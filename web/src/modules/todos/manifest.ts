@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     head: 'figure',
     surface: 'gradient',
     signature: 'todayCard',
+    feedback: 'tick',
   },
   version: 4,
   get description() {

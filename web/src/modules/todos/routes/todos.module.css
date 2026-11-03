@@ -207,3 +207,156 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
+
+/* Plan group package 2: Heute card, view bar, board, tags, checklist, project bar. */
+.todayCard {
+  min-width: 12rem;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--shape-soft, var(--radius-md));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.tagBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.tagChip {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.tagChip[aria-pressed='true'] {
+  border-color: var(--text);
+  font-weight: 600;
+}
+.boardHint {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(14rem, 1fr));
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 12rem;
+  padding: var(--space-2);
+  border: 1px dashed transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.columnOver {
+  border-color: var(--text);
+}
+.columnTitle {
+  margin: 0;
+  font-size: var(--text-base);
+}
+.columnCount {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.columnEmpty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: grab;
+}
+.cardTitle {
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+}
+.cardMeta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.cardActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+.projectBar {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.projectTrack {
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.projectFill {
+  height: 100%;
+  background: var(--module-color, var(--accent));
+}
+.checklist {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+}
+.tickPop {
+  animation: tick-pop 200ms ease-out;
+}
+@keyframes tick-pop {
+  50% {
+    transform: scale(1.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tickPop {
+    animation: none;
+  }
+}

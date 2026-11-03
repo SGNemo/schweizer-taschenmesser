@@ -25,12 +25,19 @@ import { undoableWithToast } from '@/core/undo/withToast';
 import { PersonField } from '@/core/people/PersonField';
 import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
-import type { Task, TodoList } from '../schema';
+import type { ChecklistItem, Task, TaskLink, TodoList } from '../schema';
+import { parseTags } from '../tags';
 import styles from '../routes/todos.module.css';
 
 /** Deleting a task (with its subtasks) is one action: the toast and Ctrl+Z bring it back. */
 function deleteTaskUndoable(id: string) {
   return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
+}
+
+/** Where a link of a task opens (`?open=<id>` is understood by every module page). */
+export function linkPath(l: TaskLink): string {
+  const base = { note: '/notes', mail: '/mail', invoice: '/invoices', event: '/calendar' }[l.kind];
+  return `${base}?open=${encodeURIComponent(l.id)}`;
 }
 
 /** Offered effort estimates in minutes. */
@@ -72,6 +79,11 @@ function EditorForm({
   const [plannedFor, setPlannedFor] = useState(task.plannedFor ?? '');
   const [note, setNote] = useState(task.note ?? '');
   const [personId, setPersonId] = useState(task.personId ?? '');
+  const [startDate, setStartDate] = useState(task.startDate ?? '');
+  const [tagsText, setTagsText] = useState((task.tags ?? []).map((x) => `#${x}`).join(', '));
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
+  const [itemText, setItemText] = useState('');
+  const [links, setLinks] = useState<TaskLink[]>(task.links ?? []);
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
   const navigate = useNavigate();
@@ -92,6 +104,10 @@ function EditorForm({
       plannedFor: plannedFor || undefined,
       note: note.trim() || undefined,
       personId: personId || undefined,
+      startDate: startDate || undefined,
+      tags: parseTags(tagsText).length ? parseTags(tagsText) : undefined,
+      checklist: checklist.length ? checklist : undefined,
+      links: links.length ? links : undefined,
     });
     // Subtasks always live in the list of their parent.
     if (listId !== task.listId) {
@@ -102,6 +118,14 @@ function EditorForm({
         .each((s) => void taskRepo.update(s.id, { listId }));
     }
     onClose();
+  }
+
+  function addItem(e: { preventDefault: () => void }) {
+    e.preventDefault();
+    const text = itemText.trim();
+    if (!text) return;
+    setChecklist((c) => [...c, { id: crypto.randomUUID(), text, done: false }]);
+    setItemText('');
   }
 
   async function addSub(e: { preventDefault: () => void }) {
@@ -187,7 +211,22 @@ function EditorForm({
               <Chip label={t.todos.planClear} onClick={() => setPlannedFor('')} />
             ) : null}
           </Chips>
-          <AdvancedFields moduleId="todos" hasData={someday || !!recurrence}>
+          <AdvancedFields
+            moduleId="todos"
+            hasData={someday || !!recurrence || !!startDate || tagsText.trim() !== ''}
+          >
+            <DateField
+              label={t.todos.startDate}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              hint={t.todos.startHint}
+            />
+            <TextField
+              label={t.todos.tags.label}
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+              hint={t.todos.tags.hint}
+            />
             {dueDate ? (
               <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={dueDate} />
             ) : null}
@@ -196,6 +235,81 @@ function EditorForm({
         </>
       )}
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+
+      {isSub ? null : (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>
+            {t.todos.checklist.title}
+            {checklist.length > 0
+              ? ` · ${t.todos.checklist.progress(checklist.filter((c) => c.done).length, checklist.length)}`
+              : ''}
+          </h3>
+          <ul className={styles.checklist}>
+            {checklist.map((c) => (
+              <li key={c.id} className={styles.checkItem}>
+                <input
+                  type="checkbox"
+                  className={styles.check}
+                  aria-label={c.text}
+                  checked={c.done}
+                  onChange={(e) =>
+                    setChecklist((all) =>
+                      all.map((x) => (x.id === c.id ? { ...x, done: e.target.checked } : x)),
+                    )
+                  }
+                />
+                <span style={{ flex: 1 }}>{c.text}</span>
+                <IconButton
+                  label={t.todos.checklist.remove(c.text)}
+                  onClick={() => setChecklist((all) => all.filter((x) => x.id !== c.id))}
+                >
+                  <Icon name="trash" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+          <div className={styles.add} style={{ marginBottom: 0 }}>
+            <div className={styles.grow}>
+              <TextField
+                label={t.todos.checklist.add}
+                value={itemText}
+                onChange={(e) => setItemText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addItem(e);
+                }}
+              />
+            </div>
+            <Button onClick={addItem}>{t.actions.add}</Button>
+          </div>
+        </div>
+      )}
+
+      {links.length > 0 ? (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t.todos.links.title}</h3>
+          <ul className={styles.checklist}>
+            {links.map((l) => (
+              <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onClose();
+                    void navigate(linkPath(l));
+                  }}
+                >
+                  {`${t.todos.links.kinds[l.kind]}: ${l.label}`}
+                </Button>
+                <IconButton
+                  label={t.todos.links.remove(l.label)}
+                  onClick={() => setLinks((all) => all.filter((x) => x !== l))}
+                >
+                  <Icon name="trash" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {isSub ? null : (
         <div className={styles.section}>
