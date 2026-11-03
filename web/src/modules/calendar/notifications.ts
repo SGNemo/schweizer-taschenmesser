@@ -34,7 +34,9 @@ const source: NotificationSource = async ({ from, to }) => {
   const inRange = (at: number) => at > from && at <= to;
   for (const e of events) {
     const time = e.allDay || !e.startTime ? prefs.allDayNotifyTime : e.startTime;
+    const skipped = new Set(e.exdates ?? []);
     for (const date of datesInRange(e.startDate, e.recurrence, fromDate, toDate)) {
+      if (skipped.has(date)) continue;
       const start = toEpoch(date, time);
       const at = start - e.notify!.minutesBefore * MINUTE_MS;
       const key = `event:${e.id}:${date}T${time}`;

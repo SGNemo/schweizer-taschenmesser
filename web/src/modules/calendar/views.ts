@@ -77,7 +77,13 @@ export function expandEvent(
 ): CalendarItem[] {
   const span = e.endDate ? daysBetween(e.startDate, e.endDate) : 0;
   // An occurrence starting up to `span` days before the range can still reach into it.
-  const starts = datesInRange(e.startDate, e.recurrence, addDaysStr(range.from, -span), range.to);
+  const skipped = e.exdates?.length ? new Set(e.exdates) : null;
+  const starts = datesInRange(
+    e.startDate,
+    e.recurrence,
+    addDaysStr(range.from, -span),
+    range.to,
+  ).filter((s) => !skipped?.has(s));
   const items: CalendarItem[] = [];
   for (const start of starts) {
     for (let k = 0; k <= span; k++) {

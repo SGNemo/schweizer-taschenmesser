@@ -113,6 +113,21 @@ describe('expandEvent', () => {
     expect(items.map((i) => i.date)).toEqual(['2026-09-01', '2026-09-02']);
   });
 
+  it('skips exception dates of a recurring event', () => {
+    const items = expandEvent(
+      'e1',
+      ev({
+        startDate: '2026-09-01',
+        startTime: '18:00',
+        recurrence: { freq: 'weekly' },
+        exdates: ['2026-09-08'],
+      }),
+      range,
+    );
+    expect(items.map((i) => i.date)).not.toContain('2026-09-08');
+    expect(items.map((i) => i.date)).toContain('2026-09-15');
+  });
+
   it('recurring event expands per occurrence', () => {
     const items = expandEvent(
       'e1',
