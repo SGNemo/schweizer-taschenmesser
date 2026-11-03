@@ -11,6 +11,7 @@ export const aiSchema: ModuleAiSchema = {
         kind: 'enum:event|reminder',
         startDate: 'date',
         startTime: 'text',
+        endTime: 'text',
         location: 'text',
         recurrence: 'recurrence',
         note: 'text',
@@ -53,7 +54,7 @@ export const aiSchema: ModuleAiSchema = {
       collection: 'event',
       label: 'Termin ändern',
       description: 'Titel, Datum, Uhrzeit oder Ort eines Termins ändern',
-      fields: ['title', 'startDate', 'startTime', 'location', 'note'],
+      fields: ['title', 'startDate', 'startTime', 'endTime', 'location', 'note'],
       examples: [
         {
           input: 'Verschiebe den Termin Zahnarzt auf 5.10. 9 Uhr',
