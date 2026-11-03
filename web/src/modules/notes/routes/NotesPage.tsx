@@ -11,9 +11,11 @@ import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { PageTitle, useMediaQuery, useOpenParam } from '@/ui';
+import { HeroSlot } from '@/ui/identity';
 import { ExportDialog, type ExportScope } from '../components/ExportDialog';
 import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
+import { NotePaper } from '../components/NotePaper';
 import { NotebookDialog } from '../components/NotebookDialog';
 import { NotePane } from '../components/NotePane';
 import { PageList } from '../components/PageList';
@@ -21,6 +23,7 @@ import { TabBar } from '../components/TabBar';
 import { TrashDialog } from '../components/TrashDialog';
 import {
   displayTitle,
+  excerpt,
   isScratch,
   type NotebookFilter,
   SCRATCH_ID,
@@ -31,6 +34,7 @@ import { backlinks as backlinksOf, findPage, suggestTitles } from '../links';
 import { noteRepo, notebookRepo } from '../repo';
 import type { Note } from '../schema';
 import { type NotesSettings, settings as moduleSettings, settingsSchema } from '../settings';
+import { buildTemplate, type TemplateId } from '../templates';
 import styles from './NotesPage.module.css';
 
 type Sel = { kind: 'note'; id: string } | { kind: 'scratch' } | { kind: 'new' } | { kind: 'list' };
@@ -87,7 +91,11 @@ export default function NotesPage() {
   );
   const moduleStates = useModuleStates();
   const wide = useMediaQuery('(min-width: 900px)');
-  const [stored] = useSettings('module.notes', settingsSchema, moduleSettings.defaults as never);
+  const [stored, setPrefs] = useSettings(
+    'module.notes',
+    settingsSchema,
+    moduleSettings.defaults as never,
+  );
   const prefs = stored ?? (moduleSettings.defaults as NotesSettings);
   const [params, setParams] = useSearchParams();
   const wantsNew = params.get('new') === '1';
@@ -98,6 +106,8 @@ export default function NotesPage() {
         : undefined,
     [wantsNew, params],
   );
+  // A page made from a template (title and Markdown), shown like a quick-capture prefill.
+  const [template, setTemplate] = useState<{ title: string; body: string } | null>(null);
   const [query, setQuery] = useState('');
   const [filterRaw, setFilter] = useState<NotebookFilter>('all');
   // A deleted notebook falls back to all pages.
@@ -144,6 +154,7 @@ export default function NotesPage() {
     });
 
   function open(next: Sel) {
+    if (next.kind !== 'new') setTemplate(null);
     setCreatedId(null);
     setPaneKey((k) => k + 1);
     setPicked(next);
@@ -309,6 +320,15 @@ export default function NotesPage() {
   return (
     <>
       <PageTitle title={t.notes.title} />
+      <HeroSlot area="extra">
+        <NotePaper
+          text={
+            scratchNote
+              ? excerpt({ title: t.notes.scratch, body: scratchNote.body }, 120)
+              : undefined
+          }
+        />
+      </HeroSlot>
       <div
         className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}
         data-writing={focusMode || undefined}
@@ -328,7 +348,17 @@ export default function NotesPage() {
             showOpenList={!wide}
             onOpen={(p) => (p.id === 'scratch' ? open({ kind: 'scratch' }) : openPage(p))}
             onCloseTab={closeTab}
-            onNewPage={() => open({ kind: 'new' })}
+            onNewPage={() => {
+              setTemplate(null);
+              open({ kind: 'new' });
+            }}
+            onNewFromTemplate={(id: TemplateId) => {
+              const made = buildTemplate(id);
+              open({ kind: 'new' });
+              setTemplate(made); // after open(), which clears a previous template
+            }}
+            view={prefs.view}
+            onView={(view) => void setPrefs({ view })}
             onNewNotebook={() => setBookDialog({ open: true, book: null })}
             onEditNotebook={(book) => setBookDialog({ open: true, book })}
             onTogglePin={(p) => void noteRepo.update(p.id, { pinned: !p.pinned })}
@@ -369,7 +399,7 @@ export default function NotesPage() {
               key={paneKey}
               existing={sel.kind === 'note' ? current : sel.kind === 'scratch' ? scratchNote : null}
               scratch={sel.kind === 'scratch'}
-              prefill={sel.kind === 'new' ? prefill : undefined}
+              prefill={sel.kind === 'new' ? (template ?? prefill) : undefined}
               prefs={prefs}
               focusMode={focusMode}
               notebookId={newPageBook}

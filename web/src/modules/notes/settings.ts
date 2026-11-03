@@ -5,12 +5,13 @@ import { t } from '@/strings';
 export const settingsSchema = z.object({
   width: z.enum(['narrow', 'medium', 'full']),
   wordCount: z.boolean(),
+  view: z.enum(['list', 'cards']),
 });
 export type NotesSettings = z.output<typeof settingsSchema>;
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { width: 'narrow', wordCount: true } satisfies NotesSettings,
+  defaults: { width: 'narrow', wordCount: true, view: 'list' } satisfies NotesSettings,
   fields: [
     {
       key: 'width',
@@ -33,6 +34,19 @@ export const settings: ModuleSettings = {
         return t.notes.meta.settings.wordCount;
       },
       type: 'boolean',
+    },
+    {
+      key: 'view',
+      get label() {
+        return t.notes.meta.settings.view;
+      },
+      type: 'select',
+      get options() {
+        return [
+          { value: 'list', label: t.notes.view.list },
+          { value: 'cards', label: t.notes.view.cards },
+        ];
+      },
     },
   ],
 };

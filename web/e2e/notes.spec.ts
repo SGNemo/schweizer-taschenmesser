@@ -74,6 +74,24 @@ test.describe('desktop layout', () => {
     await expect(list.getByText('Gartenplan')).toHaveCount(0);
   });
 
+  test('a template fills a new page; the cards view shows the previews; the head carries the paper', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes');
+    await expect(page.getByTestId('note-paper')).toBeAttached();
+    await page.getByRole('button', { name: 'Vorlage wählen' }).click();
+    await page.getByRole('menuitem', { name: 'Besprechung' }).click();
+    await expect(editor(page)).toContainText('Beschlüsse');
+    await expect(page.getByRole('textbox', { name: 'Titel' })).toHaveValue(/^Besprechung /);
+    await page.keyboard.type('x');
+    await expect(page.getByText('Gespeichert')).toBeVisible();
+    await page.getByRole('radio', { name: 'Karten' }).click();
+    await expect(page.getByTestId('note-row').first()).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('radio', { name: 'Karten' })).toBeChecked();
+  });
+
   test('writing mode hides the page list', async ({ page }) => {
     await enable(page, 'notes');
     await ready(page, '/notes');
