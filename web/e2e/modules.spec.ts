@@ -34,7 +34,7 @@ test.describe('module library', () => {
     page,
   }) => {
     await page.goto('/library');
-    for (const id of ['calendar', 'todos', 'finance', 'invoices', 'subscriptions']) {
+    for (const id of ['calendar', 'todos', 'finance', 'invoices', 'subscriptions', 'weather']) {
       const card = page.getByTestId(`module-${id}`);
       await moduleSwitch(card).click(); // no data: no dialog
       // the write is finished when the switch has flipped (a `goto` before that can lose it)
