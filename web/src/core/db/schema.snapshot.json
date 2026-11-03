@@ -1,5 +1,5 @@
 {
-  "version": 28,
+  "version": 29,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -49,6 +49,9 @@
     "people_gift": "id, updatedAt, personId, status, date",
     "people_person": "id, updatedAt, name",
     "subscriptions_subscription": "id, updatedAt, startDate",
+    "timetrack_client": "id, updatedAt, order",
+    "timetrack_job": "id, updatedAt, clientId, order",
+    "timetrack_session": "id, updatedAt, date, jobId",
     "todos_list": "id, updatedAt, order",
     "todos_task": "id, updatedAt, listId, dueDate, parentId",
     "vault_document": "id, updatedAt, category, expiresOn"

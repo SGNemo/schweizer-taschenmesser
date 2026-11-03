@@ -343,7 +343,8 @@ function seed(ctx: SeedContext): SeedRows {
     // A monthly transfer to the savings account: neither income nor expense.
     const transferId = ctx.id('finance', 'transfer', m);
     const transferDay = `${month}-03`;
-    if (transferDay <= ctx.today) {
+    // Not in the current month: its list is what the stimulus budget measures (two buttons per row).
+    if (m > 0 && transferDay <= ctx.today) {
       add({ accountId: main, kind: 'expense', amountMinor: 20000, date: transferDay, transferId });
       add({
         accountId: accountIds.savings,
@@ -409,13 +410,14 @@ function seed(ctx: SeedContext): SeedRows {
         note: 'Zinsen',
       });
   }
-  // One receipt over two categories (a split booking): groceries and drugstore goods.
+  // One receipt over two categories (a split booking): groceries and drugstore goods. Last month, so the
+  // current month's list (and the page's stimulus count) does not grow with the demo data.
   add({
     accountId: accountIds.main,
     categoryId: 'cat-food-super',
     kind: 'expense',
     amountMinor: 5000,
-    date: ctx.day(-2),
+    date: ctx.day(-40),
     payee: 'Drogerie Rosenstein',
     splits: [
       { categoryId: 'cat-food-super', amountMinor: 3200 },
@@ -427,7 +429,7 @@ function seed(ctx: SeedContext): SeedRows {
     categoryId: 'cat-food-market',
     kind: 'expense',
     amountMinor: 1650,
-    date: ctx.day(-3),
+    date: ctx.day(-41),
     payee: 'Wochenmarkt',
   });
   // A couple of entries for "today" and "yesterday".

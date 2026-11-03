@@ -407,6 +407,20 @@ function Form({
               {t.calendar.asTodo}
             </Button>
           ) : null}
+          {existing && !reminder ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                // Time tracking starts the clock when it is on (it listens to this event); the event only names it.
+                await bus.emit('timetrack.start.requested', {
+                  title: existing.title,
+                  sourceRef: existing.id,
+                });
+              }}
+            >
+              {t.timetrack.fromEvent.action}
+            </Button>
+          ) : null}
           {existing?.recurrence && occurrence ? (
             <Button
               variant="ghost"
