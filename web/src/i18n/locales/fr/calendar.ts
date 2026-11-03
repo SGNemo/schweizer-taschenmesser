@@ -28,6 +28,7 @@ export const calendar: Strings['calendar'] = {
   week: 'Semaine',
   day: 'Jour',
   year: 'Année',
+  skipOccurrence: (date: string) => `Retirer uniquement celui du ${date}`,
   weekNoShort: 'Sem.',
   agendaEmpty: 'Rien de prévu sur cette période.',
   holidayLabel: 'Jour férié',

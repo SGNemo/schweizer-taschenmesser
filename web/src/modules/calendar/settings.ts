@@ -23,6 +23,7 @@ export const settings: ModuleSettings = {
     defaultReminderTime: '09:00',
     allDayNotifyTime: '09:00',
   },
+  keywords: ['Feiertage', 'Ferien', 'KW', 'Jahresansicht', 'Agenda'],
   fields: [
     {
       key: 'defaultView',

@@ -66,6 +66,7 @@ export default function CalendarPage() {
   const [target, setTarget] = useState<EventTarget>(null);
   useOpenParam((id) => eventRepo.get(id), setTarget);
   const [externalId, setExternalId] = useState<string | null>(null);
+  const [occurrence, setOccurrence] = useState<string | null>(null);
   const split = useSplitView();
   const weekStart = useWeekStart();
 
@@ -108,6 +109,7 @@ export default function CalendarPage() {
       setExternalId(eventIdOf(item.id));
     } else if (item.source === 'calendar') {
       const ev = await eventRepo.get(eventIdOf(item.id));
+      setOccurrence(item.date);
       if (ev) setTarget(ev);
     } else if (item.to) void navigate(item.to);
   }
@@ -250,7 +252,12 @@ export default function CalendarPage() {
         </SplitView>
       </div>
 
-      <EventEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
+      <EventEditor
+        target={openTarget}
+        onClose={closeEditor}
+        onDuplicated={setTarget}
+        occurrence={occurrence}
+      />
       <ExternalDetail id={externalId} onClose={() => setExternalId(null)} />
     </>
   );

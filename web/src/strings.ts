@@ -1493,6 +1493,7 @@ export const de = {
     week: 'Woche',
     day: 'Tag',
     year: 'Jahr',
+    skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
     weekNoShort: 'KW',
     agendaEmpty: 'In diesem Zeitraum ist nichts geplant.',
     holidayLabel: 'Feiertag',
