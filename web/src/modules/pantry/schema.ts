@@ -10,6 +10,13 @@ export const itemSchema = z.object({
   place: z.enum(PLACES).default('pantry'),
   /** How many are in stock (packs, bottles …). */
   count: z.number().int().min(0).max(9999).default(1),
+  /** Unit of one piece ('kg', 'l', 'pack' …), shown after the count. */
+  unit: z.string().trim().max(12).optional(),
+  /** Product barcode (EAN-8/13, UPC-A/E digits), kept only here: no online lookup. */
+  ean: z
+    .string()
+    .regex(/^\d{8}$|^\d{12,13}$/)
+    .optional(),
   /** At or below this many the item counts as "running low". */
   minCount: z.number().int().min(0).max(9999).optional(),
   /** Best-before date 'YYYY-MM-DD'. */

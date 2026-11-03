@@ -272,6 +272,10 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Colar aniversários',
     textHint: 'Uma linha por pessoa: nome e data, com ou sem ano.',
     placeholder: 'Ana Exemplo 15.03.1985\nTio Marcos 02.11.\n24.12. Vovó',
+    file: 'De um arquivo de contatos ou agenda',
+    fileHint:
+      'Um arquivo .vcf (exportação de contatos) ou .ics de uma agenda de aniversários. O arquivo fica neste aparelho.',
+    fileNone: 'Nenhum aniversário encontrado no arquivo.',
   },
   lists: {
     text: 'Colar lista de compras',
@@ -362,6 +366,20 @@ export const onboarding: Strings['onboarding'] = {
         'Lanche do recreio',
         'Roupa de educação física',
         'Bilhetes para os pais',
+      ],
+    },
+    business: {
+      name: 'Viagem a trabalho',
+      note: 'De um a três dias fora',
+      items: [
+        'Notebook e carregador',
+        'Cartões de visita',
+        'Documento de identidade',
+        'Passagem de trem ou avião',
+        'Reserva de hotel',
+        'Terno ou roupa social',
+        'Cabo de carregamento',
+        'Caderno e caneta',
       ],
     },
   },

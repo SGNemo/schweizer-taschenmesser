@@ -21,11 +21,16 @@ import {
   useOpenParam,
 } from '@/ui';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
+import { FolderTabs } from '../components/FolderTabs';
+import { changeWithUndo } from '@/core/undo/withToast';
 import {
   cancelDeadline,
+  countByCategory,
   endOf,
   filterDocuments,
   formatSize,
+  RENEWABLE,
+  renewedEnd,
   safeFileName,
   sortDocuments,
   statusOf,
@@ -79,6 +84,7 @@ export default function VaultPage() {
           {t.vault.add}
         </Button>
       </PageHeader>
+      <FolderTabs counts={countByCategory(docs ?? [])} />
       <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>{t.vault.localOnly}</p>
       <TextField
         label={t.vault.search}
@@ -137,10 +143,38 @@ export default function VaultPage() {
               end={
                 <>
                   {state === 'ok' || state === 'open-ended' ? null : (
-                    <Badge tone={state === 'act-now' || state === 'expired' ? 'accent' : 'neutral'}>
+                    <Badge
+                      tone={
+                        state === 'expired'
+                          ? 'danger'
+                          : state === 'act-now' || state === 'missed' || state === 'soon'
+                            ? 'warning'
+                            : 'neutral'
+                      }
+                    >
                       {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
                     </Badge>
                   )}
+                  {RENEWABLE.includes(d.category) &&
+                  renewedEnd(d) &&
+                  (state === 'act-now' || state === 'missed' || state === 'expired') ? (
+                    <Button
+                      size="sm"
+                      aria-label={t.vault.renewAria(d.title)}
+                      onClick={() =>
+                        void changeWithUndo(
+                          () =>
+                            documentRepo.update(d.id, {
+                              endDate: renewedEnd(d),
+                              expiresOn: undefined,
+                            }),
+                          t.vault.renewed(d.title, formatDay(renewedEnd(d)!, 'd. MMM yyyy')),
+                        )
+                      }
+                    >
+                      {t.vault.renew}
+                    </Button>
+                  ) : null}
                   {hasFile && d.fileName ? (
                     <Button
                       variant="ghost"

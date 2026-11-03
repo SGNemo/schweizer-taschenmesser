@@ -1,5 +1,5 @@
 import { compareText } from '@/core/i18n/format';
-import { addDaysStr, daysBetween } from '@/core/time/dates';
+import { addDaysStr, addMonthsStr, daysBetween } from '@/core/time/dates';
 import type { DocCategory, VaultDocument } from './schema';
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -109,3 +109,21 @@ export const PAPER_TEMPLATES = [
   'policies',
 ] as const;
 export type PaperTemplate = (typeof PAPER_TEMPLATES)[number];
+
+/** Categories whose entries are renewed ("verlängert") rather than replaced: contracts and insurances. */
+export const RENEWABLE: readonly DocCategory[] = ['contract', 'insurance'];
+
+/** The new end date after a renewal of one year; undefined when there is no end date to move. */
+export const renewedEnd = (d: Pick<VaultDocument, 'endDate' | 'expiresOn'>): string | undefined => {
+  const end = endOf(d);
+  return end ? addMonthsStr(end, 12) : undefined;
+};
+
+/** Number of documents per category (for the folder tabs). */
+export function countByCategory(
+  docs: readonly Pick<VaultDocument, 'category'>[],
+): Partial<Record<DocCategory, number>> {
+  const out: Partial<Record<DocCategory, number>> = {};
+  for (const d of docs) out[d.category] = (out[d.category] ?? 0) + 1;
+  return out;
+}

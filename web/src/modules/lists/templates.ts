@@ -1,4 +1,4 @@
-import { nextOrder } from './logic';
+import { nextOrder, type PackingTemplate } from './logic';
 import { itemRepo, listRepo } from './repo';
 import { t } from '@/strings';
 
@@ -12,6 +12,22 @@ export async function createRoutine(id: RoutineId): Promise<string> {
   const list = await listRepo.create({
     name: tpl.name,
     kind: 'checklist',
+    order: nextOrder(lists),
+  });
+  await itemRepo.createMany(
+    tpl.items.map((name, i) => ({ data: { listId: list.id, name, done: false, order: i + 1 } })),
+  );
+  return list.id;
+}
+
+/** A packing list from one of the ready-made templates (the start-data wizard offers the same ones). */
+export async function createPackingFromTemplate(id: PackingTemplate): Promise<string> {
+  const tpl = t.onboarding.lists[id];
+  const lists = await listRepo.active().toArray();
+  const list = await listRepo.create({
+    name: tpl.name,
+    kind: 'packing',
+    ...(tpl.note ? { note: tpl.note } : {}),
     order: nextOrder(lists),
   });
   await itemRepo.createMany(

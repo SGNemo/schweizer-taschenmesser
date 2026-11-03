@@ -3,6 +3,11 @@ import { db } from '@/core/db/db';
 import { validateManifest } from '@/core/modules/registry';
 import {
   copyName,
+  groupItems,
+  listAsText,
+  recall,
+  suggestNames,
+  totals,
   isDuplicate,
   nextOrder,
   parseEntry,
@@ -160,5 +165,68 @@ describe('lists repo', () => {
       ['Butter', undefined],
       ['Mehl', '500 g'],
     ]);
+  });
+});
+
+describe('shopping extras', () => {
+  it('groups by store section in walk order and keeps one flat group while nothing is assigned', () => {
+    const flat = groupItems([{ name: 'a' }, { name: 'b' }] as never[], 'section');
+    expect(flat).toHaveLength(1);
+    const g = groupItems(
+      [{ section: 'drinks' }, { section: 'produce' }, {}, { section: 'produce' }] as never[],
+      'section',
+    );
+    expect(g.map((x) => [x.id, x.items.length])).toEqual([
+      ['produce', 2],
+      ['drinks', 1],
+      ['', 1],
+    ]);
+  });
+
+  it('sums open and ticked prices separately', () => {
+    expect(
+      totals([{ priceCents: 150, done: false }, { priceCents: 250, done: true }, { done: false }]),
+    ).toEqual({ openCents: 150, doneCents: 250, priced: 2 });
+  });
+
+  it('suggests names bought before, most often first, never what is open', () => {
+    const history = [{ name: 'Milch' }, { name: 'Brot' }, { name: 'milch' }, { name: 'Eier' }];
+    expect(suggestNames(history, ['Eier'])).toEqual(['Milch', 'Brot']);
+  });
+
+  it('recalls the last section and price of the same name', () => {
+    const h = [
+      { name: 'Milch', section: 'dairy' as const, updatedAt: 1 },
+      { name: 'milch', section: 'drinks' as const, priceCents: 99, updatedAt: 2 },
+    ];
+    expect(recall(h, 'MILCH')).toEqual({ section: 'drinks', priceCents: 99 });
+    expect(recall(h, 'Brot')).toEqual({});
+  });
+
+  it('writes a plain text copy of a list', () => {
+    expect(
+      listAsText('Einkauf', [
+        { name: 'Milch', quantity: '2', done: false },
+        { name: 'Brot', done: true },
+      ]),
+    ).toBe('Einkauf\n[ ] 2 Milch\n[x] Brot');
+  });
+});
+
+describe('recurring entries', () => {
+  beforeEach(async () => {
+    await db.table('lists_item').clear();
+    await db.table('lists_list').clear();
+  });
+  it('"remove bought" unticks a recurring entry instead of removing it', async () => {
+    await ensureShoppingList();
+    await addItem(SHOPPING_LIST_ID, 'Milch', 'shopping');
+    await addItem(SHOPPING_LIST_ID, 'Kerze', 'shopping');
+    const [milk, candle] = await itemsOf(SHOPPING_LIST_ID);
+    await itemRepo.update(milk!.id, { done: true, recurring: true });
+    await itemRepo.update(candle!.id, { done: true });
+    await clearDone(SHOPPING_LIST_ID);
+    const left = await itemsOf(SHOPPING_LIST_ID);
+    expect(left.map((i) => [i.name, i.done])).toEqual([['Milch', false]]);
   });
 });

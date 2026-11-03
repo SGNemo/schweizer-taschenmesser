@@ -4,6 +4,7 @@
  */
 import { getPlatform } from '@/core/platform';
 import { getSettings } from '@/core/settings/settings';
+import { now } from '@/core/time/now';
 import { defaultSettings, settingsSchema, type AccountsSettings } from './settings';
 import { isUnlocked, useSession } from './session';
 import { lockVault } from './vault';
@@ -14,6 +15,10 @@ const BACKGROUND_GRACE_MS = 30_000;
 
 export const loadAccountsSettings = (): Promise<AccountsSettings> =>
   getSettings(SCOPE, settingsSchema, defaultSettings);
+
+/** When the idle lock will fire (epoch ms) while it is armed. Read-only, for the status in the page head. */
+let idleDeadline: number | undefined;
+export const getAutoLockDeadline = (): number | undefined => idleDeadline;
 
 export interface AutoLockDeps {
   settings(): Promise<AccountsSettings>;
@@ -42,6 +47,7 @@ export function startAutoLock(deps: AutoLockDeps = defaultDeps()): () => void {
     const restart = () => {
       clearTimeout(idle);
       idle = setTimeout(deps.lock, Number(autoLockMinutes) * 60_000);
+      idleDeadline = now() + Number(autoLockMinutes) * 60_000;
     };
     restart();
     for (const type of ACTIVITY_EVENTS) window.addEventListener(type, restart, { passive: true });
@@ -63,6 +69,7 @@ export function startAutoLock(deps: AutoLockDeps = defaultDeps()): () => void {
       for (const type of ACTIVITY_EVENTS) window.removeEventListener(type, restart);
       document.removeEventListener('visibilitychange', onVisible);
       stopBackground();
+      idleDeadline = undefined;
       disarm = undefined;
     };
   };

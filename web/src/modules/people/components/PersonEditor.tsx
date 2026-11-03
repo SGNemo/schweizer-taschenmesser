@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
+import { formatMoneyInput, parseMoney } from '@/core/money';
 import { pad2 } from '@/core/time/dates';
 import { t } from '@/strings';
 import { AdvancedFields, Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
@@ -68,15 +69,36 @@ function Fields({
   const [yearUnknown, setYearUnknown] = useState(b ? b.year === undefined : false);
   const [tags, setTags] = useState(existing?.tags.join(', ') ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
+  const [phone, setPhone] = useState(existing?.phone ?? '');
+  const [email, setEmail] = useState(existing?.email ?? '');
+  const [lead, setLead] = useState(
+    existing?.remindDaysBefore === undefined ? '' : String(existing.remindDaysBefore),
+  );
+  const [budget, setBudget] = useState(
+    existing?.giftBudgetCents === undefined ? '' : formatMoneyInput(existing.giftBudgetCents),
+  );
   const [error, setError] = useState('');
+  const [extraError, setExtraError] = useState('');
 
   async function save() {
     const [y, m, d] = date.split('-').map(Number);
+    setExtraError('');
+    const cents = budget.trim() === '' ? undefined : parseMoney(budget);
+    const leadDays = lead.trim() === '' ? undefined : Number(lead);
+    if (
+      (budget.trim() !== '' && cents === undefined) ||
+      (leadDays !== undefined && !Number.isInteger(leadDays))
+    )
+      return setExtraError(t.people.invalidExtra);
     const parsed = personSchema.safeParse({
       name: name.trim(),
       birthday: hasBirthday ? { month: m, day: d, year: yearUnknown ? undefined : y } : undefined,
       tags: parseTags(tags),
       note: note.trim() || undefined,
+      phone: phone.trim() || undefined,
+      email: email.trim() || undefined,
+      remindDaysBefore: leadDays,
+      giftBudgetCents: cents,
     });
     if (!parsed.success) return setError(t.people.invalidDate);
     if (existing) await personRepo.update(existing.id, parsed.data);
@@ -118,7 +140,36 @@ function Fields({
           />
         </>
       ) : null}
-      <AdvancedFields moduleId="people" hasData={!!tags || !!note}>
+      <AdvancedFields
+        moduleId="people"
+        hasData={!!tags || !!note || !!phone || !!email || !!lead || !!budget}
+      >
+        <TextField
+          label={t.people.phone}
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        <TextField
+          label={t.people.email}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField
+          label={t.people.remindOwn}
+          hint={t.people.remindOwnHint}
+          value={lead}
+          onChange={(e) => setLead(e.target.value)}
+          inputMode="numeric"
+        />
+        <TextField
+          label={t.people.budget}
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          error={extraError}
+          inputMode="decimal"
+        />
         <TextField label={t.people.tags} value={tags} onChange={(e) => setTags(e.target.value)} />
         <TextField label={t.people.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>

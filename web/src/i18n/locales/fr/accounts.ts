@@ -88,6 +88,50 @@ export const accounts: Strings['accounts'] = {
   },
   add: 'Ajouter un accès',
   edit: 'Modifier l’accès',
+  head: {
+    locked: 'Verrouillé',
+    unlocked: 'Déverrouillé',
+    autoLock: (min: number) =>
+      min <= 0
+        ? 'Se verrouille tout seul dans moins d’une minute'
+        : `Se verrouille tout seul dans environ ${min} min`,
+    bridgeOn: 'Extension du navigateur : activée',
+    bridgeOff: 'Extension du navigateur : désactivée',
+  },
+  groups: { label: 'Groupes', all: 'Tous', favorites: 'Favoris' },
+  audit: {
+    open: 'Vérifier les mots de passe',
+    title: 'Vérifier les mots de passe',
+    intro:
+      'Tout est calculé ici, sur cet appareil. Aucun mot de passe n’est affiché, envoyé ni enregistré.',
+    running: (done: number, total: number) => `Vérification de ${done} sur ${total} …`,
+    nothing: 'Rien de notable. Très bien.',
+    weak: (n: number) => `Faibles (${n})`,
+    reused: (n: number) => `Utilisés plusieurs fois (${n})`,
+    old: (n: number) => `Plus d’un an (${n})`,
+    unavailable:
+      'La vérification de la robustesse a besoin d’internet une fois pour charger ses dictionnaires. La réutilisation et l’ancienneté ont quand même été vérifiées.',
+    openEntry: 'Ouvrir',
+  },
+  emergency: {
+    open: 'Fiche d’urgence',
+    title: 'Fiche d’urgence',
+    intro:
+      'Une fiche avec les étapes en cas d’urgence. Elle ne contient aucun mot de passe. Imprime-la et garde-la séparée de l’appareil.',
+    heading: 'Fiche d’urgence : coffre de mots de passe',
+    entries: (n: number) => `Entrées dans le coffre : ${n}`,
+    date: (d: string) => `Date : ${d}`,
+    steps: [
+      'Fais régulièrement une sauvegarde chiffrée (Outils → Sauvegarde) et garde le fichier à un deuxième endroit.',
+      'Le mot de passe principal n’est pas sur cette fiche et ne peut pas être réinitialisé. Garde-le à part, par exemple chez une personne de confiance.',
+      'Nouvel appareil : installe l’appli, restaure le coffre depuis la sauvegarde, déverrouille-le avec le mot de passe principal.',
+      'Si le mot de passe principal est perdu, les données ne sont plus lisibles.',
+    ],
+    save: 'Enregistrer en fichier',
+    file: 'fiche-urgence-coffre.html',
+    saved: 'Fiche d’urgence enregistrée.',
+    backup: 'Aller à la sauvegarde',
+  },
   search: 'Rechercher dans les mots de passe',
   empty: 'Aucun accès pour l’instant.',
   emptyFiltered: 'Aucun résultat.',

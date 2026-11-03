@@ -1,0 +1,25 @@
+.tile {
+  display: inline-grid;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-weight: var(--weight-bold);
+}
+.tile[data-step='1'] {
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+}
+.tile[data-step='2'] {
+  background: color-mix(in srgb, var(--module-color) 24%, var(--surface));
+}
+.tile[data-step='3'] {
+  background: color-mix(in srgb, var(--module-color) 30%, var(--surface));
+}
+.tile[data-step='4'] {
+  background: color-mix(in srgb, var(--module-color) 36%, var(--surface));
+}
