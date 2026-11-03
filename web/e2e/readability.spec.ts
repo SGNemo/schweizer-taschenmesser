@@ -37,7 +37,10 @@ test.describe('Reading aid, colour mode and grouping', () => {
     await expect(preview.locator('[data-rs]')).toHaveCount(0);
     const before = await preview.boundingBox();
 
-    await page.getByRole('switch', { name: 'Lesehilfe' }).click();
+    await page
+      .locator('section[aria-labelledby="reading"]')
+      .getByRole('switch', { name: 'Lesehilfe' })
+      .click();
     await expect(preview.locator('[data-rs]').first()).toBeVisible();
     // Screen readers get the plain sentence: no extra roles or labels inside.
     await expect(preview.locator('[role], [aria-label], b, strong')).toHaveCount(0);
@@ -55,7 +58,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     await page.reload();
     await openFoldedGroup(page, 'reading', 'aid');
     await expect(page.getByTestId('reading-preview').locator('[data-rs]').first()).toBeVisible();
-    await page.getByRole('switch', { name: 'Lesehilfe' }).click();
+    await page.getByTestId('reading-group-aid').getByRole('switch', { name: 'Lesehilfe' }).click();
     await expect(page.getByTestId('reading-preview').locator('[data-rs]')).toHaveCount(0);
   });
 

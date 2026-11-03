@@ -146,7 +146,7 @@ test.describe('Focus and attention aids', () => {
 
   test('every aid can be switched off in the settings', async ({ page }) => {
     await addTodo(page, 'Etwas');
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     const section = page.locator('section[aria-labelledby="focus"]');
     await expect(section).toBeVisible();
     await openFoldedGroup(page, 'focus', 'aids');
