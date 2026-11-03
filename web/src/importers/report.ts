@@ -1,9 +1,9 @@
-import { t } from '@/strings';
+import { tImp } from '../strings.importers';
 import type { SkipCounts } from './types';
 
 /** Readable lines for the import report: one per reason that occurred, in a fixed order. */
 export function skipNotes(counts: SkipCounts): string[] {
-  const reasons = t.importers.reasons;
+  const reasons = tImp.get().reasons;
   return (Object.keys(reasons) as (keyof typeof reasons)[])
     .filter((key) => (counts[key] ?? 0) > 0)
     .map((key) => reasons[key](counts[key]!));
