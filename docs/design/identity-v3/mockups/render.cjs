@@ -1,4 +1,4 @@
-// Renders the identity v3 mockups: 6 pages × variants A/B/C × light/dark × desktop (1920×1080) / phone (412×915).
+// Renders the identity v3 mockups: 6 pages × variants A/B/C/D (D = the chosen mix: C with B's widgets) × light/dark × desktop (1920×1080) / phone (412×915).
 // Single shots go to OUT (default: a temp folder); contact sheets per variant (desktop light, desktop dark, phone)
 // go to this folder. Usage: node render.cjs [outDir]. Needs web/node_modules (playwright) and the pre-installed Chromium.
 const path = require('node:path');
@@ -7,7 +7,7 @@ const { chromium } = require(path.join(__dirname, '../../../../web/node_modules/
 const OUT = process.argv[2] || path.join(require('node:os').tmpdir(), 'identity-v3');
 fs.mkdirSync(OUT, { recursive: true });
 const PAGES = ['uebersicht', 'kalender', 'todos', 'vorraete', 'finanzen', 'widgets'];
-const ONLY = process.env.V ? process.env.V.split(',') : ['A', 'B', 'C'];
+const ONLY = process.env.V ? process.env.V.split(',') : ['A', 'B', 'C', 'D'];
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const shot = async (page, v, theme, device) => {

@@ -4,7 +4,7 @@ Decisions from round 1 (maintainer): sidebar **wide, grouped, collapsible**; mod
 the variant**, area tabs **out of the head** into a sub-navigation; widget **shape follows the head variant**;
 references **Things 3, Apple Weather/Wallet**. Mockups: [`mockups/`](mockups/) (`*.html?v=A|B|C&theme=light|dark&device=desktop|mobile`,
 contact sheets `sheet--<v>-desktop-light|dark.png`, `sheet--<v>-phone.png`; render with `node mockups/render.cjs`).
-Round 3 implements the chosen variant; the rules below become the v3 edition of [MODULE-IDENTITY.md](../MODULE-IDENTITY.md).
+Round 3 implements the chosen variant (**D**, § 8); the rules below become the v3 edition of [MODULE-IDENTITY.md](../MODULE-IDENTITY.md).
 
 ## 1. Layout frame
 
@@ -152,7 +152,12 @@ entries. Then the widget grid (adjacency rule). Phone: greeting, tools row, card
 | Signature size | small (plate, figure) | medium (strip, rings, tiles) | large (band, pattern) |
 | Reads as | Things 3 | Apple Weather/Wallet | material surfaces |
 
-Recommendation: **B**. A is the quietest and the closest to the current content style, but on the overview the
+**Chosen (maintainer, 2026-11-03): C for head, sidebar and overview, the widgets as in B** – rendered as variant
+**D** in the mockups (`?v=D`, `sheet--D-*.png`): full-bleed head band with the area pattern at 9 %, tinted sidebar
+groups, solid icon plates in head, sub-navigation and attention cards; widgets keep a white body with the tinted head
+zone (14 %, gradient to the surface after 58 px), a tinted plate and the pattern at 5 %. Round 3 implements D.
+
+Recommendation before the choice was **B**. A is the quietest and the closest to the current content style, but on the overview the
 widgets again differ only by their edge colour; C identifies every module at a glance even in "Ruhig" (the shape and
 pattern stay in grey), but the tinted bodies compete with the content on a 2560 screen. B gives shape *and* colour to
 head and widget without tinting body text areas, and degrades to A in "Ruhig".
@@ -176,3 +181,36 @@ head and widget without tinting body text areas, and degrades to A in "Ruhig".
 4. Sidebar v3 (favourites bar, capsule, rail, fly-out), bottom nav tint.
 5. Overview head (greeting, cards, agenda component), widget shapes in `@/ui/widgets`, adjacency `spread()`.
 6. Every manifest mapped (table in MODULE-IDENTITY v3); module-internal content stays with the module chats.
+
+## 11. Mapping of every module (default for round 3 and the module chats)
+
+| Module | Area | `hue` | `hue2` | `head` | `widget` | Signature in the head | Pattern |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kalender `calendar` | plan | sky | ocean | zeit | zeitleiste | day number + hour strip | plan |
+| ToDos `todos` | plan | moss | lime | fokus | fokus | count box + next task | plan |
+| Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | rings | plan |
+| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | clock + today's strip | plan |
+| Wetter `weather` | plan | cobalt | sky | himmel | himmel | sky backdrop, thin temperature | – (sky) |
+| Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | place tiles | plan |
+| Personen `people` | plan | orchid | violet | fokus | faellig | next birthday + avatar | plan |
+| Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | balance + sparkline + account cards | money |
+| Rechnungen `invoices` | money | ocean | sky | kennzahl | faellig | open sum + receipt | money |
+| Abos `subscriptions` | money | indigo | cobalt | kennzahl | faellig | monthly sum + next debit | money |
+| Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | free amount + envelope bars | money |
+| Listen `lists` | household | orchid | violet | regal | checkliste | list tiles | household |
+| Vorräte `pantry` | household | fern | moss | regal | kacheln | shelf tiles with counts | household |
+| Merkliste `bookmarks` | knowledge | indigo | cobalt | regal | kacheln | pinboard tiles | knowledge |
+| Notizen `notes` | knowledge | violet | indigo | schreib | notiz | paper edge, serif title | knowledge |
+| Chat `chat` | knowledge | sky | cobalt | schreib | notiz | last answer | knowledge |
+| Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | address bar / tabs | knowledge |
+| E-Mail `mail` | knowledge | teal | ocean | schreib | kennzahl | unread count + stamp | knowledge |
+| Musik `music` | knowledge | orchid | violet | cover | cover | cover colour on the page | – (cover) |
+| Unterlagen `vault` | vault | indigo | violet | tresor | faellig | folder tabs, expiring count | vault |
+| Passwörter `accounts` | vault | slate | – | tresor | status | lock status (never content) | vault |
+| Dieser PC `disk` | system | slate | – | fortschritt | fortschritt | drive rings | – |
+| Downloads `downloads` | system | cobalt | sky | fortschritt | fortschritt | arrow progress | – |
+
+Adjacency on the overview (default order): Heute (fokus, moss) · Kontostand (kennzahl, teal) · Kalender (zeitleiste, sky)
+· Wetter (himmel, cobalt) · Gewohnheiten (fortschritt, violet) · Fällige Rechnungen (faellig, ocean) · Vorräte (kacheln,
+fern) · Musik (cover, orchid) · Einkauf (checkliste, orchid – not next to Musik in four columns) · Passwort-Tresor (status,
+slate) · Nächste Abbuchungen (faellig, indigo) · Laufwerke (fortschritt, slate).
