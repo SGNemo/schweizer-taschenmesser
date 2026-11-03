@@ -1625,7 +1625,7 @@ export const de = {
     end: 'Ende',
     location: 'Ort',
     showOnMap: 'Auf der Karte zeigen',
-    saveAsPlace: 'Als Ort speichern',
+    saveAsPlace: 'Als Ort merken',
     nothing: 'Keine Einträge',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,

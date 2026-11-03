@@ -11,7 +11,7 @@ Identity rules: [design/MODULE-IDENTITY.md](../design/MODULE-IDENTITY.md). One s
 - **Holidays:** `holidays.ts` computes them (Easter rule + table) for DE (nationwide or one state), AT, CH; setting `holidayRegion`, off by default; never fetched. A holiday that depends on the community is left out on purpose.
 - **Reminders tab:** time ring (`components/BellRing.tsx`, built on the shared `Ring`, never animated), "Später" presets and "Erledigt" as before, "Erledigte entfernen" (undoable), extra lead times per event (`notify.extraMinutes`, advanced fields; key suffix `:x<min>` in `notifications.ts`).
 - **Links inside the group:** "Als ToDo merken" emits `todo.requested` with `dueDate`; modules never import each other.
-- **Not built (proposals):** weather per day, "Als Ort speichern" (`place.requested`, needs the maps consumer), device-local reminder history.
+- **Not built (proposals):** weather per day, "Als Ort merken" (`place.requested`, needs the maps consumer), device-local reminder history.
 
 ## ToDos (`modules/todos`)
 
@@ -25,6 +25,6 @@ Identity rules: [design/MODULE-IDENTITY.md](../design/MODULE-IDENTITY.md). One s
 ## Karten & Orte (`modules/maps`)
 - **Head:** `components/PinHead.tsx` (the signature `pin`, in `HeroSlot`): a still pin on two quiet rings in the module hue plus the last saved place as text. It draws no map, so the head fetches nothing (the map and its tiles still start only with the Karte tab and the notice).
 - **Places tab:** category chips (only categories in use), search words over name/address/note, sort Zuletzt/Name, pinned first (`placesView.ts`, pure). Each row has a **Navigieren** button: `geo:` on Android, OpenStreetMap elsewhere (`placeLink`); the "⋯" menu keeps the other apps.
-- **Places from appointments:** the calendar editor's "Als Ort speichern" opens `/maps?q=<location>`: the Karte tab with the words in the search field. Nothing is searched until the button is pressed (own map first, online only after the click), then "Ort speichern" as before. Modules stay unlinked: it is a URL, not an import.
+- **Places from appointments:** the calendar editor's "Als Ort merken" opens `/maps?q=<location>`: the Karte tab with the words in the search field. Nothing is searched until the button is pressed (own map first, online only after the click), then "Ort speichern" as before. Modules stay unlinked: it is a URL, not an import.
 - **Not built:** AI actions (a place needs coordinates, and the assistant never gets or dictates them; the registry test also needs a `create` example), a "last place + Navigieren" widget (the tiles widget stays), a static map snippet in the head (would fetch tiles on every open), offline map piece: the existing "Eigene Karte" (Karte tab → regions) covers it.
 
