@@ -28,10 +28,10 @@
     },
     "desktop--calendar": {
       "height": 800,
-      "buttons": 267,
+      "buttons": 268,
       "links": 31,
       "icons": 62,
-      "firstScreenActions": 116
+      "firstScreenActions": 118
     },
     "desktop--finance": {
       "height": 800,
@@ -161,10 +161,10 @@
     },
     "phone--calendar": {
       "height": 1231,
-      "buttons": 51,
+      "buttons": 53,
       "links": 12,
       "icons": 14,
-      "firstScreenActions": 55
+      "firstScreenActions": 57
     },
     "phone--finance": {
       "height": 2741,

@@ -214,6 +214,8 @@ interface Base {
   location?: string;
   note?: string;
   recurrence?: Record<string, unknown>;
+  /** Skip the occurrence one week after `day` (shows the "only this one removed" case). */
+  skipNextWeek?: boolean;
 }
 
 /** Fixed core: this and next week, so the "today & tomorrow" widget and the week view are alive. */
@@ -285,6 +287,7 @@ const BASE: Base[] = [
     end: '08:00',
     location: 'Westpark, Eingang Parkallee, 81373 München',
     recurrence: { freq: 'weekly', interval: 1 },
+    skipNextWeek: true,
   },
 ];
 
@@ -330,6 +333,7 @@ function toRow(ctx: SeedContext, key: number, b: Base): SeedRow {
   if (b.location) data.location = b.location;
   if (b.note) data.note = tr(ctx, b.note);
   if (b.recurrence) data.recurrence = b.recurrence;
+  if (b.recurrence && b.skipNextWeek) data.exdates = [ctx.day(b.day + 7)];
   return { id: ctx.id('calendar', 'event', key), data };
 }
 
