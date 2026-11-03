@@ -11,6 +11,7 @@ import {
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Button, Dialog, Icon, IconButton, TextField } from '@/ui';
+import { PlacesDialog } from './PlacesDialog';
 import styles from '../routes/weather.module.css';
 
 /**
@@ -22,6 +23,7 @@ export function PlaceChips({ index, places }: { index: number; places: string[] 
   const tp = tWeatherPage.use();
   const [settings] = useWeatherSettings();
   const [open, setOpen] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Place[] | undefined>();
   const [status, setStatus] = useState<'idle' | 'busy' | 'none' | 'down' | 'dup'>('idle');
@@ -87,7 +89,13 @@ export function PlaceChips({ index, places }: { index: number; places: string[] 
           <Icon name="plus" size={16} />
           {tp.addPlace}
         </Button>
+        {places.length > 1 ? (
+          <Button variant="ghost" onClick={() => setManaging(true)} data-testid="weather-manage">
+            {tp.managePlaces}
+          </Button>
+        ) : null}
       </nav>
+      <PlacesDialog open={managing} onClose={() => setManaging(false)} />
       <Dialog open={open} onClose={() => setOpen(false)} title={tp.addPlace} size="default">
         <form onSubmit={(e) => void search(e)}>
           <TextField

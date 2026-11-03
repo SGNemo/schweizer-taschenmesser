@@ -13,6 +13,7 @@ import { useUiStore } from '@/stores/ui';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon, TextField } from '@/ui';
 import { useCover } from '../useCover';
+import { useAddToPlaylist } from './AddToPlaylist';
 import { TrackList } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
 import { viewKey, type PlayerApi, type View } from './types';
@@ -90,15 +91,18 @@ function SongList({
 }) {
   const hearts = useHearts(api, items);
   const queue = useQueueAction(api);
+  const add = useAddToPlaylist(api);
   if (items.length === 0) return <p className={styles.note}>{empty}</p>;
   return (
     <>
       {hearts.note}
+      {add.dialog}
       <TrackList
         items={items}
         playingId={api.playingId}
         onPlay={(i) => void api.playFromList(i, items)}
         onQueue={queue}
+        onAddToPlaylist={add.onAdd}
         saved={hearts.saved}
         onToggleSave={hearts.onToggleSave}
       />
@@ -152,6 +156,7 @@ function ContentView({
   const items = list.state === 'ready' ? list.value.items : [];
   const hearts = useHearts(api, items);
   const queue = useQueueAction(api);
+  const add = useAddToPlaylist(api);
   const visible = items.filter((i) => !hiddenIds.has(i.id));
   const hiddenHere = items.length - visible.length;
 
@@ -215,6 +220,7 @@ function ContentView({
         ) : null}
       </ListHeader>
       {hearts.note}
+      {add.dialog}
       {value.total !== undefined && value.total > items.length ? (
         <p className={styles.note}>{tx.tracksShown(items.length, value.total)}</p>
       ) : null}
@@ -223,6 +229,7 @@ function ContentView({
         playingId={api.playingId}
         onPlay={playOne}
         onQueue={queue}
+        onAddToPlaylist={add.onAdd}
         saved={hearts.saved}
         onToggleSave={hearts.onToggleSave}
         hidden={view.type === 'playlist' ? hiddenIds : undefined}
@@ -253,6 +260,7 @@ function QueueView({ api }: { api: PlayerApi }) {
         <p className={styles.note}>{tx.nothingPlaying}</p>
       )}
       <h3 className={styles.sub}>{tx.queueNext}</h3>
+      <p className={styles.note}>{tx.queueNote}</p>
       {q.value.next.length === 0 ? (
         <p className={styles.note}>{tx.queueEmpty}</p>
       ) : (

@@ -54,6 +54,17 @@ describe('spotify connector', () => {
     expect(loginUrl(['show', 'control']).searchParams.get('scope')).not.toContain('playlist');
   });
 
+  it('"Playlists bearbeiten" is an opt-in feature of its own; no other feature asks for a modify scope', () => {
+    const f = connector.features.find((x) => x.id === 'playlistEdit')!;
+    expect(f.defaultOn).toBe(false);
+    expect(loginUrl(['playlistEdit']).searchParams.get('scope')).toBe(
+      'playlist-modify-private playlist-modify-public',
+    );
+    for (const other of connector.features.filter((x) => x.id !== 'playlistEdit'))
+      expect(other.scopes.join(' '), other.id).not.toContain('playlist-modify');
+    expect(connector.nowPlaying?.addToPlaylist).toBeTypeOf('function');
+  });
+
   it('offers the now-playing capability and no calendar or mail', () => {
     expect(connector.nowPlaying).toBeDefined();
     expect(connector.calendar).toBeUndefined();

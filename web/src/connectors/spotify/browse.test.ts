@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import {
+  addToPlaylist,
   addToQueue,
+  createPlaylist,
   devices,
   playFrom,
   queue,
   recent,
+  removeFromPlaylist,
+  renamePlaylist,
   save,
   saved,
   toTrack,
@@ -257,5 +261,56 @@ describe('saved songs', () => {
   it('a missing scope is "denied"', async () => {
     const { ctx } = ctxWith([json({ error: { status: 403 } }, 403)]);
     await expect(save(ctx, ['a1'], true)).rejects.toMatchObject({ code: 'denied' });
+  });
+});
+
+describe('playlist editing', () => {
+  it('creates a private playlist and returns it', async () => {
+    const { ctx, calls } = ctxWith([json({ id: 'pl123', name: 'Neu' }, 201)]);
+    const made = await createPlaylist(ctx, '  Neue Liste ');
+    expect(made).toEqual({ id: 'pl123', name: 'Neue Liste', trackCount: 0 });
+    expect(calls[0]).toMatchObject({
+      method: 'POST',
+      url: expect.stringContaining('/v1/me/playlists'),
+    });
+    expect(JSON.parse(calls[0]!.body!)).toEqual({ name: 'Neue Liste', public: false });
+    await expect(createPlaylist(ctx, '   ')).rejects.toBeInstanceOf(ConnectorError);
+  });
+
+  it('renames with one PUT and refuses a bad id', async () => {
+    const { ctx, calls } = ctxWith([noContent()]);
+    await renamePlaylist(ctx, 'pl123', 'Anders');
+    expect(calls[0]).toMatchObject({ method: 'PUT' });
+    expect(calls[0]!.url).toMatch(/\/v1\/playlists\/pl123$/);
+    await expect(renamePlaylist(ctx, 'not an id!', 'x')).rejects.toBeInstanceOf(ConnectorError);
+  });
+
+  it('adds songs through the newer /items path and sends track uris only', async () => {
+    const { ctx, calls } = ctxWith([json({ snapshot_id: 'x' }, 201)]);
+    await addToPlaylist(ctx, 'pl123', ['t1', 't2']);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toMatch(/\/playlists\/pl123\/items$/);
+    expect(JSON.parse(calls[0]!.body!)).toEqual({ uris: ['spotify:track:t1', 'spotify:track:t2'] });
+  });
+
+  it('falls back to the older /tracks path when the newer one is not found', async () => {
+    const { ctx, calls } = ctxWith([json({ error: {} }, 404), json({ snapshot_id: 'x' }, 201)]);
+    await addToPlaylist(ctx, 'pl123', ['t1']);
+    expect(calls.map((c) => c.url.split('/').slice(-1)[0])).toEqual(['items', 'tracks']);
+  });
+
+  it('removes songs the same way (items, then tracks with the older body)', async () => {
+    const { ctx, calls } = ctxWith([json({}, 400), json({ snapshot_id: 'x' })]);
+    await removeFromPlaylist(ctx, 'pl123', ['t1']);
+    expect(calls[0]).toMatchObject({ method: 'DELETE' });
+    expect(JSON.parse(calls[0]!.body!)).toEqual({ items: [{ uri: 'spotify:track:t1' }] });
+    expect(JSON.parse(calls[1]!.body!)).toEqual({ tracks: [{ uri: 'spotify:track:t1' }] });
+  });
+
+  it('never sends an id that is not a plain id', async () => {
+    const { ctx, calls } = ctxWith([]);
+    await expect(addToPlaylist(ctx, 'pl123', ['../x'])).rejects.toBeInstanceOf(ConnectorError);
+    await expect(addToPlaylist(ctx, 'a/b', ['t1'])).rejects.toBeInstanceOf(ConnectorError);
+    expect(calls).toHaveLength(0);
   });
 });

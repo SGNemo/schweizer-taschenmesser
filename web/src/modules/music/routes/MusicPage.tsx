@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { useSettings } from '@/core/settings/settings';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Card, EmptyState, Icon, PageTitle } from '@/ui';
@@ -9,6 +10,8 @@ import { SideLists } from '../components/SideLists';
 import { SourceView } from '../components/SourceView';
 import { StartView } from '../components/StartView';
 import { trackIdOf, type PlayerApi, type View } from '../components/types';
+import { useShortcuts } from '../useShortcuts';
+import { settings as moduleSettings, settingsSchema, type MusicPrefs } from '../settings';
 import { useNowPlaying } from '../useNowPlaying';
 import styles from './music.module.css';
 
@@ -28,6 +31,14 @@ export default function MusicPage() {
   const [version, setVersion] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
+  const [stored] = useSettings('module.music', settingsSchema, moduleSettings.defaults as never);
+  const prefs = stored ?? (moduleSettings.defaults as MusicPrefs);
+  useShortcuts(
+    np,
+    prefs.shortcuts,
+    () => setView({ type: 'search' }),
+    trackIdOf(np?.current?.trackUrl),
+  );
 
   if (!np) {
     return (
