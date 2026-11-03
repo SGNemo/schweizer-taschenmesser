@@ -9,17 +9,20 @@ import styles from './VaultDoor.module.css';
 function useMinutesToLock(active: boolean): number | undefined {
   const [min, setMin] = useState<number>();
   useEffect(() => {
-    if (!active) return setMin(undefined);
+    if (!active) return;
     const read = () => {
       const at = getAutoLockDeadline();
       setMin(at === undefined ? undefined : Math.max(0, Math.ceil((at - now()) / 60_000)));
     };
-    read();
+    const first = setTimeout(read, 0);
     // Every few seconds is enough: the page never counts down second by second.
     const timer = setInterval(read, 5000);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
   }, [active]);
-  return min;
+  return active ? min : undefined;
 }
 
 /**

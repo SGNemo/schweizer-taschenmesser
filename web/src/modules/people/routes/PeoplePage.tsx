@@ -138,7 +138,10 @@ function PeopleList({
     return map;
   }, [gifts]);
   const pending = useMemo(() => openGiftsWithPerson(gifts ?? [], people ?? []), [gifts, people]);
-  const soonest = sortByNext(people ?? [], day).find((p) => p.birthday);
+  const soonest = useMemo(
+    () => sortByNext(people ?? [], day).find((p) => p.birthday),
+    [people, day],
+  );
   const soonestDays = soonest?.birthday ? daysUntil(soonest.birthday, day) : 0;
   const q = fold(query.trim());
   const shown = useMemo(

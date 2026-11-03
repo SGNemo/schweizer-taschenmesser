@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { daysBetween, today } from '@/core/time/dates';
 import { fetchForecast, searchPlaces, type DayRow } from '@/core/weather/api';
@@ -39,8 +39,6 @@ type State =
  */
 export function TripWeather({ place, tripDate }: { place: string; tripDate: string }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
-  // Another list or trip: the old answer does not belong to it any more.
-  useEffect(() => setState({ kind: 'idle' }), [place, tripDate]);
   const w = tWeather.get();
   const h = t.lists.tripWeather;
 
