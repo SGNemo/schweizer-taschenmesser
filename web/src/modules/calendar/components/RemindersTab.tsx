@@ -29,6 +29,7 @@ import { isActive, isReminder, nextOccurrenceAt, reminderStatus } from '../remin
 import { eventRepo } from '../repo';
 import styles from '../routes/reminders.module.css';
 import { settings } from '../settings';
+import { BellRing } from './BellRing';
 import { EventEditor, type EventTarget } from './EventEditor';
 
 /** Pause or resume the notification; the reminder stays in the list (undoable). */
@@ -137,6 +138,15 @@ export function RemindersTab({
     [],
   );
   const groups = reminders ? groupReminders(reminders, now()) : [];
+  const finished = groups.find((g) => g.id === 'done')?.items ?? [];
+  const nowMs = now();
+  const upcoming = (reminders ?? [])
+    .filter((r) => reminderStatus(r, nowMs) === 'upcoming')
+    .map((r) => nextOccurrenceAt(r, nowMs)?.at)
+    .filter((at): at is number => at !== undefined);
+  const minutesUntilNext = upcoming.length
+    ? Math.max(0, Math.round((Math.min(...upcoming) - nowMs) / 60_000))
+    : null;
   const [prefs] = useSettings('module.calendar', settings.schema, settings.defaults);
   const [target, setTarget] = useState<EventTarget>(null);
   const defaultTime = (prefs as { defaultReminderTime?: string } | undefined)?.defaultReminderTime;
@@ -164,6 +174,8 @@ export function RemindersTab({
           {t.calendar.reminders.add}
         </Button>
       </div>
+
+      {reminders && reminders.length > 0 ? <BellRing minutesUntilNext={minutesUntilNext} /> : null}
 
       {permission !== 'granted' && permission !== 'unsupported' ? (
         <div className={styles.banner} role="note">
@@ -197,6 +209,22 @@ export function RemindersTab({
             ),
           }))}
         />
+      ) : null}
+
+      {finished.length > 0 ? (
+        <div className={styles.header}>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              void deleteWithUndo(
+                () => Promise.all(finished.map((r) => eventRepo.remove(r.id))),
+                t.calendar.reminders.clearedToast(finished.length),
+              )
+            }
+          >
+            {t.calendar.reminders.clearDone}
+          </Button>
+        </div>
       ) : null}
 
       <EventEditor target={openTarget} onClose={close} onDuplicated={setTarget} />

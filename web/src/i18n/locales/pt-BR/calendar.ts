@@ -132,6 +132,16 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'Pausado.',
     resumedToast: 'Reativado.',
     widgetEmpty: 'Nenhum lembrete pendente.',
+    ringNone: 'Nada nas próximas 24 horas.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'agora'
+        : minutes < 60
+          ? `em ${minutes} min`
+          : `em ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Próximo lembrete ${when}`,
+    clearDone: 'Remover os concluídos',
+    clearedToast: (n: number) => (n === 1 ? '1 lembrete removido.' : `${n} lembretes removidos.`),
   },
   notify: {
     label: 'Notificar',

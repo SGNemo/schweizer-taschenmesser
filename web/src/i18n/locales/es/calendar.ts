@@ -132,6 +132,17 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'En pausa.',
     resumedToast: 'Reactivado.',
     widgetEmpty: 'No hay recordatorios próximos.',
+    ringNone: 'Nada en las próximas 24 horas.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'ahora'
+        : minutes < 60
+          ? `en ${minutes} min`
+          : `en ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Próximo recordatorio ${when}`,
+    clearDone: 'Quitar los terminados',
+    clearedToast: (n: number) =>
+      n === 1 ? '1 recordatorio quitado.' : `${n} recordatorios quitados.`,
   },
   notify: {
     label: 'Notificar',

@@ -92,4 +92,20 @@ describe('RemindersTab', () => {
     const moved = (await eventRepo.active().toArray()).find((e) => e.title === 'Einmal')!;
     expect(moved).toMatchObject({ startDate: '2026-10-02', startTime: '11:00' });
   });
+
+  it('shows the ring text for the next reminder and says so when none is near', async () => {
+    await add('Abends', '2026-10-02');
+    draw();
+    expect(await screen.findByText('Nächste Erinnerung in 8 Std')).toBeVisible();
+  });
+
+  it('removes finished reminders in one step (and says how many)', async () => {
+    await add('Vorbei eins', '2026-09-01');
+    await add('Vorbei zwei', '2026-09-02');
+    await add('Kommt noch', '2026-10-05');
+    draw();
+    await userEvent.click(await screen.findByRole('button', { name: 'Erledigte entfernen' }));
+    await screen.findByText('Kommt noch');
+    expect((await eventRepo.active().toArray()).map((e) => e.title)).toEqual(['Kommt noch']);
+  });
 });
