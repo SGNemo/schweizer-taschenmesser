@@ -13,7 +13,13 @@ const manifest: ModuleManifest = {
     return t.budgets.meta.name;
   },
   icon: 'piggy',
-  identity: { hue: 'indigo', widgetType: 'progress' },
+  identity: {
+    hue: 'indigo',
+    widgetType: 'progress',
+    head: 'figure',
+    surface: 'gradient',
+    signature: 'envelope',
+  },
   version: 2,
   get description() {
     return t.budgets.meta.description;

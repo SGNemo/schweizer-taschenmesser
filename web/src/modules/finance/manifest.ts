@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.finance.meta.name;
   },
   icon: 'wallet',
-  identity: { hue: 'teal', widgetType: 'kpi' },
+  identity: {
+    hue: 'teal',
+    widgetType: 'kpi',
+    head: 'figure',
+    surface: 'gradient',
+    signature: 'bankCard',
+  },
   version: 3,
   get description() {
     return t.finance.meta.description;

@@ -17,7 +17,13 @@ const manifest: ModuleManifest = {
     return t.maps.meta.name;
   },
   icon: 'map',
-  identity: { hue: 'ocean', widgetType: 'tiles' },
+  identity: {
+    hue: 'ocean',
+    widgetType: 'tiles',
+    head: 'cover',
+    surface: 'gradient',
+    signature: 'pin',
+  },
   version: 1,
   get description() {
     return t.maps.meta.description;

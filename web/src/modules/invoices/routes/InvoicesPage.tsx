@@ -17,6 +17,7 @@ import {
   IconButton,
   ItemList,
   ItemRow,
+  PageTitle,
   Segmented,
   StateBadge,
   useMediaQuery,
@@ -128,7 +129,7 @@ export default function InvoicesPage() {
   return (
     <>
       <div className={styles.header}>
-        <h1>{t.invoices.title}</h1>
+        <PageTitle title={t.invoices.title} spacer />
         <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />

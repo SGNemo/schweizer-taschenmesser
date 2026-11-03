@@ -1,27 +1,41 @@
+/* Module head ("hero"), identity v2 (docs/design/MODULE-IDENTITY.md). Everything in it is text on the hue gradient: always
+   `--text` (AA on every hue, tokens.test.ts); the hue itself appears as the chip, the tab underline, the signature. */
 .frame {
+  --hero-radius: var(--shape-soft);
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'eyebrow actions'
-    'tabs tabs';
-  align-items: center;
-  gap: 0 var(--space-2);
-  margin-bottom: var(--space-3);
+    'title extra'
+    'tabs extra'
+    'figure extra';
+  align-items: start;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--hero-radius);
+  color: var(--text);
 }
-/* Module identity: a 4 px edge in the module's hue along the frame and its icon on a soft chip (A + edge, DECISIONS ui-shell). */
-.frame[data-hue] {
-  position: relative;
-  padding-left: var(--space-3);
+.frame[data-shape='round'] {
+  --hero-radius: var(--shape-round);
 }
-.frame[data-hue]::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  border-radius: var(--radius-full);
-  background: var(--module-color);
+.frame[data-shape='sharp'] {
+  --hero-radius: var(--shape-sharp);
+}
+.frame[data-surface='gradient'] {
+  background: var(--head-gradient);
+  box-shadow: var(--shadow-1);
+}
+.frame[data-surface='tint'] {
+  background: var(--head-flat);
+}
+.frame[data-surface='plain'] {
+  padding-inline: 0;
+  padding-top: 0;
+}
+.frame[data-head='figure'] {
+  padding-block: var(--space-5);
 }
 .chip {
   display: inline-grid;
@@ -30,23 +44,90 @@
   height: 1.75rem;
   margin-right: var(--space-2);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--module-color) 15%, transparent);
-  color: var(--module-color);
+  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
+  color: var(--text);
   vertical-align: middle;
 }
 .eyebrow {
   grid-area: eyebrow;
   display: flex;
   align-items: center;
-  margin: 0 0 var(--space-1);
+  margin: 0;
   font-size: var(--text-caps);
   font-weight: var(--weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text);
+}
+.title {
+  grid-area: title;
+  min-width: 0;
+}
+.title:empty,
+.extra:empty,
+.figure:empty,
+.notice:empty {
+  display: none;
+}
+.notice {
+  margin-bottom: var(--space-3);
+}
+/* Full-bleed layer behind the head's content (the sky); the head's own children sit above it. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.backdrop:empty {
+  display: none;
+}
+.frame > :not(.backdrop) {
+  position: relative;
+}
+/* A night sky is dark whatever the theme: the head's text switches to the light ink (tokens.css --sky-night-ink). */
+.frame:has([data-sky='night']) {
+  --text: var(--sky-night-ink);
+  color: var(--text);
+}
+.title h1 {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-h1);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.frame[data-type='thin'] .title h1 {
+  font-weight: 300;
+}
+.frame[data-type='mono'] .title h1 {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+.frame[data-type='serif'] .title h1 {
+  font-family: Georgia, 'Times New Roman', serif;
 }
 .tabs {
   grid-area: tabs;
+  min-width: 0;
+  /* Tabs sit on the tint: text in --text, the hue underlines the active one. */
+  --text-muted: var(--text);
+  --accent: var(--text);
+}
+.tabs [aria-current='page']::after {
+  background: var(--module-color);
+  height: 3px;
+}
+.figure {
+  grid-area: figure;
+  margin-top: var(--space-3);
+}
+.extra {
+  grid-area: extra;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   min-width: 0;
 }
 .actions {
@@ -55,30 +136,93 @@
   align-items: center;
   gap: var(--space-2);
 }
+/* Rows that only exist with a head that has something on the right: let a lone title use the full width. */
+.frame:not(:has(.extra:not(:empty))) {
+  grid-template-areas:
+    'eyebrow actions'
+    'title title'
+    'tabs tabs'
+    'figure figure';
+}
 
-/* Phone: label, tabs and actions share one line instead of two. The tabs scroll sideways (each
-   at least 44 px high); with a single module there is only the label. */
+/* Phone: label, tabs and actions share one line instead of two; the page's h1 follows. Scrolled: the whole head folds to one
+   line (name, one figure) and stays under the bar (core/shell/heroCollapse.ts). */
 @media (max-width: 899px) {
   .frame {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'eyebrow tabs actions';
+    grid-template-areas:
+      'eyebrow tabs actions'
+      'title title title'
+      'figure figure figure'
+      'extra extra extra';
+    align-items: center;
     gap: 0 var(--space-3);
-    margin-bottom: var(--space-2);
+    margin-inline: calc(-1 * var(--space-4));
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-radius: 0 0 var(--shape-round) var(--shape-round);
+    border-top: 3px solid var(--module-color);
+  }
+  .frame:not(:has(.extra:not(:empty))) {
+    grid-template-areas:
+      'eyebrow tabs actions'
+      'title title title'
+      'figure figure figure';
   }
   .eyebrow {
-    margin: 0;
     white-space: nowrap;
   }
-  /* No tabs: the label takes the room and pushes the actions to the right. */
   .frame:not([data-tabs]) {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'eyebrow actions';
-  }
-  /* One line only: the edge stays, the chip goes (the widget cards and the nav icon still show it). */
-  .frame[data-hue] {
-    padding-left: var(--space-2);
+    grid-template-areas:
+      'eyebrow actions'
+      'title title'
+      'figure figure'
+      'extra extra';
   }
   .chip {
     display: none;
+  }
+}
+/* Phone, scrolled: the head itself scrolls away like content (no height change, so the page never jumps); a one-line bar with the
+   module's chip and title fades in at the top instead (core/shell/heroCollapse.ts decides when). */
+.compact {
+  display: none;
+}
+@media (max-width: 899px) {
+  .compact {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: calc(var(--z-sticky) - 1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2.75rem;
+    padding: var(--space-1) var(--space-4);
+    padding-top: calc(var(--space-1) + env(safe-area-inset-top));
+    border-bottom: 3px solid var(--module-color);
+    background: var(--head-gradient);
+    color: var(--text);
+    font-weight: var(--weight-semibold);
+    opacity: 0;
+    transform: translateY(-100%);
+    pointer-events: none;
+    transition:
+      opacity var(--dur-fast) linear,
+      transform var(--dur-fast) var(--ease);
+  }
+  .compact[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+  }
+  .compactName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* The signature's own motion (Sky drift etc.) never runs with less motion; static art stays. */
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    scroll-behavior: auto;
   }
 }

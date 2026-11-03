@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v2 – Kalender</title>
+<link rel="stylesheet" href="identity.css">
+<style>
+body{--mod:var(--mod-sky);--mod2:var(--mod-sky-2)}
+.hero{padding-block:18px}
+.head{display:flex;align-items:center;gap:var(--s4)}
+html[data-v=B] .leaf{width:96px}html[data-v=B] .leaf .d{font-size:2.75rem}
+html[data-v=A] .leaf{width:56px;box-shadow:none;border:1px solid var(--border)}html[data-v=A] .leaf .d{font-size:1.5rem;padding:3px 0 2px}html[data-v=A] .leaf .w{display:none}
+.next{font-size:.9375rem;color:var(--text-2);margin-top:8px}.next b{color:var(--text)}
+.week{display:grid;grid-template-columns:3rem repeat(7,1fr);font-size:.8125rem;position:relative}
+.week .hd{padding:6px 8px;color:var(--text-2);border-bottom:1px solid var(--border);text-align:center}
+.week .hd b{display:block;font-size:1.125rem;color:var(--text)}
+.week .hd.today{color:var(--mod)}.week .hd.today b{color:var(--mod)}
+.week .h{color:var(--text-3);text-align:right;padding:0 8px 0 0;height:44px;font-variant-numeric:tabular-nums}
+.week .c{border-left:1px solid var(--border);border-bottom:1px solid var(--border);height:44px;position:relative}
+.week .c.today{background:color-mix(in srgb,var(--mod) 6%,transparent)}
+.ev{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:600;background:var(--accent-soft);color:var(--accent);border-left:3px solid var(--accent);z-index:1}
+.ev.ext{background:color-mix(in srgb,var(--info) 14%,transparent);color:var(--info);border-color:var(--info)}
+.ev.rem{background:var(--surface-2);color:var(--text-2);border-color:var(--border-strong)}
+.nowline{position:absolute;left:3rem;right:0;height:2px;background:var(--danger);z-index:2}
+.nowline::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--danger)}
+.ag .t{width:4.75rem;flex:none;font-size:.8125rem;color:var(--text-3);font-variant-numeric:tabular-nums}
+.ag .row{align-items:flex-start;padding:8px 0}
+.ag .dot{width:10px;height:10px;border-radius:3px;background:var(--accent);margin-top:6px}
+.ag .dot.rem{background:var(--border-strong)}
+html[data-device=mobile] .week{grid-template-columns:3rem repeat(3,1fr)}
+html[data-device=mobile] .week .hd:nth-child(n+5),html[data-device=mobile] .week .c:nth-child(8n+5),html[data-device=mobile] .week .c:nth-child(8n+6),html[data-device=mobile] .week .c:nth-child(8n+7),html[data-device=mobile] .week .c:nth-child(8n)
+{display:none}
+</style></head>
+<body data-active="calendar" data-area="planen">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame full">
+  <section class="hero">
+    <div class="collapsed"><span>Di., 29. Sep.</span><span class="meta">Nächster Termin 13:00 Friseur</span></div>
+    <div class="head">
+      <div class="leaf"><div class="m">Sep</div><div class="d">29</div><div class="w">Dienstag</div></div>
+      <div>
+        <p class="eyebrow"><span class="modchip" id="chip"></span>Planen</p>
+        <h1>Kalender</h1>
+        <div class="tabs"><b>Kalender</b><span>Erinnerungen</span></div>
+        <p class="next">KW 40 · 28. Sep. – 4. Okt. · <b>Nächster Termin in 3 Std: 13:00 Friseur</b> · heute 3 Einträge</p>
+      </div>
+    </div>
+    <div class="actions"><span class="btn ghost">Heute</span><span class="btn primary">+ Neuer Termin</span></div>
+  </section>
+  <div class="toolbar">
+    <span class="chip">‹</span><span class="chip on">28. Sep. – 4. Okt. 2026</span><span class="chip">›</span>
+    <div class="seg"><span>Monat</span><span class="on">Woche</span><span>Tag</span><span>Agenda</span></div>
+    <span class="spacer"></span>
+    <span class="chip">Geburtstage</span><span class="chip">Fälligkeiten</span><span class="chip">Mehr Felder</span>
+  </div>
+  <div class="body with-aside">
+    <div class="card" style="padding:var(--s4)"><div class="week" id="week"></div></div>
+    <aside class="aside">
+      <div class="card ag"><h3>Agenda · Dienstag, 29. September</h3>
+        <div class="row"><span class="t">ganztägig</span><span class="dot"></span><span class="grow">Anna Beispiel wird 29 <span class="sub">Geburtstag · Personen</span></span></div>
+        <div class="row"><span class="t">08:00</span><span class="dot rem"></span><span class="grow">Medikament nehmen <span class="sub">Erinnerung · täglich</span></span></div>
+        <div class="row"><span class="t">10:00</span><span class="dot"></span><span class="grow">Teammeeting <span class="sub">bis 11:00 · Arbeit</span></span></div>
+        <div class="row"><span class="t">13:00</span><span class="dot"></span><span class="grow">Friseur <span class="sub">bis 14:00 · in 3 Std</span></span></div>
+      </div>
+      <div class="card ag"><h3>Morgen</h3>
+        <div class="row"><span class="t">ganztägig</span><span class="dot rem"></span><span class="grow">Läuft bald ab: Frischkäse <span class="sub">Vorräte</span></span></div>
+        <div class="row"><span class="t">Do.</span><span class="dot rem"></span><span class="grow">Garantie endet: Cloud-Speicher 22 <span class="sub">Unterlagen</span></span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+</div>
+<script src="shell.js"></script>
+<script>
+document.getElementById('chip').innerHTML = ICONS.cal;
+const days=[['Mo.',28],['Di.',29],['Mi.',30],['Do.',1],['Fr.',2],['Sa.',3],['So.',4]];
+let h='<div class="hd"></div>'+days.map(([d,n],i)=>`<div class="hd${i===1?' today':''}">${d}<b>${n}</b></div>`).join('');
+for(let hr=7;hr<=20;hr++){h+=`<div class="h">${hr}:00</div>`;for(let d=0;d<7;d++){let ev='';
+ if(d===1&&hr===10)ev='<div class="ev" style="top:2px;height:40px">Teammeeting</div>';
+ if(d===1&&hr===13)ev='<div class="ev" style="top:2px;height:40px">Friseur</div>';
+ if(d===1&&hr===8)ev='<div class="ev rem" style="top:2px;height:20px">Medikament</div>';
+ if(d===3&&hr===9)ev='<div class="ev ext" style="top:2px;height:84px">Arzttermin (extern)</div>';
+ if(d===4&&hr===18)ev='<div class="ev" style="top:2px;height:62px">Kino</div>';
+ if(d===0&&hr===14)ev='<div class="ev" style="top:2px;height:40px">Werkstatt</div>';
+ h+=`<div class="c${d===1?' today':''}">${ev}</div>`;}}
+h+=`<div class="nowline" style="top:${34+ (10-7)*44 + 0}px"></div>`;
+document.getElementById('week').innerHTML=h;
+</script>
+</body></html>

@@ -4,6 +4,12 @@ import {
   ALL_WIDGET_SIZES,
   AREAS,
   MODULE_HUES,
+  HEAD_STYLES,
+  HEAD_SURFACES,
+  SIGNATURES,
+  TYPE_ACCENTS,
+  CARD_SHAPES,
+  FEEDBACKS,
   PAGE_LAYOUTS,
   WIDGET_TYPES,
   type ModuleManifest,
@@ -91,12 +97,32 @@ export function validateManifest(m: ModuleManifest): string[] {
   else if (!m.area || !AREAS.includes(m.area))
     errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
-  if (!m.identity) errors.push('identity is required ({ hue, widgetType })');
+  if (!m.identity)
+    errors.push('identity is required ({ hue, widgetType, head, surface, signature })');
   else {
     if (!MODULE_HUES.includes(m.identity.hue))
       errors.push(`identity.hue "${String(m.identity.hue)}" is not in the module palette`);
     if (!WIDGET_TYPES.includes(m.identity.widgetType))
       errors.push(`identity.widgetType "${String(m.identity.widgetType)}" is not a catalogue type`);
+    const id = m.identity;
+    if (id.hue2 !== undefined && !MODULE_HUES.includes(id.hue2))
+      errors.push(`identity.hue2 "${String(id.hue2)}" is not in the module palette`);
+    if (!HEAD_STYLES.includes(id.head))
+      errors.push(`identity.head "${String(id.head)}" must be one of ${HEAD_STYLES.join(', ')}`);
+    if (!HEAD_SURFACES.includes(id.surface))
+      errors.push(
+        `identity.surface "${String(id.surface)}" must be one of ${HEAD_SURFACES.join(', ')}`,
+      );
+    if (!SIGNATURES.includes(id.signature))
+      errors.push(`identity.signature "${String(id.signature)}" is not a known signature`);
+    if (id.type !== undefined && !TYPE_ACCENTS.includes(id.type))
+      errors.push(`identity.type "${String(id.type)}" must be one of ${TYPE_ACCENTS.join(', ')}`);
+    if (id.shape !== undefined && !CARD_SHAPES.includes(id.shape))
+      errors.push(`identity.shape "${String(id.shape)}" must be one of ${CARD_SHAPES.join(', ')}`);
+    if (id.feedback !== undefined && !FEEDBACKS.includes(id.feedback))
+      errors.push(
+        `identity.feedback "${String(id.feedback)}" must be one of ${FEEDBACKS.join(', ')}`,
+      );
   }
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))

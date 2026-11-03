@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -126,86 +126,103 @@ async function choosePlace(page: Page) {
   await expect(page.getByTestId('weather-place')).toHaveText('Bern, Schweiz');
 }
 
-test.describe('Weather line', () => {
-  test('without a place nothing is shown and nothing is requested', async ({ page }) => {
+test.describe('Weather module', () => {
+  test.beforeEach(async ({ page }) => {
+    await showAllWidgets(page);
+  });
+
+  test('without a place the widget offers one calm step and nothing is requested', async ({
+    page,
+  }) => {
     const seen = await mockWeather(page);
     await ready(page, '/');
-    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
-    await expect(page.getByTestId('weather-line')).toHaveCount(0);
+    const widget = page.getByTestId('widget-weather:today');
+    await expect(widget).toBeVisible();
+    await expect(widget).toContainText('Noch kein Ort gewählt.');
+    await expect(widget.getByRole('link', { name: 'Ort wählen' })).toHaveAttribute(
+      'href',
+      '/weather',
+    );
     expect(seen).toEqual([]);
   });
 
-  test('choose a place once: the Overview shows one calm line with the rain hint', async ({
+  test('choose a place once: the widget shows only today and the rain hint; the module page has the rest', async ({
     page,
   }) => {
     const seen = await mockWeather(page);
     await choosePlace(page);
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toHaveText(
-      'Bern · 14° leicht bewölkt · ab 15 Uhr Regen',
-    );
+    const widget = page.getByTestId('widget-weather:today');
+    await expect(widget).toContainText('Bern');
+    await expect(widget).toContainText('14°');
+    await expect(widget).toContainText('leicht bewölkt');
+    await expect(widget).toContainText('ab 15 Uhr Regen');
+    await expect(widget.getByTestId('weather-hours')).toHaveCount(0);
     // Only the typed name (search) and the rounded position (forecast) went out.
     const forecast = seen.find((u) => u.includes('api.open-meteo.com/v1/forecast'))!;
     expect(forecast).toContain('latitude=46.95');
     expect(forecast).toContain('longitude=7.45');
     expect(seen.find((u) => u.includes('geocoding'))).toContain('name=Bern');
+    // The title opens the module as a page, not a dialog.
+    await widget.getByRole('link', { name: /Wetter heute/ }).click();
+    await expect(page).toHaveURL(/\/weather$/);
+    await expect(page.getByTestId('module-frame')).toHaveAttribute('data-hue', 'indigo');
+    await expect(page.locator('main h1')).toHaveText('Bern');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
-  test('the switch and "Ort entfernen" take the line away again', async ({ page }) => {
+  test('"Wetter auf der Übersicht" off and "Ort entfernen" take the widget\'s values away again', async ({
+    page,
+  }) => {
     await mockWeather(page);
     await choosePlace(page);
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toBeVisible();
+    await expect(page.getByTestId('widget-weather:today')).toContainText('14°');
 
     await ready(page, '/settings/verbindungen');
     await page.getByRole('switch', { name: 'Wetter auf der Übersicht' }).click();
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toHaveCount(0);
+    await expect(page.getByTestId('widget-weather:today')).not.toContainText('14°');
 
     await ready(page, '/settings/verbindungen');
     await page.getByRole('switch', { name: 'Wetter auf der Übersicht' }).click();
     await page.getByRole('button', { name: 'Ort entfernen' }).click();
     await expect(page.getByTestId('weather-place')).toHaveText('Noch kein Ort gewählt.');
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toHaveCount(0);
+    await expect(page.getByTestId('widget-weather:today')).toContainText('Noch kein Ort gewählt.');
   });
 
-  test('without a place: one quiet hint, "Später nicht mehr" ends it', async ({ page }) => {
+  test('the page without a place: one calm next step to the settings', async ({ page }) => {
     const seen = await mockWeather(page);
-    await ready(page, '/');
-    await expect(page.getByTestId('weather-hint')).toContainText('Wetter: Stadt wählen');
-    await page.getByRole('button', { name: 'Später nicht mehr' }).click();
-    await expect(page.getByTestId('weather-hint')).toHaveCount(0);
-    await ready(page, '/');
-    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
-    await expect(page.getByTestId('weather-hint')).toHaveCount(0);
+    await ready(page, '/weather');
+    const empty = page.getByTestId('weather-empty');
+    await expect(empty).toContainText('Wähle deinen Ort');
+    await empty.getByRole('link').click();
+    await expect(page).toHaveURL(/\/settings\/verbindungen/);
     expect(seen).toEqual([]);
   });
 
-  test('the line opens a preview: 24 hours and 7 days; Escape and Back close it', async ({
+  test('the page: head with sky and the three facts, 24 hour cards, 7 days, air in the aside', async ({
     page,
     isMobile,
   }) => {
     await mockWeather(page);
     await choosePlace(page);
-    await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toBeVisible();
-    await page.getByTestId('weather-line').click();
+    await ready(page, '/weather');
+    const frame = page.getByTestId('module-frame');
+    await expect(frame.getByTestId('sky')).toBeAttached();
+    await expect(frame.getByTestId('weather-now')).toContainText('fühlt sich an wie 12°');
+    await expect(frame.getByTestId('weather-now')).toContainText('Regen ab 15 Uhr');
+    await expect(frame.getByTestId('weather-now')).toContainText('Wind 14 km/h');
     const preview = page.getByTestId('weather-preview');
-    await expect(preview).toBeVisible();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(8);
-    await preview.getByTestId('weather-hours-toggle').click();
     await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(24);
     await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);
     await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('10:00');
-    await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText(
-      'Regen 80 %',
-    );
+    await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText('80 %');
     await expect(preview.getByTestId('weather-days').locator('li').nth(3)).toContainText(
       'Gewitter',
     );
-    await expect(preview.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
+    await expect(page.getByTestId('weather-preview-credit')).toContainText('Open-Meteo.com');
     await expect(preview.getByTestId('weather-chart')).toBeVisible();
     // Airways and allergy: air index with its word, pollen strongest first, always with words.
     await expect(preview.getByTestId('weather-aqi')).toContainText('mäßig');
@@ -216,33 +233,38 @@ test.describe('Weather line', () => {
     await expect(preview.getByTestId('weather-days').locator('li').nth(1)).toContainText(
       'Pollen: Birke',
     );
-    await expect(preview.getByTestId('weather-now')).toContainText('gefühlt 12°');
-    await expect(preview.getByTestId('weather-now')).toContainText('Wind 14 km/h');
-    // Colour never stands alone: every row names its rating.
-    await expect(preview.locator('[data-rating]').first()).toHaveText(/Gut|Geht so|Ungemütlich/);
-    await expect(preview.getByTestId('weather-hours').locator('li').nth(5)).toContainText(
-      'Ungemütlich',
+    // Colour never stands alone: every day names its rating.
+    await expect(preview.getByTestId('weather-days').locator('[data-rating]').first()).toHaveText(
+      /Gut|Geht so|Ungemütlich/,
     );
     // The chart fits the window width on a phone too.
     const box = await preview.getByTestId('weather-chart').boundingBox();
     expect(box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     if (isMobile) expect(box!.width).toBeGreaterThan(250);
-    await page.keyboard.press('Escape');
-    await expect(preview).toHaveCount(0);
-
-    await page.getByTestId('weather-line').click();
-    await expect(page.getByTestId('weather-preview')).toBeVisible();
-    await page.goBack();
-    await expect(page.getByTestId('weather-preview')).toHaveCount(0);
-    await expect(page).toHaveURL(/\/$/);
+    // Gusts of 70 km/h on Friday: a hint above the head, with what it is based on.
+    await expect(page.getByTestId('weather-warning')).toContainText('Sturmböen bis 70 km/h');
+    await expect(page.getByTestId('weather-warning')).toContainText('keine amtliche Warnung');
   });
 
-  test('the preview links on to the weather settings', async ({ page }) => {
+  test('a second place: the chip shows its own forecast and can be removed again', async ({
+    page,
+  }) => {
     await mockWeather(page);
     await choosePlace(page);
-    await ready(page, '/');
-    await page.getByTestId('weather-line').click();
-    await page.getByTestId('weather-preview').getByRole('link', { name: 'Einstellungen' }).click();
+    await ready(page, '/weather');
+    await page.getByTestId('weather-add-place').click();
+    await page.getByLabel('Ort suchen').fill('Bern');
+    await page.getByRole('dialog').getByRole('button', { name: 'Suchen', exact: true }).click();
+    await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
+    // The mocked search offers only Bern, which is the main place: nothing is added twice.
+    await expect(page.getByText('Dieser Ort ist schon dabei.')).toBeVisible();
+  });
+
+  test('the page links on to the weather settings', async ({ page }) => {
+    await mockWeather(page);
+    await choosePlace(page);
+    await ready(page, '/weather');
+    await page.getByRole('main').getByRole('link', { name: 'Einstellungen' }).click();
     await expect(page).toHaveURL(/\/settings\/verbindungen/);
     await expect(page.getByTestId('weather-place')).toBeVisible();
   });
@@ -253,19 +275,18 @@ test.describe('Weather line', () => {
     await mockWeather(page);
     await choosePlace(page);
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toContainText('ab 15 Uhr Regen');
+    await expect(page.getByTestId('widget-weather:today')).toContainText('ab 15 Uhr Regen');
     // An hour later the forecast cannot be reached any more.
     await page.clock.setFixedTime(new Date('2026-09-29T11:00:00'));
     await page.route('**://api.open-meteo.com/**', (route) => route.abort());
     await ready(page, '/');
-    await expect(page.getByTestId('weather-line')).toHaveText(
-      'Bern · 14° leicht bewölkt · Stand 10:00',
-    );
-    // The last preview stays, marked with its time; the hours start at the place's current hour.
-    await page.getByTestId('weather-line').click();
-    const preview = page.getByTestId('weather-preview');
-    await expect(preview).toContainText('Stand 10:00');
-    await expect(preview.getByTestId('weather-hours').locator('li').first()).toContainText('11:00');
+    const widget = page.getByTestId('widget-weather:today');
+    await expect(widget).toContainText('Stand 10:00');
+    await expect(widget).not.toContainText('ab 15 Uhr Regen');
+    // The last forecast stays on the page, marked with its time; the hours start at the place's current hour.
+    await ready(page, '/weather');
+    await expect(page.getByTestId('weather-now')).toContainText('Stand 10:00');
+    await expect(page.getByTestId('weather-hours').locator('li').first()).toContainText('11:00');
   });
 
   test('an unreachable service leaves no error on the Overview', async ({ page }) => {
@@ -275,7 +296,7 @@ test.describe('Weather line', () => {
     await page.route('**://api.open-meteo.com/**', (route) => route.abort());
     await ready(page, '/');
     await expect(page.getByTestId('widget-todos:next')).toBeVisible();
-    await expect(page.getByTestId('weather-line')).toHaveCount(0);
+    await expect(page.getByTestId('widget-weather:today')).not.toContainText('°');
     await expect(page.getByText('nicht erreichbar')).toHaveCount(0);
   });
 

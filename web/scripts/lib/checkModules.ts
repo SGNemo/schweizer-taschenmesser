@@ -25,6 +25,35 @@ export const HUES = [
   'slate',
   'navy',
 ];
+export const HEAD_STYLES = ['figure', 'cover', 'compact'];
+export const HEAD_SURFACES = ['gradient', 'tint', 'plain'];
+export const TYPE_ACCENTS = ['sans', 'thin', 'mono', 'serif'];
+export const CARD_SHAPES = ['soft', 'round', 'sharp'];
+export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'];
+export const SIGNATURES = [
+  'sky',
+  'coverTone',
+  'bankCard',
+  'ring',
+  'calendarLeaf',
+  'todayCard',
+  'receipt',
+  'cycle',
+  'envelope',
+  'shelf',
+  'avatarRing',
+  'pin',
+  'pinboard',
+  'notePaper',
+  'bubble',
+  'addressBar',
+  'stamp',
+  'folderTab',
+  'vaultDoor',
+  'gauges',
+  'arrowProgress',
+  'none',
+];
 export const WIDGET_TYPES = [
   'kpi',
   'dueList',
@@ -101,7 +130,8 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
 
   // Identity: `identity: { hue, widgetType }` from the fixed lists (docs/decisions/ui-shell.md).
   const identity = /\bidentity:\s*\{([^}]*)\}/.exec(manifest)?.[1];
-  if (identity === undefined) fail('manifest has no `identity: { hue, widgetType }`');
+  if (identity === undefined)
+    fail('manifest has no `identity: { hue, widgetType, head, surface, signature }`');
   else {
     const hue = /\bhue:\s*['"]([a-z]+)['"]/.exec(identity)?.[1];
     const type = /\bwidgetType:\s*['"]([a-zA-Z]+)['"]/.exec(identity)?.[1];
@@ -109,6 +139,31 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
       fail(`identity.hue "${hue ?? ''}" is not in the module palette`);
     if (!type || !WIDGET_TYPES.includes(type))
       fail(`identity.widgetType "${type ?? ''}" is not a catalogue type`);
+    const pick = (key: string) =>
+      new RegExp(`\\b${key}:\\s*['"]([a-zA-Z0-9]+)['"]`).exec(identity)?.[1];
+    const hue2 = pick('hue2');
+    if (hue2 !== undefined && !HUES.includes(hue2))
+      fail(`identity.hue2 "${hue2}" is not in the module palette`);
+    const required: [string, string[]][] = [
+      ['head', HEAD_STYLES],
+      ['surface', HEAD_SURFACES],
+      ['signature', SIGNATURES],
+    ];
+    for (const [key, list] of required) {
+      const v = pick(key);
+      if (!v || !list.includes(v))
+        fail(`identity.${key} "${v ?? ''}" must be one of ${list.join(', ')}`);
+    }
+    const optional: [string, string[]][] = [
+      ['type', TYPE_ACCENTS],
+      ['shape', CARD_SHAPES],
+      ['feedback', FEEDBACKS],
+    ];
+    for (const [key, list] of optional) {
+      const v = pick(key);
+      if (v !== undefined && !list.includes(v))
+        fail(`identity.${key} "${v}" must be one of ${list.join(', ')}`);
+    }
   }
 
   const platforms = /\bplatforms:\s*\[([^\]]*)\]/.exec(manifest)?.[1];

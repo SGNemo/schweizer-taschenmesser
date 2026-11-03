@@ -101,15 +101,67 @@ export const WIDGET_TYPES = [
 ] as const;
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 
+/** Head style of the module frame's hero (identity v2, `docs/design/MODULE-IDENTITY.md`). */
+export const HEAD_STYLES = ['figure', 'cover', 'compact'] as const;
+export type HeadStyle = (typeof HEAD_STYLES)[number];
+/** Treatment behind the hero (never behind body text): gradient in the hue, flat tint, or none. */
+export const HEAD_SURFACES = ['gradient', 'tint', 'plain'] as const;
+export type HeadSurface = (typeof HEAD_SURFACES)[number];
+/** The one thing a module is recognised by. Components live in `@/ui/identity`; ids without one render nothing yet. */
+export const SIGNATURES = [
+  'sky',
+  'coverTone',
+  'bankCard',
+  'ring',
+  'calendarLeaf',
+  'todayCard',
+  'receipt',
+  'cycle',
+  'envelope',
+  'shelf',
+  'avatarRing',
+  'pin',
+  'pinboard',
+  'notePaper',
+  'bubble',
+  'addressBar',
+  'stamp',
+  'folderTab',
+  'vaultDoor',
+  'gauges',
+  'arrowProgress',
+  'none',
+] as const;
+export type SignatureId = (typeof SIGNATURES)[number];
+export const TYPE_ACCENTS = ['sans', 'thin', 'mono', 'serif'] as const;
+export type TypeAccent = (typeof TYPE_ACCENTS)[number];
+export const CARD_SHAPES = ['soft', 'round', 'sharp'] as const;
+export type CardShape = (typeof CARD_SHAPES)[number];
+export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'] as const;
+export type FeedbackMotion = (typeof FEEDBACKS)[number];
+
 /**
- * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity"): its hue from the
- * palette (icon chip in widget heads, edge of widget cards and the module header, active
- * navigation icon, chart series) and the catalogue type its main widget is built from. The icon is
- * `ModuleManifest.icon`. Required: `validateManifest` and `npm run check:modules` enforce it.
+ * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity", v2): its hue from
+ * the palette (icon chip, edge, module head tint, active navigation, chart series), the catalogue
+ * type its main widget is built from, and the look of its head: style, background treatment and
+ * signature. The icon is `ModuleManifest.icon`. Required fields: `validateManifest` and
+ * `npm run check:modules` enforce them. The "Ruhig" colour mode and "Modulfarben: Aus" turn every
+ * hue grey; shape and signature stay.
  */
 export interface ModuleIdentity {
   hue: ModuleHue;
+  /** Second hue of the head gradient and of the second chart series; default: derived from `hue`. */
+  hue2?: ModuleHue;
   widgetType: WidgetType;
+  head: HeadStyle;
+  surface: HeadSurface;
+  signature: SignatureId;
+  /** Typography accent for the head's figures and title only (`thin` numerals, `mono` times, `serif` titles). */
+  type?: TypeAccent;
+  /** Corner radius of the module's cards: `soft` 16 px (default), `round` 20 px, `sharp` 10 px. */
+  shape?: CardShape;
+  /** Short accent after a confirmed action (≤ 250 ms, transform/opacity, off with reduced motion). */
+  feedback?: FeedbackMotion;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';

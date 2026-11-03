@@ -51,6 +51,8 @@ const connector: ConnectorDef = {
   platforms: ['desktop', 'web'],
   // Desktop OAuth, Premium-only controls and open hand tests (docs/product/next/03-maturity-proposal.md).
   maturity: 'preview',
+  // The music module (page, widget) belongs to this connector: it is switched on once when Spotify is connected.
+  enablesModule: 'music',
   get unavailableHint() {
     return s().browserHint;
   },

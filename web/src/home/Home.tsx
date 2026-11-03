@@ -54,10 +54,6 @@ import { AgendaBlock } from './AgendaBlock';
 import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
 import { ResumeCard } from './ResumeCard';
-import { NowPlayingLine } from './NowPlayingLine';
-import { useNowPlayingAvailable } from './useNowPlaying';
-import { tSpotify } from '@/strings.spotify';
-import { WeatherLine } from './WeatherLine';
 
 import styles from './Home.module.css';
 import {
@@ -113,8 +109,6 @@ const allEntries = (): Entry[] =>
 
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 const ATTENTION_KEY = 'core:attention';
-/** Key of the "Läuft gerade" widget in the layout's hidden list (shown by default once Spotify is connected). */
-export const NOWPLAYING_KEY = 'core:nowplaying';
 /** Key of the "Heute · Morgen · diese Woche" block in the layout's hidden list. */
 const AGENDA_KEY = 'core:agenda';
 
@@ -127,8 +121,6 @@ const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: 
 export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const scope = cockpit ? COCKPIT_SCOPE : HOME_SCOPE;
   const states = useModuleStates();
-  const nowPlayingAvailable = useNowPlayingAvailable();
-  const tSp = tSpotify.use();
   const tx = tCockpit.use();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -267,8 +259,6 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
       {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
       {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
-      {!editing && !cockpit ? <WeatherLine /> : null}
-      {!editing && !layout.hidden.includes(NOWPLAYING_KEY) ? <NowPlayingLine /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         <EmptyState title={t.home.emptyTitle}>
@@ -378,18 +368,6 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
               }
             />
           </li>
-          {nowPlayingAvailable ? (
-            <li>
-              <Switch
-                label={tSp.widgetSwitch}
-                hint={tSp.widgetHint}
-                checked={!layout.hidden.includes(NOWPLAYING_KEY)}
-                onChange={() =>
-                  void updateLayout({ hidden: toggleHidden(layout, NOWPLAYING_KEY) }, scope)
-                }
-              />
-            </li>
-          ) : null}
           {ordered.map((e) => (
             <li key={e.key}>
               <Switch

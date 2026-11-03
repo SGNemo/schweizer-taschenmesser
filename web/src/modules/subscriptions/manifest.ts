@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.subscriptions.meta.name;
   },
   icon: 'repeat',
-  identity: { hue: 'navy', widgetType: 'dueList' },
+  identity: {
+    hue: 'navy',
+    widgetType: 'dueList',
+    head: 'figure',
+    surface: 'gradient',
+    signature: 'cycle',
+  },
   version: 3,
   get description() {
     return t.subscriptions.meta.description;

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v2 – Finanzen</title>
+<link rel="stylesheet" href="identity.css">
+<style>
+body{--mod:var(--mod-teal);--mod2:var(--mod-teal-2)}
+.cards{display:flex;gap:var(--s4);align-items:flex-start}
+html[data-v=A] .bankcard{width:150px;padding:10px 12px;border-radius:var(--r-md)}
+html[data-v=A] .bankcard .bal{font-size:.9375rem}html[data-v=A] .bankcard .bank{font-size:.5625rem}html[data-v=A] .bankcard .foot{font-size:.625rem}html[data-v=A] .bankcard::after{width:20px;height:15px;top:26px;left:12px}
+html[data-v=C] .bankcard{width:240px}
+html[data-v=C] .bankcard .bal{font-size:1.375rem}
+html[data-v=C] .cards .bankcard:nth-child(2){display:none}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4)}
+.kpis .card{padding:var(--s4) var(--s5)}
+.kpis .n{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpis .n.in{color:var(--success)}
+.kpis .d{font-size:.8125rem;color:var(--text-3);margin-top:2px}
+.kpis .pill{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:var(--r-full);font-size:.75rem;background:color-mix(in srgb,var(--success) 14%,transparent);color:var(--success);font-weight:600}
+.area svg{width:100%;height:220px;display:block}
+.cats{display:grid;grid-template-columns:auto 1fr;gap:var(--s5);align-items:center}
+.cats .ring{--c1:var(--mod);--c2:color-mix(in srgb,var(--mod) 65%,var(--surface));--c3:color-mix(in srgb,var(--mod) 40%,var(--surface));--c4:color-mix(in srgb,var(--mod) 22%,var(--surface));position:relative}
+.cats .leg{display:flex;flex-direction:column;gap:6px;font-size:.875rem}
+.cats .leg div{display:flex;align-items:center;gap:8px}
+.cats .leg i{width:10px;height:10px;border-radius:3px}
+.cats .leg b{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:600}
+.cats .leg span{color:var(--text-3)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:var(--s5)}
+.tx .row .amt{font-variant-numeric:tabular-nums}
+.tx .day{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);padding:10px 0 2px}
+html[data-device=mobile] .cards{flex-direction:column}
+html[data-device=mobile] .kpis{grid-template-columns:1fr 1fr}
+html[data-device=mobile] .grid2{grid-template-columns:1fr}
+html[data-device=mobile] .bankcard{width:100%}
+html[data-device=mobile] .cards .bankcard:nth-child(2){display:none}
+</style></head>
+<body data-active="finance" data-area="geld">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame wide">
+  <section class="hero">
+    <div class="collapsed"><span>Finanzen</span><span class="num">12.410,93 €</span><span class="meta">Girokonto</span></div>
+    <div>
+      <p class="eyebrow"><span class="modchip" id="chip"></span>Geld</p>
+      <h1>Finanzen</h1>
+      <div class="tabs"><b>Übersicht</b><span>Buchungen</span><span>Konten</span></div>
+      <div class="figblock">
+        <div><p class="caps">Verfügbar · alle Konten</p><div class="fig">20.610<small>,93 €</small></div></div>
+        <div class="kv">September<b style="color:var(--success)">+1.249,29 €</b></div>
+        <div class="kv">Offene Rechnungen<b>1.067,84 €</b></div>
+        <div class="kv">Nächste Abbuchung<b>Fr. · Streaming Plus · 12,99 €</b></div>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="cards">
+        <div class="bankcard"><div class="bank">Girokonto · Beispielbank</div><div><div class="bal num">12.410,93 €</div><div class="foot"><span>verfügbar 11.204,10 €</span><span>···· 4021</span></div></div></div>
+        <div class="bankcard" style="--mod:var(--mod-ocean);--mod2:var(--mod-teal-2)"><div class="bank">Sparkonto</div><div><div class="bal num">8.200,00 €</div><div class="foot"><span>Ziel 10.000 €</span><span>···· 7731</span></div></div></div>
+      </div>
+    </div>
+  </section>
+  <div class="toolbar">
+    <span class="chip">‹</span><span class="chip on">September 2026</span><span class="chip">›</span>
+    <div class="seg"><span class="on">Monat</span><span>Quartal</span><span>Jahr</span></div>
+    <span class="spacer"></span>
+    <span class="chip">Mehr Felder</span>
+    <span class="btn primary">+ Buchung</span>
+  </div>
+  <div class="body with-aside">
+    <div style="display:flex;flex-direction:column;gap:var(--s5);min-width:0">
+      <div class="kpis">
+        <div class="card"><h3>Einnahmen</h3><div class="n in">2.863,12 €</div><div class="d">4 Buchungen<span class="pill">+3 %</span></div></div>
+        <div class="card"><h3>Ausgaben</h3><div class="n">1.613,83 €</div><div class="d">31 Buchungen · wie im August</div></div>
+        <div class="card"><h3>Ergebnis</h3><div class="n">1.249,29 €</div><div class="d">Sparquote 44 %</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card area"><h3>Monatsverlauf · Kontostand</h3><svg viewBox="0 0 800 220" preserveAspectRatio="none" id="area"></svg></div>
+        <div class="card cats"><div class="ring"><span>31</span></div>
+          <div class="leg">
+            <div><i style="background:var(--mod)"></i>Lebensmittel<span>12</span><b>412,30 €</b></div>
+            <div><i style="background:color-mix(in srgb,var(--mod) 65%,var(--surface))"></i>Wohnen<span>3</span><b>345,36 €</b></div>
+            <div><i style="background:color-mix(in srgb,var(--mod) 40%,var(--surface))"></i>Mobilität<span>5</span><b>251,10 €</b></div>
+            <div><i style="background:color-mix(in srgb,var(--mod) 22%,var(--surface))"></i>Freizeit<span>7</span><b>115,11 €</b></div>
+            <div><i style="background:var(--surface-2)"></i>Sonstiges<span>4</span><b>89,96 €</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="aside">
+      <div class="card tx"><h3>Letzte Buchungen</h3>
+        <div class="day">Dienstag, 29. September</div>
+        <div class="row"><span class="catic">🥐</span><span class="grow">Bäckerei Sonnenschein <span class="sub">Lebensmittel · Girokonto</span></span><span class="amt minus">−18,40 €</span></div>
+        <div class="day">Montag, 28. September</div>
+        <div class="row"><span class="catic">☕</span><span class="grow">Café Morgenrot <span class="sub">Freizeit</span></span><span class="amt minus">−12,50 €</span></div>
+        <div class="row"><span class="catic">⛽</span><span class="grow">Tankstelle Nordring <span class="sub">Mobilität</span></span><span class="amt minus">−61,20 €</span></div>
+        <div class="day">Freitag, 25. September</div>
+        <div class="row"><span class="catic">💼</span><span class="grow">Gehalt Beispiel GmbH <span class="sub">Einkommen</span></span><span class="amt plus">+2.650,00 €</span></div>
+        <div class="day">Donnerstag, 24. September</div>
+        <div class="row"><span class="catic">🏠</span><span class="grow">Internet &amp; Telefon <span class="sub">Wohnen · Abo</span></span><span class="amt minus">−34,36 €</span></div>
+        <div class="row"><span class="catic">🛒</span><span class="grow">Supermarkt Mühlenfeld <span class="sub">Lebensmittel</span></span><span class="amt minus">−56,93 €</span></div>
+        <div class="day">Freitag, 18. September</div>
+        <div class="row"><span class="catic">🔧</span><span class="grow">Werkstatt Radlager <span class="sub">Mobilität</span></span><span class="amt minus">−189,90 €</span></div>
+        <p class="meta" style="margin-top:12px"><a style="color:var(--mod);font-weight:600">Alle Buchungen</a></p>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+</div>
+<script src="shell.js"></script>
+<script>
+document.getElementById('chip').innerHTML = ICONS.wallet;
+const v=[11200,11150,11100,11080,10900,10850,10800,10780,10700,10650,10600,10550,10500,10480,10400,10350,10300,10250,10200,10150,10100,10050,10000,9950,12600,12550,12500,12480,12410];
+const W=800,H=220,x=i=>i/(v.length-1)*W,y=n=>H-30-(n-9500)/3500*(H-60);
+const pts=v.map((n,i)=>`${x(i)} ${y(n)}`).join(' L ');
+document.getElementById('area').innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--mod)" stop-opacity=".35"/><stop offset="1" stop-color="var(--mod)" stop-opacity="0"/></linearGradient></defs>
+<path d="M ${pts} L ${W} ${H} L 0 ${H} Z" fill="url(#g)"/><path d="M ${pts}" fill="none" stroke="var(--mod)" stroke-width="2.5" stroke-linejoin="round"/>
+${[0,7,14,21,28].map(i=>`<text x="${x(i)}" y="${H-6}" font-size="12" fill="var(--text-3)" text-anchor="${i?i===28?'end':'middle':'start'}">${i+1}. Sep.</text>`).join('')}
+<text x="${x(24)}" y="${y(12600)-10}" font-size="12" font-weight="600" fill="var(--success)" text-anchor="middle">Gehalt +2.650 €</text>`;
+</script>
+</body></html>

@@ -2,7 +2,16 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allManifests, availableManifestsFor, isAvailableOn, validateManifest } from './registry';
-import { MODULE_HUES, WIDGET_TYPES } from './types';
+import {
+  CARD_SHAPES,
+  FEEDBACKS,
+  HEAD_STYLES,
+  HEAD_SURFACES,
+  MODULE_HUES,
+  SIGNATURES,
+  TYPE_ACCENTS,
+  WIDGET_TYPES,
+} from './types';
 
 describe('module registry', () => {
   it('discovers manifests', () => {
@@ -43,11 +52,40 @@ describe('module registry', () => {
     const base = allManifests[0]!;
     expect(validateManifest({ ...base, identity: undefined as never })).toHaveLength(1);
     expect(
-      validateManifest({ ...base, identity: { hue: 'mauve' as never, widgetType: 'kpi' } }),
+      validateManifest({ ...base, identity: { ...base.identity, hue: 'mauve' as never } }),
     ).toHaveLength(1);
     expect(
-      validateManifest({ ...base, identity: { hue: 'teal', widgetType: 'chart' as never } }),
+      validateManifest({ ...base, identity: { ...base.identity, widgetType: 'chart' as never } }),
     ).toHaveLength(1);
+  });
+
+  it('identity v2: head, surface and signature are required and checked; the optional fields too', () => {
+    const base = allManifests.find((m) => m.id === 'finance')!;
+    const bad = (patch: Record<string, unknown>) =>
+      validateManifest({ ...base, identity: { ...base.identity, ...patch } as never });
+    expect(validateManifest(base)).toEqual([]);
+    for (const patch of [
+      { head: 'banner' },
+      { head: undefined },
+      { surface: 'neon' },
+      { surface: undefined },
+      { signature: 'spaceship' },
+      { signature: undefined },
+      { hue2: 'pink' },
+      { type: 'comic' },
+      { shape: 'blob' },
+      { feedback: 'explode' },
+    ])
+      expect(bad(patch), JSON.stringify(patch)).toHaveLength(1);
+    expect(bad({ hue2: 'sky', type: 'thin', shape: 'round', feedback: 'tick' })).toEqual([]);
+  });
+
+  it('every module declares an identity v2 from the fixed lists', () => {
+    for (const m of allManifests.filter((x) => !x.retired)) {
+      expect(HEAD_STYLES, m.id).toContain(m.identity.head);
+      expect(HEAD_SURFACES, m.id).toContain(m.identity.surface);
+      expect(SIGNATURES, m.id).toContain(m.identity.signature);
+    }
   });
 
   it('no two modules of one navigation area share a hue (the palette has ten; areas are small)', () => {
@@ -66,6 +104,12 @@ describe('module registry', () => {
     const lib = await import('../../../scripts/lib/checkModules');
     expect(lib.HUES).toEqual([...MODULE_HUES]);
     expect(lib.WIDGET_TYPES).toEqual([...WIDGET_TYPES]);
+    expect(lib.HEAD_STYLES).toEqual([...HEAD_STYLES]);
+    expect(lib.HEAD_SURFACES).toEqual([...HEAD_SURFACES]);
+    expect(lib.SIGNATURES).toEqual([...SIGNATURES]);
+    expect(lib.TYPE_ACCENTS).toEqual([...TYPE_ACCENTS]);
+    expect(lib.CARD_SHAPES).toEqual([...CARD_SHAPES]);
+    expect(lib.FEEDBACKS).toEqual([...FEEDBACKS]);
   });
 
   it('rejects bad manifests', () => {

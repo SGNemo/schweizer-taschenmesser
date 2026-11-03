@@ -276,3 +276,115 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
+
+/* Identity v2: account cards in the head, month curve, category ring. */
+.cards {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.cards > * {
+  width: 15rem;
+}
+.cards > *:nth-child(2) {
+  --module-color: var(--mod-ocean);
+}
+@media (max-width: 899px) {
+  .cards {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cards > * {
+    width: 100%;
+    aspect-ratio: auto;
+    min-height: 6.5rem;
+  }
+  .cards > *:nth-child(n + 2) {
+    display: none;
+  }
+}
+.curve {
+  width: 100%;
+  height: 11rem;
+  display: block;
+}
+.curveFill {
+  fill: color-mix(in srgb, var(--module-color) 16%, transparent);
+}
+.curveLine {
+  fill: none;
+  stroke: var(--module-color);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.curveFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+}
+.curveFoot .income {
+  color: var(--success);
+  font-weight: var(--weight-semibold);
+}
+.ringRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+.legend {
+  flex: 1 1 12rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.legend b {
+  margin-left: auto;
+  font-variant-numeric: var(--font-num);
+  font-weight: var(--weight-semibold);
+}
+.swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+  flex: none;
+}
+.visuals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  margin-bottom: var(--space-5);
+}
+.visualsOne {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (max-width: 899px) {
+  .visuals {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Category icon in front of a booking (derived from the category, categoryIcon.ts); decoration, the category name is in the row's text. */
+.catIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  color: var(--module-color);
+}

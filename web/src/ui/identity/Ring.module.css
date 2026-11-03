@@ -1,0 +1,18 @@
+.ring {
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.hole {
+  display: grid;
+  place-items: center;
+  width: 68%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+}

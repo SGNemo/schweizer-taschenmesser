@@ -5,101 +5,105 @@ Moved unchanged from `docs/STATUS.md` (2026-10-01). Hardware-only checks; the in
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
 ### Cockpit-Modus (`feat/cockpit-mode`) – Gerät nötig
-C1. *Android immersiv:* Übersicht → „Cockpit“: Status- und Navigationsleiste verschwinden, Wischen vom Rand zeigt sie kurz; „Cockpit beenden“ (Griff oben antippen) bringt sie zurück. ☐
-C2. *Bildschirm wach halten (Android):* Einstellungen → Darstellung → Sonstiges → „Bildschirm wach halten“ an; im Cockpit geht der Bildschirm nicht aus, nach dem Beenden wieder normal. ☐
-C3. *Windows F11:* im Cockpit F11 → echtes Vollbild des Fensters, noch einmal F11 oder „Cockpit beenden“ → zurück; F11 außerhalb des Cockpits bleibt ohne Wirkung. ☐
-C4. *Zurück-Geste (Android):* Widget-Titel öffnet das Modul im Panel; Zurück schließt nur das Panel, das Cockpit bleibt. ☐
+
+C1. _Android immersiv:_ Übersicht → „Cockpit“: Status- und Navigationsleiste verschwinden, Wischen vom Rand zeigt sie kurz; „Cockpit beenden“ (Griff oben antippen) bringt sie zurück. ☐
+C2. _Bildschirm wach halten (Android):_ Einstellungen → Darstellung → Sonstiges → „Bildschirm wach halten“ an; im Cockpit geht der Bildschirm nicht aus, nach dem Beenden wieder normal. ☐
+C3. _Windows F11:_ im Cockpit F11 → echtes Vollbild des Fensters, noch einmal F11 oder „Cockpit beenden“ → zurück; F11 außerhalb des Cockpits bleibt ohne Wirkung. ☐
+C4. _Zurück-Geste (Android):_ Widget-Titel öffnet das Modul im Panel; Zurück schließt nur das Panel, das Cockpit bleibt. ☐
 
 ### Release 0.3.1 prüfen
-R1. *Windows-Portable frisch herunterladen* (`Nemo-Portable.exe` von der Release-Seite `v0.3.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.1`. ☐
-R2. *Android-APK als Update* (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
-R3. *In-App-Update:* eine 0.3.x-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf das erste Release ohne `Taschenmesser-*`-Dateien (`latest.json` verweist auf `Nemo-Portable.exe`, Android nimmt `Nemo.apk`). Daten bleiben erhalten. Von 0.2.x aus ist kein Selbst-Update mehr möglich (nur Neuinstallation). ☐
-R4. *Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:* zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
+
+R1. _Windows-Portable frisch herunterladen_ (`Nemo-Portable.exe` von der Release-Seite `v0.3.1`) und starten; SmartScreen-Hinweis ist erwartet; Über-Dialog zeigt `0.3.1`. ☐
+R2. _Android-APK als Update_ (`Nemo.apk`) über eine bestehende 0.2.0-Installation installieren: Daten bleiben, Share-Ziel und Benachrichtigungs-Symbol funktionieren. ☐
+R3. _In-App-Update:_ eine 0.3.x-Installation (Windows-Portable und Android) prüft Updates und aktualisiert auf das erste Release ohne `Taschenmesser-*`-Dateien (`latest.json` verweist auf `Nemo-Portable.exe`, Android nimmt `Nemo.apk`). Daten bleiben erhalten. Von 0.2.x aus ist kein Selbst-Update mehr möglich (nur Neuinstallation). ☐
+R4. _Sync-Tresor v2 (Argon2id) mit einem 0.2.0-Gerät:_ zweites, altes Gerät am selben Server; prüfen, ob ein älterer Tresor weiter entschlüsselt. ☐
 R5. Datenträger-Modul D1–D18 und Keystore/Windows Hello (Schritt 11b) wie unten. ☐
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
+
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
-D1. *Scan echtes Laufwerk:* Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
-D2. *Treemap navigieren:* Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
-D3. *Laufwerksarten:* USB-Stick und Netzlaufwerk erscheinen mit richtigem Typ; SSD/HDD-Angabe stimmt (kann „Festplatte“ ohne Angabe sein). ☐
-D4. *Cloud-Platzhalter:* Ein OneDrive-Ordner mit „Nur online“-Dateien wird gescannt, ohne dass etwas heruntergeladen wird; Hinweis „liegen nur online“ erscheint. ☐
-D5. *Verknüpfungen:* Ein Ordner mit Junction/Symlink auf einen großen Ordner: wird nicht doppelt gezählt (Hinweis „nicht betreten“). ☐
-D6. *Papierkorb:* Testordner (mit ein paar Dateien) → Löschen → „In den Papierkorb“: Ordner liegt im Windows-Papierkorb, lässt sich wiederherstellen; Baum und Summen aktualisieren sich ohne Neu-Scan. ☐
-D7. *Papierkorb nicht möglich:* Einen Testordner auf einem USB-Stick/Netzlaufwerk ohne Papierkorb löschen: Bericht „Papierkorb nicht möglich – nichts gelöscht“, der Ordner ist noch da; erst der bewusste „endgültig“-Schritt löscht. ☐
-D8. *Sperrliste:* Diese Pfade zeigen **keine** Löschen-Schaltfläche, sondern „Geschützt“: Laufwerkswurzel, `C:\Windows` (und darin), `C:\Program Files`, `C:\ProgramData`, `C:\Users`, dein Profilordner, `AppData`, `System Volume Information`, `$Recycle.Bin`, `pagefile.sys`/`hiberfil.sys`, Ordner der Taschenmesser-App und ihrer Daten, Ordner eines laufenden Programms. Mit 8.3-Namen (`dir /x`) und über eine Junction auf `C:\Windows` ebenfalls nicht löschbar. ☐
-D9. *Abbruch:* Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar); Löschen einer großen Testordner-Auswahl mit „Stoppen“ unterbrechen (Rest bleibt unberührt). ☐
-D10. *Datei in Benutzung:* Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
-D11. *Bestätigungen:* Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ fragen ein zweites Mal („Wirklich löschen?“, kein Eintippen mehr; ein schneller Doppelklick bestätigt nicht beide Male); Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
-D12. *Aufräum-Helfer:* „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
-D13. *Zuordnung (Windows, aus):* Downloads → BitTorrent → „Bei Windows eintragen“. Windows-Einstellungen → Standard-Apps zeigt Nemo für „magnet“ und „.torrent“; ein bestehender Standard bleibt unverändert, bis du Nemo wählst. „Eintrag entfernen“ → Nemo verschwindet aus der Liste (Registry: `HKCU\Software\Classes\Nemo.Magnet`, `Nemo.Torrent`, `HKCU\Software\Nemo`, Wert unter `RegisteredApplications` weg). Beim Dev-Preview heißen die Einträge `NemoDev…`. ☐
-D14. *Magnet-Link öffnen:* Nemo als Standard für magnet wählen, in einem Browser einen (Test-)Magnet-Link anklicken: Nemo kommt nach vorn (auch bei schon laufender App), der Dialog „Torrent hinzufügen“ ist vorbefüllt, nichts startet vor „Herunterladen“. Bei ausgeschaltetem Torrent-Teil: Hinweis „Ein Magnet-Link wartet“, nach dem Einschalten (mit Hinweis) öffnet sich der Dialog. Downloads-Modul aus: Angebot zum Einschalten. ☐
-D15. *.torrent-Datei öffnen:* Doppelklick auf eine Test-.torrent (und eine fehlende/über 10 MB große) → Dialog zeigt die erste Datei, die zweite wird stumm ignoriert; mit „Öffnen mit“ gestartet funktioniert dasselbe bei kaltem Start. ☐
-D13. *Im Explorer zeigen / Pfad kopieren* funktionieren (auch bei langen Pfaden). ☐
-D14. *Berechtigungen:* App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
-D15. *Systeminfo:* Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
-D16. *Android/PWA:* „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
-D17. *Alt & ungenutzt:* Spiele-/Steam-Laufwerk scannen: Karte „Alter“ zeigt lange nicht aktualisierte Spiele warm (orange/rot) mit Alter auf der Kachel; „Dateityp“ zeigt Spieldaten statt fast nur „Sonstiges“; „Lange nicht geändert“ (1 Jahr, ab 10 MB) listet jeden alten Ordner einmal mit plausibler Summe; zwei Treffer ankreuzen → „In den Korb“ bzw. „Auswahl löschen …“ öffnet die normale Bestätigung (Papierkorb). ☐
-D18. *Live-Karte:* großes Laufwerk scannen: die Karte erscheint sofort unter dem Fortschritt und wächst Ordner für Ordner; Pause friert sie ein; nach dem Ende übernimmt die normale, anklickbare Karte. Der Scan ist nicht spürbar langsamer als vorher. ☐
-D19. *Steam zuletzt gespielt:* Laufwerk mit Steam-Spielen (auch eine zweite Bibliothek, z. B. `D:\SteamLibrary`) scannen: Filter „Spiele (Steam)“ erscheint, listet die installierten Spiele, am längsten nicht gespielte zuerst, mit Datum wie in Steam (Bibliothek → Spiel → „Zuletzt gespielt“); ein nie gestartetes Spiel zeigt „Kein Spieldatum von Steam“; die Details eines Spielordners zeigen „Zuletzt gespielt“. ☐
-D20. *Zuletzt benutzt:* `fsutil behavior query disableLastAccess` zeigt den Zustand. Ist er „aktiviert“ (0 oder 2): Scan von C: → Legende sagt „letzte Benutzung“, Filter heißt „Lange nicht benutzt“ und misst standardmäßig nach „letztem Öffnen“ (Umschalten auf „letzter Änderung“ geht); eine alte Testdatei öffnen, nach ~1 Std. neu scannen → ihre Kachel wird „jung“ gefärbt und sie fällt aus der Liste. Ist er „deaktiviert“ (1 oder 3) oder das Laufwerk FAT/exFAT (USB-Stick): alles bleibt bei „letzte Änderung“ / „Lange nicht geändert“, ohne Umschalter. ☐
+D1. _Scan echtes Laufwerk:_ Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
+D2. _Treemap navigieren:_ Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
+D3. _Laufwerksarten:_ USB-Stick und Netzlaufwerk erscheinen mit richtigem Typ; SSD/HDD-Angabe stimmt (kann „Festplatte“ ohne Angabe sein). ☐
+D4. _Cloud-Platzhalter:_ Ein OneDrive-Ordner mit „Nur online“-Dateien wird gescannt, ohne dass etwas heruntergeladen wird; Hinweis „liegen nur online“ erscheint. ☐
+D5. _Verknüpfungen:_ Ein Ordner mit Junction/Symlink auf einen großen Ordner: wird nicht doppelt gezählt (Hinweis „nicht betreten“). ☐
+D6. _Papierkorb:_ Testordner (mit ein paar Dateien) → Löschen → „In den Papierkorb“: Ordner liegt im Windows-Papierkorb, lässt sich wiederherstellen; Baum und Summen aktualisieren sich ohne Neu-Scan. ☐
+D7. _Papierkorb nicht möglich:_ Einen Testordner auf einem USB-Stick/Netzlaufwerk ohne Papierkorb löschen: Bericht „Papierkorb nicht möglich – nichts gelöscht“, der Ordner ist noch da; erst der bewusste „endgültig“-Schritt löscht. ☐
+D8. _Sperrliste:_ Diese Pfade zeigen **keine** Löschen-Schaltfläche, sondern „Geschützt“: Laufwerkswurzel, `C:\Windows` (und darin), `C:\Program Files`, `C:\ProgramData`, `C:\Users`, dein Profilordner, `AppData`, `System Volume Information`, `$Recycle.Bin`, `pagefile.sys`/`hiberfil.sys`, Ordner der Taschenmesser-App und ihrer Daten, Ordner eines laufenden Programms. Mit 8.3-Namen (`dir /x`) und über eine Junction auf `C:\Windows` ebenfalls nicht löschbar. ☐
+D9. _Abbruch:_ Scan während der Laufzeit abbrechen (Teilergebnis bleibt nutzbar); Löschen einer großen Testordner-Auswahl mit „Stoppen“ unterbrechen (Rest bleibt unberührt). ☐
+D10. _Datei in Benutzung:_ Eine geöffnete Testdatei in einem Testordner: Bericht „Teilweise gelöscht“ mit Grund „Datei in Benutzung“. ☐
+D11. _Bestätigungen:_ Große Löschung (> 10 GB oder > 10 000 Dateien, z. B. Testordner mit vielen leeren Dateien) und „endgültig“ fragen ein zweites Mal („Wirklich löschen?“, kein Eintippen mehr; ein schneller Doppelklick bestätigt nicht beide Male); Dokumente/Bilder/Desktop zeigen die Warnung für persönliche Ordner. ☐
+D12. _Aufräum-Helfer:_ „Aufräumen“ auf der Startseite listet Temp/Downloads/Browser-Caches (nur vorhandene); „Doppelte Dateien“ findet zwei gleiche Testdateien, ein Exemplar bleibt immer. ☐
+D13. _Zuordnung (Windows, aus):_ Downloads → BitTorrent → „Bei Windows eintragen“. Windows-Einstellungen → Standard-Apps zeigt Nemo für „magnet“ und „.torrent“; ein bestehender Standard bleibt unverändert, bis du Nemo wählst. „Eintrag entfernen“ → Nemo verschwindet aus der Liste (Registry: `HKCU\Software\Classes\Nemo.Magnet`, `Nemo.Torrent`, `HKCU\Software\Nemo`, Wert unter `RegisteredApplications` weg). Beim Dev-Preview heißen die Einträge `NemoDev…`. ☐
+D14. _Magnet-Link öffnen:_ Nemo als Standard für magnet wählen, in einem Browser einen (Test-)Magnet-Link anklicken: Nemo kommt nach vorn (auch bei schon laufender App), der Dialog „Torrent hinzufügen“ ist vorbefüllt, nichts startet vor „Herunterladen“. Bei ausgeschaltetem Torrent-Teil: Hinweis „Ein Magnet-Link wartet“, nach dem Einschalten (mit Hinweis) öffnet sich der Dialog. Downloads-Modul aus: Angebot zum Einschalten. ☐
+D15. _.torrent-Datei öffnen:_ Doppelklick auf eine Test-.torrent (und eine fehlende/über 10 MB große) → Dialog zeigt die erste Datei, die zweite wird stumm ignoriert; mit „Öffnen mit“ gestartet funktioniert dasselbe bei kaltem Start. ☐
+D13. _Im Explorer zeigen / Pfad kopieren_ funktionieren (auch bei langen Pfaden). ☐
+D14. _Berechtigungen:_ App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
+D15. _Systeminfo:_ Werte stimmen mit dem Task-Manager grob überein (CPU-Name, RAM, Akku am Laptop, Grafikkarte, lokale IP). ☐
+D16. _Android/PWA:_ „Datenträger“ und „Systeminfo“ erscheinen weder in der Modul-Bibliothek noch im Menü. ☐
+D17. _Alt & ungenutzt:_ Spiele-/Steam-Laufwerk scannen: Karte „Alter“ zeigt lange nicht aktualisierte Spiele warm (orange/rot) mit Alter auf der Kachel; „Dateityp“ zeigt Spieldaten statt fast nur „Sonstiges“; „Lange nicht geändert“ (1 Jahr, ab 10 MB) listet jeden alten Ordner einmal mit plausibler Summe; zwei Treffer ankreuzen → „In den Korb“ bzw. „Auswahl löschen …“ öffnet die normale Bestätigung (Papierkorb). ☐
+D18. _Live-Karte:_ großes Laufwerk scannen: die Karte erscheint sofort unter dem Fortschritt und wächst Ordner für Ordner; Pause friert sie ein; nach dem Ende übernimmt die normale, anklickbare Karte. Der Scan ist nicht spürbar langsamer als vorher. ☐
+D19. _Steam zuletzt gespielt:_ Laufwerk mit Steam-Spielen (auch eine zweite Bibliothek, z. B. `D:\SteamLibrary`) scannen: Filter „Spiele (Steam)“ erscheint, listet die installierten Spiele, am längsten nicht gespielte zuerst, mit Datum wie in Steam (Bibliothek → Spiel → „Zuletzt gespielt“); ein nie gestartetes Spiel zeigt „Kein Spieldatum von Steam“; die Details eines Spielordners zeigen „Zuletzt gespielt“. ☐
+D20. _Zuletzt benutzt:_ `fsutil behavior query disableLastAccess` zeigt den Zustand. Ist er „aktiviert“ (0 oder 2): Scan von C: → Legende sagt „letzte Benutzung“, Filter heißt „Lange nicht benutzt“ und misst standardmäßig nach „letztem Öffnen“ (Umschalten auf „letzter Änderung“ geht); eine alte Testdatei öffnen, nach ~1 Std. neu scannen → ihre Kachel wird „jung“ gefärbt und sie fällt aus der Liste. Ist er „deaktiviert“ (1 oder 3) oder das Laufwerk FAT/exFAT (USB-Stick): alles bleibt bei „letzte Änderung“ / „Lange nicht geändert“, ohne Umschalter. ☐
 
 ### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
-V1. *GPU-Erkennung:* Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐
-V2. *Netzwerk-Adapterliste:* Pro Adapter Name, Typ (Kabel/WLAN/virtuell), Status, IPv4, **eine** IPv6; „Alle Adressen anzeigen“ blendet die übrigen ein. vEthernet/WSL/Hyper-V gedämpft am Ende. WLAN-Name und Signal erscheinen (unter Windows 11 24H2 ggf. nur mit Standortberechtigung – dann fehlen sie). Auf/Ab-Rate bewegt sich beim Download. „Öffentliche IP abfragen“ fragt erst nach dem Klick. ☐
-V3. *Laufwerke:* Typ (NVMe/SSD/HDD/USB), Modellname, Systemlaufwerk-Markierung, Füllstand-Hinweis in Worten; Temperatur und Zustand erscheinen **oder** „nicht verfügbar – …“ mit Grund (ohne Adminrechte oft nur die Temperatur). „Belegt seit letztem Scan“ nach einem Scan und etwas Schreiben. Lese-/Schreibrate bei Kopieren einer großen Datei. ☐
-V4. *Schnellübersicht:* Größen von Temp/Downloads/Browser-Cache/Papierkorb stimmen grob mit dem Explorer; „mindestens …“ bei sehr großen Ordnern; kein automatisches Löschen. ☐
-V5. *Mehr Infos:* Mainboard, BIOS, RAM-Riegel (Anzahl, Typ, Takt), Windows-Build, letzter Neustart, Bildschirme (Auflösung, Rate), Standard-Lautsprecher/Mikrofon, Prozesse mit CPU %, „Im Task-Manager öffnen“. Akku am Laptop. ☐
-V6. *Live-Kacheln:* CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-Verlauf füllt sich; Seite verlassen und zurückkehren beginnt neu. ☐
-V7. *Übersicht mit echten Daten:* „Jetzt wichtig“ zeigt Überfälliges (rot), Heute (Akzent), bald Ablaufendes (Warnfarbe) – jeweils mit Icon/Text; leer = Bereich fehlt. ToDo im Widget abhaken → „Rückgängig“. Kachel „Heute“ zeigt Jetzt-Linie und „Als Nächstes“. Dichte „Kompakt“ in Einstellungen → Darstellung. ☐
-V8. *Android:* Übersicht (Widgets, „Jetzt wichtig“ umbrechen sauber, Touch-Ziele), Dieser PC erscheint **nicht**. ☐
+
+V1. _GPU-Erkennung:_ Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐
+V2. _Netzwerk-Adapterliste:_ Pro Adapter Name, Typ (Kabel/WLAN/virtuell), Status, IPv4, **eine** IPv6; „Alle Adressen anzeigen“ blendet die übrigen ein. vEthernet/WSL/Hyper-V gedämpft am Ende. WLAN-Name und Signal erscheinen (unter Windows 11 24H2 ggf. nur mit Standortberechtigung – dann fehlen sie). Auf/Ab-Rate bewegt sich beim Download. „Öffentliche IP abfragen“ fragt erst nach dem Klick. ☐
+V3. _Laufwerke:_ Typ (NVMe/SSD/HDD/USB), Modellname, Systemlaufwerk-Markierung, Füllstand-Hinweis in Worten; Temperatur und Zustand erscheinen **oder** „nicht verfügbar – …“ mit Grund (ohne Adminrechte oft nur die Temperatur). „Belegt seit letztem Scan“ nach einem Scan und etwas Schreiben. Lese-/Schreibrate bei Kopieren einer großen Datei. ☐
+V4. _Schnellübersicht:_ Größen von Temp/Downloads/Browser-Cache/Papierkorb stimmen grob mit dem Explorer; „mindestens …“ bei sehr großen Ordnern; kein automatisches Löschen. ☐
+V5. _Mehr Infos:_ Mainboard, BIOS, RAM-Riegel (Anzahl, Typ, Takt), Windows-Build, letzter Neustart, Bildschirme (Auflösung, Rate), Standard-Lautsprecher/Mikrofon, Prozesse mit CPU %, „Im Task-Manager öffnen“. Akku am Laptop. ☐
+V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-Verlauf füllt sich; Seite verlassen und zurückkehren beginnt neu. ☐
+V7. _Übersicht mit echten Daten:_ „Jetzt wichtig“ zeigt Überfälliges (rot), Heute (Akzent), bald Ablaufendes (Warnfarbe) – jeweils mit Icon/Text; leer = Bereich fehlt. ToDo im Widget abhaken → „Rückgängig“. Kachel „Heute“ zeigt Jetzt-Linie und „Als Nächstes“. Dichte „Kompakt“ in Einstellungen → Darstellung. ☐
+V8. _Android:_ Übersicht (Widgets, „Jetzt wichtig“ umbrechen sauber, Touch-Ziele), Dieser PC erscheint **nicht**. ☐
 
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
-**Windows (`Nemo-Portable.exe`)**
-1. *API-Schlüssel im Credential Manager:* Einstellungen → KI-Assistent → Anbieter hinzufügen → Schlüssel eintragen → Speichern → „Verbindung testen". Dann Windows-Suche „Anmeldeinformationsverwaltung" → „Windows-Anmeldeinformationen": Es gibt einen Eintrag `ai-key:<anbieter>` (Adresse `io.github.sgnemo.taschenmesser`). ☐
-2. *Migration:* Ein Schlüssel, der schon mit einer älteren Version gespeichert war, funktioniert nach dem Update weiter (nach der ersten Nutzung erscheint er im Credential Manager). ☐
-3. *Windows Hello:* Accounts → Tresor anlegen/entsperren → „Import, Export & Sicherheit" → „Biometrisches Entsperren aktivieren" (Master-Passwort eingeben) → Windows-Hello-Fenster erscheint und bestätigt. Danach „Sperren" → beim Sperrbildschirm fragt Windows Hello automatisch → Tresor offen. ☐
-4. *Abbruch:* Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Passwortfeld und Button „Mit Biometrie entsperren" sind da. ☐
-5. *Deaktivieren:* „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
-6. *Ohne Hello (kein PIN/Gesicht eingerichtet):* Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
 
-**Android (signierte APK)**
-7. *Keystore-Schlüssel:* API-Schlüssel speichern, App komplett schließen und neu öffnen, „Verbindung testen" funktioniert. Nach Neustart des Handys ebenfalls. ☐
-8. *Biometrie aktivieren:* Accounts → Import, Export & Sicherheit → aktivieren (Master-Passwort) → Fingerabdruck-Dialog → „aktiv". Sperren → Sperrbildschirm zeigt den Dialog → Fingerabdruck → offen. ☐
-9. *Abbrechen / falscher Finger:* Dialog abbrechen → gesperrt, Passwort geht weiter; falscher Finger → Dialog meldet Fehler, kein Entsperren. ☐
-10. *Fingerabdrücke geändert:* In den Android-Einstellungen einen Fingerabdruck hinzufügen oder löschen → beim nächsten Entsperren erscheint „Biometrisches Entsperren ist nicht mehr gültig…", Master-Passwort entsperrt, Biometrie lässt sich neu aktivieren. ☐
-11. *Bildschirmschutz:* Auf der Accounts-Seite Screenshot versuchen (wird blockiert/schwarz), App-Umschalter (Übersicht) zeigt kein Vorschaubild; auf anderen Seiten (Dashboard) normale Screenshots. ☐
-12. *Hintergrund-Sperre:* App in den Hintergrund → nach eingestellter Zeit ist der Tresor gesperrt. ☐
+**Windows (`Nemo-Portable.exe`)**
+
+1. _API-Schlüssel im Credential Manager:_ Einstellungen → KI-Assistent → Anbieter hinzufügen → Schlüssel eintragen → Speichern → „Verbindung testen". Dann Windows-Suche „Anmeldeinformationsverwaltung" → „Windows-Anmeldeinformationen": Es gibt einen Eintrag `ai-key:<anbieter>` (Adresse `io.github.sgnemo.taschenmesser`). ☐
+2. _Migration:_ Ein Schlüssel, der schon mit einer älteren Version gespeichert war, funktioniert nach dem Update weiter (nach der ersten Nutzung erscheint er im Credential Manager). ☐
+3. _Windows Hello:_ Accounts → Tresor anlegen/entsperren → „Import, Export & Sicherheit" → „Biometrisches Entsperren aktivieren" (Master-Passwort eingeben) → Windows-Hello-Fenster erscheint und bestätigt. Danach „Sperren" → beim Sperrbildschirm fragt Windows Hello automatisch → Tresor offen. ☐
+4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Passwortfeld und Button „Mit Biometrie entsperren" sind da. ☐
+5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
+6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
+
+**Android (signierte APK)** 7. _Keystore-Schlüssel:_ API-Schlüssel speichern, App komplett schließen und neu öffnen, „Verbindung testen" funktioniert. Nach Neustart des Handys ebenfalls. ☐ 8. _Biometrie aktivieren:_ Accounts → Import, Export & Sicherheit → aktivieren (Master-Passwort) → Fingerabdruck-Dialog → „aktiv". Sperren → Sperrbildschirm zeigt den Dialog → Fingerabdruck → offen. ☐ 9. _Abbrechen / falscher Finger:_ Dialog abbrechen → gesperrt, Passwort geht weiter; falscher Finger → Dialog meldet Fehler, kein Entsperren. ☐ 10. _Fingerabdrücke geändert:_ In den Android-Einstellungen einen Fingerabdruck hinzufügen oder löschen → beim nächsten Entsperren erscheint „Biometrisches Entsperren ist nicht mehr gültig…", Master-Passwort entsperrt, Biometrie lässt sich neu aktivieren. ☐ 11. _Bildschirmschutz:_ Auf der Accounts-Seite Screenshot versuchen (wird blockiert/schwarz), App-Umschalter (Übersicht) zeigt kein Vorschaubild; auf anderen Seiten (Dashboard) normale Screenshots. ☐ 12. _Hintergrund-Sperre:_ App in den Hintergrund → nach eingestellter Zeit ist der Tresor gesperrt. ☐
 
 **Beide:** Tresor-Daten und KI-Schlüssel bleiben nach einem App-Update erhalten (Update-Test, siehe unten). ☐
 
 ### KI-Zugriff / lokale Import-API (Phase 2)
+
 Nur in der Windows-App prüfbar (der Server selbst ist per Rust-Tests geprüft, die Oberfläche per E2E mit Ersatz-Server):
-K1. *Aktivieren:* Einstellungen → KI-Zugriff → Schalter an → Status „Läuft auf http://127.0.0.1:47631“. Windows-Firewall fragt **nicht** (nur Loopback). ☐
-K2. *Zugang:* „Zugang anlegen“, Name, ToDos Lesen + Schreiben → Schlüssel erscheint einmal, kopieren. PowerShell: `Invoke-RestMethod -Uri http://127.0.0.1:47631/v1/modules -Headers @{Authorization="Bearer <Schlüssel>"}` listet nur ToDos. ☐
-K3. *Schutz:* dieselbe Anfrage ohne/mit falschem Schlüssel → 401; im Browser `http://127.0.0.1:47631/v1/modules` öffnen → Fehler (kein Zugriff). Von einem anderen Gerät im WLAN ist der Port nicht erreichbar. ☐
-K4. *Probelauf:* `POST /v1/todos/import?dryRun=true` mit einem Eintrag → Ergebnis je Eintrag, in der App erscheint nichts. ☐
-K4b. *Import mit Vorschau:* derselbe Aufruf ohne `dryRun` → Banner „… möchte 1 Eintrag in „ToDos“ übernehmen“ → Ansehen → Übernehmen; nach dem Sync ist der Eintrag auf dem Handy. „Import rückgängig machen“ (Einstellungen → KI-Zugriff) entfernt ihn überall. Ein Eintrag mit `id` erscheint als Änderung (alt → neu) und ist nicht vorausgewählt. ☐
-K5. *Widerrufen / Port belegt:* Zugang widerrufen → nächste Anfrage 401. Port auf einen belegten Wert stellen → verständliche Meldung. ☐
+K1. _Aktivieren:_ Einstellungen → KI-Zugriff → Schalter an → Status „Läuft auf http://127.0.0.1:47631“. Windows-Firewall fragt **nicht** (nur Loopback). ☐
+K2. _Zugang:_ „Zugang anlegen“, Name, ToDos Lesen + Schreiben → Schlüssel erscheint einmal, kopieren. PowerShell: `Invoke-RestMethod -Uri http://127.0.0.1:47631/v1/modules -Headers @{Authorization="Bearer <Schlüssel>"}` listet nur ToDos. ☐
+K3. _Schutz:_ dieselbe Anfrage ohne/mit falschem Schlüssel → 401; im Browser `http://127.0.0.1:47631/v1/modules` öffnen → Fehler (kein Zugriff). Von einem anderen Gerät im WLAN ist der Port nicht erreichbar. ☐
+K4. _Probelauf:_ `POST /v1/todos/import?dryRun=true` mit einem Eintrag → Ergebnis je Eintrag, in der App erscheint nichts. ☐
+K4b. _Import mit Vorschau:_ derselbe Aufruf ohne `dryRun` → Banner „… möchte 1 Eintrag in „ToDos“ übernehmen“ → Ansehen → Übernehmen; nach dem Sync ist der Eintrag auf dem Handy. „Import rückgängig machen“ (Einstellungen → KI-Zugriff) entfernt ihn überall. Ein Eintrag mit `id` erscheint als Änderung (alt → neu) und ist nicht vorausgewählt. ☐
+K5. _Widerrufen / Port belegt:_ Zugang widerrufen → nächste Anfrage 401. Port auf einen belegten Wert stellen → verständliche Meldung. ☐
 
 ### Portable Windows-Build (Phase 13)
+
 Nur auf echtem Windows prüfbar (CI baut nur; der Smoke-Test dort ist informativ):
-P1. *Start:* `Nemo-Portable.exe` (Pre-Release-Download) starten, SmartScreen „Weitere Informationen → Trotzdem ausführen". Die App öffnet sich, die Daten der bisher installierten Version sind da (gleiche App-Kennung). ☐
-P2. *WebView2 fehlt:* auf einem Rechner/VM ohne WebView2 startet die exe → deutsches Meldungsfenster mit „OK" (öffnet die Microsoft-Seite) statt stillem Absturz. ☐
-P3. *Portabler Modus:* Ordner `data` neben die exe legen, starten → die App ist leer (neues Profil), `data\` füllt sich; ohne den Ordner wieder das Benutzerprofil. ☐
-P4. *Update (erst ab dem zweiten portablen Release):* Kanal Beta → „Jetzt prüfen" → „Jetzt aktualisieren": Backup, Download, die exe ersetzt sich, startet neu, neue Version, Daten da, im Ordner bleiben keine `.old`/`.new`-Dateien (nach dem nächsten Start). ☐
-P5. *Fehlerfall:* exe in einen schreibgeschützten Ordner legen und aktualisieren → verständliche Meldung („Ordner nicht beschreibbar"), alte Version läuft weiter. ☐
+P1. _Start:_ `Nemo-Portable.exe` (Pre-Release-Download) starten, SmartScreen „Weitere Informationen → Trotzdem ausführen". Die App öffnet sich, die Daten der bisher installierten Version sind da (gleiche App-Kennung). ☐
+P2. _WebView2 fehlt:_ auf einem Rechner/VM ohne WebView2 startet die exe → deutsches Meldungsfenster mit „OK" (öffnet die Microsoft-Seite) statt stillem Absturz. ☐
+P3. _Portabler Modus:_ Ordner `data` neben die exe legen, starten → die App ist leer (neues Profil), `data\` füllt sich; ohne den Ordner wieder das Benutzerprofil. ☐
+P4. _Update (erst ab dem zweiten portablen Release):_ Kanal Beta → „Jetzt prüfen" → „Jetzt aktualisieren": Backup, Download, die exe ersetzt sich, startet neu, neue Version, Daten da, im Ordner bleiben keine `.old`/`.new`-Dateien (nach dem nächsten Start). ☐
+P5. _Fehlerfall:_ exe in einen schreibgeschützten Ordner legen und aktualisieren → verständliche Meldung („Ordner nicht beschreibbar"), alte Version läuft weiter. ☐
 
 ### Verbindungen, Kalender, Kontoauszug (Phase 13, Schritt 3)
+
 Braucht ein echtes Google-Konto bzw. eine echte Bankdatei – bitte nur mit eigenen Daten, nichts davon in den Chat kopieren:
-C1. *Kalender-Abo (ICS):* Einstellungen → Verbindungen → Kalender-Abo: „Geheime Adresse im iCal-Format" deines Google-Kalenders eintragen. Im Browser (PWA) braucht das den Sync-Server (Proxy), in der Windows-App geht es direkt. Termine erscheinen im Kalender mit Badge „Extern", sind nur lesbar; Adresse entfernen → Termine verschwinden. ☐
-C2. *Google-Login (nur Windows-App):* eigene Client-ID/Secret eintragen (siehe unten), „Verbinden" → der Browser öffnet die Google-Anmeldung → nach „Zulassen" erscheint die Seite „Die Anmeldung ist abgeschlossen" und die Karte zeigt „Verbunden". Bei einer unverifizierten App zeigt Google eine Warnung („Google hat diese App nicht überprüft" → „Erweitert" → „… öffnen"). ☐
-C3. *Kalender-Sync:* nach dem Login erscheint die Liste deiner Kalender (nur der Hauptkalender ist angehakt); „Jetzt abgleichen" holt die Termine. Termin in Google ändern/löschen → nach „Jetzt abgleichen" (oder spätestens nach 30 min) auch hier. Zeiten stimmen (Zeitzone!), ganztägige und mehrtägige Termine ebenfalls. ☐
-C4. *Ablauf des Tokens:* Status „Testing" in der Google Cloud Console → nach 7 Tagen zeigt die Karte „Abgelaufen" + „Neu anmelden"; lokale Termine bleiben. („In Produktion" vermeidet das.) ☐
-C5. *Gmail-Scan:* Feature „E-Mails" einschalten (neuer Login mit mehr Rechten), dann in Rechnungen/Abos/Unterlagen/Kalender „… aus E-Mails erkennen" → Zeitraum wählen → Vorschau prüfen. Es darf nur passieren, was du bestätigst; der Vorschau-Text nennt „N Mails gelesen (Absender, Betreff, Datum, Vorschauzeile)". Prüfe, ob die Erkennungsquote brauchbar ist (Heuristiken sind auf erfundenen Beispielen getestet, nicht auf echten Mails). ☐
-C6. *Trennen:* „Trennen" → Dialog „Termine behalten / löschen"; danach ist der Zugriff in deinem Google-Konto unter „Sicherheit → Drittanbieter-Zugriff" verschwunden. ☐
-C7. *Kontoauszug:* Online-Banking → Umsätze → Export „CSV-CAMT" (oder „CAMT"). **Bitte nur die Kopfzeile (erste Zeile) einer echten Datei prüfen/schicken** und mit `Buchungstag`, `Verwendungszweck`, `Beguenstigter/Zahlungspflichtiger`, `Betrag` vergleichen; dann Finanzen → Einstellungen → Startdaten → „Kontoauszug importieren": Vorschau, Import, zweiter Import zeigt nur „Schon vorhanden". Abos: „Abos im Kontoauszug erkennen" zeigt regelmäßige Abbuchungen. ☐
+C1. _Kalender-Abo (ICS):_ Einstellungen → Verbindungen → Kalender-Abo: „Geheime Adresse im iCal-Format" deines Google-Kalenders eintragen. Im Browser (PWA) braucht das den Sync-Server (Proxy), in der Windows-App geht es direkt. Termine erscheinen im Kalender mit Badge „Extern", sind nur lesbar; Adresse entfernen → Termine verschwinden. ☐
+C2. _Google-Login (nur Windows-App):_ eigene Client-ID/Secret eintragen (siehe unten), „Verbinden" → der Browser öffnet die Google-Anmeldung → nach „Zulassen" erscheint die Seite „Die Anmeldung ist abgeschlossen" und die Karte zeigt „Verbunden". Bei einer unverifizierten App zeigt Google eine Warnung („Google hat diese App nicht überprüft" → „Erweitert" → „… öffnen"). ☐
+C3. _Kalender-Sync:_ nach dem Login erscheint die Liste deiner Kalender (nur der Hauptkalender ist angehakt); „Jetzt abgleichen" holt die Termine. Termin in Google ändern/löschen → nach „Jetzt abgleichen" (oder spätestens nach 30 min) auch hier. Zeiten stimmen (Zeitzone!), ganztägige und mehrtägige Termine ebenfalls. ☐
+C4. _Ablauf des Tokens:_ Status „Testing" in der Google Cloud Console → nach 7 Tagen zeigt die Karte „Abgelaufen" + „Neu anmelden"; lokale Termine bleiben. („In Produktion" vermeidet das.) ☐
+C5. _Gmail-Scan:_ Feature „E-Mails" einschalten (neuer Login mit mehr Rechten), dann in Rechnungen/Abos/Unterlagen/Kalender „… aus E-Mails erkennen" → Zeitraum wählen → Vorschau prüfen. Es darf nur passieren, was du bestätigst; der Vorschau-Text nennt „N Mails gelesen (Absender, Betreff, Datum, Vorschauzeile)". Prüfe, ob die Erkennungsquote brauchbar ist (Heuristiken sind auf erfundenen Beispielen getestet, nicht auf echten Mails). ☐
+C6. _Trennen:_ „Trennen" → Dialog „Termine behalten / löschen"; danach ist der Zugriff in deinem Google-Konto unter „Sicherheit → Drittanbieter-Zugriff" verschwunden. ☐
+C7. _Kontoauszug:_ Online-Banking → Umsätze → Export „CSV-CAMT" (oder „CAMT"). **Bitte nur die Kopfzeile (erste Zeile) einer echten Datei prüfen/schicken** und mit `Buchungstag`, `Verwendungszweck`, `Beguenstigter/Zahlungspflichtiger`, `Betrag` vergleichen; dann Finanzen → Einstellungen → Startdaten → „Kontoauszug importieren": Vorschau, Import, zweiter Import zeigt nur „Schon vorhanden". Abos: „Abos im Kontoauszug erkennen" zeigt regelmäßige Abbuchungen. ☐
 
 ### E-Mail lesen (Modul „E-Mail“, `feat/mail-read`) – nur mit echtem Google-Konto auf Windows prüfbar
+
 M1. In Einstellungen → Verbindungen Google verbinden, Funktion „E-Mails" einschalten; Modul „E-Mail" in der Bibliothek aktivieren. Der Posteingang zeigt deine Threads, die Ordnerliste (Posteingang, Markiert, eigene Labels) hat Ungelesen-Zahlen. ☐
 M2. Suche mit Gmail-Syntax (`from:… has:attachment newer_than:7d`) liefert dasselbe wie in Gmail. ☐
 M3. Eine HTML-Mail öffnen (Newsletter): Bilder sind blockiert („N externe Bilder blockiert"), „Bilder laden" lädt sie; ein Link öffnet im Standardbrowser, nicht im Fenster. Prüfe, dass die Mail im Gmail-Web weiterhin **ungelesen** ist (Nemo ändert nichts). ☐
@@ -121,49 +125,55 @@ M18. Einstellungen → Mail → „Lokales Modell darf Mails lesen" einschalten,
 M19. Nur Ollama auf `localhost` konfiguriert: Zusammenfassung funktioniert. Ollama-Eintrag auf eine LAN-Adresse oder Cloud-Preset: keine Antwort, Hinweis „Kein lokales Modell bereit"; im Netzwerk-Mitschnitt keine Anfrage an einen fremden Host. „Aus dieser Mail anlegen" → „Vorschlag vom lokalen Modell": Feld ändert sich erst nach „Übernehmen". ☐
 
 ### Werkzeuge (Phase 13, Schritt 5)
-T1. *QR lesen:* Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
-T2. *Währung:* mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐
-T3. *Timer:* Timer starten, Sheet schließen – läuft weiter; bei Ablauf kommt die Benachrichtigung (Windows und Android). ☐
+
+T1. _QR lesen:_ Werkzeuge → QR-Code → „Lesen" → Kamera erlauben → einen QR-Code halten: Text erscheint (Windows-App/Chrome: `BarcodeDetector`; auf dem Handy Kamerarecht in der APK). Wo es nicht geht, steht ein Hinweis; Erzeugen geht immer. ☐
+T2. _Währung:_ mit Internet: Kurse laden, umrechnen; danach Netz aus → gespeicherte Kurse mit Datum. Die Schnittstelle `api.frankfurter.dev` ist nur per Doku geprüft (in der Windows-App keine CORS-Hürde, im Browser hängt es an deren CORS-Erlaubnis). ☐
+T3. _Timer:_ Timer starten, Sheet schließen – läuft weiter; bei Ablauf kommt die Benachrichtigung (Windows und Android). ☐
 
 ### Links, Teilen, Lesezeichen (Phase 13, Schritt 6)
-L1. *Karte:* Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (Windows: Browser, Android: Maps-App). ☐
-L2. *WhatsApp:* Personen → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
-L3. *Teilen (Android, PWA in Chrome installiert):* in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
-L4. *Lesezeichen:* Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
-L5. *Spotify:* gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
+
+L1. _Karte:_ Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Maps (Windows: Browser, Android: Maps-App). ☐
+L2. _WhatsApp:_ Personen → Knopf neben dem Namen → WhatsApp (Web/App) mit Glückwunschtext, Kontakt wählen. ☐
+L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teilen“ → Nemo → Seite „Teilen“ mit den Zielen (nur eingeschaltete Module); Merkliste/Notiz/ToDo öffnen vorbefüllt. Die **APK** hat kein Teilen-Ziel (nicht gebaut). ☐
+L4. _Lesezeichen:_ Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
+L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
 ### Einrichtungsassistent
-E1. *Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):* Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
-E2. *Frische Installation (Windows-Portable, dann Android-APK):* Übersicht zeigt die Willkommenskarte (kein Vollbild); „Einrichtung starten“ → alle Schritte durchgehen. Tresor: Master-Passwort festlegen, mit Fingerabdruck bzw. Windows Hello entsperrbar. KI-Anbieter mit echtem Schlüssel: „Verbindung testen“, danach Eintrag `ai-key:<anbieter>` im Credential Manager. Benachrichtigungen: erlauben; Android: Erinnerung bei geschlossener App, Hinweis zu genauen Alarmen/Akku-Optimierung. ☐
-E3. *Wiederherstellung aus Backup:* frische App → Schritt „Sync und Wiederherstellung“ → „Backup-Datei einspielen“ → Module/Daten sind da; danach Profile/Startdaten überspringen. ☐
-E4. *Bestehende Installation bleibt unberührt:* Update einer App mit Daten: keine Willkommenskarte, keine Checkliste, Daten unverändert; Einstellungen → „Einrichtung starten“ zeigt den aktuellen Zustand, nichts wird ohne Bestätigung geändert (Profil zeigt erst den Diff). ☐
-E5. *Google-Verbindung im Assistenten (Windows):* Schritt „Konten verknüpfen“ → Anmeldung starten und im Browser abbrechen bzw. den Assistenten schließen: kein Token gespeichert, Status bleibt „Nicht verbunden“. ☐
+
+E1. _Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):_ Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
+E2. _Frische Installation (Windows-Portable, dann Android-APK):_ Übersicht zeigt die Willkommenskarte (kein Vollbild); „Einrichtung starten“ → alle Schritte durchgehen. Tresor: Master-Passwort festlegen, mit Fingerabdruck bzw. Windows Hello entsperrbar. KI-Anbieter mit echtem Schlüssel: „Verbindung testen“, danach Eintrag `ai-key:<anbieter>` im Credential Manager. Benachrichtigungen: erlauben; Android: Erinnerung bei geschlossener App, Hinweis zu genauen Alarmen/Akku-Optimierung. ☐
+E3. _Wiederherstellung aus Backup:_ frische App → Schritt „Sync und Wiederherstellung“ → „Backup-Datei einspielen“ → Module/Daten sind da; danach Profile/Startdaten überspringen. ☐
+E4. _Bestehende Installation bleibt unberührt:_ Update einer App mit Daten: keine Willkommenskarte, keine Checkliste, Daten unverändert; Einstellungen → „Einrichtung starten“ zeigt den aktuellen Zustand, nichts wird ohne Bestätigung geändert (Profil zeigt erst den Diff). ☐
+E5. _Google-Verbindung im Assistenten (Windows):_ Schritt „Konten verknüpfen“ → Anmeldung starten und im Browser abbrechen bzw. den Assistenten schließen: kein Token gespeichert, Status bleibt „Nicht verbunden“. ☐
 
 ### Übersicht als Home-Screen
-H1. *Windows-Portable und Android:* App öffnen → Start ist die Übersicht; Logo (Sidebar bzw. Kopfzeile) führt von jedem Modul zurück; Android-Zurück: Modul → Übersicht, Übersicht beendet die App. ☐
-H2. *Bearbeitungsmodus per Touch (Android):* „Anpassen“ → Widget am Griff lange drücken und verschieben, Größe S/M/L wählen, Widget-Liste öffnen und ein-/ausblenden, „Zurücksetzen“; alle Ziele gut treffbar, Seite scrollt beim Wischen nicht versehentlich mit. ☐
-H3. *Sync der Anordnung:* auf Gerät A Reihenfolge/Größe/Sichtbarkeit ändern, Gerät B synchronisieren: gleiche Übersicht; ein altes Layout (vor dem Update angepasst) bleibt erhalten. ☐
-H4. *Status-Widgets (Windows):* Datenträger zeigt Füllstände, Systeminfo CPU/RAM/Akku, Tresor nur gesperrt/entsperrt (nie Einträge). ☐
+
+H1. _Windows-Portable und Android:_ App öffnen → Start ist die Übersicht; Logo (Sidebar bzw. Kopfzeile) führt von jedem Modul zurück; Android-Zurück: Modul → Übersicht, Übersicht beendet die App. ☐
+H2. _Bearbeitungsmodus per Touch (Android):_ „Anpassen“ → Widget am Griff lange drücken und verschieben, Größe S/M/L wählen, Widget-Liste öffnen und ein-/ausblenden, „Zurücksetzen“; alle Ziele gut treffbar, Seite scrollt beim Wischen nicht versehentlich mit. ☐
+H3. _Sync der Anordnung:_ auf Gerät A Reihenfolge/Größe/Sichtbarkeit ändern, Gerät B synchronisieren: gleiche Übersicht; ein altes Layout (vor dem Update angepasst) bleibt erhalten. ☐
+H4. _Status-Widgets (Windows):_ Datenträger zeigt Füllstände, Systeminfo CPU/RAM/Akku, Tresor nur gesperrt/entsperrt (nie Einträge). ☐
 
 ### Nemo: Umbenennung und Design
-N1. *Windows-Portable starten (frische Datei und als Update):* Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
-N2. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
-N3. *Hell / Dunkel / System, Akzentfarben:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
-N4. *Reduzierte Bewegung:* Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
-N5. *Neue Module der anderen Chats:* nach dem Merge Dashboard, Datenträger-Aufräumer und weitere neue Seiten hell/dunkel ansehen (sollten das Design über Tokens erben; Sonderstyles melden).
-N6. *Alte Backups:* eine `taschenmesser-backup-…json` (auch verschlüsselt) einspielen; neue Exporte heißen `nemo-backup-…`.
-N7. *Diagramm-Farben:* Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
-N8. *Windows-Portable mit dem Logo „Welle“:* Icon in Taskleiste, Titelleiste, Tray und Alt-Tab zeigt den neuen Fisch (7 ICO-Größen), Fenstertitel „Nemo“, Tray-Tooltip „Nemo“. ☐
-N9. *Android-APK als Update über die bestehende Installation:* App-Name „Nemo“, **neues Launcher-Icon** (adaptiv: runde und eckige Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), **Benachrichtigungs-Icon** in der Statusleiste ist der weiße Fisch (kein weißer Klotz), alle Daten und der Tresor bleiben. Vorher war unklar, ob die Icons überhaupt in der APK landen (Kopierschritt in `release.yml` neu). ☐
-N10. *Hell / Dunkel / System, Akzente, Design „Klar“:* Einstellungen → Darstellung: alle vier Akzente in beiden Themes; Karten mit Rahmen statt Schatten, Tabs als ruhige Pille, nur ein orangefarbener Hauptbutton je Seite; Titelleisten-Farbe (PWA/Browser) folgt der gewählten Darstellung. ☐
-N11. *Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:* Taskleiste (hell/dunkel, 100–200 % Skalierung), Tray, Alt-Tab und Fenstertitel zeigen den geneigten Fisch auf der orangen Kachel, nicht unscharf bei 16/24/32 px. ☐
-N12. *Clownfisch-Icon, Android-APK als Update über die bestehende Installation:* Launcher-Icon (runde, eckige und Squircle-Maske: Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), Benachrichtigungs-Icon in der Statusleiste, Splash (hell/dunkel). Benachrichtigungs-Akzent ist jetzt `#E0550F`. ☐
-N13. *Clownfisch-Icon im Browser/PWA:* Favicon im Tab (hell/dunkel), „Zum Startbildschirm“ (maskierbares Icon), Sidebar/Topbar zeigen die Wortmarke (Nemo als Clownfisch), leere Zustände. README-Header „Nemo als Clownfisch“ + Claim „Notes · Events · Modules · Offline“ (README.md) bzw. „Notizen · Erinnerungen · Module · Offline“ (README.de.md) auf GitHub in hell und dunkel, Social-Preview neu hochladen (`docs/brand/social-preview.png`). ☐
-N11. *Reduzierte Bewegung:* Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
-N12. *README auf GitHub im hellen und dunklen Modus:* Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
-N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
+
+N1. _Windows-Portable starten (frische Datei und als Update):_ Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
+N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
+N3. _Hell / Dunkel / System, Akzentfarben:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
+N4. _Reduzierte Bewegung:_ Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
+N5. _Neue Module der anderen Chats:_ nach dem Merge Dashboard, Datenträger-Aufräumer und weitere neue Seiten hell/dunkel ansehen (sollten das Design über Tokens erben; Sonderstyles melden).
+N6. _Alte Backups:_ eine `taschenmesser-backup-…json` (auch verschlüsselt) einspielen; neue Exporte heißen `nemo-backup-…`.
+N7. _Diagramm-Farben:_ Türkis/Orange bei Farbfehlsichtigkeit prüfen (Validator des dataviz-Skills nach dem Rebrand noch nicht erneut gelaufen).
+N8. _Windows-Portable mit dem Logo „Welle“:_ Icon in Taskleiste, Titelleiste, Tray und Alt-Tab zeigt den neuen Fisch (7 ICO-Größen), Fenstertitel „Nemo“, Tray-Tooltip „Nemo“. ☐
+N9. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, **neues Launcher-Icon** (adaptiv: runde und eckige Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), **Benachrichtigungs-Icon** in der Statusleiste ist der weiße Fisch (kein weißer Klotz), alle Daten und der Tresor bleiben. Vorher war unklar, ob die Icons überhaupt in der APK landen (Kopierschritt in `release.yml` neu). ☐
+N10. _Hell / Dunkel / System, Akzente, Design „Klar“:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes; Karten mit Rahmen statt Schatten, Tabs als ruhige Pille, nur ein orangefarbener Hauptbutton je Seite; Titelleisten-Farbe (PWA/Browser) folgt der gewählten Darstellung. ☐
+N11. _Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:_ Taskleiste (hell/dunkel, 100–200 % Skalierung), Tray, Alt-Tab und Fenstertitel zeigen den geneigten Fisch auf der orangen Kachel, nicht unscharf bei 16/24/32 px. ☐
+N12. _Clownfisch-Icon, Android-APK als Update über die bestehende Installation:_ Launcher-Icon (runde, eckige und Squircle-Maske: Fisch nicht abgeschnitten), Themed-Icon (Android 13+, einfarbig), Benachrichtigungs-Icon in der Statusleiste, Splash (hell/dunkel). Benachrichtigungs-Akzent ist jetzt `#E0550F`. ☐
+N13. _Clownfisch-Icon im Browser/PWA:_ Favicon im Tab (hell/dunkel), „Zum Startbildschirm“ (maskierbares Icon), Sidebar/Topbar zeigen die Wortmarke (Nemo als Clownfisch), leere Zustände. README-Header „Nemo als Clownfisch“ + Claim „Notes · Events · Modules · Offline“ (README.md) bzw. „Notizen · Erinnerungen · Module · Offline“ (README.de.md) auf GitHub in hell und dunkel, Social-Preview neu hochladen (`docs/brand/social-preview.png`). ☐
+N11. _Reduzierte Bewegung:_ Systemeinstellung an → keine Seiten-/Listen-/Balken-Animation, Listen erscheinen sofort (kein Verzögern), Skeleton ohne Schimmer. ☐
+N12. _README auf GitHub im hellen und dunklen Modus:_ Header-Bild und Dashboard-Screenshot wechseln mit (`<picture>`), Badges lesbar, beide Download-Buttons liefern die Dateien (erst nach dem Nemo-Kopien-Upload zu v0.2.0 bzw. dem nächsten stabilen Release). ☐
+N13. _Autostart (Windows):_ Wenn Autostart in 0.2.0 aktiv war: nach dem Update prüfen, ob der Eintrag noch „Taschenmesser“ heißt und die App ihn als „aus“ anzeigt (siehe REVIEW M10). ☐
 
 ## KI-Eintragen per Leiste (PR A, nur von Hand prüfbar)
+
 - **K1 Echte Sätze (Windows und Android):** in der Leiste (Strg+K / Suchen) eigene Sätze eintippen: „Rechnung Stadtwerke 89,90 € fällig 15.10.“, „Abo Netflix 12,99 monatlich ab 1.11.“, „Lösche das Abo Spotify“, „Markiere die Stadtwerke-Rechnung als bezahlt“. Erwartung: Vorschau mit richtigen Feldern, Änderung/Löschen zeigen Vorher/Nachher, nichts wird vor „Eintragen“ gespeichert, „Rückgängig“ im Hinweis stellt den Stand wieder her. Auf dem Handy: Tastatur schiebt die Vorschau nicht aus dem Bild.
 - **K2 Statistik:** Einstellungen → KI → KI-Statistik: Regel-Antworten zählen mit 0 Token, Cloud-Antworten mit Token/Kosten; „x % ohne Cloud“ passt zu dem, was du getan hast.
 - **K3 Cloud-Fallback:** mit eingerichtetem Anbieter einen Satz schreiben, den die Regeln nicht kennen („Leg bitte etwas für die Steuerberaterin fest, sie meldet sich Freitag“): die Vorschau erscheint, Statistik zeigt eine Cloud-Antwort; mit „Cloud-Fallback erlauben“ aus erscheint stattdessen die normale Antwort.
@@ -173,70 +183,78 @@ N13. *Autostart (Windows):* Wenn Autostart in 0.2.0 aktiv war: nach dem Update p
 - **K7 Android „Leicht“:** folgt mit der Android-Entscheidung.
 
 ## Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
+
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt, `nemo-extension-….zip` entpacken, Tresor mit Beispieldaten. Hintergrund: [security/VAULT-EXTENSION.md](security/VAULT-EXTENSION.md).
-X1. *Laden:* `brave://extensions` → Entwicklermodus → „Entpackte Erweiterung laden“. Die ID lautet `olgcnfjmihlmpgjepkfbdjcpenckemaj`, keine Fehler im Service-Worker-Log. ☐
-X2. *Verbindung bestätigen:* Nemo → Tresor → Browser-Erweiterung → an (Registry: `HKCU\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\io.github.sgnemo.taschenmesser.vault` zeigt auf die JSON im `data`-Ordner bzw. App-Daten; auch Chrome/Edge/Chromium-Schlüssel). Popup zeigt einen Code, der Dialog in Nemo denselben; „Verbinden“ → Popup „Verbunden“. ☐
-X3. *Host als GUI-EXE:* Der Host-Start (Release-EXE ohne Konsole) liefert Antworten (Popup „Verbunden“, nicht „nicht gefunden“); im Task-Manager erscheint kurz ein zweiter Prozess ohne Fenster, nach Schließen von Brave weg. ☐
-X4. *Registrierung auf einer Test-Site:* Seite mit Registrierungsformular, E-Mail eintragen, ins Passwortfeld klicken → Vorschlag; „Verwenden“ füllt beide Passwortfelder; Speicherkarte zeigt die E-Mail; „Im Tresor speichern“ → in Nemo erscheint der Eintrag (URL = Origin der Seite). ☐
-X5. *Sync aufs Handy:* Nach Sync (oder Auto-Sync) erscheint der Eintrag in der Android-App mit demselben Passwort. ☐
-X6. *Login-Autofill:* Login-Seite derselben Domain: Schlüssel im Feld → Eintrag → Benutzername und Passwort gefüllt; vorher nichts. TOTP-Eintrag: Code-Feld bzw. Popup „Code kopieren“; Zwischenablage nach 30 s leer (und bei zwischenzeitlich kopiertem anderen Text unverändert). ☐
-X7. *Phishing-Test:* Ähnliche Domain (z. B. `shop-example.test` statt `shop.example.test`, `http://` statt `https://`, anderer Port) bekommt keinen Eintrag und kein Passwort. ☐
-X8. *Gesperrt / nicht gestartet:* Tresor sperren → Popup „gesperrt“, Speichern zeigt Hinweis, Daten bleiben im Tab; entsperren → „Erneut versuchen“ speichert. App beenden → „Nemo wurde nicht gefunden“. Auto-Sperre beendet die Sitzung sofort. ☐
-X9. *Portable verschoben:* Ordner mit der EXE verschieben, App starten → Dialog zeigt den Pfad als aktuell (oder „Neu eintragen“), Erweiterung verbindet wieder ohne erneutes Bestätigen. ☐
-X10. *Brave Shields:* Shields hoch/aus auf einer Test-Site: Overlay und Schlüssel erscheinen in beiden Fällen; Fingerprinting-Schutz „streng“ stört das Ausfüllen nicht. ☐
-X11. *Pipe nur für dich:* Mit einem zweiten Windows-Benutzer ist die Pipe `\\.\pipe\nemo-vault-<Benutzer>` nicht öffenbar; ein zweites Nemo (Dev-Preview neben Release) meldet „belegt“ statt zu verdrängen. ☐
-X12. *Tresor-Suche-Hotkey:* Einstellungen → Schnellerfassung → „Tastenkürzel Tresor-Suche“ setzen; bei entsperrtem Tresor öffnet es die Suche, bei gesperrtem nur das Fenster mit dem Sperrbildschirm. ☐
-X13. *Tasten im Eintrag:* U/P/T/O kopieren Benutzername/Passwort/Code bzw. öffnen die Website; in Eingabefeldern passiert nichts. ☐
-X14. *Eigene Seiten:* Auf der Nemo-PWA im Browser schlägt die Erweiterung nichts vor und bietet das Master-Passwort nie zum Speichern an. ☐
+X1. _Laden:_ `brave://extensions` → Entwicklermodus → „Entpackte Erweiterung laden“. Die ID lautet `olgcnfjmihlmpgjepkfbdjcpenckemaj`, keine Fehler im Service-Worker-Log. ☐
+X2. _Verbindung bestätigen:_ Nemo → Tresor → Browser-Erweiterung → an (Registry: `HKCU\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\io.github.sgnemo.taschenmesser.vault` zeigt auf die JSON im `data`-Ordner bzw. App-Daten; auch Chrome/Edge/Chromium-Schlüssel). Popup zeigt einen Code, der Dialog in Nemo denselben; „Verbinden“ → Popup „Verbunden“. ☐
+X3. _Host als GUI-EXE:_ Der Host-Start (Release-EXE ohne Konsole) liefert Antworten (Popup „Verbunden“, nicht „nicht gefunden“); im Task-Manager erscheint kurz ein zweiter Prozess ohne Fenster, nach Schließen von Brave weg. ☐
+X4. _Registrierung auf einer Test-Site:_ Seite mit Registrierungsformular, E-Mail eintragen, ins Passwortfeld klicken → Vorschlag; „Verwenden“ füllt beide Passwortfelder; Speicherkarte zeigt die E-Mail; „Im Tresor speichern“ → in Nemo erscheint der Eintrag (URL = Origin der Seite). ☐
+X5. _Sync aufs Handy:_ Nach Sync (oder Auto-Sync) erscheint der Eintrag in der Android-App mit demselben Passwort. ☐
+X6. _Login-Autofill:_ Login-Seite derselben Domain: Schlüssel im Feld → Eintrag → Benutzername und Passwort gefüllt; vorher nichts. TOTP-Eintrag: Code-Feld bzw. Popup „Code kopieren“; Zwischenablage nach 30 s leer (und bei zwischenzeitlich kopiertem anderen Text unverändert). ☐
+X7. _Phishing-Test:_ Ähnliche Domain (z. B. `shop-example.test` statt `shop.example.test`, `http://` statt `https://`, anderer Port) bekommt keinen Eintrag und kein Passwort. ☐
+X8. _Gesperrt / nicht gestartet:_ Tresor sperren → Popup „gesperrt“, Speichern zeigt Hinweis, Daten bleiben im Tab; entsperren → „Erneut versuchen“ speichert. App beenden → „Nemo wurde nicht gefunden“. Auto-Sperre beendet die Sitzung sofort. ☐
+X9. _Portable verschoben:_ Ordner mit der EXE verschieben, App starten → Dialog zeigt den Pfad als aktuell (oder „Neu eintragen“), Erweiterung verbindet wieder ohne erneutes Bestätigen. ☐
+X10. _Brave Shields:_ Shields hoch/aus auf einer Test-Site: Overlay und Schlüssel erscheinen in beiden Fällen; Fingerprinting-Schutz „streng“ stört das Ausfüllen nicht. ☐
+X11. _Pipe nur für dich:_ Mit einem zweiten Windows-Benutzer ist die Pipe `\\.\pipe\nemo-vault-<Benutzer>` nicht öffenbar; ein zweites Nemo (Dev-Preview neben Release) meldet „belegt“ statt zu verdrängen. ☐
+X12. _Tresor-Suche-Hotkey:_ Einstellungen → Schnellerfassung → „Tastenkürzel Tresor-Suche“ setzen; bei entsperrtem Tresor öffnet es die Suche, bei gesperrtem nur das Fenster mit dem Sperrbildschirm. ☐
+X13. _Tasten im Eintrag:_ U/P/T/O kopieren Benutzername/Passwort/Code bzw. öffnen die Website; in Eingabefeldern passiert nichts. ☐
+X14. _Eigene Seiten:_ Auf der Nemo-PWA im Browser schlägt die Erweiterung nichts vor und bietet das Master-Passwort nie zum Speichern an. ☐
 
 ### Testdaten (Dev-Preview)
-T1. *Dev-Preview frisch installieren* (`Nemo-Portable-dev.exe` / `Nemo-dev.apk`, leere Datenbank): Die App startet mit Daten in Übersicht und allen Modulen, Hinweis „Testdaten geladen“ erscheint einmal. ☐
-T2. *Einstellungen → Entwickler → „Testdaten entfernen“:* alle Testdaten sind weg, eigene Einträge (vorher angelegt) bleiben. Nach Neustart werden sie nicht erneut geladen. ☐
-T3. *Tresor:* Accounts zeigt einen Demo-Tresor mit der Passphrase `nemo-demo-tresor`; ein vorhandener Tresor wird nie überschrieben. ☐
-T4. *Sync:* Mit eingerichtetem Sync-Server werden Testdaten nicht übertragen (Server hat sie nicht); erst „Seed-Sync erlauben“ schickt sie. ☐
-T5. *Stabile App* (`Nemo-Portable.exe`/`Nemo.apk`) hat keinen Bereich „Entwickler“ und keinen Palette-Befehl „Testdaten laden“. ☐
+
+T1. _Dev-Preview frisch installieren_ (`Nemo-Portable-dev.exe` / `Nemo-dev.apk`, leere Datenbank): Die App startet mit Daten in Übersicht und allen Modulen, Hinweis „Testdaten geladen“ erscheint einmal. ☐
+T2. _Einstellungen → Entwickler → „Testdaten entfernen“:_ alle Testdaten sind weg, eigene Einträge (vorher angelegt) bleiben. Nach Neustart werden sie nicht erneut geladen. ☐
+T3. _Tresor:_ Accounts zeigt einen Demo-Tresor mit der Passphrase `nemo-demo-tresor`; ein vorhandener Tresor wird nie überschrieben. ☐
+T4. _Sync:_ Mit eingerichtetem Sync-Server werden Testdaten nicht übertragen (Server hat sie nicht); erst „Seed-Sync erlauben“ schickt sie. ☐
+T5. _Stabile App_ (`Nemo-Portable.exe`/`Nemo.apk`) hat keinen Bereich „Entwickler“ und keinen Palette-Befehl „Testdaten laden“. ☐
 
 ### Einstellungen neu (Kategorien, Über Nemo) – nur auf echter Hardware prüfbar
-E1. *Windows-Portable:* Einstellungen durchklicken – Kategorien-Leiste links, Auswahl markiert, Zurück/Vor des Fensters, Suche („Hotkey“ springt zu Schnellerfassung und hebt die Zeile hervor). ☐
-E2. *Android:* Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
-E3. *Deep-Links:* „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
-E4. *Über Nemo:* Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
-E5. *Gerät zurücksetzen (Testgerät!):* der erste Klick fragt „Bist du sicher?“, ein schneller Doppelklick löscht nicht, „Zurück“ ändert nichts; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
-E6. *Entwickler:* die Kategorie erscheint nur im Dev-Preview-Build. ☐
+
+E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste links, Auswahl markiert, Zurück/Vor des Fensters, Suche („Hotkey“ springt zu Schnellerfassung und hebt die Zeile hervor). ☐
+E2. _Android:_ Einstellungen öffnet die Kategorien-Liste, eine Kategorie öffnet den Inhalt, die Zurück-Geste führt zur Liste; große Touch-Ziele. ☐
+E3. _Deep-Links:_ „Benachrichtigungen aktivieren“ im Tab Erinnerungen des Kalenders, das Sync-Symbol oben und der Dev-Hinweis springen in die richtige Kategorie und zum Abschnitt. ☐
+E4. _Über Nemo:_ Version, Build/Commit (Dev-Preview), Plattform und Installationsart stimmen; „Ordner öffnen“ öffnet den Datenordner (Portable: `data/` neben der exe, sonst lokaler App-Ordner); Changelog und Lizenzen klappen auf; Diagnose-Export speichert eine Datei ohne Daten und Schlüssel. ☐
+E5. _Gerät zurücksetzen (Testgerät!):_ der erste Klick fragt „Bist du sicher?“, ein schneller Doppelklick löscht nicht, „Zurück“ ändert nichts; danach ist die App leer, API-Schlüssel und Backup-Passwort sind weg, der Sync-Server hat seine Daten noch. ☐
+E6. _Entwickler:_ die Kategorie erscheint nur im Dev-Preview-Build. ☐
 
 ### Fokus- und Aufmerksamkeitshilfen (Paket 1) – nur mit echtem Gerät und echtem Alltag prüfbar
-F1. *Fokusmodus am Handy (Android):* ToDo über „Jetzt dran“ starten. Ring, Schritte und Buttons gut erreichbar mit einer Hand? Display-Sperre/App-Wechsel während der Runde: nach Rückkehr stimmt die Restzeit, die Anzeige oben führt zurück. Ende: „Zeit ist um“ erscheint erst beim Öffnen der App (kein System-Hinweis im Hintergrund, bekannt). ☐
-F2. *Fokusmodus am PC (Windows):* Esc verlässt den Bildschirm, die Runde läuft weiter; „Fertig“ und „Runde beenden“; Ton am Ende (Einstellung „Sanfter Ton am Ende“) ist leise genug. ☐
-F3. *Schnellerfassung in echten Situationen:* unterwegs „Formular ausfüllen 15 min“ eintippen und per Teilen-Menü etwas erfassen; stimmt Dauer und Ziel, wirkt es schnell genug? ☐
-F4. *„Jetzt dran“ über einen Tag:* Passt der Vorschlag morgens? Sind „Später“ und „Etwas anderes“ verständlich? Tagesplan mit 3 Dingen: zu viel, zu wenig? ☐
-F5. *Ruhiges „Jetzt wichtig“:* Wirkt „Wartet noch“ beruhigend oder versteckt es zu viel? „Neu planen“ verteilt sinnvoll? Jede Hilfe lässt sich unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“ einzeln ausschalten. ☐
-F6. *Erinnerungen über einen Tag (Handy und PC):* ein paar Erinnerungen und ToDos mit Datum anlegen; kommt die Morgen-Übersicht um die eingestellte Zeit, wirkt die Karte bei offener App ruhig, ist „Später“ nützlich? Ruhezeit und „höchstens 3 pro Stunde“ in der Praxis spürbar, aber nicht störend? ☐
-F7. *Android, App geschlossen:* Erinnerungen und das Ende einer Fokus-Runde kommen vom System (ohne Knöpfe, bekannt); „Später“ gibt es nur in der Karte bei offener App. Gestaffelte Erinnerung testen (Einstellungen → Ruhige Erinnerungen). ☐
-F8. *„Wenn ich am PC bin“:* auf dem Handy „Später → Wenn ich am PC bin“ wählen, nach dem Sync erscheint die Erinnerung einmal in der Windows-App. ☐
-F9. *„Woran war ich?“:* App 30 Minuten verlassen, zurückkommen: erscheint die Karte auf der Übersicht, führt „Weiter dort“ an die richtige Stelle? ☐
-F10. *Schnellerfassung ohne Rückfrage in echten Situationen:* unterwegs ein paar vage Sätze tippen; landen sie im Eingang, geht „Eingang sortieren“ abends zügig? Ctrl+Enter am PC fürs ganze Formular. ☐
-F11. *Darstellung am Handy und PC:* „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
-F12. *Fortschritt im Alltag:* eine tägliche Wiederholung anlegen und ein paar Tage abhaken: erscheint „n in Folge“, bleibt ein ausgelassener Tag ohne Drama („mit Pausentag“)? Abends „Tag abschließen“ und der Wochenrückblick: wirken sie motivierend statt drängend? Eine Vorlage („Aus Vorlage“ in Listen) einmal wirklich benutzen. ☐
+
+F1. _Fokusmodus am Handy (Android):_ ToDo über „Jetzt dran“ starten. Ring, Schritte und Buttons gut erreichbar mit einer Hand? Display-Sperre/App-Wechsel während der Runde: nach Rückkehr stimmt die Restzeit, die Anzeige oben führt zurück. Ende: „Zeit ist um“ erscheint erst beim Öffnen der App (kein System-Hinweis im Hintergrund, bekannt). ☐
+F2. _Fokusmodus am PC (Windows):_ Esc verlässt den Bildschirm, die Runde läuft weiter; „Fertig“ und „Runde beenden“; Ton am Ende (Einstellung „Sanfter Ton am Ende“) ist leise genug. ☐
+F3. _Schnellerfassung in echten Situationen:_ unterwegs „Formular ausfüllen 15 min“ eintippen und per Teilen-Menü etwas erfassen; stimmt Dauer und Ziel, wirkt es schnell genug? ☐
+F4. _„Jetzt dran“ über einen Tag:_ Passt der Vorschlag morgens? Sind „Später“ und „Etwas anderes“ verständlich? Tagesplan mit 3 Dingen: zu viel, zu wenig? ☐
+F5. _Ruhiges „Jetzt wichtig“:_ Wirkt „Wartet noch“ beruhigend oder versteckt es zu viel? „Neu planen“ verteilt sinnvoll? Jede Hilfe lässt sich unter Einstellungen → Darstellung → „Fokus & Aufmerksamkeit“ einzeln ausschalten. ☐
+F6. _Erinnerungen über einen Tag (Handy und PC):_ ein paar Erinnerungen und ToDos mit Datum anlegen; kommt die Morgen-Übersicht um die eingestellte Zeit, wirkt die Karte bei offener App ruhig, ist „Später“ nützlich? Ruhezeit und „höchstens 3 pro Stunde“ in der Praxis spürbar, aber nicht störend? ☐
+F7. _Android, App geschlossen:_ Erinnerungen und das Ende einer Fokus-Runde kommen vom System (ohne Knöpfe, bekannt); „Später“ gibt es nur in der Karte bei offener App. Gestaffelte Erinnerung testen (Einstellungen → Ruhige Erinnerungen). ☐
+F8. _„Wenn ich am PC bin“:_ auf dem Handy „Später → Wenn ich am PC bin“ wählen, nach dem Sync erscheint die Erinnerung einmal in der Windows-App. ☐
+F9. _„Woran war ich?“:_ App 30 Minuten verlassen, zurückkommen: erscheint die Karte auf der Übersicht, führt „Weiter dort“ an die richtige Stelle? ☐
+F10. _Schnellerfassung ohne Rückfrage in echten Situationen:_ unterwegs ein paar vage Sätze tippen; landen sie im Eingang, geht „Eingang sortieren“ abends zügig? Ctrl+Enter am PC fürs ganze Formular. ☐
+F11. _Darstellung am Handy und PC:_ „Sehr groß“, „Luftig“, „Bewegung: Weniger“ und „Nur das Wichtigste“ ausprobieren; bricht irgendwo das Layout, ist die ruhige Übersicht ruhig genug? ☐
+F12. _Fortschritt im Alltag:_ eine tägliche Wiederholung anlegen und ein paar Tage abhaken: erscheint „n in Folge“, bleibt ein ausgelassener Tag ohne Drama („mit Pausentag“)? Abends „Tag abschließen“ und der Wochenrückblick: wirken sie motivierend statt drängend? Eine Vorlage („Aus Vorlage“ in Listen) einmal wirklich benutzen. ☐
 
 ### Komfort-Review (`docs/product/comfort/`) – nur im Alltag und am Handy prüfbar
-K1. *Eine Woche echte Nutzung:* ToDos, Termine und Geld nur über Zeilenaktionen (Wischen, ⋯-Menü) bedienen. Fehlt eine Aktion, die du ständig suchst? Löst ein Wisch versehentlich etwas aus? ☐
-K2. *Wischen am Handy:* ToDo erledigen, Rechnung bezahlen, Buchung umkategorisieren, Termin „+1 Tag / +1 Woche“. Fühlt sich die Trefferfläche (≥ 44 px) und der Rückgängig-Hinweis gut an, auch einhändig? ☐
-K3. *Erweitert:* pro Modul Basis lassen, einige Tage nutzen; fehlt im Basis-Formular etwas Wichtiges? „Alle Module Erweitert“ (Einstellungen) einmal an- und ausschalten. ☐
-K4. *Wiederkehrende Rechnung:* Miete mit „Monatlich“ anlegen, bezahlen, Rückgängig; kommt genau eine neue? ☐
+
+K1. _Eine Woche echte Nutzung:_ ToDos, Termine und Geld nur über Zeilenaktionen (Wischen, ⋯-Menü) bedienen. Fehlt eine Aktion, die du ständig suchst? Löst ein Wisch versehentlich etwas aus? ☐
+K2. _Wischen am Handy:_ ToDo erledigen, Rechnung bezahlen, Buchung umkategorisieren, Termin „+1 Tag / +1 Woche“. Fühlt sich die Trefferfläche (≥ 44 px) und der Rückgängig-Hinweis gut an, auch einhändig? ☐
+K3. _Erweitert:_ pro Modul Basis lassen, einige Tage nutzen; fehlt im Basis-Formular etwas Wichtiges? „Alle Module Erweitert“ (Einstellungen) einmal an- und ausschalten. ☐
+K4. _Wiederkehrende Rechnung:_ Miete mit „Monatlich“ anlegen, bezahlen, Rückgängig; kommt genau eine neue? ☐
 
 ### Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`) – nur auf echter Hardware prüfbar
-V1. *Windows-Portable in verschiedenen Fenstergrößen:* Fenster ziehen, Halbbild-Snapping links/rechts, maximiert auf 1440p/Ultrawide. Übersicht, ToDos, Merkliste, Finanzen, Kalender: gleich hohe Karten, keine abgeschnittenen Wörter, kein waagerechter Scrollbalken; Schrift auf großem Monitor spürbar größer als auf dem Laptop. ☐
-V2. *Android:* Übersicht, Kalender, Einstellungen im Hoch- und Querformat; Glocke in der Top-Bar, Panel als Sheet, Toasts über der Navigationsleiste, nichts unter Kamera-/Gestenleiste. ☐
-V3. *Glocke:* eine Erinnerung für „gleich“ anlegen, App offen lassen: es erscheint **kein** Banner; die Glocke zählt hoch; „Nächste Erinnerung“ / „Zufällige Erinnerung“, Erledigt, Später, „Alle gelesen“ ausprobieren; Tastatur (Tab, Esc) und Fokus zurück auf die Glocke. ☐
-V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch einblenden“ aus: Windows-/Android-Systembenachrichtigungen kommen unverändert; mit Einstellung an: Karte oben/unten rechts, verschwindet nach der gewählten Zeit, die Erinnerung bleibt in der Glocke. ☐
+
+V1. _Windows-Portable in verschiedenen Fenstergrößen:_ Fenster ziehen, Halbbild-Snapping links/rechts, maximiert auf 1440p/Ultrawide. Übersicht, ToDos, Merkliste, Finanzen, Kalender: gleich hohe Karten, keine abgeschnittenen Wörter, kein waagerechter Scrollbalken; Schrift auf großem Monitor spürbar größer als auf dem Laptop. ☐
+V2. _Android:_ Übersicht, Kalender, Einstellungen im Hoch- und Querformat; Glocke in der Top-Bar, Panel als Sheet, Toasts über der Navigationsleiste, nichts unter Kamera-/Gestenleiste. ☐
+V3. _Glocke:_ eine Erinnerung für „gleich“ anlegen, App offen lassen: es erscheint **kein** Banner; die Glocke zählt hoch; „Nächste Erinnerung“ / „Zufällige Erinnerung“, Erledigt, Später, „Alle gelesen“ ausprobieren; Tastatur (Tab, Esc) und Fokus zurück auf die Glocke. ☐
+V4. _Keine Banner mehr:_ mit Einstellung „Erinnerungen in der App automatisch einblenden“ aus: Windows-/Android-Systembenachrichtigungen kommen unverändert; mit Einstellung an: Karte oben/unten rechts, verschwindet nach der gewählten Zeit, die Erinnerung bleibt in der Glocke. ☐
 
 ### Lesbarkeit (`feat/readability`) – nur im Alltag prüfbar
+
 - **L1 Lesehilfe eine Woche** auf PC und Handy: Einstellungen → Darstellung → Lesen einschalten; Umfang 25/50/75/100 %, Anteil 30/40/50 und Stärke Weich/Fett ausprobieren (Überschriften: Wortanfang hell, Rest dunkler; bei 100 % auch Schaltflächen und Navigation); hilft es bei Notizen, Antworten, Hilfetexten? `Alt+L` zum Umschalten (PC).
 - **L2 Listen:** Umfang 50 % und mehr: werden Titel in Listen ruhiger oder unruhiger? Lange Listen (Rechnungen/ToDos mit vielen Einträgen) bei 100 %: bleibt es flüssig? Fokus-Lesen in einer langen Notiz öffnen.
 - **L3 Ruhig-Modus:** Farben → Ruhig: bleiben nur Überfälliges und Heutiges farbig; erkennt man Kategorien noch am Namen?
 - **L4 Gliederung:** Rechnungen/ToDos: Gruppen einklappen, nach Neustart bleibt der Zustand; Kalender-Woche: Stundenlinien, Wochenende, Jetzt-Linie; Bereichsfarben in Seitenleiste und Modul-Bibliothek (hell/dunkel, Rail, Handy).
 
 ### Notizen: Editor (`feat/notes-editor`) – nur auf echter Hardware prüfbar
+
 - **E1 Android:** Seite öffnen, Tastatur (Gboard) mit Autokorrektur: tippen, `# ` und `- ` Kürzel, `/`-Menü, Text markieren → schwebende Leiste bedienbar (Fett, Hervorheben, Link); Bild aus der Galerie per „/Bild“; Zurück zur Liste. ☐
 - **E2 Windows-App:** Strg+B/I, Tab/Shift+Tab in Listen, Strg+Z/Y; Vollbild; Bild aus der Zwischenablage einfügen und nach Neustart noch da. ☐
 - **E3 Absturz:** Seite mit viel Text, Tab/Fenster hart beenden (Task-Manager), neu öffnen: Text ist da (ggf. Hinweis „wiederhergestellt“). ☐
@@ -249,17 +267,21 @@ V4. *Keine Banner mehr:* mit Einstellung „Erinnerungen in der App automatisch 
 - **E10 Verknüpfen:** `[[` tippen (Handy-Tastatur), Titel wählen, Link antippen, Rückverweise unter der Seite; „Notiz ergänze …“ im Assistenten zeigt in der Vorschau den angehängten Text. ☐
 
 ### KI abschalten – nur mit zwei Geräten prüfbar
+
 - **A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
 ## Spracheingabe (nur von Hand prüfbar)
-V1. *Windows-App (WebView2):* Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
-V2. *Systemweite Taste (Windows):* Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
-V3. *Android (Chrome-PWA und APK):* PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
-V4. *Sprachen:* App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+
+V1. _Windows-App (WebView2):_ Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
+V2. _Systemweite Taste (Windows):_ Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
+V3. _Android (Chrome-PWA und APK):_ PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
+V4. _Sprachen:_ App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
 
 ## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
+
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
+
 - **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐
 - **Z2 Ton bei Fenster im Tray:** „Ton testen“ mit sichtbarem Fenster (alle drei Klänge, Lautstärke 0 = still). Dann Schließen-in-Tray an, Fenster schließen, Erinnerung für in 2 Minuten anlegen vorher, Zock-Modus „Immer“: kommt der Toast ohne Windows-Ton, und danach der App-Ton? Notieren: Verzögerung in Sekunden. ☐
 - **Z3 Vollbild-Spiel:** ein Spiel im Vollbild (Direct3D) starten, Zock-Modus „Automatisch“, Erinnerung für in 2 Minuten: nur der leichte App-Ton, kein Windows-Ton, der Toast wartet im Info-Center oder erscheint (Windows' Spiel-Ruhe kann ihn zurückhalten, das ist ok). Spiel beenden, nächste Erinnerung: normaler Weg, kein App-Ton. ☐
@@ -267,7 +289,9 @@ Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrich
 - **Z5 Android:** Zock-Modus „An“: Erinnerung kommt über den Kanal „Stumm“ ohne Ton und Vibration; „Aus“: wieder normal. ☐
 
 ## Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
+
 Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
+
 - **B1 Windows-App, Fenster:** Portable-EXE, Werkzeug „Bildschirmfoto“ → „Bildschirm aufnehmen“: kommt eine Auswahl (Bildschirm/Fenster)? Ein Fenster wählen: Vorschau erscheint. Kommt stattdessen „… gibt es auf diesem Gerät nicht“ (kein Fehler), ist WebView2 ohne Aufnahme – dann Notiz an den Maintainer (Rust-Aufnahme = neue Abhängigkeit). ☐
 - **B2 Kopieren:** „Kopieren“, dann in Paint/Mail einfügen (Strg+V): das Bild erscheint. ☐
 - **B3 Speichern:** „Speichern“: Windows-Dialog, Datei `bildschirmfoto-JJJJ-MM-TT-HHMM.png` öffnet sich als Bild. ☐
@@ -275,160 +299,188 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
 
 ## Sprachen (App in fünf Sprachen)
+
 - **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
 - **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
 - **S3 – Bestandsinstallation:** ein Gerät mit vorhandenen Daten aktualisieren → bleibt Deutsch, bis die Sprache geändert wird.
 - **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
 - **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
 
 Installation und Update auf echten Geräten (Windows und Android) – Schritt für Schritt:
 
-1. **Dateien holen (Pre-Release).** GitHub → Repository → *Releases* → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das *neueste stabile* Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Nemo-Portable.exe` (Windows) und `Nemo.apk` (Android); die `Taschenmesser-*`-Dateien im selben Release sind identische Kopien für alte Installationen. Prüfsumme optional: `Nemo.apk.sha256`.
+1. **Dateien holen (Pre-Release).** GitHub → Repository → _Releases_ → das neueste Pre-Release. Die README-Badges („Windows (portabel) herunterladen" …) zeigen auf das _neueste stabile_ Release und funktionieren erst, wenn es ein stabiles Release gibt – bis dahin die Dateien direkt von der Release-Seite laden: `Nemo-Portable.exe` (Windows) und `Nemo.apk` (Android); die `Taschenmesser-*`-Dateien im selben Release sind identische Kopien für alte Installationen. Prüfsumme optional: `Nemo.apk.sha256`.
 2. **Von der installierten Windows-Version umsteigen (einmalig, `0.2.0-beta.1` kann sich nicht selbst auf die portable Datei aktualisieren).** (a) Alte App: Einstellungen → Backup → exportieren. (b) `Nemo-Portable.exe` in einen beschreibbaren Ordner legen und starten (SmartScreen: „Weitere Informationen" → „Trotzdem ausführen"; die Datei hat kein Authenticode-Zertifikat, der Update-Inhalt ist mit dem Updater-Key signiert). Die Daten sind sofort da. (c) Alte Version deinstallieren – **„Anwendungsdaten löschen" nicht ankreuzen.** Einstellungen → „App-Updates" zeigt die Version.
 3. **Android installieren.** `Nemo.apk` aufs Handy laden und öffnen. Beim ersten Mal „Installation aus unbekannten Quellen" für den Browser/Dateimanager erlauben, dann installieren. Öffnen → Einstellungen → „App-Updates" zeigt die Version. (Vorherige Debug-/anders signierte Version vorher deinstallieren.)
 4. **Etwas Testdaten anlegen** (ein ToDo, eine Notiz, ein KI-Anbieter, optional ein Tresor-Eintrag), damit man nach dem Update sieht, dass nichts verloren geht.
-5. **Nächstes Pre-Release erzeugen (der Update-Test).** Auf deinem Rechner im Repo: `cd web && npm run version:set -- 0.2.0-beta.3`, dann `git commit -am "chore(release): 0.2.0-beta.3"`, `git tag v0.2.0-beta.3`, `git push origin develop v0.2.0-beta.3`. Der Workflow *Release* baut, prüft (Secret-Scan + Artefakt-Audit), veröffentlicht und prüft danach alle Download-Links (~15 Min.; Fortschritt unter *Actions*). Oder sag mir Bescheid, dann mache ich das.
+5. **Nächstes Pre-Release erzeugen (der Update-Test).** Auf deinem Rechner im Repo: `cd web && npm run version:set -- 0.2.0-beta.3`, dann `git commit -am "chore(release): 0.2.0-beta.3"`, `git tag v0.2.0-beta.3`, `git push origin develop v0.2.0-beta.3`. Der Workflow _Release_ baut, prüft (Secret-Scan + Artefakt-Audit), veröffentlicht und prüft danach alle Download-Links (~15 Min.; Fortschritt unter _Actions_). Oder sag mir Bescheid, dann mache ich das.
 6. **In der portablen App aktualisieren.** Einstellungen → „App-Updates" → Kanal **Beta** wählen → „Jetzt prüfen" → Banner „Update verfügbar" mit Änderungsliste → „Jetzt aktualisieren".
-   - *Windows:* Backup (`%APPDATA%\io.github.sgnemo.taschenmesser\backups\pre-update-…json`), Download, Signaturprüfung, die exe ersetzt sich selbst und startet neu. Version stimmt, Daten sind da. ☐
-   - *Android:* Backup → Download → Android-Installer öffnet sich → „Aktualisieren". Beim ersten Mal ggf. „Installation aus dieser Quelle erlauben" aktivieren, zurück in die App und nochmal „Jetzt aktualisieren". Danach neue Version, Daten sind da. ☐
+   - _Windows:_ Backup (`%APPDATA%\io.github.sgnemo.taschenmesser\backups\pre-update-…json`), Download, Signaturprüfung, die exe ersetzt sich selbst und startet neu. Version stimmt, Daten sind da. ☐
+   - _Android:_ Backup → Download → Android-Installer öffnet sich → „Aktualisieren". Beim ersten Mal ggf. „Installation aus dieser Quelle erlauben" aktivieren, zurück in die App und nochmal „Jetzt aktualisieren". Danach neue Version, Daten sind da. ☐
 7. **Stabil-Kanal prüfen (optional).** Kanal „Stabil" zeigt die Beta nicht an; erst ein Tag `v0.2.0` (ohne Suffix) wird dort angeboten, und die README-Download-Badges gehen dann.
 8. **Rückmeldung.** Klappt etwas nicht: Fehlermeldung/Screenshot und Gerät nennen. Die Update-Logik ist Unit-getestet, aber Austausch der laufenden exe, Installer-Übergabe (Android) und Signaturprüfung sind erst hier real geprüft. Danach die Checklisten in [MANUAL-TESTS.md](MANUAL-TESTS.md) durchgehen.
 
 9. **Einrichtungsassistent prüfen.** Die Punkte E1–E5 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf Windows-Portable und Android durchgehen (frische Installation und eine mit Daten).
 
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
+
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".
-2. *APIs & Dienste → Bibliothek*: „Google Calendar API" und „Gmail API" aktivieren.
-3. *OAuth-Zustimmungsbildschirm* → Typ „Extern"; Name „Nemo", deine Adresse als Support-/Entwickler-Mail. *Bereiche*: `…/auth/calendar.readonly` und `…/auth/gmail.readonly` hinzufügen. **Veröffentlichungsstatus auf „In Produktion" stellen** (ohne Prüfung; beim Login erscheint eine Warnung „nicht überprüft", nur du selbst nutzt es). Im Status „Testing" laufen Refresh-Tokens nach 7 Tagen ab (dann „Neu anmelden").
-4. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID* → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
+2. _APIs & Dienste → Bibliothek_: „Google Calendar API" und „Gmail API" aktivieren.
+3. _OAuth-Zustimmungsbildschirm_ → Typ „Extern"; Name „Nemo", deine Adresse als Support-/Entwickler-Mail. _Bereiche_: `…/auth/calendar.readonly` und `…/auth/gmail.readonly` hinzufügen. **Veröffentlichungsstatus auf „In Produktion" stellen** (ohne Prüfung; beim Login erscheint eine Warnung „nicht überprüft", nur du selbst nutzt es). Im Status „Testing" laufen Refresh-Tokens nach 7 Tagen ab (dann „Neu anmelden").
+4. _Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID_ → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
 
 ### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
+
 Vorher: App im Developer Dashboard anlegen, Redirect-URI `http://127.0.0.1:38417/callback`, eigenes Konto unter „User management“, Client ID in Nemo einfügen ([user/spotify.de.md](user/spotify.de.md)).
-S1. *Echter Login:* Einstellungen → Verbindungen → Spotify → Verbinden: Browser öffnet Spotify, nach „Zustimmen“ zeigt die Ergebnisseite „Anmeldung ist abgeschlossen“, Status „Verbunden“. Spiele in Spotify etwas ab: auf der Übersicht erscheint binnen etwa 30 s „Läuft gerade: Titel – Interpret“; der Titel öffnet Spotify im Browser. Spotify stoppen: die Zeile verschwindet. ☐
-S2. *Pause/Weiter/Nächster (Premium-Konto):* Knöpfe in der Zeile steuern den Player (Pause → „Pausiert: …“, Weiter, Nächster wechselt den Titel). Nemo minimieren: keine regelmäßigen Anfragen (die Zeile fragt nur bei sichtbarer App). ☐
-S3. *Ohne Premium (kostenloses Konto):* Pause klicken: einmal Hinweis „Steuern braucht Spotify Premium.“, Knöpfe weg, Anzeige bleibt; nach Neustart keine Knöpfe, kein zweiter Hinweis. ☐
-S4. *Port belegt:* ein anderes Programm auf Port 38417 starten (z. B. `python -m http.server 38417 --bind 127.0.0.1`), Verbinden klicken: Meldung „Port belegt …“, der Browser öffnet sich nicht; Programm beenden, erneut Verbinden klappt. Danach Trennen: Zeile weg. ☐
-S5. *Musik in der Fokus-Runde (Premium-Konto, Spotify offen auf dem PC):* beim Verbinden „Playlists“ ankreuzen; Einstellungen → Fokus & Aufmerksamkeit → Weitere Einstellungen → „Musik in der Fokus-Runde“ → „Playlist starten“, eine Playlist wählen. Fokus-Runde starten: die Playlist beginnt; „Fertig“ oder Zeit um: Pause. Spotify schließen und neu starten: Runde läuft normal weiter, Zeile „Musik: nicht erreichbar“. Mit „Beim Start weiterspielen“: pausierte Wiedergabe läuft los, nichts Neues startet. ☐
-S6. *Spotify in der PWA (Handy oder PC im Browser, https-Adresse):* im Developer Dashboard zusätzlich `<deine Nemo-Adresse>/oauth/callback` als Redirect-URI eintragen (steht auch auf der Spotify-Karte); Client-ID speichern, „Verbinden“: die Seite wechselt zu Spotify und kommt zurück, Karte zeigt „Verbunden“, „Läuft gerade“ erscheint. Falls es nach der Rückkehr „Fehler“ zeigt: Browserkonsole auf CORS-Meldungen für `accounts.spotify.com/api/token` oder `api.spotify.com` prüfen und melden. ☐
-S7. *Spotify-Player (echtes Konto, Premium, Spotify offen):* beim Verbinden „Playlists“, „Lieblingssongs“ und „Zuletzt gehört“ ankreuzen. Karte „Läuft gerade“ antippen: Playlist öffnen (alle Titel, Cover, Dauer) – es spielt nichts; Titel antippen: er spielt, danach geht die Playlist weiter. ♥ bei einem Titel: er erscheint in Spotify unter „Lieblingssongs“; nochmal tippen: weg. ⋯ → Warteschlange: der Titel kommt als Nächstes/danach. Titel ausblenden: er verschwindet nur hier, in Spotify bleibt er; „Abspielen“ überspringt ihn. Geräte-Menü: Wiedergabe wechselt auf ein anderes Gerät. Falls Playlist-Inhalte leer bleiben: Spotify hat die Playlist-Felder geändert, bitte melden (Parser: `connectors/spotify/browse.ts`). ☐
+S1. _Echter Login:_ Einstellungen → Verbindungen → Spotify → Verbinden: Browser öffnet Spotify, nach „Zustimmen“ zeigt die Ergebnisseite „Anmeldung ist abgeschlossen“, Status „Verbunden“. Spiele in Spotify etwas ab: auf der Übersicht erscheint binnen etwa 30 s „Läuft gerade: Titel – Interpret“; der Titel öffnet Spotify im Browser. Spotify stoppen: die Zeile verschwindet. ☐
+S2. _Pause/Weiter/Nächster (Premium-Konto):_ Knöpfe in der Zeile steuern den Player (Pause → „Pausiert: …“, Weiter, Nächster wechselt den Titel). Nemo minimieren: keine regelmäßigen Anfragen (die Zeile fragt nur bei sichtbarer App). ☐
+S3. _Ohne Premium (kostenloses Konto):_ Pause klicken: einmal Hinweis „Steuern braucht Spotify Premium.“, Knöpfe weg, Anzeige bleibt; nach Neustart keine Knöpfe, kein zweiter Hinweis. ☐
+S4. _Port belegt:_ ein anderes Programm auf Port 38417 starten (z. B. `python -m http.server 38417 --bind 127.0.0.1`), Verbinden klicken: Meldung „Port belegt …“, der Browser öffnet sich nicht; Programm beenden, erneut Verbinden klappt. Danach Trennen: Zeile weg. ☐
+S5. _Musik in der Fokus-Runde (Premium-Konto, Spotify offen auf dem PC):_ beim Verbinden „Playlists“ ankreuzen; Einstellungen → Fokus & Aufmerksamkeit → Weitere Einstellungen → „Musik in der Fokus-Runde“ → „Playlist starten“, eine Playlist wählen. Fokus-Runde starten: die Playlist beginnt; „Fertig“ oder Zeit um: Pause. Spotify schließen und neu starten: Runde läuft normal weiter, Zeile „Musik: nicht erreichbar“. Mit „Beim Start weiterspielen“: pausierte Wiedergabe läuft los, nichts Neues startet. ☐
+S6. _Spotify in der PWA (Handy oder PC im Browser, https-Adresse):_ im Developer Dashboard zusätzlich `<deine Nemo-Adresse>/oauth/callback` als Redirect-URI eintragen (steht auch auf der Spotify-Karte); Client-ID speichern, „Verbinden“: die Seite wechselt zu Spotify und kommt zurück, Karte zeigt „Verbunden“, „Läuft gerade“ erscheint. Falls es nach der Rückkehr „Fehler“ zeigt: Browserkonsole auf CORS-Meldungen für `accounts.spotify.com/api/token` oder `api.spotify.com` prüfen und melden. ☐
+S7. _Spotify-Player (echtes Konto, Premium, Spotify offen):_ beim Verbinden „Playlists“, „Lieblingssongs“ und „Zuletzt gehört“ ankreuzen. Karte „Läuft gerade“ antippen: Playlist öffnen (alle Titel, Cover, Dauer) – es spielt nichts; Titel antippen: er spielt, danach geht die Playlist weiter. ♥ bei einem Titel: er erscheint in Spotify unter „Lieblingssongs“; nochmal tippen: weg. ⋯ → Warteschlange: der Titel kommt als Nächstes/danach. Titel ausblenden: er verschwindet nur hier, in Spotify bleibt er; „Abspielen“ überspringt ihn. Geräte-Menü: Wiedergabe wechselt auf ein anderes Gerät. Falls Playlist-Inhalte leer bleiben: Spotify hat die Playlist-Felder geändert, bitte melden (Parser: `connectors/spotify/browse.ts`). ☐
 
 ### Supporter-Modus (nur mit echter Zahlungsseite und Dienst prüfbar)
+
 Voraussetzung: Schlüsselpaar erzeugt, `publicKeys.ts` im Build, Webhook-Dienst deployt ([services/supporter-webhook/README.md](../services/supporter-webhook/README.md)). Ohne Dienst gehen Codes per CLI (`create`).
-S1. *Test-Spende mit kleinem Betrag* bei Ko-fi: Mail mit Code (Deutsch und Englisch) kommt an, nicht im Spam; Absender und Inhalt stimmen, Hinweis „freiwillig“ steht drin. ☐
-S2. *Code auf dem PC:* Einstellungen → Über Nemo → Supporter, Code einfügen: Stufe, Name, Datum stimmen; Danke-Abzeichen in Über Nemo; Farbthemen wählbar; Logo in Themenfarbe. ☐
-S3. *Code auf Android:* derselbe Code auf dem Handy eingeben (Einfügen-Knopf geht oder Direkteinfügen im Feld); Themes sehen auf dem Display gut aus (hell und dunkel). ☐
-S4. *Sync:* Code nur auf einem Gerät eingeben; nach dem Sync zeigt das zweite Gerät denselben Status. Code entfernen: auch dort weg. ☐
-S5. *Themes:* alle fünf in Hell und Dunkel durchklicken (Lesbarkeit, Fokusring sichtbar, Formulare erkennbar); ohne Code: 30-Sekunden-Vorschau endet von selbst, nichts bleibt gespeichert. ☐
-S6. *Duplikat-Webhook:* in Ko-fi „Send test“ zweimal oder dieselbe Transaktion erneut senden: derselbe Code kommt wieder, kein neuer. ☐
-S7. *Mailfehler:* Resend-Schlüssel kurz falsch setzen, Spende auslösen: nach den Wiederholungen kommt die Benachrichtigung an die Entwickleradresse (mit Hash-Kürzel, ohne Spender-Mail). ☐
-S8. *Entwickler-Code:* `create --tier developer --name "Sven"` eingeben: Badge „Entwickler“, entfernbar, neu erzeugbar. ☐
+S1. _Test-Spende mit kleinem Betrag_ bei Ko-fi: Mail mit Code (Deutsch und Englisch) kommt an, nicht im Spam; Absender und Inhalt stimmen, Hinweis „freiwillig“ steht drin. ☐
+S2. _Code auf dem PC:_ Einstellungen → Über Nemo → Supporter, Code einfügen: Stufe, Name, Datum stimmen; Danke-Abzeichen in Über Nemo; Farbthemen wählbar; Logo in Themenfarbe. ☐
+S3. _Code auf Android:_ derselbe Code auf dem Handy eingeben (Einfügen-Knopf geht oder Direkteinfügen im Feld); Themes sehen auf dem Display gut aus (hell und dunkel). ☐
+S4. _Sync:_ Code nur auf einem Gerät eingeben; nach dem Sync zeigt das zweite Gerät denselben Status. Code entfernen: auch dort weg. ☐
+S5. _Themes:_ alle fünf in Hell und Dunkel durchklicken (Lesbarkeit, Fokusring sichtbar, Formulare erkennbar); ohne Code: 30-Sekunden-Vorschau endet von selbst, nichts bleibt gespeichert. ☐
+S6. _Duplikat-Webhook:_ in Ko-fi „Send test“ zweimal oder dieselbe Transaktion erneut senden: derselbe Code kommt wieder, kein neuer. ☐
+S7. _Mailfehler:_ Resend-Schlüssel kurz falsch setzen, Spende auslösen: nach den Wiederholungen kommt die Benachrichtigung an die Entwickleradresse (mit Hash-Kürzel, ohne Spender-Mail). ☐
+S8. _Entwickler-Code:_ `create --tier developer --name "Sven"` eingeben: Badge „Entwickler“, entfernbar, neu erzeugbar. ☐
 
 ### Stumm (Pause für Erinnerungen)
-M1. *Android:* Erinnerung in 2 Minuten anlegen, Einstellungen → „Stumm“ → 1 Stunde: die Erinnerung kommt, aber ohne Ton und Vibration (Kanal „Stumm“ in den App-Benachrichtigungseinstellungen sichtbar). Danach „Aus“: nächste Erinnerung mit Ton. ☐
-M2. *Web Push:* gleiche Prüfung mit geschlossener App und eingerichtetem Push: Benachrichtigung erscheint ohne Ton. ☐
-M3. *Extras:* gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
-M4. *Desktop:* Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
 
+M1. _Android:_ Erinnerung in 2 Minuten anlegen, Einstellungen → „Stumm“ → 1 Stunde: die Erinnerung kommt, aber ohne Ton und Vibration (Kanal „Stumm“ in den App-Benachrichtigungseinstellungen sichtbar). Danach „Aus“: nächste Erinnerung mit Ton. ☐
+M2. _Web Push:_ gleiche Prüfung mit geschlossener App und eingerichtetem Push: Benachrichtigung erscheint ohne Ton. ☐
+M3. _Extras:_ gestaffelte Erinnerung oder Tagesübersicht fällt in die Pause: kommt erst nach deren Ende. ☐
+M4. _Desktop:_ Karte in der App erscheint wie sonst; der Ton der Windows-Benachrichtigung bleibt (bekannte Grenze). ☐
 
 ### Tastenkürzel (Kürzelkarte)
-K1. *Windows-App:* `T` dann `T` öffnet den Timer; F8 ebenso, auch mit dem Cursor in einem Textfeld (nichts wird getippt). F10 öffnet nur die Einstellungen, kein Fenstermenü. ☐
-K2. *Umbelegen:* Einstellungen → Allgemein → Tastenkürzel: eine belegte Taste wird mit Text abgelehnt, F5/F11/F12 ebenso; nach „Entfernen“ bei Rechner lässt sich F9 für „Heute“ vergeben und wirkt sofort. ☐
-K3. *Handy:* der Abschnitt lässt sich nur mit Fingertipp bedienen („Entfernen“, „Standard“). ☐
+
+K1. _Windows-App:_ `T` dann `T` öffnet den Timer; F8 ebenso, auch mit dem Cursor in einem Textfeld (nichts wird getippt). F10 öffnet nur die Einstellungen, kein Fenstermenü. ☐
+K2. _Umbelegen:_ Einstellungen → Allgemein → Tastenkürzel: eine belegte Taste wird mit Text abgelehnt, F5/F11/F12 ebenso; nach „Entfernen“ bei Rechner lässt sich F9 für „Heute“ vergeben und wirkt sofort. ☐
+K3. _Handy:_ der Abschnitt lässt sich nur mit Fingertipp bedienen („Entfernen“, „Standard“). ☐
 
 ### Erinnerungen bei geschlossener App (P5) – nur auf Android prüfbar
+
 Skript und Auswertung: [features/qa-reminders-safety.md](features/qa-reminders-safety.md). Je Zeile notieren: pünktlich / verspätet (Minuten) / nie; Gerät, Android-Version, Akkumodus.
-E1. *Android:* Erinnerung in 3 Minuten, App aus den zuletzt benutzten Apps wegwischen, Bildschirm aus: kommt pünktlich. ☐
-E2. *Android, Ruhezustand:* Gerät 30+ Minuten unberührt (nicht am Ladegerät), Erinnerung in 45 Minuten: kommt. ☐
-E3. *Android, Neustart:* Erinnerung in 10 Minuten, Gerät neu starten, Nemo nicht öffnen: kommt. ☐
-E4. *Android, Akku „eingeschränkt“ für Nemo* und *„Wecker & Erinnerungen“ entzogen*: jeweils wie E1; Ergebnis dokumentieren. ☐
-E5. *Android, „Beenden erzwingen“ und Flugmodus:* wie E1 (Flugmodus muss gehen). ☐
-E6. *PWA in Chrome (gleiches Handy), mit und ohne Web Push:* E1 und E3; ohne Push kommt nichts, mit Push kommt es. ☐
+E1. _Android:_ Erinnerung in 3 Minuten, App aus den zuletzt benutzten Apps wegwischen, Bildschirm aus: kommt pünktlich. ☐
+E2. _Android, Ruhezustand:_ Gerät 30+ Minuten unberührt (nicht am Ladegerät), Erinnerung in 45 Minuten: kommt. ☐
+E3. _Android, Neustart:_ Erinnerung in 10 Minuten, Gerät neu starten, Nemo nicht öffnen: kommt. ☐
+E4. _Android, Akku „eingeschränkt“ für Nemo_ und _„Wecker & Erinnerungen“ entzogen_: jeweils wie E1; Ergebnis dokumentieren. ☐
+E5. _Android, „Beenden erzwingen“ und Flugmodus:_ wie E1 (Flugmodus muss gehen). ☐
+E6. _PWA in Chrome (gleiches Handy), mit und ohne Web Push:_ E1 und E3; ohne Push kommt nichts, mit Push kommt es. ☐
 
 ### Erinnern-Zeile, Genommen, Ruhe (P5 Paket A)
-A1. *Android:* Termin mit Uhrzeit anlegen, „Erinnern → 1 h“ und „Als Vorgabe merken“; ein neuer Termin startet mit „1 h“, ein Termin ohne Uhrzeit bekommt nichts. Ohne Benachrichtigungs-Erlaubnis erscheint ein ruhiger Satz mit „Erlauben“ und „Nicht mehr zeigen“. ☐
-A2. *Einstellungen → Benachrichtigungen (Android, Windows, PWA):* der Einleitungstext passt zur Plattform; auf Android und Windows fehlt die Push-Karte. ☐
-A3. *Android:* Erinnerung mit „Einnahme“ anlegen: Karte und Glocke zeigen „Genommen“, danach ist sie weg, nichts wird gezählt. ☐
-A4. *Glocke:* mehr als drei Erinnerungen in einer Stunde zeigen konkrete Titel (nicht „Weitere Erinnerungen · n“); Älteres liegt unter „Früher“. ☐
-A5. *Ruhe:* eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spielen“ (Windows) bzw. „Immer leise“ (Android); Schnellleiste und Palette heißen „Ruhe“. ☐
+
+A1. _Android:_ Termin mit Uhrzeit anlegen, „Erinnern → 1 h“ und „Als Vorgabe merken“; ein neuer Termin startet mit „1 h“, ein Termin ohne Uhrzeit bekommt nichts. Ohne Benachrichtigungs-Erlaubnis erscheint ein ruhiger Satz mit „Erlauben“ und „Nicht mehr zeigen“. ☐
+A2. _Einstellungen → Benachrichtigungen (Android, Windows, PWA):_ der Einleitungstext passt zur Plattform; auf Android und Windows fehlt die Push-Karte. ☐
+A3. _Android:_ Erinnerung mit „Einnahme“ anlegen: Karte und Glocke zeigen „Genommen“, danach ist sie weg, nichts wird gezählt. ☐
+A4. _Glocke:_ mehr als drei Erinnerungen in einer Stunde zeigen konkrete Titel (nicht „Weitere Erinnerungen · n“); Älteres liegt unter „Früher“. ☐
+A5. _Ruhe:_ eine Karte „Ruhe“ (Aus / 1 Stunde / Bis morgen) mit „Beim Spielen“ (Windows) bzw. „Immer leise“ (Android); Schnellleiste und Palette heißen „Ruhe“. ☐
 
 ### Fristen (P5 Paket B)
-F1. *Android/Windows:* Unterlage „Vertrag“ mit Ende in 3 Monaten und Frist 4 Monate anlegen: Liste „Frist vorbei am …“ (ruhig, kein Rot), Übersicht zeigt es gedämpft, Kalender „Frist vorbei: …“. ☐
-F2. *Abo jährlich mit Frist „3 Monate“:* im Dialog steht „Kündigen bis …“ groß; Monatsabo hat kein 31-Tage-Feld, der Tag folgt dem Datum „Abbuchung am“. ☐
-F3. *Handy:* Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Zahl bleibt beim Wechsel der Einheit. ☐
+
+F1. _Android/Windows:_ Unterlage „Vertrag“ mit Ende in 3 Monaten und Frist 4 Monate anlegen: Liste „Frist vorbei am …“ (ruhig, kein Rot), Übersicht zeigt es gedämpft, Kalender „Frist vorbei: …“. ☐
+F2. _Abo jährlich mit Frist „3 Monate“:_ im Dialog steht „Kündigen bis …“ groß; Monatsabo hat kein 31-Tage-Feld, der Tag folgt dem Datum „Abbuchung am“. ☐
+F3. _Handy:_ Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar, Zahl bleibt beim Wechsel der Einheit. ☐
+
 ### Mit Partner teilen: QR-Bilder (Kamera) – nur von Hand prüfbar
-Q1. *Zwei Geräte (z. B. Handy und Laptop, Chromium-Browser mit QR-Erkennung):* Einstellungen → Verbindungen → „Dauerhaft teilen“ → Verbindung anlegen, Code notieren, „Als QR-Bilder zeigen“. Auf dem anderen Gerät „Mit Kamera lesen“, Kamera auf den Bildschirm halten: Fortschritt „n von m Bildern“ läuft hoch, danach erscheint die Vorschau, „Zusammenführen“ übernimmt. ☐
-Q2. *Reihenfolge und Wiederholung:* „Anhalten“, Kamera wegnehmen und später wieder hinhalten: das Lesen läuft weiter, nichts geht verloren. ☐
-Q3. *Firefox/Safari:* dort steht „Dieser Browser kann QR-Codes nicht lesen. Nimm stattdessen die Datei.“, der Dateiweg geht. ☐
-Q4. *Kamera verweigert:* ruhiger Hinweis, die Kamera bleibt aus, die Datei geht. Nach „Kamera ausschalten“ und beim Schließen der Seite erlischt die Kamera-Anzeige. ☐
-Q5. *Android-App:* QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐
+
+Q1. _Zwei Geräte (z. B. Handy und Laptop, Chromium-Browser mit QR-Erkennung):_ Einstellungen → Verbindungen → „Dauerhaft teilen“ → Verbindung anlegen, Code notieren, „Als QR-Bilder zeigen“. Auf dem anderen Gerät „Mit Kamera lesen“, Kamera auf den Bildschirm halten: Fortschritt „n von m Bildern“ läuft hoch, danach erscheint die Vorschau, „Zusammenführen“ übernimmt. ☐
+Q2. _Reihenfolge und Wiederholung:_ „Anhalten“, Kamera wegnehmen und später wieder hinhalten: das Lesen läuft weiter, nichts geht verloren. ☐
+Q3. _Firefox/Safari:_ dort steht „Dieser Browser kann QR-Codes nicht lesen. Nimm stattdessen die Datei.“, der Dateiweg geht. ☐
+Q4. _Kamera verweigert:_ ruhiger Hinweis, die Kamera bleibt aus, die Datei geht. Nach „Kamera ausschalten“ und beim Schließen der Seite erlischt die Kamera-Anzeige. ☐
+Q5. _Android-App:_ QR-Lesen braucht Kamera-Berechtigung und eine WebView mit QR-Erkennung; wenn das Lesen nicht startet, gilt der Dateiweg. ☐
 
 ### Löschen mit Rückgängig, Entwurf (P5 Paket C)
-U1. *Android/Windows:* Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
-U2. *Handy:* Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
+
+U1. _Android/Windows:_ Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
+U2. _Handy:_ Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
 
 ### Zuletzt gelöscht (P5 Paket D)
-G1. *Android/Windows:* Unterlage mit Datei, ein Abo und einen Termin löschen; Einstellungen → Allgemein → „Zuletzt gelöscht“ zeigt alle drei mit „noch 30 Tage“. „Wiederherstellen“ bringt sie zurück (Datei der Unterlage ist da). ☐
-G2. *Mit eingerichtetem Sync-Server, zwei Geräte:* auf Gerät A löschen und „Endgültig löschen“; nach dem Abgleich ist der Eintrag auch auf Gerät B weg und nicht in dessen Liste. ☐
-G3. *Schalter „Gelöschtes 30 Tage aufbewahren“ aus:* Liste verschwindet mit Hinweis; „Rückgängig“ direkt nach dem Löschen geht weiter. ☐
 
+G1. _Android/Windows:_ Unterlage mit Datei, ein Abo und einen Termin löschen; Einstellungen → Allgemein → „Zuletzt gelöscht“ zeigt alle drei mit „noch 30 Tage“. „Wiederherstellen“ bringt sie zurück (Datei der Unterlage ist da). ☐
+G2. _Mit eingerichtetem Sync-Server, zwei Geräte:_ auf Gerät A löschen und „Endgültig löschen“; nach dem Abgleich ist der Eintrag auch auf Gerät B weg und nicht in dessen Liste. ☐
+G3. _Schalter „Gelöschtes 30 Tage aufbewahren“ aus:_ Liste verschwindet mit Hinweis; „Rückgängig“ direkt nach dem Löschen geht weiter. ☐
 
 ### Schnellerfassung: Android-Kurzbefehle, Kachel, Tray „Heute“ – nur auf echter Hardware prüfbar
+
 Android-Teil: Gradle baut ihn nur im Job „Android APK (dev)“ von `.github/workflows/dev-preview.yml` (nach jedem grünen Push auf `develop`) bzw. „Android APK“ von `release.yml` (Trockenlauf bei Push auf `develop` mit Änderungen unter `web/src-tauri/**`), nicht im PR.
-Q1. *Android, Launcher:* lange auf das Nemo-Symbol drücken: drei Kurzbefehle „Erfassen“, „Suchen“, „Heute“ (Gerätesprache). „Erfassen“ öffnet die App mit dem Erfassen-Blatt, „Suchen“ mit der Suche, „Heute“ auf der Übersicht – auch wenn die App schon offen war. ☐
-Q2. *Android, Schnelleinstellungen:* Schnelleinstellungen bearbeiten → Kachel „Nemo: Erfassen“ hinzufügen, tippen: Leiste klappt zu, App öffnet mit dem Erfassen-Blatt (Android 14+ und älter). Bei gesperrtem Handy erst entsperren, nichts öffnet über dem Sperrbildschirm. ☐
-Q3. *Dev-Preview parallel installiert:* Kurzbefehle und Kachel der „Nemo Dev“ öffnen „Nemo Dev“, die der stabilen App die stabile App (nie die andere, keine Auswahl-Abfrage). Teilen von Text funktioniert in beiden wie vorher. ☐
-T1. *Windows, Tray:* ein Termin heute 15:00 und ein überfälliges ToDo anlegen, Rechtsklick auf das Tray-Symbol: oben „Heute“ mit „Überfälliges ToDo“ und „15:00 · Termin“, darunter „Jetzt dran anfangen“ und „Timer 25 Minuten“, dann Erfassen/App öffnen/Beenden wie bisher. Keine Beträge, kein Tresor, keine Notizinhalte. ☐
-T2. *Klick:* Klick auf die Termin-Zeile holt das Hauptfenster nach vorn und öffnet den Kalender an dem Tag; „Timer 25 Minuten“ startet den Timer und zeigt ihn; „Jetzt dran anfangen“ öffnet den Fokus für das ToDo. ☐
-T3. *Aktualisieren und Abschalten:* ToDo erledigen → nach dem nächsten Öffnen des Tray-Menüs ist die Zeile weg (sofort, spätestens nach 5 Minuten). Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“ aus: Block verschwindet, Menü wie vorher. Leerer Tag: kein Block. ☐
+Q1. _Android, Launcher:_ lange auf das Nemo-Symbol drücken: drei Kurzbefehle „Erfassen“, „Suchen“, „Heute“ (Gerätesprache). „Erfassen“ öffnet die App mit dem Erfassen-Blatt, „Suchen“ mit der Suche, „Heute“ auf der Übersicht – auch wenn die App schon offen war. ☐
+Q2. _Android, Schnelleinstellungen:_ Schnelleinstellungen bearbeiten → Kachel „Nemo: Erfassen“ hinzufügen, tippen: Leiste klappt zu, App öffnet mit dem Erfassen-Blatt (Android 14+ und älter). Bei gesperrtem Handy erst entsperren, nichts öffnet über dem Sperrbildschirm. ☐
+Q3. _Dev-Preview parallel installiert:_ Kurzbefehle und Kachel der „Nemo Dev“ öffnen „Nemo Dev“, die der stabilen App die stabile App (nie die andere, keine Auswahl-Abfrage). Teilen von Text funktioniert in beiden wie vorher. ☐
+T1. _Windows, Tray:_ ein Termin heute 15:00 und ein überfälliges ToDo anlegen, Rechtsklick auf das Tray-Symbol: oben „Heute“ mit „Überfälliges ToDo“ und „15:00 · Termin“, darunter „Jetzt dran anfangen“ und „Timer 25 Minuten“, dann Erfassen/App öffnen/Beenden wie bisher. Keine Beträge, kein Tresor, keine Notizinhalte. ☐
+T2. _Klick:_ Klick auf die Termin-Zeile holt das Hauptfenster nach vorn und öffnet den Kalender an dem Tag; „Timer 25 Minuten“ startet den Timer und zeigt ihn; „Jetzt dran anfangen“ öffnet den Fokus für das ToDo. ☐
+T3. _Aktualisieren und Abschalten:_ ToDo erledigen → nach dem nächsten Öffnen des Tray-Menüs ist die Zeile weg (sofort, spätestens nach 5 Minuten). Einstellungen → Schnellerfassung → „Heute im Tray-Menü zeigen“ aus: Block verschwindet, Menü wie vorher. Leerer Tag: kein Block. ☐
 
 ### Rechner-Modi (Branch `feat/calculator-modes`)
-C1. *Android-APK:* Rechner öffnen, alle sechs Tabs durchtippen; die Tab-Leiste scrollt seitlich, die aktive Tab bleibt sichtbar, Tasten sind gut treffbar, Tastatur verdeckt das Ergebnis nicht. ☐
-C2. *Offline:* App einmal online öffnen, Flugmodus, Rechner öffnen: Wissenschaft (sin, log) geht nur, wenn der Rechner vorher online geöffnet war; sonst Grundrechenarten und der ruhige Hinweis. ☐
-C3. *Sprachen:* Format-Region auf en-US stellen: `1,234.5 + 1` und `1.234,5 + 1` ergeben beide 1235.5, Ergebnis mit Punkt als Dezimalzeichen. ☐
-C4. *Notiz:* Notizen einschalten, Verlauf → „In Notiz übernehmen“ öffnet eine neue Notiz mit den Zeilen. ☐
+
+C1. _Android-APK:_ Rechner öffnen, alle sechs Tabs durchtippen; die Tab-Leiste scrollt seitlich, die aktive Tab bleibt sichtbar, Tasten sind gut treffbar, Tastatur verdeckt das Ergebnis nicht. ☐
+C2. _Offline:_ App einmal online öffnen, Flugmodus, Rechner öffnen: Wissenschaft (sin, log) geht nur, wenn der Rechner vorher online geöffnet war; sonst Grundrechenarten und der ruhige Hinweis. ☐
+C3. _Sprachen:_ Format-Region auf en-US stellen: `1,234.5 + 1` und `1.234,5 + 1` ergeben beide 1235.5, Ergebnis mit Punkt als Dezimalzeichen. ☐
+C4. _Notiz:_ Notizen einschalten, Verlauf → „In Notiz übernehmen“ öffnet eine neue Notiz mit den Zeilen. ☐
 
 ### Browser (Desktop, nur mit echtem Fenster prüfbar)
-B1. *Tab sitzt im Nemo-Fenster:* Modul „Browser“ in der Bibliothek einschalten, `/browser` öffnen, `example.org` eintippen: die Seite erscheint genau im grauen Rahmen, Fenster vergrößern/verkleinern: sie folgt. Menü („Mehr“) öffnen: die Seite verschwindet, das Menü ist lesbar; schließen: sie ist wieder da. ☐
-B2. *Isolation:* auf einer beliebigen Seite die Entwicklerkonsole (F12 ist aus; Rechtsklick → Untersuchen nur im Debug-Build) – `window.__TAURI_INTERNALS__` ist nicht definiert, `fetch('http://ipc.localhost/…')` bleibt ohne Antwort. ☐
-B3. *HTTP-Warnung:* `http://neverssl.com` → Warnseite mit „Zurück“/„Trotzdem öffnen“; Einstellung „Vor unverschlüsselten Seiten warnen“ aus: öffnet direkt. ☐
-B4. *Pop-ups, Downloads, Rechte:* eine Seite mit `window.open` – kein Fenster, Hinweis „Ein Pop-up wurde blockiert“; ein Download-Link – nichts wird gespeichert, Hinweis mit „Im Systembrowser öffnen“; Kamera/Mikrofon/Standort-Abfrage einer Testseite wird ohne Rückfrage abgelehnt (Windows/WebView2; Linux/macOS: nicht gebaut). ☐
-B5. *Privat:* privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließen, neuen privaten Tab: nicht mehr angemeldet; Verlauf bleibt leer. Normaler Tab: Anmeldung bleibt nach App-Neustart; „Browserdaten löschen“ entfernt sie. ☐
-B6. *Blocker (Windows):* eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
-B7. *Suchen auf der Seite:* Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
-B8. *Merkliste/Notiz:* „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐
-B9. *Android (Custom Tabs, APK nötig):* Browser öffnen, Adresse eingeben → die Seite erscheint in einem Custom Tab (Chrome-Leiste, Schließen-Pfeil zurück in Nemo). Suchbegriff nutzt die gewählte Suchmaschine. Stern setzt ein Lesezeichen; Lesezeichen und „Zuletzt besucht“ öffnen wieder im Custom Tab. Ohne Chrome/Browser mit Custom Tabs öffnet der Standardbrowser. Die Einstellungen zeigen Blocker/HTTP-Warnung nicht. ☐
-B10. *Android: Datenschutz:* Nemo erhält nichts aus dem Custom Tab zurück (Verlauf zeigt nur, was in Nemo geöffnet wurde); „Verlauf speichern“ aus → nichts wird vermerkt. Der Browser erscheint nicht in der Desktop-Liste doppelt. ☐
+
+B1. _Tab sitzt im Nemo-Fenster:_ Modul „Browser“ in der Bibliothek einschalten, `/browser` öffnen, `example.org` eintippen: die Seite erscheint genau im grauen Rahmen, Fenster vergrößern/verkleinern: sie folgt. Menü („Mehr“) öffnen: die Seite verschwindet, das Menü ist lesbar; schließen: sie ist wieder da. ☐
+B2. _Isolation:_ auf einer beliebigen Seite die Entwicklerkonsole (F12 ist aus; Rechtsklick → Untersuchen nur im Debug-Build) – `window.__TAURI_INTERNALS__` ist nicht definiert, `fetch('http://ipc.localhost/…')` bleibt ohne Antwort. ☐
+B3. _HTTP-Warnung:_ `http://neverssl.com` → Warnseite mit „Zurück“/„Trotzdem öffnen“; Einstellung „Vor unverschlüsselten Seiten warnen“ aus: öffnet direkt. ☐
+B4. _Pop-ups, Downloads, Rechte:_ eine Seite mit `window.open` – kein Fenster, Hinweis „Ein Pop-up wurde blockiert“; ein Download-Link – nichts wird gespeichert, Hinweis mit „Im Systembrowser öffnen“; Kamera/Mikrofon/Standort-Abfrage einer Testseite wird ohne Rückfrage abgelehnt (Windows/WebView2; Linux/macOS: nicht gebaut). ☐
+B5. _Privat:_ privater Tab, auf einer Seite anmelden/Cookie setzen, Tab schließen, neuen privaten Tab: nicht mehr angemeldet; Verlauf bleibt leer. Normaler Tab: Anmeldung bleibt nach App-Neustart; „Browserdaten löschen“ entfernt sie. ☐
+B6. _Blocker (Windows):_ eine Seite mit vielen Anzeigen: Zähler im Menü „Blocker“ steigt, Fremdserver-Liste füllt sich, „Blocken“ legt eine eigene Regel an, nach „Neu laden“ fehlt dieser Server. Pausieren auf der Seite lädt alles wieder. ☐
+B7. _Suchen auf der Seite:_ Strg+F zeigt die Suchleiste von WebView2 (nicht von Nemo gebaut). ☐
+B8. _Merkliste/Notiz:_ „In Merkliste speichern“ (Modul an) legt den Eintrag an, „Als Notiz speichern“ öffnet eine neue Notiz mit Titel und Adresse. ☐
+B9. _Android (Custom Tabs, APK nötig):_ Browser öffnen, Adresse eingeben → die Seite erscheint in einem Custom Tab (Chrome-Leiste, Schließen-Pfeil zurück in Nemo). Suchbegriff nutzt die gewählte Suchmaschine. Stern setzt ein Lesezeichen; Lesezeichen und „Zuletzt besucht“ öffnen wieder im Custom Tab. Ohne Chrome/Browser mit Custom Tabs öffnet der Standardbrowser. Die Einstellungen zeigen Blocker/HTTP-Warnung nicht. ☐
+B10. _Android: Datenschutz:_ Nemo erhält nichts aus dem Custom Tab zurück (Verlauf zeigt nur, was in Nemo geöffnet wurde); „Verlauf speichern“ aus → nichts wird vermerkt. Der Browser erscheint nicht in der Desktop-Liste doppelt. ☐
 
 ### Downloads (Desktop, nur mit echtem Netz und Fenster prüfbar)
-D1. *Download und Prüfsumme:* Modul „Downloads“ einschalten, eine kleine Datei von einer Seite mit veröffentlichter SHA-256 hinzufügen (Prüfsumme einfügen): läuft, wird „Fertig“, „Stimmt überein“. Eine falsche Prüfsumme: „Fehlgeschlagen – Prüfsumme stimmt nicht, Datei wurde gelöscht“. ☐
-D2. *Pausieren, Fortsetzen, Neustart:* großen Download starten, pausieren, Nemo beenden, neu starten: Eintrag steht „Pausiert“ mit dem alten Stand, nichts läuft von selbst; „Fortsetzen“ macht dort weiter (kein neuer Anfang). Auch beim Beenden mitten im Download (Task-Manager): nach dem Start „Pausiert“. ☐
-D3. *Limit:* Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darunter; auf 0: wieder volle Geschwindigkeit. ☐
-D4. *Ordner und Dateien:* Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
-D5. *Aus dem Browser:* im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
-D6. *Entfernen:* „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
+
+D1. _Download und Prüfsumme:_ Modul „Downloads“ einschalten, eine kleine Datei von einer Seite mit veröffentlichter SHA-256 hinzufügen (Prüfsumme einfügen): läuft, wird „Fertig“, „Stimmt überein“. Eine falsche Prüfsumme: „Fehlgeschlagen – Prüfsumme stimmt nicht, Datei wurde gelöscht“. ☐
+D2. _Pausieren, Fortsetzen, Neustart:_ großen Download starten, pausieren, Nemo beenden, neu starten: Eintrag steht „Pausiert“ mit dem alten Stand, nichts läuft von selbst; „Fortsetzen“ macht dort weiter (kein neuer Anfang). Auch beim Beenden mitten im Download (Task-Manager): nach dem Start „Pausiert“. ☐
+D3. _Limit:_ Einstellung „Tempolimit“ auf 200 KB/s: die Anzeige bleibt darunter; auf 0: wieder volle Geschwindigkeit. ☐
+D4. _Ordner und Dateien:_ Ordner wählen (Dialog), gleichnamige Datei vorhanden: neue heißt „name (1).ext“, die alte bleibt. „Im Ordner zeigen“ markiert die Datei im Explorer, öffnet sie nicht. Eine ausführbare Datei wird nie gestartet. ☐
+D5. _Aus dem Browser:_ im Browser auf einen Download-Link klicken: nichts wird gespeichert, Hinweis mit „Im Download-Manager öffnen“; Modul aus: „Aktivieren“-Hinweis. Der Dialog erscheint vorausgefüllt und lädt erst nach „Herunterladen“. Hinweis: ohne die Cookies des Browsers (Seiten mit Anmeldung liefern ggf. nur eine Fehlerseite). ☐
+D6. _Entfernen:_ „Aus der Liste entfernen“ lässt die Datei liegen, „Mit Datei löschen“ fragt nach und löscht Datei und `.part`. ☐
 
 ### Rechner-Plotter (Branch `feat/calc-plotter`)
-PL1. *Android-APK:* Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
-PL2. *Offline vor dem ersten Gebrauch:* ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
-PL3. *Tastatur (Windows):* Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
+
+PL1. _Android-APK:_ Rechner → Tab „Plotter“: der Graph füllt die Breite, die Achsenzahlen sind lesbar, Zoom- und Pfeil-Tasten sind gut treffbar, die Bildschirmtastatur verdeckt den Graphen nicht. ☐
+PL2. _Offline vor dem ersten Gebrauch:_ ohne vorherigen Online-Start des Rechners zeigt der Plotter die ruhige Fehlermeldung statt eines Graphen (die Bibliothek ist nicht im Vorab-Cache). ☐
+PL3. _Tastatur (Windows):_ Graph anklicken oder mit Tab erreichen, Pfeiltasten verschieben, + und − zoomen, 0 setzt zurück; der Fokusrahmen ist sichtbar. ☐
 
 ### Torrent (Desktop, nur mit echtem Netz prüfbar; nur legale Inhalte, z. B. eine Linux-Distribution von deren Download-Seite)
-D7. *Aus und Hinweis:* Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐
-D8. *Magnet und Datei:* Magnet-Link einer Linux-Distribution einfügen → „Dateien ansehen“ (kann etwas dauern) → Dateien wählen, Ordner wählen → lädt; dasselbe mit der `.torrent`-Datei der Distribution („.torrent-Datei öffnen“). Mehrere Dateien landen in `Ordner/<Name>/`. ☐
-D9. *Anzeige und Limits:* Zustand, Fortschritt, Verbindungen, Laden/Teilen pro Sekunde, Verhältnis; Einstellungen → Torrent-Limits setzen: die Anzeige bleibt darunter. ☐
-D10. *Teilen und Neustart:* nach dem Download „Teilt“; Verhältnis 1,0 gesetzt → nach Erreichen „Fertig, Teilen beendet“. Nemo beenden und neu starten (auch hart per Task-Manager): alle Torrents stehen „Pausiert“, nichts lädt oder teilt von selbst. ☐
-D11. *Entfernen:* „Aus der Liste entfernen“ lässt die Dateien, „Mit Dateien löschen“ fragt nach und löscht sie. ☐
-D12. *IP und Ausschalten:* „IP-Adresse anzeigen“ fragt erst auf den Klick (api.ipify.org). „Torrent-Teil ausschalten“ beendet die Engine; kein Netzverkehr der Torrents mehr (Ressourcenmonitor). Rechner ohne IPv6 (selten): „konnte nicht starten“. ☐
+
+D7. _Aus und Hinweis:_ Downloads-Seite, „BitTorrent ist aus“; „Torrent-Teil einschalten“ zeigt den Hinweis (legale Inhalte, hochladen beim Herunterladen, Abmahnung); erst nach „Verstanden“ startet die Engine. Aus- und wieder Einschalten: kein zweiter Hinweis. ☐
+D8. _Magnet und Datei:_ Magnet-Link einer Linux-Distribution einfügen → „Dateien ansehen“ (kann etwas dauern) → Dateien wählen, Ordner wählen → lädt; dasselbe mit der `.torrent`-Datei der Distribution („.torrent-Datei öffnen“). Mehrere Dateien landen in `Ordner/<Name>/`. ☐
+D9. _Anzeige und Limits:_ Zustand, Fortschritt, Verbindungen, Laden/Teilen pro Sekunde, Verhältnis; Einstellungen → Torrent-Limits setzen: die Anzeige bleibt darunter. ☐
+D10. _Teilen und Neustart:_ nach dem Download „Teilt“; Verhältnis 1,0 gesetzt → nach Erreichen „Fertig, Teilen beendet“. Nemo beenden und neu starten (auch hart per Task-Manager): alle Torrents stehen „Pausiert“, nichts lädt oder teilt von selbst. ☐
+D11. _Entfernen:_ „Aus der Liste entfernen“ lässt die Dateien, „Mit Dateien löschen“ fragt nach und löscht sie. ☐
+D12. _IP und Ausschalten:_ „IP-Adresse anzeigen“ fragt erst auf den Klick (api.ipify.org). „Torrent-Teil ausschalten“ beendet die Engine; kein Netzverkehr der Torrents mehr (Ressourcenmonitor). Rechner ohne IPv6 (selten): „konnte nicht starten“. ☐
 
 ### Anonyme Persona (Branch `feat/tool-anonymous-persona`)
-AP1. *Wegwerf-Mail:* Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
-AP2. *Notiz:* Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
-AP3. *Telefon:* Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
-AP4. *Android:* die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
-AP5. *Einstellungen:* Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
-AP6. *Tresor:* Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
+
+AP1. _Wegwerf-Mail:_ Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öffnen“ mit jedem der drei Anbieter: die Seite öffnet sich im Browser (Android: im Standardbrowser, Windows: im Standardbrowser), Nemo füllt nichts aus. ☐
+AP2. _Notiz:_ Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
+AP3. _Telefon:_ Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
+AP4. _Android:_ die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut treffbar, nichts läuft über den Rand. ☐
+AP5. _Einstellungen:_ Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
+AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
+
+### Modul-Rahmen, Wetter und Musik (Branch `feat/module-shell-identity`) – nur auf Geräten prüfbar
+
+- **M1 Handy-Kopf (Android):** ein Modul öffnen (z. B. Finanzen, Wetter), nach unten scrollen: der Kopf schrumpft auf eine Zeile (Name, Tabs), die Leiste oben blendet beim Scrollen nach unten aus und beim Hochscrollen wieder ein, ohne den Kopf zu verdecken. Zurück an den Anfang: der Kopf wächst wieder. ☐
+- **M2 Spotify ohne Gerät (Windows und Android):** Spotify auf allen Geräten beenden, Modul „Musik“ öffnen: „Gerade läuft nichts“, die Geräteliste, „Spotify-App öffnen“ (öffnet die App, wenn das System das `spotify:`-Schema kennt, sonst nichts Schlimmes) und „Im Browser öffnen“ (Webplayer). Ein Gerät mit „Hier abspielen“ wählen: Musik startet dort. Ohne Premium steht der Hinweis, ohne die Knöpfe. ☐
+- **M3 Coverfarbe:** Titel mit sehr hellem und mit sehr dunklem Cover abspielen: der Kopf der Musik-Seite wird in der Coverfarbe getönt, die Schrift bleibt gut lesbar (hell und dunkel). ☐
+- **M4 Wetterhinweis und Himmel:** echten Ort wählen: der Himmel passt zu Wetter und Tageszeit (nachts hell auf dunkel). Bei Gewitter/Sturm in der Vorhersage erscheint oben ein Hinweis mit dem Satz „keine amtliche Warnung“. Zweiten Ort über „Ort hinzufügen“ ergänzen, per Chip umschalten, mit × entfernen. ☐
+- **M5 Ruhig-Modus:** Einstellungen → Darstellung → Farben → „Ruhig“: Köpfe, Widget-Bänder, Himmel und Karten werden grau; Aufbau und Signatur bleiben erkennbar. ☐
+- **M6 Musik schaltet sich beim Verbinden ein:** Spotify unter Verbindungen verbinden: „Musik“ ist danach aktiv (Hinweis „Jetzt aktiv“), erscheint unter Wissen und als Widget. Wer „Musik“ in der Bibliothek ausgeschaltet hat und neu verbindet, bekommt es nicht wieder eingeschaltet. ☐

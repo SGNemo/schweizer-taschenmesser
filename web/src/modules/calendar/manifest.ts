@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.calendar.meta.name;
   },
   icon: 'calendar',
-  identity: { hue: 'sky', widgetType: 'timeline' },
+  identity: {
+    hue: 'sky',
+    widgetType: 'timeline',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'calendarLeaf',
+  },
   version: 2,
   get description() {
     return t.calendar.meta.description;

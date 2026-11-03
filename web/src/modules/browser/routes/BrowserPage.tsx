@@ -9,7 +9,16 @@ import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, IconButton, ItemList, ItemRow, TextField } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  IconButton,
+  ItemList,
+  ItemRow,
+  PageTitle,
+  TextField,
+} from '@/ui';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
@@ -165,7 +174,7 @@ export default function BrowserPage() {
   if (!platform.supported) {
     return (
       <>
-        <h1>{t.browser.meta.name}</h1>
+        <PageTitle title={t.browser.meta.name} />
         <EmptyState title={t.browser.unsupported.title}>{t.browser.unsupported.body}</EmptyState>
       </>
     );

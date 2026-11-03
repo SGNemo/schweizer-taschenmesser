@@ -1,0 +1,43 @@
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.label {
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-variant-numeric: var(--font-num);
+  overflow-wrap: anywhere;
+}
+.unit {
+  margin-left: 0.15em;
+  font-size: 0.5em;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0;
+}
+.detail {
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.figure[data-type='thin'] .value {
+  font-weight: 300;
+  letter-spacing: -0.045em;
+}
+.figure[data-type='mono'] .value {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+.figure[data-type='serif'] .value {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.01em;
+}

@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.pantry.meta.name;
   },
   icon: 'package',
-  identity: { hue: 'moss', widgetType: 'dueList' },
+  identity: {
+    hue: 'moss',
+    widgetType: 'dueList',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'shelf',
+  },
   version: 1,
   get description() {
     return t.pantry.meta.description;

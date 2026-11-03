@@ -5,7 +5,13 @@ import type { ModuleManifest } from './types';
 const manifest = (id: string, over: Partial<ModuleManifest> = {}): ModuleManifest =>
   ({
     id,
-    identity: { hue: 'teal', widgetType: 'kpi' },
+    identity: {
+      hue: 'teal',
+      widgetType: 'kpi',
+      head: 'figure',
+      surface: 'gradient',
+      signature: 'bankCard',
+    },
     contributions: {},
     ...over,
   }) as ModuleManifest;

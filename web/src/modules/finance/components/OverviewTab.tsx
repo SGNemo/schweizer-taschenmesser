@@ -6,6 +6,10 @@ import { Button, Card } from '@/ui';
 import { expensesByCategory, monthSummary, monthlyTrend } from '../logic';
 import type { FinanceData } from '../types';
 import { totalBalance, useAvailability } from '../summary';
+import { monthBalanceSeries } from '../balanceSeries';
+import { CategoryRing } from './CategoryRing';
+import { MonthCurve } from './MonthCurve';
+import { today } from '@/core/time/dates';
 import styles from '../routes/finance.module.css';
 
 // Recharts is heavy: load it only when the overview is shown.
@@ -52,6 +56,7 @@ export function OverviewTab({
   const byCategory = expensesByCategory(data.txs, month, data.categories);
   const trend = monthlyTrend(data.txs, month, 6);
   const deducting = a?.deducting;
+  const curve = monthBalanceSeries(data.accounts, data.txs, month, today());
 
   return (
     <>
@@ -103,6 +108,11 @@ export function OverviewTab({
             {money(sum.net)}
           </span>
         </Card>
+      </div>
+
+      <div className={`${styles.visuals} ${narrow ? styles.visualsOne : ''}`}>
+        <MonthCurve points={curve} />
+        <CategoryRing rows={byCategory} />
       </div>
 
       <div className={`${styles.charts} ${narrow ? styles.chartsOne : ''}`}>

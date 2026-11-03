@@ -1,0 +1,77 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 18.75rem;
+  max-width: 100%;
+  aspect-ratio: 1.586;
+  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius-lg);
+  /* Text colour for both themes: the card is dark enough in light (hue 92 % over black) and light enough in dark. */
+  color: var(--card-ink, var(--surface));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--module-color) 88%, black),
+    var(--module-color) 58%,
+    color-mix(in srgb, var(--module-color-2, var(--module-color)) 78%, white)
+  );
+  box-shadow: var(--shadow-2);
+}
+:global(:root[data-theme='dark']) .card {
+  --card-ink: var(--bg);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  right: -2.5rem;
+  top: -3.75rem;
+  width: 14rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 0.14);
+}
+.name {
+  position: relative;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.balance {
+  position: relative;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  font-variant-numeric: var(--font-num);
+}
+.foot {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-meta);
+  opacity: 0.92;
+}
+.compact {
+  width: 100%;
+  aspect-ratio: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  gap: var(--space-1);
+  box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-3);
+}
+.compact .balance {
+  font-size: var(--text-xl);
+}
+.compact .name {
+  font-size: var(--text-xs);
+}
+:global(:root[data-color='calm']) .card,
+:global(:root[data-module-colors='off']) .card {
+  background: color-mix(in srgb, var(--text-3) 85%, black);
+}

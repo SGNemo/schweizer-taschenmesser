@@ -12,7 +12,14 @@ const manifest: ModuleManifest = {
     return t.notes.meta.name;
   },
   icon: 'note',
-  identity: { hue: 'violet', widgetType: 'tiles' },
+  identity: {
+    hue: 'violet',
+    widgetType: 'tiles',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'notePaper',
+    type: 'serif',
+  },
   version: 3,
   get description() {
     return t.notes.meta.description;

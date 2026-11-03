@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.vault.meta.name;
   },
   icon: 'files',
-  identity: { hue: 'plum', widgetType: 'status' },
+  identity: {
+    hue: 'plum',
+    widgetType: 'status',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'folderTab',
+  },
   version: 2,
   get description() {
     return t.vault.meta.description;

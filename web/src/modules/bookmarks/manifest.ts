@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.bookmarks.meta.name;
   },
   icon: 'bookmark',
-  identity: { hue: 'indigo', widgetType: 'tiles' },
+  identity: {
+    hue: 'indigo',
+    widgetType: 'tiles',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'pinboard',
+  },
   version: 1,
   get description() {
     return t.bookmarks.meta.description;

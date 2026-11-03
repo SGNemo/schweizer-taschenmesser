@@ -1,8 +1,9 @@
-import { DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/money';
+import { currencyOf, DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/money';
 import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { KpiWidget } from '@/ui';
-import { balances, currenciesOf, filterByCurrency, monthlyTrend } from '../logic';
+import { KpiWidget, useWidgetSize } from '@/ui';
+import { BankCard } from '@/ui/identity';
+import { balances, currenciesOf, filterByCurrency, monthlyTrend, sortAccounts } from '../logic';
 import { totalBalance, useAvailability, useFinanceData } from '../summary';
 
 export default function BalanceWidget() {
@@ -31,27 +32,39 @@ export default function BalanceWidget() {
         return sumMinor(balances(data.accounts, data.txs, asOf).values());
       })
     : [];
+  const size = useWidgetSize();
+  const first = data
+    ? sortAccounts(data.accounts).find((a) => currencyOf(a) === currency)
+    : undefined;
+  const firstBalance =
+    first && data ? (balances(data.accounts, data.txs, day).get(first.id) ?? 0) : 0;
   return (
-    <KpiWidget
-      loading={loading && !noAccounts}
-      value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
-      empty={t.finance.noAccounts}
-      emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-      context={
-        [a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '', others]
-          .filter(Boolean)
-          .join(' · ') || undefined
-      }
-      trend={
-        net !== 0
-          ? {
-              direction: net > 0 ? 'up' : 'down',
-              text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
-            }
-          : undefined
-      }
-      series={series}
-      seriesLabel={t.widgets.kpiSeries}
-    />
+    <>
+      {/* The module's signature in small (identity v2): the first account as a card; the figure below is the total. */}
+      {size !== 's' && data && first && data.accounts.length > 1 ? (
+        <BankCard compact name={first.name} balance={formatMoney(firstBalance, currency)} />
+      ) : null}
+      <KpiWidget
+        loading={loading && !noAccounts}
+        value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
+        empty={t.finance.noAccounts}
+        emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
+        context={
+          [a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '', others]
+            .filter(Boolean)
+            .join(' · ') || undefined
+        }
+        trend={
+          net !== 0
+            ? {
+                direction: net > 0 ? 'up' : 'down',
+                text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
+              }
+            : undefined
+        }
+        series={series}
+        seriesLabel={t.widgets.kpiSeries}
+      />
+    </>
   );
 }

@@ -87,12 +87,13 @@ describe('module visibility filter', () => {
     expect(isVisible(base({}), { showPreview: false, isEnabled: () => false })).toBe(true);
   });
 
-  it("the preview modules are the maintainer's list (chat, maps), hidden until the switch", () => {
+  it("the preview modules are the maintainer's list (chat, maps, music), hidden until the switch", () => {
     const preview = catalogManifests({ showPreview: true }).filter((m) => m.maturity === 'preview');
-    expect(preview.map((m) => m.id).sort()).toEqual(['chat', 'maps']);
+    expect(preview.map((m) => m.id).sort()).toEqual(['chat', 'maps', 'music']);
     const ids = catalogManifests({ showPreview: false }).map((m) => m.id);
     expect(ids).not.toContain('chat');
     expect(ids).not.toContain('maps');
+    expect(ids).not.toContain('music');
     expect(
       catalogManifests({ showPreview: false, isEnabled: (id) => id === 'maps' }).map((m) => m.id),
     ).toContain('maps');

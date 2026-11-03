@@ -1,8 +1,8 @@
 {
   "version": 1,
   "tolerancePercent": 5,
-  "criticalGzip": 617139,
-  "criticalRequests": 69,
-  "precacheFiles": 318,
-  "precacheBytes": 5441690
+  "criticalGzip": 666824,
+  "criticalRequests": 82,
+  "precacheFiles": 362,
+  "precacheBytes": 5956220
 }

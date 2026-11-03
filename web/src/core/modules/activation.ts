@@ -55,6 +55,19 @@ export async function enableModule(
   await bus.emit('module.enabled', { moduleId: manifest.id });
 }
 
+/**
+ * Switches a module on once, only if the user never chose (no stored state): a connector that brings a module of its own
+ * (Spotify → music) activates it when it is connected. Returns true when it did switch it on.
+ */
+export async function enableModuleIfUnset(
+  manifest: ModuleManifest,
+  database: TaschenmesserDB = defaultDb,
+): Promise<boolean> {
+  if (await stateRepo(database).get(manifest.id)) return false;
+  await enableModule(manifest, database);
+  return true;
+}
+
 /** Soft-delete every record of the module (tombstones, so the deletion syncs). */
 export async function wipeModuleData(
   manifest: ModuleManifest,

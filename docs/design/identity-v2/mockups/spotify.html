@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v2 – Musik (Spotify)</title>
+<link rel="stylesheet" href="identity.css">
+<style>
+body{--mod:var(--mod-orchid);--mod2:var(--mod-orchid-2);--cover:#7a3b9c;--cover2:#e07a5f}
+html[data-theme=dark] body{--cover:#9b5bc0;--cover2:#f0956f}
+/* the hero takes its colour from the cover (B fully, C as a tint, A keeps the module hue) */
+html[data-v=B] .hero{background:linear-gradient(118deg,color-mix(in srgb,var(--cover) 58%,var(--surface)) 0%,color-mix(in srgb,var(--cover2) 14%,var(--surface)) 75%)}
+html[data-v=C] .hero{background:linear-gradient(118deg,color-mix(in srgb,var(--cover) 30%,var(--surface)) 0%,color-mix(in srgb,var(--cover) 6%,var(--surface)) 75%)}
+html[data-v=B] .hero .tabs b,html[data-v=B] .hero .modchip{color:color-mix(in srgb,var(--cover) 70%,var(--text));border-color:currentColor}
+.now{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s5);align-items:center}
+.now .cover{width:168px;height:168px}
+html[data-v=A] .now .cover{width:72px;height:72px;border-radius:var(--r-sm)}
+html[data-v=C] .now .cover{width:120px;height:120px}
+.now h1{font-size:2rem;margin-top:2px}
+html[data-v=A] .now h1{font-size:1.5rem}
+.now .by{font-size:1.0625rem;color:var(--text-2)}
+.prog{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:.8125rem;color:var(--text-3);font-variant-numeric:tabular-nums;font-family:var(--mono)}
+html[data-v=A] .prog{font-family:var(--font)}
+.prog .bar{flex:1;height:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 14%,transparent);position:relative}
+.prog .bar i{position:absolute;left:0;top:0;bottom:0;width:39%;border-radius:3px;background:var(--text)}
+.prog .bar i::after{content:'';position:absolute;right:-6px;top:-4px;width:14px;height:14px;border-radius:50%;background:var(--text)}
+.ctl{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl .b{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--text-2)}
+.ctl .b.big{width:52px;height:52px;background:var(--text);color:var(--bg)}
+.ctl .b .ic{width:20px;height:20px}
+.ctl .vol{display:flex;align-items:center;gap:8px;margin-left:12px;font-size:.8125rem;color:var(--text-3)}
+.ctl .vol .bar{width:110px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 14%,transparent);position:relative}
+.ctl .vol .bar i{position:absolute;left:0;top:0;bottom:0;width:40%;border-radius:3px;background:var(--text-2)}
+.ctl .dev{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:var(--r-full);background:color-mix(in srgb,var(--surface) 70%,transparent);font-size:.875rem;font-weight:600}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s4)}
+.cgrid .pl .cover{width:100%;aspect-ratio:1;height:auto;margin-bottom:8px}
+.cgrid .pl b{display:block;font-size:.9375rem}.cgrid .pl span{font-size:.8125rem;color:var(--text-3)}
+.recent{display:flex;gap:var(--s4);overflow:hidden}
+.recent .pl{flex:0 0 120px}
+.recent .pl .cover{width:120px;height:120px;margin-bottom:8px}
+.recent .pl b{display:block;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recent .pl span{font-size:.8125rem;color:var(--text-3)}
+.q .cover{width:40px;height:40px;border-radius:6px}
+.lib .row{min-height:40px}
+.lib .cover{width:36px;height:36px;border-radius:6px}
+.lib .ic{color:var(--mod)}
+.q .dur{font-variant-numeric:tabular-nums;color:var(--text-3);font-size:.875rem}
+/* no active device */
+.nodev{display:none}
+html[data-state=nodevice] .now{display:none}
+html[data-state=nodevice] .nodev{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s5);align-items:start}
+html[data-state=nodevice] .hero{background:linear-gradient(118deg,color-mix(in srgb,var(--mod) var(--tint-0),var(--surface)),color-mix(in srgb,var(--mod) var(--tint-1),var(--surface)) 72%)}
+.nodev .ph{width:120px;height:120px;border-radius:var(--r-md);background:color-mix(in srgb,var(--mod) 14%,transparent);display:grid;place-items:center;color:var(--mod)}
+.nodev .ph .ic{width:40px;height:40px}
+.devs{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-width:34rem}
+.devs .d{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r-md);background:color-mix(in srgb,var(--surface) 80%,transparent);font-size:.9375rem}
+.devs .d .grow{flex:1}.devs .d .sub{display:block;font-size:.8125rem;color:var(--text-3)}
+html[data-device=mobile] .now{grid-template-columns:1fr}
+html[data-device=mobile] .now .cover{width:140px;height:140px}
+html[data-device=mobile] .recent{overflow-x:auto}
+html[data-device=mobile] .nodev{grid-template-columns:1fr}
+</style></head>
+<body data-active="music" data-area="wissen">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame wide">
+  <section class="hero">
+    <div class="collapsed"><span class="cover sm" style="width:28px;height:28px;border-radius:6px"></span><span>Testlied</span><span class="meta">Erfundene Band</span></div>
+    <div class="now">
+      <div class="cover"></div>
+      <div>
+        <p class="eyebrow"><span class="modchip" id="chip"></span>Wissen · Musik</p>
+        <h1>Testlied</h1>
+        <p class="by">Erfundene Band · Erfundenes Album · 2024</p>
+        <div class="prog"><span>1:12</span><span class="bar"><i></i></span><span>3:05</span></div>
+        <div class="ctl">
+          <span class="b"><svg class="ic" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></span>
+          <span class="b"><svg class="ic" viewBox="0 0 24 24"><path d="M19 20L9 12l10-8zM5 19V5"/></svg></span>
+          <span class="b big"><svg class="ic" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></span>
+          <span class="b"><svg class="ic" viewBox="0 0 24 24"><path d="M5 4l10 8-10 8zM19 5v14"/></svg></span>
+          <span class="b"><svg class="ic" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4M21 13v3a2 2 0 0 1-2 2H3"/></svg></span>
+          <span class="b" style="color:var(--danger)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg></span>
+          <span class="vol"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7"/></svg><span class="bar"><i></i></span>40 %</span>
+          <span class="dev"><svg class="ic" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7" r="1"/></svg>Küche ▾</span>
+        </div>
+      </div>
+    </div>
+    <div class="nodev">
+      <div class="ph"><svg class="ic" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7" r="1"/></svg></div>
+      <div>
+        <p class="eyebrow"><span class="modchip" id="chip2"></span>Wissen · Musik</p>
+        <h1>Gerade läuft nichts</h1>
+        <p class="by">Kein aktives Gerät. Wähle eines, oder öffne Spotify einmal auf einem Gerät.</p>
+        <div class="devs">
+          <div class="d"><svg class="ic" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="14" r="3"/></svg><span class="grow">Küche <span class="sub">Lautsprecher · zuletzt gestern</span></span><span class="btn soft" style="height:34px">Hier abspielen</span></div>
+          <div class="d"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg><span class="grow">Büro-PC <span class="sub">Computer</span></span><span class="btn soft" style="height:34px">Hier abspielen</span></div>
+          <div class="d"><svg class="ic" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span class="grow">Handy <span class="sub">Telefon</span></span><span class="btn soft" style="height:34px">Hier abspielen</span></div>
+        </div>
+        <div class="ctl" style="margin-top:14px"><span class="btn primary">Spotify-App öffnen</span><span class="meta">Steuern braucht Spotify Premium.</span></div>
+      </div>
+    </div>
+    <div class="actions"><span class="btn ghost">In Spotify öffnen</span></div>
+  </section>
+  <div class="toolbar">
+    <div class="search" style="width:28rem"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Titel, Playlists, Alben suchen</div>
+    <span class="chip on">Alle</span><span class="chip">Titel</span><span class="chip">Playlists</span><span class="chip">Alben</span>
+    <span class="spacer"></span>
+    <span class="chip">Fokus-Musik</span>
+  </div>
+  <div class="body with-aside">
+    <div style="display:flex;flex-direction:column;gap:var(--s5);min-width:0">
+      <div class="card"><h3>Zuletzt gespielt</h3>
+        <div class="recent">
+          <div class="pl"><div class="cover sm" style="--cover:#7a3b9c;--cover2:#e07a5f"></div><b>Testlied</b><span>Erfundene Band</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#1f5fa8;--cover2:#7cc7e8"></div><b>Gestern gehört</b><span>Erfundene Band</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#2b3f8c;--cover2:#a0305f"></div><b>Tiefer Fokus</b><span>Playlist · 42 Titel</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#4f6d1a;--cover2:#12766f"></div><b>Ruhe</b><span>Playlist · 18 Titel</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#8a5a00;--cover2:#e8b85a"></div><b>Morgenlicht</b><span>Album · 2023</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#55636b;--cover2:#1d6b7a"></div><b>Regentage</b><span>Playlist · 25 Titel</span></div>
+        </div>
+      </div>
+      <div class="card"><h3>Deine Playlists</h3>
+        <div class="cgrid">
+          <div class="pl"><div class="cover sm" style="--cover:#2b3f8c;--cover2:#a0305f"></div><b>Tiefer Fokus</b><span>42 Titel · 2 Std 51</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#4f6d1a;--cover2:#12766f"></div><b>Ruhe</b><span>18 Titel · 1 Std 12</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#55636b;--cover2:#1d6b7a"></div><b>Regentage</b><span>25 Titel · 1 Std 40</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#a0305f;--cover2:#ff9a57"></div><b>Küche &amp; Kochen</b><span>60 Titel · 4 Std 05</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#1d6b7a;--cover2:#7cc7e8"></div><b>Laufen</b><span>33 Titel · 2 Std 10</span></div>
+          <div class="pl"><div class="cover sm" style="--cover:#7a4aa8;--cover2:#c9a8ea"></div><b>Abends</b><span>21 Titel · 1 Std 30</span></div>
+        </div>
+      </div>
+    </div>
+    <aside class="aside">
+      <div class="card lib"><h3>Bibliothek</h3>
+        <div class="row"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg><span class="grow">Lieblingssongs</span><span class="meta">212</span></div>
+        <div class="row"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="grow">Zuletzt gespielt</span></div>
+        <div class="row"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="grow">Warteschlange</span><span class="meta">3</span></div>
+      </div>
+      <div class="card q"><h3>Warteschlange</h3>
+        <div class="row"><span class="cover sm" style="--cover:#1f5fa8;--cover2:#7cc7e8"></span><span class="grow">Als Nächstes <span class="sub">Erfundene Band</span></span><span class="dur">3:20</span></div>
+        <div class="row"><span class="cover sm" style="--cover:#4f6d1a;--cover2:#12766f"></span><span class="grow">Zweites Lied <span class="sub">Erfundene Band</span></span><span class="dur">3:20</span></div>
+        <div class="row"><span class="cover sm" style="--cover:#8a5a00;--cover2:#e8b85a"></span><span class="grow">Drittes Lied <span class="sub">Andere Band</span></span><span class="dur">4:01</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+</div>
+<script src="shell.js"></script>
+<script>document.getElementById('chip').innerHTML = ICONS.music; document.getElementById('chip2').innerHTML = ICONS.music;</script>
+</body></html>

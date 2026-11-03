@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { now } from '@/core/time/now';
 import { fetchForecast, type Forecast } from './api';
 import {
@@ -50,21 +50,32 @@ export function useWeather(needsPreview = false): WeatherView | undefined {
 
   const hit = fetched?.key === key ? fetched : cached?.key === key ? cached : undefined;
 
+  // One request per place (and preview need) per mount: a re-render that only swaps the cached object must not ask again.
+  // The answer is kept even if the effect re-ran meanwhile; only an unmounted hook stops listening.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const asked = useRef<string | undefined>(undefined);
   useEffect(() => {
     const online = typeof navigator === 'undefined' || navigator.onLine !== false;
     if (!active || !shouldFetch(hit, key, now(), online, readTried(), needsPreview)) return;
-    let alive = true;
+    const token = `${key}|${needsPreview}`;
+    if (asked.current === token) return;
+    asked.current = token;
     request(key, lat, lon)
       .then((f) => {
-        if (!alive) return;
         const at = now();
         writeCache({ key, at, forecast: f });
-        setFetched({ key, forecast: f, at });
+        if (mounted.current) setFetched({ key, forecast: f, at });
       })
-      .catch(() => noteTried({ key, at: now() }));
-    return () => {
-      alive = false;
-    };
+      .catch(() => {
+        asked.current = undefined;
+        noteTried({ key, at: now() });
+      });
   }, [active, key, lat, lon, hit, needsPreview]);
 
   if (!active || !hit) return undefined;

@@ -4,7 +4,9 @@
  * contributions (`externalCalendar`), never through connector code.
  */
 import { t } from '@/strings';
-import { loadModuleStates } from '@/core/modules/activation';
+import { enableModuleIfUnset, loadModuleStates } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
+import { useUiStore } from '@/stores/ui';
 import { activeManifests } from '@/core/modules/contributions';
 import type { ExternalCalendarSink } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
@@ -175,13 +177,15 @@ export async function connectOAuth(
         features: features.map((f) => f.id),
       });
     }
-    return await saveStatus(def.id, {
+    const status = await saveStatus(def.id, {
       state: 'connected',
       features: features.map((f) => f.id),
       message: undefined,
       retryAt: undefined,
       account: def.multiAccount ? await identifyAccount(def) : undefined,
     });
+    await enableConnectorModule(def);
+    return status;
   } catch (e) {
     // A failed extra login must not turn the working first account into an error.
     if (accountId) return await saveStatus(def.id, { message: describeError(e) });
@@ -426,3 +430,15 @@ export function startConnectorSync(): () => void {
 }
 
 export { getConnector };
+
+/** The module that belongs to a connector is switched on the first time it is connected (never against an explicit choice). */
+async function enableConnectorModule(def: ConnectorDef): Promise<void> {
+  const manifest = def.enablesModule ? getManifest(def.enablesModule) : undefined;
+  if (!manifest) return;
+  try {
+    if (await enableModuleIfUnset(manifest))
+      useUiStore.getState().toast(t.library.nowActive(manifest.name), undefined, 'check');
+  } catch {
+    // The connection itself worked; the module can still be switched on in the library.
+  }
+}

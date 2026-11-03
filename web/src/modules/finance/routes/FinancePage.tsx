@@ -11,6 +11,7 @@ import {
   Card,
   Icon,
   IconButton,
+  PageTitle,
   patternStyles,
   Segmented,
   SplitView,
@@ -24,6 +25,8 @@ import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
 import { useFinanceData } from '../summary';
 import { CurrencyContext } from '../currency';
 import { currenciesOf, filterByCurrency } from '../logic';
+import { AccountCards } from '../components/AccountCards';
+import { HeroSlot } from '@/ui/identity';
 import styles from './finance.module.css';
 
 const TABS = ['overview', 'transactions', 'accounts', 'categories'] as const;
@@ -89,7 +92,7 @@ export default function FinancePage() {
   return (
     <>
       <div className={styles.header}>
-        <h1>{t.finance.title}</h1>
+        <PageTitle title={t.finance.title} spacer />
         <div className={patternStyles.hstackCenter}>
           <AdvancedToggle moduleId="finance" />
           <Button
@@ -103,6 +106,12 @@ export default function FinancePage() {
           </Button>
         </div>
       </div>
+
+      {view ? (
+        <HeroSlot>
+          <AccountCards data={view} />
+        </HeroSlot>
+      ) : null}
 
       <NowStrip modules={['finance', 'invoices', 'budgets']} />
       <div className={styles.tabs}>

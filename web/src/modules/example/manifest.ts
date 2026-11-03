@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.example.name;
   },
   icon: 'puzzle',
-  identity: { hue: 'slate', widgetType: 'kpi' },
+  identity: {
+    hue: 'slate',
+    widgetType: 'kpi',
+    head: 'compact',
+    surface: 'plain',
+    signature: 'none',
+  },
   version: 1,
   get description() {
     return t.example.description;

@@ -1,6 +1,8 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { t } from '@/strings';
+import { useHeroTargets } from '@/core/shell/heroContext';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
@@ -9,6 +11,23 @@ import { useMediaQuery } from './useMediaQuery';
 import styles from './Patterns.module.css';
 
 /** `views` = the segmented switch between the sub-views of the page (replaces a second row of tabs). */
+/**
+ * The page title (h1). Inside a module page it renders into the module head (`layout/ModuleShell` hero), anywhere else
+ * where it is called. Pages that lay out their own header use this instead of a bare `<h1>`.
+ */
+export function PageTitle({ title, spacer = false }: { title: string; spacer?: boolean }) {
+  const hero = useHeroTargets();
+  const heading = <h1>{title}</h1>;
+  if (!hero) return heading;
+  return (
+    <>
+      {/* The title left its flex row (a header with actions): this keeps the actions where they were, on the right. */}
+      {spacer ? <span className={styles.titleSpacer} aria-hidden="true" /> : null}
+      {hero.title ? createPortal(heading, hero.title) : null}
+    </>
+  );
+}
+
 export function PageHeader({
   title,
   views,
@@ -18,9 +37,23 @@ export function PageHeader({
   views?: ReactNode;
   children?: ReactNode;
 }) {
+  const hero = useHeroTargets();
+  if (hero) {
+    return (
+      <>
+        <PageTitle title={title} />
+        {views || children ? (
+          <div className={styles.header} data-in-head="true">
+            {views ? <div className={styles.headerViews}>{views}</div> : null}
+            {children ? <div className={styles.headerEnd}>{children}</div> : null}
+          </div>
+        ) : null}
+      </>
+    );
+  }
   return (
     <div className={styles.header}>
-      <h1>{title}</h1>
+      <PageTitle title={title} />
       {views ? <div className={styles.headerViews}>{views}</div> : null}
       {children}
     </div>
