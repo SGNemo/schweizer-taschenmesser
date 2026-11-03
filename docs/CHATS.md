@@ -7,25 +7,19 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
-| [PR #372](https://github.com/SGNemo/schweizer-taschenmesser/pull/372): Werkzeug „Anonyme Persona“ | ansehen, mergen; Handtests AP1–AP5 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung) |
-| [PR #381](https://github.com/SGNemo/schweizer-taschenmesser/pull/381): Persona „Im Tresor speichern“ (gestapelt auf #372) | nach #372 mergen (Basis wird automatisch auf `develop` umgestellt); Handtest AP6 in [MANUAL-TESTS](MANUAL-TESTS.md); Änderung am Modul `accounts` nur als Formular-Vorbelegung, keine Krypto |
-| [PR #379](https://github.com/SGNemo/schweizer-taschenmesser/pull/379): Rechner-Tab „Plotter“ | ansehen, mergen; Handtests PL1–PL3 in [MANUAL-TESTS](MANUAL-TESTS.md) |
-| [PR #376](https://github.com/SGNemo/schweizer-taschenmesser/pull/376): zufälliger Passphrasen-Test (Erweiterung und `vault-core`) | ansehen, mergen (nur Tests) |
+| Anonyme Persona (#372, #381 gemergt) | Handtests AP1–AP6 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung, „Im Tresor speichern“) |
+| Rechner-Tab „Plotter“ (#379 gemergt) | Handtests PL1–PL3 in [MANUAL-TESTS](MANUAL-TESTS.md) |
 | Rechner-Modi (PR #359, gemergt) | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz |
-| Eigene Karte, Paket 5 (`feat/map-own-search`) | PR reviewen und mergen; Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, dann „Genauer machen“, dann eine Straße der Stadt suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
-| T6 Kaltstart & Bundle (`claude/busy-darwin-zfoab0`, PR) | PR reviewen und mergen (Reihenfolge 5, vor T3); Handtest: PWA am Handy einmal online öffnen, Flugmodus, App, ein benutztes Werkzeug und die Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)) |
+| Eigene Karte (Pakete 1–5 gemergt: #342, #346, #348, #350, #352) | Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
+| Runde „next tasks“ T1–T6 (#341, #343, #344, #345, #347, #349 gemergt) | Handtests: Schnellerfassung Q1–Q3 (Android-Kurzbefehle/Kachel) und T1–T3 (Tray „Heute“) in [MANUAL-TESTS](MANUAL-TESTS.md); PWA am Handy einmal online öffnen, Flugmodus, App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)); offen aus T3: Feld-Reifegrad (Erinnerungs-Felder, Zock-Modus) |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
-| Nächste Runde: sechs Chat-Prompts | starten, Reihenfolge und Links in [product/next/00-README.md](product/next/00-README.md) (Merge: T4 → T2 → T1 → T5 → T6 → T3) |
 | Fehlerberichte: Launch-Checkliste | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus) |
 
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Eigene Karte aus OSM-Daten, Paket 1: Speicher + Zeichnen | `feat/map-own-tiles` | `modules/maps/own/*`, `maps/{schema,repo,manifest,settings}.ts`, `TileMap.tsx`, `MapsPage.tsx`, `core/db` (`db:bump` 21), strings `maps` + 4 locales, `e2e/maps.spec.ts` | done, PR open | code | 2026-10-31 |
-| Eigene Karte aus OSM-Daten, Paket 4: eigene Regionsdateien (PMTiles) | `feat/map-own-regions` | `modules/maps/own/{pmtiles,builder,sample,work}.ts`, `maps/{schema,settings}.ts`, `components/RegionsCard.tsx`, `MapsPage.tsx`, strings `maps.settings`/`maps.own` + 4 locales, `strings.legal.ts` (`maps-build`, flows), `pages/settings/inventory.modules.json`, `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
-| Eigene Karte aus OSM-Daten, Paket 5: lokale Suche (Namensindex) | `feat/map-own-search` | `modules/maps/own/{names,search,gzip,builder,work,compute}.ts`, `maps/{schema,manifest,repo,geocode}.ts`, `MapsPage.tsx` + css, `core/db` (`db:bump` → v22, history 21), strings `maps.map`/`maps.own` + 4 locales, `strings.legal.ts` (flows, notice `maps`), `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
