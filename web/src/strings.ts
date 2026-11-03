@@ -1631,6 +1631,7 @@ export const de = {
     notify: {
       label: 'Benachrichtigen',
       rowLabel: 'Erinnern',
+      extra: 'Zusätzlich erinnern',
       noneShort: 'Keine',
       hourShort: '1 h',
       dayShort: '1 Tag',

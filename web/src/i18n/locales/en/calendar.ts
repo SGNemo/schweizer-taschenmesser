@@ -164,6 +164,7 @@ export const calendar: Strings['calendar'] = {
   notify: {
     label: 'Notify',
     rowLabel: 'Remind me',
+    extra: 'Also remind',
     noneShort: 'None',
     hourShort: '1 h',
     dayShort: '1 day',
