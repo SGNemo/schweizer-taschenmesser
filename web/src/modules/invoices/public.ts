@@ -4,12 +4,14 @@
  */
 import { currencyOf, DEFAULT_CURRENCY, sumMinor } from '@/core/money';
 import { getSettings } from '@/core/settings/settings';
+import { remainingMinor } from './logic';
 import { invoiceRepo } from './repo';
 import { settings } from './settings';
 
 export interface OpenInvoice {
   id: string;
   payee: string;
+  /** The part still to pay. */
   amountMinor: number;
   currency: string;
   dueDate: string;
@@ -17,16 +19,19 @@ export interface OpenInvoice {
 
 export async function listOpenInvoices(): Promise<OpenInvoice[]> {
   const all = await invoiceRepo.active().toArray();
-  return all
-    .filter((i) => i.status === 'open')
-    .map(({ id, payee, amountMinor, dueDate, currency }) => ({
-      id,
-      payee,
-      amountMinor,
-      currency: currencyOf(currency),
-      dueDate,
-    }))
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  return (
+    all
+      .filter((i) => i.status === 'open')
+      // What is still to pay: part payments are booked already and must not count twice.
+      .map((i) => ({
+        id: i.id,
+        payee: i.payee,
+        amountMinor: remainingMinor(i),
+        currency: currencyOf(i.currency),
+        dueDate: i.dueDate,
+      }))
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+  );
 }
 
 /** Open invoices in one currency (the euro by default); other currencies never count into it. */

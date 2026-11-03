@@ -3,6 +3,7 @@ import { formatMoney } from '@/core/money';
 import type { NotificationSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr, toDateString, toEpoch } from '@/core/time/dates';
+import { remainingMinor } from './logic';
 import { invoiceRepo } from './repo';
 import { settings, settingsSchema } from './settings';
 import { t } from '@/strings';
@@ -26,7 +27,7 @@ const source: NotificationSource = async ({ from, to }) => {
       at: toEpoch(addDaysStr(i.dueDate, -prefs.remindDaysBefore), prefs.remindTime),
       title: t.invoices.dueTitle(i.payee),
       body: t.invoices.dueBody(
-        formatMoney(i.amountMinor, i.currency),
+        formatMoney(remainingMinor(i), i.currency),
         i.dueDate.split('-').reverse().join('.'),
       ),
       url: '/invoices',

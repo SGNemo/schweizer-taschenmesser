@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { formatMoney } from '@/core/money';
 import type { Stored } from '@/core/db/types';
 import { formatDay, today } from '@/core/time/dates';
@@ -17,7 +17,7 @@ import {
   IconButton,
   ItemList,
   ItemRow,
-  PageTitle,
+  PageHeader,
   Segmented,
   StateBadge,
   useMediaQuery,
@@ -26,13 +26,16 @@ import {
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen } from '../actions';
 import { payWithUndo } from '../quickActions';
-import { openTotalText, sortInvoices } from '../logic';
+import { invoiceState, openTotalText, remainingMinor, sortInvoices } from '../logic';
+import { copyPaymentData } from '../pay';
+import { ReceiptCard } from '../components/ReceiptCard';
+import { HeroSlot } from '@/ui/identity';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 
-type View = 'open' | 'paid';
+type View = 'open' | 'paid' | 'all';
 
 export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
@@ -42,6 +45,7 @@ export default function InvoicesPage() {
   const [params, setParams] = useSearchParams();
   const day = today();
   const narrow = useMediaQuery('(max-width: 899px)');
+  const navigate = useNavigate();
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -50,10 +54,18 @@ export default function InvoicesPage() {
     if (params.get('new')) setParams({}, { replace: true });
   };
 
-  const shown = (invoices ?? []).filter((i) => i.status === view);
+  const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
 
   function renderRow(i: Stored<Invoice>) {
     const state = dueState(i.dueDate, day, { done: i.status === 'paid' });
+    const inv = invoiceState(i, day);
+    const extra = [
+      inv.partial ? t.invoices.ext.state.partial : '',
+      i.dunningLevel ? t.invoices.ext.dunning.level(i.dunningLevel) : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    const hasPayData = Boolean(i.iban || i.reference);
     const urgent = i.status === 'open' && (state.tone === 'overdue' || state.tone === 'today');
     return (
       <ItemRow
@@ -63,7 +75,7 @@ export default function InvoicesPage() {
         meta={
           i.status === 'paid'
             ? `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
-            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}`
+            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}${extra ? ` · ${extra}` : ''}`
         }
         onOpen={() => setTarget(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}
@@ -72,6 +84,25 @@ export default function InvoicesPage() {
           i.status === 'open'
             ? [
                 { id: 'pay', label: t.invoices.markPaid, onSelect: () => void pay(i.id) },
+                ...(hasPayData
+                  ? [
+                      {
+                        id: 'copy',
+                        label: t.invoices.ext.pay.copyAll,
+                        onSelect: () => void copyPaymentData(i),
+                      },
+                    ]
+                  : []),
+                ...(i.payments?.length
+                  ? [
+                      {
+                        id: 'booking',
+                        label: t.invoices.ext.openBooking,
+                        onSelect: () =>
+                          void navigate(`/finance?open=inv-${i.id}-${i.payments![0]!.id}`),
+                      },
+                    ]
+                  : []),
                 {
                   id: 'delete',
                   label: t.actions.delete,
@@ -81,6 +112,11 @@ export default function InvoicesPage() {
               ]
             : [
                 { id: 'open', label: t.invoices.reopen, onSelect: () => void markOpen(i.id) },
+                {
+                  id: 'booking',
+                  label: t.invoices.ext.openBooking,
+                  onSelect: () => void navigate(`/finance?open=inv-${i.id}`),
+                },
                 {
                   id: 'delete',
                   label: t.actions.delete,
@@ -94,7 +130,9 @@ export default function InvoicesPage() {
             {i.status === 'open' && state.tone !== 'later' ? (
               <StateBadge tone={state.tone} label={state.label} />
             ) : null}
-            <span className={styles.amount}>{formatMoney(i.amountMinor, i.currency)}</span>
+            <span className={styles.amount}>
+              {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
+            </span>
             {i.status === 'open' ? (
               narrow ? (
                 <IconButton label={t.invoices.markPaid} onClick={() => void pay(i.id)}>
@@ -128,14 +166,19 @@ export default function InvoicesPage() {
 
   return (
     <>
-      <div className={styles.header}>
-        <PageTitle title={t.invoices.title} spacer />
+      <PageHeader title={t.invoices.title}>
         <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.invoices.add}
         </Button>
-      </div>
+      </PageHeader>
+
+      {invoices ? (
+        <HeroSlot>
+          <ReceiptCard invoices={invoices} />
+        </HeroSlot>
+      ) : null}
 
       <div className={styles.toolbar}>
         <div className={styles.stat}>
@@ -150,6 +193,7 @@ export default function InvoicesPage() {
           options={[
             { value: 'open', label: t.invoices.open },
             { value: 'paid', label: t.invoices.paid },
+            { value: 'all', label: t.invoices.ext.views.all },
           ]}
           onChange={setView}
         />

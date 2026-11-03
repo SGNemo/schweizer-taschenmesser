@@ -1,6 +1,7 @@
 import { notDeleted } from '@/core/db/repo';
 import { formatMoney } from '@/core/money';
 import type { CalendarSource } from '@/core/modules/types';
+import { remainingMinor } from './logic';
 import { invoiceRepo } from './repo';
 
 /** Open invoices appear on their due date. */
@@ -14,7 +15,7 @@ const source: CalendarSource = async (range) => {
     id: i.id,
     source: 'invoices',
     kind: 'invoice',
-    title: `${i.payee} · ${formatMoney(i.amountMinor, i.currency)}`,
+    title: `${i.payee} · ${formatMoney(remainingMinor(i), i.currency)}`,
     date: i.dueDate,
     allDay: true,
     to: '/invoices',
