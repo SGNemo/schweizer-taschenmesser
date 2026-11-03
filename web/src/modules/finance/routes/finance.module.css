@@ -376,3 +376,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Category icon in front of a booking (derived from the category, categoryIcon.ts); decoration, the category name is in the row's text. */
+.catIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  color: var(--module-color);
+}

@@ -8,6 +8,7 @@ import example from '@/modules/example/manifest';
 import {
   disableModule,
   enableModule,
+  enableModuleIfUnset,
   loadModuleStates,
   resolveStates,
   wipeModuleData,
@@ -66,6 +67,16 @@ describe('module activation', () => {
     expect(await entries(db).active().count()).toBe(0);
     expect((await entries(db).table.get(r.id))?.deletedAt).not.toBeNull();
     expect(await db.table('_outbox').where('collection').equals('example_entry').count()).toBe(1);
+  });
+
+  it('enableModuleIfUnset switches a module on once and never against an explicit choice', async () => {
+    const off = { ...example, defaultEnabled: false } as ModuleManifest;
+    expect(await enableModuleIfUnset(off, db)).toBe(true);
+    expect((await loadModuleStates([off], db))[off.id]).toBe(true);
+    // The user switches it off: a later connection must not switch it on again.
+    await disableModule(off, 'keep', db);
+    expect(await enableModuleIfUnset(off, db)).toBe(false);
+    expect((await loadModuleStates([off], db))[off.id]).toBe(false);
   });
 
   it('wipeModuleData is safe on empty modules', async () => {

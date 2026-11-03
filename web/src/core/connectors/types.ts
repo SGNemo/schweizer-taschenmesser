@@ -324,6 +324,8 @@ export interface NowPlayingSource {
 
 export interface ConnectorDef {
   id: string;
+  /** A module that belongs to this connector (by id, e.g. `music`): switched on once, the first time the connector is connected, unless the user already chose. */
+  enablesModule?: string;
   name: string;
   description: string;
   icon: IconName;

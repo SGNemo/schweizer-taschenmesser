@@ -22,6 +22,7 @@ import { balances, filterTransactions, signed, type TxFilter } from '../logic';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
 import type { Transaction } from '../schema';
+import { categoryIcon } from '../categoryIcon';
 import styles from '../routes/finance.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 
@@ -91,6 +92,14 @@ export function TransactionsTab({
                 return (
                   <ItemRow
                     key={x.id}
+                    lead={
+                      <span className={styles.catIcon} aria-hidden="true">
+                        <Icon
+                          name={categoryIcon(data.categories.find((c) => c.id === x.categoryId))}
+                          size={16}
+                        />
+                      </span>
+                    }
                     title={title}
                     meta={`${(x.categoryId && category.get(x.categoryId)) || t.finance.noCategory} · ${account.get(x.accountId) ?? '–'}${x.repeat ? ` · ${t.finance.repeatMeta(t.finance.repeatOptions[x.repeat])}` : ''}`}
                     onOpen={() => onOpen(x)}
