@@ -253,6 +253,26 @@
         "kind": "yesno",
         "target": 1
       }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Hausbau",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Steuerberatung",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
     }
   ],
   "cases": [
@@ -2850,6 +2870,70 @@
       "input": "Wie viele Gläser habe ich heute getrunken?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "tt-c01",
+      "input": "Neues Zeiterfassungs-Projekt Hausbau",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Hausbau"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-c02",
+      "input": "Zeiterfassung Projekt anlegen Steuerberatung",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Steuerberatung"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-c03",
+      "input": "Archiviere das Zeiterfassungs-Projekt Hausbau",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Hausbau"
+        }
+      ]
+    },
+    {
+      "id": "tt-c04",
+      "input": "Archiviere das Zeiterfassungs-Projekt Steuerberatung",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Steuerberatung"
+        }
+      ]
+    },
+    {
+      "id": "tt-c05",
+      "input": "Lösche das Zeiterfassungs-Projekt Hausbau",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "delete",
+          "target": "Hausbau"
+        }
+      ]
     }
   ]
 }

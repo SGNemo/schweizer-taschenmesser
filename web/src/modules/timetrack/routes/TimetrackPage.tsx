@@ -243,7 +243,7 @@ export default function TimetrackPage() {
         </>
       ) : null}
 
-      <SessionEditor target={openSession} jobs={jobs ?? []} onClose={closeSession} />
+      <SessionEditor target={jobs ? openSession : null} jobs={jobs ?? []} onClose={closeSession} />
       <JobEditor
         target={job}
         clients={clients ?? []}
