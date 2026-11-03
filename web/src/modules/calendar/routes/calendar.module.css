@@ -726,3 +726,66 @@ button.itemRow:hover {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Named calendars: chips with name + dot (colour never stands alone). */
+.calBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.calChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.calChip[aria-pressed='false'] {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.calDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.calManage,
+.calList {
+  display: grid;
+  gap: var(--space-3);
+}
+.calList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.calList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.calSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.calSwatch {
+  width: var(--touch);
+  height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  cursor: pointer;
+}
+.calSwatch[aria-pressed='true'] {
+  border-color: var(--text);
+}

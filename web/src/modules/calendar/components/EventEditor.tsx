@@ -27,6 +27,7 @@ import {
 } from '@/ui';
 import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
+import { useCalendars } from './CalendarsBar';
 import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
@@ -125,10 +126,12 @@ function Form({
         : 'none') as string,
     active: existing?.notify?.enabled ?? true,
     taken: existing?.taken ?? false,
+    calendarId: existing?.calendarId ?? '',
   });
   const { title, allDay, startDate, startTime, endDate, endTime, location, note, personId } =
     draft.values;
-  const { recurrence, notifyChoice, active, taken } = draft.values;
+  const { recurrence, notifyChoice, active, taken, calendarId } = draft.values;
+  const calendars = useCalendars();
   const setTitle = (v: string) => draft.set('title', v);
   const setAllDay = (v: boolean) => draft.set('allDay', v);
   const setStartDate = (v: string) => draft.set('startDate', v);
@@ -167,6 +170,7 @@ function Form({
       note: note.trim() || undefined,
       personId: personId || undefined,
       recurrence,
+      calendarId: !reminder && calendarId ? calendarId : undefined,
       taken: reminder && taken ? true : undefined,
       notify:
         lead === undefined ? undefined : { minutesBefore: lead, enabled: reminder ? active : true },
@@ -270,6 +274,20 @@ function Form({
             {t.calendar.showOnMap}
           </Button>
         </div>
+      ) : null}
+      {!reminder && calendars && calendars.length > 0 ? (
+        <SelectField
+          label={t.calendar.calendars.field}
+          value={calendarId}
+          onChange={(e) => draft.set('calendarId', e.target.value)}
+        >
+          <option value="">{t.calendar.calendars.none}</option>
+          {calendars.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </SelectField>
       ) : null}
       <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
       <PersonField value={personId} onChange={setPersonId} />
