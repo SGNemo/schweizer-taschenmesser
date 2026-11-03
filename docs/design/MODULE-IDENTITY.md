@@ -6,13 +6,13 @@ Binding for every module and for new ones. Origin: [identity-v2/](identity-v2/) 
 
 The shell (`layout/AreaFrame.tsx`, via `router.tsx`) wraps **every** module page in the same frame:
 
-| Zone | Owner | Content |
-|---|---|---|
-| Notice (optional) | module via `HeroSlot area="notice"` | one hint that outranks the page (weather hint) |
-| Head ("hero") | shell | eyebrow (module chip + area), **the page's h1**, the area's tabs, the headline figure or the signature, the gear and "Mit KI eintragen" |
-| Toolbar | module | search, filter chips, period, view switch, "Neu", "Erweitert" (`PageHeader` views/children, `Toolbar`) |
-| Content | module | lists, grids, charts; master–detail from 1200 px; fills the page width variant |
-| Aside (optional) | module | context: air quality, library, latest bookings; 20–22 rem from 1200 px |
+| Zone              | Owner                               | Content                                                                                                                                 |
+| ----------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Notice (optional) | module via `HeroSlot area="notice"` | one hint that outranks the page (weather hint)                                                                                          |
+| Head ("hero")     | shell                               | eyebrow (module chip + area), **the page's h1**, the area's tabs, the headline figure or the signature, the gear and "Mit KI eintragen" |
+| Toolbar           | module                              | search, filter chips, period, view switch, "Neu", "Erweitert" (`PageHeader` views/children, `Toolbar`)                                  |
+| Content           | module                              | lists, grids, charts; master–detail from 1200 px; fills the page width variant                                                          |
+| Aside (optional)  | module                              | context: air quality, library, latest bookings; 20–22 rem from 1200 px                                                                  |
 
 - **A module never draws its own head or its own h1.** Use `PageHeader` (title + views + actions) or `PageTitle` (a bare title); both render the h1 into the head. Without a shell (dialogs, tests) they render in place.
 - **Widths:** `manifest.layout` (`content` 70 rem, `wide` 100 rem, `full`). A page fills its variant; a module that is narrower than its variant picks a narrower variant instead of leaving empty space.
@@ -38,51 +38,51 @@ Required: `hue`, `widgetType`, `head`, `surface`, `signature` (`validateManifest
 
 ## Tokens (`ui/tokens.css`)
 
-| Token | Use |
-|---|---|
-| `--mod-<hue>` (10 hues, light + dark) | module colour: chip, tab underline, sidebar stripe, chart series, signature. ≥ 3:1 on the surfaces, ≥ 25° from the state colours |
-| `--module-color`, `--module-color-2` | set by `data-hue` (and `hue2` inline) on the head, a page, a widget, a nav item |
-| `--head-tint-0`, `--head-tint-1`, `--head-gradient`, `--head-flat` | the head's gradient (40 % → 10 % of the hue over `--surface`); widgets use 65 % / 80 % of it |
-| `--shape-soft/round/sharp` | card corners per module |
-| `--sky-*` | the weather sky (day, rain, night) |
+| Token                                                              | Use                                                                                                                              |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--mod-<hue>` (10 hues, light + dark)                              | module colour: chip, tab underline, sidebar stripe, chart series, signature. ≥ 3:1 on the surfaces, ≥ 25° from the state colours |
+| `--module-color`, `--module-color-2`                               | set by `data-hue` (and `hue2` inline) on the head, a page, a widget, a nav item                                                  |
+| `--head-tint-0`, `--head-tint-1`, `--head-gradient`, `--head-flat` | the head's gradient (40 % → 10 % of the hue over `--surface`); widgets use 65 % / 80 % of it                                     |
+| `--shape-soft/round/sharp`                                         | card corners per module                                                                                                          |
+| `--sky-*`                                                          | the weather sky (day, rain, night)                                                                                               |
 
 **Rules:** text on a tint is always `--text` (AA for every hue, both themes, `tokens.test.ts`); the hue itself only as chip, underline, stripe, icon or figure accent. No body text on a tint. Semantic colours (overdue, warning, done) keep priority and never appear in a head tint. **"Ruhig" colour mode and "Modulfarben: Aus"** set all `--mod-*` to `--text-3` and flatten the tint (12 % / 5 %): head shape and signature stay, so the module is still recognisable without colour. No permanent animation; a signature never moves on its own; `prefers-reduced-motion` and the in-app "less motion" stop everything that moves. Contrast of a dynamic colour (a cover) is checked at run time (`safeTint`).
 
 ## Building blocks (`@/ui/identity`)
 
-| Block | Use | Parametrised by |
-|---|---|---|
-| `Sky` + `skyKind` | weather head (backdrop) and widget swatch; clear / cloudy / rain / night; night sets its own light ink | condition group, day/night |
-| `useCoverTone`, `safeTint`, `dominantColor` | colour from the current cover (24 × 24 px canvas, cached per cover, local blobs only); `safeTint` keeps the text AA | cover blob |
-| `BankCard` | account as a card: balance large, "available" as the context line | module hue (+ `hue2` for a second card) |
-| `Ring`, `ringColor` | shares of a whole in steps of the hue; the legend carries the meaning | module hue |
-| `CalendarLeaf` | month strip, big day, weekday | module hue |
-| `HeroFigure` | the big number with label and context line; `thin` / `mono` / `serif` | `identity.type` |
-| `HeroSlot` | portal into the head's slots | – |
+| Block                                       | Use                                                                                                                 | Parametrised by                         |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `Sky` + `skyKind`                           | weather head (backdrop) and widget swatch; clear / cloudy / rain / night; night sets its own light ink              | condition group, day/night              |
+| `useCoverTone`, `safeTint`, `dominantColor` | colour from the current cover (24 × 24 px canvas, cached per cover, local blobs only); `safeTint` keeps the text AA | cover blob                              |
+| `BankCard`                                  | account as a card: balance large, "available" as the context line                                                   | module hue (+ `hue2` for a second card) |
+| `Ring`, `ringColor`                         | shares of a whole in steps of the hue; the legend carries the meaning                                               | module hue                              |
+| `CalendarLeaf`                              | month strip, big day, weekday                                                                                       | module hue                              |
+| `HeroFigure`                                | the big number with label and context line; `thin` / `mono` / `serif`                                               | `identity.type`                         |
+| `HeroSlot`                                  | portal into the head's slots                                                                                        | –                                       |
 
 Specified as defaults for the module chats, built when a module needs them (declared in `SIGNATURES`; a signature without a component renders nothing yet): `todayCard`, `receipt` (jagged edge), `cycle`, `envelope`, `shelf`, `avatarRing`, `pin`, `pinboard`, `notePaper`, `bubble`, `addressBar`, `stamp`, `folderTab`, `vaultDoor`, `gauges`, `arrowProgress`. Reserved for future modules: stopwatch digits, suitcase, confetti (very quiet), newspaper head, habit rings.
 
 ## The signature per module (default for the module chats)
 
-| Module | Hue | Head | Signature | Type | Widget shows |
-|---|---|---|---|---|---|
-| Wetter `weather` ✓ | indigo (+ sky) | cover | `sky` | thin | sky swatch, temperature, word, rain hint |
-| Musik `music` ✓ | orchid | cover | `coverTone` | mono | cover, title, artist, play/pause/next |
-| Finanzen ✓ | teal | figure | `bankCard` + `ring` | sans | balance (the mini card is the next step) |
-| Kalender ✓ | sky | compact | `calendarLeaf` (today in the head) | sans | agenda |
-| ToDos | moss | figure | `todayCard` | sans | focus card |
-| Rechnungen | ocean | figure | `receipt` | sans | open sum + due list |
-| Abos | navy | figure | `cycle` | sans | next debit |
-| Budgets | indigo | figure | `envelope` | sans | two bars |
-| Listen | orchid | compact | `receipt` ("Kassenzettel") | sans | checklist |
-| Vorräte | moss | compact | `shelf` | sans | count + rows |
-| Personen | plum | compact | `avatarRing` | sans | next birthday |
-| Karten & Orte | ocean | cover | `pin` | sans | last place |
-| Merkliste | indigo | compact | `pinboard` | sans | tiles |
-| Notizen | violet | compact | `notePaper` | serif | scratchpad |
-| Chat · Browser · E-Mail | sky · navy · teal | compact | `bubble` · `addressBar` · `stamp` | sans · mono · sans | last answer · tabs · unread |
-| Unterlagen · Passwörter | plum · slate | compact | `folderTab` · `vaultDoor` | sans · mono | expiring · status only (never entries) |
-| Dieser PC · Downloads | slate · navy | figure | `gauges` · `arrowProgress` | mono | rings · progress |
+| Module                  | Hue               | Head    | Signature                          | Type               | Widget shows                                                        |
+| ----------------------- | ----------------- | ------- | ---------------------------------- | ------------------ | ------------------------------------------------------------------- |
+| Wetter `weather` ✓      | indigo (+ sky)    | cover   | `sky`                              | thin               | sky swatch, temperature, word, rain hint                            |
+| Musik `music` ✓         | orchid            | cover   | `coverTone`                        | mono               | cover, title, artist, play/pause/next                               |
+| Finanzen ✓              | teal              | figure  | `bankCard` + `ring`                | sans               | first account as a mini card (with several accounts), total balance |
+| Kalender ✓              | sky               | compact | `calendarLeaf` (today in the head) | sans               | leaf + today's timeline                                             |
+| ToDos                   | moss              | figure  | `todayCard`                        | sans               | focus card                                                          |
+| Rechnungen              | ocean             | figure  | `receipt`                          | sans               | open sum + due list                                                 |
+| Abos                    | navy              | figure  | `cycle`                            | sans               | next debit                                                          |
+| Budgets                 | indigo            | figure  | `envelope`                         | sans               | two bars                                                            |
+| Listen                  | orchid            | compact | `receipt` ("Kassenzettel")         | sans               | checklist                                                           |
+| Vorräte                 | moss              | compact | `shelf`                            | sans               | count + rows                                                        |
+| Personen                | plum              | compact | `avatarRing`                       | sans               | next birthday                                                       |
+| Karten & Orte           | ocean             | cover   | `pin`                              | sans               | last place                                                          |
+| Merkliste               | indigo            | compact | `pinboard`                         | sans               | tiles                                                               |
+| Notizen                 | violet            | compact | `notePaper`                        | serif              | scratchpad                                                          |
+| Chat · Browser · E-Mail | sky · navy · teal | compact | `bubble` · `addressBar` · `stamp`  | sans · mono · sans | last answer · tabs · unread                                         |
+| Unterlagen · Passwörter | plum · slate      | compact | `folderTab` · `vaultDoor`          | sans · mono        | expiring · status only (never entries)                              |
+| Dieser PC · Downloads   | slate · navy      | figure  | `gauges` · `arrowProgress`         | mono               | rings · progress                                                    |
 
 ✓ = built in the identity v2 package; the others keep the v1 look inside the new frame until their module chat adds the signature (head, tint, chip and h1 placement already come from the shell).
 

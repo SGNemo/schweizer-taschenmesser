@@ -63,6 +63,7 @@
   border-radius: var(--radius-md);
   gap: var(--space-1);
   box-shadow: var(--shadow-1);
+  margin-bottom: var(--space-3);
 }
 .compact .balance {
   font-size: var(--text-xl);
