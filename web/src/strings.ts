@@ -2858,6 +2858,13 @@ export const de = {
     chartLegend: 'Legende',
     ext: {
       weekly: 'Wöchentlich',
+      subPrice: {
+        title: (name: string, from: string, to: string) =>
+          `${name} bucht jetzt ${to} statt ${from}`,
+        detail: (since: string) => `Seit ${since} in deinen Buchungen. Im Abo übernehmen?`,
+      },
+      subBooked: (n: number) =>
+        n === 1 ? '1 Abo-Abbuchung gebucht.' : `${n} Abo-Abbuchungen gebucht.`,
       transfer: {
         title: 'Umbuchung',
         button: 'Umbuchung',
@@ -2949,6 +2956,9 @@ export const de = {
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
       settings: {
+        bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
+        bookSubscriptionsHelp:
+          'Bucht die fälligen Abbuchungen der letzten 31 Tage, sofern keine passende Buchung (z. B. aus dem Bankimport) schon da ist. Standard: aus.',
         forecastHorizon: 'Ausblick: Zeitraum',
         month: 'Bis Monatsende',
         d30: '30 Tage',

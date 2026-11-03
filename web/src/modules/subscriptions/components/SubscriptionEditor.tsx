@@ -15,7 +15,7 @@ import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { changePercent, nextCancelDeadline, recordPriceChange } from '../logic';
+import { changePercent, nextCancelDeadline, recordPriceChange, trialDaysLeft } from '../logic';
 import {
   AdvancedFields,
   Button,
@@ -278,7 +278,11 @@ function Form({
           type="date"
           value={trialEndsOn}
           onChange={(e) => setTrialEndsOn(e.target.value)}
-          hint={t.subscriptions.ext.trial.hint}
+          hint={
+            trialEndsOn && trialDaysLeft({ trialEndsOn }, today()) !== undefined
+              ? t.subscriptions.ext.trial.daysLeft(trialDaysLeft({ trialEndsOn }, today())!)
+              : t.subscriptions.ext.trial.hint
+          }
         />
         <SelectField
           label={t.subscriptions.ext.category.label}

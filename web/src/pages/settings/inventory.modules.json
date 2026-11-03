@@ -182,6 +182,11 @@
         "label": "Abo-Abbuchungen bis Monatsende abziehen",
         "default": true
       },
+      "bookSubscriptions": {
+        "type": "boolean",
+        "label": "Abo-Abbuchungen als Ausgabe buchen",
+        "default": false
+      },
       "forecastHorizon": {
         "type": "select",
         "label": "Ausblick: Zeitraum",

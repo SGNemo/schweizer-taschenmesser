@@ -4,12 +4,19 @@ import { today } from '@/core/time/dates';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { paidInvoiceBookingOn } from '@/modules/invoices/public';
+import { getSettings } from '@/core/settings/settings';
+import { addDaysStr } from '@/core/time/dates';
+import { listSubscriptionCharges } from '@/modules/subscriptions/public';
+import { chargeAlreadyBooked } from './subscriptionLink';
+import { settings } from './settings';
+import { accountRepo } from './repo';
 import { planRepeats } from './logic';
 import { normalizePayee } from './rules';
 import {
   categoryRepo,
   ensureDefaults,
   INVOICE_CATEGORY_ID,
+  SUBSCRIPTIONS_CATEGORY_ID,
   primaryAccountId,
   transactionRepo,
 } from './repo';
@@ -106,9 +113,69 @@ export async function bookDueRepeats(): Promise<number> {
   return fresh.length;
 }
 
+/** Booking id of a subscription charge: the same charge books once on every device, and a deleted one is not brought back. */
+export const subscriptionTransactionId = (subscriptionId: string, date: string): string =>
+  `sub-${subscriptionId}-${date}`;
+
+/** Charges younger than this are booked when the setting is on (older ones are history, not news). */
+const SUBSCRIPTION_BOOK_DAYS = 31;
+
+/**
+ * With the setting "Abo-Abbuchungen buchen" on: books the charges of the last month that no booking
+ * stands for yet (same service and amount within three days, e.g. from a bank import). Idempotent by
+ * id; a booking the user deleted stays deleted. A toast says how many and offers "Rückgängig".
+ */
+export async function bookDueSubscriptionCharges(): Promise<number> {
+  const prefs = await getSettings('module.finance', settings.schema, settings.defaults);
+  if (!prefs.bookSubscriptions) return 0;
+  const day = today();
+  const from = addDaysStr(day, -SUBSCRIPTION_BOOK_DAYS);
+  const accounts = await accountRepo.active().toArray();
+  const currencies = [...new Set(accounts.map((a) => currencyOf(a)))];
+  const existing = await transactionRepo.active().toArray();
+  const fresh: {
+    id: string;
+    currency: string;
+    name: string;
+    subscriptionId: string;
+    amountMinor: number;
+    date: string;
+  }[] = [];
+  for (const currency of currencies) {
+    for (const c of await listSubscriptionCharges(from, day, currency)) {
+      const id = subscriptionTransactionId(c.subscriptionId, c.date);
+      if (await transactionRepo.table.get(id)) continue;
+      if (chargeAlreadyBooked(c, existing)) continue;
+      fresh.push({ ...c, id, currency });
+    }
+  }
+  if (fresh.length === 0) return 0;
+  await ensureDefaults();
+  const category = (await categoryRepo.get(SUBSCRIPTIONS_CATEGORY_ID))
+    ? SUBSCRIPTIONS_CATEGORY_ID
+    : undefined;
+  const message = t.finance.ext.subBooked(fresh.length);
+  await undoableWithToast(message, message, async () => {
+    for (const c of fresh)
+      await transactionRepo.create(
+        {
+          accountId: await primaryAccountId(c.currency),
+          categoryId: category,
+          kind: 'expense',
+          amountMinor: c.amountMinor,
+          date: c.date,
+          payee: c.name,
+          sourceRef: `subscription:${c.subscriptionId}`,
+        },
+        { id: c.id },
+      );
+  });
+  return fresh.length;
+}
+
 /** Runs while the finance module is enabled: reacts to invoice events from the bus. */
 export default function start(): () => void {
-  void bookDueRepeats();
+  void bookDueRepeats().then(() => bookDueSubscriptionCharges());
   const offPaid = bus.on('invoice.paid', async (p) => {
     // Only while Finances is on (this service runs only then) and the user keeps the invoice
     // setting on; an existing booking of this invoice is left to `bookInvoiceExpense` (idempotent).

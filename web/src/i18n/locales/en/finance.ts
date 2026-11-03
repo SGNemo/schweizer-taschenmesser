@@ -4,6 +4,14 @@ export const finance: Strings['finance'] = {
   chartLegend: 'Legend',
   ext: {
     weekly: 'Weekly',
+    subPrice: {
+      title: (name: string, from: string, to: string) =>
+        `${name} now charges ${to} instead of ${from}`,
+      detail: (since: string) =>
+        `In your bookings since ${since}. Take it over in the subscription?`,
+    },
+    subBooked: (n: number) =>
+      n === 1 ? '1 subscription charge booked.' : `${n} subscription charges booked.`,
     transfer: {
       title: 'Transfer',
       button: 'Transfer',
@@ -95,6 +103,9 @@ export const finance: Strings['finance'] = {
     },
     widget: { addExpense: 'Expense +', vsPrevious: (change: string) => `${change} vs. last month` },
     settings: {
+      bookSubscriptions: 'Book subscription charges as expenses',
+      bookSubscriptionsHelp:
+        'Books the charges due in the last 31 days unless a matching booking (e.g. from the bank import) is already there. Default: off.',
       forecastHorizon: 'Outlook: period',
       month: 'Until month end',
       d30: '30 days',

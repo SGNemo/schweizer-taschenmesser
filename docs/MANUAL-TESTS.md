@@ -532,3 +532,10 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
 - **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
 - **G10 Kopf:** Beleg-Karte hell, dunkel, „Ruhig“, 412 px: Summe, Anzahl, nächste Fälligkeit lesbar, gezackter Rand ohne Bewegung. ☐
+
+## Geld-Gruppe: Abos (Paket 3)
+- **G11 Kacheln und Kopf:** Abos hell, dunkel, „Ruhig“, 412 px: Kachel mit Monogramm und der Kopf mit der nächsten Abbuchung lesbar, jede Kachel behält ihre Farbe, nichts bewegt sich. ☐
+- **G12 Probezeit:** Abo mit „Probezeit endet am“ in drei Tagen: Chip „Probezeit“, Erinnerung am gewählten Tag (Windows, Android), Eintrag im Kalender. ☐
+- **G13 Preisänderung:** zwei Buchungen mit gleichem neuem Preis für ein Abo (Empfängername enthält den Abo-Namen): unter „Jetzt wichtig“ erscheint „… bucht jetzt X statt Y“, ein Klick öffnet das Abo mit „Preis übernehmen“; ohne Klick ändert sich nichts. Einstellung „Preisänderung melden“ aus: kein Hinweis. ☐
+- **G14 Abbuchungen buchen:** Finanzen → Einstellungen „Abo-Abbuchungen als Ausgabe buchen“ an, App neu starten: fällige Abbuchungen der letzten 31 Tage sind gebucht (Hinweis mit „Rückgängig“), keine doppelte Buchung neben einem Bankimport; eine gelöschte Buchung kommt nicht wieder. ☐
+

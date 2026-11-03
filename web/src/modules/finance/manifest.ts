@@ -71,6 +71,7 @@ const manifest: ModuleManifest = {
         to: '/finance?tab=transactions&new=1',
       },
     ],
+    attention: () => import('./attention'),
     services: () => import('./services'),
     headline: () => import('./headline'),
     aiCreateDefaults: () => import('./aiDefaults'),

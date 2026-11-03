@@ -24,7 +24,6 @@ import {
   monthlyEquivalent,
   subscriptionStatus,
   topExpensive,
-  trialDaysLeft,
   annualCost,
   nextCancelDeadline,
   missedDeadline,
@@ -53,8 +52,17 @@ export default function SubscriptionsPage() {
     [],
   );
   const [target, setTarget] = useState<SubscriptionTarget>(null);
-  useOpenParam((id) => subscriptionRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
+  // A price from finance's hint (`?open=<id>&newprice=<cents>`) is offered for that subscription only.
+  const [suggestion, setSuggestion] = useState<{ id: string; amountMinor: number } | undefined>();
+  useOpenParam(
+    (id) => subscriptionRepo.get(id),
+    (record) => {
+      setTarget(record);
+      const amountMinor = Number(params.get('newprice'));
+      setSuggestion(amountMinor > 0 ? { id: record.id, amountMinor } : undefined);
+    },
+  );
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -66,7 +74,6 @@ export default function SubscriptionsPage() {
   const sums = totalsByCurrency(subs ?? [], day);
   const [advanced] = useAdvanced('subscriptions');
   const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
-  const suggested = Number(params.get('newprice')) || undefined;
 
   return (
     <>
@@ -130,7 +137,6 @@ export default function SubscriptionsPage() {
           const urgent = cancel ? daysBetween(day, cancel.deadline) <= WARN_DAYS : false;
           const increase = recentIncrease(s.priceHistory ?? [], day);
           const status = subscriptionStatus(s, day);
-          const trialLeft = trialDaysLeft(s, day);
           const plainMonthly =
             s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
           const facts = [
@@ -147,11 +153,9 @@ export default function SubscriptionsPage() {
             plainMonthly
               ? ''
               : t.subscriptions.ext.monthlyShort(formatMoney(monthlyEquivalent(s), currencyOf(s))),
-            s.category ? t.subscriptions.ext.category[s.category] : '',
-            s.paymentMethod ?? '',
-            status === 'trial' && trialLeft !== undefined
-              ? t.subscriptions.ext.trial.daysLeft(trialLeft)
-              : '',
+            // Category and payment method are power details: they show in Erweitert.
+            advanced && s.category ? t.subscriptions.ext.category[s.category] : '',
+            advanced ? (s.paymentMethod ?? '') : '',
           ].filter(Boolean);
           const toggle = (active: boolean) =>
             void changeWithUndo(() => subscriptionRepo.update(s.id, { active }));
@@ -160,7 +164,11 @@ export default function SubscriptionsPage() {
             <ItemRow
               key={s.id}
               title={s.name}
-              lead={<ServiceTile name={s.name} />}
+              lead={
+                <span className={styles.rowTile}>
+                  <ServiceTile name={s.name} />
+                </span>
+              }
               className={s.active ? undefined : styles.inactive}
               meta={
                 <>
@@ -214,7 +222,11 @@ export default function SubscriptionsPage() {
       <SubscriptionEditor
         target={openTarget}
         onClose={closeEditor}
-        suggestedAmountMinor={suggested}
+        suggestedAmountMinor={
+          openTarget && 'id' in openTarget && suggestion?.id === openTarget.id
+            ? suggestion.amountMinor
+            : undefined
+        }
       />
     </>
   );
