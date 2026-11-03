@@ -49,7 +49,7 @@ export const invoices: Strings['invoices'] = {
       localOnly: 'O comprovante fica neste dispositivo.',
       otherDevice: 'O comprovante foi anexado em outro dispositivo e não está aqui.',
       open: 'Abrir comprovante',
-      save: 'Salvar comprovante',
+      save: 'Baixar comprovante',
       previewOf: (name: string) => `Prévia: ${name}`,
       tooBig: (max: string) => `O arquivo é maior que ${max}.`,
       wrongType: 'Escolha um PDF ou uma foto.',

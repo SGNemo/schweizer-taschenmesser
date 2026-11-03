@@ -183,3 +183,13 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+/* The open sum stands in the head (receipt); this copy stays in the DOM for tests only. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

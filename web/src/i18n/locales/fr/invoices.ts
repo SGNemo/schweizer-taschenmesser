@@ -49,7 +49,7 @@ export const invoices: Strings['invoices'] = {
       localOnly: 'Le justificatif reste sur cet appareil.',
       otherDevice: 'Le justificatif a été joint sur un autre appareil et n’est pas ici.',
       open: 'Ouvrir le justificatif',
-      save: 'Enregistrer le justificatif',
+      save: 'Télécharger le justificatif',
       previewOf: (name: string) => `Aperçu : ${name}`,
       tooBig: (max: string) => `Le fichier dépasse ${max}.`,
       wrongType: 'Choisissez un PDF ou une photo.',

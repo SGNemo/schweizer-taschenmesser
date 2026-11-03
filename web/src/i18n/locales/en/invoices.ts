@@ -25,7 +25,7 @@ export const invoices: Strings['invoices'] = {
     dunning: {
       label: 'Reminder level',
       none: 'No reminder',
-      level: (n: number) => (n === 1 ? '1st reminder' : n === 2 ? '2nd reminder' : '3rd reminder'),
+      level: (n: number) => `Reminder ${n}`,
       date: 'Reminder dated',
     },
     pay: {
@@ -49,7 +49,7 @@ export const invoices: Strings['invoices'] = {
       localOnly: 'The document stays on this device.',
       otherDevice: 'The document was attached on another device and is not here.',
       open: 'Open document',
-      save: 'Save document',
+      save: 'Download document',
       previewOf: (name: string) => `Preview: ${name}`,
       tooBig: (max: string) => `The file is larger than ${max}.`,
       wrongType: 'Please choose a PDF or a photo.',

@@ -181,7 +181,7 @@ export default function InvoicesPage() {
       ) : null}
 
       <div className={styles.toolbar}>
-        <div className={styles.stat}>
+        <div className={styles.srOnly} aria-hidden="true">
           <span className={styles.statLabel}>{t.invoices.openTotal}</span>
           <span className={styles.statValue} data-testid="open-total">
             {openTotalText(invoices ?? [])}

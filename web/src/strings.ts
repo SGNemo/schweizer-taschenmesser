@@ -2648,7 +2648,7 @@ export const de = {
         localOnly: 'Der Beleg bleibt auf diesem Gerät.',
         otherDevice: 'Der Beleg wurde auf einem anderen Gerät angehängt und liegt hier nicht.',
         open: 'Beleg öffnen',
-        save: 'Beleg speichern',
+        save: 'Beleg herunterladen',
         previewOf: (name: string) => `Vorschau: ${name}`,
         tooBig: (max: string) => `Die Datei ist größer als ${max}.`,
         wrongType: 'Bitte ein PDF oder ein Foto wählen.',
