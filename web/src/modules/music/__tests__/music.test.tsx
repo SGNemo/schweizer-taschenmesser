@@ -58,6 +58,7 @@ let router: (call: Call) => unknown | Response | undefined;
 let player: () => Response;
 let playerState: () => Response;
 let savedAnswer: boolean[] = [true, false, false];
+const opened: string[] = [];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const empty204 = () => new Response(null, { status: 204 });
 
@@ -67,6 +68,7 @@ function install() {
     ...web,
     kind: 'desktop',
     isNative: true,
+    app: { ...web.app, openUrl: async (url: string) => void opened.push(url) },
     fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url === 'https://accounts.spotify.com/api/token')
@@ -140,6 +142,7 @@ const chip = (name: RegExp | string) =>
 
 beforeEach(async () => {
   calls.length = 0;
+  opened.length = 0;
   router = () => undefined;
   player = () => json(PLAYING);
   playerState = () =>
@@ -561,6 +564,16 @@ describe('music page', () => {
       expect(within(panel).getByRole('button', { name: 'Im Browser öffnen' })).toBeTruthy();
       // The page below is not empty either.
       expect(screen.getByTestId('music-start')).toBeTruthy();
+    });
+
+    it('in the desktop app the platform opens the Spotify link (the window does not follow custom schemes itself)', async () => {
+      await connect();
+      await renderPage();
+      const link = await screen.findByTestId('music-open-app');
+      fireEvent.click(link);
+      expect(opened).toEqual(['spotify:']);
+      fireEvent.click(screen.getByRole('button', { name: 'Im Browser öffnen' }));
+      expect(opened).toEqual(['spotify:', 'https://open.spotify.com/']);
     });
 
     it('"Hier abspielen" moves the playback to that device', async () => {

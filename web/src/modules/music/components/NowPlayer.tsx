@@ -107,7 +107,18 @@ export function NowPlayer({ api }: { api: PlayerApi }) {
           ))}
         </div>
         <div className={styles.nodevActions}>
-          <a className={styles.linkButton} href={OPEN_APP} data-testid="music-open-app">
+          <a
+            className={styles.linkButton}
+            href={OPEN_APP}
+            data-testid="music-open-app"
+            onClick={(e) => {
+              // The desktop app's window does not follow custom schemes by itself: the platform opens it (scoped grant in the opener capability).
+              if (getPlatform().isNative) {
+                e.preventDefault();
+                void getPlatform().app.openUrl(OPEN_APP);
+              }
+            }}
+          >
             <Icon name="external" size={16} />
             {tm.openApp}
           </a>
