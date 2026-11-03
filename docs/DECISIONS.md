@@ -17,6 +17,7 @@ Index. Each area file holds one bullet per decision (**what** – why, with date
 | Focus and attention aids | [decisions/focus.md](decisions/focus.md) | one switch per aid, calm wording, notification centre instead of banners, doc budgets |
 | Phone with one hand | [decisions/focus-phone.md](decisions/focus-phone.md) | Back closes the open thing first, keyboard fallback, thumb zone, step counts |
 | Karten & Orte | [decisions/maps.md](decisions/maps.md) | Module, own tile map, nothing requested until the map is opened |
+| Page data from the web | [decisions/web-page-data.md](decisions/web-page-data.md) | `fetchPublic` kinds (feed, page, image), proxy `?kind=`, plain-data page meta and reader text, no script into tabs |
 | Weather line | [decisions/weather.md](decisions/weather.md) | Open-Meteo, a place chosen once, nothing sent without it |
 | Readability | [decisions/readability.md](decisions/readability.md) | reading aid off by default, colour only with meaning, grouped lists, "Ruhig" mode |
 | Supporter mode | [decisions/supporter.md](decisions/supporter.md) | cosmetic only, Ed25519 codes verified offline, status derived from the code, Cloudflare Worker issuer |

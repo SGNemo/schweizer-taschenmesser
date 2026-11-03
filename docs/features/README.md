@@ -16,6 +16,7 @@
 | [import-todos.md](import-todos.md) | ToDo import from Todoist CSV / Google Tasks JSON: where to export, what is read, calm rules |
 | [bank-import.md](bank-import.md) | Kontoauszug-Import: OFX/QIF/CAMT/CSV, Bank-Vorlagen, Spaltenzuordnung, Regeln, Rechnung → Buchung, Preis erhöht |
 | [notes-import.md](notes-import.md) | Notizen-Import: Markdown/Obsidian und Google Keep, Parser, Dedupe, Grenzen |
+| [news-proposal.md](news-proposal.md) | News: proposal for a returning optional module (not built) |
 | [connection-log.md](connection-log.md) | Verbindungsprotokoll + "Netzwerk sperren": network inventory, design (draft) |
 | [partner-share.md](partner-share.md) | "Mit Partner teilen" without a server: QR/file, pairing code, packages (draft) |
 | [first-run-setup.md](first-run-setup.md) | First run in 3 questions: measurement, target flow, per-finding changes (QA package P1) |
