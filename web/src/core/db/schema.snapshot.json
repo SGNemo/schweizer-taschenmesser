@@ -1,5 +1,5 @@
 {
-  "version": 27,
+  "version": 28,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -30,6 +30,8 @@
     "finance_account": "id, updatedAt, order",
     "finance_category": "id, updatedAt, kind",
     "finance_transaction": "id, updatedAt, accountId, date, categoryId",
+    "habits_entry": "id, updatedAt, goalId, date",
+    "habits_goal": "id, updatedAt, order",
     "invoices_invoice": "id, updatedAt, dueDate, status",
     "lists_item": "id, updatedAt, listId, done",
     "lists_list": "id, updatedAt, kind",
