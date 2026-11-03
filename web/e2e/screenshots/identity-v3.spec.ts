@@ -28,7 +28,21 @@ const SCHEMES = (process.env.SCREENS_SCHEMES ?? 'light,dark').split(',') as ('li
 const READ_MODES = (process.env.SCREENS_READ_MODES ?? 'off,on').split(',');
 /** Coverage of the reading aid when it is on (25 running text … 100 everything). */
 const READ_COVER = process.env.SCREENS_READ_COVER ?? '75';
+/** SCREENS_VIEWPORTS: names from the list above, or any `<w>x<h>` (added as a desktop viewport). */
 const ONLY_VIEWPORTS = process.env.SCREENS_VIEWPORTS?.split(',');
+for (const name of ONLY_VIEWPORTS ?? []) {
+  const m = /^(\d+)x(\d+)$/.exec(name);
+  if (m && !VIEWPORTS.some((v) => v.name === name))
+    VIEWPORTS.push({ name, width: Number(m[1]), height: Number(m[2]) });
+}
+/** SCREENS_LOCAL=key=value,key=value: extra localStorage settings (e.g. tm-text-size=large). */
+const LOCAL: [string, string][] = (process.env.SCREENS_LOCAL ?? '')
+  .split(',')
+  .filter(Boolean)
+  .map((kv) => {
+    const i = kv.indexOf('=');
+    return [kv.slice(0, i), kv.slice(i + 1)];
+  });
 const ONLY_PAGES = process.env.SCREENS_PAGES ? new RegExp(process.env.SCREENS_PAGES) : undefined;
 const WAIT = Number(process.env.SCREENS_WAIT ?? 900);
 /** Demo vault passphrase of the seed (modules/accounts/seed.ts). */
@@ -165,7 +179,18 @@ function measure(page: Page): Promise<Measure> {
     const pageEl = main?.firstElementChild ?? null;
     const pageRight = pageEl ? pageEl.getBoundingClientRect().right : innerWidth;
     const all = main ? [...main.querySelectorAll<HTMLElement>('*')] : [];
-    const visible = all.filter((e) => e.offsetParent !== null && e.getClientRects().length > 0);
+    // An element inside a horizontal scroller that itself fits (a chip row, the hour strip) is scrolled to, not cut off.
+    const inScroller = (e: HTMLElement, limit: number): boolean => {
+      for (let p = e.parentElement; p && p !== main; p = p.parentElement) {
+        const o = getComputedStyle(p).overflowX;
+        if ((o === 'auto' || o === 'scroll') && p.getBoundingClientRect().right <= limit + 1)
+          return true;
+      }
+      return false;
+    };
+    const visible = all.filter(
+      (e) => e.offsetParent !== null && e.getClientRects().length > 0 && !inScroller(e, innerWidth),
+    );
     return {
       innerWidth,
       docOverflow: doc.scrollWidth - doc.clientWidth,
@@ -226,15 +251,16 @@ async function newContext(
   await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
   await mockWeather(page);
   await page.addInitScript(
-    ([isDesktop, readOn, cover]) => {
+    ([isDesktop, readOn, cover, local]) => {
       localStorage.setItem('tm-show-preview', '1');
       if (isDesktop) localStorage.setItem('__tmPlatformKind', 'desktop');
       if (readOn) {
         localStorage.setItem('tm-read-aid', '1');
         localStorage.setItem('tm-read-cover', cover);
       }
+      for (const [k, v] of local) localStorage.setItem(k, v);
     },
-    [desktop, read, READ_COVER] as const,
+    [desktop, read, READ_COVER, LOCAL] as const,
   );
   await bootDev(page);
   await seedApp(page, SCALE);
@@ -271,8 +297,30 @@ test('identity v3: capture and measure', async ({ browser }) => {
         const shot = async (name: string, path: string, opts: Omit<Shot, 'name' | 'path'> = {}) => {
           await page.goto(path);
           await settle(page);
+          // The overview loads its widgets lazily (skeletons first): give it twice the time before the crops.
+          if (opts.widgets) await page.waitForTimeout(WAIT * 2);
           measures[name] = await measure(page);
-          await page.screenshot({ path: `${dir}/${vp.name}--${name}.png`, fullPage: !!opts.full });
+          if (opts.full && !vp.mobile) {
+            // Desktop: `main` scrolls, not the document, so a full-page shot needs a viewport as tall as the page.
+            const height = await page.evaluate(() => {
+              const main = document.getElementById('main');
+              return main
+                ? Math.min(main.scrollHeight + main.getBoundingClientRect().top, 8000)
+                : innerHeight;
+            });
+            await page.setViewportSize({
+              width: vp.width,
+              height: Math.max(vp.height, Math.ceil(height)),
+            });
+            await page.waitForTimeout(300);
+            await page.screenshot({ path: `${dir}/${vp.name}--${name}.png` });
+            await page.setViewportSize({ width: vp.width, height: vp.height });
+          } else {
+            await page.screenshot({
+              path: `${dir}/${vp.name}--${name}.png`,
+              fullPage: !!opts.full,
+            });
+          }
           if (opts.head) {
             const frame = page.getByTestId('module-frame');
             if (await frame.count())

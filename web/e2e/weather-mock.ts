@@ -112,10 +112,10 @@ export async function pickWeatherPlace(page: Page): Promise<boolean> {
       .getByRole('button', { name: 'Suchen', exact: true });
     await search.click({ timeout: 15_000 });
     const notice = page.getByRole('button', { name: 'Verstanden' });
-    if (await notice.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    if (await notice.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await notice.click();
       const pick = page.getByRole('button', { name: 'Bern, Schweiz wählen' });
-      if (!(await pick.isVisible({ timeout: 2_000 }).catch(() => false))) await search.click();
+      if (!(await pick.isVisible({ timeout: 5_000 }).catch(() => false))) await search.click();
     }
     await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click({ timeout: 15_000 });
     return true;

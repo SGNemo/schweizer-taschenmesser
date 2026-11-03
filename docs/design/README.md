@@ -6,6 +6,7 @@ Result of the design review done together with the maintainer in eight rounds. N
 |---|---|
 | [`DESIGN-SPEC.md`](DESIGN-SPEC.md) | **the specification** (final): principles, shell, areas, home, tokens table, typography, components, interaction, motion, modules, a11y, open items |
 | [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) | **the prompt** for the implementation chats + part B: split into parallel PRs |
+| [`identity-v3/`](identity-v3/) | **identity v3** (2026-11-03): layout frame, sidebar, overview head, head and widget variants – round 1 diagnosis (`01-DIAGNOSIS.md`), concept and mockups follow |
 | [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md) | round 1: what works, problems P1–P17 with severity, daily scenarios (clicks) |
 | `screenshots/round-1/` | annotated screenshots (markers = problem ids), reduced to ≤ 1280 px |
 | [`ROUND-2-DIRECTION.md`](ROUND-2-DIRECTION.md) | round 2: three directions (A/B/C) compared, proposed principles |
