@@ -1598,6 +1598,17 @@ export const de = {
       pausedToast: 'Pausiert.',
       resumedToast: 'Wieder eingeschaltet.',
       widgetEmpty: 'Keine anstehenden Erinnerungen.',
+      ringNone: 'Nichts in den nächsten 24 Stunden.',
+      ringIn: (minutes: number) =>
+        minutes < 1
+          ? 'jetzt'
+          : minutes < 60
+            ? `in ${minutes} Min`
+            : `in ${Math.floor(minutes / 60)} Std${minutes % 60 ? ` ${minutes % 60} Min` : ''}`,
+      ringLabel: (when: string) => `Nächste Erinnerung ${when}`,
+      clearDone: 'Erledigte entfernen',
+      clearedToast: (n: number) =>
+        n === 1 ? '1 Erinnerung entfernt.' : `${n} Erinnerungen entfernt.`,
     },
     notify: {
       label: 'Benachrichtigen',
