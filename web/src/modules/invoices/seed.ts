@@ -123,11 +123,20 @@ const PAYEES: readonly (readonly [Record<Lang, string>, number, number, string])
 ];
 
 /** Fixed head of the list so every state (overdue, soon, later, paid) exists even at small scale. */
-const HEAD: readonly { payee: number; amount: number; due: number; paidDaysAgo?: number }[] = [
-  { payee: 0, amount: 8740, due: -12 },
-  { payee: 2, amount: 13250, due: -3 },
+const HEAD: readonly {
+  payee: number;
+  amount: number;
+  due: number;
+  paidDaysAgo?: number;
+  /** Part payment (cents, paid this many days ago) and reminder level. */
+  part?: { amount: number; daysAgo: number };
+  dunning?: number;
+  iban?: boolean;
+}[] = [
+  { payee: 0, amount: 8740, due: -12, dunning: 1, iban: true },
+  { payee: 2, amount: 13250, due: -3, part: { amount: 5000, daysAgo: 5 } },
   { payee: 4, amount: 3999, due: 2 },
-  { payee: 3, amount: 41800, due: 6 },
+  { payee: 3, amount: 41800, due: 6, iban: true },
   { payee: 1, amount: 22000, due: 25 },
   { payee: 5, amount: 18990, due: -20, paidDaysAgo: 18 },
 ];
@@ -171,6 +180,20 @@ function seed(ctx: SeedContext): SeedRows {
         dueDate,
         status: paidAt ? 'paid' : 'open',
         ...(paidAt ? { paidAt } : {}),
+        ...(head?.part
+          ? {
+              payments: [
+                {
+                  id: ctx.id('invoices', 'payment', i),
+                  date: ctx.day(-head.part.daysAgo),
+                  amountMinor: head.part.amount,
+                },
+              ],
+            }
+          : {}),
+        ...(head?.dunning ? { dunningLevel: head.dunning, dunnedAt: ctx.day(-2) } : {}),
+        // The published example IBAN of the German banking standard, not a real account.
+        ...(head?.iban ? { iban: 'DE89370400440532013000' } : {}),
         reference: `${prefix}-2026-${String(1000 + i)}`,
         ...(i % 4 === 0
           ? {
@@ -185,6 +208,21 @@ function seed(ctx: SeedContext): SeedRows {
           : {}),
       },
     });
+    if (head?.part) {
+      // The part payment's own booking (`inv-<invoiceId>-<paymentId>`), as the invoice.payment handler makes it.
+      bookings.push({
+        id: `inv-${id}-${ctx.id('invoices', 'payment', i)}`,
+        data: {
+          accountId: 'acc-main',
+          categoryId: 'cat-invoices',
+          kind: 'expense',
+          amountMinor: head.part.amount,
+          date: ctx.day(-head.part.daysAgo),
+          payee,
+          sourceRef: `invoice:${id}`,
+        },
+      });
+    }
     if (paidAt) {
       // What finance's invoice.paid handler books (invoiceTransactionId = `inv-<invoiceId>`).
       bookings.push({
