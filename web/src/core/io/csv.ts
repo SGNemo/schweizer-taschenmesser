@@ -68,9 +68,35 @@ export function parseCsv(text: string, opts: { delimiter?: Delimiter } = {}): st
   return rows;
 }
 
-export function toCsv(rows: readonly (readonly string[])[], delimiter: Delimiter = ','): string {
-  const escape = (value: string) =>
-    value.includes(delimiter) || /["\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+/** A plain number ("-12.50", "+3,5") is data, not a formula. */
+const PLAIN_NUMBER = /^[+-]?\d+([.,]\d+)?$/;
+
+/**
+ * Spreadsheet programs run a cell that starts with `=`, `+`, `-`, `@`, TAB or CR as a formula. Text from
+ * outside (payees, notes, imported names) can therefore turn an export into an attack; a leading
+ * apostrophe makes the cell plain text. Plain numbers stay as they are.
+ */
+export function neutralizeCsvCell(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) && !PLAIN_NUMBER.test(value) ? `'${value}` : value;
+}
+
+export interface ToCsvOptions {
+  /** Default true. Only for files that another password manager reads back unchanged (vault export). */
+  neutralize?: boolean;
+}
+
+export function toCsv(
+  rows: readonly (readonly string[])[],
+  delimiter: Delimiter = ',',
+  opts: ToCsvOptions = {},
+): string {
+  const neutralize = opts.neutralize ?? true;
+  const escape = (raw: string) => {
+    const value = neutralize ? neutralizeCsvCell(raw) : raw;
+    return value.includes(delimiter) || /["\r\n]/.test(value)
+      ? `"${value.replaceAll('"', '""')}"`
+      : value;
+  };
   return rows.map((r) => r.map(escape).join(delimiter)).join('\r\n') + '\r\n';
 }
 
