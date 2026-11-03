@@ -1,3 +1,4 @@
+import { useMediaQuery } from '@/ui';
 import { HeroFigure } from '@/ui/identity';
 import { t } from '@/strings';
 import { pickNext, type PickTask } from '../next';
@@ -13,6 +14,8 @@ type CardTask = PickTask & Pick<Task, 'title' | 'startDate'>;
  * the numbers are text. Empty day = a calm sentence instead of a zero.
  */
 export function TodayCard({ tasks, day }: { tasks: readonly CardTask[]; day: string }) {
+  // A phone keeps the head short: one line instead of the three-line figure.
+  const narrow = useMediaQuery('(max-width: 700px)');
   const today = tasks.filter((x) => !x.parentId && viewOf(x, day) === 'today');
   const minutes = today.reduce((sum, x) => sum + (x.estimateMin ?? 0), 0);
   const next = pickNext(today, day);
@@ -21,6 +24,14 @@ export function TodayCard({ tasks, day }: { tasks: readonly CardTask[]; day: str
     : today.length === 0
       ? t.todos.todayCard.done
       : undefined;
+  if (narrow)
+    return (
+      <p className={styles.todayLine} data-testid="today-card">
+        <strong data-testid="today-count">{today.length}</strong> {t.todos.todayCard.label}
+        {minutes > 0 ? ` · ${t.todos.todayCard.minutes(minutes)}` : ''}
+        <span className="sr-only">{`. ${t.todos.todayCard.count(today.length)}`}</span>
+      </p>
+    );
   return (
     <div className={styles.todayCard} data-testid="today-card">
       <HeroFigure

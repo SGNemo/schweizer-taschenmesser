@@ -360,3 +360,27 @@
     animation: none;
   }
 }
+
+/* The view chips are one scrollable row, so the list stays high on a phone. */
+.viewBar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+.viewBar .tagChip {
+  flex: none;
+}
+
+.todayLine {
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: var(--text-sm);
+  width: fit-content;
+}

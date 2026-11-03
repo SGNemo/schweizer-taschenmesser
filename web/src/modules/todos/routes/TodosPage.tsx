@@ -615,64 +615,6 @@ export default function TodosPage() {
         </HeroSlot>
       ) : null}
 
-      <div className={styles.toolbar}>
-        <div className={styles.tagBar} role="group" aria-label={t.todos.views.label}>
-          {PAGE_VIEWS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              className={styles.tagChip}
-              aria-pressed={pageView === v}
-              onClick={() => setParam('view', v === 'list' ? null : v)}
-            >
-              {v === 'list' ? t.todos.views.all : t.todos.views[v]}
-            </button>
-          ))}
-        </div>
-      </div>
-      {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
-      {tagList.length > 0 && (advanced || tag) ? (
-        <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
-          <button
-            type="button"
-            className={styles.tagChip}
-            aria-pressed={tag === ''}
-            onClick={() => setParam('tag', null)}
-          >
-            {t.todos.tags.all}
-          </button>
-          {tagList.map(([name, n]) => (
-            <button
-              key={name}
-              type="button"
-              className={styles.tagChip}
-              aria-pressed={tag === name}
-              onClick={() => setParam('tag', tag === name ? null : name)}
-            >
-              {`#${name} · ${n}`}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      {project ? (
-        <div className={styles.projectBar} data-testid="project-bar">
-          <div
-            className={styles.projectTrack}
-            role="progressbar"
-            aria-label={currentList?.name}
-            aria-valuemin={0}
-            aria-valuemax={project.total}
-            aria-valuenow={project.done}
-          >
-            <div
-              className={styles.projectFill}
-              style={{ width: `${project.total ? (project.done / project.total) * 100 : 0}%` }}
-            />
-          </div>
-          <span>{t.todos.projectProgress(project.done, project.total)}</span>
-        </div>
-      ) : null}
-
       <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
@@ -689,6 +631,64 @@ export default function TodosPage() {
               {t.actions.add}
             </Button>
           </form>
+
+          <div className={styles.toolbar}>
+            <div className={styles.viewBar} role="group" aria-label={t.todos.views.label}>
+              {PAGE_VIEWS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={styles.tagChip}
+                  aria-pressed={pageView === v}
+                  onClick={() => setParam('view', v === 'list' ? null : v)}
+                >
+                  {v === 'list' ? t.todos.views.all : t.todos.views[v]}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
+          {tagList.length > 0 && (advanced || tag) ? (
+            <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
+              <button
+                type="button"
+                className={styles.tagChip}
+                aria-pressed={tag === ''}
+                onClick={() => setParam('tag', null)}
+              >
+                {t.todos.tags.all}
+              </button>
+              {tagList.map(([name, n]) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={styles.tagChip}
+                  aria-pressed={tag === name}
+                  onClick={() => setParam('tag', tag === name ? null : name)}
+                >
+                  {`#${name} · ${n}`}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {project ? (
+            <div className={styles.projectBar} data-testid="project-bar">
+              <div
+                className={styles.projectTrack}
+                role="progressbar"
+                aria-label={currentList?.name}
+                aria-valuemin={0}
+                aria-valuemax={project.total}
+                aria-valuenow={project.done}
+              >
+                <div
+                  className={styles.projectFill}
+                  style={{ width: `${project.total ? (project.done / project.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span>{t.todos.projectProgress(project.done, project.total)}</span>
+            </div>
+          ) : null}
 
           {inboxOpen.length > 0 && (selected === ALL || selected === INBOX_ID) ? (
             <div className={styles.waiting} data-testid="todos-inbox">
