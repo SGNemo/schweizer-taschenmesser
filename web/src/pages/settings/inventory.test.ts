@@ -59,6 +59,7 @@ const CORE_KEYS = {
   '_settings scope profiles': { items: [] },
   '_settings scope tools': { enabled: 'per tool', order: 'per tool' },
   '_settings scope quickCapture': { defaultType: 'todo' },
+  '_settings scope automation': { enabled: false, dryRun: false, globalPerHour: 10, rules: {} },
   '_settings scope focus': {
     notifyChannels: {},
     nextOne: true,
@@ -92,6 +93,10 @@ const CORE_KEYS = {
   '_settings scope weather': { enabled: true, place: '', lat: 0, lon: 0 },
   '_settings scope reminders': { snoozed: [], 'ack:<notification key>': 'time of the answer' },
   _meta: {
+    'automation.guard': 'rule run times of the last hour, occurrence keys (device-local)',
+    'automation.notices': 'reminders, hints and suggestions rules left (device-local)',
+    'automation.cursor': 'timestamp of the last rule tick',
+    'automation.detected': 'timestamp of the last module check',
     'update.prefs': { channel: 'stable', auto: true },
     'update.lastCheckAt': 'timestamp',
     'update.dismissedVersion': 'version',

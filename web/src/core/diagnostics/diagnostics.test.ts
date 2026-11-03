@@ -25,6 +25,7 @@ import { cacheKey, writeCache } from '@/core/weather/cache';
 import { chooseWeatherPlace } from '@/core/weather/settings';
 import todosManifest from '@/modules/todos/manifest';
 import { buildDiagnostics, describeOs, renderDiagnostics } from './export';
+import { logError } from './logError';
 import { issueUrl, mailtoUrl } from './report';
 
 afterEach(clearErrorLog);
@@ -234,5 +235,18 @@ describe('bug report links', () => {
   });
   it('builds a mailto link with the configured address', () => {
     expect(mailtoUrl(facts)).toMatch(/^mailto:[^?]+\?subject=.+&body=.+/);
+  });
+});
+
+describe('logError', () => {
+  it('swallows the failure, resolves to undefined and records it scrubbed', async () => {
+    const result = await Promise.reject(
+      new Error('boom at https://example.test/feed?token=abc'),
+    ).catch(logError('resume'));
+    expect(result).toBeUndefined();
+    const entry = errorLog().at(-1)!;
+    expect(entry.source).toBe('resume');
+    expect(entry.message).toContain('boom');
+    expect(entry.message).not.toContain('token=abc');
   });
 });

@@ -29,7 +29,8 @@ export const BITWARDEN_HEADER = [
 /** Bitwarden exports always use commas, so the delimiter is fixed (no auto-detection). */
 export const parseCsv = (text: string): string[][] => parseCsvCore(text, { delimiter: ',' });
 
-export const toCsv = (rows: readonly (readonly string[])[]): string => toCsvCore(rows, ',');
+export const toCsv = (rows: readonly (readonly string[])[]): string =>
+  toCsvCore(rows, ',', { neutralize: false });
 
 export interface CsvImport {
   entries: EntryData[];

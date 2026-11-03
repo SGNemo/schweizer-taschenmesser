@@ -53,15 +53,20 @@ function Fields({
     startDate: existing?.startDate ?? '',
     endDate: (existing && endOf(existing)) ?? '',
     notice: existing?.noticeDays as number | undefined,
+    noticeMonths: existing?.noticeMonths as number | undefined,
     note: existing?.note ?? '',
   });
-  const { title, category, provider, startDate, endDate, notice, note } = draft.values;
+  const { title, category, provider, startDate, endDate, notice, noticeMonths, note } =
+    draft.values;
   const setTitle = (v: string) => draft.set('title', v);
   const setCategory = (v: DocCategory) => draft.set('category', v);
   const setProvider = (v: string) => draft.set('provider', v);
   const setStartDate = (v: string) => draft.set('startDate', v);
   const setEndDate = (v: string) => draft.set('endDate', v);
-  const setNotice = (v: number | undefined) => draft.set('notice', v);
+  const setNotice = (v: number | undefined, months?: number) => {
+    draft.set('notice', v);
+    draft.set('noticeMonths', months);
+  };
   const setNote = (v: string) => draft.set('note', v);
   const [dateError, setDateError] = useState('');
   const [file, setFile] = useState<File | 'remove' | undefined>();
@@ -75,6 +80,7 @@ function Fields({
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       noticeDays: notice,
+      noticeMonths: notice === undefined ? undefined : noticeMonths,
       note: note.trim() || undefined,
       fileName: existing?.fileName,
       fileType: existing?.fileType,
@@ -150,7 +156,7 @@ function Fields({
           error={dateError}
         />
       </Split>
-      <NoticeField days={notice} onChange={setNotice} max={730} />
+      <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <div>
         <TextField

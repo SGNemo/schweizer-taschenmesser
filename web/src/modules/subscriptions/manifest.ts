@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'cycle',
   },
-  version: 4,
+  version: 5,
   get description() {
     return t.subscriptions.meta.description;
   },

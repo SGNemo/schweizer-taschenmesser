@@ -168,3 +168,63 @@ describe('subscription costs per currency', () => {
     expect(totals(list.filter((s) => !s.currency)).yearly).toBe(14400);
   });
 });
+
+describe('notice in calendar months', () => {
+  it('uses calendar months for the deadline when the period was entered in months', () => {
+    // Charge on the 31st, 3 months notice: 31 Jul - 3 months = 30 Apr (not 31 Jul - 90 days = 2 May).
+    const monthsSub = sub({
+      startDate: '2026-01-31',
+      recurrence: { freq: 'monthly', interval: 6 },
+      cancelNoticeDays: 90,
+      cancelNoticeMonths: 3,
+    });
+    const daysSub = sub({
+      startDate: '2026-01-31',
+      recurrence: { freq: 'monthly', interval: 6 },
+      cancelNoticeDays: 90,
+    });
+    expect(nextCancelDeadline(monthsSub, '2026-02-01')).toEqual({
+      deadline: '2026-04-30',
+      charge: '2026-07-31',
+    });
+    expect(nextCancelDeadline(daysSub, '2026-02-01')).toEqual({
+      deadline: '2026-05-02',
+      charge: '2026-07-31',
+    });
+  });
+
+  it('lists the same deadlines in a range', () => {
+    const s = sub({
+      startDate: '2026-01-31',
+      recurrence: { freq: 'monthly', interval: 6 },
+      cancelNoticeDays: 90,
+      cancelNoticeMonths: 3,
+    });
+    expect(cancelDeadlinesInRange(s, '2026-04-01', '2026-05-31')).toEqual([
+      { charge: '2026-07-31', deadline: '2026-04-30' },
+    ]);
+    expect(cancelDeadlinesInRange(s, '2026-05-01', '2026-05-31')).toEqual([]);
+  });
+
+  it('skips a charge whose clamped deadline already lies before the reference day', () => {
+    // 31 Jan + 1 month clamps to 28 Feb; the 28 Feb charge would have to be cancelled on 28 Jan.
+    const s = sub({
+      startDate: '2026-02-28',
+      recurrence: { freq: 'monthly' },
+      cancelNoticeDays: 30,
+      cancelNoticeMonths: 1,
+    });
+    const next = nextCancelDeadline(s, '2026-01-31');
+    expect(next && next.deadline >= '2026-01-31').toBe(true);
+  });
+
+  it('ignores a stale month count once the days were changed alone', () => {
+    const s = sub({
+      startDate: '2026-01-31',
+      recurrence: { freq: 'monthly', interval: 6 },
+      cancelNoticeDays: 60,
+      cancelNoticeMonths: 3,
+    });
+    expect(nextCancelDeadline(s, '2026-02-01')?.deadline).toBe('2026-06-01');
+  });
+});

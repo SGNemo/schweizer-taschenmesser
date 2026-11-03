@@ -5,6 +5,7 @@ import {
   startOfWeekStr,
   toEpoch,
 } from '@/core/time/dates';
+import { neutralizeCsvCell } from '@/core/io/csv';
 import type { Client, Job, Session } from './schema';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -149,7 +150,7 @@ export const idleMinutes = (lastInputMs: number, nowMs: number): number =>
   Math.max(0, Math.floor((nowMs - lastInputMs) / 60_000));
 
 const cell = (v: string | number): string => {
-  const s = String(v);
+  const s = typeof v === 'string' ? neutralizeCsvCell(v) : String(v);
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 

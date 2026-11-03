@@ -17,6 +17,8 @@ export const SYSTEM_TABLES = {
   _conflicts: { stores: '++id, at, status', synced: false },
   /** Registry of generated test data (Dev-Preview only writes it); sync and backup skip these rows. */
   _seeds: { stores: 'id, batchId, table', synced: false },
+  /** Automations: one row per rule run (also dry runs and skips); the log and the basis of "Rückgängig". Local only. */
+  _automationLog: { stores: '++id, at, ruleId, groupId', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
 } as const;

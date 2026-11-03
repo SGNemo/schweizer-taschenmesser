@@ -6,12 +6,14 @@ import { loadSeed } from '@/core/seed/load';
 import { applyDefaultsEra } from '@/core/focus/defaults';
 import { appHasData, ensureSetupState } from '@/core/setup/detect';
 import { readSetupState } from '@/core/setup/state';
+import { startAutomation } from '@/core/automation/start';
 import { startHistory } from '@/core/settings/history';
 import { startProfileScheduler } from '@/core/settings/profiles';
 import { useUiStore } from '@/stores/ui';
 
 let stopHistory: (() => void) | undefined;
 let stopScheduler: (() => void) | undefined;
+let stopAutomation: (() => void) | undefined;
 
 /** One-time app start work: storage persistence and pending module migrations. */
 export async function initCore(): Promise<void> {
@@ -42,4 +44,6 @@ export async function initCore(): Promise<void> {
   // Profile schedules run once the data is ready, while the app is open.
   if (!stopScheduler && typeof localStorage !== 'undefined')
     stopScheduler = startProfileScheduler();
+  // Rules (off until switched on in Settings): watch writes, schedule triggers, module checks.
+  if (!stopAutomation && typeof document !== 'undefined') stopAutomation = startAutomation();
 }

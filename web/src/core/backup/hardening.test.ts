@@ -18,7 +18,13 @@ import {
   sanitizeConfig,
   type AutoBackupDeps,
 } from './auto';
-import { createBackup, importBackup, parseBackup, serializeBackup } from './backup';
+import {
+  createBackup,
+  importBackup,
+  MAX_BACKUP_CHARS,
+  parseBackup,
+  serializeBackup,
+} from './backup';
 import {
   decryptBackup,
   encryptBackup,
@@ -462,5 +468,55 @@ describe('no secrets in backups', () => {
     for (const needle of ['invented-sync-credential', 'sk-test-fake-key', 'syncConfig', '_secrets'])
       expect(plain).not.toContain(needle);
     expect(Object.keys(backup.tables)).not.toContain('_meta');
+  });
+});
+
+describe('parseBackup: size cap and damaged rows', () => {
+  const stamp = '1700000000000-0000-aaaa0001';
+  const file = (rows: unknown[]) =>
+    JSON.stringify({
+      format: 'taschenmesser-backup',
+      version: 1,
+      exportedAt: '2026-11-03T10:00:00.000Z',
+      tables: { example_entry: rows },
+    });
+  const good = {
+    id: 'a',
+    createdAt: 1,
+    updatedAt: 2,
+    deviceId: 'd',
+    deletedAt: null,
+    _f: { id: stamp },
+  };
+
+  it('refuses a file over the size cap before parsing it', () => {
+    const huge = ' '.repeat(MAX_BACKUP_CHARS + 1);
+    expect(parseBackup(huge)).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('skips rows with a damaged envelope and counts them', () => {
+    const result = parseBackup(
+      file([
+        good,
+        { ...good, id: 'b', updatedAt: 'yesterday' },
+        { ...good, id: 'c', deviceId: 5 },
+        { ...good, id: 'x'.repeat(201) },
+        { ...good, id: 'd', createdAt: Number.NaN },
+      ]),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.skippedRows).toBe(4);
+    expect(result.backup.tables.example_entry!.map((r) => r.id)).toEqual(['a']);
+  });
+
+  it('still refuses the whole file when a row has no usable id, tombstone or stamps', () => {
+    expect(parseBackup(file([good, 'not a row'])).ok).toBe(false);
+    expect(parseBackup(file([{ ...good, id: '' }])).ok).toBe(false);
+  });
+
+  it('keeps every row of a clean file and reports none skipped', () => {
+    const result = parseBackup(file([good, { ...good, id: 'b' }]));
+    expect(result.ok && result.skippedRows).toBe(0);
   });
 });

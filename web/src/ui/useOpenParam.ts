@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router';
+import { logError } from '@/core/diagnostics/logError';
 
 /**
  * Deep link to a record: `?open=<id>` (what a search hit or an assistant answer links to). Once the
@@ -23,7 +24,7 @@ export function useOpenParam<T>(
     let cancelled = false;
     void latest.current
       .load(id)
-      .catch(() => undefined)
+      .catch(logError('open-param'))
       .then((record) => {
         if (cancelled) return;
         const extra = record ? latest.current.onOpen(record) : undefined;
