@@ -6963,6 +6963,116 @@ export const de = {
       },
     },
   },
+  habits: {
+    meta: {
+      name: 'Gewohnheiten',
+      description:
+        'Tägliche und wöchentliche Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“, mit Pausentagen, Verlauf und Erinnerungen, die aufhören, sobald das Tagesziel erreicht ist.',
+      quickAdd: 'Gewohnheit',
+      widget: 'Heute',
+      settings: {
+        remindersEnabled: 'Erinnerungen der Gewohnheiten',
+        remindersHelp: 'Aus: es kommen keine Erinnerungen, die Ringe bleiben.',
+      },
+    },
+    title: 'Gewohnheiten',
+    tabs: { label: 'Ansicht', today: 'Heute', history: 'Verlauf', archive: 'Archiv' },
+    empty: 'Noch keine Gewohnheiten.',
+    emptyHint:
+      'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
+    add: 'Gewohnheit hinzufügen',
+    edit: 'Gewohnheit bearbeiten',
+    form: {
+      name: 'Name',
+      kind: 'Art',
+      yesno: 'Ja/Nein',
+      count: 'Zahl',
+      target: 'Ziel pro Tag',
+      unit: 'Einheit (z. B. Gläser)',
+      period: 'Rhythmus',
+      day: 'Täglich',
+      week: 'Mehrmals pro Woche',
+      weeklyTimes: 'Mal pro Woche',
+      weekdays: 'Wochentage',
+      weekdaysHint: 'Keine Auswahl = jeden Tag.',
+      reminder: 'Erinnerung',
+      reminderOff: 'Aus',
+      reminderTime: 'Zu einer Uhrzeit',
+      reminderWindow: 'Im Zeitfenster',
+      at: 'Uhrzeit',
+      from: 'Von',
+      to: 'Bis',
+      every: 'Alle (Minuten)',
+      reminderHint:
+        'Im Zeitfenster erinnert die App, bis das Tagesziel erreicht ist – danach nicht mehr.',
+      templates: 'Vorlagen',
+    },
+    templates: {
+      water: { name: 'Wasser trinken', unit: 'Gläser' },
+      walk: { name: 'Spazieren gehen', unit: '' },
+      stretch: { name: 'Dehnen', unit: '' },
+      pill: { name: 'Medikament nehmen', unit: '' },
+    },
+    today: {
+      progress: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+      done: 'Geschafft',
+      plus: '+1',
+      minus: '−1',
+      markDone: 'Erledigt',
+      undo: 'Zurücknehmen',
+      rest: 'Pausentag',
+      restOn: 'Pausentag: heute zählt nicht.',
+      restOff: 'Pausentag aufheben',
+      weekProgress: (done: number, of: number) => `${done} von ${of} diese Woche`,
+      plusFor: (name: string) => `+1 ${name}`,
+      minusFor: (name: string) => `−1 ${name}`,
+      nothing: 'Heute ist nichts geplant.',
+    },
+    history: {
+      pick: 'Gewohnheit',
+      last30: 'Letzte 30 Tage',
+      ofDays: (done: number, of: number) => `${done} von ${of} geplanten Tagen`,
+      ofWeeks: (done: number, of: number) => `${done} von ${of} Wochen geschafft`,
+      perWeekday: 'Pro Wochentag',
+      best: (n: number) => `Längste Serie: ${n}`,
+      grid: 'Das letzte Jahr, eine Spalte pro Woche',
+      legend: {
+        done: 'Geschafft',
+        partial: 'Teilweise',
+        open: 'Offen',
+        rest: 'Pausentag',
+        off: 'Nicht geplant',
+      },
+      noData: 'In diesem Zeitraum zählt noch nichts.',
+      cell: (date: string, state: string, count: number) =>
+        `${date}: ${state}${count > 0 ? `, ${count}` : ''}`,
+    },
+    archive: {
+      empty: 'Nichts archiviert.',
+      archived: 'Archiviert.',
+      restored: 'Wieder aktiv.',
+      archiveAction: 'Archivieren',
+      restoreAction: 'Wiederherstellen',
+    },
+    notify: {
+      body: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+    },
+    widget: {
+      summary: (done: number, of: number) => `${done} von ${of} geschafft`,
+      detail: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+      plusFor: (name: string) => `+1 ${name}`,
+      empty: 'Noch keine Gewohnheiten.',
+      addAction: 'Gewohnheit anlegen',
+    },
+    head: {
+      label: 'Heute',
+      value: (done: number, of: number) => `${done}/${of}`,
+      none: 'Nichts geplant',
+    },
+  },
 } as const;
 
 /** Shape every translation must have: same keys, strings for strings, same function signatures. */

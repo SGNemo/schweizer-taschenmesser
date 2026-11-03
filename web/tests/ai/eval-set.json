@@ -234,6 +234,25 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
     }
   ],
   "cases": [
@@ -2771,6 +2790,64 @@
     {
       "id": "neg-30",
       "input": "Wo ist meine Notiz zum Garten?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "hab-c01",
+      "input": "Neue Gewohnheit Meditieren",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Meditieren"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-c02",
+      "input": "Gewohnheit anlegen Lesen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Lesen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-t01",
+      "input": "Gewohnheit Wasser trinken archivieren",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Wasser trinken"
+        }
+      ]
+    },
+    {
+      "id": "hab-d01",
+      "input": "Lösche die Gewohnheit Spazieren gehen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "delete",
+          "target": "Spazieren gehen"
+        }
+      ]
+    },
+    {
+      "id": "hab-n01",
+      "input": "Wie viele Gläser habe ich heute getrunken?",
       "tags": ["negative"],
       "expect": []
     }
