@@ -4523,6 +4523,8 @@ export const de = {
       hot: 'Warm: Sonnencreme und Sonnenhut nicht vergessen.',
       cold: 'Kalt: warme Kleidung und Handschuhe einpacken.',
     },
+    more: 'Mehr',
+    suggestionsToggle: (n: number) => `Schon mal gekauft (${n})`,
     recurringBadge: 'Wiederkehrend',
     category: 'Kategorie (optional)',
     categoryNow: 'Neue Einträge in Kategorie',

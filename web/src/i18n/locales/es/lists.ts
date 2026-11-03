@@ -128,6 +128,8 @@ export const lists: Strings['lists'] = {
     hot: 'Calor: no olvides crema solar y gorro.',
     cold: 'Frío: lleva ropa de abrigo y guantes.',
   },
+  more: 'Más',
+  suggestionsToggle: (n: number) => `Comprado antes (${n})`,
   recurringBadge: 'Recurrente',
   category: 'Categoría (opcional)',
   categoryNow: 'Las entradas nuevas van a la categoría',

@@ -129,6 +129,8 @@ export const lists: Strings['lists'] = {
     hot: 'Chaud : n’oublie pas crème solaire et chapeau.',
     cold: 'Froid : emporte des vêtements chauds et des gants.',
   },
+  more: 'Plus',
+  suggestionsToggle: (n: number) => `Déjà acheté (${n})`,
   recurringBadge: 'Récurrent',
   category: 'Catégorie (facultatif)',
   categoryNow: 'Les nouvelles entrées vont dans la catégorie',

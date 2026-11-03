@@ -127,6 +127,8 @@ export const lists: Strings['lists'] = {
     hot: 'Warm: do not forget sun cream and a hat.',
     cold: 'Cold: pack warm clothes and gloves.',
   },
+  more: 'More',
+  suggestionsToggle: (n: number) => `Bought before (${n})`,
   recurringBadge: 'Recurring',
   category: 'Category (optional)',
   categoryNow: 'New entries go to category',

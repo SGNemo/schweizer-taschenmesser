@@ -21,6 +21,7 @@ import {
   GroupedList,
   IconButton,
   ItemList,
+  RowMenu,
   ItemRow,
   PageHeader,
   Progress,
@@ -75,6 +76,8 @@ export default function ListsPage() {
   const [templates, setTemplates] = useState(false);
   const [category, setCategory] = useState('');
   const moduleStates = useModuleStates();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
 
@@ -350,13 +353,26 @@ export default function ListsPage() {
                   </Button>
                 </>
               )}
-              {isShopping && doneCount > 0 && moduleStates?.pantry === true ? (
-                <Button onClick={() => void toPantry()}>{t.lists.toPantry(doneCount)}</Button>
-              ) : null}
               {toBuy.length > 0 ? (
                 <Button onClick={() => void sendToBuy()}>{t.lists.buyMissing(toBuy.length)}</Button>
               ) : null}
-              <Button onClick={() => void share()}>{t.lists.share}</Button>
+              <RowMenu
+                label={t.lists.more}
+                open={moreOpen}
+                onOpenChange={setMoreOpen}
+                items={[
+                  ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
+                    ? [
+                        {
+                          id: 'to-pantry',
+                          label: t.lists.toPantry(doneCount),
+                          onSelect: () => void toPantry(),
+                        },
+                      ]
+                    : []),
+                  { id: 'share', label: t.lists.share, onSelect: () => void share() },
+                ]}
+              />
               <IconButton label={t.lists.editList} onClick={() => setListTarget(current)}>
                 <Icon name="edit" />
               </IconButton>
@@ -397,8 +413,10 @@ export default function ListsPage() {
           ) : null}
           {suggestions.length > 0 ? (
             <section aria-label={t.lists.suggestions} className={styles.suggest}>
-              <span className={styles.quantity}>{t.lists.suggestions}</span>
-              {suggestions.map((name) => (
+              <Button aria-expanded={showSuggestions} onClick={() => setShowSuggestions((v) => !v)}>
+                {t.lists.suggestionsToggle(suggestions.length)}
+              </Button>
+              {(showSuggestions ? suggestions : []).map((name) => (
                 <Button
                   key={name}
                   onClick={() => void addItem(current.id, name, current.kind)}

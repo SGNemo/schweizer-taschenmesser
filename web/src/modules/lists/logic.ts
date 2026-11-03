@@ -112,7 +112,7 @@ export function totals(items: readonly Pick<Item, 'priceCents' | 'done'>[]): {
 export function suggestNames(
   history: readonly Pick<Item, 'name'>[],
   openNames: readonly string[],
-  limit = 6,
+  limit = 4,
 ): string[] {
   const open = new Set(openNames.map((n) => n.trim().toLowerCase()));
   const count = new Map<string, { name: string; n: number }>();

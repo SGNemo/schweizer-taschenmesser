@@ -238,7 +238,9 @@ function PeopleList({
               <ItemRow
                 key={p.id}
                 title={p.name}
-                lead={<AvatarRing name={p.name} days={b ? daysUntil(b, day) : undefined} />}
+                lead={
+                  <AvatarRing name={p.name} days={b ? daysUntil(b, day) : undefined} size={2.25} />
+                }
                 meta={[
                   next ? formatDay(next, 'EEE, d. MMMM') : undefined,
                   age !== undefined ? t.people.turns(age) : undefined,

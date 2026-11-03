@@ -157,10 +157,7 @@ export default function VaultPage() {
                   )}
                   {RENEWABLE.includes(d.category) &&
                   renewedEnd(d) &&
-                  (state === 'act-now' ||
-                    state === 'soon' ||
-                    state === 'missed' ||
-                    state === 'expired') ? (
+                  (state === 'act-now' || state === 'missed' || state === 'expired') ? (
                     <Button
                       size="sm"
                       aria-label={t.vault.renewAria(d.title)}

@@ -127,6 +127,8 @@ export const lists: Strings['lists'] = {
     hot: 'Calor: não esqueça protetor solar e chapéu.',
     cold: 'Frio: leve roupas quentes e luvas.',
   },
+  more: 'Mais',
+  suggestionsToggle: (n: number) => `Já comprado antes (${n})`,
   recurringBadge: 'Recorrente',
   category: 'Categoria (opcional)',
   categoryNow: 'Novos itens vão para a categoria',

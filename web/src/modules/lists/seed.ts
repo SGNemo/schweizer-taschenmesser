@@ -241,7 +241,7 @@ const TEXTS: Record<Lang, Texts> = {
   },
 };
 
-const SECTION_CYCLE = ['dairy', 'bakery', 'produce', 'household', 'drinks'] as const;
+const SECTION_CYCLE = ['dairy', 'bakery', 'produce'] as const;
 
 /** Where the first packing list goes and its two categories, per language. */
 const TRIP: Record<Lang, { place: string; cats: [string, string] }> = {
@@ -282,7 +282,8 @@ function seed(ctx: SeedContext): SeedRows {
         ...(quantity ? { quantity } : {}),
         done: i % 3 === 2,
         order: i,
-        section: SECTION_CYCLE[i % SECTION_CYCLE.length]!,
+        // Most people never assign sections: only the first entries have one (the list stays calm).
+        ...(i < 6 ? { section: SECTION_CYCLE[i % SECTION_CYCLE.length]! } : {}),
         ...(i % 2 === 0 ? { priceCents: 99 + ((i * 37) % 400) } : {}),
         ...(i % 5 === 0 ? { recurring: true } : {}),
       },
