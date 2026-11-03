@@ -5,7 +5,7 @@ import { overpassBusyFixture, overpassFixture } from '../own/fixtures';
 import { decodeTile, encodeTile, type VectorTile } from '../own/mvt';
 import { buildParent } from '../own/pyramid';
 import { SAMPLE_CENTER } from '../own/sample';
-import { handle, runCell, runParent, tilesUnder } from '../own/work';
+import { handle, runBlock, runParent, tilesUnder } from '../own/work';
 
 const c13 = project(SAMPLE_CENTER.lat, SAMPLE_CENTER.lon, 13);
 const cell = { z: 13, x: Math.floor(c13.x / 256), y: Math.floor(c13.y / 256) };
@@ -22,18 +22,20 @@ describe('cell work', () => {
   });
 
   it('turns an answer into the cell tiles (z13 and z14), with the streets and the town in them', () => {
-    const res = runCell({
-      kind: 'cell',
+    const res = runBlock({
+      kind: 'block',
       id: 1,
       level: 'lean',
-      cell,
+      cells: [cell],
       maxZoom: 14,
       json: JSON.stringify(overpassFixture()),
     });
     expect(res.error).toBeUndefined();
     expect(res.features).toBeGreaterThan(8);
-    expect(res.tiles.length).toBeGreaterThanOrEqual(2);
-    const top = res.tiles.find((t) => t.z === 13)!;
+    expect(res.cells).toHaveLength(1);
+    const { tiles } = res.cells[0]!;
+    expect(tiles.length).toBeGreaterThanOrEqual(2);
+    const top = tiles.find((t) => t.z === 13)!;
     const decoded = decodeTile(new Uint8Array(top.bytes));
     const layers = decoded.layers.map((l) => l.name);
     expect(layers).toEqual(expect.arrayContaining(['road', 'rail', 'water', 'landuse', 'place']));
@@ -42,7 +44,7 @@ describe('cell work', () => {
       .find((l) => l.name === 'road')!
       .features.map((f) => f.tags.class);
     expect(roads13).not.toContain('path');
-    const deep = res.tiles.filter((t) => t.z === 14);
+    const deep = tiles.filter((t) => t.z === 14);
     const classes14 = deep.flatMap((t) =>
       decodeTile(new Uint8Array(t.bytes))
         .layers.filter((l) => l.name === 'road')
@@ -52,14 +54,42 @@ describe('cell work', () => {
   });
 
   it('reports a busy server and an unreadable answer instead of producing tiles', () => {
-    const base = { kind: 'cell' as const, id: 2, level: 'lean' as const, cell, maxZoom: 14 };
-    expect(runCell({ ...base, json: JSON.stringify(overpassBusyFixture()) })).toMatchObject({
+    const base = {
+      kind: 'block' as const,
+      id: 2,
+      level: 'lean' as const,
+      cells: [cell],
+      maxZoom: 14,
+    };
+    expect(runBlock({ ...base, json: JSON.stringify(overpassBusyFixture()) })).toMatchObject({
       error: 'busy',
-      tiles: [],
+      cells: [],
     });
-    expect(runCell({ ...base, json: '<html>down</html>' })).toMatchObject({ error: 'shape' });
-    expect(runCell({ ...base, json: '{"foo":1}' })).toMatchObject({ error: 'shape' });
-    expect(runCell({ ...base, json: '{"elements":[]}' })).toMatchObject({ tiles: [], features: 0 });
+    // A timed-out answer that still carries elements is incomplete: busy as well, never half a cell.
+    const partial = { ...overpassFixture(), remark: 'runtime error: Query timed out in "query"' };
+    expect(runBlock({ ...base, json: JSON.stringify(partial) })).toMatchObject({ error: 'busy' });
+    expect(runBlock({ ...base, json: '<html>down</html>' })).toMatchObject({ error: 'shape' });
+    expect(runBlock({ ...base, json: '{"foo":1}' })).toMatchObject({ error: 'shape' });
+    expect(runBlock({ ...base, json: '{"elements":[]}' })).toMatchObject({
+      cells: [{ cell, tiles: [], names: [] }],
+      features: 0,
+    });
+  });
+
+  it('cuts every cell of a block from the one answer', () => {
+    const cells = [cell, { z: 13, x: cell.x + 1, y: cell.y }];
+    const res = runBlock({
+      kind: 'block',
+      id: 3,
+      level: 'lean',
+      cells,
+      maxZoom: 14,
+      json: JSON.stringify(overpassFixture()),
+    });
+    expect(res.cells.map((c) => c.cell)).toEqual(cells);
+    expect(res.cells[0]!.tiles.length).toBeGreaterThan(0);
+    // The town lies in the first cell; the neighbour gets at most what reaches over its edge.
+    expect(res.cells[1]!.tiles.length).toBeLessThanOrEqual(res.cells[0]!.tiles.length);
   });
 });
 
@@ -180,14 +210,14 @@ describe('parent work (the overview)', () => {
   });
 
   it('the fixture region overview: every z12 parent of the cells has content', () => {
-    const res = runCell({
-      kind: 'cell',
+    const res = runBlock({
+      kind: 'block',
       id: 5,
       level: 'lean',
-      cell,
+      cells: [cell],
       maxZoom: 14,
       json: JSON.stringify(overpassFixture()),
-    });
+    }).cells[0]!;
     const parents = tilesCovering(
       {
         minLat: SAMPLE_CENTER.lat - 0.001,

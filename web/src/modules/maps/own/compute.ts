@@ -51,7 +51,7 @@ export function workerCompute(make: () => WorkerLike = makeBrowserWorker): Compu
       return new Promise<BuildResult>((resolve, reject) => {
         pending.set(req.id, { resolve, reject });
         const transfer =
-          req.kind === 'cell'
+          req.kind === 'block'
             ? []
             : req.kind === 'parent'
               ? req.children.map((c) => c.bytes)

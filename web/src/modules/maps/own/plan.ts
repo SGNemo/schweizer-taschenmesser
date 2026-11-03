@@ -1,13 +1,14 @@
 /**
- * The build plan of an own-map region: which Web Mercator cells are fetched (one request each), which
- * tile zooms are stored, and how a too-large area is cut down to a calm first piece around its centre.
- * Pure; the cell order is deterministic, so a build resumes from `cells.done`.
+ * The build plan of an own-map region: which Web Mercator cells are written, which tile zooms are
+ * stored, and how a too-large area is cut down to a calm first piece around its centre. Cells are
+ * fetched in blocks of up to four (the four children of one parent tile: one request each) and listed
+ * in block order, so a build resumes from `cells.done` at a block boundary. Pure and deterministic.
  */
 import { TILE_SIZE, fromScreen, project, type View } from '../logic';
 import type { MapLevel } from '../schema';
 import { tileBbox, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
 
-/** One request per cell: z13 (≈ 3 km at 50° N) for the lean map, z14 for the full one. */
+/** The cells of a build: z13 (≈ 3 km at 50° N) for the lean map, z14 for the full one. */
 export const CELL_ZOOM: Record<MapLevel, number> = { lean: 13, full: 14 };
 /** Stored tile zooms per level; deeper views are drawn from the stored data (overzoom). */
 export const STORED_ZOOMS: Record<MapLevel, { min: number; max: number }> = {
@@ -27,7 +28,41 @@ export interface BuildPlan {
 
 export function planRegion(level: MapLevel, bbox: Bbox): BuildPlan {
   const cellZoom = CELL_ZOOM[level];
-  return { cellZoom, zooms: STORED_ZOOMS[level], cells: tilesCovering(bbox, cellZoom) };
+  return {
+    cellZoom,
+    zooms: STORED_ZOOMS[level],
+    cells: blocksOf(tilesCovering(bbox, cellZoom)).flatMap((b) => b.cells),
+  };
+}
+
+/** Up to four cells that share a parent tile: one request. */
+export interface Block {
+  parent: TileAddress;
+  cells: TileAddress[];
+}
+
+/** Groups cells by their parent tile, in the order the cells (and so the parents) first appear. */
+export function blocksOf(cells: readonly TileAddress[]): Block[] {
+  const blocks = new Map<string, Block>();
+  for (const c of cells) {
+    const parent = { z: c.z - 1, x: c.x >> 1, y: c.y >> 1 };
+    const key = `${parent.z}/${parent.x}/${parent.y}`;
+    const block = blocks.get(key);
+    if (block) block.cells.push(c);
+    else blocks.set(key, { parent, cells: [c] });
+  }
+  return [...blocks.values()];
+}
+
+/** The bbox a block's request asks for: its cells plus their margins. */
+export function blockBbox(block: Block): Bbox {
+  const boxes = block.cells.map(cellBbox);
+  return {
+    minLat: Math.min(...boxes.map((b) => b.minLat)),
+    minLon: Math.min(...boxes.map((b) => b.minLon)),
+    maxLat: Math.max(...boxes.map((b) => b.maxLat)),
+    maxLon: Math.max(...boxes.map((b) => b.maxLon)),
+  };
 }
 
 /** The bbox a cell's request asks for: the tile plus a small margin. */

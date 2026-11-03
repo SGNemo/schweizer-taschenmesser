@@ -4,6 +4,8 @@ import {
   assembleRings,
   isOverloadRemark,
   overpassQuery,
+  slotWaitSeconds,
+  statusUrl,
   parseOverpass,
   readAnswer,
 } from '../own/overpass';
@@ -14,7 +16,13 @@ describe('overpass query', () => {
   it('asks for one bbox, as JSON with geometry, with a server-side time and size limit', () => {
     const q = overpassQuery(bbox, 'lean');
     expect(q).toContain('[out:json]');
-    expect(q).toContain('[timeout:60]');
+    expect(q).toContain('[timeout:180]');
+    // One spatial scan each for ways and relations, filtered from the set.
+    expect(q).toContain('way(49.59000,10.99000,49.61000,11.02000)->.w;');
+    expect(q).toContain('relation(49.59000,10.99000,49.61000,11.02000)->.r;');
+    expect(q).toContain('way.w["highway"~');
+    expect(q).toContain('relation.r["landuse"~');
+    expect(q).toContain('node["place"~');
     expect(q).toContain('[maxsize:');
     expect(q).toContain('out geom;');
     expect(q).toContain('(49.59000,10.99000,49.61000,11.02000)');
@@ -29,7 +37,7 @@ describe('overpass query', () => {
     expect(lean).not.toContain('footway');
     expect(lean).not.toContain('amenity');
     const full = overpassQuery(bbox, 'full');
-    expect(full).toContain('way["building"]');
+    expect(full).toContain('way.w["building"]');
     expect(full).toContain('footway');
     expect(full).toContain('"amenity"');
   });
@@ -100,5 +108,28 @@ describe('overpass answer', () => {
     expect(rings).toHaveLength(1);
     expect(rings[0]).toHaveLength(5);
     expect(rings[0]![0]).toEqual(rings[0]![4]);
+  });
+});
+
+describe('server status (rate limit)', () => {
+  it('knows the status page next to the interpreter, and nothing for other addresses', () => {
+    expect(statusUrl('https://overpass-api.de/api/interpreter')).toBe(
+      'https://overpass-api.de/api/status',
+    );
+    expect(statusUrl('https://o.example/api/interpreter/')).toBe('https://o.example/api/status');
+    expect(statusUrl('https://o.example/overpass')).toBeUndefined();
+  });
+
+  it('reads the seconds until a slot is free, zero when one is free now', () => {
+    const busy =
+      'Connected as: 123\nCurrent time: 2026-11-02T03:00:00Z\nRate limit: 2\nSlot available after: 2026-11-02T03:00:12Z, in 12 seconds.\nSlot available after: 2026-11-02T03:00:40Z, in 40 seconds.\nCurrently running queries (pid, space limit, time limit, start time):\n';
+    expect(slotWaitSeconds(busy)).toBe(12);
+    expect(slotWaitSeconds('Rate limit: 2\n2 slots available now.\n')).toBe(0);
+    expect(
+      slotWaitSeconds(
+        'Rate limit: 2\n1 slot available now.\nSlot available after: …, in 9 seconds.',
+      ),
+    ).toBe(0);
+    expect(slotWaitSeconds('<html>gateway</html>')).toBeUndefined();
   });
 });
