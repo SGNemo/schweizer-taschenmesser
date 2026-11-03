@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'calendarLeaf',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.calendar.meta.description;
   },
@@ -64,7 +64,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'full',
   order: 10,
   area: 'plan',

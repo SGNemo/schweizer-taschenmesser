@@ -90,7 +90,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
                 <button
                   key={`${item.source}:${item.id}`}
                   type="button"
-                  className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${item.done ? styles.done : ''}`}
+                  className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
                   style={
                     {
                       '--start': start,
@@ -99,10 +99,13 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
                       '--lanes': lanes,
                     } as CSSProperties
                   }
-                  title={`${kindLabel(item.kind)}: ${item.title}`}
+                  title={`${kindLabel(item.kind)}: ${item.title}${lanes > 1 ? ` – ${t.calendar.overlaps}` : ''}`}
                   onClick={() => onOpenItem(item)}
                 >
                   <span className={styles.tgTime}>{item.time}</span> {item.title}
+                  {lanes > 1 ? (
+                    <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
+                  ) : null}
                 </button>
               ))}
               {d === now ? (

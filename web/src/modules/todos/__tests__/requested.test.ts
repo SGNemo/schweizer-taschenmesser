@@ -21,4 +21,12 @@ describe('todo.requested', () => {
     await bus.emit('todo.requested', { title: 'Brot' });
     expect(await taskRepo.active().count()).toBe(1);
   });
+
+  it('carries an optional due date (from a calendar event)', async () => {
+    const stop = start();
+    await bus.emit('todo.requested', { title: 'Zahnarzt vorbereiten', dueDate: '2026-11-10' });
+    const [task] = await taskRepo.active().toArray();
+    expect(task?.dueDate).toBe('2026-11-10');
+    stop();
+  });
 });

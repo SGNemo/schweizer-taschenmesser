@@ -77,6 +77,11 @@
         "label": "Standardansicht",
         "default": "month"
       },
+      "holidayRegion": {
+        "type": "select",
+        "label": "Feiertage anzeigen",
+        "default": "off"
+      },
       "defaultReminderTime": {
         "type": "text",
         "label": "Standard-Uhrzeit für neue Erinnerungen",
