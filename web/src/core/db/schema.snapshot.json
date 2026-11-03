@@ -1,8 +1,9 @@
 {
-  "version": 29,
+  "version": 30,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
+    "_automationLog": "++id, at, ruleId, groupId",
     "_blobs": "key",
     "_conflicts": "++id, at, status",
     "_imports": "id, createdAt, moduleId",

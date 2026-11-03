@@ -17,10 +17,10 @@ async function handlersOf(manifest: ModuleManifest): Promise<Record<string, AiAc
   return load ? (await load()).default : {};
 }
 
-function candidateOf(op: PreparedOp, def: { via?: string }): ImportCandidate {
+function candidateOf(op: PreparedOp, def: { via?: string; id?: string }): ImportCandidate {
   const label = op.targetTitle ?? String(op.data[titleKey(op)] ?? op.actionLabel);
   const base = { collection: op.collection, label, dedupeKey: `${op.action}:${label}` };
-  if (op.kind === 'create') return { ...base, data: op.data };
+  if (op.kind === 'create') return { ...base, ...(def.id ? { id: def.id } : {}), data: op.data };
   if (op.kind === 'delete') {
     return { ...base, id: op.targetId, data: {}, remove: { before: op.before ?? {} } };
   }
@@ -51,10 +51,23 @@ export interface CommitResult {
 /** Commits the ticked, ready ops. Throws nothing for skipped ones; the preview never offers them. */
 export async function commitOps(
   ops: readonly PreparedOp[],
-  deps: { manifests: readonly ModuleManifest[]; source: string; database?: TaschenmesserDB },
+  deps: {
+    manifests: readonly ModuleManifest[];
+    source: string;
+    database?: TaschenmesserDB;
+    /** Automations: who writes, and fixed ids for new entries (a repeated run writes nothing twice). */
+    writer?: {
+      importerId: string;
+      origin: NonNullable<ImportBatch['origin']>;
+      groupId?: string;
+      idFor?: (op: PreparedOp) => string | undefined;
+    };
+  },
 ): Promise<CommitResult> {
   const database = deps.database ?? defaultDb;
-  const groupId = newBatchId();
+  const groupId = deps.writer?.groupId ?? newBatchId();
+  const importerId = deps.writer?.importerId ?? ASSISTANT_IMPORTER_ID;
+  const origin = deps.writer?.origin ?? 'assistant';
   const byModule = new Map<string, PreparedOp[]>();
   for (const op of ops.filter((o) => o.ready)) {
     byModule.set(op.module, [...(byModule.get(op.module) ?? []), op]);
@@ -66,17 +79,22 @@ export async function commitOps(
     const handlers = await handlersOf(manifest);
     const rows: PreviewRow[] = list.map((op, index) => {
       const via = op.kind === 'transition' && handlers[op.action] ? op.action : undefined;
-      return { index, candidate: candidateOf(op, { via }), duplicate: false, selected: true };
+      return {
+        index,
+        candidate: candidateOf(op, { via, id: deps.writer?.idFor?.(op) }),
+        duplicate: false,
+        selected: true,
+      };
     });
     batches.push(
       await commitImport(
         manifest,
         {
           batchId: newBatchId(),
-          importerId: ASSISTANT_IMPORTER_ID,
+          importerId,
           source: deps.source.slice(0, 120),
           rows,
-          base: { origin: 'assistant', groupId, createdAt: now() },
+          base: { origin, groupId, createdAt: now() },
           handlers,
         },
         database,

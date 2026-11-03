@@ -13,6 +13,7 @@ import { db as defaultDb, type TaschenmesserDB } from './db';
 import { tableName } from './schema';
 import { getDeviceContext, type DeviceContext } from './device';
 import { recordWrite, type UndoStep } from './recorder';
+import { signalWrite, type WriteSignal } from './writeHook';
 import { maxHlc } from './hlc';
 import { ENVELOPE_KEYS, type Stored } from './types';
 import { deepEqual, randomId } from './util';
@@ -200,6 +201,8 @@ export function createRepo<T extends Record<string, unknown>>(
       changed = rows.map((r) => r.id);
     });
     if (changed.length > 0) recordWrite(() => setDeletedMany(changed, !deleted));
+    for (const id of changed)
+      signalWrite({ table: name, kind: deleted ? 'deleted' : 'restored', id });
   };
 
   /** Data fields of `existing` that `next` changes, with their previous values (for undo). */
@@ -231,6 +234,7 @@ export function createRepo<T extends Record<string, unknown>>(
         return created;
       });
       recordWrite(() => setDeletedMany([row.id], true));
+      signalWrite({ table: name, kind: 'created', id: row.id, data: dataOf(row) });
       return row;
     },
     async createMany(items) {
@@ -252,10 +256,13 @@ export function createRepo<T extends Record<string, unknown>>(
             true,
           ),
         );
+      for (const r of rows)
+        signalWrite({ table: name, kind: 'created', id: r.id, data: dataOf(r) });
       return rows;
     },
     async update(id, patch) {
       let undo: UndoStep | undefined;
+      let changedBefore: Record<string, unknown> | undefined;
       const row = await write(async (ctx) => {
         const existing = await table().get(id);
         if (!existing || !notDeleted(existing))
@@ -265,18 +272,23 @@ export function createRepo<T extends Record<string, unknown>>(
         if (!updated) return existing;
         const prev = previousValues(existing, next);
         if (prev) undo = () => repo.update(id, prev as Partial<T>).then(() => undefined);
+        changedBefore = prev;
         await saveAll([updated]);
         return updated;
       });
       if (undo) recordWrite(undo);
+      if (changedBefore)
+        signalWrite({ table: name, kind: 'updated', id, data: dataOf(row), before: changedBefore });
       return row;
     },
     async upsert(id, data) {
       let undo: UndoStep | undefined;
+      let signal: WriteSignal | undefined;
       const row = await write(async (ctx) => {
         const existing = await table().get(id);
         if (!existing) {
           undo = () => setDeletedMany([id], true);
+          signal = { table: name, kind: 'created', id };
           const created = buildCreated(ctx, data, id);
           await saveAll([created]);
           return created;
@@ -286,10 +298,17 @@ export function createRepo<T extends Record<string, unknown>>(
         if (!updated) return existing;
         const before = dataOf(existing as unknown as Record<string, unknown>) as T;
         undo = () => repo.upsert(id, before).then(() => undefined);
+        signal = {
+          table: name,
+          kind: 'updated',
+          id,
+          before: previousValues(existing, next),
+        };
         await saveAll([updated]);
         return updated;
       });
       if (undo) recordWrite(undo);
+      if (signal) signalWrite({ ...signal, data: dataOf(row) });
       return row;
     },
     remove: (id) => setDeletedMany([id], true),
