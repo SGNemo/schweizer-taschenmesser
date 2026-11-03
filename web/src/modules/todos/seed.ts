@@ -2,6 +2,13 @@ import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/typ
 
 /** German source text → [en, es, fr, pt-BR]; a text without an entry stays German. */
 const TR: Record<string, readonly [string, string, string, string]> = {
+  'Maße nehmen': ['Take measurements', 'Tomar medidas', 'Prendre les mesures', 'Tirar as medidas'],
+  'Material kaufen': [
+    'Buy materials',
+    'Comprar material',
+    'Acheter le matériel',
+    'Comprar material',
+  ],
   Haushalt: ['Household', 'Hogar', 'Maison', 'Casa'],
   Arbeit: ['Work', 'Trabajo', 'Travail', 'Trabalho'],
   'Einkäufe & Besorgungen': [
@@ -253,7 +260,13 @@ function seed(ctx: SeedContext): SeedRows {
   const extra = ctx.count({ small: 0, medium: 25, large: 300 });
   const lists: SeedRow[] = LISTS.slice(0, nLists).map((l, i) => ({
     id: ctx.id('todos', 'list', i),
-    data: { name: tr(ctx, l.name), color: l.color, order: i },
+    data: {
+      name: tr(ctx, l.name),
+      color: l.color,
+      order: i,
+      // The balcony list is a project: it shows its progress.
+      ...(l.name === 'Projekt Balkon' ? { kind: 'project' } : {}),
+    },
   }));
   const base = ctx.scale === 'small' ? BASE.filter((b) => b.list < nLists) : BASE;
   const all: Base[] = [...base];
@@ -293,6 +306,14 @@ function seed(ctx: SeedContext): SeedRows {
     if (b.plan !== undefined && !done) data.plannedFor = ctx.day(b.plan);
     if (b.est !== undefined) data.estimateMin = b.est;
     if (done) data.completedAt = ctx.at(Math.min(b.due ?? -1, -1), '18:00');
+    // A few tags, one checklist and one task that starts later show the newer fields.
+    if (i % 5 === 0) data.tags = [i % 10 === 0 ? 'haus' : 'papier'];
+    if (i === 1)
+      data.checklist = [
+        { id: 'seed-cl-1', text: tr(ctx, 'Maße nehmen'), done: true },
+        { id: 'seed-cl-2', text: tr(ctx, 'Material kaufen'), done: false },
+      ];
+    if (i === 2 && !done) data.startDate = ctx.day(3);
     tasks.push({ id, data });
     (b.subs ?? []).forEach((s, j) => {
       const sd = s.done ?? false;

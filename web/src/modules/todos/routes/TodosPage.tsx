@@ -30,7 +30,10 @@ import {
   type RowMenuItem,
   useOpenParam,
 } from '@/ui';
+import { HeroSlot } from '@/ui/identity';
+import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
+import { TodayCard } from '../components/TodayCard';
 import { ListEditor } from '../components/ListEditor';
 import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
@@ -41,6 +44,8 @@ import { seriesKey, streaksOf, type Streak } from '../progress';
 import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { personName, usePeople } from '@/core/people/people';
 import { readQuickAdd } from '../quickAdd';
+import { tagCounts } from '../tags';
+import { movePatch, overdueTasks, TODO_VIEWS, viewOf, type TodoView } from '../views';
 import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
@@ -51,6 +56,10 @@ type StoredTask = Stored<Task>;
 
 const ALL = 'all';
 const SOMEDAY = 'someday';
+
+/** The page shows the grouped list (default), one of the four views, or the board. */
+type PageView = 'list' | TodoView | 'board';
+const PAGE_VIEWS: PageView[] = ['list', ...TODO_VIEWS, 'board'];
 
 interface RowProps {
   task: StoredTask;
@@ -64,6 +73,8 @@ interface RowProps {
   sub?: boolean;
   /** Calm wording: an old date is a plain date, not "Überfällig" in red. */
   calm?: boolean;
+  /** A visible "Morgen" button (the Heute view). */
+  quickTomorrow?: boolean;
   /** "n in Folge" of the task's series (shown on the open instance only). */
   streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
@@ -79,10 +90,13 @@ function TaskRow({
   person,
   sub,
   calm,
+  quickTomorrow,
   streaks,
   onToggle,
   onOpen,
 }: RowProps) {
+  // A short check-mark pop after a tick (≤ 250 ms; the global motion rules switch it off when reduced).
+  const [popped, setPopped] = useState(false);
   const tone = dueTone(task.dueDate, task.done, day);
   const waiting = calm && tone === 'overdue';
   const streak = !task.done && task.recurrence ? streaks?.get(seriesKey(task.id)) : undefined;
@@ -152,16 +166,31 @@ function TaskRow({
           >
             {t.todos.moveToday}
           </Button>
+        ) : quickTomorrow && !task.done ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => postpone(task, day)}
+            data-testid="move-tomorrow"
+          >
+            {t.todos.moveTomorrow}
+          </Button>
         ) : undefined
       }
       lead={
         <input
           type="checkbox"
-          className={styles.check}
+          className={`${styles.check} ${popped ? styles.tickPop : ''}`}
           aria-label={task.title}
           data-row-tick
           checked={task.done}
-          onChange={(e) => onToggle(task, e.target.checked)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setPopped(true);
+              setTimeout(() => setPopped(false), 250);
+            }
+            onToggle(task, e.target.checked);
+          }}
         />
       }
       meta={
@@ -191,7 +220,19 @@ function TaskRow({
                 : relativeDayLabel(task.dueDate, day)}
             </span>
           ) : null}
+          {task.startDate && task.startDate > day ? (
+            <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
+          ) : null}
           {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
+          {task.tags?.length ? <span>{task.tags.map((x) => `#${x}`).join(' ')}</span> : null}
+          {task.checklist?.length ? (
+            <span>
+              {t.todos.checklist.progress(
+                task.checklist.filter((c) => c.done).length,
+                task.checklist.length,
+              )}
+            </span>
+          ) : null}
           {streak ? (
             <span data-testid="streak">
               {streak.rest > 0
@@ -216,6 +257,7 @@ function TaskRow({
               day={day}
               sub
               calm={calm}
+              quickTomorrow={quickTomorrow}
               streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
@@ -282,6 +324,12 @@ export default function TodosPage() {
     }
   }, [params, setParams]);
 
+  const day = today();
+  const rawView = params.get('view');
+  const pageView: PageView = PAGE_VIEWS.includes(rawView as PageView)
+    ? (rawView as PageView)
+    : 'list';
+  const tag = params.get('tag') ?? '';
   const selected = params.get('list') ?? ALL;
   const currentList = lists?.find((l) => l.id === selected);
   // Without a chosen list a new ToDo lands in the inbox (sorted later), not in whichever list is first.
@@ -295,15 +343,43 @@ export default function TodosPage() {
   const forPerson = usePersonFilter();
   const people = usePeople();
   const visible = useMemo(() => {
-    const scoped =
-      selected === SOMEDAY
-        ? (tasks ?? []).filter((x) => x.someday)
-        : (tasks ?? []).filter(
-            (x) => isActionable(x) && (selected === ALL || x.listId === selected),
-          );
-    return scoped.filter((x) => (showDone || !x.done) && (!forPerson || x.personId === forPerson));
-  }, [tasks, selected, showDone, forPerson]);
+    const all = tasks ?? [];
+    const matches = (x: StoredTask) =>
+      (!forPerson || x.personId === forPerson) && (!tag || !!x.tags?.includes(tag));
+    if (pageView === 'list') {
+      const scoped =
+        selected === SOMEDAY
+          ? all.filter((x) => x.someday)
+          : all.filter(
+              (x) =>
+                isActionable(x) &&
+                // Not started yet = under "Demnächst", not in the plain list.
+                !(x.startDate && x.startDate > day && !x.parentId) &&
+                (selected === ALL || x.listId === selected),
+            );
+      return scoped.filter((x) => (showDone || !x.done) && matches(x));
+    }
+    // A view picks top-level tasks by their dates; their subtasks and checklist ride along.
+    const inList = (x: StoredTask) =>
+      selected === ALL || selected === SOMEDAY || x.listId === selected;
+    const tops = all.filter(
+      (x) =>
+        !x.parentId &&
+        inList(x) &&
+        matches(x) &&
+        (pageView === 'board' || viewOf(x, day) === pageView),
+    );
+    if (pageView === 'board') return tops;
+    const ids = new Set(tops.map((x) => x.id));
+    return [...tops, ...all.filter((x) => x.parentId && ids.has(x.parentId))];
+  }, [tasks, selected, showDone, forPerson, tag, pageView, day]);
   const { top, children } = useMemo(() => groupTasks(visible), [visible]);
+  const tagList = useMemo(() => tagCounts(tasks ?? []), [tasks]);
+  const project = useMemo(() => {
+    if (currentList?.kind !== 'project') return null;
+    const own = (tasks ?? []).filter((x) => x.listId === currentList.id && !x.parentId);
+    return { done: own.filter((x) => x.done).length, total: own.length };
+  }, [tasks, currentList]);
   const listName = (id: string) => lists?.find((l) => l.id === id)?.name ?? '';
   const editingSubs = editing
     ? ((tasks ?? []).filter((x) => x.parentId === editing.id) as StoredTask[])
@@ -325,13 +401,23 @@ export default function TodosPage() {
         ...(typed.dueDate ? { dueDate: typed.dueDate } : {}),
         ...(typed.estimateMin ? { estimateMin: typed.estimateMin } : {}),
         ...(typed.note ? { note: typed.note } : {}),
-        ...(selected === SOMEDAY && !typed.dueDate ? { someday: true } : {}),
+        ...((selected === SOMEDAY || pageView === 'someday') && !typed.dueDate
+          ? { someday: true }
+          : {}),
+        ...(pageView === 'today' && !typed.dueDate ? { plannedFor: day } : {}),
       }),
     );
     toast(t.todos.added);
     setTitle('');
     // The next entry follows right away: the field keeps the focus (and the keyboard stays up).
     addRef.current?.querySelector('input')?.focus();
+  }
+
+  function setParam(key: 'view' | 'tag', value: string | null) {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next, { replace: true });
   }
 
   function select(id: string) {
@@ -341,7 +427,6 @@ export default function TodosPage() {
     setParams(next, { replace: true });
   }
 
-  const day = today();
   const streaks = useMemo(
     () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
     [focus.streaks, tasks, day],
@@ -358,6 +443,7 @@ export default function TodosPage() {
         showList={selected === ALL || selected === SOMEDAY ? listName(task.listId) : undefined}
         person={personName(people, task.personId)}
         calm={focus.calmAttention}
+        quickTomorrow={pageView === 'today'}
         streaks={streaks}
         onToggle={toggle}
         onOpen={setEditing}
@@ -379,6 +465,12 @@ export default function TodosPage() {
             </span>
             <Button onClick={replanNow}>{t.focus.waiting.replan}</Button>
           </div>
+        ) : g.id === 'overdue' ? (
+          <div className={styles.waiting}>
+            <Button onClick={moveOverdueToday} data-testid="all-today">
+              {t.todos.allToday}
+            </Button>
+          </div>
         ) : undefined,
       children: <ItemList>{g.items.map(row)}</ItemList>,
     }));
@@ -396,7 +488,7 @@ export default function TodosPage() {
         ]
       : timed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top, children, tasks, day, selected, focus.calmAttention, lists]);
+  }, [top, children, tasks, day, selected, focus.calmAttention, lists, pageView]);
   const inboxOpen = useMemo(
     () =>
       ((tasks ?? []) as StoredTask[])
@@ -406,6 +498,29 @@ export default function TodosPage() {
         .sort((a, b) => a.createdAt - b.createdAt),
     [tasks],
   );
+
+  function moveOverdueToday() {
+    const list = overdueTasks((tasks ?? []) as StoredTask[], day);
+    void undoableWithToast(
+      t.todos.allTodayDone(list.length),
+      t.todos.allTodayDone(list.length),
+      async () => {
+        for (const x of list) await taskRepo.update(x.id, { dueDate: day });
+      },
+    );
+  }
+
+  /** Board / menu move into a column; "Erledigt" ticks off (a repeat creates its next instance). */
+  function moveTo(task: StoredTask, to: TodoView) {
+    void undoableWithToast(t.todos.changed, t.todos.changed, async () => {
+      if (to === 'done') {
+        await setDone(task, true);
+        return;
+      }
+      if (task.done) await setDone(task, false);
+      await taskRepo.update(task.id, movePatch(task, to, day));
+    });
+  }
 
   function replanNow() {
     const moves = replan((tasks ?? []) as unknown as PickTask[], day, focus.planLimit);
@@ -494,6 +609,12 @@ export default function TodosPage() {
         </p>
       ) : null}
 
+      {tasks ? (
+        <HeroSlot>
+          <TodayCard tasks={tasks} day={day} />
+        </HeroSlot>
+      ) : null}
+
       <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
@@ -511,6 +632,64 @@ export default function TodosPage() {
             </Button>
           </form>
 
+          <div className={styles.toolbar}>
+            <div className={styles.viewBar} role="group" aria-label={t.todos.views.label}>
+              {PAGE_VIEWS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={styles.tagChip}
+                  aria-pressed={pageView === v}
+                  onClick={() => setParam('view', v === 'list' ? null : v)}
+                >
+                  {v === 'list' ? t.todos.views.all : t.todos.views[v]}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
+          {tagList.length > 0 && (advanced || tag) ? (
+            <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
+              <button
+                type="button"
+                className={styles.tagChip}
+                aria-pressed={tag === ''}
+                onClick={() => setParam('tag', null)}
+              >
+                {t.todos.tags.all}
+              </button>
+              {tagList.map(([name, n]) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={styles.tagChip}
+                  aria-pressed={tag === name}
+                  onClick={() => setParam('tag', tag === name ? null : name)}
+                >
+                  {`#${name} · ${n}`}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {project ? (
+            <div className={styles.projectBar} data-testid="project-bar">
+              <div
+                className={styles.projectTrack}
+                role="progressbar"
+                aria-label={currentList?.name}
+                aria-valuemin={0}
+                aria-valuemax={project.total}
+                aria-valuenow={project.done}
+              >
+                <div
+                  className={styles.projectFill}
+                  style={{ width: `${project.total ? (project.done / project.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span>{t.todos.projectProgress(project.done, project.total)}</span>
+            </div>
+          ) : null}
+
           {inboxOpen.length > 0 && (selected === ALL || selected === INBOX_ID) ? (
             <div className={styles.waiting} data-testid="todos-inbox">
               <span className={styles.waitingText}>
@@ -520,12 +699,21 @@ export default function TodosPage() {
             </div>
           ) : null}
 
-          {tasks && top.length === 0 ? (
+          {tasks && top.length === 0 && pageView !== 'board' ? (
             <EmptyState title={t.todos.empty}>
               <StartDataButton moduleId="todos" />
             </EmptyState>
           ) : null}
-          {top.length > 0 ? (
+          {pageView === 'board' ? (
+            <BoardView
+              tasks={top}
+              day={day}
+              onOpen={setEditing}
+              onMove={moveTo}
+              onTomorrow={(x) => postpone(x, day)}
+            />
+          ) : null}
+          {pageView !== 'board' && top.length > 0 ? (
             <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
           ) : null}
         </div>
