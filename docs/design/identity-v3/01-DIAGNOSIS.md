@@ -151,8 +151,12 @@ area icons without the module hue.
   calendar (`1920x1080--calendar.png`).
 - **Head actions**: "Satz eintragen" (AI write) and the gear sit in the head on every page; ToDos then shows a lone "⋯"
   row under the head because its `PageTitle` moved into the head and left the menu behind (`1920x1080--todos.png`).
-- **Dark mode** keeps all of the above; the head gradient at 40 % → 10 % reads darker than the page on every hue and the
-  stripes become brighter than the text (see `dark-readoff/`).
+- **Dark mode** keeps all of the above (`dark-readoff/`, overflow 0): the tinted head is the brightest surface of the
+  page but its hue is a muted olive/blue-grey for every module (the 40 % mix of a pastel hue into a dark surface), while
+  the pure hue appears only as the 3 px stripes (sidebar edge, calendar entries) and the chips – the loudest elements on
+  a dark page are the stripes, not the module. On the dark contact sheet (`grid-heads--1920x1080.png`) Browser,
+  Abos, Budgets and Downloads are one blue-grey, Finanzen, Rechnungen, E-Mail, Karten & Orte and Zeiterfassung one
+  green-grey; only Vorräte/ToDos (olive), Personen/Unterlagen (mauve) and Wetter (sky) stand apart.
 - **Reading aid** on (75 % coverage, `*-readon/`): the page h1 inside the head is split like running text
   ("**Kal**ender", "**Über**sicht"), while eyebrow, tabs, figures and the time column stay plain (correct); the agenda
   list and the widget titles are emphasised. A head whose title is the module's name should be exempt like a figure.
