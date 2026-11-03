@@ -712,3 +712,17 @@ button.itemRow:hover {
   border-radius: var(--radius-full);
   background: currentColor;
 }
+
+/* Overlap: a dashed edge (not a colour) plus a text for assistive tech. */
+.tgConflict {
+  outline: 1.5px dashed var(--text-muted);
+  outline-offset: -2px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

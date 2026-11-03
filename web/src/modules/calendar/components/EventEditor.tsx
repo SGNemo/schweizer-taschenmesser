@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
+import { bus } from '@/core/events';
 import { mapsUrl } from '@/core/links';
+import { useUiStore } from '@/stores/ui';
 import { getPlatform } from '@/core/platform';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
@@ -331,6 +333,21 @@ function Form({
           <span />
         )}
         <span className={patternStyles.hstack}>
+          {existing && !reminder ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await bus.emit('todo.requested', {
+                  title: existing.title,
+                  dueDate: occurrence ?? existing.startDate,
+                  ...(existing.note ? { note: existing.note } : {}),
+                });
+                useUiStore.getState().toast(t.calendar.asTodoDone);
+              }}
+            >
+              {t.calendar.asTodo}
+            </Button>
+          ) : null}
           {existing?.recurrence && occurrence ? (
             <Button
               variant="ghost"

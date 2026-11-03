@@ -3,7 +3,11 @@ import { t } from '@/strings';
 import { ensureInbox, listRepo, taskRepo } from './repo';
 
 /** Adds a requested to-do to the inbox (the first list when there is no inbox). */
-export async function addRequested(req: { title: string; note?: string }): Promise<void> {
+export async function addRequested(req: {
+  title: string;
+  note?: string;
+  dueDate?: string;
+}): Promise<void> {
   const title = req.title.trim();
   if (!title) return;
   await ensureInbox(t.todos.inbox);
@@ -16,6 +20,7 @@ export async function addRequested(req: { title: string; note?: string }): Promi
     priority: 0,
     order: 0,
     ...(req.note?.trim() ? { note: req.note.trim() } : {}),
+    ...(req.dueDate ? { dueDate: req.dueDate } : {}),
   });
 }
 
