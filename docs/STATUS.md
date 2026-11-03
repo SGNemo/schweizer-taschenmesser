@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Einstellungen v2, Paket 1 (`feat/settings-overhaul`): Überblick mit acht Karten, Untergruppen als zweite Ebene, Breadcrumb, Inhaltsverzeichnis ab 1440 px, Modul-Unterseiten `/settings/module/<id>`; Pakete 2–4 (Verständlichkeit, neue Möglichkeiten, Suche) folgen nach Freigabe; Handtests SO1–SO3 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).
 Verständliche Sprache (QA P3a, `fix/qa-wording-i18n`): einfachere Wörter in 5 Sprachen, KI-Knöpfe nur mit KI-Zugang, „Sehr groß“ = 150 %; P3b/P3c folgen; Handtest S5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 P5 QA Paket A (`feat/qa-reminders-safety`): plattformehrliche Erinnerungstexte, „Erinnern“-Zeile beim Termin, „Genommen“, Glocke mit Titeln, „Ruhe“; Handtests E1–E6, A1–A5; Pakete B (Frist vorbei), C (Löschen mit Rückgängig, Entwurf) gemergt, Paket D („Zuletzt gelöscht“, Einstellungen → Allgemein) in Review (#318) ([features/qa-reminders-safety.md](features/qa-reminders-safety.md)).
