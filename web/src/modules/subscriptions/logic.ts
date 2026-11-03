@@ -1,13 +1,28 @@
 import { compareText } from '@/core/i18n/format';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { firstOnOrAfter, occurrencesBetween } from '@/core/recurrence/expand';
+import { minusNotice, plusNotice, type NoticeValue } from '@/core/deadline/notice';
 import { addDaysStr, daysBetween } from '@/core/time/dates';
 import type { PriceChange, Subscription } from './schema';
 
 type Sub = Pick<
   Subscription,
-  'amountMinor' | 'currency' | 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'
+  | 'amountMinor'
+  | 'currency'
+  | 'recurrence'
+  | 'startDate'
+  | 'cancelNoticeDays'
+  | 'cancelNoticeMonths'
+  | 'active'
 >;
+
+/** The notice period of a subscription, or undefined when it has none. */
+export const noticeOf = (
+  s: Pick<Sub, 'cancelNoticeDays' | 'cancelNoticeMonths'>,
+): NoticeValue | undefined =>
+  s.cancelNoticeDays === undefined
+    ? undefined
+    : { days: s.cancelNoticeDays, months: s.cancelNoticeMonths };
 
 /** Charges per year implied by the rule (365 days, 52 weeks, 12 months). */
 export function chargesPerYear(rule: Subscription['recurrence']): number {
@@ -93,12 +108,22 @@ export interface CancelDeadline {
 
 /** The next cancellation deadline that is still reachable on `from`. */
 export function nextCancelDeadline(
-  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays'>,
+  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'cancelNoticeMonths'>,
   from: string,
 ): CancelDeadline | undefined {
-  if (s.cancelNoticeDays === undefined) return undefined;
-  const charge = firstOnOrAfter(s.recurrence, s.startDate, addDaysStr(from, s.cancelNoticeDays));
-  return charge ? { deadline: addDaysStr(charge, -s.cancelNoticeDays), charge } : undefined;
+  const n = noticeOf(s);
+  if (!n) return undefined;
+  let search = plusNotice(from, n);
+  // With calendar months the deadline of the first candidate can fall a day or two before `from`
+  // (31 Jan + 1 month clamps to 28 Feb); that charge is no longer reachable, take the next one.
+  for (let i = 0; i < 3; i++) {
+    const charge = firstOnOrAfter(s.recurrence, s.startDate, search);
+    if (!charge) return undefined;
+    const deadline = minusNotice(charge, n);
+    if (deadline >= from) return { deadline, charge };
+    search = addDaysStr(charge, 1);
+  }
+  return undefined;
 }
 
 /** Cycles at most this many times a year (quarterly or longer) keep a missed deadline visible until the charge. */
@@ -114,42 +139,47 @@ export const MISSED_RECENT_DAYS = 7;
  * Active subscriptions that are not already cancelled "zum" a date.
  */
 export function missedDeadline(
-  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'active'>,
+  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'cancelNoticeMonths' | 'active'>,
   today: string,
 ): CancelDeadline | undefined {
-  if (!s.active || s.cancelNoticeDays === undefined || s.recurrence.until) return undefined;
-  const n = s.cancelNoticeDays;
+  const n = noticeOf(s);
+  if (!s.active || !n || s.recurrence.until) return undefined;
   if (chargesPerYear(s.recurrence) <= MISSED_MAX_CHARGES_PER_YEAR) {
     const charge = nextCharge(s, today);
     if (!charge) return undefined;
-    const deadline = addDaysStr(charge, -n);
+    const deadline = minusNotice(charge, n);
     return deadline < today ? { deadline, charge } : undefined;
   }
   // Short cycles: the most recent deadline that passed within the last `MISSED_RECENT_DAYS`, for a
-  // charge that is still ahead (deadline in [today - 7, today - 1] means charge in [today + n - 7, today + n - 1]).
+  // charge that is still ahead. Candidates come from a slightly wider range (calendar months are not
+  // a fixed number of days); the exact deadline decides.
+  const first = addDaysStr(today, -MISSED_RECENT_DAYS);
+  const last = addDaysStr(today, -1);
   const charges = chargesInRange(
     s,
-    addDaysStr(today, n - MISSED_RECENT_DAYS),
-    addDaysStr(today, n - 1),
-  ).filter((c) => c >= today);
+    addDaysStr(plusNotice(first, n), -3),
+    addDaysStr(plusNotice(last, n), 3),
+  ).filter((c) => c >= today && minusNotice(c, n) >= first && minusNotice(c, n) <= last);
   const charge = charges[charges.length - 1];
-  return charge ? { deadline: addDaysStr(charge, -n), charge } : undefined;
+  return charge ? { deadline: minusNotice(charge, n), charge } : undefined;
 }
 
 /** Cancellation deadlines that fall within [from, to]. */
 export function cancelDeadlinesInRange(
-  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays'>,
+  s: Pick<Sub, 'recurrence' | 'startDate' | 'cancelNoticeDays' | 'cancelNoticeMonths'>,
   from: string,
   to: string,
 ): CancelDeadline[] {
-  if (s.cancelNoticeDays === undefined) return [];
-  const n = s.cancelNoticeDays;
-  return occurrencesBetween(s.recurrence, s.startDate, addDaysStr(from, n), addDaysStr(to, n)).map(
-    (charge) => ({
-      charge,
-      deadline: addDaysStr(charge, -n),
-    }),
-  );
+  const n = noticeOf(s);
+  if (!n) return [];
+  return occurrencesBetween(
+    s.recurrence,
+    s.startDate,
+    addDaysStr(plusNotice(from, n), -3),
+    addDaysStr(plusNotice(to, n), 3),
+  )
+    .map((charge) => ({ charge, deadline: minusNotice(charge, n) }))
+    .filter((d) => d.deadline >= from && d.deadline <= to);
 }
 
 /** Active first (by next charge), inactive last. */

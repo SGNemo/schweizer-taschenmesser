@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'folderTab',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.vault.meta.description;
   },

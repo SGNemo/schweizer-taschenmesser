@@ -230,6 +230,18 @@ describe('vault module', () => {
     expect(row?.expiresOn).toBeUndefined();
   });
 
+  it('the version 3 migration turns whole-month notice periods into calendar months', async () => {
+    const a = await documentRepo.create(doc({ endDate: '2026-12-31', noticeDays: 90 }));
+    const b = await documentRepo.create(doc({ endDate: '2026-12-31', noticeDays: 45 }));
+    await db.table('_meta').put({ key: 'moduleVersion.vault', value: 2 });
+    await runMigrations(manifest);
+    const migrated = (await documentRepo.get(a.id))!;
+    expect(migrated.noticeMonths).toBe(3);
+    expect(cancelDeadline(migrated)).toBe('2026-09-30');
+    expect((await documentRepo.get(b.id))?.noticeMonths).toBeUndefined();
+    expect(cancelDeadline((await documentRepo.get(b.id))!)).toBe('2026-11-16');
+  });
+
   it('editing a legacy document writes endDate only', async () => {
     const created = await documentRepo.create(doc({ expiresOn: '2026-12-01' }));
     await saveDocument(created.id, { ...(await documentRepo.get(created.id))!, title: 'Neu' });
