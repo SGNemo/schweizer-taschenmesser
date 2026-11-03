@@ -28,10 +28,10 @@
     },
     "desktop--calendar": {
       "height": 800,
-      "buttons": 267,
+      "buttons": 268,
       "links": 31,
       "icons": 62,
-      "firstScreenActions": 116
+      "firstScreenActions": 118
     },
     "desktop--finance": {
       "height": 800,
@@ -112,9 +112,9 @@
     },
     "desktop--settings-module": {
       "height": 800,
-      "buttons": 83,
+      "buttons": 80,
       "links": 39,
-      "icons": 72,
+      "icons": 74,
       "firstScreenActions": 57
     },
     "desktop--subscriptions": {
@@ -161,10 +161,10 @@
     },
     "phone--calendar": {
       "height": 1231,
-      "buttons": 51,
+      "buttons": 53,
       "links": 12,
       "icons": 14,
-      "firstScreenActions": 55
+      "firstScreenActions": 57
     },
     "phone--finance": {
       "height": 2741,
@@ -244,10 +244,10 @@
       "firstScreenActions": 36
     },
     "phone--settings-module": {
-      "height": 4747,
-      "buttons": 48,
+      "height": 4722,
+      "buttons": 45,
       "links": 8,
-      "icons": 12,
+      "icons": 14,
       "firstScreenActions": 14
     },
     "phone--subscriptions": {
