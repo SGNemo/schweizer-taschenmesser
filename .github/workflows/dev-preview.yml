@@ -306,6 +306,9 @@ jobs:
       # The dev identifier is applied at `init`, so the generated project gets the package id
       # io.github.sgnemo.taschenmesser.dev and the label "Nemo Dev" (the stable app is a different app).
       - run: npx tauri android init --ci --config src-tauri/tauri.dev.conf.json
+      # The template leaves `android:allowBackup` unset (= true: the app data would go to Google backup).
+      - name: Android manifest hardening (allowBackup off)
+        run: node scripts/android-manifest.mjs
       # Launcher shortcuts (share-intent plugin, res/xml/shortcuts.xml) name their target app
       # literally: resource XML knows no ${applicationId}. Point them at this build's id.
       - name: Application id into the launcher shortcuts

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { enable, moreFields } from './helpers';
+import { backSettled, enable, moreFields } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
@@ -13,7 +13,9 @@ async function tick(box: Locator) {
 
 const rows = (page: Page) => page.getByRole('list', { name: 'Einkauf' }).getByRole('listitem');
 
+/** A dialog just closed is a pending back traversal; `goto` before it settles can abort (`net::ERR_ABORTED`). */
 async function open(page: Page, url: string) {
+  await backSettled(page);
   await page.goto(url);
   await expect(page.locator('main h1')).toBeVisible();
 }

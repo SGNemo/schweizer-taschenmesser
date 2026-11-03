@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
+import { STATUS_CODES } from 'node:http';
 import { isIP } from 'node:net';
 import { join } from 'node:path';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
-import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
+import Fastify, { type FastifyError, type FastifyInstance, type FastifyRequest } from 'fastify';
 import {
   createAuthenticator,
   createFailureLimiter,
@@ -118,6 +119,19 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     bodyLimit: 8 * 1024 * 1024,
     // Reject unknown properties instead of silently stripping them (Fastify's default).
     ajv: { customOptions: { removeAdditional: false } },
+  });
+
+  // Unexpected failures never leak `error.message` (paths, SQL, library text); the cause goes to the log
+  // (url query redacted by the serializer). Client errors (bad JSON, schema, size) keep Fastify's shape.
+  app.setErrorHandler((error: FastifyError, req, reply) => {
+    const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    if (status >= 500) {
+      req.log.error({ err: error }, 'unhandled error');
+      return reply.code(500).send({ error: 'internal-error' });
+    }
+    return reply
+      .code(status)
+      .send({ statusCode: status, error: STATUS_CODES[status] ?? 'Error', message: error.message });
   });
 
   await app.register(cors, {

@@ -41,6 +41,8 @@ export const subscriptionSchema = z.object({
   startDate: z.string().regex(DATE_RE),
   /** Days before a charge by which the contract must be cancelled. */
   cancelNoticeDays: z.number().int().min(0).max(365).optional(),
+  /** Set when the period was entered in whole months (since version 5): the deadline moves by calendar months; `cancelNoticeDays` is then months × 30. */
+  cancelNoticeMonths: z.number().int().min(1).max(12).optional(),
   active: z.boolean().default(true),
   note: z.string().optional(),
   /** Earlier prices, oldest first (since version 2); the current price is `amountMinor`. */

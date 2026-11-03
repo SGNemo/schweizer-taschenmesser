@@ -27,6 +27,8 @@ export const documentSchema = z
     endDate: z.string().regex(DATE_RE).optional(),
     /** Days before `endDate` by which a contract must be cancelled. */
     noticeDays: z.number().int().min(0).max(730).optional(),
+    /** Set when the period was entered in whole months (since version 3): the deadline moves by calendar months; `noticeDays` is then months × 30. */
+    noticeMonths: z.number().int().min(1).max(24).optional(),
     note: z.string().optional(),
     /** Before 0.6.0 the end date; still read (`endOf`), never written. */
     expiresOn: z.string().regex(DATE_RE).optional(),

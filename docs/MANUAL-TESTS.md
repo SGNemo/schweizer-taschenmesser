@@ -573,3 +573,8 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
 - **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
 
+## Backlog-Ernte (`chore/backlog-harvest-2026-11`) – nur auf Geräten prüfbar
+- **BK1 Android Auto Backup aus:** nach dem ersten CI-Build des Dev-Previews die APK installieren: `adb shell dumpsys package io.github.sgnemo.taschenmesser.dev | findstr /i ALLOW_BACKUP` zeigt kein `ALLOW_BACKUP`. Außerdem prüfen, dass der Schritt „Android manifest hardening“ im Job-Log steht und `usesCleartextTraffic` meldet. ☐
+- **BK2 Kündigungsfrist in Monaten:** Abo mit Abbuchung am 31., Frist „3 Monate“: „Kündigen bis“ liegt auf dem 30. des Monats drei Monate davor (nicht 90 Tage davor). Ein Abo oder eine Unterlage, die vor dem Update „90 Tage“ als „3 Monate“ zeigte, zeigt nach dem Update weiter „3 Monate“ und rechnet kalendarisch; „45 Tage“ bleibt „45 Tage“. ☐
+- **BK3 CSV öffnen:** Finanzen → Export mit einer Buchung, deren Empfänger `=1+1` heißt, in Excel/LibreOffice öffnen: die Zelle zeigt den Text `'=1+1`, keine Berechnung. Passwort-Export (Bitwarden-Format) bleibt unverändert. ☐
+

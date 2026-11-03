@@ -306,3 +306,26 @@ describe('rate limit', () => {
     limited.store.close();
   });
 });
+
+describe('error handling', () => {
+  it('does not leak the message of an unexpected error', async () => {
+    app.get('/v1/boom', async () => {
+      throw new Error('SQLITE_ERROR: no such table /srv/secret/path');
+    });
+    const res = await app.inject({ method: 'GET', url: '/v1/boom', headers: auth });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({ error: 'internal-error' });
+    expect(res.body).not.toContain('SQLITE');
+  });
+
+  it('keeps the client error shape for bad requests', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/push',
+      headers: { ...auth, 'content-type': 'application/json' },
+      payload: '{not json',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+});
