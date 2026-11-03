@@ -40,7 +40,9 @@ function setEnabled(
 ) {
   return changeWithUndo(
     () =>
-      eventRepo.update(r.id, { notify: { minutesBefore: r.notify?.minutesBefore ?? 0, enabled } }),
+      eventRepo.update(r.id, {
+        notify: { ...r.notify, minutesBefore: r.notify?.minutesBefore ?? 0, enabled },
+      }),
     message,
   );
 }

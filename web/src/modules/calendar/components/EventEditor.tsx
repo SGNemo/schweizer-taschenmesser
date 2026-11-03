@@ -15,6 +15,7 @@ import { tDraft } from '@/strings.draft';
 import {
   AdvancedFields,
   Button,
+  Checkbox,
   DateChips,
   Dialog,
   Icon,
@@ -127,10 +128,11 @@ function Form({
     active: existing?.notify?.enabled ?? true,
     taken: existing?.taken ?? false,
     calendarId: existing?.calendarId ?? '',
+    extra: (existing?.notify?.extraMinutes ?? []).map(String),
   });
   const { title, allDay, startDate, startTime, endDate, endTime, location, note, personId } =
     draft.values;
-  const { recurrence, notifyChoice, active, taken, calendarId } = draft.values;
+  const { recurrence, notifyChoice, active, taken, calendarId, extra } = draft.values;
   const calendars = useCalendars();
   const setTitle = (v: string) => draft.set('title', v);
   const setAllDay = (v: boolean) => draft.set('allDay', v);
@@ -173,7 +175,15 @@ function Form({
       calendarId: !reminder && calendarId ? calendarId : undefined,
       taken: reminder && taken ? true : undefined,
       notify:
-        lead === undefined ? undefined : { minutesBefore: lead, enabled: reminder ? active : true },
+        lead === undefined
+          ? undefined
+          : {
+              minutesBefore: lead,
+              enabled: reminder ? active : true,
+              ...(!reminder && extra.length
+                ? { extraMinutes: extra.map(Number).filter((m) => m !== lead) }
+                : {}),
+            },
     };
     const parsed = eventSchema.safeParse(data);
     if (!parsed.success) {
@@ -317,7 +327,7 @@ function Form({
       {reminder ? (
         <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
       ) : null}
-      <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note}>
+      <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note || extra.length > 0}>
         {reminder ? null : (
           <div className={styles.split}>
             <TextField
@@ -328,6 +338,24 @@ function Form({
             />
           </div>
         )}
+        {!reminder && notifyChoice !== 'none' && (allDay || startTime) ? (
+          <fieldset className={styles.extraLeads}>
+            <legend>{t.calendar.notify.extra}</legend>
+            {NOTIFY_LEADS.filter((m) => String(m) !== notifyChoice).map((m) => (
+              <Checkbox
+                key={m}
+                label={leadLabel(m)}
+                checked={extra.includes(String(m))}
+                onChange={(e) =>
+                  draft.set(
+                    'extra',
+                    e.target.checked ? [...extra, String(m)] : extra.filter((x) => x !== String(m)),
+                  )
+                }
+              />
+            ))}
+          </fieldset>
+        ) : null}
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>
       {error ? (

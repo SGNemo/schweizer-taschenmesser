@@ -10,6 +10,8 @@ import { DATE_RE, TIME_RE } from '@/core/time/dates';
 export const notifySchema = z.object({
   minutesBefore: z.number().int().min(0).max(10080),
   enabled: z.boolean(),
+  /** Further lead times (minutes before the start) that notify as well, e.g. a day before and an hour before. */
+  extraMinutes: z.array(z.number().int().min(0).max(10080)).optional(),
 });
 export type Notify = z.output<typeof notifySchema>;
 
