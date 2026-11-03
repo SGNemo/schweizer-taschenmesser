@@ -2860,7 +2860,7 @@ export const de = {
         allCategories: 'Alle Kategorien',
         minAmount: 'Betrag ab',
         maxAmount: 'Betrag bis',
-        more: 'Mehr Filter',
+        more: 'Mehr',
         reset: 'Filter zurücksetzen',
         withTransfers: 'Umbuchungen zeigen',
       },
@@ -2885,6 +2885,8 @@ export const de = {
       forecast: {
         title: 'Ausblick',
         horizon: 'Zeitraum des Ausblicks',
+        showDetails: 'Details',
+        hideDetails: 'Weniger',
         month: 'Bis Monatsende',
         d30: '30 Tage',
         d90: '90 Tage',
