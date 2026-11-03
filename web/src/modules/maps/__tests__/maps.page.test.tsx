@@ -528,7 +528,9 @@ describe('own map build (Overpass)', () => {
     expect(row).toHaveTextContent(/abgespeckt · Fertig · \d+ Teile/);
     const region = (await regionRepo.active().toArray())[0]!;
     expect(region.cells.done).toBe(region.cells.total);
-    expect(overpassRequests()).toHaveLength(region.cells.total);
+    // One request per block of up to four cells.
+    expect(overpassRequests().length).toBeGreaterThanOrEqual(Math.ceil(region.cells.total / 4));
+    expect(overpassRequests().length).toBeLessThanOrEqual(region.cells.total);
     expect(await tileRepo.active().count()).toBeGreaterThan(region.cells.total);
     // The map now draws the stored tiles itself.
     await waitFor(() => expect(blobTiles().length).toBeGreaterThan(0));

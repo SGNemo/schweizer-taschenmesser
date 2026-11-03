@@ -1,6 +1,6 @@
 /**
- * The CPU work of a build, as plain functions: an Overpass answer of one cell → the cell's tiles and
- * names, four stored tiles → their parent, stored tiles → their names. The worker (`worker.ts`) and
+ * The CPU work of a build, as plain functions: an Overpass answer of one block → the tiles and names
+ * of its cells, four stored tiles → their parent, stored tiles → their names. The worker (`worker.ts`) and
  * the tests call these directly; the builder talks to them through `compute.ts`. Pure, relative
  * imports only.
  */
@@ -20,24 +20,30 @@ export interface TileBytes {
   gzip?: boolean;
 }
 
-export interface CellRequest {
-  kind: 'cell';
+export interface BlockRequest {
+  kind: 'block';
   id: number;
   level: MapLevel;
-  cell: TileAddress;
-  /** Deepest stored zoom: the cell's tiles are cut from the cell zoom down to it. */
+  /** The cells the answer covers (up to four, one parent tile). */
+  cells: TileAddress[];
+  /** Deepest stored zoom: a cell's tiles are cut from the cell zoom down to it. */
   maxZoom: number;
   /** The Overpass answer, still as text (parsed here, off the page). */
   json: string;
 }
 
-export interface CellResult {
-  kind: 'cell';
-  id: number;
+export interface CellTiles {
+  cell: TileAddress;
   tiles: TileBytes[];
-  features: number;
   /** What the cell knows by name (from its deepest tiles). */
   names: NameEntry[];
+}
+
+export interface BlockResult {
+  kind: 'block';
+  id: number;
+  cells: CellTiles[];
+  features: number;
   /** `busy` = the server ran out of time or memory (try later), `shape` = not an Overpass answer. */
   error?: 'busy' | 'shape';
 }
@@ -69,8 +75,8 @@ export interface NamesResult {
   names: NameEntry[];
 }
 
-export type BuildRequest = CellRequest | ParentRequest | NamesRequest;
-export type BuildResult = CellResult | ParentResult | NamesResult;
+export type BuildRequest = BlockRequest | ParentRequest | NamesRequest;
+export type BuildResult = BlockResult | ParentResult | NamesResult;
 
 const toBuffer = (u: Uint8Array): ArrayBuffer => {
   const b = new ArrayBuffer(u.byteLength);
@@ -90,32 +96,41 @@ export function tilesUnder(cell: TileAddress, maxZoom: number): TileAddress[] {
   return out;
 }
 
-export function runCell(req: CellRequest): CellResult {
+export function runBlock(req: BlockRequest): BlockResult {
+  const failed = (error: 'busy' | 'shape'): BlockResult => ({
+    kind: 'block',
+    id: req.id,
+    cells: [],
+    features: 0,
+    error,
+  });
   let parsed: unknown;
   try {
     parsed = JSON.parse(req.json);
   } catch {
-    return { kind: 'cell', id: req.id, tiles: [], features: 0, names: [], error: 'shape' };
+    return failed('shape');
   }
   let answer;
   try {
     answer = readAnswer(parsed);
   } catch {
-    return { kind: 'cell', id: req.id, tiles: [], features: 0, names: [], error: 'shape' };
+    return failed('shape');
   }
-  if (answer.elements.length === 0 && isOverloadRemark(answer.remark)) {
-    return { kind: 'cell', id: req.id, tiles: [], features: 0, names: [], error: 'busy' };
-  }
+  // A timed-out or out-of-memory answer is incomplete even when it carries some elements.
+  if (isOverloadRemark(answer.remark)) return failed('busy');
   const features = parseOverpass(answer);
-  const tiles: TileBytes[] = [];
-  const names: NameEntry[] = [];
-  for (const t of tilesUnder(req.cell, req.maxZoom)) {
-    const tile = cutTile(features, t.z, t.x, t.y);
-    if (!tile) continue;
-    tiles.push({ ...t, bytes: toBuffer(encodeTile(tile)) });
-    if (t.z === req.maxZoom) names.push(...namesInTile(tile, t.z, t.x, t.y));
-  }
-  return { kind: 'cell', id: req.id, tiles, features: features.length, names: dedupe(names) };
+  const cells: CellTiles[] = req.cells.map((cell) => {
+    const tiles: TileBytes[] = [];
+    const names: NameEntry[] = [];
+    for (const t of tilesUnder(cell, req.maxZoom)) {
+      const tile = cutTile(features, t.z, t.x, t.y);
+      if (!tile) continue;
+      tiles.push({ ...t, bytes: toBuffer(encodeTile(tile)) });
+      if (t.z === req.maxZoom) names.push(...namesInTile(tile, t.z, t.x, t.y));
+    }
+    return { cell, tiles, names: dedupe(names) };
+  });
+  return { kind: 'block', id: req.id, cells, features: features.length };
 }
 
 export function runNames(req: NamesRequest): NamesResult {
@@ -149,8 +164,8 @@ export function runParent(req: ParentRequest): ParentResult {
 
 export function handle(req: BuildRequest): BuildResult {
   switch (req.kind) {
-    case 'cell':
-      return runCell(req);
+    case 'block':
+      return runBlock(req);
     case 'parent':
       return runParent(req);
     case 'names':
@@ -161,8 +176,8 @@ export function handle(req: BuildRequest): BuildResult {
 /** The buffers a result carries (to transfer instead of copy). */
 export function transferables(res: BuildResult): ArrayBuffer[] {
   switch (res.kind) {
-    case 'cell':
-      return res.tiles.map((t) => t.bytes);
+    case 'block':
+      return res.cells.flatMap((c) => c.tiles.map((t) => t.bytes));
     case 'parent':
       return res.tile ? [res.tile.bytes] : [];
     case 'names':

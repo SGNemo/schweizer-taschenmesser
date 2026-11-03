@@ -1,5 +1,7 @@
 # Next tasks – six parallel chats (2026-10-29, refreshed 2026-10-31)
 
+**Done 2026-11-03:** all six merged – T4 #341, T2 #343 (incl. money rules), T1 #344, T5 #345, T3 #347 (preview list: [03-maturity-proposal.md](03-maturity-proposal.md)), T6 #349. Open hand tests are in [../../CHATS.md](../../CHATS.md) "Wartet auf Sven". This folder is history now; candidates for the next round: [../../ROADMAP.md](../../ROADMAP.md) → "Not chosen 2026-10".
+
 **Refresh 2026-10-31:** none of the six had started; the QA round (#271–#333) overtook parts of three prompts, which are updated: **T1** moves out of the first-run quick mode (#276: 3 questions, 5 taps stay) into the full wizard + dashboard checklist; **T4** keeps only what #275 left (area row, Erweitert placement, collapsing top bar, seed banner); **T5 package 2** sits in front of the parser rebuilt by #274. T2, T3 and T6 got the new facts (currency per account, new candidates for the preview list and for lazy loading). All six can start now.
 
 Result of the planning round in this folder: [00-known-open.md](00-known-open.md) (what was already open), [01-ideas.md](01-ideas.md) (46 ideas, top 10), [02-selection.md](02-selection.md) (cut, files, hotspots, risks; addendum 2026-10-29 for what `develop` overtook). One prompt per chat in [prompts/](prompts/), German, same shape as [../focus/15-parallel-prompts-4.md](../focus/15-parallel-prompts-4.md): paste the **common header** from [prompts/00-header.md](prompts/00-header.md) first, then the chat's block. All chats work without questions, except T3 (one stop).

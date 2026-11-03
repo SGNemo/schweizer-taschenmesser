@@ -11,9 +11,12 @@ import type { Bbox, Feature, LonLat } from './cut';
 import type { TileValue } from './mvt';
 
 export const DEFAULT_OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
-/** Server-side limits per request: seconds and bytes (64 MiB). */
-const TIMEOUT_S = 60;
-const MAXSIZE = 67_108_864;
+/**
+ * Server-side limits per request: seconds and bytes (256 MiB). A request covers a block of up to four
+ * cells, so it may run longer than a minute on a busy server.
+ */
+const TIMEOUT_S = 180;
+const MAXSIZE = 268_435_456;
 
 /* ------------------------------------------------------------------ query */
 
@@ -23,6 +26,7 @@ const ROADS_FULL =
   '^(motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|pedestrian|service|track|path|footway|cycleway|bridleway|steps)$';
 const RAIL = '^(rail|light_rail|tram|subway|narrow_gauge)$';
 const WATERWAY = '^(river|canal|stream)$';
+const NATURAL = '^(water|wood)$';
 const LANDUSE = '^(forest|residential|industrial|commercial|retail|cemetery|grass|meadow)$';
 const LEISURE = '^(park|garden|pitch|playground)$';
 const PLACE = '^(city|town|village|suburb|hamlet|neighbourhood|quarter)$';
@@ -32,25 +36,29 @@ const POI_AMENITY =
 const bboxOf = (b: Bbox): string =>
   `${b.minLat.toFixed(5)},${b.minLon.toFixed(5)},${b.maxLat.toFixed(5)},${b.maxLon.toFixed(5)}`;
 
-/** The Overpass QL query of one cell: lean = what the lean map shows; full adds paths, buildings, POIs. */
+/**
+ * The Overpass QL query of one block of cells: lean = what the lean map shows; full adds paths,
+ * buildings, POIs. The ways and relations of the area are read once into a set and filtered from
+ * there (one spatial scan each instead of one per tag filter); named nodes come through the tag index.
+ */
 export function overpassQuery(bbox: Bbox, level: MapLevel): string {
   const b = bboxOf(bbox);
-  const lines = [
-    `way["highway"~"${level === 'full' ? ROADS_FULL : ROADS_LEAN}"](${b});`,
-    `way["railway"~"${RAIL}"](${b});`,
-    `way["waterway"~"${WATERWAY}"](${b});`,
-    `way["natural"="water"](${b});`,
-    `relation["natural"="water"]["type"="multipolygon"](${b});`,
-    `way["natural"="wood"](${b});`,
-    `relation["natural"="wood"]["type"="multipolygon"](${b});`,
-    `way["landuse"~"${LANDUSE}"](${b});`,
-    `relation["landuse"~"${LANDUSE}"]["type"="multipolygon"](${b});`,
-    `way["leisure"~"${LEISURE}"](${b});`,
-    `node["place"~"${PLACE}"](${b});`,
+  const ways = [
+    `way.w["highway"~"${level === 'full' ? ROADS_FULL : ROADS_LEAN}"];`,
+    `way.w["railway"~"${RAIL}"];`,
+    `way.w["waterway"~"${WATERWAY}"];`,
+    `way.w["natural"~"${NATURAL}"];`,
+    `way.w["landuse"~"${LANDUSE}"];`,
+    `way.w["leisure"~"${LEISURE}"];`,
   ];
+  const relations = [
+    `relation.r["natural"~"${NATURAL}"]["type"="multipolygon"];`,
+    `relation.r["landuse"~"${LANDUSE}"]["type"="multipolygon"];`,
+  ];
+  const nodes = [`node["place"~"${PLACE}"](${b});`];
   if (level === 'full') {
-    lines.push(
-      `way["building"](${b});`,
+    ways.push(`way.w["building"];`);
+    nodes.push(
       `node["amenity"~"${POI_AMENITY}"]["name"](${b});`,
       `node["shop"]["name"](${b});`,
       `node["public_transport"="station"]["name"](${b});`,
@@ -58,7 +66,27 @@ export function overpassQuery(bbox: Bbox, level: MapLevel): string {
       `node["tourism"~"^(attraction|museum|viewpoint)$"]["name"](${b});`,
     );
   }
-  return `[out:json][timeout:${TIMEOUT_S}][maxsize:${MAXSIZE}];\n(\n  ${lines.join('\n  ')}\n);\nout geom;`;
+  const lines = [...ways, ...relations, ...nodes];
+  return `[out:json][timeout:${TIMEOUT_S}][maxsize:${MAXSIZE}];\nway(${b})->.w;\nrelation(${b})->.r;\n(\n  ${lines.join('\n  ')}\n);\nout geom;`;
+}
+
+/* ------------------------------------------------------------------ server status (rate limit) */
+
+/** The status page of an Overpass server (`…/api/status` next to `…/api/interpreter`), or undefined. */
+export function statusUrl(interpreterUrl: string): string | undefined {
+  return /\/interpreter\/?$/.test(interpreterUrl)
+    ? interpreterUrl.replace(/\/interpreter\/?$/, '/status')
+    : undefined;
+}
+
+/**
+ * Seconds until the server frees a slot for this client, read from its status page ("Slot available
+ * after: …, in 12 seconds." or "2 slots available now."); undefined when the page says nothing usable.
+ */
+export function slotWaitSeconds(status: string): number | undefined {
+  if (/slots? available now/i.test(status)) return 0;
+  const waits = [...status.matchAll(/in (\d+) seconds?/gi)].map((m) => Number(m[1]));
+  return waits.length > 0 ? Math.min(...waits) : undefined;
 }
 
 /* ------------------------------------------------------------------ parsing */
