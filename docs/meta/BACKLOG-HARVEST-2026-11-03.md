@@ -6,6 +6,13 @@ Findings in short: there are **no TODO/FIXME/HACK markers** in code (only fixtur
 
 Legend: Eff S/M/L · Value L/M/H · UI = needs visible markup, styles or components.
 
+## 0. Outcome (after the maintainer's choice)
+Built on `chore/backlog-harvest-2026-11`: **P1, P2** (vault export excluded by decision), **P3, P5 in full with migrations** (subscriptions v5, vault documents v3), **P6** (partly), **P7, P8** (CI edit approved; cleartext only reported), **P10**.
+- **P4 was already fixed** (`policy.ts` drops mute-covered repeats before the hour cap, `policy.test.ts:119`; local-hour buckets). The scribble finding was stale.
+- **P6:** `ERR_ABORTED` race fixed in `extras.spec.ts` and `lists.spec.ts` (`backSettled` before `goto`); `calendar-drag.spec.ts:55` and `seed/seed.spec.ts:49` pass on current `develop`, left unchanged. `money-budgets.spec.ts` has the same local `open()` and is left to the budgets chat.
+- **P9 not built** (needs a device).
+- Source lines are marked done with the PR number in the PR's last commit.
+
 ## 1. Proposal – 10 non-UI items (you choose)
 
 Selection rules: no UI, no schema change or hotspot contract, outside identity-v3 and the open map/settings/money files, testable, none of the protected areas (signing, secrets, gitleaks, artifact audit, sync encryption, crypto/vault, screenshot protection).
