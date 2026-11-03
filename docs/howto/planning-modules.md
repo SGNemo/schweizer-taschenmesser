@@ -21,3 +21,10 @@ Identity rules: [design/MODULE-IDENTITY.md](../design/MODULE-IDENTITY.md). One s
 - **Head:** `components/TodayCard.tsx` (the signature `todayCard`, built on `HeroFigure` in `HeroSlot`): count, summed estimate, the next task. `identity.feedback: 'tick'` = a ≤ 250 ms check pop on the row checkbox (switched off by the global motion rules).
 - **Calm rules kept:** "Alle auf heute" appears only in the plain wording (calm mode keeps "Neu planen"); no streak or guilt text was added.
 - **Not built:** drag reorder inside the plain list (`order` stays manual via the editor), AI `postpone`/`tag` actions, widget changes (`next` already has tick and "Später").
+
+## Karten & Orte (`modules/maps`)
+- **Head:** `components/PinHead.tsx` (the signature `pin`, in `HeroSlot`): a still pin on two quiet rings in the module hue plus the last saved place as text. It draws no map, so the head fetches nothing (the map and its tiles still start only with the Karte tab and the notice).
+- **Places tab:** category chips (only categories in use), search words over name/address/note, sort Zuletzt/Name, pinned first (`placesView.ts`, pure). Each row has a **Navigieren** button: `geo:` on Android, OpenStreetMap elsewhere (`placeLink`); the "⋯" menu keeps the other apps.
+- **Places from appointments:** the calendar editor's "Als Ort speichern" opens `/maps?q=<location>`: the Karte tab with the words in the search field. Nothing is searched until the button is pressed (own map first, online only after the click), then "Ort speichern" as before. Modules stay unlinked: it is a URL, not an import.
+- **Not built:** AI actions (a place needs coordinates, and the assistant never gets or dictates them; the registry test also needs a `create` example), a "last place + Navigieren" widget (the tiles widget stays), a static map snippet in the head (would fetch tiles on every open), offline map piece: the existing "Eigene Karte" (Karte tab → regions) covers it.
+

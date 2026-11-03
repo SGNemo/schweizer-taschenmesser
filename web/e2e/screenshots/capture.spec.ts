@@ -48,6 +48,7 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'vault', path: '/vault' },
   { name: 'pantry', path: '/pantry' },
   { name: 'people', path: '/people' },
+  { name: 'maps', path: '/maps' },
   ...(process.env.SCREENS_DESKTOP
     ? [
         { name: 'system', path: '/disk?tab=system' },
