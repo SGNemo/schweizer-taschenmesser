@@ -70,6 +70,10 @@
     "clipboard-manager:allow-clear",
     "opener:allow-open-url",
     "opener:allow-default-urls",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "spotify:*" }]
+    },
     "apk-installer:default",
     "secure-store:default",
     "share-intent:default",

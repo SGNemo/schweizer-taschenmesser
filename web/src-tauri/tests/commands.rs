@@ -129,3 +129,25 @@ fn browser_commands_check_the_caller() {
     let commands = src.matches("#[tauri::command]").count();
     assert_eq!(commands, src.matches("ensure_main(&webview)?;").count());
 }
+
+/// The music page opens the Spotify app with a `spotify:` link: the opener may open exactly that scheme besides the default
+/// ones (http, https, mailto, tel), nothing broader.
+#[test]
+fn opener_scope_adds_only_the_spotify_scheme() {
+    let value: serde_json::Value =
+        serde_json::from_str(&read("capabilities/default.json")).unwrap();
+    let scoped: Vec<&serde_json::Value> = value["permissions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|p| p["identifier"] == "opener:allow-open-url")
+        .collect();
+    assert_eq!(scoped.len(), 1, "one scoped opener grant");
+    let urls: Vec<&str> = scoped[0]["allow"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| a["url"].as_str().unwrap())
+        .collect();
+    assert_eq!(urls, ["spotify:*"]);
+}
