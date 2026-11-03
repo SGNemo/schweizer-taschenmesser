@@ -306,6 +306,11 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
 - **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
 
+## Einstellungen v2 (Paket 1) – nur von Hand prüfbar
+- **SO1 Handy, zwei Ebenen:** Einstellungen öffnen: Karten oben, Kategorienliste darunter; eine Karte antippen, in der Kategorie „Zurück“ (Pfeil und Android-Geste) führt zur Übersicht. ☐
+- **SO2 Modul-Seite auf dem Handy:** Module → ein Modul: Kopf mit Modulfarbe, Blöcke untereinander, „Alle Module“ zurück; in „Ruhig“ wird der Kopf grau. ☐
+- **SO3 Breites Fenster (2560 px):** Inhaltsverzeichnis rechts folgt dem Scrollen, kein Zittern; Lesbarkeit der Karten hell und dunkel. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
@@ -495,3 +500,20 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **M4 Wetterhinweis und Himmel:** echten Ort wählen: der Himmel passt zu Wetter und Tageszeit (nachts hell auf dunkel). Bei Gewitter/Sturm in der Vorhersage erscheint oben ein Hinweis mit dem Satz „keine amtliche Warnung“. Zweiten Ort über „Ort hinzufügen“ ergänzen, per Chip umschalten, mit × entfernen. ☐
 - **M5 Ruhig-Modus:** Einstellungen → Darstellung → Farben → „Ruhig“: Köpfe, Widget-Bänder, Himmel und Karten werden grau; Aufbau und Signatur bleiben erkennbar. ☐
 - **M6 Musik schaltet sich beim Verbinden ein:** Spotify unter Verbindungen verbinden: „Musik“ ist danach aktiv (Hinweis „Jetzt aktiv“), erscheint unter Wissen und als Widget. Wer „Musik“ in der Bibliothek ausgeschaltet hat und neu verbindet, bekommt es nicht wieder eingeschaltet. ☐
+- **PK1 Kalender-Ansichten:** Kalender → „Jahr“: zwölf Monate, Tag antippen öffnet die Tagesansicht; „Agenda“: nächste 30 Tage, nur Tage mit Einträgen. Einstellungen → Kalender → „Feiertage anzeigen“ → Bayern: Heilige Drei Könige 6.1. erscheint im Monat (unterstrichen/als Text), mit „Aus“ verschwindet er. ☐
+- **PK2 Einzelner Termin einer Serie:** wiederkehrenden Termin öffnen → „Nur den Termin am … entfernen“: nur dieser Tag fehlt, Rückgängig stellt ihn wieder her, die Benachrichtigung dieses Tages bleibt aus. ☐
+- **PK3 Als ToDo merken:** Termin öffnen → „Als ToDo merken“: Aufgabe im Eingang mit dem Datum als Fälligkeit (ToDos aktiv). Überschneidende Termine (Wochenansicht ≥ 1400 px) haben gestrichelten Rand. ☐
+- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
+- **PK5 Mehrere Kalender:** „Mehr Felder anzeigen“ → „Kalender verwalten“: „Arbeit“ und „Familie“ anlegen/umfärben; Chips blenden Termine ein/aus; im Termin-Dialog das Feld „Kalender“; einen Kalender löschen: seine Termine bleiben sichtbar. ☐
+- **PK6 Erinnerungen:** Zeitring zeigt „Nächste Erinnerung in …“; „Erledigte entfernen“ räumt nur Beendete/Pausierte auf (Rückgängig); Termin mit „Erinnern“ → „Zusätzlich erinnern“ (Mehr Felder): zwei Benachrichtigungen. ☐
+
+### Haushalt & Tresor (Branch `feat/household-vault-identity`) – nur auf Geräten prüfbar
+
+- **HT1 Barcode-Scanner (Android, Chrome/PWA und APK):** Vorräte → „Scannen“, Kamera erlauben, einen Barcode einer Packung zeigen: unbekannt → neuer Vorrat mit der Nummer; danach dieselbe Packung nochmal: „einer mehr“. Wo die Kamera-Erkennung fehlt (APK-WebView?), erscheint der Hinweis und die Nummer lässt sich tippen. Kamera geht beim Schließen aus. ☐
+- **HT2 Kontakte-Datei:** Personen → Einrichtung/Import → „Aus Kontakte- oder Kalenderdatei“: eine .vcf aus Google Kontakte/iCloud und eine .ics eines Geburtstagskalenders; Vorschau prüfen, nichts doppelt. ☐
+- **HT3 Gratulieren:** Person mit Telefon und Mail: WhatsApp (mit Nummer), Anrufen und E-Mail öffnen auf Windows und Android die richtige App. ☐
+- **HT4 Wetter am Ziel:** Packliste mit Ziel (eine Stadt) und Datum in den nächsten 7 Tagen → „Wetter am Ziel prüfen“: erst der Hinweis „Verstanden“, dann Wort, Grad, Regen % und ein Packhinweis; ohne Netz die ruhige Meldung. ☐
+- **HT5 Geschenk aus Merkliste:** Merkliste → Menü → „Als Geschenkidee“ (Personen an), bei einer Person „Für … übernehmen“. ☐
+- **HT6 Tresor-Kopf:** Passwörter entsperren: „Entsperrt“ mit „Sperrt automatisch in etwa n Min.“, nach Inaktivität „Gesperrt“; Ruhig-Modus und „weniger Bewegung“: nichts bewegt sich. „Passwörter prüfen“ zeigt nur Titel, nie ein Passwort. ☐
+- **HT7 Notfallblatt:** „Notfallblatt“ → „Als Datei speichern“, Datei öffnen und drucken: Schritte, Datum, Anzahl, kein Geheimnis. ☐
+

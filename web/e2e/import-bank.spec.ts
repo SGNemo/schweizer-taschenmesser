@@ -42,7 +42,7 @@ async function openBankImport(page: Page): Promise<Locator> {
   await waitForRows(page, 'finance_account');
   // The twelve default categories are created one after another.
   await waitForRows(page, 'finance_category', 12);
-  await page.goto('/settings/module');
+  await page.goto('/settings/module/finance');
   await page
     .locator('section[aria-labelledby="module-finance"]')
     .getByRole('button', { name: 'Importieren' })
@@ -115,7 +115,7 @@ test('unknown CSV: assign the columns once, the second import is silent and find
   await expect(dialog.getByRole('status')).toHaveText('3 Einträge wurden importiert.');
   await dialog.getByRole('button', { name: 'Schließen' }).last().click();
 
-  await page.goto('/settings/module');
+  await page.goto('/settings/module/finance');
   await page
     .locator('section[aria-labelledby="module-finance"]')
     .getByRole('button', { name: 'Importieren' })
@@ -158,7 +158,7 @@ test('rules: a suggestion becomes a rule on confirmation, the next import is cat
   await expect(dialog.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
   await dialog.getByRole('button', { name: 'Schließen' }).last().click();
 
-  await page.goto('/settings/module');
+  await page.goto('/settings/module/finance');
   await page
     .locator('section[aria-labelledby="module-finance"]')
     .getByRole('button', { name: 'Importieren' })

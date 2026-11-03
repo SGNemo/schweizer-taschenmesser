@@ -1,5 +1,9 @@
 import type { Stored } from '@/core/db/types';
 import { copyData } from '@/core/db/copy';
+import { bus } from '@/core/events';
+import { loadModuleStates } from '@/core/modules/activation';
+import { offerEnableModule } from '@/core/modules/offerEnable';
+import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { getPlatform } from '@/core/platform';
 import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
@@ -60,6 +64,25 @@ export function bookmarkMenu(
               void getPlatform()
                 .clipboard.writeText(item.url!)
                 .then(() => useUiStore.getState().toast(t.bookmarks.linkCopied)),
+          },
+        ]
+      : []),
+    ...(item.url
+      ? [
+          {
+            id: 'gift-idea',
+            label: t.bookmarks.asGift,
+            onSelect: () => {
+              const send = async () => {
+                await bus.emit('gift.requested', { title: item.title, url: item.url! });
+                void useUiStore.getState().toast(t.bookmarks.giftSent);
+              };
+              void loadModuleStates().then((states) =>
+                states.people === true
+                  ? whenServicesSettled().then(send)
+                  : offerEnableModule('people', t.bookmarks.giftOff, send),
+              );
+            },
           },
         ]
       : []),

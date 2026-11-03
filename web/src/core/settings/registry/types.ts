@@ -30,6 +30,24 @@ export function isCategoryId(id: string | undefined): id is SettingsCategoryId {
   return (SETTINGS_CATEGORY_IDS as readonly string[]).includes(id ?? '');
 }
 
+/** Where a value lives: this device only, synchronised (`_settings`), or both inside one section. */
+export const SETTINGS_SCOPES = ['local', 'synced', 'mixed'] as const;
+export type SettingsScope = (typeof SETTINGS_SCOPES)[number];
+
+/** Basis is shown by default, Erweitert sits behind a fold. */
+export const SETTINGS_LEVELS = ['basic', 'advanced'] as const;
+export type SettingsLevel = (typeof SETTINGS_LEVELS)[number];
+
+/** The fixed blocks of every module's settings page, in this order. */
+export const MODULE_FIELD_GROUPS = [
+  'general',
+  'display',
+  'notifications',
+  'data',
+  'advanced',
+] as const;
+export type ModuleFieldGroup = (typeof MODULE_FIELD_GROUPS)[number];
+
 /** What `visibleWhen` can look at. */
 export interface SettingsContext {
   platform: PlatformKind;
@@ -67,6 +85,15 @@ export interface SettingsSectionDef {
   keywords?: readonly string[];
   /** Text of the `HelpHint` next to the title. */
   hint?: string;
+  /**
+   * Sub-group inside the category (second navigation level). Optional: core sections are placed by
+   * `registry/groups.ts`; a section without a group stands alone.
+   */
+  group?: string;
+  /** `advanced` sections sit behind the category's "Erweitert" fold (default `basic`). */
+  level?: SettingsLevel;
+  /** Where the values of the section live; shown as a small label. Default: not shown. */
+  scope?: SettingsScope;
   fields?: readonly SettingsFieldRef[];
   /** Hidden when this returns false (dev build only, desktop only, module enabled, …). */
   visibleWhen?: (ctx: SettingsContext) => boolean;

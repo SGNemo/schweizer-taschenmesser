@@ -81,6 +81,49 @@ export const accounts: Strings['accounts'] = {
   },
   add: 'Add login',
   edit: 'Edit login',
+  head: {
+    locked: 'Locked',
+    unlocked: 'Unlocked',
+    autoLock: (min: number) =>
+      min <= 0
+        ? 'Locks automatically in under a minute'
+        : `Locks automatically in about ${min} min`,
+    bridgeOn: 'Browser extension: on',
+    bridgeOff: 'Browser extension: off',
+  },
+  groups: { label: 'Groups', all: 'All', favorites: 'Favourites' },
+  audit: {
+    open: 'Check passwords',
+    title: 'Check passwords',
+    intro: 'Everything is calculated here on this device. No passwords are shown, sent or stored.',
+    running: (done: number, total: number) => `Checking ${done} of ${total} …`,
+    nothing: 'Nothing stands out. Good.',
+    weak: (n: number) => `Weak (${n})`,
+    reused: (n: number) => `Used more than once (${n})`,
+    old: (n: number) => `Older than a year (${n})`,
+    unavailable:
+      'The strength check needs the internet once to load its dictionaries. Reuse and age were checked anyway.',
+    openEntry: 'Open',
+  },
+  emergency: {
+    open: 'Emergency sheet',
+    title: 'Emergency sheet',
+    intro:
+      'A sheet with the steps for an emergency. It contains no passwords. Print it and keep it apart from the device.',
+    heading: 'Emergency sheet: password vault',
+    entries: (n: number) => `Entries in the vault: ${n}`,
+    date: (d: string) => `As of: ${d}`,
+    steps: [
+      'Make an encrypted backup regularly (Tools → Backup) and keep the file in a second place.',
+      'The master password is not on this sheet and cannot be reset. Keep it apart, e.g. with someone you trust.',
+      'New device: install the app, restore the vault from the backup, unlock it with the master password.',
+      'If the master password is lost, the data can no longer be read.',
+    ],
+    save: 'Save as file',
+    file: 'emergency-sheet-vault.html',
+    saved: 'Emergency sheet saved.',
+    backup: 'Go to backup',
+  },
   search: 'Search passwords',
   empty: 'No logins yet.',
   emptyFiltered: 'Nothing found.',

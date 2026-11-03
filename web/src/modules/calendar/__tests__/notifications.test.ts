@@ -27,6 +27,24 @@ beforeEach(async () => {
   await db.table('_meta').clear();
 });
 
+describe('extra lead times of an event', () => {
+  it('fires an extra notification for each chosen lead, once, and skips the own lead', async () => {
+    await patchFocusSettings({ followUp: false });
+    const e = await eventRepo.create({
+      title: 'Zahnarzt',
+      allDay: false,
+      startDate: '2026-10-05',
+      startTime: '14:00',
+      notify: { enabled: true, minutesBefore: 30, extraMinutes: [60, 60, 30] },
+    });
+    const out = await source({ from: toEpoch('2026-10-04', '00:00'), to: range.to });
+    const base = `event:${e.id}:2026-10-05T14:00`;
+    expect(out.map((n) => n.key).sort()).toEqual([base, `${base}:x60`]);
+    expect(out.find((n) => n.key.endsWith(':x60'))?.at).toBe(toEpoch('2026-10-05', '13:00'));
+    expect(out.every((n) => !n.soft)).toBe(true);
+  });
+});
+
 describe('calendar notifications', () => {
   it("default: one notification at the event's own lead", async () => {
     await patchFocusSettings({ followUp: false }); // repeats are on by default, tested below

@@ -4,6 +4,7 @@ import {
   checkMaturity,
   checkModule,
   checkRowSource,
+  checkSettingsFieldMeta,
   checkSettingsSource,
   checkWidgetSource,
 } from './checkModules';
@@ -203,6 +204,21 @@ describe('checkSettingsSource', () => {
   });
   it('rejects an unknown category', () => {
     expect(checkSettingsSource('x', "{ category: 'misc' }", categories)).toHaveLength(1);
+  });
+});
+
+describe('checkSettingsFieldMeta', () => {
+  const groups = ['general', 'display'];
+  const levels = ['basic', 'advanced'];
+  it('accepts known groups and levels and sources without them', () => {
+    expect(
+      checkSettingsFieldMeta('x', "{ group: 'display', level: 'advanced' }", groups, levels),
+    ).toEqual([]);
+    expect(checkSettingsFieldMeta('x', '{ fields: [] }', groups, levels)).toEqual([]);
+  });
+  it('rejects an unknown group or level', () => {
+    expect(checkSettingsFieldMeta('x', "{ group: 'misc' }", groups, levels)).toHaveLength(1);
+    expect(checkSettingsFieldMeta('x', "{ level: 'pro' }", groups, levels)).toHaveLength(1);
   });
 });
 

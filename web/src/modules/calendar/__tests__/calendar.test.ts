@@ -3,10 +3,11 @@ import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
 import { toEpoch } from '@/core/time/dates';
 import manifest from '../manifest';
-import { eventRepo } from '../repo';
+import { calendarRepo, eventRepo } from '../repo';
 
 beforeEach(async () => {
   await db.table('calendar_event').clear();
+  await db.table('calendar_calendar').clear();
   await db.table('_settings').clear();
 });
 
@@ -33,6 +34,56 @@ describe('calendar module', () => {
       ['2026-09-29', '14:30', 'Zahnarzt'],
       ['2026-09-29', '19:00', 'Stammtisch'],
     ]);
+  });
+});
+
+describe('named calendars', () => {
+  const range = { from: '2026-09-29', to: '2026-09-29' };
+  it('colours an event with its calendar and leaves events without one alone', async () => {
+    const work = await calendarRepo.create({ name: 'Arbeit', tone: 2, visible: true, order: 0 });
+    await eventRepo.create({
+      title: 'Meeting',
+      allDay: true,
+      startDate: '2026-09-29',
+      calendarId: work.id,
+    });
+    await eventRepo.create({ title: 'Frei', allDay: true, startDate: '2026-09-29' });
+    const items = await collectCalendarItems(range, [manifest]);
+    expect(items.find((i) => i.title === 'Meeting')?.color).toBe('var(--cat-3)');
+    expect(items.find((i) => i.title === 'Frei')?.color).toBeUndefined();
+  });
+
+  it('hides the events of a switched-off calendar without deleting them', async () => {
+    const family = await calendarRepo.create({
+      name: 'Familie',
+      tone: 0,
+      visible: false,
+      order: 0,
+    });
+    await eventRepo.create({
+      title: 'Ausflug',
+      allDay: true,
+      startDate: '2026-09-29',
+      calendarId: family.id,
+    });
+    expect(await collectCalendarItems(range, [manifest])).toEqual([]);
+    await calendarRepo.update(family.id, { visible: true });
+    expect((await collectCalendarItems(range, [manifest])).map((i) => i.title)).toEqual([
+      'Ausflug',
+    ]);
+    expect(await eventRepo.active().count()).toBe(1);
+  });
+
+  it('shows events whose calendar was deleted', async () => {
+    const gone = await calendarRepo.create({ name: 'Alt', tone: 1, visible: false, order: 0 });
+    await eventRepo.create({
+      title: 'Bleibt',
+      allDay: true,
+      startDate: '2026-09-29',
+      calendarId: gone.id,
+    });
+    await calendarRepo.remove(gone.id);
+    expect((await collectCalendarItems(range, [manifest])).map((i) => i.title)).toEqual(['Bleibt']);
   });
 });
 

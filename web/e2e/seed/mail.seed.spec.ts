@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openFoldedGroup, showAllWidgets, showPreview } from '../helpers';
+import { showAllWidgets, showPreview } from '../helpers';
 import { bootDev, seedApp } from './helpers';
 
 /**
@@ -151,10 +151,9 @@ test.describe('mail (demo mails)', () => {
   test('new-mail notifications are off by default and their switch is in the module settings', async ({
     page,
   }) => {
-    await page.goto('/settings/module');
+    await page.goto('/settings/module/mail');
     const section = page.locator('section[aria-labelledby="module-mail"]');
     await expect(section).toBeVisible();
-    await openFoldedGroup(page, 'module-mail', 'fields');
     const notify = section
       .getByRole('switch', { name: /Bei neuen Mails benachrichtigen/ })
       .or(section.getByRole('checkbox', { name: /Bei neuen Mails benachrichtigen/ }));
@@ -166,9 +165,8 @@ test.describe('mail (demo mails)', () => {
   test('the local model may not read mail until switched on, and the button is absent', async ({
     page,
   }) => {
-    await page.goto('/settings/module');
+    await page.goto('/settings/module/mail');
     const section = page.locator('section[aria-labelledby="module-mail"]');
-    await openFoldedGroup(page, 'module-mail', 'fields');
     await expect(section.getByLabel('Lokales Modell darf Mails lesen')).not.toBeChecked();
     await page.goto('/mail');
     await page.getByText('Ihre Rechnung für Oktober').click();

@@ -3,8 +3,11 @@ import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { changeWithUndo } from '@/core/undo/withToast';
+import { useUiStore } from '@/stores/ui';
 import type { CalendarItem } from '@/core/modules/types';
 import { useWeekStart } from '@/core/settings/core';
+import { useAdvanced } from '@/core/settings/comfort';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -20,6 +23,11 @@ import {
   useSplitView,
 } from '@/ui';
 import { Agenda } from '../components/Agenda';
+import { AgendaView } from '../components/AgendaView';
+import { CalendarsBar } from '../components/CalendarsBar';
+import { YearView } from '../components/YearView';
+import type { Slot } from '../dragMath';
+import { holidayMap, type HolidayRegion } from '../holidays';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
 import { RemindersTab } from '../components/RemindersTab';
@@ -48,6 +56,12 @@ const VIEW_LABEL: Record<CalendarView, string> = {
   get day() {
     return t.calendar.day;
   },
+  get agenda() {
+    return t.calendar.agenda;
+  },
+  get year() {
+    return t.calendar.year;
+  },
 };
 
 export default function CalendarPage() {
@@ -57,7 +71,9 @@ export default function CalendarPage() {
   const [target, setTarget] = useState<EventTarget>(null);
   useOpenParam((id) => eventRepo.get(id), setTarget);
   const [externalId, setExternalId] = useState<string | null>(null);
+  const [occurrence, setOccurrence] = useState<string | null>(null);
   const split = useSplitView();
+  const [advanced] = useAdvanced('calendar');
   const weekStart = useWeekStart();
 
   const rawView = params.get('view');
@@ -70,6 +86,9 @@ export default function CalendarPage() {
   const date = rawDate && DATE_RE.test(rawDate) ? rawDate : today();
   const range = rangeFor(view ?? 'month', date, weekStart);
   const items = useCalendarItems(range);
+  const region = ((prefs as { holidayRegion?: HolidayRegion } | null)?.holidayRegion ??
+    'off') as HolidayRegion;
+  const holidays = holidayMap(range.from, range.to, region);
   const forPerson = usePersonFilter();
 
   function go(next: { view?: CalendarView; date?: string }) {
@@ -96,8 +115,31 @@ export default function CalendarPage() {
       setExternalId(eventIdOf(item.id));
     } else if (item.source === 'calendar') {
       const ev = await eventRepo.get(eventIdOf(item.id));
+      setOccurrence(item.date);
       if (ev) setTarget(ev);
     } else if (item.to) void navigate(item.to);
+  }
+
+  async function moveItem(item: CalendarItem, slot: Slot) {
+    const id = eventIdOf(item.id);
+    const ev = await eventRepo.get(id);
+    if (!ev) return;
+    // A series is changed in the editor, where "only this one" is a deliberate choice.
+    if (ev.recurrence) {
+      useUiStore.getState().toast(t.calendar.dragRecurring);
+      return;
+    }
+    await changeWithUndo(
+      () =>
+        eventRepo.update(id, {
+          startDate: slot.date,
+          startTime: slot.startTime,
+          ...(slot.endTime ? { endTime: slot.endTime } : {}),
+          // A one-day timed event keeps no end date.
+          endDate: undefined,
+        }),
+      t.calendar.movedToast,
+    );
   }
 
   if (!view) return null;
@@ -166,6 +208,7 @@ export default function CalendarPage() {
       </PageHeader>
       <NowStrip modules={['calendar']} />
 
+      <CalendarsBar advanced={advanced} />
       <PersonFilter usedIds={(items ?? []).flatMap((i) => (i.personId ? [i.personId] : []))} />
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>
@@ -198,14 +241,24 @@ export default function CalendarPage() {
 
       <div className={styles.body}>
         <SplitView
-          enabled={split}
+          enabled={split && view !== 'agenda'}
           asideLabel={t.calendar.agenda}
           aside={<Agenda date={date} onOpenItem={(i) => void openItem(i)} />}
         >
-          {view === 'month' ? (
+          {view === 'year' ? (
+            <YearView
+              date={date}
+              items={list}
+              holidays={holidays}
+              onPickDay={(d) => go({ view: 'day', date: d })}
+            />
+          ) : view === 'agenda' ? (
+            <AgendaView items={list} holidays={holidays} onOpenItem={(i) => void openItem(i)} />
+          ) : view === 'month' ? (
             <MonthView
               date={date}
               items={list}
+              holidays={holidays}
               onPickDay={(d) => go({ view: 'day', date: d })}
               onOpenItem={(i) => void openItem(i)}
             />
@@ -213,6 +266,11 @@ export default function CalendarPage() {
             <WeekView
               days={eachDay(range.from, range.to)}
               items={list}
+              onMoveItem={(i, slot) => void moveItem(i, slot)}
+              onCreateSlot={(d, startTime, endTime) =>
+                setTarget({ draft: { startDate: d, startTime, endTime } })
+              }
+              holidays={holidays}
               onPickDay={(d) => go({ view: 'day', date: d })}
               onOpenItem={(i) => void openItem(i)}
             />
@@ -220,6 +278,10 @@ export default function CalendarPage() {
             <DayView
               date={date}
               items={list}
+              onMoveItem={(i, slot) => void moveItem(i, slot)}
+              onCreateSlot={(d, startTime, endTime) =>
+                setTarget({ draft: { startDate: d, startTime, endTime } })
+              }
               onOpenItem={(i) => void openItem(i)}
               onAdd={(d) => setTarget({ draft: { startDate: d } })}
             />
@@ -227,7 +289,12 @@ export default function CalendarPage() {
         </SplitView>
       </div>
 
-      <EventEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
+      <EventEditor
+        target={openTarget}
+        onClose={closeEditor}
+        onDuplicated={setTarget}
+        occurrence={occurrence}
+      />
       <ExternalDetail id={externalId} onClose={() => setExternalId(null)} />
     </>
   );

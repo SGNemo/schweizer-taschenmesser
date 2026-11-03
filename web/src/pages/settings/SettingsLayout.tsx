@@ -4,12 +4,14 @@ import { useFocusSettings } from '@/core/settings/focus';
 import { frequentSections, recordSectionVisit } from '@/core/settings/frequent';
 import { resetSection } from '@/core/settings/reset';
 import { categoryDef, SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
-import { legacyTarget, settingsPath } from '@/core/settings/registry/paths';
+import { groupSections } from '@/core/settings/registry/groups';
+import { legacyTarget, moduleIdOfSection, settingsPath } from '@/core/settings/registry/paths';
 import { sectionsOf, visibleCategoryIds } from '@/core/settings/registry/registry';
 import { searchSettings } from '@/core/settings/registry/search';
 import { isCategoryId, type SettingsCategoryId } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
+import { tSettings2 } from '@/strings.settings2';
 import {
   Badge,
   Button,
@@ -20,13 +22,19 @@ import {
   useMediaQuery,
   type IconName,
 } from '@/ui';
+import { Breadcrumb, type Crumb } from './Breadcrumb';
 import { CategoryStatus } from './CategoryStatus';
+import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar } from './QuickBar';
+import { SettingsOverview } from './SettingsOverview';
+import { SettingsToc } from './SettingsToc';
 import { useSettingsSections } from './useSections';
 import styles from './SettingsLayout.module.css';
 
 /** Desktop two-column layout from this width; below it the categories are a list (first level). */
 const MASTER_DETAIL_QUERY = '(min-width: 900px)';
+/** Third column (table of contents) from this width. */
+const TOC_QUERY = '(min-width: 1440px)';
 /** How long a deep-linked settings section stays highlighted. */
 const HIGHLIGHT_MS = 1600;
 
@@ -85,20 +93,50 @@ function SettingsSearch() {
   );
 }
 
+/** The category id of the current `/settings/<id>[/…]` URL, if any. */
+function useOpenCategory(): SettingsCategoryId | undefined {
+  const { pathname } = useLocation();
+  const id = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
+  return isCategoryId(id) ? id : undefined;
+}
+
+/** Second level under the open category: its groups, each jumping to the group's first section. */
+function SubNav({ id }: { id: SettingsCategoryId }) {
+  const sections = useSettingsSections();
+  const g = tSettings2.use().groups as Record<string, string>;
+  const groups = groupSections(id, sectionsOf(sections, id)).filter((x) => x.group);
+  if (groups.length < 2) return null;
+  return (
+    <ul className={styles.subnav} data-testid={`subnav-${id}`}>
+      {groups.map((x) => (
+        <li key={x.group}>
+          <Link to={settingsPath(id, x.sections[0]!.id)} className={styles.subLink}>
+            {g[x.group!]}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function CategoryLink({ id, list }: { id: SettingsCategoryId; list?: boolean }) {
   const c = categoryDef(id);
+  const open = useOpenCategory() === id;
   return (
-    <NavLink to={`/settings/${id}`} className={list ? styles.listLink : styles.navLink}>
-      <span className={styles.icon}>
-        <Icon name={c.icon as IconName} />
-      </span>
-      <span className={styles.linkText}>
-        <span className={styles.linkTitle}>{c.title}</span>
-        {list ? <span className={styles.linkDesc}>{c.description}</span> : null}
-      </span>
-      <CategoryStatus id={id} />
-      {list ? <Icon name="chevronRight" /> : null}
-    </NavLink>
+    <>
+      <NavLink to={`/settings/${id}`} className={list ? styles.listLink : styles.navLink}>
+        <span className={styles.icon}>
+          <Icon name={c.icon as IconName} />
+        </span>
+        <span className={styles.linkText}>
+          <span className={styles.linkTitle}>{c.title}</span>
+          {list ? <span className={styles.linkDesc}>{c.description}</span> : null}
+        </span>
+        <CategoryStatus id={id} />
+        {list ? <Icon name="chevronRight" /> : null}
+      </NavLink>
+      {open && !list ? <SubNav id={id} /> : null}
+    </>
   );
 }
 
@@ -145,11 +183,24 @@ function FrequentNav({ list }: { list?: boolean }) {
 export function CategoryNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const ids = visibleCategoryIds(sections);
+  const overviewTitle = tSettings2.use().overview.title;
   return (
     <div className={list ? undefined : styles.aside} data-testid="settings-nav">
       <FrequentNav list={list} />
       <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
         <ul>
+          {list ? null : (
+            <li>
+              <NavLink to="/settings" end className={styles.navLink}>
+                <span className={styles.icon}>
+                  <Icon name="home" />
+                </span>
+                <span className={styles.linkText}>
+                  <span className={styles.linkTitle}>{overviewTitle}</span>
+                </span>
+              </NavLink>
+            </li>
+          )}
           {ids.map((id) => (
             <li key={id}>
               <CategoryLink id={id} list={list} />
@@ -161,18 +212,18 @@ export function CategoryNav({ list }: { list?: boolean }) {
   );
 }
 
-/** `/settings`: redirect to the first category on desktop, the category list on phones; old `#anchor` links are mapped. */
+/** `/settings`: the overview cards (and the category list on phones); old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
   const { hash } = useLocation();
   const legacy = legacyTarget(hash);
   if (legacy) return <Navigate to={legacy} replace />;
-  if (wide) return <Navigate to={settingsPath('allgemein')} replace />;
   return (
-    <>
-      <QuickBar />
-      <CategoryNav list />
-    </>
+    <div className={styles.overview}>
+      {wide ? null : <QuickBar />}
+      <SettingsOverview />
+      {wide ? null : <CategoryNav list />}
+    </div>
   );
 }
 
@@ -219,9 +270,23 @@ function useDeepLink(ready: boolean) {
   }, [ready, hash, pathname, historyOn]);
 }
 
+/** Crumbs for a category page: Einstellungen › Kategorie [› Abschnitt in view of the deep link]. */
+function crumbsFor(category: SettingsCategoryId, sectionTitle?: string): Crumb[] {
+  const root = tSettings2.get().nav.root;
+  const title = categoryDef(category).title;
+  return sectionTitle
+    ? [
+        { label: root, to: '/settings' },
+        { label: title, to: `/settings/${category}` },
+        { label: sectionTitle },
+      ]
+    : [{ label: root, to: '/settings' }, { label: title }];
+}
+
 export function CategoryPage() {
   const { category } = useParams();
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
+  const { hash } = useLocation();
   const sections = useSettingsSections();
   const known = isCategoryId(category);
   const own = known ? sectionsOf(sections, category) : [];
@@ -243,9 +308,22 @@ export function CategoryPage() {
         <Link to="/settings">{t.settings.back}</Link>
       </EmptyState>
     );
+  // Old links `/settings/module#module-<id>[--field]` arrive on the module's own page.
+  const legacyModule =
+    category === 'module' ? /^#module-([^-]+(?:-[^-]+)*?)(?:--(.+))?$/.exec(hash) : null;
+  if (legacyModule && sections.some((x) => x.id === `module-${legacyModule[1]}`))
+    return (
+      <Navigate to={settingsPath('module', `module-${legacyModule[1]}`, legacyModule[2])} replace />
+    );
+  // A module's settings are a page of their own: the category shows the list instead.
+  const shown = own.filter((x) => !moduleIdOfSection(category, x.id));
+  const sectionId = decodeURIComponent(hash.slice(1)).split('--')[0];
+  const current = shown.find((x) => x.id === sectionId)?.title;
   return (
     <div className={styles.category} onChange={noteUse} onClick={noteUse}>
-      {wide ? null : (
+      {wide ? (
+        <Breadcrumb items={crumbsFor(category, current)} />
+      ) : (
         <Link to="/settings" className={styles.back}>
           <Icon name="chevronLeft" />
           {t.settings.back}
@@ -256,7 +334,7 @@ export function CategoryPage() {
           {categoryDef(category).title}
         </p>
       )}
-      {own.map((s) => (
+      {shown.map((s) => (
         <Fragment key={s.id}>
           {s.maturity === 'preview' ? (
             <p className={styles.previewBadge} data-testid={`preview-${s.id}`}>
@@ -276,12 +354,50 @@ export function CategoryPage() {
           ) : null}
         </Fragment>
       ))}
+      {category === 'module' ? <ModuleList /> : null}
+    </div>
+  );
+}
+
+/** `/settings/module/<id>`: breadcrumb or back link, then the module's own settings page. */
+export function ModuleSettingsRoute() {
+  const { moduleId } = useParams();
+  const wide = useMediaQuery(MASTER_DETAIL_QUERY);
+  const sections = useSettingsSections();
+  const own = sections.find((x) => x.id === `module-${moduleId}`);
+  useDeepLink(sections.length > 0);
+  if (sections.length === 0) return <Skeleton />;
+  const o = tSettings2.get();
+  const crumbs: Crumb[] = [
+    { label: o.nav.root, to: '/settings' },
+    { label: categoryDef('module').title, to: '/settings/module' },
+    { label: own?.title ?? moduleId ?? '' },
+  ];
+  return (
+    <div className={styles.category}>
+      {wide ? (
+        <Breadcrumb items={crumbs} />
+      ) : (
+        <Link to="/settings/module" className={styles.back}>
+          <Icon name="chevronLeft" />
+          {o.modulePage.all}
+        </Link>
+      )}
+      <ModuleSettingsPage />
     </div>
   );
 }
 
 export function SettingsLayout() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
+  const tocWide = useMediaQuery(TOC_QUERY);
+  const open = useOpenCategory();
+  const sections = useSettingsSections();
+  const entries =
+    open && open !== 'module'
+      ? sectionsOf(sections, open).map((x) => ({ id: x.id, title: x.title }))
+      : [];
+  const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
       <div className={styles.header}>
@@ -290,11 +406,12 @@ export function SettingsLayout() {
       <SettingsSearch />
       {wide ? <QuickBar /> : null}
       {wide ? (
-        <div className={styles.split}>
+        <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
           <CategoryNav />
           <div className={styles.content}>
             <Outlet />
           </div>
+          {showToc ? <SettingsToc entries={entries} /> : null}
         </div>
       ) : (
         <Outlet />
