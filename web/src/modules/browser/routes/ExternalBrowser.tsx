@@ -5,7 +5,7 @@ import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Icon, IconButton, ItemList, ItemRow, TextField } from '@/ui';
+import { Icon, IconButton, ItemList, ItemRow, PageTitle, TextField } from '@/ui';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
 import { displayUrl, isWebUrl } from '../lib/urlPolicy';
@@ -65,7 +65,7 @@ export default function ExternalBrowser() {
 
   return (
     <div className={styles.root}>
-      <h1>{t.browser.meta.name}</h1>
+      <PageTitle title={t.browser.meta.name} />
       <form
         className={styles.bar}
         onSubmit={(e) => {
