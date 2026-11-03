@@ -170,3 +170,8 @@
   flex-wrap: wrap;
   gap: var(--space-3);
 }
+
+/* The rings take the module hue (the shared Ring uses the accent; this only recolours the arc). */
+.ringHue svg circle:last-child {
+  stroke: var(--module-color);
+}

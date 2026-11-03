@@ -24,7 +24,7 @@ export function HabitRings({
       {planned.map((g) => {
         const entry = today.get(g.id);
         return (
-          <span key={g.id} className={styles.headRing}>
+          <span key={g.id} className={`${styles.headRing} ${styles.ringHue}`}>
             <Ring percent={Math.round(dayProgress(g, entry) * 100)} size="sm" label={g.name}>
               {g.kind === 'count' ? (entry?.count ?? 0) : (entry?.count ?? 0) >= 1 ? '✓' : ''}
             </Ring>

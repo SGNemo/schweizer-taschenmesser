@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { formatDay, today as todayStr, addDaysStr } from '@/core/time/dates';
@@ -26,12 +26,19 @@ export function History({
 }) {
   const [pick, setPick] = useState<string | undefined>(undefined);
   const [focus] = useFocusSettings();
+  const heatRef = useRef<HTMLDivElement>(null);
   const goal = goals.find((g) => g.id === pick) ?? goals[0];
   const day = todayStr();
   const map = useMemo(
     () => (goal ? byDate(entries, goal.id) : new Map<string, Entry>()),
     [entries, goal],
   );
+  const goalId = goal?.id;
+  // The newest week is on the right: start there, older weeks are a swipe away.
+  useEffect(() => {
+    const el = heatRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [goalId]);
   if (!goal) return null;
   const grid = heatmap(goal, map, day, 53, weekStart);
   const last30 = rate(goal, map, addDaysStr(day, -29), day);
@@ -55,7 +62,7 @@ export function History({
 
       <section className={styles.section} aria-label={t.habits.history.grid}>
         <h2 className={styles.sectionTitle}>{t.habits.history.grid}</h2>
-        <div className={styles.heat} role="img" aria-label={t.habits.history.grid}>
+        <div ref={heatRef} className={styles.heat} role="img" aria-label={t.habits.history.grid}>
           {grid.flat().map((c) => (
             <span
               key={c.date}

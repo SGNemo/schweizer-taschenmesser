@@ -92,7 +92,7 @@ export function GoalCard({
 
   return (
     <li className={`${styles.card} ${rest ? styles.cardRest : ''}`} data-testid="habit-card">
-      <span className={popped ? styles.pop : undefined}>
+      <span className={`${styles.ringHue} ${popped ? styles.pop : ''}`}>
         <Ring percent={percent} size="md" label={goal.name}>
           {isCount ? count : count >= 1 ? '✓' : ''}
         </Ring>
