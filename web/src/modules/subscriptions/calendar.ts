@@ -23,6 +23,16 @@ const source: CalendarSource = async (range) => {
         to: '/subscriptions',
       });
     }
+    if (s.trialEndsOn && s.trialEndsOn >= range.from && s.trialEndsOn <= range.to)
+      items.push({
+        id: `${s.id}:trial:${s.trialEndsOn}`,
+        source: 'subscriptions',
+        kind: 'trial',
+        title: t.subscriptions.ext.trial.calendar(s.name),
+        date: s.trialEndsOn,
+        allDay: true,
+        to: '/subscriptions',
+      });
     const missed = missedDeadline(s, day);
     for (const d of cancelDeadlinesInRange(s, range.from, range.to)) {
       const passed = missed?.deadline === d.deadline;

@@ -197,6 +197,11 @@
         "label": "Abo-Abbuchungen bis Monatsende abziehen",
         "default": true
       },
+      "bookSubscriptions": {
+        "type": "boolean",
+        "label": "Abo-Abbuchungen als Ausgabe buchen",
+        "default": false
+      },
       "forecastHorizon": {
         "type": "select",
         "label": "Ausblick: Zeitraum",
@@ -380,6 +385,11 @@
       "cancelRemindDaysBefore": {
         "type": "number",
         "label": "Erinnerung vor Ende der Kündigungsfrist (Tage)",
+        "default": 3
+      },
+      "trialRemindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Ende der Probezeit (Tage)",
         "default": 3
       },
       "remindTime": {

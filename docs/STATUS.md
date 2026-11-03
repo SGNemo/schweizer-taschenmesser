@@ -174,5 +174,6 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Befehlspalette lädt erst beim ersten Öffnen (Startpfad 667 → 636 KB gzip, 86 → 82 Anfragen).
 - Auf `develop`/PR: Geld-Gruppe Paket 1 „Finanzen“ (Umbuchungen, Aufteilung auf Kategorien, Unterkategorien mit Symbol, Filter, Jahresansicht, Vormonatsvergleich, Ausblick aus Wiederkehrendem/Abos/Rechnungen, CSV-Export, Widget „Ausgabe +“); Pakete Rechnungen, Abos, Budgets folgen.
 - Auf `develop`/PR: Geld-Gruppe Paket 2 „Rechnungen“ (Teilzahlungen mit eigener Buchung je Teil, Mahnstufen, Zahlungsdaten kopieren mit IBAN-Prüfung, Beleg-Anhang nur auf diesem Gerät, Beleg-Kopf mit gezacktem Rand, Ansicht „Alle“).
+- Auf `develop`/PR: Geld-Gruppe Paket 3 „Abos“ (Dienst-Kacheln, Kopf mit nächsten Abbuchungen, Probezeit mit Erinnerung, Kategorie, Zahlungsweg, Status, teuerste Abos; Finanzen: Preisänderung aus Buchungen erkennen, Abbuchungen optional buchen).
 - Auf `develop`/PR: Geld-Gruppe Paket 4 „Budgets“ (Zeiträume Monat/Quartal/Jahr, Übertrag, Warnschwelle, Prognose, Verlauf, Sparziel-Plan, Kopf „Noch frei“ mit Ring); damit ist die Geld-Gruppe (Finanzen, Rechnungen, Abos, Budgets) komplett.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.

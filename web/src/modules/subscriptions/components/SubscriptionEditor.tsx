@@ -15,13 +15,14 @@ import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { changePercent, nextCancelDeadline, recordPriceChange } from '../logic';
+import { changePercent, nextCancelDeadline, recordPriceChange, trialDaysLeft } from '../logic';
 import {
   AdvancedFields,
   Button,
   CurrencyField,
   Dialog,
   patternStyles,
+  SelectField,
   Switch,
   TextArea,
   TextField,
@@ -29,7 +30,7 @@ import {
 } from '@/ui';
 import { annualCost } from '../logic';
 import { subscriptionRepo } from '../repo';
-import type { Subscription } from '../schema';
+import { SUBSCRIPTION_CATEGORIES, type Subscription, type SubscriptionCategory } from '../schema';
 import styles from '../routes/subscriptions.module.css';
 import { deleteWithUndo } from '@/core/undo/withToast';
 
@@ -38,9 +39,12 @@ export type SubscriptionTarget = Stored<Subscription> | { draft: true } | null;
 export function SubscriptionEditor({
   target,
   onClose,
+  suggestedAmountMinor,
 }: {
   target: SubscriptionTarget;
   onClose: () => void;
+  /** A price seen in the bookings (finance's hint opens the editor with it): offered, never applied by itself. */
+  suggestedAmountMinor?: number;
 }) {
   const existing = target && 'id' in target ? target : null;
   return (
@@ -49,7 +53,14 @@ export function SubscriptionEditor({
       onClose={onClose}
       title={existing ? t.subscriptions.edit : t.subscriptions.add}
     >
-      {target ? <Form key={existing?.id ?? 'new'} existing={existing} onClose={onClose} /> : null}
+      {target ? (
+        <Form
+          key={existing?.id ?? 'new'}
+          existing={existing}
+          onClose={onClose}
+          suggestedAmountMinor={existing ? suggestedAmountMinor : undefined}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -57,9 +68,11 @@ export function SubscriptionEditor({
 function Form({
   existing,
   onClose,
+  suggestedAmountMinor,
 }: {
   existing: Stored<Subscription> | null;
   onClose: () => void;
+  suggestedAmountMinor?: number;
 }) {
   const dl = tDeadline.use();
   // Typed text survives Esc or a tap beside the dialog (memory only, 30 minutes); saving and
@@ -74,8 +87,23 @@ function Form({
     notice: existing?.cancelNoticeDays as number | undefined,
     active: existing?.active ?? true,
     note: existing?.note ?? '',
+    trialEndsOn: existing?.trialEndsOn ?? '',
+    category: (existing?.category ?? '') as SubscriptionCategory | '',
+    paymentMethod: existing?.paymentMethod ?? '',
   });
-  const { name, amount, currency, startDate, recurrence, notice, active, note } = draft.values;
+  const {
+    name,
+    amount,
+    currency,
+    startDate,
+    recurrence,
+    notice,
+    active,
+    note,
+    trialEndsOn,
+    category,
+    paymentMethod,
+  } = draft.values;
   const setName = (v: string) => draft.set('name', v);
   const setAmount = (v: string) => draft.set('amount', v);
   const setCurrency = (v: string) => draft.set('currency', v);
@@ -84,6 +112,9 @@ function Form({
   const setNotice = (v: number | undefined) => draft.set('notice', v);
   const setActive = (v: boolean) => draft.set('active', v);
   const setNote = (v: string) => draft.set('note', v);
+  const setTrialEndsOn = (v: string) => draft.set('trialEndsOn', v);
+  const setCategory = (v: SubscriptionCategory | '') => draft.set('category', v);
+  const setPaymentMethod = (v: string) => draft.set('paymentMethod', v);
   const [error, setError] = useState('');
 
   const amountMinor = parseMoney(amount);
@@ -115,6 +146,9 @@ function Form({
       cancelNoticeDays: notice,
       active,
       note: note.trim() || undefined,
+      trialEndsOn: trialEndsOn || undefined,
+      category: category || undefined,
+      paymentMethod: paymentMethod.trim() || undefined,
       priceHistory: existing
         ? recordPriceChange(existing.priceHistory ?? [], today(), existing.amountMinor, amountMinor)
         : [],
@@ -174,6 +208,16 @@ function Form({
           required
         />
       </div>
+      {suggestedAmountMinor && suggestedAmountMinor !== amountMinor ? (
+        <p role="status" className={styles.suggest} data-testid="price-suggestion">
+          <span>
+            {t.subscriptions.ext.suggest.seen(formatMoney(suggestedAmountMinor, currency))}
+          </span>
+          <Button variant="ghost" onClick={() => setAmount(formatMoneyInput(suggestedAmountMinor))}>
+            {t.subscriptions.ext.suggest.apply(formatMoney(suggestedAmountMinor, currency))}
+          </Button>
+        </p>
+      ) : null}
       <RecurrenceEditor
         value={recurrence}
         onChange={(r) => r && setRecurrence(r)}
@@ -218,10 +262,47 @@ function Form({
       ) : null}
       <AdvancedFields
         moduleId="subscriptions"
-        hasData={notice !== undefined || !!note || currencyOf(existing) !== 'EUR'}
+        hasData={
+          notice !== undefined ||
+          !!note ||
+          currencyOf(existing) !== 'EUR' ||
+          !!trialEndsOn ||
+          !!category ||
+          !!paymentMethod
+        }
       >
         <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
         <NoticeField days={notice} onChange={setNotice} max={365} />
+        <TextField
+          label={t.subscriptions.ext.trial.label}
+          type="date"
+          value={trialEndsOn}
+          onChange={(e) => setTrialEndsOn(e.target.value)}
+          hint={
+            trialEndsOn && trialDaysLeft({ trialEndsOn }, today()) !== undefined
+              ? t.subscriptions.ext.trial.daysLeft(trialDaysLeft({ trialEndsOn }, today())!)
+              : t.subscriptions.ext.trial.hint
+          }
+        />
+        <SelectField
+          label={t.subscriptions.ext.category.label}
+          value={category}
+          onChange={(e) => setCategory(e.target.value as SubscriptionCategory | '')}
+        >
+          <option value="">–</option>
+          {SUBSCRIPTION_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {t.subscriptions.ext.category[c]}
+            </option>
+          ))}
+        </SelectField>
+        <TextField
+          label={t.subscriptions.ext.payment.label}
+          value={paymentMethod}
+          placeholder={t.subscriptions.ext.payment.placeholder}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+          maxLength={40}
+        />
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>
       {existing ? (

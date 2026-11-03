@@ -10,6 +10,7 @@ export const transactionRepo = createRepo(tableName('finance', 'transaction'), t
 
 export const DEFAULT_ACCOUNT_ID = 'acc-main';
 export const INVOICE_CATEGORY_ID = 'cat-invoices';
+export const SUBSCRIPTIONS_CATEGORY_ID = 'cat-subs';
 
 const SEED_CATEGORIES = [
   ['cat-food', 'Lebensmittel', 'expense'],

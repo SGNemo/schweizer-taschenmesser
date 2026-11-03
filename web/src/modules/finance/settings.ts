@@ -6,11 +6,18 @@ export const settingsSchema = z.object({
   includeOpenInvoices: z.boolean(),
   includeSubscriptions: z.boolean(),
   forecastHorizon: z.enum(['month', '30', '90']),
+  /** Book the due charges of subscriptions as expenses (off by default: bank imports usually bring them). */
+  bookSubscriptions: z.boolean(),
 });
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { includeOpenInvoices: true, includeSubscriptions: true, forecastHorizon: 'month' },
+  defaults: {
+    includeOpenInvoices: true,
+    includeSubscriptions: true,
+    forecastHorizon: 'month',
+    bookSubscriptions: false,
+  },
   fields: [
     {
       key: 'includeOpenInvoices',
@@ -27,6 +34,16 @@ export const settings: ModuleSettings = {
       type: 'boolean',
       get help() {
         return t.finance.meta.settings.includeSubscriptionsHelp;
+      },
+    },
+    {
+      key: 'bookSubscriptions',
+      get label() {
+        return t.finance.ext.settings.bookSubscriptions;
+      },
+      type: 'boolean',
+      get help() {
+        return t.finance.ext.settings.bookSubscriptionsHelp;
       },
     },
     {

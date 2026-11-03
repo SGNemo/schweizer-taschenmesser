@@ -2,7 +2,9 @@ import { currencyOf, formatMoney } from '@/core/money';
 import type { NotificationSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr, formatDay, toDateString, toEpoch } from '@/core/time/dates';
+import type { Stored } from '@/core/db/types';
 import { cancelDeadlinesInRange } from './logic';
+import type { Subscription } from './schema';
 import { subscriptionRepo } from './repo';
 import { settings, settingsSchema } from './settings';
 import { t } from '@/strings';
@@ -35,7 +37,30 @@ const source: NotificationSource = async ({ from, to }) => {
         url: '/subscriptions',
       })),
     )
+    .concat(trialReminders(subs, prefs, from, to))
     .filter((n) => n.at > from && n.at <= to);
 };
+
+/** One reminder per trial, `trialRemindDaysBefore` days before it ends (0 = on the last day). */
+function trialReminders(
+  subs: Stored<Subscription>[],
+  prefs: { trialRemindDaysBefore: number; remindTime: string },
+  from: number,
+  to: number,
+) {
+  return subs
+    .filter((s) => s.trialEndsOn)
+    .map((s) => ({
+      key: `subscription-trial:${s.id}:${s.trialEndsOn}`,
+      at: toEpoch(addDaysStr(s.trialEndsOn!, -prefs.trialRemindDaysBefore), prefs.remindTime),
+      title: t.subscriptions.ext.trial.reminderTitle(s.name),
+      body: t.subscriptions.ext.trial.reminderBody(
+        formatDay(s.trialEndsOn!, 'd. MMM yyyy'),
+        formatMoney(s.amountMinor, currencyOf(s)),
+      ),
+      url: '/subscriptions',
+    }))
+    .filter((n) => n.at > from && n.at <= to);
+}
 
 export default source;

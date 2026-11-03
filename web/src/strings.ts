@@ -2761,6 +2761,50 @@ export const de = {
     view: 'Status',
   },
   subscriptions: {
+    ext: {
+      category: {
+        label: 'Art des Dienstes',
+        streaming: 'Streaming',
+        music: 'Musik',
+        software: 'Software',
+        cloud: 'Cloud & Speicher',
+        news: 'Nachrichten',
+        mobility: 'Mobilität',
+        sport: 'Sport',
+        insurance: 'Versicherung',
+        telecom: 'Telefon & Internet',
+        other: 'Sonstiges',
+      },
+      trial: {
+        label: 'Probezeit endet am',
+        hint: 'Du bekommst vorher eine Erinnerung.',
+        chip: 'Probezeit',
+        daysLeft: (n: number) =>
+          n === 0
+            ? 'Probezeit endet heute'
+            : n === 1
+              ? 'Probezeit endet morgen'
+              : `Probezeit endet in ${n} Tagen`,
+        reminderTitle: (name: string) => `Probezeit endet bald: ${name}`,
+        reminderBody: (date: string, price: string) => `Bis ${date}. Danach ${price}.`,
+        calendar: (name: string) => `Probezeit endet: ${name}`,
+        remindDaysBefore: 'Erinnerung vor Ende der Probezeit (Tage)',
+        remindDaysBeforeHelp: '0 = am letzten Tag der Probezeit',
+      },
+      status: { ended: 'Beendet' },
+      payment: { label: 'Bezahlt mit', placeholder: 'z. B. Lastschrift Girokonto' },
+      monthlyShort: (amount: string) => `${amount} / Monat`,
+      top: { title: 'Teuerste Abos', perYear: (amount: string) => `${amount} pro Jahr` },
+      head: {
+        title: 'Nächste Abbuchungen',
+        nothing: 'Nichts in Sicht',
+        on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+      },
+      suggest: {
+        apply: (amount: string) => `Preis übernehmen: ${amount}`,
+        seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
+      },
+    },
     importDetail: (amount: string, rhythm: string, next: string) =>
       `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
     cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
@@ -2816,6 +2860,13 @@ export const de = {
     chartLegend: 'Legende',
     ext: {
       weekly: 'Wöchentlich',
+      subPrice: {
+        title: (name: string, from: string, to: string) =>
+          `${name} bucht jetzt ${to} statt ${from}`,
+        detail: (since: string) => `Seit ${since} in deinen Buchungen. Im Abo übernehmen?`,
+      },
+      subBooked: (n: number) =>
+        n === 1 ? '1 Abo-Abbuchung gebucht.' : `${n} Abo-Abbuchungen gebucht.`,
       transfer: {
         title: 'Umbuchung',
         button: 'Umbuchung',
@@ -2909,6 +2960,9 @@ export const de = {
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
       settings: {
+        bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
+        bookSubscriptionsHelp:
+          'Bucht die fälligen Abbuchungen der letzten 31 Tage, sofern keine passende Buchung (z. B. aus dem Bankimport) schon da ist. Standard: aus.',
         forecastHorizon: 'Ausblick: Zeitraum',
         month: 'Bis Monatsende',
         d30: '30 Tage',

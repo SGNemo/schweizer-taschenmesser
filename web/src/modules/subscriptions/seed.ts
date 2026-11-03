@@ -177,6 +177,21 @@ const numbered = (names: Record<Lang, string>, i: number): Record<Lang, string> 
     string
   >;
 
+/** By row, matching the first nine names (streaming, music, cloud, gym, paper, phone, insurance, audio books, web). */
+const CATEGORIES = [
+  'streaming',
+  'music',
+  'cloud',
+  'sport',
+  'news',
+  'telecom',
+  'insurance',
+  'music',
+  'software',
+] as const;
+/** Language-neutral on purpose: names of ways to pay. */
+const PAYMENT = ['SEPA', 'Visa', 'PayPal'] as const;
+
 function seed(ctx: SeedContext): SeedRows {
   const n = ctx.count({ small: 4, medium: 9, large: 60 });
   const rows = Array.from({ length: n }, (_, i) => {
@@ -198,6 +213,10 @@ function seed(ctx: SeedContext): SeedRows {
         startDate: ctx.day(-ago),
         ...(notice !== undefined ? { cancelNoticeDays: notice } : {}),
         active,
+        category: CATEGORIES[i % CATEGORIES.length],
+        paymentMethod: PAYMENT[i % PAYMENT.length],
+        // One subscription is still in its trial (ends in five days).
+        ...(i === 1 && active ? { trialEndsOn: ctx.day(5) } : {}),
       },
     };
   });
