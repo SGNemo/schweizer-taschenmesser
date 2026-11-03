@@ -592,6 +592,11 @@ export interface ModuleManifest {
    */
   seed: SeedMeta;
   contributions?: ModuleContributions;
+  /**
+   * Events, state checks and allowed actions for rules ("Wenn X, dann Y", `core/automation`). Lazy;
+   * optional. Needs `aiSchema` for `actions`. The vault never has one.
+   */
+  automation?: () => Promise<{ default: import('@/core/automation/module').ModuleAutomation }>;
   /** Optional steps for the setup assistant; ids must start with `<module id>.`. */
   setupSteps?: SetupStepDef[];
 }
