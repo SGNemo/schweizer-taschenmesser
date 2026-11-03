@@ -2,7 +2,7 @@ import { onboarding } from './onboarding';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
-import { eventSchema, externalEventSchema } from './schema';
+import { calendarSchema, eventSchema, externalEventSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
 
@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'calendarLeaf',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.calendar.meta.description;
   },
@@ -36,6 +36,7 @@ const manifest: ModuleManifest = {
   dataSchema: {
     collections: {
       event: { schema: eventSchema, indexes: ['startDate'] },
+      calendar: { schema: calendarSchema, indexes: ['order'], dataApi: false },
       external: { schema: externalEventSchema, indexes: ['startDate', 'source'], dataApi: false },
     },
   },
@@ -64,7 +65,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 3, dependsOn: [] },
+  seed: { version: 4, dependsOn: [] },
   layout: 'full',
   order: 10,
   area: 'plan',

@@ -3,6 +3,8 @@ import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/typ
 
 /** German source text → [en, es, fr, pt-BR]; a text without an entry stays German (places do). */
 const TR: Record<string, readonly [string, string, string, string]> = {
+  Arbeit: ['Work', 'Trabajo', 'Travail', 'Trabalho'],
+  Familie: ['Family', 'Familia', 'Famille', 'Família'],
   Teammeeting: ['Team meeting', 'Reunión de equipo', 'Réunion d’équipe', 'Reunião de equipe'],
   'Zahnarzt Dr. Beispiel': [
     'Dentist Dr. Beispiel',
@@ -450,7 +452,15 @@ function seed(ctx: SeedContext): SeedRows {
     }
     rows.push(toRow(ctx, i, b));
   }
-  return { event: [...rows, ...reminderRows(ctx)] };
+  // Two named calendars; every third / second-of-three event is sorted into one, the rest stay free.
+  const calendars = ['Arbeit', 'Familie'].map((name, i) => ({
+    id: ctx.id('calendar', 'calendar', i),
+    data: { name: tr(ctx, name), tone: i, visible: true, order: i },
+  }));
+  rows.forEach((row, i) => {
+    if (i % 3 < 2) row.data.calendarId = calendars[i % 3]!.id;
+  });
+  return { calendar: calendars, event: [...rows, ...reminderRows(ctx)] };
 }
 
 export default { seed } satisfies SeedModule;

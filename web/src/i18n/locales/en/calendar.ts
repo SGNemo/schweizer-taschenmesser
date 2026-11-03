@@ -32,6 +32,24 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Save as to-do',
   asTodoDone: 'Saved as to-do.',
   skipOccurrence: (date: string) => `Remove only the one on ${date}`,
+  movedToast: 'Event moved.',
+  dragRecurring: 'Change repeating events in the editor.',
+  calendars: {
+    group: 'Calendars',
+    manage: 'Manage calendars',
+    add: 'Add calendar',
+    edit: 'Edit calendar',
+    name: 'Name',
+    colour: 'Colour',
+    colourN: (n: number) => `Colour ${n}`,
+    field: 'Calendar',
+    none: 'No calendar',
+    empty:
+      'No calendars of your own yet. Add "Work" and "Family", for example, and show or hide them one by one.',
+    deleteHint: 'Deleting keeps the events; they then belong to no calendar.',
+    shown: 'shown',
+    hidden: 'hidden',
+  },
   weekNoShort: 'Wk',
   agendaEmpty: 'Nothing planned in this period.',
   holidayLabel: 'Public holiday',
@@ -132,10 +150,21 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'Paused.',
     resumedToast: 'Turned back on.',
     widgetEmpty: 'No upcoming reminders.',
+    ringNone: 'Nothing in the next 24 hours.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'now'
+        : minutes < 60
+          ? `in ${minutes} min`
+          : `in ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Next reminder ${when}`,
+    clearDone: 'Remove finished',
+    clearedToast: (n: number) => (n === 1 ? '1 reminder removed.' : `${n} reminders removed.`),
   },
   notify: {
     label: 'Notify',
     rowLabel: 'Remind me',
+    extra: 'Also remind',
     noneShort: 'None',
     hourShort: '1 h',
     dayShort: '1 day',
