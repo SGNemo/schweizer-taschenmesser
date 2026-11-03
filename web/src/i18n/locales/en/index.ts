@@ -69,6 +69,7 @@ import { maps } from './maps';
 import { mail } from './mail';
 import { browser } from './browser';
 import { downloads } from './downloads';
+import { timetrack } from './timetrack';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -141,4 +142,5 @@ export const en: Strings = {
   mail,
   browser,
   downloads,
+  timetrack,
 };
