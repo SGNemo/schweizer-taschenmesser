@@ -1,12 +1,14 @@
 import { bus } from '@/core/events';
 import { t } from '@/strings';
 import { ensureInbox, listRepo, taskRepo } from './repo';
+import type { TaskLink } from './schema';
 
 /** Adds a requested to-do to the inbox (the first list when there is no inbox). */
 export async function addRequested(req: {
   title: string;
   note?: string;
   dueDate?: string;
+  link?: TaskLink;
 }): Promise<void> {
   const title = req.title.trim();
   if (!title) return;

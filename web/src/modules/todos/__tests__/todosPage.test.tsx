@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -131,6 +131,25 @@ describe('ToDos board', () => {
       await screen.findByRole('menuitem', { name: 'Verschieben nach Erledigt' }),
     );
     await waitFor(async () => expect((await taskRepo.get(task.id))?.done).toBe(true));
+  });
+});
+
+describe('ToDos board drag and drop', () => {
+  it('drops a card onto another column', async () => {
+    const task = await taskRepo.create({ ...base, title: 'Ziehkarte' });
+    draw('/todos?view=board');
+    const card = (await screen.findByText('Ziehkarte')).closest('li')!;
+    const data = new Map<string, string>();
+    const dataTransfer = {
+      setData: (k: string, v: string) => data.set(k, v),
+      getData: (k: string) => data.get(k) ?? '',
+      effectAllowed: '',
+    };
+    fireEvent.dragStart(card, { dataTransfer });
+    const column = screen.getByRole('region', { name: 'Heute' });
+    fireEvent.dragOver(column, { dataTransfer });
+    fireEvent.drop(column, { dataTransfer });
+    await waitFor(async () => expect((await taskRepo.get(task.id))?.plannedFor).toBe('2026-11-03'));
   });
 });
 
