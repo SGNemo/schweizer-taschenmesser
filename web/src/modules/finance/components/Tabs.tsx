@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { currencyOf, formatMoney, parseMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
+import { useAdvanced } from '@/core/settings/comfort';
 import { useCurrency } from '../currency';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -46,6 +47,7 @@ export function TransactionsTab({
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<TxFilter['kind']>('all');
   const [more, setMore] = useState(false);
+  const [advanced] = useAdvanced('finance');
   const [extra, setExtra] = useState<{
     accountId: string;
     categoryId: string;
@@ -119,25 +121,33 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <div className={styles.toolbarRow}>
-        <Button
-          variant="ghost"
-          onClick={() => setTransfer({ draft: true })}
-          disabled={data.accounts.length < 2}
-        >
-          <Icon name="repeat" size={18} />
-          {t.finance.ext.transfer.button}
-        </Button>
-        <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
-          {t.finance.ext.export.button}
-        </Button>
-        <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
-          {t.finance.ext.filter.more}
-          {narrowed ? ' •' : ''}
-        </Button>
-      </div>
+      {advanced || narrowed || more ? (
+        <div className={styles.toolbarRow}>
+          <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
+            {t.finance.ext.filter.more}
+            {narrowed ? ' •' : ''}
+          </Button>
+        </div>
+      ) : null}
       {more ? (
         <div className={styles.filterBox}>
+          <div className={styles.toolbarRow}>
+            <Button
+              variant="ghost"
+              onClick={() => setTransfer({ draft: true })}
+              disabled={data.accounts.length < 2}
+            >
+              <Icon name="repeat" size={18} />
+              {t.finance.ext.transfer.button}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => void exportCsv()}
+              disabled={inMonth.length === 0}
+            >
+              {t.finance.ext.export.button}
+            </Button>
+          </div>
           <div className={styles.split}>
             <SelectField
               label={t.finance.ext.filter.account}
@@ -292,10 +302,11 @@ export function TransactionsTab({
 
 export function AccountsTab({ data }: { data: FinanceData }) {
   const [target, setTarget] = useState<AccountTarget>(null);
+  const [transfer, setTransfer] = useState<TransferTarget>(null);
   const map = balances(data.accounts, data.txs, today());
   return (
     <>
-      <div className={patternStyles.gapBottom}>
+      <div className={patternStyles.gapBottom + ' ' + patternStyles.hstack}>
         <Button
           variant="primary"
           onClick={() => setTarget({ draft: true, order: data.accounts.length })}
@@ -303,6 +314,12 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           <Icon name="plus" size={18} />
           {t.finance.addAccount}
         </Button>
+        {data.accounts.length > 1 ? (
+          <Button variant="ghost" onClick={() => setTransfer({ draft: true })}>
+            <Icon name="repeat" size={18} />
+            {t.finance.ext.transfer.button}
+          </Button>
+        ) : null}
       </div>
       {data.accounts.length === 0 ? <EmptyState title={t.finance.noAccounts} /> : null}
       <ul className={styles.list}>
@@ -323,6 +340,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
         ))}
       </ul>
       <AccountEditor target={target} onClose={() => setTarget(null)} />
+      <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
     </>
   );
 }
