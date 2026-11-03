@@ -27,9 +27,28 @@ export const PUBLIC_FETCH_TIMEOUT_MS = 20_000;
 /** Same number as `MAX_PROXY_BYTES` in `server/src/proxy.ts` (not imported: no shared package). */
 export const MAX_PUBLIC_BYTES = 2 * 1024 * 1024;
 
-/** Mirrors `TYPE_ALLOWED` of the server proxy, plus `application/octet-stream` for `.ics` downloads. */
-const TYPE_ALLOWED =
-  /^(text\/(calendar|plain|xml|x-vcalendar|x-ical)|application\/(xml|ics|x-ics|calendar|octet-stream|(rss|atom|rdf)\+xml))$/i;
+/**
+ * What a caller asks for; mirrors `KIND_RULES` of the server proxy. `feed` is the default and the only
+ * kind calendars and feeds use. `page` is one HTML document (link preview, reader text) and `image` one
+ * small raster picture (never SVG); callers reduce both to plain data and never render them as markup.
+ */
+export type PublicKind = 'feed' | 'page' | 'image';
+
+interface KindRule {
+  types: RegExp;
+  maxBytes: number;
+}
+
+/** Mirrors `KIND_RULES` of the server proxy; `feed` also takes `application/octet-stream` for `.ics` downloads. */
+const KIND_RULES: Record<PublicKind, KindRule> = {
+  feed: {
+    types:
+      /^(text\/(calendar|plain|xml|x-vcalendar|x-ical)|application\/(xml|ics|x-ics|calendar|octet-stream|(rss|atom|rdf)\+xml))$/i,
+    maxBytes: MAX_PUBLIC_BYTES,
+  },
+  page: { types: /^(text\/html|application\/xhtml\+xml)$/i, maxBytes: 1024 * 1024 },
+  image: { types: /^image\/(png|jpeg|webp|gif)$/i, maxBytes: 512 * 1024 },
+};
 
 const proxyStyleError = (code: 'unsupported-type' | 'too-large'): Response =>
   new Response(JSON.stringify({ error: code }), {
@@ -68,11 +87,15 @@ async function readCapped(res: Response, maxBytes: number): Promise<ArrayBuffer 
 }
 
 /** Applies the proxy's type and size limits to a successful native response. */
-export async function limitPublicResponse(res: Response): Promise<Response> {
+export async function limitPublicResponse(
+  res: Response,
+  kind: PublicKind = 'feed',
+): Promise<Response> {
   if (!res.ok) return res; // errors, 304 … pass through; callers never read those bodies
+  const rule = KIND_RULES[kind];
   const type = (res.headers.get('content-type') ?? '').split(';')[0]!.trim();
-  if (!TYPE_ALLOWED.test(type)) return proxyStyleError('unsupported-type');
-  const body = await readCapped(res, MAX_PUBLIC_BYTES);
+  if (!rule.types.test(type)) return proxyStyleError('unsupported-type');
+  const body = await readCapped(res, rule.maxBytes);
   if (!body) return proxyStyleError('too-large');
   return new Response(body, {
     status: res.status,
@@ -111,6 +134,7 @@ export async function fetchPublic(
   url: string,
   init?: RequestInit,
   timeoutMs = PUBLIC_FETCH_TIMEOUT_MS,
+  kind: PublicKind = 'feed',
 ): Promise<Response> {
   const platform = getPlatform();
   if (platform.isNative) {
@@ -118,7 +142,7 @@ export async function fetchPublic(
     if (!isPublicHttpsUrl(url)) throw new PublicFetchError('network', 'not a public https address');
     try {
       return await withTimeout(
-        async (signal) => limitPublicResponse(await platform.fetch(url, { ...init, signal })),
+        async (signal) => limitPublicResponse(await platform.fetch(url, { ...init, signal }), kind),
         timeoutMs,
       );
     } catch (e) {
@@ -127,7 +151,8 @@ export async function fetchPublic(
   }
   const config = await loadSyncConfig();
   if (!config) throw new PublicFetchError('no-proxy');
-  const proxied = `${config.url.replace(/\/+$/, '')}/v1/proxy?url=${encodeURIComponent(url)}`;
+  const kindParam = kind === 'feed' ? '' : `&kind=${kind}`;
+  const proxied = `${config.url.replace(/\/+$/, '')}/v1/proxy?url=${encodeURIComponent(url)}${kindParam}`;
   const headers = new Headers(init?.headers);
   headers.set('authorization', `Bearer ${config.token}`);
   try {
