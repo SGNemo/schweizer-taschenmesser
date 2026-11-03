@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ConnectorContext } from '@/core/connectors/types';
-import { COVER_URL } from '@/connectors/spotify/api';
+import { COVER_URL } from '@/core/connectors/coverUrl';
 
 /**
  * The cover as a local `blob:` URL: fetched through the platform (so the connection log sees it and

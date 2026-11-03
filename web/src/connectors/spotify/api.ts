@@ -1,3 +1,4 @@
+import { COVER_URL } from '@/core/connectors/coverUrl';
 import { z } from 'zod';
 import {
   ConnectorError,
@@ -37,7 +38,7 @@ const playingSchema = z.object({
 export const clip = (text: string): string => text.trim().slice(0, MAX_TEXT);
 
 /** Covers come from Spotify's own image host only; anything else is never fetched. */
-export const COVER_URL = /^https:\/\/i\.scdn\.co\/image\/[A-Za-z0-9]+$/;
+export { COVER_URL };
 
 /** The smallest image that is still at least 64 px wide (a widget cover needs no more); else the first. */
 export function pickCover(

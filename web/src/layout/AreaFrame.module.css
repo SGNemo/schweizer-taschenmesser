@@ -155,6 +155,7 @@
       'title title title'
       'figure figure figure'
       'extra extra extra';
+    align-items: center;
     gap: 0 var(--space-3);
     margin-inline: calc(-1 * var(--space-4));
     padding: var(--space-3) var(--space-4) var(--space-4);

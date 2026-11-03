@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BankCard, CalendarLeaf, HeroFigure, Ring, Sky, skyKind } from './index';
-import { dominantColor } from './coverTone';
+import { dominantColor, safeTint } from './coverTone';
 
 describe('identity building blocks', () => {
   it('skyKind: night wins, rain-like groups are rain, partly/cloudy/fog are cloudy, the rest is clear', () => {
@@ -92,5 +92,25 @@ describe('cover tone', () => {
     expect(dominantColor([10, 20, 30, 0, 40, 50, 60, 0])).toBeUndefined();
     expect(dominantColor(px(0, 0, 0, 20))).toBeUndefined();
     expect(dominantColor([])).toBeUndefined();
+  });
+});
+
+describe('safeTint (cover tone vs. text contrast)', () => {
+  it('keeps text AA: a bright cover tints the dark theme weakly, a dark one strongly', () => {
+    const yellow = { r: 250, g: 220, b: 40 };
+    const navy = { r: 20, g: 30, b: 110 };
+    const dark = safeTint(yellow, '#171c20', '#eceff1');
+    const darkNavy = safeTint(navy, '#171c20', '#eceff1');
+    expect(dark).toBeLessThan(darkNavy);
+    expect(darkNavy).toBeGreaterThan(0.3);
+    // The light theme is the mirror image.
+    expect(safeTint(navy, '#ffffff', '#171f24', 0.9)).toBeLessThan(
+      safeTint(yellow, '#ffffff', '#171f24', 0.9),
+    );
+  });
+
+  it('never tints beyond the maximum, falls back safely for unknown token formats', () => {
+    expect(safeTint({ r: 10, g: 10, b: 10 }, '#171c20', '#eceff1', 0.4)).toBeLessThanOrEqual(0.4);
+    expect(safeTint({ r: 200, g: 0, b: 0 }, 'rgb(1 2 3)', '#fff')).toBeLessThanOrEqual(0.25);
   });
 });

@@ -90,3 +90,39 @@ export function useCoverTone(src: string | undefined, key: string | undefined): 
 export function clearCoverToneCache(): void {
   cache.clear();
 }
+
+const hex = (value: string): Rgb | undefined => {
+  const m = /^#([0-9a-f]{6})$/i.exec(value.trim());
+  if (!m) return undefined;
+  const n = parseInt(m[1]!, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+};
+const channel = (v: number): number => {
+  const c = v / 255;
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+const luminance = ({ r, g, b }: Rgb): number =>
+  0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+const contrast = (a: Rgb, b: Rgb): number => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi! + 0.05) / (lo! + 0.05);
+};
+const blend = (fg: Rgb, bg: Rgb, alpha: number): Rgb => ({
+  r: Math.round(fg.r * alpha + bg.r * (1 - alpha)),
+  g: Math.round(fg.g * alpha + bg.g * (1 - alpha)),
+  b: Math.round(fg.b * alpha + bg.b * (1 - alpha)),
+});
+
+/**
+ * How strongly a cover colour may tint the head: the largest share (≤ `max`) over the surface that still keeps `text` at
+ * AA (4.5:1). A bright cover in the dark theme gets a weaker tint, a dark one a stronger; unknown token formats fall back
+ * to a mild, always-safe share.
+ */
+export function safeTint(tone: Rgb, surface: string, text: string, max = 0.55): number {
+  const bg = hex(surface);
+  const fg = hex(text);
+  if (!bg || !fg) return Math.min(max, 0.25);
+  for (let a = max; a > 0.04; a -= 0.03)
+    if (contrast(fg, blend(tone, bg, a)) >= 4.5) return Math.round(a * 100) / 100;
+  return 0;
+}
