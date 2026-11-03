@@ -176,6 +176,22 @@ function moduleValueText(scope: string, key: string, v: unknown): string {
   return f?.options?.find((o) => o.value === String(v))?.label ?? valueText(key, v);
 }
 
+/** One change in words ("Farbschema: Hell → Dunkel"), the wording the history uses; `scope` is `ui` for the look. */
+export function describeChange(
+  scope: string,
+  key: string,
+  before: unknown,
+  after: unknown,
+): string {
+  return tSettings3
+    .get()
+    .history.changed(
+      labelOf(scope, key),
+      moduleValueText(scope, key, before),
+      moduleValueText(scope, key, after),
+    );
+}
+
 /* ---- hooks ---- */
 
 /** Starts recording; returns the stop function. Called once at app start. */

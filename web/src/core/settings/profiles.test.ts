@@ -5,6 +5,7 @@ import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { DEFAULT_FOCUS, getFocusSettings, patchFocusSettings } from './focus';
 import {
+  activeProfile,
   applyProfile,
   builtinProfiles,
   deleteProfile,
@@ -130,6 +131,21 @@ describe('profiles', () => {
     await restoreProfile(gone!);
     expect(await loadCustomProfiles()).toHaveLength(1);
     expect(await saveCurrentAsProfile('   ')).toBeUndefined();
+  });
+});
+
+describe('which profile is active', () => {
+  it('prefers the one switched on last, else the one with the most values', async () => {
+    const all = builtinProfiles();
+    await applyProfile(builtin('evening')); // dark + calm + reduced motion + quiet hours: "Ruhig" fits too
+    const cur = await readValues(ALL_VALUE_KEYS);
+    await writeValues({ homeView: 'calm' });
+    const now = await readValues(ALL_VALUE_KEYS);
+    expect(activeProfile(all, now, 'evening')?.id).toBe('evening');
+    expect(activeProfile(all, now, 'quiet')?.id).toBe('quiet');
+    expect(activeProfile(all, now, undefined)?.id).toBe('quiet'); // 4 values beat 4: first of the equals
+    expect(activeProfile(all, cur, 'work')?.id).not.toBe('work');
+    expect(activeProfile(all, { theme: 'light' }, 'quiet')).toBeUndefined();
   });
 });
 

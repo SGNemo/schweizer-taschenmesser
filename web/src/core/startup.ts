@@ -6,10 +6,17 @@ import { loadSeed } from '@/core/seed/load';
 import { applyDefaultsEra } from '@/core/focus/defaults';
 import { appHasData, ensureSetupState } from '@/core/setup/detect';
 import { readSetupState } from '@/core/setup/state';
+import { startHistory } from '@/core/settings/history';
+import { startProfileScheduler } from '@/core/settings/profiles';
 import { useUiStore } from '@/stores/ui';
+
+let stopHistory: (() => void) | undefined;
+let stopScheduler: (() => void) | undefined;
 
 /** One-time app start work: storage persistence and pending module migrations. */
 export async function initCore(): Promise<void> {
+  // The change history listens from the very start, so a change made while the app is still waking up counts too.
+  if (!stopHistory && typeof localStorage !== 'undefined') stopHistory = startHistory();
   try {
     await navigator.storage?.persist?.();
   } catch {
@@ -32,4 +39,7 @@ export async function initCore(): Promise<void> {
   }
   // Forward copies between merged/retired modules (also run after every sync pull and restore).
   await runAppMigrations();
+  // Profile schedules run once the data is ready, while the app is open.
+  if (!stopScheduler && typeof localStorage !== 'undefined')
+    stopScheduler = startProfileScheduler();
 }

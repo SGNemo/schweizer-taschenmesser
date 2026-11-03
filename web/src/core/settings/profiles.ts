@@ -101,11 +101,42 @@ export function matches(profile: Profile, current: Values): boolean {
   return keys.length > 0 && keys.every((k) => sameValue(profile.values[k as never], current[k]));
 }
 
+const APPLIED_KEY = 'tm-profile-applied';
+
+/**
+ * The profile that counts as active: of those whose values all match right now, the one switched on
+ * last on this device, else the one with the most values (a calm profile is a subset of an evening one).
+ */
+export function activeProfile(
+  profiles: readonly Profile[],
+  current: Values,
+  appliedId?: string,
+): Profile | undefined {
+  const fits = profiles.filter((p) => matches(p, current));
+  return (
+    fits.find((p) => p.id === appliedId) ??
+    [...fits].sort((a, b) => Object.keys(b.values).length - Object.keys(a.values).length)[0]
+  );
+}
+
+export function lastAppliedProfileId(): string | undefined {
+  try {
+    return localStorage.getItem(APPLIED_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Switches to a profile and confirms with a toast whose action puts the previous values back. */
 export async function applyProfile(
   profile: Profile,
   how: 'manual' | 'schedule' = 'manual',
 ): Promise<void> {
+  try {
+    localStorage.setItem(APPLIED_KEY, profile.id);
+  } catch {
+    // storage blocked: the active mark falls back to the best match
+  }
   // Many keys, one history entry: the profile switch itself.
   const before = await withoutHistory(() => writeValues(profile.values));
   recordGroup(tSettings3.get().history.profile(profile.name), { values: before });

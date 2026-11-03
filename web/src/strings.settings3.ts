@@ -6,7 +6,27 @@ import { defineBundle } from '@/core/i18n/bundle';
  */
 export const tSettings3 = defineBundle(
   {
-    groupManage: 'Verwalten',
+    keywords: {
+      profiles: [
+        'Voreinstellung',
+        'Modus',
+        'Szenario',
+        'Zeitplan',
+        'umschalten',
+        'Ruhig',
+        'Abends',
+        'Arbeit',
+      ],
+      transfer: [
+        'Export',
+        'Import',
+        'Sicherung',
+        'Datei',
+        'übertragen',
+        'Backup der Einstellungen',
+      ],
+      history: ['Verlauf', 'rückgängig', 'zuletzt geändert', 'Protokoll'],
+    },
     profiles: {
       title: 'Profile',
       description:
@@ -101,7 +121,11 @@ export const tSettings3 = defineBundle(
   },
   {
     en: {
-      groupManage: 'Manage',
+      keywords: {
+        profiles: ['preset', 'mode', 'scene', 'schedule', 'switch', 'calm', 'evening', 'work'],
+        transfer: ['export', 'import', 'backup', 'file', 'transfer', 'settings backup'],
+        history: ['history', 'undo', 'recently changed', 'log'],
+      },
       profiles: {
         title: 'Profiles',
         description:
@@ -193,7 +217,20 @@ export const tSettings3 = defineBundle(
       },
     },
     es: {
-      groupManage: 'Gestionar',
+      keywords: {
+        profiles: [
+          'preajuste',
+          'modo',
+          'escena',
+          'programación',
+          'cambiar',
+          'calma',
+          'noche',
+          'trabajo',
+        ],
+        transfer: ['exportar', 'importar', 'copia', 'archivo', 'transferir', 'copia de ajustes'],
+        history: ['historial', 'deshacer', 'cambiado recientemente', 'registro'],
+      },
       profiles: {
         title: 'Perfiles',
         description:
@@ -286,7 +323,27 @@ export const tSettings3 = defineBundle(
       },
     },
     fr: {
-      groupManage: 'Gérer',
+      keywords: {
+        profiles: [
+          'préréglage',
+          'mode',
+          'scène',
+          'planning',
+          'basculer',
+          'calme',
+          'soirée',
+          'travail',
+        ],
+        transfer: [
+          'exporter',
+          'importer',
+          'sauvegarde',
+          'fichier',
+          'transférer',
+          'sauvegarde des réglages',
+        ],
+        history: ['historique', 'annuler', 'modifié récemment', 'journal'],
+      },
       profiles: {
         title: 'Profils',
         description:
@@ -379,7 +436,27 @@ export const tSettings3 = defineBundle(
       },
     },
     'pt-BR': {
-      groupManage: 'Gerenciar',
+      keywords: {
+        profiles: [
+          'predefinição',
+          'modo',
+          'cena',
+          'agendamento',
+          'trocar',
+          'calmo',
+          'noite',
+          'trabalho',
+        ],
+        transfer: [
+          'exportar',
+          'importar',
+          'backup',
+          'arquivo',
+          'transferir',
+          'backup das configurações',
+        ],
+        history: ['histórico', 'desfazer', 'alterado recentemente', 'registro'],
+      },
       profiles: {
         title: 'Perfis',
         description:
