@@ -529,3 +529,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PM1 Orte-Liste:** Karten & Orte → Orte: Kategorie-Chips, Suchfeld und „Zuletzt/Name“ ändern die Liste; fixierte Orte stehen oben; „Navigieren“ öffnet den Ort in OpenStreetMap (Android: in der Karten-App deiner Wahl). ☐
 - **PM2 Ort aus Termin:** Termin mit Ort öffnen → „Als Ort speichern“: Karte-Tab mit dem Ort im Suchfeld; erst „Suchen“ fragt (zuerst eigene Karte), dann Treffer wählen → „Ort speichern“. ☐
 
+
+## Geld-Gruppe: Rechnungen (Paket 2)
+- **G7 Teilzahlung:** Rechnung 100 € öffnen, Teilzahlung 40 €: „Noch 60,00 € offen“, die Liste zeigt „Teilweise bezahlt“, Finanzen hat eine Buchung −40 €. Zweite Teilzahlung über den Rest: die Rechnung ist „Bezahlt“, Summe der Buchungen = 100 €. Teilzahlung entfernen: Buchung weg, Rechnung wieder offen. ☐
+- **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
+- **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
+- **G10 Kopf:** Beleg-Karte hell, dunkel, „Ruhig“, 412 px: Summe, Anzahl, nächste Fälligkeit lesbar, gezackter Rand ohne Bewegung. ☐
