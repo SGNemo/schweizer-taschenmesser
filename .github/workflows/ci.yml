@@ -179,6 +179,8 @@ jobs:
         run: npm run version:check
       - name: Every module has a complete manifest and a home-screen widget
         run: npm run check:modules
+      - name: No two tracked paths differ only in letter case (Windows/macOS checkouts)
+        run: npm run check:case
       - name: UI texts complete in every language, none hard-coded or read at import
         run: npm run check:i18n
       - run: npm run format:check
