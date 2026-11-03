@@ -139,17 +139,6 @@
      the tint never sits behind body text. "Ruhig" and "Modulfarben: Aus" flatten it to a neutral wash. */
   --head-tint-0: 40%;
   --head-tint-1: 10%;
-  --head-gradient: linear-gradient(
-    118deg,
-    color-mix(in srgb, var(--module-color) var(--head-tint-0), var(--surface)) 0%,
-    color-mix(
-        in srgb,
-        var(--module-color-2, var(--module-color)) var(--head-tint-1),
-        var(--surface)
-      )
-      72%
-  );
-  --head-flat: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   /* Card corners per module (identity.shape). */
   --shape-soft: 16px;
   --shape-round: 20px;
@@ -497,4 +486,16 @@
 }
 [data-hue] {
   --viz-1: var(--module-color);
+  /* Resolved here, where --module-color exists (a custom property built from var() is computed at the element that declares it). */
+  --head-gradient: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--module-color) var(--head-tint-0), var(--surface)) 0%,
+    color-mix(
+        in srgb,
+        var(--module-color-2, var(--module-color)) var(--head-tint-1),
+        var(--surface)
+      )
+      72%
+  );
+  --head-flat: color-mix(in srgb, var(--module-color) 14%, var(--surface));
 }

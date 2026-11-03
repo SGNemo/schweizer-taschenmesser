@@ -1,5 +1,6 @@
 import { dateTimeFormat } from '@/core/i18n/format';
 import type { DayRow } from '@/core/weather/api';
+import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows } from '@/core/weather/logic';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { now } from '@/core/time/now';
@@ -33,7 +34,7 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
   const hourFmt = dateTimeFormat({ hour: '2-digit', minute: '2-digit' });
 
   const wind = detail?.wind ?? hours[0]?.wind;
-  const windDir = windParts(wind, undefined, detail?.dir)[0]?.t;
+  const compass = detail?.dir != null ? tx.compass[compassIndex(detail.dir)] : undefined;
   const keys: { icon: IconName; text: string; kind?: 'rain' }[] = [
     forecast.rainFrom && !stale
       ? { icon: 'cloudRain', text: tp.keyRain(forecast.rainFrom), kind: 'rain' }
@@ -42,7 +43,7 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
       ? [
           {
             icon: 'wind' as const,
-            text: windDir ? `${tp.keyWind(wind)} ${windDir.split(' ').at(-1)}` : tp.keyWind(wind),
+            text: compass ? `${tp.keyWind(wind)} ${compass}` : tp.keyWind(wind),
           },
         ]
       : []),
