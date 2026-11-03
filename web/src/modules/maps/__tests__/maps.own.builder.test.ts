@@ -8,7 +8,7 @@ import { createBuilder, useBuildStore, type BuilderDeps } from '../own/builder';
 import { inlineCompute } from '../own/compute';
 import { tileBbox, tileId, tilesCovering } from '../own/cut';
 import { overpassBusyFixture, overpassFixture } from '../own/fixtures';
-import { CELL_ZOOM } from '../own/plan';
+import { CELL_ZOOM, blocksOf, planRegion } from '../own/plan';
 import { encodePmtiles } from '../own/pmtiles';
 import { SAMPLE_CENTER, SAMPLE_REGION_ID, samplePmtiles, sampleRegion } from '../own/sample';
 import { nameSchema, regionSchema, tileSchema } from '../schema';
@@ -48,6 +48,23 @@ const three = (() => {
     maxLon: b.minLon + w * 2.5,
   };
 })();
+/** Nine cells in a row: five blocks of one or two (a block never spans two parents). */
+const nine = (() => {
+  const b = tileBbox(cell.z, cell.x, cell.y);
+  const dLat = (b.maxLat - b.minLat) / 10;
+  const w = b.maxLon - b.minLon;
+  return {
+    minLat: b.minLat + dLat,
+    maxLat: b.maxLat - dLat,
+    minLon: b.minLon + w / 10,
+    maxLon: b.minLon + w * 8.5,
+  };
+})();
+
+type Mocked = { mock: { calls: unknown[][] } };
+const mocked = (fetch: unknown): Mocked => fetch as Mocked;
+const OVERPASS_CALLS = (fetch: unknown) =>
+  mocked(fetch).mock.calls.filter((c) => String(c[0]) === OVERPASS).length;
 
 const okAnswer = () => new Response(JSON.stringify(overpassFixture()), { status: 200 });
 
@@ -129,30 +146,37 @@ describe('own map builder', () => {
     expect(await regions.table.count()).toBe(1);
   });
 
-  it('pauses between cells, keeps what is built, and continues where it stopped', async () => {
+  it('fetches blocks of cells, two in flight; a pause finishes those on their way, keeps what is built, and continues where it stopped', async () => {
     let release: () => void = () => undefined;
     let calls = 0;
     const fetch = vi.fn(async () => {
       calls++;
-      if (calls === 2) await new Promise<void>((r) => (release = r));
+      if (calls === 3) await new Promise<void>((r) => (release = r));
       return okAnswer();
     }) as unknown as typeof globalThis.fetch;
     const { builder, regions, tiles } = setup({ fetch });
     const { id } = await start(builder, {
-      name: 'Drei',
-      bbox: three,
+      name: 'Neun',
+      bbox: nine,
       centre: SAMPLE_CENTER,
       level: 'lean',
     });
-    expect((await regions.get(id))!.cells.total).toBe(3);
-    await vi.waitFor(() => expect(calls).toBe(2));
+    const region = (await regions.get(id))!;
+    expect(region.cells.total).toBe(9);
+    const blocks = blocksOf(planRegion('lean', region.bbox).cells);
+    expect(blocks).toHaveLength(5);
+    expect(blocks.every((b) => b.cells.length <= 2)).toBe(true);
+    // Block 3 hangs; block 4 is already on its way (two in flight), block 5 not yet.
+    await vi.waitFor(() => expect(calls).toBe(4));
     expect(useBuildStore.getState()).toEqual({ active: id, phase: 'cells' });
     await builder.pause(id);
     release();
     await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('paused'));
     const paused = (await regions.get(id))!;
-    expect(paused.cells.done).toBe(2);
+    const doneCells = blocks.slice(0, 4).reduce((n, b) => n + b.cells.length, 0);
+    expect(paused.cells.done).toBe(doneCells);
     expect(paused.reason).toBeUndefined();
+    expect(calls).toBe(4);
     const builtSoFar = await tiles.active().count();
     expect(builtSoFar).toBeGreaterThan(0);
     expect(useBuildStore.getState().active).toBeUndefined();
@@ -160,8 +184,9 @@ describe('own map builder', () => {
     await builder.start(id);
     const done = (await regions.get(id))!;
     expect(done.status).toBe('done');
-    expect(calls).toBe(3);
-    expect(await tiles.active().count()).toBeGreaterThan(builtSoFar);
+    expect(done.cells).toEqual({ done: 9, total: 9 });
+    expect(calls).toBe(5);
+    expect(await tiles.active().count()).toBeGreaterThanOrEqual(builtSoFar);
   });
 
   it('a busy server is retried with growing pauses, then the build pauses with a reason', async () => {
@@ -177,9 +202,35 @@ describe('own map builder', () => {
     });
     await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('paused'));
     expect((await regions.get(id))!.reason).toBe('busy');
+    // The status page is asked before each retry; it is busy too, so the default pauses apply.
     expect(sleep.mock.calls.map((c) => c[0])).toEqual([1, 2, 3]);
-    expect(fetch).toHaveBeenCalledTimes(4);
+    expect(OVERPASS_CALLS(fetch)).toBe(4);
+    expect(
+      mocked(fetch).mock.calls.filter((c) => String(c[0]).endsWith('/api/status')),
+    ).toHaveLength(3);
     expect(await tiles.active().count()).toBe(0);
+  });
+
+  it('waits as long as the status page says before trying again', async () => {
+    let attempts = 0;
+    const fetch = vi.fn(async (input: unknown) => {
+      if (String(input).endsWith('/api/status'))
+        return new Response('Rate limit: 2\nSlot available after: x, in 7 seconds.\n', {
+          status: 200,
+        });
+      attempts++;
+      return attempts === 1 ? new Response('', { status: 429 }) : okAnswer();
+    }) as unknown as typeof globalThis.fetch;
+    const { builder, regions, sleep } = setup({ fetch });
+    const { id } = await start(builder, {
+      name: 'Wait',
+      bbox: one,
+      centre: SAMPLE_CENTER,
+      level: 'lean',
+    });
+    await vi.waitFor(async () => expect((await regions.get(id))!.status).toBe('done'));
+    expect(sleep.mock.calls.map((c) => c[0])).toEqual([8000]);
+    expect(attempts).toBe(2);
   });
 
   it('names the other reasons: blocked network (no retry), unreachable, unreadable, overloaded', async () => {
@@ -215,11 +266,17 @@ describe('own map builder', () => {
         ) as unknown as typeof globalThis.fetch,
       ),
     ).toMatchObject({ reason: 'error' });
+    // A server error is transient (the server may be restarting): tried again, then busy.
     expect(
       await run(
         vi.fn(async () => new Response('', { status: 500 })) as unknown as typeof globalThis.fetch,
       ),
-    ).toMatchObject({ reason: 'error' });
+    ).toMatchObject({ reason: 'busy', sleeps: 3 });
+    expect(
+      await run(
+        vi.fn(async () => new Response('', { status: 400 })) as unknown as typeof globalThis.fetch,
+      ),
+    ).toEqual({ reason: 'error', sleeps: 0 });
     expect(
       await run(
         vi.fn(
@@ -330,9 +387,10 @@ describe('own map builder', () => {
     expect(region.zooms).toEqual({ min: 8, max: 16 });
     expect(region.status).toBe('done');
     expect(region.cells.total).toBeGreaterThanOrEqual(4);
-    expect(fetch.mock.calls.length - leanCalls).toBe(region.cells.total);
+    const fullBlocks = blocksOf(planRegion('full', region.bbox).cells).length;
+    expect(fetch.mock.calls.length - leanCalls).toBe(fullBlocks);
     expect(String((fetch.mock.calls[leanCalls]! as [string, RequestInit])[1].body)).toContain(
-      encodeURIComponent('way["building"]'),
+      encodeURIComponent('way.w["building"]'),
     );
     const rows = await tiles.active().toArray();
     expect(rows.length).toBeGreaterThan(leanRows);
@@ -342,7 +400,7 @@ describe('own map builder', () => {
     expect(rows.every((r) => r.regionId === id)).toBe(true);
     // A second upgrade or an upgrade of a running build does nothing.
     await builder.upgrade(id);
-    expect(fetch.mock.calls.length - leanCalls).toBe(region.cells.total);
+    expect(fetch.mock.calls.length - leanCalls).toBe(fullBlocks);
   });
 
   it('"Hier erweitern" leaves out cells another region holds, and makes no region for a covered area', async () => {

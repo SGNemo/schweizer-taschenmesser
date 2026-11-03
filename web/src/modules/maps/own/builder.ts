@@ -1,10 +1,11 @@
 /**
- * Builds own-map regions: one Overpass request per cell through the platform fetch (connection log,
- * "Netzwerk sperren"), the answer handed to the compute worker, the tiles written through the repos,
- * the region row updated after every cell (the map fills visibly). Nothing starts by itself: `start`
+ * Builds own-map regions: one Overpass request per block of up to four cells through the platform
+ * fetch (connection log, "Netzwerk sperren"), two requests in flight (the public server grants two
+ * slots per client), the answer handed to the compute worker, the tiles written through the repos,
+ * the region row updated after every block (the map fills visibly). Nothing starts by itself: `start`
  * is a click; a build found running after a restart is set to "paused" and offers "Weiter". One
- * region at a time, a short breath between requests, a few retries with growing pauses when the
- * donated server is busy, then a calm pause with a reason. With a region file (PMTiles on an own host)
+ * region at a time, a short breath between requests; when the donated server is busy the build waits
+ * as long as its status page says (or a few growing pauses), then pauses calmly with a reason. With a region file (PMTiles on an own host)
  * the tiles are copied from the file instead, cell by cell, with range requests. Every written cell
  * also refreshes the names index (`maps_name`) the search field answers from.
  */
@@ -20,9 +21,9 @@ import { defaultCompute, type Compute } from './compute';
 import { tileId, tilesCovering, type Bbox, type LonLat, type TileAddress } from './cut';
 import { gunzip } from './gzip';
 import { tokensOf, type NameEntry } from './names';
-import { DEFAULT_OVERPASS_URL, overpassQuery } from './overpass';
+import { DEFAULT_OVERPASS_URL, overpassQuery, slotWaitSeconds, statusUrl } from './overpass';
 import { openPmtiles, plainAttribution, type Pmtiles } from './pmtiles';
-import { STORED_ZOOMS, capBbox, cellBbox, planRegion } from './plan';
+import { STORED_ZOOMS, blockBbox, blocksOf, capBbox, planRegion } from './plan';
 import { tilesUnder, type TileBytes } from './work';
 
 export type PauseReason = 'busy' | 'network' | 'blocked' | 'error';
@@ -93,7 +94,15 @@ export interface Builder {
 
 const DEFAULT_RETRY = [5_000, 15_000, 45_000];
 const DEFAULT_GAP = 1_000;
-const DEFAULT_TIMEOUT = 90_000;
+/** Longer than the server's own 180 s limit, so its answer (or its timeout remark) arrives. */
+const DEFAULT_TIMEOUT = 240_000;
+const STATUS_TIMEOUT = 10_000;
+/** The longest single wait for a free slot, whatever the status page says. */
+const MAX_SLOT_WAIT = 120_000;
+/** Requests in flight at once: what the public server grants one client. */
+const IN_FLIGHT = 2;
+/** Answers the server may give while busy or restarting: tried again after a pause. */
+const TRANSIENT = new Set([429, 500, 502, 503, 504]);
 
 type Fetched = { json: string } | { reason: PauseReason };
 
@@ -127,12 +136,35 @@ export function createBuilder(deps: BuilderDeps): Builder {
     waiters.delete(id);
   };
 
-  async function fetchCell(cell: TileAddress, level: MapLevel): Promise<Fetched> {
+  /**
+   * How long to wait for a free slot: what the server's status page says ("in 12 seconds"), else the
+   * growing default pause of this attempt.
+   */
+  async function slotWait(attempt: number): Promise<number> {
     const delays = deps.retryDelays ?? DEFAULT_RETRY;
-    const query = overpassQuery(cellBbox(cell), level);
+    const fallback = delays[Math.min(attempt, delays.length - 1)]!;
+    const status = statusUrl(deps.overpassUrl());
+    if (!status) return fallback;
+    try {
+      const res = await deps.fetch(status, {
+        headers: deps.headers(),
+        signal: AbortSignal.timeout(STATUS_TIMEOUT),
+      });
+      if (!res.ok) return fallback;
+      const seconds = slotWaitSeconds(await res.text());
+      return seconds === undefined ? fallback : Math.min(MAX_SLOT_WAIT, seconds * 1000 + 1000);
+    } catch {
+      return fallback;
+    }
+  }
+
+  async function fetchBlock(bbox: Bbox, level: MapLevel): Promise<Fetched> {
+    const delays = deps.retryDelays ?? DEFAULT_RETRY;
+    const query = overpassQuery(bbox, level);
     let last: PauseReason = 'network';
     for (let attempt = 0; attempt <= delays.length; attempt++) {
-      if (attempt > 0) await deps.sleep(delays[attempt - 1]!);
+      if (attempt > 0)
+        await deps.sleep(last === 'busy' ? await slotWait(attempt - 1) : delays[attempt - 1]!);
       try {
         const res = await deps.fetch(deps.overpassUrl(), {
           method: 'POST',
@@ -140,7 +172,7 @@ export function createBuilder(deps: BuilderDeps): Builder {
           headers: { 'content-type': 'application/x-www-form-urlencoded', ...deps.headers() },
           signal: AbortSignal.timeout(deps.timeoutMs ?? DEFAULT_TIMEOUT),
         });
-        if (res.status === 429 || res.status === 503 || res.status === 504) {
+        if (TRANSIENT.has(res.status)) {
           last = 'busy';
           continue;
         }
@@ -332,38 +364,67 @@ export function createBuilder(deps: BuilderDeps): Builder {
     compute ??= deps.compute();
     useBuildStore.setState({ active: id, phase: 'cells' });
     let bytes = region.bytes;
-    for (let i = region.cells.done; i < total; i++) {
+    let done = region.cells.done;
+    // The cells are listed in block order, so what is done is a whole number of blocks.
+    const blocks = blocksOf(cells.slice(done));
+    const inflight: (Promise<Fetched> | undefined)[] = [];
+    const begin = (k: number) => {
+      if (k < blocks.length && !inflight[k])
+        inflight[k] = fetchBlock(blockBbox(blocks[k]!), region.level);
+    };
+    const run = (k: number, json: string) =>
+      compute!.run({
+        kind: 'block',
+        id: ++requestId,
+        level: region.level,
+        cells: blocks[k]!.cells,
+        maxZoom: plan.zooms.max,
+        json,
+      });
+    for (let k = 0; k < blocks.length; k++) {
       if (removed.has(id)) return;
-      if (paused.has(id)) {
+      // A pause lets the requests already on their way finish and be written, then stops.
+      if (paused.has(id) && !inflight[k]) {
         await deps.regions.update(id, { status: 'paused' });
         return;
       }
-      const fetched = await fetchCell(cells[i]!, region.level);
+      begin(k);
+      if (!paused.has(id) && k + 1 < blocks.length && IN_FLIGHT > 1) {
+        await deps.sleep(deps.cellGapMs ?? DEFAULT_GAP);
+        begin(k + 1);
+      }
+      let fetched = await inflight[k]!;
       if (removed.has(id)) return;
       if ('reason' in fetched) {
         await deps.regions.update(id, { status: 'paused', reason: fetched.reason });
         return;
       }
-      const res = await compute.run({
-        kind: 'cell',
-        id: ++requestId,
-        level: region.level,
-        cell: cells[i]!,
-        maxZoom: plan.zooms.max,
-        json: fetched.json,
-      });
+      let res = await run(k, fetched.json);
+      if (res.kind === 'block' && res.error === 'shape') {
+        // Once more: a garbled answer is usually a one-off of a busy server.
+        await deps.sleep((deps.retryDelays ?? DEFAULT_RETRY)[0]!);
+        fetched = await fetchBlock(blockBbox(blocks[k]!), region.level);
+        if (removed.has(id)) return;
+        if ('reason' in fetched) {
+          await deps.regions.update(id, { status: 'paused', reason: fetched.reason });
+          return;
+        }
+        res = await run(k, fetched.json);
+      }
       if (removed.has(id)) return;
-      if (res.kind !== 'cell' || res.error) {
+      if (res.kind !== 'block' || res.error) {
         await deps.regions.update(id, {
           status: 'paused',
-          reason: res.kind === 'cell' && res.error === 'busy' ? 'busy' : 'error',
+          reason: res.kind === 'block' && res.error === 'busy' ? 'busy' : 'error',
         });
         return;
       }
-      bytes += await writeTiles(id, res.tiles);
-      await writeNames(id, cells[i]!, res.names);
-      await deps.regions.update(id, { cells: { done: i + 1, total }, bytes });
-      if (i + 1 < total) await deps.sleep(deps.cellGapMs ?? DEFAULT_GAP);
+      for (const c of res.cells) {
+        bytes += await writeTiles(id, c.tiles);
+        await writeNames(id, c.cell, c.names);
+      }
+      done += blocks[k]!.cells.length;
+      await deps.regions.update(id, { cells: { done, total }, bytes });
     }
     // The overview: lower zooms from the stored tiles, one level at a time, never from the network.
     useBuildStore.setState({ active: id, phase: 'overview' });

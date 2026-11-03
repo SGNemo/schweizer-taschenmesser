@@ -12,6 +12,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 | Rechner-Modi (PR #359, gemergt) | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz |
 | Eigene Karte (Pakete 1–5 gemergt: #342, #346, #348, #350, #352) | Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser |
 | Runde „next tasks“ T1–T6 (#341, #343, #344, #345, #347, #349 gemergt) | Handtests: Schnellerfassung Q1–Q3 (Android-Kurzbefehle/Kachel) und T1–T3 (Tray „Heute“) in [MANUAL-TESTS](MANUAL-TESTS.md); PWA am Handy einmal online öffnen, Flugmodus, App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)); offen aus T3: Feld-Reifegrad (Erinnerungs-Felder, Zock-Modus) |
+| Eigene Karte, Tempo (`fix/map-own-speed`) | PR reviewen und mergen; dann die Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen gleichzeitig, Wartezeit vom Server); sagen, wie lange es jetzt dauert |
 | Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5 | „+ Neu“ statt FAB (Spotify läuft, Chat 10) |
 | QA-Wording (P3a–c gemergt: #273, #283, #286) | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise? |
 | Fehlerberichte: echte Mail-Adresse | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus) |
@@ -20,6 +21,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
+| Eigene Karte aus OSM-Daten: Erzeugen beschleunigt (Blöcke, zwei Anfragen, Serverstatus) | `fix/map-own-speed` | `modules/maps/own/{overpass,plan,work,compute,builder}.ts`, tests, `docs/features/map-own.md`, `docs/decisions/maps.md` | done, PR open | code | 2026-11-03 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
