@@ -2,10 +2,29 @@ import { z } from 'zod';
 import { recurrenceSchema } from '@/core/recurrence/types';
 import { DATE_RE } from '@/core/time/dates';
 
+export const LIST_KINDS = ['list', 'project'] as const;
+
 export const listSchema = z.object({
   name: z.string().min(1),
   color: z.string().optional(),
   order: z.number().default(0),
+  /** A project is a list with a progress bar (done / all); missing = plain list. */
+  kind: z.enum(LIST_KINDS).optional(),
+});
+
+/** A tick-off line inside a task (lighter than a subtask: no date, no priority). */
+export const checklistItemSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+  done: z.boolean().default(false),
+});
+
+/** Where a link of a task leads; only the id and the title at the time, never the content. */
+export const LINK_KINDS = ['note', 'mail', 'invoice', 'event'] as const;
+export const taskLinkSchema = z.object({
+  kind: z.enum(LINK_KINDS),
+  id: z.string().min(1),
+  label: z.string().min(1),
 });
 
 export const taskSchema = z.object({
@@ -29,6 +48,12 @@ export const taskSchema = z.object({
   plannedFor: z.string().regex(DATE_RE).optional(),
   /** Estimated effort in minutes (5, 15, 30, 60 offered); shown as "etwa 10 Min". */
   estimateMin: z.number().int().min(1).max(480).optional(),
+  /** The task stays out of the open views until this day (then it shows up as "Heute" or "Demnächst"). */
+  startDate: z.string().regex(DATE_RE).optional(),
+  /** Free labels without `#`, lower case (see `tags.ts`). */
+  tags: z.array(z.string().min(1)).optional(),
+  checklist: z.array(checklistItemSchema).optional(),
+  links: z.array(taskLinkSchema).optional(),
   /** Set for subtasks (one level only). */
   parentId: z.string().optional(),
   note: z.string().optional(),
@@ -40,3 +65,5 @@ export const taskSchema = z.object({
 
 export type TodoList = z.output<typeof listSchema>;
 export type Task = z.output<typeof taskSchema>;
+export type ChecklistItem = z.output<typeof checklistItemSchema>;
+export type TaskLink = z.output<typeof taskLinkSchema>;

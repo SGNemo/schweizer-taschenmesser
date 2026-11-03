@@ -495,6 +495,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 - **PK5 Mehrere Kalender:** „Mehr Felder anzeigen“ → „Kalender verwalten“: „Arbeit“ und „Familie“ anlegen/umfärben; Chips blenden Termine ein/aus; im Termin-Dialog das Feld „Kalender“; einen Kalender löschen: seine Termine bleiben sichtbar. ☐
 - **PK6 Erinnerungen:** Zeitring zeigt „Nächste Erinnerung in …“; „Erledigte entfernen“ räumt nur Beendete/Pausierte auf (Rückgängig); Termin mit „Erinnern“ → „Zusätzlich erinnern“ (Mehr Felder): zwei Benachrichtigungen. ☐
+- **TD1 Board im echten Browser:** ToDos → „Board“: eine Karte mit der Maus auf eine andere Spalte ziehen (Heute, Demnächst, Irgendwann, Erledigt); Rückgängig stellt sie zurück; das Ziehen geht auf Chrome und Firefox, auf Android funktioniert das „⋯“-Menü („Verschieben nach …“). ☐
+- **TD2 Ansichten und Tags:** „Heute“, „Demnächst“, „Irgendwann“ zeigen je die richtigen Aufgaben; eine Aufgabe mit „Beginnt am“ in der Zukunft fehlt in „Alle“ und „Heute“ und steht unter „Demnächst“ („ab …“); Tag-Chips (unter „Mehr Felder anzeigen“) filtern. ☐
+- **TD3 Checkliste, Verknüpfung, Projekt:** in der Aufgabe Checklistenpunkte anlegen/abhaken (Zähler in der Zeile); im Kalender „Als ToDo merken“: die Aufgabe hat „Termin: …“ und öffnet den Termin; eine Liste als „Projekt“ markieren zeigt den Fortschrittsbalken. ☐
 
 ### Haushalt & Tresor (Branch `feat/household-vault-identity`) – nur auf Geräten prüfbar
 
