@@ -32,6 +32,24 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Salvar como tarefa',
   asTodoDone: 'Salvo como tarefa.',
   skipOccurrence: (date: string) => `Remover apenas o de ${date}`,
+  movedToast: 'Compromisso movido.',
+  dragRecurring: 'Altere compromissos recorrentes no editor.',
+  calendars: {
+    group: 'Calendários',
+    manage: 'Gerenciar calendários',
+    add: 'Adicionar calendário',
+    edit: 'Editar calendário',
+    name: 'Nome',
+    colour: 'Cor',
+    colourN: (n: number) => `Cor ${n}`,
+    field: 'Calendário',
+    none: 'Sem calendário',
+    empty:
+      'Você ainda não tem calendários próprios. Crie, por exemplo, “Trabalho” e “Família” e mostre ou oculte cada um.',
+    deleteHint: 'Ao excluir, os compromissos são mantidos; eles ficam sem calendário.',
+    shown: 'visível',
+    hidden: 'oculto',
+  },
   weekNoShort: 'Sem.',
   agendaEmpty: 'Nada planejado neste período.',
   holidayLabel: 'Feriado',
@@ -132,10 +150,21 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'Pausado.',
     resumedToast: 'Reativado.',
     widgetEmpty: 'Nenhum lembrete pendente.',
+    ringNone: 'Nada nas próximas 24 horas.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'agora'
+        : minutes < 60
+          ? `em ${minutes} min`
+          : `em ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Próximo lembrete ${when}`,
+    clearDone: 'Remover os concluídos',
+    clearedToast: (n: number) => (n === 1 ? '1 lembrete removido.' : `${n} lembretes removidos.`),
   },
   notify: {
     label: 'Notificar',
     rowLabel: 'Lembrar',
+    extra: 'Lembrar também',
     noneShort: 'Nenhum',
     hourShort: '1 h',
     dayShort: '1 dia',

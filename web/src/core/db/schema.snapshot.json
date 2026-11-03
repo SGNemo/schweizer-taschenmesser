@@ -1,5 +1,5 @@
 {
-  "version": 26,
+  "version": 27,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -21,6 +21,7 @@
     "budgets_budget": "id, updatedAt, categoryId",
     "budgets_deposit": "id, updatedAt, goalId, date",
     "budgets_goal": "id, updatedAt, deadline",
+    "calendar_calendar": "id, updatedAt, order",
     "calendar_event": "id, updatedAt, startDate",
     "calendar_external": "id, updatedAt, startDate, source",
     "chat_message": "id, updatedAt, threadId",

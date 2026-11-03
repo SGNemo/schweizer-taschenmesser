@@ -1,7 +1,15 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, isoWeekday, nowTime, today } from '@/core/time/dates';
 import { t } from '@/strings';
+import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
 import { groupByDate, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
 import styles from '../routes/calendar.module.css';
@@ -11,7 +19,22 @@ interface Props {
   items: CalendarItem[];
   onPickDay: (date: string) => void;
   onOpenItem: (item: CalendarItem) => void;
+  /** Own, single-day, timed events can be moved (drag or Alt+arrow) and stretched (bottom edge or Alt+Shift+arrow). */
+  onMoveItem?: (item: CalendarItem, slot: Slot) => void;
+  /** Drawing over an empty part of a day asks for a new event in that slot. */
+  onCreateSlot?: (date: string, startTime: string, endTime: string) => void;
 }
+
+/** Pixels the pointer has to travel before a press becomes a drag (below it stays a click). */
+const DRAG_THRESHOLD = 4;
+
+type Drag =
+  | { kind: 'move'; id: string; dMin: number; dDays: number }
+  | { kind: 'resize'; id: string; dMin: number }
+  | { kind: 'draw'; date: string; a: number; b: number };
+
+const draggable = (item: CalendarItem): boolean =>
+  item.source === 'calendar' && !item.external && !!item.time && !item.endDate && !item.continued;
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
@@ -20,8 +43,11 @@ const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.sl
  * Week / day view with an hour grid that fills the available height. Untimed items sit in a row
  * above the grid; on open the grid scrolls to the current time (or shortly before the first item).
  */
-export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
+export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCreateSlot }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  // A drag ends in a click event on the same element; this swallows exactly that one.
+  const swallowClick = useRef(false);
   const byDate = groupByDate(items);
   const now = today();
   const perDay = days.map((d) => ({ d, ...splitDay(byDate.get(d) ?? []) }));
@@ -41,6 +67,111 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
   }, [rangeKey]);
 
   const cols = { '--cols': days.length } as CSSProperties;
+
+  /** Pixels per minute and the width of one day column, read from the first column. */
+  function geometry() {
+    const col = bodyRef.current?.querySelector<HTMLElement>('[data-date]');
+    if (!col) return null;
+    const rect = col.getBoundingClientRect();
+    return { perMinute: rect.height / (24 * 60), colWidth: rect.width };
+  }
+  function minuteAt(colEl: HTMLElement, clientY: number): number {
+    const rect = colEl.getBoundingClientRect();
+    return Math.min(24 * 60, Math.max(0, ((clientY - rect.top) / rect.height) * 24 * 60));
+  }
+
+  function startItemDrag(
+    e: PointerEvent<HTMLElement>,
+    item: CalendarItem,
+    kind: 'move' | 'resize',
+  ) {
+    if (!onMoveItem || !draggable(item) || e.button !== 0) return;
+    const geo = geometry();
+    if (!geo) return;
+    if (kind === 'resize') e.stopPropagation();
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    let moved = false;
+    let last: Drag = { kind, id: item.id, dMin: 0, dDays: 0 } as Drag;
+    const target = e.currentTarget;
+    target.setPointerCapture?.(e.pointerId);
+    const onMove = (ev: globalThis.PointerEvent) => {
+      if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < DRAG_THRESHOLD) return;
+      moved = true;
+      const dMin = snap((ev.clientY - y0) / geo.perMinute);
+      last =
+        kind === 'move'
+          ? { kind, id: item.id, dMin, dDays: Math.round((ev.clientX - x0) / geo.colWidth) }
+          : { kind, id: item.id, dMin };
+      setDrag(last);
+    };
+    const finish = (ev: globalThis.PointerEvent) => {
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerup', finish);
+      target.removeEventListener('pointercancel', finish);
+      setDrag(null);
+      if (!moved || ev.type === 'pointercancel') return;
+      swallowClick.current = true;
+      commit(item, last);
+    };
+    target.addEventListener('pointermove', onMove);
+    target.addEventListener('pointerup', finish);
+    target.addEventListener('pointercancel', finish);
+  }
+
+  function commit(item: CalendarItem, d: Drag) {
+    if (!onMoveItem || !item.time) return;
+    if (d.kind === 'move') {
+      const slot = movedSlot(item.date, item.time, item.endTime, d.dMin, d.dDays);
+      if (slot.date !== item.date || slot.startTime !== item.time) onMoveItem(item, slot);
+    } else if (d.kind === 'resize') {
+      const endTime = resizedEnd(item.time, item.endTime, d.dMin);
+      if (endTime !== item.endTime)
+        onMoveItem(item, { date: item.date, startTime: item.time, endTime });
+    }
+  }
+
+  function onItemKey(e: KeyboardEvent<HTMLElement>, item: CalendarItem) {
+    if (!onMoveItem || !draggable(item) || !e.altKey) return;
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    const dMin = e.key === 'ArrowUp' ? -SNAP_MINUTES : SNAP_MINUTES;
+    commit(
+      item,
+      e.shiftKey
+        ? { kind: 'resize', id: item.id, dMin }
+        : { kind: 'move', id: item.id, dMin, dDays: 0 },
+    );
+  }
+
+  function startDraw(e: PointerEvent<HTMLElement>, date: string) {
+    // Only on the bare column: a press on an event keeps its own behaviour.
+    if (!onCreateSlot || e.button !== 0 || e.target !== e.currentTarget) return;
+    const col = e.currentTarget;
+    const a = minuteAt(col, e.clientY);
+    const y0 = e.clientY;
+    let moved = false;
+    let last: Drag = { kind: 'draw', date, a, b: a };
+    col.setPointerCapture?.(e.pointerId);
+    const onMove = (ev: globalThis.PointerEvent) => {
+      if (!moved && Math.abs(ev.clientY - y0) < DRAG_THRESHOLD) return;
+      moved = true;
+      last = { kind: 'draw', date, a, b: minuteAt(col, ev.clientY) };
+      setDrag(last);
+    };
+    const finish = (ev: globalThis.PointerEvent) => {
+      col.removeEventListener('pointermove', onMove);
+      col.removeEventListener('pointerup', finish);
+      col.removeEventListener('pointercancel', finish);
+      setDrag(null);
+      if (!moved || ev.type === 'pointercancel' || last.kind !== 'draw') return;
+      const slot = slotFromDrag(last.a, last.b);
+      if (slot) onCreateSlot(date, slot.startTime, slot.endTime);
+    };
+    col.addEventListener('pointermove', onMove);
+    col.addEventListener('pointerup', finish);
+    col.addEventListener('pointercancel', finish);
+  }
   return (
     <div className={styles.tg} role="group" aria-label={t.calendar.timeGrid}>
       <div className={styles.tgInner} style={cols}>
@@ -84,30 +215,74 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem }: Props) {
           {perDay.map(({ d, timed }) => (
             <div
               key={d}
+              data-date={d}
               className={`${styles.tgCol} ${isoWeekday(d) >= 6 ? styles.tgWeekend : ''} ${d === now ? styles.tgToday : ''}`}
+              onPointerDown={(e) => startDraw(e, d)}
             >
-              {timed.map(({ item, start, end, lane, lanes }) => (
-                <button
-                  key={`${item.source}:${item.id}`}
-                  type="button"
-                  className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
+              {drag?.kind === 'draw' && drag.date === d ? (
+                <span
+                  className={styles.tgDraw}
+                  aria-hidden="true"
                   style={
                     {
-                      '--start': start,
-                      '--minutes': end - start,
-                      '--lane': lane,
-                      '--lanes': lanes,
+                      '--start': Math.min(drag.a, drag.b),
+                      '--minutes': Math.abs(drag.b - drag.a),
                     } as CSSProperties
                   }
-                  title={`${kindLabel(item.kind)}: ${item.title}${lanes > 1 ? ` – ${t.calendar.overlaps}` : ''}`}
-                  onClick={() => onOpenItem(item)}
-                >
-                  <span className={styles.tgTime}>{item.time}</span> {item.title}
-                  {lanes > 1 ? (
-                    <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
-                  ) : null}
-                </button>
-              ))}
+                />
+              ) : null}
+              {timed.map(({ item, start, end, lane, lanes }) => {
+                const active = drag && drag.kind !== 'draw' && drag.id === item.id ? drag : null;
+                const dStart = active?.kind === 'move' ? active.dMin : 0;
+                const dLen = active?.kind === 'resize' ? active.dMin : 0;
+                const canDrag = !!onMoveItem && draggable(item);
+                return (
+                  <button
+                    key={`${item.source}:${item.id}`}
+                    type="button"
+                    className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
+                    style={
+                      {
+                        '--start': start + dStart,
+                        '--minutes': Math.max(SNAP_MINUTES, end - start + dLen),
+                        '--lane': lane,
+                        '--lanes': lanes,
+                        ...(active?.kind === 'move' && active.dDays
+                          ? { transform: `translateX(${active.dDays * 100}%)` }
+                          : {}),
+                      } as CSSProperties
+                    }
+                    aria-keyshortcuts={
+                      canDrag
+                        ? 'Alt+ArrowUp Alt+ArrowDown Alt+Shift+ArrowUp Alt+Shift+ArrowDown'
+                        : undefined
+                    }
+                    data-dragging={active ? 'true' : undefined}
+                    onPointerDown={(e) => startItemDrag(e, item, 'move')}
+                    onKeyDown={(e) => onItemKey(e, item)}
+                    title={`${kindLabel(item.kind)}: ${item.title}${lanes > 1 ? ` – ${t.calendar.overlaps}` : ''}`}
+                    onClick={() => {
+                      if (swallowClick.current) {
+                        swallowClick.current = false;
+                        return;
+                      }
+                      onOpenItem(item);
+                    }}
+                  >
+                    <span className={styles.tgTime}>{item.time}</span> {item.title}
+                    {lanes > 1 ? (
+                      <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
+                    ) : null}
+                    {canDrag ? (
+                      <span
+                        className={styles.tgResize}
+                        aria-hidden="true"
+                        onPointerDown={(e) => startItemDrag(e, item, 'resize')}
+                      />
+                    ) : null}
+                  </button>
+                );
+              })}
               {d === now ? (
                 <span
                   className={styles.tgNow}

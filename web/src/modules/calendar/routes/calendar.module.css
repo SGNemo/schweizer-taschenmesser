@@ -726,3 +726,117 @@ button.itemRow:hover {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Named calendars: chips with name + dot (colour never stands alone). */
+.calBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.calChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.calChip[aria-pressed='false'] {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.calDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.calManage,
+.calList {
+  display: grid;
+  gap: var(--space-3);
+}
+.calList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.calList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.calSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.calSwatch {
+  width: var(--touch);
+  height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  cursor: pointer;
+}
+.calSwatch[aria-pressed='true'] {
+  border-color: var(--text);
+}
+
+/* Dragging in the hour grid: the press target is the whole event, the bottom edge stretches it. */
+.tgItem[data-dragging='true'] {
+  z-index: 3;
+  outline: 2px solid var(--accent);
+  box-shadow: var(--shadow-2, 0 2px 8px color-mix(in srgb, var(--text) 25%, transparent));
+}
+.tgItem {
+  touch-action: none;
+  user-select: none;
+}
+.tgResize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.5rem;
+  cursor: ns-resize;
+}
+.tgDraw {
+  position: absolute;
+  top: calc(var(--start) / 60 * var(--hour));
+  height: calc(var(--minutes) / 60 * var(--hour));
+  left: 2px;
+  right: 2px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tgItem {
+    transition: none;
+  }
+}
+
+.extraLeads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.extraLeads legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-label);
+  font-weight: 600;
+  color: var(--text-muted);
+}
