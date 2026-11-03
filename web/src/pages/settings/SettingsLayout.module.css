@@ -321,3 +321,47 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+
+/* Reset row under a section: only present while something differs from the default. */
+.changedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* "Erweitert": the rarely needed sections of a category behind one fold. */
+.advanced {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.advancedSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  font-weight: var(--weight-semibold);
+}
+.advancedHint {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: normal;
+}
+.advancedBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* A section with its scope line and reset row: close together, so the line reads as this section's. */
+.sectionFrame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}

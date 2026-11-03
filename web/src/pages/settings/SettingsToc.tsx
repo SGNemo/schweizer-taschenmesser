@@ -47,7 +47,10 @@ export function SettingsToc({ entries }: { entries: readonly TocEntry[] }) {
               aria-current={(active ?? entries[0]?.id) === e.id ? 'location' : undefined}
               onClick={(ev) => {
                 ev.preventDefault();
-                document.getElementById(e.id)?.scrollIntoView({ block: 'start' });
+                const el = document.getElementById(e.id);
+                // A section inside the closed Erweitert fold opens it first.
+                el?.closest('details')?.setAttribute('open', '');
+                el?.scrollIntoView({ block: 'start' });
                 setActive(e.id);
               }}
             >

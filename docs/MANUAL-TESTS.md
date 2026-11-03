@@ -315,6 +315,10 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO2 Modul-Seite auf dem Handy:** Module → ein Modul: Kopf mit Modulfarbe, Blöcke untereinander, „Alle Module“ zurück; in „Ruhig“ wird der Kopf grau. ☐
 - **SO3 Breites Fenster (2560 px):** Inhaltsverzeichnis rechts folgt dem Scrollen, kein Zittern; Lesbarkeit der Karten hell und dunkel. ☐
 
+- **SO4 Erweitert auf dem Handy:** Einstellungen → KI: „Erweitert“ ist zu; antippen öffnet „Lokales Modell“ und „KI-Statistik“; Seite neu laden: bleibt offen; wieder zu: bleibt zu. ☐
+- **SO5 Zurücksetzen:** Darstellung → Farbschema „Dunkel“: unten erscheint „Vom Standard abweichend“ mit dem Zurücksetzen-Knopf; ein Modul (z. B. Aufgaben): Schalter ändern, „Geändert · Auf Standard“ stellt zurück, „Rückgängig“ bringt es wieder. ☐
+- **SO6 Vorschau und Hinweis:** Darstellung → Text öffnen: die Vorschau folgt Schriftgröße und Dichte; Benachrichtigungen → „Erinnerungen in der App einblenden“ an: Beispielkarte oben/unten rechts; Tresor: „30 Minuten“ zeigt den ruhigen Hinweis. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

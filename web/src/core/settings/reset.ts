@@ -25,6 +25,8 @@ import {
 export interface ResetPlan {
   /** Current values, in a form `restore` accepts. */
   capture(): Promise<unknown>;
+  /** The defaults in the form `capture` returns, so "changed from default" is a plain comparison. */
+  defaults?(): unknown;
   toDefaults(): Promise<void>;
   restore(snapshot: unknown): Promise<void>;
 }
@@ -76,8 +78,16 @@ export const appearanceReset: ResetPlan = {
     const s = ui() as unknown as Choices;
     return Promise.resolve(Object.fromEntries(APPEARANCE_KEYS.map((k) => [k, s[k]])));
   },
+  defaults: () => ({ ...APPEARANCE_DEFAULTS }),
   toDefaults: () => Promise.resolve(writeAppearance({ ...APPEARANCE_DEFAULTS })),
   restore: (snap) => Promise.resolve(writeAppearance(snap as Choices)),
+};
+
+const READING_DEFAULTS = {
+  aid: false,
+  share: READ_SHARES[0],
+  style: READ_STYLES[0],
+  cover: READ_COVERS[0],
 };
 
 export const readingReset: ResetPlan = {
@@ -90,6 +100,7 @@ export const readingReset: ResetPlan = {
       cover: s.readCover,
     });
   },
+  defaults: () => ({ ...READING_DEFAULTS }),
   toDefaults: () => {
     const s = ui();
     s.setReadAid(false);
@@ -114,6 +125,7 @@ export function focusReset(keys: readonly (keyof FocusSettings)[]): ResetPlan {
   const pick = (from: FocusSettings) => Object.fromEntries(keys.map((k) => [k, from[k]]));
   return {
     capture: async () => pick(await getFocusSettings()),
+    defaults: () => pick(DEFAULT_FOCUS),
     toDefaults: () => patchFocusSettings(pick(DEFAULT_FOCUS) as Partial<FocusSettings>),
     restore: (snap) => patchFocusSettings(snap as Partial<FocusSettings>),
   };

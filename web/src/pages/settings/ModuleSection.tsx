@@ -3,9 +3,15 @@ import { hasStartData, importersOf } from '@/core/dataapi/onboarding';
 import { JSON_IMPORTER_ID } from '@/core/dataapi/importer';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import type { ModuleManifest, SettingField } from '@/core/modules/types';
+import { sameValue } from '@/core/settings/changed';
+import { warningFor } from '@/core/settings/warnings';
 import { useSettings } from '@/core/settings/settings';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Segmented, SelectField, SettingRow, SettingsGroup, Switch, TextField } from '@/ui';
+import { tFieldHelp } from '@/strings.settingsHelp';
+import { tSettings2 } from '@/strings.settings2';
+import { Button, Segmented, SelectField, SettingRow, SettingsGroup, Switch, TextField } from '@/ui';
+import { SecurityNote } from './SettingExtras';
 import { FoldedGroup } from './FoldedGroup';
 import styles from './settings.module.css';
 
@@ -20,14 +26,23 @@ export function FieldRow({
   sectionId,
   field: f,
   value,
+  defaultValue,
   onChange,
 }: {
   sectionId: string;
   field: SettingField;
   value: unknown;
+  /** The module's default for this field: shows "Geändert · Auf Standard" while the value differs. */
+  defaultValue?: unknown;
   onChange: (value: unknown) => void;
 }) {
   const id = `${sectionId}--${f.key}`;
+  const c = tSettings2.use().changed;
+  const toast = useUiStore((st) => st.toast);
+  const changed = defaultValue !== undefined && !sameValue(value, defaultValue);
+  const note = warningFor(id, value);
+  const helpTexts = tFieldHelp.use() as Record<string, string>;
+  const help = f.help ?? helpTexts[`${sectionId.replace(/^module-/, '')}.${f.key}`];
   let control;
   if (f.type === 'boolean') {
     control = <Switch label={f.label} labelHidden checked={Boolean(value)} onChange={onChange} />;
@@ -66,10 +81,33 @@ export function FieldRow({
       />
     );
   }
+  const reset = () => {
+    const before = value;
+    onChange(defaultValue);
+    toast(c.resetFieldDone(f.label), { label: t.ui.undo, run: () => onChange(before) });
+  };
   return (
-    <SettingRow id={id} label={f.label} description={f.help}>
-      {control}
-    </SettingRow>
+    <>
+      <SettingRow id={id} label={f.label} description={help}>
+        {changed ? (
+          <span className={styles.row}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={reset}
+              title={c.resetFieldNamed(f.label)}
+              data-testid={`reset-field-${id}`}
+            >
+              {c.field} · {c.resetField}
+            </Button>
+            {control}
+          </span>
+        ) : (
+          control
+        )}
+      </SettingRow>
+      {note ? <SecurityNote kind={note} /> : null}
+    </>
   );
 }
 
@@ -115,6 +153,7 @@ export function ModuleSection({ manifest }: { manifest: ModuleManifest }) {
               sectionId={sectionId}
               field={f}
               value={v[f.key]}
+              defaultValue={defaults[f.key]}
               onChange={(value) => void patch({ [f.key]: value })}
             />
           ))}
