@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { Button, Dialog, patternStyles, TextField } from '@/ui';
+import { Button, Dialog, patternStyles, Switch, TextField } from '@/ui';
 import { t } from '@/strings';
 import { deleteList, listRepo } from '../repo';
 import type { TodoList } from '../schema';
@@ -42,16 +42,21 @@ function ListForm({
 }) {
   const existing = target === 'new' ? null : target;
   const [name, setName] = useState(existing?.name ?? '');
+  const [project, setProject] = useState(existing?.kind === 'project');
 
   async function save(e: FormEvent) {
     e.preventDefault();
     const value = name.trim();
     if (!value) return;
     if (existing) {
-      await listRepo.update(existing.id, { name: value });
+      await listRepo.update(existing.id, { name: value, kind: project ? 'project' : undefined });
       onClose();
     } else {
-      const created = await listRepo.create({ name: value, order: nextOrder });
+      const created = await listRepo.create({
+        name: value,
+        order: nextOrder,
+        ...(project ? { kind: 'project' as const } : {}),
+      });
       onClose(created.id);
     }
   }
@@ -68,6 +73,8 @@ function ListForm({
         required
         data-autofocus
       />
+      <Switch label={t.todos.project} checked={project} onChange={setProject} />
+      <p className={patternStyles.muted}>{t.todos.projectHint}</p>
       {existing ? <p className={patternStyles.muted}>{t.todos.deleteListHint}</p> : null}
       <div
         style={{
