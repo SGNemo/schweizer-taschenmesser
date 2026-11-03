@@ -5,6 +5,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Einstellungen v2, Paket 2 (`feat/settings-clarity`): Erweitert-Falte pro Kategorie, Geltungsbereich je Abschnitt, „Vom Standard abweichend“ mit Zurücksetzen je Feld/Modul/Abschnitt, Vorschauen (Aussehen, Erinnerungskarte), Sicherheitshinweise, Erklärungssatz für jede Modul-Einstellung; Handtests SO4–SO6 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 Einstellungen v2, Paket 1 (`feat/settings-overhaul`): Überblick mit acht Karten, Untergruppen als zweite Ebene, Breadcrumb, Inhaltsverzeichnis ab 1440 px, Modul-Unterseiten `/settings/module/<id>`; Pakete 2–4 (Verständlichkeit, neue Möglichkeiten, Suche) folgen nach Freigabe; Handtests SO1–SO3 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Verbindungsprotokoll und „Netzwerk sperren“ (QA P6, `feat/qa-connection-log`): [features/connection-log.md](features/connection-log.md).

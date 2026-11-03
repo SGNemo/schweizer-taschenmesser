@@ -357,3 +357,11 @@
   gap: var(--space-5);
   padding: 0 var(--space-4) var(--space-4);
 }
+
+/* A section with its scope line and reset row: close together, so the line reads as this section's. */
+.sectionFrame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}

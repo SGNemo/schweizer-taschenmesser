@@ -90,9 +90,13 @@ test('previews: the reminder sample follows the chosen position', async ({ page 
   await expect(preview.locator('[data-position]')).toHaveAttribute('data-position', 'bottom');
 });
 
-test('the look preview is part of the appearance section', async ({ page }) => {
+test('the look preview shows while the colour scheme or text group is open, not at rest', async ({
+  page,
+}) => {
   await ready(page, '/settings/darstellung');
-  await expect(page.getByTestId('look-preview')).toBeVisible();
+  await expect(page.getByTestId('look-preview').first()).toBeHidden();
+  await openAppearanceGroup(page, 'text');
+  await expect(page.getByTestId('look-preview').first()).toBeVisible();
 });
 
 test('a weaker vault choice gets a calm note, a stronger one none', async ({ page }) => {

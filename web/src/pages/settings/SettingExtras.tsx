@@ -10,10 +10,6 @@ export function ScopeLabel({ scope }: { scope: SettingsScope }) {
   const o = tSettings2.use().scope;
   return (
     <p className={styles.scope} data-scope={scope} data-testid="scope-label">
-      <Icon
-        name={scope === 'synced' ? 'sync' : scope === 'local' ? 'monitor' : 'cloud'}
-        size={14}
-      />
       {o[scope]}
     </p>
   );

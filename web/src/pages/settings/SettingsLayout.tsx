@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { advancedOpen, readAdvancedOpen, writeAdvancedOpen } from '@/core/settings/foldState';
 import { isChanged } from '@/core/settings/changed';
@@ -302,7 +302,7 @@ function SectionFrame({ s }: { s: SettingsSectionDef }) {
   const scope = scopeOf(s);
   const c = tSettings2.use().changed;
   return (
-    <Fragment>
+    <div className={styles.sectionFrame}>
       {s.maturity === 'preview' ? (
         <p className={styles.previewBadge} data-testid={`preview-${s.id}`}>
           <Badge>{t.settings.maturity.badge}</Badge>
@@ -323,7 +323,7 @@ function SectionFrame({ s }: { s: SettingsSectionDef }) {
           </Button>
         </div>
       ) : null}
-    </Fragment>
+    </div>
   );
 }
 

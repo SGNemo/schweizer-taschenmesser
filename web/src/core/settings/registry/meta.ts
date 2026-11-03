@@ -41,14 +41,10 @@ const SECTION_SCOPE: Readonly<Record<string, SettingsScope>> = {
 /**
  * Rarely needed sections: shown behind "Erweitert" when their category also has Basis sections.
  * Never anything people look for in a hurry: help, diagnostics, reset, legal texts, sync, backup,
- * the connection log and the Basis/Erweitert switch itself stay in Basis.
+ * the connection log, anything that can be switched on and run (local API) and the Basis/Erweitert
+ * switch itself stay in Basis.
  */
-const ADVANCED_SECTIONS: ReadonlySet<string> = new Set([
-  'ai-local',
-  'ai-stats',
-  'localapi',
-  'model-licenses',
-]);
+const ADVANCED_SECTIONS: ReadonlySet<string> = new Set(['ai-local', 'ai-stats', 'model-licenses']);
 
 /** Module settings live in the synced `_settings` table. */
 const isModuleSection = (id: string) => id.startsWith('module-');

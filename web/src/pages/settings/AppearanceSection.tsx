@@ -93,8 +93,8 @@ export function AppearanceSection() {
   const paletteOn = (previewPalette ?? (tier !== 'none' ? chosenPalette : null)) !== null;
   return (
     <SettingsGroup id="appearance" title={t.settings.appearance}>
-      <LookPreview />
       <FoldedGroup id="theme" title={g.theme} current={[THEME_LABELS[theme]()]}>
+        <LookPreview />
         <SettingRow id="appearance--theme" label={t.settings.theme} description={r.themeHint}>
           <Segmented<ThemeChoice>
             label={t.settings.theme}
@@ -168,6 +168,7 @@ export function AppearanceSection() {
           t.settings.densityOptions[density],
         ]}
       >
+        <LookPreview />
         <SettingRow
           id="appearance--textSize"
           label={t.settings.textSize}
