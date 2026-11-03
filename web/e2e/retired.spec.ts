@@ -4,7 +4,7 @@ import { enable } from './helpers';
 /** Modules that were retired and later removed: old paths still lead somewhere useful. */
 
 test('old paths of removed modules lead to the home screen', async ({ page }) => {
-  for (const path of ['/news', '/timetrack']) {
+  for (const path of ['/news']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('main h1')).toBeVisible();
@@ -35,7 +35,6 @@ test('the library does not list removed modules', async ({ page }) => {
   await expect(page.locator('main h1')).toBeVisible();
   for (const id of [
     'news',
-    'timetrack',
     'shopping',
     'packing',
     'launcher',

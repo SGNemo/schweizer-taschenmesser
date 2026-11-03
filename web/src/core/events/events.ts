@@ -49,6 +49,8 @@ export interface EventMap {
     /** Where the to-do came from (a note, a mail, an invoice, an event): only the id and the title. */
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
+  /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
+  'timetrack.start.requested': { title: string; sourceRef?: string };
   'module.enabled': { moduleId: string };
   'module.disabled': { moduleId: string; policy: DataPolicy };
 }

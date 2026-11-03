@@ -27,6 +27,7 @@ const MODULES = [
   'lists',
   'maps',
   'habits',
+  'timetrack',
   'weather',
   'music',
 ];
@@ -100,6 +101,7 @@ const PAGES = [
   ['calendar', '/calendar'],
   ['todos', '/todos'],
   ['habits', '/habits'],
+  ['timetrack', '/timetrack'],
   ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
   ['finance transactions', '/finance?tab=transactions'],
