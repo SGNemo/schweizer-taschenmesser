@@ -85,6 +85,7 @@ function Form({
     startDate: existing?.startDate ?? today(),
     recurrence: (existing?.recurrence ?? { freq: 'monthly', interval: 1 }) as Recurrence,
     notice: existing?.cancelNoticeDays as number | undefined,
+    noticeMonths: existing?.cancelNoticeMonths as number | undefined,
     active: existing?.active ?? true,
     note: existing?.note ?? '',
     trialEndsOn: existing?.trialEndsOn ?? '',
@@ -98,6 +99,7 @@ function Form({
     startDate,
     recurrence,
     notice,
+    noticeMonths,
     active,
     note,
     trialEndsOn,
@@ -109,7 +111,10 @@ function Form({
   const setCurrency = (v: string) => draft.set('currency', v);
   const setStartDate = (v: string) => draft.set('startDate', v);
   const setRecurrence = (v: Recurrence) => draft.set('recurrence', v);
-  const setNotice = (v: number | undefined) => draft.set('notice', v);
+  const setNotice = (v: number | undefined, months?: number) => {
+    draft.set('notice', v);
+    draft.set('noticeMonths', months);
+  };
   const setActive = (v: boolean) => draft.set('active', v);
   const setNote = (v: string) => draft.set('note', v);
   const setTrialEndsOn = (v: string) => draft.set('trialEndsOn', v);
@@ -124,7 +129,10 @@ function Form({
 
   const cancelBy =
     notice !== undefined && !recurrence.until
-      ? nextCancelDeadline({ recurrence, startDate, cancelNoticeDays: notice }, today())?.deadline
+      ? nextCancelDeadline(
+          { recurrence, startDate, cancelNoticeDays: notice, cancelNoticeMonths: noticeMonths },
+          today(),
+        )?.deadline
       : undefined;
 
   async function save(e: FormEvent) {
@@ -144,6 +152,7 @@ function Form({
       recurrence,
       startDate,
       cancelNoticeDays: notice,
+      cancelNoticeMonths: notice === undefined ? undefined : noticeMonths,
       active,
       note: note.trim() || undefined,
       trialEndsOn: trialEndsOn || undefined,
@@ -272,7 +281,7 @@ function Form({
         }
       >
         <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
-        <NoticeField days={notice} onChange={setNotice} max={365} />
+        <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={365} />
         <TextField
           label={t.subscriptions.ext.trial.label}
           type="date"

@@ -12,17 +12,29 @@ export const BACKUP_VERSION = 1;
 
 const HLC_RE = /^\d{13}-\d{4}-[a-z0-9]{1,32}$/;
 
-const rowSchema = z.looseObject({
+/** A backup file larger than this (as text) is refused before it is parsed. A real backup is a few MB. */
+export const MAX_BACKUP_CHARS = 64 * 1024 * 1024;
+
+/** What a row must have for the file to count as a backup at all (a failure here refuses the whole file). */
+const coreRowSchema = z.looseObject({
   id: z.string().min(1),
   deletedAt: z.number().nullable(),
   _f: z.record(z.string().min(1), z.string().regex(HLC_RE)),
+});
+
+/** Further envelope checks: a row that fails them is skipped and counted, the rest is still restored. */
+const extraRowSchema = z.looseObject({
+  id: z.string().max(200),
+  createdAt: z.number().finite().optional(),
+  updatedAt: z.number().finite().optional(),
+  deviceId: z.string().max(200).optional(),
 });
 
 const backupSchema = z.object({
   format: z.literal(BACKUP_FORMAT),
   version: z.number().int().min(1),
   exportedAt: z.string(),
-  tables: z.record(z.string(), z.array(rowSchema)),
+  tables: z.record(z.string(), z.array(z.unknown())),
 });
 
 export interface Backup {
@@ -34,7 +46,7 @@ export interface Backup {
 }
 
 export type ParseResult =
-  | { ok: true; backup: Backup }
+  | { ok: true; backup: Backup; skippedRows: number }
   | { ok: false; reason: 'not-json' | 'wrong-format' | 'newer-version' | 'invalid' };
 
 export type ImportMode = 'merge' | 'replace';
@@ -79,6 +91,7 @@ export function backupFileName(date: Date = new Date()): string {
 }
 
 export function parseBackup(text: string): ParseResult {
+  if (text.length > MAX_BACKUP_CHARS) return { ok: false, reason: 'invalid' };
   let json: unknown;
   try {
     json = JSON.parse(text);
@@ -97,7 +110,24 @@ export function parseBackup(text: string): ParseResult {
     return { ok: false, reason: 'newer-version' };
   const parsed = backupSchema.safeParse(json);
   if (!parsed.success) return { ok: false, reason: 'invalid' };
-  return { ok: true, backup: parsed.data as unknown as Backup };
+  const tables: Record<string, SyncRow[]> = {};
+  let skippedRows = 0;
+  for (const [name, rows] of Object.entries(parsed.data.tables)) {
+    const good: SyncRow[] = [];
+    for (const row of rows) {
+      const core = coreRowSchema.safeParse(row);
+      if (!core.success) return { ok: false, reason: 'invalid' };
+      if (extraRowSchema.safeParse(row).success) good.push(core.data as unknown as SyncRow);
+      else skippedRows++;
+    }
+    tables[name] = good;
+  }
+  const { format, exportedAt } = parsed.data;
+  return {
+    ok: true,
+    backup: { format, version: parsed.data.version, exportedAt, tables },
+    skippedRows,
+  };
 }
 
 /**
