@@ -8,6 +8,8 @@ import type { Shape } from '@/core/i18n/shape';
  * `src/i18n/locales/<lang>/` with exactly the same shape (`Strings`, checked by the compiler).
  * Add new texts here (inside your module's block) and in every locale, then run `npm run check:i18n`.
  */
+const n1 = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
 export const de = {
   appName: 'Nemo',
   /** Building blocks for dates and durations (most wording comes from Intl). */
@@ -5650,6 +5652,80 @@ export const de = {
     oneOf: (values: string) => `erlaubt: ${values}`,
     badFormat: 'falsches Format (Datum JJJJ-MM-TT, Uhrzeit HH:mm)',
     outOfRange: 'außerhalb des erlaubten Bereichs',
+  },
+  importers: {
+    title: 'Aus anderer App importieren',
+    intro:
+      'Wähle die Datei(en) deines Exports, auch ZIP. Nemo erkennt, aus welcher App sie stammen, und zeigt vor dem Übernehmen eine Vorschau. Nichts verlässt dieses Gerät.',
+    choose: 'Dateien wählen',
+    reading: (done: number, total: number) => `Dateien werden gelesen … ${done} von ${total}`,
+    cancel: 'Abbrechen',
+    parsing: 'Daten werden gelesen …',
+    detected: (apps: string) => `Erkannt: ${apps}`,
+    unknown: 'Ich erkenne nicht, aus welcher App diese Dateien stammen. Wähle die Quelle selbst:',
+    manual: 'Andere Quelle wählen',
+    step: (i: number, n: number) => `Teil ${i} von ${n}`,
+    nothing: 'In den Dateien wurde nichts Lesbares gefunden.',
+    vaultHint:
+      'Passwörter importierst du im Tresor, nach Eingabe des Master-Passworts. Dort öffnet sich der CSV-Import.',
+    openVault: 'Zum Tresor',
+    paletteCommand: 'Aus anderer App importieren …',
+    sources: {
+      enex: 'Evernote (.enex)',
+      obsidian: 'Obsidian oder Markdown-Ordner',
+      'outlook-tasks': 'Microsoft To Do (Outlook-CSV)',
+      todoist: 'Todoist (CSV)',
+      'google-tasks': 'Google Aufgaben',
+      'google-keep': 'Google Keep',
+      'google-calendar': 'Google Kalender (.ics)',
+      bank: 'Kontoumsätze (CSV, OFX, CAMT)',
+      'vault-csv': 'Passwort-Manager (Bitwarden, KeePass, 1Password)',
+    },
+    reasons: {
+      trashed: (n: number) =>
+        n1(
+          n,
+          '1 Eintrag aus Papierkorb oder Archiv wurde ausgelassen.',
+          `${n} Einträge aus Papierkorb oder Archiv wurden ausgelassen.`,
+        ),
+      empty: (n: number) =>
+        n1(n, '1 leerer Eintrag wurde übersprungen.', `${n} leere Einträge wurden übersprungen.`),
+      unreadable: (n: number) =>
+        n1(
+          n,
+          '1 Datei ist nicht lesbar oder aus einer anderen App und wurde übersprungen.',
+          `${n} Dateien sind nicht lesbar oder aus einer anderen App und wurden übersprungen.`,
+        ),
+      attachment: (n: number) =>
+        n1(
+          n,
+          '1 Anhang (Bild oder Datei) wurde nicht übernommen: Notizen speichern nur Text.',
+          `${n} Anhänge (Bilder oder Dateien) wurden nicht übernommen: Notizen speichern nur Text.`,
+        ),
+      unsupported: (n: number) =>
+        n1(n, '1 Eintrag wird nicht unterstützt.', `${n} Einträge werden nicht unterstützt.`),
+      tooMany: (n: number) =>
+        `Die Vorschau zeigt höchstens ${n} Einträge; der Rest wurde ausgelassen.`,
+      done: (n: number) =>
+        n1(
+          n,
+          '1 erledigter Eintrag wurde ausgelassen.',
+          `${n} erledigte Einträge wurden ausgelassen.`,
+        ),
+    },
+    report: {
+      title: 'Bericht',
+      imported: (n: number) => n1(n, '1 Eintrag übernommen.', `${n} Einträge übernommen.`),
+      duplicates: (n: number) => n1(n, '1 war schon vorhanden.', `${n} waren schon vorhanden.`),
+      invalid: (n: number) =>
+        n1(
+          n,
+          '1 passte nicht ins Format und wurde nicht gespeichert.',
+          `${n} passten nicht ins Format und wurden nicht gespeichert.`,
+        ),
+      deselected: (n: number) => n1(n, '1 hast du abgewählt.', `${n} hast du abgewählt.`),
+    },
+    newNotebook: 'Neues Notizbuch',
   },
   onboarding: {
     button: 'Importieren',

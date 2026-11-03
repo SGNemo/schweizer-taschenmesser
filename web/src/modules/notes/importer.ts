@@ -9,7 +9,7 @@ import type {
 import { runJob } from '@/importers/run';
 import { skipNotes } from '@/importers/report';
 import { addSkip, type SkipCounts, type SourceFile } from '@/importers/types';
-import { tImp } from '@/strings.importers';
+
 import { t } from '@/strings';
 import { noteKey } from './exchange';
 import { noteRepo, notebookRepo } from './repo';
@@ -72,7 +72,7 @@ async function withNotebooks(notes: ParsedNote[], ctx: ImportContext): Promise<I
       id,
       data: { name, order: ++order },
       label: name,
-      detail: tImp.get().newNotebook,
+      detail: t.importers.newNotebook,
       dedupeKey: `notebook|${name.toLowerCase()}`,
     });
   });

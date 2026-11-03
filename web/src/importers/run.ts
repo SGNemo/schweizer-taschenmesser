@@ -4,7 +4,7 @@
  * rejects with an `AbortError`; nothing is written anywhere before the user confirms the preview,
  * so cancelling leaves no half state.
  */
-import { JOBS, type JobName, type Jobs, type Progress } from './jobs';
+import type { JobName, Jobs, Progress } from './jobs';
 
 export interface RunOptions {
   signal?: AbortSignal;
@@ -14,12 +14,14 @@ export interface RunOptions {
 export const abortError = () => new DOMException('Import cancelled', 'AbortError');
 export const isAbort = (e: unknown) => e instanceof DOMException && e.name === 'AbortError';
 
-function inline<K extends JobName>(
+async function inline<K extends JobName>(
   name: K,
   input: Jobs[K]['in'],
   opts: RunOptions,
-): Jobs[K]['out'] {
+): Promise<Jobs[K]['out']> {
   if (opts.signal?.aborted) throw abortError();
+  // Loaded on demand: the parsers stay out of the main bundle when a Worker does the work.
+  const { JOBS } = await import('./jobs');
   const out = JOBS[name](input, opts.onProgress ?? (() => {}));
   if (opts.signal?.aborted) throw abortError();
   return out;
@@ -33,12 +35,12 @@ export function runJob<K extends JobName>(
   opts: RunOptions = {},
 ): Promise<Jobs[K]['out']> {
   if (opts.signal?.aborted) return Promise.reject(abortError());
-  if (typeof Worker === 'undefined') return Promise.resolve().then(() => inline(name, input, opts));
+  if (typeof Worker === 'undefined') return inline(name, input, opts);
   let worker: Worker;
   try {
     worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
   } catch {
-    return Promise.resolve().then(() => inline(name, input, opts));
+    return inline(name, input, opts);
   }
   const id = nextId++;
   return new Promise((resolve, reject) => {
@@ -66,11 +68,7 @@ export function runJob<K extends JobName>(
     // The Worker could not load (blocked, offline chunk): run inline instead of failing the import.
     worker.onerror = () => {
       finish();
-      try {
-        resolve(inline(name, input, opts));
-      } catch (err) {
-        reject(err);
-      }
+      inline(name, input, opts).then(resolve, reject);
     };
     worker.postMessage({ id, name, input });
   });

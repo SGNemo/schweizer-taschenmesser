@@ -14,7 +14,7 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { pickRawFiles, pickTextFile } from '@/core/io/pickFile';
 import { skipNotes, sumSkips } from '@/importers/report';
 import { isAbort, runJob } from '@/importers/run';
-import { tImp } from '@/strings.importers';
+
 import { today } from '@/core/time/now';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -72,7 +72,7 @@ export function OnboardingWizard({
     <Dialog
       open={open}
       onClose={onClose}
-      title={part ? `${title} · ${tImp.get().step(part.index, part.total)}` : title}
+      title={part ? `${title} · ${t.importers.step(part.index, part.total)}` : title}
     >
       <Wizard manifest={manifest} onClose={onClose} preset={preset} />
     </Dialog>
@@ -81,7 +81,7 @@ export function OnboardingWizard({
 
 /** What happened to the entries of the source: imported, already there, left out and why. */
 function ReportList({ report }: { report: ImportReportCounts }) {
-  const r = tImp.get().report;
+  const r = t.importers.report;
   const lines = [
     report.duplicates > 0 ? r.duplicates(report.duplicates) : '',
     report.invalid > 0 ? r.invalid(report.invalid) : '',
@@ -198,7 +198,14 @@ function Wizard({
   const [text, setText] = useState('');
   const [values, setValues] = useState<Record<string, string>>({});
   const [ticked, setTicked] = useState<string[]>([]);
-  const [fileName, setFileName] = useState('');
+  const [fileName, setFileName] = useState(() =>
+    preset
+      ? (preset.source ??
+        (preset.files.length === 1
+          ? (preset.files[0]?.name ?? '')
+          : t.onboarding.filesChosen(preset.files.length)))
+      : '',
+  );
   const [rows, setRows] = useState<PreviewRow[]>([]);
   const [notes, setNotes] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -216,68 +223,6 @@ function Wizard({
     return () => {
       alive.current = false;
     };
-  }, []);
-
-  async function choose(meta: ImporterMeta, then?: ImportInput) {
-    setError('');
-    setBusy(true);
-    try {
-      const rt = await runtimeFor(manifest, meta.id);
-      const defaults: Record<string, string> = {};
-      const dynamic: Record<string, Choice[]> = {};
-      for (const field of [...(meta.options ?? []), ...(meta.fields ?? [])]) {
-        if (field.defaultValue) defaults[field.key] = field.defaultValue;
-        if (field.dynamicChoices && rt.optionChoices) {
-          dynamic[field.key] = await rt.optionChoices(field.key);
-          defaults[field.key] = dynamic[field.key]![0]?.value ?? '';
-        }
-        if (field.type === 'select' && !field.dynamicChoices && !defaults[field.key])
-          defaults[field.key] = field.choices?.[0]?.value ?? '';
-      }
-      if (!alive.current) return;
-      setRuntime(rt);
-      setChoices(dynamic);
-      setOptions(
-        Object.fromEntries((meta.options ?? []).map((f) => [f.key, defaults[f.key] ?? ''])),
-      );
-      setValues(Object.fromEntries((meta.fields ?? []).map((f) => [f.key, defaults[f.key] ?? ''])));
-      setTicked((meta.templates ?? []).filter((tpl) => tpl.preselected).map((tpl) => tpl.id));
-      setText('');
-      setFileName('');
-      setSlot(null);
-      setImporter(meta);
-      setStep('input');
-      if (then) {
-        const initial = Object.fromEntries(
-          (meta.options ?? []).map((f) => [f.key, defaults[f.key] ?? '']),
-        );
-        await parseWith(meta, rt, initial, then);
-      }
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      if (alive.current) setBusy(false);
-    }
-  }
-
-  // Files chosen before (import from another app): open the importer and read them at once.
-  useEffect(() => {
-    const meta = preset && declared.find((i) => i.id === preset.importerId);
-    if (!preset || !meta) return;
-    const first = preset.files[0];
-    if (!first) return;
-    setFileName(
-      preset.source ??
-        (preset.files.length === 1 ? first.name : t.onboarding.filesChosen(preset.files.length)),
-    );
-    void choose(meta, {
-      kind: 'file',
-      text: first.text,
-      fileName: first.name,
-      files: preset.files,
-      ...(preset.binary ? { binary: preset.binary } : {}),
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function cancel() {
@@ -335,6 +280,66 @@ function Wizard({
       }
     }
   }
+
+  async function choose(meta: ImporterMeta, then?: ImportInput) {
+    setError('');
+    setBusy(true);
+    try {
+      const rt = await runtimeFor(manifest, meta.id);
+      const defaults: Record<string, string> = {};
+      const dynamic: Record<string, Choice[]> = {};
+      for (const field of [...(meta.options ?? []), ...(meta.fields ?? [])]) {
+        if (field.defaultValue) defaults[field.key] = field.defaultValue;
+        if (field.dynamicChoices && rt.optionChoices) {
+          dynamic[field.key] = await rt.optionChoices(field.key);
+          defaults[field.key] = dynamic[field.key]![0]?.value ?? '';
+        }
+        if (field.type === 'select' && !field.dynamicChoices && !defaults[field.key])
+          defaults[field.key] = field.choices?.[0]?.value ?? '';
+      }
+      if (!alive.current) return;
+      setRuntime(rt);
+      setChoices(dynamic);
+      setOptions(
+        Object.fromEntries((meta.options ?? []).map((f) => [f.key, defaults[f.key] ?? ''])),
+      );
+      setValues(Object.fromEntries((meta.fields ?? []).map((f) => [f.key, defaults[f.key] ?? ''])));
+      setTicked((meta.templates ?? []).filter((tpl) => tpl.preselected).map((tpl) => tpl.id));
+      setText('');
+      if (!then) setFileName('');
+      setSlot(null);
+      setImporter(meta);
+      setStep('input');
+      if (then) {
+        const initial = Object.fromEntries(
+          (meta.options ?? []).map((f) => [f.key, defaults[f.key] ?? '']),
+        );
+        await parseWith(meta, rt, initial, then);
+      }
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      if (alive.current) setBusy(false);
+    }
+  }
+
+  // Files chosen before (import from another app): open the importer and read them at once.
+  useEffect(() => {
+    const meta = preset && declared.find((i) => i.id === preset.importerId);
+    const first = preset?.files[0];
+    if (!preset || !meta || !first) return;
+    void (async () => {
+      await Promise.resolve(); // not synchronously inside the effect
+      await choose(meta, {
+        kind: 'file',
+        text: first.text,
+        fileName: first.name,
+        files: preset.files,
+        ...(preset.binary ? { binary: preset.binary } : {}),
+      });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function chooseFile() {
     if (!importer) return;
@@ -676,13 +681,13 @@ function Wizard({
         ) : null}
         {busy && importer.kind === 'file' ? (
           <p role="status" className={styles.muted}>
-            {reading ? tImp.get().reading(reading.done, reading.total) : tImp.get().parsing}
+            {reading ? t.importers.reading(reading.done, reading.total) : t.importers.parsing}
           </p>
         ) : null}
         <div className={styles.bar}>
           <Button onClick={() => setStep('choose')}>{t.onboarding.back}</Button>
           {busy && importer.kind === 'file' ? (
-            <Button onClick={cancel}>{tImp.get().cancel}</Button>
+            <Button onClick={cancel}>{t.importers.cancel}</Button>
           ) : null}
           {importer.kind !== 'file' && importer.kind !== 'connector' ? (
             <Button variant="primary" disabled={busy} onClick={() => void submitInput()}>

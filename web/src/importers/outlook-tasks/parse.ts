@@ -90,7 +90,7 @@ const DONE_WORDS = [
 ];
 
 export function parseOutlookTasks(text: string, opts: { listName: string }): ParsedTaskExport {
-  const table = csvTable(text.replace(/^﻿/, ''));
+  const table = csvTable(text.replace(/^\uFEFF/, ''));
   const col = columns(table);
   const tasks: ImportedTask[] = [];
   let skipped = 0;

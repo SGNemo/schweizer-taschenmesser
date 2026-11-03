@@ -36,7 +36,7 @@ function plain(s: string): string {
 }
 
 export function parseEnex(text: string): EnexResult {
-  const src = text.replace(/^﻿/, '');
+  const src = text.replace(/^\uFEFF/, '');
   const result: EnexResult = { notes: [], skipped: {}, total: 0, invalid: false };
   if (!/<en-export[\s>]/.test(src)) return { ...result, invalid: true };
   let at = 0;

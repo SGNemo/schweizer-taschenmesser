@@ -16,8 +16,8 @@ import { db } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import { MigratePicker } from '@/layout/setup/steps/MigrateStep';
-import { openAppImport } from '@/core/importer/appImport';
-import { tImp } from '@/strings.importers';
+import { openAppImport } from '@/core/importer/appImportStore';
+
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, Dialog, TextField } from '@/ui';
@@ -292,11 +292,11 @@ export function BackupSection() {
           </div>
           <div className={styles.row}>
             <div>
-              <strong>{tImp.get().title}</strong>
-              <p className={styles.muted}>{tImp.get().intro}</p>
+              <strong>{t.importers.title}</strong>
+              <p className={styles.muted}>{t.importers.intro}</p>
             </div>
             <Button data-testid="appimport-open" onClick={() => openAppImport()}>
-              {tImp.get().choose}
+              {t.importers.choose}
             </Button>
           </div>
         </div>

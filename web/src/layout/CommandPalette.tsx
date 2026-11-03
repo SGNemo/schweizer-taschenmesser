@@ -21,8 +21,8 @@ import { searchSettings, type SettingsSearchResult } from '@/core/settings/regis
 import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
 import { applyProfile, builtinProfiles } from '@/core/settings/profiles';
 import { tSettings3 } from '@/strings.settings3';
-import { tImp } from '@/strings.importers';
-import { openAppImport } from '@/core/importer/appImport';
+
+import { openAppImport } from '@/core/importer/appImportStore';
 import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
 import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
@@ -247,7 +247,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
       {
         id: 'import-app',
-        label: tImp.get().paletteCommand,
+        label: t.importers.paletteCommand,
         icon: 'download',
         keywords: [
           'import',

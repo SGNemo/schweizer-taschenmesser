@@ -5,7 +5,6 @@
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { create } from 'zustand';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { importersOf } from '@/core/dataapi/onboarding';
@@ -13,26 +12,12 @@ import { pickRawFiles } from '@/core/io/pickFile';
 import { detectSources, SOURCES } from '@/importers/registry';
 import { isAbort, runJob } from '@/importers/run';
 import type { SourceDef, SourceFile } from '@/importers/types';
-import { tImp } from '@/strings.importers';
+
 import { t } from '@/strings';
 import { Button, Dialog, patternStyles } from '@/ui';
 import { newBatchId } from './batches';
+import { useAppImport } from './appImportStore';
 import { useOnboardingHost, type HostItem } from './host';
-
-interface AppImportState {
-  open: boolean;
-  openDialog: () => void;
-  close: () => void;
-}
-
-export const useAppImport = create<AppImportState>((set) => ({
-  open: false,
-  openDialog: () => set({ open: true }),
-  close: () => set({ open: false }),
-}));
-
-/** For the command palette and the settings row. */
-export const openAppImport = () => useAppImport.getState().openDialog();
 
 /** Relevant files per source: those the source itself recognises. */
 const filesOf = (source: SourceDef, files: SourceFile[]) =>
@@ -89,14 +74,14 @@ export function AppImportHost() {
   const { open, close } = useAppImport();
   if (!open) return null;
   return (
-    <Dialog open onClose={close} title={tImp.get().title}>
+    <Dialog open onClose={close} title={t.importers.title}>
       <AppImport onClose={close} />
     </Dialog>
   );
 }
 
 function AppImport({ onClose }: { onClose: () => void }) {
-  const text = tImp.get();
+  const text = t.importers;
   const navigate = useNavigate();
   const startQueue = useOnboardingHost((h) => h.openQueue);
   const states = useModuleStates();

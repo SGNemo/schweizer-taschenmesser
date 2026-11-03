@@ -114,10 +114,16 @@ describe('Obsidian ZIP end to end', () => {
   });
 
   it('creates a notebook per top-level folder and reuses an existing one', async () => {
-    await notebookRepo.create({ name: 'alltag', order: 0 }, { id: 'nb-old' });
+    await notebookRepo.create(
+      { name: 'alltag', tone: 0, icon: 'note', order: 0 },
+      { id: 'nb-old' },
+    );
     const expanded = expandFiles([{ name: 'vault.zip', bytes: zip }]);
     const r = await parse('notes', 'file', {
-      ...files(...expanded.files),
+      kind: 'file',
+      text: expanded.files[0]!.text,
+      fileName: 'vault.zip',
+      files: expanded.files,
       binary: expanded.binary,
     });
     expect(r.rows.filter((x) => x.candidate.collection === 'notebook')).toHaveLength(0);

@@ -245,7 +245,8 @@ export const accounts: Strings['accounts'] = {
     backupPasswordImport: 'Senha do backup',
     importDone: (added: number, duplicates: number, skipped: number) =>
       `${added} ${added <= 1 ? 'importado' : 'importados'}${duplicates ? `, ${duplicates} já ${duplicates <= 1 ? 'existente' : 'existentes'}` : ''}${skipped ? `, ${skipped} ${skipped <= 1 ? 'ignorado' : 'ignorados'} (tipo não suportado)` : ''}.`,
-    importFailedCsv: 'Este arquivo CSV não foi reconhecido (esperado: Bitwarden, KeePass ou 1Password).',
+    importFailedCsv:
+      'Este arquivo CSV não foi reconhecido (esperado: Bitwarden, KeePass ou 1Password).',
     importFailedBackup: 'Não foi possível abrir o backup (senha incorreta ou arquivo danificado).',
     exported: 'Exportação salva.',
     changePassword: 'Alterar senha mestra',

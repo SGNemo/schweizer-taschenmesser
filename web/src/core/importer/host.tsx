@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import { getManifest } from '@/core/modules/registry';
-import { AppImportHost } from './appImport';
+import { lazy, Suspense } from 'react';
+import { useAppImport } from './appImportStore';
 import { OnboardingWizard } from './OnboardingWizard';
 import type { ImportPreset } from './types';
 
 /** One wizard run: a module and, when files were chosen before, what to read in it. */
+// The dialog (source detection, unpacking) is only fetched when someone opens it.
+const AppImportHost = lazy(() => import('./appImport').then((m) => ({ default: m.AppImportHost })));
+
 export interface HostItem {
   moduleId: string;
   preset?: ImportPreset;
@@ -54,6 +58,7 @@ export const useOnboardingHost = create<HostState>((set, get) => ({
 export function OnboardingHost() {
   const { moduleId, preset, queue, total, close } = useOnboardingHost();
   const manifest = moduleId ? getManifest(moduleId) : undefined;
+  const appImportOpen = useAppImport((s) => s.open);
   return (
     <>
       {manifest ? (
@@ -67,7 +72,11 @@ export function OnboardingHost() {
           part={total > 1 ? { index: total - queue.length, total } : undefined}
         />
       ) : null}
-      <AppImportHost />
+      {appImportOpen ? (
+        <Suspense fallback={null}>
+          <AppImportHost />
+        </Suspense>
+      ) : null}
     </>
   );
 }
