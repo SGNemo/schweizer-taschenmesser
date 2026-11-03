@@ -29,7 +29,7 @@
     "desktop--calendar": {
       "height": 800,
       "buttons": 268,
-      "links": 31,
+      "links": 35,
       "icons": 62,
       "firstScreenActions": 118
     },
@@ -56,9 +56,9 @@
     },
     "desktop--lists": {
       "height": 800,
-      "buttons": 68,
+      "buttons": 76,
       "links": 28,
-      "icons": 77,
+      "icons": 86,
       "firstScreenActions": 64
     },
     "desktop--notes": {
@@ -78,14 +78,14 @@
     "desktop--people": {
       "height": 800,
       "buttons": 91,
-      "links": 31,
+      "links": 35,
       "icons": 90,
       "firstScreenActions": 62
     },
     "desktop--reminders": {
       "height": 800,
       "buttons": 84,
-      "links": 32,
+      "links": 36,
       "icons": 84,
       "firstScreenActions": 58
     },
@@ -98,7 +98,7 @@
     },
     "desktop--settings-benachrichtigungen": {
       "height": 800,
-      "buttons": 63,
+      "buttons": 80,
       "links": 40,
       "icons": 73,
       "firstScreenActions": 56
@@ -127,13 +127,13 @@
     "desktop--todos": {
       "height": 800,
       "buttons": 132,
-      "links": 31,
+      "links": 35,
       "icons": 109,
       "firstScreenActions": 60
     },
     "desktop--vault": {
       "height": 800,
-      "buttons": 74,
+      "buttons": 82,
       "links": 28,
       "icons": 62,
       "firstScreenActions": 54
@@ -162,7 +162,7 @@
     "phone--calendar": {
       "height": 1231,
       "buttons": 53,
-      "links": 12,
+      "links": 14,
       "icons": 14,
       "firstScreenActions": 57
     },
@@ -211,14 +211,14 @@
     "phone--people": {
       "height": 3457,
       "buttons": 66,
-      "links": 12,
+      "links": 14,
       "icons": 42,
       "firstScreenActions": 30
     },
     "phone--reminders": {
       "height": 2353,
       "buttons": 59,
-      "links": 13,
+      "links": 15,
       "icons": 36,
       "firstScreenActions": 31
     },
@@ -231,7 +231,7 @@
     },
     "phone--settings-benachrichtigungen": {
       "height": 2176,
-      "buttons": 28,
+      "buttons": 43,
       "links": 7,
       "icons": 11,
       "firstScreenActions": 15
@@ -244,7 +244,7 @@
       "firstScreenActions": 36
     },
     "phone--settings-module": {
-      "height": 1898,
+      "height": 2088,
       "buttons": 5,
       "links": 22,
       "icons": 25,
@@ -260,7 +260,7 @@
     "phone--todos": {
       "height": 4066,
       "buttons": 106,
-      "links": 12,
+      "links": 14,
       "icons": 60,
       "firstScreenActions": 31
     },
