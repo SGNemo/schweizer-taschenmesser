@@ -34,6 +34,18 @@ export const maps: Strings['maps'] = {
   tabs: { label: 'View', places: 'Places', routes: 'Routes', map: 'Map' },
   empty: { places: 'No places yet.', routes: 'No routes yet.' },
   add: { place: 'Add a place', route: 'Add a route' },
+  placesBar: {
+    search: 'Search places',
+    all: 'All',
+    sortLabel: 'Sort',
+    recent: 'Recent',
+    name: 'Name',
+    navigate: 'Navigate',
+    navigateTo: (name: string) => `Navigate to ${name}`,
+    none: 'No matching places.',
+    last: (name: string) => `Last saved: ${name}`,
+    pinHint: 'No place saved yet.',
+  },
   widget: { title: 'Places & routes', empty: 'No places or routes yet.', addPlace: 'Save a place' },
   place: {
     titleAdd: 'Save a place',

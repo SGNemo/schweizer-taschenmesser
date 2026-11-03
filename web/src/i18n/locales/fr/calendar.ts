@@ -112,6 +112,7 @@ export const calendar: Strings['calendar'] = {
   end: 'Fin',
   location: 'Lieu',
   showOnMap: 'Afficher sur la carte',
+  saveAsPlace: 'Enregistrer comme lieu',
   nothing: 'Aucune entrée',
   endBeforeStart: 'La fin ne peut pas être avant le début.',
   more: (n: number) => `+${n} de plus`,
