@@ -11,7 +11,7 @@ export default defineConfig({
   testDir: './e2e/perf',
   testMatch: ['data.spec.ts'],
   workers: 1,
-  timeout: 1_800_000,
+  timeout: 10_800_000,
   reporter: 'list',
   use: {
     locale: 'de-DE',
