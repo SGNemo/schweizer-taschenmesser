@@ -21,7 +21,8 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
   Werkzeug. Den früheren Notizzettel findest du jetzt als **Zettel** oben in den Notizen (dein alter Text wird einmal übernommen).
 - **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. ZIP-Dateien bitte vorher entpacken.
 - **Dieser PC** (nur Windows-App): Laufwerke analysieren und aufräumen, im Tab „System“ Prozessor, Speicher, Akku, Grafik und Netzwerk.
-- **Stillgelegt (0.4.0):** Nachrichten, Habit-Tracker und Zeiterfassung sind nicht mehr sichtbar. Ihre Daten bleiben gespeichert und stecken weiter in jedem Backup.
+- **Gewohnheiten** (Planen, standardmäßig aus): Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“ –, Pausentage, die nie gegen dich zählen, ein Jahresraster und Erinnerungen im Zeitfenster, die aufhören, sobald das Tagesziel erreicht ist (Vorlage „Wasser trinken“). Das ist ein neues Modul; der alte Habit-Tracker von 0.4.0 bleibt stillgelegt, seine alten Daten stecken weiter in jedem Backup.
+- **Stillgelegt (0.4.0):** Nachrichten und Zeiterfassung sind nicht mehr sichtbar. Ihre Daten bleiben gespeichert und stecken weiter in jedem Backup.
 - **Karte & WhatsApp:** Termine mit Ort haben „Auf der Karte zeigen“; bei Personen mit Geburtstag öffnet der Knopf WhatsApp mit einem Glückwunsch
   (den Kontakt wählst du in WhatsApp).
 

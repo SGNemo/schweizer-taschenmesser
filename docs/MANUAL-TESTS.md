@@ -536,3 +536,8 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
 - **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
 - **G10 Kopf:** Beleg-Karte hell, dunkel, „Ruhig“, 412 px: Summe, Anzahl, nächste Fälligkeit lesbar, gezackter Rand ohne Bewegung. ☐
+- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit hinzufügen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
+- **PH2 Pausentag und Verlauf:** an einer Gewohnheit „⋯“ → „Pausentag“: die Karte wird grau, es kommt keine Erinnerung, im Verlauf ist der Tag schraffiert und die Quote („x von y geplanten Tagen“) sinkt nicht; „Pausentag aufheben“ stellt ihn zurück. ☐
+- **PH3 Aus-Schalter:** Einstellungen → Gewohnheiten → „Erinnerungen“ aus: keine Benachrichtigung mehr, Ringe und Verlauf bleiben; Ruhige Zeiten verschieben die Erinnerungen wie bei anderen Modulen. ☐
+- **PH4 Kopf und Widget:** Kopf zeigt je einen Ring pro heutige Gewohnheit (hell, dunkel, „Ruhig“, 412 px, mit Text); das Übersichts-Widget zeigt „x von y geschafft“ und „+1 …“. ☐
+
