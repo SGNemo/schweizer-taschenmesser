@@ -34,10 +34,12 @@ export function validateAutomation(
   const actions = automation.actions ?? [];
   if (actions.length > 0 && !aiSchema)
     errors.push('automation.actions needs an aiSchema (rules write through its actions)');
-  for (const id of actions) {
-    const def = aiSchema?.actions?.[id];
+  const defs = aiSchema?.actions;
+  for (const id of aiSchema ? actions : []) {
+    const def = defs?.[id];
     if (!def) errors.push(`automation.actions: "${id}" is not in aiSchema.actions`);
-    else if (def.kind === 'delete') errors.push(`automation.actions: "${id}" deletes, which rules never do`);
+    else if (def.kind === 'delete')
+      errors.push(`automation.actions: "${id}" deletes, which rules never do`);
   }
   if (automation.detectors && !automation.events)
     errors.push('automation.detectors need their events declared in automation.events');

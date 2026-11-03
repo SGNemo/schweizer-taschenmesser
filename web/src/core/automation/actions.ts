@@ -35,6 +35,7 @@ export interface RunContext {
   manifests: readonly ModuleManifest[];
   known: readonly ModuleManifest[];
   database: TaschenmesserDB;
+  allowed?: (module: string, action: string) => boolean;
 }
 
 /** 64-bit-ish id part from text (FNV-1a twice); only has to be stable, not secret. */
@@ -74,6 +75,7 @@ async function prepare(
   const base = { kind: a.kind, module: a.module, ok: false };
   if (EXCLUDED_MODULES.includes(a.module)) return { ...base, note: 'not-allowed' };
   if (!ctx.manifests.some((m) => m.id === a.module)) return { ...base, note: 'module-unavailable' };
+  if (ctx.allowed && !ctx.allowed(a.module, a.action)) return { ...base, note: 'not-allowed' };
   let op: PreparedOp;
   try {
     op = await prepareOp(proposal(a, ctx.event), index, {

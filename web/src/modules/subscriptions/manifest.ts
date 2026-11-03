@@ -58,6 +58,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 60,
   area: 'money',
+  automation: () => import('./automation'),
   contributions: {
     onboarding: onboarding,
     quickAdd: [

@@ -11,13 +11,13 @@ import {
   checkDeleteSource,
   checkMaturity,
   checkRowSource,
+  checkAutomationSource,
   checkModule,
   checkSettingsFieldMeta,
   checkSettingsSource,
   checkWidgetSource,
 } from './lib/checkModules.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
-import { validateAutomation } from '../src/core/modules/automation.ts';
 import {
   MODULE_FIELD_GROUPS,
   SETTINGS_CATEGORY_IDS,
@@ -49,16 +49,20 @@ for (const id of readdirSync(modulesDir).sort()) {
     const { aiSchema } = await import(pathToFileURL(aiPath).href);
     errors.push(...validateAiActions(aiSchema).map((e) => `${id}: ${e}`));
   }
-  // `automation` (rules): when present the file must agree with the manifest (watched collections, actions).
-  const autoPath = join(dir, 'automation.ts');
+  // `automation` (rules): the file exists and its `actions` agree with `ai.ts` (the full check runs in
+  // `core/automation/modules.test.ts`, because the file imports repos that plain node cannot load).
   if (/\bautomation:\s*\(\)\s*=>\s*import\(/.test(manifest)) {
-    if (!existsSync(autoPath)) errors.push(`${id}: manifest.automation points to a missing automation.ts`);
-    else {
-      const { automation } = await import(pathToFileURL(autoPath).href);
-      const aiSchema = existsSync(aiPath) ? (await import(pathToFileURL(aiPath).href)).aiSchema : undefined;
-      const collections = [...manifest.matchAll(/^\s+(\w+):\s*\{\s*schema:/gm)].map((m) => m[1]);
-      errors.push(...validateAutomation(id, automation, collections, aiSchema).map((e) => `${id}: ${e}`));
-    }
+    const autoPath = join(dir, 'automation.ts');
+    if (!existsSync(autoPath))
+      errors.push(`${id}: manifest.automation points to a missing automation.ts`);
+    else
+      errors.push(
+        ...checkAutomationSource(
+          id,
+          readFileSync(autoPath, 'utf8'),
+          existsSync(aiPath) ? readFileSync(aiPath, 'utf8') : undefined,
+        ),
+      );
   }
   for (const m of manifest.matchAll(/import\(\s*['"]\.\/(widgets\/[^'"]+)['"]\s*\)/g)) {
     const file = ['.tsx', '.ts'].map((e) => join(dir, m[1] + e)).find(existsSync);

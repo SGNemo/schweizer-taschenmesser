@@ -26,6 +26,8 @@ export interface EngineDeps {
   /** All modules, to tell "disabled" from "unknown". */
   known?: () => readonly ModuleManifest[];
   database?: TaschenmesserDB;
+  /** Which `aiSchema.actions` of which module rules may call (`manifest.automation.actions`); unset = any. */
+  allowed?: (module: string, action: string) => boolean;
 }
 
 /** The run that is writing right now; events that arrive meanwhile carry it as their cause. */
@@ -140,6 +142,7 @@ async function runRule(
       manifests: deps.manifests(),
       known: (deps.known ?? deps.manifests)(),
       database,
+      allowed: deps.allowed,
     });
   } finally {
     active = undefined;
