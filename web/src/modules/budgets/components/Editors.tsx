@@ -248,7 +248,7 @@ function BudgetHistory({
         </tbody>
       </table>
       <Link
-        to={`/finance?tab=transactions&month=${rows[rows.length - 1]?.info.months.at(-1) ?? month}`}
+        to={`/finance?tab=transactions&month=${rows[rows.length - 1]?.info.months.at(-1) ?? month}&category=${encodeURIComponent(budget.categoryId)}`}
       >
         {e.history.bookings}
       </Link>
@@ -283,6 +283,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   const [rate, setRate] = useState(
     existing?.monthlyRateMinor ? formatMoneyInput(existing.monthlyRateMinor) : '',
   );
+  const [startDate, setStartDate] = useState(existing?.startDate ?? '');
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');
 
@@ -297,6 +298,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       currency: currency === 'EUR' ? undefined : currency,
       deadline: deadline || undefined,
       monthlyRateMinor: parseMoney(rate) || undefined,
+      startDate: startDate || undefined,
       note: note.trim() || undefined,
     };
     if (existing) await goalRepo.update(existing.id, data);
@@ -333,7 +335,10 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           onChange={(e) => setDeadline(e.target.value)}
         />
       </Split>
-      <AdvancedFields moduleId="budgets" hasData={rate !== '' || currencyOf(existing) !== 'EUR'}>
+      <AdvancedFields
+        moduleId="budgets"
+        hasData={rate !== '' || startDate !== '' || currencyOf(existing) !== 'EUR'}
+      >
         <TextField
           label={t.budgets.ext.goal.rate}
           inputMode="decimal"
@@ -341,6 +346,13 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           value={rate}
           onChange={(e) => setRate(e.target.value)}
           hint={t.budgets.ext.goal.rateHint}
+        />
+        <TextField
+          label={t.budgets.ext.goal.start}
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          hint={t.budgets.ext.goal.startHint}
         />
         <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
       </AdvancedFields>

@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { currencyOf, formatMoney, parseMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
@@ -44,9 +45,14 @@ export function TransactionsTab({
   onOpen: (tx: Stored<Transaction>) => void;
 }) {
   const currency = useCurrency();
+  const [params] = useSearchParams();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<TxFilter['kind']>('all');
-  const [more, setMore] = useState(false);
+  // `?category=<id>` (the budget history link) starts the list filtered by that category.
+  const urlCategory = params.get('category');
+  const fromUrl =
+    urlCategory && data.categories.some((c) => c.id === urlCategory) ? urlCategory : '';
+  const [more, setMore] = useState(fromUrl !== '');
   const [advanced] = useAdvanced('finance');
   const [extra, setExtra] = useState<{
     accountId: string;
@@ -54,7 +60,7 @@ export function TransactionsTab({
     min: string;
     max: string;
     withTransfers: boolean;
-  }>({ accountId: '', categoryId: '', min: '', max: '', withTransfers: true });
+  }>({ accountId: '', categoryId: fromUrl, min: '', max: '', withTransfers: true });
   const [transfer, setTransfer] = useState<TransferTarget>(null);
   const category = new Map(data.categories.map((c) => [c.id, c.name]));
   const account = new Map(data.accounts.map((a) => [a.id, a.name]));
@@ -168,7 +174,7 @@ export function TransactionsTab({
             >
               <option value="">{t.finance.ext.filter.allCategories}</option>
               {data.categories
-                .filter((c) => !c.parentId)
+                .filter((c) => !c.parentId || c.id === extra.categoryId)
                 .sort((a, b) => compareText(a.name, b.name))
                 .map((c) => (
                   <option key={c.id} value={c.id}>

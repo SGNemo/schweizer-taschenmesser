@@ -31,7 +31,7 @@ import {
   type BudgetTarget,
   type GoalTarget,
 } from '../components/Editors';
-import { goalPlan, goalProgress } from '../compute';
+import { goalPace, goalPlan, goalProgress, paceReachedOn } from '../compute';
 import { budgetRepo, depositRepo, goalRepo } from '../repo';
 import type { Goal } from '../schema';
 
@@ -286,6 +286,19 @@ export default function BudgetsPage() {
                             ? t.budgets.ext.goal.late(plan.monthsLate)
                             : t.budgets.ext.goal.inTime
                           : ''}
+                      </p>
+                    );
+                  })()}
+                  {(() => {
+                    const pace = goalPace(g, p.saved, day);
+                    if (pace === undefined) return null;
+                    const reach = g.monthlyRateMinor
+                      ? undefined
+                      : paceReachedOn(g, p.saved, pace, day);
+                    return (
+                      <p className={patternStyles.muted} data-testid="goal-pace">
+                        {t.budgets.ext.goal.pace(formatMoney(pace, currencyOf(g)))}{' '}
+                        {reach ? t.budgets.ext.goal.paceReach(formatDay(reach, 'LLLL yyyy')) : ''}
                       </p>
                     );
                   })()}

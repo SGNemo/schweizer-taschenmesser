@@ -145,3 +145,25 @@ export function goalPlan(
   }
   return { months, reachedOn, monthsLate };
 }
+
+/** What a goal has gained per month on average since its start; none without a start or without savings. */
+export function goalPace(
+  goal: Pick<Goal, 'startDate'>,
+  saved: number,
+  today: string,
+): number | undefined {
+  if (!goal.startDate || saved <= 0 || goal.startDate > today) return undefined;
+  const months = Math.max(1, Math.round(daysBetween(goal.startDate, today) / DAYS_PER_MONTH));
+  return Math.round(saved / months);
+}
+
+/** The month the target is reached at the pace so far (none when the goal is already met). */
+export function paceReachedOn(
+  goal: Pick<Goal, 'targetMinor'>,
+  saved: number,
+  pace: number,
+  today: string,
+): string | undefined {
+  if (pace < 1 || saved >= goal.targetMinor) return undefined;
+  return addMonthsStr(today, Math.ceil((goal.targetMinor - saved) / pace));
+}
