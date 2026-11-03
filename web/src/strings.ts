@@ -1497,6 +1497,24 @@ export const de = {
     asTodo: 'Als ToDo merken',
     asTodoDone: 'Als ToDo gemerkt.',
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
+    movedToast: 'Termin verschoben.',
+    dragRecurring: 'Wiederkehrende Termine änderst du im Editor.',
+    calendars: {
+      group: 'Kalender',
+      manage: 'Kalender verwalten',
+      add: 'Kalender hinzufügen',
+      edit: 'Kalender bearbeiten',
+      name: 'Name',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      field: 'Kalender',
+      none: 'Kein Kalender',
+      empty:
+        'Noch kein eigener Kalender. Lege zum Beispiel „Arbeit“ und „Familie“ an, dann kannst du sie einzeln ein- und ausblenden.',
+      deleteHint: 'Beim Löschen bleiben die Termine erhalten; sie gehören dann zu keinem Kalender.',
+      shown: 'sichtbar',
+      hidden: 'ausgeblendet',
+    },
     weekNoShort: 'KW',
     agendaEmpty: 'In diesem Zeitraum ist nichts geplant.',
     holidayLabel: 'Feiertag',
@@ -1598,10 +1616,22 @@ export const de = {
       pausedToast: 'Pausiert.',
       resumedToast: 'Wieder eingeschaltet.',
       widgetEmpty: 'Keine anstehenden Erinnerungen.',
+      ringNone: 'Nichts in den nächsten 24 Stunden.',
+      ringIn: (minutes: number) =>
+        minutes < 1
+          ? 'jetzt'
+          : minutes < 60
+            ? `in ${minutes} Min`
+            : `in ${Math.floor(minutes / 60)} Std${minutes % 60 ? ` ${minutes % 60} Min` : ''}`,
+      ringLabel: (when: string) => `Nächste Erinnerung ${when}`,
+      clearDone: 'Erledigte entfernen',
+      clearedToast: (n: number) =>
+        n === 1 ? '1 Erinnerung entfernt.' : `${n} Erinnerungen entfernt.`,
     },
     notify: {
       label: 'Benachrichtigen',
       rowLabel: 'Erinnern',
+      extra: 'Zusätzlich erinnern',
       noneShort: 'Keine',
       hourShort: '1 h',
       dayShort: '1 Tag',

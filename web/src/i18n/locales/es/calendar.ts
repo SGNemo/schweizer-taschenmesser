@@ -32,6 +32,24 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Guardar como tarea',
   asTodoDone: 'Guardado como tarea.',
   skipOccurrence: (date: string) => `Quitar solo el del ${date}`,
+  movedToast: 'Evento movido.',
+  dragRecurring: 'Los eventos repetidos se cambian en el editor.',
+  calendars: {
+    group: 'Calendarios',
+    manage: 'Gestionar calendarios',
+    add: 'Añadir calendario',
+    edit: 'Editar calendario',
+    name: 'Nombre',
+    colour: 'Color',
+    colourN: (n: number) => `Color ${n}`,
+    field: 'Calendario',
+    none: 'Sin calendario',
+    empty:
+      'Aún no tienes calendarios propios. Crea, por ejemplo, «Trabajo» y «Familia» y muéstralos u ocúltalos uno a uno.',
+    deleteHint: 'Al borrarlo se conservan los eventos; pasan a no tener calendario.',
+    shown: 'visible',
+    hidden: 'oculto',
+  },
   weekNoShort: 'Sem.',
   agendaEmpty: 'No hay nada planificado en este periodo.',
   holidayLabel: 'Festivo',
@@ -132,10 +150,22 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'En pausa.',
     resumedToast: 'Reactivado.',
     widgetEmpty: 'No hay recordatorios próximos.',
+    ringNone: 'Nada en las próximas 24 horas.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'ahora'
+        : minutes < 60
+          ? `en ${minutes} min`
+          : `en ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Próximo recordatorio ${when}`,
+    clearDone: 'Quitar los terminados',
+    clearedToast: (n: number) =>
+      n === 1 ? '1 recordatorio quitado.' : `${n} recordatorios quitados.`,
   },
   notify: {
     label: 'Notificar',
     rowLabel: 'Recordar',
+    extra: 'Recordar también',
     noneShort: 'Ninguno',
     hourShort: '1 h',
     dayShort: '1 día',

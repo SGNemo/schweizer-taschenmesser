@@ -32,6 +32,25 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Garder comme tâche',
   asTodoDone: 'Gardé comme tâche.',
   skipOccurrence: (date: string) => `Retirer uniquement celui du ${date}`,
+  movedToast: 'Événement déplacé.',
+  dragRecurring: 'Modifiez les événements récurrents dans l’éditeur.',
+  calendars: {
+    group: 'Agendas',
+    manage: 'Gérer les agendas',
+    add: 'Ajouter un agenda',
+    edit: 'Modifier l’agenda',
+    name: 'Nom',
+    colour: 'Couleur',
+    colourN: (n: number) => `Couleur ${n}`,
+    field: 'Agenda',
+    none: 'Aucun agenda',
+    empty:
+      'Pas encore d’agenda à vous. Créez par exemple « Travail » et « Famille », puis affichez-les ou masquez-les un par un.',
+    deleteHint:
+      'La suppression conserve les événements ; ils n’appartiennent alors à aucun agenda.',
+    shown: 'affiché',
+    hidden: 'masqué',
+  },
   weekNoShort: 'Sem.',
   agendaEmpty: 'Rien de prévu sur cette période.',
   holidayLabel: 'Jour férié',
@@ -132,10 +151,21 @@ export const calendar: Strings['calendar'] = {
     pausedToast: 'En pause.',
     resumedToast: 'Réactivé.',
     widgetEmpty: 'Aucun rappel à venir.',
+    ringNone: 'Rien dans les prochaines 24 heures.',
+    ringIn: (minutes: number) =>
+      minutes < 1
+        ? 'maintenant'
+        : minutes < 60
+          ? `dans ${minutes} min`
+          : `dans ${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+    ringLabel: (when: string) => `Prochain rappel ${when}`,
+    clearDone: 'Retirer les rappels terminés',
+    clearedToast: (n: number) => (n === 1 ? '1 rappel retiré.' : `${n} rappels retirés.`),
   },
   notify: {
     label: 'Notifier',
     rowLabel: 'Me rappeler',
+    extra: 'Rappeler aussi',
     noneShort: 'Aucun',
     hourShort: '1 h',
     dayShort: '1 jour',
