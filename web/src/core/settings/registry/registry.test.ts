@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SETTINGS_CATEGORIES } from './categories';
-import { legacyTarget, settingsPath } from './paths';
+import { CATEGORY_GROUPS, groupOf, groupSections } from './groups';
+import { legacyTarget, moduleIdOfSection, settingsPath } from './paths';
 import { sectionsOf, validateSections, visibleCategoryIds, visibleSections } from './registry';
 import { searchSettings } from './search';
 import { SETTINGS_CATEGORY_IDS, type SettingsContext, type SettingsSectionDef } from './types';
@@ -152,5 +153,47 @@ describe('settings paths', () => {
     expect(legacyTarget('#startdata')).toBe('/settings/module#modules');
     expect(legacyTarget('#unknown')).toBeUndefined();
     expect(legacyTarget('')).toBeUndefined();
+  });
+});
+
+describe('module pages and groups', () => {
+  it('links a module section to the module page, other sections to their category', () => {
+    expect(settingsPath('module', 'module-todos')).toBe('/settings/module/todos#module-todos');
+    expect(settingsPath('module', 'module-todos', 'showDone')).toBe(
+      '/settings/module/todos#module-todos--showDone',
+    );
+    expect(settingsPath('sicherheit', 'module-accounts')).toBe(
+      '/settings/sicherheit#module-accounts',
+    );
+    expect(moduleIdOfSection('module', 'modules')).toBeUndefined();
+    expect(moduleIdOfSection('module', 'module-notes')).toBe('notes');
+  });
+
+  it('places core sections in the declared groups of their category only', () => {
+    expect(groupOf(sec({ id: 'shortcuts', category: 'allgemein' }))).toBe('input');
+    // A group of another category does not apply.
+    expect(groupOf(sec({ id: 'shortcuts', category: 'ki' }))).toBeUndefined();
+    expect(groupOf(sec({ id: 'x', category: 'ki', group: 'usage' }))).toBe('usage');
+    expect(groupOf(sec({ id: 'x', category: 'ki', group: 'nope' }))).toBeUndefined();
+    for (const groups of Object.values(CATEGORY_GROUPS)) {
+      expect(new Set(groups).size).toBe(groups!.length);
+    }
+  });
+
+  it('splits a category into ungrouped sections first, then groups in declared order', () => {
+    const all = [
+      sec({ id: 'recently-deleted' }),
+      sec({ id: 'general' }),
+      sec({ id: 'free' }),
+      sec({ id: 'shortcuts' }),
+    ];
+    expect(
+      groupSections('allgemein', all).map((g) => [g.group, g.sections.map((s) => s.id)]),
+    ).toEqual([
+      [undefined, ['free']],
+      ['profile', ['general']],
+      ['input', ['shortcuts']],
+      ['data', ['recently-deleted']],
+    ]);
   });
 });

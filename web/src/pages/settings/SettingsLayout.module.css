@@ -222,3 +222,102 @@
 .previewBadge {
   margin: 0 0 calc(-1 * var(--space-2));
 }
+
+/* Second navigation level: the groups of the open category, under its link. */
+.subnav {
+  list-style: none;
+  margin: var(--space-hair) 0 var(--space-2);
+  padding: 0 0 0 calc(var(--space-3) + 1.5rem);
+  display: flex;
+  flex-direction: column;
+}
+.subLink {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border-left: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-decoration: none;
+}
+.subLink:hover {
+  color: var(--text);
+  border-left-color: var(--accent);
+}
+
+/* Breadcrumb in the content. */
+.breadcrumb ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  color: var(--text-muted);
+}
+.breadcrumb [aria-current='page'] {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+.crumbSep {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Table of contents: a third column on very wide windows only. */
+.toc {
+  display: none;
+}
+@media (min-width: 1440px) {
+  .splitToc {
+    grid-template-columns: 16rem minmax(0, var(--settings-w)) 13rem;
+  }
+  .toc {
+    display: block;
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100dvh - var(--space-6));
+    overflow-y: auto;
+  }
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .toc a {
+    display: flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 var(--space-3);
+    border-left: 2px solid var(--border);
+    color: var(--text-muted);
+    font-size: var(--text-meta);
+    text-decoration: none;
+  }
+  .toc a[aria-current='location'] {
+    border-left-color: var(--accent);
+    color: var(--text);
+    font-weight: var(--weight-medium);
+  }
+}
+.tocTitle {
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}

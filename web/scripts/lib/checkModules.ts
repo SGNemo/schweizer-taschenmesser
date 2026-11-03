@@ -240,3 +240,23 @@ export function checkSettingsSource(
     `${id}: settings.category "${match[1]}" is not a settings category (${categories.join(', ')})`,
   ];
 }
+
+/**
+ * Optional placement of a module setting (`group` on a field = block of the module's settings page,
+ * `level` = Basis or Erweitert): unknown values would silently fall back, so they fail here.
+ */
+export function checkSettingsFieldMeta(
+  id: string,
+  source: string,
+  groups: readonly string[],
+  levels: readonly string[],
+): string[] {
+  const errors: string[] = [];
+  for (const m of source.matchAll(/\bgroup:\s*['"]([^'"]*)['"]/g))
+    if (!groups.includes(m[1]!))
+      errors.push(`${id}: settings field group "${m[1]}" is not one of ${groups.join(', ')}`);
+  for (const m of source.matchAll(/\blevel:\s*['"]([^'"]*)['"]/g))
+    if (!levels.includes(m[1]!))
+      errors.push(`${id}: settings field level "${m[1]}" is not one of ${levels.join(', ')}`);
+  return errors;
+}

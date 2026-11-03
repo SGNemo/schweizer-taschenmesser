@@ -13,7 +13,12 @@ import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { NotFound } from '@/pages/NotFound';
-import { CategoryPage, SettingsIndex, SettingsLayout } from '@/pages/settings/SettingsLayout';
+import {
+  CategoryPage,
+  ModuleSettingsRoute,
+  SettingsIndex,
+  SettingsLayout,
+} from '@/pages/settings/SettingsLayout';
 import { lazyOnline } from '@/core/net/OnlineChunk';
 
 import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
@@ -170,6 +175,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           ),
           children: [
             { index: true, element: <SettingsIndex /> },
+            { path: 'module/:moduleId', element: <ModuleSettingsRoute /> },
             { path: ':category', element: <CategoryPage /> },
           ],
         },
