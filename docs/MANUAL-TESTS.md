@@ -573,3 +573,10 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
 - **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
 
+## Importer aus anderen Apps (Branch `feat/importers`)
+- **IA1** Befehlspalette → „Aus anderer App importieren …“ → eine echte `.enex`-Datei aus Evernote wählen: Erkennung „Evernote“, Vorschau, Bericht mit Anhängen; „Rückgängig“ entfernt alles.
+- **IA2** Ein Obsidian-Ordner als ZIP (Windows: Rechtsklick → Senden an → ZIP): Notizbücher aus Ordnern, `.obsidian` fehlt in der Vorschau, Bilder werden im Bericht gezählt.
+- **IA3** Google Takeout (Kalender + Keep + Aufgaben) als ZIP: drei Teile nacheinander („Teil 1 von 3“), je eigene Vorschau.
+- **IA4** Große Datei (> 50 MB Text oder viele Tausend Notizen): Fortschritt sichtbar, „Abbrechen“ mittendrin lässt nichts zurück (Notizen-Zähler unverändert).
+- **IA5** Echte Exporte prüfen (Kopfzeilen sind je Version/Sprache verschieden): Outlook-Aufgaben-CSV (deutsch und englisch), KeePassXC- und 1Password-CSV im Tresor-Import; unbekannte Kopfzeile melden.
+

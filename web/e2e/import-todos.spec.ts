@@ -40,7 +40,7 @@ async function openWizard(page: Page, url = '/todos') {
         })
   ).click();
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
-  await dialog.getByRole('button', { name: /Aus Todoist oder Google Tasks/ }).click();
+  await dialog.getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ }).click();
   return dialog;
 }
 
