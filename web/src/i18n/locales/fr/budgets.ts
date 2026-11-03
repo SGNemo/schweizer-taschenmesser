@@ -1,6 +1,69 @@
 import type { Strings } from '@/strings';
 
 export const budgets: Strings['budgets'] = {
+  ext: {
+    period: {
+      label: 'Période',
+      month: 'Mois',
+      quarter: 'Trimestre',
+      year: 'Année',
+      quarterLabel: (q: number, year: number) => `T${q} ${year}`,
+      perPeriod: (period: string) => `par ${period}`,
+    },
+    carry: {
+      label: 'Reporter le reste sur la période suivante',
+      hint: 'Ce qui reste agrandit le budget suivant ; ce qui a été dépassé le réduit (d’un budget au plus).',
+      plus: (amount: string) => `dont ${amount} reportés`,
+      minus: (amount: string) => `moins ${amount} reportés`,
+    },
+    warn: {
+      label: 'Alerter à partir de (pourcentage)',
+      hint: 'Vide = valeur par défaut des réglages.',
+      title: (name: string, percent: number) => `${name} : ${percent} % du budget utilisé`,
+    },
+    forecast: {
+      over: (amount: string) => `Au rythme actuel : environ ${amount} au-dessus du budget`,
+    },
+    history: {
+      title: 'Historique',
+      period: 'Période',
+      spent: 'Dépensé',
+      limit: 'Budget',
+      bookings: 'Voir les opérations',
+    },
+    head: {
+      free: 'Encore libre',
+      context: (n: number, over: number) =>
+        over === 0
+          ? n === 1
+            ? '1 budget, dans la limite'
+            : `${n} budgets, tous dans la limite`
+          : n === 1
+            ? '1 budget, dépassé'
+            : `${n} budgets, ${over} dépassés`,
+      ring: (n: number) => `Répartition des dépenses sur ${n} budgets`,
+    },
+    goal: {
+      rate: 'Versement mensuel prévu',
+      rateHint: 'Facultatif : avec votre versement, vous voyez quand l’objectif est atteint.',
+      plan: (rate: string, date: string) =>
+        `Avec ${rate} par mois, vous atteignez l’objectif en ${date}.`,
+      inTime: 'Cela correspond à la date visée.',
+      late: (months: number) =>
+        months === 1
+          ? 'C’est 1 mois après la date visée.'
+          : `C’est ${months} mois après la date visée.`,
+    },
+    widget: { addExpense: 'Dépense +' },
+    settings: {
+      warnAtPercent: 'Alerter à partir de (pourcentage du budget)',
+      warnAtPercentHelp:
+        'À partir de cette part, un budget apparaît comme « presque épuisé ». Seul ce qui dépasse le budget passe au rouge.',
+      showForecast: 'Afficher la prévision jusqu’à la fin de la période',
+      showForecastHelp:
+        'Une ligne par budget : où finissent les dépenses au rythme actuel, opérations récurrentes prévues comprises.',
+    },
+  },
   meta: {
     name: 'Budgets et objectifs d’épargne',
     description:

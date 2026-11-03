@@ -234,6 +234,45 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Hausbau",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Steuerberatung",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
     }
   ],
   "cases": [
@@ -2848,6 +2887,128 @@
       "input": "Wo ist meine Notiz zum Garten?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "hab-c01",
+      "input": "Neue Gewohnheit Meditieren",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Meditieren"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-c02",
+      "input": "Gewohnheit anlegen Lesen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Lesen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-t01",
+      "input": "Gewohnheit Wasser trinken archivieren",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Wasser trinken"
+        }
+      ]
+    },
+    {
+      "id": "hab-d01",
+      "input": "Lösche die Gewohnheit Spazieren gehen",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "delete",
+          "target": "Spazieren gehen"
+        }
+      ]
+    },
+    {
+      "id": "hab-n01",
+      "input": "Wie viele Gläser habe ich heute getrunken?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "tt-c01",
+      "input": "Neues Zeiterfassungs-Projekt Hausbau",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Hausbau"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-c02",
+      "input": "Zeiterfassung Projekt anlegen Steuerberatung",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Steuerberatung"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-c03",
+      "input": "Archiviere das Zeiterfassungs-Projekt Hausbau",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Hausbau"
+        }
+      ]
+    },
+    {
+      "id": "tt-c04",
+      "input": "Archiviere das Zeiterfassungs-Projekt Steuerberatung",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Steuerberatung"
+        }
+      ]
+    },
+    {
+      "id": "tt-c05",
+      "input": "Lösche das Zeiterfassungs-Projekt Hausbau",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "delete",
+          "target": "Hausbau"
+        }
+      ]
     }
   ]
 }

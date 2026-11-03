@@ -79,7 +79,11 @@ test('the row menu pauses a subscription (2 clicks) and the delete swipe action 
   page,
 }) => {
   await addStreaming(page);
-  const row = page.getByRole('listitem').filter({ hasText: 'Streaming' });
+  // The head also lists the next charges as items, so pick the row that has the actions button.
+  const row = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Streaming' })
+    .filter({ has: page.getByRole('button', { name: 'Weitere Aktionen' }) });
   await row.getByRole('button', { name: 'Weitere Aktionen' }).click(); // click 1
   await page.getByRole('menuitem', { name: 'Pausieren' }).click(); // click 2
   await expect(row).toContainText('Pausiert');

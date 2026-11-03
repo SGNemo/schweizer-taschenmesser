@@ -11,22 +11,28 @@ import { getFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
 import { getGameSettings, quietChannelWanted } from './gameMode';
 import { getMute } from './mute';
+import { manifestsForChannel, type Channel } from './channels';
 import { applyPolicy } from './policy';
 import { getSnoozed, snoozedDue } from './snooze';
 
 /** Quiet hours may move automatic extras by up to this much, so the query starts that early. */
 const WIDEN_MS = 14 * 60 * 60 * 1000;
 
+/**
+ * `channel` limits the module sources to those not switched off for it in Settings → Benachrichtigungen
+ * (the app's own "Später" and focus-round notices always pass); without it every source counts.
+ */
 export async function collectDue(
   range: { from: number; to: number },
   manifests: readonly ModuleManifest[],
+  channel?: Channel,
 ): Promise<DueNotification[]> {
   const wide = { from: range.from - WIDEN_MS, to: range.to };
-  const [fromModules, snoozed, focus, settings] = await Promise.all([
-    collectNotifications(wide, manifests),
+  const settings = await getFocusSettings();
+  const [fromModules, snoozed, focus] = await Promise.all([
+    collectNotifications(wide, manifestsForChannel(manifests, settings.notifyChannels, channel)),
     getSnoozed().catch(() => []),
     focusEndDue().catch(() => []),
-    getFocusSettings(),
   ]);
   const own = [...snoozedDue(snoozed, wide, getPlatform().kind), ...focus];
   const adjusted = applyPolicy(

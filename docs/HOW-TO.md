@@ -18,6 +18,8 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | [howto/ai-actions.md](howto/ai-actions.md)                   | define AI actions for a module (`aiSchema.actions`), parse hints, handlers, extend the eval set (`npm run ai:eval`)                                           |
 | [howto/money-finance.md](howto/money-finance.md)             | Finanzen: transfers, splits, sub-categories, year view, outlook, export (money group package 1)                                                               |
 | [howto/money-invoices.md](howto/money-invoices.md) | Rechnungen: part payments, reminder levels, payment data, attachment, receipt signature (money group package 2) |
+| [howto/money-subscriptions.md](howto/money-subscriptions.md) | Abos: service tiles, trial end, category, price hint from bookings, bookings from charges (money group package 3) |
+| [howto/money-budgets.md](howto/money-budgets.md) | Budgets: periods, carry-over, warning level, forecast, history, goal plan (money group package 4) |
 | [howto/planning-modules.md](howto/planning-modules.md)       | Planen group modules: calendar views, hour-grid drag, named calendars, holidays, reminders                                                                    |
 | [howto/readable-text.md](howto/readable-text.md)             | reading aid, groups, colour meaning: show text readably                                                                                                       |
 | [howto/new-extension.md](howto/new-extension.md)             | tool (incl. "Register a search-bar expression for a tool"), connector, setup step, AI provider, importer                                                      |

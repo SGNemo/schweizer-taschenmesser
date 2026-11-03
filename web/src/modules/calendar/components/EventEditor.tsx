@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { bus } from '@/core/events';
 import { mapsUrl } from '@/core/links';
 import { useUiStore } from '@/stores/ui';
@@ -148,6 +149,7 @@ function Form({
   const setActive = (v: boolean) => draft.set('active', v);
   const setTaken = (v: boolean) => draft.set('taken', v);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
   const slots = useLiveQuery(
     async () => (existing || reminder ? [] : recentSlots(await eventRepo.active().toArray())),
@@ -283,6 +285,16 @@ function Form({
             <Icon name="pin" size={16} />
             {t.calendar.showOnMap}
           </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onClose();
+              void navigate(`/maps?q=${encodeURIComponent(location.trim())}`);
+            }}
+          >
+            <Icon name="pin" size={16} />
+            {t.calendar.saveAsPlace}
+          </Button>
         </div>
       ) : null}
       {!reminder && calendars && calendars.length > 0 ? (
@@ -393,6 +405,20 @@ function Form({
               }}
             >
               {t.calendar.asTodo}
+            </Button>
+          ) : null}
+          {existing && !reminder ? (
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                // Time tracking starts the clock when it is on (it listens to this event); the event only names it.
+                await bus.emit('timetrack.start.requested', {
+                  title: existing.title,
+                  sourceRef: existing.id,
+                });
+              }}
+            >
+              {t.timetrack.fromEvent.action}
             </Button>
           ) : null}
           {existing?.recurrence && occurrence ? (

@@ -3,7 +3,7 @@ import { enable, openMoreFocus, ready } from './helpers';
 
 /** Week review and streaks are off by default (calm defaults): switch them on in the settings. */
 async function switchOn(page: Page, names: string[]) {
-  await ready(page, '/settings/darstellung');
+  await ready(page, '/settings/barrierefreiheit');
   await openMoreFocus(page);
   for (const name of names) {
     const sw = page.getByRole('switch', { name });
@@ -81,7 +81,7 @@ test.describe('Visible progress without pressure', () => {
     await switchOn(page, ['Rückblick auf die Woche', '„n in Folge“ bei Wiederholungen']);
     await ready(page, '/');
     await expect(page.getByTestId('week-review')).toBeVisible();
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
     await page.getByRole('switch', { name: 'Rückblick auf die Woche' }).click();
     await ready(page, '/');

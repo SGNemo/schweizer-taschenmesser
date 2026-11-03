@@ -12,6 +12,7 @@ import type { ResetPlan } from '../reset';
 export const SETTINGS_CATEGORY_IDS = [
   'allgemein',
   'darstellung',
+  'barrierefreiheit',
   'module',
   'werkzeuge',
   'benachrichtigungen',

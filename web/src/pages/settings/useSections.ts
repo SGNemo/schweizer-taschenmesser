@@ -15,7 +15,7 @@ import { isDevBuild } from '@/core/update/buildInfo';
 import { useVoicePrefs } from '@/core/voice/settings';
 import { useUiStore } from '@/stores/ui';
 import { createElement } from 'react';
-import { ModuleSection } from './ModuleSection';
+import { ModuleSection } from './sectionChunks';
 import { CORE_SECTIONS } from './sections';
 
 const MODULE_ORDER = 100;

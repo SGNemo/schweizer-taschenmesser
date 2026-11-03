@@ -1625,6 +1625,7 @@ export const de = {
     end: 'Ende',
     location: 'Ort',
     showOnMap: 'Auf der Karte zeigen',
+    saveAsPlace: 'Als Ort merken',
     nothing: 'Keine Einträge',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
@@ -2760,6 +2761,50 @@ export const de = {
     view: 'Status',
   },
   subscriptions: {
+    ext: {
+      category: {
+        label: 'Art des Dienstes',
+        streaming: 'Streaming',
+        music: 'Musik',
+        software: 'Software',
+        cloud: 'Cloud & Speicher',
+        news: 'Nachrichten',
+        mobility: 'Mobilität',
+        sport: 'Sport',
+        insurance: 'Versicherung',
+        telecom: 'Telefon & Internet',
+        other: 'Sonstiges',
+      },
+      trial: {
+        label: 'Probezeit endet am',
+        hint: 'Du bekommst vorher eine Erinnerung.',
+        chip: 'Probezeit',
+        daysLeft: (n: number) =>
+          n === 0
+            ? 'Probezeit endet heute'
+            : n === 1
+              ? 'Probezeit endet morgen'
+              : `Probezeit endet in ${n} Tagen`,
+        reminderTitle: (name: string) => `Probezeit endet bald: ${name}`,
+        reminderBody: (date: string, price: string) => `Bis ${date}. Danach ${price}.`,
+        calendar: (name: string) => `Probezeit endet: ${name}`,
+        remindDaysBefore: 'Erinnerung vor Ende der Probezeit (Tage)',
+        remindDaysBeforeHelp: '0 = am letzten Tag der Probezeit',
+      },
+      status: { ended: 'Beendet' },
+      payment: { label: 'Bezahlt mit', placeholder: 'z. B. Lastschrift Girokonto' },
+      monthlyShort: (amount: string) => `${amount} / Monat`,
+      top: { title: 'Teuerste Abos', perYear: (amount: string) => `${amount} pro Jahr` },
+      head: {
+        title: 'Nächste Abbuchungen',
+        nothing: 'Nichts in Sicht',
+        on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+      },
+      suggest: {
+        apply: (amount: string) => `Preis übernehmen: ${amount}`,
+        seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
+      },
+    },
     importDetail: (amount: string, rhythm: string, next: string) =>
       `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
     cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
@@ -2815,6 +2860,13 @@ export const de = {
     chartLegend: 'Legende',
     ext: {
       weekly: 'Wöchentlich',
+      subPrice: {
+        title: (name: string, from: string, to: string) =>
+          `${name} bucht jetzt ${to} statt ${from}`,
+        detail: (since: string) => `Seit ${since} in deinen Buchungen. Im Abo übernehmen?`,
+      },
+      subBooked: (n: number) =>
+        n === 1 ? '1 Abo-Abbuchung gebucht.' : `${n} Abo-Abbuchungen gebucht.`,
       transfer: {
         title: 'Umbuchung',
         button: 'Umbuchung',
@@ -2860,7 +2912,7 @@ export const de = {
         allCategories: 'Alle Kategorien',
         minAmount: 'Betrag ab',
         maxAmount: 'Betrag bis',
-        more: 'Mehr Filter',
+        more: 'Mehr',
         reset: 'Filter zurücksetzen',
         withTransfers: 'Umbuchungen zeigen',
       },
@@ -2885,6 +2937,8 @@ export const de = {
       forecast: {
         title: 'Ausblick',
         horizon: 'Zeitraum des Ausblicks',
+        showDetails: 'Details',
+        hideDetails: 'Weniger',
         month: 'Bis Monatsende',
         d30: '30 Tage',
         d90: '90 Tage',
@@ -2906,6 +2960,9 @@ export const de = {
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
       settings: {
+        bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
+        bookSubscriptionsHelp:
+          'Bucht die fälligen Abbuchungen der letzten 31 Tage, sofern keine passende Buchung (z. B. aus dem Bankimport) schon da ist. Standard: aus.',
         forecastHorizon: 'Ausblick: Zeitraum',
         month: 'Bis Monatsende',
         d30: '30 Tage',
@@ -4644,6 +4701,68 @@ export const de = {
   },
 
   budgets: {
+    ext: {
+      period: {
+        label: 'Zeitraum',
+        month: 'Monat',
+        quarter: 'Quartal',
+        year: 'Jahr',
+        quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
+        perPeriod: (period: string) => `pro ${period}`,
+      },
+      carry: {
+        label: 'Rest in den nächsten Zeitraum übernehmen',
+        hint: 'Was übrig bleibt, erweitert das nächste Budget; was zu viel war, verkleinert es (höchstens um ein Budget).',
+        plus: (amount: string) => `inkl. ${amount} Übertrag`,
+        minus: (amount: string) => `abzüglich ${amount} Übertrag`,
+      },
+      warn: {
+        label: 'Warnen ab (Prozent)',
+        hint: 'Leer = Standard aus den Einstellungen.',
+        title: (name: string, percent: number) => `${name}: ${percent} % des Budgets verbraucht`,
+      },
+      forecast: {
+        over: (amount: string) => `Im bisherigen Tempo: etwa ${amount} über dem Budget`,
+      },
+      history: {
+        title: 'Verlauf',
+        period: 'Zeitraum',
+        spent: 'Ausgaben',
+        limit: 'Budget',
+        bookings: 'Buchungen ansehen',
+      },
+      head: {
+        free: 'Noch frei',
+        context: (n: number, over: number) =>
+          over === 0
+            ? n === 1
+              ? '1 Budget, im Rahmen'
+              : `${n} Budgets, alle im Rahmen`
+            : n === 1
+              ? '1 Budget, darüber'
+              : `${n} Budgets, ${over} darüber`,
+        ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
+      },
+      goal: {
+        rate: 'Geplante Rate pro Monat',
+        rateHint: 'Optional: Mit deiner Rate siehst du, wann das Ziel erreicht ist.',
+        plan: (rate: string, date: string) => `Mit ${rate} im Monat bist du im ${date} am Ziel.`,
+        inTime: 'Das passt zum Zieldatum.',
+        late: (months: number) =>
+          months === 1
+            ? 'Das ist 1 Monat nach dem Zieldatum.'
+            : `Das sind ${months} Monate nach dem Zieldatum.`,
+      },
+      widget: { addExpense: 'Ausgabe +' },
+      settings: {
+        warnAtPercent: 'Warnen ab (Prozent des Budgets)',
+        warnAtPercentHelp:
+          'Ab diesem Anteil zeigt ein Budget „fast aufgebraucht“. Rot wird nur, was das Budget überschreitet.',
+        showForecast: 'Prognose bis Zeitraumende zeigen',
+        showForecastHelp:
+          'Eine Zeile je Budget: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
+      },
+    },
     meta: {
       name: 'Budgets & Sparziele',
       description:
@@ -6256,6 +6375,18 @@ export const de = {
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
     add: { place: 'Ort hinzufügen', route: 'Route hinzufügen' },
+    placesBar: {
+      search: 'Orte durchsuchen',
+      all: 'Alle',
+      sortLabel: 'Sortierung',
+      recent: 'Zuletzt',
+      name: 'Name',
+      navigate: 'Navigieren',
+      navigateTo: (name: string) => `Zu ${name} navigieren`,
+      none: 'Keine passenden Orte.',
+      last: (name: string) => `Zuletzt gespeichert: ${name}`,
+      pinHint: 'Noch kein Ort gespeichert.',
+    },
     widget: {
       title: 'Orte & Routen',
       empty: 'Noch keine Orte oder Routen.',
@@ -7063,6 +7194,214 @@ export const de = {
         title: 'Noch keine Torrents',
         body: 'Füge einen Magnet-Link oder eine .torrent-Datei hinzu, die du selbst hast.',
       },
+    },
+  },
+  timetrack: {
+    meta: {
+      name: 'Zeiterfassung',
+      description:
+        'Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz, manuelle Einträge, Pausen, Wochen- und Monatsauswertung, CSV-Export und eine Nachfrage bei Leerlauf.',
+      quickAdd: 'Zeit starten',
+      widget: 'Zeiterfassung',
+      settings: {
+        idleMinutes: 'Nachfrage bei Leerlauf (Minuten, 0 = aus)',
+        idleHelp:
+          'Läuft die Zeit und du warst so lange nicht am Gerät, fragt die App nach – sie ändert nie etwas von selbst.',
+      },
+    },
+    title: 'Zeiterfassung',
+    tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
+    add: 'Eintrag hinzufügen',
+    edit: 'Eintrag bearbeiten',
+    start: 'Start',
+    stop: 'Stopp',
+    pause: 'Pause',
+    resume: 'Weiter',
+    paused: 'Pausiert',
+    running: 'Läuft',
+    idleNow: 'Nichts läuft.',
+    startFor: (name: string) => `${name} starten`,
+    startedToast: (name: string) => `Läuft: ${name}`,
+    stoppedToast: (minutes: number) => `Gestoppt: ${minutes} Min`,
+    noJob: 'Ohne Projekt',
+    noClient: 'Ohne Kunde',
+    today: 'Heute',
+    todayTotal: (duration: string) => `Heute: ${duration}`,
+    since: (time: string) => `seit ${time}`,
+    dur: (h: number, m: number) => (h > 0 ? `${h} Std ${m} Min` : `${m} Min`),
+    noSessions: 'Heute noch keine Zeit erfasst.',
+    emptyJobs: 'Noch keine Projekte. Lege eins an, dann startest du die Zeit mit einem Klick.',
+    form: {
+      job: 'Projekt',
+      date: 'Datum',
+      start: 'Beginn',
+      end: 'Ende',
+      endDate: 'Enddatum (wenn es über Mitternacht ging)',
+      breakMin: 'Pause (Minuten)',
+      note: 'Notiz',
+    },
+    job: {
+      add: 'Projekt hinzufügen',
+      edit: 'Projekt bearbeiten',
+      name: 'Name',
+      client: 'Kunde',
+      newClient: 'Neuer Kunde (Name)',
+      rate: 'Stundensatz (€)',
+      billable: 'Abrechenbar',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      archive: 'Archivieren',
+      archived: 'Archiviert.',
+      restore: 'Wiederherstellen',
+      rateLine: (rate: string) => `${rate} pro Stunde`,
+      notBillable: 'nicht abrechenbar',
+    },
+    report: {
+      week: 'Woche',
+      month: 'Monat',
+      period: 'Zeitraum',
+      prev: 'Zurück',
+      next: 'Weiter',
+      total: 'Gesamt',
+      billable: 'abrechenbar',
+      amount: 'Betrag',
+      byJob: 'Nach Projekt',
+      byClient: 'Nach Kunde',
+      none: 'In diesem Zeitraum ist nichts erfasst.',
+      csv: 'Als CSV speichern',
+      csvDone: 'Datei gespeichert.',
+      roundNote: 'Beträge werden je Eintrag auf ganze Cent gerundet.',
+    },
+    idle: {
+      title: 'Warst du die ganze Zeit dabei?',
+      body: (minutes: number) => `Seit ${minutes} Min kam keine Eingabe.`,
+      keep: 'Zeit behalten',
+      deduct: 'Als Pause abziehen',
+      stopAt: 'Dort stoppen, wo ich weg war',
+      toast: (minutes: number) => `Du warst ${minutes} Min weg – Zeit prüfen?`,
+      open: 'Ansehen',
+    },
+    fromEvent: {
+      action: 'Zeit erfassen',
+      started: (title: string) => `Zeit läuft für „${title}“.`,
+    },
+    widgetText: {
+      start: 'Starten',
+      none: 'Noch keine Projekte.',
+      addJob: 'Projekt anlegen',
+      running: (name: string, since: string) => `${name} · seit ${since}`,
+      idle: 'Nichts läuft',
+    },
+    head: { running: 'Läuft', idle: 'Bereit' },
+  },
+  habits: {
+    meta: {
+      name: 'Gewohnheiten',
+      description:
+        'Tägliche und wöchentliche Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“, mit Pausentagen, Verlauf und Erinnerungen, die aufhören, sobald das Tagesziel erreicht ist.',
+      quickAdd: 'Gewohnheit',
+      widget: 'Heute',
+      settings: {
+        remindersEnabled: 'Erinnerungen der Gewohnheiten',
+        remindersHelp: 'Aus: es kommen keine Erinnerungen, die Ringe bleiben.',
+      },
+    },
+    title: 'Gewohnheiten',
+    tabs: { label: 'Ansicht', today: 'Heute', history: 'Verlauf', archive: 'Archiv' },
+    empty: 'Noch keine Gewohnheiten.',
+    emptyHint:
+      'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
+    add: 'Gewohnheit hinzufügen',
+    edit: 'Gewohnheit bearbeiten',
+    form: {
+      name: 'Name',
+      kind: 'Art',
+      yesno: 'Ja/Nein',
+      count: 'Zahl',
+      target: 'Ziel pro Tag',
+      unit: 'Einheit (z. B. Gläser)',
+      period: 'Rhythmus',
+      day: 'Täglich',
+      week: 'Mehrmals pro Woche',
+      weeklyTimes: 'Mal pro Woche',
+      weekdays: 'Wochentage',
+      weekdaysHint: 'Keine Auswahl = jeden Tag.',
+      reminder: 'Erinnerung',
+      reminderOff: 'Aus',
+      reminderTime: 'Zu einer Uhrzeit',
+      reminderWindow: 'Im Zeitfenster',
+      at: 'Uhrzeit',
+      from: 'Von',
+      to: 'Bis',
+      every: 'Alle (Minuten)',
+      reminderHint:
+        'Im Zeitfenster erinnert die App, bis das Tagesziel erreicht ist – danach nicht mehr.',
+      templates: 'Vorlagen',
+    },
+    templates: {
+      water: { name: 'Wasser trinken', unit: 'Gläser' },
+      walk: { name: 'Spazieren gehen', unit: '' },
+      stretch: { name: 'Dehnen', unit: '' },
+      pill: { name: 'Medikament nehmen', unit: '' },
+    },
+    today: {
+      progress: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+      done: 'Geschafft',
+      plus: '+1',
+      minus: '−1',
+      markDone: 'Erledigt',
+      undo: 'Zurücknehmen',
+      rest: 'Pausentag',
+      restOn: 'Pausentag: heute zählt nicht.',
+      restOff: 'Pausentag aufheben',
+      weekProgress: (done: number, of: number) => `${done} von ${of} diese Woche`,
+      plusFor: (name: string) => `+1 ${name}`,
+      minusFor: (name: string) => `−1 ${name}`,
+      nothing: 'Heute ist nichts geplant.',
+    },
+    history: {
+      pick: 'Gewohnheit',
+      last30: 'Letzte 30 Tage',
+      ofDays: (done: number, of: number) => `${done} von ${of} geplanten Tagen`,
+      ofWeeks: (done: number, of: number) => `${done} von ${of} Wochen geschafft`,
+      perWeekday: 'Pro Wochentag',
+      best: (n: number) => `Längste Serie: ${n}`,
+      grid: 'Das letzte Jahr, eine Spalte pro Woche',
+      legend: {
+        done: 'Geschafft',
+        partial: 'Teilweise',
+        open: 'Offen',
+        rest: 'Pausentag',
+        off: 'Nicht geplant',
+      },
+      noData: 'In diesem Zeitraum zählt noch nichts.',
+      cell: (date: string, state: string, count: number) =>
+        `${date}: ${state}${count > 0 ? `, ${count}` : ''}`,
+    },
+    archive: {
+      empty: 'Nichts archiviert.',
+      archived: 'Archiviert.',
+      restored: 'Wieder aktiv.',
+      archiveAction: 'Archivieren',
+      restoreAction: 'Wiederherstellen',
+    },
+    notify: {
+      body: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+    },
+    widget: {
+      summary: (done: number, of: number) => `${done} von ${of} geschafft`,
+      detail: (n: number, target: number, unit?: string) =>
+        `${n} von ${target}${unit ? ` ${unit}` : ''}`,
+      plusFor: (name: string) => `+1 ${name}`,
+      empty: 'Noch keine Gewohnheiten.',
+      addAction: 'Gewohnheit anlegen',
+    },
+    head: {
+      label: 'Heute',
+      value: (done: number, of: number) => `${done}/${of}`,
+      none: 'Nichts geplant',
     },
   },
 } as const;

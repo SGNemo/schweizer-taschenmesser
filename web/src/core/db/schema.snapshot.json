@@ -1,5 +1,5 @@
 {
-  "version": 27,
+  "version": 29,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -30,6 +30,8 @@
     "finance_account": "id, updatedAt, order",
     "finance_category": "id, updatedAt, kind",
     "finance_transaction": "id, updatedAt, accountId, date, categoryId",
+    "habits_entry": "id, updatedAt, goalId, date",
+    "habits_goal": "id, updatedAt, order",
     "invoices_invoice": "id, updatedAt, dueDate, status",
     "lists_item": "id, updatedAt, listId, done",
     "lists_list": "id, updatedAt, kind",
@@ -47,6 +49,9 @@
     "people_gift": "id, updatedAt, personId, status, date",
     "people_person": "id, updatedAt, name",
     "subscriptions_subscription": "id, updatedAt, startDate",
+    "timetrack_client": "id, updatedAt, order",
+    "timetrack_job": "id, updatedAt, clientId, order",
+    "timetrack_session": "id, updatedAt, date, jobId",
     "todos_list": "id, updatedAt, order",
     "todos_task": "id, updatedAt, listId, dueDate, parentId",
     "vault_document": "id, updatedAt, category, expiresOn"

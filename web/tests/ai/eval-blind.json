@@ -234,6 +234,45 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Nachhilfe",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Kurs Python",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
     }
   ],
   "cases": [
@@ -2158,6 +2197,96 @@
       "input": "Vergleiche meine Ausgaben von August und September",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "hab-b01",
+      "input": "Gewohnheit anlegen Tagebuch schreiben",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Tagebuch schreiben"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-b02",
+      "input": "Gewohnheit Wasser trinken archivieren",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Wasser trinken"
+        }
+      ]
+    },
+    {
+      "id": "tt-b01",
+      "input": "Zeiterfassung neues Projekt Nachhilfe",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Nachhilfe"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-b02",
+      "input": "Neues Zeiterfassungs-Projekt Kurs Python",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Kurs Python"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-b03",
+      "input": "Archiviere das Zeiterfassungs-Projekt Nachhilfe",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Nachhilfe"
+        }
+      ]
+    },
+    {
+      "id": "tt-b04",
+      "input": "Archiviere das Zeiterfassungs-Projekt Kurs Python",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Kurs Python"
+        }
+      ]
+    },
+    {
+      "id": "tt-b05",
+      "input": "Lösche das Zeiterfassungs-Projekt Nachhilfe",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "delete",
+          "target": "Nachhilfe"
+        }
+      ]
     }
   ]
 }

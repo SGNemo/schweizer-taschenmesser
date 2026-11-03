@@ -34,6 +34,18 @@ export const maps: Strings['maps'] = {
   tabs: { label: 'Vue', places: 'Lieux', routes: 'Itinéraires', map: 'Carte' },
   empty: { places: 'Pas encore de lieux.', routes: 'Pas encore d’itinéraires.' },
   add: { place: 'Ajouter un lieu', route: 'Ajouter un itinéraire' },
+  placesBar: {
+    search: 'Chercher des lieux',
+    all: 'Tous',
+    sortLabel: 'Tri',
+    recent: 'Récents',
+    name: 'Nom',
+    navigate: 'Naviguer',
+    navigateTo: (name: string) => `Naviguer vers ${name}`,
+    none: 'Aucun lieu correspondant.',
+    last: (name: string) => `Dernier enregistré : ${name}`,
+    pinHint: 'Aucun lieu enregistré pour l’instant.',
+  },
   widget: {
     title: 'Lieux et itinéraires',
     empty: 'Pas encore de lieux ni d’itinéraires.',

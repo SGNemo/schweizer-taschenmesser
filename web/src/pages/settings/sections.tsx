@@ -16,54 +16,66 @@ import {
 import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
-import { SettingRow, SettingsGroup } from '@/ui';
-import { DeveloperSection } from '@/layout/devTools';
-import { Suspense } from 'react';
 import {
   AboutSection,
   AboutUpdatesSection,
+  AccessibilitySection,
+  AdvancedSection,
+  AiSection,
+  AiStatsSection,
+  AiSwitchSection,
+  AiWriteSection,
+  AppearanceSection,
+  CalmRemindersSection,
+  ConnectorsSection,
   DeviceResetSection,
   DiagnosticsSection,
+  FavouritesSection,
+  FocusSection,
+  GeneralSection,
+  HistorySection,
+  LegalImprintSection,
+  LegalLicensesSection,
+  LegalPrivacySection,
   LinksSection,
-} from './AboutSections';
-import { AiSection } from './AiSection';
-import { AiSwitchSection } from './AiSwitchSection';
-import { AppearanceSection } from './AppearanceSection';
-import { SupporterSection } from './SupporterSection';
+  LocalApiSection,
+  LocalModelSection,
+  ModelLicensesSection,
+  NetworkSection,
+  NotificationSourcesSection,
+  NotificationsSection,
+  PersonaSection,
+  ProfilesSection,
+  QuickCaptureSection,
+  ReadingSection,
+  RecentlyDeletedSection,
+  SetupSection,
+  ShareSection,
+  ShortcutsSection,
+  StorageSection,
+  SupporterSection,
+  ToolsSection,
+  TransferSection,
+  UpdateSection,
+  VoiceSection,
+  WeatherSection,
+} from './sectionChunks';
+// Sync and Backup are the sections a person opens offline on purpose (e.g. to see why a change is
+// queued): they stay in the start bundle, every other section loads when it is opened.
 import { BackupSection } from './BackupSection';
-import { AiStatsSection } from './AiStatsSection';
-import { AiWriteSection } from './AiWriteSection';
-import { CalmRemindersSection } from './CalmRemindersSection';
-import { NetworkSection } from './NetworkSection';
-import { ShareSection } from './ShareSection';
+import { SyncSection } from './SyncSection';
+import { SettingRow, SettingsGroup } from '@/ui';
+import { DeveloperSection } from '@/layout/devTools';
+import { Suspense } from 'react';
 import { tShare } from '@/strings.share';
 import { tNet } from '@/strings.netlog';
 import { tTrash } from '@/strings.trash';
-import { RecentlyDeletedSection } from './RecentlyDeletedSection';
-import { ConnectorsSection } from './ConnectorsSection';
-import { FavouritesSection } from './FavouritesSection';
 import { tAdvanced } from '@/strings.advanced';
-import { AdvancedSection } from './AdvancedSection';
-import { FocusSection } from './FocusSection';
-import { GeneralSection } from './GeneralSection';
-import { LocalApiSection } from './LocalApiSection';
-import { LocalModelSection } from './LocalModelSection';
-import { LegalImprintSection, LegalLicensesSection, LegalPrivacySection } from './LegalSections';
-import { ModelLicensesSection } from './ModelLicensesSection';
-import { NotificationsSection } from './NotificationsSection';
-import { ReadingSection } from './ReadingSection';
-import { QuickCaptureSection } from './QuickCaptureSection';
-import { ShortcutsSection } from './ShortcutsSection';
-import { VoiceSection } from './VoiceSection';
-import { WeatherSection } from './WeatherSection';
 import { tKeys } from '@/strings.keys';
+import { tSettings4 } from '@/strings.settings4';
+import { tSettings3 } from '@/strings.settings3';
 import { tWeather } from '@/strings.weather';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
-import { SetupSection } from './SetupSection';
-import { SyncSection } from './SyncSection';
-import { PersonaSection } from './PersonaSection';
-import { ToolsSection } from './ToolsSection';
-import { UpdateSection } from './UpdateSection';
 
 const s = t.settings;
 
@@ -272,9 +284,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   },
   {
     id: 'reading',
-    category: 'darstellung',
+    category: 'barrierefreiheit',
     maturity: 'preview',
-    order: 12,
+    order: 20,
     get title() {
       return s.reading.title;
     },
@@ -324,9 +336,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   },
   {
     id: 'focus',
-    category: 'darstellung',
+    category: 'barrierefreiheit',
     maturity: 'stable',
-    order: 15,
+    order: 30,
     get title() {
       return t.focus.settings.title;
     },
@@ -876,6 +888,129 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <NetworkSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'accessibility',
+    category: 'barrierefreiheit',
+    maturity: 'stable',
+    order: 10,
+    get title() {
+      return tSettings4.get().accessibility.title;
+    },
+    get description() {
+      return tSettings4.get().accessibility.description;
+    },
+    get keywords() {
+      return tSettings4.get().accessibility.keywords;
+    },
+    get fields() {
+      const a = tSettings4.get().accessibility;
+      return [
+        { key: 'textSize', label: a.textSize },
+        { key: 'motion', label: a.motion },
+        { key: 'readAid', label: a.readAid },
+        { key: 'colors', label: a.colors, description: a.colorsHint },
+        { key: 'spacing', label: a.spacing, description: a.spacingHint },
+      ];
+    },
+    render: () => <AccessibilitySection />,
+  },
+  {
+    id: 'notification-sources',
+    category: 'benachrichtigungen',
+    maturity: 'stable',
+    order: 25,
+    get title() {
+      return tSettings4.get().notifySources.title;
+    },
+    get description() {
+      return tSettings4.get().notifySources.description;
+    },
+    get keywords() {
+      return tSettings4.get().notifySources.keywords;
+    },
+    render: () => <NotificationSourcesSection />,
+  },
+  {
+    id: 'storage',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 45,
+    get title() {
+      return tSettings4.get().storage.title;
+    },
+    get description() {
+      return tSettings4.get().storage.description;
+    },
+    get keywords() {
+      return tSettings4.get().storage.keywords;
+    },
+    render: () => <StorageSection />,
+  },
+  {
+    id: 'profiles',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 20,
+    get title() {
+      return tSettings3.get().profiles.title;
+    },
+    get description() {
+      return tSettings3.get().profiles.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.profiles;
+    },
+    get fields() {
+      const p = tSettings3.get().profiles;
+      return [
+        { key: 'save', label: p.saveTitle },
+        { key: 'schedules', label: p.scheduleTitle, description: p.scheduleHint },
+      ];
+    },
+    render: () => <ProfilesSection />,
+  },
+  {
+    id: 'settings-transfer',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 21,
+    get title() {
+      return tSettings3.get().transfer.title;
+    },
+    get description() {
+      return tSettings3.get().transfer.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.transfer;
+    },
+    get fields() {
+      const x = tSettings3.get().transfer;
+      return [
+        { key: 'export', label: x.export, description: x.excluded },
+        { key: 'import', label: x.import },
+      ];
+    },
+    render: () => <TransferSection />,
+  },
+  {
+    id: 'settings-history',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 22,
+    get title() {
+      return tSettings3.get().history.title;
+    },
+    get description() {
+      return tSettings3.get().history.description;
+    },
+    get keywords() {
+      return tSettings3.get().keywords.history;
+    },
+    get fields() {
+      return [{ key: 'on', label: tSettings3.get().history.on }];
+    },
+    render: () => <HistorySection />,
   },
   {
     id: 'shortcuts',

@@ -234,6 +234,45 @@
       "data": {
         "name": "Anna Muster"
       }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Wasser trinken",
+        "kind": "count",
+        "target": 8,
+        "unit": "Gläser"
+      }
+    },
+    {
+      "module": "habits",
+      "collection": "goal",
+      "data": {
+        "name": "Spazieren gehen",
+        "kind": "yesno",
+        "target": 1
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Gartenbau",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
+    },
+    {
+      "module": "timetrack",
+      "collection": "job",
+      "data": {
+        "name": "Vereinsarbeit",
+        "tone": 0,
+        "billable": true,
+        "order": 0
+      }
     }
   ],
   "cases": [
@@ -3176,6 +3215,96 @@
       "input": "Wie lange läuft mein Handytarif?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "hab-h01",
+      "input": "Neue Gewohnheit Zähne flossen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "create",
+          "data": {
+            "name": "Zähne flossen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hab-h02",
+      "input": "Archiviere die Gewohnheit Spazieren gehen",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "habits",
+          "action": "archive",
+          "target": "Spazieren gehen"
+        }
+      ]
+    },
+    {
+      "id": "tt-h01",
+      "input": "Lege ein Zeiterfassungs-Projekt Gartenbau an",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Gartenbau"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-h02",
+      "input": "Neues Zeitprojekt Vereinsarbeit",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "create",
+          "data": {
+            "name": "Vereinsarbeit"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tt-h03",
+      "input": "Archiviere das Zeiterfassungs-Projekt Gartenbau",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Gartenbau"
+        }
+      ]
+    },
+    {
+      "id": "tt-h04",
+      "input": "Schließe das Zeiterfassungs-Projekt Vereinsarbeit ab",
+      "tags": ["transition"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "archive",
+          "target": "Vereinsarbeit"
+        }
+      ]
+    },
+    {
+      "id": "tt-h05",
+      "input": "Lösche das Zeiterfassungs-Projekt Gartenbau",
+      "tags": ["delete"],
+      "expect": [
+        {
+          "module": "timetrack",
+          "action": "delete",
+          "target": "Gartenbau"
+        }
+      ]
     }
   ]
 }

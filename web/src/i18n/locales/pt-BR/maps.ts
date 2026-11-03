@@ -34,6 +34,18 @@ export const maps: Strings['maps'] = {
   tabs: { label: 'Visão', places: 'Lugares', routes: 'Rotas', map: 'Mapa' },
   empty: { places: 'Ainda não há lugares.', routes: 'Ainda não há rotas.' },
   add: { place: 'Adicionar um lugar', route: 'Adicionar uma rota' },
+  placesBar: {
+    search: 'Buscar lugares',
+    all: 'Todos',
+    sortLabel: 'Ordem',
+    recent: 'Recentes',
+    name: 'Nome',
+    navigate: 'Navegar',
+    navigateTo: (name: string) => `Navegar até ${name}`,
+    none: 'Nenhum lugar encontrado.',
+    last: (name: string) => `Salvo por último: ${name}`,
+    pinHint: 'Nenhum lugar salvo ainda.',
+  },
   widget: {
     title: 'Lugares e rotas',
     empty: 'Ainda não há lugares nem rotas.',

@@ -4,6 +4,14 @@ export const finance: Strings['finance'] = {
   chartLegend: 'Légende',
   ext: {
     weekly: 'Chaque semaine',
+    subPrice: {
+      title: (name: string, from: string, to: string) =>
+        `${name} prélève maintenant ${to} au lieu de ${from}`,
+      detail: (since: string) =>
+        `Dans vos opérations depuis le ${since}. Le reprendre dans l’abonnement ?`,
+    },
+    subBooked: (n: number) =>
+      n === 1 ? '1 prélèvement d’abonnement saisi.' : `${n} prélèvements d’abonnement saisis.`,
     transfer: {
       title: 'Virement interne',
       button: 'Virement interne',
@@ -49,7 +57,7 @@ export const finance: Strings['finance'] = {
       allCategories: 'Toutes les catégories',
       minAmount: 'Montant à partir de',
       maxAmount: "Montant jusqu'à",
-      more: 'Plus de filtres',
+      more: 'Plus',
       reset: 'Réinitialiser les filtres',
       withTransfers: 'Afficher les virements internes',
     },
@@ -74,6 +82,8 @@ export const finance: Strings['finance'] = {
     forecast: {
       title: 'Perspective',
       horizon: 'Période de la perspective',
+      showDetails: 'Détails',
+      hideDetails: 'Moins',
       month: "Jusqu'à la fin du mois",
       d30: '30 jours',
       d90: '90 jours',
@@ -98,6 +108,9 @@ export const finance: Strings['finance'] = {
       vsPrevious: (change: string) => `${change} par rapport au mois précédent`,
     },
     settings: {
+      bookSubscriptions: 'Saisir les prélèvements d’abonnements comme dépense',
+      bookSubscriptionsHelp:
+        'Saisit les prélèvements dus des 31 derniers jours, sauf si une opération correspondante (p. ex. de l’import bancaire) existe déjà. Par défaut : désactivé.',
       forecastHorizon: 'Perspective : période',
       month: "Jusqu'à la fin du mois",
       d30: '30 jours',

@@ -57,6 +57,14 @@ export const focusSettingsSchema = z.object({
   eventLead: z.number().int().min(0).max(10080).nullable(),
   /** Calm note in the appointment editor when notifications are not allowed yet. */
   leadHint: z.boolean(),
+  /**
+   * Per module and channel switch-off of its notifications: `{ [moduleId]: { center?: false, alert?: false } }`.
+   * Absent = on. `center` is the bell list, `alert` the notice at the due time (system or card).
+   */
+  notifyChannels: z.record(
+    z.string(),
+    z.object({ center: z.boolean().optional(), alert: z.boolean().optional() }),
+  ),
   /** One notification in the morning that lists today's ToDos. */
   todoDigest: z.boolean(),
   todoDigestTime: z.string().regex(TIME_RE),
@@ -102,6 +110,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   repeatMax: 6,
   eventLead: null,
   leadHint: true,
+  notifyChannels: {},
   todoDigest: true,
   todoDigestTime: '09:00',
   inAppPrompt: false,
@@ -128,4 +137,4 @@ export const getFocusSettings = (): Promise<FocusSettings> =>
   getSettings(FOCUS_SCOPE, focusSettingsSchema, DEFAULT_FOCUS);
 
 export const patchFocusSettings = (patch: Partial<FocusSettings>): Promise<void> =>
-  setSettings(FOCUS_SCOPE, patch);
+  setSettings(FOCUS_SCOPE, patch, DEFAULT_FOCUS);

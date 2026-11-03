@@ -141,7 +141,8 @@ export default function FinancePage() {
         </div>
       ) : null}
 
-      {tab === 'overview' ? (
+      {/* The year view is a power view: the switch shows in Erweitert (or while the year is open, e.g. from a link). */}
+      {tab === 'overview' && (advanced || period === 'year') ? (
         <div className={styles.tabs}>
           <Segmented
             label={t.finance.ext.period.label}

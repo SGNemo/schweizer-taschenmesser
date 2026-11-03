@@ -125,7 +125,7 @@ test.describe('Calm display, capture and finding things again', () => {
     await expect(first).toContainText('Zuletzt benutzt');
 
     await page.keyboard.press('Escape');
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
     await page.getByRole('button', { name: 'Verlauf löschen' }).click();
     await expect(page.getByText('Verlauf gelöscht.')).toBeVisible();

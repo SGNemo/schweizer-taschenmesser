@@ -89,9 +89,14 @@ function seed(ctx: SeedContext): SeedRows {
   const goalCount = ctx.count({ small: 2, medium: 4, large: 24 });
   const depositMonths = ctx.count({ small: 2, medium: 5, large: 10 });
 
+  // A few depth settings so every field shows up: a quarterly budget with carry-over, an own warning level.
+  const EXTRA: Record<string, Record<string, unknown>> = {
+    'cat-mobility': { period: 'quarter', monthlyLimitMinor: 54000, carryOver: true },
+    'cat-food': { warnAtPercent: 90 },
+  };
   const budget: SeedRow[] = BUDGETS.slice(0, budgetCount).map(([categoryId, limit]) => ({
     id: ctx.id('budgets', 'budget', categoryId),
-    data: { categoryId, monthlyLimitMinor: limit },
+    data: { categoryId, monthlyLimitMinor: limit, ...EXTRA[categoryId] },
   }));
 
   const goal: SeedRow[] = [];
@@ -111,6 +116,8 @@ function seed(ctx: SeedContext): SeedRows {
           ? { deadline: ctx.day(base[2] + (i < GOALS.length ? 0 : i * 3)) }
           : {}),
         ...(base[4] ? { note: base[4][ctx.lang] } : {}),
+        // Two goals carry a planned rate, so the plan line (reached in … / after the target date) shows.
+        ...(i < 2 ? { monthlyRateMinor: base[3] } : {}),
       },
     });
     for (let k = 0; k < depositMonths; k++) {
