@@ -492,7 +492,10 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       },
     },
     async (req, reply) => {
-      const { url, kind } = req.query as { url: string; kind?: ProxyKind };
+      const { url, kind: asked } = req.query as { url: string; kind?: string };
+      // Only the three known kinds get through, as constants (the schema checks it as well; nothing the
+      // caller typed reaches the request options).
+      const kind: ProxyKind = asked === 'page' ? 'page' : asked === 'image' ? 'image' : 'feed';
       try {
         const r = await proxyFetch(
           url,
@@ -501,7 +504,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
             ifModifiedSince: req.headers['if-modified-since'],
           },
           opts.proxy ?? defaultProxyDeps,
-          kind ?? 'feed',
+          kind,
         );
         if (r.etag) reply.header('etag', r.etag);
         if (r.lastModified) reply.header('last-modified', r.lastModified);
