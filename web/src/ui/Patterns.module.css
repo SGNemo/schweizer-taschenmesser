@@ -6,6 +6,10 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+.header[data-in-head='true'] {
+  /* The title moved into the module head: the row keeps views left and actions right. */
+  justify-content: flex-start;
+}
 .headerViews {
   /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */
   flex: 1 1 14rem;

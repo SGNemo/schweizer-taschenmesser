@@ -1,6 +1,8 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { t } from '@/strings';
+import { useHeroTargets } from '@/core/shell/heroContext';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
@@ -18,9 +20,25 @@ export function PageHeader({
   views?: ReactNode;
   children?: ReactNode;
 }) {
+  // Inside a module page the h1 sits in the module head (`layout/ModuleShell`); anywhere else it stays in place.
+  const hero = useHeroTargets();
+  const heading = <h1>{title}</h1>;
+  if (hero) {
+    return (
+      <>
+        {hero.title ? createPortal(heading, hero.title) : null}
+        {views || children ? (
+          <div className={styles.header} data-in-head="true">
+            {views ? <div className={styles.headerViews}>{views}</div> : null}
+            {children}
+          </div>
+        ) : null}
+      </>
+    );
+  }
   return (
     <div className={styles.header}>
-      <h1>{title}</h1>
+      {heading}
       {views ? <div className={styles.headerViews}>{views}</div> : null}
       {children}
     </div>

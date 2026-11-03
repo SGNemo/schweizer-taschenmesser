@@ -24,6 +24,7 @@ import { UpdateBanner } from './UpdateBanner';
 import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
 import { ShortcutSheet } from './ShortcutSheet';
+import { availableManifests } from '@/core/modules/available';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { watchKeyboard } from '@/core/shell/keyboardInset';
@@ -63,6 +64,10 @@ export function AppShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  // The active module's hue tints the thin stripe at the sidebar's edge (identity v2).
+  const activeHue = availableManifests().find(
+    (m) => location.pathname === `/${m.id}` || location.pathname.startsWith(`/${m.id}/`),
+  )?.identity.hue;
   useNativeShare();
   useLaunchOpen();
   useShortcuts();
@@ -143,7 +148,7 @@ export function AppShell() {
       </a>
 
       {focusing ? null : (
-        <aside className={styles.sidebar}>
+        <aside className={styles.sidebar} data-hue={activeHue} data-testid="sidebar">
           <Sidebar tree={tree} rail={rail} canExpand={wide} />
         </aside>
       )}

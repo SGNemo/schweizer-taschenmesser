@@ -171,7 +171,11 @@
   color: var(--accent);
 }
 
-/* Module identity: the active module's icon takes its hue (the text keeps the accent). */
+/* Module identity: the active entry is tinted in the module's hue, its icon takes the hue; the text stays --text (AA). */
+.row[data-hue] .link[aria-current='page'] {
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  color: var(--text);
+}
 .row[data-hue] .link[aria-current='page'] > svg {
   color: var(--module-color);
 }
