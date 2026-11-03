@@ -257,6 +257,10 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Paste birthdays',
     textHint: 'One line per person: name and date, with or without the year.',
     placeholder: 'Anna Example 15.03.1985\nUncle Max 02.11.\n24.12. Grandma',
+    file: 'From a contacts or calendar file',
+    fileHint:
+      'A .vcf file (contacts export) or an .ics file of a birthday calendar. The file stays on this device.',
+    fileNone: 'No birthdays were found in the file.',
   },
   lists: {
     text: 'Paste shopping list',

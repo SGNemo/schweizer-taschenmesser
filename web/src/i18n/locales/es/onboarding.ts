@@ -256,6 +256,10 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Pegar cumpleaños',
     textHint: 'Una línea por persona: nombre y fecha, con o sin año.',
     placeholder: 'Ana Ejemplo 15.03.1985\nTío Max 02.11.\n24.12. Abuela',
+    file: 'Desde un archivo de contactos o calendario',
+    fileHint:
+      'Un archivo .vcf (exportación de contactos) o un .ics de un calendario de cumpleaños. El archivo se queda en este dispositivo.',
+    fileNone: 'No se encontraron cumpleaños en el archivo.',
   },
   lists: {
     text: 'Pegar lista de la compra',

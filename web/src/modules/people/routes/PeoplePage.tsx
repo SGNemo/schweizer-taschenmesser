@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { StartDataButton } from '@/core/importer/StartDataButton';
-import { whatsappUrl } from '@/core/links';
 import { formatMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
@@ -24,10 +23,13 @@ import {
   TextField,
   useOpenParam,
 } from '@/ui';
+import { AvatarRing, NextBirthdayHead } from '../components/AvatarRing';
 import { GiftEditor, type GiftTarget } from '../components/GiftEditor';
 import { PersonEditor, type PersonTarget } from '../components/PersonEditor';
 import {
   ageOn,
+  budgetLeft,
+  congratsLinks,
   daysUntil,
   nextBirthday,
   openGiftsWithPerson,
@@ -41,8 +43,10 @@ import type { Gift, Person } from '../schema';
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-function congratulate(name: string) {
-  void getPlatform().app.openUrl(whatsappUrl(t.people.wish(name)));
+/** Opens the first way to congratulate (WhatsApp, with the number when it is known). */
+function congratulate(person: Person) {
+  const [first] = congratsLinks(person, t.people.wish(person.name), t.people.wishSubject);
+  if (first) void getPlatform().app.openUrl(first.url);
 }
 
 export default function PeoplePage() {
@@ -132,6 +136,8 @@ function PeopleList({
     return map;
   }, [gifts]);
   const pending = useMemo(() => openGiftsWithPerson(gifts ?? [], people ?? []), [gifts, people]);
+  const soonest = sortByNext(people ?? [], day).find((p) => p.birthday);
+  const soonestDays = soonest?.birthday ? daysUntil(soonest.birthday, day) : 0;
   const q = fold(query.trim());
   const shown = useMemo(
     () =>
@@ -150,6 +156,20 @@ function PeopleList({
           {t.people.add}
         </Button>
       </PageHeader>
+      {soonest ? (
+        <NextBirthdayHead
+          name={soonest.name}
+          days={soonestDays}
+          label={[
+            whenLabel(soonestDays),
+            ageOn(soonest.birthday!, nextBirthday(soonest.birthday!, day)) !== undefined
+              ? t.people.turns(ageOn(soonest.birthday!, nextBirthday(soonest.birthday!, day))!)
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        />
+      ) : null}
       {pending.length > 0 || view === 'gifts' ? (
         <Segmented
           label={t.people.viewLabel}
@@ -213,6 +233,7 @@ function PeopleList({
               <ItemRow
                 key={p.id}
                 title={p.name}
+                lead={<AvatarRing name={p.name} days={b ? daysUntil(b, day) : undefined} />}
                 meta={[
                   next ? formatDay(next, 'EEE, d. MMMM') : undefined,
                   age !== undefined ? t.people.turns(age) : undefined,
@@ -226,7 +247,7 @@ function PeopleList({
                   b ? (
                     <IconButton
                       label={t.people.congratulate(p.name)}
-                      onClick={() => congratulate(p.name)}
+                      onClick={() => congratulate(p)}
                     >
                       <Icon name="external" size={18} />
                     </IconButton>
@@ -260,6 +281,13 @@ function PersonDetail({
   const sum = totals(gifts);
   return (
     <>
+      {b ? (
+        <NextBirthdayHead
+          name={person.name}
+          days={daysUntil(b, day)}
+          label={whenLabel(daysUntil(b, day))}
+        />
+      ) : null}
       <PageHeader title={person.name}>
         <Button onClick={onBack}>{t.people.back}</Button>
         <Button onClick={() => setEditing(person)}>
@@ -275,15 +303,16 @@ function PersonDetail({
         ]
           .filter(Boolean)
           .join(' · ')}{' '}
-        {b ? (
-          <IconButton
-            label={t.people.congratulate(person.name)}
-            onClick={() => congratulate(person.name)}
-          >
-            <Icon name="external" size={18} />
-          </IconButton>
-        ) : null}
       </p>
+      {b ? (
+        <p className={patternStyles.hstackTight}>
+          {congratsLinks(person, t.people.wish(person.name), t.people.wishSubject).map((l) => (
+            <Button key={l.id} onClick={() => void getPlatform().app.openUrl(l.url)}>
+              {t.people.congratsVia[l.id]}
+            </Button>
+          ))}
+        </p>
+      ) : null}
       {person.tags.length > 0 ? (
         <p className={patternStyles.hstackTight}>
           {person.tags.map((tag) => (
@@ -294,6 +323,15 @@ function PersonDetail({
         </p>
       ) : null}
       {person.note ? <p>{person.note}</p> : null}
+      {person.giftBudgetCents !== undefined ? (
+        <p data-testid="gift-budget">
+          {t.people.budgetLine(
+            formatMoney(person.giftBudgetCents),
+            formatMoney(Math.abs(budgetLeft(person.giftBudgetCents, gifts))),
+            budgetLeft(person.giftBudgetCents, gifts) < 0,
+          )}
+        </p>
+      ) : null}
       <h2>{t.people.giftsHeading}</h2>
       <Button variant="primary" onClick={() => setGift({ draft: true })}>
         <Icon name="plus" size={18} />

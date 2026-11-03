@@ -3712,6 +3712,19 @@ export const de = {
     inDays: (n: number) => `In ${n} Tagen`,
     congratulate: (name: string) => `${name} per WhatsApp gratulieren`,
     wish: (name: string) => `Alles Gute zum Geburtstag, ${name}! 🎂`,
+    invalidExtra: 'Bitte Budget als Betrag und Vorlauf als ganze Tage eingeben.',
+    phone: 'Telefon (optional)',
+    email: 'E-Mail (optional)',
+    remindOwn: 'Erinnerung für diese Person (Tage vorher)',
+    remindOwnHint: 'Leer lassen, dann gilt die Einstellung des Moduls.',
+    budget: 'Geschenkbudget (optional)',
+    wishSubject: 'Alles Gute zum Geburtstag',
+    budgetLine: (budget: string, amount: string, over: boolean) =>
+      over ? `Budget ${budget}, ${amount} überschritten` : `Budget ${budget}, noch ${amount} übrig`,
+    congratsVia: { whatsapp: 'WhatsApp', tel: 'Anrufen', mail: 'E-Mail schreiben' } as Record<
+      string,
+      string
+    >,
     search: 'Personen durchsuchen',
     empty: 'Noch keine Personen. Lege Geburtstage und Geschenkideen an.',
     emptyFiltered: 'Nichts gefunden.',
@@ -5333,6 +5346,10 @@ export const de = {
       text: 'Geburtstage einfügen',
       textHint: 'Eine Zeile pro Person: Name und Datum, mit oder ohne Jahr.',
       placeholder: 'Anna Beispiel 15.03.1985\nOnkel Max 02.11.\n24.12. Oma',
+      file: 'Aus Kontakte- oder Kalenderdatei',
+      fileHint:
+        'Eine .vcf-Datei (Kontakte-Export) oder eine .ics-Datei eines Geburtstagskalenders. Die Datei bleibt auf diesem Gerät.',
+      fileNone: 'In der Datei wurden keine Geburtstage gefunden.',
     },
     lists: {
       text: 'Einkaufsliste einfügen',

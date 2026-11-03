@@ -268,6 +268,11 @@ function seed(ctx: SeedContext): SeedRows {
     if (ctx.rng.chance(0.7)) birthday.year = todayYear - ctx.rng.int(4, 80);
     const data: Record<string, unknown> = { name: `${first} ${last}`, birthday };
     if (ctx.rng.chance(0.3)) data.note = tr(ctx, ctx.rng.pick(NOTES));
+    // Test contact details and options (no rng: the existing sequence stays as it was).
+    if (i % 3 === 0) data.phone = `+49 555 01${String(i).padStart(3, '0')}`;
+    if (i % 4 === 1) data.email = `person${i}@example.org`;
+    if (i % 4 === 0) data.giftBudgetCents = 4000 + (i % 3) * 1500;
+    if (i % 7 === 1) data.remindDaysBefore = 7;
     return { id: ctx.id('people', 'person', i), data };
   });
   const gift = Array.from({ length: g }, (_, i) => {
