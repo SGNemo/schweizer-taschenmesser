@@ -4690,6 +4690,11 @@ export const de = {
       goal: {
         rate: 'Geplante Rate pro Monat',
         rateHint: 'Optional: Mit deiner Rate siehst du, wann das Ziel erreicht ist.',
+        start: 'Gespart seit',
+        startHint:
+          'Optional: Mit dem Beginn siehst du, wie viel du im Schnitt pro Monat zurücklegst.',
+        pace: (avg: string) => `Bisher legst du im Schnitt ${avg} pro Monat zurück.`,
+        paceReach: (date: string) => `Im bisherigen Tempo bist du im ${date} am Ziel.`,
         plan: (rate: string, date: string) => `Mit ${rate} im Monat bist du im ${date} am Ziel.`,
         inTime: 'Das passt zum Zieldatum.',
         late: (months: number) =>

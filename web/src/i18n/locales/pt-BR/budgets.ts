@@ -46,6 +46,10 @@ export const budgets: Strings['budgets'] = {
     goal: {
       rate: 'Valor mensal planejado',
       rateHint: 'Opcional: com o seu valor você vê quando a meta é alcançada.',
+      start: 'Poupando desde',
+      startHint: 'Opcional: com o início você vê quanto separa por mês, em média.',
+      pace: (avg: string) => `Até agora você separa em média ${avg} por mês.`,
+      paceReach: (date: string) => `No ritmo atual você alcança a meta em ${date}.`,
       plan: (rate: string, date: string) => `Com ${rate} por mês você chega à meta em ${date}.`,
       inTime: 'Isso combina com a data da meta.',
       late: (months: number) =>

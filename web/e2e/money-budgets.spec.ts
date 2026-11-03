@@ -84,6 +84,12 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await expect(dialog.getByTestId('budget-history')).toBeVisible();
     await expect(dialog.getByTestId('budget-history').getByRole('row')).toHaveCount(7); // header + six months
     await expect(dialog.getByRole('link', { name: 'Buchungen ansehen' })).toBeVisible();
+
+    // The link opens the bookings of that category: the filter is open and set.
+    await dialog.getByRole('link', { name: 'Buchungen ansehen' }).click();
+    await expect(page).toHaveURL(/category=/);
+    await expect(page.getByLabel('Kategorie', { exact: true })).toHaveValue(/.+/);
+    await expect(page.getByRole('button', { name: 'Filter zurücksetzen' })).toBeVisible();
   });
 
   test('the head says what is still free', async ({ page }) => {
@@ -110,5 +116,29 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await expect(page.getByTestId('goal-plan')).toContainText(
       /Mit 100,00\s€ im Monat bist du im September 2027 am Ziel/,
     );
+  });
+
+  test('a goal with a start date shows what is put aside per month on average', async ({
+    page,
+  }) => {
+    await enable(page, 'budgets');
+    await open(page, '/budgets?tab=goals&new=1');
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Wofür sparst du?').fill('Fahrrad');
+    await dialog.getByLabel('Zielbetrag').fill('1200');
+    await moreFields(page);
+    await dialog.getByLabel('Gespart seit').fill('2026-06-29');
+    await save(page);
+    await expect(page.getByTestId('goal-pace')).toHaveCount(0); // nothing saved yet
+
+    await page.getByRole('button', { name: 'Einzahlen' }).click();
+    const deposit = page.getByRole('dialog');
+    await deposit.getByLabel('Betrag').fill('300');
+    await save(page);
+    // 3 months since the start: 300 / 3 = 100 a month; at that pace 900 more takes 9 months.
+    await expect(page.getByTestId('goal-pace')).toContainText(
+      /Bisher legst du im Schnitt 100,00\s€ pro Monat zurück/,
+    );
+    await expect(page.getByTestId('goal-pace')).toContainText('im Juni 2027 am Ziel');
   });
 });

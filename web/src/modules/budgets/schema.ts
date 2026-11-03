@@ -37,6 +37,8 @@ export const goalSchema = z.object({
   deadline: z.string().regex(DATE_RE).optional(),
   /** What the user plans to put aside per month (since version 3); the plan says when the goal is reached. */
   monthlyRateMinor: z.number().int().min(1).optional(),
+  /** When the saving started (since version 4); with it the goal shows the average put aside so far. */
+  startDate: z.string().regex(DATE_RE).optional(),
   note: z.string().optional(),
 });
 
