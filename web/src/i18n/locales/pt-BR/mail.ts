@@ -33,6 +33,12 @@ export const mail: Strings['mail'] = {
   },
   page: {
     refresh: 'Atualizar',
+    labelsNav: 'Pastas',
+    pickThread: 'Escolha um e-mail da lista.',
+    rowMenu: (from: string) => `Ações: ${from}`,
+    rowRead: 'Marcar como lido',
+    rowUnread: 'Marcar como não lido',
+    rowArchive: 'Arquivar',
     loading: 'Carregando e-mails …',
     more: 'Carregar mais',
     searchLabel: 'Buscar',

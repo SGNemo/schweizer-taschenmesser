@@ -99,7 +99,7 @@ const manifest: ModuleManifest = {
   maturity: 'preview',
   defaultEnabled: false,
   seed: { version: 1, dependsOn: [] },
-  layout: 'content',
+  layout: 'full',
   area: 'knowledge',
   contributions: {
     onboarding: noOnboarding,

@@ -1,0 +1,62 @@
+.stamp {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-2);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
+  /* perforation: small round bites along every edge */
+  --bite: 0.3rem;
+  --gap: 0.9rem;
+  -webkit-mask:
+    radial-gradient(circle var(--bite) at 50% 0, transparent 98%, #000) top / var(--gap) 51%
+      repeat-x,
+    radial-gradient(circle var(--bite) at 50% 100%, transparent 98%, #000) bottom / var(--gap) 51%
+      repeat-x,
+    radial-gradient(circle var(--bite) at 0 50%, transparent 98%, #000) left / 51% var(--gap)
+      repeat-y,
+    radial-gradient(circle var(--bite) at 100% 50%, transparent 98%, #000) right / 51% var(--gap)
+      repeat-y;
+  mask:
+    radial-gradient(circle var(--bite) at 50% 0, transparent 98%, #000) top / var(--gap) 51%
+      repeat-x,
+    radial-gradient(circle var(--bite) at 50% 100%, transparent 98%, #000) bottom / var(--gap) 51%
+      repeat-x,
+    radial-gradient(circle var(--bite) at 0 50%, transparent 98%, #000) left / 51% var(--gap)
+      repeat-y,
+    radial-gradient(circle var(--bite) at 100% 50%, transparent 98%, #000) right / 51% var(--gap)
+      repeat-y;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+/* the frame inside the perforation, in the module hue */
+.edge {
+  position: absolute;
+  inset: var(--space-2);
+  border: 2px solid var(--module-color);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.face {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: var(--space-2) var(--space-4);
+  text-align: center;
+}
+.figure {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  font-variant-numeric: var(--font-num);
+}
+.label {
+  font-size: var(--text-caps);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.context {
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+}
