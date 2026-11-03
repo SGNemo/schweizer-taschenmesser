@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'cycle',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.subscriptions.meta.description;
   },
@@ -54,7 +54,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: ['finance'] },
+  seed: { version: 2, dependsOn: ['finance'] },
   layout: 'wide',
   order: 60,
   area: 'money',

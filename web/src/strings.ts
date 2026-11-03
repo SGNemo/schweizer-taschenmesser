@@ -2760,6 +2760,49 @@ export const de = {
     view: 'Status',
   },
   subscriptions: {
+    ext: {
+      category: {
+        label: 'Art des Dienstes',
+        streaming: 'Streaming',
+        music: 'Musik',
+        software: 'Software',
+        cloud: 'Cloud & Speicher',
+        news: 'Nachrichten',
+        mobility: 'Mobilität',
+        sport: 'Sport',
+        insurance: 'Versicherung',
+        telecom: 'Telefon & Internet',
+        other: 'Sonstiges',
+      },
+      trial: {
+        label: 'Probezeit endet am',
+        hint: 'Du bekommst vorher eine Erinnerung.',
+        chip: 'Probezeit',
+        daysLeft: (n: number) =>
+          n === 0
+            ? 'Probezeit endet heute'
+            : n === 1
+              ? 'Probezeit endet morgen'
+              : `Probezeit endet in ${n} Tagen`,
+        reminderTitle: (name: string) => `Probezeit endet bald: ${name}`,
+        reminderBody: (date: string, price: string) => `Bis ${date}. Danach ${price}.`,
+        calendar: (name: string) => `Probezeit endet: ${name}`,
+        remindDaysBefore: 'Erinnerung vor Ende der Probezeit (Tage)',
+      },
+      status: { ended: 'Beendet' },
+      payment: { label: 'Bezahlt mit', placeholder: 'z. B. Lastschrift Girokonto' },
+      monthlyShort: (amount: string) => `${amount} / Monat`,
+      top: { title: 'Teuerste Abos', perYear: (amount: string) => `${amount} pro Jahr` },
+      head: {
+        title: 'Nächste Abbuchungen',
+        nothing: 'Nichts in Sicht',
+        on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+      },
+      suggest: {
+        apply: (amount: string) => `Preis übernehmen: ${amount}`,
+        seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
+      },
+    },
     importDetail: (amount: string, rhythm: string, next: string) =>
       `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
     cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,

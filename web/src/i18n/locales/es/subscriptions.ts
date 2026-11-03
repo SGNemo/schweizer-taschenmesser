@@ -1,6 +1,49 @@
 import type { Strings } from '@/strings';
 
 export const subscriptions: Strings['subscriptions'] = {
+  ext: {
+    category: {
+      label: 'Tipo de servicio',
+      streaming: 'Streaming',
+      music: 'Música',
+      software: 'Software',
+      cloud: 'Nube y almacenamiento',
+      news: 'Noticias',
+      mobility: 'Movilidad',
+      sport: 'Deporte',
+      insurance: 'Seguro',
+      telecom: 'Teléfono e internet',
+      other: 'Otros',
+    },
+    trial: {
+      label: 'La prueba termina el',
+      hint: 'Recibirás un aviso antes.',
+      chip: 'Prueba',
+      daysLeft: (n: number) =>
+        n === 0
+          ? 'La prueba termina hoy'
+          : n === 1
+            ? 'La prueba termina mañana'
+            : `La prueba termina en ${n} días`,
+      reminderTitle: (name: string) => `La prueba termina pronto: ${name}`,
+      reminderBody: (date: string, price: string) => `Hasta el ${date}. Después ${price}.`,
+      calendar: (name: string) => `Termina la prueba: ${name}`,
+      remindDaysBefore: 'Aviso antes de que termine la prueba (días)',
+    },
+    status: { ended: 'Terminada' },
+    payment: { label: 'Pagado con', placeholder: 'p. ej. domiciliación cuenta corriente' },
+    monthlyShort: (amount: string) => `${amount} / mes`,
+    top: { title: 'Las más caras', perYear: (amount: string) => `${amount} al año` },
+    head: {
+      title: 'Próximos cargos',
+      nothing: 'Nada a la vista',
+      on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+    },
+    suggest: {
+      apply: (amount: string) => `Adoptar el precio: ${amount}`,
+      seen: (amount: string) => `Último cargo: ${amount}`,
+    },
+  },
   importDetail: (amount: string, rhythm: string, next: string) =>
     `${amount} · ${rhythm} · próximo cargo ${next}`,
   cancelTitle: (name: string) => `Termina el plazo de cancelación: ${name}`,

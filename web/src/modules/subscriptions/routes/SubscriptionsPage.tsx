@@ -14,13 +14,18 @@ import {
   Icon,
   ItemList,
   ItemRow,
-  PageTitle,
+  PageHeader,
   Switch,
   useOpenParam,
 } from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
 import {
   changePercent,
+  monthlyEquivalent,
+  subscriptionStatus,
+  topExpensive,
+  trialDaysLeft,
+  annualCost,
   nextCancelDeadline,
   missedDeadline,
   nextCharge,
@@ -30,6 +35,10 @@ import {
   totalsByCurrency,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
+import { NextChargesHead } from '../components/NextChargesHead';
+import { ServiceTile } from '../components/ServiceTile';
+import { HeroSlot } from '@/ui/identity';
+import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
 import { StartDataButton } from '@/core/importer/StartDataButton';
@@ -55,17 +64,25 @@ export default function SubscriptionsPage() {
   };
 
   const sums = totalsByCurrency(subs ?? [], day);
+  const [advanced] = useAdvanced('subscriptions');
+  const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
+  const suggested = Number(params.get('newprice')) || undefined;
 
   return (
     <>
-      <div className={styles.header}>
-        <PageTitle title={t.subscriptions.title} spacer />
+      <PageHeader title={t.subscriptions.title}>
         <AdvancedToggle moduleId="subscriptions" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.subscriptions.add}
         </Button>
-      </div>
+      </PageHeader>
+
+      {subs ? (
+        <HeroSlot>
+          <NextChargesHead subs={subs} />
+        </HeroSlot>
+      ) : null}
 
       <div className={styles.stats}>
         <div className={styles.stat}>
@@ -82,6 +99,24 @@ export default function SubscriptionsPage() {
         </div>
       </div>
 
+      {top.length > 0 ? (
+        <section aria-label={t.subscriptions.ext.top.title} data-testid="top-expensive">
+          <h2 className={styles.topTitle}>{t.subscriptions.ext.top.title}</h2>
+          <ul className={styles.topList}>
+            {top.map((s) => (
+              <li key={s.id}>
+                <ServiceTile name={s.name} />
+                <span>
+                  {s.name} ·{' '}
+                  {t.subscriptions.ext.top.perYear(
+                    formatMoney(Math.round(annualCost(s)), currencyOf(s)),
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {subs && subs.length === 0 ? (
         <EmptyState title={t.subscriptions.empty}>
           <StartDataButton moduleId="subscriptions" />
@@ -94,6 +129,10 @@ export default function SubscriptionsPage() {
           const missed = s.active ? missedDeadline(s, day) : undefined;
           const urgent = cancel ? daysBetween(day, cancel.deadline) <= WARN_DAYS : false;
           const increase = recentIncrease(s.priceHistory ?? [], day);
+          const status = subscriptionStatus(s, day);
+          const trialLeft = trialDaysLeft(s, day);
+          const plainMonthly =
+            s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
           const facts = [
             describeRecurrence(s.recurrence),
             charge
@@ -105,6 +144,14 @@ export default function SubscriptionsPage() {
               ? t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))
               : '',
             increase ? t.subscriptions.priceUp(changePercent(increase)) : '',
+            plainMonthly
+              ? ''
+              : t.subscriptions.ext.monthlyShort(formatMoney(monthlyEquivalent(s), currencyOf(s))),
+            s.category ? t.subscriptions.ext.category[s.category] : '',
+            s.paymentMethod ?? '',
+            status === 'trial' && trialLeft !== undefined
+              ? t.subscriptions.ext.trial.daysLeft(trialLeft)
+              : '',
           ].filter(Boolean);
           const toggle = (active: boolean) =>
             void changeWithUndo(() => subscriptionRepo.update(s.id, { active }));
@@ -113,6 +160,7 @@ export default function SubscriptionsPage() {
             <ItemRow
               key={s.id}
               title={s.name}
+              lead={<ServiceTile name={s.name} />}
               className={s.active ? undefined : styles.inactive}
               meta={
                 <>
@@ -152,6 +200,10 @@ export default function SubscriptionsPage() {
                     onChange={toggle}
                   />
                   {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                  {status === 'trial' ? (
+                    <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
+                  ) : null}
+                  {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
                 </>
               }
             />
@@ -159,7 +211,11 @@ export default function SubscriptionsPage() {
         })}
       </ItemList>
 
-      <SubscriptionEditor target={openTarget} onClose={closeEditor} />
+      <SubscriptionEditor
+        target={openTarget}
+        onClose={closeEditor}
+        suggestedAmountMinor={suggested}
+      />
     </>
   );
 }

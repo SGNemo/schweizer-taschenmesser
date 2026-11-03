@@ -10,6 +10,21 @@ export const priceChangeSchema = z.object({
 });
 export type PriceChange = z.output<typeof priceChangeSchema>;
 
+/** What kind of service it is (since version 4); only groups and labels, nothing is derived from it. */
+export const SUBSCRIPTION_CATEGORIES = [
+  'streaming',
+  'music',
+  'software',
+  'cloud',
+  'news',
+  'mobility',
+  'sport',
+  'insurance',
+  'telecom',
+  'other',
+] as const;
+export type SubscriptionCategory = (typeof SUBSCRIPTION_CATEGORIES)[number];
+
 export const subscriptionSchema = z.object({
   name: z.string().min(1),
   /** Price per charge in cents. */
@@ -29,6 +44,11 @@ export const subscriptionSchema = z.object({
   active: z.boolean().default(true),
   note: z.string().optional(),
   /** Earlier prices, oldest first (since version 2); the current price is `amountMinor`. */
+  /** Last day of a free or cheap trial ('YYYY-MM-DD', since version 4); a reminder comes before it. */
+  trialEndsOn: z.string().regex(DATE_RE).optional(),
+  category: z.enum(SUBSCRIPTION_CATEGORIES).optional(),
+  /** How it is paid, in the user's words ("Visa", "Lastschrift Girokonto"); short, never a card number. */
+  paymentMethod: z.string().max(40).optional(),
   priceHistory: z.array(priceChangeSchema).max(20).optional().meta({ internal: true }),
 });
 
