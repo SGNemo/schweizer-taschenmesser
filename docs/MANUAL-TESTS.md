@@ -306,6 +306,10 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
 - **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
 
+## Befehlspalette lädt beim ersten Öffnen (nur von Hand prüfbar)
+- **BP1 Offline:** PWA am Handy einmal online öffnen, Flugmodus, App neu starten: Suche/Palette (Lupe, Strg+K, Sprachtaste) öffnet sich ohne Fehler, auch ohne dass sie vorher benutzt wurde. ☐
+- **BP2 Erstes Öffnen online:** Palette öffnen und sofort tippen: kein verlorener Buchstabe, kein sichtbares Flackern. ☐
+
 ## Einstellungen v2 (Paket 1) – nur von Hand prüfbar
 - **SO1 Handy, zwei Ebenen:** Einstellungen öffnen: Karten oben, Kategorienliste darunter; eine Karte antippen, in der Kategorie „Zurück“ (Pfeil und Android-Geste) führt zur Übersicht. ☐
 - **SO2 Modul-Seite auf dem Handy:** Module → ein Modul: Kopf mit Modulfarbe, Blöcke untereinander, „Alle Module“ zurück; in „Ruhig“ wird der Kopf grau. ☐
