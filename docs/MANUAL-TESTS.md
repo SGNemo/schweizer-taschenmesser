@@ -553,3 +553,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G13 Preisänderung:** zwei Buchungen mit gleichem neuem Preis für ein Abo (Empfängername enthält den Abo-Namen): unter „Jetzt wichtig“ erscheint „… bucht jetzt X statt Y“, ein Klick öffnet das Abo mit „Preis übernehmen“; ohne Klick ändert sich nichts. Einstellung „Preisänderung melden“ aus: kein Hinweis. ☐
 - **G14 Abbuchungen buchen:** Finanzen → Einstellungen „Abo-Abbuchungen als Ausgabe buchen“ an, App neu starten: fällige Abbuchungen der letzten 31 Tage sind gebucht (Hinweis mit „Rückgängig“), keine doppelte Buchung neben einem Bankimport; eine gelöschte Buchung kommt nicht wieder. ☐
 
+## Geld-Gruppe: Budgets (Paket 4)
+- **G15 Zeiträume und Übertrag:** Budget mit „Quartal“ und „Rest übernehmen“ (Mehr Felder): Karte zeigt „Q… 2026“, die Summe des Quartals und den Übertrag des Vorquartals. Hell, dunkel, „Ruhig“, 412 px: Kopf („Noch frei“, Ring nur breit), Karten lesbar. ☐
+- **G16 Warnung und Prognose:** Budget ab 50 % warnen: „Jetzt wichtig“ zeigt ruhig (nicht rot) „… % verbraucht“; liegt das Tempo über dem Limit, steht „Im bisherigen Tempo: etwa X über dem Budget“. Einstellung „Prognose zeigen“ aus: keine Zeile. ☐
+- **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
+- **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
+

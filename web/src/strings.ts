@@ -4645,6 +4645,68 @@ export const de = {
   },
 
   budgets: {
+    ext: {
+      period: {
+        label: 'Zeitraum',
+        month: 'Monat',
+        quarter: 'Quartal',
+        year: 'Jahr',
+        quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
+        perPeriod: (period: string) => `pro ${period}`,
+      },
+      carry: {
+        label: 'Rest in den nächsten Zeitraum übernehmen',
+        hint: 'Was übrig bleibt, erweitert das nächste Budget; was zu viel war, verkleinert es (höchstens um ein Budget).',
+        plus: (amount: string) => `inkl. ${amount} Übertrag`,
+        minus: (amount: string) => `abzüglich ${amount} Übertrag`,
+      },
+      warn: {
+        label: 'Warnen ab (Prozent)',
+        hint: 'Leer = Standard aus den Einstellungen.',
+        title: (name: string, percent: number) => `${name}: ${percent} % des Budgets verbraucht`,
+      },
+      forecast: {
+        over: (amount: string) => `Im bisherigen Tempo: etwa ${amount} über dem Budget`,
+      },
+      history: {
+        title: 'Verlauf',
+        period: 'Zeitraum',
+        spent: 'Ausgaben',
+        limit: 'Budget',
+        bookings: 'Buchungen ansehen',
+      },
+      head: {
+        free: 'Noch frei',
+        context: (n: number, over: number) =>
+          over === 0
+            ? n === 1
+              ? '1 Budget, im Rahmen'
+              : `${n} Budgets, alle im Rahmen`
+            : n === 1
+              ? '1 Budget, darüber'
+              : `${n} Budgets, ${over} darüber`,
+        ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
+      },
+      goal: {
+        rate: 'Geplante Rate pro Monat',
+        rateHint: 'Optional: Mit deiner Rate siehst du, wann das Ziel erreicht ist.',
+        plan: (rate: string, date: string) => `Mit ${rate} im Monat bist du im ${date} am Ziel.`,
+        inTime: 'Das passt zum Zieldatum.',
+        late: (months: number) =>
+          months === 1
+            ? 'Das ist 1 Monat nach dem Zieldatum.'
+            : `Das sind ${months} Monate nach dem Zieldatum.`,
+      },
+      widget: { addExpense: 'Ausgabe +' },
+      settings: {
+        warnAtPercent: 'Warnen ab (Prozent des Budgets)',
+        warnAtPercentHelp:
+          'Ab diesem Anteil zeigt ein Budget „fast aufgebraucht“. Rot wird nur, was das Budget überschreitet.',
+        showForecast: 'Prognose bis Zeitraumende zeigen',
+        showForecastHelp:
+          'Eine Zeile je Budget: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
+      },
+    },
     meta: {
       name: 'Budgets & Sparziele',
       description:
