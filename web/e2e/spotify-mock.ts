@@ -63,7 +63,18 @@ export async function seedConnected(page: Page, features: string[]) {
       ['oauth:spotify:refresh', 'RT-invented'],
     ] as const;
     const sealed = await Promise.all(rows.map(async ([n, v]) => [n, await seal(n, v)] as const));
-    const tx = db.transaction(['_secrets', '_meta'], 'readwrite');
+    const tx = db.transaction(['_secrets', '_meta', '_modules'], 'readwrite');
+    // The music module is a preview module and off by default: connecting is the moment to switch it on.
+    tx.objectStore('_modules').put({
+      id: 'music',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'e2e',
+      deletedAt: null,
+      _f: {},
+    });
     const secrets = tx.objectStore('_secrets');
     if (!existing) secrets.put({ key: 'deviceKey', value: key });
     for (const [n, token] of sealed) secrets.put({ key: `secret:${n}`, value: token });

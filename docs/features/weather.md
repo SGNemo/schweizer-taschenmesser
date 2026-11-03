@@ -1,6 +1,8 @@
-# Weather line
+# Weather (module)
 
-One calm line on the Overview: place, temperature now, a few words, a rain hint for the next hours. Switch + place in Settings → Verbindungen → Wetter. Rules: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md). Decisions: [decisions/weather.md](../decisions/weather.md).
+**Since identity v2 weather is a module** (`modules/weather`, area Planen, route `/weather`): a full page in the module frame (sky in the head, thin large temperature, the three facts that matter, hour cards, 24 h chart with rain, wind and night, 7 day range bars, air quality in the aside, hints computed from the forecast, up to three places as chips) and an overview **widget** with only today (sky swatch, temperature, word, rain hint). The overview line, its "Wetter: Stadt wählen" hint and the dialog are gone; the sections below that talk about the line and the dialog describe the data behaviour that still holds (cache, offline, rating, air). Decisions: [decisions/ui-shell.md](../decisions/ui-shell.md) "Module identity v2".
+
+One calm line on the Overview (old): place, temperature now, a few words, a rain hint for the next hours. Switch + place in Settings → Verbindungen → Wetter. Rules: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md). Decisions: [decisions/weather.md](../decisions/weather.md).
 
 ## Behaviour
 - Default **on**, but nothing is shown or requested until a place is chosen. Without a place one quiet hint "Wetter: Stadt wählen" appears; "Später nicht mehr" ends it (device-local `tm-weather-hint`), after that only the settings offer it.

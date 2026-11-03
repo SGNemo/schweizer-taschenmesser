@@ -99,7 +99,8 @@
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
-/* Module identity on a widget: the module's icon on a soft chip and a 4 px edge in its hue (always with the title). */
+/* Module identity on a widget (v2, variant B): the head is a band tinted in the module's hue (weaker than the module head, text stays --text), the
+   module's icon sits on a chip; "Ruhig" / "Modulfarben: Aus" flatten the tint through the --head-tint tokens. */
 .chip {
   display: inline-grid;
   place-items: center;
@@ -107,21 +108,24 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--module-color) 15%, transparent);
-  color: var(--module-color);
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  color: var(--text);
 }
 .widget[data-hue] > section {
   position: relative;
   overflow: hidden;
 }
-.widget[data-hue] > section::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--module-color);
+.widget[data-hue] .head {
+  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--module-color) calc(var(--head-tint-0) * 0.65), var(--surface)),
+    color-mix(in srgb, var(--module-color) calc(var(--head-tint-1) * 0.8), var(--surface)) 85%
+  );
+}
+.widget[data-hue] .chip svg {
+  color: var(--module-color);
 }
 .title {
   flex: 1;

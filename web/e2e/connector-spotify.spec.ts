@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready, showPreview } from './helpers';
+import { enable, ready, showAllWidgets, showPreview } from './helpers';
 import { CORS, mockSpotify, seedConnected } from './spotify-mock';
 
 /**
@@ -117,106 +117,67 @@ test.describe('Spotify connector', () => {
     await expect(page.getByTestId('connector-spotify').getByRole('alert')).toHaveCount(0);
   });
 
-  test('not connected: no line and no request to Spotify', async ({ page }) => {
+  test('not connected: the widget offers to connect, and no request goes to Spotify', async ({
+    page,
+  }) => {
+    await showAllWidgets(page);
     const mock = await mockSpotify(page);
-    await ready(page, '/');
-    await expect(page.getByTestId('widget-todos:next')).toBeVisible();
-    await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
+    // The module is a preview module: switch it on like the library does.
+    await enable(page, 'music');
+    await ready(page, '/music');
+    await expect(page.getByTestId('music-empty')).toContainText('Verbinde Spotify');
     expect(mock.api).toEqual([]);
   });
 
-  test('connected: one calm line with the title as a link, pause/resume and next', async ({
+  test('connected: the widget shows what plays with pause/resume and next; the title opens the module as a page', async ({
     page,
   }) => {
+    await showAllWidgets(page);
     const mock = await mockSpotify(page);
     await seedConnected(page, ['show', 'control']);
     await ready(page, '/');
-    const line = page.getByTestId('now-playing-line');
-    await expect(line).toContainText('Läuft gerade: Testlied – Erfundene Band');
-    const link = line.getByRole('link', { name: 'Testlied' });
-    await expect(link).toHaveAttribute('href', 'https://open.spotify.com/track/abc123');
-    await expect(link).toHaveAttribute('rel', 'noreferrer noopener');
-
-    await line.getByRole('button', { name: 'Pause' }).click();
-    await expect(line).toContainText('Pausiert: Testlied');
-    await line.getByRole('button', { name: 'Weiter' }).click();
-    await expect(line).toContainText('Läuft gerade: Testlied');
-    await line.getByRole('button', { name: 'Nächster' }).click();
+    const widget = page.getByTestId('widget-music:player');
+    await expect(widget).toContainText('Testlied');
+    await expect(widget).toContainText('Erfundene Band');
+    await widget.getByRole('button', { name: 'Pause' }).click();
+    await expect(widget.getByRole('button', { name: 'Weiter' })).toBeVisible();
+    await widget.getByRole('button', { name: 'Weiter' }).click();
+    await expect(widget.getByRole('button', { name: 'Pause' })).toBeVisible();
+    await widget.getByRole('button', { name: 'Nächster' }).click();
     await expect.poll(() => mock.api).toContain('POST /next');
     expect(mock.api).toContain('PUT /pause');
     expect(mock.api).toContain('PUT /play');
+    await widget.getByRole('link', { name: /Musik/ }).first().click();
+    await expect(page).toHaveURL(/\/music$/);
+    await expect(page.getByTestId('music-now')).toContainText('Testlied');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
   test('display only: no controls without the "Steuern" feature', async ({ page }) => {
+    await showAllWidgets(page);
     await mockSpotify(page);
     await seedConnected(page, ['show']);
     await ready(page, '/');
-    const line = page.getByTestId('now-playing-line');
-    await expect(line).toContainText('Testlied');
-    await expect(line.getByTestId('now-playing-toggle')).toHaveCount(0);
-    await expect(line.getByTestId('now-playing-next')).toHaveCount(0);
+    const widget = page.getByTestId('widget-music:player');
+    await expect(widget).toContainText('Testlied');
+    await expect(widget.getByTestId('now-playing-toggle')).toHaveCount(0);
+    await expect(widget.getByTestId('now-playing-next')).toHaveCount(0);
   });
 
-  test('nothing playing (204): the card gives way to one quiet row', async ({ page }) => {
+  test('nothing playing (204): the widget gives way to one quiet line', async ({ page }) => {
+    await showAllWidgets(page);
     const mock = await mockSpotify(page);
     mock.player = () => ({ status: 204 });
     await seedConnected(page, ['show', 'control']);
     await ready(page, '/');
     await expect.poll(() => mock.api).toContain('GET /currently-playing');
-    await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
-    await expect(page.getByTestId('now-playing-idle')).toContainText(
-      'Spotify: gerade läuft nichts.',
-    );
-  });
-
-  test('the card is a widget: it opens the player (playlist, saved song, search) and can be switched off', async ({
-    page,
-  }) => {
-    const mock = await mockSpotify(page);
-    await seedConnected(page, ['show', 'control', 'playlists', 'library']);
-    await ready(page, '/');
-    await expect(page.getByTestId('now-playing-line')).toContainText('Testlied');
-    await page.getByTestId('now-playing-open').click();
-    const player = page.getByTestId('spotify-player');
-    await expect(player).toContainText('Auf Küche');
-    await player.getByRole('button', { name: /Ruhe/ }).click();
-    await expect(player.getByRole('heading', { name: 'Ruhe' })).toBeVisible();
-    await player.getByRole('button', { name: 'Abspielen', exact: true }).click();
-    await expect
-      .poll(() =>
-        mock.api.some((c) => c.startsWith('PUT /play') && c.includes('spotify:playlist:pl2DEF')),
-      )
-      .toBe(true);
-    const back = player.getByRole('button', { name: 'Zurück zur Bibliothek' });
-    if (await back.isVisible()) await back.click();
-    await player
-      .getByRole('button', { name: /Lieblingssongs/ })
-      .first()
-      .click();
-    await player.getByRole('button', { name: 'Lieblingslied abspielen' }).click();
-    await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:lk1AAA'))).toBe(true);
-    if (await back.isVisible()) await back.click();
-    await player.getByRole('button', { name: /^Suchen$/ }).click();
-    await player.getByLabel('Titel, Playlist oder Album suchen').fill('Feuer');
-    await player.getByRole('button', { name: 'Suchen', exact: true }).last().click();
-    await player.getByRole('button', { name: 'Gefundenes Lied abspielen' }).click();
-    await expect.poll(() => mock.api.some((c) => c.includes('spotify:track:trk9ZZ'))).toBe(true);
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('spotify-player')).toHaveCount(0);
-
-    // Switched off on the Overview: gone, and nothing is read any more.
-    await page.getByRole('button', { name: 'Anpassen' }).click();
-    await page.getByRole('button', { name: 'Karten' }).click();
-    await page.getByRole('switch', { name: 'Läuft gerade (Spotify)' }).click();
-    await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Fertig' }).click();
-    await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
-    await expect(page.getByTestId('now-playing-idle')).toHaveCount(0);
+    await expect(page.getByTestId('widget-music:player')).toContainText('Gerade läuft nichts.');
   });
 
   test('without Premium the controls go away with one quiet hint, the display stays', async ({
     page,
   }) => {
+    await showAllWidgets(page);
     const mock = await mockSpotify(page);
     mock.command = () => ({
       status: 403,
@@ -224,21 +185,22 @@ test.describe('Spotify connector', () => {
     });
     await seedConnected(page, ['show', 'control']);
     await ready(page, '/');
-    const line = page.getByTestId('now-playing-line');
-    await line.getByRole('button', { name: 'Pause' }).click();
+    const widget = page.getByTestId('widget-music:player');
+    await widget.getByRole('button', { name: 'Pause' }).click();
     await expect(page.getByText('Steuern braucht Spotify Premium.')).toBeVisible();
-    await expect(line.getByTestId('now-playing-toggle')).toHaveCount(0);
-    await expect(line.getByTestId('now-playing-next')).toHaveCount(0);
-    await expect(line).toContainText('Testlied');
+    await expect(widget.getByTestId('now-playing-toggle')).toHaveCount(0);
+    await expect(widget.getByTestId('now-playing-next')).toHaveCount(0);
+    await expect(widget).toContainText('Testlied');
   });
 
-  test('an expired sign-in turns the line off and the card says so', async ({ page }) => {
+  test('an expired sign-in turns the widget off and the card says so', async ({ page }) => {
+    await showAllWidgets(page);
     const mock = await mockSpotify(page);
     mock.player = () => ({ status: 401, body: { error: { status: 401 } } });
     await seedConnected(page, ['show']);
     await ready(page, '/');
     await expect.poll(() => mock.api.length).toBeGreaterThan(0);
-    await expect(page.getByTestId('now-playing-line')).toHaveCount(0);
+    await expect(page.getByTestId('widget-music:player')).toContainText('Verbinde Spotify');
     await ready(page, '/settings/verbindungen');
     await expect(
       page.getByTestId('connector-spotify').getByText('Abgelaufen', { exact: true }),
