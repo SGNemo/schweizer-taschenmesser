@@ -4506,6 +4506,9 @@ export const de = {
     fileElsewhere: 'Datei nur auf einem anderen Gerät',
     removeFile: 'Datei entfernen',
     tooLarge: (max: string) => `Die Datei ist zu groß (höchstens ${max}).`,
+    renew: 'Verlängert +1 Jahr',
+    renewAria: (title: string) => `${title}: um 1 Jahr verlängern`,
+    renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',
     status: {
