@@ -32,6 +32,23 @@ export const calendar: Strings['calendar'] = {
   asTodo: 'Garder comme tâche',
   asTodoDone: 'Gardé comme tâche.',
   skipOccurrence: (date: string) => `Retirer uniquement celui du ${date}`,
+  calendars: {
+    group: 'Agendas',
+    manage: 'Gérer les agendas',
+    add: 'Ajouter un agenda',
+    edit: 'Modifier l’agenda',
+    name: 'Nom',
+    colour: 'Couleur',
+    colourN: (n: number) => `Couleur ${n}`,
+    field: 'Agenda',
+    none: 'Aucun agenda',
+    empty:
+      'Pas encore d’agenda à vous. Créez par exemple « Travail » et « Famille », puis affichez-les ou masquez-les un par un.',
+    deleteHint:
+      'La suppression conserve les événements ; ils n’appartiennent alors à aucun agenda.',
+    shown: 'affiché',
+    hidden: 'masqué',
+  },
   weekNoShort: 'Sem.',
   agendaEmpty: 'Rien de prévu sur cette période.',
   holidayLabel: 'Jour férié',

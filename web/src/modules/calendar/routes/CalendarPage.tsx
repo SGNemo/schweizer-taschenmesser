@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
 import { useWeekStart } from '@/core/settings/core';
+import { useAdvanced } from '@/core/settings/comfort';
 import { useSettings } from '@/core/settings/settings';
 import { DATE_RE, eachDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -21,6 +22,7 @@ import {
 } from '@/ui';
 import { Agenda } from '../components/Agenda';
 import { AgendaView } from '../components/AgendaView';
+import { CalendarsBar } from '../components/CalendarsBar';
 import { YearView } from '../components/YearView';
 import { holidayMap, type HolidayRegion } from '../holidays';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
@@ -68,6 +70,7 @@ export default function CalendarPage() {
   const [externalId, setExternalId] = useState<string | null>(null);
   const [occurrence, setOccurrence] = useState<string | null>(null);
   const split = useSplitView();
+  const [advanced] = useAdvanced('calendar');
   const weekStart = useWeekStart();
 
   const rawView = params.get('view');
@@ -180,6 +183,7 @@ export default function CalendarPage() {
       </PageHeader>
       <NowStrip modules={['calendar']} />
 
+      <CalendarsBar advanced={advanced} />
       <PersonFilter usedIds={(items ?? []).flatMap((i) => (i.personId ? [i.personId] : []))} />
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>
