@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, moreFields, openFoldedGroup, ready, showAllWidgets } from './helpers';
+import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -357,8 +357,7 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('widget-finance:balance')).toContainText(/2\.134,01\s€/);
 
     // Switch the deduction off in the settings
-    await ready(page, '/settings/module');
-    await openFoldedGroup(page, 'module-finance', 'fields');
+    await ready(page, '/settings/module/finance');
     await page
       .getByRole('switch', { name: 'Offene Rechnungen vom verfügbaren Betrag abziehen' })
       .click();

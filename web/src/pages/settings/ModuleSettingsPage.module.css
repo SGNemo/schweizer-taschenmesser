@@ -1,0 +1,102 @@
+/* Module settings page: identity chip in the module hue (`data-hue` sets --module-color; grey in
+   "Ruhig"), text always --text, tokens only. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--module-color);
+  border-radius: var(--radius-lg);
+}
+.chip {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
+  color: var(--text);
+}
+.headText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.name {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+.desc,
+.listHint,
+.listDesc {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.libraryLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  color: var(--accent);
+}
+.fold {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.foldSummary {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  font-weight: var(--weight-semibold);
+}
+.foldBody {
+  padding: 0 var(--space-4) var(--space-3);
+}
+.listTitle {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-2);
+}
+.listLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--module-color);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  text-decoration: none;
+}
+.listLink:hover {
+  border-color: var(--accent);
+}
+.listName {
+  font-weight: var(--weight-medium);
+}

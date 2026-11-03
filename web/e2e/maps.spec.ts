@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, openFoldedGroup, ready, showAllWidgets, showPreview } from './helpers';
+import { enable, ready, showAllWidgets, showPreview } from './helpers';
 import { overpassFixture } from '../src/modules/maps/own/fixtures';
 import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../src/modules/maps/own/sample';
 
@@ -369,8 +369,7 @@ test.describe('Karten & Orte', () => {
       .toBeGreaterThan(0);
 
     // "Nur eigene Karte (offline)": nothing outside the own map is requested or drawn.
-    await ready(page, '/settings/module');
-    await openFoldedGroup(page, 'module-maps', 'fields');
+    await ready(page, '/settings/module/maps');
     const toggle = page.getByRole('switch', { name: 'Nur eigene Karte (offline)' });
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
@@ -446,13 +445,11 @@ test.describe('Karten & Orte', () => {
     const fileRequests = () => seen.filter((u) => hostOf(u) === 'maps.example');
     await enable(page, 'maps');
     // The address of the file is a module setting (saved on leaving the field).
-    await ready(page, '/settings/module');
-    await openFoldedGroup(page, 'module-maps', 'fields');
+    await ready(page, '/settings/module/maps');
     const field = page.getByLabel('Kartendatei (Adresse)');
     await field.fill('https://maps.example/nemostadt.pmtiles');
     await field.blur();
-    await ready(page, '/settings/module');
-    await openFoldedGroup(page, 'module-maps', 'fields');
+    await ready(page, '/settings/module/maps');
     await expect(page.getByLabel('Kartendatei (Adresse)')).toHaveValue(
       'https://maps.example/nemostadt.pmtiles',
     );

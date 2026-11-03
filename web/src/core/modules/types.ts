@@ -4,7 +4,11 @@ import type { ExternalEvent } from '@/core/connectors/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { OnboardingDef } from '@/core/importer/types';
 import type { SeedMeta } from '@/core/seed/types';
-import type { SettingsCategoryId } from '@/core/settings/registry/types';
+import type {
+  ModuleFieldGroup,
+  SettingsCategoryId,
+  SettingsLevel,
+} from '@/core/settings/registry/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
@@ -325,6 +329,10 @@ export interface SettingField {
   type: 'text' | 'number' | 'boolean' | 'select';
   options?: { value: string; label: string }[];
   help?: string;
+  /** Block on the module's settings page; default `general`. */
+  group?: ModuleFieldGroup;
+  /** `advanced` fields sit behind the page's "Erweitert" fold; default `basic`. */
+  level?: SettingsLevel;
 }
 
 export interface ModuleSettings {

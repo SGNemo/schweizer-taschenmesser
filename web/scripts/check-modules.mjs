@@ -12,11 +12,16 @@ import {
   checkMaturity,
   checkRowSource,
   checkModule,
+  checkSettingsFieldMeta,
   checkSettingsSource,
   checkWidgetSource,
 } from './lib/checkModules.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
-import { SETTINGS_CATEGORY_IDS } from '../src/core/settings/registry/types.ts';
+import {
+  MODULE_FIELD_GROUPS,
+  SETTINGS_CATEGORY_IDS,
+  SETTINGS_LEVELS,
+} from '../src/core/settings/registry/types.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const modulesDir = join(root, 'src', 'modules');
@@ -36,6 +41,7 @@ for (const id of readdirSync(modulesDir).sort()) {
   const settingsPath = join(dir, 'settings.ts');
   const settingsSource = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : manifest;
   errors.push(...checkSettingsSource(id, settingsSource, SETTINGS_CATEGORY_IDS));
+  errors.push(...checkSettingsFieldMeta(id, settingsSource, MODULE_FIELD_GROUPS, SETTINGS_LEVELS));
   // `aiSchema.actions` is optional; when a module has them they must be complete.
   const aiPath = join(dir, 'ai.ts');
   if (existsSync(aiPath) && /\bactions:\s*\{/.test(readFileSync(aiPath, 'utf8'))) {
