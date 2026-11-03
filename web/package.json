@@ -47,6 +47,7 @@
     "check:stimulus": "node scripts/check-stimulus.mjs",
     "check:bundle": "node scripts/check-bundle.mjs",
     "measure:coldstart": "playwright test -c playwright.coldstart.config.ts",
+    "measure:data": "playwright test -c playwright.perf.config.ts",
     "stimulus:baseline": "node scripts/check-stimulus.mjs --baseline",
     "ai:eval": "node scripts/ai-eval.mjs",
     "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
