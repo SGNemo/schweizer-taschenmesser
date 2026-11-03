@@ -8,7 +8,7 @@ import type { SettingsCategoryId, SettingsSectionDef } from './types';
 /** Group ids per category, in display order (texts: `tSettings2.groups`). */
 export const CATEGORY_GROUPS: Partial<Record<SettingsCategoryId, readonly string[]>> = {
   allgemein: ['profile', 'input', 'data'],
-  darstellung: ['look', 'reading', 'more'],
+  darstellung: ['look', 'more'],
   ki: ['switch', 'providers', 'usage'],
   verbindungen: ['services', 'network'],
   ueber: ['app', 'legal', 'support'],
@@ -19,10 +19,9 @@ const SECTION_GROUP: Readonly<Record<string, string>> = {
   general: 'profile',
   shortcuts: 'input',
   'recently-deleted': 'data',
+  storage: 'data',
   appearance: 'look',
   favourites: 'look',
-  reading: 'reading',
-  focus: 'reading',
   advanced: 'more',
   'ai-switch': 'switch',
   ai: 'providers',

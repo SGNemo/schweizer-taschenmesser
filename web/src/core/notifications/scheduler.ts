@@ -78,7 +78,7 @@ function defaultDeps(): SchedulerDeps {
   return {
     service: withGameDelivery(getPlatform().notifications),
     async loadDue(range) {
-      return collectDue(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()), 'alert');
     },
     getCursor: async () => (await meta.get(CURSOR_KEY))?.value,
     setCursor: async (at) => void (await meta.put({ key: CURSOR_KEY, value: at })),

@@ -52,6 +52,7 @@
     "defaultType": "todo"
   },
   "_settings scope focus": {
+    "notifyChannels": {},
     "nextOne": true,
     "dayPlan": true,
     "planLimit": 3,

@@ -1,10 +1,12 @@
 import { t } from '@/strings';
+import { tSettings4 } from '@/strings.settings4';
 import { SETTINGS_CATEGORY_IDS, type SettingsCategoryDef, type SettingsCategoryId } from './types';
 
 /** Icon (from `ui/icons`) per category. */
 const ICONS: Record<SettingsCategoryId, string> = {
   allgemein: 'settings',
   darstellung: 'sun',
+  barrierefreiheit: 'eye',
   module: 'grid',
   werkzeuge: 'wrench',
   benachrichtigungen: 'bell',
@@ -18,19 +20,24 @@ const ICONS: Record<SettingsCategoryId, string> = {
   ueber: 'help',
 };
 
+/** The texts of a category; the accessibility category's live in its own bundle (no hotspot edit of `strings.ts`). */
+function catText(id: SettingsCategoryId) {
+  return id === 'barrierefreiheit' ? tSettings4.get().accessibility.cat : t.settings.cat[id];
+}
+
 /** Texts are getters: they are read when shown, so they follow a language switch. */
 export const SETTINGS_CATEGORIES: readonly SettingsCategoryDef[] = SETTINGS_CATEGORY_IDS.map(
   (id) => ({
     id,
     icon: ICONS[id],
     get title() {
-      return t.settings.cat[id].title;
+      return catText(id).title;
     },
     get description() {
-      return t.settings.cat[id].description;
+      return catText(id).description;
     },
     get keywords() {
-      return t.settings.cat[id].keywords;
+      return catText(id).keywords;
     },
   }),
 );

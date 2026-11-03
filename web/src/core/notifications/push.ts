@@ -137,7 +137,7 @@ export function defaultPushDeps(): PushDeps {
     registration: async () => (await navigator.serviceWorker.getRegistration()) ?? undefined,
     remote: (config) => createPushRemote(config),
     async loadDue(range) {
-      return collectDue(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()), 'alert');
     },
   };
 }

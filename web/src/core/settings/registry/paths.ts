@@ -33,6 +33,8 @@ export const LEGACY_HASHES: Readonly<Record<string, SettingsCategoryId>> = {
   setup: 'ueber',
   appearance: 'darstellung',
   favourites: 'darstellung',
+  reading: 'barrierefreiheit',
+  focus: 'barrierefreiheit',
   notifications: 'benachrichtigungen',
   ai: 'ki',
   sync: 'sync',

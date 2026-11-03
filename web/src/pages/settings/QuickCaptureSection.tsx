@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { fixedConflict } from '@/core/keyboard/fixed';
 import { getPlatform, type HotkeyError } from '@/core/platform';
+import { tSettings4 } from '@/strings.settings4';
 import { useFocusSettings } from '@/core/settings/focus';
 import {
   applyHotkey,
@@ -45,6 +47,12 @@ export function HotkeyField({
 
   function onRecord(accelerator: string, modifiers: boolean) {
     if (!modifiers) return setError(t.quickCapture.settings.hotkeyNeedsModifier);
+    // A global hotkey must not take over a shortcut the app itself uses (Strg+K, Alt+L …).
+    const taken = fixedConflict(accelerator);
+    if (taken)
+      return setError(
+        tSettings4.get().shortcuts.conflictFixed(tSettings4.get().shortcuts.fixed[taken.id]),
+      );
     void set(accelerator);
   }
 

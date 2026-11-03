@@ -64,7 +64,7 @@ function defaultDeps(): NativeScheduleDeps {
   return {
     service: getPlatform().notifications,
     async loadDue(range) {
-      return collectDue(range, activeManifests(await loadModuleStates()));
+      return collectDue(range, activeManifests(await loadModuleStates()), 'alert');
     },
     now: clockNow,
   };

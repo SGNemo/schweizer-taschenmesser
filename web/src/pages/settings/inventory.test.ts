@@ -52,6 +52,7 @@ const CORE_KEYS = {
   '_settings scope tools': { enabled: 'per tool', order: 'per tool' },
   '_settings scope quickCapture': { defaultType: 'todo' },
   '_settings scope focus': {
+    notifyChannels: {},
     nextOne: true,
     dayPlan: true,
     planLimit: 3,
