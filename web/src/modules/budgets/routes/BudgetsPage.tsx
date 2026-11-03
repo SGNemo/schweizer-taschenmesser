@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
-import { currencyOf, formatMoney } from '@/core/money';
+import { currencyOf, formatMoney, DEFAULT_CURRENCY } from '@/core/money';
 import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core/time/dates';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
@@ -20,7 +20,9 @@ import {
   Stat,
   useOpenParam,
 } from '@/ui';
-import { spentOf, useBudgetData } from '../data';
+import { useBudgetData } from '../data';
+import { HeroFigure, HeroSlot, Ring } from '@/ui/identity';
+import styles from './budgets.module.css';
 import {
   BudgetEditor,
   DepositDialog,
@@ -29,7 +31,7 @@ import {
   type BudgetTarget,
   type GoalTarget,
 } from '../components/Editors';
-import { budgetStatus, goalProgress } from '../logic';
+import { goalPlan, goalProgress } from '../compute';
 import { budgetRepo, depositRepo, goalRepo } from '../repo';
 import type { Goal } from '../schema';
 
@@ -65,9 +67,20 @@ export default function BudgetsPage() {
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? t.budgets.unknownCategory;
   const taken = new Set((data?.budgets ?? []).map((b) => b.categoryId));
-  const budgets = (data?.budgets ?? []).sort((a, b) =>
-    categoryName(a.categoryId).localeCompare(categoryName(b.categoryId), 'de'),
+  const rows = [...(data?.rows ?? [])].sort((a, b) =>
+    categoryName(a.budget.categoryId).localeCompare(categoryName(b.budget.categoryId), 'de'),
   );
+  const budgets = rows.map((r) => r.budget);
+  // The head: what is still free in the main currency and where the spending went (decoration; the cards carry every number).
+  const mainCurrency = rows.some((r) => currencyOf(r.budget) === DEFAULT_CURRENCY)
+    ? DEFAULT_CURRENCY
+    : rows[0] && currencyOf(rows[0].budget);
+  const inMain = rows.filter((r) => currencyOf(r.budget) === mainCurrency);
+  const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
+  const overCount = inMain.filter((r) => r.status.tone === 'over').length;
+  const ringParts = inMain
+    .filter((r) => r.spent > 0)
+    .map((r) => ({ label: categoryName(r.budget.categoryId), share: r.spent }));
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
 
   return (
@@ -89,6 +102,30 @@ export default function BudgetsPage() {
           </Button>
         )}
       </PageHeader>
+      {tab === 'budgets' && data && inMain.length > 0 && mainCurrency ? (
+        <>
+          <HeroSlot area="figure">
+            <HeroFigure
+              label={t.budgets.ext.head.free}
+              value={formatMoney(free, mainCurrency)}
+              detail={t.budgets.ext.head.context(inMain.length, overCount)}
+              testId="budgets-free"
+            />
+          </HeroSlot>
+          {ringParts.length > 0 ? (
+            <HeroSlot>
+              <div className={styles.headRing}>
+                <Ring
+                  parts={ringParts}
+                  label={t.budgets.ext.head.ring(ringParts.length)}
+                  centre={ringParts.length}
+                  size={6}
+                />
+              </div>
+            </HeroSlot>
+          ) : null}
+        </>
+      ) : null}
       <div className={patternStyles.gapBottom}>
         <Segmented
           label={t.budgets.tabs}
@@ -130,9 +167,27 @@ export default function BudgetsPage() {
                 </EmptyState>
               ) : null}
               <ItemList layout="grid" label={t.budgets.tabBudgets}>
-                {budgets.map((b) => {
-                  const s = budgetStatus(b.monthlyLimitMinor, data ? spentOf(data.spent, b) : 0);
+                {rows.map((r) => {
+                  const b = r.budget;
+                  const s = r.status;
                   const cur = currencyOf(b);
+                  const periodText =
+                    r.period === 'quarter'
+                      ? t.budgets.ext.period.quarterLabel(r.info.index, r.info.year)
+                      : r.period === 'year'
+                        ? String(r.info.year)
+                        : '';
+                  const carryText =
+                    r.carry > 0
+                      ? t.budgets.ext.carry.plus(formatMoney(r.carry, cur))
+                      : r.carry < 0
+                        ? t.budgets.ext.carry.minus(formatMoney(-r.carry, cur))
+                        : '';
+                  // Only a forecast that lands above the limit is worth a line (calm: no line while it looks fine).
+                  const forecast =
+                    r.projected !== undefined && s.tone !== 'over' && r.projected > r.limit
+                      ? t.budgets.ext.forecast.over(formatMoney(r.projected - r.limit, cur))
+                      : undefined;
                   return (
                     <Card as="li" key={b.id}>
                       <div className={patternStyles.row}>
@@ -165,6 +220,16 @@ export default function BudgetsPage() {
                         label={categoryName(b.categoryId)}
                         over={s.tone === 'over'}
                       />
+                      {periodText || carryText ? (
+                        <p className={styles.note}>
+                          {[periodText, carryText].filter(Boolean).join(' · ')}
+                        </p>
+                      ) : null}
+                      {forecast ? (
+                        <p className={styles.warnNote} data-testid="forecast-line">
+                          {forecast}
+                        </p>
+                      ) : null}
                     </Card>
                   );
                 })}
@@ -207,6 +272,23 @@ export default function BudgetsPage() {
                       {t.budgets.perMonth(formatMoney(p.perMonth, currencyOf(g)))}
                     </p>
                   ) : null}
+                  {(() => {
+                    const plan = goalPlan(g, p.saved, day);
+                    if (!plan || !g.monthlyRateMinor) return null;
+                    return (
+                      <p className={patternStyles.muted} data-testid="goal-plan">
+                        {t.budgets.ext.goal.plan(
+                          formatMoney(g.monthlyRateMinor, currencyOf(g)),
+                          formatDay(plan.reachedOn, 'LLLL yyyy'),
+                        )}{' '}
+                        {g.deadline
+                          ? plan.monthsLate > 0
+                            ? t.budgets.ext.goal.late(plan.monthsLate)
+                            : t.budgets.ext.goal.inTime
+                          : ''}
+                      </p>
+                    );
+                  })()}
                   <div className={patternStyles.row} style={{ marginTop: 'var(--space-2)' }}>
                     <Button onClick={() => setDepositFor(g)}>{t.budgets.deposit}</Button>
                     <Button variant="ghost" onClick={() => setHistoryFor(g)}>
@@ -224,6 +306,7 @@ export default function BudgetsPage() {
         target={openBudget}
         categories={categories}
         taken={taken}
+        month={month}
         onClose={() => {
           setBudgetTarget(null);
           clearNew();
