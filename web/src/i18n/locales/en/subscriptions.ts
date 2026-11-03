@@ -1,6 +1,46 @@
 import type { Strings } from '@/strings';
 
 export const subscriptions: Strings['subscriptions'] = {
+  ext: {
+    category: {
+      label: 'Type of service',
+      streaming: 'Streaming',
+      music: 'Music',
+      software: 'Software',
+      cloud: 'Cloud & storage',
+      news: 'News',
+      mobility: 'Mobility',
+      sport: 'Sport',
+      insurance: 'Insurance',
+      telecom: 'Phone & internet',
+      other: 'Other',
+    },
+    trial: {
+      label: 'Trial ends on',
+      hint: 'You get a reminder beforehand.',
+      chip: 'Trial',
+      daysLeft: (n: number) =>
+        n === 0 ? 'Trial ends today' : n === 1 ? 'Trial ends tomorrow' : `Trial ends in ${n} days`,
+      reminderTitle: (name: string) => `Trial ends soon: ${name}`,
+      reminderBody: (date: string, price: string) => `Until ${date}. Then ${price}.`,
+      calendar: (name: string) => `Trial ends: ${name}`,
+      remindDaysBefore: 'Reminder before the trial ends (days)',
+      remindDaysBeforeHelp: '0 = on the last day of the trial',
+    },
+    status: { ended: 'Ended' },
+    payment: { label: 'Paid with', placeholder: 'e.g. direct debit checking account' },
+    monthlyShort: (amount: string) => `${amount} / month`,
+    top: { title: 'Most expensive', perYear: (amount: string) => `${amount} a year` },
+    head: {
+      title: 'Next charges',
+      nothing: 'Nothing ahead',
+      on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+    },
+    suggest: {
+      apply: (amount: string) => `Take over the price: ${amount}`,
+      seen: (amount: string) => `Last charged: ${amount}`,
+    },
+  },
   importDetail: (amount: string, rhythm: string, next: string) =>
     `${amount} · ${rhythm} · next charge ${next}`,
   cancelTitle: (name: string) => `Notice period ends: ${name}`,

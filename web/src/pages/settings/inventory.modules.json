@@ -69,6 +69,21 @@
       }
     }
   },
+  "budgets": {
+    "scope": "module.budgets",
+    "fields": {
+      "warnAtPercent": {
+        "type": "number",
+        "label": "Warnen ab (Prozent des Budgets)",
+        "default": 80
+      },
+      "showForecast": {
+        "type": "boolean",
+        "label": "Prognose bis Zeitraumende zeigen",
+        "default": true
+      }
+    }
+  },
   "calendar": {
     "scope": "module.calendar",
     "fields": {
@@ -181,6 +196,11 @@
         "type": "boolean",
         "label": "Abo-Abbuchungen bis Monatsende abziehen",
         "default": true
+      },
+      "bookSubscriptions": {
+        "type": "boolean",
+        "label": "Abo-Abbuchungen als Ausgabe buchen",
+        "default": false
       },
       "forecastHorizon": {
         "type": "select",
@@ -367,6 +387,11 @@
         "label": "Erinnerung vor Ende der Kündigungsfrist (Tage)",
         "default": 3
       },
+      "trialRemindDaysBefore": {
+        "type": "number",
+        "label": "Erinnerung vor Ende der Probezeit (Tage)",
+        "default": 3
+      },
       "remindTime": {
         "type": "text",
         "label": "Uhrzeit der Erinnerung",
@@ -376,6 +401,16 @@
         "type": "boolean",
         "label": "Hinweis bei Preiserhöhung",
         "default": true
+      }
+    }
+  },
+  "timetrack": {
+    "scope": "module.timetrack",
+    "fields": {
+      "idleMinutes": {
+        "type": "number",
+        "label": "Nachfrage bei Leerlauf (Minuten, 0 = aus)",
+        "default": 15
       }
     }
   },

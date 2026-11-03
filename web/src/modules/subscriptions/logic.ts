@@ -1,7 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { firstOnOrAfter, occurrencesBetween } from '@/core/recurrence/expand';
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, daysBetween } from '@/core/time/dates';
 import type { PriceChange, Subscription } from './schema';
 
 type Sub = Pick<
@@ -181,4 +181,67 @@ export function recentIncrease(
 ): PriceChange | undefined {
   const since = addDaysStr(today, -days);
   return [...history].reverse().find((c) => c.date >= since && c.toMinor > c.fromMinor);
+}
+
+/** What one charge cost per month, in cents, rounded half up (a weekly 5,00 € is 21,67 €). */
+export const monthlyEquivalent = (s: Pick<Sub, 'amountMinor' | 'recurrence'>): number =>
+  Math.round(annualCost(s) / 12);
+
+export type SubscriptionStatus = 'trial' | 'paused' | 'cancelled' | 'ended' | 'active';
+
+/**
+ * The state shown as a chip. `paused` is the switch ("Aktiv" off); `cancelled` has a last day that
+ * is still ahead ("zum" date), `ended` has none left; `trial` is within the free period.
+ */
+export function subscriptionStatus(
+  s: Pick<Sub, 'recurrence' | 'startDate' | 'active'> & { trialEndsOn?: string },
+  today: string,
+): SubscriptionStatus {
+  if (!s.active) return 'paused';
+  if (s.recurrence.until) return s.recurrence.until >= today ? 'cancelled' : 'ended';
+  if (nextCharge(s, today) === undefined) return 'ended';
+  return s.trialEndsOn && s.trialEndsOn >= today ? 'trial' : 'active';
+}
+
+/** Days until the trial ends (0 = today); undefined without a trial or after it. */
+export function trialDaysLeft(s: { trialEndsOn?: string }, today: string): number | undefined {
+  return s.trialEndsOn && s.trialEndsOn >= today ? daysBetween(today, s.trialEndsOn) : undefined;
+}
+
+/**
+ * The most expensive running subscriptions by yearly cost, in the main currency (the euro, else the
+ * first by code): amounts of other currencies are never ranked against it.
+ */
+export function topExpensive<T extends Sub & { name: string }>(
+  subs: readonly T[],
+  today: string,
+  n = 3,
+): T[] {
+  const running = subs.filter((s) => s.active && nextCharge(s, today) !== undefined);
+  const currencies = [...new Set(running.map((s) => currencyOf(s)))].sort((a, b) =>
+    a === DEFAULT_CURRENCY ? -1 : b === DEFAULT_CURRENCY ? 1 : a.localeCompare(b),
+  );
+  const main = currencies[0];
+  return running
+    .filter((s) => currencyOf(s) === main)
+    .sort((a, b) => annualCost(b) - annualCost(a) || compareText(a.name, b.name))
+    .slice(0, n);
+}
+
+/** One or two capital letters for a service tile: "Streaming Plus" → "SP", "Spotify" → "S". */
+export function monogram(name: string): string {
+  const words = name
+    .trim()
+    .split(/[\s\-_.]+/)
+    .filter((w) => /\p{L}|\p{N}/u.test(w));
+  const letters = words.map((w) => [...w].find((c) => /\p{L}|\p{N}/u.test(c)) ?? '');
+  const out = letters.length > 1 ? letters[0]! + letters[1]! : (letters[0] ?? '');
+  return (out || '?').toLocaleUpperCase();
+}
+
+/** The same name always gets the same entry of `palette` (a small string hash, no randomness). */
+export function paletteIndex(name: string, size: number): number {
+  let h = 0;
+  for (const c of name.trim().toLocaleLowerCase()) h = (h * 31 + c.codePointAt(0)!) >>> 0;
+  return size > 0 ? h % size : 0;
 }

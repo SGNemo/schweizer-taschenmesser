@@ -4,7 +4,9 @@
 import { compareText } from '@/core/i18n/format';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { today } from '@/core/time/dates';
+import { getSettings } from '@/core/settings/settings';
 import { subscriptionRepo } from './repo';
+import { settings } from './settings';
 import { chargesInRange, totals } from './logic';
 
 export interface SubscriptionCharge {
@@ -56,4 +58,21 @@ export async function listSubscriptionNames(): Promise<{ id: string; name: strin
   return (await subscriptionRepo.active().toArray())
     .filter((s) => s.active)
     .map((s) => ({ id: s.id, name: s.name }));
+}
+
+/** What a bank booking is compared with to notice a changed price (finance's hint): name, price, currency. */
+export async function listSubscriptionPrices(): Promise<
+  { id: string; name: string; amountMinor: number; currency: string }[]
+> {
+  return (await subscriptionRepo.active().toArray())
+    .filter((s) => s.active)
+    .map((s) => ({ id: s.id, name: s.name, amountMinor: s.amountMinor, currency: currencyOf(s) }));
+}
+
+/** Does the user want the price hint (Abos → Einstellungen)? */
+export async function priceHintOn(): Promise<boolean> {
+  return (
+    (await getSettings('module.subscriptions', settings.schema, settings.defaults)).priceHint !==
+    false
+  );
 }

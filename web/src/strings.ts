@@ -2761,6 +2761,50 @@ export const de = {
     view: 'Status',
   },
   subscriptions: {
+    ext: {
+      category: {
+        label: 'Art des Dienstes',
+        streaming: 'Streaming',
+        music: 'Musik',
+        software: 'Software',
+        cloud: 'Cloud & Speicher',
+        news: 'Nachrichten',
+        mobility: 'Mobilität',
+        sport: 'Sport',
+        insurance: 'Versicherung',
+        telecom: 'Telefon & Internet',
+        other: 'Sonstiges',
+      },
+      trial: {
+        label: 'Probezeit endet am',
+        hint: 'Du bekommst vorher eine Erinnerung.',
+        chip: 'Probezeit',
+        daysLeft: (n: number) =>
+          n === 0
+            ? 'Probezeit endet heute'
+            : n === 1
+              ? 'Probezeit endet morgen'
+              : `Probezeit endet in ${n} Tagen`,
+        reminderTitle: (name: string) => `Probezeit endet bald: ${name}`,
+        reminderBody: (date: string, price: string) => `Bis ${date}. Danach ${price}.`,
+        calendar: (name: string) => `Probezeit endet: ${name}`,
+        remindDaysBefore: 'Erinnerung vor Ende der Probezeit (Tage)',
+        remindDaysBeforeHelp: '0 = am letzten Tag der Probezeit',
+      },
+      status: { ended: 'Beendet' },
+      payment: { label: 'Bezahlt mit', placeholder: 'z. B. Lastschrift Girokonto' },
+      monthlyShort: (amount: string) => `${amount} / Monat`,
+      top: { title: 'Teuerste Abos', perYear: (amount: string) => `${amount} pro Jahr` },
+      head: {
+        title: 'Nächste Abbuchungen',
+        nothing: 'Nichts in Sicht',
+        on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+      },
+      suggest: {
+        apply: (amount: string) => `Preis übernehmen: ${amount}`,
+        seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
+      },
+    },
     importDetail: (amount: string, rhythm: string, next: string) =>
       `${amount} · ${rhythm} · nächste Abbuchung ${next}`,
     cancelTitle: (name: string) => `Kündigungsfrist endet: ${name}`,
@@ -2816,6 +2860,13 @@ export const de = {
     chartLegend: 'Legende',
     ext: {
       weekly: 'Wöchentlich',
+      subPrice: {
+        title: (name: string, from: string, to: string) =>
+          `${name} bucht jetzt ${to} statt ${from}`,
+        detail: (since: string) => `Seit ${since} in deinen Buchungen. Im Abo übernehmen?`,
+      },
+      subBooked: (n: number) =>
+        n === 1 ? '1 Abo-Abbuchung gebucht.' : `${n} Abo-Abbuchungen gebucht.`,
       transfer: {
         title: 'Umbuchung',
         button: 'Umbuchung',
@@ -2909,6 +2960,9 @@ export const de = {
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
       settings: {
+        bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
+        bookSubscriptionsHelp:
+          'Bucht die fälligen Abbuchungen der letzten 31 Tage, sofern keine passende Buchung (z. B. aus dem Bankimport) schon da ist. Standard: aus.',
         forecastHorizon: 'Ausblick: Zeitraum',
         month: 'Bis Monatsende',
         d30: '30 Tage',
@@ -4591,6 +4645,68 @@ export const de = {
   },
 
   budgets: {
+    ext: {
+      period: {
+        label: 'Zeitraum',
+        month: 'Monat',
+        quarter: 'Quartal',
+        year: 'Jahr',
+        quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
+        perPeriod: (period: string) => `pro ${period}`,
+      },
+      carry: {
+        label: 'Rest in den nächsten Zeitraum übernehmen',
+        hint: 'Was übrig bleibt, erweitert das nächste Budget; was zu viel war, verkleinert es (höchstens um ein Budget).',
+        plus: (amount: string) => `inkl. ${amount} Übertrag`,
+        minus: (amount: string) => `abzüglich ${amount} Übertrag`,
+      },
+      warn: {
+        label: 'Warnen ab (Prozent)',
+        hint: 'Leer = Standard aus den Einstellungen.',
+        title: (name: string, percent: number) => `${name}: ${percent} % des Budgets verbraucht`,
+      },
+      forecast: {
+        over: (amount: string) => `Im bisherigen Tempo: etwa ${amount} über dem Budget`,
+      },
+      history: {
+        title: 'Verlauf',
+        period: 'Zeitraum',
+        spent: 'Ausgaben',
+        limit: 'Budget',
+        bookings: 'Buchungen ansehen',
+      },
+      head: {
+        free: 'Noch frei',
+        context: (n: number, over: number) =>
+          over === 0
+            ? n === 1
+              ? '1 Budget, im Rahmen'
+              : `${n} Budgets, alle im Rahmen`
+            : n === 1
+              ? '1 Budget, darüber'
+              : `${n} Budgets, ${over} darüber`,
+        ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
+      },
+      goal: {
+        rate: 'Geplante Rate pro Monat',
+        rateHint: 'Optional: Mit deiner Rate siehst du, wann das Ziel erreicht ist.',
+        plan: (rate: string, date: string) => `Mit ${rate} im Monat bist du im ${date} am Ziel.`,
+        inTime: 'Das passt zum Zieldatum.',
+        late: (months: number) =>
+          months === 1
+            ? 'Das ist 1 Monat nach dem Zieldatum.'
+            : `Das sind ${months} Monate nach dem Zieldatum.`,
+      },
+      widget: { addExpense: 'Ausgabe +' },
+      settings: {
+        warnAtPercent: 'Warnen ab (Prozent des Budgets)',
+        warnAtPercentHelp:
+          'Ab diesem Anteil zeigt ein Budget „fast aufgebraucht“. Rot wird nur, was das Budget überschreitet.',
+        showForecast: 'Prognose bis Zeitraumende zeigen',
+        showForecastHelp:
+          'Eine Zeile je Budget: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
+      },
+    },
     meta: {
       name: 'Budgets & Sparziele',
       description:
@@ -6975,6 +7091,104 @@ export const de = {
         body: 'Füge einen Magnet-Link oder eine .torrent-Datei hinzu, die du selbst hast.',
       },
     },
+  },
+  timetrack: {
+    meta: {
+      name: 'Zeiterfassung',
+      description:
+        'Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz, manuelle Einträge, Pausen, Wochen- und Monatsauswertung, CSV-Export und eine Nachfrage bei Leerlauf.',
+      quickAdd: 'Zeit starten',
+      widget: 'Zeiterfassung',
+      settings: {
+        idleMinutes: 'Nachfrage bei Leerlauf (Minuten, 0 = aus)',
+        idleHelp:
+          'Läuft die Zeit und du warst so lange nicht am Gerät, fragt die App nach – sie ändert nie etwas von selbst.',
+      },
+    },
+    title: 'Zeiterfassung',
+    tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
+    add: 'Eintrag hinzufügen',
+    edit: 'Eintrag bearbeiten',
+    start: 'Start',
+    stop: 'Stopp',
+    pause: 'Pause',
+    resume: 'Weiter',
+    paused: 'Pausiert',
+    running: 'Läuft',
+    idleNow: 'Nichts läuft.',
+    startFor: (name: string) => `${name} starten`,
+    startedToast: (name: string) => `Läuft: ${name}`,
+    stoppedToast: (minutes: number) => `Gestoppt: ${minutes} Min`,
+    noJob: 'Ohne Projekt',
+    noClient: 'Ohne Kunde',
+    today: 'Heute',
+    todayTotal: (duration: string) => `Heute: ${duration}`,
+    since: (time: string) => `seit ${time}`,
+    dur: (h: number, m: number) => (h > 0 ? `${h} Std ${m} Min` : `${m} Min`),
+    noSessions: 'Heute noch keine Zeit erfasst.',
+    emptyJobs: 'Noch keine Projekte. Lege eins an, dann startest du die Zeit mit einem Klick.',
+    form: {
+      job: 'Projekt',
+      date: 'Datum',
+      start: 'Beginn',
+      end: 'Ende',
+      endDate: 'Enddatum (wenn es über Mitternacht ging)',
+      breakMin: 'Pause (Minuten)',
+      note: 'Notiz',
+    },
+    job: {
+      add: 'Projekt hinzufügen',
+      edit: 'Projekt bearbeiten',
+      name: 'Name',
+      client: 'Kunde',
+      newClient: 'Neuer Kunde (Name)',
+      rate: 'Stundensatz (€)',
+      billable: 'Abrechenbar',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      archive: 'Archivieren',
+      archived: 'Archiviert.',
+      restore: 'Wiederherstellen',
+      rateLine: (rate: string) => `${rate} pro Stunde`,
+      notBillable: 'nicht abrechenbar',
+    },
+    report: {
+      week: 'Woche',
+      month: 'Monat',
+      period: 'Zeitraum',
+      prev: 'Zurück',
+      next: 'Weiter',
+      total: 'Gesamt',
+      billable: 'abrechenbar',
+      amount: 'Betrag',
+      byJob: 'Nach Projekt',
+      byClient: 'Nach Kunde',
+      none: 'In diesem Zeitraum ist nichts erfasst.',
+      csv: 'Als CSV speichern',
+      csvDone: 'Datei gespeichert.',
+      roundNote: 'Beträge werden je Eintrag auf ganze Cent gerundet.',
+    },
+    idle: {
+      title: 'Warst du die ganze Zeit dabei?',
+      body: (minutes: number) => `Seit ${minutes} Min kam keine Eingabe.`,
+      keep: 'Zeit behalten',
+      deduct: 'Als Pause abziehen',
+      stopAt: 'Dort stoppen, wo ich weg war',
+      toast: (minutes: number) => `Du warst ${minutes} Min weg – Zeit prüfen?`,
+      open: 'Ansehen',
+    },
+    fromEvent: {
+      action: 'Zeit erfassen',
+      started: (title: string) => `Zeit läuft für „${title}“.`,
+    },
+    widgetText: {
+      start: 'Starten',
+      none: 'Noch keine Projekte.',
+      addJob: 'Projekt anlegen',
+      running: (name: string, since: string) => `${name} · seit ${since}`,
+      idle: 'Nichts läuft',
+    },
+    head: { running: 'Läuft', idle: 'Bereit' },
   },
   habits: {
     meta: {

@@ -4,6 +4,14 @@ export const finance: Strings['finance'] = {
   chartLegend: 'Leyenda',
   ext: {
     weekly: 'Semanal',
+    subPrice: {
+      title: (name: string, from: string, to: string) =>
+        `${name} ahora cobra ${to} en vez de ${from}`,
+      detail: (since: string) =>
+        `En tus movimientos desde el ${since}. ¿Adoptarlo en la suscripción?`,
+    },
+    subBooked: (n: number) =>
+      n === 1 ? '1 cargo de suscripción anotado.' : `${n} cargos de suscripción anotados.`,
     transfer: {
       title: 'Transferencia',
       button: 'Transferencia',
@@ -100,6 +108,9 @@ export const finance: Strings['finance'] = {
       vsPrevious: (change: string) => `${change} respecto al mes anterior`,
     },
     settings: {
+      bookSubscriptions: 'Anotar los cargos de suscripciones como gasto',
+      bookSubscriptionsHelp:
+        'Anota los cargos vencidos de los últimos 31 días si no hay ya un movimiento que coincida (p. ej. de la importación del banco). Por defecto: desactivado.',
       forecastHorizon: 'Previsión: periodo',
       month: 'Hasta fin de mes',
       d30: '30 días',

@@ -69,6 +69,7 @@ import { maps } from './maps';
 import { mail } from './mail';
 import { browser } from './browser';
 import { downloads } from './downloads';
+import { timetrack } from './timetrack';
 import { habits } from './habits';
 
 export const fr: Strings = {
@@ -142,5 +143,6 @@ export const fr: Strings = {
   mail,
   browser,
   downloads,
+  timetrack,
   habits,
 };

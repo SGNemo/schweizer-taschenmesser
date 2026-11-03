@@ -545,5 +545,20 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit hinzufügen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
 - **PH2 Pausentag und Verlauf:** an einer Gewohnheit „⋯“ → „Pausentag“: die Karte wird grau, es kommt keine Erinnerung, im Verlauf ist der Tag schraffiert und die Quote („x von y geplanten Tagen“) sinkt nicht; „Pausentag aufheben“ stellt ihn zurück. ☐
 - **PH3 Aus-Schalter:** Einstellungen → Gewohnheiten → „Erinnerungen“ aus: keine Benachrichtigung mehr, Ringe und Verlauf bleiben; Ruhige Zeiten verschieben die Erinnerungen wie bei anderen Modulen. ☐
+- **TT1 Start und Stopp:** Modul-Bibliothek → Zeiterfassung einschalten; Projekt anlegen (Name, Stundensatz); Chip „<Projekt> starten“ klicken: Kopf zeigt die laufende Stoppuhr (Sekunden), „Pause“/„Weiter“ und „Stopp“ funktionieren; „Ruhig“ / reduzierte Bewegung: nur Minuten, keine Sekunden. ☐
+- **TT2 Leerlauf:** Zeit laufen lassen, Gerät länger als die eingestellte Zeit liegen lassen (Fenster wechseln/Sperrbildschirm), zurückkehren: Hinweis „Du warst … Min weg“ und die Frage mit drei Wahlmöglichkeiten; erst die Wahl ändert etwas („Als Pause abziehen“ erhöht die Pause, „Dort stoppen…“ beendet zur letzten Eingabe); Einstellung 0 = keine Frage. ☐
+- **TT3 Auswertung und CSV:** Auswertung Woche/Monat: Summe, Betrag, Balken je Projekt/Kunde; „Als CSV speichern“ speichert eine Datei (Windows: Speichern-Dialog, Android: Teilen/Speichern), Öffnen in einer Tabelle zeigt Spalten und `.` als Dezimalzeichen. ☐
+- **TT4 Aus dem Kalender:** Termin öffnen → „Zeit erfassen“: Zeit läuft mit dem Terminnamen als Notiz; ist Zeiterfassung aus, passiert nichts. ☐
 - **PH4 Kopf und Widget:** Kopf zeigt je einen Ring pro heutige Gewohnheit (hell, dunkel, „Ruhig“, 412 px, mit Text); das Übersichts-Widget zeigt „x von y geschafft“ und „+1 …“. ☐
+## Geld-Gruppe: Abos (Paket 3)
+- **G11 Kacheln und Kopf:** Abos hell, dunkel, „Ruhig“, 412 px: Kachel mit Monogramm und der Kopf mit der nächsten Abbuchung lesbar, jede Kachel behält ihre Farbe, nichts bewegt sich. ☐
+- **G12 Probezeit:** Abo mit „Probezeit endet am“ in drei Tagen: Chip „Probezeit“, Erinnerung am gewählten Tag (Windows, Android), Eintrag im Kalender. ☐
+- **G13 Preisänderung:** zwei Buchungen mit gleichem neuem Preis für ein Abo (Empfängername enthält den Abo-Namen): unter „Jetzt wichtig“ erscheint „… bucht jetzt X statt Y“, ein Klick öffnet das Abo mit „Preis übernehmen“; ohne Klick ändert sich nichts. Einstellung „Preisänderung melden“ aus: kein Hinweis. ☐
+- **G14 Abbuchungen buchen:** Finanzen → Einstellungen „Abo-Abbuchungen als Ausgabe buchen“ an, App neu starten: fällige Abbuchungen der letzten 31 Tage sind gebucht (Hinweis mit „Rückgängig“), keine doppelte Buchung neben einem Bankimport; eine gelöschte Buchung kommt nicht wieder. ☐
+
+## Geld-Gruppe: Budgets (Paket 4)
+- **G15 Zeiträume und Übertrag:** Budget mit „Quartal“ und „Rest übernehmen“ (Mehr Felder): Karte zeigt „Q… 2026“, die Summe des Quartals und den Übertrag des Vorquartals. Hell, dunkel, „Ruhig“, 412 px: Kopf („Noch frei“, Ring nur breit), Karten lesbar. ☐
+- **G16 Warnung und Prognose:** Budget ab 50 % warnen: „Jetzt wichtig“ zeigt ruhig (nicht rot) „… % verbraucht“; liegt das Tempo über dem Limit, steht „Im bisherigen Tempo: etwa X über dem Budget“. Einstellung „Prognose zeigen“ aus: keine Zeile. ☐
+- **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
+- **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
 

@@ -4,6 +4,8 @@ import { t } from '@/strings';
 
 export const settingsSchema = z.object({
   cancelRemindDaysBefore: z.number().int().min(0).max(60),
+  /** Days before a trial ends that a reminder comes (0 = on the last day). */
+  trialRemindDaysBefore: z.number().int().min(0).max(30),
   remindTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   /** One notice under "Jetzt wichtig" when a price went up. */
   priceHint: z.boolean(),
@@ -11,7 +13,12 @@ export const settingsSchema = z.object({
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { cancelRemindDaysBefore: 3, remindTime: '09:00', priceHint: true },
+  defaults: {
+    cancelRemindDaysBefore: 3,
+    trialRemindDaysBefore: 3,
+    remindTime: '09:00',
+    priceHint: true,
+  },
   fields: [
     {
       key: 'cancelRemindDaysBefore',
@@ -21,6 +28,16 @@ export const settings: ModuleSettings = {
       type: 'number',
       get help() {
         return t.subscriptions.meta.settings.cancelRemindDaysBeforeHelp;
+      },
+    },
+    {
+      key: 'trialRemindDaysBefore',
+      get label() {
+        return t.subscriptions.ext.trial.remindDaysBefore;
+      },
+      type: 'number',
+      get help() {
+        return t.subscriptions.ext.trial.remindDaysBeforeHelp;
       },
     },
     {

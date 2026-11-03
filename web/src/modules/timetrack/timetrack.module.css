@@ -1,0 +1,120 @@
+.viewBar {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+}
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.chip[aria-pressed='true'] {
+  border-color: var(--text);
+  font-weight: 600;
+}
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.starts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.running {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--shape-soft, var(--radius-md));
+  background: var(--surface);
+}
+.runningName {
+  margin: 0;
+  font-weight: 600;
+}
+.meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.heroTime {
+  font-variant-numeric: tabular-nums;
+}
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-3);
+}
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+.totals strong {
+  display: block;
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+}
+.section {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-base);
+}
+.bars {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+.barHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.periodBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.idle {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--shape-soft, var(--radius-md));
+  background: var(--surface-2);
+}
+.idle h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
