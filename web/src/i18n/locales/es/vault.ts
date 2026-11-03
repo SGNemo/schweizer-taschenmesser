@@ -51,6 +51,9 @@ export const vault: Strings['vault'] = {
   fileElsewhere: 'Archivo solo en otro dispositivo',
   removeFile: 'Quitar archivo',
   tooLarge: (max: string) => `El archivo es demasiado grande (como máximo ${max}).`,
+  renew: 'Renovado +1 año',
+  renewAria: (title: string) => `${title}: renovar 1 año`,
+  renewed: (title: string, date: string) => `«${title}» ahora vale hasta ${date}.`,
   download: 'Descargar',
   search: 'Buscar en documentos',
   status: {

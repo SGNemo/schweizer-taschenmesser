@@ -56,12 +56,21 @@ function Fields({
   const [name, setName] = useState(list?.name ?? '');
   const [kind, setKind] = useState<ListKind>(list?.kind ?? 'checklist');
   const [note, setNote] = useState(list?.note ?? '');
+  const [tripDate, setTripDate] = useState(list?.tripDate ?? '');
+  const [place, setPlace] = useState(list?.place ?? '');
   const [error, setError] = useState('');
 
   async function save() {
     const trimmed = name.trim();
     if (!trimmed) return setError(t.form.required);
-    const data = { name: trimmed, kind, note: note.trim() || undefined };
+    const trip = kind === 'packing';
+    const data = {
+      name: trimmed,
+      kind,
+      note: note.trim() || undefined,
+      tripDate: trip ? tripDate || undefined : undefined,
+      place: trip ? place.trim() || undefined : undefined,
+    };
     if (list) {
       await listRepo.update(list.id, data);
       onSaved(list.id);
@@ -95,6 +104,21 @@ function Fields({
           </option>
         ))}
       </SelectField>
+      {kind === 'packing' ? (
+        <>
+          <TextField
+            label={t.lists.tripPlace}
+            value={place}
+            onChange={(e) => setPlace(e.target.value)}
+          />
+          <TextField
+            label={t.lists.tripDate}
+            type="date"
+            value={tripDate}
+            onChange={(e) => setTripDate(e.target.value)}
+          />
+        </>
+      ) : null}
       <TextArea
         label={t.lists.note}
         rows={3}

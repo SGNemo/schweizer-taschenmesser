@@ -1,0 +1,19 @@
+/* Expiry lamp in front of the count: the text beside it always says the same (colour is never alone). */
+.dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  vertical-align: baseline;
+}
+.dot[data-state='ok'] {
+  background: var(--success);
+}
+.dot[data-state='soon'] {
+  background: var(--warning);
+}
+.dot[data-state='expired'] {
+  background: var(--danger);
+}

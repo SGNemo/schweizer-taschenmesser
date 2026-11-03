@@ -13,6 +13,7 @@ import {
 } from '@/ui';
 import type { DecryptedEntry } from '../vault';
 import { saveEntry } from '../vault';
+import { today } from '@/core/time/dates';
 import { parseTotpInput } from '../totp';
 import type { EntryDraft } from '../schema';
 import styles from '../accounts.module.css';
@@ -110,6 +111,9 @@ function Fields({
         .filter(Boolean),
       totp: parsedTotp,
       favorite,
+      // The age hint counts from the last time the password itself changed.
+      changedAt:
+        existing && existing.data.password === password ? existing.data.changedAt : today(),
     };
     const id = await saveEntry(draft, existing?.id);
     onSaved?.(id);

@@ -279,6 +279,10 @@ export const onboarding: Strings['onboarding'] = {
     text: 'Coller des anniversaires',
     textHint: 'Une ligne par personne : nom et date, avec ou sans année.',
     placeholder: 'Anne Exemple 15.03.1985\nOncle Max 02.11.\n24.12. Mamie',
+    file: 'Depuis un fichier de contacts ou d’agenda',
+    fileHint:
+      'Un fichier .vcf (export de contacts) ou .ics d’un agenda d’anniversaires. Le fichier reste sur cet appareil.',
+    fileNone: 'Aucun anniversaire trouvé dans le fichier.',
   },
   lists: {
     text: 'Coller une liste de courses',
@@ -370,6 +374,20 @@ export const onboarding: Strings['onboarding'] = {
         'Goûter',
         'Sac de sport',
         'Mots pour les parents',
+      ],
+    },
+    business: {
+      name: 'Voyage d’affaires',
+      note: 'Un à trois jours sur place',
+      items: [
+        'Ordinateur portable et chargeur',
+        'Cartes de visite',
+        'Pièce d’identité',
+        'Billet de train ou d’avion',
+        'Réservation d’hôtel',
+        'Costume ou tenue professionnelle',
+        'Câble de charge',
+        'Carnet et stylo',
       ],
     },
   },

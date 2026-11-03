@@ -2,7 +2,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { validateManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import { applyFilter, daysLeft, expiryState, needsRestock, parseCount, sortItems } from '../logic';
+import {
+  applyFilter,
+  countLabel,
+  crossedMinimum,
+  daysLeft,
+  expiryState,
+  needsRestock,
+  parseCount,
+  sortItems,
+} from '../logic';
 import manifest from '../manifest';
 import { itemRepo } from '../repo';
 import { itemSchema, type PantryItem } from '../schema';
@@ -99,5 +108,35 @@ describe('calendar and reminders', () => {
     expect(due[0]!.at).toBe(new Date('2026-10-04T18:00:00').getTime());
     expect(due[0]!.key).toMatch(/^pantry:.+:2026-10-05$/);
     expect(await notifications({ from: due[0]!.at, to: due[0]!.at + 1000 })).toHaveLength(0);
+  });
+});
+
+describe('unit and automatic restock', () => {
+  it('shows the unit after the count and falls back to the pieces wording', () => {
+    const pieces = (n: number) => `${n} Stück`;
+    expect(countLabel(item({ count: 3, unit: 'kg' }), pieces)).toBe('3 kg');
+    expect(countLabel(item({ count: 3 }), pieces)).toBe('3 Stück');
+  });
+
+  it('flags only the step that takes the stock down to the minimum', () => {
+    const base = item({ count: 2, minCount: 1 });
+    expect(crossedMinimum(base, 1)).toBe(true);
+    expect(crossedMinimum(item({ count: 1, minCount: 1 }), 0)).toBe(false); // already low
+    expect(crossedMinimum(item({ count: 2 }), 1)).toBe(false); // no minimum
+  });
+});
+
+describe('barcodes', () => {
+  it('accepts EAN-13, EAN-8 and UPC-A with a correct check digit only', async () => {
+    const { isEan, findByEan } = await import('../logic');
+    expect(isEan('4006381333931')).toBe(true); // EAN-13
+    expect(isEan('96385074')).toBe(true); // EAN-8
+    expect(isEan('036000291452')).toBe(true); // UPC-A
+    expect(isEan('4006381333932')).toBe(false); // wrong check digit
+    expect(isEan('12345')).toBe(false);
+    expect(isEan('40063813339a1')).toBe(false);
+    const items = [item({ ean: '4006381333931' })];
+    expect(findByEan(items, '4006381333931')).toBe(items[0]);
+    expect(findByEan(items, '96385074')).toBeUndefined();
   });
 });

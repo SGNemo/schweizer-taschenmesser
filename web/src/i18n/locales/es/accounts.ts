@@ -89,6 +89,48 @@ export const accounts: Strings['accounts'] = {
   },
   add: 'Añadir acceso',
   edit: 'Editar acceso',
+  head: {
+    locked: 'Bloqueado',
+    unlocked: 'Desbloqueado',
+    autoLock: (min: number) =>
+      min <= 0 ? 'Se bloquea solo en menos de un minuto' : `Se bloquea solo en unos ${min} min`,
+    bridgeOn: 'Extensión del navegador: activada',
+    bridgeOff: 'Extensión del navegador: desactivada',
+  },
+  groups: { label: 'Grupos', all: 'Todas', favorites: 'Favoritas' },
+  audit: {
+    open: 'Revisar contraseñas',
+    title: 'Revisar contraseñas',
+    intro:
+      'Todo se calcula aquí, en este dispositivo. No se muestra, envía ni guarda ninguna contraseña.',
+    running: (done: number, total: number) => `Revisando ${done} de ${total} …`,
+    nothing: 'Nada destacable. Bien.',
+    weak: (n: number) => `Débiles (${n})`,
+    reused: (n: number) => `Usadas más de una vez (${n})`,
+    old: (n: number) => `Con más de un año (${n})`,
+    unavailable:
+      'La comprobación de seguridad necesita internet una vez para cargar sus diccionarios. La reutilización y la antigüedad se comprobaron igualmente.',
+    openEntry: 'Abrir',
+  },
+  emergency: {
+    open: 'Hoja de emergencia',
+    title: 'Hoja de emergencia',
+    intro:
+      'Una hoja con los pasos para una emergencia. No contiene contraseñas. Imprímela y guárdala aparte del dispositivo.',
+    heading: 'Hoja de emergencia: almacén de contraseñas',
+    entries: (n: number) => `Entradas en el almacén: ${n}`,
+    date: (d: string) => `Fecha: ${d}`,
+    steps: [
+      'Haz una copia de seguridad cifrada con regularidad (Herramientas → Copia de seguridad) y guarda el archivo en un segundo lugar.',
+      'La contraseña maestra no está en esta hoja y no se puede restablecer. Guárdala aparte, p. ej. con una persona de confianza.',
+      'Dispositivo nuevo: instala la app, restaura el almacén desde la copia y desbloquéalo con la contraseña maestra.',
+      'Si se pierde la contraseña maestra, los datos ya no se pueden leer.',
+    ],
+    save: 'Guardar como archivo',
+    file: 'hoja-emergencia-almacen.html',
+    saved: 'Hoja de emergencia guardada.',
+    backup: 'Ir a la copia',
+  },
   search: 'Buscar en contraseñas',
   empty: 'Aún no hay accesos.',
   emptyFiltered: 'No se encontró nada.',

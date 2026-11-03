@@ -23,6 +23,7 @@ const TR: Record<string, readonly [string, string, string, string]> = {
   Girokonto: ['Checking account', 'Cuenta corriente', 'Compte courant', 'Conta corrente'],
   Sparkonto: ['Savings account', 'Cuenta de ahorro', 'Compte d’épargne', 'Conta poupança'],
   Bargeld: ['Cash', 'Efectivo', 'Espèces', 'Dinheiro'],
+  Supermarkt: ['Supermarket', 'Supermercado', 'Supermarché', 'Supermercado'],
   'Musterfirma GmbH': [
     'Musterfirma Ltd',
     'Musterfirma S.L.',
@@ -199,13 +200,22 @@ const CATEGORIES = [
   ['cat-income-other', 'Sonstige Einnahmen', 'income'],
 ] as const;
 
+/** Sub-categories (one level) with fixed ids, so the split booking and the budgets can name them. */
+const SUB_CATEGORIES = [
+  ['cat-food-super', 'Supermarkt', 'cat-food'],
+  ['cat-food-market', 'Wochenmarkt', 'cat-food'],
+] as const;
+
 interface Tx {
   accountId: string;
-  categoryId: string;
+  categoryId?: string;
+  transferId?: string;
+  splits?: { categoryId?: string; amountMinor: number }[];
+  repeat?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   kind: 'expense' | 'income';
   amountMinor: number;
   date: string;
-  payee: string;
+  payee?: string;
   note?: string;
 }
 
@@ -270,21 +280,34 @@ function seed(ctx: SeedContext): SeedRows {
   const accounts: SeedRow[] = [
     {
       id: accountIds.main,
-      data: { name: tr(ctx, 'Girokonto'), openingBalanceMinor: 120000, order: 0 },
+      data: {
+        name: tr(ctx, 'Girokonto'),
+        openingBalanceMinor: 120000,
+        order: 0,
+        kind: 'checking',
+      },
     },
     {
       id: accountIds.savings,
-      data: { name: tr(ctx, 'Sparkonto'), openingBalanceMinor: 850000, order: 1 },
+      data: {
+        name: tr(ctx, 'Sparkonto'),
+        openingBalanceMinor: 850000,
+        order: 1,
+        kind: 'savings',
+      },
     },
     {
       id: accountIds.cash,
-      data: { name: tr(ctx, 'Bargeld'), openingBalanceMinor: 6000, order: 2 },
+      data: { name: tr(ctx, 'Bargeld'), openingBalanceMinor: 6000, order: 2, kind: 'cash' },
     },
   ];
-  const categories: SeedRow[] = CATEGORIES.map(([id, name, kind]) => ({
-    id,
-    data: { name: tr(ctx, name), kind },
-  }));
+  const categories: SeedRow[] = [
+    ...CATEGORIES.map(([id, name, kind]) => ({ id, data: { name: tr(ctx, name), kind } })),
+    ...SUB_CATEGORIES.map(([id, name, parentId]) => ({
+      id,
+      data: { name: tr(ctx, name), kind: 'expense', parentId },
+    })),
+  ];
 
   const months = ctx.count({ small: 2, medium: 4, large: 12 });
   const thisMonth = monthOf(ctx.today);
@@ -305,6 +328,7 @@ function seed(ctx: SeedContext): SeedRows {
       date: first,
       payee: 'Musterfirma GmbH',
       note: 'Gehalt',
+      ...(m === 0 ? { repeat: 'monthly' as const } : {}),
     });
     add({
       accountId: main,
@@ -314,7 +338,21 @@ function seed(ctx: SeedContext): SeedRows {
       date: first,
       payee: 'Hausverwaltung Beispiel',
       note: 'Miete',
+      ...(m === 0 ? { repeat: 'monthly' as const } : {}),
     });
+    // A monthly transfer to the savings account: neither income nor expense.
+    const transferId = ctx.id('finance', 'transfer', m);
+    const transferDay = `${month}-03`;
+    if (transferDay <= ctx.today) {
+      add({ accountId: main, kind: 'expense', amountMinor: 20000, date: transferDay, transferId });
+      add({
+        accountId: accountIds.savings,
+        kind: 'income',
+        amountMinor: 20000,
+        date: transferDay,
+        transferId,
+      });
+    }
     add({
       accountId: main,
       categoryId: 'cat-home',
@@ -371,6 +409,27 @@ function seed(ctx: SeedContext): SeedRows {
         note: 'Zinsen',
       });
   }
+  // One receipt over two categories (a split booking): groceries and drugstore goods.
+  add({
+    accountId: accountIds.main,
+    categoryId: 'cat-food-super',
+    kind: 'expense',
+    amountMinor: 5000,
+    date: ctx.day(-2),
+    payee: 'Drogerie Rosenstein',
+    splits: [
+      { categoryId: 'cat-food-super', amountMinor: 3200 },
+      { categoryId: 'cat-other', amountMinor: 1800 },
+    ],
+  });
+  add({
+    accountId: accountIds.cash,
+    categoryId: 'cat-food-market',
+    kind: 'expense',
+    amountMinor: 1650,
+    date: ctx.day(-3),
+    payee: 'Wochenmarkt',
+  });
   // A couple of entries for "today" and "yesterday".
   add({
     accountId: accountIds.main,
@@ -423,7 +482,7 @@ function seed(ctx: SeedContext): SeedRows {
       id: ctx.id('finance', 'transaction', i),
       data: {
         ...t,
-        payee: tr(ctx, t.payee),
+        ...(t.payee ? { payee: tr(ctx, t.payee) } : {}),
         ...(t.note ? { note: tr(ctx, t.note) } : {}),
       },
     })),

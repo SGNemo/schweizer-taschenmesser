@@ -59,7 +59,7 @@ describe('BookmarkRow', () => {
     expect(onEdit).toHaveBeenCalledOnce();
   });
 
-  it('the menu holds edit, copy link, one entry per tag, duplicate and delete', async () => {
+  it('the menu holds edit, copy link, gift idea, one entry per tag, duplicate and delete', async () => {
     const { row, onEdit, onFilterTag } = setup(
       stored({ title: 'Pasta', url: 'https://koch.de/', tags: ['Kochen', 'Rezept'] }),
     );
@@ -70,6 +70,7 @@ describe('BookmarkRow', () => {
     expect(names).toEqual([
       'Bearbeiten',
       'Link kopieren',
+      'Als Geschenkidee',
       'Kochen',
       'Rezept',
       'Duplizieren',
@@ -109,6 +110,6 @@ describe('BookmarkRow', () => {
         edit: vi.fn(),
       },
     ).map((m) => m.id);
-    expect(ids).toEqual(['edit', 'copy-link', 'duplicate', 'delete']);
+    expect(ids).toEqual(['edit', 'copy-link', 'gift-idea', 'duplicate', 'delete']);
   });
 });

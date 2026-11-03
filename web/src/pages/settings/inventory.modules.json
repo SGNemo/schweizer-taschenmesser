@@ -181,6 +181,11 @@
         "type": "boolean",
         "label": "Abo-Abbuchungen bis Monatsende abziehen",
         "default": true
+      },
+      "forecastHorizon": {
+        "type": "select",
+        "label": "Ausblick: Zeitraum",
+        "default": "month"
       }
     }
   },
@@ -311,6 +316,11 @@
         "type": "number",
         "label": "Als „läuft bald ab“ zeigen ab (Tage vorher)",
         "default": 3
+      },
+      "autoRestock": {
+        "type": "boolean",
+        "label": "Automatisch auf die Einkaufsliste, wenn der Mindestbestand erreicht ist",
+        "default": true
       },
       "remindDaysBefore": {
         "type": "number",
