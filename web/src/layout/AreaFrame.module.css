@@ -247,6 +247,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* The write button keeps its icon and its accessible name; the words come back with the width. */
+  .writeLabel {
+    display: none;
+  }
 }
 .compact {
   display: none;

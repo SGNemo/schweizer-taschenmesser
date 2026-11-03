@@ -616,22 +616,13 @@ button.chip[aria-pressed='true'] {
   color: var(--accent);
 }
 
-/* Urgency stripe at the left edge of a row (the colour never stands alone: the row carries a badge or text). */
+/* Urgency on a row is a quiet fill (the colour never stands alone: the row carries a badge or text); no edge stripe (identity v3). */
 .item[data-tone] {
-  position: relative;
-}
-.item[data-tone]::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
-  width: 3px;
-  border-radius: var(--radius-full);
-  background: var(--stripe, var(--danger));
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+  border-radius: var(--radius-sm);
 }
 .item[data-tone='today'] {
-  --stripe: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
 .done [data-rr] {

@@ -40,8 +40,9 @@ function WriteButton({ pathname }: { pathname: string }) {
   const write = useWriteLabel();
   if (!available || writeInMenu) return null;
   return (
-    <Button variant="ghost" onClick={open} data-testid="ai-write-button">
-      <Icon name={write.ai ? 'sparkles' : 'plus'} size={16} /> {write.label}
+    <Button variant="ghost" onClick={open} data-testid="ai-write-button" aria-label={write.label}>
+      <Icon name={write.ai ? 'sparkles' : 'plus'} size={16} />
+      <span className={styles.writeLabel}>{write.label}</span>
     </Button>
   );
 }

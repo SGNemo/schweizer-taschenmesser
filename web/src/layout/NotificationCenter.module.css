@@ -11,7 +11,7 @@
   padding: var(--space-4);
   margin-bottom: var(--space-4);
   border-radius: var(--radius-lg);
-  border-inline-start: 3px solid var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
   background: var(--surface-2);
 }
 .label {

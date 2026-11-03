@@ -144,8 +144,8 @@
   /* Identity v3: the head zone of a widget, the area patterns (head band, widget, sidebar group) and the sidebar group tint.
      "Ruhig" and "Modulfarben: Aus" turn the tint down and the patterns off (below). */
   --widget-tint: 14%;
-  --pattern-head: 0.09;
-  --pattern-widget: 0.05;
+  --pattern-head: 0.06;
+  --pattern-widget: 0.04;
   --group-tint: 6%;
   /* Ink of the area patterns (drawn with gradients, never an image): the quiet text colour. */
   --pattern-ink: var(--text);

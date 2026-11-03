@@ -21,10 +21,10 @@
   gap: var(--space-2);
   min-height: var(--touch);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-left-width: 4px;
+  --tone: var(--border);
+  border: 1px solid color-mix(in srgb, var(--tone) 40%, var(--border));
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--tone) 8%, var(--surface));
   color: var(--text);
   text-decoration: none;
 }
@@ -33,22 +33,16 @@
 }
 /* Colour never stands alone: every item has an icon and text. Red only for overdue/exceeded. */
 .item[data-tone='danger'] {
-  border-left-color: var(--danger);
-}
-.item[data-tone='danger'] svg {
-  color: var(--danger);
+  --tone: var(--danger);
 }
 .item[data-tone='accent'] {
-  border-left-color: var(--accent);
-}
-.item[data-tone='accent'] svg {
-  color: var(--accent);
+  --tone: var(--accent);
 }
 .item[data-tone='warning'] {
-  border-left-color: var(--warning);
+  --tone: var(--warning);
 }
-.item[data-tone='warning'] svg {
-  color: var(--warning);
+.item[data-tone] svg {
+  color: var(--tone);
 }
 .text {
   display: flex;
