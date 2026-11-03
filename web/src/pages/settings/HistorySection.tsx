@@ -10,6 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { tSettings3 } from '@/strings.settings3';
 import { Button, SettingRow, SettingsGroup, Switch } from '@/ui';
 import settingsStyles from './settings.module.css';
+import styles from './HistorySection.module.css';
 
 /** Settings → Allgemein → Verwalten → "Änderungsverlauf": the last 30 changes on this device, each can be taken back. */
 export function HistorySection() {
@@ -24,12 +25,11 @@ export function HistorySection() {
       {entries.length === 0 ? (
         <p className={settingsStyles.muted}>{h.empty}</p>
       ) : (
-        <ul className={settingsStyles.form} data-testid="history-list">
+        <ul className={styles.list} data-testid="history-list">
           {entries.map((e) => (
-            <li key={e.id} className={settingsStyles.row}>
-              <span>
+            <li key={e.id} className={styles.item}>
+              <span className={styles.text}>
                 {e.label}
-                <br />
                 <span className={settingsStyles.muted}>{formatTimestamp(e.at)}</span>
               </span>
               <Button
