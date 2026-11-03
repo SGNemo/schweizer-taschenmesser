@@ -15,7 +15,7 @@ const manifest = {
     { id: 'a', title: 'A', defaultSize: 's', sizes: ALL_WIDGET_SIZES, component: () => import('./widgets/AWidget') },
   ],
   layout: 'wide',
-  identity: { hue: 'teal', widgetType: 'kpi' },
+  identity: { hue: 'teal', widgetType: 'kpi', head: 'figure', surface: 'gradient', signature: 'bankCard' },
   platforms: ['desktop'],
   maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
@@ -66,6 +66,24 @@ describe('checkModule', () => {
     const badType = good.replace("widgetType: 'kpi'", "widgetType: 'chart'");
     expect(checkModule({ id: 'x', manifest: badType, fileExists: files }).join()).toContain(
       'identity.widgetType "chart"',
+    );
+  });
+
+  it('requires the identity v2 fields (head, surface, signature) from their lists', () => {
+    const files = has('widgets/AWidget.tsx', 'seed.ts');
+    for (const [from, to, expected] of [
+      ["head: 'figure'", "head: 'banner'", 'identity.head "banner"'],
+      ["surface: 'gradient'", "surface: 'neon'", 'identity.surface "neon"'],
+      ["signature: 'bankCard'", "signature: 'spaceship'", 'identity.signature "spaceship"'],
+      ["signature: 'bankCard'", "signature: 'bankCard', shape: 'blob'", 'identity.shape "blob"'],
+      ["signature: 'bankCard'", "signature: 'bankCard', hue2: 'pink'", 'identity.hue2 "pink"'],
+    ] as const)
+      expect(
+        checkModule({ id: 'x', manifest: good.replace(from, to), fileExists: files }).join(),
+      ).toContain(expected);
+    const missing = good.replace(", head: 'figure'", '');
+    expect(checkModule({ id: 'x', manifest: missing, fileExists: files }).join()).toContain(
+      'identity.head ""',
     );
   });
 

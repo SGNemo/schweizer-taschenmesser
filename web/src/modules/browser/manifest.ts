@@ -11,7 +11,14 @@ const manifest: ModuleManifest = {
     return t.browser.meta.name;
   },
   icon: 'globe',
-  identity: { hue: 'navy', widgetType: 'tiles' },
+  identity: {
+    hue: 'navy',
+    widgetType: 'tiles',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'addressBar',
+    type: 'mono',
+  },
   version: 1,
   get description() {
     return t.browser.meta.description;

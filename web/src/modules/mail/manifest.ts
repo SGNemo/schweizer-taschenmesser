@@ -16,7 +16,13 @@ const manifest: ModuleManifest = {
     return t.mail.meta.name;
   },
   icon: 'mail',
-  identity: { hue: 'teal', widgetType: 'kpi' },
+  identity: {
+    hue: 'teal',
+    widgetType: 'kpi',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'stamp',
+  },
   version: 1,
   get description() {
     return t.mail.meta.description;

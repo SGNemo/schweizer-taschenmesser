@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.people.meta.name;
   },
   icon: 'users',
-  identity: { hue: 'plum', widgetType: 'dueList' },
+  identity: {
+    hue: 'plum',
+    widgetType: 'dueList',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'avatarRing',
+  },
   version: 1,
   get description() {
     return t.people.meta.description;

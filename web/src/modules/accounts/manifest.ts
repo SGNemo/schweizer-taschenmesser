@@ -18,7 +18,14 @@ const manifest: ModuleManifest = {
     return t.accounts.meta.name;
   },
   icon: 'lock',
-  identity: { hue: 'slate', widgetType: 'status' },
+  identity: {
+    hue: 'slate',
+    widgetType: 'status',
+    head: 'compact',
+    surface: 'gradient',
+    signature: 'vaultDoor',
+    type: 'mono',
+  },
   version: 1,
   dataApi: false,
   get description() {

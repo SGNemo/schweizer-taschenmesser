@@ -12,7 +12,13 @@ const manifest: ModuleManifest = {
     return t.todos.meta.name;
   },
   icon: 'checklist',
-  identity: { hue: 'moss', widgetType: 'checklist' },
+  identity: {
+    hue: 'moss',
+    widgetType: 'checklist',
+    head: 'figure',
+    surface: 'gradient',
+    signature: 'todayCard',
+  },
   version: 3,
   get description() {
     return t.todos.meta.description;
