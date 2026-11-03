@@ -1,0 +1,49 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: var(--space-1) var(--space-2);
+  text-align: start;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td,
+.table thead th:not(:first-child) {
+  text-align: end;
+}
+
+.historyTitle {
+  margin: 0 0 var(--space-2);
+  font-size: 1rem;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.warnNote {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.headRing {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+/* Phone: the figure stays in the head, the ring (decoration) waits for the wide layout. */
+@media (max-width: 899px) {
+  .headRing {
+    display: none;
+  }
+}

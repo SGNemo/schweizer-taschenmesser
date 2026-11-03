@@ -7,9 +7,14 @@ import {
   isCurrencyCode,
   parseMoney,
 } from '@/core/money';
-import { today } from '@/core/time/dates';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router';
+import { formatMonth, today } from '@/core/time/dates';
+import { loadHistory } from '../data';
+import styles from '../routes/budgets.module.css';
 import { t } from '@/strings';
 import {
+  AdvancedFields,
   CurrencyField,
   Button,
   Dialog,
@@ -20,10 +25,11 @@ import {
   patternStyles,
   SelectField,
   Split,
+  Switch,
   TextField,
 } from '@/ui';
 import { budgetRepo, deleteGoal, depositRepo, goalRepo } from '../repo';
-import type { Budget, Deposit, Goal } from '../schema';
+import { BUDGET_PERIODS, type Budget, type BudgetPeriod, type Deposit, type Goal } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
 
 function DeleteButton({ onDelete }: { onDelete: () => Promise<void> }) {
@@ -42,12 +48,15 @@ export function BudgetEditor({
   target,
   categories,
   taken,
+  month,
   onClose,
 }: {
   target: BudgetTarget;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; parentId?: string }[];
   /** Category ids that already have a budget. */
   taken: Set<string>;
+  /** The month shown on the page: the history ends with its period. */
+  month: string;
   onClose: () => void;
 }) {
   const existing = target && 'id' in target ? target : null;
@@ -62,6 +71,8 @@ export function BudgetEditor({
           key={existing?.id ?? 'new'}
           existing={existing}
           categories={categories.filter((c) => c.id === existing?.categoryId || !taken.has(c.id))}
+          allCategories={categories}
+          month={month}
           onClose={onClose}
         />
       ) : null}
@@ -72,16 +83,26 @@ export function BudgetEditor({
 function BudgetFields({
   existing,
   categories,
+  allCategories,
+  month,
   onClose,
 }: {
   existing: Stored<Budget> | null;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; parentId?: string }[];
+  allCategories: { id: string; name: string; parentId?: string }[];
+  month: string;
   onClose: () => void;
 }) {
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? '');
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [limit, setLimit] = useState(existing ? formatMoneyInput(existing.monthlyLimitMinor) : '');
+  const [period, setPeriod] = useState<BudgetPeriod>(existing?.period ?? 'month');
+  const [carryOver, setCarryOver] = useState(existing?.carryOver ?? false);
+  const [warnAt, setWarnAt] = useState(
+    existing?.warnAtPercent ? String(existing.warnAtPercent) : '',
+  );
   const [error, setError] = useState('');
+  const parentName = (id?: string) => allCategories.find((c) => c.id === id)?.name ?? '';
 
   async function save() {
     const monthlyLimitMinor = parseMoney(limit);
@@ -89,10 +110,15 @@ function BudgetFields({
       return setError(t.money.invalidAmount(formatMoneyInput(1250)));
     if (!isCurrencyCode(currency)) return setError(t.money.currencyInvalid);
     if (!categoryId) return;
+    const warn = Number(warnAt);
     const data = {
       categoryId,
       monthlyLimitMinor,
       currency: currency === 'EUR' ? undefined : currency,
+      period: period === 'month' ? undefined : period,
+      carryOver: carryOver || undefined,
+      warnAtPercent:
+        warnAt.trim() !== '' && warn >= 10 && warn <= 99 ? Math.round(warn) : undefined,
     };
     if (existing) await budgetRepo.update(existing.id, data);
     else await budgetRepo.create(data);
@@ -110,7 +136,7 @@ function BudgetFields({
       >
         {categories.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.name}
+            {c.parentId ? `${parentName(c.parentId)} › ${c.name}` : c.name}
           </option>
         ))}
       </SelectField>
@@ -126,7 +152,36 @@ function BudgetFields({
         error={error}
         required
       />
-      <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
+      <AdvancedFields
+        moduleId="budgets"
+        hasData={period !== 'month' || carryOver || warnAt !== '' || currencyOf(existing) !== 'EUR'}
+      >
+        <SelectField
+          label={t.budgets.ext.period.label}
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as BudgetPeriod)}
+        >
+          {BUDGET_PERIODS.map((p) => (
+            <option key={p} value={p}>
+              {t.budgets.ext.period[p]}
+            </option>
+          ))}
+        </SelectField>
+        <Switch label={t.budgets.ext.carry.label} checked={carryOver} onChange={setCarryOver} />
+        <p className={patternStyles.muted}>{t.budgets.ext.carry.hint}</p>
+        <TextField
+          label={t.budgets.ext.warn.label}
+          inputMode="numeric"
+          placeholder="80"
+          value={warnAt}
+          onChange={(e) => setWarnAt(e.target.value.replace(/\D/g, '').slice(0, 2))}
+          hint={t.budgets.ext.warn.hint}
+        />
+        <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
+      </AdvancedFields>
+      {existing ? (
+        <BudgetHistory budget={existing} month={month} categories={allCategories} />
+      ) : null}
       <FormActions
         start={
           existing ? (
@@ -145,6 +200,59 @@ function BudgetFields({
         </Button>
       </FormActions>
     </Form>
+  );
+}
+
+/** The last six periods of a budget: what each spent against the limit, with a link to the bookings of its last month. */
+function BudgetHistory({
+  budget,
+  month,
+  categories,
+}: {
+  budget: Stored<Budget>;
+  month: string;
+  categories: { id: string; name: string; parentId?: string }[];
+}) {
+  const rows = useLiveQuery(
+    () => loadHistory(budget, month, categories),
+    [budget, month, categories],
+  );
+  const cur = currencyOf(budget);
+  const e = t.budgets.ext;
+  if (!rows) return null;
+  return (
+    <section aria-label={e.history.title} data-testid="budget-history">
+      <h3 className={styles.historyTitle}>{e.history.title}</h3>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th scope="col">{e.history.period}</th>
+            <th scope="col">{e.history.spent}</th>
+            <th scope="col">{e.history.limit}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.info.months[0]}>
+              <th scope="row">
+                {r.info.period === 'quarter'
+                  ? e.period.quarterLabel(r.info.index, r.info.year)
+                  : r.info.period === 'year'
+                    ? String(r.info.year)
+                    : formatMonth(r.month)}
+              </th>
+              <td>{formatMoney(r.spent, cur)}</td>
+              <td>{formatMoney(budget.monthlyLimitMinor, cur)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Link
+        to={`/finance?tab=transactions&month=${rows[rows.length - 1]?.info.months.at(-1) ?? month}`}
+      >
+        {e.history.bookings}
+      </Link>
+    </section>
   );
 }
 
@@ -172,6 +280,9 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [target, setTarget] = useState(existing ? formatMoneyInput(existing.targetMinor) : '');
   const [deadline, setDeadline] = useState(existing?.deadline ?? '');
+  const [rate, setRate] = useState(
+    existing?.monthlyRateMinor ? formatMoneyInput(existing.monthlyRateMinor) : '',
+  );
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');
 
@@ -185,6 +296,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       targetMinor,
       currency: currency === 'EUR' ? undefined : currency,
       deadline: deadline || undefined,
+      monthlyRateMinor: parseMoney(rate) || undefined,
       note: note.trim() || undefined,
     };
     if (existing) await goalRepo.update(existing.id, data);
@@ -221,7 +333,17 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
           onChange={(e) => setDeadline(e.target.value)}
         />
       </Split>
-      <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
+      <AdvancedFields moduleId="budgets" hasData={rate !== '' || currencyOf(existing) !== 'EUR'}>
+        <TextField
+          label={t.budgets.ext.goal.rate}
+          inputMode="decimal"
+          placeholder="0,00"
+          value={rate}
+          onChange={(e) => setRate(e.target.value)}
+          hint={t.budgets.ext.goal.rateHint}
+        />
+        <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
+      </AdvancedFields>
       <TextField label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <FormActions
         start={

@@ -1,10 +1,22 @@
 import { z } from 'zod';
 import { DATE_RE } from '@/core/time/dates';
 
-/** Monthly spending limit for one finance category (the category lives in the finance module). */
+/** How long one budget period is (since version 3). */
+export const BUDGET_PERIODS = ['month', 'quarter', 'year'] as const;
+export type BudgetPeriod = (typeof BUDGET_PERIODS)[number];
+
+/**
+ * Spending limit for one finance category (the category lives in the finance module). The limit
+ * applies to one `period` (a month unless set): the field keeps its name from when it was monthly only.
+ */
 export const budgetSchema = z.object({
   categoryId: z.string().min(1),
   monthlyLimitMinor: z.number().int().min(1),
+  period: z.enum(BUDGET_PERIODS).optional(),
+  /** What was left (or overspent) of the previous period moves into this one. */
+  carryOver: z.boolean().optional(),
+  /** Percent of the limit from which the budget is shown as "nearly used" (default from the settings). */
+  warnAtPercent: z.number().int().min(10).max(99).optional(),
   /** ISO 4217 code of the amount; none means euro (since version 2). */
   currency: z
     .string()
@@ -23,6 +35,8 @@ export const goalSchema = z.object({
     .optional()
     .meta({ description: 'ISO 4217, z. B. EUR, USD, MXN; ohne Angabe EUR' }),
   deadline: z.string().regex(DATE_RE).optional(),
+  /** What the user plans to put aside per month (since version 3); the plan says when the goal is reached. */
+  monthlyRateMinor: z.number().int().min(1).optional(),
   note: z.string().optional(),
 });
 
