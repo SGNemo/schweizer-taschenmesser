@@ -738,6 +738,14 @@ export const de = {
             title: 'Todoist',
             how: 'Menü (⋯) eines Projekts → „Als CSV exportieren“. Eine Datei pro Projekt.',
           },
+          evernote: {
+            title: 'Evernote',
+            how: 'Exportiere deine Notizbücher in Evernote als .enex-Datei (Notizbuch → „Notizbuch exportieren“). Titel, Text, Listen und Schlagwörter bleiben erhalten; Bilder und Anhänge kann Nemo in Notizen nicht speichern.',
+          },
+          microsoft: {
+            title: 'Microsoft To Do',
+            how: 'Microsoft To Do hat keinen eigenen Export. Exportiere die Aufgaben über Outlook (Datei → Öffnen und Exportieren → In Datei exportieren → CSV → Aufgaben).',
+          },
           obsidian: {
             title: 'Obsidian / Markdown',
             how: 'Wähle die .md-Dateien deines Ordners aus, auch mehrere auf einmal. Titel, Tags und Aufgabenlisten bleiben erhalten.',
@@ -768,6 +776,8 @@ export const de = {
           'google.keep': 'Keep-Notizen importiert',
           'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
           'todoist.tasks': 'Todoist-CSV importiert',
+          'evernote.notes': 'Evernote-Notizen importiert',
+          'microsoft.tasks': 'Microsoft-To-Do-Aufgaben (Outlook-CSV) importiert',
           'obsidian.notes': 'Markdown-Notizen importiert',
           'bank.statement': 'Kontoauszug importiert',
           'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
@@ -5281,7 +5291,8 @@ export const de = {
       backupPasswordImport: 'Passwort des Backups',
       importDone: (added: number, duplicates: number, skipped: number) =>
         `${added} importiert${duplicates ? `, ${duplicates} bereits vorhanden` : ''}${skipped ? `, ${skipped} übersprungen (nicht unterstützter Typ)` : ''}.`,
-      importFailedCsv: 'Diese CSV-Datei kenne ich nicht (erwartet: Bitwarden, KeePass oder 1Password).',
+      importFailedCsv:
+        'Diese CSV-Datei kenne ich nicht (erwartet: Bitwarden, KeePass oder 1Password).',
       importFailedBackup:
         'Backup konnte nicht geöffnet werden (falsches Passwort oder beschädigte Datei).',
       exported: 'Export gespeichert.',
@@ -5732,9 +5743,9 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
-      file: 'Aus Todoist oder Google Tasks',
+      file: 'Aus Todoist, Google Tasks oder Microsoft To Do',
       fileHint:
-        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV oder Google-Tasks-Datei (JSON). Es wird nichts hochgeladen.',
+        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV, Google-Tasks-Datei (JSON) oder die CSV-Datei der Aufgaben aus Outlook (Microsoft To Do). Es wird nichts hochgeladen.',
       perSource: 'Je Quell-Liste eine eigene Liste',
       newList: 'Neue Liste',
       includeDone: 'Erledigte Aufgaben',
@@ -5883,23 +5894,13 @@ export const de = {
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
     },
     notes: {
-      file: 'Markdown-Dateien oder Google Keep',
+      file: 'Markdown, Obsidian, Evernote oder Google Keep',
       fileHint:
-        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
       text: 'Markdown einfügen',
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
       placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
-      emptyFiles: (n: number) =>
-        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
-      keepSkipped: (n: number) =>
-        n === 1
-          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
-          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
-      unreadable: (n: number) =>
-        n === 1
-          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
-          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
     },
     birthdays: {
       text: 'Geburtstage einfügen',

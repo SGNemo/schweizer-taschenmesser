@@ -180,6 +180,14 @@ export const setup: Strings['setup'] = {
           title: 'Todoist',
           how: 'Project menu (⋯) → “Export as CSV”. One file per project.',
         },
+        evernote: {
+          title: 'Evernote',
+          how: 'Export your notebooks in Evernote as an .enex file (notebook → “Export notebook”). Titles, text, lists and tags are kept; Nemo cannot store images and attachments in notes.',
+        },
+        microsoft: {
+          title: 'Microsoft To Do',
+          how: 'Microsoft To Do has no export of its own. Export the tasks through Outlook (File → Open & Export → Import/Export → Export to a file → CSV → Tasks).',
+        },
         obsidian: {
           title: 'Obsidian / Markdown',
           how: 'Choose the .md files of your folder, several at once if you like. Titles, tags and task lists are kept.',
@@ -210,6 +218,8 @@ export const setup: Strings['setup'] = {
         'google.keep': 'Keep notes imported',
         'google.subscription': 'Connect the calendar as a subscription (Settings → Connections)',
         'todoist.tasks': 'Todoist CSV imported',
+        'evernote.notes': 'Evernote notes imported',
+        'microsoft.tasks': 'Microsoft To Do tasks (Outlook CSV) imported',
         'obsidian.notes': 'Markdown notes imported',
         'bank.statement': 'Statement imported',
         'bitwarden.vault': 'Bitwarden CSV imported in Passwords',

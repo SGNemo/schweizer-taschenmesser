@@ -199,7 +199,12 @@ export interface ImportParseResult {
   /** An extra question or panel of the importer; see `ImportSlot`. */
   slot?: ImportSlot;
   /** What the parser left out, by reason (counts only); shown in the report after the import. */
-  skipped?: Partial<Record<'trashed' | 'empty' | 'unreadable' | 'attachment' | 'unsupported' | 'tooMany' | 'done', number>>;
+  skipped?: Partial<
+    Record<
+      'trashed' | 'empty' | 'unreadable' | 'attachment' | 'unsupported' | 'tooMany' | 'done',
+      number
+    >
+  >;
 }
 
 export interface ImporterRuntime {
@@ -291,4 +296,16 @@ export interface ImportReportCounts {
   deselected: number;
   /** Left out by the parser, by reason (`SkipReason`). */
   skipped: Record<string, number>;
+}
+
+/** Files that are already chosen and read (the "import from another app" flow): the wizard starts at the preview. */
+export interface ImportPreset {
+  importerId: string;
+  files: { name: string; text: string }[];
+  /** Non-text files of an unpacked archive, only reported. */
+  binary?: number;
+  /** Shared by the parts of one multi-part import. */
+  groupId?: string;
+  /** Shown as the source of the batch ("Takeout.zip"). */
+  source?: string;
 }

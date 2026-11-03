@@ -21,6 +21,8 @@ import { searchSettings, type SettingsSearchResult } from '@/core/settings/regis
 import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
 import { applyProfile, builtinProfiles } from '@/core/settings/profiles';
 import { tSettings3 } from '@/strings.settings3';
+import { tImp } from '@/strings.importers';
+import { openAppImport } from '@/core/importer/appImport';
 import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
 import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
@@ -243,6 +245,23 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           void getPlatform().app.openUrl(`${HELP_URL}/faq${getLang() === 'de' ? '.de' : ''}.md`),
       },
       { id: 'setup', label: t.setup.paletteCommand, icon: 'check', run: () => openSetup() },
+      {
+        id: 'import-app',
+        label: tImp.get().paletteCommand,
+        icon: 'download',
+        keywords: [
+          'import',
+          'umzug',
+          'export',
+          'todoist',
+          'evernote',
+          'keep',
+          'obsidian',
+          'notion',
+          'outlook',
+        ],
+        run: () => openAppImport(),
+      },
       // "Profil: Ruhig" switches a built-in profile on the spot (own profiles live in Settings and the quick bar).
       ...builtinProfiles().map((profile) => ({
         id: `profile-${profile.id}`,

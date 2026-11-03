@@ -107,9 +107,9 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Collez une liste venant d’une app de notes ou d’un message : une ligne par tâche.',
     placeholder: 'Trier les papiers des impôts\nAppeler le dentiste\nRéparer le vélo',
     list: 'Dans cette liste',
-    file: 'Depuis Todoist ou Google Tasks',
+    file: 'Depuis Todoist, Google Tasks ou Microsoft To Do',
     fileHint:
-      'Choisis le fichier que tu y as exporté toi-même : CSV Todoist ou fichier Google Tasks (JSON). Rien n’est envoyé.',
+      'Choisissez le fichier que vous y avez exporté vous-même : CSV Todoist, fichier Google Tasks (JSON) ou CSV des tâches d’Outlook (Microsoft To Do). Rien n’est envoyé.',
     perSource: 'Une liste distincte pour chaque liste d’origine',
     newList: 'Nouvelle liste',
     includeDone: 'Tâches terminées',
@@ -257,23 +257,13 @@ export const onboarding: Strings['onboarding'] = {
     placeholder: 'https://example.org/article\nBelle randonnée https://example.org/randonnee',
   },
   notes: {
-    file: 'Fichiers Markdown ou Google Keep',
+    file: 'Markdown, Obsidian, Evernote ou Google Keep',
     fileHint:
-      'Choisissez des fichiers .md (p. ex. de votre dossier Obsidian, plusieurs à la fois) ou les fichiers .json de Google Takeout (Keep). Titres, listes de tâches et #mots-clés sont conservés. Décompressez d’abord les fichiers ZIP.',
+      'Choisissez des fichiers .md (p. ex. de votre dossier Obsidian, plusieurs à la fois), un ZIP avec un dossier de notes, un fichier Evernote (.enex) ou les fichiers .json de Google Takeout (Keep). Titres, listes et #étiquettes sont conservés, les dossiers deviennent des carnets. Nemo ne peut pas enregistrer de pièces jointes (images, fichiers) dans les notes ; elles sont comptées dans le rapport.',
     text: 'Coller du Markdown',
     textHint: 'Le texte collé devient une note ; un premier titre devient le titre de la note.',
     textLabel: 'Texte Markdown',
     placeholder: '# Plan de la semaine\n\n- Courses #maison\n- Appeler maman',
-    emptyFiles: (n: number) =>
-      n === 1 ? '1 fichier vide a été ignoré.' : `${n} fichiers vides ont été ignorés.`,
-    keepSkipped: (n: number) =>
-      n === 1
-        ? '1 note Keep de la corbeille ou des archives a été laissée de côté.'
-        : `${n} notes Keep de la corbeille ou des archives ont été laissées de côté.`,
-    unreadable: (n: number) =>
-      n === 1
-        ? '1 fichier JSON n’est pas une note Keep et a été ignoré.'
-        : `${n} fichiers JSON ne sont pas des notes Keep et ont été ignorés.`,
   },
   birthdays: {
     text: 'Coller des anniversaires',

@@ -16,6 +16,8 @@ import { db } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import { MigratePicker } from '@/layout/setup/steps/MigrateStep';
+import { openAppImport } from '@/core/importer/appImport';
+import { tImp } from '@/strings.importers';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, Dialog, TextField } from '@/ui';
@@ -286,6 +288,15 @@ export function BackupSection() {
             </div>
             <Button data-testid="migrate-open" onClick={() => setMoving(true)}>
               {t.setup.steps.migrate.settingsOpen}
+            </Button>
+          </div>
+          <div className={styles.row}>
+            <div>
+              <strong>{tImp.get().title}</strong>
+              <p className={styles.muted}>{tImp.get().intro}</p>
+            </div>
+            <Button data-testid="appimport-open" onClick={() => openAppImport()}>
+              {tImp.get().choose}
             </Button>
           </div>
         </div>

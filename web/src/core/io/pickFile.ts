@@ -9,6 +9,8 @@ export interface PickedFile {
 }
 
 const MAX_BYTES = 10 * 1024 * 1024;
+/** Archives may be bigger than a text file; their text content is limited again when unpacked. */
+export const MAX_RAW_BYTES = 300 * 1024 * 1024;
 
 /**
  * UTF-8 first; a file that is not valid UTF-8 (the replacement character appears) is read again as
@@ -58,6 +60,26 @@ export function pickTextFiles(accept: string): Promise<PickedFile[]> {
         resolve,
         reject,
       );
+    });
+    input.addEventListener('cancel', () => resolve([]));
+    input.click();
+  });
+}
+
+/** The chosen files as bytes (ZIP, ENEX …); the caller unpacks and decodes them in a Worker. */
+export function pickRawFiles(accept: string): Promise<{ name: string; bytes: Uint8Array }[]> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.multiple = true;
+    input.addEventListener('change', () => {
+      const files = Array.from(input.files ?? []);
+      if (files.length === 0) return resolve([]);
+      if (files.some((f) => f.size > MAX_RAW_BYTES)) return reject(new Error('file-too-large'));
+      Promise.all(
+        files.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })),
+      ).then(resolve, reject);
     });
     input.addEventListener('cancel', () => resolve([]));
     input.click();
