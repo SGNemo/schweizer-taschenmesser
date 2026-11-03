@@ -1,9 +1,26 @@
 import { compareText } from '@/core/i18n/format';
-import { addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
+import { addDaysStr, addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
 import { currencyOf, DEFAULT_CURRENCY, formatMoneyInput } from '@/core/money';
-import type { Account, BookingRepeat, Transaction } from './schema';
+import type { Account, BookingRepeat, Split, Transaction } from './schema';
 
-type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
+type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'> &
+  Partial<Pick<Transaction, 'transferId' | 'splits'>>;
+
+/** Both halves of a transfer: they move money between accounts and are neither income nor expense. */
+export const isTransfer = (t: Pick<Transaction, 'transferId'>): boolean => Boolean(t.transferId);
+
+/** The category parts of a booking: its splits, or the whole amount in its one category. */
+export function categoryParts(
+  t: Pick<Tx, 'categoryId' | 'amountMinor' | 'splits'>,
+): { categoryId?: string; amountMinor: number }[] {
+  return t.splits && t.splits.length > 0
+    ? t.splits.map((s) => ({ categoryId: s.categoryId, amountMinor: s.amountMinor }))
+    : [{ categoryId: t.categoryId, amountMinor: t.amountMinor }];
+}
+
+/** Do the parts add up to the amount (and are there at least two)? */
+export const splitsValid = (amountMinor: number, splits: readonly Split[]): boolean =>
+  splits.length >= 2 && splits.reduce((s, p) => s + p.amountMinor, 0) === amountMinor;
 
 export const signed = (t: Pick<Tx, 'kind' | 'amountMinor'>): number =>
   t.kind === 'income' ? t.amountMinor : -t.amountMinor;
@@ -40,7 +57,7 @@ export function monthSummary(txs: Tx[], month: string): MonthSummary {
   let income = 0;
   let expense = 0;
   for (const t of txs) {
-    if (monthOf(t.date) !== month) continue;
+    if (monthOf(t.date) !== month || isTransfer(t)) continue;
     if (t.kind === 'income') income += t.amountMinor;
     else expense += t.amountMinor;
   }
@@ -67,9 +84,11 @@ export function expensesByCategory(
   const names = new Map(categories.map((c) => [c.id, c.name]));
   const sums = new Map<string | undefined, number>();
   for (const t of txs) {
-    if (t.kind !== 'expense' || monthOf(t.date) !== month) continue;
-    const key = t.categoryId && names.has(t.categoryId) ? t.categoryId : undefined;
-    sums.set(key, (sums.get(key) ?? 0) + t.amountMinor);
+    if (t.kind !== 'expense' || monthOf(t.date) !== month || isTransfer(t)) continue;
+    for (const part of categoryParts(t)) {
+      const key = part.categoryId && names.has(part.categoryId) ? part.categoryId : undefined;
+      sums.set(key, (sums.get(key) ?? 0) + part.amountMinor);
+    }
   }
   const rows: CategoryTotal[] = [...sums].map(([categoryId, amountMinor]) => ({
     categoryId,
@@ -167,7 +186,15 @@ export function lastUsedFor(
   return hit ? { categoryId: hit.categoryId, accountId: hit.accountId } : undefined;
 }
 
-const REPEAT_MONTHS: Record<BookingRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
+const REPEAT_MONTHS: Record<Exclude<BookingRepeat, 'weekly'>, number> = {
+  monthly: 1,
+  quarterly: 3,
+  yearly: 12,
+};
+
+/** The date after `date` in a repeating series (weekly = 7 days; months clamp to the month end). */
+export const nextRepeatDate = (date: string, repeat: BookingRepeat): string =>
+  repeat === 'weekly' ? addDaysStr(date, 7) : addMonthsStr(date, REPEAT_MONTHS[repeat]);
 
 /** At most this many missed periods are booked per series and start (a long break never floods the list). */
 const MAX_CATCH_UP = 12;
@@ -188,11 +215,10 @@ export function planRepeats(
   for (const head of heads) {
     if (!head.repeat) continue;
     const root = head.repeatOf ?? head.id;
-    const months = REPEAT_MONTHS[head.repeat];
     let { date } = head;
     let made = 0;
     while (made < MAX_CATCH_UP) {
-      const next = addMonthsStr(date, months);
+      const next = nextRepeatDate(date, head.repeat);
       if (next > day) break;
       const { id: _id, ...base } = head;
       create.push({
