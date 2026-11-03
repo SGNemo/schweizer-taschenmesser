@@ -34,7 +34,7 @@ import {
 import { Breadcrumb, type Crumb } from './Breadcrumb';
 import { CategoryStatus } from './CategoryStatus';
 import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
-import { QuickBar } from './QuickBar';
+import { QuickBar, QuickInline } from './QuickBar';
 import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
 import { ScopeLabel } from './SettingExtras';
@@ -93,6 +93,7 @@ function SettingsSearch() {
                     <span>{r.label}</span>
                     <span className={styles.path}>{r.path}</span>
                   </Link>
+                  {r.quick ? <QuickInline id={r.quick} /> : null}
                 </li>
               ))}
             </ul>

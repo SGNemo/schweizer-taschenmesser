@@ -27,6 +27,23 @@ function QuickSwitch({ setting }: { setting: QuickSetting }) {
   );
 }
 
+/** One quick switch inside a search hit: the setting can be changed without opening its page. */
+export function QuickInline({ id }: { id: QuickSetting['id'] }) {
+  const setting = QUICK_SETTINGS.find((q) => q.id === id);
+  const value = useUiStore(() => setting?.read() ?? '');
+  if (!setting) return null;
+  return (
+    <div className={styles.resultQuick} data-testid={`search-quick-${id}`}>
+      <Segmented<string>
+        label={setting.label()}
+        value={value}
+        options={setting.options()}
+        onChange={(v) => applyQuick(setting, v)}
+      />
+    </div>
+  );
+}
+
 /** The profile switch: many settings in one choice (the list shows "Eigene Auswahl" while no profile matches). */
 function ProfileSwitch() {
   const p = tSettings3.use().profiles;
