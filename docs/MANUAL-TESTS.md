@@ -322,6 +322,9 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO7 Profile am Handy und am PC:** Einstellungen → Allgemein → Verwalten: „Abends“ schaltet dunkel + ruhige Farben + Ruhezeit; das Profil trägt „Aktiv“, „Rückgängig“ im Hinweis stellt alles zurück; ein Zeitplan (z. B. in 2 Minuten) schaltet bei offener App um, ein Umschalten von Hand davor oder danach bleibt bis zum nächsten Zeitpunkt. ☐
 - **SO8 Datei mit Einstellungen:** exportieren (Android: „Speichern unter“, Windows: Dialog), die Datei im Texteditor ansehen: keine Adressen, Tokens, Tresor- oder Supporter-Werte; auf einem zweiten Gerät übernehmen: Vorschau, dann „Übernehmen“ und „Rückgängig“. ☐
 - **SO9 Änderungsverlauf:** drei Einstellungen ändern, „Rückgängig“ in der Liste nimmt genau diese zurück; Schalter „Änderungen merken“ aus: nichts wird mehr notiert; „Verlauf löschen“ leert die Liste. ☐
+- **SO10 Meldungen pro Modul:** Einstellungen → Benachrichtigungen → Erweitert → „Meldungen pro Modul“: „Hinweis zur Zeit“ für ein Modul ausschalten, eine Erinnerung dieses Moduls in 2 Minuten setzen: sie erscheint in der Glocke, aber nicht als Hinweis (Android: auch nicht als Systemmeldung); wieder einschalten: sie kommt wieder. ☐
+- **SO11 Speicher:** Einstellungen → Allgemein → Speicher: die Größe passt ungefähr zum Gerät; „Zwischenspeicher leeren“ mit Bestätigung, danach Werkzeuge (z. B. Rechner) mit Internet neu öffnen: lädt wieder; die App selbst bleibt offline nutzbar. ☐
+- **SO12 Barrierefreiheit:** Einstellungen → Barrierefreiheit am Handy: Textgröße „Sehr groß“ und Bewegung „Weniger“ wirken sofort, Lesehilfe und Fokus sind hier zu finden; ein alter Link (Darstellung → Fokus) führt hierher. ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 

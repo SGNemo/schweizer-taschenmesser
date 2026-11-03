@@ -88,6 +88,7 @@ const PAGES = [
   ['settings', '/settings'],
   ['settings-allgemein', '/settings/allgemein'],
   ['settings-darstellung', '/settings/darstellung'],
+  ['settings-barrierefreiheit', '/settings/barrierefreiheit'],
   ['settings-module', '/settings/module'],
   ['settings-werkzeuge', '/settings/werkzeuge'],
   ['settings-benachrichtigungen', '/settings/benachrichtigungen'],

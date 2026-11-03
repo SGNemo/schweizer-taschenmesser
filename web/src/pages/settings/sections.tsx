@@ -57,6 +57,10 @@ import { ShortcutsSection } from './ShortcutsSection';
 import { VoiceSection } from './VoiceSection';
 import { WeatherSection } from './WeatherSection';
 import { tKeys } from '@/strings.keys';
+import { tSettings4 } from '@/strings.settings4';
+import { AccessibilitySection } from './AccessibilitySection';
+import { NotificationSourcesSection } from './NotificationSourcesSection';
+import { StorageSection } from './StorageSection';
 import { tSettings3 } from '@/strings.settings3';
 import { HistorySection } from './HistorySection';
 import { ProfilesSection } from './ProfilesSection';
@@ -276,9 +280,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   },
   {
     id: 'reading',
-    category: 'darstellung',
+    category: 'barrierefreiheit',
     maturity: 'preview',
-    order: 12,
+    order: 20,
     get title() {
       return s.reading.title;
     },
@@ -328,9 +332,9 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   },
   {
     id: 'focus',
-    category: 'darstellung',
+    category: 'barrierefreiheit',
     maturity: 'stable',
-    order: 15,
+    order: 30,
     get title() {
       return t.focus.settings.title;
     },
@@ -880,6 +884,64 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <NetworkSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'accessibility',
+    category: 'barrierefreiheit',
+    maturity: 'stable',
+    order: 10,
+    get title() {
+      return tSettings4.get().accessibility.title;
+    },
+    get description() {
+      return tSettings4.get().accessibility.description;
+    },
+    get keywords() {
+      return tSettings4.get().accessibility.keywords;
+    },
+    get fields() {
+      const a = tSettings4.get().accessibility;
+      return [
+        { key: 'textSize', label: a.textSize },
+        { key: 'motion', label: a.motion },
+        { key: 'readAid', label: a.readAid },
+        { key: 'colors', label: a.colors, description: a.colorsHint },
+        { key: 'spacing', label: a.spacing, description: a.spacingHint },
+      ];
+    },
+    render: () => <AccessibilitySection />,
+  },
+  {
+    id: 'notification-sources',
+    category: 'benachrichtigungen',
+    maturity: 'stable',
+    order: 25,
+    get title() {
+      return tSettings4.get().notifySources.title;
+    },
+    get description() {
+      return tSettings4.get().notifySources.description;
+    },
+    get keywords() {
+      return tSettings4.get().notifySources.keywords;
+    },
+    render: () => <NotificationSourcesSection />,
+  },
+  {
+    id: 'storage',
+    category: 'allgemein',
+    maturity: 'stable',
+    order: 45,
+    get title() {
+      return tSettings4.get().storage.title;
+    },
+    get description() {
+      return tSettings4.get().storage.description;
+    },
+    get keywords() {
+      return tSettings4.get().storage.keywords;
+    },
+    render: () => <StorageSection />,
   },
   {
     id: 'profiles',

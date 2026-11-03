@@ -409,6 +409,13 @@ export function CategoryPage() {
     return (
       <Navigate to={settingsPath('module', `module-${legacyModule[1]}`, legacyModule[2])} replace />
     );
+  // A link to a section that lives in another category now (Lesehilfe, Fokus moved to Barrierefreiheit) follows it.
+  const wanted = decodeURIComponent(hash.slice(1));
+  const moved = sections.find((x) => x.id === wanted.split('--')[0] && x.category !== category);
+  if (moved && !moduleIdOfSection(moved.category, moved.id)) {
+    const field = wanted.split('--')[1];
+    return <Navigate to={settingsPath(moved.category, moved.id, field)} replace />;
+  }
   // A module's settings are a page of their own: the category shows the list instead.
   const shown = own.filter((x) => !moduleIdOfSection(category, x.id));
   const sectionId = decodeURIComponent(hash.slice(1)).split('--')[0];

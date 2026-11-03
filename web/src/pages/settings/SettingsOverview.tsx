@@ -10,6 +10,7 @@ import { availableManifests } from '@/core/modules/available';
 import { formatMuteEnd, useMute } from '@/core/notifications/mute';
 import { getPlatform } from '@/core/platform';
 import { useFocusSettings } from '@/core/settings/focus';
+import { categoryDef } from '@/core/settings/registry/categories';
 import { settingsPath } from '@/core/settings/registry/paths';
 import type { SettingsCategoryId } from '@/core/settings/registry/types';
 import { useSyncStatus } from '@/core/sync/status';
@@ -18,7 +19,6 @@ import { useUpdateStore } from '@/core/update/controller';
 import { loadAccountsSettings } from '@/modules/accounts/autolock';
 import { useSession } from '@/modules/accounts/session';
 import { useUiStore } from '@/stores/ui';
-import { t } from '@/strings';
 import { tSettings2 } from '@/strings.settings2';
 import { Icon, type IconName } from '@/ui';
 import styles from './SettingsOverview.module.css';
@@ -54,7 +54,7 @@ function OverviewCard({ to, icon, title, status, context, testId, attention }: C
   );
 }
 
-const cat = (id: SettingsCategoryId) => t.settings.cat[id].title;
+const cat = (id: SettingsCategoryId) => categoryDef(id).title;
 
 function LookCard() {
   const o = tSettings2.use().overview.look;

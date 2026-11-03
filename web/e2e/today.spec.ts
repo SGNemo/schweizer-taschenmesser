@@ -39,7 +39,7 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(page.getByTestId('widget-calendar:next')).toHaveCount(0);
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
 
-    await ready(page, '/settings/darstellung');
+    await ready(page, '/settings/barrierefreiheit');
     await openFoldedGroup(page, 'focus', 'aids');
     const toggle = page
       .locator('section[aria-labelledby="focus"]')

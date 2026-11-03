@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FIXED_SHORTCUTS } from '@/core/keyboard/fixed';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 import {
   assignKey,
@@ -14,6 +15,8 @@ import { useTools } from '@/core/tools/state';
 import { keyCaps } from '@/core/voice/keys';
 import { useVoicePrefs } from '@/core/voice/settings';
 import { tKeys } from '@/strings.keys';
+import { tSettings4 } from '@/strings.settings4';
+import { useUiStore } from '@/stores/ui';
 import { Button, KeyRecorder, Keys, SettingRow } from '@/ui';
 import styles from './settings.module.css';
 
@@ -24,6 +27,8 @@ import styles from './settings.module.css';
  */
 export function ShortcutsSection() {
   const tx = tKeys.use();
+  const t4 = tSettings4.use().shortcuts;
+  const toast = useUiStore((st) => st.toast);
   const prefs = useShortcutPrefs();
   const voice = useVoicePrefs();
   const tools = useTools();
@@ -97,6 +102,29 @@ export function ShortcutsSection() {
           </SettingRow>
         );
       })}
+      {shortcutActions().some((a) => keys[a] !== DEFAULT_FKEYS[a]) ? (
+        <div>
+          <Button
+            variant="ghost"
+            data-testid="shortcuts-reset-all"
+            onClick={() => {
+              writeShortcutPrefs({ keys: {} });
+              toast(t4.resetAllDone);
+            }}
+          >
+            {t4.resetAll}
+          </Button>
+        </div>
+      ) : null}
+      <SettingRow id="shortcuts--fixed" label={t4.fixedTitle} description={t4.fixedHint} stacked>
+        <ul aria-label={t4.fixedTitle} data-testid="shortcut-fixed">
+          {FIXED_SHORTCUTS.map((f) => (
+            <li key={f.id}>
+              <Keys keys={keyCaps(f.keys)} /> {t4.fixed[f.id]}
+            </li>
+          ))}
+        </ul>
+      </SettingRow>
       <SettingRow id="shortcuts--chords" label={tx.groupChords} description={tx.chordsHint} stacked>
         {chords.length === 0 ? (
           <p className={styles.muted}>{tx.chordsNone}</p>

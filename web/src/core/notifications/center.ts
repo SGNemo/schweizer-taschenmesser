@@ -69,6 +69,7 @@ export async function loadOpen(at: number = clockNow()): Promise<DueNotification
   const due = await collectDue(
     { from: at - MAX_CATCH_UP_MS, to: at },
     activeManifests(await loadModuleStates()),
+    'center',
   );
   const todayStart = new Date(at).setHours(0, 0, 0, 0);
   return dropStaleSoft(pickOpen(expandSummaries(due), await loadAcked()), todayStart);
@@ -79,6 +80,7 @@ export async function loadUpcoming(at: number = clockNow()): Promise<DueNotifica
   const due = await collectDue(
     { from: at, to: at + MAX_CATCH_UP_MS },
     activeManifests(await loadModuleStates()),
+    'center',
   );
   return [...due].sort((a, b) => a.at - b.at)[0];
 }
