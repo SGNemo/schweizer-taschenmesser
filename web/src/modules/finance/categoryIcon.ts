@@ -37,8 +37,30 @@ const BY_WORD: readonly [RegExp, IconName][] = [
   [/sparen|saving|ahorro|[eé]pargne|poupan/i, 'piggy'],
 ];
 
-/** The icon for a category row: the default categories by id, own ones by their name, otherwise a neutral one. */
-export function categoryIcon(category: { id: string; name: string } | undefined): IconName {
+/** The icons a user can pick for an own category (the ones the derivation above also uses). */
+export const CATEGORY_ICONS: readonly IconName[] = [
+  'cart',
+  'home',
+  'car',
+  'dice',
+  'activity',
+  'repeat',
+  'receipt',
+  'wallet',
+  'coins',
+  'gift',
+  'luggage',
+  'piggy',
+  'target',
+  'package',
+];
+
+/** The icon for a category row: the picked one, else the default categories by id, own ones by their name, otherwise a neutral one. */
+export function categoryIcon(
+  category: { id: string; name: string; icon?: string } | undefined,
+): IconName {
   if (!category) return 'package';
+  const picked = CATEGORY_ICONS.find((i) => i === category.icon);
+  if (picked) return picked;
   return BY_ID[category.id] ?? BY_WORD.find(([re]) => re.test(category.name))?.[1] ?? 'package';
 }

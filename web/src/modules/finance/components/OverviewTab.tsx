@@ -3,7 +3,9 @@ import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
 import { Button, Card } from '@/ui';
-import { expensesByCategory, monthSummary, monthlyTrend } from '../logic';
+import { monthSummary, monthlyTrend } from '../logic';
+import { compareMonths, topCategoryTotals, type Delta } from '../analysis';
+import { ForecastCard } from './ForecastCard';
 import type { FinanceData } from '../types';
 import { totalBalance, useAvailability } from '../summary';
 import { monthBalanceSeries } from '../balanceSeries';
@@ -38,6 +40,19 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
   );
 }
 
+/** "▲ 120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by itself). */
+function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
+  const text =
+    d.diffMinor === 0
+      ? t.finance.ext.compare.unchanged
+      : t.finance.ext.compare.vsPrevious(
+          `${d.diffMinor > 0 ? '▲ +' : '▼ −'}${money(Math.abs(d.diffMinor))}${
+            d.percent === undefined ? '' : ` (${d.percent > 0 ? '+' : ''}${d.percent} %)`
+          }`,
+        );
+  return <span className={styles.delta}>{text}</span>;
+}
+
 /** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
 export function OverviewTab({
   data,
@@ -53,7 +68,9 @@ export function OverviewTab({
   const balance = totalBalance(data);
   const a = useAvailability(balance, currency);
   const sum = monthSummary(data.txs, month);
-  const byCategory = expensesByCategory(data.txs, month, data.categories);
+  const byCategory = topCategoryTotals(data.txs, month, data.categories);
+  const cmp = compareMonths(data.txs, month);
+  const hasPrevious = data.txs.some((x) => x.date.slice(0, 7) < month);
   const trend = monthlyTrend(data.txs, month, 6);
   const deducting = a?.deducting;
   const curve = monthBalanceSeries(data.accounts, data.txs, month, today());
@@ -92,12 +109,14 @@ export function OverviewTab({
           <span className={`${styles.kpiValue} ${styles.income}`} data-testid="kpi-income">
             {money(sum.income)}
           </span>
+          {hasPrevious ? <DeltaLine d={cmp.income} money={money} /> : null}
         </Card>
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.expense}</span>
           <span className={styles.kpiValue} data-testid="kpi-expense">
             {money(sum.expense)}
           </span>
+          {hasPrevious ? <DeltaLine d={cmp.expense} money={money} /> : null}
         </Card>
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.net}</span>
@@ -107,6 +126,7 @@ export function OverviewTab({
           >
             {money(sum.net)}
           </span>
+          {hasPrevious ? <DeltaLine d={cmp.net} money={money} /> : null}
         </Card>
       </div>
 
@@ -114,6 +134,8 @@ export function OverviewTab({
         <MonthCurve points={curve} />
         <CategoryRing rows={byCategory} />
       </div>
+
+      <ForecastCard data={data} />
 
       <div className={`${styles.charts} ${narrow ? styles.chartsOne : ''}`}>
         <ChartCard

@@ -1,7 +1,9 @@
 import { currencyOf, DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/money';
 import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { KpiWidget, useWidgetSize } from '@/ui';
+import { useNavigate } from 'react-router';
+import { Button, KpiWidget, useWidgetSize } from '@/ui';
+import { compareMonths } from '../analysis';
 import { BankCard } from '@/ui/identity';
 import { balances, currenciesOf, filterByCurrency, monthlyTrend, sortAccounts } from '../logic';
 import { totalBalance, useAvailability, useFinanceData } from '../summary';
@@ -33,6 +35,15 @@ export default function BalanceWidget() {
       })
     : [];
   const size = useWidgetSize();
+  const navigate = useNavigate();
+  const cmp = data ? compareMonths(data.txs, monthOf(day)) : undefined;
+  const hasPrevious = Boolean(data?.txs.some((x) => x.date.slice(0, 7) < monthOf(day)));
+  const expenseChange =
+    cmp && hasPrevious && cmp.expense.diffMinor !== 0
+      ? t.finance.ext.widget.vsPrevious(
+          `${t.finance.expense} ${cmp.expense.diffMinor > 0 ? '▲ +' : '▼ −'}${formatMoney(Math.abs(cmp.expense.diffMinor), currency)}`,
+        )
+      : '';
   const first = data
     ? sortAccounts(data.accounts).find((a) => currencyOf(a) === currency)
     : undefined;
@@ -50,7 +61,11 @@ export default function BalanceWidget() {
         empty={t.finance.noAccounts}
         emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
         context={
-          [a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '', others]
+          [
+            a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
+            others,
+            expenseChange,
+          ]
             .filter(Boolean)
             .join(' · ') || undefined
         }
@@ -65,6 +80,16 @@ export default function BalanceWidget() {
         series={series}
         seriesLabel={t.widgets.kpiSeries}
       />
+      {/* The one thing done most often: an expense, one click away (opens the booking dialog). */}
+      {size !== 's' && !noAccounts ? (
+        <Button
+          size="sm"
+          onClick={() => void navigate('/finance?tab=transactions&new=1')}
+          data-testid="widget-add-expense"
+        >
+          {t.finance.ext.widget.addExpense}
+        </Button>
+      ) : null}
     </>
   );
 }
