@@ -24,10 +24,11 @@ import {
   GroupedList,
   ItemList,
   ItemRow,
+  PageTitle,
   RowMenu,
   TextField,
-  useOpenParam,
   type RowMenuItem,
+  useOpenParam,
 } from '@/ui';
 import { InboxSorter } from '../components/InboxSorter';
 import { ListEditor } from '../components/ListEditor';
@@ -473,7 +474,7 @@ export default function TodosPage() {
   return (
     <>
       <div className={styles.header}>
-        <h1>{t.todos.title}</h1>
+        <PageTitle title={t.todos.title} />
         <RowMenu
           label={t.todos.moreOptions}
           open={menuOpen}

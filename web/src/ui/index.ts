@@ -30,6 +30,7 @@ export {
   ItemList,
   ItemRow,
   PageHeader,
+  PageTitle,
   Progress,
   Segmented,
   Split,

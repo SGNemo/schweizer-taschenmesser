@@ -10,7 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { useMediaQuery, useOpenParam } from '@/ui';
+import { PageTitle, useMediaQuery, useOpenParam } from '@/ui';
 import { ExportDialog, type ExportScope } from '../components/ExportDialog';
 import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
@@ -308,7 +308,7 @@ export default function NotesPage() {
   const loadingPane = waiting || (sel?.kind === 'note' && !current);
   return (
     <>
-      <h1 className="sr-only">{t.notes.title}</h1>
+      <PageTitle title={t.notes.title} />
       <div
         className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}
         data-writing={focusMode || undefined}

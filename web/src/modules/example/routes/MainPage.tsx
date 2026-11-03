@@ -3,7 +3,16 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { Button, Checkbox, EmptyState, Icon, IconButton, patternStyles, TextField } from '@/ui';
+import {
+  Button,
+  Checkbox,
+  EmptyState,
+  Icon,
+  IconButton,
+  PageTitle,
+  patternStyles,
+  TextField,
+} from '@/ui';
 import { entryRepo } from '../repo';
 import { settings } from '../settings';
 
@@ -35,7 +44,7 @@ export default function MainPage() {
 
   return (
     <>
-      <h1>{t.example.name}</h1>
+      <PageTitle title={t.example.name} />
       <form
         ref={form}
         onSubmit={add}

@@ -14,6 +14,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageTitle,
   Switch,
   useOpenParam,
 } from '@/ui';
@@ -58,7 +59,7 @@ export default function SubscriptionsPage() {
   return (
     <>
       <div className={styles.header}>
-        <h1>{t.subscriptions.title}</h1>
+        <PageTitle title={t.subscriptions.title} />
         <AdvancedToggle moduleId="subscriptions" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
