@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { advancedOpen, readAdvancedOpen, writeAdvancedOpen } from '@/core/settings/foldState';
 import { isChanged } from '@/core/settings/changed';
@@ -238,6 +238,9 @@ export function SettingsIndex() {
 }
 
 /** Scrolls to `#<section or section--field>` once the sections are rendered and highlights it briefly. */
+/** How long a deep link keeps its target in view while sections above it load. */
+const SETTLE_MS = 1500;
+
 function useDeepLink(ready: boolean) {
   const { hash, pathname } = useLocation();
   const [focus] = useFocusSettings();
@@ -248,6 +251,31 @@ function useDeepLink(ready: boolean) {
     const sectionId = id.split('--')[0] ?? id;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let marked: HTMLElement | undefined;
+    // Sections above the target load their code after the jump and push it down: scroll again while
+    // the page settles, unless the person has scrolled themselves.
+    let settle: ResizeObserver | undefined;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    let touched = false;
+    const touch = () => {
+      touched = true;
+    };
+    const stopSettling = () => {
+      settle?.disconnect();
+      clearTimeout(settleTimer);
+      for (const ev of ['wheel', 'touchstart', 'keydown'] as const)
+        window.removeEventListener(ev, touch);
+    };
+    const keepInView = (target: HTMLElement) => {
+      for (const ev of ['wheel', 'touchstart', 'keydown'] as const)
+        window.addEventListener(ev, touch, { passive: true });
+      settle = new ResizeObserver(() => {
+        if (touched) return stopSettling();
+        target.scrollIntoView({ block: 'start' });
+      });
+      // The page may scroll inside a container, so watch every ancestor of the target.
+      for (let n: HTMLElement | null = target; n; n = n.parentElement) settle.observe(n);
+      settleTimer = setTimeout(stopSettling, SETTLE_MS);
+    };
     const apply = (): boolean => {
       // A setting without its own anchor (older sections) falls back to its section.
       const el = document.getElementById(id) ?? document.getElementById(sectionId);
@@ -255,6 +283,7 @@ function useDeepLink(ready: boolean) {
       // A setting inside a folded "more settings" block opens it first, else there is nothing to scroll to.
       el.closest('details')?.setAttribute('open', '');
       el.scrollIntoView({ block: 'start' });
+      keepInView(el);
       if (historyOn) recordSectionVisit(sectionId);
       // Section anchors sit on the heading: highlight the whole section.
       marked = el.matches('h2') ? (el.closest('section') ?? el) : el;
@@ -274,6 +303,7 @@ function useDeepLink(ready: boolean) {
     }
     return () => {
       observer?.disconnect();
+      stopSettling();
       clearTimeout(timer);
       if (marked) delete marked.dataset.highlight;
     };
@@ -309,7 +339,7 @@ function SectionFrame({ s }: { s: SettingsSectionDef }) {
         </p>
       ) : null}
       {scope ? <ScopeLabel scope={scope} /> : null}
-      {s.render()}
+      <Suspense fallback={null}>{s.render()}</Suspense>
       {s.reset && changed ? (
         <div className={styles.changedRow}>
           <Badge>{c.badge}</Badge>
