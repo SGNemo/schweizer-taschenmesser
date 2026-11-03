@@ -1,5 +1,5 @@
 import { SafeModeBanner } from './SafeModeBanner';
-import { Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useLaunchOpen } from '@/quickCapture/launchOpen';
 import { useNativeShare } from '@/quickCapture/nativeShare';
@@ -11,7 +11,6 @@ import { isDevBuild } from '@/core/update/buildInfo';
 import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
 import { Fab, Toaster, useMediaQuery } from '@/ui';
 import { NoticeHost } from './NoticeHost';
-import { CommandPalette } from './CommandPalette';
 import { FocusWatcher } from './FocusWatcher';
 import { NotificationCenter } from './NotificationCenter';
 import { ReminderPrompt } from './ReminderPrompt';
@@ -44,12 +43,21 @@ import styles from './AppShell.module.css';
 
 let devNoticeShown = false;
 
+// The palette (search, assistant, settings index) loads when it is opened for the first time.
+const CommandPalette = lazy(() =>
+  import('./CommandPalette').then((m) => ({ default: m.CommandPalette })),
+);
+
 export function AppShell() {
   const tree = useNavTree();
   const sidebar = useUiStore((s) => s.sidebar);
   const wide = useMediaQuery('(min-width: 1200px)');
   const rail = sidebar === 'narrow' || !wide;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
+  const paletteOpen = useUiStore((s) => s.paletteOpen);
+  // Mounted from the first opening on (state adjusted during render, like Dialog).
+  const [paletteSeen, setPaletteSeen] = useState(false);
+  if (paletteOpen && !paletteSeen) setPaletteSeen(true);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
 
   // Phone keyboard: `--kb-inset` + keeping a focused add field in view (core/shell/keyboardInset.ts).
@@ -193,7 +201,11 @@ export function AppShell() {
           <QuickAdd />
           <ShortcutSheet />
           <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />
-          <CommandPalette />
+          {paletteSeen ? (
+            <Suspense fallback={null}>
+              <CommandPalette />
+            </Suspense>
+          ) : null}
           <VoiceStatus />
           <ToolsSheet />
           <OnboardingHost />
