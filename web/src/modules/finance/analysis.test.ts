@@ -9,7 +9,14 @@ import {
   rollupYear,
   yearSummary,
 } from './analysis';
-import { categoryParts, isTransfer, monthSummary, nextRepeatDate, planRepeats, splitsValid } from './logic';
+import {
+  categoryParts,
+  isTransfer,
+  monthSummary,
+  nextRepeatDate,
+  planRepeats,
+  splitsValid,
+} from './logic';
 import { buildTransfer, transferValid } from './transfer';
 import { bookingsCsv } from './export';
 import { buildForecast, horizonEnd } from './forecast';
@@ -64,7 +71,9 @@ describe('splits', () => {
     [1000, [{ amountMinor: 600 }, { amountMinor: 300 }], false],
     [1000, [{ amountMinor: 1000 }], false],
     [1000, [], false],
-  ])('splitsValid(%i, %j) = %s', (amount, splits, ok) => expect(splitsValid(amount, splits)).toBe(ok));
+  ])('splitsValid(%i, %j) = %s', (amount, splits, ok) =>
+    expect(splitsValid(amount, splits)).toBe(ok),
+  );
 
   it('categoryParts falls back to the one category', () => {
     expect(categoryParts({ categoryId: 'food', amountMinor: 500 })).toEqual([
@@ -129,7 +138,9 @@ describe('roll-up of sub-categories', () => {
   });
 
   it('year roll-up merges the months', () => {
-    expect(rollupYear(rows, 2026, CATS).find((x) => x.categoryId === 'home')!.amountMinor).toBe(2400 + 9999);
+    expect(rollupYear(rows, 2026, CATS).find((x) => x.categoryId === 'home')!.amountMinor).toBe(
+      2400 + 9999,
+    );
   });
 });
 
@@ -144,7 +155,9 @@ describe('comparison', () => {
     [2, 3, -1, -33],
     [5, 3, 2, 67], // 66.67 → 67
   ])('delta(%i, %i)', (cur, prev, diff, pct) => {
-    expect(delta(cur, prev)).toEqual(pct === undefined ? { diffMinor: diff } : { diffMinor: diff, percent: pct });
+    expect(delta(cur, prev)).toEqual(
+      pct === undefined ? { diffMinor: diff } : { diffMinor: diff, percent: pct },
+    );
   });
 
   it('compares with the previous calendar month, also across the year change', () => {
@@ -186,7 +199,9 @@ describe('year summary', () => {
     expect(y.savingsRate).toBe(50); // 49.9998 → 50
   });
   it('has no savings rate without income', () => {
-    expect(yearSummary([tx({ date: '2026-01-01', amountMinor: 5 })], 2026).savingsRate).toBeUndefined();
+    expect(
+      yearSummary([tx({ date: '2026-01-01', amountMinor: 5 })], 2026).savingsRate,
+    ).toBeUndefined();
   });
 });
 
@@ -195,24 +210,36 @@ describe('filter', () => {
     tx({ date: '2026-03-02', amountMinor: 3000, categoryId: 'super' }),
     tx({ date: '2026-03-03', amountMinor: 1500, categoryId: 'home', accountId: 'a2' }),
     tx({ date: '2026-03-04', amountMinor: 8000, kind: 'income' }),
-    { ...buildTransfer({ fromAccountId: 'a1', toAccountId: 'a2', amountMinor: 700, date: '2026-03-05' }, 't').out },
+    {
+      ...buildTransfer(
+        { fromAccountId: 'a1', toAccountId: 'a2', amountMinor: 700, date: '2026-03-05' },
+        't',
+      ).out,
+    },
   ];
-  it('hides transfers by default', () => expect(applyBookingFilter(rows, {}, CATS)).toHaveLength(3));
+  it('hides transfers by default', () =>
+    expect(applyBookingFilter(rows, {}, CATS)).toHaveLength(3));
   it('shows them on request', () =>
     expect(applyBookingFilter(rows, { withTransfers: true }, CATS)).toHaveLength(4));
   it('category includes its children', () =>
-    expect(applyBookingFilter(rows, { categoryId: 'food' }, CATS).map((r) => r.amountMinor)).toEqual([3000]));
+    expect(
+      applyBookingFilter(rows, { categoryId: 'food' }, CATS).map((r) => r.amountMinor),
+    ).toEqual([3000]));
   it('amount range is inclusive, account and kind narrow', () => {
     expect(applyBookingFilter(rows, { minMinor: 1500, maxMinor: 3000 }, CATS)).toHaveLength(2);
     expect(applyBookingFilter(rows, { accountId: 'a2' }, CATS)).toHaveLength(1);
     expect(applyBookingFilter(rows, { kind: 'income' }, CATS)).toHaveLength(1);
   });
   it('date range is inclusive', () =>
-    expect(applyBookingFilter(rows, { from: '2026-03-03', to: '2026-03-04' }, CATS)).toHaveLength(2));
+    expect(applyBookingFilter(rows, { from: '2026-03-03', to: '2026-03-04' }, CATS)).toHaveLength(
+      2,
+    ));
 });
 
 describe('possible duplicate', () => {
-  const existing = [{ ...tx({ date: '2026-03-10', amountMinor: 1250, payee: 'Café Rot' }), id: 'x1' }];
+  const existing = [
+    { ...tx({ date: '2026-03-10', amountMinor: 1250, payee: 'Café Rot' }), id: 'x1' },
+  ];
   const draft = { accountId: 'a1', kind: 'expense' as const, amountMinor: 1250, payee: 'café rot' };
   it.each([
     ['2026-03-10', true],
@@ -225,8 +252,12 @@ describe('possible duplicate', () => {
   );
   it('ignores itself, other amounts and other accounts', () => {
     expect(findPossibleDuplicate(existing, { ...draft, date: '2026-03-10' }, 'x1')).toBeUndefined();
-    expect(findPossibleDuplicate(existing, { ...draft, date: '2026-03-10', amountMinor: 1251 })).toBeUndefined();
-    expect(findPossibleDuplicate(existing, { ...draft, date: '2026-03-10', accountId: 'a2' })).toBeUndefined();
+    expect(
+      findPossibleDuplicate(existing, { ...draft, date: '2026-03-10', amountMinor: 1251 }),
+    ).toBeUndefined();
+    expect(
+      findPossibleDuplicate(existing, { ...draft, date: '2026-03-10', accountId: 'a2' }),
+    ).toBeUndefined();
   });
 });
 
@@ -252,7 +283,14 @@ describe('repeat dates', () => {
 });
 
 describe('forecast', () => {
-  const base = { today: '2026-03-10', to: '2026-03-31', balanceMinor: 100000, repeatHeads: [], subscriptionCharges: [], openInvoices: [] };
+  const base = {
+    today: '2026-03-10',
+    to: '2026-03-31',
+    balanceMinor: 100000,
+    repeatHeads: [],
+    subscriptionCharges: [],
+    openInvoices: [],
+  };
 
   it.each([
     ['2026-02-10', 'month', '2026-02-28'],
@@ -260,7 +298,9 @@ describe('forecast', () => {
     ['2026-12-10', 'month', '2026-12-31'],
     ['2026-03-10', '30', '2026-04-09'],
     ['2026-12-10', '90', '2027-03-10'],
-  ] as const)('horizon from %s (%s) ends %s', (today, h, end) => expect(horizonEnd(today, h)).toBe(end));
+  ] as const)('horizon from %s (%s) ends %s', (today, h, end) =>
+    expect(horizonEnd(today, h)).toBe(end),
+  );
 
   it('without anything known the line is flat', () => {
     const f = buildForecast(base);
@@ -273,8 +313,20 @@ describe('forecast', () => {
     const f = buildForecast({
       ...base,
       repeatHeads: [
-        { kind: 'income', amountMinor: 200000, date: '2026-02-25', payee: 'Salary', repeat: 'monthly' },
-        { kind: 'expense', amountMinor: 80000, date: '2026-03-01', payee: 'Rent', repeat: 'monthly' },
+        {
+          kind: 'income',
+          amountMinor: 200000,
+          date: '2026-02-25',
+          payee: 'Salary',
+          repeat: 'monthly',
+        },
+        {
+          kind: 'expense',
+          amountMinor: 80000,
+          date: '2026-03-01',
+          payee: 'Rent',
+          repeat: 'monthly',
+        },
       ],
       subscriptionCharges: [{ date: '2026-03-12', amountMinor: 1299, name: 'Stream' }],
       openInvoices: [
@@ -295,7 +347,15 @@ describe('forecast', () => {
   it('puts overdue items on today and never counts a subscription that is also a repeating booking', () => {
     const f = buildForecast({
       ...base,
-      repeatHeads: [{ kind: 'expense', amountMinor: 999, date: '2026-02-20', payee: 'Music', repeat: 'monthly' }],
+      repeatHeads: [
+        {
+          kind: 'expense',
+          amountMinor: 999,
+          date: '2026-02-20',
+          payee: 'Music',
+          repeat: 'monthly',
+        },
+      ],
       subscriptionCharges: [{ date: '2026-03-20', amountMinor: 999, name: 'music' }],
       openInvoices: [{ dueDate: '2026-03-01', amountMinor: 5000, payee: 'Overdue' }],
     });
@@ -308,24 +368,55 @@ describe('forecast', () => {
     const f = buildForecast({
       ...base,
       to: '2026-04-09',
-      repeatHeads: [{ kind: 'expense', amountMinor: 1000, date: '2026-03-09', payee: 'Class', repeat: 'weekly' }],
+      repeatHeads: [
+        {
+          kind: 'expense',
+          amountMinor: 1000,
+          date: '2026-03-09',
+          payee: 'Class',
+          repeat: 'weekly',
+        },
+      ],
     });
-    expect(f.events.map((e) => e.date)).toEqual(['2026-03-16', '2026-03-23', '2026-03-30', '2026-04-06']);
+    expect(f.events.map((e) => e.date)).toEqual([
+      '2026-03-16',
+      '2026-03-23',
+      '2026-03-30',
+      '2026-04-06',
+    ]);
     expect(f.end.balanceMinor).toBe(100000 - 4000);
   });
 });
 
 describe('export', () => {
-  const labels = { header: ['Date', 'Account', 'Payee', 'Category', 'Kind', 'Amount', 'Note'], expense: 'Expense', income: 'Income', transfer: 'Transfer' };
+  const labels = {
+    header: ['Date', 'Account', 'Payee', 'Category', 'Kind', 'Amount', 'Note'],
+    expense: 'Expense',
+    income: 'Income',
+    transfer: 'Transfer',
+  };
   const acc = (id: string) => (id === 'a1' ? 'Checking' : 'Cash');
   const cat = (id?: string) => CATS.find((c) => c.id === id)?.name ?? '';
 
   it('writes signed amounts with a dot, one row per split part, ordered by date', () => {
     const csv = bookingsCsv(
       [
-        tx({ date: '2026-03-09', amountMinor: 1000, payee: 'Shop; "X"', splits: [{ categoryId: 'super', amountMinor: 650 }, { categoryId: 'home', amountMinor: 350 }] }),
+        tx({
+          date: '2026-03-09',
+          amountMinor: 1000,
+          payee: 'Shop; "X"',
+          splits: [
+            { categoryId: 'super', amountMinor: 650 },
+            { categoryId: 'home', amountMinor: 350 },
+          ],
+        }),
         tx({ date: '2026-03-01', amountMinor: 250000, kind: 'income', payee: 'Job' }),
-        { ...buildTransfer({ fromAccountId: 'a1', toAccountId: 'a2', amountMinor: 5, date: '2026-03-10' }, 't').out },
+        {
+          ...buildTransfer(
+            { fromAccountId: 'a1', toAccountId: 'a2', amountMinor: 5, date: '2026-03-10' },
+            't',
+          ).out,
+        },
       ],
       acc,
       cat,

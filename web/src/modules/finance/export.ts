@@ -32,7 +32,9 @@ export function bookingsCsv(
   const out: string[][] = [[...labels.header]];
   const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
   for (const r of sorted) {
-    const parts = r.transferId ? [{ categoryId: undefined, amountMinor: r.amountMinor }] : categoryParts(r);
+    const parts = r.transferId
+      ? [{ categoryId: undefined, amountMinor: r.amountMinor }]
+      : categoryParts(r);
     for (const p of parts) {
       const signedAmount = signed({ kind: r.kind, amountMinor: p.amountMinor });
       out.push([

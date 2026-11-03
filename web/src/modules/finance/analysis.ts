@@ -3,7 +3,16 @@
  * previous period, the extended filter and the duplicate hint. No database, no clock.
  */
 import { addMonthsToMonth, daysBetween, monthOf } from '@/core/time/dates';
-import { categoryParts, isTransfer, monthSummary, type MonthSummary } from './logic';
+import { compareText } from '@/core/i18n/format';
+import {
+  categoryParts,
+  isTransfer,
+  monthSummary,
+  OTHERS,
+  UNCATEGORISED,
+  type CategoryTotal,
+  type MonthSummary,
+} from './logic';
 import type { Category, Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'> &
@@ -21,7 +30,10 @@ export function categoryFamily(categories: readonly Cat[], id: string): Set<stri
 }
 
 /** The id a category counts under in a roll-up: its parent, if the parent still exists. */
-export function topCategoryId(categories: readonly Cat[], id: string | undefined): string | undefined {
+export function topCategoryId(
+  categories: readonly Cat[],
+  id: string | undefined,
+): string | undefined {
   if (!id) return undefined;
   const c = categories.find((x) => x.id === id);
   if (!c) return undefined;
@@ -59,6 +71,28 @@ export function rollupExpenses(
   const rows = [...tops.values()];
   for (const r of rows) r.children.sort((a, b) => b.amountMinor - a.amountMinor);
   return rows.sort((a, b) => b.amountMinor - a.amountMinor);
+}
+
+/** The roll-up as the flat rows the charts take: top categories largest first, the tail folded into "Weitere". */
+export function topCategoryTotals(
+  txs: readonly Tx[],
+  month: string,
+  categories: readonly Cat[],
+  limit = 8,
+): CategoryTotal[] {
+  const names = new Map(categories.map((c) => [c.id, c.name]));
+  const rows: CategoryTotal[] = rollupExpenses(txs, month, categories).map((r) => ({
+    categoryId: r.categoryId,
+    name: r.categoryId ? (names.get(r.categoryId) ?? UNCATEGORISED) : UNCATEGORISED,
+    amountMinor: r.amountMinor,
+  }));
+  rows.sort((a, b) => b.amountMinor - a.amountMinor || compareText(a.name, b.name));
+  if (rows.length <= limit) return rows;
+  const tail = rows.slice(limit - 1);
+  return [
+    ...rows.slice(0, limit - 1),
+    { name: OTHERS, amountMinor: tail.reduce((s, r) => s + r.amountMinor, 0) },
+  ];
 }
 
 /* ---------- comparison ---------- */
@@ -100,7 +134,10 @@ export function categoryDeltas(
 ): Map<string | undefined, Delta> {
   const cur = rollupExpenses(txs, month, categories);
   const prev = new Map(
-    rollupExpenses(txs, addMonthsToMonth(month, -1), categories).map((r) => [r.categoryId, r.amountMinor]),
+    rollupExpenses(txs, addMonthsToMonth(month, -1), categories).map((r) => [
+      r.categoryId,
+      r.amountMinor,
+    ]),
   );
   return new Map(cur.map((r) => [r.categoryId, delta(r.amountMinor, prev.get(r.categoryId) ?? 0)]));
 }
@@ -135,13 +172,21 @@ export function yearSummary(txs: readonly Tx[], year: number): YearSummary {
 }
 
 /** Expenses of a year per top category, largest first (for the year view). */
-export function rollupYear(txs: readonly Tx[], year: number, categories: readonly Cat[]): RolledTotal[] {
+export function rollupYear(
+  txs: readonly Tx[],
+  year: number,
+  categories: readonly Cat[],
+): RolledTotal[] {
   const all = Array.from({ length: 12 }, (_, i) =>
     rollupExpenses(txs, `${year}-${String(i + 1).padStart(2, '0')}`, categories),
   ).flat();
   const merged = new Map<string | undefined, RolledTotal>();
   for (const r of all) {
-    const row = merged.get(r.categoryId) ?? { categoryId: r.categoryId, amountMinor: 0, children: [] };
+    const row = merged.get(r.categoryId) ?? {
+      categoryId: r.categoryId,
+      amountMinor: 0,
+      children: [],
+    };
     row.amountMinor += r.amountMinor;
     for (const c of r.children) {
       const hit = row.children.find((x) => x.categoryId === c.categoryId);
@@ -184,7 +229,8 @@ export function applyBookingFilter<T extends Tx>(
     if (f.maxMinor !== undefined && t.amountMinor > f.maxMinor) return false;
     if (f.from && t.date < f.from) return false;
     if (f.to && t.date > f.to) return false;
-    if (family && !categoryParts(t).some((p) => p.categoryId && family.has(p.categoryId))) return false;
+    if (family && !categoryParts(t).some((p) => p.categoryId && family.has(p.categoryId)))
+      return false;
     return true;
   });
 }

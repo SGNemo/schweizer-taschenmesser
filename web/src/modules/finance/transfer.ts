@@ -25,4 +25,7 @@ export function buildTransfer(
 }
 
 export const transferValid = (d: TransferDraft): boolean =>
-  d.amountMinor > 0 && d.fromAccountId !== '' && d.toAccountId !== '' && d.fromAccountId !== d.toAccountId;
+  d.amountMinor > 0 &&
+  d.fromAccountId !== '' &&
+  d.toAccountId !== '' &&
+  d.fromAccountId !== d.toAccountId;

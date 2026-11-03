@@ -77,7 +77,9 @@ export function buildForecast(input: ForecastInput): Forecast {
 
   // A subscription that is also a repeating booking (same payee and amount) is counted once.
   const covered = new Set(
-    input.repeatHeads.filter((h) => h.kind === 'expense').map((h) => `${key(h.payee)}|${h.amountMinor}`),
+    input.repeatHeads
+      .filter((h) => h.kind === 'expense')
+      .map((h) => `${key(h.payee)}|${h.amountMinor}`),
   );
   for (const c of input.subscriptionCharges) {
     if (c.date > to || covered.has(`${key(c.name)}|${c.amountMinor}`)) continue;
@@ -112,4 +114,17 @@ export function buildForecast(input: ForecastInput): Forecast {
   }
   const lowest = points.reduce((m, p) => (p.balanceMinor < m.balanceMinor ? p : m), points[0]!);
   return { events, points, lowest, end: { date: to, balanceMinor: balance } };
+}
+
+/** The forecast as one balance per day from `today` to the end, for drawing a line (the balance stays until the next event). */
+export function dailySeries(forecast: Forecast, today: string): ForecastPoint[] {
+  const out: ForecastPoint[] = [];
+  const byDate = new Map<string, number>();
+  for (const p of forecast.points) byDate.set(p.date, p.balanceMinor);
+  let running = forecast.points[0]!.balanceMinor;
+  for (let d = today; d <= forecast.end.date; d = addDaysStr(d, 1)) {
+    running = byDate.get(d) ?? running;
+    out.push({ date: d, balanceMinor: running });
+  }
+  return out;
 }
