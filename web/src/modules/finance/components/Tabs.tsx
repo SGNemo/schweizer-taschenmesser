@@ -83,9 +83,17 @@ export function TransactionsTab({
   const filtering = searching || kind !== 'all' || narrowed;
   if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
-      <EmptyState title={t.finance.noTransactions}>
-        <StartDataButton moduleId="finance" />
-      </EmptyState>
+      <>
+        <EmptyState title={t.finance.noTransactions}>
+          <StartDataButton moduleId="finance" />
+          {data.accounts.length > 1 ? (
+            <Button variant="ghost" onClick={() => setTransfer({ draft: true })}>
+              {t.finance.ext.transfer.button}
+            </Button>
+          ) : null}
+        </EmptyState>
+        <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
+      </>
     );
 
   async function exportCsv() {
