@@ -27,7 +27,8 @@ export const tSettings4 = defineBundle(
       usedOf: (size: string, quota: string) => `${size} von ${quota} belegt`,
       unknown: 'Die Größe ist auf diesem Gerät nicht abrufbar.',
       persisted: 'Dauerhaft gespeichert: Das System löscht die Daten nicht von selbst.',
-      notPersisted: 'Nicht gesichert: Bei Platzmangel darf das System Daten löschen. Ein Backup hilft.',
+      notPersisted:
+        'Nicht gesichert: Bei Platzmangel darf das System Daten löschen. Ein Backup hilft.',
       modulesTitle: 'Einträge je Modul',
       entries: (n: number) => (n === 1 ? '1 Eintrag' : `${n} Einträge`),
       noData: 'Noch keine Einträge.',
@@ -64,7 +65,15 @@ export const tSettings4 = defineBundle(
       colorsHint: 'Farbschema und Farbmodus: „Ruhig“ nimmt alle Farbbedeutung heraus.',
       spacing: 'Zeilenabstand und Dichte',
       spacingHint: 'Mehr Luft zwischen Zeilen und Elementen.',
-      keywords: ['Zugänglichkeit', 'Sehhilfe', 'Kontrast', 'große Schrift', 'weniger Bewegung', 'Lesen', 'Fokus'],
+      keywords: [
+        'Zugänglichkeit',
+        'Sehhilfe',
+        'Kontrast',
+        'große Schrift',
+        'weniger Bewegung',
+        'Lesen',
+        'Fokus',
+      ],
       cat: {
         title: 'Barrierefreiheit',
         description: 'Schrift, Farben, Bewegung, Lesehilfe, Fokus',
@@ -104,12 +113,14 @@ export const tSettings4 = defineBundle(
       },
       storage: {
         title: 'Storage',
-        description: 'What the app holds on this device: data per module, attachments and the cache.',
+        description:
+          'What the app holds on this device: data per module, attachments and the cache.',
         used: (size: string) => `${size} used`,
         usedOf: (size: string, quota: string) => `${size} of ${quota} used`,
         unknown: 'The size is not available on this device.',
         persisted: 'Stored for good: the system does not delete the data by itself.',
-        notPersisted: 'Not protected: if space runs short the system may delete data. A backup helps.',
+        notPersisted:
+          'Not protected: if space runs short the system may delete data. A backup helps.',
         modulesTitle: 'Entries per module',
         entries: (n: number) => (n === 1 ? '1 entry' : `${n} entries`),
         noData: 'No entries yet.',
@@ -146,7 +157,15 @@ export const tSettings4 = defineBundle(
         colorsHint: 'Colour scheme and colour mode: "Calm" removes all colour meaning.',
         spacing: 'Line spacing and density',
         spacingHint: 'More air between lines and elements.',
-        keywords: ['accessibility', 'low vision', 'contrast', 'large text', 'less motion', 'reading', 'focus'],
+        keywords: [
+          'accessibility',
+          'low vision',
+          'contrast',
+          'large text',
+          'less motion',
+          'reading',
+          'focus',
+        ],
         cat: {
           title: 'Accessibility',
           description: 'Text, colours, motion, reading aid, focus',
@@ -229,7 +248,15 @@ export const tSettings4 = defineBundle(
         colorsHint: 'Esquema de color y modo de color: «Calma» quita todo significado de color.',
         spacing: 'Interlineado y densidad',
         spacingHint: 'Más aire entre líneas y elementos.',
-        keywords: ['accesibilidad', 'baja visión', 'contraste', 'texto grande', 'menos movimiento', 'lectura', 'enfoque'],
+        keywords: [
+          'accesibilidad',
+          'baja visión',
+          'contraste',
+          'texto grande',
+          'menos movimiento',
+          'lectura',
+          'enfoque',
+        ],
         cat: {
           title: 'Accesibilidad',
           description: 'Texto, colores, movimiento, ayuda de lectura, enfoque',
@@ -248,8 +275,7 @@ export const tSettings4 = defineBundle(
         },
         resetAll: 'Restablecer todos los atajos',
         resetAllDone: 'Todos los atajos vuelven al valor predeterminado',
-        conflictFixed: (label: string) =>
-          `La app ya usa este atajo: ${label}. Elige otro.`,
+        conflictFixed: (label: string) => `La app ya usa este atajo: ${label}. Elige otro.`,
       },
     },
     fr: {
@@ -294,7 +320,14 @@ export const tSettings4 = defineBundle(
         cacheConfirmYes: 'Vider',
         cacheCancel: 'Annuler',
         cacheCleared: (n: number) => (n === 1 ? '1 fichier supprimé' : `${n} fichiers supprimés`),
-        keywords: ['place', 'espace disque', 'cache', 'taille', 'pièces jointes', 'base de données'],
+        keywords: [
+          'place',
+          'espace disque',
+          'cache',
+          'taille',
+          'pièces jointes',
+          'base de données',
+        ],
       },
       accessibility: {
         title: 'Accessibilité',
@@ -312,7 +345,15 @@ export const tSettings4 = defineBundle(
         colorsHint: 'Thème et mode de couleur : « Calme » retire tout sens aux couleurs.',
         spacing: 'Interligne et densité',
         spacingHint: 'Plus d’air entre les lignes et les éléments.',
-        keywords: ['accessibilité', 'malvoyance', 'contraste', 'grand texte', 'moins de mouvement', 'lecture', 'concentration'],
+        keywords: [
+          'accessibilité',
+          'malvoyance',
+          'contraste',
+          'grand texte',
+          'moins de mouvement',
+          'lecture',
+          'concentration',
+        ],
         cat: {
           title: 'Accessibilité',
           description: 'Texte, couleurs, mouvement, aide à la lecture, concentration',
@@ -321,7 +362,8 @@ export const tSettings4 = defineBundle(
       },
       shortcuts: {
         fixedTitle: 'Raccourcis fixes',
-        fixedHint: 'Ces raccourcis sont fixes et ne peuvent pas être modifiés ; ils appartiennent à l’application.',
+        fixedHint:
+          'Ces raccourcis sont fixes et ne peuvent pas être modifiés ; ils appartiennent à l’application.',
         fixed: {
           palette: 'Ouvrir la recherche et les commandes',
           tools: 'Ouvrir la boîte à outils',
@@ -351,8 +393,7 @@ export const tSettings4 = defineBundle(
       },
       storage: {
         title: 'Armazenamento',
-        description:
-          'O que o app ocupa neste dispositivo: dados por módulo, anexos e o cache.',
+        description: 'O que o app ocupa neste dispositivo: dados por módulo, anexos e o cache.',
         used: (size: string) => `${size} usados`,
         usedOf: (size: string, quota: string) => `${size} de ${quota} usados`,
         unknown: 'O tamanho não está disponível neste dispositivo.',
@@ -395,7 +436,15 @@ export const tSettings4 = defineBundle(
         colorsHint: 'Esquema e modo de cor: “Calmo” tira todo significado das cores.',
         spacing: 'Espaçamento entre linhas e densidade',
         spacingHint: 'Mais ar entre linhas e elementos.',
-        keywords: ['acessibilidade', 'baixa visão', 'contraste', 'texto grande', 'menos movimento', 'leitura', 'foco'],
+        keywords: [
+          'acessibilidade',
+          'baixa visão',
+          'contraste',
+          'texto grande',
+          'menos movimento',
+          'leitura',
+          'foco',
+        ],
         cat: {
           title: 'Acessibilidade',
           description: 'Texto, cores, movimento, ajuda de leitura, foco',
@@ -414,8 +463,7 @@ export const tSettings4 = defineBundle(
         },
         resetAll: 'Redefinir todos os atalhos',
         resetAllDone: 'Todos os atalhos voltaram ao padrão',
-        conflictFixed: (label: string) =>
-          `O app já usa este atalho: ${label}. Escolha outro.`,
+        conflictFixed: (label: string) => `O app já usa este atalho: ${label}. Escolha outro.`,
       },
     },
   },
