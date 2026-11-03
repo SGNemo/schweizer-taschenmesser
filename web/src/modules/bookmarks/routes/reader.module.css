@@ -1,0 +1,43 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.site {
+  flex: 1;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.note {
+  margin: var(--space-2) 0;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+/* a calm reading column: serif, generous leading, about 65 characters wide */
+.text {
+  max-width: 65ch;
+  margin: var(--space-4) auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--text-lg, 1.125rem);
+  line-height: 1.7;
+  color: var(--text);
+}
+.text h2,
+.text h3 {
+  margin: var(--space-5, 1.5rem) 0 var(--space-2);
+  line-height: 1.3;
+}
+.text p {
+  margin: 0 0 var(--space-3);
+}
+.text ul {
+  margin: 0 0 var(--space-1);
+  padding-left: var(--space-5, 1.5rem);
+}
+.text blockquote {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--module-color);
+  color: var(--text-muted);
+}

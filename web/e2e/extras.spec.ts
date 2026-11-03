@@ -48,7 +48,7 @@ test.describe('Merkliste', () => {
       await save(page);
     };
     await add('Pasta Rezept', 'koch.de/pasta', 'Kochen, Rezept', 'Lesen');
-    await add('Dune', '', 'Film', 'Ansehen');
+    await add('Dune', '', 'Film', 'Film/Serie');
 
     const list = page.getByRole('group', { name: 'Merkliste' });
     await expect(list.getByRole('listitem')).toHaveCount(2);

@@ -3461,7 +3461,12 @@ export const de = {
     viewList: 'Liste',
     viewCards: 'Pinnwand',
     sortBy: 'Sortieren nach',
-    sorts: { newest: 'Zuletzt hinzugefügt', title: 'Titel', kind: 'Art', status: 'Status' },
+    sorts: {
+      newest: 'Neueste zuerst',
+      title: 'Titel A–Z',
+      kind: 'Nach Art',
+      status: 'Angefangenes zuerst',
+    },
     statuses: { open: 'Offen', started: 'Angefangen', done: 'Erledigt' },
     markStarted: 'Als angefangen markieren',
     markOpen: 'Wieder öffnen',
@@ -6005,6 +6010,12 @@ export const de = {
     },
     page: {
       refresh: 'Aktualisieren',
+      labelsNav: 'Ordner',
+      pickThread: 'Wähle eine Mail aus der Liste.',
+      rowMenu: (from: string) => `Aktionen: ${from}`,
+      rowRead: 'Als gelesen markieren',
+      rowUnread: 'Als ungelesen markieren',
+      rowArchive: 'Archivieren',
       loading: 'Mails werden geladen …',
       more: 'Mehr laden',
       searchLabel: 'Suchen',
@@ -6257,6 +6268,9 @@ export const de = {
       widgetAction: 'Browser öffnen',
     },
     settings: {
+      tabPreview: 'Vorschaubilder für offene Tabs',
+      tabPreviewHelp:
+        'Lädt für jeden offenen Tab Titel und Vorschaubild der Seite erneut, ohne Anmeldung und Cookies. Die Seite erfährt dadurch einen zweiten Aufruf. Private Tabs sind nie dabei. Standard: aus.',
       engine: 'Suchmaschine',
       engineCustom: 'Eigene Adresse',
       customUrl: 'Eigene Such-Adresse',
@@ -6272,6 +6286,24 @@ export const de = {
     },
     hint: 'Kein vollwertiger Browser. Für Online-Banking den Systembrowser nutzen.',
     hintClose: 'Hinweis ausblenden',
+    tabs: {
+      title: 'Offene Tabs',
+      openAll: 'Alle Tabs anzeigen',
+      back: 'Zurück zur Seite',
+      none: 'Keine Tabs offen.',
+      new: 'Neuer Tab',
+      private: 'Privat',
+      close: (title: string) => `Tab schließen: ${title}`,
+    },
+    reader: {
+      title: 'Lesemodus',
+      loading: 'Seite wird geladen …',
+      failed:
+        'Diese Seite lässt sich nicht als Text lesen. Bleib auf der Seite oder öffne sie im Systembrowser.',
+      note: 'Nemo lädt die Seite noch einmal ohne Anmeldung und ohne Cookies und zeigt nur den Text.',
+      unavailable: 'Der Lesemodus gibt es für https-Seiten in normalen Tabs, nicht in privaten.',
+      back: 'Zurück zur Seite',
+    },
     toolbar: {
       back: 'Zurück',
       forward: 'Vor',
@@ -6296,6 +6328,7 @@ export const de = {
       none: 'Noch nichts gespeichert.',
     },
     menu: {
+      reader: 'Lesemodus',
       saveToList: 'In Merkliste speichern',
       saveAsNote: 'Als Notiz speichern',
       openSystem: 'Im Systembrowser öffnen',

@@ -65,7 +65,12 @@ export const bookmarks: Strings['bookmarks'] = {
   viewList: 'Liste',
   viewCards: 'Tableau',
   sortBy: 'Trier par',
-  sorts: { newest: 'Ajoutés récemment', title: 'Titre', kind: 'Type', status: 'Statut' },
+  sorts: {
+    newest: "Plus récents d'abord",
+    title: 'Titre A–Z',
+    kind: 'Par type',
+    status: "Commencés d'abord",
+  },
   statuses: { open: 'Ouvert', started: 'Commencé', done: 'Terminé' },
   markStarted: 'Marquer comme commencé',
   markOpen: 'Rouvrir',

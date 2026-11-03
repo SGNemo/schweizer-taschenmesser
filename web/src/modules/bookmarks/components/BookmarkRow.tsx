@@ -5,7 +5,7 @@ import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Checkbox, ItemRow, type RowMenuItem } from '@/ui';
-import { hostOf } from '../logic';
+import { hostOf, statusOf } from '../logic';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
 
@@ -15,10 +15,42 @@ import type { BookmarkItem } from '../schema';
  */
 export function bookmarkMenu(
   item: Stored<BookmarkItem>,
-  on: { edit: (item: Stored<BookmarkItem>) => void; filterTag?: (tag: string) => void },
+  on: {
+    edit: (item: Stored<BookmarkItem>) => void;
+    filterTag?: (tag: string) => void;
+    read?: (item: Stored<BookmarkItem>) => void;
+  },
 ): RowMenuItem[] {
+  const status = statusOf(item);
   return [
     { id: 'edit', label: t.actions.edit, onSelect: () => on.edit(item) },
+    ...(on.read && item.url?.startsWith('https://')
+      ? [{ id: 'read', label: t.bookmarks.reader.open, onSelect: () => on.read!(item) }]
+      : []),
+    ...(status !== 'started'
+      ? [
+          {
+            id: 'started',
+            label: t.bookmarks.markStarted,
+            onSelect: () => void itemRepo.update(item.id, { started: true, done: false }),
+          },
+        ]
+      : []),
+    ...(status !== 'done'
+      ? [
+          {
+            id: 'done',
+            label: t.bookmarks.markDone,
+            onSelect: () => void itemRepo.update(item.id, { done: true, started: false }),
+          },
+        ]
+      : [
+          {
+            id: 'reopen',
+            label: t.bookmarks.markOpen,
+            onSelect: () => void itemRepo.update(item.id, { done: false, started: false }),
+          },
+        ]),
     ...(item.url
       ? [
           {
@@ -44,7 +76,7 @@ export function bookmarkMenu(
       label: t.actions.duplicate,
       onSelect: () =>
         void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
-          itemRepo.create({ ...copyData(item), done: false }),
+          itemRepo.create({ ...copyData(item), done: false, started: false }),
         ),
     },
     {
@@ -65,10 +97,12 @@ export function BookmarkRow({
   item,
   onEdit,
   onFilterTag,
+  onRead,
 }: {
   item: Stored<BookmarkItem>;
   onEdit: (item: Stored<BookmarkItem>) => void;
   onFilterTag: (tag: string) => void;
+  onRead?: (item: Stored<BookmarkItem>) => void;
 }) {
   return (
     <ItemRow
@@ -84,10 +118,15 @@ export function BookmarkRow({
           onChange={(e) => void itemRepo.update(item.id, { done: e.target.checked })}
         />
       }
-      meta={[t.bookmarks.kinds[item.kind], hostOf(item.url), ...item.tags.map((x) => `#${x}`)]
+      meta={[
+        t.bookmarks.kinds[item.kind],
+        statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
+        hostOf(item.url),
+        ...item.tags.map((x) => `#${x}`),
+      ]
         .filter(Boolean)
         .join(' · ')}
-      menu={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag })}
+      menu={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag, read: onRead })}
     />
   );
 }

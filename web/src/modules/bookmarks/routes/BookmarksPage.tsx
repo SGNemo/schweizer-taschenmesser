@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { useAdvanced } from '@/core/settings/comfort';
+import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { tAdvanced } from '@/strings.advanced';
@@ -20,7 +21,9 @@ import {
   useOpenParam,
   type RowMenuItem,
 } from '@/ui';
+import { BookmarkCard } from '../components/BookmarkCard';
 import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
+import { Pinboard } from '../components/Pinboard';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
   filterItems,
@@ -34,7 +37,15 @@ import {
   type Grouping,
 } from '../logic';
 import { itemRepo } from '../repo';
+import {
+  type BookmarksSettings,
+  settings as moduleSettings,
+  settingsSchema,
+  SORTS,
+  type SortMode,
+} from '../settings';
 import { KINDS } from '../schema';
+import { HeroSlot } from '@/ui/identity';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import styles from './bookmarks.module.css';
 
@@ -52,6 +63,14 @@ function sharedDraft(params: URLSearchParams): { draft: true; title?: string; ur
 
 export default function BookmarksPage() {
   const items = useLiveQuery(() => itemRepo.active().toArray(), []);
+  const [stored, setPrefs] = useSettings(
+    'module.bookmarks',
+    settingsSchema,
+    moduleSettings.defaults as never,
+  );
+  const prefs = stored ?? (moduleSettings.defaults as BookmarksSettings);
+  const navigate = useNavigate();
+  const read = (i: { id: string }) => void navigate(`/bookmarks/read/${i.id}`);
   const [filter, setFilter] = useState<Filter>({ view: 'open', kind: 'all', query: '' });
   const [grouping, setGrouping] = useState<Grouping>('recent');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,7 +89,14 @@ export default function BookmarksPage() {
   };
 
   const linksView = params.get('view') === 'links';
-  const shown = useMemo(() => filterItems(items ?? [], filter), [items, filter]);
+  const shown = useMemo(
+    () => filterItems(items ?? [], filter, prefs.sort),
+    [items, filter, prefs.sort],
+  );
+  const latest = useMemo(
+    () => [...(items ?? [])].sort((a, b) => b.createdAt - a.createdAt).map((i) => i.title),
+    [items],
+  );
   const tags = useMemo(() => tagCounts(items ?? []), [items]);
   // "Lesezeichen": links as tiles, the first tag is the group (the former "Apps & Links").
   const links = useMemo(
@@ -85,7 +111,7 @@ export default function BookmarksPage() {
   );
   const groups = useMemo(
     () =>
-      groupItems(shown, grouping, today()).map((g) => ({
+      groupItems(shown, grouping, today(), prefs.sort).map((g) => ({
         id: g.id,
         label:
           grouping === 'recent'
@@ -94,16 +120,35 @@ export default function BookmarksPage() {
               ? t.bookmarks.kinds[g.id]!
               : g.tag || t.bookmarks.noGroup,
         count: g.items.length,
-        children: (
-          <ItemList>
-            {g.items.map((i) => (
-              <BookmarkRow key={i.id} item={i} onEdit={setTarget} onFilterTag={filterTag} />
-            ))}
-          </ItemList>
-        ),
+        children:
+          prefs.view === 'cards' ? (
+            <div className={styles.cards}>
+              {g.items.map((i) => (
+                <BookmarkCard
+                  key={i.id}
+                  item={i}
+                  onEdit={setTarget}
+                  onFilterTag={filterTag}
+                  onRead={read}
+                />
+              ))}
+            </div>
+          ) : (
+            <ItemList>
+              {g.items.map((i) => (
+                <BookmarkRow
+                  key={i.id}
+                  item={i}
+                  onEdit={setTarget}
+                  onFilterTag={filterTag}
+                  onRead={read}
+                />
+              ))}
+            </ItemList>
+          ),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shown, grouping],
+    [shown, grouping, prefs.view, prefs.sort],
   );
   const sameTag = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
   function filterTag(tag: string) {
@@ -117,6 +162,13 @@ export default function BookmarksPage() {
   };
 
   const listMenu: RowMenuItem[] = [
+    ...(['list', 'cards'] as const).map((v) => ({
+      id: `layout-${v}`,
+      group: t.bookmarks.tabsLabel,
+      label: v === 'list' ? t.bookmarks.viewList : t.bookmarks.viewCards,
+      checked: prefs.view === v,
+      onSelect: () => void setPrefs({ view: v }),
+    })),
     ...(['open', 'done', 'all'] as const).map((v) => ({
       id: `view-${v}`,
       group: t.bookmarks.view,
@@ -137,6 +189,13 @@ export default function BookmarksPage() {
       label: `${tag} (${n})`,
       checked: sameTag(filter.tag, tag),
       onSelect: () => filterTag(tag),
+    })),
+    ...SORTS.map((m) => ({
+      id: `sort-${m}`,
+      group: t.bookmarks.sortBy,
+      label: t.bookmarks.sorts[m],
+      checked: prefs.sort === m,
+      onSelect: () => void setPrefs({ sort: m satisfies SortMode }),
     })),
     ...GROUPINGS.map((g) => ({
       id: `group-${g}`,
@@ -164,6 +223,9 @@ export default function BookmarksPage() {
 
   return (
     <>
+      <HeroSlot area="extra">
+        <Pinboard titles={latest} />
+      </HeroSlot>
       <PageHeader
         title={t.bookmarks.title}
         views={
@@ -229,7 +291,7 @@ export default function BookmarksPage() {
                     onOpen={
                       i.url ? () => void getPlatform().app.openUrl(i.url!) : () => setTarget(i)
                     }
-                    menu={bookmarkMenu(i, { edit: setTarget })}
+                    menu={bookmarkMenu(i, { edit: setTarget, read })}
                   />
                 ))}
               </ItemList>

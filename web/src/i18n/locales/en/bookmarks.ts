@@ -63,7 +63,7 @@ export const bookmarks: Strings['bookmarks'] = {
   viewList: 'List',
   viewCards: 'Pinboard',
   sortBy: 'Sort by',
-  sorts: { newest: 'Recently added', title: 'Title', kind: 'Type', status: 'Status' },
+  sorts: { newest: 'Newest first', title: 'Title A–Z', kind: 'By type', status: 'Started first' },
   statuses: { open: 'Open', started: 'Started', done: 'Done' },
   markStarted: 'Mark as started',
   markOpen: 'Reopen',

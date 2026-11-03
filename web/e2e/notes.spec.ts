@@ -83,13 +83,13 @@ test.describe('desktop layout', () => {
     await page.getByRole('button', { name: 'Vorlage wählen' }).click();
     await page.getByRole('menuitem', { name: 'Besprechung' }).click();
     await expect(editor(page)).toContainText('Beschlüsse');
-    await expect(page.getByRole('textbox', { name: 'Titel' })).toHaveValue(/^Besprechung /);
+    await expect(page.getByLabel('Titel der Seite')).toHaveValue(/^Besprechung /);
     await page.keyboard.type('x');
     await expect(page.getByText('Gespeichert')).toBeVisible();
-    await page.getByRole('radio', { name: 'Karten' }).click();
+    await page.getByRole('button', { name: 'Karten', pressed: false }).click();
     await expect(page.getByTestId('note-row').first()).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('radio', { name: 'Karten' })).toBeChecked();
+    await expect(page.getByRole('button', { name: 'Karten', pressed: true })).toBeVisible();
   });
 
   test('writing mode hides the page list', async ({ page }) => {
