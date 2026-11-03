@@ -161,4 +161,5 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Werkzeug „Anonyme Persona“ (erfundene Angaben für Anmeldungen, Wegwerf-Mail-Link, als Notiz oder Tresor-Eintrag speichern).
 - Auf `develop`/PR: Befehlspalette lädt erst beim ersten Öffnen (Startpfad 667 → 636 KB gzip, 86 → 82 Anfragen).
 - Auf `develop`/PR: Geld-Gruppe Paket 1 „Finanzen“ (Umbuchungen, Aufteilung auf Kategorien, Unterkategorien mit Symbol, Filter, Jahresansicht, Vormonatsvergleich, Ausblick aus Wiederkehrendem/Abos/Rechnungen, CSV-Export, Widget „Ausgabe +“); Pakete Rechnungen, Abos, Budgets folgen.
+- Auf `develop`/PR: Geld-Gruppe Paket 2 „Rechnungen“ (Teilzahlungen mit eigener Buchung je Teil, Mahnstufen, Zahlungsdaten kopieren mit IBAN-Prüfung, Beleg-Anhang nur auf diesem Gerät, Beleg-Kopf mit gezacktem Rand, Ansicht „Alle“).
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
