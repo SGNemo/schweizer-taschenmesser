@@ -1,0 +1,101 @@
+/* Small additions to the settings page: tokens only, no colour meaning, nothing moves. */
+.scope {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-3);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: var(--text-meta);
+}
+.preview {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+.previewTitle {
+  margin-bottom: var(--space-2);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.previewHint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  height: 7rem;
+  padding: var(--space-2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.screen[data-position='bottom'] {
+  justify-content: flex-end;
+}
+.sample {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  max-width: 75%;
+}
+.sampleText {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-meta);
+}
+.lookCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+}
+.lookCard p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.lookRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.lookLink {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.lookButton {
+  padding: var(--space-1) var(--space-3);
+  background: var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--accent-contrast);
+  font-weight: var(--weight-medium);
+}

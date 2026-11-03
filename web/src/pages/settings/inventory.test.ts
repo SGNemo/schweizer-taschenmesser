@@ -30,6 +30,8 @@ const CORE_KEYS = {
     'tm-nav-closed': '[]',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
+    'tm-settings-adv':
+      '{} (open state of the "Erweitert" fold per settings category; core/settings/foldState.ts)',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
     'tm-spotify-now':
       'last now-playing reading, only while connected (core/connectors/nowPlaying.ts)',

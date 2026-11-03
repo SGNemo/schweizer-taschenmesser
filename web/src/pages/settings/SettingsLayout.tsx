@@ -1,14 +1,23 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import { advancedOpen, readAdvancedOpen, writeAdvancedOpen } from '@/core/settings/foldState';
+import { isChanged } from '@/core/settings/changed';
+import { useComfortSettings } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
+import { levelOf, scopeOf } from '@/core/settings/registry/meta';
 import { frequentSections, recordSectionVisit } from '@/core/settings/frequent';
-import { resetSection } from '@/core/settings/reset';
+import { resetSection, type ResetPlan } from '@/core/settings/reset';
 import { categoryDef, SETTINGS_CATEGORIES } from '@/core/settings/registry/categories';
 import { groupSections } from '@/core/settings/registry/groups';
 import { legacyTarget, moduleIdOfSection, settingsPath } from '@/core/settings/registry/paths';
 import { sectionsOf, visibleCategoryIds } from '@/core/settings/registry/registry';
 import { searchSettings } from '@/core/settings/registry/search';
-import { isCategoryId, type SettingsCategoryId } from '@/core/settings/registry/types';
+import {
+  isCategoryId,
+  type SettingsCategoryId,
+  type SettingsSectionDef,
+} from '@/core/settings/registry/types';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tSettings2 } from '@/strings.settings2';
@@ -28,6 +37,7 @@ import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar } from './QuickBar';
 import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
+import { ScopeLabel } from './SettingExtras';
 import { useSettingsSections } from './useSections';
 import styles from './SettingsLayout.module.css';
 
@@ -270,6 +280,90 @@ function useDeepLink(ready: boolean) {
   }, [ready, hash, pathname, historyOn]);
 }
 
+/** Does the section differ from its defaults? Re-checked when the look or the focus settings move. */
+function useChanged(plan?: ResetPlan): boolean {
+  const ui = useUiStore((st) => st);
+  const [focus] = useFocusSettings();
+  const [changed, setChanged] = useState(false);
+  useEffect(() => {
+    if (!plan?.defaults) return;
+    let live = true;
+    void isChanged(plan).then((c) => live && setChanged(c));
+    return () => {
+      live = false;
+    };
+  }, [plan, ui, focus]);
+  return plan?.defaults ? changed : false;
+}
+
+/** One section on a category page: maturity mark, scope line, the section, then the reset row (only when something differs). */
+function SectionFrame({ s }: { s: SettingsSectionDef }) {
+  const changed = useChanged(s.reset);
+  const scope = scopeOf(s);
+  const c = tSettings2.use().changed;
+  return (
+    <Fragment>
+      {s.maturity === 'preview' ? (
+        <p className={styles.previewBadge} data-testid={`preview-${s.id}`}>
+          <Badge>{t.settings.maturity.badge}</Badge>
+        </p>
+      ) : null}
+      {scope ? <ScopeLabel scope={scope} /> : null}
+      {s.render()}
+      {s.reset && changed ? (
+        <div className={styles.changedRow}>
+          <Badge>{c.badge}</Badge>
+          <Button
+            variant="ghost"
+            className={styles.reset}
+            onClick={() => void resetSection(s.reset!, s.title)}
+            data-testid={`reset-${s.id}`}
+          >
+            {tComfort.get().reset.button}: {s.title}
+          </Button>
+        </div>
+      ) : null}
+    </Fragment>
+  );
+}
+
+/** The category's rarely needed sections behind one fold; its state is remembered per category on this device. */
+function AdvancedFold({
+  category,
+  sections,
+}: {
+  category: SettingsCategoryId;
+  sections: readonly SettingsSectionDef[];
+}) {
+  const o = tSettings2.use().advanced;
+  const [comfort] = useComfortSettings();
+  const open = advancedOpen(category, comfort.advancedAll);
+  return (
+    <details
+      key={`${category}:${comfort.advancedAll}:${readAdvancedOpen(category)}`}
+      className={styles.advanced}
+      open={open}
+      data-testid={`advanced-fold-${category}`}
+    >
+      <summary
+        className={styles.advancedSummary}
+        onClick={(e) => {
+          const d = e.currentTarget.parentElement as HTMLDetailsElement;
+          writeAdvancedOpen(category, !d.open);
+        }}
+      >
+        <span>{o.title}</span>
+        <span className={styles.advancedHint}>{o.hint(sections.length)}</span>
+      </summary>
+      <div className={styles.advancedBody}>
+        {sections.map((s) => (
+          <SectionFrame key={s.id} s={s} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
 /** Crumbs for a category page: Einstellungen › Kategorie [› Abschnitt in view of the deep link]. */
 function crumbsFor(category: SettingsCategoryId, sectionTitle?: string): Crumb[] {
   const root = tSettings2.get().nav.root;
@@ -319,6 +413,10 @@ export function CategoryPage() {
   const shown = own.filter((x) => !moduleIdOfSection(category, x.id));
   const sectionId = decodeURIComponent(hash.slice(1)).split('--')[0];
   const current = shown.find((x) => x.id === sectionId)?.title;
+  const basic = shown.filter((x) => levelOf(x) === 'basic');
+  const advanced = shown.filter((x) => levelOf(x) === 'advanced');
+  // Only a category with Basis sections folds the rest away; one that is all Erweitert shows it plainly.
+  const fold = basic.length > 0 && advanced.length > 0;
   return (
     <div className={styles.category} onChange={noteUse} onClick={noteUse}>
       {wide ? (
@@ -334,26 +432,11 @@ export function CategoryPage() {
           {categoryDef(category).title}
         </p>
       )}
-      {shown.map((s) => (
-        <Fragment key={s.id}>
-          {s.maturity === 'preview' ? (
-            <p className={styles.previewBadge} data-testid={`preview-${s.id}`}>
-              <Badge>{t.settings.maturity.badge}</Badge>
-            </p>
-          ) : null}
-          {s.render()}
-          {s.reset ? (
-            <Button
-              variant="ghost"
-              className={styles.reset}
-              onClick={() => void resetSection(s.reset!, s.title)}
-              data-testid={`reset-${s.id}`}
-            >
-              {tComfort.get().reset.button}: {s.title}
-            </Button>
-          ) : null}
-        </Fragment>
+      {basic.map((s) => (
+        <SectionFrame key={s.id} s={s} />
       ))}
+      {fold ? <AdvancedFold category={category} sections={advanced} /> : null}
+      {fold ? null : advanced.map((s) => <SectionFrame key={s.id} s={s} />)}
       {category === 'module' ? <ModuleList /> : null}
     </div>
   );

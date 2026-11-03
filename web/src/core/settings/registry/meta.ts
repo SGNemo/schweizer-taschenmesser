@@ -38,17 +38,16 @@ const SECTION_SCOPE: Readonly<Record<string, SettingsScope>> = {
   supporter: 'synced',
 };
 
-/** Rarely needed sections: shown behind "Erweitert" when their category also has Basis sections. */
+/**
+ * Rarely needed sections: shown behind "Erweitert" when their category also has Basis sections.
+ * Never anything people look for in a hurry: help, diagnostics, reset, legal texts, sync, backup,
+ * the connection log and the Basis/Erweitert switch itself stay in Basis.
+ */
 const ADVANCED_SECTIONS: ReadonlySet<string> = new Set([
-  'advanced',
   'ai-local',
   'ai-stats',
   'localapi',
-  'network',
   'model-licenses',
-  'licenses',
-  'diagnostics',
-  'device-reset',
 ]);
 
 /** Module settings live in the synced `_settings` table. */

@@ -84,6 +84,44 @@ export const tSettings2 = defineBundle(
       toc: 'Auf dieser Seite',
       sections: 'Abschnitte',
     },
+    advanced: {
+      title: 'Erweitert',
+      hint: (n: number) =>
+        n === 1 ? '1 weiterer Bereich, selten nötig' : `${n} weitere Bereiche, selten nötig`,
+    },
+    scope: {
+      local: 'Nur auf diesem Gerät',
+      synced: 'Wird zwischen deinen Geräten abgeglichen',
+      mixed: 'Teils nur auf diesem Gerät, teils abgeglichen',
+    },
+    changed: {
+      badge: 'Vom Standard abweichend',
+      field: 'Geändert',
+      resetField: 'Auf Standard',
+      resetFieldNamed: (label: string) => `${label}: auf Standard zurücksetzen`,
+      resetFieldDone: (label: string) => `„${label}“ auf Standard gesetzt`,
+      resetModule: 'Alle Einstellungen des Moduls auf Standard',
+    },
+    preview: {
+      title: 'Vorschau',
+      look: {
+        heading: 'So sieht es aus',
+        body: 'Text, Link und Schaltfläche in deiner Auswahl',
+        link: 'Ein Link',
+        button: 'Schaltfläche',
+      },
+      reminder: {
+        title: 'Beispiel-Erinnerung',
+        body: 'Wasser trinken',
+        when: 'jetzt',
+        hint: 'So zeigt sich eine Erinnerung. Es wird nichts gesendet.',
+      },
+    },
+    notes: {
+      autoLockLong: 'Der Tresor bleibt bis zu 30 Minuten ohne Eingabe offen. Kürzer ist sicherer.',
+      backgroundDelay:
+        'Wechselst du zu einer anderen App, bleibt der Tresor noch 30 Sekunden offen.',
+    },
     modulePage: {
       all: 'Alle Module',
       library: 'In der Bibliothek ansehen',
@@ -183,6 +221,44 @@ export const tSettings2 = defineBundle(
         toc: 'On this page',
         sections: 'Sections',
       },
+      advanced: {
+        title: 'Advanced',
+        hint: (n: number) =>
+          n === 1 ? '1 more area, rarely needed' : `${n} more areas, rarely needed`,
+      },
+      scope: {
+        local: 'On this device only',
+        synced: 'Kept in step between your devices',
+        mixed: 'Partly on this device only, partly kept in step',
+      },
+      changed: {
+        badge: 'Differs from the default',
+        field: 'Changed',
+        resetField: 'Use default',
+        resetFieldNamed: (label: string) => `${label}: reset to default`,
+        resetFieldDone: (label: string) => `“${label}” set to the default`,
+        resetModule: 'Reset all settings of this module',
+      },
+      preview: {
+        title: 'Preview',
+        look: {
+          heading: 'This is how it looks',
+          body: 'Text, link and button in your choice',
+          link: 'A link',
+          button: 'Button',
+        },
+        reminder: {
+          title: 'Sample reminder',
+          body: 'Drink some water',
+          when: 'now',
+          hint: 'This is how a reminder appears. Nothing is sent.',
+        },
+      },
+      notes: {
+        autoLockLong: 'The vault stays open for up to 30 minutes without input. Shorter is safer.',
+        backgroundDelay:
+          'If you switch to another app, the vault stays open for another 30 seconds.',
+      },
       modulePage: {
         all: 'All modules',
         library: 'View in the library',
@@ -280,6 +356,44 @@ export const tSettings2 = defineBundle(
         root: 'Ajustes',
         toc: 'En esta página',
         sections: 'Secciones',
+      },
+      advanced: {
+        title: 'Avanzado',
+        hint: (n: number) =>
+          n === 1 ? '1 área más, rara vez necesaria' : `${n} áreas más, rara vez necesarias`,
+      },
+      scope: {
+        local: 'Solo en este dispositivo',
+        synced: 'Se mantiene igual en tus dispositivos',
+        mixed: 'En parte solo en este dispositivo, en parte sincronizado',
+      },
+      changed: {
+        badge: 'Distinto del valor predeterminado',
+        field: 'Cambiado',
+        resetField: 'Predeterminado',
+        resetFieldNamed: (label: string) => `${label}: restablecer el valor predeterminado`,
+        resetFieldDone: (label: string) => `«${label}» restablecido al valor predeterminado`,
+        resetModule: 'Restablecer todos los ajustes del módulo',
+      },
+      preview: {
+        title: 'Vista previa',
+        look: {
+          heading: 'Así se ve',
+          body: 'Texto, enlace y botón con tu elección',
+          link: 'Un enlace',
+          button: 'Botón',
+        },
+        reminder: {
+          title: 'Recordatorio de ejemplo',
+          body: 'Beber agua',
+          when: 'ahora',
+          hint: 'Así aparece un recordatorio. No se envía nada.',
+        },
+      },
+      notes: {
+        autoLockLong:
+          'La caja fuerte permanece abierta hasta 30 minutos sin actividad. Menos tiempo es más seguro.',
+        backgroundDelay: 'Si cambias a otra app, la caja fuerte sigue abierta 30 segundos más.',
       },
       modulePage: {
         all: 'Todos los módulos',
@@ -379,6 +493,45 @@ export const tSettings2 = defineBundle(
         toc: 'Sur cette page',
         sections: 'Sections',
       },
+      advanced: {
+        title: 'Avancé',
+        hint: (n: number) =>
+          n === 1 ? '1 zone de plus, rarement utile' : `${n} zones de plus, rarement utiles`,
+      },
+      scope: {
+        local: 'Uniquement sur cet appareil',
+        synced: 'Synchronisé entre vos appareils',
+        mixed: 'En partie sur cet appareil seulement, en partie synchronisé',
+      },
+      changed: {
+        badge: 'Différent de la valeur par défaut',
+        field: 'Modifié',
+        resetField: 'Par défaut',
+        resetFieldNamed: (label: string) => `${label} : rétablir la valeur par défaut`,
+        resetFieldDone: (label: string) => `« ${label} » remis à la valeur par défaut`,
+        resetModule: 'Rétablir tous les réglages du module',
+      },
+      preview: {
+        title: 'Aperçu',
+        look: {
+          heading: 'Voici le rendu',
+          body: 'Texte, lien et bouton avec votre choix',
+          link: 'Un lien',
+          button: 'Bouton',
+        },
+        reminder: {
+          title: 'Rappel d’exemple',
+          body: 'Boire de l’eau',
+          when: 'maintenant',
+          hint: 'Voici comment s’affiche un rappel. Rien n’est envoyé.',
+        },
+      },
+      notes: {
+        autoLockLong:
+          'Le coffre reste ouvert jusqu’à 30 minutes sans saisie. Plus court est plus sûr.',
+        backgroundDelay:
+          'Si vous passez à une autre application, le coffre reste ouvert encore 30 secondes.',
+      },
       modulePage: {
         all: 'Tous les modules',
         library: 'Voir dans la bibliothèque',
@@ -476,6 +629,45 @@ export const tSettings2 = defineBundle(
         root: 'Configurações',
         toc: 'Nesta página',
         sections: 'Seções',
+      },
+      advanced: {
+        title: 'Avançado',
+        hint: (n: number) =>
+          n === 1
+            ? '1 área a mais, raramente necessária'
+            : `${n} áreas a mais, raramente necessárias`,
+      },
+      scope: {
+        local: 'Somente neste dispositivo',
+        synced: 'Mantido igual entre seus dispositivos',
+        mixed: 'Em parte só neste dispositivo, em parte sincronizado',
+      },
+      changed: {
+        badge: 'Diferente do padrão',
+        field: 'Alterada',
+        resetField: 'Padrão',
+        resetFieldNamed: (label: string) => `${label}: voltar ao padrão`,
+        resetFieldDone: (label: string) => `“${label}” voltou ao padrão`,
+        resetModule: 'Redefinir todas as configurações do módulo',
+      },
+      preview: {
+        title: 'Pré-visualização',
+        look: {
+          heading: 'Assim fica',
+          body: 'Texto, link e botão com a sua escolha',
+          link: 'Um link',
+          button: 'Botão',
+        },
+        reminder: {
+          title: 'Lembrete de exemplo',
+          body: 'Beber água',
+          when: 'agora',
+          hint: 'É assim que um lembrete aparece. Nada é enviado.',
+        },
+      },
+      notes: {
+        autoLockLong: 'O cofre fica aberto por até 30 minutos sem uso. Menos tempo é mais seguro.',
+        backgroundDelay: 'Se você trocar para outro app, o cofre fica aberto por mais 30 segundos.',
       },
       modulePage: {
         all: 'Todos os módulos',
