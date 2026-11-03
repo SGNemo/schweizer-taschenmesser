@@ -320,6 +320,11 @@ export interface NowPlayingSource {
   saved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
   /** Saves or removes songs in the user's saved songs ("Lieblingssongs"). */
   save?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** Playlist editing; each needs its own feature/scope ("Playlists bearbeiten", off until chosen). */
+  createPlaylist?(ctx: ConnectorContext, name: string): Promise<Playlist>;
+  renamePlaylist?(ctx: ConnectorContext, id: string, name: string): Promise<void>;
+  addToPlaylist?(ctx: ConnectorContext, id: string, trackIds: string[]): Promise<void>;
+  removeFromPlaylist?(ctx: ConnectorContext, id: string, trackIds: string[]): Promise<void>;
 }
 
 export interface ConnectorDef {

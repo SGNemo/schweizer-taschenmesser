@@ -10,13 +10,14 @@ const schema = z.object({
   httpWarning: z.boolean(),
   blocker: z.boolean(),
   hint: z.boolean(),
+  tabPreview: z.boolean(),
 });
 
 export type BrowserPrefs = z.output<typeof schema>;
 
 /** (No platform import here: manifests are loaded by the database module, which would make a cycle.) */
 /** Settings that steer the embedded desktop tabs; Custom Tabs on Android have the system's own. */
-const DESKTOP_ONLY = new Set(['httpWarning', 'blocker', 'hint']);
+const DESKTOP_ONLY = new Set(['httpWarning', 'blocker', 'hint', 'tabPreview']);
 
 export const settings: ModuleSettings = {
   schema,
@@ -27,6 +28,7 @@ export const settings: ModuleSettings = {
     httpWarning: true,
     blocker: true,
     hint: true,
+    tabPreview: false,
   },
   keywords: ['Browser', 'Internet', 'Suche', 'Werbung', 'Tracker'],
   get fields() {
@@ -85,6 +87,16 @@ const ALL_FIELDS: SettingField[] = [
     key: 'hint',
     get label() {
       return t.browser.settings.hint;
+    },
+    type: 'boolean',
+  },
+  {
+    key: 'tabPreview',
+    get label() {
+      return t.browser.settings.tabPreview;
+    },
+    get help() {
+      return t.browser.settings.tabPreviewHelp;
     },
     type: 'boolean',
   },

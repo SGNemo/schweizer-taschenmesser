@@ -78,13 +78,13 @@ Specified as defaults for the module chats, built when a module needs them (decl
 | Vorräte                 | moss              | compact | `shelf`                            | sans               | count + rows                                                        |
 | Personen                | plum              | compact | `avatarRing`                       | sans               | next birthday                                                       |
 | Karten & Orte           | ocean             | cover   | `pin`                              | sans               | last place                                                          |
-| Merkliste               | indigo            | compact | `pinboard`                         | sans               | tiles                                                               |
-| Notizen                 | violet            | compact | `notePaper`                        | serif              | scratchpad                                                          |
+| Merkliste ✓             | indigo            | compact | `pinboard`                         | sans               | tiles                                                               |
+| Notizen ✓               | violet            | compact | `notePaper`                        | serif              | scratchpad                                                          |
 | Chat · Browser · E-Mail | sky · navy · teal | compact | `bubble` · `addressBar` · `stamp`  | sans · mono · sans | last answer · tabs · unread                                         |
 | Unterlagen · Passwörter | plum · slate      | compact | `folderTab` · `vaultDoor`          | sans · mono        | expiring · status only (never entries)                              |
-| Dieser PC · Downloads   | slate · navy      | figure  | `gauges` · `arrowProgress`         | mono               | rings · progress                                                    |
+| Dieser PC · Downloads ✓ | slate · navy      | figure  | `gauges` · `arrowProgress`         | mono               | rings · progress                                                    |
 
-✓ = built in the identity v2 package; the others keep the v1 look inside the new frame until their module chat adds the signature (head, tint, chip and h1 placement already come from the shell).
+✓ = built (identity v2 package; Merkliste, Notizen, E-Mail `stamp`, Browser `addressBar` as tab strip and Downloads `arrowProgress` as module-local components, see [howto/knowledge-modules.md](../howto/knowledge-modules.md)); the others keep the v1 look inside the new frame until their module chat adds the signature (head, tint, chip and h1 placement already come from the shell).
 
 ## Widgets
 

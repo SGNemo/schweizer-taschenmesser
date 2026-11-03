@@ -19,16 +19,19 @@ import {
   PageTitle,
   TextField,
 } from '@/ui';
+import { ReaderPanel } from '../components/ReaderPanel';
+import { TabOverview } from '../components/TabOverview';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
+import { useTabPreviews } from '../tabPreviews';
 import { useBrowserTabs } from '../tabsStore';
 import ExternalBrowser from './ExternalBrowser';
 import styles from './BrowserPage.module.css';
 
-type View = 'page' | 'menu' | 'bookmarks' | 'history' | 'blocker' | 'clear';
+type View = 'page' | 'menu' | 'bookmarks' | 'history' | 'blocker' | 'clear' | 'tabs' | 'reader';
 
 export default function BrowserPage() {
   const platform = getPlatform().browser;
@@ -51,10 +54,18 @@ export default function BrowserPage() {
     [],
   );
   const rules = useLiveQuery(() => blockruleRepo.active().toArray(), []);
+  // The last pages visited, each address once (history is empty when it is switched off).
+  const recent = useMemo(() => {
+    const seen = new Set<string>();
+    return (visits ?? []).filter((v) => !seen.has(v.url) && !!seen.add(v.url)).slice(0, 6);
+  }, [visits]);
 
+  const previews = useTabPreviews(tabs, prefs.tabPreview && view === 'tabs');
   const template = engineTemplate(prefs.engine, prefs.customUrl);
   const current = tab && tab.opened ? tab.url : '';
   const marked = marks?.find((m) => m.url === current);
+  // Reader mode needs an https page in a normal tab (the text is fetched without the tab's cookies).
+  const canRead = !!tab && !tab.isPrivate && current.startsWith('https://');
 
   const input = draft && draft.tab === activeId ? draft.text : current;
   const setInput = (text: string) => setDraft({ tab: activeId, text });
@@ -121,10 +132,7 @@ export default function BrowserPage() {
   );
 
   const toast = useUiStore.getState().toast;
-  const hosts = useMemo(
-    () => (tab?.hosts ?? []).filter((h) => h !== hostOf(current)),
-    [tab, current],
-  );
+  const hosts = (tab?.hosts ?? []).filter((h) => h !== hostOf(current));
 
   async function toggleBookmark() {
     if (!tab || !isWebUrl(current)) return;
@@ -186,7 +194,8 @@ export default function BrowserPage() {
 
   return (
     <div className={styles.root}>
-      <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs}>
+      <PageTitle title={t.browser.meta.name} />
+      <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
             <button
@@ -218,6 +227,14 @@ export default function BrowserPage() {
         >
           <Icon name="plus" />
         </IconButton>
+        {tabs.length > 0 ? (
+          <IconButton
+            label={view === 'tabs' ? t.browser.tabs.back : t.browser.tabs.openAll}
+            onClick={() => setView(view === 'tabs' ? 'page' : 'tabs')}
+          >
+            <Icon name="grid" />
+          </IconButton>
+        ) : null}
       </nav>
 
       <form
@@ -307,6 +324,13 @@ export default function BrowserPage() {
               lead={<Icon name="bookmark" />}
               onOpen={saveToList}
             />
+            {canRead ? (
+              <ItemRow
+                title={t.browser.menu.reader}
+                lead={<Icon name="eye" />}
+                onOpen={() => setView('reader')}
+              />
+            ) : null}
             <ItemRow
               title={t.browser.menu.saveAsNote}
               lead={<Icon name="note" />}
@@ -376,6 +400,32 @@ export default function BrowserPage() {
               onOpen={() => setView('clear')}
             />
           </ItemList>
+        ) : view === 'tabs' ? (
+          <TabOverview
+            tabs={tabs}
+            activeId={activeId}
+            previews={previews}
+            onPick={(id) => {
+              useBrowserTabs.getState().setActive(id);
+              setView('page');
+            }}
+            onClose={(id) => void useBrowserTabs.getState().closeTab(id)}
+            onNew={() => {
+              useBrowserTabs.getState().newTab();
+              setView('page');
+            }}
+          />
+        ) : view === 'reader' ? (
+          canRead ? (
+            <ReaderPanel url={current} onBack={() => setView('page')} />
+          ) : (
+            <div className={styles.panel}>
+              <p className={styles.muted}>{t.browser.reader.unavailable}</p>
+              <div className={styles.actions}>
+                <Button onClick={() => setView('page')}>{t.browser.reader.back}</Button>
+              </div>
+            </div>
+          )
         ) : view === 'bookmarks' ? (
           <div className={styles.panel}>
             <h2>{t.browser.bookmarks.title}</h2>
@@ -535,16 +585,41 @@ export default function BrowserPage() {
             {marks && marks.length === 0 ? (
               <p className={styles.muted}>{t.browser.start.none}</p>
             ) : null}
-            <ItemList label={t.browser.start.bookmarks}>
-              {(marks ?? []).slice(0, 8).map((m) => (
-                <ItemRow
-                  key={m.id}
-                  title={m.title}
-                  meta={displayUrl(m.url)}
-                  onOpen={() => void open(m.url)}
-                />
+            <ul className={styles.tiles} aria-label={t.browser.start.bookmarks}>
+              {(marks ?? []).slice(0, 12).map((m) => (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    className={styles.tile}
+                    title={m.title}
+                    onClick={() => void open(m.url)}
+                  >
+                    <span className={styles.tileMark} aria-hidden="true">
+                      {(hostOf(m.url) ?? m.title)
+                        .replace(/^[^\p{L}\p{N}]+/u, '')
+                        .charAt(0)
+                        .toUpperCase() || '·'}
+                    </span>
+                    <span className={styles.tileLabel}>{m.title}</span>
+                  </button>
+                </li>
               ))}
-            </ItemList>
+            </ul>
+            {recent.length > 0 ? (
+              <>
+                <h3>{t.browser.start.recent}</h3>
+                <ItemList label={t.browser.start.recent}>
+                  {recent.map((v) => (
+                    <ItemRow
+                      key={v.id}
+                      title={v.title || displayUrl(v.url)}
+                      meta={displayUrl(v.url)}
+                      onOpen={() => void open(v.url)}
+                    />
+                  ))}
+                </ItemList>
+              </>
+            ) : null}
             <div className={styles.actions}>
               <Button
                 onClick={() => {

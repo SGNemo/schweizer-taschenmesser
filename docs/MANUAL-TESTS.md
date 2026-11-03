@@ -496,6 +496,17 @@ AP4. _Android:_ die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut tr
 AP5. _Einstellungen:_ Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
 AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
 
+### Wissen, Medien, Dienste (Branch `feat/knowledge-media-depth`) – nur auf Geräten prüfbar
+
+- **W1 E-Mail echt (Windows):** mit einem echten Gmail-Konto (`mail-modify` an): ab 1200 px stehen Ordner, Liste und Lesebereich nebeneinander; „Als gelesen markieren“ und „Archivieren“ aus dem Zeilenmenü, „Rückgängig“ im Hinweis; Suchfeld schlägt frühere Suchen und Absender vor. ☐
+- **W2 Spotify Playlists (PWA/PC):** in Verbindungen „Playlists bearbeiten“ einschalten (neue Anmeldung), im Track-Menü „Zu Playlist hinzufügen …“: bestehende Liste und neue Liste; prüfen, ob `/items` oder der Rückfall `/tracks` greift; Tastenkürzel (Leertaste, Umschalt+←/→, L, /) und ihr Schalter in den Modul-Einstellungen. ☐
+- **W3 Browser-Lesemodus (Windows):** auf einer echten https-Artikelseite Menü → Lesemodus; private Tabs und http-Seiten bieten ihn nicht an; „Vorschaubilder für offene Tabs“ einschalten und die Tab-Übersicht öffnen. ☐
+- **W4 Downloads (Windows):** laufende Downloads: Band und Prozent stimmen, Restzeit in der Zeile, „Fertig“/„Probleme“-Filter, „Zielordner zeigen“ öffnet den Explorer am letzten Download. ☐
+- **W5 Wetter-Hinweis (Gerät):** „Bei Unwetter benachrichtigen“ einschalten, bei einer echten Hitze/Sturm-Vorhersage kommt morgens oder am Vorabend genau eine Benachrichtigung; „Jetzt wichtig“ zeigt den Hinweis auch ohne den Schalter. ☐
+- **W6 Merkliste Linkvorschau:** „Linkvorschau laden“ einschalten, einen Link speichern: Seitenname, Beschreibung und Bild erscheinen in der Pinnwand-Ansicht; ausgeschaltet kommt nichts nach. ☐
+- **W7 Lesemodus Merkliste:** Menü → „Im Lesemodus öffnen“ bei einem https-Link; der Eintrag wird „Angefangen“. ☐
+- **W8 Handy (Android/PWA):** Notizen (Karten, Vorlagen), Merkliste (Pinnwand) und E-Mail-Listen bei 412 px: nichts läuft über, Menüs sind erreichbar. ☐
+
 ### Modul-Rahmen, Wetter und Musik (Branch `feat/module-shell-identity`) – nur auf Geräten prüfbar
 
 - **M1 Handy-Kopf (Android):** ein Modul öffnen (z. B. Finanzen, Wetter), nach unten scrollen: der Kopf schrumpft auf eine Zeile (Name, Tabs), die Leiste oben blendet beim Scrollen nach unten aus und beim Hochscrollen wieder ein, ohne den Kopf zu verdecken. Zurück an den Anfang: der Kopf wächst wieder. ☐

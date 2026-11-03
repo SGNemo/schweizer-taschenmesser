@@ -32,6 +32,25 @@ export const downloads: Strings['downloads'] = {
     body: 'On this device your device’s browser downloads files.',
   },
   hint: 'Files only go to the chosen folder. Nemo never opens or starts them.',
+  filter: {
+    label: 'Show',
+    all: 'All',
+    active: 'Active',
+    done: 'Done',
+    problems: 'Problems',
+    none: 'Nothing in this view.',
+  },
+  band: {
+    idle: 'Nothing running',
+    one: '1 running',
+    many: (n: number) => `${n} running`,
+    context: (speed: string) => `at ${speed}/s`,
+    contextIdle: 'New downloads appear here.',
+  },
+  folder: {
+    show: 'Show target folder',
+    help: 'Shows the most recently started download in its folder.',
+  },
   add: {
     button: 'Add a download',
     title: 'Add a download',
@@ -65,6 +84,7 @@ export const downloads: Strings['downloads'] = {
     size: 'The file arrived incomplete.',
   },
   row: {
+    eta: (d: string) => `${d} left`,
     progress: (done: string, total: string) => `${done} of ${total}`,
     unknownTotal: (done: string) => `${done} downloaded`,
     speed: (perSecond: string) => `${perSecond}/s`,

@@ -60,7 +60,12 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 45,
   area: 'plan',
-  contributions: { onboarding: noOnboarding },
+  contributions: {
+    onboarding: noOnboarding,
+    // Severe-weather hints from the cached forecast: "Jetzt wichtig" always, a notification only when switched on.
+    attention: () => import('./attention'),
+    notifications: () => import('./notifications'),
+  },
 };
 
 export default manifest;

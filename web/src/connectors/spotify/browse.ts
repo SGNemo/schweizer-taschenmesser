@@ -9,6 +9,7 @@ import {
   ConnectorError,
   type ConnectorContext,
   type MediaItem,
+  type Playlist,
   type PlayerDevice,
   type PlayerQueue,
   type Tracklist,
@@ -247,4 +248,65 @@ export async function save(ctx: ConnectorContext, list: string[], on: boolean): 
   const ok = ids(list);
   if (ok.length === 0) throw new ConnectorError('bad-response', 'id');
   await call(ctx, on ? 'PUT' : 'DELETE', `${API_ORIGIN}v1/me/tracks?ids=${ok.join(',')}`);
+}
+
+/* ---- Playlist editing (`playlist-modify-private`, own playlists only) ---- */
+
+const uris = (list: string[]): string[] => ids(list).map((id) => `spotify:track:${id}`);
+const cleanName = (name: string): string => clip(name.trim());
+/** "Not found" or "bad request" on the newer path means the older one is the one this account's API speaks. */
+const FALLBACK = [400, 404];
+
+const createdSchema = z.object({ id: z.string(), name: z.string().nullish() });
+
+/** Creates a private playlist for the signed-in user and returns it (`POST /me/playlists`). */
+export async function createPlaylist(ctx: ConnectorContext, name: string): Promise<Playlist> {
+  const clean = cleanName(name);
+  if (!clean) throw new ConnectorError('bad-response', 'name');
+  const { json } = await call(ctx, 'POST', `${API_ORIGIN}v1/me/playlists`, [], {
+    name: clean,
+    public: false,
+  });
+  const parsed = createdSchema.safeParse(json);
+  if (!parsed.success || !ID.test(parsed.data.id)) throw new ConnectorError('bad-response', 'id');
+  return { id: parsed.data.id, name: clean, trackCount: 0 };
+}
+
+/** Renames a playlist of the user (`PUT /playlists/{id}`). */
+export async function renamePlaylist(
+  ctx: ConnectorContext,
+  id: string,
+  name: string,
+): Promise<void> {
+  const clean = cleanName(name);
+  if (!ID.test(id) || !clean) throw new ConnectorError('bad-response', 'id');
+  await call(ctx, 'PUT', `${API_ORIGIN}v1/playlists/${id}`, [], { name: clean });
+}
+
+/** Adds songs to the end of a playlist: the newer `/items` path first, the older `/tracks` path as the fallback. */
+export async function addToPlaylist(
+  ctx: ConnectorContext,
+  id: string,
+  list: string[],
+): Promise<void> {
+  const body = { uris: uris(list) };
+  if (!ID.test(id) || body.uris.length === 0) throw new ConnectorError('bad-response', 'id');
+  const first = await call(ctx, 'POST', `${API_ORIGIN}v1/playlists/${id}/items`, FALLBACK, body);
+  if (!FALLBACK.includes(first.status)) return;
+  await call(ctx, 'POST', `${API_ORIGIN}v1/playlists/${id}/tracks`, [], body);
+}
+
+/** Removes songs from a playlist (all occurrences), same path fallback as adding. */
+export async function removeFromPlaylist(
+  ctx: ConnectorContext,
+  id: string,
+  list: string[],
+): Promise<void> {
+  const entries = uris(list).map((uri) => ({ uri }));
+  if (!ID.test(id) || entries.length === 0) throw new ConnectorError('bad-response', 'id');
+  const first = await call(ctx, 'DELETE', `${API_ORIGIN}v1/playlists/${id}/items`, FALLBACK, {
+    items: entries,
+  });
+  if (!FALLBACK.includes(first.status)) return;
+  await call(ctx, 'DELETE', `${API_ORIGIN}v1/playlists/${id}/tracks`, [], { tracks: entries });
 }

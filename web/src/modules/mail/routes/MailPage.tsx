@@ -19,11 +19,15 @@ import {
   SelectField,
   Skeleton,
   TextField,
+  useMediaQuery,
   type GroupedListGroup,
+  type RowMenuItem,
 } from '@/ui';
+import { HeroSlot } from '@/ui/identity';
 import { DEMO_ACCOUNT, type CachedThreadView } from '../cache';
 import { MailError } from '../components/MailError';
 import { MailSettingsPanel } from '../components/MailSettingsPanel';
+import { Stamp } from '../components/Stamp';
 import { ComposeDialog } from '../components/ComposeDialog';
 import { PendingSendBar } from '../components/PendingSendBar';
 import { ThreadView } from '../components/ThreadView';
@@ -33,7 +37,10 @@ import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
 import { settings } from '../settings';
+import { rowAction } from '../rowActions';
+import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 import { useMailbox } from '../useMailbox';
+import { useMailSummary } from '../useSummary';
 
 const GROUPS: DayGroup[] = ['today', 'yesterday', 'week', 'older'];
 const DEFAULT_LABELS: MailLabel[] = ['INBOX', 'STARRED', 'IMPORTANT', 'SENT'].map((id) => ({
@@ -47,9 +54,12 @@ const labelName = (l: MailLabel) => t.mail.page.labels[l.id] ?? l.name;
 function ThreadList({
   threads,
   onOpen,
+  menuFor,
 }: {
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
+  /** Quick actions of one row (read/unread, archive); none without write permission. */
+  menuFor?: (th: CachedThreadView) => RowMenuItem[];
 }) {
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
     const rows = threads.filter((th) => dayGroup(th.date) === g);
@@ -78,6 +88,7 @@ function ThreadList({
               }
               end={<span className={styles.meta}>{shortWhen(th.date)}</span>}
               onOpen={() => onOpen(th.id)}
+              menu={menuFor?.(th)}
             />
           ))}
         </ItemList>
@@ -127,6 +138,14 @@ export default function MailPage() {
       : DEFAULT_LABELS;
 
   const box = useMailbox(account, labelId, query);
+  const wide = useMediaQuery('(min-width: 1200px)');
+  const summary = useMailSummary();
+  const [recent, setRecent] = useState<string[]>(readSearches);
+  const senders = useMemo(
+    () => [...new Set(box.threads.map((th) => personName(th.from)))],
+    [box.threads],
+  );
+  const suggestions = suggestionsFor(draft, recent, senders);
   const images = (prefs as { images?: string } | undefined)?.images === 'always';
   const cacheBodies = (prefs as { cacheBodies?: boolean } | undefined)?.cacheBodies ?? true;
   const confirmMoves = (prefs as { confirmMoves?: boolean } | undefined)?.confirmMoves ?? true;
@@ -155,20 +174,31 @@ export default function MailPage() {
   const canWrite =
     !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
   const header = (
-    <PageHeader title={t.mail.meta.name}>
-      {canWrite && account ? (
-        <Button
-          onClick={() =>
-            setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
-          }
-        >
-          {t.mail.write.newMail}
-        </Button>
+    <>
+      {summary ? (
+        <HeroSlot area="figure">
+          <Stamp
+            count={summary.unread}
+            label={t.mail.widget.unread}
+            context={t.mail.widget.unreadContext(summary.unread)}
+          />
+        </HeroSlot>
       ) : null}
-      <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
-        <Icon name="settings" />
-      </IconButton>
-    </PageHeader>
+      <PageHeader title={t.mail.meta.name}>
+        {canWrite && account ? (
+          <Button
+            onClick={() =>
+              setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
+            }
+          >
+            {t.mail.write.newMail}
+          </Button>
+        ) : null}
+        <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
+          <Icon name="settings" />
+        </IconButton>
+      </PageHeader>
+    </>
   );
 
   if (live && accounts.length === 0)
@@ -208,37 +238,67 @@ export default function MailPage() {
     </>
   );
 
-  if (threadId)
+  const threadView = threadId ? (
+    <ThreadView
+      key={`${account.key}|${threadId}`}
+      account={account}
+      threadId={threadId}
+      cacheBodies={cacheBodies}
+      autoLoadImages={images}
+      labels={labels}
+      confirmMoves={confirmMoves}
+      localAi={localAi}
+      onChanged={box.reload}
+      onCompose={(state, title) => setCompose({ state, title, account })}
+      onBack={() => update({ thread: null })}
+    />
+  ) : null;
+
+  // Phone and narrow windows: the mail replaces the list. From 1200 px both stay (see below).
+  if (threadId && !wide)
     return (
       <>
         {header}
         {writeUi}
-        <ThreadView
-          key={`${account.key}|${threadId}`}
-          account={account}
-          threadId={threadId}
-          cacheBodies={cacheBodies}
-          autoLoadImages={images}
-          labels={labels}
-          confirmMoves={confirmMoves}
-          localAi={localAi}
-          onChanged={box.reload}
-          onCompose={(state, title) => setCompose({ state, title, account })}
-          onBack={() => update({ thread: null })}
-        />
+        {threadView}
         <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
     );
 
-  return (
+  const canModify = hasFeature(account, 'mail-modify');
+  const menuFor = canModify
+    ? (th: (typeof box.threads)[number]): RowMenuItem[] => [
+        th.unread
+          ? {
+              id: 'read',
+              label: t.mail.page.rowRead,
+              onSelect: () => void rowAction(account, th.id, 'read', box.reload),
+            }
+          : {
+              id: 'unread',
+              label: t.mail.page.rowUnread,
+              onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
+            },
+        ...(th.labelIds.includes('INBOX')
+          ? [
+              {
+                id: 'archive',
+                label: t.mail.page.rowArchive,
+                onSelect: () => void rowAction(account, th.id, 'archive', box.reload),
+              },
+            ]
+          : []),
+      ]
+    : undefined;
+
+  const listPane = (
     <>
-      {header}
-      {writeUi}
       {account.key === DEMO_ACCOUNT ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
       <form
         className={styles.toolbar}
         onSubmit={(e) => {
           e.preventDefault();
+          setRecent(rememberSearch(draft));
           update({ q: draft.trim(), thread: null });
         }}
         role="search"
@@ -258,21 +318,23 @@ export default function MailPage() {
             </SelectField>
           </div>
         ) : null}
-        <div className={styles.picker}>
-          <SelectField
-            label={t.mail.page.label}
-            value={labelId}
-            disabled={query !== ''}
-            onChange={(e) => update({ label: e.target.value })}
-          >
-            {labels.map((l) => (
-              <option key={l.id} value={l.id}>
-                {labelName(l)}
-                {l.unread ? ` (${l.unread})` : ''}
-              </option>
-            ))}
-          </SelectField>
-        </div>
+        {wide ? null : (
+          <div className={styles.picker}>
+            <SelectField
+              label={t.mail.page.label}
+              value={labelId}
+              disabled={query !== ''}
+              onChange={(e) => update({ label: e.target.value })}
+            >
+              {labels.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {labelName(l)}
+                  {l.unread ? ` (${l.unread})` : ''}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        )}
         <div className={styles.search}>
           <TextField
             label={t.mail.page.searchLabel}
@@ -280,7 +342,14 @@ export default function MailPage() {
             placeholder={t.mail.page.searchPlaceholder}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            list="mail-suggest"
+            autoComplete="off"
           />
+          <datalist id="mail-suggest">
+            {suggestions.map((x) => (
+              <option key={x} value={x} />
+            ))}
+          </datalist>
         </div>
         <Button type="submit" variant="primary">
           {t.mail.page.searchLabel}
@@ -301,7 +370,11 @@ export default function MailPage() {
       ) : box.threads.length === 0 && !box.error ? (
         <EmptyState title={query ? t.mail.page.emptySearch : t.mail.page.empty} />
       ) : (
-        <ThreadList threads={box.threads} onOpen={(id) => update({ thread: id })} />
+        <ThreadList
+          threads={box.threads}
+          onOpen={(id) => update({ thread: id })}
+          menuFor={menuFor}
+        />
       )}
       {box.hasMore ? (
         <div className={styles.row}>
@@ -310,6 +383,37 @@ export default function MailPage() {
           </Button>
         </div>
       ) : null}
+    </>
+  );
+
+  return (
+    <>
+      {header}
+      {writeUi}
+      {wide ? (
+        <div className={styles.cols} data-testid="mail-columns">
+          <nav className={styles.labelCol} aria-label={t.mail.page.labelsNav}>
+            {labels.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                className={styles.labelBtn}
+                aria-current={l.id === labelId && !query ? 'true' : undefined}
+                onClick={() => update({ label: l.id, q: null, thread: null })}
+              >
+                <span>{labelName(l)}</span>
+                {l.unread ? <span className={styles.labelCount}>{l.unread}</span> : null}
+              </button>
+            ))}
+          </nav>
+          <div className={styles.listCol}>{listPane}</div>
+          <section className={styles.reading} aria-label={t.mail.view.back}>
+            {threadView ?? <p className={styles.hint}>{t.mail.page.pickThread}</p>}
+          </section>
+        </div>
+      ) : (
+        listPane
+      )}
       <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
     </>
   );

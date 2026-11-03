@@ -1,0 +1,5 @@
+# Decisions – page data from the web
+
+Index: [DECISIONS](../DECISIONS.md). Used by link preview (Merkliste), reader mode (Merkliste, Browser) and tab pictures (Browser); overview in [howto/knowledge-modules.md](../howto/knowledge-modules.md).
+
+- **Page data from the web as plain data (2026-11-03):** `fetchPublic` and the sync-server proxy get a `kind` (`feed` default, `page` HTML ≤ 1 MB, `image` raster ≤ 512 KB, never SVG) for link previews, reader mode and tab pictures. Default behaviour and every address check (https/public hosts natively; per-hop SSRF rules, pinned socket, ≤ 3 redirects on the server) stay as they were; responses stay sandboxed and `nosniff`. `core/io/pageMeta.ts` / `readable.ts` reduce a page to text in an inert document, so nothing from a page runs or loads. The platform seam is untouched: the browser gets no screenshot or page-text API (it would need script injection into a tab). Sources: `core/net/fetchPublic.ts`, `server/src/proxy.ts`, `server/CLAUDE.md` (narrow proxy: only opt-in kinds added).

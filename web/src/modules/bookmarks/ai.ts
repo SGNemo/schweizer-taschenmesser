@@ -8,7 +8,7 @@ export const aiSchema: ModuleAiSchema = {
       fields: {
         title: 'text',
         url: 'text',
-        kind: 'enum:link|read|watch|place|idea|other',
+        kind: 'enum:link|read|watch|book|place|idea|other',
         tags: 'tags',
         note: 'text',
         done: 'bool',
@@ -30,7 +30,8 @@ export const aiSchema: ModuleAiSchema = {
         fallback: 'url',
         values: {
           kind: {
-            read: ['lesen', 'artikel', 'buch'],
+            read: ['lesen', 'artikel'],
+            book: ['buch', 'roman'],
             watch: ['film', 'serie', 'ansehen', 'anschauen'],
             place: ['ort', 'restaurant'],
             idea: ['idee'],

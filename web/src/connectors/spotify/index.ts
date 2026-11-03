@@ -26,6 +26,10 @@ import {
   saved,
   tracks,
   transfer,
+  addToPlaylist,
+  createPlaylist,
+  removeFromPlaylist,
+  renamePlaylist,
 } from './browse';
 
 const s = () => tSpotify.get();
@@ -116,6 +120,17 @@ const connector: ConnectorDef = {
       defaultOn: false,
     },
     {
+      id: 'playlistEdit',
+      get label() {
+        return s().playlistEditFeature;
+      },
+      get description() {
+        return s().playlistEditHint;
+      },
+      scopes: ['playlist-modify-private', 'playlist-modify-public'],
+      defaultOn: false,
+    },
+    {
       id: 'history',
       get label() {
         return s().historyFeature;
@@ -128,6 +143,10 @@ const connector: ConnectorDef = {
     },
   ],
   nowPlaying: {
+    createPlaylist,
+    renamePlaylist,
+    addToPlaylist,
+    removeFromPlaylist,
     read: readCurrentlyPlaying,
     control: sendCommand,
     playlists: listPlaylists,

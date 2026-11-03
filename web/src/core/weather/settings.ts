@@ -15,8 +15,8 @@ const placeSchema = z.object({
   lon: z.number().min(-180).max(180),
 });
 export type ExtraPlace = z.infer<typeof placeSchema>;
-/** The weather module shows the chosen place and up to two more (chips on the page). */
-export const MAX_EXTRA_PLACES = 2;
+/** The weather module shows the chosen place and up to four more (chips on the page). */
+export const MAX_EXTRA_PLACES = 4;
 
 export const weatherSettingsSchema = z.object({
   enabled: z.boolean(),
@@ -76,4 +76,45 @@ export async function addExtraPlace(place: string, lat: number, lon: number): Pr
 export async function removeExtraPlace(index: number): Promise<void> {
   const current = await getWeatherSettings();
   await setSettings(WEATHER_SCOPE, { extra: current.extra.filter((_, i) => i !== index) });
+}
+
+/** Moves an extra place one step up (-1) or down (+1) in the chips; the main place stays first. */
+export async function moveExtraPlace(index: number, step: -1 | 1): Promise<void> {
+  const current = await getWeatherSettings();
+  const to = index + step;
+  if (index < 0 || index >= current.extra.length || to < 0 || to >= current.extra.length) return;
+  const extra = [...current.extra];
+  [extra[index], extra[to]] = [extra[to]!, extra[index]!];
+  await setSettings(WEATHER_SCOPE, { extra });
+}
+
+/** Makes an extra place the main place (the overview widget follows it); the old main place takes its slot. */
+export async function promoteExtraPlace(index: number): Promise<void> {
+  const current = await getWeatherSettings();
+  const picked = current.extra[index];
+  if (!picked || current.place === '') return;
+  const extra = [...current.extra];
+  extra[index] = { label: current.place, lat: current.lat, lon: current.lon };
+  clearCache();
+  await setSettings(WEATHER_SCOPE, {
+    place: picked.label,
+    lat: picked.lat,
+    lon: picked.lon,
+    extra,
+  });
+}
+
+/** Renames a place for display: slot 0 is the main place, slot n the n-th extra place. A blank name is ignored. */
+export async function renamePlace(slot: number, name: string): Promise<void> {
+  const label = name.trim().slice(0, 120);
+  if (!label) return;
+  const current = await getWeatherSettings();
+  if (slot === 0) {
+    if (current.place !== '') await setSettings(WEATHER_SCOPE, { place: label });
+    return;
+  }
+  if (!current.extra[slot - 1]) return;
+  await setSettings(WEATHER_SCOPE, {
+    extra: current.extra.map((p, i) => (i === slot - 1 ? { ...p, label } : p)),
+  });
 }

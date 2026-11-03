@@ -10,6 +10,7 @@ import {
   Icon,
   IconButton,
   RowMenu,
+  Segmented,
   SelectField,
   SortableList,
   TextField,
@@ -31,6 +32,7 @@ import {
   SORT_MODES,
 } from '../logic';
 import type { Note, Notebook } from '../schema';
+import { TEMPLATE_IDS, type TemplateId } from '../templates';
 import styles from './PageList.module.css';
 
 type Page = Stored<Note>;
@@ -52,6 +54,9 @@ export interface PageListProps {
   onOpen: (page: Page) => void;
   onCloseTab: (id: string) => void;
   onNewPage: () => void;
+  onNewFromTemplate: (id: TemplateId) => void;
+  view: 'list' | 'cards';
+  onView: (v: 'list' | 'cards') => void;
   onNewNotebook: () => void;
   onEditNotebook: (book: Book) => void;
   onTogglePin: (page: Page) => void;
@@ -67,6 +72,7 @@ const titleOf = (n: Page) => (isScratch(n) ? t.notes.scratch : displayTitle(n) |
 
 export function PageList(p: PageListProps) {
   const { pages, books, filter, sort, query } = p;
+  const [tplOpen, setTplOpen] = useState(false);
   const counts = countByNotebook(pages ?? []);
   const bookOf = new Map(books.map((b) => [b.id, b]));
   const shown = sortPages(
@@ -90,6 +96,19 @@ export function PageList(p: PageListProps) {
           <Icon name="plus" size={18} />
           {t.notes.newPage}
         </Button>
+        <RowMenu
+          label={t.notes.templates.button}
+          open={tplOpen}
+          onOpenChange={setTplOpen}
+          items={[
+            { id: 'blank', label: t.notes.templates.blank, onSelect: p.onNewPage },
+            ...TEMPLATE_IDS.map((id) => ({
+              id,
+              label: t.notes.templates[id],
+              onSelect: () => p.onNewFromTemplate(id),
+            })),
+          ]}
+        />
       </div>
       <TextField
         label={t.notes.search}
@@ -167,6 +186,18 @@ export function PageList(p: PageListProps) {
         ) : null}
       </div>
 
+      <div className={styles.viewSwitch}>
+        <Segmented
+          label={t.notes.view.label}
+          value={p.view}
+          options={[
+            { value: 'list', label: t.notes.view.list },
+            { value: 'cards', label: t.notes.view.cards },
+          ]}
+          onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
+        />
+      </div>
+
       <SelectField
         label={t.notes.sort}
         labelHidden
@@ -193,7 +224,11 @@ export function PageList(p: PageListProps) {
         </EmptyState>
       ) : null}
 
-      <div role="group" aria-label={t.notes.title} className={styles.rows}>
+      <div
+        role="group"
+        aria-label={t.notes.title}
+        className={p.view === 'cards' ? `${styles.rows} ${styles.cards}` : styles.rows}
+      >
         {!query.trim() && !scratch && pages ? (
           <Row
             id="scratch-new"
@@ -304,6 +339,7 @@ function Row({
     <div
       className={active ? `${styles.row} ${styles.rowActive}` : styles.row}
       data-testid="note-row"
+      style={book ? ({ '--strip': categoryColor(book.tone) } as React.CSSProperties) : undefined}
     >
       {handle}
       <button
@@ -312,7 +348,7 @@ function Row({
         aria-current={active ? 'page' : undefined}
         onClick={onOpen}
       >
-        <span className={styles.title}>
+        <span className={styles.title} title={title}>
           {pinned ? <Icon name="pin" size={14} /> : null}
           {title}
         </span>

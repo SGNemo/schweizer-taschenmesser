@@ -22,6 +22,22 @@ describe('bookmark.requested', () => {
     });
   });
 
+  it('takes a known kind and tags from the request, and ignores an unknown kind', async () => {
+    await addRequested({
+      title: 'Ein Film',
+      url: 'https://film.example.test/a',
+      kind: 'watch',
+      tags: [' Abend ', 'Abend', ''],
+    });
+    await addRequested({ title: 'Was', url: 'https://film.example.test/b', kind: 'bogus' });
+    const items = await itemRepo.active().toArray();
+    expect(items.find((i) => i.title === 'Ein Film')).toMatchObject({
+      kind: 'watch',
+      tags: ['Abend'],
+    });
+    expect(items.find((i) => i.title === 'Was')?.kind).toBe('read');
+  });
+
   it('is handled while the module service runs, and not after it stopped', async () => {
     const stop = start();
     await bus.emit('bookmark.requested', {

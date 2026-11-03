@@ -15,6 +15,8 @@ export interface TrackListProps {
   playingId?: string;
   onPlay: (item: MediaItem) => void;
   onQueue?: (item: MediaItem) => void;
+  /** "Zu Playlist hinzufügen …" (absent unless playlist editing is switched on). */
+  onAddToPlaylist?: (item: MediaItem) => void;
   /** Hearts: `saved` by track id; `onToggleSave` is absent when saving is not possible. */
   saved?: Record<string, boolean>;
   onToggleSave?: (item: MediaItem, on: boolean) => void;
@@ -35,6 +37,7 @@ export function TrackList({
   playingId,
   onPlay,
   onQueue,
+  onAddToPlaylist,
   saved,
   onToggleSave,
   hidden,
@@ -66,6 +69,15 @@ export function TrackList({
             { id: 'play', label: tx.play(item.name), onSelect: () => onPlay(item) },
             ...(onQueue
               ? [{ id: 'queue', label: tx.menuQueue, onSelect: () => onQueue(item) }]
+              : []),
+            ...(onAddToPlaylist
+              ? [
+                  {
+                    id: 'playlist',
+                    label: tx.menuAddToPlaylist,
+                    onSelect: () => onAddToPlaylist(item),
+                  },
+                ]
               : []),
             ...(isHidden && onUnhide
               ? [{ id: 'show', label: tx.menuShow, onSelect: () => onUnhide(item) }]

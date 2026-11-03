@@ -10,6 +10,9 @@ export const browser: Strings['browser'] = {
     widgetAction: 'Abrir el navegador',
   },
   settings: {
+    tabPreview: 'Imágenes de vista previa de las pestañas abiertas',
+    tabPreviewHelp:
+      'Vuelve a cargar el título y la imagen de vista previa de cada pestaña abierta, sin sesión ni cookies. El sitio ve una segunda solicitud. Las pestañas privadas nunca se incluyen. Por defecto: desactivado.',
     engine: 'Buscador',
     engineCustom: 'Dirección propia',
     customUrl: 'Dirección de búsqueda propia',
@@ -25,6 +28,24 @@ export const browser: Strings['browser'] = {
   },
   hint: 'No es un navegador completo. Para la banca en línea usa el navegador del sistema.',
   hintClose: 'Ocultar el aviso',
+  tabs: {
+    title: 'Pestañas abiertas',
+    openAll: 'Mostrar todas las pestañas',
+    back: 'Volver a la página',
+    none: 'No hay pestañas abiertas.',
+    new: 'Nueva pestaña',
+    private: 'Privada',
+    close: (title: string) => `Cerrar pestaña: ${title}`,
+  },
+  reader: {
+    title: 'Modo lectura',
+    loading: 'Cargando la página …',
+    failed:
+      'Esta página no se puede leer como texto. Quédate en la página o ábrela en el navegador del sistema.',
+    note: 'Nemo vuelve a cargar la página sin sesión y sin cookies y muestra solo el texto.',
+    unavailable: 'El modo lectura funciona con páginas https en pestañas normales, no en privadas.',
+    back: 'Volver a la página',
+  },
   toolbar: {
     back: 'Atrás',
     forward: 'Adelante',
@@ -49,6 +70,7 @@ export const browser: Strings['browser'] = {
     none: 'Todavía no hay nada guardado.',
   },
   menu: {
+    reader: 'Modo lectura',
     saveToList: 'Guardar en Guardados',
     saveAsNote: 'Guardar como nota',
     openSystem: 'Abrir en el navegador del sistema',

@@ -34,6 +34,26 @@
       }
     }
   },
+  "bookmarks": {
+    "scope": "module.bookmarks",
+    "fields": {
+      "view": {
+        "type": "select",
+        "label": "Ansicht",
+        "default": "list"
+      },
+      "sort": {
+        "type": "select",
+        "label": "Sortierung",
+        "default": "newest"
+      },
+      "linkPreview": {
+        "type": "boolean",
+        "label": "Linkvorschau laden",
+        "default": false
+      }
+    }
+  },
   "browser": {
     "scope": "module.browser",
     "fields": {
@@ -66,6 +86,11 @@
         "type": "boolean",
         "label": "Hinweis zum Systembrowser zeigen",
         "default": true
+      },
+      "tabPreview": {
+        "type": "boolean",
+        "label": "Vorschaubilder für offene Tabs",
+        "default": false
       }
     }
   },
@@ -324,6 +349,16 @@
       }
     }
   },
+  "music": {
+    "scope": "module.music",
+    "fields": {
+      "shortcuts": {
+        "type": "boolean",
+        "label": "Tastenkürzel auf der Musikseite",
+        "default": true
+      }
+    }
+  },
   "notes": {
     "scope": "module.notes",
     "fields": {
@@ -336,6 +371,11 @@
         "type": "boolean",
         "label": "Wortzahl anzeigen",
         "default": true
+      },
+      "view": {
+        "type": "select",
+        "label": "Ansicht der Seitenliste",
+        "default": "list"
       }
     }
   },
@@ -441,6 +481,16 @@
         "type": "text",
         "label": "Uhrzeit der Erinnerung",
         "default": "09:00"
+      }
+    }
+  },
+  "weather": {
+    "scope": "module.weather",
+    "fields": {
+      "warnNotify": {
+        "type": "boolean",
+        "label": "Bei Unwetter benachrichtigen",
+        "default": false
       }
     }
   }

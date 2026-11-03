@@ -2264,6 +2264,81 @@
       ]
     },
     {
+      "id": "bkm-c05",
+      "input": "Buch Faust merken",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Faust",
+            "kind": "book"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bkm-c06",
+      "input": "Roman Momo merken",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Momo",
+            "kind": "book"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bkm-c07",
+      "input": "Merke dir das Buch Siddhartha",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Siddhartha",
+            "kind": "book"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bkm-c08",
+      "input": "Buch Schachnovelle merken",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Schachnovelle",
+            "kind": "book"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bkm-c09",
+      "input": "Roman Effi Briest merken",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "bookmarks",
+          "action": "create",
+          "data": {
+            "title": "Effi Briest",
+            "kind": "book"
+          }
+        }
+      ]
+    },
+    {
       "id": "bkm-t01",
       "input": "Rezept Linsensuppe gelesen",
       "tags": ["transition"],

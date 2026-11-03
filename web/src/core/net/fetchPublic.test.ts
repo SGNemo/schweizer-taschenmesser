@@ -143,3 +143,60 @@ describe('fetchPublic limits', () => {
     expect(called).toBe(false);
   });
 });
+
+describe('fetchPublic kinds', () => {
+  const html = (body = '<title>x</title>') =>
+    new Response(body, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } });
+  const png = (bytes: number) =>
+    new Response(new Uint8Array(bytes), { status: 200, headers: { 'content-type': 'image/png' } });
+
+  it('refuses HTML for the default kind and takes it for kind page', async () => {
+    nativeWith(() => html());
+    const feed = await fetchPublic('https://example.org/a');
+    expect(feed.status).toBe(415);
+    const page = await fetchPublic('https://example.org/a', undefined, undefined, 'page');
+    expect(page.status).toBe(200);
+    expect(await page.text()).toContain('<title>');
+  });
+
+  it('refuses feed types for kind page', async () => {
+    nativeWith(
+      () => new Response(FEED, { status: 200, headers: { 'content-type': 'text/calendar' } }),
+    );
+    expect((await fetchPublic('https://example.org/a', undefined, undefined, 'page')).status).toBe(
+      415,
+    );
+  });
+
+  it('images: raster only, capped at 512 KB, never SVG', async () => {
+    nativeWith(() => png(1000));
+    expect((await fetchPublic('https://example.org/i', undefined, undefined, 'image')).status).toBe(
+      200,
+    );
+    nativeWith(() => png(512 * 1024 + 1));
+    expect((await fetchPublic('https://example.org/i', undefined, undefined, 'image')).status).toBe(
+      413,
+    );
+    nativeWith(
+      () => new Response('<svg/>', { status: 200, headers: { 'content-type': 'image/svg+xml' } }),
+    );
+    expect((await fetchPublic('https://example.org/i', undefined, undefined, 'image')).status).toBe(
+      415,
+    );
+  });
+
+  it('pages are capped at 1 MB', async () => {
+    nativeWith(() => html('x'.repeat(1024 * 1024 + 1)));
+    expect((await fetchPublic('https://example.org/a', undefined, undefined, 'page')).status).toBe(
+      413,
+    );
+  });
+
+  it('still refuses non-https addresses for every kind', async () => {
+    nativeWith(() => html());
+    for (const kind of ['feed', 'page', 'image'] as const)
+      await expect(
+        fetchPublic('http://example.org/a', undefined, undefined, kind),
+      ).rejects.toMatchObject({ code: 'network' });
+  });
+});

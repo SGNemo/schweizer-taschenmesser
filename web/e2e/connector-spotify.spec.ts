@@ -35,7 +35,10 @@ test.describe('Spotify connector', () => {
     // Fresh card: the two basic features are ticked, the optional ones are not.
     await expect(card.getByRole('checkbox', { name: /^Anzeigen/ })).toBeChecked();
     await expect(card.getByRole('checkbox', { name: /^Steuern/ })).toBeChecked();
-    await expect(card.getByRole('checkbox', { name: /^Playlists/ })).not.toBeChecked();
+    await expect(
+      card.getByRole('checkbox', { name: /^Playlists(?! bearbeiten)/ }),
+    ).not.toBeChecked();
+    await expect(card.getByRole('checkbox', { name: /^Playlists bearbeiten/ })).not.toBeChecked();
     await expect(card.getByRole('button', { name: 'Verbinden' })).toBeEnabled();
   });
 

@@ -110,6 +110,34 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
   });
 
+  test('from 1200 px folders, list and mail stand side by side; below it the mail replaces the list', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/mail');
+    await expect(page.getByTestId('mail-columns')).toBeVisible();
+    await expect(page.getByTestId('mail-stamp')).toContainText('Ungelesen');
+    await expect(page.getByRole('navigation', { name: 'Ordner' })).toBeVisible();
+    await page.getByText('Ihre Rechnung für Oktober').click();
+    await expect(page.getByTitle(/Inhalt der Mail/)).toBeVisible();
+    // the list stays next to the open mail
+    await expect(page.getByText('Hausverwaltung Muster')).toBeVisible();
+    await page.setViewportSize({ width: 1000, height: 900 });
+    await expect(page.getByTestId('mail-columns')).toHaveCount(0);
+    await expect(page.getByText('Hausverwaltung Muster')).toHaveCount(0);
+  });
+
+  test('a finished search is offered again as a suggestion (device-local)', async ({ page }) => {
+    await page.goto('/mail');
+    await page.getByLabel('Suchen', { exact: true }).fill('Rechnung');
+    await page.getByRole('search').getByRole('button', { name: 'Suchen' }).click();
+    await page.getByRole('button', { name: 'Suche beenden' }).click();
+    await expect(page.locator('#mail-suggest option[value="Rechnung"]')).toBeAttached();
+    expect(await page.evaluate(() => localStorage.getItem('tm-mail-searches'))).toContain(
+      'Rechnung',
+    );
+  });
+
   test('widgets show unread count, top mails and invoice mails', async ({ page }) => {
     await showAllWidgets(page);
     await page.goto('/');

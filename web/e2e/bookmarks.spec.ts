@@ -39,7 +39,7 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
   test.beforeEach(async ({ page }) => {
     await enable(page, 'bookmarks');
     await add(page, 'Pasta Rezept', 'koch.de/pasta', 'Kochen, Rezept');
-    await add(page, 'Dune', '', 'Film', 'Ansehen');
+    await add(page, 'Dune', '', 'Film', 'Film/Serie');
   });
 
   test('a row has one link (the title) and a menu; the title opens the address', async ({
@@ -119,8 +119,8 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await expect(
       menu.getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
     ).toBeVisible();
-    await menu.getByRole('menuitemcheckbox', { name: 'Ansehen' }).click();
-    await expect(page.getByTestId('bookmarks-filter')).toContainText('Ansehen');
+    await menu.getByRole('menuitemcheckbox', { name: 'Film/Serie' }).click();
+    await expect(page.getByTestId('bookmarks-filter')).toContainText('Film/Serie');
     await expect(rowOf(page, 'Dune')).toBeVisible();
     await expect(rowOf(page, 'Pasta Rezept')).toHaveCount(0);
     await (
@@ -193,5 +193,27 @@ test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
     await expect(tile(page, 'Bahn neu')).toHaveCount(0);
     await page.getByRole('button', { name: 'Rückgängig' }).click();
     await expect(tile(page, 'Bahn neu')).toBeVisible();
+  });
+});
+
+test.describe('Pinboard (identity, cards, status)', () => {
+  test('the head carries the pinboard; the cards view lists items with a status word', async ({
+    page,
+  }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Pasta Rezept', 'koch.de/pasta', 'Kochen', 'Buch');
+    await expect(page.getByTestId('pinboard')).toBeAttached();
+    const menu = await openBookmarksMenu(page);
+    await menu.getByRole('menuitemcheckbox', { name: 'Pinnwand' }).click();
+    const card = page.getByTestId('bookmark-card').filter({ hasText: 'Pasta Rezept' });
+    await expect(card).toContainText('Buch');
+    await card.getByRole('button', { name: /Pasta Rezept/ }).click();
+    await page.getByRole('menuitem', { name: 'Als angefangen markieren' }).click();
+    await expect(card).toContainText('Angefangen');
+    // the choice of view is a setting and survives a reload
+    await page.reload();
+    await expect(
+      page.getByTestId('bookmark-card').filter({ hasText: 'Pasta Rezept' }),
+    ).toBeVisible();
   });
 });

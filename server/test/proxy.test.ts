@@ -5,6 +5,7 @@ import {
   checkUrl,
   defaultDeps,
   isBlockedAddress,
+  KIND_RULES,
   MAX_PROXY_BYTES,
   proxyFetch,
   ProxyError,
@@ -226,6 +227,135 @@ describe('proxyFetch', () => {
     }
   });
 
+  describe('kind=page and kind=image (link preview, reader text)', () => {
+    const html = (over: Partial<UpstreamResponse> = {}) =>
+      ok({
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+        body: Buffer.from('<p>x</p>'),
+        ...over,
+      });
+
+    it('returns HTML only when asked for a page, and keeps refusing it by default', async () => {
+      const { deps } = fakeDeps({ 'a.example.test': html() });
+      await expect(proxyFetch('https://a.example.test/x', {}, deps)).rejects.toMatchObject({
+        code: 'unsupported-type',
+      });
+      await expect(proxyFetch('https://a.example.test/x', {}, deps, 'image')).rejects.toMatchObject(
+        { code: 'unsupported-type' },
+      );
+      expect((await proxyFetch('https://a.example.test/x', {}, deps, 'page')).status).toBe(200);
+    });
+
+    it('a page request never returns feed types, scripts or images', async () => {
+      for (const type of [
+        'text/calendar',
+        'application/javascript',
+        'image/png',
+        'image/svg+xml',
+      ]) {
+        const { deps } = fakeDeps({ 'a.example.test': ok({ headers: { 'content-type': type } }) });
+        await expect(
+          proxyFetch('https://a.example.test/x', {}, deps, 'page'),
+          type,
+        ).rejects.toMatchObject({ code: 'unsupported-type' });
+      }
+    });
+
+    it('images: raster types only, never SVG', async () => {
+      for (const type of ['image/png', 'image/jpeg', 'image/webp', 'image/gif']) {
+        const { deps } = fakeDeps({ 'a.example.test': ok({ headers: { 'content-type': type } }) });
+        expect((await proxyFetch('https://a.example.test/i', {}, deps, 'image')).status).toBe(200);
+      }
+      for (const type of ['image/svg+xml', 'image/x-icon', 'text/html']) {
+        const { deps } = fakeDeps({ 'a.example.test': ok({ headers: { 'content-type': type } }) });
+        await expect(
+          proxyFetch('https://a.example.test/i', {}, deps, 'image'),
+          type,
+        ).rejects.toMatchObject({ code: 'unsupported-type' });
+      }
+    });
+
+    it('applies the per-kind size limit and asks upstream for that limit', async () => {
+      expect(KIND_RULES.page.maxBytes).toBe(1024 * 1024);
+      expect(KIND_RULES.image.maxBytes).toBe(512 * 1024);
+      const big = fakeDeps({
+        'a.example.test': html({ body: Buffer.alloc(KIND_RULES.page.maxBytes + 1) }),
+      });
+      await expect(
+        proxyFetch('https://a.example.test/x', {}, big.deps, 'page'),
+      ).rejects.toMatchObject({
+        code: 'too-large',
+      });
+      // a page may be larger than an image is allowed to be
+      const img = fakeDeps({
+        'a.example.test': ok({
+          headers: { 'content-type': 'image/png' },
+          body: Buffer.alloc(KIND_RULES.image.maxBytes + 1),
+        }),
+      });
+      await expect(
+        proxyFetch('https://a.example.test/i', {}, img.deps, 'image'),
+      ).rejects.toMatchObject({
+        code: 'too-large',
+      });
+    });
+
+    it('keeps every address rule: blocked hosts and redirects are checked for all kinds', async () => {
+      const { deps } = fakeDeps({ 'evil.example.test': ['10.0.0.5'] });
+      for (const kind of ['feed', 'page', 'image'] as const)
+        await expect(
+          proxyFetch('https://evil.example.test/x', {}, deps, kind),
+        ).rejects.toMatchObject({ code: 'blocked' });
+      const redirect = fakeDeps({
+        'a.example.test': {
+          status: 302,
+          headers: { location: 'http://127.0.0.1/' },
+          body: Buffer.alloc(0),
+        },
+      });
+      await expect(
+        proxyFetch('https://a.example.test/x', {}, redirect.deps, 'page'),
+      ).rejects.toMatchObject({ code: 'blocked' });
+    });
+
+    it('a blocked address never reaches the fetcher: not as the first hop, not as a redirect target', async () => {
+      const spy = fakeDeps({
+        'evil.example.test': ['10.0.0.5'],
+        'mixed.example.test': ['93.184.216.34', '169.254.169.254'],
+        'hop.example.test': {
+          status: 302,
+          headers: { location: 'https://evil.example.test/x' },
+          body: Buffer.alloc(0),
+        },
+      });
+      for (const kind of ['feed', 'page', 'image'] as const) {
+        for (const target of [
+          'https://evil.example.test/x',
+          'https://mixed.example.test/x',
+          'http://127.0.0.1/x',
+          'http://[::1]/x',
+          'https://hop.example.test/x',
+        ]) {
+          await expect(
+            proxyFetch(target, {}, spy.deps, kind),
+            `${kind} ${target}`,
+          ).rejects.toMatchObject({
+            code: 'blocked',
+          });
+        }
+      }
+      // only the harmless first hop of the redirect chain was ever fetched, never a blocked address
+      expect(spy.fetched.every((f) => f.url.startsWith('https://hop.example.test/'))).toBe(true);
+      expect(spy.fetched.some((f) => /^(10\.|127\.|169\.254\.|::1)/.test(f.address))).toBe(false);
+    });
+
+    it('sends a matching Accept header', async () => {
+      const { deps, fetched } = fakeDeps({ 'a.example.test': html() });
+      await proxyFetch('https://a.example.test/x', {}, deps, 'page');
+      expect(fetched[0]!.headers.accept).toContain('text/html');
+    });
+  });
+
   it('maps upstream failures and unresolvable hosts', async () => {
     const down = fakeDeps({ 'a.example.test': ok({ status: 503 }) });
     await expect(proxyFetch('https://a.example.test/x', {}, down.deps)).rejects.toMatchObject({
@@ -268,6 +398,24 @@ describe('the real fetcher (against a local server, address given directly)', ()
     expect(r.status).toBe(200);
     expect(r.headers.etag).toBe('"abc"');
     expect(r.body.toString()).toBe(ICS);
+  });
+
+  it('sends the path and query of the address it was given, to the pinned address and port', async () => {
+    let seenUrl: string | undefined;
+    const port = await serve((req, res) => {
+      seenUrl = req.url;
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end('ok');
+    });
+    const r = await defaultDeps.fetch({
+      url: new URL(`http://feed.example.test:${port}/a/b%20c.ics?x=1&y=%C3%A4`),
+      address: '127.0.0.1',
+      headers: { host: `feed.example.test:${port}` },
+      timeoutMs: 2000,
+      maxBytes: MAX_PROXY_BYTES,
+    });
+    expect(r.status).toBe(200);
+    expect(seenUrl).toBe('/a/b%20c.ics?x=1&y=%C3%A4');
   });
 
   it('stops reading at the size limit', async () => {
@@ -339,6 +487,33 @@ describe('GET /v1/proxy', () => {
     expect(res.headers.etag).toBe('"v1"');
     expect(res.headers['content-security-policy']).toContain('sandbox');
     expect(res.headers['cache-control']).toBe('no-store');
+  });
+
+  it('serves a page only for kind=page, always sandboxed and nosniff; rejects unknown kinds', async () => {
+    const routes = {
+      'p.example.test': ok({
+        headers: { 'content-type': 'text/html' },
+        body: Buffer.from('<p>x</p>'),
+      }),
+    };
+    const { app } = await setup({ proxy: fakeDeps(routes as never).deps });
+    const url = 'https%3A%2F%2Fp.example.test%2Fx';
+    const plain = await app.inject({ method: 'GET', url: `/v1/proxy?url=${url}`, headers: auth });
+    expect(plain.statusCode).toBe(415);
+    const page = await app.inject({
+      method: 'GET',
+      url: `/v1/proxy?url=${url}&kind=page`,
+      headers: auth,
+    });
+    expect(page.statusCode).toBe(200);
+    expect(page.headers['content-security-policy']).toContain('sandbox');
+    expect(page.headers['x-content-type-options']).toBe('nosniff');
+    const bad = await app.inject({
+      method: 'GET',
+      url: `/v1/proxy?url=${url}&kind=script`,
+      headers: auth,
+    });
+    expect(bad.statusCode).toBe(400);
   });
 
   it('answers 304 when the client already has the version', async () => {

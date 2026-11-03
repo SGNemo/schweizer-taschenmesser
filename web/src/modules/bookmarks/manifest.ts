@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'pinboard',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.bookmarks.meta.description;
   },
@@ -31,6 +31,14 @@ const manifest: ModuleManifest = {
       },
       nav: true,
       component: () => import('./routes/BookmarksPage'),
+    },
+    {
+      path: '/bookmarks/read/:id',
+      get label() {
+        return t.bookmarks.reader.mode;
+      },
+      layout: 'content',
+      component: () => import('./routes/ReaderPage'),
     },
   ],
   dataSchema: {
@@ -63,7 +71,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'wide',
   order: 70,
   area: 'knowledge',

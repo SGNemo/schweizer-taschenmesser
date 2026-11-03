@@ -31,6 +31,25 @@ export const downloads: Strings['downloads'] = {
     body: 'Neste dispositivo, o navegador do seu dispositivo baixa os arquivos.',
   },
   hint: 'Os arquivos vão só para a pasta escolhida. O Nemo nunca os abre nem os executa.',
+  filter: {
+    label: 'Mostrar',
+    all: 'Todos',
+    active: 'Em andamento',
+    done: 'Concluídos',
+    problems: 'Problemas',
+    none: 'Nada nesta visualização.',
+  },
+  band: {
+    idle: 'Nada em andamento',
+    one: '1 em andamento',
+    many: (n: number) => `${n} em andamento`,
+    context: (speed: string) => `a ${speed}/s`,
+    contextIdle: 'Os novos downloads aparecem aqui.',
+  },
+  folder: {
+    show: 'Mostrar pasta de destino',
+    help: 'Mostra o último download iniciado na sua pasta.',
+  },
   add: {
     button: 'Adicionar um download',
     title: 'Adicionar um download',
@@ -64,6 +83,7 @@ export const downloads: Strings['downloads'] = {
     size: 'O arquivo chegou incompleto.',
   },
   row: {
+    eta: (d: string) => `faltam ${d}`,
     progress: (done: string, total: string) => `${done} de ${total}`,
     unknownTotal: (done: string) => `${done} baixados`,
     speed: (perSecond: string) => `${perSecond}/s`,

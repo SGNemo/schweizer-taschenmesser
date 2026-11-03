@@ -19,6 +19,7 @@ import {
   proxyFetch,
   ProxyError,
   type ProxyDeps,
+  type ProxyKind,
 } from './proxy.js';
 import type { FieldOp, Store, Vault } from './store.js';
 
@@ -483,12 +484,18 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
           type: 'object',
           required: ['url'],
           additionalProperties: false,
-          properties: { url: { type: 'string', minLength: 8, maxLength: 2048 } },
+          properties: {
+            url: { type: 'string', minLength: 8, maxLength: 2048 },
+            kind: { type: 'string', enum: ['feed', 'page', 'image'] },
+          },
         },
       },
     },
     async (req, reply) => {
-      const { url } = req.query as { url: string };
+      const { url, kind: asked } = req.query as { url: string; kind?: string };
+      // Only the three known kinds get through, as constants (the schema checks it as well; nothing the
+      // caller typed reaches the request options).
+      const kind: ProxyKind = asked === 'page' ? 'page' : asked === 'image' ? 'image' : 'feed';
       try {
         const r = await proxyFetch(
           url,
@@ -497,12 +504,14 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
             ifModifiedSince: req.headers['if-modified-since'],
           },
           opts.proxy ?? defaultProxyDeps,
+          kind,
         );
         if (r.etag) reply.header('etag', r.etag);
         if (r.lastModified) reply.header('last-modified', r.lastModified);
         if (r.status === 304) return reply.code(304).send();
         // Never let a fetched page run as HTML/script on our origin.
         reply.header('content-security-policy', "default-src 'none'; sandbox");
+        reply.header('x-content-type-options', 'nosniff');
         return reply
           .code(200)
           .type(r.contentType ?? 'text/plain')

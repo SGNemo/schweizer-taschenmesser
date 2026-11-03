@@ -33,6 +33,12 @@ export const mail: Strings['mail'] = {
   },
   page: {
     refresh: 'Refresh',
+    labelsNav: 'Folders',
+    pickThread: 'Pick a mail from the list.',
+    rowMenu: (from: string) => `Actions: ${from}`,
+    rowRead: 'Mark as read',
+    rowUnread: 'Mark as unread',
+    rowArchive: 'Archive',
     loading: 'Loading mail …',
     more: 'Load more',
     searchLabel: 'Search',

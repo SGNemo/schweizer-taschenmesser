@@ -1,6 +1,7 @@
 import { compareText } from '@/core/i18n/format';
 import { addDaysStr, toDateString } from '@/core/time/dates';
 import { KINDS, type BookmarkItem, type Kind } from './schema';
+import type { SortMode } from './settings';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
 export function normalizeUrl(input: string): string | undefined {
@@ -76,6 +77,11 @@ export function tagCounts(items: readonly Pick<BookmarkItem, 'tags'>[]): [string
     .map((e) => [e.label, e.n]);
 }
 
+/** Open → started → done. `done` wins when both flags are set. */
+export type Status = 'open' | 'started' | 'done';
+export const statusOf = (i: Pick<BookmarkItem, 'done' | 'started'>): Status =>
+  i.done ? 'done' : i.started ? 'started' : 'open';
+
 export interface Filter {
   view: 'open' | 'done' | 'all';
   kind: Kind | 'all';
@@ -88,6 +94,7 @@ const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
 export function filterItems<T extends BookmarkItem & { createdAt: number }>(
   items: readonly T[],
   f: Filter,
+  sort: SortMode = 'newest',
 ): T[] {
   const q = fold(f.query.trim());
   return items
@@ -97,7 +104,22 @@ export function filterItems<T extends BookmarkItem & { createdAt: number }>(
     .filter(
       (i) => !q || fold([i.title, i.url ?? '', i.note ?? '', ...i.tags].join(' ')).includes(q),
     )
-    .sort((a, b) => b.createdAt - a.createdAt);
+    .sort(sorter(sort));
+}
+
+const STATUS_ORDER: Record<Status, number> = { started: 0, open: 1, done: 2 };
+
+/** Newest first (default), by title, by type (order of `KINDS`), or started before open before done. */
+export function sorter<T extends BookmarkItem & { createdAt: number }>(
+  sort: SortMode,
+): (a: T, b: T) => number {
+  const newest = (a: T, b: T) => b.createdAt - a.createdAt;
+  if (sort === 'title') return (a, b) => compareText(a.title, b.title) || newest(a, b);
+  if (sort === 'kind')
+    return (a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind) || newest(a, b);
+  if (sort === 'status')
+    return (a, b) => STATUS_ORDER[statusOf(a)] - STATUS_ORDER[statusOf(b)] || newest(a, b);
+  return newest;
 }
 
 /** How the list is grouped: by when it was saved (default), by first tag or by type. */
@@ -111,7 +133,9 @@ export interface ItemGroup<T> {
   items: T[];
 }
 
-type Groupable = Pick<BookmarkItem, 'tags' | 'title' | 'kind'> & { createdAt: number };
+type Groupable = Pick<BookmarkItem, 'tags' | 'title' | 'kind' | 'done' | 'started'> & {
+  createdAt: number;
+};
 
 /** Buckets for "recent": saved today, in the last 7 days (incl. yesterday), earlier. */
 export function recentBucket(createdAt: number, day: string): 'today' | 'week' | 'older' {
@@ -129,8 +153,9 @@ export function groupItems<T extends Groupable>(
   items: readonly T[],
   mode: Grouping,
   day: string,
+  sort: SortMode = 'newest',
 ): ItemGroup<T>[] {
-  const newestFirst = (list: T[]) => list.sort((a, b) => b.createdAt - a.createdAt);
+  const newestFirst = (list: T[]) => list.sort(sorter<T & BookmarkItem>(sort));
   if (mode === 'tag')
     return groupLinks(items).map(([tag, list]) => ({
       id: tag ? `tag-${encodeURIComponent(tag.toLowerCase())}` : 'none',

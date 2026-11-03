@@ -165,9 +165,14 @@ export const defaultDeps: ProxyDeps = {
         };
       resolve = settle(resolve);
       reject = settle(reject);
+      // The request is built from the parts that `checkUrl` and `checkedAddress` already vetted
+      // (scheme, host name, port, path and query) and never from the caller's URL object itself.
       const req = client.request(
-        url,
         {
+          protocol: url.protocol,
+          hostname: url.hostname.replace(/^\[|\]$/g, ''),
+          port: url.port || undefined,
+          path: `${url.pathname}${url.search}`,
           method: 'GET',
           headers,
           timeout: timeoutMs,
@@ -220,9 +225,38 @@ export const defaultDeps: ProxyDeps = {
 
 /* ------------------------------------ the request ------------------------------------ */
 
-/** Feed-like types only: never HTML, script, images or JSON. */
-const TYPE_ALLOWED =
-  /^(text\/(calendar|plain|xml|x-vcalendar|x-ical)|application\/(xml|ics|x-ics|calendar|(rss|atom|rdf)\+xml))$/i;
+/**
+ * What a caller may ask for. `feed` (default) is feed-like text only: never HTML, script, images or
+ * JSON. `page` is one HTML document (link preview, reader text), `image` one small raster picture
+ * (preview image; never SVG, which can carry script). The client never renders either as markup.
+ */
+export type ProxyKind = 'feed' | 'page' | 'image';
+
+interface KindRule {
+  types: RegExp;
+  maxBytes: number;
+  accept: string;
+}
+
+export const KIND_RULES: Record<ProxyKind, KindRule> = {
+  feed: {
+    types:
+      /^(text\/(calendar|plain|xml|x-vcalendar|x-ical)|application\/(xml|ics|x-ics|calendar|(rss|atom|rdf)\+xml))$/i,
+    maxBytes: MAX_PROXY_BYTES,
+    accept:
+      'text/calendar, application/rss+xml, application/atom+xml, application/xml, text/xml, text/plain;q=0.5',
+  },
+  page: {
+    types: /^(text\/html|application\/xhtml\+xml)$/i,
+    maxBytes: 1024 * 1024,
+    accept: 'text/html, application/xhtml+xml;q=0.9',
+  },
+  image: {
+    types: /^image\/(png|jpeg|webp|gif)$/i,
+    maxBytes: 512 * 1024,
+    accept: 'image/png, image/jpeg, image/webp, image/gif',
+  },
+};
 
 export function checkUrl(input: string): URL {
   let url: URL;
@@ -259,14 +293,15 @@ export async function proxyFetch(
   input: string,
   conditional: { ifNoneMatch?: string; ifModifiedSince?: string },
   deps: ProxyDeps = defaultDeps,
+  kind: ProxyKind = 'feed',
 ): Promise<ProxyResult> {
+  const rule = KIND_RULES[kind];
   let url = checkUrl(input);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const address = await checkedAddress(url, deps);
     const headers: Record<string, string> = {
       'user-agent': 'Taschenmesser-Proxy/1',
-      accept:
-        'text/calendar, application/rss+xml, application/atom+xml, application/xml, text/xml, text/plain;q=0.5',
+      accept: rule.accept,
       'accept-encoding': 'identity',
       host: url.host,
     };
@@ -278,7 +313,7 @@ export async function proxyFetch(
       address,
       headers,
       timeoutMs: PROXY_TIMEOUT_MS,
-      maxBytes: MAX_PROXY_BYTES,
+      maxBytes: rule.maxBytes,
     });
     if ([301, 302, 303, 307, 308].includes(res.status)) {
       const location = res.headers.location;
@@ -297,8 +332,8 @@ export async function proxyFetch(
     }
     if (res.status < 200 || res.status >= 300) throw new ProxyError('upstream-error');
     const type = (res.headers['content-type'] ?? '').split(';')[0]!.trim();
-    if (!TYPE_ALLOWED.test(type)) throw new ProxyError('unsupported-type');
-    if (res.body.length > MAX_PROXY_BYTES) throw new ProxyError('too-large');
+    if (!rule.types.test(type)) throw new ProxyError('unsupported-type');
+    if (res.body.length > rule.maxBytes) throw new ProxyError('too-large');
     return {
       status: 200,
       contentType: res.headers['content-type'],

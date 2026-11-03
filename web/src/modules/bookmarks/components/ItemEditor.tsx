@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@/ui';
 import { formatTags, normalizeUrl, parseTags } from '../logic';
+import { fetchPreviewFor, previewEnabled } from '../preview';
 import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -52,9 +53,19 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
       tags: parseTags(tags),
       note: note.trim() || undefined,
       done: existing?.done ?? false,
+      started: existing?.started ?? false,
     };
-    if (existing) await itemRepo.update(existing.id, data);
-    else await itemRepo.create(data);
+    // A new address (or a new item) gets its preview when the setting is on; a stale one is dropped.
+    const addressChanged = !existing || existing.url !== address;
+    const saved = existing
+      ? (await itemRepo.update(
+          existing.id,
+          addressChanged ? { ...data, preview: undefined } : data,
+        ),
+        existing)
+      : await itemRepo.create(data);
+    if (address && addressChanged && (await previewEnabled()))
+      void fetchPreviewFor(saved.id, address);
     onClose();
   }
 

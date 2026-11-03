@@ -34,7 +34,14 @@ export interface EventMap {
   /** A part payment was removed again. Finance removes the expense it booked for it. */
   'invoice.paymentRemoved': { invoiceId: string; paymentId: string };
   /** Something wants to be remembered (a news article, a shared link). The bookmarks module stores it. */
-  'bookmark.requested': { title: string; url: string; note?: string };
+  'bookmark.requested': {
+    title: string;
+    url: string;
+    note?: string;
+    /** What it is (the bookmarks module ignores a value it does not know); none means "read later". */
+    kind?: 'link' | 'read' | 'watch' | 'book' | 'place' | 'idea' | 'other';
+    tags?: string[];
+  };
   /** Something is running low (pantry). The shopping list adds the item unless it is already open there. */
   'shopping.requested': { name: string; quantity?: string };
   /** Something was bought (shopping list). The pantry adds the amount to the item of that name or creates it. */

@@ -7,3 +7,10 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--grid-gap, var(--space-4));
+  padding: var(--space-2) 0;
+}

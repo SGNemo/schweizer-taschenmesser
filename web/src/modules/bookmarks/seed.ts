@@ -150,7 +150,7 @@ const LANG_INDEX = { en: 0, es: 1, fr: 2, 'pt-BR': 3 } as const;
 const tr = (ctx: SeedContext, de: string): string =>
   ctx.lang === 'de' ? de : (TR[de]?.[LANG_INDEX[ctx.lang]] ?? de);
 
-type Kind = 'link' | 'read' | 'watch' | 'place' | 'idea' | 'other';
+type Kind = 'link' | 'read' | 'watch' | 'book' | 'place' | 'idea' | 'other';
 
 const BASE: { title: string; kind: Kind; tags: string[]; note?: string; slug: string }[] = [
   {
@@ -201,7 +201,7 @@ const BASE: { title: string; kind: Kind; tags: string[]; note?: string; slug: st
   },
   {
     title: 'Kurzgeschichten-Sammlung zum Vorlesen',
-    kind: 'read',
+    kind: 'book',
     tags: ['buch'],
     slug: 'geschichten',
   },
@@ -252,6 +252,7 @@ function seed(ctx: SeedContext): SeedRows {
             tags: b.tags.map((x) => tr(ctx, x)),
             ...(b.note ? { note: tr(ctx, b.note) } : {}),
             done: i % 4 === 3,
+            started: i % 4 === 1,
           },
         };
       }),
