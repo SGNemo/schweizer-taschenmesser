@@ -1,7 +1,10 @@
 import { applyQuick, QUICK_SETTINGS, type QuickSetting } from '@/core/settings/quick';
 import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
-import { Segmented } from '@/ui';
+import { applyProfile, builtinProfiles, useCustomProfiles } from '@/core/settings/profiles';
+import { tSettings3 } from '@/strings.settings3';
+import { Segmented, SelectField } from '@/ui';
+import { useActiveProfileId } from './useActiveProfile';
 import { MuteSwitch } from './MuteSwitch';
 import styles from './SettingsLayout.module.css';
 
@@ -24,6 +27,37 @@ function QuickSwitch({ setting }: { setting: QuickSetting }) {
   );
 }
 
+/** The profile switch: many settings in one choice (the list shows "Eigene Auswahl" while no profile matches). */
+function ProfileSwitch() {
+  const p = tSettings3.use().profiles;
+  const all = [...builtinProfiles(), ...useCustomProfiles()];
+  const active = useActiveProfileId(all);
+  return (
+    <div className={styles.quickItem}>
+      <span className={styles.quickLabel}>{p.switchLabel}</span>
+      <SelectField
+        label={p.switchLabel}
+        labelHidden
+        value={active ?? ''}
+        onChange={(e) => {
+          const next = all.find((x) => x.id === e.target.value);
+          if (next) void applyProfile(next);
+        }}
+        data-testid="quick-profile"
+      >
+        <option value="" disabled>
+          {p.none}
+        </option>
+        {all.map((x) => (
+          <option key={x.id} value={x.id}>
+            {x.name}
+          </option>
+        ))}
+      </SelectField>
+    </div>
+  );
+}
+
 /** One row of switches at the top of Settings: theme, density, reading aid without opening a category. */
 export function QuickBar() {
   return (
@@ -35,6 +69,7 @@ export function QuickBar() {
       {QUICK_SETTINGS.filter((q) => IN_BAR.includes(q.id)).map((q) => (
         <QuickSwitch key={q.id} setting={q} />
       ))}
+      <ProfileSwitch />
       <MuteSwitch />
     </section>
   );

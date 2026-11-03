@@ -319,6 +319,10 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO5 Zurücksetzen:** Darstellung → Farbschema „Dunkel“: unten erscheint „Vom Standard abweichend“ mit dem Zurücksetzen-Knopf; ein Modul (z. B. Aufgaben): Schalter ändern, „Geändert · Auf Standard“ stellt zurück, „Rückgängig“ bringt es wieder. ☐
 - **SO6 Vorschau und Hinweis:** Darstellung → Text öffnen: die Vorschau folgt Schriftgröße und Dichte; Benachrichtigungen → „Erinnerungen in der App einblenden“ an: Beispielkarte oben/unten rechts; Tresor: „30 Minuten“ zeigt den ruhigen Hinweis. ☐
 
+- **SO7 Profile am Handy und am PC:** Einstellungen → Allgemein → Verwalten: „Abends“ schaltet dunkel + ruhige Farben + Ruhezeit; das Profil trägt „Aktiv“, „Rückgängig“ im Hinweis stellt alles zurück; ein Zeitplan (z. B. in 2 Minuten) schaltet bei offener App um, ein Umschalten von Hand davor oder danach bleibt bis zum nächsten Zeitpunkt. ☐
+- **SO8 Datei mit Einstellungen:** exportieren (Android: „Speichern unter“, Windows: Dialog), die Datei im Texteditor ansehen: keine Adressen, Tokens, Tresor- oder Supporter-Werte; auf einem zweiten Gerät übernehmen: Vorschau, dann „Übernehmen“ und „Rückgängig“. ☐
+- **SO9 Änderungsverlauf:** drei Einstellungen ändern, „Rückgängig“ in der Liste nimmt genau diese zurück; Schalter „Änderungen merken“ aus: nichts wird mehr notiert; „Verlauf löschen“ leert die Liste. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
