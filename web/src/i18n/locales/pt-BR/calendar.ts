@@ -111,6 +111,7 @@ export const calendar: Strings['calendar'] = {
   end: 'Fim',
   location: 'Local',
   showOnMap: 'Mostrar no mapa',
+  saveAsPlace: 'Lembrar como lugar',
   nothing: 'Nenhum registro',
   endBeforeStart: 'O fim não pode ser antes do início.',
   more: (n: number) => `+${n} ${n <= 1 ? 'outro' : 'outros'}`,

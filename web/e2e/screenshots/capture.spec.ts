@@ -52,6 +52,7 @@ const PAGES: { name: string; path: string }[] = [
   { name: 'habits-history', path: '/habits?view=history' },
   { name: 'timetrack', path: '/timetrack' },
   { name: 'timetrack-report', path: '/timetrack?view=report' },
+  { name: 'maps', path: '/maps' },
   ...(process.env.SCREENS_DESKTOP
     ? [
         { name: 'system', path: '/disk?tab=system' },

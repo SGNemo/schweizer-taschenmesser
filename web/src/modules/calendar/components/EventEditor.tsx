@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { bus } from '@/core/events';
 import { mapsUrl } from '@/core/links';
 import { useUiStore } from '@/stores/ui';
@@ -148,6 +149,7 @@ function Form({
   const setActive = (v: boolean) => draft.set('active', v);
   const setTaken = (v: boolean) => draft.set('taken', v);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
   const slots = useLiveQuery(
     async () => (existing || reminder ? [] : recentSlots(await eventRepo.active().toArray())),
@@ -282,6 +284,16 @@ function Form({
           <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(mapsUrl(location))}>
             <Icon name="pin" size={16} />
             {t.calendar.showOnMap}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onClose();
+              void navigate(`/maps?q=${encodeURIComponent(location.trim())}`);
+            }}
+          >
+            <Icon name="pin" size={16} />
+            {t.calendar.saveAsPlace}
           </Button>
         </div>
       ) : null}

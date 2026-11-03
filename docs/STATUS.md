@@ -1,8 +1,9 @@
 # Status – Nemo
 
-Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-*- und Taschenmesser-*-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
+Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf; Nemo-_- und Taschenmesser-_-Assets, `latest.json`). Keine offenen Issues, keine offenen PRs (geprüft bei Erstellung dieser Datei).
 
 ## Nächste eine Sache
+
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
 Einstellungen v2, Paket 3a (`feat/settings-manage`): Profile (Ruhig/Arbeit/Abends + eigene) mit Zeitplänen, Einstellungen exportieren/importieren (ohne Geheimnisse), Änderungsverlauf mit Rückgängig; Handtests SO7–SO9 in [MANUAL-TESTS.md](MANUAL-TESTS.md); 3b (Kürzel-Editor, Benachrichtigungen pro Modul/Kanal, Speicher, Barrierefreiheit), dann der Bundle-Split.
@@ -30,6 +31,8 @@ Fokus-Prüfung Runde 2 (`docs/product/focus/`): Plan #176; Pakete 1–4 und Rund
 Handy-Layout (QA P2, `fix/qa-mobile-layout`, Kopf: [Zahlen](product/next/04-header-results.md)): Kopfzeile, Listenzeilen, Hinweise, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi; `e2e/screenshots/mobile-layout.spec.ts`; Gerätetest offen.
 
 Planen-Gruppe, Paket 5 (`feat/plan-timetrack`): neues Modul Zeiterfassung (Start/Stopp mit einem Klick, Pause, Projekte mit Farbe/Kunde/Stundensatz, manuelle Einträge, Woche/Monat mit Betrag in ganzen Cent, CSV, Nachfrage bei Leerlauf, „Zeit erfassen“ aus dem Kalendertermin); Planen-Gruppe, Paket 4 (`feat/plan-habits`): neues Modul Gewohnheiten (Ringe, Ja/Nein oder Zahl, Pausentage, Jahresraster, Erinnerungen im Zeitfenster bis das Tagesziel erreicht ist, Vorlage „Wasser trinken“); Planen-Gruppe, Paket 2 (`feat/plan-todos`): ToDos mit Ansichten Heute/Demnächst/Irgendwann/Erledigt, Board, Tags, Checkliste, Verknüpfungen, Startdatum, Projekten mit Fortschritt und Heute-Karte im Kopf; Planen-Gruppe, Paket 1 (`feat/plan-calendar`): Kalender mit Agenda-/Jahresansicht, KW-Spalte, Feiertagen (offline), mehreren Kalendern mit Farbe, Ziehen/Länge/Aufziehen im Zeitraster, „nur diesen Termin entfernen“, Überschneidungs-Markierung, Zeitring und „Erledigte entfernen“ bei den Erinnerungen, mehrere Erinnerungszeiten; offen: Wetter am Tag, „Als Ort speichern“; [howto/planning-modules.md](howto/planning-modules.md). Modul-Rahmen + Identität v2 (`feat/module-shell-identity`): einheitlicher Kopf mit Modulfarbe, Signatur-Bausteine (`ui/identity`), Wetter und Musik (Spotify) als Module mit eigener Seite und Widget, Finanzen mit Kontokarten, Verlauf und Ring, Navi/Widgets in Modulfarbe; Regeln in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md). Vorher: Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
+Planen-Gruppe, Paket 4 (`feat/plan-habits`): neues Modul Gewohnheiten (Ringe, Ja/Nein oder Zahl, Pausentage, Jahresraster, Erinnerungen im Zeitfenster bis das Tagesziel erreicht ist, Vorlage „Wasser trinken“); Planen-Gruppe, Paket 2 (`feat/plan-todos`): ToDos mit Ansichten Heute/Demnächst/Irgendwann/Erledigt, Board, Tags, Checkliste, Verknüpfungen, Startdatum, Projekten mit Fortschritt und Heute-Karte im Kopf; Planen-Gruppe, Paket 1 (`feat/plan-calendar`): Kalender mit Agenda-/Jahresansicht, KW-Spalte, Feiertagen (offline), mehreren Kalendern mit Farbe, Ziehen/Länge/Aufziehen im Zeitraster, „nur diesen Termin entfernen“, Überschneidungs-Markierung, Zeitring und „Erledigte entfernen“ bei den Erinnerungen, mehrere Erinnerungszeiten; offen: Wetter am Tag, „Als Ort speichern“; [howto/planning-modules.md](howto/planning-modules.md). Modul-Rahmen + Identität v2 (`feat/module-shell-identity`): einheitlicher Kopf mit Modulfarbe, Signatur-Bausteine (`ui/identity`), Wetter und Musik (Spotify) als Module mit eigener Seite und Widget, Finanzen mit Kontokarten, Verlauf und Ring, Navi/Widgets in Modulfarbe; Regeln in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md). Vorher: Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
+Planen-Gruppe, Paket 3 (`feat/plan-maps`): Karten & Orte mit Pin-Kopf, Orte filtern/suchen/sortieren, „Navigieren“ je Ort und „Als Ort merken“ aus dem Kalender (`/maps?q=`); Planen-Gruppe, Paket 2 (`feat/plan-todos`): ToDos mit Ansichten Heute/Demnächst/Irgendwann/Erledigt, Board, Tags, Checkliste, Verknüpfungen, Startdatum, Projekten mit Fortschritt und Heute-Karte im Kopf; Planen-Gruppe, Paket 1 (`feat/plan-calendar`): Kalender mit Agenda-/Jahresansicht, KW-Spalte, Feiertagen (offline), mehreren Kalendern mit Farbe, Ziehen/Länge/Aufziehen im Zeitraster, „nur diesen Termin entfernen“, Überschneidungs-Markierung, Zeitring und „Erledigte entfernen“ bei den Erinnerungen, mehrere Erinnerungszeiten; offen: Wetter am Tag, „Als Ort speichern“; [howto/planning-modules.md](howto/planning-modules.md). Modul-Rahmen + Identität v2 (`feat/module-shell-identity`): einheitlicher Kopf mit Modulfarbe, Signatur-Bausteine (`ui/identity`), Wetter und Musik (Spotify) als Module mit eigener Seite und Widget, Finanzen mit Kontokarten, Verlauf und Ring, Navi/Widgets in Modulfarbe; Regeln in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md). Vorher: Modul-Identität (`feat/module-identity`, Paket 2): Pflichtfeld `identity` im Manifest, Zehner-Palette `--mod-*` (hell/dunkel, kontrast- und abstandsgeprüft), Plättchen + Kante an Widgets, Modulrahmen und Kalender-Heute, Navi-Icon in Modulfarbe, Schalter „Modulfarben“, Cockpit-Großanzeige mit Kontostand (`contributions.headline`).
 Cockpit-Modus (`feat/cockpit-mode`): Übersicht allein im Fenster (F10, Knopf, Palette), schwebende Mini-Leiste, Module als Panel darüber, eigenes Cockpit-Layout (dicht, Großanzeige), F11 Vollbild, Android immersiv + wach halten; Handtests C1–C4 in [MANUAL-TESTS.md](MANUAL-TESTS.md). Modul-Identität folgt als eigenes Paket nach der Varianten-Wahl.
 
 Kürzelkarte: [features/shortcuts.md](features/shortcuts.md) · Notizen-Import: [features/notes-import.md](features/notes-import.md). Neu (aus): Textvergleich, Regex-Tester. ToDo-Import: [features/import-todos.md](features/import-todos.md).
@@ -75,7 +78,8 @@ App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Fran
 Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, #150 Stumm, #151 Bibliothek, #153 Werkzeugkasten): Schnellleiste, Palette-Direktumschaltung und Suche ohne Präfix, „Häufig genutzt“, Kontext-Zahnrad, Zurücksetzen, Stumm, Bibliothek- und Werkzeugsuche, „timer 10m“/„umrechnen 5 km“ in der Leiste. Ergebnis: [product/comfort/06-settings-results.md](product/comfort/06-settings-results.md). Offen (Sven): Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Woche Nutzung (Reizlast Zahnrad/Schnellleiste).
 
 ## Heute möglich in 15 Minuten
-1. Social-Preview hochladen: GitHub → Settings → *Social preview* → `docs/brand/social-preview.png` (Punkt 0 unten).
+
+1. Social-Preview hochladen: GitHub → Settings → _Social preview_ → `docs/brand/social-preview.png` (Punkt 0 unten).
 2. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).
 3. Offene PRs ansehen: Liste „Wartet auf Sven“ in [CHATS.md](CHATS.md).
 
@@ -84,6 +88,7 @@ Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit d
 Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressum/Datenschutz-Platzhaltern, DE/EN; PR gegen `develop`, wartet auf Review; danach Cloudflare-Pages-Projekt, Domain und Deploy-Hook einrichten ([site/README.md](../site/README.md) → „Offen – macht Sven“).
 
 ## Nicht gebaut / bekannte Grenzen
+
 - Google-Drive-Sync-Adapter (nur `core/sync/adapters/googleDrive.stub.ts`), Binär-Anhänge im Sync, Tombstone-GC, Mehrmandanten-Server.
 - Browser-Erweiterung: nur Brave/Chromium (MV3); Firefox, Safari, Store-Veröffentlichung (Chrome Web Store/Edge Add-ons, eigene Erweiterungs-ID → Allowlist), Release-Zip in `release.yml` (Vorschlag in [howto/browser-extension.md](howto/browser-extension.md)) offen; mehrstufige Logins und Felder in geschlossenen Shadow-Roots werden nicht erkannt.
 - Android: Autofill-Dienst (Folge-PR geplant, Notiz in [ROADMAP.md](ROADMAP.md)); bis dahin Kopieren mit sensibler Zwischenablage, per Erweiterung gespeicherte Einträge kommen per Sync aufs Handy.
@@ -97,16 +102,19 @@ Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressu
 - Supporter-Modus: Webhook-Dienst ist gebaut, aber noch **nicht deployt** (Anleitung: [services/supporter-webhook/README.md](../services/supporter-webhook/README.md)); bis dahin Codes per CLI von Hand ([howto/supporter.md](howto/supporter.md)). Icon-Varianten (Android-Activity-Alias, Tray) bewusst nicht gebaut.
 
 ## Bekannte Probleme / Hinweise
-- README-Download-Badges zeigen auf das neueste *stabile* Release und funktionieren jetzt (seit `v0.2.0`).
+
+- README-Download-Badges zeigen auf das neueste _stabile_ Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
 - Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). Erledigt 2026-09-30: JS-Plugin-Bumps (`plugin-http` 2.8.0, `plugin-opener` 2.7.0; die Rust-Seite bleibt `~2.7`, siehe Cargo), CI-Caching. `serde_json` bleibt: `tauri::generate_context!` braucht es.
 - Commit `792e7aa` (Logo) hat zwei durch Shell-Backticks verschluckte Wörter im Text („after . Logo gets a prop“) – bewusst nicht per Force-Push korrigiert.
 - Aus PR #3 offene Vorschläge: globaler „+“-FAB ab 900 px durch „+ Neu“ in der Top-Bar ersetzen; ToDo-Board mit Listen als Spalten.
 
 ## Modul-Review 2026-10-01 (entschieden, Doku-PR, noch nicht umgesetzt)
+
 Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen“; Verschmelzungen Erinnerungen → Kalender, (Einkauf + Packlisten → Listen, Apps & Links → Merkliste, Verträge → Unterlagen, Geburtstage + Geschenke → Personen: erledigt), Systeminfo → Datenträger; Nachrichten, Habits, Zeiterfassung stillgelegt und mit Paket 6 entfernt; Werkzeuge 18 → 12. Pakete (0.4 … 0.9) und Prompts: [product/MODULE-PLAN.md](product/MODULE-PLAN.md), [archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Review-Funde: alle behoben oder bewusst belassen. Reihenfolge mit der Design-Spezifikation: Design-PR 1 + 2 → Paket 1 → Design-PR 3 + 4 → Pakete 3–5; Design-PRs 5b/5c/5d nur für bleibende Module (Review Abschnitt 25).
 
 ## Nächste sinnvolle Schritte
+
 1. Hardware-Checklisten ([MANUAL-TESTS.md](MANUAL-TESTS.md)) abarbeiten (Sven), Fehler melden.
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
 3. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
@@ -114,13 +122,13 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 5. Entscheidung: FAB-Änderung (Chat 10). Kaltstart/Precache: [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
 
 ## Manuelle Tests offen
+
 Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Offen – macht Sven
 
 0b. **Google-Prüfung für die Mail-Berechtigungen (Mail-Modul, Paket 3):** `gmail.readonly`, `gmail.modify` und `gmail.send` sind bei Google „eingeschränkte Bereiche“. Mit der eigenen OAuth-Client-ID jedes Nutzers (so ist es gebaut) braucht das keine Prüfung durch Google; im Teststatus der Cloud-Console laufen die Anmeldungen aber nach 7 Tagen ab, bis die App auf „In Produktion“ gestellt wird (dann zeigt Google den Hinweis „nicht verifizierte App“). Würde Nemo je einen **eigenen, mitgelieferten** Client für alle Nutzer einsetzen, wäre die Google-OAuth-Verifizierung samt jährlicher Sicherheitsprüfung (CASA) Pflicht – das ist eine Entscheidung für dich, nicht für den Code. Siehe [decisions/legal.md](decisions/legal.md).
-0a. **Dev-Preview-Schlüssel (vor dem Launch):** Schlüsselpaar erzeugt, öffentlicher Schlüssel (`FA423702E1D8B9CE`) steht in `src-tauri/tauri.dev.conf.json`; die Secrets `TAURI_DEV_SIGNING_PRIVATE_KEY` + `_PASSWORD` sind gesetzt (07.10.). Der Android-Keystore wurde am 07.10. neu angelegt (altes Passwort verloren): v0.3.1-Installationen lassen sich nicht aktualisieren, vorher Backup in der App, deinstallieren, neu installieren, Backup einspielen. Handtests aus dem Launch-Review (X1 Pipe auf Windows mit zweitem Nutzer, V1 Credential-Manager nach „Alle Daten löschen“, Android-APK-Update, Datenschutzseite: Name des Verantwortlichen eintragen).
-0. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** Beschreibung (Englisch), Website, Topics, Social Preview (`docs/brand/social-preview.png`, jetzt mit englischem Claim), *Private vulnerability reporting* und Sponsor-Button: Texte zum Einfügen in [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md). Kontakt-Adresse in `CODE_OF_CONDUCT.md` eintragen (Platzhalter).
+0a. **Dev-Preview-Schlüssel (vor dem Launch):** Schlüsselpaar erzeugt, öffentlicher Schlüssel (`FA423702E1D8B9CE`) steht in `src-tauri/tauri.dev.conf.json`; die Secrets `TAURI_DEV_SIGNING_PRIVATE_KEY` + `_PASSWORD` sind gesetzt (07.10.). Der Android-Keystore wurde am 07.10. neu angelegt (altes Passwort verloren): v0.3.1-Installationen lassen sich nicht aktualisieren, vorher Backup in der App, deinstallieren, neu installieren, Backup einspielen. Handtests aus dem Launch-Review (X1 Pipe auf Windows mit zweitem Nutzer, V1 Credential-Manager nach „Alle Daten löschen“, Android-APK-Update, Datenschutzseite: Name des Verantwortlichen eintragen). 0. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** Beschreibung (Englisch), Website, Topics, Social Preview (`docs/brand/social-preview.png`, jetzt mit englischem Claim), _Private vulnerability reporting_ und Sponsor-Button: Texte zum Einfügen in [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md). Kontakt-Adresse in `CODE_OF_CONDUCT.md` eintragen (Platzhalter).
 
 **Neu (Datenträger):** Die Checkliste D1–D16 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
 
@@ -128,18 +136,21 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent E1–E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
 
 ### Nemo-Rebranding
+
 10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
 11. **Download-Buttons der README:** erledigt – README und `docs/user/installation.md` verlinken seit dem Folge-PR `Nemo-Portable.exe` / `Nemo.apk` (das neueste stabile Release trägt beide Namen). Die `Taschenmesser-*`-Kopien entfallen ab dem nächsten Release (siehe 13); `v0.3.1` und älter behalten ihre Dateien.
 12. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
 13. **Erledigt (ab dem nächsten Release nach `v0.3.1`):** Releases tragen nur noch `Nemo-*`; `latest.json` zeigt auf `Nemo-Portable.exe`. Folge: Installationen ≤ 0.2.x können sich nicht mehr selbst aktualisieren (Neuinstallation nötig); Clients ab 0.3.0 akzeptieren beide Namen. Offen: Die Rust-/TS-Allowlists (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`) nennen den Altnamen noch, harmlos, später entfernbar. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 
 **Neu (Supporter-Modus, [howto/supporter.md](howto/supporter.md), [legal/SUPPORTER-NOTES.md](legal/SUPPORTER-NOTES.md)):**
+
 - Ko-fi-Seite und „Code erneut senden“-Seite sind in `supporterLinks.ts` eingetragen; vor dem Release mit einer echten Spende testen (Mail kommt an, Code wird akzeptiert, `/resend`).
 - Schlüsselpaar erzeugen und sicher verwahren (`tools/supporter-cli`: `keygen`, dann `set-public-key`, `publicKeys.ts` committen; solange er leer ist, lehnt die App jeden Code ab). Eigenen Code: `create --tier developer --name "Sven"`.
 - Webhook-Dienst deployen: Schritt für Schritt in [services/supporter-webhook/README.md](../services/supporter-webhook/README.md) (Cloudflare-Konto, KV und Queues anlegen, Secrets setzen, Resend mit verifizierter Domain, Webhook-URL und Token bei Ko-fi eintragen, Test-Spende). Vorher prüfen, dass die Feldnamen der echten Ko-fi-„Send test“-Nachricht zu `src/kofi.ts` passen (Schritt 15 der Anleitung).
 - Steuerliche und rechtliche Klärung (Impressum, Datenschutzhinweis für den Mailversand): Checkliste in [legal/SUPPORTER-NOTES.md](legal/SUPPORTER-NOTES.md). README-Abschnitt „Unterstützen“ erst mit der Zahlungsseite veröffentlichen.
 
 ## Fertig (eine Zeile je Release; Details: [CHANGELOG](../CHANGELOG.md), Arbeitsprotokoll bis 0.3.1: [archive/2026-10/STATUS-done-until-0.3.1.md](archive/2026-10/STATUS-done-until-0.3.1.md))
+
 - `v0.2.0` (2026-09-30): Phasen 1–13 (Fundament bis Passwort-Tresor, Sync/Backup, KI-Assistent + Router, Tauri-Shell, Releases, Selbst-Update), KI-Import (JSON, lokale Import-API, `mcp/`).
 - `v0.3.0-beta.1` (2026-09-30) / `v0.3.0` (2026-10-01): Nemo-Rebranding, Einrichtungsassistent, Schnell erfassen, Datenträger/Systeminfo (Windows), Vorrat, Zeiterfassung, Geschenkideen, Werkzeuge, flaches Design „Klar“, Übersicht + Widgets, Dev-Preview, MIT.
 - Auf `develop`/PR: Rechner mit sechs Modi (Standard, Wissenschaft, Programmierer, Prozent & Finanzen, Datum, Einheiten), mathjs-Engine, Ausdrücke in der Suchleiste (`=…`, `0x1F in dez`, `15.03. + 45 Tage`).

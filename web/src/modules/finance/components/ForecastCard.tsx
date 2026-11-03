@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { formatMoney } from '@/core/money';
+import { useAdvanced } from '@/core/settings/comfort';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Card, Segmented } from '@/ui';
+import { Button, Card, Segmented } from '@/ui';
 import { useCurrency } from '../currency';
 import { dailySeries, type ForecastHorizon } from '../forecast';
 import { settings } from '../settings';
@@ -20,6 +21,9 @@ export function ForecastCard({ data }: { data: FinanceData }) {
   const preferred = ((prefs as { forecastHorizon?: ForecastHorizon } | undefined)
     ?.forecastHorizon ?? 'month') as ForecastHorizon;
   const [chosen, setChosen] = useState<ForecastHorizon | undefined>();
+  // Calm by default: the two sentences; the line, the horizon switch and the list wait behind "Details".
+  const [open, setOpen] = useState(false);
+  const [advanced] = useAdvanced('finance');
   const horizon = chosen ?? preferred;
   const forecast = useForecast(data, currency, horizon);
   const e = t.finance.ext.forecast;
@@ -29,6 +33,19 @@ export function ForecastCard({ data }: { data: FinanceData }) {
     <Card>
       <div className={styles.chartHead}>
         <h2 className={styles.chartTitle}>{e.title}</h2>
+        {advanced ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+            data-testid="forecast-toggle"
+          >
+            {open ? e.hideDetails : e.showDetails}
+          </Button>
+        ) : null}
+      </div>
+      {open && advanced ? (
         <Segmented
           label={e.horizon}
           value={horizon}
@@ -39,7 +56,7 @@ export function ForecastCard({ data }: { data: FinanceData }) {
           ]}
           onChange={setChosen}
         />
-      </div>
+      ) : null}
       {forecast ? (
         <>
           {forecast.events.length === 0 ? (
@@ -52,30 +69,34 @@ export function ForecastCard({ data }: { data: FinanceData }) {
               <p className={styles.muted} data-testid="forecast-lowest">
                 {e.lowest(money(forecast.lowest.balanceMinor), date(forecast.lowest.date))}
               </p>
-              <MonthCurve
-                points={dailySeries(forecast, today())}
-                title={e.chartLabel}
-                fromLabel={date(today())}
-                testId="forecast-curve"
-              />
-              <ul className={styles.forecastList}>
-                {forecast.events.map((ev, i) => (
-                  <li key={i}>
-                    <span>{date(ev.date)}</span>
-                    <span>
-                      {ev.label ? `${ev.label} · ` : ''}
-                      {e.sources[ev.source]}
-                    </span>
-                    <b className={ev.amountMinor > 0 ? styles.income : undefined}>
-                      {ev.amountMinor > 0 ? '+' : '−'}
-                      {money(Math.abs(ev.amountMinor))}
-                    </b>
-                  </li>
-                ))}
-              </ul>
+              {open ? (
+                <>
+                  <MonthCurve
+                    points={dailySeries(forecast, today())}
+                    title={e.chartLabel}
+                    fromLabel={date(today())}
+                    testId="forecast-curve"
+                  />
+                  <ul className={styles.forecastList}>
+                    {forecast.events.map((ev, i) => (
+                      <li key={i}>
+                        <span>{date(ev.date)}</span>
+                        <span>
+                          {ev.label ? `${ev.label} · ` : ''}
+                          {e.sources[ev.source]}
+                        </span>
+                        <b className={ev.amountMinor > 0 ? styles.income : undefined}>
+                          {ev.amountMinor > 0 ? '+' : '−'}
+                          {money(Math.abs(ev.amountMinor))}
+                        </b>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
             </>
           )}
-          <p className={styles.muted}>{e.note}</p>
+          {open && advanced ? <p className={styles.muted}>{e.note}</p> : null}
         </>
       ) : (
         <p role="status">…</p>
