@@ -5,6 +5,7 @@ Whole-picture check of identity v3 on `develop` (73da10c4): foundation (#414) pl
 ## Method
 - Dev-Preview build with seed scale `medium`, fixed clock 2026-09-29. Tours: `web/e2e/screenshots/identity-v3.spec.ts` (every module entry page, overview, library, tools, settings × 1280·1920·2560·412 × light/dark, reading aid on at 1920/412) and the audit spec [`tools/identity-audit.spec.ts`](tools/identity-audit.spec.ts) (blind crops, empty states, toolbox, overview head). Sheets: [`tools/grid-audit.mjs`](tools/grid-audit.mjs). Contrast matrix: [`tools/contrast.mjs`](tools/contrast.mjs); mapping seams: [`tools/seams.mjs`](tools/seams.mjs).
 - **Blind test:** 147 crops (24 heads + 30 widgets at 1920 light and dark, 19 heads + 20 widgets at 412), title text blacked out (h1, eyebrow, sub-navigation labels, widget titles), random file names, key read only after scoring ([`blind-test.txt`](blind-test.txt)). Limitation: the same reviewer had seen the labelled sheets first, so the raw hit rate is inflated; the honest figure is "recognised by form" below.
+- Capture notes: on the phone the tour's weather page shows the no-place state (the place pick did not persist in that run); the audit spec's phone run shows the sky head (blind crop `f07e16`), so the phone `himmel` head is fine. Widget crops at 412 include the fixed bottom navigation and the FAB.
 - Overflow and centring: `measure--*.json` of the tour (document/main scroll width, elements beyond the window) at all four viewports.
 
 ## Contact sheets
@@ -24,6 +25,19 @@ Whole-picture check of identity v3 on `develop` (73da10c4): foundation (#414) pl
 | **All** | **147** | **147 (100 %)** | **108 (73 %)** | **39 (27 %)** |
 
 Weak recognitions, grouped (every one is a finding below): invoices head (reading the receipt card, F-G04), budgets head (lime is the only colour, G05), disk head (empty, elimination, G01), vault head (reading "Unterlagen", G03), chat and notes heads (signature tiny on the desktop, absent on the phone, G02/G07/G08), bookmarks head (three 70 px notes, G06), maps head (reading the card), feeds head (reading); widgets: every `kennzahl` widget (finance, timetrack, mail × 3, feeds) only by its icon (F05), `kacheln` of bookmarks vs browser (icon only, F10), people and vault lists (reading), `checkliste` of lists vs todos (icon only).
+
+## Consistency between the four groups (seams)
+| Element | Owner | Seen | Verdict |
+| --- | --- | --- | --- |
+| Icon plate (1.75 rem, `--radius-sm`, solid hue, surface ink) | shell (`AreaFrame`, settings `PageHead`, `ToolPlate`) | identical on every head, settings head and tool head; widgets use the tinted 18 % chip by design (B) | consistent |
+| Head padding, eyebrow, h1 size per variant, actions row | shell | identical across the 24 modules; `type` accents (mono, serif, thin) applied by the band | consistent |
+| Sub-navigation (pills, filled 14 % active, wraps / scrolls with fade) | shell `ui/SubNav` | identical; the phone row scrolls with the fade mask | consistent |
+| Card radius, widget head zone, pattern opacity | shell tokens | identical; `shape: 'round'` only on weather | consistent |
+| Module toolbars (views, period, "Neu") | modules | `PageHeader views` everywhere except ToDos (own 44 px chip bar, documented) and Notes (own tab strip); Finance/Invoices/Subscriptions share one layout | small drift, documented |
+| Signatures in the head | modules | sizes from 60 px (chat) to full-height (music, pantry); phone behaviour differs by group (G02) | **inconsistent** (F01, F02, G02) |
+| Empty-state motifs | modules | 13 own motifs vs the fish in plan/money (F11) | **inconsistent** |
+| Folder/index tabs | modules | three local copies (notes, vault, accounts), same look | duplicated, consistent look |
+| Tiles with count + state | modules | pantry draws its own (`TileGrid` has no count line); maps uses a card with chips | drift |
 
 ## Findings
 Severity: **S1** breaks the promise "recognisable without reading" for several modules or fails an accessibility rule · **S2** one module or one seam clearly off · **S3** polish. Cause: **foundation** (shell, tokens, contract, rule), **group** (a module chat), **seam** (between chats, nobody's rule).
