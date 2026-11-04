@@ -19,6 +19,7 @@
     "test:changed": "vitest run --changed",
     "e2e": "npm run e2e:app && npm run e2e:sync",
     "gen:module": "node scripts/gen-module.mjs",
+    "gen:modules": "node scripts/gen-module-list.mjs",
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
     "check:tools": "node scripts/check-tools.mjs",
