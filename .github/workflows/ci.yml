@@ -15,8 +15,12 @@ permissions:
 
 concurrency:
   # The event is part of the group so that the nightly dispatch never cancels a push run (and vice versa).
+  # A newer push to a pull request replaces its older run. Runs for develop and main are never cancelled: a
+  # push that lands while one is running waits its turn (GitHub keeps one pending run per group, and a newer
+  # push replaces a pending run, never a running one), so every run that starts also finishes, Dev-Preview
+  # build and publish included.
   group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Decides what has to run. Any doubt (no diff, unreadable range, an unknown path, an error) means
