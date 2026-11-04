@@ -14,6 +14,8 @@ Parametric master of the Nemo logo and the tools that turn it into every brand a
 | `render.mjs` | `node render.mjs rounds/<n>` renders a round's `variants.mjs` into SVG layers and `sheet.png` (16–512 px, light/dark, true pixels, the mark in the real sidebar and phone top bar, taskbar/tray, Android masks + safe zone + themed icon, favicon tab, palette check) |
 | `tools/app-shots.mjs` | screenshots of the seeded Dev-Preview app with the brand hidden (`context/`, with boxes in `boxes.json`; the `-current` files are the old logo, the "before") |
 | `tools/app-after.mjs` | screenshots of the running app with the logo in place (`rounds/9/screens/`) |
+| `tools/compose.mjs` | before/after sheets from two `app-after` runs (a build of the base branch and of this branch) |
+| `tools/os-mock.mjs` | mock of the shipped rasters in taskbar, tray, tab strip, PWA, Android masks and themed icon |
 | `rounds/9/` | the final sheet, the final layers (`Final/`, `F4/`), the app screenshots (`screens/`) |
 | `rounds/archive/` | exploration rounds 1–8 (sheets and parameters; see its README) |
 

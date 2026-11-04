@@ -1,9 +1,9 @@
 // Screenshots of the running seeded Dev-Preview app with the logo in place (the "after" of the PR):
-// wide sidebar and rail (light/dark), the rail with the proposed tile (a mock, clearly labelled in the PR),
+// wide sidebar and rail (light/dark),
 // the phone top bar (mark below 416 px, wordmark above), the splash (JavaScript off, so it stays), About.
 //
 //   cd web && npm run build:e2e-seed && npm run preview:e2e-seed      (port 4174)
-//   node tools/app-after.mjs <outDir>
+//   node tools/app-after.mjs <outDir>      (APP_URL=http://localhost:<port> for another build, e.g. the base branch for the "before")
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
@@ -45,7 +45,7 @@ async function open(page, path, { theme, sidebar }) {
 const ctx = (opts) =>
   browser.newContext({ reducedMotion: 'reduce', locale: 'de-DE', serviceWorkers: 'block', deviceScaleFactor: 2, ...opts });
 
-// Desktop 1440 x 900: wide, rail, rail with the proposed tile.
+// Desktop 1440 x 900: wide, rail, About.
 {
   const context = await ctx({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
   await context.addInitScript(() => localStorage.setItem('tm-seed-autofilled', '1'));
@@ -56,18 +56,6 @@ const ctx = (opts) =>
     await page.screenshot({ path: join(out, `wide-${theme}.png`), clip: { x: 0, y: 0, width: 420, height: 240 } });
     await open(page, '/', { theme, sidebar: 'rail' });
     await page.screenshot({ path: join(out, `rail-${theme}.png`), clip: { x: 0, y: 0, width: 420, height: 240 } });
-    // Proposal mock (not in the app): the tile at 28 px, centred in the 76 px rail.
-    await page.evaluate(() => {
-      const img = document.querySelector('a[aria-label="Zur Übersicht"] img');
-      if (!img) return;
-      img.src = '/icon.svg';
-      img.width = 28;
-      img.height = 28;
-      img.parentElement.style.justifyContent = 'center';
-      img.parentElement.style.width = '100%';
-    });
-    await page.waitForTimeout(200);
-    await page.screenshot({ path: join(out, `rail-proposal-${theme}.png`), clip: { x: 0, y: 0, width: 420, height: 240 } });
     // About: the mark at 64 px.
     await open(page, '/settings/ueber', { theme, sidebar: 'wide' });
     const logo = page.locator('main svg[aria-label="Nemo"]').first();
