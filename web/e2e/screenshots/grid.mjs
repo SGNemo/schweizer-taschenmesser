@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global process, console */
 // Manual tooling: lays the screenshots of identity-v3.spec.ts side by side, "all modules next to each other".
 // Usage (in web/): node e2e/screenshots/grid.mjs <dir with before/ and after/> <out dir> [modules,comma,separated]
 // Per viewport and colour scheme (reading aid off and on) one PNG: a row "before", a row "after", one column per module.

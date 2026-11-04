@@ -30,14 +30,16 @@ export function ReceiptSignature({
         />
       </HeroSlot>
       <HeroSlot>
-        <div className={styles.receipt} data-testid="receipt-signature" aria-hidden="true">
-          {lines.slice(0, 3).map((l, i) => (
-            <span key={i} className={styles.slipLine}>
-              <span className={styles.slipName}>{l.name}</span>
-              {l.price ? <span className={styles.slipPrice}>{l.price}</span> : null}
-            </span>
-          ))}
-        </div>
+        {lines.length === 0 ? null : (
+          <div className={styles.receipt} data-testid="receipt-signature" aria-hidden="true">
+            {lines.slice(0, 3).map((l, i) => (
+              <span key={i} className={styles.slipLine}>
+                <span className={styles.slipName}>{l.name}</span>
+                {l.price ? <span className={styles.slipPrice}>{l.price}</span> : null}
+              </span>
+            ))}
+          </div>
+        )}
       </HeroSlot>
     </>
   );

@@ -14,7 +14,7 @@ export function VaultHead({ docs, day }: { docs: Stored<VaultDocument>[]; day: s
   if (docs.length === 0) return null;
   const states = docs.map((d) => statusOf(d, day));
   const expired = states.filter((s) => s === 'expired').length;
-  const due = states.filter((s) => s === 'act-now' || s === 'soon' || s === 'missed').length;
+  const due = states.filter((s) => s === 'act-now' || s === 'soon').length;
   return (
     <>
       <HeroSlot area="figure">

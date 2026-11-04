@@ -4,7 +4,7 @@ import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
-import { WidgetBody } from '@/ui';
+import { WidgetBody, useWidgetSize } from '@/ui';
 import { expiryState, needsRestock, sortItems } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
@@ -13,6 +13,7 @@ import styles from './ExpiringWidget.module.css';
 
 /** Widget variant `kacheln`: one tile per place with its count and state in words, one context line, the most urgent item. */
 export default function ExpiringWidget() {
+  const size = useWidgetSize();
   const items = useLiveQuery(() => itemRepo.active().toArray(), []);
   const [prefs] = useSettings('module.pantry', settingsSchema, moduleSettings.defaults as never);
   const soonDays = (prefs as { soonDays?: number } | undefined)?.soonDays ?? 3;
@@ -35,7 +36,7 @@ export default function ExpiringWidget() {
       label: dueState(i.expires!, day, { soonDays }).label,
     })),
     ...low.map((i) => ({ id: i.id, name: i.name, label: t.pantry.lowStock })),
-  ].slice(0, 3);
+  ].slice(0, size === 's' ? 2 : size === 'm' ? 3 : 5);
 
   const places = PLACES.map((p) => {
     const here = list.filter((i) => i.place === p);

@@ -29,6 +29,7 @@ export default function ExpiringWidget() {
       empty={t.vault.widgetEmpty}
       emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
       summary={total > 0 ? t.vault.widgetSummary(total) : undefined}
+      moreLabel={t.widgets.more}
       entries={rows.map((r) => ({ key: r.s, title: r.title, tone: r.tone, label: String(r.n) }))}
     />
   );

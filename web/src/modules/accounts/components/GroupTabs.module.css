@@ -7,6 +7,8 @@
 }
 .tab {
   min-height: var(--touch);
+  max-width: 100%;
+  overflow-wrap: anywhere;
   margin-bottom: -1px;
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border-strong);

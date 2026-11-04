@@ -4958,7 +4958,6 @@ export const de = {
     widgetAction: 'Eintrag anlegen',
     packingEmpty: 'Keine Packliste unterwegs.',
     packingAction: 'Packliste anlegen',
-    openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
     figureUnit: 'offen',
     sectionsCount: (n: number) => (n === 1 ? '1 Ladenbereich' : `${n} Ladenbereiche`),
     sections: {

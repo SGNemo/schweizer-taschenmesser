@@ -149,7 +149,7 @@ export default function PantryPage() {
           {t.pantry.add}
         </Button>
       </PageHeader>
-      <ShelfSignature counts={counts} />
+      <ShelfSignature counts={counts} beforeJump={() => setFilter('all')} />
       <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}

@@ -441,8 +441,8 @@ export default function ListsPage() {
             </section>
           ) : null}
           <div
-            className={isShopping ? styles.paper : undefined}
-            data-testid={isShopping ? 'receipt-paper' : undefined}
+            className={isShopping && shown.length > 0 ? styles.paper : undefined}
+            data-testid={isShopping && shown.length > 0 ? 'receipt-paper' : undefined}
           >
             {groups.length === 1 && groups[0]!.id === '' ? (
               <ItemList label={current.name}>{shown.map(renderRow)}</ItemList>

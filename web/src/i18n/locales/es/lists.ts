@@ -100,7 +100,6 @@ export const lists: Strings['lists'] = {
   widgetAction: 'Añadir elemento',
   packingEmpty: 'No hay ninguna lista de equipaje en curso.',
   packingAction: 'Crear lista de equipaje',
-  openCount: (n: number) => (n === 1 ? '1 artículo pendiente' : `${n} artículos pendientes`),
   figureUnit: 'pendientes',
   sectionsCount: (n: number) =>
     n === 1 ? '1 sección de la tienda' : `${n} secciones de la tienda`,

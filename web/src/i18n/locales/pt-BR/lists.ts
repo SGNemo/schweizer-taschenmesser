@@ -99,7 +99,6 @@ export const lists: Strings['lists'] = {
   widgetAction: 'Adicionar item',
   packingEmpty: 'Nenhuma lista de bagagem em andamento.',
   packingAction: 'Criar lista de bagagem',
-  openCount: (n: number) => (n <= 1 ? `${n} item em aberto` : `${n} itens em aberto`),
   figureUnit: 'em aberto',
   sectionsCount: (n: number) => (n <= 1 ? `${n} seção da loja` : `${n} seções da loja`),
   sections: {

@@ -30,7 +30,14 @@ function stateLine(c: ShelfCounts[Place]): { text: string; tone: 'danger' | 'war
  * something (count + state in words), standing on a single neutral shelf line. The tiles are buttons that jump to
  * the section of that place; colour is never alone, every tile says its state.
  */
-export function ShelfSignature({ counts }: { counts: ShelfCounts }) {
+export function ShelfSignature({
+  counts,
+  beforeJump,
+}: {
+  counts: ShelfCounts;
+  /** Called before the jump: the page shows every item again, so the section of the place exists. */
+  beforeJump?: () => void;
+}) {
   const places = PLACES.filter((p) => counts[p].items > 0);
   if (places.length === 0) return null;
   const total = places.reduce((n, p) => n + counts[p].items, 0);
@@ -57,8 +64,11 @@ export function ShelfSignature({ counts }: { counts: ShelfCounts }) {
                 key={p}
                 type="button"
                 className={styles.tile}
-                aria-label={t.pantry.shelf.jump(t.pantry.places[p], counts[p].items)}
-                onClick={() => jumpTo(p)}
+                aria-label={`${t.pantry.shelf.jump(t.pantry.places[p], counts[p].items)}${state.tone === 'ok' ? '' : ` · ${state.text}`}`}
+                onClick={() => {
+                  beforeJump?.();
+                  requestAnimationFrame(() => jumpTo(p));
+                }}
               >
                 <span className={styles.name} aria-hidden="true">
                   {t.pantry.places[p]}

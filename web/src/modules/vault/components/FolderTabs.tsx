@@ -39,11 +39,7 @@ export function FolderTabs({
             onClick={() => onChange(tab.id)}
           >
             <span>{tab.label}</span>
-            {tab.n > 0 ? (
-              <span className={styles.num} aria-hidden="true">
-                {tab.n}
-              </span>
-            ) : null}
+            {tab.n > 0 ? <span className={styles.num}>{tab.n}</span> : null}
           </button>
         ))}
       </div>
