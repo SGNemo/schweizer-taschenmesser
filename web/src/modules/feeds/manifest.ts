@@ -1,7 +1,7 @@
 import { t } from '@/strings';
-import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { feedExample, feedSchema } from './schema';
 import { settings } from './settings';
 
@@ -55,7 +55,7 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   contributions: {
     // Start-data importers (see modules/todos/importer.ts); `noOnboarding` = nothing to import.
-    onboarding: noOnboarding,
+    onboarding,
     quickAdd: [
       {
         id: 'new',
