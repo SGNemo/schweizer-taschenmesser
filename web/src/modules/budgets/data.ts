@@ -70,6 +70,16 @@ function monthCache() {
   };
 }
 
+/** Planned (not yet booked) repeating expenses, fetched once per (currency, range): one scan, not one per budget. */
+function plannedCache() {
+  const cache = new Map<string, Promise<Map<string, number>>>();
+  return (from: string, to: string, currency: string) => {
+    const key = `${currency}|${from}|${to}`;
+    if (!cache.has(key)) cache.set(key, plannedExpensesByCategory(from, to, currency));
+    return cache.get(key)!;
+  };
+}
+
 /**
  * Budgets with what their period spent, the carry-over, the status against the warning threshold and
  * the forecast. `financeOn` false (the finance module is off) leaves the rows empty: there is no spending to show.
@@ -86,6 +96,7 @@ export async function loadBudgetRows(
   if (budgets.length === 0) return { budgets, categories, rows: [] };
   const prefs = await getSettings('module.budgets', settingsSchema, settings.defaults as never);
   const spentIn = monthCache();
+  const plannedIn = plannedCache();
   const rows: BudgetRow[] = [];
   for (const budget of budgets) {
     const currency = currencyOf(budget);
@@ -108,7 +119,7 @@ export async function loadBudgetRows(
     let projected: number | undefined;
     if (running && prefs.showForecast) {
       const planned = spentInMonths(
-        [await plannedExpensesByCategory(day, info.to, currency)],
+        [await plannedIn(day, info.to, currency)],
         categories,
         budget.categoryId,
       );
