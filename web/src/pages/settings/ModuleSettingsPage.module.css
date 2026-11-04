@@ -15,16 +15,6 @@
   background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
   color: var(--text);
 }
-.chip {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
-  color: var(--text);
-}
 .headText {
   display: flex;
   flex-direction: column;
