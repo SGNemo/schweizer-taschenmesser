@@ -21,6 +21,10 @@ import { searchSettings, type SettingsSearchResult } from '@/core/settings/regis
 import { applyQuick, QUICK_SETTINGS } from '@/core/settings/quick';
 import { applyProfile, builtinProfiles } from '@/core/settings/profiles';
 import { tSettings3 } from '@/strings.settings3';
+import { tAuto } from '@/strings.automation';
+import { undoLastRun, runRuleById } from '@/core/automation';
+import { useAutomationSettings } from '@/core/automation/settings';
+import { resolveRules } from '@/core/automation/templates';
 import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
 import { now } from '@/core/time/now';
 import { normalize } from '@/core/text/normalize';
@@ -182,6 +186,41 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
       ),
     [shortcutPrefs, voiceKey, tools],
   );
+  const [automation] = useAutomationSettings();
+  const automationCommands = useMemo<Command[]>(() => {
+    if (!automation?.enabled) return [];
+    const p = tAuto.get().palette;
+    const toast = useUiStore.getState().toast;
+    return [
+      ...resolveRules(automation).map((rule) => ({
+        id: `automation-run-${rule.id}`,
+        label: p.run(rule.title),
+        icon: 'check' as IconName,
+        // listed only once the user types "regel …", so the empty palette stays calm
+        onlyWhenQueryStartsWith: p.keywords[0],
+        keywords: p.keywords,
+        run: () => void runRuleById(rule.id).then(() => toast(p.ran)),
+      })),
+      {
+        id: 'automation-log',
+        label: p.log,
+        icon: 'settings' as IconName,
+        keywords: p.keywords,
+        run: () => navigate(settingsPath('benachrichtigungen', 'automation-log')),
+      },
+      {
+        id: 'automation-undo',
+        label: p.undoLast,
+        icon: 'undo' as IconName,
+        keywords: p.keywords,
+        run: () =>
+          void undoLastRun().then((r) =>
+            toast(r ? tAuto.get().log.undoneDetail(r.removed, r.kept) : p.nothingToUndo),
+          ),
+      },
+    ];
+  }, [automation, navigate]);
+
   const commands = useMemo<Command[]>(() => {
     const go = (to: string) => () => void navigate(to);
     const list: Command[] = [
@@ -296,6 +335,8 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         icon: tool.icon,
         run: () => openTools(tool.id),
       })),
+      // Automations (only while switched on): "Regel ausführen: …" (typed "regel …"), the log, undo.
+      ...automationCommands,
       ...devCommands,
     ];
     return list.map((c) => ({ ...c, shortcut: keyHints[c.id] }));
@@ -308,6 +349,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     openTools,
     tools,
     devCommands,
+    automationCommands,
     states,
     showPreview,
     keyHints,

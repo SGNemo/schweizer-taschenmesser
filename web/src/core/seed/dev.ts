@@ -3,9 +3,11 @@
  * repos (valid envelope, HLC stamps) but are registered in `_seeds` first, so sync and backup skip
  * them. Each run is one batch row in `_imports`; "remove" deletes exactly what the registry lists.
  */
+import { z } from 'zod';
+import { AUTOMATION_DEFAULTS } from '@/core/automation/settings';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { tableName } from '@/core/db/schema';
-import { createCollectionRepo } from '@/core/db/repo';
+import { createCollectionRepo, createRepo } from '@/core/db/repo';
 import { enableModule, loadModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
@@ -172,6 +174,7 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
     );
     await outbox(database).bulkDelete(enabledRows.map((id) => ['_modules', id]));
   }
+  if (opts.prepareApp !== false) await seedAutomation(database, batchId);
   const modules = new Map<string, SeedModule>();
   const plans: PlannedWrite[] = [];
   for (const m of ordered) {
@@ -363,4 +366,30 @@ export async function seedCounts(
     out[id] = (out[id] ?? 0) + 1;
   });
   return out;
+}
+
+/**
+ * Example rules in dry run (`_settings` scope `automation`), so the automation sections have
+ * something to show without ever changing data. Only when the user has no such settings row; the
+ * row is registered first, so sync and backup skip it and "remove" deletes it again.
+ */
+async function seedAutomation(database: TaschenmesserDB, batchId: string): Promise<void> {
+  if ((await database.table('_settings').get('automation')) !== undefined) return;
+  await registry(database).put({
+    id: seedKey('_settings', 'automation'),
+    table: '_settings',
+    rowId: 'automation',
+    batchId,
+  });
+  await createRepo('_settings', z.looseObject({}), database).upsert('automation', {
+    ...AUTOMATION_DEFAULTS,
+    enabled: true,
+    dryRun: true,
+    rules: {
+      invoiceDue: { enabled: true, params: {} },
+      stockLow: { enabled: true, params: {} },
+      weeklyReview: { enabled: true, params: {} },
+    },
+  });
+  await outbox(database).delete(['_settings', 'automation']);
 }

@@ -578,3 +578,11 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **BK2 Kündigungsfrist in Monaten:** Abo mit Abbuchung am 31., Frist „3 Monate“: „Kündigen bis“ liegt auf dem 30. des Monats drei Monate davor (nicht 90 Tage davor). Ein Abo oder eine Unterlage, die vor dem Update „90 Tage“ als „3 Monate“ zeigte, zeigt nach dem Update weiter „3 Monate“ und rechnet kalendarisch; „45 Tage“ bleibt „45 Tage“. ☐
 - **BK3 CSV öffnen:** Finanzen → Export mit einer Buchung, deren Empfänger `=1+1` heißt, in Excel/LibreOffice öffnen: die Zelle zeigt den Text `'=1+1`, keine Berechnung. Passwort-Export (Bitwarden-Format) bleibt unverändert. ☐
 
+## Automatisierungen (Handtest)
+- AU1 · Einstellungen → Darstellung → „In Arbeit anzeigen“ an; Einstellungen → Benachrichtigungen: „Automatisierungen“ und „Regel-Protokoll“ erscheinen. Hauptschalter ein, Vorlage „Rechnung bald fällig“ ein, Tage vorher 3; eine offene Rechnung mit Fälligkeit in 2 Tagen anlegen; nach höchstens zehn Minuten (und App offen) liegt eine Aufgabe „Rechnung … bezahlen“ in ToDos, die Erinnerung kommt als ruhige Benachrichtigung (Ruhezeiten und Limit gelten), das Protokoll zeigt den Lauf.
+- AU2 · Im Protokoll „Rückgängig“ bei diesem Lauf: Aufgabe und Erinnerung sind weg; eine zwischendurch geänderte Aufgabe bleibt und wird gemeldet.
+- AU3 · „Nur ausprobieren (Trockenlauf)“ an: gleiche Schritte schreiben nichts, das Protokoll sagt „Trockenlauf“.
+- AU4 · Befehlspalette: „regel“ tippen → „Regel ausführen: …“ führt die Regel aus; „Letzte Regel-Ausführung rückgängig“ nimmt sie zurück.
+- AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
+- AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
+

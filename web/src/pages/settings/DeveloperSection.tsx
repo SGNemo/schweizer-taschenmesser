@@ -1,3 +1,5 @@
+import { dryRunAll } from '@/core/automation';
+import { tAuto } from '@/strings.automation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import {
@@ -101,6 +103,20 @@ export default function DeveloperSection() {
           </Button>
         </div>
         <p className={styles.muted}>{tDev.remove.hint}</p>
+        <div className={styles.row}>
+          <Button
+            disabled={busy !== undefined}
+            data-testid="automation-dry-run"
+            onClick={() =>
+              void run('dry', async () => {
+                const n = await dryRunAll();
+                return n > 0 ? tAuto.get().dev.dryRunDone(n) : tAuto.get().dev.dryRunNone;
+              })
+            }
+          >
+            {tAuto.get().dev.dryRunAll}
+          </Button>
+        </div>
 
         <Switch
           label={tDev.sync.label}

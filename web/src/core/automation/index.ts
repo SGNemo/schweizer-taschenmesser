@@ -6,3 +6,5 @@ export { automationDue } from './notices';
 export { useAutomationLog, listLog } from './log';
 export * from './settings';
 export { TEMPLATES, resolveRules, type RuleTemplate } from './templates';
+export { applyAutomationSettings, dryRunAll, runRuleById, undoLastRun, undoRunById } from './api';
+export { listNotices, removeNotices, type AutomationNotice } from './notices';
