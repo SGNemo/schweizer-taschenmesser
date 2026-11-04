@@ -29,15 +29,22 @@ export function GroupedList({
   listId,
   groups,
   label,
+  columns,
 }: {
   listId: string;
   groups: readonly GroupedListGroup[];
   label?: string;
+  /** Let the groups flow into as many columns as fit (20 rem each, a hairline between them), like a newspaper. */
+  columns?: boolean;
 }) {
   const closed = useUiStore((s) => s.closedGroups);
   const toggle = useUiStore((s) => s.toggleGroupOpen);
   return (
-    <div className={styles.root} role="group" aria-label={label}>
+    <div
+      className={columns ? `${styles.root} ${styles.columns}` : styles.root}
+      role="group"
+      aria-label={label}
+    >
       {groups.map((g) => {
         const key = `${listId}:${g.id}`;
         const toggled = closed.includes(key);
