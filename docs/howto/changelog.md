@@ -44,3 +44,5 @@ Previews (Dev channel, `-beta`/`-dev` versions, `npm run dev`) read the open `.c
 Both places that show notes (update banner `layout/UpdateBanner.tsx`, Settings → Über Nemo `pages/settings/ChangelogList.tsx`) render with `layout/ReleaseNotes.tsx`; the banner reads the release body via `core/changelog/notes.ts` (German block above `---`, English below; other languages read English; the Dev-Preview preamble lines starting with `>` are dropped).
 
 "New" dot: `core/changelog/useNewChangelog.ts` (token = hash of the open notes in a preview, else the running version; seen tokens in `_meta` `changelog.seen`, switch `changelog.hint`) drives `layout/NewDot.tsx` at the Settings entry of the sidebar (wide and rail) and the status of "Über Nemo" in the settings list. It clears when the list was open and left, or a version was opened. No count, no pop-up.
+
+Settings → Updates shows the history below the controls (`pages/settings/ChangelogHistory.tsx`: one card per version, newest first, all open, link to `CHANGELOG.md` for older ones); the per-version body is `pages/settings/VersionNotes.tsx`, shared with the folded list in "Über Nemo".

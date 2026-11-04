@@ -55,6 +55,7 @@ export const de = {
       none: 'Zu dieser Version gibt es keine Angaben.',
     },
     changes: {
+      history: 'Was in den letzten Versionen passiert ist',
       unreleased: 'Unveröffentlicht',
       unreleasedNote: 'Noch nicht veröffentlicht, nur in dieser Vorschau.',
       highlights: 'Das Wichtigste',
