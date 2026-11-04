@@ -346,7 +346,7 @@ function useDeepLink(ready: boolean) {
       keepInView(el);
       if (historyOn) recordSectionVisit(sectionId);
       // Section anchors sit on the heading: highlight the whole section.
-      marked = el.matches('h2') ? (el.closest('section') ?? el) : el;
+      marked = el.matches('h1, h2') ? (el.closest('section') ?? el) : el;
       marked.dataset.highlight = 'true';
       timer = setTimeout(() => marked && delete marked.dataset.highlight, HIGHLIGHT_MS);
       return true;

@@ -48,6 +48,10 @@
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
+/* The status text sits on the tinted capsule: one step darker than --text-3 keeps 4.5:1 in both themes. */
+.navLink[aria-current='page'] .status {
+  color: var(--text-muted);
+}
 /* The category's icon on a small plate in its hue (identity v3); the active entry is a tinted capsule. */
 .icon {
   display: grid;
