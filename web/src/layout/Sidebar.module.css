@@ -199,6 +199,7 @@
 
 /* Rail: icons only. The name is the tooltip (title) and the accessible name; the active area is a capsule in its colour. */
 .railLink {
+  position: relative;
   display: grid;
   place-items: center;
   width: 100%;

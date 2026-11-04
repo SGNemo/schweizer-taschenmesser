@@ -35,11 +35,21 @@ describe('ChangelogList', () => {
     expect(screen.getByTestId('changelog-0.3.1').textContent).toContain('old note');
     expect(screen.queryByText(/newer than running/)).toBeNull();
   });
-  it('marks the running version new until it was opened, then remembers it', async () => {
-    render(<ChangelogList version="1.0.0" />);
+  it('marks the newest notes new until you leave or open a version, and remembers it', async () => {
+    const { unmount } = render(<ChangelogList version="1.0.0" />);
     await waitFor(() => expect(screen.getByTestId('changelog-new')).toBeTruthy());
-    await userEvent.click(screen.getByText(/1\.0\.0 ·|\(1\.0\.0/));
+    // The unreleased notes are the newest and open; the mark sits on them.
+    expect(
+      screen.getByTestId('changelog-unreleased').contains(screen.getByTestId('changelog-new')),
+    ).toBe(true);
+    await userEvent.click(screen.getByText(/Version 1\.0\.0/));
     await waitFor(async () => expect(await loadSeen()).toContain('1.0.0'));
-    await waitFor(() => expect(screen.queryByTestId('changelog-new')).toBeNull());
+    unmount();
+    await waitFor(async () =>
+      expect((await loadSeen()).some((x) => x.startsWith('unreleased:'))).toBe(true),
+    );
+    render(<ChangelogList version="1.0.0" />);
+    await waitFor(() => expect(screen.getByTestId('changelog-1.0.0')).toBeTruthy());
+    expect(screen.queryByTestId('changelog-new')).toBeNull();
   });
 });

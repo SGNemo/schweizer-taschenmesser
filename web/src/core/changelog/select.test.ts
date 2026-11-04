@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { entryText, groupForDisplay, selectChangelog, stripBuild } from './select';
+import { entryText, groupForDisplay, newToken, selectChangelog, stripBuild } from './select';
 import { isUnread } from './seen';
 import type { ChangelogData, ChangelogEntry } from './types';
 
@@ -92,5 +92,32 @@ describe('unread', () => {
     expect(isUnread(['1.0.0'], '1.0.0')).toBe(false);
     expect(isUnread([], 'unreleased')).toBe(false);
     expect(isUnread([], undefined)).toBe(false);
+  });
+});
+
+describe('newToken', () => {
+  it('is the running version on a release build', () => {
+    const released: ChangelogData = { ...data, versions: data.versions.slice(1) };
+    expect(newToken(selectChangelog(released, '1.0.0'))).toBe('1.0.0');
+  });
+  it('is a hash of the open notes in a preview, and changes with every new note', () => {
+    const a = newToken(selectChangelog(data, '1.1.1-dev.7'));
+    expect(a).toMatch(/^unreleased:[0-9a-z]+$/);
+    const more: ChangelogData = {
+      ...data,
+      versions: [
+        {
+          version: 'unreleased',
+          date: '',
+          entries: [entry({ en: 'open' }), entry({ en: 'another' })],
+        },
+        ...data.versions.slice(1),
+      ],
+    };
+    expect(newToken(selectChangelog(more, '1.1.1-dev.7'))).not.toBe(a);
+    expect(newToken(selectChangelog(data, '1.1.1-dev.7'))).toBe(a);
+  });
+  it('is undefined when there is nothing to show', () => {
+    expect(newToken(selectChangelog({ areas: {}, versions: [] }, '1.0.0'))).toBeUndefined();
   });
 });
