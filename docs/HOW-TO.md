@@ -27,7 +27,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | [howto/readable-text.md](howto/readable-text.md)             | reading aid, groups, colour meaning: show text readably                                                                                                       |
 | [howto/new-extension.md](howto/new-extension.md)             | tool (incl. "Register a search-bar expression for a tool"), connector, setup step, AI provider, importer                                                      |
 | [howto/new-importer.md](howto/new-importer.md) | importer for another app (`web/src/importers/<source>/`: parser, source, tests, report) |
-| [howto/design-brand.md](howto/design-brand.md)               | logo/icons pipeline (`design/icon/`), wordmark, banner, design tokens, accents                                                                                |
+| [howto/design-brand.md](howto/design-brand.md)               | logo/icons pipeline (`design/logo-v2/`), wordmark, banner, design tokens, accents                                                                            |
 | [howto/ci.md](howto/ci.md)                                   | CI layout, caches, sharding, doc-only gate, Dev-Preview                                                                                                       |
 | [howto/cloudflare-checks.md](howto/cloudflare-checks.md) | Cloudflare Pages check red: what to check (imprint variables, Production vs Preview, Node, log table), Worker has no check |
 | [howto/browser-extension.md](howto/browser-extension.md)     | Brave extension: build, load, connect, flows, troubleshooting, vault bridge (native messaging host), release zip proposal                                     |

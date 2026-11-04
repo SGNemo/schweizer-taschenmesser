@@ -66,4 +66,15 @@ export const vault: Strings['vault'] = {
   empty: 'Aucun document pour l’instant.',
   emptyFiltered: 'Aucun résultat.',
   widgetEmpty: 'Aucun délai en vue.',
+  figureLabel: 'Classeur',
+  figureUnit: 'documents',
+  figureDetail: (expired: number, due: number) =>
+    [
+      expired > 0 ? `${expired} expiré${expired === 1 ? '' : 's'}` : '',
+      due > 0 ? `${due} avec une échéance proche` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  widgetSummary: (n: number) =>
+    n === 1 ? '1 document demande un coup d’œil' : `${n} documents demandent un coup d’œil`,
 };

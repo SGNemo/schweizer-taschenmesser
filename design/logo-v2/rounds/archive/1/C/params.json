@@ -1,0 +1,44 @@
+{
+  "direction": "bands",
+  "params": {
+    "nose": 466,
+    "joint": 160,
+    "height": 118,
+    "stalk": 52,
+    "gaps": {
+      "at": [
+        0.64,
+        0.34
+      ],
+      "width": 40,
+      "slant": 18
+    },
+    "fin": {
+      "length": 92,
+      "spread": 100,
+      "notch": 30
+    },
+    "eye": {
+      "at": 0.84,
+      "dy": -0.22,
+      "r": 0
+    },
+    "soften": 14,
+    "views": {
+      "tile": {
+        "radius": 146,
+        "scale": 0.8
+      },
+      "adaptive": {
+        "scale": 0.62
+      }
+    }
+  },
+  "small": null,
+  "lockup": {
+    "source": "mark",
+    "markHeight": 1.2,
+    "gap": 0.42
+  },
+  "rail": "mark"
+}

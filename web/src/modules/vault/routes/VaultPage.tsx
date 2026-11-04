@@ -7,21 +7,11 @@ import { getPlatform } from '@/core/platform';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
-import {
-  Badge,
-  Button,
-  Chip,
-  Chips,
-  EmptyState,
-  Icon,
-  ItemList,
-  ItemRow,
-  PageHeader,
-  TextField,
-  useOpenParam,
-} from '@/ui';
+import { Badge, Button, Icon, ItemList, ItemRow, PageHeader, TextField, useOpenParam } from '@/ui';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
 import { FolderTabs } from '../components/FolderTabs';
+import { VaultEmpty } from '../components/VaultEmpty';
+import { VaultHead } from '../components/VaultHead';
 import { changeWithUndo } from '@/core/undo/withToast';
 import {
   cancelDeadline,
@@ -36,7 +26,8 @@ import {
   statusOf,
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
-import { CATEGORIES, type DocCategory } from '../schema';
+import styles from './VaultPage.module.css';
+import type { DocCategory } from '../schema';
 
 async function download(id: string, name: string) {
   const blob = await getBlob(id);
@@ -84,35 +75,23 @@ export default function VaultPage() {
           {t.vault.add}
         </Button>
       </PageHeader>
-      <FolderTabs counts={countByCategory(docs ?? [])} />
-      <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>{t.vault.localOnly}</p>
+      <VaultHead docs={docs ?? []} day={day} />
       <TextField
         label={t.vault.search}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <div style={{ margin: 'var(--space-3) 0' }}>
-        <Chips label={t.vault.category}>
-          <Chip
-            label={t.vault.allCategories}
-            selected={category === 'all'}
-            onClick={() => setCategory('all')}
-          />
-          {CATEGORIES.map((c) => (
-            <Chip
-              key={c}
-              label={t.vault.categories[c] ?? c}
-              selected={category === c}
-              onClick={() => setCategory(c)}
-            />
-          ))}
-        </Chips>
-      </div>
+      <FolderTabs
+        counts={countByCategory(docs ?? [])}
+        total={docs?.length ?? 0}
+        value={category}
+        onChange={setCategory}
+      />
       {docs && shown.length === 0 ? (
-        <EmptyState title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
+        <VaultEmpty title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
           {docs.length === 0 ? <StartDataButton moduleId="vault" /> : null}
-        </EmptyState>
+        </VaultEmpty>
       ) : null}
       <ItemList layout="grid" label={t.vault.title}>
         {shown.map((d) => {
@@ -123,6 +102,7 @@ export default function VaultPage() {
           return (
             <ItemRow
               key={d.id}
+              className={styles.doc}
               title={d.title}
               onOpen={() => setTarget(d)}
               meta={[

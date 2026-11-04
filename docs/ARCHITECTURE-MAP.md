@@ -9,7 +9,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
 | `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info` |
-| `design/icon/` | Icon/logo workshop (own `package.json`, not part of the app): parametric fish generator, master parameters `final.params.mjs`, `npm run export` → `web/brand/*.svg` + `Logo.tsx` + splash, round previews in `rounds/` (`docs/HOW-TO.md` → Icons) |
+| `design/logo-v2/` | Logo workshop (no dependencies of its own, not part of the app; renders with Playwright from `web/`): parametric master (`mark.mjs`, `wordmark.mjs`), the chosen parameters `final.params.mjs`, `node export.mjs` → `web/brand/*.svg` + `Logo.tsx` + splash, preview sheets and screenshots per round in `rounds/` (`docs/HOW-TO.md` → Icons) |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
@@ -59,7 +59,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **AI providers** | `web/src/core/ai/providers/{types,claude,openai,ollama,presets}.ts` | `AiProvider` |
 | **AI writes** | `web/src/core/ai/write/{types,prepare,commit,targets,stages,settings}.ts`, `rules/{parse,lexicon,intent}.ts`; contract `core/modules/aiActions.ts`; UI `layout/assistant/WritePreview.tsx`; eval `web/tests/ai/eval-set.json` + `core/ai/write/eval.test.ts` (`npm run ai:eval`) | `AiActionDef` |
 | **AI router / config** | `web/src/core/ai/router.ts` (`createRouter`), `config.ts` (`ProviderEntry`, `createRouterProvider`), `usage.ts`, `testConnection.ts`; UI `pages/settings/AiSection.tsx` | |
-| Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts`, `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts` | |
+| Assistant pipeline | `web/src/core/ai/assistant.ts` (`ask`), `intent/parser.ts` (tier 1), `search/fulltext.ts` (+ `search/index.ts`: in-memory MiniSearch kept current per changed table), `cache.ts` (tier 2), `prompt.ts`, `scope.ts` (`aiModules` filter), `query/{schema,executor,validate,create}.ts` | |
 | **Mail** | provider contract + sanitiser + cache-free service `web/src/core/mail/{types,sanitize,accounts,service}.ts`; Gmail provider `web/src/connectors/google/gmail.ts` (`ConnectorDef.mailbox`); module `web/src/modules/mail/` (encrypted `local` cache `cache.ts`, page, widgets); never reaches a model (`core/mail/isolation.test.ts`) | `MailProvider` |
 | **Connectors** | framework `web/src/core/connectors/{types,registry,context,oauth,redact,service,state}.ts` (glob `connectors/*/index.ts`); impls `web/src/connectors/google/*`, `web/src/connectors/ics/*`; UI `pages/settings/ConnectorsSection.tsx`; isolation `connectors/isolation.test.ts` | `ConnectorDef` |
 | **Home screen (not a module)** | `web/src/home/` (`Home.tsx`, `layout.ts` scope `home`, `AutoWidget.tsx`); widget contract `ModuleManifest.widgets` (`WidgetDef`) checked by `validateManifest`, `scripts/check-modules.mjs`, `core/modules/widgets.test.tsx`; route `/` in `router.tsx`. Details: [architecture/setup-home.md](architecture/setup-home.md) | |

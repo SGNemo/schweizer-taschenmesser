@@ -608,9 +608,27 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
 - AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
 
+<<<<<<< HEAD
 ## Werkzeuge: Panel (Handtest)
 
 - TP1 · Android: „Werkzeuge“ öffnet ein Vollbild-Sheet auf dem zuletzt benutzten Werkzeug; Pfeil oben links zeigt die Liste, Zurück-Geste schließt das Sheet; keine Taste unter 44 px, kein seitliches Wischen.
 - TP2 · PWA im Browser und installiert: „In eigenem Fenster öffnen“ öffnet das Werkzeug allein in einem kleinen Fenster (Popup-Blocker erlaubt?), Rechnen dort funktioniert, das Fenster lässt sich schließen; in der Windows-App fehlt der Knopf.
 - TP3 · Windows: Strg+. öffnet, Suchfeld hat den Fokus, Alt+1…9 wechselt, Pfeil runter/hoch geht durch die Liste, Esc leert die Suche, dann schließt es, der Fokus liegt wieder auf „Werkzeuge“; Alt+Zahl kollidiert mit keinem Windows-Kürzel.
 - TP4 · Hell/Dunkel, „Ruhig“ und „Modulfarben: Aus“: die Werkzeugfläche wird grau, Plättchen und Zeichen bleiben erkennbar.
+=======
+## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
+- **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.
+- **HV2 Kacheln springen:** Auf eine Regal-Kachel im Kopf tippen → die Liste springt zum Abschnitt des Ortes (Tastatur: Enter).
+- **HV3 Scannen:** „Scannen“ in der Werkzeugleiste öffnet weiterhin die Kamera; der Barcode legt einen Vorrat an oder erhöht ihn.
+- **HV4 Tresor-Sperre:** Passwörter entsperren, ruhig liegen lassen: der Kopf zählt „sperrt in n Min.“ herunter und sperrt dann; Gruppen-Reiter bleiben nach dem Entsperren erhalten.
+- **HV5 Ruhig / Lesehilfe:** In „Ruhig“ und mit „Modulfarben: Aus“ sind Vorräte, Einkauf, Unterlagen und Passwörter noch an Form und Beschriftung zu erkennen; mit Lesehilfe (75 %) bricht keine Kachel und kein Reiter.
+
+## Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
+Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+- **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐
+- **LG2 Windows-Tray:** Tray-Symbol („Heute“) im Infobereich bei 16 und 24 px erkennbar, helle und dunkle Taskleiste. ☐
+- **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
+- **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
+- **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
+- **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
+>>>>>>> origin/develop

@@ -121,9 +121,9 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
 - Social preview: `docs/brand/social-preview.png` (1280×640) is copied to `/og-image.png`.
 
 ## Offen – macht Sven
-- Imprint: set `IMPRESSUM_NAME`, `IMPRESSUM_STREET`, `IMPRESSUM_POSTCODE_CITY` in the Cloudflare Pages
-  environment variables, **Production and Preview** (step 3), then retry the latest `develop` deployment.
-  Until then every `develop`/`main` build is red and the live site is not updated.
+- Imprint: `IMPRESSUM_NAME`, `IMPRESSUM_STREET`, `IMPRESSUM_POSTCODE_CITY` are set in the Cloudflare Pages
+  environment variables for **Production** (2026-11-04). Set them for **Preview** too (step 3), otherwise
+  every `main` build stays red (it is built as a Preview).
 - Cloudflare Pages project, custom domain `nemo-adhd-helper.online` (+ `www` redirect) and the
   deploy-hook secret `CF_PAGES_DEPLOY_HOOK` (steps above).
 - `public/.well-known/security.txt`: renew `Expires` before 2027-10-01.
