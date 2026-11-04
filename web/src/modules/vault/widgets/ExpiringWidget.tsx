@@ -15,9 +15,9 @@ export default function ExpiringWidget() {
   const day = today();
   const count = (s: Status) => (docs ?? []).filter((d) => statusOf(d, day) === s).length;
   const rows = [
-    { s: 'expired' as const, tone: 'overdue' as const, title: t.vault.status.expired },
-    { s: 'act-now' as const, tone: 'today' as const, title: t.vault.status['act-now'] },
-    { s: 'soon' as const, tone: 'soon' as const, title: t.vault.status.soon },
+    { s: 'expired' as const, tone: 'overdue' as const, title: t.vault.status.expired ?? '' },
+    { s: 'act-now' as const, tone: 'today' as const, title: t.vault.status['act-now'] ?? '' },
+    { s: 'soon' as const, tone: 'soon' as const, title: t.vault.status.soon ?? '' },
     { s: 'missed' as const, tone: 'later' as const, title: tDeadline.get().missed ?? '' },
   ]
     .map((r) => ({ ...r, n: count(r.s) }))
