@@ -627,6 +627,9 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - TP4 · Hell/Dunkel, „Ruhig“ und „Modulfarben: Aus“: die Werkzeugfläche wird grau, Plättchen und Zeichen bleiben erkennbar.
 - TP5 · Rechner am Handy und mit der Maus: Zahlenblock tippt in das Display (7 × 6 = 42), Komma/Punkt je nach Sprache, „⌫“ löscht; Tasten fühlen sich gedrückt an, auch mit „Weniger Bewegung“ ohne Verzögerung.
 - TP6 · Timer: der Ring läuft mit (Timer und Pomodoro leeren sich, die Stoppuhr füllt pro Minute), die Zeit in der Mitte ist gut lesbar in hell/dunkel; Einheiten und Währung: großes Ergebnis, „Ergebnis kopieren“ legt es in die Zwischenablage.
+- TP5 · Rechner am Handy und mit der Maus: Zahlenblock tippt in das Display (7 × 6 = 42), Komma/Punkt je nach Sprache, „⌫“ löscht; Tasten fühlen sich gedrückt an, auch mit „Weniger Bewegung“ ohne Verzögerung.
+- TP6 · Timer: der Ring läuft mit (Timer und Pomodoro leeren sich, die Stoppuhr füllt pro Minute), die Zeit in der Mitte ist gut lesbar in hell/dunkel; Einheiten und Währung: großes Ergebnis, „Ergebnis kopieren“ legt es in die Zwischenablage.
+- TP7 · Persona: die Karte zeigt Initialen, Namen und „Erfunden“ im Rahmen, Hinweis „nicht für Verträge, Banken, Behörden“ bleibt; Würfel: mehrere Würfel zeigen je eine Fläche, ein Screenreader liest „3, 5“; QR: Vorschau groß und scannbar (Handykamera) in hell und dunkel; Dev/Diff/Regex lesen sich in der Code-Optik gut.
 
 ## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
 - **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.

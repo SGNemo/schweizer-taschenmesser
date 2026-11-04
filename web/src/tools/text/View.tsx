@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { t } from '@/strings';
 import { Button, Checkbox, TextArea, TextField } from '@/ui';
 import { copyWithToast, num } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { convertCase, countText, lorem, sortLines, tidy, type CaseMode } from './logic';
 
@@ -23,7 +24,13 @@ export default function TextTool() {
   ];
   return (
     <div className={styles.stack}>
-      <TextArea label={s.input} value={text} onChange={(e) => setText(e.target.value)} rows={8} />
+      <TextArea
+        label={s.input}
+        className={kit.noteInput}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={8}
+      />
       <div className={styles.row}>
         <Button onClick={() => void copyWithToast(text)} disabled={!text}>
           {s.copy}
@@ -34,39 +41,39 @@ export default function TextTool() {
       </div>
 
       <section aria-label={s.stats}>
-        <ul className={styles.list} data-testid="text-stats">
-          <li className={styles.item}>
-            <span>{s.chars}</span>
-            <strong>{formatNumber(stats.chars)}</strong>
+        <ul className={kit.chips} data-testid="text-stats">
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.chars}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.chars)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.charsNoSpaces}</span>
-            <strong>{formatNumber(stats.charsNoSpaces)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.charsNoSpaces}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.charsNoSpaces)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.words}</span>
-            <strong>{formatNumber(stats.words)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.words}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.words)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.lines}</span>
-            <strong>{formatNumber(stats.lines)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.lines}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.lines)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.sentences}</span>
-            <strong>{formatNumber(stats.sentences)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.sentences}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.sentences)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.paragraphs}</span>
-            <strong>{formatNumber(stats.paragraphs)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.paragraphs}</span>
+            <strong className={kit.chipValue}>{formatNumber(stats.paragraphs)}</strong>
           </li>
-          <li className={styles.item}>
-            <span>{s.reading}</span>
-            <strong>{s.minutes(stats.minutes)}</strong>
+          <li className={kit.chip}>
+            <span className={styles.label}>{s.reading}</span>
+            <strong className={kit.chipValue}>{s.minutes(stats.minutes)}</strong>
           </li>
         </ul>
       </section>
 
-      <section aria-label={s.caseTitle} className={styles.stack}>
+      <section aria-label={s.caseTitle} className={kit.section}>
         <h3>{s.caseTitle}</h3>
         <div className={styles.row}>
           {cases.map((c) => (
@@ -81,7 +88,7 @@ export default function TextTool() {
         </div>
       </section>
 
-      <section aria-label={s.tidyTitle} className={styles.stack}>
+      <section aria-label={s.tidyTitle} className={kit.section}>
         <h3>{s.tidyTitle}</h3>
         <Checkbox
           label={s.trimLines}
@@ -114,7 +121,7 @@ export default function TextTool() {
         </div>
       </section>
 
-      <section aria-label={s.loremTitle} className={styles.stack}>
+      <section aria-label={s.loremTitle} className={kit.section}>
         <h3>{s.loremTitle}</h3>
         <div className={styles.row}>
           <div className={styles.grow}>
