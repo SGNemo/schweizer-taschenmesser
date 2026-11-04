@@ -127,7 +127,7 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 
 ## Shared folder tabs, columns and the masthead id (2026-11-04, `feat/ui-folder-tabs`, package B of the shared identity blocks)
 
-- **`ui/FolderTabs`** is the one tab-shaped filter (a named group of `aria-pressed` buttons; fill, shape and weight carry the state, a tab may bring its own colour as `--tab`, `folder` adds the folder body, `children` are extra controls at the end of the row). Documents, passwords and the notebooks of the notes use it; the three module-local copies are gone. Passwords tabs now take the module tint instead of a neutral grey.
+- **`ui/FolderTabs`** is the one tab-shaped filter (a named group of `aria-pressed` buttons; fill, shape and weight carry the state, a tab may bring its own colour as `--tab`, `folder` adds the folder body, `children` are extra controls at the end of the row). Documents, passwords and the notebooks of the notes use it; the three module-local copies are gone. Visible changes, all small: passwords tabs take the module tint instead of a neutral grey, and the "all" and "general" notebook tabs of the notes (no colour of their own) take the module tint, the chosen one the plain surface.
 - **`GroupedList columns`** lets the groups flow into newspaper columns (20 rem, hairline between the columns, none above a group); feeds uses it instead of its own CSS.
 - **`masthead`** is now a signature id (both lists: `core/modules/types.ts` and `scripts/lib/checkModules.ts`, pinned equal by `registry.test.ts`); feeds uses it. It has no block of its own (the head is `HeroFigure type="serif"` + `identity.type`).
 

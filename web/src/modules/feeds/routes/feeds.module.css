@@ -32,6 +32,9 @@
   overflow-wrap: anywhere;
 }
 /* The rubric headings are set in the newspaper's serif; the columns come from `GroupedList columns`. */
+.heads li {
+  list-style: none;
+}
 .heads h2 {
   font-family: Georgia, 'Times New Roman', serif;
 }
