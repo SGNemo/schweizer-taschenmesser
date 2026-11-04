@@ -1,5 +1,5 @@
 import { t } from '@/strings';
-import { Button, Icon, useMediaQuery } from '@/ui';
+import { Button, useMediaQuery } from '@/ui';
 import { focusMinutesFor } from '../focus';
 import { pickNext, type PickTask } from '../next';
 import { viewOf } from '../views';
@@ -59,7 +59,6 @@ export function TodayCard({
         <span className="sr-only">{`. ${t.todos.todayCard.count(today.length)}`}</span>
         {next && onStart ? (
           <Button size="sm" variant="primary" onClick={() => onStart(next)}>
-            <Icon name="play" size={16} />
             {t.focus.next.start}
           </Button>
         ) : null}
@@ -87,7 +86,6 @@ export function TodayCard({
       {next && onStart ? (
         <div className={styles.nextActions}>
           <Button variant="primary" onClick={() => onStart(next)}>
-            <Icon name="play" size={18} />
             {startLabel}
           </Button>
           {onLater ? (

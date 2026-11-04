@@ -12,7 +12,6 @@ import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
 import { groupByDate, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
-import { KindIcon } from './KindIcon';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -271,7 +270,6 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                       onOpenItem(item);
                     }}
                   >
-                    <KindIcon kind={item.kind} size={11} />
                     <span className={styles.tgTime}>{item.time}</span> {item.title}
                     {lanes > 1 ? (
                       <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>

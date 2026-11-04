@@ -244,3 +244,10 @@
     display: none;
   }
 }
+
+/* Phone: only the very next charge above the list. */
+@media (max-width: 899px) {
+  .headList li:nth-child(n + 2) {
+    display: none;
+  }
+}

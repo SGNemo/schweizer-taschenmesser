@@ -1,7 +1,6 @@
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { KindIcon } from './KindIcon';
 import type { CSSProperties } from 'react';
 import styles from '../routes/calendar.module.css';
 
@@ -34,7 +33,6 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
     <>
       <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>
       <span className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}>
-        <KindIcon kind={item.kind} />
         {kindLabel(item.kind)}
       </span>
       <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`} title={item.title}>

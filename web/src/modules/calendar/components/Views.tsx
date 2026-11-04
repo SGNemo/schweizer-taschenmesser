@@ -9,7 +9,6 @@ import type { Slot } from '../dragMath';
 import type { HolidayId } from '../holidays';
 import { groupByDate, monthWeeks, weekNumberOf } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
-import { KindIcon } from './KindIcon';
 import type { CSSProperties } from 'react';
 import { TimeGrid } from './TimeGrid';
 import styles from '../routes/calendar.module.css';
@@ -107,7 +106,6 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                             style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
                             onClick={() => onOpenItem(i)}
                           >
-                            <KindIcon kind={i.kind} size={11} />
                             {i.time ? `${i.time} ` : ''}
                             {i.title}
                           </button>

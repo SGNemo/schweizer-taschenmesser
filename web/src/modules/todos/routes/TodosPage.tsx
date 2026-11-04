@@ -23,7 +23,6 @@ import {
   EmptyState,
   GroupedList,
   ItemList,
-  Icon,
   ItemRow,
   PageHeader,
   Progress,
@@ -202,8 +201,7 @@ function TaskRow({
           {person ? <span>{t.assign.forName(person)}</span> : null}
           {task.priority >= 2 ? (
             <span className={task.priority === 3 ? styles.prio3 : styles.prio2}>
-              <Icon name="chevronUp" size={14} />
-              {task.priority === 3 ? <Icon name="chevronUp" size={14} /> : null}{' '}
+              {task.priority === 3 ? <span aria-hidden="true">▲</span> : null}{' '}
               {t.todos.prio[task.priority]}
             </span>
           ) : null}

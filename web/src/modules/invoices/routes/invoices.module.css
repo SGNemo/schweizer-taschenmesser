@@ -216,4 +216,12 @@
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+/* Phone: the plate would wrap the payee name; the row keeps its text. */
+@media (max-width: 700px) {
+  .plate {
+    display: none;
+  }
 }

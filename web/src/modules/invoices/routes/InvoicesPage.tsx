@@ -79,7 +79,7 @@ export default function InvoicesPage() {
         }
         lead={
           <span className={styles.plate} aria-hidden="true">
-            <Icon name="receipt" size={20} />
+            {i.payee.slice(0, 1).toUpperCase()}
           </span>
         }
         onOpen={() => setTarget(i)}
