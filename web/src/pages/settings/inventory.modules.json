@@ -209,6 +209,16 @@
       }
     }
   },
+  "feeds": {
+    "scope": "module.feeds",
+    "fields": {
+      "grouped": {
+        "type": "boolean",
+        "label": "Nach Gruppen ordnen",
+        "default": true
+      }
+    }
+  },
   "finance": {
     "scope": "module.finance",
     "fields": {

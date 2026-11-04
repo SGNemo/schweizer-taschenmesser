@@ -47,7 +47,16 @@ describe('registered settings sections', () => {
 });
 
 describe('preview sections (maturity)', () => {
-  const PREVIEW = ['localapi', 'share', 'network', 'browser-extension', 'reading', 'voice'];
+  const PREVIEW = [
+    'localapi',
+    'share',
+    'network',
+    'browser-extension',
+    'reading',
+    'voice',
+    'automation',
+    'automation-log',
+  ];
   // All manifests (not only those of the web platform): desktop-only preview modules count too.
   const all = allSettingsSections(allManifests.filter((m) => !m.retired));
   const ids = (c: SettingsContext) => visibleSections(all, c).map((s) => s.id);
