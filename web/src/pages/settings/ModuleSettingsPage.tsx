@@ -12,10 +12,13 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { getSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { tSettings2 } from '@/strings.settings2';
+import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
 import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
+import { Ring } from '@/ui/identity';
 import { FieldRow } from './ModuleSection';
+import { PageHead } from './PageHead';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
@@ -43,7 +46,28 @@ function useChangedCounts(
   }, [ids]);
 }
 
-/** Module identity in the page head: chip in the module hue (grey in "Ruhig"), name, one line. */
+/** The module's signature in small, decoration only: its ring, else its icon large. Numbers never live here. */
+function HeadMark({ manifest }: { manifest: ModuleManifest }) {
+  if (manifest.identity.signature === 'ring')
+    return (
+      <Ring
+        size={4.5}
+        label={manifest.name}
+        parts={[
+          { label: '', share: 0.5 },
+          { label: '', share: 0.3 },
+          { label: '', share: 0.2 },
+        ]}
+      />
+    );
+  return (
+    <span className={styles.mark}>
+      <Icon name={manifest.icon} size={48} />
+    </span>
+  );
+}
+
+/** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate, signature in small. */
 function ModuleHead({
   manifest,
   changed,
@@ -55,31 +79,33 @@ function ModuleHead({
 }) {
   const o = tSettings2.use().modulePage;
   const c = tSettings2.use().changed;
+  const v3 = tSettingsV3.use();
   return (
-    <header
-      className={styles.head}
-      data-hue={manifest.identity.hue}
-      data-testid="module-settings-head"
-    >
-      <span className={styles.chip} aria-hidden="true">
-        <Icon name={manifest.icon} size={20} />
-      </span>
-      <div className={styles.headText}>
-        <h2 id={`module-${manifest.id}`} className={styles.name}>
-          {manifest.name}
-        </h2>
-        <p className={styles.desc}>{manifest.description}</p>
-      </div>
-      {changed ? <Badge>{o.changed(changed)}</Badge> : null}
-      {changed && onResetAll ? (
-        <Button variant="ghost" onClick={onResetAll} data-testid="module-reset-all">
-          {c.resetModule}
-        </Button>
-      ) : null}
-      <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
-        {o.library}
-      </Link>
-    </header>
+    <PageHead
+      hue={manifest.identity.hue}
+      hue2={manifest.identity.hue2}
+      area={manifest.area ?? 'system'}
+      icon={manifest.icon}
+      eyebrow={v3.modulesEyebrow}
+      title={manifest.name}
+      titleId={`module-${manifest.id}`}
+      description={manifest.description}
+      decoration={<HeadMark manifest={manifest} />}
+      testId="module-settings-head"
+      actions={
+        <>
+          {changed ? <Badge>{o.changed(changed)}</Badge> : null}
+          {changed && onResetAll ? (
+            <Button variant="ghost" onClick={onResetAll} data-testid="module-reset-all">
+              {c.resetModule}
+            </Button>
+          ) : null}
+          <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
+            {o.library}
+          </Link>
+        </>
+      }
+    />
   );
 }
 

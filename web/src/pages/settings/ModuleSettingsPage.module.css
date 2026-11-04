@@ -1,20 +1,19 @@
-/* Module settings page: identity chip in the module hue (`data-hue` sets --module-color; grey in
-   "Ruhig"), text always --text, tokens only. */
+/* Module settings page: the head is `PageHead` (module hues, area pattern, signature in small; grey in "Ruhig"),
+   text always --text, tokens only. */
 .page {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
 }
-.head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
+.mark {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  color: var(--text);
 }
 .chip {
   display: grid;
@@ -31,12 +30,6 @@
   flex-direction: column;
   min-width: 0;
   flex: 1;
-}
-.name {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: var(--weight-semibold);
-  color: var(--text);
 }
 .desc,
 .listHint,

@@ -1,0 +1,117 @@
+/* Head of settings and library pages (identity v3): tinted surface in the hue, the area's pattern, the hue as the icon
+   plate. Text on it is always `--text` (AA on every hue, both themes). No edge stripe; all hairlines run all around. */
+.head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--shape-round);
+  background: var(--head-gradient);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  margin-bottom: var(--space-4);
+}
+.head[data-size='tall'] {
+  min-height: 12.5rem;
+}
+.head[data-size='compact'] {
+  min-height: 6rem;
+}
+.pattern {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-head);
+}
+.head > :not(.pattern) {
+  position: relative;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--module-color);
+  color: var(--surface);
+}
+:global(:root[data-theme='dark']) .plate {
+  color: var(--bg);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.titles {
+  min-width: 0;
+}
+.title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.head[data-size='compact'] .title {
+  font-size: var(--text-xl);
+}
+.description {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+.decoration {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+}
+
+@media (max-width: 899px) {
+  .head {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+  .head[data-size='tall'] {
+    min-height: 8.5rem;
+  }
+  .head[data-size='compact'] {
+    min-height: 5rem;
+  }
+  .decoration {
+    display: none;
+  }
+}

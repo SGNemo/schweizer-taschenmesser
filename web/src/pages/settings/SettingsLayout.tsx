@@ -21,6 +21,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tSettings2 } from '@/strings.settings2';
+import { tSettingsV3 } from '@/strings.settingsV3';
 import {
   Badge,
   Button,
@@ -32,6 +33,9 @@ import {
   type IconName,
 } from '@/ui';
 import { Breadcrumb, type Crumb } from './Breadcrumb';
+import { CATEGORY_LOOK, NAV_GROUPS, STATUS_LOOK } from './categoryLook';
+import { PageHead } from './PageHead';
+import { StatusHead } from './StatusHead';
 import { CategoryStatus } from './CategoryStatus';
 import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar, QuickInline } from './QuickBar';
@@ -130,17 +134,59 @@ function SubNav({ id }: { id: SettingsCategoryId }) {
   );
 }
 
-function CategoryLink({ id, list }: { id: SettingsCategoryId; list?: boolean }) {
+/** Ids of the categories with at least one section that differs from its defaults (re-checked when the look or focus settings move). */
+function useChangedCategories(): ReadonlySet<SettingsCategoryId> {
+  const sections = useSettingsSections();
+  const ui = useUiStore((st) => st);
+  const [focus] = useFocusSettings();
+  const [changed, setChanged] = useState<ReadonlySet<SettingsCategoryId>>(new Set());
+  useEffect(() => {
+    let live = true;
+    const withPlan = sections.filter((x) => x.reset?.defaults);
+    void Promise.all(withPlan.map((x) => isChanged(x.reset!))).then((flags) => {
+      if (!live) return;
+      setChanged(new Set(withPlan.filter((_, i) => flags[i]).map((x) => x.category)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [sections, ui, focus]);
+  return changed;
+}
+
+function CategoryLink({
+  id,
+  list,
+  changed,
+}: {
+  id: SettingsCategoryId;
+  list?: boolean;
+  changed: boolean;
+}) {
   const c = categoryDef(id);
+  const look = CATEGORY_LOOK[id];
+  const differs = tSettingsV3.use().differs;
   const open = useOpenCategory() === id;
   return (
     <>
-      <NavLink to={`/settings/${id}`} className={list ? styles.listLink : styles.navLink}>
+      <NavLink
+        to={`/settings/${id}`}
+        className={list ? styles.listLink : styles.navLink}
+        data-hue={look.hue}
+      >
         <span className={styles.icon}>
           <Icon name={c.icon as IconName} />
         </span>
         <span className={styles.linkText}>
-          <span className={styles.linkTitle}>{c.title}</span>
+          <span className={styles.linkTitle}>
+            {c.title}
+            {changed ? (
+              <>
+                <span className={styles.dot} aria-hidden="true" data-testid={`differs-${id}`} />
+                <span className="sr-only">{differs}</span>
+              </>
+            ) : null}
+          </span>
           {list ? <span className={styles.linkDesc}>{c.description}</span> : null}
         </span>
         <CategoryStatus id={id} />
@@ -195,14 +241,20 @@ export function CategoryNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const ids = visibleCategoryIds(sections);
   const overviewTitle = tSettings2.use().overview.title;
+  const groupTitles = tSettingsV3.use().navGroups;
+  const changed = useChangedCategories();
+  const groups = NAV_GROUPS.map((g) => ({
+    id: g.id,
+    categories: g.categories.filter((c) => ids.includes(c)),
+  })).filter((g) => g.categories.length > 0);
   return (
     <div className={list ? undefined : styles.aside} data-testid="settings-nav">
       <FrequentNav list={list} />
-      <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
-        <ul>
-          {list ? null : (
+      <nav aria-label={t.settings.categoriesNav} className={list ? styles.listGroups : styles.nav}>
+        {list ? null : (
+          <ul>
             <li>
-              <NavLink to="/settings" end className={styles.navLink}>
+              <NavLink to="/settings" end className={styles.navLink} data-hue="slate">
                 <span className={styles.icon}>
                   <Icon name="home" />
                 </span>
@@ -211,13 +263,20 @@ export function CategoryNav({ list }: { list?: boolean }) {
                 </span>
               </NavLink>
             </li>
-          )}
-          {ids.map((id) => (
-            <li key={id}>
-              <CategoryLink id={id} list={list} />
-            </li>
-          ))}
-        </ul>
+          </ul>
+        )}
+        {groups.map((g) => (
+          <div key={g.id} className={styles.navGroup}>
+            <p className={styles.groupHead}>{groupTitles[g.id]}</p>
+            <ul className={list ? styles.list : undefined}>
+              {g.categories.map((id) => (
+                <li key={id}>
+                  <CategoryLink id={id} list={list} changed={changed.has(id)} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
     </div>
   );
@@ -465,11 +524,6 @@ export function CategoryPage() {
           {t.settings.back}
         </Link>
       )}
-      {wide ? null : (
-        <p aria-hidden="true" className={styles.categoryTitle}>
-          {categoryDef(category).title}
-        </p>
-      )}
       {basic.map((s) => (
         <SectionFrame key={s.id} s={s} />
       ))}
@@ -509,6 +563,38 @@ export function ModuleSettingsRoute() {
   );
 }
 
+/** Head of the open settings page: "Status" on the landing page, the category's own head on a category; a module page brings its own. */
+function SettingsHead() {
+  const { pathname } = useLocation();
+  const open = useOpenCategory();
+  const v3 = tSettingsV3.use();
+  const sections = useSettingsSections();
+  if (/^\/settings\/module\/[^/]+/.test(pathname)) return null;
+  if (!open) return <StatusHead title={t.settings.title} />;
+  // A category without visible sections (vault off, preview hidden) is a "not found" page: no category head for it.
+  if (sections.length > 0 && !visibleCategoryIds(sections).includes(open))
+    return (
+      <PageHead
+        {...STATUS_LOOK}
+        icon="settings"
+        eyebrow={v3.eyebrow}
+        title={t.settings.title}
+        testId="settings-head-missing"
+      />
+    );
+  const c = categoryDef(open);
+  return (
+    <PageHead
+      {...CATEGORY_LOOK[open]}
+      icon={c.icon as IconName}
+      eyebrow={v3.eyebrow}
+      title={c.title}
+      description={c.description}
+      testId={`settings-head-${open}`}
+    />
+  );
+}
+
 export function SettingsLayout() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
   const tocWide = useMediaQuery(TOC_QUERY);
@@ -521,9 +607,7 @@ export function SettingsLayout() {
   const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
-      <div className={styles.header}>
-        <h1>{t.settings.title}</h1>
-      </div>
+      <SettingsHead />
       <SettingsSearch />
       {wide ? <QuickBar /> : null}
       {wide ? (
