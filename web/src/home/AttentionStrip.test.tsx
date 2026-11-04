@@ -127,3 +127,53 @@ describe('AttentionStrip (calm, the default)', () => {
     expect(screen.getByRole('heading', { name: 'Jetzt wichtig' })).toBeInTheDocument();
   });
 });
+
+describe('AttentionStrip cards (identity v3)', () => {
+  beforeEach(async () => {
+    await db.table('_settings').clear();
+    await patchFocusSettings({ calmAttention: false });
+    items.value = [];
+    useLiveAttention.setState({ bySource: {} });
+    useUpdateStore.setState({ state: { phase: 'idle' } });
+  });
+  afterEach(cleanup);
+
+  it('shows the count as a big figure, the text beside it and the module hue on the card', async () => {
+    items.value = [
+      {
+        id: 'i',
+        tone: 'danger',
+        icon: 'receipt',
+        title: '2 Rechnungen überfällig',
+        detail: '897,89 €',
+        to: '/invoices',
+      },
+    ];
+    draw();
+    const link = await screen.findByRole('link', { name: /2 Rechnungen überfällig/ });
+    expect(link.getAttribute('data-hue')).toBe('ocean');
+    expect(link.querySelector('b')?.textContent).toBe('2');
+    expect(link.textContent).toContain('Rechnungen überfällig');
+    // The plate carries the icon and is decoration only.
+    expect(link.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+  });
+  it('keeps a title without a count in one line and gives core items no hue', async () => {
+    useUpdateStore.setState({
+      state: { phase: 'available', info: { version: '0.5.0', notes: '', prerelease: false } },
+    });
+    items.value = [
+      {
+        id: 'b',
+        tone: 'warning',
+        icon: 'piggy',
+        title: 'Budget „Freizeit“ überschritten',
+        to: '/budgets',
+      },
+    ];
+    const { container } = draw();
+    const update = await screen.findByRole('link', { name: /Update verfügbar/ });
+    expect(update.getAttribute('data-hue')).toBeNull();
+    expect(container.querySelectorAll('b').length).toBe(0);
+    expect(screen.getByRole('link', { name: /Freizeit/ }).getAttribute('data-hue')).toBe('lime');
+  });
+});

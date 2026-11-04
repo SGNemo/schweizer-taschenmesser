@@ -37,19 +37,10 @@ a.value:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* A module's figure carries its identity: edge and icon chip in the module hue. */
+/* A module's figure carries its identity as the icon plate in the module hue (no edge). */
 .tile[data-hue] {
   position: relative;
   overflow: hidden;
-}
-.tile[data-hue]::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--module-color);
 }
 .label {
   display: flex;

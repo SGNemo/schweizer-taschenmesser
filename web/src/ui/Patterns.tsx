@@ -8,6 +8,7 @@ import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
+import { usePageWidthAtLeast } from './pageWidth';
 import styles from './Patterns.module.css';
 
 /** `views` = the segmented switch between the sub-views of the page (replaces a second row of tabs). */
@@ -314,12 +315,24 @@ export function ItemRow({
   );
 }
 
-/** Viewport width from which a page can afford a side panel next to its main content. */
+/** Window width from which a page can afford a side panel when it is not inside a page container (dialogs, tests). */
 export const SPLIT_QUERY = '(min-width: 1200px)';
 
-/** True while the viewport is wide enough for a `SplitView` panel (see `SPLIT_QUERY`). */
-export function useSplitView(query: string = SPLIT_QUERY): boolean {
-  return useMediaQuery(query);
+/**
+ * Page width (rem) from which master–detail opens its panel: the main column keeps about 32 rem next to a 22 rem aside. At the 16 px
+ * root that is 896 px of page, so a 1280 px window with the full sidebar still gets the panel, a 1200 px one does not.
+ */
+export const SPLIT_PAGE_REM = 56;
+
+/**
+ * True while the page is wide enough for a `SplitView` panel. Inside a page container it follows the room the page really has
+ * (`SPLIT_PAGE_REM`; the sidebar, the rail and a narrow window all count); with an explicit `query`, or outside a page container,
+ * it follows the window (`SPLIT_QUERY`).
+ */
+export function useSplitView(query?: string): boolean {
+  const viewport = useMediaQuery(query ?? SPLIT_QUERY);
+  const page = usePageWidthAtLeast(SPLIT_PAGE_REM);
+  return query === undefined && page !== undefined ? page : viewport;
 }
 
 /**

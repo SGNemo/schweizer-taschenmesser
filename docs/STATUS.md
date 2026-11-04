@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Fundament v3 (`feat/identity-v3-foundation`, PR #414, fertig zum Review): Rahmen zentriert mit Gutter und ohne seitlichen Überlauf, keine Farbstreifen mehr, neun Kopf-Varianten mit Unternavigation, Palette v3, Widget-Varianten, neue Sidebar (Favoritenleiste, Kapsel, Rail), dünne Overlay-Scrollbars, neuer Übersichtskopf (Begrüßung, Wetterzeile, Karten, Tageskarten); Regeln und Zuordnung aller Module in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), Entscheidungen in [decisions/ui-shell.md](decisions/ui-shell.md). Handtest: Übersicht und je ein Modul pro Bereich hell/dunkel, Ruhig, Rail, Handy.
+
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
 Feeds (Modul, `feat/feeds-module`, Paket 2b): Abo-Liste für RSS/Atom/Podcasts mit Gruppen, Widget, Startdaten, Einstellung „Nach Gruppen ordnen“; ruft nichts ab (kein Reader); OPML-Import/-Export (2c, `feat/feeds-opml`): Datei oder eingefügte Adressen, Gruppen aus Ordnern, Export als OPML; Handtest IA7.

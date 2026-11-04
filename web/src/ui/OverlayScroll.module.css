@@ -1,0 +1,51 @@
+/* Overlay scrollbar (ui/OverlayScroll.tsx): no layout width, a thin thumb on hover or while scrolling, faded edges. */
+.wrap {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  position: relative;
+  min-height: 0;
+  /* Fills a flex column (the sidebar); the viewport scrolls inside. */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.wrap[data-top='true'] {
+  --fade-top: 1.25rem;
+}
+.wrap[data-bottom='true'] {
+  --fade-bottom: 1.5rem;
+}
+.viewport {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* The native bar is off: the thumb below floats over the content instead of taking width from the labels. */
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+}
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+.thumb {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  width: 6px;
+  border-radius: var(--radius-full);
+  background: var(--scroll-thumb);
+  opacity: 0;
+  touch-action: none;
+  cursor: default;
+  transition: opacity var(--dur-fast) linear;
+}
+.wrap:hover .thumb,
+.viewport[data-scrolling='true'] ~ .thumb,
+.thumb:active {
+  opacity: 1;
+}

@@ -73,7 +73,7 @@ async function metrics(page: Page) {
   return page.evaluate(() => {
     const doc = document.documentElement;
     const main = document.querySelector('main')!;
-    const pageBox = main.firstElementChild!.getBoundingClientRect();
+    const pageBox = main.querySelector('[data-testid="page"]')!.getBoundingClientRect();
     return {
       overflowX: doc.scrollWidth - doc.clientWidth,
       mainOverflowX: main.scrollWidth - main.clientWidth,
@@ -226,27 +226,35 @@ test.describe('phone header', () => {
     });
   const scrollTo = (page: Page, y: number) => page.evaluate((top) => window.scrollTo(0, top), y);
 
-  test('area label, tabs and gear share one line; the title starts high', async ({ page }) => {
+  test('area label and gear share one line; the sub-navigation scrolls under the head; the title starts high', async ({
+    page,
+  }) => {
     await prepare(page);
     await page.goto('/calendar');
     await expect(page.locator('main h1').first()).toBeVisible();
     const box = await page.evaluate(() => {
       const r = (el: Element | null) => el?.getBoundingClientRect();
       const label = document.querySelector('main p');
+      const gear = document.querySelector('main a[href^="/settings"]');
       const tabs = document.querySelector('main nav[aria-label]');
       const h1 = document.querySelector('main h1');
       return {
         labelMid: (r(label)!.top + r(label)!.bottom) / 2,
-        tabsMid: (r(tabs)!.top + r(tabs)!.bottom) / 2,
-        tabHeights: [...tabs!.querySelectorAll('a')].map((a) => a.getBoundingClientRect().height),
+        gearMid: (r(gear)!.top + r(gear)!.bottom) / 2,
+        pillHeights: [...tabs!.querySelectorAll('a')].map((a) => a.getBoundingClientRect().height),
+        // The row scrolls sideways on a phone (it never wraps to a second line).
+        pillTops: new Set(
+          [...tabs!.querySelectorAll('a')].map((a) => Math.round(a.getBoundingClientRect().top)),
+        ).size,
         h1Top: r(h1)!.top,
         mainTop: r(document.querySelector('main'))!.top,
       };
     });
-    expect(Math.abs(box.labelMid - box.tabsMid)).toBeLessThan(6);
-    for (const h of box.tabHeights) expect(h).toBeGreaterThanOrEqual(44);
-    // topbar + one 44 px frame row + padding: before, label row and tab row were two lines.
-    expect(box.h1Top - box.mainTop).toBeLessThan(100);
+    expect(Math.abs(box.labelMid - box.gearMid)).toBeLessThan(8);
+    for (const h of box.pillHeights) expect(h).toBeGreaterThanOrEqual(44);
+    expect(box.pillTops).toBe(1);
+    // The head is a band at the top of the page: the title sits near its top edge.
+    expect(box.h1Top - box.mainTop).toBeLessThan(120);
   });
 
   test('the topbar folds away on scrolling down and returns on scrolling up', async ({ page }) => {

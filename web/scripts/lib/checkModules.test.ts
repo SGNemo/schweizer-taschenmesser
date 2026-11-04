@@ -17,7 +17,7 @@ const manifest = {
     { id: 'a', title: 'A', defaultSize: 's', sizes: ALL_WIDGET_SIZES, component: () => import('./widgets/AWidget') },
   ],
   layout: 'wide',
-  identity: { hue: 'teal', widgetType: 'kpi', head: 'figure', surface: 'gradient', signature: 'bankCard' },
+  identity: { hue: 'teal', widgetType: 'kpi', widget: 'kennzahl', head: 'kennzahl', signature: 'bankCard' },
   platforms: ['desktop'],
   maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
@@ -71,22 +71,34 @@ describe('checkModule', () => {
     );
   });
 
-  it('requires the identity v2 fields (head, surface, signature) from their lists', () => {
+  it('requires the identity v3 fields (widget, head, signature) from their lists', () => {
     const files = has('widgets/AWidget.tsx', 'seed.ts');
     for (const [from, to, expected] of [
-      ["head: 'figure'", "head: 'banner'", 'identity.head "banner"'],
-      ["surface: 'gradient'", "surface: 'neon'", 'identity.surface "neon"'],
+      ["head: 'kennzahl'", "head: 'banner'", 'identity.head "banner"'],
+      ["head: 'kennzahl'", "head: 'figure'", 'identity.head "figure"'],
+      ["widget: 'kennzahl'", "widget: 'chart'", 'identity.widget "chart"'],
       ["signature: 'bankCard'", "signature: 'spaceship'", 'identity.signature "spaceship"'],
       ["signature: 'bankCard'", "signature: 'bankCard', shape: 'blob'", 'identity.shape "blob"'],
       ["signature: 'bankCard'", "signature: 'bankCard', hue2: 'pink'", 'identity.hue2 "pink"'],
+      ["signature: 'bankCard'", "signature: 'bankCard', hue2: 'teal'", 'identity.hue2 must differ'],
     ] as const)
       expect(
         checkModule({ id: 'x', manifest: good.replace(from, to), fileExists: files }).join(),
       ).toContain(expected);
-    const missing = good.replace(", head: 'figure'", '');
-    expect(checkModule({ id: 'x', manifest: missing, fileExists: files }).join()).toContain(
-      'identity.head ""',
-    );
+    for (const key of ['head', 'widget']) {
+      const missing = good.replace(new RegExp(`, ${key}: '[a-z]+'`), '');
+      expect(checkModule({ id: 'x', manifest: missing, fileExists: files }).join()).toContain(
+        `identity.${key} ""`,
+      );
+    }
+    // The retired v2 surface and the retired hues are no longer accepted.
+    expect(
+      checkModule({
+        id: 'x',
+        manifest: good.replace("hue: 'teal'", "hue: 'plum'"),
+        fileExists: files,
+      }).join(),
+    ).toContain('identity.hue "plum"');
   });
 
   it('fails without a widget (error, not a warning)', () => {

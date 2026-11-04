@@ -1,8 +1,17 @@
 .viewBar {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  overflow-x: auto;
   margin-bottom: var(--space-4);
+}
+/* Phone: one row that scrolls sideways with a fade at the edge. */
+@media (max-width: 899px) {
+  .viewBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
 }
 .chip {
   flex: none;

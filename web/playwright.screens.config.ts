@@ -16,7 +16,11 @@ export default defineConfig({
     // The app follows the device language; the specs assert German texts.
     locale: 'de-DE',
     serviceWorkers: 'block',
-    launchOptions: { executablePath },
+    // SCREENS_SCROLLBARS=1 keeps the classic scrollbars Playwright hides in headless mode (they are what Windows users see).
+    launchOptions: {
+      executablePath,
+      ...(process.env.SCREENS_SCROLLBARS ? { ignoreDefaultArgs: ['--hide-scrollbars'] } : {}),
+    },
   },
   projects: [
     {
@@ -24,6 +28,7 @@ export default defineConfig({
       name: 'seeded',
       testMatch: [
         'capture.spec.ts',
+        'identity-v3.spec.ts',
         'languages.spec.ts',
         'measure-focus.spec.ts',
         'targets-focus.spec.ts',
@@ -38,6 +43,7 @@ export default defineConfig({
       name: 'plain',
       testIgnore: [
         'capture.spec.ts',
+        'identity-v3.spec.ts',
         'languages.spec.ts',
         'stimulus.spec.ts',
         'measure-focus.spec.ts',

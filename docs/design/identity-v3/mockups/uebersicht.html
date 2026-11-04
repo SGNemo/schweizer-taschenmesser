@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v3 – Übersicht</title>
+<link rel="stylesheet" href="v3.css">
+<style>
+body{--mod:var(--mod-slate)}
+.w.finance{--mod:var(--mod-teal)}.w.calendar{--mod:var(--mod-sky)}.w.todos{--mod:var(--mod-moss)}.w.weather{--mod:var(--mod-cobalt)}
+.w.habits{--mod:var(--mod-violet)}.w.invoices{--mod:var(--mod-ocean)}.w.pantry{--mod:var(--mod-fern)}.w.music{--mod:var(--mod-orchid)}
+.w.accounts{--mod:var(--mod-slate)}.w.lists{--mod:var(--mod-orchid)}
+.w.music .pattern,.w.calendar .pattern,.w.weather .pattern{display:none}
+</style></head>
+<body data-active="home" data-area="home">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <div class="greet">
+    <div>
+      <h1>Guten Morgen</h1>
+      <div class="date"><span>Dienstag, 29. September</span><span class="wx"><span class="sw"><span class="sky"><span class="sun"></span><span class="cloud"></span></span></span>14° · leicht bewölkt · Regen ab 15 Uhr</span></div>
+    </div>
+    <div class="tools"><a class="btn ghost"><span data-i="max"></span><span class="lbl">Cockpit</span></a><div class="seg"><span class="on">Ruhig</span><span>Ausführlich</span></div><a class="btn ghost icon"><span data-i="edit"></span></a></div>
+  </div>
+  <div>
+    <p class="caps" style="margin-bottom:8px">Jetzt wichtig</p>
+    <div class="attn">
+      <a class="danger" style="--mod:var(--mod-ocean)"><span class="plate" data-i="bill"></span><div><b>2</b><span>Rechnungen überfällig · 169,90 €</span></div></a>
+      <a class="danger" style="--mod:var(--mod-lime)"><span class="plate" data-i="piggy"></span><div><b>35 €</b><span>Budget „Freizeit“ drüber</span></div></a>
+      <a style="--mod:var(--mod-fern)"><span class="plate" data-i="box"></span><div><b>1</b><span>Vorrat abgelaufen</span></div></a>
+      <a style="--mod:var(--mod-indigo)"><span class="plate" data-i="files"></span><div><b>3</b><span>Dokumente abgelaufen</span></div></a>
+      <a style="--mod:var(--mod-moss)"><span class="plate" data-i="todo"></span><div><b>2</b><span>ToDos heute fällig</span></div></a>
+      <a style="--mod:var(--mod-sky)"><span class="plate" data-i="cal"></span><div><b>10:00</b><span>Teammeeting</span></div></a>
+      <a class="quiet"><span data-i="chevd"></span><div><span>Wartet noch · 1 · Laufwerk C:\ fast voll</span></div></a>
+    </div>
+  </div>
+  <div class="agenda">
+    <div class="day"><h3 class="today">Heute <small>Di 29. Sep</small></h3><div class="tl">
+      <div class="ev" style="--c:var(--mod-orchid)"><span class="t">ganztägig</span><span class="dt"></span><span class="x">Anna Beispiel wird 29</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">08:00</span><span class="dt"></span><span class="x">Medikament nehmen</span></div>
+      <div class="ev now" style="--c:var(--mod-sky)"><span class="t">10:00</span><span class="dt"></span><span class="x">Teammeeting · in 20 Min</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">13:00</span><span class="dt"></span><span class="x">Friseur</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">15:30</span><span class="dt"></span><span class="x">Zahnarzt Dr. Beispiel</span></div></div></div>
+    <div class="day"><h3>Morgen <small>Mi 30. Sep</small></h3><div class="tl">
+      <div class="ev" style="--c:var(--mod-fern)"><span class="t">ganztägig</span><span class="dt"></span><span class="x">Läuft bald ab: Frischkäse</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">12:15</span><span class="dt"></span><span class="x">Mittagessen mit Anna</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">ganztägig</span><span class="dt"></span><span class="x">Müllabfuhr: Biotonne</span></div></div></div>
+    <div class="day"><h3>Diese Woche <small>Do 1. – So 4. Okt</small></h3><div class="tl">
+      <div class="ev" style="--c:var(--mod-indigo)"><span class="t">Do</span><span class="dt"></span><span class="x">Garantie endet: Cloud-Speicher 22</span></div>
+      <div class="ev" style="--c:var(--mod-orchid)"><span class="t">Do</span><span class="dt"></span><span class="x">Geschenk für Oma besorgen</span></div>
+      <div class="ev" style="--c:var(--mod-indigo)"><span class="t">Sa</span><span class="dt"></span><span class="x">Internet &amp; Telefon Küstennetz · 39,99 €</span></div>
+      <div class="ev" style="--c:var(--mod-sky)"><span class="t">So</span><span class="dt"></span><span class="x">Wochenendausflug</span></div></div></div>
+  </div>
+  <div class="wgrid">
+    <div class="w todos"><span class="pattern plan"></span><div class="wh"><span class="plate" data-i="todo"></span>Heute<span class="chev" data-i="chev"></span></div>
+      <div class="focus"><div class="meta">in 3 Std · 13:00 Friseur</div><b>Urlaubsantrag einreichen</b><div class="meta">Arbeit · etwa 5 Min</div><div class="acts"><a class="btn primary">Anfangen · 5 Min</a><a class="btn ghost">Später</a></div></div>
+      <div class="meta">+ Fenster putzen · Zahnbürsten kaufen · 3 Dinge reichen für heute.</div></div>
+    <div class="w finance"><span class="pattern money"></span><div class="wh"><span class="plate" data-i="wallet"></span>Kontostand<span class="chev" data-i="chev"></span></div>
+      <div class="big">12.616,33 €</div><div class="ctx">11.598,49 € verfügbar · Ausgaben ▲ 463 € zum Vormonat</div>
+      <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:50%"></i><i style="height:62%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:48%"></i><i class="hi" style="height:90%"></i></div></div>
+    <div class="w calendar"><div class="wh"><span class="plate" data-i="cal"></span>Kalender<span class="chev" data-i="chev"></span></div>
+      <div class="tl"><div class="ev past"><span class="t">08:00</span><span class="dt"></span><span>Medikament nehmen</span></div><div class="ev now"><span class="t">10:00</span><span class="dt"></span><span>Teammeeting · in 20 Min</span></div><div class="ev"><span class="t">13:00</span><span class="dt"></span><span>Friseur</span></div><div class="ev"><span class="t">15:30</span><span class="dt"></span><span>Zahnarzt Dr. Beispiel</span></div></div></div>
+    <div class="w weather skyw"><span class="sky"><span class="sun"></span><span class="cloud"></span></span><div class="wh"><span class="plate" data-i="sun"></span>Wetter · Bern</div>
+      <div class="skybody"><div class="big thin">14°</div><div class="ctx">leicht bewölkt · ab 15 Uhr Regen · UV 3</div></div></div>
+    <div class="w habits"><span class="pattern plan"></span><div class="wh"><span class="plate" data-i="target"></span>Gewohnheiten<span class="chev" data-i="chev"></span></div>
+      <div class="rings"><div class="ringl"><div class="ringx" style="--p:38"><span>3</span></div>Wasser</div><div class="ringl"><div class="ringx done"><span data-i="check" style="display:grid"></span></div>Spazieren</div><div class="ringl"><div class="ringx" style="--p:0"><span>·</span></div>Dehnen</div><div class="ringl"><div class="ringx" style="--p:0"><span>·</span></div>Medikament</div></div>
+      <div class="ctx">1 von 4 geschafft</div></div>
+    <div class="w invoices"><span class="pattern money"></span><div class="wh"><span class="plate" data-i="bill"></span>Fällige Rechnungen<span class="chev" data-i="chev"></span></div>
+      <div class="due"><div class="row"><span class="grow">Stadtwerke Musterstadt</span><span class="amt">87,40 €</span><span class="badge danger">seit 12 Tagen</span></div><div class="row"><span class="grow">Zahnarztpraxis Dr. Beispiel</span><span class="amt">82,50 €</span><span class="badge danger">seit 3 Tagen</span></div><div class="row"><span class="grow">Internet &amp; Telefon</span><span class="amt">39,99 €</span><span class="badge">in 2 Tagen</span></div></div>
+      <div class="ctx">1.017,84 € offen · 2 überfällig</div></div>
+    <div class="w pantry"><span class="pattern household"></span><div class="wh"><span class="plate" data-i="box"></span>Vorräte<span class="chev" data-i="chev"></span></div>
+      <div class="tiles"><a><b>5</b><span>Kühlschrank · 1 abgelaufen</span></a><a><b>2</b><span>Tiefkühler</span></a><a><b>6</b><span>Vorratsschrank · 3 bald</span></a><a><b>1</b><span>Sonstiges</span></a></div></div>
+    <div class="w music"><div class="wh"><span class="plate" data-i="music"></span>Musik<span class="chev" data-i="chev"></span></div>
+      <div class="mini"><div class="cover"></div><div><b>Testlied</b><div class="meta">Erfundene Band · auf Küche</div></div><div class="ctl"><span data-i="play" style="display:grid"></span><span class="p" data-i="pause" style="display:grid"></span><span data-i="next" style="display:grid"></span></div></div>
+      <div class="prog"><i style="width:39%;background:var(--text-2)"></i></div></div>
+    <div class="w lists"><span class="pattern household"></span><div class="wh"><span class="plate" data-i="cart"></span>Einkauf<span class="chev" data-i="chev"></span></div>
+      <div class="check"><div class="row"><span class="cb"></span><span class="grow">Milch (2)</span></div><div class="row"><span class="cb"></span><span class="grow">Brot</span></div><div class="row"><span class="cb on"></span><span class="grow" style="color:var(--text-3);text-decoration:line-through">Eier</span></div></div><div class="ctx">10 Artikel offen</div></div>
+    <div class="w accounts"><span class="pattern vault"></span><div class="wh"><span class="plate" data-i="lock"></span>Passwort-Tresor</div>
+      <div class="status"><span class="plate" data-i="lock"></span><div><b>Gesperrt</b><small>Entsperren für 5 Minuten</small></div></div><a class="btn ghost" style="align-self:flex-start">Entsperren</a></div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>

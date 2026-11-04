@@ -6,6 +6,7 @@ import { useFocusSettings } from '@/core/settings/focus';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
 import { Icon } from '@/ui';
+import { moduleOfPath, splitFigure } from './attentionCard';
 import styles from './AttentionStrip.module.css';
 
 /** Core items that do not belong to a module. */
@@ -27,23 +28,41 @@ function useCoreItems(): AttentionItem[] {
 }
 
 /**
- * "Jetzt wichtig": what needs attention right now as a slim row of small cards with a coloured
- * edge, an icon and text. Renders nothing at all when there is nothing urgent.
+ * "Jetzt wichtig": what needs attention right now as small cards. Each has the module's icon on a plate in the module's hue, the
+ * count as a big figure, the text and an optional context line; no edge stripe (identity v3). Colour never stands alone:
+ * `danger` (overdue / exceeded only) reddens the figure, the words say the same.
  */
-function Chips({ items }: { items: AttentionItem[] }) {
+function Cards({ items }: { items: AttentionItem[] }) {
   return (
     <ul className={styles.list}>
-      {items.map((i) => (
-        <li key={i.id}>
-          <Link to={i.to} className={styles.item} data-tone={i.tone}>
-            <Icon name={i.icon} size={18} />
-            <span className={styles.text}>
-              <span className={styles.title}>{i.title}</span>
-              {i.detail ? <span className={styles.detail}>{i.detail}</span> : null}
-            </span>
-          </Link>
-        </li>
-      ))}
+      {items.map((i) => {
+        const { figure, label } = splitFigure(i.title);
+        return (
+          <li key={i.id}>
+            <Link
+              to={i.to}
+              className={styles.item}
+              data-tone={i.tone}
+              data-hue={moduleOfPath(i.to)?.identity.hue}
+            >
+              <span className={styles.plate} aria-hidden="true">
+                <Icon name={i.icon} size={18} />
+              </span>
+              <span className={styles.text}>
+                <span className={styles.title}>
+                  {figure ? (
+                    <>
+                      <b className={styles.figure}>{figure}</b>{' '}
+                    </>
+                  ) : null}
+                  <span className={styles.label}>{label}</span>
+                </span>
+                {i.detail ? <span className={styles.detail}>{i.detail}</span> : null}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -67,7 +86,7 @@ export function AttentionStrip() {
     return (
       <section className={styles.strip} aria-label={t.attention.title}>
         <h2 className={styles.heading}>{t.attention.title}</h2>
-        <Chips items={all} />
+        <Cards items={all} />
       </section>
     );
 
@@ -78,7 +97,7 @@ export function AttentionStrip() {
       {visible.length > 0 ? (
         <>
           <h2 className={styles.heading}>{t.attention.title}</h2>
-          <Chips items={visible} />
+          <Cards items={visible} />
         </>
       ) : null}
       {waiting.length > 0 ? (
@@ -96,7 +115,7 @@ export function AttentionStrip() {
             </span>
           </summary>
           <p className={styles.reassure}>{t.attention.waitingExplain}</p>
-          <Chips items={waiting} />
+          <Cards items={waiting} />
           <p className={styles.reassure}>{t.attention.nothingNow}</p>
         </details>
       ) : null}

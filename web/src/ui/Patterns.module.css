@@ -33,14 +33,25 @@
 }
 .segment {
   display: inline-flex;
+  /* The desktop wraps instead of cutting a switch off; a wrapped switch gets rounded corners instead of a pill. */
+  flex-wrap: wrap;
   /* Pages are flex columns: keep the switch as wide as its buttons. */
   align-self: flex-start;
   max-width: 100%;
-  overflow-x: auto;
   gap: var(--space-hair);
   padding: 3px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-xl);
   background: var(--surface-2);
+}
+/* Phone: one row that scrolls sideways; the right edge fades out. */
+@media (max-width: 899px) {
+  .segment {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-radius: var(--radius-full);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
 }
 .segment button {
   min-height: 2rem;
@@ -616,22 +627,13 @@ button.chip[aria-pressed='true'] {
   color: var(--accent);
 }
 
-/* Urgency stripe at the left edge of a row (the colour never stands alone: the row carries a badge or text). */
+/* Urgency on a row is a quiet fill (the colour never stands alone: the row carries a badge or text); no edge stripe (identity v3). */
 .item[data-tone] {
-  position: relative;
-}
-.item[data-tone]::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
-  width: 3px;
-  border-radius: var(--radius-full);
-  background: var(--stripe, var(--danger));
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+  border-radius: var(--radius-sm);
 }
 .item[data-tone='today'] {
-  --stripe: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
 .done [data-rr] {

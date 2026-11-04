@@ -19,9 +19,10 @@ const manifest: ModuleManifest = {
   icon: 'map',
   identity: {
     hue: 'ocean',
+    hue2: 'sky',
     widgetType: 'tiles',
-    head: 'cover',
-    surface: 'gradient',
+    widget: 'kacheln',
+    head: 'regal',
     signature: 'pin',
   },
   version: 1,

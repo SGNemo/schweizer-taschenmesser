@@ -101,8 +101,8 @@
   font-weight: var(--weight-semibold);
 }
 .libStripe {
-  width: 3px;
-  height: 1.1em;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: var(--radius-full);
   background: var(--area-color, var(--text-3));
 }

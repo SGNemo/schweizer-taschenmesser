@@ -24,7 +24,7 @@ import { lazyComponent } from '@/core/modules/lazy';
 import { isWidgetVisible, widgetMaturity } from './maturity';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
-import type { Maturity, WidgetDef, WidgetSize } from '@/core/modules/types';
+import type { Maturity, WidgetDef, WidgetSize, WidgetVariant } from '@/core/modules/types';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
@@ -41,7 +41,6 @@ import {
   EmptyState,
   Icon,
   IconButton,
-  PageHeader,
   patternStyles,
   Segmented,
   SettingsLink,
@@ -53,6 +52,7 @@ import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
 import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
+import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
 
 import styles from './Home.module.css';
@@ -80,6 +80,8 @@ interface Entry extends WidgetDef {
   moduleId: string;
   /** Module maturity tightened by the widget's own (`home/maturity.ts`); drives the badge. */
   effectiveMaturity: Maturity;
+  /** Frame shape: the widget's own variant, else the module's identity (`identity.widget`). */
+  variant: WidgetVariant;
   Component: ReturnType<typeof lazyComponent>;
 }
 
@@ -101,6 +103,7 @@ const allEntries = (): Entry[] =>
         to: w.to ?? m.routes?.[0]?.path,
         moduleId: m.id,
         effectiveMaturity: widgetMaturity(m.maturity, w),
+        variant: w.variant ?? m.identity.widget,
         key,
         Component: componentFor(key, w.component),
       };
@@ -211,42 +214,51 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           </div>
         ) : null
       ) : (
-        <PageHeader title={t.home.title}>
-          {entries.length > 0 ? (
-            <>
-              {editTools}
-              {editing ? null : (
-                <Button
-                  variant="secondary"
-                  onClick={() => enterCockpit((to) => void navigate(to), pathname)}
-                  data-testid="cockpit-enter"
-                >
-                  <Icon name="maximize" size={18} />
-                  {tx.enter}
-                </Button>
-              )}
-              {editing ? null : (
-                <Segmented
-                  label={t.settings.homeView}
-                  value={homeView}
-                  options={HOME_VIEWS.map((v) => ({
-                    value: v,
-                    label: t.settings.homeViewOptions[v],
-                  }))}
-                  onChange={setHomeView}
-                />
-              )}
-              <Button
-                variant={editing ? 'primary' : 'secondary'}
-                onClick={() => setEditing(!editing)}
-                aria-pressed={editing}
-              >
-                <Icon name={editing ? 'check' : 'edit'} size={18} />
-                {editing ? t.homeEdit.done : t.homeEdit.customize}
-              </Button>
-            </>
-          ) : null}
-        </PageHeader>
+        <OverviewHead
+          weather={!!states?.weather}
+          tools={
+            entries.length > 0 ? (
+              <>
+                {editTools}
+                {editing ? null : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => enterCockpit((to) => void navigate(to), pathname)}
+                    data-testid="cockpit-enter"
+                  >
+                    <Icon name="maximize" size={18} />
+                    {tx.enter}
+                  </Button>
+                )}
+                {editing ? null : (
+                  <Segmented
+                    label={t.settings.homeView}
+                    value={homeView}
+                    options={HOME_VIEWS.map((v) => ({
+                      value: v,
+                      label: t.settings.homeViewOptions[v],
+                    }))}
+                    onChange={setHomeView}
+                  />
+                )}
+                {editing ? (
+                  <Button variant="primary" onClick={() => setEditing(false)} aria-pressed>
+                    <Icon name="check" size={18} />
+                    {t.homeEdit.done}
+                  </Button>
+                ) : (
+                  <IconButton
+                    label={t.homeEdit.customize}
+                    aria-pressed={false}
+                    onClick={() => setEditing(true)}
+                  >
+                    <Icon name="edit" size={18} />
+                  </IconButton>
+                )}
+              </>
+            ) : null
+          }
+        />
       )}
 
       {cockpit ? null : (
@@ -468,6 +480,8 @@ function SortableWidget({
       ].join(' ')}
       data-testid={`widget-${entry.key}`}
       data-hue={manifest?.identity.hue}
+      data-widget={manifest ? entry.variant : undefined}
+      data-area={manifest?.area}
     >
       <Card>
         <div className={styles.head}>

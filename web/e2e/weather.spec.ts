@@ -166,7 +166,7 @@ test.describe('Weather module', () => {
     // The title opens the module as a page, not a dialog.
     await widget.getByRole('link', { name: /Wetter heute/ }).click();
     await expect(page).toHaveURL(/\/weather$/);
-    await expect(page.getByTestId('module-frame')).toHaveAttribute('data-hue', 'indigo');
+    await expect(page.getByTestId('module-frame')).toHaveAttribute('data-hue', 'cobalt');
     await expect(page.locator('main h1')).toHaveText('Bern');
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });

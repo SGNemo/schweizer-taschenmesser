@@ -131,17 +131,48 @@ export const resetLayout = (scope: LayoutScope = HOME_SCOPE): Promise<void> =>
 export const FRONT_WIDGETS: readonly string[] = ['todos:next', 'calendar:next'];
 
 /**
- * Applies the saved order to the currently available widgets. Widgets without a saved position
- * (new modules, new widgets) keep their manifest order and go to the end.
+ * Default order only (identity v3): no two neighbouring widgets of different modules share a frame shape (`variant`); cards of
+ * one module belong together and stay side by side. Widgets with a saved position never move, nor do the front widgets; of the
+ * rest, a widget whose neighbour before it has its shape swaps places with the next one of another shape (a move, so the
+ * remaining order stays as it was). When no such widget is left, the neighbours stay.
  */
-export function orderWidgets<T extends { key: string }>(entries: T[], saved: HomeLayout): T[] {
+export function spreadVariants<T extends { key: string; variant?: string }>(
+  entries: readonly T[],
+  saved: HomeLayout,
+): T[] {
+  const out = [...entries];
+  const placed = new Set(saved.order);
+  const movable = (e: T) => !placed.has(e.key) && !FRONT_WIDGETS.includes(e.key);
+  const moduleOf = (key: string) => key.split(':')[0];
+  const same = (a: T | undefined, b: T) =>
+    !!a &&
+    a.variant !== undefined &&
+    a.variant === b.variant &&
+    moduleOf(a.key) !== moduleOf(b.key);
+  for (let i = 1; i < out.length; i += 1) {
+    if (!movable(out[i]!) || !same(out[i - 1], out[i]!)) continue;
+    const j = out.findIndex((e, k) => k > i && movable(e) && !same(out[i - 1], e));
+    if (j > i) out.splice(i, 0, out.splice(j, 1)[0]!);
+  }
+  return out;
+}
+
+/**
+ * Applies the saved order to the currently available widgets. Widgets without a saved position
+ * (new modules, new widgets) keep their manifest order and go to the end, spread so that neighbours
+ * differ in shape (`spreadVariants`).
+ */
+export function orderWidgets<T extends { key: string; variant?: string }>(
+  entries: T[],
+  saved: HomeLayout,
+): T[] {
   const index = new Map(saved.order.map((k, i) => [k, i]));
   // Widgets that start the day come first until the user moves them (no saved position yet).
   const front = (k: string) => {
     const f = FRONT_WIDGETS.indexOf(k);
     return f < 0 ? FRONT_WIDGETS.length : f;
   };
-  return entries
+  const sorted = entries
     .map((e, i) => ({ e, i }))
     .sort((a, b) => {
       const ia = index.get(a.e.key);
@@ -152,6 +183,7 @@ export function orderWidgets<T extends { key: string }>(entries: T[], saved: Hom
       return front(a.e.key) - front(b.e.key) || a.i - b.i;
     })
     .map((x) => x.e);
+  return spreadVariants(sorted, saved);
 }
 
 /** Moves `activeKey` to the position of `overKey`. */

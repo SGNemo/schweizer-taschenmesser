@@ -47,7 +47,7 @@
   border-radius: var(--radius-sm);
   background: var(--danger-soft);
   color: var(--text);
-  border-left: 4px solid var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
   font-size: var(--text-sm);
 }
 .modes {

@@ -15,8 +15,8 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'slate',
     widgetType: 'kpi',
-    head: 'compact',
-    surface: 'plain',
+    widget: 'kennzahl',
+    head: 'schreib',
     signature: 'none',
   },
   version: 1,

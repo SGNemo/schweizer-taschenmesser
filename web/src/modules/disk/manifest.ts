@@ -18,8 +18,8 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'slate',
     widgetType: 'gauge',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'fortschritt',
+    head: 'fortschritt',
     signature: 'gauges',
     type: 'mono',
   },

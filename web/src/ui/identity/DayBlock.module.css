@@ -1,0 +1,22 @@
+.block {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.day {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-variant-numeric: var(--font-num);
+}
+.line {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  color: var(--text);
+}

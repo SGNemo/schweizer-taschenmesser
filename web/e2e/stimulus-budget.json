@@ -153,7 +153,7 @@
       "firstScreenActions": 30
     },
     "phone--budgets": {
-      "height": 1302,
+      "height": 1444,
       "buttons": 17,
       "links": 11,
       "icons": 14,
@@ -251,7 +251,7 @@
       "firstScreenActions": 16
     },
     "phone--subscriptions": {
-      "height": 1848,
+      "height": 2046,
       "buttons": 35,
       "links": 11,
       "icons": 23,
