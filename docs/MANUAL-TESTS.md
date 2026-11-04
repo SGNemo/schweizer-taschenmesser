@@ -328,6 +328,12 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO11 Speicher:** Einstellungen → Allgemein → Speicher: die Größe passt ungefähr zum Gerät; „Zwischenspeicher leeren“ mit Bestätigung, danach Werkzeuge (z. B. Rechner) mit Internet neu öffnen: lädt wieder; die App selbst bleibt offline nutzbar. ☐
 - **SO12 Barrierefreiheit:** Einstellungen → Barrierefreiheit am Handy: Textgröße „Sehr groß“ und Bewegung „Weniger“ wirken sofort, Lesehilfe und Fokus sind hier zu finden; ein alter Link (Darstellung → Fokus) führt hierher. ☐
 
+## Einstellungen in Identität v3 (Paket 1) – nur von Hand prüfbar
+- **SV1 Handy, zwei Ebenen:** Einstellungen: Status-Kopf mit sechs Kacheln, darunter Karten und die gruppierte Liste; eine Kategorie antippen zeigt ihren Kopf mit „Einstellungen“ als Rücksprung, Android-Zurück führt zur Liste. ☐
+- **SV2 „Ruhig“ und „Modulfarben: Aus“:** Köpfe, Plättchen und die Kapsel werden grau, Muster verschwinden, alles bleibt lesbar (Text, Icons). ☐
+- **SV3 Breite Fenster (2560 px) und 1280 × 720:** Kopf und Liste zentriert, nichts läuft über; hell und dunkel. ☐
+- **SV4 Punkt „weicht vom Standard ab“:** Darstellung → Farbschema „Dunkel“: in der Liste erscheint der Punkt bei „Darstellung“; „Auf Standard“ entfernt ihn; ein Screenreader liest den Text. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.

@@ -155,3 +155,8 @@ Recipe: [howto/new-tool.md](../howto/new-tool.md). The tool contents are rebuilt
 5. Widget: base type and variant, only today, empty state with one next step, one context line per number.
 6. Seeds and onboarding as before; e2e: the frame carries `data-hue`; axe in both themes; no horizontal overflow at 412 px.
 7. Focus checklist ([FOCUS-GUIDELINES](FOCUS-GUIDELINES.md)): no streak, no guilt text, no permanent motion, an off switch (the colour modes).
+
+## Settings and libraries
+
+Not module pages, so no `AreaFrame` band: they use the local `pages/settings/PageHead` (same ingredients: tinted head in the hue, the area's pattern, icon plate, text `--text`, no stripe) as a rounded card in the page container. **Settings:** the landing page has the "Status" head (six figure tiles), each category its own compact head in its hue (`pages/settings/categoryLook.ts`, display only), a module's settings page the module's identity (`hue`, `hue2`, area pattern, signature in small). The category list uses the sidebar's look: group headings, icon plates, the open page as a tinted capsule, a quiet dot for "differs from the default". Rule for new categories: add the look and a nav group (`categoryLook.test.ts`).
+

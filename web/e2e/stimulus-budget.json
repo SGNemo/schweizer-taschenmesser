@@ -92,7 +92,7 @@
     "desktop--settings": {
       "height": 800,
       "buttons": 40,
-      "links": 47,
+      "links": 52,
       "icons": 80,
       "firstScreenActions": 62
     },
