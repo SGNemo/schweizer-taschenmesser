@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, SelectField, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { convertText, type Base64Mode } from './base64';
 
@@ -39,7 +40,7 @@ export default function Base64Panel() {
       ) : output ? (
         <>
           <p className={styles.muted}>{s.output}</p>
-          <p className={styles.mono} role="status" aria-label={s.output}>
+          <p className={kit.code} role="status" aria-label={s.output}>
             {output}
           </p>
           <div className={styles.row}>

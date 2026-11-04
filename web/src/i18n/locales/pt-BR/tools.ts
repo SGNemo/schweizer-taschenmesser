@@ -434,6 +434,7 @@ export const tools: Strings['tools'] = {
     invalid: 'Escolha datas válidas.',
   },
   persona: {
+    stamp: 'Inventada',
     name: 'Persona anônima',
     keywords: 'falso, pseudônimo, descartável, cadastro, pessoa inventada',
     description:

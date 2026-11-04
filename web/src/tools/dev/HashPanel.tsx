@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { t } from '@/strings';
 import { Button, SelectField, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { ALGORITHMS, digestHex, type HashAlgorithm } from './hash';
 
@@ -46,7 +47,7 @@ export default function HashPanel() {
         spellCheck={false}
       />
       <p className={styles.muted}>{s.output}</p>
-      <p className={styles.mono} role="status" aria-label={s.output}>
+      <p className={kit.code} role="status" aria-label={s.output}>
         {hex ?? '…'}
       </p>
       <div className={styles.row}>

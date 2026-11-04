@@ -7,6 +7,7 @@ import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { Button, Checkbox, Icon, IconButton, SelectField } from '@/ui';
 import { copyWithToast, useSaveAsNote, useSaveInVault } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { COUNTRIES } from './data';
 import {
@@ -215,17 +216,26 @@ function Generator({
         />
       </div>
 
-      <div className={styles.table} data-testid="persona-fields">
-        {rows.map((r) => (
-          <PersonaRow
-            key={r.field}
-            label={r.label}
-            value={r.value}
-            mono={r.field === 'password' || r.field === 'username'}
-            onCopy={() => void copyWithToast(r.value)}
-            onReroll={() => reroll(r.field)}
-          />
-        ))}
+      <div className={kit.idCard}>
+        <div className={kit.idHead}>
+          <span className={kit.avatar} aria-hidden="true">
+            {`${persona.firstName.charAt(0)}${persona.lastName.charAt(0)}`.toUpperCase()}
+          </span>
+          <p className={kit.idName}>{`${persona.firstName} ${persona.lastName}`}</p>
+          <span className={kit.stamp}>{s.stamp}</span>
+        </div>
+        <div className={styles.table} data-testid="persona-fields">
+          {rows.map((r) => (
+            <PersonaRow
+              key={r.field}
+              label={r.label}
+              value={r.value}
+              mono={r.field === 'password' || r.field === 'username'}
+              onCopy={() => void copyWithToast(r.value)}
+              onReroll={() => reroll(r.field)}
+            />
+          ))}
+        </div>
       </div>
       <p className={styles.muted}>{s.phoneNote}</p>
 

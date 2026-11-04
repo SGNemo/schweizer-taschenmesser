@@ -3,6 +3,7 @@ import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, SelectField, Segmented, TextField } from '@/ui';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { outName, parseRanges, without, type Rotation } from './logic';
 import { PdfError, extractPages, mergePdfs, pageCount, rotatePages } from './pdf';
@@ -123,9 +124,9 @@ function Merge({ run, save, busy }: StepProps) {
         />
       </div>
       {files.length > 0 ? (
-        <ul className={styles.list} aria-label={s.files} data-testid="pdf-files">
+        <ul className={kit.files} aria-label={s.files} data-testid="pdf-files">
           {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className={styles.item}>
+            <li key={`${f.name}-${i}`} className={kit.file}>
               <span>
                 {i + 1}. {f.name}
               </span>

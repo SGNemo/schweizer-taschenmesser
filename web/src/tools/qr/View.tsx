@@ -3,6 +3,7 @@ import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Segmented, TextArea } from '@/ui';
+import { kit } from '../kit';
 import { copyText } from '../shared';
 import styles from '../tools.module.css';
 import { makeQr, qrPath, qrSvg, QrTooLongError, type QrMatrix } from './logic';
@@ -72,17 +73,19 @@ function Create() {
       ) : null}
       {drawn ? (
         <>
-          <svg
-            className={styles.qr}
-            viewBox={`0 0 ${drawn.box} ${drawn.box}`}
-            role="img"
-            aria-label={s.alt}
-            shapeRendering="crispEdges"
-            data-testid="qr-code"
-          >
-            <rect width={drawn.box} height={drawn.box} fill="#fff" />
-            <path d={drawn.path} fill="#000" />
-          </svg>
+          <div className={kit.mat}>
+            <svg
+              className={kit.matInner}
+              viewBox={`0 0 ${drawn.box} ${drawn.box}`}
+              role="img"
+              aria-label={s.alt}
+              shapeRendering="crispEdges"
+              data-testid="qr-code"
+            >
+              <rect width={drawn.box} height={drawn.box} fill="#fff" />
+              <path d={drawn.path} fill="#000" />
+            </svg>
+          </div>
           <div className={styles.row}>
             <Button onClick={() => void save()}>{s.download}</Button>
           </div>
