@@ -627,7 +627,7 @@ jobs:
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
   # The build runs next to the tests (it needs nothing from them); the publish stage waits for every check
-  # of this run (tests, packages, Rust, docs-pairs, gitleaks) to be green, so nothing is published from a red
+  # of this run (tests, packages, Rust, licences, docs-pairs, gitleaks) to be green, so nothing is published from a red
   # commit. The signed build artifacts of a red commit stay in the run for 3 days, but are never attached to
   # a release. See dev-preview.yml and
   # docs/howto/ci.md -> "Dev-Preview".

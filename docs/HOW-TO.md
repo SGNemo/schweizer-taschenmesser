@@ -19,7 +19,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Native shell (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes | no | yes | yes | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
 | CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
-| Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published only when tests, packages, Rust, docs-pairs and gitleaks are green** (not for docs-only pushes) | – | – |
+| Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published only when tests, packages, Rust, licences, docs-pairs and gitleaks are green** (not for docs-only pushes) | – | – |
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
 How to read it:
