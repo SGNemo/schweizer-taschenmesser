@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { searchEntries } from '@/core/ai/search/fulltext';
+import { resetSearchIndexes } from '@/core/ai/search/index';
 import { ctxFor, TODAY } from '@/core/ai/testing';
 import { balances } from '@/modules/finance/logic';
 import { createRepo, type Repo } from '@/core/db/repo';
@@ -104,8 +105,13 @@ describe('data micro-benchmarks', () => {
     await db.table('todos_task').bulkPut(tasks);
     const ctx = ctxFor(['finance', 'calendar', 'notes', 'todos'], TODAY);
     const out: Record<string, number> = {};
+    resetSearchIndexes();
+    // The first search builds the index (31k documents); the following ones only search it.
+    const t0 = performance.now();
+    await searchEntries('tankstelle', ctx);
+    out['first query (builds the index)'] = round(performance.now() - t0);
     for (const q of ['tankstelle', 'arzt', 'miete 12'])
-      out[q] = await time(() => searchEntries(q, ctx));
+      out[`${q} (warm)`] = await time(() => searchEntries(q, ctx));
     save('searchEntries', out);
   });
 
