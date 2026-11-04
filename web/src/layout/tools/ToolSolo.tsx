@@ -28,7 +28,7 @@ export function ToolSolo() {
       ) : (
         <p>
           {t.tools.panel.soloMissing}{' '}
-          {/* A full page load: this window skipped the background services, the app must start normally. */}
+          {/* Opens the full app in a new tab: this window skipped the background services, the app must start normally there. */}
           <a href="/tools" target="_blank" rel="noreferrer">
             {t.tools.manage}
           </a>

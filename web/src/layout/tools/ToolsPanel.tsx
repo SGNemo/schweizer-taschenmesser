@@ -67,7 +67,7 @@ export function ToolsPanel() {
       setBlocked(false);
       setRecentAtOpen(recentIds);
       // A phone with no tool asked for and none used before starts on the list, not on an arbitrary tool.
-      setListView(phone && !activeTool && !ordered.some((x) => x.id === recentIds[0]));
+      setListView(phone && !!tools && !activeTool && !ordered.some((x) => x.id === recentIds[0]));
     }
   }
 
@@ -99,6 +99,7 @@ export function ToolsPanel() {
   const searchRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const choose = (tool: ToolManifest, focusTool = phone) => {
+    setBlocked(false);
     openTools(tool.id);
     setListView(false);
     // On a phone the list disappears behind the tool; from the keyboard the focus follows too.
@@ -263,6 +264,7 @@ export function ToolsPanel() {
                 onDetach={
                   canDetachTool() && !phone
                     ? () => {
+                        setBlocked(false);
                         if (detachTool(shown)) closeTools();
                         else setBlocked(true);
                       }

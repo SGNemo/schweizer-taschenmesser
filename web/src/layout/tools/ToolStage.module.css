@@ -40,7 +40,7 @@
   display: inline-grid;
   place-items: center;
   flex: none;
-  /* Decoration: the hue on its own tint reads at 3:1 (tokens.test.ts); words carry the meaning. */
+  /* Decoration only (≥ 1.5:1 on the head, tokens.test.ts); words carry the meaning. */
   color: var(--module-color);
 }
 .detach {
