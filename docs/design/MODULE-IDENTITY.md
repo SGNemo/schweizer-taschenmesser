@@ -121,6 +121,31 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 
 Existing modules got the v3 fields in the manifest only; their pages keep their content until their module chat rebuilds them against the head and widget variant. Signatures without a component render nothing yet (list in `SIGNATURES`; blocks in `@/ui/identity`).
 
+## Tools
+
+Tools are not modules but speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature, type? }`, `category`, `keywords` (checked by `npm run check:tools`; neighbours in the list never share a hue). The toolbox is a large panel (`layout/tools`): list left, the tool right on a surface tinted in its hue (head: plate, one line, signature; no edge stripe). "Ruhig" and "Modulfarben: Aus" flatten it like everywhere else.
+
+| Tool | Category | `hue` / `hue2` | Signature |
+| --- | --- | --- | --- |
+| Rechner `calc` | rechnen | cobalt / sky | `display` |
+| Währung `currency` | rechnen | teal / ocean | `flow` |
+| Einheiten `units` | rechnen | lime / moss | `flow` |
+| Timer & Stoppuhr `timer` | zeit | violet / orchid | `ring` |
+| Datumsrechner `dates` | zeit | sky / ocean | `calendarLeaf` |
+| Zeitzonen `timezones` | zeit | ocean / teal | `globe` |
+| QR-Code `qr` | erzeugen | indigo / cobalt | `qrFrame` |
+| Würfel & Zufall `dice` | erzeugen | orchid / violet | `dice` |
+| Anonyme Persona `persona` | erzeugen | violet / indigo | `idCard` |
+| Bilder `image` | medien | fern / lime | `photoFrame` |
+| PDF `pdf` | medien | indigo / violet | `pageStack` |
+| Bildschirmfoto `screenshot` | medien | sky / cobalt | `viewfinder` |
+| Text `text` | text | moss / fern | `notePaper` |
+| Entwickler `dev` | entwickler | slate | `terminal` (mono) |
+| Textvergleich `diff` | entwickler | teal | `splitPage` (mono) |
+| Regex `regex` | entwickler | lime | `pattern` (mono) |
+
+Recipe: [howto/new-tool.md](../howto/new-tool.md). The tool contents are rebuilt in packages 2 and 3.
+
 ## Checklist for a new or converted module
 
 1. Manifest `identity` complete; hue free in the area (≥ 25° from its neighbours), head variant different from the neighbour module in the area; `npm run check:modules`.
