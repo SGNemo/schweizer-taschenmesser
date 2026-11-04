@@ -46,7 +46,3 @@
   background: var(--head-flat);
   color: var(--text);
 }
-.head[data-tinted='true'] .icon {
-  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
-  color: var(--text);
-}
