@@ -1,11 +1,15 @@
 import { installUpdate, postponeUpdate, useUpdateStore } from '@/core/update/controller';
-import { notesPreview } from '@/core/update/notes';
+import { parseReleaseNotes } from '@/core/changelog/notes';
+import { useLang } from '@/core/i18n/lang';
+import { dateTimeFormat } from '@/core/i18n/format';
 import { t } from '@/strings';
-import { Badge, Button, Progress } from '@/ui';
+import { Badge, Button, Icon, Progress } from '@/ui';
+import { ReleaseNotes } from './ReleaseNotes';
 import styles from './UpdateBanner.module.css';
 
 /** Unobtrusive offer of a new version. Never forces anything; "Später" hides it for that version. */
 export function UpdateBanner() {
+  const lang = useLang();
   const state = useUpdateStore((s) => s.state);
   // Only these phases belong to an offered update; everything else shows nothing here.
   const info =
@@ -17,7 +21,18 @@ export function UpdateBanner() {
       : undefined;
   if (!info) return null;
   const busy = state.phase === 'installing';
-  const preview = notesPreview(info.notes);
+  const notes = parseReleaseNotes(info.notes, lang);
+  const heading = notes.unreleased
+    ? t.about.changes.unreleased
+    : notes.version
+      ? [
+          t.about.changes.version(notes.version),
+          notes.date &&
+            dateTimeFormat({ dateStyle: 'medium' }).format(new Date(`${notes.date}T00:00:00`)),
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : undefined;
   const progress = state.phase === 'installing' ? state.progress : undefined;
   const pct =
     progress && progress.total > 0
@@ -27,6 +42,9 @@ export function UpdateBanner() {
   return (
     <section className={styles.banner} aria-label={t.update.title} data-testid="update-banner">
       <div className={styles.head}>
+        <span className={styles.plate} aria-hidden="true">
+          <Icon name="sparkles" size={18} />
+        </span>
         <span className={styles.title}>
           {t.update.available(info.version)}{' '}
           {info.prerelease ? <Badge>{t.update.beta}</Badge> : null}
@@ -66,14 +84,13 @@ export function UpdateBanner() {
         </p>
       ) : null}
 
-      {preview.length > 0 ? (
-        <details className={styles.notes}>
+      {notes.blocks.length > 0 ? (
+        <details className={styles.notes} open>
           <summary>{t.update.whatsNew}</summary>
-          <ul>
-            {preview.map((line, i) => (
-              <li key={i}>{line}</li>
-            ))}
-          </ul>
+          {heading ? <p className={styles.version}>{heading}</p> : null}
+          <div className={styles.scroll}>
+            <ReleaseNotes blocks={notes.blocks} />
+          </div>
         </details>
       ) : null}
     </section>
