@@ -206,7 +206,8 @@ export function ToolsPanel() {
       {toolsOpen ? (
         <div
           className={styles.panel}
-          data-pane={phone ? (phoneTool ? 'tool' : 'list') : 'both'}
+          // A phone shows no empty list while the tool settings load (it would turn into the last tool a moment later).
+          data-pane={phone ? (phoneTool || !tools ? 'tool' : 'list') : 'both'}
           onKeyDown={onPanelKey}
         >
           <nav
