@@ -5,12 +5,14 @@ import { allManifests, availableManifestsFor, isAvailableOn, validateManifest } 
 import {
   CARD_SHAPES,
   FEEDBACKS,
-  HEAD_STYLES,
-  HEAD_SURFACES,
+  HEAD_VARIANTS,
   MODULE_HUES,
   SIGNATURES,
   TYPE_ACCENTS,
   WIDGET_TYPES,
+  WIDGET_VARIANTS,
+  AREAS,
+  type ModuleManifest,
 } from './types';
 
 describe('module registry', () => {
@@ -59,32 +61,56 @@ describe('module registry', () => {
     ).toHaveLength(1);
   });
 
-  it('identity v2: head, surface and signature are required and checked; the optional fields too', () => {
+  it('identity v3: widget, head and signature are required and checked; the optional fields too', () => {
     const base = allManifests.find((m) => m.id === 'finance')!;
     const bad = (patch: Record<string, unknown>) =>
       validateManifest({ ...base, identity: { ...base.identity, ...patch } as never });
     expect(validateManifest(base)).toEqual([]);
     for (const patch of [
       { head: 'banner' },
+      { head: 'figure' },
       { head: undefined },
-      { surface: 'neon' },
-      { surface: undefined },
+      { widget: 'chart' },
+      { widget: undefined },
       { signature: 'spaceship' },
       { signature: undefined },
+      { hue: 'plum' },
       { hue2: 'pink' },
+      { hue2: base.identity.hue },
       { type: 'comic' },
       { shape: 'blob' },
       { feedback: 'explode' },
     ])
       expect(bad(patch), JSON.stringify(patch)).toHaveLength(1);
     expect(bad({ hue2: 'sky', type: 'thin', shape: 'round', feedback: 'tick' })).toEqual([]);
+    // A widget may name its own shape; an unknown one is refused.
+    const widgets = (variant: string) =>
+      base.widgets.map((w) => ({ ...w, variant: variant as never }));
+    expect(validateManifest({ ...base, widgets: widgets('fokus') })).toEqual([]);
+    expect(validateManifest({ ...base, widgets: widgets('blob') }).length).toBeGreaterThan(0);
   });
 
-  it('every module declares an identity v2 from the fixed lists', () => {
+  it('every module declares an identity v3 from the fixed lists', () => {
     for (const m of allManifests.filter((x) => !x.retired)) {
-      expect(HEAD_STYLES, m.id).toContain(m.identity.head);
-      expect(HEAD_SURFACES, m.id).toContain(m.identity.surface);
+      expect(HEAD_VARIANTS, m.id).toContain(m.identity.head);
+      expect(WIDGET_VARIANTS, m.id).toContain(m.identity.widget);
       expect(SIGNATURES, m.id).toContain(m.identity.signature);
+    }
+  });
+
+  it('neighbours in the navigation of one area never share a head variant (every module has its own silhouette)', () => {
+    const order = (a: ModuleManifest, b: ModuleManifest) =>
+      (a.order ?? 100) - (b.order ?? 100) || a.id.localeCompare(b.id);
+    for (const area of AREAS) {
+      const group = allManifests.filter((x) => !x.retired && x.area === area).sort(order);
+      for (const [i, m] of group.entries()) {
+        const next = group[i + 1];
+        if (next)
+          expect(
+            m.identity.head,
+            `${m.id} and ${next.id} are neighbours in ${area} and share the head "${m.identity.head}"`,
+          ).not.toBe(next.identity.head);
+      }
     }
   });
 
@@ -104,8 +130,8 @@ describe('module registry', () => {
     const lib = await import('../../../scripts/lib/checkModules');
     expect(lib.HUES).toEqual([...MODULE_HUES]);
     expect(lib.WIDGET_TYPES).toEqual([...WIDGET_TYPES]);
-    expect(lib.HEAD_STYLES).toEqual([...HEAD_STYLES]);
-    expect(lib.HEAD_SURFACES).toEqual([...HEAD_SURFACES]);
+    expect(lib.HEAD_VARIANTS).toEqual([...HEAD_VARIANTS]);
+    expect(lib.WIDGET_VARIANTS).toEqual([...WIDGET_VARIANTS]);
     expect(lib.SIGNATURES).toEqual([...SIGNATURES]);
     expect(lib.TYPE_ACCENTS).toEqual([...TYPE_ACCENTS]);
     expect(lib.CARD_SHAPES).toEqual([...CARD_SHAPES]);

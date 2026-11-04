@@ -8,6 +8,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
 import { ComponentSheet } from '@/layout/devTools';
+import { frameVariant } from '@/core/modules/frame';
 import { AreaFrame } from '@/layout/AreaFrame';
 import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
@@ -89,25 +90,23 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           return {
             path: r.path.replace(/^\//, ''),
             element: (
-              <PageContainer
+              <AreaFrame
                 key={m.id}
-                variant={r.layout ?? m.layout ?? 'content'}
+                variant={frameVariant(r.layout ?? m.layout)}
                 hue={m.identity.hue}
               >
-                <AreaFrame>
-                  <ModuleErrorBoundary manifest={m}>
-                    <Suspense fallback={<PageFallback />}>
-                      {NO_READ_AID_MODULES.has(m.id) ? (
-                        <NoReadAid>
-                          <Cmp />
-                        </NoReadAid>
-                      ) : (
+                <ModuleErrorBoundary manifest={m}>
+                  <Suspense fallback={<PageFallback />}>
+                    {NO_READ_AID_MODULES.has(m.id) ? (
+                      <NoReadAid>
                         <Cmp />
-                      )}
-                    </Suspense>
-                  </ModuleErrorBoundary>
-                </AreaFrame>
-              </PageContainer>
+                      </NoReadAid>
+                    ) : (
+                      <Cmp />
+                    )}
+                  </Suspense>
+                </ModuleErrorBoundary>
+              </AreaFrame>
             ),
           } satisfies RouteObject;
         })

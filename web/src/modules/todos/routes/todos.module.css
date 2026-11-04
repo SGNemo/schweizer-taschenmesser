@@ -8,10 +8,19 @@
 }
 .chips {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
   margin-bottom: var(--space-4);
+}
+/* Phone: one row that scrolls sideways; the right edge fades so a cut-off chip reads as "more". */
+@media (max-width: 899px) {
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: var(--space-2);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
 }
 .chip {
   flex: none;
@@ -361,17 +370,24 @@
   }
 }
 
-/* The view chips are one scrollable row, so the list stays high on a phone. */
+/* The view chips wrap on the desktop; on a phone they are one scrollable row, so the list stays high. */
 .viewBar {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  overflow-x: auto;
-  padding-bottom: var(--space-1);
   margin-bottom: var(--space-3);
 }
 .viewBar .tagChip {
   flex: none;
+}
+@media (max-width: 899px) {
+  .viewBar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: var(--space-1);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
 }
 
 .todayLine {

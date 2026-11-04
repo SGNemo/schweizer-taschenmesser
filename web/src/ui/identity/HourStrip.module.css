@@ -1,0 +1,42 @@
+.strip {
+  width: min(100%, 22rem);
+}
+.bars,
+.labels {
+  display: grid;
+  grid-template-columns: repeat(var(--hours, 11), minmax(0, 1fr));
+  gap: 2px;
+}
+.bars {
+  align-items: end;
+  height: 2rem;
+}
+.bars i {
+  position: relative;
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color) 30%, var(--surface));
+}
+.bars i[data-busy='true'] {
+  height: 1.5rem;
+  background: var(--module-color);
+}
+/* "Now": a thin line in the accent over the current hour; it is text-free, the hour label below carries the meaning. */
+.bars i[data-now='true']::after {
+  content: '';
+  position: absolute;
+  inset: -0.25rem auto -0.125rem 50%;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.labels {
+  margin-top: var(--space-1);
+  font-size: var(--text-caps);
+  color: var(--text-3);
+  font-variant-numeric: var(--font-num);
+}
+.labels span {
+  text-align: center;
+}

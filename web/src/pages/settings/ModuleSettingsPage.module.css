@@ -13,8 +13,7 @@
   gap: var(--space-3);
   padding: var(--space-4);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--module-color);
+  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
   border-radius: var(--radius-lg);
 }
 .chip {
@@ -88,8 +87,7 @@
   min-height: var(--touch);
   padding: var(--space-3);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--module-color);
+  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
   border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;

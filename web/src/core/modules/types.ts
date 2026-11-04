@@ -75,21 +75,23 @@ export interface ModuleContext {
 }
 
 /**
- * Fixed module palette (tokens.css `--mod-<hue>`, light + dark, contrast-checked; `tokens.test.ts`
- * keeps every hue ≥ 3:1 on the surfaces and ≥ 25° of hue away from the status colours). The
- * "Ruhig" colour mode and the "Modulfarben" switch turn all of them into the quiet text colour.
+ * Fixed module palette v3 (tokens.css `--mod-<hue>`, light + dark, contrast-checked; `tokens.test.ts`
+ * keeps every hue ≥ 3:1 on the surfaces, ≥ 25° of hue away from the status colours and ≥ 25° from every
+ * other hue). Ten hues in steps of 26° of HSL hue plus `slate`, the grey. The "Ruhig" colour mode and the
+ * "Modulfarben" switch turn all of them into the quiet text colour.
  */
 export const MODULE_HUES = [
-  'sky',
+  'lime',
   'moss',
+  'fern',
   'teal',
   'ocean',
-  'violet',
-  'plum',
-  'orchid',
+  'sky',
+  'cobalt',
   'indigo',
+  'violet',
+  'orchid',
   'slate',
-  'navy',
 ] as const;
 export type ModuleHue = (typeof MODULE_HUES)[number];
 
@@ -106,12 +108,55 @@ export const WIDGET_TYPES = [
 ] as const;
 export type WidgetType = (typeof WIDGET_TYPES)[number];
 
-/** Head style of the module frame's hero (identity v2, `docs/design/MODULE-IDENTITY.md`). */
-export const HEAD_STYLES = ['figure', 'cover', 'compact'] as const;
-export type HeadStyle = (typeof HEAD_STYLES)[number];
-/** Treatment behind the hero (never behind body text): gradient in the hue, flat tint, or none. */
-export const HEAD_SURFACES = ['gradient', 'tint', 'plain'] as const;
-export type HeadSurface = (typeof HEAD_SURFACES)[number];
+/**
+ * Head variants of the module frame (identity v3, `docs/design/identity-v3/02-CONCEPT.md` § 3): each has its own
+ * silhouette (height, arrangement, typography), not only a colour. `hero` heads are ≈ 200 px tall, `compact` ones ≈ 96 px.
+ * - `kennzahl` big figure with context line, sparkline and mini cards (money)
+ * - `zeit` day number and today's hour strip (calendar, time tracking)
+ * - `fortschritt` rings or bars per item (habits, drives, downloads)
+ * - `cover` cover art whose colour tints the head (music)
+ * - `himmel` sky backdrop with a thin temperature (weather)
+ * - `regal` count figure with tiles on a shelf line (pantry, lists, places, bookmarks)
+ * - `tresor` lock status on a framed head (vault; never content)
+ * - `schreib` plain paper with a serif title (notes, chat, mail, browser)
+ * - `fokus` one task or one fact large (todos, people, invoices)
+ */
+export const HEAD_VARIANTS = [
+  'kennzahl',
+  'zeit',
+  'fortschritt',
+  'cover',
+  'himmel',
+  'regal',
+  'tresor',
+  'schreib',
+  'fokus',
+] as const;
+export type HeadVariant = (typeof HEAD_VARIANTS)[number];
+/** Height class of a head variant: three are a slim bar, the others a hero. */
+export const COMPACT_HEADS: readonly HeadVariant[] = ['tresor', 'schreib', 'fokus'];
+export const headHeight = (v: HeadVariant): 'hero' | 'compact' =>
+  COMPACT_HEADS.includes(v) ? 'compact' : 'hero';
+/**
+ * Shape of a module's widget on the overview (identity v3 § 5), bound to the head variant: `kennzahl` figure + sparkline,
+ * `zeitleiste` time rail, `fortschritt` rings or bars, `cover` cover + player, `himmel` sky band, `kacheln` 2 × 2 tiles,
+ * `status` lock plate + one action, `notiz` first lines in serif, `fokus` one task large, `faellig` rows with state
+ * badges, `checkliste` rows with checkboxes. The catalogue type (`widgetType`) says what the body is built from.
+ */
+export const WIDGET_VARIANTS = [
+  'kennzahl',
+  'zeitleiste',
+  'fortschritt',
+  'cover',
+  'himmel',
+  'kacheln',
+  'status',
+  'notiz',
+  'fokus',
+  'faellig',
+  'checkliste',
+] as const;
+export type WidgetVariant = (typeof WIDGET_VARIANTS)[number];
 /** The one thing a module is recognised by. Components live in `@/ui/identity`; ids without one render nothing yet. */
 export const SIGNATURES = [
   'sky',
@@ -146,20 +191,21 @@ export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'] as const;
 export type FeedbackMotion = (typeof FEEDBACKS)[number];
 
 /**
- * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity", v2): its hue from
- * the palette (icon chip, edge, module head tint, active navigation, chart series), the catalogue
- * type its main widget is built from, and the look of its head: style, background treatment and
- * signature. The icon is `ModuleManifest.icon`. Required fields: `validateManifest` and
- * `npm run check:modules` enforce them. The "Ruhig" colour mode and "Modulfarben: Aus" turn every
- * hue grey; shape and signature stay.
+ * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity", v3): its hue from the
+ * palette (icon plate, head tint, active navigation, chart series), the catalogue type its main widget is
+ * built from and the shape of that widget, the variant of its head and the signature inside it. The area's
+ * pattern comes from `ModuleManifest.area`; the icon is `ModuleManifest.icon`. Required fields:
+ * `validateManifest` and `npm run check:modules` enforce them. The "Ruhig" colour mode and "Modulfarben: Aus"
+ * turn every hue grey and the patterns off; head variant and signature stay.
  */
 export interface ModuleIdentity {
   hue: ModuleHue;
-  /** Second hue of the head gradient and of the second chart series; default: derived from `hue`. */
+  /** Second hue of the head gradient and of the second chart series; default: derived from `hue`. Never equal to `hue`. */
   hue2?: ModuleHue;
   widgetType: WidgetType;
-  head: HeadStyle;
-  surface: HeadSurface;
+  /** Shape of the overview widget (`WIDGET_VARIANTS`); a `WidgetDef.variant` overrides it for one widget. */
+  widget: WidgetVariant;
+  head: HeadVariant;
   signature: SignatureId;
   /** Typography accent for the head's figures and title only (`thin` numerals, `mono` times, `serif` titles). */
   type?: TypeAccent;
@@ -192,6 +238,8 @@ export interface WidgetDef {
   /** Sizes the user can pick in the edit mode (`defaultSize` must be one of them). */
   sizes: readonly WidgetSize[];
   defaultSize: WidgetSize;
+  /** Shape of this widget when it differs from the module's `identity.widget` (a module with two widgets of two shapes). */
+  variant?: WidgetVariant;
   component: LazyComponent;
   /** Where the title links to (a small arrow in the widget header), usually the module page. */
   to?: string;

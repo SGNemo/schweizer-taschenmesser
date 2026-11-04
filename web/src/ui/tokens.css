@@ -71,7 +71,7 @@
   /* List row height and grid gap; changed by phone width and by the density setting below. */
   --row-h: 2.75rem;
   --grid-gap: var(--space-5);
-  --sidebar-w: 15.5rem; /* 248 px at 16 px root */
+  --sidebar-w: 16.25rem; /* 260 px at 16 px root */
   --bottom-nav-h: 64px;
   /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
   --page-narrow: 45rem;
@@ -121,24 +121,34 @@
   --cat-4: #8a5a00;
   --cat-5: #a0305f;
   --cat-6: #3f6b1f;
-  /* Module palette (core/modules/types.ts MODULE_HUES): icon chip, card edge, active nav icon, chart
-     series of one module. ≥ 3:1 on surface and surface-2; ≥ 25° of hue away from danger/accent/
-     warning/success so a module colour is never mistaken for a state (tokens.test.ts). */
-  --mod-sky: #1f5fa8;
-  --mod-moss: #4f6d1a;
-  --mod-teal: #12766f;
-  --mod-ocean: #1d6b7a;
-  --mod-violet: #7a4aa8;
-  --mod-plum: #a0305f;
-  --mod-orchid: #8a3a8f;
-  --mod-indigo: #4a52b8;
+  /* Module palette v3 (core/modules/types.ts MODULE_HUES; docs/design/identity-v3/02-CONCEPT.md): ten hues in steps of
+     26° of HSL hue plus slate. Every hue ≥ 3:1 on surface and surface-2, ≥ 25° of hue away from danger/accent/warning/
+     success so a module colour is never mistaken for a state, and ≥ 25° from every other hue (tokens.test.ts).
+     Used as: icon plate, head tint, hairline, filled chip, chart series of one module; never as text colour. */
+  --mod-lime: #6c7a04;
+  --mod-moss: #2f6800;
+  --mod-fern: #368535;
+  --mod-teal: #01665f;
+  --mod-ocean: #0077bc;
+  --mod-sky: #3a4fa5;
+  --mod-cobalt: #755fbb;
+  --mod-indigo: #733b8f;
+  --mod-violet: #9e4f96;
+  --mod-orchid: #902d5b;
   --mod-slate: #55636b;
-  --mod-navy: #2b3f8c;
   /* Module head (identity v2, docs/design/MODULE-IDENTITY.md): the hero's gradient from the module hue (+ optional
      second hue as --module-color-2) over the surface. Text in the head is always --text (≥ 4.5:1 on every hue, tokens.test.ts);
      the tint never sits behind body text. "Ruhig" and "Modulfarben: Aus" flatten it to a neutral wash. */
   --head-tint-0: 40%;
-  --head-tint-1: 10%;
+  --head-tint-1: 12%;
+  /* Identity v3: the head zone of a widget, the area patterns (head band, widget, sidebar group) and the sidebar group tint.
+     "Ruhig" and "Modulfarben: Aus" turn the tint down and the patterns off (below). */
+  --widget-tint: 14%;
+  --pattern-head: 0.06;
+  --pattern-widget: 0.04;
+  --group-tint: 6%;
+  /* Ink of the area patterns (drawn with gradients, never an image): the quiet text colour. */
+  --pattern-ink: var(--text);
   /* Card corners per module (identity.shape). */
   --shape-soft: 16px;
   --shape-round: 20px;
@@ -204,16 +214,17 @@
   --cat-4: #e8b85a;
   --cat-5: #f0a0c0;
   --cat-6: #a9d26f;
-  --mod-sky: #7cc7e8;
-  --mod-moss: #a9d26f;
-  --mod-teal: #4fb3ad;
-  --mod-ocean: #6fd6d0;
-  --mod-violet: #c9a8ea;
-  --mod-plum: #f0a0c0;
-  --mod-orchid: #e3a3e0;
-  --mod-indigo: #a7adf5;
+  --mod-lime: #c9d475;
+  --mod-moss: #94c16f;
+  --mod-fern: #99df98;
+  --mod-teal: #37c9bf;
+  --mod-ocean: #8ed5fe;
+  --mod-sky: #98acfd;
+  --mod-cobalt: #cec0fe;
+  --mod-indigo: #cd9ae7;
+  --mod-violet: #f7aef0;
+  --mod-orchid: #eb90ba;
   --mod-slate: #a9b7c0;
-  --mod-navy: #9db0f0;
   --sky-day-0: #1c3a5c;
   --sky-day-1: #2e5a86;
   --sky-rain-0: #1d2733;
@@ -256,16 +267,17 @@
     --cat-4: #e8b85a;
     --cat-5: #f0a0c0;
     --cat-6: #a9d26f;
-    --mod-sky: #7cc7e8;
-    --mod-moss: #a9d26f;
-    --mod-teal: #4fb3ad;
-    --mod-ocean: #6fd6d0;
-    --mod-violet: #c9a8ea;
-    --mod-plum: #f0a0c0;
-    --mod-orchid: #e3a3e0;
-    --mod-indigo: #a7adf5;
+    --mod-lime: #c9d475;
+    --mod-moss: #94c16f;
+    --mod-fern: #99df98;
+    --mod-teal: #37c9bf;
+    --mod-ocean: #8ed5fe;
+    --mod-sky: #98acfd;
+    --mod-cobalt: #cec0fe;
+    --mod-indigo: #cd9ae7;
+    --mod-violet: #f7aef0;
+    --mod-orchid: #eb90ba;
     --mod-slate: #a9b7c0;
-    --mod-navy: #9db0f0;
     --sky-day-0: #1c3a5c;
     --sky-day-1: #2e5a86;
     --sky-rain-0: #1d2733;
@@ -403,62 +415,98 @@
   --success: var(--text-muted);
   --warning: var(--text-muted);
   --info: var(--text-muted);
-  --mod-sky: var(--text-3);
+  --mod-lime: var(--text-3);
   --mod-moss: var(--text-3);
+  --mod-fern: var(--text-3);
   --mod-teal: var(--text-3);
   --mod-ocean: var(--text-3);
-  --mod-violet: var(--text-3);
-  --mod-plum: var(--text-3);
-  --mod-orchid: var(--text-3);
+  --mod-sky: var(--text-3);
+  --mod-cobalt: var(--text-3);
   --mod-indigo: var(--text-3);
+  --mod-violet: var(--text-3);
+  --mod-orchid: var(--text-3);
   --mod-slate: var(--text-3);
-  --mod-navy: var(--text-3);
   --head-tint-0: 12%;
   --head-tint-1: 5%;
+  --widget-tint: 5%;
+  --pattern-head: 0;
+  --pattern-widget: 0;
+  --group-tint: 3%;
 }
 /* "Modulfarben" off (Einstellungen → Darstellung → Farben): the identity stays (chip, edge, icon), in grey. */
 :root[data-module-colors='off'] {
-  --mod-sky: var(--text-3);
+  --mod-lime: var(--text-3);
   --mod-moss: var(--text-3);
+  --mod-fern: var(--text-3);
   --mod-teal: var(--text-3);
   --mod-ocean: var(--text-3);
-  --mod-violet: var(--text-3);
-  --mod-plum: var(--text-3);
-  --mod-orchid: var(--text-3);
+  --mod-sky: var(--text-3);
+  --mod-cobalt: var(--text-3);
   --mod-indigo: var(--text-3);
+  --mod-violet: var(--text-3);
+  --mod-orchid: var(--text-3);
   --mod-slate: var(--text-3);
-  --mod-navy: var(--text-3);
   --head-tint-0: 12%;
   --head-tint-1: 5%;
+  --widget-tint: 5%;
+  --pattern-head: 0;
+  --pattern-widget: 0;
+  --group-tint: 3%;
 }
 
 /* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
 [data-area='plan'] {
   --area-color: var(--cat-1);
+  --area-pattern: linear-gradient(var(--pattern-ink) 1px, transparent 1px);
+  --area-pattern-size: 100% 0.875rem;
 }
 [data-area='money'] {
   --area-color: var(--cat-2);
+  --area-pattern: radial-gradient(var(--pattern-ink) 1px, transparent 1.2px);
+  --area-pattern-size: 0.75rem 0.75rem;
 }
 [data-area='knowledge'] {
   --area-color: var(--cat-3);
+  --area-pattern: repeating-linear-gradient(
+    45deg,
+    var(--pattern-ink) 0 1px,
+    transparent 1px 0.625rem
+  );
+  --area-pattern-size: auto;
 }
 [data-area='household'] {
   --area-color: var(--cat-4);
+  --area-pattern:
+    linear-gradient(90deg, var(--pattern-ink) 1px, transparent 1px),
+    linear-gradient(var(--pattern-ink) 1px, transparent 1px);
+  --area-pattern-size: 1.125rem 1.125rem;
 }
 [data-area='vault'] {
   --area-color: var(--cat-5);
+  --area-pattern: repeating-linear-gradient(
+    0deg,
+    var(--pattern-ink) 0 1px,
+    transparent 1px 0.375rem
+  );
+  --area-pattern-size: auto;
 }
+/* System: no pattern (the gauges and rings are the texture). */
 [data-area='system'] {
   --area-color: var(--cat-6);
+  --area-pattern: none;
+  --area-pattern-size: auto;
 }
 
 /* Module identity (manifest `identity.hue`): `data-hue` on a widget card, a module page, a nav item. Inside
    it `--module-color` is the hue and the first chart series follows it (always next to the module's icon or name). */
-[data-hue='sky'] {
-  --module-color: var(--mod-sky);
+[data-hue='lime'] {
+  --module-color: var(--mod-lime);
 }
 [data-hue='moss'] {
   --module-color: var(--mod-moss);
+}
+[data-hue='fern'] {
+  --module-color: var(--mod-fern);
 }
 [data-hue='teal'] {
   --module-color: var(--mod-teal);
@@ -466,23 +514,23 @@
 [data-hue='ocean'] {
   --module-color: var(--mod-ocean);
 }
-[data-hue='violet'] {
-  --module-color: var(--mod-violet);
+[data-hue='sky'] {
+  --module-color: var(--mod-sky);
 }
-[data-hue='plum'] {
-  --module-color: var(--mod-plum);
-}
-[data-hue='orchid'] {
-  --module-color: var(--mod-orchid);
+[data-hue='cobalt'] {
+  --module-color: var(--mod-cobalt);
 }
 [data-hue='indigo'] {
   --module-color: var(--mod-indigo);
 }
+[data-hue='violet'] {
+  --module-color: var(--mod-violet);
+}
+[data-hue='orchid'] {
+  --module-color: var(--mod-orchid);
+}
 [data-hue='slate'] {
   --module-color: var(--mod-slate);
-}
-[data-hue='navy'] {
-  --module-color: var(--mod-navy);
 }
 [data-hue] {
   --viz-1: var(--module-color);

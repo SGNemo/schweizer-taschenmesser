@@ -246,7 +246,7 @@
 }
 .subLink:hover {
   color: var(--text);
-  border-left-color: var(--accent);
+  background: var(--surface-2);
 }
 
 /* Breadcrumb in the content. */
@@ -307,7 +307,7 @@
     text-decoration: none;
   }
   .toc a[aria-current='location'] {
-    border-left-color: var(--accent);
+    background: var(--accent-soft);
     color: var(--text);
     font-weight: var(--weight-medium);
   }

@@ -1,20 +1,50 @@
+/* "Heute · Morgen · diese Woche" (identity v3): up to three day cards on a time rail, no frame around the block. */
 .block {
-  margin-bottom: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  margin-bottom: var(--space-5);
 }
 .heading {
-  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-meta);
   font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: var(--space-2);
+}
+/* Cards side by side from about 15 rem each; the page container, not the window, decides (a narrow window stacks them). */
+.days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-3);
+}
+.day {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+@media (max-width: 899px) {
+  .day {
+    padding: var(--space-2) var(--space-3);
+  }
 }
 .group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
   font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  margin: var(--space-2) 0 var(--space-1);
+  font-weight: var(--weight-bold);
+}
+/* "Heute" is told apart by the accent ink, not by colour alone: it is also the first card and says so. */
+.group[data-accent] {
+  color: var(--accent);
+}
+.caption {
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-3);
 }
 .list {
   list-style: none;
@@ -22,21 +52,34 @@
   margin: 0;
 }
 .row {
-  display: flex;
-  gap: var(--space-3);
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: 4.25rem 0.625rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
   min-height: var(--touch);
   padding: var(--space-1) 0;
   color: var(--text);
   text-decoration: none;
 }
+/* Entries of the week name their weekday first ("Do 14:00"), so the time column is a little wider. */
+.row[data-week] {
+  grid-template-columns: 6.25rem 0.625rem minmax(0, 1fr);
+}
 .row:hover .what {
   text-decoration: underline;
 }
 .when {
-  flex: 0 0 7.5rem;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+.dot {
+  --dot: var(--module-color, var(--text-muted));
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot) 20%, var(--surface));
 }
 .what {
   min-width: 0;

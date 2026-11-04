@@ -7,6 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
+| [PR #414](https://github.com/SGNemo/schweizer-taschenmesser/pull/414): Fundament v3 (Rahmen, Sidebar, Übersichtskopf, Kopf-/Widget-Varianten, Palette v3; alle drei Runden) | PR reviewen und mergen (Draft-Status aufheben); Handtest: Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy; danach sind die Hotspots (`ui/tokens.css`, `layout/*`) frei und die Modul-Chats bauen ihre Seiten um ([scribble/feat-identity-v3-foundation.md](../scribble/feat-identity-v3-foundation.md)) |
 | Anonyme Persona (#372, #381 gemergt) | Handtests AP1–AP6 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung, „Im Tresor speichern“) |
 | Rechner-Tab „Plotter“ (#379 gemergt) | Handtests PL1–PL3 in [MANUAL-TESTS](MANUAL-TESTS.md) |
 | Rechner-Modi (PR #359, gemergt) | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz |

@@ -38,6 +38,6 @@
 .text blockquote {
   margin: 0 0 var(--space-3);
   padding-left: var(--space-3);
-  border-left: 3px solid var(--module-color);
+  border-left: 3px solid var(--border-strong);
   color: var(--text-muted);
 }

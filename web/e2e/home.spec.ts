@@ -21,8 +21,11 @@ test.describe('Home screen', () => {
   test('navigation separates the home entry from the module list', async ({ page }, info) => {
     test.skip(info.project.name === 'pixel-7', 'the labelled module list is the desktop sidebar');
     await ready(page, '/todos');
-    await expect(page.getByRole('heading', { name: 'Bereiche', exact: true })).toBeVisible();
-    await expect(mainNav(page).getByRole('link', { name: 'Übersicht' })).toBeVisible();
+    const nav = mainNav(page);
+    // The home entry stands alone above the favourites bar and the area blocks (each area folds with its heading button).
+    await expect(nav.getByRole('heading', { name: 'Favoriten' })).toBeVisible();
+    await expect(nav.getByRole('button', { name: /Planen/ })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Übersicht' })).toBeVisible();
   });
 
   test('Alt+Home goes to the home screen', async ({ page }, info) => {

@@ -37,6 +37,9 @@
   font-weight: var(--weight-semibold);
 }
 .body {
+  /* The module head bleeds through the panel's padding like it does in the shell (layout/AreaFrame). */
+  --frame-bleed-x: var(--page-gutter);
+  --frame-bleed-top: var(--space-4);
   flex: 1;
   min-height: 0;
   overflow-y: auto;

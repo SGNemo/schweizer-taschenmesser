@@ -26,6 +26,7 @@ import { ShortcutSheet } from './ShortcutSheet';
 import { availableManifests } from '@/core/modules/available';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { watchScrolling } from '@/core/shell/scrollbars';
 import { watchKeyboard } from '@/core/shell/keyboardInset';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
@@ -62,6 +63,8 @@ export function AppShell() {
 
   // Phone keyboard: `--kb-inset` + keeping a focused add field in view (core/shell/keyboardInset.ts).
   useEffect(() => watchKeyboard(), []);
+  // Scrollbars appear while an area scrolls (core/shell/scrollbars.ts).
+  useEffect(() => watchScrolling(), []);
 
   // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
   useEffect(() => {

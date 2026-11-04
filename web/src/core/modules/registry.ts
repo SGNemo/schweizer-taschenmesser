@@ -4,14 +4,14 @@ import {
   ALL_WIDGET_SIZES,
   AREAS,
   MODULE_HUES,
-  HEAD_STYLES,
-  HEAD_SURFACES,
+  HEAD_VARIANTS,
   SIGNATURES,
   TYPE_ACCENTS,
   CARD_SHAPES,
   FEEDBACKS,
   PAGE_LAYOUTS,
   WIDGET_TYPES,
+  WIDGET_VARIANTS,
   type ModuleManifest,
 } from './types';
 
@@ -98,7 +98,7 @@ export function validateManifest(m: ModuleManifest): string[] {
     errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
   if (!m.identity)
-    errors.push('identity is required ({ hue, widgetType, head, surface, signature })');
+    errors.push('identity is required ({ hue, widgetType, widget, head, signature })');
   else {
     if (!MODULE_HUES.includes(m.identity.hue))
       errors.push(`identity.hue "${String(m.identity.hue)}" is not in the module palette`);
@@ -107,12 +107,14 @@ export function validateManifest(m: ModuleManifest): string[] {
     const id = m.identity;
     if (id.hue2 !== undefined && !MODULE_HUES.includes(id.hue2))
       errors.push(`identity.hue2 "${String(id.hue2)}" is not in the module palette`);
-    if (!HEAD_STYLES.includes(id.head))
-      errors.push(`identity.head "${String(id.head)}" must be one of ${HEAD_STYLES.join(', ')}`);
-    if (!HEAD_SURFACES.includes(id.surface))
+    if (id.hue2 !== undefined && id.hue2 === id.hue)
+      errors.push('identity.hue2 must differ from identity.hue');
+    if (!WIDGET_VARIANTS.includes(id.widget))
       errors.push(
-        `identity.surface "${String(id.surface)}" must be one of ${HEAD_SURFACES.join(', ')}`,
+        `identity.widget "${String(id.widget)}" must be one of ${WIDGET_VARIANTS.join(', ')}`,
       );
+    if (!HEAD_VARIANTS.includes(id.head))
+      errors.push(`identity.head "${String(id.head)}" must be one of ${HEAD_VARIANTS.join(', ')}`);
     if (!SIGNATURES.includes(id.signature))
       errors.push(`identity.signature "${String(id.signature)}" is not a known signature`);
     if (id.type !== undefined && !TYPE_ACCENTS.includes(id.type))
@@ -143,6 +145,8 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`widget "${w.id}" has invalid sizes`);
     if (!w.sizes.includes(w.defaultSize))
       errors.push(`widget "${w.id}": defaultSize must be one of sizes`);
+    if (w.variant !== undefined && !WIDGET_VARIANTS.includes(w.variant))
+      errors.push(`widget "${w.id}": variant must be one of ${WIDGET_VARIANTS.join(', ')}`);
     if (w.maturity !== undefined && w.maturity !== 'preview')
       errors.push(`widget "${w.id}": maturity can only tighten to 'preview'`);
   }

@@ -99,8 +99,9 @@
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
-/* Module identity on a widget (v2, variant B): the head is a band tinted in the module's hue (weaker than the module head, text stays --text), the
-   module's icon sits on a chip; "Ruhig" / "Modulfarben: Aus" flatten the tint through the --head-tint tokens. */
+/* Widget frame (identity v3): the head zone is tinted in the module's hue, the module's icon sits on a tinted plate and a faint area
+   pattern lies behind the content. "Ruhig" and "Modulfarben: Aus" lower the tint and drop the pattern through the tokens
+   (`--widget-tint`, `--pattern-widget`). The widget variant (`data-widget`, from the manifest's `identity.widget`) shapes the frame. */
 .chip {
   display: inline-grid;
   place-items: center;
@@ -114,15 +115,41 @@
 .widget[data-hue] > section {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+}
+/* The pattern sits between the card's background and its content (negative z-index inside the isolated card). */
+.widget[data-hue] > section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-widget);
 }
 .widget[data-hue] .head {
   margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) var(--space-3);
   padding: var(--space-3) var(--space-5);
+  background: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
+}
+/* himmel: the card itself is a soft sky wash from the top, no head band and no pattern. */
+.widget[data-widget='himmel'] > section {
   background: linear-gradient(
-    118deg,
-    color-mix(in srgb, var(--module-color) calc(var(--head-tint-0) * 0.65), var(--surface)),
-    color-mix(in srgb, var(--module-color) calc(var(--head-tint-1) * 0.8), var(--surface)) 85%
+    180deg,
+    color-mix(in srgb, var(--module-color) calc(var(--widget-tint) * 1.6), var(--surface)),
+    var(--surface) 70%
   );
+}
+.widget[data-widget='himmel'] .head,
+.widget[data-widget='cover'] .head {
+  background: transparent;
+}
+/* The timeline has its dots, the cover its picture: no pattern behind them. */
+.widget[data-widget='himmel'] > section::before,
+.widget[data-widget='cover'] > section::before,
+.widget[data-widget='zeitleiste'] > section::before {
+  display: none;
 }
 .title {
   flex: 1;

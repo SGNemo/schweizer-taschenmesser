@@ -73,15 +73,20 @@ test.describe('Spotify connector', () => {
     await card.getByRole('button', { name: 'Verbinden' }).click();
 
     // Back in the app on the connection card: connected, and the address holds no code any more.
+    // `exact`: a plain 'Verbunden' also matches "Nicht verbunden" (substring, any case) and would
+    // pass before the login has even started, so the requests below would still be empty.
     await expect(page).toHaveURL(/\/settings\/verbindungen/);
-    await expect(page.getByTestId('connector-spotify').getByText('Verbunden')).toBeVisible();
+    await expect(
+      page.getByTestId('connector-spotify').getByText('Verbunden', { exact: true }),
+    ).toBeVisible();
     expect(page.url()).not.toContain('code=');
+    await expect.poll(() => authorize.length).toBeGreaterThan(0);
     const query = new URLSearchParams(authorize[0]);
     expect(query.get('scope')).toBe(
       'user-read-currently-playing user-read-playback-state user-modify-playback-state',
     );
     expect(query.get('code_challenge_method')).toBe('S256');
-    expect(tokenBody).toContain('grant_type=authorization_code');
+    await expect.poll(() => tokenBody).toContain('grant_type=authorization_code');
     expect(tokenBody).toContain('code=CODE-invented');
     expect(tokenBody).toContain('code_verifier=');
     expect(decodeURIComponent(tokenBody)).toContain('/oauth/callback');
