@@ -4,7 +4,7 @@ labels: [enhancement]
 body:
   - type: markdown
     attributes:
-      value: Have a quick look at [docs/ROADMAP.md](../blob/develop/docs/ROADMAP.md); the idea may already be there. German is fine too (Deutsch geht auch).
+      value: Have a quick look at [docs/ROADMAP.md](https://github.com/SGNemo/schweizer-taschenmesser/blob/develop/docs/ROADMAP.md); the idea may already be there. German is fine too (Deutsch geht auch).
   - type: textarea
     id: problem
     attributes:

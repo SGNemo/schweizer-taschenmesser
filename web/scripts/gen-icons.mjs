@@ -7,7 +7,8 @@
  *                      pwa-*.png, pwa-badge-96.png (monochrome web-push badge)
  *   src-tauri/icons/   icon.png + icon.ico (16–256, incl. 128) and the Android launcher layers
  *                      (foreground, monochrome, notification icon, background colour)
- *   docs/brand/        README header (light + dark) and social preview image, English + German `*.de.png`
+ *   docs/brand/        README header (light + dark), English + German `*.de.png` (the social preview
+ *                      comes from `npm run gen:social`: it shows the overview screenshot)
  *   ../extension/static/icons/  icon-32.png + icon-192.png (the tile, for the browser extension)
  *
  * The other native icons (icon.icns, Android legacy mipmaps) come from the Tauri CLI:
@@ -176,10 +177,10 @@ try {
 `,
   );
 
-  // ---- README header + social preview -----------------------------------------------------
+  // ---- README header (the social preview is gen-social.mjs) -----------------------------------------------------
   // Composition "H1": the pill centred, a faint school of small marks in the free thirds, the claim
   // (backronym of NEMO) with accent initials. README/social only.
-  // English for the repo (README.md, social preview); German copies `*.de.png` for README.de.md.
+  // English for the repo (README.md); German copies `*.de.png` for README.de.md.
   const CLAIMS = {
     en: [
       ['N', 'otes'],
@@ -261,10 +262,6 @@ try {
         1280,
         320,
       ),
-    );
-    write(
-      out(repo, 'docs', 'brand', `social-preview${suffix}.png`),
-      await pageShot(page(1280, 640, wordmarkLight, claim), 1280, 640),
     );
   }
 } finally {

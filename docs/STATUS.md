@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
+
 Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.
 
 Identität v3, Paket 2 (`feat/identity-v3-wissen`): Notizen (Reiter), Merkliste (Pinnwand, Kopfzahl), Feeds (Zeitungskopf, Aufmacher, Spalten), Chat (Sprechblasen) und Browser (Adressleiste) auf die v3-Kopf- und Widget-Varianten umgebaut; Paket 3 (Mail, Musik, Downloads) folgt.

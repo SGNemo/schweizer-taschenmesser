@@ -4,10 +4,12 @@
 
 Die Erweiterung hilft dir beim Anlegen und Anmelden auf Websites. Sie hat **keinen eigenen Tresor**: Alles kommt live aus dem Tresor der Nemo-Desktop-App und wird dort gespeichert (und von dort per Sync aufs Handy gebracht). Ist Nemo nicht gestartet oder der Tresor gesperrt, zeigt sie das an und tut nichts.
 
+Sie ist für Brave gebaut. Die Windows-App trägt ihre Verbindung für Brave, Chrome, Edge und Chromium ein (Manifest V3, Chrome 116 oder neuer). Eine Store-Version und einen Download in den Releases gibt es noch nicht: Du lädst sie entpackt aus dem Build-Artefakt.
+
 ## Einrichten
 1. `nemo-extension-….zip` entpacken (aus den Build-Artefakten bzw. vom Entwickler).
 2. In Brave `brave://extensions` öffnen, **Entwicklermodus** einschalten, **Entpackte Erweiterung laden**, den Ordner wählen.
-3. In Nemo: **Tresor → Browser-Erweiterung** → Verbindung aktivieren. (Nur für dein Windows-Konto, ohne Administratorrechte.)
+3. In Nemo: **Passwörter** öffnen → **Browser-Erweiterung** → Verbindung aktivieren. (Nur für dein Windows-Konto, ohne Administratorrechte.)
 4. Auf das Erweiterungs-Symbol klicken. Der angezeigte 6-stellige Code muss mit dem Dialog in Nemo übereinstimmen – dann **Verbinden**. Das ist nur einmal nötig.
 
 ## Benutzen
@@ -16,6 +18,6 @@ Die Erweiterung hilft dir beim Anlegen und Anmelden auf Websites. Sie hat **kein
 - Nichts wird automatisch ausgefüllt oder gespeichert – immer erst nach deinem Klick. Einträge werden nur für die passende Website angeboten (einstellbar: gleiche Domain oder genau derselbe Host).
 
 ## Probleme
-- „Nemo wurde nicht gefunden“: App starten, in **Tresor → Browser-Erweiterung** prüfen, dass die Verbindung an ist.
+- „Nemo wurde nicht gefunden“: App starten, in **Passwörter → Browser-Erweiterung** prüfen, dass die Verbindung an ist.
 - Portable-Ordner verschoben: Nemo trägt den neuen Pfad beim Start selbst ein; sonst im selben Dialog **Neu eintragen**.
 - Brave Shields: Die Erweiterung wird dadurch nicht blockiert. Falls eine Seite nichts anzeigt, Shields kurz ausschalten und prüfen.

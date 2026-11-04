@@ -2,9 +2,27 @@
 import { t, type Locale } from '../i18n';
 import Icon from './Icon.astro';
 import Shot from './Shot.astro';
+// Generated from the app's own registry (`npm run gen:modules` in web/), all five languages.
+import catalog from '../catalog/modules.json';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
+const locale = Astro.props.locale;
+const m = s.features.modules;
+const areas = catalog.areas.map((a) => ({
+  id: a.id,
+  name: a.name[locale],
+  items: catalog.modules
+    .filter((x) => x.area === a.id)
+    .map((x) => ({
+      id: x.id,
+      name: x.name[locale],
+      text: x.short[locale],
+      note: [m.status[x.status as 'default' | 'optional' | 'preview'], x.platforms ? m.only[x.platforms as 'windows' | 'android' | 'both'] : null]
+        .filter(Boolean)
+        .join(', '),
+    })),
+}));
 ---
 <section class="block" id="features" aria-labelledby="features-title">
   <div class="wrap">
@@ -22,6 +40,25 @@ const s = t(Astro.props.locale);
       ))}
     </ul>
     <p class="more">{s.features.more}</p>
+    <details class="all">
+      <summary>{m.summary(catalog.modules.length)}</summary>
+      <div class="areas">
+        {areas.map((a) => (
+          <section aria-labelledby={`area-${a.id}`}>
+            <h3 id={`area-${a.id}`}>{a.name}</h3>
+            <dl>
+              {a.items.map((x) => (
+                <div>
+                  <dt>{x.name} <span class="state">({x.note})</span></dt>
+                  <dd>{x.text}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+      <p class="hint">{m.hint}</p>
+    </details>
   </div>
 </section>
 
@@ -90,7 +127,76 @@ const s = t(Astro.props.locale);
     color: var(--text-muted);
     max-width: var(--measure);
   }
+  .all {
+    margin-top: var(--space-5);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .all summary {
+    cursor: pointer;
+    min-height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-weight: var(--weight-medium);
+    list-style: none;
+  }
+  .all summary::-webkit-details-marker {
+    display: none;
+  }
+  .all summary::after {
+    content: '+';
+    color: var(--text-3);
+    font-size: var(--text-xl);
+    flex: none;
+  }
+  .all[open] summary::after {
+    content: '–';
+  }
+  .all summary:hover {
+    color: var(--accent);
+  }
+  .areas {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: 1fr;
+    padding-bottom: var(--space-4);
+  }
+  .areas h3 {
+    font-size: var(--text-label);
+    color: var(--text-muted);
+    padding-bottom: var(--space-2);
+  }
+  .areas dl {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .areas dt {
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+  }
+  .areas dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  .state {
+    font-weight: normal;
+    color: var(--text-muted);
+  }
+  .hint {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    padding-bottom: var(--space-4);
+    max-width: var(--measure);
+  }
   @media (min-width: 30rem) {
+    .areas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .tiles {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
