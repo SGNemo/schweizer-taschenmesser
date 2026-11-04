@@ -52,6 +52,32 @@ describe('useSharedLiveQuery', () => {
     await waitFor(() => expect(result.current).toBe(9));
   });
 
+  it('a remount right after a write sees the new data, not the lingering old result', async () => {
+    const read = async () => (await db.table('example_entry').get('linger'))?.value ?? 0;
+    await db.table('example_entry').put({ id: 'linger', value: 1 });
+    const first = renderHook(() => useSharedLiveQuery('linger', read));
+    await waitFor(() => expect(first.result.current).toBe(1));
+    first.unmount(); // the query lingers for a moment
+    await db.table('example_entry').put({ id: 'linger', value: 2 });
+    const second = renderHook(() => useSharedLiveQuery('linger', read));
+    await waitFor(() => expect(second.result.current).toBe(2));
+  });
+
+  it('starts the query only after prepare has finished', async () => {
+    const order: string[] = [];
+    const querier = vi.fn(async () => {
+      order.push('query');
+      return 1;
+    });
+    const prepare = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      order.push('prepared');
+    };
+    const { result } = renderHook(() => useSharedLiveQuery('prepared', querier, prepare));
+    await waitFor(() => expect(result.current).toBe(1));
+    expect(order.slice(0, 2)).toEqual(['prepared', 'query']);
+  });
+
   it('is undefined until the first result and gives a late subscriber the current value', async () => {
     await db.table('example_entry').put({ id: 'b', value: 7 });
     const first = renderHook(() => useSharedLiveQuery('late', read('b')));

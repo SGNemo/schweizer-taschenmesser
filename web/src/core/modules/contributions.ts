@@ -13,6 +13,15 @@ import type {
   ModuleManifest,
 } from './types';
 
+/** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
+const preload =
+  (
+    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline',
+    manifests: readonly ModuleManifest[],
+  ) =>
+  () =>
+    Promise.all(manifests.map((m) => m.contributions?.[kind]?.() ?? undefined));
+
 export function compareCalendarItems(a: CalendarItem, b: CalendarItem): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.allDay !== b.allDay) return a.allDay ? -1 : 1; // all-day first
@@ -76,6 +85,7 @@ export function useCalendarItems(range: DateRange): CalendarItem[] | undefined {
   return useSharedLiveQuery(
     `calendar|${range.from}|${range.to}|${ids}|${states === undefined}`,
     async () => (states ? collectCalendarItems(range, activeManifests(states)) : undefined),
+    preload('calendarItems', activeManifests(states)),
   );
 }
 
@@ -120,8 +130,10 @@ export function useAttentionItems(): AttentionItem[] | undefined {
   const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
-  return useSharedLiveQuery(`attention|${ids}|${states === undefined}`, async () =>
-    states ? collectAttention(today(), activeManifests(states)) : undefined,
+  return useSharedLiveQuery(
+    `attention|${ids}|${states === undefined}`,
+    async () => (states ? collectAttention(today(), activeManifests(states)) : undefined),
+    preload('attention', activeManifests(states)),
   );
 }
 
@@ -153,7 +165,9 @@ export function useHeadlines():
   const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
-  return useSharedLiveQuery(`headline|${ids}|${states === undefined}`, async () =>
-    states ? collectHeadlines(today(), activeManifests(states)) : undefined,
+  return useSharedLiveQuery(
+    `headline|${ids}|${states === undefined}`,
+    async () => (states ? collectHeadlines(today(), activeManifests(states)) : undefined),
+    preload('headline', activeManifests(states)),
   );
 }
