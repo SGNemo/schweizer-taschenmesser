@@ -35,6 +35,23 @@ describe('useSharedLiveQuery', () => {
     expect(querier).toHaveBeenCalledTimes(2); // one re-run for all three, not three
   });
 
+  it('re-runs on a write even when the query awaits a non-Dexie promise first', async () => {
+    // Contribution sources `await import(...)` before they read the tables. Dexie only tracks those
+    // reads when it is given a native async function (a plain wrapper loses the tracking). Node keeps
+    // the tracking either way, so this is a behaviour guard; the browser run that fails without the
+    // `async` wrapper is e2e/now-strip.spec.ts.
+    const querier = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      return (await db.table('example_entry').get('late-read'))?.value ?? 0;
+    };
+    const { result } = renderHook(() => useSharedLiveQuery('after-await', querier));
+    await waitFor(() => expect(result.current).toBe(0));
+    await act(async () => {
+      await db.table('example_entry').put({ id: 'late-read', value: 9 });
+    });
+    await waitFor(() => expect(result.current).toBe(9));
+  });
+
   it('is undefined until the first result and gives a late subscriber the current value', async () => {
     await db.table('example_entry').put({ id: 'b', value: 7 });
     const first = renderHook(() => useSharedLiveQuery('late', read('b')));

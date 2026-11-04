@@ -87,7 +87,10 @@ export function useSharedLiveQuery<T>(key: string, querier: () => Promise<T> | T
 
   const subscribe = useCallback(
     (onChange: () => void) => {
-      const entry = acquire<T>(key, () => querierRef.current());
+      // Must be an `async` function: Dexie only keeps its read tracking across the `await`s inside the
+      // query when `liveQuery` is given a native async function; a plain wrapper silently loses it and
+      // the query never re-runs when the data changes.
+      const entry = acquire<T>(key, async () => querierRef.current());
       entry.listeners.add(onChange);
       // The query may have produced its first result before this subscriber was attached.
       if (entry.snapshot !== EMPTY) onChange();
