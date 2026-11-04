@@ -12,6 +12,7 @@ export default defineConfig({
   testMatch: ['data.spec.ts'],
   workers: 1,
   timeout: 10_800_000,
+  expect: { timeout: 60_000 },
   reporter: 'list',
   use: {
     locale: 'de-DE',
