@@ -11,6 +11,7 @@ import { skipNotes } from '@/importers/report';
 import { addSkip, type SkipCounts, type SourceFile } from '@/importers/types';
 
 import { t } from '@/strings';
+import { isNotionPath } from '@/importers/notion/parse';
 import { noteKey } from './exchange';
 import { noteRepo, notebookRepo } from './repo';
 
@@ -95,7 +96,8 @@ const runtime: ImporterRuntime = {
       const files = input.files ?? [{ name: input.fileName, text: input.text }];
       const opts = { signal: ctx.signal, onProgress: ctx.progress };
       const enex = files.filter(isEnexFile);
-      const rest = files.filter((f) => !isEnexFile(f));
+      const notion = files.filter((f) => isNotionPath(f.name));
+      const rest = files.filter((f) => !isEnexFile(f) && !isNotionPath(f.name));
       const keepFiles = rest.filter((f) => isKeepFile(f.name, f.text));
       const markdown = rest.filter((f) => !isKeepFile(f.name, f.text));
       let unreadable = 0;
@@ -103,6 +105,18 @@ const runtime: ImporterRuntime = {
         const r = await runJob('enex', { files: enex }, opts);
         notes.push(...r.notes);
         unreadable += r.unreadable;
+        for (const [reason, n] of Object.entries(r.skipped))
+          addSkip(skipped, reason as keyof SkipCounts, n);
+      }
+      if (notion.length > 0) {
+        // Notion's CSV tables travel with the pages; they are counted, not read.
+        const tables = files.filter((f) => /\.csv$/i.test(f.name));
+        const r = await runJob(
+          'notion',
+          { files: [...notion, ...tables], binary: input.binary ?? 0 },
+          opts,
+        );
+        notes.push(...r.notes);
         for (const [reason, n] of Object.entries(r.skipped))
           addSkip(skipped, reason as keyof SkipCounts, n);
       }
@@ -114,8 +128,10 @@ const runtime: ImporterRuntime = {
         addSkip(skipped, 'empty', keep.empty);
         addSkip(skipped, 'attachment', keep.attachments);
       }
-      if (markdown.length > 0 || (input.binary ?? 0) > 0) {
-        const md = await runJob('markdown', { files: markdown, binary: input.binary ?? 0 }, opts);
+      // The attachments of an archive are counted once: by the Notion reader when it ran.
+      const binaryLeft = notion.length > 0 ? 0 : (input.binary ?? 0);
+      if (markdown.length > 0 || binaryLeft > 0) {
+        const md = await runJob('markdown', { files: markdown, binary: binaryLeft }, opts);
         notes.push(...md.notes);
         for (const [reason, n] of Object.entries(md.skipped))
           addSkip(skipped, reason as keyof SkipCounts, n);

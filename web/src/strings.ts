@@ -5672,6 +5672,7 @@ export const de = {
     paletteCommand: 'Aus anderer App importieren …',
     sources: {
       enex: 'Evernote (.enex)',
+      notion: 'Notion (Markdown- und CSV-Export)',
       obsidian: 'Obsidian oder Markdown-Ordner',
       'outlook-tasks': 'Microsoft To Do (Outlook-CSV)',
       todoist: 'Todoist (CSV)',
