@@ -93,7 +93,8 @@ describe('lock screen with biometrics', () => {
     bio.state.sealed.set([...bio.state.sealed.keys()][0]!, new Uint8Array(32)); // wrong key
     render(<LockScreen />);
     expect(await screen.findByText(b.invalid)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: b.unlock })).toBeNull(); // seal was removed
+    // The message is set first; the button goes once the seal status was read again (async).
+    await waitFor(() => expect(screen.queryByRole('button', { name: b.unlock })).toBeNull()); // seal was removed
     expect(getSession().status).toBe('locked');
   });
 
