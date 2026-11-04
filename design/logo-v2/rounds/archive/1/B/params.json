@@ -1,0 +1,34 @@
+{
+  "direction": "head",
+  "params": {
+    "r": 186,
+    "egg": 0.32,
+    "band": {
+      "at": 0.26,
+      "width": 48,
+      "bend": -34
+    },
+    "eye": {
+      "at": 0.66,
+      "dy": -0.2,
+      "r": 34
+    },
+    "mouth": 0,
+    "views": {
+      "tile": {
+        "radius": 146,
+        "scale": 0.72
+      },
+      "adaptive": {
+        "scale": 0.56
+      }
+    }
+  },
+  "small": null,
+  "lockup": {
+    "source": "mark",
+    "markHeight": 1.15,
+    "gap": 0.4
+  },
+  "rail": "mark"
+}

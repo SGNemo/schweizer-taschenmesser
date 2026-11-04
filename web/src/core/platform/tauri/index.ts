@@ -107,7 +107,7 @@ async function createNotifications(kind: PlatformKind): Promise<NotificationServ
 }
 
 /** Small icon + accent tint for Android notifications (drawable name, see `scripts/gen-icons.mjs`). */
-const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#E0550F' } as const;
+const ANDROID_ICON = { icon: 'ic_notification', iconColor: '#b5430c' } as const;
 
 /** Android channel without sound for "Stumm" (created once; the plugin ignores a repeat). */
 const QUIET_CHANNEL = 'nemo-quiet';

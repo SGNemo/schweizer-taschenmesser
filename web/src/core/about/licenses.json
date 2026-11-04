@@ -5384,12 +5384,6 @@
       "url": "https://github.com/rsms/inter"
     },
     {
-      "name": "Nunito (wordmark \"Nemo\", outlined into the logo SVG)",
-      "version": "",
-      "license": "OFL-1.1",
-      "url": "https://github.com/googlefonts/nunito"
-    },
-    {
       "name": "Lucide icons (via lucide-react)",
       "version": "",
       "license": "ISC",

@@ -22,7 +22,7 @@ Code, comments, commits **English**; UI in **5 languages**: German source `web/s
 - **Done =** `check` (or lint + typecheck), `test`, `e2e` green; app starts; docs per step 4; commit + push the branch.
 
 ## Layout (map: [docs/ARCHITECTURE-MAP.md](docs/ARCHITECTURE-MAP.md))
-`web/` PWA (`src/core` framework, `src/modules/<id>`, `src/tools`, `src/connectors`, `src/ui`, `src/layout`, `src/home`) · `web/src-tauri/` shell (crates `local-api`, `disk-scan`, `system-info`, `vault-bridge`) · `server/` sync server · `mcp/` MCP wrapper · `extension/` Brave extension · `packages/vault-core/` shared generator/origin/protocol · `contract/` LWW fixtures · `design/icon/` logo workshop.
+`web/` PWA (`src/core` framework, `src/modules/<id>`, `src/tools`, `src/connectors`, `src/ui`, `src/layout`, `src/home`) · `web/src-tauri/` shell (crates `local-api`, `disk-scan`, `system-info`, `vault-bridge`) · `server/` sync server · `mcp/` MCP wrapper · `extension/` Brave extension · `packages/vault-core/` shared generator/origin/protocol · `contract/` LWW fixtures · `design/logo-v2/` logo workshop.
 
 ## Hard rules (unabridged, with file refs: [docs/RULES.md](docs/RULES.md); rationale: [docs/DECISIONS.md](docs/DECISIONS.md))
 - **Secrets/security – never weaken:** no secrets, tokens or real data in the repo (public); API keys only via `getPlatform().secrets`; bundle id `io.github.sgnemo.taschenmesser` never changes (only the sanctioned `.dev` Dev-Preview app); Android keystore and updater private key never lost or committed; release signing, artifact audit, gitleaks untouched.

@@ -1,0 +1,25 @@
+{
+  "word": {
+    "text": "Nemo",
+    "weight": 800,
+    "tracking": -0.02
+  },
+  "art": {
+    "ink": "accent",
+    "head": {
+      "length": 0.9,
+      "gap": 0.12,
+      "eye": 0.13
+    },
+    "tail": {
+      "style": "fan",
+      "length": 0.5,
+      "spread": 0.6,
+      "gap": 0.12,
+      "bulge": 0.1
+    }
+  },
+  "lockup": {
+    "source": "none"
+  }
+}
