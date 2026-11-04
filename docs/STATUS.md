@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Werkzeuge mit Identität v3, Paket 2 von 3 (`feat/identity-v3-tools-calc-time`): Rechner mit Display, Zahlenblock und Tasten mit Tiefe, Einheiten und Währung als Umrechnungsfluss mit großen Zahlen, Timer mit großem Ring, Datumsrechner mit Kalenderblättern, Zeitzonen als Karten; Bausteine in `tools/kit.tsx`; Handtests TP5–TP6 in [MANUAL-TESTS.md](MANUAL-TESTS.md); Paket 3 (Erzeugen & Prüfen) folgt.
+
 Werkzeuge mit Identität v3, Paket 1 von 3 (`feat/identity-v3-tools`): großes Werkzeug-Panel (Liste links, Werkzeug rechts, öffnet auf dem zuletzt benutzten, Alt+1–9, Suche, am Handy Vollbild), `identity`/`category`/`keywords` je Werkzeug mit `check:tools`, „In eigenem Fenster öffnen“ im Web; Paket 2 (Rechnen & Zeit) und 3 (Erzeugen & Prüfen) bauen die Inhalte um; Handtests TP1–TP4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Identität v3, Paket 1 (`feat/identity-v3-haushalt-wissen`): Vorräte (Regal-Kacheln, Etiketten, Warenkorb-Aktion), Einkauf (Kassenzettel), Unterlagen (Ordner-Reiter, Widget nur Zahlen) und Passwörter (Gruppen-Reiter) auf die v3-Kopf- und Widget-Varianten umgebaut; Wissen (Paket 2) sowie Medien und Dienste (Paket 3) folgen einzeln.

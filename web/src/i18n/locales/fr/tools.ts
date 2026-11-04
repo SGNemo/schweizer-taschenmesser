@@ -97,6 +97,7 @@ export const tools: Strings['tools'] = {
       deg: 'Degrés',
       rad: 'Radians',
       keys: 'Touches',
+      pad: 'Pavé numérique',
       ans: 'ans: Insérer le dernier résultat',
       historySearch: 'Rechercher dans l’historique',
       historyEmpty: 'Rien n’a encore été calculé.',

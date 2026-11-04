@@ -1,0 +1,269 @@
+/*
+ * Building blocks for the content of the tools (identity v3, package 2): a calculator display, keys with
+ * depth, a conversion flow with big numbers, a timer ring. Everything reads the hue the tool stage sets
+ * (`--module-color`, `ToolStage`), uses tokens only and moves with transform/opacity only.
+ */
+
+/* ---- Display (calculator) ---- */
+.display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    var(--shadow-1);
+  min-width: 0;
+}
+.displayInput {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-xl);
+  text-align: end;
+}
+.displayInput:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+.displayResult {
+  margin: 0;
+  min-height: 3rem;
+  color: var(--text);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Keys with depth ---- */
+.pad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.padRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+  gap: var(--space-2);
+}
+.key {
+  min-height: 2.75rem;
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-shadow:
+    var(--shadow-1),
+    0 2px 0 var(--border-strong);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.key:hover {
+  background: var(--surface-2);
+}
+.key:active {
+  transform: translateY(2px);
+  box-shadow: var(--shadow-1);
+}
+.key:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+/* Operators and the equals sign are the tool's colour (shape and text still say what they are). */
+.keyOp {
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  font-weight: var(--weight-medium);
+}
+.keyMain {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: var(--weight-medium);
+}
+.keyMain:hover {
+  background: var(--accent-hover, var(--accent));
+}
+.span2 {
+  grid-column: span 2;
+}
+
+/* ---- Conversion flow: a start card, an arrow, an end card ---- */
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+.side {
+  flex: 1 1 15rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    var(--shadow-1);
+}
+.sideEnd {
+  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
+}
+.between {
+  flex: 0 0 auto;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--module-color);
+}
+.bigInput {
+  min-height: 3rem;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.bigNumber {
+  margin: 0;
+  min-height: 3rem;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.caption {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- Timer ring ---- */
+.ringWrap {
+  position: relative;
+  width: min(100%, 17rem, 36dvh);
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+.ringSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.ringTrack {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 9;
+}
+.ringArc {
+  fill: none;
+  stroke: var(--module-color);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.ringCentre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+.ringTime {
+  margin: 0;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.ringSub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- Cards in a list (time zones, laps) ---- */
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-3);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    var(--shadow-1);
+  min-width: 0;
+}
+.cardHome {
+  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
+}
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.cardTime {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key {
+    transition: none;
+  }
+}
+
+/* ---- Calendar leaves (date calculator) and centred action rows ---- */
+.leaves {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
+}
+.leavesArrow {
+  color: var(--module-color);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}

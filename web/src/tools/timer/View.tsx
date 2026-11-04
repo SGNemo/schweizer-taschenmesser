@@ -1,6 +1,7 @@
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, Segmented, TextField } from '@/ui';
+import { kit, TimerRing } from '../kit';
 import styles from '../tools.module.css';
 import { useTimer, type Mode } from './engine';
 import { clock, elapsed, isRunning, left } from './logic';
@@ -31,6 +32,14 @@ export default function TimerTool() {
         ? clock(elapsed(st.stopwatch, t0), true)
         : clock(left(st.pomodoro.countdown, t0));
 
+  // The ring shows how much is left (timer, pomodoro) or how far the current minute is (stopwatch).
+  const progress =
+    st.mode === 'timer'
+      ? left(st.timer, t0) / st.timer.durationMs
+      : st.mode === 'stopwatch'
+        ? (elapsed(st.stopwatch, t0) % 60_000) / 60_000
+        : left(st.pomodoro.countdown, t0) / st.pomodoro.countdown.durationMs;
+
   return (
     <div className={styles.stack}>
       <Segmented
@@ -49,20 +58,22 @@ export default function TimerTool() {
           onChange={(e) => st.setMinutes(Number(e.target.value) || 1)}
         />
       ) : null}
-      {st.mode === 'pomodoro' ? (
-        <p className={styles.muted}>
-          {st.pomodoro.phase === 'work' ? s.work : s.rest} · {s.round(st.pomodoro.round)}
+      <TimerRing progress={progress}>
+        <p
+          className={kit.ringTime}
+          role="timer"
+          aria-label={s.modes[st.mode]}
+          data-testid="timer-display"
+        >
+          {display}
         </p>
-      ) : null}
-      <p
-        className={styles.big}
-        role="timer"
-        aria-label={s.modes[st.mode]}
-        data-testid="timer-display"
-      >
-        {display}
-      </p>
-      <div className={styles.row}>
+        {st.mode === 'pomodoro' ? (
+          <p className={kit.ringSub}>
+            {st.pomodoro.phase === 'work' ? s.work : s.rest} · {s.round(st.pomodoro.round)}
+          </p>
+        ) : null}
+      </TimerRing>
+      <div className={kit.actions}>
         {running ? (
           <Button variant="primary" onClick={st.pause}>
             {s.pause}

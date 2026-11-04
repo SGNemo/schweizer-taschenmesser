@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, SelectField, TextField } from '@/ui';
+import { Button, Icon, SelectField, TextField } from '@/ui';
+import { Flow, kit } from '../kit';
 import { copyText, fmt, num } from '../shared';
 import styles from '../tools.module.css';
 import { convert, UNITS, type UnitKind } from './logic';
@@ -39,47 +40,53 @@ export default function UnitsTool() {
           </option>
         ))}
       </SelectField>
-      <TextField
-        label={s.value}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        inputMode="decimal"
-        autoComplete="off"
+      <Flow
+        start={
+          <>
+            <TextField
+              label={s.value}
+              className={kit.bigInput}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              inputMode="decimal"
+              autoComplete="off"
+            />
+            <SelectField label={s.from} value={fromId} onChange={(e) => setFrom(e.target.value)}>
+              {units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.label}
+                </option>
+              ))}
+            </SelectField>
+          </>
+        }
+        between={<Icon name="arrowRight" size={28} />}
+        end={
+          <>
+            <p className={kit.bigNumber} role="status" aria-label={s.result}>
+              {result !== undefined ? fmt(result) : s.invalid}
+            </p>
+            <SelectField label={s.to} value={toId} onChange={(e) => setTo(e.target.value)}>
+              {units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.label}
+                </option>
+              ))}
+            </SelectField>
+            {result !== undefined ? (
+              <Button
+                onClick={() =>
+                  void copyText(String(Math.round(result * 1e6) / 1e6)).then(
+                    (ok) => ok && toast(t.tools.calc.copied),
+                  )
+                }
+              >
+                {t.tools.calc.copy}
+              </Button>
+            ) : null}
+          </>
+        }
       />
-      <div className={styles.row}>
-        <div className={styles.grow}>
-          <SelectField label={s.from} value={fromId} onChange={(e) => setFrom(e.target.value)}>
-            {units.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.label}
-              </option>
-            ))}
-          </SelectField>
-        </div>
-        <div className={styles.grow}>
-          <SelectField label={s.to} value={toId} onChange={(e) => setTo(e.target.value)}>
-            {units.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.label}
-              </option>
-            ))}
-          </SelectField>
-        </div>
-      </div>
-      <p className={styles.result} role="status" aria-label={s.result}>
-        {result !== undefined ? fmt(result) : s.invalid}
-      </p>
-      {result !== undefined ? (
-        <Button
-          onClick={() =>
-            void copyText(String(Math.round(result * 1e6) / 1e6)).then(
-              (ok) => ok && toast(t.tools.calc.copied),
-            )
-          }
-        >
-          {t.tools.calc.copy}
-        </Button>
-      ) : null}
     </div>
   );
 }

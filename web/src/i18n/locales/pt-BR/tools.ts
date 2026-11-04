@@ -97,6 +97,7 @@ export const tools: Strings['tools'] = {
       deg: 'Graus',
       rad: 'Radianos',
       keys: 'Teclas',
+      pad: 'Teclado numérico',
       ans: 'ans: Inserir o último resultado',
       historySearch: 'Pesquisar no histórico',
       historyEmpty: 'Nada calculado ainda.',

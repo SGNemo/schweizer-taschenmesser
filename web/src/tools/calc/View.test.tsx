@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -34,6 +34,19 @@ describe('calculator tool', () => {
     expect(JSON.parse(localStorage.getItem('tm-calc-history')!)).toEqual([
       { expr: '0,1 + 0,2', result: '0,3' },
     ]);
+  });
+
+  it('the number pad types into the display: 7 × 6 = 42, with the decimal sign of the language', async () => {
+    const user = userEvent.setup();
+    wrap();
+    const field = await screen.findByLabelText(s.input);
+    const pad = screen.getByRole('group', { name: s.pro.pad });
+    for (const key of ['7', '×', '6'])
+      await user.click(within(pad).getByRole('button', { name: key }));
+    expect(field).toHaveValue('7×6');
+    await waitFor(() => expect(result()).toHaveTextContent('42'));
+    await user.click(within(pad).getByRole('button', { name: ',' }));
+    expect(field).toHaveValue('7×6,');
   });
 
   it('stays calm about incomplete input and reports errors on Enter', async () => {

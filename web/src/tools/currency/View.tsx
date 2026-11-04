@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, SelectField, TextField } from '@/ui';
-import { fmt2, num, readStored, writeStored } from '../shared';
+import { Button, Icon, SelectField, TextField } from '@/ui';
+import { Flow, kit } from '../kit';
+import { copyWithToast, fmt2, num, readStored, writeStored } from '../shared';
 import styles from '../tools.module.css';
 import { convert, currencies, parseRates, type Rates } from './logic';
 
@@ -77,46 +78,65 @@ export default function CurrencyTool() {
 
   return (
     <div className={styles.stack}>
-      <TextField
-        label={s.amount}
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        inputMode="decimal"
-        autoComplete="off"
-        data-autofocus
+      <Flow
+        start={
+          <>
+            <TextField
+              label={s.amount}
+              className={kit.bigInput}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              inputMode="decimal"
+              autoComplete="off"
+              data-autofocus
+            />
+            <SelectField label={s.from} value={from} onChange={(e) => setFrom(e.target.value)}>
+              {list.map((c) => (
+                <option key={c} value={c}>
+                  {label(c)}
+                </option>
+              ))}
+            </SelectField>
+          </>
+        }
+        between={
+          <Button
+            onClick={() => {
+              setFrom(to);
+              setTo(from);
+            }}
+          >
+            <Icon name="swap" size={16} /> {s.swap}
+          </Button>
+        }
+        end={
+          <>
+            <p
+              className={kit.bigNumber}
+              role="status"
+              aria-label={s.result}
+              data-testid="currency-result"
+            >
+              {result !== undefined ? `${fmt2(result)} ${to}` : s.invalid}
+            </p>
+            {one !== undefined ? (
+              <p className={kit.caption}>{s.rate(from, to, fmt2(one))}</p>
+            ) : null}
+            {result !== undefined ? (
+              <Button onClick={() => void copyWithToast(String(Math.round(result * 100) / 100))}>
+                {t.tools.calc.copy}
+              </Button>
+            ) : null}
+            <SelectField label={s.to} value={to} onChange={(e) => setTo(e.target.value)}>
+              {list.map((c) => (
+                <option key={c} value={c}>
+                  {label(c)}
+                </option>
+              ))}
+            </SelectField>
+          </>
+        }
       />
-      <div className={styles.row}>
-        <div className={styles.grow}>
-          <SelectField label={s.from} value={from} onChange={(e) => setFrom(e.target.value)}>
-            {list.map((c) => (
-              <option key={c} value={c}>
-                {label(c)}
-              </option>
-            ))}
-          </SelectField>
-        </div>
-        <Button
-          onClick={() => {
-            setFrom(to);
-            setTo(from);
-          }}
-        >
-          {s.swap}
-        </Button>
-        <div className={styles.grow}>
-          <SelectField label={s.to} value={to} onChange={(e) => setTo(e.target.value)}>
-            {list.map((c) => (
-              <option key={c} value={c}>
-                {label(c)}
-              </option>
-            ))}
-          </SelectField>
-        </div>
-      </div>
-      <p className={styles.big} role="status" aria-label={s.result} data-testid="currency-result">
-        {result !== undefined ? `${fmt2(result)} ${to}` : s.invalid}
-      </p>
-      {one !== undefined ? <p className={styles.muted}>{s.rate(from, to, fmt2(one))}</p> : null}
       <p className={styles.muted}>{data.live ? s.asOf(date) : s.cached(date)}</p>
     </div>
   );

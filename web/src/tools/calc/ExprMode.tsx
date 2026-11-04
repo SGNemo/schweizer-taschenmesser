@@ -9,6 +9,7 @@ import {
 import { CalcError } from '@/core/calc/expr';
 import { t } from '@/strings';
 import { Button, Segmented, TextField } from '@/ui';
+import { kit, decimalSign } from '../kit';
 import { copyWithToast, useSaveAsNote } from '../shared';
 import styles from '../tools.module.css';
 import {
@@ -29,8 +30,25 @@ const BASIC_KEYS: Array<[string, string]> = [
   [')', ')'],
   ['%', '%'],
   ['^', '^'],
-  ['÷', '÷'],
-  ['×', '×'],
+];
+/** The number pad: digits, the decimal sign of the language and the four operations. */
+const PAD_KEYS = (dec: string): Array<[string, string, 'num' | 'op']> => [
+  ['7', '7', 'num'],
+  ['8', '8', 'num'],
+  ['9', '9', 'num'],
+  ['÷', '÷', 'op'],
+  ['4', '4', 'num'],
+  ['5', '5', 'num'],
+  ['6', '6', 'num'],
+  ['×', '×', 'op'],
+  ['1', '1', 'num'],
+  ['2', '2', 'num'],
+  ['3', '3', 'num'],
+  ['−', '-', 'op'],
+  ['0', '0', 'num'],
+  [dec, dec, 'num'],
+  ['ans', 'ans', 'num'],
+  ['+', '+', 'op'],
 ];
 const SCI_KEYS: Array<[string, string]> = [
   ['sin', 'sin('],
@@ -144,38 +162,61 @@ export default function ExprMode({
         />
       ) : null}
       <form onSubmit={(e) => void commit(e)} className={styles.stack}>
-        <TextField
-          ref={field}
-          label={s.input}
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-            setError('');
-          }}
-          onKeyDown={onKeyDown}
-          placeholder={s.placeholder}
-          inputMode="text"
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          data-autofocus
-        />
-        <div className={styles.keys} role="group" aria-label={s.pro.keys}>
+        <div className={kit.display}>
+          <TextField
+            ref={field}
+            label={s.input}
+            labelHidden
+            className={kit.displayInput}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setError('');
+            }}
+            onKeyDown={onKeyDown}
+            placeholder={s.placeholder}
+            inputMode="text"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-autofocus
+          />
+          <p
+            className={kit.displayResult}
+            role="status"
+            aria-label={s.pro.live}
+            data-testid="calc-result"
+          >
+            {input.trim() !== '' && live ? live.display : ''}
+          </p>
+        </div>
+        <div className={kit.padRow} role="group" aria-label={s.pro.keys}>
           {(scientific ? [...BASIC_KEYS, ...SCI_KEYS] : BASIC_KEYS).map(([label, text]) => (
-            <Button key={label} size="sm" onClick={() => insert(text)}>
+            <button key={label} type="button" className={kit.key} onClick={() => insert(text)}>
               {label}
-            </Button>
+            </button>
           ))}
-          <Button size="sm" onClick={() => insert('ans')} aria-label={s.pro.ans}>
-            {'ans'}
-          </Button>
-          <Button
-            size="sm"
+          <button
+            type="button"
+            className={kit.key}
             onClick={() => setInput((v) => v.slice(0, -1))}
             aria-label={t.actions.delete}
           >
             ⌫
-          </Button>
+          </button>
+        </div>
+        <div className={kit.pad} role="group" aria-label={s.pro.pad}>
+          {PAD_KEYS(decimalSign()).map(([label, text, kind]) => (
+            <button
+              key={label}
+              type="button"
+              className={`${kit.key} ${kind === 'op' ? kit.keyOp : ''}`}
+              onClick={() => insert(text)}
+              aria-label={text === 'ans' ? s.pro.ans : undefined}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <div className={styles.row}>
           <Button type="submit" variant="primary">
@@ -186,9 +227,6 @@ export default function ExprMode({
           ) : null}
         </div>
       </form>
-      <p className={styles.big} role="status" aria-label={s.pro.live} data-testid="calc-result">
-        {input.trim() !== '' && live ? live.display : ''}
-      </p>
       {input.trim() !== '' && live?.basic ? (
         <p className={styles.muted}>{s.pro.basicOnly}</p>
       ) : null}
