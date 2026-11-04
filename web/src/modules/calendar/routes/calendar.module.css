@@ -526,6 +526,10 @@ button.itemRow[style*='--cal']:hover {
   gap: var(--space-3);
   font-size: var(--text-md);
 }
+.agendaTitle h2 {
+  margin: 0;
+  font-size: inherit;
+}
 .agendaHead {
   font-size: var(--text-sm);
   color: var(--text-muted);
