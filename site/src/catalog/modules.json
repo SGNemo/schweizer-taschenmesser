@@ -1,0 +1,802 @@
+{
+  "areas": [
+    {
+      "id": "plan",
+      "name": {
+        "de": "Planen",
+        "en": "Plan",
+        "es": "Planificar",
+        "fr": "Planifier",
+        "pt-BR": "Planejar"
+      }
+    },
+    {
+      "id": "money",
+      "name": {
+        "de": "Geld",
+        "en": "Money",
+        "es": "Dinero",
+        "fr": "Argent",
+        "pt-BR": "Dinheiro"
+      }
+    },
+    {
+      "id": "household",
+      "name": {
+        "de": "Haushalt",
+        "en": "Household",
+        "es": "Hogar",
+        "fr": "Maison",
+        "pt-BR": "Casa"
+      }
+    },
+    {
+      "id": "knowledge",
+      "name": {
+        "de": "Wissen",
+        "en": "Knowledge",
+        "es": "Conocimiento",
+        "fr": "Savoir",
+        "pt-BR": "Conhecimento"
+      }
+    },
+    {
+      "id": "vault",
+      "name": {
+        "de": "Tresor",
+        "en": "Vault",
+        "es": "Bóveda",
+        "fr": "Coffre-fort",
+        "pt-BR": "Cofre"
+      }
+    },
+    {
+      "id": "system",
+      "name": {
+        "de": "System",
+        "en": "System",
+        "es": "Sistema",
+        "fr": "Système",
+        "pt-BR": "Sistema"
+      }
+    }
+  ],
+  "modules": [
+    {
+      "id": "calendar",
+      "area": "plan",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "Kalender",
+        "en": "Calendar",
+        "es": "Calendario",
+        "fr": "Calendrier",
+        "pt-BR": "Calendário"
+      },
+      "description": {
+        "de": "Termine in Monats-, Wochen- und Tagesansicht – zeigt auch Fälligkeiten und Fristen anderer Module (ToDos, Erinnerungen, Rechnungen, Abos, Verträge, Geburtstage, Vorräte).",
+        "en": "Events in month, week and day view – also shows due dates and deadlines from other modules (to-dos, reminders, invoices, subscriptions, contracts, birthdays, pantry).",
+        "es": "Eventos en vista de mes, semana y día; también muestra vencimientos y plazos de otros módulos (Tareas, Recordatorios, Facturas, Suscripciones, Contratos, Cumpleaños, Despensa).",
+        "fr": "Événements en vue mois, semaine et jour – affiche aussi les échéances et délais des autres modules (Tâches, Rappels, Factures, Abonnements, contrats, anniversaires, Provisions).",
+        "pt-BR": "Eventos nas visões de mês, semana e dia – mostra também vencimentos e prazos de outros módulos (Tarefas, Lembretes, Faturas, Assinaturas, Contratos, Aniversários, Despensa)."
+      }
+    },
+    {
+      "id": "todos",
+      "area": "plan",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "ToDos",
+        "en": "To-dos",
+        "es": "Tareas",
+        "fr": "Tâches",
+        "pt-BR": "Tarefas"
+      },
+      "description": {
+        "de": "Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben.",
+        "en": "Tasks in lists with priorities, due date and subtasks.",
+        "es": "Tareas en listas con prioridades, fecha de vencimiento y subtareas.",
+        "fr": "Tâches en listes avec priorités, date d’échéance et sous-tâches.",
+        "pt-BR": "Tarefas em listas com prioridades, data de vencimento e subtarefas."
+      }
+    },
+    {
+      "id": "habits",
+      "area": "plan",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Gewohnheiten",
+        "en": "Habits",
+        "es": "Hábitos",
+        "fr": "Habitudes",
+        "pt-BR": "Hábitos"
+      },
+      "description": {
+        "de": "Tägliche und wöchentliche Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“, mit Pausentagen, Verlauf und Erinnerungen, die aufhören, sobald das Tagesziel erreicht ist.",
+        "en": "Daily and weekly goals with rings – a tick or a number like \"8 glasses\", with rest days, history and reminders that stop once the day's goal is met.",
+        "es": "Metas diarias y semanales con anillos: una marca o un número como «8 vasos», con días de descanso, historial y avisos que se detienen al cumplir la meta del día.",
+        "fr": "Objectifs quotidiens et hebdomadaires avec des anneaux : une coche ou un nombre comme « 8 verres », avec jours de repos, historique et rappels qui s’arrêtent dès que l’objectif du jour est atteint.",
+        "pt-BR": "Metas diárias e semanais com anéis: um visto ou um número como “8 copos”, com dias de descanso, histórico e lembretes que param quando a meta do dia é atingida."
+      }
+    },
+    {
+      "id": "finance",
+      "area": "money",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "Finanzen",
+        "en": "Finances",
+        "es": "Finanzas",
+        "fr": "Finances",
+        "pt-BR": "Finanças"
+      },
+      "description": {
+        "de": "Konten, Einnahmen und Ausgaben mit Kategorien, Monatsübersicht mit Diagrammen und dem wirklich verfügbaren Geld (nach offenen Rechnungen und Abos).",
+        "en": "Accounts, income and expenses with categories, a monthly overview with charts and the money you really have available (after open invoices and subscriptions).",
+        "es": "Cuentas, ingresos y gastos con categorías, resumen mensual con gráficos y el dinero realmente disponible (tras facturas y suscripciones pendientes).",
+        "fr": "Comptes, revenus et dépenses par catégorie, bilan mensuel avec graphiques et l’argent vraiment disponible (après factures ouvertes et abonnements).",
+        "pt-BR": "Contas, receitas e despesas com categorias, resumo mensal com gráficos e o dinheiro realmente disponível (depois de faturas em aberto e assinaturas)."
+      }
+    },
+    {
+      "id": "timetrack",
+      "area": "plan",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Zeiterfassung",
+        "en": "Time tracking",
+        "es": "Registro de tiempo",
+        "fr": "Suivi du temps",
+        "pt-BR": "Controle de tempo"
+      },
+      "description": {
+        "de": "Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz, manuelle Einträge, Pausen, Wochen- und Monatsauswertung, CSV-Export und eine Nachfrage bei Leerlauf.",
+        "en": "Start and stop with one click, projects and clients with colour and hourly rate, manual entries, breaks, weekly and monthly reports, CSV export and a question when you were away.",
+        "es": "Inicio y parada con un clic, proyectos y clientes con color y tarifa por hora, entradas manuales, pausas, informes semanales y mensuales, exportación CSV y una pregunta si estuviste ausente.",
+        "fr": "Démarrage et arrêt en un clic, projets et clients avec couleur et taux horaire, saisies manuelles, pauses, bilans hebdomadaires et mensuels, export CSV et une question en cas d’absence.",
+        "pt-BR": "Iniciar e parar com um clique, projetos e clientes com cor e valor por hora, lançamentos manuais, pausas, relatórios semanais e mensais, exportação CSV e uma pergunta quando você esteve ausente."
+      }
+    },
+    {
+      "id": "weather",
+      "area": "plan",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "Wetter",
+        "en": "Weather",
+        "es": "El tiempo",
+        "fr": "Météo",
+        "pt-BR": "Tempo"
+      },
+      "description": {
+        "de": "Eine eigene Seite für das Wetter deines Ortes: jetzt, die nächsten Stunden, sieben Tage, Luft und Pollen, auf Wunsch mehrere Orte.",
+        "en": "A page of its own for the weather at your place: now, the next hours, seven days, air and pollen, several places if you like.",
+        "es": "Una página propia para el tiempo de tu lugar: ahora, las próximas horas, siete días, aire y polen, varios lugares si quieres.",
+        "fr": "Une page à part pour la météo de ton lieu : maintenant, les prochaines heures, sept jours, air et pollen, plusieurs lieux si tu veux.",
+        "pt-BR": "Uma página própria para o tempo do seu lugar: agora, as próximas horas, sete dias, ar e pólen, vários lugares se quiser."
+      }
+    },
+    {
+      "id": "invoices",
+      "area": "money",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "Rechnungen",
+        "en": "Invoices",
+        "es": "Facturas",
+        "fr": "Factures",
+        "pt-BR": "Faturas"
+      },
+      "description": {
+        "de": "Offene Rechnungen mit Betrag, Empfänger und Fälligkeit. „Als bezahlt markieren“ bucht die Ausgabe automatisch in Finanzen.",
+        "en": "Open invoices with amount, payee and due date. “Mark as paid” books the expense in Finances automatically.",
+        "es": "Facturas pendientes con importe, destinatario y vencimiento. «Marcar como pagada» registra el gasto automáticamente en Finanzas.",
+        "fr": "Factures ouvertes avec montant, bénéficiaire et échéance. « Marquer comme payée » enregistre automatiquement la dépense dans Finances.",
+        "pt-BR": "Faturas em aberto com valor, destinatário e vencimento. “Marcar como paga” lança a despesa automaticamente em Finanças."
+      }
+    },
+    {
+      "id": "subscriptions",
+      "area": "money",
+      "status": "default",
+      "platforms": null,
+      "name": {
+        "de": "Abos",
+        "en": "Subscriptions",
+        "es": "Suscripciones",
+        "fr": "Abonnements",
+        "pt-BR": "Assinaturas"
+      },
+      "description": {
+        "de": "Abos und wiederkehrende Zahlungen: nächste Abbuchung, Kündigungsfrist und die Summe pro Monat und Jahr.",
+        "en": "Subscriptions and recurring payments: next charge, notice period and the total per month and year.",
+        "es": "Suscripciones y pagos recurrentes: próximo cargo, plazo de cancelación y el total al mes y al año.",
+        "fr": "Abonnements et paiements récurrents : prochain prélèvement, délai de résiliation et total par mois et par an.",
+        "pt-BR": "Assinaturas e pagamentos recorrentes: próxima cobrança, prazo de cancelamento e o total por mês e por ano."
+      }
+    },
+    {
+      "id": "bookmarks",
+      "area": "knowledge",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Merkliste",
+        "en": "Saved",
+        "es": "Guardados",
+        "fr": "Enregistrés",
+        "pt-BR": "Salvos"
+      },
+      "description": {
+        "de": "Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.",
+        "en": "Save links, reading, films, places and ideas – with tags, filters and a done status; links you use often as bookmark tiles. On your phone also via “Share” from other apps.",
+        "es": "Guarda enlaces, lecturas, películas, lugares e ideas, con etiquetas, filtros y estado de hecho; los enlaces que usas a menudo, como mosaicos de marcadores. En el móvil también con «Compartir» desde otras apps.",
+        "fr": "Garder liens, lectures, films, lieux et idées – avec tags, filtres et statut terminé ; les liens fréquents en tuiles de signets. Sur mobile aussi via « Partager » depuis d’autres apps.",
+        "pt-BR": "Guarde links, leituras, filmes, lugares e ideias – com tags, filtros e status de concluído; links usados com frequência como blocos de marcadores. No celular, também pelo “Compartilhar” de outros apps."
+      }
+    },
+    {
+      "id": "notes",
+      "area": "knowledge",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Notizen",
+        "en": "Notes",
+        "es": "Notas",
+        "fr": "Notes",
+        "pt-BR": "Notas"
+      },
+      "description": {
+        "de": "Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche.",
+        "en": "Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search.",
+        "es": "Bloc de notas con texto con formato (Markdown), una nota rápida fija siempre arriba, fijar y búsqueda.",
+        "fr": "Bloc-notes avec texte mis en forme (Markdown), un pense-bête fixe toujours en haut, épinglage et recherche.",
+        "pt-BR": "Bloco de notas com texto formatado (Markdown), um rascunho fixo sempre no topo, fixar e busca."
+      }
+    },
+    {
+      "id": "chat",
+      "area": "knowledge",
+      "status": "preview",
+      "platforms": null,
+      "name": {
+        "de": "Chat",
+        "en": "Chat",
+        "es": "Chat",
+        "fr": "Chat",
+        "pt-BR": "Chat"
+      },
+      "description": {
+        "de": "Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern; auf Wunsch mit Daten aus ausgewählten Modulen.",
+        "en": "Conversations with the built-in local model or your providers; optionally with data from selected modules.",
+        "es": "Conversaciones con el modelo local integrado o con tus proveedores; si quieres, con datos de módulos elegidos.",
+        "fr": "Discussions avec le modèle local intégré ou vos fournisseurs ; si vous le souhaitez, avec des données de modules choisis.",
+        "pt-BR": "Conversas com o modelo local integrado ou com seus provedores; se quiser, com dados de módulos escolhidos."
+      }
+    },
+    {
+      "id": "lists",
+      "area": "household",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Listen",
+        "en": "Lists",
+        "es": "Listas",
+        "fr": "Listes",
+        "pt-BR": "Listas"
+      },
+      "description": {
+        "de": "Einkauf, Packlisten und Checklisten: Dinge abhaken, Gekauftes entfernen, Packlisten zurücksetzen oder als Vorlage kopieren.",
+        "en": "Shopping, packing lists and checklists: tick things off, clear bought items, reset packing lists or copy them as a template.",
+        "es": "Compra, listas de equipaje y listas de control: marca cosas, quita lo comprado, restablece listas de equipaje o cópialas como plantilla.",
+        "fr": "Courses, listes de bagages et listes de contrôle : cocher, retirer les achats, réinitialiser les listes de bagages ou les copier comme modèle.",
+        "pt-BR": "Compras, listas de bagagem e checklists: marque itens, tire o que já comprou, redefina listas de bagagem ou copie como modelo."
+      }
+    },
+    {
+      "id": "pantry",
+      "area": "household",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Vorräte",
+        "en": "Pantry",
+        "es": "Despensa",
+        "fr": "Provisions",
+        "pt-BR": "Despensa"
+      },
+      "description": {
+        "de": "Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? Mit Ablaufdaten, Erinnerung vor Ablauf und „Auf die Einkaufsliste“, wenn etwas zur Neige geht.",
+        "en": "What’s in the fridge, the cupboard and the freezer? With best-before dates, a reminder before they expire and “Add to shopping list” when something runs low.",
+        "es": "¿Qué hay en la nevera, la despensa y el congelador? Con fechas de caducidad, recordatorio antes de que caduque y «A la lista de la compra» cuando algo se acaba.",
+        "fr": "Qu’y a-t-il dans le frigo, le placard et le congélateur ? Avec dates de péremption, rappel avant péremption et « Sur la liste de courses » quand quelque chose vient à manquer.",
+        "pt-BR": "O que tem na geladeira, na despensa e no freezer? Com datas de validade, lembrete antes de vencer e “Para a lista de compras” quando algo está acabando."
+      }
+    },
+    {
+      "id": "browser",
+      "area": "knowledge",
+      "status": "preview",
+      "platforms": "both",
+      "name": {
+        "de": "Browser",
+        "en": "Browser",
+        "es": "Navegador",
+        "fr": "Navigateur",
+        "pt-BR": "Navegador"
+      },
+      "description": {
+        "de": "Einfacher Browser mit Tabs, Lesezeichen und privatem Modus. Läuft getrennt von deinen Nemo-Daten.",
+        "en": "Simple browser with tabs, bookmarks and a private mode. Runs separately from your Nemo data.",
+        "es": "Navegador sencillo con pestañas, marcadores y modo privado. Funciona separado de tus datos de Nemo.",
+        "fr": "Navigateur simple avec onglets, signets et mode privé. Fonctionne séparément de vos données Nemo.",
+        "pt-BR": "Navegador simples com abas, marcadores e modo privado. Funciona separado dos seus dados do Nemo."
+      }
+    },
+    {
+      "id": "feeds",
+      "area": "knowledge",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Feeds",
+        "en": "Feeds",
+        "es": "Feeds",
+        "fr": "Flux",
+        "pt-BR": "Feeds"
+      },
+      "description": {
+        "de": "Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.",
+        "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group. Nemo does not fetch them itself; a tap opens the site.",
+        "es": "Tus feeds suscritos (noticias, blogs, podcasts) en un solo lugar, ordenados por grupo. Nemo no los descarga por sí mismo; un toque abre el sitio.",
+        "fr": "Vos flux suivis (actualités, blogs, podcasts) au même endroit, classés par groupe. Nemo ne les récupère pas lui-même ; un appui ouvre le site.",
+        "pt-BR": "Seus feeds assinados (notícias, blogs, podcasts) em um só lugar, organizados por grupo. O Nemo não os busca sozinho; um toque abre o site."
+      }
+    },
+    {
+      "id": "mail",
+      "area": "knowledge",
+      "status": "preview",
+      "platforms": "windows",
+      "name": {
+        "de": "E-Mail",
+        "en": "Mail",
+        "es": "Correo",
+        "fr": "Courrier",
+        "pt-BR": "E-mail"
+      },
+      "description": {
+        "de": "Posteingang, Suche und Mails lesen – nur lesend, ohne Cloud-KI. Nutzt dein Google-Konto aus den Verbindungen.",
+        "en": "Inbox, search and reading mail – read-only, no cloud AI. Uses your Google account from Connections.",
+        "es": "Bandeja de entrada, búsqueda y lectura – solo lectura, sin IA en la nube. Usa tu cuenta de Google de Conexiones.",
+        "fr": "Boîte de réception, recherche et lecture – lecture seule, sans IA dans le cloud. Utilise ton compte Google de Connexions.",
+        "pt-BR": "Caixa de entrada, busca e leitura – somente leitura, sem IA na nuvem. Usa sua conta do Google de Conexões."
+      }
+    },
+    {
+      "id": "maps",
+      "area": "plan",
+      "status": "preview",
+      "platforms": null,
+      "name": {
+        "de": "Karten & Orte",
+        "en": "Maps & places",
+        "es": "Mapas y lugares",
+        "fr": "Cartes et lieux",
+        "pt-BR": "Mapas e lugares"
+      },
+      "description": {
+        "de": "Orte und Wege, die du oft brauchst: Karte, Ortssuche, gespeicherte Routen. Öffnet auch deine Karten-App.",
+        "en": "Places and routes you need often: map, place search, saved routes. Also opens your map app.",
+        "es": "Lugares y rutas que necesitas a menudo: mapa, búsqueda de lugares, rutas guardadas. También abre tu app de mapas.",
+        "fr": "Lieux et trajets dont vous avez souvent besoin : carte, recherche de lieux, itinéraires enregistrés. Ouvre aussi votre appli de cartes.",
+        "pt-BR": "Lugares e rotas de que você precisa com frequência: mapa, busca de lugares, rotas salvas. Também abre o seu app de mapas."
+      }
+    },
+    {
+      "id": "people",
+      "area": "plan",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Personen",
+        "en": "People",
+        "es": "Personas",
+        "fr": "Personnes",
+        "pt-BR": "Pessoas"
+      },
+      "description": {
+        "de": "Geburtstage nie mehr vergessen und Geschenke je Person sammeln: jährlich im Kalender, mit Alter, Erinnerung und Geschenkideen mit Preis, Link und Stand.",
+        "en": "Never forget a birthday again and collect gifts per person: yearly in the calendar, with age, reminder and gift ideas with price, link and status.",
+        "es": "No vuelvas a olvidar un cumpleaños y reúne regalos por persona: cada año en el calendario, con edad, recordatorio e ideas de regalo con precio, enlace y estado.",
+        "fr": "Ne plus oublier les anniversaires et réunir les cadeaux par personne : chaque année au calendrier, avec l’âge, un rappel et des idées cadeaux avec prix, lien et état.",
+        "pt-BR": "Nunca mais esqueça aniversários e reúna presentes por pessoa: todo ano no calendário, com idade, lembrete e ideias de presente com preço, link e situação."
+      }
+    },
+    {
+      "id": "budgets",
+      "area": "money",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Budgets & Sparziele",
+        "en": "Budgets & savings goals",
+        "es": "Presupuestos y metas de ahorro",
+        "fr": "Budgets et objectifs d’épargne",
+        "pt-BR": "Orçamentos e metas de economia"
+      },
+      "description": {
+        "de": "Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.",
+        "en": "Monthly limits per expense category (from Finances) and savings goals with deposits and progress.",
+        "es": "Límites mensuales por categoría de gasto (de Finanzas) y metas de ahorro con aportaciones y progreso.",
+        "fr": "Limites mensuelles par catégorie de dépenses (depuis les Finances) et objectifs d’épargne avec versements et progression.",
+        "pt-BR": "Limites mensais por categoria de despesa (das Finanças) e metas de economia com depósitos e progresso."
+      }
+    },
+    {
+      "id": "vault",
+      "area": "vault",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Unterlagen",
+        "en": "Documents",
+        "es": "Documentos",
+        "fr": "Documents",
+        "pt-BR": "Documentos"
+      },
+      "description": {
+        "de": "Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei – im Kalender und mit Erinnerung, bevor eine Frist verstreicht. Dateien bleiben nur auf diesem Gerät.",
+        "en": "IDs, contracts, insurance and warranties with end date, notice period and an attached file – in the calendar and with a reminder before a deadline passes. Files stay on this device only.",
+        "es": "Documentos de identidad, contratos, seguros y garantías con fecha de fin, plazo de cancelación y archivo adjunto, en el calendario y con recordatorio antes de que venza un plazo. Los archivos se quedan solo en este dispositivo.",
+        "fr": "Pièces d’identité, contrats, assurances et garanties avec échéance, délai de résiliation et fichier joint – au calendrier et avec un rappel avant qu’un délai expire. Les fichiers restent uniquement sur cet appareil.",
+        "pt-BR": "Documentos de identidade, contratos, seguros e garantias com término, prazo de cancelamento e arquivo anexo – no calendário e com lembrete antes que um prazo vença. Os arquivos ficam só neste dispositivo."
+      }
+    },
+    {
+      "id": "accounts",
+      "area": "vault",
+      "status": "optional",
+      "platforms": null,
+      "name": {
+        "de": "Passwörter",
+        "en": "Passwords",
+        "es": "Contraseñas",
+        "fr": "Mots de passe",
+        "pt-BR": "Senhas"
+      },
+      "description": {
+        "de": "Passwort-Tresor: Zugangsdaten mit Master-Passwort verschlüsselt (Argon2id, AES-256), Generator, Einmalcodes (TOTP), Import/Export. Komplett von der KI ausgeschlossen.",
+        "en": "Password vault: logins encrypted with a master password (Argon2id, AES-256), generator, one-time codes (TOTP), import/export. Completely excluded from AI.",
+        "es": "Bóveda de contraseñas: datos de acceso cifrados con contraseña maestra (Argon2id, AES-256), generador, códigos de un solo uso (TOTP), importar/exportar. Totalmente excluida de la IA.",
+        "fr": "Coffre-fort à mots de passe : identifiants chiffrés par un mot de passe maître (Argon2id, AES-256), générateur, codes à usage unique (TOTP), import/export. Totalement exclu de l’IA.",
+        "pt-BR": "Cofre de senhas: dados de acesso criptografados com senha mestra (Argon2id, AES-256), gerador, códigos únicos (TOTP), importar/exportar. Totalmente excluído da IA."
+      }
+    },
+    {
+      "id": "music",
+      "area": "knowledge",
+      "status": "preview",
+      "platforms": null,
+      "name": {
+        "de": "Musik",
+        "en": "Music",
+        "es": "Música",
+        "fr": "Musique",
+        "pt-BR": "Música"
+      },
+      "description": {
+        "de": "Spotify auf einer Seite: was läuft, Steuern, Zuletzt gespielt, deine Playlists mit Cover, Suche und Warteschlange. Nemo spielt selbst nichts ab und speichert keine Titel.",
+        "en": "Spotify on one page: what plays, controls, recently played, your playlists with covers, search and the queue. Nemo plays nothing itself and stores no tracks.",
+        "es": "Spotify en una página: qué suena, controles, escuchado hace poco, tus listas con portada, búsqueda y cola. Nemo no reproduce nada por sí mismo ni guarda títulos.",
+        "fr": "Spotify sur une page : ce qui joue, commandes, écoutés récemment, tes playlists avec pochette, recherche et file d’attente. Nemo ne joue rien lui-même et ne garde aucun titre.",
+        "pt-BR": "Spotify numa página: o que toca, controles, tocadas recentemente, suas playlists com capa, busca e fila. O Nemo não toca nada sozinho e não guarda títulos."
+      }
+    },
+    {
+      "id": "disk",
+      "area": "system",
+      "status": "optional",
+      "platforms": "windows",
+      "name": {
+        "de": "Dieser PC",
+        "en": "This PC",
+        "es": "Este PC",
+        "fr": "Ce PC",
+        "pt-BR": "Este PC"
+      },
+      "description": {
+        "de": "Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) – nur zum Ansehen, nur am PC; der Scan verändert nichts.",
+        "en": "Drives with a scan of the biggest folders and system info (processor, memory, battery, network) – view only, PC only; the scan changes nothing.",
+        "es": "Unidades con análisis de las carpetas más grandes e información del sistema (procesador, memoria, batería, red): solo para ver, solo en el PC; el análisis no cambia nada.",
+        "fr": "Lecteurs avec analyse des plus gros dossiers et infos système (processeur, mémoire, batterie, réseau) – consultation seule, sur PC uniquement ; l’analyse ne modifie rien.",
+        "pt-BR": "Unidades com análise das maiores pastas e informações do sistema (processador, memória, bateria, rede) – só para ver, só no PC; a análise não altera nada."
+      }
+    },
+    {
+      "id": "downloads",
+      "area": "system",
+      "status": "preview",
+      "platforms": "windows",
+      "name": {
+        "de": "Downloads",
+        "en": "Downloads",
+        "es": "Descargas",
+        "fr": "Téléchargements",
+        "pt-BR": "Downloads"
+      },
+      "description": {
+        "de": "Lädt Dateien herunter: Fortschritt, Pausieren, Fortsetzen, Tempolimit und Prüfsumme. Nichts wird automatisch geöffnet.",
+        "en": "Downloads files: progress, pause, resume, speed limit and checksum. Nothing is opened automatically.",
+        "es": "Descarga archivos: progreso, pausa, reanudar, límite de velocidad y suma de verificación. Nada se abre automáticamente.",
+        "fr": "Télécharge des fichiers : progression, pause, reprise, limite de débit et somme de contrôle. Rien ne s’ouvre automatiquement.",
+        "pt-BR": "Baixa arquivos: progresso, pausa, retomada, limite de velocidade e checksum. Nada é aberto automaticamente."
+      }
+    }
+  ],
+  "toolCategories": [
+    {
+      "id": "rechnen",
+      "name": {
+        "de": "Rechnen",
+        "en": "Calculate",
+        "es": "Calcular",
+        "fr": "Calculer",
+        "pt-BR": "Calcular"
+      }
+    },
+    {
+      "id": "zeit",
+      "name": {
+        "de": "Zeit",
+        "en": "Time",
+        "es": "Tiempo",
+        "fr": "Temps",
+        "pt-BR": "Tempo"
+      }
+    },
+    {
+      "id": "erzeugen",
+      "name": {
+        "de": "Erzeugen",
+        "en": "Create",
+        "es": "Crear",
+        "fr": "Créer",
+        "pt-BR": "Criar"
+      }
+    },
+    {
+      "id": "medien",
+      "name": {
+        "de": "Bilder & Dateien",
+        "en": "Images & files",
+        "es": "Imágenes y archivos",
+        "fr": "Images et fichiers",
+        "pt-BR": "Imagens e arquivos"
+      }
+    },
+    {
+      "id": "text",
+      "name": {
+        "de": "Text",
+        "en": "Text",
+        "es": "Texto",
+        "fr": "Texte",
+        "pt-BR": "Texto"
+      }
+    },
+    {
+      "id": "entwickler",
+      "name": {
+        "de": "Entwickler",
+        "en": "Developer",
+        "es": "Desarrollo",
+        "fr": "Développeur",
+        "pt-BR": "Desenvolvimento"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "id": "calc",
+      "category": "rechnen",
+      "status": "default",
+      "name": {
+        "de": "Rechner",
+        "en": "Calculator",
+        "es": "Calculadora",
+        "fr": "Calculatrice",
+        "pt-BR": "Calculadora"
+      }
+    },
+    {
+      "id": "currency",
+      "category": "rechnen",
+      "status": "default",
+      "name": {
+        "de": "Währung",
+        "en": "Currency",
+        "es": "Divisas",
+        "fr": "Devises",
+        "pt-BR": "Moeda"
+      }
+    },
+    {
+      "id": "timer",
+      "category": "zeit",
+      "status": "default",
+      "name": {
+        "de": "Timer & Stoppuhr",
+        "en": "Timer & stopwatch",
+        "es": "Temporizador y cronómetro",
+        "fr": "Minuteur et chrono",
+        "pt-BR": "Timer e cronômetro"
+      }
+    },
+    {
+      "id": "qr",
+      "category": "erzeugen",
+      "status": "default",
+      "name": {
+        "de": "QR-Code",
+        "en": "QR code",
+        "es": "Código QR",
+        "fr": "Code QR",
+        "pt-BR": "Código QR"
+      }
+    },
+    {
+      "id": "units",
+      "category": "rechnen",
+      "status": "optional",
+      "name": {
+        "de": "Einheiten",
+        "en": "Units",
+        "es": "Unidades",
+        "fr": "Unités",
+        "pt-BR": "Unidades"
+      }
+    },
+    {
+      "id": "dates",
+      "category": "zeit",
+      "status": "optional",
+      "name": {
+        "de": "Datumsrechner",
+        "en": "Date calculator",
+        "es": "Calculadora de fechas",
+        "fr": "Calcul de dates",
+        "pt-BR": "Calculadora de datas"
+      }
+    },
+    {
+      "id": "timezones",
+      "category": "zeit",
+      "status": "optional",
+      "name": {
+        "de": "Zeitzonen",
+        "en": "Time zones",
+        "es": "Zonas horarias",
+        "fr": "Fuseaux horaires",
+        "pt-BR": "Fusos horários"
+      }
+    },
+    {
+      "id": "dice",
+      "category": "erzeugen",
+      "status": "optional",
+      "name": {
+        "de": "Würfel & Zufall",
+        "en": "Dice & random",
+        "es": "Dados y azar",
+        "fr": "Dés et hasard",
+        "pt-BR": "Dados e sorteio"
+      }
+    },
+    {
+      "id": "text",
+      "category": "text",
+      "status": "optional",
+      "name": {
+        "de": "Text-Werkzeug",
+        "en": "Text tool",
+        "es": "Herramienta de texto",
+        "fr": "Outil texte",
+        "pt-BR": "Ferramenta de texto"
+      }
+    },
+    {
+      "id": "image",
+      "category": "medien",
+      "status": "optional",
+      "name": {
+        "de": "Bilder verkleinern",
+        "en": "Shrink images",
+        "es": "Reducir imágenes",
+        "fr": "Réduire des images",
+        "pt-BR": "Reduzir imagens"
+      }
+    },
+    {
+      "id": "pdf",
+      "category": "medien",
+      "status": "optional",
+      "name": {
+        "de": "PDF-Werkzeug",
+        "en": "PDF tool",
+        "es": "Herramienta PDF",
+        "fr": "Outil PDF",
+        "pt-BR": "Ferramenta de PDF"
+      }
+    },
+    {
+      "id": "screenshot",
+      "category": "medien",
+      "status": "preview",
+      "name": {
+        "de": "Bildschirmfoto",
+        "en": "Screenshot",
+        "es": "Captura de pantalla",
+        "fr": "Capture d’écran",
+        "pt-BR": "Captura de tela"
+      }
+    },
+    {
+      "id": "persona",
+      "category": "erzeugen",
+      "status": "optional",
+      "name": {
+        "de": "Anonyme Persona",
+        "en": "Anonymous persona",
+        "es": "Persona anónima",
+        "fr": "Persona anonyme",
+        "pt-BR": "Persona anônima"
+      }
+    },
+    {
+      "id": "dev",
+      "category": "entwickler",
+      "status": "optional",
+      "name": {
+        "de": "Entwickler",
+        "en": "Developer",
+        "es": "Desarrollo",
+        "fr": "Développeurs",
+        "pt-BR": "Desenvolvedores"
+      }
+    },
+    {
+      "id": "diff",
+      "category": "entwickler",
+      "status": "preview",
+      "name": {
+        "de": "Textvergleich",
+        "en": "Text compare",
+        "es": "Comparar textos",
+        "fr": "Comparer des textes",
+        "pt-BR": "Comparar textos"
+      }
+    },
+    {
+      "id": "regex",
+      "category": "entwickler",
+      "status": "preview",
+      "name": {
+        "de": "Regex-Tester",
+        "en": "Regex tester",
+        "es": "Probador de regex",
+        "fr": "Testeur de regex",
+        "pt-BR": "Testador de regex"
+      }
+    }
+  ]
+}
