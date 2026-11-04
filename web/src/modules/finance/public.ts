@@ -2,6 +2,7 @@
  * Read-only API for modules that are allowed to look at finance data (budgets).
  * Everything else must use the event bus or manifest contributions.
  */
+import { notDeleted } from '@/core/db/repo';
 import { compareText } from '@/core/i18n/format';
 import { monthOf } from '@/core/time/dates';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
@@ -36,7 +37,13 @@ export async function expensesByCategory(
       .filter((a) => currencyOf(a) === currency)
       .map((a) => a.id),
   );
-  for (const tx of await transactionRepo.active().toArray()) {
+  // Only the month's bookings are read (index `date`), not the whole table.
+  const inMonth = await transactionRepo.table
+    .where('date')
+    .between(`${month}-01`, `${month}-31`, true, true)
+    .filter(notDeleted)
+    .toArray();
+  for (const tx of inMonth) {
     if (
       tx.kind !== 'expense' ||
       isTransfer(tx) ||
