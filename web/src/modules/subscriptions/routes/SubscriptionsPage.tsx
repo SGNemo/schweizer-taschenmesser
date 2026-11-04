@@ -36,7 +36,7 @@ import {
 import { subscriptionRepo } from '../repo';
 import { NextChargesHead } from '../components/NextChargesHead';
 import { ServiceTile } from '../components/ServiceTile';
-import { HeroSlot } from '@/ui/identity';
+import { HeroSlot, Ring } from '@/ui/identity';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
@@ -75,6 +75,16 @@ export default function SubscriptionsPage() {
   const [advanced] = useAdvanced('subscriptions');
   const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
 
+  // Month cycle: the share of each active subscription (first currency) in the monthly sum, the biggest four.
+  const activeSubs = (subs ?? []).filter((s) => s.active);
+  const activeCount = activeSubs.length;
+  const firstCurrency = activeSubs[0] ? currencyOf(activeSubs[0]) : undefined;
+  const monthly = activeSubs
+    .filter((s) => currencyOf(s) === firstCurrency)
+    .map((s) => ({ label: s.name, share: monthlyEquivalent(s) }))
+    .sort((a, b) => b.share - a.share);
+  const cycle = monthly.slice(0, 4);
+
   return (
     <>
       <PageHeader title={t.subscriptions.title}>
@@ -85,11 +95,25 @@ export default function SubscriptionsPage() {
         </Button>
       </PageHeader>
 
-      {subs ? (
+      {cycle.length > 0 ? (
         <HeroSlot>
-          <NextChargesHead subs={subs} />
+          <div className={styles.cycle} data-testid="cycle-ring">
+            <Ring
+              parts={cycle}
+              centre={<strong>{activeCount}</strong>}
+              label={`${t.subscriptions.perMonth}: ${cycle.map((p) => p.label).join(', ')}`}
+              size={7.5}
+            />
+            <ul className={styles.cycleLegend}>
+              {cycle.map((p) => (
+                <li key={p.label}>{p.label}</li>
+              ))}
+            </ul>
+          </div>
         </HeroSlot>
       ) : null}
+
+      {subs ? <NextChargesHead subs={subs} /> : null}
 
       <div className={styles.stats}>
         <div className={styles.stat}>
