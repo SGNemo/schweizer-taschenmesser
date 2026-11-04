@@ -17,10 +17,13 @@ export function TimerHead({
   sessions,
   running,
   firstJob,
+  showStop = true,
 }: {
   sessions: readonly Stored<Session>[];
   running?: Stored<Session>;
   firstJob?: Stored<Job>;
+  /** False while the running card (with its own Stopp) is on the page. */
+  showStop?: boolean;
 }) {
   const d = new Date(now());
   const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -32,21 +35,24 @@ export function TimerHead({
           now={hhmm}
         />
         {running ? (
-          <Button
-            variant="primary"
-            onClick={() => {
-              const minutes = sessionMinutes(running, now());
-              void stopSession(running).then(() =>
-                useUiStore.getState().toast(t.timetrack.stoppedToast(minutes)),
-              );
-            }}
-          >
-            <Icon name="close" size={18} />
-            {t.timetrack.stop}
-          </Button>
+          showStop ? (
+            <Button
+              variant="primary"
+              onClick={() => {
+                const minutes = sessionMinutes(running, now());
+                void stopSession(running).then(() =>
+                  useUiStore.getState().toast(t.timetrack.stoppedToast(minutes)),
+                );
+              }}
+            >
+              <Icon name="close" size={18} />
+              {t.timetrack.stop}
+            </Button>
+          ) : null
         ) : firstJob ? (
           <Button
             variant="primary"
+            aria-label={`${t.timetrack.start}: ${firstJob.name}`}
             onClick={() =>
               void startSession(firstJob.id).then(() =>
                 useUiStore.getState().toast(t.timetrack.startedToast(firstJob.name)),

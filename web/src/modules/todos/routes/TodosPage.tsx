@@ -26,6 +26,7 @@ import {
   Icon,
   ItemRow,
   PageHeader,
+  Progress,
   RowMenu,
   TextField,
   type RowMenuItem,
@@ -246,12 +247,11 @@ function TaskRow({
           ) : null}
           {allSubs.length > 0 ? (
             <span className={styles.subProgress}>
-              <span className={styles.subTrack} aria-hidden="true">
-                <span
-                  className={styles.subFill}
-                  style={{
-                    width: `${(allSubs.filter((x) => x.done).length / allSubs.length) * 100}%`,
-                  }}
+              <span className={styles.subTrack}>
+                <Progress
+                  value={allSubs.filter((x) => x.done).length}
+                  max={allSubs.length}
+                  label={task.title}
                 />
               </span>
               {t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}

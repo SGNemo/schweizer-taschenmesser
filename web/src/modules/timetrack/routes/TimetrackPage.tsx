@@ -121,7 +121,12 @@ export default function TimetrackPage() {
 
       {running ? <IdlePrompt session={running} /> : null}
 
-      <TimerHead sessions={todays} running={running} firstJob={(jobs ?? [])[0]} />
+      <TimerHead
+        sessions={todays}
+        running={running}
+        firstJob={(jobs ?? [])[0]}
+        showStop={view !== 'today'}
+      />
 
       {view === 'today' ? (
         <>

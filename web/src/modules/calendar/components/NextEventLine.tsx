@@ -1,5 +1,6 @@
 import { useNow } from '@/core/focus/useNow';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { usePersonFilter } from '@/core/people/PersonFilter';
 import { useFocusSettings } from '@/core/settings/focus';
 import { pad2, today } from '@/core/time/now';
 import { HeroSlot } from '@/ui/identity';
@@ -11,7 +12,10 @@ import styles from '../routes/calendar.module.css';
 export function NextEventLine() {
   const [settings] = useFocusSettings();
   const day = today();
-  const items = useCalendarItems({ from: day, to: day });
+  const forPerson = usePersonFilter();
+  const items = useCalendarItems({ from: day, to: day })?.filter(
+    (i) => !forPerson || i.personId === forPerson,
+  );
   const tick = useNow(30_000, settings.timeToNext);
   if (!settings.timeToNext || !items) return null;
   const d = new Date(tick);

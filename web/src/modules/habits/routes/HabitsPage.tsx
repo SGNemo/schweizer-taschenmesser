@@ -91,6 +91,7 @@ export default function HabitsPage() {
       {goals && planned.length > 0 ? (
         <HeroSlot area="figure">
           <HeroFigure
+            label={t.habits.tabs.today}
             value={String(planned.filter((g) => dayProgress(g, todayMap.get(g.id)) >= 1).length)}
             unit={`/ ${planned.length}`}
             testId="habit-done"

@@ -77,11 +77,10 @@ export default function SubscriptionsPage() {
 
   // Month cycle: the share of each active subscription (first currency) in the monthly sum, the biggest four.
   const activeSubs = (subs ?? []).filter((s) => s.active);
-  const activeCount = activeSubs.length;
   const firstCurrency = activeSubs[0] ? currencyOf(activeSubs[0]) : undefined;
   const monthly = activeSubs
     .filter((s) => currencyOf(s) === firstCurrency)
-    .map((s) => ({ label: s.name, share: monthlyEquivalent(s) }))
+    .map((s) => ({ id: s.id, label: s.name, share: monthlyEquivalent(s) }))
     .sort((a, b) => b.share - a.share);
   const cycle = monthly.slice(0, 4);
 
@@ -100,13 +99,13 @@ export default function SubscriptionsPage() {
           <div className={styles.cycle} data-testid="cycle-ring">
             <Ring
               parts={cycle}
-              centre={<strong>{activeCount}</strong>}
+              centre={<strong>{monthly.length}</strong>}
               label={`${t.subscriptions.perMonth}: ${cycle.map((p) => p.label).join(', ')}`}
               size={7.5}
             />
             <ul className={styles.cycleLegend}>
               {cycle.map((p) => (
-                <li key={p.label}>{p.label}</li>
+                <li key={p.id}>{p.label}</li>
               ))}
             </ul>
           </div>

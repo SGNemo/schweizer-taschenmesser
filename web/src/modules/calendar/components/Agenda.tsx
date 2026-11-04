@@ -28,10 +28,12 @@ export function Agenda({
   );
   return (
     <section className={styles.agenda}>
-      <h2 className={styles.agendaTitle}>
-        <CalendarLeaf month={formatDay(date, 'MMM')} day={formatDay(date, 'd')} size="sm" />
-        {t.calendar.agenda}
-      </h2>
+      <div className={styles.agendaTitle}>
+        <span aria-hidden="true">
+          <CalendarLeaf month={formatDay(date, 'MMM')} day={formatDay(date, 'd')} size="sm" />
+        </span>
+        <h2>{t.calendar.agenda}</h2>
+      </div>
       {days.map((d) => {
         const list = byDate.get(d) ?? [];
         return (

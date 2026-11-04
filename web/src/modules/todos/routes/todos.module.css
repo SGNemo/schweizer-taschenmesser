@@ -95,7 +95,7 @@
   border-left: 2px solid currentcolor;
   border-bottom: 2px solid currentcolor;
   transform: rotate(-45deg) scale(0);
-  transition: transform 0.12s ease;
+  transition: transform var(--dur-fast) ease;
 }
 .check:checked {
   background: var(--module-color);
@@ -156,7 +156,7 @@
   align-items: center;
   gap: 0.2rem;
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .prio3 svg,
 .prio2 svg {
@@ -172,15 +172,6 @@
 }
 .subTrack {
   width: 3rem;
-  height: 0.3rem;
-  border-radius: var(--radius-full);
-  background: var(--surface-2);
-  overflow: hidden;
-}
-.subFill {
-  display: block;
-  height: 100%;
-  background: var(--module-color);
 }
 .subs {
   list-style: none;
@@ -300,8 +291,8 @@
   line-height: 1.1;
 }
 .countBox strong {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
 }
 .countBox span {
@@ -385,7 +376,6 @@
 }
 .column[data-view='done'] {
   background: var(--surface-2);
-  opacity: 0.85;
 }
 .columnTitle {
   display: flex;
