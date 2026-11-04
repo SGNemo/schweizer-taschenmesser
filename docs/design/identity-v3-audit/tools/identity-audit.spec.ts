@@ -4,7 +4,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { bootDev, SEED_TODAY, seedApp } from '../seed/helpers';
 import { mockSpotify, seedConnected } from '../spotify-mock';
 import { mockWeather, pickWeatherPlace } from '../weather-mock';
-import { openToolbox, pickTool } from '../helpers';
+import { openToolbox } from '../helpers';
 
 /**
  * Audit tooling (docs/design/identity-v3-audit): blind-test crops (title text blacked out, random file names, key
@@ -271,21 +271,37 @@ test('identity audit: blind crops, empty states, toolbox, overview head', async 
       await page.goto('/');
       await settle(page, WAIT * 2);
       const head = page.getByTestId('overview-head');
-      if (await head.count()) await head.screenshot({ path: `${dir}/${vp.name}--overview-head.png` });
+      if (await head.count())
+        await head.screenshot({ path: `${dir}/${vp.name}--overview-head.png` });
       const main = await page.locator('#main').boundingBox();
       if (main)
         await page.screenshot({
           path: `${dir}/${vp.name}--overview-top.png`,
-          clip: { x: main.x, y: main.y, width: main.width, height: Math.min(700, vp.height - main.y) },
+          clip: {
+            x: main.x,
+            y: main.y,
+            width: main.width,
+            height: Math.min(700, vp.height - main.y),
+          },
         });
       const dialog = await openToolbox(page);
       await page.waitForTimeout(WAIT);
       await page.screenshot({ path: `${dir}/${vp.name}--toolbox.png` });
       await dialog.screenshot({ path: `${dir}/${vp.name}--toolbox-panel.png` });
-      for (const tool of ['Rechner', 'Timer & Stoppuhr', 'QR-Code', 'Anonyme Persona', 'Einheiten']) {
-        const d = await pickTool(page, tool);
+      for (const tool of ['Rechner', 'Timer & Stoppuhr', 'QR-Code']) {
+        // Only tools that are on by default; the list entry's name may carry its shortcut, so match the start.
+        const list = await openToolbox(page);
+        await list
+          .getByRole('button', {
+            name: new RegExp(`^${tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+          })
+          .last()
+          .click({ timeout: 15_000 });
+        const d = page.getByRole('dialog');
         await page.waitForTimeout(WAIT);
-        await d.screenshot({ path: `${dir}/${vp.name}--tool-${tool.replace(/[^a-z]+/gi, '-').toLowerCase()}.png` });
+        await d.screenshot({
+          path: `${dir}/${vp.name}--tool-${tool.replace(/[^a-z]+/gi, '-').toLowerCase()}.png`,
+        });
       }
       await context.close();
     }

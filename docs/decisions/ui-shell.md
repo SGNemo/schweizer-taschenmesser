@@ -148,3 +148,9 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 
 - **Same blocks, more of them:** nine more tools use `tools/kit.*` (framed preview for QR and screenshots, persona card, section cards for dice and text, stat chips, file cards for PDF, a quiet mono panel for the developer tools). Logic, labels, test ids and the persona field list are unchanged.
 - **The persona card is a card, not an ID:** initials in a circle, the name large, the word "Erfunden" in a frame (text, never only colour), the fields below. No new field, the intro and the "not for contracts, banks, authorities" notice stay (negative-list tests untouched).
+
+## Identity v3 audit (2026-11-04, `review/identity-v3-audit`)
+
+- **Verdicts on the foundation:** layout rules, stripe rule and the overview head confirmed; palette, widget frame, sidebar and contract need sharpening; the nine head variants change – the frame gets fixed grid areas and a sized signature slot beside the figure with the content column capped at 70 rem (maintainer, mockups in `docs/design/identity-v3-audit/mockups/`). Full table: `docs/design/identity-v3-audit/01-findings.md`.
+- **Mapping changes decided:** E-Mail back to `schreib` + stamp with one "Posteingang" widget; Dieser PC gets its `fortschritt` head, slate rings and a token palette; empty states through an `EmptyState motif` prop with every module ported; four fix packages, foundation first (`02-packages.md`).
+- **Rules sharpened** (MODULE-IDENTITY "Clarifications from the audit"): only `--text` on tinted surfaces until `--text-on-tint` exists, same hue across areas needs a different head and widget variant, signatures shrink on the phone and never hide, `signature: 'none'` only for an empty head, widget titles unique app-wide.

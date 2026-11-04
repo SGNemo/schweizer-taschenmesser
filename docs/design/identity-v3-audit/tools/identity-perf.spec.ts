@@ -32,8 +32,20 @@ async function enableModules(page: Page, ids: string[]) {
           const db = open.result;
           const tx = db.transaction('_modules', 'readwrite');
           for (const id of list)
-            tx.objectStore('_modules').put({ id, enabled: true, dataPolicy: null, createdAt: 1, updatedAt: 1, deviceId: 'screens', deletedAt: null, _f: {} });
-          tx.oncomplete = () => { db.close(); resolve(); };
+            tx.objectStore('_modules').put({
+              id,
+              enabled: true,
+              dataPolicy: null,
+              createdAt: 1,
+              updatedAt: 1,
+              deviceId: 'screens',
+              deletedAt: null,
+              _f: {},
+            });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
           tx.onerror = () => reject(tx.error);
         };
       }),
@@ -55,7 +67,11 @@ test('identity perf sample', async ({ browser }) => {
   test.setTimeout(0);
   const samples: Sample[] = [];
   for (const mode of ['colour', 'calm']) {
-    const context = await browser.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, colorScheme: 'light' });
+    const context = await browser.newContext({
+      viewport: { width: 1920, height: 1080 },
+      deviceScaleFactor: 1,
+      colorScheme: 'light',
+    });
     const page = await context.newPage();
     await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
     await mockWeather(page);
@@ -79,32 +95,68 @@ test('identity perf sample', async ({ browser }) => {
       }, !!p.all);
       // Fresh document per page so the metrics are per page, not cumulative.
       await page.goto('about:blank');
-      const before = Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
+      const before = Object.fromEntries(
+        (await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]),
+      );
       await page.goto(p.path);
       await page.locator('main').waitFor();
       await page.waitForTimeout(2500);
-      const after = Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
+      const after = Object.fromEntries(
+        (await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]),
+      );
       const metrics: Record<string, number> = {};
-      for (const k of ['TaskDuration', 'ScriptDuration', 'LayoutDuration', 'RecalcStyleDuration', 'LayoutCount', 'RecalcStyleCount', 'Nodes', 'JSHeapUsedSize'])
-        metrics[k] = Math.round(((after[k] ?? 0) - (k === 'Nodes' || k === 'JSHeapUsedSize' ? 0 : (before[k] ?? 0))) * (k.endsWith('Duration') ? 1000 : 1));
+      for (const k of [
+        'TaskDuration',
+        'ScriptDuration',
+        'LayoutDuration',
+        'RecalcStyleDuration',
+        'LayoutCount',
+        'RecalcStyleCount',
+        'Nodes',
+        'JSHeapUsedSize',
+      ])
+        metrics[k] = Math.round(
+          ((after[k] ?? 0) - (k === 'Nodes' || k === 'JSHeapUsedSize' ? 0 : (before[k] ?? 0))) *
+            (k.endsWith('Duration') ? 1000 : 1),
+        );
       const stats = await page.evaluate(() => {
         const all = [...document.querySelectorAll<HTMLElement>('body *')];
-        let gradients = 0, masks = 0, shadows = 0, patterns = 0, blurs = 0;
+        let gradients = 0,
+          masks = 0,
+          shadows = 0,
+          patterns = 0,
+          blurs = 0;
         for (const el of all) {
           const cs = getComputedStyle(el);
           const bg = cs.backgroundImage;
-          if (bg && bg !== 'none') { gradients += 1; if (bg.includes('repeating') || /gradient\(.*1px/.test(bg)) patterns += 1; }
-          const mask = (cs as unknown as { maskImage?: string; webkitMaskImage?: string }).maskImage ?? (cs as unknown as { webkitMaskImage?: string }).webkitMaskImage;
+          if (bg && bg !== 'none') {
+            gradients += 1;
+            if (bg.includes('repeating') || /gradient\(.*1px/.test(bg)) patterns += 1;
+          }
+          const mask =
+            (cs as unknown as { maskImage?: string; webkitMaskImage?: string }).maskImage ??
+            (cs as unknown as { webkitMaskImage?: string }).webkitMaskImage;
           if (mask && mask !== 'none') masks += 1;
           if (cs.boxShadow && cs.boxShadow !== 'none') shadows += 1;
-          if ((cs as unknown as { backdropFilter?: string }).backdropFilter && (cs as unknown as { backdropFilter?: string }).backdropFilter !== 'none') blurs += 1;
+          if (
+            (cs as unknown as { backdropFilter?: string }).backdropFilter &&
+            (cs as unknown as { backdropFilter?: string }).backdropFilter !== 'none'
+          )
+            blurs += 1;
           // pseudo-elements carry the area pattern
           for (const pseudo of ['::before', '::after']) {
             const ps = getComputedStyle(el, pseudo);
-            if (ps.content !== 'none' && ps.backgroundImage && ps.backgroundImage !== 'none') { gradients += 1; if (ps.backgroundImage.includes('gradient')) patterns += 1; }
+            if (ps.content !== 'none' && ps.backgroundImage && ps.backgroundImage !== 'none') {
+              gradients += 1;
+              if (ps.backgroundImage.includes('gradient')) patterns += 1;
+            }
           }
         }
-        return { nodes: all.length, decorated: { gradients, masks, shadows, patterns, blurs }, animations: document.getAnimations().length };
+        return {
+          nodes: all.length,
+          decorated: { gradients, masks, shadows, patterns, blurs },
+          animations: document.getAnimations().length,
+        };
       });
       // Scroll test: 40 frames of programmatic scrolling in #main, frame deltas via rAF.
       const scroll = await page.evaluate(async () => {
@@ -124,14 +176,23 @@ test('identity perf sample', async ({ browser }) => {
           requestAnimationFrame(step);
         });
         const d = deltas.slice(1);
-        return { frames: d.length, slow32: d.filter((x) => x > 32).length, slow50: d.filter((x) => x > 50).length, maxMs: Math.round(Math.max(...d)), avgMs: Math.round((d.reduce((a, b) => a + b, 0) / d.length) * 10) / 10 };
+        return {
+          frames: d.length,
+          slow32: d.filter((x) => x > 32).length,
+          slow50: d.filter((x) => x > 50).length,
+          maxMs: Math.round(Math.max(...d)),
+          avgMs: Math.round((d.reduce((a, b) => a + b, 0) / d.length) * 10) / 10,
+        };
       });
       samples.push({ page: p.name, mode, ...stats, metrics, scroll });
     }
     await context.close();
   }
   writeFileSync(`${OUT}/perf-sample.json`, JSON.stringify(samples, null, 2));
-  const rows = samples.map((s) => `${s.page.padEnd(20)} ${s.mode.padEnd(7)} nodes ${String(s.nodes).padStart(5)} grad ${String(s.decorated.gradients).padStart(4)} pattern ${String(s.decorated.patterns).padStart(3)} mask ${String(s.decorated.masks).padStart(3)} shadow ${String(s.decorated.shadows).padStart(4)} anim ${String(s.animations).padStart(2)} | task ${String(s.metrics.TaskDuration).padStart(5)} ms script ${String(s.metrics.ScriptDuration).padStart(5)} layout ${String(s.metrics.LayoutDuration).padStart(4)} style ${String(s.metrics.RecalcStyleDuration).padStart(4)} (layouts ${s.metrics.LayoutCount}, recalcs ${s.metrics.RecalcStyleCount}) | scroll avg ${s.scroll.avgMs} ms max ${s.scroll.maxMs} slow>32: ${s.scroll.slow32}`);
+  const rows = samples.map(
+    (s) =>
+      `${s.page.padEnd(20)} ${s.mode.padEnd(7)} nodes ${String(s.nodes).padStart(5)} grad ${String(s.decorated.gradients).padStart(4)} pattern ${String(s.decorated.patterns).padStart(3)} mask ${String(s.decorated.masks).padStart(3)} shadow ${String(s.decorated.shadows).padStart(4)} anim ${String(s.animations).padStart(2)} | task ${String(s.metrics.TaskDuration).padStart(5)} ms script ${String(s.metrics.ScriptDuration).padStart(5)} layout ${String(s.metrics.LayoutDuration).padStart(4)} style ${String(s.metrics.RecalcStyleDuration).padStart(4)} (layouts ${s.metrics.LayoutCount}, recalcs ${s.metrics.RecalcStyleCount}) | scroll avg ${s.scroll.avgMs} ms max ${s.scroll.maxMs} slow>32: ${s.scroll.slow32}`,
+  );
   writeFileSync(`${OUT}/perf-sample.txt`, rows.join('\n') + '\n');
   console.log(rows.join('\n'));
 });
