@@ -239,9 +239,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Phone: the legend is visually hidden (the ring keeps its text alternative); it stays in the text flow for readers. */
 @media (max-width: 700px) {
   .cycleLegend {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
