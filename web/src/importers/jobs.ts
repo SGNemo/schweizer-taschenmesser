@@ -2,6 +2,7 @@
 import type { ParsedNote } from '@/core/io/markdownNote';
 import { parseEnex } from './enex/parse';
 import { expandFiles, type ExpandedFiles, type RawFile } from './files';
+import { parseNotion } from './notion/parse';
 import { parseMarkdownFolder, type MarkdownFolderResult } from './obsidian/parse';
 import { addSkip, type SkipCounts, type SourceFile } from './types';
 
@@ -15,6 +16,7 @@ export interface EnexJobResult {
 export interface Jobs {
   expand: { in: { files: RawFile[] }; out: ExpandedFiles };
   enex: { in: { files: SourceFile[] }; out: EnexJobResult };
+  notion: { in: { files: SourceFile[]; binary: number }; out: MarkdownFolderResult };
   markdown: { in: { files: SourceFile[]; binary: number }; out: MarkdownFolderResult };
 }
 
@@ -36,6 +38,11 @@ export const JOBS: {
       progress(i + 1, files.length);
     });
     return out;
+  },
+  notion: ({ files, binary }, progress) => {
+    const r = parseNotion(files, { binary });
+    progress(1, 1);
+    return r;
   },
   markdown: ({ files, binary }, progress) => {
     const r = parseMarkdownFolder(files, { binary });
