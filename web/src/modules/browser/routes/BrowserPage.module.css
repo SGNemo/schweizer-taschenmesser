@@ -110,7 +110,6 @@
   border-bottom: 1px solid var(--border);
 }
 .tabActive {
-  background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
   border-color: var(--border);
   /* The active tab is a filled chip (the fill, not an edge bar, carries the module colour). */
   background: color-mix(in srgb, var(--module-color) 22%, var(--surface));

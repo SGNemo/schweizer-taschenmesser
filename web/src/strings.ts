@@ -3833,7 +3833,7 @@ export const de = {
     url: 'Adresse (Link)',
     urlInvalid: 'Bitte eine gültige http(s)-Adresse eingeben.',
     kind: 'Art',
-    figureUnit: 'offen',
+    figureUnit: (_n: number) => 'offen',
     kinds: {
       link: 'Link',
       read: 'Lesen',

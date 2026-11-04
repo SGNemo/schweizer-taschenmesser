@@ -45,7 +45,3 @@
 .columns h2 {
   font-family: Georgia, 'Times New Roman', serif;
 }
-/* The rows are plain list items inside a group body: no bullets. */
-.columns li {
-  list-style: none;
-}

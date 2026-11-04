@@ -242,7 +242,7 @@ export default function BookmarksPage() {
           <HeroFigure
             label={t.bookmarks.title}
             value={String(openItems.length)}
-            unit={t.bookmarks.figureUnit}
+            unit={t.bookmarks.figureUnit(openItems.length)}
             detail={kindLine || undefined}
             testId="bookmarks-open"
           />

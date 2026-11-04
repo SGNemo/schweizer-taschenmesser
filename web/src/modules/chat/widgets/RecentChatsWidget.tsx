@@ -6,7 +6,7 @@ import { sortThreads } from '../logic';
 import { threadRepo } from '../repo';
 import styles from './RecentChatsWidget.module.css';
 
-/** Widget variant `notiz`: the latest chat as a speech bubble, two more titles underneath (titles only, never message text). */
+/** Widget variant `notiz`: the first chat of the list (pinned ones first, then the latest) as a speech bubble, two more titles underneath (titles only, never message text). */
 export default function RecentChatsWidget() {
   const threads = useLiveQuery(
     async () => sortThreads((await threadRepo.active().toArray()).filter((x) => !x.archived)),
@@ -25,11 +25,13 @@ export default function RecentChatsWidget() {
           {first.title}
         </Link>
       ) : null}
-      <ul className={styles.list}>
-        {rest.slice(0, 2).map((x) => (
-          <li key={x.id}>{x.title}</li>
-        ))}
-      </ul>
+      {rest.length > 0 ? (
+        <ul className={styles.list}>
+          {rest.slice(0, 2).map((x) => (
+            <li key={x.id}>{x.title}</li>
+          ))}
+        </ul>
+      ) : null}
     </WidgetBody>
   );
 }

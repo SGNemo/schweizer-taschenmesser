@@ -129,7 +129,7 @@ export default function MainPage() {
               testId="feeds-total"
             />
           </HeroSlot>
-          {lead ? (
+          {lead && feeds.length > 1 ? (
             <a
               className={styles.lead}
               href={lead.siteUrl || lead.url}

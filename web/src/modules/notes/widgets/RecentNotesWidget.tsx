@@ -31,11 +31,13 @@ export default function RecentNotesWidget() {
           <span className={styles.text}>{scratchText}</span>
         </Link>
       ) : null}
-      <ul className={styles.list}>
-        {recent.map((n) => (
-          <li key={n.id}>{displayTitle(n)}</li>
-        ))}
-      </ul>
+      {recent.length > 0 ? (
+        <ul className={styles.list}>
+          {recent.map((n) => (
+            <li key={n.id}>{displayTitle(n)}</li>
+          ))}
+        </ul>
+      ) : null}
     </WidgetBody>
   );
 }
