@@ -1,3 +1,4 @@
+import { useAutomationSettings } from '@/core/automation/settings';
 import { useMemo } from 'react';
 import { useAiOn } from '@/core/ai/switch';
 import { hasStartData } from '@/core/dataapi/onboarding';
@@ -87,6 +88,7 @@ export function useSectionsInUse(): Readonly<Record<string, boolean>> {
   const voice = useVoicePrefs();
   const networkBlocked = useNetLog((s) => s.blocked);
   const pairs = useLiveQuery(() => loadPairs(), []);
+  const [automation] = useAutomationSettings();
   return useMemo(
     () => ({
       localapi: localApi?.enabled === true,
@@ -94,8 +96,9 @@ export function useSectionsInUse(): Readonly<Record<string, boolean>> {
       voice: voice.enabled,
       network: networkBlocked,
       share: (pairs?.length ?? 0) > 0,
+      automation: automation?.enabled === true,
     }),
-    [localApi?.enabled, readAid, voice.enabled, networkBlocked, pairs?.length],
+    [localApi?.enabled, readAid, voice.enabled, networkBlocked, pairs?.length, automation?.enabled],
   );
 }
 
