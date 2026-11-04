@@ -16,7 +16,6 @@ import {
   Button,
   Checkbox,
   Dialog,
-  EmptyState,
   Icon,
   GroupedList,
   IconButton,
@@ -30,6 +29,7 @@ import {
   useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
+import { ListsEmpty } from '../components/ListsEmpty';
 import { ListEditor, type ListTarget } from '../components/ListEditor';
 import {
   groupItems,
@@ -213,6 +213,12 @@ export default function ListsPage() {
   }
 
   const groups = groupItems(shown, isShopping ? 'section' : 'category');
+  const receiptDetail = [
+    sums.priced > 0 ? t.lists.sumOpen(formatMoney(sums.openCents)) : '',
+    isShopping && groups.length > 0 ? t.lists.sectionsCount(groups.length) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const groupLabel = (id: string) =>
     isShopping ? (id ? t.lists.sections[id]! : t.lists.noSection) : id || t.lists.sections.other!;
 
@@ -270,8 +276,15 @@ export default function ListsPage() {
       </PageHeader>
       {lists && current && isShopping ? (
         <ReceiptSignature
+          name={current.name}
           open={shown.filter((i) => !i.done).length}
-          sum={sums.priced > 0 ? formatMoney(sums.openCents) : undefined}
+          detail={receiptDetail}
+          lines={shown
+            .filter((i) => !i.done)
+            .map((i) => ({
+              name: i.name,
+              ...(i.priceCents !== undefined ? { price: formatMoney(i.priceCents) } : {}),
+            }))}
         />
       ) : null}
       {lists && current && isPacking && stats.total > 0 ? (
@@ -399,9 +412,9 @@ export default function ListsPage() {
             </div>
           ) : null}
           {items && shown.length === 0 ? (
-            <EmptyState title={t.lists.empty}>
+            <ListsEmpty title={t.lists.empty} kind={current.kind}>
               <StartDataButton moduleId="lists" />
-            </EmptyState>
+            </ListsEmpty>
           ) : null}
           {isShopping && sums.priced > 0 ? (
             <p className={styles.sums} data-testid="lists-sums">
@@ -427,20 +440,25 @@ export default function ListsPage() {
               ))}
             </section>
           ) : null}
-          {groups.length === 1 && groups[0]!.id === '' ? (
-            <ItemList label={current.name}>{shown.map(renderRow)}</ItemList>
-          ) : (
-            <GroupedList
-              listId={current.id}
-              label={current.name}
-              groups={groups.map((g) => ({
-                id: g.id || 'none',
-                label: groupLabel(g.id),
-                count: g.items.length,
-                children: <ItemList label={groupLabel(g.id)}>{g.items.map(renderRow)}</ItemList>,
-              }))}
-            />
-          )}
+          <div
+            className={isShopping ? styles.paper : undefined}
+            data-testid={isShopping ? 'receipt-paper' : undefined}
+          >
+            {groups.length === 1 && groups[0]!.id === '' ? (
+              <ItemList label={current.name}>{shown.map(renderRow)}</ItemList>
+            ) : (
+              <GroupedList
+                listId={current.id}
+                label={current.name}
+                groups={groups.map((g) => ({
+                  id: g.id || 'none',
+                  label: groupLabel(g.id),
+                  count: g.items.length,
+                  children: <ItemList label={groupLabel(g.id)}>{g.items.map(renderRow)}</ItemList>,
+                }))}
+              />
+            )}
+          </div>
         </>
       ) : null}
       <Dialog open={templates} onClose={() => setTemplates(false)} title={t.lists.routines.title}>

@@ -55,3 +55,24 @@
   align-items: center;
   margin-bottom: var(--space-3);
 }
+
+/* The shopping list is a receipt: paper with a dashed top, a jagged lower edge, prices in mono. */
+.paper {
+  --zig: 0.5rem;
+  padding: var(--space-2) var(--space-3) calc(var(--space-3) + var(--zig));
+  border-top: 2px dashed var(--border-strong);
+  background: var(--surface);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    var(--zig) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig)
+    100%;
+}
+/* The rows sit on the paper: no second surface or shadow. */
+.paper ul {
+  background: transparent;
+  box-shadow: none;
+}
+.paper .quantity {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
