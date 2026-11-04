@@ -17,6 +17,8 @@ import { t } from '@/strings';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import {
+  AutomationLogSection,
+  AutomationSection,
   AboutSection,
   AboutUpdatesSection,
   AccessibilitySection,
@@ -68,6 +70,7 @@ import { SettingRow, SettingsGroup } from '@/ui';
 import { DeveloperSection } from '@/layout/devTools';
 import { Suspense } from 'react';
 import { tShare } from '@/strings.share';
+import { tAuto } from '@/strings.automation';
 import { tNet } from '@/strings.netlog';
 import { tTrash } from '@/strings.trash';
 import { tAdvanced } from '@/strings.advanced';
@@ -914,6 +917,41 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       ];
     },
     render: () => <AccessibilitySection />,
+  },
+  {
+    id: 'automation',
+    category: 'benachrichtigungen',
+    // Unfinished and off by default: hidden until "In Arbeit anzeigen" or while switched on.
+    maturity: 'preview',
+    previewInUse: (ctx) => ctx.inUse?.automation === true,
+    order: 30,
+    get title() {
+      return tAuto.get().settings.title;
+    },
+    get description() {
+      return tAuto.get().settings.description;
+    },
+    get keywords() {
+      return tAuto.get().settings.keywords;
+    },
+    render: () => <AutomationSection />,
+  },
+  {
+    id: 'automation-log',
+    category: 'benachrichtigungen',
+    maturity: 'preview',
+    previewInUse: (ctx) => ctx.inUse?.automation === true,
+    order: 31,
+    get title() {
+      return tAuto.get().log.title;
+    },
+    get description() {
+      return tAuto.get().log.description;
+    },
+    get keywords() {
+      return tAuto.get().log.keywords;
+    },
+    render: () => <AutomationLogSection />,
   },
   {
     id: 'notification-sources',

@@ -587,3 +587,10 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **IA6** Notion → Einstellungen → Exportieren → „Markdown & CSV“ (mit Unterseiten): ZIP über „Aus anderer App importieren“ wählen: Titel ohne Kennung, Verweise als `[[…]]`, Eigenschaften oben im Text, Bilder im Bericht gezählt; echte Exporte weichen je Version ab, Abweichungen melden.
 - **IA7** Feeds → „Importieren“ mit einer echten OPML-Datei aus einer Podcast-/Feed-App (Gruppen, Umlaute, sehr viele Abos): Vorschau, Bericht; danach „Als OPML exportieren“ und die Datei in der anderen App wieder einlesen.
 
+## Automatisierungen (Handtest)
+- AU1 · Einstellungen → Darstellung → „In Arbeit anzeigen“ an; Einstellungen → Benachrichtigungen: „Automatisierungen“ und „Regel-Protokoll“ erscheinen. Hauptschalter ein, Vorlage „Rechnung bald fällig“ ein, Tage vorher 3; eine offene Rechnung mit Fälligkeit in 2 Tagen anlegen; nach höchstens zehn Minuten (und App offen) liegt eine Aufgabe „Rechnung … bezahlen“ in ToDos, die Erinnerung kommt als ruhige Benachrichtigung (Ruhezeiten und Limit gelten), das Protokoll zeigt den Lauf.
+- AU2 · Im Protokoll „Rückgängig“ bei diesem Lauf: Aufgabe und Erinnerung sind weg; eine zwischendurch geänderte Aufgabe bleibt und wird gemeldet.
+- AU3 · „Nur ausprobieren (Trockenlauf)“ an: gleiche Schritte schreiben nichts, das Protokoll sagt „Trockenlauf“.
+- AU4 · Befehlspalette: „regel“ tippen → „Regel ausführen: …“ führt die Regel aus; „Letzte Regel-Ausführung rückgängig“ nimmt sie zurück.
+- AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
+- AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.

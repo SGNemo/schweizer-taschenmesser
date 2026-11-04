@@ -14,6 +14,15 @@ import type { Rule } from './types';
 
 const CACHE_MS = 5_000;
 
+/** The running engine's dependencies, shared with the settings, the palette and the dev tools. */
+let live: LiveDeps | undefined;
+const setLiveDeps = (deps: LiveDeps | undefined): void => {
+  live = deps;
+};
+
+/** The running engine's, or (before `startAutomation`, in tests) a fresh set that reads the same data. */
+export const getLiveDeps = (): LiveDeps => (live ??= createDeps());
+
 export interface LiveDeps extends TickDeps {
   wants: (type: string) => boolean;
   watched: (moduleId: string, collection: string) => boolean;
@@ -82,6 +91,7 @@ export function startAutomation(): () => void {
       stopEvents = undefined;
     }
   });
+  setLiveDeps(deps);
   void deps.refresh();
   // Domain events other modules report on the bus (`mail.invoiceReceived`).
   const offBus = bus.on('automation.event', (e) => {
@@ -92,6 +102,7 @@ export function startAutomation(): () => void {
   });
   const stopTick = startAutomationScheduler(deps);
   return () => {
+    setLiveDeps(undefined);
     stopEvents?.();
     offBus();
     stopTick();
