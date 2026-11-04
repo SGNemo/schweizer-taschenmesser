@@ -191,21 +191,21 @@ export default function PantryPage() {
                     className={lamp.label}
                     title={i.name}
                     meta={
-                      <>
+                      <span className={lamp.meta}>
                         <span className={lamp.dot} data-state={state} aria-hidden="true" />
                         <span className={lamp.amount}>{countLabel(i, t.pantry.countOf)}</span>
                         {state === 'ok' && text ? ` · ${text}` : ''}
-                      </>
+                        {state === 'expired' || state === 'soon' ? (
+                          <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
+                        ) : null}
+                        {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
+                      </span>
                     }
                     onOpen={() => setTarget(i)}
                     onSwipeRight={restockable ? () => requestRestock([i.name]) : undefined}
                     swipeRightLabel={t.pantry.restock}
                     end={
                       <span className={lamp.endCol}>
-                        {state === 'expired' || state === 'soon' ? (
-                          <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
-                        ) : null}
-                        {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
                         <span className={lamp.controls}>
                           {restockable ? (
                             <IconButton

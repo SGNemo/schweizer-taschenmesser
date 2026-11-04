@@ -66,9 +66,11 @@ export function ShelfSignature({ counts }: { counts: ShelfCounts }) {
                 <span className={styles.num} aria-hidden="true">
                   {counts[p].items}
                 </span>
-                <span className={styles.state} data-tone={state.tone} aria-hidden="true">
-                  {state.text}
-                </span>
+                {state.tone === 'ok' ? null : (
+                  <span className={styles.state} data-tone={state.tone} aria-hidden="true">
+                    {state.text}
+                  </span>
+                )}
               </button>
             );
           })}

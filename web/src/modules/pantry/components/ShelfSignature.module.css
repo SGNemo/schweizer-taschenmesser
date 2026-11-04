@@ -55,4 +55,14 @@
   .shelf {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* Phone: name and count share a line, the state (when there is one) sits below. */
+  .tile {
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    min-height: 2.75rem;
+    padding-block: var(--space-1);
+  }
+  .state {
+    grid-column: 1 / -1;
+  }
 }
