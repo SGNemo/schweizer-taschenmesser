@@ -1,27 +1,41 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router';
 import { t } from '@/strings';
-import { WidgetList } from '@/ui';
+import { WidgetBody } from '@/ui';
 import { displayTitle, excerpt, isScratch, sortNotes } from '../logic';
 import { noteRepo } from '../repo';
+import styles from './RecentNotesWidget.module.css';
 
-/** The scratch pad at a glance (headline), the pages changed last (list), and "new page" when empty. */
+/**
+ * Widget variant `notiz`: the scratch pad as a little sheet (serif title, the first lines), the pages changed last
+ * underneath as small print, and "new page" when empty.
+ */
 export default function RecentNotesWidget() {
   const notes = useLiveQuery(async () => sortNotes(await noteRepo.active().toArray()), []);
   const scratch = notes?.find(isScratch);
-  const scratchText = scratch ? excerpt({ title: t.notes.scratch, body: scratch.body }, 90) : '';
+  const scratchText = scratch ? excerpt({ title: t.notes.scratch, body: scratch.body }, 120) : '';
   const recent = (notes ?? [])
     .filter((n) => !isScratch(n))
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 3);
   return (
-    <WidgetList
-      emptyAction={{ label: t.homeEmpty.notes, to: '/notes?new=1' }}
+    <WidgetBody
       loading={!notes}
-      empty={scratchText ? undefined : t.notes.widgetEmpty}
-      headline={scratchText ? t.notes.scratch : undefined}
-      subline={scratchText || undefined}
-      entries={recent.slice(0, 3).map((n) => ({ key: n.id, title: displayTitle(n) }))}
-      to="/notes"
-      linkLabel={t.notes.title}
-    />
+      isEmpty={!scratchText && recent.length === 0}
+      empty={t.notes.widgetEmpty}
+      emptyAction={{ label: t.homeEmpty.notes, to: '/notes?new=1' }}
+    >
+      {scratchText ? (
+        <Link to="/notes" className={styles.sheet}>
+          <span className={styles.title}>{t.notes.scratch}</span>
+          <span className={styles.text}>{scratchText}</span>
+        </Link>
+      ) : null}
+      <ul className={styles.list}>
+        {recent.map((n) => (
+          <li key={n.id}>{displayTitle(n)}</li>
+        ))}
+      </ul>
+    </WidgetBody>
   );
 }

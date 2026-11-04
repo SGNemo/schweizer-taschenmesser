@@ -1,0 +1,37 @@
+/* A little sheet of paper: the scratch pad's first lines in serif on a lightly tinted surface. */
+.sheet {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
+  color: var(--text);
+  text-decoration: none;
+}
+.title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.list li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
