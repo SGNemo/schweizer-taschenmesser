@@ -27,7 +27,6 @@ import {
   ItemRow,
   PageHeader,
   RowMenu,
-  Segmented,
   TextField,
   type RowMenuItem,
   useOpenParam,
@@ -615,15 +614,19 @@ export default function TodosPage() {
       <PageHeader
         title={t.todos.title}
         views={
-          <Segmented
-            label={t.todos.views.label}
-            value={pageView}
-            options={PAGE_VIEWS.map((v) => ({
-              value: v,
-              label: v === 'list' ? t.todos.views.all : t.todos.views[v],
-            }))}
-            onChange={(v) => setParam('view', v === 'list' ? null : v)}
-          />
+          <div className={styles.viewBar} role="group" aria-label={t.todos.views.label}>
+            {PAGE_VIEWS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={styles.tagChip}
+                aria-pressed={pageView === v}
+                onClick={() => setParam('view', v === 'list' ? null : v)}
+              >
+                {v === 'list' ? t.todos.views.all : t.todos.views[v]}
+              </button>
+            ))}
+          </div>
         }
       >
         <RowMenu
