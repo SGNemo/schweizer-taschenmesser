@@ -1,0 +1,13 @@
+.dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+.floating {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  box-shadow: 0 0 0 2px var(--surface);
+}

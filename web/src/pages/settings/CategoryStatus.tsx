@@ -7,6 +7,7 @@ import { loadStatus } from '@/core/connectors/state';
 import { connectors } from '@/core/connectors/registry';
 import type { SettingsCategoryId } from '@/core/settings/registry/types';
 import { useSyncStatus } from '@/core/sync/status';
+import { useNewChangelog } from '@/core/changelog/useNewChangelog';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
@@ -22,6 +23,11 @@ function Sync() {
 function Updates() {
   const available = useUpdateStore((u) => u.state.phase === 'available');
   return <>{available ? s.updates(1) : null}</>;
+}
+
+function NewChanges() {
+  const fresh = useNewChangelog();
+  return <>{fresh ? t.about.changes.fresh : null}</>;
 }
 
 function Ai() {
@@ -70,6 +76,8 @@ export function CategoryStatus({ id }: { id: SettingsCategoryId }) {
       <Modules />
     ) : id === 'benachrichtigungen' ? (
       <Notifications />
+    ) : id === 'ueber' ? (
+      <NewChanges />
     ) : null;
   return content ? <span className={styles.status}>{content}</span> : null;
 }

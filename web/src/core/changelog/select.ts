@@ -66,3 +66,18 @@ export function groupForDisplay(
 
 /** The entry text in the app language; every other language falls back to English. */
 export const entryText = (e: ChangelogEntry, lang: string): string => (lang === 'de' ? e.de : e.en);
+
+/**
+ * What "new" refers to: the open notes in a preview build (identified by a hash of their text, so every
+ * new note makes it "new" again), else the running version when the data has it.
+ */
+export function newToken(view: ChangelogView): string | undefined {
+  if (view.unreleased) {
+    let h = 0;
+    for (const ch of view.unreleased.entries.map((e) => e.en).join('\n'))
+      h = (h * 31 + ch.charCodeAt(0)) | 0;
+    return `unreleased:${(h >>> 0).toString(36)}`;
+  }
+  if (view.current && view.current.entries.length > 0) return view.current.version;
+  return undefined;
+}

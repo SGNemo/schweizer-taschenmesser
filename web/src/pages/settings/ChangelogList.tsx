@@ -1,7 +1,7 @@
 /** "Changes in this version" plus older versions, from the embedded changelog data (offline). */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadChangelog } from '@/core/changelog/load';
-import { entryText, groupForDisplay, selectChangelog } from '@/core/changelog/select';
+import { entryText, groupForDisplay, newToken, selectChangelog } from '@/core/changelog/select';
 import { isUnread, loadHint, loadSeen, markSeen, saveHint } from '@/core/changelog/seen';
 import type { ChangelogData, ChangelogEntry, ChangelogVersion } from '@/core/changelog/types';
 import { useLang } from '@/core/i18n/lang';
@@ -60,18 +60,26 @@ export function ChangelogList({ version }: { version: string }) {
   const open = (v: string) => {
     void markSeen(v).then(() => loadSeen().then(setSeen));
   };
-  const unread = hint && isUnread(seen, view?.current?.version);
+  const token = view ? newToken(view) : undefined;
+  const unread = hint && isUnread(seen, token);
   const dateOf = (v: ChangelogVersion) =>
     v.date
       ? ` · ${dateTimeFormat({ dateStyle: 'medium' }).format(new Date(v.date + 'T00:00:00'))}`
       : '';
   // The newest notes are open without a click: the unreleased ones in a preview, else the running version.
   const openFirst = view?.unreleased ? 'unreleased' : view?.current?.version;
+  // Leaving the page counts as having seen the newest notes (they were open); the mark stays while you read.
+  const tokenRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (hint && view?.current && openFirst === view.current.version) open(view.current.version);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openFirst, !!view?.current]);
-  const block = (v: ChangelogVersion, title: string, isCurrent = false) =>
+    tokenRef.current = token;
+  }, [token]);
+  useEffect(
+    () => () => {
+      if (tokenRef.current) void markSeen(tokenRef.current);
+    },
+    [],
+  );
+  const block = (v: ChangelogVersion, title: string) =>
     data ? (
       <details
         className={styles.details}
@@ -82,7 +90,9 @@ export function ChangelogList({ version }: { version: string }) {
       >
         <summary>
           {title}
-          {isCurrent && unread ? <span data-testid="changelog-new"> · {c.fresh}</span> : null}
+          {v.version === openFirst && unread ? (
+            <span data-testid="changelog-new"> · {c.fresh}</span>
+          ) : null}
         </summary>
         <VersionBody version={v} data={data} lang={lang} />
       </details>
@@ -91,7 +101,7 @@ export function ChangelogList({ version }: { version: string }) {
     <>
       {view?.unreleased ? block(view.unreleased, `${c.unreleased} · ${c.unreleasedNote}`) : null}
       {view?.current ? (
-        block(view.current, `${c.version(view.current.version)}${dateOf(view.current)}`, true)
+        block(view.current, `${c.version(view.current.version)}${dateOf(view.current)}`)
       ) : view?.unreleased ? null : (
         <details className={styles.details}>
           <summary>{t.about.updates.current}</summary>
