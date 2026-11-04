@@ -1,29 +1,53 @@
-import { HeroSlot } from '@/ui/identity';
 import { t } from '@/strings';
 import { CATEGORIES, type DocCategory } from '../schema';
 import styles from './FolderTabs.module.css';
 
 /**
- * Signature "folder tabs": a row of tabs sticking out of a folder, one per category that holds documents, each with
- * its count. Decoration only (`aria-hidden`, nothing moves); the real filter is the category chips below.
- * It shows no titles, files or dates: counts only.
+ * Signature "folder tabs", and the category filter at once: a row of tabs on a folder, "all" plus one per category
+ * with its count. The chosen tab is filled and joins the folder below (shape and fill, not only colour); each tab
+ * is a button with `aria-pressed` named after its category. Counts only, never titles, files or dates.
  */
-export function FolderTabs({ counts }: { counts: Partial<Record<DocCategory, number>> }) {
-  const used = CATEGORIES.filter((c) => (counts[c] ?? 0) > 0);
-  if (used.length === 0) return null;
+export function FolderTabs({
+  counts,
+  total,
+  value,
+  onChange,
+}: {
+  counts: Partial<Record<DocCategory, number>>;
+  total: number;
+  value: DocCategory | 'all';
+  onChange: (value: DocCategory | 'all') => void;
+}) {
+  const tabs: { id: DocCategory | 'all'; label: string; n: number }[] = [
+    { id: 'all', label: t.vault.allCategories, n: total },
+    ...CATEGORIES.map((c) => ({ id: c, label: t.vault.categories[c] ?? c, n: counts[c] ?? 0 })),
+  ];
   return (
-    <HeroSlot>
-      <div className={styles.folder} aria-hidden="true" data-testid="folder-tabs">
-        <div className={styles.tabs}>
-          {used.map((c, i) => (
-            <span key={c} className={styles.tab} data-first={i === 0 ? 'true' : undefined}>
-              <span>{t.vault.categories[c]}</span>
-              <span className={styles.num}>{counts[c]}</span>
-            </span>
-          ))}
-        </div>
-        <div className={styles.body} />
+    <div
+      className={styles.folder}
+      role="group"
+      aria-label={t.vault.category}
+      data-testid="folder-tabs"
+    >
+      <div className={styles.tabs}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={styles.tab}
+            aria-pressed={value === tab.id}
+            onClick={() => onChange(tab.id)}
+          >
+            <span>{tab.label}</span>
+            {tab.n > 0 ? (
+              <span className={styles.num} aria-hidden="true">
+                {tab.n}
+              </span>
+            ) : null}
+          </button>
+        ))}
       </div>
-    </HeroSlot>
+      <div className={styles.body} aria-hidden="true" />
+    </div>
   );
 }
