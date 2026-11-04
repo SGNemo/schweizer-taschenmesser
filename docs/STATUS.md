@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3, Paket 2 (`feat/identity-v3-wissen`): Notizen (Reiter), Merkliste (Pinnwand, Kopfzahl), Feeds (Zeitungskopf, Aufmacher, Spalten), Chat (Sprechblasen) und Browser (Adressleiste) auf die v3-Kopf- und Widget-Varianten umgebaut; Paket 3 (Mail, Musik, Downloads) folgt.
+
 Werkzeuge mit Identität v3, Paket 1 von 3 (`feat/identity-v3-tools`): großes Werkzeug-Panel (Liste links, Werkzeug rechts, öffnet auf dem zuletzt benutzten, Alt+1–9, Suche, am Handy Vollbild), `identity`/`category`/`keywords` je Werkzeug mit `check:tools`, „In eigenem Fenster öffnen“ im Web; Paket 2 (Rechnen & Zeit) und 3 (Erzeugen & Prüfen) bauen die Inhalte um; Handtests TP1–TP4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Identität v3, Paket 1 (`feat/identity-v3-haushalt-wissen`): Vorräte (Regal-Kacheln, Etiketten, Warenkorb-Aktion), Einkauf (Kassenzettel), Unterlagen (Ordner-Reiter, Widget nur Zahlen) und Passwörter (Gruppen-Reiter) auf die v3-Kopf- und Widget-Varianten umgebaut; Wissen (Paket 2) sowie Medien und Dienste (Paket 3) folgen einzeln.

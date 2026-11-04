@@ -641,3 +641,10 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
 - **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
 - **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
+
+## Identität v3: Wissen (Paket 2) – nur von Hand prüfbar
+- **WK1 Notizbuch-Reiter:** Notizen: Notizbuch-Reiter wählen, neues Notizbuch mit Farbe anlegen → der Reiter trägt die Farbe, Name und Zahl sind lesbar (hell und dunkel, Lesehilfe 75 %).
+- **WK2 Pinnwand:** Merkliste in der Kartenansicht: Karten liegen auf der Tafel, nichts läuft über den Rand (Handy).
+- **WK3 Feeds-Titelseite:** Feeds: Aufmacher ist das zuletzt hinzugefügte Feed; Gruppen stehen in Spalten (breites Fenster) und untereinander (Handy).
+- **WK4 Sprechblasen:** Chat: eigene Nachricht rechts, Antwort links; lange Zeilen und Code brechen nicht aus der Blase aus.
+- **WK5 Browser-Pille:** Browser (Windows-App): die Pille zeigt nur den Host der offenen Seite; der aktive Tab ist als gefüllter Chip erkennbar, auch in „Ruhig“.
