@@ -130,3 +130,77 @@ licence check, secret scan; `retries: 1` of Playwright (reported, flaky causes a
 2. **E2E on PR**: smoke list (desktop only, ~5 min) vs. whole suite on desktop only (~7 min). Recommendation: smoke list + label `full-ci`; full suite on `develop` and nightly.
 3. **Draft PRs** run only static checks and unit tests. OK? Recommendation: yes.
 4. **Weekly warm-up of the `main` cache** (measure 2): scheduled run + release dry run on `main` push. Recommendation: dry run on `main` push only (no schedule), because it fits your release routine (merge to `main`, then release).
+
+---
+
+# After (measured on PR #439 and manual runs on `ci/speed-round-2`)
+
+Honest limits: the PR changes workflows, so its pre-check turns **every** package on (worst case for a plain PR: 17
+jobs); a typical `web/src/**` PR starts about 11. Runs on the PR are real PR runs; the `develop` push and a real
+tag release cannot be measured before the merge (details under "Not measured"). Fewer than 5 runs per event
+exist because every run here is a run of this one PR; the tables list each of them.
+
+## Wall clock per event
+
+| Event | Before (median, range) | After (this branch) |
+|---|---|---|
+| PR, all CI checks | 24 min (24 to 35, loaded runner pool) | **4.7, 4.9, 8.4 min** with a free pool (17 jobs); **20.9 min** when the pool was full (one run: queue of 7 to 14 min for the 17 jobs, compute of the critical path 4 min) |
+| PR, docs/scribble only | 7.4 min | not measured on its own (the pre-check skips every heavy job; unit-tested on 5 historical ranges) |
+| Full run = `develop` push without preview (manual dispatch of `ci.yml`, 6 E2E shards) | 17 to 27 min | **11.7 min**, 21 jobs, queue at most 22 s |
+| Dev-Preview after a green develop push | CI 17 to 27 min **then** 13 to 14 min | built next to the tests: expected CI 11.7 min + about 1 min publish gate = **about 13 min**; a stand-alone Dev-Preview run takes **8 to 9 min** warm. The split build/publish path is only exercised on a real `develop` push (see risks). |
+| Release dry run (Windows + Android + audit) | 23 min median (18 to 33) | **11.3 min** warm (678 s); 25 min the one run that fills the cache |
+| Real release (tag / dispatch on `main`) | same jobs, cache of `develop` not visible | first run on `main` is cold (about 25 min), later ones warm; the new dry run on `main` pushes keeps it warm |
+
+PR critical path now (free pool): queue under 1.5 min, then the slowest of E2E smoke (209 to 264 s), unit shard
+(165 to 269 s), static (141 to 178 s), sync E2E (146 to 193 s), extension (147 to 183 s). Remaining long pole outside
+CI: CodeQL Rust (9 to 14 min) only on PRs that touch Rust.
+
+## Per job
+
+| Job | Before | After |
+|---|---|---|
+| E2E app, slowest shard | 14.3 min (4 shards, 824 x 2 projects + seed) | PR: smoke 3.5 to 4.4 min (171 tests, 2 shards); full: 6.6 to 11.0 min (6 shards, 1648 tests) |
+| Web unit tests | 7.7 min (one job) | 2.8 to 4.5 min (3 shards) |
+| Small packages (server, MCP, vault-core, supporter x2, webhook) | 6 jobs, each 1.0 to 1.1 min plus a runner each | one job, 81 to 123 s |
+| Windows release build step | 1187 s, 476 of 476 crates compiled | **408 s warm, 15 crates**; job 609 s instead of 1360 s |
+| Windows Dev-Preview build step | 653 s, 254 crates | **360 s warm, 14 crates**; job 486 s instead of 780 s |
+| Android (release, dev) | 349 s, 333 s | 289 to 300 s (release warm), 412 s (dev, cache of the new key only half warm) |
+
+## Caches
+
+| Cache | Result |
+|---|---|
+| Windows release `rust-cache` | was 0 % useful. `rust-cache` does not follow `CARGO_TARGET_DIR` (it logged `src-tauri\target` although the job builds into `C:/t`); first fix attempt (env only) still compiled 476 crates, run 41787006854. Now `cache-directories: C:/t`: warm run restored 1004 MB and compiled 15 crates. Cost: a 1 GB cache entry per key on the repository's 10 GB budget. |
+| Windows Dev-Preview | own key `windows-dev`; 254 to 14 crates compiled. |
+| npm, Playwright browsers | unchanged, hit on every job. |
+
+## Same coverage
+
+| Check | Before | After |
+|---|---|---|
+| E2E tests listed | 1677 (824 + 824 + 29) | 1677: smoke 171 (PR), full 1648 + seed 29 (`playwright test --list` with the profiles) |
+| E2E executed in the full dispatch run | – | 1542 passed + 105 skipped + 1 flaky = 1648 in six shards; sync job 15 passed, seed project 29 passed |
+| Unit tests | 599 files, 5426 tests (full run, branch head) | three shards: 200 + 200 + 200 files, 1686 + 1899 + 1847 = 5432 tests, all passed (the PR run includes newer `develop` commits than the local run) |
+| Security steps | gitleaks (4 workflows), artifact audit, signing, keystore cleanup, link check, licence check | unchanged and still on every run they ran on before; `git diff origin/develop -- .github/workflows` adds no step removal; CodeQL is the only scan that runs less on PRs (Rust, only when no Rust file changed), by the maintainer's decision |
+| Artifacts | exe 62 735 872 B, signed | exe 62 735 872 B in cold and warm dry runs (zip hashes differ: signature and zip timestamps; byte-identical exe is not provable from logs, same profile and sources) |
+
+## Flaky tests seen (not changed, not retried; on `scribble/BOARD.md`)
+
+`cockpit.spec.ts:123` (axe contrast, dark; failed twice in a row once), `notes.spec.ts:77` (view mode after reload),
+`reminders.spec.ts:121` (clock), `automation.spec.ts:35` (flaky, passed on the built-in retry), `crates/torrent`
+`preview_lists_files_and_selection_downloads_only_those`. Each passed on one re-run; the app code was identical.
+
+## Not measured / risks
+
+- **Dev-Preview staged path** (`stage: build` then `stage: publish` in one run) runs only on a push to `develop`.
+  The `all` path (manual run) and the build jobs were run on the branch; publish gating was reviewed, not run. If the
+  first merge shows trouble, `stage` can be dropped to `all` in `ci.yml` (one line) to get the old behaviour.
+- Runner queue is outside the repository: a loaded pool turned 4.7 min into 20.9 min once. Fewer, fuller jobs help;
+  larger or more runners would be the next lever (proposal below).
+- A PR that touches only `.changes/` or `web/src-tauri/**` skips E2E on purpose.
+
+## Open proposals (not done)
+
+- Larger runners (8 vCPU Linux) for E2E and unit shards: about half the shard time at about twice the price per minute.
+- Merge queue on `develop`: would let the PR run stay smaller; needs a repository setting.
+- `retries: 1` in `playwright.config.ts` hides the flakes above as "flaky"; fixing causes is a separate task.
