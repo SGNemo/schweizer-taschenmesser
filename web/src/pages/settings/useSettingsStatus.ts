@@ -104,7 +104,8 @@ export function useSettingsStatus(): StatusTile[] {
   return [
     {
       id: 'security',
-      to: vaultOn ? '/settings/sicherheit' : settingsPath('sync', 'backup'),
+      // With the vault off the category does not exist: the module list is where it is switched on.
+      to: vaultOn ? '/settings/sicherheit' : '/settings/module',
       icon: 'lock',
       title: v3.tiles.security,
       status: !vaultOn
@@ -132,9 +133,9 @@ export function useSettingsStatus(): StatusTile[] {
       to: settingsPath('sync', 'backup'),
       icon: 'cloud',
       title: v3.tiles.backup,
-      status: last?.ok ? v3.backup.done : v3.backup.none,
-      context: last?.ok ? v3.backup.at(formatTimestamp(last.at)) : v3.backup.noneContext,
-      attention: false,
+      status: !last ? v3.backup.none : last.ok ? v3.backup.done : v3.backup.failed,
+      context: last ? v3.backup.at(formatTimestamp(last.at)) : v3.backup.noneContext,
+      attention: last?.ok === false,
       testId: 'overview-backup',
     },
     {

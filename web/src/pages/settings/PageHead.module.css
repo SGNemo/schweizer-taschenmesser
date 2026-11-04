@@ -2,9 +2,15 @@
    plate. Text on it is always `--text` (AA on every hue, both themes). No edge stripe; all hairlines run all around. */
 .head {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  /* DOM order is eyebrow, title, mark, actions, body (reading order); the grid puts the actions on the eyebrow's row. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'eyebrow actions'
+    'titles mark'
+    'body body';
+  align-items: start;
+  gap: var(--space-2) var(--space-4);
   min-width: 0;
   padding: var(--space-4) var(--space-5);
   border-radius: var(--shape-round);
@@ -32,14 +38,9 @@
 .head > :not(.pattern) {
   position: relative;
 }
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-}
 .eyebrow {
+  grid-area: eyebrow;
+  align-self: center;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -65,19 +66,19 @@
   color: var(--bg);
 }
 .actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-2);
 }
-.titleRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
+.titles {
+  grid-area: titles;
   min-width: 0;
 }
-.titles {
+.body {
+  grid-area: body;
   min-width: 0;
 }
 .title {
@@ -95,6 +96,7 @@
   font-size: var(--text-label);
 }
 .decoration {
+  grid-area: mark;
   flex: none;
   max-width: 40%;
   overflow: hidden;
@@ -102,6 +104,12 @@
 
 @media (max-width: 899px) {
   .head {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'eyebrow'
+      'titles'
+      'actions'
+      'body';
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-lg);
   }
@@ -113,5 +121,8 @@
   }
   .decoration {
     display: none;
+  }
+  .actions {
+    justify-content: flex-start;
   }
 }

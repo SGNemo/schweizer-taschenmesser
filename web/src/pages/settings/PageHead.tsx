@@ -59,29 +59,25 @@ export function PageHead({
       style={style}
     >
       <span className={styles.pattern} aria-hidden="true" />
-      <div className={styles.row}>
-        <p className={styles.eyebrow}>
-          <span className={styles.plate} aria-hidden="true">
-            <Icon name={icon} />
-          </span>
-          <span>{eyebrow}</span>
-        </p>
-        {actions ? <div className={styles.actions}>{actions}</div> : null}
+      <p className={styles.eyebrow}>
+        <span className={styles.plate} aria-hidden="true">
+          <Icon name={icon} />
+        </span>
+        <span>{eyebrow}</span>
+      </p>
+      <div className={styles.titles}>
+        <h1 id={titleId} className={styles.title}>
+          {title}
+        </h1>
+        {description ? <p className={styles.description}>{description}</p> : null}
       </div>
-      <div className={styles.titleRow}>
-        <div className={styles.titles}>
-          <h1 id={titleId} className={styles.title}>
-            {title}
-          </h1>
-          {description ? <p className={styles.description}>{description}</p> : null}
+      {decoration ? (
+        <div className={styles.decoration} aria-hidden="true">
+          {decoration}
         </div>
-        {decoration ? (
-          <div className={styles.decoration} aria-hidden="true">
-            {decoration}
-          </div>
-        ) : null}
-      </div>
-      {children}
+      ) : null}
+      {actions ? <div className={styles.actions}>{actions}</div> : null}
+      {children ? <div className={styles.body}>{children}</div> : null}
     </header>
   );
 }

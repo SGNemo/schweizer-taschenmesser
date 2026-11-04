@@ -36,10 +36,13 @@ export const STATUS_LOOK: CategoryLook = { hue: 'slate', area: 'system' };
  * Display grouping of the category list (small headings in the nav). The groups are contiguous slices of the
  * registry order (the navigation order never changes); `categoryLook.test.ts` pins that.
  */
-export const NAV_GROUPS: readonly { id: string; categories: readonly SettingsCategoryId[] }[] = [
-  { id: 'you', categories: ['allgemein', 'darstellung', 'barrierefreiheit'] },
-  { id: 'work', categories: ['module', 'werkzeuge', 'benachrichtigungen'] },
-  { id: 'data', categories: ['sicherheit', 'sync'] },
-  { id: 'connect', categories: ['ki', 'verbindungen', 'schnellerfassung'] },
-  { id: 'app', categories: ['updates', 'entwickler', 'ueber'] },
-];
+export type NavGroupId = 'you' | 'work' | 'data' | 'connect' | 'app';
+
+export const NAV_GROUPS: readonly { id: NavGroupId; categories: readonly SettingsCategoryId[] }[] =
+  [
+    { id: 'you', categories: ['allgemein', 'darstellung', 'barrierefreiheit'] },
+    { id: 'work', categories: ['module', 'werkzeuge', 'benachrichtigungen'] },
+    { id: 'data', categories: ['sicherheit', 'sync'] },
+    { id: 'connect', categories: ['ki', 'verbindungen', 'schnellerfassung'] },
+    { id: 'app', categories: ['updates', 'entwickler', 'ueber'] },
+  ];

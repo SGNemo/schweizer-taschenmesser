@@ -62,7 +62,12 @@ test.describe('settings in identity v3', () => {
     await expect(page.getByTestId('differs-darstellung')).toHaveCount(0);
     await page.evaluate(() => localStorage.setItem('tm-density', 'compact'));
     await page.reload();
-    await expect(page.getByTestId('differs-darstellung')).toBeAttached();
+    const dot = page.getByTestId('differs-darstellung');
+    await expect(dot).toBeVisible();
+    // the dot has a real colour (an undefined token would paint it transparent)
+    await expect
+      .poll(() => dot.evaluate((el) => getComputedStyle(el).backgroundColor))
+      .not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
     await expect(categoryNav(page).getByText('Weicht vom Standard ab')).toBeAttached();
   });
 

@@ -69,7 +69,7 @@
   height: 0.4375rem;
   margin-inline-start: var(--space-2);
   border-radius: 50%;
-  background: var(--text-2);
+  background: var(--text-muted);
   vertical-align: middle;
 }
 /* Small headings between the groups of the category list (like the sidebar's area blocks). */
@@ -139,10 +139,6 @@
 /* Long addresses (model licences, links) wrap instead of widening the page. */
 .category a {
   overflow-wrap: anywhere;
-}
-.categoryTitle {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-semibold);
 }
 .back {
   display: inline-flex;

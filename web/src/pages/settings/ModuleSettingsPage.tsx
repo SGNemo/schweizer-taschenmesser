@@ -16,8 +16,8 @@ import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
 import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
-import { Ring } from '@/ui/identity';
 import { FieldRow } from './ModuleSection';
+import { STATUS_LOOK } from './categoryLook';
 import { PageHead } from './PageHead';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
@@ -46,20 +46,8 @@ function useChangedCounts(
   }, [ids]);
 }
 
-/** The module's signature in small, decoration only: its ring, else its icon large. Numbers never live here. */
+/** The module's icon large on a tinted plate: decoration only, never a number. */
 function HeadMark({ manifest }: { manifest: ModuleManifest }) {
-  if (manifest.identity.signature === 'ring')
-    return (
-      <Ring
-        size={4.5}
-        label={manifest.name}
-        parts={[
-          { label: '', share: 0.5 },
-          { label: '', share: 0.3 },
-          { label: '', share: 0.2 },
-        ]}
-      />
-    );
   return (
     <span className={styles.mark}>
       <Icon name={manifest.icon} size={48} />
@@ -67,7 +55,7 @@ function HeadMark({ manifest }: { manifest: ModuleManifest }) {
   );
 }
 
-/** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate, signature in small. */
+/** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate and a large icon mark. */
 function ModuleHead({
   manifest,
   changed,
@@ -109,18 +97,34 @@ function ModuleHead({
   );
 }
 
+/** The head of a module route that has no module page (unknown, off, loading): the settings title, nothing more. */
+function PlainHead() {
+  return (
+    <PageHead
+      {...STATUS_LOOK}
+      icon="settings"
+      eyebrow={tSettingsV3.use().modulesEyebrow}
+      title={t.settings.title}
+    />
+  );
+}
+
 /** `/settings/module/<id>`: one module's settings in the same five blocks for every module. */
 export function ModuleSettingsPage() {
   const { moduleId } = useParams();
   const states = useModuleStates();
   const o = tSettings2.use().modulePage;
   const manifest = availableManifests().find((m) => m.id === moduleId);
-  if (!states) return null;
+  // Loading or no page for this module: the layout leaves the head to this page, so it keeps the one h1.
+  if (!states) return <PlainHead />;
   if (!manifest || !states[manifest.id] || !hasPage(manifest)) {
     return (
-      <EmptyState compact title={o.notFound}>
-        <Link to={settingsPath('module')}>{o.all}</Link>
-      </EmptyState>
+      <>
+        <PlainHead />
+        <EmptyState compact title={o.notFound}>
+          <Link to={settingsPath('module')}>{o.all}</Link>
+        </EmptyState>
+      </>
     );
   }
   return <ModuleSettingsBody manifest={manifest} />;

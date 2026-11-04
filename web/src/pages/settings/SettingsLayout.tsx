@@ -143,7 +143,7 @@ function useChangedCategories(): ReadonlySet<SettingsCategoryId> {
   useEffect(() => {
     let live = true;
     const withPlan = sections.filter((x) => x.reset?.defaults);
-    void Promise.all(withPlan.map((x) => isChanged(x.reset!))).then((flags) => {
+    void Promise.all(withPlan.map((x) => isChanged(x.reset!).catch(() => false))).then((flags) => {
       if (!live) return;
       setChanged(new Set(withPlan.filter((_, i) => flags[i]).map((x) => x.category)));
     });
@@ -566,13 +566,15 @@ export function ModuleSettingsRoute() {
 /** Head of the open settings page: "Status" on the landing page, the category's own head on a category; a module page brings its own. */
 function SettingsHead() {
   const { pathname } = useLocation();
-  const open = useOpenCategory();
   const v3 = tSettingsV3.use();
   const sections = useSettingsSections();
   if (/^\/settings\/module\/[^/]+/.test(pathname)) return null;
-  if (!open) return <StatusHead title={t.settings.title} />;
-  // A category without visible sections (vault off, preview hidden) is a "not found" page: no category head for it.
-  if (sections.length > 0 && !visibleCategoryIds(sections).includes(open))
+  const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
+  if (!segment) return <StatusHead title={t.settings.title} />;
+  // Sections still loading: no head yet (CategoryPage shows its skeleton), so no category head flashes up for a hidden one.
+  if (sections.length === 0) return null;
+  // An unknown category, or a known one without visible sections (vault off, preview hidden): a "not found" page, no category head.
+  if (!isCategoryId(segment) || !visibleCategoryIds(sections).includes(segment))
     return (
       <PageHead
         {...STATUS_LOOK}
@@ -582,15 +584,15 @@ function SettingsHead() {
         testId="settings-head-missing"
       />
     );
-  const c = categoryDef(open);
+  const c = categoryDef(segment);
   return (
     <PageHead
-      {...CATEGORY_LOOK[open]}
+      {...CATEGORY_LOOK[segment]}
       icon={c.icon as IconName}
       eyebrow={v3.eyebrow}
       title={c.title}
       description={c.description}
-      testId={`settings-head-${open}`}
+      testId={`settings-head-${segment}`}
     />
   );
 }
@@ -607,8 +609,9 @@ export function SettingsLayout() {
   const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
-      <SettingsHead />
+      {wide ? <SettingsHead /> : null}
       <SettingsSearch />
+      {wide ? null : <SettingsHead />}
       {wide ? <QuickBar /> : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>

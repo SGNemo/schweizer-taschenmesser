@@ -45,7 +45,8 @@
 .title {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   font-size: var(--text-label);
   font-weight: var(--weight-semibold);
   color: var(--text);

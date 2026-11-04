@@ -17,7 +17,7 @@ export function StatusHead({ title }: { title: string }) {
     <PageHead
       {...STATUS_LOOK}
       icon="settings"
-      eyebrow={v3.eyebrow}
+      eyebrow={v3.statusEyebrow}
       title={title}
       size="tall"
       testId="settings-head"

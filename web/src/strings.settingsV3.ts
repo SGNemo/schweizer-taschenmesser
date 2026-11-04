@@ -8,6 +8,7 @@ export const tSettingsV3 = defineBundle(
   {
     eyebrow: 'Einstellungen',
     modulesEyebrow: 'Einstellungen · Module',
+    statusEyebrow: 'Status',
     statusLabel: 'Wichtigste Zustände',
     tiles: {
       security: 'Sicherheit',
@@ -20,25 +21,24 @@ export const tSettingsV3 = defineBundle(
     backup: {
       done: 'Gesichert',
       none: 'Kein Backup',
+      failed: 'Letztes Backup fehlgeschlagen',
       at: (when: string) => `Letztes Backup: ${when}`,
       noneContext: 'Noch kein automatisches Backup',
     },
-    more: 'Mehr Einstellungen',
     navGroups: {
       you: 'Persönlich',
       work: 'Arbeiten',
       data: 'Daten und Schutz',
       connect: 'Verbinden',
       app: 'App',
-    } as Record<string, string>,
+    },
     differs: 'Weicht vom Standard ab',
-    advancedBlock: (n: number) => `Erweitert · ${n}`,
-    previewBlock: 'Vorschau',
   },
   {
     en: {
       eyebrow: 'Settings',
       modulesEyebrow: 'Settings · Modules',
+      statusEyebrow: 'Status',
       statusLabel: 'Most important states',
       tiles: {
         security: 'Security',
@@ -51,10 +51,10 @@ export const tSettingsV3 = defineBundle(
       backup: {
         done: 'Backed up',
         none: 'No backup',
+        failed: 'Last backup failed',
         at: (when: string) => `Last backup: ${when}`,
         noneContext: 'No automatic backup yet',
       },
-      more: 'More settings',
       navGroups: {
         you: 'Personal',
         work: 'Working',
@@ -63,12 +63,11 @@ export const tSettingsV3 = defineBundle(
         app: 'App',
       },
       differs: 'Differs from the default',
-      advancedBlock: (n: number) => `Advanced · ${n}`,
-      previewBlock: 'Preview',
     },
     es: {
       eyebrow: 'Ajustes',
       modulesEyebrow: 'Ajustes · Módulos',
+      statusEyebrow: 'Estado',
       statusLabel: 'Estados más importantes',
       tiles: {
         security: 'Seguridad',
@@ -81,10 +80,10 @@ export const tSettingsV3 = defineBundle(
       backup: {
         done: 'Con copia',
         none: 'Sin copia',
+        failed: 'La última copia falló',
         at: (when: string) => `Última copia: ${when}`,
         noneContext: 'Aún no hay copia automática',
       },
-      more: 'Más ajustes',
       navGroups: {
         you: 'Personal',
         work: 'Trabajo',
@@ -93,12 +92,11 @@ export const tSettingsV3 = defineBundle(
         app: 'Aplicación',
       },
       differs: 'Distinto del valor predeterminado',
-      advancedBlock: (n: number) => `Avanzado · ${n}`,
-      previewBlock: 'Vista previa',
     },
     fr: {
       eyebrow: 'Paramètres',
       modulesEyebrow: 'Paramètres · Modules',
+      statusEyebrow: 'État',
       statusLabel: 'États les plus importants',
       tiles: {
         security: 'Sécurité',
@@ -111,10 +109,10 @@ export const tSettingsV3 = defineBundle(
       backup: {
         done: 'Sauvegardé',
         none: 'Aucune sauvegarde',
+        failed: 'Dernière sauvegarde échouée',
         at: (when: string) => `Dernière sauvegarde : ${when}`,
         noneContext: 'Pas encore de sauvegarde automatique',
       },
-      more: 'Plus de paramètres',
       navGroups: {
         you: 'Personnel',
         work: 'Travail',
@@ -123,12 +121,11 @@ export const tSettingsV3 = defineBundle(
         app: 'Application',
       },
       differs: 'Différent de la valeur par défaut',
-      advancedBlock: (n: number) => `Avancé · ${n}`,
-      previewBlock: 'Aperçu',
     },
     'pt-BR': {
       eyebrow: 'Configurações',
       modulesEyebrow: 'Configurações · Módulos',
+      statusEyebrow: 'Status',
       statusLabel: 'Estados mais importantes',
       tiles: {
         security: 'Segurança',
@@ -141,10 +138,10 @@ export const tSettingsV3 = defineBundle(
       backup: {
         done: 'Com backup',
         none: 'Sem backup',
+        failed: 'Último backup falhou',
         at: (when: string) => `Último backup: ${when}`,
         noneContext: 'Ainda sem backup automático',
       },
-      more: 'Mais configurações',
       navGroups: {
         you: 'Pessoal',
         work: 'Trabalho',
@@ -153,8 +150,6 @@ export const tSettingsV3 = defineBundle(
         app: 'Aplicativo',
       },
       differs: 'Diferente do padrão',
-      advancedBlock: (n: number) => `Avançado · ${n}`,
-      previewBlock: 'Prévia',
     },
   },
 );
