@@ -78,9 +78,11 @@ export default function InvoicesPage() {
             : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}${extra ? ` · ${extra}` : ''}`
         }
         lead={
-          <span className={styles.plate} aria-hidden="true">
-            {i.payee.slice(0, 1).toUpperCase()}
-          </span>
+          <span
+            className={styles.plate}
+            data-initial={i.payee.slice(0, 1).toUpperCase()}
+            aria-hidden="true"
+          />
         }
         onOpen={() => setTarget(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}

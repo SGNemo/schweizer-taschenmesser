@@ -879,10 +879,3 @@ button.itemRow[style*='--cal']:hover {
 .nextLine strong {
   font-variant-numeric: tabular-nums;
 }
-
-/* Phone: the head stays short; the next appointment is the first row of the list. */
-@media (max-width: 700px) {
-  .nextLine {
-    display: none;
-  }
-}

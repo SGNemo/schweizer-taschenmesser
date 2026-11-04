@@ -219,6 +219,11 @@
   font-weight: var(--weight-semibold);
 }
 
+/* The letter is drawn by the style sheet (decoration, not part of the row's text). */
+.plate::before {
+  content: attr(data-initial);
+}
+
 /* Phone: the plate would wrap the payee name; the row keeps its text. */
 @media (max-width: 700px) {
   .plate {
