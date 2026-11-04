@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { MODULE_HUES } from '@/core/modules/types';
+import {
+  TOOL_CATEGORIES as SCRIPT_CATEGORIES,
+  TOOL_SIGNATURES as SCRIPT_SIGNATURES,
+} from '../../../scripts/lib/checkTools';
 import { allTools } from './registry';
 import { toolKeywords } from './keywords';
 import { TOOL_CATEGORIES, TOOL_SIGNATURES } from './types';
@@ -112,6 +116,11 @@ describe('tool id migration', () => {
 });
 
 describe('tool identity v3', () => {
+  it('the check script knows the same lists as the contract', () => {
+    expect(SCRIPT_CATEGORIES).toEqual([...TOOL_CATEGORIES]);
+    expect(SCRIPT_SIGNATURES).toEqual([...TOOL_SIGNATURES]);
+  });
+
   const tokens = readFileSync('src/ui/tokens.css', 'utf8');
 
   it('every tool has a category, a palette hue, a signature and keywords', () => {

@@ -80,7 +80,7 @@
 }
 .number {
   flex: none;
-  color: var(--text-3);
+  color: var(--text-muted);
   font: inherit;
   font-size: var(--text-meta);
 }

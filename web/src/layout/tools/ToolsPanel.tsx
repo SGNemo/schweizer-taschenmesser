@@ -115,9 +115,12 @@ export function ToolsPanel() {
       e.preventDefault();
       e.stopPropagation();
       setQuery('');
-    } else if (e.key === 'Enter' && visible[0]) {
+    } else if (e.key === 'Enter') {
+      // Read the field itself: a fast typist may press Enter before the list has re-rendered.
+      const first = filterTools(ordered, e.currentTarget.value)[0];
+      if (!first) return;
       e.preventDefault();
-      choose(visible[0]);
+      choose(first);
       focusStage();
     }
   };
