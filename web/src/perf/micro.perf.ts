@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { searchEntries } from '@/core/ai/search/fulltext';
+import { resetSearchIndexes } from '@/core/ai/search/index';
 import { ctxFor, TODAY } from '@/core/ai/testing';
 import { balances } from '@/modules/finance/logic';
 import { createRepo, type Repo } from '@/core/db/repo';
@@ -104,8 +105,13 @@ describe('data micro-benchmarks', () => {
     await db.table('todos_task').bulkPut(tasks);
     const ctx = ctxFor(['finance', 'calendar', 'notes', 'todos'], TODAY);
     const out: Record<string, number> = {};
+    resetSearchIndexes();
+    // The first search builds the index (31k documents); the following ones only search it.
+    const t0 = performance.now();
+    await searchEntries('tankstelle', ctx);
+    out['first query (builds the index)'] = round(performance.now() - t0);
     for (const q of ['tankstelle', 'arzt', 'miete 12'])
-      out[q] = await time(() => searchEntries(q, ctx));
+      out[`${q} (warm)`] = await time(() => searchEntries(q, ctx));
     save('searchEntries', out);
   });
 
@@ -149,5 +155,61 @@ describe('data micro-benchmarks', () => {
     }
     setNow();
     save('sync', out);
+  });
+
+  it('backup stages with n records in finance + calendar + notes + tasks', async () => {
+    const stamp = (fields: string[]) =>
+      Object.fromEntries([...fields, 'deletedAt'].map((f) => [f, '1790000000000-0000-perfdev1']));
+    const row = (i: number, extra: Record<string, unknown>) => ({
+      id: `bk-${i}`,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'perfdev1',
+      deletedAt: null,
+      _f: stamp(Object.keys(extra)),
+      ...extra,
+    });
+    await db.table('finance_transaction').clear();
+    const N = 20_000;
+    await db.table('finance_transaction').bulkPut(
+      Array.from({ length: N }, (_, i) =>
+        row(i, {
+          accountId: 'a1',
+          kind: 'expense',
+          amountMinor: 100,
+          date: '2026-09-01',
+          payee: `Laden ${i % 300}`,
+        }),
+      ),
+    );
+    await db.table('notes_note').clear();
+    await db
+      .table('notes_note')
+      .bulkPut(
+        Array.from({ length: 2_000 }, (_, i) =>
+          row(i, { title: `Notiz ${i}`, body: 'Text '.repeat(150), pinned: false }),
+        ),
+      );
+    const out: Record<string, number> = {};
+    const { createBackup, serializeBackup, parseBackup } = await import('@/core/backup/backup');
+    const { applyBackup } = await import('@/core/backup/apply');
+    const { syncedTableNames } = await import('@/core/db/schema');
+    const names = syncedTableNames(allManifests);
+    let backup = await createBackup(db, names);
+    out.createBackupMs = await time(async () => {
+      backup = await createBackup(db, names);
+    }, 1);
+    let text = '';
+    out.serializeMs = await time(() => {
+      text = serializeBackup(backup);
+    }, 1);
+    out.fileMb = round(text.length / 1048576);
+    out.parseMs = await time(() => parseBackup(text), 1);
+    await db.table('finance_transaction').clear();
+    await db.table('notes_note').clear();
+    out.applyMergeIntoEmptyMs = await time(async () => {
+      await applyBackup(backup, 'merge', db, names);
+    }, 1);
+    save('backup', out);
   });
 });

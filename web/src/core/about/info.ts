@@ -34,9 +34,6 @@ export const buildCommit = (): string =>
   BUILD_SHA || fromDefine(() => (typeof __BUILD_SHA__ === 'string' ? __BUILD_SHA__ : ''));
 export const buildDate = (): string =>
   fromDefine(() => (typeof __BUILD_DATE__ === 'string' ? __BUILD_DATE__ : ''));
-/** This version's changelog section (Markdown), '' if the build has none. */
-export const buildChangelog = (): string =>
-  fromDefine(() => (typeof __CHANGELOG__ === 'string' ? __CHANGELOG__ : ''));
 
 async function installKind(kind: PlatformKind): Promise<InstallKind> {
   if (kind === 'android') return 'apk';

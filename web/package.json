@@ -52,7 +52,10 @@
     "measure:micro": "vitest run -c vitest.perf.config.ts",
     "stimulus:baseline": "node scripts/check-stimulus.mjs --baseline",
     "ai:eval": "node scripts/ai-eval.mjs",
-    "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome"
+    "test:update-path": "playwright test e2e/update-path.spec.ts --project=desktop-chrome",
+    "change": "node scripts/change.mjs",
+    "check:changes": "node scripts/check-changes.mjs",
+    "changelog:release": "node scripts/changelog-release.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

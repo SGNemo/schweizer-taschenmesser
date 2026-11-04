@@ -14,6 +14,8 @@ const CURSOR_KEY = 'sync.cursor';
 const EPOCH_KEY = 'sync.epoch';
 /** Records merged per Dexie transaction. */
 const APPLY_CHUNK = 400;
+/** Outbox rows written per transaction by `markAllDirty`. */
+const DIRTY_CHUNK = 5_000;
 
 interface OutboxRow extends OutboxEntry {
   queuedAt: number;
@@ -54,12 +56,25 @@ export class DexieStorageAdapter implements StorageAdapter {
     const ops: FieldOp[] = [];
     const entries: OutboxEntry[] = [];
     const orphans: [string, string][] = [];
+    // One read per collection instead of one per record (the records keep the outbox order below).
+    const wanted = new Map<string, string[]>();
+    for (const row of rows)
+      if (this.tables.has(row.collection)) {
+        const ids = wanted.get(row.collection) ?? [];
+        ids.push(row.id);
+        wanted.set(row.collection, ids);
+      }
+    const records = new Map<string, SyncRow | undefined>();
+    for (const [collection, ids] of wanted) {
+      const found = await this.database.table<SyncRow, string>(collection).bulkGet(ids);
+      ids.forEach((id, i) => records.set(`${collection}\u0000${id}`, found[i]));
+    }
     for (const row of rows) {
       if (!this.tables.has(row.collection)) {
         orphans.push([row.collection, row.id]);
         continue;
       }
-      const record = await this.database.table<SyncRow, string>(row.collection).get(row.id);
+      const record = records.get(`${row.collection}\u0000${row.id}`);
       if (!record) {
         orphans.push([row.collection, row.id]);
         continue;
@@ -118,21 +133,34 @@ export class DexieStorageAdapter implements StorageAdapter {
           ? []
           : await this.outbox().bulkGet(chunk.map((g): [string, string] => [g.collection, g.id]));
         const found: ReturnType<typeof conflictRows> = [];
+        // The records of the chunk are read once per collection and the merged ones written once.
+        const current = new Map<string, SyncRow | undefined>();
+        for (const name of names) {
+          const ofName = chunk.filter((g) => g.collection === name);
+          const rows = await this.database
+            .table<SyncRow, string>(name)
+            .bulkGet(ofName.map((g) => g.id));
+          ofName.forEach((g, k) => current.set(`${name}\u0000${g.id}`, rows[k]));
+        }
+        const merged = new Map<string, SyncRow[]>();
         for (const [i, g] of chunk.entries()) {
-          const table = this.database.table<SyncRow, string>(g.collection);
-          const existing = await table.get(g.id);
+          const existing = current.get(`${g.collection}\u0000${g.id}`);
           if (queued[i] && existing)
             found.push(
               ...conflictRows(g.collection, g.id, findConflicts(existing, g.ops, deviceId), now()),
             );
           const { row, changed } = mergeOps(existing, g.id, g.ops);
           if (!changed) continue;
-          await table.put(row);
+          const list = merged.get(g.collection) ?? [];
+          list.push(row);
+          merged.set(g.collection, list);
           result.records++;
           result.applied += g.ops.length;
           if (opts.markDirty)
             dirty.push({ collection: g.collection, id: g.id, rev: 0, queuedAt: now() });
         }
+        for (const [name, rows] of merged)
+          await this.database.table<SyncRow, string>(name).bulkPut(rows);
         if (found.length) {
           await conflictTable.bulkAdd(found);
           result.conflicts! += found.length;
@@ -159,14 +187,22 @@ export class DexieStorageAdapter implements StorageAdapter {
         );
         if (seeded.size > 0) ids = ids.filter((id) => !seeded.has(`${name}|${id}`));
       }
-      if (ids.length === 0) continue;
-      await rwTransaction(this.database, [this.outbox()], async () => {
-        const prev = await this.outbox().bulkGet(ids.map((id) => [name, id]));
-        const queuedAt = now();
-        await this.outbox().bulkPut(
-          ids.map((id, i) => ({ collection: name, id, queuedAt, rev: (prev[i]?.rev ?? 0) + 1 })),
-        );
-      });
+      // Chunked: one transaction per slice keeps the write sets small for very large tables.
+      for (let from = 0; from < ids.length; from += DIRTY_CHUNK) {
+        const slice = ids.slice(from, from + DIRTY_CHUNK);
+        await rwTransaction(this.database, [this.outbox()], async () => {
+          const prev = await this.outbox().bulkGet(slice.map((id) => [name, id]));
+          const queuedAt = now();
+          await this.outbox().bulkPut(
+            slice.map((id, i) => ({
+              collection: name,
+              id,
+              queuedAt,
+              rev: (prev[i]?.rev ?? 0) + 1,
+            })),
+          );
+        });
+      }
     }
   }
 

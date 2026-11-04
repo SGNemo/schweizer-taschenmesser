@@ -151,6 +151,41 @@ Left over at start: 11 full scans of the bookings (64k rows) from the sources th
 `startDate` index; a range read needs an index on `endDate` and one for recurring events, i.e. a migration), and 9 of
 the tasks (16k rows). Mail `saveThreads` (one transaction per thread) waits for `Repo.transaction` in P2e.
 
+### P2c `perf/search-index` (2026-11-04)
+The full text search keeps one in-memory MiniSearch index (`core/ai/search/index.ts`) instead of reading every
+searchable table and building an index per query. A written table is marked dirty (Dexie `storagemutated`) and re-read
+by the next search, replacing only changed documents; the index drops after 5 idle minutes. Results are read from
+the tables when shown. Median of 3, desktop, 31k searchable documents:
+
+| | before | after P2c |
+|---|---|---|
+| Rows read per query | 31,700 (every searchable table) | **5–91** (only the hits) |
+| `searchEntries`, fake-indexeddb, per query | 760 ms | first query 471 ms (builds the index), then **4–9 ms** |
+| Palette, typed query to settled (includes 60 ms per typed key of the test) | 1.6 / 1.2 / 1.3 s | **0.73 / 0.35 / 0.41 s** |
+| JS heap after searching | 29.5 MB | 32.5 MB (+3 MB for the index) |
+
+The first search of a session still builds the index (about 0.5 s for 31k documents, in slices of 2,000 so the page
+can draw); a Web Worker would move it off the main thread and was left out (the documents would have to be copied
+to the worker first).
+
+### P2d `perf/sync-backup-batch` (2026-11-04)
+`core/storage/dexie.ts`: `readOutbox` reads the records with one `bulkGet` per collection (was one `get` per record),
+`applyRemote` reads the chunk with one `bulkGet` and writes with one `bulkPut` per collection, `markAllDirty` writes the
+outbox in slices of 5,000. The LWW rule (`core/sync/ops.ts`), the sync encryption and the backup format are untouched.
+Micro-benchmark on fake-indexeddb (`npm run measure:micro`), 10,000 records of 3 fields:
+
+| | before | after |
+|---|---|---|
+| First pull on a fresh device (apply) | 885 ms | **~400 ms** (−55 %) |
+| First push (read outbox + upload) | 1,365 ms | **~1,100 ms** (−20 %) |
+
+Backup stages (22,000 records, 11 MB file, fake-indexeddb), for the record: create 221 ms, stringify 61 ms, parse
+240 ms, **merge into an empty database 1.75 s**. The format steps are cheap; the restore time is the per-record
+last-write-wins merge (`recordToOps` + `mergeOps`), which is the rule that sync and backup share and was left alone.
+In the browser the restore went from 10.8 s to about 6 s with P2b (fewer live-query re-runs after the bulk write).
+Parsers in a Web Worker (bank, notes, ICS) were not done: they parse small files in practice (the backup parse is
+240 ms for 11 MB), so the copy to the worker would cost about what it saves.
+
 ## Re-running
 ```bash
 cd web

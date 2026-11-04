@@ -1,0 +1,176 @@
+{
+  "areas": {
+    "accessibility": {
+      "de": "Lesbarkeit",
+      "en": "Readability"
+    },
+    "ai": {
+      "de": "KI",
+      "en": "AI"
+    },
+    "app": {
+      "de": "App",
+      "en": "App"
+    },
+    "calendar": {
+      "de": "Kalender",
+      "en": "Calendar"
+    },
+    "platform": {
+      "de": "Installation",
+      "en": "Installation"
+    },
+    "sync": {
+      "de": "Sync",
+      "en": "Sync"
+    }
+  },
+  "versions": [
+    {
+      "version": "1.0.0",
+      "date": "2026-10-07",
+      "entries": [
+        {
+          "type": "changed",
+          "area": "app",
+          "breaking": true,
+          "highlight": false,
+          "de": "Daten der alten Module Einkauf, Packlisten, Apps & Links, Geburtstage, Geschenke, Verträge, Erinnerungen, Gewohnheiten, Zeiterfassung und News werden von 0.3.x nicht übernommen. Vorher unter Einstellungen → Backup sichern.",
+          "en": "Data of the old modules (shopping, packing lists, apps & links, birthdays, gifts, contracts, reminders, habits, time tracking, news) is not carried over from 0.3.x. Back it up first under Settings → Backup."
+        },
+        {
+          "type": "changed",
+          "area": "app",
+          "breaking": true,
+          "highlight": false,
+          "de": "Die Datenbank wird auf Version 19 umgestellt; danach läuft keine ältere App mehr mit diesen Daten. Alle per Sync verbundenen Geräte auf dieselbe Version bringen.",
+          "en": "The database moves to version 19; no older app can open this data afterwards. Bring all devices connected by sync to the same version."
+        },
+        {
+          "type": "changed",
+          "area": "platform",
+          "breaking": true,
+          "highlight": false,
+          "de": "Installationen bis 0.2.x können sich nicht mehr selbst aktualisieren und müssen neu installiert werden.",
+          "en": "Installations up to 0.2.x can no longer update themselves and must be reinstalled."
+        },
+        {
+          "type": "added",
+          "area": "app",
+          "breaking": false,
+          "highlight": true,
+          "de": "Neue Oberfläche „Klar 2“ mit Übersicht, Bereichen, Seitenleiste, Einstellungen mit Suche und Tastenkürzeln.",
+          "en": "New “Klar 2” interface with a home overview, areas, sidebar, searchable settings and keyboard shortcuts."
+        },
+        {
+          "type": "added",
+          "area": "ai",
+          "breaking": false,
+          "highlight": true,
+          "de": "KI-Einträge in jedem Modul mit Vorschau und Rückgängig, lokales Modell und ein Hauptschalter „KI abschalten“.",
+          "en": "AI entries in every module with preview and undo, a local model and a master switch to turn AI off."
+        },
+        {
+          "type": "added",
+          "area": "app",
+          "breaking": false,
+          "highlight": true,
+          "de": "Fünf Sprachen: Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).",
+          "en": "Five languages: German, English, Spanish, French and Portuguese (Brazil)."
+        },
+        {
+          "type": "changed",
+          "area": "app",
+          "breaking": false,
+          "highlight": false,
+          "de": "Module neu geordnet: Listen, Personen, Unterlagen, Kalender mit Erinnerungen; Werkzeuge von 18 auf 12.",
+          "en": "Modules reorganised: lists, people, documents, calendar with reminders; tools reduced from 18 to 12."
+        },
+        {
+          "type": "added",
+          "area": "accessibility",
+          "breaking": false,
+          "highlight": false,
+          "de": "Fokus- und Lesehilfen: „Als Nächstes“, Tagesplan, Fokusmodus, ruhige Erinnerungen, Lesehilfe, größere Schrift, weniger Bewegung. Alles abschaltbar.",
+          "en": "Focus and reading aids: “Next up”, day plan, focus mode, calm reminders, reading aid, larger text, less motion. All can be switched off."
+        },
+        {
+          "type": "added",
+          "area": "app",
+          "breaking": false,
+          "highlight": false,
+          "de": "Fehler melden mit Vorschau, Wiederherstellungsbildschirm und sicherer Modus.",
+          "en": "Report bugs with a preview, a recovery screen and a safe mode."
+        },
+        {
+          "type": "added",
+          "area": "calendar",
+          "breaking": false,
+          "highlight": false,
+          "de": "Benachrichtigungen vorab und wiederkehrende Todos.",
+          "en": "Advance notifications and recurring todos."
+        },
+        {
+          "type": "security",
+          "area": "app",
+          "breaking": false,
+          "highlight": false,
+          "de": "Sicherheitsprüfung vor dem Start; CodeQL-Befunde bearbeitet.",
+          "en": "Security review before launch; CodeQL findings handled."
+        }
+      ]
+    },
+    {
+      "version": "0.3.1",
+      "date": "2026-10-01",
+      "entries": [
+        {
+          "type": "changed",
+          "area": "app",
+          "breaking": false,
+          "highlight": false,
+          "de": "Neues „Nemo“-Schriftzug im Clownfisch-Stil in Seitenleiste und Kopfzeile.",
+          "en": "New “Nemo” wordmark in clownfish style in the sidebar and header."
+        }
+      ]
+    },
+    {
+      "version": "0.3.0",
+      "date": "2026-10-01",
+      "entries": [
+        {
+          "type": "changed",
+          "area": "app",
+          "breaking": false,
+          "highlight": true,
+          "de": "Erste stabile Version unter dem Namen Nemo mit neuem Symbol und Schriftzug; Daten bleiben beim Update erhalten.",
+          "en": "First stable version under the name Nemo with a new icon and wordmark; data stays intact on update."
+        },
+        {
+          "type": "changed",
+          "area": "platform",
+          "breaking": false,
+          "highlight": false,
+          "de": "Dateien heißen jetzt Nemo-Portable.exe und Nemo.apk; die alten Taschenmesser-Dateien liegen als Kopien bei, damit Updates weiter laufen.",
+          "en": "Files are now called Nemo-Portable.exe and Nemo.apk; the old Taschenmesser files are included as copies so updates keep working."
+        },
+        {
+          "type": "added",
+          "area": "app",
+          "breaking": false,
+          "highlight": false,
+          "de": "Einrichtungsassistent, Schnellerfassung, Modul „Dieser PC“, Vorrat, Zeiterfassung, Geschenkideen, neue Werkzeuge, flaches Design „Klar“.",
+          "en": "Setup assistant, quick capture, “This PC” module, pantry, time tracking, gift ideas, new tools and the flat “Klar” design."
+        },
+        {
+          "type": "security",
+          "area": "sync",
+          "breaking": false,
+          "highlight": false,
+          "de": "Verschlüsselte Backups, Gerätetokens und neuer Sync-Tresor; Sicherungskopien vor Updates sind verschlüsselt.",
+          "en": "Encrypted backups, device tokens and a new sync vault; backup copies before updates are encrypted."
+        }
+      ]
+    }
+  ]
+}

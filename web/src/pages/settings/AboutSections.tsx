@@ -2,7 +2,7 @@ import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
-import { buildChangelog, getAboutInfo, versionLabel, type AboutInfo } from '@/core/about/info';
+import { getAboutInfo, versionLabel, type AboutInfo } from '@/core/about/info';
 import { diagnosticsText, saveDiagnostics } from '@/core/diagnostics/export';
 import { hasReportMail } from '@/core/diagnostics/config';
 import { reportBug, reportByMail } from '@/core/diagnostics/report';
@@ -12,6 +12,7 @@ import { getPlatform } from '@/core/platform';
 import { resetDevice } from '@/core/reset/device';
 import { checkForUpdate, useUpdateStore } from '@/core/update/controller';
 import { notesPreview } from '@/core/update/notes';
+import { ChangelogList } from './ChangelogList';
 import { getLastCheckAt } from '@/core/update/prefs';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -139,7 +140,7 @@ export function AboutUpdatesSection() {
   useEffect(() => {
     void getLastCheckAt().then(setLast);
   }, [state]);
-  const changelog = buildChangelog();
+  const info = useAboutInfo();
   return (
     <SettingsGroup id="about-updates" title={a.updates.title}>
       {platform.updater.supported ? (
@@ -164,10 +165,7 @@ export function AboutUpdatesSection() {
           <Notes markdown={state.info.notes} />
         </details>
       ) : null}
-      <details className={styles.details}>
-        <summary>{a.updates.current}</summary>
-        <Notes markdown={changelog} />
-      </details>
+      {info ? <ChangelogList version={info.version} /> : null}
     </SettingsGroup>
   );
 }
@@ -176,6 +174,7 @@ const REPO = 'https://github.com/SGNemo/schweizer-taschenmesser';
 const LINKS = [
   { key: 'repo', url: REPO },
   { key: 'releases', url: `${REPO}/releases` },
+  { key: 'changelog', url: `${REPO}/blob/main/CHANGELOG.md` },
   { key: 'docs', url: `${REPO}/tree/main/docs/user` },
   { key: 'bugs', url: `${REPO}/issues/new/choose` },
 ] as const;

@@ -1,0 +1,33 @@
+name: Change note
+
+# A PR into develop needs a note in .changes/ or the label "no-changelog" (docs/howto/changelog.md).
+# Own workflow so that (un)labelling does not re-run the heavy CI; it only reads the repository.
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: change-note-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  change-note:
+    name: Change note present
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+      - name: Notes valid, and one present (or label no-changelog)
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: node web/scripts/check-changes.mjs --pr --base "origin/$BASE_REF"
