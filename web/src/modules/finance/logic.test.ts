@@ -191,3 +191,29 @@ describe('currencies', () => {
     expect(filterByCurrency(data, 'EUR').txs).toHaveLength(1);
   });
 });
+
+describe('balances: same result as the straightforward per-account sum', () => {
+  it('matches accountBalance for random bookings, dates after asOf and unknown accounts', () => {
+    let seed = 7;
+    const rnd = () => (seed = (seed * 48271) % 2147483647) / 2147483647;
+    const accounts = ['a', 'b', 'c'].map((id, i) => ({ id, openingBalanceMinor: i * 1000 - 500 }));
+    const txs = Array.from({ length: 500 }, () => ({
+      accountId: ['a', 'b', 'c', 'gone'][Math.floor(rnd() * 4)]!,
+      kind: rnd() < 0.4 ? ('income' as const) : ('expense' as const),
+      amountMinor: Math.floor(rnd() * 5000),
+      date: `2026-${String(1 + Math.floor(rnd() * 12)).padStart(2, '0')}-${String(1 + Math.floor(rnd() * 28)).padStart(2, '0')}`,
+    }));
+    for (const asOf of ['2025-12-31', '2026-06-15', '2026-12-31']) {
+      const result = balances(accounts, txs, asOf);
+      for (const a of accounts)
+        expect(result.get(a.id)).toBe(
+          accountBalance(
+            a,
+            txs.filter((t) => t.accountId === a.id),
+            asOf,
+          ),
+        );
+      expect(result.has('gone')).toBe(false);
+    }
+  });
+});
