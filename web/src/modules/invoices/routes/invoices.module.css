@@ -225,3 +225,10 @@
     display: none;
   }
 }
+
+/* Phone: the receipt keeps the sum and the count; "Nächste: …" is the first row of the list anyway. */
+@media (max-width: 700px) {
+  .receiptLine + .receiptLine {
+    display: none;
+  }
+}
