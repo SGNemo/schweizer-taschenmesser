@@ -1,6 +1,3 @@
-.header {
-  margin-bottom: var(--space-4);
-}
 /* Settings column: 44 rem as before, growing with very wide screens (set on the parts that share it). */
 .split,
 .search,
@@ -23,7 +20,8 @@
   overflow-y: auto;
 }
 .nav ul,
-.list ul {
+.list ul,
+.navGroup ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -46,15 +44,64 @@
   color: var(--text);
 }
 .navLink[aria-current='page'] {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--module-color, var(--accent)) 16%, var(--surface));
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
+/* The status text sits on the tinted capsule: one step darker than --text-3 keeps 4.5:1 in both themes. */
+.navLink[aria-current='page'] .status {
+  color: var(--text-muted);
+}
+/* The category's icon on a small plate in its hue (identity v3); the active entry is a tinted capsule. */
 .icon {
   display: grid;
   place-items: center;
   flex: none;
-  color: inherit;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color, var(--accent)) 14%, var(--surface));
+  color: var(--module-color, var(--accent));
+}
+.dot {
+  display: inline-block;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin-inline-start: var(--space-2);
+  border-radius: 50%;
+  background: var(--text-muted);
+  vertical-align: middle;
+}
+/* Small headings between the groups of the category list (like the sidebar's area blocks). */
+.navGroup + .navGroup,
+.nav ul + .navGroup {
+  margin-top: var(--space-3);
+}
+.groupHead {
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.legend .dot {
+  margin: 0;
+}
+.listGroups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 .linkText {
   display: flex;
@@ -84,10 +131,9 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: var(--radius-md);
-  background: var(--accent-soft);
-  color: var(--accent);
 }
-.list {
+.list,
+.navGroup ul.list {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -105,10 +151,6 @@
 /* Long addresses (model licences, links) wrap instead of widening the page. */
 .category a {
   overflow-wrap: anywhere;
-}
-.categoryTitle {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-semibold);
 }
 .back {
   display: inline-flex;
@@ -239,7 +281,7 @@
   align-items: center;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border-left: 2px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--text-meta);
   text-decoration: none;
@@ -301,7 +343,7 @@
     align-items: center;
     min-height: var(--touch);
     padding: 0 var(--space-3);
-    border-left: 2px solid var(--border);
+    border-radius: var(--radius-md);
     color: var(--text-muted);
     font-size: var(--text-meta);
     text-decoration: none;

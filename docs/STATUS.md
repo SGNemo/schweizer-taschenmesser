@@ -8,6 +8,8 @@ Identität v3, Paket 1 (`feat/identity-v3-haushalt-wissen`): Vorräte (Regal-Kac
 
 Fundament v3 (`feat/identity-v3-foundation`, PR #414, fertig zum Review): Rahmen zentriert mit Gutter und ohne seitlichen Überlauf, keine Farbstreifen mehr, neun Kopf-Varianten mit Unternavigation, Palette v3, Widget-Varianten, neue Sidebar (Favoritenleiste, Kapsel, Rail), dünne Overlay-Scrollbars, neuer Übersichtskopf (Begrüßung, Wetterzeile, Karten, Tageskarten); Regeln und Zuordnung aller Module in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), Entscheidungen in [decisions/ui-shell.md](decisions/ui-shell.md). Handtest: Übersicht und je ein Modul pro Bereich hell/dunkel, Ruhig, Rail, Handy.
 
+Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von 2): Status-Kopf mit sechs Kennzahl-Kacheln (Sicherheit, Sync, Backup, Updates, KI, Speicher), gruppierte Kategorienliste im Sidebar-Stil mit Farb-Plättchen und Punkt „vom Standard abweichend“, Kategorie- und Modul-Köpfe; Funktion, Schlüssel und Standardwerte unverändert. Paket 2: Modul- und Werkzeug-Bibliothek.
+
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
 Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).
