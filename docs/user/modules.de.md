@@ -6,14 +6,54 @@
 
 In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: Daten behalten oder löschen).
 
-| Standardmäßig an | Optional (aus, in der Bibliothek aktivieren) |
-|---|---|
-| Kalender (mit Erinnerungen und Benachrichtigung vor Terminen), ToDos (auch wiederkehrend, mit „Irgendwann“), Finanzen, Rechnungen, Abos | **Merkliste** (Links, Lesen, Ansehen, Orte, Ideen mit Tags; auf dem Handy per „Teilen“), **Notizen** (mit festem **Zettel** oben für Zwischendurch), **Listen** (Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten), **Personen** (Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand), **Budgets & Sparziele** (Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen), **Unterlagen** (Ausweise, Verträge, Versicherungen, Garantien mit Ende, Kündigungsfrist im Kalender + Erinnerung und Datei), **Lesezeichen** (Ansicht der Merkliste: Kacheln nach erstem Tag gruppiert, z. B. Paketverfolgung, Bahn, Karten …), **Karten & Orte** (gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest), **Accounts** (Passwort-Tresor) |
+<!-- modules:start -->
 
+| Bereich | Modul | Was es tut | Status |
+|---|---|---|---|
+| **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
+|  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
+|  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
+|  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
+|  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
+|  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
+|  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
+| **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
+|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
+|  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
+|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional |
+| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | optional |
+|  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
+| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
+|  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
+|  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
+|  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
+|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert | optional |
+|  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
+|  | Musik | Spotify auf einer Seite | Vorschau |
+| **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
+|  | Passwörter | Passwort-Tresor | optional |
+| **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
+|  | Downloads | Lädt Dateien herunter | Vorschau, nur Windows-App |
+
+**Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
+
+Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen“ einschaltest (Einstellungen → Darstellung).
+
+<!-- modules:end -->
+
+Besonderheiten der Module, die oben nur eine kurze Zeile haben:
+
+- **Kalender** (standardmäßig an): Erinnerungen und Benachrichtigung vor Terminen. **ToDos:** auch wiederkehrend, mit „Irgendwann“.
+- **Merkliste:** Links, Lesen, Ansehen, Orte und Ideen mit Tags; auf dem Handy per „Teilen“. Ihre Lesezeichen-Ansicht zeigt Kacheln nach erstem Tag gruppiert, z. B. Paketverfolgung, Bahn, Karten …
+- **Notizen:** mit festem **Zettel** oben für Zwischendurch.
+- **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
+- **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
+- **Budgets & Sparziele:** Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen.
+- **Karten & Orte** (Vorschau): gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest.
 - **Unterlagen:** Titel, Kategorie, Anbieter, Beginn, Ende, Kündigungsfrist und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
 - **Teilen (Android, als PWA installiert):** „Nemo“ erscheint im Teilen-Menü; die Seite „Teilen“ fragt, wohin der Inhalt soll
-  (Merkliste, Notiz oder ToDo – nur eingeschaltete Module werden angeboten). In der nativen Android-App (APK) gibt es das Teilen-Ziel noch nicht.
+  (Merkliste, Notiz oder ToDo – nur eingeschaltete Module werden angeboten). Die native Android-App (APK) hat das Teilen-Ziel auch.
 - **Schnell erfassen:** Eine Zeile = ein Eintrag, so landen mehrere Dinge auf einmal (je mit einer Vorschau-Zeile). In der Android-App lange auf das App-Symbol drücken für „Erfassen“, „Suchen“ und „Heute“, oder die Schnelleinstellungs-Kachel „Nemo: Erfassen“ hinzufügen.
 - **Werkzeuge:** Der Knopf „Werkzeuge“ oben (oder **Strg+.**) öffnet Rechner (mit den Modi Prozent/MwSt und Teilen), Währung, Timer und QR-Code;
   weitere (Einheiten, Datumsrechner, Zeitzonen, Würfel, Anonyme Persona, Text, Bilder, PDF und **Entwickler** mit Base64/URL, JSON, UUID, Hash) schaltest du
@@ -21,9 +61,9 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
   Werkzeug. Den früheren Notizzettel findest du jetzt als **Zettel** oben in den Notizen (dein alter Text wird einmal übernommen).
 - **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. ZIP-Dateien bitte vorher entpacken.
 - **Dieser PC** (nur Windows-App): Laufwerke analysieren und aufräumen, im Tab „System“ Prozessor, Speicher, Akku, Grafik und Netzwerk.
-- **Gewohnheiten** (Planen, standardmäßig aus): Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“ –, Pausentage, die nie gegen dich zählen, ein Jahresraster und Erinnerungen im Zeitfenster, die aufhören, sobald das Tagesziel erreicht ist (Vorlage „Wasser trinken“). Das ist ein neues Modul; der alte Habit-Tracker von 0.4.0 bleibt stillgelegt, seine alten Daten stecken weiter in jedem Backup.
-- **Zeiterfassung** (Planen, standardmäßig aus): ein Klick auf ein Projekt startet die Uhr, Pause und Stopp, manuelle Einträge, Projekte mit Farbe, Kunde und Stundensatz, Wochen- und Monatsauswertung mit Betrag (je Eintrag auf ganze Cent gerundet) und CSV-Export. Warst du bei laufender Uhr weg, fragt die App nach – Zeit behalten, als Pause abziehen oder dort stoppen, wo du weg warst – und ändert nie etwas von selbst. Im Termin startet „Zeit erfassen“ die Uhr. Das ist ein neues Modul; die alte Zeiterfassung von 0.4.0 bleibt stillgelegt, ihre alten Daten stecken weiter in jedem Backup.
-- **Stillgelegt (0.4.0):** Nachrichten sind nicht mehr sichtbar. Ihre Daten bleiben gespeichert und stecken weiter in jedem Backup.
+- **Gewohnheiten** (Planen, standardmäßig aus): Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“ –, Pausentage, die nie gegen dich zählen, ein Jahresraster und Erinnerungen im Zeitfenster, die aufhören, sobald das Tagesziel erreicht ist (Vorlage „Wasser trinken“). Das ist ein neues Modul; der alte Habit-Tracker von 0.3.x bleibt stillgelegt, seine alten Daten stecken weiter in jedem Backup.
+- **Zeiterfassung** (Planen, standardmäßig aus): ein Klick auf ein Projekt startet die Uhr, Pause und Stopp, manuelle Einträge, Projekte mit Farbe, Kunde und Stundensatz, Wochen- und Monatsauswertung mit Betrag (je Eintrag auf ganze Cent gerundet) und CSV-Export. Warst du bei laufender Uhr weg, fragt die App nach – Zeit behalten, als Pause abziehen oder dort stoppen, wo du weg warst – und ändert nie etwas von selbst. Im Termin startet „Zeit erfassen“ die Uhr. Das ist ein neues Modul; die alte Zeiterfassung von 0.3.x bleibt stillgelegt, ihre alten Daten stecken weiter in jedem Backup.
+- **Stillgelegt (1.0.0):** Nachrichten sind nicht mehr sichtbar. Ihre Daten bleiben gespeichert und stecken weiter in jedem Backup.
 - **Karte & WhatsApp:** Termine mit Ort haben „Auf der Karte zeigen“; bei Personen mit Geburtstag öffnet der Knopf WhatsApp mit einem Glückwunsch
   (den Kontakt wählst du in WhatsApp).
 

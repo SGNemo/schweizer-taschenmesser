@@ -18,7 +18,7 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
 3. **Voraussetzung: Microsoft WebView2.** Unter Windows 10/11 ist die Komponente in der Regel schon da (sie gehört zu
    Edge). Fehlt sie, erklärt die App das in einem Fenster und öffnet auf Wunsch die
    [Download-Seite](https://developer.microsoft.com/microsoft-edge/webview2/) („Evergreen Bootstrapper“).
-4. **Updates:** Einstellungen → App-Updates. Die App legt zuerst eine Sicherungskopie an, lädt die neue `.exe`,
+4. **Updates:** Einstellungen → Updates. Die App legt zuerst eine Sicherungskopie an, lädt die neue `.exe`,
    prüft die Signatur, ersetzt sich selbst und startet neu (bei einem Fehler bleibt die alte Version erhalten).
    Dafür braucht der Ordner der `.exe` Schreibrechte.
    Hinweis: Version 0.2.x (Name „Taschenmesser“) kann sich nicht mehr selbst aktualisieren, weil neue Releases keine `Taschenmesser-…`-Dateien mehr enthalten. Einmal die aktuelle `Nemo-Portable.exe` bzw. `Nemo.apk` laden und installieren (Daten über Backup oder Sync mitnehmen).
@@ -42,7 +42,8 @@ Die alte installierte Version kann sich nicht selbst auf die portable Datei aktu
 2. Android fragt beim ersten Mal, ob die **Installation aus unbekannten Quellen** erlaubt ist: **„Einstellungen“ →
    „Aus dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
    kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“).
-3. Für spätere Updates fragt die App selbst nach der Erlaubnis („Update installieren“); die neue APK muss mit demselben
+3. Für spätere Updates öffnest du Einstellungen → Updates und tippst auf „Jetzt aktualisieren“: Die App lädt das Update, prüft die
+   Prüfsumme und übergibt an den Android-Installer (wenn gefragt, die Installation aus dieser Quelle erlauben). Die neue APK muss mit demselben
    Schlüssel signiert sein, sonst lehnt Android sie ab.
 
 > **Daten aus der PWA übernehmen:** Die installierte App hat einen eigenen Speicher. Umzug über *Einstellungen → Backup*
@@ -58,9 +59,9 @@ Du kommst von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden? Öffne d
 
 ## Dev-Preview (ungetestete Zwischenstände)
 
-Nach jedem Stand von `develop` baut GitHub automatisch eine Vorschau (Windows-Portable und Android-APK). Sie ist für Tester gedacht und kann Fehler enthalten.
+Nach einem grünen Push auf `develop`, der Code ändert, baut GitHub automatisch eine Vorschau (Windows-Portable und Android-APK). Sie ist für Tester gedacht und kann Fehler enthalten.
 
 - **Eigene App, eigene Daten.** Die Dev-Preview heißt „Nemo Dev“ und läuft neben der stabilen App. Daten der stabilen App sind dort nicht vorhanden; hole sie per Sync oder Backup herüber. Unter Windows hat sie einen eigenen Datenordner (portabel: Ordner `data-dev` statt `data` neben der exe).
 - **Download:** [Windows](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe) · [Android](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk). In der App zeigt ein „Dev“-Abzeichen, dass es die Vorschau ist.
-- **Updates:** Die Dev-Preview folgt immer dem Dev-Kanal (Einstellungen → App-Updates) und legt vor jedem Update eine Sicherungskopie an. Die stabile App bietet nie eine Dev-Preview an.
+- **Updates:** Die Dev-Preview folgt immer dem Dev-Kanal (Einstellungen → Updates) und legt vor jedem Update eine Sicherungskopie an. Die stabile App bietet nie eine Dev-Preview an.
 - **Zurück zur stabilen Version:** Die stabile App ist ein separates Programm. Nutze sie weiter oder installiere sie neu; die Dev-Preview kannst du einfach löschen.

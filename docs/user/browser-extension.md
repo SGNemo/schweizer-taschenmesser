@@ -4,10 +4,12 @@
 
 The extension helps you sign up and log in on websites. It has **no vault of its own**: everything comes live from the vault of the Nemo desktop app and is saved there (and from there synced to your phone). If Nemo is not running or the vault is locked, the extension says so and does nothing.
 
+It is built for Brave. The Windows app registers its connection for Brave, Chrome, Edge and Chromium (Manifest V3, Chrome 116 or newer). There is no store version and no download in the releases yet: you load it unpacked from the build artifact.
+
 ## Setting up
 1. Unzip `nemo-extension-….zip` (from the build artifacts or from the developer).
 2. In Brave open `brave://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the folder.
-3. In Nemo: **Vault → Browser extension** → enable the connection. (Only for your Windows account, no administrator rights needed.)
+3. In Nemo: open **Passwords** → **Browser extension** → enable the connection. (Only for your Windows account, no administrator rights needed.)
 4. Click the extension icon. The 6-digit code shown must match the dialog in Nemo, then click **Connect**. You only do this once.
 
 ## Using it
@@ -16,6 +18,6 @@ The extension helps you sign up and log in on websites. It has **no vault of its
 - Nothing is filled in or saved automatically, always only after your click. Entries are only offered for the matching website (adjustable: same domain or exactly the same host).
 
 ## Troubleshooting
-- "Nemo was not found": start the app and check in **Vault → Browser extension** that the connection is on.
+- "Nemo was not found": start the app and check in **Passwords → Browser extension** that the connection is on.
 - Portable folder moved: Nemo registers the new path itself on start; otherwise use **Register again** in the same dialog.
 - Brave Shields: they do not block the extension. If a page shows nothing, briefly turn Shields off and check.

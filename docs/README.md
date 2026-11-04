@@ -21,7 +21,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [security/](security/), [perf/](perf/), [features/](features/) | reports and feature notes (each has an index) | that topic |
 | [archive/](archive/) | historical reports (hidden from scans) | history only |
 | [product/](product/), [design/](design/) | module plan (German), design spec, mockups, prompts; [FOCUS-GUIDELINES](design/FOCUS-GUIDELINES.md) = checklist for every new feature | module/design work, new features |
-| design-proposals/, brand/, screenshots/ | images and token experiments | design work |
+| design-proposals/, brand/, screenshots/, assets/ | images and token experiments; `brand/` = README header and social preview, `assets/screenshots/` = the README pictures (`npm run app:screenshots -- --readme` in `site/`) | design work, README |
 
 ## For users (English; German copies `*.de.md` next to each file)
-[user/installation.md](user/installation.md) · [user/modules.md](user/modules.md) · [user/ai-assistant.md](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync.md](user/sync.md) · [user/backup.md](user/backup.md) · [user/security.md](user/security.md) · [user/faq.md](user/faq.md) · [user/browser-extension.md](user/browser-extension.md) · [user/development.md](user/development.md)
+[user/installation.md](user/installation.md) · [user/modules.md](user/modules.md) · [user/ai-assistant.md](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [user/sync.md](user/sync.md) · [user/backup.md](user/backup.md) · [user/security.md](user/security.md) · [user/faq.md](user/faq.md) · [user/spotify.md](user/spotify.md) · [user/browser-extension.md](user/browser-extension.md) · [user/development.md](user/development.md)
