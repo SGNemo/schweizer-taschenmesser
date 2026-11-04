@@ -4,6 +4,11 @@ Moved unchanged from `docs/STATUS.md` (2026-10-01). Hardware-only checks; the in
 
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
+### Identität v3: Planen + Geld (`feat/identity-v3-planen-geld`) – am Gerät und in „Ruhig“ prüfbar
+- [ ] IP1 Kalender, ToDos, Gewohnheiten, Zeiterfassung, Karten & Orte, Abos, Budgets am Handy (412 px) und im Hochformat: nichts läuft seitlich über, Kopf lesbar, Schalter ≥ 44 px.
+- [ ] IP2 „Ruhig“ und „Modulfarben: Aus“: Module bleiben ohne Farbe an Form und Signatur erkennbar (Kapsel-Icons, Umschlag, Ring, runde Häkchen).
+- [ ] IP3 Lesehilfe an (Abdeckung 75 und 100 %): Köpfe, Kapseln und Karten sauber, Zahlen und Eingaben unberührt.
+
 ### Cockpit-Modus (`feat/cockpit-mode`) – Gerät nötig
 
 C1. _Android immersiv:_ Übersicht → „Cockpit“: Status- und Navigationsleiste verschwinden, Wischen vom Rand zeigt sie kurz; „Cockpit beenden“ (Griff oben antippen) bringt sie zurück. ☐
