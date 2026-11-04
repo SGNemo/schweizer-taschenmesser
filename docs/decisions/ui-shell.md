@@ -126,6 +126,6 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 
 ## Tools identity v3, package 3 (2026-11-04, `feat/identity-v3-tools-make-check`)
 
-- **Same blocks, more of them:** the remaining ten tools use `tools/kit.*` (framed preview for QR and screenshots, section cards for dice and text, stat chips, file cards for PDF, a quiet mono panel for the developer tools). Logic, labels, test ids and the persona field list are unchanged.
+- **Same blocks, more of them:** nine more tools use `tools/kit.*` (framed preview for QR and screenshots, persona card, section cards for dice and text, stat chips, file cards for PDF, a quiet mono panel for the developer tools). Logic, labels, test ids and the persona field list are unchanged.
 - **The persona card is a card, not an ID:** initials in a circle, the name large, the word "Erfunden" in a frame (text, never only colour), the fields below. No new field, the intro and the "not for contracts, banks, authorities" notice stay (negative-list tests untouched).
 - **Stacked PR:** package 3 builds on `kit.tsx` from package 2 (#446), so its PR is based on that branch until #446 is merged.
