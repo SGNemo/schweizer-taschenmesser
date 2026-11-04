@@ -125,6 +125,12 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 
 - **`EmptyState` takes an optional `motif`** (a 96 × 64 outline drawing, `aria-hidden`, decoration only) and `testId`; without a motif it draws the fish as before, the compact variant (dashboard widgets) always keeps the fish. The twelve module-local copies of identity v3 packages 1–3 are now thin wrappers (`XEmpty` = `EmptyState` + the module's drawing) and their twelve identical CSS files are gone. Habits keeps its own empty state (planning chat's code).
 
+## Shared folder tabs, columns and the masthead id (2026-11-04, `feat/ui-folder-tabs`, package B of the shared identity blocks)
+
+- **`ui/FolderTabs`** is the one tab-shaped filter (a named group of `aria-pressed` buttons; fill, shape and weight carry the state, a tab may bring its own colour as `--tab`, `folder` adds the folder body, `children` are extra controls at the end of the row). Documents, passwords and the notebooks of the notes use it; the three module-local copies are gone. Passwords tabs now take the module tint instead of a neutral grey.
+- **`GroupedList columns`** lets the groups flow into newspaper columns (20 rem, hairline between the columns, none above a group); feeds uses it instead of its own CSS.
+- **`masthead`** is now a signature id (both lists: `core/modules/types.ts` and `scripts/lib/checkModules.ts`, pinned equal by `registry.test.ts`); feeds uses it. It has no block of its own (the head is `HeroFigure type="serif"` + `identity.type`).
+
 ## Settings in identity v3 (2026-11-04, `feat/identity-v3-settings-library`, package 1)
 
 - **A local `PageHead` instead of the shell band.** The head band is private to `layout/AreaFrame` and only renders on area paths, so settings (and later the libraries) build the same ingredients from the same tokens (`data-hue`, `data-area`, `--head-gradient`, `--area-pattern`, plate, text always `--text`) as a rounded card inside the page container. Proposal for later: lift it into a shared `ui/PageBand` once the shell owner agrees (no overflow, no bleed needed there).
