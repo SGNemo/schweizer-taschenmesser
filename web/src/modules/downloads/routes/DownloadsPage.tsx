@@ -7,7 +7,6 @@ import { t } from '@/strings';
 import {
   Button,
   Dialog,
-  EmptyState,
   Form,
   FormActions,
   Icon,
@@ -22,6 +21,7 @@ import {
 import { HeroSlot } from '@/ui/identity';
 import { MEANINGS } from '@/ui/semantics';
 import type { IconName } from '@/ui/icons';
+import { DownloadsEmpty } from '../components/DownloadsEmpty';
 import { ArrowBand } from '../components/ArrowBand';
 import {
   bandSummary,
@@ -75,9 +75,9 @@ export default function DownloadsPage() {
     return (
       <>
         <PageHeader title={t.downloads.meta.name} />
-        <EmptyState title={t.downloads.unsupported.title}>
+        <DownloadsEmpty title={t.downloads.unsupported.title}>
           {t.downloads.unsupported.body}
-        </EmptyState>
+        </DownloadsEmpty>
       </>
     );
   }
@@ -142,7 +142,7 @@ export default function DownloadsPage() {
       </div>
 
       {jobs && jobs.length === 0 ? (
-        <EmptyState title={t.downloads.empty.title}>{t.downloads.empty.body}</EmptyState>
+        <DownloadsEmpty title={t.downloads.empty.title}>{t.downloads.empty.body}</DownloadsEmpty>
       ) : null}
 
       {jobs && jobs.length > 0 && shown.length === 0 ? (
