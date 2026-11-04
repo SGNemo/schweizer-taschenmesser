@@ -23,9 +23,10 @@ export function extractLinks(text: string): Link[] {
     out.push({ target: m[1], kind: 'link' });
   for (const m of body.matchAll(/<a\s[^>]*href="([^"]+)"/g))
     out.push({ target: m[1], kind: 'link' });
-  for (const m of body.matchAll(/<(?:img|source)\s[^>]*?(?:src|srcset)="([^"]+)"/g)) {
-    // A srcset lists candidates ("a.webp 1x, b.webp 2x"): each one is a picture.
-    for (const candidate of m[1].split(',')) {
+  for (const m of body.matchAll(/<(?:img|source)\s[^>]*?(src|srcset)="([^"]+)"/g)) {
+    // Only a srcset lists candidates ("a.webp 1x, b.webp 2x"); a src is one address as written.
+    const candidates = m[1] === 'srcset' ? m[2].split(',') : [m[2]];
+    for (const candidate of candidates) {
       const url = candidate.trim().split(/\s+/)[0];
       if (url) out.push({ target: url, kind: 'image' });
     }
