@@ -6,6 +6,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).
 Feeds (Modul, `feat/feeds-module`, Paket 2b): Abo-Liste für RSS/Atom/Podcasts mit Gruppen, Widget, Startdaten, Einstellung „Nach Gruppen ordnen“; ruft nichts ab (kein Reader); OPML-Import/-Export folgt in 2c.
 Importer für andere Apps (`feat/importers`, Paket 1): „Aus anderer App importieren“ (Palette, Einstellungen, Umzug-Assistent) erkennt Evernote, Obsidian/ZIP, Outlook-Aufgaben (Microsoft To Do), KeePass/1Password-CSV u. a., liest im Worker mit Abbruch und zeigt einen Bericht; Notion und Feed-Modul mit OPML folgen; [features/import-apps.md](features/import-apps.md), Handtests IA1–IA5 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 Backlog-Ernte (`chore/backlog-harvest-2026-11`, [meta/BACKLOG-HARVEST-2026-11-03.md](meta/BACKLOG-HARVEST-2026-11-03.md)): CSV-Formelschutz, Backup-Import mit Größenlimit und Zeilenprüfung, Server-Fehlerhandler, Kündigungsfrist in Kalendermonaten (Migration), `logError`, Android-Auto-Backup aus, `check:case`; Handtests BK1–BK3 in [MANUAL-TESTS.md](MANUAL-TESTS.md).

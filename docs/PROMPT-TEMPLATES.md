@@ -28,6 +28,7 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 - **Fragen an Sven:** always bundled in one `AskUserQuestion` per stop, at most 3–4 questions, each with a recommended option first ("(Recommended)"), short German labels, no open essay questions. Everything that does not change the next step is decided by the chat and named in the report.
 
 ## closing
+- Before the PR: change note in `.changes/` (`npm run change`, [howto/changelog.md](howto/changelog.md)): short, user view, German and English; no note, no merge (docs/tests/CI only: label `no-changelog`).
 - Final message: **3 points + PR link**, nothing more. Point 1 what changed, point 2 how it was verified, point 3 what waits on the maintainer (also add it to "Wartet auf Sven" in [CHATS.md](CHATS.md)).
 
 ## pr-text
