@@ -117,3 +117,9 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Status head = six states.** Security, sync, backup, updates, AI, storage (same hooks and texts as the overview cards before; backup is new as its own tile). Each tile has one state line and one context line, a jump into its category, `attention` as an accent hairline plus words, never red. The overview keeps look, notifications and modules as cards; e2e count: 6 tiles + 3 cards.
 - **"Differs from the default" is a quiet dot** next to the category in the list (reuses `isChanged` of the sections' reset plans) with a `sr-only` text; nothing new is stored. No left rails remain in settings (sub-groups, table of contents, security note).
 - **Unchanged on purpose:** registry, keys, defaults (`inventory.test.ts` untouched), security sections and their confirmations, module files.
+
+## Tools identity v3, package 2 (2026-11-04, `feat/identity-v3-tools-calc-time`)
+
+- **Shared blocks in `tools/kit.tsx`:** tools may not import each other, so the look of the contents (display, keys with depth, conversion flow, timer ring, cards) lives in one allowed neighbour of `shared.ts` (`isolation.test.ts` knows it). Logic, labels and test ids of the tools are unchanged.
+- **The calculator gets a number pad** (digits, the decimal sign of the language, four operations, `ans`) next to the display: until now it could only be typed on. The field keeps its label for screen readers ("Rechnung"); the result is the large line of the display.
+- **Ring and leaves are decoration:** the timer ring is `aria-hidden`, the time stays text in `role="timer"`; the date leaves show the dates the result line names (the day count, or the end date) and are hidden from screen readers.
