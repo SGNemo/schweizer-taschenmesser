@@ -5,8 +5,11 @@
 }
 .head {
   display: flex;
+  /* A long badge (longer languages) wraps under the name instead of pushing the card wider than the screen. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
 }
 .icon {
   display: grid;
@@ -20,6 +23,8 @@
 }
 .name {
   font-weight: var(--weight-semibold);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .desc {
   color: var(--text-muted);
