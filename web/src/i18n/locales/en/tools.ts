@@ -434,6 +434,7 @@ export const tools: Strings['tools'] = {
     invalid: 'Please choose valid dates.',
   },
   persona: {
+    stamp: 'Made up',
     name: 'Anonymous persona',
     keywords: 'fake, alias, throwaway, sign-up, made-up person',
     description:

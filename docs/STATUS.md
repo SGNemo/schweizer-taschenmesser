@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Werkzeuge mit Identität v3, Paket 3 von 3 (`feat/identity-v3-tools-make-check`, gestapelt auf #446): QR und Bildschirmfoto in gerahmter Vorschau, Persona als Karte mit „Erfunden“-Stempel, Würfel mit Würfelflächen, Text mit Kennzahl-Kacheln und Haftnotiz-Feld, PDF-Dateikarten, Dev/Diff/Regex im Code-Look; Handtest TP7 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 Identität v3, Paket 2 (`feat/identity-v3-wissen`): Notizen (Reiter), Merkliste (Pinnwand, Kopfzahl), Feeds (Zeitungskopf, Aufmacher, Spalten), Chat (Sprechblasen) und Browser (Adressleiste) auf die v3-Kopf- und Widget-Varianten umgebaut; Paket 3 (Mail, Musik, Downloads) folgt.
 
 Werkzeuge mit Identität v3, Paket 2 von 3 (`feat/identity-v3-tools-calc-time`): Rechner mit Display, Zahlenblock und Tasten mit Tiefe, Einheiten und Währung als Umrechnungsfluss mit großen Zahlen, Timer mit großem Ring, Datumsrechner mit Kalenderblättern, Zeitzonen als Karten; Bausteine in `tools/kit.tsx`; Handtests TP5–TP6 in [MANUAL-TESTS.md](MANUAL-TESTS.md); Paket 3 (Erzeugen & Prüfen) folgt.

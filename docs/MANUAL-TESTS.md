@@ -5,6 +5,7 @@ Moved unchanged from `docs/STATUS.md` (2026-10-01). Hardware-only checks; the in
 Nur auf echter Hardware prüfbar (das macht Sven am Ende). Alles andere ist per Unit-/E2E-Tests und CI-Läufen abgedeckt.
 
 ### Identität v3: Planen + Geld (`feat/identity-v3-planen-geld`) – am Gerät und in „Ruhig“ prüfbar
+
 - [ ] IP1 Kalender, ToDos, Gewohnheiten, Zeiterfassung, Karten & Orte, Abos, Budgets am Handy (412 px) und im Hochformat: nichts läuft seitlich über, Kopf lesbar, Schalter ≥ 44 px.
 - [ ] IP2 „Ruhig“ und „Modulfarben: Aus“: Module bleiben ohne Farbe an Form und Signatur erkennbar (Kapsel-Icons, Umschlag, Ring, runde Häkchen).
 - [ ] IP3 Lesehilfe an (Abdeckung 75 und 100 %): Köpfe, Kapseln und Karten sauber, Zahlen und Eingaben unberührt.
@@ -334,6 +335,7 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SO12 Barrierefreiheit:** Einstellungen → Barrierefreiheit am Handy: Textgröße „Sehr groß“ und Bewegung „Weniger“ wirken sofort, Lesehilfe und Fokus sind hier zu finden; ein alter Link (Darstellung → Fokus) führt hierher. ☐
 
 ## Einstellungen in Identität v3 (Paket 1) – nur von Hand prüfbar
+
 - **SV1 Handy, zwei Ebenen:** Einstellungen: Status-Kopf mit sechs Kacheln, darunter Karten und die gruppierte Liste; eine Kategorie antippen zeigt ihren Kopf mit „Einstellungen“ als Rücksprung, Android-Zurück führt zur Liste. ☐
 - **SV2 „Ruhig“ und „Modulfarben: Aus“:** Köpfe, Plättchen und die Kapsel werden grau, Muster verschwinden, alles bleibt lesbar (Text, Icons). ☐
 - **SV3 Breite Fenster (2560 px) und 1280 × 720:** Kopf und Liste zentriert, nichts läuft über; hell und dunkel. ☐
@@ -629,6 +631,7 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - TP6 · Timer: der Ring läuft mit (Timer und Pomodoro leeren sich, die Stoppuhr füllt pro Minute), die Zeit in der Mitte ist gut lesbar in hell/dunkel; Einheiten und Währung: großes Ergebnis, „Ergebnis kopieren“ legt es in die Zwischenablage.
 
 ## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
+
 - **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.
 - **HV2 Kacheln springen:** Auf eine Regal-Kachel im Kopf tippen → die Liste springt zum Abschnitt des Ortes (Tastatur: Enter).
 - **HV3 Scannen:** „Scannen“ in der Werkzeugleiste öffnet weiterhin die Kamera; der Barcode legt einen Vorrat an oder erhöht ihn.
@@ -636,15 +639,21 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **HV5 Ruhig / Lesehilfe:** In „Ruhig“ und mit „Modulfarben: Aus“ sind Vorräte, Einkauf, Unterlagen und Passwörter noch an Form und Beschriftung zu erkennen; mit Lesehilfe (75 %) bricht keine Kachel und kein Reiter.
 
 ## Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
+
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+
 - **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐
 - **LG2 Windows-Tray:** Tray-Symbol („Heute“) im Infobereich bei 16 und 24 px erkennbar, helle und dunkle Taskleiste. ☐
 - **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
 - **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
 - **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
 - **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
+- TP5 · Rechner am Handy und mit der Maus: Zahlenblock tippt in das Display (7 × 6 = 42), Komma/Punkt je nach Sprache, „⌫“ löscht; Tasten fühlen sich gedrückt an, auch mit „Weniger Bewegung“ ohne Verzögerung.
+- TP6 · Timer: der Ring läuft mit (Timer und Pomodoro leeren sich, die Stoppuhr füllt pro Minute), die Zeit in der Mitte ist gut lesbar in hell/dunkel; Einheiten und Währung: großes Ergebnis, „Ergebnis kopieren“ legt es in die Zwischenablage.
+- TP7 · Persona: die Karte zeigt Initialen, Namen und „Erfunden“ im Rahmen, Hinweis „nicht für Verträge, Banken, Behörden“ bleibt; Würfel: mehrere Würfel zeigen je eine Fläche, ein Screenreader liest „3, 5“; QR: Vorschau groß und scannbar (Handykamera) in hell und dunkel; Dev/Diff/Regex lesen sich in der Code-Optik gut.
 
 ## Identität v3: Wissen (Paket 2) – nur von Hand prüfbar
+
 - **WK1 Notizbuch-Reiter:** Notizen: Notizbuch-Reiter wählen, neues Notizbuch mit Farbe anlegen → der Reiter trägt die Farbe, Name und Zahl sind lesbar (hell und dunkel, Lesehilfe 75 %).
 - **WK2 Pinnwand:** Merkliste in der Kartenansicht: Karten liegen auf der Tafel, nichts läuft über den Rand (Handy).
 - **WK3 Feeds-Titelseite:** Feeds: Aufmacher ist das zuletzt hinzugefügte Feed; Gruppen stehen in Spalten (breites Fenster) und untereinander (Handy).

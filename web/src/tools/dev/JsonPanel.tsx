@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, TextArea } from '@/ui';
 import { copyWithToast } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { parseJson } from './json';
 
@@ -45,7 +46,7 @@ export default function JsonPanel() {
           ) : null}
         </div>
       ) : null}
-      {parsed?.ok && shown ? <pre className={styles.mono}>{shown}</pre> : null}
+      {parsed?.ok && shown ? <pre className={kit.code}>{shown}</pre> : null}
     </div>
   );
 }

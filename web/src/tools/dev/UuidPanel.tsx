@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, TextField } from '@/ui';
 import { copyWithToast, num } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 
 const s = t.tools.dev.uuid;
@@ -29,7 +30,7 @@ export default function UuidPanel() {
       </div>
       {ids.length > 0 ? (
         <>
-          <p className={styles.mono} role="status" aria-label={s.result}>
+          <p className={kit.code} role="status" aria-label={s.result}>
             {ids.join('\n')}
           </p>
           <div className={styles.row}>

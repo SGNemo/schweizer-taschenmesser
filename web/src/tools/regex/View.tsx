@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatNumber } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { Checkbox, NoReadAid, TextArea, TextField } from '@/ui';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import own from './Tool.module.css';
 import {
@@ -93,6 +94,7 @@ export default function RegexTool() {
         ))}
       </fieldset>
       <TextArea
+        className={kit.codeInput}
         label={s.text}
         value={text}
         onChange={(e) => setText(e.target.value)}
