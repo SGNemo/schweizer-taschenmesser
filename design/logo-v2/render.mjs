@@ -9,7 +9,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildLayers, COLORS, merge, reach } from './mark.mjs';
-import { lockupSvg, wordSvg } from './wordmark.mjs';
+import { lockupSvg } from './wordmark.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -183,49 +183,13 @@ function header() {
   return `<h1>Nemo logo v2 · round ${round} · ${esc(spec.title)}</h1><p class="sub">${esc(spec.subtitle ?? '')}</p>`;
 }
 
-const brand = (n) => readFileSync(join(repo, 'web/brand', n), 'utf8');
-async function currentBlock() {
-  const wmL = brand('logo-wordmark.svg');
-  const wmD = brand('logo-wordmark-light.svg');
-  const mark = brand('logo-mark.svg');
-  const appIcon = brand('app-icon.svg');
-  const mono = brand('logo-mono.svg');
-  const SZ = [16, 24, 32, 48, 64, 128, 256];
-  let s = `<div class="block"><h2>Current logo (as is)</h2><p>Wordmark Q2 (Nunito ExtraBold letters as a clownfish body, head + tail, white bands with dark edges) and the tilted tile fish C12, both in the old logo orange #E0550F.</p>`;
-  s += `<div class="row"><div class="panel light"><h3>App icon 16–256 · wordmark 44 px (sidebar) and 28 px (rail) · mark 32 px (phone)</h3>${sizesRow(() => appIcon, SZ)}<div class="word" style="margin-top:14px">${img(wmL, (150 / 44) * 44, 44)}${img(wmL, (150 / 44) * 28, 28)}${img(mark, 32 * 1.142, 32)}${img(mono, 32, 32)}</div></div>`;
-  s += `<div class="panel dark"><h3>Dark</h3>${sizesRow(() => appIcon, SZ)}<div class="word" style="margin-top:14px">${img(wmD, (150 / 44) * 44, 44)}${img(wmD, (150 / 44) * 28, 28)}${img(mark, 32 * 1.142, 32)}${img(mono.replace(/#000\b/g, '#fff'), 32, 32)}</div></div></div>`;
-  s += `<div class="row">`;
-  for (const [name, cap] of [
-    ['desktop-light-wide-2x-current', 'Sidebar wide, light (200 %)'],
-    ['desktop-dark-wide-2x-current', 'Sidebar wide, dark (200 %)'],
-    ['desktop-light-rail-2x-current', 'Rail 76 px, light: the wordmark is clipped'],
-    ['desktop-dark-rail-2x-current', 'Rail, dark'],
-  ])
-    s += `<div>${montage(name, 560, 360, [], 2)}<div class="cap">${cap}</div></div>`;
-  s += `</div><div class="row"><div>${phoneMontage('phone-light-2x-current', mark)}<div class="cap">Phone top bar, light (200 %)</div></div><div>${phoneMontage('phone-dark-2x-current', mark)}<div class="cap">Phone top bar, dark (200 %)</div></div></div>`;
-  s += `<div class="notes"><b>What no longer fits</b><ul>
-    <li><b>Style:</b> the wordmark is an illustration (eye highlight, dark edges around every band, a tail with an outline) next to a shell that is flat: Lucide outlines at 1.5 px, chips without borders, no shadows in icons. It is the only element on the screen with three colours and outlines.</li>
-    <li><b>Colour:</b> #E0550F is neither accent token. Light theme accent is #b5430c (the active "Übersicht" item right below it), dark is #ff9a57: two oranges in one view, and the logo ignores the accent variants (teal, coral, lagoon).</li>
-    <li><b>Weight and type:</b> Nunito ExtraBold (round, heavy) against Inter 600 everywhere else; the letters carry bands and a tail, so the word is hard to read below 32 px.</li>
-    <li><b>Proportion to the shell:</b> 150 × 44 px in a 248 px sidebar sits heavier than the 20 px icons and 15 px labels under it; in the 76 px rail the 28 px wordmark is clipped to "Nemc" (no mark-only state exists).</li>
-    <li><b>Small sizes:</b> the 35° tilt and the two bands blur at 16–24 px (taskbar, tray, favicon); the wordmark's bands and edges turn into noise at 28 px.</li>
-    <li><b>Relation to the new icons:</b> module identity v2 uses rounded chips (28 px, radius 8) with a quiet outline icon in the module hue; the logo neither shares the chip shape nor the stroke, so it reads as foreign to its own system.</li>
-  </ul></div></div>`;
-  return s;
-}
-
-/** Lockup options with the variant's own layers injected where the art needs them (o-fish). */
-function withLayers(opts, L) {
-  if (!opts?.art?.ofish) return opts;
-  return { ...opts, art: { ...opts.art, ofish: { ...opts.art.ofish, layers: L } } };
-}
 const DARK_INK = { mark: COLORS.accent.dark, mono: '#ffffff' };
 
 async function variantBlock(v) {
-  const L = buildLayers(v.direction, v.params, { ink: v.ink });
-  const Ld = buildLayers(v.direction, v.params, { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } });
-  const Ls = v.small ? buildLayers(v.direction, merge(v.params, v.small), { ink: v.ink }) : L;
-  const Lsd = v.small ? buildLayers(v.direction, merge(v.params, v.small), { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } }) : Ld;
+  const L = buildLayers(v.params, { ink: v.ink });
+  const Ld = buildLayers(v.params, { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } });
+  const Ls = v.small ? buildLayers(merge(v.params, v.small), { ink: v.ink }) : L;
+  const Lsd = v.small ? buildLayers(merge(v.params, v.small), { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } }) : Ld;
   const appAt = (s) => (s <= 24 ? Ls.appSmall : s <= 32 ? Ls.app : L.app);
   const markAt = (s, dark) => (s <= 24 ? (dark ? Lsd : Ls).markSquare : (dark ? Ld : L).markSquare);
   const monoAt = (s, dark) => (s <= 24 ? (dark ? Lsd : Ls).mono : (dark ? Ld : L).mono);
@@ -247,22 +211,15 @@ async function variantBlock(v) {
       `<div style="width:12px"></div><div>${await px(markAt(16, true), 16, 8)}16</div><div>${await px(markAt(24, true), 24, 5)}24</div><div>${await px(monoAt(16, true), 16, 8)}mono 16</div></div></div></div>`;
   }
   // Lockups (the word setting of this round; a variant may bring its own)
-  const word = spec.lockupWord ?? { text: 'Nemo', weight: 600 };
+  const word = spec.lockupWord ?? { text: 'NEMO', weight: 700 };
   const lopts = v.lockup ?? spec.lockup ?? { source: 'mark', markHeight: 1.2, gap: 0.42 };
-  const lk = (theme, wd, opts) => {
-    const LL = theme === 'dark' ? Ld : L;
-    if (opts.source === 'markOnly') return { svg: opts.form === 'mark' ? LL.markSquare : LL.app, width: 512, height: 512 };
-    return lockupSvg(LL, wd, withLayers(opts, LL), theme);
-  };
+  const lk = (theme, wd, opts) => lockupSvg(theme === 'dark' ? Ld : L, wd, opts, theme);
   const lkL = lk('light', word, lopts);
   const lkD = lk('dark', word, lopts);
-  const word2 = spec.lockupWord2;
-  const lkL2 = word2 ? lk('light', word2, lopts) : null;
-  const lkD2 = word2 ? lk('dark', word2, lopts) : null;
   const hL = (l, h) => img(l.svg, (h * l.width) / l.height, h);
   const lockH = spec.lockupHeight ?? 32;
-  s += `<div class="row"><div class="panel light"><h3>Lockup · sidebar ${lockH} px, 28 px, 24 px${word2 ? ' · "Nemo" and "nemo"' : ''}</h3><div class="word">${hL(lkL, lockH)}${hL(lkL, 28)}${hL(lkL, 24)}${lkL2 ? `<span style="width:24px"></span>${hL(lkL2, lockH)}${hL(lkL2, 28)}${hL(lkL2, 24)}` : ''}</div></div>`;
-  s += `<div class="panel dark"><h3>Dark</h3><div class="word">${hL(lkD, lockH)}${hL(lkD, 28)}${hL(lkD, 24)}${lkD2 ? `<span style="width:24px"></span>${hL(lkD2, lockH)}${hL(lkD2, 28)}${hL(lkD2, 24)}` : ''}</div></div>`;
+  s += `<div class="row"><div class="panel light"><h3>Lockup · sidebar ${lockH} px, 28 px, 24 px</h3><div class="word">${hL(lkL, lockH)}${hL(lkL, 28)}${hL(lkL, 24)}</div></div>`;
+  s += `<div class="panel dark"><h3>Dark</h3><div class="word">${hL(lkD, lockH)}${hL(lkD, 28)}${hL(lkD, 24)}</div></div>`;
   s += `<div class="panel light"><h3>Lockup large</h3>${hL(lkL, 96)}</div></div>`;
   // In the shell (2x = 200 % zoom)
   const railMark = (dark) => (v.rail === 'app' ? (dark ? Ld : L).app : (dark ? Ld : L).markSquare);
@@ -295,10 +252,8 @@ async function variantBlock(v) {
       'lockup-light.svg': lkL.svg,
       'lockup-dark.svg': lkD.svg,
     };
-    if (lkL2) files['lockup-lower-light.svg'] = lkL2.svg;
-    if (lkD2) files['lockup-lower-dark.svg'] = lkD2.svg;
     for (const [n, t] of Object.entries(files)) writeFileSync(join(out, n), t);
-    writeFileSync(join(out, 'params.json'), JSON.stringify({ direction: v.direction, params: v.params, ink: v.ink ?? null, small: v.small ?? null, lockup: lopts, rail: v.rail }, null, 2) + '\n');
+    writeFileSync(join(out, 'params.json'), JSON.stringify({ params: v.params, ink: v.ink ?? null, small: v.small ?? null, lockup: lopts, rail: v.rail }, null, 2) + '\n');
   };
   if (v.compact) {
     writeFiles();
@@ -337,14 +292,14 @@ async function variantBlock(v) {
 
 async function wordmarkBlock() {
   const base = spec.variants.find((x) => x.label === spec.wordmarkBase) ?? spec.variants[0];
-  const L = buildLayers(base.direction, base.params, { ink: base.ink });
-  const Ld = buildLayers(base.direction, base.params, { ink: { ...DARK_INK, ...(base.inkDark ?? {}) } });
+  const L = buildLayers(base.params, { ink: base.ink });
+  const Ld = buildLayers(base.params, { ink: { ...DARK_INK, ...(base.inkDark ?? {}) } });
   const lockH = spec.lockupHeight ?? 32;
   const wideBox = boxes['desktop-light-wide-2x'].img;
   let s = `<div class="block"><h2>Wordmarks (shown with ${esc(base.label)})</h2><p>${esc(spec.wordmarkIntro ?? '')}</p>`;
   for (const w of spec.wordmarks ?? []) {
     const opts = w.lockup ?? { source: 'none' };
-    const mk = (LL, theme) => (opts.source === 'markOnly' ? { svg: opts.form === 'mark' ? LL.markSquare : LL.app, width: 512, height: 512 } : lockupSvg(LL, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, LL), theme));
+    const mk = (LL, theme) => lockupSvg(LL, w.word, opts, theme);
     const l = mk(L, 'light');
     const d = mk(Ld, 'dark');
     const h = (x, hh) => img(x.svg, (hh * x.width) / x.height, hh);
@@ -364,14 +319,13 @@ async function wordmarkBlock() {
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'lockup-light.svg'), l.svg);
     writeFileSync(join(out, 'lockup-dark.svg'), d.svg);
-    writeFileSync(join(out, 'params.json'), JSON.stringify({ word: w.word, art: w.art ?? null, lockup: opts }, null, 2) + '\n');
+    writeFileSync(join(out, 'params.json'), JSON.stringify({ word: w.word, lockup: opts }, null, 2) + '\n');
   }
   return s + `</div>`;
 }
 
 // ---------- compose ----------
 let html = `<!doctype html><meta charset="utf-8"><style>${CSS}</style><div class="sheet">${header()}`;
-if (spec.current !== false) html += await currentBlock();
 for (const v of spec.variants) html += await variantBlock(v);
 if (spec.wordmarks?.length) html += await wordmarkBlock();
 html += `</div>`;

@@ -1,36 +1,37 @@
-# Logo v2 – design rounds
+# Logo v2 – workshop
 
-Workshop for the new mark, wordmark and app icons (branch `design/logo-v2`). Nothing here is imported by the app; the final assets are exported from the master after "Logo final". The previous logo workshop stays in [`../icon/`](../icon/) until the assets are replaced.
+Parametric master of the Nemo logo and the tools that turn it into every brand asset. Nothing here is imported by the app. The how-to (regenerate, what the export touches) is [docs/howto/design-brand.md](../../docs/howto/design-brand.md); the decision is in [docs/decisions/ui-brand.md](../../docs/decisions/ui-brand.md) ("Logo v2").
+
+**Final (2026-11-04):** mark **A2b** (an upright, rounded clownfish on an accent tile), name **NEMO** in an own rounded monoline lettering, both on an accent **pill** in the sidebar head. The colour is the accent token (`--accent` `#b5430c` light, `#ff9a57` dark), never a hand-picked orange.
 
 ## Files
 | File | What |
 |---|---|
-| `final.params.mjs` | the chosen parameters (mark A2b, NEMO lettering, F4 pill, placement sizes); the asset export reads only this file. |
-| `mark.mjs` | parametric master: four directions (`tile`, `head`, `bands`, `line`), each built from a few shapes in a 512 canvas; `buildLayers(direction, params)` returns mark, one-colour, app tile, Android layers and the mark's box. Colours default to the accent tokens (`COLORS`). |
-| `wordmark.mjs` | "Nemo"/"nemo" set in Inter from `glyphs-inter.json` (outlines, no font at run time) or, for comparison, the previous Nunito word (`../icon/glyphs.json`): `wordPath`, `wordArt` (letters in accent, head, tail, bands, o-fish, badge), `wordSvg`, `lockupSvg` (mark + word, aligned on the cap or x-height). |
-| `glyphs-inter.json` | Inter and Inter Display 500/600/700/800 outlines of N n e m o (1000 units per em; `tools/extract-glyphs.mjs`, needs `npm i` here for opentype.js and the Inter OTFs). |
-| `render.mjs` | renders a round: `node render.mjs rounds/<n>` reads `rounds/<n>/variants.mjs`, writes every variant's SVG layers, lockups and `sheet.png` (sizes 16–512 light/dark, one-colour, true pixels, the mark in the real shell, taskbar/tray, Android masks + safe zone + themed icon, favicon tab, palette check). Uses Playwright's Chromium from `web/node_modules` (`cd web && npm ci` first). |
-| `tools/app-shots.mjs` | screenshots of the seeded Dev-Preview app with the brand image hidden (`context/`, boxes in `boxes.json`), so the sheet can montage a candidate into the sidebar (wide + rail), and the phone top bar. `cd web && npm run build:e2e-seed && npm run preview:e2e-seed`, then `npm run shots`. |
-| `rounds/<n>/` | one folder per feedback round: `variants.mjs` (parameters), `sheet.png`, `<label>/` with the SVG layers + `params.json`. Older rounds move to `rounds/archive/` at the end. |
+| `final.params.mjs` | the chosen parameters (mark, lettering, pill, safe-zone radii, wordmark box); the export reads only this file |
+| `mark.mjs` | parametric mark: `buildLayers(params)` for the sheets, `markGeometry(params)` for the export (exact bounding box by sampling the curves, safe-zone radius) |
+| `wordmark.mjs` | the NEMO lettering (strokes, no font) and `lockupSvg` (mark + name, optionally on the pill) |
+| `export.mjs` | writes `web/brand/*.svg`, the generated block in `web/src/ui/Logo.tsx` and the splash in `web/index.html`; verifies the files against the master by rendering both (`cd web && npm ci` first) |
+| `render.mjs` | `node render.mjs rounds/<n>` renders a round's `variants.mjs` into SVG layers and `sheet.png` (16–512 px, light/dark, true pixels, the mark in the real sidebar and phone top bar, taskbar/tray, Android masks + safe zone + themed icon, favicon tab, palette check) |
+| `tools/app-shots.mjs` | screenshots of the seeded Dev-Preview app with the brand hidden (`context/`, with boxes in `boxes.json`; the `-current` files are the old logo, the "before") |
+| `tools/app-after.mjs` | screenshots of the running app with the logo in place (`rounds/9/screens/`) |
+| `rounds/9/` | the final sheet, the final layers (`Final/`, `F4/`), the app screenshots (`screens/`) |
+| `rounds/archive/` | exploration rounds 1–8 (sheets and parameters; see its README) |
+
+## Commands
+```bash
+cd design/logo-v2 && node export.mjs          # brand SVGs + Logo.tsx block + splash (then prettier on index.html and Logo.tsx)
+cd ../../web && npx tauri icon brand/app-icon.svg && npm run gen:icons
+cd ../design/logo-v2 && node render.mjs rounds/9   # preview sheet of a round
+```
 
 ## Rounds
-- **Round 1 (2026-11-04):** diagnosis of the current logo (wordmark Q2 + tile fish C12 in #E0550F) and four directions: A tile fish, B head and eye, C bands and fin (geometric), D line fish in the icon stroke; wordmark settings W1–W4 (Inter 600/700, Display 500; "Nemo"/"nemo"). Feedback: none convinces yet, A is the best; the wordmark must not be plain type.
-- **Round 2 (2026-11-04):** A refined – A1 round body + fan tail, A2 + fins, A3 bigger eye + curved bands + 6° tilt, A4 = A2 bleeding off the tile (`views.tile.clip`); wordmarks as a fish – W5 fish-word (Inter ExtraBold, flat head + fan tail), W6 the same with the previous Nunito letters, W7 o-fish (the mark as the "o"), W8 badge (word knocked out of the fish). Master gained `fins`, `tilt`, tile `clip`; wordmark gained `wordArt` (head, tail, bands, o-fish, badge) and the `nunito` family. Feedback: A2 is the best, none of the wordmarks.
-- **Round 3 (2026-11-04):** A2 refined one change each – A2a bigger eye, A2b bands following the body, A2c stronger fins, A2d 5° lean; sidebar head without a fish-word – W10 pill (mark + name in the contrast colour on an accent pill), W11 mark only, W13 own monoline rounded lettering (`family: 'round'`, drawn from circles and stems, no font) in the accent, W14 the same in the text colour. Master: per-band widths/bends; wordmark: `round` family, soft bands, head band, `pill` lockups, `markOnly`. Feedback: A2b and W10, but the pill's letters are too standard and not round enough.
-- **Round 4 (2026-11-04):** A2b in every context once more; the pill with four letterings – W10a own round lettering 700, W10b 800 with a taller x-height, W10c lowercase "nemo" 800, W10d Nunito ExtraBold. Lettering gained lowercase n and weight steps (`ROUND_WEIGHTS`, `round: { xHeight, eOpen, gap }`). Feedback: W10b, but the e is not readable.
-- **Round 5 (2026-11-04):** the e's aperture (bar to terminal) was 42°, which the round terminal of a 0.25 stroke closes; W10b1 opens it to 72°, W10b2 to 85°, W10b3 72° with stroke 700, W10b4 72° with x-height 0.88. The wordmark block now shows true pixels at 36 and 28 px. Feedback: almost good, but the e's lower stroke is too short.
-- **Round 6 (2026-11-04):** a longer e bowl that stays open – W10b5 bowl to 55° (stroke 700, x-height 0.84), W10b6 to 48° (x-height 0.86), W10b7 to 32° with a flat-cut terminal (`round.eCap: 'butt'`, stroke 700), W10b8 to 30° flat-cut with stroke 800. Feedback: still not right; write NEMO in capitals.
-- **Round 7 (2026-11-04):** NEMO in capitals (uppercase E, M, O added to the round lettering: `eWidth/eMid/eMidLen`, `mWidth/mVertex`, `oWide`) – W10c1 stroke 700, W10c2 stroke 800, W10c3 M vertex at half height, W10c4 wider spacing. Feedback: W10c3.
-- **Round 8 (2026-11-04):** A2b + W10c3 in every context; lockup fine-tuning F1 (as chosen, pill 36 px), F2 pill 40 px, F3 tighter padding, F4 bigger mark and narrower gap. Renderer: a wordmark may set its own `height` in the sidebar head. Feedback: F4.
-- **Round 9 (2026-11-04):** final candidate – `final.params.mjs` (MARK = A2b, WORD = NEMO round 700 with the M vertex at half height, LOCKUP = F4 pill, PLACEMENT sizes) rendered once more in every context. Waiting for "Logo final".
+1. Diagnosis of the old logo and four directions (A tile fish, B head and eye, C bands and fin, D line fish). Feedback: none convinces, A is best, the wordmark must not be plain type.
+2. A refined (rounder body and fan tail, fins, bigger eye and curved bands, lean, bleed off the tile); the name as a fish. Feedback: A2 (with fins); no fish-word.
+3. A2 one change at a time; sidebar head without a fish-word: pill, mark only, own rounded lettering. Feedback: A2b (bands follow the body) and the pill.
+4. The pill with a rounder lettering (lowercase). Feedback: the weight W10b, but the e cannot be read.
+5. An open e aperture; 6. a longer e bowl. Feedback: still not right, write NEMO in capitals.
+7. NEMO in capitals (stroke 700/800, M vertex, spacing). Feedback: W10c3 (M vertex at half height).
+8. Fine-tuning of the pill proportions. Feedback: F4 (mark 1.3, gap 0.24, padding 0.36 / 0.3).
+9. The final candidate from `final.params.mjs` in every context; then "Logo final" and the asset export.
 
-## Logo final (2026-11-04) – hand-over for the asset step
-Chosen: mark **A2b**, name **NEMO** in the own rounded capitals (M vertex at half height), **pill F4** – all in `final.params.mjs`; the last sheet is `rounds/9/sheet.png`. The asset step replaces the old files under their current paths and names and touches nothing else in the app:
-
-1. **Export from the master** (write a small `export.mjs` next to `render.mjs`, reading only `final.params.mjs`): `web/brand/logo-mark.svg` (tight view box), `logo-mono.svg` (square box, one colour), `app-icon.svg` (tile), `app-icon-maskable.svg` (whole fish inside the safe circle, radius 196 of 512), `android-foreground.svg` / `android-background.svg` / `android-monochrome.svg`, `logo-wordmark.svg` (light: the pill) and `logo-wordmark-light.svg` (dark: pill `#ff9a57`, name and fish `#1b0f06`). Mask ids must be unique per file (`brand-sync.test.ts`).
-2. **Generated blocks:** `web/src/ui/Logo.tsx` (`// brand:begin … // brand:end`) and the splash in `web/index.html` (`<!-- brand:begin -->`) carry the mark's paths; the new mark has four shapes (body, tail, dorsal, ventral) and two band widths (34 / 40). Either bake the fins into the body `d` as extra subpaths and keep one band width, or change the two consumers minimally (a paths array, per-cut widths) – a few lines, list them in the PR. `web/src/ui/Wordmark.tsx` holds the wordmark's aspect ratio (`ASPECT = 1368 / 401`): set it to the pill's view box. `brand-sync.test.ts` must stay green.
-3. **Rasters:** `cd web && npx tauri icon brand/app-icon.svg && npm run gen:icons` (Windows `.ico` 16–256, `icon.icns`, Android mipmaps, adaptive layers, `ic_notification`, favicon SVG/ICO/PNG, PWA 192/512 + maskable, `pwa-badge-96.png`, README headers light/dark + `*.de.png`, social preview). `gen-icons.mjs` composes the banner from the wordmark SVGs and the claim; check that the pill works there or compose banner = tile + NEMO lettering. `ANDROID_ICON.iconColor` in `core/platform/tauri/index.ts` (+ `tauri.test.ts`) must become the light accent `#b5430c` if it still holds `#E0550F`. Website: replace only the files under `site/public/` that hold the logo.
-4. **Clean-up:** delete asset files nothing references any more; move `rounds/1`–`8` to `rounds/archive/`, keep `rounds/9`, the master and `final.params.mjs`. The previous workshop `design/icon/` is superseded: archive it under `rounds/archive/icon-v1/` (or delete) and point `docs/howto/design-brand.md` and the root `CLAUDE.md` layout line at `design/logo-v2/`.
-5. **Verify:** `npm run check`, `npm test`, `npm run e2e` in `web/`; the app starts; screenshots with the new logo (sidebar wide and rail, light and dark, splash, About, Windows taskbar mock) into the PR.
-6. **Docs:** one bullet in `docs/decisions/ui-brand.md` (direction, why: tile fish in the accent, calm pill instead of the illustrated wordmark; rejected: plain Inter, fish-words, o-fish, badge, lowercase e), `docs/HOW-TO.md` → `docs/howto/design-brand.md` (regenerate from `final.params.mjs`), `docs/MANUAL-TESTS.md` + `docs/STATUS.md`: open hand tests – Windows taskbar and tray, Android icon as an update over the installed app, themed icon, favicon. Remove the row from `docs/CHATS.md` in the last commit; `.changes/design-logo-v2.md` exists.
-7. **Proposals for the foundation chat (PR text, not done here):** sidebar wide shows the pill at 36 px in the 44 px brand box (today `Wordmark height={44}`); rail shows the tile at 28 px in a 44 × 44 box so it aligns with the rail icons (today 59 × 28 with the wordmark clipped); phone top bar keeps the tile at 32 px; the brand link's hover (`--surface-2` box) around an orange pill reads as a frame – darken the pill slightly instead; `--logo-ink` (supporter "Logo in Themenfarbe") should recolour the tile, the name stays in the contrast colour.
+The transparent mark of rounds 2–8 was cut off at its box: the fan tail's convex back edge reached 12 units further out than the box built from the tail length. The master now samples the curves; the tile, the app icons and the sheets of round 9 show the whole tail.

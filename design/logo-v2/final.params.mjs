@@ -1,8 +1,7 @@
 // Final parameters of the Nemo logo v2 (chosen in rounds 1–8 with the maintainer). Everything the
-// asset export needs comes from here: the mark (direction `tile`, variant A2b), the lettering
+// asset export needs comes from here: the mark (variant A2b), the lettering
 // (W10c3: own rounded monoline capitals, M vertex at half height) and the pill lockup (F4).
 export const MARK = {
-  direction: 'tile',
   params: {
     body: { nose: 466, joint: 176, height: 132, peak: 0.48, blunt: 0.74, stalk: 50 },
     tail: { style: 'fan', length: 68, spread: 76, notch: 16, overlap: 30 },
@@ -27,3 +26,10 @@ export const PLACEMENT = {
   sidebarRail: { tile: 28 }, // mark only
   phoneTopBar: { tile: 32 }, // mark only
 };
+
+/** Safe zones of the 512 canvas: PWA maskable icon (circle, 40 % radius minus a margin) and the Android adaptive icon (66 dp of 108). */
+export const MASKABLE_SAFE_RADIUS = 196;
+export const ADAPTIVE_SAFE_RADIUS = 156.4;
+
+/** The sidebar head is 44 px high; the pill sits in it at 36 px (`PLACEMENT.sidebarWide.pill`), left-aligned, so the file keeps the old wordmark's aspect ratio and `ui/Wordmark.tsx` needs no change. */
+export const WORDMARK_BOX = { aspect: 1368 / 401, headPx: 44 };

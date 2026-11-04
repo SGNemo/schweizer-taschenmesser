@@ -15,7 +15,6 @@ export default {
   variants: [
     {
       label: 'Final',
-      direction: MARK.direction,
       title: 'Mark A2b',
       desc: 'Round body, fan tail, dorsal and ventral fin, head band curving with the gill line, wider middle band, eye r 26; tile radius 146, fish at 0.8; Android adaptive at 0.56.',
       params: MARK.params,
