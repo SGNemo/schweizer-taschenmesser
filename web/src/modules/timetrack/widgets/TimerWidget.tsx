@@ -51,7 +51,6 @@ export default function TimerWidget() {
     <>
       <KpiWidget
         loading={false}
-        loading={false}
         label={t.timetrack.widgetText.idle}
         value={stopwatch(total * 60, false)}
         context={t.timetrack.todayTotal(duration(total))}
