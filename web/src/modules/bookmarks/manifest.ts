@@ -56,6 +56,8 @@ const manifest: ModuleManifest = {
       },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
+      // The latest saved entries as a short list: the shape of "the last thing".
+      variant: 'notiz',
       component: () => import('./widgets/RecentWidget'),
     },
     {

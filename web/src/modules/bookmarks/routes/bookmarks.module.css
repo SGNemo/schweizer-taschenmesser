@@ -12,5 +12,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
   gap: var(--grid-gap, var(--space-4));
-  padding: var(--space-2) 0;
+  /* The board the cards are pinned to: a faintly tinted surface with a hairline. */
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 6%, var(--surface-2, var(--surface)));
 }
