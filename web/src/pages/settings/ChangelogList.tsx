@@ -6,6 +6,8 @@ import { isUnread, loadHint, loadSeen, markSeen, saveHint } from '@/core/changel
 import type { ChangelogData, ChangelogEntry, ChangelogVersion } from '@/core/changelog/types';
 import { useLang } from '@/core/i18n/lang';
 import { dateTimeFormat } from '@/core/i18n/format';
+import type { NoteBlock } from '@/core/changelog/notes';
+import { ReleaseNotes } from '@/layout/ReleaseNotes';
 import { t } from '@/strings';
 import { SettingRow, Switch } from '@/ui';
 import styles from './settings.module.css';
@@ -21,31 +23,26 @@ function VersionBody({
 }) {
   const c = t.about.changes;
   const { highlights, groups } = groupForDisplay(version, data, lang);
-  const item = (e: ChangelogEntry, prefix?: string) => (
-    <li key={`${e.area}-${e.de}`}>
-      {e.breaking ? <strong>{c.breaking}</strong> : null}
-      {prefix ? <strong>{prefix} </strong> : null}
-      {entryText(e, lang)}
-    </li>
-  );
-  return (
-    <div className={styles.notes}>
-      {highlights.length > 0 ? (
-        <>
-          <strong>{c.highlights}</strong>
-          <ul>
-            {highlights.map((e) => item(e, data.areas[e.area]?.[lang === 'de' ? 'de' : 'en']))}
-          </ul>
-        </>
-      ) : null}
-      {groups.map((g) => (
-        <div key={g.area}>
-          <strong>{g.label}</strong>
-          <ul>{g.entries.map((e) => item(e))}</ul>
-        </div>
-      ))}
-    </div>
-  );
+  const areaLabel = (e: ChangelogEntry) =>
+    data.areas[e.area]?.[lang === 'de' ? 'de' : 'en'] ?? e.area;
+  const blocks: NoteBlock[] = [
+    ...(highlights.length > 0
+      ? [
+          {
+            heading: c.highlights,
+            items: highlights.map((e) => ({ lead: `${areaLabel(e)}:`, text: entryText(e, lang) })),
+          },
+        ]
+      : []),
+    ...groups.map((g) => ({
+      heading: g.label,
+      items: g.entries.map((e) => ({
+        ...(e.breaking ? { lead: c.breaking.trim() } : {}),
+        text: entryText(e, lang),
+      })),
+    })),
+  ];
+  return <ReleaseNotes blocks={blocks} />;
 }
 
 export function ChangelogList({ version }: { version: string }) {
@@ -68,18 +65,23 @@ export function ChangelogList({ version }: { version: string }) {
     v.date
       ? ` · ${dateTimeFormat({ dateStyle: 'medium' }).format(new Date(v.date + 'T00:00:00'))}`
       : '';
-  const block = (v: ChangelogVersion, title: string, extra?: string, isCurrent = false) =>
+  // The newest notes are open without a click: the unreleased ones in a preview, else the running version.
+  const openFirst = view?.unreleased ? 'unreleased' : view?.current?.version;
+  useEffect(() => {
+    if (hint && view?.current && openFirst === view.current.version) open(view.current.version);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openFirst, !!view?.current]);
+  const block = (v: ChangelogVersion, title: string, isCurrent = false) =>
     data ? (
       <details
         className={styles.details}
         key={v.version}
         data-testid={`changelog-${v.version}`}
         onToggle={(e) => e.currentTarget.open && open(v.version)}
-        open={isCurrent && undefined}
+        open={v.version === openFirst || undefined}
       >
         <summary>
           {title}
-          {extra ? ` ${extra}` : ''}
           {isCurrent && unread ? <span data-testid="changelog-new"> · {c.fresh}</span> : null}
         </summary>
         <VersionBody version={v} data={data} lang={lang} />
@@ -87,15 +89,10 @@ export function ChangelogList({ version }: { version: string }) {
     ) : null;
   return (
     <>
-      {view?.unreleased ? block(view.unreleased, c.unreleased, `(${c.unreleasedNote})`) : null}
+      {view?.unreleased ? block(view.unreleased, `${c.unreleased} · ${c.unreleasedNote}`) : null}
       {view?.current ? (
-        block(
-          view.current,
-          t.about.updates.current,
-          `(${view.current.version}${dateOf(view.current)})`,
-          true,
-        )
-      ) : (
+        block(view.current, `${c.version(view.current.version)}${dateOf(view.current)}`, true)
+      ) : view?.unreleased ? null : (
         <details className={styles.details}>
           <summary>{t.about.updates.current}</summary>
           <p className={styles.muted}>{t.about.updates.none}</p>
@@ -104,7 +101,7 @@ export function ChangelogList({ version }: { version: string }) {
       {view && view.older.length > 0 ? (
         <details className={styles.details}>
           <summary>{c.older}</summary>
-          {view.older.map((v) => block(v, c.version(v.version), dateOf(v)))}
+          {view.older.map((v) => block(v, `${c.version(v.version)}${dateOf(v)}`))}
         </details>
       ) : null}
       <SettingRow id="about-updates--hint" label={c.hint} description={c.hintDescription}>

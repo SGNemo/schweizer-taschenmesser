@@ -1,0 +1,40 @@
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.heading {
+  margin: 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.warning {
+  color: var(--warning);
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  line-height: var(--leading);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.item:first-child {
+  border-top: 0;
+}
+.lead {
+  font-weight: var(--weight-semibold);
+}
