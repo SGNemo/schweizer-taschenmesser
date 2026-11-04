@@ -335,7 +335,7 @@ async function variantBlock(v) {
   return s;
 }
 
-function wordmarkBlock() {
+async function wordmarkBlock() {
   const base = spec.variants.find((x) => x.label === spec.wordmarkBase) ?? spec.variants[0];
   const L = buildLayers(base.direction, base.params, { ink: base.ink });
   const Ld = buildLayers(base.direction, base.params, { ink: { ...DARK_INK, ...(base.inkDark ?? {}) } });
@@ -349,7 +349,12 @@ function wordmarkBlock() {
     const d = mk(Ld, 'dark');
     const h = (x, hh) => img(x.svg, (hh * x.width) / x.height, hh);
     const over = (x) => [{ svg: x.svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - lockH) / 2) * 2, h: lockH * 2 }];
+    const pxl = async (x, hh, zoom) => {
+      const ww = Math.round((hh * x.width) / x.height);
+      return `<img class="px" src="${pngUri(await raster(x.svg, ww, hh))}" style="width:${ww * zoom}px;height:${hh * zoom}px">`;
+    };
     s += `<div class="row" style="align-items:center"><div style="width:300px"><b style="font-size:22px">${w.label}</b><br>${esc(w.title)}</div><div class="panel light">${h(l, 44)}</div><div class="panel dark">${h(d, 44)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(l, 100)}</div></div>`;
+    s += `<div class="row" style="align-items:center"><div style="width:300px" class="cap">True pixels: 36 px ×4 · 28 px ×4 (light) · 28 px ×4 (dark)</div><div class="panel light">${await pxl(l, 36, 4)}</div><div class="panel light">${await pxl(l, 28, 4)}</div><div class="panel dark">${await pxl(d, 28, 4)}</div></div>`;
     s += `<div class="row"><div>${montage('desktop-light-wide-2x', 560, 360, over(l), 2)}<div class="cap">${w.label} in the sidebar, light (200 %) – ${lockH} px</div></div><div>${montage('desktop-dark-wide-2x', 560, 360, over(d), 2)}<div class="cap">${w.label} dark</div></div>` +
       `<div><div class="montage" style="width:420px;height:120px"><img src="${fileUri('desktop-light-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(l.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 light</div>` +
       `<div class="montage" style="width:420px;height:120px;margin-top:8px"><img src="${fileUri('desktop-dark-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(d.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 dark</div></div></div>`;
@@ -367,7 +372,7 @@ function wordmarkBlock() {
 let html = `<!doctype html><meta charset="utf-8"><style>${CSS}</style><div class="sheet">${header()}`;
 if (spec.current !== false) html += await currentBlock();
 for (const v of spec.variants) html += await variantBlock(v);
-if (spec.wordmarks?.length) html += wordmarkBlock();
+if (spec.wordmarks?.length) html += await wordmarkBlock();
 html += `</div>`;
 if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 const page = await browser.newPage({ viewport: { width: 2400, height: 1200 }, deviceScaleFactor: 1 });
