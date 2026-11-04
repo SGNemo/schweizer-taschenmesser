@@ -1,3 +1,4 @@
+import type { ModuleAutomation } from '@/core/automation/module';
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
 import type { ExternalEvent } from '@/core/connectors/types';
@@ -592,6 +593,11 @@ export interface ModuleManifest {
    */
   seed: SeedMeta;
   contributions?: ModuleContributions;
+  /**
+   * Events, state checks and allowed actions for rules ("Wenn X, dann Y", `core/automation`). Lazy;
+   * optional. Needs `aiSchema` for `actions`. The vault never has one.
+   */
+  automation?: () => Promise<{ default: ModuleAutomation }>;
   /** Optional steps for the setup assistant; ids must start with `<module id>.`. */
   setupSteps?: SetupStepDef[];
 }

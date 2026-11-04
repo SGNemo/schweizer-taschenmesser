@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     surface: 'gradient',
     signature: 'cycle',
   },
-  version: 4,
+  version: 5,
   get description() {
     return t.subscriptions.meta.description;
   },
@@ -58,6 +58,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 60,
   area: 'money',
+  automation: () => import('./automation'),
   contributions: {
     onboarding: onboarding,
     quickAdd: [

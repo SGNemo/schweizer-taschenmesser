@@ -182,6 +182,14 @@ export const setup: Strings['setup'] = {
           title: 'Todoist',
           how: 'Menú (⋯) de un proyecto → «Exportar como CSV». Un archivo por proyecto.',
         },
+        evernote: {
+          title: 'Evernote',
+          how: 'Exporta tus cuadernos en Evernote como archivo .enex (cuaderno → «Exportar cuaderno»). Se conservan títulos, texto, listas y etiquetas; Nemo no puede guardar imágenes ni adjuntos en las notas.',
+        },
+        microsoft: {
+          title: 'Microsoft To Do',
+          how: 'Microsoft To Do no tiene exportación propia. Exporta las tareas desde Outlook (Archivo → Abrir y exportar → Importar o exportar → Exportar a un archivo → CSV → Tareas).',
+        },
         obsidian: {
           title: 'Obsidian / Markdown',
           how: 'Elige los archivos .md de tu carpeta, varios a la vez si quieres. Se conservan títulos, etiquetas y listas de tareas.',
@@ -212,6 +220,8 @@ export const setup: Strings['setup'] = {
         'google.keep': 'Notas de Keep importadas',
         'google.subscription': 'Conectar el calendario como suscripción (Ajustes → Conexiones)',
         'todoist.tasks': 'CSV de Todoist importado',
+        'evernote.notes': 'Notas de Evernote importadas',
+        'microsoft.tasks': 'Tareas de Microsoft To Do (CSV de Outlook) importadas',
         'obsidian.notes': 'Notas Markdown importadas',
         'bank.statement': 'Extracto importado',
         'bitwarden.vault': 'CSV de Bitwarden importado en Contraseñas',

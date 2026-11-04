@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { collectCalendarItems, collectNotifications } from '@/core/modules/contributions';
 import { toEpoch } from '@/core/time/dates';
+import { runMigrations } from '@/core/modules/migrate';
 import manifest from '../manifest';
 import { missedDeadline } from '../logic';
 import { listSubscriptionCharges, subscriptionTotals } from '../public';
@@ -185,5 +186,22 @@ describe('subscriptions public API per currency', () => {
   it('accepts a currency on the schema and rejects a malformed code', () => {
     expect(sub({ currency: 'MXN' }).currency).toBe('MXN');
     expect(subscriptionSchema.safeParse({ ...sub(), currency: 'mxn' }).success).toBe(false);
+  });
+});
+
+describe('migration 5: notice in calendar months', () => {
+  it('sets the month count for periods that were shown as whole months, nothing else', async () => {
+    const ninety = await subscriptionRepo.create(sub({ cancelNoticeDays: 90 }));
+    const forty = await subscriptionRepo.create(sub({ name: 'B', cancelNoticeDays: 45 }));
+    const none = await subscriptionRepo.create(sub({ name: 'C' }));
+    const set = await subscriptionRepo.create(
+      sub({ name: 'D', cancelNoticeDays: 60, cancelNoticeMonths: 2 }),
+    );
+    await db.table('_meta').put({ key: 'moduleVersion.subscriptions', value: 4 });
+    await runMigrations(manifest);
+    expect((await subscriptionRepo.get(ninety.id))?.cancelNoticeMonths).toBe(3);
+    expect((await subscriptionRepo.get(forty.id))?.cancelNoticeMonths).toBeUndefined();
+    expect((await subscriptionRepo.get(none.id))?.cancelNoticeMonths).toBeUndefined();
+    expect((await subscriptionRepo.get(set.id))?.cancelNoticeMonths).toBe(2);
   });
 });

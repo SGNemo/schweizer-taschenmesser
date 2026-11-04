@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { csvTable, detectDelimiter, normalizeHeader, parseCsv, toCsv } from './csv';
+import {
+  csvTable,
+  detectDelimiter,
+  neutralizeCsvCell,
+  normalizeHeader,
+  parseCsv,
+  toCsv,
+} from './csv';
 
 describe('parseCsv', () => {
   it('reads quoted fields, doubled quotes and line breaks inside quotes', () => {
@@ -73,5 +80,25 @@ describe('normalizeHeader', () => {
       'beguenstigter zahlungspflichtiger'.replace('ue', 'u'),
     );
     expect(normalizeHeader('Straße')).toBe('strasse');
+  });
+});
+
+describe('formula neutralisation', () => {
+  it('turns a cell that starts like a formula into plain text', () => {
+    for (const bad of ['=SUM(A1)', '+1+1', '-2+3', '@cmd', '\tx', '\rx', '-HYPERLINK("x")']) {
+      expect(neutralizeCsvCell(bad)).toBe(`'${bad}`);
+    }
+  });
+
+  it('keeps plain numbers, dates and ordinary text', () => {
+    for (const ok of ['-12.50', '+3,5', '42', '2026-11-03', 'Lidl', '', 'a=b']) {
+      expect(neutralizeCsvCell(ok)).toBe(ok);
+    }
+  });
+
+  it('is applied by toCsv unless switched off (vault export stays Bitwarden-compatible)', () => {
+    const rows = [['=1+1', '-5.00']];
+    expect(toCsv(rows)).toBe("'=1+1,-5.00\r\n");
+    expect(toCsv(rows, ',', { neutralize: false })).toBe('=1+1,-5.00\r\n');
   });
 });

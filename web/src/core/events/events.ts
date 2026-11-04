@@ -58,6 +58,19 @@ export interface EventMap {
   };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
   'timetrack.start.requested': { title: string; sourceRef?: string };
+  /**
+   * A module reports something to the automation engine (`core/automation`): a domain event such as
+   * `mail.invoiceReceived`. Nothing happens unless a rule listens. Keep `data` to what rules need.
+   */
+  'automation.event': {
+    type: string;
+    moduleId?: string;
+    /** Stable per occurrence: a rule runs at most once for the same key. */
+    key: string;
+    data: Record<string, unknown>;
+    /** Short text for the rule log; leave out for anything private (mail). */
+    title?: string;
+  };
   'module.enabled': { moduleId: string };
   'module.disabled': { moduleId: string; policy: DataPolicy };
 }

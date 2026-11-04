@@ -152,7 +152,7 @@ test('Bitwarden CSV import adds entries; the export needs a confirmation', async
     'Privat,,login,Importiertes Konto,,,0,https://example.org,bob,geheim-import-1,',
   ].join('\n');
   const chooser = page.waitForEvent('filechooser');
-  await tools.getByRole('button', { name: 'Bitwarden-CSV importieren' }).click();
+  await tools.getByRole('button', { name: 'CSV importieren' }).click();
   await (
     await chooser
   ).setFiles({

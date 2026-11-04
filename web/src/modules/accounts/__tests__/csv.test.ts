@@ -119,3 +119,69 @@ describe('encrypted backup file', () => {
     expect(withoutDuplicates([a], [a, b, b])).toEqual({ fresh: [b], duplicates: 2 });
   });
 });
+
+describe('KeePass and 1Password CSV (mapping only)', () => {
+  it('reads a KeePassXC export: group path → folder tag, TOTP, quotes and umlauts', async () => {
+    const { importVaultCsv } = await import('../csv');
+    const text = [
+      'Group,Title,Username,Password,URL,Notes,TOTP,Icon,Last Modified,Created',
+      '"Root/Internet","Müller & Söhne","anna@example.org","p""w,1","https://example.org","Zeile 1\nZeile 2","JBSWY3DPEHPK3PXP",0,2026-01-01T00:00:00Z,2026-01-01T00:00:00Z',
+      'Root,Ohne Passwort,,,,,,0,,',
+      'Root,,x,y,,,,0,,',
+    ].join('\r\n');
+    const r = importVaultCsv(text);
+    expect(r.format).toBe('keepass');
+    expect(r.skipped).toBe(1);
+    expect(r.entries).toHaveLength(2);
+    expect(r.entries[0]).toMatchObject({
+      title: 'Müller & Söhne',
+      username: 'anna@example.org',
+      password: 'p"w,1',
+      url: 'https://example.org',
+      notes: 'Zeile 1\nZeile 2',
+      tags: ['Internet'],
+    });
+    expect(r.entries[0]!.totp).toBeDefined();
+    expect(r.entries[1]!.tags).toEqual([]);
+  });
+
+  it('reads a KeePass 2 export with its older column names', async () => {
+    const { importVaultCsv } = await import('../csv');
+    const r = importVaultCsv(
+      '"Account","Login Name","Password","Web Site","Comments"\n"Bank","u1","pw","https://bank.example","n"',
+    );
+    expect(r.format).toBe('keepass');
+    expect(r.entries[0]).toMatchObject({
+      title: 'Bank',
+      username: 'u1',
+      url: 'https://bank.example',
+    });
+  });
+
+  it('reads a 1Password export, leaves archived items out, splits tags', async () => {
+    const { importVaultCsv } = await import('../csv');
+    const text = [
+      'Title,Website,Username,Password,One-time password,Favorite,Archived,Tags,Notes',
+      'Shop,https://shop.example,me,secret,,true,false,"Privat;Einkauf",Hi',
+      'Alt,https://old.example,me,old,,false,true,,',
+    ].join('\n');
+    const r = importVaultCsv(text);
+    expect(r.format).toBe('onepassword');
+    expect(r.skipped).toBe(1);
+    expect(r.entries).toHaveLength(1);
+    expect(r.entries[0]).toMatchObject({
+      title: 'Shop',
+      favorite: true,
+      tags: ['Privat', 'Einkauf'],
+    });
+  });
+
+  it('keeps Bitwarden working and rejects other CSVs', async () => {
+    const { importVaultCsv } = await import('../csv');
+    expect(importVaultCsv(exportBitwardenCsv([entry({ title: 'A', password: 'p' })])).format).toBe(
+      'bitwarden',
+    );
+    expect(() => importVaultCsv('a,b\n1,2')).toThrow(CsvFormatError);
+    expect(() => importVaultCsv('')).toThrow(CsvFormatError);
+  });
+});

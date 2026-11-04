@@ -105,8 +105,8 @@ Aufwand laut `meta/IMPROVEMENTS-2026-10-03.md` §Top 10.
 | S1 | X2 Pipe-Erstinstanz in `bind()` (Squatter auf Windows) | M | `security/LAUNCH-REVIEW-2026-10-06.md` §Status after phase 2 |
 | S2 | X4 Overlay-Host durch Seite versteck-/verschiebbar (UI-Redress) | M | ebd. |
 | S3 | V2 Windows Hello nur Zustimmungsschranke; DEK mit `KeyCredentialManager` umhüllen | L | ebd. |
-| S4 | V5 Backup-Import: keine Zeilenvalidierung gegen Collection-Schema, keine Größengrenze (Vorschlag 64 MB, ungültige Zeilen überspringen + zählen) | M | ebd. |
-| S5 | T2 `allowBackup`/Cleartext nach `tauri android init` in CI absichern | S | ebd. |
+| S4 | V5 Backup-Import: keine Zeilenvalidierung gegen Collection-Schema, keine Größengrenze (Vorschlag 64 MB, ungültige Zeilen überspringen + zählen) | M | ebd. (erledigt, PR #417) |
+| S5 | T2 `allowBackup`/Cleartext nach `tauri android init` in CI absichern | S | ebd. (erledigt, PR #417) |
 | S6 | V4 Android-Zwischenablage ohne `EXTRA_IS_SENSITIVE`; A5 Modelldatei beim Laden neu hashen | S / M | ebd. |
 | S7 | N9/N11/N12 Server: Compose auf allen Interfaces, CORS `*`, kein Digest-Pin; kein `setErrorHandler`; Ops unbekannter Collections übersprungen, Cursor läuft weiter | S | ebd. |
 | S8 | S5 Sync-Token in `_secrets.syncConfig` statt `SecretStore`; S13 APK-Digest-Signatur | M | `security/AUDIT-2026-09-30.md` |

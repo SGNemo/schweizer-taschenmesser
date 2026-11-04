@@ -91,9 +91,9 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Paste a list from a notes app or a message: one line per task.',
     placeholder: 'Sort tax papers\nCall the dentist\nFix the bike',
     list: 'Into this list',
-    file: 'From Todoist or Google Tasks',
+    file: 'From Todoist, Google Tasks or Microsoft To Do',
     fileHint:
-      'Choose the file you exported there yourself: Todoist CSV or Google Tasks file (JSON). Nothing is uploaded.',
+      'Choose the file you exported there yourself: Todoist CSV, Google Tasks file (JSON) or the tasks CSV from Outlook (Microsoft To Do). Nothing is uploaded.',
     perSource: 'A separate list for each source list',
     newList: 'New list',
     includeDone: 'Completed tasks',
@@ -235,23 +235,13 @@ export const onboarding: Strings['onboarding'] = {
     placeholder: 'https://example.org/article\nLovely hike https://example.org/hiking',
   },
   notes: {
-    file: 'Markdown files or Google Keep',
+    file: 'Markdown, Obsidian, Evernote or Google Keep',
     fileHint:
-      'Choose .md files (e.g. from your Obsidian folder, several at once) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept. Please unzip ZIP files first.',
+      'Choose .md files (e.g. from your Obsidian folder, several at once), a ZIP file with a notes folder, an Evernote file (.enex) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept, folders become notebooks. Nemo cannot store attachments (images, files) in notes; they are counted in the report.',
     text: 'Paste Markdown',
     textHint: 'The pasted text becomes one note; a first heading becomes the title.',
     textLabel: 'Markdown text',
     placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
-    emptyFiles: (n: number) =>
-      n === 1 ? '1 empty file was skipped.' : `${n} empty files were skipped.`,
-    keepSkipped: (n: number) =>
-      n === 1
-        ? '1 Keep note from the trash or archive was left out.'
-        : `${n} Keep notes from the trash or archive were left out.`,
-    unreadable: (n: number) =>
-      n === 1
-        ? '1 JSON file is not a Keep note and was skipped.'
-        : `${n} JSON files are not Keep notes and were skipped.`,
   },
   birthdays: {
     text: 'Paste birthdays',

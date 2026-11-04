@@ -59,6 +59,7 @@ import { pendingImport } from './pendingImport';
 import { localApi } from './localApi';
 import { dataApi } from './dataApi';
 import { onboarding } from './onboarding';
+import { importers } from './importers';
 import { update } from './update';
 import { devPreview } from './devPreview';
 import { chat } from './chat';
@@ -133,6 +134,7 @@ export const ptBR: Strings = {
   localApi,
   dataApi,
   onboarding,
+  importers,
   update,
   devPreview,
   chat,

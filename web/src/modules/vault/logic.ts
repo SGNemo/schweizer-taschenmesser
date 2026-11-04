@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
-import { addDaysStr, addMonthsStr, daysBetween } from '@/core/time/dates';
+import { minusNotice } from '@/core/deadline/notice';
+import { addMonthsStr, daysBetween } from '@/core/time/dates';
 import type { DocCategory, VaultDocument } from './schema';
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -10,7 +11,7 @@ export function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
 }
 
-type D = Pick<VaultDocument, 'endDate' | 'expiresOn' | 'noticeDays'>;
+type D = Pick<VaultDocument, 'endDate' | 'expiresOn' | 'noticeDays' | 'noticeMonths'>;
 
 /** End date of a document; `expiresOn` is what documents carried before 0.6.0. */
 export const endOf = (d: Pick<VaultDocument, 'endDate' | 'expiresOn'>): string | undefined =>
@@ -19,7 +20,9 @@ export const endOf = (d: Pick<VaultDocument, 'endDate' | 'expiresOn'>): string |
 /** Last day to cancel; only for entries with an end date and a notice period. */
 export function cancelDeadline(d: D): string | undefined {
   const end = endOf(d);
-  return end && d.noticeDays !== undefined ? addDaysStr(end, -d.noticeDays) : undefined;
+  return end && d.noticeDays !== undefined
+    ? minusNotice(end, { days: d.noticeDays, months: d.noticeMonths })
+    : undefined;
 }
 
 export type Status = 'expired' | 'act-now' | 'missed' | 'soon' | 'ok' | 'open-ended';

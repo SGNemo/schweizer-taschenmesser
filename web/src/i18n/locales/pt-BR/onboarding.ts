@@ -103,9 +103,9 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Cole uma lista de um app de notas ou de uma mensagem: uma linha por tarefa.',
     placeholder: 'Organizar documentos do imposto\nLigar para o dentista\nConsertar a bicicleta',
     list: 'Nesta lista',
-    file: 'Do Todoist ou do Google Tasks',
+    file: 'Do Todoist, Google Tasks ou Microsoft To Do',
     fileHint:
-      'Escolha o arquivo que você mesmo exportou de lá: CSV do Todoist ou arquivo do Google Tasks (JSON). Nada é enviado.',
+      'Escolha o arquivo que você mesmo exportou de lá: CSV do Todoist, arquivo do Google Tasks (JSON) ou o CSV de tarefas do Outlook (Microsoft To Do). Nada é enviado.',
     perSource: 'Uma lista própria para cada lista de origem',
     newList: 'Lista nova',
     includeDone: 'Tarefas concluídas',
@@ -250,23 +250,13 @@ export const onboarding: Strings['onboarding'] = {
     placeholder: 'https://example.org/artigo\nTrilha bonita https://example.org/trilha',
   },
   notes: {
-    file: 'Arquivos Markdown ou Google Keep',
+    file: 'Markdown, Obsidian, Evernote ou Google Keep',
     fileHint:
-      'Escolha arquivos .md (por exemplo da sua pasta do Obsidian, vários de uma vez) ou os arquivos .json do Google Takeout (Keep). Títulos, listas de tarefas e #tags são mantidos. Descompacte antes os arquivos ZIP.',
+      'Escolha arquivos .md (p. ex. da sua pasta do Obsidian, vários de uma vez), um ZIP com uma pasta de notas, um arquivo do Evernote (.enex) ou os arquivos .json do Google Takeout (Keep). Títulos, listas e #tags são mantidos, pastas viram cadernos. O Nemo não consegue guardar anexos (imagens, arquivos) em notas; eles são contados no relatório.',
     text: 'Colar Markdown',
     textHint: 'O texto colado vira uma nota; um primeiro título vira o título da nota.',
     textLabel: 'Texto Markdown',
     placeholder: '# Plano da semana\n\n- Compras #casa\n- Ligar para a mamãe',
-    emptyFiles: (n: number) =>
-      n === 1 ? '1 arquivo vazio foi ignorado.' : `${n} arquivos vazios foram ignorados.`,
-    keepSkipped: (n: number) =>
-      n === 1
-        ? '1 nota do Keep da lixeira ou do arquivo ficou de fora.'
-        : `${n} notas do Keep da lixeira ou do arquivo ficaram de fora.`,
-    unreadable: (n: number) =>
-      n === 1
-        ? '1 arquivo JSON não é uma nota do Keep e foi ignorado.'
-        : `${n} arquivos JSON não são notas do Keep e foram ignorados.`,
   },
   birthdays: {
     text: 'Colar aniversários',

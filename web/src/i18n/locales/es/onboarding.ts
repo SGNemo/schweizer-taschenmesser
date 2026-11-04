@@ -90,9 +90,9 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Pega una lista de una app de notas o de un mensaje: una línea por tarea.',
     placeholder: 'Ordenar papeles de impuestos\nLlamar al dentista\nArreglar la bici',
     list: 'En esta lista',
-    file: 'Desde Todoist o Google Tasks',
+    file: 'Desde Todoist, Google Tasks o Microsoft To Do',
     fileHint:
-      'Elige el archivo que exportaste allí: CSV de Todoist o archivo de Google Tasks (JSON). No se sube nada.',
+      'Elige el archivo que exportaste tú mismo allí: CSV de Todoist, archivo de Google Tasks (JSON) o el CSV de tareas de Outlook (Microsoft To Do). No se sube nada.',
     perSource: 'Una lista propia por cada lista de origen',
     newList: 'Lista nueva',
     includeDone: 'Tareas completadas',
@@ -233,24 +233,14 @@ export const onboarding: Strings['onboarding'] = {
     placeholder: 'https://example.org/articulo\nRuta bonita https://example.org/senderismo',
   },
   notes: {
-    file: 'Archivos Markdown o Google Keep',
+    file: 'Markdown, Obsidian, Evernote o Google Keep',
     fileHint:
-      'Elige archivos .md (p. ej. de tu carpeta de Obsidian, varios a la vez) o los archivos .json de Google Takeout (Keep). Se conservan títulos, listas de tareas y #etiquetas. Descomprime antes los archivos ZIP.',
+      'Elige archivos .md (p. ej. de tu carpeta de Obsidian, varios a la vez), un ZIP con una carpeta de notas, un archivo de Evernote (.enex) o los archivos .json de Google Takeout (Keep). Se conservan títulos, listas y #etiquetas; las carpetas pasan a ser cuadernos. Nemo no puede guardar adjuntos (imágenes, archivos) en las notas; se cuentan en el informe.',
     text: 'Pegar Markdown',
     textHint:
       'El texto pegado se convierte en una nota; un primer encabezado pasa a ser el título.',
     textLabel: 'Texto Markdown',
     placeholder: '# Plan semanal\n\n- Compras #casa\n- Llamar a mamá',
-    emptyFiles: (n: number) =>
-      n === 1 ? 'Se omitió 1 archivo vacío.' : `Se omitieron ${n} archivos vacíos.`,
-    keepSkipped: (n: number) =>
-      n === 1
-        ? 'Se dejó fuera 1 nota de Keep de la papelera o del archivo.'
-        : `Se dejaron fuera ${n} notas de Keep de la papelera o del archivo.`,
-    unreadable: (n: number) =>
-      n === 1
-        ? '1 archivo JSON no es una nota de Keep y se omitió.'
-        : `${n} archivos JSON no son notas de Keep y se omitieron.`,
   },
   birthdays: {
     text: 'Pegar cumpleaños',

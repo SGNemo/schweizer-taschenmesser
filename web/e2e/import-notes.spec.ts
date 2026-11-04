@@ -22,7 +22,9 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
   await enable(page, 'notes');
   // Enabling offers the start-data wizard once.
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
-  await dialog.getByRole('button', { name: /Markdown-Dateien oder Google Keep/ }).click();
+  await dialog
+    .getByRole('button', { name: /Markdown, Obsidian, Evernote oder Google Keep/ })
+    .click();
 
   const chooser = page.waitForEvent('filechooser');
   await dialog.getByRole('button', { name: 'Datei wählen …' }).click();
@@ -41,8 +43,8 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
   ]);
 
   await expect(dialog.getByText('2 Einträge erkannt')).toBeVisible();
-  await expect(dialog.getByText('1 leere Datei wurde übersprungen.')).toBeVisible();
-  await expect(dialog.getByText(/1 Keep-Notiz aus Papierkorb oder Archiv/)).toBeVisible();
+  await expect(dialog.getByText('1 leerer Eintrag wurde übersprungen.')).toBeVisible();
+  await expect(dialog.getByText(/1 Eintrag aus Papierkorb oder Archiv/)).toBeVisible();
   await dialog.getByRole('checkbox', { name: /Einkauf/ }).click();
   await dialog.getByRole('button', { name: '1 Eintrag importieren' }).click();
   await expect(dialog.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
@@ -56,7 +58,9 @@ test('Notizen: Markdown-Dateien und Keep-Export → Vorschau → Import → Wied
   await page.goto('/library');
   await page.getByTestId('module-notes').getByRole('button', { name: 'Importieren' }).click();
   const again = page.getByRole('dialog', { name: /Importieren/ });
-  await again.getByRole('button', { name: /Markdown-Dateien oder Google Keep/ }).click();
+  await again
+    .getByRole('button', { name: /Markdown, Obsidian, Evernote oder Google Keep/ })
+    .click();
   const chooser2 = page.waitForEvent('filechooser');
   await again.getByRole('button', { name: 'Datei wählen …' }).click();
   await (
