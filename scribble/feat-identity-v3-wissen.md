@@ -3,7 +3,7 @@
 Package 2 of 3 (notes, bookmarks, feeds, chat, browser). Package 3 (mail, music, downloads) follows on its own branch.
 
 ## Proposals for whoever owns `ui/*` (not touched here)
-- `EmptyState` `motif?: ReactNode` (now five more module-local copies: Notes/Bookmarks/Feeds/Chat/Browser plus the four of package 1).
+- (DONE in `feat/ui-empty-motif`: `EmptyState` takes `motif` and `testId`, the module wrappers are thin.) `EmptyState` `motif?: ReactNode` (now five more module-local copies: Notes/Bookmarks/Feeds/Chat/Browser plus the four of package 1).
 - `SignatureId` `masthead` for the feeds head (feeds keeps `signature: 'none'` and draws the masthead with `HeroFigure` type `serif` and `identity.type: 'serif'`).
 - Index-tab and folder-tab shapes are now copied in notes, vault and accounts: one shared `Tabs`-style "folder tab" strip would remove the copies.
 

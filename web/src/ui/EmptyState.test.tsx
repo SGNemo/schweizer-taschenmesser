@@ -31,6 +31,7 @@ describe('EmptyState', () => {
       <EmptyState compact title="Leer" motif={<svg data-motif="demo" aria-hidden="true" />} />,
     );
     expect(container.querySelector('[data-motif]')).toBeNull();
+    expect(container.querySelector('svg')).not.toBeNull(); // the fish
     expect(screen.getByText('Leer')).toBeInTheDocument();
   });
 });

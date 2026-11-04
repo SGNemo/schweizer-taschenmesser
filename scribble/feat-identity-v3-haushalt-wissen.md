@@ -3,7 +3,7 @@
 Package 1 of 3 (pantry, lists, vault, accounts). Packages 2 (notes, bookmarks, feeds, chat, browser) and 3 (mail, music, downloads) follow on their own branches.
 
 ## Proposals for whoever owns `ui/*` (I did not touch it)
-- `EmptyState` always draws the Nemo fish. Four module-local empties exist (`PantryEmpty`, `ListsEmpty`, `VaultEmpty`, `AccountsEmpty`): an optional `motif?: ReactNode` prop would remove the copies.
+- (DONE in `feat/ui-empty-motif`: `EmptyState` takes `motif` and `testId`, the module wrappers are thin.) `EmptyState` always draws the Nemo fish. Four module-local empties exist (`PantryEmpty`, `ListsEmpty`, `VaultEmpty`, `AccountsEmpty`): an optional `motif?: ReactNode` prop would remove the copies.
 - `TileGrid` has no count/state line; the pantry widget draws its own tiles (see decisions/ui-shell.md).
 - `HeroFigure` `label` is user text for the shopping list name: a very long unbroken list name cannot be wrapped from a module (needs `overflow-wrap` in `HeroFigure.module.css`).
 - `HeroSlot area="figure"` on a phone pushes `extra` below the figure, so heads with tiles grow to about 14 rem; fine, but the phone stimulus budget of pantry rose by 20 %.

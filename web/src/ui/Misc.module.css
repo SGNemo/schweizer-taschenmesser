@@ -43,7 +43,7 @@
 .emptyMark {
   display: grid;
   place-items: center;
-  /* The faded fish: 35 % of the quiet text colour, no module illustrations. */
+  /* The faded fish: 35 % of the quiet text colour (a module's own motif is `.emptyMotif`). */
   color: var(--text-3);
   opacity: 0.35;
 }
