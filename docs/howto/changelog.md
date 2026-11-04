@@ -9,7 +9,7 @@ Data flow: `.changes/*.md` (one note per PR) → release step `npm run changelog
 ```
 ---
 type: fixed            # added | changed | fixed | removed | security | performance
-area: calendar         # module or tool id, or app | home | settings | sync | ai | backup | accessibility | automation | platform | tools
+area: calendar         # module or tool id, or app | home (alias overview) | ui | settings | sync | ai | backup | accessibility | automation | platform | tools
 breaking: false
 highlight: true        # optional: the 1–3 most important points of a release
 pr: 123                # optional

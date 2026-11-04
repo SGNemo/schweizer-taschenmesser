@@ -31,6 +31,7 @@ export const AREAS: Record<string, Label> = {
   accessibility: { de: 'Lesbarkeit', en: 'Readability' },
   automation: { de: 'Automatisierungen', en: 'Automations' },
   platform: { de: 'Installation', en: 'Installation' },
+  ui: { de: 'Oberfläche', en: 'Interface' },
   accounts: { de: 'Tresor', en: 'Vault' },
   bookmarks: { de: 'Merkliste', en: 'Bookmarks' },
   browser: { de: 'Browser', en: 'Browser' },
@@ -67,6 +68,9 @@ const TYPE_ALIASES: Record<string, ChangeType> = {
   feat: 'added',
   fix: 'fixed',
 };
+
+/** Other names chats reach for; stored under the canonical area. */
+const AREA_ALIASES: Record<string, string> = { overview: 'home' };
 
 const KEYS = new Set(['type', 'area', 'breaking', 'highlight', 'de', 'en', 'pr']);
 
@@ -131,6 +135,7 @@ export function parseChangeFile(
     const type = (TYPE_ALIASES[kv.type ?? ''] ?? kv.type) as ChangeType | undefined;
     if (!type || !(TYPES as readonly string[]).includes(type))
       errors.push(`${at}: type must be one of ${TYPES.join(', ')}`);
+    kv.area = AREA_ALIASES[kv.area ?? ''] ?? kv.area;
     if (!kv.area || !areas[kv.area]) errors.push(`${at}: unknown area "${kv.area ?? ''}"`);
     for (const lang of ['de', 'en'] as const) {
       const s = kv[lang];

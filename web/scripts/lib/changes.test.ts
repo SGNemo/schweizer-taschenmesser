@@ -53,6 +53,11 @@ describe('parseChangeFile', () => {
     expect(errors).toEqual([]);
     expect(entries[0]?.type).toBe('performance');
   });
+  it('accepts the area alias overview and the area ui', () => {
+    const t = (a: string) => `---\ntype: changed\narea: ${a}\nde: Neu.\nen: New.\n---\n`;
+    expect(parseChangeFile(t('overview')).entries[0]?.area).toBe('home');
+    expect(parseChangeFile(t('ui')).errors).toEqual([]);
+  });
   it('round-trips through formatChangeFile', () => {
     const { entries } = parseChangeFile(ok);
     expect(parseChangeFile(formatChangeFile(entries)).entries).toEqual(entries);
