@@ -373,7 +373,7 @@ jobs:
   # (documentation only, other packages only, draft PR without the E2E part).
   web:
     name: Web (lint, types, unit, E2E)
-    needs: [changes, web-static, web-unit, web-e2e]
+    needs: [changes, licences, web-static, web-unit, web-e2e]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -383,6 +383,8 @@ jobs:
           CHANGES: ${{ needs.changes.result }}
           WEB: ${{ needs.changes.outputs.web }}
           E2E: ${{ needs.changes.outputs.e2e }}
+          CODE: ${{ needs.changes.outputs.code }}
+          LICENCES: ${{ needs.licences.result }}
           STATIC: ${{ needs.web-static.result }}
           UNIT: ${{ needs.web-unit.result }}
           E2E_RESULT: ${{ needs.web-e2e.result }}
@@ -396,6 +398,7 @@ jobs:
               [ "$2" = "skipped" ] || { echo "::error::$1 should have been skipped (result '$2'); the pre-check job 'Which parts changed' said it is not needed."; exit 1; }
             fi
           }
+          check "Licence list" "$LICENCES" "$CODE"
           check "Web static (format, lint, types)" "$STATIC" "$WEB"
           check "Web unit tests (shards)" "$UNIT" "$WEB"
           check "E2E app (shards)" "$E2E_RESULT" "$E2E"
