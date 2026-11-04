@@ -19,6 +19,7 @@ Code, comments, commits **English**; UI in **5 languages**: German source `web/s
 - `npm test` (`test:changed`) · `npm run e2e` (= `e2e:app` + `e2e:sync`); one spec: `npx playwright test e2e/<name>.spec.ts`
 - `npm run gen:module -- <id> "<Name>"` · `db:bump` · `gen:icons` · `version:check|sync|set -- <semver>` · `changelog -- --version <x.y.z>`
 - Rust, CI layout, release: [docs/HOW-TO.md](docs/HOW-TO.md). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
+- **CI:** a plain PR runs only the touched packages and the E2E smoke list; label `full-ci` = everything now, `develop`/nightly always run everything ([HOW-TO](docs/HOW-TO.md) "Which checks run when").
 - **Done =** `check` (or lint + typecheck), `test`, `e2e` green; app starts; docs per step 4; commit + push the branch.
 
 ## Layout (map: [docs/ARCHITECTURE-MAP.md](docs/ARCHITECTURE-MAP.md))

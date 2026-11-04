@@ -2,6 +2,23 @@
 
 Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTURE-MAP.md), [architecture index](architecture.md). Definition of done and git rules: root [CLAUDE.md](../CLAUDE.md).
 
+## Which checks run when
+
+| Check | PR (plain) | PR with label `full-ci` | Draft PR | push `develop` | nightly (develop) | Release / dry run |
+|---|---|---|---|---|---|---|
+| gitleaks, docs pairs/budget, change note | always | always | always | always | always | gitleaks always |
+| Static (format, lint, types, i18n, modules, licences) | if `web/` or `.changes/` changed | yes | yes | yes | yes | – |
+| Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | yes | yes | yes | – |
+| E2E app | **smoke**: 24 files, desktop only, 2 shards | **full**: desktop + Pixel 7, 6 shards | no | **full** | **full** | – |
+| E2E seed project (Dev-Preview flavour) + sync E2E | sync if `web/` or `server/` changed | yes | no | yes | yes | – |
+| server, MCP, extension, supporter, webhook, native shell, local model | only for the package that changed | yes | no | yes | yes | – |
+| Shared inputs (`packages/`, `contract/`, workflows, root manifests, unknown paths) | turn every package on | – | no | – | – | – |
+| CodeQL (3 languages) | always (superseded scans cancelled) | always | always | always | weekly | – |
+| Dev-Preview (signed exe + APK) | never | never | never | build next to the tests, **published only when everything is green** | – | – |
+| Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on `main`) | – | tag / manual run: build, sign, audit, publish |
+
+Rules of thumb: anything that leaves a plain PR runs on `develop` and nightly, so nothing is checked less often overall. Need the full suite on your PR now (UI-wide change, a11y, layout, Pixel 7)? Add the label `full-ci`. A docs-only change starts none of the heavy jobs. Details and cache notes: [howto/ci.md](howto/ci.md).
+
 ## More recipes (one file per topic, load only what you need)
 
 | File                                                         | Covers                                                                                                                                                        |
