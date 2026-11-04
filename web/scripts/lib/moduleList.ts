@@ -59,7 +59,7 @@ const WORDS = {
     optional: 'optional',
     preview: 'Vorschau',
     previewHint:
-      'Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen“ einschaltest (Einstellungen → Aussehen).',
+      'Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen“ einschaltest (Einstellungen → Darstellung).',
     only: (p: string) => `nur ${p}`,
     windows: 'Windows-App',
     android: 'Android-App',
