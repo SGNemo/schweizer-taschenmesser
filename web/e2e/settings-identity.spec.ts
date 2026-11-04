@@ -61,6 +61,36 @@ test.describe('settings in identity v3', () => {
     expect(Math.abs((module?.y ?? -1) - (category?.y ?? -2))).toBeLessThanOrEqual(1);
   });
 
+  test('desktop: the navigation stays where it is while you click through the categories', async ({
+    page,
+  }, info) => {
+    test.skip(isPhone(info), 'desktop layout');
+    await ready(page, '/settings');
+    const nav = categoryNav(page);
+    // measured at the top of the page: the sticky column follows the scroll, its place in the layout is what counts
+    const top = async () => {
+      // the app scrolls inside a container: bring every scrolling ancestor of the column back to the top
+      await page.getByTestId('settings-nav').evaluate((el) => {
+        for (let n: HTMLElement | null = el.parentElement; n; n = n.parentElement) n.scrollTop = 0;
+        window.scrollTo(0, 0);
+      });
+      return (await page.getByTestId('settings-nav').boundingBox())?.y ?? -1;
+    };
+    const first = await top();
+    for (const name of ['Allgemein', 'KI', 'Sync & Backup', 'Darstellung']) {
+      await nav.getByRole('link', { name: new RegExp(name) }).click();
+      await expect(nav.getByRole('link', { name: new RegExp(name) })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      expect(Math.abs((await top()) - first), `${name}: the column moved`).toBeLessThanOrEqual(1);
+    }
+    // the second level never grows the column: its groups are pills in the content
+    await nav.getByRole('link', { name: 'Allgemein' }).click();
+    await expect(page.getByTestId('subnav-allgemein')).toBeVisible();
+    await expect(nav.getByTestId('subnav-allgemein')).toHaveCount(0);
+  });
+
   test('desktop: the category list is grouped, keyboard reachable and marks the open page', async ({
     page,
   }, info) => {
