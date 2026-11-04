@@ -95,18 +95,16 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Overview:** the greeting is by the hour with no name; the weather short line shows only with the weather module on and a place chosen (no new request, same hook as the widget). Default widget order avoids neighbouring cards of different modules with the same shape (`spreadVariants`); saved positions and the front widgets never move.
 - **Existing modules** got the v3 fields in their manifests only; rebuilding their pages around their head and widget variant is each module chat's job (list in `scribble/feat-identity-v3-foundation.md`).
 
-<<<<<<< HEAD
 ## Tools identity v3 (2026-11-04, `feat/identity-v3-tools`, package 1 of 3)
 
 - **Panel instead of popover:** the toolbox is a large centred window (`Dialog size="xl"`): list left (search, categories, Alt+1…9), the tool right, opens on the tool used last; under 900 px a full-screen sheet with one pane at a time (the tool first, the list behind the arrow). Chosen over a docked side panel (no base drawer, own focus logic, too narrow for the calculator modes and PDF) and over "both" (double layout upkeep). No change to `ui/Dialog`.
 - **Identity in the manifest, not in CSS:** `identity`, `category`, `keywords` are required on every tool and checked (`check:tools`, registry test); hues come from palette v3 and must differ between neighbours. The library cards (`LibraryCard`, a base component the settings chat owns) do not show the hue yet: they need an optional `hue` prop (proposal in the PR).
 - **Detached window is web-only for now:** `/tool/:id` without the shell, opened with `window.open` (PWA/browser). A Tauri window needs a platform seam and a capability (hotspots): own package. The tools that hand over to Notes or the vault navigate inside that window (accepted).
 - **The old "Notizzettel" tool is not back:** the scratch pad lives in Notes (`modules.md`); the panel only links to it when Notes is on.
-=======
+
 ## Module identity v3 – household and vault pages (2026-11-04, branch `feat/identity-v3-haushalt-wissen`, package 1 of 3)
 
 - **Content shape per module, module-local only (no tokens, shell or `ui/*` change):** pantry = shelf tiles in the head + label cards (hairline, punched hole, mono amount) with the cart as row action and "restock all" in the toolbar; lists = receipt (open figure + total in the head, slip beside it, paper with dashed top and jagged lower edge); documents = folder tabs as the filter (tab shape replaces `Chips`); passwords = group folder tabs, lock status and auto-lock stay in the head.
 - **Empty states with their own motif** are module-local components (`PantryEmpty`, `ListsEmpty`, `VaultEmpty`, `AccountsEmpty`) because `ui/Misc` `EmptyState` always draws the fish. Proposal for the shell chat: an optional `motif?: ReactNode` prop on `EmptyState`.
 - **Documents widget shows counts only** (state names + numbers, no title, provider or file name); pinned by `vault.widget.test.tsx`. The passwords widget stays status-only (`exclusion.test.ts`).
 - **Pantry widget is `kacheln`** (tile per place with count and state in words, one context line, up to three names): the body now matches the frame variant. Packing widget overrides its frame to `fortschritt`. **Exception to "catalogue base type":** the tile body is built from `WidgetBody` plus module CSS because `TileGrid` has no count/state line; the name rows follow the widget size (2/3/5). Proposal for the shell chat: a count/state variant of `TileGrid` (`scribble/feat-identity-v3-haushalt-wissen.md`).
->>>>>>> origin/develop
