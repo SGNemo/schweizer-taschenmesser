@@ -96,6 +96,25 @@ function roundLetters(C, text, weight, opt = {}) {
       const cx = x + r;
       strokes.push(`M${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}`);
       x = cx + r + gap + sw;
+    } else if (ch === 'E') {
+      // stem + three bars; the middle bar a little shorter
+      const ew = C * (opt.eWidth ?? 0.56);
+      const mid = -C / 2 + C * (opt.eMid ?? 0);
+      strokes.push(`M${x + ew} ${-C + sw / 2}L${x} ${-C + sw / 2}L${x} ${-sw / 2}L${x + ew} ${-sw / 2}M${x} ${mid}L${x + ew * (opt.eMidLen ?? 0.86)} ${mid}`);
+      x += ew + gap + sw;
+    } else if (ch === 'M') {
+      // two stems, the diagonals meet at mVertex (0 = baseline, 0.5 = half way up)
+      const mw = C * (opt.mWidth ?? 0.98);
+      const vy = -sw / 2 - (C - sw) * (opt.mVertex ?? 0);
+      strokes.push(`M${x} ${-sw / 2}L${x} ${-C + sw / 2}L${x + mw / 2} ${vy}L${x + mw} ${-C + sw / 2}L${x + mw} ${-sw / 2}`);
+      x += mw + gap + sw;
+    } else if (ch === 'O') {
+      const R = (C - sw) / 2;
+      const rx = R * (opt.oWide ?? 1);
+      const cx = x + rx;
+      const cyc = -C / 2;
+      strokes.push(`M${cx + rx} ${cyc}A${rx} ${R} 0 1 0 ${cx - rx} ${cyc}A${rx} ${R} 0 1 0 ${cx + rx} ${cyc}`);
+      x = cx + rx + gap + sw;
     } else throw new Error(`round lettering: no letter "${ch}"`);
   }
   x -= gap; // no trailing gap
