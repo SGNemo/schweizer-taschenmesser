@@ -28,8 +28,10 @@ export function selectChangelog(data: ChangelogData, runningVersion: string): Ch
   const exact = sorted.find((v) => v.version === running);
   const current = exact;
   const parsed = parseSemver(running);
+  // A dev/beta build of 1.1.0 sorts below 1.1.0 but is built on it: everything up to its base is "older".
+  const upTo = parsed ? `${parsed.major}.${parsed.minor}.${parsed.patch}` : running;
   const older = sorted.filter(
-    (v) => v !== current && (!parsed || compareSemver(v.version, running) < 0),
+    (v) => v !== current && (!parsed || compareSemver(v.version, upTo) <= 0),
   );
   return { ...(unreleased ? { unreleased } : {}), ...(current ? { current } : {}), older };
 }

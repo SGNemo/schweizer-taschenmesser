@@ -11,7 +11,9 @@ import { tDiag } from '@/strings.diagnostics';
 import { getPlatform } from '@/core/platform';
 import { resetDevice } from '@/core/reset/device';
 import { checkForUpdate, useUpdateStore } from '@/core/update/controller';
-import { notesPreview } from '@/core/update/notes';
+import { parseReleaseNotes } from '@/core/changelog/notes';
+import { useLang } from '@/core/i18n/lang';
+import { ReleaseNotes } from '@/layout/ReleaseNotes';
 import { ChangelogList } from './ChangelogList';
 import { getLastCheckAt } from '@/core/update/prefs';
 import { t } from '@/strings';
@@ -121,15 +123,10 @@ export function AboutSection() {
 }
 
 function Notes({ markdown }: { markdown: string }) {
-  const lines = notesPreview(markdown, 80);
-  if (lines.length === 0) return <p className={styles.muted}>{a.updates.none}</p>;
-  return (
-    <div className={styles.notes}>
-      {lines.map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
-    </div>
-  );
+  const lang = useLang();
+  const { blocks } = parseReleaseNotes(markdown, lang);
+  if (blocks.length === 0) return <p className={styles.muted}>{a.updates.none}</p>;
+  return <ReleaseNotes blocks={blocks} />;
 }
 
 /** Last update check, "check now" and the changes of this and the available version (collapsed). */

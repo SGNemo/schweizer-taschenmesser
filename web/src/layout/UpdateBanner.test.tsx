@@ -43,8 +43,10 @@ describe('UpdateBanner', () => {
     const { container } = render(<UpdateBanner />);
     expect(screen.getByText(/Update verfügbar \(v1\.2\.0-beta\.1\)/)).toBeInTheDocument();
     expect(screen.getByText(t.update.beta)).toBeInTheDocument();
-    expect(screen.getByText('ai: add Groq')).toBeInTheDocument();
+    expect(screen.getByText('add Groq', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('ai:')).toBeInTheDocument();
     expect(screen.getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument(); // as text
+    expect(screen.getByText(/Version 1\.2\.0-beta\.1/)).toBeInTheDocument();
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getByRole('button', { name: t.update.updateNow })).toBeEnabled();
   });
