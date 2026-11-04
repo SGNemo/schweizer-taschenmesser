@@ -9,20 +9,13 @@ import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import {
-  Button,
-  EmptyState,
-  Icon,
-  IconButton,
-  ItemList,
-  ItemRow,
-  PageTitle,
-  TextField,
-} from '@/ui';
+import { Button, Icon, IconButton, ItemList, ItemRow, PageTitle, TextField } from '@/ui';
 import { ReaderPanel } from '../components/ReaderPanel';
 import { TabOverview } from '../components/TabOverview';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
+import { AddressBarSignature } from '../components/AddressBarSignature';
+import { BrowserEmpty } from '../components/BrowserEmpty';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
@@ -183,7 +176,9 @@ export default function BrowserPage() {
     return (
       <>
         <PageTitle title={t.browser.meta.name} />
-        <EmptyState title={t.browser.unsupported.title}>{t.browser.unsupported.body}</EmptyState>
+        <BrowserEmpty title={t.browser.unsupported.title}>
+          {t.browser.unsupported.body}
+        </BrowserEmpty>
       </>
     );
   }
@@ -195,6 +190,7 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
+      <AddressBarSignature host={hostOf(current) || undefined} />
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
