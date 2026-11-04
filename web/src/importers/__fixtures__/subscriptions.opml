@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Abos von Anna &amp; Max</title></head>
+  <body>
+    <outline text="Nachrichten" title="Nachrichten">
+      <outline type="rss" text="Tagesbericht &amp; Mehr" xmlUrl="https://tagesbericht.example.org/feed.xml" htmlUrl="https://tagesbericht.example.org"/>
+      <outline type="rss" text="Wissen" xmlUrl="https://www.wissen.example.org/rss/"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Technik">
+        <outline type="rss" text="Der Werkstatt-Podcast" xmlUrl="https://werkstatt.example.org/podcast.rss"/>
+      </outline>
+      <outline type="rss" text="Kochen am Sonntag" xmlUrl="https://kochen.example.org/atom.xml"/>
+    </outline>
+    <outline type="rss" text="Ohne Gruppe" xmlUrl="https://anna.example.org/index.xml"/>
+    <outline type="rss" text="Kaputt" xmlUrl="javascript:alert(1)"/>
+    <outline type="rss" text="Lokal" xmlUrl="ftp://example.org/feed"/>
+    <outline text="Leerer Ordner"></outline>
+    <outline type="rss" text='Einfache "Quotes"' xmlUrl='https://q.example.org/f'/>
+  </body>
+</opml>

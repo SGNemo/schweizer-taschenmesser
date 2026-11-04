@@ -5686,6 +5686,7 @@ export const de = {
     sources: {
       enex: 'Evernote (.enex)',
       notion: 'Notion (Markdown- und CSV-Export)',
+      opml: 'OPML (Feed- und Podcast-Apps)',
       obsidian: 'Obsidian oder Markdown-Ordner',
       'outlook-tasks': 'Microsoft To Do (Outlook-CSV)',
       todoist: 'Todoist (CSV)',
@@ -5991,6 +5992,15 @@ export const de = {
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
       placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+    },
+    feeds: {
+      file: 'OPML-Datei (Feeds und Podcasts)',
+      fileHint:
+        'Wähle die OPML-Datei, die deine Feed- oder Podcast-App exportiert hat. Gruppen („Ordner“) werden übernommen, Doppeltes erkennt Nemo. Es wird nichts hochgeladen.',
+      text: 'Adressen einfügen',
+      textHint: 'Eine Zeile pro Feed: die Adresse, davor optional ein Name.',
+      placeholder:
+        'Tagesbericht https://tagesbericht.example.org/feed.xml\nhttps://blog.example.org/feed.xml',
     },
     birthdays: {
       text: 'Geburtstage einfügen',
@@ -7520,6 +7530,10 @@ export const de = {
     listLabel: 'Abonnierte Feeds',
     ungrouped: 'Ohne Gruppe',
     allFeeds: 'Alle Feeds',
+    importOpml: 'Importieren',
+    exportOpml: 'Als OPML exportieren',
+    exported: 'OPML gespeichert.',
+    opmlTitle: 'Meine Feeds',
     rowMenu: (name: string) => `Aktionen für ${name}`,
     fields: {
       url: 'Adresse des Feeds',

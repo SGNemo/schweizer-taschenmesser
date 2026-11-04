@@ -1,7 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
+import { useOnboardingHost } from '@/core/importer/host';
 import { collator } from '@/core/i18n/format';
+import { getPlatform } from '@/core/platform';
+import { today } from '@/core/time/now';
+import { buildOpml } from '@/importers/opml/parse';
+import { useUiStore } from '@/stores/ui';
 import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -36,6 +41,8 @@ export default function MainPage() {
   const [closed, setClosed] = useState(false);
   const [error, setError] = useState('');
   const [params, setParams] = useSearchParams();
+  const openImporter = useOnboardingHost((h) => h.open);
+  const toast = useUiStore((st) => st.toast);
   const [prefs] = useSettings('module.feeds', settings.schema, settings.defaults);
 
   // `?new=1` (quick add, widget) opens the empty form; typing takes the draft over.
@@ -70,6 +77,13 @@ export default function MainPage() {
     close();
   }
 
+  async function exportOpml() {
+    const data = buildOpml(feeds ?? [], s.opmlTitle);
+    const fileName = `nemo-feeds-${today()}.opml`;
+    if ((await getPlatform().saveFile({ fileName, data, mime: 'text/x-opml' })) === 'saved')
+      toast(s.exported);
+  }
+
   function close() {
     setDraft(null);
     setClosed(true);
@@ -84,6 +98,16 @@ export default function MainPage() {
           <Icon name="plus" size={18} />
           {s.add}
         </Button>
+        <Button onClick={() => openImporter('feeds')}>
+          <Icon name="download" size={18} />
+          {s.importOpml}
+        </Button>
+        {feeds && feeds.length > 0 ? (
+          <Button onClick={() => void exportOpml()}>
+            <Icon name="upload" size={18} />
+            {s.exportOpml}
+          </Button>
+        ) : null}
       </PageHeader>
       {feeds && feeds.length === 0 ? (
         <EmptyState title={s.empty}>

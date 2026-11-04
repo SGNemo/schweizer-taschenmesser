@@ -12,10 +12,11 @@
 | Evernote | `.enex` | notes | ENML → Markdown, tags, to-dos; images/attachments counted, not stored |
 | Obsidian / Markdown folder | `.md`, ZIP | notes | front matter, `#tags`, wikilinks kept; top folder → notebook; hidden folders skipped; embeds counted |
 | Notion | "Markdown & CSV" ZIP | notes | `Title <id>.md` pages: id dropped, property block kept, `Tags` → `#tags`, links between exported pages → `[[wikilinks]]`, wrapper folder skipped, top folder → notebook; images/files and CSV tables counted, not read |
+| Feed and podcast apps | OPML (`.opml`, `.xml`), or pasted addresses | feeds | folders → groups, nested folders use the innermost name, non-http(s) addresses counted; the Feeds page exports the list as OPML 2.0 (`nemo-feeds-<date>.opml`); Spotify has no feed export (only podcast apps do) |
 | Bitwarden / KeePass(XC) / 1Password | CSV | vault | mapping only in `accounts/csv.ts` (`importVaultCsv`); needs the master password, crypto untouched |
 | German banks | CSV, CAMT, OFX, QIF | finance | presets for Sparkasse, DKB, ING, comdirect, N26 existed |
 
-Not yet: a Feed module with OPML (own PRs). Todoist JSON backup is not read (the CSV is the documented export). The header names of the KeePass, 1Password and Outlook CSVs vary by version and language and could not be checked against official docs; the readers match aliases, so report an unknown header as a bug.
+Todoist JSON backup is not read (the CSV is the documented export). The header names of the KeePass, 1Password and Outlook CSVs vary by version and language and could not be checked against official docs; the readers match aliases, so report an unknown header as a bug.
 
 Formats were checked on 2026-11-03: Evernote DTD (`en-export`/`note`/`resource`, base64 data, ENML in CDATA) confirmed; KeePassXC header `Group,Title,Username,Password,URL,Notes,TOTP,…` from third-party docs; 1Password CSV columns per support.1password.com (Title, Website, Username, Password, one-time password, Favorite, Archived, Tags, Notes); Outlook classic exports tasks to CSV (File → Open & Export), To Do has none.
 

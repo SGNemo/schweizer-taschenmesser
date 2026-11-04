@@ -5,6 +5,7 @@ import { source as googleKeep } from './google-keep/source';
 import { source as googleTasks } from './google-tasks/source';
 import { source as notion } from './notion/source';
 import { source as obsidian } from './obsidian/source';
+import { source as opml } from './opml/source';
 import { source as outlookTasks } from './outlook-tasks/source';
 import { source as todoist } from './todoist/source';
 import type { Detection, SourceDef, SourceFile } from './types';
@@ -20,6 +21,7 @@ export const SOURCES: readonly SourceDef[] = [
   googleCalendar,
   enex,
   notion,
+  opml,
   obsidian,
   bank,
 ];
