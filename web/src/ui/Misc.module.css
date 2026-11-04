@@ -47,6 +47,13 @@
   color: var(--text-3);
   opacity: 0.35;
 }
+/* The module's own picture: outline drawing in the quiet text colour, a little stronger than the faded fish. */
+.emptyMotif {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  opacity: 0.6;
+}
 .emptyTitle {
   color: var(--text);
   font-size: var(--text-lg);
