@@ -1,0 +1,49 @@
+{
+  "direction": "line",
+  "params": {
+    "stroke": 34,
+    "body": {
+      "nose": 456,
+      "joint": 176,
+      "height": 106,
+      "peak": 0.5,
+      "blunt": 0.64,
+      "stalk": 40
+    },
+    "tail": {
+      "length": 88,
+      "spread": 86,
+      "notch": 28
+    },
+    "stripes": {
+      "at": [
+        0.64
+      ],
+      "bend": -8,
+      "inset": 0.68
+    },
+    "eye": {
+      "at": 0.85,
+      "dy": -0.2,
+      "r": 1.1
+    },
+    "views": {
+      "tile": {
+        "radius": 146,
+        "scale": 0.78
+      },
+      "adaptive": {
+        "scale": 0.6
+      }
+    }
+  },
+  "small": {
+    "stroke": 46
+  },
+  "lockup": {
+    "source": "mark",
+    "markHeight": 1.25,
+    "gap": 0.4
+  },
+  "rail": "mark"
+}

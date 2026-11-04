@@ -12,10 +12,13 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { getSettings, useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { tSettings2 } from '@/strings.settings2';
+import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
 import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
 import { FieldRow } from './ModuleSection';
+import { STATUS_LOOK } from './categoryLook';
+import { PageHead } from './PageHead';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
@@ -43,47 +46,65 @@ function useChangedCounts(
   }, [ids]);
 }
 
-/** Module identity in the page head: chip in the module hue (grey in "Ruhig"), name, one line. */
-function ModuleHead({
-  manifest,
-  changed,
-  onResetAll,
-}: {
-  manifest: ModuleManifest;
-  changed?: number;
-  onResetAll?: () => void;
-}) {
-  const o = tSettings2.use().modulePage;
-  const c = tSettings2.use().changed;
+/** The module's icon large on a tinted plate: decoration only, never a number. */
+function HeadMark({ manifest }: { manifest: ModuleManifest }) {
   return (
-    <header
-      className={styles.head}
-      data-hue={manifest.identity.hue}
-      data-testid="module-settings-head"
-    >
-      <span className={styles.chip} aria-hidden="true">
-        <Icon name={manifest.icon} size={20} />
-      </span>
-      <div className={styles.headText}>
-        <h2 id={`module-${manifest.id}`} className={styles.name}>
-          {manifest.name}
-        </h2>
-        <p className={styles.desc}>{manifest.description}</p>
-      </div>
-      {changed ? <Badge>{o.changed(changed)}</Badge> : null}
-      {changed && onResetAll ? (
-        <Button variant="ghost" onClick={onResetAll} data-testid="module-reset-all">
-          {c.resetModule}
-        </Button>
-      ) : null}
-      <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
-        {o.library}
-      </Link>
-    </header>
+    <span className={styles.mark}>
+      <Icon name={manifest.icon} size={48} />
+    </span>
   );
 }
 
-/** `/settings/module/<id>`: one module's settings in the same five blocks for every module. */
+/** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate and a large icon mark. */
+function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
+  const o = tSettings2.use().modulePage;
+  const v3 = tSettingsV3.use();
+  return (
+    <PageHead
+      hue={manifest.identity.hue}
+      hue2={manifest.identity.hue2}
+      area={manifest.area ?? 'system'}
+      icon={manifest.icon}
+      eyebrow={v3.modulesEyebrow}
+      title={manifest.name}
+      titleId={`module-${manifest.id}`}
+      description={manifest.description}
+      decoration={<HeadMark manifest={manifest} />}
+      testId="module-settings-head"
+      actions={
+        <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
+          {o.library}
+        </Link>
+      }
+    />
+  );
+}
+
+/** The head of a module route that has no module page (unknown, off, loading): the settings title, nothing more. */
+function PlainHead() {
+  return (
+    <PageHead
+      {...STATUS_LOOK}
+      icon="settings"
+      eyebrow={tSettingsV3.use().modulesEyebrow}
+      title={t.settings.title}
+    />
+  );
+}
+
+/**
+ * The head of `/settings/module/<id>`, rendered by the settings layout in the same slot as the category heads (so the
+ * search and the page do not jump between pages): the module's identity, or the plain settings head while the states
+ * load and for a module that is unknown, off or has no settings page.
+ */
+export function ModuleRouteHead({ moduleId }: { moduleId: string }) {
+  const states = useModuleStates();
+  const manifest = availableManifests().find((m) => m.id === moduleId);
+  if (!states || !manifest || !states[manifest.id] || !hasPage(manifest)) return <PlainHead />;
+  return <ModuleHead manifest={manifest} />;
+}
+
+/** `/settings/module/<id>`: one module's settings in the same five blocks for every module (the head is the layout's). */
 export function ModuleSettingsPage() {
   const { moduleId } = useParams();
   const states = useModuleStates();
@@ -102,6 +123,7 @@ export function ModuleSettingsPage() {
 
 function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
+  const c = tSettings2.use().changed;
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
   const toast = useUiStore((st) => st.toast);
@@ -137,7 +159,14 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       className={styles.page}
       data-testid={`module-settings-${manifest.id}`}
     >
-      <ModuleHead manifest={manifest} changed={changed} onResetAll={resetAll} />
+      {changed ? (
+        <div className={styles.changedRow}>
+          <Badge>{o.changed(changed)}</Badge>
+          <Button variant="ghost" onClick={resetAll} data-testid="module-reset-all">
+            {c.resetModule}
+          </Button>
+        </div>
+      ) : null}
       {blocks.map((b) => {
         const title = o.blocks[b.group];
         const body = (

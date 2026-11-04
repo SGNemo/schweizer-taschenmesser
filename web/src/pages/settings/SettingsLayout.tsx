@@ -21,6 +21,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tSettings2 } from '@/strings.settings2';
+import { tSettingsV3 } from '@/strings.settingsV3';
 import {
   Badge,
   Button,
@@ -32,8 +33,11 @@ import {
   type IconName,
 } from '@/ui';
 import { Breadcrumb, type Crumb } from './Breadcrumb';
+import { CATEGORY_LOOK, NAV_GROUPS, STATUS_LOOK } from './categoryLook';
+import { PageHead } from './PageHead';
+import { StatusHead } from './StatusHead';
 import { CategoryStatus } from './CategoryStatus';
-import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
+import { ModuleList, ModuleRouteHead, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar, QuickInline } from './QuickBar';
 import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
@@ -130,17 +134,60 @@ function SubNav({ id }: { id: SettingsCategoryId }) {
   );
 }
 
-function CategoryLink({ id, list }: { id: SettingsCategoryId; list?: boolean }) {
+/** Ids of the categories with at least one section that differs from its defaults (re-checked when the look or focus settings move). */
+function useChangedCategories(): ReadonlySet<SettingsCategoryId> {
+  const sections = useSettingsSections();
+  const ui = useUiStore((st) => st);
+  const [focus] = useFocusSettings();
+  const [changed, setChanged] = useState<ReadonlySet<SettingsCategoryId>>(new Set());
+  useEffect(() => {
+    let live = true;
+    const withPlan = sections.filter((x) => x.reset?.defaults);
+    void Promise.all(withPlan.map((x) => isChanged(x.reset!).catch(() => false))).then((flags) => {
+      if (!live) return;
+      setChanged(new Set(withPlan.filter((_, i) => flags[i]).map((x) => x.category)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [sections, ui, focus]);
+  return changed;
+}
+
+function CategoryLink({
+  id,
+  list,
+  changed,
+}: {
+  id: SettingsCategoryId;
+  list?: boolean;
+  changed: boolean;
+}) {
   const c = categoryDef(id);
+  const look = CATEGORY_LOOK[id];
+  const differs = tSettingsV3.use().differs;
   const open = useOpenCategory() === id;
   return (
     <>
-      <NavLink to={`/settings/${id}`} className={list ? styles.listLink : styles.navLink}>
+      <NavLink
+        to={`/settings/${id}`}
+        className={list ? styles.listLink : styles.navLink}
+        data-hue={look.hue}
+      >
         <span className={styles.icon}>
           <Icon name={c.icon as IconName} />
         </span>
         <span className={styles.linkText}>
-          <span className={styles.linkTitle}>{c.title}</span>
+          <span className={styles.linkTitle}>
+            {c.title}
+            {changed ? (
+              <>
+                {' '}
+                <span className={styles.dot} aria-hidden="true" data-testid={`differs-${id}`} />
+                <span className="sr-only">{differs}</span>
+              </>
+            ) : null}
+          </span>
           {list ? <span className={styles.linkDesc}>{c.description}</span> : null}
         </span>
         <CategoryStatus id={id} />
@@ -195,14 +242,21 @@ export function CategoryNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const ids = visibleCategoryIds(sections);
   const overviewTitle = tSettings2.use().overview.title;
+  const groupTitles = tSettingsV3.use().navGroups;
+  const differsLegend = tSettingsV3.use().differs;
+  const changed = useChangedCategories();
+  const groups = NAV_GROUPS.map((g) => ({
+    id: g.id,
+    categories: g.categories.filter((c) => ids.includes(c)),
+  })).filter((g) => g.categories.length > 0);
   return (
     <div className={list ? undefined : styles.aside} data-testid="settings-nav">
       <FrequentNav list={list} />
-      <nav aria-label={t.settings.categoriesNav} className={list ? styles.list : styles.nav}>
-        <ul>
-          {list ? null : (
+      <nav aria-label={t.settings.categoriesNav} className={list ? styles.listGroups : styles.nav}>
+        {list ? null : (
+          <ul>
             <li>
-              <NavLink to="/settings" end className={styles.navLink}>
+              <NavLink to="/settings" end className={styles.navLink} data-hue="slate">
                 <span className={styles.icon}>
                   <Icon name="home" />
                 </span>
@@ -211,19 +265,37 @@ export function CategoryNav({ list }: { list?: boolean }) {
                 </span>
               </NavLink>
             </li>
-          )}
-          {ids.map((id) => (
-            <li key={id}>
-              <CategoryLink id={id} list={list} />
-            </li>
-          ))}
-        </ul>
+          </ul>
+        )}
+        {groups.map((g) => (
+          <div key={g.id} className={styles.navGroup}>
+            <p className={styles.groupHead} id={`settings-group-${g.id}`}>
+              {groupTitles[g.id]}
+            </p>
+            <ul
+              className={list ? styles.list : undefined}
+              aria-labelledby={`settings-group-${g.id}`}
+            >
+              {g.categories.map((id) => (
+                <li key={id}>
+                  <CategoryLink id={id} list={list} changed={changed.has(id)} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {changed.size > 0 ? (
+          <p className={styles.legend} data-testid="differs-legend">
+            <span className={styles.dot} aria-hidden="true" />
+            {differsLegend}
+          </p>
+        ) : null}
       </nav>
     </div>
   );
 }
 
-/** `/settings`: the overview cards (and the category list on phones); old `#anchor` links are mapped. */
+/** `/settings`: the overview cards on the desktop, the category list on phones; old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
   const { hash } = useLocation();
@@ -232,7 +304,8 @@ export function SettingsIndex() {
   return (
     <div className={styles.overview}>
       {wide ? null : <QuickBar />}
-      <SettingsOverview />
+      {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
+      {wide ? <SettingsOverview /> : null}
       {wide ? null : <CategoryNav list />}
     </div>
   );
@@ -287,16 +360,30 @@ function useDeepLink(ready: boolean) {
       keepInView(el);
       if (historyOn) recordSectionVisit(sectionId);
       // Section anchors sit on the heading: highlight the whole section.
-      marked = el.matches('h2') ? (el.closest('section') ?? el) : el;
+      marked = el.matches('h1, h2')
+        ? (el.closest('section') ??
+          document.querySelector<HTMLElement>(`section[aria-labelledby="${el.id}"]`) ??
+          el)
+        : el;
       marked.dataset.highlight = 'true';
       timer = setTimeout(() => marked && delete marked.dataset.highlight, HIGHLIGHT_MS);
       return true;
     };
     // Some sections render only after their values are loaded (module settings): wait for them.
     let observer: MutationObserver | undefined;
-    if (!document.getElementById(sectionId)) {
+    // A module's page has its head (the anchor) in the layout before its body: wait for the body section there.
+    const present = () => {
+      const anchor = document.getElementById(sectionId);
+      if (!anchor) return false;
+      // The head's h1 is there before the body: wait for the body section; any other anchor is ready as soon as it exists.
+      return (
+        !(pathname.startsWith('/settings/module/') && anchor.tagName === 'H1') ||
+        document.querySelector(`section[aria-labelledby="${sectionId}"]`) !== null
+      );
+    };
+    if (!present()) {
       observer = new MutationObserver(() => {
-        if (document.getElementById(sectionId) && apply()) observer?.disconnect();
+        if (present() && apply()) observer?.disconnect();
       });
       observer.observe(document.body, { childList: true, subtree: true });
     } else {
@@ -465,11 +552,6 @@ export function CategoryPage() {
           {t.settings.back}
         </Link>
       )}
-      {wide ? null : (
-        <p aria-hidden="true" className={styles.categoryTitle}>
-          {categoryDef(category).title}
-        </p>
-      )}
       {basic.map((s) => (
         <SectionFrame key={s.id} s={s} />
       ))}
@@ -509,6 +591,50 @@ export function ModuleSettingsRoute() {
   );
 }
 
+/** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
+function safeDecode(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+/** Head of the open settings page: "Status" on the landing page, the category's own head on a category, the module's on its page. */
+function SettingsHead() {
+  const { pathname } = useLocation();
+  const v3 = tSettingsV3.use();
+  const sections = useSettingsSections();
+  const moduleId = /^\/settings\/module\/([^/]+)/.exec(pathname)?.[1];
+  if (moduleId) return <ModuleRouteHead moduleId={safeDecode(moduleId)} />;
+  const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
+  if (!segment) return <StatusHead title={t.settings.title} />;
+  // Sections still loading: no head yet (CategoryPage shows its skeleton), so no category head flashes up for a hidden one.
+  if (sections.length === 0) return null;
+  // An unknown category, or a known one without visible sections (vault off, preview hidden): a "not found" page, no category head.
+  if (!isCategoryId(segment) || !visibleCategoryIds(sections).includes(segment))
+    return (
+      <PageHead
+        {...STATUS_LOOK}
+        icon="settings"
+        eyebrow={v3.eyebrow}
+        title={t.settings.title}
+        testId="settings-head-missing"
+      />
+    );
+  const c = categoryDef(segment);
+  return (
+    <PageHead
+      {...CATEGORY_LOOK[segment]}
+      icon={c.icon as IconName}
+      eyebrow={v3.eyebrow}
+      title={c.title}
+      description={c.description}
+      testId={`settings-head-${segment}`}
+    />
+  );
+}
+
 export function SettingsLayout() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
   const tocWide = useMediaQuery(TOC_QUERY);
@@ -521,10 +647,9 @@ export function SettingsLayout() {
   const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
-      <div className={styles.header}>
-        <h1>{t.settings.title}</h1>
-      </div>
+      {wide ? <SettingsHead /> : null}
       <SettingsSearch />
+      {wide ? null : <SettingsHead />}
       {wide ? <QuickBar /> : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>

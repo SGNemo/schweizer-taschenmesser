@@ -37,6 +37,8 @@ const PAGES = [
   '/tools',
   '/settings',
   '/settings/darstellung',
+  '/settings/sicherheit',
+  '/settings/module/todos',
 ];
 
 /** Preview modules and the desktop-only ones are off by default: switch them on in IndexedDB. */

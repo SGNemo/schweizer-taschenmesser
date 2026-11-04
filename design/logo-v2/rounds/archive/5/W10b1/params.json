@@ -1,0 +1,22 @@
+{
+  "word": {
+    "text": "Nemo",
+    "family": "round",
+    "weight": 800,
+    "round": {
+      "xHeight": 0.82,
+      "eOpen": 72
+    }
+  },
+  "art": null,
+  "lockup": {
+    "source": "mark",
+    "markHeight": 1.15,
+    "gap": 0.3,
+    "pill": {
+      "padX": 0.4,
+      "padY": 0.32,
+      "radius": 0.5
+    }
+  }
+}

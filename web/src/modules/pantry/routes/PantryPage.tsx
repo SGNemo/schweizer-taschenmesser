@@ -16,13 +16,11 @@ import {
   AdvancedToggle,
   Badge,
   Button,
-  EmptyState,
   Icon,
   IconButton,
   ItemList,
   ItemRow,
   PageHeader,
-  patternStyles,
   Segmented,
   useOpenParam,
 } from '@/ui';
@@ -38,6 +36,7 @@ import {
   sortItems,
   type Filter,
 } from '../logic';
+import { PantryEmpty } from '../components/PantryEmpty';
 import { ScanDialog } from '../components/ScanDialog';
 import { ShelfSignature, type ShelfCounts } from '../components/ShelfSignature';
 import { itemRepo } from '../repo';
@@ -106,11 +105,16 @@ export default function PantryPage() {
   };
 
   const counts = useMemo(() => {
-    const out = Object.fromEntries(PLACES.map((p) => [p, { items: 0, flagged: 0 }])) as ShelfCounts;
+    const out = Object.fromEntries(
+      PLACES.map((p) => [p, { items: 0, expired: 0, soon: 0, low: 0 }]),
+    ) as ShelfCounts;
     for (const i of items ?? []) {
-      out[i.place].items += 1;
-      if (['expired', 'soon'].includes(expiryState(i, day, soonDays)) || needsRestock(i))
-        out[i.place].flagged += 1;
+      const c = out[i.place];
+      c.items += 1;
+      const state = expiryState(i, day, soonDays);
+      if (state === 'expired') c.expired += 1;
+      else if (state === 'soon') c.soon += 1;
+      if (needsRestock(i)) c.low += 1;
     }
     return out;
   }, [items, day, soonDays]);
@@ -133,13 +137,19 @@ export default function PantryPage() {
     <>
       <PageHeader title={t.pantry.title}>
         <AdvancedToggle moduleId="pantry" />
+        {low.length >= 2 ? (
+          <Button onClick={() => requestRestock(low.map((i) => i.name))}>
+            <Icon name="cart" size={18} />
+            {t.pantry.restockAll(low.length)}
+          </Button>
+        ) : null}
         <Button onClick={() => setScanning(true)}>{t.pantry.scan.open}</Button>
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </Button>
       </PageHeader>
-      <ShelfSignature counts={counts} />
+      <ShelfSignature counts={counts} beforeJump={() => setFilter('all')} />
       <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
@@ -151,17 +161,10 @@ export default function PantryPage() {
         ]}
         onChange={setFilter}
       />
-      {low.length >= 2 ? (
-        <p>
-          <Button onClick={() => requestRestock(low.map((i) => i.name))}>
-            {t.pantry.restockAll(low.length)}
-          </Button>
-        </p>
-      ) : null}
       {items && items.length === 0 ? (
-        <EmptyState title={t.pantry.empty}>
+        <PantryEmpty title={t.pantry.empty}>
           <StartDataButton moduleId="pantry" />
-        </EmptyState>
+        </PantryEmpty>
       ) : null}
       {items && items.length > 0 && shown.length === 0 ? (
         <p className={styles.lead}>{t.pantry.noMatch}</p>
@@ -170,50 +173,67 @@ export default function PantryPage() {
         const group = shown.filter((i) => i.place === place);
         if (group.length === 0) return null;
         return (
-          <section key={place} aria-label={t.pantry.places[place]} className={styles.section}>
+          <section
+            key={place}
+            id={`pantry-place-${place}`}
+            aria-label={t.pantry.places[place]}
+            className={styles.section}
+          >
             <h2>{t.pantry.places[place]}</h2>
-            <ItemList label={t.pantry.places[place]}>
+            <ItemList label={t.pantry.places[place]} layout="grid">
               {group.map((i) => {
                 const state = expiryState(i, day, soonDays);
                 const text = expiryText(i);
+                const restockable = needsRestock(i);
                 return (
                   <ItemRow
                     key={i.id}
+                    className={lamp.label}
                     title={i.name}
                     meta={
-                      <>
+                      <span className={lamp.meta}>
                         <span className={lamp.dot} data-state={state} aria-hidden="true" />
-                        {countLabel(i, t.pantry.countOf)}
+                        <span className={lamp.amount}>{countLabel(i, t.pantry.countOf)}</span>
                         {state === 'ok' && text ? ` · ${text}` : ''}
-                      </>
-                    }
-                    onOpen={() => setTarget(i)}
-                    end={
-                      <span className={patternStyles.hstackTight}>
                         {state === 'expired' || state === 'soon' ? (
                           <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
                         ) : null}
-                        {needsRestock(i) ? <Badge>{t.pantry.lowStock}</Badge> : null}
-                        <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
-                          <span aria-hidden="true">−</span>
-                        </IconButton>
-                        <IconButton
-                          label={t.pantry.plus(i.name)}
-                          onClick={() =>
-                            void changeWithUndo(() =>
-                              itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
-                            )
-                          }
-                        >
-                          <Icon name="plus" size={16} />
-                        </IconButton>
+                        {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
                       </span>
                     }
-                  >
-                    {needsRestock(i) ? (
-                      <Button onClick={() => requestRestock([i.name])}>{t.pantry.restock}</Button>
-                    ) : null}
-                  </ItemRow>
+                    onOpen={() => setTarget(i)}
+                    onSwipeRight={restockable ? () => requestRestock([i.name]) : undefined}
+                    swipeRightLabel={t.pantry.restock}
+                    end={
+                      <span className={lamp.endCol}>
+                        <span className={lamp.controls}>
+                          {restockable ? (
+                            <IconButton
+                              label={t.pantry.restockOne(i.name)}
+                              onClick={() => requestRestock([i.name])}
+                            >
+                              <Icon name="cart" size={18} />
+                            </IconButton>
+                          ) : null}
+                          <span className={lamp.stepper}>
+                            <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
+                              <span aria-hidden="true">−</span>
+                            </IconButton>
+                            <IconButton
+                              label={t.pantry.plus(i.name)}
+                              onClick={() =>
+                                void changeWithUndo(() =>
+                                  itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
+                                )
+                              }
+                            >
+                              <Icon name="plus" size={16} />
+                            </IconButton>
+                          </span>
+                        </span>
+                      </span>
+                    }
+                  />
                 );
               })}
             </ItemList>

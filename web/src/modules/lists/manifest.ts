@@ -58,6 +58,8 @@ const manifest: ModuleManifest = {
       },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
+      // Progress bars of the trips under way: the frame follows the body, not the module default (checklist).
+      variant: 'fortschritt',
       component: () => import('./widgets/PackingWidget'),
     },
   ],

@@ -1,0 +1,130 @@
+/* Head of settings and library pages (identity v3): tinted surface in the hue, the area's pattern, the hue as the icon
+   plate. Text on it is always `--text` (AA on every hue, both themes). No edge stripe; all hairlines run all around. */
+.head {
+  position: relative;
+  /* DOM order is eyebrow, title, mark, actions, body (reading order); the grid puts the actions on the eyebrow's row. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(50%);
+  grid-template-areas:
+    'eyebrow actions'
+    'titles mark'
+    'body body';
+  align-items: start;
+  gap: var(--space-2) var(--space-4);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--shape-round);
+  background: var(--head-gradient);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  margin-bottom: var(--space-4);
+}
+.head[data-size='tall'] {
+  min-height: 12.5rem;
+}
+.head[data-size='compact'] {
+  min-height: 6rem;
+}
+.pattern {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-head);
+}
+.head > :not(.pattern) {
+  position: relative;
+}
+.eyebrow {
+  grid-area: eyebrow;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--module-color);
+  color: var(--surface);
+}
+:global(:root[data-theme='dark']) .plate {
+  color: var(--bg);
+}
+.actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.titles {
+  grid-area: titles;
+  min-width: 0;
+}
+.body {
+  grid-area: body;
+  min-width: 0;
+}
+.title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.head[data-size='compact'] .title {
+  font-size: var(--text-xl);
+}
+.description {
+  margin: var(--space-1) 0 0;
+  /* The head is a tinted gradient: text on it is --text only (axe cannot measure gradients, the rule holds anyway). */
+  color: var(--text);
+  font-size: var(--text-label);
+}
+.decoration {
+  grid-area: mark;
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+}
+
+@media (max-width: 899px) {
+  .head {
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'eyebrow'
+      'titles'
+      'actions'
+      'body';
+    border-radius: var(--radius-lg);
+  }
+  .head[data-size='tall'] {
+    min-height: 0;
+  }
+  .head[data-size='compact'] {
+    min-height: 5rem;
+  }
+  .decoration {
+    display: none;
+  }
+  .actions {
+    justify-content: flex-start;
+  }
+}
