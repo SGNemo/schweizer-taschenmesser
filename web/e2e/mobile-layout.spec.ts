@@ -251,7 +251,12 @@ test.describe('Big monitor', () => {
 
   test('settings use a good share of the screen', async ({ page }) => {
     await ready(page, '/settings/allgemein');
-    const settings = (await page.getByRole('main').locator('h1').boundingBox())!;
+    // The left edge of the settings area is its category navigation. The head sits in the column beside it
+    // since the calm settings (its h1 starts after the navigation), so the h1 no longer says how much
+    // empty margin the page leaves at the left.
+    const settings = (await page
+      .getByRole('navigation', { name: 'Einstellungs-Kategorien' })
+      .boundingBox())!;
     const field = (await page.getByLabel('Dein Name').boundingBox())!;
     expect(settings.x).toBeLessThan(650); // before: ~790 px of empty margin at the left
     expect(field.x + field.width - settings.x).toBeGreaterThan(1150);
