@@ -248,12 +248,6 @@ jobs:
           VITE_RELEASE_CHANNEL: dev
           VITE_BUILD_SHA: ${{ github.sha }}
           TAURI_VERSION_CONFIG: ${{ needs.prepare.outputs.tauri_config }}
-          # The preview is built for speed: no fat LTO and parallel code generation (the release profile in
-          # Cargo.toml has lto = true, codegen-units = 1, which is most of this build). Only this job; the
-          # release workflow and the Android build keep the release profile. Size/startup of the .exe differ a
-          # little from a release build (measured in docs/perf/CI-BASELINE-2-2026-11-04.md).
-          CARGO_PROFILE_RELEASE_LTO: 'false'
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '16'
         run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG" -- --locked
 
       - name: Sign with the updater key
