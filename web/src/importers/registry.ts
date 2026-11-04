@@ -3,6 +3,7 @@ import { source as enex } from './enex/source';
 import { source as googleCalendar } from './google-calendar/source';
 import { source as googleKeep } from './google-keep/source';
 import { source as googleTasks } from './google-tasks/source';
+import { source as notion } from './notion/source';
 import { source as obsidian } from './obsidian/source';
 import { source as opml } from './opml/source';
 import { source as outlookTasks } from './outlook-tasks/source';
@@ -19,6 +20,7 @@ export const SOURCES: readonly SourceDef[] = [
   googleKeep,
   googleCalendar,
   enex,
+  notion,
   opml,
   obsidian,
   bank,

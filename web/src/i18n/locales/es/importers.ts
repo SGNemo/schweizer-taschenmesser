@@ -21,6 +21,7 @@ export const importers: Strings['importers'] = {
   paletteCommand: 'Importar desde otra app …',
   sources: {
     enex: 'Evernote (.enex)',
+    notion: 'Notion (exportación Markdown y CSV)',
     opml: 'OPML (apps de feeds y podcasts)',
     obsidian: 'Obsidian o carpeta de Markdown',
     'outlook-tasks': 'Microsoft To Do (CSV de Outlook)',
