@@ -3,16 +3,16 @@
     <mask id="nemo-fg-cut" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
       <rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/>
       <g fill="none" stroke="#000">
-        <path d="M262.4 66Q323.3 208.9 436.7 315" stroke-width="40"/>
-        <path d="M173.3 128.4Q244.1 264.3 347.7 377.4" stroke-width="40"/>
+        <path d="M379 64Q331 256 379 448" stroke-width="34"/>
+        <path d="M280.3 64Q248.3 256 280.3 448M286.3 64Q254.3 256 286.3 448" stroke-width="34"/>
       </g>
-      <circle cx="370" cy="146.1" r="23" fill="#000"/>
+      <circle cx="419.6" cy="227" r="26" fill="#000"/>
     </mask>
   </defs>
-  <g transform="translate(81.92 85.92) scale(0.68)">
-    <g fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" mask="url(#nemo-fg-cut)">
-      <path d="M142.7 274.3C165.3 224.4 177.9 173.9 235.8 133.4C307.1 83.5 380.3 87 418.8 142C457.4 197 435.6 267 364.3 316.9C306.4 357.4 254.7 352 200.1 356.2Z"/>
-      <path d="M162.4 260.5C122.6 288.4 66.1 286.4 56.1 293.4C67.8 341.6 111.2 403.5 152.4 431.1C162.5 424 180 370.3 219.8 342.4Z"/>
+  <g transform="translate(112.64 112.64) scale(0.56)">
+    <g fill="#ffffff" stroke="#ffffff" stroke-width="12" stroke-linejoin="round" mask="url(#nemo-fg-cut)">
+      <path d="M176 206C220.5 165 256.7 124 315.2 124C426.8 124 466 158.3 466 256C466 353.7 426.8 388 315.2 388C256.7 388 220.5 347 176 306Z"/>
+      <path d="M206 206L176 206C148.8 206 128.4 180 108 180C92 225.6 92 286.4 108 332C128.4 332 148.8 306 176 306L206 306ZM263 183.4C268.8 94 297.8 94 315.2 94C355.8 94 379 134.6 379 183.4ZM280.4 328.6C283.9 406 301.3 406 311.7 406C336.1 406 350 377.4 350 328.6Z"/>
     </g>
   </g>
 </svg>

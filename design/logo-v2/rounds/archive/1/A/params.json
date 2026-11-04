@@ -1,0 +1,49 @@
+{
+  "direction": "tile",
+  "params": {
+    "body": {
+      "nose": 472,
+      "joint": 168,
+      "height": 118,
+      "peak": 0.5,
+      "blunt": 0.66,
+      "stalk": 42
+    },
+    "tail": {
+      "length": 82,
+      "spread": 82,
+      "notch": 26,
+      "overlap": 30
+    },
+    "stripes": {
+      "at": [
+        0.74,
+        0.4
+      ],
+      "width": 34,
+      "bend": -10
+    },
+    "eye": {
+      "at": 0.86,
+      "dy": -0.2,
+      "r": 24
+    },
+    "soften": 12,
+    "views": {
+      "tile": {
+        "radius": 146,
+        "scale": 0.8
+      },
+      "adaptive": {
+        "scale": 0.6
+      }
+    }
+  },
+  "small": null,
+  "lockup": {
+    "source": "app",
+    "markHeight": 1.3,
+    "gap": 0.45
+  },
+  "rail": "app"
+}
