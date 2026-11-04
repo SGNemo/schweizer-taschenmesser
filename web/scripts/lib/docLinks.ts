@@ -34,10 +34,24 @@ export function extractLinks(text: string): Link[] {
   return out;
 }
 
+/**
+ * Text without HTML tags, removed by a scan instead of a regex so nested or broken tags
+ * ("<<b>x</b>") cannot leave a tag behind.
+ */
+function stripTags(text: string): string {
+  let out = '';
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '<') depth++;
+    else if (ch === '>' && depth > 0) depth--;
+    else if (depth === 0) out += ch;
+  }
+  return out;
+}
+
 /** GitHub's anchor for a heading: lower case, no punctuation, spaces to hyphens. */
 export function slug(heading: string): string {
-  return heading
-    .replace(/<[^>]+>/g, '')
+  return stripTags(heading)
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[`*_~]/g, '')
     .trim()
@@ -89,7 +103,7 @@ export function headingSkips(text: string): string[] {
     const md = /^(#{1,6})\s+(.*)$/.exec(line);
     if (md) levels.push({ level: md[1].length, label: md[2].trim() });
     for (const h of line.matchAll(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/g))
-      levels.push({ level: Number(h[1]), label: h[2].replace(/<[^>]+>/g, '').trim() });
+      levels.push({ level: Number(h[1]), label: stripTags(h[2]).trim() });
   }
   const out: string[] = [];
   let prev = 0;

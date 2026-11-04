@@ -55,6 +55,13 @@ describe('anchors', () => {
   });
 });
 
+describe('slug with tags', () => {
+  it('drops nested and broken tags completely', () => {
+    expect(slug('<b>Quick</b> start')).toBe('quick-start');
+    expect(slug('<<b>script>x')).toBe('x');
+  });
+});
+
 describe('imagesWithoutAlt', () => {
   it('reports missing and empty alt texts', () => {
     const text =
