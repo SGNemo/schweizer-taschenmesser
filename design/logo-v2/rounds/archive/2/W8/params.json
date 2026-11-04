@@ -1,0 +1,18 @@
+{
+  "word": {
+    "text": "Nemo",
+    "weight": 800,
+    "tracking": -0.02
+  },
+  "art": {
+    "badge": {
+      "height": 2.2,
+      "padRight": 0.5,
+      "tail": 0.62,
+      "spread": 0.95
+    }
+  },
+  "lockup": {
+    "source": "none"
+  }
+}

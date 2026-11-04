@@ -33,12 +33,25 @@ export const about: Strings['about'] = {
     available: (version: string) => `Mudanças na versão ${version}`,
     none: 'Não há informações sobre esta versão.',
   },
+  changes: {
+    unreleased: 'Não publicado',
+    unreleasedNote: 'Ainda não publicado, só nesta prévia.',
+    highlights: 'O mais importante',
+    breaking: 'Atenção: ',
+    older: 'Versões anteriores',
+    fresh: 'Novo',
+    hint: 'Avisar sobre novidades',
+    hintDescription:
+      'Mostra um pequeno «Novo» quando há mudanças que você ainda não viu. Sem pop-up.',
+    version: (version: string) => `Versão ${version}`,
+  },
   packages: 'Bibliotecas usadas',
   links: {
     title: 'Links',
     open: 'Abrir',
     repo: 'Código-fonte no GitHub',
     releases: 'Versões e downloads',
+    changelog: 'Todas as mudanças (changelog)',
     docs: 'Documentação',
     bugs: 'Relatar erro',
   },
@@ -55,7 +68,6 @@ export const about: Strings['about'] = {
   licenses: 'Avisos de licença',
   licenseList: [
     'Fonte “Inter” – SIL Open Font License 1.1, © The Inter Project Authors.',
-    'Logotipo “Nemo” em “Nunito” – SIL Open Font License 1.1, © The Nunito Project Authors.',
     'Ícones “Lucide” – licença ISC, © Lucide Contributors.',
     'O logo do Nemo (peixe-palhaço) é um desenho próprio deste projeto.',
   ],

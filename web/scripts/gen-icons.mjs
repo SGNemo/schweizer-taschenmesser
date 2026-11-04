@@ -8,6 +8,7 @@
  *   src-tauri/icons/   icon.png + icon.ico (16–256, incl. 128) and the Android launcher layers
  *                      (foreground, monochrome, notification icon, background colour)
  *   docs/brand/        README header (light + dark) and social preview image, English + German `*.de.png`
+ *   ../extension/static/icons/  icon-32.png + icon-192.png (the tile, for the browser extension)
  *
  * The other native icons (icon.icns, Android legacy mipmaps) come from the Tauri CLI:
  *   npx tauri icon brand/app-icon.svg      (then re-run this script: it restores icon.ico + Android
@@ -30,24 +31,27 @@ const executablePath =
 const appIcon = brand('app-icon.svg');
 const maskable = brand('app-icon-maskable.svg');
 // Tiny sizes: the corners are less round so the tile keeps its area at 16–32 px.
-const appIconSmall = appIcon.replace('rx="112"', 'rx="96"');
+const appIconSmall = appIcon.replace(/rx="(\d+)"/, (_, r) => `rx="${Math.round(r * 0.85)}"`);
 const mark = brand('logo-mark.svg');
-// Favicon: the fish alone on a transparent tab, in a square frame around its bounding box.
-const [vx, vy, vw, vh] = mark
-  .match(/viewBox="([^"]+)"/)[1]
-  .split(' ')
-  .map(Number);
-const side = Math.round(Math.max(vw, vh) * 1.06);
-const favicon = mark.replace(
-  /viewBox="[^"]+"/,
-  `viewBox="${Math.round(vx + vw / 2 - side / 2)} ${Math.round(vy + vh / 2 - side / 2)} ${side} ${side}"`,
-);
+// The accent token's two values, taken from the files (tokens.css `--accent` via the logo export).
+const ACCENT = maskable.match(/<rect[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
+const ACCENT_DARK = brand('logo-wordmark-light.svg').match(/<rect[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
+// Favicon: the tile (a solid accent square with the white fish). The transparent mark in the deeper accent has
+// too little contrast on dark tab strips; the tile reads on both.
+const favicon = appIconSmall;
 const androidFg = brand('android-foreground.svg');
 const androidMono = brand('android-monochrome.svg');
 const mono = brand('logo-mono.svg');
 const monoWhite = mono.replace('fill="#000" stroke="#000"', 'fill="#fff" stroke="#fff"');
-const wordmark = brand('logo-wordmark.svg');
-const wordmarkLight = brand('logo-wordmark-light.svg');
+/** The wordmark files keep the sidebar's 1368:401 box; for banners the view box is cut to the pill (the first rect). */
+const pillOnly = (svg) => {
+  const [, x, y, w, h] = svg.match(
+    /<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/,
+  );
+  return svg.replace(/viewBox="[^"]+"/, `viewBox="${x} ${y} ${w} ${h}"`);
+};
+const wordmark = pillOnly(brand('logo-wordmark.svg'));
+const wordmarkLight = pillOnly(brand('logo-wordmark-light.svg'));
 const OCEAN = 'linear-gradient(135deg, #0B1D2B 0%, #0F3440 100%)';
 const LIGHT = '#fbf8f3';
 /* Inter as a data URL: Chromium blocks file:// fonts on about:blank pages (setContent). */
@@ -119,6 +123,9 @@ try {
   write(pub('pwa-maskable-512.png'), await png(maskable, 512));
   // Web push badge (Android status bar): white silhouette on transparent.
   write(pub('pwa-badge-96.png'), await png(monoWhite, 96));
+  // Browser extension (static icons copied by extension/scripts/build.mjs): the same tile.
+  write(out(repo, 'extension', 'static', 'icons', 'icon-32.png'), await png(appIconSmall, 32));
+  write(out(repo, 'extension', 'static', 'icons', 'icon-192.png'), await png(appIcon, 192));
 
   // ---- Windows / Tauri -------------------------------------------------------------------
   const icons = join(root, 'src-tauri', 'icons');
@@ -156,7 +163,7 @@ try {
   }
   write(
     out(icons, 'android', 'values', 'ic_launcher_background.xml'),
-    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">#E0550F</color>\n</resources>\n`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">${ACCENT}</color>\n</resources>\n`,
   );
   write(
     out(icons, 'android', 'mipmap-anydpi-v26', 'ic_launcher.xml'),
@@ -170,8 +177,8 @@ try {
   );
 
   // ---- README header + social preview -----------------------------------------------------
-  // Composition "H1" (design/icon/rounds/13): wordmark centred, a faint school of small marks in
-  // the free thirds, the claim (backronym of NEMO) with orange initials. README/social only.
+  // Composition "H1": the pill centred, a faint school of small marks in the free thirds, the claim
+  // (backronym of NEMO) with accent initials. README/social only.
   // English for the repo (README.md, social preview); German copies `*.de.png` for README.de.md.
   const CLAIMS = {
     en: [
@@ -187,11 +194,13 @@ try {
       ['O', 'ffline'],
     ],
   };
-  const markSymbol = `<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="51 93 393 344">${mark
+  const markBox = mark.match(/viewBox="([^"]+)"/)[1];
+  const [, , mw, mh] = markBox.split(' ').map(Number);
+  const markSymbol = `<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="${markBox}">${mark
+    // everything before <defs> goes, including the file's leading comment
     .replace(/^[\s\S]*?<defs>/, '<defs>')
     .replace(/<\/svg>\s*$/, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replaceAll('"#E0550F"', '"currentColor"')}</symbol></svg>`;
+    .replaceAll(`"${ACCENT}"`, '"currentColor"')}</symbol></svg>`;
   const SCHOOL = [
     [0.05, 0.22, 0.2, 1],
     [0.14, 0.7, 0.13, 0.8],
@@ -205,7 +214,7 @@ try {
     `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="position:absolute;inset:0">${SCHOOL.map(
       ([x, y, hh, a]) => {
         const H = hh * h;
-        return `<use href="#fish" x="${x * w - H * 0.57}" y="${y * h - H / 2}" width="${H * 1.142}" height="${H}" opacity="${(alpha * a).toFixed(3)}" style="color:${color}"/>`;
+        return `<use href="#fish" x="${x * w - (H * (mw / mh)) / 2}" y="${y * h - H / 2}" width="${H * (mw / mh)}" height="${H}" opacity="${(alpha * a).toFixed(3)}" style="color:${color}"/>`;
       },
     ).join('')}</svg>`;
   const page = (
@@ -213,14 +222,21 @@ try {
     h,
     wm,
     claim,
-    { bg = OCEAN, fg = '#E7F1F2', muted = '#9FB6BC', deco = '#7FC4CC', alpha = 0.09 } = {},
+    {
+      bg = OCEAN,
+      fg = '#E7F1F2',
+      muted = '#9FB6BC',
+      deco = '#7FC4CC',
+      alpha = 0.09,
+      accent = ACCENT_DARK,
+    } = {},
   ) => `<style>
     @font-face{font-family:Inter;src:url(${interData});font-weight:100 900}
     html,body{margin:0}
-    .bg{position:relative;overflow:hidden;width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${Math.round(h * 0.085)}px;color:${fg};font-family:Inter,sans-serif}
-    .bg>svg.wm{position:relative;height:${Math.round(h * 0.56)}px;width:auto}
+    .bg{position:relative;overflow:hidden;width:${w}px;height:${h}px;background:${bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${Math.round(h * 0.11)}px;color:${fg};font-family:Inter,sans-serif}
+    .bg>svg.wm{position:relative;height:${Math.round(h * 0.36)}px;width:auto}
     .tag{position:relative;font-size:${Math.round(h * 0.066)}px;font-weight:500;letter-spacing:.01em;color:${muted}}
-    .tag b{color:#E0550F;font-weight:700}
+    .tag b{color:${accent};font-weight:700}
   </style><div class="bg">${markSymbol}${school(w, h, deco, alpha)}${wm.replace('<svg ', '<svg class="wm" ')}<div class="tag">${claim
     .map(([a, b]) => `<b>${a}</b>${b}`)
     .join(' · ')}</div></div>`;
@@ -238,8 +254,9 @@ try {
           bg: LIGHT,
           fg: '#13262F',
           muted: '#51616A',
-          deco: '#E0550F',
+          deco: ACCENT,
           alpha: 0.1,
+          accent: ACCENT,
         }),
         1280,
         320,

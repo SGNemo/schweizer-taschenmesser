@@ -54,12 +54,25 @@ export const de = {
       available: (version: string) => `Änderungen in Version ${version}`,
       none: 'Zu dieser Version gibt es keine Angaben.',
     },
+    changes: {
+      unreleased: 'Unveröffentlicht',
+      unreleasedNote: 'Noch nicht veröffentlicht, nur in dieser Vorschau.',
+      highlights: 'Das Wichtigste',
+      breaking: 'Achtung: ',
+      older: 'Ältere Versionen',
+      fresh: 'Neu',
+      hint: 'Auf neue Änderungen hinweisen',
+      hintDescription:
+        'Zeigt ein kleines „Neu“, wenn es Änderungen gibt, die du noch nicht gesehen hast. Kein Pop-up.',
+      version: (version: string) => `Version ${version}`,
+    },
     packages: 'Verwendete Bibliotheken',
     links: {
       title: 'Links',
       open: 'Öffnen',
       repo: 'Quellcode auf GitHub',
       releases: 'Versionen und Downloads',
+      changelog: 'Alle Änderungen (Changelog)',
       docs: 'Dokumentation',
       bugs: 'Fehler melden',
     },
@@ -76,7 +89,6 @@ export const de = {
     licenses: 'Lizenzhinweise',
     licenseList: [
       'Schrift „Inter“ – SIL Open Font License 1.1, © The Inter Project Authors.',
-      'Schriftzug „Nemo“ (Logo) in „Nunito“ – SIL Open Font License 1.1, © The Nunito Project Authors.',
       'Icons „Lucide“ – ISC-Lizenz, © Lucide Contributors.',
       'Das Nemo-Logo (Clownfisch) ist eine eigene Zeichnung dieses Projekts.',
     ],

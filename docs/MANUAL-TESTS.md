@@ -605,3 +605,12 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - AU4 · Befehlspalette: „regel“ tippen → „Regel ausführen: …“ führt die Regel aus; „Letzte Regel-Ausführung rückgängig“ nimmt sie zurück.
 - AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
 - AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
+
+## Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
+Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+- **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐
+- **LG2 Windows-Tray:** Tray-Symbol („Heute“) im Infobereich bei 16 und 24 px erkennbar, helle und dunkle Taskleiste. ☐
+- **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
+- **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
+- **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
+- **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
