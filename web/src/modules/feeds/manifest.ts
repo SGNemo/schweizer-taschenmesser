@@ -18,7 +18,7 @@ const manifest: ModuleManifest = {
     widgetType: 'kpi',
     widget: 'kennzahl',
     head: 'regal',
-    signature: 'none',
+    signature: 'masthead',
     type: 'serif',
   },
   version: 1,

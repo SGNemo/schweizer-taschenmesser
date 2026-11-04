@@ -51,6 +51,7 @@ export { useMediaQuery } from './useMediaQuery';
 export { useSelection } from './useSelection';
 export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';
+export { FolderTabs, type FolderTab } from './FolderTabs';
 export * from './widgets';
 
 export { KeyRecorder } from './KeyRecorder';

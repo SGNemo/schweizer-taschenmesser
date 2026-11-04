@@ -2,6 +2,22 @@
   display: flex;
   flex-direction: column;
 }
+/* Newspaper columns: a group never breaks across columns, the hairline sits between the columns, not above each group. */
+.columns {
+  display: block;
+  column-width: 20rem;
+  column-gap: var(--space-6);
+  column-rule: 1px solid var(--border);
+}
+.columns .group {
+  break-inside: avoid;
+  margin-bottom: var(--space-4);
+}
+.columns .group + .group {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
 /* Groups are separated by space first; one hairline only between different groups. */
 .group + .group {
   margin-top: var(--space-4);

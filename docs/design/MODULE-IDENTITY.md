@@ -111,7 +111,7 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 | Notizen `notes` | knowledge | violet | indigo | schreib | notiz | `notePaper` |
 | Chat `chat` | knowledge | sky | cobalt | fokus | notiz | `bubble` |
 | Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | `addressBar` |
-| Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | – |
+| Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | `masthead` |
 | E-Mail `mail` | knowledge | teal | ocean | kennzahl | kennzahl | `stamp` |
 | Musik `music` | knowledge | orchid | violet | cover | cover | `coverTone` |
 | Unterlagen `vault` | vault | indigo | violet | regal | faellig | `folderTab` |
@@ -119,7 +119,7 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 | Dieser PC `disk` | system | slate | – | fortschritt | fortschritt | `gauges` |
 | Downloads `downloads` | system | cobalt | sky | fokus | fortschritt | `arrowProgress` |
 
-Existing modules got the v3 fields in the manifest only; their pages keep their content until their module chat rebuilds them against the head and widget variant. Signatures without a component render nothing yet (list in `SIGNATURES`; blocks in `@/ui/identity`).
+Existing modules got the v3 fields in the manifest only; their pages keep their content until their module chat rebuilds them against the head and widget variant. `masthead` (Feeds) has no block of its own: it is the newspaper head made of `HeroFigure type="serif"` (date line, count), `identity.type: 'serif'` and the lead card on the page. Shared page blocks: `EmptyState motif`, `FolderTabs` (a filter drawn as tabs), `GroupedList columns`. Signatures without a component render nothing yet (list in `SIGNATURES`; blocks in `@/ui/identity`).
 
 ## Tools
 
