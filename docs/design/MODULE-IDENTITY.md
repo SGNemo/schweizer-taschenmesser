@@ -35,7 +35,7 @@ Nine silhouettes, two heights (tall 12.5 rem / phone 8.5 rem; compact 6 / 5 rem)
 | `fortschritt` | tall | title + "n von m"; rings of the module | Gewohnheiten, Abos, Dieser PC |
 | `cover` | tall | cover with its own tone, title, artist | Musik |
 | `himmel` | tall | sky backdrop, thin temperature | Wetter |
-| `regal` | tall | count figure + tiles | Karten & Orte, Vorräte, Merkliste, Unterlagen |
+| `regal` | tall | count figure + tiles | Karten & Orte, Vorräte, Merkliste, Feeds, Unterlagen |
 | `tresor` | compact | framed, lock status, fine vault rules | Passwörter |
 | `schreib` | compact | paper: plain surface, serif title, ruled edge | Notizen, Browser, Beispiel |
 | `fokus` | compact | one thing large, small module name | ToDos, Personen, Rechnungen, Chat, Downloads |
@@ -111,6 +111,7 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 | Notizen `notes` | knowledge | violet | indigo | schreib | notiz | `notePaper` |
 | Chat `chat` | knowledge | sky | cobalt | fokus | notiz | `bubble` |
 | Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | `addressBar` |
+| Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | – |
 | E-Mail `mail` | knowledge | teal | ocean | kennzahl | kennzahl | `stamp` |
 | Musik `music` | knowledge | orchid | violet | cover | cover | `coverTone` |
 | Unterlagen `vault` | vault | indigo | violet | regal | faellig | `folderTab` |
