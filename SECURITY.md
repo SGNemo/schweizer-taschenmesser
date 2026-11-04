@@ -3,11 +3,11 @@
 ## Reporting a vulnerability
 Please **do not** open a public issue for security problems. Use GitHub's private vulnerability reporting on this repository ("Security" → "Report a vulnerability"). If that is unavailable, contact the maintainer through the e-mail address on the [GitHub profile](https://github.com/SGNemo). You should get a first answer within a week.
 
-Please include: affected version (Settings → App updates shows it), platform (Windows portable, Android APK, PWA, sync server), steps to reproduce, and what an attacker could gain.
+Please include: affected version (Settings → Updates shows it), platform (Windows portable, Android APK, PWA, sync server), steps to reproduce, and what an attacker could gain.
 
 ## Scope
-- The app (`web/`), the native shells (`web/src-tauri/`), the sync server (`server/`) and the MCP wrapper (`mcp/`).
-- Release artifacts: portable Windows executable, Android APK, `latest.json`.
+- The app (`web/`), the native shells (`web/src-tauri/`), the sync server (`server/`), the MCP wrapper (`mcp/`) and the browser extension (`extension/`, with its native-messaging bridge to the Windows app).
+- Release artifacts: portable Windows executable, Android APK, `latest.json`. The Dev preview ("Nemo Dev") is an untested build of `develop`: reports are welcome, but only the latest stable release is supported.
 
 Out of scope: third-party services users connect on their own (AI providers, Google, feed hosts), and problems that require a compromised device.
 

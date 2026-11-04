@@ -9,8 +9,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: Settings → App updates
-      placeholder: 0.3.1
+      description: Settings → Updates
+      placeholder: 1.0.0
     validations:
       required: true
   - type: input
@@ -26,7 +26,9 @@ body:
         - Windows (Nemo-Portable.exe)
         - Android (Nemo.apk)
         - PWA in the browser
+        - Dev preview (Nemo Dev, Windows or Android)
         - Sync server
+        - Browser extension
     validations:
       required: true
   - type: textarea

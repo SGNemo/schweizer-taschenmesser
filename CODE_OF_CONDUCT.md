@@ -60,7 +60,9 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-[CONTACT – e-mail address to be filled in by the maintainer].
+the maintainer, confidentially, through GitHub's private vulnerability reporting on this
+repository ("Security" → "Report a vulnerability", also for conduct reports) or through
+the e-mail address on the [GitHub profile](https://github.com/SGNemo).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
