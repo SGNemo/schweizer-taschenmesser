@@ -24,7 +24,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 - `src/tools/<id>/` – helpers (14: calc, currency, dates, dev, dice, image, pdf, persona, qr, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `tools/` (toolbox panel), `assistant/`.
-- `src/pages/` – `settings/` (layout, sections), `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
+- `src/pages/` – `settings/` (layout, sections, `PageHead`), `ModuleLibrary.tsx`, `ToolLibrary.tsx`, `library/` (detail page, `WidgetMiniature`, shared on/off hook), `ShareTarget.tsx`, `dashboard/`, `NotFound.tsx`.
 - `src/ui/` – design system: `tokens.css` (+ `tokens.test.ts`), `global.css`, Button, Card, Dialog (sheet on phones), Fields, Tabs, Patterns (`Segmented`, `ItemList`/`ItemRow`, `Progress`, `SplitView`), Misc (Badge, EmptyState, ErrorState, Skeleton, Toaster), `SelectionBar`, `useSelection`/`useSwipeRow`/`useDraft`, `WidgetList.tsx`, HelpHint, `Logo.tsx`, `icons.tsx`.
 - `web/brand/` – logo/icon SVG sources + font licences (one fish, mask-based; `src/brand-sync.test.ts` keeps Logo/splash in step); `scripts/gen-icons.mjs` renders all raster assets (see HOW-TO → Icons).
 - `src/router.tsx`, `src/App.tsx`, `src/main.tsx` (startup order), `src/sw.ts` (service worker), `src/stores/ui.ts` (zustand UI state), `src/strings.ts` (**German UI source** `de` + localized `t`; translations `src/i18n/locales/<lang>/`, runtime `src/core/i18n/` – language, catalogs, `format.ts` for dates/numbers/sorting).

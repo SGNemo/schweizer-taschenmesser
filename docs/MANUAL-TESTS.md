@@ -339,6 +339,12 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SV3 Breite Fenster (2560 px) und 1280 × 720:** Kopf und Liste zentriert, nichts läuft über; hell und dunkel. ☐
 - **SV4 Punkt „weicht vom Standard ab“:** Darstellung → Farbschema „Dunkel“: in der Liste erscheint der Punkt bei „Darstellung“; „Auf Standard“ entfernt ihn; ein Screenreader liest den Text. ☐
 
+## Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
+- **LB1 Handy:** Modul-Bibliothek: Kopf mit Zahlen, Werkzeugleiste (Suche, Filter, Bereich) bricht um, Karten einspaltig; „Details“ öffnet das Modul, Android-Zurück führt zur Liste. ☐
+- **LB2 „Ruhig“ und „Modulfarben: Aus“:** Kartenköpfe, Plättchen und Miniaturen werden grau, Text bleibt lesbar. ☐
+- **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
+- **LB4 Breite Fenster (2560 px):** Karten füllen die Zeile, nichts läuft über; Werkzeug-Bibliothek ebenso, hell und dunkel. ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
