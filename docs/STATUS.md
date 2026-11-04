@@ -219,3 +219,4 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `develop`/PR: Geld-Gruppe Paket 4 „Budgets“ (Zeiträume Monat/Quartal/Jahr, Übertrag, Warnschwelle, Prognose, Verlauf, Sparziel-Plan, Kopf „Noch frei“ mit Ring); damit ist die Geld-Gruppe (Finanzen, Rechnungen, Abos, Budgets) komplett.
 - `v0.3.1` (2026-10-01, aktuell): neue Wortmarke, Clownfisch-Icon, Sicherheits-/Abhängigkeitskorrekturen.
 - Auf `feat/library-hue`: Eine Farbsprache – Module und Werkzeuge tragen in Bibliothek und Einstellungen dasselbe Icon-Plättchen (`ui/HuePlate`) in ihrer Identitätsfarbe.
+- Auf `feat/settings-calm`: Einstellungen Paket 1 – ruhiges Menü (Kopf in der Inhaltsspalte, Gruppen als Reiter, „Häufig genutzt“ eingefroren); weitere Pakete: Formulare und Karten der Bereiche (Sync, KI, Verbindungen …).

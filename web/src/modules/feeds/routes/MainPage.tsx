@@ -156,8 +156,9 @@ export default function MainPage() {
         </FeedsEmpty>
       ) : null}
       {groups.length > 0 ? (
-        <div className={styles.columns}>
+        <div className={styles.heads}>
           <GroupedList
+            columns
             listId="feeds"
             label={s.listLabel}
             groups={groups.map((g) => ({
