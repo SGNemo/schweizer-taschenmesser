@@ -88,13 +88,13 @@ Nemo ist mit ADHS im Blick gebaut. Es hilft beim Anfangen und Dranbleiben; es is
 - **Auf deinem Gerät, kostenlos:** Eingebaute Regeln beantworten einfache Fragen („Was steht heute an?“) und machen aus einem Satz wie „Rechnung Stadtwerke 89,90 € fällig 15.10.“ einen Eintrag, immer zuerst mit Vorschau. Die Regeln verstehen vorerst **nur Deutsch**.
 - **Lokales Modell (Windows-App):** Ein optionales Modell läuft nach einem einmaligen Download offline.
 - **Anbieter deiner Wahl:** Claude, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama oder dein eigener OpenAI-kompatibler Server, der Reihe nach gefragt (lokal → kostenlos → bezahlt) mit Limits und Kostenübersicht.
-- **Import mit einer KI:** Ein KI-Werkzeug kann vorhandene Daten über eine lokale Schnittstelle liefern (Windows-App, standardmäßig aus): [KI-Import](docs/AI-IMPORT.de.md).
+- **Import mit einer KI:** Ein KI-Werkzeug kann vorhandene Daten über eine lokale Schnittstelle liefern (Windows-App, standardmäßig aus, die Einstellung ist noch Vorschau): [KI-Import](docs/AI-IMPORT.de.md).
 - **Mit einem Schalter aus:** Einstellungen → KI → „KI komplett abschalten“.
 
 ### Verbindungen und Import, optional
 
-- **Google** (Windows-App, mit deiner eigenen Client-ID): Kalender und E-Mail (Vorschau), nur lesend, solange du nicht mehr erlaubst. **Spotify** (Vorschau): was läuft und deine Playlists; Nemo spielt selbst nichts ab. **Kalender-Abos:** jeder iCalendar-Link, ohne Anmeldung.
-- **Aus einer anderen App importieren:** Evernote, Obsidian und Markdown, Todoist, Google Tasks und Keep, Notion, Microsoft To Do, Bankdateien, Exporte von Bitwarden, KeePass und 1Password, OPML. Jeder Import zeigt zuerst eine Vorschau und lässt sich rückgängig machen.
+- **Google** (Windows-App, mit deiner eigenen Client-ID): Kalender und E-Mail (Vorschau), nur lesend, solange du nicht mehr erlaubst. **Spotify** (Vorschau; Windows-App und Browser, nicht Android): was läuft und deine Playlists; Nemo spielt selbst nichts ab. **Kalender-Abos:** jeder iCalendar-Link, ohne Anmeldung.
+- **Aus einer anderen App importieren:** Evernote, Obsidian und Markdown, Todoist, Google Tasks, Keep und Kalenderdateien, Notion, Microsoft To Do, Bankdateien, Exporte von Bitwarden, KeePass und 1Password, OPML. Jeder Import zeigt zuerst eine Vorschau und lässt sich rückgängig machen; Passwort-Exporte laufen über den eigenen Import des Tresors, der dein Master-Passwort braucht.
 
 ## Bildschirmfotos
 
@@ -195,7 +195,7 @@ Ein kleiner Node-Server (Fastify + SQLite) mit Token-Login. Das Docker-Image bau
 <details>
 <summary><strong>Lokales KI-Modell (Windows-App)</strong></summary>
 
-Einstellungen → KI → „Lokales Modell“ lädt einmal ein Modell herunter (von Hugging Face) und antwortet danach offline. Es ist der erste Schritt bei „Mit KI hinzufügen“ und treibt das Chat-Modul (Vorschau) ganz ohne Anbieter an. Es braucht einen Prozessor mit AVX2; eine Grafikkarte wird genutzt, wenn eine gefunden wird. Anleitung: [Suche und KI](docs/user/ai-assistant.de.md).
+Einstellungen → KI → „Lokales Modell“ lädt einmal ein Modell herunter (von Hugging Face) und antwortet danach offline. Es ist der erste Schritt bei „Mit KI eintragen“ und treibt das Chat-Modul (Vorschau) ganz ohne Anbieter an. Es braucht einen Prozessor mit AVX2; eine Grafikkarte wird genutzt, wenn eine gefunden wird. Anleitung: [Suche und KI](docs/user/ai-assistant.de.md).
 </details>
 
 <details>

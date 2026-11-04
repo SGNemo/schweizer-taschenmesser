@@ -88,13 +88,13 @@ Nemo is built with ADHD in mind. It helps with starting and staying on track; it
 - **On your device, free:** built-in rules answer simple questions (“What’s on today?”) and turn a sentence like “Rechnung Stadtwerke 89,90 € fällig 15.10.” into an entry, always with a preview first. The rules understand **German only** for now.
 - **Local model (Windows app):** an optional model runs offline after a one-time download.
 - **Providers you choose:** Claude, OpenAI, Gemini, Groq, OpenRouter, Mistral, Ollama or your own OpenAI-compatible server, asked in order (local → free → paid) with limits and a cost overview.
-- **Import with an AI:** an AI tool can deliver existing data through a local interface (Windows app, off by default): [AI import](docs/AI-IMPORT.md).
+- **Import with an AI:** an AI tool can deliver existing data through a local interface (Windows app, off by default, the setting is still a preview): [AI import](docs/AI-IMPORT.md).
 - **Off with one switch:** Settings → AI → “Turn off AI completely”.
 
 ### Connections and import, optional
 
-- **Google** (Windows app, with your own client ID): calendar and Mail (preview), read-only unless you allow more. **Spotify** (preview): what is playing and your playlists; Nemo plays nothing itself. **Calendar subscriptions:** any iCalendar link, no login.
-- **Import from another app:** Evernote, Obsidian and Markdown, Todoist, Google Tasks and Keep, Notion, Microsoft To Do, bank files, Bitwarden, KeePass and 1Password exports, OPML. Every import shows a preview first and can be undone.
+- **Google** (Windows app, with your own client ID): calendar and Mail (preview), read-only unless you allow more. **Spotify** (preview; Windows app and browser, not Android): what is playing and your playlists; Nemo plays nothing itself. **Calendar subscriptions:** any iCalendar link, no login.
+- **Import from another app:** Evernote, Obsidian and Markdown, Todoist, Google Tasks, Keep and Calendar files, Notion, Microsoft To Do, bank files, Bitwarden, KeePass and 1Password exports, OPML. Every import shows a preview first and can be undone; password exports use the vault’s own import, which needs your master password.
 
 ## Screenshots
 

@@ -132,7 +132,7 @@ try {
         await page.getByRole('button', { name: 'Zugang hinzufügen' }).waitFor({ timeout: 30_000 });
       }
       // The Dev-Preview flavour shows a one-time notice a moment after the shell mounts; wait for it, close it.
-      await page.getByRole('button', { name: 'Schließen', exact: true }).first().click({ timeout: 5_000 }).catch(() => {});
+      await page.getByRole('button', { name: 'Schließen', exact: true }).first().click({ timeout: 3_000 }).catch(() => {});
       if (p.openToolbox) {
         await page.getByRole('button', { name: 'Werkzeuge', exact: true }).first().click();
         const toolbox = page.getByRole('dialog').filter({ hasText: 'Rechner' });

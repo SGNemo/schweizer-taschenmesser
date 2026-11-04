@@ -29,6 +29,15 @@ describe('extractLinks', () => {
   });
 });
 
+describe('extractLinks srcset', () => {
+  it('takes every candidate of a srcset and survives a malformed escape', () => {
+    expect(
+      extractLinks('<img srcset="a.webp 1x, b.webp 2x" alt="x">').map((l) => l.target),
+    ).toEqual(['a.webp', 'b.webp']);
+    expect(splitTarget('docs/100%.md#a%')).toEqual({ path: 'docs/100%.md', anchor: 'a%' });
+  });
+});
+
 describe('anchors', () => {
   it('uses the GitHub slug, numbers repeats and knows HTML ids', () => {
     const text =

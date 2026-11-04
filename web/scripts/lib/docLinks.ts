@@ -23,8 +23,13 @@ export function extractLinks(text: string): Link[] {
     out.push({ target: m[1], kind: 'link' });
   for (const m of body.matchAll(/<a\s[^>]*href="([^"]+)"/g))
     out.push({ target: m[1], kind: 'link' });
-  for (const m of body.matchAll(/<(?:img|source)\s[^>]*?(?:src|srcset)="([^"]+)"/g))
-    out.push({ target: m[1], kind: 'image' });
+  for (const m of body.matchAll(/<(?:img|source)\s[^>]*?(?:src|srcset)="([^"]+)"/g)) {
+    // A srcset lists candidates ("a.webp 1x, b.webp 2x"): each one is a picture.
+    for (const candidate of m[1].split(',')) {
+      const url = candidate.trim().split(/\s+/)[0];
+      if (url) out.push({ target: url, kind: 'image' });
+    }
+  }
   return out;
 }
 
@@ -97,7 +102,18 @@ export function headingSkips(text: string): string[] {
 /** Splits `path#anchor`, `path?query` and returns just what a file system needs. */
 export function splitTarget(target: string): { path: string; anchor: string } {
   const [beforeHash, anchor = ''] = target.split('#');
-  return { path: decodeURI(beforeHash.split('?')[0]), anchor: decodeURIComponent(anchor) };
+  // A malformed % sequence stays as written (the file will then simply not be found).
+  const safe = <T>(decode: (v: string) => T, v: string): string | T => {
+    try {
+      return decode(v);
+    } catch {
+      return v;
+    }
+  };
+  return {
+    path: String(safe(decodeURI, beforeHash.split('?')[0])),
+    anchor: String(safe(decodeURIComponent, anchor)),
+  };
 }
 
 export const isExternal = (target: string) => /^(https?:)?\/\//.test(target);
