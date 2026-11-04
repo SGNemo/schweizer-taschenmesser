@@ -208,31 +208,49 @@ const INTERVAL_MS = 60_000;
 const DEBOUNCE_MS = 1500;
 
 /**
+ * A round (or the first restore of the status) that meets a closed or deleted database, for example after a
+ * reset, has nobody left to report to: `syncNow` writes its errors to the status store, and that needs the
+ * database too. Anything else is logged without details.
+ */
+function ignoreClosedDatabase(e: unknown): void {
+  if (e instanceof Error && e.name === 'DatabaseClosedError') return;
+  console.error('[sync] round failed');
+}
+
+/**
  * Keeps the device in sync: on start, every minute, when coming back online or visible, and
  * shortly after local changes. Returns a function that stops everything.
  */
 export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined;
+  /** Set by the returned stop function: a restore or a round that finishes later starts nothing new. */
+  let stopped = false;
   /** `force` ignores a pending backoff (the user came back online or opened the app). */
   const tick = (force = false) => {
+    if (stopped) return;
     const { retryAt, phase } = useSyncStatus.getState();
     if (!force && retryAt && now() < retryAt) return;
     // Errors the user has to fix (locked device, wrong key) are not retried in the background.
     if (!force && phase === 'error' && !retryAt) return;
-    void syncNow(deps).then(() => {
-      clearTimeout(retry);
-      const next = useSyncStatus.getState().retryAt;
-      if (next) retry = setTimeout(() => tick(), Math.max(0, next - now()));
-      void runMaintenance(deps);
-    });
+    void syncNow(deps)
+      .then(() => {
+        if (stopped) return;
+        clearTimeout(retry);
+        const next = useSyncStatus.getState().retryAt;
+        if (next) retry = setTimeout(() => tick(), Math.max(0, next - now()));
+        void runMaintenance(deps);
+      })
+      .catch(ignoreClosedDatabase);
   };
   const onOnline = () => tick(true);
   const onVisible = () => {
     if (document.visibilityState === 'visible') tick(true);
   };
 
-  void restoreSyncStatus(deps).then(() => tick(true));
+  void restoreSyncStatus(deps)
+    .then(() => tick(true))
+    .catch(ignoreClosedDatabase);
   const interval = setInterval(() => tick(), INTERVAL_MS);
   window.addEventListener('online', onOnline);
   document.addEventListener('visibilitychange', onVisible);
@@ -254,6 +272,7 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   });
 
   return () => {
+    stopped = true;
     clearInterval(interval);
     clearTimeout(debounce);
     clearTimeout(retry);

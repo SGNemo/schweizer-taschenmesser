@@ -72,6 +72,45 @@ describe('startSync', () => {
     }
   });
 
+  it('a round that meets a closed database after stop leaves no unhandled rejection', async () => {
+    // The pull is held back until the database is closed: the round then fails inside its try block and
+    // the status write in the catch block fails too. That rejection used to escape as an unhandled one
+    // (it ended other test files of the shard with "Database has been closed").
+    expect((await connect(params, deps)).ok).toBe(true);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const held: SyncServiceDeps = {
+      ...deps,
+      remote: (_url, token) => {
+        const r = server.remote(token);
+        return { ...r, pull: async (since, limit) => (await gate, r.pull(since, limit)) };
+      },
+    };
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      const stop = startSync(held);
+      await vi.waitFor(() => expect(useSyncStatus.getState().phase).toBe('syncing'));
+      stop();
+      db.close();
+      release();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+  });
+
+  it('does not start a round after stop (the first restore of the status may finish late)', async () => {
+    expect((await connect(params, deps)).ok).toBe(true);
+    const before = pulls;
+    const stop = startSync(deps);
+    stop(); // before restoreSyncStatus has resolved
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(pulls).toBe(before);
+  });
+
   it('still syncs shortly after a local change', async () => {
     expect((await connect(params, deps)).ok).toBe(true);
     const stop = startSync(deps);
