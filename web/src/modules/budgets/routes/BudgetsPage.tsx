@@ -21,7 +21,8 @@ import {
   useOpenParam,
 } from '@/ui';
 import { useBudgetData } from '../data';
-import { HeroFigure, HeroSlot, Ring } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { EnvelopeMini } from '../components/Envelope';
 import styles from './budgets.module.css';
 import {
   BudgetEditor,
@@ -78,14 +79,24 @@ export default function BudgetsPage() {
   const inMain = rows.filter((r) => currencyOf(r.budget) === mainCurrency);
   const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
-  const ringParts = inMain
-    .filter((r) => r.spent > 0)
-    .map((r) => ({ label: categoryName(r.budget.categoryId), share: r.spent }));
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
 
   return (
     <>
-      <PageHeader title={t.budgets.title}>
+      <PageHeader
+        title={t.budgets.title}
+        views={
+          <Segmented
+            label={t.budgets.tabs}
+            value={tab}
+            options={[
+              { value: 'budgets', label: t.budgets.tabBudgets },
+              { value: 'goals', label: t.budgets.tabGoals },
+            ]}
+            onChange={setTab}
+          />
+        }
+      >
         {tab === 'budgets' ? (
           <Button
             variant="primary"
@@ -112,31 +123,25 @@ export default function BudgetsPage() {
               testId="budgets-free"
             />
           </HeroSlot>
-          {ringParts.length > 0 ? (
+          {inMain.length > 0 ? (
             <HeroSlot>
-              <div className={styles.headRing}>
-                <Ring
-                  parts={ringParts}
-                  label={t.budgets.ext.head.ring(ringParts.length)}
-                  centre={ringParts.length}
-                  size={6}
-                />
+              <div className={styles.headEnvelopes}>
+                {[...inMain]
+                  .sort((x, y) => y.status.pct - x.status.pct)
+                  .slice(0, 3)
+                  .map((r) => (
+                    <EnvelopeMini
+                      key={r.budget.id}
+                      name={categoryName(r.budget.categoryId)}
+                      pct={r.status.pct}
+                      over={r.status.tone === 'over'}
+                    />
+                  ))}
               </div>
             </HeroSlot>
           ) : null}
         </>
       ) : null}
-      <div className={patternStyles.gapBottom}>
-        <Segmented
-          label={t.budgets.tabs}
-          value={tab}
-          options={[
-            { value: 'budgets', label: t.budgets.tabBudgets },
-            { value: 'goals', label: t.budgets.tabGoals },
-          ]}
-          onChange={setTab}
-        />
-      </div>
 
       {tab === 'budgets' ? (
         <>
@@ -189,7 +194,13 @@ export default function BudgetsPage() {
                       ? t.budgets.ext.forecast.over(formatMoney(r.projected - r.limit, cur))
                       : undefined;
                   return (
-                    <Card as="li" key={b.id}>
+                    <Card as="li" key={b.id} className={styles.envelope}>
+                      <span
+                        className={`${styles.level} ${s.tone === 'over' ? styles.levelOver : ''}`}
+                        style={{ height: `${Math.min(100, s.pct)}%` }}
+                        aria-hidden="true"
+                      />
+                      <span className={styles.flap} aria-hidden="true" />
                       <div className={patternStyles.row}>
                         <button
                           type="button"

@@ -47,3 +47,60 @@
     display: none;
   }
 }
+
+/* Envelope signature: a flap in the corner and a fill level that rises from the bottom (decoration; numbers are text). */
+.headEnvelopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.mini,
+.envelope {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.mini {
+  min-width: 8rem;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5, 1.5rem);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--module-color) 35%, var(--border));
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+.miniText {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.level {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--module-color) 22%, transparent);
+  transition: height 0.2s ease;
+}
+.levelOver,
+.miniOver .level {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+/* Flap: a corner triangle at the top, like the closed flap of an envelope. */
+.flap {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  z-index: -1;
+  background: color-mix(in srgb, var(--module-color) 28%, transparent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .level {
+    transition: none;
+  }
+}
