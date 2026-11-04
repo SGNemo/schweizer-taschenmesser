@@ -17,3 +17,47 @@
 .dot[data-state='expired'] {
   background: var(--danger);
 }
+
+/* A pantry item is a label: hairline all around, a punched hole at the top, the amount in mono. Not a to-do row. */
+.label.label {
+  position: relative;
+  padding-top: var(--space-5);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: none;
+}
+.label.label::before {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-left: -0.3125rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+}
+.label.label:hover,
+.label.label:focus-within {
+  background: var(--surface-2);
+}
+.amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.endCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+/* One compact pill: minus, plus; each button keeps its 44 px hit area. */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+}

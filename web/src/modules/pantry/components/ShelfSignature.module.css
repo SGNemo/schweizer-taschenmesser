@@ -1,39 +1,58 @@
+/* Tiles on one neutral shelf line (no coloured bar); the tint of the head is the identity. */
 .shelf {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
   gap: var(--space-2);
-  min-width: 10rem;
+  min-width: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--border-strong);
 }
-.board {
-  padding-bottom: var(--space-1);
-  border-bottom: 0.25rem solid var(--module-color);
-}
-.label {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
+.tile {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  min-height: var(--touch);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
-  font-size: var(--text-xs);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tile:hover {
+  background: var(--surface-2);
 }
 .name {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
   letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .num {
-  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xl);
   font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
-.flag {
-  align-self: center;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: var(--radius-full);
-  background: var(--warning);
+.state {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
-@media (max-width: 600px) {
+.state[data-tone='danger'] {
+  color: var(--danger-ink);
+  font-weight: var(--weight-semibold);
+}
+@media (min-width: 900px) {
   .shelf {
-    display: none;
+    grid-template-columns: repeat(2, minmax(7.5rem, 9.5rem));
+  }
+}
+@media (max-width: 899px) {
+  .shelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
