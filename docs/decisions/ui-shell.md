@@ -121,6 +121,10 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Own empty-state motifs** again module-local (`MailEmpty`, `MusicEmpty`, `DownloadsEmpty`); with these, every module of the household, vault, knowledge and media/service groups draws its own motif. The `EmptyState` `motif` prop proposal stands.
 - **Left for a later pass:** an envelope mark on unread mail rows, and the cover-tone hero of music is unchanged (it already was the cover hero).
 
+## Shared empty-state motif (2026-11-04, `feat/ui-empty-motif`, package A of the shared identity blocks)
+
+- **`EmptyState` takes an optional `motif`** (a 96 × 64 outline drawing, `aria-hidden`, decoration only) and `testId`; without a motif it draws the fish as before, the compact variant (dashboard widgets) always keeps the fish. The twelve module-local copies of identity v3 packages 1–3 are now thin wrappers (`XEmpty` = `EmptyState` + the module's drawing) and their twelve identical CSS files are gone. Habits keeps its own empty state (planning chat's code).
+
 ## Settings in identity v3 (2026-11-04, `feat/identity-v3-settings-library`, package 1)
 
 - **A local `PageHead` instead of the shell band.** The head band is private to `layout/AreaFrame` and only renders on area paths, so settings (and later the libraries) build the same ingredients from the same tokens (`data-hue`, `data-area`, `--head-gradient`, `--area-pattern`, plate, text always `--text`) as a rounded card inside the page container. Proposal for later: lift it into a shared `ui/PageBand` once the shell owner agrees (no overflow, no bleed needed there).

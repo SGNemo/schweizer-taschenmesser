@@ -50,22 +50,37 @@ export function SkeletonRows({ count = 3 }: { count?: number }) {
   );
 }
 
-/** The faded Nemo fish, one sentence and (as `children`) at most one button. */
+/**
+ * The faded Nemo fish, one sentence and (as `children`) at most one button. A module with its own picture passes it as
+ * `motif` (a 96 × 64 outline drawing, decoration only: it should be `aria-hidden`); the compact variant keeps the fish.
+ */
 export function EmptyState({
   title,
   compact,
+  motif,
+  testId,
   children,
 }: {
   title: string;
   /** One-line variant for dashboard widgets and other small containers. */
   compact?: boolean;
+  /** The module's own picture instead of the fish (not used by the compact variant). */
+  motif?: ReactNode;
+  testId?: string;
   children?: ReactNode;
 }) {
   return (
-    <div className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}>
-      <span className={styles.emptyMark}>
-        <Logo mono size={compact ? 28 : 60} />
-      </span>
+    <div
+      className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}
+      data-testid={testId}
+    >
+      {motif && !compact ? (
+        <span className={styles.emptyMotif}>{motif}</span>
+      ) : (
+        <span className={styles.emptyMark}>
+          <Logo mono size={compact ? 28 : 60} />
+        </span>
+      )}
       {compact ? (
         <p className={styles.emptyTitle}>{title}</p>
       ) : (

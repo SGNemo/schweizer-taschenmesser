@@ -43,9 +43,16 @@
 .emptyMark {
   display: grid;
   place-items: center;
-  /* The faded fish: 35 % of the quiet text colour, no module illustrations. */
+  /* The faded fish: 35 % of the quiet text colour (a module's own motif is `.emptyMotif`). */
   color: var(--text-3);
   opacity: 0.35;
+}
+/* The module's own picture: outline drawing in the quiet text colour, a little stronger than the faded fish. */
+.emptyMotif {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  opacity: 0.6;
 }
 .emptyTitle {
   color: var(--text);
