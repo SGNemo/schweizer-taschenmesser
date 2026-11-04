@@ -24,6 +24,7 @@ Round 3 implements the chosen variant (**D**, § 8); the rules below become the 
 - **Master–detail from the page container**, not the viewport: `@container page (min-width: 72rem)` (≈ 1150 px of
   page) opens the aside; the calendar time grid, the home columns and the ToDos columns use container queries too.
   One breakpoint table in `ui/tokens.css` as custom properties (`--bp-aside`, `--bp-grid-2/3/4`), documented once.
+  *Built differently:* `useSplitView()` follows the measured page container (`ui/pageWidth.ts`) from **56 rem**, not 72 rem, so 1280–1440 px laptops keep the panel; the grids keep their container queries.
 - **Overflow test.** `e2e/layout-overflow.spec.ts` (CI): for every module entry page, the overview, library, tools and
   settings, in 1280 · 1536 · 1920 · 2560 · 412 px, asserts `document.scrollWidth === clientWidth`,
   `main.scrollWidth === clientWidth`, and that no element inside `main` ends beyond the window unless it sits in a
@@ -182,7 +183,9 @@ head and widget without tinting body text areas, and degrades to A in "Ruhig".
 5. Overview head (greeting, cards, agenda component), widget shapes in `@/ui/widgets`, adjacency `spread()`.
 6. Every manifest mapped (table in MODULE-IDENTITY v3); module-internal content stays with the module chats.
 
-## 11. Mapping of every module (default for round 3 and the module chats)
+## 11. Mapping of every module (as built in round 3; the live table is in [MODULE-IDENTITY](../MODULE-IDENTITY.md))
+
+The head variants of seven modules differ from the first draft so that neighbours in one area never share a variant (`npm run check:modules`).
 
 | Module | Area | `hue` | `hue2` | `head` | `widget` | Signature in the head | Pattern |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -194,21 +197,21 @@ head and widget without tinting body text areas, and degrades to A in "Ruhig".
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | place tiles | plan |
 | Personen `people` | plan | orchid | violet | fokus | faellig | next birthday + avatar | plan |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | balance + sparkline + account cards | money |
-| Rechnungen `invoices` | money | ocean | sky | kennzahl | faellig | open sum + receipt | money |
-| Abos `subscriptions` | money | indigo | cobalt | kennzahl | faellig | monthly sum + next debit | money |
+| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | open sum + receipt | money |
+| Abos `subscriptions` | money | indigo | cobalt | fortschritt | faellig | monthly sum + next debit | money |
 | Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | free amount + envelope bars | money |
-| Listen `lists` | household | orchid | violet | regal | checkliste | list tiles | household |
+| Listen `lists` | household | orchid | violet | kennzahl | checkliste | list tiles | household |
 | Vorräte `pantry` | household | fern | moss | regal | kacheln | shelf tiles with counts | household |
 | Merkliste `bookmarks` | knowledge | indigo | cobalt | regal | kacheln | pinboard tiles | knowledge |
 | Notizen `notes` | knowledge | violet | indigo | schreib | notiz | paper edge, serif title | knowledge |
-| Chat `chat` | knowledge | sky | cobalt | schreib | notiz | last answer | knowledge |
+| Chat `chat` | knowledge | sky | cobalt | fokus | notiz | last answer | knowledge |
 | Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | address bar / tabs | knowledge |
 | E-Mail `mail` | knowledge | teal | ocean | schreib | kennzahl | unread count + stamp | knowledge |
 | Musik `music` | knowledge | orchid | violet | cover | cover | cover colour on the page | – (cover) |
-| Unterlagen `vault` | vault | indigo | violet | tresor | faellig | folder tabs, expiring count | vault |
+| Unterlagen `vault` | vault | indigo | violet | regal | faellig | folder tabs, expiring count | vault |
 | Passwörter `accounts` | vault | slate | – | tresor | status | lock status (never content) | vault |
 | Dieser PC `disk` | system | slate | – | fortschritt | fortschritt | drive rings | – |
-| Downloads `downloads` | system | cobalt | sky | fortschritt | fortschritt | arrow progress | – |
+| Downloads `downloads` | system | cobalt | sky | fokus | fortschritt | arrow progress | – |
 
 Adjacency on the overview (default order): Heute (fokus, moss) · Kontostand (kennzahl, teal) · Kalender (zeitleiste, sky)
 · Wetter (himmel, cobalt) · Gewohnheiten (fortschritt, violet) · Fällige Rechnungen (faellig, ocean) · Vorräte (kacheln,

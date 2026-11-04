@@ -1,12 +1,14 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ModuleHue, PageLayout } from '@/core/modules/types';
+import { createPageWidthStore, PageWidthContext } from '@/ui/pageWidth';
 import styles from './PageContainer.module.css';
 
 /**
  * The one place that decides how wide a page may get. Pages do not set their own `max-width`;
  * they pick a variant (modules via `manifest.layout`). The container is a size container named
  * `page`, so module layouts react to the space they really get (`@container page (…)`), also
- * inside a narrow window or a future panel.
+ * inside a narrow window or a future panel. Its width is also published (`ui/pageWidth`), so master–detail pages
+ * (`useSplitView`) decide by the room the page has, not by the window.
  */
 export function PageContainer({
   variant = 'content',
@@ -18,10 +20,28 @@ export function PageContainer({
   hue?: ModuleHue;
   children: ReactNode;
 }) {
+  const [store] = useState(createPageWidthStore);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([entry]) =>
+      store.set(Math.round(entry?.contentRect.width ?? el.clientWidth)),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [store]);
   return (
-    <div className={`${styles.page} ${styles[variant]}`} data-hue={hue} data-testid="page">
-      {children}
-    </div>
+    <PageWidthContext.Provider value={store}>
+      <div
+        ref={ref}
+        className={`${styles.page} ${styles[variant]}`}
+        data-hue={hue}
+        data-testid="page"
+      >
+        {children}
+      </div>
+    </PageWidthContext.Provider>
   );
 }
 

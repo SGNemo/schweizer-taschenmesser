@@ -78,6 +78,8 @@
 }
 .eyebrow {
   grid-area: eyebrow;
+  /* The row is as tall as the 44 px actions: the label and its plate sit on their middle line. */
+  align-self: center;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -143,6 +145,7 @@
 }
 .actions {
   grid-area: actions;
+  align-self: center;
   display: flex;
   align-items: center;
   justify-content: flex-end;

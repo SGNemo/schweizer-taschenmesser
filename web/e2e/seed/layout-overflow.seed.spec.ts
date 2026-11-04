@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 import { bootDev, seedApp } from './helpers';
 
@@ -19,10 +20,12 @@ const VIEWPORTS = [
   { name: '412x915', width: 412, height: 915, mobile: true },
 ] as const;
 
+const HERE = dirname(fileURLToPath(import.meta.url));
+
 /** Every module folder with a manifest (the dev-only example included in e2e builds is left out). */
-const MODULE_IDS = readdirSync(join(__dirname, '../../src/modules'))
+const MODULE_IDS = readdirSync(join(HERE, '../../src/modules'))
   .filter(
-    (id) => id !== 'example' && existsSync(join(__dirname, '../../src/modules', id, 'manifest.ts')),
+    (id) => id !== 'example' && existsSync(join(HERE, '../../src/modules', id, 'manifest.ts')),
   )
   .sort();
 const PAGES = [
