@@ -1,28 +1,16 @@
 /**
- * Full text search over the `searchable` fields of all enabled modules. The index is rebuilt for
- * every search – personal data volumes are small and this way it can never be stale.
+ * Full text search over the `searchable` fields of all enabled modules. The index is kept in memory and
+ * updated when a table changes (`./index.ts`), so a search costs the search itself, not a read of
+ * every table; results are read from the tables when they are shown, so they are never stale.
  */
-import MiniSearch from 'minisearch';
 import { tableName } from '@/core/db/schema';
 import { t } from '@/strings';
-import { fold } from '../text';
 import { aiModules } from '../scope';
 import { toResultRow } from '../query/rows';
 import type { AiResult, ExecContext, ResultRow } from '../query/types';
-
-interface Doc {
-  uid: string;
-  title: string;
-  text: string;
-}
+import { searchIndexFor, tokenize } from './index';
 
 const MAX_HITS = 20;
-
-/** Splits on anything that is not a letter or digit (after folding diacritics). */
-const tokenize = (s: string): string[] =>
-  fold(s)
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean);
 
 export async function searchEntries(
   text: string,
@@ -32,44 +20,32 @@ export async function searchEntries(
   loose = true,
 ): Promise<ResultRow[]> {
   if (tokenize(text).length === 0) return [];
-  const docs: Doc[] = [];
-  const rowsByUid = new Map<string, () => ResultRow>();
+  const modules = aiModules(ctx.manifests);
+  const index = searchIndexFor(ctx.database, modules);
+  await index.ready();
 
-  for (const manifest of aiModules(ctx.manifests)) {
-    for (const [collection, schema] of Object.entries(manifest.aiSchema.collections)) {
-      const fields = schema.searchable ?? [];
-      if (fields.length === 0) continue;
-      const rows = await ctx.database
-        .table<Record<string, unknown> & { id: string; deletedAt: number | null }, string>(
-          tableName(manifest.id, collection),
-        )
-        .toArray();
-      for (const row of rows) {
-        if (row.deletedAt !== null) continue;
-        const uid = `${manifest.id}/${collection}/${row.id}`;
-        docs.push({
-          uid,
-          title: String(row[schema.titleField] ?? ''),
-          text: fields.map((f) => (row[f] === undefined ? '' : String(row[f]))).join(' '),
-        });
-        rowsByUid.set(uid, () => toResultRow(manifest, collection, row, { withSubtitle: true }));
-      }
-    }
+  let hits = index.mini.search(text, { combineWith: 'AND' });
+  if (hits.length === 0 && loose) hits = index.mini.search(text, { combineWith: 'OR' });
+
+  const byId = new Map(modules.map((m) => [m.id, m]));
+  const rows: ResultRow[] = [];
+  for (const hit of hits) {
+    if (rows.length >= limit) break;
+    // `<module>/<collection>/<record id>`: the record id may itself contain a slash.
+    const [moduleId, collection, ...rest] = String(hit.id).split('/');
+    const manifest = byId.get(moduleId!);
+    if (!manifest || !collection) continue;
+    const row = (await ctx.database
+      .table<Record<string, unknown> & { id: string; deletedAt: number | null }, string>(
+        tableName(manifest.id, collection),
+      )
+      .get(rest.join('/'))) as
+      (Record<string, unknown> & { id: string; deletedAt: number | null }) | undefined;
+    // Gone or deleted since the index was updated: the next search drops it.
+    if (!row || row.deletedAt !== null) continue;
+    rows.push(toResultRow(manifest, collection, row, { withSubtitle: true }));
   }
-
-  const index = new MiniSearch<Doc>({
-    idField: 'uid',
-    fields: ['title', 'text'],
-    tokenize,
-    searchOptions: { prefix: true, fuzzy: 0.15, boost: { title: 2 } },
-  });
-  index.addAll(docs);
-  let hits = index.search(text, { combineWith: 'AND' });
-  if (hits.length === 0 && loose) hits = index.search(text, { combineWith: 'OR' });
-  return hits.slice(0, limit).flatMap((h) => {
-    const row = rowsByUid.get(String(h.id));
-    return row ? [row()] : [];
-  });
+  return rows;
 }
 
 export async function searchText(text: string, ctx: ExecContext): Promise<AiResult> {

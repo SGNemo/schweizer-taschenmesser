@@ -389,6 +389,7 @@ test('data volume: ' + SCALE, async ({ page }, info) => {
     searches[q] = summarise(runs);
   }
   result.searches = searches;
+  result.heapAfterSearchMb = await heapMb(cdp);
   save();
 
   // 5. Backup and restore. Seeded rows are left out of real backups, so the seed rows are exported
