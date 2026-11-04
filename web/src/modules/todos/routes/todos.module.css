@@ -154,12 +154,16 @@
 .prio2 {
   display: inline-flex;
   align-items: center;
+  gap: 0.2rem;
   color: var(--text);
   font-weight: 600;
 }
 .prio3 svg,
 .prio2 svg {
-  margin-inline-end: -0.35rem;
+  flex: none;
+}
+.prio3 svg + svg {
+  margin-inline-start: -0.5rem;
 }
 .subProgress {
   display: inline-flex;

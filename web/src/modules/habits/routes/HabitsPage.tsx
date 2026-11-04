@@ -4,15 +4,7 @@ import { useWeekStart } from '@/core/settings/core';
 import { addDaysStr, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import {
-  Button,
-  Icon,
-  ItemList,
-  ItemRow,
-  PageHeader,
-  Segmented,
-  useOpenParam,
-} from '@/ui';
+import { Button, Icon, ItemList, ItemRow, PageHeader, Segmented, useOpenParam } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalCard } from '../components/GoalCard';
 import { GoalEditor, type GoalTarget } from '../components/GoalEditor';
@@ -101,10 +93,6 @@ export default function HabitsPage() {
           <HeroFigure
             value={String(planned.filter((g) => dayProgress(g, todayMap.get(g.id)) >= 1).length)}
             unit={`/ ${planned.length}`}
-            detail={t.habits.today.progress(
-              planned.filter((g) => dayProgress(g, todayMap.get(g.id)) >= 1).length,
-              planned.length,
-            )}
             testId="habit-done"
           />
         </HeroSlot>
