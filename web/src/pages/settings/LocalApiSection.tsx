@@ -255,7 +255,7 @@ export function LocalApiSection() {
                     ·{' '}
                     {state === 'committed'
                       ? t.localApi.importState.committed(countRecords(b))
-                      : t.localApi.importState[state]}
+                      : t.localApi.importState[state === 'committing' ? 'pending' : state]}
                   </span>
                   {state === 'committed' && manifest ? (
                     <Button

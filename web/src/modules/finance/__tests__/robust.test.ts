@@ -3,7 +3,6 @@ import { db } from '@/core/db/db';
 import { bus } from '@/core/events';
 import { setSettings } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
-import { invoiceRepo } from '@/modules/invoices/repo';
 import { accountRepo, transactionRepo } from '../repo';
 import { bookDueRepeats, invoiceTransactionId, repairInvoiceBookings } from '../services';
 
@@ -25,15 +24,26 @@ afterEach(() => {
   setNow();
 });
 
-const paidInvoice = (over: Record<string, unknown> = {}) =>
-  invoiceRepo.create({
+// Invoices are stored rows here (a module's tests do not import another module's repo).
+let invoiceNo = 0;
+const paidInvoice = async (over: Record<string, unknown> = {}) => {
+  const row = {
+    id: `inv${++invoiceNo}`,
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 'd',
+    deletedAt: null,
+    _f: {},
     payee: 'Stadtwerke',
     amountMinor: 8990,
     dueDate: '2026-10-05',
     status: 'paid',
     paidAt: '2026-10-04',
     ...over,
-  } as never);
+  };
+  await db.table('invoices_invoice').put(row);
+  return row;
+};
 
 describe('repairInvoiceBookings: what a lost event left unbooked', () => {
   it('books a paid invoice without a booking, once, however often it runs', async () => {

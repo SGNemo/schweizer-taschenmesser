@@ -55,6 +55,22 @@ export async function commitImport(
     byCollection.set(row.candidate.collection, list);
   });
 
+  // Written first: if the app closes during the writes, the next start finds this and keeps the
+  // records that were written findable (and undoable) instead of leaving them without a batch.
+  await table(database).put({
+    ...args.base,
+    id: args.batchId,
+    moduleId: manifest.id,
+    importerId: args.importerId,
+    source: args.source,
+    createdAt: args.base?.createdAt ?? now(),
+    records: [...byCollection].map(([collection, items]) => ({
+      collection,
+      ids: items.map((i) => i.id),
+    })),
+    status: 'committing',
+  });
+
   const records: ImportBatch['records'] = [];
   const updates: BatchUpdate[] = [];
   let conflicts = 0;
@@ -68,6 +84,15 @@ export async function commitImport(
         .removeMany(ids)
         .catch(() => {});
     }
+    // Back to what it was before the attempt: a pending API batch keeps its rows, anything else leaves no trace.
+    if (args.base)
+      await table(database)
+        .put(args.base as ImportBatch)
+        .catch(() => {});
+    else
+      await table(database)
+        .delete(args.batchId)
+        .catch(() => {});
     throw e;
   }
 
@@ -143,6 +168,43 @@ export async function commitImport(
   };
   await table(database).put(batch);
   return batch;
+}
+
+/**
+ * Settles imports that were interrupted (the app closed while `commitImport` was writing): records
+ * that exist are kept and registered, so "Import rückgängig machen" finds them; a batch that wrote
+ * nothing goes back to what it was (a pending API batch to `pending`, a wizard import is dropped).
+ * Runs at every start; there is no import in flight then.
+ */
+export async function recoverInterruptedImports(
+  database: TaschenmesserDB = defaultDb,
+): Promise<number> {
+  const stuck = (await table(database).toArray()).filter((b) => b.status === 'committing');
+  for (const batch of stuck) {
+    const records: ImportBatch['records'] = [];
+    for (const { collection, ids } of batch.records) {
+      const rows = await database
+        .table<{ id: string; deletedAt: number | null }, string>(`${batch.moduleId}_${collection}`)
+        .bulkGet(ids);
+      const alive = rows.filter((r) => r !== undefined && r.deletedAt === null).map((r) => r!.id);
+      if (alive.length > 0) records.push({ collection, ids: alive });
+    }
+    if (records.length > 0) {
+      await table(database).put({
+        ...batch,
+        records,
+        status: 'committed',
+        committedAt: batch.committedAt ?? now(),
+        rows: undefined,
+        interrupted: true,
+      });
+    } else if (batch.rows) {
+      await table(database).put({ ...batch, records: [], status: 'pending' });
+    } else {
+      await table(database).delete(batch.id);
+    }
+  }
+  return stuck.length;
 }
 
 export function countRecords(batch: ImportBatch): number {

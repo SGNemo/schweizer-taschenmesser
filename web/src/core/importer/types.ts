@@ -230,7 +230,11 @@ export interface PreviewRow {
   selected: boolean;
 }
 
-export type BatchStatus = 'pending' | 'committed' | 'rejected' | 'undone';
+/**
+ * `committing` is written before an import writes anything and replaced when it is done; one that is
+ * still there at the next start means the app closed in between (`recoverInterruptedImports`).
+ */
+export type BatchStatus = 'pending' | 'committing' | 'committed' | 'rejected' | 'undone';
 
 /** A change the batch made to an existing record; `before` restores it on undo. */
 export interface BatchUpdate {
@@ -270,6 +274,8 @@ export interface ImportBatch {
   /** Counts for the report after the import: no names, no content. */
   report?: ImportReportCounts;
   committedAt?: number;
+  /** Set when the app closed during the import and the start found it half done (the records that exist are kept). */
+  interrupted?: boolean;
   /* ---- API batches ---- */
   tokenId?: string;
   tokenName?: string;

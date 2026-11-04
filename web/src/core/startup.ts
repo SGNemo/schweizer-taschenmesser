@@ -41,6 +41,12 @@ export async function initCore(): Promise<void> {
   }
   // Forward copies between merged/retired modules (also run after every sync pull and restore).
   await runAppMigrations();
+  // An import the app was closed in the middle of: keep what was written findable and undoable.
+  try {
+    await (await import('@/core/importer/batches')).recoverInterruptedImports();
+  } catch {
+    // Best effort: a leftover marker is tried again at the next start.
+  }
   // Profile schedules run once the data is ready, while the app is open.
   if (!stopScheduler && typeof localStorage !== 'undefined')
     stopScheduler = startProfileScheduler();
