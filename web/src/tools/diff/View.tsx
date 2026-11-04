@@ -4,6 +4,7 @@ import { t } from '@/strings';
 import { Button, Checkbox, NoReadAid, TextArea } from '@/ui';
 import { copyText } from '../shared';
 import { useUiStore } from '@/stores/ui';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import own from './Tool.module.css';
 import { diffLines, isTooLong, MAX_CHARS, toUnifiedDiff, type DiffRow } from './logic';
@@ -47,6 +48,7 @@ export default function DiffTool() {
     <div className={styles.stack}>
       <div className={own.pair}>
         <TextArea
+          className={kit.codeInput}
           label={s.before}
           value={before}
           onChange={(e) => setBefore(e.target.value)}
@@ -55,6 +57,7 @@ export default function DiffTool() {
           data-testid="diff-before"
         />
         <TextArea
+          className={kit.codeInput}
           label={s.after}
           value={after}
           onChange={(e) => setAfter(e.target.value)}

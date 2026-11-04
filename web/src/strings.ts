@@ -2182,6 +2182,7 @@ export const de = {
       invalid: 'Bitte gültige Daten wählen.',
     },
     persona: {
+      stamp: 'Erfunden',
       name: 'Anonyme Persona',
       keywords: 'Fake, Pseudonym, Wegwerf, Anmeldung, erfundene Person',
       description:

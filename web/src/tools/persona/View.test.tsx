@@ -56,6 +56,15 @@ beforeEach(async () => {
 afterEach(cleanup);
 
 describe('persona tool', () => {
+  it('the card says in words that the person is made up, next to the name', async () => {
+    wrap();
+    expect(await screen.findByText(s.stamp)).toBeVisible();
+    const name = `${rowValue(s.fields.firstName)} ${rowValue(s.fields.lastName)}`;
+    expect(screen.getByText(name)).toBeVisible();
+    // The stamp is not the only warning: the intro stays.
+    expect(screen.getByText(s.intro)).toBeVisible();
+  });
+
   it('shows the persona fields and nothing that works like an identity document', async () => {
     wrap();
     await screen.findByTestId('persona-fields');
