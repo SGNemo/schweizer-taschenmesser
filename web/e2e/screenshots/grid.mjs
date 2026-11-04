@@ -2,7 +2,7 @@
 // Manual tooling: lays the screenshots of identity-v3.spec.ts side by side, "all modules next to each other".
 // Usage (in web/): node e2e/screenshots/grid.mjs <dir with before/ and after/> <out dir> [modules,comma,separated]
 // Per viewport and colour scheme (reading aid off and on) one PNG: a row "before", a row "after", one column per module.
-import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -45,7 +45,9 @@ for (const variant of variants)
     const page = await browser.newPage({
       viewport: { width: cell * modules.length + 8 * modules.length + 24, height: 600 },
     });
-    await page.setContent(html);
+    const htmlFile = path.resolve(out, `grid-${variant}-${vp}.html`);
+    writeFileSync(htmlFile, html);
+    await page.goto(pathToFileURL(htmlFile).href);
     await page.waitForLoadState('load');
     await page.screenshot({ path: path.join(out, `grid-${variant}-${vp}.png`), fullPage: true });
     await page.close();
