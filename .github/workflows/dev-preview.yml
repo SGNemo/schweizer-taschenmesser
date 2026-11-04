@@ -59,8 +59,10 @@ on:
 permissions:
   contents: read
 
+# One group per ref: several merges to develop still replace each other (the newest preview wins), while a manual
+# test run on a branch can no longer cancel a real preview of develop (or be cancelled by it).
 concurrency:
-  group: dev-preview
+  group: dev-preview-${{ github.ref }}
   cancel-in-progress: true
 
 env:
