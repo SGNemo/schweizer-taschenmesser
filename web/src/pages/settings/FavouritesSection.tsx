@@ -2,7 +2,7 @@ import { setFavourite } from '@/core/settings/nav';
 import { useNavTree } from '@/layout/useNavItems';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { HuePlate, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { SettingRow, SettingsGroup, Switch } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
 
 /**
@@ -25,12 +25,7 @@ export function FavouritesSection() {
     >
       <FoldedGroup section="favourites" id="list" title={t.settings.favourites} current={current}>
         {items.map((i) => (
-          <SettingRow
-            key={i.to}
-            id={`favourites--${i.moduleId}`}
-            label={i.label}
-            leading={i.hue ? <HuePlate hue={i.hue} icon={i.icon} /> : undefined}
-          >
+          <SettingRow key={i.to} id={`favourites--${i.moduleId}`} label={i.label}>
             <Switch
               label={i.label}
               labelHidden
