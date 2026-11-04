@@ -54,6 +54,7 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/` |
 | `npm run screenshots` | renders the preview at 360/768/1280/1920, light and dark → `out/` |
 | `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
+| `npm run app:screenshots -- --readme` | the README pictures (overview, calendar, finance, toolbox, settings; desktop 1920×1080 and phone 412×915, light and dark, WebP) → `../docs/assets/screenshots/` |
 
 `NO_RELEASE_FETCH=1 npm run build` skips the API call. Chromium for Lighthouse/screenshots:
 `PLAYWRIGHT_CHROMIUM=<path>` (default: the pinned path used in the cloud sessions).
@@ -111,8 +112,10 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
   fixes the clock to the seed date, hides the Dev badge and writes `home`, `phone`, `calendar`,
   `todos`, `finance`, `vault` (unlocked with the seed's demo passphrase) and `reminders`, light and
   dark, to `src/assets/screens/`. `APP_URL=http://localhost:4174` reuses a running preview,
-  `SCREENS_PAGES=<regex>` filters. The app UI is German only, so one set serves both languages;
+  `SCREENS_PAGES=<regex>` filters. The seed's texts are German, so one set serves every language;
   tile focal points live in `Features.astro` (`focus`). Only test data, never real data.
+  With `--readme` the same script shoots the README motifs instead (see the table above); after a
+  big UI change run it again and commit the WebP files together with the README.
 - Product video (not on the page yet): record the quick capture (Ctrl+K or "+ Neu", type
   "Zahnarzt Di 10 Uhr", Enter, entry appears) in the seeded app at 1280×720, ≤ 20 s, no sound,
   export MP4 (H.264, ≤ 1.5 MB) + WebM and a poster PNG; add a `<video>` with `preload="none"`,

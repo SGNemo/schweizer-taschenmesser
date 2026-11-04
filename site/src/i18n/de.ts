@@ -44,7 +44,13 @@ export const de = {
       { icon: 'key', shot: 'vault', title: 'Tresor', text: 'Passwörter mit TOTP und Generator, Unterlagen mit Ablaufdatum. Verschlüsselt, für KI unsichtbar.', alt: 'Entsperrter Tresor mit Demo-Zugängen' },
       { icon: 'bell', shot: 'reminders', title: 'Erinnerungen', text: 'Gebündelt, mit Ruhezeiten und „Später“, auch bei geschlossener App.', alt: 'Erinnerungen mit Schaltern und nächstem Zeitpunkt' },
     ],
-    more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, PC aufräumen, Nachrichten mit lokalem Modell. KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
+    more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
+    modules: {
+      summary: (n: number) => `Alle ${n} Module`,
+      status: { default: 'standardmäßig an', optional: 'optional', preview: 'Vorschau' },
+      only: { windows: 'nur Windows-App', android: 'nur Android-App', both: 'nur Windows- und Android-App' },
+      hint: 'Vorschau-Module bleiben versteckt, bis „In Arbeit anzeigen“ an ist (Einstellungen → Darstellung). Die Liste wird aus der App selbst erzeugt.',
+    },
   },
   data: {
     eyebrow: 'Deine Daten bleiben bei dir',
