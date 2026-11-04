@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openToolbox, pickTool } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
@@ -7,8 +8,7 @@ test.beforeEach(async ({ page }) => {
 async function openSheet(page: Page) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
-  await page.getByRole('button', { name: 'Werkzeuge' }).click();
-  return page.getByRole('dialog', { name: 'Werkzeuge' });
+  return openToolbox(page);
 }
 
 test('the toolbar lists the everyday tools and the calculator works', async ({ page }) => {
@@ -37,7 +37,9 @@ test('the toolbar lists the everyday tools and the calculator works', async ({ p
   await sheet.getByLabel('Personen').fill('3');
   await expect(sheet.getByRole('status')).toContainText('30,00');
 
-  await sheet.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
+  // The list is beside the tool; a phone shows one pane and goes back with the arrow.
+  const back = sheet.getByRole('button', { name: 'Zurück zu den Werkzeugen' });
+  if (await back.isVisible()) await back.click();
   await expect(sheet.getByRole('button', { name: 'QR-Code' })).toBeVisible();
 });
 
@@ -52,8 +54,7 @@ test('the tool library switches tools on and off and reorders the toolbar', asyn
   await calc.getByLabel('Rechner einschalten').click();
   await expect(calc.getByLabel('Rechner einschalten')).not.toBeChecked();
 
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  const sheet = page.getByRole('dialog', { name: 'Werkzeuge' });
+  const sheet = await openToolbox(page);
   await expect(sheet.getByRole('button', { name: 'Würfel & Zufall' })).toBeVisible();
   await expect(sheet.getByRole('button', { name: 'Rechner', exact: true })).toHaveCount(0);
 
@@ -83,12 +84,8 @@ test('dice and the developer tool compute', async ({ page }) => {
   const sheet = page.getByRole('dialog', { name: 'Würfel & Zufall' });
   await sheet.getByRole('button', { name: 'Würfeln' }).click();
   await expect(sheet.getByRole('status', { name: 'Würfel' })).toContainText(/^[1-6]$/);
-  await sheet.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
-
-  await page
-    .getByRole('dialog', { name: 'Werkzeuge' })
-    .getByRole('button', { name: 'Entwickler' })
-    .click();
+  const dev0 = await pickTool(page, 'Entwickler');
+  void dev0;
   const dev = page.getByRole('dialog', { name: 'Entwickler' });
   await dev.getByLabel('Eingabe').fill('hello');
   await expect(dev.getByRole('status', { name: 'Ergebnis' })).toHaveText('aGVsbG8=');
@@ -112,9 +109,10 @@ test('/tools/:id opens the sheet on that tool', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
   await page.keyboard.press('Escape');
-  // A tool that is not switched on just shows the tile grid.
+  // A tool that is not switched on is not opened: the panel shows one that is on.
   await page.goto('/tools/dice');
-  await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Würfel & Zufall' })).toHaveCount(0);
 });
 
 test('the palette lists tools and Ctrl+. toggles the sheet', async ({ page }, info) => {
@@ -129,7 +127,8 @@ test('the palette lists tools and Ctrl+. toggles the sheet', async ({ page }, in
   await page.keyboard.press('Control+.');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.press('Control+.');
-  await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
+  // It opens on the tool used last.
+  await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
 });
 
 test('the calculator has scientific, programmer and date modes and remembers the tab', async ({
@@ -163,8 +162,7 @@ test('the calculator has scientific, programmer and date modes and remembers the
 
   // The last tab is remembered.
   await page.reload();
-  await page.getByRole('button', { name: 'Werkzeuge' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Rechner' }).click();
+  await pickTool(page, 'Rechner');
   await expect(page.getByRole('dialog').getByRole('button', { name: 'Datum' })).toHaveAttribute(
     'aria-current',
     'page',
@@ -230,9 +228,7 @@ test('the anonymous persona is off by default, invents a persona and opens a dis
   await card.getByLabel('Anonyme Persona einschalten').click();
   await expect(card.getByLabel('Anonyme Persona einschalten')).toBeChecked();
 
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  const sheet = page.getByRole('dialog');
-  await sheet.getByRole('button', { name: 'Anonyme Persona', exact: true }).click();
+  const sheet = await pickTool(page, 'Anonyme Persona');
   await expect(
     sheet.getByText('Nur für Seiten, die keine echten Angaben verlangen.'),
   ).toBeVisible();

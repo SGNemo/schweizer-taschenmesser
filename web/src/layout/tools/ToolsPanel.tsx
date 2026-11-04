@@ -196,10 +196,10 @@ export function ToolsPanel() {
               </section>
             ) : null}
             {groups.map((g) => (
-              <section key={g.category} aria-label={t.tools.panel.categories[g.category]}>
+              <div key={g.category}>
                 <h3 className={styles.groupTitle}>{t.tools.panel.categories[g.category]}</h3>
                 <ul className={styles.tiles}>{g.tools.map((x) => tile(x, true))}</ul>
-              </section>
+              </div>
             ))}
             {tools && ordered.length === 0 ? <p>{t.tools.none}</p> : null}
             {ordered.length > 0 && visible.length === 0 ? (

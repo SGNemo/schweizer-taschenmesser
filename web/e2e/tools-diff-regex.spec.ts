@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { showPreview } from './helpers';
+import { pickTool, showPreview } from './helpers';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -11,12 +11,7 @@ async function openTool(page: Page, id: string, name: string) {
   await expect(card.getByLabel(`${name} einschalten`)).not.toBeChecked();
   await card.getByLabel(`${name} einschalten`).click();
   await expect(card.getByLabel(`${name} einschalten`)).toBeChecked();
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  await page
-    .getByRole('dialog', { name: 'Werkzeuge' })
-    .getByRole('button', { name, exact: true })
-    .click();
-  return page.getByRole('dialog');
+  return pickTool(page, name);
 }
 
 test.describe('Textvergleich', () => {

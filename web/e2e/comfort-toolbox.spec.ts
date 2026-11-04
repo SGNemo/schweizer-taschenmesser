@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { openToolbox, ready } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -43,7 +43,7 @@ test('tool library: search finds a tool by purpose', async ({ page }) => {
   await expect(page.getByTestId('tool-timer')).toBeVisible();
 });
 
-test('toolbox: the tool used last is one tap away above the tiles', async ({ page }, info) => {
+test('toolbox: the tool used last is one tap away above the list', async ({ page }, info) => {
   void info;
   await ready(page, '/tools');
   const units = page.getByRole('switch', { name: /Einheiten.* einschalten/ });
@@ -53,7 +53,9 @@ test('toolbox: the tool used last is one tap away above the tiles', async ({ pag
     .getByTestId('tool-timer')
     .getByRole('button', { name: /Timer.* öffnen/ })
     .click();
-  await page.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
+  // The panel opens on the tool used last, and the row names the ones used before it.
+  await page.keyboard.press('Escape');
+  await openToolbox(page);
   const recent = page.getByRole('region', { name: 'Zuletzt benutzt' });
   await expect(recent.getByRole('button', { name: /Timer/ })).toBeVisible();
 });

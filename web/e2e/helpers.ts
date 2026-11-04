@@ -145,3 +145,29 @@ export async function showPreview(page: Page) {
     await page.reload();
   }
 }
+
+/**
+ * Opens the toolbox panel (or takes it as it is when it is open already) and returns its dialog.
+ * The panel opens on the tool used last; on a phone (one pane at a time, under 900 px) this goes
+ * back to the list first, so callers can always pick from it.
+ */
+export async function openToolbox(page: Page): Promise<Locator> {
+  const dialog = page.getByRole('dialog');
+  if (!(await dialog.isVisible()))
+    await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+  await expect(dialog).toBeVisible();
+  if ((page.viewportSize()?.width ?? 1280) < 900) {
+    const back = dialog.getByRole('button', { name: 'Zurück zu den Werkzeugen' });
+    if (await back.isVisible()) await back.click();
+    await expect(dialog.getByRole('searchbox')).toBeVisible();
+  }
+  return dialog;
+}
+
+/** Opens the toolbox and picks a tool by its name (the panel's list); returns the dialog titled after it. */
+export async function pickTool(page: Page, name: string): Promise<Locator> {
+  const dialog = await openToolbox(page);
+  await dialog.getByRole('button', { name, exact: true }).click();
+  await expect(page.getByRole('dialog', { name })).toBeVisible();
+  return page.getByRole('dialog');
+}

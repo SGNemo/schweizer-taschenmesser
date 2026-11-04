@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { PDFDocument } from 'pdf-lib';
+import { pickTool } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -12,13 +13,7 @@ async function openTool(page: Page, id: string, name: string) {
   await page.goto('/tools');
   await page.getByTestId(`tool-${id}`).getByLabel(`${name} einschalten`).click();
   await expect(page.getByTestId(`tool-${id}`).getByLabel(`${name} einschalten`)).toBeChecked();
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  await page
-    .getByRole('dialog', { name: 'Werkzeuge' })
-    .getByRole('button', { name, exact: true })
-    .click();
-  // The dialog is titled after the open tool now.
-  return page.getByRole('dialog');
+  return pickTool(page, name);
 }
 
 test('text tool: counts, changes case, tidies and inserts placeholder text', async ({ page }) => {
