@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Audit – Kopf-Silhouetten (F01/F02)</title>
+<link rel="stylesheet" href="audit.css">
+<style>.vault{--mod:var(--mod-indigo);--mod2:var(--mod-violet)}.inv{--mod:var(--mod-ocean);--mod2:var(--mod-sky)}</style></head>
+<body data-active="vault" data-area="vault">
+<div class="app"><aside class="sidebar" id="sb"></aside><div class="main"><header class="top" id="tb"></header>
+<div class="frame">
+  <div class="cap"><b>VORHER</b><span>Unterlagen · regal · develop heute: Figur links, „Signatur“ (Satz-Plättchen) 1 300 px weiter rechts, Ordnerreiter nicht gezeichnet</span></div>
+  <section class="head hero vault"><span class="pattern vault"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="files"></span>Tresor · Unterlagen</div><h1>Unterlagen</h1>
+      <div class="caps" style="margin-top:12px">Ablage</div><div class="fig">34 <small>Unterlagen</small></div><div class="ctx">3 abgelaufen · 6 mit Frist in Sicht</div></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right"><div class="sentence"><span data-i="lock" style="display:grid;flex:none"></span>Dateien bleiben nur auf diesem Gerät. Sie werden weder synchronisiert noch ins Backup geschrieben. Titel, Ablaufdatum und Notizen werden wie üblich synchronisiert.</div></div>
+  </section>
+  <div class="cap after"><b>NACHHER</b><span>v3.1-Raster: Figur | Signatur-Platz (36 rem) | frei | Aktionen – Inhaltsspalte 70 rem, linksbündig zur Seite; Ordnerreiter als Signatur, der Datenschutz-Satz wandert unter die Unternavigation</span></div>
+  <section class="head hero vault v31"><span class="pattern vault"></span>
+    <div class="inner">
+      <div class="eyebrow"><span class="plate" data-i="files"></span>Tresor · Unterlagen</div><h1>Unterlagen</h1>
+      <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+      <div class="figure"><div class="caps">Ablage</div><div class="fig">34 <small>Unterlagen</small></div><div class="ctx">3 abgelaufen · 6 mit Frist in Sicht</div></div>
+      <div class="sig" style="position:relative"><div class="slotmark"><b>signature · M</b></div><div class="tabs"><a><b>3</b><span>Abgelaufen</span></a><a><b>6</b><span>Frist in Sicht</span></a><a><b>12</b><span>Verträge</span></a><a><b>13</b><span>Sonstige</span></a></div></div>
+    </div>
+  </section>
+  <nav class="subnav" data-area="vault"></nav>
+  <div class="quietline"><span data-i="lock" style="display:grid"></span>Dateien bleiben auf diesem Gerät · Titel, Fristen und Notizen werden abgeglichen</div>
+
+  <div class="cap"><b>VORHER</b><span>Rechnungen · fokus · develop heute: kleiner Titel links, Quittungskarte mit vier Textzeilen ganz rechts – erkennbar nur durch Lesen; dieselbe gezackte Kante wie der Listen-Bon</span></div>
+  <section class="head compact inv"><span class="pattern money"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="bill"></span>Geld · Rechnungen</div><h1>Rechnungen</h1></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right"><div class="receiptcard">Offen gesamt<b>1.017,84 €</b>7 Rechnungen<br>Nächste: Stadtwerke Musterstadt am 17.09.2026</div></div>
+  </section>
+  <div class="cap after"><b>NACHHER</b><span>fokus = die eine Sache groß neben dem Modulnamen: offene Summe mit Kontext, die Rechnung als Marke (neue Signatur „bill“: abgerissener Beleg mit Summenzeile); Aktion „Nächste bezahlen“ im Kopf</span></div>
+  <section class="head compact inv v31"><span class="pattern money"></span>
+    <div class="inner">
+      <div class="eyebrow"><span class="plate" data-i="bill"></span>Geld · Rechnungen</div><h1>Rechnungen</h1>
+      <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+      <div class="figure"><div class="onething"><div class="bill"><i></i><i></i><i></i><i class="t"></i></div><div class="big">1.017,84 € offen<small>7 Rechnungen · 2 überfällig · nächste Stadtwerke Musterstadt, 17. Sep.</small></div></div></div>
+      <div class="sig" style="position:relative"><div class="slotmark"><b>signature · S</b></div><a class="btn soft">Nächste bezahlen</a></div>
+    </div>
+  </section>
+  <nav class="subnav" data-area="money"></nav>
+  <p class="note">Regel dazu (MODULE-IDENTITY v3.1): jede Kopf-Variante hat feste Raster-Bereiche und einen Signatur-Platz mit Größe (S 4 rem · M 36 rem · L volle Breite); der Inhalt endet bei 70 rem, auch wenn die Seite 100 rem breit ist. Der Rahmen zeichnet den Platz, das Modul füllt ihn (<code>HeroSlot area="signature"</code>).</p>
+</div></div></div>
+<script src="../../identity-v3/mockups/shell.js"></script>
+</body></html>

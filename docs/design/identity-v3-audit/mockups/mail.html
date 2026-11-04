@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Audit – E-Mail auf schreib (F04/G13)</title>
+<link rel="stylesheet" href="audit.css">
+<style>.mail{--mod:var(--mod-teal);--mod2:var(--mod-ocean)}.fin{--mod:var(--mod-teal);--mod2:var(--mod-ocean)}.w.fin{--mod:var(--mod-teal)}.w.mail{--mod:var(--mod-teal)}.w.tt{--mod:var(--mod-teal)}
+.stampbox{display:inline-flex;flex-direction:column;align-items:center;padding:10px 18px;border:2px dashed color-mix(in srgb,var(--mod) 60%,var(--border));background:var(--surface);margin-top:12px}
+.stampbox b{font-size:1.75rem;font-weight:800;line-height:1}.stampbox small{font-size:.5625rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.stampbox i{font-style:normal;font-size:.6875rem;color:var(--text-3)}</style></head>
+<body data-active="mail" data-area="knowledge">
+<div class="app"><aside class="sidebar" id="sb"></aside><div class="main"><header class="top" id="tb"></header>
+<div class="frame">
+  <div class="cap"><b>VORHER</b><span>E-Mail · kennzahl · teal: dieselbe Silhouette, Form und Farbe wie Finanzen; Stempel links, Umschlag 1 400 px weiter rechts</span></div>
+  <section class="head hero mail"><span class="pattern knowledge"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="mail"></span>Wissen · E-Mail</div><h1>E-Mail</h1>
+      <div class="stampbox"><b>2</b><small>Ungelesen</small><i>Ungelesene Threads im Posteingang</i></div></div>
+    <div class="actions"><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right"><div class="envelope"></div></div>
+  </section>
+  <div class="cap after"><b>NACHHER</b><span>E-Mail · schreib (wie im Konzept): Papier mit Linienkante, Serifen-Titel, die Briefmarke trägt die Zahl und sitzt neben dem Titel – keine Verwechslung mit der teal Kennzahl von Finanzen</span></div>
+  <section class="head compact schreib mail v31">
+    <div class="inner">
+      <div class="eyebrow"><span class="plate" data-i="mail"></span>Wissen · E-Mail</div><h1>E-Mail</h1>
+      <div class="actions"><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+      <div class="figure"><div class="onething"><div class="stamp"><div class="in"><b>2</b><small>ungelesen</small></div></div><div class="big" style="font-family:var(--serif);font-weight:600;font-size:1.5rem">Posteingang<small>2 ungelesen · zuletzt 08:15 · Stadtwerke, Anna</small></div></div></div>
+      <div class="sig" style="position:relative"><div class="slotmark"><b>signature · S</b></div><div class="envelope"></div></div>
+    </div>
+  </section>
+  <nav class="subnav" data-area="knowledge"></nav>
+
+  <div class="cap"><b>VORHER</b><span>Übersicht: drei teal Kennzahl-Widgets nebeneinander – Finanzen, E-Mail (Ungelesen), E-Mail (Rechnungsmails); ohne Titel nur am Icon zu unterscheiden</span></div>
+  <div class="wrow">
+    <div class="w fin"><span class="pattern money"></span><div class="wh"><span class="plate" data-i="wallet"></span>Kontostand<span class="chev" data-i="chev"></span></div><div class="big">12.616,33 €</div><div class="ctx">11.598,49 € verfügbar · ▲ 463,62 € zum Vormonat</div></div>
+    <div class="w mail"><span class="pattern knowledge"></span><div class="wh"><span class="plate" data-i="mail"></span>Ungelesen<span class="chev" data-i="chev"></span></div><div class="meta">Ungelesen</div><div class="big">2</div><div class="ctx">Ungelesene Threads im Posteingang</div></div>
+    <div class="w mail"><span class="pattern knowledge"></span><div class="wh"><span class="plate" data-i="mail"></span>Rechnungsmails<span class="chev" data-i="chev"></span></div><div class="meta">Rechnungsmails</div><div class="big">2</div><div class="ctx">in den letzten 30 Tagen</div></div>
+  </div>
+  <div class="cap after"><b>NACHHER</b><span>E-Mail als Notiz-Papier: ein Widget „Posteingang“ (Briefmarke mit Zahl, zwei Betreffzeilen, Rechnungsmails als Kontextzeile); Finanzen bleibt die einzige teal Kennzahl</span></div>
+  <div class="wrow">
+    <div class="w fin"><span class="pattern money"></span><div class="wh"><span class="plate" data-i="wallet"></span>Kontostand<span class="chev" data-i="chev"></span></div><div class="big">12.616,33 €</div><div class="ctx">11.598,49 € verfügbar · ▲ 463,62 € zum Vormonat</div></div>
+    <div class="w mail paper"><div class="wh"><span class="plate" data-i="mail"></span>Posteingang<span class="stamp sm"><span class="in"><b>2</b><small>neu</small></span></span></div>
+      <div class="subj"><span class="unread">Stadtwerke Musterstadt: Ihre Rechnung für Oktober<i>08:15</i></span><span class="unread">Anna Beispiel: Wochenende?<i>07:40</i></span><span>Bibliothek: Erinnerung Rückgabe<i>gestern</i></span></div><div class="ctx">2 Rechnungsmails in 30 Tagen · <u>als Rechnung anlegen</u></div></div>
+    <div class="w tt"><span class="pattern plan"></span><div class="wh"><span class="plate" data-i="clock"></span>Zeiterfassung<span class="chev" data-i="chev"></span></div><div class="meta">Nichts läuft</div><div class="big" style="font-family:var(--mono);font-weight:600">2:00</div><div class="ctx">Heute: 2 Std 0 Min</div></div>
+  </div>
+  <p class="note">Zeiterfassung (rechts) bleibt teal und eine Kennzahl: die Mono-Uhr und die Stundenleiste im Kopf unterscheiden sie; auf der Übersicht trennt die Nachbarschaftsregel sie von Finanzen. Regel neu (F04): gleicher Farbton ⇒ Kopf- und Widget-Variante müssen sich unterscheiden, app-weit, geprüft von <code>check:modules</code>.</p>
+</div></div></div>
+<script src="../../identity-v3/mockups/shell.js"></script>
+</body></html>

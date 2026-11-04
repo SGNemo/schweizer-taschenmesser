@@ -146,6 +146,20 @@ Tools are not modules but speak the same language: `ToolManifest.identity` `{ hu
 
 Recipe: [howto/new-tool.md](../howto/new-tool.md). Contents: package 2 (calculator with display and number pad, units and currency as a conversion flow, timer ring, date leaves, time-zone cards) is built with the blocks of `tools/kit.tsx`; package 3 adds the QR/picture mat, the persona card with its "erfunden" stamp, dice faces, section cards, stat chips and the code look for the developer tools (`kit.mat`, `kit.idCard`, `kit.die`, `kit.section`, `kit.chips`, `kit.code`).
 
+## Clarifications from the audit (2026-11-04, `review/identity-v3-audit`)
+
+Findings and packages: [identity-v3-audit/](identity-v3-audit/01-findings.md). These sharpen existing rules; the rebuild of the head grid (signature slot, 70 rem content column) comes with the foundation fix package and is written here when it lands.
+
+- **Text on a tinted surface is `--text`.** `--text-muted` and `--text-3` reach only 2.9–3.6 : 1 on the 40 % head tint (both themes) and fail AA; until a `--text-on-tint` token exists, a context line on the band uses `--text` at the small size.
+- **Same hue in two areas ⇒ head *and* widget variant differ.** The 25° rule is per area; the overview, sidebar and library mix areas. Two modules may share a hue only when neither their head nor their widget variant matches (Finanzen/E-Mail, Merkliste/Unterlagen and Zeiterfassung/Finanzen break this today; the fix packages resolve them).
+- **A signature never disappears on the phone.** It shrinks (bubble, paper, envelope, address bar at 40–56 px); `display: none` at a breakpoint is not allowed.
+- **`signature: 'none'` only when the head draws nothing.** A module that fills `HeroSlot` with a mark names it (new ids go into `SIGNATURES` with the block that draws them).
+- **Widget titles are unique across modules.** Two cards named "Heute" or "Lesezeichen" on one overview are a finding, not a style.
+- **Empty states:** the widget keeps the fish; a module page may draw its own grey motif – the shared `EmptyState` is the place for it (`motif` prop, fix package), not a module-local copy.
+- **Hue names are not angles.** `sky` is 228°, `cobalt` 254°, `indigo` 280°, `violet` 306°, `orchid` 332° (HSL, light theme); pick a hue by its swatch in `tokens.css`, not by its name (council C14).
+- **Decoration may repeat content only on the module's own page.** A head signature that shows the first lines of a note or the titles of bookmarks is `aria-hidden` and repeats what the list below shows; the compact bar, the overview head, attention cards, the agenda and widget heads never carry such content (council C32).
+- **Bars and rings carry the module colour, not the accent.** `--accent` stays with the primary action and "today"; a progress bar or ring is `--module-color` (red only for an exceeded budget or overdue money).
+
 ## Checklist for a new or converted module
 
 1. Manifest `identity` complete; hue free in the area (≥ 25° from its neighbours), head variant different from the neighbour module in the area; `npm run check:modules`.
