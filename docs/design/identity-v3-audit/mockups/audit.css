@@ -1,0 +1,64 @@
+/* Identity v3 audit – mockups of the phase 2 proposals. Builds on ../../identity-v3/mockups/v3.css (variant D).
+   Not app code. "Vorher" = develop today (drawn after the screenshots), "Nachher" = the proposal. */
+@import url('../../identity-v3/mockups/v3.css');
+.cap{display:flex;align-items:center;gap:10px;margin:36px 0 34px;position:relative;z-index:2;font:600 .8125rem var(--mono);color:var(--text-2)}
+.cap b{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;background:var(--text);color:var(--bg);font-weight:700;letter-spacing:.04em}
+.cap.after b{background:var(--accent);color:var(--accent-ink)}
+.cap span{font-weight:400;color:var(--text-3)}
+.frame{gap:var(--s4)}
+/* ---- v3.1 head grid (proposal F01/F02): fixed areas, the signature anchored beside the figure, the content column
+   capped at the `content` width (70 rem) and aligned with the page's left gutter; the band still bleeds. ---- */
+.head.v31{display:block}
+.head.v31 .inner{display:grid;grid-template-columns:minmax(0,30rem) minmax(0,36rem) minmax(0,1fr) auto;grid-template-areas:'eyebrow eyebrow . actions' 'title title . actions' 'figure sig . .';gap:8px 28px;align-items:start;position:relative;z-index:1}
+.head.v31 .eyebrow{grid-area:eyebrow}.head.v31 h1{grid-area:title}.head.v31 .actions{grid-area:actions;grid-row:auto}
+.head.v31 .figure{grid-area:figure;min-width:0;margin-top:6px}.head.v31 .sig{grid-area:sig;min-width:0;align-self:end;display:flex;align-items:flex-end;gap:12px}
+.head.v31.compact .inner{grid-template-areas:'eyebrow eyebrow . actions' 'figure sig . actions';align-items:center}
+.head.v31.compact h1{display:none}
+.head.v31.compact .figure{margin-top:0}
+.head.v31 .slotmark{position:absolute;inset:-6px;border:1px dashed color-mix(in srgb,var(--accent) 55%,transparent);border-radius:8px;pointer-events:none}
+.head.v31 .slotmark b{position:absolute;right:6px;top:-9px;font:600 .625rem var(--mono);background:var(--accent);color:var(--accent-ink);padding:1px 6px;border-radius:4px}
+/* the old right-anchored layout (before) is v3.css's default: .left / .right / .actions */
+/* ---- signature blocks ---- */
+.tabs{display:flex;gap:6px;align-items:flex-end;position:relative;padding-top:6px}
+.tabs a{display:flex;flex-direction:column;gap:2px;min-width:118px;padding:10px 14px 10px;border-radius:10px 10px 0 0;background:color-mix(in srgb,var(--surface) 78%,transparent);border:1px solid color-mix(in srgb,var(--mod) 30%,var(--border));border-bottom:0;box-shadow:0 -1px 0 color-mix(in srgb,var(--mod) 20%,transparent) inset}
+.tabs a:nth-child(2){margin-top:4px}.tabs a:nth-child(3){margin-top:8px}
+.tabs a b{font-size:1.375rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.tabs a span{font-size:.75rem;color:var(--text-2)}
+.tabs::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;background:var(--mod)}
+.stamp{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:118px;height:84px;background:var(--surface);color:var(--text);
+  -webkit-mask:radial-gradient(circle 4px at 50% 0,transparent 98%,#000) top/12px 6px repeat-x,radial-gradient(circle 4px at 50% 100%,transparent 98%,#000) bottom/12px 6px repeat-x,radial-gradient(circle 4px at 0 50%,transparent 98%,#000) left/6px 12px repeat-y,radial-gradient(circle 4px at 100% 50%,transparent 98%,#000) right/6px 12px repeat-y,linear-gradient(#000,#000) center/calc(100% - 12px) calc(100% - 12px) no-repeat;
+  mask:radial-gradient(circle 4px at 50% 0,transparent 98%,#000) top/12px 6px repeat-x,radial-gradient(circle 4px at 50% 100%,transparent 98%,#000) bottom/12px 6px repeat-x,radial-gradient(circle 4px at 0 50%,transparent 98%,#000) left/6px 12px repeat-y,radial-gradient(circle 4px at 100% 50%,transparent 98%,#000) right/6px 12px repeat-y,linear-gradient(#000,#000) center/calc(100% - 12px) calc(100% - 12px) no-repeat}
+.stamp .in{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border:1.5px solid var(--mod);margin:6px;padding:4px;box-sizing:border-box}
+.stamp b{font-size:1.75rem;font-weight:800;line-height:1;letter-spacing:-.03em}
+.stamp small{font-size:.5625rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mod)}
+.stamp.sm{width:64px;height:48px}.stamp.sm b{font-size:1.125rem}.stamp.sm small{font-size:.5rem}
+.bill{position:relative;display:flex;flex-direction:column;justify-content:flex-end;width:64px;height:72px;padding:8px 10px 10px;background:var(--surface);color:var(--text);box-shadow:var(--shadow-1);
+  -webkit-mask:conic-gradient(from -45deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/12px 100%;mask:conic-gradient(from -45deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/12px 100%}
+.bill i{display:block;height:3px;border-radius:2px;background:color-mix(in srgb,var(--mod) 35%,var(--surface));margin-bottom:5px}
+.bill i.t{background:var(--mod);height:4px;width:70%}
+.receiptcard{width:150px;padding:10px 12px;background:var(--surface);box-shadow:var(--shadow-1);font-size:.6875rem;line-height:1.35;color:var(--text-2);
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%}
+.receiptcard b{display:block;font-size:.9375rem;color:var(--text);font-variant-numeric:tabular-nums}
+.sentence{display:flex;gap:8px;align-items:flex-start;max-width:22rem;padding:10px 12px;border-radius:10px;background:var(--surface);box-shadow:var(--shadow-1);font-size:.6875rem;line-height:1.35;color:var(--text-2)}
+.quietline{display:flex;align-items:center;gap:8px;font-size:.8125rem;color:var(--text-3)}
+.envelope{width:60px;height:40px;border:2px solid color-mix(in srgb,var(--mod) 60%,var(--text-3));border-radius:4px;position:relative}
+.envelope::before{content:'';position:absolute;left:4px;right:4px;top:3px;height:16px;border:2px solid color-mix(in srgb,var(--mod) 60%,var(--text-3));border-top:0;border-radius:0 0 3px 3px;transform:perspective(40px) rotateX(35deg)}
+.onething{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.onething .big{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.onething .big small{display:block;font-size:.8125rem;font-weight:400;letter-spacing:0;color:var(--text-2);margin-top:4px}
+.ringrow{display:flex;gap:16px;align-items:flex-end}
+.ringrow .ringx{width:64px;height:64px}.ringrow .ringx::before{width:48px;height:48px}
+.ringrow .ringl{width:78px}
+.w .wh .stamp.sm{margin-left:auto}
+.paper{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-1)}
+.w.paper{background:var(--surface)}
+.w.paper::after{content:'';position:absolute;left:0;right:0;bottom:0;height:14px;background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--mod) 35%,var(--surface)) 0 1px,transparent 1px 5px);opacity:.9}
+.w.paper .wh{font-family:var(--serif);font-weight:600}
+.w .subj{display:flex;flex-direction:column;gap:2px;font-size:.9rem}
+.w .subj span{display:flex;gap:8px;align-items:baseline;min-height:30px;border-bottom:1px solid var(--border)}
+.w .subj span:last-child{border-bottom:0}
+.w .subj span i{font-style:normal;color:var(--text-3);font-size:.8125rem;margin-left:auto;font-variant-numeric:tabular-nums}
+.w .subj span.unread{font-weight:600}
+.wrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:6px}
+.wrow .w{grid-row:auto;min-height:150px}
+.note{font-size:.8125rem;color:var(--text-2);max-width:70rem}
