@@ -1,5 +1,5 @@
 ---
-type: feat
+type: changed
 area: app
 breaking: false
 pr: 425
