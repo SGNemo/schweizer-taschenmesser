@@ -573,6 +573,12 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
 - **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
 
+
+## Datenebene: Messung auf Geräten (Phase 1, [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md))
+- **PF1 Portable-Exe, große Datenmenge:** Dev-Preview-Build, Einstellungen → Entwickler → Testdaten „Groß“ laden (die Skala `xl` gibt es nur in `npm run measure:data`). Übersicht öffnen, Kalender, Budgets, Finanzen öffnen, in der Befehlspalette „tankstelle“ suchen: Zeiten notieren (Stoppuhr), Speicher im Task-Manager. ☐
+- **PF2 Android-Gerät, große Datenmenge:** wie PF1 auf einem echten Gerät (oder Emulator): Start bis zur Übersicht, Modul öffnen, Suche, Schnellerfassung; Backup erstellen und wiederherstellen. Messwerte der Emulation (4× CPU) stehen in der Baseline. ☐
+- **PF3 Festplatte-Modul (Rust):** „Dieser PC“ → Löschen-Plan und Details eines großen Ordners: bleibt das Fenster bedienbar (Ziel: ja)? Zeiten in die Baseline eintragen. ☐
+
 ## Importer aus anderen Apps (Branch `feat/importers`)
 - **IA1** Befehlspalette → „Aus anderer App importieren …“ → eine echte `.enex`-Datei aus Evernote wählen: Erkennung „Evernote“, Vorschau, Bericht mit Anhängen; „Rückgängig“ entfernt alles.
 - **IA2** Ein Obsidian-Ordner als ZIP (Windows: Rechtsklick → Senden an → ZIP): Notizbücher aus Ordnern, `.obsidian` fehlt in der Vorschau, Bilder werden im Bericht gezählt.
@@ -584,4 +590,12 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **BK1 Android Auto Backup aus:** nach dem ersten CI-Build des Dev-Previews die APK installieren: `adb shell dumpsys package io.github.sgnemo.taschenmesser.dev | findstr /i ALLOW_BACKUP` zeigt kein `ALLOW_BACKUP`. Außerdem prüfen, dass der Schritt „Android manifest hardening“ im Job-Log steht und `usesCleartextTraffic` meldet. ☐
 - **BK2 Kündigungsfrist in Monaten:** Abo mit Abbuchung am 31., Frist „3 Monate“: „Kündigen bis“ liegt auf dem 30. des Monats drei Monate davor (nicht 90 Tage davor). Ein Abo oder eine Unterlage, die vor dem Update „90 Tage“ als „3 Monate“ zeigte, zeigt nach dem Update weiter „3 Monate“ und rechnet kalendarisch; „45 Tage“ bleibt „45 Tage“. ☐
 - **BK3 CSV öffnen:** Finanzen → Export mit einer Buchung, deren Empfänger `=1+1` heißt, in Excel/LibreOffice öffnen: die Zelle zeigt den Text `'=1+1`, keine Berechnung. Passwort-Export (Bitwarden-Format) bleibt unverändert. ☐
+- **IA6** Notion → Einstellungen → Exportieren → „Markdown & CSV“ (mit Unterseiten): ZIP über „Aus anderer App importieren“ wählen: Titel ohne Kennung, Verweise als `[[…]]`, Eigenschaften oben im Text, Bilder im Bericht gezählt; echte Exporte weichen je Version ab, Abweichungen melden.
 
+## Automatisierungen (Handtest)
+- AU1 · Einstellungen → Darstellung → „In Arbeit anzeigen“ an; Einstellungen → Benachrichtigungen: „Automatisierungen“ und „Regel-Protokoll“ erscheinen. Hauptschalter ein, Vorlage „Rechnung bald fällig“ ein, Tage vorher 3; eine offene Rechnung mit Fälligkeit in 2 Tagen anlegen; nach höchstens zehn Minuten (und App offen) liegt eine Aufgabe „Rechnung … bezahlen“ in ToDos, die Erinnerung kommt als ruhige Benachrichtigung (Ruhezeiten und Limit gelten), das Protokoll zeigt den Lauf.
+- AU2 · Im Protokoll „Rückgängig“ bei diesem Lauf: Aufgabe und Erinnerung sind weg; eine zwischendurch geänderte Aufgabe bleibt und wird gemeldet.
+- AU3 · „Nur ausprobieren (Trockenlauf)“ an: gleiche Schritte schreiben nichts, das Protokoll sagt „Trockenlauf“.
+- AU4 · Befehlspalette: „regel“ tippen → „Regel ausführen: …“ führt die Regel aus; „Letzte Regel-Ausführung rückgängig“ nimmt sie zurück.
+- AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
+- AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.

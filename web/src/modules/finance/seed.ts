@@ -309,7 +309,7 @@ function seed(ctx: SeedContext): SeedRows {
     })),
   ];
 
-  const months = ctx.count({ small: 2, medium: 4, large: 12 });
+  const months = ctx.count({ small: 2, medium: 4, large: 12, xl: 48 });
   const thisMonth = monthOf(ctx.today);
   const txs: Tx[] = [];
   const add = (t: Tx) => txs.push(t);
@@ -459,7 +459,7 @@ function seed(ctx: SeedContext): SeedRows {
     note: 'Tanken',
   });
 
-  const target = ctx.count({ small: 10, medium: 60, large: 5000 });
+  const target = ctx.count({ small: 10, medium: 60, large: 5000, xl: 20000 });
   const startOfWindow = `${addMonthsToMonth(thisMonth, -(months - 1))}-01`;
   const span = Math.max(1, daysFrom(startOfWindow, ctx.today));
   while (txs.length < target) {

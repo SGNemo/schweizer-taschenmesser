@@ -15,7 +15,7 @@
     "desktop--bookmarks-links": {
       "height": 800,
       "buttons": 61,
-      "links": 30,
+      "links": 34,
       "icons": 76,
       "firstScreenActions": 59
     },
@@ -57,21 +57,21 @@
     "desktop--lists": {
       "height": 800,
       "buttons": 76,
-      "links": 28,
+      "links": 31,
       "icons": 86,
       "firstScreenActions": 64
     },
     "desktop--notes": {
       "height": 800,
       "buttons": 70,
-      "links": 30,
+      "links": 34,
       "icons": 89,
       "firstScreenActions": 55
     },
     "desktop--pantry": {
       "height": 800,
       "buttons": 85,
-      "links": 28,
+      "links": 31,
       "icons": 76,
       "firstScreenActions": 62
     },
@@ -100,14 +100,14 @@
       "height": 800,
       "buttons": 80,
       "links": 40,
-      "icons": 73,
+      "icons": 81,
       "firstScreenActions": 56
     },
     "desktop--settings-darstellung": {
       "height": 800,
       "buttons": 112,
       "links": 43,
-      "icons": 74,
+      "icons": 82,
       "firstScreenActions": 76
     },
     "desktop--settings-module": {
@@ -134,7 +134,7 @@
     "desktop--vault": {
       "height": 800,
       "buttons": 82,
-      "links": 28,
+      "links": 31,
       "icons": 62,
       "firstScreenActions": 54
     },
@@ -244,7 +244,7 @@
       "firstScreenActions": 36
     },
     "phone--settings-module": {
-      "height": 2088,
+      "height": 2329,
       "buttons": 5,
       "links": 26,
       "icons": 29,

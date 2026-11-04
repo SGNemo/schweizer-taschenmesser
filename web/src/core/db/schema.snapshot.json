@@ -1,5 +1,5 @@
 {
-  "version": 30,
+  "version": 31,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -28,6 +28,7 @@
     "chat_message": "id, updatedAt, threadId",
     "chat_thread": "id, updatedAt, pinned, archived",
     "example_entry": "id, updatedAt, createdAt",
+    "feeds_feed": "id, updatedAt, createdAt",
     "finance_account": "id, updatedAt, order",
     "finance_category": "id, updatedAt, kind",
     "finance_transaction": "id, updatedAt, accountId, date, categoryId",

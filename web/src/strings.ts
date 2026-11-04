@@ -5672,6 +5672,7 @@ export const de = {
     paletteCommand: 'Aus anderer App importieren …',
     sources: {
       enex: 'Evernote (.enex)',
+      notion: 'Notion (Markdown- und CSV-Export)',
       obsidian: 'Obsidian oder Markdown-Ordner',
       'outlook-tasks': 'Microsoft To Do (Outlook-CSV)',
       todoist: 'Todoist (CSV)',
@@ -7484,6 +7485,46 @@ export const de = {
       label: 'Heute',
       value: (done: number, of: number) => `${done}/${of}`,
       none: 'Nichts geplant',
+    },
+  },
+  feeds: {
+    meta: {
+      name: 'Feeds',
+      description:
+        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.',
+      quickAdd: 'Feed hinzufügen',
+      settings: {
+        grouped: 'Nach Gruppen ordnen',
+        groupedHelp: 'Zeigt die Feeds unter ihren Gruppennamen; aus: eine alphabetische Liste.',
+      },
+    },
+    title: 'Feeds',
+    add: 'Feed hinzufügen',
+    edit: 'Feed bearbeiten',
+    remove: 'Entfernen',
+    empty: 'Noch keine Feeds',
+    emptyHint: 'Trag die Adresse eines Feeds ein, zum Beispiel von deinem Lieblingsblog.',
+    listLabel: 'Abonnierte Feeds',
+    ungrouped: 'Ohne Gruppe',
+    allFeeds: 'Alle Feeds',
+    rowMenu: (name: string) => `Aktionen für ${name}`,
+    fields: {
+      url: 'Adresse des Feeds',
+      urlHint: 'Zum Beispiel example.org/feed.xml',
+      title: 'Name',
+      titleHint: 'Leer lassen: Nemo nimmt den Namen der Website.',
+      category: 'Gruppe',
+    },
+    errors: {
+      url: 'Das ist keine Web-Adresse (http oder https).',
+      duplicate: 'Diesen Feed hast du schon.',
+    },
+    widget: {
+      label: 'Feeds',
+      context: (n: number, g: number) =>
+        `${n === 1 ? '1 Feed' : `${n} Feeds`}${g > 0 ? ` · ${g === 1 ? '1 Gruppe' : `${g} Gruppen`}` : ''}`,
+      empty: 'Noch keine Feeds',
+      add: 'Feed hinzufügen',
     },
   },
 } as const;

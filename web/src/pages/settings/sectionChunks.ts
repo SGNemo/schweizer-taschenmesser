@@ -22,6 +22,12 @@ export const DiagnosticsSection = lazyOnline<object>(() =>
 export const LinksSection = lazyOnline<object>(() =>
   import('./AboutSections').then((m) => ({ default: m.LinksSection })),
 );
+export const AutomationSection = lazyOnline<object>(() =>
+  import('./AutomationSection').then((m) => ({ default: m.AutomationSection })),
+);
+export const AutomationLogSection = lazyOnline<object>(() =>
+  import('./AutomationLogSection').then((m) => ({ default: m.AutomationLogSection })),
+);
 export const AiSection = lazyOnline<object>(() =>
   import('./AiSection').then((m) => ({ default: m.AiSection })),
 );

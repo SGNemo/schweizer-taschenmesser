@@ -424,7 +424,7 @@ function reminderRows(ctx: SeedContext) {
 }
 
 function seed(ctx: SeedContext): SeedRows {
-  const total = ctx.count({ small: 10, medium: 45, large: 300 });
+  const total = ctx.count({ small: 10, medium: 45, large: 300, xl: 5000 });
   const base = ctx.scale === 'small' ? BASE.slice(0, total) : BASE;
   const rows = base.map((b, i) => toRow(ctx, i, b));
   for (let i = base.length; i < total; i++) {

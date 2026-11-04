@@ -58,8 +58,8 @@ import { connectors } from './connectors';
 import { pendingImport } from './pendingImport';
 import { localApi } from './localApi';
 import { dataApi } from './dataApi';
-import { onboarding } from './onboarding';
 import { importers } from './importers';
+import { onboarding } from './onboarding';
 import { update } from './update';
 import { devPreview } from './devPreview';
 import { chat } from './chat';
@@ -72,6 +72,7 @@ import { browser } from './browser';
 import { downloads } from './downloads';
 import { timetrack } from './timetrack';
 import { habits } from './habits';
+import { feeds } from './feeds';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -133,8 +134,8 @@ export const en: Strings = {
   pendingImport,
   localApi,
   dataApi,
-  onboarding,
   importers,
+  onboarding,
   update,
   devPreview,
   chat,
@@ -147,4 +148,5 @@ export const en: Strings = {
   downloads,
   timetrack,
   habits,
+  feeds,
 };
