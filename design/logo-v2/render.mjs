@@ -214,11 +214,18 @@ async function currentBlock() {
   return s;
 }
 
+/** Lockup options with the variant's own layers injected where the art needs them (o-fish). */
+function withLayers(opts, L) {
+  if (!opts?.art?.ofish) return opts;
+  return { ...opts, art: { ...opts.art, ofish: { ...opts.art.ofish, layers: L } } };
+}
+const DARK_INK = { mark: COLORS.accent.dark, mono: '#ffffff' };
+
 async function variantBlock(v) {
-  const L = buildLayers(v.direction, v.params);
-  const Ld = buildLayers(v.direction, v.params, { ink: { mark: COLORS.accent.dark, mono: '#ffffff' } });
-  const Ls = v.small ? buildLayers(v.direction, merge(v.params, v.small)) : L;
-  const Lsd = v.small ? buildLayers(v.direction, merge(v.params, v.small), { ink: { mark: COLORS.accent.dark, mono: '#ffffff' } }) : Ld;
+  const L = buildLayers(v.direction, v.params, { ink: v.ink });
+  const Ld = buildLayers(v.direction, v.params, { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } });
+  const Ls = v.small ? buildLayers(v.direction, merge(v.params, v.small), { ink: v.ink }) : L;
+  const Lsd = v.small ? buildLayers(v.direction, merge(v.params, v.small), { ink: { ...DARK_INK, ...(v.inkDark ?? {}) } }) : Ld;
   const appAt = (s) => (s <= 24 ? Ls.appSmall : s <= 32 ? Ls.app : L.app);
   const markAt = (s, dark) => (s <= 24 ? (dark ? Lsd : Ls).markSquare : (dark ? Ld : L).markSquare);
   const monoAt = (s, dark) => (s <= 24 ? (dark ? Lsd : Ls).mono : (dark ? Ld : L).mono);
@@ -231,29 +238,32 @@ async function variantBlock(v) {
   s += `<div class="panel light"><h3>One colour · light</h3>${sizesRow((z) => monoAt(z, false), [16, 24, 32, 64])}</div><div class="panel dark"><h3>One colour · dark</h3>${sizesRow((z) => monoAt(z, true), [16, 24, 32, 64])}</div></div>`;
   // True pixels
   const px = async (svg, size, zoom) => pix(await raster(svg, size), size, zoom);
-  s += `<div class="row"><div class="panel light"><h3>True pixels: tile 16 ×8 · 24 ×5 · 32 ×4 — mark 16 ×8 · 24 ×5</h3><div class="sizes">` +
-    `<div>${await px(appAt(16), 16, 8)}16</div><div>${await px(appAt(24), 24, 5)}24</div><div>${await px(appAt(32), 32, 4)}32</div>` +
-    `<div style="width:12px"></div><div>${await px(markAt(16, false), 16, 8)}16</div><div>${await px(markAt(24, false), 24, 5)}24</div></div></div>`;
-  s += `<div class="panel dark"><h3>Dark</h3><div class="sizes">` +
-    `<div>${await px(appAt(16), 16, 8)}16</div><div>${await px(appAt(24), 24, 5)}24</div><div>${await px(appAt(32), 32, 4)}32</div>` +
-    `<div style="width:12px"></div><div>${await px(markAt(16, true), 16, 8)}16</div><div>${await px(markAt(24, true), 24, 5)}24</div><div>${await px(monoAt(16, true), 16, 8)}mono 16</div></div></div></div>`;
-  // Lockups
-  const lk = (theme, word, opts) => lockupSvg(theme === 'dark' ? Ld : L, word, opts, theme);
-  const W1 = spec.wordmarks?.[0]?.word ?? { text: 'Nemo', weight: 600 };
-  const W2 = spec.wordmarks?.[1]?.word ?? { text: 'nemo', weight: 600 };
-  const lkL = lk('light', W1, v.lockup);
-  const lkD = lk('dark', W1, v.lockup);
-  const lkL2 = lk('light', W2, v.lockup);
-  const lkD2 = lk('dark', W2, v.lockup);
+  if (!v.compact) {
+    s += `<div class="row"><div class="panel light"><h3>True pixels: tile 16 ×8 · 24 ×5 · 32 ×4 — mark 16 ×8 · 24 ×5</h3><div class="sizes">` +
+      `<div>${await px(appAt(16), 16, 8)}16</div><div>${await px(appAt(24), 24, 5)}24</div><div>${await px(appAt(32), 32, 4)}32</div>` +
+      `<div style="width:12px"></div><div>${await px(markAt(16, false), 16, 8)}16</div><div>${await px(markAt(24, false), 24, 5)}24</div></div></div>`;
+    s += `<div class="panel dark"><h3>Dark</h3><div class="sizes">` +
+      `<div>${await px(appAt(16), 16, 8)}16</div><div>${await px(appAt(24), 24, 5)}24</div><div>${await px(appAt(32), 32, 4)}32</div>` +
+      `<div style="width:12px"></div><div>${await px(markAt(16, true), 16, 8)}16</div><div>${await px(markAt(24, true), 24, 5)}24</div><div>${await px(monoAt(16, true), 16, 8)}mono 16</div></div></div></div>`;
+  }
+  // Lockups (the word setting of this round; a variant may bring its own)
+  const word = spec.lockupWord ?? { text: 'Nemo', weight: 600 };
+  const lopts = v.lockup ?? spec.lockup ?? { source: 'mark', markHeight: 1.2, gap: 0.42 };
+  const lk = (theme, wd, opts) => lockupSvg(theme === 'dark' ? Ld : L, wd, withLayers(opts, theme === 'dark' ? Ld : L), theme);
+  const lkL = lk('light', word, lopts);
+  const lkD = lk('dark', word, lopts);
+  const word2 = spec.lockupWord2;
+  const lkL2 = word2 ? lk('light', word2, lopts) : null;
+  const lkD2 = word2 ? lk('dark', word2, lopts) : null;
   const hL = (l, h) => img(l.svg, (h * l.width) / l.height, h);
-  s += `<div class="row"><div class="panel light"><h3>Lockup · sidebar 32 px, 28 px, 24 px · "Nemo" and "nemo"</h3><div class="word">${hL(lkL, 32)}${hL(lkL, 28)}${hL(lkL, 24)}<span style="width:24px"></span>${hL(lkL2, 32)}${hL(lkL2, 28)}${hL(lkL2, 24)}</div></div>`;
-  s += `<div class="panel dark"><h3>Dark</h3><div class="word">${hL(lkD, 32)}${hL(lkD, 28)}${hL(lkD, 24)}<span style="width:24px"></span>${hL(lkD2, 32)}${hL(lkD2, 28)}${hL(lkD2, 24)}</div></div>`;
+  const lockH = spec.lockupHeight ?? 32;
+  s += `<div class="row"><div class="panel light"><h3>Lockup · sidebar ${lockH} px, 28 px, 24 px${word2 ? ' · "Nemo" and "nemo"' : ''}</h3><div class="word">${hL(lkL, lockH)}${hL(lkL, 28)}${hL(lkL, 24)}${lkL2 ? `<span style="width:24px"></span>${hL(lkL2, lockH)}${hL(lkL2, 28)}${hL(lkL2, 24)}` : ''}</div></div>`;
+  s += `<div class="panel dark"><h3>Dark</h3><div class="word">${hL(lkD, lockH)}${hL(lkD, 28)}${hL(lkD, 24)}${lkD2 ? `<span style="width:24px"></span>${hL(lkD2, lockH)}${hL(lkD2, 28)}${hL(lkD2, 24)}` : ''}</div></div>`;
   s += `<div class="panel light"><h3>Lockup large</h3>${hL(lkL, 96)}</div></div>`;
   // In the shell (2x = 200 % zoom)
   const railMark = (dark) => (v.rail === 'app' ? (dark ? Ld : L).app : (dark ? Ld : L).markSquare);
   const wideBox = boxes['desktop-light-wide-2x'].img; // 16,16,150,44 (CSS px)
   const railBox = boxes['desktop-light-rail-2x'].brand; // 8,12,59,28
-  const lockH = 32;
   const railH = 28;
   const wideOver = (theme) => [
     { svg: (theme === 'dark' ? lkD : lkL).svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - lockH) / 2) * 2, h: lockH * 2 },
@@ -262,11 +272,34 @@ async function variantBlock(v) {
     { svg: railMark(theme === 'dark'), x: (railBox.x + (railBox.width - railH) / 2) * 2, y: railBox.y * 2, h: railH * 2 },
   ];
   s += `<div class="row">`;
-  s += `<div>${montage('desktop-light-wide-2x', 560, 360, wideOver('light'), 2)}<div class="cap">Sidebar wide, light (200 %) – lockup 32 px</div></div>`;
+  s += `<div>${montage('desktop-light-wide-2x', 560, 360, wideOver('light'), 2)}<div class="cap">Sidebar wide, light (200 %) – lockup ${lockH} px</div></div>`;
   s += `<div>${montage('desktop-dark-wide-2x', 560, 360, wideOver('dark'), 2)}<div class="cap">Sidebar wide, dark</div></div>`;
   s += `<div>${montage('desktop-light-rail-2x', 560, 360, railOver('light'), 2)}<div class="cap">Rail, light – mark only 28 px</div></div>`;
   s += `<div>${montage('desktop-dark-rail-2x', 560, 360, railOver('dark'), 2)}<div class="cap">Rail, dark</div></div>`;
   s += `</div>`;
+  const out = join(dir, v.label);
+  mkdirSync(out, { recursive: true });
+  const writeFiles = () => {
+    const files = {
+      'app-icon.svg': L.app,
+      'logo-mark.svg': L.mark,
+      'logo-mark-dark.svg': Ld.mark,
+      'logo-mono.svg': L.mono,
+      'android-foreground.svg': L.adFg,
+      'android-background.svg': L.adBg,
+      'android-monochrome.svg': L.adMono,
+      'lockup-light.svg': lkL.svg,
+      'lockup-dark.svg': lkD.svg,
+    };
+    if (lkL2) files['lockup-lower-light.svg'] = lkL2.svg;
+    if (lkD2) files['lockup-lower-dark.svg'] = lkD2.svg;
+    for (const [n, t] of Object.entries(files)) writeFileSync(join(out, n), t);
+    writeFileSync(join(out, 'params.json'), JSON.stringify({ direction: v.direction, params: v.params, ink: v.ink ?? null, small: v.small ?? null, lockup: lopts, rail: v.rail }, null, 2) + '\n');
+  };
+  if (v.compact) {
+    writeFiles();
+    return s + `<div class="notes"><b>Notes:</b> ${esc(v.notes ?? '')}</div></div>`;
+  }
   // In the shell (1:1) + phone
   const wide1 = (theme) => [{ svg: (theme === 'dark' ? lkD : lkL).svg, x: wideBox.x, y: wideBox.y + (wideBox.height - lockH) / 2, h: lockH }];
   const rail1 = (theme) => [{ svg: railMark(theme === 'dark'), x: railBox.x + (railBox.width - railH) / 2, y: railBox.y, h: railH }];
@@ -294,44 +327,33 @@ async function variantBlock(v) {
   s += `<div class="row"><div class="panel light"><h3>Palette check · light: accent, then the ten module hues (32 px)</h3><div class="hues"><div>${img(L.markIn(COLORS.accent.light), 32)}accent</div>${hues.map(([n, [l]]) => `<div>${img(L.markIn(l), 32)}${n}</div>`).join('')}</div></div>`;
   s += `<div class="panel dark"><h3>Dark</h3><div class="hues"><div>${img(L.markIn(COLORS.accent.dark), 32)}accent</div>${hues.map(([n, [, d]]) => `<div>${img(L.markIn(d), 32)}${n}</div>`).join('')}</div></div></div>`;
   s += `<div class="notes"><b>Notes:</b> ${esc(v.notes ?? '')}</div></div>`;
-  // Files
-  const out = join(dir, v.label);
-  mkdirSync(out, { recursive: true });
-  const files = {
-    'app-icon.svg': L.app,
-    'logo-mark.svg': L.mark,
-    'logo-mark-dark.svg': Ld.mark,
-    'logo-mono.svg': L.mono,
-    'android-foreground.svg': L.adFg,
-    'android-background.svg': L.adBg,
-    'android-monochrome.svg': L.adMono,
-    'lockup-light.svg': lkL.svg,
-    'lockup-dark.svg': lkD.svg,
-    'lockup-lower-light.svg': lkL2.svg,
-    'lockup-lower-dark.svg': lkD2.svg,
-  };
-  for (const [n, t] of Object.entries(files)) writeFileSync(join(out, n), t);
-  writeFileSync(join(out, 'params.json'), JSON.stringify({ direction: v.direction, params: v.params, small: v.small ?? null, lockup: v.lockup, rail: v.rail }, null, 2) + '\n');
+  writeFiles();
   return s;
 }
 
 function wordmarkBlock() {
-  const base = spec.variants[0];
-  const L = buildLayers(base.direction, base.params);
-  const Ld = buildLayers(base.direction, base.params, { ink: { mark: COLORS.accent.dark } });
-  let s = `<div class="block"><h2>Wordmark type settings (shown with A)</h2><p>Inter is the app's typeface (tokens: titles 600, hero 700). The word sits in the text colour, the mark carries the accent.</p>`;
+  const base = spec.variants.find((x) => x.label === spec.wordmarkBase) ?? spec.variants[0];
+  const L = buildLayers(base.direction, base.params, { ink: base.ink });
+  const Ld = buildLayers(base.direction, base.params, { ink: { ...DARK_INK, ...(base.inkDark ?? {}) } });
+  const lockH = spec.lockupHeight ?? 32;
+  const wideBox = boxes['desktop-light-wide-2x'].img;
+  let s = `<div class="block"><h2>Wordmarks (shown with ${esc(base.label)})</h2><p>${esc(spec.wordmarkIntro ?? '')}</p>`;
   for (const w of spec.wordmarks ?? []) {
-    const l = lockupSvg(L, w.word, base.lockup, 'light');
-    const d = lockupSvg(Ld, w.word, base.lockup, 'dark');
-    const wl = wordSvg(w.word, 'light');
+    const opts = w.lockup ?? { source: 'none' };
+    const l = lockupSvg(L, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, L), 'light');
+    const d = lockupSvg(Ld, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, Ld), 'dark');
     const h = (x, hh) => img(x.svg, (hh * x.width) / x.height, hh);
-    s += `<div class="row" style="align-items:center"><div style="width:360px"><b>${w.label}</b> · ${esc(w.title)}</div><div class="panel light">${h(l, 44)}</div><div class="panel dark">${h(d, 44)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(wl, 40)}</div></div>`;
+    const over = (x) => [{ svg: x.svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - lockH) / 2) * 2, h: lockH * 2 }];
+    s += `<div class="row" style="align-items:center"><div style="width:300px"><b style="font-size:22px">${w.label}</b><br>${esc(w.title)}</div><div class="panel light">${h(l, 44)}</div><div class="panel dark">${h(d, 44)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(l, 100)}</div></div>`;
+    s += `<div class="row"><div>${montage('desktop-light-wide-2x', 560, 360, over(l), 2)}<div class="cap">${w.label} in the sidebar, light (200 %) – ${lockH} px</div></div><div>${montage('desktop-dark-wide-2x', 560, 360, over(d), 2)}<div class="cap">${w.label} dark</div></div>` +
+      `<div><div class="montage" style="width:420px;height:120px"><img src="${fileUri('desktop-light-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(l.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 light</div>` +
+      `<div class="montage" style="width:420px;height:120px;margin-top:8px"><img src="${fileUri('desktop-dark-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(d.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 dark</div></div></div>`;
+    if (w.notes) s += `<div class="notes"><b>Notes:</b> ${esc(w.notes)}</div>`;
     const out = join(dir, w.label);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'lockup-light.svg'), l.svg);
     writeFileSync(join(out, 'lockup-dark.svg'), d.svg);
-    writeFileSync(join(out, 'word-light.svg'), wl.svg);
-    writeFileSync(join(out, 'params.json'), JSON.stringify(w.word, null, 2) + '\n');
+    writeFileSync(join(out, 'params.json'), JSON.stringify({ word: w.word, art: w.art ?? null, lockup: opts }, null, 2) + '\n');
   }
   return s + `</div>`;
 }

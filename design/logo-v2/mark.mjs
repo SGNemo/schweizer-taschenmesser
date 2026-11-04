@@ -55,7 +55,9 @@ export const FISH = {
   tail: { style: 'fork', length: 96, spread: 96, notch: 34, overlap: 30 },
   stripes: { at: [0.72, 0.38], width: 38, bend: -10 }, // fractions 0 = tail joint .. 1 = nose
   eye: { at: 0.84, dy: -0.16, r: 22 },
+  fins: { dorsal: { height: 0, from: 0.3, to: 0.7 }, ventral: { height: 0, from: 0.38, to: 0.6 } }, // height 0 = none
   soften: 12, // rounds every outer corner (same-colour stroke)
+  tilt: 0, // degrees, negative = nose up
 };
 
 function bodyPath(b, cy = 256) {
@@ -83,6 +85,23 @@ function tailPath(b, t, cy = 256) {
   const bottom = `C${xe + L * 0.3} ${cy + s} ${xp - L * 0.4} ${cy + ph} ${xp} ${cy + ph}L${x0} ${cy + ph}Z`;
   return fmt(top + back + bottom);
 }
+function finPath(b, f, dir, cy = 256) {
+  if (!f || !f.height) return '';
+  const { nose: xn, joint: xp, height: h } = b;
+  const x1 = xp + (xn - xp) * f.from;
+  const x2 = xp + (xn - xp) * f.to;
+  const w = x2 - x1;
+  const base = cy + dir * h * 0.55;
+  const tip = cy + dir * (h + f.height);
+  const xpk = x1 + w * 0.45;
+  return fmt(
+    `M${x1} ${base}C${x1 + w * 0.05} ${tip} ${xpk - w * 0.15} ${tip} ${xpk} ${tip}` +
+      `C${xpk + w * 0.35} ${tip} ${x2} ${cy + dir * h * 0.92} ${x2} ${base}Z`,
+  );
+}
+function fishShapes(f) {
+  return [bodyPath(f.body), tailPath(f.body, f.tail), finPath(f.body, f.fins?.dorsal, -1), finPath(f.body, f.fins?.ventral, 1)].filter(Boolean);
+}
 function fishStripes(f, cy = 256) {
   const { nose: xn, joint: xp, height: h } = f.body;
   const reach = h + 60;
@@ -98,8 +117,8 @@ function fishEye(f, cy = 256) {
 function fishBox(f, cy = 256) {
   const left = f.body.joint - f.tail.length - f.soften / 2;
   const right = f.body.nose + f.soften / 2;
-  const top = cy - Math.max(f.body.height, f.tail.spread) - f.soften / 2;
-  const bottom = cy + Math.max(f.body.height, f.tail.spread) + f.soften / 2;
+  const top = cy - Math.max(f.body.height + (f.fins?.dorsal?.height ?? 0), f.tail.spread) - f.soften / 2;
+  const bottom = cy + Math.max(f.body.height + (f.fins?.ventral?.height ?? 0), f.tail.spread) + f.soften / 2;
   return { x: left, y: top, w: right - left, h: bottom - top };
 }
 
@@ -114,7 +133,7 @@ function fishFilled(f, color, id) {
     ? `<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/><g fill="none" stroke="#000">${holes}</g></mask>`
     : '';
   const soft = f.soften > 0 ? ` stroke="${color}" stroke-width="${f.soften}" stroke-linejoin="round"` : '';
-  const body = `<g fill="${color}"${soft}${holes ? ` mask="url(#${id})"` : ''}><path d="${bodyPath(f.body)}"/><path d="${tailPath(f.body, f.tail)}"/></g>`;
+  const body = `<g fill="${color}"${soft}${holes ? ` mask="url(#${id})"` : ''}>${fishShapes(f).map((d) => `<path d="${d}"/>`).join('')}</g>`;
   return { defs, body };
 }
 
@@ -240,7 +259,7 @@ function lineDrawn(ln, color) {
 // Views: tile (app icon), adaptive, transparent mark.
 // ---------------------------------------------------------------------------------------------
 export const VIEWS = {
-  tile: { radius: 146, scale: 0.8, dx: 0, dy: 0 }, // radius 146/512 = the module chip's 8/28
+  tile: { radius: 146, scale: 0.8, dx: 0, dy: 0, clip: false }, // radius 146/512 = the module chip's 8/28; clip: the mark may bleed off the tile
   adaptive: { scale: 0.62, dx: 0, dy: 0 }, // Android: 512 box = 108 dp, safe circle r 156
   mark: { scale: 1, dx: 0, dy: 0 },
 };
@@ -267,9 +286,11 @@ export function buildLayers(direction, params = {}, opts = {}) {
   const views = merge(VIEWS, viewsOver ?? {});
   const ink = merge({ mark: COLORS.accent.light, mono: '#000000', tile: COLORS.accent.light, onTile: '#ffffff' }, opts.ink ?? {});
   const uid = opts.id ?? `nemo-${direction}`;
+  const tilt = p.tilt ?? 0;
   const draw = (color, id, view) => {
     const d = dir.draw(p, color, id);
-    return { defs: d.defs, body: `<g transform="${place(view)}">${d.body}</g>`, box: d.box };
+    const inner = tilt ? `<g transform="rotate(${tilt} 256 256)">${d.body}</g>` : d.body;
+    return { defs: d.defs, body: `<g transform="${place(view)}">${inner}</g>`, box: tilt ? rotateBox(d.box, tilt) : d.box };
   };
   const m = draw(ink.mark, `${uid}-m`, views.mark);
   const mono = draw(ink.mono, `${uid}-o`, views.mark);
@@ -291,14 +312,34 @@ export function buildLayers(direction, params = {}, opts = {}) {
     mark: svg(`<defs>${m.defs}</defs>${m.body}`, 'Nemo', tight),
     markSquare: svg(`<defs>${m.defs}</defs>${m.body}`, 'Nemo', square),
     mono: svg(`<defs>${mono.defs}</defs>${mono.body}`, 'Nemo', square),
-    app: svg(`<defs>${t.defs}</defs><rect width="512" height="512" rx="${views.tile.radius}" fill="${ink.tile}"/>${t.body}`),
-    appSmall: svg(`<defs>${t.defs}</defs><rect width="512" height="512" rx="${Math.round(views.tile.radius * 0.85)}" fill="${ink.tile}"/>${t.body}`),
+    app: tileSvg(t, views.tile.radius, ink.tile, views.tile.clip, `${uid}-clip`),
+    appSmall: tileSvg(t, Math.round(views.tile.radius * 0.85), ink.tile, views.tile.clip, `${uid}-clips`),
     adFg: svg(`<defs>${a.defs}</defs>${a.body}`),
     adBg: svg(`<rect width="512" height="512" fill="${ink.tile}"/>`),
     adMono: svg(`<defs>${am.defs}</defs>${am.body}`),
     /** The mark recoloured (same geometry); for palette checks. */
     markIn: (color) => svg(`<defs>${draw(color, `${uid}-x`, views.mark).defs}</defs>${draw(color, `${uid}-x`, views.mark).body}`, 'Nemo', tight),
   };
+}
+
+function tileSvg(t, radius, fill, clip, id) {
+  const rect = `<rect width="512" height="512" rx="${radius}" fill="${fill}"/>`;
+  if (!clip) return svg(`<defs>${t.defs}</defs>${rect}${t.body}`);
+  return svg(`<defs>${t.defs}<clipPath id="${id}"><rect width="512" height="512" rx="${radius}"/></clipPath></defs>${rect}<g clip-path="url(#${id})">${t.body}</g>`);
+}
+
+/** Axis-aligned box of a box rotated by `deg` around (256, 256). */
+function rotateBox(b, deg) {
+  const a = (deg * Math.PI) / 180;
+  const pts = [
+    [b.x, b.y],
+    [b.x + b.w, b.y],
+    [b.x, b.y + b.h],
+    [b.x + b.w, b.y + b.h],
+  ].map(([x, y]) => [256 + (x - 256) * Math.cos(a) - (y - 256) * Math.sin(a), 256 + (x - 256) * Math.sin(a) + (y - 256) * Math.cos(a)]);
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
 }
 
 /** Largest distance of the mark's box corners from the centre after `scale` (safe-zone check). */
