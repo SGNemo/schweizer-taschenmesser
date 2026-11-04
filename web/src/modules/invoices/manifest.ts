@@ -15,9 +15,10 @@ const manifest: ModuleManifest = {
   icon: 'receipt',
   identity: {
     hue: 'ocean',
+    hue2: 'sky',
     widgetType: 'dueList',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'faellig',
+    head: 'fokus',
     signature: 'receipt',
   },
   version: 4,

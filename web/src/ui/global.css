@@ -32,6 +32,22 @@
   box-sizing: border-box;
 }
 
+/* Scrollbars (identity v3): the same everywhere. Thin and transparent; the thumb shows while the pointer is over the area or
+   while it scrolls (core/shell/scrollbars.ts sets data-scrolling). A classic scrollbar no longer sits next to the text all day. */
+:root {
+  --scroll-thumb: color-mix(in srgb, var(--text) 40%, transparent);
+  scrollbar-color: transparent transparent;
+}
+* {
+  scrollbar-width: thin;
+}
+:hover {
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+[data-scrolling='true'] {
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

@@ -209,9 +209,8 @@
   padding: var(--space-3) var(--space-4);
 }
 .weekDay.todayCell {
+  /* The accent border all around says "today". */
   border-color: var(--accent);
-  /* Today also carries the calendar's own edge (module identity); the accent border still says "today". */
-  border-left: 4px solid var(--module-color, var(--accent));
 }
 .weekDayEmpty {
   display: flex;
@@ -462,8 +461,7 @@ button.itemRow:hover {
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;
   padding: 2px var(--space-1);
-  border: 0;
-  border-left: 3px solid var(--kind, var(--text-3));
+  border: 1px solid color-mix(in srgb, var(--kind, var(--text-3)) 55%, transparent);
   border-radius: var(--radius-sm);
   text-align: left;
   font-size: var(--text-xs);
@@ -587,7 +585,7 @@ button.itemRow:hover {
   --kind: var(--text-muted);
 }
 .chip {
-  border-left: 3px solid var(--kind, var(--text-3));
+  border: 1px solid color-mix(in srgb, var(--kind, var(--text-3)) 55%, transparent);
 }
 .tgItem.done,
 .chip.done {

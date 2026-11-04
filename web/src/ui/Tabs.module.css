@@ -1,9 +1,17 @@
 .tabs {
   display: flex;
-  gap: var(--space-4);
-  overflow-x: auto;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
   border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
+}
+/* Phone: one row that scrolls sideways with a fade at the edge (the scrollbar stays hidden). */
+@media (max-width: 899px) {
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
 }
 .tabs::-webkit-scrollbar {
   display: none;

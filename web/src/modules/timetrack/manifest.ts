@@ -19,9 +19,10 @@ const manifest: ModuleManifest = {
   icon: 'clock',
   identity: {
     hue: 'teal',
+    hue2: 'ocean',
     widgetType: 'status',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'kennzahl',
+    head: 'zeit',
     signature: 'none',
     type: 'mono',
     feedback: 'pulse',

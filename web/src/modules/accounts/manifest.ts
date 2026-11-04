@@ -21,8 +21,8 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'slate',
     widgetType: 'status',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'status',
+    head: 'tresor',
     signature: 'vaultDoor',
     type: 'mono',
   },

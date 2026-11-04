@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'wallet',
   identity: {
     hue: 'teal',
+    hue2: 'ocean',
     widgetType: 'kpi',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'kennzahl',
+    head: 'kennzahl',
     signature: 'bankCard',
   },
   version: 4,

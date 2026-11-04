@@ -114,6 +114,9 @@ test.describe('ten paths', () => {
 
   test('2 Später', async ({ page }, info) => {
     await addTodoPlain(page, 'Fenster putzen');
+    // The "ToDo hinzugefügt" toast sits over the first row for a moment (the list starts lower under the sub-navigation);
+    // a person swipes once it is gone, so the swipe is not counted as a step.
+    await expect(page.getByText('ToDo hinzugefügt')).toBeHidden({ timeout: 15_000 });
     const s = new Steps(page);
     await s.swipeLeft(page.getByRole('listitem').filter({ hasText: 'Fenster putzen' }).first());
     await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();

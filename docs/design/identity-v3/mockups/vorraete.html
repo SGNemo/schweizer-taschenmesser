@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v3 – Vorräte</title>
+<link rel="stylesheet" href="v3.css">
+<style>body{--mod:var(--mod-fern);--mod2:var(--mod-lime)}</style></head>
+<body data-active="pantry" data-area="household">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <section class="head hero regal"><span class="pattern household"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="box"></span>Haushalt · Vorräte</div><h1>Vorräte</h1>
+      <div class="fig" style="margin-top:10px">14 <small>Vorräte</small></div><div class="ctx">1 abgelaufen · 3 laufen bald ab · 6 werden knapp</div></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right"><div class="shelf"><a><b>5</b><span><i class="dot" style="background:var(--danger)"></i>Kühlschrank · 1 abgelaufen</span></a><a><b>2</b><span><i class="dot" style="background:var(--warning)"></i>Tiefkühler · 1 bald</span></a><a><b>6</b><span><i class="dot" style="background:var(--warning)"></i>Vorratsschrank · 2 bald</span></a><a><b>1</b><span>Sonstiges</span></a></div></div>
+  </section>
+  <nav class="subnav" data-area="household"></nav>
+  <div class="toolbar"><div class="seg"><span class="on">Alle</span><span>Läuft bald ab</span><span>Nachkaufen</span></div><span class="chip">Alle 6 nachkaufen</span><span class="spacer"></span><a class="btn ghost">Scannen</a><a class="btn primary"><span data-i="plus"></span>Vorrat</a></div>
+  <div class="list">
+    <div class="grp">Kühlschrank · 5</div>
+    <div class="row"><span class="grow">Joghurt natur<span class="sub">3 Stück</span></span><span class="badge danger"><span data-i="alert" style="display:grid"></span>seit gestern abgelaufen</span><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="row"><span class="grow">Frischkäse<span class="sub">1 Stück</span></span><span class="badge warn">läuft morgen ab</span><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="row"><span class="grow">Vollmilch 1 l<span class="sub">2 Stück</span></span><span class="badge">noch 2 Tage</span><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="row"><span class="grow">Eier (10er)<span class="sub">1 Stück · haltbar bis 11.10.</span></span><span class="badge">wird knapp</span><a class="btn ghost" style="height:34px;font-size:.875rem">Auf die Einkaufsliste</a><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="row"><span class="grow">Butter<span class="sub">1 Stück · haltbar bis 17.10.</span></span><span class="badge">wird knapp</span><a class="btn ghost" style="height:34px;font-size:.875rem">Auf die Einkaufsliste</a><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="grp">Tiefkühler · 2</div>
+    <div class="row"><span class="grow">Fischstäbchen<span class="sub">1 Stück · haltbar bis 28.12.</span></span><span class="badge">wird knapp</span><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+    <div class="row"><span class="grow">Tiefkühlspinat<span class="sub">4 Stück · haltbar bis 08.03.</span></span><a class="btn ghost icon" style="height:34px;width:34px">−</a><a class="btn ghost icon" style="height:34px;width:34px">+</a></div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>

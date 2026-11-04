@@ -26,6 +26,6 @@ describe('fluid root size', () => {
     expect(css.indexOf("data-text-size='large'")).toBeGreaterThan(css.indexOf('100vw - 1920px'));
   });
   it('sidebar and rail scale with the root', () => {
-    expect(css).toMatch(/--sidebar-w:\s*15\.5rem/);
+    expect(css).toMatch(/--sidebar-w:\s*16\.25rem/);
   });
 });

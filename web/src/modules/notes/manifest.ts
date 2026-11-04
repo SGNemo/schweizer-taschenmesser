@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'note',
   identity: {
     hue: 'violet',
+    hue2: 'indigo',
     widgetType: 'tiles',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'notiz',
+    head: 'schreib',
     signature: 'notePaper',
     type: 'serif',
   },

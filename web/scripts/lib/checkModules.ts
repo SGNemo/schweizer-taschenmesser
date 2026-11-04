@@ -14,19 +14,42 @@ const PLATFORMS = ['web', 'desktop', 'android'];
 const LAYOUTS = ['narrow', 'content', 'wide', 'full'];
 /** Keep in step with `MODULE_HUES` / `WIDGET_TYPES` in `src/core/modules/types.ts` (pinned by the registry test). */
 export const HUES = [
-  'sky',
+  'lime',
   'moss',
+  'fern',
   'teal',
   'ocean',
-  'violet',
-  'plum',
-  'orchid',
+  'sky',
+  'cobalt',
   'indigo',
+  'violet',
+  'orchid',
   'slate',
-  'navy',
 ];
-export const HEAD_STYLES = ['figure', 'cover', 'compact'];
-export const HEAD_SURFACES = ['gradient', 'tint', 'plain'];
+export const HEAD_VARIANTS = [
+  'kennzahl',
+  'zeit',
+  'fortschritt',
+  'cover',
+  'himmel',
+  'regal',
+  'tresor',
+  'schreib',
+  'fokus',
+];
+export const WIDGET_VARIANTS = [
+  'kennzahl',
+  'zeitleiste',
+  'fortschritt',
+  'cover',
+  'himmel',
+  'kacheln',
+  'status',
+  'notiz',
+  'fokus',
+  'faellig',
+  'checkliste',
+];
 export const TYPE_ACCENTS = ['sans', 'thin', 'mono', 'serif'];
 export const CARD_SHAPES = ['soft', 'round', 'sharp'];
 export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'];
@@ -128,10 +151,10 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
   if (!layout && !devOnly) fail('manifest has no `layout`');
   if (layout && !LAYOUTS.includes(layout)) fail(`unknown layout "${layout}"`);
 
-  // Identity: `identity: { hue, widgetType }` from the fixed lists (docs/decisions/ui-shell.md).
+  // Identity v3: `identity: { hue, widgetType, widget, head, signature }` from the fixed lists (docs/decisions/ui-shell.md).
   const identity = /\bidentity:\s*\{([^}]*)\}/.exec(manifest)?.[1];
   if (identity === undefined)
-    fail('manifest has no `identity: { hue, widgetType, head, surface, signature }`');
+    fail('manifest has no `identity: { hue, widgetType, widget, head, signature }`');
   else {
     const hue = /\bhue:\s*['"]([a-z]+)['"]/.exec(identity)?.[1];
     const type = /\bwidgetType:\s*['"]([a-zA-Z]+)['"]/.exec(identity)?.[1];
@@ -144,9 +167,10 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
     const hue2 = pick('hue2');
     if (hue2 !== undefined && !HUES.includes(hue2))
       fail(`identity.hue2 "${hue2}" is not in the module palette`);
+    if (hue2 !== undefined && hue2 === hue) fail('identity.hue2 must differ from identity.hue');
     const required: [string, string[]][] = [
-      ['head', HEAD_STYLES],
-      ['surface', HEAD_SURFACES],
+      ['widget', WIDGET_VARIANTS],
+      ['head', HEAD_VARIANTS],
       ['signature', SIGNATURES],
     ];
     for (const [key, list] of required) {

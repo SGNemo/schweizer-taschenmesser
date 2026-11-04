@@ -9,6 +9,8 @@ export { useFormDraft } from './useFormDraft';
 export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from './Fields';
 export { CurrencyField } from './CurrencyField';
 export { Tabs, type TabItem } from './Tabs';
+export { SubNav, type SubNavItem } from './SubNav';
+export { OverlayScroll } from './OverlayScroll';
 export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } from './Misc';
 export { NoReadAid, ReadableText } from './ReadableText';
 export { ReadAidProvider } from './ReadAidProvider';

@@ -14,9 +14,10 @@ const manifest: ModuleManifest = {
   icon: 'bookmark',
   identity: {
     hue: 'indigo',
+    hue2: 'cobalt',
     widgetType: 'tiles',
-    head: 'compact',
-    surface: 'gradient',
+    widget: 'kacheln',
+    head: 'regal',
     signature: 'pinboard',
   },
   version: 2,

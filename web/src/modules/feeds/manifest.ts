@@ -11,7 +11,15 @@ const manifest: ModuleManifest = {
     return t.feeds.meta.name;
   },
   icon: 'wifi',
-  identity: { hue: 'moss', widgetType: 'kpi', head: 'compact', surface: 'tint', signature: 'none' },
+  // Identity v3: the neighbours in the knowledge area by id are Browser (schreib) and E-Mail (kennzahl), so the head is `regal`.
+  identity: {
+    hue: 'moss',
+    hue2: 'lime',
+    widgetType: 'kpi',
+    widget: 'kennzahl',
+    head: 'regal',
+    signature: 'none',
+  },
   version: 1,
   get description() {
     return t.feeds.meta.description;

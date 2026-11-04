@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v3 – Finanzen</title>
+<link rel="stylesheet" href="v3.css">
+<style>body{--mod:var(--mod-teal);--mod2:var(--mod-ocean)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.kpi .k{font-size:.8125rem;color:var(--text-2)}.kpi .v{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .v.plus{color:var(--success)}
+html[data-device=mobile] .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+</style></head>
+<body data-active="finance" data-area="money">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <section class="head hero kennzahl"><span class="pattern money"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="wallet"></span>Geld · Finanzen</div><h1>Finanzen</h1>
+      <div class="caps" style="margin-top:12px">Kontostand</div><div class="fig">12.616,33 €</div><div class="ctx">11.598,49 € verfügbar · 3 Konten · September: ▲ 463,62 € zum Vormonat</div></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right"><div><div class="caps" style="margin-bottom:6px">Verlauf 12 Monate</div><div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:50%"></i><i style="height:62%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:48%"></i><i class="hi" style="height:90%"></i></div></div><div class="minicard"><div class="k">Girokonto</div><div class="v">3.567,01 €</div></div><div class="minicard two"><div class="k">Sparkonto</div><div class="v">9.129,45 €</div></div></div>
+  </section>
+  <nav class="subnav" data-area="money"></nav>
+  <div class="toolbar"><div class="seg"><span class="on">Übersicht</span><span>Buchungen</span><span>Konten</span><span>Kategorien</span></div><span class="spacer"></span><a class="btn ghost icon">‹</a><b style="font-size:1.0625rem">September 2026</b><a class="btn ghost icon">›</a><a class="btn primary"><span data-i="plus"></span>Buchung</a></div>
+  <div class="body with-aside">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="kpis"><div class="card kpi"><div class="k">Einnahmen</div><div class="v plus">2.863,12 €</div><div class="meta">3 Buchungen</div></div><div class="card kpi"><div class="k">Ausgaben</div><div class="v">2.399,50 €</div><div class="meta">41 Buchungen · ▲ 463 €</div></div><div class="card kpi"><div class="k">Offene Rechnungen</div><div class="v">1.017,84 €</div><div class="meta">7 Rechnungen · 2 überfällig</div></div></div>
+      <div class="card"><h3 style="font-size:.9375rem;font-weight:600;color:var(--text-2);margin-bottom:10px">Ausgaben nach Kategorie</h3>
+        <div class="row"><span class="plate" data-i="cart"></span><span class="grow">Lebensmittel<span class="sub">38 %</span></span><span class="amt">912,40 €</span></div>
+        <div class="row"><span class="plate" data-i="box"></span><span class="grow">Wohnen<span class="sub">29 %</span></span><span class="amt">690,00 €</span></div>
+        <div class="row"><span class="plate" data-i="repeat"></span><span class="grow">Abos<span class="sub">9 %</span></span><span class="amt">214,90 €</span></div>
+        <div class="row"><span class="plate" data-i="people"></span><span class="grow">Freizeit<span class="sub">8 % · 35,11 € über Budget</span></span><span class="amt" style="color:var(--danger)">235,11 €</span></div></div>
+    </div>
+    <div class="aside"><div class="card"><h3 style="font-size:.9375rem;font-weight:600;color:var(--text-2);margin-bottom:10px">Letzte Buchungen</h3>
+      <div class="row"><span class="grow">REWE Musterstadt<span class="sub">heute · Lebensmittel</span></span><span class="amt">−48,20 €</span></div>
+      <div class="row"><span class="grow">Gehalt<span class="sub">gestern · Einnahmen</span></span><span class="amt" style="color:var(--success)">+2.863,12 €</span></div>
+      <div class="row"><span class="grow">Streaming Plus<span class="sub">27. Sep · Abos</span></span><span class="amt">−12,99 €</span></div>
+      <div class="row"><span class="grow">Stadtwerke<span class="sub">25. Sep · Wohnen</span></span><span class="amt">−87,40 €</span></div></div></div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>

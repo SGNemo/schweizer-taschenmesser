@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity v3 – Kalender</title>
+<link rel="stylesheet" href="v3.css">
+<style>body{--mod:var(--mod-sky);--mod2:var(--mod-ocean)}</style></head>
+<body data-active="calendar" data-area="plan">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <section class="head hero zeit"><span class="pattern plan"></span>
+    <div class="left"><div class="eyebrow"><span class="plate" data-i="cal"></span>Planen · Kalender</div><h1>Kalender</h1>
+      <div class="datebig" style="margin-top:10px"><span class="d">29</span><span class="m">September · Dienstag · KW 40</span></div>
+      <div class="ctx">Nächster Termin: Teammeeting in 20 Min · 4 Termine heute</div></div>
+    <div class="actions"><a class="btn ghost"><span data-i="spark"></span><span class="lbl">Satz eintragen</span></a><a class="btn ghost icon"><span data-i="gear"></span></a></div>
+    <div class="right" style="flex-direction:column;align-items:stretch;min-width:360px"><div class="strip"><b style="left:0">Heute</b><i></i><i class="ev"></i><i class="ev now"></i><i></i><i></i><i class="ev"></i><i></i><i class="ev"></i><i></i><i></i><i></i></div><div class="striph"><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span></div></div>
+  </section>
+  <nav class="subnav" data-area="plan"></nav>
+  <div class="toolbar"><div class="seg"><span class="on">Kalender</span><span>Erinnerungen</span></div><span class="chip on">● Arbeit</span><span class="chip">● Familie</span><span class="spacer"></span><a class="btn ghost icon">‹</a><a class="btn ghost">Heute</a><a class="btn ghost icon">›</a><b style="font-size:1.0625rem;margin:0 6px">28. Sep – 4. Okt</b><div class="seg"><span>Monat</span><span class="on">Woche</span><span>Tag</span><span>Agenda</span><span>Jahr</span></div><a class="btn primary"><span data-i="plus"></span>Termin</a></div>
+  <div class="body with-aside">
+    <div class="week">
+      <div class="h" style="border-left:0"></div><div class="h">Mo 28.</div><div class="h today">Di 29.</div><div class="h">Mi 30.</div><div class="h">Do 1.</div><div class="h">Fr 2.</div><div class="h">Sa 3.</div><div class="h">So 4.</div>
+      <div class="hours"><span>08:00</span><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>14:00</span></div>
+      <div class="g"><div class="ev" style="top:60px;height:50px"><b>09:00 Backup prüfen</b></div></div>
+      <div class="g today"><div class="ev" style="top:4px;height:30px;--c:var(--mod-orchid)"><b>Anna wird 29</b></div><div class="ev" style="top:116px;height:54px"><b>10:00 Teammeeting</b>bis 11:00</div><div class="ev" style="top:284px;height:50px"><b>13:00 Friseur</b></div></div>
+      <div class="g"><div class="ev" style="top:4px;height:30px;--c:var(--mod-fern)"><b>Frischkäse läuft ab</b></div><div class="ev" style="top:240px;height:54px"><b>12:15 Mittagessen</b>mit Anna</div></div>
+      <div class="g"><div class="ev" style="top:4px;height:30px;--c:var(--mod-indigo)"><b>Garantie endet</b></div><div class="ev" style="top:60px;height:54px"><b>09:00 Zählerstand</b></div></div>
+      <div class="g"><div class="ev" style="top:116px;height:54px"><b>10:00 Rechnung prüfen</b></div><div class="ev" style="top:172px;height:50px"><b>11:00 Friseur</b></div></div>
+      <div class="g"><div class="ev" style="top:4px;height:30px;--c:var(--mod-ocean)"><b>Feiertag-Brückentag</b></div></div>
+      <div class="g"><div class="ev" style="top:4px;height:30px"><b>Wochenendausflug</b></div></div>
+    </div>
+    <div class="aside">
+      <div class="card"><h3 style="font-size:.9375rem;font-weight:600;color:var(--text-2);margin-bottom:10px">Agenda · Dienstag, 29. September</h3>
+        <div class="row"><span class="badge" style="background:color-mix(in srgb,var(--mod-orchid) 16%,var(--surface));color:var(--text)">Geburtstag</span><span class="grow">Anna Beispiel wird 29</span></div>
+        <div class="row"><span class="badge">08:00</span><span class="grow">Medikament nehmen</span></div>
+        <div class="row" style="font-weight:600"><span class="badge today">10:00</span><span class="grow">Teammeeting · in 20 Min</span></div>
+        <div class="row"><span class="badge">13:00</span><span class="grow">Friseur</span></div>
+        <div class="row"><span class="badge">15:30</span><span class="grow">Zahnarzt Dr. Beispiel</span></div></div>
+      <div class="card"><h3 style="font-size:.9375rem;font-weight:600;color:var(--text-2);margin-bottom:10px">Erinnerungen</h3><div class="row"><span class="cb"></span><span class="grow">Paket abholen<span class="sub">17:30</span></span></div><div class="row"><span class="cb"></span><span class="grow">Chorprobe<span class="sub">18:00</span></span></div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>

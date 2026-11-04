@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Fundament v3 (`feat/identity-v3-foundation`, PR #414, fertig zum Review): Rahmen zentriert mit Gutter und ohne seitlichen Überlauf, keine Farbstreifen mehr, neun Kopf-Varianten mit Unternavigation, Palette v3, Widget-Varianten, neue Sidebar (Favoritenleiste, Kapsel, Rail), dünne Overlay-Scrollbars, neuer Übersichtskopf (Begrüßung, Wetterzeile, Karten, Tageskarten); Regeln und Zuordnung aller Module in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), Entscheidungen in [decisions/ui-shell.md](decisions/ui-shell.md). Handtest: Übersicht und je ein Modul pro Bereich hell/dunkel, Ruhig, Rail, Handy.
+
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
 Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).

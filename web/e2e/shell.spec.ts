@@ -4,14 +4,13 @@ import { enable, mainNav, ready, openAppearanceGroup, openFoldedGroup } from './
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
 
-  test('favourites above the areas; the star adds one, keeps it after a reload, and stops at five', async ({
+  test('favourites above the areas; the pin adds one, keeps it after a reload, and stops at five', async ({
     page,
   }) => {
     await enable(page, 'notes');
     await ready(page, '/');
     const nav = mainNav(page);
     await expect(nav.getByRole('heading', { name: 'Favoriten' })).toBeVisible();
-    await expect(nav.getByRole('heading', { name: 'Bereiche' })).toBeVisible();
 
     const add = (name: string) =>
       nav.getByRole('button', { name: `${name} zu den Favoriten hinzufügen` }).first();
@@ -55,7 +54,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     await expect(page).toHaveURL(/\/invoices$/);
   });
 
-  test('the modules of an area are tabs above the page', async ({ page }) => {
+  test('the modules of an area are a sub-navigation under the head', async ({ page }) => {
     await ready(page, '/finance');
     const tabs = page.getByRole('navigation', { name: 'Geld: Module' });
     await expect(tabs.getByRole('link', { name: 'Finanzen' })).toHaveAttribute(
@@ -99,7 +98,9 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     await expect(nav.getByRole('heading', { name: 'Favoriten' })).toBeVisible();
   });
 
-  test('below 1200 px the rail is automatic and shows areas with labels', async ({ page }) => {
+  test('below 1200 px the rail is automatic and shows the areas as icons with tooltips', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1100, height: 800 });
     await ready(page, '/');
     const nav = mainNav(page);

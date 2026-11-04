@@ -19,9 +19,10 @@ const manifest: ModuleManifest = {
   icon: 'target',
   identity: {
     hue: 'violet',
+    hue2: 'orchid',
     widgetType: 'progress',
-    head: 'figure',
-    surface: 'gradient',
+    widget: 'fortschritt',
+    head: 'fortschritt',
     signature: 'ring',
     feedback: 'ring',
   },

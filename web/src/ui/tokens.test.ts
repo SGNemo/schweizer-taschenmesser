@@ -113,7 +113,8 @@ describe('design tokens', () => {
         };
         const apart = (a: number, b: number) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
         const hues = Object.keys(t).filter((k) => k.startsWith('--mod-'));
-        expect(hues).toHaveLength(10);
+        // Identity v3: ten hues in steps of 26° plus slate, the grey of the palette.
+        expect(hues).toHaveLength(11);
         for (const key of hues) {
           text(key, '--surface', 3);
           text(key, '--surface-2', 3);
@@ -125,6 +126,27 @@ describe('design tokens', () => {
               `${key} (${t[key]}) too close to ${status} (${t[status]})`,
             ).toBeGreaterThanOrEqual(25);
         }
+      });
+      it('module hues keep 25° of hue between each other, so no two modules of a group look alike (identity v3)', () => {
+        const hueOf = (hex: string): number => {
+          const [r, g, b] = hex
+            .replace('#', '')
+            .match(/../g)!
+            .map((h) => parseInt(h, 16) / 255);
+          const max = Math.max(r!, g!, b!);
+          const min = Math.min(r!, g!, b!);
+          const d = max - min;
+          const h =
+            max === r ? ((g! - b!) / d) % 6 : max === g ? (b! - r!) / d + 2 : (r! - g!) / d + 4;
+          return (h * 60 + 360) % 360;
+        };
+        const keys = Object.keys(t).filter((k) => k.startsWith('--mod-') && k !== '--mod-slate');
+        expect(keys).toHaveLength(10);
+        for (const [i, a] of keys.entries())
+          for (const b of keys.slice(i + 1)) {
+            const d = Math.abs(hueOf(t[a]!) - hueOf(t[b]!));
+            expect(Math.min(d, 360 - d), `${a} and ${b}`).toBeGreaterThanOrEqual(25);
+          }
       });
       it('page background and text on the filled accent', () => {
         text('--accent', '--bg');
@@ -184,7 +206,41 @@ describe('design tokens', () => {
     for (const b of [calm, off]) {
       expect(Number.parseInt(b['--head-tint-0']!, 10)).toBeLessThanOrEqual(15);
       expect(Number.parseInt(b['--head-tint-1']!, 10)).toBeLessThanOrEqual(8);
+      // Identity v3: the widget head zone is nearly flat, the area patterns are off, the sidebar groups barely tinted.
+      expect(Number.parseInt(b['--widget-tint']!, 10)).toBeLessThanOrEqual(8);
+      expect(Number(b['--pattern-head'])).toBe(0);
+      expect(Number(b['--pattern-widget'])).toBe(0);
+      expect(Number.parseInt(b['--group-tint']!, 10)).toBeLessThanOrEqual(4);
     }
+    // In the normal mode the pattern stays a quiet texture: at most a tenth of the ink, never behind body text.
+    expect(Number(light['--pattern-head'])).toBeLessThanOrEqual(0.1);
+    expect(Number(light['--pattern-widget'])).toBeLessThanOrEqual(0.06);
+    // Identity v3: text on the widget head zone (14 %), the sidebar capsule (16 %) and the group block stays AA, every hue, both themes.
+    for (const [name, t] of [
+      ['light', light],
+      ['dark', dark],
+    ] as const)
+      for (const key of Object.keys(t).filter((k) => k.startsWith('--mod-'))) {
+        const zone = mix(
+          t[key]!,
+          t['--surface']!,
+          Number.parseInt(light['--widget-tint']!, 10) / 100,
+        );
+        expect(
+          ratio(t['--text']!, zone),
+          `${name} ${key} --text on the widget head zone`,
+        ).toBeGreaterThanOrEqual(4.5);
+        const capsule = mix(t[key]!, t['--surface']!, 0.16);
+        expect(
+          ratio(t['--text']!, capsule),
+          `${name} ${key} --text on the sidebar capsule`,
+        ).toBeGreaterThanOrEqual(4.5);
+        // The hue on the capsule/zone it tints: the icon keeps ≥ 3:1 (WCAG 1.4.11).
+        expect(
+          ratio(t[key]!, capsule),
+          `${name} ${key} icon on the capsule`,
+        ).toBeGreaterThanOrEqual(3);
+      }
     expect([light['--shape-soft'], light['--shape-round'], light['--shape-sharp']]).toEqual([
       '16px',
       '20px',
