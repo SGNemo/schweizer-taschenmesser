@@ -103,6 +103,7 @@ const PAGES: Shot[] = [
   { name: 'settings-sicherheit', path: '/settings/sicherheit' },
   { name: 'settings-module-todos', path: '/settings/module/todos' },
   { name: 'settings-werkzeuge', path: '/settings/werkzeuge', full: true },
+  { name: 'settings-sync', path: '/settings/sync', full: true },
 ];
 
 /** Preview modules and desktop-only modules are off by default: switch them on in IndexedDB (the app has opened the DB). */
