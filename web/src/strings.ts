@@ -4126,6 +4126,25 @@ export const de = {
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
+    restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
+    shelf: {
+      jump: (place: string, n: number) => `${place}: ${n}, zum Abschnitt springen`,
+      expired: (n: number) => `${n} abgelaufen`,
+      soon: (n: number) => `${n} bald`,
+      low: (n: number) => `${n} knapp`,
+      fine: 'Alles im Plan',
+      figureLabel: 'Im Haus',
+      figureUnit: 'Vorräte',
+      summaryFine: 'Nichts läuft ab, nichts wird knapp.',
+      summary: (expired: number, soon: number, low: number) =>
+        [
+          expired > 0 ? `${expired} abgelaufen` : '',
+          soon > 0 ? `${soon} laufen bald ab` : '',
+          low > 0 ? `${low} werden knapp` : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
+    },
   },
 
   people: {
@@ -4938,7 +4957,8 @@ export const de = {
     widgetAction: 'Eintrag anlegen',
     packingEmpty: 'Keine Packliste unterwegs.',
     packingAction: 'Packliste anlegen',
-    openCount: (n: number) => (n === 1 ? '1 Artikel offen' : `${n} Artikel offen`),
+    figureUnit: 'offen',
+    sectionsCount: (n: number) => (n === 1 ? '1 Ladenbereich' : `${n} Ladenbereiche`),
     sections: {
       produce: 'Obst & Gemüse',
       bakery: 'Backwaren',
@@ -5057,6 +5077,14 @@ export const de = {
     empty: 'Noch keine Unterlagen.',
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
+    figureLabel: 'Ablage',
+    figureUnit: 'Unterlagen',
+    figureDetail: (expired: number, due: number) =>
+      [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
+        .filter(Boolean)
+        .join(' · '),
+    widgetSummary: (n: number) =>
+      n === 1 ? '1 Unterlage braucht einen Blick' : `${n} Unterlagen brauchen einen Blick`,
   },
   accounts: {
     meta: {

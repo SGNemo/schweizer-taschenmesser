@@ -1,19 +1,47 @@
-import { HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { t } from '@/strings';
 import styles from './ListSignature.module.css';
 
 /**
- * Signature "receipt" for the shopping list: a narrow slip with a jagged lower edge. The numbers are real text
- * (open entries, optional sum); the slip itself is decoration and never moves.
+ * Head of the shopping list (`kennzahl`): the open count as the figure with one context line (sum, store sections), and
+ * a narrow receipt slip with a jagged lower edge that lists the next entries. The slip is decoration (`aria-hidden`,
+ * the list below says the same in text) and never moves.
  */
-export function ReceiptSignature({ open, sum }: { open: number; sum?: string }) {
+export function ReceiptSignature({
+  name,
+  open,
+  detail,
+  lines,
+}: {
+  name: string;
+  open: number;
+  detail?: string;
+  lines: { name: string; price?: string }[];
+}) {
   return (
-    <HeroSlot>
-      <div className={styles.receipt} data-testid="receipt-signature">
-        <span className={styles.line}>{t.lists.openCount(open)}</span>
-        {sum ? <span className={styles.sum}>{sum}</span> : null}
-      </div>
-    </HeroSlot>
+    <>
+      <HeroSlot area="figure">
+        <HeroFigure
+          label={name}
+          value={String(open)}
+          unit={t.lists.figureUnit}
+          detail={detail}
+          testId="lists-open"
+        />
+      </HeroSlot>
+      <HeroSlot>
+        {lines.length === 0 ? null : (
+          <div className={styles.receipt} data-testid="receipt-signature" aria-hidden="true">
+            {lines.slice(0, 3).map((l, i) => (
+              <span key={i} className={styles.slipLine}>
+                <span className={styles.slipName}>{l.name}</span>
+                {l.price ? <span className={styles.slipPrice}>{l.price}</span> : null}
+              </span>
+            ))}
+          </div>
+        )}
+      </HeroSlot>
+    </>
   );
 }
 

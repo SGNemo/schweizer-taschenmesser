@@ -12,9 +12,6 @@ import { t } from '@/strings';
 import {
   Badge,
   Button,
-  Chip,
-  Chips,
-  EmptyState,
   Icon,
   ItemList,
   ItemRow,
@@ -28,6 +25,8 @@ import { AuditDialog } from '../components/AuditDialog';
 import { EmergencySheet } from '../components/EmergencySheet';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { MonogramTile } from '../components/MonogramTile';
+import { AccountsEmpty } from '../components/AccountsEmpty';
+import { GroupTabs } from '../components/GroupTabs';
 import { VaultDoor } from '../components/VaultDoor';
 import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
@@ -184,23 +183,16 @@ function Unlocked() {
         ) : null}
       </div>
       {tags.length > 0 || hasFavorites ? (
-        <Chips label={t.accounts.groups.label}>
-          <Chip
-            label={t.accounts.groups.all}
-            selected={group === 'all'}
-            onClick={() => setGroup('all')}
-          />
-          {hasFavorites ? (
-            <Chip
-              label={t.accounts.groups.favorites}
-              selected={group === '*fav'}
-              onClick={() => setGroup('*fav')}
-            />
-          ) : null}
-          {tags.map((tag) => (
-            <Chip key={tag} label={tag} selected={group === tag} onClick={() => setGroup(tag)} />
-          ))}
-        </Chips>
+        <GroupTabs
+          label={t.accounts.groups.label}
+          value={group}
+          onChange={setGroup}
+          items={[
+            { id: 'all', label: t.accounts.groups.all },
+            ...(hasFavorites ? [{ id: '*fav', label: t.accounts.groups.favorites }] : []),
+            ...tags.map((tag) => ({ id: tag, label: tag })),
+          ]}
+        />
       ) : null}
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
@@ -224,12 +216,12 @@ function Unlocked() {
               onEdit={(entry) => setForm(entry)}
             />
           ) : (
-            <EmptyState title={t.accounts.pickEntry} />
+            <AccountsEmpty title={t.accounts.pickEntry} />
           )
         }
       >
         {shown.length === 0 ? (
-          <EmptyState
+          <AccountsEmpty
             title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
           />
         ) : null}

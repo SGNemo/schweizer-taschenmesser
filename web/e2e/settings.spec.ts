@@ -16,7 +16,9 @@ test('desktop: /settings is the overview; the list navigates and Back works', as
     'aria-current',
     'page',
   );
-  await expect(page.getByTestId('settings-overview').getByRole('link')).toHaveCount(8);
+  // Identity v3: six status tiles in the head, three cards below (the eight cards of before, plus Backup).
+  await expect(page.getByTestId('settings-status').getByRole('link')).toHaveCount(6);
+  await expect(page.getByTestId('settings-overview').getByRole('link')).toHaveCount(3);
   await nav.getByRole('link', { name: 'Allgemein' }).click();
   await expect(page).toHaveURL(/\/settings\/allgemein$/);
   await expect(nav.getByRole('link', { name: 'Allgemein' })).toHaveAttribute(
@@ -99,7 +101,7 @@ test('search finds a setting by its description, jumps there and highlights it',
   await expect(hit).toContainText('Schnellerfassung');
   await hit.click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
-  await expect(page.getByRole('heading', { name: 'Schnellerfassung' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Schnellerfassung', level: 2 })).toBeVisible();
   await expect(page.locator('section[aria-labelledby="quickcapture"]')).toHaveAttribute(
     'data-highlight',
     'true',

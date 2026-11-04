@@ -1,52 +1,36 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { formatDay, today } from '@/core/time/dates';
-import { tDeadline } from '@/strings.deadline';
-import { dueState } from '@/core/time/due';
+import { today } from '@/core/time/dates';
 import { t } from '@/strings';
+import { tDeadline } from '@/strings.deadline';
 import { DueList } from '@/ui';
-import { cancelDeadline, nextRelevantDate, sortDocuments, statusOf } from '../logic';
+import { statusOf, type Status } from '../logic';
 import { documentRepo } from '../repo';
 
-/** Deadlines and expiries that need attention: act now, soon and already expired. */
+/**
+ * Deadlines and expiries in numbers only: one row per state ("Abgelaufen 1", "Bald 2"). No document title,
+ * file or provider is read into the overview; the titles are one tap away in the module.
+ */
 export default function ExpiringWidget() {
   const docs = useLiveQuery(() => documentRepo.active().toArray(), []);
   const day = today();
-  const urgent = sortDocuments(docs ?? [], day).filter((d) => {
-    const s = statusOf(d, day);
-    return s === 'act-now' || s === 'soon' || s === 'expired' || s === 'missed';
-  });
-  const act = urgent.filter((d) => statusOf(d, day) === 'act-now').length;
-  const expired = urgent.filter((d) => statusOf(d, day) === 'expired').length;
-  const missed = urgent.filter((d) => statusOf(d, day) === 'missed').length;
-  const soon = urgent.length - expired - missed;
+  const count = (s: Status) => (docs ?? []).filter((d) => statusOf(d, day) === s).length;
+  const rows = [
+    { s: 'expired' as const, tone: 'overdue' as const, title: t.vault.status.expired ?? '' },
+    { s: 'act-now' as const, tone: 'today' as const, title: t.vault.status['act-now'] ?? '' },
+    { s: 'soon' as const, tone: 'soon' as const, title: t.vault.status.soon ?? '' },
+    { s: 'missed' as const, tone: 'later' as const, title: tDeadline.get().missed ?? '' },
+  ]
+    .map((r) => ({ ...r, n: count(r.s) }))
+    .filter((r) => r.n > 0);
+  const total = rows.reduce((sum, r) => sum + r.n, 0);
   return (
     <DueList
       loading={!docs}
       empty={t.vault.widgetEmpty}
       emptyAction={{ label: t.homeEmpty.vault, to: '/vault?new=1' }}
-      summary={
-        act > 0
-          ? t.widgets.contractsSummary(act)
-          : expired + soon > 0
-            ? t.widgets.expirySummary(expired, soon)
-            : missed > 0
-              ? tDeadline.get().missedSummary(missed)
-              : undefined
-      }
-      entries={urgent.map((d) => {
-        if (statusOf(d, day) === 'missed') {
-          // Calm: muted tone, no alarm colour; the date says what happened.
-          return {
-            key: d.id,
-            title: d.title,
-            tone: 'later' as const,
-            label: tDeadline.get().missedOn(formatDay(cancelDeadline(d)!, 'd. MMM')),
-          };
-        }
-        const s = dueState(nextRelevantDate(d, day)!, day, { soonDays: 60 });
-        return { key: d.id, title: d.title, tone: s.tone, label: s.label };
-      })}
+      summary={total > 0 ? t.vault.widgetSummary(total) : undefined}
       moreLabel={t.widgets.more}
+      entries={rows.map((r) => ({ key: r.s, title: r.title, tone: r.tone, label: String(r.n) }))}
     />
   );
 }
