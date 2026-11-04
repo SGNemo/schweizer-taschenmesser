@@ -5,6 +5,7 @@ Workshop for the new mark, wordmark and app icons (branch `design/logo-v2`). Not
 ## Files
 | File | What |
 |---|---|
+| `final.params.mjs` | the chosen parameters (mark A2b, NEMO lettering, F4 pill, placement sizes); the asset export reads only this file. |
 | `mark.mjs` | parametric master: four directions (`tile`, `head`, `bands`, `line`), each built from a few shapes in a 512 canvas; `buildLayers(direction, params)` returns mark, one-colour, app tile, Android layers and the mark's box. Colours default to the accent tokens (`COLORS`). |
 | `wordmark.mjs` | "Nemo"/"nemo" set in Inter from `glyphs-inter.json` (outlines, no font at run time) or, for comparison, the previous Nunito word (`../icon/glyphs.json`): `wordPath`, `wordArt` (letters in accent, head, tail, bands, o-fish, badge), `wordSvg`, `lockupSvg` (mark + word, aligned on the cap or x-height). |
 | `glyphs-inter.json` | Inter and Inter Display 500/600/700/800 outlines of N n e m o (1000 units per em; `tools/extract-glyphs.mjs`, needs `npm i` here for opentype.js and the Inter OTFs). |
@@ -20,4 +21,5 @@ Workshop for the new mark, wordmark and app icons (branch `design/logo-v2`). Not
 - **Round 5 (2026-11-04):** the e's aperture (bar to terminal) was 42°, which the round terminal of a 0.25 stroke closes; W10b1 opens it to 72°, W10b2 to 85°, W10b3 72° with stroke 700, W10b4 72° with x-height 0.88. The wordmark block now shows true pixels at 36 and 28 px. Feedback: almost good, but the e's lower stroke is too short.
 - **Round 6 (2026-11-04):** a longer e bowl that stays open – W10b5 bowl to 55° (stroke 700, x-height 0.84), W10b6 to 48° (x-height 0.86), W10b7 to 32° with a flat-cut terminal (`round.eCap: 'butt'`, stroke 700), W10b8 to 30° flat-cut with stroke 800. Feedback: still not right; write NEMO in capitals.
 - **Round 7 (2026-11-04):** NEMO in capitals (uppercase E, M, O added to the round lettering: `eWidth/eMid/eMidLen`, `mWidth/mVertex`, `oWide`) – W10c1 stroke 700, W10c2 stroke 800, W10c3 M vertex at half height, W10c4 wider spacing. Feedback: W10c3.
-- **Round 8 (2026-11-04):** A2b + W10c3 in every context; lockup fine-tuning F1 (as chosen, pill 36 px), F2 pill 40 px, F3 tighter padding, F4 bigger mark and narrower gap. Renderer: a wordmark may set its own `height` in the sidebar head. Waiting for "Logo final".
+- **Round 8 (2026-11-04):** A2b + W10c3 in every context; lockup fine-tuning F1 (as chosen, pill 36 px), F2 pill 40 px, F3 tighter padding, F4 bigger mark and narrower gap. Renderer: a wordmark may set its own `height` in the sidebar head. Feedback: F4.
+- **Round 9 (2026-11-04):** final candidate – `final.params.mjs` (MARK = A2b, WORD = NEMO round 700 with the M vertex at half height, LOCKUP = F4 pill, PLACEMENT sizes) rendered once more in every context. Waiting for "Logo final".
