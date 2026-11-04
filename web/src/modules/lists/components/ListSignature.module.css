@@ -1,11 +1,13 @@
 .receipt {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
-  min-width: 9rem;
+  min-width: 11rem;
+  max-width: 15rem;
   padding: var(--space-3) var(--space-4) var(--space-4);
   background: var(--surface);
   color: var(--text);
-  border-top: 0.25rem solid var(--module-color);
+  border-top: 2px dashed var(--border-strong);
   /* jagged lower edge */
   --zig: 0.5rem;
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
@@ -17,10 +19,22 @@
 .line {
   font-size: var(--text-sm);
 }
-.sum {
+.slipLine {
+  display: flex;
+  min-width: 0;
+  gap: var(--space-3);
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.slipName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slipPrice {
   font-variant-numeric: tabular-nums;
-  font-weight: var(--weight-bold);
-  font-size: var(--text-lg);
 }
 .case {
   display: flex;

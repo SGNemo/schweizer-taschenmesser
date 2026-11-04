@@ -15,7 +15,7 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'fern',
     hue2: 'moss',
-    widgetType: 'dueList',
+    widgetType: 'tiles',
     widget: 'kacheln',
     head: 'regal',
     signature: 'shelf',

@@ -607,6 +607,13 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
 - AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
 
+## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
+- **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.
+- **HV2 Kacheln springen:** Auf eine Regal-Kachel im Kopf tippen → die Liste springt zum Abschnitt des Ortes (Tastatur: Enter).
+- **HV3 Scannen:** „Scannen“ in der Werkzeugleiste öffnet weiterhin die Kamera; der Barcode legt einen Vorrat an oder erhöht ihn.
+- **HV4 Tresor-Sperre:** Passwörter entsperren, ruhig liegen lassen: der Kopf zählt „sperrt in n Min.“ herunter und sperrt dann; Gruppen-Reiter bleiben nach dem Entsperren erhalten.
+- **HV5 Ruhig / Lesehilfe:** In „Ruhig“ und mit „Modulfarben: Aus“ sind Vorräte, Einkauf, Unterlagen und Passwörter noch an Form und Beschriftung zu erkennen; mit Lesehilfe (75 %) bricht keine Kachel und kein Reiter.
+
 ## Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
 - **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐

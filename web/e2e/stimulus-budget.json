@@ -56,10 +56,10 @@
     },
     "desktop--lists": {
       "height": 800,
-      "buttons": 76,
+      "buttons": 74,
       "links": 31,
-      "icons": 86,
-      "firstScreenActions": 64
+      "icons": 82,
+      "firstScreenActions": 56
     },
     "desktop--notes": {
       "height": 800,
@@ -70,10 +70,10 @@
     },
     "desktop--pantry": {
       "height": 800,
-      "buttons": 85,
+      "buttons": 90,
       "links": 31,
-      "icons": 76,
-      "firstScreenActions": 62
+      "icons": 83,
+      "firstScreenActions": 68
     },
     "desktop--people": {
       "height": 800,
@@ -133,9 +133,9 @@
     },
     "desktop--vault": {
       "height": 800,
-      "buttons": 82,
+      "buttons": 80,
       "links": 31,
-      "icons": 62,
+      "icons": 63,
       "firstScreenActions": 54
     },
     "phone--bookmarks": {
@@ -188,11 +188,11 @@
       "firstScreenActions": 29
     },
     "phone--lists": {
-      "height": 2078,
+      "height": 2307,
       "buttons": 49,
       "links": 9,
-      "icons": 34,
-      "firstScreenActions": 39
+      "icons": 35,
+      "firstScreenActions": 27
     },
     "phone--notes": {
       "height": 1200,
@@ -202,11 +202,11 @@
       "firstScreenActions": 30
     },
     "phone--pantry": {
-      "height": 2181,
-      "buttons": 60,
+      "height": 2621,
+      "buttons": 65,
       "links": 9,
-      "icons": 28,
-      "firstScreenActions": 36
+      "icons": 36,
+      "firstScreenActions": 31
     },
     "phone--people": {
       "height": 3457,
@@ -265,11 +265,11 @@
       "firstScreenActions": 31
     },
     "phone--vault": {
-      "height": 5549,
+      "height": 5753,
       "buttons": 55,
       "links": 9,
-      "icons": 14,
-      "firstScreenActions": 26
+      "icons": 16,
+      "firstScreenActions": 24
     }
   }
 }
