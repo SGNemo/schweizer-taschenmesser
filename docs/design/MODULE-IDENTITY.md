@@ -144,7 +144,7 @@ Tools are not modules but speak the same language: `ToolManifest.identity` `{ hu
 | Textvergleich `diff` | entwickler | teal | `splitPage` (mono) |
 | Regex `regex` | entwickler | lime | `pattern` (mono) |
 
-Recipe: [howto/new-tool.md](../howto/new-tool.md). The tool contents are rebuilt in packages 2 and 3.
+Recipe: [howto/new-tool.md](../howto/new-tool.md). Contents: package 2 (calculator with display and number pad, units and currency as a conversion flow, timer ring, date leaves, time-zone cards) is built with the blocks of `tools/kit.tsx`; package 3 adds the QR/picture mat, the persona card with its "erfunden" stamp, dice faces, section cards, stat chips and the code look for the developer tools (`kit.mat`, `kit.idCard`, `kit.die`, `kit.section`, `kit.chips`, `kit.code`).
 
 ## Checklist for a new or converted module
 

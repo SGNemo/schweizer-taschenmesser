@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, TextArea, TextField } from '@/ui';
 import { num } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { flipCoin, pickLine, randomBetween, rollDice } from './logic';
 
@@ -29,7 +30,7 @@ function Dice() {
     setFailed(!r);
   }
   return (
-    <section className={styles.stack} aria-label={s.dice}>
+    <section className={kit.section} aria-label={s.dice}>
       <h3>{s.dice}</h3>
       <div className={styles.row}>
         <div className={styles.grow}>
@@ -56,7 +57,14 @@ function Dice() {
         {failed ? <p className={styles.error}>{s.invalid}</p> : null}
         {rolled ? (
           <>
-            <p className={styles.big}>{rolled.rolls.join(' · ')}</p>
+            <div className={kit.dice}>
+              {rolled.rolls.map((r, i) => (
+                <span key={i} className={kit.die}>
+                  {r}
+                  {i < rolled.rolls.length - 1 ? <span className="sr-only">, </span> : null}
+                </span>
+              ))}
+            </div>
             {rolled.rolls.length > 1 ? (
               <p className={styles.muted}>{s.total(rolled.total)}</p>
             ) : null}
@@ -70,7 +78,7 @@ function Dice() {
 function Coin() {
   const [side, setSide] = useState<'heads' | 'tails'>();
   return (
-    <section className={styles.stack} aria-label={s.coin}>
+    <section className={kit.section} aria-label={s.coin}>
       <h3>{s.coin}</h3>
       <div className={styles.row}>
         <Button onClick={() => setSide(flipCoin())}>{s.coin}</Button>
@@ -93,7 +101,7 @@ function RandomNumber() {
     setFailed(n === undefined);
   }
   return (
-    <section className={styles.stack} aria-label={s.number}>
+    <section className={kit.section} aria-label={s.number}>
       <h3>{s.number}</h3>
       <div className={styles.row}>
         <div className={styles.grow}>
@@ -128,7 +136,7 @@ function Pick() {
   const [text, setText] = useState('');
   const [chosen, setChosen] = useState<string>();
   return (
-    <section className={styles.stack} aria-label={s.pick}>
+    <section className={kit.section} aria-label={s.pick}>
       <h3>{s.pick}</h3>
       <TextArea label={s.options} value={text} onChange={(e) => setText(e.target.value)} rows={4} />
       <div className={styles.row}>

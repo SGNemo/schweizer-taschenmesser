@@ -1,12 +1,26 @@
 import { useState } from 'react';
 import { formatDay, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Segmented, TextField } from '@/ui';
+import { Icon, Segmented, TextField } from '@/ui';
+import { CalendarLeaf } from '@/ui/identity';
+import { kit } from '../kit';
 import { num } from '../shared';
 import styles from '../tools.module.css';
 import { addDays, difference, weekInfo } from './logic';
 
 const s = t.tools.dates;
+
+/** A calendar leaf for a `YYYY-MM-DD` day; decoration, the same date is written out in the result line. */
+function Leaf({ day }: { day: string }) {
+  return (
+    <CalendarLeaf
+      size="lg"
+      month={formatDay(day, 'MMM')}
+      day={formatDay(day, 'd')}
+      weekday={formatDay(day, 'EEEE')}
+    />
+  );
+}
 
 export default function DatesTool() {
   const [mode, setMode] = useState<'diff' | 'add'>('diff');
@@ -42,6 +56,15 @@ function Diff({ initial }: { initial: string }) {
           <TextField label={s.to} type="date" value={b} onChange={(e) => setB(e.target.value)} />
         </div>
       </div>
+      {d ? (
+        <div className={kit.leaves} aria-hidden="true">
+          <Leaf day={a} />
+          <span className={kit.leavesArrow}>
+            <Icon name="arrowRight" size={28} />
+          </span>
+          <Leaf day={b} />
+        </div>
+      ) : null}
       <div role="status" aria-label={s.result}>
         {d ? (
           <>
@@ -83,6 +106,15 @@ function Add({ initial }: { initial: string }) {
           />
         </div>
       </div>
+      {end && info ? (
+        <div className={kit.leaves} aria-hidden="true">
+          <Leaf day={start} />
+          <span className={kit.leavesArrow}>
+            <Icon name="arrowRight" size={28} />
+          </span>
+          <Leaf day={end} />
+        </div>
+      ) : null}
       <div role="status" aria-label={s.result}>
         {end && info ? (
           <>

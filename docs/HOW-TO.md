@@ -2,6 +2,36 @@
 
 Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTURE-MAP.md), [architecture index](architecture.md). Definition of done and git rules: root [CLAUDE.md](../CLAUDE.md).
 
+## Which checks run when
+
+| Check | PR (plain) | PR with label `full-ci` | Draft PR | push `develop` | nightly | Release / dry run |
+|---|---|---|---|---|---|---|
+| gitleaks, docs pairs, docs budget | always | always | always | always | always | gitleaks always |
+| Change note (`.changes/` or label `no-changelog`) | PR into `develop` only | same | same | – | – | – |
+| Static (format, lint, types, i18n, modules, case) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
+| Licence check (lock files) | every code change | yes | every code change | yes | yes | – |
+| Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
+| E2E app | if `web/` (not only `web/src-tauri/`) changed: **smoke** = 24 spec files, desktop only, 2 shards | **full** = desktop + Pixel 7, 6 shards | no | **full** | **full** | – |
+| Sync E2E (+ seed project on full runs) | if `web/` (not only `src-tauri/`) or `server/` changed | yes | no | yes | yes | – |
+| Browser extension (its own E2E runs against the web app) | if `extension/` or `web/` (not only `src-tauri/`) changed | yes | no | yes | yes | – |
+| server, MCP, supporter (+ CLI), supporter webhook (job "Small packages") | only for the package that changed | yes | no | yes | yes | – |
+| vault-core | only when a shared input changed | yes | no | yes | yes | – |
+| Native shell (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes | no | yes | yes | – |
+| Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
+| CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
+| Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published only when tests, packages, Rust, licences, docs-pairs and gitleaks are green** (not for docs-only pushes) | – | – |
+| Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
+
+How to read it:
+- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs; `scribble-guard` runs only for `main` (push or PR into `main`).
+- **Skipped means "not needed for this diff"** and counts as passed. The check **Web (lint, types, unit, E2E)** fails if a part that was needed did not run or one that was not needed did.
+- **Need everything on your PR now** (UI-wide change, accessibility, layout, Pixel 7)? Add the label `full-ci` (the immediate full run starts only for branches of this repository; later pushes follow the label). It starts one separate full run now and makes every later push run the full set; a red smoke run from before stays visible next to it until the next push. Removing the label applies from the next push.
+- **A draft PR** runs the web static checks and unit tests only (if `web/` changed); marking it ready starts the plain PR set.
+- **Docs-only changes** (see [howto/ci.md](howto/ci.md)) start none of the heavy jobs; `README*.md` and other root files are not docs for the pre-check and run every package; `docs/AI-IMPORT*` and `docs/user/installation*` run static + unit.
+- **What leaves the plain PR runs later, not never:** Pixel 7, most accessibility specs (`a11y.spec.ts`), layout and seed specs first run after the merge (push `develop`) or overnight. A red `develop` run blocks the Dev-Preview; the chat whose merge broke it fixes it (check Actions → CI on `develop` after merging).
+- **Nightly** (`nightly.yml`) is a scheduled workflow and GitHub fires those only from the default branch: it is active once `nightly.yml` is on `main` (next release merge). Until then the push runs on `develop` cover the same set.
+- Add a spec to the PR smoke set only if it guards start-up, data safety, navigation or a module's create/edit path: `SMOKE_FILES` in `web/playwright.config.ts`.
+
 ## More recipes (one file per topic, load only what you need)
 
 | File                                                         | Covers                                                                                                                                                        |

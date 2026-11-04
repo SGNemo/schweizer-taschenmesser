@@ -97,6 +97,7 @@ export const tools: Strings['tools'] = {
       deg: 'Graus',
       rad: 'Radianos',
       keys: 'Teclas',
+      pad: 'Teclado numérico',
       ans: 'ans: Inserir o último resultado',
       historySearch: 'Pesquisar no histórico',
       historyEmpty: 'Nada calculado ainda.',
@@ -433,6 +434,7 @@ export const tools: Strings['tools'] = {
     invalid: 'Escolha datas válidas.',
   },
   persona: {
+    stamp: 'Inventada',
     name: 'Persona anônima',
     keywords: 'falso, pseudônimo, descartável, cadastro, pessoa inventada',
     description:

@@ -126,3 +126,14 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Tool library** uses the same head, figures, filter and tinted groups; cards take the tool's own hue (`tool.identity.hue`).
 - **Edge cases kept calm:** a card switched under the Aktiv/Aus filter stays until the search or filter changes (focus does not fall to the page), also a preview module that leaves the catalogue when switched off; an empty result says why and offers "reset search and filter"; the detail page resolves through the same catalogue as the library (a hidden preview module stays hidden).
 - **Fixed on the way:** the card list was one column because `.list` (flex) came after `.grid` in `Page.module.css`; the libraries have their own grid now. The area-colour dot (`libStripe`) and a dead `.moduleIcon` rule are gone.
+
+## Tools identity v3, package 2 (2026-11-04, `feat/identity-v3-tools-calc-time`)
+
+- **Shared blocks in `tools/kit.tsx`:** tools may not import each other, so the look of the contents (display, keys with depth, conversion flow, timer ring, cards) lives in one allowed neighbour of `shared.ts` (`isolation.test.ts` knows it). Logic, labels and test ids of the tools are unchanged.
+- **The calculator gets a number pad** (digits, the decimal sign of the language, four operations, `ans`) next to the display: until now it could only be typed on. The field keeps its label for screen readers ("Rechnung"); the result is the large line of the display.
+- **Ring and leaves are decoration:** the timer ring is `aria-hidden`, the time stays text in `role="timer"`; the date leaves show the dates the result line names (the day count, or the end date) and are hidden from screen readers.
+
+## Tools identity v3, package 3 (2026-11-04, `feat/identity-v3-tools-make-check`)
+
+- **Same blocks, more of them:** nine more tools use `tools/kit.*` (framed preview for QR and screenshots, persona card, section cards for dice and text, stat chips, file cards for PDF, a quiet mono panel for the developer tools). Logic, labels, test ids and the persona field list are unchanged.
+- **The persona card is a card, not an ID:** initials in a circle, the name large, the word "Erfunden" in a frame (text, never only colour), the fields below. No new field, the intro and the "not for contracts, banks, authorities" notice stay (negative-list tests untouched).

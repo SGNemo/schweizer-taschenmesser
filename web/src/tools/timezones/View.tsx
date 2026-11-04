@@ -4,6 +4,7 @@ import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, SelectField, TextField } from '@/ui';
 import { readStored, writeStored } from '../shared';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { ZONES, isKnownZone, showIn, zoneLabel, zonedInstant } from './logic';
 
@@ -119,27 +120,23 @@ export default function TimezonesTool() {
             {s.invalid}
           </p>
         ) : (
-          <ul className={styles.list} data-testid="zone-results">
+          <ul className={kit.cards} data-testid="zone-results">
             {rows.map((r) => (
-              <li key={r.zone} className={styles.item}>
-                <span>
+              <li key={r.zone} className={kit.card}>
+                <div className={kit.cardHead}>
                   <strong>{zoneLabel(r.zone)}</strong>
-                  <br />
-                  <span className={styles.muted}>{r.offset}</span>
-                </span>
-                <span>
-                  <span className={styles.result} data-testid={`zone-time-${r.zone}`}>
-                    {r.time}
-                  </span>{' '}
-                  <span className={styles.muted}>
-                    {r.date.split('-').reverse().join('.')} {s.dayDiff(r.dayDiff)}
-                  </span>
                   <IconButton
                     label={s.remove(zoneLabel(r.zone))}
                     onClick={() => update({ ...saved, to: saved.to.filter((z) => z !== r.zone) })}
                   >
                     <Icon name="close" size={16} />
                   </IconButton>
+                </div>
+                <span className={kit.cardTime} data-testid={`zone-time-${r.zone}`}>
+                  {r.time}
+                </span>
+                <span className={styles.muted}>
+                  {r.offset} · {r.date.split('-').reverse().join('.')} {s.dayDiff(r.dayDiff)}
                 </span>
               </li>
             ))}

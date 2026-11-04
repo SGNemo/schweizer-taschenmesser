@@ -4,6 +4,7 @@ import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Checkbox } from '@/ui';
+import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { canShareImage, captureFrame, copyImage, shareImage } from './capture';
 import {
@@ -122,12 +123,14 @@ export default function ScreenshotTool() {
       ) : null}
       {shot ? (
         <>
-          <img
-            src={shot.url}
-            alt={s.alt(shot.width, shot.height)}
-            data-testid="screenshot-preview"
-            style={{ maxWidth: '100%', height: 'auto' }}
-          />
+          <div className={kit.mat}>
+            <img
+              src={shot.url}
+              alt={s.alt(shot.width, shot.height)}
+              data-testid="screenshot-preview"
+              className={kit.matImage}
+            />
+          </div>
           <div className={styles.row}>
             <Button onClick={() => void save()}>{s.save}</Button>
             <Button onClick={() => void copy()}>{s.copy}</Button>

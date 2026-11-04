@@ -4,6 +4,10 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Werkzeuge mit Identität v3, Paket 3 von 3 (`feat/identity-v3-tools-make-check`, gestapelt auf #446): QR und Bildschirmfoto in gerahmter Vorschau, Persona als Karte mit „Erfunden“-Stempel, Würfel mit Würfelflächen, Text mit Kennzahl-Kacheln und Haftnotiz-Feld, PDF-Dateikarten, Dev/Diff/Regex im Code-Look; Handtest TP7 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+Werkzeuge mit Identität v3, Paket 2 von 3 (`feat/identity-v3-tools-calc-time`): Rechner mit Display, Zahlenblock und Tasten mit Tiefe, Einheiten und Währung als Umrechnungsfluss mit großen Zahlen, Timer mit großem Ring, Datumsrechner mit Kalenderblättern, Zeitzonen als Karten; Bausteine in `tools/kit.tsx`; Handtests TP5–TP6 in [MANUAL-TESTS.md](MANUAL-TESTS.md); Paket 3 (Erzeugen & Prüfen) folgt.
+
 Werkzeuge mit Identität v3, Paket 1 von 3 (`feat/identity-v3-tools`): großes Werkzeug-Panel (Liste links, Werkzeug rechts, öffnet auf dem zuletzt benutzten, Alt+1–9, Suche, am Handy Vollbild), `identity`/`category`/`keywords` je Werkzeug mit `check:tools`, „In eigenem Fenster öffnen“ im Web; Paket 2 (Rechnen & Zeit) und 3 (Erzeugen & Prüfen) bauen die Inhalte um; Handtests TP1–TP4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Bibliotheken in Identität v3 (`feat/identity-v3-library`, Paket 2 von 2): Modul-Bibliothek mit Kopf (aktiv/verfügbar/neu), Werkzeugleiste mit Status- und Bereichsfilter, getönten Bereichs-Abschnitten, Karten in der Farbe des Moduls mit gezeichneter Widget-Miniatur und Detailseite `/library/:id`; Werkzeug-Bibliothek in gleicher Optik. Schalter, Daten-Rückfrage und Start-Daten unverändert.

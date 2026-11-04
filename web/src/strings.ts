@@ -1846,6 +1846,7 @@ export const de = {
         deg: 'Grad',
         rad: 'Bogenmaß',
         keys: 'Tasten',
+        pad: 'Zahlenblock',
         ans: 'ans: Letztes Ergebnis einsetzen',
         historySearch: 'Verlauf durchsuchen',
         historyEmpty: 'Noch nichts gerechnet.',
@@ -2181,6 +2182,7 @@ export const de = {
       invalid: 'Bitte gültige Daten wählen.',
     },
     persona: {
+      stamp: 'Erfunden',
       name: 'Anonyme Persona',
       keywords: 'Fake, Pseudonym, Wegwerf, Anmeldung, erfundene Person',
       description:

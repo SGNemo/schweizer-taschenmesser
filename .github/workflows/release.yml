@@ -3,14 +3,15 @@ name: Release
 # Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
 # Second way: a manual run on `main` with the input `version` (must equal web/package.json, tag must not
 # exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
-# Pushes to `develop` that touch the native shell, and manual runs WITHOUT `version`, are DRY RUNS: they
+# Pushes to `develop` or `main` that touch the native shell (the `main` run also warms the cache that a
+# manual release run on `main` can read: caches written on develop are not visible there), and manual runs WITHOUT `version`, are DRY RUNS: they
 # build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
 # see docs/howto/release-deps.md ("Release").
 
 on:
   push:
     tags: ['v*.*.*']
-    branches: [develop]
+    branches: [develop, main]
     paths:
       - 'web/src-tauri/**'
       - 'web/scripts/**'
@@ -27,6 +28,8 @@ permissions:
   contents: read
 
 concurrency:
+  # One group per ref: a release started right after a push to main waits for that push's dry run, which
+  # leaves the Windows cache warm. (GitHub keeps one pending run per group; a newer push replaces a pending one.)
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
@@ -186,6 +189,8 @@ jobs:
     needs: prepare
     runs-on: windows-latest
     timeout-minutes: 45
+    env:
+      CARGO_TARGET_DIR: C:/t
     defaults:
       run:
         working-directory: web
@@ -200,9 +205,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
+      # The build below writes into C:/t (CARGO_TARGET_DIR, short path for llama.cpp). rust-cache does not
+      # derive its target directory from that variable (it kept saving the empty src-tauri/target: 476 of
+      # 476 crates were rebuilt on every run, 19 min), so C:/t is cached as an extra directory and the
+      # unused default target is skipped. The registry and cargo bin are still cached as before.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
+          shared-key: windows-release
+          cache-targets: false
+          # A release (tag / manual run with version) reads the cache but never writes it.
+          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
+          cache-directories: C:/t
       - run: npm ci
       # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the
       # runner image; the Vulkan SDK (headers, loader import library, glslc) comes from Chocolatey, whose
@@ -228,7 +242,6 @@ jobs:
       - name: Build
         env:
           CMAKE_GENERATOR: Ninja
-          CARGO_TARGET_DIR: C:/t
         run: npx tauri build --no-bundle -- --features local-llm-vulkan --locked
 
       - name: Put the executable where the next steps expect it
@@ -325,6 +338,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
+          # A release reads the cache but never writes it.
+          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
       - run: npm ci
 
       - name: Android SDK and NDK

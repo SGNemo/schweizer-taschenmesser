@@ -97,6 +97,7 @@ export const tools: Strings['tools'] = {
       deg: 'Degrees',
       rad: 'Radians',
       keys: 'Keys',
+      pad: 'Number pad',
       ans: 'ans: Insert last result',
       historySearch: 'Search history',
       historyEmpty: 'Nothing calculated yet.',
@@ -433,6 +434,7 @@ export const tools: Strings['tools'] = {
     invalid: 'Please choose valid dates.',
   },
   persona: {
+    stamp: 'Made up',
     name: 'Anonymous persona',
     keywords: 'fake, alias, throwaway, sign-up, made-up person',
     description:

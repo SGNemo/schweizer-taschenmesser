@@ -6,6 +6,42 @@ const executablePath =
   process.env.PW_CHROMIUM_PATH ??
   (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 
+// CI profiles (docs/HOW-TO.md -> "Which checks run when"):
+//   E2E_PROFILE=smoke  plain pull request: desktop-chrome only, the critical-path files below
+//   E2E_SEED=0         leave out the seed project and its second web server (CI shards; the seed project
+//                      runs in the sync job of full runs)
+// Nothing set (local, `npm run e2e:app`): everything, as before.
+const smoke = process.env.E2E_PROFILE === 'smoke';
+const withSeed = !smoke && process.env.E2E_SEED !== '0';
+// Add a spec here when it guards start-up, data safety, navigation or a module's create/edit path; everything
+// else runs on develop, nightly and with the label `full-ci`.
+const SMOKE_FILES = [
+  'core',
+  'shell',
+  'home',
+  'modules',
+  'setup',
+  'onboarding',
+  'settings',
+  'backup',
+  'offline',
+  'accounts',
+  'money',
+  'todos-views',
+  'calendar-views',
+  'notes',
+  'lists',
+  'reminders',
+  'assistant',
+  'i18n',
+  'update-path',
+  'safe-mode',
+  'create',
+  'delete-undo',
+  'today',
+  'cockpit',
+].map((name) => new RegExp(`/${name}\\.spec\\.ts$`));
+
 export default defineConfig({
   testDir: './e2e',
   // Multi-device tests need the real sync server: see playwright.sync.config.ts
@@ -25,15 +61,23 @@ export default defineConfig({
     launchOptions: { executablePath },
   },
   projects: [
-    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
-    { name: 'pixel-7', use: { ...devices['Pixel 7'] } },
     {
-      // Dev-Preview flavour (VITE_RELEASE_CHANNEL=dev): test-data tooling, see e2e/seed/.
-      name: 'seed-dev',
-      testIgnore: ['**/sync/**', '**/screenshots/**'],
-      testMatch: '**/seed/**/*.spec.ts',
-      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4174' },
+      name: 'desktop-chrome',
+      use: { ...devices['Desktop Chrome'] },
+      ...(smoke ? { testMatch: SMOKE_FILES } : {}),
     },
+    ...(smoke ? [] : [{ name: 'pixel-7', use: { ...devices['Pixel 7'] } }]),
+    ...(withSeed
+      ? [
+          {
+            // Dev-Preview flavour (VITE_RELEASE_CHANNEL=dev): test-data tooling, see e2e/seed/.
+            name: 'seed-dev',
+            testIgnore: ['**/sync/**', '**/screenshots/**'],
+            testMatch: '**/seed/**/*.spec.ts',
+            use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4174' },
+          },
+        ]
+      : []),
   ],
   webServer: [
     {
@@ -43,12 +87,16 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
-    {
-      // Same app built as a Dev-Preview (.env.e2e-seed), served from its own folder and port.
-      command: 'npm run build:e2e-seed && npm run preview:e2e-seed',
-      url: 'http://localhost:4174',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120_000,
-    },
+    ...(withSeed
+      ? [
+          {
+            // Same app built as a Dev-Preview (.env.e2e-seed), served from its own folder and port.
+            command: 'npm run build:e2e-seed && npm run preview:e2e-seed',
+            url: 'http://localhost:4174',
+            reuseExistingServer: !process.env.CI,
+            timeout: 120_000,
+          },
+        ]
+      : []),
   ],
 });
