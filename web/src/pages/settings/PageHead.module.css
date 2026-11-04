@@ -4,7 +4,7 @@
   position: relative;
   /* DOM order is eyebrow, title, mark, actions, body (reading order); the grid puts the actions on the eyebrow's row. */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) fit-content(50%);
   grid-template-areas:
     'eyebrow actions'
     'titles mark'
@@ -92,7 +92,8 @@
 }
 .description {
   margin: var(--space-1) 0 0;
-  color: var(--text-muted);
+  /* The head is a tinted gradient: text on it is --text only (axe cannot measure gradients, the rule holds anyway). */
+  color: var(--text);
   font-size: var(--text-label);
 }
 .decoration {

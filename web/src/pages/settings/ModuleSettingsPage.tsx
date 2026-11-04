@@ -56,17 +56,8 @@ function HeadMark({ manifest }: { manifest: ModuleManifest }) {
 }
 
 /** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate and a large icon mark. */
-function ModuleHead({
-  manifest,
-  changed,
-  onResetAll,
-}: {
-  manifest: ModuleManifest;
-  changed?: number;
-  onResetAll?: () => void;
-}) {
+function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
-  const c = tSettings2.use().changed;
   const v3 = tSettingsV3.use();
   return (
     <PageHead
@@ -81,17 +72,9 @@ function ModuleHead({
       decoration={<HeadMark manifest={manifest} />}
       testId="module-settings-head"
       actions={
-        <>
-          {changed ? <Badge>{o.changed(changed)}</Badge> : null}
-          {changed && onResetAll ? (
-            <Button variant="ghost" onClick={onResetAll} data-testid="module-reset-all">
-              {c.resetModule}
-            </Button>
-          ) : null}
-          <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
-            {o.library}
-          </Link>
-        </>
+        <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
+          {o.library}
+        </Link>
       }
     />
   );
@@ -109,22 +92,30 @@ function PlainHead() {
   );
 }
 
-/** `/settings/module/<id>`: one module's settings in the same five blocks for every module. */
+/**
+ * The head of `/settings/module/<id>`, rendered by the settings layout in the same slot as the category heads (so the
+ * search and the page do not jump between pages): the module's identity, or the plain settings head while the states
+ * load and for a module that is unknown, off or has no settings page.
+ */
+export function ModuleRouteHead({ moduleId }: { moduleId: string }) {
+  const states = useModuleStates();
+  const manifest = availableManifests().find((m) => m.id === moduleId);
+  if (!states || !manifest || !states[manifest.id] || !hasPage(manifest)) return <PlainHead />;
+  return <ModuleHead manifest={manifest} />;
+}
+
+/** `/settings/module/<id>`: one module's settings in the same five blocks for every module (the head is the layout's). */
 export function ModuleSettingsPage() {
   const { moduleId } = useParams();
   const states = useModuleStates();
   const o = tSettings2.use().modulePage;
   const manifest = availableManifests().find((m) => m.id === moduleId);
-  // Loading or no page for this module: the layout leaves the head to this page, so it keeps the one h1.
-  if (!states) return <PlainHead />;
+  if (!states) return null;
   if (!manifest || !states[manifest.id] || !hasPage(manifest)) {
     return (
-      <>
-        <PlainHead />
-        <EmptyState compact title={o.notFound}>
-          <Link to={settingsPath('module')}>{o.all}</Link>
-        </EmptyState>
-      </>
+      <EmptyState compact title={o.notFound}>
+        <Link to={settingsPath('module')}>{o.all}</Link>
+      </EmptyState>
     );
   }
   return <ModuleSettingsBody manifest={manifest} />;
@@ -167,7 +158,14 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
       className={styles.page}
       data-testid={`module-settings-${manifest.id}`}
     >
-      <ModuleHead manifest={manifest} changed={changed} onResetAll={resetAll} />
+      {changed ? (
+        <div className={styles.changedRow}>
+          <Badge>{o.changed(changed)}</Badge>
+          <Button variant="ghost" onClick={resetAll} data-testid="module-reset-all">
+            {tSettings2.get().changed.resetModule}
+          </Button>
+        </div>
+      ) : null}
       {blocks.map((b) => {
         const title = o.blocks[b.group];
         const body = (

@@ -134,7 +134,11 @@ export function useSettingsStatus(): StatusTile[] {
       icon: 'cloud',
       title: v3.tiles.backup,
       status: !last ? v3.backup.none : last.ok ? v3.backup.done : v3.backup.failed,
-      context: last ? v3.backup.at(formatTimestamp(last.at)) : v3.backup.noneContext,
+      context: !last
+        ? v3.backup.noneContext
+        : last.ok
+          ? v3.backup.at(formatTimestamp(last.at))
+          : v3.backup.tried(formatTimestamp(last.at)),
       attention: last?.ok === false,
       testId: 'overview-backup',
     },

@@ -37,7 +37,7 @@ import { CATEGORY_LOOK, NAV_GROUPS, STATUS_LOOK } from './categoryLook';
 import { PageHead } from './PageHead';
 import { StatusHead } from './StatusHead';
 import { CategoryStatus } from './CategoryStatus';
-import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
+import { ModuleList, ModuleRouteHead, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar, QuickInline } from './QuickBar';
 import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
@@ -182,6 +182,7 @@ function CategoryLink({
             {c.title}
             {changed ? (
               <>
+                {' '}
                 <span className={styles.dot} aria-hidden="true" data-testid={`differs-${id}`} />
                 <span className="sr-only">{differs}</span>
               </>
@@ -242,6 +243,7 @@ export function CategoryNav({ list }: { list?: boolean }) {
   const ids = visibleCategoryIds(sections);
   const overviewTitle = tSettings2.use().overview.title;
   const groupTitles = tSettingsV3.use().navGroups;
+  const groupTitlesDiffers = tSettingsV3.use().differs;
   const changed = useChangedCategories();
   const groups = NAV_GROUPS.map((g) => ({
     id: g.id,
@@ -267,8 +269,13 @@ export function CategoryNav({ list }: { list?: boolean }) {
         )}
         {groups.map((g) => (
           <div key={g.id} className={styles.navGroup}>
-            <p className={styles.groupHead}>{groupTitles[g.id]}</p>
-            <ul className={list ? styles.list : undefined}>
+            <p className={styles.groupHead} id={`settings-group-${g.id}`}>
+              {groupTitles[g.id]}
+            </p>
+            <ul
+              className={list ? styles.list : undefined}
+              aria-labelledby={`settings-group-${g.id}`}
+            >
               {g.categories.map((id) => (
                 <li key={id}>
                   <CategoryLink id={id} list={list} changed={changed.has(id)} />
@@ -277,12 +284,18 @@ export function CategoryNav({ list }: { list?: boolean }) {
             </ul>
           </div>
         ))}
+        {changed.size > 0 ? (
+          <p className={styles.legend} data-testid="differs-legend">
+            <span className={styles.dot} aria-hidden="true" />
+            {groupTitlesDiffers}
+          </p>
+        ) : null}
       </nav>
     </div>
   );
 }
 
-/** `/settings`: the overview cards (and the category list on phones); old `#anchor` links are mapped. */
+/** `/settings`: the overview cards on the desktop, the category list on phones; old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
   const { hash } = useLocation();
@@ -347,16 +360,25 @@ function useDeepLink(ready: boolean) {
       keepInView(el);
       if (historyOn) recordSectionVisit(sectionId);
       // Section anchors sit on the heading: highlight the whole section.
-      marked = el.matches('h1, h2') ? (el.closest('section') ?? el) : el;
+      marked = el.matches('h1, h2')
+        ? (el.closest('section') ??
+          document.querySelector<HTMLElement>(`section[aria-labelledby="${CSS.escape(el.id)}"]`) ??
+          el)
+        : el;
       marked.dataset.highlight = 'true';
       timer = setTimeout(() => marked && delete marked.dataset.highlight, HIGHLIGHT_MS);
       return true;
     };
     // Some sections render only after their values are loaded (module settings): wait for them.
     let observer: MutationObserver | undefined;
-    if (!document.getElementById(sectionId)) {
+    // A module's page has its head (the anchor) in the layout before its body: wait for the body section there.
+    const present = () =>
+      pathname.startsWith('/settings/module/')
+        ? document.querySelector(`section[aria-labelledby="${CSS.escape(sectionId)}"]`) !== null
+        : document.getElementById(sectionId) !== null;
+    if (!present()) {
       observer = new MutationObserver(() => {
-        if (document.getElementById(sectionId) && apply()) observer?.disconnect();
+        if (present() && apply()) observer?.disconnect();
       });
       observer.observe(document.body, { childList: true, subtree: true });
     } else {
@@ -564,12 +586,13 @@ export function ModuleSettingsRoute() {
   );
 }
 
-/** Head of the open settings page: "Status" on the landing page, the category's own head on a category; a module page brings its own. */
+/** Head of the open settings page: "Status" on the landing page, the category's own head on a category, the module's on its page. */
 function SettingsHead() {
   const { pathname } = useLocation();
   const v3 = tSettingsV3.use();
   const sections = useSettingsSections();
-  if (/^\/settings\/module\/[^/]+/.test(pathname)) return null;
+  const moduleId = /^\/settings\/module\/([^/]+)/.exec(pathname)?.[1];
+  if (moduleId) return <ModuleRouteHead moduleId={decodeURIComponent(moduleId)} />;
   const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
   if (!segment) return <StatusHead title={t.settings.title} />;
   // Sections still loading: no head yet (CategoryPage shows its skeleton), so no category head flashes up for a hidden one.

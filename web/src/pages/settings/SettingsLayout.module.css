@@ -86,6 +86,18 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0 var(--space-3);
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+.legend .dot {
+  margin: 0;
+}
 .listGroups {
   display: flex;
   flex-direction: column;

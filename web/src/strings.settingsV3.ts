@@ -23,6 +23,7 @@ export const tSettingsV3 = defineBundle(
       none: 'Kein Backup',
       failed: 'Letztes Backup fehlgeschlagen',
       at: (when: string) => `Letztes Backup: ${when}`,
+      tried: (when: string) => `Zuletzt versucht: ${when}`,
       noneContext: 'Noch kein automatisches Backup',
     },
     navGroups: {
@@ -53,11 +54,12 @@ export const tSettingsV3 = defineBundle(
         none: 'No backup',
         failed: 'Last backup failed',
         at: (when: string) => `Last backup: ${when}`,
+        tried: (when: string) => `Last tried: ${when}`,
         noneContext: 'No automatic backup yet',
       },
       navGroups: {
         you: 'Personal',
-        work: 'Working',
+        work: 'Work',
         data: 'Data and protection',
         connect: 'Connect',
         app: 'App',
@@ -78,10 +80,11 @@ export const tSettingsV3 = defineBundle(
         storage: 'Almacenamiento',
       },
       backup: {
-        done: 'Con copia',
+        done: 'Copia hecha',
         none: 'Sin copia',
         failed: 'La última copia falló',
         at: (when: string) => `Última copia: ${when}`,
+        tried: (when: string) => `Último intento: ${when}`,
         noneContext: 'Aún no hay copia automática',
       },
       navGroups: {
@@ -109,8 +112,9 @@ export const tSettingsV3 = defineBundle(
       backup: {
         done: 'Sauvegardé',
         none: 'Aucune sauvegarde',
-        failed: 'Dernière sauvegarde échouée',
+        failed: 'Échec de la dernière sauvegarde',
         at: (when: string) => `Dernière sauvegarde : ${when}`,
+        tried: (when: string) => `Dernière tentative : ${when}`,
         noneContext: 'Pas encore de sauvegarde automatique',
       },
       navGroups: {
@@ -136,10 +140,11 @@ export const tSettingsV3 = defineBundle(
         storage: 'Armazenamento',
       },
       backup: {
-        done: 'Com backup',
+        done: 'Backup feito',
         none: 'Sem backup',
         failed: 'Último backup falhou',
         at: (when: string) => `Último backup: ${when}`,
+        tried: (when: string) => `Última tentativa: ${when}`,
         noneContext: 'Ainda sem backup automático',
       },
       navGroups: {

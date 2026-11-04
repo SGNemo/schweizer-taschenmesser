@@ -39,6 +39,28 @@ test.describe('settings in identity v3', () => {
     await expect(page.locator('main h1')).toHaveText('ToDos');
   });
 
+  test('an unknown category or module keeps one h1 and no status tiles over "not found"', async ({
+    page,
+  }) => {
+    for (const path of ['/settings/xyz', '/settings/module/doesnotexist']) {
+      await ready(page, path);
+      await expect(page.locator('main h1'), path).toHaveCount(1);
+      await expect(page.locator('main h1'), path).toHaveText('Einstellungen');
+      await expect(page.getByTestId('settings-status'), path).toHaveCount(0);
+    }
+  });
+
+  test('the head sits in the same place on a category and on a module page', async ({
+    page,
+  }, info) => {
+    test.skip(isPhone(info), 'desktop layout');
+    await ready(page, '/settings/darstellung');
+    const category = await page.getByTestId('settings-head-darstellung').boundingBox();
+    await ready(page, '/settings/module/todos');
+    const module = await page.getByTestId('module-settings-head').boundingBox();
+    expect(Math.abs((module?.y ?? -1) - (category?.y ?? -2))).toBeLessThanOrEqual(1);
+  });
+
   test('desktop: the category list is grouped, keyboard reachable and marks the open page', async ({
     page,
   }, info) => {
@@ -68,7 +90,9 @@ test.describe('settings in identity v3', () => {
     await expect
       .poll(() => dot.evaluate((el) => getComputedStyle(el).backgroundColor))
       .not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
-    await expect(categoryNav(page).getByText('Weicht vom Standard ab')).toBeAttached();
+    await expect(categoryNav(page).getByTestId('differs-legend')).toContainText(
+      'Weicht vom Standard ab',
+    );
   });
 
   test('phone: two levels, the list first and the category with its head and a way back', async ({
