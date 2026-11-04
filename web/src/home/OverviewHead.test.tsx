@@ -65,26 +65,27 @@ describe('OverviewHead', () => {
     expect(date.getAttribute('datetime')).toBe('2026-09-29');
   });
 
-  it('adds the weather line only when the weather module is on and a place is chosen', () => {
+  it('adds the weather line only when the weather module is on and a place is chosen', async () => {
     weather.value = sunny;
-    draw();
-    expect(screen.queryByRole('link', { name: /Wetter/ })).toBeNull();
-    cleanup();
     draw(<OverviewHead weather />);
-    const link = screen.getByRole('link', {
+    // The line is a lazy chunk (its texts stay off the start path); once loaded it renders at once.
+    const link = await screen.findByRole('link', {
       name: 'Wetter: 14° · leicht bewölkt · ab 15 Uhr Regen',
     });
     expect(link.getAttribute('href')).toBe('/weather');
+    cleanup();
+    draw();
+    expect(screen.queryByRole('link', { name: /Wetter/ })).toBeNull();
     cleanup();
     weather.value = undefined;
     draw(<OverviewHead weather />);
     expect(screen.queryByRole('link', { name: /Wetter/ })).toBeNull();
   });
 
-  it('leaves the rain hint out of an old forecast', () => {
+  it('leaves the rain hint out of an old forecast', async () => {
     weather.value = { ...sunny, stale: true };
     draw(<OverviewHead weather />);
-    expect(screen.getByRole('link', { name: 'Wetter: 14° · leicht bewölkt' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Wetter: 14° · leicht bewölkt' })).toBeTruthy();
   });
 
   it('puts the tools in the head and none when there are none', () => {
@@ -95,7 +96,7 @@ describe('OverviewHead', () => {
     expect(container.querySelector('button')).toBeNull();
   });
 
-  it('reads the same with the reading aid on (it only marks word starts)', () => {
+  it('reads the same with the reading aid on (it only marks word starts)', async () => {
     weather.value = sunny;
     const { container } = render(
       <MemoryRouter>
@@ -108,6 +109,6 @@ describe('OverviewHead', () => {
     expect(container.querySelector('time')?.textContent).toBe('Dienstag, 29. September');
     expect(screen.getByRole('heading', { level: 1, name: 'Übersicht: Guten Morgen' })).toBeTruthy();
     // The weather link keeps its own label; the marks add no semantics.
-    expect(screen.getByRole('link', { name: /^Wetter: 14°/ })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: /^Wetter: 14°/ })).toBeTruthy();
   });
 });

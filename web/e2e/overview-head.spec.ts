@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
+import { mockWeather, pickWeatherPlace } from './weather-mock';
 
 /**
  * Identity v3 overview head (docs/design/MODULE-IDENTITY.md): greeting by the hour, date, calm tools, "Jetzt wichtig" cards
@@ -48,6 +49,22 @@ test.describe('Overview head', () => {
         .getByTestId('overview-head')
         .getByRole('heading', { level: 1, name: 'Übersicht: Guten Abend' }),
     ).toBeVisible();
+  });
+
+  test('shows a short weather line next to the date once a place is chosen, and none before', async ({
+    page,
+  }) => {
+    await mockWeather(page);
+    await ready(page, '/');
+    const head = page.getByTestId('overview-head');
+    await expect(head).toContainText('Dienstag, 29. September');
+    await expect(head.getByRole('link', { name: /^Wetter:/ })).toHaveCount(0);
+
+    expect(await pickWeatherPlace(page)).toBe(true);
+    await ready(page, '/');
+    const line = page.getByTestId('overview-head').getByRole('link', { name: /^Wetter: 14°/ });
+    await expect(line).toBeVisible();
+    await expect(line).toHaveAttribute('href', '/weather');
   });
 
   test('keeps Cockpit, Ruhig/Ausführlich and Anpassen together in the head, inside the window', async ({

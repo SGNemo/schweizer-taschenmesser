@@ -1,40 +1,13 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Suspense, type ReactNode } from 'react';
+import { lazyComponent } from '@/core/modules/lazy';
 import { now, today } from '@/core/time/now';
 import { formatDay } from '@/core/time/dates';
-import { useWeather } from '@/core/weather/useWeather';
 import { dayPart, tOverview } from '@/strings.overview';
 import { t } from '@/strings';
-import { tWeather } from '@/strings.weather';
-import { Sky, skyKind } from '@/ui/identity';
 import styles from './OverviewHead.module.css';
 
-/**
- * The weather as one short line next to the date: sky swatch, temperature, the word, the rain hint. It only exists when the
- * weather module is on and a place is chosen (`useWeather` is `undefined` otherwise), and it asks nothing the widget does not.
- */
-function WeatherGlance() {
-  const tx = tWeather.use();
-  const to = tOverview.use();
-  const weather = useWeather();
-  if (!weather) return null;
-  const f = weather.forecast;
-  const text = [
-    tx.temp(f.temp),
-    tx.codes[f.group],
-    f.rainFrom && !weather.stale ? tx.rainFrom(f.rainFrom) : undefined,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return (
-    <Link to="/weather" className={styles.weather} aria-label={to.weatherAria(text)}>
-      <span className={styles.swatch} aria-hidden="true">
-        <Sky kind={skyKind(f.group, !!f.now?.night)} compact />
-      </span>
-      {text}
-    </Link>
-  );
-}
+/** Loaded only with the weather module on: its texts and the forecast hook stay off the start path. */
+const WeatherGlance = lazyComponent(() => import('./WeatherGlance'));
 
 /**
  * Head of the overview (identity v3): a greeting by the time of day, the date with the weather, and the calm tools on the right.
@@ -61,7 +34,11 @@ export function OverviewHead({
           <time dateTime={day} className={styles.date}>
             {formatDay(day, 'EEEE, d. MMMM')}
           </time>
-          {weather ? <WeatherGlance /> : null}
+          {weather ? (
+            <Suspense fallback={null}>
+              <WeatherGlance />
+            </Suspense>
+          ) : null}
         </div>
       </div>
       {tools ? <div className={styles.tools}>{tools}</div> : null}

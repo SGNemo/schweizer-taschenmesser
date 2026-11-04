@@ -14,4 +14,4 @@ for the next chat: identity v3 foundation is built (PR #414, branch `feat/identi
 ## Leftovers I did not touch (module or other areas)
 - `modules/mail/routes/MailPage.tsx`, `modules/music/routes/music.module.css`, `modules/weather/routes/weather.module.css` and `layout/AppShell.tsx` still decide by the 1200 px **window** (`useMediaQuery` / `@media`). Shared master–detail (`useSplitView`) follows the page container from 56 rem now; those four could move to `usePageWidthAtLeast` (`ui/pageWidth.ts`).
 - Only the sidebar list uses the custom `ui/OverlayScroll`; other scroll areas keep native scrollbars made thin and transparent until hover or scroll.
-- The bundle baseline (`scripts/bundle-budget.json`) was raised for the new shell components, see the PR text.
+- Bundle: `scripts/bundle-budget.json` is **not** changed. On plain `develop` the critical requests (76 of 75) and precache files (467 of 448) are already over; this PR adds about 11 KB gzip and 3 requests on the critical path (numbers in the PR text). Whoever re-baselines does it once after both are merged.
