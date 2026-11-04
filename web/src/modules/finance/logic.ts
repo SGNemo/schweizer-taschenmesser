@@ -42,9 +42,11 @@ export function balances<A extends Pick<Account, 'openingBalanceMinor'> & { id: 
   txs: Tx[],
   asOf: string,
 ): Map<string, number> {
-  const byAccount = new Map<string, Tx[]>();
-  for (const t of txs) byAccount.set(t.accountId, [...(byAccount.get(t.accountId) ?? []), t]);
-  return new Map(accounts.map((a) => [a.id, accountBalance(a, byAccount.get(a.id) ?? [], asOf)]));
+  // One pass over the bookings (it used to copy an array per booking: quadratic, 2 s at 20k bookings).
+  const sums = new Map<string, number>();
+  for (const t of txs)
+    if (t.date <= asOf) sums.set(t.accountId, (sums.get(t.accountId) ?? 0) + signed(t));
+  return new Map(accounts.map((a) => [a.id, a.openingBalanceMinor + (sums.get(a.id) ?? 0)]));
 }
 
 export interface MonthSummary {

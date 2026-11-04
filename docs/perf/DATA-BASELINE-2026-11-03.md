@@ -112,6 +112,27 @@ robustness item, not a speed item.
    local tombstone/outbox/`_imports` maintenance without sync, quota notice, parallel `checkDb`. Row 9.
 Targets are set per package from the table above; "after" numbers use the same commands.
 
+## After the packages
+Same commands, same `xl` data, desktop. "Before" = the table above; "after" runs use one run per step, so differences
+below about 30 % are noise (the search rows are untouched by P2a and show that spread).
+
+### P2a `perf/finance-data` (2026-11-04)
+`balances()` in one pass, `expensesByCategory` and the price-change source read by the `date` index, budgets plan scan
+once per range instead of once per budget. No schema change (an `[accountId+date]` index would have no reader).
+
+| | before | after |
+|---|---|---|
+| Start, settled | 18.7 s | **6.5 s** (rows 357k → 119k) |
+| Budgets | 13.6 s | **2.7 s** (rows 263k → 43k) |
+| Calendar | 16.4 s | **4.4 s** (rows 331k → 72k) |
+| Pantry | 15.4 s | **3.7 s** (rows 292k → 53k) |
+| Finance | 7.5 s | 5.3 s |
+| `balances()` 20k / 50k bookings, one account | 2,210 ms / 19,289 ms | **2.5 ms / 3.1 ms** |
+| Search "tankstelle" / "arzt" / "miete 12" | 3.6 / 1.9 / 0.8 s | 7.7 / 1.8 / 0.8 s (noise, not touched) |
+
+What is left is mostly row 1 of the ranking: headline, calendar items and the finance page itself still load all
+bookings (about 40k rows per page open); that is P2b.
+
 ## Re-running
 ```bash
 cd web

@@ -133,4 +133,18 @@ describe('finance public read API', () => {
       },
     );
   });
+
+  it('reads only the month by its date range: edge days count, deleted bookings do not', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'a' });
+    const spend = (date: string, amountMinor: number) =>
+      transactionRepo.create({ accountId: 'a', kind: 'expense', amountMinor, date } as never);
+    await spend('2026-08-31', 1);
+    await spend('2026-09-01', 10);
+    await spend('2026-09-30', 100);
+    const gone = await spend('2026-09-15', 1000);
+    await spend('2026-10-01', 10000);
+    await transactionRepo.remove(gone.id);
+    expect(Object.fromEntries(await expensesByCategory('2026-09'))).toEqual({ '': 110 });
+    expect(Object.fromEntries(await expensesByCategory('2026-02'))).toEqual({});
+  });
 });
