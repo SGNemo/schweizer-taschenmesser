@@ -307,10 +307,12 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
 
 ## Befehlspalette lädt beim ersten Öffnen (nur von Hand prüfbar)
+
 - **BP1 Offline:** PWA am Handy einmal online öffnen, Flugmodus, App neu starten: Suche/Palette (Lupe, Strg+K, Sprachtaste) öffnet sich ohne Fehler, auch ohne dass sie vorher benutzt wurde. ☐
 - **BP2 Erstes Öffnen online:** Palette öffnen und sofort tippen: kein verlorener Buchstabe, kein sichtbares Flackern. ☐
 
 ## Einstellungen v2 (Paket 1) – nur von Hand prüfbar
+
 - **SO1 Handy, zwei Ebenen:** Einstellungen öffnen: Karten oben, Kategorienliste darunter; eine Karte antippen, in der Kategorie „Zurück“ (Pfeil und Android-Geste) führt zur Übersicht. ☐
 - **SO2 Modul-Seite auf dem Handy:** Module → ein Modul: Kopf mit Modulfarbe, Blöcke untereinander, „Alle Module“ zurück; in „Ruhig“ wird der Kopf grau. ☐
 - **SO3 Breites Fenster (2560 px):** Inhaltsverzeichnis rechts folgt dem Scrollen, kein Zittern; Lesbarkeit der Karten hell und dunkel. ☐
@@ -535,7 +537,6 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **HT6 Tresor-Kopf:** Passwörter entsperren: „Entsperrt“ mit „Sperrt automatisch in etwa n Min.“, nach Inaktivität „Gesperrt“; Ruhig-Modus und „weniger Bewegung“: nichts bewegt sich. „Passwörter prüfen“ zeigt nur Titel, nie ein Passwort. ☐
 - **HT7 Notfallblatt:** „Notfallblatt“ → „Als Datei speichern“, Datei öffnen und drucken: Schritte, Datum, Anzahl, kein Geheimnis. ☐
 
-
 ## Geld-Gruppe: Finanzen (Paket 1)
 
 - **G1 Umbuchung:** Finanzen → Konten → „Umbuchung“ (oder Buchungen → „Mehr“ im Erweitert-Modus): von Girokonto auf Sparkonto 50 €. Beide Salden ändern sich, „Einnahmen“ und „Ausgaben“ des Monats nicht; die Zeile zeigt „Girokonto → Sparkonto“. Zeile öffnen, löschen: beide Hälften verschwinden, „Rückgängig“ bringt beide zurück. ☐
@@ -547,8 +548,8 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **PM1 Orte-Liste:** Karten & Orte → Orte: Kategorie-Chips, Suchfeld und „Zuletzt/Name“ ändern die Liste; fixierte Orte stehen oben; „Navigieren“ öffnet den Ort in OpenStreetMap (Android: in der Karten-App deiner Wahl). ☐
 - **PM2 Ort aus Termin:** Termin mit Ort öffnen → „Als Ort merken“: Karte-Tab mit dem Ort im Suchfeld; erst „Suchen“ fragt (zuerst eigene Karte), dann Treffer wählen → „Ort speichern“. ☐
 
-
 ## Geld-Gruppe: Rechnungen (Paket 2)
+
 - **G7 Teilzahlung:** Rechnung 100 € öffnen, Teilzahlung 40 €: „Noch 60,00 € offen“, die Liste zeigt „Teilweise bezahlt“, Finanzen hat eine Buchung −40 €. Zweite Teilzahlung über den Rest: die Rechnung ist „Bezahlt“, Summe der Buchungen = 100 €. Teilzahlung entfernen: Buchung weg, Rechnung wieder offen. ☐
 - **G8 Zahlungsdaten:** IBAN eintragen (Mehr Felder), in der Zeile „⋯“ → „Zahlungsdaten kopieren“, im Banking einfügen: Empfänger, IBAN in Vierergruppen, Verwendungszweck, offener Betrag. Falsche Prüfziffer: ruhiger Hinweis, speichern geht trotzdem. Windows und Android. ☐
 - **G9 Beleg:** Foto und PDF anhängen (Android: Kamera/Dateien), Vorschau und „Beleg herunterladen“; auf einem zweiten synchronisierten Gerät steht „liegt hier nicht“. ☐
@@ -561,25 +562,29 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **TT3 Auswertung und CSV:** Auswertung Woche/Monat: Summe, Betrag, Balken je Projekt/Kunde; „Als CSV speichern“ speichert eine Datei (Windows: Speichern-Dialog, Android: Teilen/Speichern), Öffnen in einer Tabelle zeigt Spalten und `.` als Dezimalzeichen. ☐
 - **TT4 Aus dem Kalender:** Termin öffnen → „Zeit erfassen“: Zeit läuft mit dem Terminnamen als Notiz; ist Zeiterfassung aus, passiert nichts. ☐
 - **PH4 Kopf und Widget:** Kopf zeigt je einen Ring pro heutige Gewohnheit (hell, dunkel, „Ruhig“, 412 px, mit Text); das Übersichts-Widget zeigt „x von y geschafft“ und „+1 …“. ☐
+
 ## Geld-Gruppe: Abos (Paket 3)
+
 - **G11 Kacheln und Kopf:** Abos hell, dunkel, „Ruhig“, 412 px: Kachel mit Monogramm und der Kopf mit der nächsten Abbuchung lesbar, jede Kachel behält ihre Farbe, nichts bewegt sich. ☐
 - **G12 Probezeit:** Abo mit „Probezeit endet am“ in drei Tagen: Chip „Probezeit“, Erinnerung am gewählten Tag (Windows, Android), Eintrag im Kalender. ☐
 - **G13 Preisänderung:** zwei Buchungen mit gleichem neuem Preis für ein Abo (Empfängername enthält den Abo-Namen): unter „Jetzt wichtig“ erscheint „… bucht jetzt X statt Y“, ein Klick öffnet das Abo mit „Preis übernehmen“; ohne Klick ändert sich nichts. Einstellung „Preisänderung melden“ aus: kein Hinweis. ☐
 - **G14 Abbuchungen buchen:** Finanzen → Einstellungen „Abo-Abbuchungen als Ausgabe buchen“ an, App neu starten: fällige Abbuchungen der letzten 31 Tage sind gebucht (Hinweis mit „Rückgängig“), keine doppelte Buchung neben einem Bankimport; eine gelöschte Buchung kommt nicht wieder. ☐
 
 ## Geld-Gruppe: Budgets (Paket 4)
+
 - **G15 Zeiträume und Übertrag:** Budget mit „Quartal“ und „Rest übernehmen“ (Mehr Felder): Karte zeigt „Q… 2026“, die Summe des Quartals und den Übertrag des Vorquartals. Hell, dunkel, „Ruhig“, 412 px: Kopf („Noch frei“, Ring nur breit), Karten lesbar. ☐
 - **G16 Warnung und Prognose:** Budget ab 50 % warnen: „Jetzt wichtig“ zeigt ruhig (nicht rot) „… % verbraucht“; liegt das Tempo über dem Limit, steht „Im bisherigen Tempo: etwa X über dem Budget“. Einstellung „Prognose zeigen“ aus: keine Zeile. ☐
 - **G17 Verlauf:** Budget öffnen: sechs Zeiträume mit Ausgaben und Limit, „Buchungen ansehen“ öffnet Finanzen im richtigen Monat. ☐
 - **G18 Sparziel-Plan:** Ziel mit „Geplante Rate“ und Zieldatum: Satz „Mit … im Monat bist du im … am Ziel“ und ob das zum Zieldatum passt (ohne Vorwurf). ☐
 
-
 ## Datenebene: Messung auf Geräten (Phase 1, [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md))
+
 - **PF1 Portable-Exe, große Datenmenge:** Dev-Preview-Build, Einstellungen → Entwickler → Testdaten „Groß“ laden (die Skala `xl` gibt es nur in `npm run measure:data`). Übersicht öffnen, Kalender, Budgets, Finanzen öffnen, in der Befehlspalette „tankstelle“ suchen: Zeiten notieren (Stoppuhr), Speicher im Task-Manager. ☐
 - **PF2 Android-Gerät, große Datenmenge:** wie PF1 auf einem echten Gerät (oder Emulator): Start bis zur Übersicht, Modul öffnen, Suche, Schnellerfassung; Backup erstellen und wiederherstellen. Messwerte der Emulation (4× CPU) stehen in der Baseline. ☐
 - **PF3 Festplatte-Modul (Rust):** „Dieser PC“ → Löschen-Plan und Details eines großen Ordners: bleibt das Fenster bedienbar (Ziel: ja)? Zeiten in die Baseline eintragen. ☐
 
 ## Importer aus anderen Apps (Branch `feat/importers`)
+
 - **IA1** Befehlspalette → „Aus anderer App importieren …“ → eine echte `.enex`-Datei aus Evernote wählen: Erkennung „Evernote“, Vorschau, Bericht mit Anhängen; „Rückgängig“ entfernt alles.
 - **IA2** Ein Obsidian-Ordner als ZIP (Windows: Rechtsklick → Senden an → ZIP): Notizbücher aus Ordnern, `.obsidian` fehlt in der Vorschau, Bilder werden im Bericht gezählt.
 - **IA3** Google Takeout (Kalender + Keep + Aufgaben) als ZIP: drei Teile nacheinander („Teil 1 von 3“), je eigene Vorschau.
@@ -587,6 +592,7 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **IA5** Echte Exporte prüfen (Kopfzeilen sind je Version/Sprache verschieden): Outlook-Aufgaben-CSV (deutsch und englisch), KeePassXC- und 1Password-CSV im Tresor-Import; unbekannte Kopfzeile melden.
 
 ## Backlog-Ernte (`chore/backlog-harvest-2026-11`) – nur auf Geräten prüfbar
+
 - **BK1 Android Auto Backup aus:** nach dem ersten CI-Build des Dev-Previews die APK installieren: `adb shell dumpsys package io.github.sgnemo.taschenmesser.dev | findstr /i ALLOW_BACKUP` zeigt kein `ALLOW_BACKUP`. Außerdem prüfen, dass der Schritt „Android manifest hardening“ im Job-Log steht und `usesCleartextTraffic` meldet. ☐
 - **BK2 Kündigungsfrist in Monaten:** Abo mit Abbuchung am 31., Frist „3 Monate“: „Kündigen bis“ liegt auf dem 30. des Monats drei Monate davor (nicht 90 Tage davor). Ein Abo oder eine Unterlage, die vor dem Update „90 Tage“ als „3 Monate“ zeigte, zeigt nach dem Update weiter „3 Monate“ und rechnet kalendarisch; „45 Tage“ bleibt „45 Tage“. ☐
 - **BK3 CSV öffnen:** Finanzen → Export mit einer Buchung, deren Empfänger `=1+1` heißt, in Excel/LibreOffice öffnen: die Zelle zeigt den Text `'=1+1`, keine Berechnung. Passwort-Export (Bitwarden-Format) bleibt unverändert. ☐
@@ -594,6 +600,7 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - **IA7** Feeds → „Importieren“ mit einer echten OPML-Datei aus einer Podcast-/Feed-App (Gruppen, Umlaute, sehr viele Abos): Vorschau, Bericht; danach „Als OPML exportieren“ und die Datei in der anderen App wieder einlesen.
 
 ## Automatisierungen (Handtest)
+
 - AU1 · Einstellungen → Darstellung → „In Arbeit anzeigen“ an; Einstellungen → Benachrichtigungen: „Automatisierungen“ und „Regel-Protokoll“ erscheinen. Hauptschalter ein, Vorlage „Rechnung bald fällig“ ein, Tage vorher 3; eine offene Rechnung mit Fälligkeit in 2 Tagen anlegen; nach höchstens zehn Minuten (und App offen) liegt eine Aufgabe „Rechnung … bezahlen“ in ToDos, die Erinnerung kommt als ruhige Benachrichtigung (Ruhezeiten und Limit gelten), das Protokoll zeigt den Lauf.
 - AU2 · Im Protokoll „Rückgängig“ bei diesem Lauf: Aufgabe und Erinnerung sind weg; eine zwischendurch geänderte Aufgabe bleibt und wird gemeldet.
 - AU3 · „Nur ausprobieren (Trockenlauf)“ an: gleiche Schritte schreiben nichts, das Protokoll sagt „Trockenlauf“.
@@ -602,7 +609,8 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
 
 ## Werkzeuge: Panel (Handtest)
+
 - TP1 · Android: „Werkzeuge“ öffnet ein Vollbild-Sheet auf dem zuletzt benutzten Werkzeug; Pfeil oben links zeigt die Liste, Zurück-Geste schließt das Sheet; keine Taste unter 44 px, kein seitliches Wischen.
 - TP2 · PWA im Browser und installiert: „In eigenem Fenster öffnen“ öffnet das Werkzeug allein in einem kleinen Fenster (Popup-Blocker erlaubt?), Rechnen dort funktioniert, das Fenster lässt sich schließen; in der Windows-App fehlt der Knopf.
 - TP3 · Windows: Strg+. öffnet, Suchfeld hat den Fokus, Alt+1…9 wechselt, Pfeil runter/hoch geht durch die Liste, Esc leert die Suche, dann schließt es, der Fokus liegt wieder auf „Werkzeuge“; Alt+Zahl kollidiert mit keinem Windows-Kürzel.
-- TP4 · Hell/Dunkel, „Ruhig“ und „Modulfarben: Aus“: die Werkzeugfläche wird grau, Plättchen und Zeichen bleiben erkennbar; mit „Weniger Bewegung“ dreht sich der Schmierzettel-Link nicht.
+- TP4 · Hell/Dunkel, „Ruhig“ und „Modulfarben: Aus“: die Werkzeugfläche wird grau, Plättchen und Zeichen bleiben erkennbar.

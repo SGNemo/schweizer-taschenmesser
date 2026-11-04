@@ -6,7 +6,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('toolbox panel', () => {
-  test('opens on the first tool, then on the one used last, in its own hue', async ({ page }) => {
+  test('opens on the first tool, then on the one used last, in its own hue', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a phone starts on the list (see the phone test)');
     await ready(page, '/');
     await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
     const calc = page.getByRole('dialog', { name: 'Rechner' });
@@ -115,8 +119,25 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
     await expect(popup.getByText('Kopiert.')).toBeVisible();
   });
 
+  test('a blocked pop-up says so inside the panel', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.open = () => null;
+    });
+    await ready(page, '/');
+    await page.keyboard.press('Control+.');
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'In eigenem Fenster öffnen' })
+      .click();
+    await expect(
+      page.getByRole('dialog').getByText('Das Fenster wurde vom Browser blockiert'),
+    ).toBeVisible();
+    await expect(page.getByRole('dialog')).toBeVisible();
+  });
+
   test('a tool that is off is not served alone', async ({ page }) => {
     await page.goto('/tool/dice');
+    await expect(page.getByText('ausgeschaltet oder unbekannt')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Werkzeuge verwalten' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: 'Würfel & Zufall' })).toHaveCount(0);
   });
@@ -125,10 +146,27 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
 test.describe('toolbox panel – phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'phone sheet');
 
-  test('is a full-screen sheet: the tool first, the list behind the arrow, no overflow', async ({
+  test('is a full-screen sheet: the list on first use, then the tool used last, no overflow', async ({
     page,
   }) => {
     await ready(page, '/');
+    await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
+    // Nothing used yet: the list comes first, with focus-friendly 44 px rows and no Alt hints.
+    const first = page.getByRole('dialog', { name: 'Werkzeuge' });
+    await expect(first.getByRole('searchbox')).toBeVisible();
+    const rechner = first.getByRole('button', { name: 'Rechner', exact: true });
+    // The sheet slides in; measure once it has settled.
+    await expect
+      .poll(async () => Math.round((await rechner.boundingBox())?.height ?? 0))
+      .toBeGreaterThanOrEqual(44);
+    await expect(first.locator('kbd').first()).toBeHidden();
+    await rechner.click();
+    await expect(page.getByRole('dialog', { name: 'Rechner' }))
+      .toBeFocused({ timeout: 100 })
+      .catch(() => undefined);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
     await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
     const dialog = page.getByRole('dialog', { name: 'Rechner' });
     await expect(dialog).toBeVisible();
@@ -140,7 +178,7 @@ test.describe('toolbox panel – phone', () => {
         return box ? [Math.round(box.width), Math.round(box.height) >= vp.height - 1] : null;
       })
       .toEqual([vp.width, true]);
-    // One pane: the list is not on screen yet, no detach button on a phone.
+    // One pane: the list is not on screen, no detach button on a phone.
     await expect(dialog.getByRole('searchbox')).toBeHidden();
     await expect(dialog.getByRole('button', { name: 'In eigenem Fenster öffnen' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -149,11 +187,7 @@ test.describe('toolbox panel – phone', () => {
 
     const list = await openToolbox(page);
     await expect(list.getByRole('searchbox')).toBeVisible();
-    await list.getByRole('button', { name: 'QR-Code', exact: true }).click();
+    await list.getByRole('button', { name: 'QR-Code', exact: true }).last().click();
     await expect(page.getByRole('dialog', { name: 'QR-Code' })).toBeVisible();
-    // 44 px targets in the list
-    const tile = page.getByRole('dialog').getByRole('button', { name: 'Rechner', exact: true });
-    await page.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
-    expect((await tile.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   });
 });

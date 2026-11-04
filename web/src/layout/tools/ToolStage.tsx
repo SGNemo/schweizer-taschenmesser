@@ -1,6 +1,7 @@
 import { Suspense, type CSSProperties } from 'react';
 import type { ToolManifest } from '@/core/tools/types';
 import { getPlatform } from '@/core/platform';
+import { toolWindowPath } from '@/core/tools/window';
 import { t } from '@/strings';
 import { Button, Icon } from '@/ui';
 import { ToolBody } from './lazyTools';
@@ -8,8 +9,6 @@ import { ToolPlate } from './ToolPlate';
 import { ToolSignature } from './ToolSignature';
 import styles from './ToolStage.module.css';
 
-/** Where a detached tool lives (`router.tsx`), and the window features it opens with. */
-export const toolWindowPath = (id: string) => `/tool/${id}`;
 const WINDOW_FEATURES = 'popup,width=540,height=760';
 
 /** Detaching opens a browser window: only where there is one (the desktop app and Android keep the panel). */

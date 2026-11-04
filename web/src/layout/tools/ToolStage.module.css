@@ -28,7 +28,8 @@
 }
 .about {
   margin: 0;
-  color: var(--text-muted);
+  /* On the tinted head only --text is pinned at AA (tokens.test.ts). */
+  color: var(--text);
   font-size: var(--text-sm);
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -21,6 +21,7 @@ export const tools: Strings['tools'] = {
     list: 'Lista de ferramentas',
     detach: 'Abrir em janela própria',
     detachBlocked: 'O navegador bloqueou a janela. Permita pop-ups para este site.',
+    soloMissing: 'Esta ferramenta está desativada ou não existe.',
     scratch: 'Rascunho',
     scratchHint: 'Nota adesiva em Notas',
     number: (n: number) => `Alt+${n}`,

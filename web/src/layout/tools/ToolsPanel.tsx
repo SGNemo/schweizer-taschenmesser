@@ -25,7 +25,12 @@ import styles from './ToolsPanel.module.css';
 const PHONE = '(max-width: 899px)';
 /** Memory only (gone with the page): the tool the panel showed last, for when no history is kept. */
 let lastShown: string | null = null;
-const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+const IS_MAC =
+  typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad/.test(
+    (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ??
+      navigator.platform,
+  );
 const isEditable = (el: EventTarget | null): boolean =>
   el instanceof HTMLElement &&
   (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
@@ -49,16 +54,20 @@ export function ToolsPanel() {
   const [query, setQuery] = useState('');
   const [listView, setListView] = useState(false);
   const [recentAtOpen, setRecentAtOpen] = useState<string[]>([]);
+  const [blocked, setBlocked] = useState(false);
 
   // Each opening starts clean: no old search, the phone shows the tool, the last-used row is read once.
   const [wasOpen, setWasOpen] = useState(false);
   if (toolsOpen !== wasOpen) {
     setWasOpen(toolsOpen);
     if (toolsOpen) {
-      setQuery('');
-      setListView(false);
       // Without "Verlauf in der Suche" nothing is stored; the tool shown last is still remembered in memory.
-      setRecentAtOpen(focus.searchHistory ? readRecentTools() : lastShown ? [lastShown] : []);
+      const recentIds = focus.searchHistory ? readRecentTools() : lastShown ? [lastShown] : [];
+      setQuery('');
+      setBlocked(false);
+      setRecentAtOpen(recentIds);
+      // A phone with no tool asked for and none used before starts on the list, not on an arbitrary tool.
+      setListView(phone && !activeTool && !ordered.some((x) => x.id === recentIds[0]));
     }
   }
 
@@ -89,11 +98,11 @@ export function ToolsPanel() {
   const sideRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const choose = (tool: ToolManifest) => {
+  const choose = (tool: ToolManifest, focusTool = phone) => {
     openTools(tool.id);
     setListView(false);
-    // On a phone the list disappears behind the tool: the focus follows into the tool.
-    if (phone) focusStage();
+    // On a phone the list disappears behind the tool; from the keyboard the focus follows too.
+    if (focusTool) focusStage();
   };
   const focusStage = () =>
     requestAnimationFrame(() => stageRef.current?.querySelector<HTMLElement>('section')?.focus());
@@ -106,8 +115,7 @@ export function ToolsPanel() {
     // Option+digit types characters on a Mac ([ ] { } on a German keyboard): leave fields alone there.
     if (IS_MAC && isEditable(e.target) && e.target !== searchRef.current) return;
     e.preventDefault();
-    choose(tool);
-    focusStage();
+    choose(tool, true);
   };
   const buttons = () =>
     Array.from(sideRef.current?.querySelectorAll<HTMLButtonElement>('button[data-tool-btn]') ?? []);
@@ -136,8 +144,7 @@ export function ToolsPanel() {
       const first = filterTools(ordered, e.currentTarget.value)[0];
       if (!first) return;
       e.preventDefault();
-      choose(first);
-      focusStage();
+      choose(first, true);
     }
   };
 
@@ -244,6 +251,11 @@ export function ToolsPanel() {
             </Link>
           </nav>
           <div ref={stageRef} className={styles.stagePane}>
+            {blocked ? (
+              <p role="status" className={styles.note}>
+                {t.tools.panel.detachBlocked}
+              </p>
+            ) : null}
             {shown ? (
               <ToolStage
                 key={shown.id}
@@ -252,14 +264,12 @@ export function ToolsPanel() {
                   canDetachTool() && !phone
                     ? () => {
                         if (detachTool(shown)) closeTools();
-                        else useUiStore.getState().toast(t.tools.panel.detachBlocked);
+                        else setBlocked(true);
                       }
                     : undefined
                 }
               />
-            ) : (
-              <p>{t.tools.none}</p>
-            )}
+            ) : null}
           </div>
         </div>
       ) : null}

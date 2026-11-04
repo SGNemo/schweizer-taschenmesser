@@ -21,6 +21,7 @@ export const tools: Strings['tools'] = {
     list: 'Tool list',
     detach: 'Open in its own window',
     detachBlocked: 'The browser blocked the window. Allow pop-ups for this site.',
+    soloMissing: 'This tool is turned off or unknown.',
     scratch: 'Scratch pad',
     scratchHint: 'Sticky note in Notes',
     number: (n: number) => `Alt+${n}`,

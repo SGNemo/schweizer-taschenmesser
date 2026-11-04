@@ -1771,6 +1771,7 @@ export const de = {
       list: 'Werkzeugliste',
       detach: 'In eigenem Fenster öffnen',
       detachBlocked: 'Das Fenster wurde vom Browser blockiert. Erlaube Pop-ups für diese Seite.',
+      soloMissing: 'Dieses Werkzeug ist ausgeschaltet oder unbekannt.',
       scratch: 'Schmierzettel',
       scratchHint: 'Notizzettel in Notizen',
       number: (n: number) => `Alt+${n}`,

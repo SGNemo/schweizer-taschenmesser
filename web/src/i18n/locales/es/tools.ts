@@ -22,6 +22,7 @@ export const tools: Strings['tools'] = {
     detach: 'Abrir en su propia ventana',
     detachBlocked:
       'El navegador bloqueó la ventana. Permite las ventanas emergentes de este sitio.',
+    soloMissing: 'Esta herramienta está desactivada o no existe.',
     scratch: 'Bloc de notas',
     scratchHint: 'Nota adhesiva en Notas',
     number: (n: number) => `Alt+${n}`,

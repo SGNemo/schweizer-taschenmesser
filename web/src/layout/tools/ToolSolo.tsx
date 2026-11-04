@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, Navigate, useParams } from 'react-router';
+import { Navigate, useParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { Toaster } from '@/ui';
 import { useTools } from '@/core/tools/state';
@@ -27,7 +27,11 @@ export function ToolSolo() {
         <ToolStage tool={tool} heading />
       ) : (
         <p>
-          {t.tools.none} <Link to="/tools">{t.tools.manage}</Link>
+          {t.tools.panel.soloMissing}{' '}
+          {/* A full page load: this window skipped the background services, the app must start normally. */}
+          <a href="/tools" target="_blank" rel="noreferrer">
+            {t.tools.manage}
+          </a>
         </p>
       )}
       <Toaster />
