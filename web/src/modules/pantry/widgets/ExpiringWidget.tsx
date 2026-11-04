@@ -27,12 +27,15 @@ export default function ExpiringWidget() {
   const dueIds = new Set(due.map((i) => i.id));
   const low = list.filter((i) => needsRestock(i) && !dueIds.has(i.id));
   const total = due.length + low.length;
-  const first = due[0];
-  const next = first
-    ? { name: first.name, label: dueState(first.expires!, day, { soonDays }).label }
-    : low[0]
-      ? { name: low[0].name, label: t.pantry.lowStock }
-      : undefined;
+  // What needs a look, by name (up to three): expiring first, then what runs low.
+  const next = [
+    ...due.map((i) => ({
+      id: i.id,
+      name: i.name,
+      label: dueState(i.expires!, day, { soonDays }).label,
+    })),
+    ...low.map((i) => ({ id: i.id, name: i.name, label: t.pantry.lowStock })),
+  ].slice(0, 3);
 
   const places = PLACES.map((p) => {
     const here = list.filter((i) => i.place === p);
@@ -76,10 +79,14 @@ export default function ExpiringWidget() {
           ? t.widgets.expirySummary(expired, due.length - expired, low.length)
           : t.pantry.shelf.summaryFine}
       </p>
-      {next ? (
-        <p className={styles.next}>
-          {next.name} · {next.label}
-        </p>
+      {next.length > 0 ? (
+        <ul className={styles.next}>
+          {next.map((n) => (
+            <li key={n.id}>
+              {n.name} · {n.label}
+            </li>
+          ))}
+        </ul>
       ) : null}
     </WidgetBody>
   );
