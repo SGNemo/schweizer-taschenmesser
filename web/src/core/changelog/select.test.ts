@@ -39,6 +39,11 @@ describe('selectChangelog', () => {
     expect(v.current).toBeUndefined();
     expect(v.older.map((x) => x.version)).toEqual(['1.1.0', '1.0.0', '0.3.1']);
   });
+  it('a dev build of an already released base (1.0.0-dev.637) still lists 1.0.0 as older', () => {
+    const v = selectChangelog(data, '1.0.0-dev.637+73da10c');
+    expect(v.current).toBeUndefined();
+    expect(v.older.map((x) => x.version)).toEqual(['1.0.0', '0.3.1']);
+  });
   it('beta build 1.2.0-beta.1 is not 1.2.0', () => {
     const v = selectChangelog(data, '1.2.0-beta.1');
     expect(v.current).toBeUndefined();

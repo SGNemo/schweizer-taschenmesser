@@ -1,21 +1,40 @@
 .banner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   margin: var(--space-3) var(--space-4) 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
 }
+/* Tinted head zone (identity v3): the accent only on the plate and the head, never as an edge. */
 .head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 14%, var(--surface)),
+    var(--surface) 70%
+  );
+}
+.plate {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--text);
 }
 .title {
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
   margin-right: auto;
 }
 .actions {
@@ -24,19 +43,38 @@
   flex-wrap: wrap;
 }
 .notes {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-top: 1px solid var(--border);
 }
-.notes ul {
-  margin: var(--space-2) 0 0;
-  padding-left: var(--space-5);
+.notes > summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  cursor: pointer;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.version {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.scroll {
+  max-height: min(24rem, 50vh);
+  overflow-y: auto;
+  padding-right: var(--space-2);
 }
 .error {
   color: var(--danger);
   margin: 0;
+  padding: var(--space-2) var(--space-4);
 }
 .status {
   margin: 0;
+  padding: var(--space-2) var(--space-4);
   color: var(--text-muted);
 }
 @media (min-width: 900px) {

@@ -40,3 +40,5 @@ CI: `.github/workflows/change-note.yml` (PRs into `develop`; own workflow so lab
 ## Dev-Preview and the app
 
 Previews (Dev channel, `-beta`/`-dev` versions, `npm run dev`) read the open `.changes/` at build time as "Unveröffentlicht" (`virtual:changelog`, `scripts/lib/changelogBuild.ts`); stable builds only embed released versions. The list shows the running version, then older ones folded; text German or English (other languages show English). "Neu" mark: device-local (`_meta` keys `changelog.seen`, `changelog.hint`), no pop-up, switchable.
+
+Both places that show notes (update banner `layout/UpdateBanner.tsx`, Settings → Über Nemo `pages/settings/ChangelogList.tsx`) render with `layout/ReleaseNotes.tsx`; the banner reads the release body via `core/changelog/notes.ts` (German block above `---`, English below; other languages read English; the Dev-Preview preamble lines starting with `>` are dropped).
