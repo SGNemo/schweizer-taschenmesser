@@ -7593,6 +7593,7 @@ export const de = {
     ungrouped: 'Ohne Gruppe',
     allFeeds: 'Alle Feeds',
     lead: 'Zuletzt hinzugefügt',
+    groupsCount: (g: number) => (g === 0 ? '' : g === 1 ? '1 Gruppe' : `${g} Gruppen`),
     importOpml: 'Importieren',
     exportOpml: 'Als OPML exportieren',
     exported: 'OPML gespeichert.',

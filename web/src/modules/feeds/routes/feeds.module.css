@@ -33,6 +33,7 @@
 }
 /* The groups are newspaper columns: the page's list flows into as many columns as fit, a hairline between them. */
 .columns > [role='group'] {
+  display: block;
   column-width: 20rem;
   column-gap: var(--space-6);
   column-rule: 1px solid var(--border);
@@ -43,4 +44,8 @@
 }
 .columns h2 {
   font-family: Georgia, 'Times New Roman', serif;
+}
+/* The rows are plain list items inside a group body: no bullets. */
+.columns li {
+  list-style: none;
 }

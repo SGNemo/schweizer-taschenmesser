@@ -21,6 +21,7 @@ export const feeds: Strings['feeds'] = {
   ungrouped: 'No group',
   allFeeds: 'All feeds',
   lead: 'Added last',
+  groupsCount: (g: number) => (g === 0 ? '' : g === 1 ? '1 group' : `${g} groups`),
   importOpml: 'Import',
   exportOpml: 'Export as OPML',
   exported: 'OPML saved.',

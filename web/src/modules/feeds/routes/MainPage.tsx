@@ -125,7 +125,7 @@ export default function MainPage() {
               label={formatDay(today(), 'EEEE, d. MMMM')}
               value={formatNumber(feeds.length)}
               unit={s.widget.label}
-              detail={s.widget.context(feeds.length, categories.length)}
+              detail={s.groupsCount(categories.length) || undefined}
               testId="feeds-total"
             />
           </HeroSlot>
