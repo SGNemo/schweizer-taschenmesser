@@ -30,7 +30,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 26
+          # The version Cloudflare Pages builds with (site/.node-version), so CI and the deploy cannot drift apart.
+          node-version-file: site/.node-version
           cache: npm
           cache-dependency-path: site/package-lock.json
       - run: npm ci
@@ -55,6 +56,31 @@ jobs:
       - name: Lighthouse (thresholds 95, warnings only)
         continue-on-error: true
         run: npm run lighthouse
+      # Cloudflare builds develop (Production) and main (Preview) with CF_PAGES=1, and site/src/legal.js then
+      # refuses to build without the imprint details. Those live only in Cloudflare (never in the repo), so
+      # these two steps pin both halves with invented values: the guard still fires, and the production path
+      # builds when the details exist. They run last because they overwrite dist/.
+      - name: Production build without imprint details must fail (guard)
+        env:
+          CF_PAGES: '1'
+          CF_PAGES_BRANCH: develop
+          NO_RELEASE_FETCH: '1'
+        run: |
+          if npm run build > "$RUNNER_TEMP/guard.log" 2>&1; then
+            echo "::error::A production build without imprint details succeeded (the guard in site/src/legal.js is gone)"; exit 1
+          fi
+          if ! grep -q 'Imprint details missing' "$RUNNER_TEMP/guard.log"; then
+            cat "$RUNNER_TEMP/guard.log"; echo "::error::The production build failed for another reason"; exit 1
+          fi
+      - name: Production build as Cloudflare runs it (invented imprint details)
+        env:
+          CF_PAGES: '1'
+          CF_PAGES_BRANCH: develop
+          NO_RELEASE_FETCH: '1'
+          IMPRESSUM_NAME: CI Dummy
+          IMPRESSUM_STREET: Teststrasse 1
+          IMPRESSUM_POSTCODE_CITY: 00000 Teststadt
+        run: npm run build
       - name: Lighthouse reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

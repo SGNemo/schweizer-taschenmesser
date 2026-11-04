@@ -13,6 +13,7 @@ import { ensureLoaded } from '@/core/ai/local/state';
 import { AiError, type AiErrorCode, type AiProvider } from '@/core/ai/providers/types';
 import { isAiOn } from '@/core/ai/switch';
 import { recordUsage } from '@/core/ai/usage';
+import { notDeleted } from '@/core/db/repo';
 import type { Stored } from '@/core/db/types';
 import { getPlatform } from '@/core/platform';
 import { autoTitle, byTime, toTurns } from './logic';
@@ -41,9 +42,11 @@ export interface ReplyOptions {
 
 /** Messages of a chat in order. */
 export async function messagesOf(threadId: string): Promise<Stored<Message>[]> {
-  const rows = await messageRepo
-    .active()
-    .filter((m) => m.threadId === threadId)
+  // Index `threadId`: only this chat's messages are read, not every message of every chat.
+  const rows = await messageRepo.table
+    .where('threadId')
+    .equals(threadId)
+    .filter(notDeleted)
     .toArray();
   return rows.sort(byTime);
 }

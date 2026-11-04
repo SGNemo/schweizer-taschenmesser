@@ -33,6 +33,18 @@ test('a production build on Cloudflare Pages fails without the details', () => {
   assert.doesNotThrow(() => provider({ ...prod, ...ALL }));
 });
 
+test('the failure names the branch and where the variables belong (it is what the Cloudflare log shows)', () => {
+  assert.throws(
+    () => provider({ CF_PAGES: '1', CF_PAGES_BRANCH: 'main' }),
+    (err) => err instanceof Error && /branch "main"/.test(err.message) && /Production.*Preview/.test(err.message),
+  );
+});
+
+test('a Preview environment with PRODUCTION_BRANCH=develop builds main without the details', () => {
+  assert.doesNotThrow(() => provider({ CF_PAGES: '1', CF_PAGES_BRANCH: 'main', PRODUCTION_BRANCH: 'develop' }));
+  assert.throws(() => provider({ CF_PAGES: '1', CF_PAGES_BRANCH: 'develop', PRODUCTION_BRANCH: 'develop' }), /IMPRESSUM_NAME/);
+});
+
 test('the production branch can be changed', () => {
   assert.doesNotThrow(() => provider({ CF_PAGES: '1', CF_PAGES_BRANCH: 'develop', PRODUCTION_BRANCH: 'live' }));
   assert.throws(() => provider({ CF_PAGES: '1', CF_PAGES_BRANCH: 'live', PRODUCTION_BRANCH: 'live' }));
