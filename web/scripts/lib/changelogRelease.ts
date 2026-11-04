@@ -109,3 +109,16 @@ export function upsertVersion(data: ChangelogData, v: VersionData): ChangelogDat
   for (const id of [...used].sort()) areas[id] = AREAS[id] ?? { de: id, en: id };
   return { areas, versions };
 }
+
+/** The `## [version] …` section of a changelog file (without trailing blank lines), or '' if absent. */
+export function extractSection(markdown: string, version: string): string {
+  const lines = markdown.split('\n');
+  const isHead = (l: string) => /^##\s+(?!#)/.test(l);
+  const start = lines.findIndex((l) => isHead(l) && l.startsWith(`## [${version}]`));
+  if (start === -1) return '';
+  const next = lines.findIndex((l, i) => i > start && isHead(l));
+  return lines
+    .slice(start, next === -1 ? lines.length : next)
+    .join('\n')
+    .trim();
+}

@@ -32,7 +32,10 @@ One sentence, from the user's view, no technology, no ticket jargon; say what ch
 ## Release (maintainer's release chat, in the release-branch step)
 
 1. `npm run changelog:release -- 1.2.0` in `web/`: adds `## [1.2.0] – date` (Highlights, then by type; breaking first; area prefix) to both changelogs and the JSON, deletes the notes. `-beta.N` versions change nothing. `--dry` previews, `--notes` prints the GitHub release text (German above, English below).
-2. The files belong to the release commit.
+2. The files belong to the release commit. `release.yml` then builds the GitHub release text with `node scripts/changelog-notes.mjs <x.y.z>` (the `## [x.y.z]` sections of `CHANGELOG.de.md` above `CHANGELOG.md`) and fails with a clear message when a section is missing.
+3. Dev-Preview release text: `node scripts/changelog-release.mjs --unreleased` (open notes, nothing deleted).
+
+CI: `.github/workflows/change-note.yml` (PRs into `develop`; own workflow so labelling does not re-run the heavy CI) runs `check-changes.mjs --pr`.
 
 ## Dev-Preview and the app
 

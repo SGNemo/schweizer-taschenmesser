@@ -22,6 +22,23 @@ const flag = (n) => argv.includes(`--${n}`);
 const opt = (n) => argv[argv.indexOf(`--${n}`) + 1];
 const version = argv.find((a) => !a.startsWith('--') && a !== opt('date'))?.replace(/^v/, '');
 
+if (flag('unreleased')) {
+  // Dev-Preview release text: the open notes, German above, English below. Deletes nothing.
+  const open = loadChanges(join(root, '.changes'));
+  if (open.errors.length) {
+    console.error(open.errors.join('\n'));
+    process.exit(1);
+  }
+  const head = (lang) =>
+    renderSection({ version: 'Unreleased', date: '', entries: open.entries }, lang).replace(
+      /^## \[Unreleased\] – \n/,
+      '## Unreleased\n',
+    );
+  process.stdout.write(
+    open.entries.length ? `${head('de')}\n---\n\n${head('en')}` : 'No open change notes.\n',
+  );
+  process.exit(0);
+}
 if (!version || !parseSemver(version)) {
   console.error('Usage: changelog-release.mjs <x.y.z> [--date YYYY-MM-DD] [--dry] [--notes]');
   process.exit(2);

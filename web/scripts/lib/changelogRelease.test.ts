@@ -81,3 +81,13 @@ describe('upsertVersion', () => {
     expect(c.areas.maps).toEqual({ de: 'Karten', en: 'Maps' });
   });
 });
+
+describe('extractSection', () => {
+  it('returns one version section, or an empty string', async () => {
+    const { extractSection } = await import('./changelogRelease');
+    const md =
+      '# Changelog\n\n## [1.1.0] – 2026-11-10\n\n### Added\n- **A:** x\n\n## [1.0.0] – d\n\n- old\n';
+    expect(extractSection(md, '1.1.0')).toBe('## [1.1.0] – 2026-11-10\n\n### Added\n- **A:** x');
+    expect(extractSection(md, '9.9.9')).toBe('');
+  });
+});
