@@ -1,7 +1,7 @@
 import { compareText } from '@/core/i18n/format';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
+import { useSharedLiveQuery } from './sharedQuery';
 import { today } from '@/core/time/now';
 import type {
   AttentionItem,
@@ -69,12 +69,13 @@ export function activeManifests(states: Record<string, boolean> | undefined): Mo
 /** Live calendar items of all active modules for a date range; `undefined` while loading. */
 export function useCalendarItems(range: DateRange): CalendarItem[] | undefined {
   const states = useModuleStates();
-  const key = activeManifests(states)
+  const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
-  return useLiveQuery(
+  // One shared query per range and module set: the home page mounts this hook several times.
+  return useSharedLiveQuery(
+    `calendar|${range.from}|${range.to}|${ids}|${states === undefined}`,
     async () => (states ? collectCalendarItems(range, activeManifests(states)) : undefined),
-    [range.from, range.to, key, states === undefined],
   );
 }
 
@@ -116,12 +117,11 @@ export async function collectAttention(
 /** Live attention items; `undefined` while loading. */
 export function useAttentionItems(): AttentionItem[] | undefined {
   const states = useModuleStates();
-  const key = activeManifests(states)
+  const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
-  return useLiveQuery(
-    async () => (states ? collectAttention(today(), activeManifests(states)) : undefined),
-    [key, states === undefined],
+  return useSharedLiveQuery(`attention|${ids}|${states === undefined}`, async () =>
+    states ? collectAttention(today(), activeManifests(states)) : undefined,
   );
 }
 
@@ -150,11 +150,10 @@ export async function collectHeadlines(
 export function useHeadlines():
   (HeadlineFigure & { moduleId: string; hue: ModuleHue })[] | undefined {
   const states = useModuleStates();
-  const key = activeManifests(states)
+  const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
-  return useLiveQuery(
-    async () => (states ? collectHeadlines(today(), activeManifests(states)) : undefined),
-    [key, states === undefined],
+  return useSharedLiveQuery(`headline|${ids}|${states === undefined}`, async () =>
+    states ? collectHeadlines(today(), activeManifests(states)) : undefined,
   );
 }
