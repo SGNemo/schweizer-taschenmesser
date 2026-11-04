@@ -6,6 +6,7 @@ import { t } from '@/strings';
 import {
   Button,
   categoryColor,
+  FolderTabs,
   Icon,
   IconButton,
   RowMenu,
@@ -142,36 +143,21 @@ export function PageList(p: PageListProps) {
         </section>
       ) : null}
 
-      <div role="group" aria-label={t.notes.notebooks} className={styles.chips}>
-        <button
-          type="button"
-          className={styles.chip}
-          aria-pressed={filter === 'all'}
-          onClick={() => p.onFilter('all')}
-        >
-          {t.notes.allPages} · {total}
-        </button>
-        <button
-          type="button"
-          className={styles.chip}
-          aria-pressed={filter === 'none'}
-          onClick={() => p.onFilter('none')}
-        >
-          {t.notes.general} · {counts.get(null) ?? 0}
-        </button>
-        {books.map((b) => (
-          <button
-            key={b.id}
-            type="button"
-            className={styles.chip}
-            style={{ '--tab': categoryColor(b.tone) } as React.CSSProperties}
-            aria-pressed={filter === b.id}
-            onClick={() => p.onFilter(b.id)}
-          >
-            <Icon name={b.icon as IconName} size={14} />
-            {b.name} · {counts.get(b.id) ?? 0}
-          </button>
-        ))}
+      <FolderTabs
+        label={t.notes.notebooks}
+        value={filter}
+        onChange={p.onFilter}
+        tabs={[
+          { id: 'all', label: `${t.notes.allPages} · ${total}` },
+          { id: 'none', label: `${t.notes.general} · ${counts.get(null) ?? 0}` },
+          ...books.map((b) => ({
+            id: b.id,
+            label: `${b.name} · ${counts.get(b.id) ?? 0}`,
+            color: categoryColor(b.tone),
+            icon: <Icon name={b.icon as IconName} size={14} />,
+          })),
+        ]}
+      >
         <IconButton label={t.notes.newNotebook} onClick={p.onNewNotebook}>
           <Icon name="plus" size={18} />
         </IconButton>
@@ -180,7 +166,7 @@ export function PageList(p: PageListProps) {
             <Icon name="edit" size={18} />
           </IconButton>
         ) : null}
-      </div>
+      </FolderTabs>
 
       <div className={styles.viewSwitch}>
         <Segmented

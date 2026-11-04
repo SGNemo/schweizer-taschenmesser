@@ -115,7 +115,7 @@ function useOpenCategory(): SettingsCategoryId | undefined {
   return isCategoryId(id) ? id : undefined;
 }
 
-/** Second level under the open category: its groups, each jumping to the group's first section. */
+/** Second level of the open category: its groups as quiet pills above the content, so the left column never grows. */
 function SubNav({ id }: { id: SettingsCategoryId }) {
   const sections = useSettingsSections();
   const g = tSettings2.use().groups as Record<string, string>;
@@ -166,7 +166,6 @@ function CategoryLink({
   const c = categoryDef(id);
   const look = CATEGORY_LOOK[id];
   const differs = tSettingsV3.use().differs;
-  const open = useOpenCategory() === id;
   return (
     <>
       <NavLink
@@ -193,7 +192,6 @@ function CategoryLink({
         <CategoryStatus id={id} />
         {list ? <Icon name="chevronRight" /> : null}
       </NavLink>
-      {open && !list ? <SubNav id={id} /> : null}
     </>
   );
 }
@@ -202,7 +200,12 @@ function CategoryLink({
 function FrequentNav({ list }: { list?: boolean }) {
   const sections = useSettingsSections();
   const [focus] = useFocusSettings();
-  const ids = focus.searchHistory ? frequentSections(sections.map((x) => x.id)) : [];
+  // Frozen for as long as Settings stays open: every click records a visit, and a list that re-sorts under the
+  // pointer makes the whole navigation below it jump. The next visit of Settings shows the new order.
+  const [frozen, setFrozen] = useState<string[] | null>(null);
+  if (focus.searchHistory && sections.length > 0 && frozen === null)
+    setFrozen(frequentSections(sections.map((x) => x.id)));
+  const ids = focus.searchHistory ? (frozen ?? []) : [];
   if (ids.length === 0) return null;
   const title = tComfort.get().frequent.title;
   return (
@@ -552,6 +555,7 @@ export function CategoryPage() {
           {t.settings.back}
         </Link>
       )}
+      {wide ? <SubNav id={category} /> : null}
       {basic.map((s) => (
         <SectionFrame key={s.id} s={s} />
       ))}
@@ -647,7 +651,6 @@ export function SettingsLayout() {
   const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
-      {wide ? <SettingsHead /> : null}
       <SettingsSearch />
       {wide ? null : <SettingsHead />}
       {wide ? <QuickBar /> : null}
@@ -655,6 +658,7 @@ export function SettingsLayout() {
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
           <CategoryNav />
           <div className={styles.content}>
+            <SettingsHead />
             <Outlet />
           </div>
           {showToc ? <SettingsToc entries={entries} /> : null}

@@ -1,49 +1,15 @@
 /** "Changes in this version" plus older versions, from the embedded changelog data (offline). */
 import { useEffect, useRef, useState } from 'react';
 import { loadChangelog } from '@/core/changelog/load';
-import { entryText, groupForDisplay, newToken, selectChangelog } from '@/core/changelog/select';
+import { newToken, selectChangelog } from '@/core/changelog/select';
 import { isUnread, loadHint, loadSeen, markSeen, saveHint } from '@/core/changelog/seen';
-import type { ChangelogData, ChangelogEntry, ChangelogVersion } from '@/core/changelog/types';
+import type { ChangelogData, ChangelogVersion } from '@/core/changelog/types';
 import { useLang } from '@/core/i18n/lang';
 import { dateTimeFormat } from '@/core/i18n/format';
-import type { NoteBlock } from '@/core/changelog/notes';
-import { ReleaseNotes } from '@/layout/ReleaseNotes';
+import { VersionNotes } from './VersionNotes';
 import { t } from '@/strings';
 import { SettingRow, Switch } from '@/ui';
 import styles from './settings.module.css';
-
-function VersionBody({
-  version,
-  data,
-  lang,
-}: {
-  version: ChangelogVersion;
-  data: ChangelogData;
-  lang: string;
-}) {
-  const c = t.about.changes;
-  const { highlights, groups } = groupForDisplay(version, data, lang);
-  const areaLabel = (e: ChangelogEntry) =>
-    data.areas[e.area]?.[lang === 'de' ? 'de' : 'en'] ?? e.area;
-  const blocks: NoteBlock[] = [
-    ...(highlights.length > 0
-      ? [
-          {
-            heading: c.highlights,
-            items: highlights.map((e) => ({ lead: `${areaLabel(e)}:`, text: entryText(e, lang) })),
-          },
-        ]
-      : []),
-    ...groups.map((g) => ({
-      heading: g.label,
-      items: g.entries.map((e) => ({
-        ...(e.breaking ? { lead: c.breaking.trim() } : {}),
-        text: entryText(e, lang),
-      })),
-    })),
-  ];
-  return <ReleaseNotes blocks={blocks} />;
-}
 
 export function ChangelogList({ version }: { version: string }) {
   const lang = useLang();
@@ -94,7 +60,7 @@ export function ChangelogList({ version }: { version: string }) {
             <span data-testid="changelog-new"> · {c.fresh}</span>
           ) : null}
         </summary>
-        <VersionBody version={v} data={data} lang={lang} />
+        <VersionNotes version={v} data={data} lang={lang} />
       </details>
     ) : null;
   return (

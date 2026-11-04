@@ -7,9 +7,18 @@ import { getPlatform } from '@/core/platform';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { t } from '@/strings';
-import { Badge, Button, Icon, ItemList, ItemRow, PageHeader, TextField, useOpenParam } from '@/ui';
+import {
+  Badge,
+  Button,
+  FolderTabs,
+  Icon,
+  ItemList,
+  ItemRow,
+  PageHeader,
+  TextField,
+  useOpenParam,
+} from '@/ui';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
-import { FolderTabs } from '../components/FolderTabs';
 import { VaultEmpty } from '../components/VaultEmpty';
 import { VaultHead } from '../components/VaultHead';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -27,7 +36,7 @@ import {
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
-import type { DocCategory } from '../schema';
+import { CATEGORIES, type DocCategory } from '../schema';
 
 async function download(id: string, name: string) {
   const blob = await getBlob(id);
@@ -67,6 +76,8 @@ export default function VaultPage() {
     [docs, category, query, day],
   );
 
+  const counts = countByCategory(docs ?? []);
+
   return (
     <>
       <PageHeader title={t.vault.title}>
@@ -83,10 +94,19 @@ export default function VaultPage() {
         onChange={(e) => setQuery(e.target.value)}
       />
       <FolderTabs
-        counts={countByCategory(docs ?? [])}
-        total={docs?.length ?? 0}
+        folder
+        testId="folder-tabs"
+        label={t.vault.category}
         value={category}
-        onChange={setCategory}
+        onChange={(id) => setCategory(id as DocCategory | 'all')}
+        tabs={[
+          { id: 'all', label: t.vault.allCategories, count: docs?.length ?? 0 },
+          ...CATEGORIES.map((c) => ({
+            id: c,
+            label: t.vault.categories[c] ?? c,
+            count: counts[c] ?? 0,
+          })),
+        ]}
       />
       {docs && shown.length === 0 ? (
         <VaultEmpty title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>

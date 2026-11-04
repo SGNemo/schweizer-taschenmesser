@@ -8,11 +8,14 @@ const executablePath =
 
 // CI profiles (docs/HOW-TO.md -> "Which checks run when"):
 //   E2E_PROFILE=smoke  plain pull request: desktop-chrome only, the critical-path files below
+//   E2E_PROFILE=rest   everything the smoke list does not cover (desktop-chrome without the smoke files, all of
+//                      pixel-7): smoke + rest = the full suite, run after the Dev-Preview is published
 //   E2E_SEED=0         leave out the seed project and its second web server (CI shards; the seed project
 //                      runs in the sync job of full runs)
 // Nothing set (local, `npm run e2e:app`): everything, as before.
 const smoke = process.env.E2E_PROFILE === 'smoke';
-const withSeed = !smoke && process.env.E2E_SEED !== '0';
+const rest = process.env.E2E_PROFILE === 'rest';
+const withSeed = !smoke && !rest && process.env.E2E_SEED !== '0';
 // Add a spec here when it guards start-up, data safety, navigation or a module's create/edit path; everything
 // else runs on develop, nightly and with the label `full-ci`.
 const SMOKE_FILES = [
@@ -42,11 +45,13 @@ const SMOKE_FILES = [
   'cockpit',
 ].map((name) => new RegExp(`/${name}\\.spec\\.ts$`));
 
+// Multi-device tests need the real sync server: see playwright.sync.config.ts
+// `screenshots/` is manual tooling (playwright.screens.config.ts), not part of the suite.
+const NOT_IN_APP_SUITE = ['**/sync/**', '**/screenshots/**', '**/seed/**', '**/perf/**'];
+
 export default defineConfig({
   testDir: './e2e',
-  // Multi-device tests need the real sync server: see playwright.sync.config.ts
-  // `screenshots/` is manual tooling (playwright.screens.config.ts), not part of the suite.
-  testIgnore: ['**/sync/**', '**/screenshots/**', '**/seed/**', '**/perf/**'],
+  testIgnore: NOT_IN_APP_SUITE,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -65,6 +70,7 @@ export default defineConfig({
       name: 'desktop-chrome',
       use: { ...devices['Desktop Chrome'] },
       ...(smoke ? { testMatch: SMOKE_FILES } : {}),
+      ...(rest ? { testIgnore: [...NOT_IN_APP_SUITE, ...SMOKE_FILES] } : {}),
     },
     ...(smoke ? [] : [{ name: 'pixel-7', use: { ...devices['Pixel 7'] } }]),
     ...(withSeed

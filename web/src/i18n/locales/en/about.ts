@@ -34,6 +34,7 @@ export const about: Strings['about'] = {
     none: 'There are no notes for this version.',
   },
   changes: {
+    history: 'What happened in the latest versions',
     unreleased: 'Unreleased',
     unreleasedNote: 'Not released yet, only in this preview.',
     highlights: 'Highlights',

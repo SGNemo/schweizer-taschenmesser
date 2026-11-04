@@ -12,6 +12,11 @@
 }
 .content {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  /* A page that is still loading must not collapse the column: the navigation beside it stays where it is. */
+  min-height: 70dvh;
 }
 .aside {
   position: sticky;
@@ -268,22 +273,23 @@
   margin: 0 0 calc(-1 * var(--space-2));
 }
 
-/* Second navigation level: the groups of the open category, under its link. */
+/* Second level of the open category: the groups as pills above the content. */
 .subnav {
   list-style: none;
-  margin: var(--space-hair) 0 var(--space-2);
-  padding: 0 0 0 calc(var(--space-3) + 1.5rem);
+  margin: 0;
+  padding: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 .subLink {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   color: var(--text-muted);
-  font-size: var(--text-meta);
+  font-size: var(--text-md);
   text-decoration: none;
 }
 .subLink:hover {

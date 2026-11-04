@@ -27,7 +27,7 @@ jobs:
   # "everything", and the jobs below also run when this job itself fails. Documentation only: nothing
   # heavy runs; the secret scan and the docs checks always run.
   #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
-  #           whole E2E suite (both browser projects, 6 shards) and the seed project
+  #           whole E2E suite (smoke + rest on both browser projects) and the seed project
   #   PR    = only the packages the change touches (below), E2E smoke list on desktop (2 shards);
   #           a draft PR runs only the static checks and the unit tests of the web app
   changes:
@@ -48,6 +48,7 @@ jobs:
       tauri: ${{ steps.diff.outputs.tauri }}
       llm: ${{ steps.diff.outputs.llm }}
       full: ${{ steps.diff.outputs.full }}
+      rest: ${{ steps.diff.outputs.rest }}
       shards: ${{ steps.diff.outputs.shards }}
       e2e_profile: ${{ steps.diff.outputs.e2e_profile }}
     steps:
@@ -126,13 +127,13 @@ jobs:
             web=false; e2e=false; sync=false; server=false; mcp=false; supporter=false; webhook=false
             extension=false; tauri=false; llm=false; shared=false
           fi
-          if [ "$full" = "true" ]; then
-            shards='[1,2,3,4,5,6]'; profile=full
-          else
-            shards='[1,2]'; profile=smoke
-          fi
+          # The gate E2E (smoke list, 2 shards) runs everywhere; on full runs the rest of the suite follows in
+          # its own jobs (they never hold up the Dev-Preview).
+          shards='[1,2]'; profile=smoke
+          rest=false
+          if [ "$full" = "true" ] && [ "$e2e" = "true" ]; then rest=true; fi
           {
-            echo "code=$code"; echo "full=$full"; echo "shards=$shards"; echo "e2e_profile=$profile"
+            echo "code=$code"; echo "full=$full"; echo "rest=$rest"; echo "shards=$shards"; echo "e2e_profile=$profile"
             echo "web=$web"; echo "e2e=$e2e"; echo "sync=$sync"; echo "server=$server"; echo "mcp=$mcp"
             echo "shared=$shared"; echo "supporter=$supporter"; echo "webhook=$webhook"
             echo "extension=$extension"; echo "tauri=$tauri"; echo "llm=$llm"
@@ -319,10 +320,10 @@ jobs:
 
   # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
   # cores were slower per test and failed under load). Sharding is by test: every test runs exactly once.
-  #   full run (develop, nightly, label full-ci, manual): both browser projects, 6 shards (seed project: e2e-sync job)
-  #   plain PR: smoke list on desktop-chrome only, 2 shards (E2E_PROFILE=smoke, list in web/playwright.config.ts)
+  # This job is the smoke list (desktop-chrome, 24 spec files, 2 shards; E2E_PROFILE=smoke, list in
+  # web/playwright.config.ts) and part of the Dev-Preview gate. Full runs add `web-e2e-rest` below.
   web-e2e:
-    name: E2E app (${{ needs.changes.outputs.e2e_profile || 'full' }}, shard ${{ matrix.shard }})
+    name: E2E app (smoke, shard ${{ matrix.shard }})
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
@@ -330,7 +331,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2,3,4,5,6]') }}
+        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2]') }}
     defaults:
       run:
         working-directory: web
@@ -353,11 +354,10 @@ jobs:
       # System libraries are needed even when the browser itself comes from the cache.
       - run: npx playwright install-deps chromium
         if: steps.pw-cache.outputs.cache-hit == 'true'
-      - name: E2E (${{ needs.changes.outputs.e2e_profile || 'full' }}), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
+      - name: E2E (smoke), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
-          E2E_PROFILE: ${{ needs.changes.outputs.e2e_profile }}
-          E2E_SEED: '0' # the seed project runs in the sync job
+          E2E_PROFILE: smoke
           # Shard 1 also writes the build manifest for the bundle budget below (no extra build).
           VITE_BUNDLE_REPORT: ${{ matrix.shard == 1 && '1' || '' }}
       # Non-blocking bundle budget (critical path, precache) on the build the E2E step just made; the
@@ -374,12 +374,62 @@ jobs:
           path: web/playwright-report
           retention-days: 7
 
+  # The rest of the E2E suite (everything the smoke list above does not cover: Pixel 7, accessibility, layout, the
+  # other specs on desktop). Only on full runs; smoke + rest = the whole app suite (1714 tests), the seed project
+  # (29) runs in the sync job. Not part of the Dev-Preview gate: it runs next to the build and after the publish.
+  web-e2e-rest:
+    name: E2E app (rest, shard ${{ matrix.shard }})
+    # Starts after the smoke E2E so that its six runners do not compete with the Dev-Preview gate for the
+    # runner pool; it still runs when the smoke list failed (!cancelled()), so the run shows everything.
+    needs: [changes, web-e2e]
+    if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Playwright browser cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+      - run: npx playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      # System libraries are needed even when the browser itself comes from the cache.
+      - run: npx playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+      - name: E2E (rest), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
+        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        env:
+          E2E_PROFILE: rest
+          E2E_SEED: '0' # the seed project runs in the sync job
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-rest-${{ matrix.shard }}
+          path: web/playwright-report
+          retention-days: 7
+
   # One stable check name for everything web: this is what the former single job was called.
   # A part must succeed when the pre-check asked for it and must be skipped when it did not
   # (documentation only, other packages only, draft PR without the E2E part).
   web:
     name: Web (lint, types, unit, E2E)
-    needs: [changes, licences, web-static, web-unit, web-e2e]
+    needs: [changes, licences, web-static, web-unit, web-e2e, web-e2e-rest]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -394,6 +444,8 @@ jobs:
           STATIC: ${{ needs.web-static.result }}
           UNIT: ${{ needs.web-unit.result }}
           E2E_RESULT: ${{ needs.web-e2e.result }}
+          REST: ${{ needs.changes.outputs.rest }}
+          REST_RESULT: ${{ needs.web-e2e-rest.result }}
         run: |
           echo "pre-check=$CHANGES web=$WEB e2e=$E2E static=$STATIC unit=$UNIT e2e-result=$E2E_RESULT"
           [ "$CHANGES" = "success" ] || echo "::notice::The pre-check did not finish; every part was asked to run."
@@ -407,7 +459,8 @@ jobs:
           check "Licence list" "$LICENCES" "$CODE"
           check "Web static (format, lint, types)" "$STATIC" "$WEB"
           check "Web unit tests (shards)" "$UNIT" "$WEB"
-          check "E2E app (shards)" "$E2E_RESULT" "$E2E"
+          check "E2E app (smoke shards)" "$E2E_RESULT" "$E2E"
+          check "E2E app (rest shards)" "$REST_RESULT" "$REST"
 
   # Server, MCP wrapper, shared vault package, supporter codes + CLI and the supporter webhook are five small
   # packages (about a minute each). They share one runner: every extra job waits for a free runner (up to
@@ -530,7 +583,8 @@ jobs:
 
   e2e-sync:
     name: Multi-device sync E2E
-    needs: changes
+    # After the smoke E2E, like the rest of the suite: keeps the runner pool free for the Dev-Preview gate.
+    needs: [changes, web-e2e]
     if: ${{ !cancelled() && needs.changes.outputs.sync != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -651,9 +705,13 @@ jobs:
       stage: build
     secrets: inherit
 
+  # Publish gate: what can break the Dev-Preview app itself and finishes before its build does. Everything else
+  # (rest of E2E, sync E2E + seed project, small packages, browser extension, local model, docs checks, CodeQL)
+  # runs next to the build and after the publish: a red one turns the run red, but the preview is out already.
+  # The preview is "an untested intermediate build" by its release notes; docs/HOW-TO.md "Which checks run when".
   dev-preview:
     name: Dev-Preview publish
-    needs: [changes, dev-preview-build, secret-scan, docs-pairs, licences, web, packages, extension, e2e-sync, rust, local-llm]
+    needs: [changes, dev-preview-build, secret-scan, licences, web-static, web-unit, web-e2e, rust]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write
@@ -661,4 +719,8 @@ jobs:
     with:
       target: dev-preview
       stage: publish
+      version: ${{ needs.dev-preview-build.outputs.version }}
+      full: ${{ needs.dev-preview-build.outputs.full }}
+      tag: ${{ needs.dev-preview-build.outputs.tag }}
+      publish: ${{ needs.dev-preview-build.outputs.publish }}
     secrets: inherit
