@@ -23,8 +23,6 @@ import { PageHead } from './PageHead';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
-const hasPage = hasModulePage;
-
 /** How many settings of each module differ from their default (live), by module id. */
 function useChangedCounts(
   manifests: readonly ModuleManifest[],
@@ -98,7 +96,8 @@ function PlainHead() {
 export function ModuleRouteHead({ moduleId }: { moduleId: string }) {
   const states = useModuleStates();
   const manifest = availableManifests().find((m) => m.id === moduleId);
-  if (!states || !manifest || !states[manifest.id] || !hasPage(manifest)) return <PlainHead />;
+  if (!states || !manifest || !states[manifest.id] || !hasModulePage(manifest))
+    return <PlainHead />;
   return <ModuleHead manifest={manifest} />;
 }
 
@@ -109,7 +108,7 @@ export function ModuleSettingsPage() {
   const o = tSettings2.use().modulePage;
   const manifest = availableManifests().find((m) => m.id === moduleId);
   if (!states) return null;
-  if (!manifest || !states[manifest.id] || !hasPage(manifest)) {
+  if (!manifest || !states[manifest.id] || !hasModulePage(manifest)) {
     return (
       <EmptyState compact title={o.notFound}>
         <Link to={settingsPath('module')}>{o.all}</Link>
@@ -205,7 +204,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
 export function ModuleList() {
   const states = useModuleStates();
   const o = tSettings2.use().modulePage;
-  const manifests = availableManifests().filter((m) => states?.[m.id] && hasPage(m));
+  const manifests = availableManifests().filter((m) => states?.[m.id] && hasModulePage(m));
   const counts = useChangedCounts(manifests);
   if (manifests.length === 0) return null;
   return (

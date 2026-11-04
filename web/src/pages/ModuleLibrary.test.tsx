@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { enableModule, moduleHasData } from '@/core/modules/activation';
@@ -16,6 +16,8 @@ import { ModuleLibrary } from './ModuleLibrary';
 import { LibraryDetail } from './library/LibraryDetail';
 
 const entries = () => createRepo('example_entry', example.dataSchema.collections.entry!.schema);
+
+afterEach(() => useUiStore.setState({ showPreview: useUiStore.getInitialState().showPreview }));
 
 beforeEach(async () => {
   localStorage.clear();
@@ -179,7 +181,8 @@ describe('ModuleLibrary filter states', () => {
     expect(within(status).getByText(tComfort.get().library.noResults)).toBeVisible();
     await user.click(within(status).getByRole('button', { name: f.reset }));
     expect(await screen.findByTestId('module-example')).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    // the status region stays mounted (screen readers announce what is put into it) but is empty again
+    expect(status).toBeEmptyDOMElement();
   });
 
   it('a card switched under the "Aus" filter stays until the filter changes', async () => {
@@ -261,5 +264,11 @@ describe('LibraryDetail', () => {
     useUiStore.setState({ showPreview: false });
     renderDetail('maps');
     expect(await screen.findByText(tLibraryV3.get().detail.notFound)).toBeVisible();
+    // positive control: with the switch on, the same module has its page (so the gate was the reason)
+    cleanup();
+    useUiStore.setState({ showPreview: true });
+    renderDetail('maps');
+    expect(await screen.findByRole('heading', { level: 1, name: /.+/ })).toBeVisible();
+    expect(screen.queryByText(tLibraryV3.get().detail.notFound)).not.toBeInTheDocument();
   });
 });

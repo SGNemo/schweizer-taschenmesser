@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { hasStartData } from '@/core/dataapi/onboarding';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
-import { useCatalogManifests } from '@/core/modules/available';
+import { availableManifests, useCatalogManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
@@ -25,7 +26,9 @@ export function LibraryDetail() {
   const v3 = tLibraryV3.use();
   // The same set as the library (a preview module stays hidden while "In Arbeit anzeigen" is off, unless it is on).
   const catalog = useCatalogManifests(states);
-  const manifest = catalog.find((m) => m.id === moduleId);
+  // After the person switched the module here, a preview module leaves the catalogue; the page stays (with its undo toast).
+  const [switched, setSwitched] = useState(false);
+  const manifest = (switched ? availableManifests() : catalog).find((m) => m.id === moduleId);
   if (!states) return null;
 
   if (!manifest) {
@@ -46,7 +49,7 @@ export function LibraryDetail() {
   }
 
   const m = manifest;
-  const enabled = states?.[m.id] ?? false;
+  const enabled = states[m.id] ?? false;
   const d = v3.detail;
   const platforms = m.platforms?.length
     ? m.platforms.map((p) => d.platformNames[p]).join(', ')
@@ -99,8 +102,10 @@ export function LibraryDetail() {
             <Switch
               label={tComfort.get().library.toggle(m.name)}
               checked={enabled}
-              disabled={!states}
-              onChange={(on) => sw.set(m, on)}
+              onChange={(on) => {
+                setSwitched(true);
+                sw.set(m, on);
+              }}
             />
             {enabled && hasStartData(m) ? (
               <StartDataButton moduleId={m.id} setupLink={false} />

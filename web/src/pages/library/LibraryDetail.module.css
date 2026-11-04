@@ -12,7 +12,14 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
+/* Phone: the facts and the switch (the decision) come before the large sketch. */
+.facts {
+  order: -1;
+}
 @media (min-width: 900px) {
+  .facts {
+    order: 0;
+  }
   .body {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     align-items: start;

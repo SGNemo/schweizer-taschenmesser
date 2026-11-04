@@ -76,14 +76,30 @@
   padding: 0;
 }
 
-/* The search in the toolbar grows to a readable width (the page's `.librarySearch` was a fixed block). */
+/* The search in the toolbar grows to a readable width. */
 .toolbarSearch {
   flex: 1 1 16rem;
   max-width: 24rem;
   min-width: 0;
 }
 .filterSeg {
+  /* Filter and area select sit together on the right; the search takes the left. */
+  margin-inline-start: auto;
   min-width: 0;
+}
+/* The status filter is short enough to show whole: no sideways fade on its last option (the base segment fades it below 900 px). */
+.filterSeg [role='group'] {
+  -webkit-mask-image: none;
+  mask-image: none;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.empty:empty {
+  display: none;
+}
+/* Start-data button: after the switch row on the phone, inline on larger screens. */
+.startData {
+  display: inline-flex;
 }
 .empty {
   display: flex;
@@ -97,11 +113,19 @@
 }
 
 @media (max-width: 599px) {
-  /* Phone: the status filter gets a row of its own (four options and the longer es/pt-BR words fit), the sections
+  /* Phone: the sections
      lose their padding (the card is the unit), and the drawn sketch waits for the detail page: one full card with
      its switch is on the first screen. */
+  /* The status filter and the area select share a row while they fit and wrap when they do not (four options, the
+     longer es/pt-BR words): nothing is cut off, and the first card moves up. */
   .filterSeg {
+    flex: 0 1 auto;
+    margin-inline-start: 0;
+  }
+  .startData {
+    order: 3;
     flex: 1 1 100%;
+    justify-content: flex-end;
   }
   .group {
     padding: var(--space-2);

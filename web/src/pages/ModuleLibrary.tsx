@@ -82,9 +82,14 @@ export function ModuleLibrary() {
   const isOn = (m: ModuleManifest) => states?.[m.id] ?? false;
   const activeCount = catalog.filter(isOn).length;
   const newsCount = catalog.filter((m) => badges[m.id]).length;
+  // A preview module that was just switched off leaves the catalogue; its card stays until a filter changes.
+  const pool = [
+    ...catalog,
+    ...availableManifests().filter((m) => held.has(m.id) && !catalog.includes(m)),
+  ];
 
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
-  const shown = catalog.filter((m) => {
+  const shown = pool.filter((m) => {
     const text = haystack(m);
     if (!tokens.every((tok) => text.includes(tok))) return false;
     if (held.has(m.id)) return true;
@@ -93,7 +98,7 @@ export function ModuleLibrary() {
     if (filter === 'news' && !badges[m.id]) return false;
     return true;
   });
-  const allGroups = libraryGroups(catalog);
+  const allGroups = libraryGroups(pool);
   const groups = libraryGroups(shown).filter((g) => areaFilter === 'all' || g.id === areaFilter);
 
   return (
@@ -171,22 +176,25 @@ export function ModuleLibrary() {
           ))}
         </SelectField>
       </Toolbar>
-      {groups.length === 0 ? (
-        <div role="status" className={library.empty}>
-          <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
-          {filter !== 'all' || areaFilter !== 'all' ? (
-            <Button
-              onClick={() => {
-                release();
-                setFilter('all');
-                setAreaFilter('all');
-              }}
-            >
-              {v3.filter.reset}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
+      <div role="status" className={library.empty}>
+        {groups.length === 0 ? (
+          <>
+            <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
+            {query.trim() || filter !== 'all' || areaFilter !== 'all' ? (
+              <Button
+                onClick={() => {
+                  release();
+                  setQuery('');
+                  setFilter('all');
+                  setAreaFilter('all');
+                }}
+              >
+                {v3.filter.reset}
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+      </div>
       {groups.map((g) => {
         const total = allGroups.find((x) => x.id === g.id)?.manifests ?? g.manifests;
         return (
@@ -217,7 +225,7 @@ export function ModuleLibrary() {
                     preview={<WidgetMiniature variant={m.identity.widget} />}
                     badges={
                       <>
-                        {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
+                        {enabled ? <Badge>{t.library.active}</Badge> : null}
                         {badges[m.id] ? (
                           <Badge>
                             {badges[m.id] === 'new' ? text.badgeNew : text.badgeUpdated}
@@ -238,7 +246,9 @@ export function ModuleLibrary() {
                       {v3.details}
                     </Link>
                     {enabled && hasStartData(m) ? (
-                      <StartDataButton moduleId={m.id} setupLink={false} />
+                      <span className={library.startData}>
+                        <StartDataButton moduleId={m.id} setupLink={false} />
+                      </span>
                     ) : null}
                     <Switch
                       label={text.toggle(m.name)}

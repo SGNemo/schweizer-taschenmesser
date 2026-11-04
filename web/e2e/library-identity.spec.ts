@@ -85,6 +85,19 @@ test.describe('libraries in identity v3', () => {
     await expect(page.getByTestId('tool-calc')).toHaveAttribute('data-hue', /.+/);
   });
 
+  test('phone: the first card shows its switch above the bottom navigation', async ({
+    page,
+  }, info) => {
+    test.skip(!isPhone(info), 'phone only');
+    await ready(page, '/library');
+    const card = page.locator('[data-testid^="module-"]').first();
+    const box = await card.getByRole('switch').boundingBox();
+    const nav = await page.getByRole('navigation', { name: 'Hauptnavigation' }).boundingBox();
+    expect(box, 'switch').not.toBeNull();
+    expect(nav, 'bottom navigation').not.toBeNull();
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(nav?.y ?? 0);
+  });
+
   test('phone: the library fits and its cards stay one column', async ({ page }, info) => {
     test.skip(!isPhone(info), 'phone only');
     for (const path of ['/library', '/library/todos', '/tools']) {
