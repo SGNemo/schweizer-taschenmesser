@@ -68,9 +68,9 @@ Four packages, each one chat and one PR against `develop`. **Package 0 first**; 
 
 | # | Package | Branch | Findings (mandatory) | Hotspots to announce | Skills |
 | --- | --- | --- | --- | --- | --- |
-| 0 | Foundation: head grid v3.1, tokens, contract, shared blocks | `feat/identity-v3-frame` | F01 F02 F03 F04 F05 F06 F07 F08 F09 F10 F11 F12 F14 G12 G15 | `ui/tokens.css` (+ test), `core/modules/{types,registry}.ts`, `layout/AreaFrame*`, `home/Home*`, `ui/Misc` (EmptyState), `ui/identity/*`, `scripts/lib/checkIdentity.ts`, every `modules/*/manifest.ts` (ids only) | council · full stop |
-| 1 | Planen + Geld on the new frame | `feat/identity-v3-plan-money-fix` | G04 G05 G10 G11 F04(subs) F10(habits) F11 F15 | `modules/{calendar,todos,habits,timetrack,weather,maps,people,finance,invoices,subscriptions,budgets}/*`, `strings.ts` blocks of those modules + 4 locales | review loop · full stop |
-| 2 | Haushalt / Tresor / Wissen / Medien on the new frame, E-Mail on paper | `feat/identity-v3-household-knowledge-fix` | G13 F04(mail, vault) G02 G03 G06 G07 G08 G09 F10(browser) F11 F15(notes) | `modules/{lists,pantry,vault,accounts,bookmarks,notes,chat,browser,feeds,mail,music}/*`, `strings.ts` blocks + 4 locales | review loop · full stop |
+| 0 | Foundation: head grid v3.1, tokens, contract, shared blocks | `feat/identity-v3-frame` | F01 F02 F03 F04 F05 F06 F07 F08 F09 F10 F11 F12 F14 G12 G15 · council C01 C02 C05 C06 C07(guard) C08 C09 C10 C11 C12 C13 C15 C16 C17 C18 C20 C21 C28 C30 C31 C33 | `ui/tokens.css` (+ test), `core/modules/{types,registry}.ts`, `layout/AreaFrame*`, `home/Home*`, `ui/Misc` (EmptyState), `ui/identity/*`, `scripts/lib/checkIdentity.ts`, every `modules/*/manifest.ts` (ids only) | council · full stop |
+| 1 | Planen + Geld on the new frame | `feat/identity-v3-plan-money-fix` | G04 G05 G10 G11 F04(subs) F10(habits) F11 F15 · council C07(weather) C19 C22 C23 C25 C26 C27 C29 C34(timetrack) | `modules/{calendar,todos,habits,timetrack,weather,maps,people,finance,invoices,subscriptions,budgets}/*`, `strings.ts` blocks of those modules + 4 locales | review loop · full stop |
+| 2 | Haushalt / Tresor / Wissen / Medien on the new frame, E-Mail on paper | `feat/identity-v3-household-knowledge-fix` | G13 F04(mail, vault) G02 G03 G06 G07 G08 G09 F10(browser) F11 F15(notes) · council C03 C04 C23 C24 C34(accounts) | `modules/{lists,pantry,vault,accounts,bookmarks,notes,chat,browser,feeds,mail,music}/*`, `strings.ts` blocks + 4 locales | review loop · full stop |
 | 3 | Dieser PC + Downloads | `feat/identity-v3-disk` | G01 (+ downloads slot) | `modules/disk/*`, `modules/downloads/*` | review loop · full stop |
 
 ### Prompt – package 0: foundation (`feat/identity-v3-frame`)
@@ -99,6 +99,7 @@ Die Gesamtabnahme von Identity v3 (docs/design/identity-v3-audit/01-findings.md,
 - F14: Einstellungs-Köpfe ohne Bereichsmuster; Modul-Einstellungskopf zeigt die Signatur in Größe S statt des Icon-Tiles.
 - G12: `timetrack` → `hourStrip`, `feeds` → `masthead`; `check:modules` warnt bei `signature: 'none'` plus `HeroSlot` in der Seite.
 - G15: `layout/tools/ToolsPanel`: Schmierzettel-Link mit `data-hue` aus dem Notizen-Manifest und `var(--module-color)` statt `--mod-violet`.
+- Council-Funde (01-findings.md „Council additions“): C01 `ui/Patterns.module.css` `.progressBar` und die Ring-Bausteine füllen mit `--module-color` (Akzent bleibt der Primäraktion; `tone` warning/danger nur für Überschreitung) – betrifft alle Balken/Ringe app-weit, Screenshot-Vergleich im PR. C02 `tokens.test.ts`: die 25°-Prüfung für jeden `data-accent`-Block (teal, lagoon, coral) laufen lassen, Varianten verschieben oder Hue-Tabelle anpassen. C05 `router.tsx`: `NoReadAid` um den ganzen `AreaFrame` für `NO_READ_AID_MODULES`. C06 Sidebar: Gruppen-Tönung unter der aktiven Waschung senken oder Labels in getönten Gruppen auf `--text`. C07 `ui/noStripes.test.ts`: auch `box-shadow: inset <n>px 0` / `inset -<n>px 0` und `linear-gradient(90deg, <farbig> 0 <n>px …)` erkennen (der Wetter-Treffer selbst ist Paket 1). C08 `identity.signature` wird vom Rahmen aus einem `Record<SignatureId, Component>` gerendert (das ist der Signatur-Slot); `feedback` streichen oder anschließen; `widgetType` nur behalten, wenn es etwas steuert; den `calendarLeaf`-Sonderfall in `AreaFrame.tsx` entfernen. C09 ein `HeadSurface` in `@/ui` (Muster, Verlauf, Eyebrow, Plättchen) für AreaFrame, Einstellungs-`PageHead` (aus `pages/settings/` herausziehen) und `ToolStage`; Tokens `--head-h-tall`/`--head-h-compact`; `[data-hue2]`-Regel statt Inline-Styles. C10 feste Zeilen je Höhenklasse (kompakt bleibt kompakt, auch mit Inhalt in `extra`). C11 Tokens `--font-serif`, `--weight-light`; Identity-`type`-Akzente darauf umstellen; Test gegen rohe `font-weight`-Zahlen und Font-Stacks außerhalb `tokens.css`. C12 `categoryLook.ts`: Kategorien neutral (slate, kein Bereichsmuster) oder Test, dass kein (hue, area)-Paar einem Modul gleicht. C13 `checkIdentity.ts`: Winkel-Schleife raus (die Palette pinnt ≥ 26°), app-weite Regel rein, Fakten aus der Laufzeit-Registry statt Regex über Manifest-Quelltext. C15 `spreadVariants` streichen oder auf dem berechneten Raster testen (Modul-Läufe zusammenhalten). C16 Kompakt-Leiste liest den Titel aus dem `HeroContext`, nicht aus dem DOM. C17 unter `calm`/`off` `--area-pattern: none` statt nur Opazität 0; `--card-pad`-Token für die Kopfzone. C18 Overflow-Spec: auch `scrollWidth > clientWidth` unter `overflow: hidden` melden (ohne `text-overflow: ellipsis`), je Master-Detail-Modul eine Split-Route. C20 eine Signatur-Bibliothek für Module und Werkzeuge (`TOOL_SIGNATURES` auflösen). C21 ein Mechanismus für die Figur (`HeroSlot`/Registry; `contributions.headline` mit nur einem Nutzer prüfen). C28 Bibliothek-Band in neutralem oder Marken-Ton, nicht in einem Modul-Farbton. C30 Hinweis/Link von „Fokus & Aufmerksamkeit“ auf „Modulfarben“. C31 Telefon: „Satz eintragen“ mit Tooltip/aria-Label und im ⋯-Menü. C33 `tokens.test.ts`: kein Text-Token unter `--text-muted` in `[data-hue] .head`.
 
 ## Nicht in diesem Paket
 Modul-Inhalte (Köpfe, Widgets, Leerzustände der Module), Dieser PC, E-Mail-Seite. Keine neuen Farbtöne. Nichts an Signing, Secrets, Tresor-Logik, Sync.
@@ -132,6 +133,7 @@ Das Fundament-Paket hat den Kopf-Rahmen v3.1 (Signatur-Slot neben der Figur), di
 - F11 Leerzustände auf `EmptyState motif`: Kalender (Kalenderblatt), ToDos (Tageskarte), Zeiterfassung (Stundenleiste), Wetter (Himmel), Karten (Pin), Personen (Avatar-Ring), Finanzen (Bankkarte), Rechnungen (Bill), Abos (Ring), Budgets (Umschlag); Gewohnheiten portiert seinen vorhandenen Ring.
 - F15 Fenster-Queries raus: Wetter-Aside (`weather.module.css` 1200 px), ToDos `TodayCard` (700 px), Kalender `NextEventLine` (700 px), Rechnungen-Seite (899 px) → `useSplitView()` / `usePageWidthAtLeast()` bzw. `@container page`.
 - Alle Signaturen der Gruppe in den Slot (`HeroSlot area="signature"`), modul-lokale Kopien von Bausteinen entfernen (todayCard, avatarRing, calendarLeaf-Kopien, receipt).
+- Council-Funde: C07 Wetter-Bewertungszeilen ohne Streifen (`box-shadow: inset 3px 0 0` raus; Chip oder getönte Zeile). C19 Kalender-Zeitraster per `@container page` statt `TIME_GRID_QUERY` 1400 px/700 px. C22 ToDos-Kopf am Telefon: Aufgabentitel einzeilig (gekürzt) und „Später“ bleiben, Button-Name „Anfangen: <Titel>“, Container-Query statt Fenster. C23 Leerzustände der Seiten: ein Verb (die Primäraktion der Toolbar); „Importieren“ und „Einrichtung öffnen“ ins ⋯-Menü. C25 Zeiterfassung: eigene Leistenform (laufender Balken oder Stoppuhr-Bogen) statt der Kalender-Stundenleiste. C26 Wetter ohne Ort: Himmel auch im Ohne-Ort-Zustand, „Ort wählen“ im Körper. C27 Rechnungen-Widget: Fälligkeitsdatum oder „wartet noch“ statt „seit n Tagen“. C29 ToDos/Zeiterfassung: nur eine gefüllte Primäraktion je Ansicht (Formular-Button sekundär). C34 Zeiterfassung-Widget-Leerzustand auf den Fisch/`EmptyState`.
 
 ## Nicht in diesem Paket
 Rahmen, Tokens, Contract (Fundament); andere Gruppen; keine neuen Farbtöne; keine Datenänderung.
@@ -166,6 +168,7 @@ Wie Paket 1, für die elf Module Listen, Vorräte, Unterlagen, Passwörter, Merk
 - F11 Die zwölf modul-lokalen Leerzustände (`*Empty.tsx`) auf `EmptyState motif` portieren, Kopien löschen.
 - F15 Notizen-Seite: `useMediaQuery('(min-width: 900px)')` → Seiten-Container.
 - Modul-lokale Kopien der Signatur-Bausteine (Bon, Ordnerreiter dreimal, Stempel, Umschlag, Pinnwand, Papier, Blase, Adresszeile, Regal, Tür) durch die Bausteine aus `@/ui/identity` ersetzen.
+- Council-Funde: C03 Musik: Cover-Ton unter „Ruhig“ und „Modulfarben: Aus“ ausblenden (wie BankCard/Sky), Tönung je Theme neu rechnen; Player-Bedienelemente am Telefon aus dem Kopf (C10). C04 Unterlagen: Kalender-Beiträge (`vault/calendar.ts`) ohne Dokumenttitel in der Übersichts-Agenda (Kategorie/Anzahl, wie die Aufmerksamkeitskarte) – Standard ohne Titel; ein Opt-in „Titel auf der Übersicht zeigen“ nur, wenn der Maintainer es will (Frage mit Empfehlung „nein“). C23 Leerzustände der Seiten: ein Verb, Import/Einrichtung ins ⋯-Menü. C24 Aufmerksamkeitskarten: abgelaufene Vorräte und abgelaufene Unterlagen mit `warning` statt `danger` (rot nur für Geld und Budgets, FOCUS-GUIDELINES). C34 Passwörter-Widget-Leerzustand auf `EmptyState` (Fisch oder `motif`).
 
 ## Nicht in diesem Paket
 Rahmen, Tokens, Contract; Planen/Geld; Dieser PC; Tresor-Krypto, Mail-Zugangsdaten, Sync.
@@ -204,3 +207,70 @@ Alles außer `modules/disk/*` und `modules/downloads/*`; keine neuen Farbtöne.
 ## Skills
 `review loop`, dann `full stop`: PR gegen develop, kein Merge.
 ```
+
+## Part C – council (one round, three delegates on `develop` 73da10c4)
+
+Scores for the **whole identity v3 implementation on develop**, not for this branch. No fixes were made for the council (this PR carries one allowed one-token fix, G16); every accepted finding is a package item above, so a second round would have re-reviewed the same code. Delegate reports (verbatim): `../../../scribble/` is not used for them; the ledger below is the record.
+
+| Delegate (lens) | Round 1 |
+| --- | --- |
+| Architect (Claude Opus) | 6/10 · CHANGES |
+| Guardian (Claude Opus) | 7/10 · CHANGES |
+| Advocate (Claude Opus) | 6/10 · CHANGES |
+
+Open after the round: everything below marked "package" (no fix in this PR by design). Declined as out of scope: Guardian F13 (strength-meter transition, pre-existing in accounts), Advocate F6 (method note, acted on: calm sheets added, cold re-run in the packages' acceptance).
+
+### Ledger
+| Delegate · id | Severity | Claim (short) | Outcome |
+| --- | --- | --- | --- |
+| Architect A1 | should | weather rows draw a left rail with `box-shadow: inset 3px 0 0`; noStripes cannot see it | **confirmed** (code) → C07: guard in package 0, weather row in package 1; T02 amended |
+| Architect A2 | should | `widgetType`/`feedback` render nothing; `signature` only special-cased for `calendarLeaf` | **confirmed** → C08, package 0 |
+| Architect A3 | should | three head implementations, literal heights, inline hue2 | **confirmed** → C09, package 0 |
+| Architect A4 | should | compact is only a min-height; music head 60 % of the phone | **confirmed** (heads-light-1920/-412) → C10, packages 0 + 2 |
+| Architect A5 | should | raw font-weight 300, Georgia stack ×12, no tokens | **confirmed** → C11, package 0 |
+| Architect A6 | should | settings categories equal module identities | **confirmed** → C12 (F14 raised to S2), package 0 |
+| Architect A7 | nit | in-area 25° loop cannot fire; regex parsing brittle | **confirmed** → C13, package 0; palette verdict reworded |
+| Architect A8 | nit | hue names drift from angles | **confirmed** → C14, MODULE-IDENTITY clarification (this PR) |
+| Architect A9 | nit | spreadVariants weak on the dense grid, splits module runs | **confirmed** (home/layout.ts) → C15, package 0 |
+| Architect A10 | nit | compact bar reads the DOM during render | **confirmed** → C16, package 0 |
+| Architect A11 | nit | dead comment/no-op reduced-motion rule | **confirmed** → with C10/F02 in package 0 |
+| Architect A12 | nit | calm leaves 26 pattern layers; hard-coded `--space-5` | **confirmed** (perf sample "pattern 26" in calm) → C17, package 0 |
+| Architect A13 | nit | overflow method blind to clipped content and split routes | **confirmed** → C18, package 0 (tooling) |
+| Architect A14 | nit | calendar grid by window 1400 px | **confirmed** → C19, package 1 |
+| Architect A15 | blocker | disk has no identity | confirms G01 → package 3 |
+| Architect A16–A19 | should/nit | confirm F01, F02, F05, F12, F13; tool/module signature vocabularies collide | → C20, C21 package 0 |
+| Architect A20 | nit | `--mod-violet`/`--mod-ocean` hardcodes; the branch carries a code commit | G15 package 0; G16 fixed here (one token, allowed by the task's phase 3) |
+| Architect A21 | nit | perf sample confirmed; WebView2/Android unmeasured | agreed; hand test noted in 01-findings |
+| Guardian F1 | blocker | `--text-3` on the 40 % tint 2.65–3.16 light / 1.93–2.40 dark (hour labels) | **confirmed** (contrast.mjs now prints t3@40) → F03 corrected, package 0 |
+| Guardian F2 | should | AvatarRing `.sub` muted on the tint | **confirmed** → F03 list |
+| Guardian F3 | should | music cover tone ignores calm/off; stale tint after theme switch | **confirmed** (no `data-color` guard in MusicHero) → C03, package 2 |
+| Guardian F4 | should | accent variants outside the 25° rule | **confirmed** (tokens.test checks the default accent only) → C02, package 0 |
+| Guardian F5 | should | document titles reach the overview agenda | **confirmed** (`vault/calendar.ts` uses `d.title`) → C04, package 2 with a maintainer question (default: no title) |
+| Guardian F6 | should | NoReadAid does not cover the frame on vault pages | **confirmed** (router.tsx:106-109) → C05, package 0 |
+| Guardian F7 | should | no calm sheets; six kennzahl widgets in calm differ by a grey icon only | **acted on**: `shots/heads-calm-1920.jpg`, `widgets-calm-1920.jpg` added; the kennzahl finding stands (F05) |
+| Guardian F8 | should | sidebar stacked tints 4.41 : 1 | **confirmed by computation** → C06, package 0 |
+| Guardian F9 | nit | ArrowBand, VaultDoor, ListSignature muted on the tint | confirms F03 |
+| Guardian F10 | nit | Stamp, Shelf, CalendarLeaf sit on their own surface card | **agreed, F03 corrected** |
+| Guardian F11 | nit | `--info` missing in both themes; `--focus` needs no hue rule | **agreed, F08 corrected** |
+| Guardian F12 | nit | spinner stops via the global rule; no Sky drift | **agreed, T06 corrected** |
+| Guardian F13 | nit | strength meter `transition: width` | declined: pre-existing, outside identity |
+| Guardian F14 | nit | bars/rings in accent | → C01 (with Advocate F1), package 0 |
+| Guardian F15 | nit | decoration repeats content on the module page: write the boundary | **done**: MODULE-IDENTITY clarification → C32 |
+| Guardian F16 | nit | `--text-3` on the widget head zone borderline | → C33, package 0 |
+| Guardian F17, F18 | nit | screenshots seed-only; widget/plate contrast passes | confirm T04/T07 |
+| Advocate F1 | should | `.progressBar` fills with `--accent` app-wide | **confirmed** (Patterns.module.css:334) → C01, package 0; rule in MODULE-IDENTITY |
+| Advocate F2 | should | phone ToDos head drops the title; button name "Anfangen" | **confirmed** (heads-light-412) → C22, package 1 |
+| Advocate F3 | should | empty pages offer three actions | **confirmed** (empty-pages sheet) → C23, packages 1 + 2 |
+| Advocate F4 | should | expired stock/documents as red attention cards | **confirmed** (`pantry/attention.ts:22`, `vault/attention.ts:32` use `danger`) → C24, package 2; overview-head verdict changed to "nachschärfen" |
+| Advocate F5 | nit | calendar/timetrack share the HourStrip | **confirmed** → C25, package 1 |
+| Advocate F6 | nit | blind test not cold | **agreed**, noted in 01-findings (C35); cold re-run in the packages' acceptance |
+| Advocate F7 | nit | weather no-place head empty on desktop too | **confirmed** (empty-pages sheet) → C26, package 1 |
+| Advocate F8 | nit | "seit 12 Tagen" counter in the invoices widget | **confirmed** → C27, package 1 |
+| Advocate F9 | nit | library band tint reads as a module; three controls per card | **confirmed** → C28, package 0 (library tint); card controls left to the library owner |
+| Advocate F10 | nit | two filled primaries on todos/timetrack | **confirmed** → C29, package 1 |
+| Advocate F11 | nit | "Modulfarben" placement | → C30, package 0 (link from the focus section) |
+| Advocate F12–F19 | blocker/should | confirm F03, G02, F10, F09/F05, F11, G01/G03/G04/G05, F01/F02, F06 | already in the packages |
+| Advocate F20 | nit | phone "Satz eintragen" icon-only | **confirmed** → C31, package 0 |
+| Advocate F21 | nit | i18n of identity texts complete and natural | confirmed |
+
+Contradictions settled with evidence: the audit's T06 said the spinner never stops – the Guardian's reading of `global.css` is right (global `animation-iteration-count: 1 !important`); the audit's F03 list of seven – the Guardian is right that three of them sit on surface cards; the audit's "overview head bestätigt" – the Advocate's `danger` finding (C24) stands, verdict changed. The Architect's challenge to the palette verdict (the in-area angle rule is redundant) is accepted and the verdict reworded.

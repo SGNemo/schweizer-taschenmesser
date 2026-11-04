@@ -22,11 +22,11 @@ const f = (n) => n.toFixed(1).padStart(5);
 for (const [name, t] of [['light', light], ['dark', dark]]) {
   const ink = name === 'light' ? t.surface : t.bg;
   console.log(`\n## ${name}  (hue on bg/surface/surface-2 ≥3:1 · plate ink on hue ≥3:1 · text on tints ≥4.5:1 · hue as icon on tints ≥3:1)`);
-  console.log('hue      | H°   | on bg | on sf | on sf2| ink/hue | text@40%| text@14%| muted@40%| muted@14%| t3@14% | hue@18% | hue@12% | hue@5%');
+  console.log('hue      | H°   | on bg | on sf | on sf2| ink/hue | text@40%| text@14%| muted@40%| muted@14%| t3@40% | t3@14% | hue@18% | hue@12% | hue@5%');
   for (const h of HUES) {
     const c = t[`mod-${h}`];
     const head40 = mix(c, 40, t.surface), w14 = mix(c, 14, t.surface), t18 = mix(c, 18, t.surface), t12 = mix(c, 12, t.surface), t5 = mix(c, 5, t.surface);
-    console.log(`${h.padEnd(8)} | ${String(Math.round(hue(c))).padStart(4)} | ${f(cr(c, t.bg))} | ${f(cr(c, t.surface))} | ${f(cr(c, t['surface-2']))} | ${f(cr(ink, c))}   | ${f(cr(t.text, head40))}   | ${f(cr(t.text, w14))}   | ${f(cr(t['text-muted'], head40))}    | ${f(cr(t['text-muted'], w14))}    | ${f(cr(t['text-3'], w14))}  | ${f(cr(c, t18))}   | ${f(cr(c, t12))}   | ${f(cr(c, t5))}`);
+    console.log(`${h.padEnd(8)} | ${String(Math.round(hue(c))).padStart(4)} | ${f(cr(c, t.bg))} | ${f(cr(c, t.surface))} | ${f(cr(c, t['surface-2']))} | ${f(cr(ink, c))}   | ${f(cr(t.text, head40))}   | ${f(cr(t.text, w14))}   | ${f(cr(t['text-muted'], head40))}    | ${f(cr(t['text-muted'], w14))}    | ${f(cr(t['text-3'], head40))}  | ${f(cr(t['text-3'], w14))}  | ${f(cr(c, t18))}   | ${f(cr(c, t12))}   | ${f(cr(c, t5))}`);
   }
   console.log('\nhue distance (°) to state colours (≥25 wanted):');
   const states = ['danger', 'warning', 'success', 'info', 'accent', 'focus'];

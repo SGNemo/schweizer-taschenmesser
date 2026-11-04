@@ -156,6 +156,9 @@ Findings and packages: [identity-v3-audit/](identity-v3-audit/01-findings.md). T
 - **`signature: 'none'` only when the head draws nothing.** A module that fills `HeroSlot` with a mark names it (new ids go into `SIGNATURES` with the block that draws them).
 - **Widget titles are unique across modules.** Two cards named "Heute" or "Lesezeichen" on one overview are a finding, not a style.
 - **Empty states:** the widget keeps the fish; a module page may draw its own grey motif – the shared `EmptyState` is the place for it (`motif` prop, fix package), not a module-local copy.
+- **Hue names are not angles.** `sky` is 228°, `cobalt` 254°, `indigo` 280°, `violet` 306°, `orchid` 332° (HSL, light theme); pick a hue by its swatch in `tokens.css`, not by its name (council C14).
+- **Decoration may repeat content only on the module's own page.** A head signature that shows the first lines of a note or the titles of bookmarks is `aria-hidden` and repeats what the list below shows; the compact bar, the overview head, attention cards, the agenda and widget heads never carry such content (council C32).
+- **Bars and rings carry the module colour, not the accent.** `--accent` stays with the primary action and "today"; a progress bar or ring is `--module-color` (red only for an exceeded budget or overdue money).
 
 ## Checklist for a new or converted module
 
