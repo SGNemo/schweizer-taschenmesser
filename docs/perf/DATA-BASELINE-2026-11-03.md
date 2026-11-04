@@ -151,6 +151,23 @@ Left over at start: 11 full scans of the bookings (64k rows) from the sources th
 `startDate` index; a range read needs an index on `endDate` and one for recurring events, i.e. a migration), and 9 of
 the tasks (16k rows). Mail `saveThreads` (one transaction per thread) waits for `Repo.transaction` in P2e.
 
+### P2c `perf/search-index` (2026-11-04)
+The full text search keeps one in-memory MiniSearch index (`core/ai/search/index.ts`) instead of reading every
+searchable table and building an index per query. A written table is marked dirty (Dexie `storagemutated`) and re-read
+by the next search, replacing only changed documents; the index drops after 5 idle minutes. Results are read from
+the tables when shown. Median of 3, desktop, 31k searchable documents:
+
+| | before | after P2c |
+|---|---|---|
+| Rows read per query | 31,700 (every searchable table) | **5–91** (only the hits) |
+| `searchEntries`, fake-indexeddb, per query | 760 ms | first query 471 ms (builds the index), then **4–9 ms** |
+| Palette, typed query to settled (includes 60 ms per typed key of the test) | 1.6 / 1.2 / 1.3 s | **0.73 / 0.35 / 0.41 s** |
+| JS heap after searching | 29.5 MB | 32.5 MB (+3 MB for the index) |
+
+The first search of a session still builds the index (about 0.5 s for 31k documents, in slices of 2,000 so the page
+can draw); a Web Worker would move it off the main thread and was left out (the documents would have to be copied
+to the worker first).
+
 ## Re-running
 ```bash
 cd web
