@@ -4,6 +4,7 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { usePersonFilter } from '@/core/people/PersonFilter';
 import { personName, usePeople } from '@/core/people/people';
+import { CalendarLeaf } from '@/ui/identity';
 import { groupByDate } from '../views';
 import { ItemRow } from './ItemRow';
 import styles from '../routes/calendar.module.css';
@@ -27,7 +28,10 @@ export function Agenda({
   );
   return (
     <section className={styles.agenda}>
-      <h2 className={styles.agendaTitle}>{t.calendar.agenda}</h2>
+      <h2 className={styles.agendaTitle}>
+        <CalendarLeaf month={formatDay(date, 'MMM')} day={formatDay(date, 'd')} size="sm" />
+        {t.calendar.agenda}
+      </h2>
       {days.map((d) => {
         const list = byDate.get(d) ?? [];
         return (

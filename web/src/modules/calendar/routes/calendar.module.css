@@ -47,6 +47,7 @@
 .cell {
   vertical-align: top;
   height: 5.5rem;
+  min-width: 0;
   padding: var(--space-1);
   border: 1px solid var(--border);
   overflow: hidden;
@@ -105,12 +106,19 @@
   white-space: nowrap;
   text-align: left;
   border: 0;
-  border-radius: var(--radius-sm);
-  padding: 1px var(--space-1);
+  border-radius: var(--radius-full);
+  padding: 1px var(--space-2);
   font-size: var(--text-xs);
   cursor: pointer;
   background: var(--surface-2);
   color: var(--text);
+}
+.chip svg,
+.tgItem svg {
+  flex: none;
+  vertical-align: -2px;
+  margin-inline-end: 3px;
+  color: var(--text-muted);
 }
 .more {
   background: none;
@@ -264,8 +272,16 @@
 button.itemRow {
   cursor: pointer;
 }
+/* Entries of a calendar are capsules in its colour (tint + dot); the kind is an icon, not a colour. */
+.itemRow[style*='--cal'] {
+  background: color-mix(in srgb, var(--cal) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--cal) 30%, transparent);
+}
 button.itemRow:hover {
   background: var(--surface-2);
+}
+button.itemRow[style*='--cal']:hover {
+  background: color-mix(in srgb, var(--cal) 20%, var(--surface));
 }
 .time {
   flex: none;
@@ -291,6 +307,9 @@ button.itemRow:hover {
 }
 .kind {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   padding: 0 var(--space-2);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
@@ -461,8 +480,7 @@ button.itemRow:hover {
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;
   padding: 2px var(--space-1);
-  border: 1px solid color-mix(in srgb, var(--kind, var(--text-3)) 55%, transparent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   text-align: left;
   font-size: var(--text-xs);
   cursor: pointer;
@@ -497,12 +515,15 @@ button.itemRow:hover {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--module-color) 25%, var(--border));
+  border-radius: var(--radius-lg);
   min-height: 100%;
 }
 .agendaTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   font-size: var(--text-md);
 }
 .agendaHead {
@@ -537,7 +558,7 @@ button.itemRow:hover {
   border-radius: 50%;
 }
 
-/* Blocks and chips are neutral; the kind shows as a stripe at the left (and in the label/tooltip), not as a coloured text. */
+/* Blocks and chips: the calendar colour (--cal) tints the capsule; without one the kind picks a quiet tone. The kind itself is the icon, the label and the tooltip, never an edge. */
 .chip.kind_event,
 .tgItem.kind_event {
   --kind: var(--accent);
@@ -584,8 +605,13 @@ button.itemRow:hover {
 .tgItem.kind_external {
   --kind: var(--text-muted);
 }
-.chip {
-  border: 1px solid color-mix(in srgb, var(--kind, var(--text-3)) 55%, transparent);
+.chip,
+.tgItem {
+  border: 1px solid color-mix(in srgb, var(--cal, var(--kind, var(--text-3))) 45%, transparent);
+}
+.chip[style*='--cal'],
+.tgItem[style*='--cal'] {
+  background: color-mix(in srgb, var(--cal) 18%, var(--surface));
 }
 .tgItem.done,
 .chip.done {
@@ -837,4 +863,15 @@ button.itemRow:hover {
   font-size: var(--text-label);
   font-weight: 600;
   color: var(--text-muted);
+}
+
+/* Head line: the next appointment, quiet text under the date block. */
+.nextLine {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.nextLine strong {
+  font-variant-numeric: tabular-nums;
 }

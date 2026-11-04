@@ -1,6 +1,8 @@
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
+import { KindIcon } from './KindIcon';
+import type { CSSProperties } from 'react';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -32,6 +34,7 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
     <>
       <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>
       <span className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}>
+        <KindIcon kind={item.kind} />
         {kindLabel(item.kind)}
       </span>
       <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`} title={item.title}>
@@ -44,14 +47,15 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
     </>
   );
   const rowClass = `${styles.itemRow} ${compact ? styles.itemRowCompact : ''}`;
+  const capsule = (item.color ? { '--cal': item.color } : undefined) as CSSProperties | undefined;
   return (
     <li>
       {onOpen ? (
-        <button type="button" className={rowClass} onClick={() => onOpen(item)}>
+        <button type="button" className={rowClass} style={capsule} onClick={() => onOpen(item)}>
           {content}
         </button>
       ) : (
-        <div className={rowClass}>{content}</div>
+        <div className={rowClass} style={capsule}>{content}</div>
       )}
     </li>
   );

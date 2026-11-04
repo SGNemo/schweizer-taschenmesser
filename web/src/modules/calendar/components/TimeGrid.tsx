@@ -12,6 +12,7 @@ import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
 import { groupByDate, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
+import { KindIcon } from './KindIcon';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -247,6 +248,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                         '--minutes': Math.max(SNAP_MINUTES, end - start + dLen),
                         '--lane': lane,
                         '--lanes': lanes,
+                        ...(item.color ? { '--cal': item.color } : {}),
                         ...(active?.kind === 'move' && active.dDays
                           ? { transform: `translateX(${active.dDays * 100}%)` }
                           : {}),
@@ -269,6 +271,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                       onOpenItem(item);
                     }}
                   >
+                    <KindIcon kind={item.kind} size={11} />
                     <span className={styles.tgTime}>{item.time}</span> {item.title}
                     {lanes > 1 ? (
                       <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
