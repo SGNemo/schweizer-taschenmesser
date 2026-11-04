@@ -205,3 +205,15 @@
     display: none;
   }
 }
+
+/* Receipt plate in front of every invoice (the money area has no left stripes; the plate carries the module colour). */
+.plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  color: var(--text);
+}

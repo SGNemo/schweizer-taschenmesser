@@ -12,8 +12,7 @@ import {
   Card,
   Icon,
   IconButton,
-  PageTitle,
-  patternStyles,
+  PageHeader,
   Segmented,
   SplitView,
   useOpenParam,
@@ -98,21 +97,28 @@ export default function FinancePage() {
 
   return (
     <>
-      <div className={styles.header}>
-        <PageTitle title={t.finance.title} spacer />
-        <div className={patternStyles.hstackCenter}>
-          <AdvancedToggle moduleId="finance" />
-          <Button
-            variant="primary"
-            onClick={() => setTarget({ draft: true })}
-            aria-label={t.finance.addTransaction}
-            disabled={!data || data.accounts.length === 0}
-          >
-            <Icon name="plus" size={18} />
-            {t.finance.addTransactionShort}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t.finance.title}
+        views={
+          <Segmented
+            label={t.finance.tabsLabel}
+            value={tab}
+            options={tabs.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
+            onChange={(k) => go({ tab: k })}
+          />
+        }
+      >
+        <AdvancedToggle moduleId="finance" />
+        <Button
+          variant="primary"
+          onClick={() => setTarget({ draft: true })}
+          aria-label={t.finance.addTransaction}
+          disabled={!data || data.accounts.length === 0}
+        >
+          <Icon name="plus" size={18} />
+          {t.finance.addTransactionShort}
+        </Button>
+      </PageHeader>
 
       {view ? (
         <HeroSlot>
@@ -121,15 +127,6 @@ export default function FinancePage() {
       ) : null}
 
       <NowStrip modules={['finance', 'invoices', 'budgets']} />
-      <div className={styles.tabs}>
-        <Segmented
-          label={t.finance.tabsLabel}
-          value={tab}
-          options={tabs.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
-          onChange={(k) => go({ tab: k })}
-        />
-      </div>
-
       {currencies.length > 1 && (tab === 'overview' || tab === 'transactions') ? (
         <div className={styles.tabs}>
           <Segmented
