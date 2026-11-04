@@ -1,0 +1,126 @@
+/* Desktop: list left, tool right, one fixed height so nothing jumps between tools. Phone: one pane. */
+.panel {
+  display: grid;
+  grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  height: min(42rem, 72dvh);
+  min-height: 0;
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  padding-inline-end: var(--space-1);
+}
+.stagePane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stagePane > section {
+  flex: 1 1 auto;
+}
+.search {
+  min-height: 2.75rem;
+  width: 100%;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.groupTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--text-3);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.tile {
+  width: 100%;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.tile:hover {
+  background: var(--surface-2);
+}
+/* The tool that is open: a tint of its hue behind the whole row (no edge stripe). */
+.tile[aria-current='true'] {
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  font-weight: var(--weight-medium);
+}
+.tileName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.number {
+  flex: none;
+  color: var(--text-3);
+  font: inherit;
+  font-size: var(--text-meta);
+}
+/* The scratch pad lives in Notes: a sticky-note shaped link, tinted like that module. */
+.scratch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--mod-violet) 14%, var(--surface));
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow-1);
+  transform: rotate(-0.6deg);
+}
+.scratch span {
+  display: flex;
+  flex-direction: column;
+}
+.scratch small {
+  color: var(--text-muted);
+}
+.manage {
+  align-self: flex-start;
+  color: var(--accent);
+}
+@media (max-width: 899px) {
+  .panel {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: calc(100dvh - 8rem);
+  }
+  .panel[data-pane='tool'] .side,
+  .panel[data-pane='list'] .stagePane {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scratch {
+    transform: none;
+  }
+}

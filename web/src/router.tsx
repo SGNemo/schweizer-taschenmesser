@@ -7,6 +7,7 @@ import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
+import { ToolSolo } from '@/layout/tools/ToolSolo';
 import { ComponentSheet } from '@/layout/devTools';
 import { frameVariant } from '@/core/modules/frame';
 import { AreaFrame } from '@/layout/AreaFrame';
@@ -119,6 +120,8 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
   }));
 
   return [
+    // A tool detached from the panel into its own window: no shell around it.
+    { path: 'tool/:id', element: page(<ToolSolo />) },
     {
       element: <AppShell />,
       children: [

@@ -1,0 +1,56 @@
+/* The tool's surface: a tint of its hue from the head down, soft depth, nothing on the edges. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 5%, var(--surface));
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--head-gradient);
+  color: var(--text);
+}
+.headText {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.name {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+.about {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.signature {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  /* Decoration: the hue on its own tint reads at 3:1 (tokens.test.ts); words carry the meaning. */
+  color: var(--module-color);
+}
+.detach {
+  flex: none;
+}
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+/* Code-like tools (developer group) read in mono. */
+.stage[data-type='mono'] .about {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

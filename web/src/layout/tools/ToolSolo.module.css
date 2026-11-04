@@ -1,0 +1,11 @@
+.solo {
+  min-height: 100dvh;
+  padding: var(--space-3);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+.solo > section {
+  flex: 1 1 auto;
+}
