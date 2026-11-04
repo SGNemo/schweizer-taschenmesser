@@ -15,7 +15,7 @@ Whole-picture check of identity v3 on `develop` (73da10c4): foundation (#414) pl
 | All module heads, phone 412 | [heads-light-412](shots/heads-light-412.jpg) |
 | All widgets ("Ausführlich"), light / dark 1920, phone | [widgets-light-1920](shots/widgets-light-1920.jpg) · [widgets-dark-1920](shots/widgets-dark-1920.jpg) · [widgets-light-412](shots/widgets-light-412.jpg) |
 | All empty states (pages, widgets) | [empty-pages-light-1920](shots/empty-pages-light-1920.jpg) · [empty-widgets-light-1920](shots/empty-widgets-light-1920.jpg) |
-| Overview, sidebar, settings, library, toolbox | [dashboard 1920](shots/page-1920x1080--dashboard.jpg) · [dashboard-all 2560](shots/page-2560x1440--dashboard-all.jpg) · [phone](shots/page-412x915--dashboard.jpg) · [sidebar](shots/page-1920x1080--sidebar.jpg) · [settings](shots/page-1920x1080--settings.jpg) · [library](shots/page-1920x1080--library.jpg) · [tools library](shots/page-1920x1080--tools.jpg) · [toolbox](shots/page-1920x1080--toolbox.jpg) · [timer](shots/tool-timer.jpg) |
+| Overview, sidebar, settings, library, toolbox | [dashboard 1920](shots/page-1920x1080--dashboard.jpg) · [dashboard-all 2560](shots/page-2560x1440--dashboard-all.jpg) · [phone](shots/page-412x915--dashboard.jpg) · [sidebar](shots/page-1920x1080--sidebar.jpg) · [settings](shots/page-1920x1080--settings.jpg) · [library](shots/page-1920x1080--library.jpg) · [tools library](shots/page-1920x1080--tools.jpg) · [toolbox](shots/page-1920x1080--toolbox.jpg) · [timer](shots/tool-timer.jpg) · [QR](shots/tool-qr.jpg) · [toolbox phone](shots/toolbox-phone.jpg) |
 
 ## Blind test – result
 | | Items | Recognised | By form or signature | Only by colour, icon, reading the content, or elimination |
@@ -92,7 +92,7 @@ Severity: **S1** breaks the promise "recognisable without reading" for several m
 | T05 | Hue distance to state colours: all ten hues ≥ 27° from danger, warning, success and accent (lime–warning 28°, fern–success 29°, teal–success 28°, orchid–danger 31° are the closest). `--info` (ocean 10°, sky 16°) and `--focus` (teal 6°, ocean 20°) are not covered by the rule → F08. | F08 |
 | T06 | Motion: only the skeleton shimmer and the sync spinner (`AppShell.module.css .spin`) run forever; the shimmer stops under reduced motion, the spinner does not (pre-existing, not identity). Signature motion (Sky drift) is static under reduced motion by the tour's `reducedMotion: 'reduce'`. | S3 note |
 | T07 | Vault: the passwords widget is status only, the documents widget counts only (pinned by `exclusion.test.ts`, `vault.widget.test.tsx`); nothing from the vault reaches the overview. Reading aid: numbers, inputs and the vault stay plain; head titles get the bold prefix in `--text` (heads-readon-1920). | **confirmed** |
-| T08 | Performance sample (1920, overview calm/all, finance, calendar week, music, library, settings; module colours vs "Ruhig"): see "Performance" below. | pending |
+| T08 | Performance sample (1920, overview calm/all, finance, calendar week, music, library, settings; module colours vs "Ruhig"): see "Performance" below. | **confirmed** |
 
 ## Foundation decisions – verdicts
 | Decision | Verdict | Why |
@@ -107,10 +107,22 @@ Severity: **S1** breaks the promise "recognisable without reading" for several m
 | Contract: `identity` fields, `SIGNATURES`, `check:modules` | **nachschärfen** | The checker passes while `signature: 'none'` sits on modules with a strong hero (G12) and 16 of 21 signature ids have no shared block (F12). The checker should know what the frame can render. |
 
 ## Empty states
-Pages: the household, vault, knowledge, media and service groups draw their own motif (shelf, slip, folder, door, pinboard, paper, masthead, bubble, address bar, envelope, note, arrow); the plan and money group keeps the fish for calendar, todos, finance, invoices, subscriptions, budgets, maps, weather, timetrack and people (habits has a ring). Widgets: fish everywhere, one sentence, one link – consistent. The vault page without a vault shows the create screen (correct). Sheets: empty-pages-light-1920, empty-widgets-light-1920 (F11).
+Every module on, no data ([empty-pages-light-1920](shots/empty-pages-light-1920.jpg), [phone](shots/empty-pages-light-412.jpg), [widgets](shots/empty-widgets-light-1920.jpg)). Pages: bookmarks, chat, feeds, habits, lists, mail, notes, pantry, vault, downloads, music and browser draw their own grey motif (pinboard, bubble, masthead, rings, slip, envelope, paper, shelf, folder, arrow, note, address page); budgets, finance, invoices, maps, people, subscriptions, timetrack, todos and weather show the fish; calendar shows the bare grid, accounts the create screen (correct). Widgets: fish everywhere, one sentence, one link – consistent, and the one place where the plan/money group and the others agree (F11). Empty heads: budgets, habits, pantry, people, subscriptions, maps, vault and weather keep the 12.5 rem band with the title alone, finance shows "0,00 €" twice (figure and card), mail a "0" stamp – the hero height has no empty-state rule (adds to F01).
 
 ## Performance
-_(filled in after the sample run; see T08)_
+Sample at 1920 light, seeded `medium`, module colours on vs "Ruhig" (patterns off, flat hues), [`tools/identity-perf.spec.ts`](tools/identity-perf.spec.ts), raw numbers in [perf-sample.txt](perf-sample.txt):
+
+| Page | Nodes | Gradients / patterns (colour) | Style recalc ms colour → calm | Layout ms | Scroll frame avg / max ms (colour) |
+| --- | --- | --- | --- | --- | --- |
+| Overview "Ruhig" view | 666 | 5 / 1 | 26 → 19 | 15 | 16 / 17 |
+| Overview "Ausführlich" (29 widgets) | 1 604 | 34 / 26 | 43 → 39 | 36 | 16 / 20 |
+| Finanzen | 1 227 | 7 / 1 | 33 → 29 | 27 | 16 / 17 |
+| Kalender week | 1 345 | 11 / 8 | 31 → 32 | 15 | 16 / 20 |
+| Musik (cover tone) | 681 | 4 / 1 | 21 → 17 | 10 | 16 / 17 |
+| Bibliothek | 1 186 | 13 / 5 | 26 → 19 | 13 | 16 / 22 |
+| Einstellungen | 778 | 2 / 0 | 24 → 17 | 12 | 16 / 17 |
+
+The decoration (head gradient, area pattern on 26 widgets, mask fades) costs under 10 ms of style work per page and nothing in scrolling: no frame above 22 ms in 60 scrolled frames on any page, in either mode. The cover tone (one canvas sample) and the finance sparkline (18 finite draw-in animations, none in reduced motion) are not visible in the numbers. **No performance finding**; T08 confirmed. Not measured: a real Windows WebView2 and Android, where the `mask-image` fades and `color-mix` run on the GPU/CPU of the device (hand test).
 
 ## Open questions for the maintainer (phase 1 stop)
 1. **Head silhouettes (F01, F02):** a foundation package that gives every variant a real shape in `AreaFrame` (fixed grid areas, a signature slot with a size, content column capped at the `content` width or the signature anchored beside the figure), *then* the module chats adjust – or only a documentation clarification and each chat fixes its heads? **Recommendation:** foundation package first; it touches one file set and every module benefits without a second rebuild.
