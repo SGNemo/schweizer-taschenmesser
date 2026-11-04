@@ -138,14 +138,9 @@
 }
 
 .headTiles {
-  min-width: 16rem;
-  max-width: 22rem;
   display: grid;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
 }
 
 .headTitle {
@@ -157,34 +152,30 @@
 
 .headNothing {
   margin: 0;
+  color: var(--text-muted);
 }
 
+/* "Als Nächstes": the next charges as service tiles in a row that wraps. */
 .headList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: var(--space-3);
 }
 
 .headList li {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--module-color) 22%, var(--border));
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
-}
-
-/* Phone: only the very next charge above the list. */
-@media (max-width: 899px) {
-  .headTiles {
-    min-width: 0;
-    padding-block: var(--space-2);
-  }
-
-  .headList li:nth-child(n + 2) {
-    display: none;
-  }
 }
 
 .topList {
@@ -218,6 +209,51 @@
 /* Phone: the row keeps its width for the text; the tile stays in the head. */
 @media (max-width: 899px) {
   .rowTile {
+    display: none;
+  }
+}
+
+/* Head: the month cycle as a ring of shares with its legend (names are text, the ring is decoration). */
+.cycle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.cycle strong {
+  font-size: var(--text-xl, 1.5rem);
+  font-variant-numeric: tabular-nums;
+}
+.cycleLegend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  min-width: 0;
+}
+.cycleLegend li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Phone: the legend is visually hidden (the ring keeps its text alternative); it stays in the text flow for readers. */
+@media (max-width: 700px) {
+  .cycleLegend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Phone: only the very next charge above the list. */
+@media (max-width: 899px) {
+  .headList li:nth-child(n + 2) {
     display: none;
   }
 }

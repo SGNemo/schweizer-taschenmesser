@@ -38,6 +38,7 @@ export function BoardView({ tasks, day, onOpen, onMove, onTomorrow }: Props) {
         {columns.map(({ view, cards }) => (
           <section
             key={view}
+            data-view={view}
             className={`${styles.column} ${over === view ? styles.columnOver : ''}`}
             aria-label={t.todos.views[view]}
             onDragOver={(e) => {

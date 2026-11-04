@@ -13,6 +13,7 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
+  Segmented,
   categoryColor,
   useMediaQuery,
   useOpenParam,
@@ -21,6 +22,7 @@ import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { IdlePrompt } from '../components/IdlePrompt';
 import { JobEditor, type JobTarget } from '../components/JobEditor';
 import { Report } from '../components/Report';
+import { TimerHead } from '../components/TimerHead';
 import { RunningCard } from '../components/RunningCard';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import { duration } from '../components/format';
@@ -87,7 +89,17 @@ export default function TimetrackPage() {
 
   return (
     <>
-      <PageHeader title={t.timetrack.title}>
+      <PageHeader
+        title={t.timetrack.title}
+        views={
+          <Segmented
+            label={t.timetrack.tabs.label}
+            value={view}
+            options={VIEWS.map((v) => ({ value: v, label: t.timetrack.tabs[v] }))}
+            onChange={setView}
+          />
+        }
+      >
         <Button variant="primary" onClick={() => setSession('new')}>
           <Icon name="plus" size={18} />
           {t.timetrack.add}
@@ -109,19 +121,12 @@ export default function TimetrackPage() {
 
       {running ? <IdlePrompt session={running} /> : null}
 
-      <div className={styles.viewBar} role="group" aria-label={t.timetrack.tabs.label}>
-        {VIEWS.map((v) => (
-          <button
-            key={v}
-            type="button"
-            className={styles.chip}
-            aria-pressed={view === v}
-            onClick={() => setView(v)}
-          >
-            {t.timetrack.tabs[v]}
-          </button>
-        ))}
-      </div>
+      <TimerHead
+        sessions={todays}
+        running={running}
+        firstJob={(jobs ?? [])[0]}
+        showStop={view !== 'today'}
+      />
 
       {view === 'today' ? (
         <>
@@ -142,7 +147,7 @@ export default function TimetrackPage() {
                 <button
                   key={j.id}
                   type="button"
-                  className={styles.chip}
+                  className={styles.tile}
                   aria-label={t.timetrack.startFor(j.name)}
                   onClick={() => void start(j.id, j.name)}
                 >

@@ -205,3 +205,35 @@
     display: none;
   }
 }
+
+/* Receipt plate in front of every invoice (the money area has no left stripes; the plate carries the module colour). */
+.plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+/* The letter is drawn by the style sheet (decoration, not part of the row's text). */
+.plate::before {
+  content: attr(data-initial);
+}
+
+/* Phone: the plate would wrap the payee name; the row keeps its text. */
+@media (max-width: 700px) {
+  .plate {
+    display: none;
+  }
+}
+
+/* Phone: the receipt keeps the sum and the count; "Nächste: …" is the first row of the list anyway. */
+@media (max-width: 700px) {
+  .receiptLine + .receiptLine {
+    display: none;
+  }
+}

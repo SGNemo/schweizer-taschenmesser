@@ -247,6 +247,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                         '--minutes': Math.max(SNAP_MINUTES, end - start + dLen),
                         '--lane': lane,
                         '--lanes': lanes,
+                        ...(item.color ? { '--cal': item.color } : {}),
                         ...(active?.kind === 'move' && active.dDays
                           ? { transform: `translateX(${active.dDays * 100}%)` }
                           : {}),

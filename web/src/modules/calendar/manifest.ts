@@ -59,6 +59,8 @@ const manifest: ModuleManifest = {
       },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
+      // One figure ("in 20 Min"), not a time rail: the card has the shape of its content.
+      variant: 'kennzahl',
       component: () => import('./widgets/NextWidget'),
     },
   ],
