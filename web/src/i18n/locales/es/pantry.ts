@@ -71,4 +71,23 @@ export const pantry: Strings['pantry'] = {
   expiresNotice: (n: string) => `Caduca pronto: ${n}`,
   expiresBody: (date: string) => `Consumir antes del ${date}`,
   widgetEmpty: 'Nada caduca pronto.',
+  restockOne: (n: string) => `Añadir a la lista de la compra: ${n}`,
+  shelf: {
+    jump: (place: string, n: number) => `${place}: ${n}, ir a la sección`,
+    expired: (n: number) => `${n} caducado${n === 1 ? '' : 's'}`,
+    soon: (n: number) => `${n} pronto`,
+    low: (n: number) => `${n} por agotarse`,
+    fine: 'Todo en orden',
+    figureLabel: 'En casa',
+    figureUnit: 'productos',
+    summaryFine: 'Nada caduca, nada se agota.',
+    summary: (expired: number, soon: number, low: number) =>
+      [
+        expired > 0 ? `${expired} caducado${expired === 1 ? '' : 's'}` : '',
+        soon > 0 ? `${soon} caduca${soon === 1 ? '' : 'n'} pronto` : '',
+        low > 0 ? `${low} se agota${low === 1 ? '' : 'n'}` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+  },
 };

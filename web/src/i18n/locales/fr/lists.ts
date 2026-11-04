@@ -102,6 +102,8 @@ export const lists: Strings['lists'] = {
   packingEmpty: 'Aucune liste de bagages en cours.',
   packingAction: 'Créer une liste de bagages',
   openCount: (n: number) => (n <= 1 ? `${n} article restant` : `${n} articles restants`),
+  figureUnit: 'restants',
+  sectionsCount: (n: number) => (n <= 1 ? `${n} rayon` : `${n} rayons`),
   sections: {
     produce: 'Fruits et légumes',
     bakery: 'Boulangerie',

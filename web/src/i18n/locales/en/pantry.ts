@@ -70,4 +70,23 @@ export const pantry: Strings['pantry'] = {
   expiresNotice: (n: string) => `Expiring soon: ${n}`,
   expiresBody: (date: string) => `Best before ${date}`,
   widgetEmpty: 'Nothing is expiring soon.',
+  restockOne: (n: string) => `Add to shopping list: ${n}`,
+  shelf: {
+    jump: (place: string, n: number) => `${place}: ${n}, jump to section`,
+    expired: (n: number) => `${n} expired`,
+    soon: (n: number) => `${n} soon`,
+    low: (n: number) => `${n} low`,
+    fine: 'All good',
+    figureLabel: 'In the house',
+    figureUnit: 'items',
+    summaryFine: 'Nothing expires, nothing runs low.',
+    summary: (expired: number, soon: number, low: number) =>
+      [
+        expired > 0 ? `${expired} expired` : '',
+        soon > 0 ? `${soon} expiring soon` : '',
+        low > 0 ? `${low} running low` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+  },
 };
