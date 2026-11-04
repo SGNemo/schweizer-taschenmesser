@@ -8,6 +8,7 @@ import { createRepo } from '@/core/db/repo';
 import { enableModule, moduleHasData } from '@/core/modules/activation';
 import example from '@/modules/example/manifest';
 import { markLibrarySeen } from '@/core/modules/librarySeen';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
@@ -162,6 +163,42 @@ describe('ModuleLibrary in identity v3', () => {
   });
 });
 
+describe('ModuleLibrary filter states', () => {
+  it('an empty result under a filter offers the way back', async () => {
+    const user = userEvent.setup();
+    await renderLibrary();
+    const f = tLibraryV3.get().filter;
+    // example is off: searching for it under "Aktiv" leaves nothing
+    await user.type(
+      screen.getByRole('searchbox', { name: tComfort.get().library.search }),
+      example.name.slice(0, 4),
+    );
+    expect(await screen.findByTestId('module-example')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: f.active }));
+    const status = await screen.findByRole('status');
+    expect(within(status).getByText(tComfort.get().library.noResults)).toBeVisible();
+    await user.click(within(status).getByRole('button', { name: f.reset }));
+    expect(await screen.findByTestId('module-example')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('a card switched under the "Aus" filter stays until the filter changes', async () => {
+    const user = userEvent.setup();
+    const card = await renderLibrary();
+    const f = tLibraryV3.get().filter;
+    await user.click(screen.getByRole('button', { name: f.off }));
+    await user.click(await toggle(card));
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(true),
+    );
+    // switched on, but still listed (focus stays on its switch) until the filter is changed
+    expect(screen.getByTestId('module-example')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: f.all }));
+    await user.click(screen.getByRole('button', { name: f.off }));
+    await waitFor(() => expect(screen.queryByTestId('module-example')).not.toBeInTheDocument());
+  });
+});
+
 describe('LibraryDetail', () => {
   function renderDetail(id: string) {
     render(
@@ -199,5 +236,30 @@ describe('LibraryDetail', () => {
       'href',
       '/library',
     );
+  });
+
+  it('asks what to do with the data from the detail page too and keeps it on "keep"', async () => {
+    const user = userEvent.setup();
+    await enableModule(example);
+    await entries().create({ title: 'stay', done: false });
+    renderDetail('example');
+    const sw = await screen.findByRole('switch', { name: /einschalten/ });
+    await waitFor(() => expect(sw).toBeEnabled());
+    await user.click(sw);
+    // the dialog comes first; nothing is deleted without the explicit choice
+    expect(await screen.findByRole('button', { name: t.library.keepData })).toBeVisible();
+    expect(await entries().active().count()).toBe(1);
+    await user.click(screen.getByRole('button', { name: t.library.keepData }));
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(false),
+    );
+    expect(await entries().active().count()).toBe(1);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('a preview module stays hidden here while "In Arbeit anzeigen" is off, like in the library', async () => {
+    useUiStore.setState({ showPreview: false });
+    renderDetail('maps');
+    expect(await screen.findByText(tLibraryV3.get().detail.notFound)).toBeVisible();
   });
 });

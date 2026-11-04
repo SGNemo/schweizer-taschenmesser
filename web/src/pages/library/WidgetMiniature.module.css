@@ -187,3 +187,10 @@
 .box[data-done='true'] {
   background: var(--mini-ink);
 }
+
+/* Phone: the card is tall enough without the sketch (the detail page keeps it large). */
+@media (max-width: 599px) {
+  .mini[data-size='sm'] {
+    display: none;
+  }
+}

@@ -2,22 +2,17 @@ import { Link, useParams } from 'react-router';
 import { hasStartData } from '@/core/dataapi/onboarding';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
-import { availableManifests } from '@/core/modules/available';
-import type { ModuleManifest } from '@/core/modules/types';
+import { useCatalogManifests } from '@/core/modules/available';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
 import { Badge, Card, EmptyState, Icon, Switch } from '@/ui';
 import { STATUS_LOOK } from '../settings/categoryLook';
+import { hasModulePage } from '../settings/hasModulePage';
 import { PageHead } from '../settings/PageHead';
 import { useModuleSwitch } from './useModuleSwitch';
 import { WidgetMiniature } from './WidgetMiniature';
 import styles from './LibraryDetail.module.css';
-
-/** Has the module a settings page of its own (`/settings/module/<id>`)? Same rule as the settings page. */
-const hasSettingsPage = (m: ModuleManifest) =>
-  (m.settings.category ?? 'module') === 'module' &&
-  (m.settings.fields.length > 0 || hasStartData(m));
 
 /**
  * `/library/<id>`: a mini version of the module (identity v3): its head in its own colours, the sketch of its
@@ -28,7 +23,10 @@ export function LibraryDetail() {
   const states = useModuleStates();
   const sw = useModuleSwitch();
   const v3 = tLibraryV3.use();
-  const manifest = availableManifests().find((m) => m.id === moduleId);
+  // The same set as the library (a preview module stays hidden while "In Arbeit anzeigen" is off, unless it is on).
+  const catalog = useCatalogManifests(states);
+  const manifest = catalog.find((m) => m.id === moduleId);
+  if (!states) return null;
 
   if (!manifest) {
     return (
@@ -51,7 +49,7 @@ export function LibraryDetail() {
   const enabled = states?.[m.id] ?? false;
   const d = v3.detail;
   const platforms = m.platforms?.length
-    ? m.platforms.map((p) => d.platformNames[p] ?? p).join(', ')
+    ? m.platforms.map((p) => d.platformNames[p]).join(', ')
     : d.allPlatforms;
   return (
     <div data-testid="library-detail" data-module={m.id}>
@@ -107,7 +105,7 @@ export function LibraryDetail() {
             {enabled && hasStartData(m) ? (
               <StartDataButton moduleId={m.id} setupLink={false} />
             ) : null}
-            {enabled && hasSettingsPage(m) ? (
+            {enabled && hasModulePage(m) ? (
               <Link to={`/settings/module/${m.id}`} className={styles.link}>
                 {d.settings}
               </Link>

@@ -1,4 +1,5 @@
 import { defineBundle } from '@/core/i18n/bundle';
+import type { PlatformKind } from '@/core/platform/types';
 
 /**
  * Texts of the libraries in identity v3 (head figures, filters, section counts, detail page) in every UI
@@ -22,6 +23,8 @@ export const tLibraryV3 = defineBundle(
       news: 'Neu',
       areaLabel: 'Bereich',
       allAreas: 'Alle Bereiche',
+      none: 'Mit diesem Filter ist nichts da.',
+      reset: 'Filter zurücksetzen',
     },
     section: (active: number, total: number) => `${active} von ${total} aktiv`,
     details: 'Details',
@@ -37,16 +40,13 @@ export const tLibraryV3 = defineBundle(
       stable: 'Fertig',
       preview: 'In Arbeit',
       platforms: 'Läuft auf',
-      allPlatforms: 'Allen Geräten',
+      allPlatforms: 'Alle Geräte',
       platformNames: { web: 'Browser', desktop: 'Windows', android: 'Android' } as Record<
-        string,
+        PlatformKind,
         string
       >,
       settings: 'Einstellungen des Moduls',
-      widget: 'So sieht die Karte auf der Übersicht aus',
-    },
-    tools: {
-      groupSection: (on: number, total: number) => `${on} von ${total} an`,
+      widget: 'Skizze der Karte auf der Übersicht',
     },
   },
   {
@@ -62,11 +62,13 @@ export const tLibraryV3 = defineBundle(
       filter: {
         label: 'Show',
         all: 'All',
-        active: 'On',
+        active: 'Active',
         off: 'Off',
         news: 'New',
         areaLabel: 'Area',
         allAreas: 'All areas',
+        none: 'Nothing matches this filter.',
+        reset: 'Reset filter',
       },
       section: (active: number, total: number) => `${active} of ${total} on`,
       details: 'Details',
@@ -85,10 +87,7 @@ export const tLibraryV3 = defineBundle(
         allPlatforms: 'All devices',
         platformNames: { web: 'Browser', desktop: 'Windows', android: 'Android' },
         settings: 'Module settings',
-        widget: 'How the card looks on the overview',
-      },
-      tools: {
-        groupSection: (on: number, total: number) => `${on} of ${total} on`,
+        widget: 'Sketch of the card on the overview',
       },
     },
     es: {
@@ -108,6 +107,8 @@ export const tLibraryV3 = defineBundle(
         news: 'Nuevos',
         areaLabel: 'Área',
         allAreas: 'Todas las áreas',
+        none: 'Nada coincide con este filtro.',
+        reset: 'Restablecer filtro',
       },
       section: (active: number, total: number) => `${active} de ${total} activos`,
       details: 'Detalles',
@@ -126,10 +127,7 @@ export const tLibraryV3 = defineBundle(
         allPlatforms: 'Todos los dispositivos',
         platformNames: { web: 'Navegador', desktop: 'Windows', android: 'Android' },
         settings: 'Ajustes del módulo',
-        widget: 'Así se ve la tarjeta en el resumen',
-      },
-      tools: {
-        groupSection: (on: number, total: number) => `${on} de ${total} activas`,
+        widget: 'Boceto de la tarjeta en el resumen',
       },
     },
     fr: {
@@ -149,6 +147,8 @@ export const tLibraryV3 = defineBundle(
         news: 'Nouveaux',
         areaLabel: 'Domaine',
         allAreas: 'Tous les domaines',
+        none: 'Rien ne correspond à ce filtre.',
+        reset: 'Réinitialiser le filtre',
       },
       section: (active: number, total: number) => `${active} sur ${total} actifs`,
       details: 'Détails',
@@ -167,10 +167,7 @@ export const tLibraryV3 = defineBundle(
         allPlatforms: 'Tous les appareils',
         platformNames: { web: 'Navigateur', desktop: 'Windows', android: 'Android' },
         settings: 'Paramètres du module',
-        widget: 'Voici la carte sur la vue d’ensemble',
-      },
-      tools: {
-        groupSection: (on: number, total: number) => `${on} sur ${total} actifs`,
+        widget: 'Esquisse de la carte sur la vue d’ensemble',
       },
     },
     'pt-BR': {
@@ -190,6 +187,8 @@ export const tLibraryV3 = defineBundle(
         news: 'Novos',
         areaLabel: 'Área',
         allAreas: 'Todas as áreas',
+        none: 'Nada corresponde a este filtro.',
+        reset: 'Redefinir filtro',
       },
       section: (active: number, total: number) => `${active} de ${total} ativos`,
       details: 'Detalhes',
@@ -208,10 +207,7 @@ export const tLibraryV3 = defineBundle(
         allPlatforms: 'Todos os dispositivos',
         platformNames: { web: 'Navegador', desktop: 'Windows', android: 'Android' },
         settings: 'Configurações do módulo',
-        widget: 'Assim fica o cartão na visão geral',
-      },
-      tools: {
-        groupSection: (on: number, total: number) => `${on} de ${total} ligadas`,
+        widget: 'Esboço do cartão na visão geral',
       },
     },
   },

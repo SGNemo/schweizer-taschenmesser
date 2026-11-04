@@ -67,7 +67,7 @@ export function ToolLibrary() {
         </ul>
       </PageHead>
       <Toolbar>
-        <div role="search" className={styles.librarySearch}>
+        <div role="search" className={library.toolbarSearch}>
           <TextField
             label={text.search}
             labelHidden
@@ -78,21 +78,26 @@ export function ToolLibrary() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <Segmented
-          label={v3.filter.label}
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { value: 'all', label: v3.filter.all },
-            { value: 'active', label: v3.filter.active },
-            { value: 'off', label: v3.filter.off },
-          ]}
-        />
+        <div className={library.filterSeg}>
+          <Segmented
+            label={v3.filter.label}
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'all', label: v3.filter.all },
+              { value: 'active', label: v3.filter.active },
+              { value: 'off', label: v3.filter.off },
+            ]}
+          />
+        </div>
       </Toolbar>
       {tools && !anyMatch ? (
-        <p role="status" className={styles.lead}>
-          {text.noResults}
-        </p>
+        <div role="status" className={library.empty}>
+          <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
+          {filter !== 'all' ? (
+            <Button onClick={() => setFilter('all')}>{v3.filter.reset}</Button>
+          ) : null}
+        </div>
       ) : null}
       {GROUPS.map((group) => {
         const inGroup = (tools?.all ?? []).filter((x) => x.group === group && matches(x));
@@ -107,7 +112,7 @@ export function ToolLibrary() {
             <h2 id={`tools-${group}`} className={library.groupHead}>
               {s.groups[group]}
               <span className={library.groupCount}>
-                {v3.tools.groupSection(
+                {v3.section(
                   (tools?.all ?? []).filter((x) => x.group === group && activeIds.includes(x.id))
                     .length,
                   (tools?.all ?? []).filter((x) => x.group === group).length,

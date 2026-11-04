@@ -51,9 +51,10 @@
   font-weight: var(--weight-semibold);
 }
 .groupCount {
-  color: var(--text-muted);
+  /* On a tinted surface with a pattern: --text, the lighter size and weight carry the hierarchy. */
+  color: var(--text);
   font-size: var(--text-meta);
-  font-weight: normal;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
 }
 .details {
@@ -73,4 +74,36 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* The search in the toolbar grows to a readable width (the page's `.librarySearch` was a fixed block). */
+.toolbarSearch {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+  min-width: 0;
+}
+.filterSeg {
+  min-width: 0;
+}
+.empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.empty p {
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  /* Phone: the status filter gets a row of its own (four options and the longer es/pt-BR words fit), the sections
+     lose their padding (the card is the unit), and the drawn sketch waits for the detail page: one full card with
+     its switch is on the first screen. */
+  .filterSeg {
+    flex: 1 1 100%;
+  }
+  .group {
+    padding: var(--space-2);
+  }
 }

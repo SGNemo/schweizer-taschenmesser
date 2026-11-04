@@ -13,6 +13,7 @@ import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
 import {
   Badge,
+  Button,
   LibraryCard,
   SelectField,
   Segmented,
@@ -66,6 +67,10 @@ export function ModuleLibrary() {
   const [filter, setFilter] = useState<Filter>('all');
   const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
   const sw = useModuleSwitch();
+  // Cards the person just switched: they stay in the list until a filter or the search changes, so the card
+  // (and the keyboard focus on its switch) does not vanish mid-action under the "Aktiv" / "Aus" filter.
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const release = () => setHeld(new Set());
   const text = tComfort.get().library;
   const v3 = tLibraryV3.use();
   // The marks shown now; the library counts as looked at when it is left.
@@ -82,6 +87,7 @@ export function ModuleLibrary() {
   const shown = catalog.filter((m) => {
     const text = haystack(m);
     if (!tokens.every((tok) => text.includes(tok))) return false;
+    if (held.has(m.id)) return true;
     if (filter === 'active' && !isOn(m)) return false;
     if (filter === 'off' && isOn(m)) return false;
     if (filter === 'news' && !badges[m.id]) return false;
@@ -118,7 +124,7 @@ export function ModuleLibrary() {
         </ul>
       </PageHead>
       <Toolbar>
-        <div role="search" className={styles.librarySearch}>
+        <div role="search" className={library.toolbarSearch}>
           <TextField
             label={text.search}
             labelHidden
@@ -126,25 +132,36 @@ export function ModuleLibrary() {
             placeholder={text.searchPlaceholder}
             value={query}
             autoComplete="off"
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              release();
+              setQuery(e.target.value);
+            }}
           />
         </div>
-        <Segmented
-          label={v3.filter.label}
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { value: 'all', label: v3.filter.all },
-            { value: 'active', label: v3.filter.active },
-            { value: 'off', label: v3.filter.off },
-            ...(newsCount > 0 ? [{ value: 'news' as const, label: v3.filter.news }] : []),
-          ]}
-        />
+        <div className={library.filterSeg}>
+          <Segmented
+            label={v3.filter.label}
+            value={filter}
+            onChange={(f) => {
+              release();
+              setFilter(f);
+            }}
+            options={[
+              { value: 'all', label: v3.filter.all },
+              { value: 'active', label: v3.filter.active },
+              { value: 'off', label: v3.filter.off },
+              ...(newsCount > 0 ? [{ value: 'news' as const, label: v3.filter.news }] : []),
+            ]}
+          />
+        </div>
         <SelectField
           label={v3.filter.areaLabel}
           labelHidden
           value={areaFilter}
-          onChange={(e) => setAreaFilter(e.target.value as AreaFilter)}
+          onChange={(e) => {
+            release();
+            setAreaFilter(e.target.value as AreaFilter);
+          }}
         >
           <option value="all">{v3.filter.allAreas}</option>
           {allGroups.map((g) => (
@@ -155,9 +172,20 @@ export function ModuleLibrary() {
         </SelectField>
       </Toolbar>
       {groups.length === 0 ? (
-        <p role="status" className={styles.lead}>
-          {text.noResults}
-        </p>
+        <div role="status" className={library.empty}>
+          <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
+          {filter !== 'all' || areaFilter !== 'all' ? (
+            <Button
+              onClick={() => {
+                release();
+                setFilter('all');
+                setAreaFilter('all');
+              }}
+            >
+              {v3.filter.reset}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {groups.map((g) => {
         const total = allGroups.find((x) => x.id === g.id)?.manifests ?? g.manifests;
@@ -216,7 +244,10 @@ export function ModuleLibrary() {
                       label={text.toggle(m.name)}
                       checked={enabled}
                       disabled={!states}
-                      onChange={(on) => sw.set(m, on)}
+                      onChange={(on) => {
+                        setHeld((h) => new Set(h).add(m.id));
+                        sw.set(m, on);
+                      }}
                     />
                   </LibraryCard>
                 );

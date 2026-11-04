@@ -18,14 +18,12 @@ import { tComfort } from '@/strings.comfort';
 import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
+import { hasModulePage } from './hasModulePage';
 import { PageHead } from './PageHead';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
-/** Modules that have a settings page of their own: fields or start data, in the "Module" category (the vault sits under Sicherheit). */
-const hasPage = (m: ModuleManifest) =>
-  (m.settings.category ?? 'module') === 'module' &&
-  (m.settings.fields.length > 0 || hasStartData(m));
+const hasPage = hasModulePage;
 
 /** How many settings of each module differ from their default (live), by module id. */
 function useChangedCounts(
