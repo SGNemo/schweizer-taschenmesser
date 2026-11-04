@@ -6,22 +6,27 @@
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
  *
  * Pages: home (1280×720, hero), phone (412×915), and one 1280×720 shot per feature tile (the vault
- * unlocked with the seed's demo passphrase, notifications granted so no permission banner shows). The app's
- * UI is German only, so one set serves both site languages. The only cosmetic change is the hidden
+ * unlocked with the seed's demo passphrase, notifications granted so no permission banner shows). The seed's
+ * texts are German, so one set serves every site language. The only cosmetic change is the hidden
  * "Dev" badge of the preview flavour; everything else is the real UI.
+ *
+ *   npm run app:screenshots -- --readme   README motifs instead (../docs/assets/screenshots/*.webp):
+ *     overview, calendar, finance, tools, settings; desktop 1920×1080 and phone 412×915, light and dark.
+ *     SCREENS_PAGES=calendar|tools limits the motifs, SCREENS_VIEWPORTS=phone the viewport.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import sharp from 'sharp';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const web = path.resolve(here, '..', '..', 'web');
 const out = path.resolve(here, '..', 'src', 'assets', 'screens');
 const SEED_TODAY = '2026-09-29'; // reference date of the seed (web/e2e/seed/helpers.ts)
 const SCALE = process.env.SCREENS_SCALE ?? 'medium';
-const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium';
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 const PAGES = [
@@ -33,6 +38,23 @@ const PAGES = [
   { name: 'vault', path: '/accounts', unlock: true },
   { name: 'reminders', path: '/calendar?tab=reminders' },
 ];
+const README = process.argv.includes('--readme');
+/** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
+const README_PAGES = [
+  { name: 'overview', path: '/' },
+  { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
+  { name: 'finance', path: '/finance?tab=overview' },
+  // The toolbox panel (top bar button "Werkzeuge"), not the tool library page.
+  { name: 'tools', path: '/', openToolbox: true },
+  { name: 'settings', path: '/settings' },
+];
+const README_VIEWPORTS = [
+  // 1920 CSS px at scale 1 is already sharp when GitHub shows it at 900 px; the phone is 2×.
+  { name: 'desktop', viewport: { width: 1920, height: 1080 }, scale: 1, mobile: false },
+  { name: 'phone', viewport: { width: 412, height: 915 }, scale: 2, mobile: true },
+];
+const readmeOut = path.resolve(here, '..', '..', 'docs', 'assets', 'screenshots');
+const onlyViewports = process.env.SCREENS_VIEWPORTS ? new RegExp(process.env.SCREENS_VIEWPORTS) : null;
 const only = process.env.SCREENS_PAGES ? new RegExp(process.env.SCREENS_PAGES) : null;
 
 const run = (args, cwd) =>
@@ -55,19 +77,40 @@ if (!base) {
 }
 if (!(await reachable(base))) throw new Error(`App not reachable at ${base}`);
 
-mkdirSync(out, { recursive: true });
+mkdirSync(README ? readmeOut : out, { recursive: true });
+
+/** What to shoot: the site's pages with their own viewport, or every README motif in each README viewport. */
+const jobs = README
+  ? README_VIEWPORTS.filter((v) => !onlyViewports || onlyViewports.test(v.name)).flatMap((v) =>
+      README_PAGES.filter((x) => !only || only.test(x.name)).map((x) => ({
+        ...x,
+        file: `${x.name}-${v.name}`,
+        viewport: v.viewport,
+        mobile: v.mobile,
+        scale: v.scale,
+      })),
+    )
+  : PAGES.filter((x) => !only || only.test(x.name)).map((x) => ({
+      ...x,
+      file: x.name,
+      viewport: x.viewport ?? { width: 1280, height: 720 },
+      scale: x.mobile ? 2 : 1,
+    }));
+
 const browser = await chromium.launch({ executablePath: chromiumPath });
 try {
   for (const scheme of ['light', 'dark']) {
-    for (const p of PAGES.filter((x) => !only || only.test(x.name))) {
+    for (const p of jobs) {
       const context = await browser.newContext({
         baseURL: base,
-        viewport: p.viewport ?? { width: 1280, height: 720 },
+        viewport: p.viewport,
         isMobile: p.mobile ?? false,
         hasTouch: p.mobile ?? false,
-        deviceScaleFactor: p.mobile ? 2 : 1,
+        deviceScaleFactor: p.scale,
         reducedMotion: 'reduce',
         colorScheme: scheme,
+        // The seed's texts are German; the app follows the device language.
+        locale: 'de-DE',
         serviceWorkers: 'block',
         permissions: ['notifications'],
       });
@@ -88,14 +131,28 @@ try {
         await page.getByRole('button', { name: 'Entsperren' }).click();
         await page.getByRole('button', { name: 'Zugang hinzufügen' }).waitFor({ timeout: 30_000 });
       }
+      // The Dev-Preview flavour shows a one-time notice a moment after the shell mounts; wait for it, close it.
+      await page.getByRole('button', { name: 'Schließen', exact: true }).first().click({ timeout: 5_000 }).catch(() => {});
+      if (p.openToolbox) {
+        await page.getByRole('button', { name: 'Werkzeuge', exact: true }).first().click();
+        const toolbox = page.getByRole('dialog').filter({ hasText: 'Rechner' });
+        await toolbox.waitFor();
+        // On a phone the panel opens on the tool list; show the calculator like the desktop does.
+        if (p.mobile) await toolbox.getByText('Rechner', { exact: true }).first().click();
+      }
       await page.addStyleTag({ content: '[data-testid="dev-badge"]{display:none !important}' });
-      const notice = page.getByRole('button', { name: 'Schließen', exact: true });
-      if (await notice.count()) await notice.first().click();
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(Number(process.env.SCREENS_WAIT ?? 600));
-      const file = path.join(out, `${p.name}-${scheme}.png`);
-      await page.screenshot({ path: file });
-      console.log(path.relative(process.cwd(), file));
+      if (README) {
+        // WebP keeps the repository light: about 60–150 KB per picture instead of 300+ KB as PNG.
+        const file = path.join(readmeOut, `${p.file}-${scheme}.webp`);
+        await sharp(await page.screenshot()).webp({ quality: 80, effort: 6 }).toFile(file);
+        console.log(path.relative(process.cwd(), file));
+      } else {
+        const file = path.join(out, `${p.file}-${scheme}.png`);
+        await page.screenshot({ path: file });
+        console.log(path.relative(process.cwd(), file));
+      }
       await context.close();
     }
   }
