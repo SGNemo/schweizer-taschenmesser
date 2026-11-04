@@ -100,7 +100,7 @@ Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, 
 
 Launch-Auftritt (`docs/launch-polish`): README und Nutzerdoku auf Englisch mit deutscher Übersetzung (`*.de.md`, `check:readme`), Community-Dateien, englische Issue-Vorlagen; PR gegen `develop`, wartet auf Review. Danach: App-UI in 5 Sprachen (`feat/i18n-ui`); dort auch die deutsche Website auf `installation.de.md` verlinken (geht erst, wenn die Datei auf `develop` liegt, sonst schlägt `site.yml` → `check:links` fehl).
 
-Website (`feat/website`, `site/`): statische Seite mit Download, Ko-fi, Impressum/Datenschutz-Platzhaltern, DE/EN; PR gegen `develop`, wartet auf Review; danach Cloudflare-Pages-Projekt, Domain und Deploy-Hook einrichten ([site/README.md](../site/README.md) → „Offen – macht Sven“).
+Website (`site/`, Cloudflare-Pages-Projekt `nemo-site`): alle `develop`/`main`-Builds sind seit 08.10. rot, weil `IMPRESSUM_*` in Cloudflare fehlt (Production **und** Preview setzen), die Live-Seite steht deshalb auf dem Stand vom 07.10.; Checkliste [howto/cloudflare-checks.md](howto/cloudflare-checks.md), offen unter „Offen – macht Sven“.
 
 ## Nicht gebaut / bekannte Grenzen
 
@@ -147,7 +147,7 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 
 **Neu (Datenträger):** Die Checkliste D1–D16 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
 
-- **TODO Rechtliches vor dem Launch** ([Checkliste](legal/LAUNCH-LEGAL-CHECKLIST.md)): Name und Anschrift als Cloudflare-Pages-Variablen `IMPRESSUM_NAME`/`IMPRESSUM_STREET`/`IMPRESSUM_POSTCODE_CITY` setzen (nicht im Repo; `cd web && npm run check:legal` prüft den Rest), `[[RECHTSGRUNDLAGE]]` in [DATA-FLOWS](legal/DATA-FLOWS.md) füllen; der Release-Workflow bricht das Veröffentlichen ab, solange welche offen sind. Markenname „Nemo“ prüfen. **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
+- **TODO Rechtliches vor dem Launch** ([Checkliste](legal/LAUNCH-LEGAL-CHECKLIST.md)): Name und Anschrift als Cloudflare-Pages-Variablen `IMPRESSUM_NAME`/`IMPRESSUM_STREET`/`IMPRESSUM_POSTCODE_CITY` in **Production und Preview** setzen, danach „Retry deployment“ auf `develop` (nicht im Repo; ohne sie ist jeder `develop`/`main`-Build rot; `cd web && npm run check:legal` prüft den Rest), `[[RECHTSGRUNDLAGE]]` in [DATA-FLOWS](legal/DATA-FLOWS.md) füllen; der Release-Workflow bricht das Veröffentlichen ab, solange welche offen sind. Markenname „Nemo“ prüfen. **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
 - Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent E1–E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
 
 ### Nemo-Rebranding
