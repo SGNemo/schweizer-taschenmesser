@@ -25,6 +25,29 @@ on:
       stage:
         type: string
         default: all
+      # Publish stage only: the build stage's version, tag and publish flag (so the publish stage needs no second
+      # `prepare` run and cannot compute a different version if a tag lands in between).
+      version:
+        type: string
+        default: ''
+      full:
+        type: string
+        default: ''
+      tag:
+        type: string
+        default: ''
+      publish:
+        type: string
+        default: ''
+    outputs:
+      version:
+        value: ${{ jobs.prepare.outputs.version }}
+      full:
+        value: ${{ jobs.prepare.outputs.full }}
+      tag:
+        value: ${{ jobs.prepare.outputs.tag }}
+      publish:
+        value: ${{ jobs.prepare.outputs.publish }}
   workflow_dispatch:
     inputs:
       target:
@@ -68,11 +91,11 @@ jobs:
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
+  # The gitleaks scan runs next to `prepare` and the builds instead of before them (it took 50 s of the critical
+  # path); the `publish` job below still needs it, so nothing is published from a run whose scan failed or was
+  # skipped. Built artifacts of a run with a failed scan are never attached to a release.
   prepare:
-    needs: secret-scan
-    # Also runs in the publish stage: its outputs are cheap and deterministic for one commit, and in the
-    # publish stage the secret scan was done by the build stage of the same run.
-    if: ${{ !cancelled() && (needs.secret-scan.result == 'success' || needs.secret-scan.result == 'skipped') }}
+    if: ${{ inputs.stage != 'publish' }}
     name: Version, notes, signing check
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -394,15 +417,17 @@ jobs:
 
   publish:
     name: Publish rolling pre-release
-    needs: [prepare, windows, android]
-    if: ${{ !cancelled() && inputs.stage != 'build' && needs.prepare.result == 'success' && needs.prepare.outputs.publish == 'true' && contains(fromJSON('["success","skipped"]'), needs.windows.result) && contains(fromJSON('["success","skipped"]'), needs.android.result) }}
+    needs: [secret-scan, prepare, windows, android]
+    # stage=all: every needed job must have succeeded. stage=publish: the build stage already scanned, prepared and
+    # built (ci.yml only starts this stage after that whole call and the gate succeeded), so those jobs are skipped.
+    if: ${{ !cancelled() && inputs.stage != 'build' && (needs.prepare.outputs.publish || inputs.publish) == 'true' && contains(fromJSON('["success","skipped"]'), needs.secret-scan.result) && contains(fromJSON('["success","skipped"]'), needs.prepare.result) && contains(fromJSON('["success","skipped"]'), needs.windows.result) && contains(fromJSON('["success","skipped"]'), needs.android.result) && (inputs.stage == 'publish' || needs.secret-scan.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: ${{ needs.prepare.outputs.tag }}
+      TAG: ${{ needs.prepare.outputs.tag || inputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -426,7 +451,7 @@ jobs:
         run: |
           set -euo pipefail
           node web/scripts/latest-json.mjs --dir dl --exe Nemo-Portable-dev.exe \
-            --version "${{ needs.prepare.outputs.version }}" --tag "$TAG" \
+            --version "${{ needs.prepare.outputs.version || inputs.version }}" --tag "$TAG" \
             --repo "$GITHUB_REPOSITORY" --notes dl/DEV_NOTES.md --out dl/dev-latest.json
           cat dl/dev-latest.json
           node web/scripts/audit-release.mjs --path dl/dev-latest.json
@@ -452,7 +477,7 @@ jobs:
           for n in "${NAMES[@]}"; do
             if [[ "$n" == dev-latest.json ]]; then MANIFEST+=("dl/$n"); else BINARIES+=("dl/$n"); fi
           done
-          TITLE="Nemo Dev-Preview ${{ needs.prepare.outputs.full }}"
+          TITLE="Nemo Dev-Preview ${{ needs.prepare.outputs.full || inputs.full }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             # Move the tag to this commit, keep the release a pre-release, replace the assets. The
             # manifest goes last: until then it still describes the previous (consistent) state.
@@ -479,7 +504,7 @@ jobs:
       - name: Summary
         run: |
           {
-            echo "## Dev-Preview ${{ needs.prepare.outputs.full }}"
+            echo "## Dev-Preview ${{ needs.prepare.outputs.full || inputs.full }}"
             echo
             echo "- Windows: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-Portable-dev.exe"
             echo "- Android: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Nemo-dev.apk"

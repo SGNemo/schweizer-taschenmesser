@@ -11,7 +11,8 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Static (format, lint, types, i18n, modules, case) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
 | Licence check (lock files) | every code change | yes | every code change | yes | yes | – |
 | Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
-| E2E app | if `web/` (not only `web/src-tauri/`) changed: **smoke** = 24 spec files, desktop only, 2 shards | **full** = desktop + Pixel 7, 6 shards | no | **full** | **full** | – |
+| E2E app, smoke (24 spec files, desktop, 2 shards) | if `web/` (not only `web/src-tauri/`) changed | yes | no | yes (**Dev-Preview gate**) | yes | – |
+| E2E app, rest (everything else: Pixel 7, a11y, layout, other specs; 6 shards) | no | yes | no | yes, next to the build and after the publish | yes | – |
 | Sync E2E (+ seed project on full runs) | if `web/` (not only `src-tauri/`) or `server/` changed | yes | no | yes | yes | – |
 | Browser extension (its own E2E runs against the web app) | if `extension/` or `web/` (not only `src-tauri/`) changed | yes | no | yes | yes | – |
 | server, MCP, supporter (+ CLI), supporter webhook (job "Small packages") | only for the package that changed | yes | no | yes | yes | – |
@@ -19,7 +20,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Native shell (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes | no | yes | yes | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
 | CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
-| Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published only when tests, packages, Rust, licences, docs-pairs and gitleaks are green** (not for docs-only pushes) | – | – |
+| Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published when the gate is green: gitleaks, licences, static, unit, E2E smoke, native shell**; the rest of the run (rest E2E, sync E2E + seed, small packages, extension, local model, docs) follows and cannot hold the preview back (not for docs-only pushes) | – | – |
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
 How to read it:
