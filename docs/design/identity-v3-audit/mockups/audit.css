@@ -62,3 +62,8 @@
 .wrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:6px}
 .wrow .w{grid-row:auto;min-height:150px}
 .note{font-size:.8125rem;color:var(--text-2);max-width:70rem}
+/* compact v3.1 heads stay compact; the bill mark is a plain shape (clip-path), no mask */
+.head.v31.compact{min-height:96px;padding-top:14px;padding-bottom:14px}
+.head.v31.compact .inner{gap:4px 28px}
+.head.v31.compact .figure{margin-top:0}
+.bill{-webkit-mask:none;mask:none;clip-path:polygon(0 8px,8px 0,16px 8px,24px 0,32px 8px,40px 0,48px 8px,56px 0,64px 8px,64px 100%,0 100%);border-radius:0 0 6px 6px}
