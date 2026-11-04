@@ -65,15 +65,25 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
    the GitHub API, not from the branch) · **Framework preset** Astro ·
    **Root directory** `site` · **Build command** `npm ci && npm run build` ·
    **Build output directory** `dist`.
-3. Environment variables (Production and Preview): `NODE_VERSION` = `22`. `SITE_URL` defaults to
-   `https://nemo-adhd-helper.online` (`src/config.js`); previews use Cloudflare's own URL.
-   **Imprint details (Production, optionally Preview):** `IMPRESSUM_NAME`, `IMPRESSUM_STREET`,
-   `IMPRESSUM_POSTCODE_CITY` (optional `IMPRESSUM_COUNTRY`). They are read by `src/legal.js` and are
-   deliberately not in the repository; a production build (`develop` or `main`) fails without them.
-   A new postal address = edit the variables, then redeploy (no commit).
+3. Environment variables:
+   - **Node** is pinned in the repository (`site/.node-version`, read from the root directory, the same
+     file CI uses). `NODE_VERSION` = `22` is only a fallback if the build log shows another version.
+   - `SITE_URL` defaults to `https://nemo-adhd-helper.online` (`src/config.js`); previews use
+     Cloudflare's own URL.
+   - **Imprint details in Production AND Preview:** `IMPRESSUM_NAME`, `IMPRESSUM_STREET`,
+     `IMPRESSUM_POSTCODE_CITY` (optional `IMPRESSUM_COUNTRY`). They are read by `src/legal.js` and are
+     deliberately not in the repository. `develop` builds in Production, but a push to `main` builds in
+     Preview and still counts as production there, so with the variables only in Production every `main`
+     build is red. A build without them stops with `Imprint details missing in the build of branch …`
+     (first line to look for in the Cloudflare log; checklist: [docs/howto/cloudflare-checks.md](../docs/howto/cloudflare-checks.md)).
+     Alternative that keeps the address off the PR previews: variables in Production only, plus
+     `PRODUCTION_BRANCH` = `develop` in Preview.
+   - A new postal address = edit the variables, then redeploy (no commit).
 4. Save and deploy. Preview deployments for pull requests are on by default
-   (Settings → Builds & deployments → Preview branches: all non-production branches, or only
-   those that touch `site/` via the "Build watch paths" setting: include `site/*`).
+   (Settings → Builds & deployments → Preview branches: all non-production branches). Optional,
+   once the builds are green: "Build watch paths" `site/*`, `web/brand/*`, `web/public/*`,
+   `docs/brand/*` (the build copies logo, favicons and the social preview from the last three, so a
+   change there must rebuild too; builds with other changes are skipped).
 5. **Custom domain:** Pages project → Custom domains → Set up a domain → enter the domain. If
    DNS is at Cloudflare the CNAME is created for you; otherwise create `CNAME <host> →
    <project>.pages.dev` at your registrar. Certificates are automatic.
@@ -112,7 +122,8 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
 
 ## Offen – macht Sven
 - Imprint: set `IMPRESSUM_NAME`, `IMPRESSUM_STREET`, `IMPRESSUM_POSTCODE_CITY` in the Cloudflare Pages
-  environment variables (step 3), then redeploy.
+  environment variables, **Production and Preview** (step 3), then retry the latest `develop` deployment.
+  Until then every `develop`/`main` build is red and the live site is not updated.
 - Cloudflare Pages project, custom domain `nemo-adhd-helper.online` (+ `www` redirect) and the
   deploy-hook secret `CF_PAGES_DEPLOY_HOOK` (steps above).
 - `public/.well-known/security.txt`: renew `Expires` before 2027-10-01.

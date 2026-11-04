@@ -63,7 +63,7 @@ Locally the mail step fails (dummy Resend key) – that is the expected "owner i
 1. **Accounts:** a Cloudflare account (free plan is enough), a [Resend](https://resend.com) account, and your Ko-fi page.
 2. **Key pair** (once, own machine, Node 26+): run `npm ci` in `packages/supporter-codes` and in `tools/supporter-cli` first, then `cd tools/supporter-cli && node bin/supporter-cli.mjs keygen`, then `set-public-key`, commit `web/src/core/supporter/publicKeys.ts` and ship an app version that contains it. Back up the key file ([docs/howto/supporter.md](../../docs/howto/supporter.md)).
 3. **Login:** `cd services/supporter-webhook && npx wrangler login`.
-4. **KV:** `npx wrangler kv namespace create KV` → copy the printed `id` into `wrangler.toml` (`REPLACE_WITH_KV_NAMESPACE_ID`). That id is not a secret.
+4. **KV:** `npx wrangler kv namespace create KV` → copy the printed `id` into `wrangler.toml` (`[[kv_namespaces]]` → `id`; the repository holds the maintainer's id, replace it when you deploy to another account). That id is not a secret.
 5. **Queues:** `npx wrangler queues create supporter-mail` and `npx wrangler queues create supporter-mail-dlq`.
 6. **Variables:** in `wrangler.toml` set `SIGNING_KEY_ID` (the key id from step 2), `MAIL_FROM` and, if you want replies, `REPLY_TO`.
 7. **Check the bundle:** `npm run build` (dry run, uploads nothing).
