@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
-import { mockWeather, pickWeatherPlace } from './weather-mock';
+import { ready, showAllWidgets } from './helpers';
+import { mockWeather } from './weather-mock';
 
 /**
  * Identity v3 overview head (docs/design/MODULE-IDENTITY.md): greeting by the hour, date, calm tools, "Jetzt wichtig" cards
@@ -54,13 +54,23 @@ test.describe('Overview head', () => {
   test('shows a short weather line next to the date once a place is chosen, and none before', async ({
     page,
   }) => {
+    // Weather is a preview module: the setting that shows it comes first, as in e2e/weather.spec.ts.
+    await showAllWidgets(page);
     await mockWeather(page);
     await ready(page, '/');
     const head = page.getByTestId('overview-head');
     await expect(head).toContainText('Dienstag, 29. September');
     await expect(head.getByRole('link', { name: /^Wetter:/ })).toHaveCount(0);
 
-    expect(await pickWeatherPlace(page)).toBe(true);
+    await ready(page, '/settings/verbindungen');
+    await page.getByLabel('Ort suchen').fill('Bern');
+    await page
+      .locator('#weather--place')
+      .getByRole('button', { name: 'Suchen', exact: true })
+      .click();
+    await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click();
+    await expect(page.getByTestId('weather-place')).toHaveText('Bern, Schweiz');
+
     await ready(page, '/');
     const line = page.getByTestId('overview-head').getByRole('link', { name: /^Wetter: 14°/ });
     await expect(line).toBeVisible();

@@ -18,8 +18,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  /* 36 px to look at; the link keeps the 44 px target through the vertical margin of its row on touch screens. */
-  min-height: 2.25rem;
+  min-height: var(--touch);
   padding: 0 var(--space-3);
   border-radius: var(--radius-full);
   color: var(--text-muted);
@@ -42,11 +41,6 @@
 }
 .pill[aria-current='page'] svg {
   color: var(--module-color, var(--text-3));
-}
-@media (pointer: coarse) {
-  .pill {
-    min-height: var(--touch);
-  }
 }
 /* Phone: one row, scrolls sideways; the right edge fades out so a cut-off pill reads as "more", never as clipped. */
 @media (max-width: 899px) {
