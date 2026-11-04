@@ -48,3 +48,48 @@ export async function paidInvoiceBookingOn(): Promise<boolean> {
     false
   );
 }
+
+/** A payment of an invoice that finance books as an expense (a part payment, or what was left when it was marked paid). */
+export interface InvoicePayment {
+  invoiceId: string;
+  /** Set for a part payment; empty for the rest that was paid when the invoice was marked paid. */
+  paymentId?: string;
+  payee: string;
+  amountMinor: number;
+  /** Day of the payment (`YYYY-MM-DD`). */
+  paidAt: string;
+  note?: string;
+  currency?: string;
+}
+
+/**
+ * Every payment finance should have booked: the part payments of live invoices, and for paid
+ * invoices what was still open at that moment. Finance compares this with its bookings and books
+ * what is missing (an event that was lost when the app closed in between).
+ */
+export async function listInvoicePayments(): Promise<InvoicePayment[]> {
+  const out: InvoicePayment[] = [];
+  for (const i of await invoiceRepo.active().toArray()) {
+    for (const p of i.payments ?? [])
+      out.push({
+        invoiceId: i.id,
+        paymentId: p.id,
+        payee: i.payee,
+        amountMinor: p.amountMinor,
+        paidAt: p.date,
+        note: i.note,
+        ...(i.currency ? { currency: i.currency } : {}),
+      });
+    const rest = remainingMinor(i);
+    if (i.status === 'paid' && i.paidAt && rest >= 1)
+      out.push({
+        invoiceId: i.id,
+        payee: i.payee,
+        amountMinor: rest,
+        paidAt: i.paidAt,
+        note: i.note,
+        ...(i.currency ? { currency: i.currency } : {}),
+      });
+  }
+  return out;
+}

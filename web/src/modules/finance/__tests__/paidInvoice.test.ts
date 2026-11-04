@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { bus } from '@/core/events';
 import { setSettings } from '@/core/settings/settings';
+import { setNow } from '@/core/time/now';
 import { accountRepo, transactionRepo } from '../repo';
 import start, { bookDueRepeats, coveredByRepeatingBooking } from '../services';
 
@@ -43,6 +44,11 @@ describe('a paid invoice becomes a booking', () => {
 });
 
 describe('no double booking with a repeating booking', () => {
+  // `start()` also books due repeats for the current day; the rent below is due again on 2026-10-02,
+  // so the clock stands before that and the count only holds the rent itself.
+  beforeEach(() => setNow(() => new Date(2026, 8, 20, 10, 0).getTime()));
+  afterEach(() => setNow());
+
   async function rent(over: Record<string, unknown> = {}) {
     const account = await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 });
     await transactionRepo.create({

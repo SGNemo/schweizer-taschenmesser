@@ -11,6 +11,7 @@ import { now } from '@/core/time/now';
 import type { ModuleManifest } from '@/core/modules/types';
 import { db as defaultDb, type TaschenmesserDB } from './db';
 import { tableName } from './schema';
+import { rwTransaction } from './tx';
 import { getDeviceContext, type DeviceContext } from './device';
 import { recordWrite, type UndoStep } from './recorder';
 import { hasWriteListener, signalWrite, type WriteSignal } from './writeHook';
@@ -331,4 +332,23 @@ export function createRepo<T extends Record<string, unknown>>(
     },
   };
   return repo;
+}
+
+/**
+ * Runs several repo writes as ONE transaction: they all happen or none does (also when the tab is
+ * closed half way). Pass every repo that `fn` writes to. The repos' own writes join this transaction.
+ *
+ * Inside `fn` only repo calls and other Dexie operations may be awaited (nothing foreign: no
+ * network, no timers, no `import()`); do that before. Undo steps and write signals of the repos
+ * fire as usual. A repo that is not listed fails with Dexie's "not part of transaction" error.
+ */
+export async function transaction<R>(
+  repos: readonly { readonly name: string }[],
+  fn: () => Promise<R>,
+  database: TaschenmesserDB = defaultDb,
+): Promise<R> {
+  // The device context is read from `_meta` the first time; a transaction must not need it.
+  await getDeviceContext(database);
+  const tables = [...new Set(repos.map((r) => r.name))].map((n) => database.table(n));
+  return rwTransaction(database, [...tables, database.table('_outbox')], fn);
 }
