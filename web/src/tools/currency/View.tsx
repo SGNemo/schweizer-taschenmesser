@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatNumber } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -123,7 +124,17 @@ export default function CurrencyTool() {
               <p className={kit.caption}>{s.rate(from, to, fmt2(one))}</p>
             ) : null}
             {result !== undefined ? (
-              <Button onClick={() => void copyWithToast(String(Math.round(result * 100) / 100))}>
+              <Button
+                onClick={() =>
+                  void copyWithToast(
+                    formatNumber(result, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                      useGrouping: false,
+                    }),
+                  )
+                }
+              >
                 {t.tools.calc.copy}
               </Button>
             ) : null}

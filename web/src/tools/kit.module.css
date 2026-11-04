@@ -25,7 +25,7 @@
   background: transparent;
   box-shadow: none;
   color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-xl);
   text-align: end;
 }
@@ -72,9 +72,7 @@
   box-shadow:
     var(--shadow-1),
     0 2px 0 var(--border-strong);
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 .key:hover {
   background: var(--surface-2);
@@ -87,22 +85,10 @@
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
-/* Operators and the equals sign are the tool's colour (shape and text still say what they are). */
+/* Operators are the tool's colour (shape and text still say what they are). */
 .keyOp {
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   font-weight: var(--weight-medium);
-}
-.keyMain {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: var(--weight-medium);
-}
-.keyMain:hover {
-  background: var(--accent-hover, var(--accent));
-}
-.span2 {
-  grid-column: span 2;
 }
 
 /* ---- Conversion flow: a start card, an arrow, an end card ---- */
@@ -160,7 +146,7 @@
 /* ---- Timer ring ---- */
 .ringWrap {
   position: relative;
-  width: min(100%, 17rem, 36dvh);
+  width: min(100%, 17rem, max(12rem, 36dvh));
   aspect-ratio: 1;
   margin-inline: auto;
 }
@@ -192,7 +178,7 @@
 }
 .ringTime {
   margin: 0;
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -223,9 +209,6 @@
     inset 0 0 0 1px var(--border),
     var(--shadow-1);
   min-width: 0;
-}
-.cardHome {
-  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
 }
 .cardHead {
   display: flex;

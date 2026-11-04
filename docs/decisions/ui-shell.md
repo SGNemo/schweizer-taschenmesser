@@ -122,4 +122,4 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 
 - **Shared blocks in `tools/kit.tsx`:** tools may not import each other, so the look of the contents (display, keys with depth, conversion flow, timer ring, cards) lives in one allowed neighbour of `shared.ts` (`isolation.test.ts` knows it). Logic, labels and test ids of the tools are unchanged.
 - **The calculator gets a number pad** (digits, the decimal sign of the language, four operations, `ans`) next to the display: until now it could only be typed on. The field keeps its label for screen readers ("Rechnung"); the result is the large line of the display.
-- **Ring and leaves are decoration:** the timer ring is `aria-hidden`, the time stays text in `role="timer"`; the date leaves repeat the written-out result and are hidden from screen readers.
+- **Ring and leaves are decoration:** the timer ring is `aria-hidden`, the time stays text in `role="timer"`; the date leaves show the dates the result line names (the day count, or the end date) and are hidden from screen readers.

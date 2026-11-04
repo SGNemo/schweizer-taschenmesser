@@ -3,19 +3,13 @@
  * The look lives in `kit.module.css`; classes for single elements (display, keys, cards) are used directly.
  */
 import type { ReactNode } from 'react';
-import { numberFormat } from '@/core/i18n/format';
+import { decimalSeparator } from '@/core/i18n/format';
 import styles from './kit.module.css';
 
 export { styles as kit };
 
 /** The decimal sign of the current language ("," or "."), for keys that type a number. */
-export function decimalSign(): string {
-  return (
-    numberFormat()
-      .formatToParts(1.1)
-      .find((p) => p.type === 'decimal')?.value ?? '.'
-  );
-}
+export const decimalSign = decimalSeparator;
 
 /** Start card → between (arrow or swap button) → end card; wraps into a column when narrow. */
 export function Flow({

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatNumber } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Icon, SelectField, TextField } from '@/ui';
@@ -76,9 +77,9 @@ export default function UnitsTool() {
             {result !== undefined ? (
               <Button
                 onClick={() =>
-                  void copyText(String(Math.round(result * 1e6) / 1e6)).then(
-                    (ok) => ok && toast(t.tools.calc.copied),
-                  )
+                  void copyText(
+                    formatNumber(result, { maximumFractionDigits: 6, useGrouping: false }),
+                  ).then((ok) => ok && toast(t.tools.calc.copied))
                 }
               >
                 {t.tools.calc.copy}

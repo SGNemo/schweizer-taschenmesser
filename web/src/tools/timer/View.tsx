@@ -32,12 +32,12 @@ export default function TimerTool() {
         ? clock(elapsed(st.stopwatch, t0), true)
         : clock(left(st.pomodoro.countdown, t0));
 
-  // The ring shows how much is left (timer, pomodoro) or how far the current minute is (stopwatch).
+  // The ring shows how much is left (timer, pomodoro); the stopwatch ring stays full, nothing resets every minute.
   const progress =
     st.mode === 'timer'
       ? left(st.timer, t0) / st.timer.durationMs
       : st.mode === 'stopwatch'
-        ? (elapsed(st.stopwatch, t0) % 60_000) / 60_000
+        ? 1
         : left(st.pomodoro.countdown, t0) / st.pomodoro.countdown.durationMs;
 
   return (

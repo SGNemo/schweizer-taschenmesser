@@ -24,7 +24,7 @@ import { session } from './session';
 
 const s = t.tools.calc;
 
-/** Keys that insert text at the cursor: [label, inserted text, accessible name]. */
+/** Keys that insert text at the cursor: [label, inserted text]. */
 const BASIC_KEYS: Array<[string, string]> = [
   ['(', '('],
   [')', ')'],
@@ -127,8 +127,10 @@ export default function ExprMode({
     const next = input.slice(0, from) + text + input.slice(to);
     setInput(next);
     setError('');
+    // On a touch screen focusing the field raises the phone keyboard over the pad: keep the caret, not the focus.
+    const touch = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     requestAnimationFrame(() => {
-      el?.focus();
+      if (!touch) el?.focus();
       const pos = from + text.length;
       el?.setSelectionRange(pos, pos);
     });
