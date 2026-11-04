@@ -266,10 +266,26 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
-      - name: Licence list is current and every licence is allowed
-        run: npm run check:licenses
       - name: Open legal placeholders (warning only)
         run: npm run check:legal
+
+  # The licence check reads only the lock files, so it needs no install; it runs on every code change as it always did,
+  # whatever package the change touches (the pre-check's package flags do not apply to it).
+  licences:
+    name: Licence list is current and every licence is allowed
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+      - run: npm run check:licenses
 
   # 598 files / 5421 tests: three slices by file (vitest --shard), so every test runs exactly once.
   web-unit:
@@ -628,7 +644,7 @@ jobs:
 
   dev-preview:
     name: Dev-Preview publish
-    needs: [changes, dev-preview-build, secret-scan, docs-pairs, web, packages, extension, e2e-sync, rust, local-llm]
+    needs: [changes, dev-preview-build, secret-scan, docs-pairs, licences, web, packages, extension, e2e-sync, rust, local-llm]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write

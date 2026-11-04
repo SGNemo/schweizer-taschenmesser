@@ -8,7 +8,8 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 |---|---|---|---|---|---|---|
 | gitleaks, docs pairs, docs budget | always | always | always | always | always | gitleaks always |
 | Change note (`.changes/` or label `no-changelog`) | PR into `develop` only | same | same | – | – | – |
-| Static (format, lint, types, i18n, modules, licences) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
+| Static (format, lint, types, i18n, modules, case) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
+| Licence check (lock files) | every code change | yes | every code change | yes | yes | – |
 | Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
 | E2E app | if `web/` (not only `web/src-tauri/`) changed: **smoke** = 24 spec files, desktop only, 2 shards | **full** = desktop + Pixel 7, 6 shards | no | **full** | **full** | – |
 | Sync E2E (+ seed project on full runs) | if `web/` (not only `src-tauri/`) or `server/` changed | yes | no | yes | yes | – |

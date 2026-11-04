@@ -213,3 +213,9 @@ Dev-Preview publish also waits for `docs-pairs`; a release run reads but never w
 accepted: the seed step of the full run also builds the first web server (about 20 s); a skipped CodeQL Rust leg
 shows a green check that says so in its log; no required status checks were found in the `develop` ruleset, so
 retiring the old per-package job names blocks nothing.
+
+Round 2 of the council (Architect 9/10 approve; Guardian 7/10, Advocate 8/10, then fixed): the licence check moved to
+its own job so it still runs on every code change; CodeQL got a manual trigger; the release keeps one concurrency
+group per ref. Declined as follow-up: the Dev-Preview publish stage recomputes version/tag in `prepare` (a tag pushed
+between the two stages of one run, about 12 min apart, could change the label of the release; asset names and
+signatures are unaffected).
