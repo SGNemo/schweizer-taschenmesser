@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
@@ -10,7 +10,9 @@ import example from '@/modules/example/manifest';
 import { markLibrarySeen } from '@/core/modules/librarySeen';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
+import { tLibraryV3 } from '@/strings.libraryV3';
 import { ModuleLibrary } from './ModuleLibrary';
+import { LibraryDetail } from './library/LibraryDetail';
 
 const entries = () => createRepo('example_entry', example.dataSchema.collections.entry!.schema);
 
@@ -115,6 +117,87 @@ describe('ModuleLibrary', () => {
     // Leaving the library counts as having looked at it.
     await renderLibrary().then((c) =>
       expect(c.queryByText(tComfort.get().library.badgeNew)).not.toBeInTheDocument(),
+    );
+  });
+});
+
+describe('ModuleLibrary in identity v3', () => {
+  it('the head counts active and available modules and the card shows its identity', async () => {
+    await enableModule(example);
+    const card = await renderLibrary();
+    const figures = within(screen.getByTestId('library-figures'));
+    await waitFor(() => expect(figures.getByText(tLibraryV3.get().figures.active)).toBeVisible());
+    const read = () => {
+      const list = screen.getByTestId('library-figures').textContent ?? '';
+      return {
+        active: Number(/(\d+)\s*aktiv/.exec(list)?.[1]),
+        available: Number(/(\d+)\s*verfügbar/.exec(list)?.[1]),
+      };
+    };
+    // the module states load after the first render; example is on, so at least one is active
+    await waitFor(() => expect(read().active).toBeGreaterThanOrEqual(1));
+    expect(read().available).toBeGreaterThanOrEqual(read().active);
+    // the card carries the module's hue and a drawn widget sketch, no live widget
+    const el = screen.getByTestId('module-example');
+    expect(el).toHaveAttribute('data-hue', example.identity.hue);
+    expect(card.getByTestId('widget-miniature')).toHaveAttribute(
+      'data-variant',
+      example.identity.widget,
+    );
+    expect(
+      card.getByRole('link', { name: tLibraryV3.get().detailsOf(example.name) }),
+    ).toHaveAttribute('href', '/library/example');
+  });
+
+  it('the filter shows only what is on or off', async () => {
+    const user = userEvent.setup();
+    await renderLibrary();
+    const f = tLibraryV3.get().filter;
+    await user.click(screen.getByRole('button', { name: f.active }));
+    await waitFor(() => expect(screen.queryByTestId('module-example')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: f.off }));
+    expect(await screen.findByTestId('module-example')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: f.all }));
+    expect(await screen.findByTestId('module-example')).toBeInTheDocument();
+  });
+});
+
+describe('LibraryDetail', () => {
+  function renderDetail(id: string) {
+    render(
+      <MemoryRouter initialEntries={[`/library/${id}`]}>
+        <Routes>
+          <Route path="/library/:moduleId" element={<LibraryDetail />} />
+          <Route path="/library" element={<p>library</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows the module as a small page with the same switch as the card', async () => {
+    const user = userEvent.setup();
+    renderDetail('example');
+    expect(await screen.findByRole('heading', { level: 1, name: example.name })).toBeVisible();
+    expect(screen.getByTestId('library-detail-head')).toHaveAttribute(
+      'data-hue',
+      example.identity.hue,
+    );
+    expect(screen.getByTestId('widget-miniature')).toHaveAttribute('data-size', 'lg');
+    const sw = await screen.findByRole('switch', { name: /einschalten/ });
+    await waitFor(() => expect(sw).toBeEnabled());
+    await user.click(sw);
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('example'))?.enabled).toBe(true),
+    );
+  });
+
+  it('an unknown module keeps one h1 and a way back', async () => {
+    renderDetail('doesnotexist');
+    expect(await screen.findByText(tLibraryV3.get().detail.notFound)).toBeVisible();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('link', { name: tLibraryV3.get().detail.back })).toHaveAttribute(
+      'href',
+      '/library',
     );
   });
 });

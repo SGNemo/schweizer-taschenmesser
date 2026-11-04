@@ -31,6 +31,9 @@ import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
 const ModuleLibrary = lazyOnline<object>(() =>
   import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
 );
+const LibraryDetail = lazyOnline<object>(() =>
+  import('@/pages/library/LibraryDetail').then((m) => ({ default: m.LibraryDetail })),
+);
 const ToolLibrary = lazyOnline<object>(() =>
   import('@/pages/ToolLibrary').then((m) => ({ default: m.ToolLibrary })),
 );
@@ -140,6 +143,14 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           element: (
             <PageContainer key="ModuleLibrary" variant="wide">
               {page(<ModuleLibrary />)}
+            </PageContainer>
+          ),
+        },
+        {
+          path: 'library/:moduleId',
+          element: (
+            <PageContainer key="LibraryDetail" variant="wide">
+              {page(<LibraryDetail />)}
             </PageContainer>
           ),
         },

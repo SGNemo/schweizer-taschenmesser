@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ModuleHue } from '@/core/modules/types';
 import { Card } from './Card';
 import { Icon, type IconName } from './icons';
 import { ReadableText } from './ReadableText';
@@ -7,7 +8,8 @@ import styles from './LibraryCard.module.css';
 /**
  * One entry of a library (modules, tools): icon, name, badges, a one-line description and the
  * actions on the right. The module and the tool library share it, so both look and behave alike.
- * `id` is the deep-link anchor (`/library#module-<id>`, `/tools#tool-<id>`).
+ * `id` is the deep-link anchor (`/library#module-<id>`, `/tools#tool-<id>`). With a `hue` the head is tinted in it
+ * (identity v3) and `preview` shows a drawn sketch under the head; without them the card looks as before.
  */
 export function LibraryCard({
   id,
@@ -16,6 +18,8 @@ export function LibraryCard({
   name,
   badges,
   description,
+  hue,
+  preview,
   children,
 }: {
   id: string;
@@ -24,12 +28,16 @@ export function LibraryCard({
   name: string;
   badges?: ReactNode;
   description: string;
+  /** Identity colour of the module or tool: tints the head and the plate (grey in "Ruhig"). */
+  hue?: ModuleHue;
+  /** A drawn sketch between the head and the description (`aria-hidden` by itself). */
+  preview?: ReactNode;
   /** The actions (switch, buttons); rendered on the right below the description. */
   children?: ReactNode;
 }) {
   return (
-    <Card as="li" id={id} className={styles.card} data-testid={testId}>
-      <div className={styles.head}>
+    <Card as="li" id={id} className={styles.card} data-testid={testId} data-hue={hue}>
+      <div className={styles.head} data-tinted={hue ? 'true' : undefined}>
         <span className={styles.icon}>
           <Icon name={icon} />
         </span>
@@ -38,6 +46,7 @@ export function LibraryCard({
         </span>
         {badges}
       </div>
+      {preview}
       <p className={styles.desc}>
         <ReadableText text={description} />
       </p>

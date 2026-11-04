@@ -1,0 +1,189 @@
+/* Drawn widget shapes for the library (identity v3). Tokens only; the colour is the hue of the surrounding
+   `data-hue` (--module-color), in "Ruhig" it is grey like everything else. Boxes and bars, never text or numbers. */
+.mini {
+  --mini-ink: color-mix(in srgb, var(--module-color, var(--text-3)) 55%, var(--surface));
+  --mini-soft: color-mix(in srgb, var(--module-color, var(--text-3)) 16%, var(--surface));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-content: center;
+  min-width: 0;
+  min-height: 5.5rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.mini[data-size='lg'] {
+  min-height: 11rem;
+  padding: var(--space-5);
+  gap: var(--space-3);
+}
+.line {
+  display: block;
+  height: 0.5rem;
+  width: 70%;
+  border-radius: var(--radius-full);
+  background: var(--mini-soft);
+}
+.line[data-w='1'] {
+  width: 50%;
+}
+.line[data-w='2'] {
+  width: 35%;
+}
+.figure {
+  display: block;
+  height: 1.5rem;
+  width: 45%;
+  border-radius: var(--radius-sm);
+  background: var(--mini-ink);
+}
+.figure[data-w='1'] {
+  width: 30%;
+}
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  height: 1.75rem;
+}
+.spark > span {
+  flex: 1;
+  border-radius: var(--radius-sm);
+  background: var(--mini-soft);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.row > .line {
+  flex: 1;
+  width: auto;
+  max-width: 70%;
+}
+.row > .line[data-w='1'] {
+  max-width: 55%;
+}
+.row > .line[data-w='2'] {
+  max-width: 40%;
+}
+.dot {
+  display: block;
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--mini-ink);
+}
+.dot[data-big='true'] {
+  width: 1rem;
+  height: 1rem;
+}
+.ring {
+  display: block;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  background: conic-gradient(var(--mini-ink) 0 62%, var(--mini-soft) 62% 100%);
+  mask: radial-gradient(circle, transparent 55%, var(--text) 56%);
+}
+.mini[data-variant='fortschritt'],
+.mini[data-variant='cover'] {
+  flex-direction: row;
+  align-items: center;
+}
+.stack {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.cover {
+  display: block;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--mini-ink), var(--mini-soft));
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.mini[data-variant='himmel'] {
+  background: linear-gradient(180deg, var(--mini-soft), var(--surface-2));
+}
+.sun {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  background: var(--mini-ink);
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  min-height: 2rem;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--mini-soft);
+}
+.tile > .line {
+  background: var(--mini-ink);
+}
+.plate {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
+  background: var(--mini-ink);
+}
+.pill {
+  display: block;
+  width: 4rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--mini-ink);
+}
+.pill[data-primary='true'] {
+  background: var(--mini-ink);
+}
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.badge {
+  display: block;
+  flex: none;
+  width: 1.5rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--mini-ink);
+}
+.box {
+  display: block;
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--mini-ink);
+}
+.box[data-done='true'] {
+  background: var(--mini-ink);
+}

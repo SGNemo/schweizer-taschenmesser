@@ -4,16 +4,21 @@ import { useTools } from '@/core/tools/state';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
+import { tLibraryV3 } from '@/strings.libraryV3';
 import {
   Badge,
   Button,
   Icon,
   IconButton,
   LibraryCard,
+  Segmented,
   Switch,
   TextField,
+  Toolbar,
   useHashTarget,
 } from '@/ui';
+import { PageHead } from './settings/PageHead';
+import library from './library/Library.module.css';
 import styles from './Page.module.css';
 
 const s = t.tools.library;
@@ -25,11 +30,16 @@ export function ToolLibrary() {
   const openTools = useUiStore((st) => st.openTools);
   const activeIds = tools?.active.map((x) => x.id) ?? [];
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'off'>('all');
   const text = tComfort.get().tools;
+  const v3 = tLibraryV3.use();
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
-  const matches = (x: { name: string; description: string }) => {
+  const matches = (x: { id: string; name: string; description: string }) => {
     const hay = normalize(`${x.name} ${x.description}`);
-    return tokens.every((tok) => hay.includes(tok));
+    if (!tokens.every((tok) => hay.includes(tok))) return false;
+    if (filter === 'active') return activeIds.includes(x.id);
+    if (filter === 'off') return !activeIds.includes(x.id);
+    return true;
   };
   const anyMatch = (tools?.all ?? []).some(matches);
   // `/tools#tool-<id>` scrolls to that tool and marks it.
@@ -37,23 +47,48 @@ export function ToolLibrary() {
 
   return (
     <>
-      <div className={styles.header}>
-        <div>
-          <h1>{s.title}</h1>
-          <p className={styles.lead}>{s.intro}</p>
+      <PageHead
+        hue="moss"
+        area="system"
+        icon="wrench"
+        eyebrow={v3.toolsEyebrow}
+        title={s.title}
+        description={s.intro}
+        size="tall"
+        testId="tools-head"
+      >
+        <ul className={library.figures} aria-label={v3.figures.label} data-testid="tools-figures">
+          <li>
+            <strong>{activeIds.length}</strong> {v3.figures.active}
+          </li>
+          <li>
+            <strong>{tools?.all.length ?? 0}</strong> {v3.figures.available}
+          </li>
+        </ul>
+      </PageHead>
+      <Toolbar>
+        <div role="search" className={styles.librarySearch}>
+          <TextField
+            label={text.search}
+            labelHidden
+            type="search"
+            placeholder={text.searchPlaceholder}
+            value={query}
+            autoComplete="off"
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
-      </div>
-      <div role="search" className={styles.librarySearch}>
-        <TextField
-          label={text.search}
-          labelHidden
-          type="search"
-          placeholder={text.searchPlaceholder}
-          value={query}
-          autoComplete="off"
-          onChange={(e) => setQuery(e.target.value)}
+        <Segmented
+          label={v3.filter.label}
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: v3.filter.all },
+            { value: 'active', label: v3.filter.active },
+            { value: 'off', label: v3.filter.off },
+          ]}
         />
-      </div>
+      </Toolbar>
       {tools && !anyMatch ? (
         <p role="status" className={styles.lead}>
           {text.noResults}
@@ -63,8 +98,22 @@ export function ToolLibrary() {
         const inGroup = (tools?.all ?? []).filter((x) => x.group === group && matches(x));
         if (inGroup.length === 0) return null;
         return (
-          <section key={group} aria-labelledby={`tools-${group}`} className={styles.section}>
-            <h2 id={`tools-${group}`}>{s.groups[group]}</h2>
+          <section
+            key={group}
+            aria-labelledby={`tools-${group}`}
+            className={library.group}
+            data-area="system"
+          >
+            <h2 id={`tools-${group}`} className={library.groupHead}>
+              {s.groups[group]}
+              <span className={library.groupCount}>
+                {v3.tools.groupSection(
+                  (tools?.all ?? []).filter((x) => x.group === group && activeIds.includes(x.id))
+                    .length,
+                  (tools?.all ?? []).filter((x) => x.group === group).length,
+                )}
+              </span>
+            </h2>
             <ul className={`${styles.list} ${styles.grid}`}>
               {inGroup.map((tool) => {
                 const on = activeIds.includes(tool.id);
@@ -77,6 +126,7 @@ export function ToolLibrary() {
                     icon={tool.icon}
                     name={tool.name}
                     description={tool.description}
+                    hue={tool.identity.hue}
                     badges={
                       <>
                         <Badge>{tool.offline ? s.offline : s.online}</Badge>

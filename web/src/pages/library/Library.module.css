@@ -1,0 +1,66 @@
+/* Libraries in identity v3: head figures, tinted area sections, details link. Tokens only; hairlines all around,
+   no edge stripe; text is --text / --text-muted. */
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  color: var(--text);
+  font-size: var(--text-label);
+}
+.figures strong {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  margin-inline-end: var(--space-1);
+}
+.group {
+  position: relative;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--area-color, var(--text-3)) var(--group-tint, 6%),
+    var(--surface)
+  );
+}
+.group::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-widget, 0.04);
+}
+.group > * {
+  position: relative;
+}
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+.groupCount {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: normal;
+  font-variant-numeric: tabular-nums;
+}
+.details {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  color: var(--text);
+  text-decoration: underline;
+}
