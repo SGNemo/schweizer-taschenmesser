@@ -21,6 +21,7 @@ export const feeds: Strings['feeds'] = {
   listLabel: 'Flux suivis',
   ungrouped: 'Sans groupe',
   allFeeds: 'Tous les flux',
+  lead: 'Ajouté en dernier',
   importOpml: 'Importer',
   exportOpml: 'Exporter en OPML',
   exported: 'OPML enregistré.',

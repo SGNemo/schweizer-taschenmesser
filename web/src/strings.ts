@@ -3833,6 +3833,7 @@ export const de = {
     url: 'Adresse (Link)',
     urlInvalid: 'Bitte eine gültige http(s)-Adresse eingeben.',
     kind: 'Art',
+    figureUnit: 'offen',
     kinds: {
       link: 'Link',
       read: 'Lesen',
@@ -7591,6 +7592,7 @@ export const de = {
     listLabel: 'Abonnierte Feeds',
     ungrouped: 'Ohne Gruppe',
     allFeeds: 'Alle Feeds',
+    lead: 'Zuletzt hinzugefügt',
     importOpml: 'Importieren',
     exportOpml: 'Als OPML exportieren',
     exported: 'OPML gespeichert.',
