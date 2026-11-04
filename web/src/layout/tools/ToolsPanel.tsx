@@ -23,6 +23,12 @@ import styles from './ToolsPanel.module.css';
 
 /** Below this width the dialog is a full-screen sheet (`ui/Dialog.module.css`): one pane at a time. */
 const PHONE = '(max-width: 899px)';
+/** Memory only (gone with the page): the tool the panel showed last, for when no history is kept. */
+let lastShown: string | null = null;
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+const isEditable = (el: EventTarget | null): boolean =>
+  el instanceof HTMLElement &&
+  (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
 
 /**
  * The toolbox: a large window with the list on the left (search, categories, Alt+1…9) and the tool
@@ -51,18 +57,23 @@ export function ToolsPanel() {
     if (toolsOpen) {
       setQuery('');
       setListView(false);
-      setRecentAtOpen(focus.searchHistory ? readRecentTools() : []);
+      // Without "Verlauf in der Suche" nothing is stored; the tool shown last is still remembered in memory.
+      setRecentAtOpen(focus.searchHistory ? readRecentTools() : lastShown ? [lastShown] : []);
     }
   }
 
   const shown: ToolManifest | undefined = toolsOpen
     ? pickInitialTool(ordered, activeTool, recentAtOpen)
     : undefined;
-  // Showing a tool counts as using it (device-local, off with "Verlauf in der Suche").
+  // Picking a tool counts as using it (device-local, off with "Verlauf in der Suche"); the default pick does not.
   const shownId = shown?.id;
+  const picked = shownId !== undefined && shownId === activeTool;
   useEffect(() => {
-    if (shownId && focus.searchHistory) recordToolUse(shownId);
-  }, [shownId, focus.searchHistory]);
+    if (shownId) lastShown = shownId;
+  }, [shownId]);
+  useEffect(() => {
+    if (picked && shownId && focus.searchHistory) recordToolUse(shownId);
+  }, [picked, shownId, focus.searchHistory]);
 
   const visible = useMemo(() => filterTools(ordered, query), [ordered, query]);
   const groups = useMemo(() => groupByCategory(visible), [visible]);
@@ -76,10 +87,13 @@ export function ToolsPanel() {
   const scratchOn = !!states?.['notes'];
 
   const sideRef = useRef<HTMLElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const choose = (tool: ToolManifest) => {
     openTools(tool.id);
     setListView(false);
+    // On a phone the list disappears behind the tool: the focus follows into the tool.
+    if (phone) focusStage();
   };
   const focusStage = () =>
     requestAnimationFrame(() => stageRef.current?.querySelector<HTMLElement>('section')?.focus());
@@ -89,6 +103,8 @@ export function ToolsPanel() {
     if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const tool = toolForDigit(ordered, e.code);
     if (!tool) return;
+    // Option+digit types characters on a Mac ([ ] { } on a German keyboard): leave fields alone there.
+    if (IS_MAC && isEditable(e.target) && e.target !== searchRef.current) return;
     e.preventDefault();
     choose(tool);
     focusStage();
@@ -134,7 +150,7 @@ export function ToolsPanel() {
           className={styles.tile}
           data-hue={tool.identity.hue}
           data-tool-btn=""
-          aria-current={tool.id === shownId ? 'true' : undefined}
+          aria-current={numbered && tool.id === shownId ? 'true' : undefined}
           aria-keyshortcuts={numbered && n <= 9 ? `Alt+${n}` : undefined}
           onClick={() => choose(tool)}
         >
@@ -162,7 +178,13 @@ export function ToolsPanel() {
       variant={phone ? 'full' : 'center'}
       headerStart={
         phoneTool ? (
-          <IconButton label={t.tools.back} onClick={() => setListView(true)}>
+          <IconButton
+            label={t.tools.back}
+            onClick={() => {
+              setListView(true);
+              requestAnimationFrame(() => searchRef.current?.focus());
+            }}
+          >
             <Icon name="chevronLeft" />
           </IconButton>
         ) : undefined
@@ -181,9 +203,9 @@ export function ToolsPanel() {
             onKeyDown={onSideKey}
           >
             <input
+              ref={searchRef}
               type="search"
               className={styles.search}
-              role="searchbox"
               aria-label={tComfort.get().tools.search}
               placeholder={tComfort.get().tools.searchPlaceholder}
               title={t.tools.panel.searchHint}
@@ -209,7 +231,7 @@ export function ToolsPanel() {
               <p role="status">{tComfort.get().tools.noResults}</p>
             ) : null}
             {scratchOn && !query ? (
-              <Link to="/notes?scratch=1" className={styles.scratch} onClick={closeTools}>
+              <Link to="/notes" className={styles.scratch} onClick={closeTools}>
                 <Icon name="note" size={18} />
                 <span>
                   <strong>{t.tools.panel.scratch}</strong>
@@ -230,6 +252,7 @@ export function ToolsPanel() {
                   canDetachTool() && !phone
                     ? () => {
                         if (detachTool(shown)) closeTools();
+                        else useUiStore.getState().toast(t.tools.panel.detachBlocked);
                       }
                     : undefined
                 }

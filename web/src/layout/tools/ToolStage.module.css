@@ -30,6 +30,10 @@
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .signature {
   display: inline-grid;
@@ -50,7 +54,4 @@
   flex-direction: column;
   gap: var(--space-4);
 }
-/* Code-like tools (developer group) read in mono. */
-.stage[data-type='mono'] .about {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
+/* Code-like tools (developer group): the head stays in the reading font. */

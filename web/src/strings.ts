@@ -1770,6 +1770,7 @@ export const de = {
       searchHint: 'Name oder Aufgabe, Alt+1 bis 9 wechselt',
       list: 'Werkzeugliste',
       detach: 'In eigenem Fenster öffnen',
+      detachBlocked: 'Das Fenster wurde vom Browser blockiert. Erlaube Pop-ups für diese Seite.',
       scratch: 'Schmierzettel',
       scratchHint: 'Notizzettel in Notizen',
       number: (n: number) => `Alt+${n}`,

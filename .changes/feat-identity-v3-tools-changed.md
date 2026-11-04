@@ -3,10 +3,12 @@ type: changed
 area: tools
 breaking: false
 highlight: true
-de: Der Werkzeugkasten ist ein großes Fenster: Liste links, Werkzeug rechts in seiner Farbe; er öffnet auf dem zuletzt benutzten Werkzeug, mit Suche, Alt+1 bis 9 und am Handy als Vollbild.
-en: The toolbox is now a large window: list on the left, the tool on the right in its own colour; it opens on the tool you used last, with search, Alt+1 to 9 and a full-screen sheet on phones.
+de: Der Werkzeugkasten ist jetzt eine große Ansicht: links die Liste mit Suche und Alt+1 bis 9, rechts das Werkzeug in seiner Farbe. Er öffnet mit dem zuletzt benutzten Werkzeug; am Handy füllt er den Bildschirm.
+en: The toolbox is now a large panel: the list with search and Alt+1 to 9 on the left, the tool in its own colour on the right. It opens on the tool you used last; on phones it fills the screen.
 ---
+
 ---
+
 type: added
 area: tools
 breaking: false

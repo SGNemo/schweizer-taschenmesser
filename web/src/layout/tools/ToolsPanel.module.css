@@ -119,8 +119,3 @@
     display: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .scratch {
-    transform: none;
-  }
-}

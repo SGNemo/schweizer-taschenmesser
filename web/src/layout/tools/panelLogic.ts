@@ -63,12 +63,12 @@ export function pickInitialTool(
   return byId(requestedId ?? undefined) ?? byId(recentIds[0]) ?? ordered[0];
 }
 
-/** Alt+1 … Alt+9 → the n-th tool of the (unfiltered) panel order; `KeyboardEvent.code`, so layouts do not matter. */
+/** Alt+1 … Alt+9 → the n-th tool of the (unfiltered) panel order; `KeyboardEvent.code` of the digit row (the numpad types Windows Alt codes), so layouts do not matter. */
 export function toolForDigit(
   ordered: readonly ToolManifest[],
   code: string,
 ): ToolManifest | undefined {
-  const m = /^(?:Digit|Numpad)([1-9])$/.exec(code);
+  const m = /^Digit([1-9])$/.exec(code);
   return m ? ordered[Number(m[1]) - 1] : undefined;
 }
 

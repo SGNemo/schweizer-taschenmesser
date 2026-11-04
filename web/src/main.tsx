@@ -58,6 +58,8 @@ void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
   );
   void initCore()
     .then(() => {
+      // A detached tool window (`/tool/:id`) needs the database, not a second set of background services.
+      if (window.location.pathname.startsWith('/tool/')) return;
       startNotificationScheduler();
       // Safe mode: no module background work, no connectors, no local API.
       if (!isSafeMode()) {

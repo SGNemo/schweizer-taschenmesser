@@ -20,6 +20,7 @@ export const tools: Strings['tools'] = {
     searchHint: 'Nom ou tâche, Alt+1 à 9 change',
     list: 'Liste des outils',
     detach: 'Ouvrir dans sa propre fenêtre',
+    detachBlocked: 'Le navigateur a bloqué la fenêtre. Autorisez les pop-ups pour ce site.',
     scratch: 'Brouillon',
     scratchHint: 'Pense-bête dans Notes',
     number: (n: number) => `Alt+${n}`,

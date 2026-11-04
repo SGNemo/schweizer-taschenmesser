@@ -79,6 +79,7 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
     await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
     await page.keyboard.press('Alt+3'); // Rechnen: Rechner, Währung, then Timer (zeit) = 3rd of the four
     await expect(page.getByRole('dialog', { name: 'Timer & Stoppuhr' })).toBeVisible();
+    await expect(page.locator('[data-tool="timer"]')).toBeFocused(); // the focus follows the tool
     await page.keyboard.press('Alt+1');
     await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
 
@@ -109,6 +110,9 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
     await popup.getByLabel('Rechnung').fill('2 + 2');
     await popup.getByRole('button', { name: 'Ergebnis', exact: true }).click();
     await expect(popup.getByTestId('calc-result')).toHaveText('4');
+    // The window brings its own toasts: copying says so.
+    await popup.getByRole('button', { name: 'Ergebnis kopieren' }).first().click();
+    await expect(popup.getByText('Kopiert.')).toBeVisible();
   });
 
   test('a tool that is off is not served alone', async ({ page }) => {

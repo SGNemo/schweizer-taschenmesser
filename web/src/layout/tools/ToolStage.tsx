@@ -16,6 +16,7 @@ const WINDOW_FEATURES = 'popup,width=540,height=760';
 export const canDetachTool = (): boolean => getPlatform().kind === 'web';
 
 export function detachTool(tool: ToolManifest): boolean {
+  // The opener is kept on purpose: same origin, and the return value tells whether the browser blocked the popup.
   const w = window.open(toolWindowPath(tool.id), `nemo-tool-${tool.id}`, WINDOW_FEATURES);
   return w !== null;
 }
@@ -39,6 +40,7 @@ export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
     data-type={tool.identity.type ?? 'sans'}
     data-tool={tool.id}
     aria-label={tool.name}
+    tabIndex={-1}
     style={
       tool.identity.hue2
         ? ({ '--module-color-2': `var(--mod-${tool.identity.hue2})` } as CSSProperties)
@@ -49,7 +51,9 @@ export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
       <ToolPlate tool={tool} size="lg" />
       <div className={styles.headText}>
         {heading ? <h1 className={styles.name}>{tool.name}</h1> : null}
-        <p className={styles.about}>{tool.description}</p>
+        <p className={styles.about} title={tool.description}>
+          {tool.description}
+        </p>
       </div>
       <span className={styles.signature}>
         <ToolSignature id={tool.identity.signature} size={40} />

@@ -5,6 +5,7 @@ import {
   TOOL_CATEGORIES as SCRIPT_CATEGORIES,
   TOOL_SIGNATURES as SCRIPT_SIGNATURES,
 } from '../../../scripts/lib/checkTools';
+import { orderForPanel } from '@/layout/tools/panelLogic';
 import { allTools } from './registry';
 import { toolKeywords } from './keywords';
 import { TOOL_CATEGORIES, TOOL_SIGNATURES } from './types';
@@ -152,6 +153,10 @@ describe('tool identity v3', () => {
       expect(tool.category, tool.id).toBe('entwickler');
     for (let i = 1; i < allTools.length; i++)
       expect(allTools[i]!.identity.hue, allTools[i]!.id).not.toBe(allTools[i - 1]!.identity.hue);
+    // … and in the order the panel shows them (by category).
+    const shown = orderForPanel(allTools);
+    for (let i = 1; i < shown.length; i++)
+      expect(shown[i]!.identity.hue, shown[i]!.id).not.toBe(shown[i - 1]!.identity.hue);
   });
 
   it('splits the comma separated keyword strings', () => {

@@ -72,7 +72,8 @@ describe('toolForDigit and stepIndex', () => {
   const ordered = orderForPanel(tools);
   it('maps Alt+1…9 to the n-th tool', () => {
     expect(toolForDigit(ordered, 'Digit1')?.id).toBe('calc');
-    expect(toolForDigit(ordered, 'Numpad3')?.id).toBe('timer');
+    expect(toolForDigit(ordered, 'Numpad3')).toBeUndefined();
+    expect(toolForDigit(ordered, 'Digit3')?.id).toBe('timer');
     expect(toolForDigit(ordered, 'Digit9')).toBeUndefined();
     expect(toolForDigit(ordered, 'Digit0')).toBeUndefined();
     expect(toolForDigit(ordered, 'KeyA')).toBeUndefined();

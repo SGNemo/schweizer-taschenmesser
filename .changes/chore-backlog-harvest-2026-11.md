@@ -8,6 +8,7 @@ en: A notice period in months now counts calendar months instead of a flat 30 da
 ---
 
 ---
+
 type: fixed
 area: vault
 breaking: false
@@ -17,6 +18,7 @@ en: For documents, a notice period in months now also counts calendar months.
 ---
 
 ---
+
 type: security
 area: finance
 breaking: false
@@ -26,6 +28,7 @@ en: In CSV exports, cells that look like formulas open as plain text in Excel an
 ---
 
 ---
+
 type: security
 area: backup
 breaking: false
@@ -35,6 +38,7 @@ en: When restoring a backup, files that are too large are refused and damaged en
 ---
 
 ---
+
 type: security
 area: platform
 breaking: false

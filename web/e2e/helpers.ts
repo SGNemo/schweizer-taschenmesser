@@ -167,7 +167,8 @@ export async function openToolbox(page: Page): Promise<Locator> {
 /** Opens the toolbox and picks a tool by its name (the panel's list); returns the dialog titled after it. */
 export async function pickTool(page: Page, name: string): Promise<Locator> {
   const dialog = await openToolbox(page);
-  await dialog.getByRole('button', { name, exact: true }).click();
+  // The "Zuletzt benutzt" row repeats tools above their category: the list entry is the last match.
+  await dialog.getByRole('button', { name, exact: true }).last().click();
   await expect(page.getByRole('dialog', { name })).toBeVisible();
   return page.getByRole('dialog');
 }

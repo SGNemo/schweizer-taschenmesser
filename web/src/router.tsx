@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -7,7 +7,6 @@ import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
-import { ToolSolo } from '@/layout/tools/ToolSolo';
 import { ComponentSheet } from '@/layout/devTools';
 import { frameVariant } from '@/core/modules/frame';
 import { AreaFrame } from '@/layout/AreaFrame';
@@ -37,6 +36,9 @@ const ToolLibrary = lazyOnline<object>(() =>
 );
 const OAuthCallback = lazyOnline<object>(() =>
   import('@/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallback })),
+);
+const ToolSolo = lazy(() =>
+  import('@/layout/tools/ToolSolo').then((m) => ({ default: m.ToolSolo })),
 );
 const ShareTarget = lazyOnline<object>(() =>
   import('@/pages/ShareTarget').then((m) => ({ default: m.ShareTarget })),

@@ -7,6 +7,9 @@ import { evaluate, CalcError } from '@/core/calc/expr';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 
+/** The tool runs alone in its own window (`/tool/:id`): handing over to Notes or the vault would turn that window into the app. */
+export const inDetachedWindow = (): boolean => window.location.pathname.startsWith('/tool/');
+
 /** 1234.5 → "1.234,50" */
 export const fmt2 = (n: number): string =>
   formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -64,7 +67,7 @@ export async function copyWithToast(text: string): Promise<void> {
 export function useSaveAsNote(): ((title: string, text: string) => void) | undefined {
   const navigate = useNavigate();
   const states = useModuleStates();
-  if (!states?.['notes']) return undefined;
+  if (!states?.['notes'] || inDetachedWindow()) return undefined;
   return (title, text) => {
     useUiStore.getState().closeTools();
     void navigate(
@@ -82,7 +85,7 @@ export function useSaveAsNote(): ((title: string, text: string) => void) | undef
 export function useSaveInVault(): ((entry: VaultEntryHandoff) => void) | undefined {
   const navigate = useNavigate();
   const states = useModuleStates();
-  if (!states?.['accounts']) return undefined;
+  if (!states?.['accounts'] || inDetachedWindow()) return undefined;
   return (entry) => {
     offerVaultEntry(entry);
     useUiStore.getState().closeTools();

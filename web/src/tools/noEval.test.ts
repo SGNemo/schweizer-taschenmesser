@@ -3,8 +3,9 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The calculator and every tool parse what the user types themselves; nothing is ever handed to the
- * JavaScript engine as code. Comments may say so, code may not (`eval`, `new Function`, string timers).
+ * The calculator and the tools parse what the user types themselves. A cheap guard against the obvious
+ * ways of running text as code: `eval`, `new Function`, string timers (comments may name them, code may
+ * not). It is a grep, not a proof.
  */
 const ROOTS = ['src/tools', 'src/core/calc'];
 
