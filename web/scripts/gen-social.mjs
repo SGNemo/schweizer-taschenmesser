@@ -82,7 +82,7 @@ try {
     const p = await browser.newPage({ viewport: { width: 1280, height: 640 } });
     await p.setContent(page(t));
     await p.evaluate('document.fonts.ready');
-    await p.waitForFunction(() => [...document.images].every((i) => i.complete));
+    await p.waitForFunction('[...document.images].every((i) => i.complete)');
     const out = join(repo, 'docs', 'brand', t.file);
     writeFileSync(out, await p.screenshot({ type: 'png' }));
     console.log(`wrote docs/brand/${t.file}`);
