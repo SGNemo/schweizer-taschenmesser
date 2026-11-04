@@ -600,3 +600,10 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - AU4 · Befehlspalette: „regel“ tippen → „Regel ausführen: …“ führt die Regel aus; „Letzte Regel-Ausführung rückgängig“ nimmt sie zurück.
 - AU5 · Mail-Konto verbunden und „Neue Mails melden“ an, Vorlage „Rechnung per Mail“ ein: eine Rechnungs-Mail erzeugt unter „Vorschläge“ einen Eintrag; „Prüfen“ zeigt die Vorschau, erst „Eintragen“ speichert.
 - AU6 · Profil-Vorlagen („Arbeit am Morgen“, „Abends“) zur eingestellten Uhrzeit (App offen): Profil wechselt, Toast mit Rückgängig.
+
+## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
+- **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.
+- **HV2 Kacheln springen:** Auf eine Regal-Kachel im Kopf tippen → die Liste springt zum Abschnitt des Ortes (Tastatur: Enter).
+- **HV3 Scannen:** „Scannen“ in der Werkzeugleiste öffnet weiterhin die Kamera; der Barcode legt einen Vorrat an oder erhöht ihn.
+- **HV4 Tresor-Sperre:** Passwörter entsperren, ruhig liegen lassen: der Kopf zählt „sperrt in n Min.“ herunter und sperrt dann; Gruppen-Reiter bleiben nach dem Entsperren erhalten.
+- **HV5 Ruhig / Lesehilfe:** In „Ruhig“ und mit „Modulfarben: Aus“ sind Vorräte, Einkauf, Unterlagen und Passwörter noch an Form und Beschriftung zu erkennen; mit Lesehilfe (75 %) bricht keine Kachel und kein Reiter.
