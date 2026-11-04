@@ -186,6 +186,8 @@ jobs:
     needs: prepare
     runs-on: windows-latest
     timeout-minutes: 45
+    env:
+      CARGO_TARGET_DIR: C:/t
     defaults:
       run:
         working-directory: web
@@ -200,9 +202,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
+      # The build below writes into C:/t (CARGO_TARGET_DIR), so the cache must save and restore that
+      # directory (it used to cache src-tauri/target, which this job never fills: 476 of 476 crates were
+      # rebuilt on every run, 19 min). cache-workspace-crates keeps the llama.cpp build of crates/local-llm.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
+          shared-key: windows-release
+          cache-workspace-crates: true
       - run: npm ci
       # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the
       # runner image; the Vulkan SDK (headers, loader import library, glslc) comes from Chocolatey, whose
@@ -228,7 +235,6 @@ jobs:
       - name: Build
         env:
           CMAKE_GENERATOR: Ninja
-          CARGO_TARGET_DIR: C:/t
         run: npx tauri build --no-bundle -- --features local-llm-vulkan --locked
 
       - name: Put the executable where the next steps expect it

@@ -201,6 +201,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
+          shared-key: windows-dev
       - run: npm ci
 
       # Own identifier (…taschenmesser.dev), name "Nemo Dev", version from the prepare job; the frontend is
@@ -291,6 +292,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
+          shared-key: android-dev
       - run: npm ci
 
       - name: Android SDK and NDK
