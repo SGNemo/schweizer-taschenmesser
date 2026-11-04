@@ -73,7 +73,8 @@ export function ToolsPanel() {
 
   // A phone with no tool asked for and none used before starts on the list, not on an arbitrary tool.
   const autoList = phone && !activeTool && !ordered.some((x) => x.id === recentAtOpen[0]);
-  const listView = listChoice ?? autoList;
+  // Until the tool settings are read there is nothing to choose from: no list flashing before the last tool.
+  const listView = listChoice ?? (tools ? autoList : false);
 
   const shown: ToolManifest | undefined = toolsOpen
     ? pickInitialTool(ordered, activeTool, recentAtOpen)

@@ -158,6 +158,8 @@ export async function openToolbox(page: Page): Promise<Locator> {
   await expect(dialog).toBeVisible();
   if ((page.viewportSize()?.width ?? 1280) < 900) {
     const back = dialog.getByRole('button', { name: 'Zurück zu den Werkzeugen' });
+    // Either the list or the tool is shown once the tool settings are read.
+    await expect(back.or(dialog.getByRole('searchbox'))).toBeVisible();
     if (await back.isVisible()) await back.click();
     await expect(dialog.getByRole('searchbox')).toBeVisible();
   }
