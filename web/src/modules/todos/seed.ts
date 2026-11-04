@@ -257,7 +257,7 @@ const TITLES = [
 
 function seed(ctx: SeedContext): SeedRows {
   const nLists = ctx.count({ small: 3, medium: 4, large: 4 });
-  const extra = ctx.count({ small: 0, medium: 25, large: 300 });
+  const extra = ctx.count({ small: 0, medium: 25, large: 300, xl: 2000 });
   const lists: SeedRow[] = LISTS.slice(0, nLists).map((l, i) => ({
     id: ctx.id('todos', 'list', i),
     data: {

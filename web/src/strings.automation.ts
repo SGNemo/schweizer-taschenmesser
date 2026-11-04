@@ -7,6 +7,85 @@ import { defineBundle } from '@/core/i18n/bundle';
  * guilt, no counters, no exclamation marks (docs/design/FOCUS-WORDING.md).
  */
 const de = {
+  settings: {
+    title: 'Automatisierungen',
+    description:
+      'Fertige Regeln nach dem Muster „Wenn das passiert, dann tu das“. Alles bleibt auf diesem Gerät, nichts wird gelöscht oder verschickt.',
+    keywords: ['Regeln', 'Automatisierung', 'Wenn dann', 'Vorlagen', 'Trockenlauf', 'Erinnerung'],
+    enabled: 'Automatisierungen verwenden',
+    enabledHint: 'Aus: keine Regel läuft, nichts wird beobachtet.',
+    dryRun: 'Nur ausprobieren (Trockenlauf)',
+    dryRunHint:
+      'Die Regeln schreiben nur ins Protokoll, was sie tun würden. Es ändert sich nichts.',
+    limit: 'Regelläufe pro Stunde, alle zusammen',
+    limitHint: '0 heißt: kein gemeinsames Limit. Jede Regel hat zusätzlich ihr eigenes Limit.',
+    templates: 'Vorlagen',
+    templatesHint: 'Alle sind zu Beginn aus.',
+    needs: (names: string) => `Braucht: ${names}`,
+    params: { daysBefore: 'Tage vorher', time: 'Uhrzeit', minutes: 'Minuten' } as Record<
+      string,
+      string
+    >,
+    ruleOn: (title: string) => `${title} einschalten`,
+  },
+  log: {
+    title: 'Regel-Protokoll',
+    description: 'Was die Regeln zuletzt getan haben. Ein Lauf lässt sich zurücknehmen.',
+    keywords: ['Protokoll', 'Regel', 'Rückgängig', 'Verlauf', 'Automatisierung'],
+    listLabel: 'Letzte Regelläufe',
+    empty: 'Noch kein Regellauf.',
+    undo: 'Rückgängig',
+    undone: 'Zurückgenommen',
+    undoneDetail: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} zurückgenommen, ${kept} behalten (inzwischen geändert).`
+        : `${removed} zurückgenommen.`,
+    results: {
+      done: 'ausgeführt',
+      dry: 'Trockenlauf',
+      skipped: 'übersprungen',
+      error: 'nicht möglich',
+    } as Record<string, string>,
+    reasons: {
+      loop: 'Schleife erkannt',
+      depth: 'zu viele Schritte hintereinander',
+      limit: 'Limit pro Stunde erreicht',
+      'global-limit': 'gemeinsames Limit erreicht',
+      duplicate: 'schon erledigt',
+    } as Record<string, string>,
+    notes: {
+      dry: 'nur geprüft',
+      exists: 'war schon da',
+      busy: 'läuft schon',
+      incomplete: 'unvollständig',
+      'not-allowed': 'nicht erlaubt',
+      'module-unavailable': 'Modul ist aus',
+      'no-target': 'Eintrag nicht gefunden',
+      conflict: 'Eintrag wurde geändert',
+      error: 'Fehler',
+      'unknown-profile': 'Profil unbekannt',
+      invalid: 'ungültig',
+    } as Record<string, string>,
+    suggestions: 'Vorschläge',
+    suggestionsHint:
+      'Eine Regel hat diese Einträge vorbereitet. Gespeichert wird erst, wenn du bestätigst.',
+    review: 'Prüfen',
+    dismiss: 'Verwerfen',
+    reviewTitle: 'Vorschlag prüfen',
+  },
+  palette: {
+    run: (title: string) => `Regel ausführen: ${title}`,
+    ran: 'Regel ausgeführt.',
+    log: 'Regel-Protokoll öffnen',
+    undoLast: 'Letzte Regel-Ausführung rückgängig',
+    nothingToUndo: 'Es gibt nichts zurückzunehmen.',
+    keywords: ['regel', 'automatisierung', 'protokoll'],
+  },
+  dev: {
+    dryRunAll: 'Regeln trocken laufen lassen',
+    dryRunDone: (n: number) => `Trockenlauf: ${n} Regeln geprüft, siehe Regel-Protokoll.`,
+    dryRunNone: 'Keine Regel ist an.',
+  },
   templates: {
     invoiceDue: {
       title: 'Rechnung bald fällig',
@@ -78,6 +157,83 @@ const de = {
 type Shape = typeof de;
 
 const en: Shape = {
+  settings: {
+    title: 'Automations',
+    description:
+      'Ready-made rules of the kind “when this happens, do that”. Everything stays on this device, nothing is deleted or sent.',
+    keywords: ['rules', 'automation', 'if then', 'templates', 'dry run', 'reminder'],
+    enabled: 'Use automations',
+    enabledHint: 'Off: no rule runs and nothing is watched.',
+    dryRun: 'Just try it out (dry run)',
+    dryRunHint: 'Rules only write to the log what they would do. Nothing changes.',
+    limit: 'Rule runs per hour, all together',
+    limitHint: '0 means no shared limit. Every rule also has its own limit.',
+    templates: 'Templates',
+    templatesHint: 'All of them are off at first.',
+    needs: (names: string) => `Needs: ${names}`,
+    params: { daysBefore: 'Days before', time: 'Time', minutes: 'Minutes' } as Record<
+      string,
+      string
+    >,
+    ruleOn: (title: string) => `Turn on ${title}`,
+  },
+  log: {
+    title: 'Rule log',
+    description: 'What the rules did lately. A run can be taken back.',
+    keywords: ['log', 'rule', 'undo', 'history', 'automation'],
+    listLabel: 'Latest rule runs',
+    empty: 'No rule run yet.',
+    undo: 'Undo',
+    undone: 'Taken back',
+    undoneDetail: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} taken back, ${kept} kept (changed meanwhile).`
+        : `${removed} taken back.`,
+    results: {
+      done: 'done',
+      dry: 'dry run',
+      skipped: 'skipped',
+      error: 'not possible',
+    } as Record<string, string>,
+    reasons: {
+      loop: 'loop detected',
+      depth: 'too many steps in a row',
+      limit: 'hourly limit reached',
+      'global-limit': 'shared limit reached',
+      duplicate: 'already done',
+    } as Record<string, string>,
+    notes: {
+      dry: 'only checked',
+      exists: 'was already there',
+      busy: 'already running',
+      incomplete: 'incomplete',
+      'not-allowed': 'not allowed',
+      'module-unavailable': 'module is off',
+      'no-target': 'entry not found',
+      conflict: 'entry was changed',
+      error: 'error',
+      'unknown-profile': 'unknown profile',
+      invalid: 'invalid',
+    } as Record<string, string>,
+    suggestions: 'Suggestions',
+    suggestionsHint: 'A rule prepared these entries. Nothing is saved until you confirm.',
+    review: 'Review',
+    dismiss: 'Dismiss',
+    reviewTitle: 'Review suggestion',
+  },
+  palette: {
+    run: (title: string) => `Run rule: ${title}`,
+    ran: 'Rule run.',
+    log: 'Open rule log',
+    undoLast: 'Undo last rule run',
+    nothingToUndo: 'There is nothing to take back.',
+    keywords: ['rule', 'automation', 'log'],
+  },
+  dev: {
+    dryRunAll: 'Dry-run the rules',
+    dryRunDone: (n: number) => `Dry run: ${n} rules checked, see the rule log.`,
+    dryRunNone: 'No rule is on.',
+  },
   templates: {
     invoiceDue: {
       title: 'Invoice due soon',
@@ -144,6 +300,90 @@ const en: Shape = {
 };
 
 const es: Shape = {
+  settings: {
+    title: 'Automatizaciones',
+    description:
+      'Reglas listas del tipo «cuando pase esto, haz aquello». Todo queda en este dispositivo, no se borra ni se envía nada.',
+    keywords: [
+      'reglas',
+      'automatización',
+      'si entonces',
+      'plantillas',
+      'simulacro',
+      'recordatorio',
+    ],
+    enabled: 'Usar automatizaciones',
+    enabledHint: 'Desactivado: no se ejecuta ninguna regla ni se observa nada.',
+    dryRun: 'Solo probar (simulacro)',
+    dryRunHint: 'Las reglas solo anotan en el registro lo que harían. No cambia nada.',
+    limit: 'Ejecuciones de reglas por hora, en total',
+    limitHint: '0 significa sin límite común. Cada regla tiene además su propio límite.',
+    templates: 'Plantillas',
+    templatesHint: 'Al principio todas están desactivadas.',
+    needs: (names: string) => `Necesita: ${names}`,
+    params: { daysBefore: 'Días antes', time: 'Hora', minutes: 'Minutos' } as Record<
+      string,
+      string
+    >,
+    ruleOn: (title: string) => `Activar ${title}`,
+  },
+  log: {
+    title: 'Registro de reglas',
+    description: 'Lo que hicieron las reglas últimamente. Una ejecución se puede deshacer.',
+    keywords: ['registro', 'regla', 'deshacer', 'historial', 'automatización'],
+    listLabel: 'Últimas ejecuciones de reglas',
+    empty: 'Aún no hay ninguna ejecución.',
+    undo: 'Deshacer',
+    undone: 'Deshecho',
+    undoneDetail: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} deshechos, ${kept} conservados (cambiados entretanto).`
+        : `${removed} deshechos.`,
+    results: {
+      done: 'hecho',
+      dry: 'simulacro',
+      skipped: 'omitido',
+      error: 'no es posible',
+    } as Record<string, string>,
+    reasons: {
+      loop: 'bucle detectado',
+      depth: 'demasiados pasos seguidos',
+      limit: 'límite por hora alcanzado',
+      'global-limit': 'límite común alcanzado',
+      duplicate: 'ya hecho',
+    } as Record<string, string>,
+    notes: {
+      dry: 'solo comprobado',
+      exists: 'ya existía',
+      busy: 'ya en marcha',
+      incomplete: 'incompleto',
+      'not-allowed': 'no permitido',
+      'module-unavailable': 'módulo desactivado',
+      'no-target': 'entrada no encontrada',
+      conflict: 'la entrada cambió',
+      error: 'error',
+      'unknown-profile': 'perfil desconocido',
+      invalid: 'no válido',
+    } as Record<string, string>,
+    suggestions: 'Sugerencias',
+    suggestionsHint: 'Una regla preparó estas entradas. No se guarda nada hasta que confirmes.',
+    review: 'Revisar',
+    dismiss: 'Descartar',
+    reviewTitle: 'Revisar sugerencia',
+  },
+  palette: {
+    run: (title: string) => `Ejecutar regla: ${title}`,
+    ran: 'Regla ejecutada.',
+    log: 'Abrir registro de reglas',
+    undoLast: 'Deshacer la última ejecución de reglas',
+    nothingToUndo: 'No hay nada que deshacer.',
+    keywords: ['regla', 'automatización', 'registro'],
+  },
+  dev: {
+    dryRunAll: 'Probar las reglas en simulacro',
+    dryRunDone: (n: number) => `Simulacro: ${n} reglas comprobadas, ver el registro de reglas.`,
+    dryRunNone: 'No hay ninguna regla activada.',
+  },
   templates: {
     invoiceDue: {
       title: 'Factura a punto de vencer',
@@ -213,6 +453,84 @@ const es: Shape = {
 };
 
 const fr: Shape = {
+  settings: {
+    title: 'Automatisations',
+    description:
+      'Des règles toutes prêtes du type « quand ceci arrive, fais cela ». Tout reste sur cet appareil, rien n’est supprimé ni envoyé.',
+    keywords: ['règles', 'automatisation', 'si alors', 'modèles', 'test à blanc', 'rappel'],
+    enabled: 'Utiliser les automatisations',
+    enabledHint: 'Désactivé : aucune règle ne s’exécute et rien n’est surveillé.',
+    dryRun: 'Seulement essayer (test à blanc)',
+    dryRunHint: 'Les règles notent seulement dans le journal ce qu’elles feraient. Rien ne change.',
+    limit: 'Exécutions de règles par heure, au total',
+    limitHint: '0 signifie pas de limite commune. Chaque règle a aussi sa propre limite.',
+    templates: 'Modèles',
+    templatesHint: 'Au début, tous sont désactivés.',
+    needs: (names: string) => `Nécessite : ${names}`,
+    params: { daysBefore: 'Jours avant', time: 'Heure', minutes: 'Minutes' } as Record<
+      string,
+      string
+    >,
+    ruleOn: (title: string) => `Activer ${title}`,
+  },
+  log: {
+    title: 'Journal des règles',
+    description: 'Ce que les règles ont fait récemment. Une exécution peut être annulée.',
+    keywords: ['journal', 'règle', 'annuler', 'historique', 'automatisation'],
+    listLabel: 'Dernières exécutions de règles',
+    empty: 'Aucune exécution pour l’instant.',
+    undo: 'Annuler',
+    undone: 'Annulé',
+    undoneDetail: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} annulés, ${kept} conservés (modifiés entre-temps).`
+        : `${removed} annulés.`,
+    results: {
+      done: 'fait',
+      dry: 'test à blanc',
+      skipped: 'ignoré',
+      error: 'impossible',
+    } as Record<string, string>,
+    reasons: {
+      loop: 'boucle détectée',
+      depth: 'trop d’étapes à la suite',
+      limit: 'limite par heure atteinte',
+      'global-limit': 'limite commune atteinte',
+      duplicate: 'déjà fait',
+    } as Record<string, string>,
+    notes: {
+      dry: 'seulement vérifié',
+      exists: 'existait déjà',
+      busy: 'déjà en cours',
+      incomplete: 'incomplet',
+      'not-allowed': 'non autorisé',
+      'module-unavailable': 'module désactivé',
+      'no-target': 'entrée introuvable',
+      conflict: 'l’entrée a changé',
+      error: 'erreur',
+      'unknown-profile': 'profil inconnu',
+      invalid: 'invalide',
+    } as Record<string, string>,
+    suggestions: 'Suggestions',
+    suggestionsHint:
+      'Une règle a préparé ces entrées. Rien n’est enregistré tant que tu n’as pas confirmé.',
+    review: 'Vérifier',
+    dismiss: 'Écarter',
+    reviewTitle: 'Vérifier la suggestion',
+  },
+  palette: {
+    run: (title: string) => `Exécuter la règle : ${title}`,
+    ran: 'Règle exécutée.',
+    log: 'Ouvrir le journal des règles',
+    undoLast: 'Annuler la dernière exécution de règle',
+    nothingToUndo: 'Il n’y a rien à annuler.',
+    keywords: ['règle', 'automatisation', 'journal'],
+  },
+  dev: {
+    dryRunAll: 'Tester les règles à blanc',
+    dryRunDone: (n: number) => `Test à blanc : ${n} règles vérifiées, voir le journal des règles.`,
+    dryRunNone: 'Aucune règle n’est activée.',
+  },
   templates: {
     invoiceDue: {
       title: 'Facture bientôt due',
@@ -282,6 +600,83 @@ const fr: Shape = {
 };
 
 const ptBR: Shape = {
+  settings: {
+    title: 'Automações',
+    description:
+      'Regras prontas do tipo “quando isto acontecer, faça aquilo”. Tudo fica neste dispositivo, nada é apagado nem enviado.',
+    keywords: ['regras', 'automação', 'se então', 'modelos', 'simulação', 'lembrete'],
+    enabled: 'Usar automações',
+    enabledHint: 'Desligado: nenhuma regra roda e nada é observado.',
+    dryRun: 'Só experimentar (simulação)',
+    dryRunHint: 'As regras só anotam no registro o que fariam. Nada muda.',
+    limit: 'Execuções de regras por hora, no total',
+    limitHint: '0 significa sem limite comum. Cada regra também tem o seu próprio limite.',
+    templates: 'Modelos',
+    templatesHint: 'No começo, todos estão desligados.',
+    needs: (names: string) => `Precisa de: ${names}`,
+    params: { daysBefore: 'Dias antes', time: 'Hora', minutes: 'Minutos' } as Record<
+      string,
+      string
+    >,
+    ruleOn: (title: string) => `Ligar ${title}`,
+  },
+  log: {
+    title: 'Registro de regras',
+    description: 'O que as regras fizeram ultimamente. Uma execução pode ser desfeita.',
+    keywords: ['registro', 'regra', 'desfazer', 'histórico', 'automação'],
+    listLabel: 'Últimas execuções de regras',
+    empty: 'Ainda não há execuções.',
+    undo: 'Desfazer',
+    undone: 'Desfeito',
+    undoneDetail: (removed: number, kept: number) =>
+      kept > 0
+        ? `${removed} desfeitos, ${kept} mantidos (alterados nesse meio-tempo).`
+        : `${removed} desfeitos.`,
+    results: {
+      done: 'feito',
+      dry: 'simulação',
+      skipped: 'ignorado',
+      error: 'não foi possível',
+    } as Record<string, string>,
+    reasons: {
+      loop: 'laço detectado',
+      depth: 'passos demais seguidos',
+      limit: 'limite por hora atingido',
+      'global-limit': 'limite comum atingido',
+      duplicate: 'já feito',
+    } as Record<string, string>,
+    notes: {
+      dry: 'só verificado',
+      exists: 'já existia',
+      busy: 'já em andamento',
+      incomplete: 'incompleto',
+      'not-allowed': 'não permitido',
+      'module-unavailable': 'módulo desligado',
+      'no-target': 'entrada não encontrada',
+      conflict: 'a entrada foi alterada',
+      error: 'erro',
+      'unknown-profile': 'perfil desconhecido',
+      invalid: 'inválido',
+    } as Record<string, string>,
+    suggestions: 'Sugestões',
+    suggestionsHint: 'Uma regra preparou estas entradas. Nada é salvo até você confirmar.',
+    review: 'Revisar',
+    dismiss: 'Descartar',
+    reviewTitle: 'Revisar sugestão',
+  },
+  palette: {
+    run: (title: string) => `Executar regra: ${title}`,
+    ran: 'Regra executada.',
+    log: 'Abrir registro de regras',
+    undoLast: 'Desfazer a última execução de regra',
+    nothingToUndo: 'Não há nada para desfazer.',
+    keywords: ['regra', 'automação', 'registro'],
+  },
+  dev: {
+    dryRunAll: 'Rodar as regras em simulação',
+    dryRunDone: (n: number) => `Simulação: ${n} regras verificadas, veja o registro de regras.`,
+    dryRunNone: 'Nenhuma regra está ligada.',
+  },
   templates: {
     invoiceDue: {
       title: 'Fatura vencendo em breve',

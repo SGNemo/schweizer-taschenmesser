@@ -174,7 +174,7 @@ function seed(ctx: SeedContext): SeedRows {
   const titles = TITLES[ctx.lang];
   const bodies = BODIES[ctx.lang];
   const scratch = SCRATCH[ctx.lang];
-  const n = ctx.count({ small: 4, medium: 10, large: 200 });
+  const n = ctx.count({ small: 4, medium: 10, large: 200, xl: 2000 });
   const books = BOOKS[ctx.lang];
   const bookId = (i: number) => ctx.id('notes', 'notebook', i);
   const formatted = FORMATTED[ctx.lang];

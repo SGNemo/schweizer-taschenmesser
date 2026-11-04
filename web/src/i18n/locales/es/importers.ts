@@ -22,6 +22,7 @@ export const importers: Strings['importers'] = {
   sources: {
     enex: 'Evernote (.enex)',
     notion: 'Notion (exportación Markdown y CSV)',
+    opml: 'OPML (apps de feeds y podcasts)',
     obsidian: 'Obsidian o carpeta de Markdown',
     'outlook-tasks': 'Microsoft To Do (CSV de Outlook)',
     todoist: 'Todoist (CSV)',

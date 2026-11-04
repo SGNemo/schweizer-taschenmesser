@@ -1,6 +1,7 @@
 import { currencyOf, formatMoney } from '@/core/money';
 import type { AttentionSource } from '@/core/modules/types';
-import { formatDay } from '@/core/time/dates';
+import { notDeleted } from '@/core/db/repo';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 // Sanctioned cross-module read access (see CLAUDE.md): finance → subscriptions/public.
 import { listSubscriptionPrices, priceHintOn } from '@/modules/subscriptions/public';
@@ -12,19 +13,27 @@ import { detectPriceChanges } from './subscriptionLink';
  * Plus bucht jetzt 14,99 € statt 12,99 €"). It opens the subscription with the new price offered;
  * nothing changes by itself. Off with the subscriptions setting "Preisänderung melden".
  */
+const PRICE_WINDOW_DAYS = 120;
+
 const source: AttentionSource = async ({ today }) => {
   if (!(await priceHintOn())) return [];
   const subscriptions = await listSubscriptionPrices();
   if (subscriptions.length === 0) return [];
+  // `detectPriceChanges` only looks at the last 120 days: read just those (index `date`).
   const [accounts, bookings] = await Promise.all([
     accountRepo.active().toArray(),
-    transactionRepo.active().toArray(),
+    transactionRepo.table
+      .where('date')
+      .between(addDaysStr(today, -PRICE_WINDOW_DAYS), today, true, true)
+      .filter(notDeleted)
+      .toArray(),
   ]);
   const changes = detectPriceChanges({
     subscriptions,
     bookings,
     accountCurrency: new Map(accounts.map((a) => [a.id, currencyOf(a)])),
     today,
+    windowDays: PRICE_WINDOW_DAYS,
   });
   return changes.map((c) => ({
     id: `finance:subscription-price:${c.subscriptionId}:${c.toMinor}`,

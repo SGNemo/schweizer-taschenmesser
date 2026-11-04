@@ -258,6 +258,15 @@ export const onboarding: Strings['onboarding'] = {
     textLabel: 'Texto Markdown',
     placeholder: '# Plano da semana\n\n- Compras #casa\n- Ligar para a mamãe',
   },
+  feeds: {
+    file: 'Arquivo OPML (feeds e podcasts)',
+    fileHint:
+      'Escolha o arquivo OPML que seu app de feeds ou podcasts exportou. Os grupos («pastas») são mantidos e o Nemo reconhece duplicados. Nada é enviado.',
+    text: 'Colar endereços',
+    textHint: 'Uma linha por feed: o endereço, opcionalmente com um nome na frente.',
+    placeholder:
+      'Relatório diário https://relatorio.example.org/feed.xml\nhttps://blog.example.org/feed.xml',
+  },
   birthdays: {
     text: 'Colar aniversários',
     textHint: 'Uma linha por pessoa: nome e data, com ou sem ano.',

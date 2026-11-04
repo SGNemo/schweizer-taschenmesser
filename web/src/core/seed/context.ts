@@ -22,7 +22,7 @@ export function createSeedContext(args: {
     text: (by) => by[lang] ?? by.de,
     day: (days) => addDaysStr(args.today, days),
     at: (days, time = '12:00') => toEpoch(addDaysStr(args.today, days), time),
-    count: (by) => by[args.scale],
+    count: (by) => by[args.scale] ?? by.large,
     id: (moduleId, collection, key) => `seed-${moduleId}-${collection}-${key}`,
   };
 }

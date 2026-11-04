@@ -265,6 +265,15 @@ export const onboarding: Strings['onboarding'] = {
     textLabel: 'Texte Markdown',
     placeholder: '# Plan de la semaine\n\n- Courses #maison\n- Appeler maman',
   },
+  feeds: {
+    file: 'Fichier OPML (flux et podcasts)',
+    fileHint:
+      'Choisissez le fichier OPML exporté par votre appli de flux ou de podcasts. Les groupes (« dossiers ») sont conservés et Nemo reconnaît les doublons. Rien n’est envoyé.',
+    text: 'Coller des adresses',
+    textHint: 'Une ligne par flux : l’adresse, avec éventuellement un nom devant.',
+    placeholder:
+      'Rapport du jour https://rapport.example.org/feed.xml\nhttps://blog.example.org/feed.xml',
+  },
   birthdays: {
     text: 'Coller des anniversaires',
     textHint: 'Une ligne par personne : nom et date, avec ou sans année.',
