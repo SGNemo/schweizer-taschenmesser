@@ -85,6 +85,7 @@ const PAGES: Shot[] = [
   { name: 'lists', path: '/lists', head: true },
   { name: 'pantry', path: '/pantry', head: true },
   { name: 'bookmarks', path: '/bookmarks', head: true },
+  { name: 'feeds', path: '/feeds', head: true },
   { name: 'notes', path: '/notes', head: true },
   { name: 'chat', path: '/chat', head: true },
   { name: 'browser', path: '/browser', head: true, desktop: true },

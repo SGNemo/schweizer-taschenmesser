@@ -5,7 +5,9 @@ import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Badge, Button, EmptyState, Icon, PageHeader, TextField } from '@/ui';
+import { Badge, Button, Icon, PageHeader, TextField } from '@/ui';
+import { BubbleSignature } from '../components/BubbleSignature';
+import { ChatEmpty } from '../components/ChatEmpty';
 import { SetupHint } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
 import { expiredThreads, searchThreads, sortThreads } from '../logic';
@@ -82,7 +84,7 @@ export default function ChatPage() {
     return (
       <>
         <PageHeader title={c.title} />
-        <EmptyState title={c.aiOff} />
+        <ChatEmpty title={c.aiOff} />
       </>
     );
   }
@@ -98,6 +100,7 @@ export default function ChatPage() {
 
   return (
     <>
+      <BubbleSignature />
       <PageHeader title={c.title}>
         <Button variant="primary" onClick={() => void create()}>
           <Icon name="plus" size={18} />
@@ -123,11 +126,11 @@ export default function ChatPage() {
           {c.showArchived}
         </label>
         {threads && shown.length === 0 ? (
-          <EmptyState title={c.empty}>
+          <ChatEmpty title={c.empty}>
             <Button variant="primary" onClick={() => void create()}>
               {c.emptyAction}
             </Button>
-          </EmptyState>
+          </ChatEmpty>
         ) : (
           <ul className={styles.list}>
             {shown.map((x) => (

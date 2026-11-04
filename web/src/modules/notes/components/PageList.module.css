@@ -40,25 +40,35 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-1);
+  padding-left: var(--space-2);
+  border-bottom: 1px solid var(--border-strong);
 }
+/* An index tab: the notebook's colour is the tab's fill (the name and count are written on it); the chosen tab joins the list. */
 .chip {
   min-height: var(--touch);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  max-width: 100%;
+  margin-bottom: -1px;
   padding: 0 var(--space-3);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-full);
-  background: var(--surface);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: color-mix(in srgb, var(--tab, var(--text-3)) 14%, var(--surface));
   color: var(--text);
   font: inherit;
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
+.chip:hover {
+  background: color-mix(in srgb, var(--tab, var(--text-3)) 24%, var(--surface));
+}
 .chip[aria-pressed='true'] {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--tab, var(--text-3)) 26%, var(--surface));
   font-weight: 600;
 }
 .dot {
@@ -133,7 +143,7 @@
   }
 }
 
-/* Cards view: page previews on little sheets (title in serif, up to four lines of text, notebook colour as a strip). */
+/* Cards view: page previews on little sheets (title in serif, up to four lines of text, the notebook colour tints the sheet). */
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
@@ -145,7 +155,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
-  border-top: 4px solid var(--strip, var(--border-strong));
+  background: color-mix(in srgb, var(--strip, var(--surface)) 12%, var(--surface));
 }
 .cards .rowActive {
   background: var(--accent-soft);

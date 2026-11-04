@@ -6,7 +6,6 @@ import { t } from '@/strings';
 import {
   Button,
   categoryColor,
-  EmptyState,
   Icon,
   IconButton,
   RowMenu,
@@ -33,6 +32,7 @@ import {
 } from '../logic';
 import type { Note, Notebook } from '../schema';
 import { TEMPLATE_IDS, type TemplateId } from '../templates';
+import { NotesEmpty } from './NotesEmpty';
 import styles from './PageList.module.css';
 
 type Page = Stored<Note>;
@@ -164,14 +164,10 @@ export function PageList(p: PageListProps) {
             key={b.id}
             type="button"
             className={styles.chip}
+            style={{ '--tab': categoryColor(b.tone) } as React.CSSProperties}
             aria-pressed={filter === b.id}
             onClick={() => p.onFilter(b.id)}
           >
-            <span
-              className={styles.dot}
-              style={{ background: categoryColor(b.tone) }}
-              aria-hidden="true"
-            />
             <Icon name={b.icon as IconName} size={14} />
             {b.name} · {counts.get(b.id) ?? 0}
           </button>
@@ -216,12 +212,12 @@ export function PageList(p: PageListProps) {
       </SelectField>
 
       {pages && rest.length === 0 && (query.trim() || filter !== 'all') ? (
-        <EmptyState title={t.notes.emptyFiltered} />
+        <NotesEmpty title={t.notes.emptyFiltered} />
       ) : null}
       {pages && total === 0 && !query.trim() && filter === 'all' ? (
-        <EmptyState title={t.notes.empty}>
+        <NotesEmpty title={t.notes.empty}>
           <StartDataButton moduleId="notes" />
-        </EmptyState>
+        </NotesEmpty>
       ) : null}
 
       <div

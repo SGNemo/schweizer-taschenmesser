@@ -8,16 +8,16 @@
     "desktop--bookmarks": {
       "height": 800,
       "buttons": 67,
-      "links": 61,
-      "icons": 95,
-      "firstScreenActions": 60
+      "links": 65,
+      "icons": 98,
+      "firstScreenActions": 58
     },
     "desktop--bookmarks-links": {
       "height": 800,
       "buttons": 61,
       "links": 34,
-      "icons": 76,
-      "firstScreenActions": 59
+      "icons": 79,
+      "firstScreenActions": 57
     },
     "desktop--budgets": {
       "height": 800,
@@ -63,10 +63,10 @@
     },
     "desktop--notes": {
       "height": 800,
-      "buttons": 70,
+      "buttons": 73,
       "links": 34,
-      "icons": 89,
-      "firstScreenActions": 55
+      "icons": 93,
+      "firstScreenActions": 59
     },
     "desktop--pantry": {
       "height": 800,
@@ -139,18 +139,18 @@
       "firstScreenActions": 54
     },
     "phone--bookmarks": {
-      "height": 2834,
+      "height": 3202,
       "buttons": 42,
-      "links": 42,
-      "icons": 47,
-      "firstScreenActions": 33
+      "links": 43,
+      "icons": 48,
+      "firstScreenActions": 29
     },
     "phone--bookmarks-links": {
-      "height": 1882,
+      "height": 2083,
       "buttons": 36,
-      "links": 11,
-      "icons": 28,
-      "firstScreenActions": 30
+      "links": 12,
+      "icons": 29,
+      "firstScreenActions": 27
     },
     "phone--budgets": {
       "height": 1444,
@@ -195,11 +195,11 @@
       "firstScreenActions": 27
     },
     "phone--notes": {
-      "height": 1200,
-      "buttons": 41,
-      "links": 11,
-      "icons": 37,
-      "firstScreenActions": 30
+      "height": 1245,
+      "buttons": 44,
+      "links": 12,
+      "icons": 39,
+      "firstScreenActions": 33
     },
     "phone--pantry": {
       "height": 2621,

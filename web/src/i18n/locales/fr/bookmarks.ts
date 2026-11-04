@@ -26,6 +26,7 @@ export const bookmarks: Strings['bookmarks'] = {
   url: 'Adresse (lien)',
   urlInvalid: 'Veuillez saisir une adresse http(s) valide.',
   kind: 'Type',
+  figureUnit: (n: number) => (n <= 1 ? 'ouvert' : 'ouverts'),
   kinds: {
     link: 'Lien',
     read: 'À lire',

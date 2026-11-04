@@ -110,10 +110,10 @@
   border-bottom: 1px solid var(--border);
 }
 .tabActive {
-  background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
   border-color: var(--border);
-  border-bottom: 3px solid var(--module-color);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  /* The active tab is a filled chip (the fill, not an edge bar, carries the module colour). */
+  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
+  border-radius: var(--radius-full);
 }
 .address input {
   font-family: var(--font-mono);

@@ -23,6 +23,7 @@
   background: transparent;
   color: var(--text);
   font: inherit;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: var(--text-xl);
   font-weight: 600;
   display: flex;

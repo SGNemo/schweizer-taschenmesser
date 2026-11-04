@@ -51,18 +51,21 @@
   gap: var(--space-3);
   margin: var(--space-4) 0;
 }
+/* Speech bubbles: the answer sits on the left with a small corner at the lower left, your message on the right in the accent tint. */
 .msg {
   display: grid;
   gap: var(--space-1);
-  max-width: 100%;
-  padding: var(--space-3);
+  max-width: min(100%, 48rem);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm);
   background: var(--surface);
 }
 .user {
+  margin-left: auto;
   background: var(--accent-soft);
   border-color: transparent;
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
 }
 .msgHead {
   display: flex;

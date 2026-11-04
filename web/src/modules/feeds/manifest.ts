@@ -19,6 +19,7 @@ const manifest: ModuleManifest = {
     widget: 'kennzahl',
     head: 'regal',
     signature: 'none',
+    type: 'serif',
   },
   version: 1,
   get description() {

@@ -13,7 +13,6 @@ import { t } from '@/strings';
 import {
   Button,
   Dialog,
-  EmptyState,
   GroupedList,
   Icon,
   ItemRow,
@@ -21,9 +20,14 @@ import {
   TextField,
   useOpenParam,
 } from '@/ui';
+import { formatNumber } from '@/core/i18n/format';
+import { formatDay } from '@/core/time/dates';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { FeedsEmpty } from '../components/FeedsEmpty';
 import { feedKey, groupFeeds, hostOf, normalizeFeedUrl } from '../logic';
 import { feedRepo } from '../repo';
 import { settings, type FeedsSettings } from '../settings';
+import styles from './feeds.module.css';
 
 interface Draft {
   id?: string;
@@ -59,6 +63,10 @@ export default function MainPage() {
     collator(),
   );
   const categories = [...new Set((feeds ?? []).map((f) => f.category).filter(Boolean))];
+  const lead = (feeds ?? []).reduce<NonNullable<typeof feeds>[number] | undefined>(
+    (best, f) => (!best || f.createdAt > best.createdAt ? f : best),
+    undefined,
+  );
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -109,52 +117,84 @@ export default function MainPage() {
           </Button>
         ) : null}
       </PageHeader>
+      {feeds && feeds.length > 0 ? (
+        <>
+          <HeroSlot area="figure">
+            <HeroFigure
+              type="serif"
+              label={formatDay(today(), 'EEEE, d. MMMM')}
+              value={formatNumber(feeds.length)}
+              unit={s.widget.label}
+              detail={s.groupsCount(categories.length) || undefined}
+              testId="feeds-total"
+            />
+          </HeroSlot>
+          {lead && feeds.length > 1 ? (
+            <a
+              className={styles.lead}
+              href={lead.siteUrl || lead.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              data-testid="feeds-lead"
+            >
+              <span className={styles.kicker}>{s.lead}</span>
+              <span className={styles.leadTitle}>{lead.title}</span>
+              <span className={styles.leadMeta}>
+                {hostOf(lead.url)}
+                {lead.category ? ` · ${lead.category}` : ''}
+              </span>
+            </a>
+          ) : null}
+        </>
+      ) : null}
       {feeds && feeds.length === 0 ? (
-        <EmptyState title={s.empty}>
+        <FeedsEmpty title={s.empty}>
           <p>{s.emptyHint}</p>
           <Button variant="primary" onClick={() => setDraft(EMPTY)}>
             {s.add}
           </Button>
-        </EmptyState>
+        </FeedsEmpty>
       ) : null}
       {groups.length > 0 ? (
-        <GroupedList
-          listId="feeds"
-          label={s.listLabel}
-          groups={groups.map((g) => ({
-            id: g.category || '_none',
-            label: g.category || (grouped ? s.ungrouped : s.allFeeds),
-            count: g.feeds.length,
-            children: g.feeds.map((feed) => (
-              <ItemRow
-                key={feed.id}
-                title={feed.title}
-                meta={hostOf(feed.url)}
-                href={feed.siteUrl || feed.url}
-                menuLabel={s.rowMenu(feed.title)}
-                menu={[
-                  {
-                    id: 'edit',
-                    label: s.edit,
-                    onSelect: () =>
-                      setDraft({
-                        id: feed.id,
-                        title: feed.title,
-                        url: feed.url,
-                        category: feed.category,
-                      }),
-                  },
-                  {
-                    id: 'delete',
-                    label: s.remove,
-                    danger: true,
-                    onSelect: () => void deleteWithUndo(() => feedRepo.remove(feed.id)),
-                  },
-                ]}
-              />
-            )),
-          }))}
-        />
+        <div className={styles.columns}>
+          <GroupedList
+            listId="feeds"
+            label={s.listLabel}
+            groups={groups.map((g) => ({
+              id: g.category || '_none',
+              label: g.category || (grouped ? s.ungrouped : s.allFeeds),
+              count: g.feeds.length,
+              children: g.feeds.map((feed) => (
+                <ItemRow
+                  key={feed.id}
+                  title={feed.title}
+                  meta={hostOf(feed.url)}
+                  href={feed.siteUrl || feed.url}
+                  menuLabel={s.rowMenu(feed.title)}
+                  menu={[
+                    {
+                      id: 'edit',
+                      label: s.edit,
+                      onSelect: () =>
+                        setDraft({
+                          id: feed.id,
+                          title: feed.title,
+                          url: feed.url,
+                          category: feed.category,
+                        }),
+                    },
+                    {
+                      id: 'delete',
+                      label: s.remove,
+                      danger: true,
+                      onSelect: () => void deleteWithUndo(() => feedRepo.remove(feed.id)),
+                    },
+                  ]}
+                />
+              )),
+            }))}
+          />
+        </div>
       ) : null}
       <Dialog
         open={draft !== null}

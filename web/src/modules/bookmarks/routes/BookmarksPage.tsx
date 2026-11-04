@@ -9,7 +9,6 @@ import { t } from '@/strings';
 import { tAdvanced } from '@/strings.advanced';
 import {
   Button,
-  EmptyState,
   GroupedList,
   Icon,
   ItemList,
@@ -23,6 +22,7 @@ import {
 } from '@/ui';
 import { BookmarkCard } from '../components/BookmarkCard';
 import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
+import { BookmarksEmpty } from '../components/BookmarksEmpty';
 import { Pinboard } from '../components/Pinboard';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
@@ -45,7 +45,7 @@ import {
   type SortMode,
 } from '../settings';
 import { KINDS } from '../schema';
-import { HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { StartDataButton } from '@/core/importer/StartDataButton';
 import styles from './bookmarks.module.css';
 
@@ -98,6 +98,17 @@ export default function BookmarksPage() {
     [items],
   );
   const tags = useMemo(() => tagCounts(items ?? []), [items]);
+  const openItems = useMemo(() => (items ?? []).filter((i) => !i.done), [items]);
+  // Head context line: the biggest kinds among the open entries ("3 Lesen · 2 Ansehen").
+  const kindLine = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const i of openItems) n.set(i.kind, (n.get(i.kind) ?? 0) + 1);
+    return [...n.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([k, c]) => `${c} ${t.bookmarks.kinds[k] ?? k}`)
+      .join(' · ');
+  }, [openItems]);
   // "Lesezeichen": links as tiles, the first tag is the group (the former "Apps & Links").
   const links = useMemo(
     () =>
@@ -226,6 +237,17 @@ export default function BookmarksPage() {
       <HeroSlot area="extra">
         <Pinboard titles={latest} />
       </HeroSlot>
+      {items && items.length > 0 ? (
+        <HeroSlot area="figure">
+          <HeroFigure
+            label={t.bookmarks.title}
+            value={String(openItems.length)}
+            unit={t.bookmarks.figureUnit(openItems.length)}
+            detail={kindLine || undefined}
+            testId="bookmarks-open"
+          />
+        </HeroSlot>
+      ) : null}
       <PageHeader
         title={t.bookmarks.title}
         views={
@@ -275,9 +297,9 @@ export default function BookmarksPage() {
       {linksView ? (
         <>
           {items && links.length === 0 ? (
-            <EmptyState title={t.bookmarks.linksEmpty}>
+            <BookmarksEmpty title={t.bookmarks.linksEmpty}>
               <StartDataButton moduleId="bookmarks" />
-            </EmptyState>
+            </BookmarksEmpty>
           ) : null}
           {links.map(([group, list]) => (
             <section key={group || '-'} aria-label={group || t.bookmarks.noGroup}>
@@ -300,9 +322,9 @@ export default function BookmarksPage() {
         </>
       ) : null}
       {linksView ? null : items && shown.length === 0 ? (
-        <EmptyState title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}>
+        <BookmarksEmpty title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}>
           {items.length === 0 ? <StartDataButton moduleId="bookmarks" /> : null}
-        </EmptyState>
+        </BookmarksEmpty>
       ) : null}
       {linksView || shown.length === 0 ? null : (
         <GroupedList listId={`bookmarks-${grouping}`} groups={groups} label={t.bookmarks.title} />

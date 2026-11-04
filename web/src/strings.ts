@@ -3835,6 +3835,7 @@ export const de = {
     url: 'Adresse (Link)',
     urlInvalid: 'Bitte eine gültige http(s)-Adresse eingeben.',
     kind: 'Art',
+    figureUnit: (_n: number) => 'offen',
     kinds: {
       link: 'Link',
       read: 'Lesen',
@@ -7593,6 +7594,8 @@ export const de = {
     listLabel: 'Abonnierte Feeds',
     ungrouped: 'Ohne Gruppe',
     allFeeds: 'Alle Feeds',
+    lead: 'Zuletzt hinzugefügt',
+    groupsCount: (g: number) => (g === 0 ? '' : g === 1 ? '1 Gruppe' : `${g} Gruppen`),
     importOpml: 'Importieren',
     exportOpml: 'Als OPML exportieren',
     exported: 'OPML gespeichert.',
