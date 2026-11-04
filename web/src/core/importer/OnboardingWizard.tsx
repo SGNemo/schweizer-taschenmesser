@@ -11,7 +11,10 @@ import { getConnector } from '@/core/connectors/registry';
 import { loadStatus } from '@/core/connectors/state';
 import { describeError, scanMail } from '@/core/connectors/service';
 import type { ModuleManifest } from '@/core/modules/types';
-import { pickTextFile, pickTextFiles } from '@/core/io/pickFile';
+import { pickRawFiles, pickTextFile } from '@/core/io/pickFile';
+import { skipNotes, sumSkips } from '@/importers/report';
+import { isAbort, runJob } from '@/importers/run';
+
 import { today } from '@/core/time/now';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -32,6 +35,8 @@ import type {
   ImportField,
   ImporterMeta,
   ImportInput,
+  ImportPreset,
+  ImportReportCounts,
   ImportSlot,
   ImporterRuntime,
   PreviewRow,
@@ -51,15 +56,47 @@ export function OnboardingWizard({
   manifest,
   open,
   onClose,
+  preset,
+  part,
 }: {
   manifest: ModuleManifest;
   open: boolean;
   onClose: () => void;
+  /** Files that were chosen before (import from another app): the wizard reads them at once. */
+  preset?: ImportPreset;
+  /** Part of a multi-part import: shown after the title. */
+  part?: { index: number; total: number };
 }) {
+  const title = t.onboarding.title(manifest.name);
   return (
-    <Dialog open={open} onClose={onClose} title={t.onboarding.title(manifest.name)}>
-      <Wizard manifest={manifest} onClose={onClose} />
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={part ? `${title} · ${t.importers.step(part.index, part.total)}` : title}
+    >
+      <Wizard manifest={manifest} onClose={onClose} preset={preset} />
     </Dialog>
+  );
+}
+
+/** What happened to the entries of the source: imported, already there, left out and why. */
+function ReportList({ report }: { report: ImportReportCounts }) {
+  const r = t.importers.report;
+  const lines = [
+    report.duplicates > 0 ? r.duplicates(report.duplicates) : '',
+    report.invalid > 0 ? r.invalid(report.invalid) : '',
+    report.deselected > 0 ? r.deselected(report.deselected) : '',
+    ...skipNotes(report.skipped),
+  ].filter(Boolean);
+  if (lines.length === 0) return null;
+  return (
+    <section aria-label={r.title}>
+      <ul className={styles.notes}>
+        {lines.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -122,7 +159,15 @@ function FieldInput({
   );
 }
 
-function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () => void }) {
+function Wizard({
+  manifest,
+  onClose,
+  preset,
+}: {
+  manifest: ModuleManifest;
+  onClose: () => void;
+  preset?: ImportPreset;
+}) {
   const toast = useUiStore((s) => s.toast);
   const declared = importersOf(manifest);
   // A connector scan is only offered while that connector is connected with the needed feature.
@@ -153,13 +198,23 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
   const [text, setText] = useState('');
   const [values, setValues] = useState<Record<string, string>>({});
   const [ticked, setTicked] = useState<string[]>([]);
-  const [fileName, setFileName] = useState('');
+  const [fileName, setFileName] = useState(() =>
+    preset
+      ? (preset.source ??
+        (preset.files.length === 1
+          ? (preset.files[0]?.name ?? '')
+          : t.onboarding.filesChosen(preset.files.length)))
+      : '',
+  );
   const [rows, setRows] = useState<PreviewRow[]>([]);
   const [notes, setNotes] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<ImportBatch | null>(null);
   const [slot, setSlot] = useState<ImportSlot | null>(null);
+  const [reading, setReading] = useState<{ done: number; total: number } | null>(null);
+  const abort = useRef<AbortController | null>(null);
+  const skipped = useRef<ImportReportCounts['skipped']>({});
   const lastInput = useRef<ImportInput | null>(null);
   const batchId = useRef(newBatchId());
   const alive = useRef(true);
@@ -170,7 +225,63 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     };
   }, []);
 
-  async function choose(meta: ImporterMeta) {
+  function cancel() {
+    abort.current?.abort();
+  }
+
+  async function runParse(input: ImportInput, prefaceNotes: string[] = []) {
+    if (!importer || !runtime) return;
+    await parseWith(importer, runtime, options, input, prefaceNotes);
+  }
+
+  async function parseWith(
+    meta: ImporterMeta,
+    rt: ImporterRuntime,
+    opts: Record<string, string>,
+    input: ImportInput,
+    prefaceNotes: string[] = [],
+  ) {
+    setError('');
+    setBusy(true);
+    lastInput.current = input;
+    const controller = new AbortController();
+    abort.current = controller;
+    try {
+      const result = await rt.parse(meta.id, input, {
+        today: today(),
+        options: opts,
+        batchId: batchId.current,
+        signal: controller.signal,
+        progress: (done, total) => alive.current && setReading({ done, total }),
+      });
+      if (!alive.current) return;
+      skipped.current = result.skipped ?? {};
+      setSlot(result.slot ?? null);
+      if (result.candidates.length === 0) {
+        setNotes([...prefaceNotes, ...result.notes]);
+        setError(
+          result.notes.length === 0 && result.slot?.placement !== 'resolve'
+            ? t.onboarding.nothingFound
+            : '',
+        );
+        return;
+      }
+      setRows(await buildPreview(manifest, rt, result.candidates));
+      setNotes([...prefaceNotes, ...result.notes]);
+      setStep('preview');
+    } catch (e) {
+      // A cancelled read changes nothing: nothing was written before the preview is confirmed.
+      if (!isAbort(e)) setError(errorText(e));
+    } finally {
+      abort.current = null;
+      if (alive.current) {
+        setBusy(false);
+        setReading(null);
+      }
+    }
+  }
+
+  async function choose(meta: ImporterMeta, then?: ImportInput) {
     setError('');
     setBusy(true);
     try {
@@ -195,10 +306,16 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       setValues(Object.fromEntries((meta.fields ?? []).map((f) => [f.key, defaults[f.key] ?? ''])));
       setTicked((meta.templates ?? []).filter((tpl) => tpl.preselected).map((tpl) => tpl.id));
       setText('');
-      setFileName('');
+      if (!then) setFileName('');
       setSlot(null);
       setImporter(meta);
       setStep('input');
+      if (then) {
+        const initial = Object.fromEntries(
+          (meta.options ?? []).map((f) => [f.key, defaults[f.key] ?? '']),
+        );
+        await parseWith(meta, rt, initial, then);
+      }
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -206,51 +323,59 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
     }
   }
 
-  async function runParse(
-    input: Parameters<ImporterRuntime['parse']>[1],
-    prefaceNotes: string[] = [],
-  ) {
-    if (!importer || !runtime) return;
-    setError('');
-    setBusy(true);
-    lastInput.current = input;
-    try {
-      const result = await runtime.parse(importer.id, input, {
-        today: today(),
-        options,
-        batchId: batchId.current,
+  // Files chosen before (import from another app): open the importer and read them at once.
+  useEffect(() => {
+    const meta = preset && declared.find((i) => i.id === preset.importerId);
+    const first = preset?.files[0];
+    if (!preset || !meta || !first) return;
+    void (async () => {
+      await Promise.resolve(); // not synchronously inside the effect
+      await choose(meta, {
+        kind: 'file',
+        text: first.text,
+        fileName: first.name,
+        files: preset.files,
+        ...(preset.binary ? { binary: preset.binary } : {}),
       });
-      if (!alive.current) return;
-      setSlot(result.slot ?? null);
-      if (result.candidates.length === 0) {
-        setNotes([...prefaceNotes, ...result.notes]);
-        setError(
-          result.notes.length === 0 && result.slot?.placement !== 'resolve'
-            ? t.onboarding.nothingFound
-            : '',
-        );
-        return;
-      }
-      setRows(await buildPreview(manifest, runtime, result.candidates));
-      setNotes([...prefaceNotes, ...result.notes]);
-      setStep('preview');
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      if (alive.current) setBusy(false);
-    }
-  }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function chooseFile() {
     if (!importer) return;
     setError('');
     try {
       if (importer.multiple) {
-        const files = await pickTextFiles(importer.accept ?? '*/*');
-        if (files.length === 0) return;
-        const label = files.length === 1 ? files[0]!.name : t.onboarding.filesChosen(files.length);
+        const raw = await pickRawFiles(`${importer.accept ?? '*/*'},.zip,application/zip`);
+        if (raw.length === 0) return;
+        const controller = new AbortController();
+        abort.current = controller;
+        setBusy(true);
+        const expanded = await runJob(
+          'expand',
+          { files: raw },
+          {
+            signal: controller.signal,
+            onProgress: (done, total) => alive.current && setReading({ done, total }),
+          },
+        ).finally(() => {
+          abort.current = null;
+          if (alive.current) {
+            setBusy(false);
+            setReading(null);
+          }
+        });
+        if (expanded.files.length === 0) return setError(t.onboarding.nothingFound);
+        const files = expanded.files;
+        const label = raw.length === 1 ? raw[0]!.name : t.onboarding.filesChosen(raw.length);
         setFileName(label);
-        await runParse({ kind: 'file', text: files[0]!.text, fileName: label, files });
+        await runParse({
+          kind: 'file',
+          text: files[0]!.text,
+          fileName: label,
+          files,
+          ...(expanded.binary ? { binary: expanded.binary } : {}),
+        });
         return;
       }
       const file = await pickTextFile(
@@ -261,6 +386,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
       setFileName(file.name);
       await runParse({ kind: 'file', text: file.text, fileName: file.name });
     } catch (e) {
+      if (isAbort(e)) return;
       setError(
         e instanceof Error && e.message === 'file-too-large'
           ? t.onboarding.fileTooLarge
@@ -320,6 +446,17 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
         importerId: importer.id,
         source: fileName || importer.label,
         rows,
+        base: {
+          report: {
+            found: rows.length + sumSkips(skipped.current),
+            imported: 0,
+            duplicates: rows.filter((r) => r.duplicate && !r.selected).length,
+            invalid: rows.filter((r) => r.invalid).length,
+            deselected: rows.filter((r) => !r.selected && !r.duplicate && !r.invalid).length,
+            skipped: { ...skipped.current },
+          },
+          ...(preset?.groupId ? { groupId: preset.groupId } : {}),
+        },
       });
       await markOnboardingHandled(manifest.id);
       batchId.current = newBatchId();
@@ -542,8 +679,16 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
             {error}
           </p>
         ) : null}
+        {busy && importer.kind === 'file' ? (
+          <p role="status" className={styles.muted}>
+            {reading ? t.importers.reading(reading.done, reading.total) : t.importers.parsing}
+          </p>
+        ) : null}
         <div className={styles.bar}>
           <Button onClick={() => setStep('choose')}>{t.onboarding.back}</Button>
+          {busy && importer.kind === 'file' ? (
+            <Button onClick={cancel}>{t.importers.cancel}</Button>
+          ) : null}
           {importer.kind !== 'file' && importer.kind !== 'connector' ? (
             <Button variant="primary" disabled={busy} onClick={() => void submitInput()}>
               {busy ? t.onboarding.parsing : t.onboarding.preview}
@@ -591,6 +736,7 @@ function Wizard({ manifest, onClose }: { manifest: ModuleManifest; onClose: () =
   return (
     <div className={styles.stack}>
       <p role="status">{done ? t.onboarding.imported(countRecords(done)) : null}</p>
+      {done?.report ? <ReportList report={done.report} /> : null}
       <div className={styles.bar}>
         {done ? <Button onClick={() => void undo(done.id)}>{t.onboarding.undo}</Button> : <span />}
         <Button variant="primary" data-autofocus onClick={onClose}>

@@ -10,6 +10,8 @@ export interface ParsedNote {
   /** Without the leading `#`, in order of appearance, unique (case-insensitive). */
   tags: string[];
   pinned?: boolean;
+  /** Top-level folder of a folder/ZIP import (Obsidian vault); becomes a notebook. */
+  folder?: string;
 }
 
 export interface PickedText {
