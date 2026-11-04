@@ -43,6 +43,7 @@ How: add your row in the **first commit** of your branch (or in a draft PR as ea
 | `core/db/schema.snapshot.json`, Dexie version (`npm run db:bump`) | on conflict re-run `db:bump` after merging `develop`; never hand-edit |
 | `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx` | keep edits small and local to your section |
 | `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting |
+| Einstellungen ruhiger und moderner (Paket 1: Menü springt nicht) | `feat/settings-calm` | `pages/settings/{SettingsLayout,StatusHead}`, `e2e/settings-identity.spec.ts` | in progress | code | 2026-11-04 |
 
 ## Hand-over conventions
 - PR description = hand-over: **Done / Open / Next / How to verify**, links to files, no history.
