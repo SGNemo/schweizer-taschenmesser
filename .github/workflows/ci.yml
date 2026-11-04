@@ -300,7 +300,7 @@ jobs:
   #   full run (develop, nightly, label full-ci, manual): both browser projects, 6 shards (seed project: e2e-sync job)
   #   plain PR: smoke list on desktop-chrome only, 2 shards (E2E_PROFILE=smoke, list in web/playwright.config.ts)
   web-e2e:
-    name: E2E app (${{ needs.changes.outputs.e2e_profile }}, shard ${{ matrix.shard }})
+    name: E2E app (${{ needs.changes.outputs.e2e_profile || 'full' }}, shard ${{ matrix.shard }})
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
@@ -331,7 +331,7 @@ jobs:
       # System libraries are needed even when the browser itself comes from the cache.
       - run: npx playwright install-deps chromium
         if: steps.pw-cache.outputs.cache-hit == 'true'
-      - name: E2E (${{ needs.changes.outputs.e2e_profile }}), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
+      - name: E2E (${{ needs.changes.outputs.e2e_profile || 'full' }}), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
           E2E_PROFILE: ${{ needs.changes.outputs.e2e_profile }}
@@ -538,7 +538,7 @@ jobs:
         working-directory: web
       # The Dev-Preview flavour (seed project, 29 tests) is part of every full run; the shards skip it.
       - name: E2E seed project (full runs only)
-        if: ${{ needs.changes.outputs.full == 'true' }}
+        if: ${{ needs.changes.outputs.full != 'false' }}
         run: npx playwright test --project=seed-dev
         working-directory: web
 
@@ -608,7 +608,9 @@ jobs:
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
   # The build runs next to the tests (it needs nothing from them); the publish stage waits for every check
-  # of this run (tests, packages, Rust, docs-pairs, gitleaks) to be green, so nothing is published from a red commit. The signed build artifacts of a red commit stay in the run for 3 days (retention), but are never attached to a release. See dev-preview.yml and
+  # of this run (tests, packages, Rust, docs-pairs, gitleaks) to be green, so nothing is published from a red
+  # commit. The signed build artifacts of a red commit stay in the run for 3 days, but are never attached to
+  # a release. See dev-preview.yml and
   # docs/howto/ci.md -> "Dev-Preview".
   dev-preview-build:
     name: Dev-Preview build

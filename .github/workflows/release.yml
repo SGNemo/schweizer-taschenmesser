@@ -28,7 +28,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.event_name }}-${{ github.ref }}
+  # One group per ref: a release started right after a push to main waits for that push's dry run, which
+  # leaves the Windows cache warm. (GitHub keeps one pending run per group; a newer push replaces a pending one.)
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
