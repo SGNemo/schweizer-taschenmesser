@@ -68,7 +68,6 @@ export const about: Strings['about'] = {
   licenses: 'Avisos de licença',
   licenseList: [
     'Fonte “Inter” – SIL Open Font License 1.1, © The Inter Project Authors.',
-    'Logotipo “Nemo” em “Nunito” – SIL Open Font License 1.1, © The Nunito Project Authors.',
     'Ícones “Lucide” – licença ISC, © Lucide Contributors.',
     'O logo do Nemo (peixe-palhaço) é um desenho próprio deste projeto.',
   ],

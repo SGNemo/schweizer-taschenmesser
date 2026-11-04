@@ -33,7 +33,7 @@ Gedächtnisstütze vor dem Launch, keine Rechtsberatung. Bei Unsicherheit Rechts
 
 - [ ] `cd web && npm run check:licenses` ist grün (läuft in `build` und CI). Neue Lizenz → Policy `web/scripts/lib/licensePolicy.ts` bewusst erweitern, nie die Prüfung abschalten.
 - [ ] Gradle-Bibliotheken (`web/scripts/licenses.manual.json`) beim ersten Android-Release gegen das erzeugte Projekt (`src-tauri/gen/android`, `./gradlew app:dependencies`) abgleichen: die Liste kommt aus den Plugin-Dateien und der Tauri-Vorlage, nicht aus einem Werkzeug.
-- [ ] Lizenztexte/Namensnennung für Schriften (OFL: Inter, Nunito) und Modelle (Apache-2.0 u. a.) liegen in der App unter Rechtliches → Lizenzen.
+- [ ] Lizenztexte/Namensnennung für Schriften (OFL: Inter) und Modelle (Apache-2.0 u. a.) liegen in der App unter Rechtliches → Lizenzen.
 - [ ] Bei eingebautem Modell im Release: Lizenz des Basismodells erneut lesen.
 
 ## 7. Markenname „Nemo“

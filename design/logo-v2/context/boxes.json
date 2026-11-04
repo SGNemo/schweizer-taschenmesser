@@ -1,0 +1,262 @@
+{
+ "desktop-light-wide-1x-current": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-light-wide-1x": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-light-rail-1x-current": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-light-rail-1x": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-dark-wide-1x-current": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-dark-wide-1x": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-dark-rail-1x-current": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-dark-rail-1x": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-light-wide-2x-current": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-light-wide-2x": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-light-rail-2x-current": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-light-rail-2x": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-dark-wide-2x-current": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-dark-wide-2x": {
+  "brand": {
+   "x": 16,
+   "y": 16,
+   "width": 215,
+   "height": 44
+  },
+  "img": {
+   "x": 16,
+   "y": 16,
+   "width": 150,
+   "height": 44
+  }
+ },
+ "desktop-dark-rail-2x-current": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "desktop-dark-rail-2x": {
+  "brand": {
+   "x": 8,
+   "y": 12,
+   "width": 59,
+   "height": 28
+  },
+  "img": {
+   "x": 8,
+   "y": 12,
+   "width": 94.109375,
+   "height": 28
+  }
+ },
+ "phone-light-2x-current": {
+  "brand": {
+   "x": 12,
+   "y": 12,
+   "width": 44,
+   "height": 44
+  },
+  "img": null
+ },
+ "phone-light-2x": {
+  "brand": {
+   "x": 12,
+   "y": 12,
+   "width": 44,
+   "height": 44
+  },
+  "img": null
+ },
+ "phone-dark-2x-current": {
+  "brand": {
+   "x": 12,
+   "y": 12,
+   "width": 44,
+   "height": 44
+  },
+  "img": null
+ },
+ "phone-dark-2x": {
+  "brand": {
+   "x": 12,
+   "y": 12,
+   "width": 44,
+   "height": 44
+  },
+  "img": null
+ }
+}

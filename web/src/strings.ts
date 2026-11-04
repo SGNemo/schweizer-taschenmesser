@@ -89,7 +89,6 @@ export const de = {
     licenses: 'Lizenzhinweise',
     licenseList: [
       'Schrift „Inter“ – SIL Open Font License 1.1, © The Inter Project Authors.',
-      'Schriftzug „Nemo“ (Logo) in „Nunito“ – SIL Open Font License 1.1, © The Nunito Project Authors.',
       'Icons „Lucide“ – ISC-Lizenz, © Lucide Contributors.',
       'Das Nemo-Logo (Clownfisch) ist eine eigene Zeichnung dieses Projekts.',
     ],
