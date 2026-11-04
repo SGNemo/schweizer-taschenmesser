@@ -71,6 +71,7 @@ export const SIGNATURES = [
   'bubble',
   'addressBar',
   'stamp',
+  'masthead',
   'folderTab',
   'vaultDoor',
   'gauges',
