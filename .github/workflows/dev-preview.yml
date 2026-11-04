@@ -338,7 +338,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: android-dev
+          shared-key: android-dev-thin
       - run: npm ci
 
       - name: Android SDK and NDK
@@ -367,7 +367,12 @@ jobs:
           VITE_RELEASE_CHANNEL: dev
           VITE_BUILD_SHA: ${{ github.sha }}
           ANDROID_VERSION_CONFIG: ${{ needs.prepare.outputs.android_config }}
-        run: npx tauri android build --apk --target aarch64 armv7 --config src-tauri/tauri.dev.conf.json --config "$ANDROID_VERSION_CONFIG"
+          # Same two levers as the Windows preview build: no second typecheck/licence run (gate jobs of the same
+          # CI run) and no fat LTO. Own rust-cache key below.
+          ANDROID_FRONTEND_CONFIG: '{"build":{"beforeBuildCommand":"npx vite build"}}'
+          CARGO_PROFILE_RELEASE_LTO: 'false'
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '16'
+        run: npx tauri android build --apk --target aarch64 armv7 --config src-tauri/tauri.dev.conf.json --config "$ANDROID_VERSION_CONFIG" --config "$ANDROID_FRONTEND_CONFIG"
 
       - name: Locate the APK
         id: apk
