@@ -3,14 +3,15 @@ name: Release
 # Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
 # Second way: a manual run on `main` with the input `version` (must equal web/package.json, tag must not
 # exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
-# Pushes to `develop` that touch the native shell, and manual runs WITHOUT `version`, are DRY RUNS: they
+# Pushes to `develop` or `main` that touch the native shell (the `main` run also warms the cache that a
+# manual release run on `main` can read: caches written on develop are not visible there), and manual runs WITHOUT `version`, are DRY RUNS: they
 # build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
 # see docs/howto/release-deps.md ("Release").
 
 on:
   push:
     tags: ['v*.*.*']
-    branches: [develop]
+    branches: [develop, main]
     paths:
       - 'web/src-tauri/**'
       - 'web/scripts/**'
