@@ -291,7 +291,8 @@ export function SettingsIndex() {
   return (
     <div className={styles.overview}>
       {wide ? null : <QuickBar />}
-      <SettingsOverview />
+      {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
+      {wide ? <SettingsOverview /> : null}
       {wide ? null : <CategoryNav list />}
     </div>
   );

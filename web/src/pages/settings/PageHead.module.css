@@ -104,17 +104,18 @@
 
 @media (max-width: 899px) {
   .head {
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-2) var(--space-3);
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'eyebrow'
       'titles'
       'actions'
       'body';
-    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-lg);
   }
   .head[data-size='tall'] {
-    min-height: 8.5rem;
+    min-height: 0;
   }
   .head[data-size='compact'] {
     min-height: 5rem;
