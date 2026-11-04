@@ -19,7 +19,7 @@ import { createServer } from 'vite';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LANGS, moduleBlock, platformKey, replaceBlock } from './lib/moduleList.ts';
+import { LANGS, moduleBlock, platformKey, replaceBlock, shortText } from './lib/moduleList.ts';
 
 const web = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = resolve(web, '..');
@@ -68,6 +68,7 @@ try {
       status: status(m),
       platforms: platformKey(m.platforms),
       name: {},
+      short: {},
       description: {},
     })),
     toolCategories: TOOL_CATEGORIES.map((id) => ({ id, name: {} })),
@@ -79,6 +80,7 @@ try {
     data.areas.forEach((a) => (a.name[l] = t.nav.areas[a.id]));
     modules.forEach((m, i) => {
       data.modules[i].name[l] = m.name;
+      data.modules[i].short[l] = shortText(m.description);
       data.modules[i].description[l] = m.description;
     });
     data.toolCategories.forEach((c) => (c.name[l] = t.tools.panel.categories[c.id]));

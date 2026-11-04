@@ -44,7 +44,13 @@ export const en = {
       { icon: 'key', shot: 'vault', title: 'Vault', text: 'Passwords with TOTP and a generator, documents with expiry dates. Encrypted, invisible to AI.', alt: 'Unlocked vault with demo accounts' },
       { icon: 'bell', shot: 'reminders', title: 'Reminders', text: 'Bundled, with quiet hours and “later”, even when the app is closed.', alt: 'Reminders with switches and next time' },
     ],
-    more: 'Also: notes, lists, bookmarks, pantry, people, PC clean-up, messages with a local model. AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
+    more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
+    modules: {
+      summary: (n: number) => `All ${n} modules`,
+      status: { default: 'on by default', optional: 'optional', preview: 'preview' },
+      only: { windows: 'Windows app only', android: 'Android app only', both: 'Windows and Android apps only' },
+      hint: 'Preview modules stay hidden until “Show work in progress” is on (Settings → Appearance). The list is generated from the app itself.',
+    },
   },
   data: {
     eyebrow: 'Your data stays with you',

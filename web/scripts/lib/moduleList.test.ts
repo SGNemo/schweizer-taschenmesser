@@ -29,6 +29,22 @@ describe('shortText', () => {
     expect(shortText(long)).toBe('Accounts, income and expenses with categories');
   });
 
+  it('never cuts inside brackets and knows Spanish and French sentence starts', () => {
+    const disk =
+      'Unidades con análisis de las carpetas más grandes e información del sistema (procesador, memoria, batería, red): solo para ver.';
+    expect(shortText(disk)).toBe(
+      'Unidades con análisis de las carpetas más grandes e información del sistema',
+    );
+    expect(
+      shortText(
+        'Facturas pendientes con importe, destinatario y vencimiento. «Marcar como pagada» registra el gasto.',
+      ),
+    ).toBe('Facturas pendientes con importe, destinatario y vencimiento');
+    expect(
+      shortText('Coffre-fort à mots de passe : identifiants chiffrés (Argon2id, AES-256).'),
+    ).toBe('Coffre-fort à mots de passe');
+  });
+
   it('does not cut inside the first words', () => {
     expect(shortText('Password vault: logins and codes')).toBe('Password vault');
     expect(shortText('Vault: x')).toBe('Vault: x');
@@ -57,6 +73,7 @@ const data: ModuleData = {
       status: 'default',
       platforms: null,
       name: { en: 'Calendar', de: 'Kalender' },
+      short: {},
       description: {
         en: 'Events in month view – and more.',
         de: 'Termine in der Monatsansicht – und mehr.',
@@ -68,6 +85,7 @@ const data: ModuleData = {
       status: 'optional',
       platforms: null,
       name: { en: 'To-dos', de: 'ToDos' },
+      short: {},
       description: { en: 'Tasks in lists.', de: 'Aufgaben in Listen.' },
     },
     {
@@ -76,6 +94,7 @@ const data: ModuleData = {
       status: 'preview',
       platforms: 'windows',
       name: { en: 'This PC', de: 'Dieser PC' },
+      short: {},
       description: { en: 'Drives and system info.', de: 'Laufwerke und Systeminfo.' },
     },
   ],

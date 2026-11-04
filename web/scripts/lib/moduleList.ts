@@ -16,6 +16,8 @@ export interface ModuleRecord {
   status: Status;
   platforms: PlatformKey;
   name: Names;
+  /** `shortText` of the description: the one line the READMEs and the website show. */
+  short: Names;
   description: Names;
 }
 export interface ModuleData {
@@ -78,18 +80,33 @@ export function platformKey(platforms: readonly string[] | undefined): PlatformK
   return null;
 }
 
+/** Index of the last ", " before `limit` that is not inside brackets, or -1. */
+function lastTopLevelComma(text: string, limit: number): number {
+  let depth = 0;
+  let found = -1;
+  for (let i = 0; i < Math.min(limit, text.length); i++) {
+    if (text[i] === '(') depth++;
+    else if (text[i] === ')') depth = Math.max(0, depth - 1);
+    else if (depth === 0 && text.startsWith(', ', i)) found = i;
+  }
+  return found;
+}
+
 /**
- * First clause of a description: the first sentence, cut at a dash, colon or semicolon; a sentence
- * that is still longer than 100 characters is cut at its last comma before character 90.
+ * First clause of a description: the first sentence, cut at a dash, colon or semicolon (also the
+ * French " :"); a sentence that is still longer than 100 characters is cut at its last comma
+ * before character 90 outside brackets, or else before its first bracket.
  */
 export function shortText(text: string): string {
   const clean = text.replace(/\s+/g, ' ').trim();
-  const sentence = clean.split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ„“"])/)[0] ?? clean;
-  const cut = sentence.search(/ [–—] |: |; /);
+  const sentence = clean.split(/(?<=[.!?])\s+(?=[A-ZÄÖÜÁÉÍÓÚÑÀÂÇÈÊÎÔÛ„“"«¿¡])/)[0] ?? clean;
+  const cut = sentence.search(/ [–—] |\s?[:;] /);
   let head = cut >= 10 ? sentence.slice(0, cut) : sentence;
   if (head.length > 100) {
-    const comma = head.slice(0, 90).lastIndexOf(', ');
+    const comma = lastTopLevelComma(head, 90);
+    const bracket = head.indexOf(' (');
     if (comma >= 30) head = head.slice(0, comma);
+    else if (bracket >= 30) head = head.slice(0, bracket);
   }
   return head.replace(/[\s.:;,–—-]+$/, '');
 }
