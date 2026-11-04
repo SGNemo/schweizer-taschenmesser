@@ -85,6 +85,7 @@ async function audit(page: Page, label: string) {
 const PAGES = [
   ['dashboard', '/'],
   ['library', '/library'],
+  ['library-detail', '/library/todos'],
   ['tools', '/tools'],
   ['settings', '/settings'],
   ['settings-allgemein', '/settings/allgemein'],

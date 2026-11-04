@@ -114,7 +114,7 @@ export function ToolLibrary() {
                 )}
               </span>
             </h2>
-            <ul className={`${styles.list} ${styles.grid}`}>
+            <ul className={library.cards}>
               {inGroup.map((tool) => {
                 const on = activeIds.includes(tool.id);
                 const index = activeIds.indexOf(tool.id);

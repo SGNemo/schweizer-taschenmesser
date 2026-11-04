@@ -4,7 +4,6 @@ import { StartDataButton } from '@/core/importer/StartDataButton';
 import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import type { ModuleManifest } from '@/core/modules/types';
-import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
@@ -117,7 +116,6 @@ export function LibraryDetail() {
         </Card>
       </div>
       {sw.node}
-      <SetupLink />
     </div>
   );
 }

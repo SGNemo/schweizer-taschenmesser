@@ -174,7 +174,7 @@ export function ModuleLibrary() {
                 {v3.section(total.filter(isOn).length, total.length)}
               </span>
             </h2>
-            <ul className={`${styles.list} ${styles.grid}`}>
+            <ul className={library.cards}>
               {g.manifests.map((m) => {
                 const enabled = isOn(m);
                 return (

@@ -34,6 +34,7 @@ const PAGES = [
   '/calendar?view=month',
   '/todos?view=board',
   '/library',
+  '/library/todos',
   '/tools',
   '/settings',
   '/settings/darstellung',
