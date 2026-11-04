@@ -62,6 +62,7 @@ function roundLetters(C, text, weight, opt = {}) {
   const r = (xh - sw) / 2; // centreline radius of the round letters
   const gap = sw * (opt.gap ?? 0.85); // space between letters
   const strokes = [];
+  const butts = []; // strokes drawn with flat ends (the e's terminal when eCap = 'butt')
   let x = sw / 2;
   const cy = -xh / 2;
   const arch = (x0, ar, top) => `A${ar} ${ar} 0 0 1 ${x0 + 2 * ar} ${top}`;
@@ -78,7 +79,13 @@ function roundLetters(C, text, weight, opt = {}) {
     } else if (ch === 'e') {
       const cx = x + r;
       const a = ((opt.eOpen ?? 38) * Math.PI) / 180;
-      strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
+      if (opt.eCap === 'butt') {
+        // Bowl with a flat-cut terminal (its own stroke group), the bar on top with round ends.
+        butts.push(`M${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
+        strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}`);
+      } else {
+        strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
+      }
       x = cx + r + gap + sw;
     } else if (ch === 'm') {
       const ar = r * (opt.archRatio ?? 0.62);
@@ -92,7 +99,7 @@ function roundLetters(C, text, weight, opt = {}) {
     } else throw new Error(`round lettering: no letter "${ch}"`);
   }
   x -= gap; // no trailing gap
-  return { strokes, sw, width: x + sw / 2 - sw / 2, capHeight: C, xHeight: xh, left: 0 };
+  return { strokes, butts, sw, width: x + sw / 2 - sw / 2, capHeight: C, xHeight: xh, left: 0 };
 }
 
 export function wordPath(input = {}) {
@@ -101,7 +108,7 @@ export function wordPath(input = {}) {
     const C = GLYPHS.families.inter[600].capHeight;
     const rl = roundLetters(C, p.text, p.weight, p.round ?? {});
     // The strokes are kept as a stroke group (no outline), so `d` is empty and `strokes` carries the letters.
-    return { d: '', strokes: rl.strokes, strokeWidth: rl.sw, width: r1(rl.width), left: 0, capHeight: C, xHeight: rl.xHeight, font: 'Nemo rounded lettering (own)', params: p, letters: null };
+    return { d: '', strokes: rl.strokes, butts: rl.butts, strokeWidth: rl.sw, width: r1(rl.width), left: 0, capHeight: C, xHeight: rl.xHeight, font: 'Nemo rounded lettering (own)', params: p, letters: null };
   }
   if (p.family === 'nunito') {
     if (p.text !== 'Nemo') throw new Error('nunito: only "Nemo" is available');
@@ -246,7 +253,11 @@ export function wordArt(word = {}, art = {}, theme = 'light', uid = 'wa') {
   const masked = holes.length ? ` mask="url(#${maskId})"` : '';
   body += `<g${masked}>`;
   if (shapes.length) body += `<g fill="${accent}">${shapes.map((d) => `<path d="${d}"/>`).join('')}</g>`;
-  if (!a.badge) body += w.strokes ? `<g fill="none" stroke="${fill}" stroke-width="${r1(w.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round">${w.strokes.map((d) => `<path d="${d}"/>`).join('')}</g>` : `<path fill="${fill}" d="${w.d}"/>`;
+  if (!a.badge)
+    body += w.strokes
+      ? (w.butts?.length ? `<g fill="none" stroke="${fill}" stroke-width="${r1(w.strokeWidth)}" stroke-linecap="butt" stroke-linejoin="round">${w.butts.map((d) => `<path d="${d}"/>`).join('')}</g>` : '') +
+        `<g fill="none" stroke="${fill}" stroke-width="${r1(w.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round">${w.strokes.map((d) => `<path d="${d}"/>`).join('')}</g>`
+      : `<path fill="${fill}" d="${w.d}"/>`;
   body += `</g>`;
   if (softBands.length) {
     defs += `<clipPath id="${uid}-letters">${shapes.map((d) => `<path d="${d}"/>`).join('')}<path d="${w.d}"/></clipPath>`;
