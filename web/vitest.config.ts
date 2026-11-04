@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Only the Vite build resolves the real data (vite.config.ts); tests get an empty changelog.
+      'virtual:changelog': fileURLToPath(
+        new URL('./src/core/changelog/emptyData.ts', import.meta.url),
+      ),
       zod: fileURLToPath(new URL('./node_modules/zod', import.meta.url)),
       tldts: fileURLToPath(new URL('./node_modules/tldts', import.meta.url)),
       '@nemo/vault-core': fileURLToPath(

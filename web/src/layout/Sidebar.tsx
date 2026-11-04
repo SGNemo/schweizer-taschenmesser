@@ -4,6 +4,8 @@ import { areaOfPath, type NavArea, type NavItem, type NavTree } from '@/core/mod
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon, Logo, OverlayScroll, Wordmark } from '@/ui';
+import { useNewChangelog } from '@/core/changelog/useNewChangelog';
+import { NewDot } from './NewDot';
 import { SupporterBadge } from './SupporterBadge';
 import styles from './Sidebar.module.css';
 
@@ -129,12 +131,14 @@ function RailLink({
   label,
   active,
   area,
+  dot,
 }: {
   to: string;
   icon: NavItem['icon'];
   label: string;
   active: boolean;
   area?: NavItem['area'];
+  dot?: boolean;
 }) {
   return (
     <li data-area={area}>
@@ -146,6 +150,7 @@ function RailLink({
         title={label}
       >
         <Icon name={icon} size={22} />
+        {dot ? <NewDot floating /> : null}
       </Link>
     </li>
   );
@@ -155,6 +160,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const setSidebar = useUiStore((s) => s.setSidebar);
+  const newChanges = useNewChangelog();
   const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
   const activeArea = areaOfPath(tree, pathname)?.id;
 
@@ -203,6 +209,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
             icon="settings"
             label={t.nav.settings}
             active={pathname.startsWith('/settings')}
+            dot={newChanges}
           />
           {canExpand ? (
             <li>
@@ -253,6 +260,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
           <NavLink to="/settings" className={styles.link}>
             <Icon name="settings" />
             <span>{t.nav.settings}</span>
+            {newChanges ? <NewDot /> : null}
           </NavLink>
         </li>
         <li className={styles.row}>
