@@ -243,7 +243,7 @@ export function CategoryNav({ list }: { list?: boolean }) {
   const ids = visibleCategoryIds(sections);
   const overviewTitle = tSettings2.use().overview.title;
   const groupTitles = tSettingsV3.use().navGroups;
-  const groupTitlesDiffers = tSettingsV3.use().differs;
+  const differsLegend = tSettingsV3.use().differs;
   const changed = useChangedCategories();
   const groups = NAV_GROUPS.map((g) => ({
     id: g.id,
@@ -287,7 +287,7 @@ export function CategoryNav({ list }: { list?: boolean }) {
         {changed.size > 0 ? (
           <p className={styles.legend} data-testid="differs-legend">
             <span className={styles.dot} aria-hidden="true" />
-            {groupTitlesDiffers}
+            {differsLegend}
           </p>
         ) : null}
       </nav>
@@ -362,7 +362,7 @@ function useDeepLink(ready: boolean) {
       // Section anchors sit on the heading: highlight the whole section.
       marked = el.matches('h1, h2')
         ? (el.closest('section') ??
-          document.querySelector<HTMLElement>(`section[aria-labelledby="${CSS.escape(el.id)}"]`) ??
+          document.querySelector<HTMLElement>(`section[aria-labelledby="${el.id}"]`) ??
           el)
         : el;
       marked.dataset.highlight = 'true';
@@ -372,10 +372,15 @@ function useDeepLink(ready: boolean) {
     // Some sections render only after their values are loaded (module settings): wait for them.
     let observer: MutationObserver | undefined;
     // A module's page has its head (the anchor) in the layout before its body: wait for the body section there.
-    const present = () =>
-      pathname.startsWith('/settings/module/')
-        ? document.querySelector(`section[aria-labelledby="${CSS.escape(sectionId)}"]`) !== null
-        : document.getElementById(sectionId) !== null;
+    const present = () => {
+      const anchor = document.getElementById(sectionId);
+      if (!anchor) return false;
+      // The head's h1 is there before the body: wait for the body section; any other anchor is ready as soon as it exists.
+      return (
+        !(pathname.startsWith('/settings/module/') && anchor.tagName === 'H1') ||
+        document.querySelector(`section[aria-labelledby="${sectionId}"]`) !== null
+      );
+    };
     if (!present()) {
       observer = new MutationObserver(() => {
         if (present() && apply()) observer?.disconnect();
@@ -586,13 +591,22 @@ export function ModuleSettingsRoute() {
   );
 }
 
+/** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
+function safeDecode(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 /** Head of the open settings page: "Status" on the landing page, the category's own head on a category, the module's on its page. */
 function SettingsHead() {
   const { pathname } = useLocation();
   const v3 = tSettingsV3.use();
   const sections = useSettingsSections();
   const moduleId = /^\/settings\/module\/([^/]+)/.exec(pathname)?.[1];
-  if (moduleId) return <ModuleRouteHead moduleId={decodeURIComponent(moduleId)} />;
+  if (moduleId) return <ModuleRouteHead moduleId={safeDecode(moduleId)} />;
   const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
   if (!segment) return <StatusHead title={t.settings.title} />;
   // Sections still loading: no head yet (CategoryPage shows its skeleton), so no category head flashes up for a hidden one.

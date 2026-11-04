@@ -123,6 +123,7 @@ export function ModuleSettingsPage() {
 
 function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
+  const c = tSettings2.use().changed;
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
   const toast = useUiStore((st) => st.toast);
@@ -162,7 +163,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
         <div className={styles.changedRow}>
           <Badge>{o.changed(changed)}</Badge>
           <Button variant="ghost" onClick={resetAll} data-testid="module-reset-all">
-            {tSettings2.get().changed.resetModule}
+            {c.resetModule}
           </Button>
         </div>
       ) : null}

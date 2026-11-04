@@ -73,8 +73,12 @@
   }
   .context {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  /* A tile that needs a look keeps its second line. */
+  .tile[data-attention='true'] .context {
+    -webkit-line-clamp: 2;
   }
 }
