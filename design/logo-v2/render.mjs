@@ -348,16 +348,17 @@ async function wordmarkBlock() {
     const l = mk(L, 'light');
     const d = mk(Ld, 'dark');
     const h = (x, hh) => img(x.svg, (hh * x.width) / x.height, hh);
-    const over = (x) => [{ svg: x.svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - lockH) / 2) * 2, h: lockH * 2 }];
+    const hh0 = w.height ?? lockH; // a wordmark may ask for its own height in the sidebar head
+    const over = (x) => [{ svg: x.svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - hh0) / 2) * 2, h: hh0 * 2 }];
     const pxl = async (x, hh, zoom) => {
       const ww = Math.round((hh * x.width) / x.height);
       return `<img class="px" src="${pngUri(await raster(x.svg, ww, hh))}" style="width:${ww * zoom}px;height:${hh * zoom}px">`;
     };
-    s += `<div class="row" style="align-items:center"><div style="width:300px"><b style="font-size:22px">${w.label}</b><br>${esc(w.title)}</div><div class="panel light">${h(l, 44)}</div><div class="panel dark">${h(d, 44)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(l, 100)}</div></div>`;
-    s += `<div class="row" style="align-items:center"><div style="width:300px" class="cap">True pixels: 36 px ×4 · 28 px ×4 (light) · 28 px ×4 (dark)</div><div class="panel light">${await pxl(l, 36, 4)}</div><div class="panel light">${await pxl(l, 28, 4)}</div><div class="panel dark">${await pxl(d, 28, 4)}</div></div>`;
-    s += `<div class="row"><div>${montage('desktop-light-wide-2x', 560, 360, over(l), 2)}<div class="cap">${w.label} in the sidebar, light (200 %) – ${lockH} px</div></div><div>${montage('desktop-dark-wide-2x', 560, 360, over(d), 2)}<div class="cap">${w.label} dark</div></div>` +
-      `<div><div class="montage" style="width:420px;height:120px"><img src="${fileUri('desktop-light-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(l.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 light</div>` +
-      `<div class="montage" style="width:420px;height:120px;margin-top:8px"><img src="${fileUri('desktop-dark-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(d.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - lockH) / 2}px;height:${lockH}px;width:auto"></div><div class="cap">1:1 dark</div></div></div>`;
+    s += `<div class="row" style="align-items:center"><div style="width:300px"><b style="font-size:22px">${w.label}</b><br>${esc(w.title)}</div><div class="panel light">${h(l, hh0)}</div><div class="panel dark">${h(d, hh0)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(l, 100)}</div></div>`;
+    s += `<div class="row" style="align-items:center"><div style="width:300px" class="cap">True pixels: ${hh0} px ×4 · 28 px ×4 (light) · 28 px ×4 (dark)</div><div class="panel light">${await pxl(l, hh0, 4)}</div><div class="panel light">${await pxl(l, 28, 4)}</div><div class="panel dark">${await pxl(d, 28, 4)}</div></div>`;
+    s += `<div class="row"><div>${montage('desktop-light-wide-2x', 560, 360, over(l), 2)}<div class="cap">${w.label} in the sidebar, light (200 %) – ${hh0} px</div></div><div>${montage('desktop-dark-wide-2x', 560, 360, over(d), 2)}<div class="cap">${w.label} dark</div></div>` +
+      `<div><div class="montage" style="width:420px;height:120px"><img src="${fileUri('desktop-light-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(l.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - hh0) / 2}px;height:${hh0}px;width:auto"></div><div class="cap">1:1 light</div>` +
+      `<div class="montage" style="width:420px;height:120px;margin-top:8px"><img src="${fileUri('desktop-dark-wide-1x.png')}" style="width:420px;height:240px"><img class="over" src="${svgUri(d.svg)}" style="left:${wideBox.x}px;top:${wideBox.y + (wideBox.height - hh0) / 2}px;height:${hh0}px;width:auto"></div><div class="cap">1:1 dark</div></div></div>`;
     if (w.notes) s += `<div class="notes"><b>Notes:</b> ${esc(w.notes)}</div>`;
     const out = join(dir, w.label);
     mkdirSync(out, { recursive: true });
