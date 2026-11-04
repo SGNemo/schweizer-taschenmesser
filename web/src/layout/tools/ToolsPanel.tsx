@@ -52,7 +52,8 @@ export function ToolsPanel() {
 
   const ordered = useMemo(() => orderForPanel(tools?.active ?? []), [tools]);
   const [query, setQuery] = useState('');
-  const [listView, setListView] = useState(false);
+  // `null` = automatic (see `autoList`); the arrow and a pick set it explicitly.
+  const [listChoice, setListView] = useState<boolean | null>(null);
   const [recentAtOpen, setRecentAtOpen] = useState<string[]>([]);
   const [blocked, setBlocked] = useState(false);
 
@@ -66,10 +67,13 @@ export function ToolsPanel() {
       setQuery('');
       setBlocked(false);
       setRecentAtOpen(recentIds);
-      // A phone with no tool asked for and none used before starts on the list, not on an arbitrary tool.
-      setListView(phone && !!tools && !activeTool && !ordered.some((x) => x.id === recentIds[0]));
+      setListView(null);
     }
   }
+
+  // A phone with no tool asked for and none used before starts on the list, not on an arbitrary tool.
+  const autoList = phone && !activeTool && !ordered.some((x) => x.id === recentAtOpen[0]);
+  const listView = listChoice ?? autoList;
 
   const shown: ToolManifest | undefined = toolsOpen
     ? pickInitialTool(ordered, activeTool, recentAtOpen)
