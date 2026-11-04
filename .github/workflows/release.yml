@@ -170,9 +170,11 @@ jobs:
             exit 1
           fi
 
-      - name: Release notes from Conventional Commits
+      # The sections were written into CHANGELOG.md / CHANGELOG.de.md by `npm run changelog:release` in the
+      # release commit (docs/howto/changelog.md); the notes are the same text, German above, English below.
+      - name: Release notes from the changelog section
         working-directory: web
-        run: node scripts/changelog.mjs --version "${{ steps.meta.outputs.version }}" --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/RELEASE_NOTES.md"
+        run: node scripts/changelog-notes.mjs "${{ steps.meta.outputs.version }}" --out "$RUNNER_TEMP/RELEASE_NOTES.md"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

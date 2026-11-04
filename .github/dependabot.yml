@@ -253,3 +253,194 @@ updates:
       # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
       - dependency-name: typescript
         update-types: [version-update:semver-minor, version-update:semver-major]
+
+  # --- Added 2026-11-04: packages that had no entry, so version updates never reached them
+  # (security updates did). One entry per directory, same style as above.
+  - package-ecosystem: npm
+    directory: "/site"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # The site stays on TypeScript 5.x (@astrojs/check): patches only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: npm
+    directory: "/services/supporter-webhook"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: npm
+    directory: "/packages/supporter-codes"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: npm
+    directory: "/tools/supporter-cli"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      npm-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript is pinned to 6.0.x: typescript-eslint supports < 6.1 only.
+      - dependency-name: typescript
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri/crates/downloader"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri/crates/local-llm"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Pinned exactly in Cargo.toml (native llama.cpp build): bump by hand together with the smoke-model test.
+      - dependency-name: llama-cpp-2
+  - package-ecosystem: cargo
+    directory: "/web/src-tauri/crates/torrent"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - cargo
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/custom-tabs/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: gradle
+    directory: "/web/src-tauri/plugins/screen-mode/android"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - gradle
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      gradle-minor-patch:
+        update-types: [minor, patch]

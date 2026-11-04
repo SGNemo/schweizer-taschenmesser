@@ -1,0 +1,7 @@
+# fix/site-cloudflare-checks – for the next chat
+
+- **Root cause of the red `Cloudflare Pages` check:** `site/src/legal.js` stops every `develop`/`main` build without `IMPRESSUM_*` (since #122, 2026-10-08). 0 production deploys since, so the live site is the 2026-10-07 state (inferred from check runs, not from the site). Needs the maintainer in the Cloudflare UI (Production **and** Preview); checklist `docs/howto/cloudflare-checks.md`.
+- **`in_progress` forever** on intermediate commits (superseded builds) is a Cloudflare artefact, nothing to fix in the repo.
+- **Outside this PR – `.github/dependabot.yml` gaps** (file only takes effect on `main`, so a change needs a PR into `main`): no entries for `/site`, `/services/supporter-webhook`, `/packages/supporter-codes`, `/tools/supporter-cli` (npm) and the Gradle plugins `custom-tabs`, `screen-mode`; Cargo only lists `/web/src-tauri` although `crates/local-llm` gets its own PRs (#388). Security updates still arrive, version updates for these directories do not.
+- **Webhook Worker** is deployed by hand (last 2026-10-05, no Git build, no Cloudflare check). Not compared with the repo source; `npx wrangler deploy --dry-run` vs. the deployed code would tell.
+- Tooling in cloud chats: `gh pr list` (GraphQL), the Actions secrets API and `curl` to the public site are blocked by the proxy; use `gh api repos/...` REST and the check-run API (`check_name=Cloudflare%20Pages`).
