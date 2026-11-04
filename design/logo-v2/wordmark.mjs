@@ -55,40 +55,51 @@ function edges(d) {
 
 /** The word as one path, letters laid out with advances, kerning and tracking. */
 /** Monoline rounded geometric letters ("Nemo"), drawn as strokes: { strokes, width, capHeight, xHeight }. */
-function roundLetters(C, weight) {
-  const sw = C * (weight === 'bold' ? 0.22 : 0.19); // stroke width
-  const xh = C * 0.78;
+const ROUND_WEIGHTS = { 500: 0.17, 600: 0.19, 700: 0.22, 800: 0.25, 900: 0.28 }; // stroke width × cap height
+function roundLetters(C, text, weight, opt = {}) {
+  const sw = C * (ROUND_WEIGHTS[weight] ?? 0.22);
+  const xh = C * (opt.xHeight ?? 0.78);
   const r = (xh - sw) / 2; // centreline radius of the round letters
-  const gap = sw * 0.85; // space between letters
+  const gap = sw * (opt.gap ?? 0.85); // space between letters
   const strokes = [];
   let x = sw / 2;
-  // N
-  const nw = C * 0.74;
-  strokes.push(`M${x} ${-sw / 2}L${x} ${-C + sw / 2}L${x + nw} ${-sw / 2}L${x + nw} ${-C + sw / 2}`);
-  x += nw + gap + sw;
-  // e: bar + open circle (opening at the lower right)
   const cy = -xh / 2;
-  let cx = x + r;
-  const a = (38 * Math.PI) / 180;
-  strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
-  x = cx + r + gap + sw;
-  // m: stem + two arches (each arch a semicircle on the centreline)
-  const ar = r * 0.62;
-  const top = -xh + sw / 2 + ar;
-  strokes.push(`M${x} ${-sw / 2}L${x} ${-xh + sw / 2 + ar}A${ar} ${ar} 0 0 1 ${x + 2 * ar} ${top}L${x + 2 * ar} ${-sw / 2}M${x + 2 * ar} ${top}A${ar} ${ar} 0 0 1 ${x + 4 * ar} ${top}L${x + 4 * ar} ${-sw / 2}`);
-  x += 4 * ar + gap + sw;
-  // o
-  cx = x + r;
-  strokes.push(`M${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}`);
-  x = cx + r + sw / 2;
-  return { strokes, sw, width: x, capHeight: C, xHeight: xh, left: 0 };
+  const arch = (x0, ar, top) => `A${ar} ${ar} 0 0 1 ${x0 + 2 * ar} ${top}`;
+  for (const ch of text) {
+    if (ch === 'N') {
+      const nw = C * (opt.nWidth ?? 0.74);
+      strokes.push(`M${x} ${-sw / 2}L${x} ${-C + sw / 2}L${x + nw} ${-sw / 2}L${x + nw} ${-C + sw / 2}`);
+      x += nw + gap + sw;
+    } else if (ch === 'n') {
+      const ar = r * (opt.archRatio ?? 0.8);
+      const top = -xh + sw / 2 + ar;
+      strokes.push(`M${x} ${-sw / 2}L${x} ${-xh + sw / 2}M${x} ${top}${arch(x, ar, top)}L${x + 2 * ar} ${-sw / 2}`);
+      x += 2 * ar + gap + sw;
+    } else if (ch === 'e') {
+      const cx = x + r;
+      const a = ((opt.eOpen ?? 38) * Math.PI) / 180;
+      strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
+      x = cx + r + gap + sw;
+    } else if (ch === 'm') {
+      const ar = r * (opt.archRatio ?? 0.62);
+      const top = -xh + sw / 2 + ar;
+      strokes.push(`M${x} ${-sw / 2}L${x} ${-xh + sw / 2}M${x} ${top}${arch(x, ar, top)}L${x + 2 * ar} ${-sw / 2}M${x + 2 * ar} ${top}${arch(x + 2 * ar, ar, top)}L${x + 4 * ar} ${-sw / 2}`);
+      x += 4 * ar + gap + sw;
+    } else if (ch === 'o') {
+      const cx = x + r;
+      strokes.push(`M${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}`);
+      x = cx + r + gap + sw;
+    } else throw new Error(`round lettering: no letter "${ch}"`);
+  }
+  x -= gap; // no trailing gap
+  return { strokes, sw, width: x + sw / 2 - sw / 2, capHeight: C, xHeight: xh, left: 0 };
 }
 
 export function wordPath(input = {}) {
   const p = merge(WORD_DEFAULTS, input);
   if (p.family === 'round') {
     const C = GLYPHS.families.inter[600].capHeight;
-    const rl = roundLetters(C, p.weight >= 800 ? 'bold' : 'regular');
+    const rl = roundLetters(C, p.text, p.weight, p.round ?? {});
     // The strokes are kept as a stroke group (no outline), so `d` is empty and `strokes` carries the letters.
     return { d: '', strokes: rl.strokes, strokeWidth: rl.sw, width: r1(rl.width), left: 0, capHeight: C, xHeight: rl.xHeight, font: 'Nemo rounded lettering (own)', params: p, letters: null };
   }
