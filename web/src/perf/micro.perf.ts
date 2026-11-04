@@ -150,4 +150,62 @@ describe('data micro-benchmarks', () => {
     setNow();
     save('sync', out);
   });
+
+  it('backup stages with n records in finance + calendar + notes + tasks', async () => {
+    const stamp = (fields: string[]) =>
+      Object.fromEntries([...fields, 'deletedAt'].map((f) => [f, '1790000000000-0000-perfdev1']));
+    const row = (i: number, extra: Record<string, unknown>) => ({
+      id: `bk-${i}`,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'perfdev1',
+      deletedAt: null,
+      _f: stamp(Object.keys(extra)),
+      ...extra,
+    });
+    await db.table('finance_transaction').clear();
+    const N = 20_000;
+    await db
+      .table('finance_transaction')
+      .bulkPut(
+        Array.from({ length: N }, (_, i) =>
+          row(i, {
+            accountId: 'a1',
+            kind: 'expense',
+            amountMinor: 100,
+            date: '2026-09-01',
+            payee: `Laden ${i % 300}`,
+          }),
+        ),
+      );
+    await db.table('notes_note').clear();
+    await db
+      .table('notes_note')
+      .bulkPut(
+        Array.from({ length: 2_000 }, (_, i) =>
+          row(i, { title: `Notiz ${i}`, body: 'Text '.repeat(150), pinned: false }),
+        ),
+      );
+    const out: Record<string, number> = {};
+    const { createBackup, serializeBackup, parseBackup } = await import('@/core/backup/backup');
+    const { applyBackup } = await import('@/core/backup/apply');
+    const { syncedTableNames } = await import('@/core/db/schema');
+    const names = syncedTableNames(allManifests);
+    let backup = await createBackup(db, names);
+    out.createBackupMs = await time(async () => {
+      backup = await createBackup(db, names);
+    }, 1);
+    let text = '';
+    out.serializeMs = await time(() => {
+      text = serializeBackup(backup);
+    }, 1);
+    out.fileMb = round(text.length / 1048576);
+    out.parseMs = await time(() => parseBackup(text), 1);
+    await db.table('finance_transaction').clear();
+    await db.table('notes_note').clear();
+    out.applyMergeIntoEmptyMs = await time(async () => {
+      await applyBackup(backup, 'merge', db, names);
+    }, 1);
+    save('backup', out);
+  });
 });

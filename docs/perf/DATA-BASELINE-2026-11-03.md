@@ -133,6 +133,24 @@ once per range instead of once per budget. No schema change (an `[accountId+date
 What is left is mostly row 1 of the ranking: headline, calendar items and the finance page itself still load all
 bookings (about 40k rows per page open); that is P2b.
 
+### P2d `perf/sync-backup-batch` (2026-11-04)
+`core/storage/dexie.ts`: `readOutbox` reads the records with one `bulkGet` per collection (was one `get` per record),
+`applyRemote` reads the chunk with one `bulkGet` and writes with one `bulkPut` per collection, `markAllDirty` writes the
+outbox in slices of 5,000. The LWW rule (`core/sync/ops.ts`), the sync encryption and the backup format are untouched.
+Micro-benchmark on fake-indexeddb (`npm run measure:micro`), 10,000 records of 3 fields:
+
+| | before | after |
+|---|---|---|
+| First pull on a fresh device (apply) | 885 ms | **~400 ms** (−55 %) |
+| First push (read outbox + upload) | 1,365 ms | **~1,100 ms** (−20 %) |
+
+Backup stages (22,000 records, 11 MB file, fake-indexeddb), for the record: create 221 ms, stringify 61 ms, parse
+240 ms, **merge into an empty database 1.75 s**. The format steps are cheap; the restore time is the per-record
+last-write-wins merge (`recordToOps` + `mergeOps`), which is the rule that sync and backup share and was left alone.
+In the browser the restore went from 10.8 s to about 6 s with P2b (fewer live-query re-runs after the bulk write).
+Parsers in a Web Worker (bank, notes, ICS) were not done: they parse small files in practice (the backup parse is
+240 ms for 11 MB), so the copy to the worker would cost about what it saves.
+
 ## Re-running
 ```bash
 cd web
