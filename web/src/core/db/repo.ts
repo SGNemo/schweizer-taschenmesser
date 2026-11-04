@@ -13,7 +13,7 @@ import { db as defaultDb, type TaschenmesserDB } from './db';
 import { tableName } from './schema';
 import { getDeviceContext, type DeviceContext } from './device';
 import { recordWrite, type UndoStep } from './recorder';
-import { signalWrite, type WriteSignal } from './writeHook';
+import { hasWriteListener, signalWrite, type WriteSignal } from './writeHook';
 import { maxHlc } from './hlc';
 import { ENVELOPE_KEYS, type Stored } from './types';
 import { deepEqual, randomId } from './util';
@@ -48,6 +48,11 @@ export interface Repo<T> {
   /** Really deletes rows (caches). Only allowed for local repos; synced data needs tombstones. */
   purge(ids: string[]): Promise<void>;
 }
+
+/** Reports a write to `core/automation`; builds the signal (a row copy) only when someone listens. */
+const notify = (make: () => WriteSignal): void => {
+  if (hasWriteListener()) signalWrite(make());
+};
 
 export const notDeleted = (r: { deletedAt: number | null }): boolean => r.deletedAt === null;
 
@@ -202,7 +207,7 @@ export function createRepo<T extends Record<string, unknown>>(
     });
     if (changed.length > 0) recordWrite(() => setDeletedMany(changed, !deleted));
     for (const id of changed)
-      signalWrite({ table: name, kind: deleted ? 'deleted' : 'restored', id });
+      notify(() => ({ table: name, kind: deleted ? 'deleted' : 'restored', id }));
   };
 
   /** Data fields of `existing` that `next` changes, with their previous values (for undo). */
@@ -234,7 +239,7 @@ export function createRepo<T extends Record<string, unknown>>(
         return created;
       });
       recordWrite(() => setDeletedMany([row.id], true));
-      signalWrite({ table: name, kind: 'created', id: row.id, data: dataOf(row) });
+      notify(() => ({ table: name, kind: 'created', id: row.id, data: dataOf(row) }));
       return row;
     },
     async createMany(items) {
@@ -257,7 +262,7 @@ export function createRepo<T extends Record<string, unknown>>(
           ),
         );
       for (const r of rows)
-        signalWrite({ table: name, kind: 'created', id: r.id, data: dataOf(r) });
+        notify(() => ({ table: name, kind: 'created', id: r.id, data: dataOf(r) }));
       return rows;
     },
     async update(id, patch) {
@@ -278,7 +283,13 @@ export function createRepo<T extends Record<string, unknown>>(
       });
       if (undo) recordWrite(undo);
       if (changedBefore)
-        signalWrite({ table: name, kind: 'updated', id, data: dataOf(row), before: changedBefore });
+        notify(() => ({
+          table: name,
+          kind: 'updated',
+          id,
+          data: dataOf(row),
+          before: changedBefore,
+        }));
       return row;
     },
     async upsert(id, data) {
@@ -308,7 +319,7 @@ export function createRepo<T extends Record<string, unknown>>(
         return updated;
       });
       if (undo) recordWrite(undo);
-      if (signal) signalWrite({ ...signal, data: dataOf(row) });
+      if (signal) notify(() => ({ ...signal!, data: dataOf(row) }));
       return row;
     },
     remove: (id) => setDeletedMany([id], true),

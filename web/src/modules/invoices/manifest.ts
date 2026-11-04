@@ -59,6 +59,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 50,
   area: 'money',
+  automation: () => import('./automation'),
   contributions: {
     attention: () => import('./attention'),
     onboarding: onboarding,

@@ -101,6 +101,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'full',
   area: 'knowledge',
+  automation: () => import('./automation'),
   contributions: {
     onboarding: noOnboarding,
     // New-mail notifications: off until switched on in the module settings.

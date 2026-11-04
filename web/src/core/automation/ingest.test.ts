@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { clearAll, ctxFor, seed, useFixedClock } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
-import { setWriteListener, type WriteSignal } from '@/core/db/writeHook';
+import { hasWriteListener, setWriteListener, type WriteSignal } from '@/core/db/writeHook';
 import { setNow } from '@/core/time/now';
 import { taskRepo } from '@/modules/todos/repo';
 import { eventsOf, splitTable } from './ingest';
@@ -36,6 +36,16 @@ describe('repo write hook', () => {
     expect(seen[0]).toMatchObject({ table: 'todos_task', id: t.id, data: { title: 'A' } });
     expect(seen[1]).toMatchObject({ data: { title: 'B' }, before: { title: 'A' } });
     expect(Object.keys(seen[0]!.data!)).not.toContain('deviceId');
+  });
+
+  it('costs nothing without a listener: no signal is built, writes work as before', async () => {
+    setWriteListener(undefined);
+    expect(hasWriteListener()).toBe(false);
+    const t = await taskRepo.create({ listId: 'inbox', title: 'quiet' } as never);
+    expect(await taskRepo.get(t.id)).toBeDefined();
+    setWriteListener(() => undefined);
+    expect(hasWriteListener()).toBe(true);
+    setWriteListener(undefined);
   });
 
   it('a throwing listener never breaks the write', async () => {

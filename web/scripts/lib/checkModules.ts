@@ -260,3 +260,30 @@ export function checkSettingsFieldMeta(
       errors.push(`${id}: settings field level "${m[1]}" is not one of ${levels.join(', ')}`);
   return errors;
 }
+
+/**
+ * `automation.ts` (rules): text-level checks that plain node can run (the file imports repos). The
+ * listed `actions` must be keys of `aiSchema.actions` in `ai.ts` and never a delete; the full check
+ * (`validateAutomation`) runs in `core/automation/modules.test.ts`.
+ */
+export function checkAutomationSource(id: string, source: string, aiSource?: string): string[] {
+  const errors: string[] = [];
+  const list = /\bactions:\s*\[([^\]]*)\]/.exec(source)?.[1];
+  const ids = [...(list ?? '').matchAll(/['"]([\w.-]+)['"]/g)].map((m) => m[1]!);
+  if (ids.length > 0 && !aiSource) {
+    errors.push(`${id}: automation.actions needs an ai.ts with aiSchema.actions`);
+    return errors;
+  }
+  for (const action of ids) {
+    const block = new RegExp(`^\\s+${action}:\\s*\\{([\\s\\S]*?)\\n\\s{4}\\},`, 'm').exec(
+      aiSource ?? '',
+    );
+    if (!new RegExp(`^\\s+${action}:\\s*\\{`, 'm').test(aiSource ?? ''))
+      errors.push(`${id}: automation.actions "${action}" is not in ai.ts`);
+    else if (block && /kind:\s*'delete'/.test(block[1]!))
+      errors.push(`${id}: automation.actions "${action}" deletes, which rules never do`);
+  }
+  if (!/export\s+(const\s+automation|default)/.test(source))
+    errors.push(`${id}: automation.ts must export \`automation\` and a default`);
+  return errors;
+}
