@@ -14,7 +14,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # The event is part of the group so that the nightly dispatch never cancels a push run (and vice versa).
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -307,7 +308,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.changes.outputs.shards) }}
+        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2,3,4,5,6]') }}
     defaults:
       run:
         working-directory: web
@@ -374,14 +375,14 @@ jobs:
           [ "$CHANGES" = "success" ] || echo "::notice::The pre-check did not finish; every part was asked to run."
           check() { # name result wanted
             if [ "$3" != "false" ]; then
-              [ "$2" = "success" ] || { echo "::error::$1 did not succeed (result '$2')."; exit 1; }
+              [ "$2" = "success" ] || { echo "::error::$1 did not succeed (result '$2'): open that job above."; exit 1; }
             else
-              [ "$2" = "skipped" ] || { echo "::error::$1 should have been skipped (result '$2')."; exit 1; }
+              [ "$2" = "skipped" ] || { echo "::error::$1 should have been skipped (result '$2'); the pre-check job 'Which parts changed' said it is not needed."; exit 1; }
             fi
           }
-          check "Static checks" "$STATIC" "$WEB"
-          check "Unit tests" "$UNIT" "$WEB"
-          check "E2E" "$E2E_RESULT" "$E2E"
+          check "Web static (format, lint, types)" "$STATIC" "$WEB"
+          check "Web unit tests (shards)" "$UNIT" "$WEB"
+          check "E2E app (shards)" "$E2E_RESULT" "$E2E"
 
   # Server, MCP wrapper, shared vault package, supporter codes + CLI and the supporter webhook are five small
   # packages (about a minute each). They share one runner: every extra job waits for a free runner (up to
@@ -607,7 +608,7 @@ jobs:
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
   # The build runs next to the tests (it needs nothing from them); the publish stage waits for every check
-  # of this run to be green, so nothing is published from a red commit. See dev-preview.yml and
+  # of this run (tests, packages, Rust, docs-pairs, gitleaks) to be green, so nothing is published from a red commit. The signed build artifacts of a red commit stay in the run for 3 days (retention), but are never attached to a release. See dev-preview.yml and
   # docs/howto/ci.md -> "Dev-Preview".
   dev-preview-build:
     name: Dev-Preview build
@@ -625,7 +626,7 @@ jobs:
 
   dev-preview:
     name: Dev-Preview publish
-    needs: [changes, dev-preview-build, secret-scan, web, packages, extension, e2e-sync, rust, local-llm]
+    needs: [changes, dev-preview-build, secret-scan, docs-pairs, web, packages, extension, e2e-sync, rust, local-llm]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write

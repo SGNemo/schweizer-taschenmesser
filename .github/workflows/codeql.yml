@@ -19,10 +19,11 @@ on:
   schedule:
     - cron: '39 2 * * 3'
 
-# A newer push to the same pull request replaces the older scan; pushes to develop and the weekly run are
-# never cancelled, so every commit that lands is scanned.
+# A newer push to the same pull request replaces the older scan. Every other event (push to develop, weekly,
+# manual) gets its own group per run, so nothing is cancelled and no pending run is replaced: every commit that
+# lands on develop is scanned.
 concurrency:
-  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  group: codeql-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -107,6 +108,9 @@ jobs:
     #   uses: actions/setup-example@v1
 
     # Initializes the CodeQL tools for scanning.
+    - name: Say when Rust is not scanned
+      if: ${{ matrix.language == 'rust' && needs.rust-changed.outputs.run == 'false' }}
+      run: echo "Rust is not analysed on this pull request (no Rust file changed). The push to develop and the weekly run scan it."
     - name: Initialize CodeQL
       if: ${{ matrix.language != 'rust' || needs.rust-changed.outputs.run != 'false' }}
       uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4

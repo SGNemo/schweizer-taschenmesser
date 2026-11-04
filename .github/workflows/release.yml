@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -212,6 +212,8 @@ jobs:
           workspaces: web/src-tauri
           shared-key: windows-release
           cache-targets: false
+          # A release (tag / manual run with version) reads the cache but never writes it.
+          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
           cache-directories: C:/t
       - run: npm ci
       # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the

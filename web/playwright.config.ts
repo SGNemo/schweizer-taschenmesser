@@ -13,6 +13,8 @@ const executablePath =
 // Nothing set (local, `npm run e2e:app`): everything, as before.
 const smoke = process.env.E2E_PROFILE === 'smoke';
 const withSeed = !smoke && process.env.E2E_SEED !== '0';
+// Add a spec here when it guards start-up, data safety, navigation or a module's create/edit path; everything
+// else runs on develop, nightly and with the label `full-ci`.
 const SMOKE_FILES = [
   'core',
   'shell',

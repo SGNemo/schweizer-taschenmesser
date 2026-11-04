@@ -126,17 +126,17 @@ licence check, secret scan; `retries: 1` of Playwright (reported, flaky causes a
 
 ## 8. Questions for the maintainer
 
-1. **CodeQL Rust on PRs** (9 to 14 min, the longest check): run it on PRs only when Rust files changed, and always on `develop` push + weekly? It would be a security step that runs less often on PRs, so I do not do it without your yes. Recommendation: yes; the same code is scanned on `develop` anyway. Without it, "all checks green" on a PR stays at ~14 min.
-2. **E2E on PR**: smoke list (desktop only, ~5 min) vs. whole suite on desktop only (~7 min). Recommendation: smoke list + label `full-ci`; full suite on `develop` and nightly.
-3. **Draft PRs** run only static checks and unit tests. OK? Recommendation: yes.
-4. **Weekly warm-up of the `main` cache** (measure 2): scheduled run + release dry run on `main` push. Recommendation: dry run on `main` push only (no schedule), because it fits your release routine (merge to `main`, then release).
+1. (answered 2026-11-04: yes) **CodeQL Rust on PRs** (9 to 14 min, the longest check): run it on PRs only when Rust files changed, and always on `develop` push + weekly? It would be a security step that runs less often on PRs, so I do not do it without your yes. Recommendation: yes; the same code is scanned on `develop` anyway. Without it, "all checks green" on a PR stays at ~14 min.
+2. (answered: smoke list plus label `full-ci`) **E2E on PR**: smoke list (desktop only, ~5 min) vs. whole suite on desktop only (~7 min). Recommendation: smoke list + label `full-ci`; full suite on `develop` and nightly.
+3. (answered: yes) **Draft PRs** run only static checks and unit tests. OK? Recommendation: yes.
+4. (answered: yes, on pushes to `main`) **Weekly warm-up of the `main` cache** (measure 2): scheduled run + release dry run on `main` push. Recommendation: dry run on `main` push only (no schedule), because it fits your release routine (merge to `main`, then release).
 
 ---
 
 # After (measured on PR #439 and manual runs on `ci/speed-round-2`)
 
 Honest limits: the PR changes workflows, so its pre-check turns **every** package on (worst case for a plain PR: 17
-jobs); a typical `web/src/**` PR starts about 11. Runs on the PR are real PR runs; the `develop` push and a real
+jobs); a typical `web/src/**` PR starts 14. Runs on the PR are real PR runs; the `develop` push and a real
 tag release cannot be measured before the merge (details under "Not measured"). Fewer than 5 runs per event
 exist because every run here is a run of this one PR; the tables list each of them.
 
@@ -181,7 +181,7 @@ CI: CodeQL Rust (9 to 14 min) only on PRs that touch Rust.
 | E2E tests listed | 1677 (824 + 824 + 29) | 1677: smoke 171 (PR), full 1648 + seed 29 (`playwright test --list` with the profiles) |
 | E2E executed in the full dispatch run | – | 1542 passed + 105 skipped + 1 flaky = 1648 in six shards; sync job 15 passed, seed project 29 passed |
 | Unit tests | 599 files, 5426 tests (full run, branch head) | three shards: 200 + 200 + 200 files, 1686 + 1899 + 1847 = 5432 tests, all passed (the PR run includes newer `develop` commits than the local run) |
-| Security steps | gitleaks (4 workflows), artifact audit, signing, keystore cleanup, link check, licence check | unchanged and still on every run they ran on before; `git diff origin/develop -- .github/workflows` adds no step removal; CodeQL is the only scan that runs less on PRs (Rust, only when no Rust file changed), by the maintainer's decision |
+| Security steps | gitleaks (4 workflows), artifact audit, signing, keystore cleanup, link check, licence check | unchanged and still on every run they ran on before; `git diff origin/develop -- .github/workflows` adds no step removal; CodeQL is the only scan that differs on PRs: Rust is scanned on a PR only when the PR touches Rust, by the maintainer's decision (every push to `develop`, the weekly run and manual runs scan all three languages) |
 | Artifacts | exe 62 735 872 B, signed | exe 62 735 872 B in cold and warm dry runs (zip hashes differ: signature and zip timestamps; byte-identical exe is not provable from logs, same profile and sources) |
 
 ## Flaky tests seen (not changed, not retried; on `scribble/BOARD.md`)
@@ -204,3 +204,12 @@ CI: CodeQL Rust (9 to 14 min) only on PRs that touch Rust.
 - Larger runners (8 vCPU Linux) for E2E and unit shards: about half the shard time at about twice the price per minute.
 - Merge queue on `develop`: would let the PR run stay smaller; needs a repository setting.
 - `retries: 1` in `playwright.config.ts` hides the flakes above as "flaky"; fixing causes is a separate task.
+
+## Council review notes (round 1, applied)
+
+Concurrency groups now include the event (a nightly dispatch cannot cancel a push run); CodeQL pushes to `develop`
+are never cancelled or replaced; the E2E matrix falls back to the six shards if the pre-check fails; the
+Dev-Preview publish also waits for `docs-pairs`; a release run reads but never writes the Windows cache. Known and
+accepted: the seed step of the full run also builds the first web server (about 20 s); a skipped CodeQL Rust leg
+shows a green check that says so in its log; no required status checks were found in the `develop` ruleset, so
+retiring the old per-package job names blocks nothing.
