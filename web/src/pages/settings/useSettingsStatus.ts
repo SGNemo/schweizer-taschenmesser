@@ -45,8 +45,13 @@ export function useSettingsStatus(): StatusTile[] {
   const [minutes, setMinutes] = useState<string>();
   const [last, setLast] = useState<AutoBackupLast>();
   useEffect(() => {
-    void loadAutoLast().then(setLast);
-    if (vaultOn) void loadAccountsSettings().then((s) => setMinutes(s.autoLockMinutes));
+    // The reads finish later; an unmounted head (or a finished test) must not get the state update.
+    let live = true;
+    void loadAutoLast().then((v) => live && setLast(v));
+    if (vaultOn) void loadAccountsSettings().then((s) => live && setMinutes(s.autoLockMinutes));
+    return () => {
+      live = false;
+    };
   }, [vaultOn]);
 
   const sync = useSyncStatus();
