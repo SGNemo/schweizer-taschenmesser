@@ -249,7 +249,11 @@ async function variantBlock(v) {
   // Lockups (the word setting of this round; a variant may bring its own)
   const word = spec.lockupWord ?? { text: 'Nemo', weight: 600 };
   const lopts = v.lockup ?? spec.lockup ?? { source: 'mark', markHeight: 1.2, gap: 0.42 };
-  const lk = (theme, wd, opts) => lockupSvg(theme === 'dark' ? Ld : L, wd, withLayers(opts, theme === 'dark' ? Ld : L), theme);
+  const lk = (theme, wd, opts) => {
+    const LL = theme === 'dark' ? Ld : L;
+    if (opts.source === 'markOnly') return { svg: opts.form === 'mark' ? LL.markSquare : LL.app, width: 512, height: 512 };
+    return lockupSvg(LL, wd, withLayers(opts, LL), theme);
+  };
   const lkL = lk('light', word, lopts);
   const lkD = lk('dark', word, lopts);
   const word2 = spec.lockupWord2;
@@ -340,8 +344,9 @@ function wordmarkBlock() {
   let s = `<div class="block"><h2>Wordmarks (shown with ${esc(base.label)})</h2><p>${esc(spec.wordmarkIntro ?? '')}</p>`;
   for (const w of spec.wordmarks ?? []) {
     const opts = w.lockup ?? { source: 'none' };
-    const l = lockupSvg(L, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, L), 'light');
-    const d = lockupSvg(Ld, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, Ld), 'dark');
+    const mk = (LL, theme) => (opts.source === 'markOnly' ? { svg: opts.form === 'mark' ? LL.markSquare : LL.app, width: 512, height: 512 } : lockupSvg(LL, w.word, withLayers({ ...opts, art: w.art ?? opts.art }, LL), theme));
+    const l = mk(L, 'light');
+    const d = mk(Ld, 'dark');
     const h = (x, hh) => img(x.svg, (hh * x.width) / x.height, hh);
     const over = (x) => [{ svg: x.svg, x: wideBox.x * 2, y: (wideBox.y + (wideBox.height - lockH) / 2) * 2, h: lockH * 2 }];
     s += `<div class="row" style="align-items:center"><div style="width:300px"><b style="font-size:22px">${w.label}</b><br>${esc(w.title)}</div><div class="panel light">${h(l, 44)}</div><div class="panel dark">${h(d, 44)}</div><div class="panel light">${h(l, 28)}</div><div class="panel light">${h(l, 100)}</div></div>`;

@@ -54,8 +54,44 @@ function edges(d) {
 }
 
 /** The word as one path, letters laid out with advances, kerning and tracking. */
+/** Monoline rounded geometric letters ("Nemo"), drawn as strokes: { strokes, width, capHeight, xHeight }. */
+function roundLetters(C, weight) {
+  const sw = C * (weight === 'bold' ? 0.22 : 0.19); // stroke width
+  const xh = C * 0.78;
+  const r = (xh - sw) / 2; // centreline radius of the round letters
+  const gap = sw * 0.85; // space between letters
+  const strokes = [];
+  let x = sw / 2;
+  // N
+  const nw = C * 0.74;
+  strokes.push(`M${x} ${-sw / 2}L${x} ${-C + sw / 2}L${x + nw} ${-sw / 2}L${x + nw} ${-C + sw / 2}`);
+  x += nw + gap + sw;
+  // e: bar + open circle (opening at the lower right)
+  const cy = -xh / 2;
+  let cx = x + r;
+  const a = (38 * Math.PI) / 180;
+  strokes.push(`M${cx - r} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}A${r} ${r} 0 0 0 ${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`);
+  x = cx + r + gap + sw;
+  // m: stem + two arches (each arch a semicircle on the centreline)
+  const ar = r * 0.62;
+  const top = -xh + sw / 2 + ar;
+  strokes.push(`M${x} ${-sw / 2}L${x} ${-xh + sw / 2 + ar}A${ar} ${ar} 0 0 1 ${x + 2 * ar} ${top}L${x + 2 * ar} ${-sw / 2}M${x + 2 * ar} ${top}A${ar} ${ar} 0 0 1 ${x + 4 * ar} ${top}L${x + 4 * ar} ${-sw / 2}`);
+  x += 4 * ar + gap + sw;
+  // o
+  cx = x + r;
+  strokes.push(`M${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}`);
+  x = cx + r + sw / 2;
+  return { strokes, sw, width: x, capHeight: C, xHeight: xh, left: 0 };
+}
+
 export function wordPath(input = {}) {
   const p = merge(WORD_DEFAULTS, input);
+  if (p.family === 'round') {
+    const C = GLYPHS.families.inter[600].capHeight;
+    const rl = roundLetters(C, p.weight >= 800 ? 'bold' : 'regular');
+    // The strokes are kept as a stroke group (no outline), so `d` is empty and `strokes` carries the letters.
+    return { d: '', strokes: rl.strokes, strokeWidth: rl.sw, width: r1(rl.width), left: 0, capHeight: C, xHeight: rl.xHeight, font: 'Nemo rounded lettering (own)', params: p, letters: null };
+  }
   if (p.family === 'nunito') {
     if (p.text !== 'Nemo') throw new Error('nunito: only "Nemo" is available');
     const k = GLYPHS.families.inter[600].capHeight / NUNITO_CAP; // same cap height as Inter 600
@@ -89,9 +125,9 @@ const svg = (vb, inner, label = 'Nemo') =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.map(r1).join(' ')}" role="img" aria-label="${label}">${inner}</svg>\n`;
 
 export const ART_DEFAULTS = {
-  ink: 'text', // text | accent: colour of the letters
-  bands: null, // { at: [0.25, 0.6], width: 0.1, slant: 0, bend: 0 }: white bands cut through the letters (at = fraction of the word width, width × cap height, slant in degrees)
-  head: null, // { length: 0.9, gap: 0.12, eye: 0.14, eyeAt: [0.42, -0.2], overshoot: 0.06 }: flat clownfish head in front of the first letter (× cap height)
+  ink: 'text', // text | accent | contrast: colour of the letters (contrast = text on the filled accent)
+  bands: null, // { at: [0.25, 0.6], perLetter: false, width: 0.1, slant: 0, bend: 0 }: white bands cut through the letters (at = fraction of the word width, or perLetter: one band through every letter's centre; width × cap height, slant in degrees)
+  head: null, // { length: 0.9, gap: 0.12, eye: 0.14, eyeAt: [0.42, -0.2], overshoot: 0.06, band: 0 }: flat clownfish head in front of the first letter (× cap height); band > 0 cuts a band of that width through the head (at bandAt, 0 = nose .. 1 = back)
   tail: null, // { style: 'fan' | 'fork', length: 0.55, spread: 0.62, gap: 0.12, bulge: 0.12 }: caudal fin after the last letter
   ofish: null, // { layers, scale: 1.3, dy: 0 }: the mark replaces the last letter "o" (word 'Nem' + mark)
   badge: null, // { height: 1.9, tail: 0.5, spread: 0.6, eye: 0.14 }: the word knocked out of a fish silhouette (× cap height)
@@ -106,17 +142,18 @@ export function wordArt(word = {}, art = {}, theme = 'light', uid = 'wa') {
   const w = wordPath(a.ofish ? { ...word, text: (word.text ?? 'Nemo').replace(/o$/, '') } : word);
   const C = w.capHeight;
   const accent = COLORS.accent[theme];
-  const fill = a.ink === 'accent' ? accent : COLORS.text[theme];
+  const fill = a.ink === 'accent' ? accent : a.ink === 'contrast' ? COLORS.accentContrast[theme] : COLORS.text[theme];
   const top = -C;
   const bot = 0;
   let box = { x: w.left, y: top, w: w.width, h: C };
   const shapes = []; // accent shapes drawn under the mask
   let defs = '';
   const holes = [];
+  const softBands = []; // bands painted in the soft accent on top of the letters (clipped to them)
 
   // Head: a half egg, flat side towards the first letter, nose to the left; eye cut out.
   if (a.head) {
-    const h = merge({ length: 0.9, gap: 0.12, eye: 0.14, eyeAt: [0.42, -0.22], overshoot: 0.06, round: 0.55 }, a.head);
+    const h = merge({ length: 0.9, gap: 0.12, eye: 0.14, eyeAt: [0.42, -0.22], overshoot: 0.06, round: 0.55, band: 0, bandAt: 0.68, bandBend: -0.06 }, a.head);
     const hx = w.left - h.gap * C; // flat back edge
     const nose = hx - h.length * C;
     const ov = h.overshoot * C;
@@ -128,6 +165,10 @@ export function wordArt(word = {}, art = {}, theme = 'light', uid = 'wa') {
     const ex = nose + (hx - nose) * h.eyeAt[0];
     const ey = mid + h.eyeAt[1] * C;
     holes.push(`<circle cx="${r1(ex)}" cy="${r1(ey)}" r="${r1(h.eye * C)}" fill="#000"/>`);
+    if (h.band > 0) {
+      const bx = nose + (hx - nose) * h.bandAt;
+      holes.push(`<path d="M${r1(bx)} ${r1(top - ov - 20)}Q${r1(bx + 2 * h.bandBend * C)} ${r1(mid)} ${r1(bx)} ${r1(bot + ov + 20)}" fill="none" stroke="#000" stroke-width="${r1(h.band * C)}"/>`);
+    }
     box = { x: nose, y: top - ov, w: w.left + w.width - nose, h: C + 2 * ov };
   }
   // Tail: fan or fork after the last letter.
@@ -150,14 +191,16 @@ export function wordArt(word = {}, art = {}, theme = 'light', uid = 'wa') {
   }
   // Bands cut through everything accent-coloured.
   if (a.bands) {
-    const b = merge({ at: [0.25, 0.6], width: 0.1, slant: 0, bend: 0 }, a.bands);
+    const b = merge({ at: [0.25, 0.6], perLetter: false, width: 0.1, slant: 0, bend: 0, letterAt: 0.5 }, a.bands);
     const tan = Math.tan((b.slant * Math.PI) / 180);
     const reach = C * 0.9;
     const mid = -C / 2;
-    for (const at of b.at) {
-      const x = w.left + w.width * at;
+    const xs = b.perLetter && w.letters ? w.letters.map((l) => l.x0 + (l.x1 - l.x0) * (typeof b.letterAt === 'number' ? b.letterAt : (b.letterAt[l.ch] ?? 0.5))) : b.at.map((at) => w.left + w.width * at);
+    for (const x of xs) {
       const d = b.bend ? `M${x + reach * tan} ${mid - reach}Q${x + 2 * b.bend * C} ${mid} ${x - reach * tan} ${mid + reach}` : `M${x + reach * tan} ${mid - reach}L${x - reach * tan} ${mid + reach}`;
-      holes.push(`<path d="${mapPath(d, (px, py) => [px, py])}" fill="none" stroke="#000" stroke-width="${r1(b.width * C)}"/>`);
+      const path = `<path d="${mapPath(d, (px, py) => [px, py])}" fill="none" stroke="${b.soft ? COLORS.accentSoft[theme] : '#000'}" stroke-width="${r1(b.width * C)}"/>`;
+      if (b.soft) softBands.push(path);
+      else holes.push(path);
     }
   }
   // Badge: an accent fish silhouette around the word; the word (and the eye) are knocked out.
@@ -192,8 +235,12 @@ export function wordArt(word = {}, art = {}, theme = 'light', uid = 'wa') {
   const masked = holes.length ? ` mask="url(#${maskId})"` : '';
   body += `<g${masked}>`;
   if (shapes.length) body += `<g fill="${accent}">${shapes.map((d) => `<path d="${d}"/>`).join('')}</g>`;
-  if (!a.badge) body += `<path fill="${fill}" d="${w.d}"/>`;
+  if (!a.badge) body += w.strokes ? `<g fill="none" stroke="${fill}" stroke-width="${r1(w.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round">${w.strokes.map((d) => `<path d="${d}"/>`).join('')}</g>` : `<path fill="${fill}" d="${w.d}"/>`;
   body += `</g>`;
+  if (softBands.length) {
+    defs += `<clipPath id="${uid}-letters">${shapes.map((d) => `<path d="${d}"/>`).join('')}<path d="${w.d}"/></clipPath>`;
+    body += `<g clip-path="url(#${uid}-letters)">${softBands.join('')}</g>`;
+  }
   // o-fish: the mark where the "o" would be.
   if (a.ofish) {
     const o = merge({ scale: 1.25, dy: 0, gap: 0.08 }, a.ofish);
@@ -227,6 +274,7 @@ export const LOCKUP_DEFAULTS = {
   align: 'cap', // cap | x: the mark is centred on that box
   dy: 0, // × cap height, nudge of the mark (+ = down)
   art: null, // word art (see ART_DEFAULTS)
+  pill: null, // { padX: 0.4, padY: 0.3, radius: 0.5 }: accent pill behind mark and word (both in the contrast colour), × cap height
 };
 
 /**
@@ -235,7 +283,8 @@ export const LOCKUP_DEFAULTS = {
  */
 export function lockupSvg(layers, word = {}, opts = {}, theme = 'light') {
   const o = merge(LOCKUP_DEFAULTS, opts);
-  const a = wordArt(word, o.art ?? {}, theme, `l-${theme}`);
+  const art = o.pill ? { ...(o.art ?? {}), ink: 'contrast' } : o.art ?? {};
+  const a = wordArt(word, art, theme, `l-${theme}`);
   const w = a.word;
   const C = w.capHeight;
   const pad = 12;
@@ -245,7 +294,7 @@ export function lockupSvg(layers, word = {}, opts = {}, theme = 'light') {
   let top = a.box.y;
   let bottom = a.box.y + a.box.h;
   if (o.source !== 'none') {
-    const src = o.source === 'app' ? layers.app : layers.mark;
+    const src = o.pill ? layers.markIn(COLORS.accentContrast[theme]) : o.source === 'app' ? layers.app : layers.mark;
     const vb = src.match(/viewBox="([^"]+)"/)[1].split(' ').map(Number);
     const inner = src.replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
     const box = o.align === 'x' ? w.xHeight : C;
@@ -258,8 +307,21 @@ export function lockupSvg(layers, word = {}, opts = {}, theme = 'light') {
     bottom = Math.max(bottom, my + mh);
   }
   const dx = mw + gap - a.box.x; // word art starts right after the mark
-  const body = `${markSvg}<g transform="translate(${r1(dx)} 0)"><defs>${a.defs}</defs>${a.body}</g>`;
-  const width = mw + gap + a.box.w + 2 * pad;
-  const height = bottom - top + 2 * pad;
-  return { svg: svg([-pad, top - pad, width, height], body), width, height, markWidth: mw, word: w };
+  let body = `${markSvg}<g transform="translate(${r1(dx)} 0)"><defs>${a.defs}</defs>${a.body}</g>`;
+  let width = mw + gap + a.box.w + 2 * pad;
+  let height = bottom - top + 2 * pad;
+  let x0 = -pad;
+  let y0 = top - pad;
+  if (o.pill) {
+    const p = merge({ padX: 0.4, padY: 0.3, radius: 0.5 }, o.pill);
+    const px = p.padX * C;
+    const py = p.padY * C;
+    const rx = p.radius * (bottom - top + 2 * py);
+    body = `<rect x="${r1(-px)}" y="${r1(top - py)}" width="${r1(mw + gap + a.box.w + 2 * px)}" height="${r1(bottom - top + 2 * py)}" rx="${r1(rx)}" fill="${COLORS.accent[theme]}"/>` + body;
+    x0 = -px - 4;
+    y0 = top - py - 4;
+    width = mw + gap + a.box.w + 2 * px + 8;
+    height = bottom - top + 2 * py + 8;
+  }
+  return { svg: svg([x0, y0, width, height], body), width, height, markWidth: mw, word: w };
 }

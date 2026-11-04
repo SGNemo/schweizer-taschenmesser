@@ -15,6 +15,7 @@ export const COLORS = {
   // --accent (light / dark), --accent-contrast, --text, surfaces: web/src/ui/tokens.css
   accent: { light: '#b5430c', dark: '#ff9a57' },
   accentContrast: { light: '#ffffff', dark: '#1b0f06' },
+  accentSoft: { light: '#fbe9de', dark: '#2e241c' },
   text: { light: '#171f24', dark: '#eceff1' },
   text3: { light: '#5f6c75', dark: '#88939b' },
   surface: { light: '#ffffff', dark: '#171c20' },
@@ -105,9 +106,11 @@ function fishShapes(f) {
 function fishStripes(f, cy = 256) {
   const { nose: xn, joint: xp, height: h } = f.body;
   const reach = h + 60;
-  return f.stripes.at.map((a) => {
+  return f.stripes.at.map((a, i) => {
     const x = xp + (xn - xp) * a;
-    return { d: fmt(`M${x} ${cy - reach}Q${x + 2 * f.stripes.bend} ${cy} ${x} ${cy + reach}`), w: f.stripes.width };
+    const w = Array.isArray(f.stripes.width) ? (f.stripes.width[i] ?? f.stripes.width.at(-1)) : f.stripes.width;
+    const bend = Array.isArray(f.stripes.bend) ? (f.stripes.bend[i] ?? f.stripes.bend.at(-1)) : f.stripes.bend;
+    return { d: fmt(`M${x} ${cy - reach}Q${x + 2 * bend} ${cy} ${x} ${cy + reach}`), w };
   });
 }
 function fishEye(f, cy = 256) {
