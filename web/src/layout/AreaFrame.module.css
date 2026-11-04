@@ -216,7 +216,7 @@
   font-size: var(--text-xl);
 }
 
-/* Phone: label and actions share one line, the title follows; hero 9.5 rem, compact 5 rem. Scrolled, the head scrolls away
+/* Phone: label and actions share one line, the title follows; hero 8.5 rem, compact 5 rem. Scrolled, the head scrolls away
    like content (no height change, so the page never jumps) and a one-line bar fades in at the top (core/shell/heroCollapse.ts). */
 @media (max-width: 899px) {
   .inner {
@@ -226,7 +226,7 @@
       'title title'
       'figure figure'
       'extra extra';
-    min-height: var(--head-min-h-phone, 9.5rem);
+    min-height: var(--head-min-h-phone, 8.5rem);
     padding: var(--space-3) var(--frame-bleed-x, var(--space-4)) var(--space-4);
   }
   .band[data-size='compact'] {

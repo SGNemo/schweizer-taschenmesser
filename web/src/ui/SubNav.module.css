@@ -62,4 +62,11 @@
   .pill {
     flex: none;
   }
+  /* Text only on a phone: the pill's icon repeats the name and adds stimulus (focus guidelines, stimulus budget). */
+  .pill svg {
+    display: none;
+  }
+  .subnav {
+    margin-bottom: var(--space-2);
+  }
 }

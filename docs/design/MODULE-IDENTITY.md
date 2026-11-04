@@ -26,7 +26,7 @@ Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) 
 
 ## Head variants (manifest `identity.head`)
 
-Nine silhouettes, two heights (tall 12.5 rem / phone 9.5 rem; compact 6 / 5 rem). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %); text on it is always `--text`.
+Nine silhouettes, two heights (tall 12.5 rem / phone 8.5 rem; compact 6 / 5 rem). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %); text on it is always `--text`.
 
 | Variant | Height | Content | Modules |
 | --- | --- | --- | --- |

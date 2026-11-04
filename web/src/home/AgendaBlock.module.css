@@ -23,6 +23,11 @@
   background: var(--surface);
   box-shadow: var(--shadow-1);
 }
+@media (max-width: 899px) {
+  .day {
+    padding: var(--space-2) var(--space-3);
+  }
+}
 .group {
   display: flex;
   flex-wrap: wrap;

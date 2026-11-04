@@ -16,7 +16,8 @@
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  /* Two cards per row on a phone (11 rem each), five or six on a desktop. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
   gap: var(--space-3);
 }
 .item {
