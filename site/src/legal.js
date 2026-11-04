@@ -11,6 +11,10 @@
  * A production build on Cloudflare Pages (branch `develop` or `main`, or the one named in
  * `PRODUCTION_BRANCH`) fails when one of the three is missing, so the site can never go live with an empty imprint. Local, CI and preview builds
  * show a visible note instead and keep working.
+ *
+ * Cloudflare's own "Production" is `develop`; a push to `main` is built in the *Preview* environment but
+ * counts as production here. So the three variables belong into Production AND Preview, or Preview gets
+ * `PRODUCTION_BRANCH=develop` instead (then `main` previews keep working without the address).
  */
 const REQUIRED = ['IMPRESSUM_NAME', 'IMPRESSUM_STREET', 'IMPRESSUM_POSTCODE_CITY'];
 
@@ -20,8 +24,10 @@ export function provider(env = process.env) {
   const branches = env.PRODUCTION_BRANCH ? [env.PRODUCTION_BRANCH] : ['develop', 'main'];
   const production = env.CF_PAGES === '1' && branches.includes(env.CF_PAGES_BRANCH);
   if (missing.length > 0 && production) {
+    // Cloudflare builds `main` in the Preview environment and `develop` in Production: the variables
+    // must exist in the environment that builds the branch named here.
     throw new Error(
-      `Imprint details missing in the production build: set ${missing.join(', ')} in the Cloudflare Pages environment variables (see site/README.md).`,
+      `Imprint details missing in the build of branch "${env.CF_PAGES_BRANCH}": set ${missing.join(', ')} in the Cloudflare Pages environment variables of the environment that builds this branch (Production for the production branch, otherwise Preview; see site/README.md).`,
     );
   }
   const value = (key) => env[key]?.trim() || '(nicht gesetzt / not set)';
