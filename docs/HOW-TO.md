@@ -13,7 +13,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | E2E seed project (Dev-Preview flavour) + sync E2E | sync if `web/` or `server/` changed | yes | no | yes | yes | – |
 | server, MCP, extension, supporter, webhook, native shell, local model | only for the package that changed | yes | no | yes | yes | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests, unknown paths) | turn every package on | – | no | – | – | – |
-| CodeQL (3 languages) | always (superseded scans cancelled) | always | always | always | weekly | – |
+| CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust (superseded scans cancelled) | same | same | all three languages | weekly (all three) | – |
 | Dev-Preview (signed exe + APK) | never | never | never | build next to the tests, **published only when everything is green** | – | – |
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on `main`) | – | tag / manual run: build, sign, audit, publish |
 
