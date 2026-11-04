@@ -263,7 +263,7 @@ export default function MailPage() {
     />
   ) : null;
 
-  // Phone and narrow windows: the mail replaces the list. From 1200 px both stay (see below).
+  // Phone and narrow windows: the mail replaces the list. From 58 rem of page both stay (see below).
   if (threadId && !wide)
     return (
       <>

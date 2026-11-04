@@ -5,21 +5,12 @@ import type { TorrentInfo } from '@/core/platform/torrent';
 import { useSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import {
-  Button,
-  Dialog,
-  EmptyState,
-  FormActions,
-  Icon,
-  IconButton,
-  ItemList,
-  ItemRow,
-  Progress,
-} from '@/ui';
+import { Button, Dialog, FormActions, Icon, IconButton, ItemList, ItemRow, Progress } from '@/ui';
 import { formatBytes, percent } from '../lib/format';
 import { settings, type DownloadsPrefs } from '../settings';
 import { resetTorrents, useTorrents, watchTorrents } from '../torrentStore';
 import { AddTorrentDialog } from './AddTorrentDialog';
+import { DownloadsEmpty } from '../components/DownloadsEmpty';
 import styles from './DownloadsPage.module.css';
 import { TorrentIp } from './TorrentIp';
 
@@ -125,7 +116,7 @@ export function TorrentSection({
     return (
       <section className={styles.torrent}>
         <h2>{t.downloads.torrent.title}</h2>
-        <EmptyState title={t.downloads.torrent.off.title}>
+        <DownloadsEmpty title={t.downloads.torrent.off.title}>
           {t.downloads.torrent.off.body}
           {incoming ? <p role="status">{t.downloads.torrent.launch.pendingOff}</p> : null}
           <div className={styles.bar}>
@@ -133,7 +124,7 @@ export function TorrentSection({
               {t.downloads.torrent.off.turnOn}
             </Button>
           </div>
-        </EmptyState>
+        </DownloadsEmpty>
       </section>
     );
   }
@@ -169,9 +160,9 @@ export function TorrentSection({
       ) : null}
 
       {status === 'ready' && torrents && torrents.length === 0 ? (
-        <EmptyState title={t.downloads.torrent.empty.title}>
+        <DownloadsEmpty title={t.downloads.torrent.empty.title}>
           {t.downloads.torrent.empty.body}
-        </EmptyState>
+        </DownloadsEmpty>
       ) : null}
       <ItemList label={t.downloads.torrent.title}>
         {(torrents ?? []).map((x) => (
