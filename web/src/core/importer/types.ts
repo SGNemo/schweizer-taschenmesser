@@ -102,6 +102,8 @@ export type ImportInput =
       text: string;
       fileName: string;
       files?: { name: string; text: string }[];
+      /** Files of an unpacked archive that are not text (images, PDFs): not stored, only reported. */
+      binary?: number;
       extras?: Record<string, string>;
     }
   | { kind: 'template'; ids: string[] }
@@ -116,6 +118,10 @@ export interface ImportContext {
   options: Record<string, string>;
   /** Known before parsing so a candidate can reference another candidate by id. */
   batchId: string;
+  /** Aborted when the user cancels; heavy steps stop and nothing has been written yet. */
+  signal?: AbortSignal;
+  /** Reports the progress of a long parse (shown in the wizard). */
+  progress?: (done: number, total: number) => void;
 }
 
 export interface ImportCandidate {
@@ -192,6 +198,13 @@ export interface ImportParseResult {
   notes: string[];
   /** An extra question or panel of the importer; see `ImportSlot`. */
   slot?: ImportSlot;
+  /** What the parser left out, by reason (counts only); shown in the report after the import. */
+  skipped?: Partial<
+    Record<
+      'trashed' | 'empty' | 'unreadable' | 'attachment' | 'unsupported' | 'tooMany' | 'done',
+      number
+    >
+  >;
 }
 
 export interface ImporterRuntime {
@@ -254,6 +267,8 @@ export interface ImportBatch {
   groupId?: string;
   /** Changes skipped on commit because the record had been edited meanwhile. */
   conflicts?: number;
+  /** Counts for the report after the import: no names, no content. */
+  report?: ImportReportCounts;
   committedAt?: number;
   /* ---- API batches ---- */
   tokenId?: string;
@@ -265,4 +280,32 @@ export interface ImportBatch {
   rows?: PreviewRow[];
   /** Per-entry result as reported to the API client (no stored data beyond what it sent). */
   result?: unknown;
+}
+
+/** Stored with the batch: what happened to the entries of the source. */
+export interface ImportReportCounts {
+  /** Entries found in the source. */
+  found: number;
+  /** Written as records. */
+  imported: number;
+  /** Already stored (or repeated in the file) and not ticked. */
+  duplicates: number;
+  /** Rejected by the collection's schema. */
+  invalid: number;
+  /** Unticked by the user. */
+  deselected: number;
+  /** Left out by the parser, by reason (`SkipReason`). */
+  skipped: Record<string, number>;
+}
+
+/** Files that are already chosen and read (the "import from another app" flow): the wizard starts at the preview. */
+export interface ImportPreset {
+  importerId: string;
+  files: { name: string; text: string }[];
+  /** Non-text files of an unpacked archive, only reported. */
+  binary?: number;
+  /** Shared by the parts of one multi-part import. */
+  groupId?: string;
+  /** Shown as the source of the batch ("Takeout.zip"). */
+  source?: string;
 }
