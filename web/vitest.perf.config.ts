@@ -4,5 +4,5 @@ import base from './vitest.config';
 
 export default defineConfig({
   ...base,
-  test: { ...base.test, include: ['scripts/perf/**/*.perf.ts'], testTimeout: 600_000 },
+  test: { ...base.test, include: ['src/perf/**/*.perf.ts'], testTimeout: 600_000 },
 });

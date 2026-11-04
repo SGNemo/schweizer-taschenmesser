@@ -124,7 +124,7 @@ describe('data micro-benchmarks', () => {
         done: boolean;
       }>;
       const items = Array.from({ length: n }, (_, i) => ({
-        data: { title: `Eintrag ${i}`, done: i % 2 === 0 },
+        data: { title: `Entry ${i}`, done: i % 2 === 0 },
       }));
       const w0 = performance.now();
       await repoA.createMany(items);
