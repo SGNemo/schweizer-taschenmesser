@@ -20,6 +20,11 @@ on:
       target:
         type: string
         default: dev-preview
+      # ci.yml calls this twice for one commit: `build` next to the tests (gitleaks, signed exe + APK as
+      # artifacts) and, after every check is green, `publish` (the release step only). `all` = one run.
+      stage:
+        type: string
+        default: all
   workflow_dispatch:
     inputs:
       target:
@@ -43,6 +48,7 @@ env:
 jobs:
   secret-scan:
     name: Secret scan (gitleaks)
+    if: ${{ inputs.stage != 'publish' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -64,6 +70,9 @@ jobs:
 
   prepare:
     needs: secret-scan
+    # Also runs in the publish stage: its outputs are cheap and deterministic for one commit, and in the
+    # publish stage the secret scan was done by the build stage of the same run.
+    if: ${{ !cancelled() && (needs.secret-scan.result == 'success' || needs.secret-scan.result == 'skipped') }}
     name: Version, notes, signing check
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -160,6 +169,7 @@ jobs:
           node -e "console.log(Buffer.from(process.argv[1],'base64').toString().split('\n')[0])" "$DEV"
 
       - name: Release notes (open change notes in .changes/, nothing is deleted)
+        if: ${{ inputs.stage != 'publish' }}
         working-directory: web
         env:
           FULL: ${{ steps.meta.outputs.full }}
@@ -174,6 +184,7 @@ jobs:
           } > "$RUNNER_TEMP/DEV_NOTES.md"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ inputs.stage != 'publish' }} # the build stage of this run already uploaded them
         with:
           name: dev-notes
           path: ${{ runner.temp }}/DEV_NOTES.md
@@ -182,6 +193,7 @@ jobs:
   windows:
     name: Windows (portable, dev)
     needs: prepare
+    if: ${{ inputs.stage != 'publish' }}
     runs-on: windows-latest
     timeout-minutes: 45
     defaults:
@@ -268,6 +280,7 @@ jobs:
   android:
     name: Android APK (dev)
     needs: prepare
+    if: ${{ inputs.stage != 'publish' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     defaults:
@@ -382,7 +395,7 @@ jobs:
   publish:
     name: Publish rolling pre-release
     needs: [prepare, windows, android]
-    if: needs.prepare.outputs.publish == 'true'
+    if: ${{ !cancelled() && inputs.stage != 'build' && needs.prepare.result == 'success' && needs.prepare.outputs.publish == 'true' && contains(fromJSON('["success","skipped"]'), needs.windows.result) && contains(fromJSON('["success","skipped"]'), needs.android.result) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
