@@ -19,6 +19,7 @@ import {
   SplitView,
   TextField,
   useSplitView,
+  FolderTabs,
 } from '@/ui';
 import { BridgeDialog, PairingDialog } from '../components/BridgeDialog';
 import { AuditDialog } from '../components/AuditDialog';
@@ -26,7 +27,6 @@ import { EmergencySheet } from '../components/EmergencySheet';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { MonogramTile } from '../components/MonogramTile';
 import { AccountsEmpty } from '../components/AccountsEmpty';
-import { GroupTabs } from '../components/GroupTabs';
 import { VaultDoor } from '../components/VaultDoor';
 import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
@@ -183,11 +183,11 @@ function Unlocked() {
         ) : null}
       </div>
       {tags.length > 0 || hasFavorites ? (
-        <GroupTabs
+        <FolderTabs
           label={t.accounts.groups.label}
           value={group}
           onChange={setGroup}
-          items={[
+          tabs={[
             { id: 'all', label: t.accounts.groups.all },
             ...(hasFavorites ? [{ id: '*fav', label: t.accounts.groups.favorites }] : []),
             ...tags.map((tag) => ({ id: tag, label: tag })),
