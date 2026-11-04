@@ -6,7 +6,7 @@ const isPhone = (info: { project: { name: string } }) => info.project.name === '
 test.describe('libraries in identity v3', () => {
   test('the module library has a head with figures, a toolbar and cards in the modules colours', async ({
     page,
-  }) => {
+  }, info) => {
     await ready(page, '/library');
     await expect(page.locator('main h1')).toHaveCount(1);
     await expect(page.locator('main h1')).toHaveText('Modul-Bibliothek');
@@ -14,7 +14,10 @@ test.describe('libraries in identity v3', () => {
     await expect(page.getByTestId('library-figures')).toContainText('verfügbar');
     const card = page.getByTestId('module-todos');
     await expect(card).toHaveAttribute('data-hue', /.+/);
-    await expect(card.getByTestId('widget-miniature')).toBeVisible();
+    // the drawn sketch sits on every card; on the phone it is hidden (the detail page keeps it large)
+    await expect(card.getByTestId('widget-miniature')).toBeAttached();
+    if (!isPhone(info)) await expect(card.getByTestId('widget-miniature')).toBeVisible();
+    else await expect(card.getByTestId('widget-miniature')).toBeHidden();
     // section count: "n von m aktiv" under the area name
     await expect(page.getByRole('heading', { name: /^Planen/ })).toContainText('aktiv');
   });
