@@ -66,4 +66,15 @@ export const vault: Strings['vault'] = {
   empty: 'Aún no hay documentos.',
   emptyFiltered: 'No se encontró nada.',
   widgetEmpty: 'No hay plazos a la vista.',
+  figureLabel: 'Archivo',
+  figureUnit: 'documentos',
+  figureDetail: (expired: number, due: number) =>
+    [
+      expired > 0 ? `${expired} caducado${expired === 1 ? '' : 's'}` : '',
+      due > 0 ? `${due} con plazo a la vista` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  widgetSummary: (n: number) =>
+    n === 1 ? '1 documento necesita atención' : `${n} documentos necesitan atención`,
 };

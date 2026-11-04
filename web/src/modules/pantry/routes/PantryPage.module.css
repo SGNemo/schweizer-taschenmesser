@@ -17,3 +17,62 @@
 .dot[data-state='expired'] {
   background: var(--danger);
 }
+
+/* A pantry item is a label: hairline all around, a punched hole at the top, the amount in mono. Not a to-do row. */
+.label.label {
+  position: relative;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: none;
+}
+.label.label::before {
+  content: '';
+  position: absolute;
+  top: 0.375rem;
+  left: 50%;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-left: -0.3125rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+}
+.label.label:hover,
+.label.label:focus-within {
+  background: var(--surface-2);
+}
+.amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.endCol {
+  display: flex;
+  align-items: center;
+}
+/* Count, state and badges wrap as one line of small print under the name. */
+.meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+}
+/* One compact pill: minus, plus; each button keeps its 44 px hit area. */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+}
+
+.controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Tighter than the default tile: the hole takes the top edge, the rest is small print. */
+.label.label.label {
+  padding: var(--space-4) var(--space-3) var(--space-2);
+}
