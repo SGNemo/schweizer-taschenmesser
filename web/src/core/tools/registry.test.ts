@@ -1,5 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { MODULE_HUES } from '@/core/modules/types';
+import {
+  TOOL_CATEGORIES as SCRIPT_CATEGORIES,
+  TOOL_SIGNATURES as SCRIPT_SIGNATURES,
+} from '../../../scripts/lib/checkTools';
+import { orderForPanel } from '@/layout/tools/panelLogic';
 import { allTools } from './registry';
+import { toolKeywords } from './keywords';
+import { TOOL_CATEGORIES, TOOL_SIGNATURES } from './types';
 import {
   activeTools,
   DEFAULT_TOOLS,
@@ -104,5 +113,54 @@ describe('tool id migration', () => {
       calc: false,
     });
     expect(migrateToolIds(settings({ hash: false })).enabled).toEqual({ dev: false });
+  });
+});
+
+describe('tool identity v3', () => {
+  it('the check script knows the same lists as the contract', () => {
+    expect(SCRIPT_CATEGORIES).toEqual([...TOOL_CATEGORIES]);
+    expect(SCRIPT_SIGNATURES).toEqual([...TOOL_SIGNATURES]);
+  });
+
+  const tokens = readFileSync('src/ui/tokens.css', 'utf8');
+
+  it('every tool has a category, a palette hue, a signature and keywords', () => {
+    for (const tool of allTools) {
+      const { hue, hue2, signature } = tool.identity;
+      expect(TOOL_CATEGORIES, tool.id).toContain(tool.category);
+      expect(MODULE_HUES, tool.id).toContain(hue);
+      if (hue2) {
+        expect(MODULE_HUES, tool.id).toContain(hue2);
+        expect(hue2, tool.id).not.toBe(hue);
+      }
+      expect(TOOL_SIGNATURES, tool.id).toContain(signature);
+      expect(tool.keywords.length, tool.id).toBeGreaterThan(1);
+    }
+  });
+
+  it('every hue a tool uses is a token in both themes (contrast is pinned by tokens.test.ts)', () => {
+    const used = new Set(
+      allTools.flatMap((x) => [x.identity.hue, x.identity.hue2 ?? x.identity.hue]),
+    );
+    for (const hue of used) {
+      const defs = tokens.match(new RegExp(`--mod-${hue}:`, 'g')) ?? [];
+      expect(defs.length, `--mod-${hue} defined for light and dark`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('only code-like tools use the mono type, and neighbours differ in hue', () => {
+    for (const tool of allTools.filter((x) => x.identity.type === 'mono'))
+      expect(tool.category, tool.id).toBe('entwickler');
+    for (let i = 1; i < allTools.length; i++)
+      expect(allTools[i]!.identity.hue, allTools[i]!.id).not.toBe(allTools[i - 1]!.identity.hue);
+    // … and in the order the panel shows them (by category).
+    const shown = orderForPanel(allTools);
+    for (let i = 1; i < shown.length; i++)
+      expect(shown[i]!.identity.hue, shown[i]!.id).not.toBe(shown[i - 1]!.identity.hue);
+  });
+
+  it('splits the comma separated keyword strings', () => {
+    expect(toolKeywords(' a, b ,,c ')).toEqual(['a', 'b', 'c']);
+    expect(toolKeywords('')).toEqual([]);
   });
 });

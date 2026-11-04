@@ -4,6 +4,7 @@ import { HANDOFF_PARAM, offerVaultEntry, type VaultEntryHandoff } from '@/core/h
 import { useModuleStates } from '@/core/modules/activation';
 import { formatNumber } from '@/core/i18n/format';
 import { evaluate, CalcError } from '@/core/calc/expr';
+import { isToolWindow } from '@/core/tools/window';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 
@@ -64,7 +65,7 @@ export async function copyWithToast(text: string): Promise<void> {
 export function useSaveAsNote(): ((title: string, text: string) => void) | undefined {
   const navigate = useNavigate();
   const states = useModuleStates();
-  if (!states?.['notes']) return undefined;
+  if (!states?.['notes'] || isToolWindow()) return undefined;
   return (title, text) => {
     useUiStore.getState().closeTools();
     void navigate(
@@ -82,7 +83,7 @@ export function useSaveAsNote(): ((title: string, text: string) => void) | undef
 export function useSaveInVault(): ((entry: VaultEntryHandoff) => void) | undefined {
   const navigate = useNavigate();
   const states = useModuleStates();
-  if (!states?.['accounts']) return undefined;
+  if (!states?.['accounts'] || isToolWindow()) return undefined;
   return (entry) => {
     offerVaultEntry(entry);
     useUiStore.getState().closeTools();

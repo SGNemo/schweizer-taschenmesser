@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { moduleSwitch } from './helpers';
+import { moduleSwitch, pickTool } from './helpers';
 
 const MASTER = 'Mein-Master-Passwort-1';
 const SECRET_TITLE = 'Beispiel-Bank-Konto';
@@ -236,9 +236,7 @@ test('the anonymous persona is handed to the vault form: filled in, saved encryp
   const card = page.getByTestId('tool-persona');
   await card.getByLabel('Anonyme Persona einschalten').click();
   await expect(card.getByLabel('Anonyme Persona einschalten')).toBeChecked();
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  const sheet = page.getByRole('dialog');
-  await sheet.getByRole('button', { name: 'Anonyme Persona', exact: true }).click();
+  const sheet = await pickTool(page, 'Anonyme Persona');
   const fields = sheet.getByTestId('persona-fields');
   await expect(fields).toContainText('Passwort');
   await sheet.getByRole('button', { name: 'Im Tresor speichern' }).click();

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
 import { undoable } from '@/core/undo';
@@ -24,7 +24,8 @@ import {
   GroupedList,
   ItemList,
   ItemRow,
-  PageTitle,
+  PageHeader,
+  Progress,
   RowMenu,
   TextField,
   type RowMenuItem,
@@ -39,6 +40,7 @@ import { TaskEditor } from '../components/TaskEditor';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { dueTone, groupTasks, isActionable } from '../logic';
 import { replan, type PickTask } from '../next';
+import { beginFocus, focusPath } from '../focus';
 import { postponePatch } from '../postpone';
 import { seriesKey, streaksOf, type Streak } from '../progress';
 import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
@@ -199,7 +201,8 @@ function TaskRow({
           {person ? <span>{t.assign.forName(person)}</span> : null}
           {task.priority >= 2 ? (
             <span className={task.priority === 3 ? styles.prio3 : styles.prio2}>
-              ● {t.todos.prio[task.priority]}
+              {task.priority === 3 ? <span aria-hidden="true">▲</span> : null}{' '}
+              {t.todos.prio[task.priority]}
             </span>
           ) : null}
           {task.dueDate ? (
@@ -241,7 +244,16 @@ function TaskRow({
             </span>
           ) : null}
           {allSubs.length > 0 ? (
-            <span>{t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}</span>
+            <span className={styles.subProgress}>
+              <span className={styles.subTrack}>
+                <Progress
+                  value={allSubs.filter((x) => x.done).length}
+                  max={allSubs.length}
+                  label={task.title}
+                />
+              </span>
+              {t.todos.progress(allSubs.filter((x) => x.done).length, allSubs.length)}
+            </span>
           ) : null}
         </span>
       }
@@ -292,6 +304,7 @@ export default function TodosPage() {
   const [prefs] = useSettings('module.todos', settings.schema, settings.defaults);
   const [focus] = useFocusSettings();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
   const [title, setTitle] = useState(() => params.get('title') ?? '');
   const [editing, setEditing] = useState<StoredTask | null>(null);
@@ -522,6 +535,14 @@ export default function TodosPage() {
     });
   }
 
+  async function startFocus(id: string) {
+    const task = tasks?.find((x) => x.id === id);
+    if (!task) return;
+    // A round that runs for another task is not replaced here: the focus screen asks first.
+    await beginFocus(task, focus.focusMinutes);
+    void navigate(focusPath(id));
+  }
+
   function replanNow() {
     const moves = replan((tasks ?? []) as unknown as PickTask[], day, focus.planLimit);
     void undoableWithToast(t.focus.waiting.replanned, t.focus.waiting.replanned, async () => {
@@ -588,15 +609,31 @@ export default function TodosPage() {
 
   return (
     <>
-      <div className={styles.header}>
-        <PageTitle title={t.todos.title} spacer />
+      <PageHeader
+        title={t.todos.title}
+        views={
+          <div className={styles.viewBar} role="group" aria-label={t.todos.views.label}>
+            {PAGE_VIEWS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={styles.tagChip}
+                aria-pressed={pageView === v}
+                onClick={() => setParam('view', v === 'list' ? null : v)}
+              >
+                {v === 'list' ? t.todos.views.all : t.todos.views[v]}
+              </button>
+            ))}
+          </div>
+        }
+      >
         <RowMenu
           label={t.todos.moreOptions}
           open={menuOpen}
           onOpenChange={setMenuOpen}
           items={pageMenu}
         />
-      </div>
+      </PageHeader>
 
       {selected !== ALL ? (
         <p className={styles.filterNote} data-testid="todos-filter">
@@ -611,7 +648,16 @@ export default function TodosPage() {
 
       {tasks ? (
         <HeroSlot>
-          <TodayCard tasks={tasks} day={day} />
+          <TodayCard
+            tasks={tasks}
+            day={day}
+            focusMinutes={focus.focusMinutes}
+            onStart={(x) => void startFocus(x.id)}
+            onLater={(x) => {
+              const full = tasks.find((y) => y.id === x.id);
+              if (full) postpone(full, day);
+            }}
+          />
         </HeroSlot>
       ) : null}
 
@@ -632,21 +678,6 @@ export default function TodosPage() {
             </Button>
           </form>
 
-          <div className={styles.toolbar}>
-            <div className={styles.viewBar} role="group" aria-label={t.todos.views.label}>
-              {PAGE_VIEWS.map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  className={styles.tagChip}
-                  aria-pressed={pageView === v}
-                  onClick={() => setParam('view', v === 'list' ? null : v)}
-                >
-                  {v === 'list' ? t.todos.views.all : t.todos.views[v]}
-                </button>
-              ))}
-            </div>
-          </div>
           {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
           {tagList.length > 0 && (advanced || tag) ? (
             <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>

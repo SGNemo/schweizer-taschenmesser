@@ -77,6 +77,13 @@ export default function InvoicesPage() {
             ? `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
             : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}${extra ? ` · ${extra}` : ''}`
         }
+        lead={
+          <span
+            className={styles.plate}
+            data-initial={i.payee.slice(0, 1).toUpperCase()}
+            aria-hidden="true"
+          />
+        }
         onOpen={() => setTarget(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}
         swipeRightLabel={t.invoices.markPaid}
@@ -166,7 +173,21 @@ export default function InvoicesPage() {
 
   return (
     <>
-      <PageHeader title={t.invoices.title}>
+      <PageHeader
+        title={t.invoices.title}
+        views={
+          <Segmented
+            label={t.invoices.view}
+            value={view}
+            options={[
+              { value: 'open', label: t.invoices.open },
+              { value: 'paid', label: t.invoices.paid },
+              { value: 'all', label: t.invoices.ext.views.all },
+            ]}
+            onChange={setView}
+          />
+        }
+      >
         <AdvancedToggle moduleId="invoices" />
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
@@ -187,16 +208,6 @@ export default function InvoicesPage() {
             {openTotalText(invoices ?? [])}
           </span>
         </div>
-        <Segmented
-          label={t.invoices.view}
-          value={view}
-          options={[
-            { value: 'open', label: t.invoices.open },
-            { value: 'paid', label: t.invoices.paid },
-            { value: 'all', label: t.invoices.ext.views.all },
-          ]}
-          onChange={setView}
-        />
       </div>
 
       {invoices && shown.length === 0 ? (

@@ -1,5 +1,6 @@
 import { t } from '@/strings';
 import { formatNumber } from '@/core/i18n/format';
+import { toolKeywords } from '@/core/tools/keywords';
 import type { ToolManifest } from '@/core/tools/types';
 import { tComfort } from '@/strings.comfort';
 import { parseTimerQuery } from './expression';
@@ -14,6 +15,11 @@ const tool: ToolManifest = {
     return t.tools.timer.description;
   },
   group: 'basis',
+  category: 'zeit',
+  identity: { hue: 'violet', hue2: 'orchid', signature: 'ring' },
+  get keywords() {
+    return toolKeywords(t.tools.timer.keywords);
+  },
   offline: true,
   defaultEnabled: true,
   maturity: 'stable',

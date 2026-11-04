@@ -69,6 +69,8 @@ const manifest: ModuleManifest = {
       },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
+      // The module's main shape is "fokus" (the Heute card); the open list is the checklist next to it.
+      variant: 'checkliste',
       component: () => import('./widgets/OpenTasksWidget'),
     },
   ],

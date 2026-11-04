@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { showPreview } from './helpers';
+import { openToolbox, pickTool, showPreview } from './helpers';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -158,14 +158,12 @@ for (const scheme of ['light', 'dark'] as const) {
         names.push(name);
       }
       expect(names.length).toBeGreaterThanOrEqual(12);
-      await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-      await expect(page.getByRole('dialog', { name: 'Werkzeuge' })).toBeVisible();
-      await audit(page, `tools sheet (${scheme})`);
+      await openToolbox(page);
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await audit(page, `toolbox panel (${scheme})`);
       for (const name of names) {
-        await page.getByRole('dialog').getByRole('button', { name, exact: true }).click();
-        await expect(page.getByRole('dialog', { name })).toBeVisible();
+        await pickTool(page, name);
         await audit(page, `tool ${name} (${scheme})`);
-        await page.getByRole('button', { name: 'Zurück zu den Werkzeugen' }).click();
       }
     });
 
@@ -173,10 +171,7 @@ for (const scheme of ['light', 'dark'] as const) {
       test.setTimeout(90_000);
       await page.goto('/');
       await expect(page.locator('main h1')).toBeVisible();
-      await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-      const sheet = page.getByRole('dialog');
-      await sheet.getByRole('button', { name: 'Rechner', exact: true }).click();
-      await expect(page.getByRole('dialog', { name: 'Rechner' })).toBeVisible();
+      const sheet = await pickTool(page, 'Rechner');
       for (const tab of [
         'Wissenschaftlich',
         'Programmierer',

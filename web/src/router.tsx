@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -36,6 +36,9 @@ const ToolLibrary = lazyOnline<object>(() =>
 );
 const OAuthCallback = lazyOnline<object>(() =>
   import('@/pages/OAuthCallback').then((m) => ({ default: m.OAuthCallback })),
+);
+const ToolSolo = lazy(() =>
+  import('@/layout/tools/ToolSolo').then((m) => ({ default: m.ToolSolo })),
 );
 const ShareTarget = lazyOnline<object>(() =>
   import('@/pages/ShareTarget').then((m) => ({ default: m.ShareTarget })),
@@ -119,6 +122,8 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
   }));
 
   return [
+    // A tool detached from the panel into its own window: no shell around it.
+    { path: 'tool/:id', element: page(<ToolSolo />) },
     {
       element: <AppShell />,
       children: [

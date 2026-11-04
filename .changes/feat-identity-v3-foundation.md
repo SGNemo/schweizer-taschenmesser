@@ -8,6 +8,7 @@ en: Pages are now centred and no longer run off the side, on very wide as well a
 ---
 
 ---
+
 type: changed
 area: ui
 breaking: false
@@ -17,6 +18,7 @@ en: The sidebar is clearer, with favourites as a compact bar, areas with small h
 ---
 
 ---
+
 type: changed
 area: ui
 breaking: false
@@ -26,6 +28,7 @@ en: Scrollbars are now thin and appear only when you hover over them or scroll.
 ---
 
 ---
+
 type: changed
 area: ui
 breaking: false
@@ -35,6 +38,7 @@ en: Every module has its own header in its colour, the modules of an area sit be
 ---
 
 ---
+
 type: changed
 area: overview
 breaking: false

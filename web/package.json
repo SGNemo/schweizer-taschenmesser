@@ -21,6 +21,7 @@
     "gen:module": "node scripts/gen-module.mjs",
     "new:module": "node scripts/gen-module.mjs",
     "check:modules": "node scripts/check-modules.mjs",
+    "check:tools": "node scripts/check-tools.mjs",
     "check:case": "node scripts/check-case-collisions.mjs",
     "gen:licenses": "node scripts/gen-licenses.mjs",
     "check:legal": "node scripts/check-legal.mjs",

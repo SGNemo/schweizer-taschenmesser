@@ -591,21 +591,36 @@ export default function MapsPage() {
     <>
       {places ? (
         <HeroSlot>
-          <PinHead last={lastPlace(places)?.name} />
+          <PinHead
+            last={lastPlace(places)?.name}
+            tiles={PLACE_CATEGORIES.map((c) => ({
+              key: c,
+              label: t.maps.categories[c],
+              count: places.filter((p) => p.category === c).length,
+              icon: CATEGORY_ICON[c],
+            }))
+              .filter((x) => x.count > 0)
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 4)}
+          />
         </HeroSlot>
       ) : null}
-      <PageHeader title={t.maps.meta.name}>
+      <PageHeader
+        title={t.maps.meta.name}
+        views={
+          <Segmented
+            label={t.maps.tabs.label}
+            value={tab}
+            options={TABS.map((v) => ({ value: v, label: t.maps.tabs[v] }))}
+            onChange={setTab}
+          />
+        }
+      >
         <Button variant="primary" onClick={() => setRouteTarget({ draft: true })}>
           <Icon name="route" size={18} />
           {t.maps.add.route}
         </Button>
       </PageHeader>
-      <Segmented
-        label={t.maps.tabs.label}
-        value={tab}
-        options={TABS.map((v) => ({ value: v, label: t.maps.tabs[v] }))}
-        onChange={setTab}
-      />
 
       {tab === 'places' ? (
         places && places.length === 0 ? (
@@ -665,7 +680,11 @@ export default function MapsPage() {
                   key={p.id}
                   title={p.name}
                   meta={[t.maps.categories[p.category], p.address].filter(Boolean).join(' · ')}
-                  lead={<Icon name={CATEGORY_ICON[p.category]} size={20} />}
+                  lead={
+                    <span className={styles.plate} aria-hidden="true">
+                      <Icon name={CATEGORY_ICON[p.category]} size={20} />
+                    </span>
+                  }
                   onOpen={() => show({ lat: p.lat, lon: p.lon, label: p.name, place: p })}
                   end={
                     <Button

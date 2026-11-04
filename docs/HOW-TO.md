@@ -37,6 +37,7 @@ How to read it:
 | File                                                         | Covers                                                                                                                                                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [howto/new-module.md](howto/new-module.md)                   | `npm run gen:module`, mandatory widget, platform-only (desktop) modules                                                                                       |
+| [howto/new-tool.md](howto/new-tool.md) | tool with identity: category, hue, signature, keywords, panel, detached window, `check:tools` |
 | [howto/automation.md](howto/automation.md)                   | automation rules: `automation.ts` of a module (events, detectors, allowed actions), templates, rule model, limits, undo                                         |
 | [howto/changelog.md](howto/changelog.md)                     | change note per PR (`npm run change`), what belongs in it, release step `changelog:release`, how the app shows it                                             |
 | [howto/list-actions.md](howto/list-actions.md)               | list rows: swipe, "⋯" menu, date chips, undo, widget actions (comfort contract)                                                                               |

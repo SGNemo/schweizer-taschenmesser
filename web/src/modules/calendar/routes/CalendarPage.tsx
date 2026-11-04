@@ -30,6 +30,7 @@ import type { Slot } from '../dragMath';
 import { holidayMap, type HolidayRegion } from '../holidays';
 import { EventEditor, type EventTarget } from '../components/EventEditor';
 import { ExternalDetail } from '../components/ExternalDetail';
+import { NextEventLine } from '../components/NextEventLine';
 import { RemindersTab } from '../components/RemindersTab';
 import { DayView, MonthView, WeekView } from '../components/Views';
 import { eventRepo } from '../repo';
@@ -206,6 +207,7 @@ export default function CalendarPage() {
           {t.calendar.newEvent}
         </Button>
       </PageHeader>
+      <NextEventLine />
       <NowStrip modules={['calendar']} />
 
       <CalendarsBar advanced={advanced} />

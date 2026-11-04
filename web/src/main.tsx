@@ -12,6 +12,7 @@ import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
+import { isToolWindow } from '@/core/tools/window';
 import { checkDb } from '@/core/db/health';
 import { importNativePanics } from '@/core/diagnostics/nativeLog';
 import { installErrorLog, recordError } from '@/core/diagnostics/errorLog';
@@ -58,6 +59,8 @@ void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
   );
   void initCore()
     .then(() => {
+      // A detached tool window (`/tool/:id`) needs the database, not a second set of background services.
+      if (isToolWindow()) return;
       startNotificationScheduler();
       // Safe mode: no module background work, no connectors, no local API.
       if (!isSafeMode()) {

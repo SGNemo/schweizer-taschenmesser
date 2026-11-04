@@ -4,9 +4,12 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Werkzeuge mit Identität v3, Paket 1 von 3 (`feat/identity-v3-tools`): großes Werkzeug-Panel (Liste links, Werkzeug rechts, öffnet auf dem zuletzt benutzten, Alt+1–9, Suche, am Handy Vollbild), `identity`/`category`/`keywords` je Werkzeug mit `check:tools`, „In eigenem Fenster öffnen“ im Web; Paket 2 (Rechnen & Zeit) und 3 (Erzeugen & Prüfen) bauen die Inhalte um; Handtests TP1–TP4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Identität v3, Paket 1 (`feat/identity-v3-haushalt-wissen`): Vorräte (Regal-Kacheln, Etiketten, Warenkorb-Aktion), Einkauf (Kassenzettel), Unterlagen (Ordner-Reiter, Widget nur Zahlen) und Passwörter (Gruppen-Reiter) auf die v3-Kopf- und Widget-Varianten umgebaut; Wissen (Paket 2) sowie Medien und Dienste (Paket 3) folgen einzeln.
 
 Fundament v3 (`feat/identity-v3-foundation`, PR #414, fertig zum Review): Rahmen zentriert mit Gutter und ohne seitlichen Überlauf, keine Farbstreifen mehr, neun Kopf-Varianten mit Unternavigation, Palette v3, Widget-Varianten, neue Sidebar (Favoritenleiste, Kapsel, Rail), dünne Overlay-Scrollbars, neuer Übersichtskopf (Begrüßung, Wetterzeile, Karten, Tageskarten); Regeln und Zuordnung aller Module in [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), Entscheidungen in [decisions/ui-shell.md](decisions/ui-shell.md). Handtest: Übersicht und je ein Modul pro Bereich hell/dunkel, Ruhig, Rail, Handy.
+Identität v3, Gruppen Planen + Geld (`feat/identity-v3-planen-geld`): Kalender mit Kalenderfarben-Kapseln und Art-Icons, ToDos mit Fokus-Kopf und runden Häkchen, Gewohnheiten mit Fortschrittszahl und Ring-Leerzustand, Zeiterfassung mit Stundenband und Start/Stopp im Kopf, Karten & Orte mit Regal-Kopf, Abos mit Zyklus-Ring und Dienst-Kacheln, Budgets mit Umschlag-Füllständen, Ansichtsumschalter im Kopf; Handtest in [MANUAL-TESTS.md](MANUAL-TESTS.md) (IP1–IP3).
 
 Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von 2): Status-Kopf mit sechs Kennzahl-Kacheln (Sicherheit, Sync, Backup, Updates, KI, Speicher), gruppierte Kategorienliste im Sidebar-Stil mit Farb-Plättchen und Punkt „vom Standard abweichend“, Kategorie- und Modul-Köpfe; Funktion, Schlüssel und Standardwerte unverändert. Paket 2: Modul- und Werkzeug-Bibliothek.
 
