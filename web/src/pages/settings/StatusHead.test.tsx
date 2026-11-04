@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { tSettingsV3 } from '@/strings.settingsV3';
@@ -26,5 +26,11 @@ describe('settings status head', () => {
       expect(l.querySelectorAll('span')).toHaveLength(3);
     }
     expect(within(list).getByText(tSettingsV3.get().tiles.backup)).toBeInTheDocument();
+    // The tiles load their states (backup, version, …) asynchronously. Let those loads finish inside the test:
+    // if they resolve after the file's last test, the jsdom is gone and React fails with "window is not defined"
+    // as an unhandled error (seen when the file ends a worker, e.g. with vitest --shard).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
   });
 });

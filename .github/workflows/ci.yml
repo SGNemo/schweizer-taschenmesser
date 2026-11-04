@@ -1,37 +1,63 @@
 name: CI
 
+# What runs when: docs/HOW-TO.md -> "Which checks run when" (PR / develop / nightly / release).
+#  - pull request: only the packages the change touches, E2E as the smoke list (desktop), draft PRs static + unit
+#  - label `full-ci` on a PR (full-ci.yml), push to develop/main, nightly (nightly.yml), manual run: everything
 on:
   push:
     branches: [develop, main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # The event is part of the group so that the nightly dispatch never cancels a push run (and vice versa).
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Decides whether anything but documentation changed. Used only to skip the heavy jobs on docs-only
-  # changes; the secret scan below always runs. Any doubt (no diff available, unreadable range, an error)
-  # means "code changed", and the heavy jobs also run when this job itself fails.
+  # Decides what has to run. Any doubt (no diff, unreadable range, an unknown path, an error) means
+  # "everything", and the jobs below also run when this job itself fails. Documentation only: nothing
+  # heavy runs; the secret scan and the docs checks always run.
+  #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
+  #           whole E2E suite (both browser projects, 6 shards) and the seed project
+  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (2 shards);
+  #           a draft PR runs only the static checks and the unit tests of the web app
   changes:
     name: Which parts changed
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      web: ${{ steps.diff.outputs.web }}
+      e2e: ${{ steps.diff.outputs.e2e }}
+      sync: ${{ steps.diff.outputs.sync }}
+      server: ${{ steps.diff.outputs.server }}
+      mcp: ${{ steps.diff.outputs.mcp }}
+      shared: ${{ steps.diff.outputs.shared }}
+      supporter: ${{ steps.diff.outputs.supporter }}
+      webhook: ${{ steps.diff.outputs.webhook }}
+      extension: ${{ steps.diff.outputs.extension }}
+      tauri: ${{ steps.diff.outputs.tauri }}
+      llm: ${{ steps.diff.outputs.llm }}
+      full: ${{ steps.diff.outputs.full }}
+      shards: ${{ steps.diff.outputs.shards }}
+      e2e_profile: ${{ steps.diff.outputs.e2e_profile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - name: Does the change touch more than documentation?
+      - name: What does the change touch?
         id: diff
         env:
           EVENT: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
         run: |
@@ -43,18 +69,72 @@ jobs:
           elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then
             range="$PUSH_BEFORE..$PUSH_AFTER"
           fi
+          # Full run: everything outside a plain pull request, or a PR labelled full-ci.
+          full=true
+          if [ "$EVENT" = "pull_request" ]; then
+            full=false
+            case ",$PR_LABELS," in *,full-ci,*) full=true ;; esac
+          fi
+          # Per-package flags; all true unless this is a PR whose changed files say otherwise.
+          web=true; e2e=true; sync=true; server=true; mcp=true; shared=true; supporter=true
+          webhook=true; extension=true; tauri=true; llm=true
           if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
             # Documentation that no test reads. README*.md, docs/AI-IMPORT*.md and docs/user/installation*.md
             # are read by unit tests (prompt and download-link checks), so they count as code.
             # site/ has its own workflow (site.yml) and never touches the app.
-            ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
+            ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG(\.de)?\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
             pinned='^docs/(AI-IMPORT(\.de)?\.md|user/installation(\.de)?\.md)$'
             relevant="$( { printf '%s\n' "$files" | grep -E "$pinned"; printf '%s\n' "$files" | grep -Ev "$ignorable"; } )"
             if [ -z "$relevant" ]; then code=false; fi
             echo "Changed files:"; printf '%s\n' "$files"
+            if [ "$full" = "false" ] && [ "$code" = "true" ]; then
+              has() { printf '%s\n' "$relevant" | grep -Eq "$1"; }
+              # Known areas; any other path is "unknown" and turns everything on.
+              known='^(web/|server/|mcp/|extension/|services/supporter-webhook/|tools/supporter-cli/|\.changes/|docs/)'
+              shared=false
+              if printf '%s\n' "$relevant" | grep -Evq "$known"; then shared=true; fi
+              # Shared inputs of several packages (packages/, contract/, workflows, root manifests).
+              if has '^(packages/|contract/|\.github/workflows/|\.github/actions/|package(-lock)?\.json$)'; then shared=true; fi
+              if [ "$shared" = "true" ]; then
+                echo "Shared input changed: every package runs."
+              else
+                web=false; e2e=false; sync=false; server=false; mcp=false; supporter=false
+                webhook=false; extension=false; tauri=false; llm=false
+                has '^(web/|\.changes/|docs/)' && web=true
+                # Everything under web/ except the native shell can change what the browser app does.
+                printf '%s\n' "$relevant" | grep -E '^web/' | grep -Evq '^web/src-tauri/' && { e2e=true; sync=true; extension=true; }
+                has '^server/' && { server=true; sync=true; }
+                has '^mcp/' && mcp=true
+                has '^extension/' && extension=true
+                has '^tools/supporter-cli/' && supporter=true
+                has '^services/supporter-webhook/' && webhook=true
+                has '^web/src-tauri/' && tauri=true
+                has '^web/src-tauri/crates/local-llm/' && llm=true
+              fi
+            fi
           fi
-          echo "code=$code" >> "$GITHUB_OUTPUT"
-          echo "Heavy jobs needed: $code"
+          # Draft PR (not labelled full-ci): static checks + unit tests of the web app only.
+          if [ "$EVENT" = "pull_request" ] && [ "$PR_DRAFT" = "true" ] && [ "$full" = "false" ]; then
+            e2e=false; sync=false; server=false; mcp=false; supporter=false; webhook=false
+            extension=false; tauri=false; llm=false; shared=false
+          fi
+          if [ "$code" = "false" ]; then
+            web=false; e2e=false; sync=false; server=false; mcp=false; supporter=false; webhook=false
+            extension=false; tauri=false; llm=false; shared=false
+          fi
+          if [ "$full" = "true" ]; then
+            shards='[1,2,3,4,5,6]'; profile=full
+          else
+            shards='[1,2]'; profile=smoke
+          fi
+          {
+            echo "code=$code"; echo "full=$full"; echo "shards=$shards"; echo "e2e_profile=$profile"
+            echo "web=$web"; echo "e2e=$e2e"; echo "sync=$sync"; echo "server=$server"; echo "mcp=$mcp"
+            echo "shared=$shared"; echo "supporter=$supporter"; echo "webhook=$webhook"
+            echo "extension=$extension"; echo "tauri=$tauri"; echo "llm=$llm"
+          } >> "$GITHUB_OUTPUT"
+          echo "code=$code full=$full profile=$profile web=$web e2e=$e2e sync=$sync server=$server mcp=$mcp shared=$shared"
+          echo "supporter=$supporter webhook=$webhook extension=$extension tauri=$tauri llm=$llm"
 
   # scribble/ is the chats' scratch space on develop (see scribble/README.md); the release merge removes it.
   scribble-guard:
@@ -114,7 +194,7 @@ jobs:
   stimulus-budget:
     name: Stimulus budget (warnings only)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     continue-on-error: true
@@ -161,7 +241,7 @@ jobs:
   web-static:
     name: Web static (format, lint, types)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -188,17 +268,38 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
-      - name: Licence list is current and every licence is allowed
-        run: npm run check:licenses
       - name: Open legal placeholders (warning only)
         run: npm run check:legal
 
-  web-unit:
-    name: Web unit tests
+  # The licence check reads only the lock files, so it needs no install; it runs on every code change as it always did,
+  # whatever package the change touches (the pre-check's package flags do not apply to it).
+  licences:
+    name: Licence list is current and every licence is allowed
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+      - run: npm run check:licenses
+
+  # 598 files / 5421 tests: three slices by file (vitest --shard), so every test runs exactly once.
+  web-unit:
+    name: Web unit tests (shard ${{ matrix.shard }}/3)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.web != 'false' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     defaults:
       run:
         working-directory: web
@@ -210,21 +311,22 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: npx vitest run --shard=${{ matrix.shard }}/3
 
-  # The Playwright suite is split into four slices, each on its own runner with the same two workers as
-  # before (more workers on four cores were slower per test and failed under load). Sharding is by test,
-  # so every test runs exactly once across the matrix.
+  # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
+  # cores were slower per test and failed under load). Sharding is by test: every test runs exactly once.
+  #   full run (develop, nightly, label full-ci, manual): both browser projects, 6 shards (seed project: e2e-sync job)
+  #   plain PR: smoke list on desktop-chrome only, 2 shards (E2E_PROFILE=smoke, list in web/playwright.config.ts)
   web-e2e:
-    name: E2E app (shard ${{ matrix.shard }}/4)
+    name: E2E app (${{ needs.changes.outputs.e2e_profile || 'full' }}, shard ${{ matrix.shard }})
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2,3,4,5,6]') }}
     defaults:
       run:
         working-directory: web
@@ -247,9 +349,11 @@ jobs:
       # System libraries are needed even when the browser itself comes from the cache.
       - run: npx playwright install-deps chromium
         if: steps.pw-cache.outputs.cache-hit == 'true'
-      - name: E2E (app + accessibility), shard ${{ matrix.shard }} of 4
-        run: npx playwright test --shard=${{ matrix.shard }}/4
+      - name: E2E (${{ needs.changes.outputs.e2e_profile || 'full' }}), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
+        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
+          E2E_PROFILE: ${{ needs.changes.outputs.e2e_profile }}
+          E2E_SEED: '0' # the seed project runs in the sync job
           # Shard 1 also writes the build manifest for the bundle budget below (no extra build).
           VITE_BUNDLE_REPORT: ${{ matrix.shard == 1 && '1' || '' }}
       # Non-blocking bundle budget (critical path, precache) on the build the E2E step just made; the
@@ -267,106 +371,50 @@ jobs:
           retention-days: 7
 
   # One stable check name for everything web: this is what the former single job was called.
-  # Skipped parts count as fine only when the change was documentation only.
+  # A part must succeed when the pre-check asked for it and must be skipped when it did not
+  # (documentation only, other packages only, draft PR without the E2E part).
   web:
     name: Web (lint, types, unit, E2E)
-    needs: [changes, web-static, web-unit, web-e2e]
+    needs: [changes, licences, web-static, web-unit, web-e2e]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: All web checks passed (or nothing but documentation changed)
+      - name: All requested web checks passed (and nothing else ran by accident)
         env:
+          CHANGES: ${{ needs.changes.result }}
+          WEB: ${{ needs.changes.outputs.web }}
+          E2E: ${{ needs.changes.outputs.e2e }}
           CODE: ${{ needs.changes.outputs.code }}
-          RESULTS: ${{ needs.web-static.result }} ${{ needs.web-unit.result }} ${{ needs.web-e2e.result }}
+          LICENCES: ${{ needs.licences.result }}
+          STATIC: ${{ needs.web-static.result }}
+          UNIT: ${{ needs.web-unit.result }}
+          E2E_RESULT: ${{ needs.web-e2e.result }}
         run: |
-          echo "code=$CODE results: $RESULTS"
-          if [ "$CODE" = "false" ]; then
-            for r in $RESULTS; do
-              [ "$r" = "skipped" ] || { echo "::error::Unexpected result '$r' on a documentation-only change."; exit 1; }
-            done
-            echo "Documentation-only change: the web checks were skipped on purpose."
-            exit 0
-          fi
-          for r in $RESULTS; do
-            [ "$r" = "success" ] || { echo "::error::A web check did not succeed (result '$r')."; exit 1; }
-          done
+          echo "pre-check=$CHANGES web=$WEB e2e=$E2E static=$STATIC unit=$UNIT e2e-result=$E2E_RESULT"
+          [ "$CHANGES" = "success" ] || echo "::notice::The pre-check did not finish; every part was asked to run."
+          check() { # name result wanted
+            if [ "$3" != "false" ]; then
+              [ "$2" = "success" ] || { echo "::error::$1 did not succeed (result '$2'): open that job above."; exit 1; }
+            else
+              [ "$2" = "skipped" ] || { echo "::error::$1 should have been skipped (result '$2'); the pre-check job 'Which parts changed' said it is not needed."; exit 1; }
+            fi
+          }
+          check "Licence list" "$LICENCES" "$CODE"
+          check "Web static (format, lint, types)" "$STATIC" "$WEB"
+          check "Web unit tests (shards)" "$UNIT" "$WEB"
+          check "E2E app (shards)" "$E2E_RESULT" "$E2E"
 
-  server:
-    name: Sync server
+  # Server, MCP wrapper, shared vault package, supporter codes + CLI and the supporter webhook are five small
+  # packages (about a minute each). They share one runner: every extra job waits for a free runner (up to
+  # 14 min in the baseline), and the setup of five jobs cost more than the checks themselves. Each package
+  # keeps its own steps and flag from the pre-check; a failing package does not hide the others.
+  packages:
+    name: Small packages (server, MCP, vault-core, supporter, webhook)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && (needs.changes.outputs.server != 'false' || needs.changes.outputs.mcp != 'false' || needs.changes.outputs.shared != 'false' || needs.changes.outputs.supporter != 'false' || needs.changes.outputs.webhook != 'false') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-
-  mcp:
-    name: MCP wrapper (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: mcp
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: mcp/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-
-  vault-core:
-    name: Shared vault package (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: packages/vault-core
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: packages/vault-core/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-
-  # Supporter codes: shared package + maintainer CLI (the CLI imports the package source, so both are installed).
-  supporter:
-    name: Supporter codes + CLI (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -374,40 +422,50 @@ jobs:
           node-version: 26
           cache: npm
           cache-dependency-path: |
+            server/package-lock.json
+            mcp/package-lock.json
+            packages/vault-core/package-lock.json
             packages/supporter-codes/package-lock.json
             tools/supporter-cli/package-lock.json
-      - run: npm ci
-        working-directory: packages/supporter-codes
-      - run: npm ci
-        working-directory: tools/supporter-cli
-      - name: Package checks
-        working-directory: packages/supporter-codes
-        run: npm run format:check && npm run lint && npm run typecheck && npm test
-      - name: CLI checks
-        working-directory: tools/supporter-cli
-        run: npm run format:check && npm run lint && npm run typecheck && npm test
-
-  # Supporter webhook service (Cloudflare Worker): own job, no deploy, no secrets. It imports the shared code package source.
-  supporter-webhook:
-    name: Supporter webhook (lint, types, tests, bundle)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: |
-            packages/supporter-codes/package-lock.json
             services/supporter-webhook/package-lock.json
-      - run: npm ci
+      - name: Install (every package that will run)
+        if: ${{ !cancelled() }}
+        env:
+          SERVER: ${{ needs.changes.outputs.server }}
+          MCP: ${{ needs.changes.outputs.mcp }}
+          VAULT: ${{ needs.changes.outputs.shared }}
+          SUPPORTER: ${{ needs.changes.outputs.supporter }}
+          WEBHOOK: ${{ needs.changes.outputs.webhook }}
+        run: |
+          set -euo pipefail
+          [ "$SERVER" = "false" ] || (cd server && npm ci)
+          [ "$MCP" = "false" ] || (cd mcp && npm ci)
+          [ "$VAULT" = "false" ] || (cd packages/vault-core && npm ci)
+          if [ "$SUPPORTER" != "false" ] || [ "$WEBHOOK" != "false" ]; then (cd packages/supporter-codes && npm ci); fi
+          [ "$SUPPORTER" = "false" ] || (cd tools/supporter-cli && npm ci)
+          [ "$WEBHOOK" = "false" ] || (cd services/supporter-webhook && npm ci)
+      - name: Sync server (format, lint, types, tests, build)
+        if: ${{ !cancelled() && needs.changes.outputs.server != 'false' }}
+        working-directory: server
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+      - name: MCP wrapper (format, lint, types, tests, build)
+        if: ${{ !cancelled() && needs.changes.outputs.mcp != 'false' }}
+        working-directory: mcp
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+      - name: Shared vault package (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.shared != 'false' }}
+        working-directory: packages/vault-core
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter codes package (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.supporter != 'false' }}
         working-directory: packages/supporter-codes
-      - run: npm ci
-        working-directory: services/supporter-webhook
-      - name: Service checks
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter CLI (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.supporter != 'false' }}
+        working-directory: tools/supporter-cli
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter webhook (format, lint, types, tests, bundle)
+        if: ${{ !cancelled() && needs.changes.outputs.webhook != 'false' }}
         working-directory: services/supporter-webhook
         env:
           WRANGLER_SEND_METRICS: 'false'
@@ -416,7 +474,7 @@ jobs:
   extension:
     name: Browser extension (lint, types, tests, build, E2E)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.extension != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -469,7 +527,7 @@ jobs:
   e2e-sync:
     name: Multi-device sync E2E
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.sync != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -499,11 +557,16 @@ jobs:
         working-directory: web
       - run: npm run e2e:sync
         working-directory: web
+      # The Dev-Preview flavour (seed project, 29 tests) is part of every full run; the shards skip it.
+      - name: E2E seed project (full runs only)
+        if: ${{ needs.changes.outputs.full != 'false' }}
+        run: npx playwright test --project=seed-dev
+        working-directory: web
 
   rust:
     name: Native shell (fmt, clippy, tests)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.tauri != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     defaults:
@@ -538,7 +601,7 @@ jobs:
   local-llm:
     name: Local model runtime (fmt, clippy, tests)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.llm != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     defaults:
@@ -565,14 +628,33 @@ jobs:
 
   # Signed Dev-Preview (portable exe + APK) as the rolling pre-release `dev-preview`, only after a green
   # push to develop that changed more than documentation. Never on pull requests, never a stable release.
-  # See dev-preview.yml and docs/howto/ci.md -> "Dev-Preview".
-  dev-preview:
+  # The build runs next to the tests (it needs nothing from them); the publish stage waits for every check
+  # of this run (tests, packages, Rust, licences, docs-pairs, gitleaks) to be green, so nothing is published from a red
+  # commit. The signed build artifacts of a red commit stay in the run for 3 days, but are never attached to
+  # a release. See dev-preview.yml and
+  # docs/howto/ci.md -> "Dev-Preview".
+  dev-preview-build:
     name: Dev-Preview build
-    needs: [changes, secret-scan, web, server, mcp, vault-core, extension, e2e-sync, rust]
+    needs: [changes]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    # dev-preview.yml's publish job asks for contents: write; a caller must allow it even though the
+    # publish job is skipped in the build stage (all other jobs there keep the workflow's read-only token).
+    permissions:
+      contents: write
+    uses: ./.github/workflows/dev-preview.yml
+    with:
+      target: dev-preview
+      stage: build
+    secrets: inherit
+
+  dev-preview:
+    name: Dev-Preview publish
+    needs: [changes, dev-preview-build, secret-scan, docs-pairs, licences, web, packages, extension, e2e-sync, rust, local-llm]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write
     uses: ./.github/workflows/dev-preview.yml
     with:
       target: dev-preview
+      stage: publish
     secrets: inherit
