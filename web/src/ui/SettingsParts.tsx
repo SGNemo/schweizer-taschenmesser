@@ -18,6 +18,7 @@ export function SettingRow({
   description,
   hint,
   stacked,
+  leading,
   children,
 }: {
   id?: string;
@@ -26,21 +27,33 @@ export function SettingRow({
   hint?: string;
   /** Control below the text instead of beside it (wide controls such as tile pickers). */
   stacked?: boolean;
+  /** Decoration before the text (an icon plate of a module or tool); rows without it are unchanged. */
+  leading?: ReactNode;
   children?: ReactNode;
 }) {
+  const text = (
+    <div className={styles.text}>
+      <span className={styles.label}>
+        {label}
+        {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
+      </span>
+      {description ? (
+        <span className={styles.description}>
+          <ReadableText text={description} />
+        </span>
+      ) : null}
+    </div>
+  );
   return (
     <div id={id} className={[styles.row, stacked ? styles.stacked : ''].join(' ')}>
-      <div className={styles.text}>
-        <span className={styles.label}>
-          {label}
-          {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
-        </span>
-        {description ? (
-          <span className={styles.description}>
-            <ReadableText text={description} />
-          </span>
-        ) : null}
-      </div>
+      {leading ? (
+        <div className={styles.lead}>
+          {leading}
+          {text}
+        </div>
+      ) : (
+        text
+      )}
       {children ? <div className={styles.control}>{children}</div> : null}
     </div>
   );

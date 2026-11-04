@@ -3,6 +3,7 @@ export { SettingsLink } from './SettingsLink';
 export { useHashTarget } from './useHashTarget';
 export { Card } from './Card';
 export { LibraryCard } from './LibraryCard';
+export { HuePlate } from './HuePlate';
 export { Dialog } from './Dialog';
 export { useDraft } from './useDraft';
 export { useFormDraft } from './useFormDraft';

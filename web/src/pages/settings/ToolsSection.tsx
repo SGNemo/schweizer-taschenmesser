@@ -1,6 +1,15 @@
 import { useTools } from '@/core/tools/state';
 import { t } from '@/strings';
-import { Badge, Icon, IconButton, SettingRow, SettingsGroup, SortableList, Switch } from '@/ui';
+import {
+  Badge,
+  HuePlate,
+  Icon,
+  IconButton,
+  SettingRow,
+  SettingsGroup,
+  SortableList,
+  Switch,
+} from '@/ui';
 import styles from './settings.module.css';
 
 /** Which tools are on and their order: the same setters as the tools sheet (synced scope `tools`). */
@@ -16,7 +25,12 @@ export function ToolsSection() {
         getLabel={(tool) => tool.name}
         onReorder={(order) => void tools.reorder(order)}
         renderItem={(tool, i, handle) => (
-          <SettingRow id={`tools--${tool.id}`} label={tool.name} description={tool.description}>
+          <SettingRow
+            id={`tools--${tool.id}`}
+            label={tool.name}
+            description={tool.description}
+            leading={<HuePlate hue={tool.identity.hue} icon={tool.icon} />}
+          >
             <span className={styles.row}>
               {tool.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
               {handle}

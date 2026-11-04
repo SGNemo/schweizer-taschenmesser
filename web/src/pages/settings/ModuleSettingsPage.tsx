@@ -15,7 +15,7 @@ import { tSettings2 } from '@/strings.settings2';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
-import { Badge, Button, EmptyState, Icon, SettingRow, SettingsGroup } from '@/ui';
+import { Badge, Button, EmptyState, HuePlate, Icon, SettingRow, SettingsGroup } from '@/ui';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
@@ -222,9 +222,7 @@ export function ModuleList() {
               data-hue={m.identity.hue}
               data-testid={`module-link-${m.id}`}
             >
-              <span className={styles.chip} aria-hidden="true">
-                <Icon name={m.icon} size={20} />
-              </span>
+              <HuePlate hue={m.identity.hue} icon={m.icon} />
               <span className={styles.headText}>
                 <span className={styles.listName}>{m.name}</span>
                 <span className={styles.listDesc}>
