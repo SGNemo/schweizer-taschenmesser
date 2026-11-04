@@ -55,7 +55,9 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
           {content}
         </button>
       ) : (
-        <div className={rowClass} style={capsule}>{content}</div>
+        <div className={rowClass} style={capsule}>
+          {content}
+        </div>
       )}
     </li>
   );

@@ -71,13 +71,46 @@
 .sub {
   margin-left: var(--space-6);
 }
+/* The ToDos tick: a round check in the module colour (pantry has squares, habits rings). Still a native checkbox. */
 .check {
   flex: none;
+  appearance: none;
+  display: grid;
+  place-content: center;
   /* 24 px: WCAG 2.2 minimum target for inline controls. */
   width: 1.5rem;
   height: 1.5rem;
-  accent-color: var(--accent);
+  margin: 0;
+  border: 2px solid var(--module-color);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
+  color: var(--accent-contrast);
   cursor: pointer;
+}
+.check::after {
+  content: '';
+  width: 0.55rem;
+  height: 0.3rem;
+  margin-top: -0.12rem;
+  border-left: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.12s ease;
+}
+.check:checked {
+  background: var(--module-color);
+}
+.check:checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+.check:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .check::after {
+    transition: none;
+  }
 }
 .open {
   flex: 1;
@@ -117,11 +150,33 @@
   color: var(--accent);
   font-weight: 600;
 }
-.prio3 {
-  color: var(--danger);
-}
+.prio3,
 .prio2 {
-  color: var(--warning);
+  display: inline-flex;
+  align-items: center;
+  color: var(--text);
+  font-weight: 600;
+}
+.prio3 svg,
+.prio2 svg {
+  margin-inline-end: -0.35rem;
+}
+.subProgress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.subTrack {
+  width: 3rem;
+  height: 0.3rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.subFill {
+  display: block;
+  height: 100%;
+  background: var(--module-color);
 }
 .subs {
   list-style: none;
@@ -219,12 +274,55 @@
 
 /* Plan group package 2: Heute card, view bar, board, tags, checklist, project bar. */
 .todayCard {
-  min-width: 12rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--shape-soft, var(--radius-md));
-  background: var(--surface);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
   color: var(--text);
+}
+.countBox {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  line-height: 1.1;
+}
+.countBox strong {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.countBox span {
+  font-size: var(--text-xs);
+}
+.nextTask {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.nextLabel,
+.nextDetail {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.nextTitle {
+  font-size: var(--text-xl, 1.5rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.nextActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 .toolbar {
   display: flex;
@@ -271,8 +369,28 @@
   min-height: 12rem;
   padding: var(--space-2);
   border: 1px dashed transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface-2);
+}
+/* Column identity: the head of each column is a filled tint, the first (today) in the module colour. */
+.column[data-view='today'] {
+  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
+}
+.column[data-view='soon'] {
+  background: color-mix(in srgb, var(--module-color-2, var(--module-color)) 7%, var(--surface));
+}
+.column[data-view='done'] {
+  background: var(--surface-2);
+  opacity: 0.85;
+}
+.columnTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--module-color) 14%, transparent);
+  width: fit-content;
 }
 .columnOver {
   border-color: var(--text);
@@ -391,6 +509,10 @@
 }
 
 .todayLine {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin: 0;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
