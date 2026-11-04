@@ -383,81 +383,16 @@ jobs:
           check "Unit tests" "$UNIT" "$WEB"
           check "E2E" "$E2E_RESULT" "$E2E"
 
-  server:
-    name: Sync server
+  # Server, MCP wrapper, shared vault package, supporter codes + CLI and the supporter webhook are five small
+  # packages (about a minute each). They share one runner: every extra job waits for a free runner (up to
+  # 14 min in the baseline), and the setup of five jobs cost more than the checks themselves. Each package
+  # keeps its own steps and flag from the pre-check; a failing package does not hide the others.
+  packages:
+    name: Small packages (server, MCP, vault-core, supporter, webhook)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.server != 'false' }}
+    if: ${{ !cancelled() && (needs.changes.outputs.server != 'false' || needs.changes.outputs.mcp != 'false' || needs.changes.outputs.shared != 'false' || needs.changes.outputs.supporter != 'false' || needs.changes.outputs.webhook != 'false') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-
-  mcp:
-    name: MCP wrapper (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.mcp != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: mcp
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: mcp/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-
-  vault-core:
-    name: Shared vault package (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.shared != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: packages/vault-core
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: packages/vault-core/package-lock.json
-      - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-
-  # Supporter codes: shared package + maintainer CLI (the CLI imports the package source, so both are installed).
-  supporter:
-    name: Supporter codes + CLI (lint, types, tests)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.supporter != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -465,40 +400,50 @@ jobs:
           node-version: 26
           cache: npm
           cache-dependency-path: |
+            server/package-lock.json
+            mcp/package-lock.json
+            packages/vault-core/package-lock.json
             packages/supporter-codes/package-lock.json
             tools/supporter-cli/package-lock.json
-      - run: npm ci
-        working-directory: packages/supporter-codes
-      - run: npm ci
-        working-directory: tools/supporter-cli
-      - name: Package checks
-        working-directory: packages/supporter-codes
-        run: npm run format:check && npm run lint && npm run typecheck && npm test
-      - name: CLI checks
-        working-directory: tools/supporter-cli
-        run: npm run format:check && npm run lint && npm run typecheck && npm test
-
-  # Supporter webhook service (Cloudflare Worker): own job, no deploy, no secrets. It imports the shared code package source.
-  supporter-webhook:
-    name: Supporter webhook (lint, types, tests, bundle)
-    needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.webhook != 'false' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 26
-          cache: npm
-          cache-dependency-path: |
-            packages/supporter-codes/package-lock.json
             services/supporter-webhook/package-lock.json
-      - run: npm ci
+      - name: Install (every package that will run)
+        if: ${{ !cancelled() }}
+        env:
+          SERVER: ${{ needs.changes.outputs.server }}
+          MCP: ${{ needs.changes.outputs.mcp }}
+          VAULT: ${{ needs.changes.outputs.shared }}
+          SUPPORTER: ${{ needs.changes.outputs.supporter }}
+          WEBHOOK: ${{ needs.changes.outputs.webhook }}
+        run: |
+          set -euo pipefail
+          [ "$SERVER" = "false" ] || (cd server && npm ci)
+          [ "$MCP" = "false" ] || (cd mcp && npm ci)
+          [ "$VAULT" = "false" ] || (cd packages/vault-core && npm ci)
+          if [ "$SUPPORTER" != "false" ] || [ "$WEBHOOK" != "false" ]; then (cd packages/supporter-codes && npm ci); fi
+          [ "$SUPPORTER" = "false" ] || (cd tools/supporter-cli && npm ci)
+          [ "$WEBHOOK" = "false" ] || (cd services/supporter-webhook && npm ci)
+      - name: Sync server (format, lint, types, tests, build)
+        if: ${{ !cancelled() && needs.changes.outputs.server != 'false' }}
+        working-directory: server
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+      - name: MCP wrapper (format, lint, types, tests, build)
+        if: ${{ !cancelled() && needs.changes.outputs.mcp != 'false' }}
+        working-directory: mcp
+        run: npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+      - name: Shared vault package (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.shared != 'false' }}
+        working-directory: packages/vault-core
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter codes package (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.supporter != 'false' }}
         working-directory: packages/supporter-codes
-      - run: npm ci
-        working-directory: services/supporter-webhook
-      - name: Service checks
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter CLI (format, lint, types, tests)
+        if: ${{ !cancelled() && needs.changes.outputs.supporter != 'false' }}
+        working-directory: tools/supporter-cli
+        run: npm run format:check && npm run lint && npm run typecheck && npm test
+      - name: Supporter webhook (format, lint, types, tests, bundle)
+        if: ${{ !cancelled() && needs.changes.outputs.webhook != 'false' }}
         working-directory: services/supporter-webhook
         env:
           WRANGLER_SEND_METRICS: 'false'
@@ -680,7 +625,7 @@ jobs:
 
   dev-preview:
     name: Dev-Preview publish
-    needs: [changes, dev-preview-build, secret-scan, web, server, mcp, vault-core, supporter, supporter-webhook, extension, e2e-sync, rust, local-llm]
+    needs: [changes, dev-preview-build, secret-scan, web, packages, extension, e2e-sync, rust, local-llm]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
     permissions:
       contents: write
