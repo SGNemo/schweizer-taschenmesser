@@ -369,8 +369,8 @@ export async function seedCounts(
 }
 
 /**
- * Example rules in dry run (`_settings` scope `automation`), so the automation sections have
- * something to show without ever changing data. Only when the user has no such settings row; the
+ * Example rules in dry run (`_settings` scope `automation`, master switch off), so the automation
+ * sections have something to show once switched on, without ever changing data. Only when the user has no such settings row; the
  * row is registered first, so sync and backup skip it and "remove" deletes it again.
  */
 async function seedAutomation(database: TaschenmesserDB, batchId: string): Promise<void> {
@@ -383,7 +383,9 @@ async function seedAutomation(database: TaschenmesserDB, batchId: string): Promi
   });
   await createRepo('_settings', z.looseObject({}), database).upsert('automation', {
     ...AUTOMATION_DEFAULTS,
-    enabled: true,
+    // The master switch stays off: the sections stay hidden and the pages as calm as without test
+    // data; whoever wants to look switches it on (the rules and the dry run are already set).
+    enabled: false,
     dryRun: true,
     rules: {
       invoiceDue: { enabled: true, params: {} },
