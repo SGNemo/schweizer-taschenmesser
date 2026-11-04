@@ -1,4 +1,5 @@
 import { t } from '@/strings';
+import { toolKeywords } from '@/core/tools/keywords';
 import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
@@ -11,6 +12,11 @@ const tool: ToolManifest = {
     return t.tools.timezones.description;
   },
   group: 'extra',
+  category: 'zeit',
+  identity: { hue: 'ocean', hue2: 'teal', signature: 'globe' },
+  get keywords() {
+    return toolKeywords(t.tools.timezones.keywords);
+  },
   offline: true,
   defaultEnabled: false,
   maturity: 'stable',

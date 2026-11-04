@@ -1,4 +1,5 @@
 import { t } from '@/strings';
+import { toolKeywords } from '@/core/tools/keywords';
 import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
@@ -11,6 +12,11 @@ const tool: ToolManifest = {
     return t.tools.text.description;
   },
   group: 'extra',
+  category: 'text',
+  identity: { hue: 'moss', hue2: 'fern', signature: 'notePaper' },
+  get keywords() {
+    return toolKeywords(t.tools.text.keywords);
+  },
   offline: true,
   defaultEnabled: false,
   maturity: 'stable',

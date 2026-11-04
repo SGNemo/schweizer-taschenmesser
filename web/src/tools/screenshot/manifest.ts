@@ -1,4 +1,5 @@
 import { t } from '@/strings';
+import { toolKeywords } from '@/core/tools/keywords';
 import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
@@ -11,6 +12,11 @@ const tool: ToolManifest = {
     return t.tools.screenshot.description;
   },
   group: 'extra',
+  category: 'medien',
+  identity: { hue: 'sky', hue2: 'cobalt', signature: 'viewfinder' },
+  get keywords() {
+    return toolKeywords(t.tools.screenshot.keywords);
+  },
   offline: true,
   // A function for people who use it daily; everyone else keeps the toolbar short.
   defaultEnabled: false,

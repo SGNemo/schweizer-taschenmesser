@@ -8,6 +8,27 @@ export const tools: Strings['tools'] = {
   shortcut: 'Ctrl+.',
   none: 'No tools are turned on.',
   manage: 'Manage tools',
+  panel: {
+    categories: {
+      rechnen: 'Calculate',
+      zeit: 'Time',
+      erzeugen: 'Create',
+      medien: 'Images & files',
+      text: 'Text',
+      entwickler: 'Developer',
+    },
+    search: 'Search tools',
+    searchHint: 'Name or task, Alt+1 to 9 switches',
+    list: 'Tool list',
+    all: 'All tools',
+    detach: 'Open in its own window',
+    noMatch: 'No tool matches.',
+    scratch: 'Scratch pad',
+    scratchHint: 'Sticky note in Notes',
+    pick: 'Pick a tool on the left.',
+    solo: 'Tool',
+    number: (n: number) => `Alt+${n}`,
+  },
   library: {
     title: 'Tools',
     intro:
@@ -29,6 +50,7 @@ export const tools: Strings['tools'] = {
       `${percent}% of ${base} = ${value}`,
     shareOf: (part: string, whole: string, value: string) => `${part} of ${whole} = ${value}%`,
     name: 'Calculator',
+    keywords: 'calculator, maths, percent, arithmetic',
     description:
       'Calculate with brackets, functions and variables, plus programmer, finance, date and unit calculators with history. “240 + 19 %” adds 19%.',
     input: 'Calculation',
@@ -204,6 +226,7 @@ export const tools: Strings['tools'] = {
   },
   currency: {
     name: 'Currency',
+    keywords: 'exchange rate, forex, euro, dollar, convert',
     description: 'Converts amounts using the European Central Bank’s reference rates.',
     amount: 'Amount',
     from: 'From',
@@ -220,6 +243,7 @@ export const tools: Strings['tools'] = {
   },
   timer: {
     name: 'Timer & stopwatch',
+    keywords: 'countdown, stopwatch, pomodoro, alarm',
     description: 'Countdown, stopwatch and Pomodoro (25 min work, 5 min break).',
     modes: { timer: 'Timer', stopwatch: 'Stopwatch', pomodoro: 'Pomodoro' } as Record<
       string,
@@ -242,6 +266,7 @@ export const tools: Strings['tools'] = {
   },
   screenshot: {
     name: 'Screenshot',
+    keywords: 'screenshot, screen, capture, record',
     description:
       'Capture a screen, window or tab and save or copy it as an image. Everything stays on your device.',
     hint: 'The browser asks what to capture. The picture stays on this page until you save, copy or discard it.',
@@ -264,6 +289,7 @@ export const tools: Strings['tools'] = {
   },
   diff: {
     name: 'Text compare',
+    keywords: 'compare, difference, text diff, diff',
     description:
       'Put two texts side by side and see what changed. Everything stays on your device.',
     before: 'Before',
@@ -284,6 +310,7 @@ export const tools: Strings['tools'] = {
   },
   regex: {
     name: 'Regex tester',
+    keywords: 'regex, regular expression, pattern, matches',
     description:
       'Try a pattern (regular expression) on a text: matches, groups and replacing. Runs only on your device.',
     pattern: 'Pattern',
@@ -319,6 +346,7 @@ export const tools: Strings['tools'] = {
   },
   qr: {
     name: 'QR code',
+    keywords: 'qr, code, scan, share link',
     description: 'Create QR codes and read them with the camera.',
     create: 'Create',
     scan: 'Read',
@@ -370,6 +398,7 @@ export const tools: Strings['tools'] = {
       kn: 'Knots (kn)',
     } as Record<string, string>,
     name: 'Units',
+    keywords: 'convert, length, weight, temperature, metres, pounds',
     description: 'Convert length, weight, temperature, volume and speed.',
     kind: 'Quantity',
     kinds: {
@@ -387,6 +416,7 @@ export const tools: Strings['tools'] = {
   },
   dates: {
     name: 'Date calculator',
+    keywords: 'date, days, calendar week, weekday, difference',
     description: 'Time between dates, add days, weekday and calendar week.',
     diff: 'Difference',
     add: 'Add days',
@@ -407,6 +437,7 @@ export const tools: Strings['tools'] = {
   },
   persona: {
     name: 'Anonymous persona',
+    keywords: 'fake, alias, throwaway, sign-up, made-up person',
     description:
       'Invents a persona for sign-ups that need no real details, and for testing. With a disposable-mail link.',
     intro: 'Made-up details. No real person, no ID, account or card data.',
@@ -474,6 +505,7 @@ export const tools: Strings['tools'] = {
   },
   dice: {
     name: 'Dice & random',
+    keywords: 'dice, coin, random, draw, pick',
     description: 'Roll dice, flip a coin, random number and random pick.',
     dice: 'Dice',
     count: 'Count',
@@ -494,6 +526,7 @@ export const tools: Strings['tools'] = {
   },
   text: {
     name: 'Text tool',
+    keywords: 'word count, characters, upper case, lower case, lorem ipsum',
     description: 'Count words and characters, change case, tidy up text, placeholder text.',
     input: 'Text',
     stats: 'Count',
@@ -556,6 +589,7 @@ export const tools: Strings['tools'] = {
       'America/Argentina/Buenos_Aires': 'Buenos Aires',
     } as Record<string, string>,
     name: 'Time zones',
+    keywords: 'time zone, clock, time difference, world time',
     description: 'Convert a time into other time zones, including daylight saving time.',
     date: 'Date',
     time: 'Time',
@@ -572,6 +606,7 @@ export const tools: Strings['tools'] = {
   },
   image: {
     name: 'Shrink images',
+    keywords: 'image, photo, resize, crop, jpg, png, webp',
     description: 'Shrink, crop and convert images to PNG, JPG or WebP – all on your device.',
     pick: 'Choose image',
     source: (w: number, h: number, size: string) => `Original: ${w} × ${h} pixels, ${size}`,
@@ -594,6 +629,7 @@ export const tools: Strings['tools'] = {
   },
   pdf: {
     name: 'PDF tool',
+    keywords: 'pdf, merge, pages, rotate, remove',
     description:
       'Merge PDFs, keep or remove pages and rotate them – on your device, without uploading.',
     mode: 'What do you want to do?',
@@ -630,6 +666,7 @@ export const tools: Strings['tools'] = {
   },
   dev: {
     name: 'Developer',
+    keywords: 'base64, json, uuid, hash, sha, developer',
     description: 'Base64 & URL, JSON, UUID and checksums (hash) in one tool.',
     tabsLabel: 'Function',
     tabs: { base64: 'Base64 & URL', json: 'JSON', uuid: 'UUID', hash: 'Hash' } as Record<

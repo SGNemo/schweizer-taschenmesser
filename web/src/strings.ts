@@ -1758,6 +1758,27 @@ export const de = {
     shortcut: 'Strg+.',
     none: 'Es sind keine Werkzeuge eingeschaltet.',
     manage: 'Werkzeuge verwalten',
+    panel: {
+      categories: {
+        rechnen: 'Rechnen',
+        zeit: 'Zeit',
+        erzeugen: 'Erzeugen',
+        medien: 'Bilder & Dateien',
+        text: 'Text',
+        entwickler: 'Entwickler',
+      },
+      search: 'Werkzeug suchen',
+      searchHint: 'Name oder Aufgabe, Alt+1 bis 9 wechselt',
+      list: 'Werkzeugliste',
+      all: 'Alle Werkzeuge',
+      detach: 'In eigenem Fenster öffnen',
+      noMatch: 'Kein Werkzeug passt.',
+      scratch: 'Schmierzettel',
+      scratchHint: 'Notizzettel in Notizen',
+      pick: 'Wähle links ein Werkzeug.',
+      solo: 'Werkzeug',
+      number: (n: number) => `Alt+${n}`,
+    },
     library: {
       title: 'Werkzeuge',
       intro:
@@ -1779,6 +1800,7 @@ export const de = {
         `${percent}% von ${base} = ${value}`,
       shareOf: (part: string, whole: string, value: string) => `${part} von ${whole} = ${value}%`,
       name: 'Rechner',
+      keywords: 'Taschenrechner, rechnen, Prozent, Mathe',
       description:
         'Rechnen mit Klammern, Funktionen und Variablen, dazu Programmierer-, Finanz-, Datums- und Einheitenrechner mit Verlauf. „240 + 19 %“ rechnet 19 % dazu.',
       input: 'Rechnung',
@@ -1954,6 +1976,7 @@ export const de = {
     },
     currency: {
       name: 'Währung',
+      keywords: 'Devisen, Wechselkurs, Euro, Dollar, umrechnen',
       description: 'Rechnet Beträge mit den Referenzkursen der Europäischen Zentralbank um.',
       amount: 'Betrag',
       from: 'Von',
@@ -1970,6 +1993,7 @@ export const de = {
     },
     timer: {
       name: 'Timer & Stoppuhr',
+      keywords: 'Countdown, Stoppuhr, Pomodoro, Wecker',
       description: 'Countdown, Stoppuhr und Pomodoro (25 Min. Arbeit, 5 Min. Pause).',
       modes: { timer: 'Timer', stopwatch: 'Stoppuhr', pomodoro: 'Pomodoro' } as Record<
         string,
@@ -1992,6 +2016,7 @@ export const de = {
     },
     screenshot: {
       name: 'Bildschirmfoto',
+      keywords: 'Screenshot, Bildschirm, aufnehmen, Aufnahme',
       description:
         'Bildschirm, Fenster oder Tab aufnehmen und als Bild speichern oder kopieren. Alles bleibt auf deinem Gerät.',
       hint: 'Der Browser fragt, was aufgenommen werden soll. Das Bild bleibt auf dieser Seite, bis du es speicherst, kopierst oder verwirfst.',
@@ -2014,6 +2039,7 @@ export const de = {
     },
     diff: {
       name: 'Textvergleich',
+      keywords: 'Vergleich, Unterschied, Text vergleichen, diff',
       description:
         'Zwei Texte nebeneinander legen und sehen, was sich geändert hat. Alles bleibt auf deinem Gerät.',
       before: 'Vorher',
@@ -2034,6 +2060,7 @@ export const de = {
     },
     regex: {
       name: 'Regex-Tester',
+      keywords: 'Regex, regulärer Ausdruck, Muster, Treffer',
       description:
         'Ein Muster (reguläre Ausdrücke) an einem Text ausprobieren: Treffer, Gruppen und Ersetzen. Läuft nur auf deinem Gerät.',
       pattern: 'Muster',
@@ -2069,6 +2096,7 @@ export const de = {
     },
     qr: {
       name: 'QR-Code',
+      keywords: 'QR, Code, Barcode, scannen, Link teilen',
       description: 'QR-Codes erzeugen und mit der Kamera lesen.',
       create: 'Erzeugen',
       scan: 'Lesen',
@@ -2120,6 +2148,7 @@ export const de = {
         kn: 'Knoten (kn)',
       } as Record<string, string>,
       name: 'Einheiten',
+      keywords: 'umrechnen, Länge, Gewicht, Temperatur, Meter, Kilo',
       description: 'Länge, Gewicht, Temperatur, Volumen und Geschwindigkeit umrechnen.',
       kind: 'Größe',
       kinds: {
@@ -2137,6 +2166,7 @@ export const de = {
     },
     dates: {
       name: 'Datumsrechner',
+      keywords: 'Datum, Tage, Kalenderwoche, Wochentag, Differenz',
       description: 'Abstand zwischen Daten, Tage addieren, Wochentag und Kalenderwoche.',
       diff: 'Abstand',
       add: 'Tage addieren',
@@ -2156,6 +2186,7 @@ export const de = {
     },
     persona: {
       name: 'Anonyme Persona',
+      keywords: 'Fake, Pseudonym, Wegwerf, Anmeldung, erfundene Person',
       description:
         'Erfindet eine Persona für Anmeldungen, bei denen keine echten Angaben nötig sind, und für Tests. Mit Wegwerf-Mail-Link.',
       intro: 'Erfundene Angaben. Keine echte Person, keine Ausweis-, Konto- oder Kartendaten.',
@@ -2224,6 +2255,7 @@ export const de = {
     },
     dice: {
       name: 'Würfel & Zufall',
+      keywords: 'Würfel, Münze, Zufall, Los, auslosen',
       description: 'Würfeln, Münze werfen, Zufallszahl und Zufallsauswahl.',
       dice: 'Würfel',
       count: 'Anzahl',
@@ -2244,6 +2276,7 @@ export const de = {
     },
     text: {
       name: 'Text-Werkzeug',
+      keywords: 'Wörter zählen, Zeichen, Groß- und Kleinschreibung, Blindtext',
       description:
         'Wörter und Zeichen zählen, Groß-/Kleinschreibung ändern, Text aufräumen, Blindtext.',
       input: 'Text',
@@ -2307,6 +2340,7 @@ export const de = {
         'America/Argentina/Buenos_Aires': 'Buenos Aires',
       } as Record<string, string>,
       name: 'Zeitzonen',
+      keywords: 'Zeitzone, Uhrzeit, Zeitverschiebung, Weltzeit',
       description: 'Eine Uhrzeit in andere Zeitzonen umrechnen, inklusive Sommerzeit.',
       date: 'Datum',
       time: 'Uhrzeit',
@@ -2323,6 +2357,7 @@ export const de = {
     },
     image: {
       name: 'Bilder verkleinern',
+      keywords: 'Bild, Foto, verkleinern, zuschneiden, JPG, PNG, WebP',
       description:
         'Bilder verkleinern, zuschneiden und in PNG, JPG oder WebP umwandeln – alles auf deinem Gerät.',
       pick: 'Bild auswählen',
@@ -2347,6 +2382,7 @@ export const de = {
     },
     pdf: {
       name: 'PDF-Werkzeug',
+      keywords: 'PDF, zusammenfügen, Seiten, drehen, entfernen',
       description:
         'PDFs zusammenfügen, Seiten behalten oder entfernen und drehen – auf deinem Gerät, ohne Hochladen.',
       mode: 'Was möchtest du tun?',
@@ -2387,6 +2423,7 @@ export const de = {
     },
     dev: {
       name: 'Entwickler',
+      keywords: 'Base64, JSON, UUID, Hash, SHA, Entwickler',
       description: 'Base64 & URL, JSON, UUID und Prüfsummen (Hash) in einem Werkzeug.',
       tabsLabel: 'Funktion',
       tabs: { base64: 'Base64 & URL', json: 'JSON', uuid: 'UUID', hash: 'Hash' } as Record<

@@ -8,6 +8,27 @@ export const tools: Strings['tools'] = {
   shortcut: 'Ctrl+.',
   none: 'Aucun outil n’est activé.',
   manage: 'Gérer les outils',
+  panel: {
+    categories: {
+      rechnen: 'Calculer',
+      zeit: 'Temps',
+      erzeugen: 'Créer',
+      medien: 'Images et fichiers',
+      text: 'Texte',
+      entwickler: 'Développeur',
+    },
+    search: 'Chercher un outil',
+    searchHint: 'Nom ou tâche, Alt+1 à 9 change',
+    list: 'Liste des outils',
+    all: 'Tous les outils',
+    detach: 'Ouvrir dans sa propre fenêtre',
+    noMatch: 'Aucun outil ne correspond.',
+    scratch: 'Brouillon',
+    scratchHint: 'Pense-bête dans Notes',
+    pick: 'Choisissez un outil à gauche.',
+    solo: 'Outil',
+    number: (n: number) => `Alt+${n}`,
+  },
   library: {
     title: 'Outils',
     intro:
@@ -29,6 +50,7 @@ export const tools: Strings['tools'] = {
       `${percent} % de ${base} = ${value}`,
     shareOf: (part: string, whole: string, value: string) => `${part} sur ${whole} = ${value} %`,
     name: 'Calculatrice',
+    keywords: 'calculatrice, calculer, pourcentage, maths',
     description:
       'Calculer avec parenthèses, fonctions et variables, plus calculatrices programmeur, finance, dates et unités avec historique. « 240 + 19 % » ajoute 19 %.',
     input: 'Calcul',
@@ -206,6 +228,7 @@ export const tools: Strings['tools'] = {
   },
   currency: {
     name: 'Devises',
+    keywords: 'devises, taux de change, euro, dollar, convertir',
     description:
       'Convertit des montants avec les taux de référence de la Banque centrale européenne.',
     amount: 'Montant',
@@ -223,6 +246,7 @@ export const tools: Strings['tools'] = {
   },
   timer: {
     name: 'Minuteur et chrono',
+    keywords: 'minuteur, chronomètre, pomodoro, compte à rebours',
     description: 'Compte à rebours, chronomètre et Pomodoro (25 min de travail, 5 min de pause).',
     modes: { timer: 'Minuteur', stopwatch: 'Chronomètre', pomodoro: 'Pomodoro' } as Record<
       string,
@@ -245,6 +269,7 @@ export const tools: Strings['tools'] = {
   },
   screenshot: {
     name: 'Capture d’écran',
+    keywords: 'capture d’écran, écran, capturer',
     description:
       'Capturez un écran, une fenêtre ou un onglet et enregistrez ou copiez-le comme image. Tout reste sur votre appareil.',
     hint: 'Le navigateur demande ce qu’il faut capturer. L’image reste sur cette page jusqu’à ce que vous l’enregistriez, la copiiez ou l’écartiez.',
@@ -267,6 +292,7 @@ export const tools: Strings['tools'] = {
   },
   diff: {
     name: 'Comparer des textes',
+    keywords: 'comparer, différence, comparer des textes, diff',
     description:
       'Placez deux textes côte à côte et voyez ce qui a changé. Tout reste sur votre appareil.',
     before: 'Avant',
@@ -287,6 +313,7 @@ export const tools: Strings['tools'] = {
   },
   regex: {
     name: 'Testeur de regex',
+    keywords: 'regex, expression régulière, motif, correspondances',
     description:
       'Essayez un motif (expression régulière) sur un texte : correspondances, groupes et remplacement. Fonctionne uniquement sur votre appareil.',
     pattern: 'Motif',
@@ -323,6 +350,7 @@ export const tools: Strings['tools'] = {
   },
   qr: {
     name: 'Code QR',
+    keywords: 'qr, code, scanner, partager un lien',
     description: 'Créer des codes QR et les lire avec la caméra.',
     create: 'Créer',
     scan: 'Lire',
@@ -375,6 +403,7 @@ export const tools: Strings['tools'] = {
       kn: 'Nœuds (kn)',
     } as Record<string, string>,
     name: 'Unités',
+    keywords: 'convertir, longueur, poids, température, mètres',
     description: 'Convertir longueur, poids, température, volume et vitesse.',
     kind: 'Grandeur',
     kinds: {
@@ -392,6 +421,7 @@ export const tools: Strings['tools'] = {
   },
   dates: {
     name: 'Calcul de dates',
+    keywords: 'date, jours, semaine, jour de la semaine, écart',
     description: 'Écart entre deux dates, ajout de jours, jour de la semaine et numéro de semaine.',
     diff: 'Écart',
     add: 'Ajouter des jours',
@@ -412,6 +442,7 @@ export const tools: Strings['tools'] = {
   },
   persona: {
     name: 'Persona anonyme',
+    keywords: 'faux, pseudonyme, jetable, inscription, personne inventée',
     description:
       'Invente un persona pour les inscriptions qui n’exigent pas de vraies données, et pour les tests. Avec lien vers un e-mail jetable.',
     intro:
@@ -481,6 +512,7 @@ export const tools: Strings['tools'] = {
   },
   dice: {
     name: 'Dés et hasard',
+    keywords: 'dé, pièce, hasard, tirage, choisir',
     description: 'Lancer des dés, jouer à pile ou face, nombre aléatoire et tirage au sort.',
     dice: 'Dés',
     count: 'Nombre',
@@ -501,6 +533,7 @@ export const tools: Strings['tools'] = {
   },
   text: {
     name: 'Outil texte',
+    keywords: 'compter les mots, caractères, majuscules, minuscules, lorem ipsum',
     description: 'Compter mots et caractères, changer la casse, nettoyer un texte, faux texte.',
     input: 'Texte',
     stats: 'Comptage',
@@ -563,6 +596,7 @@ export const tools: Strings['tools'] = {
       'America/Argentina/Buenos_Aires': 'Buenos Aires',
     } as Record<string, string>,
     name: 'Fuseaux horaires',
+    keywords: 'fuseau horaire, heure, décalage, heure mondiale',
     description: 'Convertir une heure dans d’autres fuseaux horaires, heure d’été comprise.',
     date: 'Date',
     time: 'Heure',
@@ -579,6 +613,7 @@ export const tools: Strings['tools'] = {
   },
   image: {
     name: 'Réduire des images',
+    keywords: 'image, photo, réduire, recadrer, jpg, png, webp',
     description:
       'Réduire, recadrer et convertir des images en PNG, JPG ou WebP – le tout sur votre appareil.',
     pick: 'Choisir une image',
@@ -603,6 +638,7 @@ export const tools: Strings['tools'] = {
   },
   pdf: {
     name: 'Outil PDF',
+    keywords: 'pdf, fusionner, pages, pivoter, supprimer',
     description:
       'Fusionner des PDF, garder ou retirer des pages et les faire pivoter – sur votre appareil, sans envoi.',
     mode: 'Que souhaitez-vous faire ?',
@@ -643,6 +679,7 @@ export const tools: Strings['tools'] = {
   },
   dev: {
     name: 'Développeurs',
+    keywords: 'base64, json, uuid, hash, sha, développeur',
     description: 'Base64 et URL, JSON, UUID et sommes de contrôle (hash) dans un seul outil.',
     tabsLabel: 'Fonction',
     tabs: { base64: 'Base64 et URL', json: 'JSON', uuid: 'UUID', hash: 'Hash' } as Record<

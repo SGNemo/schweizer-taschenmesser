@@ -4,11 +4,54 @@
  * ones are on and their order), and never import modules or the database (ESLint).
  */
 import type { ComponentType } from 'react';
-import type { Maturity } from '@/core/modules/types';
+import type { Maturity, ModuleHue } from '@/core/modules/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
 export type ToolGroup = 'basis' | 'extra' | 'dev';
+
+/** How the toolbox panel sorts its list (`group` stays the library/settings section). */
+export const TOOL_CATEGORIES = [
+  'rechnen',
+  'zeit',
+  'erzeugen',
+  'medien',
+  'text',
+  'entwickler',
+] as const;
+export type ToolCategory = (typeof TOOL_CATEGORIES)[number];
+
+/** The small mark in a tool's head (decoration only, `ui`-free SVG in `layout/tools/ToolSignature`). */
+export const TOOL_SIGNATURES = [
+  'display',
+  'flow',
+  'ring',
+  'calendarLeaf',
+  'globe',
+  'dice',
+  'qrFrame',
+  'idCard',
+  'notePaper',
+  'photoFrame',
+  'pageStack',
+  'viewfinder',
+  'terminal',
+  'splitPage',
+  'pattern',
+  'none',
+] as const;
+export type ToolSignatureId = (typeof TOOL_SIGNATURES)[number];
+
+/** Identity v3 for a tool (docs/design/MODULE-IDENTITY.md "Tools"): colour, mark, type. */
+export interface ToolIdentity {
+  /** Primary colour of the plate and the tinted head; one of the palette v3 hues. */
+  hue: ModuleHue;
+  /** Optional second colour (second stop of the head). Never equal to `hue`. */
+  hue2?: ModuleHue;
+  signature: ToolSignatureId;
+  /** `mono` for code-like tools (developer group); everything else stays sans. */
+  type?: 'sans' | 'mono';
+}
 
 /**
  * What a tool answers to a line typed into the search bar ("timer 10m", "umrechnen 5 km"): one line
@@ -31,6 +74,15 @@ export interface ToolManifest {
   /** One sentence for the tool library. */
   description: string;
   group: ToolGroup;
+  /** Required. Sorting in the toolbox panel and the search; `npm run check:tools` checks it. */
+  category: ToolCategory;
+  /** Required. Colour, mark and type of the tool (identity v3); `npm run check:tools` checks it. */
+  identity: ToolIdentity;
+  /**
+   * Required. Extra words the panel search and palette match (synonyms, other spellings), taken
+   * from the current language (`t.tools.<id>.keywords`, comma separated there, split by `toolKeywords`).
+   */
+  keywords: readonly string[];
   /** Works without a network connection (shown as a badge in the library). */
   offline: boolean;
   /** On without user action; `false` = off but listed ("aus, aber sichtbar"). */
