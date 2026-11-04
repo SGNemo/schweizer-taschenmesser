@@ -2,7 +2,7 @@
 type: changed
 area: mail
 breaking: false
-de: "E-Mail zeigt oben einen Umschlag neben der Briefmarke mit der Zahl ungelesener Mails, der aktive Ordner ist ein gefüllter Chip, und die drei Spalten richten sich nach der Seitenbreite statt nach dem Fenster."
+de: "E-Mail zeigt oben einen Umschlag neben der Briefmarke mit den ungelesenen Mails, der aktive Ordner ist ein gefüllter Chip, und die drei Spalten folgen der Seitenbreite statt dem Fenster."
 en: "Mail shows an envelope beside the stamp with the unread count at the top, the open folder is a filled chip, and the three columns follow the page width instead of the window."
 ---
 
