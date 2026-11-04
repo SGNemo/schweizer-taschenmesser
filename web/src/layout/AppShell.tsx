@@ -17,7 +17,7 @@ import { ReminderPrompt } from './ReminderPrompt';
 import { ResumeTracker } from './ResumeTracker';
 import { SupporterEffects } from './SupporterEffects';
 import { SetupHost } from './setup/SetupHost';
-import { ToolsSheet } from './ToolsSheet';
+import { ToolsPanel } from './tools/ToolsPanel';
 import { PendingImports } from './PendingImports';
 import { UpdateBanner } from './UpdateBanner';
 import { SeedBanner } from './devTools';
@@ -210,7 +210,7 @@ export function AppShell() {
             </Suspense>
           ) : null}
           <VoiceStatus />
-          <ToolsSheet />
+          <ToolsPanel />
           <OnboardingHost />
           <SetupHost />
         </>

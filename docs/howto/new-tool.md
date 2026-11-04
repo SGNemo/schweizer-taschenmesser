@@ -1,0 +1,14 @@
+# New tool with identity
+
+Recipe for a tool that looks and feels like the rest of Nemo (identity v3, [design/MODULE-IDENTITY.md](../design/MODULE-IDENTITY.md) "Tools"). Index: [HOW-TO](../HOW-TO.md). General tool rules (isolation, lazy chunks, settings): [new-extension.md](new-extension.md) "New tool". Commands in `web/`.
+
+1. **Folder** `src/tools/<id>/`: `manifest.ts`, thin `Tool.tsx` (`lazyOnline`), `View.tsx`, optional `logic.ts` + test.
+2. **Manifest fields** (`ToolManifest`, `core/tools/types.ts`), all required, checked by `npm run check:tools`:
+   - `category`: `rechnen | zeit | erzeugen | medien | text | entwickler` (sorts the panel list, `t.tools.panel.categories`). `group` stays the library section and default on/off.
+   - `identity: { hue, hue2?, signature, type? }`: a palette v3 hue (`MODULE_HUES`, not the same as the tool before or after in `order`), an optional second hue for the head gradient, a `signature` from `TOOL_SIGNATURES` (small mark, `layout/tools/ToolSignature.tsx`; add the SVG there for a new one and to the list in `core/tools/types.ts` **and** `scripts/lib/checkTools.ts`, a registry test pins both), `type: 'mono'` only for code-like tools.
+   - `keywords`: getter `toolKeywords(t.tools.<id>.keywords)`; a comma separated list of synonyms in each language (the panel search folds case and umlauts).
+3. **Texts** in all five languages: `name`, `description`, `keywords` under `t.tools.<id>` (`strings.ts` + `i18n/locales/*/tools.ts`), `npm run check:i18n`.
+4. **The tool itself** sits in `ToolStage` (`layout/tools/`): the stage draws the head (plate, one line from `description`, signature) and the tinted surface; the tool draws only its content. Use `@/ui` and tokens (no hex, no edge stripes), a large result with "copy", short feedback (`copyText` toast), nothing that moves without `prefers-reduced-motion` care.
+5. **Keys:** the panel gives Alt+1…9 by list position and the arrows; a tool must not take Alt+digit or Esc for itself (Esc closes the panel; inside a field it first leaves the field's own popup).
+6. **Detached window:** `/tool/<id>` renders the same stage without the shell; the tool must work when it is the only thing on screen.
+7. Tests: registry test (identity valid), your `logic.test.ts`, one e2e that opens the tool with `pickTool(page, name)` (`e2e/helpers.ts`).

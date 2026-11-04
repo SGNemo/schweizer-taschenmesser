@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { openToolbox, ready } from './helpers';
 
 /**
  * "In Arbeit anzeigen" (maturity): what is `preview` is missing from the toolbox, the tool library,
@@ -17,12 +17,11 @@ async function setPreview(page: Page, on: boolean) {
 }
 
 function toolbar(page: Page) {
-  return page.getByRole('dialog', { name: 'Werkzeuge' });
+  return page.getByRole('dialog');
 }
 
 async function openToolbar(page: Page) {
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  await expect(toolbar(page)).toBeVisible();
+  await openToolbox(page);
 }
 
 /** The palette entries for `text`, without the "Frage stellen" line the assistant always offers. */

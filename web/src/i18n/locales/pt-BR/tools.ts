@@ -8,6 +8,24 @@ export const tools: Strings['tools'] = {
   shortcut: 'Ctrl+.',
   none: 'Nenhuma ferramenta está ativada.',
   manage: 'Gerenciar ferramentas',
+  panel: {
+    categories: {
+      rechnen: 'Calcular',
+      zeit: 'Tempo',
+      erzeugen: 'Criar',
+      medien: 'Imagens e arquivos',
+      text: 'Texto',
+      entwickler: 'Desenvolvimento',
+    },
+    searchHint: 'Nome ou tarefa, Alt+1 a 9 troca',
+    list: 'Lista de ferramentas',
+    detach: 'Abrir em janela própria',
+    detachBlocked: 'O navegador bloqueou a janela. Permita pop-ups para este site.',
+    soloMissing: 'Esta ferramenta está desativada ou não existe.',
+    scratch: 'Rascunho',
+    scratchHint: 'Nota adesiva em Notas',
+    number: (n: number) => `Alt+${n}`,
+  },
   library: {
     title: 'Ferramentas',
     intro:
@@ -29,6 +47,7 @@ export const tools: Strings['tools'] = {
       `${percent}% de ${base} = ${value}`,
     shareOf: (part: string, whole: string, value: string) => `${part} de ${whole} = ${value}%`,
     name: 'Calculadora',
+    keywords: 'calculadora, calcular, porcentagem, matemática',
     description:
       'Calcule com parênteses, funções e variáveis, além de calculadoras de programador, finanças, datas e unidades com histórico. “240 + 19 %” soma 19%.',
     input: 'Conta',
@@ -204,6 +223,7 @@ export const tools: Strings['tools'] = {
   },
   currency: {
     name: 'Moeda',
+    keywords: 'câmbio, moeda, euro, dólar, converter',
     description: 'Converte valores com as taxas de referência do Banco Central Europeu.',
     amount: 'Valor',
     from: 'De',
@@ -220,6 +240,7 @@ export const tools: Strings['tools'] = {
   },
   timer: {
     name: 'Timer e cronômetro',
+    keywords: 'cronômetro, contagem regressiva, pomodoro, alarme',
     description: 'Contagem regressiva, cronômetro e Pomodoro (25 min de trabalho, 5 min de pausa).',
     modes: { timer: 'Timer', stopwatch: 'Cronômetro', pomodoro: 'Pomodoro' } as Record<
       string,
@@ -242,6 +263,7 @@ export const tools: Strings['tools'] = {
   },
   screenshot: {
     name: 'Captura de tela',
+    keywords: 'captura de tela, tela, capturar',
     description:
       'Capture uma tela, janela ou aba e salve ou copie como imagem. Tudo fica no seu dispositivo.',
     hint: 'O navegador pergunta o que capturar. A imagem fica nesta página até você salvar, copiar ou descartar.',
@@ -264,6 +286,7 @@ export const tools: Strings['tools'] = {
   },
   diff: {
     name: 'Comparar textos',
+    keywords: 'comparar, diferença, comparar texto, diff',
     description:
       'Coloque dois textos lado a lado e veja o que mudou. Tudo fica no seu dispositivo.',
     before: 'Antes',
@@ -284,6 +307,7 @@ export const tools: Strings['tools'] = {
   },
   regex: {
     name: 'Testador de regex',
+    keywords: 'regex, expressão regular, padrão, correspondências',
     description:
       'Teste um padrão (expressão regular) em um texto: correspondências, grupos e substituição. Funciona só no seu dispositivo.',
     pattern: 'Padrão',
@@ -320,6 +344,7 @@ export const tools: Strings['tools'] = {
   },
   qr: {
     name: 'Código QR',
+    keywords: 'qr, código, escanear, compartilhar link',
     description: 'Gerar códigos QR e lê-los com a câmera.',
     create: 'Gerar',
     scan: 'Ler',
@@ -371,6 +396,7 @@ export const tools: Strings['tools'] = {
       kn: 'Nós (kn)',
     } as Record<string, string>,
     name: 'Unidades',
+    keywords: 'converter, comprimento, peso, temperatura, metros',
     description: 'Converter comprimento, peso, temperatura, volume e velocidade.',
     kind: 'Grandeza',
     kinds: {
@@ -388,6 +414,7 @@ export const tools: Strings['tools'] = {
   },
   dates: {
     name: 'Calculadora de datas',
+    keywords: 'data, dias, semana, dia da semana, diferença',
     description: 'Intervalo entre datas, somar dias, dia da semana e semana do ano.',
     diff: 'Intervalo',
     add: 'Somar dias',
@@ -407,6 +434,7 @@ export const tools: Strings['tools'] = {
   },
   persona: {
     name: 'Persona anônima',
+    keywords: 'falso, pseudônimo, descartável, cadastro, pessoa inventada',
     description:
       'Inventa uma persona para cadastros que não precisam de dados reais e para testes. Com link para e-mail descartável.',
     intro: 'Dados inventados. Nenhuma pessoa real, sem dados de documentos, contas ou cartões.',
@@ -475,6 +503,7 @@ export const tools: Strings['tools'] = {
   },
   dice: {
     name: 'Dados e sorteio',
+    keywords: 'dado, moeda, aleatório, sorteio, escolher',
     description: 'Jogar dados, cara ou coroa, número aleatório e sorteio.',
     dice: 'Dados',
     count: 'Quantidade',
@@ -495,6 +524,7 @@ export const tools: Strings['tools'] = {
   },
   text: {
     name: 'Ferramenta de texto',
+    keywords: 'contar palavras, caracteres, maiúsculas, minúsculas, lorem ipsum',
     description:
       'Contar palavras e caracteres, mudar maiúsculas/minúsculas, limpar texto, texto de exemplo.',
     input: 'Texto',
@@ -558,6 +588,7 @@ export const tools: Strings['tools'] = {
       'America/Argentina/Buenos_Aires': 'Buenos Aires',
     } as Record<string, string>,
     name: 'Fusos horários',
+    keywords: 'fuso horário, hora, diferença de horário',
     description: 'Converter um horário para outros fusos, incluindo horário de verão.',
     date: 'Data',
     time: 'Horário',
@@ -574,6 +605,7 @@ export const tools: Strings['tools'] = {
   },
   image: {
     name: 'Reduzir imagens',
+    keywords: 'imagem, foto, reduzir, cortar, jpg, png, webp',
     description:
       'Reduzir, cortar e converter imagens em PNG, JPG ou WebP – tudo no seu dispositivo.',
     pick: 'Escolher imagem',
@@ -597,6 +629,7 @@ export const tools: Strings['tools'] = {
   },
   pdf: {
     name: 'Ferramenta de PDF',
+    keywords: 'pdf, juntar, páginas, girar, remover',
     description: 'Juntar PDFs, manter ou remover páginas e girar – no seu dispositivo, sem upload.',
     mode: 'O que você quer fazer?',
     merge: 'Juntar',
@@ -635,6 +668,7 @@ export const tools: Strings['tools'] = {
   },
   dev: {
     name: 'Desenvolvedores',
+    keywords: 'base64, json, uuid, hash, sha, desenvolvedor',
     description: 'Base64 e URL, JSON, UUID e checksums (hash) em uma só ferramenta.',
     tabsLabel: 'Função',
     tabs: { base64: 'Base64 e URL', json: 'JSON', uuid: 'UUID', hash: 'Hash' } as Record<

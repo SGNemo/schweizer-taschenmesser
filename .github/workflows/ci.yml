@@ -179,6 +179,8 @@ jobs:
         run: npm run version:check
       - name: Every module has a complete manifest and a home-screen widget
         run: npm run check:modules
+      - name: Every tool has an identity, a category and keywords in all languages
+        run: npm run check:tools
       - name: No two tracked paths differ only in letter case (Windows/macOS checkouts)
         run: npm run check:case
       - name: UI texts complete in every language, none hard-coded or read at import

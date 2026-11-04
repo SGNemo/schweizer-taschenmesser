@@ -1,4 +1,5 @@
 import { t } from '@/strings';
+import { toolKeywords } from '@/core/tools/keywords';
 import type { ToolManifest } from '@/core/tools/types';
 
 const tool: ToolManifest = {
@@ -11,6 +12,11 @@ const tool: ToolManifest = {
     return t.tools.calc.description;
   },
   group: 'basis',
+  category: 'rechnen',
+  identity: { hue: 'cobalt', hue2: 'sky', signature: 'display' },
+  get keywords() {
+    return toolKeywords(t.tools.calc.keywords);
+  },
   offline: true,
   defaultEnabled: true,
   maturity: 'stable',
