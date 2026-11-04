@@ -379,7 +379,9 @@ jobs:
   # (29) runs in the sync job. Not part of the Dev-Preview gate: it runs next to the build and after the publish.
   web-e2e-rest:
     name: E2E app (rest, shard ${{ matrix.shard }})
-    needs: changes
+    # Starts after the smoke E2E so that its six runners do not compete with the Dev-Preview gate for the
+    # runner pool; it still runs when the smoke list failed (!cancelled()), so the run shows everything.
+    needs: [changes, web-e2e]
     if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -581,7 +583,8 @@ jobs:
 
   e2e-sync:
     name: Multi-device sync E2E
-    needs: changes
+    # After the smoke E2E, like the rest of the suite: keeps the runner pool free for the Dev-Preview gate.
+    needs: [changes, web-e2e]
     if: ${{ !cancelled() && needs.changes.outputs.sync != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20

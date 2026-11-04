@@ -219,3 +219,56 @@ its own job so it still runs on every code change; CodeQL got a manual trigger; 
 group per ref. Declined as follow-up: the Dev-Preview publish stage recomputes version/tag in `prepare` (a tag pushed
 between the two stages of one run, about 12 min apart, could change the label of the release; asset names and
 signatures are unaffected).
+
+---
+
+# Dev release, round 3 (PR #462)
+
+Goal: the Dev app as early as possible after a merge to `develop`. Measured on the real develop runs after round 2
+(`41906185037`, `41898666199`, `41895791819`) and on manual Dev-Preview runs on the branch.
+
+## Where the 14 to 15 minutes went
+
+| Part | Time after the push |
+|---|---|
+| Windows build done (gitleaks + prepare in front: 70 s, runner start, setup 95 s, build 307 to 377 s, smoke test 25 s) | 7.5 to 9 min |
+| Android build done | 6 to 8 min |
+| Full E2E (six shards, desktop + Pixel 7) done, which the publish waited for | 11.5 to 13 min |
+| Publish (prepare again 21 s + release step 25 to 32 s) | +1 min after the last gate job |
+
+So the app was built 4 to 6 minutes before it was published. The time was spent waiting for checks.
+
+## What changed
+
+| Measure | Effect |
+|---|---|
+| Publish gate = gitleaks, licences, web static, unit tests, E2E smoke (24 spec files), native shell. Rest of E2E (1543 tests), sync E2E + seed project, small packages, extension, local model, docs checks, CodeQL run next to the build and after the publish | the publish no longer waits for the 11 to 13 min E2E; a red late check turns the run red but the preview is out. Tests: smoke 171 + rest 1543 = 1714 app tests, seed 29, as before |
+| Gitleaks next to `prepare` and the builds (publish still needs it) | Windows and Android start after 20 to 25 s instead of 70 to 195 s |
+| Publish stage gets version/tag from the build stage (no second `prepare`) | about 25 s, and no version drift between the two stages |
+| `web-e2e-rest` and `e2e-sync` start after the smoke E2E | the six + one runners no longer take the gate's runners (free plan: 20 at a time) |
+| `dev-preview` concurrency group per ref | a manual run on a branch can no longer cancel a develop preview (it did once while measuring) |
+
+Expected: Dev app out about 9 to 10 min after the push (Windows build end + publish), instead of 14 to 15. The first
+real develop run shows the number; a loaded runner pool can add minutes to any of it.
+
+## Tried and dropped: Windows preview without fat LTO
+
+`CARGO_PROFILE_RELEASE_LTO=false`, `CODEGEN_UNITS=16` for the Windows dev build only (env, no `Cargo.toml` change):
+build step 488 s warm (486 s cold) against 377 s warm with the release profile, and the .exe grew from 15.3 to
+17.8 MB (+16 %). Not faster, so reverted. The 14 workspace crates are compiled on every run (`rust-cache` keeps
+dependencies only); a build that really got faster would need the workspace crates cached too.
+
+## Unit coverage (measured once, not added to the repo)
+
+`vitest --coverage` (v8, 599 files, 5426 tests): **lines 80.8 %, statements 79.3 %, functions 74.4 %, branches
+73.8 %**. Weak in the unit tests alone: `pages` 40 %, `layout` 55 % (the E2E specs cover those), `modules/accounts`
+76 %, `todos` 76 %, `calendar` 76 %; strong: `core` 87 %, `tools` 88 %, `maps` 92 %, `finance` 93 %, `i18n` 100 %.
+There is no coverage gate in CI. Adding one means a dependency (`@vitest/coverage-v8`) and a slower unit job, so it
+is only proposed: a floor of 78 % lines would pass today.
+
+## Further levers, not done
+
+- Android: build only `aarch64` for the preview (saves about 80 s, but Android is not the critical path).
+- Cache the 14 workspace crates on Windows (needs `cache-workspace-crates` and size care on the 10 GB budget).
+- Larger Windows runner for the dev build (cost).
+- Move the Windows smoke test (25 s) after the upload; it is a safety gate before signing, so not done.
