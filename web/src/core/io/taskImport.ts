@@ -4,6 +4,7 @@
  */
 import { parseTodoistCsv } from './todoistCsv';
 import { parseGoogleTasks } from './googleTasks';
+import { isOutlookTasksCsv, parseOutlookTasks } from '@/importers/outlook-tasks/parse';
 
 export interface ImportedTask {
   /** Unique within the file; `parentKey` points at it. */
@@ -29,7 +30,7 @@ export interface ParsedTaskExport {
   skipped: number;
 }
 
-export type TaskExportFormat = 'todoist' | 'google';
+export type TaskExportFormat = 'todoist' | 'google' | 'outlook';
 
 const stripBom = (s: string) => (s.charCodeAt(0) === 0xfeff ? s.slice(1) : s);
 
@@ -38,7 +39,8 @@ export function detectTaskExport(text: string): TaskExportFormat | undefined {
   const src = stripBom(text).trimStart();
   if (src.startsWith('{') || src.startsWith('[')) return 'google';
   const header = (src.split(/\r?\n/, 1)[0] ?? '').toUpperCase();
-  return /\bTYPE\b/.test(header) && /\bCONTENT\b/.test(header) ? 'todoist' : undefined;
+  if (/\bTYPE\b/.test(header) && /\bCONTENT\b/.test(header)) return 'todoist';
+  return isOutlookTasksCsv(src) ? 'outlook' : undefined;
 }
 
 export function parseTaskExport(
@@ -46,5 +48,6 @@ export function parseTaskExport(
   format: TaskExportFormat,
   opts: { listName: string; today?: string },
 ): ParsedTaskExport {
-  return format === 'google' ? parseGoogleTasks(text, opts) : parseTodoistCsv(text, opts);
+  if (format === 'google') return parseGoogleTasks(text, opts);
+  return format === 'outlook' ? parseOutlookTasks(text, opts) : parseTodoistCsv(text, opts);
 }

@@ -11,6 +11,7 @@ import {
   checkDeleteSource,
   checkMaturity,
   checkRowSource,
+  checkAutomationSource,
   checkModule,
   checkSettingsFieldMeta,
   checkSettingsSource,
@@ -50,6 +51,21 @@ for (const id of readdirSync(modulesDir).sort()) {
   if (existsSync(aiPath) && /\bactions:\s*\{/.test(readFileSync(aiPath, 'utf8'))) {
     const { aiSchema } = await import(pathToFileURL(aiPath).href);
     errors.push(...validateAiActions(aiSchema).map((e) => `${id}: ${e}`));
+  }
+  // `automation` (rules): the file exists and its `actions` agree with `ai.ts` (the full check runs in
+  // `core/automation/modules.test.ts`, because the file imports repos that plain node cannot load).
+  if (/\bautomation:\s*\(\)\s*=>\s*import\(/.test(manifest)) {
+    const autoPath = join(dir, 'automation.ts');
+    if (!existsSync(autoPath))
+      errors.push(`${id}: manifest.automation points to a missing automation.ts`);
+    else
+      errors.push(
+        ...checkAutomationSource(
+          id,
+          readFileSync(autoPath, 'utf8'),
+          existsSync(aiPath) ? readFileSync(aiPath, 'utf8') : undefined,
+        ),
+      );
   }
   for (const m of manifest.matchAll(/import\(\s*['"]\.\/(widgets\/[^'"]+)['"]\s*\)/g)) {
     const file = ['.tsx', '.ts'].map((e) => join(dir, m[1] + e)).find(existsSync);

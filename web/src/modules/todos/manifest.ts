@@ -80,6 +80,7 @@ const manifest: ModuleManifest = {
   layout: 'wide',
   order: 20,
   area: 'plan',
+  automation: () => import('./automation'),
   contributions: {
     attention: () => import('./attention'),
     notifications: () => import('./notifications'),

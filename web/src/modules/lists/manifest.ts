@@ -69,6 +69,7 @@ const manifest: ModuleManifest = {
   layout: 'content',
   order: 90,
   area: 'household',
+  automation: () => import('./automation'),
   contributions: {
     onboarding,
     quickAdd: [

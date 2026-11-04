@@ -28,6 +28,8 @@ const TARGETS: Record<Origin, { action: string; moduleId: string }[]> = {
     { action: 'notes', moduleId: 'notes' },
   ],
   todoist: [{ action: 'tasks', moduleId: 'todos' }],
+  microsoft: [{ action: 'tasks', moduleId: 'todos' }],
+  evernote: [{ action: 'notes', moduleId: 'notes' }],
   obsidian: [{ action: 'notes', moduleId: 'notes' }],
   bank: [{ action: 'bank', moduleId: 'finance' }],
   bitwarden: [{ action: 'vault', moduleId: 'accounts' }],

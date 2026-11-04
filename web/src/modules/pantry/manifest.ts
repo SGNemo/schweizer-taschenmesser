@@ -63,6 +63,7 @@ const manifest: ModuleManifest = {
   layout: 'content',
   order: 95,
   area: 'household',
+  automation: () => import('./automation'),
   contributions: {
     attention: () => import('./attention'),
     onboarding: noOnboarding,

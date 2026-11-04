@@ -10,6 +10,7 @@ import { loadNotifyState, saveNotifyState } from '@/core/mail/state';
 import type { MailAccountRef, MailPage, MailThreadSummary } from '@/core/mail/types';
 import { getSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
+import { reportInvoices } from './automationEvents';
 import { saveThreads } from './cache';
 import { settings, type MailSettings } from './settings';
 
@@ -60,7 +61,9 @@ export async function pollAll(deps: PollDeps = defaultDeps()): Promise<number> {
       const byId = new Map(pages.flatMap((p) => p.threads).map((t) => [t.id, t]));
       const threads = [...byId.values()];
       await deps.saveHeaders(account.key, threads);
-      await deps.save(account.key, applyPoll(state, threads, at).state);
+      const polled = applyPoll(state, threads, at);
+      await deps.save(account.key, polled.state);
+      reportInvoices(threads.filter((t) => polled.fresh.includes(t.id)));
     } catch {
       // token gone, offline, rate limit: the mail page explains it; here we only wait longer
       await deps.save(account.key, afterFailure(state, at));

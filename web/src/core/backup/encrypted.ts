@@ -15,7 +15,13 @@ import {
   encryptWithPassword,
   type PasswordBlob,
 } from '@/core/crypto';
-import { parseBackup, serializeBackup, type Backup, type ParseResult } from './backup';
+import {
+  MAX_BACKUP_CHARS,
+  parseBackup,
+  serializeBackup,
+  type Backup,
+  type ParseResult,
+} from './backup';
 
 export const ENCRYPTED_BACKUP_FORMAT = 'taschenmesser-backup-encrypted';
 export const ENCRYPTED_BACKUP_VERSION = 1;
@@ -62,7 +68,8 @@ export type ReadFailure =
   | 'checksum-mismatch';
 
 export type ReadResult =
-  { ok: true; backup: Backup; encrypted: boolean } | { ok: false; reason: ReadFailure };
+  | { ok: true; backup: Backup; encrypted: boolean; skippedRows: number }
+  | { ok: false; reason: ReadFailure };
 
 export async function sha256Hex(text: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -129,6 +136,7 @@ export function isEncryptedBackupText(text: string): boolean {
 }
 
 export function parseEncryptedBackup(text: string): EncryptedParseResult {
+  if (text.length > MAX_BACKUP_CHARS * 2) return { ok: false, reason: 'invalid' };
   let json: unknown;
   try {
     json = JSON.parse(text);
@@ -170,7 +178,9 @@ export async function decryptBackup(
     return { ok: false, reason: 'invalid' };
   }
   const parsed = parseBackup(plain);
-  return parsed.ok ? { ok: true, backup: parsed.backup, encrypted: true } : parsed;
+  return parsed.ok
+    ? { ok: true, backup: parsed.backup, encrypted: true, skippedRows: parsed.skippedRows }
+    : parsed;
 }
 
 /** Reads either kind of backup text. Plain backups need no passphrase. */
@@ -179,7 +189,9 @@ export async function readBackupText(text: string, passphrase?: string): Promise
     const parsed = parseBackup(text);
     if (parsed.ok && (await plainChecksumStatus(text)) === 'mismatch')
       return { ok: false, reason: 'checksum-mismatch' };
-    return parsed.ok ? { ok: true, backup: parsed.backup, encrypted: false } : parsed;
+    return parsed.ok
+      ? { ok: true, backup: parsed.backup, encrypted: false, skippedRows: parsed.skippedRows }
+      : parsed;
   }
   const file = parseEncryptedBackup(text);
   if (!file.ok) return file;

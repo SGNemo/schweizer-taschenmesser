@@ -70,6 +70,7 @@ const manifest: ModuleManifest = {
   layout: 'full',
   order: 10,
   area: 'plan',
+  automation: () => import('./automation'),
   contributions: {
     attention: () => import('./attention'),
     onboarding: onboarding,

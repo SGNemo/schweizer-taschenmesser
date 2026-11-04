@@ -66,6 +66,7 @@ const manifest: ModuleManifest = {
   layout: 'content',
   order: 30,
   area: 'plan',
+  automation: () => import('./automation'),
   contributions: {
     onboarding: noOnboarding,
     notifications: () => import('./notifications'),

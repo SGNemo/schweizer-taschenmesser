@@ -22,9 +22,16 @@ const titleOf = (data: Record<string, unknown> | undefined): string | undefined 
 /** Optional per-module refinement: more events for the same write (e.g. `completed`). */
 export type Derive = (signal: WriteSignal, event: AutomationEvent) => AutomationEvent[];
 
-export function eventsOf(signal: WriteSignal, at: number, derive?: Derive): AutomationEvent[] {
+export function eventsOf(
+  signal: WriteSignal,
+  at: number,
+  derive?: Derive,
+  /** Which collections report their writes (`manifest.automation.watch`); unset = all. */
+  watched?: (moduleId: string, collection: string) => boolean,
+): AutomationEvent[] {
   const parts = splitTable(signal.table);
   if (!parts || EXCLUDED_MODULES.includes(parts.moduleId)) return [];
+  const report = !watched || watched(parts.moduleId, parts.collection);
   const cause = currentCause();
   const title = titleOf(signal.data);
   const base: AutomationEvent = {
@@ -37,7 +44,7 @@ export function eventsOf(signal: WriteSignal, at: number, derive?: Derive): Auto
     ...(cause ? { cause } : {}),
   };
   return [
-    base,
+    ...(report ? [base] : []),
     ...(derive?.(signal, base) ?? []).map((e) => ({ ...e, ...(cause ? { cause } : {}) })),
   ];
 }
@@ -48,10 +55,14 @@ export function eventsOf(signal: WriteSignal, at: number, derive?: Derive): Auto
  */
 export function startWriteEvents(
   deps: EngineDeps,
-  options: { derive?: Derive; wants?: (type: string) => boolean } = {},
+  options: {
+    derive?: Derive;
+    wants?: (type: string) => boolean;
+    watched?: (moduleId: string, collection: string) => boolean;
+  } = {},
 ): () => void {
   setWriteListener((signal) => {
-    for (const event of eventsOf(signal, now(), options.derive)) {
+    for (const event of eventsOf(signal, now(), options.derive, options.watched)) {
       if (options.wants && !options.wants(event.type)) continue;
       void processEvent(event, deps).catch((e) => console.error('[automation] event failed', e));
     }

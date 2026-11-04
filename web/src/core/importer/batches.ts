@@ -56,50 +56,64 @@ export async function commitImport(
   });
 
   const records: ImportBatch['records'] = [];
-  for (const [collection, items] of byCollection) {
-    const def = manifest.dataSchema.collections[collection];
-    if (!def) throw new ImportError('unknown-collection');
-    const repo = createCollectionRepo(manifest, collection, database);
-    const written = await repo.createMany(items);
-    records.push({ collection, ids: written.map((r) => r.id) });
-  }
-
   const updates: BatchUpdate[] = [];
   let conflicts = 0;
-  for (const row of changes) {
-    const { collection } = row.candidate;
-    const { before, after } = row.candidate.update!;
-    if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
-    const repo = createCollectionRepo(manifest, collection, database);
-    const current = await repo.get(row.candidate.id!);
-    const unchanged =
-      current !== undefined && Object.keys(before).every((k) => deepEqual(current[k], before[k]));
-    if (!unchanged) {
-      conflicts++;
-      continue;
+  const deletes: NonNullable<ImportBatch['deletes']> = [];
+  // A failure half way must not leave a half import: what this call wrote is taken back again.
+  try {
+    await writeAll();
+  } catch (e) {
+    for (const { collection, ids } of records) {
+      await createCollectionRepo(manifest, collection, database)
+        .removeMany(ids)
+        .catch(() => {});
     }
-    const via = row.candidate.update!.via;
-    const handler = via ? args.handlers?.[via] : undefined;
-    if (handler) await handler.apply(current.id, after);
-    else await repo.update(current.id, after);
-    updates.push({ collection, id: current.id, before, after, ...(via ? { via } : {}) });
+    throw e;
   }
 
-  const deletes: NonNullable<ImportBatch['deletes']> = [];
-  for (const row of removals) {
-    const { collection } = row.candidate;
-    if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
-    const repo = createCollectionRepo(manifest, collection, database);
-    const current = await repo.get(row.candidate.id!);
-    const before = row.candidate.remove!.before;
-    const unchanged =
-      current !== undefined && Object.keys(before).every((k) => deepEqual(current[k], before[k]));
-    if (!unchanged) {
-      conflicts++;
-      continue;
+  async function writeAll() {
+    for (const [collection, items] of byCollection) {
+      const def = manifest.dataSchema.collections[collection];
+      if (!def) throw new ImportError('unknown-collection');
+      const repo = createCollectionRepo(manifest, collection, database);
+      const written = await repo.createMany(items);
+      records.push({ collection, ids: written.map((r) => r.id) });
     }
-    await repo.remove(current.id);
-    deletes.push({ collection, id: current.id });
+
+    for (const row of changes) {
+      const { collection } = row.candidate;
+      const { before, after } = row.candidate.update!;
+      if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
+      const repo = createCollectionRepo(manifest, collection, database);
+      const current = await repo.get(row.candidate.id!);
+      const unchanged =
+        current !== undefined && Object.keys(before).every((k) => deepEqual(current[k], before[k]));
+      if (!unchanged) {
+        conflicts++;
+        continue;
+      }
+      const via = row.candidate.update!.via;
+      const handler = via ? args.handlers?.[via] : undefined;
+      if (handler) await handler.apply(current.id, after);
+      else await repo.update(current.id, after);
+      updates.push({ collection, id: current.id, before, after, ...(via ? { via } : {}) });
+    }
+
+    for (const row of removals) {
+      const { collection } = row.candidate;
+      if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
+      const repo = createCollectionRepo(manifest, collection, database);
+      const current = await repo.get(row.candidate.id!);
+      const before = row.candidate.remove!.before;
+      const unchanged =
+        current !== undefined && Object.keys(before).every((k) => deepEqual(current[k], before[k]));
+      if (!unchanged) {
+        conflicts++;
+        continue;
+      }
+      await repo.remove(current.id);
+      deletes.push({ collection, id: current.id });
+    }
   }
 
   const at = now();
@@ -112,6 +126,15 @@ export async function commitImport(
     createdAt: args.base?.createdAt ?? at,
     committedAt: at,
     records,
+    ...(args.base?.report
+      ? {
+          report: {
+            ...args.base.report,
+            imported:
+              records.reduce((n, r) => n + r.ids.length, 0) + updates.length + deletes.length,
+          },
+        }
+      : {}),
     status: 'committed',
     rows: undefined,
     ...(updates.length > 0 ? { updates } : {}),

@@ -14,7 +14,16 @@ import { now } from '@/core/time/now';
 export const MIGRATE_STEP_ID = 'core.migrate';
 export const MIGRATE_STATE_KEY = 'migrate.state';
 
-export const ORIGINS = ['google', 'todoist', 'obsidian', 'bank', 'bitwarden', 'paper'] as const;
+export const ORIGINS = [
+  'google',
+  'todoist',
+  'microsoft',
+  'evernote',
+  'obsidian',
+  'bank',
+  'bitwarden',
+  'paper',
+] as const;
 export type Origin = (typeof ORIGINS)[number];
 
 export interface MigrateItemDef {
@@ -33,6 +42,8 @@ export const MIGRATE_ITEMS: readonly MigrateItemDef[] = [
   { id: 'google.keep', origin: 'google', moduleId: 'notes' },
   { id: 'google.subscription', origin: 'google', manual: true },
   { id: 'todoist.tasks', origin: 'todoist', moduleId: 'todos' },
+  { id: 'microsoft.tasks', origin: 'microsoft', moduleId: 'todos' },
+  { id: 'evernote.notes', origin: 'evernote', moduleId: 'notes' },
   { id: 'obsidian.notes', origin: 'obsidian', moduleId: 'notes' },
   { id: 'bank.statement', origin: 'bank', moduleId: 'finance' },
   { id: 'bitwarden.vault', origin: 'bitwarden', manual: true },

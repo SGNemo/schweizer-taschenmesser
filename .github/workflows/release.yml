@@ -335,6 +335,9 @@ jobs:
 
       # The Gradle project is generated, not committed (src-tauri/gen is git-ignored).
       - run: npx tauri android init --ci
+      # The template leaves `android:allowBackup` unset (= true: the app data would go to Google backup).
+      - name: Android manifest hardening (allowBackup off)
+        run: node scripts/android-manifest.mjs
       # Launcher shortcuts (share-intent plugin, res/xml/shortcuts.xml) name their target app
       # literally: resource XML knows no ${applicationId}. Point them at this build's id.
       - name: Application id into the launcher shortcuts
@@ -484,10 +487,12 @@ jobs:
       # The website (site/) shows version, size and checksums of the latest release; the Cloudflare
       # Pages deploy hook rebuilds it. No-op while the secret is empty (site/README.md, step 6).
       - name: Rebuild the website
-        if: env.CF_PAGES_DEPLOY_HOOK != ''
         env:
           CF_PAGES_DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
-        run: curl -fsS -X POST "$CF_PAGES_DEPLOY_HOOK" > /dev/null
+        # The check lives in the script: a step's own `env` is not visible to its `if:`.
+        run: |
+          if [ -z "$CF_PAGES_DEPLOY_HOOK" ]; then echo "No deploy hook configured, skipping."; exit 0; fi
+          curl -fsS -X POST "$CF_PAGES_DEPLOY_HOOK" > /dev/null
 
   summary:
     name: Dry-run summary

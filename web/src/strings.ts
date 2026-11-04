@@ -8,6 +8,8 @@ import type { Shape } from '@/core/i18n/shape';
  * `src/i18n/locales/<lang>/` with exactly the same shape (`Strings`, checked by the compiler).
  * Add new texts here (inside your module's block) and in every locale, then run `npm run check:i18n`.
  */
+const n1 = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
 export const de = {
   appName: 'Nemo',
   /** Building blocks for dates and durations (most wording comes from Intl). */
@@ -738,6 +740,14 @@ export const de = {
             title: 'Todoist',
             how: 'Menü (⋯) eines Projekts → „Als CSV exportieren“. Eine Datei pro Projekt.',
           },
+          evernote: {
+            title: 'Evernote',
+            how: 'Exportiere deine Notizbücher in Evernote als .enex-Datei (Notizbuch → „Notizbuch exportieren“). Titel, Text, Listen und Schlagwörter bleiben erhalten; Bilder und Anhänge kann Nemo in Notizen nicht speichern.',
+          },
+          microsoft: {
+            title: 'Microsoft To Do',
+            how: 'Microsoft To Do hat keinen eigenen Export. Exportiere die Aufgaben über Outlook (Datei → Öffnen und Exportieren → In Datei exportieren → CSV → Aufgaben).',
+          },
           obsidian: {
             title: 'Obsidian / Markdown',
             how: 'Wähle die .md-Dateien deines Ordners aus, auch mehrere auf einmal. Titel, Tags und Aufgabenlisten bleiben erhalten.',
@@ -768,6 +778,8 @@ export const de = {
           'google.keep': 'Keep-Notizen importiert',
           'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
           'todoist.tasks': 'Todoist-CSV importiert',
+          'evernote.notes': 'Evernote-Notizen importiert',
+          'microsoft.tasks': 'Microsoft-To-Do-Aufgaben (Outlook-CSV) importiert',
           'obsidian.notes': 'Markdown-Notizen importiert',
           'bank.statement': 'Kontoauszug importiert',
           'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
@@ -5268,7 +5280,7 @@ export const de = {
       title: 'Import, Export & Sicherheit',
       import: 'Importieren',
       export: 'Exportieren',
-      csvImport: 'Bitwarden-CSV importieren',
+      csvImport: 'CSV importieren (Bitwarden, KeePass, 1Password)',
       csvExport: 'Als Bitwarden-CSV exportieren (Klartext!)',
       csvWarning:
         'Die CSV-Datei enthält alle Passwörter unverschlüsselt. Bewahre sie nur so kurz wie nötig auf und lösche sie danach sicher.',
@@ -5281,7 +5293,8 @@ export const de = {
       backupPasswordImport: 'Passwort des Backups',
       importDone: (added: number, duplicates: number, skipped: number) =>
         `${added} importiert${duplicates ? `, ${duplicates} bereits vorhanden` : ''}${skipped ? `, ${skipped} übersprungen (nicht unterstützter Typ)` : ''}.`,
-      importFailedCsv: 'Das ist keine Bitwarden-CSV-Datei.',
+      importFailedCsv:
+        'Diese CSV-Datei kenne ich nicht (erwartet: Bitwarden, KeePass oder 1Password).',
       importFailedBackup:
         'Backup konnte nicht geöffnet werden (falsches Passwort oder beschädigte Datei).',
       exported: 'Export gespeichert.',
@@ -5640,6 +5653,80 @@ export const de = {
     badFormat: 'falsches Format (Datum JJJJ-MM-TT, Uhrzeit HH:mm)',
     outOfRange: 'außerhalb des erlaubten Bereichs',
   },
+  importers: {
+    title: 'Aus anderer App importieren',
+    intro:
+      'Wähle die Datei(en) deines Exports, auch ZIP. Nemo erkennt, aus welcher App sie stammen, und zeigt vor dem Übernehmen eine Vorschau. Nichts verlässt dieses Gerät.',
+    choose: 'Dateien wählen',
+    reading: (done: number, total: number) => `Dateien werden gelesen … ${done} von ${total}`,
+    cancel: 'Abbrechen',
+    parsing: 'Daten werden gelesen …',
+    detected: (apps: string) => `Erkannt: ${apps}`,
+    unknown: 'Ich erkenne nicht, aus welcher App diese Dateien stammen. Wähle die Quelle selbst:',
+    manual: 'Andere Quelle wählen',
+    step: (i: number, n: number) => `Teil ${i} von ${n}`,
+    nothing: 'In den Dateien wurde nichts Lesbares gefunden.',
+    vaultHint:
+      'Passwörter importierst du im Tresor, nach Eingabe des Master-Passworts. Dort öffnet sich der CSV-Import.',
+    openVault: 'Zum Tresor',
+    paletteCommand: 'Aus anderer App importieren …',
+    sources: {
+      enex: 'Evernote (.enex)',
+      obsidian: 'Obsidian oder Markdown-Ordner',
+      'outlook-tasks': 'Microsoft To Do (Outlook-CSV)',
+      todoist: 'Todoist (CSV)',
+      'google-tasks': 'Google Aufgaben',
+      'google-keep': 'Google Keep',
+      'google-calendar': 'Google Kalender (.ics)',
+      bank: 'Kontoumsätze (CSV, OFX, CAMT)',
+      'vault-csv': 'Passwort-Manager (Bitwarden, KeePass, 1Password)',
+    },
+    reasons: {
+      trashed: (n: number) =>
+        n1(
+          n,
+          '1 Eintrag aus Papierkorb oder Archiv wurde ausgelassen.',
+          `${n} Einträge aus Papierkorb oder Archiv wurden ausgelassen.`,
+        ),
+      empty: (n: number) =>
+        n1(n, '1 leerer Eintrag wurde übersprungen.', `${n} leere Einträge wurden übersprungen.`),
+      unreadable: (n: number) =>
+        n1(
+          n,
+          '1 Datei ist nicht lesbar oder aus einer anderen App und wurde übersprungen.',
+          `${n} Dateien sind nicht lesbar oder aus einer anderen App und wurden übersprungen.`,
+        ),
+      attachment: (n: number) =>
+        n1(
+          n,
+          '1 Anhang (Bild oder Datei) wurde nicht übernommen: Notizen speichern nur Text.',
+          `${n} Anhänge (Bilder oder Dateien) wurden nicht übernommen: Notizen speichern nur Text.`,
+        ),
+      unsupported: (n: number) =>
+        n1(n, '1 Eintrag wird nicht unterstützt.', `${n} Einträge werden nicht unterstützt.`),
+      tooMany: (n: number) =>
+        `Die Vorschau zeigt höchstens ${n} Einträge; der Rest wurde ausgelassen.`,
+      done: (n: number) =>
+        n1(
+          n,
+          '1 erledigter Eintrag wurde ausgelassen.',
+          `${n} erledigte Einträge wurden ausgelassen.`,
+        ),
+    },
+    report: {
+      title: 'Bericht',
+      imported: (n: number) => n1(n, '1 Eintrag übernommen.', `${n} Einträge übernommen.`),
+      duplicates: (n: number) => n1(n, '1 war schon vorhanden.', `${n} waren schon vorhanden.`),
+      invalid: (n: number) =>
+        n1(
+          n,
+          '1 passte nicht ins Format und wurde nicht gespeichert.',
+          `${n} passten nicht ins Format und wurden nicht gespeichert.`,
+        ),
+      deselected: (n: number) => n1(n, '1 hast du abgewählt.', `${n} hast du abgewählt.`),
+    },
+    newNotebook: 'Neues Notizbuch',
+  },
   onboarding: {
     button: 'Importieren',
     title: (module: string) => `Importieren: ${module}`,
@@ -5732,9 +5819,9 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
-      file: 'Aus Todoist oder Google Tasks',
+      file: 'Aus Todoist, Google Tasks oder Microsoft To Do',
       fileHint:
-        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV oder Google-Tasks-Datei (JSON). Es wird nichts hochgeladen.',
+        'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV, Google-Tasks-Datei (JSON) oder die CSV-Datei der Aufgaben aus Outlook (Microsoft To Do). Es wird nichts hochgeladen.',
       perSource: 'Je Quell-Liste eine eigene Liste',
       newList: 'Neue Liste',
       includeDone: 'Erledigte Aufgaben',
@@ -5883,23 +5970,13 @@ export const de = {
       placeholder: 'https://example.org/artikel\nSchöne Wanderung https://example.org/wandern',
     },
     notes: {
-      file: 'Markdown-Dateien oder Google Keep',
+      file: 'Markdown, Obsidian, Evernote oder Google Keep',
       fileHint:
-        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen. ZIP-Dateien bitte vorher entpacken.',
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
       text: 'Markdown einfügen',
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
       placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
-      emptyFiles: (n: number) =>
-        n === 1 ? '1 leere Datei wurde übersprungen.' : `${n} leere Dateien wurden übersprungen.`,
-      keepSkipped: (n: number) =>
-        n === 1
-          ? '1 Keep-Notiz aus Papierkorb oder Archiv wurde ausgelassen.'
-          : `${n} Keep-Notizen aus Papierkorb oder Archiv wurden ausgelassen.`,
-      unreadable: (n: number) =>
-        n === 1
-          ? '1 JSON-Datei ist keine Keep-Notiz und wurde übersprungen.'
-          : `${n} JSON-Dateien sind keine Keep-Notizen und wurden übersprungen.`,
     },
     birthdays: {
       text: 'Geburtstage einfügen',

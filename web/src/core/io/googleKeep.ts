@@ -12,6 +12,8 @@ export interface KeepResult {
   skipped: number;
   /** Notes without title and text. */
   empty: number;
+  /** Attached images, audio and files (not stored). */
+  attachments: number;
   /** The JSON is unreadable or not a Keep note. */
   invalid: boolean;
 }
@@ -24,6 +26,7 @@ interface KeepNote {
   isTrashed?: unknown;
   isArchived?: unknown;
   isPinned?: unknown;
+  attachments?: unknown;
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
@@ -46,7 +49,7 @@ function listMarkdown(list: unknown): string {
 }
 
 export function parseGoogleKeep(json: string): KeepResult {
-  const result: KeepResult = { notes: [], skipped: 0, empty: 0, invalid: false };
+  const result: KeepResult = { notes: [], skipped: 0, empty: 0, attachments: 0, invalid: false };
   let data: unknown;
   try {
     data = JSON.parse(json.replace(/^\uFEFF/, ''));
@@ -62,6 +65,7 @@ export function parseGoogleKeep(json: string): KeepResult {
       result.skipped++;
       continue;
     }
+    if (Array.isArray(entry.attachments)) result.attachments += entry.attachments.length;
     const text = str(entry.textContent).replace(/\r\n?/g, '\n').trim();
     const list = listMarkdown(entry.listContent);
     const tags = Array.isArray(entry.labels)

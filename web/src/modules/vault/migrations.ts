@@ -8,4 +8,12 @@ export const migrations: ModuleManifest['migrations'] = {
         return { endDate: rec.expiresOn, expiresOn: undefined };
     });
   },
+  // 3: `noticeMonths`. A period that is a whole number of 30-day months was shown as "n Monate" but
+  // computed with n × 30 days; it now counts calendar months, as displayed.
+  3: (ctx) =>
+    ctx.forEachRecord('document', (rec) => {
+      const days = rec.noticeDays;
+      if (rec.noticeMonths !== undefined || typeof days !== 'number') return;
+      return days >= 30 && days % 30 === 0 ? { noticeMonths: days / 30 } : undefined;
+    }),
 };

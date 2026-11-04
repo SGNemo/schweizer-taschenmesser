@@ -23,6 +23,9 @@ export function setWriteListener(next: ((signal: WriteSignal) => void) | undefin
   listener = next;
 }
 
+/** Cheap check so a writer can skip building the signal (copying a row) when nobody listens. */
+export const hasWriteListener = (): boolean => listener !== undefined;
+
 export function signalWrite(signal: WriteSignal): void {
   if (!listener) return;
   try {

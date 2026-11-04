@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  checkAutomationSource,
   checkDeleteSource,
   checkMaturity,
   checkModule,
@@ -277,5 +278,44 @@ describe('checkRowSource', () => {
   });
   it('ignores lists that open nothing', () => {
     expect(checkRowSource('x', 'routes/P.tsx', '<li>step</li>')).toEqual([]);
+  });
+});
+
+describe('checkAutomationSource', () => {
+  const ai = `export const aiSchema = {
+  actions: {
+    create: {
+      kind: 'create',
+      collection: 'task',
+    },
+    delete: {
+      kind: 'delete',
+      collection: 'task',
+    },
+  },
+};`;
+  const ok = `export const automation = { actions: ['create'] }; export default automation;`;
+
+  it('accepts a create action that exists', () => {
+    expect(checkAutomationSource('todos', ok, ai)).toEqual([]);
+  });
+  it('refuses delete, unknown ids and actions without ai.ts', () => {
+    expect(checkAutomationSource('todos', ok.replace('create', 'delete'), ai)).toEqual([
+      'todos: automation.actions "delete" deletes, which rules never do',
+    ]);
+    expect(checkAutomationSource('todos', ok.replace('create', 'ghost'), ai)).toEqual([
+      'todos: automation.actions "ghost" is not in ai.ts',
+    ]);
+    expect(checkAutomationSource('mail', ok, undefined)).toEqual([
+      'mail: automation.actions needs an ai.ts with aiSchema.actions',
+    ]);
+  });
+  it('allows reporting-only modules and wants both exports', () => {
+    expect(
+      checkAutomationSource('habits', `export const automation = {}; export default automation;`),
+    ).toEqual([]);
+    expect(checkAutomationSource('habits', `const automation = {};`)).toEqual([
+      'habits: automation.ts must export `automation` and a default',
+    ]);
   });
 });

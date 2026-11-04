@@ -43,7 +43,16 @@ beforeEach(async () => {
 describe('migrate step', () => {
   it('shows a tile per origin with where to get the export, and "Papier" opens nothing', async () => {
     view(harness().props);
-    for (const key of ['google', 'todoist', 'obsidian', 'bank', 'bitwarden', 'paper'])
+    for (const key of [
+      'google',
+      'todoist',
+      'microsoft',
+      'evernote',
+      'obsidian',
+      'bank',
+      'bitwarden',
+      'paper',
+    ])
       expect(
         await screen.findByRole('region', { name: s.origins[key]!.title }),
       ).toBeInTheDocument();

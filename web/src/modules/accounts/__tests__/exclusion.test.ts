@@ -47,6 +47,8 @@ const withAccounts = () => {
 describe('module definition', () => {
   it('has no aiSchema, contributions for other modules, or quick add; one status-only widget', () => {
     expect(manifest.aiSchema).toBeUndefined();
+    // not a trigger and not a target of automation rules
+    expect(manifest.automation).toBeUndefined();
     expect(manifest.widgets.map((w) => w.id)).toEqual(['status']);
     const c = manifest.contributions ?? {};
     // only its own auto-lock service plus the (empty) onboarding declaration every module carries
