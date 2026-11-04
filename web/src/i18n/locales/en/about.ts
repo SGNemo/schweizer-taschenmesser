@@ -55,7 +55,6 @@ export const about: Strings['about'] = {
   licenses: 'Licence notices',
   licenseList: [
     'Font “Inter” – SIL Open Font License 1.1, © The Inter Project Authors.',
-    'Wordmark “Nemo” (logo) in “Nunito” – SIL Open Font License 1.1, © The Nunito Project Authors.',
     'Icons “Lucide” – ISC Licence, © Lucide Contributors.',
     'The Nemo logo (clownfish) is an original drawing of this project.',
   ],
