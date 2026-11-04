@@ -159,15 +159,13 @@ jobs:
           fi
           node -e "console.log(Buffer.from(process.argv[1],'base64').toString().split('\n')[0])" "$DEV"
 
-      - name: Release notes (commits since the last stable release)
+      - name: Release notes (open change notes in .changes/, nothing is deleted)
         working-directory: web
         env:
           FULL: ${{ steps.meta.outputs.full }}
         run: |
           set -euo pipefail
-          LAST="$(node scripts/dev-preview.mjs last-stable-tag)"
-          node scripts/changelog.mjs --version "${FULL%%+*}" ${LAST:+--from "$LAST"} \
-            --repo "https://github.com/${{ github.repository }}" --out "$RUNNER_TEMP/NOTES.md"
+          node scripts/changelog-release.mjs --unreleased > "$RUNNER_TEMP/NOTES.md"
           {
             echo "> **Dev-Preview $FULL** – untested intermediate build of \`develop\`, a separate app with its own data."
             echo "> Not a release. Stable downloads: https://github.com/${{ github.repository }}/releases/latest"
