@@ -27,8 +27,10 @@ import {
 import { getPlatform } from '@/core/platform';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
+import { tSettingsConnect } from '@/strings.settingsConnect';
 import { Badge, Button, Icon, IconButton, SelectField, Switch, TextField } from '@/ui';
 import { Card } from '@/ui';
+import { Actions, StateBanner, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 const usd = (n: number) => n.toFixed(4).replace('.', ',');
@@ -374,12 +376,12 @@ function ProviderCard({
 function UsageBlock() {
   const rows = useUsageRows();
   const [cleared, setCleared] = useState(false);
+  const usageHint = tSettingsConnect.use().ai.stepUsageHint;
   if (!rows) return null;
   const usage = totalsOf(rows);
   const empty = usage.requests === 0 && usage.cacheHits === 0 && usage.errors === 0;
   return (
-    <div className={styles.form}>
-      <h3 className={styles.legend}>{t.ai.settings.usageTitle}</h3>
+    <Step title={t.ai.settings.usageTitle} hint={usageHint}>
       {empty ? (
         <p className={styles.muted}>{t.ai.settings.usageEmpty}</p>
       ) : (
@@ -392,7 +394,7 @@ function UsageBlock() {
           ) : null}
         </ul>
       )}
-      <div className={styles.row}>
+      <Actions>
         <Button onClick={() => void resetUsage()} disabled={empty}>
           {t.ai.settings.usageReset}
         </Button>
@@ -405,8 +407,8 @@ function UsageBlock() {
           {t.ai.settings.clearCache}
         </Button>
         {cleared ? <span role="status">{t.ai.settings.cacheCleared}</span> : null}
-      </div>
-    </div>
+      </Actions>
+    </Step>
   );
 }
 
@@ -415,9 +417,11 @@ export function AiSection() {
   const rows = useUsageRows();
   const [openId, setOpenId] = useState<string | undefined>();
   const s = t.ai.settings;
+  const c = tSettingsConnect.use().ai;
 
   if (!config) return <Card>{null}</Card>;
   const stats = totalsByProvider(rows ?? []);
+  const active = config.providers.filter((p) => p.enabled).length;
 
   // Always start from the stored config (not the last render): quick successive changes must not
   // overwrite each other.
@@ -438,38 +442,45 @@ export function AiSection() {
   return (
     <Card>
       <div className={styles.form}>
-        <p>{s.intro}</p>
+        <StateBanner
+          icon="sparkles"
+          tone={active > 0 ? 'ok' : 'neutral'}
+          title={active > 0 ? c.on(active, config.providers.length) : c.off}
+          line={active > 0 ? s.intro : c.offLine}
+          testId="ai-state"
+        />
         <p className={styles.muted}>{s.privacy}</p>
-        <h3 className={styles.legend}>{s.providers}</h3>
-        {config.providers.length === 0 ? <p className={styles.muted}>{s.noProviders}</p> : null}
-        <ul className={styles.providerList} aria-label={s.providers}>
-          {config.providers.map((p, i) => (
-            <ProviderCard
-              key={p.id}
-              entry={p}
-              index={i}
-              count={config.providers.length}
-              stats={stats.get(p.id)}
-              open={openId === p.id}
-              onToggleOpen={() => setOpenId(openId === p.id ? undefined : p.id)}
-              onConfig={apply}
-            />
-          ))}
-        </ul>
-        <SelectField
-          label={s.addProvider}
-          value=""
-          onChange={(e) => {
-            if (e.target.value) void add(e.target.value as PresetId);
-          }}
-        >
-          <option value="">{s.addPlaceholder}</option>
-          {PRESETS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </SelectField>
+        <Step title={s.providers} hint={c.stepProvidersHint}>
+          {config.providers.length === 0 ? <p className={styles.muted}>{s.noProviders}</p> : null}
+          <ul className={styles.providerList} aria-label={s.providers}>
+            {config.providers.map((p, i) => (
+              <ProviderCard
+                key={p.id}
+                entry={p}
+                index={i}
+                count={config.providers.length}
+                stats={stats.get(p.id)}
+                open={openId === p.id}
+                onToggleOpen={() => setOpenId(openId === p.id ? undefined : p.id)}
+                onConfig={apply}
+              />
+            ))}
+          </ul>
+          <SelectField
+            label={s.addProvider}
+            value=""
+            onChange={(e) => {
+              if (e.target.value) void add(e.target.value as PresetId);
+            }}
+          >
+            <option value="">{s.addPlaceholder}</option>
+            {PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </SelectField>
+        </Step>
         <UsageBlock />
       </div>
     </Card>
