@@ -625,6 +625,8 @@ AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei g
 - TP2 · PWA im Browser und installiert: „In eigenem Fenster öffnen“ öffnet das Werkzeug allein in einem kleinen Fenster (Popup-Blocker erlaubt?), Rechnen dort funktioniert, das Fenster lässt sich schließen; in der Windows-App fehlt der Knopf.
 - TP3 · Windows: Strg+. öffnet, Suchfeld hat den Fokus, Alt+1…9 wechselt, Pfeil runter/hoch geht durch die Liste, Esc leert die Suche, dann schließt es, der Fokus liegt wieder auf „Werkzeuge“; Alt+Zahl kollidiert mit keinem Windows-Kürzel.
 - TP4 · Hell/Dunkel, „Ruhig“ und „Modulfarben: Aus“: die Werkzeugfläche wird grau, Plättchen und Zeichen bleiben erkennbar.
+- TP5 · Rechner am Handy und mit der Maus: Zahlenblock tippt in das Display (7 × 6 = 42), Komma/Punkt je nach Sprache, „⌫“ löscht; Tasten fühlen sich gedrückt an, auch mit „Weniger Bewegung“ ohne Verzögerung.
+- TP6 · Timer: der Ring läuft mit (Timer und Pomodoro leeren sich, die Stoppuhr füllt pro Minute), die Zeit in der Mitte ist gut lesbar in hell/dunkel; Einheiten und Währung: großes Ergebnis, „Ergebnis kopieren“ legt es in die Zwischenablage.
 
 ## Identität v3: Haushalt und Tresor (Paket 1) – nur von Hand prüfbar
 - **HV1 Wischen am Etikett (Handy):** In den Vorräten einen knappen Vorrat nach rechts wischen → „An die Einkaufsliste gesendet“; das Warenkorb-Symbol am Etikett tut dasselbe.

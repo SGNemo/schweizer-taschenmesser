@@ -37,12 +37,17 @@ describe('tool isolation', () => {
     expect(offenders(toolSources, /^(\.\.\/){2,}(modules|connectors|core\/db)\//)).toEqual([]);
   });
 
-  it('tools do not import each other (only their own folder and shared.ts)', () => {
+  it('tools do not import each other (only their own folder, shared.ts and kit.tsx)', () => {
     const bad = Object.entries(toolSources).flatMap(([file, src]) => {
       const own = file.split('/')[1];
       return importsOf(src)
         .filter(
-          (i) => /^\.\.\/[^/]+/.test(i) && i !== '../shared' && !i.startsWith('../tools.module'),
+          (i) =>
+            /^\.\.\/[^/]+/.test(i) &&
+            i !== '../shared' &&
+            i !== '../kit' &&
+            !i.startsWith('../kit.module') &&
+            !i.startsWith('../tools.module'),
         )
         .filter((i) => !i.startsWith(`../${own}`))
         .map((i) => `${file} → ${i}`);
