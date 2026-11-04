@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Plugin } from 'vite';
-import { extractChangelogSection } from './scripts/lib/aboutData.ts';
+import { buildChangelogData, wantsUnreleased } from './scripts/lib/changelogBuild.ts';
 import { onlineOnlyFiles } from './scripts/lib/precacheSplit.ts';
 import { fileURLToPath } from 'node:url';
 
@@ -103,14 +103,29 @@ function gitSha(): string {
     return '';
   }
 }
-/** This version's section of the changelog (or the unreleased block), shown collapsed in Über Nemo. */
-function changelog(): string {
-  try {
-    const md = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
-    return extractChangelogSection(md, pkg.version);
-  } catch {
-    return '';
-  }
+/** `virtual:changelog`: released versions plus, in previews, the open notes of `.changes/` (own chunk). */
+function changelogData(): Plugin {
+  const id = 'virtual:changelog';
+  let serve = false;
+  return {
+    name: 'nemo-changelog',
+    configResolved: (c) => void (serve = c.command === 'serve'),
+    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    load(source) {
+      if (source !== `\0${id}`) return undefined;
+      const webDir = fileURLToPath(new URL('.', import.meta.url));
+      const data = buildChangelogData({
+        webDir,
+        rootDir: fileURLToPath(new URL('..', import.meta.url)),
+        includeUnreleased: wantsUnreleased({
+          channel: process.env.VITE_RELEASE_CHANNEL,
+          version: pkg.version,
+          serve,
+        }),
+      });
+      return `export default ${JSON.stringify(data)};`;
+    },
+  };
 }
 
 export default defineConfig({
@@ -118,11 +133,11 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(gitSha()),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
-    __CHANGELOG__: JSON.stringify(changelog()),
   },
   plugins: [
     ...(bundleReport ? [moduleReport()] : []),
     precacheSplit(),
+    changelogData(),
     react({ jsxImportSource: '@/core/text/readjsx' }),
     VitePWA({
       disable: native,

@@ -3,6 +3,7 @@
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
 ## Native & distribution
+- **Changelog from per-PR notes, not from commits.** `.changes/*.md` (type, area, DE+EN sentence), consumed by `changelog:release` into `CHANGELOG.md`/`.de.md` and an embedded `changelog.json`; own ~300-line script instead of `changesets` (that is built for npm packages, one language, semver bumps, adds a dependency). The app reads only the embedded JSON (offline); previews add the open notes as "Unveröffentlicht". Source: howto/changelog.md.
 - **Tauri 2 shell around the unchanged web app; thin by design.** PWA build stays the fallback; native builds drop the service worker (`TAURI_ENV_PLATFORM`). Source: commit fb1400b; architecture.md "Native distribution".
 - **`PlatformService` is the only browser/native seam** (`@tauri-apps/*` only in `core/platform/tauri/**`, enforced by ESLint). Source: commit fb1400b.
 - **Portable Windows exe instead of NSIS/MSI installers** (`tauri build --no-bundle`), with own signed self-update: `tauri-plugin-updater` can only launch installers, so it just checks/downloads; `portable.rs` re-verifies the minisign signature and swaps the running exe with rollback. `latest.json` has only `windows-x86_64-portable`. Breaking change: old installed 0.2.0-beta.1 cannot self-update. Source: commit 6a0f1aa.
