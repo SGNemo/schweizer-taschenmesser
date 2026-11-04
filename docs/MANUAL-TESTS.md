@@ -663,3 +663,9 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **WK3 Feeds-Titelseite:** Feeds: Aufmacher ist das zuletzt hinzugefügte Feed; Gruppen stehen in Spalten (breites Fenster) und untereinander (Handy).
 - **WK4 Sprechblasen:** Chat: eigene Nachricht rechts, Antwort links; lange Zeilen und Code brechen nicht aus der Blase aus.
 - **WK5 Browser-Pille:** Browser (Windows-App): die Pille zeigt nur den Host der offenen Seite; der aktive Tab ist als gefüllter Chip erkennbar, auch in „Ruhig“.
+
+## Identität v3: Medien und Dienste (Paket 3) – nur von Hand prüfbar
+- **MD1 Mail-Spalten (Windows-App):** E-Mail mit verbundenem Konto: bei breiter Seite stehen Ordner, Liste und Lesefenster nebeneinander, beim Verkleinern des Fensters oder Einblenden der Seitenleiste wechselt es zur Liste mit Mail darüber; der offene Ordner ist ein gefüllter Chip.
+- **MD2 Umschlag:** der Umschlag im Kopf zeigt keine Zahlen und keinen Mailtext; die Briefmarke daneben trägt die Zahl der ungelesenen Mails.
+- **MD3 Musik:** Warteschlange neben der Liste, sobald die Seite breit genug ist; Cover-Kopf unverändert.
+- **MD4 Downloads:** leere Ansicht zeigt den Pfeil in der Ablage; ein laufender Download zeigt Zahl und Band im Kopf.

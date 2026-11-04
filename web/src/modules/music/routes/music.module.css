@@ -183,7 +183,8 @@
   gap: var(--space-5);
   align-items: start;
 }
-@media (min-width: 1200px) {
+/* The queue sits beside the list when the page (not the window) has room: 32 rem for the list plus the 20 rem aside. */
+@container page (min-width: 56rem) {
   .layout {
     grid-template-columns: minmax(0, 1fr) 20rem;
   }

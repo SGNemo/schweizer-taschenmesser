@@ -9,7 +9,6 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
 import {
   Button,
-  EmptyState,
   GroupedList,
   Icon,
   IconButton,
@@ -33,6 +32,9 @@ import { PendingSendBar } from '../components/PendingSendBar';
 import { ThreadView } from '../components/ThreadView';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { hasFeature } from '@/core/mail/service';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
+import { MailEmpty } from '../components/MailEmpty';
+import { MailEnvelope } from '../components/MailEnvelope';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -98,6 +100,9 @@ function ThreadList({
   return <GroupedList listId="mail" groups={groups} />;
 }
 
+/** Page width (rem) from which folders, list and reading pane stand side by side: 12 + 20 + 24 rem and two gaps. */
+const MAIL_COLUMNS_REM = 58;
+
 export default function MailPage() {
   const [params, setParams] = useSearchParams();
   const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);
@@ -138,7 +143,10 @@ export default function MailPage() {
       : DEFAULT_LABELS;
 
   const box = useMailbox(account, labelId, query);
-  const wide = useMediaQuery('(min-width: 1200px)');
+  // Three columns follow the room the page really has (sidebar, rail and window all count); outside a page container the window decides.
+  const pageWide = usePageWidthAtLeast(MAIL_COLUMNS_REM);
+  const windowWide = useMediaQuery('(min-width: 1200px)');
+  const wide = pageWide ?? windowWide;
   const summary = useMailSummary();
   const [recent, setRecent] = useState<string[]>(readSearches);
   const senders = useMemo(
@@ -184,6 +192,7 @@ export default function MailPage() {
           />
         </HeroSlot>
       ) : null}
+      <MailEnvelope />
       <PageHeader title={t.mail.meta.name}>
         {canWrite && account ? (
           <Button
@@ -205,10 +214,10 @@ export default function MailPage() {
     return (
       <>
         {header}
-        <EmptyState title={t.mail.connect.title}>
+        <MailEmpty title={t.mail.connect.title}>
           <p>{t.mail.connect.body}</p>
           <Link to={settingsPath('verbindungen', 'connectors')}>{t.mail.connect.action}</Link>
-        </EmptyState>
+        </MailEmpty>
         <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
     );
@@ -254,7 +263,7 @@ export default function MailPage() {
     />
   ) : null;
 
-  // Phone and narrow windows: the mail replaces the list. From 1200 px both stay (see below).
+  // Phone and narrow windows: the mail replaces the list. From 58 rem of page both stay (see below).
   if (threadId && !wide)
     return (
       <>
@@ -368,7 +377,7 @@ export default function MailPage() {
       {box.threads.length === 0 && box.loading ? (
         <Skeleton height="10rem" />
       ) : box.threads.length === 0 && !box.error ? (
-        <EmptyState title={query ? t.mail.page.emptySearch : t.mail.page.empty} />
+        <MailEmpty title={query ? t.mail.page.emptySearch : t.mail.page.empty} />
       ) : (
         <ThreadList
           threads={box.threads}

@@ -205,7 +205,7 @@
   font-size: var(--text-sm);
 }
 
-/* Three columns from 1200 px: folders, list, reading pane. */
+/* Three columns when the page is wide enough (58 rem): folders, list, reading pane. */
 .cols {
   display: grid;
   grid-template-columns: 12rem minmax(20rem, 26rem) minmax(0, 1fr);
@@ -238,9 +238,10 @@
   background: var(--surface-2);
 }
 .labelBtn[aria-current='true'] {
-  background: var(--accent-soft);
+  /* The open folder is a filled chip (fill and weight, not an edge bar). */
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  border-radius: var(--radius-full);
   font-weight: var(--weight-semibold);
-  box-shadow: inset 3px 0 0 var(--module-color);
 }
 .labelCount {
   font-size: var(--text-meta);
