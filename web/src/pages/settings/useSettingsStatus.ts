@@ -76,7 +76,13 @@ export function useSettingsStatus(): StatusTile[] {
   const available = useUpdateStore((u) => u.state.phase === 'available');
   const [version, setVersion] = useState('');
   useEffect(() => {
-    void getPlatform().app.version().then(setVersion);
+    let live = true;
+    void getPlatform()
+      .app.version()
+      .then((v) => live && setVersion(v));
+    return () => {
+      live = false;
+    };
   }, []);
 
   const aiOn = useAiOn();
@@ -98,10 +104,14 @@ export function useSettingsStatus(): StatusTile[] {
   const [used, setUsed] = useState<number | null>();
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return;
+    let live = true;
     void navigator.storage.estimate().then(
-      (e) => setUsed(e.usage ?? null),
-      () => setUsed(null),
+      (e) => live && setUsed(e.usage ?? null),
+      () => live && setUsed(null),
     );
+    return () => {
+      live = false;
+    };
   }, []);
   const mb = used ? used / (1024 * 1024) : 0;
   const size = `${formatNumber(mb, { maximumFractionDigits: mb < 10 ? 1 : 0 })} MB`;
