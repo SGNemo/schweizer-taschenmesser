@@ -94,9 +94,6 @@
   flex-wrap: wrap;
   overflow: visible;
 }
-.empty:empty {
-  display: none;
-}
 /* Start-data button: after the switch row on the phone, inline on larger screens. */
 .startData {
   display: inline-flex;
@@ -106,6 +103,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+}
+.empty[data-shown='true'] {
   margin-bottom: var(--space-4);
 }
 .empty p {
@@ -125,7 +124,8 @@
   .startData {
     order: 3;
     flex: 1 1 100%;
-    justify-content: flex-end;
+    /* Start of the row: the floating action button covers the right edge. */
+    justify-content: flex-start;
   }
   .group {
     padding: var(--space-2);

@@ -7,6 +7,7 @@ import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { enableModule, moduleHasData } from '@/core/modules/activation';
 import example from '@/modules/example/manifest';
+import maps from '@/modules/maps/manifest';
 import { markLibrarySeen } from '@/core/modules/librarySeen';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -179,7 +180,9 @@ describe('ModuleLibrary filter states', () => {
     await user.click(screen.getByRole('button', { name: f.active }));
     const status = await screen.findByRole('status');
     expect(within(status).getByText(tComfort.get().library.noResults)).toBeVisible();
-    await user.click(within(status).getByRole('button', { name: f.reset }));
+    // the reset button is next to the live region, not inside it (screen readers announce only the text)
+    expect(within(status).queryByRole('button')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: f.reset }));
     expect(await screen.findByTestId('module-example')).toBeInTheDocument();
     // the status region stays mounted (screen readers announce what is put into it) but is empty again
     expect(status).toBeEmptyDOMElement();
@@ -199,6 +202,26 @@ describe('ModuleLibrary filter states', () => {
     await user.click(screen.getByRole('button', { name: f.all }));
     await user.click(screen.getByRole('button', { name: f.off }));
     await waitFor(() => expect(screen.queryByTestId('module-example')).not.toBeInTheDocument());
+  });
+});
+
+describe('preview modules under the library filter', () => {
+  it('a preview module switched off while "In Arbeit anzeigen" is off stays listed until the filter changes', async () => {
+    const user = userEvent.setup();
+    useUiStore.setState({ showPreview: false });
+    await enableModule(maps);
+    await renderLibrary();
+    const f = tLibraryV3.get().filter;
+    await user.click(screen.getByRole('button', { name: f.active }));
+    const card = within(await screen.findByTestId('module-maps'));
+    await user.click(await toggle(card));
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('maps'))?.enabled).toBe(false),
+    );
+    // off now, so out of the catalogue; the card is held (focus stays) until the person changes the filter
+    expect(screen.getByTestId('module-maps')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: f.all }));
+    await waitFor(() => expect(screen.queryByTestId('module-maps')).not.toBeInTheDocument());
   });
 });
 
@@ -270,5 +293,21 @@ describe('LibraryDetail', () => {
     renderDetail('maps');
     expect(await screen.findByRole('heading', { level: 1, name: /.+/ })).toBeVisible();
     expect(screen.queryByText(tLibraryV3.get().detail.notFound)).not.toBeInTheDocument();
+  });
+
+  it('keeps a preview module on its page after the person switched it off here', async () => {
+    const user = userEvent.setup();
+    useUiStore.setState({ showPreview: false });
+    await enableModule(maps);
+    renderDetail('maps');
+    const sw = await screen.findByRole('switch', { name: /einschalten/ });
+    await waitFor(() => expect(sw).toBeEnabled());
+    await user.click(sw);
+    await waitFor(async () =>
+      expect((await db.table('_modules').get('maps'))?.enabled).toBe(false),
+    );
+    // not "there is no such module" right after the action (the undo toast is still showing)
+    expect(screen.queryByText(tLibraryV3.get().detail.notFound)).not.toBeInTheDocument();
+    expect(screen.getByTestId('library-detail')).toBeInTheDocument();
   });
 });

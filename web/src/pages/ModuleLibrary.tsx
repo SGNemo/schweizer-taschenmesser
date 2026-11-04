@@ -99,7 +99,9 @@ export function ModuleLibrary() {
     return true;
   });
   const allGroups = libraryGroups(pool);
-  const groups = libraryGroups(shown).filter((g) => areaFilter === 'all' || g.id === areaFilter);
+  // An area that no longer exists in the list (its only module left the catalogue) counts as "all".
+  const area = allGroups.some((g) => g.id === areaFilter) ? areaFilter : 'all';
+  const groups = libraryGroups(shown).filter((g) => area === 'all' || g.id === area);
 
   return (
     <>
@@ -162,7 +164,7 @@ export function ModuleLibrary() {
         <SelectField
           label={v3.filter.areaLabel}
           labelHidden
-          value={areaFilter}
+          value={area}
           onChange={(e) => {
             release();
             setAreaFilter(e.target.value as AreaFilter);
@@ -176,23 +178,23 @@ export function ModuleLibrary() {
           ))}
         </SelectField>
       </Toolbar>
-      <div role="status" className={library.empty}>
-        {groups.length === 0 ? (
-          <>
+      <div className={library.empty} data-shown={groups.length === 0}>
+        <div role="status">
+          {groups.length === 0 ? (
             <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
-            {query.trim() || filter !== 'all' || areaFilter !== 'all' ? (
-              <Button
-                onClick={() => {
-                  release();
-                  setQuery('');
-                  setFilter('all');
-                  setAreaFilter('all');
-                }}
-              >
-                {v3.filter.reset}
-              </Button>
-            ) : null}
-          </>
+          ) : null}
+        </div>
+        {groups.length === 0 && (query.trim() || filter !== 'all' || area !== 'all') ? (
+          <Button
+            onClick={() => {
+              release();
+              setQuery('');
+              setFilter('all');
+              setAreaFilter('all');
+            }}
+          >
+            {v3.filter.reset}
+          </Button>
         ) : null}
       </div>
       {groups.map((g) => {

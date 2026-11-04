@@ -101,22 +101,22 @@ export function ToolLibrary() {
           />
         </div>
       </Toolbar>
-      <div role="status" className={library.empty}>
-        {tools && !anyMatch ? (
-          <>
+      <div className={library.empty} data-shown={Boolean(tools) && !anyMatch}>
+        <div role="status">
+          {tools && !anyMatch ? (
             <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
-            {query.trim() || filter !== 'all' ? (
-              <Button
-                onClick={() => {
-                  release();
-                  setQuery('');
-                  setFilter('all');
-                }}
-              >
-                {v3.filter.reset}
-              </Button>
-            ) : null}
-          </>
+          ) : null}
+        </div>
+        {tools && !anyMatch && (query.trim() || filter !== 'all') ? (
+          <Button
+            onClick={() => {
+              release();
+              setQuery('');
+              setFilter('all');
+            }}
+          >
+            {v3.filter.reset}
+          </Button>
         ) : null}
       </div>
       {GROUPS.map((group) => {

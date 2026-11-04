@@ -27,8 +27,10 @@ export function LibraryDetail() {
   // The same set as the library (a preview module stays hidden while "In Arbeit anzeigen" is off, unless it is on).
   const catalog = useCatalogManifests(states);
   // After the person switched the module here, a preview module leaves the catalogue; the page stays (with its undo toast).
-  const [switched, setSwitched] = useState(false);
-  const manifest = (switched ? availableManifests() : catalog).find((m) => m.id === moduleId);
+  const [switchedId, setSwitchedId] = useState<string>();
+  const manifest = (switchedId === moduleId ? availableManifests() : catalog).find(
+    (m) => m.id === moduleId,
+  );
   if (!states) return null;
 
   if (!manifest) {
@@ -84,9 +86,7 @@ export function LibraryDetail() {
             <div>
               <dt>{d.status}</dt>
               <dd>
-                <Badge tone={enabled ? 'accent' : undefined}>
-                  {enabled ? d.statusOn : d.statusOff}
-                </Badge>
+                <Badge>{enabled ? d.statusOn : d.statusOff}</Badge>
               </dd>
             </div>
             <div>
@@ -103,7 +103,7 @@ export function LibraryDetail() {
               label={tComfort.get().library.toggle(m.name)}
               checked={enabled}
               onChange={(on) => {
-                setSwitched(true);
+                setSwitchedId(m.id);
                 sw.set(m, on);
               }}
             />
