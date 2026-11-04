@@ -200,36 +200,36 @@ export default function PantryPage() {
                     onOpen={() => setTarget(i)}
                     onSwipeRight={restockable ? () => requestRestock([i.name]) : undefined}
                     swipeRightLabel={t.pantry.restock}
-                    actions={
-                      restockable ? (
-                        <IconButton
-                          label={t.pantry.restockOne(i.name)}
-                          onClick={() => requestRestock([i.name])}
-                        >
-                          <Icon name="cart" size={18} />
-                        </IconButton>
-                      ) : undefined
-                    }
                     end={
                       <span className={lamp.endCol}>
                         {state === 'expired' || state === 'soon' ? (
                           <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
                         ) : null}
                         {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
-                        <span className={lamp.stepper}>
-                          <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
-                            <span aria-hidden="true">−</span>
-                          </IconButton>
-                          <IconButton
-                            label={t.pantry.plus(i.name)}
-                            onClick={() =>
-                              void changeWithUndo(() =>
-                                itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
-                              )
-                            }
-                          >
-                            <Icon name="plus" size={16} />
-                          </IconButton>
+                        <span className={lamp.controls}>
+                          {restockable ? (
+                            <IconButton
+                              label={t.pantry.restockOne(i.name)}
+                              onClick={() => requestRestock([i.name])}
+                            >
+                              <Icon name="cart" size={18} />
+                            </IconButton>
+                          ) : null}
+                          <span className={lamp.stepper}>
+                            <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
+                              <span aria-hidden="true">−</span>
+                            </IconButton>
+                            <IconButton
+                              label={t.pantry.plus(i.name)}
+                              onClick={() =>
+                                void changeWithUndo(() =>
+                                  itemRepo.update(i.id, { count: Math.min(9999, i.count + 1) }),
+                                )
+                              }
+                            >
+                              <Icon name="plus" size={16} />
+                            </IconButton>
+                          </span>
                         </span>
                       </span>
                     }

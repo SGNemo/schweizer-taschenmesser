@@ -18,3 +18,10 @@
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
 }
+/* Title and meta get the whole width; status and actions wrap below instead of squeezing the text to one letter per line. */
+.doc.doc > div {
+  flex-wrap: wrap;
+}
+.doc.doc > div > [data-row] {
+  flex: 1 1 100%;
+}
