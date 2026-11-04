@@ -21,6 +21,10 @@ export const feeds: Strings['feeds'] = {
   listLabel: 'Flux suivis',
   ungrouped: 'Sans groupe',
   allFeeds: 'Tous les flux',
+  importOpml: 'Importer',
+  exportOpml: 'Exporter en OPML',
+  exported: 'OPML enregistré.',
+  opmlTitle: 'Mes flux',
   rowMenu: (name: string) => `Actions pour ${name}`,
   fields: {
     url: 'Adresse du flux',
