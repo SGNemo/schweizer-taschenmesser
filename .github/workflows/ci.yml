@@ -668,8 +668,10 @@ jobs:
     name: Dev-Preview build
     needs: [changes]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    # dev-preview.yml's publish job asks for contents: write; a caller must allow it even though the
+    # publish job is skipped in the build stage (all other jobs there keep the workflow's read-only token).
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/dev-preview.yml
     with:
       target: dev-preview
