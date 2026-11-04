@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.
+
 Identität v3, Paket 2 (`feat/identity-v3-wissen`): Notizen (Reiter), Merkliste (Pinnwand, Kopfzahl), Feeds (Zeitungskopf, Aufmacher, Spalten), Chat (Sprechblasen) und Browser (Adressleiste) auf die v3-Kopf- und Widget-Varianten umgebaut; Paket 3 (Mail, Musik, Downloads) folgt.
 
 Werkzeuge mit Identität v3, Paket 3 von 3 (`feat/identity-v3-tools-make-check`, gestapelt auf #446): QR und Bildschirmfoto in gerahmter Vorschau, Persona als Karte mit „Erfunden“-Stempel, Würfel mit Würfelflächen, Text mit Kennzahl-Kacheln und Haftnotiz-Feld, PDF-Dateikarten, Dev/Diff/Regex im Code-Look; Handtest TP7 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
