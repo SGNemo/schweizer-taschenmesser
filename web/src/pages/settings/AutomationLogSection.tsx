@@ -23,6 +23,8 @@ import { tAuto } from '@/strings.automation';
 import { Button, Dialog, ItemList, ItemRow, SettingsGroup } from '@/ui';
 
 const SECTION = 'automation-log';
+/** Only the latest few runs: the log is for a glance, not a history page. */
+const MAX_ROWS = 8;
 
 /**
  * Settings → Benachrichtigungen → "Regel-Protokoll": the latest rule runs as a list (like "Zuletzt
@@ -32,7 +34,7 @@ const SECTION = 'automation-log';
 export function AutomationLogSection() {
   const s = tAuto.use().log;
   const toast = useUiStore((st) => st.toast);
-  const rows = useAutomationLog(50);
+  const rows = useAutomationLog(MAX_ROWS);
   const notices = useLiveQuery(() => listNotices(), []);
   const suggestions = (notices ?? []).filter((n) => n.suggestion);
   const [review, setReview] = useState<{ notice: AutomationNotice; ops: PreparedOp[] }>();

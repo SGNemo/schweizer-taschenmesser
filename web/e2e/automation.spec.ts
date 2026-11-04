@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enable, ready, showPreview } from './helpers';
+import { enable, openFoldedGroup, ready, showPreview } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -19,6 +19,7 @@ test.describe('Automatisierungen', () => {
 
     await master.click();
     await expect(master).toHaveAttribute('aria-checked', 'true');
+    await openFoldedGroup(page, 'automation', 'templates');
     const rule = section.getByRole('switch', { name: 'Rechnung bald fällig einschalten' });
     await expect(rule).toHaveAttribute('aria-checked', 'false'); // every template starts off
     await rule.click();
@@ -39,6 +40,7 @@ test.describe('Automatisierungen', () => {
     await showPreview(page);
     const section = page.locator('section[aria-labelledby="automation"]');
     await section.getByRole('switch', { name: 'Automatisierungen verwenden' }).click();
+    await openFoldedGroup(page, 'automation', 'templates');
     await section.getByRole('switch', { name: 'Wochenrückblick einschalten' }).click();
     await enable(page, 'todos');
 
