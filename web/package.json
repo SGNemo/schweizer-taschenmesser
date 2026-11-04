@@ -38,6 +38,7 @@
     "preview:e2e-seed": "vite preview --outDir dist-e2e-seed --port 4174 --strictPort",
     "e2e:seed": "playwright test --project=seed-dev",
     "gen:icons": "node scripts/gen-icons.mjs",
+    "gen:social": "node scripts/gen-social.mjs",
     "e2e:app": "playwright test",
     "e2e:sync": "playwright test -c playwright.sync.config.ts",
     "tauri": "tauri",
