@@ -165,19 +165,17 @@ describe('data micro-benchmarks', () => {
     });
     await db.table('finance_transaction').clear();
     const N = 20_000;
-    await db
-      .table('finance_transaction')
-      .bulkPut(
-        Array.from({ length: N }, (_, i) =>
-          row(i, {
-            accountId: 'a1',
-            kind: 'expense',
-            amountMinor: 100,
-            date: '2026-09-01',
-            payee: `Laden ${i % 300}`,
-          }),
-        ),
-      );
+    await db.table('finance_transaction').bulkPut(
+      Array.from({ length: N }, (_, i) =>
+        row(i, {
+          accountId: 'a1',
+          kind: 'expense',
+          amountMinor: 100,
+          date: '2026-09-01',
+          payee: `Laden ${i % 300}`,
+        }),
+      ),
+    );
     await db.table('notes_note').clear();
     await db
       .table('notes_note')
