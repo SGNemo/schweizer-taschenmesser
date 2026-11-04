@@ -20,7 +20,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), finance, invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault; **disk** = Dieser PC.
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault; **disk** = Dieser PC.
 - `src/tools/<id>/` – helpers (14: calc, currency, dates, dev, dice, image, pdf, persona, qr, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `ToolsSheet`, `assistant/`.
@@ -68,7 +68,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | **Focus and attention aids** | `core/settings/focus.ts`, `core/focus/`, `modules/todos/{next.ts,routes/FocusPage.tsx,widgets/NextWidget.tsx}`; paths and rules: [features/focus-aids.md](features/focus-aids.md#where-things-live) | |
 | **Recently deleted** | `core/trash` (`trash.ts` list/restore/purge, `settings.ts` switch), `core/db/trash.ts` (30-day window), `pages/settings/RecentlyDeletedSection.tsx`; allow-list `TRASH_COLLECTIONS` (never `accounts`) | `TrashEntry` |
 | **Undo / keyboard** | `core/undo`, `core/db/recorder.ts`, `core/keyboard`, `core/voice`, `layout/useShortcuts`; dev `/dev/components` | `UndoEntry` |
-| **Automations** | `core/automation` (types, engine, guards, actions, ingest, scheduler, notices, log, settings), `core/db/writeHook.ts` | `Rule`, `AutomationEvent`, `_automationLog` |
+| **Automations** | `core/automation` (types, engine, guards, actions, ingest, scheduler, notices, log, settings, templates, registry, api), `core/db/writeHook.ts`; UI `pages/settings/Automation*.tsx`, palette commands | `Rule`, `AutomationEvent`, `_automationLog` |
 | **Navigation areas** | `manifest.area`, `core/modules/areas.ts`, `core/settings/nav.ts`, [decisions/ui-shell.md](decisions/ui-shell.md) | `NavTree` |
 | **Layout system** | `web/src/layout/PageContainer.tsx` + `.module.css`; `PageLayout`/`PAGE_LAYOUTS` in `core/modules/types.ts`; applied once in `router.tsx` via `manifest.layout` / `route.layout` | `narrow`/`content`/`wide`/`full` |
 | **Notes editor** | `web/src/modules/notes/`: `routes/NotesPage.tsx` (list + page, writing mode), `components/NotePane.tsx` (title, autosave, crash draft, history), `components/{PageList,TabBar,NotebookDialog,MoveDialog,HistoryDialog,TrashDialog}.tsx`, `editor/versions.ts` (history), `links.ts` + `editor/{wikiLinkNode,LinkMenu}` (`[[links]]`), `exchange.ts` + `editor/print.ts` + `components/{Export,Import}Dialog.tsx` (export/import), `editor/` (`EditorSurface` lazy, `extensions.ts`, `markdown.ts` plain→Markdown + plain views, `SlashMenu`, `BubbleToolbar`, `images.ts`, `autosave.ts`, `draft.ts`); decisions in [decisions/modules.md](decisions/modules.md) | `noteExtensions`, `plainToMarkdown` |
