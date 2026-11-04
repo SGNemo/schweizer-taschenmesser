@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready, showPreview } from './helpers';
+import { pickTool, ready, showPreview } from './helpers';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -32,10 +32,7 @@ test('nothing leaves the app without a click: start, home, settings', async ({ p
 async function openCurrency(page: Page) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
-  await page.getByRole('button', { name: 'Werkzeuge' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Werkzeuge' });
-  await sheet.getByRole('button', { name: 'Währung' }).click();
-  return sheet;
+  return pickTool(page, 'Währung');
 }
 
 test('the connection log lists host and reason, the block stops requests before they leave', async ({

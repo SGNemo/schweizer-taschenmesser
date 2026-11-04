@@ -48,6 +48,8 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
     const dialog = page.getByRole('dialog');
     const search = dialog.getByRole('searchbox', { name: 'Werkzeuge durchsuchen' });
     await expect(search).toBeFocused();
+    // The list is there once the tool settings are read; typing earlier would filter nothing.
+    await expect(dialog.getByRole('button', { name: 'Rechner', exact: true })).toBeVisible();
 
     await page.keyboard.type('waehrung');
     await expect(dialog.getByRole('button', { name: 'Rechner', exact: true })).toHaveCount(0);

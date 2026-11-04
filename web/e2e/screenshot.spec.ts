@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { showPreview } from './helpers';
+import { pickTool, showPreview } from './helpers';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -15,12 +15,7 @@ async function openTool(page: Page) {
   const card = page.getByTestId('tool-screenshot');
   await card.getByLabel('Bildschirmfoto einschalten').click();
   await expect(card.getByLabel('Bildschirmfoto einschalten')).toBeChecked();
-  await page.getByRole('button', { name: 'Werkzeuge' }).first().click();
-  await page
-    .getByRole('dialog', { name: 'Werkzeuge' })
-    .getByRole('button', { name: 'Bildschirmfoto', exact: true })
-    .click();
-  return page.getByRole('dialog');
+  return pickTool(page, 'Bildschirmfoto');
 }
 
 /** A stand-in for the browser's screen picker: a 320 × 200 canvas as the "screen". */
