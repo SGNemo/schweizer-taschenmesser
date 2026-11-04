@@ -61,6 +61,13 @@ export const AREAS: Record<string, Label> = {
 
 export const MAX_SENTENCE = 200;
 
+/** Commit-style spellings people reach for; stored under the canonical type. */
+const TYPE_ALIASES: Record<string, ChangeType> = {
+  perf: 'performance',
+  feat: 'added',
+  fix: 'fixed',
+};
+
 const KEYS = new Set(['type', 'area', 'breaking', 'highlight', 'de', 'en', 'pr']);
 
 export interface ParseResult {
@@ -121,7 +128,7 @@ export function parseChangeFile(
       errors.push(`${at}: ${k} must be true or false`);
       return undefined;
     };
-    const type = kv.type as ChangeType | undefined;
+    const type = (TYPE_ALIASES[kv.type ?? ''] ?? kv.type) as ChangeType | undefined;
     if (!type || !(TYPES as readonly string[]).includes(type))
       errors.push(`${at}: type must be one of ${TYPES.join(', ')}`);
     if (!kv.area || !areas[kv.area]) errors.push(`${at}: unknown area "${kv.area ?? ''}"`);

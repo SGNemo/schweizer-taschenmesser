@@ -46,6 +46,13 @@ describe('parseChangeFile', () => {
     expect(parseChangeFile('---\ntype: added\n').errors.join()).toMatch(/closing/);
     expect(parseChangeFile('nothing').errors.join()).toMatch(/no entry/);
   });
+  it('accepts commit-style type aliases and stores the canonical type', () => {
+    const { entries, errors } = parseChangeFile(
+      '---\ntype: perf\narea: app\nde: Schneller.\nen: Faster.\n---\n',
+    );
+    expect(errors).toEqual([]);
+    expect(entries[0]?.type).toBe('performance');
+  });
   it('round-trips through formatChangeFile', () => {
     const { entries } = parseChangeFile(ok);
     expect(parseChangeFile(formatChangeFile(entries)).entries).toEqual(entries);
