@@ -197,9 +197,9 @@ try {
   const markBox = mark.match(/viewBox="([^"]+)"/)[1];
   const [, , mw, mh] = markBox.split(' ').map(Number);
   const markSymbol = `<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="${markBox}">${mark
+    // everything before <defs> goes, including the file's leading comment
     .replace(/^[\s\S]*?<defs>/, '<defs>')
     .replace(/<\/svg>\s*$/, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
     .replaceAll(`"${ACCENT}"`, '"currentColor"')}</symbol></svg>`;
   const SCHOOL = [
     [0.05, 0.22, 0.2, 1],
