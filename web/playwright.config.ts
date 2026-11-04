@@ -10,7 +10,7 @@ export default defineConfig({
   testDir: './e2e',
   // Multi-device tests need the real sync server: see playwright.sync.config.ts
   // `screenshots/` is manual tooling (playwright.screens.config.ts), not part of the suite.
-  testIgnore: ['**/sync/**', '**/screenshots/**', '**/seed/**'],
+  testIgnore: ['**/sync/**', '**/screenshots/**', '**/seed/**', '**/perf/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

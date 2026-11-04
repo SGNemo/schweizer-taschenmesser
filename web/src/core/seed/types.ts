@@ -6,8 +6,9 @@
 
 import type { Lang } from '@/core/i18n/lang';
 
-export type SeedScale = 'small' | 'medium' | 'large';
-export const SEED_SCALES: readonly SeedScale[] = ['small', 'medium', 'large'];
+export type SeedScale = 'small' | 'medium' | 'large' | 'xl';
+/** Scales every seed test iterates and the settings page offers. `xl` is for measurements only. */
+export const SEED_SCALES: readonly Exclude<SeedScale, 'xl'>[] = ['small', 'medium', 'large'];
 
 /** Manifest part of the contract (`ModuleManifest.seed`, required). */
 export interface SeedMeta {
@@ -49,8 +50,11 @@ export interface SeedContext {
   lang: Lang;
   /** Picks the text for `lang`; German is the source, a missing language falls back to it. */
   text<T = string>(by: LocalizedSeedText<T>): T;
-  /** Picks the value for the current scale. */
-  count<T = number>(by: Record<SeedScale, T>): T;
+  /**
+   * Picks the value for the current scale. `xl` (perf measurements: `docs/perf/`) uses its own
+   * value when given and `large` otherwise, so only the modules that matter for volume name it.
+   */
+  count<T = number>(by: Record<Exclude<SeedScale, 'xl'>, T> & { xl?: T }): T;
   /**
    * Stable record id. The same arguments always give the same id, also across modules, so a seed
    * can reference records of a module it depends on without importing it.

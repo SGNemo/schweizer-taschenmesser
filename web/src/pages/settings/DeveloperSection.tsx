@@ -147,7 +147,7 @@ export default function DeveloperSection() {
             <dt>{tDev.status.reference}</dt>
             <dd>{state.today}</dd>
             <dt>{tDev.status.scale}</dt>
-            <dd>{tDev.load[state.scale]}</dd>
+            <dd>{tDev.load[state.scale === 'xl' ? 'large' : state.scale]}</dd>
             <dt>{tDev.status.entries}</dt>
             <dd>
               {total}
