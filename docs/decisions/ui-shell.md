@@ -60,7 +60,7 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **One card for both libraries** – `@/ui` `LibraryCard` (icon, name, badges, description, actions, deep-link anchor) is used by the module and the tool library; search matches name, description and the module's settings words (so "Abo" or "Rechnung" find the module by purpose).
 - **"Neu" / "Aktualisiert"** is device-local (`tm-library-seen`, `core/modules/librarySeen.ts`): nothing on the very first look, later a new module or a higher `version`; the mark goes once the library was looked at. No counter, no nag.
 - **Start data on the card** of an enabled module (same button as in Settings); the card has a switch (`role=switch`, "<Name> einschalten") instead of enable/disable buttons. Switching off a module **without data** (`moduleHasData`) needs no dialog – a toast offers undo; with data the keep/delete dialog stays. E2E uses `moduleSwitch(card)` from `e2e/helpers.ts`.
-- **Not done:** preview widget in the card (stimulus load), navigation order by drag and drop (favourites keep their buttons).
+- **Not done:** preview widget in the card (stimulus load; superseded in part by "Libraries in identity v3": a drawn sketch, decoration only, hidden on the phone, grey in "Ruhig"; never the live widget), navigation order by drag and drop (favourites keep their buttons).
 
 ## Toolbox comfort (2026-10-13, `feat/comfort-toolbox`)
 
@@ -122,6 +122,15 @@ Index: [DECISIONS](../DECISIONS.md). Tokens and brand: [ui-brand.md](ui-brand.md
 - **Status head = six states.** Security, sync, backup, updates, AI, storage (same hooks and texts as the overview cards before; backup is new as its own tile). Each tile has one state line and one context line, a jump into its category, `attention` as an accent hairline plus words, never red. The overview keeps look, notifications and modules as cards; e2e count: 6 tiles + 3 cards.
 - **"Differs from the default" is a quiet dot** next to the category in the list (reuses `isChanged` of the sections' reset plans) with a `sr-only` text; nothing new is stored. No left rails remain in settings (sub-groups, table of contents, security note).
 - **Unchanged on purpose:** registry, keys, defaults (`inventory.test.ts` untouched), security sections and their confirmations, module files.
+
+## Libraries in identity v3 (2026-11-04, `feat/identity-v3-library`, package 2)
+
+- **Cards show the module, not a generic tile.** `LibraryCard` takes an optional `hue` (tinted head and plate) and `preview` (a drawn sketch of the module's widget variant, `pages/library/WidgetMiniature`: boxes and bars, no text, no data). The sketch instead of the real widget is deliberate: widgets read live data, would load every module's code on one page and, for the vault, would show entries. Without the new props the card is unchanged.
+- **Head with figures, toolbar with filters.** `PageHead` (the settings one) carries "n active · n available · n new"; the toolbar has the search, a status filter (all / active / off / new when there is something new) and an area select. Filters are component state, not stored. Sections stay one per navigation area, tinted in the area colour with its pattern and "n of m active".
+- **Detail page `/library/:moduleId`** (one child route in `router.tsx`): the module as a small page, with the same switch as the card. On/off is one hook (`pages/library/useModuleSwitch`): start-data offer once per device, keep/delete dialog when there are entries, undo toast otherwise; unchanged behaviour.
+- **Tool library** uses the same head, figures, filter and tinted groups; cards take the tool's own hue (`tool.identity.hue`).
+- **Edge cases kept calm:** a card switched under the Aktiv/Aus filter stays until the search or filter changes (focus does not fall to the page), also a preview module that leaves the catalogue when switched off; an empty result says why and offers "reset search and filter"; the detail page resolves through the same catalogue as the library (a hidden preview module stays hidden).
+- **Fixed on the way:** the card list was one column because `.list` (flex) came after `.grid` in `Page.module.css`; the libraries have their own grid now. The area-colour dot (`libStripe`) and a dead `.moduleIcon` rule are gone.
 
 ## Tools identity v3, package 2 (2026-11-04, `feat/identity-v3-tools-calc-time`)
 

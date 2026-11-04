@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
-import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
-import {
-  disableModule,
-  enableModule,
-  moduleHasData,
-  useModuleStates,
-} from '@/core/modules/activation';
+import { Link } from 'react-router';
+import { useModuleStates } from '@/core/modules/activation';
 import { availableManifests, useCatalogManifests } from '@/core/modules/available';
 import { libraryBadges, markLibrarySeen } from '@/core/modules/librarySeen';
 import { normalize } from '@/core/text/normalize';
@@ -16,9 +10,26 @@ import { AREAS, type AreaId, type ModuleManifest } from '@/core/modules/types';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
-import { useUiStore } from '@/stores/ui';
-import { Badge, Button, Dialog, LibraryCard, Switch, TextField, useHashTarget } from '@/ui';
+import { tLibraryV3 } from '@/strings.libraryV3';
+import {
+  Badge,
+  Button,
+  LibraryCard,
+  SelectField,
+  Segmented,
+  Switch,
+  TextField,
+  Toolbar,
+  useHashTarget,
+} from '@/ui';
+import { PageHead } from './settings/PageHead';
+import { useModuleSwitch } from './library/useModuleSwitch';
+import { WidgetMiniature } from './library/WidgetMiniature';
+import library from './library/Library.module.css';
 import styles from './Page.module.css';
+
+type Filter = 'all' | 'active' | 'off' | 'news';
+type AreaFilter = AreaId | 'other' | 'all';
 
 interface LibraryGroup {
   id: string;
@@ -27,28 +38,23 @@ interface LibraryGroup {
   manifests: ModuleManifest[];
 }
 
-/** The available modules grouped by navigation area (same order and names as the sidebar); modules without an area come last. */
 /** What a search matches: name, description and the settings words of the module. */
 const haystack = (m: ModuleManifest) =>
   normalize([m.name, m.description, ...(m.settings.keywords ?? [])].join(' '));
 
-function libraryGroups(catalog: readonly ModuleManifest[], query: string): LibraryGroup[] {
-  const tokens = normalize(query).split(/\s+/).filter(Boolean);
-  const all = catalog.filter((m) => {
-    const text = haystack(m);
-    return tokens.every((tok) => text.includes(tok));
-  });
+/** The available modules grouped by navigation area (same order and names as the sidebar); modules without an area come last. */
+function libraryGroups(catalog: readonly ModuleManifest[]): LibraryGroup[] {
   const groups: LibraryGroup[] = AREAS.map((id) => ({
     id,
     area: id,
     label: t.nav.areas[id],
-    manifests: all.filter((m) => m.area === id),
+    manifests: catalog.filter((m) => m.area === id),
   }));
   groups.push({
     id: 'other',
     area: undefined,
     label: t.library.other,
-    manifests: all.filter((m) => !m.area),
+    manifests: catalog.filter((m) => !m.area),
   });
   return groups.filter((g) => g.manifests.length > 0);
 }
@@ -57,150 +63,212 @@ export function ModuleLibrary() {
   const states = useModuleStates();
   // Preview modules only with "In Arbeit anzeigen" or when already on (core/modules/available.ts).
   const catalog = useCatalogManifests(states);
-  const [pending, setPending] = useState<ModuleManifest | null>(null);
-  const [offer, setOffer] = useState<ModuleManifest | null>(null);
   const [query, setQuery] = useState('');
-  const toast = useUiStore((st) => st.toast);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>('all');
+  const sw = useModuleSwitch();
+  // Cards the person just switched: they stay in the list until a filter or the search changes, so the card
+  // (and the keyboard focus on its switch) does not vanish mid-action under the "Aktiv" / "Aus" filter.
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const release = () => setHeld(new Set());
   const text = tComfort.get().library;
+  const v3 = tLibraryV3.use();
   // The marks shown now; the library counts as looked at when it is left.
   const badges = useMemo(() => libraryBadges(availableManifests()), []);
   useEffect(() => () => markLibrarySeen(availableManifests()), []);
   // `/library#module-<id>` (from the palette or a link) scrolls to that card and marks it.
   useHashTarget(states !== undefined);
 
-  const groups = libraryGroups(catalog, query);
+  const isOn = (m: ModuleManifest) => states?.[m.id] ?? false;
+  const activeCount = catalog.filter(isOn).length;
+  const newsCount = catalog.filter((m) => badges[m.id]).length;
+  // A preview module that was just switched off leaves the catalogue; its card stays until a filter changes.
+  const pool = [
+    ...catalog,
+    ...availableManifests().filter((m) => held.has(m.id) && !catalog.includes(m)),
+  ];
 
-  async function enable(m: ModuleManifest) {
-    await enableModule(m);
-    // Offer the start-data wizard once per device; "Überspringen" and every import count as handled.
-    if (hasImporters(m) && !(await wasOnboardingHandled(m.id))) setOffer(m);
-  }
-
-  /**
-   * The switch was turned off. A module with entries asks what to do with them (as before); an empty
-   * one is simply switched off, with "Rückgängig" in the toast.
-   */
-  async function switchOff(m: ModuleManifest) {
-    if (await moduleHasData(m)) {
-      setPending(m);
-      return;
-    }
-    await disableModule(m, 'keep');
-    toast(text.turnedOff(m.name), { label: t.ui.undo, run: () => void enableModule(m) });
-  }
-
-  async function disable(policy: 'keep' | 'delete') {
-    if (!pending) return;
-    const m = pending;
-    // Close the dialog only after the write: "the dialog has closed" must mean "the write is
-    // finished" (E2E rule in docs/howto/gotchas.md), otherwise a reload right after can lose the change.
-    await disableModule(m, policy);
-    setPending(null);
-  }
+  const tokens = normalize(query).split(/\s+/).filter(Boolean);
+  const shown = pool.filter((m) => {
+    const text = haystack(m);
+    if (!tokens.every((tok) => text.includes(tok))) return false;
+    if (held.has(m.id)) return true;
+    if (filter === 'active' && !isOn(m)) return false;
+    if (filter === 'off' && isOn(m)) return false;
+    if (filter === 'news' && !badges[m.id]) return false;
+    return true;
+  });
+  const allGroups = libraryGroups(pool);
+  // An area that no longer exists in the list (its only module left the catalogue) counts as "all".
+  const area = allGroups.some((g) => g.id === areaFilter) ? areaFilter : 'all';
+  const groups = libraryGroups(shown).filter((g) => area === 'all' || g.id === area);
 
   return (
     <>
-      <div className={styles.header}>
-        <div>
-          <h1>{t.library.title}</h1>
-          <p className={styles.lead}>{t.library.intro}</p>
-          <SetupLink />
-        </div>
-      </div>
-      <div role="search" className={styles.librarySearch}>
-        <TextField
-          label={text.search}
-          labelHidden
-          type="search"
-          placeholder={text.searchPlaceholder}
-          value={query}
-          autoComplete="off"
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-      {groups.length === 0 ? (
-        <p role="status" className={styles.lead}>
-          {text.noResults}
-        </p>
-      ) : null}
-      {groups.map((g) => (
-        <section key={g.id} className={styles.libGroup} data-area={g.area}>
-          <h2 className={styles.libHead}>
-            <span className={styles.libStripe} aria-hidden="true" />
-            {g.label}
-            <span className={styles.libCount}>{g.manifests.length}</span>
-          </h2>
-          <ul className={`${styles.list} ${styles.grid}`}>
-            {g.manifests.map((m) => {
-              const enabled = states?.[m.id] ?? false;
-              return (
-                <LibraryCard
-                  key={m.id}
-                  id={`module-${m.id}`}
-                  testId={`module-${m.id}`}
-                  icon={m.icon}
-                  name={m.name}
-                  description={m.description}
-                  badges={
-                    <>
-                      {enabled ? <Badge tone="accent">{t.library.active}</Badge> : null}
-                      {badges[m.id] ? (
-                        <Badge>{badges[m.id] === 'new' ? text.badgeNew : text.badgeUpdated}</Badge>
-                      ) : null}
-                      {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
-                      {m.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
-                    </>
-                  }
-                >
-                  {enabled && hasStartData(m) ? (
-                    <StartDataButton moduleId={m.id} setupLink={false} />
-                  ) : null}
-                  <Switch
-                    label={text.toggle(m.name)}
-                    checked={enabled}
-                    disabled={!states}
-                    onChange={(on) => void (on ? enable(m) : switchOff(m))}
-                  />
-                </LibraryCard>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
-
-      {offer ? (
-        <OnboardingWizard
-          manifest={offer}
-          open
-          onClose={() => {
-            void markOnboardingHandled(offer.id);
-            setOffer(null);
-          }}
-        />
-      ) : null}
-
-      <Dialog
-        open={pending !== null}
-        onClose={() => setPending(null)}
-        title={pending ? t.library.disableTitle(pending.name) : ''}
-        footer={<Button onClick={() => setPending(null)}>{t.actions.cancel}</Button>}
+      <PageHead
+        hue="cobalt"
+        area="system"
+        icon="grid"
+        eyebrow={v3.eyebrow}
+        title={t.library.title}
+        description={t.library.intro}
+        size="tall"
+        testId="library-head"
+        actions={<SetupLink />}
       >
-        <p>{t.library.disableText}</p>
-        <div className={styles.options}>
-          <div className={styles.option}>
-            <Button variant="primary" onClick={() => void disable('keep')}>
-              {t.library.keepData}
-            </Button>
-            <span className={styles.optionHint}>{t.library.keepDataHint}</span>
-          </div>
-          <div className={styles.option}>
-            <Button variant="danger" onClick={() => void disable('delete')}>
-              {t.library.deleteData}
-            </Button>
-            <span className={styles.optionHint}>{t.library.deleteDataHint}</span>
-          </div>
+        <ul className={library.figures} aria-label={v3.figures.label} data-testid="library-figures">
+          <li>
+            <strong>{activeCount}</strong> {v3.figures.active}
+          </li>
+          <li>
+            <strong>{catalog.length}</strong> {v3.figures.available}
+          </li>
+          {newsCount > 0 ? (
+            <li>
+              <strong>{newsCount}</strong> {v3.figures.news}
+            </li>
+          ) : null}
+        </ul>
+      </PageHead>
+      <Toolbar>
+        <div role="search" className={library.toolbarSearch}>
+          <TextField
+            label={text.search}
+            labelHidden
+            type="search"
+            placeholder={text.searchPlaceholder}
+            value={query}
+            autoComplete="off"
+            onChange={(e) => {
+              release();
+              setQuery(e.target.value);
+            }}
+          />
         </div>
-      </Dialog>
+        <div className={library.filterSeg}>
+          <Segmented
+            label={v3.filter.label}
+            value={filter}
+            onChange={(f) => {
+              release();
+              setFilter(f);
+            }}
+            options={[
+              { value: 'all', label: v3.filter.all },
+              { value: 'active', label: v3.filter.active },
+              { value: 'off', label: v3.filter.off },
+              ...(newsCount > 0 ? [{ value: 'news' as const, label: v3.filter.news }] : []),
+            ]}
+          />
+        </div>
+        <SelectField
+          label={v3.filter.areaLabel}
+          labelHidden
+          value={area}
+          onChange={(e) => {
+            release();
+            setAreaFilter(e.target.value as AreaFilter);
+          }}
+        >
+          <option value="all">{v3.filter.allAreas}</option>
+          {allGroups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.label}
+            </option>
+          ))}
+        </SelectField>
+      </Toolbar>
+      <div className={library.empty} data-shown={groups.length === 0}>
+        <div role="status">
+          {groups.length === 0 ? (
+            <p className={styles.lead}>{query.trim() ? text.noResults : v3.filter.none}</p>
+          ) : null}
+        </div>
+        {groups.length === 0 && (query.trim() || filter !== 'all' || area !== 'all') ? (
+          <Button
+            onClick={() => {
+              release();
+              setQuery('');
+              setFilter('all');
+              setAreaFilter('all');
+            }}
+          >
+            {v3.filter.reset}
+          </Button>
+        ) : null}
+      </div>
+      {groups.map((g) => {
+        const total = allGroups.find((x) => x.id === g.id)?.manifests ?? g.manifests;
+        return (
+          <section
+            key={g.id}
+            className={library.group}
+            data-area={g.area}
+            aria-labelledby={`lib-${g.id}`}
+          >
+            <h2 id={`lib-${g.id}`} className={library.groupHead}>
+              {g.label}
+              <span className={library.groupCount}>
+                {v3.section(total.filter(isOn).length, total.length)}
+              </span>
+            </h2>
+            <ul className={library.cards}>
+              {g.manifests.map((m) => {
+                const enabled = isOn(m);
+                return (
+                  <LibraryCard
+                    key={m.id}
+                    id={`module-${m.id}`}
+                    testId={`module-${m.id}`}
+                    icon={m.icon}
+                    name={m.name}
+                    description={m.description}
+                    hue={m.identity.hue}
+                    preview={<WidgetMiniature variant={m.identity.widget} />}
+                    badges={
+                      <>
+                        {enabled ? <Badge>{t.library.active}</Badge> : null}
+                        {badges[m.id] ? (
+                          <Badge>
+                            {badges[m.id] === 'new' ? text.badgeNew : text.badgeUpdated}
+                          </Badge>
+                        ) : null}
+                        {m.devOnly ? <Badge>{t.library.devOnly}</Badge> : null}
+                        {m.maturity === 'preview' ? (
+                          <Badge>{t.settings.maturity.badge}</Badge>
+                        ) : null}
+                      </>
+                    }
+                  >
+                    <Link
+                      to={`/library/${m.id}`}
+                      className={library.details}
+                      aria-label={v3.detailsOf(m.name)}
+                    >
+                      {v3.details}
+                    </Link>
+                    {enabled && hasStartData(m) ? (
+                      <span className={library.startData}>
+                        <StartDataButton moduleId={m.id} setupLink={false} />
+                      </span>
+                    ) : null}
+                    <Switch
+                      label={text.toggle(m.name)}
+                      checked={enabled}
+                      disabled={!states}
+                      onChange={(on) => {
+                        setHeld((h) => new Set(h).add(m.id));
+                        sw.set(m, on);
+                      }}
+                    />
+                  </LibraryCard>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+      {sw.node}
     </>
   );
 }

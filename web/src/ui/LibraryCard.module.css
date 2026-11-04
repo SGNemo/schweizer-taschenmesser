@@ -33,3 +33,15 @@
   justify-content: flex-end;
   gap: var(--space-2);
 }
+
+/* Identity v3: the head sits on a tint of the hue, the plate takes the hue; text stays --text. */
+.head[data-tinted='true'] {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--head-flat);
+  color: var(--text);
+}
+.head[data-tinted='true'] .icon {
+  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
+  color: var(--text);
+}

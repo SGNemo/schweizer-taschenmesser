@@ -1,0 +1,133 @@
+/* Libraries in identity v3: head figures, tinted area sections, details link. Tokens only; hairlines all around,
+   no edge stripe; text is --text / --text-muted. */
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  color: var(--text);
+  font-size: var(--text-label);
+}
+.figures strong {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  margin-inline-end: var(--space-1);
+}
+.group {
+  position: relative;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--area-color, var(--text-3)) var(--group-tint, 6%),
+    var(--surface)
+  );
+}
+.group::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-widget, 0.04);
+}
+.group > * {
+  position: relative;
+}
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+.groupCount {
+  /* On a tinted surface with a pattern: --text, the lighter size and weight carry the hierarchy. */
+  color: var(--text);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+.details {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* The cards of a section: as many columns as fit, never narrower than a readable card. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The search in the toolbar grows to a readable width. */
+.toolbarSearch {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+  min-width: 0;
+}
+.filterSeg {
+  /* Filter and area select sit together on the right; the search takes the left. */
+  margin-inline-start: auto;
+  min-width: 0;
+}
+/* The status filter is short enough to show whole: no sideways fade on its last option (the base segment fades it below 900 px). */
+.filterSeg [role='group'] {
+  -webkit-mask-image: none;
+  mask-image: none;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+/* Start-data button: after the switch row on the phone, inline on larger screens. */
+.startData {
+  display: inline-flex;
+}
+.empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.empty[data-shown='true'] {
+  margin-bottom: var(--space-4);
+}
+.empty p {
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  /* Phone: the sections
+     lose their padding (the card is the unit), and the drawn sketch waits for the detail page: one full card with
+     its switch is on the first screen. */
+  /* The status filter and the area select share a row while they fit and wrap when they do not (four options, the
+     longer es/pt-BR words): nothing is cut off, and the first card moves up. */
+  .filterSeg {
+    flex: 0 1 auto;
+    margin-inline-start: 0;
+  }
+  .startData {
+    order: 3;
+    flex: 1 1 100%;
+    /* Start of the row: the floating action button covers the right edge. */
+    justify-content: flex-start;
+  }
+  .group {
+    padding: var(--space-2);
+  }
+}

@@ -95,6 +95,7 @@ const PAGES: Shot[] = [
   { name: 'disk', path: '/disk', head: true, desktop: true },
   { name: 'downloads', path: '/downloads', head: true, desktop: true },
   { name: 'library', path: '/library' },
+  { name: 'library-detail', path: '/library/todos' },
   { name: 'tools', path: '/tools' },
   { name: 'settings', path: '/settings' },
   { name: 'settings-darstellung', path: '/settings/darstellung' },
