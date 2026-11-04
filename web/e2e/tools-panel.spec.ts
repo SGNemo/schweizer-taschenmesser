@@ -99,6 +99,13 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
   });
 
   test('"In eigenem Fenster öffnen" opens the tool alone in a window', async ({ page }) => {
+    // A popup has no focus on a headless runner, so the real clipboard may refuse; the toast is what is tested.
+    await page.context().addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: () => Promise.resolve() },
+        configurable: true,
+      });
+    });
     await ready(page, '/');
     await page.keyboard.press('Control+.');
     const popupPromise = page.waitForEvent('popup');
