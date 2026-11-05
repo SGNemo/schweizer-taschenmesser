@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
@@ -111,8 +112,10 @@ function TransferForm({
 
   const label = (id: string) => data.accounts.find((a) => a.id === id);
   const fromCurrency = currencyOf(label(from));
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <div className={styles.split}>
         <SelectField
           label={e.transfer.from}

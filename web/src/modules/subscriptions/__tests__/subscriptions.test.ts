@@ -96,6 +96,29 @@ describe('subscriptions module', () => {
     expect(due).toHaveLength(1);
   });
 
+  it('a contract already cancelled "zum" a date gets no deadline reminders or calendar deadlines', async () => {
+    await subscriptionRepo.create(
+      sub({
+        name: 'Fitnessstudio',
+        recurrence: { freq: 'monthly', until: '2027-01-31' },
+        cancelNoticeDays: 30,
+      }),
+    );
+    expect(
+      await collectNotifications(
+        { from: toEpoch('2026-11-05', '00:00'), to: toEpoch('2027-01-31', '00:00') },
+        [manifest],
+      ),
+    ).toEqual([]);
+    const items = await collectCalendarItems({ from: '2026-11-05', to: '2027-01-31' }, [manifest]);
+    expect(items.filter((i) => i.kind === 'cancel')).toEqual([]);
+    expect(items.filter((i) => i.kind === 'subscription').map((i) => i.date)).toEqual([
+      '2026-11-15',
+      '2026-12-15',
+      '2027-01-15',
+    ]);
+  });
+
   it('no notifications for subscriptions without a notice period', async () => {
     await subscriptionRepo.create(sub());
     expect(

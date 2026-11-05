@@ -244,6 +244,26 @@ describe('parseIcs: limits', () => {
     expect(e.uid).toHaveLength(ICS_TEXT_LIMIT);
     expect(e.note).toHaveLength(ICS_NOTE_LIMIT);
   });
+
+  it('never cuts an emoji in half at the limit (X37)', () => {
+    const at = (n: number) => `${'x'.repeat(n - 1)}😀yyy`;
+    const { events } = parseIcs(
+      wrap(
+        ev(
+          `SUMMARY:${at(ICS_TEXT_LIMIT)}`,
+          `LOCATION:${at(ICS_TEXT_LIMIT)}`,
+          `DESCRIPTION:${at(ICS_NOTE_LIMIT)}`,
+          'DTSTART;VALUE=DATE:20261003',
+        ),
+      ),
+    );
+    const e = events[0]!;
+    const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+    for (const text of [e.title, e.location!, e.note!]) expect(lone.test(text)).toBe(false);
+    expect(e.title).toBe('x'.repeat(ICS_TEXT_LIMIT - 1));
+    const whole = parseIcs(wrap(ev(`SUMMARY:${at(10)}`, 'DTSTART;VALUE=DATE:20261003')));
+    expect(whole.events[0]!.title).toBe(`${'x'.repeat(9)}😀yyy`);
+  });
 });
 
 describe('parseRrule / durationMinutes', () => {
@@ -261,5 +281,37 @@ describe('parseRrule / durationMinutes', () => {
     expect(durationMinutes('P1W')).toBe(10080);
     expect(durationMinutes('-PT5M')).toBe(-5);
     expect(durationMinutes('soon')).toBeUndefined();
+  });
+});
+
+describe('parseIcs: a start that moves to another local day moves the rule too (X18)', () => {
+  const rule = (start: string, rrule: string) =>
+    parseIcs(wrap(ev('SUMMARY:Serie', `DTSTART;${start}`, `RRULE:${rrule}`)));
+
+  it('shifts BYDAY by the same days as the start', () => {
+    // Monday 19:00 in New York is Tuesday 01:00 in Berlin.
+    const later = rule('TZID=America/New_York:20261102T190000', 'FREQ=WEEKLY;BYDAY=MO,SU');
+    expect(later.events[0]).toMatchObject({ startDate: '2026-11-03', startTime: '01:00' });
+    expect(later.events[0]!.recurrence?.byWeekday).toEqual([1, 2]);
+    // Tuesday 05:00 in Tokyo is Monday 21:00 in Berlin.
+    const earlier = rule('TZID=Asia/Tokyo:20261103T050000', 'FREQ=WEEKLY;BYDAY=TU,MO');
+    expect(earlier.events[0]).toMatchObject({ startDate: '2026-11-02', startTime: '21:00' });
+    expect(earlier.events[0]!.recurrence?.byWeekday).toEqual([1, 7]);
+    expect(later.issues).toEqual([]);
+  });
+
+  it('shifts BYMONTHDAY, or reports the rule when the shifted day does not exist', () => {
+    const ok = rule('TZID=America/New_York:20261115T190000', 'FREQ=MONTHLY;BYMONTHDAY=15');
+    expect(ok.events[0]!.startDate).toBe('2026-11-16');
+    expect(ok.events[0]!.recurrence?.byMonthDay).toBe(16);
+    const bad = rule('TZID=America/New_York:20261031T190000', 'FREQ=MONTHLY;BYMONTHDAY=31');
+    expect(bad.events[0]!.startDate).toBe('2026-11-01');
+    expect(bad.events[0]!.recurrence).toBeUndefined();
+    expect(bad.issues).toEqual([{ code: 'rrule-unsupported', title: 'Serie' }]);
+  });
+
+  it('leaves the rule alone when the day stays', () => {
+    const same = rule('TZID=America/New_York:20261102T090000', 'FREQ=WEEKLY;BYDAY=MO');
+    expect(same.events[0]!.recurrence?.byWeekday).toEqual([1]);
   });
 });

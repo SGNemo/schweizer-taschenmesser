@@ -85,6 +85,8 @@ function Fields({
   const [extraError, setExtraError] = useState('');
 
   async function save() {
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) return setError(t.form.required);
     const [y, m, d] = date.split('-').map(Number);
     setExtraError('');
     const cents = budget.trim() === '' ? undefined : parseMoney(budget);
@@ -112,7 +114,7 @@ function Fields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.people.name}
         value={name}

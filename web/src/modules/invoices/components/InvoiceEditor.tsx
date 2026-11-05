@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { currencyOf, formatMoneyInput, isCurrencyCode, parseMoney } from '@/core/money';
@@ -87,6 +88,11 @@ function Form({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!payee.trim()) {
+      setError(t.form.required);
+      return;
+    }
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
@@ -140,8 +146,10 @@ function Form({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.invoices.payee}
         value={payee}

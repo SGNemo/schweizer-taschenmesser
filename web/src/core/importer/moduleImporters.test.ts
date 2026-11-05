@@ -18,6 +18,7 @@ import { externalRepo } from '@/modules/calendar/repo';
 import type { MailFinding } from '@/core/connectors/types';
 import { INBOX_ID, listRepo, taskRepo } from '@/modules/todos/repo';
 import { commitImport } from './batches';
+import { toggleRow } from './ImportPreview';
 import { buildPreview } from './plan';
 import type { ImportInput } from './types';
 
@@ -193,9 +194,14 @@ describe('todos', () => {
       expect(lists.map((r) => r.candidate.label)).toEqual(['Einkäufe']);
       expect(task(first.rows, 'Bericht schreiben').data.listId).toBe('work');
       expect(task(first.rows, 'Käse').data.listId).toBe(lists[0]!.candidate.id);
-      // The tasks of a new list travel with it.
+      // The tasks of a new list travel with it; a subtask through its new parent (X12).
       const newList = lists[0]!.candidate.id;
-      expect(first.rows.filter((r) => r.candidate.dependsOn === newList)).toHaveLength(2);
+      expect(task(first.rows, 'Wocheneinkauf').dependsOn).toBe(newList);
+      expect(task(first.rows, 'Käse').dependsOn).toBe(task(first.rows, 'Wocheneinkauf').id);
+      const listOff = toggleRow(first.rows, lists[0]!.index, false);
+      expect(
+        listOff.filter((r) => r.candidate.data.listId === newList).map((r) => r.selected),
+      ).toEqual([false, false]);
       await commitImport(first.manifest, {
         batchId: 'tb',
         importerId: 'file',

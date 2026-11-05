@@ -37,6 +37,24 @@ describe('parseMoney', () => {
     expect(parseMoney('-5,50')).toBeUndefined();
     expect(parseMoney('-5,50', { allowNegative: true })).toBe(-550);
   });
+
+  it('requires three digits in every thousands group after the first (X32)', () => {
+    expect(parseMoney('1.234.567')).toBe(123456700);
+    expect(parseMoney('1.234.567,89')).toBe(123456789);
+    expect(parseMoney('1,234,567', { decimal: '.' })).toBe(123456700);
+    for (const input of ['1.2.3', '1.23.456', '1.2345', '1.2.3,45', '12.34.567,8']) {
+      expect(parseMoney(input), input).toBeUndefined();
+    }
+    expect(parseMoney('1,2,3.45', { decimal: '.' })).toBeUndefined();
+  });
+
+  it('never returns negative zero (X32)', () => {
+    for (const input of ['-0', '-0,00', '-0.00', '- 0']) {
+      const v = parseMoney(input, { allowNegative: true });
+      expect(v, input).toBe(0);
+      expect(Object.is(v, -0), input).toBe(false);
+    }
+  });
 });
 
 describe('formatting', () => {

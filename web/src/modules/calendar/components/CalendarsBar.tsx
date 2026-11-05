@@ -122,7 +122,7 @@ function CalendarForm({
     onDone();
   }
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.calendar.calendars.name}
         value={name}

@@ -130,7 +130,10 @@ export function extractRecurrence(s: Scan): CaptureRecurrence | undefined {
   // "alle 2 Wochen Mo–Fr", "Mo–Fr alle 2 Wochen", "alle zwei Wochen Mittwoch": interval + weekdays
   const start = s.t;
   const iv = take(s, INTERVAL_RE);
-  const interval = iv ? { freq: UNIT[iv[2]!.toLowerCase()]!, n: toNumber(iv[1]!) } : undefined;
+  // "alle 0 Tage" repeats nothing: no rule, the words stay in the title (X33).
+  const n = iv ? toNumber(iv[1]!) : 0;
+  const interval = iv && n >= 1 ? { freq: UNIT[iv[2]!.toLowerCase()]!, n } : undefined;
+  if (iv && !interval) s.t = start;
   if (!interval || interval.freq === 'weekly') {
     const days = takeWeekdaySet(s, !!interval);
     if (days) return { freq: 'weekly', interval: interval?.n ?? 1, byWeekday: days };
@@ -146,9 +149,10 @@ function extractSimple(s: Scan): CaptureRecurrence | undefined {
     if (!m) continue;
     const rec = rule.make(m);
     if (
-      rec.byMonthDay !== undefined &&
-      rec.byMonthDay !== -1 &&
-      (rec.byMonthDay < 1 || rec.byMonthDay > 31)
+      !(rec.interval >= 1) ||
+      (rec.byMonthDay !== undefined &&
+        rec.byMonthDay !== -1 &&
+        (rec.byMonthDay < 1 || rec.byMonthDay > 31))
     ) {
       s.t = before;
       continue;

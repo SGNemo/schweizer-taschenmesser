@@ -37,6 +37,32 @@ describe('collectDue', () => {
       },
     ] as never;
 
+  it('drops "Später" entries of a module that was switched off since; old entries still fire', async () => {
+    const calendar = [
+      {
+        id: 'calendar',
+        contributions: {
+          notifications: async () => ({
+            default: async () => [{ key: 'cal:e1:s0', at: at(10), title: 'Tabletten' }],
+          }),
+        },
+      },
+    ] as never;
+    // The calendar reminder was answered with "Später: 1 Std"; an entry from before has no source.
+    const [shown] = await collectDue({ from: at(9), to: at(10) }, calendar);
+    await snoozeNotification(shown!, '1h', at(10));
+    await snoozeNotification({ key: 'old', title: 'Alt' }, '1h', at(10, 5));
+    const later = { from: at(10, 30), to: at(11, 30) };
+    expect((await collectDue(later, calendar)).map((n) => n.title)).toEqual(['Tabletten', 'Alt']);
+    expect((await collectDue(later, [])).map((n) => n.title)).toEqual(['Alt']);
+    // "Später" again on the snoozed one keeps its source.
+    const [again] = await collectDue({ from: at(10, 30), to: at(11) }, calendar);
+    await snoozeNotification(again!, '1h', at(11));
+    const next = { from: at(11, 30), to: at(12, 30) };
+    expect((await collectDue(next, calendar)).map((n) => n.title)).toEqual(['Tabletten']);
+    expect(await collectDue(next, [])).toEqual([]);
+  });
+
   it('moves a soft extra out of the quiet hours, but not what the user set explicitly', async () => {
     const m = softSource([
       { key: 'soft', at: at(23), soft: true },

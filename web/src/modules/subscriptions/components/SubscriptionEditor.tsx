@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
@@ -140,6 +141,11 @@ function Form({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) {
+      setError(t.form.required);
+      return;
+    }
     if (!amountMinor || amountMinor < 1) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
@@ -176,8 +182,10 @@ function Form({
     onClose();
   };
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       {draft.restored ? (
         <p role="status" data-testid="draft-restored">
           {dr.restored}{' '}

@@ -130,7 +130,7 @@ function BudgetFields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <SelectField
         label={t.budgets.category}
         value={categoryId}
@@ -295,6 +295,8 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   const [error, setError] = useState('');
 
   async function save() {
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) return setError(t.form.required);
     const targetMinor = parseMoney(target);
     if (!targetMinor || targetMinor < 1)
       return setError(t.money.invalidAmount(formatMoneyInput(1250)));
@@ -314,7 +316,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.budgets.goalName}
         value={name}
@@ -424,7 +426,7 @@ function DepositFields({ goal, onClose }: { goal: Stored<Goal>; onClose: () => v
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <Split>
         <TextField
           label={t.money.amount}

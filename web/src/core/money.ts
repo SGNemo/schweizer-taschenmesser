@@ -65,10 +65,13 @@ export function parseMoney(
   }
   const decimal = opts.decimal ?? decimalSeparator();
   const group = decimal === ',' ? '.' : ',';
+  // Every thousands group after the first has exactly three digits ("1.234.567", never "1.2.3").
+  const groupsOk = (parts: string[]): boolean => parts.slice(1).every((p) => /^\d{3}$/.test(p));
   if (s.includes(',') && s.includes('.')) {
     // Both marks: the region's decimal mark must come last ("1.234,56" in German, "1,234.56" in English).
     if (s.lastIndexOf(decimal) < s.lastIndexOf(group)) return undefined;
     if (s.split(decimal).length > 2) return undefined;
+    if (!groupsOk(s.split(decimal)[0]!.split(group))) return undefined;
     s = s.split(group).join('').replace(decimal, '.');
   } else if (s.includes(decimal)) {
     // Only the region's decimal mark: one of them, at most two digits after it ("12,50").
@@ -79,13 +82,15 @@ export function parseMoney(
     // Only the other mark: "12.5" / "12.50" is a decimal, "1.234" / "1.234.567" groups thousands.
     const parts = s.split(group);
     const isDecimal = parts.length === 2 && parts[1]!.length <= 2;
+    if (!isDecimal && !groupsOk(parts)) return undefined;
     s = isDecimal ? parts.join('.') : parts.join('');
   }
   const m = /^(\d+)(?:\.(\d{1,2}))?$/.exec(s);
   if (!m) return undefined;
   const minor = Number(m[1]) * 100 + Number((m[2] ?? '').padEnd(2, '0'));
   if (!Number.isSafeInteger(minor)) return undefined;
-  return negative ? -minor : minor;
+  // "-0" / "-0,00" is zero, never negative zero (which would format as "-0,00 €").
+  return negative && minor !== 0 ? -minor : minor;
 }
 
 export const sumMinor = (values: Iterable<number>): number => {

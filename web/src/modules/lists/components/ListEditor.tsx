@@ -86,7 +86,7 @@ function Fields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.lists.listName}
         value={name}

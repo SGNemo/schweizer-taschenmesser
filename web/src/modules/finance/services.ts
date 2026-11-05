@@ -10,7 +10,7 @@ import { listSubscriptionCharges } from '@/modules/subscriptions/public';
 import { chargeAlreadyBooked } from './subscriptionLink';
 import { settings } from './settings';
 import { accountRepo } from './repo';
-import { planRepeats } from './logic';
+import { planRepeats, seriesAnchors } from './logic';
 import { normalizePayee } from './rules';
 import {
   categoryRepo,
@@ -98,8 +98,9 @@ export async function removeInvoiceExpense(invoiceId: string): Promise<void> {
  * module starts; a toast says how many were added and offers "Rückgängig".
  */
 export async function bookDueRepeats(): Promise<number> {
-  const heads = (await transactionRepo.active().toArray()).filter((x) => x.repeat);
-  const { create, clear } = planRepeats(heads, today());
+  const all = await transactionRepo.active().toArray();
+  const heads = all.filter((x) => x.repeat);
+  const { create, clear } = planRepeats(heads, today(), seriesAnchors(all));
   const fresh: typeof create = [];
   for (const p of create) if (!(await transactionRepo.table.get(p.id))) fresh.push(p);
   if (fresh.length === 0 && clear.length === 0) return 0;

@@ -47,7 +47,8 @@ export function todayAppointments(
         i.date === day &&
         i.source !== 'todos' &&
         !i.done &&
-        (i.allDay || !i.time || (i.endTime ?? i.time) >= nowHhmm),
+        // Over once its end time has passed, unless it ends on a later day (overnight).
+        (i.allDay || !i.time || (i.endDate ?? day) > day || (i.endTime ?? i.time) >= nowHhmm),
     )
     .sort((a, b) => startKey(a).localeCompare(startKey(b)));
   return { shown: open.slice(0, limit), hidden: Math.max(0, open.length - limit) };

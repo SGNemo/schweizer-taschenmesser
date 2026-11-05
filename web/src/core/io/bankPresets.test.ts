@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseBankFile } from '@/core/io/bank';
-import { decodeTextBytes } from '@/core/io/pickFile';
-import { BANK_PRESETS, detectBankPreset } from '../bankPresets';
+import { parseBankFile } from './bank';
+import { decodeTextBytes } from './pickFile';
+import { BANK_PRESETS, detectBankPreset } from './bankPresets';
 
 const bytes = (name: string) =>
-  readFileSync(new URL(`../../../core/io/__fixtures__/bank/${name}`, import.meta.url));
+  readFileSync(new URL(`./__fixtures__/bank/${name}`, import.meta.url));
 const read = (name: string) => decodeTextBytes(bytes(name));
 
 // Every fixture holds the same three invented bookings in the layout of one bank.

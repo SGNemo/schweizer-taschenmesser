@@ -98,9 +98,9 @@ describe('Habits page', () => {
     await setEntry(g.id, '2026-11-01', { count: 0, skipped: true });
     await setEntry(g.id, '2026-10-31', { count: 3 });
     draw('/habits?view=history');
-    // 30 days (4 Oct – 3 Nov), minus the one rest day: 29 count, one of them is done.
+    // 30 days (4 Oct – 3 Nov), minus the one rest day and today (still open): 28 count, one is done.
     await waitFor(() =>
-      expect(screen.getByTestId('habit-rate')).toHaveTextContent('1 von 29 geplanten Tagen'),
+      expect(screen.getByTestId('habit-rate')).toHaveTextContent('1 von 28 geplanten Tagen'),
     );
   });
 

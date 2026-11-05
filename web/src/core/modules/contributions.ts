@@ -2,6 +2,7 @@ import { compareText } from '@/core/i18n/format';
 import { useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
 import { useSharedLiveQuery } from './sharedQuery';
+import { noteSource } from '@/core/notifications/source';
 import { today } from '@/core/time/now';
 import type {
   AttentionItem,
@@ -61,7 +62,9 @@ export async function collectNotifications(
       const load = m.contributions?.notifications;
       if (!load) return [];
       try {
-        return await (await load()).default(range);
+        const items = await (await load()).default(range);
+        for (const n of items) noteSource(n.key, m.id);
+        return items;
       } catch (e) {
         console.error(`[notifications] source "${m.id}" failed`, e);
         return [];

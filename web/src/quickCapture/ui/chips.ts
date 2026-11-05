@@ -26,6 +26,9 @@ const NOTE_LABEL: Record<CaptureNote, string> = {
   get 'ambiguous-time'() {
     return t.quickCapture.chip.ambiguousTime;
   },
+  get 'invalid-date'() {
+    return t.quickCapture.chip.invalidDate;
+  },
 };
 
 /** "Montag–Freitag" for a run of three or more days in a row, else the names with commas. */
@@ -78,6 +81,8 @@ const usesDate = (type: CaptureType) =>
   type === 'subscription' ||
   type === 'birthday';
 const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
+const usesMoney = (type: CaptureType) =>
+  type === 'finance' || type === 'invoice' || type === 'subscription';
 
 /** The live preview: what will be saved where, derived from the parse result and the chosen type. */
 export function previewChips(
@@ -113,10 +118,20 @@ export function previewChips(
   if (type === 'finance' && fields.amountMinor) {
     const kind =
       fields.kind === 'income' ? t.quickCapture.chip.income : t.quickCapture.chip.expense;
-    chips.push({ id: 'amount', label: `${kind} ${formatMoney(fields.amountMinor)}` });
+    chips.push({
+      id: 'amount',
+      label: `${kind} ${formatMoney(fields.amountMinor, fields.currency)}`,
+    });
   }
   if ((type === 'invoice' || type === 'subscription') && fields.amountMinor)
-    chips.push({ id: 'amount', label: formatMoney(fields.amountMinor) });
+    chips.push({ id: 'amount', label: formatMoney(fields.amountMinor, fields.currency) });
+  // An amount in another currency is never shown as euro and never passes unseen (X21).
+  if (fields.currency && fields.amountMinor && usesMoney(type))
+    chips.push({
+      id: 'currency',
+      label: t.quickCapture.chip.currency(fields.currency),
+      warn: true,
+    });
   if (fields.url && type !== 'note') {
     try {
       chips.push({ id: 'url', label: new URL(fields.url).hostname });

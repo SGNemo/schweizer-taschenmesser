@@ -972,6 +972,8 @@ export const de = {
       pastDate: 'liegt in der Vergangenheit',
       approxTime: 'Uhrzeit ungefähr',
       ambiguousTime: 'Uhrzeit prüfen',
+      invalidDate: 'Datum gibt es nicht – bitte prüfen',
+      currency: (code: string) => `Betrag in ${code}`,
       allDay: 'ganztägig',
       income: 'Einnahme',
       expense: 'Ausgabe',
@@ -1006,6 +1008,8 @@ export const de = {
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
+      currency: (code: string) =>
+        `Betrag in ${code}: bitte im ganzen Formular in Finanzen buchen, dort passt das Konto.`,
       failed: 'Speichern fehlgeschlagen.',
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,

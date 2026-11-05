@@ -83,7 +83,7 @@ function Fields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <SelectField
         label={t.timetrack.form.job}
         value={jobId}

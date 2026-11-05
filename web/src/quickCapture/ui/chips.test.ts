@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { t } from '@/strings';
 import { describeRecurrence, previewChips } from './chips';
 
 describe('describeRecurrence', () => {
@@ -30,5 +31,19 @@ describe('previewChips', () => {
     expect(labels('event')).toContain('14:00–16:00 Uhr');
     expect(labels('event')).not.toContain('Priorität hoch');
     expect(labels('todo')).toContain('Priorität hoch');
+  });
+
+  it('shows that a typed date does not exist (X20)', () => {
+    const chips = previewChips(
+      { title: 'Zahnarzt 31.11.' },
+      'event',
+      ['invalid-date'],
+      '2026-10-29',
+    );
+    expect(chips).toContainEqual({
+      id: 'note-invalid-date',
+      label: t.quickCapture.chip.invalidDate,
+      warn: true,
+    });
   });
 });

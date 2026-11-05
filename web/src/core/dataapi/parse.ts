@@ -9,6 +9,7 @@ import type { CandidateUpdate, ImportCandidate, ImportParseResult } from '@/core
 import type { ModuleManifest } from '@/core/modules/types';
 import { deepEqual } from '@/core/db/util';
 import { CURRENCY, formatMoney, parseMoney } from '@/core/money';
+import { DATE_RE, isCalendarDate } from '@/core/time/dates';
 import { t } from '@/strings';
 import { describeCollection, hasMoney, type CollectionFormat, type FieldFormat } from './format';
 import { apiCollections } from './scope';
@@ -289,6 +290,8 @@ export async function buildCandidates(
             dependsOn = target.id;
         }
       } else {
+        // The schemas check only the shape of a date; 2026-02-30 must not get in (X19).
+        if (hasImpossibleDate(value)) errors.push(`${name}: ${t.dataApi.badFormat}`);
         data[field.storeName] = value;
       }
     }
@@ -369,6 +372,16 @@ async function pointsToChild(
   // A change in the batch to a stored entry keeps that entry's own reference unless it sets one.
   const stored = await lookup.record(collection, inBatch?.updateId ?? id);
   return stored?.[field.storeName] !== undefined && stored[field.storeName] !== null;
+}
+
+/** A 'YYYY-MM-DD' text anywhere in the value (also nested, e.g. `recurrence.until`) that is no real day. */
+function hasImpossibleDate(value: unknown): boolean {
+  // Years before 1000 too: `new Date` reads them as 19xx (X29).
+  if (typeof value === 'string')
+    return DATE_RE.test(value) && (!isCalendarDate(value) || value < '1000');
+  if (Array.isArray(value)) return value.some(hasImpossibleDate);
+  if (value && typeof value === 'object') return Object.values(value).some(hasImpossibleDate);
+  return false;
 }
 
 function invalid(draft: Draft, collection: string, error: string): ImportCandidate {

@@ -33,4 +33,17 @@ describe('toggleRow', () => {
   it('unticking one dependent leaves the list and its siblings', () => {
     expect(toggleRow(rows(), 1, false).map((r) => r.selected)).toEqual([true, false, true, true]);
   });
+  it('follows a chain: list → task → subtask (X12)', () => {
+    const chain = () => [
+      row(0, 'list'),
+      row(1, 'task', 'list'),
+      row(2, 'sub', 'task'),
+      row(3, 'x'),
+    ];
+    const off = toggleRow(chain(), 0, false);
+    expect(off.map((r) => r.selected)).toEqual([false, false, false, true]);
+    expect(toggleRow(off, 2, true).map((r) => r.selected)).toEqual([true, true, true, true]);
+    const broken = [{ ...row(0, 'list', undefined, false), invalid: 'x' }, ...chain().slice(1, 3)];
+    expect(toggleRow(broken, 2, true).map((r) => r.selected)).toEqual([false, true, true]);
+  });
 });

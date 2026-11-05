@@ -89,15 +89,28 @@ async function parseFile(
 
   const taskIds = new Map<string, string>();
   kept.forEach((task, n) => taskIds.set(task.key, `imp-${ctx.batchId}-t${n}`));
+  const listOf = (task: ImportedTask) =>
+    perSource ? listIds.get(task.list)! : (ctx.options.fileList ?? '');
+  const dedupeOf = (task: ImportedTask) =>
+    (task.done ? doneKeyOf : keyOf)(listOf(task), task.title);
+  /** Stored tasks by duplicate key: a parent that is already there is not written again. */
+  const storedIds = new Map<string, string>();
+  for (const stored of await taskRepo.active().toArray()) {
+    const key = (stored.done ? doneKeyOf : keyOf)(stored.listId, stored.title);
+    if (!storedIds.has(key)) storedIds.set(key, stored.id);
+  }
   const perList = new Map<string, number>();
   for (const task of kept) {
-    const listId = perSource ? listIds.get(task.list)! : (ctx.options.fileList ?? '');
+    const listId = listOf(task);
     const order = perList.get(listId) ?? 0;
     perList.set(listId, order + 1);
     const note = noteOf(task);
-    // A subtask whose parent was left out (completed, cut) becomes a task of its own.
-    const parentId = task.parentKey ? taskIds.get(task.parentKey) : undefined;
-    const keptParent = parentId && kept.some((other) => other.key === task.parentKey);
+    // A subtask whose parent was left out (completed, cut) becomes a task of its own. A parent that
+    // duplicates a stored task is that task; a new parent must be written with its subtask.
+    const parent = task.parentKey ? kept.find((other) => other.key === task.parentKey) : undefined;
+    const storedParent = parent ? storedIds.get(dedupeOf(parent)) : undefined;
+    const newParent = parent && !storedParent ? taskIds.get(parent.key) : undefined;
+    const parentId = storedParent ?? newParent;
     const data: Record<string, unknown> = {
       listId,
       title: task.title,
@@ -106,19 +119,21 @@ async function parseFile(
       order,
       ...(task.due ? { dueDate: task.due } : {}),
       ...(note ? { note } : {}),
-      ...(keptParent ? { parentId } : {}),
+      ...(parentId ? { parentId } : {}),
     };
+    // A new parent depends on the new list itself, so the subtask only needs its parent.
+    const dependsOn = newParent ?? (newListIds.has(listId) ? listId : undefined);
     candidates.push({
       collection: 'task',
       id: taskIds.get(task.key),
-      ...(newListIds.has(listId) ? { dependsOn: listId } : {}),
+      ...(dependsOn ? { dependsOn } : {}),
       data,
       label: task.title,
       detail:
         [perSource ? task.list : '', task.due ? relativeDayLabel(task.due, ctx.today) : '']
           .filter(Boolean)
           .join(' · ') || undefined,
-      dedupeKey: (task.done ? doneKeyOf : keyOf)(listId, task.title),
+      dedupeKey: dedupeOf(task),
     });
   }
   return { candidates, notes };

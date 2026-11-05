@@ -61,6 +61,18 @@ describe('todayAppointments', () => {
     ]);
   });
 
+  it('keeps an overnight appointment that ends tomorrow (night shift 22:00–06:00)', () => {
+    const night = item({ id: 'night', time: '22:00', endTime: '06:00', endDate: '2026-10-03' });
+    for (const now of ['06:01', '15:00', '21:59', '23:00'])
+      expect(
+        todayAppointments([night], DAY, now).shown.map((i) => i.id),
+        now,
+      ).toEqual(['night']);
+    // Ending today, the end time still counts.
+    const late = item({ id: 'late', time: '22:00', endTime: '23:00', endDate: DAY });
+    expect(todayAppointments([late], DAY, '23:30').shown).toEqual([]);
+  });
+
   it('caps the list and says how many more there are; leaves ToDos and done items out', () => {
     const items = [
       ...Array.from({ length: 6 }, (_, k) => item({ time: `1${k}:30` })),

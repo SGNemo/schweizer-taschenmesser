@@ -82,3 +82,19 @@ describe('detectSubscriptions', () => {
     ).toEqual([]);
   });
 });
+
+describe('next charge date (X17)', () => {
+  const next = (dates: string[]) =>
+    detectSubscriptions(dates.map((d) => tx(d, -999, 'Filmfreund GmbH')))[0]?.nextDate;
+
+  it('adds calendar months, keeping the day of the month', () => {
+    expect(next(['2026-08-15', '2026-09-15', '2026-10-15'])).toBe('2026-11-15');
+    expect(next(['2026-01-31', '2026-03-03', '2026-03-31'])).toBe('2026-04-30');
+    expect(next(['2026-01-15', '2026-04-15', '2026-07-15'])).toBe('2026-10-15');
+    expect(next(['2024-02-15', '2025-02-15', '2026-02-15'])).toBe('2027-02-15');
+  });
+
+  it('keeps seven days for weekly charges', () => {
+    expect(next(['2026-09-01', '2026-09-08', '2026-09-15'])).toBe('2026-09-22');
+  });
+});

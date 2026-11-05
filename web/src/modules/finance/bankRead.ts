@@ -13,7 +13,7 @@ import {
   type BankFormat,
   type BankParseResult,
 } from '@/core/io/bank';
-import { detectBankPreset } from './bankPresets';
+import { detectBankPreset } from '@/core/io/bankPresets';
 import { loadBankMapping, saveBankMapping, type StoredMapping } from './bankMemory';
 
 export type BankRead =

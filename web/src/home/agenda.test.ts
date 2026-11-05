@@ -80,4 +80,25 @@ describe('buildAgenda', () => {
     expect(a.today).toHaveLength(ALL.today);
     expect(a.hidden).toBe(2);
   });
+
+  it('within a day: appointments by time, then all-day ones, then notices of other modules', () => {
+    const tomorrow = '2026-10-30';
+    const later = '2026-11-02';
+    const notice = (id: string, date: string, source: string) =>
+      item(id, date, { source, kind: 'expiry', allDay: true, time: undefined });
+    const items = [
+      notice('Läuft bald ab: Frischkäse', tomorrow, 'pantry'),
+      item('Sport', tomorrow, { time: '18:30' }),
+      item('Urlaub', tomorrow, { allDay: true, time: undefined }),
+      item('Mittagessen mit Anna', tomorrow, { time: '12:30' }),
+      notice('Garantie endet: Kopfhörer', later, 'vault'),
+      item('Zahnarzt', later, { time: '08:00' }),
+    ];
+    const all = buildAgenda(items, DAY);
+    expect(all.tomorrow.map((i) => i.id)).toEqual(['Mittagessen mit Anna', 'Sport', 'Urlaub']);
+    expect(all.week[0]!.items.map((i) => i.id)).toEqual(['Zahnarzt', 'Garantie endet: Kopfhörer']);
+    const calm = buildAgenda(items, DAY, LIMITS.calm);
+    expect(calm.tomorrow.map((i) => i.id)).toEqual(['Mittagessen mit Anna']);
+    expect(calm.week.flatMap((d) => d.items.map((i) => i.id))).toEqual(['Zahnarzt']);
+  });
 });

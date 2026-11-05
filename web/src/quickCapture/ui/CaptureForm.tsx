@@ -44,8 +44,19 @@ function errorText(e: unknown): string {
   if (e instanceof CaptureError) {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
+    if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
   }
   return t.quickCapture.errors.failed;
+}
+
+/** The error a save would end with, found before a booking is offered for confirmation (X33). */
+function buildProblem(type: CaptureType, fields: CaptureFields): string | undefined {
+  try {
+    targetFor(type).build(fields, { today: today() });
+    return undefined;
+  } catch (e) {
+    return errorText(e);
+  }
 }
 
 /**
@@ -119,6 +130,10 @@ export function CaptureForm({
     [multi, parts, rowOverride, states, focus.captureNoQuestion, settings?.defaultType],
   );
   const rowsNeedConfirm = rows.some((r) => r.type && targetFor(r.type).requiresConfirm);
+  // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the
+  // entry is incomplete until the date is fixed (X20).
+  const badDate = (list: readonly { id: string }[]) =>
+    list.some((c) => c.id === 'note-invalid-date');
 
   useEffect(() => {
     clearReopenDraft();
@@ -219,12 +234,20 @@ export function CaptureForm({
     if (!text.trim()) return setError(t.quickCapture.empty);
     if (multi) {
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
-      // Bookings stay drafts until confirmed, also when they come in a batch.
-      if (rowsNeedConfirm && !confirming) return setConfirming(true);
+      if (rows.some((r) => badDate(r.chips))) return setError(t.quickCapture.errors.invalid);
+      // Bookings stay drafts until confirmed, also when they come in a batch; only complete ones.
+      if (rowsNeedConfirm && !confirming) {
+        const problem = rows.map((r) => buildProblem(r.type!, r.fields)).find(Boolean);
+        return problem ? setError(problem) : setConfirming(true);
+      }
       return void save(true);
     }
     if (!type) return setError(t.quickCapture.chooseType);
-    if (targetFor(type).requiresConfirm && !confirming) return setConfirming(true);
+    if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
+    if (targetFor(type).requiresConfirm && !confirming) {
+      const problem = buildProblem(type, fields);
+      return problem ? setError(problem) : setConfirming(true);
+    }
     void save(true);
   };
 

@@ -32,6 +32,14 @@ export const LIMITS: Record<'calm' | 'all', Limits> = {
 export const agendaRange = (day: string) => ({ from: day, to: addDaysStr(day, 6) });
 
 /**
+ * Order within a day: appointments with a time (by time), then all-day appointments, then what
+ * other modules add on their own ("Läuft bald ab", "Garantie endet"), so a short list shows a
+ * Termin first.
+ */
+const rank = (i: CalendarItem): number =>
+  i.source !== 'calendar' ? 2 : i.allDay || !i.time ? 1 : 0;
+
+/**
  * Groups calendar items into "Heute · Morgen · diese Woche". Done items are left out, and so are
  * the ToDos due today: the "Heute" card already lists them as the day plan.
  */
@@ -44,7 +52,12 @@ export function buildAgenda(
   // first day in range only, so it is neither listed three times nor keyed twice.
   const seen = new Set<string>();
   const open = [...items]
-    .sort((a, b) => a.date.localeCompare(b.date))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        rank(a) - rank(b) ||
+        (a.time ?? '').localeCompare(b.time ?? ''),
+    )
     .filter((i) => {
       if (i.done) return false;
       const key = `${i.source}:${i.id}`;

@@ -126,7 +126,7 @@ function Fields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       {existing ? null : (
         <div className={styles.days} role="group" aria-label={t.habits.form.templates}>
           {(['water', 'walk', 'stretch', 'pill'] as const).map((id) => (

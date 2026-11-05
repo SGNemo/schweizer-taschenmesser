@@ -101,3 +101,127 @@ describe('types', () => {
     expect(parse('bis Freitag Formular').fields.date).toBe('2026-10-30');
   });
 });
+
+describe('impossible dates are flagged, never replaced by an assumption (X20)', () => {
+  it.each([
+    ['Zahnarzt 31.11. 10 Uhr', '31.11.'],
+    ['32.1. Zahnarzt', '32.1.'],
+    ['Zahnarzt 15.13.', '15.13.'],
+    ['Zahnarzt 31.11.2026 10 Uhr', '31.11.2026'],
+    ['Party 30. Februar', '30. Februar'],
+    ['Termin 2026-02-30 9 Uhr', '2026-02-30'],
+  ])('%s', (text, typed) => {
+    const r = parse(text);
+    expect(r.notes).toContain('invalid-date');
+    expect(r.notes).not.toContain('assumed-date');
+    expect(r.fields.date).toBeUndefined();
+    expect(r.fields.title).toContain(typed);
+  });
+
+  it('an invoice with an impossible due date gets no assumed term', () => {
+    const r = parse('Rechnung Strom 120 € fällig 31.11.');
+    expect(r.type).toBe('invoice');
+    expect(r.fields.date).toBeUndefined();
+    expect(r.notes).toEqual(['invalid-date']);
+  });
+
+  it('real dates stay as they are', () => {
+    for (const text of ['Zahnarzt 30.11. 10 Uhr', 'Zahnarzt 29.2.2028', 'Party 28. Februar']) {
+      const r = parse(text);
+      expect(r.notes, text).not.toContain('invalid-date');
+      expect(r.fields.date, text).toBeDefined();
+    }
+  });
+});
+
+describe('a four-digit year is taken as written (X29)', () => {
+  it.each(['Zahnarzt 1.1.0001', 'Zahnarzt 0999-01-01', 'Zahnarzt 3. Oktober 0500'])(
+    '%s',
+    (text) => {
+      const r = parse(text);
+      expect(r.fields.date).toBeUndefined();
+      expect(r.notes).toContain('invalid-date');
+    },
+  );
+
+  it('a two-digit year still means 20xx', () => {
+    expect(parse('Zahnarzt 1.1.27').fields.date).toBe('2027-01-01');
+    expect(parse('Zahnarzt 1.1.2027').fields.date).toBe('2027-01-01');
+  });
+});
+
+describe('"alle 0 Tage" is no rule (X33)', () => {
+  it.each(['Termin alle 0 Tage', 'Sport alle 0 Wochen Montag', 'Gießen alle null Tage'])(
+    '%s',
+    (text) => {
+      const r = parse(text);
+      expect(r.fields.recurrence).toBeUndefined();
+      expect(r.fields.title).toMatch(/alle (0|null)/);
+    },
+  );
+
+  it('"alle 2 Tage" still repeats', () => {
+    expect(parse('Gießen alle 2 Tage').fields.recurrence).toEqual({ freq: 'daily', interval: 2 });
+  });
+});
+
+describe('amounts in another currency keep their code (X21)', () => {
+  it.each([
+    ['Ausgabe 12 USD Kaffee', 1200, 'USD', 'Kaffee'],
+    ['Ausgabe ¥500 Ramen', 50000, 'JPY', 'Ramen'],
+    ['Kaffee $12', 1200, 'USD', 'Kaffee'],
+    ['Parken 12 CHF', 1200, 'CHF', 'Parken'],
+    ['Taxi 8,50 £', 850, 'GBP', 'Taxi'],
+    ['Museum 20 Dollar', 2000, 'USD', 'Museum'],
+  ])('%s', (text, cents, currency, title) => {
+    const r = parse(text);
+    expect(r.fields).toMatchObject({ amountMinor: cents, currency, title });
+  });
+
+  it('the euro, EUR, Euro and no marker stay as they are', () => {
+    for (const text of [
+      'Kaffee 12 €',
+      'Kaffee 12 EUR',
+      'Kaffee 12 Euro',
+      '$12 Kaffee',
+      '$ 12 Kaffee',
+    ]) {
+      const r = parse(text);
+      expect(r.fields.amountMinor, text).toBe(1200);
+      expect(r.fields.currency, text).toBeUndefined();
+    }
+  });
+
+  it('does not read seconds or plain words as a currency', () => {
+    expect(parse('Plank 30 sek').fields.amountMinor).toBeUndefined();
+  });
+});
+
+describe('24:00 is the end of the day (X36)', () => {
+  it('as an end time it is 23:59 and leaves the title', () => {
+    const r = parse('Zahnarzt morgen 12:00 bis 24:00');
+    expect(r.fields).toMatchObject({
+      title: 'Zahnarzt',
+      date: '2026-10-30',
+      time: '12:00',
+      endTime: '23:59',
+    });
+    expect(parse('Feier 20 bis 24 Uhr').fields).toMatchObject({ time: '20:00', endTime: '23:59' });
+  });
+
+  it('as a start time it is 00:00 of the next day', () => {
+    for (const text of ['Party morgen 24 Uhr', 'Party morgen 24:00']) {
+      expect(parse(text).fields, text).toMatchObject({
+        title: 'Party',
+        date: '2026-10-31',
+        time: '00:00',
+      });
+    }
+    expect(parse('Party 24 Uhr').fields).toMatchObject({ date: '2026-10-30', time: '00:00' });
+  });
+
+  it('other hours past 23 stay text', () => {
+    expect(parse('Zahnarzt 12:00 bis 25:00').fields.endTime).toBeUndefined();
+    expect(parse('Party 24:30').fields.time).toBeUndefined();
+  });
+});

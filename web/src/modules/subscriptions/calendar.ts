@@ -33,6 +33,8 @@ const source: CalendarSource = async (range) => {
         allDay: true,
         to: '/subscriptions',
       });
+    // Cancelled "zum" a date (`until`): no deadlines left, only the remaining charges.
+    if (s.recurrence.until) continue;
     const missed = missedDeadline(s, day);
     for (const d of cancelDeadlinesInRange(s, range.from, range.to)) {
       const passed = missed?.deadline === d.deadline;

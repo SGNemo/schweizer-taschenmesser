@@ -46,8 +46,10 @@ export interface ForecastInput {
   balanceMinor: number;
   today: string;
   to: string;
-  /** Newest booking of each repeating series (`repeat` set). */
-  repeatHeads: readonly Pick<Transaction, 'kind' | 'amountMinor' | 'date' | 'payee' | 'repeat'>[];
+  /** Newest booking of each repeating series (`repeat` set); `anchor` = the series' first date. */
+  repeatHeads: readonly (Pick<Transaction, 'kind' | 'amountMinor' | 'date' | 'payee' | 'repeat'> & {
+    anchor?: string;
+  })[];
   subscriptionCharges: readonly { date: string; amountMinor: number; name: string }[];
   openInvoices: readonly { dueDate: string; amountMinor: number; payee: string }[];
 }
@@ -63,7 +65,7 @@ export function buildForecast(input: ForecastInput): Forecast {
     if (!head.repeat) continue;
     let date = head.date;
     for (let i = 0; i < MAX_PER_SERIES; i++) {
-      date = nextRepeatDate(date, head.repeat);
+      date = nextRepeatDate(date, head.repeat, head.anchor ?? head.date);
       if (date > to) break;
       // A missed occurrence is booked at the next start; until then it lands on today.
       events.push({

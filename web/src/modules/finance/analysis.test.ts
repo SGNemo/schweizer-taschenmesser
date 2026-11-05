@@ -15,11 +15,12 @@ import {
   monthSummary,
   nextRepeatDate,
   planRepeats,
+  seriesAnchors,
   splitsValid,
 } from './logic';
 import { buildTransfer, transferValid } from './transfer';
 import { bookingsCsv } from './export';
-import { buildForecast, horizonEnd } from './forecast';
+import { buildForecast, horizonEnd, type ForecastInput } from './forecast';
 import type { Transaction } from './schema';
 
 const tx = (o: Partial<Transaction> & Pick<Transaction, 'date' | 'amountMinor'>): Transaction => ({
@@ -272,6 +273,22 @@ describe('repeat dates', () => {
     ['2028-02-29', 'yearly', '2029-02-28'],
   ] as const)('%s %s → %s', (from, repeat, to) => expect(nextRepeatDate(from, repeat)).toBe(to));
 
+  it('a monthly series from the 31st comes back to the 31st after a short month', () => {
+    const root = { ...tx({ date: '2026-01-31', amountMinor: 80000, repeat: 'monthly' }), id: 'r' };
+    expect(planRepeats([root], '2026-05-31').create.map((c) => c.data.date)).toEqual([
+      '2026-02-28',
+      '2026-03-31',
+      '2026-04-30',
+      '2026-05-31',
+    ]);
+    // Booked day by day: the head is the 28 Feb booking, the series still started on the 31st.
+    const head = { ...root, id: 'rep-r-2026-02-28', date: '2026-02-28', repeatOf: 'r' };
+    const anchors = seriesAnchors([{ ...root, repeat: undefined }, head]);
+    expect(planRepeats([head], '2026-03-31', anchors).create.map((c) => c.id)).toEqual([
+      'rep-r-2026-03-31',
+    ]);
+  });
+
   it('catches up weekly series up to today, newest keeps the series', () => {
     const head = { ...tx({ date: '2026-03-01', amountMinor: 500, repeat: 'weekly' }), id: 'h' };
     const { create, clear } = planRepeats([head], '2026-03-16');
@@ -301,6 +318,25 @@ describe('forecast', () => {
   ] as const)('horizon from %s (%s) ends %s', (today, h, end) =>
     expect(horizonEnd(today, h)).toBe(end),
   );
+
+  it('a monthly series from the 31st comes back to the 31st after a short month', () => {
+    const rent = {
+      kind: 'expense' as const,
+      amountMinor: 80000,
+      payee: 'Rent',
+      repeat: 'monthly' as const,
+    };
+    const dates = (head: ForecastInput['repeatHeads'][number]) =>
+      buildForecast({
+        ...base,
+        today: '2026-01-31',
+        to: '2026-05-31',
+        repeatHeads: [head],
+      }).events.map((e) => e.date);
+    const expected = ['2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31'];
+    expect(dates({ ...rent, date: '2026-01-31' })).toEqual(expected);
+    expect(dates({ ...rent, date: '2026-02-28', anchor: '2026-01-31' })).toEqual(expected.slice(1));
+  });
 
   it('without anything known the line is flat', () => {
     const f = buildForecast(base);

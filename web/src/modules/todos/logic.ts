@@ -1,4 +1,5 @@
 import { nextOccurrence } from '@/core/recurrence/expand';
+import type { Recurrence } from '@/core/recurrence/types';
 import type { Task } from './schema';
 
 type T = Pick<Task, 'done' | 'dueDate' | 'priority' | 'order'> & { createdAt: number };
@@ -47,6 +48,28 @@ export function nextDueDate(task: Pick<Task, 'dueDate' | 'recurrence'>): string 
   return task.dueDate && task.recurrence
     ? nextOccurrence(task.recurrence, task.dueDate, task.dueDate)
     : undefined;
+}
+
+/**
+ * The rule the next instance carries: `count` counts down (the series ends after that many
+ * instances), and a day cut to a short month's end is kept (yearly from 29 Feb returns in leap years).
+ */
+export function nextRecurrence(
+  task: Pick<Task, 'dueDate' | 'recurrence'>,
+  nextDue: string,
+): Recurrence | undefined {
+  const rule = task.recurrence;
+  if (!rule || !task.dueDate) return rule;
+  const day = Number(task.dueDate.slice(8, 10));
+  const clamped =
+    (rule.freq === 'monthly' || rule.freq === 'yearly') &&
+    rule.byMonthDay === undefined &&
+    Number(nextDue.slice(8, 10)) !== day;
+  return {
+    ...rule,
+    ...(rule.count ? { count: Math.max(1, rule.count - 1) } : {}),
+    ...(clamped ? { byMonthDay: day } : {}),
+  };
 }
 
 /**

@@ -166,6 +166,21 @@ describe('saveCapture', () => {
     });
   });
 
+  it('never books a foreign amount into the euro account; invoices and subscriptions keep it (X21)', async () => {
+    const ctx = { today: '2026-09-30' };
+    const usd = { title: 'Kaffee', amountMinor: 1200, currency: 'USD' };
+    expect(() => TARGETS.finance.build(usd, ctx)).toThrow(CaptureError);
+    try {
+      TARGETS.finance.build(usd, ctx);
+    } catch (e) {
+      expect(e).toMatchObject({ code: 'currency', detail: 'USD' });
+    }
+    expect(TARGETS.invoice.build(usd, ctx)).toMatchObject({ amountMinor: 1200, currency: 'USD' });
+    const monthly = { ...usd, recurrence: { freq: 'monthly' as const, interval: 1 } };
+    expect(TARGETS.subscription.build(monthly, ctx)).toMatchObject({ currency: 'USD' });
+    expect(TARGETS.invoice.build({ ...usd, currency: undefined }, ctx).currency).toBeUndefined();
+  });
+
   it('rejects an invoice without an amount or payee', async () => {
     await expect(
       saveCapture('invoice', { title: 'Swisscom' }, { states: ON }),

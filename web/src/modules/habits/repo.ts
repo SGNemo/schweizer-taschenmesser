@@ -21,11 +21,18 @@ export async function setEntry(
   return entryRepo.create({ goalId, date, count: 0, ...patch }, { id });
 }
 
+/** Bumps run one after another, so two quick taps each read the count the other one wrote. */
+let bumps: Promise<unknown> = Promise.resolve();
+
 /** +1 (or -1, never below 0) on a day; a rest day is lifted by counting. */
-export async function bump(goalId: string, date: string, by: number): Promise<void> {
-  const existing = await entryRepo.get(entryId(goalId, date));
-  const count = Math.max(0, (existing?.count ?? 0) + by);
-  await setEntry(goalId, date, { count, skipped: undefined });
+export function bump(goalId: string, date: string, by: number): Promise<void> {
+  const run = bumps.then(async () => {
+    const existing = await entryRepo.get(entryId(goalId, date));
+    const count = Math.max(0, (existing?.count ?? 0) + by);
+    await setEntry(goalId, date, { count, skipped: undefined });
+  });
+  bumps = run.catch(() => undefined);
+  return run;
 }
 
 /** Archives a goal; the entries stay. */

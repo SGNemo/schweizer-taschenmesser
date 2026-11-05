@@ -50,6 +50,8 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
   async function save() {
     const address = url.trim() ? normalizeUrl(url) : undefined;
     if (url.trim() && !address) return setError(t.bookmarks.urlInvalid);
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!title.trim() && !address) return setError(t.form.required);
     const data = {
       title: title.trim() || (address ? new URL(address).host : ''),
       url: address,
@@ -77,7 +79,7 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.form.title}
         value={title}

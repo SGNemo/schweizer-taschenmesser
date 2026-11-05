@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
@@ -207,8 +208,10 @@ function TransactionForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <Segmented
         label={t.finance.kind}
         value={kind}
@@ -415,6 +418,11 @@ function AccountForm({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) {
+      setError(t.form.required);
+      return;
+    }
     if (!isCurrencyCode(currency)) {
       setError(t.money.currencyInvalid);
       return;
@@ -447,8 +455,10 @@ function AccountForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.finance.accountName}
         value={name}
@@ -536,6 +546,7 @@ function CategoryForm({
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
   const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
+  const [nameError, setNameError] = useState('');
   const [kind, setKind] = useState<Kind>(
     existing?.kind ?? ('draft' in target ? target.kind : 'expense'),
   );
@@ -552,6 +563,11 @@ function CategoryForm({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) {
+      setNameError(t.form.required);
+      return;
+    }
     const values = {
       name: name.trim(),
       kind,
@@ -563,12 +579,18 @@ function CategoryForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.finance.categoryName}
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value);
+          setNameError('');
+        }}
+        error={nameError}
         required
         data-autofocus
       />

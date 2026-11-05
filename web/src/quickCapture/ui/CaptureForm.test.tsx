@@ -75,6 +75,30 @@ describe('CaptureForm', () => {
     expect(tx).toMatchObject({ amountMinor: 1250, kind: 'expense', payee: 'Mittagessen' });
   });
 
+  it('asks to book only a complete entry: "$ " alone is incomplete (X33)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), '$ {Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.quickCapture.errors.invalid);
+    expect(screen.queryByTestId('capture-draft')).not.toBeInTheDocument();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('shows a foreign amount and sends it to the full form instead of the euro account (X21)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Ausgabe 12 USD Kaffee');
+    await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.currency('USD')));
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      t.quickCapture.errors.currency('USD'),
+    );
+    expect(screen.queryByTestId('capture-draft')).not.toBeInTheDocument();
+    expect(await db.table('finance_transaction').count()).toBe(0);
+  });
+
   it('closes with Escape', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
@@ -98,6 +122,19 @@ describe('CaptureForm', () => {
     render(<CaptureForm onSaved={() => undefined} />);
     await user.type(await box(), '15 Uhr Zahnarzt');
     await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.assumedDate));
+  });
+
+  it('a date that does not exist is shown and blocks saving instead of a silent today (X20)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Zahnarzt 31.11. 10 Uhr');
+    await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.invalidDate));
+    expect(chips()).not.toHaveTextContent(t.quickCapture.chip.assumedDate);
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.quickCapture.errors.invalid);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(await db.table('calendar_event').count()).toBe(0);
   });
 
   it('without the question: unclear text is saved as typed in the ToDo inbox', async () => {
