@@ -5,21 +5,14 @@
  */
 import type { PlannableEntry } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
-import { calendarBlockers, capacity } from '@/core/plan/capacity';
-import { addDays } from '@/core/plan/dates';
+import { capacity } from '@/core/plan/capacity';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { isoWeekday } from '@/core/time/dates';
+import { planDays, type DayBlocker } from './days';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
-import { defaultAvailable, type PlannerSettings } from './settings';
+import type { PlannerSettings } from './settings';
 
-export interface BoardBlocker {
-  id: string;
-  label: string;
-  min: number;
-  /** From the calendar (read live, not stored). */
-  calendar: boolean;
-}
+export type BoardBlocker = DayBlocker;
 
 export interface BoardRow {
   unitId: string;
@@ -97,31 +90,17 @@ export const unitTitle = (titles: Record<string, string>, unitId: string): strin
 export function buildBoard(input: BoardInput): Board {
   const entries = new Map(input.entries.map((e) => [itemKeyOf(e.moduleId, e.id), e]));
   const items = new Map(input.itemRows.map((r) => [r.id, r]));
-  const dayRows = new Map(input.dayRows.map((r) => [r.date, r]));
   const titles: Record<string, string> = { ...input.titles };
   for (const [key, e] of entries) titles[key] = e.title;
-  const cal = input.settings.calendarBlocks
-    ? calendarBlockers(
-        input.calendar.filter((c) => c.source !== 'planner'),
-        { allDayBlocks: input.settings.allDayBlocks },
-      )
-    : [];
-  const dates = Array.from({ length: input.span }, (_, i) => addDays(input.today, i));
   const bufferShare = Number(input.settings.bufferShare) / 100;
-  const days: BoardDay[] = dates.map((date) => {
-    const row = dayRows.get(date);
-    const blockers: BoardBlocker[] = [
-      ...(row?.blockers ?? []).map((b) => ({
-        id: b.id,
-        label: b.label,
-        min: b.min,
-        calendar: false,
-      })),
-      ...cal
-        .filter((b) => b.date === date)
-        .map((b) => ({ id: b.id!, label: b.label, min: b.min, calendar: true })),
-    ];
-    const availableMin = row?.availableMin ?? defaultAvailable(input.settings, isoWeekday(date));
+  const built = planDays({
+    today: input.today,
+    span: input.span,
+    settings: input.settings,
+    dayRows: input.dayRows,
+    calendar: input.calendar,
+  });
+  const days: BoardDay[] = built.map(({ date, availableMin, blockers, row }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
     const rows: BoardRow[] = input.assignments
       .filter((a) => a.date === date)

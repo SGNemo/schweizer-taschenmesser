@@ -4,6 +4,8 @@
  * reached only through the contract (`plannableSource`), never by import.
  */
 import { randomId } from '@/core/db/util';
+import { formatMinutes } from '@/core/i18n/format';
+import { getLang } from '@/core/i18n/lang';
 import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
 import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
@@ -75,7 +77,9 @@ async function itemPatch(entry: PlannableEntry, patch: Partial<PlanItemRow>): Pr
 
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<void> {
-  const phrase = extractDuePhrase(text, today());
+  // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
+  const phrase =
+    getLang() === 'de' ? extractDuePhrase(text, today()) : { text, hasDueWord: false as const };
   const parsed = parseCapture(phrase.text, { now: new Date(now()), defaultType: 'todo' });
   const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
   // The deadline is the ToDo's date too, so the ToDo page shows it.
@@ -156,9 +160,15 @@ export const setAvailable = (date: string, min: number, titles: Record<string, s
     t.planner.day.available,
     min === 0
       ? t.planner.toast.dayOff(dayName(date))
-      : t.planner.toast.available(dayName(date), `${min}`),
+      : t.planner.toast.available(dayName(date), formatMinutes(min, { compact: true })),
     titles,
     () => dayPatch(date, { availableMin: Math.max(0, Math.min(1440, min)) }),
+  );
+
+/** „Zeit wieder einplanen“: drops the day's own value, the weekday setting applies again. */
+export const clearAvailable = (date: string, titles: Record<string, string>) =>
+  act(t.planner.day.dayOn, t.planner.toast.dayOn(dayName(date)), titles, () =>
+    dayPatch(date, { availableMin: undefined }),
   );
 
 export const addBlocker = (

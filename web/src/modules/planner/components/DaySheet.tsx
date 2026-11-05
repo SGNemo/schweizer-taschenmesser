@@ -3,7 +3,13 @@ import { formatMinutes } from '@/core/i18n/format';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Dialog, IconButton, Icon, ItemList, ItemRow, TextField } from '@/ui';
-import { addBlocker, AVAILABLE_STEP, removeBlocker, setAvailable } from '../actions';
+import {
+  addBlocker,
+  AVAILABLE_STEP,
+  clearAvailable,
+  removeBlocker,
+  setAvailable,
+} from '../actions';
 import type { BoardDay } from '../board';
 import styles from '../routes/planner.module.css';
 
@@ -102,7 +108,7 @@ export function DaySheet({
       </form>
       <div className={styles.sheetRow}>
         {day.off ? (
-          <Button onClick={() => void setAvailable(day.date, 240, titles)}>
+          <Button onClick={() => void clearAvailable(day.date, titles)}>
             {t.planner.day.dayOn}
           </Button>
         ) : (

@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { ready, showPreview } from './helpers';
 
@@ -70,7 +71,8 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
-    await today(page).getByRole('button', { name: 'Warum hier?' }).first().click();
+    await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();
+    await page.getByRole('menuitemcheckbox', { name: 'Warum hier?' }).click();
     await expect(today(page)).toContainText('neu, nach Priorität');
   });
 
@@ -103,9 +105,8 @@ test.describe('Planer (week board, package 1)', () => {
     await enter(page, 'Keller 60min');
     await enter(page, 'Angebot 45min !hoch');
     await expect(today(page)).toContainText('Angebot');
-    // Erledigt from the ⋯ menu, one tap, with undo.
-    await today(page).getByRole('button', { name: 'Aktionen für Keller' }).click();
-    await page.getByRole('menuitem', { name: 'Erledigt' }).click();
+    // Erledigt is one tap (the tick in the row), with undo.
+    await today(page).getByRole('checkbox', { name: 'Erledigt' }).first().click();
     await expect(today(page)).not.toContainText('Keller');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page)).toContainText('Keller');
@@ -142,6 +143,11 @@ test.describe('Planer (week board, package 1)', () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+    // The strip's chosen chip and the one-day board pass axe at phone width too (a11y.spec covers the desktop in both themes).
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   });
 
   test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {

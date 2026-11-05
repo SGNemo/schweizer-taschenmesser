@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
@@ -94,16 +94,21 @@ describe('planner page', () => {
     const board = await screen.findByRole('group', { name: 'Wochenbrett' });
     expect(board.querySelectorAll('section')).toHaveLength(7);
     expect(screen.getByTestId('day-2026-11-09')).toHaveTextContent('2 h 12 frei von 3 h 12');
-    expect(screen.getByLabelText('Teil 1 von 2')).toBeInTheDocument();
+    expect(screen.getByText('Teil 1 von 2')).toHaveClass('sr-only');
     expect(screen.getByText('Zahnarzt')).toBeInTheDocument();
     expect(screen.getByTestId('day-2026-11-10')).toHaveTextContent('1 h 24 frei von 2 h 24');
     // „Nicht planen“ things sit in the waiting group with a way back.
     expect(screen.getByText('Wartet auf freie Zeit')).toBeInTheDocument();
     expect(screen.getByText('Keller')).toBeInTheDocument();
-    // The reason sits behind „Warum hier?“, nothing else is coloured or counted.
+    // Erledigt is one tap: a tick in the row; „Warum hier?“ sits in the ⋯ menu, no reason text at rest.
+    expect(screen.getAllByRole('checkbox', { name: 'Erledigt' }).length).toBeGreaterThan(0);
     expect(screen.queryByText('neu, nach Priorität')).toBeNull();
-    screen.getAllByRole('button', { name: 'Warum hier?' })[0]!.click();
+    expect(screen.queryByRole('button', { name: 'Warum hier?' })).toBeNull();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Aktionen für Steuer' })[0]!);
+    fireEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Warum hier?' }));
     await waitFor(() => expect(screen.getByText('neu, nach Priorität')).toBeInTheDocument());
+    // Excluded things carry a state, not a verb.
+    expect(screen.getByText('nicht im Plan')).toBeInTheDocument();
   });
 
   it('a day off says so in the head and the empty board offers the one field', async () => {
@@ -112,6 +117,11 @@ describe('planner page', () => {
     expect(await screen.findByTestId('day-2026-11-09')).toHaveTextContent('frei');
     expect(screen.getByTestId('day-2026-11-09')).not.toHaveTextContent('frei von');
     expect(screen.getByLabelText('Eintragen')).toBeInTheDocument();
+    // One empty state for the whole board, not seven „Nichts geplant“.
+    expect(screen.getByTestId('planner-empty')).toHaveTextContent(
+      'Noch nichts geplant. Eine Sache reicht.',
+    );
+    expect(screen.queryAllByText('Nichts geplant')).toHaveLength(0);
     expect(screen.queryByText('Wartet auf freie Zeit')).toBeNull();
   });
 });

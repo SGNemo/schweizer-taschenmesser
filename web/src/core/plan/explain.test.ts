@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadCatalog } from '@/core/i18n/catalogs';
 import { LANGS, setLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainMove, explainWait } from './explain';
+import { dayName, explainAssignment, explainWait } from './explain';
 import type { PlaceReason } from './types';
 
 afterEach(() => setLang('de'));
@@ -27,8 +27,6 @@ describe('explain', () => {
     expect(explainWait({ reason: 'horizon', bumpedBy: ['todos:j#0'] }, nameOf)).toBe(
       'Platz nahmen Steuerbescheid',
     );
-    expect(explainMove({ reason: 'carried', from: '2026-11-09' }, nameOf)).toBe('weiter von Mo');
-    expect(explainMove({ reason: 'done' }, nameOf)).toBe('erledigt');
   });
 
   it('has a sentence for every reason and wait state in all five languages', async () => {

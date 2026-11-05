@@ -577,6 +577,14 @@ export interface PlannableItem {
   createdAt?: number;
 }
 
+/**
+ * Is a source's date the planner's own? Only while the mark carries the same day; every other combination
+ * (no mark, a mark for another day, a mixed field-level merge) reads as the user's date – the safe direction,
+ * because sync merges each field on its own. The one rule, used by the planner and by every source.
+ */
+export const isPlannerOwned = (x: Pick<PlannableItem, 'plannedFor' | 'planMark'>): boolean =>
+  x.plannedFor !== undefined && x.planMark?.date === x.plannedFor;
+
 /** The planner's view of a module's open things plus the write-back of the same contract (typed, no module import). */
 export interface PlannableSource {
   /** Open, plannable things only (no done, no „Irgendwann“, no subtasks). */
@@ -586,6 +594,11 @@ export interface PlannableSource {
    * (`date` undefined). A ToDo writes `plannedFor` + `planMark`; no `order` clears the mark.
    */
   onAssign?(id: string, date: string | undefined, order?: number): Promise<void>;
+  /**
+   * The planner lets go of the thing for good (the module is switched off): the source hands the user's
+   * own date back (`planMark.prior`, also one in the past) or clears it, and drops the mark.
+   */
+  onRelease?(id: string): Promise<void>;
   /** Ticked off from the plan. */
   onDone?(id: string): Promise<void>;
   /** The estimate was edited in the plan. */

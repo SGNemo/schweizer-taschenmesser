@@ -5,13 +5,11 @@
  * nothing. Pure where it can be (`buildInputs`, `inputHash`, `writeBackPlan`); the effects are in
  * `runPlanner`. The service (`services.ts`) decides when a run happens; this file never reads a clock.
  */
-import { readMeta, writeMeta } from '@/core/db/meta';
-import { calendarBlockers } from '@/core/plan/capacity';
+import { getMeta, setMeta } from '@/core/db/metaKv';
 import { addDays } from '@/core/plan/dates';
 import { plan } from '@/core/plan/engine';
 import type {
   Assignment,
-  PlanBlocker,
   PlanDay,
   PlanItem,
   PlanResult,
@@ -25,13 +23,12 @@ import {
   plannableSource,
   type PlannableEntry,
 } from '@/core/modules/contributions';
-import type { CalendarItem, ModuleManifest } from '@/core/modules/types';
-import { isoWeekday } from '@/core/time/dates';
+import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
+import { planDays } from './days';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
-import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
-import { defaultAvailable, planSettings, type PlannerSettings } from './settings';
+import type { AssignmentRow, PlanItemRow } from './schema';
+import { planSettings, type PlannerSettings } from './settings';
 
-export const HASH_KEY = 'planner.hash';
 export const LAST_RUN_KEY = 'planner.lastRun';
 
 /** Device-local memory of the last run (never synced): what the board shows besides the stored rows. */
@@ -51,6 +48,8 @@ export interface LastRun {
 /** A write-back target: the source of one module. */
 export interface SourceWriter {
   onAssign(moduleId: string, id: string, date: string | undefined, order?: number): Promise<void>;
+  /** The module is switched off: hand the user's own date back, also one in the past (`PlannableSource.onRelease`). */
+  onRelease?(moduleId: string, id: string): Promise<void>;
 }
 
 export interface RunDeps {
@@ -95,10 +94,6 @@ export function fnv1a(s: string): string {
   return h.toString(16).padStart(8, '0');
 }
 
-/** Planner-own or the user's? The mark must carry the same day (CONCEPT §2). */
-export const isPlannerOwned = (e: Pick<PlannableEntry, 'plannedFor' | 'planMark'>): boolean =>
-  e.plannedFor !== undefined && e.planMark?.date === e.plannedFor;
-
 const max = (a?: string, b?: string): string | undefined => (!a ? b : !b ? a : a > b ? a : b);
 
 /** Signature of assignment rows: (id, date, minutes, order, reason), sorted. */
@@ -123,27 +118,17 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     ? (deps.calendar ??
       (await collectCalendarItems({ from: deps.today, to: until }, deps.manifests)))
     : [];
-  const calBlockers = calendarBlockers(
-    calendar.filter((i) => i.source !== 'planner'),
-    { allDayBlocks: deps.settings.allDayBlocks },
-  );
-  const dayRows = new Map<string, PlanDayRow>(
-    (await repos.day.active().toArray()).map((r) => [r.date, r]),
-  );
-  const days: PlanDay[] = horizon.map((date) => {
-    const row = dayRows.get(date);
-    const blockers: PlanBlocker[] = [
-      ...(row?.blockers ?? []).map((b) => ({ id: b.id, label: b.label, min: b.min })),
-      ...calBlockers
-        .filter((b) => b.date === date)
-        .map(({ id, label, min }) => ({ id, label, min })),
-    ];
-    return {
-      date,
-      availableMin: row?.availableMin ?? defaultAvailable(deps.settings, isoWeekday(date)),
-      blockers,
-    };
-  });
+  const days: PlanDay[] = planDays({
+    today: deps.today,
+    span: settings.horizonDays,
+    settings: deps.settings,
+    dayRows: await repos.day.active().toArray(),
+    calendar,
+  }).map(({ date, availableMin, blockers }) => ({
+    date,
+    availableMin,
+    blockers: blockers.map(({ id, label, min }) => ({ id, label, min })),
+  }));
   const itemRows = new Map<string, PlanItemRow>(
     (await repos.item.active().toArray()).map((r) => [r.id, r]),
   );
@@ -362,10 +347,15 @@ export async function writeBackPlan(
 }
 
 function defaultWriter(manifests: readonly ModuleManifest[]): SourceWriter {
+  const sourceOf = (moduleId: string) => plannableSource(manifests.find((m) => m.id === moduleId));
   return {
     async onAssign(moduleId, id, date, order) {
-      const source = await plannableSource(manifests.find((m) => m.id === moduleId));
-      await source?.onAssign?.(id, date, order);
+      await (await sourceOf(moduleId))?.onAssign?.(id, date, order);
+    },
+    async onRelease(moduleId, id) {
+      const source = await sourceOf(moduleId);
+      if (source?.onRelease) await source.onRelease(id);
+      else await source?.onAssign?.(id, undefined);
     },
   };
 }
@@ -380,7 +370,7 @@ export async function runPlanner(
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
   const inputs = await buildInputs(deps, repos);
-  const last = await readMeta<LastRun>(LAST_RUN_KEY, deps.database);
+  const last = await getMeta<LastRun>(LAST_RUN_KEY, deps.database);
   const rowsSig = rowsSignature([...inputs.prevRows.values()]);
   if (
     !opts.force &&
@@ -411,14 +401,14 @@ export async function runPlanner(
     usableMin: result.usableMin,
     titles: inputs.titles,
   };
-  await writeMeta(LAST_RUN_KEY, lastRun, deps.database);
-  await writeMeta(HASH_KEY, inputs.hash, deps.database);
+  await setMeta(LAST_RUN_KEY, lastRun, deps.database);
   return { ran: true, result, inputs, rowWrites, writeBacks };
 }
 
 /**
- * Switching the module off: every planner-own date goes back to the user (`prior`, or away) through
- * the sources – in both data policies, before the state and any wipe (`module.disabling`).
+ * Switching the module off: every marked thing goes back to its user through the sources (`prior`, also
+ * a past one, or away – the same rule as the ToDo side's own clean-up) – in both data policies, before
+ * the state and any wipe (`module.disabling`).
  */
 export async function restoreSources(
   deps: Pick<RunDeps, 'manifests' | 'entries' | 'writer' | 'today'>,
@@ -430,7 +420,8 @@ export async function restoreSources(
   let n = 0;
   for (const e of entries) {
     if (!e.planMark) continue;
-    await writer.onAssign(e.moduleId, e.id, undefined);
+    if (writer.onRelease) await writer.onRelease(e.moduleId, e.id);
+    else await writer.onAssign(e.moduleId, e.id, undefined);
     n++;
   }
   return n;

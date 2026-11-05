@@ -62,7 +62,12 @@ export function plan(input: PlanInput): PlanResult {
     .filter((d) => d.date >= today && d.date <= last)
     .sort((a, b) => cmp(a.date, b.date));
   const prev: readonly PrevAssignment[] = input.prev ?? [];
-  const prevByUnit = new Map(prev.map((a) => [a.id, a]));
+  // A previous day beyond the horizon (it shrank, or the row is old) is no plan any more: the unit is
+  // new again, otherwise rule 5 would skip it on every day and the fixpoint would need a second run.
+  const lastDay = horizon.at(-1)?.date;
+  const prevByUnit = new Map(
+    prev.filter((a) => lastDay === undefined || a.date <= lastDay).map((a) => [a.id, a]),
+  );
   const units = input.items.filter((i) => !i.done && !i.excluded).flatMap((i) => toUnits(i, s));
   const unitById = new Map(units.map((u) => [u.id, u]));
   const placed = new Map<string, Assignment>();
@@ -107,7 +112,8 @@ export function plan(input: PlanInput): PlanResult {
     /** `sameDay`: a second session of one item on the same day is allowed only under deadline pressure. */
     const eligible = (u: PlanUnit, sameDay = false): boolean => {
       if (placed.has(u.id)) return false;
-      if (u.item.earliest && u.item.earliest > day.date) return false;
+      // A pin is the user's explicit word: it beats a date that only says "not before".
+      if (u.item.earliest && u.item.earliest > day.date && u.item.pinned !== day.date) return false;
       if (u.k === 0) return true;
       const part = placed.get(unitId(u.itemKey, u.k - 1))?.date ?? '9999';
       return sameDay ? part <= day.date : part < day.date;
@@ -237,7 +243,6 @@ export function plan(input: PlanInput): PlanResult {
 
   // Rule 7: honest output – late and unplaced units, with their reason.
   const unplaced: Unplaced[] = [];
-  const lastDay = horizon.at(-1)?.date;
   for (const u of units) {
     const a = placed.get(u.id);
     const base = { id: u.id, itemKey: u.itemKey, k: u.k, of: u.of, minutes: u.minutes };
@@ -260,7 +265,7 @@ export function plan(input: PlanInput): PlanResult {
     }
   }
 
-  const diff = diffPlans(prev, assignments, bumps, new Set(unitById.keys()));
+  const diff = diffPlans([...prevByUnit.values()], assignments, bumps, new Set(unitById.keys()));
   const demandMin = units.reduce((n, u) => n + u.minutes, 0);
   const usableMin = Object.values(load).reduce((n, l) => n + l.usable, 0);
   return {

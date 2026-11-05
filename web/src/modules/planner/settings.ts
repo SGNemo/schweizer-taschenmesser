@@ -106,6 +106,7 @@ export const settings: ModuleSettings = {
     {
       key: 'bufferShare',
       type: 'select',
+      level: 'advanced',
       get label() {
         return s().bufferShare;
       },
@@ -119,6 +120,7 @@ export const settings: ModuleSettings = {
     {
       key: 'horizonDays',
       type: 'select',
+      level: 'advanced',
       get label() {
         return s().horizonDays;
       },
@@ -132,6 +134,7 @@ export const settings: ModuleSettings = {
     {
       key: 'maxSessionMin',
       type: 'select',
+      level: 'advanced',
       get label() {
         return s().maxSessionMin;
       },

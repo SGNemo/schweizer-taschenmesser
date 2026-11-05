@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eventsOf } from '@/core/automation/ingest';
 import { db } from '@/core/db/db';
-import { readMeta } from '@/core/db/meta';
+import { getMeta } from '@/core/db/metaKv';
 import { createCollectionRepo } from '@/core/db/repo';
 import { setWriteListener, type WriteSignal } from '@/core/db/writeHook';
 import { bus } from '@/core/events';
@@ -106,7 +106,7 @@ describe('a run', () => {
       plannedFor: TODAY,
       planMark: { date: TODAY, order: 1 },
     });
-    expect((await readMeta<LastRun>(LAST_RUN_KEY))?.titles).toEqual({
+    expect((await getMeta<LastRun>(LAST_RUN_KEY))?.titles).toEqual({
       [`todos:${a.id}`]: 'Steuer',
       [`todos:${b.id}`]: 'Kurz',
     });
@@ -480,5 +480,90 @@ describe('rows through putRow', () => {
     expect(
       await putRow(dayRepo, '2026-11-12', { date: '2026-11-12', availableMin: 0, blockers: [] }),
     ).toBe(false);
+  });
+});
+
+describe('council round 1', () => {
+  it('switching off hands a past user date back too (onRelease), while a run keeps it off today’s card', async () => {
+    await modulesRow('todos', true);
+    await enableModule(manifest);
+    // Today is Monday 2026-11-09; the user's own date was last Friday.
+    const a = await task('Alt', { estimateMin: 30, plannedFor: '2026-11-06' });
+    await runPlanner(deps());
+    expect(await stored(a.id)).toMatchObject({
+      plannedFor: TODAY,
+      planMark: { date: TODAY, prior: '2026-11-06' },
+    });
+    // Excluded by the user: the run lets go, a past prior stays away (it would land on today's card by itself).
+    await putRow(itemRepo, `todos:${a.id}`, {
+      source: { module: 'todos', id: a.id },
+      excluded: true,
+      order: 0,
+    });
+    await runPlanner(deps());
+    expect((await stored(a.id))!.plannedFor).toBeUndefined();
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+    // Switching the module off: the same past date comes back (the ToDo side's own clean-up rule).
+    await putRow(itemRepo, `todos:${a.id}`, { source: { module: 'todos', id: a.id }, order: 0 });
+    await taskRepo.update(a.id, { plannedFor: '2026-11-06' });
+    await runPlanner(deps());
+    expect(await stored(a.id)).toMatchObject({
+      plannedFor: TODAY,
+      planMark: { prior: '2026-11-06' },
+    });
+    const stop = start();
+    await disableModule(manifest, 'keep');
+    stop();
+    expect((await stored(a.id))!.plannedFor).toBe('2026-11-06');
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+  });
+
+  it('a run queued after the planner was stored as off writes nothing (second tab, late run)', async () => {
+    await modulesRow('todos', true);
+    await task('A', { estimateMin: 30 });
+    await modulesRow('planner', false);
+    expect(await runBackground()).toBeUndefined();
+    await expect(runUser('x', async () => undefined)).rejects.toThrow();
+    expect(await assignmentRepo.active().count()).toBe(0);
+  });
+
+  it('the gate closes, then opens: the user date is overwritten without another write', async () => {
+    await modulesRow('todos', true);
+    await modulesRow('planner', true);
+    await db
+      .table('_secrets')
+      .put({
+        key: 'syncConfig',
+        value: { kind: 'selfHosted', url: 'https://sync.example', token: 't' },
+      });
+    await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: false });
+    const a = await task('Später Do', { estimateMin: 30, plannedFor: '2026-11-12' });
+    setManifestsForTests(undefined);
+    const stop = start();
+    await vi.waitFor(async () => expect(await rows()).toHaveLength(1), { timeout: 4000 });
+    // Gated: no copy, no mark.
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+    expect(await itemRepo.get(`todos:${a.id}`)).toBeUndefined();
+    // The round ends: the flag turns true and the service runs again by itself.
+    await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: true });
+    await db.table('_meta').put({ key: 'sync.lastSyncAt', value: NOW });
+    await vi.waitFor(
+      async () =>
+        expect((await stored(a.id))!.planMark).toMatchObject({
+          date: '2026-11-12',
+          prior: '2026-11-12',
+        }),
+      { timeout: 4000 },
+    );
+    expect(await itemRepo.get(`todos:${a.id}`)).toMatchObject({ earliest: '2026-11-12' });
+    stop();
+    await runsSettled();
+  });
+
+  it('msUntilNextDay points just past the next local midnight', async () => {
+    const { msUntilNextDay } = await import('../services');
+    const at = new Date(2026, 10, 9, 23, 59, 0).getTime();
+    expect(msUntilNextDay(at)).toBe(61_000);
+    expect(msUntilNextDay(new Date(2026, 10, 9, 0, 0, 0, 500).getTime())).toBe(24 * 3600_000 + 500);
   });
 });

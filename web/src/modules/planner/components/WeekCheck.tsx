@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatMinutes } from '@/core/i18n/format';
+import { dayName } from '@/core/plan/explain';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Dialog, Icon, IconButton } from '@/ui';
@@ -46,14 +47,17 @@ export function WeekCheck({
           <span>{formatDay(d.date, 'EEE, d. MMM')}</span>
           <span className={styles.stepper}>
             <IconButton
-              label={t.planner.day.less}
+              label={t.planner.day.lessOn(dayName(d.date))}
               onClick={() => change(i, -AVAILABLE_STEP)}
               disabled={values[i] === 0}
             >
               <Icon name="minus" />
             </IconButton>
             <span className={styles.sheetValue}>{compact(values[i]!)}</span>
-            <IconButton label={t.planner.day.more} onClick={() => change(i, AVAILABLE_STEP)}>
+            <IconButton
+              label={t.planner.day.moreOn(dayName(d.date))}
+              onClick={() => change(i, AVAILABLE_STEP)}
+            >
               <Icon name="plus" />
             </IconButton>
           </span>

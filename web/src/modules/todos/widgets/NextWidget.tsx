@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/state';
 import { useNow } from '@/core/focus/useNow';
+import { useModuleStates } from '@/core/modules/activation';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
@@ -51,6 +52,7 @@ export default function NextWidget() {
     () => (tasks ?? []) as (PickTask & { title: string; listId: string })[],
     [tasks],
   );
+  const plannerOn = useModuleStates()?.planner === true;
   const { next, plan, planRows, until } = buildToday({
     tasks: all,
     items: items ?? [],
@@ -59,6 +61,8 @@ export default function NextWidget() {
     skipped: skipped ?? [],
     planLimit: settings.planLimit,
     showNext: settings.nextOne,
+    // The planner's order counts only while the planner is on (CONCEPT §2: inactive = the mark is ignored).
+    planMarks: plannerOn,
   });
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';

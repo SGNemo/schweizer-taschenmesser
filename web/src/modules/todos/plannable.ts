@@ -6,6 +6,7 @@
  */
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
+import { restorePatch } from './planMark';
 import { setDone, taskRepo } from './repo';
 import type { PlanMark, Task } from './schema';
 import { isPlannerOwned } from './views';
@@ -74,6 +75,12 @@ const source: PlannableSource = {
     const task = await taskRepo.get(id);
     if (!task) return;
     const patch = assignPatch(task, date, order, today());
+    if (Object.keys(patch).length > 0) await taskRepo.update(id, patch);
+  },
+  async onRelease(id) {
+    const task = await taskRepo.get(id);
+    if (!task) return;
+    const patch = restorePatch(task);
     if (Object.keys(patch).length > 0) await taskRepo.update(id, patch);
   },
   async onDone(id) {

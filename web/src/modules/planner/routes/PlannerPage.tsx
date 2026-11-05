@@ -6,6 +6,7 @@ import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import {
   Button,
+  EmptyState,
   GroupedList,
   ItemList,
   ItemRow,
@@ -40,6 +41,18 @@ const SPAN = 7;
 const WIDE_REM = 60;
 
 const compact = (min: number) => formatMinutes(min, { compact: true });
+
+/** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
+function Part({ k, of }: { k: number; of: number }) {
+  return (
+    <>
+      <span className={styles.part} aria-hidden="true">
+        {` · ${t.planner.row.part(k + 1, of)}`}
+      </span>
+      <span className="sr-only">{` ${t.planner.row.partAria(k + 1, of)}`}</span>
+    </>
+  );
+}
 
 export default function PlannerPage() {
   const data = useBoard(SPAN);
@@ -93,12 +106,27 @@ export default function PlannerPage() {
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
   ];
 
-  const rowMenu = (row: BoardRow | WaitingRow, date?: string): RowMenuItem[] => {
+  const titleOf = (unitId: string) => {
+    const key = unitId.slice(0, unitId.lastIndexOf('#'));
+    return titles[key] ?? key;
+  };
+  const nameOf = (unitId: string) => {
+    const k = Number(unitId.slice(unitId.lastIndexOf('#') + 1));
+    const row = board?.days.flatMap((d) => d.rows).find((r) => r.unitId === unitId);
+    return row && row.of > 1
+      ? `${titleOf(unitId)} · ${t.planner.row.part(k + 1, row.of)}`
+      : titleOf(unitId);
+  };
+
+  /** The ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). */
+  const rowMenu = (row: BoardRow | WaitingRow, date?: string, reason?: string): RowMenuItem[] => {
     const e = row.entry;
     if (!e) return [];
+    const day = date ?? data!.today;
     const pinned = row.item?.pinned !== undefined;
     const hard = row.item?.due?.hard === true;
     const excluded = row.item?.excluded === true;
+    const open = why === row.unitId;
     return [
       { id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) },
       { id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) },
@@ -109,8 +137,8 @@ export default function PlannerPage() {
               ? { id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }
               : {
                   id: 'pin',
-                  label: date ? t.planner.row.pinOn(dayName(date)) : t.planner.row.pin,
-                  onSelect: () => void pin(e, date ?? data!.today, titles),
+                  label: t.planner.row.pinOn(dayName(day)),
+                  onSelect: () => void pin(e, day, titles),
                 },
             {
               id: 'exclude',
@@ -126,23 +154,21 @@ export default function PlannerPage() {
           }
         : {
             id: 'markDue',
-            label: t.planner.row.markDue,
-            onSelect: () => void markDue(e, e.due?.date ?? date ?? data!.today, titles),
+            label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
+            onSelect: () => void markDue(e, e.due?.date ?? day, titles),
           },
+      ...(reason
+        ? [
+            {
+              id: 'why',
+              label: t.planner.row.why,
+              checked: open,
+              onSelect: () => setWhy(open ? undefined : row.unitId),
+            },
+          ]
+        : []),
       { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
     ];
-  };
-
-  const titleOf = (unitId: string) => {
-    const key = unitId.slice(0, unitId.lastIndexOf('#'));
-    return titles[key] ?? key;
-  };
-  const nameOf = (unitId: string) => {
-    const k = Number(unitId.slice(unitId.lastIndexOf('#') + 1));
-    const row = board?.days.flatMap((d) => d.rows).find((r) => r.unitId === unitId);
-    return row && row.of > 1
-      ? `${titleOf(unitId)} · ${t.planner.row.part(k + 1, row.of)}`
-      : titleOf(unitId);
   };
 
   const renderRow = (row: BoardRow, day: BoardDay) => {
@@ -155,13 +181,9 @@ export default function PlannerPage() {
       <ItemRow
         key={row.unitId}
         title={
-          <span>
+          <span title={reason}>
             {row.title}
-            {row.of > 1 ? (
-              <span className={styles.part} aria-label={t.planner.row.partAria(row.k + 1, row.of)}>
-                {` · ${t.planner.row.part(row.k + 1, row.of)}`}
-              </span>
-            ) : null}
+            {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
           </span>
         }
         titleFull
@@ -179,23 +201,24 @@ export default function PlannerPage() {
             </span>
           ) : undefined
         }
+        lead={
+          row.entry ? (
+            <input
+              type="checkbox"
+              className={styles.check}
+              aria-label={t.planner.row.done}
+              data-row-tick
+              checked={false}
+              onChange={() => void markDone(row.entry!, titles)}
+            />
+          ) : undefined
+        }
         end={
           <span className={styles.minutes}>
             {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
           </span>
         }
-        actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            title={reason}
-            aria-expanded={open}
-            onClick={() => setWhy(open ? undefined : row.unitId)}
-          >
-            {t.planner.row.why}
-          </Button>
-        }
-        menu={rowMenu(row, day.date)}
+        menu={rowMenu(row, day.date, reason)}
         menuLabel={t.planner.row.menu(row.title)}
         // Swipes only in the one-day layout: a swipeable row clips sideways, and in a narrow column the
         // ⋯ menu is wider than the row.
@@ -221,7 +244,7 @@ export default function PlannerPage() {
         <span className={styles.capacity}>
           {day.off
             ? t.planner.board.off
-            : day.free === 0 && day.over === 0 && day.planned > 0
+            : day.free === 0 && day.planned > 0
               ? t.planner.board.full
               : t.planner.board.freeOf(compact(day.free), compact(day.usable))}
         </span>
@@ -248,13 +271,12 @@ export default function PlannerPage() {
           ))}
           {day.rows.map((row) => renderRow(row, day))}
         </ItemList>
-      ) : day.off ? null : (
-        <p className={styles.empty}>{t.planner.board.empty}</p>
-      )}
+      ) : null}
     </section>
   );
 
   const waiting = board?.waiting ?? [];
+  const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
   const shownDay = board?.days[Math.min(dayIndex, SPAN - 1)];
 
   return (
@@ -295,13 +317,17 @@ export default function PlannerPage() {
         </Button>
       </form>
 
+      {nothingPlanned && waiting.length === 0 ? (
+        <EmptyState title={t.planner.empty} testId="planner-empty" />
+      ) : null}
+
       {board ? (
         wide ? (
           <div className={styles.board} role="group" aria-label={t.planner.board.label}>
             {board.days.map(renderDay)}
           </div>
         ) : (
-          <div className={styles.single}>
+          <div>
             <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
               {board.days.map((d, i) => (
                 <button
@@ -315,7 +341,7 @@ export default function PlannerPage() {
                   <span>
                     {d.off
                       ? t.planner.board.off
-                      : d.free === 0
+                      : d.free === 0 && d.planned > 0
                         ? t.planner.board.full
                         : compact(d.free)}
                   </span>
@@ -342,12 +368,15 @@ export default function PlannerPage() {
                       <ItemRow
                         key={w.unitId}
                         title={
-                          w.of > 1 ? `${w.title} · ${t.planner.row.part(w.k + 1, w.of)}` : w.title
+                          <span>
+                            {w.title}
+                            {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
+                          </span>
                         }
                         titleFull
                         meta={
                           w.reason === 'excluded'
-                            ? t.planner.row.exclude
+                            ? t.planner.row.excludedState
                             : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf)
                         }
                         end={<span className={styles.minutes}>{compact(w.minutes)}</span>}

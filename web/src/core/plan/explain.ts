@@ -5,7 +5,7 @@
  */
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import type { Assignment, PlanDiff, Unplaced } from './types';
+import type { Assignment, Unplaced } from './types';
 
 /** Short weekday of a date in the UI language, without a trailing period („Do“, „Thu“, „jeu“). */
 export const dayName = (date: string): string => formatDay(date, 'EEE').replace(/\.$/, '');
@@ -46,26 +46,4 @@ export function explainAssignment(
 export function explainWait(u: Pick<Unplaced, 'reason' | 'bumpedBy'>, nameOf: NameOf): string {
   if (u.bumpedBy?.length) return t.planner.reasons.bumped(u.bumpedBy.map(nameOf).join(', '));
   return t.planner.wait[u.reason];
-}
-
-/** The cause of a move or drop-out in the diff. */
-export function explainMove(
-  m: Pick<PlanDiff['moved'][number], 'reason' | 'by'> & { from?: string },
-  nameOf: NameOf,
-): string {
-  const r = t.planner.reasons;
-  switch (m.reason) {
-    case 'carried':
-      return m.from ? r.carried(dayName(m.from)) : r.carriedEarlier;
-    case 'bumped':
-      return r.bumped(m.by?.length ? m.by.map(nameOf).join(', ') : r.others);
-    case 'after-part':
-      return r['after-part'](m.by?.[0] ? nameOf(m.by[0]) : r.others);
-    case 'capacity':
-      return r.capacity;
-    case 'pulled':
-      return r.pulled('');
-    case 'done':
-      return r.done;
-  }
 }

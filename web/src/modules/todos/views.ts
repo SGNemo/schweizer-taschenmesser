@@ -1,3 +1,4 @@
+import { isPlannerOwned } from '@/core/modules/types';
 import { addDaysStr } from '@/core/time/dates';
 import { postponePatch } from './postpone';
 import type { Task } from './schema';
@@ -13,13 +14,7 @@ type V = Pick<Task, 'done' | 'someday' | 'dueDate' | 'plannedFor' | 'startDate' 
 
 type Marked = Pick<Task, 'plannedFor' | 'planMark'>;
 
-/**
- * Is `plannedFor` the planner's own date? Only while the mark carries the same day; every other
- * combination (no mark, a mark for another day, a mixed field-level merge) reads as the user's date –
- * the safe direction, because sync merges each field on its own.
- */
-export const isPlannerOwned = (task: Marked): boolean =>
-  task.plannedFor !== undefined && task.planMark?.date === task.plannedFor;
+export { isPlannerOwned };
 
 export type PlannedForPatch = Partial<Pick<Task, 'plannedFor' | 'planMark'>>;
 

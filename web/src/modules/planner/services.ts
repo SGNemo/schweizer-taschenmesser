@@ -12,9 +12,9 @@
  */
 import { liveQuery } from 'dexie';
 import { logError } from '@/core/diagnostics/logError';
-import { readMeta } from '@/core/db/meta';
+import { deleteMeta, getMeta } from '@/core/db/metaKv';
 import { bus } from '@/core/events';
-import { loadModuleStates } from '@/core/modules/activation';
+import { loadModuleStates, loadStoredModuleState } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import {
   activeManifests,
@@ -24,14 +24,13 @@ import {
 import type { ModuleManifest } from '@/core/modules/types';
 import { addDays } from '@/core/plan/dates';
 import { getFocusSettings } from '@/core/settings/focus';
-import { settingsRepo } from '@/core/settings/settings';
-import { syncSettled } from '@/core/sync/service';
-import { today } from '@/core/time/now';
+import { PULL_COMPLETE_KEY } from '@/core/storage/dexie';
+import { LAST_SYNC_KEY, syncSettled } from '@/core/sync/service';
+import { now, today } from '@/core/time/now';
 import { undoable, type UndoEntry } from '@/core/undo';
 import { assignmentRepo, dayRepo, itemRepo, MODULE_ID } from './repo';
 import { LAST_RUN_KEY, restoreSources, runPlanner, type RunDeps, type RunOutcome } from './run';
 import { getPlannerSettings } from './prefs';
-import { PLANNER_SCOPE } from './settings';
 
 let chain: Promise<unknown> = Promise.resolve();
 let stopped = false;
@@ -62,10 +61,17 @@ async function depsNow(): Promise<RunDeps> {
   return { today: today(), manifests, settings, planLimit: focus.planLimit, settled };
 }
 
-/** A background run: serialised, not undoable, skipped while nothing changed or the module is stopping. */
+/** Switched off meanwhile (this tab, another tab, another device)? Then no run may touch the rows again. */
+async function switchedOff(): Promise<boolean> {
+  if (stopped) return true;
+  const stored = await loadStoredModuleState(MODULE_ID);
+  return stored !== undefined && !stored.enabled;
+}
+
+/** A background run: serialised, not undoable, skipped while nothing changed or the module is off. */
 export function runBackground(): Promise<RunOutcome | undefined> {
   return enqueue(async () => {
-    if (stopped) return undefined;
+    if (await switchedOff()) return undefined;
     const deps = await depsNow();
     if (!deps.settings.autoReplan) return undefined;
     return runPlanner(deps);
@@ -83,6 +89,7 @@ export interface UserRun {
  */
 export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
   return enqueue(async () => {
+    if (await switchedOff()) throw new Error('planner: switched off');
     const { result, entry } = await undoable(label, async () => {
       await act();
       return runPlanner(await depsNow(), { force: true });
@@ -91,23 +98,27 @@ export function runUser(label: string, act: () => Promise<void>): Promise<UserRu
   });
 }
 
-/** Everything a run reads, as one string: the live query re-emits when any of it changes. */
+/**
+ * Everything a run reads, as one string: the live query re-emits when any of it changes. The sync
+ * gate is part of it (the pull flag and the last round's time), so a run that was gated while a sync
+ * ran is tried again when the round ends. The stored `LastRun` is left out: the run writes it.
+ */
 async function inputSnapshot(): Promise<string> {
   const states = await loadModuleStates();
   const manifests = activeManifests(states);
   const settings = await getPlannerSettings();
   const day = today();
   const until = addDays(day, Number(settings.horizonDays) - 1);
-  const [things, calendar, days, items, assignments, focus, last] = await Promise.all([
+  const [things, calendar, days, items, assignments, focus, pull, lastSync] = await Promise.all([
     collectPlannable({ today: day, until }, manifests),
     settings.calendarBlocks ? collectCalendarItems({ from: day, to: until }, manifests) : [],
     dayRepo.active().toArray(),
     itemRepo.active().toArray(),
     assignmentRepo.active().toArray(),
-    settingsRepo.get('focus'),
-    readMeta(LAST_RUN_KEY),
+    getFocusSettings(),
+    getMeta(PULL_COMPLETE_KEY),
+    getMeta(LAST_SYNC_KEY),
   ]);
-  void settingsRepo.get(PLANNER_SCOPE); // tracked read, so a settings change re-emits
   return JSON.stringify([
     day,
     things,
@@ -116,10 +127,21 @@ async function inputSnapshot(): Promise<string> {
     items,
     assignments,
     settings,
-    focus?.planLimit,
-    last,
+    focus.planLimit,
+    pull,
+    lastSync,
   ]);
 }
+
+/** Milliseconds from `at` to the next local midnight (plus a second, so `today()` has turned). */
+export function msUntilNextDay(at: number): number {
+  const d = new Date(at);
+  d.setHours(24, 0, 1, 0);
+  return Math.max(1000, d.getTime() - at);
+}
+
+/** How long the disabling handler waits for a running run before it hands the dates back anyway. */
+export const DISABLE_WAIT_MS = 5000;
 
 /** Loads the lazy sources once, so the live query's first run only awaits cached imports (keeps Dexie's tracking). */
 async function preload(): Promise<void> {
@@ -134,9 +156,21 @@ export default function start(): () => void {
   manifestsFor = undefined;
   let sub: { unsubscribe(): void } | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let midnight: ReturnType<typeof setTimeout> | undefined;
   const schedule = () => {
     clearTimeout(timer);
     timer = setTimeout(() => void runBackground().catch(logError('planner.run')), 50);
+  };
+  // The day changes while the app is open: yesterday's leftovers must be carried without a write.
+  const armMidnight = () => {
+    clearTimeout(midnight);
+    midnight = setTimeout(() => {
+      schedule();
+      armMidnight();
+    }, msUntilNextDay(now()));
+  };
+  const onVisible = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') schedule();
   };
   void preload()
     .catch(() => undefined)
@@ -146,19 +180,27 @@ export default function start(): () => void {
         next: schedule,
         error: (e) => console.error('[planner] input stream failed', e),
       });
+      armMidnight();
+      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisible);
     });
-  const offDisabling = bus.on('module.disabling', async ({ moduleId }) => {
+  const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
     if (moduleId !== MODULE_ID) return;
     stopped = true;
     clearTimeout(timer);
+    clearTimeout(midnight);
     sub?.unsubscribe();
-    await chain;
+    // A hung run must not keep the switch-off waiting; the ToDo side's own clean-up catches the rest.
+    await Promise.race([chain, new Promise((r) => setTimeout(r, DISABLE_WAIT_MS))]);
     await restoreSources({ today: today(), manifests: availableManifests() });
+    if (policy === 'delete') await deleteMeta(LAST_RUN_KEY);
   });
   return () => {
     stopped = true;
     clearTimeout(timer);
+    clearTimeout(midnight);
     sub?.unsubscribe();
+    if (typeof document !== 'undefined')
+      document.removeEventListener('visibilitychange', onVisible);
     offDisabling();
   };
 }

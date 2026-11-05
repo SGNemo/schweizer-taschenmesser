@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
-import { readMeta } from '@/core/db/meta';
+import { getMeta } from '@/core/db/metaKv';
 import { useCalendarItems, usePlannable } from '@/core/modules/contributions';
 import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -39,7 +39,7 @@ export function useBoard(span: number): BoardData | undefined {
       dayRows: await dayRepo.active().toArray(),
       itemRows: await itemRepo.active().toArray(),
       assignments: await assignmentRepo.active().toArray(),
-      last: (await readMeta<LastRun>(LAST_RUN_KEY)) ?? null,
+      last: (await getMeta<LastRun>(LAST_RUN_KEY)) ?? null,
     }),
     [],
   );

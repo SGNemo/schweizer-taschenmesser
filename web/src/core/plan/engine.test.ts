@@ -403,3 +403,27 @@ describe('blockers (rule 1)', () => {
     expect(shape(plan(withReminder))).toEqual(shape(plan(x)));
   });
 });
+
+describe('council round 1', () => {
+  it('a previous day beyond the horizon counts as no plan: placed in one run, fixpoint holds', () => {
+    const days = week();
+    const items = [item('x', { durationMin: 30 })];
+    const prev = [{ id: 'todos:x#0', date: '2026-11-20', reason: 'new' as const }];
+    const first = plan({ today: MON, days, items, prev, settings: H });
+    expect(first.assignments[0]).toMatchObject({ date: MON, reason: 'new' });
+    expect(first.unplaced).toEqual([]);
+    expect(first.diff.added).toHaveLength(1);
+    const again = plan({ today: MON, days, items, prev: first.assignments, settings: H });
+    expect(shape(again)).toEqual(shape(first));
+  });
+
+  it('a pin beats a date that only says "not before"', () => {
+    const r = plan({
+      today: MON,
+      days: week(),
+      items: [item('p', { durationMin: 30, earliest: '2026-11-12', pinned: MON })],
+      settings: H,
+    });
+    expect(r.assignments[0]).toMatchObject({ date: MON, reason: 'pinned' });
+  });
+});

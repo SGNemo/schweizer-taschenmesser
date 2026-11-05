@@ -72,7 +72,8 @@ export function defaultDeps(): SyncServiceDeps {
 }
 
 const CONFIG_KEY = 'syncConfig';
-const LAST_SYNC_KEY = 'sync.lastSyncAt';
+/** `_meta` key of the last successful round's time; written after every round (consumers re-read the gate on it). */
+export const LAST_SYNC_KEY = 'sync.lastSyncAt';
 export const MIN_PASSPHRASE_LENGTH = 12;
 
 /* ------------------------------ config persistence ------------------------------ */
@@ -91,6 +92,8 @@ async function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Pr
 
 async function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
   await database.table('_secrets').delete(CONFIG_KEY);
+  // The flag describes the connection that is gone now.
+  await database.table('_meta').delete(PULL_COMPLETE_KEY);
 }
 
 /* ------------------------------------ syncing ------------------------------------ */

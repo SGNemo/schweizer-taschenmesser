@@ -224,6 +224,20 @@ describe('what never carries a mark', () => {
       plannedFor: '2026-11-12',
     });
     expect(parsed.candidates[0]!.data).not.toHaveProperty('planMark');
+    // The same for every technical field (`order`): dropped, no error, nothing else touched.
+    const withOrder = await runtime.parse(
+      'json',
+      {
+        kind: 'json',
+        text: JSON.stringify([
+          { collection: 'task', title: 'Mit Reihenfolge', order: 7, priority: 2 },
+        ]),
+      },
+      { today: TODAY, options: {}, batchId: 'c' },
+    );
+    expect(withOrder.candidates[0]!.error).toBeUndefined();
+    expect(withOrder.candidates[0]!.data).toMatchObject({ title: 'Mit Reihenfolge', priority: 2 });
+    expect(withOrder.candidates[0]!.data.order).not.toBe(7);
   });
 
   it('a write-back that touches only plannedFor/planMark is no automation event; completed still is', () => {
