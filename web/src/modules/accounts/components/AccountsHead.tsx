@@ -27,25 +27,21 @@ function useMinutesToLock(active: boolean): number | undefined {
 
 /**
  * Head of the vault (`tresor`, identity v3.1): the door from the signature library at slot size S, the state beside
- * it as plain text and, while unlocked, when the idle lock fires. Shows nothing about the content.
+ * it in the same slot as plain text (one line on the phone too) and, while unlocked, when the idle lock fires. Shows nothing about the content.
  */
 export function AccountsHead({ unlocked }: { unlocked: boolean }) {
   const min = useMinutesToLock(unlocked);
   return (
-    <>
-      <HeroSlot area="figure">
-        <p className={styles.text} data-testid="vault-door" data-state={unlocked ? 'open' : 'shut'}>
-          <span className={styles.state}>
-            {unlocked ? t.accounts.head.unlocked : t.accounts.head.locked}
-          </span>
-          {unlocked && min !== undefined ? (
-            <span className={styles.sub}>{t.accounts.head.autoLock(min)}</span>
-          ) : null}
-        </p>
-      </HeroSlot>
-      <HeroSlot area="signature">
-        <Signature id="vaultDoor" size="S" />
-      </HeroSlot>
-    </>
+    <HeroSlot area="signature">
+      <Signature id="vaultDoor" size="S" />
+      <p className={styles.text} data-testid="vault-door" data-state={unlocked ? 'open' : 'shut'}>
+        <span className={styles.state}>
+          {unlocked ? t.accounts.head.unlocked : t.accounts.head.locked}
+        </span>
+        {unlocked && min !== undefined ? (
+          <span className={styles.sub}>{t.accounts.head.autoLock(min)}</span>
+        ) : null}
+      </p>
+    </HeroSlot>
   );
 }

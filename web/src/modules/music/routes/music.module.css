@@ -402,8 +402,9 @@
   height: 100%;
   background: var(--text-muted);
 }
+/* Phone: a smaller cover keeps the head short now that the player sits below it (C10). */
 @media (max-width: 899px) {
   .coverLarge {
-    width: 8rem;
+    width: 5.5rem;
   }
 }

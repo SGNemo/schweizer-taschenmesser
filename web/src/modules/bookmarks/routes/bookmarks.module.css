@@ -18,14 +18,20 @@
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--module-color) 6%, var(--surface-2, var(--surface)));
 }
-/* The pinboard from the library at slot M: three cards, about 120 px high beside the figure (G06); smaller on the phone,
-   still three cards. */
+/* The pinboard from the library at slot M: three cards, about 120 px high beside the figure (G06); on the phone one card
+   on its board (G02): the board stays, only the second and third note step back. */
 .pinboard {
   display: inline-grid;
   zoom: 1.5;
 }
 @media (max-width: 899px) {
   .pinboard {
-    zoom: 0.85;
+    zoom: 1;
+  }
+  .pinboard [data-signature='pinboard'] {
+    width: 5rem;
+  }
+  .pinboard [data-signature='pinboard'] > i:nth-child(n + 2) {
+    display: none;
   }
 }

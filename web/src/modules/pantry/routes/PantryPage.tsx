@@ -151,7 +151,7 @@ export default function PantryPage() {
         </Button>
         <StartDataMenu moduleId="pantry" />
       </PageHeader>
-      <PantryHead counts={counts} beforeJump={() => setFilter('all')} />
+      <PantryHead counts={counts} />
       <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
