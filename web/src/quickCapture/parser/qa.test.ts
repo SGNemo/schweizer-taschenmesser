@@ -196,3 +196,32 @@ describe('amounts in another currency keep their code (X21)', () => {
     expect(parse('Plank 30 sek').fields.amountMinor).toBeUndefined();
   });
 });
+
+describe('24:00 is the end of the day (X36)', () => {
+  it('as an end time it is 23:59 and leaves the title', () => {
+    const r = parse('Zahnarzt morgen 12:00 bis 24:00');
+    expect(r.fields).toMatchObject({
+      title: 'Zahnarzt',
+      date: '2026-10-30',
+      time: '12:00',
+      endTime: '23:59',
+    });
+    expect(parse('Feier 20 bis 24 Uhr').fields).toMatchObject({ time: '20:00', endTime: '23:59' });
+  });
+
+  it('as a start time it is 00:00 of the next day', () => {
+    for (const text of ['Party morgen 24 Uhr', 'Party morgen 24:00']) {
+      expect(parse(text).fields, text).toMatchObject({
+        title: 'Party',
+        date: '2026-10-31',
+        time: '00:00',
+      });
+    }
+    expect(parse('Party 24 Uhr').fields).toMatchObject({ date: '2026-10-30', time: '00:00' });
+  });
+
+  it('other hours past 23 stay text', () => {
+    expect(parse('Zahnarzt 12:00 bis 25:00').fields.endTime).toBeUndefined();
+    expect(parse('Party 24:30').fields.time).toBeUndefined();
+  });
+});

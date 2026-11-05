@@ -17,9 +17,11 @@ export function extractEndTime(s: Scan): string | undefined {
   const m = RANGE_RE.exec(s.t);
   if (!m || !(m[2] || m[3] || m[5] || m[6])) return undefined;
   const [h1, m1, h2, m2] = [Number(m[1]), Number(m[2] ?? 0), Number(m[4]), Number(m[5] ?? 0)];
-  if (!ok(h1, m1) || !ok(h2, m2)) return undefined;
+  // "bis 24:00" / "bis 24 Uhr" ends with the day: 23:59, the last valid clock time (X36).
+  const midnight = h2 === 24 && m2 === 0;
+  if (!ok(h1, m1) || !(ok(h2, m2) || midnight)) return undefined;
   const start = `${m[1]}${m[2] ? `:${m[2]}` : ''} Uhr`;
   s.t = `${s.t.slice(0, m.index)} ${start} ${s.t.slice(m.index + m[0].length)}`;
   const p = (n: number) => String(n).padStart(2, '0');
-  return `${p(h2)}:${p(m2)}`;
+  return midnight ? '23:59' : `${p(h2)}:${p(m2)}`;
 }

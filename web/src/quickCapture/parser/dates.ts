@@ -106,13 +106,22 @@ export interface DateTimeState {
   relative?: boolean;
   /** A clock time of 1–12 without am/pm ("um 3", "halb vier"): 03:00 or 15:00 is the caller's call. */
   twelveHour?: boolean;
+  /** "24 Uhr" was read as 00:00: the date moves to the next day. */
+  nextDay?: boolean;
 }
 
 const num = (s: string | undefined): number => Number(s);
 const validHour = (h: number, min: number): boolean => h >= 0 && h <= 23 && min >= 0 && min <= 59;
 
 function setTime(st: DateTimeState, h: number, min: number, approx = false): boolean {
-  if (st.time !== undefined || !validHour(h, min)) return false;
+  if (st.time !== undefined) return false;
+  // "morgen 24 Uhr" is midnight at the end of that day: 00:00 of the next one (X36).
+  if (h === 24 && min === 0) {
+    st.time = '00:00';
+    st.nextDay = true;
+    return true;
+  }
+  if (!validHour(h, min)) return false;
   st.time = fmtTime(h, min);
   if (approx) st.notes.add('approx-time');
   return true;
@@ -434,5 +443,7 @@ export function extractDateTime(s: Scan, now: Date): DateTimeState {
   extractClockTime(s, st);
   extractDate(s, st, today);
   extractDayPart(s, st);
+  // Without a date the caller's default (today or tomorrow by the clock) already lands right.
+  if (st.nextDay && st.date) st.date = addDays(st.date, 1);
   return st;
 }
