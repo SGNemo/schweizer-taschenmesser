@@ -68,9 +68,10 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // The reason sits behind „Warum hier?“.
+    // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
+    await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Warum hier?' }).first().click();
-    await expect(today(page)).toContainText('muss bis Do fertig sein');
+    await expect(today(page)).toContainText('neu, nach Priorität');
   });
 
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {

@@ -197,9 +197,11 @@ export default function PlannerPage() {
         }
         menu={rowMenu(row, day.date)}
         menuLabel={t.planner.row.menu(row.title)}
-        onSwipeRight={row.entry ? () => void markDone(row.entry!, titles) : undefined}
+        // Swipes only in the one-day layout: a swipeable row clips sideways, and in a narrow column the
+        // ⋯ menu is wider than the row.
+        onSwipeRight={!wide && row.entry ? () => void markDone(row.entry!, titles) : undefined}
         swipeRightLabel={t.planner.row.done}
-        onSwipeLeft={row.entry ? () => void later(row.entry!, titles) : undefined}
+        onSwipeLeft={!wide && row.entry ? () => void later(row.entry!, titles) : undefined}
         swipeLeftLabel={t.planner.row.later}
       />
     );

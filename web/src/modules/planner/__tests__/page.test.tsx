@@ -32,18 +32,16 @@ beforeEach(async () => {
     '_modules',
   ])
     await db.table(t).clear();
-  await db
-    .table('_modules')
-    .put({
-      id: 'todos',
-      enabled: true,
-      dataPolicy: null,
-      createdAt: 1,
-      updatedAt: 1,
-      deviceId: 't',
-      deletedAt: null,
-      _f: {},
-    });
+  await db.table('_modules').put({
+    id: 'todos',
+    enabled: true,
+    dataPolicy: null,
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 't',
+    deletedAt: null,
+    _f: {},
+  });
 });
 afterEach(() => setNow());
 

@@ -184,9 +184,3 @@
 .blockerMin {
   width: 6rem;
 }
-
-/* The first two columns sit at the page's left edge: their row menus open to the right, so nothing leaves the page. */
-.column:nth-child(-n + 2) [role='menu'] {
-  inset-inline-end: auto;
-  inset-inline-start: 0;
-}
