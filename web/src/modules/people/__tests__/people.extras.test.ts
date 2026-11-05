@@ -78,6 +78,32 @@ describe('contacts and calendar files', () => {
     ]);
   });
 
+  it('decodes QUOTED-PRINTABLE names of Android exports, also across soft line breaks (X35)', () => {
+    const vcf = [
+      'BEGIN:VCARD',
+      'VERSION:2.1',
+      'FN;ENCODING=QUOTED-PRINTABLE:J=C3=BCrgen',
+      'BDAY:1970-05-01',
+      'END:VCARD',
+      'BEGIN:VCARD',
+      'VERSION:2.1',
+      'N;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:M=C3=BCller-L=C3=BC=',
+      'denscheid;Bj=C3=B6rn;;;',
+      'BDAY:--07-14',
+      'END:VCARD',
+      'BEGIN:VCARD',
+      'FN;CHARSET=ISO-8859-1;QUOTED-PRINTABLE:Fran=E7oise =',
+      'L=E9vy',
+      'BDAY:1990-01-02',
+      'END:VCARD',
+    ].join('\r\n');
+    expect(parseVcf(vcf).map((p) => p.name)).toEqual([
+      'Jürgen',
+      'Björn Müller-Lüdenscheid',
+      'Françoise Lévy',
+    ]);
+  });
+
   it('turns yearly all-day events of a birthday calendar into people, without the year', () => {
     const ics = [
       'BEGIN:VCALENDAR',
