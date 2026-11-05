@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { backSettled, ready } from './helpers';
 
 const ENEX = `<?xml version="1.0" encoding="UTF-8"?>
 <en-export application="Evernote"><note><title>Rezept &amp; Tipps</title>
@@ -27,8 +27,9 @@ test('Aus anderer App importieren: Evernote erkannt → Vorschau → Bericht →
   await wizard.getByRole('button', { name: '1 Eintrag importieren' }).click();
   await expect(wizard.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
 
-  // Undo takes it back again.
+  // Undo takes it back again. The closing wizard pops its history entry first (backSettled), else the goto is aborted.
   await wizard.getByRole('button', { name: 'Rückgängig machen' }).click();
+  await backSettled(page);
   await page.goto('/notes');
   await expect(page.getByText('Rezept & Tipps')).toHaveCount(0);
 });

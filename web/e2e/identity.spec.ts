@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { enable, openAppearanceGroup, ready, showAllWidgets } from './helpers';
+import { enable, openAppearanceGroup, ready, showAllWidgets, showPreview } from './helpers';
 
 /** Every module wears its identity: hue on the widget card and the module frame, icon chip next to the title. */
 test.describe('Module identity', () => {
@@ -109,6 +109,7 @@ test.describe('Module identity', () => {
     // Phone: the slot shrinks, it never hides; no signature in the head is display: none. Notes and chat fill the
     // slot with their own blocks, which used to hide themselves below 720 px.
     await page.setViewportSize({ width: 1280, height: 800 });
+    await showPreview(page); // chat is a preview module: visible in the library only with "In Arbeit anzeigen"
     await enable(page, 'notes');
     await enable(page, 'chat');
     await page.setViewportSize({ width: 412, height: 915 });
