@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engine-Prototyp mit drei Szenarien, Vertrag `contributions.plannable`, fünf Paket-Prompts in `docs/design/plan/PACKAGES.md`; Svens Antworten (lokal-only, Kalender-Chips, eigenes Modul, Minimum-Paket 1) in `docs/decisions/plan.md`; Paket 1 `feat/plan-core` startet nach dem Merge von `feat/identity-v3-frame`.
+Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engine-Prototyp mit fünf Szenarien, Vertrag `contributions.plannable`, fünf Paket-Prompts in `docs/design/plan/PACKAGES.md`; Svens Antworten (lokal-only, Kalender-Chips, eigenes Modul, Minimum-Paket 1) in `docs/decisions/plan.md`; Paket 1 `feat/plan-core` startet nach dem Merge von `feat/identity-v3-frame`.
 
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 

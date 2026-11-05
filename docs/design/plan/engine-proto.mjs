@@ -39,12 +39,12 @@ export function capacity(day, s) {
 export function toUnits(item, s) {
   if (!item.splittable || item.min <= s.maxSessionMin)
     return [
-      { id: `${item.id}#1`, itemId: item.id, k: 0, of: 1, min: item.min, item },
+      { id: `${item.id}#0`, itemId: item.id, k: 0, of: 1, min: item.min, item },
     ];
   const of = Math.ceil(item.min / s.maxSessionMin);
   const per = Math.max(s.minSessionMin, Math.ceil(item.min / of));
   return Array.from({ length: of }, (_, k) => ({
-    id: `${item.id}#${k + 1}`,
+    id: `${item.id}#${k}`,
     itemId: item.id,
     k,
     of,
@@ -122,8 +122,8 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       (!u.item.earliest || u.item.earliest <= day.date) &&
       (u.k === 0 ||
         (sameDay
-          ? (placed.get(`${u.itemId}#${u.k}`)?.date ?? "9999") <= day.date
-          : (placed.get(`${u.itemId}#${u.k}`)?.date ?? "9999") < day.date));
+          ? (placed.get(`${u.itemId}#${u.k - 1}`)?.date ?? "9999") <= day.date
+          : (placed.get(`${u.itemId}#${u.k - 1}`)?.date ?? "9999") < day.date));
 
     // 1. pinned: the user nailed the item to this day; capacity is not asked (overload is counted).
     for (const u of units.filter(
@@ -169,7 +169,13 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       return !p || p.date > day.date ? 0 : p.date === day.date ? 2 : 1;
     };
     const rest = units
-      .filter((u) => eligible(u) && !must.includes(u))
+      // A unit planned for a later day is not pulled forward here: only rule 4 (deadline) may pull.
+      .filter(
+        (u) =>
+          eligible(u) &&
+          !must.includes(u) &&
+          !((prevByUnit.get(u.id)?.date ?? "") > day.date),
+      )
       .sort(
         (a, b) =>
           b.item.prio - a.item.prio ||
@@ -208,8 +214,10 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
         });
       }
     }
+    const plannedMin = todayList.reduce((n, a) => n + a.min, 0);
     load[day.date] = {
       usable: cap.usable,
+      free: Math.max(0, cap.usable - plannedMin),
       raw: cap.raw,
       planned: todayList.reduce((n, a) => n + a.min, 0),
       over: Math.max(0, todayList.reduce((n, a) => n + a.min, 0) - cap.usable),
@@ -310,7 +318,7 @@ export function print(title, input, result) {
     const u = result.assignments.find((a) => a.unitId === unitId);
     const of = input.items.find((i) => i.id === id);
     const parts = of && toUnits(of, { ...DEFAULTS, ...input.settings }).length;
-    return `${titles.get(id)}${parts > 1 ? ` (${k}/${parts})` : ""}`;
+    return `${titles.get(id)}${parts > 1 ? ` (Teil ${Number(k) + 1}/${parts})` : ""}`;
   };
   console.log(
     `\n=== ${title} (heute ${weekday(input.today)} ${input.today}) ===`,
@@ -321,7 +329,7 @@ export function print(title, input, result) {
       .map((b) => `${b.label} ${fmt(b.min)}`)
       .join(", ");
     console.log(
-      `${weekday(date)} ${date} · frei ${fmt(l.raw)} (${fmt(l.usable)} planbar)${blockers ? ` · Blocker: ${blockers}` : ""} · geplant ${fmt(l.planned)}${l.over ? ` · ${fmt(l.over)} über dem Puffer` : ""}`,
+      `${weekday(date)} ${date} · verfügbar ${fmt(l.raw)} · planbar ${fmt(l.usable)}${blockers ? ` · Blocker: ${blockers}` : ""} · geplant ${fmt(l.planned)} · frei ${fmt(l.free)}${l.over ? ` · ${fmt(l.over)} über dem Puffer` : ""}`,
     );
     for (const a of result.assignments.filter((a) => a.date === date))
       console.log(
@@ -420,7 +428,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const days1 = week(MON, 7);
   block(days1, "2026-11-10", "Zahnarzt", 60);
   block(days1, "2026-11-12", "Teamrunde", 90);
-  const in1 = { today: MON, days: days1, items: ITEMS };
+  const H = { horizonDays: 7 };
+  const in1 = { today: MON, days: days1, items: ITEMS, settings: H };
   const r1 = plan(in1);
   print("S1 Wochenstart", in1, r1);
 
@@ -436,6 +445,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     createdAt: 9,
   });
   const in2 = {
+    settings: H,
     today: "2026-11-10",
     days: days1,
     items: items2,
@@ -447,7 +457,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // S3 – Mittwoch: „Donnerstag frei“ und ein Ding, das bis Donnerstag fertig sein müsste.
   const days3 = days1.map((d) =>
     d.date === "2026-11-12"
-      ? { ...d, availableMin: 0, blockers: [{ label: "frei", min: 0 }] }
+      ? { ...d, availableMin: 0, blockers: [{ label: "Tag frei", min: 0 }] }
       : d,
   );
   const items3 = items2.concat({
@@ -459,6 +469,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     createdAt: 10,
   });
   const in3 = {
+    settings: H,
     today: "2026-11-11",
     days: days3,
     items: items3,
@@ -467,8 +478,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const r3 = plan(in3);
   print("S3 Donnerstag frei + Überlast", in3, r3);
 
+  // S5 – Erledigt macht Platz: nichts rückt von selbst nach vorn (Regel 6).
+  const in5 = {
+    settings: H,
+    today: MON,
+    days: days1,
+    items: ITEMS.map((i) => (i.id === "c" ? { ...i, done: true } : i)),
+    prev: r1.assignments,
+  };
+  const r5 = plan(in5);
+  console.log(
+    `\n=== S5 Erledigt macht Platz (heute Mo ${MON}) ===\n${r5.diff.moved.length === 0 && r5.diff.removed.length === 1 ? "0 verschoben · 1 erledigt · Montag behält 47 Min + 45 Min frei" : "FEHLER – etwas wurde vorgezogen: " + JSON.stringify(r5.diff.moved)}`,
+  );
+
   // S4 – Ferne Frist: ein Ding mit harter Frist weit hinter dem Horizont wird nicht erzwungen.
   const in4 = {
+    settings: H,
     today: MON,
     days: days1,
     items: ITEMS.concat({
