@@ -448,6 +448,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           return t.focus.settings.clearHistory;
         },
       },
+      {
+        key: 'colors',
+        get label() {
+          return t.focus.settings.colors;
+        },
+        get description() {
+          return t.focus.settings.colorsHint;
+        },
+      },
     ],
     reset: focusReset(FOCUS_RESET_KEYS),
     render: () => <FocusSection />,

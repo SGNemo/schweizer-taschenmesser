@@ -24,8 +24,11 @@ export function KpiWidget({
   unit?: string;
   /** Small caption above the number ("Kontostand"). */
   label?: string;
-  /** Required: every figure carries its context line. */
-  context: string;
+  /**
+   * The context line under the figure. Optional here only because existing widgets compute it in the same
+   * branch as the value; a new widget builds on `KennzahlBody`, where it is required.
+   */
+  context?: string;
   trend?: KpiTrend;
   series?: readonly number[];
   seriesLabel?: string;
@@ -37,7 +40,7 @@ export function KpiWidget({
           value={value}
           unit={unit}
           label={label}
-          context={context}
+          context={context ?? ''}
           trend={trend}
           series={series}
           seriesLabel={seriesLabel}

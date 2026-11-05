@@ -10,8 +10,8 @@ en: Module heads show their mark in a fixed place next to the figure or title; t
 type: changed
 area: app
 breaking: false
-de: Übersicht und Seitenleiste ruhiger: Karten behalten ihre Höhe, Bereichsgruppen sind neutral; Einstellungs- und Bibliotheksköpfe ohne Muster; „Fokus & Aufmerksamkeit“ verlinkt zu den Modulfarben.
-en: Calmer overview and sidebar: cards keep their height, area groups are neutral; settings and library heads without pattern; “Focus & attention” links to the module colours.
+de: Übersicht und Seitenleiste wirken ruhiger; unter „Fokus & Aufmerksamkeit“ führt ein Link zu den Modulfarben.
+en: Calmer overview and sidebar; “Focus & attention” now links to the module colours.
 ---
 
 ---

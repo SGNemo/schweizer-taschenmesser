@@ -112,8 +112,9 @@ test.describe('Module identity', () => {
     await showPreview(page); // chat is a preview module: visible in the library only with "In Arbeit anzeigen"
     await enable(page, 'notes');
     await enable(page, 'chat');
+    await enable(page, 'timetrack');
     await page.setViewportSize({ width: 412, height: 915 });
-    for (const path of ['/finance', '/calendar', '/todos', '/notes', '/chat']) {
+    for (const path of ['/finance', '/calendar', '/todos', '/notes', '/chat', '/timetrack']) {
       await ready(page, path);
       const frame = page.getByTestId('module-frame');
       await expect(frame.getByTestId('module-signature'), `${path} @412`).toBeVisible();
@@ -132,6 +133,16 @@ test.describe('Module identity', () => {
           .map((e) => e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0]),
       );
       expect(hidden, `${path} @412: hidden parts of the signature`).toEqual([]);
+      // In the stacked phone row the slot is as tall as its block, never a flex basis turned into height.
+      const slotHeight = await frame.getByTestId('module-signature').evaluate((el) => {
+        const own = el.getBoundingClientRect().height;
+        const inner = Math.max(0, ...[...el.children].map((c) => c.getBoundingClientRect().height));
+        return { own, inner };
+      });
+      expect(
+        slotHeight.own - slotHeight.inner,
+        `${path} @412: the slot adds empty height around its block`,
+      ).toBeLessThanOrEqual(16);
     }
   });
 

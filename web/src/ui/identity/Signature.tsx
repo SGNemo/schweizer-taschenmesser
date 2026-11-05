@@ -38,10 +38,10 @@ export const SIGNATURE_BLOCKS: Partial<
   arrowProgress: ArrowBand,
   masthead: Masthead,
   // Decoration only: the strip's own role/label ("no appointments") would be a false statement here.
-  hourStrip: () => (
-    <span aria-hidden="true">
+  hourStrip: ({ size }) => (
+    <div aria-hidden="true" data-signature="hourStrip" data-size={size}>
       <HourStrip events={[]} />
-    </span>
+    </div>
   ),
 };
 

@@ -130,7 +130,7 @@
 .signature[data-slot='L'] {
   /* The frame's own L default (the calendar leaf) takes the whole column on its own row; a page's block flows beside
      the figure and may grow to the column (the music cover and the timer strip keep their place). */
-  flex: 1 1 20rem;
+  flex: 1 1 var(--slot-l-min);
   max-width: 100%;
 }
 .signature[data-slot='L'][data-default='true'] {
@@ -213,7 +213,9 @@
   .signature[data-slot='S'][data-default='true'] {
     zoom: 0.85;
   }
-  .signature[data-slot='M'] {
+  .signature[data-slot='M'],
+  .signature[data-slot='L'] {
+    /* In the column the basis would be a height: the slot takes what its block needs. */
     flex-basis: auto;
     max-width: 100%;
   }

@@ -90,6 +90,7 @@
   --head-h-compact: 6rem;
   --slot-s: 4rem;
   --slot-m: 36rem;
+  --slot-l-min: 20rem;
   --slot-extra: 12rem;
 
   /* Layer order (never write a bare z-index) */

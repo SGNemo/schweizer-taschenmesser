@@ -117,7 +117,7 @@ export function checkSignatureUse(
 ): string[] {
   const facts = identityFacts(id, manifest);
   if (facts.retired || facts.signature !== 'none') return [];
-  return pageSources.some((s) => /<HeroSlot\b[^>]*\barea=["']signature["']/.test(s))
+  return pageSources.some((s) => /<HeroSlot\b[^>]*\barea=\{?["']signature["']\}?/.test(s))
     ? [
         `${id}: identity.signature is "none" but the page fills the signature slot – name the signature (SIGNATURES) so the frame and the settings head show it`,
       ]

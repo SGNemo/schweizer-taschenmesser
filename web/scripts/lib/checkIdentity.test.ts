@@ -125,6 +125,7 @@ describe('identity checks (identity v3.1)', () => {
     expect(
       checkSignatureUse('x', manifest, ['<div />', '<HeroSlot area="signature">']),
     ).toHaveLength(1);
+    expect(checkSignatureUse('x', manifest, ["<HeroSlot area={'signature'}>"])).toHaveLength(1);
     // A figure or a notice is not the signature slot.
     expect(checkSignatureUse('x', manifest, ['<HeroSlot area="figure">', '<HeroSlot>'])).toEqual(
       [],

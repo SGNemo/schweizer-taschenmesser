@@ -140,21 +140,14 @@ export function AvatarRing({ size }: BlockProps) {
   );
 }
 
-/** Two gauges with their needles at rest: a shape, never a reading. */
+/** Two gauges, track only, needles at rest: a shape, never a reading. */
 export function Gauges({ size }: BlockProps) {
   return (
     <div {...block('gauges', size)}>
-      {[0, 1].map((angle) => (
-        <svg key={angle} viewBox="0 0 48 30" className={styles.gauge}>
+      {['a', 'b'].map((key) => (
+        <svg key={key} viewBox="0 0 48 30" className={styles.gauge}>
           <path d="M4 26a20 20 0 0 1 40 0" className={styles.track} />
-          <path d="M4 26a20 20 0 0 1 20-20" />
-          <line
-            x1="24"
-            y1="26"
-            x2={24 + 15 * Math.cos((Math.PI * (180 + angle)) / 180)}
-            y2={26 + 15 * Math.sin((Math.PI * (180 + angle)) / 180)}
-            className={styles.needle}
-          />
+          <line x1="24" y1="26" x2="9" y2="26" className={styles.needle} />
         </svg>
       ))}
     </div>

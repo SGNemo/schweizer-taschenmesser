@@ -15,6 +15,8 @@ export interface KennzahlTrend {
  * The `kennzahl` widget shape (identity v3.1, F05): one figure with unit, always a context line (a number without
  * context says little), at size m the trend, at size l the sparkline. Pure shape: loading and empty states come
  * from `WidgetBody` around it; `KpiWidget` is that pair. The finance "Kontostand" widget is the first example.
+ * Reading load: leave `label` out when it would repeat the widget's title, and never let `context` restate the
+ * figure ("6 Feeds" under "6") – say what the figure means instead.
  */
 export function KennzahlBody({
   value,
