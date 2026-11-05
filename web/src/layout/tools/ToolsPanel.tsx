@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -13,9 +13,11 @@ import {
   filterTools,
   groupByCategory,
   orderForPanel,
+  panelFocus,
   pickInitialTool,
   stepIndex,
   toolForDigit,
+  type PanelFocus,
 } from './panelLogic';
 import { ToolPlate } from './ToolPlate';
 import { canDetachTool, detachTool, ToolStage } from './ToolStage';
@@ -100,21 +102,62 @@ export function ToolsPanel() {
   );
   const scratchOn = !!states?.['notes'];
 
+  const panelRef = useRef<HTMLDivElement>(null);
   const sideRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const choose = (tool: ToolManifest, focusTool = phone) => {
+
+  /**
+   * Moves focus to `target` once it is on screen: the tool list and the tool body load lazily, so it looks again for
+   * up to a second. It never takes focus back from where the user has gone meanwhile (only from where it was when the
+   * pick happened, the dialog head, the landing pane or nowhere). `now`: look in this frame already (on opening); a pick
+   * waits for the new tool's render.
+   */
+  const focusIn = (target: PanelFocus | null, now = false) => {
+    if (!target) return;
+    if (target === 'search') {
+      searchRef.current?.focus();
+      return;
+    }
+    const from = document.activeElement;
+    let frames = 0;
+    const step = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      const stage = stageRef.current?.querySelector<HTMLElement>('section') ?? null;
+      const pane = panel.dataset.pane === 'list' ? sideRef.current : stage;
+      const active = document.activeElement;
+      const free =
+        !active ||
+        active === from ||
+        active === document.body ||
+        active === pane ||
+        !panel.contains(active);
+      if (!free) return;
+      const field =
+        target === 'tool' ? stage?.querySelector<HTMLElement>('[data-autofocus]') : null;
+      if (field) {
+        field.focus();
+        return;
+      }
+      if (pane && active !== pane) pane.focus({ preventScroll: true });
+      if ((target === 'tool' || !pane) && frames++ < 60) requestAnimationFrame(step);
+    };
+    if (now) step();
+    else requestAnimationFrame(step);
+  };
+
+  /** `byKeyboard`: Alt+1…9, Enter in the search or a tile pressed with the keyboard; focus follows into the tool. */
+  const choose = (tool: ToolManifest, byKeyboard = false) => {
     setBlocked(false);
     openTools(tool.id);
     setListView(false);
-    // On a phone the list disappears behind the tool; from the keyboard the focus follows too.
-    if (focusTool) focusStage();
+    // On a phone the list disappears behind the tool, so focus always moves; on the desktop only from the keyboard.
+    focusIn(panelFocus({ phone, toolAsked: true, byKeyboard }));
   };
-  const focusStage = () =>
-    requestAnimationFrame(() => stageRef.current?.querySelector<HTMLElement>('section')?.focus());
 
-  // Alt+1…9 from anywhere in the panel (also out of a field), by key position, not by character.
-  const onPanelKey = (e: KeyboardEvent) => {
+  // Alt+1…9 from anywhere in the panel dialog (also out of a field or from its head), by key position, not by character.
+  const onPanelKey = (e: globalThis.KeyboardEvent) => {
     if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const tool = toolForDigit(ordered, e.code);
     if (!tool) return;
@@ -123,6 +166,42 @@ export function ToolsPanel() {
     e.preventDefault();
     choose(tool, true);
   };
+  const panelKey = useRef(onPanelKey);
+  useLayoutEffect(() => {
+    panelKey.current = onPanelKey;
+  });
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      const dialog = panelRef.current?.closest('dialog');
+      if (dialog && e.target instanceof Node && dialog.contains(e.target)) panelKey.current(e);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [toolsOpen]);
+
+  // Opening: the element that had focus is the trigger. Focus goes to the target of `panelFocus` (the dialog has
+  // already put it on the search, or on its first button where nothing is marked). Closing: the native dialog
+  // gives focus back to the trigger; if that is gone (the palette, a sheet), the page's main region takes it.
+  const opener = useRef<Element | null>(null);
+  useLayoutEffect(() => {
+    if (toolsOpen) opener.current = document.activeElement;
+  }, [toolsOpen]);
+  useEffect(() => {
+    if (toolsOpen) {
+      focusIn(panelFocus({ phone, toolAsked: activeTool !== null, byKeyboard: true }), true);
+      return;
+    }
+    const back = opener.current;
+    if (back === null) return; // not opened yet (first render)
+    opener.current = null;
+    const lost = !document.activeElement || document.activeElement === document.body;
+    if (!lost) return;
+    if (back instanceof HTMLElement && back !== document.body && back.isConnected)
+      back.focus({ preventScroll: true });
+    else document.getElementById('main')?.focus({ preventScroll: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the panel opens or closes
+  }, [toolsOpen]);
   const buttons = () =>
     Array.from(sideRef.current?.querySelectorAll<HTMLButtonElement>('button[data-tool-btn]') ?? []);
   const onSideKey = (e: KeyboardEvent) => {
@@ -165,7 +244,8 @@ export function ToolsPanel() {
           data-tool-btn=""
           aria-current={numbered && tool.id === shownId ? 'true' : undefined}
           aria-keyshortcuts={numbered && n <= 9 ? `Alt+${n}` : undefined}
-          onClick={() => choose(tool)}
+          // `detail` 0: pressed with Enter or Space, not clicked.
+          onClick={(e) => choose(tool, e.detail === 0)}
         >
           <ToolPlate tool={tool} size="sm" />
           <span className={styles.tileName}>{tool.name}</span>
@@ -205,15 +285,17 @@ export function ToolsPanel() {
     >
       {toolsOpen ? (
         <div
+          ref={panelRef}
           className={styles.panel}
           // A phone shows no empty list while the tool settings load (it would turn into the last tool a moment later).
           data-pane={phone ? (phoneTool || !tools ? 'tool' : 'list') : 'both'}
-          onKeyDown={onPanelKey}
         >
           <nav
             ref={sideRef}
             className={styles.side}
             aria-label={t.tools.panel.list}
+            // Landing spot on a phone that shows the list (focus without a field, so no on-screen keyboard).
+            tabIndex={-1}
             onKeyDown={onSideKey}
           >
             <input
@@ -224,7 +306,8 @@ export function ToolsPanel() {
               placeholder={tComfort.get().tools.searchPlaceholder}
               title={t.tools.panel.searchHint}
               value={query}
-              data-autofocus={phone ? undefined : ''}
+              // Desktop opened without a tool asked for: type to find. Otherwise `panelFocus` picks the target.
+              data-autofocus={!phone && activeTool === null ? '' : undefined}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onSearchKey}
             />
