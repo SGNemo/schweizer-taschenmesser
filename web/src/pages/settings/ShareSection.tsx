@@ -22,7 +22,9 @@ import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tShare } from '@/strings.share';
+import { tSettingsConnect } from '@/strings.settingsConnect';
 import { Button, Card, Checkbox, NoReadAid, TextField } from '@/ui';
+import { Actions, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 const moduleLabel = (id: string): string => allManifests.find((m) => m.id === id)?.name ?? id;
@@ -151,6 +153,7 @@ export function ShareSection() {
     setText(file ? await file.text() : undefined);
   }
 
+  const sc = tSettingsConnect.use().share;
   const changed = opened?.plan.modules.filter((m) => m.added + m.replaced > 0) ?? [];
   return (
     <Card>
@@ -159,134 +162,139 @@ export function ShareSection() {
 
         <SharePairs version={version} onChanged={() => setVersion((v) => v + 1)} />
 
-        <fieldset className={styles.fieldset} data-testid="share-once-modules">
-          <legend className={styles.legend}>{n.modules}</legend>
-          {modules.map((m) => (
-            <Checkbox
-              key={m.id}
-              label={m.name}
-              checked={chosen.includes(m.id)}
-              onChange={(e) =>
-                setChosen((cur) =>
-                  e.target.checked ? [...cur, m.id] : cur.filter((x) => x !== m.id),
-                )
-              }
-            />
-          ))}
-          <p className={styles.muted}>{n.modulesHint}</p>
-        </fieldset>
-
-        <div>
-          <p className={styles.legend}>{n.code}</p>
-          <NoReadAid>
-            <p data-testid="share-code">
-              <strong>{code}</strong>
-            </p>
-          </NoReadAid>
-          <p className={styles.muted}>{n.codeHint}</p>
-        </div>
-        {error ? (
-          <p role="alert" className={styles.error}>
-            {error}
-          </p>
-        ) : null}
-        <div className={styles.row}>
-          <Button variant="primary" disabled={busy || !code} onClick={() => void save()}>
-            {n.save}
-          </Button>
-          <Button disabled={busy} onClick={() => void newPairingCode().then(setCode)}>
-            {n.newCode}
-          </Button>
-        </div>
-
-        <p className={styles.legend}>{n.openTitle}</p>
-        <div>
-          <label htmlFor="share-file" className={styles.legend}>
-            {n.file}
-          </label>
-          <br />
-          <input
-            id="share-file"
-            type="file"
-            accept="application/json,.json"
-            className={styles.file}
-            onChange={(e) => void onFile(e)}
-          />
-        </div>
-        {scanning ? (
-          <QrScanner
-            onStop={() => setScanning(false)}
-            onText={(received) => {
-              setScanning(false);
-              setOpened(undefined);
-              setOpenError('');
-              setText(received);
-            }}
-          />
-        ) : canScanQr() ? (
-          <div className={styles.row}>
-            <Button onClick={() => setScanning(true)}>{n.qrScan}</Button>
-          </div>
-        ) : (
-          <p className={styles.muted}>{n.qrUnsupported}</p>
-        )}
-        {knownPair ? <p className={styles.muted}>{n.known(knownPair.name)}</p> : null}
-        {newPairId ? <p className={styles.muted}>{n.pairNew}</p> : null}
-        {newPairId ? (
-          <TextField
-            label={n.pairNameJoin}
-            value={joinName}
-            onChange={(e) => setJoinName(e.target.value)}
-          />
-        ) : null}
-        {knownPair ? null : (
-          <TextField
-            label={n.openCode}
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={openCode}
-            onChange={(e) => {
-              setOpenCode(e.target.value);
-              setOpened(undefined);
-            }}
-          />
-        )}
-        {openError ? (
-          <p role="alert" className={styles.error} data-testid="share-error">
-            {openError}
-          </p>
-        ) : null}
-        <div className={styles.row}>
-          <Button
-            disabled={busy || !text || (!knownPair && !openCode.trim())}
-            onClick={() => void check()}
+        <Step title={sc.stepOnce} hint={sc.stepOnceHint}>
+          <fieldset
+            className={`${styles.fieldset} ${styles.checkGrid}`}
+            data-testid="share-once-modules"
           >
-            {busy && !opened ? n.checking : n.check}
-          </Button>
-        </div>
-        {opened ? (
-          <div data-testid="share-plan">
-            <p className={styles.legend}>{n.preview}</p>
-            {changed.length === 0 ? (
-              <p className={styles.muted}>{n.previewNothing}</p>
-            ) : (
-              <ul className={styles.muted}>
-                {changed.map((m) => (
-                  <li key={m.module}>
-                    {t.backup.previewRow(moduleLabel(m.module), m.added, m.replaced, 0)}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p className={styles.muted}>{n.mergeHint}</p>
-            <div className={styles.row}>
-              <Button variant="primary" disabled={busy} onClick={() => void merge()}>
-                {busy ? n.merging : n.merge}
-              </Button>
-            </div>
+            <legend className={styles.legend}>{n.modules}</legend>
+            {modules.map((m) => (
+              <Checkbox
+                key={m.id}
+                label={m.name}
+                checked={chosen.includes(m.id)}
+                onChange={(e) =>
+                  setChosen((cur) =>
+                    e.target.checked ? [...cur, m.id] : cur.filter((x) => x !== m.id),
+                  )
+                }
+              />
+            ))}
+            <p className={styles.muted}>{n.modulesHint}</p>
+          </fieldset>
+
+          <div>
+            <p className={styles.legend}>{n.code}</p>
+            <NoReadAid>
+              <p data-testid="share-code">
+                <strong>{code}</strong>
+              </p>
+            </NoReadAid>
+            <p className={styles.muted}>{n.codeHint}</p>
           </div>
-        ) : null}
+          {error ? (
+            <p role="alert" className={styles.error}>
+              {error}
+            </p>
+          ) : null}
+          <Actions>
+            <Button variant="primary" disabled={busy || !code} onClick={() => void save()}>
+              {n.save}
+            </Button>
+            <Button disabled={busy} onClick={() => void newPairingCode().then(setCode)}>
+              {n.newCode}
+            </Button>
+          </Actions>
+        </Step>
+        <Step title={n.openTitle} hint={sc.stepOpenHint}>
+          <div>
+            <label htmlFor="share-file" className={styles.legend}>
+              {n.file}
+            </label>
+            <br />
+            <input
+              id="share-file"
+              type="file"
+              accept="application/json,.json"
+              className={styles.file}
+              onChange={(e) => void onFile(e)}
+            />
+          </div>
+          {scanning ? (
+            <QrScanner
+              onStop={() => setScanning(false)}
+              onText={(received) => {
+                setScanning(false);
+                setOpened(undefined);
+                setOpenError('');
+                setText(received);
+              }}
+            />
+          ) : canScanQr() ? (
+            <div className={styles.row}>
+              <Button onClick={() => setScanning(true)}>{n.qrScan}</Button>
+            </div>
+          ) : (
+            <p className={styles.muted}>{n.qrUnsupported}</p>
+          )}
+          {knownPair ? <p className={styles.muted}>{n.known(knownPair.name)}</p> : null}
+          {newPairId ? <p className={styles.muted}>{n.pairNew}</p> : null}
+          {newPairId ? (
+            <TextField
+              label={n.pairNameJoin}
+              value={joinName}
+              onChange={(e) => setJoinName(e.target.value)}
+            />
+          ) : null}
+          {knownPair ? null : (
+            <TextField
+              label={n.openCode}
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={openCode}
+              onChange={(e) => {
+                setOpenCode(e.target.value);
+                setOpened(undefined);
+              }}
+            />
+          )}
+          {openError ? (
+            <p role="alert" className={styles.error} data-testid="share-error">
+              {openError}
+            </p>
+          ) : null}
+          <div className={styles.row}>
+            <Button
+              disabled={busy || !text || (!knownPair && !openCode.trim())}
+              onClick={() => void check()}
+            >
+              {busy && !opened ? n.checking : n.check}
+            </Button>
+          </div>
+          {opened ? (
+            <div data-testid="share-plan">
+              <p className={styles.legend}>{n.preview}</p>
+              {changed.length === 0 ? (
+                <p className={styles.muted}>{n.previewNothing}</p>
+              ) : (
+                <ul className={styles.muted}>
+                  {changed.map((m) => (
+                    <li key={m.module}>
+                      {t.backup.previewRow(moduleLabel(m.module), m.added, m.replaced, 0)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className={styles.muted}>{n.mergeHint}</p>
+              <div className={styles.row}>
+                <Button variant="primary" disabled={busy} onClick={() => void merge()}>
+                  {busy ? n.merging : n.merge}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </Step>
       </div>
     </Card>
   );
