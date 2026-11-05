@@ -40,8 +40,11 @@ const runtime: ImporterRuntime = {
         (PACKING_TEMPLATES as readonly string[]).includes(x),
       )) {
         const tpl = s[tplId];
-        // The list candidate gets a fixed id so its items can point at it.
-        const listId = `imp-${ctx.batchId}-${tplId}`;
+        // The list candidate gets a fixed id so its items can point at it. When the list is there
+        // already (imported before), the missing items go into that one, not into a list that the
+        // preview skips as a duplicate.
+        const known = lists.find((l) => key(l.name) === key(tpl.name));
+        const listId = known?.id ?? `imp-${ctx.batchId}-${tplId}`;
         candidates.push({
           collection: 'list',
           id: listId,
@@ -62,6 +65,7 @@ const runtime: ImporterRuntime = {
             label: name,
             detail: tpl.name,
             dedupeKey: key(tpl.name, name),
+            ...(known ? {} : { dependsOn: listId }),
           }),
         );
       }
