@@ -14,8 +14,8 @@ export const MAX_SESSIONS = ['45', '60', '90', '120'] as const;
 /**
  * Synced module settings (CONCEPT §2). This file is loaded with the manifest, so it imports no
  * database code; `prefs.ts` reads the stored values. The number of main items per day reuses `focus.planLimit`
- * (no second setting). `calendarChips` (package 2) and `overloadToast` (package 3) are stored
- * already so later packages add a field, not a migration; nothing reads them yet.
+ * (no second setting). `calendarChips` (one plan chip per day in the calendar, `calendar.ts`) is read since package 2;
+ * `overloadToast` (package 3) is stored already so that package adds a field, not a migration.
  */
 export const plannerSettingsSchema = z.object({
   availableWeekday: z.number().int().min(0).max(1440),
@@ -177,6 +177,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().calendarBlocksHelp;
+      },
+    },
+    {
+      key: 'calendarChips',
+      type: 'boolean',
+      get label() {
+        return s().calendarChips;
+      },
+      get help() {
+        return s().calendarChipsHelp;
       },
     },
     {

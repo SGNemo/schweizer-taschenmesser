@@ -477,6 +477,11 @@
         "label": "Termine blocken Zeit",
         "default": true
       },
+      "calendarChips": {
+        "type": "boolean",
+        "label": "Plan im Kalender zeigen",
+        "default": true
+      },
       "allDayBlocks": {
         "type": "boolean",
         "label": "Ganztägige Termine blocken Zeit",

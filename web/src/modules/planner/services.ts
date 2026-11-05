@@ -29,7 +29,16 @@ import { LAST_SYNC_KEY, syncSettled } from '@/core/sync/service';
 import { now, today } from '@/core/time/now';
 import { forgetUndo, undoable, type UndoEntry } from '@/core/undo';
 import { assignmentRepo, dayRepo, itemRepo, MODULE_ID } from './repo';
-import { LAST_RUN_KEY, restoreSources, runPlanner, type RunDeps, type RunOutcome } from './run';
+import type { PlanOp } from '@/core/plan/instructions';
+import {
+  LAST_RUN_KEY,
+  previewPlanner,
+  restoreSources,
+  runPlanner,
+  type PreviewOutcome,
+  type RunDeps,
+  type RunOutcome,
+} from './run';
 import { getPlannerSettings } from './prefs';
 
 let chain: Promise<unknown> = Promise.resolve();
@@ -132,7 +141,11 @@ export interface UserRun {
  * A user action of the planner UI: `act` and the run it causes (write-backs included) are one undoable
  * action, so the undo in the toast restores everything. Returns the run and the undo entry.
  */
-export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
+export function runUser(
+  label: string,
+  act: () => Promise<void>,
+  opts: { reshuffle?: boolean } = {},
+): Promise<UserRun> {
   // A removal of test data in flight ends first – waited for outside the queue, so `suspendRuns`
   // (which awaits the queue) and a queued action can never wait for each other.
   return resumed.then(() =>
@@ -142,13 +155,24 @@ export function runUser(label: string, act: () => Promise<void>): Promise<UserRu
         label,
         async () => {
           await act();
-          return runPlanner(await depsNow(false), { force: true });
+          return runPlanner(await depsNow(false), { force: true, ...opts });
         },
         MODULE_ID,
       );
       return { outcome: result, ...(entry ? { entry } : {}) };
     }),
   );
+}
+
+/**
+ * The preview of a sentence or of „Neu verteilen“: a dry run on the current inputs, queued like a run
+ * (so it never reads half of a write), writing nothing. Throws `PlannerOffError` while switched off.
+ */
+export function previewUser(ops: readonly PlanOp[]): Promise<PreviewOutcome> {
+  return enqueue(async () => {
+    if (await switchedOff()) throw new PlannerOffError();
+    return previewPlanner(await depsNow(false), ops);
+  });
 }
 
 /**

@@ -13,7 +13,9 @@ export type CaptureType =
   | 'invoice'
   | 'note'
   | 'subscription'
-  | 'birthday';
+  | 'birthday'
+  /** A ToDo that goes into the planner at once (prefix `p` or „plan:“): a pin, an earliest day or a hard due. */
+  | 'plan';
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {
@@ -48,6 +50,12 @@ export interface CaptureFields {
   url?: string;
   /** Effort in minutes; only set for ToDos ("Formular ausfüllen 15 min"). */
   estimateMin?: number;
+  /** Plan captures: not before this day („ab Do“, the ToDo's `startDate`), 'YYYY-MM-DD'. */
+  startDate?: string;
+  /** Plan captures: nailed to this day (a plain day without „ab“ or a deadline word), 'YYYY-MM-DD'. */
+  pin?: string;
+  /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
+  hardDue?: boolean;
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
 }

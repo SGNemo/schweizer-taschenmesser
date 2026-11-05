@@ -49,6 +49,9 @@ export const focus: Strings['focus'] = {
       'For recurring to-dos, shows how often you’ve done them in a row. A rest day breaks nothing, and nothing is ever lost.',
     weekReview: 'Look back on the week',
     weekReviewHint: 'A friendly look at what got done in the last seven days.',
+    weekCheck: '“Check the week” on Mondays',
+    weekCheckHint:
+      'On Mondays the planner shows one quiet line that leads to the week sheet. An × hides it for the week; the sheet is always in the ⋯ menu.',
     eveningWrapUp: '“Wrap up the day” in the evening',
     eveningWrapUpHint: 'From late afternoon, you can move what’s left to tomorrow with one tap.',
   },

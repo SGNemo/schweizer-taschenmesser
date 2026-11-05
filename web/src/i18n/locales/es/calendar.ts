@@ -204,7 +204,9 @@ export const calendar: Strings['calendar'] = {
     end: 'Fin de contrato',
     expiry: 'Caducidad',
     external: 'Externo',
+    plan: 'Plan',
   } as Record<string, string>,
+  planLink: 'Plan',
   external: {
     title: 'Evento externo',
     readOnly: 'Este evento viene de un calendario externo. Cámbialo allí; aquí solo se puede leer.',

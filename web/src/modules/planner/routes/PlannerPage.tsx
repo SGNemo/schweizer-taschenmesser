@@ -1,11 +1,19 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { getMeta, setMeta } from '@/core/db/metaKv';
+import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import { formatDay } from '@/core/time/dates';
+import { parseInstruction, type PlanOp } from '@/core/plan/instructions';
+import { useFocusSettings } from '@/core/settings/focus';
+import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import {
   Button,
   EmptyState,
+  Icon,
+  IconButton,
   GroupedList,
   ItemList,
   ItemRow,
@@ -19,6 +27,7 @@ import { HeroFigure, HeroSlot, SignatureMark, WeekBars } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import {
   addFromField,
+  applyOps,
   exclude,
   include,
   later,
@@ -31,14 +40,29 @@ import {
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySheet } from '../components/DaySheet';
+import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
+import { beginPlanFocus, planFocusPath } from '../focus';
+import { instructionItems, opLines } from '../say';
+import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
+import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
 
 /** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
 const SPAN = 7;
 /** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
 const WIDE_REM = 60;
+
+/** Device-local (`_meta`): the Monday of the week whose „Woche prüfen“ line was clicked away. */
+export const WEEK_CHECK_KEY = 'planner.weekCheck.dismissed';
+
+/** A sentence waiting for „Übernehmen“: its ops and what the engine would do with them. */
+interface Pending {
+  ops: PlanOp[];
+  lead: string;
+  data: PreviewData;
+}
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
 function Part({ k, of }: { k: number; of: number }) {
@@ -58,29 +82,108 @@ export default function PlannerPage() {
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
   const [sheetDate, setSheetDate] = useState<string | undefined>();
-  const [checking, setChecking] = useState(false);
+  // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
+  const [checking, setChecking] = useState(() => params.get('check') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dayIndex, setDayIndex] = useState(0);
+  // The day shown in the one-day layout; `?day=` (the calendar's plan chip) picks it.
+  const [pickedDay, setPickedDay] = useState<string | undefined>(
+    () => params.get('day') ?? undefined,
+  );
   const [why, setWhy] = useState<string | undefined>();
+  const [pending, setPending] = useState<Pending | undefined>();
+  const [ask, setAsk] = useState<
+    { options: { key: string; title: string }[]; ops: (key: string) => PlanOp[] } | undefined
+  >();
+  const [sayLine, setSayLine] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
-
-  // `?new=1` (quick add) focuses the one field.
-  useEffect(() => {
-    if (params.get('new')) {
-      addRef.current?.querySelector('input')?.focus();
-      setParams({}, { replace: true });
-    }
-  }, [params, setParams]);
+  const [focus] = useFocusSettings();
+  const dismissedWeek = useLiveQuery(
+    async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
+    [],
+  );
 
   const titles = data?.titles ?? {};
   const board = data?.board;
   const todayDay = board?.days[0];
 
+  // `?new=1` (quick add) focuses the one field; `?day=` (the calendar's plan chip) shows that day;
+  // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
+  useEffect(() => {
+    if (params.get('new')) {
+      addRef.current?.querySelector('input')?.focus();
+      setParams({}, { replace: true });
+      return;
+    }
+    const day = params.get('day');
+    if (day && board) {
+      document
+        .querySelector(`[data-testid="day-${day}"]`)
+        ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      setParams({}, { replace: true });
+    } else if (params.get('week') || params.get('check')) setParams({}, { replace: true });
+  }, [params, setParams, board]);
+
+  /** Shows what `ops` would do; nothing is stored until „Übernehmen“. */
+  async function showPreview(ops: PlanOp[]) {
+    setAsk(undefined);
+    setSayLine(undefined);
+    try {
+      const out = await previewUser(ops);
+      const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
+      const lines = opLines(ops, titleOf);
+      setPending({
+        ops,
+        lead: lines[0] ?? t.planner.ops.replan,
+        data: { lines, diff: out.result.diff },
+      });
+    } catch (e) {
+      if (!(e instanceof PlannerOffError)) throw e;
+      useUiStore.getState().toast(t.planner.toast.off);
+    }
+  }
+
+  async function apply() {
+    if (!pending) return;
+    setBusy(true);
+    await applyOps(pending.ops, pending.lead, titles);
+    setBusy(false);
+    setPending(undefined);
+  }
+
   async function add(e: FormEvent) {
     e.preventDefault();
     const value = text.trim();
     if (!value) return;
+    setPending(undefined);
+    setAsk(undefined);
+    setSayLine(undefined);
+    // Instructions first – German only, like the quick-capture parser; elsewhere the ⋯ actions do the same.
+    if (getLang() === 'de') {
+      // While the board loads the sentence still reads its days; things are matched once it is there.
+      const said = parseInstruction(value, {
+        today: data?.today ?? today(),
+        items: board ? instructionItems(board) : [],
+      });
+      if (said.kind === 'ops') {
+        setText('');
+        await showPreview(said.ops);
+        return;
+      }
+      if (said.kind === 'ask') {
+        setAsk({ options: said.options, ops: said.ops });
+        return;
+      }
+      if (said.kind === 'explain') {
+        setSayLine(t.planner.say.explain);
+        return;
+      }
+      if (said.kind === 'missing') {
+        setSayLine(t.planner.say.missing(said.query));
+        return;
+      }
+    }
     setText('');
     const ok = await addFromField(value, titles);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
@@ -105,8 +208,34 @@ export default function PlannerPage() {
     : undefined;
 
   const pageMenu: RowMenuItem[] = [
+    {
+      id: 'replan',
+      label: t.planner.head.replan,
+      onSelect: () => void showPreview([{ op: 'replan', reshuffle: false }]),
+    },
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
   ];
+
+  // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.
+  const monday = data ? addDaysStr(data.today, 1 - isoWeekday(data.today)) : undefined;
+  const showWeekLink =
+    focus.weekCheck &&
+    data !== undefined &&
+    isoWeekday(data.today) === 1 &&
+    dismissedWeek !== undefined &&
+    dismissedWeek !== monday;
+
+  /** The three biggest things of the shown week (all their sessions together). */
+  const biggest = (() => {
+    if (!board) return [];
+    const sum = new Map<string, { title: string; minutes: number }>();
+    for (const r of [...board.days.flatMap((d) => d.rows), ...board.waiting]) {
+      const cur = sum.get(r.itemKey) ?? { title: r.title, minutes: 0 };
+      cur.minutes += r.minutes;
+      sum.set(r.itemKey, cur);
+    }
+    return [...sum.values()].sort((a, b) => b.minutes - a.minutes).slice(0, 3);
+  })();
 
   const titleOf = (unitId: string) => {
     const key = unitId.slice(0, unitId.lastIndexOf('#'));
@@ -166,6 +295,23 @@ export default function PlannerPage() {
               label: t.planner.row.why,
               checked: open,
               onSelect: () => setWhy(open ? undefined : row.unitId),
+            },
+          ]
+        : []),
+      ...(date
+        ? [
+            {
+              id: 'focus',
+              label: t.planner.row.focus,
+              onSelect: () => {
+                const title =
+                  row.of > 1
+                    ? `${row.title} · ${t.planner.row.part(row.k + 1, row.of)}`
+                    : row.title;
+                void beginPlanFocus({ unitId: row.unitId, title, minutes: row.minutes }).then(() =>
+                  navigate(planFocusPath(row.unitId)),
+                );
+              },
             },
           ]
         : []),
@@ -268,7 +414,7 @@ export default function PlannerPage() {
 
   const waiting = board?.waiting ?? [];
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
-  const shownDay = board?.days[Math.min(dayIndex, SPAN - 1)];
+  const shownDay = board?.days.find((d) => d.date === pickedDay) ?? board?.days[0];
 
   return (
     <>
@@ -293,6 +439,20 @@ export default function PlannerPage() {
         </HeroSlot>
       ) : null}
 
+      {showWeekLink ? (
+        <p className={styles.weekLink} data-testid="week-check-link">
+          <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
+            {t.planner.weekLink.label}
+          </button>
+          <IconButton
+            label={t.planner.weekLink.dismiss}
+            onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
+          >
+            <Icon name="close" size={16} />
+          </IconButton>
+        </p>
+      ) : null}
+
       <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
         <div className={styles.grow}>
           <TextField
@@ -307,6 +467,31 @@ export default function PlannerPage() {
           {t.planner.add.submit}
         </Button>
       </form>
+
+      {sayLine ? (
+        <p className={styles.say} role="status" data-testid="plan-say">
+          {sayLine}
+        </p>
+      ) : null}
+      {ask ? (
+        <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
+          <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
+          {ask.options.map((o) => (
+            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key))}>
+              {o.title}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      {pending ? (
+        <PlanPreview
+          data={pending.data}
+          nameOf={nameOf}
+          busy={busy}
+          onApply={() => void apply()}
+          onDiscard={() => setPending(undefined)}
+        />
+      ) : null}
 
       {nothingPlanned && waiting.length === 0 ? (
         <EmptyState
@@ -324,13 +509,13 @@ export default function PlannerPage() {
         ) : (
           <div>
             <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
-              {board.days.map((d, i) => (
+              {board.days.map((d) => (
                 <button
                   key={d.date}
                   type="button"
                   className={styles.stripChip}
-                  aria-pressed={i === dayIndex}
-                  onClick={() => setDayIndex(i)}
+                  aria-pressed={d.date === shownDay?.date}
+                  onClick={() => setPickedDay(d.date)}
                 >
                   <span>{dayName(d.date)}</span>
                   <span>{capacityShort(d)}</span>
@@ -387,7 +572,12 @@ export default function PlannerPage() {
         onClose={() => setSheetDate(undefined)}
       />
       {checking && board ? (
-        <WeekCheck days={board.days} titles={titles} onClose={() => setChecking(false)} />
+        <WeekCheck
+          days={board.days}
+          biggest={biggest}
+          titles={titles}
+          onClose={() => setChecking(false)}
+        />
       ) : null}
     </>
   );

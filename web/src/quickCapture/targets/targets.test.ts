@@ -290,6 +290,67 @@ describe('targets', () => {
   });
 });
 
+describe('saveCapture: plan (two stages)', () => {
+  const PLAN_ON = { ...ON, planner: true };
+
+  it('writes the ToDo through the todo target, then the planner item `todos:<id>` with the pin', async () => {
+    const saved = await saveCapture(
+      'plan',
+      { title: 'Steuer', estimateMin: 120, pin: '2026-10-02', priority: 3 },
+      { states: PLAN_ON },
+    );
+    const [task] = await rows('todos_task');
+    expect(task).toMatchObject({ title: 'Steuer', estimateMin: 120, priority: 3, listId: 'inbox' });
+    expect(task!.dueDate).toBeUndefined();
+    const [item] = await rows('planner_item');
+    expect(item).toMatchObject({
+      id: `todos:${task!.id}`,
+      source: { module: 'todos', id: task!.id },
+      pinned: '2026-10-02',
+    });
+    expect(saved).toMatchObject({ id: task!.id, type: 'plan', moduleId: 'todos' });
+  });
+
+  it('a deadline is the ToDo date and a hard due; „ab“ is the ToDo start date', async () => {
+    await saveCapture(
+      'plan',
+      { title: 'Abgabe', date: '2026-10-08', hardDue: true },
+      { states: PLAN_ON },
+    );
+    await saveCapture('plan', { title: 'Keller', startDate: '2026-10-03' }, { states: PLAN_ON });
+    const tasks = await rows('todos_task');
+    const abgabe = tasks.find((x) => x.title === 'Abgabe')!;
+    const keller = tasks.find((x) => x.title === 'Keller')!;
+    expect(abgabe.dueDate).toBe('2026-10-08');
+    expect(keller.startDate).toBe('2026-10-03');
+    const items = await rows('planner_item');
+    expect(items.find((i) => i.id === `todos:${abgabe.id}`)!.due).toEqual({
+      date: '2026-10-08',
+      hard: true,
+    });
+    expect(items.find((i) => i.id === `todos:${keller.id}`)!.pinned).toBeUndefined();
+  });
+
+  it('undo removes both records', async () => {
+    const saved = await saveCapture('plan', { title: 'Steuer' }, { states: PLAN_ON });
+    await saved.undo();
+    expect((await rows('todos_task')).every((x) => x.deletedAt)).toBe(true);
+    expect((await rows('planner_item')).every((x) => x.deletedAt)).toBe(true);
+  });
+
+  it('needs both modules and writes nothing half', async () => {
+    await expect(saveCapture('plan', { title: 'Steuer' }, { states: ON })).rejects.toMatchObject({
+      code: 'module-off',
+    });
+    await expect(saveCapture('plan', { title: ' ' }, { states: PLAN_ON })).rejects.toBeInstanceOf(
+      CaptureError,
+    );
+    expect(await rows('todos_task')).toHaveLength(0);
+    expect(availableTypes({ todos: true, planner: true })).toContain('plan');
+    expect(availableTypes({ todos: false, planner: true })).not.toContain('plan');
+  });
+});
+
 describe('saveCaptures', () => {
   it('saves several entries as one batch with one undo for all', async () => {
     const saved = await saveCaptures(

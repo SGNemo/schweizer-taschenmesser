@@ -7,7 +7,9 @@
  */
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { addDays } from '@/core/plan/dates';
+import { diffPlans } from '@/core/plan/diff';
 import { plan } from '@/core/plan/engine';
+import type { PlanOp } from '@/core/plan/instructions';
 import type {
   Assignment,
   PlanDay,
@@ -372,7 +374,7 @@ function defaultWriter(manifests: readonly ModuleManifest[]): SourceWriter {
  */
 export async function runPlanner(
   deps: RunDeps,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; reshuffle?: boolean } = {},
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
   const inputs = await buildInputs(deps, repos);
@@ -393,7 +395,8 @@ export async function runPlanner(
     today: deps.today,
     days: inputs.days,
     items: inputs.items,
-    prev: inputs.prev,
+    // „alles neu mischen“: the one explicit reshuffle starts from an empty plan (CONCEPT §3 rule 6).
+    prev: opts.reshuffle ? [] : inputs.prev,
     settings: inputs.settings,
   });
   if (bail()) return { ran: false, inputs, rowWrites, writeBacks: 0 };
@@ -413,6 +416,99 @@ export async function runPlanner(
   };
   await setMeta(LAST_RUN_KEY, lastRun, deps.database);
   return { ran: true, result, inputs, rowWrites, writeBacks };
+}
+
+/**
+ * The ops of a sentence (`core/plan/instructions.ts`) on the engine's inputs, in memory: what the plan
+ * would look like after „Übernehmen“. Mirrors what `actions.ts applyOps` stores (a day's minutes and
+ * blockers, the item flags, the thing's own date as earliest, its estimate, the buffer). Pure.
+ */
+export function withOps(
+  inputs: Pick<RunInputs, 'days' | 'items' | 'settings'>,
+  ops: readonly PlanOp[],
+): { days: PlanDay[]; items: PlanItem[]; settings: PlanSettings; reshuffle: boolean } {
+  const days = inputs.days.map((d) => ({ ...d, blockers: [...d.blockers] }));
+  const items = inputs.items.map((i) => ({ ...i }));
+  const settings = { ...inputs.settings };
+  let reshuffle = false;
+  const item = (key: string) => items.find((i) => i.key === key);
+  for (const op of ops) {
+    switch (op.op) {
+      case 'available': {
+        const d = days.find((x) => x.date === op.date);
+        if (d) d.availableMin = op.min;
+        break;
+      }
+      case 'block': {
+        const d = days.find((x) => x.date === op.date);
+        d?.blockers.push({ label: op.label, min: op.min });
+        break;
+      }
+      case 'pin': {
+        const i = item(op.key);
+        if (i) i.pinned = op.date;
+        break;
+      }
+      case 'earliest': {
+        const i = item(op.key);
+        if (i) i.earliest = op.date;
+        break;
+      }
+      case 'priority': {
+        const i = item(op.key);
+        if (i) i.priority = op.value;
+        break;
+      }
+      case 'exclude': {
+        const i = item(op.key);
+        if (i) i.excluded = true;
+        break;
+      }
+      case 'duration': {
+        const i = item(op.key);
+        if (i) i.durationMin = op.min;
+        break;
+      }
+      case 'buffer':
+        settings.bufferShare = op.pct / 100;
+        break;
+      case 'replan':
+        reshuffle ||= op.reshuffle;
+        break;
+    }
+  }
+  return { days, items, settings, reshuffle };
+}
+
+/** A dry run for the preview: reads like a run, writes nothing, returns what the engine would do with `ops`. */
+export async function previewPlanner(
+  deps: RunDeps,
+  ops: readonly PlanOp[],
+): Promise<PreviewOutcome> {
+  const inputs = await buildInputs(deps, plannerRepos(deps.database));
+  const next = withOps(inputs, ops);
+  const result = plan({
+    today: deps.today,
+    days: next.days,
+    items: next.items,
+    prev: next.reshuffle ? [] : inputs.prev,
+    settings: next.settings,
+  });
+  // A reshuffle compares with what is stored, not with the empty plan it started from.
+  const diff = next.reshuffle ? diffAgainst(inputs.prev, result) : result.diff;
+  return { result: { ...result, diff }, titles: inputs.titles, prev: inputs.prev };
+}
+
+export interface PreviewOutcome {
+  result: PlanResult;
+  titles: Record<string, string>;
+  prev: PrevAssignment[];
+}
+
+/** Moves and new units between stored rows and a fresh result (causes unknown: `carried`/`pulled` by direction). */
+function diffAgainst(prev: readonly PrevAssignment[], next: PlanResult): PlanResult['diff'] {
+  const live = new Set([...next.assignments, ...next.unplaced].map((u) => u.id));
+  return diffPlans(prev, next.assignments, [], live);
 }
 
 /**

@@ -29,6 +29,9 @@ export const planner: Strings['planner'] = {
       autoReplanHelp: 'Off: the plan only changes when you do something in the planner.',
       calendarBlocks: 'Appointments block time',
       calendarBlocksHelp: 'Timed appointments take their length off the day; reminders never do.',
+      calendarChips: 'Show the plan in the calendar',
+      calendarChipsHelp:
+        'One entry per day with the planned time; it leads to the planner. Off: the calendar shows appointments only.',
       allDayBlocks: 'All-day appointments block time',
       allDayBlocksHelp: 'Off: an all-day appointment costs no plannable time.',
     },
@@ -44,6 +47,7 @@ export const planner: Strings['planner'] = {
       `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,
     week: (week: string) => `Week ${week}`,
     menu: 'More options',
+    replan: 'Redistribute',
   },
   board: {
     label: 'Week board',
@@ -92,6 +96,7 @@ export const planner: Strings['planner'] = {
     due: (day: string) => `Deadline ${day}`,
     dueWas: (day: string) => `Deadline was ${day}`,
     blocker: 'Blocker',
+    focus: 'Start focus',
   },
   reasons: {
     pinned: 'pinned',
@@ -139,10 +144,53 @@ export const planner: Strings['planner'] = {
   add: {
     label: 'Add',
     placeholder: 'Steuer 2 Std bis Do',
-    hint: 'This creates a to-do; “bis Do” or “Frist” sets a deadline.',
+    hint: 'This creates a to-do; “bis Do” or “Frist” sets a deadline. Day off, available time, pin and “Don’t plan” are in the ⋯ menus of the days and rows.',
     submit: 'Add',
   },
+  say: {
+    explain: 'I can do: day off, time per day, move, pin, don’t plan.',
+    missing: (query: string) => `I can’t find “${query}” in the plan.`,
+    ask: (a: string, b: string) => `Do you mean ${a} or ${b}?`,
+    askLabel: 'Which one is meant?',
+  },
+  preview: {
+    label: 'Preview',
+    moved: 'Moved',
+    added: 'New in the plan',
+    waits: 'Waits',
+    move: (from: string, to: string) => `${from} → ${to}`,
+    from: (day: string) => `was ${day}`,
+    earlier: 'earlier, because room opened up',
+    later: 'later, because the day is full',
+    nothing: 'Nothing in the plan changes.',
+    apply: 'Apply',
+    discard: 'Discard',
+  },
+  ops: {
+    block: (day: string, label: string, from: string, to: string) =>
+      `${day}: ${label} ${from}–${to}`,
+    pin: (title: string, day: string) => `${title} pinned to ${day}`,
+    earliest: (title: string, day: string) => `${title} not before ${day}`,
+    earliestMany: (n: number, day: string) => `${n} things not before ${day}`,
+    priority: (title: string) => `${title} is important`,
+    exclude: (title: string) => `${title} not planned`,
+    duration: (title: string, min: string) => `${title} takes ${min}`,
+    buffer: (pct: number) => `Buffer ${pct} %`,
+    replan: 'Redistributed',
+    reshuffle: 'Reshuffled from scratch',
+  },
+  weekLink: {
+    label: 'Check the week · 2 steps',
+    dismiss: 'Hide for this week',
+  },
+  focus: {
+    back: 'To the planner',
+  },
   empty: 'Nothing planned yet. One thing is enough.',
+  chip: {
+    title: (planned: string, n: number) =>
+      `Plan · ${planned} · ${n === 1 ? '1 thing' : `${n} things`}`,
+  },
   widget: {
     today: (free: string) => `Today · ${free} free`,
     todayFull: 'Today · full',
@@ -162,5 +210,6 @@ export const planner: Strings['planner'] = {
     title: 'Check the week',
     intro: 'Is the time per day right? Confirming is enough; each day can be changed on its own.',
     confirm: 'Looks right',
+    biggest: 'The three biggest things',
   },
 };

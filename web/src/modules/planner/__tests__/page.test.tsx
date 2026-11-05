@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
+import { getMeta } from '@/core/db/metaKv';
+import { FOCUS_SCOPE } from '@/core/settings/focus';
+import { setSettings } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
 import { assignmentRepo, dayRepo, itemRepo } from '../repo';
-import PlannerPage from '../routes/PlannerPage';
+import PlannerPage, { WEEK_CHECK_KEY } from '../routes/PlannerPage';
 
 const NOW = new Date(2026, 10, 9, 10, 0).getTime(); // Monday 2026-11-09
 const todos = getManifest('todos')!;
@@ -118,12 +121,100 @@ describe('planner page', () => {
     draw();
     expect(await screen.findByTestId('day-2026-11-09')).toHaveTextContent('frei');
     expect(screen.getByTestId('day-2026-11-09')).not.toHaveTextContent('frei von');
-    expect(screen.getByLabelText('Eintragen')).toBeInTheDocument();
+    expect(screen.getByLabelText('Eintragen oder sagen')).toBeInTheDocument();
     // One empty state for the whole board, not seven „Nichts geplant“.
     expect(screen.getByTestId('planner-empty')).toHaveTextContent(
       'Noch nichts geplant. Eine Sache reicht.',
     );
     expect(screen.queryAllByText('Nichts geplant')).toHaveLength(0);
     expect(screen.queryByText('Wartet auf freie Zeit')).toBeNull();
+  });
+
+  it('„Donnerstag frei“ → preview first, nothing stored; „Übernehmen“ stores it; no model, no request', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    draw();
+    const field = await screen.findByLabelText('Eintragen oder sagen');
+    fireEvent.change(field, { target: { value: 'Donnerstag frei' } });
+    fireEvent.submit(field.closest('form')!);
+    const preview = await screen.findByTestId('plan-preview');
+    expect(preview).toHaveTextContent('Do ist frei.');
+    expect(await dayRepo.get('2026-11-12')).toBeUndefined();
+    expect(await db.table('todos_task').count()).toBe(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Übernehmen' }));
+    await waitFor(async () => expect((await dayRepo.get('2026-11-12'))?.availableMin).toBe(0));
+    await waitFor(() => expect(screen.queryByTestId('plan-preview')).toBeNull());
+    expect(await db.table('todos_task').count()).toBe(0);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
+  it('„Verwerfen“ stores nothing; a sentence it cannot read gets one calm line, not a ToDo', async () => {
+    draw();
+    const field = await screen.findByLabelText('Eintragen oder sagen');
+    fireEvent.change(field, { target: { value: 'Freitag nur 2 Std' } });
+    fireEvent.submit(field.closest('form')!);
+    await screen.findByTestId('plan-preview');
+    fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
+    expect(screen.queryByTestId('plan-preview')).toBeNull();
+    expect(await dayRepo.get('2026-11-13')).toBeUndefined();
+    fireEvent.change(field, { target: { value: 'schieb das irgendwie' } });
+    fireEvent.submit(field.closest('form')!);
+    expect(await screen.findByTestId('plan-say')).toHaveTextContent(
+      'Ich kann: Tag frei, Zeit je Tag, verschieben, festnageln, nicht planen.',
+    );
+    expect(await db.table('todos_task').count()).toBe(0);
+  });
+
+  it('two matching things → „Meinst du A oder B?“ with both as answers', async () => {
+    for (const title of ['Keller aufräumen', 'Keller streichen'])
+      await taskRepo.create({ listId: 'inbox', title, done: false, priority: 0, order: 0 });
+    // Both wait (no run in this test): they are still things the sentence may name.
+    await db.table('_meta').put({
+      key: 'planner.lastRun',
+      value: {
+        today: '2026-11-09',
+        hash: '',
+        rowsSig: '',
+        unplaced: [],
+        overflowMin: 0,
+        demandMin: 0,
+        usableMin: 0,
+        titles: {},
+      },
+    });
+    const tasks = await db.table('todos_task').toArray();
+    for (const [i, t] of tasks.entries())
+      await assignmentRepo.upsert(`todos:${t.id}#0`, {
+        itemKey: `todos:${t.id}`,
+        k: 0,
+        of: 1,
+        date: '2026-11-09',
+        minutes: 30,
+        order: i,
+        reason: 'new',
+      });
+    draw();
+    const field = await screen.findByLabelText('Eintragen oder sagen');
+    await screen.findAllByText('Keller aufräumen');
+    fireEvent.change(field, { target: { value: 'schieb Keller auf Freitag' } });
+    fireEvent.submit(field.closest('form')!);
+    expect(
+      await screen.findByText('Meinst du Keller aufräumen oder Keller streichen?'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Welches ist gemeint?' })).toBeInTheDocument();
+  });
+
+  it('Monday: „Woche prüfen“ is a quiet line only with the switch on; × hides it for the week', async () => {
+    draw();
+    await screen.findByLabelText('Eintragen oder sagen');
+    expect(screen.queryByTestId('week-check-link')).toBeNull();
+    await setSettings(FOCUS_SCOPE, { weekCheck: true });
+    const line = await screen.findByTestId('week-check-link');
+    expect(line).toHaveTextContent('Woche prüfen · 2 Schritte');
+    // Nothing opened by itself.
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Für diese Woche ausblenden' }));
+    await waitFor(() => expect(screen.queryByTestId('week-check-link')).toBeNull());
+    expect(await getMeta(WEEK_CHECK_KEY)).toBe('2026-11-09');
   });
 });

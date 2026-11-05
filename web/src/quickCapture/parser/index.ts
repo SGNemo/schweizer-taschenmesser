@@ -39,9 +39,27 @@ const PREFIXES: Record<string, CaptureType> = {
   l: 'list',
   n: 'note',
   r: 'invoice',
+  p: 'plan',
   $: 'finance',
 };
-const PREFIX_RE = /^\s*(t|k|e|m|l|n|r|\$)(?:\s+|(?<=\$))/i;
+/** A one-letter prefix ("t ", "$12") or the word „plan:“ (the planner's capture). */
+const PREFIX_RE = /^\s*(?:(t|k|e|m|l|n|r|p|\$)(?:\s+|(?<=\$))|(plan)\s*:\s*)/i;
+/** Short German weekdays after a planning word („ab Do“, „bis Fr.“): spelled out for the date extractor (plan only). */
+const SHORT_DAYS: Record<string, string> = {
+  mo: 'Montag',
+  di: 'Dienstag',
+  mi: 'Mittwoch',
+  do: 'Donnerstag',
+  fr: 'Freitag',
+  sa: 'Samstag',
+  so: 'Sonntag',
+};
+const SHORT_DAY_RE = word(String.raw`(ab|bis|am|frist)\s+(mo|di|mi|do|fr|sa|so)\.?`);
+/** „ab Do“: the day is the earliest one, not a pin. */
+const FROM_WORD = word(String.raw`ab`);
+/** „bis Do“, „Frist Do“: a hard deadline in a plan capture. */
+const PLAN_DUE = word(String.raw`bis|frist|deadline|abgabe|spätestens`);
+const PLAN_DUE_WORD = word(String.raw`frist|deadline|spätestens`);
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
@@ -120,9 +138,17 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   let forced: CaptureType | undefined;
   const prefix = PREFIX_RE.exec(text);
   if (prefix) {
-    forced = PREFIXES[prefix[1]!.toLowerCase()];
+    forced = prefix[2] ? 'plan' : PREFIXES[prefix[1]!.toLowerCase()];
     text = text.slice(prefix[0].length);
   }
+  if (forced === 'plan') {
+    for (let m = SHORT_DAY_RE.exec(text); m; m = SHORT_DAY_RE.exec(text)) {
+      const long = SHORT_DAYS[m[2]!.toLowerCase()]!;
+      text = `${text.slice(0, m.index)}${m[1]} ${long}${text.slice(m.index + m[0].length)}`;
+    }
+  }
+  const plan =
+    forced === 'plan' ? { from: FROM_WORD.test(text), due: PLAN_DUE.test(text) } : undefined;
   const scan: Scan = { t: text };
 
   const fields: CaptureFields = { title: '' };
@@ -245,13 +271,27 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   }
 
   if (date) fields.date = fmtDate(date);
-  if (primaryType !== 'todo') delete fields.priority;
+  if (primaryType !== 'todo' && primaryType !== 'plan') delete fields.priority;
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
 
-  if (estimate !== undefined && primaryType === 'todo') {
+  if (estimate !== undefined && (primaryType === 'todo' || primaryType === 'plan')) {
     fields.estimateMin = estimate;
     scan.t = estimateScan.t;
+  }
+  // A plan capture reads its day three ways: „bis/Frist“ = hard deadline, „ab“ = earliest, else a pin.
+  if (plan && fields.date) {
+    if (plan.due) {
+      fields.hardDue = true;
+      // The deadline word is said by the chip, not kept in the title („Steuer Frist 3.11.“ → „Steuer“).
+      scan.t = scan.t.replace(PLAN_DUE_WORD, ' ');
+    } else if (plan.from) {
+      fields.startDate = fields.date;
+      delete fields.date;
+    } else {
+      fields.pin = fields.date;
+      delete fields.date;
+    }
   }
 
   fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);

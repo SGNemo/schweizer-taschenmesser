@@ -27,7 +27,8 @@ export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
   const day = today();
   const forPerson = usePersonFilter();
   const items = useCalendarItems({ from: day, to: addDaysStr(day, AHEAD_DAYS) })?.filter(
-    (i) => !i.done && (!forPerson || i.personId === forPerson),
+    // The planner's day chip is no appointment: it never makes a day look busy here (CONCEPT §5).
+    (i) => !i.done && i.kind !== 'plan' && (!forPerson || i.personId === forPerson),
   );
   const tick = useNow(30_000, settings.timeToNext);
   if (!items) return null;

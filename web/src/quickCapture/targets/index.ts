@@ -1,14 +1,15 @@
 import { createCollectionRepo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
+import type { ModuleManifest } from '@/core/modules/types';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { today } from '@/core/time/now';
 import type { CaptureFields, CaptureType } from '../parser';
 import { TARGETS } from './adapters';
-import { CaptureError, type CaptureTarget, type SavedCapture } from './types';
+import { CaptureError, type CaptureTarget, type CaptureVia, type SavedCapture } from './types';
 
 export { CaptureError } from './types';
-export type { CaptureTarget, SavedCapture } from './types';
+export type { CaptureRef, CaptureTarget, CaptureVia, SavedCapture } from './types';
 export { TARGETS } from './adapters';
 
 export interface SaveOptions {
@@ -22,9 +23,11 @@ export interface SaveOptions {
 /** Target types whose module is currently enabled and installed, in a stable UI order. */
 export function availableTypes(states: ModuleStates | undefined): CaptureType[] {
   if (!states) return [];
-  return (Object.keys(TARGETS) as (keyof typeof TARGETS)[]).filter(
-    (type) => !!getManifest(TARGETS[type].moduleId) && states[TARGETS[type].moduleId],
-  );
+  const on = (moduleId: string) => !!getManifest(moduleId) && !!states[moduleId];
+  return (Object.keys(TARGETS) as (keyof typeof TARGETS)[]).filter((type) => {
+    const target = TARGETS[type] as CaptureTarget;
+    return on(target.moduleId) && (!target.via || on(targetFor(target.via.type).moduleId));
+  });
 }
 
 export function targetFor(type: CaptureType): CaptureTarget {
@@ -49,6 +52,7 @@ export async function saveCapture(
     throw new CaptureError('module-off', manifest?.name ?? target.moduleId);
   }
   if (target.requiresConfirm && !opts.confirmed) throw new CaptureError('invalid');
+  if (target.via) return saveTwoStage(target, target.via, manifest, fields, states, opts);
 
   const data = target.build(fields, { today: today() });
   const load = manifest.contributions?.aiCreateDefaults;
@@ -70,6 +74,42 @@ export async function saveCapture(
     type,
     moduleId: target.moduleId,
     undo: () => repo.remove(saved.id),
+  };
+}
+
+/**
+ * A two-stage save (`CaptureVia`): the first record through its own target, then this target's record
+ * under the deterministic id through the manifest repo (`upsert`). A failing second stage takes the
+ * first record back; the undo removes both.
+ */
+async function saveTwoStage(
+  target: CaptureTarget,
+  via: CaptureVia,
+  manifest: ModuleManifest,
+  fields: CaptureFields,
+  states: ModuleStates,
+  opts: SaveOptions,
+): Promise<SavedCapture> {
+  const ctx = { today: today() };
+  // Checked before anything is written: an unusable input leaves no half entry behind.
+  target.build(fields, ctx);
+  const first = await saveCapture(via.type, fields, { ...opts, states });
+  const repo = createCollectionRepo(manifest, target.collection, opts.database);
+  const id = via.id(first);
+  try {
+    await repo.upsert(id, target.build(fields, ctx, first));
+  } catch {
+    await first.undo();
+    throw new CaptureError('invalid');
+  }
+  return {
+    id: first.id,
+    type: target.type,
+    moduleId: first.moduleId,
+    undo: async () => {
+      await repo.remove(id);
+      await first.undo();
+    },
   };
 }
 

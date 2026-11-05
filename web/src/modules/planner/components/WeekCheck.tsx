@@ -8,13 +8,20 @@ import { AVAILABLE_STEP, confirmWeek } from '../actions';
 import type { BoardDay } from '../board';
 import styles from '../routes/planner.module.css';
 
-/** „Woche prüfen“: the available minutes of every shown day, confirmed in two taps (open, „Passt so“). */
+/**
+ * „Woche prüfen“: the available minutes of every shown day (Mo–So when opened on a Monday), confirmed
+ * in two taps (open, „Passt so“), and the three biggest things of the week. Opened only by the user
+ * (⋯ or the Monday line), never by itself.
+ */
 export function WeekCheck({
   days,
+  biggest = [],
   titles,
   onClose,
 }: {
   days: BoardDay[];
+  /** The three biggest things of the week (all sessions together), largest first. */
+  biggest?: { title: string; minutes: number }[];
   titles: Record<string, string>;
   onClose: () => void;
 }) {
@@ -63,6 +70,21 @@ export function WeekCheck({
           </span>
         </div>
       ))}
+      {biggest.length > 0 ? (
+        <section className={styles.biggest} aria-label={t.planner.check.biggest}>
+          <h3 className={styles.dayName}>{t.planner.check.biggest}</h3>
+          <ol>
+            {biggest.map((b) => (
+              <li key={b.title}>
+                {b.title} ·{' '}
+                <span className={styles.minutes}>
+                  {formatMinutes(b.minutes, { compact: true })}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
     </Dialog>
   );
 }

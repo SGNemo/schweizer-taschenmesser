@@ -38,6 +38,15 @@ const manifest: ModuleManifest = {
       nav: true,
       component: () => import('./routes/PlannerPage'),
     },
+    {
+      // Focus round of one session of the plan: the shell shows it without menus (`isFocusPath`).
+      path: '/planner/focus/:item',
+      get label() {
+        return t.focus.mode.title;
+      },
+      layout: 'narrow',
+      component: () => import('./routes/FocusPage'),
+    },
   ],
   dataSchema: {
     collections: {
@@ -79,6 +88,7 @@ const manifest: ModuleManifest = {
       },
     ],
     services: () => import('./services'),
+    calendarItems: () => import('./calendar'),
   },
 };
 

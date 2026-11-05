@@ -17,6 +17,10 @@ function flatten(r: CaptureResult): Flat {
     amountMinor: f.amountMinor,
     kind: f.kind,
     priority: f.priority,
+    estimateMin: f.estimateMin,
+    pin: f.pin,
+    startDate: f.startDate,
+    hardDue: f.hardDue,
   };
 }
 
@@ -31,7 +35,7 @@ function misses(c: CorpusCase): string[] {
 }
 
 // Ratchet: raise this when the parser gets better, never lower it.
-const MIN_HITS = 22;
+const MIN_HITS = 27;
 
 describe('parser corpus (QA sentences)', () => {
   it('reports the hit rate', () => {

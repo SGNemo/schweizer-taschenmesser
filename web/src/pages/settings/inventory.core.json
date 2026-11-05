@@ -96,6 +96,7 @@
     "searchHistory": true,
     "streaks": true,
     "weekReview": true,
+    "weekCheck": false,
     "eveningWrapUp": true
   },
   "_settings scope weather": {

@@ -2,6 +2,7 @@ import type { CalendarItem } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CSSProperties } from 'react';
+import { sourceHue } from './sourceHue';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -32,7 +33,10 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
   const content = (
     <>
       <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>
-      <span className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}>
+      <span
+        className={`${styles.kind} ${styles[`kind_${item.kind}`] ?? ''}`}
+        data-hue={sourceHue(item)}
+      >
         {kindLabel(item.kind)}
       </span>
       <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`} title={item.title}>

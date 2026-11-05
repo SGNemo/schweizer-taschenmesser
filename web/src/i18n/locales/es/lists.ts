@@ -8,6 +8,7 @@ export const lists: Strings['lists'] = {
     hint: 'Una pequeña lista de control para ir marcando. Al terminar, con «Restablecer» vuelve a estar lista.',
     add: 'Crear lista',
     created: 'Lista creada.',
+    weekInPlanner: 'Revisar la semana en el planificador',
     morning: {
       name: 'Rutina de mañana',
       items: [

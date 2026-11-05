@@ -31,6 +31,9 @@ export const planner: Strings['planner'] = {
       calendarBlocks: 'Les rendez-vous bloquent du temps',
       calendarBlocksHelp:
         'Les rendez-vous avec une heure retirent leur durée de la journée ; jamais les rappels.',
+      calendarChips: 'Afficher le plan dans le calendrier',
+      calendarChipsHelp:
+        'Une entrée par jour avec le temps prévu ; elle mène au planificateur. Désactivé : le calendrier ne montre que les rendez-vous.',
       allDayBlocks: 'Les rendez-vous d’une journée bloquent du temps',
       allDayBlocksHelp:
         'Désactivé : un rendez-vous d’une journée entière ne coûte aucun temps planifiable.',
@@ -47,6 +50,7 @@ export const planner: Strings['planner'] = {
       `${n === 1 ? '1 chose' : `${n} choses`} · ${planned} prévus`,
     week: (week: string) => `Semaine ${week}`,
     menu: 'Plus d’options',
+    replan: 'Redistribuer',
   },
   board: {
     label: 'Tableau de la semaine',
@@ -95,6 +99,7 @@ export const planner: Strings['planner'] = {
     due: (day: string) => `Échéance ${day}`,
     dueWas: (day: string) => `L’échéance était ${day}`,
     blocker: 'Blocage',
+    focus: 'Démarrer le focus',
   },
   reasons: {
     pinned: 'fixé',
@@ -142,10 +147,53 @@ export const planner: Strings['planner'] = {
   add: {
     label: 'Ajouter',
     placeholder: 'Steuer 2 Std bis Do',
-    hint: 'Cela crée une tâche ; « bis Do » ou « Frist » fixe une échéance.',
+    hint: 'Crée une tâche ; « bis Do » ou « Frist » fixe une échéance. Jour libre, temps disponible, fixer et « Ne pas planifier » sont dans les menus ⋯ des jours et des lignes.',
     submit: 'Ajouter',
   },
+  say: {
+    explain: 'Je sais faire : jour libre, temps par jour, déplacer, fixer, ne pas planifier.',
+    missing: (query: string) => `Je ne trouve pas « ${query} » dans le plan.`,
+    ask: (a: string, b: string) => `Tu veux dire ${a} ou ${b} ?`,
+    askLabel: 'Lequel ?',
+  },
+  preview: {
+    label: 'Aperçu',
+    moved: 'Déplacé',
+    added: 'Nouveau dans le plan',
+    waits: 'En attente',
+    move: (from: string, to: string) => `${from} → ${to}`,
+    from: (day: string) => `était ${day}`,
+    earlier: 'plus tôt, car de la place s’est libérée',
+    later: 'plus tard, car la journée est pleine',
+    nothing: 'Rien ne change dans le plan.',
+    apply: 'Appliquer',
+    discard: 'Annuler',
+  },
+  ops: {
+    block: (day: string, label: string, from: string, to: string) =>
+      `${day}: ${label} ${from}–${to}`,
+    pin: (title: string, day: string) => `${title} fixé au ${day}`,
+    earliest: (title: string, day: string) => `${title} pas avant ${day}`,
+    earliestMany: (n: number, day: string) => `${n} choses pas avant ${day}`,
+    priority: (title: string) => `${title} est important`,
+    exclude: (title: string) => `${title} non planifié`,
+    duration: (title: string, min: string) => `${title} prend ${min}`,
+    buffer: (pct: number) => `Marge ${pct} %`,
+    replan: 'Redistribué',
+    reshuffle: 'Tout remélangé',
+  },
+  weekLink: {
+    label: 'Vérifier la semaine · 2 étapes',
+    dismiss: 'Masquer cette semaine',
+  },
+  focus: {
+    back: 'Vers le planificateur',
+  },
   empty: 'Rien de prévu pour l’instant. Une seule chose suffit.',
+  chip: {
+    title: (planned: string, n: number) =>
+      `Plan · ${planned} · ${n === 1 ? '1 chose' : `${n} choses`}`,
+  },
   widget: {
     today: (free: string) => `Aujourd’hui · ${free} libres`,
     todayFull: 'Aujourd’hui · plein',
@@ -166,5 +214,6 @@ export const planner: Strings['planner'] = {
     intro:
       'Le temps par jour est-il juste ? Confirmer suffit ; chaque jour peut être changé à part.',
     confirm: 'C’est bon ainsi',
+    biggest: 'Les trois plus grandes choses',
   },
 };

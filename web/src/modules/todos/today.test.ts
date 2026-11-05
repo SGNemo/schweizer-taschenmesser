@@ -132,3 +132,16 @@ describe('buildToday', () => {
     expect(out.appointments).toEqual({ shown: [], hidden: 0 });
   });
 });
+
+describe('the planner day chip', () => {
+  it('is no appointment on the card (the card lists the planned ToDos already)', () => {
+    const chip = item({
+      source: 'planner',
+      kind: 'plan',
+      allDay: true,
+      title: 'Plan · 1 h · 2 Dinge',
+    });
+    expect(todayAppointments([chip], DAY, '09:00').shown).toEqual([]);
+    expect(untilNext([chip], DAY, '09:00')).toBeUndefined();
+  });
+});
