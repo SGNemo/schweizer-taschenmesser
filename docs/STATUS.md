@@ -20,6 +20,8 @@ Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engin
 
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 
+Website auf Identität v3.1, Paket 2 (`docs/site-screenshots-v3`): Hero- und Fokus-Bilder, README-Bilder und Social-Preview aus der v3.1-App (Testdaten), Planer im Modulkatalog und als Hinweis mit Handybild über den Bereichen; Planer-Brett am Desktop und Kalender mit Plan-Chip nach Planer-Paket 2 nachziehen ([scribble/BOARD.md](../scribble/BOARD.md)).
+
 Website auf Identität v3.1, Paket 1 (`design/site-identity-v3`): Designrunde 4 (Richtung B „Schaufenster“), Identity-Tokens und `identity.css`, Modulkarten in Modulfarbe mit Widget-Skizze aus dem Katalog (`gen:modules` liefert `icon`, `hue`, `head`, `widget`), Kopf-Silhouetten-Leiste, keine Streifen, keine Farbfläche; Paket 2 (neue Screenshots, OG-Bild) nach Identity-Paket 0–3.
 
 Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.
