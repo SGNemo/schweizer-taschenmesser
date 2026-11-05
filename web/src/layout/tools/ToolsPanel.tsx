@@ -109,9 +109,9 @@ export function ToolsPanel() {
 
   /**
    * Moves focus to `target` once it is on screen: the tool list and the tool body load lazily, so it looks again for
-   * up to a second. It never takes focus back from where the user has gone meanwhile (only from where it was when the
-   * pick or the opening happened, the landing pane or nowhere). `now`: look in this frame already (on opening); a pick
-   * waits for the new tool's render.
+   * up to a second. It never takes focus back from where the user has gone meanwhile: only from where it was when the
+   * pick or the opening happened (until it has landed once), the landing pane or nowhere. `now`: look in this frame
+   * already (on opening); a pick waits for the new tool's render.
    */
   const focusIn = (target: PanelFocus | null, now = false) => {
     if (!target) return;
@@ -119,7 +119,7 @@ export function ToolsPanel() {
       searchRef.current?.focus();
       return;
     }
-    const from = document.activeElement;
+    let from: Element | null = document.activeElement;
     let frames = 0;
     const step = () => {
       const panel = panelRef.current;
@@ -135,7 +135,11 @@ export function ToolsPanel() {
         field.focus();
         return;
       }
-      if (pane && active !== pane) pane.focus({ preventScroll: true });
+      if (pane && active !== pane) {
+        pane.focus({ preventScroll: true });
+        // Landed: going back to where it came from (the search) is the user's choice from now on.
+        from = null;
+      }
       if ((target === 'tool' || !pane) && frames++ < 60) requestAnimationFrame(step);
     };
     if (now) step();
