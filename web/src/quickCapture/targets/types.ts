@@ -20,12 +20,12 @@ export interface CaptureTarget {
   build(fields: CaptureFields, ctx: BuildContext): Record<string, unknown>;
 }
 
-export type CaptureErrorCode = 'module-off' | 'invalid' | 'unknown-target';
+export type CaptureErrorCode = 'module-off' | 'invalid' | 'unknown-target' | 'currency';
 
 export class CaptureError extends Error {
   constructor(
     readonly code: CaptureErrorCode,
-    /** Module name for `module-off`. */
+    /** Module name for `module-off`, currency code for `currency`. */
     readonly detail?: string,
   ) {
     super(code);

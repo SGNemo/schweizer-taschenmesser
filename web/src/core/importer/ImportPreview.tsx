@@ -9,22 +9,37 @@ import type { PreviewRow } from './types';
 import styles from './OnboardingWizard.module.css';
 
 /**
- * Ticks or unticks one row. Rows are linked by `dependsOn` (a task and its new list): unticking the
- * row others depend on unticks them too, ticking a dependent row ticks what it needs.
+ * Ticks or unticks one row. Rows are linked by `dependsOn` (a task and its new list, a subtask and
+ * its new parent), also in a chain: unticking the row others depend on unticks them too, ticking a
+ * dependent row ticks what it needs.
  */
 export function toggleRow(rows: PreviewRow[], index: number, selected: boolean): PreviewRow[] {
   const target = rows.find((r) => r.index === index);
-  const id = target?.candidate.id;
-  const need = target?.candidate.dependsOn;
-  // A row whose new list is invalid cannot be imported (the commit guard would drop it silently):
-  // it stays unticked instead of looking selected.
-  if (selected && need && rows.some((x) => x.candidate.id === need && x.invalid)) return rows;
-  return rows.map((x) => {
-    if (x.index === index) return { ...x, selected };
-    if (selected && need && x.candidate.id === need && !x.invalid) return { ...x, selected };
-    if (!selected && id && x.candidate.dependsOn === id) return { ...x, selected };
-    return x;
-  });
+  if (!target) return rows;
+  const change = new Set([index]);
+  if (selected) {
+    let need = target.candidate.dependsOn;
+    while (need) {
+      const row = rows.find((x) => x.candidate.id === need);
+      if (!row || change.has(row.index)) break;
+      // A row whose new list is invalid cannot be imported (the commit guard would drop it
+      // silently): it stays unticked instead of looking selected.
+      if (row.invalid) return rows;
+      change.add(row.index);
+      need = row.candidate.dependsOn;
+    }
+  } else {
+    const open = [target.candidate.id];
+    while (open.length) {
+      const id = open.pop();
+      for (const x of rows) {
+        if (!id || x.candidate.dependsOn !== id || change.has(x.index)) continue;
+        change.add(x.index);
+        open.push(x.candidate.id);
+      }
+    }
+  }
+  return rows.map((x) => (change.has(x.index) ? { ...x, selected } : x));
 }
 
 export function ImportPreview({

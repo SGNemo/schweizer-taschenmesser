@@ -38,6 +38,49 @@ export function parseDateValue(
 }
 
 const valueOf = (line: string): string => line.slice(line.indexOf(':') + 1).trim();
+
+/** vCard 2.1 (Android exports): `FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:J=C3=BCrgen`. */
+const isQuotedPrintable = (line: string): boolean =>
+  /(?:^|;)(?:ENCODING=)?QUOTED-PRINTABLE(?:;|$)/i.test(
+    line.slice(0, Math.max(0, line.indexOf(':'))),
+  );
+
+/** "J=C3=BCrgen" → "Jürgen", in the property's CHARSET (UTF-8 when none or unknown). */
+function decodeQuotedPrintable(value: string, charset: string | undefined): string {
+  const bytes: number[] = [];
+  const encoder = new TextEncoder();
+  for (const m of value.matchAll(/=([0-9A-Fa-f]{2})|[\s\S]/gu)) {
+    if (m[1]) bytes.push(parseInt(m[1], 16));
+    else bytes.push(...encoder.encode(m[0]));
+  }
+  try {
+    return new TextDecoder(charset ?? 'utf-8').decode(new Uint8Array(bytes));
+  } catch {
+    return new TextDecoder().decode(new Uint8Array(bytes));
+  }
+}
+
+/** The value of a text property, quoted-printable decoded where the line says so (X35). */
+function textOf(line: string): string {
+  const value = valueOf(line);
+  if (!isQuotedPrintable(line)) return value;
+  const charset = /;CHARSET=([^;:]+)/i.exec(line.slice(0, line.indexOf(':')))?.[1];
+  return decodeQuotedPrintable(value, charset).trim();
+}
+
+/** Lines of a vCard: quoted-printable soft breaks (a line ending in "=") joined, then unfolded. */
+function vcfLines(text: string): string[] {
+  const raw = text.replace(/\r\n|\r/g, '\n').split('\n');
+  const joined: string[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    let line = raw[i]!;
+    if (isQuotedPrintable(line))
+      while (line.endsWith('=') && i + 1 < raw.length) line = line.slice(0, -1) + raw[++i]!;
+    joined.push(line);
+  }
+  return unfold(joined.join('\n'));
+}
+
 const propOf = (line: string): string => line.split(/[;:]/)[0]!.toUpperCase();
 const unescapeText = (s: string): string =>
   s
@@ -49,7 +92,7 @@ export function parseVcf(text: string): ParsedPerson[] {
   const out: ParsedPerson[] = [];
   let cur: Partial<ParsedPerson> & { n?: string } = {};
   let inCard = false;
-  for (const line of unfold(text)) {
+  for (const line of vcfLines(text)) {
     const p = propOf(line);
     if (p === 'BEGIN' && /VCARD/i.test(line)) {
       inCard = true;
@@ -67,9 +110,9 @@ export function parseVcf(text: string): ParsedPerson[] {
         });
       inCard = false;
     } else if (inCard) {
-      if (p === 'FN') cur.name = unescapeText(valueOf(line));
+      if (p === 'FN') cur.name = unescapeText(textOf(line));
       else if (p === 'N') {
-        const [family, given] = valueOf(line).split(';');
+        const [family, given] = textOf(line).split(';');
         cur.n = [given, family].filter(Boolean).join(' ').trim() || undefined;
       } else if (p === 'BDAY') {
         const d = parseDateValue(valueOf(line));

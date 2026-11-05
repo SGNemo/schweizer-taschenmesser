@@ -106,13 +106,22 @@ export interface DateTimeState {
   relative?: boolean;
   /** A clock time of 1–12 without am/pm ("um 3", "halb vier"): 03:00 or 15:00 is the caller's call. */
   twelveHour?: boolean;
+  /** "24 Uhr" was read as 00:00: the date moves to the next day. */
+  nextDay?: boolean;
 }
 
 const num = (s: string | undefined): number => Number(s);
 const validHour = (h: number, min: number): boolean => h >= 0 && h <= 23 && min >= 0 && min <= 59;
 
 function setTime(st: DateTimeState, h: number, min: number, approx = false): boolean {
-  if (st.time !== undefined || !validHour(h, min)) return false;
+  if (st.time !== undefined) return false;
+  // "morgen 24 Uhr" is midnight at the end of that day: 00:00 of the next one (X36).
+  if (h === 24 && min === 0) {
+    st.time = '00:00';
+    st.nextDay = true;
+    return true;
+  }
+  if (!validHour(h, min)) return false;
   st.time = fmtTime(h, min);
   if (approx) st.notes.add('approx-time');
   return true;
@@ -140,8 +149,20 @@ function fullYear(y: number): number {
   return y < 100 ? 2000 + y : y;
 }
 
-function setExplicitDate(st: DateTimeState, today: Ymd, y: number, m: number, d: number): boolean {
-  if (st.date || !isValidDate(y, m, d)) return false;
+/** Marks a typed date that does not exist; the caller leaves its text in place (X20). */
+const INVALID = 'invalid';
+type RuleOutcome = boolean | typeof INVALID;
+
+function setExplicitDate(
+  st: DateTimeState,
+  today: Ymd,
+  y: number,
+  m: number,
+  d: number,
+): RuleOutcome {
+  if (st.date) return false;
+  // Years before 1000 are typos ("1.1.0001"), never a date to save (X29).
+  if (y < 1000 || !isValidDate(y, m, d)) return INVALID;
   st.date = { y, m, d };
   if (cmpDate(st.date, today) < 0) st.notes.add('past-date');
   return true;
@@ -268,9 +289,17 @@ function extractClockTime(s: Scan, st: DateTimeState): void {
   }
 }
 
+/** A year-less day/month: the next occurrence, or INVALID when no year has that day ("31.11."). */
+function yearless(st: DateTimeState, today: Ymd, month: number, day: number): RuleOutcome {
+  const d = resolveYearless(today, month, day, st.notes);
+  if (!d) return INVALID;
+  st.date = d;
+  return true;
+}
+
 function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
   if (st.date) return;
-  const rules: { re: RegExp; run: (m: RegExpExecArray) => boolean }[] = [
+  const rules: { re: RegExp; run: (m: RegExpExecArray) => RuleOutcome }[] = [
     {
       re: /(?<![\d.,-])(\d{4})-(\d{2})-(\d{2})(?![\d])/u,
       run: (m) => setExplicitDate(st, today, num(m[1]), num(m[2]), num(m[3])),
@@ -279,11 +308,10 @@ function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
       // "am 3.10.", "3.10.2026", "3.10.26"
       re: /(?<![\p{L}\d.,])(?:am\s+)?(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{4})|(\d{2}))?(?![\d])/iu,
       run: (m) => {
-        const year = m[3] ?? m[4];
-        if (year) return setExplicitDate(st, today, fullYear(num(year)), num(m[2]), num(m[1]));
-        const d = resolveYearless(today, num(m[2]), num(m[1]), st.notes);
-        if (d) st.date = d;
-        return d !== undefined;
+        // A four-digit year is taken as written; only a two-digit one means 20xx.
+        const year = m[3] ? num(m[3]) : m[4] ? fullYear(num(m[4])) : undefined;
+        if (year !== undefined) return setExplicitDate(st, today, year, num(m[2]), num(m[1]));
+        return yearless(st, today, num(m[2]), num(m[1]));
       },
     },
     {
@@ -295,9 +323,7 @@ function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
       run: (m) => {
         const month = MONTHS[m[2]!.toLowerCase()]!;
         if (m[3]) return setExplicitDate(st, today, num(m[3]), month, num(m[1]));
-        const d = resolveYearless(today, month, num(m[1]), st.notes);
-        if (d) st.date = d;
-        return d !== undefined;
+        return yearless(st, today, month, num(m[1]));
       },
     },
     {
@@ -386,8 +412,14 @@ function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
     const before = s.t;
     const m = take(s, rule.re);
     if (!m) continue;
-    if (rule.run(m)) return;
+    const outcome = rule.run(m);
+    if (outcome === true) return;
     s.t = before;
+    if (outcome === INVALID) {
+      // Never swap a date that does not exist for another one: it stays in the text, flagged.
+      st.notes.add('invalid-date');
+      return;
+    }
   }
 }
 
@@ -411,5 +443,7 @@ export function extractDateTime(s: Scan, now: Date): DateTimeState {
   extractClockTime(s, st);
   extractDate(s, st, today);
   extractDayPart(s, st);
+  // Without a date the caller's default (today or tomorrow by the clock) already lands right.
+  if (st.nextDay && st.date) st.date = addDays(st.date, 1);
   return st;
 }

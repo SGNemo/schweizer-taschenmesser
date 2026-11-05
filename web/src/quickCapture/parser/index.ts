@@ -171,6 +171,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (money) {
     fields.amountMinor = money.amountMinor;
     fields.kind = kw.income ? 'income' : money.kind;
+    if (money.currency) fields.currency = money.currency;
   }
   dt.notes.forEach((n) => notes.add(n));
   if (endTime && dt.time !== undefined) fields.endTime = endTime;
@@ -218,9 +219,13 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   const nowTime = fmtTime(opts.now.getHours(), opts.now.getMinutes());
   const timePassed = hasTime && dt.time! <= nowTime;
 
-  // Date/time defaults per type – always reported through `notes`, never silent.
+  // Date/time defaults per type – always reported through `notes`, never silent. A typed date that
+  // does not exist ("31.11.") is never replaced by an assumed one: the entry stays without a date.
   let date = dt.date;
-  if (primaryType === 'event' || primaryType === 'reminder') {
+  const assume = !notes.has('invalid-date');
+  if (!assume) {
+    // keep the entry without a date
+  } else if (primaryType === 'event' || primaryType === 'reminder') {
     if (!date && recurrence) date = startForRecurrence(recurrence, today, timePassed);
     if (!date && hasTime) {
       date = dt.time! > nowTime ? today : addDays(today, 1);
@@ -233,8 +238,8 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   } else if (!date && recurrence) {
     date = startForRecurrence(recurrence, today);
   }
-  if (primaryType === 'finance' && !date) date = today;
-  if (primaryType === 'invoice' && !date) {
+  if (primaryType === 'finance' && !date && assume) date = today;
+  if (primaryType === 'invoice' && !date && assume) {
     date = addDays(today, 14); // a usual payment term; reported as an assumption, never silent
     notes.add('assumed-date');
   }

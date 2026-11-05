@@ -4,6 +4,7 @@ import { commitImport, undoImport } from '@/core/importer/batches';
 import { buildPreview } from '@/core/importer/plan';
 import { allManifests, getManifest, visibleManifests } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
+import { t } from '@/strings';
 import { buildExample } from './example';
 import { describeCollection, itemJsonSchema } from './format';
 import { createJsonRuntime } from './importer';
@@ -163,6 +164,26 @@ describe('parsing', () => {
       accountId: rows[0]!.candidate.id,
     });
     expect(rows[3]!.invalid).toContain('accountId');
+  });
+
+  it('rejects impossible calendar dates as entry errors (X19)', async () => {
+    const { rows } = await run('calendar', [
+      { collection: 'event', title: 'Feb', startDate: '2026-02-30' },
+      { collection: 'event', title: 'Nov', startDate: '2026-11-31' },
+      { collection: 'event', title: 'Schalttag', startDate: '2028-02-29' },
+      {
+        collection: 'event',
+        title: 'Serie',
+        startDate: '2026-11-02',
+        recurrence: { freq: 'weekly', until: '2026-11-31' },
+      },
+    ]);
+    expect(rows[0]!.invalid).toContain(`startDate: ${t.dataApi.badFormat}`);
+    expect(rows[1]!.invalid).toContain(`startDate: ${t.dataApi.badFormat}`);
+    expect(rows[2]!.invalid).toBeUndefined();
+    expect(rows[3]!.invalid).toContain(`recurrence: ${t.dataApi.badFormat}`);
+    const tasks = await run('todos', [{ collection: 'task', title: 'X', dueDate: '2026-04-31' }]);
+    expect(tasks.rows[0]!.invalid).toContain(`dueDate: ${t.dataApi.badFormat}`);
   });
 
   it('fills the default list for tasks without one', async () => {

@@ -38,6 +38,8 @@ export const quickCapture: Strings['quickCapture'] = {
     pastDate: 'is in the past',
     approxTime: 'Approximate time',
     ambiguousTime: 'Check time',
+    invalidDate: 'This date doesn’t exist – please check',
+    currency: (code: string) => `Amount in ${code}`,
     allDay: 'all day',
     income: 'Income',
     expense: 'Expense',
@@ -73,6 +75,8 @@ export const quickCapture: Strings['quickCapture'] = {
   errors: {
     moduleOff: (name: string) => `The “${name}” module is turned off.`,
     invalid: 'The entry is incomplete. Check title, date and amount.',
+    currency: (code: string) =>
+      `Amount in ${code}: please record it in the full form in Finances, where the account fits.`,
     failed: 'Saving failed.',
   },
   todoTimeNote: (time: string) => `Time: ${time}`,

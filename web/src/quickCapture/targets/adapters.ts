@@ -1,3 +1,4 @@
+import { DEFAULT_CURRENCY } from '@/core/money';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
@@ -123,6 +124,9 @@ const finance: CaptureTarget = {
   // `accountId` comes from the module's `aiCreateDefaults` (the primary account).
   build: (f, ctx) => {
     if (!f.amountMinor || f.amountMinor < 1) throw new CaptureError('invalid');
+    // The account's currency is not known here: an amount in another one goes to the full form.
+    if (f.currency && f.currency !== DEFAULT_CURRENCY)
+      throw new CaptureError('currency', f.currency);
     return {
       kind: f.kind ?? 'expense',
       amountMinor: f.amountMinor,
@@ -142,6 +146,7 @@ const invoices: CaptureTarget = {
     return {
       payee: f.title.trim(),
       amountMinor: f.amountMinor,
+      ...(f.currency ? { currency: f.currency } : {}),
       dueDate: date(f.date ?? ctx.today),
       status: 'open',
       ...noteOf(f.note),
@@ -158,6 +163,7 @@ const subscriptions: CaptureTarget = {
     return {
       name: title(f),
       amountMinor: f.amountMinor,
+      ...(f.currency ? { currency: f.currency } : {}),
       recurrence: f.recurrence,
       startDate: date(f.date ?? ctx.today),
     };

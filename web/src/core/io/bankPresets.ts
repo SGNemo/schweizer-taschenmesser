@@ -4,8 +4,8 @@
  * dots, punctuation = one space). A preset is recognised from the header row alone; the file's own
  * order of rows and the lines above the header do not matter.
  */
-import { locateHeader, type BankCsvLayout } from '@/core/io/bank';
-import type { Delimiter } from '@/core/io/csv';
+import { locateHeader, type BankCsvLayout } from './bank';
+import type { Delimiter } from './csv';
 
 export interface BankPreset {
   id: string;

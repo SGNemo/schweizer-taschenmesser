@@ -19,6 +19,18 @@ import { now, pad2, toDateString, today } from './now';
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/**
+ * A real calendar date in the 'YYYY-MM-DD' shape (not 2026-02-30). For the entrances (data API,
+ * importers): `DATE_RE` in the schemas checks only the shape, so old records stay saveable.
+ */
+export function isCalendarDate(s: string): boolean {
+  if (!DATE_RE.test(s)) return false;
+  const [y, m, d] = s.split('-').map(Number) as [number, number, number];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+  return days !== undefined && d >= 1 && d <= days;
+}
+
 export function parseDate(s: string): Date {
   const [y, m, d] = s.split('-').map(Number);
   // setFullYear: `new Date(y, …)` reads the years 0–99 as 1900–1999.

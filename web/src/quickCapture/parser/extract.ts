@@ -16,6 +16,8 @@ export interface ExtractedFacts {
   /** Integer cents, positive. */
   amountMinor?: number;
   kind?: 'expense' | 'income';
+  /** ISO 4217 code of an amount in another currency; absent means euro. */
+  currency?: string;
   /** 'YYYY-MM-DD' */
   date?: string;
   /** 'HH:mm' */
@@ -49,6 +51,7 @@ export function extractFacts(
   if (money) {
     out.amountMinor = money.amountMinor;
     out.kind = money.kind;
+    if (money.currency) out.currency = money.currency;
   }
   // "jeden Montag" without a date starts at the next such day.
   const date =

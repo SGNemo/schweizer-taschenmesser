@@ -42,6 +42,8 @@ export interface CaptureFields {
   recurrence?: CaptureRecurrence;
   /** Integer cents, always positive; `kind` gives the direction. */
   amountMinor?: number;
+  /** ISO 4217 code of an amount in another currency ("12 USD", "¥500"); absent means euro. */
+  currency?: string;
   kind?: 'expense' | 'income';
   url?: string;
   /** Effort in minutes; only set for ToDos ("Formular ausfüllen 15 min"). */
@@ -52,7 +54,13 @@ export interface CaptureFields {
 
 /** Hints the UI can surface next to the chips; the parser never hides an assumption. */
 export type CaptureNote =
-  'assumed-date' | 'rolled-year' | 'past-date' | 'approx-time' | 'ambiguous-time';
+  | 'assumed-date'
+  | 'rolled-year'
+  | 'past-date'
+  | 'approx-time'
+  | 'ambiguous-time'
+  /** A typed date that does not exist ("31.11.", "15.13."); it stays in the title, no date is assumed. */
+  | 'invalid-date';
 
 export interface CaptureAlternative {
   type: CaptureType;
