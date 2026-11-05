@@ -167,10 +167,10 @@ function report(page: Page): Promise<Report> {
               `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} +${e.scrollWidth - e.clientWidth}px`,
           )
       : [];
-    // The sidebar and the bottom bar share the label; the sidebar is the one with the area groups.
-    const nav = [
-      ...document.querySelectorAll<HTMLElement>('nav[aria-label="Hauptnavigation"]'),
-    ].find((n) => n.querySelector('section[data-area]'));
+    // The sidebar is the navigation with the area groups (labels follow the UI language, so none is used here).
+    const nav = [...document.querySelectorAll<HTMLElement>('nav')].find((n) =>
+      n.querySelector('section[data-area]'),
+    );
     const groups = nav ? [...nav.querySelectorAll<HTMLElement>('section[data-area]')] : [];
     const sidebar =
       nav && groups.length > 0
