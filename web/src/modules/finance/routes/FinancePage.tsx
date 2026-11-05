@@ -121,7 +121,7 @@ export default function FinancePage() {
       </PageHeader>
 
       {view ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <AccountCards data={view} />
         </HeroSlot>
       ) : null}

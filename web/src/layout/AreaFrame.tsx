@@ -1,4 +1,11 @@
-import { useCallback, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import { useLocation } from 'react-router';
 import { isFocusPath } from '@/core/focus/path';
 import { areaOfPath } from '@/core/modules/areas';
@@ -9,26 +16,24 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { tComfort } from '@/strings.comfort';
-import { Button, Icon, SettingsLink, SubNav } from '@/ui';
-import { EMPTY_HERO, HeroContext, type HeroTargets } from '@/core/shell/heroContext';
-import { DayBlock, HeroFigure, HourStrip } from '@/ui/identity';
-import { useCalendarItems } from '@/core/modules/contributions';
-import { headHeight, type ModuleHue, type PageLayout } from '@/core/modules/types';
-import { dateTimeFormat } from '@/core/i18n/format';
-import { formatDay, nowTime } from '@/core/time/dates';
-import { today } from '@/core/time/now';
-import { tIdentity } from '@/strings.identity';
+import { Button, HeadEyebrow, HeadSurface, Icon, SettingsLink, SubNav } from '@/ui';
+import {
+  EMPTY_HERO,
+  HeroContext,
+  HeroControlsContext,
+  type HeroArea,
+  type HeroControls,
+  type HeroTargets,
+} from '@/core/shell/heroContext';
+import { HeroFigure } from '@/ui/identity';
+import { headHeight, SIGNATURE_SLOTS, type ModuleHue, type PageLayout } from '@/core/modules/types';
 import { PageContainer } from './PageContainer';
+import { DefaultSignature } from './signatures';
 import { useHeroCollapse } from './useHeroCollapse';
 import { useModuleHeadline } from './useModuleHeadline';
 import { useNavTree } from './useNavItems';
 import styles from './AreaFrame.module.css';
 
-/**
- * Frame of a module page that belongs to an area: the area name as eyebrow and, when the area has
- * more than one enabled module, its modules as tabs. Pure navigation; the module renders below.
- * On a phone it is one line (label, scrollable tabs, actions); on the desktop the tabs sit below.
- */
 /** "Mit KI eintragen" for a module that declares AI actions (and the user has not switched them off). */
 function WriteButton({ pathname }: { pathname: string }) {
   const open = useUiStore((s) => s.openWritePalette);
@@ -39,11 +44,29 @@ function WriteButton({ pathname }: { pathname: string }) {
   const available = useWriteAvailable(manifest?.id);
   const write = useWriteLabel();
   if (!available || writeInMenu) return null;
+  // On the phone only the icon shows: the name stays as the tooltip and the accessible name.
   return (
-    <Button variant="ghost" onClick={open} data-testid="ai-write-button" aria-label={write.label}>
+    <Button
+      variant="ghost"
+      onClick={open}
+      data-testid="ai-write-button"
+      aria-label={write.label}
+      title={write.label}
+    >
       <Icon name={write.ai ? 'sparkles' : 'plus'} size={16} />
       <span className={styles.writeLabel}>{write.label}</span>
     </Button>
+  );
+}
+
+/** One stable ref callback per hero area (a new function would re-run every portal on every render). */
+function useTarget(
+  area: HeroArea,
+  setTargets: Dispatch<SetStateAction<HeroTargets>>,
+): (el: HTMLElement | null) => void {
+  return useCallback(
+    (el: HTMLElement | null) => setTargets((c) => (c[area] === el ? c : { ...c, [area]: el })),
+    [area, setTargets],
   );
 }
 
@@ -57,43 +80,15 @@ function ModuleSettingsLink({ pathname }: { pathname: string }) {
   return <SettingsLink to={to} label={tComfort.get().gear.module} />;
 }
 
-/** Today as the figure of a `zeit` head whose signature is the calendar: the day number large, month, weekday and week. */
-function TodayBlock() {
-  const day = today();
-  const date = new Date(`${day}T12:00:00`);
-  return (
-    <DayBlock
-      day={String(date.getDate())}
-      month={dateTimeFormat({ month: 'long' }).format(date)}
-      weekday={dateTimeFormat({ weekday: 'long' }).format(date)}
-      week={tIdentity.get().head.week(formatDay(day, 'II'))}
-    />
-  );
-}
-
-/** The hours of today, filled where an appointment (any module's calendar contribution) lies; beside the day number. */
-function TodayStrip() {
-  const day = today();
-  const items = useCalendarItems({ from: day, to: day });
-  const timed = (items ?? []).filter((i) => !i.allDay && !i.done && !!i.time);
-  return (
-    <HourStrip events={timed.map((i) => ({ time: i.time!, endTime: i.endTime }))} now={nowTime()} />
-  );
-}
-
-/** CSS length of the head's content column: the page variant's width plus the gutters the band bleeds through. */
-const headMax = (variant: PageLayout): string =>
-  variant === 'full'
-    ? 'none'
-    : `calc(var(--page-${variant}) + 2 * var(--frame-bleed-x, var(--space-5)))`;
-
 /**
- * The module frame (identity v3, `docs/design/identity-v3/02-CONCEPT.md`): every module page sits in it. A full-width band
- * ("head") in the module's hue and the area's pattern holds the eyebrow with the icon plate, the page's h1
- * (`PageHeader` renders it into the head), the headline figure or the module's signature (`HeroSlot`) and the actions.
- * The variant (`identity.head`) sets its height and silhouette. Under it the area's other modules as a quiet sub-navigation,
- * then the page in its `PageContainer` (one width per page variant). On the phone the band shrinks to a one-line bar when
- * the page is scrolled. Outside an area (library, settings, focus screens) it is just the container.
+ * The module frame (identity v3.1, docs/design/MODULE-IDENTITY.md "Head variants"): every module page sits in it. A
+ * full-width band in the module's hue and the area's pattern (`HeadSurface`) holds, in a content column capped at
+ * `--page-content` and aligned to the page, the page's h1 (`PageHeader` renders it into the head), then one row:
+ * the headline figure, the signature slot (sized by the head variant; the frame draws the module's signature until
+ * the page fills it with `HeroSlot area="signature"`) and the free slot for strips and controls. The actions sit at
+ * the band's right edge. Under it the area's other modules as a quiet sub-navigation, then the page in its
+ * `PageContainer`. On the phone the band shrinks to a one-line bar when the page is scrolled. Outside an area
+ * (library, settings, focus screens) it is just the container.
  */
 export function AreaFrame({
   variant = 'wide',
@@ -113,119 +108,126 @@ export function AreaFrame({
     (m) => pathname === `/${m.id}` || pathname.startsWith(`/${m.id}/`),
   );
   const [targets, setTargets] = useState<HeroTargets>(EMPTY_HERO);
-  const setNotice = useCallback(
-    (el: HTMLElement | null) => setTargets((c) => (c.notice === el ? c : { ...c, notice: el })),
+  const setNotice = useTarget('notice', setTargets);
+  const setBackdrop = useTarget('backdrop', setTargets);
+  const setTitle = useTarget('title', setTargets);
+  const setFigure = useTarget('figure', setTargets);
+  const setSignature = useTarget('signature', setTargets);
+  const setExtra = useTarget('extra', setTargets);
+  // Areas the page has claimed with a HeroSlot (the frame's defaults step back) and the title text for the compact bar.
+  const [claims, setClaims] = useState<Record<string, number>>({});
+  const [titleText, setTitleText] = useState<string>();
+  const controls = useMemo<HeroControls>(
+    () => ({
+      claim: (area) => {
+        setClaims((c) => ({ ...c, [area]: (c[area] ?? 0) + 1 }));
+        return () => setClaims((c) => ({ ...c, [area]: Math.max(0, (c[area] ?? 1) - 1) }));
+      },
+      setTitle: setTitleText,
+    }),
     [],
   );
-  const setBackdrop = useCallback(
-    (el: HTMLElement | null) => setTargets((c) => (c.backdrop === el ? c : { ...c, backdrop: el })),
-    [],
-  );
-  const setTitle = useCallback(
-    (el: HTMLElement | null) => setTargets((c) => (c.title === el ? c : { ...c, title: el })),
-    [],
-  );
-  const setFigure = useCallback(
-    (el: HTMLElement | null) => setTargets((c) => (c.figure === el ? c : { ...c, figure: el })),
-    [],
-  );
-  const setExtra = useCallback(
-    (el: HTMLElement | null) => setTargets((c) => (c.extra === el ? c : { ...c, extra: el })),
-    [],
-  );
+  const claimed = (area: HeroArea) => (claims[area] ?? 0) > 0;
   const collapsed = useHeroCollapse();
   const headline = useModuleHeadline(manifest);
   const framed = !!area && !isFocusPath(pathname);
   const id = manifest?.identity;
-  const style = {
-    ...(id?.hue2 ? { '--module-color-2': `var(--mod-${id.hue2})` } : {}),
-    '--head-max': headMax(variant),
-  } as CSSProperties;
+  const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
-      {framed ? <div className={styles.notice} ref={setNotice} /> : null}
-      {framed ? (
-        <div
-          className={styles.band}
-          data-hue={id?.hue}
-          data-head={id?.head}
-          data-size={id ? headHeight(id.head) : undefined}
-          data-area={area?.id}
-          data-shape={id?.shape}
-          data-type={id?.type}
-          data-signature={id?.signature}
-          style={style}
-          data-testid="module-frame"
-        >
-          <div className={styles.pattern} aria-hidden="true" />
-          <div className={styles.backdrop} ref={setBackdrop} aria-hidden="true" />
-          <div className={styles.inner}>
-            <p className={styles.eyebrow}>
-              {manifest ? (
-                <span className={styles.plate} aria-hidden="true">
-                  <Icon name={manifest.icon} size={16} />
-                </span>
-              ) : null}
-              <span>
+      <HeroControlsContext.Provider value={framed ? controls : undefined}>
+        {framed ? <div className={styles.notice} ref={setNotice} /> : null}
+        {framed ? (
+          <HeadSurface
+            bleed
+            className={styles.band}
+            hue={id?.hue}
+            hue2={id?.hue2}
+            area={area?.id}
+            size={id ? headHeight(id.head) : 'hero'}
+            head={id?.head}
+            shape={id?.shape}
+            type={id?.type}
+            signature={id?.signature}
+            slot={slot}
+            backdropRef={setBackdrop}
+            testId="module-frame"
+          >
+            <div className={styles.inner} data-width={variant}>
+              <HeadEyebrow icon={manifest?.icon} className={styles.eyebrow}>
                 {area?.label}
                 {manifest ? ` · ${manifest.name}` : ''}
-              </span>
-            </p>
-            <div className={styles.title} ref={setTitle} />
-            <div className={styles.figure} ref={setFigure}>
-              {headline ? (
-                <div data-testid="module-headline">
-                  <HeroFigure
-                    label={headline.label}
-                    value={headline.value}
-                    detail={headline.detail}
-                    type={id?.type}
-                  />
+              </HeadEyebrow>
+              <div className={styles.actions}>
+                <WriteButton pathname={pathname} />
+                <ModuleSettingsLink pathname={pathname} />
+              </div>
+              <div className={styles.column}>
+                <div className={styles.title} ref={setTitle} />
+                <div className={styles.body}>
+                  <div className={styles.figure}>
+                    <div className={styles.target} ref={setFigure} />
+                    {headline && !claimed('figure') ? (
+                      <div data-testid="module-headline">
+                        <HeroFigure
+                          label={headline.label}
+                          value={headline.value}
+                          detail={headline.detail}
+                          type={id?.type}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  {id && slot !== 'none' && (id.signature !== 'none' || claimed('signature')) ? (
+                    <div
+                      className={styles.signature}
+                      data-slot={slot}
+                      data-default={claimed('signature') ? undefined : 'true'}
+                      data-testid="module-signature"
+                    >
+                      <div className={styles.target} ref={setSignature} />
+                      {claimed('signature') ? null : (
+                        <DefaultSignature id={id.signature} size={slot} />
+                      )}
+                    </div>
+                  ) : null}
+                  <div className={styles.extra} ref={setExtra} />
                 </div>
-              ) : id?.signature === 'calendarLeaf' ? (
-                <TodayBlock />
-              ) : null}
+              </div>
             </div>
-            <div className={styles.extra} ref={setExtra}>
-              {id?.signature === 'calendarLeaf' ? <TodayStrip /> : null}
-            </div>
-            <div className={styles.actions}>
-              <WriteButton pathname={pathname} />
-              <ModuleSettingsLink pathname={pathname} />
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {framed ? (
-        <div
-          className={styles.compact}
-          data-visible={collapsed ? 'true' : undefined}
-          data-hue={id?.hue}
-          style={style}
-          aria-hidden="true"
-          data-testid="module-compact"
-        >
-          {manifest ? <Icon name={manifest.icon} size={16} /> : null}
-          <span className={styles.compactName}>{targets.title?.textContent || manifest?.name}</span>
-        </div>
-      ) : null}
-      <PageContainer variant={variant} hue={hue}>
-        {framed && area && area.items.length > 1 ? (
-          <SubNav
-            label={t.nav.areaTabs(area.label)}
-            eyebrow={area.label}
-            items={area.items.map((i) => ({
-              id: i.to,
-              label: i.label,
-              to: i.to,
-              icon: i.icon,
-              hue: i.hue,
-              active: pathname === i.to || pathname.startsWith(`${i.to}/`),
-            }))}
-          />
+          </HeadSurface>
         ) : null}
-        {children}
-      </PageContainer>
+        {framed ? (
+          <div
+            className={styles.compact}
+            data-visible={collapsed ? 'true' : undefined}
+            data-hue={id?.hue}
+            data-hue2={id?.hue2}
+            aria-hidden="true"
+            data-testid="module-compact"
+          >
+            {manifest ? <Icon name={manifest.icon} size={16} /> : null}
+            <span className={styles.compactName}>{titleText || manifest?.name}</span>
+          </div>
+        ) : null}
+        <PageContainer variant={variant} hue={hue}>
+          {framed && area && area.items.length > 1 ? (
+            <SubNav
+              label={t.nav.areaTabs(area.label)}
+              eyebrow={area.label}
+              items={area.items.map((i) => ({
+                id: i.to,
+                label: i.label,
+                to: i.to,
+                icon: i.icon,
+                hue: i.hue,
+                active: pathname === i.to || pathname.startsWith(`${i.to}/`),
+              }))}
+            />
+          ) : null}
+          {children}
+        </PageContainer>
+      </HeroControlsContext.Provider>
     </HeroContext.Provider>
   );
 }

@@ -1,14 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { MODULE_HUES } from '@/core/modules/types';
-import {
-  TOOL_CATEGORIES as SCRIPT_CATEGORIES,
-  TOOL_SIGNATURES as SCRIPT_SIGNATURES,
-} from '../../../scripts/lib/checkTools';
+import { MODULE_HUES, SIGNATURES } from '@/core/modules/types';
+import { TOOL_CATEGORIES as SCRIPT_CATEGORIES } from '../../../scripts/lib/checkTools';
 import { orderForPanel } from '@/layout/tools/panelLogic';
 import { allTools } from './registry';
 import { toolKeywords } from './keywords';
-import { TOOL_CATEGORIES, TOOL_SIGNATURES } from './types';
+import { TOOL_CATEGORIES } from './types';
 import {
   activeTools,
   DEFAULT_TOOLS,
@@ -119,7 +116,6 @@ describe('tool id migration', () => {
 describe('tool identity v3', () => {
   it('the check script knows the same lists as the contract', () => {
     expect(SCRIPT_CATEGORIES).toEqual([...TOOL_CATEGORIES]);
-    expect(SCRIPT_SIGNATURES).toEqual([...TOOL_SIGNATURES]);
   });
 
   const tokens = readFileSync('src/ui/tokens.css', 'utf8');
@@ -133,7 +129,8 @@ describe('tool identity v3', () => {
         expect(MODULE_HUES, tool.id).toContain(hue2);
         expect(hue2, tool.id).not.toBe(hue);
       }
-      expect(TOOL_SIGNATURES, tool.id).toContain(signature);
+      // One signature library for modules and tools (identity v3.1).
+      expect(SIGNATURES, tool.id).toContain(signature);
       expect(tool.keywords.length, tool.id).toBeGreaterThan(1);
     }
   });

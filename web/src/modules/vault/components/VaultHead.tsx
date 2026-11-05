@@ -26,7 +26,7 @@ export function VaultHead({ docs, day }: { docs: Stored<VaultDocument>[]; day: s
           testId="vault-total"
         />
       </HeroSlot>
-      <HeroSlot>
+      <HeroSlot area="signature">
         <p className={styles.plate} data-testid="vault-local">
           <Icon name="lock" size={16} />
           <span>{t.vault.localOnly}</span>

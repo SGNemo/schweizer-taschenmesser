@@ -32,7 +32,7 @@ export function MusicHero({ api }: { api: PlayerApi }) {
           <div className={styles.tone} style={style} data-testid="cover-tone" />
         </HeroSlot>
       ) : null}
-      <HeroSlot area="extra">
+      <HeroSlot area="signature">
         <div className={styles.coverLarge} data-testid="music-cover">
           {cover ? <img src={cover} alt="" /> : <Icon name="music" size={56} />}
         </div>

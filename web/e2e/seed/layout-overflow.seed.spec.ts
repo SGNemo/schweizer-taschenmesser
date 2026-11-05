@@ -33,6 +33,11 @@ const PAGES = [
   ...MODULE_IDS.map((id) => `/${id}`),
   '/calendar?view=month',
   '/todos?view=board',
+  // One split route per master-detail module (identity v3.1, C18): the detail pane opens beside the list.
+  '/finance?tab=transactions',
+  '/calendar?view=day',
+  '/accounts',
+  '/disk?tab=scan',
   '/library',
   '/library/todos',
   '/tools',
@@ -79,7 +84,11 @@ interface Report {
   mainOverflow: number;
   /** Elements that end beyond the window (tag.class right=px). */
   sticking: string[];
+  /** Elements that clip their own content sideways (`overflow: hidden` without an ellipsis; tag.class +px). */
+  clipped: string[];
   subnavOverflow: number;
+  /** The sidebar at 1920 × 1080 (identity v3.1, F06): `null` without a wide sidebar; `overflow` = px beyond its scroller. */
+  sidebar: { groups: number; links: number; rowH: number; overflow: number } | null;
   /** Left/right free space of the page container inside `main` (px), `null` without a container. */
   centre: { left: number; right: number; width: number } | null;
   main: { left: number; right: number } | null;
@@ -113,6 +122,72 @@ function report(page: Page): Promise<Report> {
               `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} right=${Math.round(e.getBoundingClientRect().right)}`,
           )
       : [];
+    // Identity v3.1 (C18): content cut off by `overflow: hidden` is as bad as content beyond the window; an ellipsis
+    // (or a line clamp) says so and is fine, a horizontal scroller is a scroller.
+    // Real content (text, pictures) that ends beyond the right edge of a box with `overflow: hidden`; a decorative
+    // pseudo-element or an empty box that pokes out is not content.
+    const contentRight = (e: HTMLElement): number => {
+      let right = -Infinity;
+      const walker = document.createTreeWalker(e, NodeFilter.SHOW_TEXT);
+      const range = document.createRange();
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!(n.textContent ?? '').trim()) continue;
+        const parent = n.parentElement;
+        if (!parent || getComputedStyle(parent).textOverflow === 'ellipsis') continue;
+        range.selectNodeContents(n);
+        for (const r of range.getClientRects()) right = Math.max(right, r.right);
+      }
+      for (const m of e.querySelectorAll('img, svg, video, canvas'))
+        right = Math.max(right, m.getBoundingClientRect().right);
+      return right;
+    };
+    const clipped = main
+      ? [...main.querySelectorAll<HTMLElement>('*')]
+          .filter((e) => {
+            if (e.offsetParent === null || e.scrollWidth <= e.clientWidth + 1) return false;
+            // Visually hidden text (sr-only: 1 px, clipped) is for screen readers, not cut off.
+            if (e.clientWidth <= 1 || e.clientHeight <= 1) return false;
+            const cs = getComputedStyle(e);
+            if (cs.clip !== 'auto' || cs.clipPath !== 'none') return false;
+            if (cs.overflowX !== 'hidden' && cs.overflowX !== 'clip') return false;
+            if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none') return false;
+            // A scroller inside: the content is reachable there.
+            if (
+              [...e.children].some((c) => {
+                const o = getComputedStyle(c).overflowX;
+                return o === 'auto' || o === 'scroll';
+              })
+            )
+              return false;
+            return contentRight(e) > e.getBoundingClientRect().right + 1;
+          })
+          .slice(0, 6)
+          .map(
+            (e) =>
+              `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} +${e.scrollWidth - e.clientWidth}px`,
+          )
+      : [];
+    // The sidebar is the navigation with the area groups (labels follow the UI language, so none is used here).
+    const nav = [...document.querySelectorAll<HTMLElement>('nav')].find((n) =>
+      n.querySelector('section[data-area]'),
+    );
+    const groups = nav ? [...nav.querySelectorAll<HTMLElement>('section[data-area]')] : [];
+    const sidebar =
+      nav && groups.length > 0
+        ? {
+            groups: groups.length,
+            links: groups.reduce((n, g) => n + g.querySelectorAll('a[href]').length, 0),
+            rowH: Math.round(
+              groups[0]!.querySelector('a[href]')?.getBoundingClientRect().height ?? 0,
+            ),
+            overflow: Math.max(
+              0,
+              ...[...nav.querySelectorAll<HTMLElement>('*'), nav]
+                .filter((e) => ['auto', 'scroll'].includes(getComputedStyle(e).overflowY))
+                .map((e) => e.scrollHeight - e.clientHeight),
+            ),
+          }
+        : null;
     const subnav = document.querySelector<HTMLElement>('[data-testid="subnav"]');
     const pageEl = main?.querySelector<HTMLElement>('[data-testid="page"]');
     const box = (el: Element | null | undefined) => (el ? el.getBoundingClientRect() : null);
@@ -122,6 +197,8 @@ function report(page: Page): Promise<Report> {
       docOverflow: doc.scrollWidth - doc.clientWidth,
       mainOverflow: main ? main.scrollWidth - main.clientWidth : 0,
       sticking,
+      clipped,
+      sidebar,
       subnavOverflow: subnav ? subnav.scrollWidth - subnav.clientWidth : 0,
       centre:
         pb && mb
@@ -158,7 +235,10 @@ for (const vp of VIEWPORTS) {
         for (const path of PAGES) {
           await page.goto(path);
           await expect(page.locator('main h1').first(), path).toBeVisible();
-          // The first paint of lazy content (charts, widgets) may still move things: let it settle.
+          // The first paint of lazy content (charts, widgets) may still move things: let it settle; the sidebar's
+          // area groups arrive with the module states.
+          if (vp.width >= 900)
+            await page.locator('nav section[data-area]').first().waitFor({ timeout: 10_000 });
           await page.waitForTimeout(250);
           const r = await report(page);
           expect(r.docOverflow, `${path}: the page scrolls sideways`).toBeLessThanOrEqual(0);
@@ -166,6 +246,23 @@ for (const vp of VIEWPORTS) {
             0,
           );
           expect(r.sticking, `${path}: elements end beyond the window`).toEqual([]);
+          // Soft: every page of the viewport reports its clipping before the test fails.
+          expect.soft(r.clipped, `${path}: elements clip their content sideways`).toEqual([]);
+          // Identity v3.1 (F06): at 1920 × 1080 the sidebar shows every area and every module in 36 px rows. With all
+          // 24 modules on, 24 rows + 6 heads + home + footer need ≈ 1150 px of the ≈ 800 px the list gets, so it still
+          // scrolls; the overflow is recorded here (the six default modules fit without scrolling).
+          if (vp.width === 1920 && path === '/') {
+            expect(r.sidebar, 'sidebar').not.toBeNull();
+            expect(r.sidebar!.groups, 'areas in the sidebar').toBe(6);
+            expect(r.sidebar!.links, 'modules in the sidebar').toBeGreaterThanOrEqual(
+              MODULE_IDS.length,
+            );
+            expect(r.sidebar!.rowH, 'sidebar rows on a low pointer screen').toBeLessThanOrEqual(36);
+            test.info().annotations.push({
+              type: 'sidebar',
+              description: `1920×1080, ${r.sidebar!.links} modules: the list overflows by ${r.sidebar!.overflow} px`,
+            });
+          }
           if (vp.width >= 900)
             expect(r.subnavOverflow, `${path}: the sub-navigation is cut off`).toBeLessThanOrEqual(
               0,

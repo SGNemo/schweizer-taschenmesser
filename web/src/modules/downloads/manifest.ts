@@ -17,7 +17,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'cobalt',
     hue2: 'sky',
-    widgetType: 'progress',
     widget: 'fortschritt',
     head: 'fokus',
     signature: 'arrowProgress',

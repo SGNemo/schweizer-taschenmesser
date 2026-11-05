@@ -29,7 +29,7 @@ export function ReceiptSignature({
           testId="lists-open"
         />
       </HeroSlot>
-      <HeroSlot>
+      <HeroSlot area="signature">
         {lines.length === 0 ? null : (
           <div className={styles.receipt} data-testid="receipt-signature" aria-hidden="true">
             {lines.slice(0, 3).map((l, i) => (
@@ -60,7 +60,7 @@ export function SuitcaseSignature({
 }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.case} data-testid="suitcase-signature">
         <span className={styles.body} aria-hidden="true">
           <span className={styles.handle} />

@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { AreaId, ModuleHue } from '@/core/modules/types';
-import { Icon, type IconName } from '@/ui';
+import { HeadEyebrow, HeadSurface, type IconName } from '@/ui';
 import styles from './PageHead.module.css';
 
 export interface PageHeadProps {
@@ -28,10 +28,10 @@ export interface PageHeadProps {
 }
 
 /**
- * The head of a page that is not a module page (settings, libraries): the same ingredients as the
- * module head band of `layout/AreaFrame` (tinted surface in the hue, the area's pattern, the hue as the
- * icon plate, text always `--text`), built locally because the band belongs to the shell. A rounded
- * card inside the page, so nothing bleeds past the page container. No edge stripe.
+ * The head of a page that is not a module page (settings, libraries): the same surface as the module head band
+ * of `layout/AreaFrame` (`ui/HeadSurface`: tinted surface in the hue, the area's pattern, the hue as the icon
+ * plate, text always `--text`), as a rounded card inside the page, so nothing bleeds past the page container.
+ * The decoration (a signature at size S) stays on the phone, smaller. No edge stripe.
  */
 export function PageHead({
   hue,
@@ -48,23 +48,19 @@ export function PageHead({
   children,
   testId,
 }: PageHeadProps) {
-  const style = hue2 ? ({ '--module-color-2': `var(--mod-${hue2})` } as CSSProperties) : undefined;
   return (
-    <header
+    <HeadSurface
+      as="header"
       className={styles.head}
-      data-hue={hue}
-      data-area={area}
-      data-size={size}
-      data-testid={testId}
-      style={style}
+      hue={hue}
+      hue2={hue2}
+      area={area}
+      size={size === 'tall' ? 'hero' : 'compact'}
+      testId={testId}
     >
-      <span className={styles.pattern} aria-hidden="true" />
-      <p className={styles.eyebrow}>
-        <span className={styles.plate} aria-hidden="true">
-          <Icon name={icon} />
-        </span>
-        <span>{eyebrow}</span>
-      </p>
+      <HeadEyebrow icon={icon} className={styles.eyebrow}>
+        {eyebrow}
+      </HeadEyebrow>
       <div className={styles.titles}>
         <h1 id={titleId} className={styles.title}>
           {title}
@@ -78,6 +74,6 @@ export function PageHead({
       ) : null}
       {actions ? <div className={styles.actions}>{actions}</div> : null}
       {children ? <div className={styles.body}>{children}</div> : null}
-    </header>
+    </HeadSurface>
   );
 }

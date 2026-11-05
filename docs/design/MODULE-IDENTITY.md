@@ -1,94 +1,101 @@
-# Module identity v3 – rules for every module
+# Module identity v3.1 – rules for every module
 
-Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) (diagnosis, concept, mockups; variant **D** = C's heads and tokens with B's widgets). Decisions: [ui-shell](../decisions/ui-shell.md) "Module identity v3". It extends [DESIGN-SPEC](DESIGN-SPEC.md) and [FOCUS-GUIDELINES](FOCUS-GUIDELINES.md); history: [identity-v2/](identity-v2/).
+Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) (diagnosis, concept, mockups), audit and fix packages: [identity-v3-audit/](identity-v3-audit/01-findings.md) (v3.1 = the foundation fix package; sheets `identity-v3/shots/frame-v31-*.jpg`). Decisions: [ui-shell](../decisions/ui-shell.md) "Module identity v3" and "Identity v3.1". It extends [DESIGN-SPEC](DESIGN-SPEC.md) and [FOCUS-GUIDELINES](FOCUS-GUIDELINES.md).
 
 ## Frame – who owns what
 
-`router.tsx` wraps every module page in `layout/AreaFrame`: a full-bleed **head band**, the area's **sub-navigation**, then the `PageContainer` with the module's content.
+`router.tsx` wraps every module page in `layout/AreaFrame`: a full-bleed **head band** (`ui/HeadSurface`), the area's **sub-navigation**, then the `PageContainer` with the module's content.
 
 | Zone | Owner | Content |
 | --- | --- | --- |
 | Notice (optional) | module via `HeroSlot area="notice"` | one hint that outranks the page |
-| Head band | shell | eyebrow (icon plate + "Bereich · Modul"), the page's **h1**, headline figure or signature, gear and "Mit KI eintragen" |
-| Sub-navigation | shell (`ui/SubNav`) | one pill per module of the area, the active one filled in its hue; wraps on the desktop, scrolls with a fade on the phone |
-| Toolbar | module | search, filters, period, view switch, "Neu" (`PageHeader` views/children, `Toolbar`); wraps on the desktop |
-| Content / aside | module | lists, grids, charts; aside opens from 56 rem of page (below) |
+| Head band, row 1 | shell | eyebrow (icon plate + "Bereich · Modul") left, gear and "Mit KI eintragen" at the band's right edge |
+| Head band, content column | shell + module | capped at `--page-content` (70 rem), aligned to the page: the page's **h1**, then one row **figure \| signature slot \| extra** |
+| Figure | module via `HeroSlot area="figure"` (else `contributions.headline`) | the headline figure (`HeroFigure`) |
+| Signature slot | frame draws `identity.signature`; module may fill it via `HeroSlot area="signature"` | sized by the head variant (S 4 rem · M 36 rem · L full column for the frame's default; a page's own block flows beside the figure and may grow to the column) |
+| Extra | module via `HeroSlot` (default area) | strips and controls (hour strip, start/stop) |
+| Sub-navigation | shell (`ui/SubNav`) | one pill per module of the area, the active one filled in its hue |
+| Toolbar, content | module | `PageHeader` views/children, `Toolbar`, lists, grids |
 
-- **A module never draws its own head or h1.** `PageHeader`/`PageTitle` render the h1 into the head; without a shell (dialogs, tests) they render in place.
-- **Widths** (`manifest.layout`): `narrow` 45 rem, `content` 70 rem, `wide` 100 rem, `full`. `frameVariant()` lifts `content` to `wide` so head, sub-navigation and page do not jump when switching modules in an area. The frame is centred with `--page-gutter`; the root size stays fluid above 1920 px.
-- **Nothing runs past the window.** Grid children have `min-width: 0`; a row that may scroll (phone chips, hour strip) says so with a fade mask. Guard: `e2e/seed/layout-overflow.seed.spec.ts` (every module, overview, library, tools, settings × 6 viewports × light/dark) and `e2e/layout.spec.ts`.
-- **Master–detail follows the page, not the window:** `useSplitView()` is true from 56 rem of page container (`SPLIT_PAGE_REM`, `ui/pageWidth.ts`; the sidebar, the rail or a narrow window change it). Outside a container it falls back to the 1200 px window query.
-- **Dialogs only for short tasks.** A module is a page, also when it is small. **Phone:** the head is a compact bar (icon-only actions) and scrolls away; the one-line bar fades in (`core/shell/heroCollapse.ts`).
+- **A module never draws its own head or h1.** `PageHeader`/`PageTitle` render the h1 into the head (and hand the title text to the phone's compact bar); without a shell they render in place.
+- **Widths** (`manifest.layout`): `narrow` 45 rem, `content` 70 rem, `wide` 100 rem, `full`. The band stays full width; its inner box follows the page container, the content column ends at 70 rem even on a 100 rem page.
+- **Nothing runs past the window, nothing is clipped.** Guard: `e2e/seed/layout-overflow.seed.spec.ts` (every module, split routes, overview, library, tools, settings × 6 viewports × light/dark; reports elements beyond the window and `overflow: hidden` without an ellipsis) and `e2e/layout.spec.ts`.
+- **Master–detail follows the page** (`useSplitView()`, 56 rem of page container). **Phone:** the row under the title stacks, the signature slot scales to 70 % (`zoom`), never `display: none`; scrolled, the head scrolls away and a one-line bar fades in (`core/shell/heroCollapse.ts`).
 
 ## Stripe rule
 
-**No coloured edge stripe, anywhere.** Identity colour sits in exactly these places: the **icon plate**, the **tinted head** (or widget head zone), a **hairline all around or a top edge**, a **background tint** of a whole surface, a **filled chip** (active pill, sidebar capsule). Urgency has its own grammar: badge or figure with words, red only for overdue/exceeded. Kept because they are structure, not identity: the 2 px timeline rail and quote bars in readers and the notes editor. Guard: `ui/noStripes.test.ts` (coloured `border-left`/`inline-start`, thin bar pseudo-elements; allow-list `timeline`, `quote`).
+**No coloured edge stripe, anywhere.** Identity colour sits in exactly these places: the **icon plate**, the **tinted head** (or widget head zone), a **hairline all around or a top edge**, a **background tint** of a whole surface, a **filled chip**. Urgency: badge or figure with words, red only for overdue/exceeded. Guard: `ui/noStripes.test.ts` (coloured `border-left`, thin bar pseudo-elements, one-sided `inset` shadows, hard `linear-gradient(90deg …)` stops; `KNOWN_STRIPES` lists what a module package still owns and only shrinks).
 
 ## Head variants (manifest `identity.head`)
 
-Nine silhouettes, two heights (tall 12.5 rem / phone 8.5 rem; compact 6 / 5 rem). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %); text on it is always `--text`.
+Nine silhouettes, two heights from tokens (`--head-h-tall` 12.5 rem / phone 8.5 rem; `--head-h-compact` 6 / 5 rem – the class is the token, content in `extra` does not change it). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %). **Text on the band is `--text` or `--text-on-tint`, nothing quieter** (`tokens.test.ts` scans the head-zone files).
 
-| Variant | Height | Content | Modules |
-| --- | --- | --- | --- |
-| `kennzahl` | tall | the headline figure is the page, context line, mini cards | Finanzen, Budgets, Listen, E-Mail |
-| `zeit` | tall | day number + hour strip with the "now" line | Kalender, Zeiterfassung |
-| `fortschritt` | tall | title + "n von m"; rings of the module | Gewohnheiten, Abos, Dieser PC |
-| `cover` | tall | cover with its own tone, title, artist | Musik |
-| `himmel` | tall | sky backdrop, thin temperature | Wetter |
-| `regal` | tall | count figure + tiles | Karten & Orte, Vorräte, Merkliste, Feeds, Unterlagen |
-| `tresor` | compact | framed, lock status, fine vault rules | Passwörter |
-| `schreib` | compact | paper: plain surface, serif title, ruled edge | Notizen, Browser, Beispiel |
-| `fokus` | compact | one thing large, small module name | ToDos, Personen, Rechnungen, Chat, Downloads |
+| Variant | Height | Slot | Content | Modules |
+| --- | --- | --- | --- | --- |
+| `kennzahl` | tall | M | the headline figure is the page, context line, cards beside it | Finanzen, Budgets, Listen |
+| `zeit` | tall | L | day number + hour strip with the "now" line (`calendarLeaf`, `hourStrip`) | Kalender, Zeiterfassung |
+| `fortschritt` | tall | M | title + "n von m"; rings of the module | Gewohnheiten, Abos, Dieser PC |
+| `cover` | tall | L | cover with its own tone, title, artist | Musik |
+| `himmel` | tall | – | sky backdrop, thin temperature | Wetter |
+| `regal` | tall | M | count figure + tiles on a shelf | Karten & Orte, Vorräte, Merkliste, Feeds, Unterlagen |
+| `tresor` | compact | S | framed, lock status | Passwörter |
+| `schreib` | compact | S | paper: plain surface, serif title, ruled edge; the mark beside the title | Notizen, Browser, E-Mail, Beispiel |
+| `fokus` | compact | S | one thing large beside the small module name, the mark next to it | ToDos, Personen, Rechnungen, Chat, Downloads |
 
-`COMPACT_HEADS`/`headHeight()` in `core/modules/types.ts`. Neighbours in an area (order, id) never share a head variant (`npm run check:modules`, registry test).
+`COMPACT_HEADS`/`headHeight()`/`SIGNATURE_SLOTS` in `core/modules/types.ts`. Compact heads put title, figure and mark on one line.
 
 ## The manifest field `identity`
 
 ```ts
 identity: {
-  hue: ModuleHue; hue2?: ModuleHue;   // primary / secondary colour (second stop of the head, second card)
-  widgetType: WidgetType;             // catalogue base type of the main widget
-  widget: WidgetVariant;              // frame shape of the module's widgets (a WidgetDef may override with `variant`)
+  hue: ModuleHue; hue2?: ModuleHue;   // primary / secondary colour (second stop of the head; `data-hue2`)
+  widget: WidgetVariant;              // shape of the module's widgets (a WidgetDef may override with `variant`)
   head: HeadVariant;                  // silhouette above
-  signature: SignatureId;             // the one thing the module is recognised by (grey as empty-state motif)
-  type?: 'sans' | 'thin' | 'mono' | 'serif'; shape?: 'soft' | 'round' | 'sharp'; feedback?: 'tick' | 'pulse' | 'ring' | 'none';
+  signature: SignatureId;             // the drawing the module is recognised by (one library for modules and tools)
+  type?: 'sans' | 'thin' | 'mono' | 'serif'; shape?: 'soft' | 'round' | 'sharp';
 }
 ```
 
-The area's **pattern** is not a field: it comes from `manifest.area` (`data-area` → `--area-pattern`: plan lines, money dots, household grid, knowledge diagonals, vault rules, system none). `npm run check:modules` fails on a missing field, a hue/variant outside the lists, two hues in one area closer than 25° (both themes; slate excluded) and neighbours sharing a head variant.
+`widgetType` and `feedback` were dropped in v3.1 (nothing read them). The area's **pattern** comes from `manifest.area`. Rules (`scripts/lib/checkIdentity.ts`, same function in `npm run check:modules` on the source and in `registry.test.ts` on the runtime registry): one hue per area; neighbours in an area never share a head; **app-wide** two modules with one hue never share head *and* widget, and a shared head or widget needs a signature of its own (not `none`, not the same). The palette pins every pair of hues at ≥ 26°, so no angle is computed. `signature: 'none'` next to a `HeroSlot` in the page is a `check:modules` warning.
+
+## Signatures (`@/ui/identity`)
+
+Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing in `currentColor`) and, for the ids with a block, a **decoration at M/L** (`Signature id size`): `Receipt`, `Bill`, `FolderTabs`, `Stamp`, `Pinboard`, `NotePaper`, `Bubble`, `AddressBar`, `Shelf`, `AvatarRing`, `Gauges`, `ArrowBand`, `Masthead`, `HourStrip`; the other ids draw their mark on a plate. Rules: decoration only (`aria-hidden`), no user data of its own (`children` is the one line a module may put on it), drawn from `--module-color` and `--surface` so it works without colour. The frame draws the module's signature in the slot until the page claims it; the calendar's leaf (`DayBlock` + today's `HourStrip`) is the one data-aware default (`layout/signatures.tsx`). Tools use the same list (`ToolIdentity.signature`), the tool stage shows the mark; the module settings head shows the signature at S. Module-local copies (`modules/*/components/*Signature*`) move onto the library in the module packages. Guard: `identity.test.tsx` renders every id.
 
 ## Tokens (`ui/tokens.css`)
 
-- **Palette v3:** `--mod-<hue>` for lime, moss, fern, teal, ocean, sky, cobalt, indigo, violet, orchid (26° HSL steps) and slate (neutral for system and vault). Each ≥ 3:1 on the surfaces and ≥ 25° from danger, accent, warning and success (`tokens.test.ts`). Retired: plum, navy.
-- `--module-color`, `--module-color-2` come from `data-hue`; `--area-color` from `data-area`.
-- `--widget-tint` 14 %, `--pattern-head` 0.06, `--pattern-widget` 0.04, `--group-tint` 6 % (sidebar group blocks), `--pattern-ink`, `--scroll-thumb`.
-- **"Ruhig" colour mode and "Modulfarben: Aus"** flatten the hues to grey, widget tint 5 %, group tint 3 %, patterns 0. Shape and signature stay, so a module is still recognisable without colour. No permanent animation; `prefers-reduced-motion` and "less motion" stop everything that moves.
+- **Palette v3:** `--mod-<hue>` for lime … orchid (26° HSL steps) and slate. Each ≥ 3:1 on the surfaces and ≥ 25° from danger, accent, warning and success; `--info` sits next to ocean/sky and only warns; the accent variants (teal, coral, lagoon) share a hue family with a module or a state by geometry – the pairs are pinned in `tokens.test.ts`, a new one fails.
+- `--text-on-tint`: the one quiet ink on a tinted head or widget zone (light `--text` 84 % over the surface, dark 94 %; ≥ 4.5:1 on the 40 % tint of every hue). `--text-muted`/`--text-3` never on the band.
+- `--font-serif`, `--weight-light`: the type accents; no bare `font-weight` number or font stack outside `tokens.css` (`tokens.test.ts` ratchet, module files listed until their package cleans them).
+- `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-m`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
+- `--widget-tint` 14 %, `--pattern-head` 0.06, `--pattern-widget` 0.04, `--group-tint` 6 % (neutral on `--text-3` in sidebar and library).
+- **"Ruhig" and "Modulfarben: Aus"** flatten the hues to grey, lower the tints and set `--area-pattern: none` (not painted). Shape and signature stay.
 
 ## Widgets
 
-A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data-widget`, `data-hue`, `data-area`): a head zone tinted `--widget-tint`, the module icon on a tinted plate, the area's pattern behind the content at `--pattern-widget`. **Only what matters today**; urgency stays in the card (badge, figure with words), the tint never signals state.
+The frame (`home/Home.module.css`, `data-widget`, `data-hue`, `data-area`): a head zone tinted `--widget-tint`, the module icon on a tinted plate, the area's pattern behind the content. The grid gives every size class its height (`align-items: start`, s/m/l minimum heights); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test).
 
-| Variant | Shape | Frame |
+| Variant | Shape | Body in `@/ui/widgets` |
 | --- | --- | --- |
-| `kennzahl` | one big number, context line, sparkline | head zone + pattern |
-| `zeitleiste` | timeline with dots | head zone, no pattern |
-| `fortschritt` | rings or bars | head zone + pattern |
-| `cover` | cover, title, controls | no head tint, no pattern |
-| `himmel` | sky wash from the top | no head tint, no pattern |
-| `kacheln` | 2 × 2 tiles with counts | head zone + pattern |
-| `status` | status plate + one action | head zone + pattern |
-| `notiz` | last note or answer | head zone + pattern |
-| `fokus` | the one next thing, primary action | head zone + pattern |
-| `faellig` | due list with badges | head zone + pattern |
-| `checkliste` | checkboxes | head zone + pattern |
+| `kennzahl` | one big number, context line, sparkline | `KennzahlBody` (first example: Finanzen "Kontostand") |
+| `zeitleiste` | timeline with dots | `TimelineWidget` |
+| `fortschritt` | rings or bars | `FortschrittBody kind="rings" \| "bars"` |
+| `cover` | cover, title, controls | module |
+| `himmel` | sky wash from the top | module |
+| `kacheln` | 2 × 2 tiles, figure + state line | `KachelnBody` |
+| `status` | status plate + one action | `StatusWidget` |
+| `notiz` | paper with serif title and the first lines | `NotizBody` |
+| `fokus` | the one next thing, primary action | module |
+| `faellig` | due list with badges | `DueList` |
+| `checkliste` | checkboxes | `ChecklistWidget` |
 
-**Adjacency:** in the default order (nothing saved) `spreadVariants()` (`home/layout.ts`) keeps neighbours of different modules from sharing a shape; cards of one module stay together, saved positions and the front widgets never move.
+Default order: saved positions first, then the manifest order (no spreading by shape since v3.1).
 
 ## Sidebar, scrollbars, overview head
 
-- **Sidebar** (`layout/Sidebar`): brand row (logo = home), favourites bar of icon chips, area blocks with small headings and a faint tint, module icons in their hue, the active entry as a tinted capsule; collapsed to a rail of icons with tooltips. The bottom navigation marks the active entry in the area colour.
-- **Scrollbars:** thin, transparent until hover/scroll (`core/shell/scrollbars.ts`); the sidebar list uses `ui/OverlayScroll` (overlay thumb, fade masks, drag). One rule for all scroll areas.
-- **Overview head** (`home/OverviewHead`): greeting by the hour (h1 "Übersicht: Guten Morgen", no name), date, short weather line (weather module on + place chosen), calm tools (Cockpit, Ruhig/Ausführlich, Anpassen). "Jetzt wichtig" = cards (plate in the module hue, count as figure, "Wartet noch" as a dashed card); "Heute · Morgen · diese Woche" = day cards on a time rail.
+- **Sidebar** (`layout/Sidebar`): brand row, favourites bar, area blocks with a neutral tint and labels in `--text`, module icons in their hue, the active entry as a tinted capsule; collapsed to a rail where the **area colour** lives (with the bottom navigation). Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
+- **Scrollbars:** thin, transparent until hover/scroll (`core/shell/scrollbars.ts`); the sidebar list uses `ui/OverlayScroll`.
+- **Overview head** (`home/OverviewHead`): greeting by the hour, date, weather line, calm tools; "Jetzt wichtig" cards; day cards on a time rail.
 
 ## Mapping of every module
 
@@ -97,12 +104,12 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 | Kalender `calendar` | plan | sky | ocean | zeit | zeitleiste | `calendarLeaf` |
 | ToDos `todos` | plan | moss | lime | fokus | fokus | `todayCard` |
 | Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | `ring` |
-| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | – |
+| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `hourStrip` |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
-| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `receipt` |
+| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` (page: package 1) |
 | Abos `subscriptions` | money | indigo | cobalt | fortschritt | faellig | `cycle` |
 | Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | `envelope` |
 | Listen `lists` | household | orchid | violet | kennzahl | checkliste | `receipt` |
@@ -112,72 +119,38 @@ A widget keeps its catalogue base type. The frame (`home/Home.module.css`, `data
 | Chat `chat` | knowledge | sky | cobalt | fokus | notiz | `bubble` |
 | Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | `addressBar` |
 | Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | `masthead` |
-| E-Mail `mail` | knowledge | teal | ocean | kennzahl | kennzahl | `stamp` |
+| E-Mail `mail` | knowledge | teal | ocean | schreib | notiz | `stamp` (page: package 2) |
 | Musik `music` | knowledge | orchid | violet | cover | cover | `coverTone` |
-| Unterlagen `vault` | vault | indigo | violet | regal | faellig | `folderTab` |
+| Unterlagen `vault` | vault | indigo | violet | regal | kennzahl | `folderTab` (widget: package 2) |
 | Passwörter `accounts` | vault | slate | – | tresor | status | `vaultDoor` |
 | Dieser PC `disk` | system | slate | – | fortschritt | fortschritt | `gauges` |
 | Downloads `downloads` | system | cobalt | sky | fokus | fortschritt | `arrowProgress` |
 
-Existing modules got the v3 fields in the manifest only; their pages keep their content until their module chat rebuilds them against the head and widget variant. `masthead` (Feeds) has no block of its own: it is the newspaper head made of `HeroFigure type="serif"` (date line, count), `identity.type: 'serif'` and the lead card on the page. Shared page blocks: `EmptyState motif`, `FolderTabs` (a filter drawn as tabs), `GroupedList columns`. Signatures without a component render nothing yet (list in `SIGNATURES`; blocks in `@/ui/identity`).
+Pages keep their content until their module package rebuilds them on the v3.1 grid; until then the page's own blocks sit in the signature slot (slot name only).
 
 ## Tools
 
-Tools are not modules but speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature, type? }`, `category`, `keywords` (checked by `npm run check:tools`; neighbours in the list never share a hue). The toolbox is a large panel (`layout/tools`): list left, the tool right on a surface tinted in its hue (head: plate, one line, signature; no edge stripe). "Ruhig" and "Modulfarben: Aus" flatten it like everywhere else.
+Tools speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature, type? }`, `category`, `keywords` (`npm run check:tools`; neighbours never share a hue; `signature` from the shared `SIGNATURES`). The toolbox (`layout/tools`): list left, the tool right on a `HeadSurface` in its hue (plate, one line, the mark). Tool ids: `display`, `flow`, `ring`, `calendarLeaf`, `globe`, `dice`, `qrFrame`, `idCard`, `notePaper`, `photoFrame`, `pageStack`, `viewfinder`, `terminal`, `splitPage`, `pattern`; mapping in each `tools/<id>/manifest.ts`. Recipe: [howto/new-tool.md](../howto/new-tool.md); contents built with `tools/kit.tsx`.
 
-| Tool | Category | `hue` / `hue2` | Signature |
-| --- | --- | --- | --- |
-| Rechner `calc` | rechnen | cobalt / sky | `display` |
-| Währung `currency` | rechnen | teal / ocean | `flow` |
-| Einheiten `units` | rechnen | lime / moss | `flow` |
-| Timer & Stoppuhr `timer` | zeit | violet / orchid | `ring` |
-| Datumsrechner `dates` | zeit | sky / ocean | `calendarLeaf` |
-| Zeitzonen `timezones` | zeit | ocean / teal | `globe` |
-| QR-Code `qr` | erzeugen | indigo / cobalt | `qrFrame` |
-| Würfel & Zufall `dice` | erzeugen | orchid / violet | `dice` |
-| Anonyme Persona `persona` | erzeugen | violet / indigo | `idCard` |
-| Bilder `image` | medien | fern / lime | `photoFrame` |
-| PDF `pdf` | medien | indigo / violet | `pageStack` |
-| Bildschirmfoto `screenshot` | medien | sky / cobalt | `viewfinder` |
-| Text `text` | text | moss / fern | `notePaper` |
-| Entwickler `dev` | entwickler | slate | `terminal` (mono) |
-| Textvergleich `diff` | entwickler | teal | `splitPage` (mono) |
-| Regex `regex` | entwickler | lime | `pattern` (mono) |
+## Clarifications (audit 2026-11-04, kept as rules)
 
-Recipe: [howto/new-tool.md](../howto/new-tool.md). Contents: package 2 (calculator with display and number pad, units and currency as a conversion flow, timer ring, date leaves, time-zone cards) is built with the blocks of `tools/kit.tsx`; package 3 adds the QR/picture mat, the persona card with its "erfunden" stamp, dice faces, section cards, stat chips and the code look for the developer tools (`kit.mat`, `kit.idCard`, `kit.die`, `kit.section`, `kit.chips`, `kit.code`).
-
-## Clarifications from the audit (2026-11-04, `review/identity-v3-audit`)
-
-Findings and packages: [identity-v3-audit/](identity-v3-audit/01-findings.md). These sharpen existing rules; the rebuild of the head grid (signature slot, 70 rem content column) comes with the foundation fix package and is written here when it lands.
-
-- **Text on a tinted surface is `--text`.** `--text-muted` and `--text-3` reach only 2.9–3.6 : 1 on the 40 % head tint (both themes) and fail AA; until a `--text-on-tint` token exists, a context line on the band uses `--text` at the small size.
-- **Same hue in two areas ⇒ head *and* widget variant differ.** The 25° rule is per area; the overview, sidebar and library mix areas. Two modules may share a hue only when neither their head nor their widget variant matches (Finanzen/E-Mail, Merkliste/Unterlagen and Zeiterfassung/Finanzen break this today; the fix packages resolve them).
-- **A signature never disappears on the phone.** It shrinks (bubble, paper, envelope, address bar at 40–56 px); `display: none` at a breakpoint is not allowed.
-- **`signature: 'none'` only when the head draws nothing.** A module that fills `HeroSlot` with a mark names it (new ids go into `SIGNATURES` with the block that draws them).
-- **Widget titles are unique across modules.** Two cards named "Heute" or "Lesezeichen" on one overview are a finding, not a style.
-- **Empty states:** the widget keeps the fish; a module page may draw its own grey motif – the shared `EmptyState` is the place for it (`motif` prop, fix package), not a module-local copy.
-- **Hue names are not angles.** `sky` is 228°, `cobalt` 254°, `indigo` 280°, `violet` 306°, `orchid` 332° (HSL, light theme); pick a hue by its swatch in `tokens.css`, not by its name (council C14).
-- **Decoration may repeat content only on the module's own page.** A head signature that shows the first lines of a note or the titles of bookmarks is `aria-hidden` and repeats what the list below shows; the compact bar, the overview head, attention cards, the agenda and widget heads never carry such content (council C32).
-- **Bars and rings carry the module colour, not the accent.** `--accent` stays with the primary action and "today"; a progress bar or ring is `--module-color` (red only for an exceeded budget or overdue money).
+- **Decoration may repeat content only on the module's own page** (`aria-hidden`); the compact bar, overview head, attention cards, agenda and widget heads never carry it.
+- **Hue names are not angles:** pick a hue by its swatch in `tokens.css` (`sky` 228°, `cobalt` 254°, `indigo` 280°, `violet` 306°, `orchid` 332°).
+- **Empty states:** the widget keeps the fish; a page passes its grey motif to the shared `EmptyState` (`<EmptyState title="Noch keine Belege" motif={<Receipt />} />`), never a local copy.
+- **Open from the audit:** Merkliste and Unterlagen share hue and head (`regal`); allowed by the signatures, the heads still look alike – a head change for one of them is a package 2 decision.
 
 ## Checklist for a new or converted module
 
-1. Manifest `identity` complete; hue free in the area (≥ 25° from its neighbours), head variant different from the neighbour module in the area; `npm run check:modules`.
-2. The page uses `PageHeader`/`PageTitle`, no own h1 or head; the layout variant fills its width; no dialog for the module itself; the toolbar wraps.
+1. Manifest `identity` complete; `npm run check:modules` (area rules and the app-wide rule).
+2. The page uses `PageHeader`/`PageTitle`, no own h1 or head; the toolbar wraps; split from the page width.
 3. No coloured edge stripe (`noStripes.test.ts`); accent only as plate, tint, hairline or chip.
-4. Signature: a block from `@/ui/identity` through `HeroSlot` (or none yet); decoration only, numbers stay text, works without colour.
-5. Widget: base type and variant, only today, empty state with one next step, one context line per number.
-6. Seeds and onboarding as before; e2e: the frame carries `data-hue`; axe in both themes; no horizontal overflow at 412 px.
-7. Focus checklist ([FOCUS-GUIDELINES](FOCUS-GUIDELINES.md)): no streak, no guilt text, no permanent motion, an off switch (the colour modes).
+4. Signature: the frame draws it; fill the slot with `HeroSlot area="signature"` from a library block only when the page has something to say (a count on the stamp); never bigger than the slot (S 4 rem, M 36 rem).
+5. Widget: a body from `@/ui/widgets`, only today, empty state with one next step, one context line per number, a unique title.
+6. Seeds and onboarding as before; e2e: `data-hue` on the frame; axe both themes; no overflow or clipping at 412 px; the signature stays on the phone.
+7. Focus checklist ([FOCUS-GUIDELINES](FOCUS-GUIDELINES.md)): no streak, no guilt text, no permanent motion, an off switch (the colour modes; "Fokus & Aufmerksamkeit" links to "Modulfarben").
 
 ## Settings and libraries
 
-Not module pages, so no `AreaFrame` band: they use the local `pages/settings/PageHead` (same ingredients: tinted head in the hue, the area's pattern, icon plate, text `--text`, no stripe) as a rounded card in the page container. **Settings:** the landing page has the "Status" head (six figure tiles), each category its own compact head in its hue (`pages/settings/categoryLook.ts`, display only), a module's settings page the module's identity (`hue`, `hue2`, area pattern, signature in small). The category list uses the sidebar's look: group headings, icon plates, the open page as a tinted capsule, a quiet dot for "differs from the default". Rule for new categories: add the look and a nav group (`categoryLook.test.ts`).
-
-**Libraries:** `/library` and `/tools` use the same local `PageHead` (figures in the head), a toolbar (search, status filter, area select) and one tinted section per area (or tool group). A module card is tinted in the module's `hue` and shows a drawn sketch of `identity.widget` (`pages/library/WidgetMiniature`, decoration only); `/library/<id>` is the module as a small page. The sketch never shows data: a new widget variant needs a shape there (`WidgetMiniature.test.tsx` fails otherwise).
-
-**Cards show the identity colour:** wherever a module or tool appears as a row or card (libraries, settings lists), its icon sits on the same solid `ui/HuePlate` in `identity.hue` (hue fills, `--surface` draws the icon; grey in "Ruhig" / "Modulfarben: Aus"); a list without a hue keeps the accent tile. `e2e/hue-consistency.spec.ts` pins it.
-
-**Connect cards (settings):** Sync and Backup (later AI, connections) say the state first (`pages/settings/ConnectParts`: `StateBanner`, numbered `Step`s with a hint, `Facts` tiles, one `Actions` row with the main action first); labels and test ids of the fields stay as they were.
+Not module pages, so no band: `pages/settings/PageHead` on `ui/HeadSurface` as a rounded card. **Settings:** the landing page has the "Status" head, each category a compact head in its hue **without area pattern** and never a module's hue + area pair (`categoryLook.ts`, test), a module's settings page the module's identity with its signature at S (kept on the phone, smaller). The category list uses the sidebar's look. **Libraries:** `/library` and `/tools` carry neutral (slate) heads, a toolbar and one neutral-tinted section per area; a module card shows a sketch of `identity.widget` (`WidgetMiniature`). **Cards show the identity colour** on `ui/HuePlate` (`e2e/hue-consistency.spec.ts`). **Connect cards** (`pages/settings/ConnectParts`) say the state first.
 
 **Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.

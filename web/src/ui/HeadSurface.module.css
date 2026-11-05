@@ -1,0 +1,119 @@
+/* The tinted head surface (identity v3.1): one gradient, one pattern layer, one height token for every head.
+   Everything on it is text in --text or --text-on-tint (tokens.test.ts). The hue shows as the icon plate. */
+.surface {
+  --hero-radius: var(--shape-round);
+  --head-h: var(--head-h-tall);
+  position: relative;
+  min-width: 0;
+  background: var(--head-gradient);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+}
+.surface[data-size='compact'] {
+  --head-h: var(--head-h-compact);
+}
+.surface[data-shape='round'] {
+  --hero-radius: var(--shape-round);
+}
+.surface[data-shape='sharp'] {
+  --hero-radius: var(--shape-sharp);
+}
+/* The shell's band: bleeds through the page gutters (set by the shell; 0 where there is none), corners at the bottom. */
+.bleed {
+  flex: none;
+  align-self: stretch;
+  margin: 0 calc(-1 * var(--frame-bleed-x, 0px)) var(--space-4);
+  border-radius: 0 0 var(--hero-radius) var(--hero-radius);
+}
+/* A head inside a page (settings, libraries, tools): a rounded card, nothing bleeds past the container. */
+.card {
+  border-radius: var(--hero-radius);
+}
+/* Decoration layers: the area's pattern (not painted in "Ruhig") and a backdrop (sky); both clipped to the corners. */
+.pattern,
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pattern {
+  background-image: var(--area-pattern, none);
+  background-size: var(--area-pattern-size, auto);
+  opacity: var(--pattern-head);
+}
+.backdrop:empty {
+  display: none;
+}
+.surface > :not(.pattern, .backdrop) {
+  position: relative;
+}
+/* A night sky is dark whatever the theme: the head's text switches to the light ink (tokens.css --sky-night-ink). */
+.surface:has([data-sky='night']) {
+  --text: var(--sky-night-ink);
+  --text-on-tint: var(--sky-night-ink);
+  color: var(--text);
+}
+/* Paper heads (`schreib`): no tint, a hairline edge, ruled lines along the bottom. */
+.surface[data-head='schreib'] {
+  background: var(--surface);
+  box-shadow: none;
+  border-bottom: 1px solid var(--border);
+}
+.surface[data-head='schreib']::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1.125rem;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--module-color) 32%, var(--surface)) 0 1px,
+    transparent 1px 0.375rem
+  );
+  pointer-events: none;
+}
+/* Framed heads (`tresor`): a hairline in the hue instead of depth. */
+.surface[data-head='tresor'] {
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--module-color) 28%, var(--border));
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.eyebrowText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The icon plate: the module's one solid spot of colour in the head (ink on the hue, AA by the hue contrast rule). */
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--module-color);
+  color: var(--surface);
+}
+:global(:root[data-theme='dark']) .plate {
+  color: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .plate {
+    color: var(--bg);
+  }
+}

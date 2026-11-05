@@ -71,9 +71,31 @@ export function findStripes(file: string, css: string): Hit[] {
       if (left && thin && colour)
         hits.push({ file, selector, declaration: 'thin coloured bar at the left edge' });
     }
+    // Identity v3.1 (C07): an inset shadow on one side (`inset 3px 0 …` / `inset -3px 0 …`) and a hard gradient stop at the
+    // start (`linear-gradient(90deg, <colour> 0 3px, …)`) draw the same stripe without a border.
+    for (const d of decls) {
+      if (
+        /^box-shadow\s*:/.test(d) &&
+        /\binset\s+-?[1-6]px\s+0(?:px)?\b/.test(d) &&
+        COLOURED.test(d)
+      )
+        hits.push({ file, selector, declaration: d });
+      if (
+        /linear-gradient\(\s*(?:90deg|to right|270deg|to left)\s*,\s*var\(--(?:module-color|mod-[a-z]+|area-color|accent|danger|warning|success|info|cat-\d)[^,]*?\s+0(?:px)?\s+[1-6]px\b/.test(
+          d,
+        )
+      )
+        hits.push({ file, selector, declaration: d });
+    }
   }
   return hits;
 }
+
+/**
+ * Stripes that are known and owned by a module package (identity v3.1 package 1): the guard reports anything else and
+ * fails once a listed file is clean, so the list only shrinks.
+ */
+const KNOWN_STRIPES: readonly string[] = ['modules/weather/routes/weather.module.css'];
 
 describe('no identity or urgency stripes (identity v3)', () => {
   it('detects the stripe patterns it is meant to forbid', () => {
@@ -97,15 +119,45 @@ describe('no identity or urgency stripes (identity v3)', () => {
     expect(findStripes('x.css', '.g { border-left: 1px solid var(--border); }')).toEqual([]);
     // A hairline all around in a hue is fine.
     expect(findStripes('x.css', '.c { border: 1px solid var(--module-color); }')).toEqual([]);
-  });
-
-  it('no stylesheet of the app has one', () => {
-    const hits = cssFiles(SRC).flatMap((f) =>
-      findStripes(relative(SRC, f), readFileSync(f, 'utf8')),
+    // Identity v3.1 (C07): a one-sided inset shadow or a hard gradient stop at the start is a stripe too.
+    expect(
+      findStripes('x.css', '.s { box-shadow: inset 3px 0 0 var(--module-color); }'),
+    ).toHaveLength(1);
+    expect(findStripes('x.css', '.s { box-shadow: inset -3px 0 0 var(--accent); }')).toHaveLength(
+      1,
     );
     expect(
-      hits.map((h) => `${h.file}: ${h.selector} { ${h.declaration} }`),
+      findStripes(
+        'x.css',
+        '.g { background: linear-gradient(90deg, var(--mod-sky) 0 3px, transparent 3px); }',
+      ),
+    ).toHaveLength(1);
+    // A hairline all around as an inset shadow and a soft wash from the left stay.
+    expect(findStripes('x.css', '.c { box-shadow: inset 0 0 0 1px var(--module-color); }')).toEqual(
+      [],
+    );
+    expect(
+      findStripes(
+        'x.css',
+        '.w { background: linear-gradient(90deg, var(--module-color) 0%, transparent 60%); }',
+      ),
+    ).toEqual([]);
+  });
+
+  it('no stylesheet of the app has one (the known ones are owned by a module package and only disappear)', () => {
+    const hits = cssFiles(SRC).flatMap((f) =>
+      findStripes(relative(SRC, f).split('\\').join('/'), readFileSync(f, 'utf8')),
+    );
+    expect(
+      hits
+        .filter((h) => !KNOWN_STRIPES.includes(h.file))
+        .map((h) => `${h.file}: ${h.selector} { ${h.declaration} }`),
       'coloured edge stripes found: use a plate, a tint, a hairline all around or a filled chip',
     ).toEqual([]);
+    for (const file of KNOWN_STRIPES)
+      expect(
+        hits.some((h) => h.file === file),
+        `${file} is clean now: remove it from KNOWN_STRIPES`,
+      ).toBe(true);
   });
 });

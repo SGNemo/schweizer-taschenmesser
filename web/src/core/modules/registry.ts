@@ -8,9 +8,7 @@ import {
   SIGNATURES,
   TYPE_ACCENTS,
   CARD_SHAPES,
-  FEEDBACKS,
   PAGE_LAYOUTS,
-  WIDGET_TYPES,
   WIDGET_VARIANTS,
   type ModuleManifest,
 } from './types';
@@ -97,13 +95,10 @@ export function validateManifest(m: ModuleManifest): string[] {
   else if (!m.area || !AREAS.includes(m.area))
     errors.push(`area "${String(m.area)}" is unknown (every module needs one)`);
   if (m.layout && !PAGE_LAYOUTS.includes(m.layout)) errors.push(`layout "${m.layout}" is unknown`);
-  if (!m.identity)
-    errors.push('identity is required ({ hue, widgetType, widget, head, signature })');
+  if (!m.identity) errors.push('identity is required ({ hue, widget, head, signature })');
   else {
     if (!MODULE_HUES.includes(m.identity.hue))
       errors.push(`identity.hue "${String(m.identity.hue)}" is not in the module palette`);
-    if (!WIDGET_TYPES.includes(m.identity.widgetType))
-      errors.push(`identity.widgetType "${String(m.identity.widgetType)}" is not a catalogue type`);
     const id = m.identity;
     if (id.hue2 !== undefined && !MODULE_HUES.includes(id.hue2))
       errors.push(`identity.hue2 "${String(id.hue2)}" is not in the module palette`);
@@ -121,10 +116,8 @@ export function validateManifest(m: ModuleManifest): string[] {
       errors.push(`identity.type "${String(id.type)}" must be one of ${TYPE_ACCENTS.join(', ')}`);
     if (id.shape !== undefined && !CARD_SHAPES.includes(id.shape))
       errors.push(`identity.shape "${String(id.shape)}" must be one of ${CARD_SHAPES.join(', ')}`);
-    if (id.feedback !== undefined && !FEEDBACKS.includes(id.feedback))
-      errors.push(
-        `identity.feedback "${String(id.feedback)}" must be one of ${FEEDBACKS.join(', ')}`,
-      );
+    for (const key of ['widgetType', 'feedback'])
+      if (key in id) errors.push(`identity.${key} was dropped in identity v3.1 (remove it)`);
   }
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))

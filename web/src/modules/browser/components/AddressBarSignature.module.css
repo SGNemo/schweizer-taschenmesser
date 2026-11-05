@@ -24,8 +24,3 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-@media (max-width: 719px) {
-  .bar {
-    display: none;
-  }
-}

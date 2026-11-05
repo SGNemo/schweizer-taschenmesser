@@ -14,7 +14,8 @@ describe('ToolLibrary', () => {
         <ToolLibrary />
       </MemoryRouter>,
     );
-    expect(await screen.findByTestId('tools-head')).toHaveAttribute('data-hue', 'moss');
+    // Library bands are neutral (identity v3.1, C28): no module hue on a catalogue head.
+    expect(await screen.findByTestId('tools-head')).toHaveAttribute('data-hue', 'slate');
     const f = tLibraryV3.get().filter;
     await user.click(screen.getByRole('button', { name: f.active }));
     // a tool that is on by default

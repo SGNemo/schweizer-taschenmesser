@@ -15,7 +15,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'teal',
     hue2: 'ocean',
-    widgetType: 'kpi',
     widget: 'kennzahl',
     head: 'kennzahl',
     signature: 'bankCard',

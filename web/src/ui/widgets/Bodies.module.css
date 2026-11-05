@@ -1,0 +1,127 @@
+/* Widget bodies (identity v3.1, F05): the shapes of the widget variants `kacheln`, `fortschritt` (rings) and `notiz`;
+   `kennzahl` reuses the KPI styles of Widgets.module.css. Figures are text; colour only with meaning and never alone. */
+
+/* kacheln: 2 × 2 tiles, each a figure with its label and a state line. */
+.kacheln {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.kachel {
+  min-width: 0;
+  display: flex;
+}
+.kachelLink {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-hair);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) 8%, var(--surface));
+  color: var(--text);
+  text-decoration: none;
+}
+a.kachelLink:hover {
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) 16%, var(--surface));
+}
+.kachelValue {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  line-height: 1.1;
+}
+.kachelLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+.kachelState {
+  font-size: var(--text-meta);
+  /* On the tile's tint (8 %, 16 % hovered) only the tint ink keeps AA (tokens.test.ts). */
+  color: var(--text-on-tint);
+}
+.kachelState[data-tone='danger'] {
+  color: var(--danger-ink);
+  font-weight: var(--weight-semibold);
+}
+.kachelState[data-tone='warning'] {
+  color: var(--warning-ink);
+  font-weight: var(--weight-semibold);
+}
+
+/* fortschritt as rings: side by side, the title under each ring. */
+.rings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+}
+.ringItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 5rem;
+  text-align: center;
+}
+
+/* notiz: paper with ruled lines, a serif title, the first lines, a context line at the foot. */
+.notiz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--module-color, var(--text-3)) 22%, var(--surface)) 0 1px,
+      transparent 1px 1.5rem
+    )
+    var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.notizTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: 1.5rem;
+}
+.notizMark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--module-color, var(--text-3));
+}
+.notizLines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.notizLines li {
+  line-height: 1.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notizMeta {
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}

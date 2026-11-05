@@ -10,4 +10,8 @@ export { Ring, type RingLevel } from './Ring';
 export { Sparkline } from './Sparkline';
 export { StateBadge } from './StateBadge';
 export { WidgetBody, type WidgetEmpty } from './WidgetBody';
+export { KennzahlBody, type KennzahlTrend } from './KennzahlBody';
+export { KachelnBody, type Kachel } from './KachelnBody';
+export { FortschrittBody, type FortschrittEntry } from './FortschrittBody';
+export { NotizBody } from './NotizBody';
 export { WidgetSizeContext, useWidgetSize, type WidgetSizeName } from './size';

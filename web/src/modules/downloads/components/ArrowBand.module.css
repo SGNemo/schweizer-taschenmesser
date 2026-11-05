@@ -12,7 +12,7 @@
 }
 .context {
   font-size: var(--text-meta);
-  color: var(--text-muted);
+  color: var(--text-on-tint);
 }
 /* the band: a track with an arrow tip; the fill is the module hue, clipped to the same arrow */
 .track {

@@ -124,7 +124,7 @@ export default function BudgetsPage() {
             />
           </HeroSlot>
           {inMain.length > 0 ? (
-            <HeroSlot>
+            <HeroSlot area="signature">
               <div className={styles.headEnvelopes}>
                 {[...inMain]
                   .sort((x, y) => y.status.pct - x.status.pct)

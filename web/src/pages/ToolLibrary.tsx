@@ -52,7 +52,7 @@ export function ToolLibrary() {
   return (
     <>
       <PageHead
-        hue="moss"
+        hue="slate"
         area="system"
         icon="wrench"
         eyebrow={v3.toolsEyebrow}

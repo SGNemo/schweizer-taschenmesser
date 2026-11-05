@@ -234,7 +234,7 @@ export default function BookmarksPage() {
 
   return (
     <>
-      <HeroSlot area="extra">
+      <HeroSlot area="signature">
         <Pinboard titles={latest} />
       </HeroSlot>
       {items && items.length > 0 ? (

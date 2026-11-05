@@ -4,16 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { allManifests, availableManifestsFor, isAvailableOn, validateManifest } from './registry';
 import {
   CARD_SHAPES,
-  FEEDBACKS,
   HEAD_VARIANTS,
   MODULE_HUES,
   SIGNATURES,
+  SIGNATURE_SLOTS,
+  SLOT_SIZES,
   TYPE_ACCENTS,
-  WIDGET_TYPES,
   WIDGET_VARIANTS,
   AREAS,
   type ModuleManifest,
 } from './types';
+import { checkIdentity, type IdentityFacts } from '../../../scripts/lib/checkIdentity';
 
 describe('module registry', () => {
   it('discovers manifests', () => {
@@ -50,15 +51,17 @@ describe('module registry', () => {
       expect(availableManifestsFor('desktop').map((x) => x.id)).not.toContain(m.id);
   });
 
-  it('requires an identity with a palette hue and a catalogue widget type', () => {
+  it('requires an identity with a palette hue; the fields dropped in v3.1 are refused', () => {
     const base = allManifests[0]!;
     expect(validateManifest({ ...base, identity: undefined as never })).toHaveLength(1);
     expect(
       validateManifest({ ...base, identity: { ...base.identity, hue: 'mauve' as never } }),
     ).toHaveLength(1);
-    expect(
-      validateManifest({ ...base, identity: { ...base.identity, widgetType: 'chart' as never } }),
-    ).toHaveLength(1);
+    for (const key of ['widgetType', 'feedback'])
+      expect(
+        validateManifest({ ...base, identity: { ...base.identity, [key]: 'kpi' } as never }),
+        key,
+      ).toHaveLength(1);
   });
 
   it('identity v3: widget, head and signature are required and checked; the optional fields too', () => {
@@ -79,10 +82,9 @@ describe('module registry', () => {
       { hue2: base.identity.hue },
       { type: 'comic' },
       { shape: 'blob' },
-      { feedback: 'explode' },
     ])
       expect(bad(patch), JSON.stringify(patch)).toHaveLength(1);
-    expect(bad({ hue2: 'sky', type: 'thin', shape: 'round', feedback: 'tick' })).toEqual([]);
+    expect(bad({ hue2: 'sky', type: 'thin', shape: 'round' })).toEqual([]);
     // A widget may name its own shape; an unknown one is refused.
     const widgets = (variant: string) =>
       base.widgets.map((w) => ({ ...w, variant: variant as never }));
@@ -114,6 +116,24 @@ describe('module registry', () => {
     }
   });
 
+  it('identity v3.1: the app-wide rules hold on the runtime registry (same facts as npm run check:modules)', () => {
+    const facts: IdentityFacts[] = allManifests.map((m) => ({
+      id: m.id,
+      area: m.area,
+      order: m.order ?? 100,
+      hue: m.identity.hue,
+      hue2: m.identity.hue2,
+      head: m.identity.head,
+      widget: m.identity.widget,
+      signature: m.identity.signature,
+      retired: !!m.retired,
+    }));
+    expect(checkIdentity(facts)).toEqual([]);
+    // Every head variant names the size of its signature slot.
+    for (const head of HEAD_VARIANTS)
+      expect([...SLOT_SIZES, 'none'], head).toContain(SIGNATURE_SLOTS[head]);
+  });
+
   it('no two modules of one navigation area share a hue (the palette has ten; areas are small)', () => {
     const seen = new Map<string, string>();
     for (const m of allManifests.filter((x) => !x.retired && x.area)) {
@@ -129,13 +149,11 @@ describe('module registry', () => {
   it('the static checker (npm run check:modules) knows the same hues and widget types', async () => {
     const lib = await import('../../../scripts/lib/checkModules');
     expect(lib.HUES).toEqual([...MODULE_HUES]);
-    expect(lib.WIDGET_TYPES).toEqual([...WIDGET_TYPES]);
     expect(lib.HEAD_VARIANTS).toEqual([...HEAD_VARIANTS]);
     expect(lib.WIDGET_VARIANTS).toEqual([...WIDGET_VARIANTS]);
     expect(lib.SIGNATURES).toEqual([...SIGNATURES]);
     expect(lib.TYPE_ACCENTS).toEqual([...TYPE_ACCENTS]);
     expect(lib.CARD_SHAPES).toEqual([...CARD_SHAPES]);
-    expect(lib.FEEDBACKS).toEqual([...FEEDBACKS]);
   });
 
   it('rejects bad manifests', () => {

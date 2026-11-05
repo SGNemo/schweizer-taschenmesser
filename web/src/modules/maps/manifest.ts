@@ -20,7 +20,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'ocean',
     hue2: 'sky',
-    widgetType: 'tiles',
     widget: 'kacheln',
     head: 'regal',
     signature: 'pin',

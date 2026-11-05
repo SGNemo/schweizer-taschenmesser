@@ -39,8 +39,3 @@
   border: 2px dashed currentColor;
   border-radius: var(--radius-sm);
 }
-@media (max-width: 719px) {
-  .envelope {
-    display: none;
-  }
-}

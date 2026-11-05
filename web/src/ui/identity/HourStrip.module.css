@@ -34,7 +34,7 @@
 .labels {
   margin-top: var(--space-1);
   font-size: var(--text-caps);
-  color: var(--text-3);
+  color: var(--text-on-tint);
   font-variant-numeric: var(--font-num);
 }
 .labels span {

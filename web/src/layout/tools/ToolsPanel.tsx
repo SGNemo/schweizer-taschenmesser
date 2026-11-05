@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
+import { availableManifests } from '@/core/modules/available';
 import { useFocusSettings } from '@/core/settings/focus';
 import { readRecentTools, recordToolUse } from '@/core/tools/recent';
 import { useTools } from '@/core/tools/state';
@@ -101,6 +102,7 @@ export function ToolsPanel() {
     [query, ordered, recentAtOpen],
   );
   const scratchOn = !!states?.['notes'];
+  const notesHue = availableManifests().find((m) => m.id === 'notes')?.identity.hue;
 
   const panelRef = useRef<HTMLDivElement>(null);
   const sideRef = useRef<HTMLElement>(null);
@@ -327,7 +329,7 @@ export function ToolsPanel() {
               <p role="status">{tComfort.get().tools.noResults}</p>
             ) : null}
             {scratchOn && !query ? (
-              <Link to="/notes" className={styles.scratch} onClick={closeTools}>
+              <Link to="/notes" className={styles.scratch} data-hue={notesHue} onClick={closeTools}>
                 <Icon name="note" size={18} />
                 <span>
                   <strong>{t.tools.panel.scratch}</strong>

@@ -6,7 +6,7 @@ export const habits: Strings['habits'] = {
     description:
       'Objectifs quotidiens et hebdomadaires avec des anneaux : une coche ou un nombre comme « 8 verres », avec jours de repos, historique et rappels qui s’arrêtent dès que l’objectif du jour est atteint.',
     quickAdd: 'Habitude',
-    widget: 'Aujourd’hui',
+    widget: 'Fait aujourd’hui',
     settings: {
       remindersEnabled: 'Rappels des habitudes',
       remindersHelp: 'Désactivé : aucun rappel, les anneaux restent.',

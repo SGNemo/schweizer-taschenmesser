@@ -17,7 +17,6 @@ const manifest: ModuleManifest = {
   icon: 'disk',
   identity: {
     hue: 'slate',
-    widgetType: 'gauge',
     widget: 'fortschritt',
     head: 'fortschritt',
     signature: 'gauges',

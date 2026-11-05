@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3.1, Fundament-Fixpaket (`feat/identity-v3-frame`, PR offen): Kopf-Raster mit Signatur-Slot je Kopfvariante (S/M/L), Inhaltsspalte 70 rem, `HeadSurface` für Band/Settings/Werkzeuge, eine Signatur-Bibliothek für Module und Werkzeuge, Contract ohne `widgetType`/`feedback` mit app-weiter Kollisionsregel, Tokens `--text-on-tint`/`--font-serif`/`--weight-light`, Widget-Bodies, Sidebar-Dichte; danach Pakete 1–3 (Planen+Geld, Haushalt/Wissen/Medien, Dieser PC) auf dem neuen Raster.
+
 Shell-Fixes (`fix/shell-topbar-focus`): Handy-Topbar nach Seitenwechsel sofort da (kein Nachrutschen), Fokus im Werkzeug-Panel (passendes Feld, Ring nicht abgeschnitten, Alt+1–9 im ganzen Fenster), Lesehilfe mit eigenen Inline-Elementen (`read-text`/`read-start`, keine Wortbrüche durch `span`-Regeln) und Tinte, die nach Hover neu gemessen wird.
 
 Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engine-Prototyp mit fünf Szenarien, Vertrag `contributions.plannable`, fünf Paket-Prompts in `docs/design/plan/PACKAGES.md`; Svens Antworten (lokal-only, Kalender-Chips, eigenes Modul, Minimum-Paket 1) in `docs/decisions/plan.md`; Paket 1 `feat/plan-core` startet nach dem Merge von `feat/identity-v3-frame`.

@@ -95,11 +95,59 @@ describe('module frame (hero)', () => {
     expect(await within(frame).findByTestId('signature')).toBeVisible();
   });
 
-  it('the calendar module shows today as a day block with the hours of the day', async () => {
+  it('the calendar module shows today as a day block with the hours of the day, in the L slot', async () => {
     page('/calendar', <PageHeader title="Kalender" />);
     const frame = await screen.findByTestId('module-frame');
-    expect(await within(frame).findByTestId('day-block')).toBeVisible();
-    expect(await within(frame).findByTestId('hour-strip')).toBeVisible();
+    const slot = within(frame).getByTestId('module-signature');
+    expect(slot).toHaveAttribute('data-slot', 'L');
+    expect(await within(slot).findByTestId('day-block')).toBeVisible();
+    expect(await within(slot).findByTestId('hour-strip')).toBeVisible();
+  });
+
+  it('identity v3.1: the frame draws the signature in a slot sized by the head variant until the page fills it', async () => {
+    // finance: kennzahl head → M slot; bankCard has no block, so the mark on its plate is the default.
+    const { unmount } = page('/finance');
+    const frame = await screen.findByTestId('module-frame');
+    expect(frame).toHaveAttribute('data-slot', 'M');
+    const slot = within(frame).getByTestId('module-signature');
+    expect(slot).toHaveAttribute('data-default', 'true');
+    expect(slot.querySelector('[data-signature="bankCard"]')).not.toBeNull();
+    unmount();
+    // The page claims the slot: the default steps back, the page's content is there.
+    page(
+      '/finance',
+      <>
+        <PageHeader title="Finanzen" />
+        <HeroSlot area="signature">
+          <span data-testid="own-signature">Karten</span>
+        </HeroSlot>
+      </>,
+    );
+    const frame2 = await screen.findByTestId('module-frame');
+    const slot2 = within(frame2).getByTestId('module-signature');
+    expect(await within(slot2).findByTestId('own-signature')).toBeVisible();
+    expect(slot2).not.toHaveAttribute('data-default');
+    expect(slot2.querySelector('[data-signature="bankCard"]')).toBeNull();
+  });
+
+  it('identity v3.1: compact heads get the S mark, the sky head no slot', async () => {
+    for (const [path, slot] of [
+      ['/todos', 'S'],
+      ['/weather', 'none'],
+    ] as const) {
+      const { unmount } = page(path);
+      const frame = await screen.findByTestId('module-frame');
+      expect(frame, path).toHaveAttribute('data-slot', slot);
+      if (slot === 'none') expect(within(frame).queryByTestId('module-signature')).toBeNull();
+      else expect(within(frame).getByTestId('module-signature')).toHaveAttribute('data-slot', slot);
+      unmount();
+    }
+  });
+
+  it('the compact bar takes the title from the page (context), not from the DOM', async () => {
+    page('/finance', <PageHeader title="Konten" />);
+    const bar = await screen.findByTestId('module-compact');
+    expect(bar).toHaveTextContent('Konten');
   });
 
   it('outside a module page the title stays where it is (no head around it)', () => {

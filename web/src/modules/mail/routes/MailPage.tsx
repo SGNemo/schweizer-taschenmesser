@@ -184,7 +184,7 @@ export default function MailPage() {
   const header = (
     <>
       {summary ? (
-        <HeroSlot area="figure">
+        <HeroSlot area="signature">
           <Stamp
             count={summary.unread}
             label={t.mail.widget.unread}

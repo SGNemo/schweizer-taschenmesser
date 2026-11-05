@@ -15,7 +15,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'orchid',
     hue2: 'violet',
-    widgetType: 'checklist',
     widget: 'checkliste',
     head: 'kennzahl',
     signature: 'receipt',

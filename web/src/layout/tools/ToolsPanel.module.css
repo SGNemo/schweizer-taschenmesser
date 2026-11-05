@@ -100,7 +100,8 @@
   gap: var(--space-3);
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--mod-violet) 14%, var(--surface));
+  /* The notes module's hue (`data-hue` from its manifest), never a fixed token. */
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) 14%, var(--surface));
   color: var(--text);
   text-decoration: none;
   box-shadow: var(--shadow-1);

@@ -1,0 +1,17 @@
+/* The mark on its plate: the hue draws the lines, the surface is the plate; 4 rem at S (the slot's width). */
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--slot-s);
+  height: var(--slot-s);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--module-color) 30%, transparent);
+  color: var(--module-color);
+}
+.plate[data-size='M'],
+.plate[data-size='L'] {
+  width: calc(var(--slot-s) + var(--space-2));
+  height: calc(var(--slot-s) + var(--space-2));
+}

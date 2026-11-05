@@ -22,11 +22,8 @@
   padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: color-mix(
-    in srgb,
-    var(--area-color, var(--text-3)) var(--group-tint, 6%),
-    var(--surface)
-  );
+  /* Neutral tint (identity v3.1, F07): the area colour stays with the rail and the bottom navigation. */
+  background: color-mix(in srgb, var(--text-3) var(--group-tint, 6%), var(--surface));
 }
 .group::before {
   content: '';

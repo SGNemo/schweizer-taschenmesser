@@ -6,7 +6,7 @@ export const habits: Strings['habits'] = {
     description:
       'Metas diárias e semanais com anéis: um visto ou um número como “8 copos”, com dias de descanso, histórico e lembretes que param quando a meta do dia é atingida.',
     quickAdd: 'Hábito',
-    widget: 'Hoje',
+    widget: 'Feito hoje',
     settings: {
       remindersEnabled: 'Lembretes dos hábitos',
       remindersHelp: 'Desligado: nenhum lembrete chega, os anéis continuam.',

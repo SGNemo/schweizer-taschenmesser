@@ -28,7 +28,7 @@ export function TimerHead({
   const d = new Date(now());
   const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.timerHead} data-testid="timer-head">
         <HourStrip
           events={sessions.map((s) => ({ time: s.startTime, endTime: s.endTime }))}
