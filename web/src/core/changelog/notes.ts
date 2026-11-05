@@ -14,12 +14,19 @@ export interface NoteBlock {
   warning?: boolean;
   items: NoteItem[];
 }
-export interface ParsedNotes {
-  /** From the `## [1.2.0] – 2026-11-10` line; `unreleased` for `## Unreleased`. */
+export interface NoteSection {
+  /** From `## Build 687` (Dev-Preview text: the changes that came with that build). */
+  build?: number;
+  /** From the `## [1.2.0] – 2026-11-10` line. */
   version?: string;
   date?: string;
+  /** `## Unreleased`: open notes without a known build. */
   unreleased?: boolean;
   blocks: NoteBlock[];
+}
+export interface ParsedNotes extends NoteSection {
+  /** One section per `##` heading (a release body has one, the Dev-Preview text one per build). */
+  sections: NoteSection[];
 }
 
 const VERSION_RE =
@@ -47,12 +54,22 @@ function pickLanguage(markdown: string, lang: string): string[] {
 }
 
 export function parseReleaseNotes(markdown: string, lang: string): ParsedNotes {
-  const out: ParsedNotes = { blocks: [] };
+  const sections: NoteSection[] = [];
+  let section: NoteSection | undefined;
   let block: NoteBlock | undefined;
+  const startSection = (): NoteSection => {
+    // A heading right after an empty section (the title line of a release body) belongs to it.
+    if (section && section.blocks.length === 0) return section;
+    section = { blocks: [] };
+    sections.push(section);
+    block = undefined;
+    return section;
+  };
   const open = (heading?: string): NoteBlock => {
+    const target = section ?? startSection();
     block = { ...(heading ? { heading } : {}), items: [] };
     if (heading && WARNING_RE.test(heading)) block.warning = true;
-    out.blocks.push(block);
+    target.blocks.push(block);
     return block;
   };
   for (const raw of pickLanguage(markdown, lang)) {
@@ -62,12 +79,15 @@ export function parseReleaseNotes(markdown: string, lang: string): ParsedNotes {
     if (h) {
       const text = plain(h[2]!);
       if (h[1]!.length <= 2) {
-        if (/^(unreleased|unveröffentlicht)/i.test(text)) out.unreleased = true;
+        const target = startSection();
+        const b = /^build\s+(\d+)$/i.exec(text);
+        if (b) target.build = Number(b[1]);
+        else if (/^(unreleased|unveröffentlicht)/i.test(text)) target.unreleased = true;
         else {
           const v = VERSION_RE.exec(text);
           if (v) {
-            out.version = v[1];
-            out.date = v[2] ?? v[3];
+            target.version = v[1];
+            target.date = v[2] ?? v[3];
           }
         }
       } else open(text);
@@ -83,6 +103,15 @@ export function parseReleaseNotes(markdown: string, lang: string): ParsedNotes {
         : { text: body.replace(/\*\*/g, '') };
     (block ?? open()).items.push(item);
   }
-  out.blocks = out.blocks.filter((b) => b.items.length > 0);
-  return out;
+  const kept = sections
+    .map((x) => ({ ...x, blocks: x.blocks.filter((b) => b.items.length > 0) }))
+    .filter((x) => x.blocks.length > 0);
+  const first = kept[0] ?? sections[0];
+  return {
+    ...(first?.build ? { build: first.build } : {}),
+    ...(first?.version ? { version: first.version, date: first.date } : {}),
+    ...(first?.unreleased ? { unreleased: true } : {}),
+    blocks: kept.flatMap((x) => x.blocks),
+    sections: kept,
+  };
 }

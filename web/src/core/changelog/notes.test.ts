@@ -76,4 +76,37 @@ describe('parseReleaseNotes', () => {
       '1.3.0-beta.2',
     );
   });
+  it('reads a Dev-Preview text with one section per build, newest first, and the unreleased rest', () => {
+    const md = [
+      '> Dev-Preview 1.0.0-dev.686 – untested',
+      '',
+      '## Build 686',
+      '### Neu',
+      '- **Kalender:** Eins.',
+      '',
+      '## Build 685',
+      '### Behoben',
+      '- **Todos:** Zwei.',
+      '',
+      '## Unreleased',
+      '### Neu',
+      '- **App:** Drei.',
+      '',
+      '---',
+      '',
+      '## Build 686',
+      '### Added',
+      '- **Calendar:** One.',
+    ].join('\n');
+    const de = parseReleaseNotes(md, 'de');
+    expect(de.sections.map((x) => [x.build, x.unreleased ?? false])).toEqual([
+      [686, false],
+      [685, false],
+      [undefined, true],
+    ]);
+    expect(de.sections[1]?.blocks[0]?.items[0]).toEqual({ lead: 'Todos:', text: 'Zwei.' });
+    const en = parseReleaseNotes(md, 'en');
+    expect(en.sections).toHaveLength(1);
+    expect(en.sections[0]?.blocks[0]?.items[0]?.text).toBe('One.');
+  });
 });

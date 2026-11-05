@@ -28,6 +28,47 @@ const data: ChangelogData = {
 };
 vi.mock('@/core/changelog/load', () => ({ loadChangelog: async () => data }));
 
+const withBuilds: ChangelogData = {
+  areas: data.areas,
+  versions: [
+    {
+      version: 'unreleased',
+      date: '',
+      entries: [
+        { ...e('three', 'drei'), build: 686 },
+        { ...e('two', 'zwei'), build: 685 },
+        { ...e('one', 'eins'), build: 683 },
+        e('local', 'lokal'),
+      ],
+    },
+    data.versions[2]!,
+  ],
+};
+
+describe('ChangelogHistory per build', () => {
+  it('shows one card per Dev-Preview build, newest first, marks the installed one, local notes last', async () => {
+    vi.doMock('@/core/changelog/load', () => ({ loadChangelog: async () => withBuilds }));
+    vi.resetModules();
+    const { ChangelogHistory: History } = await import('./ChangelogHistory');
+    render(<History version="1.0.0-dev.683+abc1234" />);
+    await waitFor(() => expect(screen.getByTestId('changelog-history')).toBeTruthy());
+    const ids = within(screen.getByTestId('changelog-history'))
+      .getAllByTestId(/^history-/)
+      .map((c) => c.getAttribute('data-testid'));
+    expect(ids).toEqual([
+      'history-build-686',
+      'history-build-685',
+      'history-build-683',
+      'history-unreleased',
+      'history-1.0.0',
+    ]);
+    expect(within(screen.getByTestId('history-build-683')).getByText(/installiert/)).toBeTruthy();
+    expect(within(screen.getByTestId('history-build-686')).queryByText(/installiert/)).toBeNull();
+    expect(within(screen.getByTestId('history-build-686')).getByText(/drei/)).toBeTruthy();
+    vi.doUnmock('@/core/changelog/load');
+  });
+});
+
 describe('ChangelogHistory', () => {
   it('lists the latest versions newest first, all open, without versions newer than the build', async () => {
     render(<ChangelogHistory version="1.0.0" />);

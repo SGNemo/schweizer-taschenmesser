@@ -51,6 +51,46 @@ describe('UpdateBanner', () => {
     expect(screen.getByRole('button', { name: t.update.updateNow })).toBeEnabled();
   });
 
+  it('lists the changes per Dev-Preview build, newest first, and marks the installed build', async () => {
+    const platform = fakeNative();
+    platform.app.version = async () => '1.0.0-dev.685+abc1234';
+    const notes = [
+      '## Build 686',
+      '### Neu',
+      '- **Kalender:** Feiertage in der Jahresansicht.',
+      '',
+      '## Build 685',
+      '### Behoben',
+      '- **Todos:** Tags werden gespeichert.',
+      '',
+      '## Build 684',
+      '### Neu',
+      '- **App:** Neuer Import.',
+      '',
+      '---',
+      '',
+      '## Build 686',
+      '### Added',
+      '- **Calendar:** Holidays.',
+    ].join('\n');
+    useUpdateStore
+      .getState()
+      .set({ phase: 'available', info: { ...info, version: '1.0.0-dev.686', notes } });
+    render(<UpdateBanner />);
+    const titles = screen.getAllByText(/^Build \d+/).map((el) => el.textContent?.trim());
+    expect(titles.map((x) => x?.replace(/\s*installiert$/, ''))).toEqual([
+      'Build 686',
+      'Build 685',
+      'Build 684',
+    ]);
+    expect(
+      screen.getByText('Feiertage in der Jahresansicht.', { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Holidays/)).toBeNull(); // the German block in a German app
+    await vi.waitFor(() => expect(screen.getByText(t.about.changes.installed)).toBeInTheDocument());
+    expect(screen.getByText(/^Build 685/).textContent).toContain(t.about.changes.installed);
+  });
+
   it('"Später" hides the offer without installing anything', async () => {
     const install = vi.fn(async () => 'restarting' as const);
     fakeNative(install);

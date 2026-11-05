@@ -81,3 +81,9 @@ export function newToken(view: ChangelogView): string | undefined {
   if (view.current && view.current.entries.length > 0) return view.current.version;
   return undefined;
 }
+
+/** "1.0.0-dev.683+abc1234" → 683 (the build of a Dev-Preview version); undefined for any other version. */
+export function devBuildNumber(version: string): number | undefined {
+  const m = /-dev\.(\d+)/.exec(version);
+  return m ? Number(m[1]) : undefined;
+}

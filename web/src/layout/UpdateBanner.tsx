@@ -1,5 +1,6 @@
 import { installUpdate, postponeUpdate, useUpdateStore } from '@/core/update/controller';
-import { parseReleaseNotes } from '@/core/changelog/notes';
+import { parseReleaseNotes, type NoteSection } from '@/core/changelog/notes';
+import { useInstalledBuild } from '@/core/changelog/useInstalledBuild';
 import { useLang } from '@/core/i18n/lang';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { t } from '@/strings';
@@ -10,6 +11,7 @@ import styles from './UpdateBanner.module.css';
 /** Unobtrusive offer of a new version. Never forces anything; "Später" hides it for that version. */
 export function UpdateBanner() {
   const lang = useLang();
+  const installed = useInstalledBuild();
   const state = useUpdateStore((s) => s.state);
   // Only these phases belong to an offered update; everything else shows nothing here.
   const info =
@@ -22,17 +24,21 @@ export function UpdateBanner() {
   if (!info) return null;
   const busy = state.phase === 'installing';
   const notes = parseReleaseNotes(info.notes, lang);
-  const heading = notes.unreleased
-    ? t.about.changes.unreleased
-    : notes.version
-      ? [
-          t.about.changes.version(notes.version),
-          notes.date &&
-            dateTimeFormat({ dateStyle: 'medium' }).format(new Date(`${notes.date}T00:00:00`)),
-        ]
-          .filter(Boolean)
-          .join(' · ')
-      : undefined;
+  const c = t.about.changes;
+  const titleOf = (sec: NoteSection): string | undefined =>
+    sec.build
+      ? c.build(sec.build)
+      : sec.unreleased
+        ? c.unreleased
+        : sec.version
+          ? [
+              c.version(sec.version),
+              sec.date &&
+                dateTimeFormat({ dateStyle: 'medium' }).format(new Date(`${sec.date}T00:00:00`)),
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          : undefined;
   const progress = state.phase === 'installing' ? state.progress : undefined;
   const pct =
     progress && progress.total > 0
@@ -87,9 +93,18 @@ export function UpdateBanner() {
       {notes.blocks.length > 0 ? (
         <details className={styles.notes} open>
           <summary>{t.update.whatsNew}</summary>
-          {heading ? <p className={styles.version}>{heading}</p> : null}
           <div className={styles.scroll}>
-            <ReleaseNotes blocks={notes.blocks} />
+            {notes.sections.map((sec, i) => (
+              <section key={i} className={styles.part}>
+                {titleOf(sec) ? (
+                  <p className={styles.version}>
+                    {titleOf(sec)}{' '}
+                    {sec.build && sec.build === installed ? <Badge>{c.installed}</Badge> : null}
+                  </p>
+                ) : null}
+                <ReleaseNotes blocks={sec.blocks} />
+              </section>
+            ))}
           </div>
         </details>
       ) : null}

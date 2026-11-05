@@ -56,6 +56,8 @@ export const de = {
     },
     changes: {
       history: 'Was in den letzten Versionen passiert ist',
+      build: (n: number) => `Build ${n}`,
+      installed: 'installiert',
       unreleased: 'Unveröffentlicht',
       unreleasedNote: 'Noch nicht veröffentlicht, nur in dieser Vorschau.',
       highlights: 'Das Wichtigste',
