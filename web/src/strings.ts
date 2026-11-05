@@ -20,6 +20,11 @@ export const de = {
     atClock: (time: string) => `${time} Uhr`,
     /** "ab 29. Sep. 2026, 08:00 Uhr" */
     startsFrom: (date: string, time: string) => `ab ${date}, ${time} Uhr`,
+    /** A duration in minutes, long form ("3 Std 5 Min", "45 Min"); see `formatMinutes`. */
+    duration: (h: number, m: number) => (h > 0 ? `${h} Std ${m} Min` : `${m} Min`),
+    /** The compact form for boards, bars and widget rows ("1 h 30", "4 h", "45 Min"). */
+    durationCompact: (h: number, m: number) =>
+      h > 0 ? (m > 0 ? `${h} h ${m}` : `${h} h`) : `${m} Min`,
   },
   about: {
     title: 'Über Nemo',
@@ -7434,7 +7439,6 @@ export const de = {
     today: 'Heute',
     todayTotal: (duration: string) => `Heute: ${duration}`,
     since: (time: string) => `seit ${time}`,
-    dur: (h: number, m: number) => (h > 0 ? `${h} Std ${m} Min` : `${m} Min`),
     noSessions: 'Heute noch keine Zeit erfasst.',
     emptyJobs: 'Noch keine Projekte. Lege eins an, dann startest du die Zeit mit einem Klick.',
     form: {
