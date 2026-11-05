@@ -26,6 +26,51 @@ function scanWhen(at: number): string {
 }
 
 /**
+ * The module's one scan while it is this drive's: running (Pause, Abbrechen, Zum Scan), ended or
+ * cancelled (Zum Ergebnis), failed (the reason, Zum Scan). Its own component, so the once-a-second
+ * figure re-renders this line and not the whole card.
+ */
+function DriveScanLine({ root }: { root: string }) {
+  const phase = useDiskStore((s) => (s.root === root ? s.phase : 'idle'));
+  const paused = useDiskStore((s) => s.root === root && s.paused);
+  const progress = useDiskStore((s) => (s.root === root ? s.progress : null));
+  const error = useDiskStore((s) => (s.root === root ? s.error : null));
+  const cancelled = useDiskStore((s) => s.root === root && (s.summary?.cancelled ?? false));
+  const cancel = useDiskStore((s) => s.cancel);
+  const togglePause = useDiskStore((s) => s.togglePause);
+  if (phase === 'scanning')
+    return (
+      <ScanStatusLine
+        inline
+        state={paused ? t.disk.scan.paused : t.disk.scan.scanning}
+        detail={soFarOf(progress)}
+        to="/disk/scan"
+        linkText={t.disk.scan.toScan}
+        actions={{ paused, onPause: () => void togglePause(), onCancel: () => void cancel() }}
+      />
+    );
+  if (phase === 'failed')
+    return (
+      <ScanStatusLine
+        inline
+        state={t.disk.scan.failed(error ?? '')}
+        to="/disk/scan"
+        linkText={t.disk.scan.toScan}
+      />
+    );
+  if (phase === 'done')
+    return (
+      <ScanStatusLine
+        inline
+        state={cancelled ? t.disk.scan.cancelledShort : t.disk.scan.endedShort}
+        to="/disk/scan"
+        linkText={t.disk.scan.toResult}
+      />
+    );
+  return null;
+}
+
+/**
  * One drive, calm: the ring, the name, one line of numbers, one line of advice and one muted line
  * of what it is. The module's scan shows its state here when it is this drive's (running, ended,
  * failed) instead of in a line above the grid. Health, temperature, the session history and the
@@ -42,14 +87,8 @@ export function DriveCard({
 }) {
   const points = useDriveHistory((s) => s.points[d.root]);
   const lastScan = useDriveHistory((s) => s.lastScan[d.root]);
-  // The module's one scan, only while it is this drive's.
-  const phase = useDiskStore((s) => (s.root === d.root ? s.phase : 'idle'));
-  const paused = useDiskStore((s) => s.root === d.root && s.paused);
-  const progress = useDiskStore((s) => (s.root === d.root ? s.progress : null));
-  const error = useDiskStore((s) => (s.root === d.root ? s.error : null));
-  const cancelled = useDiskStore((s) => s.root === d.root && (s.summary?.cancelled ?? false));
-  const cancel = useDiskStore((s) => s.cancel);
-  const togglePause = useDiskStore((s) => s.togglePause);
+  // The module's one scan, only while it is this drive's (the line itself subscribes to the rest).
+  const scanning = useDiskStore((s) => s.root === d.root && s.phase === 'scanning');
 
   const used = Math.max(0, d.totalBytes - d.freeBytes);
   const pct = percent(used, d.totalBytes);
@@ -70,41 +109,15 @@ export function DriveCard({
     .filter(Boolean)
     .join(' · ');
 
-  const scanning = phase === 'scanning';
-  const scanLine = scanning ? (
-    <ScanStatusLine
-      inline
-      state={paused ? t.disk.scan.paused : t.disk.scan.scanning}
-      detail={soFarOf(progress)}
-      to="/disk/scan"
-      linkText={t.disk.scan.toScan}
-      actions={{ paused, onPause: () => void togglePause(), onCancel: () => void cancel() }}
-    />
-  ) : phase === 'failed' ? (
-    <ScanStatusLine
-      inline
-      state={t.disk.scan.failed(error ?? '')}
-      to="/disk/scan"
-      linkText={t.disk.scan.toScan}
-    />
-  ) : phase === 'done' ? (
-    <ScanStatusLine
-      inline
-      state={cancelled ? t.disk.scan.cancelledShort : t.disk.scan.endedShort}
-      to="/disk/scan"
-      linkText={t.disk.scan.toResult}
-    />
-  ) : null;
-
   return (
     <Card className={styles.card}>
       <div className={styles.top}>
         <Ring percent={pct} level={level} label={name} />
         <div className={styles.head}>
-          <h3 className={styles.name}>
-            <span>{name}</span>
+          <div className={styles.name}>
+            <h3 className={styles.title}>{name}</h3>
             {d.isSystem ? <Badge tone="accent">{c.systemDrive}</Badge> : null}
-          </h3>
+          </div>
           <p className={styles.numbers}>
             {t.disk.usedOf(formatCapacity(used), formatCapacity(d.totalBytes))}
             <span className={styles.meta}> · {t.disk.free(formatCapacity(d.freeBytes))}</span>
@@ -117,12 +130,13 @@ export function DriveCard({
         </div>
       </div>
 
-      {scanLine ?? (
+      {scanning ? null : (
         <p className={styles.meta}>
           {lastScan ? c.lastScan(scanWhen(lastScan.at)) : c.neverScanned}
           {growth !== null ? ` · ${c.growth(formatDelta(growth))}` : ''}
         </p>
       )}
+      <DriveScanLine root={d.root} />
 
       <div className={styles.foot}>
         {scanning ? null : (

@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Scan ${name}`,
   usedOf: (used: string, total: string) => `${used} of ${total} used`,
   free: (free: string) => `${free} free`,
-  percentUsed: (p: number) => `${p}% used`,
   card: {
     scan: 'Scan',
     systemDrive: 'System drive',

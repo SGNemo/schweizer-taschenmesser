@@ -96,8 +96,9 @@ function DrivesTab() {
   const scanning = useDiskStore((s) => s.phase === 'scanning');
   const scanRoot = useDiskStore((s) => s.root);
   const toast = useUiStore((s) => s.toast);
-  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above.
-  const scanOnCard = drives?.some((d) => d.root === scanRoot) ?? false;
+  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
+  // the drives still load, nothing flashes above the grid (unless loading failed).
+  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
   const record = useDriveHistory((s) => s.record);
 
   useEffect(() => {

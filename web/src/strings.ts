@@ -4396,7 +4396,6 @@ export const de = {
     open: (name: string) => `${name} scannen`,
     usedOf: (used: string, total: string) => `${used} von ${total} belegt`,
     free: (free: string) => `${free} frei`,
-    percentUsed: (p: number) => `${p} % belegt`,
     card: {
       scan: 'Scannen',
       systemDrive: 'Systemlaufwerk',
