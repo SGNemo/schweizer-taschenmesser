@@ -40,3 +40,15 @@ test('every hue of the catalogue maps to --module-color (identity.css)', () => {
     if (m.hue2) assert.ok(identity.includes(`[data-hue2='${m.hue2}']`), `${m.id}: hue2 "${m.hue2}"`);
   }
 });
+
+// The site's texts must cover what the catalogue may bring: a subtitle per area and a name per head shape, in every
+// language. Node strips the types of the locale files (plain `as const` objects without imports).
+const LOCALES = ['de', 'en', 'es', 'fr', 'pt'];
+test('every catalogue area has a subtitle and every head shape a name in all five languages', async () => {
+  for (const l of LOCALES) {
+    const mod = await import(`../src/i18n/${l}.ts`);
+    const s = Object.values(mod)[0];
+    for (const a of catalog.areas) assert.equal(typeof s.features.areas[a.id], 'string', `${l}: area "${a.id}"`);
+    for (const m of catalog.modules) assert.equal(typeof s.heads.names[m.head], 'string', `${l}: head "${m.head}"`);
+  }
+});

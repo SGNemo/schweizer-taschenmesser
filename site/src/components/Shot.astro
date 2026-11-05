@@ -19,7 +19,8 @@ interface Props {
   class?: string;
 }
 const { name, alt, sizes, widths, priority = false, frame = 'none', class: cls } = Astro.props;
-const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/*.png', { eager: true });
+// Only the names a page renders; the other files in screens/ wait for package 2 (README motifs, more tiles).
+const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/{home,phone}-*.png', { eager: true });
 const pick = (scheme: 'dark' | 'light') => {
   const hit = all[`../assets/screens/${name}-${scheme}.png`];
   if (!hit) throw new Error(`screenshot missing: ${name}-${scheme}.png (run npm run app:screenshots)`);

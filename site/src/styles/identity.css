@@ -70,14 +70,19 @@
 [data-hue2='slate'] {
   --module-color-2: var(--mod-slate);
 }
-/* Resolved where --module-color exists: the flat tint of a card head (widget zone) and the gradient of a head band. */
+/* Resolved where --module-color exists (the app's block, minus the chart series): head gradient and flat card tint. */
 [data-hue] {
-  --head-flat: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
   --head-gradient: linear-gradient(
-    100deg,
+    118deg,
     color-mix(in srgb, var(--module-color) var(--head-tint-0), var(--surface)) 0%,
-    color-mix(in srgb, var(--module-color-2, var(--module-color)) var(--head-tint-1), var(--surface)) 100%
+    color-mix(
+        in srgb,
+        var(--module-color-2, var(--module-color)) var(--head-tint-1),
+        var(--surface)
+      )
+      72%
   );
+  --head-flat: color-mix(in srgb, var(--module-color) 14%, var(--surface));
 }
 /* The icon plate: the module's one solid spot of colour; the surface colour draws the icon (HuePlate in the app). */
 .plate {
@@ -101,10 +106,6 @@
   :root:not([data-theme='light']) .plate {
     color: var(--bg);
   }
-}
-:root[data-theme='dark'] .plate.neutral,
-:root:not([data-theme='light']) .plate.neutral {
-  color: var(--text);
 }
 /* Area patterns, copied from the app (plan lines, money dots, household grid, knowledge diagonals, vault rules, system none). */
 [data-area='plan'] {

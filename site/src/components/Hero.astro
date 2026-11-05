@@ -55,7 +55,7 @@ const heads = HEAD_ORDER.map((variant) => {
     </div>
     <div class="devices">
       <Shot name="home" frame="window" alt={s.hero.screenshotAlt} sizes="(min-width: 64rem) 44vw, 100vw" widths={[480, 720, 960, 1280]} priority />
-      <Shot name="phone" frame="phone" class="handset" alt={s.hero.phoneAlt} sizes="7rem" widths={[220, 440]} />
+      <Shot name="phone" frame="phone" class="handset" alt={s.hero.phoneAlt} sizes="7rem" widths={[220, 440, 824]} />
     </div>
   </div>
   <div class="wrap heads" role="group" aria-labelledby="heads-title">
@@ -63,8 +63,8 @@ const heads = HEAD_ORDER.map((variant) => {
     <ul>
       {heads.map((h) => (
         <li>
-          <IdentityMini kind="head" variant={h.variant} hue={h.first.hue} area={h.first.area} icon={h.first.icon as IconName} />
-          <span class="hcap"><strong>{s.heads.names[h.variant]}</strong>{h.names}</span>
+          <IdentityMini kind="head" variant={h.variant} hue={h.first.hue} hue2={h.first.hue2} area={h.first.area} icon={h.first.icon as IconName} />
+          <span class="hcap"><strong>{s.heads.names[h.variant]}</strong> {h.names}</span>
         </li>
       ))}
     </ul>
@@ -195,7 +195,7 @@ const heads = HEAD_ORDER.map((variant) => {
   .hcap {
     display: block;
     margin-top: 0.35rem;
-    font-size: var(--text-caps);
+    font-size: var(--text-meta);
     color: var(--text-muted);
     line-height: 1.35;
   }

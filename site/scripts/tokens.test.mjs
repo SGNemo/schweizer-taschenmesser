@@ -20,9 +20,9 @@ function block(css, startMarker, endMarker) {
 }
 
 const HUES = ['lime', 'moss', 'fern', 'teal', 'ocean', 'sky', 'cobalt', 'indigo', 'violet', 'orchid', 'slate'];
-const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--accent-soft', '--warning', ...HUES.map((h) => `--mod-${h}`)];
+const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--accent-soft', '--warning', ...HUES.map((h) => `--mod-${h}`), '--sky-day-0', '--sky-day-1'];
 // Identity v3 tints and pattern strengths: the app sets them once in :root (same in both themes).
-const IDENTITY = ['--head-tint-0', '--head-tint-1', '--widget-tint', '--group-tint', '--pattern-head', '--pattern-widget', '--pattern-ink'];
+const IDENTITY = ['--head-tint-0', '--head-tint-1', '--widget-tint', '--group-tint', '--pattern-head', '--pattern-widget', '--pattern-ink', '--sky-sun'];
 const AREAS = ['plan', 'money', 'household', 'knowledge', 'vault', 'system'];
 const identity = readFileSync(path.join(here, '..', 'src', 'styles', 'identity.css'), 'utf8');
 const SCALE = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full', '--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--font-sans', '--font-mono'];
@@ -40,8 +40,9 @@ test('every hue maps to --module-color and --module-color-2 (identity.css)', () 
     const two = block(identity, `[data-hue2='${h}'] {`, '}');
     assert.equal(two['--module-color-2'], `var(--mod-${h})`, h);
   }
-  const hue = block(identity, '[data-hue] {', '}');
-  assert.ok(hue['--head-flat'] && hue['--head-gradient'], 'head tint definitions');
+  const hue = block(identity, '[data-hue] {', '\n}');
+  const appHue = block(app, '[data-hue] {', '\n}');
+  for (const k of ['--head-flat', '--head-gradient']) assert.equal(hue[k], appHue[k], k);
 });
 
 test('area patterns match the app', () => {

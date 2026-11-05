@@ -46,9 +46,9 @@ export const de = {
     ],
     more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number) => `${n} Module in sechs Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst. Die Skizze auf jeder Karte zeigt die Form des Widgets auf der Übersicht.`,
+    intro: (n: number, a: number) => `${n} Module in ${a} Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst. Die Skizze auf jeder Karte zeigt die Form des Widgets auf der Übersicht.`,
     count: (n: number) => (n === 1 ? '1 Modul' : `${n} Module`),
-    areas: { plan: 'Der Tag, die Woche, die Leute.', money: 'Konten, Rechnungen, Abos, Budgets.', household: 'Einkaufen und Vorräte.', knowledge: 'Lesen, schreiben, merken.', vault: 'Verschlüsselt, nur hier.', system: 'Nur in der Windows-App.' },
+    areas: { plan: 'Der Tag, die Woche, die Leute.', money: 'Konten, Rechnungen, Abos, Budgets.', household: 'Einkaufen und Vorräte.', knowledge: 'Lesen, schreiben, merken.', vault: 'Verschlüsselt, nur hier.', system: 'Was dein Gerät gerade tut.' },
     modules: {
       summary: (n: number) => `Alle ${n} Module`,
       status: { default: 'standardmäßig an', optional: 'optional', preview: 'Vorschau' },
@@ -57,8 +57,8 @@ export const de = {
     },
   },
   heads: {
-    eyebrow: 'Neun Kopfformen, eine Sprache',
-    note: 'Jedes Modul hat seine Farbe und seine Kopfform; die Website zeichnet sie nach, ohne Bild.',
+    eyebrow: 'Jedes Modul hat seine Form',
+    note: 'Jede Modulseite beginnt mit einem Kopf in einer von neun Formen und in der Farbe des Moduls. So siehst du auf einen Blick, wo du bist.',
     names: { kennzahl: 'Kennzahl', zeit: 'Zeit', fortschritt: 'Fortschritt', cover: 'Cover', himmel: 'Himmel', regal: 'Regal', tresor: 'Tresor', schreib: 'Papier', fokus: 'Fokus' },
   },
   data: {
@@ -88,6 +88,7 @@ export const de = {
     ],
     honest: 'Nemo ist mit ADHS im Blick entwickelt und hilft beim Anfangen und Dranbleiben. Es ist keine Behandlung und verspricht keine. Jede Hilfe lässt sich einzeln abschalten.',
     shotAlt: 'Ausschnitt der Übersicht: die Karte „Jetzt dran“ mit „Anfangen · 5 Min“, „Später“ und „Etwas anderes“',
+    phoneAlt: 'Die Übersicht auf dem Handy: „Jetzt wichtig“ und die Karte „Jetzt dran“ mit erstem Schritt und Dauer',
   },
   compare: {
     eyebrow: 'Vergleich',

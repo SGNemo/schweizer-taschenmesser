@@ -75,5 +75,5 @@ const paths: Record<IconName, string> = {
   aria-label={label}
   aria-hidden={label ? undefined : 'true'}
   focusable="false"
-  set:html={paths[name]}
+  set:html={Object.hasOwn(paths, name) ? paths[name] : ''}
 />

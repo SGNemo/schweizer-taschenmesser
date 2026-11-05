@@ -46,9 +46,9 @@ export const pt = {
     ],
     more: 'Também: notas, listas, marcadores, despensa, pessoas, hábitos, controle de tempo, tempo, limpeza do PC, um chat com um modelo local (prévia). IA só se você quiser. O app fala alemão, inglês, espanhol, francês e português (Brasil).',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number) => `${n} módulos em seis áreas. Cada um tem sua cor; você ativa só o que precisa. O esboço em cada cartão mostra a forma do seu widget na visão geral.`,
+    intro: (n: number, a: number) => `${n} módulos em ${a} áreas. Cada um tem sua cor; você ativa só o que precisa. O esboço em cada cartão mostra a forma do seu widget na visão geral.`,
     count: (n: number) => (n === 1 ? '1 módulo' : `${n} módulos`),
-    areas: { plan: 'O dia, a semana, as pessoas.', money: 'Contas, faturas, assinaturas, orçamentos.', household: 'Compras e despensa.', knowledge: 'Ler, escrever, lembrar.', vault: 'Criptografado, só aqui.', system: 'Só no app do Windows.' },
+    areas: { plan: 'O dia, a semana, as pessoas.', money: 'Contas, faturas, assinaturas, orçamentos.', household: 'Compras e despensa.', knowledge: 'Ler, escrever, lembrar.', vault: 'Criptografado, só aqui.', system: 'O que seu dispositivo está fazendo.' },
     modules: {
       summary: (n: number) => `Todos os ${n} módulos`,
       status: { default: 'ligado por padrão', optional: 'opcional', preview: 'prévia' },
@@ -57,8 +57,8 @@ export const pt = {
     },
   },
   heads: {
-    eyebrow: 'Nove formas de cabeçalho, uma linguagem',
-    note: 'Cada módulo tem sua cor e sua forma de cabeçalho; o site os desenha, sem imagem.',
+    eyebrow: 'Cada módulo tem sua forma',
+    note: 'Cada página de módulo começa com um cabeçalho em uma de nove formas e na cor do módulo; assim você vê de relance onde está.',
     names: { kennzahl: 'Número', zeit: 'Tempo', fortschritt: 'Progresso', cover: 'Capa', himmel: 'Céu', regal: 'Estante', tresor: 'Cofre', schreib: 'Papel', fokus: 'Foco' },
   },
   data: {
@@ -88,6 +88,7 @@ export const pt = {
     ],
     honest: 'O Nemo é desenvolvido pensando no TDAH e ajuda a começar e a manter o fio. Não é um tratamento e não promete ser. Cada recurso pode ser desligado separadamente.',
     shotAlt: 'Detalhe da visão geral: o cartão “a seguir” com “começar · 5 min”, “mais tarde” e “outra coisa”',
+    phoneAlt: 'A visão geral no celular: “importante agora” e o cartão “a seguir” com o primeiro passo e a duração',
   },
   compare: {
     eyebrow: 'Comparação',

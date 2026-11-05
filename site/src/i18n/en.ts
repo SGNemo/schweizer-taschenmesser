@@ -46,9 +46,9 @@ export const en = {
     ],
     more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number) => `${n} modules in six areas. Each has its colour; you turn on only what you need. The sketch on every card shows the shape of its widget on the overview.`,
+    intro: (n: number, a: number) => `${n} modules in ${a} areas. Each has its colour; you turn on only what you need. The sketch on every card shows the shape of its widget on the overview.`,
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
-    areas: { plan: 'The day, the week, the people.', money: 'Accounts, invoices, subscriptions, budgets.', household: 'Shopping and supplies.', knowledge: 'Read, write, remember.', vault: 'Encrypted, only here.', system: 'Windows app only.' },
+    areas: { plan: 'The day, the week, the people.', money: 'Accounts, invoices, subscriptions, budgets.', household: 'Shopping and supplies.', knowledge: 'Read, write, remember.', vault: 'Encrypted, only here.', system: 'What your device is up to.' },
     modules: {
       summary: (n: number) => `All ${n} modules`,
       status: { default: 'on by default', optional: 'optional', preview: 'preview' },
@@ -57,8 +57,8 @@ export const en = {
     },
   },
   heads: {
-    eyebrow: 'Nine head shapes, one language',
-    note: 'Every module has its colour and its head shape; the website draws them, no picture needed.',
+    eyebrow: 'Every module has its shape',
+    note: 'Every module page starts with a head in one of nine shapes and in the module’s colour, so you see at a glance where you are.',
     names: { kennzahl: 'Figure', zeit: 'Time', fortschritt: 'Progress', cover: 'Cover', himmel: 'Sky', regal: 'Shelf', tresor: 'Vault', schreib: 'Paper', fokus: 'Focus' },
   },
   data: {
@@ -88,6 +88,7 @@ export const en = {
     ],
     honest: 'Nemo is developed with ADHD in mind and helps with starting and staying on track. It is not a treatment and does not promise one. Every aid can be switched off individually.',
     shotAlt: 'Detail of the overview: the “up next” card with “start · 5 min”, “later” and “something else”',
+    phoneAlt: 'The overview on the phone: “important now” and the “up next” card with a first step and duration',
   },
   compare: {
     eyebrow: 'Comparison',

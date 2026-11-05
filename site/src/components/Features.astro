@@ -23,7 +23,6 @@ const areas = catalog.areas.map((a) => ({
       text: x.short[locale],
       icon: x.icon as IconName,
       hue: x.hue,
-      hue2: x.hue2 ?? undefined,
       widget: x.widget,
       // "on by default" is the normal case and stays quiet; optional, preview and platform limits are said.
       note: [x.status === 'default' ? null : m.status[x.status as 'optional' | 'preview'], x.platforms ? m.only[x.platforms as 'windows' | 'android' | 'both'] : null]
@@ -36,7 +35,7 @@ const areas = catalog.areas.map((a) => ({
   <div class="wrap">
     <p class="eyebrow">{s.features.eyebrow}</p>
     <h2 id="features-title">{s.features.title}</h2>
-    <p class="intro">{s.features.intro(catalog.modules.length)}</p>
+    <p class="intro">{s.features.intro(catalog.modules.length, catalog.areas.length)}</p>
     <div class="areas">
       {areas.map((a) => (
         <section class="area" data-area={a.id} aria-labelledby={`area-${a.id}`}>
@@ -47,7 +46,7 @@ const areas = catalog.areas.map((a) => ({
           </div>
           <ul class="cards">
             {a.items.map((x) => (
-              <li class="mcard" id={`module-${x.id}`} data-hue={x.hue} data-hue2={x.hue2}>
+              <li class="mcard" data-hue={x.hue}>
                 <div class="mhead">
                   <span class="plate"><Icon name={x.icon} size={18} /></span>
                   <span class="mname">{x.name}{x.note && <span class="state">{x.note}</span>}</span>
@@ -132,10 +131,6 @@ const areas = catalog.areas.map((a) => ({
     border-radius: var(--radius-md);
     background: var(--surface);
     border: 1px solid var(--border);
-    transition: border-color var(--dur-fast);
-  }
-  .mcard:hover {
-    border-color: color-mix(in srgb, var(--module-color) 45%, var(--border));
   }
   .mhead {
     display: flex;
@@ -155,7 +150,7 @@ const areas = catalog.areas.map((a) => ({
   }
   .state {
     font-weight: normal;
-    font-size: var(--text-caps);
+    font-size: var(--text-meta);
     color: var(--text-muted);
     margin-left: 0.3rem;
   }

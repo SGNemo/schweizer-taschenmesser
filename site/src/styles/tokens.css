@@ -87,6 +87,10 @@
   --pattern-head: 0.06;
   --pattern-widget: 0.04;
   --pattern-ink: var(--text);
+  /* Sky wash of the weather head (identity "himmel"): day sky and sun. */
+  --sky-day-0: #6fb3e8;
+  --sky-day-1: #cfe7f7;
+  --sky-sun: #ffd36a;
   color-scheme: light;
 }
 
@@ -119,6 +123,8 @@
   --mod-violet: #f7aef0;
   --mod-orchid: #eb90ba;
   --mod-slate: #a9b7c0;
+  --sky-day-0: #1c3a5c;
+  --sky-day-1: #2e5a86;
   color-scheme: dark;
 }
 
@@ -152,6 +158,8 @@
     --mod-violet: #f7aef0;
     --mod-orchid: #eb90ba;
     --mod-slate: #a9b7c0;
+    --sky-day-0: #1c3a5c;
+    --sky-day-1: #2e5a86;
     color-scheme: dark;
   }
 }
