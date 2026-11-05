@@ -105,3 +105,15 @@ it('a task pointing at a change of an unknown list is not written', async () => 
   );
   expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
 });
+
+it('an entry of another collection with the same id is no dependency (and nothing throws)', async () => {
+  const rows = await importJson(
+    [
+      { collection: 'lists', id: INBOX_ID },
+      { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
+    ],
+    'j8',
+  );
+  expect(rows.find((r) => r.candidate.label === 'Einzeln')?.selected).toBe(true);
+  expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
+});
