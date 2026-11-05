@@ -1,0 +1,481 @@
+---
+/**
+ * Drawn identity shapes, no text and no data: the widget miniature of a module (`kind="widget"`, the eleven
+ * `identity.widget` variants of the app's module library, web/src/pages/library/WidgetMiniature) and the nine
+ * head silhouettes (`kind="head"`, docs/design/MODULE-IDENTITY.md "Head variants"). Redrawn here so the site
+ * stays standalone; the forms follow the app. Decoration only (aria-hidden). The colour is --module-color from
+ * the surrounding `data-hue` (a head sets its own hue and area), the pattern is the area's.
+ */
+import Icon, { type IconName } from './Icon.astro';
+
+interface Props {
+  kind: 'widget' | 'head';
+  variant: string;
+  /** Head only: the example module's hue (and second hue), area and icon. */
+  hue?: string;
+  hue2?: string | null;
+  area?: string;
+  icon?: IconName;
+}
+const { kind, variant, hue, hue2, area, icon } = Astro.props;
+
+/** Widget miniatures: boxes and bars (same vocabulary as the app's sketch). */
+const WIDGET: Record<string, string> = {
+  kennzahl: '<i class="figure"></i><i class="line"></i><span class="spark"><i data-h="30"></i><i data-h="42"></i><i data-h="36"></i><i data-h="55"></i><i data-h="48"></i><i data-h="70"></i><i data-h="62"></i></span>',
+  zeitleiste: '<span class="row"><i class="dot"></i><i class="line" data-w="0"></i></span><span class="row"><i class="dot"></i><i class="line" data-w="1"></i></span><span class="row"><i class="dot"></i><i class="line" data-w="2"></i></span>',
+  fortschritt: '<i class="ring"></i><span class="stack"><i class="line"></i><i class="line" data-w="1"></i></span>',
+  cover: '<i class="cover"></i><span class="stack"><i class="line"></i><i class="line" data-w="1"></i><span class="controls"><i class="dot"></i><i class="dot" data-big></i><i class="dot"></i></span></span>',
+  himmel: '<i class="sun"></i><i class="figure" data-w="1"></i><i class="line"></i>',
+  kacheln: '<span class="tiles"><span class="tile"><i class="line" data-w="2"></i></span><span class="tile"><i class="line" data-w="2"></i></span><span class="tile"><i class="line" data-w="2"></i></span><span class="tile"><i class="line" data-w="2"></i></span></span>',
+  status: '<i class="plateS"></i><i class="line"></i><i class="pill"></i>',
+  notiz: '<span class="paper"><i class="line"></i><i class="line" data-w="1"></i><i class="line" data-w="2"></i></span>',
+  fokus: '<i class="figure" data-w="1"></i><i class="line"></i><i class="pill" data-primary></i>',
+  faellig: '<span class="row"><i class="line" data-w="0"></i><i class="badge"></i></span><span class="row"><i class="line" data-w="1"></i><i class="badge"></i></span><span class="row"><i class="line" data-w="2"></i><i class="badge"></i></span>',
+  checkliste: '<span class="row"><i class="box" data-done></i><i class="line" data-w="0"></i></span><span class="row"><i class="box"></i><i class="line" data-w="1"></i></span><span class="row"><i class="box"></i><i class="line" data-w="2"></i></span>',
+};
+/** Head silhouettes: what sits under the title row of each variant. */
+const HEAD: Record<string, string> = {
+  kennzahl: '<i class="hfig"></i><i class="hline" data-w="2"></i><span class="hcards"><i></i><i></i></span>',
+  zeit: '<i class="hday"></i><span class="hstrip"><i></i><i></i><i data-on></i><i></i><i></i><i data-on></i><i data-on></i><i></i></span>',
+  fortschritt: '<i class="hline" data-w="1"></i><span class="hrings"><i data-p="72"></i><i data-p="40"></i><i data-p="100"></i></span>',
+  cover: '<i class="hcover"></i><span class="hstack"><i class="hline" data-w="1"></i><i class="hline" data-w="2"></i></span>',
+  himmel: '<i class="hsun"></i><i class="hthin"></i>',
+  regal: '<i class="hfig" data-w="1"></i><span class="hshelf"><i></i><i></i><i></i></span>',
+  tresor: '<i class="hplate"></i><i class="hline" data-w="1"></i>',
+  schreib: '<i class="hserif"></i><i class="hline" data-w="2"></i>',
+  fokus: '<i class="hline" data-w="0" data-big></i><i class="hsmall"></i>',
+};
+const COMPACT = ['tresor', 'schreib', 'fokus'];
+// Only fixed markup reaches set:html: an unknown variant draws nothing (the catalogue tests pin the known ones).
+const widget = kind === 'widget' && Object.hasOwn(WIDGET, variant) ? WIDGET[variant] : '';
+const head = kind === 'head' && Object.hasOwn(HEAD, variant) ? HEAD[variant] : '';
+---
+{kind === 'widget' && (
+  <span class="mini" data-variant={variant} aria-hidden="true" set:html={widget} />
+)}
+{kind === 'head' && (
+  <span
+    class="hm"
+    data-head={variant}
+    data-hue={hue}
+    data-hue2={hue2 ?? undefined}
+    data-area={area}
+    data-size={COMPACT.includes(variant) ? 'compact' : 'tall'}
+    aria-hidden="true"
+  >
+    <span class="heb">{icon && <span class="plate sm"><Icon name={icon} size={12} /></span>}<i class="hline" data-w="3"></i></span>
+    <span class="hbody" set:html={head} />
+  </span>
+)}
+
+<style is:global>
+  /* Global on purpose: the shapes are injected as markup (set:html), which scoped styles would not reach. */
+  /* --- widget miniature: --mini-ink / --mini-soft from the hue, --surface-2 behind --- */
+  .mini {
+    --mini-ink: color-mix(in srgb, var(--module-color, var(--text-3)) 55%, var(--surface));
+    --mini-soft: color-mix(in srgb, var(--module-color, var(--text-3)) 16%, var(--surface));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    justify-content: center;
+    min-height: 4.5rem;
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  /* Zero-specificity reset so the flex rows below keep their display. */
+  :where(.mini) :is(i, span) {
+    display: block;
+  }
+  .mini .line {
+    height: 0.45rem;
+    width: 70%;
+    border-radius: var(--radius-full);
+    background: var(--mini-soft);
+  }
+  .mini .line[data-w='1'] {
+    width: 50%;
+  }
+  .mini .line[data-w='2'] {
+    width: 35%;
+  }
+  .mini .figure {
+    height: 1.25rem;
+    width: 45%;
+    border-radius: 4px;
+    background: var(--mini-ink);
+  }
+  .mini .figure[data-w='1'] {
+    width: 30%;
+  }
+  .mini .spark {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-1);
+    height: 1.5rem;
+  }
+  .mini .spark i {
+    flex: 1;
+    border-radius: 3px;
+    background: var(--mini-soft);
+  }
+  .mini .spark i[data-h='30'] { height: 30%; }
+  .mini .spark i[data-h='42'] { height: 42%; }
+  .mini .spark i[data-h='36'] { height: 36%; }
+  .mini .spark i[data-h='55'] { height: 55%; }
+  .mini .spark i[data-h='48'] { height: 48%; }
+  .mini .spark i[data-h='70'] { height: 70%; }
+  .mini .spark i[data-h='62'] { height: 62%; }
+  .mini .row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .mini .row > .line {
+    flex: 1;
+    width: auto;
+    max-width: 70%;
+  }
+  .mini .row > .line[data-w='1'] {
+    max-width: 55%;
+  }
+  .mini .row > .line[data-w='2'] {
+    max-width: 40%;
+  }
+  .mini .dot {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--mini-ink);
+  }
+  .mini .dot[data-big] {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  .mini .ring {
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: conic-gradient(var(--mini-ink) 0 62%, var(--mini-soft) 62% 100%);
+    mask: radial-gradient(circle, transparent 55%, #000 56%);
+  }
+  .mini[data-variant='fortschritt'],
+  .mini[data-variant='cover'] {
+    flex-direction: row;
+    align-items: center;
+  }
+  .mini .stack {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .mini .cover {
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--mini-ink), var(--mini-soft));
+  }
+  .mini .controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .mini[data-variant='himmel'] {
+    background: linear-gradient(180deg, var(--mini-soft), var(--surface-2));
+  }
+  .mini .sun {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    background: var(--mini-ink);
+  }
+  .mini .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .mini .tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    min-height: 1.75rem;
+    padding: var(--space-2);
+    border-radius: 4px;
+    background: var(--mini-soft);
+  }
+  .mini .tile > .line {
+    background: var(--mini-ink);
+  }
+  .mini .plateS {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+    background: var(--mini-ink);
+  }
+  .mini .pill {
+    width: 3.5rem;
+    height: 1.1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--mini-ink);
+  }
+  .mini .pill[data-primary] {
+    background: var(--mini-ink);
+  }
+  .mini .paper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  .mini .badge {
+    flex: none;
+    width: 1.4rem;
+    height: 0.7rem;
+    border-radius: var(--radius-full);
+    background: var(--mini-ink);
+  }
+  .mini .box {
+    flex: none;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 3px;
+    border: 1px solid var(--mini-ink);
+  }
+  .mini .box[data-done] {
+    background: var(--mini-ink);
+  }
+  /* Phone: the card is tall enough without the sketch (the app's module library does the same). */
+  @media (max-width: 37.49rem) {
+    .mini {
+      display: none;
+    }
+  }
+
+  /* --- head silhouette: the head gradient of its hue, the area pattern at --pattern-head, text ink in --text --- */
+  .hm {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    background: var(--head-gradient);
+    color: var(--text);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--area-pattern, none);
+    background-size: var(--area-pattern-size, auto);
+    opacity: var(--pattern-head);
+    pointer-events: none;
+    z-index: -1;
+  }
+  :where(.hm) :is(i, span) {
+    display: block;
+  }
+  .hm[data-size='compact'] {
+    height: 3.5rem;
+    margin-top: 1.5rem;
+    justify-content: center;
+  }
+  .hm[data-head='schreib'] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .hm[data-head='schreib']::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 0.9rem;
+    background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--module-color) 32%, var(--surface)) 0 1px, transparent 1px 0.3rem);
+  }
+  .hm[data-head='tresor'] {
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--module-color) 28%, var(--border));
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--module-color) 10%, var(--surface));
+  }
+  /* The sky wash of the weather head: the app's day-sky tokens (a deep blue in the dark theme). */
+  .hm[data-head='himmel'] {
+    background: linear-gradient(180deg, var(--sky-day-0), var(--sky-day-1));
+  }
+  .hm[data-head='cover'] {
+    background: linear-gradient(100deg, color-mix(in srgb, var(--module-color) 55%, var(--surface)), color-mix(in srgb, var(--module-color) 18%, var(--surface)));
+  }
+  .heb {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .hm[data-size='compact'] .heb {
+    display: none;
+  }
+  .plate.sm {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 4px;
+  }
+  .hbody {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex: 1;
+    min-height: 0;
+  }
+  .hm[data-size='compact'] .hbody {
+    align-items: center;
+  }
+  .hline {
+    height: 0.3rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, currentColor 45%, transparent);
+  }
+  .hline[data-w='0'] { width: 70%; }
+  .hline[data-w='1'] { width: 50%; }
+  .hline[data-w='2'] { width: 35%; }
+  .hline[data-w='3'] { width: 2.2rem; }
+  .hline[data-big] {
+    height: 0.55rem;
+    width: 60%;
+  }
+  .hsmall {
+    width: 1.4rem;
+    height: 0.25rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, currentColor 30%, transparent);
+  }
+  .hfig {
+    width: 40%;
+    height: 1.1rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, currentColor 75%, transparent);
+    align-self: center;
+  }
+  .hfig[data-w='1'] {
+    width: 22%;
+    height: 1.3rem;
+  }
+  .hcards {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+  .hcards i {
+    width: 1.25rem;
+    height: 1rem;
+    border-radius: 4px;
+    background: var(--module-color);
+    opacity: 0.9;
+  }
+  .hday {
+    width: 1rem;
+    height: 1.4rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, currentColor 75%, transparent);
+  }
+  .hstrip {
+    display: flex;
+    gap: 0.15rem;
+    align-items: flex-end;
+    margin-left: auto;
+    position: relative;
+  }
+  .hstrip i {
+    width: 0.45rem;
+    height: 0.5rem;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--module-color) 35%, var(--surface));
+  }
+  .hstrip i[data-on] {
+    background: var(--module-color);
+  }
+  .hstrip::after {
+    content: '';
+    position: absolute;
+    left: 38%;
+    top: -0.3rem;
+    bottom: -0.2rem;
+    width: 2px;
+    background: var(--accent);
+  }
+  .hrings {
+    display: flex;
+    gap: 0.3rem;
+    margin-left: auto;
+  }
+  .hrings i {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    background: conic-gradient(var(--module-color) 0 calc(var(--p) * 1%), color-mix(in srgb, var(--module-color) 25%, var(--surface)) 0);
+    mask: radial-gradient(circle, transparent 52%, #000 54%);
+  }
+  .hrings i[data-p='72'] { --p: 72; }
+  .hrings i[data-p='40'] { --p: 40; }
+  .hrings i[data-p='100'] { --p: 100; }
+  .hcover {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--module-color), color-mix(in srgb, var(--module-color) 40%, var(--surface)));
+  }
+  .hstack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+  }
+  .hsun {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--sky-sun);
+    align-self: flex-start;
+  }
+  .hthin {
+    width: 30%;
+    height: 1.4rem;
+    border-radius: 3px;
+    border: 2px solid color-mix(in srgb, currentColor 55%, transparent);
+    margin-left: auto;
+  }
+  .hshelf {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: auto;
+    padding-bottom: 0.2rem;
+    border-bottom: 2px solid color-mix(in srgb, var(--module-color) 50%, var(--surface));
+  }
+  .hshelf i {
+    width: 1rem;
+    height: 0.9rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--module-color) 28%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--module-color) 50%, var(--surface));
+  }
+  .hplate {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 4px;
+    background: var(--module-color);
+  }
+  .hserif {
+    width: 45%;
+    height: 0.6rem;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 75%, transparent);
+  }
+</style>

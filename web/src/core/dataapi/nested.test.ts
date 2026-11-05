@@ -90,3 +90,29 @@ it('a change to a subtask in the same batch is no valid parent either', async ()
   );
   expect(rows.find((r) => r.candidate.label === 'Klebeband')?.invalid).toBeTruthy();
 });
+
+it("a row of another collection with the parent's id does not hide that it becomes a subtask", async () => {
+  const haus = await taskRepo.create({
+    listId: INBOX_ID,
+    title: 'Haus',
+    done: false,
+    priority: 0,
+    order: 0,
+  });
+  const umzug = await taskRepo.create({
+    listId: INBOX_ID,
+    title: 'Umzug',
+    done: false,
+    priority: 0,
+    order: 1,
+  });
+  const rows = await importJson(
+    [
+      { collection: 'list', id: umzug.id, name: 'x' },
+      { collection: 'task', id: umzug.id, parentId: haus.id },
+      { collection: 'task', title: 'Kind', listId: INBOX_ID, parentId: umzug.id },
+    ],
+    'j9',
+  );
+  expect(rows.find((r) => r.candidate.label === 'Kind')?.invalid).toBeTruthy();
+});

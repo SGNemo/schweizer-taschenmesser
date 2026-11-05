@@ -34,12 +34,14 @@ export async function commitImport(
   },
   database: TaschenmesserDB = defaultDb,
 ): Promise<ImportBatch> {
-  const picked = args.rows.filter((r) => r.selected && !r.invalid);
-  // A row whose `dependsOn` partner is not written would point at nothing (a task of a skipped new list).
-  const pickedIds = new Set(picked.map((r) => r.candidate.id));
-  const chosen = picked.filter(
-    (r) => !r.candidate.dependsOn || pickedIds.has(r.candidate.dependsOn),
-  );
+  // A row whose `dependsOn` partner is not written would point at nothing (a task of a skipped new
+  // list); along the whole chain (a subtask whose parent is left out because of its list).
+  let chosen = args.rows.filter((r) => r.selected && !r.invalid);
+  for (let size = -1; size !== chosen.length;) {
+    size = chosen.length;
+    const ids = new Set(chosen.map((r) => r.candidate.id));
+    chosen = chosen.filter((r) => !r.candidate.dependsOn || ids.has(r.candidate.dependsOn));
+  }
   if (chosen.length === 0) throw new ImportError('nothing-selected');
 
   const byCollection = new Map<string, { data: Record<string, unknown>; id: string }[]>();

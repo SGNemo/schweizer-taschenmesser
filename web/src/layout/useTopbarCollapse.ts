@@ -1,20 +1,47 @@
-import { useEffect, useRef, useState, type FocusEventHandler } from 'react';
-import { isEditable, motionReduced, nextCollapsed } from '@/core/shell/topbarCollapse';
+import { useEffect, useLayoutEffect, useRef, useState, type FocusEventHandler } from 'react';
+import { useLocation } from 'react-router';
+import {
+  afterRouteChange,
+  isEditable,
+  motionReduced,
+  nextCollapsed,
+} from '@/core/shell/topbarCollapse';
 import { useUiStore } from '@/stores/ui';
 
 /**
  * Folds the phone topbar away while scrolling down and brings it back on scrolling up, at the
  * top, with keyboard focus in the bar, and while a palette, dialog or the on-screen keyboard is
  * up. The page scrolls in the window on a phone and in `#main` on the desktop (where the bar
- * never folds): one capturing listener sees both. The decision itself: `core/shell/topbarCollapse.ts`.
+ * never folds): one capturing listener sees both. A route change brings it back at once, without
+ * the slide (`instant`). The decisions themselves: `core/shell/topbarCollapse.ts`.
  */
 export function useTopbarCollapse(): {
   collapsed: boolean;
+  /** The current state change must not animate (the bar is simply there on a new page). */
+  instant: boolean;
   focusProps: { onFocus: FocusEventHandler; onBlur: FocusEventHandler };
 } {
   const [collapsed, setCollapsed] = useState(false);
+  const [instant, setInstant] = useState(false);
   const state = useRef({ collapsed: false, prevY: 0, focusInside: false });
   const paletteOpen = useUiStore((s) => s.paletteOpen);
+  const { pathname } = useLocation();
+
+  // A new route: the bar is out in the first frame of the new page (state adjusted during render, before paint).
+  const [route, setRoute] = useState(pathname);
+  if (route !== pathname) {
+    setRoute(pathname);
+    const after = afterRouteChange(collapsed);
+    if (after.instant) {
+      setCollapsed(after.collapsed);
+      setInstant(true);
+    }
+  }
+  // …and the scroll handler counts from the scroll position the new page has.
+  useLayoutEffect(() => {
+    state.current.collapsed = false;
+    state.current.prevY = document.scrollingElement?.scrollTop ?? 0;
+  }, [pathname]);
 
   useEffect(() => {
     const phone = matchMedia('(max-width: 899.98px)');
@@ -36,6 +63,7 @@ export function useTopbarCollapse(): {
       s.prevY = y;
       if (next !== s.collapsed) {
         s.collapsed = next;
+        setInstant(false);
         setCollapsed(next);
       }
     };
@@ -53,11 +81,13 @@ export function useTopbarCollapse(): {
     state.current.focusInside = focusInside;
     if (focusInside && state.current.collapsed) {
       state.current.collapsed = false;
+      setInstant(false);
       setCollapsed(false);
     }
   };
   return {
     collapsed,
+    instant,
     focusProps: {
       onFocus: () => set(true),
       onBlur: (e) => {

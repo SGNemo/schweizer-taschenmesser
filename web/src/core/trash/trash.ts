@@ -184,12 +184,12 @@ export async function listTrash(
     for (const r of rows) {
       if (queued.has(keyOf(c.table, r.id))) continue;
       if (c.skip?.(r)) continue;
+      if (parents && !parents.ids.has(String(r[parents.key]))) continue;
       const group = c.group ? r[c.group] : undefined;
       if (group !== undefined && group !== null) {
         if (groups.has(group)) continue;
         groups.add(group);
       }
-      if (parents && !parents.ids.has(String(r[parents.key]))) continue;
       const deletedAt = r.deletedAt as number;
       out.push({
         table: c.table,
@@ -204,6 +204,27 @@ export async function listTrash(
   return out.sort((a, b) => b.deletedAt - a.deletedAt);
 }
 
+/** The other rows of a group (the other half of a transfer) deleted together with `row`. */
+async function groupMates(
+  database: TaschenmesserDB,
+  c: TrashCollection,
+  row: Record<string, unknown> | undefined,
+): Promise<string[]> {
+  const group = c.group ? row?.[c.group] : undefined;
+  const deletedAt = row?.deletedAt;
+  if (group === undefined || group === null || typeof deletedAt !== 'number') return [];
+  return (await database
+    .table<Record<string, unknown> & { id: string }, string>(c.table)
+    .filter(
+      (r) =>
+        r.id !== row!.id &&
+        r[c.group!] === group &&
+        typeof r.deletedAt === 'number' &&
+        Math.abs(r.deletedAt - deletedAt) <= TOGETHER_MS,
+    )
+    .primaryKeys()) as string[];
+}
+
 /** Brings a record back (a repo write, so it syncs and can be undone with Ctrl+Z). */
 export async function restoreEntry(
   entry: Pick<TrashEntry, 'table' | 'id'>,
@@ -214,22 +235,10 @@ export async function restoreEntry(
   const repo = createRepo(entry.table, z.looseObject({}), database);
   const row = (await repo.table.get(entry.id)) as Record<string, unknown> | undefined;
   const deletedAt = row?.deletedAt;
+  const mates = await groupMates(database, c, row);
   await repo.restore(entry.id);
-  if (typeof deletedAt !== 'number') return;
-  const group = c.group ? row?.[c.group] : undefined;
-  if (group !== undefined && group !== null) {
-    // The other half of a transfer, deleted with it.
-    const mates = (await repo.table
-      .filter(
-        (r) =>
-          (r as Record<string, unknown>)[c.group!] === group &&
-          typeof r.deletedAt === 'number' &&
-          Math.abs(r.deletedAt - deletedAt) <= TOGETHER_MS,
-      )
-      .primaryKeys()) as string[];
-    for (const id of mates) await repo.restore(id);
-  }
-  if (!c.children) return;
+  for (const id of mates) await repo.restore(id); // the other half of a transfer
+  if (typeof deletedAt !== 'number' || !c.children) return;
   // The rows deleted together with it (`deleteAccount` removes the bookings first, then the account).
   const { table, parentKey } = c.children;
   const kids = createRepo(table, z.looseObject({}), database);
@@ -287,7 +296,12 @@ export async function purgeEntry(
   const c = TRASH_COLLECTIONS.find((x) => x.table === entry.table);
   if (!c) throw new Error(`${entry.table} is not part of "Zuletzt gelöscht"`);
   const syncOn = (await loadSyncConfig(database)) !== undefined;
-  if (await purgeNow(database, c, entry.id, syncOn)) return true;
-  await writeQueue(database, [...(await readQueue(database)), keyOf(c.table, entry.id)]);
+  // The other half of a transfer goes with it, otherwise it would show up as a new entry.
+  const mates = await groupMates(database, c, await database.table(c.table).get(entry.id));
+  const waiting: string[] = [];
+  for (const id of [entry.id, ...mates])
+    if (!(await purgeNow(database, c, id, syncOn))) waiting.push(keyOf(c.table, id));
+  if (waiting.length === 0) return true;
+  await writeQueue(database, [...(await readQueue(database)), ...waiting]);
   return false;
 }

@@ -71,3 +71,50 @@ it('writes a new list and its task together; a change to a list is no dependency
   expect(tasks.map((t) => t.title).sort()).toEqual(['Kartons', 'Pass']);
   expect(await orphans()).toEqual([]);
 });
+
+it('a subtask is not written when its parent is left out because of its list', async () => {
+  const runtime = createJsonRuntime(todos);
+  const parsed = await runtime.parse(
+    'json',
+    {
+      kind: 'json',
+      text: JSON.stringify([
+        { collection: 'list', key: 'l', name: 'Umzug' },
+        { collection: 'task', key: 'p', title: 'Packen', listId: '@l' },
+        { collection: 'task', title: 'Kartons', listId: '@l', parentId: '@p' },
+        { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
+      ]),
+    },
+    { today: '2026-11-05', options: {}, batchId: 'j5' },
+  );
+  const rows = await buildPreview(todos, runtime, parsed.candidates);
+  // The user unticks only the new list.
+  const unticked = rows.map((r) => (r.candidate.label === 'Umzug' ? { ...r, selected: false } : r));
+  await commitImport(todos, { batchId: 'j5', importerId: 'json', source: 'test', rows: unticked });
+  expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
+});
+
+it('a task pointing at a change of an unknown list is not written', async () => {
+  await importJson(
+    [
+      { collection: 'list', key: 'x', id: 'nope', name: 'Garten' },
+      { collection: 'task', title: 'Rasen', listId: '@x' },
+      { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
+    ],
+    'j6',
+  );
+  expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
+});
+
+it('an entry of another collection with the same id is no dependency (and nothing throws)', async () => {
+  const rows = await importJson(
+    [
+      { collection: 'lists', id: INBOX_ID },
+      { collection: 'task', id: INBOX_ID, title: 'kein Eintrag' },
+      { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
+    ],
+    'j8',
+  );
+  expect(rows.find((r) => r.candidate.label === 'Einzeln')?.selected).toBe(true);
+  expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
+});

@@ -12,7 +12,9 @@ import {
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
 import { t } from '@/strings';
+import { tSettingsConnect } from '@/strings.settingsConnect';
 import { Button, Card, HelpHint, KeyRecorder, SelectField, Switch } from '@/ui';
+import { Facts, StateBanner, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 /**
@@ -99,6 +101,7 @@ export function QuickCaptureSection() {
   const [focus, patchFocus] = useFocusSettings();
   const [error, setError] = useState('');
   const [portable, setPortable] = useState(false);
+  const c = tSettingsConnect.use().quickCapture;
 
   useEffect(() => {
     if (desktop.supported)
@@ -120,90 +123,123 @@ export function QuickCaptureSection() {
 
   return (
     <Card>
-      <p className={styles.muted}>{t.quickCapture.settings.intro}</p>
-      <SelectField
-        label={t.quickCapture.settings.defaultType}
-        value={settings?.defaultType ?? 'todo'}
-        onChange={(e) =>
-          void patch({ defaultType: e.target.value as (typeof DEFAULT_TYPES)[number] })
-        }
-      >
-        {DEFAULT_TYPES.map((type) => (
-          <option key={type} value={type}>
-            {t.quickCapture.target[type]}
-          </option>
-        ))}
-      </SelectField>
-      <Switch
-        label={t.quickCapture.settings.noQuestion}
-        hint={t.quickCapture.settings.noQuestionHint}
-        checked={focus.captureNoQuestion}
-        onChange={(v) => void patchFocus({ captureNoQuestion: v })}
-      />
-      {desktop.supported ? (
-        <>
-          <HotkeyField
-            label={
-              <>
-                {t.quickCapture.settings.hotkey}{' '}
-                <HelpHint text={t.quickCapture.settings.trayHelp} />
-              </>
+      <div className={styles.form}>
+        <StateBanner
+          icon="plus"
+          tone="ok"
+          title={c.title}
+          line={t.quickCapture.settings.intro}
+          testId="quick-capture-state"
+        />
+        <Facts
+          label={c.title}
+          items={[
+            {
+              label: t.quickCapture.settings.defaultType,
+              value: t.quickCapture.target[settings?.defaultType ?? 'todo'],
+            },
+            ...(desktop.supported
+              ? [
+                  {
+                    label: t.quickCapture.settings.hotkey,
+                    value: prefs.hotkey
+                      ? hotkeyLabel(prefs.hotkey)
+                      : t.quickCapture.settings.hotkeyOff,
+                  },
+                ]
+              : []),
+          ]}
+        />
+        <Step n={1} title={c.stepEntry} hint={c.stepEntryHint}>
+          <SelectField
+            label={t.quickCapture.settings.defaultType}
+            value={settings?.defaultType ?? 'todo'}
+            onChange={(e) =>
+              void patch({ defaultType: e.target.value as (typeof DEFAULT_TYPES)[number] })
             }
-            hint={t.quickCapture.settings.hotkeyHint}
-            value={prefs.hotkey}
-            defaultValue={DEFAULT_HOTKEY}
-            apply={applyHotkey}
-            save={(hotkey) => writePrefs({ hotkey })}
-            testId="hotkey-record"
-          />
-          <HotkeyField
-            label={t.quickCapture.settings.vaultHotkey}
-            hint={t.quickCapture.settings.vaultHotkeyHint}
-            value={prefs.vaultHotkey}
-            apply={applyVaultHotkey}
-            save={(vaultHotkey) => writePrefs({ vaultHotkey })}
-            testId="vault-hotkey-record"
-          />
+          >
+            {DEFAULT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t.quickCapture.target[type]}
+              </option>
+            ))}
+          </SelectField>
           <Switch
-            label={t.quickCapture.settings.closeToTray}
-            checked={prefs.closeToTray}
-            onChange={(closeToTray) => {
-              writePrefs({ closeToTray });
-              void desktop.setCloseToTray(closeToTray);
-            }}
+            label={t.quickCapture.settings.noQuestion}
+            hint={t.quickCapture.settings.noQuestionHint}
+            checked={focus.captureNoQuestion}
+            onChange={(v) => void patchFocus({ captureNoQuestion: v })}
           />
-          <Switch
-            label={t.quickCapture.settings.trayToday}
-            hint={t.quickCapture.settings.trayTodayHint}
-            checked={prefs.trayToday}
-            onChange={(trayToday) => {
-              writePrefs({ trayToday });
-              refreshTrayToday();
-            }}
-          />
-          <Switch
-            label={t.quickCapture.settings.autostart}
-            checked={prefs.autostart}
-            onChange={(v) => void toggleAutostart(v)}
-          />
-          {error ? (
-            <p role="alert" className={styles.muted}>
-              {error}
-            </p>
-          ) : null}
-          {portable ? (
-            <p className={styles.muted}>{t.quickCapture.settings.autostartPortable}</p>
-          ) : null}
-          <Switch
-            label={t.quickCapture.settings.clipboard}
-            hint={t.quickCapture.settings.clipboardHint}
-            checked={prefs.clipboard}
-            onChange={(clipboard) => writePrefs({ clipboard })}
-          />
-        </>
-      ) : (
-        <p className={styles.muted}>{t.quickCapture.settings.desktopOnly}</p>
-      )}
+        </Step>
+        {desktop.supported ? (
+          <>
+            <Step n={2} title={c.stepKeys} hint={c.stepKeysHint}>
+              <HotkeyField
+                label={
+                  <>
+                    {t.quickCapture.settings.hotkey}{' '}
+                    <HelpHint text={t.quickCapture.settings.trayHelp} />
+                  </>
+                }
+                hint={t.quickCapture.settings.hotkeyHint}
+                value={prefs.hotkey}
+                defaultValue={DEFAULT_HOTKEY}
+                apply={applyHotkey}
+                save={(hotkey) => writePrefs({ hotkey })}
+                testId="hotkey-record"
+              />
+              <HotkeyField
+                label={t.quickCapture.settings.vaultHotkey}
+                hint={t.quickCapture.settings.vaultHotkeyHint}
+                value={prefs.vaultHotkey}
+                apply={applyVaultHotkey}
+                save={(vaultHotkey) => writePrefs({ vaultHotkey })}
+                testId="vault-hotkey-record"
+              />
+            </Step>
+            <Step n={3} title={c.stepBackground} hint={c.stepBackgroundHint}>
+              <Switch
+                label={t.quickCapture.settings.closeToTray}
+                checked={prefs.closeToTray}
+                onChange={(closeToTray) => {
+                  writePrefs({ closeToTray });
+                  void desktop.setCloseToTray(closeToTray);
+                }}
+              />
+              <Switch
+                label={t.quickCapture.settings.trayToday}
+                hint={t.quickCapture.settings.trayTodayHint}
+                checked={prefs.trayToday}
+                onChange={(trayToday) => {
+                  writePrefs({ trayToday });
+                  refreshTrayToday();
+                }}
+              />
+              <Switch
+                label={t.quickCapture.settings.autostart}
+                checked={prefs.autostart}
+                onChange={(v) => void toggleAutostart(v)}
+              />
+              {error ? (
+                <p role="alert" className={styles.muted}>
+                  {error}
+                </p>
+              ) : null}
+              {portable ? (
+                <p className={styles.muted}>{t.quickCapture.settings.autostartPortable}</p>
+              ) : null}
+              <Switch
+                label={t.quickCapture.settings.clipboard}
+                hint={t.quickCapture.settings.clipboardHint}
+                checked={prefs.clipboard}
+                onChange={(clipboard) => writePrefs({ clipboard })}
+              />
+            </Step>
+          </>
+        ) : (
+          <p className={styles.muted}>{t.quickCapture.settings.desktopOnly}</p>
+        )}
+      </div>
     </Card>
   );
 }

@@ -671,4 +671,11 @@ mod tests {
         let inner = Inner::default();
         assert_eq!(inner.get(9).err().as_deref(), Some("unknown-scan"));
     }
+
+    #[test]
+    fn a_running_scan_has_no_tree_so_nothing_can_be_planned_or_deleted() {
+        let state = DiskScans::default();
+        state.0.lock().unwrap().scans.insert(7, session());
+        assert_eq!(tree_of(&state, 7).err().as_deref(), Some("not-finished"));
+    }
 }

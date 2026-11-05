@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { entriesWithBuilds, noteBuilds } from './changesBuild.ts';
+import { entriesWithBuilds, firstParentBuilds, noteBuilds } from './changesBuild.ts';
 import { loadChanges } from './changesDir.ts';
 import { upsertVersion, type ChangelogData } from './changelogRelease.ts';
 
@@ -25,8 +25,14 @@ export function buildChangelogData(opts: {
     const git = (a: string[]) => execFileSync('git', a, { cwd: opts.rootDir, encoding: 'utf8' });
     const entries = entriesWithBuilds(loaded.byFile, noteBuilds(loaded.files, '.changes', git));
     if (entries.length > 0) {
-      const withUnreleased = upsertVersion(data, { version: 'unreleased', date: '', entries });
-      // upsert puts the new version first, which is where "unreleased" belongs
+      const floor = Math.min(...entries.map((e) => e.build ?? Infinity));
+      const builds = Number.isFinite(floor) ? firstParentBuilds(git, floor) : [];
+      const withUnreleased = upsertVersion(data, {
+        version: 'unreleased',
+        date: '',
+        entries,
+        ...(builds.length > 0 ? { builds } : {}),
+      });
       data = withUnreleased;
     }
   }

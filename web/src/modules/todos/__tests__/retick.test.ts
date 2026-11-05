@@ -45,3 +45,25 @@ it('ticking off again after a fix in between carries the fixed values to the nex
     done: false,
   });
 });
+
+it('a subtask whose due date was removed in between comes back without one', async () => {
+  const t = await taskRepo.create({
+    ...base,
+    title: 'Steuer',
+    dueDate: '2026-11-05',
+    recurrence: { freq: 'weekly', interval: 1 },
+  });
+  const sub = await taskRepo.create({
+    ...base,
+    title: 'Belege',
+    parentId: t.id,
+    dueDate: '2026-11-04',
+  });
+  await setDone(t, true);
+  await setDone((await taskRepo.get(t.id))!, false);
+  await taskRepo.update(sub.id, { dueDate: undefined });
+  await setDone((await taskRepo.get(t.id))!, true);
+  const copy = (await taskRepo.active().toArray()).find((x) => x.parentId === `${t.id}:2026-11-12`);
+  expect(copy?.title).toBe('Belege');
+  expect(copy?.dueDate).toBeUndefined();
+});

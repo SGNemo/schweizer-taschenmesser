@@ -79,7 +79,8 @@ export async function setDone(task: Stored<Task>, done: boolean): Promise<void> 
           title: s.title,
           done: false,
           priority: s.priority,
-          ...(s.dueDate ? { dueDate: addDaysStr(s.dueDate, shift) } : {}),
+          // Explicit `undefined`: a copy brought back must lose a due date removed meanwhile.
+          dueDate: s.dueDate ? addDaysStr(s.dueDate, shift) : undefined,
           note: s.note,
           order: s.order,
         },
