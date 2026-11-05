@@ -10,12 +10,14 @@ import { useSettings } from '@/core/settings/settings';
 import { formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
+import { SignatureMark } from '@/ui/identity';
 import { t } from '@/strings';
 import {
   AdvancedToggle,
   Badge,
   Button,
+  EmptyState,
   Icon,
   IconButton,
   ItemList,
@@ -36,9 +38,8 @@ import {
   sortItems,
   type Filter,
 } from '../logic';
-import { PantryEmpty } from '../components/PantryEmpty';
 import { ScanDialog } from '../components/ScanDialog';
-import { ShelfSignature, type ShelfCounts } from '../components/ShelfSignature';
+import { PantryHead, type ShelfCounts } from '../components/PantryHead';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
 import { settings as moduleSettings, settingsSchema } from '../settings';
@@ -148,8 +149,9 @@ export default function PantryPage() {
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </Button>
+        <StartDataMenu moduleId="pantry" />
       </PageHeader>
-      <ShelfSignature counts={counts} beforeJump={() => setFilter('all')} />
+      <PantryHead counts={counts} beforeJump={() => setFilter('all')} />
       <NowStrip modules={['pantry']} />{' '}
       <Segmented
         label={t.pantry.filter}
@@ -162,9 +164,11 @@ export default function PantryPage() {
         onChange={setFilter}
       />
       {items && items.length === 0 ? (
-        <PantryEmpty title={t.pantry.empty}>
-          <StartDataButton moduleId="pantry" />
-        </PantryEmpty>
+        <EmptyState
+          title={t.pantry.empty}
+          testId="pantry-empty"
+          motif={<SignatureMark id="shelf" size={64} />}
+        />
       ) : null}
       {items && items.length > 0 && shown.length === 0 ? (
         <p className={styles.lead}>{t.pantry.noMatch}</p>

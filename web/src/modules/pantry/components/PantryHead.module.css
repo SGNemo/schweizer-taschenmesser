@@ -1,4 +1,4 @@
-/* Tiles on one neutral shelf line (no coloured bar); the tint of the head is the identity. */
+/* The place tiles beside the shelf block: controls (jump to a place), on one neutral line. */
 .shelf {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
@@ -42,8 +42,8 @@
   color: var(--text-on-tint);
   font-size: var(--text-xs);
 }
-.state[data-tone='danger'] {
-  color: var(--danger-ink);
+.state[data-tone='warn'] {
+  color: var(--warning-ink);
   font-weight: var(--weight-semibold);
 }
 @media (min-width: 900px) {

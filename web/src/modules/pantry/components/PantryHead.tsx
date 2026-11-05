@@ -1,7 +1,7 @@
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot, Shelf } from '@/ui/identity';
 import { t } from '@/strings';
 import { PLACES, type Place } from '../schema';
-import styles from './ShelfSignature.module.css';
+import styles from './PantryHead.module.css';
 
 export type ShelfCounts = Record<
   Place,
@@ -18,19 +18,20 @@ function jumpTo(place: Place) {
 }
 
 /** The state of one place in words: the worst thing first, "all good" when nothing needs a look. */
-function stateLine(c: ShelfCounts[Place]): { text: string; tone: 'danger' | 'warn' | 'ok' } {
-  if (c.expired > 0) return { text: t.pantry.shelf.expired(c.expired), tone: 'danger' };
+function stateLine(c: ShelfCounts[Place]): { text: string; tone: 'warn' | 'ok' } {
+  // Expired food is a warning, not red: red is kept for overdue money and exceeded budgets (FOCUS, C24).
+  if (c.expired > 0) return { text: t.pantry.shelf.expired(c.expired), tone: 'warn' };
   if (c.soon > 0) return { text: t.pantry.shelf.soon(c.soon), tone: 'warn' };
   if (c.low > 0) return { text: t.pantry.shelf.low(c.low), tone: 'warn' };
   return { text: t.pantry.shelf.fine, tone: 'ok' };
 }
 
 /**
- * Head of the pantry (`regal`): the count as the figure with one context line, and one tile per place that holds
- * something (count + state in words), standing on a single neutral shelf line. The tiles are buttons that jump to
- * the section of that place; colour is never alone, every tile says its state.
+ * Head of the pantry (`regal`, identity v3.1): the count as the figure with one context line, the shelf from the
+ * signature library in slot M, and one tile per place that holds something (count + state in words) beside it as
+ * controls: each jumps to the section of that place. Colour is never alone, every tile says its state.
  */
-export function ShelfSignature({
+export function PantryHead({
   counts,
   beforeJump,
 }: {
@@ -56,7 +57,10 @@ export function ShelfSignature({
         />
       </HeroSlot>
       <HeroSlot area="signature">
-        <div className={styles.shelf} data-testid="shelf-signature">
+        <Shelf size="M" />
+      </HeroSlot>
+      <HeroSlot area="extra">
+        <div className={styles.shelf} data-testid="pantry-places">
           {places.map((p) => {
             const state = stateLine(counts[p]);
             return (
