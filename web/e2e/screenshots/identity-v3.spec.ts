@@ -105,8 +105,8 @@ const PAGES: Shot[] = [
   { name: 'settings-werkzeuge', path: '/settings/werkzeuge', full: true },
   { name: 'settings-allgemein', path: '/settings/allgemein' },
   { name: 'settings-sync', path: '/settings/sync' },
-  { name: 'settings-ki', path: '/settings/ki' },
-  { name: 'settings-verbindungen', path: '/settings/verbindungen' },
+  { name: 'settings-ki', path: '/settings/ki', full: true },
+  { name: 'settings-verbindungen', path: '/settings/verbindungen', full: true },
 ];
 
 /** Preview modules and desktop-only modules are off by default: switch them on in IndexedDB (the app has opened the DB). */

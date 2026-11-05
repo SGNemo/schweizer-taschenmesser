@@ -24,8 +24,10 @@ import { getPlatform } from '@/core/platform';
 import { formatDay, pad2, toDateString } from '@/core/time/dates';
 import { t } from '@/strings';
 import { tLegal } from '@/strings.legal';
+import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
-import { Badge, Button, Card, Checkbox, Dialog, Icon, TextField } from '@/ui';
+import { Badge, Button, Card, Checkbox, Dialog, TextField } from '@/ui';
+import { Facts, StateBanner, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 const s = t.connectors;
@@ -109,6 +111,7 @@ function ExtraSettings({
 
 export function ConnectorCard({ def }: { def: ConnectorDef }) {
   const legal = tLegal.use();
+  const cc = tSettingsConnect.use().connectors;
   const platform = getPlatform();
   const toast = useUiStore((st) => st.toast);
   const status = useConnectorStatus(def.id);
@@ -208,23 +211,20 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
   return (
     <Card title={def.name} data-testid={`connector-${def.id}`}>
       <div className={styles.form}>
-        <div className={styles.row}>
-          <Icon name={def.icon} />
-          <span>{def.description}</span>
-        </div>
-        <dl className={styles.status}>
-          <dt>{s.statusLabel}</dt>
-          <dd>
-            <Badge>{s.status[state] ?? state}</Badge>
-            {def.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
-          </dd>
-          {status?.lastSyncAt ? (
-            <>
-              <dt>{s.calendars}</dt>
-              <dd>{s.lastSync(formatWhen(status.lastSyncAt))}</dd>
-            </>
-          ) : null}
-        </dl>
+        <StateBanner
+          icon={def.icon}
+          tone={state === 'connected' ? 'ok' : state === 'error' ? 'attention' : 'neutral'}
+          title={s.status[state] ?? state}
+          line={def.description}
+        >
+          {def.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
+        </StateBanner>
+        {status?.lastSyncAt ? (
+          <Facts
+            label={s.statusLabel}
+            items={[{ label: s.calendars, value: s.lastSync(formatWhen(status.lastSyncAt)) }]}
+          />
+        ) : null}
         {status?.message ? (
           <p className={styles.error} role="alert">
             {status.message}
@@ -237,44 +237,50 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
 
         {canLogin ? (
           <>
-            <ClientForm
-              key={clientVersion}
-              def={def}
-              onSaved={() => setClientVersion((v) => v + 1)}
-            />
-            <p className={styles.muted}>{def.client?.note ?? legal.googleTesting}</p>
-            <fieldset className={styles.fieldset}>
-              <legend className={styles.legend}>{s.features}</legend>
-              {def.features.map((f) => (
-                <Checkbox
-                  key={f.id}
-                  label={`${f.label} – ${f.description}`}
-                  checked={active.includes(f.id)}
-                  onChange={(e) =>
-                    setFeatures(
-                      e.target.checked ? [...active, f.id] : active.filter((x) => x !== f.id),
-                    )
-                  }
-                />
-              ))}
-            </fieldset>
-            <div className={styles.row}>
-              <Button
-                variant="primary"
-                disabled={busy !== undefined || active.length === 0}
-                onClick={() => void login()}
-              >
-                {busy === 'connect'
-                  ? s.connecting
-                  : state === 'expired' || connected
-                    ? s.reconnect
-                    : s.connect}
-              </Button>
-              {busy === 'connect' ? (
-                <Button onClick={() => loginAbort.current?.abort()}>{s.cancelLogin}</Button>
-              ) : null}
-              {connected ? <Button onClick={() => setConfirm(true)}>{s.disconnect}</Button> : null}
-            </div>
+            <Step n={1} title={cc.stepAccess} hint={cc.stepAccessHint}>
+              <ClientForm
+                key={clientVersion}
+                def={def}
+                onSaved={() => setClientVersion((v) => v + 1)}
+              />
+              <p className={styles.muted}>{def.client?.note ?? legal.googleTesting}</p>
+            </Step>
+            <Step n={2} title={cc.stepFeatures} hint={cc.stepFeaturesHint}>
+              <fieldset className={styles.fieldset}>
+                <legend className={styles.legend}>{s.features}</legend>
+                {def.features.map((f) => (
+                  <Checkbox
+                    key={f.id}
+                    label={`${f.label} – ${f.description}`}
+                    checked={active.includes(f.id)}
+                    onChange={(e) =>
+                      setFeatures(
+                        e.target.checked ? [...active, f.id] : active.filter((x) => x !== f.id),
+                      )
+                    }
+                  />
+                ))}
+              </fieldset>
+              <div className={styles.row}>
+                <Button
+                  variant="primary"
+                  disabled={busy !== undefined || active.length === 0}
+                  onClick={() => void login()}
+                >
+                  {busy === 'connect'
+                    ? s.connecting
+                    : state === 'expired' || connected
+                      ? s.reconnect
+                      : s.connect}
+                </Button>
+                {busy === 'connect' ? (
+                  <Button onClick={() => loginAbort.current?.abort()}>{s.cancelLogin}</Button>
+                ) : null}
+                {connected ? (
+                  <Button onClick={() => setConfirm(true)}>{s.disconnect}</Button>
+                ) : null}
+              </div>
+            </Step>
           </>
         ) : null}
 
