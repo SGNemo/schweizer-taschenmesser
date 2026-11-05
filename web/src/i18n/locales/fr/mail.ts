@@ -267,19 +267,18 @@ export const mail: Strings['mail'] = {
       'Le texte de l’e-mail ne va qu’au modèle local de cet ordinateur, jamais à un modèle dans le cloud.',
   },
   widget: {
-    unread: 'Non lus',
-    unreadContext: (n: number) =>
-      n === 0
-        ? 'La boîte est vide'
-        : n === 1
-          ? 'Conversation non lue dans la boîte'
-          : 'Conversations non lues dans la boîte',
-    important: 'E-mails principaux',
-    importantSummary: (n: number) => (n === 1 ? '1 non lu' : `${n} non lus`),
-    invoices: 'E-mails de factures',
-    invoicesContext: (days: number) => `ces ${days} derniers jours`,
-    empty: 'Pas encore d’e-mails.',
-    emptyAction: 'Ouvrir le courrier',
+    inbox: 'Boîte de réception',
+    inboxTitle: (n: number) => (n === 0 ? 'Tout est lu' : `${n} non lus`),
+    inboxNoInvoices: 'Aucun e-mail de facture ces 30 derniers jours',
+    inboxInvoices: (n: number, days: number) =>
+      n === 1 ? `1 e-mail de facture en ${days} jours` : `${n} e-mails de facture en ${days} jours`,
+    inboxInvoicesAction: 'Voir',
+    empty: "Pas encore d'e-mails.",
+    emptyAction: 'Ouvrir les e-mails',
     link: 'Ouvrir le courrier',
+  },
+  head: {
+    inbox: 'Boîte de réception',
+    unread: (n: number) => (n === 0 ? 'Tout est lu' : n === 1 ? `1 fil non lu` : `${n} fils non lus`),
   },
 };

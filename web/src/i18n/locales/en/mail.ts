@@ -257,19 +257,18 @@ export const mail: Strings['mail'] = {
     privacy: 'The mail text only goes to the local model on this computer, never to a cloud model.',
   },
   widget: {
-    unread: 'Unread',
-    unreadContext: (n: number) =>
-      n === 0
-        ? 'Inbox is empty'
-        : n === 1
-          ? 'Unread thread in the inbox'
-          : 'Unread threads in the inbox',
-    important: 'Top mail',
-    importantSummary: (n: number) => `${n} unread`,
-    invoices: 'Invoice mails',
-    invoicesContext: (days: number) => `in the last ${days} days`,
+    inbox: 'Inbox',
+    inboxTitle: (n: number) => (n === 0 ? 'All read' : `${n} unread`),
+    inboxNoInvoices: 'No invoice mails in the last 30 days',
+    inboxInvoices: (n: number, days: number) =>
+      n === 1 ? `1 invoice mail in ${days} days` : `${n} invoice mails in ${days} days`,
+    inboxInvoicesAction: 'View',
     empty: 'No mail yet.',
     emptyAction: 'Open mail',
     link: 'Open mail',
+  },
+  head: {
+    inbox: 'Inbox',
+    unread: (n: number) => (n === 0 ? 'All read' : n === 1 ? `1 unread thread` : `${n} unread threads`),
   },
 };

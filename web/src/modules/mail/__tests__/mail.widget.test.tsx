@@ -9,9 +9,7 @@ vi.mock('@/core/mail/accounts', () => ({ listMailAccounts: async () => [] }));
 
 import { threadRepo } from '../repo';
 import seedModule from '../seed';
-import InvoicesWidget from '../widgets/InvoicesWidget';
-import TopWidget from '../widgets/TopWidget';
-import UnreadWidget from '../widgets/UnreadWidget';
+import InboxWidget from '../widgets/InboxWidget';
 
 const wrap = (el: React.ReactNode) => render(<MemoryRouter>{el}</MemoryRouter>);
 
@@ -26,33 +24,24 @@ beforeEach(async () => {
   await db.table('mail_thread').clear();
 });
 
-describe('mail widgets', () => {
-  it.each([
-    ['unread', UnreadWidget],
-    ['top', TopWidget],
-    ['invoices', InvoicesWidget],
-  ] as const)('%s: empty state with a next step when there is no mail', async (_n, Widget) => {
-    wrap(<Widget />);
+describe('mail inbox widget', () => {
+  it('empty state with a next step when there is no mail', async () => {
+    wrap(<InboxWidget />);
     expect(await screen.findByRole('link', { name: 'E-Mail öffnen' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/mail/),
     );
   });
 
-  it('count unread threads, list the top three and spot invoice mails (from the seed)', async () => {
+  it('counts unread threads, shows two subject lines and the invoice mails as a context line (from the seed)', async () => {
     await seedDemo();
-    wrap(
-      <>
-        <UnreadWidget />
-        <TopWidget />
-        <InvoicesWidget />
-      </>,
-    );
-    expect(await screen.findByText('Ungelesene Threads im Posteingang')).toBeInTheDocument();
+    wrap(<InboxWidget />);
+    expect(await screen.findByText(/^\d+ ungelesen$/)).toBeInTheDocument();
     expect(
       screen.getByText(/Stadtwerke Musterstadt: Ihre Rechnung für Oktober/),
     ).toBeInTheDocument();
-    expect(screen.getByText('Rechnungsmails')).toBeInTheDocument();
-    expect(screen.getByText('in den letzten 30 Tagen')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByText(/Rechnungsmails? in 30 Tagen/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ansehen' })).toHaveAttribute('href', '/mail?q=rechnung');
   });
 });

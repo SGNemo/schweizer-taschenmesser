@@ -7034,20 +7034,24 @@ export const de = {
         'Der Mailtext geht nur an das lokale Modell auf diesem Rechner, nie an ein Cloud-Modell.',
     },
     widget: {
-      unread: 'Ungelesen',
-      unreadContext: (n: number) =>
-        n === 0
-          ? 'Posteingang ist leer'
-          : n === 1
-            ? 'Ungelesener Thread im Posteingang'
-            : 'Ungelesene Threads im Posteingang',
-      important: 'Wichtigste Mails',
-      importantSummary: (n: number) => (n === 1 ? '1 ungelesen' : `${n} ungelesen`),
-      invoices: 'Rechnungsmails',
-      invoicesContext: (days: number) => `in den letzten ${days} Tagen`,
+      inbox: 'Posteingang',
+      inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
+      inboxNoInvoices: 'Keine Rechnungsmails in den letzten 30 Tagen',
+      inboxInvoices: (n: number, days: number) =>
+        n === 1 ? `1 Rechnungsmail in ${days} Tagen` : `${n} Rechnungsmails in ${days} Tagen`,
+      inboxInvoicesAction: 'Ansehen',
       empty: 'Noch keine Mails.',
       emptyAction: 'E-Mail öffnen',
       link: 'E-Mail öffnen',
+    },
+    head: {
+      inbox: 'Posteingang',
+      unread: (n: number) =>
+        n === 0
+          ? 'Alles gelesen'
+          : n === 1
+            ? '1 ungelesener Thread'
+            : `${n} ungelesene Threads`,
     },
   },
   browser: {
