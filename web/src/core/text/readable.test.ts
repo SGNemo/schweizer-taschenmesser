@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emphasize, graphemes } from './readable';
+import { emphasize, graphemes, isBoldWeight, READ_START_TAG, READ_TEXT_TAG } from './readable';
 
 const strongOf = (text: string, share = 0.4, minLen?: number) =>
   emphasize(text, { share, minLen })
@@ -65,5 +65,66 @@ describe('emphasize', () => {
     const all = runs.map((r) => r.text).join('');
     expect(text.startsWith(all.slice(0, 20))).toBe(true);
     expect(runs.length).toBeLessThan(text.split(' ').length * 3 + 1);
+  });
+});
+
+describe('a word stays one piece', () => {
+  const texts = [
+    'Schmierzettel',
+    'Notizzettel in Notizen',
+    'Einkaufsliste für das Wochenende: Kartoffelsalat, Mineralwasser und Gartenerde.',
+    'Donaudampfschifffahrtsgesellschaftskapitän anrufen',
+    'Internet-Telefon über https://example.org/pfad',
+  ];
+
+  it('every emphasised start is followed directly by the rest of its word (no space, no break point between)', () => {
+    for (const text of texts) {
+      const runs = emphasize(text, { share: 0.4 });
+      runs.forEach((run, i) => {
+        if (!run.strong) return;
+        const rest = runs[i + 1];
+        expect(rest?.rest, `${text}: rest after "${run.text}"`).toBe(true);
+        expect(/\s/.test(run.text + rest!.text), `${text}: "${run.text}${rest!.text}"`).toBe(false);
+        expect(
+          /^\p{L}/u.test(rest!.text),
+          `${text}: rest of "${run.text}" starts with a letter`,
+        ).toBe(true);
+      });
+    }
+  });
+
+  it('long protected strings (URLs, codes) stay one plain run, so the host decides how they wrap', () => {
+    const runs = emphasize(
+      'Formular: https://www.beispiel-behoerde.example/formulare/antrag-2026.pdf',
+      {
+        share: 0.4,
+      },
+    );
+    expect(
+      runs.some((r) =>
+        r.text.includes('https://www.beispiel-behoerde.example/formulare/antrag-2026.pdf'),
+      ),
+    ).toBe(true);
+    expect(runs.filter((r) => r.strong).map((r) => r.text)).toEqual(['For']);
+  });
+
+  it('marks the aid with its own inline element names, never span (host span rules cannot reach them)', () => {
+    // Valid autonomous custom element names: lower case, start with a letter, contain a hyphen.
+    for (const tag of [READ_TEXT_TAG, READ_START_TAG]) {
+      expect(tag).toMatch(/^[a-z][a-z0-9.-]*-[a-z0-9.-]*$/);
+      expect(tag).not.toBe('span');
+    }
+    expect(READ_TEXT_TAG).not.toBe(READ_START_TAG);
+  });
+});
+
+describe('isBoldWeight', () => {
+  it('treats semibold and heavier as bold (the start then takes the heavy weight)', () => {
+    expect(isBoldWeight('600')).toBe(true);
+    expect(isBoldWeight('700')).toBe(true);
+    expect(isBoldWeight('500')).toBe(false);
+    expect(isBoldWeight('400')).toBe(false);
+    expect(isBoldWeight('bold')).toBe(true);
+    expect(isBoldWeight('normal')).toBe(false);
   });
 });
