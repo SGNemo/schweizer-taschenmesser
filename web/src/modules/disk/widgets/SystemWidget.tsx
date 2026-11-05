@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { SystemInfo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { EmptyState, Ring, Skeleton, StatusWidget } from '@/ui';
+import { EmptyState, FortschrittBody, Skeleton, StatusWidget } from '@/ui';
 import { percent } from '../format';
-import styles from './SystemWidget.module.css';
 
 const REFRESH_MS = 5000;
 
@@ -34,18 +33,17 @@ export default function SystemWidget() {
   const ram = percent(info.memory.usedBytes, info.memory.totalBytes);
   const cpu = Math.round(info.cpu.usagePercent);
   const bat = info.battery?.percent;
+  // Identity v3.1 (G01): rings in the module hue; a high load is said in words, not in a ring colour.
+  const ring = (key: string, title: string, value: number) => ({
+    key,
+    title,
+    value,
+    max: 100,
+    detail: value >= 90 ? w.high : w.normal,
+  });
   return (
     <div>
-      <div className={styles.rings}>
-        <div className={styles.ring}>
-          <Ring percent={cpu} level={cpu >= 90 ? 'full' : 'ok'} label={w.cpu} />
-          <span>{w.cpu}</span>
-        </div>
-        <div className={styles.ring}>
-          <Ring percent={ram} level={ram >= 90 ? 'full' : 'ok'} label={w.ram} />
-          <span>{w.ram}</span>
-        </div>
-      </div>
+      <FortschrittBody kind="rings" entries={[ring('cpu', w.cpu, cpu), ring('ram', w.ram, ram)]} />
       {bat != null ? (
         <StatusWidget
           icon="battery"

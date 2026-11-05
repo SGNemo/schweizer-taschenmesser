@@ -12,7 +12,7 @@ import type { DiskNode } from '@/core/platform/disk';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { AGE_VAR, ageDays, ageIndex, lastUse } from '../logic/age';
-import { KIND_PATTERN, KIND_VAR, drawPattern, textOn } from '../logic/colors';
+import { KIND_PATTERN, KIND_VAR, drawPattern, resolveColors, textOn } from '../logic/colors';
 import { formatBytes } from '../format';
 import { groupByParent, toLayoutNodes } from '../logic/tree';
 import { DEFAULT_LAYOUT, hitTest, layoutTree, type LaidOut } from '../logic/treemap';
@@ -55,21 +55,31 @@ interface Palette {
   font: string;
 }
 
+/** Tokens the canvas paints with besides the palette. */
+const UI_VARS = [
+  '--surface',
+  '--surface-2',
+  '--text',
+  '--text-muted',
+  '--accent',
+  '--focus',
+] as const;
+
+/** Reads the computed colours once per theme (palette + UI tokens), resolved to `#rrggbb` for the canvas. */
 const readPalette = (el: HTMLElement): Palette => {
-  const cs = getComputedStyle(el);
-  const v = (name: string) => cs.getPropertyValue(name).trim();
+  const c = resolveColors(el, [...Object.values(KIND_VAR), ...AGE_VAR, ...UI_VARS]);
   const kinds: Record<string, string> = {};
-  for (const [k, name] of Object.entries(KIND_VAR)) kinds[k] = v(name) || '#7a7f87';
+  for (const [k, name] of Object.entries(KIND_VAR)) kinds[k] = c[name]!;
   return {
     kinds,
-    ages: AGE_VAR.map((name) => v(name) || '#7a7f87'),
-    surface: v('--surface') || '#ffffff',
-    surface2: v('--surface-2') || '#f0f0ed',
-    text: v('--text') || '#1c1d1f',
-    muted: v('--text-muted') || '#7a7f87',
-    accent: v('--accent') || '#2f6f8f',
-    focus: v('--focus') || '#1a5fd0',
-    font: cs.fontFamily || 'sans-serif',
+    ages: AGE_VAR.map((name) => c[name]!),
+    surface: c['--surface']!,
+    surface2: c['--surface-2']!,
+    text: c['--text']!,
+    muted: c['--text-muted']!,
+    accent: c['--accent']!,
+    focus: c['--focus']!,
+    font: getComputedStyle(el).fontFamily || 'sans-serif',
   };
 };
 

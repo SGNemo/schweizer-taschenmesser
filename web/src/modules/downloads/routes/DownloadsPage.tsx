@@ -22,7 +22,7 @@ import { HeroSlot } from '@/ui/identity';
 import { MEANINGS } from '@/ui/semantics';
 import type { IconName } from '@/ui/icons';
 import { DownloadsEmpty } from '../components/DownloadsEmpty';
-import { ArrowBand } from '../components/ArrowBand';
+import { DownloadsBand } from '../components/DownloadsBand';
 import {
   bandSummary,
   etaSeconds,
@@ -94,7 +94,7 @@ export default function DownloadsPage() {
   return (
     <>
       <HeroSlot area="signature">
-        <ArrowBand
+        <DownloadsBand
           figure={
             summary.running === 0
               ? t.downloads.band.idle
