@@ -113,3 +113,26 @@
   align-items: center;
   gap: var(--space-2);
 }
+.choices {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.choicesLegend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.choicesFrame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.choicesFrame > label {
+  padding-inline: var(--space-4);
+}
+.choicesFrame > label + label {
+  border-top: 1px solid var(--border);
+}

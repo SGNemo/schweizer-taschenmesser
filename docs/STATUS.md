@@ -226,3 +226,4 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `feat/settings-connect-ai`: Einstellungen Paket 2b – KI und Verbindungen auf den Schritt-Karten (`ConnectParts`); danach Paket 3 (Allgemein, Darstellung, Benachrichtigungen, Teilen).
 - Auf `feat/settings-compact`: Einstellungen Paket 3a – schlanke Schnellleiste (Ruhe-Hinweis nur bei laufender Pause), engere Abstände, „Mit Partner teilen“ in Schritten und Spalten.
 - Auf `feat/settings-cards`: Einstellungen Paket 3b – Benachrichtigungen mit Zustandsbanner (Aktivieren, Push), Aktionen als normale Schaltflächen; Allgemein und Darstellung bleiben (schon Zeilenlisten).
+- Auf `feat/settings-choices`: Auswahllisten mit Titel und Erklärung (`Checkbox` mit `description`, `ChoiceList`), Schnellerfassung mit Banner, Fakten und Schritten.
