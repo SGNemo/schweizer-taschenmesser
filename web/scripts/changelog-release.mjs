@@ -20,7 +20,7 @@ import {
   renderSection,
   upsertVersion,
 } from './lib/changelogRelease.ts';
-import { entriesWithBuilds, noteBuilds } from './lib/changesBuild.ts';
+import { entriesWithBuilds, firstParentBuilds, noteBuilds } from './lib/changesBuild.ts';
 
 const web = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const root = resolve(web, '..');
@@ -39,9 +39,11 @@ if (flag('unreleased')) {
   }
   const git = (a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' });
   const entries = entriesWithBuilds(open.byFile, noteBuilds(open.files, '.changes', git));
+  const floor = Math.min(...entries.map((e) => e.build ?? Infinity));
+  const all = Number.isFinite(floor) ? firstParentBuilds(git, floor) : [];
   process.stdout.write(
     entries.length
-      ? `${renderBuilds(entries, 'de')}\n---\n\n${renderBuilds(entries, 'en')}`
+      ? `${renderBuilds(entries, 'de', all)}\n---\n\n${renderBuilds(entries, 'en', all)}`
       : 'No open change notes.\n',
   );
   process.exit(0);
