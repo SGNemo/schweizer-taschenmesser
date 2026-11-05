@@ -44,7 +44,7 @@ const MODULES: { id: string; path: string; desktop?: boolean }[] = [
   { id: 'downloads', path: '/downloads', desktop: true },
 ];
 
-/** Title text goes black (box over the text), icons stay: the module must be recognised by form, colour and content. */
+/** Title text goes black (box over the text), icons go too: the module must be recognised by form and signature. */
 const BLIND_CSS = `
 [data-testid="module-frame"] h1,
 [data-testid="module-frame"] p > span:last-child:not([aria-hidden]),
@@ -52,7 +52,7 @@ const BLIND_CSS = `
 [data-testid^="widget-"] h2 a,
 [data-testid^="widget-"] h2 { color: transparent !important; background: #000 !important; border-radius: 4px; }
 [data-testid="module-frame"] h1 *, [data-testid^="widget-"] h2 * { color: transparent !important; }
-[data-testid^="widget-"] h2 svg { display: none !important; }
+[data-testid^="widget-"] h2 svg, [data-testid="module-frame"] p svg { display: none !important; }
 `;
 
 async function enableModules(page: Page, ids: string[]) {
@@ -157,9 +157,20 @@ async function unlockVault(page: Page) {
   await page.waitForTimeout(WAIT);
 }
 
-
-const MINE = ['lists', 'pantry', 'vault', 'bookmarks', 'notes', 'chat', 'browser', 'feeds', 'mail', 'music'];
-const WIDGETS = /^widget-(lists|pantry|vault|accounts|bookmarks|notes|chat|browser|feeds|mail|music):/;
+const MINE = [
+  'lists',
+  'pantry',
+  'vault',
+  'bookmarks',
+  'notes',
+  'chat',
+  'browser',
+  'feeds',
+  'mail',
+  'music',
+];
+const WIDGETS =
+  /^widget-(lists|pantry|vault|accounts|bookmarks|notes|chat|browser|feeds|mail|music):/;
 
 test('package 2 shots: heads, widgets, empty pages', async ({ browser }) => {
   test.setTimeout(0);
@@ -193,9 +204,43 @@ test('package 2 shots: heads, widgets, empty pages', async ({ browser }) => {
         const el = items.nth(i);
         const tid = (await el.getAttribute('data-testid')) ?? '';
         if (!WIDGETS.test(tid) || !(await el.isVisible())) continue;
-        await el.screenshot({ path: `${dir}/widget-${tid.replace('widget-', '').replace(':', '-')}.png` });
+        await el.screenshot({
+          path: `${dir}/widget-${tid.replace('widget-', '').replace(':', '-')}.png`,
+        });
       }
       await context.close();
+    }
+    if (part('blind')) {
+      const dir = `${OUT}/blind`;
+      mkdirSync(dir, { recursive: true });
+      const key: Record<string, string> = {};
+      const name = () => randomBytes(3).toString('hex');
+      const { context, page } = await newContext(browser, vp, scheme, true);
+      for (const m of MODULES.filter((x) => MINE.includes(x.id))) {
+        if (m.desktop && !desktop) continue;
+        await page.goto(m.path);
+        await settle(page);
+        await page.addStyleTag({ content: BLIND_CSS });
+        const id = name();
+        await page.getByTestId('module-frame').screenshot({ path: `${dir}/${id}.png` });
+        key[id] = `head ${m.id} ${run}`;
+      }
+      await page.evaluate(() => localStorage.setItem('tm-home-view', 'all'));
+      await page.goto('/');
+      await settle(page, WAIT * 3);
+      await page.addStyleTag({ content: BLIND_CSS });
+      const items = page.locator('[data-testid^="widget-"]');
+      const n = await items.count();
+      for (let i = 0; i < n; i++) {
+        const el = items.nth(i);
+        const tid = (await el.getAttribute('data-testid')) ?? '';
+        if (!WIDGETS.test(tid) || !(await el.isVisible())) continue;
+        const id = name();
+        await el.screenshot({ path: `${dir}/${id}.png` });
+        key[id] = `widget ${tid.replace('widget-', '')} ${run}`;
+      }
+      await context.close();
+      writeFileSync(`${OUT}/blind-key-${run}.json`, JSON.stringify(key, null, 2));
     }
     if (part('empty')) {
       const dir = `${OUT}/${vp.name}-${scheme}/empty`;
@@ -219,7 +264,9 @@ test('package 2 shots: heads, widgets, empty pages', async ({ browser }) => {
         const el = items.nth(i);
         const tid = (await el.getAttribute('data-testid')) ?? '';
         if (!WIDGETS.test(tid) || !(await el.isVisible())) continue;
-        await el.screenshot({ path: `${dir}/widget-${tid.replace('widget-', '').replace(':', '-')}.png` });
+        await el.screenshot({
+          path: `${dir}/widget-${tid.replace('widget-', '').replace(':', '-')}.png`,
+        });
       }
       await context.close();
     }
