@@ -15,6 +15,8 @@
 :root {
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  /* Serif for the "paper" voice of a head or a widget (identity `type: 'serif'`, notes, feeds, readers). */
+  --font-serif: Georgia, 'Times New Roman', serif;
   /* Tabular figures for amounts, dates and tables: apply with `font-variant-numeric: var(--font-num)`. */
   --font-num: tabular-nums;
 
@@ -36,7 +38,9 @@
   /* Longest comfortable line for running text (notes, answers, help). */
   --measure: 68ch;
   --leading-tight: 1.25;
-  /* Three weights only: body 400, labels/buttons 500, titles 600, hero 700. */
+  /* Weights: light 300 (hero figures, identity `type: 'light'`), body 400, labels/buttons 500, titles 600, hero 700.
+     Module and layout CSS writes these tokens, never a bare number (tokens.test.ts). */
+  --weight-light: 300;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
@@ -71,6 +75,8 @@
   /* List row height and grid gap; changed by phone width and by the density setting below. */
   --row-h: 2.75rem;
   --grid-gap: var(--space-5);
+  /* Inner padding of a card or widget; the widget head zone bleeds by the same amount (ui/Card, home/Home). */
+  --card-pad: var(--space-5);
   --sidebar-w: 16.25rem; /* 260 px at 16 px root */
   --bottom-nav-h: 64px;
   /* Page widths (see layout/PageContainer) and the fluid gutter around the page. */
@@ -78,6 +84,9 @@
   --page-content: 70rem;
   --page-wide: 100rem;
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+  /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes; phone values below. */
+  --head-h-tall: 12.5rem;
+  --head-h-compact: 6rem;
 
   /* Layer order (never write a bare z-index) */
   --z-raised: 5;
@@ -106,11 +115,15 @@
   --text: #171f24;
   --text-muted: #55636b;
   --text-3: #5f6c75; /* meta, captions, eyebrows: 4.5:1 on surface-2 */
+  /* Secondary text on a tinted module head or widget zone (identity v3.1): the only quiet ink allowed there;
+     ≥ 4.5:1 on the 40 % tint of every hue in both themes (tokens.test.ts). --text-muted/--text-3 do not reach that. */
+  --text-on-tint: color-mix(in srgb, var(--text) 84%, var(--surface));
   --danger: #b3261e;
   --success: #1b7545;
   --warning: #8a5a00;
   --info: #1f5fa8;
-  --focus: #0b6f72;
+  /* Focus ring on the accent hue in both themes (the dark one is the accent's hover tone); ≥ 3:1 on every surface. */
+  --focus: #963709;
   /* Chart series (categorical slots 1 and 2) */
   --viz-1: #16847f;
   --viz-2: #c94f12;
@@ -200,6 +213,7 @@
   --text: #eceff1;
   --text-muted: #aab4bb;
   --text-3: #88939b;
+  --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
   --danger: #f4a39c;
   --success: #7fd3a3;
   --warning: #e8b85a;
@@ -253,6 +267,7 @@
     --text: #eceff1;
     --text-muted: #aab4bb;
     --text-3: #88939b;
+    --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
     --danger: #f4a39c;
     --success: #7fd3a3;
     --warning: #e8b85a;
@@ -323,11 +338,13 @@
   }
 }
 
-/* Phone: page title 28 px, list rows 48 px. */
+/* Phone: page title 28 px, list rows 48 px, lower module heads. */
 @media (max-width: 899px) {
   :root {
     --text-h1: 1.75rem;
     --row-h: 3rem;
+    --head-h-tall: 8.5rem;
+    --head-h-compact: 5rem;
   }
 }
 
@@ -453,6 +470,11 @@
   --pattern-widget: 0;
   --group-tint: 3%;
 }
+/* In both quiet modes the area pattern is not painted at all (not just faded out): nothing to blend, nothing to animate. */
+:root[data-color='calm'] [data-area],
+:root[data-module-colors='off'] [data-area] {
+  --area-pattern: none;
+}
 
 /* Navigation areas: one category hue per area for icons, the thin group stripe and the library tiles (always next to the area name; "Ruhig" turns them grey via --cat-*). */
 [data-area='plan'] {
@@ -531,6 +553,40 @@
 }
 [data-hue='slate'] {
   --module-color: var(--mod-slate);
+}
+/* Second hue of a two-tone head (manifest `identity.hue2`): `data-hue2` next to `data-hue`, no inline style needed. */
+[data-hue2='lime'] {
+  --module-color-2: var(--mod-lime);
+}
+[data-hue2='moss'] {
+  --module-color-2: var(--mod-moss);
+}
+[data-hue2='fern'] {
+  --module-color-2: var(--mod-fern);
+}
+[data-hue2='teal'] {
+  --module-color-2: var(--mod-teal);
+}
+[data-hue2='ocean'] {
+  --module-color-2: var(--mod-ocean);
+}
+[data-hue2='sky'] {
+  --module-color-2: var(--mod-sky);
+}
+[data-hue2='cobalt'] {
+  --module-color-2: var(--mod-cobalt);
+}
+[data-hue2='indigo'] {
+  --module-color-2: var(--mod-indigo);
+}
+[data-hue2='violet'] {
+  --module-color-2: var(--mod-violet);
+}
+[data-hue2='orchid'] {
+  --module-color-2: var(--mod-orchid);
+}
+[data-hue2='slate'] {
+  --module-color-2: var(--mod-slate);
 }
 [data-hue] {
   --viz-1: var(--module-color);

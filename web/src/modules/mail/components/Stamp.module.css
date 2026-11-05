@@ -52,5 +52,5 @@
 }
 .context {
   font-size: var(--text-meta);
-  color: var(--text-muted);
+  color: var(--text-on-tint);
 }

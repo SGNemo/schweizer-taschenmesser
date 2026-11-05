@@ -122,14 +122,14 @@
   letter-spacing: -0.01em;
 }
 .band[data-type='thin'] .title h1 {
-  font-weight: 300;
+  font-weight: var(--weight-light);
 }
 .band[data-type='mono'] .title h1 {
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
 }
 .band[data-type='serif'] .title h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
 }
 .figure {
   grid-area: figure;
@@ -176,7 +176,7 @@
 /* fortschritt, regal: title large, the module's rings or tiles on the right. */
 .band[data-head='himmel'] .title h1 {
   font-size: var(--text-2xl);
-  font-weight: 300;
+  font-weight: var(--weight-light);
 }
 /* tresor: a framed head, the lock status on the right; fine rules as pattern are on by the vault area. */
 .band[data-head='tresor'] {
@@ -206,7 +206,7 @@
   pointer-events: none;
 }
 .band[data-head='schreib'] .title h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
   letter-spacing: 0;

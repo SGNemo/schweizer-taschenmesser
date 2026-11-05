@@ -25,7 +25,7 @@
   background: var(--surface-2);
 }
 .name {
-  color: var(--text-muted);
+  color: var(--text-on-tint);
   font-size: var(--text-xs);
   letter-spacing: 0.03em;
   overflow: hidden;
@@ -39,7 +39,7 @@
   line-height: 1.1;
 }
 .state {
-  color: var(--text-muted);
+  color: var(--text-on-tint);
   font-size: var(--text-xs);
 }
 .state[data-tone='danger'] {

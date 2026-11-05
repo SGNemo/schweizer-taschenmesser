@@ -30,7 +30,7 @@
   color: var(--text);
 }
 .figure[data-type='thin'] .value {
-  font-weight: 300;
+  font-weight: var(--weight-light);
   letter-spacing: -0.045em;
 }
 .figure[data-type='mono'] .value {
@@ -38,6 +38,6 @@
   letter-spacing: -0.02em;
 }
 .figure[data-type='serif'] .value {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   letter-spacing: -0.01em;
 }
