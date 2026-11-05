@@ -7,6 +7,8 @@ export const browser: Strings['browser'] = {
       'Simple browser with tabs, bookmarks and a private mode. Runs separately from your Nemo data.',
     widget: 'Browser bookmarks',
     widgetEmpty: 'No bookmarks yet.',
+    widgetContext: (n: number) =>
+      n === 1 ? '1 bookmark in the browser' : `${n} bookmarks in the browser`,
     widgetAction: 'Open browser',
   },
   settings: {

@@ -18,3 +18,14 @@
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--module-color) 6%, var(--surface-2, var(--surface)));
 }
+/* The pinboard from the library at slot M: three cards, about 120 px high beside the figure (G06); smaller on the phone,
+   still three cards. */
+.pinboard {
+  display: inline-grid;
+  zoom: 1.5;
+}
+@media (max-width: 899px) {
+  .pinboard {
+    zoom: 0.85;
+  }
+}

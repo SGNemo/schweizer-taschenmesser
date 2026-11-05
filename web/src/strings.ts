@@ -3871,6 +3871,8 @@ export const de = {
     tabLinks: 'Lesezeichen',
     addLink: 'Lesezeichen anlegen',
     linksWidgetEmpty: 'Noch keine Lesezeichen.',
+    linksContext: (n: number, groups: number) =>
+      `${n === 1 ? '1 Lesezeichen' : `${n} Lesezeichen`}${groups === 0 ? '' : ` · ${groups === 1 ? 'in 1 Gruppe' : `in ${groups} Gruppen`}`}`,
     noGroup: 'Ohne Gruppe',
     linksEmpty:
       'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
@@ -7073,6 +7075,8 @@ export const de = {
         'Einfacher Browser mit Tabs, Lesezeichen und privatem Modus. Läuft getrennt von deinen Nemo-Daten.',
       widget: 'Browser-Lesezeichen',
       widgetEmpty: 'Noch keine Lesezeichen.',
+      widgetContext: (n: number) =>
+        n === 1 ? '1 Lesezeichen im Browser' : `${n} Lesezeichen im Browser`,
       widgetAction: 'Browser öffnen',
     },
     settings: {

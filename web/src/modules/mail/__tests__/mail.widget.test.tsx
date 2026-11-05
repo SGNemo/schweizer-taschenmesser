@@ -42,6 +42,9 @@ describe('mail inbox widget', () => {
     ).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
     expect(screen.getByText(/Rechnungsmails? in 30 Tagen/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ansehen' })).toHaveAttribute('href', '/mail?q=rechnung');
+    expect(screen.getByRole('link', { name: 'Ansehen' })).toHaveAttribute(
+      'href',
+      '/mail?q=rechnung',
+    );
   });
 });

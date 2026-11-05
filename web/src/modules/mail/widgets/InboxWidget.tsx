@@ -25,7 +25,9 @@ export default function InboxWidget() {
           <NotizBody
             mark={<SignatureMark id="stamp" size={24} />}
             title={t.mail.widget.inboxTitle(s.unread)}
-            lines={s.top.slice(0, 2).map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
+            lines={s.top
+              .slice(0, 2)
+              .map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
             meta={s.invoices > 0 ? undefined : t.mail.widget.inboxNoInvoices}
           />
           {s.invoices > 0 ? (
