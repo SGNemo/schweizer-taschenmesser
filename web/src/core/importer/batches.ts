@@ -62,6 +62,7 @@ export async function commitImport(
 
   // The batch row is written first, with the ids about to be created (only those that do not exist
   // yet), so an import cut off half way (tab closed) can still be undone; it is completed below.
+  // Cut off, it counts the planned records, and changes/removals (recorded at the end) are not in it.
   const before = await table(database).get(args.batchId);
   const planned: ImportBatch['records'] = [];
   for (const [collection, items] of byCollection) {
