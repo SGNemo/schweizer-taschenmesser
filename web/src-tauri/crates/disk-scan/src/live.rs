@@ -259,10 +259,13 @@ mod tests {
         live.add(0, &c);
         live.add(games, &c);
         live.add(old, &c);
-        let pending = |snap: &[NodeView], id: u32| snap.iter().find(|v| v.id == id).unwrap().pending;
+        let pending =
+            |snap: &[NodeView], id: u32| snap.iter().find(|v| v.id == id).unwrap().pending;
         let s = live.snapshot(0);
         assert!(
-            s.iter().filter(|v| v.kind != NodeKind::Small).all(|v| v.pending),
+            s.iter()
+                .filter(|v| v.kind != NodeKind::Small)
+                .all(|v| v.pending),
             "no folder finished yet: {s:?}"
         );
         // The "files here" entry is complete as soon as it exists: the folder's own files were

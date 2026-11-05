@@ -425,14 +425,20 @@ fn the_live_picture_marks_folders_pending_until_the_walk_returns() {
             }
             std::thread::sleep(std::time::Duration::from_millis(5));
         };
-        assert!(snap[0].pending, "the root is pending while the scan runs: {snap:?}");
+        assert!(
+            snap[0].pending,
+            "the root is pending while the scan runs: {snap:?}"
+        );
         control.set_paused(false);
         walk.join().unwrap()
     });
     assert!(!r.cancelled);
     let snap = control.live.snapshot(0);
     assert!(snap.len() >= 3, "root, projects and media: {snap:?}");
-    assert!(snap.iter().all(|n| !n.pending), "nothing pending after the walk: {snap:?}");
+    assert!(
+        snap.iter().all(|n| !n.pending),
+        "nothing pending after the walk: {snap:?}"
+    );
     // The finished tree never carries the flag.
     assert!(r.tree.children(0, 4, 0).iter().all(|n| !n.pending));
 }
