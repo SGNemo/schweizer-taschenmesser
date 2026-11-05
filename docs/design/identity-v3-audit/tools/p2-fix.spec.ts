@@ -6,6 +6,8 @@ import { mockSpotify, seedConnected } from '../spotify-mock';
 import { mockWeather, pickWeatherPlace } from '../weather-mock';
 
 /**
+ * Package 2 capture (heads, widgets, empty pages, blind crops of the eleven modules); copy to web/e2e/screenshots/ and
+ * web/ (config) like the audit spec, run with P2_RUNS=d-light,d-dark,p-light AUDIT_PARTS=heads,blind,empty.
  * Audit tooling (docs/design/identity-v3-audit): blind-test crops (title text blacked out, random file names, key
  * written last), empty states of every module and widget (no seed), the toolbox with three tools open, the overview
  * head. Not part of CI. Usage (web/, seeded preview on :4174):

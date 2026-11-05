@@ -182,7 +182,7 @@ export default function MailPage() {
     !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
   const header = (
     <>
-      <InboxHead unread={summary?.unread} />
+      <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
       <PageHeader title={t.mail.meta.name}>
         {canWrite && account ? (
           <Button
