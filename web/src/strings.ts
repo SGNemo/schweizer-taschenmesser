@@ -1435,6 +1435,8 @@ export const de = {
     },
   },
   todos: {
+    /** Bald view while the planner is on: the planner put the thing on this day. */
+    inPlan: (day: string) => `im Plan: ${day}`,
     meta: {
       name: 'ToDos',
       description: 'Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben.',

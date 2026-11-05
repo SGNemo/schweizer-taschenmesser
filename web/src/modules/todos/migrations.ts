@@ -11,4 +11,6 @@ export const migrations: ModuleManifest['migrations'] = {
   3: async () => {},
   // 4: tasks gained the optional `startDate`, `tags`, `checklist`, `links`; lists the optional `kind` (project). Nothing to rewrite.
   4: async () => {},
+  // 5: tasks gained the optional `planMark` (the planner's ownership mark on `plannedFor`). Nothing to rewrite.
+  5: async () => {},
 };

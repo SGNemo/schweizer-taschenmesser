@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     head: 'fokus',
     signature: 'todayCard',
   },
-  version: 4,
+  version: 5,
   get description() {
     return t.todos.meta.description;
   },
@@ -95,6 +95,7 @@ const manifest: ModuleManifest = {
       },
     ],
     calendarItems: () => import('./calendar'),
+    plannable: () => import('./plannable'),
     aiCreateDefaults: () => import('./aiDefaults'),
     services: () => import('./services'),
   },

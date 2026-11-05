@@ -5,6 +5,7 @@ import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, Dialog, SelectField } from '@/ui';
 import { deleteTask, setDone, taskRepo } from '../repo';
+import { userPlannedFor } from '../views';
 import type { Task, TodoList } from '../schema';
 import styles from './InboxSorter.module.css';
 
@@ -46,7 +47,7 @@ export function InboxSorter({ open, tasks, lists, onClose }: Props) {
             <Button
               variant="primary"
               data-autofocus
-              onClick={() => void taskRepo.update(current.id, { plannedFor: today() })}
+              onClick={() => void taskRepo.update(current.id, userPlannedFor(current, today()))}
             >
               {t.todos.sort.today}
             </Button>

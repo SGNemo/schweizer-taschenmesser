@@ -1,5 +1,7 @@
 import { bus } from '@/core/events';
+import { logError } from '@/core/diagnostics/logError';
 import { t } from '@/strings';
+import { cleanupPlanMarks, PLANNER_ID } from './planMark';
 import { ensureInbox, listRepo, taskRepo } from './repo';
 import type { TaskLink } from './schema';
 
@@ -27,7 +29,19 @@ export async function addRequested(req: {
   });
 }
 
-/** Runs while the todos module is enabled: reacts to `todo.requested` (e.g. from a note). */
+/**
+ * Runs while the todos module is enabled: reacts to `todo.requested` (e.g. from a note) and hands the
+ * planner's dates back to the user once the planner is switched off (on start and on `module.disabled`).
+ */
 export default function start(): () => void {
-  return bus.on('todo.requested', (req) => addRequested(req));
+  const clean = () => cleanupPlanMarks().catch(logError('todos.planMark'));
+  void clean();
+  const offRequested = bus.on('todo.requested', (req) => addRequested(req));
+  const offDisabled = bus.on('module.disabled', ({ moduleId }) => {
+    if (moduleId === PLANNER_ID) void clean();
+  });
+  return () => {
+    offRequested();
+    offDisabled();
+  };
 }

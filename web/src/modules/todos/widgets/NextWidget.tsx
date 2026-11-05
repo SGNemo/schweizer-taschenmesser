@@ -15,6 +15,7 @@ import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
 import { listRepo, setDone, taskRepo } from '../repo';
 import { postponePatch } from '../postpone';
+import { userPlannedFor } from '../views';
 import { buildToday } from '../today';
 import styles from './NextWidget.module.css';
 
@@ -85,7 +86,7 @@ export default function NextWidget() {
   };
   const wrapUp = () =>
     undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
-      for (const x of left) await taskRepo.update(x.id, { plannedFor: addDaysStr(day, 1) });
+      for (const x of left) await taskRepo.update(x.id, userPlannedFor(x, addDaysStr(day, 1)));
     });
   const toggle = (id: string, done: boolean) => {
     const task = all.find((x) => x.id === id);
@@ -272,7 +273,7 @@ export default function NextWidget() {
                   <Button
                     onClick={() => {
                       void undoableWithToast(t.focus.plan.planned, t.focus.plan.planned, () =>
-                        taskRepo.update(o.id, { plannedFor: day }),
+                        taskRepo.update(o.id, userPlannedFor(o, day)),
                       );
                       if (plan.free <= 1) setChoosing(false);
                     }}

@@ -10,15 +10,36 @@ import s5 from './__fixtures__/s5.json';
 import type { PlanDay, PlanInput, PlanItem, PlanResult } from './types';
 import { toUnits } from './units';
 
-type Fixture = typeof s1;
+/** One scenario as the prototype wrote it (`__fixtures__/*.json`). */
+interface Fixture {
+  title: string;
+  input: unknown;
+  expected: {
+    assignments: (string | number)[][];
+    reasons: Record<string, string>;
+    unplaced: { id: string; reason: string }[];
+    diff: {
+      added: number;
+      moved: number;
+      removed: number;
+      unchanged: number;
+      movedReasons: { id: string; from: string; to: string; reason: string; by: string[] }[];
+      removedReasons: { id: string; from: string; reason: string; by: string[] }[];
+    };
+    free: Record<string, number>;
+    overflowMin: number;
+    demandMin: number;
+    usableMin: number;
+  };
+}
 const FIXTURES: [string, Fixture][] = [
-  ['s1', s1],
-  ['s2', s2],
-  ['s3', s3],
-  ['s4', s4],
-  ['s5', s5],
+  ['s1', s1 as Fixture],
+  ['s2', s2 as Fixture],
+  ['s3', s3 as Fixture],
+  ['s4', s4 as Fixture],
+  ['s5', s5 as Fixture],
 ];
-const input = (f: Fixture): PlanInput => f.input as unknown as PlanInput;
+const input = (f: Fixture): PlanInput => f.input as PlanInput;
 /** The shape the fixpoint and the fixtures compare: (unit, date, minutes, order), sorted. */
 const shape = (r: PlanResult) =>
   r.assignments.map((a) => [a.id, a.date, a.minutes, a.order] as const).sort();

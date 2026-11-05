@@ -41,6 +41,15 @@ export function resolveStates(
   return Object.fromEntries(manifests.map((m) => [m.id, byId.get(m.id) ?? m.defaultEnabled]));
 }
 
+/** The stored choice for one module (none = the manifest default applies); for clean-ups that must only run on an explicit "off". */
+export async function loadStoredModuleState(
+  moduleId: string,
+  database: TaschenmesserDB = defaultDb,
+): Promise<{ enabled: boolean; dataPolicy: DataPolicy | null } | undefined> {
+  const row = await stateRepo(database).get(moduleId);
+  return row ? { enabled: row.enabled, dataPolicy: row.dataPolicy } : undefined;
+}
+
 /** Live module states; `undefined` until the first read has completed. */
 export function useModuleStates(): ModuleStates | undefined {
   return useLiveQuery(() => loadModuleStates(), []);
