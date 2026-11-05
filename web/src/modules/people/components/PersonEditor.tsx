@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -34,6 +35,7 @@ export function PersonEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.people.edit : t.people.add}
@@ -60,6 +62,8 @@ function Fields({
   onDeleted?: () => void;
 }) {
   const b = existing?.birthday;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [hasBirthday, setHasBirthday] = useState(existing ? !!b : true);
   const [date, setDate] = useState(
@@ -101,7 +105,8 @@ function Fields({
       giftBudgetCents: cents,
     });
     if (!parsed.success) return setError(t.people.invalidDate);
-    if (existing) await personRepo.update(existing.id, parsed.data);
+    if (existing)
+      await personRepo.update(existing.id, changedFields(opened ?? existing, parsed.data));
     else await personRepo.create(parsed.data);
     onClose();
   }

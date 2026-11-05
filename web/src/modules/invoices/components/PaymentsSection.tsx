@@ -89,6 +89,12 @@ export function PaymentsSection({
             setAmount(ev.target.value);
             setError('');
           }}
+          onKeyDown={(ev) => {
+            // The section sits inside the invoice form: Enter adds the payment, not "Speichern".
+            if (ev.key !== 'Enter') return;
+            ev.preventDefault();
+            void add();
+          }}
           error={error}
         />
         <TextField
@@ -96,6 +102,11 @@ export function PaymentsSection({
           type="date"
           value={date}
           onChange={(ev) => setDate(ev.target.value)}
+          onKeyDown={(ev) => {
+            if (ev.key !== 'Enter') return;
+            ev.preventDefault();
+            void add();
+          }}
         />
       </div>
       <div>

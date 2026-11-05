@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import {
@@ -62,6 +63,7 @@ export function BudgetEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.budgets.editBudget : t.budgets.addBudget}
@@ -93,6 +95,8 @@ function BudgetFields({
   month: string;
   onClose: () => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? '');
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [limit, setLimit] = useState(existing ? formatMoneyInput(existing.monthlyLimitMinor) : '');
@@ -120,7 +124,7 @@ function BudgetFields({
       warnAtPercent:
         warnAt.trim() !== '' && warn >= 10 && warn <= 99 ? Math.round(warn) : undefined,
     };
-    if (existing) await budgetRepo.update(existing.id, data);
+    if (existing) await budgetRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await budgetRepo.create(data);
     onClose();
   }
@@ -264,6 +268,7 @@ export function GoalEditor({ target, onClose }: { target: GoalTarget; onClose: (
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.budgets.editGoal : t.budgets.addGoal}
@@ -276,6 +281,8 @@ export function GoalEditor({ target, onClose }: { target: GoalTarget; onClose: (
 }
 
 function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onClose: () => void }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [target, setTarget] = useState(existing ? formatMoneyInput(existing.targetMinor) : '');
@@ -301,7 +308,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       startDate: startDate || undefined,
       note: note.trim() || undefined,
     };
-    if (existing) await goalRepo.update(existing.id, data);
+    if (existing) await goalRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await goalRepo.create(data);
     onClose();
   }
@@ -389,6 +396,7 @@ export function DepositDialog({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={goal !== null}
       onClose={onClose}
       title={goal ? t.budgets.depositTitle(goal.name) : ''}
@@ -469,6 +477,7 @@ export function HistoryDialog({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={goal !== null}
       onClose={onClose}
       title={goal ? t.budgets.historyTitle(goal.name) : ''}

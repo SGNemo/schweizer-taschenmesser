@@ -28,6 +28,7 @@ export const dataApi: Strings['dataApi'] = {
   badCurrency: 'Só EUR é aceito.',
   keyNotFound: 'Nenhuma entrada com este key no envio.',
   refSelf: 'Uma entrada não pode referenciar a si mesma.',
+  refNested: 'Referencia uma entrada que já é uma subentrada (apenas um nível).',
   refWrongCollection: (c: string) => `O key não pertence a “${c}”.`,
   refNotFound: (c: string) => `Nenhuma entrada “${c}” com este título encontrada.`,
   refAmbiguous: (c: string) => `Várias entradas “${c}” correspondem – use o ID ou um key.`,

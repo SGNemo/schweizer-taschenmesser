@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -25,6 +26,7 @@ export function ListEditor({
   const list = target && target !== 'new' ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={list ? t.lists.editList : t.lists.newList}
@@ -53,6 +55,8 @@ function Fields({
   onClose: () => void;
   onSaved: (id: string) => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(list);
   const [name, setName] = useState(list?.name ?? '');
   const [kind, setKind] = useState<ListKind>(list?.kind ?? 'checklist');
   const [note, setNote] = useState(list?.note ?? '');
@@ -72,7 +76,7 @@ function Fields({
       place: trip ? place.trim() || undefined : undefined,
     };
     if (list) {
-      await listRepo.update(list.id, data);
+      await listRepo.update(list.id, changedFields(opened ?? list, data));
       onSaved(list.id);
     } else {
       const created = await listRepo.create({ ...data, order: nextOrder(existing) });

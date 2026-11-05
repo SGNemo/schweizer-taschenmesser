@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { randomId } from '@/core/db/util';
@@ -38,7 +39,12 @@ export function TransferEditor({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={target !== null} onClose={onClose} title={t.finance.ext.transfer.title}>
+    <Dialog
+      askAfterTyping
+      open={target !== null}
+      onClose={onClose}
+      title={t.finance.ext.transfer.title}
+    >
       {target ? (
         <TransferForm
           key={'out' in target ? target.out.id : 'new'}
@@ -61,6 +67,8 @@ function TransferForm({
   onClose: () => void;
 }) {
   const existing = 'out' in target ? target : null;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [from, setFrom] = useState(existing?.out.accountId ?? data.accounts[0]?.id ?? '');
   const [to, setTo] = useState(existing?.in.accountId ?? data.accounts[1]?.id ?? '');
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.out.amountMinor) : '');
@@ -89,8 +97,11 @@ function TransferForm({
     }
     if (existing) {
       const pair = buildTransfer(draft, existing.out.transferId ?? randomId());
-      await transactionRepo.update(existing.out.id, pair.out);
-      await transactionRepo.update(existing.in.id, pair.in);
+      await transactionRepo.update(
+        existing.out.id,
+        changedFields((opened ?? existing).out, pair.out),
+      );
+      await transactionRepo.update(existing.in.id, changedFields((opened ?? existing).in, pair.in));
     } else {
       const pair = buildTransfer(draft, randomId());
       await transactionRepo.createMany([{ data: pair.out }, { data: pair.in }]);

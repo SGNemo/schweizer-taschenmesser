@@ -5751,6 +5751,7 @@ export const de = {
     badCurrency: 'Nur EUR wird unterstützt.',
     keyNotFound: 'Kein Eintrag mit diesem key in der Sendung.',
     refSelf: 'Ein Eintrag kann nicht auf sich selbst verweisen.',
+    refNested: 'Verweist auf einen Eintrag, der selbst schon untergeordnet ist (nur eine Ebene).',
     refWrongCollection: (c: string) => `Der key gehört nicht zu „${c}“.`,
     refNotFound: (c: string) => `Kein Eintrag „${c}“ mit diesem Titel gefunden.`,
     refAmbiguous: (c: string) =>

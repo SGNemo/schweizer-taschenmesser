@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useFocusSettings } from '@/core/settings/focus';
+import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
@@ -69,6 +70,8 @@ function EditorForm({
   lists,
   onClose,
 }: Omit<Props, 'task'> & { task: StoredTask }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(task);
   const [title, setTitle] = useState(task.title);
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
@@ -93,24 +96,28 @@ function EditorForm({
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    await taskRepo.update(task.id, {
-      title: trimmed,
-      listId,
-      priority,
-      dueDate: dueDate || undefined,
-      recurrence: dueDate ? recurrence : undefined,
-      someday: someday || undefined,
-      estimateMin: estimate,
-      plannedFor: plannedFor || undefined,
-      note: note.trim() || undefined,
-      personId: personId || undefined,
-      startDate: startDate || undefined,
-      tags: parseTags(tagsText).length ? parseTags(tagsText) : undefined,
-      checklist: checklist.length ? checklist : undefined,
-      links: links.length ? links : undefined,
-    });
+    // Only what changed here: a field edited meanwhile elsewhere (another tab, sync) keeps its value.
+    await taskRepo.update(
+      task.id,
+      changedFields(opened ?? task, {
+        title: trimmed,
+        listId,
+        priority,
+        dueDate: dueDate || undefined,
+        recurrence: dueDate ? recurrence : undefined,
+        someday: someday || undefined,
+        estimateMin: estimate,
+        plannedFor: plannedFor || undefined,
+        note: note.trim() || undefined,
+        personId: personId || undefined,
+        startDate: startDate || undefined,
+        tags: parseTags(tagsText).length ? parseTags(tagsText) : undefined,
+        checklist: checklist.length ? checklist : undefined,
+        links: links.length ? links : undefined,
+      }),
+    );
     // Subtasks always live in the list of their parent.
-    if (listId !== task.listId) {
+    if (listId !== (opened ?? task).listId) {
       await taskRepo.table
         .where('parentId')
         .equals(task.id)

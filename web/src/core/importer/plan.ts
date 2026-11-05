@@ -31,7 +31,7 @@ export async function buildPreview(
     existing.set(collection, await runtime.existingKeys(collection));
   }
   const seen = new Set<string>();
-  return candidates.map((candidate, index) => {
+  const rows = candidates.map((candidate, index) => {
     const key = `${candidate.collection}\u0000${candidate.dedupeKey}`;
     // A change without any difference counts as "already there"; changes are never pre-ticked.
     const duplicate = candidate.update
@@ -50,4 +50,16 @@ export async function buildPreview(
       selected: !duplicate && !invalid && !candidate.update,
     };
   });
+  // A row whose partner (`dependsOn`) is out starts unticked too: on its own it would point at nothing.
+  for (let changed = true; changed;) {
+    changed = false;
+    const on = new Set(rows.filter((r) => r.selected).map((r) => r.candidate.id));
+    for (const r of rows) {
+      if (r.selected && r.candidate.dependsOn && !on.has(r.candidate.dependsOn)) {
+        r.selected = false;
+        changed = true;
+      }
+    }
+  }
+  return rows;
 }

@@ -8,6 +8,8 @@ Identität v3.1, Fundament-Fixpaket (`feat/identity-v3-frame`, PR offen): Kopf-R
 
 Shell-Fixes (`fix/shell-topbar-focus`): Handy-Topbar nach Seitenwechsel sofort da (kein Nachrutschen), Fokus im Werkzeug-Panel (passendes Feld, Ring nicht abgeschnitten, Alt+1–9 im ganzen Fenster), Lesehilfe mit eigenen Inline-Elementen (`read-text`/`read-start`, keine Wortbrüche durch `span`-Regeln) und Tinte, die nach Hover neu gemessen wird.
 
+Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engine-Prototyp mit fünf Szenarien, Vertrag `contributions.plannable`, fünf Paket-Prompts in `docs/design/plan/PACKAGES.md`; Svens Antworten (lokal-only, Kalender-Chips, eigenes Modul, Minimum-Paket 1) in `docs/decisions/plan.md`; Paket 1 `feat/plan-core` startet nach dem Merge von `feat/identity-v3-frame`.
+
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 
 Website auf Identität v3.1, Paket 1 (`design/site-identity-v3`): Designrunde 4 (Richtung B „Schaufenster“), Identity-Tokens und `identity.css`, Modulkarten in Modulfarbe mit Widget-Skizze aus dem Katalog (`gen:modules` liefert `icon`, `hue`, `head`, `widget`), Kopf-Silhouetten-Leiste, keine Streifen, keine Farbfläche; Paket 2 (neue Screenshots, OG-Bild) nach Identity-Paket 0–3.
@@ -126,6 +128,8 @@ KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen �
 Erster Start in 3 Fragen (`feat/qa-first-run`, QA-P1): Name + Textgröße, Profil, „Nur lokal, ohne KI“; Rest in der Checkliste; PR wartet auf Review ([first-run-setup](features/first-run-setup.md)). Dazu Schritt „Umzug von einer anderen App“ (Kacheln → vorhandene Importer, „Was fehlt noch“ in der Checkliste, auch unter Sync & Backup).
 
 App-Sprachen (`feat/i18n-ui`): Oberfläche auf Deutsch, Englisch, Spanisch, Französisch, Portugiesisch (Brasilien), Wahl unter Einstellungen → Allgemein und im ersten Einrichtungsschritt, Standard Systemsprache sonst Englisch; Übersetzungen maschinell, noch nicht muttersprachlich geprüft ([i18n/README.md](i18n/README.md)); PR gegen `develop`, wartet auf Review; Handtests S1–S4 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+QA Runde 4 Chaos (`fix/qa4-chaos`, [qa/round-4/chaos/FINDINGS.md](qa/round-4/chaos/FINDINGS.md)): 38 Funde; PR 1 behebt die 11 mit Datenverlust (Editoren speichern nur Geändertes, Rückfrage vor dem Verwerfen, „Zuletzt gelöscht“ für Konten/Buchungen/Gewohnheiten/Zeiteinträge, Importe ohne Waisen), PR 2 (`fix/qa4-chaos-2`) die übrigen.
 
 Komfort Einstellungen, Bibliothek, Werkzeugkasten (gemergt: #132 Einstellungen, #150 Stumm, #151 Bibliothek, #153 Werkzeugkasten): Schnellleiste, Palette-Direktumschaltung und Suche ohne Präfix, „Häufig genutzt“, Kontext-Zahnrad, Zurücksetzen, Stumm, Bibliothek- und Werkzeugsuche, „timer 10m“/„umrechnen 5 km“ in der Leiste. Ergebnis: [product/comfort/06-settings-results.md](product/comfort/06-settings-results.md). Offen (Sven): Handtests M1–M4 in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Woche Nutzung (Reizlast Zahnrad/Schnellleiste).
 

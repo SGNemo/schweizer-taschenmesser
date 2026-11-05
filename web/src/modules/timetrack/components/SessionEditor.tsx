@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { today } from '@/core/time/dates';
@@ -21,6 +22,7 @@ export function SessionEditor({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={target === 'new' || target === null ? t.timetrack.add : t.timetrack.edit}
@@ -47,6 +49,10 @@ function Fields({
   onClose: () => void;
 }) {
   const existing = target === 'new' ? null : target;
+  // A running session (no end yet) stays running when it is edited: no end, its pause is kept.
+  const running = Boolean(existing && !existing.endTime);
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [jobId, setJobId] = useState(existing?.jobId ?? jobs[0]?.id ?? '');
   const [date, setDate] = useState(existing?.date ?? today());
   const [start, setStart] = useState(existing?.startTime ?? '09:00');
@@ -61,17 +67,17 @@ function Fields({
       jobId: jobId || undefined,
       date,
       startTime: start,
-      endTime: end,
-      endDate: endDate && endDate !== date ? endDate : undefined,
+      endTime: running ? undefined : end,
+      endDate: !running && endDate && endDate !== date ? endDate : undefined,
       breakMin: Math.max(0, Math.round(Number(breakMin) || 0)),
       note: note.trim() || undefined,
-      pausedAt: undefined,
-      pausedDate: undefined,
+      pausedAt: running ? existing?.pausedAt : undefined,
+      pausedDate: running ? existing?.pausedDate : undefined,
     };
-    const sameDayBackwards = (data.endDate ?? date) === date && end <= start;
+    const sameDayBackwards = !running && (data.endDate ?? date) === date && end <= start;
     if (!sessionSchema.safeParse(data).success || sameDayBackwards || (data.endDate ?? date) < date)
       return setError(t.errors.generic);
-    if (existing) await sessionRepo.update(existing.id, data);
+    if (existing) await sessionRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await sessionRepo.create(data);
     onClose();
   }
@@ -106,20 +112,24 @@ function Fields({
           onChange={(e) => setStart(e.target.value)}
           required
         />
-        <TextField
-          label={t.timetrack.form.end}
-          type="time"
-          value={end}
-          onChange={(e) => setEnd(e.target.value)}
-          required
-        />
+        {running ? null : (
+          <TextField
+            label={t.timetrack.form.end}
+            type="time"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            required
+          />
+        )}
       </div>
-      <TextField
-        label={t.timetrack.form.endDate}
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-      />
+      {running ? null : (
+        <TextField
+          label={t.timetrack.form.endDate}
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
+      )}
       <TextField
         label={t.timetrack.form.breakMin}
         type="number"

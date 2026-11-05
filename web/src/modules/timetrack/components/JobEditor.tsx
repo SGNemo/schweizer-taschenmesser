@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -24,6 +25,7 @@ export function JobEditor({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={target === 'new' || target === null ? t.timetrack.job.add : t.timetrack.job.edit}
@@ -53,6 +55,8 @@ function Fields({
   onClose: () => void;
 }) {
   const existing = target === 'new' ? null : target;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [clientId, setClientId] = useState(existing?.clientId ?? '');
   const [newClient, setNewClient] = useState('');
@@ -80,7 +84,7 @@ function Fields({
       cid = (await clientRepo.create({ name: fresh, order: clients.length })).id;
       data.clientId = cid;
     }
-    if (existing) await jobRepo.update(existing.id, data);
+    if (existing) await jobRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await jobRepo.create(data);
     onClose();
   }

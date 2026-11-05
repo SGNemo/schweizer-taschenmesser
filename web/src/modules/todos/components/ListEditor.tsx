@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { Button, Dialog, patternStyles, Switch, TextField } from '@/ui';
@@ -15,6 +16,7 @@ interface Props {
 export function ListEditor({ target, nextOrder, onClose }: Props) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={() => onClose()}
       title={target === 'new' ? t.todos.newList : t.todos.renameList}
@@ -41,6 +43,8 @@ function ListForm({
   onClose: Props['onClose'];
 }) {
   const existing = target === 'new' ? null : target;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [project, setProject] = useState(existing?.kind === 'project');
 
@@ -49,7 +53,10 @@ function ListForm({
     const value = name.trim();
     if (!value) return;
     if (existing) {
-      await listRepo.update(existing.id, { name: value, kind: project ? 'project' : undefined });
+      await listRepo.update(
+        existing.id,
+        changedFields(opened ?? existing, { name: value, kind: project ? 'project' : undefined }),
+      );
       onClose();
     } else {
       const created = await listRepo.create({

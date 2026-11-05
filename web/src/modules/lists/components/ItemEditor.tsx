@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -17,7 +18,7 @@ export function ItemEditor({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={item !== null} onClose={onClose} title={t.lists.editItem}>
+    <Dialog askAfterTyping open={item !== null} onClose={onClose} title={t.lists.editItem}>
       {item ? <Fields key={item.id} item={item} kind={kind} onClose={onClose} /> : null}
     </Dialog>
   );
@@ -34,6 +35,8 @@ function Fields({
 }) {
   const shopping = kind === 'shopping' || item.listId === SHOPPING_LIST_ID;
   const [section, setSection] = useState<Section | ''>(item.section ?? '');
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(item);
   const [price, setPrice] = useState(
     item.priceCents === undefined ? '' : formatMoneyInput(item.priceCents),
   );
@@ -49,20 +52,23 @@ function Fields({
     if (!name.trim()) return setError(t.form.required);
     const cents = price.trim() === '' ? null : parseMoney(price);
     if (cents === undefined) return setPriceError(t.money.invalidAmount(formatMoneyInput(1250)));
-    await itemRepo.update(item.id, {
-      name: name.trim(),
-      quantity: quantity.trim() || undefined,
-      ...(shopping
-        ? {
-            section: section || undefined,
-            priceCents: cents ?? undefined,
-            recurring: recurring || undefined,
-          }
-        : {}),
-      ...(kind === 'packing'
-        ? { category: category.trim() || undefined, toBuy: toBuy || undefined }
-        : {}),
-    });
+    await itemRepo.update(
+      item.id,
+      changedFields(opened ?? item, {
+        name: name.trim(),
+        quantity: quantity.trim() || undefined,
+        ...(shopping
+          ? {
+              section: section || undefined,
+              priceCents: cents ?? undefined,
+              recurring: recurring || undefined,
+            }
+          : {}),
+        ...(kind === 'packing'
+          ? { category: category.trim() || undefined, toBuy: toBuy || undefined }
+          : {}),
+      }),
+    );
     onClose();
   }
 

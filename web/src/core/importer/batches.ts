@@ -34,12 +34,14 @@ export async function commitImport(
   },
   database: TaschenmesserDB = defaultDb,
 ): Promise<ImportBatch> {
-  const picked = args.rows.filter((r) => r.selected && !r.invalid);
-  // A row whose `dependsOn` partner is not written would point at nothing (a task of a skipped new list).
-  const pickedIds = new Set(picked.map((r) => r.candidate.id));
-  const chosen = picked.filter(
-    (r) => !r.candidate.dependsOn || pickedIds.has(r.candidate.dependsOn),
-  );
+  // A row whose `dependsOn` partner is not written would point at nothing (a task of a skipped new
+  // list); along the whole chain (a subtask whose parent is left out because of its list).
+  let chosen = args.rows.filter((r) => r.selected && !r.invalid);
+  for (let size = -1; size !== chosen.length;) {
+    size = chosen.length;
+    const ids = new Set(chosen.map((r) => r.candidate.id));
+    chosen = chosen.filter((r) => !r.candidate.dependsOn || ids.has(r.candidate.dependsOn));
+  }
   if (chosen.length === 0) throw new ImportError('nothing-selected');
 
   const byCollection = new Map<string, { data: Record<string, unknown>; id: string }[]>();
@@ -59,6 +61,32 @@ export async function commitImport(
   const updates: BatchUpdate[] = [];
   let conflicts = 0;
   const deletes: NonNullable<ImportBatch['deletes']> = [];
+
+  // The batch row is written first, with the ids about to be created (only those that do not exist
+  // yet), so an import cut off half way (tab closed) can still be undone; it is completed below.
+  // Cut off, it counts the planned records, and changes/removals (recorded at the end) are not in it.
+  const before = await table(database).get(args.batchId);
+  const planned: ImportBatch['records'] = [];
+  for (const [collection, items] of byCollection) {
+    if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
+    const repo = createCollectionRepo(manifest, collection, database);
+    const existing = await repo.table.bulkGet(items.map((i) => i.id));
+    planned.push({ collection, ids: items.filter((_, i) => !existing[i]).map((i) => i.id) });
+  }
+  const startedAt = now();
+  await table(database).put({
+    ...args.base,
+    id: args.batchId,
+    moduleId: manifest.id,
+    importerId: args.importerId,
+    source: args.source,
+    createdAt: args.base?.createdAt ?? startedAt,
+    committedAt: startedAt,
+    records: planned,
+    status: 'committed',
+    rows: undefined,
+  });
+
   // A failure half way must not leave a half import: what this call wrote is taken back again.
   try {
     await writeAll();
@@ -68,6 +96,8 @@ export async function commitImport(
         .removeMany(ids)
         .catch(() => {});
     }
+    if (before) await table(database).put(before);
+    else await table(database).delete(args.batchId);
     throw e;
   }
 

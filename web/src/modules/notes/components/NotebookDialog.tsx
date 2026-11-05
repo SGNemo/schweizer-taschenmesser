@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -61,6 +62,8 @@ function Fields({
   onClose: () => void;
   onSaved: (id: string) => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(notebook);
   const [name, setName] = useState(notebook?.name ?? '');
   const [tone, setTone] = useState(notebook?.tone ?? books.length % 6);
   const [icon, setIcon] = useState(notebook?.icon ?? 'note');
@@ -70,7 +73,10 @@ function Fields({
     const trimmed = name.trim();
     if (!trimmed) return setError(t.form.required);
     if (notebook) {
-      await notebookRepo.update(notebook.id, { name: trimmed, tone, icon });
+      await notebookRepo.update(
+        notebook.id,
+        changedFields(opened ?? notebook, { name: trimmed, tone, icon }),
+      );
       onSaved(notebook.id);
     } else {
       const created = await notebookRepo.create({
