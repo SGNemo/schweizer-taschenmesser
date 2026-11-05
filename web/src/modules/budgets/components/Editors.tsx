@@ -295,6 +295,8 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   const [error, setError] = useState('');
 
   async function save() {
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) return setError(t.form.required);
     const targetMinor = parseMoney(target);
     if (!targetMinor || targetMinor < 1)
       return setError(t.money.invalidAmount(formatMoneyInput(1250)));

@@ -418,6 +418,11 @@ function AccountForm({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) {
+      setError(t.form.required);
+      return;
+    }
     if (!isCurrencyCode(currency)) {
       setError(t.money.currencyInvalid);
       return;
@@ -541,6 +546,7 @@ function CategoryForm({
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
   const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
+  const [nameError, setNameError] = useState('');
   const [kind, setKind] = useState<Kind>(
     existing?.kind ?? ('draft' in target ? target.kind : 'expense'),
   );
@@ -557,6 +563,11 @@ function CategoryForm({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!name.trim()) {
+      setNameError(t.form.required);
+      return;
+    }
     const values = {
       name: name.trim(),
       kind,
@@ -575,7 +586,11 @@ function CategoryForm({
       <TextField
         label={t.finance.categoryName}
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value);
+          setNameError('');
+        }}
+        error={nameError}
         required
         data-autofocus
       />

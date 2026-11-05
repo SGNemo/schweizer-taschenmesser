@@ -88,6 +88,11 @@ function Form({
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
+    if (!payee.trim()) {
+      setError(t.form.required);
+      return;
+    }
     const amountMinor = parseMoney(amount);
     if (!amountMinor || amountMinor < 1) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
