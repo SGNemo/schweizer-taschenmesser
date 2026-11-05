@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
 import { bus } from '@/core/events';
 import { today } from '@/core/time/dates';
@@ -64,8 +65,17 @@ export async function markOpen(id: string): Promise<void> {
 }
 
 /** Saves edits. Editing a paid invoice re-announces it so the booked expense stays in sync. */
-export async function saveInvoice(id: string | null, data: Invoice): Promise<Stored<Invoice>> {
-  const saved = id ? await invoiceRepo.update(id, data) : await invoiceRepo.create(data);
+/**
+ * Creates or changes an invoice. `base` is the record as the editor opened it: only the fields that
+ * differ from it are written, so a change made meanwhile elsewhere is kept.
+ */
+export async function saveInvoice(
+  id: string | null,
+  data: Invoice,
+  base?: Invoice,
+): Promise<Stored<Invoice>> {
+  const patch = base ? changedFields(base, data) : data;
+  const saved = id ? await invoiceRepo.update(id, patch) : await invoiceRepo.create(data);
   if (saved.status === 'paid') await announcePaid(saved);
   return saved;
 }

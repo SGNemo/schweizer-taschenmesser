@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { weekdayShort } from '@/core/recurrence/describe';
@@ -60,6 +61,8 @@ function Fields({
   onClose: () => void;
 }) {
   const existing = target === 'new' ? null : target;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [kind, setKind] = useState<Goal['kind']>(existing?.kind ?? 'yesno');
   const [goal, setGoal] = useState(String(existing?.target ?? 1));
@@ -116,7 +119,7 @@ function Fields({
     };
     const parsed = goalSchema.safeParse(data);
     if (!parsed.success || (remKind === 'window' && from >= to)) return setError(t.errors.generic);
-    if (existing) await goalRepo.update(existing.id, data);
+    if (existing) await goalRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await goalRepo.create(data);
     onClose();
   }

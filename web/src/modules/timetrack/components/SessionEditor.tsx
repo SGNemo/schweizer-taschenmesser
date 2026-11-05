@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { today } from '@/core/time/dates';
@@ -49,6 +50,8 @@ function Fields({
   const existing = target === 'new' ? null : target;
   // A running session (no end yet) stays running when it is edited: no end, its pause is kept.
   const running = Boolean(existing && !existing.endTime);
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [jobId, setJobId] = useState(existing?.jobId ?? jobs[0]?.id ?? '');
   const [date, setDate] = useState(existing?.date ?? today());
   const [start, setStart] = useState(existing?.startTime ?? '09:00');
@@ -73,7 +76,7 @@ function Fields({
     const sameDayBackwards = !running && (data.endDate ?? date) === date && end <= start;
     if (!sessionSchema.safeParse(data).success || sameDayBackwards || (data.endDate ?? date) < date)
       return setError(t.errors.generic);
-    if (existing) await sessionRepo.update(existing.id, data);
+    if (existing) await sessionRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await sessionRepo.create(data);
     onClose();
   }

@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import {
@@ -120,6 +121,8 @@ function Form({
   const setTrialEndsOn = (v: string) => draft.set('trialEndsOn', v);
   const setCategory = (v: SubscriptionCategory | '') => draft.set('category', v);
   const setPaymentMethod = (v: string) => draft.set('paymentMethod', v);
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [error, setError] = useState('');
 
   const amountMinor = parseMoney(amount);
@@ -162,7 +165,8 @@ function Form({
         ? recordPriceChange(existing.priceHistory ?? [], today(), existing.amountMinor, amountMinor)
         : [],
     };
-    if (existing) await subscriptionRepo.update(existing.id, data);
+    if (existing)
+      await subscriptionRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await subscriptionRepo.create(data);
     draft.clear();
     onClose();

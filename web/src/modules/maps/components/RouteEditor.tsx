@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { requireNotice } from '@/core/legal/notices';
@@ -68,6 +69,8 @@ function Fields({
   const draft = existing
     ? undefined
     : (target as { from?: Endpoint; to?: Endpoint; name?: string });
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? draft?.name ?? '');
   const [mode, setMode] = useState<RouteMode>(existing?.mode ?? 'walk');
   const [from, setFrom] = useState<Endpoint | undefined>(existing?.from ?? draft?.from);
@@ -89,7 +92,7 @@ function Fields({
       note: note.trim() || undefined,
       pinned,
     };
-    if (existing) await routeRepo.update(existing.id, data);
+    if (existing) await routeRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await routeRepo.create(data);
     onClose();
   }

@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
@@ -48,6 +49,8 @@ function Fields({
   prefillEan?: string;
   onClose: () => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [place, setPlace] = useState<Place>(existing?.place ?? 'pantry');
   const [count, setCount] = useState(String(existing?.count ?? 1));
@@ -86,7 +89,7 @@ function Fields({
       expires: expires || undefined,
       note: note.trim() || undefined,
     };
-    if (existing) await itemRepo.update(existing.id, data);
+    if (existing) await itemRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await itemRepo.create(data);
     onClose();
   }

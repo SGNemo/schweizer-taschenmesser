@@ -66,6 +66,8 @@ function Form({
   onClose: () => void;
   onDuplicated?: (copy: Stored<Invoice>) => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [payee, setPayee] = useState(existing?.payee ?? '');
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? today());
@@ -108,24 +110,28 @@ function Form({
         ? undefined
         : existing?.attachment;
     const level = Number(dunning);
-    const saved = await saveInvoice(existing?.id ?? null, {
-      payee: payee.trim(),
-      amountMinor,
-      currency: currency === 'EUR' ? undefined : currency,
-      dueDate,
-      status: existing?.status ?? 'open',
-      paidAt: isPaid ? paidAt || today() : undefined,
-      reference: reference.trim() || undefined,
-      note: note.trim() || undefined,
-      repeat: repeat || undefined,
-      repeatOf: existing?.repeatOf,
-      payments,
-      dunningLevel: level > 0 ? level : undefined,
-      dunnedAt: level > 0 ? dunnedAt || undefined : undefined,
-      iban: iban.trim() || undefined,
-      bic: bic.trim() || undefined,
-      attachment: attachmentMeta,
-    });
+    const saved = await saveInvoice(
+      existing?.id ?? null,
+      {
+        payee: payee.trim(),
+        amountMinor,
+        currency: currency === 'EUR' ? undefined : currency,
+        dueDate,
+        status: existing?.status ?? 'open',
+        paidAt: isPaid ? paidAt || today() : undefined,
+        reference: reference.trim() || undefined,
+        note: note.trim() || undefined,
+        repeat: repeat || undefined,
+        repeatOf: existing?.repeatOf,
+        payments,
+        dunningLevel: level > 0 ? level : undefined,
+        dunnedAt: level > 0 ? dunnedAt || undefined : undefined,
+        iban: iban.trim() || undefined,
+        bic: bic.trim() || undefined,
+        attachment: attachmentMeta,
+      },
+      opened ?? undefined,
+    );
     // The file goes to the device-local store after the record exists (its id is the key).
     if (file) await putBlob(attachmentKey(saved.id), file);
     else if (attachment.kind === 'remove' && existing?.attachment)

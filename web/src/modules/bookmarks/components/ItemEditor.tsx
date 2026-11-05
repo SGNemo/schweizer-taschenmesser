@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
@@ -36,6 +37,8 @@ export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: (
 function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose: () => void }) {
   const existing = 'id' in target ? target : null;
   const draft = !existing ? (target as { title?: string; url?: string; kind?: Kind }) : {};
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [title, setTitle] = useState(existing?.title ?? draft.title ?? '');
   const [url, setUrl] = useState(existing?.url ?? draft.url ?? '');
   const [kind, setKind] = useState<Kind>(existing?.kind ?? draft.kind ?? 'link');
@@ -60,7 +63,10 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
     const saved = existing
       ? (await itemRepo.update(
           existing.id,
-          addressChanged ? { ...data, preview: undefined } : data,
+          changedFields(
+            opened ?? existing,
+            addressChanged ? { ...data, preview: undefined } : data,
+          ),
         ),
         existing)
       : await itemRepo.create(data);

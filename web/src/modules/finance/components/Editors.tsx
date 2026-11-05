@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
@@ -133,6 +134,8 @@ function TransactionForm({
   onDuplicated?: (copy: Stored<Transaction>) => void;
 }) {
   const [kind, setKind] = useState<Kind>(existing?.kind ?? 'expense');
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [amount, setAmount] = useState(existing ? formatMoneyInput(existing.amountMinor) : '');
   const [date, setDate] = useState(existing?.date ?? today());
   const [chosenAccountId, setChosenAccountId] = useState(existing?.accountId ?? '');
@@ -197,7 +200,8 @@ function TransactionForm({
       note: note.trim() || undefined,
       repeat: repeat || undefined,
     };
-    if (existing) await transactionRepo.update(existing.id, values);
+    if (existing)
+      await transactionRepo.update(existing.id, changedFields(opened ?? existing, values));
     else await transactionRepo.create(values);
     onClose();
   }
@@ -397,6 +401,8 @@ function AccountForm({
   onClose: () => void;
 }) {
   const existing = 'id' in target ? target : null;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [opening, setOpening] = useState(
     existing ? formatMoneyInput(existing.openingBalanceMinor) : '0,00',
@@ -419,12 +425,15 @@ function AccountForm({
     }
     const stored = currency === 'EUR' ? undefined : currency;
     if (existing)
-      await accountRepo.update(existing.id, {
-        name: name.trim(),
-        openingBalanceMinor,
-        currency: stored,
-        kind: accountKind || undefined,
-      });
+      await accountRepo.update(
+        existing.id,
+        changedFields(opened ?? existing, {
+          name: name.trim(),
+          openingBalanceMinor,
+          currency: stored,
+          kind: accountKind || undefined,
+        }),
+      );
     else
       await accountRepo.create({
         name: name.trim(),
@@ -521,6 +530,8 @@ function CategoryForm({
   onClose: () => void;
 }) {
   const existing = 'id' in target ? target : null;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [kind, setKind] = useState<Kind>(
     existing?.kind ?? ('draft' in target ? target.kind : 'expense'),
@@ -544,7 +555,7 @@ function CategoryForm({
       parentId: parents.some((p) => p.id === parentId) ? parentId : undefined,
       icon: icon || undefined,
     };
-    if (existing) await categoryRepo.update(existing.id, values);
+    if (existing) await categoryRepo.update(existing.id, changedFields(opened ?? existing, values));
     else await categoryRepo.create(values);
     onClose();
   }

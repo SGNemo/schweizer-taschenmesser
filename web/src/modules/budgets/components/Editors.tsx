@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import {
@@ -93,6 +94,8 @@ function BudgetFields({
   month: string;
   onClose: () => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? categories[0]?.id ?? '');
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [limit, setLimit] = useState(existing ? formatMoneyInput(existing.monthlyLimitMinor) : '');
@@ -120,7 +123,7 @@ function BudgetFields({
       warnAtPercent:
         warnAt.trim() !== '' && warn >= 10 && warn <= 99 ? Math.round(warn) : undefined,
     };
-    if (existing) await budgetRepo.update(existing.id, data);
+    if (existing) await budgetRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await budgetRepo.create(data);
     onClose();
   }
@@ -276,6 +279,8 @@ export function GoalEditor({ target, onClose }: { target: GoalTarget; onClose: (
 }
 
 function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onClose: () => void }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? '');
   const [currency, setCurrency] = useState(currencyOf(existing));
   const [target, setTarget] = useState(existing ? formatMoneyInput(existing.targetMinor) : '');
@@ -301,7 +306,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       startDate: startDate || undefined,
       note: note.trim() || undefined,
     };
-    if (existing) await goalRepo.update(existing.id, data);
+    if (existing) await goalRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await goalRepo.create(data);
     onClose();
   }

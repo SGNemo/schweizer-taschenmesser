@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
@@ -47,6 +48,8 @@ function Fields({
   personId: string;
   onClose: () => void;
 }) {
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [title, setTitle] = useState(existing?.title ?? '');
   const [occasion, setOccasion] = useState(existing?.occasion ?? '');
   const [date, setDate] = useState(existing?.date ?? '');
@@ -76,7 +79,7 @@ function Fields({
       status,
       note: note.trim() || undefined,
     };
-    if (existing) await giftRepo.update(existing.id, data);
+    if (existing) await giftRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await giftRepo.create(data);
     onClose();
   }
