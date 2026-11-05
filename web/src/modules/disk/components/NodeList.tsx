@@ -169,7 +169,7 @@ export function NodeList({
                       {label}
                     </button>
                   ) : (
-                    <span className={styles.name}>{label}</span>
+                    <span className={`${styles.name} ${styles.plain}`}>{label}</span>
                   )}
                 </div>
                 <div role="cell" className={styles.num}>

@@ -19,8 +19,8 @@ const sameLive = (a: readonly DiskNode[], b: readonly DiskNode[]): boolean =>
     );
   });
 
-/** Number of the latest poll: an older answer that lands later is ignored. */
-let pollSeq = 0;
+/** One poll at a time: a tick while the native side is still answering is skipped. */
+let polling = false;
 
 /** What the basket needs to show an entry; the entry itself stays in the native scan tree. */
 export interface BasketItem {
@@ -149,14 +149,16 @@ export const useDiskStore = create<DiskState>((set, get) => ({
 
   async pollLive(minBytes) {
     const { scanId, phase } = get();
-    if (scanId === null || phase !== 'scanning') return;
-    const seq = ++pollSeq;
+    if (scanId === null || phase !== 'scanning' || polling) return;
+    polling = true;
     try {
       const live = await getPlatform().disk.liveScan(scanId, minBytes);
-      if (seq !== pollSeq || get().scanId !== scanId || get().phase !== 'scanning') return;
+      if (get().scanId !== scanId || get().phase !== 'scanning') return;
       if (!sameLive(get().live, live)) set({ live });
     } catch {
       // The scan ended or was dropped meanwhile; the next phase change replaces the picture.
+    } finally {
+      polling = false;
     }
   },
 

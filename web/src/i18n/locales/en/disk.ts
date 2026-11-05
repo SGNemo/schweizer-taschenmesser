@@ -380,6 +380,8 @@ export const disk: Strings['disk'] = {
     pendingCount: (n: number) =>
       n === 1 ? '1 entry is still being counted.' : `${n} entries are still being counted.`,
     endedOf: (root: string) => `Scan of ${root} finished`,
+    cancelledOf: (root: string) => `Scan of ${root} cancelled`,
+    liveMapLabel: (n: number) => `Map of the running scan with ${n} entries.`,
     toResult: 'Open the result',
     alreadyRunning: 'A scan is already running – end it to start another one.',
     liveLabel: 'Live view of the scan',

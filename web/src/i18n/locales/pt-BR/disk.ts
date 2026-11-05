@@ -384,11 +384,13 @@ export const disk: Strings['disk'] = {
     pendingCount: (n: number) =>
       n === 1 ? '1 entrada ainda está sendo contada.' : `${n} entradas ainda estão sendo contadas.`,
     endedOf: (root: string) => `Análise de ${root} concluída`,
+    cancelledOf: (root: string) => `Análise de ${root} cancelada`,
+    liveMapLabel: (n: number) => `Visualização em mapa da análise em andamento com ${n} entradas.`,
     toResult: 'Ver o resultado',
     alreadyRunning: 'Já há uma análise em andamento: encerre-a para iniciar outra.',
     liveLabel: 'Visão ao vivo da análise',
     liveHint:
-      'A visão vai se preenchendo durante a contagem. Abrir, selecionar e excluir funcionam quando a análise terminar.',
+      'A visualização vai se preenchendo durante a contagem. Abrir, selecionar e excluir funcionam quando a análise terminar.',
     liveEmpty: 'Contando as primeiras pastas …',
     files: 'Arquivos',
     folders: 'Pastas',

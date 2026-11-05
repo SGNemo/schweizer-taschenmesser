@@ -52,6 +52,7 @@ function ScanLine() {
   const progress = useDiskStore((s) => s.progress);
   const paused = useDiskStore((s) => s.paused);
   const error = useDiskStore((s) => s.error);
+  const cancelled = useDiskStore((s) => s.summary?.cancelled ?? false);
   const cancel = useDiskStore((s) => s.cancel);
   const togglePause = useDiskStore((s) => s.togglePause);
   if (!root || phase === 'idle') return null;
@@ -66,10 +67,20 @@ function ScanLine() {
         to="/disk/scan"
       />
     );
+  // Failed: there is no result, only the reason on the scan page.
+  if (phase === 'failed')
+    return (
+      <ScanEndedLine
+        text={t.disk.scan.failed(error ?? '')}
+        to="/disk/scan"
+        linkText={t.disk.scan.toScan}
+      />
+    );
   return (
     <ScanEndedLine
-      text={phase === 'failed' ? t.disk.scan.failed(error ?? '') : t.disk.scan.endedOf(root)}
+      text={cancelled ? t.disk.scan.cancelledOf(root) : t.disk.scan.endedOf(root)}
       to="/disk/scan"
+      linkText={t.disk.scan.toResult}
     />
   );
 }
@@ -81,6 +92,7 @@ function DrivesTab() {
   const navigate = useNavigate();
   const start = useDiskStore((s) => s.start);
   const scanning = useDiskStore((s) => s.phase === 'scanning');
+  const scanRoot = useDiskStore((s) => s.root);
   const toast = useUiStore((s) => s.toast);
   const record = useDriveHistory((s) => s.record);
 
@@ -114,7 +126,7 @@ function DrivesTab() {
   const startScan = (root: string) => {
     if (scanning) {
       // A second scan would drop the running one: lead to it instead, nothing is lost.
-      toast(t.disk.scan.alreadyRunning);
+      if (root !== scanRoot) toast(t.disk.scan.alreadyRunning);
       void navigate('/disk/scan');
       return;
     }

@@ -119,6 +119,10 @@ describe('scan session', () => {
     liveGate = new Promise<void>((r) => (release = r));
     picture = [node(0), node(1), node(2)];
     const slow = useDiskStore.getState().pollLive(0);
+    // While that answer is pending, another tick does not ask again.
+    disk.liveScan.mockClear();
+    await useDiskStore.getState().pollLive(0);
+    expect(disk.liveScan).not.toHaveBeenCalled();
     finish.at(-1)!(summary(nextId, 'C:\\'));
     await vi.waitFor(() => expect(useDiskStore.getState().phase).toBe('done'));
     release();

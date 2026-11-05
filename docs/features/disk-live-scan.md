@@ -3,9 +3,9 @@
 Built on `fix/disk-scan-live` (2026-11-05). Module `disk`, desktop only. Decision: [decisions/modules.md](../decisions/modules.md) (Dieser PC); rules: [RULES](../RULES.md).
 
 ## Behaviour
-- The scan runs in a Rust thread; the whole app stays usable. The scan page and the drives page show **one line** ("Scan läuft · bisher 312.000 Dateien, 210 GB", a new figure at most once a second) with Pause and Abbrechen: no bar, no percentage, no toast ([FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md)).
+- The scan runs in a Rust thread; the whole app stays usable. The scan page and the drives page show **one line** ("Scan läuft · bisher 312.000 Dateien, 210 GB", a new figure at most once a second) with Pause and Abbrechen: no bar, no percentage, no toast for progress ([FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md)).
 - While it runs, the page shows what is known so far as a **map or a list** of the top two folder levels (`disk_scan_live`, polled every 1.5 s while the page is open; the store keeps the last picture, so leaving the module and coming back shows it at once). Folders whose walk has not returned are **pending**: "…" and a dashed outline on the tile, "zählt noch" in the list, "Wird noch gezählt" in the tooltip.
-- On the drives page the line stays after the scan ended ("Scan von C:\ beendet · Zum Ergebnis"), and another drive's scan button leads to the running scan instead of replacing it (one toast). The live list keeps a stable order by name while sizes still move.
+- On the drives page the line stays after the scan ended ("Scan von C:\ beendet · Zum Ergebnis"; "abgebrochen" after Abbrechen; after a failure the reason with "Zum Scan"), and another drive's scan button leads to the running scan instead of replacing it (one toast). The live list keeps a stable order by name while sizes still move.
 - View only: opening, selecting and deleting come with the finished tree (`tree_of` answers `not-finished` in Rust until then). The finished result is unchanged.
 
 Screenshots (e2e build, invented data): [map](shots/disk-live-scan-map.jpg) · [list](shots/disk-live-scan-list.jpg) · [drives page](shots/disk-live-scan-drives.jpg).

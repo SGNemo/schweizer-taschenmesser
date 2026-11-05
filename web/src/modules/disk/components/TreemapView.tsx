@@ -37,8 +37,8 @@ interface Props {
   tooltip: (node: DiskNode) => ReactNode;
   /** Shown over an empty map (default: "nothing uses space here"). */
   emptyText?: string;
-  /** Appended to the map's accessible name (live view: how many entries are still being counted). */
-  ariaNote?: string;
+  /** Accessible name of the map instead of the default one (the live view has no key actions). */
+  ariaLabel?: string;
   testId?: string;
 }
 
@@ -97,7 +97,7 @@ export function TreemapView({
   onUp,
   tooltip,
   emptyText,
-  ariaNote,
+  ariaLabel,
   testId = 'treemap',
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -352,7 +352,7 @@ export function TreemapView({
         className={styles.canvas}
         tabIndex={0}
         role="img"
-        aria-label={`${t.disk.map.label(root.name, topLevel.length)}${ariaNote ? ` ${ariaNote}` : ''}`}
+        aria-label={ariaLabel ?? t.disk.map.label(root.name, topLevel.length)}
         aria-describedby="disk-map-help"
         onPointerMove={onMove}
         onPointerLeave={() => setHoverId(null)}

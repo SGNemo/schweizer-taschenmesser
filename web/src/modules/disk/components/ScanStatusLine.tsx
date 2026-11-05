@@ -62,14 +62,23 @@ export function ScanStatusLine({ root, progress, paused, onPause, onCancel, to }
 }
 
 /** The scan ended while the user was on the drives page: one line with the way to the result. */
-export function ScanEndedLine({ text, to }: { text: string; to: string }) {
+export function ScanEndedLine({
+  text,
+  to,
+  linkText,
+}: {
+  text: string;
+  to: string;
+  linkText: string;
+}) {
   return (
     <Card as="div" className={styles.card} data-testid="scan-status">
       <p className={styles.text}>
-        <strong>{text}</strong>
+        {/* Announced once when the running line gives way to this one. */}
+        <strong role="status">{text}</strong>
         <span className={styles.muted}> · </span>
         <Link to={to} className={styles.link}>
-          {t.disk.scan.toResult}
+          {linkText}
         </Link>
       </p>
     </Card>

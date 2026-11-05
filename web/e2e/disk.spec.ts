@@ -128,7 +128,8 @@ test('a running scan blocks nothing: one calm line, map and list grow, leaving a
   // The map grows in steps: one top folder, then two, then three.
   await step();
   await expect(status).toContainText('bisher');
-  await expect(map).toHaveAccessibleName(/mit 1 Einträgen/);
+  // The map's name counts the tiles and says how many of them are still being counted.
+  await expect(map).toHaveAccessibleName(/mit 1 Einträgen\. 1 Eintrag wird noch gezählt\./);
   await step();
   await step();
   await expect(map).toHaveAccessibleName(/mit 2 Einträgen/);
@@ -172,12 +173,21 @@ test('a running scan blocks nothing: one calm line, map and list grow, leaving a
   await expect(page.getByTestId('scan-total')).toBeVisible();
 });
 
-test('desktop: a running scan can be cancelled', async ({ page }) => {
+test('desktop: a running scan can be cancelled, also from the drives page', async ({ page }) => {
   await asDesktop(page);
+  await page.addInitScript(() => {
+    (window as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs = 0;
+  });
   await enableDisk(page);
   await page.goto('/disk');
   await page.getByRole('button', { name: 'D:\\ (Daten) scannen' }).click();
-  await page.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  const line = page.getByTestId('scan-status');
+  await line.getByRole('button', { name: 'Abbrechen' }).click();
+  // The line says what happened and still leads to the (partial) result.
+  await expect(line).toContainText('Scan von D:\\ abgebrochen');
+  await line.getByRole('link', { name: 'Zum Ergebnis' }).click();
   await expect(page.getByText('Der Scan wurde abgebrochen')).toBeVisible();
 });
 

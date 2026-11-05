@@ -4751,6 +4751,8 @@ export const de = {
       pendingCount: (n: number) =>
         n === 1 ? '1 Eintrag wird noch gezählt.' : `${n} Einträge werden noch gezählt.`,
       endedOf: (root: string) => `Scan von ${root} beendet`,
+      cancelledOf: (root: string) => `Scan von ${root} abgebrochen`,
+      liveMapLabel: (n: number) => `Kartenansicht des laufenden Scans mit ${n} Einträgen.`,
       toResult: 'Zum Ergebnis',
       alreadyRunning: 'Ein Scan läuft schon – beende ihn, um einen anderen zu starten.',
       liveLabel: 'Live-Ansicht des Scans',

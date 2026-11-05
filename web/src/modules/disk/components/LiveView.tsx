@@ -56,7 +56,11 @@ export function LiveView({ scanId }: { scanId: number }) {
         : [],
     [live, root],
   );
-  const pendingCount = useMemo(() => live.filter((n) => n.pending).length, [live]);
+  // The map's name counts the top-level tiles, so the pending note counts the same entries.
+  const pendingTop = useMemo(() => topLevel.filter((n) => n.pending).length, [topLevel]);
+  const mapLabel = `${t.disk.scan.liveMapLabel(topLevel.length)}${
+    pendingTop > 0 ? ` ${t.disk.scan.pendingCount(pendingTop)}` : ''
+  }`;
   const pendingNote = useCallback(
     (n: DiskNode) => (n.pending ? t.disk.scan.pendingShort : undefined),
     [],
@@ -105,7 +109,7 @@ export function LiveView({ scanId }: { scanId: number }) {
             onUp={noop}
             tooltip={tooltip}
             emptyText={t.disk.scan.liveEmpty}
-            ariaNote={pendingCount > 0 ? t.disk.scan.pendingCount(pendingCount) : undefined}
+            ariaLabel={mapLabel}
             testId="live-map"
           />
           <Legend colorBy="age" />
