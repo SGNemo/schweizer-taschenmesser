@@ -1,7 +1,9 @@
 //! A small, growing picture of a running scan: the folders of the top [`LIVE_DEPTH`] levels with
 //! what has been counted below them so far. The walk adds to it once per folder (one short lock);
 //! the webview asks for snapshots while the scan runs, so the map can fill up instead of staying
-//! empty until the end. Deeper folders count towards their ancestor on the last live level.
+//! empty until the end. Deeper folders count towards their ancestor on the last live level. A
+//! folder is marked finished when its walk returns, so the webview can tell what is still being
+//! counted (`NodeView::pending`).
 
 use crate::kinds::{FileKind, KIND_COUNT};
 use crate::tree::{dominant, NodeKind, NodeView};
@@ -24,6 +26,8 @@ struct LiveNode {
     modified: i64,
     kind_bytes: [u64; KIND_COUNT],
     children: Vec<u32>,
+    /// The walk of this folder (and everything that counts towards it) has returned.
+    done: bool,
 }
 
 /// What one folder contributes after its entries were read.
@@ -82,9 +86,19 @@ impl LiveTree {
         }
     }
 
+    /// Marks a folder as fully counted: its own entries and everything below it are in.
+    pub(crate) fn finish(&self, id: u32) {
+        let mut n = self.nodes.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(node) = n.get_mut(id as usize) {
+            node.done = true;
+        }
+    }
+
     /// The live folders with their totals so far, biggest first within a folder, without entries
     /// smaller than `min_bytes`. A folder whose own files count gets an extra "files here" entry
-    /// so the map shows their share. Empty before the scan started.
+    /// so the map shows their share. Folders whose walk has not returned yet are `pending` (a
+    /// cancelled walk leaves them so on purpose; that picture is discarded). Empty before the scan
+    /// started.
     pub fn snapshot(&self, min_bytes: u64) -> Vec<NodeView> {
         let n = self.nodes.lock().unwrap_or_else(|e| e.into_inner());
         if n.is_empty() {
@@ -136,6 +150,9 @@ impl LiveTree {
             kind_bytes: c.kind_bytes,
             age_bytes: [0; AGE_COUNT],
             child_count,
+            // A folder's own files are counted before its sub-folders get live nodes, so a
+            // "files here" entry is complete as soon as it exists; a folder waits for its walk.
+            pending: kind != NodeKind::Small && !n[id as usize].done,
             rel_path: String::new(),
         };
         let mut out = vec![view(
@@ -225,5 +242,42 @@ mod tests {
         );
         // Small entries are left out, the root always stays.
         assert_eq!(live.snapshot(200).len(), 3);
+    }
+
+    #[test]
+    fn folders_are_pending_until_their_walk_returns() {
+        let live = LiveTree::default();
+        live.reset("/data".into());
+        let games = live.add_folder(0, "games");
+        let old = live.add_folder(games, "old");
+        let c = Counted {
+            bytes: 10,
+            files: 1,
+            modified: 1,
+            kind_bytes: [0; KIND_COUNT],
+        };
+        live.add(0, &c);
+        live.add(games, &c);
+        live.add(old, &c);
+        let pending =
+            |snap: &[NodeView], id: u32| snap.iter().find(|v| v.id == id).unwrap().pending;
+        let s = live.snapshot(0);
+        assert!(
+            s.iter()
+                .filter(|v| v.kind != NodeKind::Small)
+                .all(|v| v.pending),
+            "no folder finished yet: {s:?}"
+        );
+        // The "files here" entry is complete as soon as it exists: the folder's own files were
+        // counted before its sub-folders got live nodes.
+        assert!(!pending(&s, OWN_FILES_ID));
+        live.finish(old);
+        let s = live.snapshot(0);
+        assert!(!pending(&s, old));
+        assert!(pending(&s, games), "a folder waits for all of its children");
+        live.finish(games);
+        live.finish(0);
+        let s = live.snapshot(0);
+        assert!(s.iter().all(|v| !v.pending), "{s:?}");
     }
 }

@@ -4,34 +4,15 @@
   display: inline-flex;
   align-items: center;
 }
-.status {
-  font-weight: 600;
-  margin-bottom: var(--space-3);
-}
-.bar {
-  width: 100%;
-  margin-bottom: var(--space-4);
-}
 .stats {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-5);
   margin-bottom: var(--space-3);
 }
-.current {
-  font-size: var(--text-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: var(--space-4);
-}
 .muted {
   color: var(--text-muted);
   font-size: var(--text-sm);
-}
-.actions {
-  display: flex;
-  gap: var(--space-3);
 }
 .notRead {
   margin: var(--space-2) 0;

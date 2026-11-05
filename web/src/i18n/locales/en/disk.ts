@@ -367,16 +367,33 @@ export const disk: Strings['disk'] = {
   scan: {
     back: 'Back to drives',
     title: (root: string) => `Scan of ${root}`,
-    scanning: 'Scanning …',
+    scanning: 'Scan running',
     paused: 'Scan paused',
+    runningOf: (root: string) => `Scan of ${root} running`,
+    pausedOf: (root: string) => `Scan of ${root} paused`,
+    soFar: (files: string, size: string) => `${files} files, ${size} so far`,
+    toScan: 'Open the scan',
+    liveList: 'Folders so far',
+    pendingShort: 'still counting',
+    pendingNote: 'Still being counted',
+    pendingLegend: '… = still being counted',
+    pendingCount: (n: number) =>
+      n === 1 ? '1 entry is still being counted.' : `${n} entries are still being counted.`,
+    endedOf: (root: string) => `Scan of ${root} finished`,
+    cancelledOf: (root: string) => `Scan of ${root} cancelled`,
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Map of the running scan with 1 entry.'
+        : `Map of the running scan with ${n} entries.`,
+    failedOf: (root: string) => `Scan of ${root} failed`,
+    toResult: 'Open the result',
+    alreadyRunning: 'A scan is already running – end it to start another one.',
     liveLabel: 'Live view of the scan',
     liveHint:
-      'The map fills up while counting. Opening, selecting and deleting work once the scan is done.',
+      'The picture fills up while counting. Opening, selecting and deleting work once the scan is done.',
     liveEmpty: 'Counting the first folders …',
     files: 'Files',
     folders: 'Folders',
-    used: 'Used',
-    current: 'Current folder',
     cancel: 'Cancel',
     pause: 'Pause',
     resume: 'Resume',

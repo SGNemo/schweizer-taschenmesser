@@ -21,8 +21,9 @@ interface Props {
   /** Denominator of the share bar (the folder the list belongs to). */
   total: number;
   selectedId: number | null;
-  onSelect: (node: DiskNode) => void;
-  onOpen: (node: DiskNode) => void;
+  /** Without `onSelect` the list is read-only: names are plain text, nothing is selectable. */
+  onSelect?: (node: DiskNode) => void;
+  onOpen?: (node: DiskNode) => void;
   /** Parent folder line under the name (query results). */
   where?: (node: DiskNode) => string | undefined;
   /** Which date the last column shows (`accessed` only where the scan trusts it). */
@@ -121,12 +122,26 @@ export function NodeList({
             const at = where?.(n);
             const date = n[dateField];
             const extra = note?.(n);
+            const label = (
+              <>
+                <span className={styles.kind} data-kind={n.fileKind} aria-hidden="true" />
+                <span className={styles.text}>
+                  <span className={styles.title}>{nameOf(n)}</span>
+                  {at !== undefined ? (
+                    <span className={styles.where}>
+                      {t.disk.list.in} {at || '/'}
+                    </span>
+                  ) : null}
+                  {extra ? <span className={styles.where}>{extra}</span> : null}
+                </span>
+              </>
+            );
             return (
               <div
                 key={n.id}
                 role="row"
                 aria-rowindex={start + k + 2}
-                aria-selected={n.id === selectedId}
+                aria-selected={onSelect ? n.id === selectedId : undefined}
                 className={`${rowClass} ${n.id === selectedId ? styles.selected : ''}`}
                 style={{
                   position: 'absolute',
@@ -135,7 +150,7 @@ export function NodeList({
                   left: 0,
                   right: 0,
                 }}
-                onDoubleClick={() => n.kind !== 'small' && onOpen(n)}
+                onDoubleClick={onOpen ? () => n.kind !== 'small' && onOpen(n) : undefined}
               >
                 {select ? (
                   <div role="cell" className={styles.check}>
@@ -149,18 +164,13 @@ export function NodeList({
                   </div>
                 ) : null}
                 <div role="cell" className={styles.nameCell}>
-                  <button type="button" className={styles.name} onClick={() => onSelect(n)}>
-                    <span className={styles.kind} data-kind={n.fileKind} aria-hidden="true" />
-                    <span className={styles.text}>
-                      <span className={styles.title}>{nameOf(n)}</span>
-                      {at !== undefined ? (
-                        <span className={styles.where}>
-                          {t.disk.list.in} {at || '/'}
-                        </span>
-                      ) : null}
-                      {extra ? <span className={styles.where}>{extra}</span> : null}
-                    </span>
-                  </button>
+                  {onSelect ? (
+                    <button type="button" className={styles.name} onClick={() => onSelect(n)}>
+                      {label}
+                    </button>
+                  ) : (
+                    <span className={`${styles.name} ${styles.plain}`}>{label}</span>
+                  )}
                 </div>
                 <div role="cell" className={styles.num}>
                   {formatBytes(n.bytes)}
