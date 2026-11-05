@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { addDaysStr } from '@/core/time/dates';
 import {
   byDate,
   dayProgress,
@@ -64,6 +65,39 @@ describe('rates never punish a pause', () => {
   });
 });
 
+describe('the last 30 days while today is still open', () => {
+  const day = '2026-11-02'; // Monday morning, nothing logged yet today
+  const daily = { kind: 'yesno', target: 1, period: 'day' } as const;
+  it('a daily goal done on each of the 29 days before is 100 %', () => {
+    const map = byDate(
+      Array.from({ length: 29 }, (_, i) => e('g', addDaysStr(day, -(i + 1)), 1)),
+      'g',
+    );
+    expect(rate(daily, map, addDaysStr(day, -29), day)).toEqual({
+      done: 29,
+      of: 29,
+    });
+    // Done today, it counts.
+    map.set(day, e('g', day, 1));
+    expect(rate(daily, map, addDaysStr(day, -29), day)).toEqual({
+      done: 30,
+      of: 30,
+    });
+  });
+  it('a weekly goal met in every past week is 100 %; the running week counts once met', () => {
+    const entries = [];
+    for (let w = 1; w <= 6; w++)
+      for (let i = 0; i < 3; i++) entries.push(e('g', addDaysStr(day, -7 * w + i), 1));
+    const map = byDate(entries, 'g');
+    expect(rate(stretch, map, addDaysStr(day, -29), day)).toEqual({ done: 5, of: 5 });
+    for (let i = 0; i < 3; i++) map.set(addDaysStr(day, i), e('g', addDaysStr(day, i), 1));
+    expect(rate(stretch, map, addDaysStr(day, -29), addDaysStr(day, 2))).toEqual({
+      done: 6,
+      of: 6,
+    });
+  });
+});
+
 describe('weekly goals', () => {
   const map = byDate(
     [e('s', '2026-11-02', 1), e('s', '2026-11-04', 1), e('s', '2026-11-10', 1)],
@@ -74,7 +108,9 @@ describe('weekly goals', () => {
     expect(weekDone(stretch, map, '2026-11-10')).toEqual({ done: 1, of: 3 });
   });
   it('judges the rate by the week', () => {
-    expect(rate(stretch, map, '2026-11-02', '2026-11-15')).toEqual({ done: 0, of: 2 });
+    expect(rate(stretch, map, '2026-11-02', '2026-11-16')).toEqual({ done: 0, of: 2 });
+    // On Sunday 15 Nov (today) the second week is still running: it does not count yet.
+    expect(rate(stretch, map, '2026-11-02', '2026-11-15')).toEqual({ done: 0, of: 1 });
   });
 });
 
