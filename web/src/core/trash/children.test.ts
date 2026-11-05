@@ -2,7 +2,7 @@ import { beforeEach, expect, it } from 'vitest';
 import { z } from 'zod';
 import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
-import { listTrash, restoreEntry } from './trash';
+import { listTrash, purgeEntry, restoreEntry } from './trash';
 
 // QA round 4, X06: an account (with all its bookings), a booking, a habit (with its history) and a
 // time entry were gone for good once the "Rückgängig" toast had passed.
@@ -94,4 +94,25 @@ it('a deleted transfer is listed once and comes back as a pair', async () => {
   expect((await bookings.active().toArray()).map((x) => x.id).sort()).toEqual(
     [out.id, into.id].sort(),
   );
+});
+
+it('removing a deleted transfer for good removes both halves', async () => {
+  const a = await accounts.create({ name: 'Giro' });
+  const b = await accounts.create({ name: 'Spar' });
+  const out = await bookings.create({
+    accountId: a.id,
+    payee: 'Umbuchung',
+    amountMinor: 5000,
+    transferId: 't2',
+  });
+  const into = await bookings.create({
+    accountId: b.id,
+    payee: 'Umbuchung',
+    amountMinor: 5000,
+    transferId: 't2',
+  });
+  await bookings.removeMany([out.id, into.id]);
+  const [entry] = await listTrash();
+  expect(await purgeEntry(entry!)).toBe(true);
+  expect(await listTrash()).toEqual([]);
 });
