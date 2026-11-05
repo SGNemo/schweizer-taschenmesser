@@ -14,7 +14,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'cobalt',
     hue2: 'sky',
-    widgetType: 'tiles',
     widget: 'kacheln',
     head: 'schreib',
     signature: 'addressBar',

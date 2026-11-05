@@ -20,11 +20,9 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'violet',
     hue2: 'orchid',
-    widgetType: 'progress',
     widget: 'fortschritt',
     head: 'fortschritt',
     signature: 'ring',
-    feedback: 'ring',
   },
   version: 1,
   get description() {

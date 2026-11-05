@@ -17,7 +17,7 @@ import {
   checkSettingsSource,
   checkWidgetSource,
 } from './lib/checkModules.ts';
-import { checkIdentityGroups, identityFacts, readHueTable } from './lib/checkIdentity.ts';
+import { checkIdentity, checkSignatureUse, identityFacts } from './lib/checkIdentity.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
 import {
   MODULE_FIELD_GROUPS,
@@ -29,6 +29,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const modulesDir = join(root, 'src', 'modules');
 const toolsDir = join(root, 'src', 'tools');
 const errors = [];
+const warnings = [];
 const identities = [];
 let count = 0;
 let toolCount = 0;
@@ -42,6 +43,17 @@ for (const id of readdirSync(modulesDir).sort()) {
   const fileExists = (rel) => existsSync(join(dir, rel));
   errors.push(...checkModule({ id, manifest, fileExists }));
   identities.push(identityFacts(id, manifest));
+  // A module that says `signature: 'none'` but fills its head itself most likely forgot to name it (warning).
+  const pageSources = ['routes', 'components']
+    .map((sub) => join(dir, sub))
+    .filter(existsSync)
+    .flatMap((d) =>
+      readdirSync(d, { recursive: true })
+        .map(String)
+        .filter((n) => /\.tsx$/.test(n) && !/\.test\./.test(n))
+        .map((n) => readFileSync(join(d, n), 'utf8')),
+    );
+  warnings.push(...checkSignatureUse(id, manifest, pageSources));
   const settingsPath = join(dir, 'settings.ts');
   const settingsSource = existsSync(settingsPath) ? readFileSync(settingsPath, 'utf8') : manifest;
   errors.push(...checkSettingsSource(id, settingsSource, SETTINGS_CATEGORY_IDS));
@@ -73,13 +85,8 @@ for (const id of readdirSync(modulesDir).sort()) {
   }
 }
 
-// Identity v3: one hue per module and area, hues keep their distance, neighbours differ in head variant.
-errors.push(
-  ...checkIdentityGroups(
-    identities,
-    readHueTable(readFileSync(join(root, 'src', 'ui', 'tokens.css'), 'utf8')),
-  ),
-);
+// Identity v3.1: one hue per module and area, neighbours differ in head variant, no app-wide hue + head + widget twins.
+errors.push(...checkIdentity(identities));
 
 // Tools: every manifest names its maturity (docs/howto/new-extension.md).
 for (const id of readdirSync(toolsDir).sort()) {
@@ -103,6 +110,8 @@ for (const id of readdirSync(modulesDir).sort()) {
   }
 }
 
+if (warnings.length > 0)
+  console.warn(`check:modules: ${warnings.length} warning(s):\n- ${warnings.join('\n- ')}`);
 if (errors.length > 0) {
   console.error(`check:modules found ${errors.length} problem(s):\n- ${errors.join('\n- ')}`);
   process.exit(1);

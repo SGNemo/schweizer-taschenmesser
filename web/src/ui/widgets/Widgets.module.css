@@ -286,7 +286,8 @@
   flex: none;
   width: 4.5rem;
   height: 4.5rem;
-  --ring: var(--accent);
+  /* Identity v3.1 (C01): the module's hue fills the ring; the accent only outside a module. */
+  --ring: var(--module-color, var(--accent));
 }
 .ring[data-size='sm'] {
   width: 3rem;

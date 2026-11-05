@@ -27,9 +27,8 @@ test('Aus anderer App importieren: Evernote erkannt → Vorschau → Bericht →
   await wizard.getByRole('button', { name: '1 Eintrag importieren' }).click();
   await expect(wizard.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
 
-  // Undo takes it back again.
+  // Undo takes it back again. The closing wizard pops its history entry first (backSettled), else the goto is aborted.
   await wizard.getByRole('button', { name: 'Rückgängig machen' }).click();
-  // The wizard pops its Back entry when it closes; a goto in that gap is aborted (ERR_ABORTED).
   await backSettled(page);
   await page.goto('/notes');
   await expect(page.getByText('Rezept & Tipps')).toHaveCount(0);

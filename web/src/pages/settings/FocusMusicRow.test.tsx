@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { forgetAccessToken } from '@/core/connectors/context';
@@ -68,7 +69,11 @@ const music = () => screen.queryByTestId('focus-group-music');
 
 describe('Musik in der Fokus-Runde (settings row)', () => {
   it('is not there until Spotify is connected with "Steuern"', async () => {
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     await new Promise((r) => setTimeout(r, 60));
     expect(music()).toBeNull();
     await connect(['show']);
@@ -79,14 +84,22 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
   it('is hidden again once Premium was ruled out', async () => {
     await connect();
     localStorage.setItem(NO_PREMIUM_KEY, String(Date.now()));
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     await new Promise((r) => setTimeout(r, 60));
     expect(music()).toBeNull();
   });
 
   it('shows one folded line "Musik in der Fokus-Runde: Aus" inside "Weitere Einstellungen"', async () => {
     await connect();
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const row = await screen.findByTestId('focus-group-music');
     expect(row).not.toHaveAttribute('open');
     expect(row.closest('[data-testid="focus-more"]')).toBe(screen.getByTestId('focus-more'));
@@ -98,7 +111,11 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
   it('"Beim Start weiterspielen" is saved on this device, with the end switch', async () => {
     const user = userEvent.setup();
     await connect();
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const row = await screen.findByTestId('focus-group-music');
     await user.click(row.querySelector('summary')!);
     expect(within(row).queryByRole('switch', { name: 'Am Ende pausieren' })).toBeNull();
@@ -114,7 +131,11 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
   it('loads the playlists only when the row is opened and stores just the chosen id', async () => {
     const user = userEvent.setup();
     await connect();
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const row = await screen.findByTestId('focus-group-music');
     await user.click(row.querySelector('summary')!);
     await user.click(within(row).getByRole('button', { name: 'Playlist starten' }));
@@ -132,7 +153,11 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
       JSON.stringify({ mode: 'playlist', playlistId: 'pl1ABC', pauseAtEnd: true }),
     );
     reloadMusic();
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     await screen.findByTestId('focus-group-music');
     await new Promise((r) => setTimeout(r, 80));
     expect(requests).toEqual([]);
@@ -141,7 +166,11 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
   it('asks to connect again when the playlist permission was not given', async () => {
     const user = userEvent.setup();
     await connect(['show', 'control']);
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const row = await screen.findByTestId('focus-group-music');
     await user.click(row.querySelector('summary')!);
     await user.click(within(row).getByRole('button', { name: 'Playlist starten' }));
@@ -153,7 +182,11 @@ describe('Musik in der Fokus-Runde (settings row)', () => {
     const user = userEvent.setup();
     await connect();
     playlists = () => new Response('{}', { status: 503 });
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const row = await screen.findByTestId('focus-group-music');
     await user.click(row.querySelector('summary')!);
     await user.click(within(row).getByRole('button', { name: 'Playlist starten' }));

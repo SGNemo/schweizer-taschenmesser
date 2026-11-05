@@ -331,7 +331,8 @@ button.chip[aria-pressed='true'] {
 .progressBar {
   height: 100%;
   width: 100%;
-  background: var(--accent);
+  /* Identity v3.1 (C01): the fill is the module's hue where there is one; the accent stays the primary action. */
+  background: var(--module-color, var(--accent));
   border-radius: inherit;
   /* Filled via scaleX (see Progress) so the change animates on the compositor only. */
   transform-origin: left center;

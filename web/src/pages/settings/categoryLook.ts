@@ -12,18 +12,22 @@ export interface CategoryLook {
   area: AreaId;
 }
 
+/*
+ * Identity v3.1 (F14, C12): settings heads carry no area pattern (`system` = none) so a category never looks like a
+ * module of that area; a hue + area pair of a module is not used (test), slate (the grey) excepted.
+ */
 export const CATEGORY_LOOK: Readonly<Record<SettingsCategoryId, CategoryLook>> = {
   allgemein: { hue: 'slate', area: 'system' },
-  darstellung: { hue: 'orchid', area: 'knowledge' },
+  darstellung: { hue: 'orchid', area: 'system' },
   barrierefreiheit: { hue: 'teal', area: 'system' },
-  module: { hue: 'cobalt', area: 'plan' },
-  werkzeuge: { hue: 'moss', area: 'household' },
-  benachrichtigungen: { hue: 'indigo', area: 'plan' },
-  sicherheit: { hue: 'slate', area: 'vault' },
+  module: { hue: 'sky', area: 'system' },
+  werkzeuge: { hue: 'moss', area: 'system' },
+  benachrichtigungen: { hue: 'indigo', area: 'system' },
+  sicherheit: { hue: 'slate', area: 'system' },
   sync: { hue: 'ocean', area: 'system' },
-  ki: { hue: 'violet', area: 'knowledge' },
-  verbindungen: { hue: 'sky', area: 'system' },
-  schnellerfassung: { hue: 'lime', area: 'plan' },
+  ki: { hue: 'violet', area: 'system' },
+  verbindungen: { hue: 'slate', area: 'system' },
+  schnellerfassung: { hue: 'lime', area: 'system' },
   updates: { hue: 'fern', area: 'system' },
   entwickler: { hue: 'slate', area: 'system' },
   ueber: { hue: 'slate', area: 'system' },

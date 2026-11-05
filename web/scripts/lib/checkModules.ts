@@ -12,7 +12,7 @@ export interface ModuleSource {
 
 const PLATFORMS = ['web', 'desktop', 'android'];
 const LAYOUTS = ['narrow', 'content', 'wide', 'full'];
-/** Keep in step with `MODULE_HUES` / `WIDGET_TYPES` in `src/core/modules/types.ts` (pinned by the registry test). */
+/** Keep in step with the lists in `src/core/modules/types.ts` (pinned by the registry test). */
 export const HUES = [
   'lime',
   'moss',
@@ -52,15 +52,18 @@ export const WIDGET_VARIANTS = [
 ];
 export const TYPE_ACCENTS = ['sans', 'thin', 'mono', 'serif'];
 export const CARD_SHAPES = ['soft', 'round', 'sharp'];
-export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'];
+/** One signature library for modules and tools (identity v3.1, `@/ui/identity`). */
 export const SIGNATURES = [
+  // modules
   'sky',
   'coverTone',
   'bankCard',
   'ring',
   'calendarLeaf',
+  'hourStrip',
   'todayCard',
   'receipt',
+  'bill',
   'cycle',
   'envelope',
   'shelf',
@@ -76,17 +79,20 @@ export const SIGNATURES = [
   'vaultDoor',
   'gauges',
   'arrowProgress',
+  // tools
+  'display',
+  'flow',
+  'globe',
+  'dice',
+  'qrFrame',
+  'idCard',
+  'photoFrame',
+  'pageStack',
+  'viewfinder',
+  'terminal',
+  'splitPage',
+  'pattern',
   'none',
-];
-export const WIDGET_TYPES = [
-  'kpi',
-  'dueList',
-  'progress',
-  'checklist',
-  'timeline',
-  'tiles',
-  'status',
-  'gauge',
 ];
 
 /** The text of the `widgets: [ … ]` array (balanced brackets), or undefined. */
@@ -152,19 +158,15 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
   if (!layout && !devOnly) fail('manifest has no `layout`');
   if (layout && !LAYOUTS.includes(layout)) fail(`unknown layout "${layout}"`);
 
-  // Identity v3: `identity: { hue, widgetType, widget, head, signature }` from the fixed lists (docs/decisions/ui-shell.md).
+  // Identity v3.1: `identity: { hue, widget, head, signature }` from the fixed lists (docs/decisions/ui-shell.md).
   const identity = /\bidentity:\s*\{([^}]*)\}/.exec(manifest)?.[1];
-  if (identity === undefined)
-    fail('manifest has no `identity: { hue, widgetType, widget, head, signature }`');
+  if (identity === undefined) fail('manifest has no `identity: { hue, widget, head, signature }`');
   else {
-    const hue = /\bhue:\s*['"]([a-z]+)['"]/.exec(identity)?.[1];
-    const type = /\bwidgetType:\s*['"]([a-zA-Z]+)['"]/.exec(identity)?.[1];
-    if (!hue || !HUES.includes(hue))
-      fail(`identity.hue "${hue ?? ''}" is not in the module palette`);
-    if (!type || !WIDGET_TYPES.includes(type))
-      fail(`identity.widgetType "${type ?? ''}" is not a catalogue type`);
     const pick = (key: string) =>
       new RegExp(`\\b${key}:\\s*['"]([a-zA-Z0-9]+)['"]`).exec(identity)?.[1];
+    const hue = pick('hue');
+    if (!hue || !HUES.includes(hue))
+      fail(`identity.hue "${hue ?? ''}" is not in the module palette`);
     const hue2 = pick('hue2');
     if (hue2 !== undefined && !HUES.includes(hue2))
       fail(`identity.hue2 "${hue2}" is not in the module palette`);
@@ -182,13 +184,15 @@ export function checkModule({ id, manifest, fileExists }: ModuleSource): string[
     const optional: [string, string[]][] = [
       ['type', TYPE_ACCENTS],
       ['shape', CARD_SHAPES],
-      ['feedback', FEEDBACKS],
     ];
     for (const [key, list] of optional) {
       const v = pick(key);
       if (v !== undefined && !list.includes(v))
         fail(`identity.${key} "${v}" must be one of ${list.join(', ')}`);
     }
+    for (const key of ['widgetType', 'feedback'])
+      if (new RegExp(`\\b${key}:`).test(identity))
+        fail(`identity.${key} was dropped in identity v3.1 (remove it)`);
   }
 
   const platforms = /\bplatforms:\s*\[([^\]]*)\]/.exec(manifest)?.[1];

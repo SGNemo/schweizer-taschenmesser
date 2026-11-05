@@ -7,7 +7,7 @@ import styles from './BubbleSignature.module.css';
  */
 export function BubbleSignature() {
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.bubbles} aria-hidden="true" data-testid="bubble-signature">
         <span className={`${styles.bubble} ${styles.answer}`}>
           <i />

@@ -7,7 +7,6 @@ const manifest = (id: string, over: Partial<ModuleManifest> = {}): ModuleManifes
     id,
     identity: {
       hue: 'teal',
-      widgetType: 'kpi',
       widget: 'kennzahl',
       head: 'kennzahl',
       signature: 'bankCard',

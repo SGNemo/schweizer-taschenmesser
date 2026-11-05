@@ -95,19 +95,6 @@ export const MODULE_HUES = [
 ] as const;
 export type ModuleHue = (typeof MODULE_HUES)[number];
 
-/** Base types of the widget catalogue (`@/ui` widgets, DESIGN-SPEC §4a). */
-export const WIDGET_TYPES = [
-  'kpi',
-  'dueList',
-  'progress',
-  'checklist',
-  'timeline',
-  'tiles',
-  'status',
-  'gauge',
-] as const;
-export type WidgetType = (typeof WIDGET_TYPES)[number];
-
 /**
  * Head variants of the module frame (identity v3, `docs/design/identity-v3/02-CONCEPT.md` § 3): each has its own
  * silhouette (height, arrangement, typography), not only a colour. `hero` heads are ≈ 200 px tall, `compact` ones ≈ 96 px.
@@ -138,10 +125,28 @@ export const COMPACT_HEADS: readonly HeadVariant[] = ['tresor', 'schreib', 'foku
 export const headHeight = (v: HeadVariant): 'hero' | 'compact' =>
   COMPACT_HEADS.includes(v) ? 'compact' : 'hero';
 /**
+ * Size of the signature slot in the head (identity v3.1, `layout/AreaFrame`): `S` the mark beside the title
+ * (`--slot-s`, 4 rem), `M` a block of up to `--slot-m` (36 rem) beside the figure, `L` the whole content column
+ * under the title. The head variant sets it; `himmel` has no slot (the sky is the backdrop).
+ */
+export const SLOT_SIZES = ['S', 'M', 'L'] as const;
+export type SlotSize = (typeof SLOT_SIZES)[number];
+export const SIGNATURE_SLOTS: Readonly<Record<HeadVariant, SlotSize | 'none'>> = {
+  kennzahl: 'M',
+  zeit: 'L',
+  fortschritt: 'M',
+  cover: 'L',
+  himmel: 'none',
+  regal: 'M',
+  tresor: 'S',
+  schreib: 'S',
+  fokus: 'S',
+};
+/**
  * Shape of a module's widget on the overview (identity v3 § 5), bound to the head variant: `kennzahl` figure + sparkline,
  * `zeitleiste` time rail, `fortschritt` rings or bars, `cover` cover + player, `himmel` sky band, `kacheln` 2 × 2 tiles,
  * `status` lock plate + one action, `notiz` first lines in serif, `fokus` one task large, `faellig` rows with state
- * badges, `checkliste` rows with checkboxes. The catalogue type (`widgetType`) says what the body is built from.
+ * badges, `checkliste` rows with checkboxes. The bodies live in `@/ui/widgets` (`KennzahlBody`, `KachelnBody`, …).
  */
 export const WIDGET_VARIANTS = [
   'kennzahl',
@@ -157,15 +162,25 @@ export const WIDGET_VARIANTS = [
   'checkliste',
 ] as const;
 export type WidgetVariant = (typeof WIDGET_VARIANTS)[number];
-/** The one thing a module is recognised by. Components live in `@/ui/identity`; ids without one render nothing yet. */
+/**
+ * The one thing a module or a tool is recognised by (identity v3.1): one library for both in `@/ui/identity`
+ * (`Signature`, `SIGNATURE_MARKS`). Every id here has a drawing: a mark at size `S` and, for the ones with a
+ * block, a decoration at `M`/`L`. The frame renders it in the head's signature slot unless the module fills
+ * the slot itself (`HeroSlot area="signature"`). Decoration only: no user data, works without colour.
+ * `identity.test.tsx` renders every id; `none` is for a module whose head has nothing to say (checked by
+ * `check:modules`: `none` plus a `HeroSlot` in the page is a warning).
+ */
 export const SIGNATURES = [
+  // modules
   'sky',
   'coverTone',
   'bankCard',
   'ring',
   'calendarLeaf',
+  'hourStrip',
   'todayCard',
   'receipt',
+  'bill',
   'cycle',
   'envelope',
   'shelf',
@@ -181,6 +196,19 @@ export const SIGNATURES = [
   'vaultDoor',
   'gauges',
   'arrowProgress',
+  // tools
+  'display',
+  'flow',
+  'globe',
+  'dice',
+  'qrFrame',
+  'idCard',
+  'photoFrame',
+  'pageStack',
+  'viewfinder',
+  'terminal',
+  'splitPage',
+  'pattern',
   'none',
 ] as const;
 export type SignatureId = (typeof SIGNATURES)[number];
@@ -188,22 +216,19 @@ export const TYPE_ACCENTS = ['sans', 'thin', 'mono', 'serif'] as const;
 export type TypeAccent = (typeof TYPE_ACCENTS)[number];
 export const CARD_SHAPES = ['soft', 'round', 'sharp'] as const;
 export type CardShape = (typeof CARD_SHAPES)[number];
-export const FEEDBACKS = ['tick', 'pulse', 'ring', 'none'] as const;
-export type FeedbackMotion = (typeof FEEDBACKS)[number];
 
 /**
- * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity", v3): its hue from the
- * palette (icon plate, head tint, active navigation, chart series), the catalogue type its main widget is
- * built from and the shape of that widget, the variant of its head and the signature inside it. The area's
- * pattern comes from `ModuleManifest.area`; the icon is `ModuleManifest.icon`. Required fields:
- * `validateManifest` and `npm run check:modules` enforce them. The "Ruhig" colour mode and "Modulfarben: Aus"
- * turn every hue grey and the patterns off; head variant and signature stay.
+ * How a module is recognised at a glance (DECISIONS → ui-shell "Module identity", v3.1): its hue from the
+ * palette (icon plate, head tint, active navigation, chart series), the shape of its main widget, the variant
+ * of its head and the signature in the head's slot. The area's pattern comes from `ModuleManifest.area`; the
+ * icon is `ModuleManifest.icon`. Required fields: `validateManifest` and `npm run check:modules` enforce them,
+ * and app-wide no two modules share hue + head + widget (`scripts/lib/checkIdentity.ts`). The "Ruhig" colour
+ * mode and "Modulfarben: Aus" turn every hue grey and the patterns off; head variant and signature stay.
  */
 export interface ModuleIdentity {
   hue: ModuleHue;
   /** Second hue of the head gradient and of the second chart series; default: derived from `hue`. Never equal to `hue`. */
   hue2?: ModuleHue;
-  widgetType: WidgetType;
   /** Shape of the overview widget (`WIDGET_VARIANTS`); a `WidgetDef.variant` overrides it for one widget. */
   widget: WidgetVariant;
   head: HeadVariant;
@@ -212,8 +237,6 @@ export interface ModuleIdentity {
   type?: TypeAccent;
   /** Corner radius of the module's cards: `soft` 16 px (default), `round` 20 px, `sharp` 10 px. */
   shape?: CardShape;
-  /** Short accent after a confirmed action (≤ 250 ms, transform/opacity, off with reduced motion). */
-  feedback?: FeedbackMotion;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';
@@ -579,7 +602,7 @@ export interface ModuleManifest {
   id: string;
   name: string;
   icon: IconName;
-  /** Hue from the module palette and the catalogue type of the main widget (required). */
+  /** Hue from the module palette, head variant, widget shape and signature (required). */
   identity: ModuleIdentity;
   /** Integer; bump when `migrations` gains an entry. */
   version: number;

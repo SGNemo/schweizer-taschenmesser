@@ -5,6 +5,8 @@ import {
   type FocusSettings,
 } from '@/core/settings/focus';
 import { clearRecent } from '@/core/search/recent';
+import { Link } from 'react-router';
+import { settingsPath } from '@/core/settings/registry/paths';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
@@ -127,6 +129,10 @@ export function FocusSection() {
         </SettingRow>
         <FocusMusicRow />
       </FoldedGroup>
+      {/* Colour and pattern are stimuli too: the switch lives under "Darstellung" (identity v3.1, C30). */}
+      <SettingRow id="focus--colors" label={s.colors} description={s.colorsHint}>
+        <Link to={settingsPath('darstellung', 'appearance', 'moduleColors')}>{s.colorsLink}</Link>
+      </SettingRow>
     </SettingsGroup>
   );
 }

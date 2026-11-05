@@ -6,7 +6,7 @@ export const habits: Strings['habits'] = {
     description:
       'Metas diarias y semanales con anillos: una marca o un número como «8 vasos», con días de descanso, historial y avisos que se detienen al cumplir la meta del día.',
     quickAdd: 'Hábito',
-    widget: 'Hoy',
+    widget: 'Hecho hoy',
     settings: {
       remindersEnabled: 'Avisos de hábitos',
       remindersHelp: 'Desactivado: no llegan avisos, los anillos se mantienen.',

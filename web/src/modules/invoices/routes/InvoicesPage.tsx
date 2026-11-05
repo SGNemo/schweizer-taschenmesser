@@ -196,7 +196,7 @@ export default function InvoicesPage() {
       </PageHeader>
 
       {invoices ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <ReceiptCard invoices={invoices} />
         </HeroSlot>
       ) : null}

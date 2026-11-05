@@ -320,7 +320,7 @@ export default function NotesPage() {
   return (
     <>
       <PageTitle title={t.notes.title} />
-      <HeroSlot area="extra">
+      <HeroSlot area="signature">
         <NotePaper
           text={
             scratchNote

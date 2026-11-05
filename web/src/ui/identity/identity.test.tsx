@@ -1,7 +1,18 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { BankCard, CalendarLeaf, HeroFigure, Ring, Sky, skyKind } from './index';
+import { SIGNATURES } from '@/core/modules/types';
+import {
+  BankCard,
+  CalendarLeaf,
+  HeroFigure,
+  Ring,
+  Signature,
+  SIGNATURE_BLOCKS,
+  SignatureMark,
+  Sky,
+  skyKind,
+} from './index';
 import { dominantColor, safeTint } from './coverTone';
 
 describe('identity building blocks', () => {
@@ -74,6 +85,42 @@ describe('identity building blocks', () => {
     );
     expect(screen.getByTestId('v')).toHaveTextContent('14°');
     expect(screen.getByText('fühlt sich an wie 12°')).toBeInTheDocument();
+  });
+});
+
+describe('signature marks (identity v3.1)', () => {
+  it.each(SIGNATURES.filter((x) => x !== 'none'))('%s draws a hidden decoration', (id) => {
+    const { container } = render(<SignatureMark id={id} />);
+    const svg = container.querySelector('svg');
+    expect(svg?.getAttribute('aria-hidden')).toBe('true');
+    expect(svg?.getAttribute('data-signature')).toBe(id);
+    expect(svg?.childElementCount).toBeGreaterThan(0);
+    // Stroke in currentColor only: no fixed colour, so it works in "Ruhig" and both themes.
+    expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}|rgb\(/i);
+  });
+
+  it('"none" draws nothing', () => {
+    expect(render(<SignatureMark id="none" />).container.innerHTML).toBe('');
+  });
+
+  it.each(Object.keys(SIGNATURE_BLOCKS))(
+    'block %s at M is decoration: hidden from assistive tech, no fixed colour',
+    (id) => {
+      const { container } = render(<Signature id={id as never} size="M" />);
+      expect(container.firstElementChild!.getAttribute('aria-hidden')).toBe('true');
+      expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(/i);
+    },
+  );
+
+  it('an id without a block draws its mark on a plate at M, every id the plate at S', () => {
+    expect(
+      render(<Signature id="bankCard" size="M" />).container.querySelector(
+        '[data-signature="bankCard"][data-size="M"] svg',
+      ),
+    ).not.toBeNull();
+    expect(
+      render(<Signature id="receipt" size="S" />).container.querySelector('[data-size="S"] svg'),
+    ).not.toBeNull();
   });
 });
 

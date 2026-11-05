@@ -18,7 +18,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'orchid',
     hue2: 'violet',
-    widgetType: 'status',
     widget: 'cover',
     head: 'cover',
     signature: 'coverTone',

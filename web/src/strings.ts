@@ -1193,6 +1193,10 @@ export const de = {
       more: 'Weitere Einstellungen',
       aids: 'Hilfen',
       aidsOn: (n: number, total: number) => `${n} von ${total} an`,
+      colors: 'Modulfarben',
+      colorsHint:
+        'Modulfarben und Muster stellst du unter „Darstellung“ ein – dort auch „Ruhig“ für weniger Reize.',
+      colorsLink: 'Zu den Modulfarben',
       planShort: (n: number) => `Tagesplan ${n}`,
       timerShort: (n: number) => `Timer ${n} Min`,
       clearHistory: 'Verlauf löschen',
@@ -7051,7 +7055,7 @@ export const de = {
       name: 'Browser',
       description:
         'Einfacher Browser mit Tabs, Lesezeichen und privatem Modus. Läuft getrennt von deinen Nemo-Daten.',
-      widget: 'Lesezeichen',
+      widget: 'Browser-Lesezeichen',
       widgetEmpty: 'Noch keine Lesezeichen.',
       widgetAction: 'Browser öffnen',
     },
@@ -7502,7 +7506,7 @@ export const de = {
       description:
         'Tägliche und wöchentliche Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“, mit Pausentagen, Verlauf und Erinnerungen, die aufhören, sobald das Tagesziel erreicht ist.',
       quickAdd: 'Gewohnheit',
-      widget: 'Heute',
+      widget: 'Heute geschafft',
       settings: {
         remindersEnabled: 'Erinnerungen der Gewohnheiten',
         remindersHelp: 'Aus: es kommen keine Erinnerungen, die Ringe bleiben.',

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
 import { lazyComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -85,8 +85,10 @@ const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   system: '/disk?tab=system',
 };
 
-/** Credential screens: the reading aid never touches them (DESIGN-SPEC §4c). */
+/** Credential screens: the reading aid never touches them (DESIGN-SPEC §4c) – the whole frame, head included (C05). */
 const NO_READ_AID_MODULES: ReadonlySet<string> = new Set(['vault', 'accounts']);
+const wrapReadAid = (id: string, el: ReactElement): ReactElement =>
+  NO_READ_AID_MODULES.has(id) ? <NoReadAid>{el}</NoReadAid> : el;
 
 export function buildRoutes(states: ModuleStates): RouteObject[] {
   const moduleRoutes = availableManifests().flatMap((m) =>
@@ -95,7 +97,8 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           const Cmp = lazyComponent(r.component);
           return {
             path: r.path.replace(/^\//, ''),
-            element: (
+            element: wrapReadAid(
+              m.id,
               <AreaFrame
                 key={m.id}
                 variant={frameVariant(r.layout ?? m.layout)}
@@ -103,16 +106,10 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
               >
                 <ModuleErrorBoundary manifest={m}>
                   <Suspense fallback={<PageFallback />}>
-                    {NO_READ_AID_MODULES.has(m.id) ? (
-                      <NoReadAid>
-                        <Cmp />
-                      </NoReadAid>
-                    ) : (
-                      <Cmp />
-                    )}
+                    <Cmp />
                   </Suspense>
                 </ModuleErrorBoundary>
-              </AreaFrame>
+              </AreaFrame>,
             ),
           } satisfies RouteObject;
         })

@@ -16,10 +16,9 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'ocean',
     hue2: 'sky',
-    widgetType: 'dueList',
     widget: 'faellig',
     head: 'fokus',
-    signature: 'receipt',
+    signature: 'bill',
   },
   version: 4,
   get description() {

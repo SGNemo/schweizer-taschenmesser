@@ -1,9 +1,9 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
-import { useHeroTargets } from '@/core/shell/heroContext';
+import { useHeroControls, useHeroTargets } from '@/core/shell/heroContext';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
@@ -19,6 +19,12 @@ import styles from './Patterns.module.css';
  */
 export function PageTitle({ title, spacer = false }: { title: string; spacer?: boolean }) {
   const hero = useHeroTargets();
+  const controls = useHeroControls();
+  // The frame's compact bar (phone, scrolled) shows the title from here, never from the DOM.
+  useEffect(() => {
+    controls?.setTitle(title);
+    return () => controls?.setTitle(undefined);
+  }, [controls, title]);
   const heading = <h1>{title}</h1>;
   if (!hero) return heading;
   return (

@@ -16,7 +16,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'lime',
     hue2: 'moss',
-    widgetType: 'progress',
     widget: 'fortschritt',
     head: 'kennzahl',
     signature: 'envelope',

@@ -55,6 +55,7 @@ export default function BalanceWidget() {
       {size !== 's' && data && first && data.accounts.length > 1 ? (
         <BankCard compact name={first.name} balance={formatMoney(firstBalance, currency)} />
       ) : null}
+      {/* The kennzahl shape (identity v3.1, KpiWidget = WidgetBody + KennzahlBody): figure, context line, trend, sparkline at l. */}
       <KpiWidget
         loading={loading && !noAccounts}
         value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
@@ -67,7 +68,7 @@ export default function BalanceWidget() {
             expenseChange,
           ]
             .filter(Boolean)
-            .join(' · ') || undefined
+            .join(' · ') || t.finance.headline.accounts(data?.accounts.length ?? 0)
         }
         trend={
           net !== 0

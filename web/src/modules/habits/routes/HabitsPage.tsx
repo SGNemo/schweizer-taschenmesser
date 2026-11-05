@@ -99,7 +99,7 @@ export default function HabitsPage() {
         </HeroSlot>
       ) : null}
       {goals ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <HabitRings goals={goals} today={todayMap} day={day} />
         </HeroSlot>
       ) : null}

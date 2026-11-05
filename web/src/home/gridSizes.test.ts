@@ -11,11 +11,21 @@ function rule(selector: string, from = 0): string {
 }
 
 describe('home grid size classes', () => {
-  it('rows snap to one unit and cards stretch to their cell', () => {
+  it('rows snap to one unit; cards keep the height of their size class instead of stretching to the row (identity v3.1, F09)', () => {
     const grid = rule('.grid');
     expect(grid).toContain('grid-auto-rows: minmax(var(--widget-unit), auto)');
-    expect(grid).toContain('align-items: stretch');
-    expect(grid).not.toContain('align-items: start');
+    expect(grid).toContain('align-items: start');
+    expect(grid).not.toContain('align-items: stretch');
+    const from = css.indexOf('@container page (min-width: 44rem)');
+    expect(rule('.s', from)).toContain(
+      'min-height: calc(2 * var(--widget-unit) + var(--grid-gap))',
+    );
+    expect(rule('.m', from)).toContain(
+      'min-height: calc(3 * var(--widget-unit) + 2 * var(--grid-gap))',
+    );
+    expect(rule('.l', from)).toContain(
+      'min-height: calc(4 * var(--widget-unit) + 3 * var(--grid-gap))',
+    );
   });
 
   it('size classes are fixed row spans from two columns on', () => {

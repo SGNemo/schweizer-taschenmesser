@@ -4,7 +4,7 @@
  * ones are on and their order), and never import modules or the database (ESLint).
  */
 import type { ComponentType } from 'react';
-import type { Maturity, ModuleHue } from '@/core/modules/types';
+import type { Maturity, ModuleHue, SignatureId } from '@/core/modules/types';
 import type { SetupStepDef } from '@/core/setup/types';
 import type { IconName } from '@/ui/icons';
 
@@ -21,34 +21,14 @@ export const TOOL_CATEGORIES = [
 ] as const;
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number];
 
-/** The small mark in a tool's head (decoration only, `ui`-free SVG in `layout/tools/ToolSignature`). */
-export const TOOL_SIGNATURES = [
-  'display',
-  'flow',
-  'ring',
-  'calendarLeaf',
-  'globe',
-  'dice',
-  'qrFrame',
-  'idCard',
-  'notePaper',
-  'photoFrame',
-  'pageStack',
-  'viewfinder',
-  'terminal',
-  'splitPage',
-  'pattern',
-  'none',
-] as const;
-export type ToolSignatureId = (typeof TOOL_SIGNATURES)[number];
-
 /** Identity v3 for a tool (docs/design/MODULE-IDENTITY.md "Tools"): colour, mark, type. */
 export interface ToolIdentity {
   /** Primary colour of the plate and the tinted head; one of the palette v3 hues. */
   hue: ModuleHue;
   /** Optional second colour (second stop of the head). Never equal to `hue`. */
   hue2?: ModuleHue;
-  signature: ToolSignatureId;
+  /** The mark in the tool's head, from the one signature library (`SIGNATURES`, `@/ui/identity`). */
+  signature: SignatureId;
   /** `mono` for code-like tools (developer group); everything else stays sans. */
   type?: 'sans' | 'mono';
 }

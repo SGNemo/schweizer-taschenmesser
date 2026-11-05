@@ -15,11 +15,9 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'moss',
     hue2: 'lime',
-    widgetType: 'checklist',
     widget: 'fokus',
     head: 'fokus',
     signature: 'todayCard',
-    feedback: 'tick',
   },
   version: 4,
   get description() {

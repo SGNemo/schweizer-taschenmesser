@@ -590,7 +590,7 @@ export default function MapsPage() {
   return (
     <>
       {places ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <PinHead
             last={lastPlace(places)?.name}
             tiles={PLACE_CATEGORIES.map((c) => ({

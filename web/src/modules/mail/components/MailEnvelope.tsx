@@ -7,7 +7,7 @@ import styles from './MailEnvelope.module.css';
  */
 export function MailEnvelope() {
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.envelope} aria-hidden="true" data-testid="mail-envelope">
         <svg viewBox="0 0 120 80" className={styles.flap} width="120" height="80">
           <path d="M4 10 60 50 116 10" fill="none" stroke="currentColor" strokeWidth="2" />

@@ -32,7 +32,7 @@
 .weekday {
   padding-bottom: var(--space-2);
   font-size: var(--text-caps);
-  color: var(--text-3);
+  color: var(--text-on-tint);
 }
 .sm {
   width: 3.25rem;

@@ -1,12 +1,12 @@
-import { Suspense, type CSSProperties } from 'react';
+import { Suspense } from 'react';
 import type { ToolManifest } from '@/core/tools/types';
 import { getPlatform } from '@/core/platform';
 import { toolWindowPath } from '@/core/tools/window';
 import { t } from '@/strings';
-import { Button, Icon } from '@/ui';
+import { Button, HeadSurface, Icon } from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { ToolBody } from './lazyTools';
 import { ToolPlate } from './ToolPlate';
-import { ToolSignature } from './ToolSignature';
 import styles from './ToolStage.module.css';
 
 const WINDOW_FEATURES = 'popup,width=540,height=760';
@@ -33,18 +33,17 @@ interface StageProps {
  * surface, then the tool. Used by the panel and by the detached window.
  */
 export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
-  <section
+  <HeadSurface
+    as="section"
     className={styles.stage}
-    data-hue={tool.identity.hue}
-    data-type={tool.identity.type ?? 'sans'}
-    data-tool={tool.id}
+    hue={tool.identity.hue}
+    hue2={tool.identity.hue2}
+    size="compact"
+    type={tool.identity.type ?? 'sans'}
+    signature={tool.identity.signature}
     aria-label={tool.name}
     tabIndex={-1}
-    style={
-      tool.identity.hue2
-        ? ({ '--module-color-2': `var(--mod-${tool.identity.hue2})` } as CSSProperties)
-        : undefined
-    }
+    data={{ 'data-tool': tool.id }}
   >
     <header className={styles.head}>
       <ToolPlate tool={tool} size="lg" />
@@ -55,7 +54,7 @@ export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
         </p>
       </div>
       <span className={styles.signature}>
-        <ToolSignature id={tool.identity.signature} size={40} />
+        <SignatureMark id={tool.identity.signature} size={40} />
       </span>
       {onDetach ? (
         <Button variant="ghost" size="sm" className={styles.detach} onClick={onDetach}>
@@ -69,5 +68,5 @@ export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
         <ToolBody tool={tool} />
       </Suspense>
     </div>
-  </section>
+  </HeadSurface>
 );

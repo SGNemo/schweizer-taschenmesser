@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { t } from '@/strings';
@@ -10,7 +11,11 @@ const s = t.focus.settings;
 
 describe('Focus settings, folded', () => {
   it('shows two closed lines with the counts; all fourteen rows stay inside a group', () => {
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const aids = screen.getByTestId('focus-group-aids');
     const more = screen.getByTestId('focus-more');
     expect(aids).not.toHaveAttribute('open');
@@ -36,7 +41,11 @@ describe('Focus settings, folded', () => {
 
   it('switching an aid off inside the open group updates the count on the line', async () => {
     const user = userEvent.setup();
-    render(<FocusSection />);
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
     const aids = screen.getByTestId('focus-group-aids');
     await user.click(within(aids).getByText(g.change).closest('summary')!);
     expect(aids).toHaveAttribute('open');

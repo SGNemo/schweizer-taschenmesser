@@ -42,7 +42,7 @@ export function NextBirthdayHead({
   label: string;
 }) {
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.head} data-testid="avatar-signature">
         <AvatarRing name={name} days={days} size={4} />
         <span className={styles.text}>

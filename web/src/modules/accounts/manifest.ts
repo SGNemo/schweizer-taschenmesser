@@ -20,7 +20,6 @@ const manifest: ModuleManifest = {
   icon: 'lock',
   identity: {
     hue: 'slate',
-    widgetType: 'status',
     widget: 'status',
     head: 'tresor',
     signature: 'vaultDoor',

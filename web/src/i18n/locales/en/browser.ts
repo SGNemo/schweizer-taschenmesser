@@ -5,7 +5,7 @@ export const browser: Strings['browser'] = {
     name: 'Browser',
     description:
       'Simple browser with tabs, bookmarks and a private mode. Runs separately from your Nemo data.',
-    widget: 'Bookmarks',
+    widget: 'Browser bookmarks',
     widgetEmpty: 'No bookmarks yet.',
     widgetAction: 'Open browser',
   },

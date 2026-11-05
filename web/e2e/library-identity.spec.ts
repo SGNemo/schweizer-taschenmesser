@@ -10,7 +10,8 @@ test.describe('libraries in identity v3', () => {
     await ready(page, '/library');
     await expect(page.locator('main h1')).toHaveCount(1);
     await expect(page.locator('main h1')).toHaveText('Modul-Bibliothek');
-    await expect(page.getByTestId('library-head')).toHaveAttribute('data-hue', 'cobalt');
+    // Library bands are neutral (identity v3.1, C28).
+    await expect(page.getByTestId('library-head')).toHaveAttribute('data-hue', 'slate');
     await expect(page.getByTestId('library-figures')).toContainText('verfügbar');
     const card = page.getByTestId('module-todos');
     await expect(card).toHaveAttribute('data-hue', /.+/);
@@ -80,7 +81,7 @@ test.describe('libraries in identity v3', () => {
   test('the tool library has the same head, figures and tinted groups', async ({ page }) => {
     await ready(page, '/tools');
     await expect(page.locator('main h1')).toHaveCount(1);
-    await expect(page.getByTestId('tools-head')).toHaveAttribute('data-hue', 'moss');
+    await expect(page.getByTestId('tools-head')).toHaveAttribute('data-hue', 'slate');
     await expect(page.getByTestId('tools-figures')).toContainText('verfügbar');
     await expect(page.getByTestId('tool-calc')).toHaveAttribute('data-hue', /.+/);
   });

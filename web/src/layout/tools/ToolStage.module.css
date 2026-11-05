@@ -1,12 +1,11 @@
-/* The tool's surface: a tint of its hue from the head down, soft depth, nothing on the edges. */
+/* The tool's surface (ui/HeadSurface): the head carries the tint, the body sits on a faint wash of the hue. */
 .stage {
+  --hero-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--module-color) 5%, var(--surface));
-  box-shadow: var(--shadow-1);
   overflow: hidden;
 }
 .head {
@@ -14,6 +13,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3);
+  min-height: var(--head-h);
   padding: var(--space-4);
   background: var(--head-gradient);
   color: var(--text);

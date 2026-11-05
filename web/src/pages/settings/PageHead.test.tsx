@@ -22,7 +22,7 @@ describe('PageHead', () => {
     const head = screen.getByTestId('head');
     expect(head).toHaveAttribute('data-hue', 'moss');
     expect(head).toHaveAttribute('data-area', 'plan');
-    expect(head.style.getPropertyValue('--module-color-2')).toBe('var(--mod-lime)');
+    expect(head).toHaveAttribute('data-hue2', 'lime');
     const h1 = screen.getByRole('heading', { level: 1, name: 'ToDos' });
     expect(h1).toHaveAttribute('id', 'module-todos');
     expect(screen.getByText('Einstellungen · Module')).toBeInTheDocument();
