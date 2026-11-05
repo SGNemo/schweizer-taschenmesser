@@ -184,6 +184,9 @@ describe('parsing', () => {
     expect(rows[3]!.invalid).toContain(`recurrence: ${t.dataApi.badFormat}`);
     const tasks = await run('todos', [{ collection: 'task', title: 'X', dueDate: '2026-04-31' }]);
     expect(tasks.rows[0]!.invalid).toContain(`dueDate: ${t.dataApi.badFormat}`);
+    // Years before 1000 (X29): `new Date` would read them as 19xx.
+    const old = await run('todos', [{ collection: 'task', title: 'Y', dueDate: '0001-01-01' }]);
+    expect(old.rows[0]!.invalid).toContain(`dueDate: ${t.dataApi.badFormat}`);
   });
 
   it('fills the default list for tasks without one', async () => {

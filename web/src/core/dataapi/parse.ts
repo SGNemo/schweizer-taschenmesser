@@ -376,7 +376,9 @@ async function pointsToChild(
 
 /** A 'YYYY-MM-DD' text anywhere in the value (also nested, e.g. `recurrence.until`) that is no real day. */
 function hasImpossibleDate(value: unknown): boolean {
-  if (typeof value === 'string') return DATE_RE.test(value) && !isCalendarDate(value);
+  // Years before 1000 too: `new Date` reads them as 19xx (X29).
+  if (typeof value === 'string')
+    return DATE_RE.test(value) && (!isCalendarDate(value) || value < '1000');
   if (Array.isArray(value)) return value.some(hasImpossibleDate);
   if (value && typeof value === 'object') return Object.values(value).some(hasImpossibleDate);
   return false;
