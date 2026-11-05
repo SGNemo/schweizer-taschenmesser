@@ -3,6 +3,17 @@ import { db } from '@/core/db/db';
 import { resetUndoJournal, undoable } from '@/core/undo';
 import { bump, entryId, entryRepo, goalRepo } from '../repo';
 
+const water = () =>
+  goalRepo.create({
+    name: 'Wasser',
+    kind: 'count',
+    target: 8,
+    unit: 'Gläser',
+    period: 'day',
+    weeklyTimes: 3,
+    order: 0,
+  });
+
 beforeEach(async () => {
   resetUndoJournal();
   await db.table('habits_goal').clear();
@@ -11,7 +22,7 @@ beforeEach(async () => {
 
 describe('counting', () => {
   it('two quick "+1" taps count twice (the card does not wait for the first)', async () => {
-    const g = await goalRepo.create({ name: 'Wasser', kind: 'count', target: 8, unit: 'Gläser' });
+    const g = await water();
     const tap = () => undoable('Wasser', () => bump(g.id, '2026-11-05', 1));
     await Promise.all([tap(), tap()]);
     expect((await entryRepo.get(entryId(g.id, '2026-11-05')))?.count).toBe(2);
@@ -21,7 +32,7 @@ describe('counting', () => {
 
   it('a failed bump does not block the next one', async () => {
     await expect(bump('g', 'kein-datum', 1)).rejects.toThrow();
-    const g = await goalRepo.create({ name: 'Wasser', kind: 'count', target: 8, unit: 'Gläser' });
+    const g = await water();
     await bump(g.id, '2026-11-05', 1);
     expect((await entryRepo.get(entryId(g.id, '2026-11-05')))?.count).toBe(1);
   });
