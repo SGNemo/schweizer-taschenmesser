@@ -573,6 +573,8 @@ export interface PlannableItem {
   done?: boolean;
   personId?: string;
   link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+  /** When the thing was created (epoch ms): the engine's tie-break "older first". */
+  createdAt?: number;
 }
 
 /** The planner's view of a module's open things plus the write-back of the same contract (typed, no module import). */

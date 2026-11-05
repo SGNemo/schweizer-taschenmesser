@@ -32,7 +32,9 @@ describe('ownership: planner-own only while the mark carries the date', () => {
   it('reads every other combination as the user’s date (both LWW interleavings, an unlisted writer)', () => {
     expect(isPlannerOwned(own('2026-11-12'))).toBe(true);
     // Interleaving 1: the user's plannedFor won the merge, the planner's mark too.
-    expect(isPlannerOwned({ plannedFor: '2026-11-10', planMark: { date: '2026-11-12', order: 0 } })).toBe(false);
+    expect(
+      isPlannerOwned({ plannedFor: '2026-11-10', planMark: { date: '2026-11-12', order: 0 } }),
+    ).toBe(false);
     // Interleaving 2: the planner's plannedFor won, the user's cleared mark too.
     expect(isPlannerOwned({ plannedFor: '2026-11-12' })).toBe(false);
     // An unlisted writer set the date without touching the mark: stale mark, user's date.
@@ -44,11 +46,19 @@ describe('ownership: planner-own only while the mark carries the date', () => {
   it('userPlannedFor clears the mark only when the date really changes', () => {
     const task = own('2026-11-12', 1, '2026-11-10');
     expect(userPlannedFor(task, '2026-11-12')).toEqual({}); // a title-only save keeps it
-    expect(userPlannedFor(task, '2026-11-13')).toEqual({ plannedFor: '2026-11-13', planMark: undefined });
+    expect(userPlannedFor(task, '2026-11-13')).toEqual({
+      plannedFor: '2026-11-13',
+      planMark: undefined,
+    });
     expect(userPlannedFor(task, undefined)).toEqual({ plannedFor: undefined, planMark: undefined });
-    expect(userPlannedFor({ plannedFor: '2026-11-13' }, '2026-11-14')).toEqual({ plannedFor: '2026-11-14' });
+    expect(userPlannedFor({ plannedFor: '2026-11-13' }, '2026-11-14')).toEqual({
+      plannedFor: '2026-11-14',
+    });
     // Every ToDo-side writer goes through it: „Später“ and the board move clear the mark with the date.
-    expect(postponePatch(own(TODAY), TODAY)).toEqual({ plannedFor: '2026-11-10', planMark: undefined });
+    expect(postponePatch(own(TODAY), TODAY)).toEqual({
+      plannedFor: '2026-11-10',
+      planMark: undefined,
+    });
     expect(movePatch({ done: false, ...own('2026-11-12') }, 'today', TODAY)).toMatchObject({
       plannedFor: TODAY,
       planMark: undefined,
@@ -103,7 +113,9 @@ describe('assignPatch (onAssign)', () => {
   });
 
   it('a missing order clears the mark', () => {
-    expect(assignPatch(own('2026-11-12'), '2026-11-12', undefined, TODAY)).toEqual({ planMark: undefined });
+    expect(assignPatch(own('2026-11-12'), '2026-11-12', undefined, TODAY)).toEqual({
+      planMark: undefined,
+    });
     expect(assignPatch({}, '2026-11-12', undefined, TODAY)).toEqual({ plannedFor: '2026-11-12' });
   });
 });
@@ -135,6 +147,7 @@ describe('the source', () => {
         earliest: '2026-11-10',
         plannedFor: '2026-11-11',
         planMark: { date: '2026-11-11', order: 0 },
+        createdAt: a.createdAt,
       },
     ]);
   });
@@ -194,14 +207,22 @@ describe('what never carries a mark', () => {
       {
         kind: 'json',
         text: JSON.stringify([
-          { collection: 'task', title: 'Von draußen', list: 'Eingang', plannedFor: '2026-11-12', planMark: { date: '2026-11-12', order: 0 } },
+          {
+            collection: 'task',
+            title: 'Von draußen',
+            plannedFor: '2026-11-12',
+            planMark: { date: '2026-11-12', order: 0 },
+          },
         ]),
       },
       { today: TODAY, options: {}, batchId: 'b' },
     );
     expect(parsed.candidates).toHaveLength(1);
-    expect(parsed.candidates[0]!.errors ?? []).toEqual([]);
-    expect(parsed.candidates[0]!.data).toMatchObject({ title: 'Von draußen', plannedFor: '2026-11-12' });
+    expect(parsed.candidates[0]!.error).toBeUndefined();
+    expect(parsed.candidates[0]!.data).toMatchObject({
+      title: 'Von draußen',
+      plannedFor: '2026-11-12',
+    });
     expect(parsed.candidates[0]!.data).not.toHaveProperty('planMark');
   });
 
@@ -251,14 +272,23 @@ describe('clean-up while the planner is off', () => {
     });
 
   it('restorePatch hands a planner-own date back to `prior`, drops a stale mark, leaves the rest alone', () => {
-    expect(restorePatch(own('2026-11-14', 0, '2026-11-12'))).toEqual({ plannedFor: '2026-11-12', planMark: undefined });
+    expect(restorePatch(own('2026-11-14', 0, '2026-11-12'))).toEqual({
+      plannedFor: '2026-11-12',
+      planMark: undefined,
+    });
     expect(restorePatch(own('2026-11-14'))).toEqual({ plannedFor: undefined, planMark: undefined });
-    expect(restorePatch({ plannedFor: '2026-11-10', planMark: { date: '2026-11-14', order: 0 } })).toEqual({ planMark: undefined });
+    expect(
+      restorePatch({ plannedFor: '2026-11-10', planMark: { date: '2026-11-14', order: 0 } }),
+    ).toEqual({ planMark: undefined });
     expect(restorePatch({ plannedFor: '2026-11-10' })).toEqual({});
   });
 
   it('runs only on a stored "off" (never by default, never while the planner is on) and is idempotent', async () => {
-    const a = await taskRepo.create({ ...base, title: 'Später Do', ...own('2026-11-14', 0, '2026-11-12') });
+    const a = await taskRepo.create({
+      ...base,
+      title: 'Später Do',
+      ...own('2026-11-14', 0, '2026-11-12'),
+    });
     const b = await taskRepo.create({ ...base, title: 'eigenes Datum', plannedFor: '2026-11-10' });
     expect(await cleanupPlanMarks()).toBe(0); // no stored choice: the manifest default applies
     await stored(true);

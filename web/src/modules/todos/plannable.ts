@@ -54,22 +54,21 @@ const source: PlannableSource = {
     const tasks = (await taskRepo.active().toArray()).filter(
       (t) => !t.done && !t.someday && !t.parentId,
     );
-    return tasks.map(
-      (t): PlannableItem => ({
-        id: t.id,
-        kind: TASK_KIND,
-        title: t.title,
-        to: `/todos?open=${t.id}`,
-        ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
-        priority: t.priority as 0 | 1 | 2 | 3,
-        ...(t.dueDate ? { due: { date: t.dueDate, hard: false } } : {}),
-        ...(t.startDate ? { earliest: t.startDate } : {}),
-        ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
-        ...(t.planMark ? { planMark: t.planMark } : {}),
-        ...(t.personId ? { personId: t.personId } : {}),
-        ...(t.links?.[0] ? { link: t.links[0] } : {}),
-      }),
-    );
+    return tasks.map((t): PlannableItem => ({
+      id: t.id,
+      kind: TASK_KIND,
+      title: t.title,
+      to: `/todos?open=${t.id}`,
+      ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
+      priority: t.priority as 0 | 1 | 2 | 3,
+      ...(t.dueDate ? { due: { date: t.dueDate, hard: false } } : {}),
+      ...(t.startDate ? { earliest: t.startDate } : {}),
+      ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
+      ...(t.planMark ? { planMark: t.planMark } : {}),
+      ...(t.personId ? { personId: t.personId } : {}),
+      ...(t.links?.[0] ? { link: t.links[0] } : {}),
+      createdAt: t.createdAt,
+    }));
   },
   async onAssign(id, date, order) {
     const task = await taskRepo.get(id);

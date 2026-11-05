@@ -18,7 +18,7 @@ import type {
 /** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
 const preload =
   (
-    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline',
+    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable',
     manifests: readonly ModuleManifest[],
   ) =>
   () =>
@@ -77,6 +77,19 @@ export async function collectPlannable(
     }),
   );
   return lists.flat();
+}
+
+/** Live plannable things of all active modules; `undefined` while loading. */
+export function usePlannable(ctx: { today: string; until: string }): PlannableEntry[] | undefined {
+  const states = useModuleStates();
+  const ids = activeManifests(states)
+    .map((m) => m.id)
+    .join(',');
+  return useSharedLiveQuery(
+    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
+    async () => (states ? collectPlannable(ctx, activeManifests(states)) : undefined),
+    preload('plannable', activeManifests(states)),
+  );
 }
 
 /** Loads the plannable source of one module (for `onAssign`/`onDone`/`onEstimate`); `undefined` without one. */
