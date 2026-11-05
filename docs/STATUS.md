@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3.1, Fundament-Fixpaket (`feat/identity-v3-frame`, PR offen): Kopf-Raster mit Signatur-Slot je Kopfvariante (S/M/L), Inhaltsspalte 70 rem, `HeadSurface` für Band/Settings/Werkzeuge, eine Signatur-Bibliothek für Module und Werkzeuge, Contract ohne `widgetType`/`feedback` mit app-weiter Kollisionsregel, Tokens `--text-on-tint`/`--font-serif`/`--weight-light`, Widget-Bodies, Sidebar-Dichte; danach Pakete 1–3 (Planen+Geld, Haushalt/Wissen/Medien, Dieser PC) auf dem neuen Raster.
+
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 
 Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.

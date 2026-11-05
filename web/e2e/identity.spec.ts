@@ -71,6 +71,60 @@ test.describe('Module identity', () => {
     expect(calm).toBe(grey);
   });
 
+  test('identity v3.1: the signature slot sits in the content column near the page edge at 1920 and 2560, and nothing of it disappears on the phone', async ({
+    page,
+  }) => {
+    // The slot's left edge, measured from the page container's left edge, in rem of the current root size.
+    const slotStart = () =>
+      page.evaluate(() => {
+        const slot = document.querySelector('[data-testid="module-signature"]');
+        const pageEl = document.querySelector('[data-testid="page"]');
+        if (!slot || !pageEl) return null;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        return (slot.getBoundingClientRect().left - pageEl.getBoundingClientRect().left) / rem;
+      });
+    for (const width of [1920, 2560]) {
+      await page.setViewportSize({ width, height: 1080 });
+      for (const [path, slot] of [
+        ['/finance', 'M'],
+        ['/calendar', 'L'],
+        ['/todos', 'S'],
+      ] as const) {
+        await ready(page, path);
+        const frame = page.getByTestId('module-frame');
+        await expect(frame, `${path} @${width}`).toHaveAttribute('data-slot', slot);
+        await expect(frame.getByTestId('module-signature'), `${path} @${width}`).toBeVisible();
+        const start = await slotStart();
+        expect(start, `${path} @${width}: slot start`).not.toBeNull();
+        expect(
+          start!,
+          `${path} @${width}: the slot starts within 40 rem of the page's left edge`,
+        ).toBeLessThanOrEqual(40);
+        expect(
+          start!,
+          `${path} @${width}: the slot is not left of the page`,
+        ).toBeGreaterThanOrEqual(-1);
+      }
+    }
+    // Phone: the slot shrinks, it never hides; no signature in the head is display: none.
+    await page.setViewportSize({ width: 412, height: 915 });
+    for (const path of ['/finance', '/calendar', '/todos']) {
+      await ready(page, path);
+      const frame = page.getByTestId('module-frame');
+      await expect(frame.getByTestId('module-signature'), `${path} @412`).toBeVisible();
+      const hidden = await frame.evaluate((el) =>
+        [
+          ...el.querySelectorAll<HTMLElement>(
+            '[data-signature], [data-testid="module-signature"] *',
+          ),
+        ]
+          .filter((e) => getComputedStyle(e).display === 'none')
+          .map((e) => e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0]),
+      );
+      expect(hidden, `${path} @412: hidden parts of the signature`).toEqual([]);
+    }
+  });
+
   test('overview and a module page pass axe in both themes with module colours on', async ({
     page,
   }) => {

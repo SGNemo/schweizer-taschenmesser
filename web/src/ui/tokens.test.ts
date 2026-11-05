@@ -174,7 +174,7 @@ describe('design tokens', () => {
             `tokens (${name}): --info ${t['--info']} is within 25° of ${near.join(', ')}`,
           );
         expect(near, '--info: module hues within 25° (documented overlaps only)').toEqual(
-          INFO_OVERLAPS[name],
+          INFO_OVERLAPS[name as 'light' | 'dark'],
         );
       });
       it('page background and text on the filled accent', () => {

@@ -33,6 +33,11 @@ const PAGES = [
   ...MODULE_IDS.map((id) => `/${id}`),
   '/calendar?view=month',
   '/todos?view=board',
+  // One split route per master-detail module (identity v3.1, C18): the detail pane opens beside the list.
+  '/finance?tab=transactions',
+  '/calendar?view=day',
+  '/accounts',
+  '/disk?tab=scan',
   '/library',
   '/library/todos',
   '/tools',
@@ -79,7 +84,11 @@ interface Report {
   mainOverflow: number;
   /** Elements that end beyond the window (tag.class right=px). */
   sticking: string[];
+  /** Elements that clip their own content sideways (`overflow: hidden` without an ellipsis; tag.class +px). */
+  clipped: string[];
   subnavOverflow: number;
+  /** The sidebar at 1920 × 1080 (identity v3.1, F06): `null` without a wide sidebar. */
+  sidebar: { groups: number; links: number; scrolls: boolean; lastBottom: number } | null;
   /** Left/right free space of the page container inside `main` (px), `null` without a container. */
   centre: { left: number; right: number; width: number } | null;
   main: { left: number; right: number } | null;
@@ -113,6 +122,41 @@ function report(page: Page): Promise<Report> {
               `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} right=${Math.round(e.getBoundingClientRect().right)}`,
           )
       : [];
+    // Identity v3.1 (C18): content cut off by `overflow: hidden` is as bad as content beyond the window; an ellipsis
+    // (or a line clamp) says so and is fine, a horizontal scroller is a scroller.
+    const clipped = main
+      ? [...main.querySelectorAll<HTMLElement>('*')]
+          .filter((e) => {
+            if (e.offsetParent === null || e.scrollWidth <= e.clientWidth + 1) return false;
+            const cs = getComputedStyle(e);
+            if (cs.overflowX !== 'hidden' && cs.overflowX !== 'clip') return false;
+            if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none') return false;
+            // A scroller inside: the content is reachable there.
+            return ![...e.children].some((c) => {
+              const o = getComputedStyle(c).overflowX;
+              return o === 'auto' || o === 'scroll';
+            });
+          })
+          .slice(0, 6)
+          .map(
+            (e) =>
+              `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} +${e.scrollWidth - e.clientWidth}px`,
+          )
+      : [];
+    const nav = document.querySelector<HTMLElement>('nav[aria-label="Hauptnavigation"]');
+    const groups = nav ? [...nav.querySelectorAll<HTMLElement>('section[data-area]')] : [];
+    const sidebar =
+      nav && groups.length > 0
+        ? {
+            groups: groups.length,
+            links: groups.reduce((n, g) => n + g.querySelectorAll('a[href]').length, 0),
+            scrolls: [...nav.querySelectorAll<HTMLElement>('*'), nav].some((e) => {
+              const o = getComputedStyle(e).overflowY;
+              return (o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight + 1;
+            }),
+            lastBottom: Math.round(groups[groups.length - 1]!.getBoundingClientRect().bottom),
+          }
+        : null;
     const subnav = document.querySelector<HTMLElement>('[data-testid="subnav"]');
     const pageEl = main?.querySelector<HTMLElement>('[data-testid="page"]');
     const box = (el: Element | null | undefined) => (el ? el.getBoundingClientRect() : null);
@@ -122,6 +166,8 @@ function report(page: Page): Promise<Report> {
       docOverflow: doc.scrollWidth - doc.clientWidth,
       mainOverflow: main ? main.scrollWidth - main.clientWidth : 0,
       sticking,
+      clipped,
+      sidebar,
       subnavOverflow: subnav ? subnav.scrollWidth - subnav.clientWidth : 0,
       centre:
         pb && mb
@@ -166,6 +212,20 @@ for (const vp of VIEWPORTS) {
             0,
           );
           expect(r.sticking, `${path}: elements end beyond the window`).toEqual([]);
+          expect(r.clipped, `${path}: elements clip their content sideways`).toEqual([]);
+          // Identity v3.1 (F06): at 1920 × 1080 every area with every module fits the sidebar without scrolling.
+          if (vp.width === 1920 && path === '/') {
+            expect(r.sidebar, 'sidebar').not.toBeNull();
+            expect(r.sidebar!.groups, 'areas in the sidebar').toBe(6);
+            expect(r.sidebar!.links, 'modules in the sidebar').toBeGreaterThanOrEqual(
+              MODULE_IDS.length,
+            );
+            expect(r.sidebar!.scrolls, 'the sidebar scrolls').toBe(false);
+            expect(
+              r.sidebar!.lastBottom,
+              'the last area ends inside the window',
+            ).toBeLessThanOrEqual(vp.height);
+          }
           if (vp.width >= 900)
             expect(r.subnavOverflow, `${path}: the sub-navigation is cut off`).toBeLessThanOrEqual(
               0,
