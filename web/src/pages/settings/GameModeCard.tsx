@@ -8,6 +8,7 @@ import { playReminderTone, REMINDER_SOUNDS, type ReminderSound } from '@/core/no
 import { getPlatform } from '@/core/platform';
 import { tGame } from '@/strings.gamemode';
 import { Button, Card, Segmented, SettingRow, TextField } from '@/ui';
+import { Actions } from './ConnectParts';
 import { MuteSwitch } from './MuteSwitch';
 import styles from './settings.module.css';
 
@@ -64,9 +65,11 @@ export function GameModeCard() {
               value={settings.volume}
               onChange={(e) => setGameSettings({ volume: Number(e.target.value) })}
             />
-            <Button onClick={() => void playReminderTone(settings.sound, settings.volume)}>
-              {s.test}
-            </Button>
+            <Actions>
+              <Button onClick={() => void playReminderTone(settings.sound, settings.volume)}>
+                {s.test}
+              </Button>
+            </Actions>
             <p>{s.muteNote}</p>
           </>
         ) : null}
