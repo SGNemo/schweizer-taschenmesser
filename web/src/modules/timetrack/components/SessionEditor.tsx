@@ -47,6 +47,8 @@ function Fields({
   onClose: () => void;
 }) {
   const existing = target === 'new' ? null : target;
+  // A running session (no end yet) stays running when it is edited: no end, its pause is kept.
+  const running = Boolean(existing && !existing.endTime);
   const [jobId, setJobId] = useState(existing?.jobId ?? jobs[0]?.id ?? '');
   const [date, setDate] = useState(existing?.date ?? today());
   const [start, setStart] = useState(existing?.startTime ?? '09:00');
@@ -61,14 +63,14 @@ function Fields({
       jobId: jobId || undefined,
       date,
       startTime: start,
-      endTime: end,
-      endDate: endDate && endDate !== date ? endDate : undefined,
+      endTime: running ? undefined : end,
+      endDate: !running && endDate && endDate !== date ? endDate : undefined,
       breakMin: Math.max(0, Math.round(Number(breakMin) || 0)),
       note: note.trim() || undefined,
-      pausedAt: undefined,
-      pausedDate: undefined,
+      pausedAt: running ? existing?.pausedAt : undefined,
+      pausedDate: running ? existing?.pausedDate : undefined,
     };
-    const sameDayBackwards = (data.endDate ?? date) === date && end <= start;
+    const sameDayBackwards = !running && (data.endDate ?? date) === date && end <= start;
     if (!sessionSchema.safeParse(data).success || sameDayBackwards || (data.endDate ?? date) < date)
       return setError(t.errors.generic);
     if (existing) await sessionRepo.update(existing.id, data);
@@ -106,20 +108,24 @@ function Fields({
           onChange={(e) => setStart(e.target.value)}
           required
         />
-        <TextField
-          label={t.timetrack.form.end}
-          type="time"
-          value={end}
-          onChange={(e) => setEnd(e.target.value)}
-          required
-        />
+        {running ? null : (
+          <TextField
+            label={t.timetrack.form.end}
+            type="time"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            required
+          />
+        )}
       </div>
-      <TextField
-        label={t.timetrack.form.endDate}
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-      />
+      {running ? null : (
+        <TextField
+          label={t.timetrack.form.endDate}
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
+      )}
       <TextField
         label={t.timetrack.form.breakMin}
         type="number"
