@@ -31,11 +31,8 @@ export type Status = 'expired' | 'act-now' | 'missed' | 'soon' | 'ok' | 'open-en
 export type StateGroup = 'expired' | 'due' | 'ok';
 export const STATE_GROUPS: readonly StateGroup[] = ['expired', 'due', 'ok'];
 export function stateGroup(s: Status): StateGroup {
-  return s === 'expired'
-    ? 'expired'
-    : s === 'act-now' || s === 'soon' || s === 'missed'
-      ? 'due'
-      : 'ok';
+  // A passed cancellation deadline is no deadline "in sight" any more: the term simply runs on.
+  return s === 'expired' ? 'expired' : s === 'act-now' || s === 'soon' ? 'due' : 'ok';
 }
 
 /** Days before a cancellation deadline from which an entry counts as "soon". */
