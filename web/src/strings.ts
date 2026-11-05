@@ -5150,6 +5150,21 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
+    stateTabs: 'Nach Zustand filtern',
+    stateGroups: {
+      expired: 'Abgelaufen',
+      due: 'Frist in Sicht',
+      ok: 'In Ordnung',
+    },
+    privacyLine: 'Dateien bleiben auf diesem Gerät · Titel, Fristen und Notizen werden abgeglichen',
+    docCount: (n: number) => (n === 1 ? '1 Unterlage' : `${n} Unterlagen`),
+    widgetRest: (due: number, total: number) =>
+      [
+        due > 0 ? `${due} mit Frist in Sicht` : '',
+        total === 1 ? '1 Unterlage insgesamt' : `${total} Unterlagen insgesamt`,
+      ]
+        .filter(Boolean)
+        .join(' · '),
     figureUnit: 'Unterlagen',
     figureDetail: (expired: number, due: number) =>
       [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
@@ -5844,6 +5859,7 @@ export const de = {
   },
   onboarding: {
     button: 'Importieren',
+    pageMenu: 'Weitere Aktionen',
     title: (module: string) => `Importieren: ${module}`,
     rowLabel: 'Einträge übernehmen',
     rowHint:
@@ -7047,11 +7063,7 @@ export const de = {
     head: {
       inbox: 'Posteingang',
       unread: (n: number) =>
-        n === 0
-          ? 'Alles gelesen'
-          : n === 1
-            ? '1 ungelesener Thread'
-            : `${n} ungelesene Threads`,
+        n === 0 ? 'Alles gelesen' : n === 1 ? '1 ungelesener Thread' : `${n} ungelesene Threads`,
     },
   },
   browser: {

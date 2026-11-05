@@ -271,6 +271,7 @@ export const mail: Strings['mail'] = {
   },
   head: {
     inbox: 'Bandeja de entrada',
-    unread: (n: number) => (n === 0 ? 'Todo leído' : n === 1 ? `1 hilo sin leer` : `${n} hilos sin leer`),
+    unread: (n: number) =>
+      n === 0 ? 'Todo leído' : n === 1 ? `1 hilo sin leer` : `${n} hilos sin leer`,
   },
 };

@@ -2,6 +2,7 @@ import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
   button: 'Import',
+  pageMenu: 'More actions',
   title: (module: string) => `Import: ${module}`,
   rowLabel: 'Add entries',
   rowHint: 'From a file, a text or suggestions. Nothing is saved until you confirm the preview.',

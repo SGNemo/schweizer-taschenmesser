@@ -27,6 +27,17 @@ export function cancelDeadline(d: D): string | undefined {
 
 export type Status = 'expired' | 'act-now' | 'missed' | 'soon' | 'ok' | 'open-ended';
 
+/** The three states the head's folder tabs count and filter by: expired, a deadline in sight, fine. */
+export type StateGroup = 'expired' | 'due' | 'ok';
+export const STATE_GROUPS: readonly StateGroup[] = ['expired', 'due', 'ok'];
+export function stateGroup(s: Status): StateGroup {
+  return s === 'expired'
+    ? 'expired'
+    : s === 'act-now' || s === 'soon' || s === 'missed'
+      ? 'due'
+      : 'ok';
+}
+
 /** Days before a cancellation deadline from which an entry counts as "soon". */
 export const SOON_DAYS = 30;
 /** Days before the end of a document without a deadline (passport, warranty) that count as "soon". */

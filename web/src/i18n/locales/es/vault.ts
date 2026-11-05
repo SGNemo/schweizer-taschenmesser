@@ -67,6 +67,22 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'No se encontró nada.',
   widgetEmpty: 'No hay plazos a la vista.',
   figureLabel: 'Archivo',
+  stateTabs: 'Filtrar por estado',
+  stateGroups: {
+    expired: 'Caducado',
+    due: 'Plazo a la vista',
+    ok: 'En orden',
+  },
+  privacyLine:
+    'Los archivos se quedan en este dispositivo · títulos, plazos y notas se sincronizan',
+  docCount: (n: number) => (n === 1 ? '1 documento' : `${n} documentos`),
+  widgetRest: (due: number, total: number) =>
+    [
+      due > 0 ? `${due} con plazo a la vista` : '',
+      total === 1 ? '1 documento en total' : `${total} documentos en total`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
   figureUnit: 'documentos',
   figureDetail: (expired: number, due: number) =>
     [

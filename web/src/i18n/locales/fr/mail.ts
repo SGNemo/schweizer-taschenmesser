@@ -279,6 +279,7 @@ export const mail: Strings['mail'] = {
   },
   head: {
     inbox: 'Boîte de réception',
-    unread: (n: number) => (n === 0 ? 'Tout est lu' : n === 1 ? `1 fil non lu` : `${n} fils non lus`),
+    unread: (n: number) =>
+      n === 0 ? 'Tout est lu' : n === 1 ? `1 fil non lu` : `${n} fils non lus`,
   },
 };

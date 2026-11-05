@@ -67,6 +67,22 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'Aucun résultat.',
   widgetEmpty: 'Aucun délai en vue.',
   figureLabel: 'Classeur',
+  stateTabs: 'Filtrer par état',
+  stateGroups: {
+    expired: 'Expiré',
+    due: 'Échéance proche',
+    ok: 'En ordre',
+  },
+  privacyLine:
+    'Les fichiers restent sur cet appareil · titres, échéances et notes sont synchronisés',
+  docCount: (n: number) => (n === 1 ? '1 document' : `${n} documents`),
+  widgetRest: (due: number, total: number) =>
+    [
+      due > 0 ? `${due} avec une échéance proche` : '',
+      total === 1 ? '1 document au total' : `${total} documents au total`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
   figureUnit: 'documents',
   figureDetail: (expired: number, due: number) =>
     [

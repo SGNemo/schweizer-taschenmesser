@@ -5,11 +5,12 @@ import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
   Badge,
   Button,
+  EmptyState,
   FolderTabs,
   Icon,
   ItemList,
@@ -18,8 +19,8 @@ import {
   TextField,
   useOpenParam,
 } from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
-import { VaultEmpty } from '../components/VaultEmpty';
 import { VaultHead } from '../components/VaultHead';
 import { changeWithUndo } from '@/core/undo/withToast';
 import {
@@ -32,7 +33,9 @@ import {
   renewedEnd,
   safeFileName,
   sortDocuments,
+  stateGroup,
   statusOf,
+  type StateGroup,
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
@@ -53,6 +56,7 @@ export default function VaultPage() {
   const files = useLiveQuery(async () => new Set(await blobKeys()), []);
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
+  const [state, setState] = useState<StateGroup | null>(null);
   const [target, setTarget] = useState<DocumentTarget>(null);
   useOpenParam((id) => documentRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
@@ -72,8 +76,14 @@ export default function VaultPage() {
   }, [keep]);
 
   const shown = useMemo(
-    () => sortDocuments(filterDocuments(docs ?? [], { category, query }), day),
-    [docs, category, query, day],
+    () =>
+      sortDocuments(
+        filterDocuments(docs ?? [], { category, query }).filter(
+          (d) => !state || stateGroup(statusOf(d, day)) === state,
+        ),
+        day,
+      ),
+    [docs, category, query, state, day],
   );
 
   const counts = countByCategory(docs ?? []);
@@ -85,8 +95,13 @@ export default function VaultPage() {
           <Icon name="plus" size={18} />
           {t.vault.add}
         </Button>
+        <StartDataMenu moduleId="vault" />
       </PageHeader>
-      <VaultHead docs={docs ?? []} day={day} />
+      <p className={styles.privacy} data-testid="vault-local">
+        <Icon name="lock" size={16} />
+        <span>{t.vault.privacyLine}</span>
+      </p>
+      <VaultHead docs={docs ?? []} day={day} state={state} onState={setState} />
       <TextField
         label={t.vault.search}
         type="search"
@@ -109,9 +124,11 @@ export default function VaultPage() {
         ]}
       />
       {docs && shown.length === 0 ? (
-        <VaultEmpty title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}>
-          {docs.length === 0 ? <StartDataButton moduleId="vault" /> : null}
-        </VaultEmpty>
+        <EmptyState
+          title={docs.length === 0 ? t.vault.empty : t.vault.emptyFiltered}
+          testId="vault-empty"
+          motif={<SignatureMark id="folderTab" size={64} />}
+        />
       ) : null}
       <ItemList layout="grid" label={t.vault.title}>
         {shown.map((d) => {

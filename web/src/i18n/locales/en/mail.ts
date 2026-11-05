@@ -269,6 +269,7 @@ export const mail: Strings['mail'] = {
   },
   head: {
     inbox: 'Inbox',
-    unread: (n: number) => (n === 0 ? 'All read' : n === 1 ? `1 unread thread` : `${n} unread threads`),
+    unread: (n: number) =>
+      n === 0 ? 'All read' : n === 1 ? `1 unread thread` : `${n} unread threads`,
   },
 };

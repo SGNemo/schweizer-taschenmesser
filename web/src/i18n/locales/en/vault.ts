@@ -67,6 +67,21 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
+  stateTabs: 'Filter by state',
+  stateGroups: {
+    expired: 'Expired',
+    due: 'Deadline ahead',
+    ok: 'Fine',
+  },
+  privacyLine: 'Files stay on this device · titles, deadlines and notes are synced',
+  docCount: (n: number) => (n === 1 ? '1 document' : `${n} documents`),
+  widgetRest: (due: number, total: number) =>
+    [
+      due > 0 ? `${due} with a deadline ahead` : '',
+      total === 1 ? '1 document in total' : `${total} documents in total`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
   figureUnit: 'documents',
   figureDetail: (expired: number, due: number) =>
     [expired > 0 ? `${expired} expired` : '', due > 0 ? `${due} with a deadline ahead` : '']
