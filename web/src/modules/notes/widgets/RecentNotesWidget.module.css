@@ -10,7 +10,7 @@
   text-decoration: none;
 }
 .title {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
 }
@@ -19,7 +19,7 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
