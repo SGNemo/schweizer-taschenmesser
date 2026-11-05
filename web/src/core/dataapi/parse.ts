@@ -268,7 +268,12 @@ export async function buildCandidates(
           batchTitles,
           entriesOf,
         );
+        const nested =
+          typeof resolved !== 'string' &&
+          field.refCollection === collection &&
+          (await pointsToChild(resolved.id, field, drafts, collection, opts.lookup));
         if (typeof resolved === 'string') errors.push(`${name}: ${resolved}`);
+        else if (nested) errors.push(`${name}: ${t.dataApi.refNested}`);
         else {
           data[field.storeName] = resolved.id;
           refIds.set(field.storeName, resolved.id);
@@ -336,6 +341,23 @@ export async function buildCandidates(
     });
   }
   return { candidates, notes: [] };
+}
+
+/**
+ * A reference within one collection (a subtask's `parentId`) may only point at an entry that has no
+ * such reference itself: the list shows one level, and a cycle or a third level would never be seen.
+ */
+async function pointsToChild(
+  id: string,
+  field: FieldFormat,
+  drafts: Draft[],
+  collection: string,
+  lookup: RefLookup,
+): Promise<boolean> {
+  const inBatch = drafts.find((d) => d.id === id);
+  if (inBatch) return inBatch.raw[field.name] !== undefined && inBatch.raw[field.name] !== null;
+  const stored = await lookup.record(collection, id);
+  return stored?.[field.storeName] !== undefined && stored[field.storeName] !== null;
 }
 
 function invalid(draft: Draft, collection: string, error: string): ImportCandidate {
