@@ -27,13 +27,21 @@ import { getFocusSettings } from '@/core/settings/focus';
 import { PULL_COMPLETE_KEY } from '@/core/storage/dexie';
 import { LAST_SYNC_KEY, syncSettled } from '@/core/sync/service';
 import { now, today } from '@/core/time/now';
-import { undoable, type UndoEntry } from '@/core/undo';
+import { forgetUndo, undoable, type UndoEntry } from '@/core/undo';
 import { assignmentRepo, dayRepo, itemRepo, MODULE_ID } from './repo';
 import { LAST_RUN_KEY, restoreSources, runPlanner, type RunDeps, type RunOutcome } from './run';
 import { getPlannerSettings } from './prefs';
 
 let chain: Promise<unknown> = Promise.resolve();
 let stopped = false;
+
+/** `runUser` while the module is switched off (a stale page in another tab): the UI says so, calmly. */
+export class PlannerOffError extends Error {
+  constructor() {
+    super('planner: switched off');
+    this.name = 'PlannerOffError';
+  }
+}
 /** Set while the service is started (tests call `runUser` without one). */
 let manifestsFor: (() => Promise<readonly ModuleManifest[]>) | undefined;
 
@@ -58,7 +66,14 @@ async function depsNow(): Promise<RunDeps> {
     activeSources(),
     syncSettled(),
   ]);
-  return { today: today(), manifests, settings, planLimit: focus.planLimit, settled };
+  return {
+    today: today(),
+    manifests,
+    settings,
+    planLimit: focus.planLimit,
+    settled,
+    aborted: () => stopped,
+  };
 }
 
 /** Switched off meanwhile (this tab, another tab, another device)? Then no run may touch the rows again. */
@@ -89,11 +104,15 @@ export interface UserRun {
  */
 export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
   return enqueue(async () => {
-    if (await switchedOff()) throw new Error('planner: switched off');
-    const { result, entry } = await undoable(label, async () => {
-      await act();
-      return runPlanner(await depsNow(), { force: true });
-    });
+    if (await switchedOff()) throw new PlannerOffError();
+    const { result, entry } = await undoable(
+      label,
+      async () => {
+        await act();
+        return runPlanner(await depsNow(), { force: true });
+      },
+      MODULE_ID,
+    );
     return { outcome: result, ...(entry ? { entry } : {}) };
   });
 }
@@ -154,6 +173,7 @@ async function preload(): Promise<void> {
 export default function start(): () => void {
   stopped = false;
   manifestsFor = undefined;
+  let active = true;
   let sub: { unsubscribe(): void } | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let midnight: ReturnType<typeof setTimeout> | undefined;
@@ -175,7 +195,7 @@ export default function start(): () => void {
   void preload()
     .catch(() => undefined)
     .then(() => {
-      if (stopped) return;
+      if (!active) return;
       sub = liveQuery(inputSnapshot).subscribe({
         next: schedule,
         error: (e) => console.error('[planner] input stream failed', e),
@@ -186,16 +206,22 @@ export default function start(): () => void {
   const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
     if (moduleId !== MODULE_ID) return;
     stopped = true;
+    active = false;
     clearTimeout(timer);
     clearTimeout(midnight);
     sub?.unsubscribe();
-    // A hung run must not keep the switch-off waiting; the ToDo side's own clean-up catches the rest.
-    await Promise.race([chain, new Promise((r) => setTimeout(r, DISABLE_WAIT_MS))]);
+    // The planner's undo entries must not be replayed into a module that is off.
+    forgetUndo(MODULE_ID);
+    // A hung run must not keep the switch-off waiting: `stopped` makes it write nothing more (`RunDeps.aborted`).
+    let wait: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([chain, new Promise((r) => (wait = setTimeout(r, DISABLE_WAIT_MS)))]);
+    clearTimeout(wait);
     await restoreSources({ today: today(), manifests: availableManifests() });
     if (policy === 'delete') await deleteMeta(LAST_RUN_KEY);
   });
   return () => {
     stopped = true;
+    active = false;
     clearTimeout(timer);
     clearTimeout(midnight);
     sub?.unsubscribe();

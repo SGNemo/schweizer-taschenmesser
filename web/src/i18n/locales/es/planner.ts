@@ -37,6 +37,7 @@ export const planner: Strings['planner'] = {
   head: {
     free: (min: string) => `${min} libres hoy`,
     full: 'Para hoy ya hay bastante planificado.',
+    noTime: 'Hoy no queda tiempo libre.',
     dayOff: 'Hoy es libre.',
     over: (min: string) => `${min} más de lo que cabe`,
     context: (n: number, planned: string) =>
@@ -49,6 +50,7 @@ export const planner: Strings['planner'] = {
     freeOf: (free: string, usable: string) => `${free} libres de ${usable}`,
     off: 'libre',
     full: 'lleno',
+    noTime: 'sin tiempo libre',
     load: (planned: string, usable: string) => `${planned} de ${usable} planificados`,
     strip: 'Días',
   },
@@ -88,7 +90,6 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Acciones para ${title}`,
     due: (day: string) => `Fecha límite ${day}`,
     dueWas: (day: string) => `La fecha límite era ${day}`,
-    pinned: 'fijado',
     blocker: 'Bloqueo',
   },
   reasons: {
@@ -103,7 +104,6 @@ export const planner: Strings['planner'] = {
     'after-part': (part: string) => `sigue a ${part}`,
     pulled: (day: string) => `adelantado, debe estar listo el ${day}`,
     capacity: 'el día tiene menos tiempo',
-    done: 'hecho',
     others: 'otros',
   },
   wait: {
@@ -126,14 +126,14 @@ export const planner: Strings['planner'] = {
     markedDue: (day: string) => `Fecha límite: ${day}`,
     unmarkedDue: 'Fecha límite quitada',
     added: 'Añadido',
-    addedWithDue: (day: string) => `Añadido · límite ${day}`,
+    addedWithDue: (day: string) => `Añadido · fecha límite ${day}`,
     dayOff: (day: string) => `El ${day} es libre.`,
     dayOn: (day: string) => `El ${day} vuelve al plan.`,
     available: (day: string, min: string) => `${day}: ${min} disponibles`,
     blockerAdded: 'Bloqueo añadido',
     blockerRemoved: 'Bloqueo quitado',
     weekChecked: 'Semana confirmada.',
-    nothingChanged: 'Nada cambió.',
+    off: 'El planificador está apagado.',
   },
   add: {
     label: 'Añadir',

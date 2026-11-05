@@ -2,7 +2,8 @@
  * What the ToDo side does with the planner's marks while the planner is off: nothing, except the one
  * idempotent clean-up of CONCEPT §2 – when a stored `_modules` row says the planner is switched off
  * and the sync gate is open, every planner-own `plannedFor` goes back to `planMark.prior` (or away)
- * and the mark is cleared. Needs no planner table, so it also catches a late write-back from a device
+ * and the mark is cleared. The service runs it from a live query over its inputs (`services.ts`), so
+ * it needs no planner table and also catches a late write-back – a run in another tab, or a device
  * that was offline while another switched the planner off (a user date that never reached `prior` is
  * lost then – accepted).
  */

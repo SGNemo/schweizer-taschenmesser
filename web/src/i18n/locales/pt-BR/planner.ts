@@ -37,6 +37,7 @@ export const planner: Strings['planner'] = {
   head: {
     free: (min: string) => `${min} livres hoje`,
     full: 'Para hoje já há o bastante planejado.',
+    noTime: 'Hoje não há tempo livre.',
     dayOff: 'Hoje é livre.',
     over: (min: string) => `${min} a mais do que cabe`,
     context: (n: number, planned: string) =>
@@ -49,6 +50,7 @@ export const planner: Strings['planner'] = {
     freeOf: (free: string, usable: string) => `${free} livres de ${usable}`,
     off: 'livre',
     full: 'cheio',
+    noTime: 'sem tempo livre',
     load: (planned: string, usable: string) => `${planned} de ${usable} planejados`,
     strip: 'Dias',
   },
@@ -88,7 +90,6 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Ações para ${title}`,
     due: (day: string) => `Prazo ${day}`,
     dueWas: (day: string) => `O prazo era ${day}`,
-    pinned: 'fixado',
     blocker: 'Bloqueio',
   },
   reasons: {
@@ -103,7 +104,6 @@ export const planner: Strings['planner'] = {
     'after-part': (part: string) => `vem depois de ${part}`,
     pulled: (day: string) => `adiantado, precisa estar pronto até ${day}`,
     capacity: 'o dia tem menos tempo',
-    done: 'feito',
     others: 'outros',
   },
   wait: {
@@ -133,7 +133,7 @@ export const planner: Strings['planner'] = {
     blockerAdded: 'Bloqueio adicionado',
     blockerRemoved: 'Bloqueio removido',
     weekChecked: 'Semana confirmada.',
-    nothingChanged: 'Nada mudou.',
+    off: 'O planejador está desligado.',
   },
   add: {
     label: 'Adicionar',

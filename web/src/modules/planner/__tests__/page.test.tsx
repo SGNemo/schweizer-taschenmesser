@@ -100,8 +100,10 @@ describe('planner page', () => {
     // „Nicht planen“ things sit in the waiting group with a way back.
     expect(screen.getByText('Wartet auf freie Zeit')).toBeInTheDocument();
     expect(screen.getByText('Keller')).toBeInTheDocument();
-    // Erledigt is one tap: a tick in the row; „Warum hier?“ sits in the ⋯ menu, no reason text at rest.
-    expect(screen.getAllByRole('checkbox', { name: 'Erledigt' }).length).toBeGreaterThan(0);
+    // Erledigt is one tap: a tick in the row, named after the thing; „Warum hier?“ sits in the ⋯ menu, no reason text at rest.
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('checkbox').every((c) => c.getAttribute('aria-label'))).toBe(true);
+    expect(screen.queryByRole('checkbox', { name: 'Erledigt' })).toBeNull();
     expect(screen.queryByText('neu, nach Priorität')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Warum hier?' })).toBeNull();
     fireEvent.click(screen.getAllByRole('button', { name: 'Aktionen für Steuer' })[0]!);

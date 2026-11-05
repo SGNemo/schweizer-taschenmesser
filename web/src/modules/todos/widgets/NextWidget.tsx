@@ -52,7 +52,10 @@ export default function NextWidget() {
     () => (tasks ?? []) as (PickTask & { title: string; listId: string })[],
     [tasks],
   );
-  const plannerOn = useModuleStates()?.planner === true;
+  // Unknown on the first render: honour the marks, so the card does not reorder once the states arrive
+  // (while the planner is off its marks are cleaned away anyway).
+  const states = useModuleStates();
+  const plannerOn = states === undefined || states.planner === true;
   const { next, plan, planRows, until } = buildToday({
     tasks: all,
     items: items ?? [],

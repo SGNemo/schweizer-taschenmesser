@@ -7701,6 +7701,7 @@ export const de = {
     head: {
       free: (min: string) => `${min} frei heute`,
       full: 'Für heute ist genug geplant.',
+      noTime: 'Heute ist keine Zeit frei.',
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
       context: (n: number, planned: string) =>
@@ -7713,6 +7714,7 @@ export const de = {
       freeOf: (free: string, usable: string) => `${free} frei von ${usable}`,
       off: 'frei',
       full: 'voll',
+      noTime: 'keine freie Zeit',
       load: (planned: string, usable: string) => `${planned} von ${usable} geplant`,
       strip: 'Tage',
     },
@@ -7752,7 +7754,6 @@ export const de = {
       menu: (title: string) => `Aktionen für ${title}`,
       due: (day: string) => `Frist ${day}`,
       dueWas: (day: string) => `Frist war ${day}`,
-      pinned: 'festgenagelt',
       blocker: 'Blocker',
     },
     reasons: {
@@ -7767,7 +7768,6 @@ export const de = {
       'after-part': (part: string) => `folgt auf ${part}`,
       pulled: (day: string) => `vorgezogen, muss bis ${day} fertig sein`,
       capacity: 'der Tag hat weniger Zeit',
-      done: 'erledigt',
       others: 'andere',
     },
     wait: {
@@ -7797,7 +7797,7 @@ export const de = {
       blockerAdded: 'Blocker eingetragen',
       blockerRemoved: 'Blocker entfernt',
       weekChecked: 'Woche bestätigt.',
-      nothingChanged: 'Nichts geändert.',
+      off: 'Der Planer ist aus.',
     },
     add: {
       label: 'Eintragen',

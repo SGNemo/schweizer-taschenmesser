@@ -17,6 +17,8 @@ export interface UndoEntry {
   id: number;
   label: string;
   steps: UndoStep[];
+  /** Who owns the entry (a module id): `forgetUndo` drops a module's entries when it is switched off. */
+  scope?: string;
 }
 
 let journal: UndoEntry[] = [];
@@ -27,6 +29,7 @@ let active: UndoStep[] | null = null;
 export async function undoable<R>(
   label: string,
   fn: () => Promise<R>,
+  scope?: string,
 ): Promise<{ result: R; entry?: UndoEntry }> {
   if (active) return { result: await fn() }; // nested: part of the outer action
   const steps: UndoStep[] = [];
@@ -40,7 +43,7 @@ export async function undoable<R>(
     active = null;
   }
   if (steps.length === 0) return { result };
-  const entry: UndoEntry = { id: ++nextId, label, steps };
+  const entry: UndoEntry = { id: ++nextId, label, steps, ...(scope ? { scope } : {}) };
   journal = [entry, ...journal].slice(0, UNDO_LIMIT);
   return { result, entry };
 }
@@ -70,6 +73,11 @@ export async function undoLast(): Promise<string | undefined> {
 }
 
 export const undoDepth = (): number => journal.length;
+
+/** Drops every entry of `scope` (a module that is switched off must not be replayed into). */
+export function forgetUndo(scope: string): void {
+  journal = journal.filter((e) => e.scope !== scope);
+}
 
 /** Tests only. */
 export function resetUndoJournal(): void {

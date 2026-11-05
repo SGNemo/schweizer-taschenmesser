@@ -4,7 +4,15 @@ import { createRepo, type Repo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
-import { resetUndoJournal, UNDO_LIMIT, undoDepth, undoEntry, undoLast, undoable } from './index';
+import {
+  forgetUndo,
+  resetUndoJournal,
+  UNDO_LIMIT,
+  undoDepth,
+  undoEntry,
+  undoLast,
+  undoable,
+} from './index';
 
 const schema = z.object({
   title: z.string().min(1),
@@ -31,6 +39,16 @@ afterEach(async () => {
 });
 
 describe('undo journal', () => {
+  it('forgetUndo drops the entries of one scope and keeps the rest', async () => {
+    const a = await undoable('Plan', () => repo.create({ title: 'a', done: false }), 'planner');
+    await undoable('Neu', () => repo.create({ title: 'b', done: false }));
+    forgetUndo('planner');
+    expect(undoDepth()).toBe(1);
+    expect(await undoEntry(a.entry!.id)).toBe(false);
+    expect(await repo.get(a.result.id)).toBeDefined();
+    expect(await undoLast()).toBe('Neu');
+  });
+
   it('undoes a create by tombstoning the record', async () => {
     const { result } = await undoable('Neu', () => repo.create({ title: 'a', done: false }));
     expect(await repo.get(result.id)).toBeDefined();

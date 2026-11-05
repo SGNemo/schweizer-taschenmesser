@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { formatMinutes } from '@/core/i18n/format';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Dialog, IconButton, Icon, ItemList, ItemRow, TextField } from '@/ui';
@@ -11,6 +10,7 @@ import {
   setAvailable,
 } from '../actions';
 import type { BoardDay } from '../board';
+import { capacityLabel, compact } from './capacity';
 import styles from '../routes/planner.module.css';
 
 /** The sheet of one day: available time in 30-minute steps, blockers, „Tag frei“. Every change is one undoable run. */
@@ -26,7 +26,6 @@ export function DaySheet({
   const [label, setLabel] = useState('');
   const [minutes, setMinutes] = useState('60');
   if (!day) return null;
-  const compact = (min: number) => formatMinutes(min, { compact: true });
   const step = (delta: number) =>
     void setAvailable(day.date, Math.max(0, day.availableMin + delta), titles);
   const submitBlocker = (e: FormEvent) => {
@@ -56,11 +55,7 @@ export function DaySheet({
           </IconButton>
         </span>
       </div>
-      <p className={styles.capacity}>
-        {day.off
-          ? t.planner.board.off
-          : t.planner.board.freeOf(compact(day.free), compact(day.usable))}
-      </p>
+      <p className={styles.capacity}>{capacityLabel(day)}</p>
       {day.blockers.length > 0 ? (
         <ItemList label={t.planner.day.blockers}>
           {day.blockers.map((b) => (

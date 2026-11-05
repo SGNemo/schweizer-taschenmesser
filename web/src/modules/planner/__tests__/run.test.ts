@@ -15,8 +15,9 @@ import { syncSettled } from '@/core/sync/service';
 import { MemoryServer } from '@/core/sync/testing';
 import { setNow } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
+import { useUiStore } from '@/stores/ui';
 import { createTestDb } from '@/test-utils';
-import { setAvailable } from '../actions';
+import { act, setAvailable } from '../actions';
 import manifest from '../manifest';
 import { assignmentRepo, dayRepo, itemRepo, plannerRepos, putRow } from '../repo';
 import { LAST_RUN_KEY, restoreSources, runPlanner, type LastRun, type RunDeps } from '../run';
@@ -250,7 +251,10 @@ describe('a run', () => {
         createdAt: 2,
       },
     ];
-    const writer = { onAssign: vi.fn(async () => undefined) };
+    const writer = {
+      onAssign: vi.fn(async () => undefined),
+      onRelease: vi.fn(async () => undefined),
+    };
     const server = new MemoryServer();
     const devices = [createTestDb(), createTestDb()];
     for (const database of devices) {
@@ -421,21 +425,66 @@ describe('the service', () => {
     stopTodos?.();
   });
 
-  it('a late write-back after the planner was switched off is cleaned on the next start; a date never in prior is gone', async () => {
+  it('a late write-back after the planner was switched off is cleaned while the ToDos run (no restart); a date never in prior is gone', async () => {
     await modulesRow('todos', true);
     await modulesRow('planner', false);
     const a = await task('Spät', { estimateMin: 30 });
+    const stopTodos = (await todos.contributions!.services!()).default();
+    await runsSettled();
     // The other device's run reaches us after the switch-off (no prior: the user never had a date).
     await (await plannableSource(todos))!.onAssign!(a.id, '2026-11-12', 0);
-    expect(await stored(a.id)).toMatchObject({ plannedFor: '2026-11-12' });
-    const stopTodos = (await todos.contributions!.services!()).default();
     await vi.waitFor(async () => expect((await stored(a.id))!.planMark).toBeUndefined());
     expect((await stored(a.id))!.plannedFor).toBeUndefined();
     stopTodos?.();
   });
 
+  it('a run that outlives the switch-off writes nothing more (aborted before rows, write-backs and the run meta)', async () => {
+    await modulesRow('todos', true);
+    const a = await task('A', { estimateMin: 30 });
+    const b = await task('B', { estimateMin: 30 });
+    let off = false;
+    const writer = {
+      onAssign: vi.fn(async () => {
+        off = true; // the switch-off lands while the first write-back is in flight
+      }),
+      onRelease: vi.fn(async () => undefined),
+    };
+    const entries = (await plannableSource(todos))!.list({ today: TODAY, until: TODAY });
+    const r = await runPlanner(
+      deps({
+        entries: (await entries).map((e) => ({ ...e, moduleId: 'todos' })),
+        writer,
+        aborted: () => off,
+      }),
+    );
+    expect(r.ran).toBe(false);
+    expect(writer.onAssign).toHaveBeenCalledTimes(1);
+    expect(await getMeta(LAST_RUN_KEY)).toBeUndefined();
+    expect([a.id, b.id]).toHaveLength(2);
+    // Already off before the run: not even the rows are written.
+    const r2 = await runPlanner(deps({ aborted: () => true }));
+    expect(r2.ran).toBe(false);
+    expect(await assignmentRepo.active().count()).toBe(2); // the first run's rows stay (the ToDo side cleans marks)
+  });
+
+  it('switching off forgets the planner’s undo entries: the toast’s Rückgängig replays nothing', async () => {
+    await modulesRow('todos', true);
+    await enableModule(manifest);
+    await task('A', { estimateMin: 30 });
+    const run = await runUser('x', async () => undefined);
+    expect(run.entry).toBeDefined();
+    const stop = start();
+    await disableModule(manifest, 'delete');
+    stop();
+    expect(await undoEntry(run.entry!.id)).toBe(false);
+    expect(await assignmentRepo.active().count()).toBe(0);
+  });
+
   it('restoreSources touches only things with a mark', async () => {
-    const writer = { onAssign: vi.fn(async () => undefined) };
+    const writer = {
+      onAssign: vi.fn(async () => undefined),
+      onRelease: vi.fn(async () => undefined),
+    };
     await restoreSources({
       today: TODAY,
       manifests: [] as ModuleManifest[],
@@ -460,8 +509,9 @@ describe('the service', () => {
         },
       ],
     });
-    expect(writer.onAssign).toHaveBeenCalledTimes(1);
-    expect(writer.onAssign).toHaveBeenCalledWith('todos', 'a', undefined);
+    expect(writer.onAssign).not.toHaveBeenCalled();
+    expect(writer.onRelease).toHaveBeenCalledTimes(1);
+    expect(writer.onRelease).toHaveBeenCalledWith('todos', 'a');
   });
 });
 
@@ -518,24 +568,24 @@ describe('council round 1', () => {
     expect((await stored(a.id))!.planMark).toBeUndefined();
   });
 
-  it('a run queued after the planner was stored as off writes nothing (second tab, late run)', async () => {
+  it('a run queued after the planner was stored as off writes nothing (second tab, late run); the UI gets a calm toast', async () => {
     await modulesRow('todos', true);
     await task('A', { estimateMin: 30 });
     await modulesRow('planner', false);
     expect(await runBackground()).toBeUndefined();
     await expect(runUser('x', async () => undefined)).rejects.toThrow();
+    expect(await act('x', 'x', {}, async () => undefined)).toBe(false);
+    expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Der Planer ist aus.');
     expect(await assignmentRepo.active().count()).toBe(0);
   });
 
   it('the gate closes, then opens: the user date is overwritten without another write', async () => {
     await modulesRow('todos', true);
     await modulesRow('planner', true);
-    await db
-      .table('_secrets')
-      .put({
-        key: 'syncConfig',
-        value: { kind: 'selfHosted', url: 'https://sync.example', token: 't' },
-      });
+    await db.table('_secrets').put({
+      key: 'syncConfig',
+      value: { kind: 'selfHosted', url: 'https://sync.example', token: 't' },
+    });
     await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: false });
     const a = await task('Später Do', { estimateMin: 30, plannedFor: '2026-11-12' });
     setManifestsForTests(undefined);

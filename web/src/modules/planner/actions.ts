@@ -19,7 +19,7 @@ import { t } from '@/strings';
 import { extractDuePhrase } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
-import { runUser, type UserRun } from './services';
+import { PlannerOffError, runUser, type UserRun } from './services';
 import { runToast } from './toast';
 
 const toast = (message: string, run?: UserRun) =>
@@ -37,19 +37,30 @@ const toast = (message: string, run?: UserRun) =>
       : undefined,
   );
 
-/** Runs `act` as one undoable user action with its run and shows the one toast line. */
+/**
+ * Runs `act` as one undoable user action with its run and shows the one toast line. False when the
+ * module was switched off meanwhile (a stale page): nothing happened, the toast says so.
+ */
 export async function act(
   label: string,
   lead: string,
   titles: Record<string, string>,
   fn: () => Promise<void>,
-): Promise<void> {
-  const run = await runUser(label, fn);
+): Promise<boolean> {
+  let run: UserRun;
+  try {
+    run = await runUser(label, fn);
+  } catch (e) {
+    if (!(e instanceof PlannerOffError)) throw e;
+    toast(t.planner.toast.off);
+    return false;
+  }
   const titleOf = (unitId: string) => {
     const key = unitId.slice(0, unitId.lastIndexOf('#'));
     return titles[key] ?? run.outcome.inputs.titles[key] ?? key;
   };
   toast(runToast(run.outcome.result, titleOf, lead), run);
+  return true;
 }
 
 const source = (moduleId: string) =>
@@ -76,7 +87,7 @@ async function itemPatch(entry: PlannableEntry, patch: Partial<PlanItemRow>): Pr
 }
 
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
-export async function addFromField(text: string, titles: Record<string, string>): Promise<void> {
+export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   const phrase =
     getLang() === 'de' ? extractDuePhrase(text, today()) : { text, hasDueWord: false as const };
@@ -85,7 +96,7 @@ export async function addFromField(text: string, titles: Record<string, string>)
   // The deadline is the ToDo's date too, so the ToDo page shows it.
   if (hardDue && !parsed.fields.date) parsed.fields.date = hardDue;
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
-  await act(t.planner.toast.added, lead, titles, async () => {
+  return act(t.planner.toast.added, lead, titles, async () => {
     const saved = await saveCapture('todo', parsed.fields);
     if (hardDue)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {

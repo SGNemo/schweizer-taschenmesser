@@ -1,11 +1,3 @@
-.head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  color: var(--text-3);
-  font-size: var(--text-meta);
-}
-
 .add {
   display: flex;
   gap: var(--space-2);
@@ -23,10 +15,6 @@
   gap: var(--space-2);
   align-items: start;
 }
-.single {
-  display: block;
-}
-
 .column {
   display: flex;
   flex-direction: column;
@@ -78,8 +66,8 @@
 
 .check {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   margin: 0;
   accent-color: var(--module-color);
 }
@@ -90,16 +78,6 @@
   white-space: nowrap;
 }
 .blocker {
-  color: var(--text-3);
-}
-.blocker .check {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  margin: 0;
-  accent-color: var(--module-color);
-}
-.minutes {
   color: var(--text-3);
 }
 .reason {
@@ -126,7 +104,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-hair);
   min-width: var(--touch);
   min-height: var(--touch);
   padding: var(--space-1) var(--space-2);

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { formatMinutes } from '@/core/i18n/format';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -30,6 +29,7 @@ import {
   unpin,
 } from '../actions';
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
+import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySheet } from '../components/DaySheet';
 import { WeekCheck } from '../components/WeekCheck';
 import { useBoard } from '../useBoard';
@@ -39,8 +39,6 @@ import styles from './planner.module.css';
 const SPAN = 7;
 /** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
 const WIDE_REM = 60;
-
-const compact = (min: number) => formatMinutes(min, { compact: true });
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
 function Part({ k, of }: { k: number; of: number }) {
@@ -84,7 +82,9 @@ export default function PlannerPage() {
     const value = text.trim();
     if (!value) return;
     setText('');
-    await addFromField(value, titles);
+    const ok = await addFromField(value, titles);
+    // Nothing happened (the planner was switched off meanwhile): the text comes back.
+    if (!ok) setText((cur) => cur || value);
     // The next entry follows right away; no scroll jump while the board below re-renders.
     addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }
@@ -97,7 +97,9 @@ export default function PlannerPage() {
         ? t.planner.head.free(compact(todayDay.free))
         : todayDay.over > 0
           ? t.planner.head.over(compact(todayDay.over))
-          : t.planner.head.full;
+          : todayDay.usable === 0
+            ? t.planner.head.noTime
+            : t.planner.head.full;
   const headDetail = todayDay
     ? `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`
     : undefined;
@@ -206,7 +208,7 @@ export default function PlannerPage() {
             <input
               type="checkbox"
               className={styles.check}
-              aria-label={t.planner.row.done}
+              aria-label={row.title}
               data-row-tick
               checked={false}
               onChange={() => void markDone(row.entry!, titles)}
@@ -241,13 +243,7 @@ export default function PlannerPage() {
     >
       <button type="button" className={styles.dayButton} onClick={() => setSheetDate(day.date)}>
         <span className={styles.dayName}>{formatDay(day.date, 'EEE d.')}</span>
-        <span className={styles.capacity}>
-          {day.off
-            ? t.planner.board.off
-            : day.free === 0 && day.planned > 0
-              ? t.planner.board.full
-              : t.planner.board.freeOf(compact(day.free), compact(day.usable))}
-        </span>
+        <span className={styles.capacity}>{capacityLabel(day)}</span>
         {!day.off ? (
           <span className={styles.bar}>
             <Progress
@@ -338,13 +334,7 @@ export default function PlannerPage() {
                   onClick={() => setDayIndex(i)}
                 >
                   <span>{dayName(d.date)}</span>
-                  <span>
-                    {d.off
-                      ? t.planner.board.off
-                      : d.free === 0 && d.planned > 0
-                        ? t.planner.board.full
-                        : compact(d.free)}
-                  </span>
+                  <span>{capacityShort(d)}</span>
                 </button>
               ))}
             </div>

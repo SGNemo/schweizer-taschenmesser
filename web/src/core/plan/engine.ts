@@ -265,7 +265,8 @@ export function plan(input: PlanInput): PlanResult {
     }
   }
 
-  const diff = diffPlans([...prevByUnit.values()], assignments, bumps, new Set(unitById.keys()));
+  // The diff names every row that changes, also one from a day beyond the horizon (moved, or removed).
+  const diff = diffPlans(prev, assignments, bumps, new Set(unitById.keys()));
   const demandMin = units.reduce((n, u) => n + u.minutes, 0);
   const usableMin = Object.values(load).reduce((n, l) => n + l.usable, 0);
   return {

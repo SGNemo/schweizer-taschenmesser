@@ -254,11 +254,19 @@ describe('syncSettled', () => {
     expect((await connect(params, deps)).ok).toBe(true);
     expect(await syncSettled(db)).toBe(true);
 
-    // A round in flight: this tab's chain is busy.
-    server.online = false;
-    const round = syncNow(deps);
-    expect(await syncSettled(db)).toBe(false);
+    // A round in flight: the gate waits for it and then answers for the state after the round.
+    let ended = false;
+    const round = syncNow(deps).then(() => (ended = true));
+    const settled = syncSettled(db);
+    expect(ended).toBe(false);
+    expect(await settled).toBe(true);
+    expect(ended).toBe(true);
     await round;
+
+    // A round that fails before its pull completes closes the gate.
+    server.online = false;
+    await syncNow(deps);
+    expect(await syncSettled(db)).toBe(false);
     server.online = true;
 
     // Another device writes two fields of one record; the pull fetches them one op per page and

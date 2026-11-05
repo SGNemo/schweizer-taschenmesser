@@ -137,18 +137,16 @@ describe('NextWidget (Jetzt dran)', () => {
     const plan = await screen.findByTestId('day-plan');
     expect(plan.textContent!.indexOf('Zweite')).toBeLessThan(plan.textContent!.indexOf('Erste'));
     unmount();
-    await db
-      .table('_modules')
-      .put({
-        id: 'planner',
-        enabled: true,
-        dataPolicy: null,
-        createdAt: 1,
-        updatedAt: 1,
-        deviceId: 't',
-        deletedAt: null,
-        _f: {},
-      });
+    await db.table('_modules').put({
+      id: 'planner',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
     renderWidget();
     await waitFor(async () => {
       const rows = await screen.findByTestId('day-plan');

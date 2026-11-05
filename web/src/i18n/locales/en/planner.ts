@@ -37,6 +37,7 @@ export const planner: Strings['planner'] = {
   head: {
     free: (min: string) => `${min} free today`,
     full: 'Enough is planned for today.',
+    noTime: 'No time is free today.',
     dayOff: 'Today is off.',
     over: (min: string) => `${min} more than fits`,
     context: (n: number, planned: string) =>
@@ -49,6 +50,7 @@ export const planner: Strings['planner'] = {
     freeOf: (free: string, usable: string) => `${free} free of ${usable}`,
     off: 'off',
     full: 'full',
+    noTime: 'no free time',
     load: (planned: string, usable: string) => `${planned} of ${usable} planned`,
     strip: 'Days',
   },
@@ -88,7 +90,6 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Actions for ${title}`,
     due: (day: string) => `Deadline ${day}`,
     dueWas: (day: string) => `Deadline was ${day}`,
-    pinned: 'pinned',
     blocker: 'Blocker',
   },
   reasons: {
@@ -103,7 +104,6 @@ export const planner: Strings['planner'] = {
     'after-part': (part: string) => `follows ${part}`,
     pulled: (day: string) => `pulled forward, must be done by ${day}`,
     capacity: 'the day has less time',
-    done: 'done',
     others: 'others',
   },
   wait: {
@@ -133,7 +133,7 @@ export const planner: Strings['planner'] = {
     blockerAdded: 'Blocker added',
     blockerRemoved: 'Blocker removed',
     weekChecked: 'Week confirmed.',
-    nothingChanged: 'Nothing changed.',
+    off: 'The planner is off.',
   },
   add: {
     label: 'Add',

@@ -49,7 +49,7 @@ export interface LastRun {
 export interface SourceWriter {
   onAssign(moduleId: string, id: string, date: string | undefined, order?: number): Promise<void>;
   /** The module is switched off: hand the user's own date back, also one in the past (`PlannableSource.onRelease`). */
-  onRelease?(moduleId: string, id: string): Promise<void>;
+  onRelease(moduleId: string, id: string): Promise<void>;
 }
 
 export interface RunDeps {
@@ -61,6 +61,8 @@ export interface RunDeps {
   planLimit: number;
   /** `syncSettled()`: may a user's date be copied, cleared or overwritten? */
   settled: boolean;
+  /** The service: the module was switched off meanwhile – a run still going writes nothing more. */
+  aborted?: () => boolean;
   /** Test seams: fixed sources and calendar instead of the contributions. */
   entries?: PlannableEntry[];
   writer?: SourceWriter;
@@ -328,6 +330,7 @@ export async function writeBackPlan(
   const first = firstDays(result.assignments);
   let n = 0;
   for (const e of inputs.entries) {
+    if (deps.aborted?.()) break;
     if (e.done) continue;
     const key = itemKeyOf(e.moduleId, e.id);
     const userSet = inputs.userDates.has(key);
@@ -380,6 +383,8 @@ export async function runPlanner(
     !(deps.settled && inputs.pendingEarliest)
   )
     return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
+  const bail = () => deps.aborted?.() === true;
+  if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
   let rowWrites = await syncEarliest(inputs, repos, deps.settled);
   const result = plan({
     today: deps.today,
@@ -388,8 +393,10 @@ export async function runPlanner(
     prev: inputs.prev,
     settings: inputs.settings,
   });
+  if (bail()) return { ran: false, inputs, rowWrites, writeBacks: 0 };
   rowWrites += await writeRows(result, inputs, repos);
   const writeBacks = await writeBackPlan(result, inputs, deps);
+  if (bail()) return { ran: false, inputs, rowWrites, writeBacks };
   const written = (await repos.assignment.active().toArray()) as (AssignmentRow & { id: string })[];
   const lastRun: LastRun = {
     today: deps.today,
@@ -420,8 +427,7 @@ export async function restoreSources(
   let n = 0;
   for (const e of entries) {
     if (!e.planMark) continue;
-    if (writer.onRelease) await writer.onRelease(e.moduleId, e.id);
-    else await writer.onAssign(e.moduleId, e.id, undefined);
+    await writer.onRelease(e.moduleId, e.id);
     n++;
   }
   return n;

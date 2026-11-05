@@ -412,7 +412,8 @@ describe('council round 1', () => {
     const first = plan({ today: MON, days, items, prev, settings: H });
     expect(first.assignments[0]).toMatchObject({ date: MON, reason: 'new' });
     expect(first.unplaced).toEqual([]);
-    expect(first.diff.added).toHaveLength(1);
+    expect(first.diff.added).toHaveLength(0);
+    expect(first.diff.moved).toMatchObject([{ id: 'todos:x#0', from: '2026-11-20', to: MON }]);
     const again = plan({ today: MON, days, items, prev: first.assignments, settings: H });
     expect(shape(again)).toEqual(shape(first));
   });

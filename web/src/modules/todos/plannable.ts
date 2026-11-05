@@ -13,7 +13,12 @@ import { isPlannerOwned } from './views';
 
 export const TASK_KIND = 'task';
 
-/** The patch `onAssign(id, date, order)` writes; pure, so both LWW interleavings are testable. */
+/**
+ * The patch `onAssign(id, date, order)` writes; pure, so both LWW interleavings are testable. Without a
+ * date (waiting, excluded, done) `prior` comes back only when it is not past – a past date would put
+ * the thing on the overdue list the planner just took it from (CONCEPT §2); switching the module off
+ * (`onRelease`) hands it back unconditionally.
+ */
 export function assignPatch(
   task: Pick<Task, 'plannedFor' | 'planMark'>,
   date: string | undefined,
