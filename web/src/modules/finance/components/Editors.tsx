@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { compareText } from '@/core/i18n/format';
 import { useState, type FormEvent } from 'react';
@@ -207,8 +208,10 @@ function TransactionForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <Segmented
         label={t.finance.kind}
         value={kind}
@@ -447,8 +450,10 @@ function AccountForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.finance.accountName}
         value={name}
@@ -563,8 +568,10 @@ function CategoryForm({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.finance.categoryName}
         value={name}

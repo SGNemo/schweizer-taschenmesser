@@ -77,7 +77,7 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.form.title}
         value={title}

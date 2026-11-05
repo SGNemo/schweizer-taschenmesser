@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
@@ -176,8 +177,10 @@ function Form({
     onClose();
   };
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       {draft.restored ? (
         <p role="status" data-testid="draft-restored">
           {dr.restored}{' '}

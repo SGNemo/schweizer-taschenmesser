@@ -130,7 +130,7 @@ function BudgetFields({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <SelectField
         label={t.budgets.category}
         value={categoryId}
@@ -314,7 +314,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.budgets.goalName}
         value={name}
@@ -424,7 +424,7 @@ function DepositFields({ goal, onClose }: { goal: Stored<Goal>; onClose: () => v
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <Split>
         <TextField
           label={t.money.amount}

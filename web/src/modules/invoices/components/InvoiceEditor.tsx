@@ -1,3 +1,4 @@
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
 import { currencyOf, formatMoneyInput, isCurrencyCode, parseMoney } from '@/core/money';
@@ -140,8 +141,10 @@ function Form({
     onClose();
   }
 
+  // One save per submit: a double click or Enter + click never saves twice (QA X13).
+  const saveOnce = useSubmitOnce(save);
   return (
-    <form onSubmit={save} className={styles.form}>
+    <form onSubmit={saveOnce} className={styles.form}>
       <TextField
         label={t.invoices.payee}
         value={payee}

@@ -61,7 +61,7 @@ function Fields({ target, onClose }: { target: NonNullable<PlaceTarget>; onClose
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <TextField
         label={t.maps.place.name}
         value={name}

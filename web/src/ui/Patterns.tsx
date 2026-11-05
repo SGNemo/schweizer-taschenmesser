@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
+import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { useHeroTargets } from '@/core/shell/heroContext';
 import { Checkbox } from './Fields';
 import { ReadableText } from './ReadableText';
@@ -108,13 +109,21 @@ export function Split({ children }: { children: ReactNode }) {
   return <div className={styles.split}>{children}</div>;
 }
 
-export function Form({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
+/** An editor form. When `onSubmit` returns a promise, submits are ignored until it has settled (no double save). */
+export function Form({
+  children,
+  onSubmit,
+}: {
+  children: ReactNode;
+  onSubmit: () => void | Promise<unknown>;
+}) {
+  const submit = useSubmitOnce(onSubmit);
   return (
     <form
       className={styles.form}
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit();
+        void submit();
       }}
     >
       {children}
