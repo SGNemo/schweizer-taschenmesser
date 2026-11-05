@@ -519,3 +519,32 @@ for (const run of RUNS) {
     await context.close();
   });
 }
+
+test("sweep: phone topbar after an in-app route change", async ({
+  browser,
+}) => {
+  test.skip(!part("topbar"));
+  test.setTimeout(0);
+  const dir = `${OUT}/390x844-light/sven`;
+  mkdirSync(dir, { recursive: true });
+  const { context, page } = await newContext(browser, PHONE, "light", true);
+  await page.goto("/todos");
+  await settle(page);
+  // Scroll far down so the topbar collapses, then change the route inside the app (bottom navigation).
+  for (let i = 0; i < 6; i++) await page.mouse.wheel(0, 800);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${dir}/topbar-scrolled.png` });
+  const barBefore = await page.locator("header").first().boundingBox();
+  await page.getByRole("link", { name: "Geld" }).last().click();
+  await page.waitForTimeout(120);
+  await page.screenshot({ path: `${dir}/topbar-after-route-120ms.png` });
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `${dir}/topbar-after-route.png` });
+  const barAfter = await page.locator("header").first().boundingBox();
+  writeFileSync(
+    `${dir}/topbar.json`,
+    JSON.stringify({ barBefore, barAfter, url: page.url() }, null, 2),
+  );
+  await context.close();
+});
