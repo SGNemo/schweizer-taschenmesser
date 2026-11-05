@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Analyser ${name}`,
   usedOf: (used: string, total: string) => `${used} utilisés sur ${total}`,
   free: (free: string) => `${free} libres`,
-  percentUsed: (p: number) => `${p} % utilisés`,
   card: {
     scan: 'Analyser',
     systemDrive: 'Lecteur système',
@@ -67,6 +66,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'Historique depuis le démarrage de l’application – il n’est pas enregistré.',
     io: (read: string, write: string) => `Lecture ${read} · Écriture ${write}`,
     model: 'Modèle',
+    details: 'Détails',
+    temperatureLabel: 'Température',
+    ioLabel: 'Activité',
   },
   quick: {
     title: 'Aperçu rapide',
@@ -394,6 +396,8 @@ export const disk: Strings['disk'] = {
         : `${n} entrées sont encore en cours de comptage.`,
     endedOf: (root: string) => `Analyse de ${root} terminée`,
     cancelledOf: (root: string) => `Analyse de ${root} annulée`,
+    endedShort: 'Analyse terminée',
+    cancelledShort: 'Analyse annulée',
     liveMapLabel: (n: number) =>
       n === 1
         ? 'Vue en carte de l’analyse en cours avec 1 entrée.'

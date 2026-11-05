@@ -42,11 +42,11 @@ export default function ThisPcPage() {
 }
 
 /**
- * The module's scan while the user is on the drives page: running (Pause, Abbrechen, Zum Scan),
- * ended or cancelled (Zum Ergebnis), failed (the reason, Zum Scan). One `ScanStatusLine` in every
- * state, so the status text changes in place. Its own component, so the once-a-second figure
- * re-renders this line and not the drive cards. The line stays until the next scan starts: it is
- * the way back to the result.
+ * The module's scan while the user is on the drives page and the scan is not one of the drives'
+ * (a clean-up place): running (Pause, Abbrechen, Zum Scan), ended or cancelled (Zum Ergebnis),
+ * failed (the reason, Zum Scan). A drive's own scan shows its state in the drive's card instead.
+ * One `ScanStatusLine` in every state, so the status text changes in place; its own component, so
+ * the once-a-second figure re-renders this line and not the drive cards.
  */
 function ScanLine() {
   const phase = useDiskStore((s) => s.phase);
@@ -96,6 +96,9 @@ function DrivesTab() {
   const scanning = useDiskStore((s) => s.phase === 'scanning');
   const scanRoot = useDiskStore((s) => s.root);
   const toast = useUiStore((s) => s.toast);
+  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
+  // the drives still load, nothing flashes above the grid (unless loading failed).
+  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
   const record = useDriveHistory((s) => s.record);
 
   useEffect(() => {
@@ -139,7 +142,7 @@ function DrivesTab() {
   return (
     <>
       <p className={styles.lead}>{t.disk.lead}</p>
-      <ScanLine />
+      {scanOnCard ? null : <ScanLine />}
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
       {!drives && !failed ? (
         <div role="status" aria-label={t.disk.loading}>
