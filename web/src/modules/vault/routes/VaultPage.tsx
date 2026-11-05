@@ -95,7 +95,7 @@ export default function VaultPage() {
           <Icon name="plus" size={18} />
           {t.vault.add}
         </Button>
-        <StartDataMenu moduleId="vault" />
+        {docs && docs.length === 0 ? <StartDataMenu moduleId="vault" /> : null}
       </PageHeader>
       <p className={styles.privacy} data-testid="vault-local">
         <Icon name="lock" size={16} />
