@@ -112,3 +112,8 @@
 :global(:root[data-theme='dark']) .plate {
   color: var(--bg);
 }
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .plate {
+    color: var(--bg);
+  }
+}

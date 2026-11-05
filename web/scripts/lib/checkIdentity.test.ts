@@ -108,7 +108,7 @@ describe('identity checks (identity v3.1)', () => {
     ).toEqual([]);
   });
 
-  it('app-wide: the same widget shape needs a different hue or head; retired modules take no part', () => {
+  it('app-wide: the same widget shape on another hue is fine; retired modules take no part', () => {
     expect(
       checkIdentityCollisions([
         fact({ id: 'a', hue: 'sky', head: 'fokus', widget: 'faellig' }),
@@ -122,12 +122,17 @@ describe('identity checks (identity v3.1)', () => {
 
   it('warns when a module says "none" but fills the head itself', () => {
     const manifest = `identity: { hue: 'teal', widget: 'kennzahl', head: 'zeit', signature: 'none' }`;
-    expect(checkSignatureUse('x', manifest, ['<div />', '<HeroSlot area="figure">'])).toHaveLength(
-      1,
-    );
-    expect(checkSignatureUse('x', manifest, ['<div />'])).toEqual([]);
     expect(
-      checkSignatureUse('x', manifest.replace("'none'", "'hourStrip'"), ['<HeroSlot>']),
+      checkSignatureUse('x', manifest, ['<div />', '<HeroSlot area="signature">']),
+    ).toHaveLength(1);
+    // A figure or a notice is not the signature slot.
+    expect(checkSignatureUse('x', manifest, ['<HeroSlot area="figure">', '<HeroSlot>'])).toEqual(
+      [],
+    );
+    expect(
+      checkSignatureUse('x', manifest.replace("'none'", "'hourStrip'"), [
+        '<HeroSlot area="signature">',
+      ]),
     ).toEqual([]);
   });
 });

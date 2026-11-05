@@ -107,8 +107,9 @@
 .figure > .target:not(:empty) + * {
   display: none;
 }
-/* The signature slot (identity v3.1, F02): S = a 4 rem mark, M = a block of up to 36 rem, L = the whole column. The
-   frame's default steps in after a beat, so a page that fills the slot itself shows no swap. */
+/* The signature slot (identity v3.1, F02): S = the mark (--slot-s), M = a block of up to --slot-m, L = the whole column.
+   A page that fills the slot claims it before paint (HeroSlot, useLayoutEffect); the target with content also hides a
+   default that is still mounted. */
 .signature {
   display: flex;
   align-items: flex-end;
@@ -120,11 +121,11 @@
 }
 .signature[data-slot='S'][data-default='true'] {
   flex: 0 0 auto;
-  width: 4rem;
+  width: var(--slot-s);
 }
 .signature[data-slot='M'] {
-  flex: 0 1 36rem;
-  max-width: 36rem;
+  flex: 0 1 var(--slot-m);
+  max-width: var(--slot-m);
 }
 .signature[data-slot='L'] {
   flex: 1 1 100%;
@@ -138,16 +139,11 @@
   gap: var(--space-3);
   min-width: 0;
 }
-.signature[data-default='true'] > :not(.target) {
-  animation: signatureIn 0ms 150ms both;
-}
-@keyframes signatureIn {
-  from {
-    opacity: 0;
-  }
+.signature > .target:not(:empty) ~ * {
+  display: none;
 }
 .extra {
-  flex: 1 1 12rem;
+  flex: 1 1 var(--slot-extra);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -204,11 +200,12 @@
     align-items: flex-start;
     gap: var(--space-3);
   }
-  .signature {
-    /* Layout-true scaling (zoom, not transform): the block keeps its place in the flow at 70 %. */
+  /* Only the frame's own decoration shrinks (layout-true zoom, not transform); a page's own content in the slot keeps
+     its size, so its controls stay ≥ 44 px. */
+  .signature[data-default='true'] {
     zoom: 0.7;
   }
-  .signature[data-slot='S'] {
+  .signature[data-slot='S'][data-default='true'] {
     zoom: 0.85;
   }
   .signature[data-slot='M'] {

@@ -1,8 +1,8 @@
 /**
  * Cross-module identity checks (identity v3.1, docs/design/MODULE-IDENTITY.md "Rules"): inside one navigation
  * area no two modules share a hue and two neighbours (in the order of the navigation) never share a head
- * variant; app-wide two modules with the same hue never share head *and* widget, a shared head or widget needs
- * a signature of its own, and two modules with the same widget shape differ in hue or head. Pure functions over
+ * variant; app-wide two modules with the same hue never share head *and* widget, and a shared head or widget needs
+ * a signature of its own. Pure functions over
  * facts: `npm run check:modules` reads them from the manifest source (no build), `src/core/modules/registry.test.ts`
  * from the runtime registry, so both see the same rule. The palette pins every pair of hues at ≥ 26°
  * (`ui/tokens.test.ts`), so "25° apart" is the same as "a different hue" and no angle is computed here.
@@ -75,8 +75,8 @@ const ownSignature = (a: IdentityFacts, b: IdentityFacts): boolean =>
 
 /**
  * App-wide collisions (the overview, the sidebar and the library show every area side by side):
- * same hue ⇒ head and widget never both the same, and a shared head or widget needs a signature of its own;
- * same widget shape ⇒ a different hue or a different head. Retired modules take no part.
+ * same hue ⇒ head and widget never both the same, and a shared head or widget needs a signature of its own
+ * (so one widget shape on one hue needs another head). Retired modules take no part.
  */
 export function checkIdentityCollisions(facts: readonly IdentityFacts[]): string[] {
   const errors: string[] = [];
@@ -95,10 +95,7 @@ export function checkIdentityCollisions(facts: readonly IdentityFacts[]): string
           errors.push(
             `${pair} share the hue "${a.hue}" and the ${head ? `head "${a.head}"` : `widget "${a.widget}"`}; each needs a signature of its own (not "none", not the same)`,
           );
-      } else if (a.widget && a.widget === b.widget && a.hue === b.hue && a.head === b.head)
-        errors.push(
-          `${pair} share the widget "${a.widget}" with the same hue and head (differ in hue or head)`,
-        );
+      }
     }
   return errors;
 }
@@ -110,8 +107,8 @@ export const checkIdentity = (facts: readonly IdentityFacts[]): string[] => [
 ];
 
 /**
- * A module whose identity says `signature: 'none'` but whose page fills the head (`HeroSlot`) most likely forgot to
- * name its signature: a warning (the checker prints it, the build stays green).
+ * A module whose identity says `signature: 'none'` but whose page fills the signature slot (`HeroSlot
+ * area="signature"`) most likely forgot to name its signature: a warning (the checker prints it, the build stays green).
  */
 export function checkSignatureUse(
   id: string,
@@ -120,9 +117,9 @@ export function checkSignatureUse(
 ): string[] {
   const facts = identityFacts(id, manifest);
   if (facts.retired || facts.signature !== 'none') return [];
-  return pageSources.some((s) => /<HeroSlot\b/.test(s))
+  return pageSources.some((s) => /<HeroSlot\b[^>]*\barea=["']signature["']/.test(s))
     ? [
-        `${id}: identity.signature is "none" but the page renders a HeroSlot – name the signature (SIGNATURES) so the frame and the settings head show it`,
+        `${id}: identity.signature is "none" but the page fills the signature slot – name the signature (SIGNATURES) so the frame and the settings head show it`,
       ]
     : [];
 }

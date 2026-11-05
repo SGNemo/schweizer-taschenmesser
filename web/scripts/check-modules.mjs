@@ -48,7 +48,8 @@ for (const id of readdirSync(modulesDir).sort()) {
     .map((sub) => join(dir, sub))
     .filter(existsSync)
     .flatMap((d) =>
-      readdirSync(d)
+      readdirSync(d, { recursive: true })
+        .map(String)
         .filter((n) => /\.tsx$/.test(n) && !/\.test\./.test(n))
         .map((n) => readFileSync(join(d, n), 'utf8')),
     );

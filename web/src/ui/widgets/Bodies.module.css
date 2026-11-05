@@ -39,13 +39,17 @@ a.kachelLink:hover {
 .kachelLabel {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 .kachelState {
   font-size: var(--text-meta);
-  color: var(--text-3);
+  /* On the tile's tint (8 %, 16 % hovered) only the tint ink keeps AA (tokens.test.ts). */
+  color: var(--text-on-tint);
 }
 .kachelState[data-tone='danger'] {
   color: var(--danger-ink);

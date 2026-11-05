@@ -2,7 +2,17 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { SIGNATURES } from '@/core/modules/types';
-import { BankCard, CalendarLeaf, HeroFigure, Ring, SignatureMark, Sky, skyKind } from './index';
+import {
+  BankCard,
+  CalendarLeaf,
+  HeroFigure,
+  Ring,
+  Signature,
+  SIGNATURE_BLOCKS,
+  SignatureMark,
+  Sky,
+  skyKind,
+} from './index';
 import { dominantColor, safeTint } from './coverTone';
 
 describe('identity building blocks', () => {
@@ -91,6 +101,26 @@ describe('signature marks (identity v3.1)', () => {
 
   it('"none" draws nothing', () => {
     expect(render(<SignatureMark id="none" />).container.innerHTML).toBe('');
+  });
+
+  it.each(Object.keys(SIGNATURE_BLOCKS))(
+    'block %s at M is decoration: hidden from assistive tech, no fixed colour',
+    (id) => {
+      const { container } = render(<Signature id={id as never} size="M" />);
+      expect(container.firstElementChild!.getAttribute('aria-hidden')).toBe('true');
+      expect(container.innerHTML).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(/i);
+    },
+  );
+
+  it('an id without a block draws its mark on a plate at M, every id the plate at S', () => {
+    expect(
+      render(<Signature id="bankCard" size="M" />).container.querySelector(
+        '[data-signature="bankCard"][data-size="M"] svg',
+      ),
+    ).not.toBeNull();
+    expect(
+      render(<Signature id="receipt" size="S" />).container.querySelector('[data-size="S"] svg'),
+    ).not.toBeNull();
   });
 });
 

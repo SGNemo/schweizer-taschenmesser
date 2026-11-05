@@ -2,16 +2,16 @@
 type: changed
 area: app
 breaking: false
-de: Modulköpfe zeigen ihr Kennzeichen neben der Zahl; Text auf farbigen Köpfen ist besser lesbar.
-en: Module heads show their mark next to the figure; text on tinted heads is easier to read.
+de: Modulköpfe zeigen ihr Erkennungszeichen an fester Stelle neben Zahl oder Titel; Text auf farbigen Köpfen ist besser lesbar.
+en: Module heads show their mark in a fixed place next to the figure or title; text on tinted heads is easier to read.
 ---
 
 ---
 type: changed
 area: app
 breaking: false
-de: Übersicht und Seitenleiste ruhiger: Karten behalten ihre Höhe, Bereichsgruppen sind neutral getönt, auf niedrigen Bildschirmen passen alle Module ohne Scrollen.
-en: Calmer overview and sidebar: cards keep their height, area groups are neutral, on low screens every module fits without scrolling.
+de: Übersicht und Seitenleiste ruhiger: Karten behalten ihre Höhe, Bereichsgruppen sind neutral; Einstellungs- und Bibliotheksköpfe ohne Muster; „Fokus & Aufmerksamkeit“ verlinkt zu den Modulfarben.
+en: Calmer overview and sidebar: cards keep their height, area groups are neutral; settings and library heads without pattern; “Focus & attention” links to the module colours.
 ---
 
 ---

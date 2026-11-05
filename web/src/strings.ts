@@ -1189,7 +1189,7 @@ export const de = {
       more: 'Weitere Einstellungen',
       aids: 'Hilfen',
       aidsOn: (n: number, total: number) => `${n} von ${total} an`,
-      colors: 'Farben der Module',
+      colors: 'Modulfarben',
       colorsHint:
         'Modulfarben und Muster stellst du unter „Darstellung“ ein – dort auch „Ruhig“ für weniger Reize.',
       colorsLink: 'Zu den Modulfarben',

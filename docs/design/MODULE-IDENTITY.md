@@ -56,7 +56,7 @@ identity: {
 }
 ```
 
-`widgetType` and `feedback` were dropped in v3.1 (nothing read them). The area's **pattern** comes from `manifest.area`. Rules (`scripts/lib/checkIdentity.ts`, same function in `npm run check:modules` on the source and in `registry.test.ts` on the runtime registry): one hue per area; neighbours in an area never share a head; **app-wide** two modules with one hue never share head *and* widget, a shared head or widget needs a signature of its own (not `none`, not the same), and one widget shape needs another hue or head. The palette pins every pair of hues at ≥ 26°, so no angle is computed. `signature: 'none'` next to a `HeroSlot` in the page is a `check:modules` warning.
+`widgetType` and `feedback` were dropped in v3.1 (nothing read them). The area's **pattern** comes from `manifest.area`. Rules (`scripts/lib/checkIdentity.ts`, same function in `npm run check:modules` on the source and in `registry.test.ts` on the runtime registry): one hue per area; neighbours in an area never share a head; **app-wide** two modules with one hue never share head *and* widget, and a shared head or widget needs a signature of its own (not `none`, not the same). The palette pins every pair of hues at ≥ 26°, so no angle is computed. `signature: 'none'` next to a `HeroSlot` in the page is a `check:modules` warning.
 
 ## Signatures (`@/ui/identity`)
 
@@ -67,7 +67,7 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 - **Palette v3:** `--mod-<hue>` for lime … orchid (26° HSL steps) and slate. Each ≥ 3:1 on the surfaces and ≥ 25° from danger, accent, warning and success; `--info` sits next to ocean/sky and only warns; the accent variants (teal, coral, lagoon) share a hue family with a module or a state by geometry – the pairs are pinned in `tokens.test.ts`, a new one fails.
 - `--text-on-tint`: the one quiet ink on a tinted head or widget zone (light `--text` 84 % over the surface, dark 94 %; ≥ 4.5:1 on the 40 % tint of every hue). `--text-muted`/`--text-3` never on the band.
 - `--font-serif`, `--weight-light`: the type accents; no bare `font-weight` number or font stack outside `tokens.css` (`tokens.test.ts` ratchet, module files listed until their package cleans them).
-- `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the accent hue in both themes, `[data-hue2]` → `--module-color-2`.
+- `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-m`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
 - `--widget-tint` 14 %, `--pattern-head` 0.06, `--pattern-widget` 0.04, `--group-tint` 6 % (neutral on `--text-3` in sidebar and library).
 - **"Ruhig" and "Modulfarben: Aus"** flatten the hues to grey, lower the tints and set `--area-pattern: none` (not painted). Shape and signature stay.
 
@@ -109,7 +109,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
-| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `receipt` (→ `bill`, package 1) |
+| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` (page: package 1) |
 | Abos `subscriptions` | money | indigo | cobalt | fortschritt | faellig | `cycle` |
 | Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | `envelope` |
 | Listen `lists` | household | orchid | violet | kennzahl | checkliste | `receipt` |

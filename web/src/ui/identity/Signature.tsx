@@ -37,7 +37,12 @@ export const SIGNATURE_BLOCKS: Partial<
   gauges: Gauges,
   arrowProgress: ArrowBand,
   masthead: Masthead,
-  hourStrip: () => <HourStrip events={[]} />,
+  // Decoration only: the strip's own role/label ("no appointments") would be a false statement here.
+  hourStrip: () => (
+    <span aria-hidden="true">
+      <HourStrip events={[]} />
+    </span>
+  ),
 };
 
 /** The mark on a tinted plate: the `S` size of every signature, and the M/L fallback of ids without a block. */

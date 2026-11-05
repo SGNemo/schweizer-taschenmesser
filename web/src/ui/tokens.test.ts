@@ -341,14 +341,23 @@ describe('design tokens', () => {
       ] as const) {
         const ink = textOnTint(t);
         for (const key of Object.keys(t).filter((k) => k.startsWith('--mod-'))) {
-          expect(
-            ratio(ink, mix(t[key]!, t['--surface']!, head)),
-            `${name} ${key}: --text-on-tint on the head tint`,
-          ).toBeGreaterThanOrEqual(4.5);
-          expect(
-            ratio(ink, mix(t[key]!, t['--surface']!, zone)),
-            `${name} ${key}: --text-on-tint on the widget zone`,
-          ).toBeGreaterThanOrEqual(4.5);
+          // The head tint, the widget zone and the kacheln tiles (8 % at rest, 16 % hovered).
+          for (const [where, pct] of [
+            ['head tint', head],
+            ['widget zone', zone],
+            ['tile', 0.08],
+            ['hovered tile', 0.16],
+          ] as const)
+            expect(
+              ratio(ink, mix(t[key]!, t['--surface']!, pct)),
+              `${name} ${key}: --text-on-tint on the ${where}`,
+            ).toBeGreaterThanOrEqual(4.5);
+          // The focus ring sits on tinted heads and zones too (3:1, WCAG 1.4.11).
+          for (const pct of [head, zone])
+            expect(
+              ratio(t['--focus']!, mix(t[key]!, t['--surface']!, pct)),
+              `${name} ${key}: --focus on the ${pct === head ? 'head tint' : 'widget zone'}`,
+            ).toBeGreaterThanOrEqual(3);
         }
         // A step below --text, so a context line still reads as secondary.
         expect(ratio(ink, t['--surface']!), `${name}: quieter than --text`).toBeLessThan(

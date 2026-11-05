@@ -178,7 +178,7 @@ export function AreaFrame({
                       </div>
                     ) : null}
                   </div>
-                  {id && slot !== 'none' ? (
+                  {id && slot !== 'none' && (id.signature !== 'none' || claimed('signature')) ? (
                     <div
                       className={styles.signature}
                       data-slot={slot}

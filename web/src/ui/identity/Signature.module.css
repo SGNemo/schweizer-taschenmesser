@@ -3,8 +3,8 @@
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 4rem;
-  height: 4rem;
+  width: var(--slot-s);
+  height: var(--slot-s);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--module-color) 30%, transparent);
@@ -12,6 +12,6 @@
 }
 .plate[data-size='M'],
 .plate[data-size='L'] {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: calc(var(--slot-s) + var(--space-2));
+  height: calc(var(--slot-s) + var(--space-2));
 }

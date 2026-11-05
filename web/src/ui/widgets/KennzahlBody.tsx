@@ -30,8 +30,8 @@ export function KennzahlBody({
   unit?: string;
   /** Small caption above the figure ("Kontostand"). */
   label?: string;
-  /** The context line under the figure ("2 Konten · verfügbar 1.204 €"). */
-  context?: string;
+  /** The context line under the figure ("2 Konten · verfügbar 1.204 €"): required, a number without context says little. */
+  context: string;
   trend?: KennzahlTrend;
   series?: readonly number[];
   seriesLabel?: string;
@@ -44,7 +44,7 @@ export function KennzahlBody({
         {value}
         {unit ? <span className={styles.kpiUnit}> {unit}</span> : null}
       </p>
-      {context ? <p className={styles.sub}>{context}</p> : null}
+      <p className={styles.sub}>{context}</p>
       {size !== 's' && trend ? (
         <p className={styles.trend} data-tone={trend.tone ?? 'neutral'}>
           <Icon

@@ -38,11 +38,11 @@ function TodayLeaf() {
  * What the frame draws in the signature slot for each id while the page has not filled it (C08): the library's
  * block or mark for every id, and the data-aware leaf for the calendar.
  */
-export const HEAD_SIGNATURES: Partial<Record<SignatureId, ComponentType<{ size: SlotSize }>>> = {
+export const HEAD_SIGNATURES: Partial<Record<SignatureId, ComponentType>> = {
   calendarLeaf: TodayLeaf,
 };
 
 export function DefaultSignature({ id, size }: { id: SignatureId; size: SlotSize }) {
   const Own = HEAD_SIGNATURES[id];
-  return Own ? <Own size={size} /> : <Signature id={id} size={size} />;
+  return Own ? <Own /> : <Signature id={id} size={size} />;
 }

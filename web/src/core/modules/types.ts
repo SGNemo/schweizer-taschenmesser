@@ -125,9 +125,9 @@ export const COMPACT_HEADS: readonly HeadVariant[] = ['tresor', 'schreib', 'foku
 export const headHeight = (v: HeadVariant): 'hero' | 'compact' =>
   COMPACT_HEADS.includes(v) ? 'compact' : 'hero';
 /**
- * Size of the signature slot in the head (identity v3.1, `layout/AreaFrame`): `S` a 4 rem mark beside the title,
- * `M` a block of up to 36 rem beside the figure, `L` the whole content column under the title. The head variant
- * sets it; `himmel` has no slot (the sky is the backdrop).
+ * Size of the signature slot in the head (identity v3.1, `layout/AreaFrame`): `S` the mark beside the title
+ * (`--slot-s`, 4 rem), `M` a block of up to `--slot-m` (36 rem) beside the figure, `L` the whole content column
+ * under the title. The head variant sets it; `himmel` has no slot (the sky is the backdrop).
  */
 export const SLOT_SIZES = ['S', 'M', 'L'] as const;
 export type SlotSize = (typeof SLOT_SIZES)[number];

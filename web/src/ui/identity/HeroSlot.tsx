@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useLayoutEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useHeroControls, useHeroTargets, type HeroArea } from '@/core/shell/heroContext';
 
@@ -17,7 +17,8 @@ export function HeroSlot({
 }) {
   const targets = useHeroTargets();
   const controls = useHeroControls();
-  useEffect(() => controls?.claim(area), [controls, area]);
+  // Before paint, so the frame never shows its default for a slot the page is about to fill.
+  useLayoutEffect(() => controls?.claim(area), [controls, area]);
   const target = targets?.[area];
   return target ? createPortal(children, target) : null;
 }

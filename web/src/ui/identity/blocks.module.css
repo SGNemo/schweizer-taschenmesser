@@ -17,7 +17,6 @@
 }
 .rule {
   height: 2px;
-  border-radius: 1px;
   background: var(--ink);
 }
 .short {
@@ -163,7 +162,7 @@
   position: relative;
   flex: 1 1 0;
   height: 3rem;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--paper);
   box-shadow: var(--shadow-1);
 }
@@ -260,7 +259,6 @@
   content: '';
   flex: 1 1 auto;
   height: 2px;
-  border-radius: 1px;
   background: var(--ink);
 }
 

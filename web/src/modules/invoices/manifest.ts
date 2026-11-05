@@ -18,7 +18,7 @@ const manifest: ModuleManifest = {
     hue2: 'sky',
     widget: 'faellig',
     head: 'fokus',
-    signature: 'receipt',
+    signature: 'bill',
   },
   version: 4,
   get description() {

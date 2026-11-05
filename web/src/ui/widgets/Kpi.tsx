@@ -24,7 +24,8 @@ export function KpiWidget({
   unit?: string;
   /** Small caption above the number ("Kontostand"). */
   label?: string;
-  context?: string;
+  /** Required: every figure carries its context line. */
+  context: string;
   trend?: KpiTrend;
   series?: readonly number[];
   seriesLabel?: string;

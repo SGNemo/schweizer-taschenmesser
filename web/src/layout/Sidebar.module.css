@@ -197,9 +197,9 @@
   padding-top: var(--space-2);
   border-top: 1px solid var(--border);
 }
-/* Low windows with a pointer (identity v3.1, F06): rows 36 px, group padding 2 px, favourites 36 px, so all six
-   areas with every module fit 1920 × 1080 without scrolling. Touch screens keep the 44 px rows. */
-@media (max-height: 1100px) and (pointer: fine) {
+/* Low windows with a mouse only (identity v3.1, F06): rows 36 px, group padding 2 px, favourites 36 px. Any screen
+   that can be touched (hybrid laptops included) keeps the 44 px rows (docs/howto/design-rules.md). */
+@media (max-height: 1100px) and (pointer: fine) and (not (any-pointer: coarse)) {
   .link {
     min-height: 2.25rem;
   }

@@ -65,7 +65,7 @@
       'actions actions'
       'body body';
     grid-template-columns: minmax(0, 1fr) auto;
-    border-radius: var(--radius-lg);
+    --hero-radius: var(--radius-lg);
   }
   .head[data-size='hero'] {
     min-height: 0;

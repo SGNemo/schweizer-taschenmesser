@@ -38,7 +38,7 @@
   /* Longest comfortable line for running text (notes, answers, help). */
   --measure: 68ch;
   --leading-tight: 1.25;
-  /* Weights: light 300 (hero figures, identity `type: 'light'`), body 400, labels/buttons 500, titles 600, hero 700.
+  /* Weights: light 300 (hero figures, identity `type: 'thin'`), body 400, labels/buttons 500, titles 600, hero 700.
      Module and layout CSS writes these tokens, never a bare number (tokens.test.ts). */
   --weight-light: 300;
   --weight-medium: 500;
@@ -84,9 +84,13 @@
   --page-content: 70rem;
   --page-wide: 100rem;
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
-  /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes; phone values below. */
+  /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes (phone values below) and the signature
+     slot sizes S and M (`SIGNATURE_SLOTS`; L is the whole content column), plus the least room the extra slot keeps. */
   --head-h-tall: 12.5rem;
   --head-h-compact: 6rem;
+  --slot-s: 4rem;
+  --slot-m: 36rem;
+  --slot-extra: 12rem;
 
   /* Layer order (never write a bare z-index) */
   --z-raised: 5;

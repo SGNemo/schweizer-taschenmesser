@@ -36,20 +36,25 @@ export function FortschrittBody({
       <ul className={own.rings} data-body="fortschritt" data-kind="rings">
         {shown.map((e) => (
           <li key={e.key} className={own.ringItem}>
+            {/* The ring's label carries title and detail once; the visible words are the same text. */}
             <Ring
               percent={Math.min(100, pct(e))}
               level={e.overText ? 'full' : 'ok'}
               size={size === 's' ? 'sm' : 'md'}
-              label={e.title}
+              label={`${e.title} · ${e.overText ?? e.detail}`}
             />
-            <span className={styles.rowTitle}>{e.title}</span>
+            <span className={styles.rowTitle} aria-hidden="true">
+              {e.title}
+            </span>
             {e.overText ? (
-              <span className={styles.over}>
+              <span className={styles.over} aria-hidden="true">
                 <Icon name="alert" size={14} />
                 {e.overText}
               </span>
             ) : (
-              <span className={styles.sub}>{e.detail}</span>
+              <span className={styles.sub} aria-hidden="true">
+                {e.detail}
+              </span>
             )}
           </li>
         ))}

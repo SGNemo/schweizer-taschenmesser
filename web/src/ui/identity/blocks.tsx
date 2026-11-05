@@ -140,11 +140,11 @@ export function AvatarRing({ size }: BlockProps) {
   );
 }
 
-/** Two gauges, needles at different angles. */
+/** Two gauges with their needles at rest: a shape, never a reading. */
 export function Gauges({ size }: BlockProps) {
   return (
     <div {...block('gauges', size)}>
-      {[52, 118].map((angle) => (
+      {[0, 1].map((angle) => (
         <svg key={angle} viewBox="0 0 48 30" className={styles.gauge}>
           <path d="M4 26a20 20 0 0 1 40 0" className={styles.track} />
           <path d="M4 26a20 20 0 0 1 20-20" />
@@ -161,8 +161,8 @@ export function Gauges({ size }: BlockProps) {
   );
 }
 
-/** An arrow band, filled to `value` (0..1). */
-export function ArrowBand({ size, value = 0.6 }: BlockProps & { value?: number }) {
+/** An arrow band; the track alone by default (no invented progress), filled to `value` (0..1) when a page says so. */
+export function ArrowBand({ size, value = 0 }: BlockProps & { value?: number }) {
   const v = Math.max(0, Math.min(1, value));
   return (
     <div {...block('arrowProgress', size)}>
