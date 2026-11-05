@@ -62,7 +62,8 @@ import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
 import styles from './todos.module.css';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { useStartDataItems } from '@/core/importer/StartDataMenu';
+import { SignatureMark } from '@/ui/identity';
 
 type StoredTask = Stored<Task>;
 
@@ -581,6 +582,7 @@ export default function TodosPage() {
     });
   }
 
+  const startItems = useStartDataItems('todos');
   const pageMenu: RowMenuItem[] = [
     {
       id: 'list-all',
@@ -636,6 +638,8 @@ export default function TodosPage() {
           },
         ]
       : []),
+    // C23: import and setup live here, not in the empty state.
+    ...startItems.map((i) => ({ ...i, group: t.todos.moreOptions })),
   ];
 
   return (
@@ -704,7 +708,8 @@ export default function TodosPage() {
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-            <Button type="submit" variant="primary" disabled={!targetListId}>
+            {/* C29: the head's "Anfangen" is the one filled action of the page. */}
+            <Button type="submit" disabled={!targetListId}>
               {t.actions.add}
             </Button>
           </form>
@@ -762,9 +767,11 @@ export default function TodosPage() {
           ) : null}
 
           {tasks && top.length === 0 && pageView !== 'board' ? (
-            <EmptyState title={t.todos.empty}>
-              <StartDataButton moduleId="todos" />
-            </EmptyState>
+            <EmptyState
+              title={t.todos.empty}
+              testId="todos-empty"
+              motif={<SignatureMark id="todayCard" size={64} />}
+            />
           ) : null}
           {pageView === 'board' ? (
             <BoardView

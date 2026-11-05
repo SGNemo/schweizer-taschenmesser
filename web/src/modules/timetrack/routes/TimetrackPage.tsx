@@ -18,7 +18,7 @@ import {
   useMediaQuery,
   useOpenParam,
 } from '@/ui';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { IdlePrompt } from '../components/IdlePrompt';
 import { JobEditor, type JobTarget } from '../components/JobEditor';
 import { Report } from '../components/Report';
@@ -100,7 +100,8 @@ export default function TimetrackPage() {
           />
         }
       >
-        <Button variant="primary" onClick={() => setSession('new')}>
+        {/* C29: Start/Stopp in the head is the page's one filled action; adding a past entry is secondary. */}
+        <Button onClick={() => setSession('new')}>
           <Icon name="plus" size={18} />
           {t.timetrack.add}
         </Button>
@@ -136,7 +137,11 @@ export default function TimetrackPage() {
             <p className={styles.meta}>{t.timetrack.idleNow}</p>
           )}
           {jobs && jobs.length === 0 ? (
-            <EmptyState title={t.timetrack.emptyJobs}>
+            <EmptyState
+              title={t.timetrack.emptyJobs}
+              testId="timetrack-empty"
+              motif={<SignatureMark id="hourStrip" size={64} />}
+            >
               <Button variant="primary" onClick={() => setJob('new')}>
                 {t.timetrack.job.add}
               </Button>

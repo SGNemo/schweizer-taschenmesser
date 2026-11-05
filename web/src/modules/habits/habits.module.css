@@ -36,7 +36,8 @@
 }
 .card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* minmax(0, …): a long name wraps instead of pushing the card past a 390 px window (QA round 4). */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -50,6 +51,7 @@
 .name {
   margin: 0;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 .meta {
   margin: 0;
@@ -185,22 +187,15 @@
   stroke: var(--module-color);
 }
 
-/* Own empty state: dashed rings in the module colour, grey in "Ruhig" via the colour modes. */
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-6) var(--space-4);
-  text-align: center;
-}
+/* The empty-state motif (EmptyState `motif`): three still, dashed rings, grey like every motif. */
 .emptyRings {
-  width: 7.5rem;
-  height: 2.5rem;
-  stroke: var(--module-color);
-  opacity: 0.55;
+  width: 6rem;
+  height: 2rem;
+  stroke: currentColor;
 }
-.emptyTitle {
-  margin: 0;
-  font-size: var(--text-lg, 1.25rem);
+/* Widget: "2 von 3 geschafft" above the rings (the size of the widget summaries). */
+.widgetSummary {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
 }

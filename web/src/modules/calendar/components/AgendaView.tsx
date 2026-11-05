@@ -2,6 +2,7 @@ import type { CalendarItem } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { personName, usePeople } from '@/core/people/people';
 import { EmptyState } from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { t } from '@/strings';
 import type { HolidayId } from '../holidays';
 import { groupByDate } from '../views';
@@ -19,7 +20,14 @@ export function AgendaView({ items, holidays, onOpenItem }: Props) {
   const people = usePeople();
   const byDate = groupByDate(items);
   const days = [...new Set([...byDate.keys(), ...holidays.keys()])].sort();
-  if (days.length === 0) return <EmptyState compact title={t.calendar.agendaEmpty} />;
+  if (days.length === 0)
+    return (
+      <EmptyState
+        title={t.calendar.agendaEmpty}
+        testId="calendar-empty"
+        motif={<SignatureMark id="calendarLeaf" size={64} />}
+      />
+    );
   return (
     <div className={styles.agendaList}>
       {days.map((d) => {

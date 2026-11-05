@@ -2,7 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
+import { SignatureMark } from '@/ui/identity';
 import { formatMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
 import { formatDay, today } from '@/core/time/dates';
@@ -23,7 +24,7 @@ import {
   TextField,
   useOpenParam,
 } from '@/ui';
-import { AvatarRing, NextBirthdayHead } from '../components/AvatarRing';
+import { NextBirthdayHead, PersonRing } from '../components/PersonRing';
 import { GiftEditor, type GiftTarget } from '../components/GiftEditor';
 import { PersonEditor, type PersonTarget } from '../components/PersonEditor';
 import {
@@ -160,11 +161,11 @@ function PeopleList({
           <Icon name="plus" size={18} />
           {t.people.add}
         </Button>
+        <StartDataMenu moduleId="people" />
       </PageHeader>
       {soonest ? (
         <NextBirthdayHead
           name={soonest.name}
-          days={soonestDays}
           label={[
             whenLabel(soonestDays),
             ageOn(soonest.birthday!, nextBirthday(soonest.birthday!, day)) !== undefined
@@ -212,9 +213,11 @@ function PeopleList({
         </>
       ) : null}
       {view === 'people' && people && people.length === 0 ? (
-        <EmptyState title={t.people.empty}>
-          <StartDataButton moduleId="people" />
-        </EmptyState>
+        <EmptyState
+          title={t.people.empty}
+          testId="people-empty"
+          motif={<SignatureMark id="avatarRing" size={64} />}
+        />
       ) : null}
       {view === 'people' && people && people.length > 0 ? (
         <TextField
@@ -239,7 +242,7 @@ function PeopleList({
                 key={p.id}
                 title={p.name}
                 lead={
-                  <AvatarRing name={p.name} days={b ? daysUntil(b, day) : undefined} size={2.25} />
+                  <PersonRing name={p.name} days={b ? daysUntil(b, day) : undefined} size={2.25} />
                 }
                 meta={[
                   next ? formatDay(next, 'EEE, d. MMMM') : undefined,
@@ -290,13 +293,7 @@ function PersonDetail({
   const sum = totals(gifts);
   return (
     <>
-      {b ? (
-        <NextBirthdayHead
-          name={person.name}
-          days={daysUntil(b, day)}
-          label={whenLabel(daysUntil(b, day))}
-        />
-      ) : null}
+      {b ? <NextBirthdayHead name={person.name} label={whenLabel(daysUntil(b, day))} /> : null}
       <PageHeader title={person.name}>
         <Button onClick={onBack}>{t.people.back}</Button>
         <Button onClick={() => setEditing(person)}>

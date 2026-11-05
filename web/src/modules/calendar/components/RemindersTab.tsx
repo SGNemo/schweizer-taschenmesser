@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { SignatureMark } from '@/ui/identity';
 import { getPlatform } from '@/core/platform';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -189,9 +189,10 @@ export function RemindersTab({
       ) : null}
 
       {reminders && reminders.length === 0 ? (
-        <EmptyState title={t.calendar.reminders.empty}>
-          <StartDataButton moduleId="calendar" />
-        </EmptyState>
+        <EmptyState
+          title={t.calendar.reminders.empty}
+          motif={<SignatureMark id="calendarLeaf" size={64} />}
+        />
       ) : null}
       {groups.length > 0 ? (
         <GroupedList

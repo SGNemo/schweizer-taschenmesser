@@ -15,7 +15,7 @@ import {
   TextField,
   type RowMenuItem,
 } from '@/ui';
-import { HeroFigure, HeroSlot, WeekBars } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark, WeekBars } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import {
   addFromField,
@@ -309,7 +309,11 @@ export default function PlannerPage() {
       </form>
 
       {nothingPlanned && waiting.length === 0 ? (
-        <EmptyState title={t.planner.empty} testId="planner-empty" />
+        <EmptyState
+          title={t.planner.empty}
+          testId="planner-empty"
+          motif={<SignatureMark id="weekBars" size={64} />}
+        />
       ) : null}
 
       {board ? (

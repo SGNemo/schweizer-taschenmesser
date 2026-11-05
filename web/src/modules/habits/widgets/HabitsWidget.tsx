@@ -2,11 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { today } from '@/core/time/dates';
 import { undoable } from '@/core/undo';
 import { t } from '@/strings';
-import { Button, ProgressList } from '@/ui';
+import { Button, FortschrittBody, WidgetBody } from '@/ui';
+import styles from '../habits.module.css';
 import { dailyTarget, dayState, isScheduled } from '../logic';
 import { entryRepo, goalRepo, bump, entryId, setEntry } from '../repo';
 
-/** Today's rings as progress rows, and one tap for the first open goal ("+1 Wasser trinken"). */
+/** Today's rings (`FortschrittBody` rings, G10: the same shape as the head), and one tap for the first open goal ("+1 Wasser trinken"). */
 export default function HabitsWidget() {
   const day = today();
   const data = useLiveQuery(async () => {
@@ -29,24 +30,31 @@ export default function HabitsWidget() {
   });
   return (
     <>
-      <ProgressList
+      <WidgetBody
         loading={!data}
-        summary={goals.length ? t.habits.widget.summary(done, goals.length) : undefined}
+        isEmpty={goals.length === 0}
         empty={t.habits.widget.empty}
         emptyAction={{ label: t.habits.widget.addAction, to: '/habits?new=1' }}
-        entries={goals.map((g) => ({
-          key: g.id,
-          title: g.name,
-          value: Math.min(entries?.get(g.id)?.count ?? 0, dailyTarget(g)),
-          max: dailyTarget(g),
-          detail:
-            g.kind === 'count'
-              ? t.habits.widget.detail(entries?.get(g.id)?.count ?? 0, g.target, g.unit)
-              : (entries?.get(g.id)?.count ?? 0) >= 1
-                ? t.habits.today.done
-                : '',
-        }))}
-      />
+      >
+        {goals.length ? (
+          <p className={styles.widgetSummary}>{t.habits.widget.summary(done, goals.length)}</p>
+        ) : null}
+        <FortschrittBody
+          kind="rings"
+          entries={goals.map((g) => ({
+            key: g.id,
+            title: g.name,
+            value: Math.min(entries?.get(g.id)?.count ?? 0, dailyTarget(g)),
+            max: dailyTarget(g),
+            detail:
+              g.kind === 'count'
+                ? t.habits.widget.detail(entries?.get(g.id)?.count ?? 0, g.target, g.unit)
+                : (entries?.get(g.id)?.count ?? 0) >= 1
+                  ? t.habits.today.done
+                  : '',
+          }))}
+        />
+      </WidgetBody>
       {next ? (
         <Button
           size="sm"

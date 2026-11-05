@@ -29,7 +29,8 @@
   gap: var(--space-4);
   min-width: 0;
 }
-@media (min-width: 900px) {
+/* F15: the columns follow the page container, not the window (the sidebar takes its share). */
+@container page (min-width: 52rem) {
   .layout {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     gap: var(--space-5);
@@ -135,12 +136,9 @@
 .row:first-child {
   border-top: 0;
 }
-/* A quiet rail at the left: the rating at a glance, the chip on the row says it in words. */
-.row[data-rating='good'] {
-  box-shadow: inset 3px 0 0 var(--success);
-}
+/* No rail (stripe rule, C07): the rating chip on the row says it in words; a poor slot gets a quiet tint. */
 .row[data-rating='poor'] {
-  box-shadow: inset 3px 0 0 var(--warning);
+  background: color-mix(in srgb, var(--warning) 6%, var(--surface));
 }
 .rowBody {
   flex: 1;
@@ -347,7 +345,7 @@
   gap: var(--space-4);
   min-width: 0;
 }
-@media (min-width: 1200px) {
+@container page (min-width: 64rem) {
   .layout {
     grid-template-columns: minmax(0, 1fr) 22rem;
   }

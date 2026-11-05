@@ -4,6 +4,7 @@ export { Ring, ringColor, type RingPart } from './Ring';
 export { CalendarLeaf } from './CalendarLeaf';
 export { DayBlock } from './DayBlock';
 export { HourStrip, type StripEvent } from './HourStrip';
+export { Stopwatch } from './Stopwatch';
 export { HeroFigure } from './HeroFigure';
 export { dominantColor, safeTint, toCss, useCoverTone, type Rgb } from './coverTone';
 export { HeroSlot } from './HeroSlot';

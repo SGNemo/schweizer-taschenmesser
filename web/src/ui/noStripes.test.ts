@@ -95,7 +95,7 @@ export function findStripes(file: string, css: string): Hit[] {
  * Stripes that are known and owned by a module package (identity v3.1 package 1): the guard reports anything else and
  * fails once a listed file is clean, so the list only shrinks.
  */
-const KNOWN_STRIPES: readonly string[] = ['modules/weather/routes/weather.module.css'];
+const KNOWN_STRIPES: readonly string[] = [];
 
 describe('no identity or urgency stripes (identity v3)', () => {
   it('detects the stripe patterns it is meant to forbid', () => {

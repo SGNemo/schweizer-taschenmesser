@@ -3,7 +3,7 @@ import { useNow } from '@/core/focus/useNow';
 import { today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, KpiWidget, StatusWidget } from '@/ui';
+import { Button, KpiWidget, WidgetBody } from '@/ui';
 import { duration } from '../components/format';
 import { runningSeconds, runningSession, sessionMinutes, stopwatch } from '../logic';
 import { jobRepo, sessionRepo, startSession, stopSession } from '../repo';
@@ -24,11 +24,15 @@ export default function TimerWidget() {
   const total = data.sessions.reduce((sum, s) => sum + sessionMinutes(s, nowMs), 0);
   if (data.jobs.length === 0)
     return (
-      <StatusWidget
-        icon="clock"
-        state={t.timetrack.widgetText.none}
-        action={{ label: t.timetrack.widgetText.addJob, to: '/timetrack?view=jobs' }}
-      />
+      // C34: the shared widget empty state (the fish, one sentence, one next step), like every other widget.
+      <WidgetBody
+        loading={false}
+        isEmpty
+        empty={t.timetrack.widgetText.none}
+        emptyAction={{ label: t.timetrack.widgetText.addJob, to: '/timetrack?view=jobs' }}
+      >
+        {null}
+      </WidgetBody>
     );
   if (running) {
     const job = data.jobs.find((j) => j.id === running.jobId);

@@ -135,7 +135,8 @@
   border-radius: 50%;
   background: var(--text-muted);
 }
-@media (min-width: 700px) {
+/* C19: the month cells follow the page container (40 rem = `MONTH_CHIPS_REM` in Views.tsx). */
+@container page (min-width: 40rem) {
   .dots {
     display: none;
   }

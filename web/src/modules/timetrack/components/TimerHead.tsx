@@ -3,15 +3,19 @@ import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Icon } from '@/ui';
-import { HeroSlot, HourStrip } from '@/ui/identity';
+import { HeroSlot, Stopwatch } from '@/ui/identity';
 import { sessionMinutes } from '../logic';
 import { startSession, stopSession } from '../repo';
 import type { Job, Session } from '../schema';
 import styles from '../timetrack.module.css';
 
+/** A working day for the dial: the arc is full after eight tracked hours (shape only; the figure says the time). */
+const DAY_MINUTES = 8 * 60;
+
 /**
- * Right half of the time head: today's sessions as blocks on the hour strip, and Start/Stopp as the one main action
- * (Start = the first project; the chips below pick another). Pause stays on the running card.
+ * The signature slot of the time head: a stopwatch dial whose arc is today's tracked time (C25: a round shape of its
+ * own, not the calendar's hour strip), and Start/Stopp as the one main action of the page (C29; Start = the first
+ * project, the tiles below pick another). Pause stays on the running card.
  */
 export function TimerHead({
   sessions,
@@ -25,15 +29,12 @@ export function TimerHead({
   /** False while the running card (with its own Stopp) is on the page. */
   showStop?: boolean;
 }) {
-  const d = new Date(now());
-  const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const at = now();
+  const tracked = sessions.reduce((sum, s) => sum + sessionMinutes(s, at), 0);
   return (
     <HeroSlot area="signature">
       <div className={styles.timerHead} data-testid="timer-head">
-        <HourStrip
-          events={sessions.map((s) => ({ time: s.startTime, endTime: s.endTime }))}
-          now={hhmm}
-        />
+        <Stopwatch fill={tracked / DAY_MINUTES} running={!!running && !running.pausedAt} />
         {running ? (
           showStop ? (
             <Button

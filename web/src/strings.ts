@@ -1505,6 +1505,8 @@ export const de = {
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
       done: 'Alles für heute erledigt.',
+      /** C22: the accessible name of the head's buttons says which task they act on ("Anfangen: Steuer"). */
+      named: (action: string, title: string) => `${action}: ${title}`,
     },
     somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
     allOpen: 'Alle offenen',
@@ -1662,6 +1664,14 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    /** Head without an appointment left today (Sven's shot: the head looked empty): what is next, or one step. */
+    headFree: {
+      today: 'Heute frei',
+      rest: 'Heute nichts mehr',
+      next: (when: string, title: string) => `Als Nächstes: ${when} · ${title}`,
+      none: 'In den nächsten zwei Wochen ist nichts eingetragen.',
+      add: 'Termin eintragen',
+    },
     endsAt: (time: string) => `bis ${time}`,
     recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
