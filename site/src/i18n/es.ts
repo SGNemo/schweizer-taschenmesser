@@ -45,12 +45,21 @@ export const es = {
       { icon: 'bell', shot: 'reminders', title: 'Recordatorios', text: 'Agrupados, con horas de silencio y «más tarde», incluso con la app cerrada.', alt: 'Recordatorios con interruptores y próxima hora' },
     ],
     more: 'Además: notas, listas, marcadores, despensa, personas, hábitos, registro de tiempo, el tiempo, limpieza del PC, un chat con un modelo local (vista previa). IA solo si tú quieres. La app habla alemán, inglés, español, francés y portugués (Brasil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number, a: number) => `${n} módulos en ${a} áreas. Cada uno tiene su color; activa solo lo que necesitas.`,
+    count: (n: number) => (n === 1 ? '1 módulo' : `${n} módulos`),
+    areas: { plan: 'El día, la semana, la gente.', money: 'Cuentas, facturas, suscripciones, presupuestos.', household: 'Compras y despensa.', knowledge: 'Leer, escribir, recordar.', vault: 'Cifrado, solo aquí.', system: 'Lo que hace tu dispositivo ahora.' },
     modules: {
       summary: (n: number) => `Los ${n} módulos`,
       status: { default: 'activado por defecto', optional: 'opcional', preview: 'vista previa' },
       only: { windows: 'solo app de Windows', android: 'solo app de Android', both: 'solo apps de Windows y Android' },
       hint: 'Los módulos en vista previa siguen ocultos hasta que actives «Mostrar lo que está en desarrollo» (Ajustes → Apariencia). La lista se genera a partir de la propia app.',
     },
+  },
+  heads: {
+    eyebrow: 'Cada módulo tiene su forma',
+    note: 'Cada página de módulo empieza con una cabecera en una de nueve formas y en el color del módulo; así ves de un vistazo dónde estás.',
+    names: { kennzahl: 'Cifra', zeit: 'Tiempo', fortschritt: 'Progreso', cover: 'Portada', himmel: 'Cielo', regal: 'Estante', tresor: 'Caja fuerte', schreib: 'Papel', fokus: 'Foco' },
   },
   data: {
     eyebrow: 'Tus datos se quedan contigo',
@@ -79,6 +88,7 @@ export const es = {
     ],
     honest: 'Nemo se desarrolla pensando en el TDAH y ayuda a empezar y a no perder el hilo. No es un tratamiento ni promete serlo. Cada ayuda se puede desactivar por separado.',
     shotAlt: 'Detalle del resumen: la tarjeta «lo siguiente» con «empezar · 5 min», «más tarde» y «otra cosa»',
+    phoneAlt: 'El resumen en el móvil: «importante ahora» y la tarjeta «lo siguiente» con el primer paso y la duración',
   },
   compare: {
     eyebrow: 'Comparación',

@@ -5,7 +5,8 @@
  * Loads the real registry (`core/modules/registry.ts`, `core/tools/registry.ts`) and the language
  * catalogs through Vite's SSR loader, so names and descriptions are the ones the app shows, then
  * writes
- *   - `site/src/catalog/modules.json`   (all five languages; the website reads it),
+ *   - `site/src/catalog/modules.json`   (all five languages plus icon, hue, head and widget variant
+ *     from `manifest.identity`; the website reads it),
  *   - the block between `<!-- modules:start -->` and `<!-- modules:end -->` in README.md,
  *     README.de.md, docs/user/modules.md and docs/user/modules.de.md (English and German).
  *
@@ -67,6 +68,12 @@ try {
       area: m.area,
       status: status(m),
       platforms: platformKey(m.platforms),
+      // Identity v3 (docs/design/MODULE-IDENTITY.md): the website draws colour, head and widget shape from these.
+      icon: m.icon,
+      hue: m.identity.hue,
+      hue2: m.identity.hue2 ?? null,
+      head: m.identity.head,
+      widget: m.identity.widget,
       name: {},
       short: {},
       description: {},

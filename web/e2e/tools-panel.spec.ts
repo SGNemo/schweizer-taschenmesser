@@ -60,7 +60,8 @@ test.describe('toolbox panel – keyboard (desktop)', () => {
     await page.keyboard.press('Enter');
     await expect(page.getByRole('dialog', { name: 'Währung' })).toBeVisible();
 
-    await expect(page.locator('[data-tool="currency"]')).toBeFocused(); // the focus follows the tool
+    // The focus follows into the tool: its amount field once the rates are there, the surface before.
+    await expect(page.locator('[data-tool="currency"]:focus-within')).toHaveCount(1);
     await search.focus();
     await page.keyboard.press('Escape'); // empties the search …
     await expect(search).toHaveValue('');

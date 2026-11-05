@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Analyser ${name}`,
   usedOf: (used: string, total: string) => `${used} utilisés sur ${total}`,
   free: (free: string) => `${free} libres`,
-  percentUsed: (p: number) => `${p} % utilisés`,
   card: {
     scan: 'Analyser',
     systemDrive: 'Lecteur système',
@@ -67,6 +66,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'Historique depuis le démarrage de l’application – il n’est pas enregistré.',
     io: (read: string, write: string) => `Lecture ${read} · Écriture ${write}`,
     model: 'Modèle',
+    details: 'Détails',
+    temperatureLabel: 'Température',
+    ioLabel: 'Activité',
   },
   quick: {
     title: 'Aperçu rapide',
@@ -378,16 +380,37 @@ export const disk: Strings['disk'] = {
   scan: {
     back: 'Retour aux lecteurs',
     title: (root: string) => `Analyse de ${root}`,
-    scanning: 'Analyse en cours…',
+    scanning: 'Analyse en cours',
     paused: 'Analyse en pause',
+    runningOf: (root: string) => `Analyse de ${root} en cours`,
+    pausedOf: (root: string) => `Analyse de ${root} en pause`,
+    soFar: (files: string, size: string) => `jusqu’ici ${files} fichiers, ${size}`,
+    toScan: 'Ouvrir l’analyse',
+    liveList: 'Dossiers jusqu’ici',
+    pendingShort: 'comptage en cours',
+    pendingNote: 'Comptage encore en cours',
+    pendingLegend: '… = comptage encore en cours',
+    pendingCount: (n: number) =>
+      n === 1
+        ? '1 entrée est encore en cours de comptage.'
+        : `${n} entrées sont encore en cours de comptage.`,
+    endedOf: (root: string) => `Analyse de ${root} terminée`,
+    cancelledOf: (root: string) => `Analyse de ${root} annulée`,
+    endedShort: 'Analyse terminée',
+    cancelledShort: 'Analyse annulée',
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Vue en carte de l’analyse en cours avec 1 entrée.'
+        : `Vue en carte de l’analyse en cours avec ${n} entrées.`,
+    failedOf: (root: string) => `Analyse de ${root} échouée`,
+    toResult: 'Voir le résultat',
+    alreadyRunning: 'Une analyse est déjà en cours : terminez-la pour en lancer une autre.',
     liveLabel: 'Vue en direct de l’analyse',
     liveHint:
-      'La carte se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
+      'La vue se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
     liveEmpty: 'Comptage des premiers dossiers…',
     files: 'Fichiers',
     folders: 'Dossiers',
-    used: 'Occupé',
-    current: 'Dossier en cours',
     cancel: 'Annuler',
     pause: 'Pause',
     resume: 'Reprendre',

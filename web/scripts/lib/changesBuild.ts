@@ -56,3 +56,26 @@ export function groupByBuild(
     .map(([build, list]) => ({ build, entries: list }))
     .sort((a, b) => (b.build ?? -1) - (a.build ?? -1));
 }
+
+/**
+ * Every build number that exists on `develop` (the commit count at each first-parent commit, newest first)
+ * down to `floor`. A push to `develop` is one first-parent commit, so these are the numbers a preview can
+ * have; the numbers a merge commit skips never were builds. Empty without history.
+ */
+export function firstParentBuilds(git: GitRunner, floor: number, max = 1500): number[] {
+  const out: number[] = [];
+  try {
+    if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') return out;
+    const hashes = git(['log', '--first-parent', '--format=%H', '-n', String(max)])
+      .split('\n')
+      .filter(Boolean);
+    for (const h of hashes) {
+      const n = Number(git(['rev-list', '--count', h]).trim());
+      if (!Number.isInteger(n) || n < floor) break;
+      out.push(n);
+    }
+  } catch {
+    return [];
+  }
+  return out;
+}

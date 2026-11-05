@@ -13,6 +13,8 @@ export interface VersionData {
   /** 'YYYY-MM-DD'; '' for unreleased. */
   date: string;
   entries: ChangeEntry[];
+  /** Preview only (`unreleased`): every build number since the oldest open note, newest first. */
+  builds?: number[];
 }
 export interface ChangelogData {
   areas: Record<string, { de: string; en: string }>;
@@ -83,17 +85,22 @@ export function renderSection(v: VersionData, lang: Lang): string {
   return [`## [${v.version}] – ${v.date}`, renderBody(v.entries, lang)].join('\n\n') + '\n';
 }
 
-/** Dev-Preview text: one `## Build N` section per build (newest first), notes without a build under `## Unreleased`. */
-export function renderBuilds(entries: ChangeEntry[], lang: Lang): string {
-  return (
-    groupByBuild(entries)
-      .map((g) =>
-        [g.build ? `## Build ${g.build}` : '## Unreleased', renderBody(g.entries, lang)].join(
-          '\n\n',
-        ),
-      )
-      .join('\n\n') + '\n'
-  );
+/**
+ * Dev-Preview text: one `## Build N` section per build, newest first. With `allBuilds` every build number
+ * gets a heading, also those without notes (an empty section); notes without a build go under `## Unreleased`.
+ */
+export function renderBuilds(entries: ChangeEntry[], lang: Lang, allBuilds: number[] = []): string {
+  const byBuild = new Map(groupByBuild(entries).map((g) => [g.build, g.entries]));
+  const numbers = [
+    ...new Set([...allBuilds, ...[...byBuild.keys()].filter((b): b is number => !!b)]),
+  ].sort((a, b) => b - a);
+  const parts = numbers.map((n) => {
+    const list = byBuild.get(n);
+    return list ? [`## Build ${n}`, renderBody(list, lang)].join('\n\n') : `## Build ${n}`;
+  });
+  const rest = byBuild.get(undefined);
+  if (rest) parts.push(['## Unreleased', renderBody(rest, lang)].join('\n\n'));
+  return parts.join('\n\n') + '\n';
 }
 
 /** Puts `section` above the newest existing `## ` heading; replaces a section of the same version. */
