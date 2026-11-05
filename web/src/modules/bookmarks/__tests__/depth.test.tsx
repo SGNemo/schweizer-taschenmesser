@@ -7,7 +7,7 @@ import { setPlatform } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { setSettings } from '@/core/settings/settings';
 import { BookmarkCard } from '../components/BookmarkCard';
-import { Pinboard } from '../components/Pinboard';
+import { Pinboard } from '@/ui/identity';
 import { filterItems, statusOf } from '../logic';
 import { fetchPreviewFor, previewEnabled, previewKey } from '../preview';
 import { itemRepo } from '../repo';
@@ -50,11 +50,12 @@ describe('status and sorting', () => {
 });
 
 describe('signature and card', () => {
-  it('the pinboard is decoration: hidden from assistive technology, text only', () => {
-    render(<Pinboard titles={['Eins', 'Zwei', 'Drei', 'Vier']} />);
-    const board = screen.getByTestId('pinboard');
+  it('the pinboard is the library block: decoration, hidden from assistive technology, no titles', () => {
+    render(<Pinboard size="M" />);
+    const board = document.querySelector('[data-signature="pinboard"]')!;
     expect(board).toHaveAttribute('aria-hidden', 'true');
-    expect(board.textContent).toBe('EinsZweiDrei');
+    expect(board.querySelectorAll('i')).toHaveLength(3);
+    expect(board.textContent).toBe('');
   });
 
   it('a card shows type, status and site as words, and a monogram without a picture', () => {

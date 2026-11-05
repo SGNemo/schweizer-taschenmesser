@@ -4,8 +4,8 @@ import { statusOf } from './logic';
 import { documentRepo } from './repo';
 
 /**
- * Cancellation deadlines within a week (accent), expired documents (danger) and documents that
- * expire soon (warning). Titles are never shown here.
+ * Cancellation deadlines within a week (accent), expired and soon-expiring documents (warning: red is kept for
+ * overdue money and exceeded budgets, FOCUS-GUIDELINES, C24). Titles are never shown here.
  */
 const source: AttentionSource = async ({ today }) => {
   const states = (await documentRepo.active().toArray()).map((d) => statusOf(d, today));
@@ -29,7 +29,7 @@ const source: AttentionSource = async ({ today }) => {
       ? [
           {
             id: 'vault:expired',
-            tone: 'danger' as const,
+            tone: 'warning' as const,
             icon: 'file' as const,
             title: t.attention.docsExpired(expired),
             to: '/vault',

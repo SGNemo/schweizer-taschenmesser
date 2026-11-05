@@ -48,6 +48,8 @@ export const bookmarks: Strings['bookmarks'] = {
   tabLinks: 'Marcadores',
   addLink: 'Adicionar marcador',
   linksWidgetEmpty: 'Ainda não há marcadores.',
+  linksContext: (n: number, groups: number) =>
+    `${n === 1 ? '1 link' : `${n} links`}${groups === 0 ? '' : ` · ${groups === 1 ? 'em 1 grupo' : `em ${groups} grupos`}`}`,
   noGroup: 'Sem grupo',
   linksEmpty:
     'Ainda não há marcadores. Adicione links que você usa com frequência – agrupados pela primeira tag.',

@@ -1,0 +1,33 @@
+/* The stamp beside the title: the library block, scaled to the compact head, the inbox line next to it. */
+.stamp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.stamp > [data-signature='stamp'] {
+  zoom: 0.72;
+}
+.text {
+  display: grid;
+  min-width: 0;
+  margin: 0;
+}
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.context {
+  font-size: var(--text-meta);
+  color: var(--text-on-tint);
+}
+.envelope {
+  display: inline-grid;
+}
+/* Phone: the envelope stays, at 40 px (G02); the stamp keeps its size beside the line. */
+@media (max-width: 899px) {
+  .envelope {
+    zoom: 0.625;
+  }
+}

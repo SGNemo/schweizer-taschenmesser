@@ -124,6 +124,15 @@ describe('home layout: migration of the old dashboard settings', () => {
     });
   });
 
+  it("maps mail's three old widgets onto the one inbox widget, once", () => {
+    expect(
+      resolveLayout(
+        { order: ['mail:top', 'a:x', 'mail:unread', 'mail:invoices'], hidden: [], sizes: {} },
+        undefined,
+      ).order,
+    ).toEqual(['mail:inbox', 'a:x']);
+  });
+
   it('falls back to the defaults on an invalid home record', () => {
     expect(resolveLayout({ sizes: { 'a:x': 'xl' } }, undefined)).toEqual(DEFAULT_LAYOUT);
   });

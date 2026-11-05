@@ -5,7 +5,7 @@ import { expiryState, needsRestock } from './logic';
 import { itemRepo } from './repo';
 import { settings, settingsSchema } from './settings';
 
-/** Expired stock (danger), stock that expires soon and stock that runs low (warning). */
+/** Expired stock, stock that expires soon and stock that runs low: all warning (red only for money, C24). */
 const source: AttentionSource = async ({ today }) => {
   const prefs = await getSettings('module.pantry', settingsSchema, settings.defaults as never);
   const soonDays = (prefs as { soonDays?: number }).soonDays ?? 3;
@@ -19,7 +19,7 @@ const source: AttentionSource = async ({ today }) => {
       ? [
           {
             id: 'pantry:expired',
-            tone: 'danger' as const,
+            tone: 'warning' as const,
             icon: 'package' as const,
             title: t.attention.pantryExpired(expired),
             to: '/pantry',

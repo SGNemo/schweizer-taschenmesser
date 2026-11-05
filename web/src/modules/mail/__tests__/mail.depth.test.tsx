@@ -1,21 +1,20 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Stamp } from '../components/Stamp';
+import { InboxStamp } from '../components/InboxHead';
 import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 
-describe('Stamp (signature)', () => {
-  it('shows the unread count as real text; the perforated frame is decoration', () => {
-    render(<Stamp count={3} label="Ungelesen" context="3 ungelesene Mails im Posteingang" />);
+describe('InboxStamp (head figure)', () => {
+  it('shows the unread count as real text beside the stamp; the stamp is decoration', () => {
+    render(<InboxStamp unread={3} />);
     const stamp = screen.getByTestId('mail-stamp');
-    expect(stamp).toHaveTextContent('3');
-    expect(stamp).toHaveTextContent('Ungelesen');
-    expect(stamp.querySelector('[aria-hidden="true"]')).not.toBeNull();
-    expect(stamp.querySelector('img, svg, canvas')).toBeNull();
+    expect(stamp).toHaveTextContent('3 ungelesene Threads');
+    expect(stamp).toHaveTextContent('Posteingang');
+    expect(stamp.querySelector('[data-signature="stamp"][aria-hidden="true"]')).not.toBeNull();
   });
 
   it('says so in words when nothing is unread', () => {
-    render(<Stamp count={0} label="Ungelesen" context="Alles gelesen" />);
+    render(<InboxStamp unread={0} />);
     expect(screen.getByTestId('mail-stamp')).toHaveTextContent('Alles gelesen');
   });
 });

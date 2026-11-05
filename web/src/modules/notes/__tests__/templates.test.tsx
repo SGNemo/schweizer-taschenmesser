@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { NotePaper } from '../components/NotePaper';
+import { NotePaper } from '@/ui/identity';
+import { pageMenuItems } from '../components/pageMenu';
 import { settings as moduleSettings, settingsSchema } from '../settings';
 import { buildTemplate, TEMPLATE_IDS } from '../templates';
 
@@ -30,12 +31,25 @@ describe('notes settings', () => {
   });
 });
 
-describe('NotePaper', () => {
+describe('NotePaper (library block in the head)', () => {
   it('is decoration: hidden from assistive technology, text only, no colour needed', () => {
-    render(<NotePaper text="Milch nicht vergessen" />);
-    const paper = screen.getByTestId('note-paper');
+    render(<NotePaper>Milch nicht vergessen</NotePaper>);
+    const paper = document.querySelector('[data-signature="notePaper"]')!;
     expect(paper).toHaveAttribute('aria-hidden', 'true');
     expect(paper).toHaveTextContent('Milch nicht vergessen');
     expect(paper.querySelector('img, svg, canvas')).toBeNull();
+  });
+});
+
+describe('page menu', () => {
+  it('lists pin and move first and delete last, so a new entry slots in before delete', () => {
+    const noop = () => undefined;
+    const items = pageMenuItems({ id: 'p', pinned: false } as never, {
+      onTogglePin: noop,
+      onMove: noop,
+      onDelete: noop,
+    });
+    expect(items.map((i) => i.id)).toEqual(['pin', 'move', 'delete']);
+    expect(items.at(-1)!.danger).toBe(true);
   });
 });

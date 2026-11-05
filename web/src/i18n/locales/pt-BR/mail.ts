@@ -260,19 +260,19 @@ export const mail: Strings['mail'] = {
       'O texto do e-mail só vai para o modelo local deste computador, nunca para um modelo na nuvem.',
   },
   widget: {
-    unread: 'Não lidos',
-    unreadContext: (n: number) =>
-      n === 0
-        ? 'A caixa de entrada está vazia'
-        : n === 1
-          ? 'Conversa não lida na caixa de entrada'
-          : 'Conversas não lidas na caixa de entrada',
-    important: 'E-mails principais',
-    importantSummary: (n: number) => (n === 1 ? '1 não lido' : `${n} não lidos`),
-    invoices: 'E-mails de faturas',
-    invoicesContext: (days: number) => `nos últimos ${days} dias`,
+    inbox: 'Caixa de entrada',
+    inboxTitle: (n: number) => (n === 0 ? 'Tudo lido' : `${n} não lidos`),
+    inboxNoInvoices: (days: number) => `Nenhum e-mail de fatura nos últimos ${days} dias`,
+    inboxInvoices: (n: number, days: number) =>
+      n === 1 ? `1 e-mail de fatura em ${days} dias` : `${n} e-mails de fatura em ${days} dias`,
+    inboxInvoicesAction: 'Ver',
     empty: 'Ainda não há e-mails.',
-    emptyAction: 'Abrir o e-mail',
+    emptyAction: 'Abrir e-mail',
     link: 'Abrir o e-mail',
+  },
+  head: {
+    inbox: 'Caixa de entrada',
+    unread: (n: number) =>
+      n === 0 ? 'Tudo lido' : n === 1 ? `1 conversa não lida` : `${n} conversas não lidas`,
   },
 };

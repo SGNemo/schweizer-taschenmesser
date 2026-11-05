@@ -118,7 +118,7 @@ test.describe('mail (demo mails)', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/mail');
     await expect(page.getByTestId('mail-columns')).toBeVisible();
-    await expect(page.getByTestId('mail-stamp')).toContainText('Ungelesen');
+    await expect(page.getByTestId('mail-stamp')).toContainText('ungelesen');
     await expect(page.getByRole('navigation', { name: 'Ordner' })).toBeVisible();
     await page.getByText('Ihre Rechnung für Oktober').click();
     await expect(page.getByTitle(/Inhalt der Mail/)).toBeVisible();
@@ -140,14 +140,16 @@ test.describe('mail (demo mails)', () => {
     );
   });
 
-  test('widgets show unread count, top mails and invoice mails', async ({ page }) => {
+  test('the inbox widget shows the unread count, two subjects and the invoice mails', async ({
+    page,
+  }) => {
     await showAllWidgets(page);
     await page.goto('/');
     await expect(page.locator('main h1')).toBeVisible();
-    const unread = page.getByTestId('widget-mail:unread');
-    await expect(unread).toContainText('Ungelesene Threads im Posteingang');
-    await expect(page.getByTestId('widget-mail:top')).toContainText('Ihre Rechnung für Oktober');
-    await expect(page.getByTestId('widget-mail:invoices')).toContainText('in den letzten 30 Tagen');
+    const inbox = page.getByTestId('widget-mail:inbox');
+    await expect(inbox).toContainText('ungelesen');
+    await expect(inbox).toContainText('Ihre Rechnung für Oktober');
+    await expect(inbox).toContainText('Rechnungsmail');
   });
 
   test('new-mail notifications are off by default and their switch is in the module settings', async ({

@@ -9,6 +9,7 @@ import { t } from '@/strings';
 import { tAdvanced } from '@/strings.advanced';
 import {
   Button,
+  EmptyState,
   GroupedList,
   Icon,
   ItemList,
@@ -22,8 +23,6 @@ import {
 } from '@/ui';
 import { BookmarkCard } from '../components/BookmarkCard';
 import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
-import { BookmarksEmpty } from '../components/BookmarksEmpty';
-import { Pinboard } from '../components/Pinboard';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
   filterItems,
@@ -45,8 +44,8 @@ import {
   type SortMode,
 } from '../settings';
 import { KINDS } from '../schema';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { HeroFigure, HeroSlot, Pinboard, SignatureMark } from '@/ui/identity';
+import { useStartDataItems } from '@/core/importer/StartDataMenu';
 import styles from './bookmarks.module.css';
 
 /** The Web Share Target sends `title`, `text` and `url`; some apps put the link into `text`. */
@@ -92,10 +91,6 @@ export default function BookmarksPage() {
   const shown = useMemo(
     () => filterItems(items ?? [], filter, prefs.sort),
     [items, filter, prefs.sort],
-  );
-  const latest = useMemo(
-    () => [...(items ?? [])].sort((a, b) => b.createdAt - a.createdAt).map((i) => i.title),
-    [items],
   );
   const tags = useMemo(() => tagCounts(items ?? []), [items]);
   const openItems = useMemo(() => (items ?? []).filter((i) => !i.done), [items]);
@@ -216,6 +211,7 @@ export default function BookmarksPage() {
       onSelect: () => setGrouping(g),
     })),
   ];
+  const startItems = useStartDataItems('bookmarks');
   const pageMenu: RowMenuItem[] = [
     ...(linksView ? [] : listMenu),
     {
@@ -225,6 +221,7 @@ export default function BookmarksPage() {
       checked: advanced,
       onSelect: () => setAdvanced(!advanced),
     },
+    ...startItems.map((i) => ({ ...i, group: t.bookmarks.moreOptions })),
   ];
   const activeFilters = [
     filter.view !== 'open' ? t.bookmarks.views[filter.view] : '',
@@ -235,7 +232,9 @@ export default function BookmarksPage() {
   return (
     <>
       <HeroSlot area="signature">
-        <Pinboard titles={latest} />
+        <span className={styles.pinboard} data-testid="pinboard">
+          <Pinboard size="M" />
+        </span>
       </HeroSlot>
       {items && items.length > 0 ? (
         <HeroSlot area="figure">
@@ -297,9 +296,11 @@ export default function BookmarksPage() {
       {linksView ? (
         <>
           {items && links.length === 0 ? (
-            <BookmarksEmpty title={t.bookmarks.linksEmpty}>
-              <StartDataButton moduleId="bookmarks" />
-            </BookmarksEmpty>
+            <EmptyState
+              title={t.bookmarks.linksEmpty}
+              testId="bookmarks-empty"
+              motif={<SignatureMark id="pinboard" size={64} />}
+            />
           ) : null}
           {links.map(([group, list]) => (
             <section key={group || '-'} aria-label={group || t.bookmarks.noGroup}>
@@ -322,9 +323,11 @@ export default function BookmarksPage() {
         </>
       ) : null}
       {linksView ? null : items && shown.length === 0 ? (
-        <BookmarksEmpty title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}>
-          {items.length === 0 ? <StartDataButton moduleId="bookmarks" /> : null}
-        </BookmarksEmpty>
+        <EmptyState
+          title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}
+          testId="bookmarks-empty"
+          motif={<SignatureMark id="pinboard" size={64} />}
+        />
       ) : null}
       {linksView || shown.length === 0 ? null : (
         <GroupedList listId={`bookmarks-${grouping}`} groups={groups} label={t.bookmarks.title} />

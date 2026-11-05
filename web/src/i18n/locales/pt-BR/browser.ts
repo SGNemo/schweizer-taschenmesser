@@ -7,6 +7,8 @@ export const browser: Strings['browser'] = {
       'Navegador simples com abas, marcadores e modo privado. Funciona separado dos seus dados do Nemo.',
     widget: 'Favoritos do navegador',
     widgetEmpty: 'Ainda não há marcadores.',
+    widgetContext: (n: number) =>
+      n === 1 ? '1 favorito no navegador' : `${n} favoritos no navegador`,
     widgetAction: 'Abrir o navegador',
   },
   settings: {

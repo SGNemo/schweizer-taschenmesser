@@ -82,6 +82,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The ellipsis needs a block of its own: it does not apply to the text of a flex container. */
+.titleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .bookTag {
   display: inline-flex;
   align-items: center;
