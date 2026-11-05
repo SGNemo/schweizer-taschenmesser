@@ -46,7 +46,7 @@ export function KennzahlBody({
         {value}
         {unit ? <span className={styles.kpiUnit}> {unit}</span> : null}
       </p>
-      <p className={styles.sub}>{context}</p>
+      {context ? <p className={styles.sub}>{context}</p> : null}
       {size !== 's' && trend ? (
         <p className={styles.trend} data-tone={trend.tone ?? 'neutral'}>
           <Icon

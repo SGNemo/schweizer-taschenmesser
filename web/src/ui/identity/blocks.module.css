@@ -310,7 +310,7 @@
   stroke-linejoin: round;
 }
 
-/* gauges: two arcs with needles. */
+/* gauges: two tracks with their needles at rest (no reading). */
 .gauges {
   display: flex;
   gap: var(--space-3);
@@ -319,12 +319,11 @@
 .gauge {
   flex: 1 1 0;
   fill: none;
-  stroke: var(--module-color);
   stroke-width: 3;
   stroke-linecap: round;
 }
 .gauge .track {
-  stroke: color-mix(in srgb, var(--module-color) 25%, var(--paper));
+  stroke: color-mix(in srgb, var(--module-color) 35%, var(--paper));
 }
 .gauge .needle {
   stroke: var(--text);
