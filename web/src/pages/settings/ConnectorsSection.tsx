@@ -27,7 +27,7 @@ import { tLegal } from '@/strings.legal';
 import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Checkbox, Dialog, TextField } from '@/ui';
-import { Facts, StateBanner, Step } from './ConnectParts';
+import { ChoiceList, Facts, StateBanner, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 const s = t.connectors;
@@ -246,12 +246,12 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
               <p className={styles.muted}>{def.client?.note ?? legal.googleTesting}</p>
             </Step>
             <Step n={2} title={cc.stepFeatures} hint={cc.stepFeaturesHint}>
-              <fieldset className={styles.fieldset}>
-                <legend className={styles.legend}>{s.features}</legend>
+              <ChoiceList legend={s.features}>
                 {def.features.map((f) => (
                   <Checkbox
                     key={f.id}
-                    label={`${f.label} – ${f.description}`}
+                    label={f.label}
+                    description={f.description}
                     checked={active.includes(f.id)}
                     onChange={(e) =>
                       setFeatures(
@@ -260,7 +260,7 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
                     }
                   />
                 ))}
-              </fieldset>
+              </ChoiceList>
               <div className={styles.row}>
                 <Button
                   variant="primary"

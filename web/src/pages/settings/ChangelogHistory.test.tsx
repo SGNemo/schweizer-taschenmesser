@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ChangelogData } from '@/core/changelog/types';
 import { ChangelogHistory } from './ChangelogHistory';
@@ -44,6 +45,44 @@ const withBuilds: ChangelogData = {
     data.versions[2]!,
   ],
 };
+
+describe('ChangelogHistory every build number', () => {
+  it('has a row for every build, a quiet line where there is no note, and loads 30 more on request', async () => {
+    const builds = Array.from({ length: 45 }, (_, i) => 745 - i); // 745 … 701
+    const many: ChangelogData = {
+      areas: data.areas,
+      versions: [
+        {
+          version: 'unreleased',
+          date: '',
+          builds,
+          entries: [
+            { ...e('even', 'gerade'), build: 744 },
+            { ...e('low', 'tief'), build: 702 },
+          ],
+        },
+        data.versions[2]!,
+      ],
+    };
+    vi.resetModules();
+    vi.doMock('@/core/changelog/load', () => ({ loadChangelog: async () => many }));
+    const { ChangelogHistory: History } = await import('./ChangelogHistory');
+    render(<History version="1.0.0-dev.744+abc" />);
+    await waitFor(() => expect(screen.getByTestId('changelog-history')).toBeTruthy());
+    const box = screen.getByTestId('changelog-history');
+    // 30 rows at first: a card for 744, quiet lines for the others; the installed build carries its mark.
+    expect(within(box).getAllByTestId(/^history-(build|empty)/)).toHaveLength(30);
+    expect(within(box).getByTestId('history-build-744')).toBeTruthy();
+    expect(within(box).getByTestId('history-empty-745')).toBeTruthy();
+    expect(within(box).queryByTestId('history-build-702')).toBeNull(); // not loaded yet
+    const more = within(box).getByRole('button', { name: /anzeigen \(15\)/ });
+    await userEvent.click(more);
+    expect(within(box).getAllByTestId(/^history-(build|empty)/)).toHaveLength(45);
+    expect(within(box).getByTestId('history-build-702')).toBeTruthy();
+    expect(within(box).getAllByTestId(/^history-(build|empty)/)).toHaveLength(45);
+    vi.doUnmock('@/core/changelog/load');
+  });
+});
 
 describe('ChangelogHistory per build', () => {
   it('shows one card per Dev-Preview build, newest first, marks the installed one, local notes last', async () => {

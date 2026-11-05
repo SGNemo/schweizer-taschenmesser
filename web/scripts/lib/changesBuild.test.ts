@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { ChangeEntry } from './changes';
 import { renderBuilds } from './changelogRelease';
-import { entriesWithBuilds, groupByBuild, noteBuilds, type GitRunner } from './changesBuild';
+import {
+  entriesWithBuilds,
+  firstParentBuilds,
+  groupByBuild,
+  noteBuilds,
+  type GitRunner,
+} from './changesBuild';
 
 const e = (p: Partial<ChangeEntry>): ChangeEntry => ({
   type: 'added',
@@ -77,5 +83,30 @@ describe('build grouping', () => {
     expect(en.indexOf('## Build 686')).toBeLessThan(en.indexOf('## Unreleased'));
     expect(en).toContain('- **Calendar:** three');
     expect(renderBuilds(entries, 'de')).toContain('- **Kalender:** Deutsch');
+  });
+});
+
+describe('firstParentBuilds', () => {
+  const git: GitRunner = (args) => {
+    if (args[0] === 'rev-parse') return 'false\n';
+    if (args[0] === 'log') return 'c5\nc4\nc3\nc2\nc1\n';
+    return `${{ c5: 730, c4: 727, c3: 723, c2: 714, c1: 711 }[args.at(-1)!]}\n`;
+  };
+  it('lists the build number of every first-parent commit down to the floor, newest first', () => {
+    expect(firstParentBuilds(git, 714)).toEqual([730, 727, 723, 714]);
+  });
+  it('is empty in a shallow clone or when git fails', () => {
+    expect(firstParentBuilds(() => 'true\n', 1)).toEqual([]);
+    expect(
+      firstParentBuilds(() => {
+        throw new Error('x');
+      }, 1),
+    ).toEqual([]);
+  });
+  it('renders every build number as a heading, also those without notes', () => {
+    const en = renderBuilds([e({ en: 'one', build: 727 })], 'en', [730, 727, 723]);
+    expect(en.indexOf('## Build 730')).toBeLessThan(en.indexOf('## Build 727'));
+    expect(en.indexOf('## Build 727')).toBeLessThan(en.indexOf('## Build 723'));
+    expect(en).toContain('- **Calendar:** one');
   });
 });
