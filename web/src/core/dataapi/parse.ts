@@ -236,6 +236,8 @@ export async function buildCandidates(
       else Object.assign(data, existing);
     }
     const refIds = new Map<string, string>();
+    // An entry of this batch it points at: it is written only together with that one.
+    let dependsOn: string | undefined;
     // Accounts and invoices have a real `currency` field; elsewhere it only confirms the euro.
     const ownCurrency = format.fields.some((f) => f.name === 'currency');
 
@@ -270,6 +272,8 @@ export async function buildCandidates(
         else {
           data[field.storeName] = resolved.id;
           refIds.set(field.storeName, resolved.id);
+          if (!dependsOn && drafts.some((d) => d !== draft && d.id === resolved.id))
+            dependsOn = resolved.id;
         }
       } else {
         data[field.storeName] = value;
@@ -323,6 +327,7 @@ export async function buildCandidates(
       label: label.length > 0 ? label : collection,
       detail: format.label,
       dedupeKey,
+      ...(dependsOn ? { dependsOn } : {}),
       ...(update ? { update } : {}),
       error:
         errors.length > 0
