@@ -240,7 +240,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-dev
+          shared-key: windows-dev-thin
       - run: npm ci
 
       # Own identifier (…taschenmesser.dev), name "Nemo Dev", version from the prepare job; the frontend is
@@ -250,7 +250,15 @@ jobs:
           VITE_RELEASE_CHANNEL: dev
           VITE_BUILD_SHA: ${{ github.sha }}
           TAURI_VERSION_CONFIG: ${{ needs.prepare.outputs.tauri_config }}
-        run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG" -- --locked
+          # `npm run build` also runs the licence check and the typecheck (74 s together with the frontend build).
+          # Both are gate jobs of the same CI run (Licence list, Web static), so the preview build only builds.
+          TAURI_FRONTEND_CONFIG: '{"build":{"beforeBuildCommand":"npx vite build"}}'
+          # Experiment (measured in docs/perf/CI-BASELINE-2-2026-11-04.md): no fat LTO, parallel code generation,
+          # Windows preview only. Own rust-cache key below, otherwise a cache built with the other profile is
+          # restored as an exact hit and nothing is ever saved for this one.
+          CARGO_PROFILE_RELEASE_LTO: 'false'
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '16'
+        run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG" --config "$TAURI_FRONTEND_CONFIG" -- --locked
 
       - name: Sign with the updater key
         env:
