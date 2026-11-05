@@ -14,22 +14,30 @@ export function StateBanner({
   line,
   tone = 'neutral',
   testId,
+  titleTestId,
   children,
 }: {
-  icon: IconName;
+  /** Leave out where the words say it all (keeps the page quiet). */
+  icon?: IconName;
   title: string;
   line?: ReactNode;
   tone?: 'neutral' | 'ok' | 'attention';
   testId?: string;
+  /** Test id on the state words alone (a test that reads exactly the status). */
+  titleTestId?: string;
   children?: ReactNode;
 }) {
   return (
     <div className={styles.banner} data-tone={tone} data-testid={testId}>
-      <span className={styles.bannerIcon} aria-hidden="true">
-        <Icon name={icon} size={22} />
-      </span>
+      {icon ? (
+        <span className={styles.bannerIcon} aria-hidden="true">
+          <Icon name={icon} size={22} />
+        </span>
+      ) : null}
       <div className={styles.bannerText}>
-        <p className={styles.bannerTitle}>{title}</p>
+        <p className={styles.bannerTitle} data-testid={titleTestId}>
+          {title}
+        </p>
         {line ? <p className={styles.bannerLine}>{line}</p> : null}
       </div>
       {children ? <div className={styles.bannerAside}>{children}</div> : null}
