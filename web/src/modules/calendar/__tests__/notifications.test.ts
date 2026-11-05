@@ -173,3 +173,39 @@ describe('calendar notifications: the series over a day', () => {
     ]);
   });
 });
+
+describe('whole-day leads across a clock change', () => {
+  it('"1 Tag vorher" keeps the wall-clock time over the DST switch (Europe/Berlin)', async () => {
+    const before = process.env.TZ;
+    process.env.TZ = 'Europe/Berlin';
+    try {
+      await patchFocusSettings({ followUp: false, staggered: false });
+      const event = (startDate: string, minutesBefore: number, extraMinutes?: number[]) =>
+        eventRepo.create({
+          title: startDate,
+          allDay: false,
+          startDate,
+          startTime: '10:00',
+          endTime: '11:00',
+          notify: { enabled: true, minutesBefore, ...(extraMinutes ? { extraMinutes } : {}) },
+        });
+      await event('2026-03-29', 1440, [2880]); // summer time starts in the night before
+      await event('2026-10-25', 1440); // winter time starts in the night before
+      await event('2026-03-30', 1500); // 1 day and 1 hour: 09:00 the day before
+      const out = await source({
+        from: toEpoch('2026-03-20', '00:00'),
+        to: toEpoch('2026-10-30', '00:00'),
+      });
+      const local = (at: number) => {
+        const d = new Date(at);
+        return [d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes()].join('-');
+      };
+      expect(out.map((n) => local(n.at)).sort()).toEqual(
+        ['3-27-10-0', '3-28-10-0', '3-29-9-0', '10-24-10-0'].sort(),
+      );
+    } finally {
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
+    }
+  });
+});

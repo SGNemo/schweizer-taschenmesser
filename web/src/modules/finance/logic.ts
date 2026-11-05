@@ -1,5 +1,11 @@
 import { compareText } from '@/core/i18n/format';
-import { addDaysStr, addMonthsStr, addMonthsToMonth, formatDay, monthOf } from '@/core/time/dates';
+import {
+  addDaysStr,
+  addMonthsInSeries,
+  addMonthsToMonth,
+  formatDay,
+  monthOf,
+} from '@/core/time/dates';
 import { currencyOf, DEFAULT_CURRENCY, formatMoneyInput } from '@/core/money';
 import type { Account, BookingRepeat, Split, Transaction } from './schema';
 
@@ -194,9 +200,40 @@ const REPEAT_MONTHS: Record<Exclude<BookingRepeat, 'weekly'>, number> = {
   yearly: 12,
 };
 
-/** The date after `date` in a repeating series (weekly = 7 days; months clamp to the month end). */
-export const nextRepeatDate = (date: string, repeat: BookingRepeat): string =>
-  repeat === 'weekly' ? addDaysStr(date, 7) : addMonthsStr(date, REPEAT_MONTHS[repeat]);
+/**
+ * The date after `date` in a repeating series (weekly = 7 days; months clamp to the month end and
+ * return to the day of `anchor`, the series' first date, afterwards).
+ */
+export const nextRepeatDate = (
+  date: string,
+  repeat: BookingRepeat,
+  anchor: string = date,
+): string =>
+  repeat === 'weekly'
+    ? addDaysStr(date, 7)
+    : addMonthsInSeries(date, REPEAT_MONTHS[repeat], anchor);
+
+/** First date of each repeating series, by series root (`repeatOf`, or the first booking's id). */
+export function seriesAnchors(
+  txs: readonly Pick<Transaction & { id: string }, 'id' | 'date' | 'repeat' | 'repeatOf'>[],
+): Map<string, string> {
+  const out = new Map<string, string>();
+  // The first booking hands `repeat` on to its follow-up: it is still the root they point to.
+  const roots = new Set(txs.map((x) => x.repeatOf));
+  for (const x of txs) {
+    if (!x.repeat && !x.repeatOf && !roots.has(x.id)) continue;
+    const root = x.repeatOf ?? x.id;
+    const first = out.get(root);
+    if (!first || x.date < first) out.set(root, x.date);
+  }
+  return out;
+}
+
+/** The first date of the series `head` belongs to (its own date when unknown). */
+export const seriesAnchor = (
+  head: Pick<Transaction & { id: string }, 'id' | 'date' | 'repeatOf'>,
+  anchors: ReadonlyMap<string, string>,
+): string => anchors.get(head.repeatOf ?? head.id) ?? head.date;
 
 /** At most this many missed periods are booked per series and start (a long break never floods the list). */
 const MAX_CATCH_UP = 12;
@@ -211,16 +248,18 @@ export type PlannedRepeat = { id: string; data: Transaction };
 export function planRepeats(
   heads: (Transaction & { id: string })[],
   day: string,
+  anchors: ReadonlyMap<string, string> = new Map(),
 ): { create: PlannedRepeat[]; clear: string[] } {
   const create: PlannedRepeat[] = [];
   const clear: string[] = [];
   for (const head of heads) {
     if (!head.repeat) continue;
     const root = head.repeatOf ?? head.id;
+    const anchor = seriesAnchor(head, anchors);
     let { date } = head;
     let made = 0;
     while (made < MAX_CATCH_UP) {
-      const next = nextRepeatDate(date, head.repeat);
+      const next = nextRepeatDate(date, head.repeat, anchor);
       if (next > day) break;
       const { id: _id, ...base } = head;
       create.push({

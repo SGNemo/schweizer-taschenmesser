@@ -8,6 +8,8 @@ import type { DueNotification } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
 import { getSettings, setSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
+import { baseKey } from './policy';
+import { sourceOf } from './source';
 
 export const REMINDERS_SCOPE = 'reminders';
 export const SNOOZE_OPTIONS = ['10min', '1h', 'evening', 'tomorrow', 'pc'] as const;
@@ -27,6 +29,8 @@ const entrySchema = z.object({
   url: z.string().optional(),
   /** Fire on the desktop app only ("Wenn ich am PC bin"). */
   desktopOnly: z.boolean().optional(),
+  /** Module the reminder came from: stays silent while that module is switched off. */
+  source: z.string().optional(),
 });
 export type SnoozeEntry = z.infer<typeof entrySchema>;
 const schema = z.object({ snoozed: z.array(entrySchema).max(MAX_ENTRIES) });
@@ -60,13 +64,18 @@ export function snoozeOptions(at: number, platform: PlatformKind): SnoozeOption[
   });
 }
 
-/** Entries due in (from, to] on this platform; "Am PC" entries fire at the next check on the desktop app. */
+/**
+ * Entries due in (from, to] on this platform; "Am PC" entries fire at the next check on the desktop
+ * app. With `activeModules`, entries of a module not in it stay silent (entries without a source fire).
+ */
 export function snoozedDue(
   entries: readonly SnoozeEntry[],
   range: { from: number; to: number },
   platform: PlatformKind,
+  activeModules?: ReadonlySet<string>,
 ): DueNotification[] {
   return entries.flatMap((e) => {
+    if (e.source && activeModules && !activeModules.has(e.source)) return [];
     if (e.desktopOnly) {
       return platform === 'desktop' && e.until <= range.to
         ? [{ key: `snooze:${e.id}`, at: range.to, title: e.title, body: e.body, url: e.url }]
@@ -92,6 +101,7 @@ export async function snoozeNotification(
   at: number = now(),
 ): Promise<SnoozeEntry> {
   const until = snoozeUntil(option, at);
+  const source = sourceOf(n.key) ?? sourceOf(baseKey(n.key));
   const entry: SnoozeEntry = {
     id: `${n.key}@${until}`,
     until,
@@ -99,6 +109,7 @@ export async function snoozeNotification(
     ...(n.body ? { body: n.body } : {}),
     ...(n.url ? { url: n.url } : {}),
     ...(option === 'pc' ? { desktopOnly: true } : {}),
+    ...(source ? { source } : {}),
   };
   // Entries of the past day are dropped on every write; the list stays small.
   const keep = (await getSnoozed()).filter(

@@ -15,9 +15,10 @@ export function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-/** Local calendar date as 'YYYY-MM-DD'. */
+/** Local calendar date as 'YYYY-MM-DD' (the year always with four digits). */
 export function toDateString(d: Date): string {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const year = String(d.getFullYear()).padStart(4, '0');
+  return `${year}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
 /** Today's local date as 'YYYY-MM-DD'. */

@@ -15,6 +15,7 @@ import { getMute } from './mute';
 import { manifestsForChannel, type Channel } from './channels';
 import { applyPolicy } from './policy';
 import { getSnoozed, snoozedDue } from './snooze';
+import { noteSource } from './source';
 
 /** Quiet hours may move automatic extras by up to this much, so the query starts that early. */
 const WIDEN_MS = 14 * 60 * 60 * 1000;
@@ -36,7 +37,10 @@ export async function collectDue(
     focusEndDue().catch(() => []),
     automationDue(wide).catch(() => []),
   ]);
-  const own = [...snoozedDue(snoozed, wide, getPlatform().kind), ...focus, ...rules];
+  // A second "Später" on a snoozed reminder keeps its module.
+  for (const e of snoozed) if (e.source) noteSource(`snooze:${e.id}`, e.source);
+  const active = new Set(manifests.map((m) => m.id));
+  const own = [...snoozedDue(snoozed, wide, getPlatform().kind, active), ...focus, ...rules];
   const adjusted = applyPolicy(
     [...fromModules, ...own],
     {

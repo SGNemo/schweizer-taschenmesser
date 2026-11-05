@@ -67,6 +67,40 @@ describe('recurring tasks', () => {
     expect((await taskRepo.active().toArray()).map((x) => x.id)).toEqual([t.id]);
   });
 
+  it('"ends after 2 times" ends after the second instance', async () => {
+    let task = await taskRepo.create({
+      ...base,
+      title: 'Physio',
+      dueDate: '2026-11-02',
+      recurrence: { ...weekly, count: 2 },
+    });
+    const seen = [task.dueDate];
+    for (let i = 0; i < 3; i++) {
+      await setDone(task, true);
+      const open = (await taskRepo.active().toArray()).filter((x) => !x.done);
+      if (open.length === 0) break;
+      task = open[0]!;
+      seen.push(task.dueDate);
+    }
+    expect(seen).toEqual(['2026-11-02', '2026-11-09']);
+  });
+
+  it('yearly from 29 Feb comes back on 29 Feb in leap years', async () => {
+    let task = await taskRepo.create({
+      ...base,
+      title: 'Schaltjahr',
+      dueDate: '2028-02-29',
+      recurrence: { freq: 'yearly', interval: 1 },
+    });
+    const seen = [task.dueDate];
+    for (let i = 0; i < 4; i++) {
+      await setDone(task, true);
+      task = (await taskRepo.active().toArray()).find((x) => !x.done)!;
+      seen.push(task.dueDate);
+    }
+    expect(seen).toEqual(['2028-02-29', '2029-02-28', '2030-02-28', '2031-02-28', '2032-02-29']);
+  });
+
   it('a task without recurrence just toggles', async () => {
     const t = await taskRepo.create({ ...base, title: 'B', dueDate: '2026-10-05' });
     await setDone(t, true);

@@ -8,7 +8,7 @@ import { endOfMonthStr, today } from '@/core/time/dates';
 import { listOpenInvoices, sumOpenInvoices } from '@/modules/invoices/public';
 import { listSubscriptionCharges } from '@/modules/subscriptions/public';
 import { accountRepo, categoryRepo, transactionRepo } from './repo';
-import { availability, balances, sortAccounts } from './logic';
+import { availability, balances, seriesAnchor, seriesAnchors, sortAccounts } from './logic';
 import { buildForecast, horizonEnd, type Forecast, type ForecastHorizon } from './forecast';
 import type { FinanceData } from './types';
 import { settings } from './settings';
@@ -96,11 +96,14 @@ export function useForecast(
     return { charges, invoices: invoices.filter((i) => i.currency === currency) };
   }, [subsOn, invoicesOn, day, to, currency]);
   if (!data || !extra) return undefined;
+  const anchors = seriesAnchors(data.txs);
   return buildForecast({
     balanceMinor: totalBalance(data) ?? 0,
     today: day,
     to,
-    repeatHeads: data.txs.filter((x) => x.repeat && !x.transferId),
+    repeatHeads: data.txs
+      .filter((x) => x.repeat && !x.transferId)
+      .map((x) => ({ ...x, anchor: seriesAnchor(x, anchors) })),
     subscriptionCharges: extra.charges,
     openInvoices: extra.invoices,
   });

@@ -1,7 +1,7 @@
 import { formatTotals, sumByCurrency, sumMinor } from '@/core/money';
 import { daysBetween } from '@/core/time/dates';
 import { formatIban } from './iban';
-import { addMonthsStr } from '@/core/time/dates';
+import { addMonthsInSeries } from '@/core/time/dates';
 import type { Invoice, InvoiceRepeat } from './schema';
 
 type Money = Pick<Invoice, 'amountMinor' | 'payments'>;
@@ -93,6 +93,12 @@ export function paymentBlock(
 
 const REPEAT_MONTHS: Record<InvoiceRepeat, number> = { monthly: 1, quarterly: 3, yearly: 12 };
 
-/** Due date of the invoice that follows one due on `dueDate` (a 31st becomes the last day of a shorter month). */
-export const nextDueDate = (dueDate: string, repeat: InvoiceRepeat): string =>
-  addMonthsStr(dueDate, REPEAT_MONTHS[repeat]);
+/**
+ * Due date of the invoice that follows one due on `dueDate` (a 31st becomes the last day of a shorter
+ * month and returns to the day of `seriesStart`, the first invoice's due date, afterwards).
+ */
+export const nextDueDate = (
+  dueDate: string,
+  repeat: InvoiceRepeat,
+  seriesStart: string = dueDate,
+): string => addMonthsInSeries(dueDate, REPEAT_MONTHS[repeat], seriesStart);

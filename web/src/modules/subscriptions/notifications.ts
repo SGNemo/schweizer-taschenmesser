@@ -23,7 +23,9 @@ const source: NotificationSource = async ({ from, to }) => {
   const fromDate = addDaysStr(toDateString(new Date(from)), before);
   const toDate = addDaysStr(toDateString(new Date(to + DAY_MS)), before);
   const subs = (await subscriptionRepo.active().toArray()).filter((s) => s.active);
-  return subs
+  // Cancelled "zum" a date (`until`): there is no deadline left to remind of.
+  const running = subs.filter((s) => !s.recurrence.until);
+  return running
     .flatMap((s) =>
       cancelDeadlinesInRange(s, fromDate, toDate).map((d) => ({
         key: `subscription-cancel:${s.id}:${d.deadline}`,

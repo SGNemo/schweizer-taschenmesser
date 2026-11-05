@@ -3,7 +3,7 @@ import { tableName } from '@/core/db/schema';
 import type { Stored } from '@/core/db/types';
 import { addDaysStr, daysBetween } from '@/core/time/dates';
 import { now } from '@/core/time/now';
-import { nextDueDate, nextInstanceId } from './logic';
+import { nextDueDate, nextInstanceId, nextRecurrence } from './logic';
 import { listSchema, taskSchema, type Task } from './schema';
 
 export const listRepo = createRepo(tableName('todos', 'list'), listSchema);
@@ -69,7 +69,7 @@ export async function setDone(task: Stored<Task>, done: boolean): Promise<void> 
           done: false,
           priority: task.priority,
           dueDate: nextDue,
-          recurrence: task.recurrence,
+          recurrence: nextRecurrence(task, nextDue),
           estimateMin: task.estimateMin,
           note: task.note,
           order: task.order,

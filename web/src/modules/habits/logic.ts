@@ -66,7 +66,8 @@ export function weekDone(
 
 /**
  * Share of planned days that were done in [from, to]. Rest days and days that are not planned do
- * not count at all: a pause never lowers the number. `null` when no day counts.
+ * not count at all: a pause never lowers the number. `to` is today: still open, it does not count
+ * against (nor does the running week of a weekly goal until it is met). `null` when no day counts.
  */
 export function rate(
   goal: G,
@@ -79,6 +80,7 @@ export function rate(
   for (let d = from; d <= to; d = addDaysStr(d, 1)) {
     const state = dayState(goal, map.get(d), d);
     if (state === 'off' || state === 'rest') continue;
+    if (d === to && state !== 'done') continue;
     of += 1;
     if (state === 'done') done += 1;
   }
@@ -87,8 +89,10 @@ export function rate(
     let weeks = 0;
     let met = 0;
     for (let d = startOfWeekStr(from, 1); d <= to; d = addDaysStr(d, 7)) {
+      const isMet = weekDone(goal, map, d, 1).done >= (goal.weeklyTimes ?? 3);
+      if (!isMet && addDaysStr(d, 6) >= to) continue; // the running week
       weeks += 1;
-      if (weekDone(goal, map, d, 1).done >= (goal.weeklyTimes ?? 3)) met += 1;
+      if (isMet) met += 1;
     }
     return weeks === 0 ? null : { done: met, of: weeks };
   }
