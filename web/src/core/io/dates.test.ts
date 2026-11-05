@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { setNow } from '@/core/time/now';
 import { parseDateInput, parseDayMonth } from './dates';
 
 describe('parseDateInput', () => {
@@ -39,5 +40,24 @@ describe('parseDayMonth', () => {
     expect(parseDayMonth('0.1.')).toBeUndefined();
     expect(parseDayMonth('15.13.')).toBeUndefined();
     expect(parseDayMonth('hallo')).toBeUndefined();
+  });
+});
+
+describe('parseDayMonth: two-digit years pivot on the current year (X24)', () => {
+  afterEach(() => setNow());
+
+  it('reads a year up to this one as 20xx and a later one as 19xx', () => {
+    setNow(() => new Date(2026, 10, 5, 12).getTime());
+    expect(parseDayMonth('3.4.12')).toEqual({ day: 3, month: 4, year: 2012 });
+    expect(parseDayMonth('3.4.26')).toEqual({ day: 3, month: 4, year: 2026 });
+    expect(parseDayMonth('3.4.00')).toEqual({ day: 3, month: 4, year: 2000 });
+    expect(parseDayMonth('3.4.27')).toEqual({ day: 3, month: 4, year: 1927 });
+    expect(parseDayMonth('3.4.85')).toEqual({ day: 3, month: 4, year: 1985 });
+  });
+
+  it('moves with the current date', () => {
+    setNow(() => new Date(2031, 0, 2, 12).getTime());
+    expect(parseDayMonth('3.4.30')).toEqual({ day: 3, month: 4, year: 2030 });
+    expect(parseDayMonth('3.4.32')).toEqual({ day: 3, month: 4, year: 1932 });
   });
 });
