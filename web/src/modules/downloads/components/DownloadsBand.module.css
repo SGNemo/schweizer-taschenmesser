@@ -1,0 +1,17 @@
+.band {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+.figure {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+.context {
+  font-size: var(--text-meta);
+  color: var(--text-on-tint);
+}
