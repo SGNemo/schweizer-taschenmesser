@@ -13,7 +13,16 @@
   min-height: 0;
   min-width: 0;
   overflow-y: auto;
-  padding-inline-end: var(--space-1);
+  /* The list scrolls and would clip the focus ring (2 px + 2 px offset) of the search and the tiles: room for it on
+     every side, given back by the margin so nothing moves. */
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+}
+/* Landing spots for programmatic focus (the list on a phone, the tool's surface): a ring round the whole pane is noise,
+   the field or button inside shows its own. */
+.side:focus-visible,
+.stagePane > section:focus-visible {
+  outline: none;
 }
 .stagePane {
   min-width: 0;

@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Shell-Fixes (`fix/shell-topbar-focus`): Handy-Topbar nach Seitenwechsel sofort da (kein Nachrutschen), Fokus im Werkzeug-Panel (passendes Feld, Ring nicht abgeschnitten, Alt+1–9 im ganzen Fenster), Lesehilfe mit eigenen Inline-Elementen (`read-text`/`read-start`, keine Wortbrüche durch `span`-Regeln) und Tinte, die nach Hover neu gemessen wird.
+
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 
 Website auf Identität v3.1, Paket 1 (`design/site-identity-v3`): Designrunde 4 (Richtung B „Schaufenster“), Identity-Tokens und `identity.css`, Modulkarten in Modulfarbe mit Widget-Skizze aus dem Katalog (`gen:modules` liefert `icon`, `hue`, `head`, `widget`), Kopf-Silhouetten-Leiste, keine Streifen, keine Farbfläche; Paket 2 (neue Screenshots, OG-Bild) nach Identity-Paket 0–3.

@@ -36,6 +36,14 @@ export function nextCollapsed(i: CollapseInput): boolean {
   return dy > 0;
 }
 
+/**
+ * A route change brings a folded bar back at once: a bar that slid in on the new page would first leave an empty
+ * band above it and then move (`instant` = no slide for this change).
+ */
+export function afterRouteChange(collapsed: boolean): { collapsed: false; instant: boolean } {
+  return { collapsed: false, instant: collapsed };
+}
+
 /** Less motion asked for by the system or in the app (Einstellungen → Darstellung → Bewegung). */
 export function motionReduced(): boolean {
   if (typeof document === 'undefined') return false;

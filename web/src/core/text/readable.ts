@@ -18,6 +18,20 @@ export interface ReadableOptions {
   minLen?: number;
 }
 
+/**
+ * Element names of the aid in the DOM: its own inline elements (custom element names, `display: inline`, no role), not
+ * `span`, so host rules written for a page's own spans (`.card span { display: flex }`) never reach them and cannot
+ * tear a word apart. Styling goes through the attributes `data-rt` / `data-rs` / `data-ink` / `data-bold` only.
+ */
+export const READ_TEXT_TAG = 'read-text';
+export const READ_START_TAG = 'read-start';
+
+/** Text around the aid that is already bold (headings, the active navigation entry, `<strong>`): from semibold on. */
+export function isBoldWeight(computed: string): boolean {
+  const n = Number.parseFloat(computed);
+  return Number.isFinite(n) ? n >= 600 : computed === 'bold' || computed === 'bolder';
+}
+
 /** Longest emphasised start, so very long compounds do not turn bold for half their length. */
 const MAX_STRONG = 6;
 const DEFAULT_MIN_LEN = 4;
