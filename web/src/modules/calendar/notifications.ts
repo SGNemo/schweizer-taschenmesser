@@ -13,6 +13,14 @@ import { settings, settingsSchema } from './settings';
 /** Longest lead a notification can have, in days (`notifySchema` allows 7 days). */
 const MAX_LEAD_DAYS = 7;
 const MINUTE_MS = 60_000;
+const DAY_MIN = 1440;
+
+/**
+ * `minutes` before `date` `time`: whole days by the calendar (the same wall-clock time across a
+ * clock change), the rest in minutes.
+ */
+const leadAt = (date: string, time: string, minutes: number): number =>
+  toEpoch(addDaysStr(date, -Math.floor(minutes / DAY_MIN)), time) - (minutes % DAY_MIN) * MINUTE_MS;
 /**
  * Events (and reminders) with `notify.enabled` fire `minutesBefore` their start, once per
  * occurrence (the first day of a multi-day event); all-day events at the module's notify time.
@@ -37,14 +45,13 @@ const source: NotificationSource = async ({ from, to }) => {
     const skipped = new Set(e.exdates ?? []);
     for (const date of datesInRange(e.startDate, e.recurrence, fromDate, toDate)) {
       if (skipped.has(date)) continue;
-      const start = toEpoch(date, time);
-      const at = start - e.notify!.minutesBefore * MINUTE_MS;
+      const at = leadAt(date, time, e.notify!.minutesBefore);
       const key = `event:${e.id}:${date}T${time}`;
       const url = `/calendar?view=day&date=${date}`;
       if (inRange(at)) out.push({ key, at, title: e.title, body: e.note, url, taken: e.taken });
       for (const extra of new Set(e.notify!.extraMinutes ?? [])) {
         if (extra === e.notify!.minutesBefore) continue;
-        const extraAt = start - extra * MINUTE_MS;
+        const extraAt = leadAt(date, time, extra);
         if (inRange(extraAt))
           out.push({
             key: `${key}:x${extra}`,
@@ -57,7 +64,7 @@ const source: NotificationSource = async ({ from, to }) => {
       if (focus.staggered)
         for (const stage of focus.stages) {
           if (stage === e.notify!.minutesBefore) continue;
-          const stageAt = start - stage * MINUTE_MS;
+          const stageAt = leadAt(date, time, stage);
           if (inRange(stageAt))
             out.push({
               key: `${key}:s${stage}`,
