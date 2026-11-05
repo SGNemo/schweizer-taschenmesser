@@ -131,7 +131,10 @@ export function DriveCard({
           </Button>
         )}
         <details className={styles.details}>
-          <summary className={styles.summary}>{c.details}</summary>
+          <summary className={styles.summary}>
+            {c.details}
+            <Icon name="chevronDown" size={16} />
+          </summary>
           <dl className={styles.facts}>
             <dt>
               {c.healthLabel} <HelpHint text={c.helpSmart} />
