@@ -41,12 +41,33 @@ it('a task is never written without the list of the batch it points at', async (
   await listRepo.create({ name: 'Urlaub', order: 1 }, { id: 'urlaub' });
   await importJson(
     [
-      { collection: 'list', key: 'u', name: 'Urlaub', order: 1 },
+      { collection: 'list', key: 'u', name: 'Urlaub' },
       { collection: 'task', title: 'Pass verlängern', listId: '@u' },
       { collection: 'list', key: 'bad', name: '' },
       { collection: 'task', title: 'Koffer', listId: '@bad' },
     ],
     'j1',
   );
+  expect(await orphans()).toEqual([]);
+});
+
+it('writes a new list and its task together; a change to a list is no dependency', async () => {
+  await listRepo.create({ name: 'Urlaub', order: 1 }, { id: 'urlaub' });
+  const rows = await importJson(
+    [
+      { collection: 'list', key: 'n', name: 'Umzug' },
+      { collection: 'task', title: 'Kartons', listId: '@n' },
+      { collection: 'list', id: 'urlaub', name: 'Urlaub 2027' },
+      { collection: 'task', title: 'Pass', listId: 'urlaub' },
+    ],
+    'j2',
+  );
+  expect(rows.filter((r) => r.selected).map((r) => r.candidate.label)).toEqual([
+    'Umzug',
+    'Kartons',
+    'Pass',
+  ]);
+  const tasks = await taskRepo.active().toArray();
+  expect(tasks.map((t) => t.title).sort()).toEqual(['Kartons', 'Pass']);
   expect(await orphans()).toEqual([]);
 });
