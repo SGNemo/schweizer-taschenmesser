@@ -7,7 +7,7 @@ import { compareText } from '@/core/i18n/format';
 import { monthOf } from '@/core/time/dates';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { accountRepo, categoryRepo, transactionRepo } from './repo';
-import { categoryParts, isTransfer, nextRepeatDate } from './logic';
+import { categoryParts, isTransfer, nextRepeatDate, seriesAnchor, seriesAnchors } from './logic';
 
 export interface ExpenseCategory {
   id: string;
@@ -76,11 +76,14 @@ export async function plannedExpensesByCategory(
       .filter((a) => currencyOf(a) === currency)
       .map((a) => a.id),
   );
-  for (const head of await transactionRepo.active().toArray()) {
+  const txs = await transactionRepo.active().toArray();
+  const anchors = seriesAnchors(txs);
+  for (const head of txs) {
     if (!head.repeat || head.kind !== 'expense' || !accountIds.has(head.accountId)) continue;
+    const anchor = seriesAnchor(head, anchors);
     let date = head.date;
     for (let i = 0; i < 60; i++) {
-      date = nextRepeatDate(date, head.repeat);
+      date = nextRepeatDate(date, head.repeat, anchor);
       if (date > to) break;
       if (date < from) continue;
       for (const part of categoryParts(head)) {

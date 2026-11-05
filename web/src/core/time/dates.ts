@@ -42,6 +42,18 @@ export const startOfWeekStr = (s: string, weekStart: 1 | 7 = 1): string => {
 export const startOfMonthStr = (s: string): string => `${s.slice(0, 7)}-01`;
 export const endOfMonthStr = (s: string): string =>
   toDateString(new Date(parseDate(s).getFullYear(), parseDate(s).getMonth() + 1, 0));
+/**
+ * `n` months after `s` in a series that started on `anchor`: a date that was cut to a short month's
+ * end returns to the anchor day where the month has it (monthly from 31 Jan: 28 Feb → 31 Mar →
+ * 30 Apr, not 28 Mar). A date moved off the month end keeps its own day.
+ */
+export function addMonthsInSeries(s: string, n: number, anchor: string): string {
+  const next = addMonthsStr(s, n);
+  const anchorDay = Number(anchor.slice(8, 10));
+  if (anchorDay <= Number(s.slice(8, 10)) || s !== endOfMonthStr(s)) return next;
+  const end = endOfMonthStr(next);
+  return Number(end.slice(8, 10)) <= anchorDay ? end : `${next.slice(0, 8)}${pad2(anchorDay)}`;
+}
 /** 'YYYY-MM' of a date string. */
 export const monthOf = (s: string): string => s.slice(0, 7);
 export const addMonthsToMonth = (month: string, n: number): string =>

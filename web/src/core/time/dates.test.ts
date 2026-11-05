@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, humanDateHint, relativeDayLabel, startOfWeekStr, toEpoch } from './dates';
+import {
+  addMonthsInSeries,
+  formatDateTime,
+  humanDateHint,
+  relativeDayLabel,
+  startOfWeekStr,
+  toEpoch,
+} from './dates';
 
 describe('formatDateTime', () => {
   it('takes day and time from the same local clock (no UTC day around midnight)', () => {
@@ -36,5 +43,25 @@ describe('humanDateHint', () => {
     expect(humanDateHint('2026-09-28', ref)).toBe('Montag, gestern');
     expect(humanDateHint('2026-10-05', ref)).toBe('Montag, in 6 Tagen');
     expect(humanDateHint('2026-09-27', ref)).toBe('Sonntag, vor 2 Tagen');
+  });
+});
+
+describe('addMonthsInSeries', () => {
+  it('a series from the 31st comes back to the 31st after a short month', () => {
+    const anchor = '2026-01-31';
+    const chain = [anchor];
+    for (let i = 0; i < 4; i++) chain.push(addMonthsInSeries(chain[chain.length - 1]!, 1, anchor));
+    expect(chain).toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31']);
+  });
+  it('the 30th stays the 30th; yearly from 29 Feb returns in leap years', () => {
+    expect(addMonthsInSeries('2026-02-28', 1, '2026-01-30')).toBe('2026-03-30');
+    expect(addMonthsInSeries('2029-02-28', 12, '2028-02-29')).toBe('2030-02-28');
+    expect(addMonthsInSeries('2031-02-28', 12, '2028-02-29')).toBe('2032-02-29');
+    expect(addMonthsInSeries('2026-11-30', 3, '2026-08-31')).toBe('2027-02-28');
+    expect(addMonthsInSeries('2027-02-28', 3, '2026-08-31')).toBe('2027-05-31');
+  });
+  it('a date moved off the month end keeps its own day', () => {
+    expect(addMonthsInSeries('2026-05-01', 1, '2026-01-31')).toBe('2026-06-01');
+    expect(addMonthsInSeries('2026-10-05', 1, '2026-10-05')).toBe('2026-11-05');
   });
 });

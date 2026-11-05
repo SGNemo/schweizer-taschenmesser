@@ -134,6 +134,27 @@ describe('finance public read API', () => {
     );
   });
 
+  it('plans a monthly series from the 31st on the 31st again after a short month', async () => {
+    await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'a' });
+    const rent = {
+      accountId: 'a',
+      kind: 'expense' as const,
+      amountMinor: 80000,
+      categoryId: 'home',
+    };
+    await transactionRepo.create({ ...rent, date: '2026-01-31' }, { id: 'r' });
+    await transactionRepo.create(
+      { ...rent, date: '2026-02-28', repeat: 'monthly', repeatOf: 'r' },
+      { id: 'rep-r-2026-02-28' },
+    );
+    expect(Object.fromEntries(await plannedExpensesByCategory('2026-03-29', '2026-03-31'))).toEqual(
+      { home: 80000 },
+    );
+    expect(Object.fromEntries(await plannedExpensesByCategory('2026-04-28', '2026-04-29'))).toEqual(
+      {},
+    );
+  });
+
   it('reads only the month by its date range: edge days count, deleted bookings do not', async () => {
     await accountRepo.create({ name: 'Giro', openingBalanceMinor: 0, order: 0 }, { id: 'a' });
     const spend = (date: string, amountMinor: number) =>

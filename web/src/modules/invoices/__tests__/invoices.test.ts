@@ -174,6 +174,17 @@ describe('repeating invoices', () => {
     expect((await invoiceRepo.get(next.id))?.status).toBe('paid');
   });
 
+  it('a series from the 31st comes back to the 31st after a short month', async () => {
+    let cur = await rent({ dueDate: '2026-01-31' });
+    const dues = [cur.dueDate];
+    for (let i = 0; i < 4; i++) {
+      await markPaid(cur.id, cur.dueDate);
+      cur = (await invoiceRepo.active().toArray()).find((x) => x.repeatOf === cur.id)!;
+      dues.push(cur.dueDate);
+    }
+    expect(dues).toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30', '2026-05-31']);
+  });
+
   it('a normal invoice brings nothing', async () => {
     const one = await invoiceRepo.create(inv());
     await markPaid(one.id);

@@ -25,6 +25,20 @@ async function openSuccessors(id: string): Promise<Stored<Invoice>[]> {
   );
 }
 
+/** Due date of the first invoice of the series (`repeatOf` back to its start; deleted ones count too). */
+async function seriesStart(invoice: Stored<Invoice>): Promise<string> {
+  const byId = new Map((await invoiceRepo.table.toArray()).map((i) => [i.id, i]));
+  const seen = new Set<string>();
+  let cur = invoice;
+  while (cur.repeatOf && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    const prev = byId.get(cur.repeatOf);
+    if (!prev) break;
+    cur = prev;
+  }
+  return cur.dueDate;
+}
+
 /**
  * A repeating invoice that was paid brings the next one: same payee, amount, reference and
  * repeat, due one period later, open. Paying again never creates a second one.
@@ -37,7 +51,7 @@ async function createNext(invoice: Stored<Invoice>): Promise<void> {
     payee: invoice.payee,
     amountMinor: invoice.amountMinor,
     ...(invoice.currency ? { currency: invoice.currency } : {}),
-    dueDate: nextDueDate(invoice.dueDate, invoice.repeat),
+    dueDate: nextDueDate(invoice.dueDate, invoice.repeat, await seriesStart(invoice)),
     status: 'open',
     reference: invoice.reference,
     note: invoice.note,
