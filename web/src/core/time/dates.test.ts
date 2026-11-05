@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addDaysStr,
   addMonthsInSeries,
+  endOfMonthStr,
   formatDateTime,
   humanDateHint,
   relativeDayLabel,
   startOfWeekStr,
+  parseDate,
+  toDateString,
   toEpoch,
 } from './dates';
 
@@ -63,5 +67,18 @@ describe('addMonthsInSeries', () => {
   it('a date moved off the month end keeps its own day', () => {
     expect(addMonthsInSeries('2026-05-01', 1, '2026-01-31')).toBe('2026-06-01');
     expect(addMonthsInSeries('2026-10-05', 1, '2026-10-05')).toBe('2026-11-05');
+  });
+});
+
+describe('years before 1000', () => {
+  it('stay the year they are (no 19xx), written with four digits', () => {
+    expect(parseDate('0099-12-31').getFullYear()).toBe(99);
+    expect(parseDate('0001-01-01').getFullYear()).toBe(1);
+    expect(addDaysStr('0001-01-01', 1)).toBe('0001-01-02');
+    expect(addDaysStr('0999-12-31', 1)).toBe('1000-01-01');
+    expect(endOfMonthStr('0050-02-10')).toBe('0050-02-28');
+    const d = parseDate('2026-01-01');
+    d.setFullYear(5, 6, 7);
+    expect(toDateString(d)).toBe('0005-07-07');
   });
 });

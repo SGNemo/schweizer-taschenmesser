@@ -23,6 +23,12 @@ describe('parseDateInput', () => {
     }
     expect(parseDateInput('29.02.2028')).toBe('2028-02-29');
   });
+
+  it('rejects years before 1000 (typos that do not fit "YYYY")', () => {
+    for (const bad of ['0100-01-01', '0999-12-31', '0001-01-01', '1.1.0100', '01.01.0001'])
+      expect(parseDateInput(bad), bad).toBeUndefined();
+    expect(parseDateInput('1000-01-01')).toBe('1000-01-01');
+  });
 });
 
 describe('parseDayMonth', () => {

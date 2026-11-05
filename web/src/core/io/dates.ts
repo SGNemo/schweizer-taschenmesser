@@ -7,7 +7,9 @@ function validDayMonth(day: number, month: number): boolean {
   return month >= 1 && month <= 12 && day >= 1 && day <= DAYS_IN_MONTH[month - 1]!;
 }
 
+/** A calendar date from the year 1000 on (earlier years are typos and do not fit 'YYYY'). */
 function isRealDate(year: number, month: number, day: number): boolean {
+  if (year < 1000) return false;
   const d = new Date(Date.UTC(year, month - 1, day));
   return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
 }
