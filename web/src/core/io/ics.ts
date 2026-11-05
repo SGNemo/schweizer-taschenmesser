@@ -4,7 +4,7 @@
  * DURATION, folded lines, escaped text and the common RRULE forms. Anything the calendar cannot
  * represent is reported as an issue and the event is still imported as far as possible.
  */
-import { addDaysStr, pad2, toDateString } from '@/core/time/dates';
+import { addDaysStr, daysBetween, pad2, toDateString } from '@/core/time/dates';
 import { recurrenceSchema, type Recurrence } from '@/core/recurrence/types';
 
 export interface IcsEvent {
@@ -243,6 +243,32 @@ export function parseRrule(value: string): Recurrence | undefined {
   return parsed.success ? parsed.data : undefined;
 }
 
+/**
+ * The rule for a start that moved from day `from` (its own zone) to `to` (local wall clock): BYDAY
+ * and BYMONTHDAY move by the same days. `undefined` when the moved rule cannot be expressed (the
+ * 31st one day later, a month day past the 28th).
+ */
+function shiftRule(rec: Recurrence, from: string, to: string): Recurrence | undefined {
+  const days = daysBetween(from, to);
+  if (days === 0) return rec;
+  const out: Recurrence = { ...rec };
+  if (out.byWeekday)
+    out.byWeekday = [
+      ...new Set(out.byWeekday.map((d) => ((((d - 1 + days) % 7) + 7) % 7) + 1)),
+    ].sort((a, b) => a - b);
+  if (out.byMonthDay !== undefined) {
+    // The last day of a month, one day later, is the 1st; other days stay inside every month.
+    const day = out.byMonthDay === -1 ? (days === 1 ? 1 : 0) : out.byMonthDay + days;
+    if (day < 1 || day > 28) return undefined;
+    out.byMonthDay = day;
+  }
+  if (out.monthOfYear !== undefined && from.slice(5, 7) !== to.slice(5, 7)) {
+    if (out.monthOfYear !== Number(from.slice(5, 7))) return undefined;
+    out.monthOfYear = Number(to.slice(5, 7));
+  }
+  return out;
+}
+
 /** ISO 8601 duration ("PT1H30M", "P1D", "P1W") in minutes. */
 export function durationMinutes(value: string): number | undefined {
   const m = /^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(
@@ -354,7 +380,13 @@ function convert(props: Prop[], events: IcsEvent[], issues: IcsIssue[]): void {
 
   const rrule = first('RRULE');
   if (rrule) {
-    const recurrence = parseRrule(rrule.value);
+    // A TZID / UTC start can land on another local day; the rule's weekdays move along (X18).
+    const own = DATE_TIME.exec(dtstart.value.trim());
+    const parsedRule = parseRrule(rrule.value);
+    const recurrence =
+      parsedRule && own
+        ? shiftRule(parsedRule, `${own[1]}-${own[2]}-${own[3]}`, start.date)
+        : parsedRule;
     if (recurrence) event.recurrence = recurrence;
     else issues.push({ code: 'rrule-unsupported', title });
   }
