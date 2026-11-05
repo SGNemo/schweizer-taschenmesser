@@ -251,7 +251,7 @@ So the app was built 4 to 6 minutes before it was published. The time was spent 
 Expected: Dev app out about 9 to 10 min after the push (Windows build end + publish), instead of 14 to 15. The first
 real develop run shows the number; a loaded runner pool can add minutes to any of it.
 
-## Tried and dropped: Windows preview without fat LTO
+## Tried and dropped (wrongly, corrected below): Windows preview without fat LTO
 
 `CARGO_PROFILE_RELEASE_LTO=false`, `CODEGEN_UNITS=16` for the Windows dev build only (env, no `Cargo.toml` change):
 build step 488 s warm (486 s cold) against 377 s warm with the release profile, and the .exe grew from 15.3 to
@@ -272,3 +272,31 @@ is only proposed: a floor of 78 % lines would pass today.
 - Cache the 14 workspace crates on Windows (needs `cache-workspace-crates` and size care on the 10 GB budget).
 - Larger Windows runner for the dev build (cost).
 - Move the Windows smoke test (25 s) after the upload; it is a safety gate before signing, so not done.
+
+## Round 4: Windows preview build, measured warm
+
+**Correction.** The "not faster" result above was wrong. `rust-cache` restored the old `windows-dev` cache (built with
+fat LTO) as an exact key hit; nothing was saved for the other profile, so both runs rebuilt 461 crates. With an own
+cache key (`windows-dev-thin`) a cold run saves the cache and the next run is warm.
+
+What the 377 s Windows build step consisted of (log timestamps of a warm run): `npm run build` 74 s (licence check, typecheck,
+vite 3 s), cargo start 36 s, the 12 small workspace crates 20 s (so caching them would save about 20 s, the idea from
+round 3 is not worth it), the app crate with fat LTO and `codegen-units = 1` 4 min 41 s.
+
+| Windows dev build, warm cache | Before | After |
+|---|---|---|
+| Build step | 377 s | **116 s** |
+| App crate compile + link | 4 min 41 s | 1 min 50 s |
+| Whole Windows job | 509 s | **240 s** |
+| .exe | 15 308 288 B | 17 783 296 B (+16 %) |
+
+Two levers, Windows preview only: (1) the build runs only `vite build` (an extra `--config` JSON in the workflow;
+the licence check and the typecheck are gate jobs of the same CI run, and `tauri.dev.conf.json` stays as the guard test
+`brand-ids.test.ts` demands); (2) `CARGO_PROFILE_RELEASE_LTO=false`, `CODEGEN_UNITS=16` as environment of the build step
+(`Cargo.toml` and the release workflow untouched). The trade: a 16 % larger preview .exe and slightly less optimised code.
+
+Android with the same two levers: build step 235 s warm against 239 s before, APK 25 MB either way. No gain, reverted.
+The Android dev job (5.7 to 7 min, two ABIs through Gradle) is now the longest build of the preview.
+
+Expected Dev app time after a push: gate about 5 min, Windows about 4.5 min, Android about 6 to 7 min, plus the publish
+(about 1 min): **about 7 to 8 min**, down from 10.9 min (round 3) and 14 to 15 min (before).

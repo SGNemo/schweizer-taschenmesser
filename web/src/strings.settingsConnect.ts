@@ -32,6 +32,11 @@ export const tSettingsConnect = defineBundle(
       stepFeatures: 'Was verbunden werden soll',
       stepFeaturesHint: 'Wähle die Funktionen und melde dich an.',
     },
+    share: {
+      stepOnce: 'Einmal als Datei teilen',
+      stepOnceHint: 'Eine Auswahl packen und der anderen Person geben, ohne dauerhafte Verbindung.',
+      stepOpenHint: 'Eine erhaltene Datei ansehen und übernehmen.',
+    },
     backup: {
       stepSave: 'Sichern',
       stepSaveHint: 'Alle Daten als Datei auf dieses Gerät legen.',
@@ -67,6 +72,11 @@ export const tSettingsConnect = defineBundle(
         stepFeatures: 'What to connect',
         stepFeaturesHint: 'Choose the features and sign in.',
       },
+      share: {
+        stepOnce: 'Share once as a file',
+        stepOnceHint: 'Pack a selection and hand it over, without a standing connection.',
+        stepOpenHint: 'Look at a file you received and take it over.',
+      },
       backup: {
         stepSave: 'Save',
         stepSaveHint: 'Put all your data into a file on this device.',
@@ -100,6 +110,11 @@ export const tSettingsConnect = defineBundle(
         stepAccessHint: 'El identificador de tu propia app en el proveedor.',
         stepFeatures: 'Qué conectar',
         stepFeaturesHint: 'Elige las funciones e inicia sesión.',
+      },
+      share: {
+        stepOnce: 'Compartir una vez como archivo',
+        stepOnceHint: 'Prepara una selección y entrégala, sin conexión permanente.',
+        stepOpenHint: 'Mira un archivo recibido y acéptalo.',
       },
       backup: {
         stepSave: 'Guardar',
@@ -136,6 +151,11 @@ export const tSettingsConnect = defineBundle(
         stepFeatures: 'Ce qu’il faut connecter',
         stepFeaturesHint: 'Choisis les fonctions et connecte-toi.',
       },
+      share: {
+        stepOnce: 'Partager une fois en fichier',
+        stepOnceHint: 'Prépare une sélection et remets-la, sans connexion permanente.',
+        stepOpenHint: 'Regarde un fichier reçu et reprends-le.',
+      },
       backup: {
         stepSave: 'Sauvegarder',
         stepSaveHint: 'Mets toutes tes données dans un fichier sur cet appareil.',
@@ -169,6 +189,11 @@ export const tSettingsConnect = defineBundle(
         stepAccessHint: 'O identificador do seu próprio app no provedor.',
         stepFeatures: 'O que conectar',
         stepFeaturesHint: 'Escolha os recursos e entre.',
+      },
+      share: {
+        stepOnce: 'Compartilhar uma vez como arquivo',
+        stepOnceHint: 'Monte uma seleção e entregue, sem conexão permanente.',
+        stepOpenHint: 'Veja um arquivo recebido e aceite.',
       },
       backup: {
         stepSave: 'Salvar',
