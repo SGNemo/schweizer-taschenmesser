@@ -19,13 +19,37 @@ function block(css, startMarker, endMarker) {
   return out;
 }
 
-const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--accent-soft', '--warning'];
+const HUES = ['lime', 'moss', 'fern', 'teal', 'ocean', 'sky', 'cobalt', 'indigo', 'violet', 'orchid', 'slate'];
+const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--accent-soft', '--warning', ...HUES.map((h) => `--mod-${h}`)];
+// Identity v3 tints and pattern strengths: the app sets them once in :root (same in both themes).
+const IDENTITY = ['--head-tint-0', '--head-tint-1', '--widget-tint', '--group-tint', '--pattern-head', '--pattern-widget', '--pattern-ink'];
+const AREAS = ['plan', 'money', 'household', 'knowledge', 'vault', 'system'];
+const identity = readFileSync(path.join(here, '..', 'src', 'styles', 'identity.css'), 'utf8');
 const SCALE = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full', '--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--font-sans', '--font-mono'];
 
 test('light theme colours match the app', () => {
   const s = block(site, ':root {', ':root[data-theme');
   const a = block(app, ':root {', ':root[data-theme');
-  for (const k of [...COLOURS, ...SCALE]) assert.equal(s[k], a[k], k);
+  for (const k of [...COLOURS, ...SCALE, ...IDENTITY]) assert.equal(s[k], a[k], k);
+});
+
+test('every hue maps to --module-color and --module-color-2 (identity.css)', () => {
+  for (const h of HUES) {
+    const one = block(identity, `[data-hue='${h}'] {`, '}');
+    assert.equal(one['--module-color'], `var(--mod-${h})`, h);
+    const two = block(identity, `[data-hue2='${h}'] {`, '}');
+    assert.equal(two['--module-color-2'], `var(--mod-${h})`, h);
+  }
+  const hue = block(identity, '[data-hue] {', '}');
+  assert.ok(hue['--head-flat'] && hue['--head-gradient'], 'head tint definitions');
+});
+
+test('area patterns match the app', () => {
+  for (const id of AREAS) {
+    const s = block(identity, `[data-area='${id}'] {`, '}');
+    const a = block(app, `[data-area='${id}'] {`, '}');
+    for (const k of ['--area-pattern', '--area-pattern-size']) assert.equal(s[k], a[k], `${id} ${k}`);
+  }
 });
 
 test('dark theme colours match the app', () => {

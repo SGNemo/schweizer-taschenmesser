@@ -1,0 +1,143 @@
+/*
+ * Identity v3 on the website (web/src/ui/tokens.css, docs/design/MODULE-IDENTITY.md): the same selectors as the
+ * app turn `data-hue` into --module-color, `data-hue2` into --module-color-2 and `data-area` into the area's
+ * pattern, so a module card needs no inline style (the CSP allows none). The values come from tokens.css;
+ * scripts/tokens.test.mjs pins the hue mapping and the patterns to the app.
+ */
+[data-hue='lime'] {
+  --module-color: var(--mod-lime);
+}
+[data-hue='moss'] {
+  --module-color: var(--mod-moss);
+}
+[data-hue='fern'] {
+  --module-color: var(--mod-fern);
+}
+[data-hue='teal'] {
+  --module-color: var(--mod-teal);
+}
+[data-hue='ocean'] {
+  --module-color: var(--mod-ocean);
+}
+[data-hue='sky'] {
+  --module-color: var(--mod-sky);
+}
+[data-hue='cobalt'] {
+  --module-color: var(--mod-cobalt);
+}
+[data-hue='indigo'] {
+  --module-color: var(--mod-indigo);
+}
+[data-hue='violet'] {
+  --module-color: var(--mod-violet);
+}
+[data-hue='orchid'] {
+  --module-color: var(--mod-orchid);
+}
+[data-hue='slate'] {
+  --module-color: var(--mod-slate);
+}
+[data-hue2='lime'] {
+  --module-color-2: var(--mod-lime);
+}
+[data-hue2='moss'] {
+  --module-color-2: var(--mod-moss);
+}
+[data-hue2='fern'] {
+  --module-color-2: var(--mod-fern);
+}
+[data-hue2='teal'] {
+  --module-color-2: var(--mod-teal);
+}
+[data-hue2='ocean'] {
+  --module-color-2: var(--mod-ocean);
+}
+[data-hue2='sky'] {
+  --module-color-2: var(--mod-sky);
+}
+[data-hue2='cobalt'] {
+  --module-color-2: var(--mod-cobalt);
+}
+[data-hue2='indigo'] {
+  --module-color-2: var(--mod-indigo);
+}
+[data-hue2='violet'] {
+  --module-color-2: var(--mod-violet);
+}
+[data-hue2='orchid'] {
+  --module-color-2: var(--mod-orchid);
+}
+[data-hue2='slate'] {
+  --module-color-2: var(--mod-slate);
+}
+/* Resolved where --module-color exists: the flat tint of a card head (widget zone) and the gradient of a head band. */
+[data-hue] {
+  --head-flat: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
+  --head-gradient: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--module-color) var(--head-tint-0), var(--surface)) 0%,
+    color-mix(in srgb, var(--module-color-2, var(--module-color)) var(--head-tint-1), var(--surface)) 100%
+  );
+}
+/* The icon plate: the module's one solid spot of colour; the surface colour draws the icon (HuePlate in the app). */
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--module-color, var(--accent));
+  color: var(--surface);
+}
+.plate.neutral {
+  background: var(--surface-2);
+  color: var(--text);
+}
+:root[data-theme='dark'] .plate {
+  color: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .plate {
+    color: var(--bg);
+  }
+}
+:root[data-theme='dark'] .plate.neutral,
+:root:not([data-theme='light']) .plate.neutral {
+  color: var(--text);
+}
+/* Area patterns, copied from the app (plan lines, money dots, household grid, knowledge diagonals, vault rules, system none). */
+[data-area='plan'] {
+  --area-pattern: linear-gradient(var(--pattern-ink) 1px, transparent 1px);
+  --area-pattern-size: 100% 0.875rem;
+}
+[data-area='money'] {
+  --area-pattern: radial-gradient(var(--pattern-ink) 1px, transparent 1.2px);
+  --area-pattern-size: 0.75rem 0.75rem;
+}
+[data-area='household'] {
+  --area-pattern:
+    linear-gradient(90deg, var(--pattern-ink) 1px, transparent 1px),
+    linear-gradient(var(--pattern-ink) 1px, transparent 1px);
+  --area-pattern-size: 1.125rem 1.125rem;
+}
+[data-area='knowledge'] {
+  --area-pattern: repeating-linear-gradient(
+    45deg,
+    var(--pattern-ink) 0 1px,
+    transparent 1px 0.625rem
+  );
+  --area-pattern-size: auto;
+}
+[data-area='vault'] {
+  --area-pattern: repeating-linear-gradient(
+    0deg,
+    var(--pattern-ink) 0 1px,
+    transparent 1px 0.375rem
+  );
+  --area-pattern-size: auto;
+}
+[data-area='system'] {
+  --area-pattern: none;
+  --area-pattern-size: auto;
+}

@@ -66,9 +66,27 @@
   --accent-soft: #fbe9de;
   --warning: #8a5a00;
   --success: #1b7545;
-  /* Brand-only wash and silhouettes behind the hero (never for UI surfaces). */
-  --hero-wash: linear-gradient(180deg, #fbf3ec 0%, var(--bg) 100%);
-  --hero-reef: rgb(224 85 15 / 0.07);
+  /* Identity v3 (web/src/ui/tokens.css, docs/design/MODULE-IDENTITY.md): the module palette, the tints of a
+     module head and widget zone, the neutral group tint of an area block and the strength of the area patterns.
+     The selectors that turn them into --module-color and --area-pattern live in identity.css. */
+  --mod-lime: #6c7a04;
+  --mod-moss: #2f6800;
+  --mod-fern: #368535;
+  --mod-teal: #01665f;
+  --mod-ocean: #0077bc;
+  --mod-sky: #3a4fa5;
+  --mod-cobalt: #755fbb;
+  --mod-indigo: #733b8f;
+  --mod-violet: #9e4f96;
+  --mod-orchid: #902d5b;
+  --mod-slate: #55636b;
+  --head-tint-0: 40%;
+  --head-tint-1: 12%;
+  --widget-tint: 14%;
+  --group-tint: 6%;
+  --pattern-head: 0.06;
+  --pattern-widget: 0.04;
+  --pattern-ink: var(--text);
   color-scheme: light;
 }
 
@@ -90,8 +108,17 @@
   --accent-soft: #2e241c;
   --warning: #e8b85a;
   --success: #7fd3a3;
-  --hero-wash: linear-gradient(180deg, #14202b 0%, var(--bg) 100%);
-  --hero-reef: rgb(255 154 87 / 0.06);
+  --mod-lime: #c9d475;
+  --mod-moss: #94c16f;
+  --mod-fern: #99df98;
+  --mod-teal: #37c9bf;
+  --mod-ocean: #8ed5fe;
+  --mod-sky: #98acfd;
+  --mod-cobalt: #cec0fe;
+  --mod-indigo: #cd9ae7;
+  --mod-violet: #f7aef0;
+  --mod-orchid: #eb90ba;
+  --mod-slate: #a9b7c0;
   color-scheme: dark;
 }
 
@@ -114,8 +141,17 @@
     --accent-soft: #2e241c;
     --warning: #e8b85a;
     --success: #7fd3a3;
-    --hero-wash: linear-gradient(180deg, #14202b 0%, var(--bg) 100%);
-    --hero-reef: rgb(255 154 87 / 0.06);
+    --mod-lime: #c9d475;
+    --mod-moss: #94c16f;
+    --mod-fern: #99df98;
+    --mod-teal: #37c9bf;
+    --mod-ocean: #8ed5fe;
+    --mod-sky: #98acfd;
+    --mod-cobalt: #cec0fe;
+    --mod-indigo: #cd9ae7;
+    --mod-violet: #f7aef0;
+    --mod-orchid: #eb90ba;
+    --mod-slate: #a9b7c0;
     color-scheme: dark;
   }
 }

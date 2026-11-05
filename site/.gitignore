@@ -11,3 +11,5 @@ src/assets/brand/
 # Lighthouse and screenshot output
 .lighthouseci
 out/
+
+.lighthouseci-dark/
