@@ -73,6 +73,7 @@ import { downloads } from './downloads';
 import { timetrack } from './timetrack';
 import { habits } from './habits';
 import { feeds } from './feeds';
+import { planner } from './planner';
 
 export const fr: Strings = {
   appName: 'Nemo',
@@ -149,4 +150,5 @@ export const fr: Strings = {
   timetrack,
   habits,
   feeds,
+  planner,
 };

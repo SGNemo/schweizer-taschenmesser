@@ -10,7 +10,15 @@ import type { Task } from './schema';
 
 export type PickTask = Pick<
   Task,
-  'done' | 'dueDate' | 'plannedFor' | 'priority' | 'order' | 'estimateMin' | 'someday' | 'parentId'
+  | 'done'
+  | 'dueDate'
+  | 'plannedFor'
+  | 'planMark'
+  | 'priority'
+  | 'order'
+  | 'estimateMin'
+  | 'someday'
+  | 'parentId'
 > & { id: string; createdAt: number; completedAt?: number };
 
 /** Effort assumed for a task without an estimate when comparing "quick wins". */
@@ -67,14 +75,31 @@ export interface DayPlan<T> {
   free: number;
 }
 
+/**
+ * `planMarks`: the planner's order counts (its mark matches the date) – off while the planner module is
+ * inactive, so a mark it left behind never reorders the card. A stale mark (another day) never sorts.
+ */
 export function dayPlan<T extends PickTask>(
   tasks: readonly T[],
   today: string,
   limit: number,
+  planMarks = true,
 ): DayPlan<T> {
+  const markOrder = (t: PickTask): number | undefined =>
+    planMarks && t.planMark && t.planMark.date === t.plannedFor ? t.planMark.order : undefined;
   const planned = tasks
     .filter((t) => isOpenTop(t) && t.plannedFor !== undefined && t.plannedFor <= today)
-    .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt);
+    .sort((a, b) => {
+      const ma = markOrder(a);
+      const mb = markOrder(b);
+      // Marked things first, in the plan's order; then the rest by the user's order.
+      if (ma !== undefined || mb !== undefined) {
+        if (ma === undefined) return 1;
+        if (mb === undefined) return -1;
+        if (ma !== mb) return ma - mb;
+      }
+      return a.order - b.order || a.createdAt - b.createdAt;
+    });
   const doneToday = tasks.filter(
     (t) =>
       t.done &&

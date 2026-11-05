@@ -2,7 +2,7 @@ import { t } from '@/strings';
 import { liveQuery } from 'dexie';
 import { runAppMigrations } from '@/core/db/appMigrations';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { DexieStorageAdapter } from '@/core/storage/dexie';
+import { DexieStorageAdapter, PULL_COMPLETE_KEY } from '@/core/storage/dexie';
 import type { StorageAdapter } from '@/core/storage/types';
 import { now } from '@/core/time/now';
 import { getDeviceContext } from '@/core/db/device';
@@ -72,7 +72,8 @@ export function defaultDeps(): SyncServiceDeps {
 }
 
 const CONFIG_KEY = 'syncConfig';
-const LAST_SYNC_KEY = 'sync.lastSyncAt';
+/** `_meta` key of the last successful round's time; written after every round (consumers re-read the gate on it). */
+export const LAST_SYNC_KEY = 'sync.lastSyncAt';
 export const MIN_PASSPHRASE_LENGTH = 12;
 
 /* ------------------------------ config persistence ------------------------------ */
@@ -91,11 +92,15 @@ async function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Pr
 
 async function clearSyncConfig(database: TaschenmesserDB): Promise<void> {
   await database.table('_secrets').delete(CONFIG_KEY);
+  // The flag describes the connection that is gone now.
+  await database.table('_meta').delete(PULL_COMPLETE_KEY);
 }
 
 /* ------------------------------------ syncing ------------------------------------ */
 
 let chain: Promise<unknown> = Promise.resolve();
+/** Rounds queued or running in this tab's chain (`syncSettled`). */
+let inFlight = 0;
 
 /** One sync at a time: in this tab via a promise chain, across tabs via the Web Locks API. */
 function exclusive<T>(fn: () => Promise<T>): Promise<T> {
@@ -103,9 +108,35 @@ function exclusive<T>(fn: () => Promise<T>): Promise<T> {
     typeof navigator !== 'undefined' && navigator.locks
       ? navigator.locks.request('taschenmesser-sync', fn)
       : fn();
-  const next = chain.then(run, run);
+  inFlight++;
+  const next = chain.then(run, run).finally(() => {
+    inFlight--;
+  });
   chain = next.catch(() => undefined);
   return next;
+}
+
+/**
+ * Is this device's view of the synced data settled enough to act on another device's fields? True
+ * without a sync configuration. With one: only while this tab's sync chain is idle and the last pull
+ * ended complete (`more: false`, recorded by `pullAll` in `_meta`); with `wait` a round still running
+ * is awaited first – a paged or failed pull can split
+ * the field ops of one record (a ToDo's `plannedFor` and `planMark`) across pages. The planner gates
+ * its copies and overwrites of a user's date on this; it never touches `navigator.locks` itself.
+ */
+export async function syncSettled(
+  database: TaschenmesserDB = defaultDb,
+  opts: { wait?: boolean } = {},
+): Promise<boolean> {
+  if (!(await loadSyncConfig(database))) return true;
+  // `wait`: a background caller woken by the round's own `_meta` write lets this tab's chain end first
+  // (bounded by the queued rounds); a user action reads the gate as it is.
+  if (opts.wait) await chain;
+  if (inFlight > 0) return false;
+  const row = await database
+    .table<{ key: string; value: unknown }, string>('_meta')
+    .get(PULL_COMPLETE_KEY);
+  return row?.value === true;
 }
 
 /** Errors that can heal by themselves; everything else needs the user (token, passphrase, lock). */

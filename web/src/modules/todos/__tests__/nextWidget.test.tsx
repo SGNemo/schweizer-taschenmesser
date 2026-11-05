@@ -115,4 +115,42 @@ describe('NextWidget (Jetzt dran)', () => {
     await screen.findByTestId('next-card');
     expect(screen.queryByTestId('day-plan')).toBeNull();
   });
+
+  it('orders the plan by the planner’s marks only while the planner module is on', async () => {
+    await patchFocusSettings({ nextOne: false });
+    const DAY = '2026-10-02';
+    await taskRepo.create({
+      ...base,
+      title: 'Zweite',
+      plannedFor: DAY,
+      planMark: { date: DAY, order: 1 },
+      order: 0,
+    });
+    await taskRepo.create({
+      ...base,
+      title: 'Erste',
+      plannedFor: DAY,
+      planMark: { date: DAY, order: 0 },
+      order: 5,
+    });
+    const { unmount } = renderWidget();
+    const plan = await screen.findByTestId('day-plan');
+    expect(plan.textContent!.indexOf('Zweite')).toBeLessThan(plan.textContent!.indexOf('Erste'));
+    unmount();
+    await db.table('_modules').put({
+      id: 'planner',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
+    renderWidget();
+    await waitFor(async () => {
+      const rows = await screen.findByTestId('day-plan');
+      expect(rows.textContent!.indexOf('Erste')).toBeLessThan(rows.textContent!.indexOf('Zweite'));
+    });
+  });
 });

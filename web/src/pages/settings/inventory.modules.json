@@ -429,6 +429,61 @@
       }
     }
   },
+  "planner": {
+    "scope": "module.planner",
+    "fields": {
+      "availableWeekday": {
+        "type": "number",
+        "label": "Verfügbare Zeit Mo–Fr (Minuten)",
+        "default": 240
+      },
+      "availableSaturday": {
+        "type": "number",
+        "label": "Verfügbare Zeit Samstag (Minuten)",
+        "default": 120
+      },
+      "availableSunday": {
+        "type": "number",
+        "label": "Verfügbare Zeit Sonntag (Minuten)",
+        "default": 0
+      },
+      "bufferShare": {
+        "type": "select",
+        "label": "Puffer",
+        "default": "20"
+      },
+      "horizonDays": {
+        "type": "select",
+        "label": "Planungszeitraum",
+        "default": "14"
+      },
+      "maxSessionMin": {
+        "type": "select",
+        "label": "Längste Sitzung",
+        "default": "90"
+      },
+      "minSessionMin": {
+        "type": "number",
+        "label": "Kürzeste Sitzung (Minuten)",
+        "default": 25
+      },
+      "autoReplan": {
+        "type": "boolean",
+        "label": "Plan von selbst aktuell halten",
+        "default": true
+      },
+      "calendarBlocks": {
+        "type": "boolean",
+        "label": "Termine blocken Zeit",
+        "default": true
+      },
+      "allDayBlocks": {
+        "type": "boolean",
+        "label": "Ganztägige Termine blocken Zeit",
+        "default": false
+      }
+    }
+  },
   "subscriptions": {
     "scope": "module.subscriptions",
     "fields": {

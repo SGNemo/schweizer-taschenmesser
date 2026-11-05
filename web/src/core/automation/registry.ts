@@ -1,7 +1,7 @@
 /** What the enabled modules offer the engine, gathered once (and again when modules are switched). */
 import type { ModuleManifest } from '@/core/modules/types';
 import type { Derive } from './ingest';
-import type { ModuleAutomation } from './module';
+import type { AutomationEventDef, ModuleAutomation } from './module';
 import type { Detector } from './scheduler';
 import { splitTable } from './ingest';
 import { EXCLUDED_MODULES, type Rule } from './types';
@@ -12,7 +12,8 @@ export interface AutomationRegistry {
   byModule: ReadonlyMap<string, ModuleAutomation>;
   /** Every event type a rule may listen to. */
   eventTypes: ReadonlySet<string>;
-  watched: (moduleId: string, collection: string) => boolean;
+  /** The `watch` entry of a collection (with its `ignoreFields`), or undefined when its writes stay silent. */
+  watched: (moduleId: string, collection: string) => AutomationEventDef | undefined;
   allowed: (module: string, action: string) => boolean;
   derive: Derive;
   detectors: Detector[];
@@ -39,7 +40,7 @@ export async function buildRegistry(
   return {
     byModule,
     eventTypes,
-    watched: (moduleId, collection) => !!byModule.get(moduleId)?.watch?.[collection],
+    watched: (moduleId, collection) => byModule.get(moduleId)?.watch?.[collection],
     allowed: (module, action) => !!byModule.get(module)?.actions?.includes(action),
     derive: (signal, base) => {
       const parts = splitTable(signal.table);

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { t } from '@/strings';
 import { getLang, useLang, type Lang } from './lang';
 
 /**
@@ -233,3 +234,15 @@ export function relativeDays(days: number, lang: Lang = getLang()): string {
 /** First letter upper case in the UI language ("heute" → "Heute"). */
 export const capitalize = (s: string, lang: Lang = getLang()): string =>
   s ? s.charAt(0).toLocaleUpperCase(lang) + s.slice(1) : s;
+
+/**
+ * A number of minutes as a duration in the UI language: the long form („3 Std 5 Min“, „45 Min“) for
+ * sentences and time tracking, the compact form („1 h 30“, „4 h“, „45 Min“) for boards, bars and
+ * widget rows. Negative or fractional input is clamped to whole minutes ≥ 0.
+ */
+export function formatMinutes(minutes: number, options: { compact?: boolean } = {}): string {
+  const total = Math.max(0, Math.round(Number.isFinite(minutes) ? minutes : 0));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return options.compact ? t.time.durationCompact(h, m) : t.time.duration(h, m);
+}

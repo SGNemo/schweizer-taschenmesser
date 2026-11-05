@@ -1,0 +1,167 @@
+.add {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+  margin: var(--space-3) 0 var(--space-4);
+}
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.board {
+  display: grid;
+  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 73rem of page width. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: start;
+}
+@container page (min-width: 73rem) {
+  .board {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.column[data-today='true'] {
+  outline: 2px solid var(--module-color);
+  outline-offset: -2px;
+}
+.column[data-off='true'] {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+.dayButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-2);
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.dayButton:hover {
+  background: var(--surface-2);
+}
+.dayName {
+  font-weight: var(--weight-semibold);
+}
+.capacity {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+.bar {
+  width: 100%;
+}
+
+.check {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--module-color);
+}
+.minutes {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.blocker {
+  color: var(--text-3);
+}
+.reason {
+  display: block;
+  color: var(--text-3);
+}
+.dueWas {
+  color: var(--warning);
+}
+.part {
+  color: var(--text-3);
+  font-weight: var(--weight-medium);
+}
+
+.strip {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stripChip {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-hair);
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-2);
+  color: inherit;
+  background: var(--surface-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+/* The chosen day: a tint, not the full hue (AA on both themes), plus weight and a hairline in the hue. */
+.stripChip[aria-pressed='true'] {
+  color: var(--text);
+  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--module-color);
+  font-weight: var(--weight-semibold);
+}
+
+.waiting {
+  margin-top: var(--space-4);
+}
+
+.sheetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--row-h);
+}
+.sheetValue {
+  font-variant-numeric: var(--font-num);
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.weekRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--row-h);
+}
+.blockerForm {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+  margin-top: var(--space-3);
+}
+.blockerMin {
+  width: 6rem;
+}

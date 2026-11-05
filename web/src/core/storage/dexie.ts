@@ -12,6 +12,8 @@ import type { ApplyResult, OutboxBatch, OutboxEntry, StorageAdapter } from './ty
 
 const CURSOR_KEY = 'sync.cursor';
 const EPOCH_KEY = 'sync.epoch';
+/** `_meta` key of the "last pull ended complete" flag (see `StorageAdapter.setPullComplete`). */
+export const PULL_COMPLETE_KEY = 'sync.pullComplete';
 /** Records merged per Dexie transaction. */
 const APPLY_CHUNK = 400;
 /** Outbox rows written per transaction by `markAllDirty`. */
@@ -220,6 +222,10 @@ export class DexieStorageAdapter implements StorageAdapter {
 
   async getEpoch(): Promise<string | undefined> {
     return (await this.meta().get(EPOCH_KEY))?.value as string | undefined;
+  }
+
+  async setPullComplete(complete: boolean): Promise<void> {
+    await this.meta().put({ key: PULL_COMPLETE_KEY, value: complete });
   }
 
   async setEpoch(epoch: string | undefined): Promise<void> {

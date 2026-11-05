@@ -179,3 +179,45 @@ describe('Heute card', () => {
     expect(screen.getByText('Alles für heute erledigt.')).toBeVisible();
   });
 });
+
+describe('with the planner module on', () => {
+  const plannerOn = () =>
+    db.table('_modules').put({
+      id: 'planner',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
+
+  it('hides „Neu planen“ (the planner distributes the open things)', async () => {
+    await taskRepo.create({ ...base, title: 'Alte Sache', dueDate: '2026-10-20' });
+    const { unmount } = draw('/todos');
+    expect(await screen.findByTestId('todos-waiting')).toBeInTheDocument();
+    unmount();
+    await plannerOn();
+    draw('/todos');
+    await screen.findByText('Alte Sache');
+    await waitFor(() => expect(screen.queryByTestId('todos-waiting')).toBeNull());
+    expect(screen.queryByRole('button', { name: 'Neu planen' })).toBeNull();
+  });
+
+  it('shows „im Plan: <Tag>“ in Bald for a planner-set date, never for the user’s own', async () => {
+    await plannerOn();
+    await taskRepo.create({
+      ...base,
+      title: 'Vom Planer',
+      plannedFor: '2026-11-05',
+      planMark: { date: '2026-11-05', order: 0 },
+    });
+    await taskRepo.create({ ...base, title: 'Selbst gesetzt', plannedFor: '2026-11-06' });
+    draw('/todos?view=soon');
+    await screen.findByText('Vom Planer');
+    const labels = await screen.findAllByTestId('in-plan');
+    expect(labels).toHaveLength(1);
+    expect(labels[0]).toHaveTextContent('im Plan: Do');
+  });
+});

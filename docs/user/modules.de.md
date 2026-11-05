@@ -11,6 +11,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | Bereich | Modul | Was es tut | Status |
 |---|---|---|---|
 | **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
+|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | Vorschau |
 |  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
 |  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
 |  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |

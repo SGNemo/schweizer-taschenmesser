@@ -12,12 +12,13 @@ import type {
   HeadlineFigure,
   ModuleHue,
   ModuleManifest,
+  PlannableItem,
 } from './types';
 
 /** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
 const preload =
   (
-    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline',
+    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable',
     manifests: readonly ModuleManifest[],
   ) =>
   () =>
@@ -50,6 +51,51 @@ export async function collectCalendarItems(
     }),
   );
   return lists.flat().sort(compareCalendarItems);
+}
+
+/** What the planner may plan, with the module that offered it. */
+export type PlannableEntry = PlannableItem & { moduleId: string };
+
+/**
+ * Plannable things of all given (active) modules, in manifest order. A failing source never breaks
+ * the others; the planner reaches the write-back of a source through `plannableSource`.
+ */
+export async function collectPlannable(
+  ctx: { today: string; until: string },
+  manifests: readonly ModuleManifest[],
+): Promise<PlannableEntry[]> {
+  const lists = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.plannable;
+      if (!load) return [];
+      try {
+        return (await (await load()).default.list(ctx)).map((i) => ({ ...i, moduleId: m.id }));
+      } catch (e) {
+        console.error(`[plannable] source "${m.id}" failed`, e);
+        return [];
+      }
+    }),
+  );
+  return lists.flat();
+}
+
+/** Live plannable things of all active modules; `undefined` while loading. */
+export function usePlannable(ctx: { today: string; until: string }): PlannableEntry[] | undefined {
+  const states = useModuleStates();
+  const ids = activeManifests(states)
+    .map((m) => m.id)
+    .join(',');
+  return useSharedLiveQuery(
+    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
+    async () => (states ? collectPlannable(ctx, activeManifests(states)) : undefined),
+    preload('plannable', activeManifests(states)),
+  );
+}
+
+/** Loads the plannable source of one module (for `onAssign`/`onDone`/`onEstimate`); `undefined` without one. */
+export async function plannableSource(manifest: ModuleManifest | undefined) {
+  const load = manifest?.contributions?.plannable;
+  return load ? (await load()).default : undefined;
 }
 
 /** Notifications due in (from, to] from all given (active) modules, oldest first. */

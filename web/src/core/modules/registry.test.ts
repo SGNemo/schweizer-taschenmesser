@@ -44,6 +44,13 @@ describe('module registry', () => {
     expect(validateManifest({ ...retired, area: 'plan' })).toHaveLength(1);
     expect(validateManifest({ ...retired, seed: base.seed })).toHaveLength(1);
     expect(validateManifest({ ...retired, routes: base.routes }).length).toBeGreaterThan(0);
+    // A retired module offers nothing to the planner either (contributions must be absent).
+    expect(
+      validateManifest({
+        ...retired,
+        contributions: { plannable: async () => ({ default: { list: async () => [] } }) },
+      }),
+    ).toHaveLength(1);
     // A normal module still needs an area.
     expect(validateManifest({ ...base, area: undefined })).toHaveLength(1);
     // Retired ids stay in allManifests (schema, sync, backup) but never reach runtime lists.

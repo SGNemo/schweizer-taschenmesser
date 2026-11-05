@@ -26,6 +26,7 @@ import { undoableWithToast } from '@/core/undo/withToast';
 import { PersonField } from '@/core/people/PersonField';
 import { beginFocus, focusPath } from '../focus';
 import { deleteTask, taskRepo } from '../repo';
+import { userPlannedFor } from '../views';
 import type { ChecklistItem, Task, TaskLink, TodoList } from '../schema';
 import { parseTags } from '../tags';
 import styles from '../routes/todos.module.css';
@@ -107,7 +108,8 @@ function EditorForm({
         recurrence: dueDate ? recurrence : undefined,
         someday: someday || undefined,
         estimateMin: estimate,
-        plannedFor: plannedFor || undefined,
+        // The planner's mark goes only when the date really changes (`userPlannedFor`).
+        ...userPlannedFor(opened ?? task, plannedFor || undefined),
         note: note.trim() || undefined,
         personId: personId || undefined,
         startDate: startDate || undefined,

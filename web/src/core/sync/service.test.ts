@@ -11,9 +11,11 @@ import {
   resetServer,
   restoreSyncStatus,
   syncNow,
+  syncSettled,
   type SyncServiceDeps,
 } from './service';
 import { useSyncStatus } from './status';
+import { runSync } from './engine';
 import { MemoryServer } from './testing';
 
 const schema = allManifests.find((m) => m.id === 'example')!.dataSchema.collections.entry!.schema;
@@ -240,5 +242,52 @@ describe('disconnect', () => {
     await connect(params, deps);
     expect(server.dump().some((o) => o.value === 'bleibt')).toBe(true);
     expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe('syncSettled', () => {
+  it('is true without a sync configuration', async () => {
+    expect(await syncSettled(db)).toBe(true);
+  });
+
+  it('is true after a complete pull, false while a round runs or after a pull that stopped half way', async () => {
+    expect((await connect(params, deps)).ok).toBe(true);
+    expect(await syncSettled(db)).toBe(true);
+
+    // A round in flight: a plain read says false; with `wait` the gate answers for the state after the round.
+    let ended = false;
+    const round = syncNow(deps).then(() => (ended = true));
+    expect(await syncSettled(db)).toBe(false);
+    const settled = syncSettled(db, { wait: true });
+    expect(ended).toBe(false);
+    expect(await settled).toBe(true);
+    expect(ended).toBe(true);
+    await round;
+
+    // A round that fails before its pull completes closes the gate.
+    server.online = false;
+    await syncNow(deps);
+    expect(await syncSettled(db)).toBe(false);
+    server.online = true;
+
+    // Another device writes two fields of one record; the pull fetches them one op per page and
+    // fails after the first page: the record's fields are split, the gate stays closed.
+    const other = device();
+    expect((await connect(params, other.deps)).ok).toBe(true);
+    await other.repo.create({ title: 'A', done: true });
+    await syncNow(other.deps);
+    server.failPullAt = server.requests.pull + 2;
+    await expect(
+      runSync({ storage: deps.storage, adapter: server.remote(), pullLimit: 1 }),
+    ).rejects.toBeDefined();
+    expect(await syncSettled(db)).toBe(false);
+
+    // The next complete round opens it again.
+    await syncNow(deps);
+    expect(await syncSettled(db)).toBe(true);
+    expect(await repo.get((await other.repo.active().toArray())[0]!.id)).toMatchObject({
+      title: 'A',
+      done: true,
+    });
   });
 });

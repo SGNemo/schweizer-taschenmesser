@@ -164,6 +164,26 @@ export function ArrowBand({ size, value = 0 }: BlockProps & { value?: number }) 
   );
 }
 
+/** The seven bars of the planner's week; `fill` (0..1 per day, Monday first) is the real load when a page knows it, else a still pattern. */
+export const WEEK_BARS_DEFAULT: readonly number[] = [0.7, 0.4, 0.9, 0.55, 0.15, 0.3, 0];
+export function WeekBars({
+  size,
+  fill = WEEK_BARS_DEFAULT,
+}: BlockProps & { fill?: readonly number[] }) {
+  return (
+    <div {...block('weekBars', size)}>
+      {Array.from({ length: 7 }, (_, i) => {
+        const v = Math.max(0, Math.min(1, fill[i] ?? 0));
+        return (
+          <span key={i} className={styles.weekBar}>
+            <i style={{ height: `${Math.round(v * 100)}%` }} />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 /** A newspaper masthead: a thick rule, a title line and two columns; `children` = the title, in serif. */
 export function Masthead({ size, children }: BlockProps) {
   return (

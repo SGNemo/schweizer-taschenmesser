@@ -7,6 +7,8 @@ import { undoable } from '@/core/undo';
 import { skipSuggestion } from '@/core/focus/state';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
+import { useModuleStates } from '@/core/modules/activation';
+import { dayName } from '@/core/plan/explain';
 import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
@@ -47,7 +49,15 @@ import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { personName, usePeople } from '@/core/people/people';
 import { readQuickAdd } from '../quickAdd';
 import { tagCounts } from '../tags';
-import { movePatch, overdueTasks, TODO_VIEWS, viewOf, type TodoView } from '../views';
+import {
+  isPlannerOwned,
+  movePatch,
+  overdueTasks,
+  TODO_VIEWS,
+  userPlannedFor,
+  viewOf,
+  type TodoView,
+} from '../views';
 import { deleteTask, ensureInbox, INBOX_ID, listRepo, setDone, taskRepo } from '../repo';
 import type { Task, TodoList } from '../schema';
 import { settings } from '../settings';
@@ -77,6 +87,8 @@ interface RowProps {
   calm?: boolean;
   /** A visible "Morgen" button (the Heute view). */
   quickTomorrow?: boolean;
+  /** The Bald view while the planner is on: a planner-set date shows a quiet „im Plan: Mi“. */
+  inPlan?: boolean;
   /** "n in Folge" of the task's series (shown on the open instance only). */
   streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
@@ -93,6 +105,7 @@ function TaskRow({
   sub,
   calm,
   quickTomorrow,
+  inPlan,
   streaks,
   onToggle,
   onOpen,
@@ -148,7 +161,13 @@ function TaskRow({
           label: t.actions.duplicate,
           onSelect: () =>
             void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
-              taskRepo.create({ ...copyData(task), done: false, completedAt: undefined }),
+              // A copy is the user's: the planner's mark stays with the original.
+              taskRepo.create({
+                ...copyData(task),
+                done: false,
+                completedAt: undefined,
+                planMark: undefined,
+              }),
             ),
         },
         {
@@ -226,6 +245,13 @@ function TaskRow({
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
           ) : null}
+          {inPlan &&
+          !task.done &&
+          task.plannedFor &&
+          task.plannedFor > day &&
+          isPlannerOwned(task) ? (
+            <span data-testid="in-plan">{t.todos.inPlan(dayName(task.plannedFor))}</span>
+          ) : null}
           {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}
           {task.tags?.length ? <span>{task.tags.map((x) => `#${x}`).join(' ')}</span> : null}
           {task.checklist?.length ? (
@@ -270,6 +296,7 @@ function TaskRow({
               sub
               calm={calm}
               quickTomorrow={quickTomorrow}
+              inPlan={inPlan}
               streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
@@ -303,6 +330,9 @@ export default function TodosPage() {
   const tasks = useLiveQuery(() => taskRepo.active().toArray(), []);
   const [prefs] = useSettings('module.todos', settings.schema, settings.defaults);
   const [focus] = useFocusSettings();
+  // While the planner module is on, it distributes the open things: the ToDo page's „Neu planen“
+  // (which rewrites due dates) steps back, and a planner-set date shows „im Plan“ in Bald.
+  const plannerOn = useModuleStates()?.planner === true;
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
@@ -417,7 +447,7 @@ export default function TodosPage() {
         ...((selected === SOMEDAY || pageView === 'someday') && !typed.dueDate
           ? { someday: true }
           : {}),
-        ...(pageView === 'today' && !typed.dueDate ? { plannedFor: day } : {}),
+        ...(pageView === 'today' && !typed.dueDate ? userPlannedFor({}, day) : {}),
       }),
     );
     toast(t.todos.added);
@@ -457,6 +487,7 @@ export default function TodosPage() {
         person={personName(people, task.personId)}
         calm={focus.calmAttention}
         quickTomorrow={pageView === 'today'}
+        inPlan={pageView === 'soon' && plannerOn}
         streaks={streaks}
         onToggle={toggle}
         onOpen={setEditing}
@@ -471,7 +502,7 @@ export default function TodosPage() {
       count: g.items.length,
       tone: g.id === 'overdue' && !focus.calmAttention ? ('overdue' as const) : undefined,
       action:
-        g.id === 'overdue' && focus.calmAttention ? (
+        g.id === 'overdue' && focus.calmAttention && !plannerOn ? (
           <div className={styles.waiting} data-testid="todos-waiting">
             <span className={styles.waitingText}>
               <span>{t.focus.waiting.replanHint}</span>
@@ -501,7 +532,7 @@ export default function TodosPage() {
         ]
       : timed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top, children, tasks, day, selected, focus.calmAttention, lists, pageView]);
+  }, [top, children, tasks, day, selected, focus.calmAttention, lists, pageView, plannerOn]);
   const inboxOpen = useMemo(
     () =>
       ((tasks ?? []) as StoredTask[])

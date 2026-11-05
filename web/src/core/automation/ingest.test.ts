@@ -4,7 +4,7 @@ import { db } from '@/core/db/db';
 import { hasWriteListener, setWriteListener, type WriteSignal } from '@/core/db/writeHook';
 import { setNow } from '@/core/time/now';
 import { taskRepo } from '@/modules/todos/repo';
-import { eventsOf, splitTable } from './ingest';
+import { eventsOf, ignoredUpdate, splitTable } from './ingest';
 import { processEvent, type EngineDeps } from './engine';
 import { listLog } from './log';
 import { listNotices } from './notices';
@@ -85,6 +85,48 @@ describe('repo write hook', () => {
           : [],
     );
     expect(out.map((e) => e.type)).toEqual(['todos.task.updated', 'todos.task.completed']);
+  });
+});
+
+describe('ignoreFields', () => {
+  const def = { fields: { title: 'text' as const }, ignoreFields: ['plannedFor', 'planMark'] };
+  const watched = (m: string, c: string) => (m === 'todos' && c === 'task' ? def : undefined);
+  const upd = (before: Record<string, unknown>) =>
+    ({ table: 'todos_task', kind: 'updated', id: 't', data: { title: 'T' }, before }) as const;
+
+  it('an update that changes only ignored fields is no event; anything else still is', () => {
+    expect(ignoredUpdate(upd({ plannedFor: '2026-11-09' }), def)).toBe(true);
+    expect(ignoredUpdate(upd({ plannedFor: '2026-11-09', planMark: undefined }), def)).toBe(true);
+    expect(ignoredUpdate(upd({ plannedFor: '2026-11-09', title: 'A' }), def)).toBe(false);
+    expect(ignoredUpdate(upd({}), def)).toBe(false);
+    expect(
+      eventsOf(upd({ planMark: { date: '2026-11-09', order: 0 } }), 1, undefined, watched),
+    ).toEqual([]);
+    expect(eventsOf(upd({ title: 'A' }), 1, undefined, watched)).toHaveLength(1);
+  });
+
+  it('only `updated` is filtered; created, deleted, restored and derived events pass', () => {
+    const created = {
+      table: 'todos_task',
+      kind: 'created',
+      id: 't',
+      data: { plannedFor: 'x' },
+    } as const;
+    expect(ignoredUpdate(created, def)).toBe(false);
+    expect(eventsOf(created, 1, undefined, watched)).toHaveLength(1);
+    expect(
+      eventsOf({ table: 'todos_task', kind: 'deleted', id: 't' }, 1, undefined, watched),
+    ).toHaveLength(1);
+    // A derived event (completed) still fires when `done` is among the changed fields.
+    const out = eventsOf(
+      upd({ done: false, plannedFor: '2026-11-09' }),
+      1,
+      (s, base) => (s.before?.done === false ? [{ ...base, type: 'todos.task.completed' }] : []),
+      watched,
+    );
+    expect(out.map((e) => e.type)).toEqual(['todos.task.updated', 'todos.task.completed']);
+    // A boolean `watched` (older callers) behaves as before.
+    expect(eventsOf(upd({ plannedFor: 'x' }), 1, undefined, () => true)).toHaveLength(1);
   });
 });
 

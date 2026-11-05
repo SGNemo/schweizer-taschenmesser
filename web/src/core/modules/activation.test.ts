@@ -79,6 +79,38 @@ describe('module activation', () => {
     expect((await loadModuleStates([off], db))[off.id]).toBe(false);
   });
 
+  it('emits and awaits module.disabling before the state is written and before the wipe', async () => {
+    await enableModule(example, db);
+    await entries(db).create({ title: 'still here', done: false });
+    const seen: string[] = [];
+    bus.on('module.disabling', async ({ moduleId, policy }) => {
+      await new Promise((r) => setTimeout(r, 5));
+      seen.push(`disabling:${moduleId}:${policy}`);
+      // Nothing has happened yet: the module is still on and its data untouched.
+      expect((await loadModuleStates([example], db)).example).toBe(true);
+      expect(await entries(db).active().count()).toBe(1);
+    });
+    bus.on('module.disabled', ({ moduleId }) => void seen.push(`disabled:${moduleId}`));
+    await disableModule(example, 'delete', db);
+    expect(seen).toEqual(['disabling:example:delete', 'disabled:example']);
+    expect((await loadModuleStates([example], db)).example).toBe(false);
+    expect(await entries(db).active().count()).toBe(0);
+  });
+
+  it('a throwing module.disabling listener never stops the state write or the wipe', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await enableModule(example, db);
+    await entries(db).create({ title: 'bye', done: false });
+    bus.on('module.disabling', () => {
+      throw new Error('listener bug');
+    });
+    await disableModule(example, 'delete', db);
+    expect((await loadModuleStates([example], db)).example).toBe(false);
+    expect(await entries(db).active().count()).toBe(0);
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
+  });
+
   it('wipeModuleData is safe on empty modules', async () => {
     await expect(wipeModuleData(example, db)).resolves.toBeUndefined();
   });

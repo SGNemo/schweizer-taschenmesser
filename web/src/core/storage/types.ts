@@ -41,4 +41,10 @@ export interface StorageAdapter {
   setCursor(cursor: number): Promise<void>;
   getEpoch(): Promise<string | undefined>;
   setEpoch(epoch: string | undefined): Promise<void>;
+  /**
+   * Device-local note whether the last pull ended complete (`more: false`). `pullAll` clears it when a
+   * pull starts and sets it when the last page was applied; a paged or failed pull leaves it cleared.
+   * `core/sync/service.ts` `syncSettled()` reads it. Optional: test doubles need not keep it.
+   */
+  setPullComplete?(complete: boolean): Promise<void>;
 }

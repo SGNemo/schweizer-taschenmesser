@@ -103,3 +103,39 @@ describe('calendar aggregation across the core modules', () => {
     ]);
   });
 });
+
+describe('collectPlannable', () => {
+  it('merges the sources of several modules, tags each item with its module and survives a failing one', async () => {
+    const { collectPlannable, plannableSource } = await import('./contributions');
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const base = allManifests.find((m) => m.id === 'example')!;
+    const mk = (id: string, list: () => Promise<unknown>): ModuleManifest =>
+      ({
+        ...base,
+        id,
+        contributions: {
+          ...base.contributions,
+          plannable: async () => ({ default: { list: list as never } }),
+        },
+      }) as ModuleManifest;
+    const a = mk('a', async () => [{ id: '1', kind: 'task', title: 'A', to: '/a?open=1' }]);
+    const b = mk('b', async () => {
+      throw new Error('boom');
+    });
+    const none = {
+      ...base,
+      id: 'c',
+      contributions: { onboarding: base.contributions!.onboarding },
+    };
+    const items = await collectPlannable({ today: '2026-11-09', until: '2026-11-15' }, [
+      a,
+      b,
+      none,
+    ]);
+    expect(items).toEqual([{ id: '1', kind: 'task', title: 'A', to: '/a?open=1', moduleId: 'a' }]);
+    expect(err).toHaveBeenCalledTimes(1);
+    expect(await plannableSource(none)).toBeUndefined();
+    expect(await plannableSource(a)).toBeDefined();
+    err.mockRestore();
+  });
+});

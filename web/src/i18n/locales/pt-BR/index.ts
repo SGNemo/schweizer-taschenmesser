@@ -73,6 +73,7 @@ import { downloads } from './downloads';
 import { timetrack } from './timetrack';
 import { habits } from './habits';
 import { feeds } from './feeds';
+import { planner } from './planner';
 
 export const ptBR: Strings = {
   appName: 'Nemo',
@@ -149,4 +150,5 @@ export const ptBR: Strings = {
   timetrack,
   habits,
   feeds,
+  planner,
 };

@@ -1,3 +1,4 @@
+import { isPlannerOwned } from '@/core/modules/types';
 import { addDaysStr } from '@/core/time/dates';
 import { postponePatch } from './postpone';
 import type { Task } from './schema';
@@ -9,7 +10,23 @@ import type { Task } from './schema';
 export const TODO_VIEWS = ['today', 'soon', 'someday', 'done'] as const;
 export type TodoView = (typeof TODO_VIEWS)[number];
 
-type V = Pick<Task, 'done' | 'someday' | 'dueDate' | 'plannedFor' | 'startDate'>;
+type V = Pick<Task, 'done' | 'someday' | 'dueDate' | 'plannedFor' | 'startDate' | 'planMark'>;
+
+type Marked = Pick<Task, 'plannedFor' | 'planMark'>;
+
+export { isPlannerOwned };
+
+export type PlannedForPatch = Partial<Pick<Task, 'plannedFor' | 'planMark'>>;
+
+/**
+ * The one way the ToDo side writes `plannedFor` (editor, inbox sorter, wrap-up, „Für heute“, „Später“,
+ * board move, create on Heute): the planner's mark is cleared only when the date really changes, so a
+ * title-only save keeps it and the planner keeps its ownership. Returns an empty patch when nothing changes.
+ */
+export function userPlannedFor(task: Marked, date: string | undefined): PlannedForPatch {
+  if (task.plannedFor === date) return {};
+  return { plannedFor: date, ...(task.planMark ? { planMark: undefined } : {}) };
+}
 
 /**
  * - `done`: ticked off.
@@ -29,7 +46,10 @@ export function viewOf(task: V, day: string): TodoView {
 export const inView = (task: V, view: TodoView, day: string): boolean => viewOf(task, day) === view;
 
 export type MovePatch = Partial<
-  Pick<Task, 'someday' | 'plannedFor' | 'dueDate' | 'done' | 'completedAt' | 'startDate'>
+  Pick<
+    Task,
+    'someday' | 'plannedFor' | 'planMark' | 'dueDate' | 'done' | 'completedAt' | 'startDate'
+  >
 >;
 
 /**
@@ -38,22 +58,26 @@ export type MovePatch = Partial<
  */
 export function movePatch(task: V, to: Exclude<TodoView, 'done'>, day: string): MovePatch {
   const open = { done: false, completedAt: undefined };
-  if (to === 'someday') return { ...open, someday: true, plannedFor: undefined };
+  if (to === 'someday')
+    return { ...open, someday: true, plannedFor: undefined, ...userPlannedFor(task, undefined) };
   const tomorrow = addDaysStr(day, 1);
   if (to === 'today')
     return {
       ...open,
       someday: undefined,
       plannedFor: day,
+      ...userPlannedFor(task, day),
       // A start date in the future would hide it again.
       ...(task.startDate && task.startDate > day ? { startDate: day } : {}),
     };
   // "soon": the same calm rule as "Später" – tomorrow, never an old or guilt-laden date.
+  const target = task.plannedFor && task.plannedFor > tomorrow ? task.plannedFor : tomorrow;
   return {
     ...open,
     someday: undefined,
     ...postponePatch(task, day),
-    plannedFor: task.plannedFor && task.plannedFor > tomorrow ? task.plannedFor : tomorrow,
+    plannedFor: target,
+    ...userPlannedFor(task, target),
   };
 }
 

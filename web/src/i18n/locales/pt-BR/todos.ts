@@ -1,6 +1,7 @@
 import type { Strings } from '@/strings';
 
 export const todos: Strings['todos'] = {
+  inPlan: (day: string) => `no plano: ${day}`,
   meta: {
     name: 'Tarefas',
     description: 'Tarefas em listas com prioridades, data de vencimento e subtarefas.',

@@ -63,6 +63,8 @@ export interface TodayInput<T extends PickTask> {
   planLimit: number;
   /** "Jetzt dran" is on in the settings. */
   showNext: boolean;
+  /** The planner module is active: its marks order the plan (default true). */
+  planMarks?: boolean;
 }
 
 export interface Today<T extends PickTask> {
@@ -76,7 +78,7 @@ export interface Today<T extends PickTask> {
 
 export function buildToday<T extends PickTask>(input: TodayInput<T>): Today<T> {
   const next = input.showNext ? pickNext(input.tasks, input.day, input.skipped) : undefined;
-  const plan = dayPlan(input.tasks, input.day, input.planLimit);
+  const plan = dayPlan(input.tasks, input.day, input.planLimit, input.planMarks ?? true);
   return {
     next,
     plan,

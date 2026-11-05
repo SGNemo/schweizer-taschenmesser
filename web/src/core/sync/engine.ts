@@ -94,6 +94,8 @@ async function adoptEpoch(deps: EngineDeps, epoch: string, result: SyncResult): 
 async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
   const { storage, adapter, key } = deps;
   const limit = deps.pullLimit ?? 1000;
+  // Until the last page is applied, the field ops of one record may be split across pages.
+  await storage.setPullComplete?.(false);
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const cursor = await storage.getCursor();
     const page = await adapter.pull(cursor, limit);
@@ -122,7 +124,10 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
     result.pulled += page.ops.length;
     result.applied += applied.applied;
     await storage.setCursor(page.cursor);
-    if (!page.more) return;
+    if (!page.more) {
+      await storage.setPullComplete?.(true);
+      return;
+    }
   }
 }
 

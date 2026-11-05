@@ -32,7 +32,6 @@ export const timetrack: Strings['timetrack'] = {
   today: 'Aujourd’hui',
   todayTotal: (duration: string) => `Aujourd’hui : ${duration}`,
   since: (time: string) => `depuis ${time}`,
-  dur: (h: number, m: number) => (h > 0 ? `${h} h ${m} min` : `${m} min`),
   noSessions: 'Pas encore de temps saisi aujourd’hui.',
   emptyJobs: 'Pas encore de projets. Créez-en un et vous démarrez le chrono en un clic.',
   form: {

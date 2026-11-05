@@ -27,6 +27,19 @@ export const taskLinkSchema = z.object({
   label: z.string().min(1),
 });
 
+/**
+ * The planner's ownership mark on `plannedFor` (docs/design/plan/CONCEPT.md §2): `plannedFor` is the
+ * planner's own only while `date === plannedFor`; `order` is its position on the „Heute“ card, `prior`
+ * the user's own date it overwrote (restored when the planner is switched off). Written only by the
+ * planner; every ToDo-side writer of `plannedFor` goes through `userPlannedFor` (`views.ts`), the import
+ * and the data API strip it (`internal`).
+ */
+export const planMarkSchema = z.object({
+  date: z.string().regex(DATE_RE),
+  order: z.number().int().min(0),
+  prior: z.string().regex(DATE_RE).optional(),
+});
+
 export const taskSchema = z.object({
   listId: z.string().min(1),
   title: z.string().min(1),
@@ -46,6 +59,8 @@ export const taskSchema = z.object({
   someday: z.boolean().optional(),
   /** The day the user plans to do it (the "Heute" plan); independent of the due date. */
   plannedFor: z.string().regex(DATE_RE).optional(),
+  /** Set by the planner module when it wrote `plannedFor`; see `planMarkSchema`. */
+  planMark: planMarkSchema.optional().meta({ internal: true }),
   /** Estimated effort in minutes (5, 15, 30, 60 offered); shown as "etwa 10 Min". */
   estimateMin: z.number().int().min(1).max(480).optional(),
   /** The task stays out of the open views until this day (then it shows up as "Heute" or "Demnächst"). */
@@ -67,3 +82,4 @@ export type TodoList = z.output<typeof listSchema>;
 export type Task = z.output<typeof taskSchema>;
 export type ChecklistItem = z.output<typeof checklistItemSchema>;
 export type TaskLink = z.output<typeof taskLinkSchema>;
+export type PlanMark = z.output<typeof planMarkSchema>;

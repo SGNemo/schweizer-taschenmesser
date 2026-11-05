@@ -1,3 +1,4 @@
+import { loadModuleStates } from '@/core/modules/activation';
 import type { AttentionSource } from '@/core/modules/types';
 import { getFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
@@ -14,6 +15,8 @@ const source: AttentionSource = async ({ today }) => {
   const overdue = open.filter((x) => x.dueDate! < today).length;
   const due = open.filter((x) => x.dueDate === today).length;
   const { calmAttention } = await getFocusSettings();
+  // „Neu planen möglich“ only points at the ToDo page's „Neu planen“, which is hidden while the planner is on.
+  const plannerOn = (await loadModuleStates()).planner === true;
   return [
     ...(overdue
       ? [
@@ -23,7 +26,7 @@ const source: AttentionSource = async ({ today }) => {
                 tone: 'warning' as const,
                 icon: 'checklist' as const,
                 title: t.attention.todosWaiting(overdue),
-                detail: t.attention.todosWaitingDetail,
+                ...(plannerOn ? {} : { detail: t.attention.todosWaitingDetail }),
                 to: '/todos',
                 rank: 2,
               }

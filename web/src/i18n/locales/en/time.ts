@@ -5,4 +5,7 @@ export const time: Strings['time'] = {
   overdueSince: (days: number) => (days === 1 ? 'overdue since yesterday' : `${days} days overdue`),
   atClock: (time: string) => `${time}`,
   startsFrom: (date: string, time: string) => `from ${date}, ${time}`,
+  duration: (h: number, m: number) => (h > 0 ? `${h} h ${m} min` : `${m} min`),
+  durationCompact: (h: number, m: number) =>
+    h > 0 ? (m > 0 ? `${h} h ${m}` : `${h} h`) : `${m} min`,
 };

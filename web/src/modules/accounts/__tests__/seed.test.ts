@@ -42,7 +42,7 @@ describe('accounts seed', () => {
   });
 
   it('creates a demo vault whose entries decrypt with the passphrase', async () => {
-    const created = await seedModule.afterSeed!(ctx);
+    const created = await seedModule.afterSeed!({ ...ctx, seeded: async () => [] });
     expect(created).toHaveLength(2);
     expect(created![0]).toEqual({ collection: 'vault', ids: ['vault'] });
     expect(created![1]!.ids).toHaveLength(DEMO_ENTRIES.length);
@@ -64,7 +64,7 @@ describe('accounts seed', () => {
     await createVault('Eigenes-Master-Passwort', { m: 64, t: 1, p: 1 });
     const before = await vaultRepo.get('vault');
     lockVault();
-    expect(await seedModule.afterSeed!(ctx)).toEqual([]);
+    expect(await seedModule.afterSeed!({ ...ctx, seeded: async () => [] })).toEqual([]);
     expect(await vaultRepo.get('vault')).toEqual(before);
     expect(await entryRepo.active().count()).toBe(0);
   });

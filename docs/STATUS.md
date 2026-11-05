@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Planer, Paket 1 (`feat/plan-core`, PR offen): Engine `core/plan` (fünf Prototyp-Fixtures, Fixpunkt), Vertrag `contributions.plannable`, Modul `planner` (Wochenbrett, Tageszettel, „Woche prüfen“, Widget Wochenlast, Seed), ToDos als Quelle mit `planMark`; Kern: `ignoreFields`, `module.disabling`, `syncSettled()`, `formatMinutes`. Pakete 2–5 folgen nach dem Merge.
+
 Identität v3.1, Paket 3 Dieser PC (`feat/identity-v3-disk`, PR offen): Kopf `fortschritt` mit belegtem Platz des Systemlaufwerks, Zustand als Badge und Laufwerks-Ringen im Slot M; Widget-Ringe in der Modulfarbe; Baumkarten-Palette auf `--mod-*`/Zustands-Tokens statt Hex; Downloads mit `ArrowBand` aus der Bibliothek.
 
 Identität v3.1, Paket 2 (`feat/identity-v3-household-knowledge-fix`, PR offen): elf Module auf dem v3.1-Rahmen mit Bausteinen aus `@/ui/identity` (keine Modul-Kopien), E-Mail auf Papier mit Briefmarke und einem Widget „Posteingang“, Unterlagen mit Ordnerreitern je Zustand, Leerzustände auf `EmptyState motif` mit einem Verb (Import/Einrichtung im ⋯-Menü, `core/importer/StartDataMenu`), Kalender ohne Unterlagen-Titel, abgelaufen = Warnung.

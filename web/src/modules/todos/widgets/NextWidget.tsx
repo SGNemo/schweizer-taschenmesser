@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/state';
 import { useNow } from '@/core/focus/useNow';
+import { useModuleStates } from '@/core/modules/activation';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
@@ -15,6 +16,7 @@ import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
 import { listRepo, setDone, taskRepo } from '../repo';
 import { postponePatch } from '../postpone';
+import { userPlannedFor } from '../views';
 import { buildToday } from '../today';
 import styles from './NextWidget.module.css';
 
@@ -50,6 +52,10 @@ export default function NextWidget() {
     () => (tasks ?? []) as (PickTask & { title: string; listId: string })[],
     [tasks],
   );
+  // Unknown on the first render: honour the marks, so the card does not reorder once the states arrive
+  // (while the planner is off its marks are cleaned away anyway).
+  const states = useModuleStates();
+  const plannerOn = states === undefined || states.planner === true;
   const { next, plan, planRows, until } = buildToday({
     tasks: all,
     items: items ?? [],
@@ -58,6 +64,8 @@ export default function NextWidget() {
     skipped: skipped ?? [],
     planLimit: settings.planLimit,
     showNext: settings.nextOne,
+    // The planner's order counts only while the planner is on (CONCEPT §2: inactive = the mark is ignored).
+    planMarks: plannerOn,
   });
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
@@ -85,7 +93,7 @@ export default function NextWidget() {
   };
   const wrapUp = () =>
     undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
-      for (const x of left) await taskRepo.update(x.id, { plannedFor: addDaysStr(day, 1) });
+      for (const x of left) await taskRepo.update(x.id, userPlannedFor(x, addDaysStr(day, 1)));
     });
   const toggle = (id: string, done: boolean) => {
     const task = all.find((x) => x.id === id);
@@ -272,7 +280,7 @@ export default function NextWidget() {
                   <Button
                     onClick={() => {
                       void undoableWithToast(t.focus.plan.planned, t.focus.plan.planned, () =>
-                        taskRepo.update(o.id, { plannedFor: day }),
+                        taskRepo.update(o.id, userPlannedFor(o, day)),
                       );
                       if (plan.free <= 1) setChoosing(false);
                     }}

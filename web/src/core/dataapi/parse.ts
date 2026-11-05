@@ -247,7 +247,9 @@ export async function buildCandidates(
       if ((META_KEYS.includes(name) && !own) || name === 'id' || value === undefined) continue;
       const field = format.fields.find((f) => f.name === name);
       if (!field) {
-        errors.push(t.dataApi.unknownField(name));
+        // Technical fields (`order`, `.meta({ internal: true })` such as a ToDo's `planMark`) are not part
+        // of the format: a sender that carries one gets it stripped, never stored.
+        if (!format.internal.includes(name)) errors.push(t.dataApi.unknownField(name));
         continue;
       }
       if (value === null) {

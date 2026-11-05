@@ -11,6 +11,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | Area | Module | What it does | Status |
 |---|---|---|---|
 | **Plan** | Calendar | Events in month, week and day view | on by default |
+|  | Planner | Spreads your open to-dos over the coming days | preview |
 |  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
 |  | Habits | Daily and weekly goals with rings | optional |
 |  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |

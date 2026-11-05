@@ -370,3 +370,33 @@
 }
 
 /* "Ruhig" / module colours off: every block is grey (the hue is --text-3 then); paper stays paper. */
+
+/* weekBars: the seven days of a week as bars on one baseline; filled from the module hue, the track from the paper. */
+.weekBars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  width: 11rem;
+  height: 3.5rem;
+  padding: 0 var(--space-1);
+  border-bottom: 2px solid color-mix(in srgb, var(--module-color) 45%, var(--paper));
+}
+.weekBar {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  background: color-mix(in srgb, var(--module-color) 14%, var(--paper));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  overflow: hidden;
+}
+.weekBar i {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: block;
+  background: var(--module-color);
+}
+.weekBars[data-size='L'] {
+  width: 100%;
+  max-width: 24rem;
+  height: 4.5rem;
+}
