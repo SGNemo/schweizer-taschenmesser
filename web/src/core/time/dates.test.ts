@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, humanDateHint, relativeDayLabel, startOfWeekStr, toEpoch } from './dates';
+import {
+  formatDateTime,
+  humanDateHint,
+  isCalendarDate,
+  relativeDayLabel,
+  startOfWeekStr,
+  toEpoch,
+} from './dates';
 
 describe('formatDateTime', () => {
   it('takes day and time from the same local clock (no UTC day around midnight)', () => {
@@ -36,5 +43,25 @@ describe('humanDateHint', () => {
     expect(humanDateHint('2026-09-28', ref)).toBe('Montag, gestern');
     expect(humanDateHint('2026-10-05', ref)).toBe('Montag, in 6 Tagen');
     expect(humanDateHint('2026-09-27', ref)).toBe('Sonntag, vor 2 Tagen');
+  });
+});
+
+describe('isCalendarDate (X19)', () => {
+  it('accepts real calendar dates only', () => {
+    for (const ok of ['2026-02-28', '2028-02-29', '2000-02-29', '2026-12-31', '0999-01-01'])
+      expect(isCalendarDate(ok), ok).toBe(true);
+    for (const bad of [
+      '2026-02-30',
+      '2026-11-31',
+      '2026-02-29',
+      '1900-02-29',
+      '2026-13-01',
+      '2026-00-10',
+      '2026-01-00',
+      '2026-1-5',
+      '5.1.2026',
+      '',
+    ])
+      expect(isCalendarDate(bad), bad).toBe(false);
   });
 });
