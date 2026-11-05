@@ -7,6 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
+| [PR #477](https://github.com/SGNemo/schweizer-taschenmesser/pull/477): Dieser PC – Scan blockiert nichts mehr, Karte und Liste wachsen während des Scans | ansehen, mergen; Handtest D18 in [MANUAL-TESTS](MANUAL-TESTS.md) auf Windows (C:\ scannen, zum Kalender und zurück, Pause, Abbrechen, Zeile auf der Laufwerke-Seite) |
 | PR `review/identity-v3-audit`: Identity-v3-Gesamtabnahme (Audit, Council, vier Fix-Pakete) | ansehen, mergen; danach die vier Pakete aus [design/identity-v3-audit/02-packages.md](design/identity-v3-audit/02-packages.md) Teil B starten: erst `feat/identity-v3-frame` (Fundament), dann parallel Planen+Geld, Haushalt/Tresor/Wissen/Medien, Dieser PC; Frage in Paket 2: Dokumenttitel in der Übersichts-Agenda (Empfehlung: ohne) |
 | [PR #414](https://github.com/SGNemo/schweizer-taschenmesser/pull/414): Fundament v3 (Rahmen, Sidebar, Übersichtskopf, Kopf-/Widget-Varianten, Palette v3; alle drei Runden) | PR reviewen und mergen (Draft-Status aufheben); Handtest: Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy; danach sind die Hotspots (`ui/tokens.css`, `layout/*`) frei und die Modul-Chats bauen ihre Seiten um ([scribble/feat-identity-v3-foundation.md](../scribble/feat-identity-v3-foundation.md)) |
 | Anonyme Persona (#372, #381 gemergt) | Handtests AP1–AP6 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung, „Im Tresor speichern“) |
