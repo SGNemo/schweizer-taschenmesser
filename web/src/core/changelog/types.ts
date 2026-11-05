@@ -18,6 +18,8 @@ export interface ChangelogVersion {
   /** 'YYYY-MM-DD'; '' for unreleased. */
   date: string;
   entries: ChangelogEntry[];
+  /** Preview only (`unreleased`): every build number since the oldest open note, newest first. */
+  builds?: number[];
 }
 export interface ChangelogData {
   areas: Record<string, { de: string; en: string }>;
