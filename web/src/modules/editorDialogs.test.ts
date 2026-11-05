@@ -11,13 +11,13 @@ it('every editor dialog asks before throwing typed input away (or keeps a draft)
   const missing: string[] = [];
   for (const mod of readdirSync(root, { withFileTypes: true })) {
     if (!mod.isDirectory()) continue;
-    let files: string[] = [];
+    let files: string[];
     try {
       files = readdirSync(join(root, mod.name, 'components')).filter((f) =>
         /Editor.*\.tsx$/.test(f),
       );
     } catch {
-      continue;
+      continue; // a module without components
     }
     for (const f of files) {
       if (f.endsWith('.test.tsx')) continue;
