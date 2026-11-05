@@ -59,6 +59,31 @@ export async function commitImport(
   const updates: BatchUpdate[] = [];
   let conflicts = 0;
   const deletes: NonNullable<ImportBatch['deletes']> = [];
+
+  // The batch row is written first, with the ids about to be created (only those that do not exist
+  // yet), so an import cut off half way (tab closed) can still be undone; it is completed below.
+  const before = await table(database).get(args.batchId);
+  const planned: ImportBatch['records'] = [];
+  for (const [collection, items] of byCollection) {
+    if (!manifest.dataSchema.collections[collection]) throw new ImportError('unknown-collection');
+    const repo = createCollectionRepo(manifest, collection, database);
+    const existing = await repo.table.bulkGet(items.map((i) => i.id));
+    planned.push({ collection, ids: items.filter((_, i) => !existing[i]).map((i) => i.id) });
+  }
+  const startedAt = now();
+  await table(database).put({
+    ...args.base,
+    id: args.batchId,
+    moduleId: manifest.id,
+    importerId: args.importerId,
+    source: args.source,
+    createdAt: args.base?.createdAt ?? startedAt,
+    committedAt: startedAt,
+    records: planned,
+    status: 'committed',
+    rows: undefined,
+  });
+
   // A failure half way must not leave a half import: what this call wrote is taken back again.
   try {
     await writeAll();
@@ -68,6 +93,8 @@ export async function commitImport(
         .removeMany(ids)
         .catch(() => {});
     }
+    if (before) await table(database).put(before);
+    else await table(database).delete(args.batchId);
     throw e;
   }
 
