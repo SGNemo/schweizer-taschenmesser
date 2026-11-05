@@ -85,6 +85,20 @@ describe('CaptureForm', () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
+  it('shows a foreign amount and sends it to the full form instead of the euro account (X21)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Ausgabe 12 USD Kaffee');
+    await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.currency('USD')));
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      t.quickCapture.errors.currency('USD'),
+    );
+    expect(screen.queryByTestId('capture-draft')).not.toBeInTheDocument();
+    expect(await db.table('finance_transaction').count()).toBe(0);
+  });
+
   it('closes with Escape', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();

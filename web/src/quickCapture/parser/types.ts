@@ -42,6 +42,8 @@ export interface CaptureFields {
   recurrence?: CaptureRecurrence;
   /** Integer cents, always positive; `kind` gives the direction. */
   amountMinor?: number;
+  /** ISO 4217 code of an amount in another currency ("12 USD", "¥500"); absent means euro. */
+  currency?: string;
   kind?: 'expense' | 'income';
   url?: string;
   /** Effort in minutes; only set for ToDos ("Formular ausfüllen 15 min"). */

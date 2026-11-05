@@ -251,6 +251,11 @@ describe('targets, changes and deletions', () => {
     expect(await parseWrite('Rechnung Strom 120 € fällig 30.11.', rules())).toBeDefined();
   });
 
+  it('proposes nothing for an amount in another currency (X21)', async () => {
+    expect(await parseWrite('Ausgabe 12 USD Kaffee', rules())).toBeUndefined();
+    expect(await parseWrite('Ausgabe 12 € Kaffee', rules())).toBeDefined();
+  });
+
   it('shows what a deletion removes and undoes it', async () => {
     const proposal = await parseWrite('Lösche die Aufgabe Milch kaufen', rules());
     expect(proposal?.ops[0]).toMatchObject({ module: 'todos', action: 'delete' });

@@ -8,6 +8,28 @@ const AFTER = new RegExp(
   'iu',
 );
 const BEFORE = new RegExp(String.raw`(?<![\p{L}\d])(?:${CUR})\s?(${NUM})(?![\d])`, 'iu');
+/** Other currencies by symbol, ISO code or word ("12 USD", "¥500", "20 Dollar"); never converted. */
+const FOREIGN: Record<string, string> = {
+  $: 'USD',
+  '£': 'GBP',
+  '¥': 'JPY',
+  dollar: 'USD',
+  dollars: 'USD',
+  franken: 'CHF',
+  yen: 'JPY',
+};
+const FOREIGN_CODES = ['USD', 'GBP', 'CHF', 'JPY', 'MXN', 'BRL', 'CAD', 'AUD', 'CNY'];
+const FOREIGN_SRC = String.raw`[$£¥]|(?:${FOREIGN_CODES.join('|')}|dollars?|franken|yen)(?![\p{L}\d])`;
+const FOREIGN_AFTER = new RegExp(
+  String.raw`(?<![\d.,])((?<![\p{L}\d])[+-])?\s?(${NUM})\s?(${FOREIGN_SRC})`,
+  'iu',
+);
+const FOREIGN_BEFORE = new RegExp(
+  String.raw`(?<![\p{L}\d])(${FOREIGN_SRC})\s?(${NUM})(?![\d])`,
+  'iu',
+);
+const currencyOf = (marker: string): string =>
+  FOREIGN[marker.toLowerCase()] ?? marker.toUpperCase();
 const BARE = new RegExp(String.raw`(?<![\d.,:])((?<![\p{L}\d])[+-])?(${NUM})(?![\d.,:])`, 'u');
 /** A number with decimal comma and no currency word: "12,99" next to "monatlich". */
 const BARE_DECIMAL = /(?<![\d.,:])(\d{1,3}(?:\.\d{3})*,\d{1,2}|\d+,\d{1,2})(?![\d.,:])/u;
@@ -28,10 +50,13 @@ export function toCents(num: string): number | undefined {
 export interface AmountMatch {
   amountMinor: number;
   kind: 'expense' | 'income';
+  /** ISO 4217 code of an amount in another currency; absent for the euro. */
+  currency?: string;
 }
 
 /**
- * Finds an amount. A currency marker (€, EUR, Euro) is required; with `allowBare` (finance prefix)
+ * Finds an amount. A currency marker (€, EUR, Euro, or another currency such as "12 USD", "¥500")
+ * is required; with `allowBare` (finance prefix)
  * the first stand-alone number counts too; `'decimal'` only accepts one with a decimal comma. Call it after dates and times were removed from `s`.
  */
 export function extractAmount(s: Scan, allowBare: boolean | 'decimal'): AmountMatch | undefined {
@@ -42,6 +67,18 @@ export function extractAmount(s: Scan, allowBare: boolean | 'decimal'): AmountMa
   if (!m) {
     m = take(s, BEFORE);
     num = m?.[1];
+  }
+  let currency: string | undefined;
+  if (!m) {
+    m = take(s, FOREIGN_AFTER);
+    sign = m?.[1];
+    num = m?.[2];
+    if (m) currency = currencyOf(m[3]!);
+  }
+  if (!m) {
+    m = take(s, FOREIGN_BEFORE);
+    num = m?.[2];
+    if (m) currency = currencyOf(m[1]!);
   }
   if (!m && allowBare === 'decimal') {
     m = take(s, BARE_DECIMAL);
@@ -57,5 +94,5 @@ export function extractAmount(s: Scan, allowBare: boolean | 'decimal'): AmountMa
     return undefined;
   }
   const income = sign === '+' || INCOME.test(original);
-  return { amountMinor, kind: income ? 'income' : 'expense' };
+  return { amountMinor, kind: income ? 'income' : 'expense', ...(currency ? { currency } : {}) };
 }

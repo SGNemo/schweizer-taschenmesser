@@ -171,6 +171,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (money) {
     fields.amountMinor = money.amountMinor;
     fields.kind = kw.income ? 'income' : money.kind;
+    if (money.currency) fields.currency = money.currency;
   }
   dt.notes.forEach((n) => notes.add(n));
   if (endTime && dt.time !== undefined) fields.endTime = endTime;

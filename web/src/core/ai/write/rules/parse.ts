@@ -293,7 +293,10 @@ async function segmentToOp(
   const hasCreateVerb = words.some((w) => isCreateWord(w.n));
   const now = ctx.now;
   // "fällig 31.11.": a date that does not exist is no rule answer; never fall back to today (X20).
-  if (extractFacts(segment, { now }).notes.includes('invalid-date')) return undefined;
+  const check = extractFacts(segment, { now });
+  if (check.notes.includes('invalid-date')) return undefined;
+  // "12 USD": a booking in another currency is no rule answer, never euro in the main account (X21).
+  if (check.currency) return undefined;
 
   const dropVerbs = (list: Word[], verbs: readonly string[]): Word[] =>
     list.filter((w) => !startsWithAny(w, verbs));

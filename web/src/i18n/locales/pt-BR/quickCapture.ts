@@ -39,6 +39,7 @@ export const quickCapture: Strings['quickCapture'] = {
     approxTime: 'Horário aproximado',
     ambiguousTime: 'Verifique o horário',
     invalidDate: 'Essa data não existe – verifique',
+    currency: (code: string) => `Valor em ${code}`,
     allDay: 'dia inteiro',
     income: 'Receita',
     expense: 'Despesa',
@@ -81,6 +82,8 @@ export const quickCapture: Strings['quickCapture'] = {
   errors: {
     moduleOff: (name: string) => `O módulo “${name}” está desativado.`,
     invalid: 'O registro está incompleto. Verifique título, data e valor.',
+    currency: (code: string) =>
+      `Valor em ${code}: lance no formulário completo de Finanças, onde a conta combina.`,
     failed: 'Falha ao salvar.',
   },
   todoTimeNote: (time: string) => `Horário: ${time}`,

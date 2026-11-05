@@ -164,3 +164,35 @@ describe('"alle 0 Tage" is no rule (X33)', () => {
     expect(parse('Gießen alle 2 Tage').fields.recurrence).toEqual({ freq: 'daily', interval: 2 });
   });
 });
+
+describe('amounts in another currency keep their code (X21)', () => {
+  it.each([
+    ['Ausgabe 12 USD Kaffee', 1200, 'USD', 'Kaffee'],
+    ['Ausgabe ¥500 Ramen', 50000, 'JPY', 'Ramen'],
+    ['Kaffee $12', 1200, 'USD', 'Kaffee'],
+    ['Parken 12 CHF', 1200, 'CHF', 'Parken'],
+    ['Taxi 8,50 £', 850, 'GBP', 'Taxi'],
+    ['Museum 20 Dollar', 2000, 'USD', 'Museum'],
+  ])('%s', (text, cents, currency, title) => {
+    const r = parse(text);
+    expect(r.fields).toMatchObject({ amountMinor: cents, currency, title });
+  });
+
+  it('the euro, EUR, Euro and no marker stay as they are', () => {
+    for (const text of [
+      'Kaffee 12 €',
+      'Kaffee 12 EUR',
+      'Kaffee 12 Euro',
+      '$12 Kaffee',
+      '$ 12 Kaffee',
+    ]) {
+      const r = parse(text);
+      expect(r.fields.amountMinor, text).toBe(1200);
+      expect(r.fields.currency, text).toBeUndefined();
+    }
+  });
+
+  it('does not read seconds or plain words as a currency', () => {
+    expect(parse('Plank 30 sek').fields.amountMinor).toBeUndefined();
+  });
+});

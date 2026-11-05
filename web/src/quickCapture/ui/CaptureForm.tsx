@@ -44,6 +44,7 @@ function errorText(e: unknown): string {
   if (e instanceof CaptureError) {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
+    if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
   }
   return t.quickCapture.errors.failed;
 }
