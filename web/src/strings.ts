@@ -4432,6 +4432,9 @@ export const de = {
       historyHint: 'Verlauf seit App-Start – er wird nicht gespeichert.',
       io: (read: string, write: string) => `Lesen ${read} · Schreiben ${write}`,
       model: 'Modell',
+      details: 'Details',
+      temperatureLabel: 'Temperatur',
+      ioLabel: 'Aktivität',
     },
     quick: {
       title: 'Schnellübersicht',
@@ -4755,6 +4758,8 @@ export const de = {
         n === 1 ? '1 Eintrag wird noch gezählt.' : `${n} Einträge werden noch gezählt.`,
       endedOf: (root: string) => `Scan von ${root} beendet`,
       cancelledOf: (root: string) => `Scan von ${root} abgebrochen`,
+      endedShort: 'Scan beendet',
+      cancelledShort: 'Scan abgebrochen',
       liveMapLabel: (n: number) =>
         n === 1
           ? 'Kartenansicht des laufenden Scans mit 1 Eintrag.'

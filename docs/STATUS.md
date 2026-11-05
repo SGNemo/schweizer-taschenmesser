@@ -31,6 +31,8 @@ Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Dieser PC – Laufwerke-Seite aufgeräumt (`feat/disk-drives-calm`, Rückmeldung des Maintainers nach #477): Karten mit Ring, Name, einer Zahlen-, einer Hinweis- und einer Typzeile, Zustand/Verlauf/Aktivität gefaltet unter „Details“, zwei gleich hohe Spalten, Scan-Zeile in der Karte des Laufwerks, Schnellübersicht als Liste; Kopf-Figur und Ring-Signatur bleiben Paket 3 nach dem v3.1-Fundament; PR gegen `develop`.
+
 Dieser PC – Scan blockiert nichts mehr (`fix/disk-scan-live`): eine ruhige Statuszeile mit Pause/Abbrechen statt Balken und Zählern (auch auf der Laufwerke-Seite), Karte und Ordnerliste wachsen alle 1,5 s während des Scans, unfertige Ordner sind als „zählt noch“ markiert, Wegnavigieren und Zurück zeigt den Stand sofort; Poll statt Event nach Messung ([features/disk-live-scan.md](features/disk-live-scan.md)); PR gegen `develop`; Handtest D18 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).

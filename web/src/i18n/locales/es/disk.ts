@@ -66,6 +66,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'Historial desde que se abrió la app; no se guarda.',
     io: (read: string, write: string) => `Lectura ${read} · Escritura ${write}`,
     model: 'Modelo',
+    details: 'Detalles',
+    temperatureLabel: 'Temperatura',
+    ioLabel: 'Actividad',
   },
   quick: {
     title: 'Vista rápida',
@@ -386,6 +389,8 @@ export const disk: Strings['disk'] = {
       n === 1 ? 'Aún se está contando 1 entrada.' : `Aún se están contando ${n} entradas.`,
     endedOf: (root: string) => `Análisis de ${root} terminado`,
     cancelledOf: (root: string) => `Análisis de ${root} cancelado`,
+    endedShort: 'Análisis terminado',
+    cancelledShort: 'Análisis cancelado',
     liveMapLabel: (n: number) =>
       n === 1
         ? 'Vista de mapa del análisis en curso con 1 entrada.'

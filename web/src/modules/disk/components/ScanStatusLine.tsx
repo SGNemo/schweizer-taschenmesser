@@ -16,6 +16,8 @@ interface Props {
   linkText?: string;
   /** Pause and Abbrechen while the scan runs; left out once it ended. */
   actions?: { paused: boolean; onPause: () => void; onCancel: () => void };
+  /** Without its own card: the line sits inside a drive card. */
+  inline?: boolean;
 }
 
 /** "bisher 312.000 Dateien, 210 GB" (read at render time). */
@@ -29,7 +31,7 @@ export const soFarOf = (p: ScanProgress | null): string | undefined =>
  * element for the running and the ended scan, so the state changes inside a status region that
  * is already there; after the user's own Abbrechen the focus moves on to the link.
  */
-export function ScanStatusLine({ state, detail, to, linkText, actions }: Props) {
+export function ScanStatusLine({ state, detail, to, linkText, actions, inline = false }: Props) {
   const link = useRef<HTMLAnchorElement>(null);
   const cancelledHere = useRef(false);
   useEffect(() => {
@@ -38,8 +40,8 @@ export function ScanStatusLine({ state, detail, to, linkText, actions }: Props) 
       link.current?.focus();
     }
   }, [actions]);
-  return (
-    <Card as="div" className={styles.card} data-testid="scan-status">
+  const body = (
+    <>
       <p className={styles.text}>
         <strong role="status">{state}</strong>
         {detail ? <span className={styles.muted}> · {detail}</span> : null}
@@ -69,6 +71,15 @@ export function ScanStatusLine({ state, detail, to, linkText, actions }: Props) 
           </Button>
         </div>
       ) : null}
+    </>
+  );
+  return inline ? (
+    <div className={styles.inline} data-testid="scan-status">
+      {body}
+    </div>
+  ) : (
+    <Card as="div" className={styles.card} data-testid="scan-status">
+      {body}
     </Card>
   );
 }

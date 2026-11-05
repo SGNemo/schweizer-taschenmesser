@@ -10,8 +10,8 @@ import styles from '../routes/DrivesPage.module.css';
 
 /**
  * "Schnellübersicht": what can be tidied without a new scan – the known clean-up places with their
- * sizes, the recycle bin and the biggest folders of this session's last scan. Sizes are rough; the
- * way to delete stays the scan with its block list and confirmation.
+ * sizes and the recycle bin as one compact list, plus the biggest folders of this session's last
+ * scan. Sizes are rough; the way to delete stays the scan with its block list and confirmation.
  */
 export function QuickOverview({ onScan }: { onScan: (path: string) => void }) {
   const [places, setPlaces] = useState<PlaceSize[] | null>(null);
@@ -63,30 +63,42 @@ export function QuickOverview({ onScan }: { onScan: (path: string) => void }) {
     <section className={styles.places} aria-label={t.disk.places.title}>
       <h2>{q.title}</h2>
       <p className={styles.lead}>{q.lead}</p>
-      <ul className={styles.grid}>
-        {(places ?? []).map((p) => (
-          <li key={p.path}>
-            <Card className={styles.placeCard}>
-              <span className={styles.name}>{t.disk.places.name[p.id]}</span>
-              <span className={styles.size}>{sizeText(p)}</span>
-              <span className={styles.path}>{p.path}</span>
-              <span className={styles.meta}>{t.disk.places.hint[p.id]}</span>
-              <Button variant="secondary" onClick={() => onScan(p.path)}>
-                {t.disk.places.scan(t.disk.places.name[p.id]!)}
-              </Button>
-            </Card>
-          </li>
-        ))}
-        {recycle !== null ? (
-          <li>
-            <Card className={styles.placeCard}>
-              <span className={styles.name}>{q.recycle}</span>
-              <span className={styles.size}>{formatCapacity(recycle)}</span>
-              <span className={styles.meta}>{q.recycleHint}</span>
-            </Card>
-          </li>
-        ) : null}
-      </ul>
+      {hasPlaces || recycle !== null ? (
+        <Card>
+          <ul className={styles.placeList}>
+            {(places ?? []).map((p) => {
+              const name = t.disk.places.name[p.id]!;
+              return (
+                <li key={p.path} className={styles.placeRow}>
+                  <div className={styles.placeText}>
+                    <span className={styles.placeName} title={p.path}>
+                      {name}
+                    </span>
+                    <span className={styles.meta}>{t.disk.places.hint[p.id]}</span>
+                  </div>
+                  <span className={styles.placeSize}>{sizeText(p)}</span>
+                  <Button
+                    variant="secondary"
+                    aria-label={t.disk.places.scan(name)}
+                    onClick={() => onScan(p.path)}
+                  >
+                    {t.disk.card.scan}
+                  </Button>
+                </li>
+              );
+            })}
+            {recycle !== null ? (
+              <li className={styles.placeRow}>
+                <div className={styles.placeText}>
+                  <span className={styles.placeName}>{q.recycle}</span>
+                  <span className={styles.meta}>{q.recycleHint}</span>
+                </div>
+                <span className={styles.placeSize}>{formatCapacity(recycle)}</span>
+              </li>
+            ) : null}
+          </ul>
+        </Card>
+      ) : null}
       {biggest.length > 0 ? (
         <Card title={q.biggest} className={styles.biggest}>
           <p className={styles.meta}>{q.biggestHint}</p>
