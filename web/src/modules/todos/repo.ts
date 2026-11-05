@@ -55,12 +55,7 @@ export async function setDone(task: Stored<Task>, done: boolean): Promise<void> 
     const subs = (await taskRepo.table.where('parentId').equals(task.id).toArray()).filter(
       (s) => s.deletedAt === null,
     );
-    // Reopening tombstoned the next instance (same ids); `createMany` skips existing ids, so bring
-    // them back here, otherwise ticking off again would end the series.
-    const nextIds = [nextId, ...subs.map((s) => `${s.id.split(':')[0]}:${nextDue}`)];
-    for (const row of await taskRepo.table.bulkGet(nextIds))
-      if (row && row.deletedAt !== null) await taskRepo.restore(row.id);
-    await taskRepo.createMany([
+    const items = [
       {
         id: nextId,
         data: {
@@ -89,7 +84,16 @@ export async function setDone(task: Stored<Task>, done: boolean): Promise<void> 
           order: s.order,
         },
       })),
-    ]);
+    ];
+    // Reopening tombstoned the next instance (same ids) and `createMany` skips existing ids: bring
+    // them back with today's values, otherwise ticking off again would end the series.
+    const stored = await taskRepo.table.bulkGet(items.map((i) => i.id));
+    for (const [i, row] of stored.entries()) {
+      if (!row || row.deletedAt === null) continue;
+      await taskRepo.restore(row.id);
+      await taskRepo.update(row.id, items[i]!.data);
+    }
+    await taskRepo.createMany(items);
   } else {
     const next = await taskRepo.get(nextId);
     if (next && !next.done) await deleteTask(nextId);

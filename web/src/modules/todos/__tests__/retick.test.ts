@@ -27,3 +27,21 @@ it('tick, reopen, tick again keeps the series going (with its subtasks)', async 
   const subs = (await taskRepo.active().toArray()).filter((s) => s.parentId === next?.id);
   expect(subs.map((s) => s.title)).toEqual(['Balkon']);
 });
+
+it('ticking off again after a fix in between carries the fixed values to the next instance', async () => {
+  const t = await taskRepo.create({
+    ...base,
+    title: 'Blumen gieen',
+    dueDate: '2026-11-05',
+    recurrence: { freq: 'weekly', interval: 1 },
+  });
+  await setDone(t, true);
+  await setDone((await taskRepo.get(t.id))!, false);
+  await taskRepo.update(t.id, { title: 'Blumen gießen', priority: 3 });
+  await setDone((await taskRepo.get(t.id))!, true);
+  expect(await taskRepo.get(`${t.id}:2026-11-12`)).toMatchObject({
+    title: 'Blumen gießen',
+    priority: 3,
+    done: false,
+  });
+});
