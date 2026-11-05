@@ -157,7 +157,7 @@ test.describe('Calendar', () => {
     await page.getByRole('button', { name: 'Woche' }).click();
     await expect(page.getByRole('heading', { name: /KW 40/ })).toBeVisible();
     await expect(calendarEntry(page, /Zahnarzt/)).toBeVisible();
-    await page.getByRole('button', { name: 'Weiter' }).click();
+    await page.getByRole('button', { name: 'Weiter', exact: true }).click();
     await expect(page.getByRole('heading', { name: /KW 41/ })).toBeVisible();
     await expect(calendarEntry(page, /Zahnarzt/)).toHaveCount(0);
     await page.getByRole('button', { name: 'Heute', exact: true }).click();
@@ -179,7 +179,7 @@ test.describe('Calendar', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await expect(calendarEntry(page, /Sport/)).toHaveCount(1);
-    await page.getByRole('button', { name: 'Weiter' }).click();
+    await page.getByRole('button', { name: 'Weiter', exact: true }).click();
     await expect(calendarEntry(page, /Sport/)).toHaveCount(1); // next week again
 
     await calendarEntry(page, /Sport/).click();
