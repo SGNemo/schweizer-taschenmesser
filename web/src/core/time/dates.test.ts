@@ -81,6 +81,8 @@ describe('years before 1000', () => {
     const d = parseDate('2026-01-01');
     d.setFullYear(5, 6, 7);
     expect(toDateString(d)).toBe('0005-07-07');
+  });
+});
 
 describe('isCalendarDate (X19)', () => {
   it('accepts real calendar dates only', () => {
