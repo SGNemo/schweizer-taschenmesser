@@ -68,7 +68,7 @@ test.describe('Chat', () => {
     ]);
     await setUp(page);
     await page.goto('/chat');
-    await page.getByRole('button', { name: 'Chat starten' }).click();
+    await page.getByRole('button', { name: 'Neuer Chat' }).click();
 
     const input = page.getByPlaceholder('Nachricht schreiben …');
     await input.fill('Plane meine Woche');

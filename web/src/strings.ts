@@ -6354,7 +6354,6 @@ export const de = {
     chats: 'Chats',
     search: 'Chats durchsuchen',
     empty: 'Noch kein Chat. Stell eine Frage – nichts wird gespeichert, bevor du sendest.',
-    emptyAction: 'Chat starten',
     noThread: 'Wähle links einen Chat oder starte einen neuen.',
     back: 'Zur Chat-Liste',
     placeholder: 'Nachricht schreiben …',

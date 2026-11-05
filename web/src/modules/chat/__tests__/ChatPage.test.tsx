@@ -41,10 +41,23 @@ const view = (path = '/chat') =>
   );
 
 describe('ChatPage', () => {
-  it('starts with an empty state and a way to begin', async () => {
+  it('starts with an empty state and one way to begin: the toolbar, not a second button (C23)', async () => {
     view();
     expect(await screen.findByText(c.empty)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: c.emptyAction })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: new RegExp(c.newChat) })).toHaveLength(1);
+  });
+
+  it('steps „Neuer Chat“ back while the setup hint is the one action (C23)', async () => {
+    setPlatform({
+      ...createWebPlatform(),
+      localModel: createFakeLocalModel({ models: [], answer: () => '' }),
+    });
+    view();
+    const hint = await screen.findByTestId('chat-setup-hint');
+    expect(within(hint).getByRole('button', { name: c.setup.openLocal })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(c.newChat) }).className).not.toMatch(
+      /primary/,
+    );
   });
 
   it('points to the local model download until a model or provider is set up', async () => {
