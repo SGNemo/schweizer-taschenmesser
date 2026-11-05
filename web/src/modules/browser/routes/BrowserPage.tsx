@@ -9,13 +9,21 @@ import { useSettings } from '@/core/settings/settings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, ItemList, ItemRow, PageTitle, TextField } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  IconButton,
+  ItemList,
+  ItemRow,
+  PageTitle,
+  TextField,
+} from '@/ui';
 import { ReaderPanel } from '../components/ReaderPanel';
 import { TabOverview } from '../components/TabOverview';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
-import { AddressBarSignature } from '../components/AddressBarSignature';
-import { BrowserEmpty } from '../components/BrowserEmpty';
+import { AddressBar, HeroSlot, SignatureMark } from '@/ui/identity';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
@@ -176,9 +184,13 @@ export default function BrowserPage() {
     return (
       <>
         <PageTitle title={t.browser.meta.name} />
-        <BrowserEmpty title={t.browser.unsupported.title}>
+        <EmptyState
+          title={t.browser.unsupported.title}
+          testId="browser-empty"
+          motif={<SignatureMark id="addressBar" size={64} />}
+        >
           {t.browser.unsupported.body}
-        </BrowserEmpty>
+        </EmptyState>
       </>
     );
   }
@@ -190,7 +202,14 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
-      <AddressBarSignature host={tab?.isPrivate ? undefined : hostOf(current) || undefined} />
+      {/* Signature (slot S): the host of the open page or the prompt, never a full address or query. */}
+      <HeroSlot area="signature">
+        <span data-testid="address-bar-signature">
+          <AddressBar>
+            {(tab?.isPrivate ? undefined : hostOf(current)) || t.browser.toolbar.address}
+          </AddressBar>
+        </span>
+      </HeroSlot>
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
