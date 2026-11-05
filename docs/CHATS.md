@@ -7,6 +7,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was | Was zu tun ist |
 |---|---|
+| PR `design/site-identity-v3`: Website auf Identity v3.1, Paket 1 | reviewen, mergen (`no-changelog`); Paket 2 (Screenshots, OG-Bild) nach Identity-Paket 0–3 |
 | PR `review/identity-v3-audit`: Identity-v3-Gesamtabnahme (Audit, Council, vier Fix-Pakete) | ansehen, mergen; danach die vier Pakete aus [design/identity-v3-audit/02-packages.md](design/identity-v3-audit/02-packages.md) Teil B starten: erst `feat/identity-v3-frame` (Fundament), dann parallel Planen+Geld, Haushalt/Tresor/Wissen/Medien, Dieser PC; Frage in Paket 2: Dokumenttitel in der Übersichts-Agenda (Empfehlung: ohne) |
 | [PR #414](https://github.com/SGNemo/schweizer-taschenmesser/pull/414): Fundament v3 (Rahmen, Sidebar, Übersichtskopf, Kopf-/Widget-Varianten, Palette v3; alle drei Runden) | PR reviewen und mergen (Draft-Status aufheben); Handtest: Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy; danach sind die Hotspots (`ui/tokens.css`, `layout/*`) frei und die Modul-Chats bauen ihre Seiten um ([scribble/feat-identity-v3-foundation.md](../scribble/feat-identity-v3-foundation.md)) |
 | Anonyme Persona (#372, #381 gemergt) | Handtests AP1–AP6 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung, „Im Tresor speichern“) |
@@ -23,7 +24,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 ## Läuft gerade (Running work)
 | Topic | Branch | Area / files | State | Last commit | Updated |
 |---|---|---|---|---|---|
-| Website auf Identity v3.1, Paket 1: Gestaltung + Katalog (Designrunde 4, dann Umbau) | `design/site-identity-v3` | `site/src/{styles,components,i18n}` (texts: new lines only), `site/scripts/tokens.test.mjs`, `web/scripts/gen-module-list.mjs` (additive `identity` fields) + test in `web/scripts/lib`, `docs/design/site/ROUND-4-*`; nothing under `web/src` | Phase 1 (design round, waits for „Plan freigegeben“) | docs | 2026-11-05 |
+| Website auf Identity v3.1, Paket 1 | `design/site-identity-v3` | `site/src/**`, `web/scripts/gen-module-list.mjs`, `docs/design/site/ROUND-4-*` | done, PR open | code | 2026-11-05 |
 | Eigene Karte aus OSM-Daten, Paket 1: Speicher + Zeichnen | `feat/map-own-tiles` | `modules/maps/own/*`, `maps/{schema,repo,manifest,settings}.ts`, `TileMap.tsx`, `MapsPage.tsx`, `core/db` (`db:bump` 21), strings `maps` + 4 locales, `e2e/maps.spec.ts` | done, PR open | code | 2026-10-31 |
 | Eigene Karte aus OSM-Daten, Paket 4: eigene Regionsdateien (PMTiles) | `feat/map-own-regions` | `modules/maps/own/{pmtiles,builder,sample,work}.ts`, `maps/{schema,settings}.ts`, `components/RegionsCard.tsx`, `MapsPage.tsx`, strings `maps.settings`/`maps.own` + 4 locales, `strings.legal.ts` (`maps-build`, flows), `pages/settings/inventory.modules.json`, `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
 | Eigene Karte aus OSM-Daten, Paket 5: lokale Suche (Namensindex) | `feat/map-own-search` | `modules/maps/own/{names,search,gzip,builder,work,compute}.ts`, `maps/{schema,manifest,repo,geocode}.ts`, `MapsPage.tsx` + css, `core/db` (`db:bump` → v22, history 21), strings `maps.map`/`maps.own` + 4 locales, `strings.legal.ts` (flows, notice `maps`), `e2e/maps.spec.ts` | done, PR open | code | 2026-11-01 |
