@@ -56,6 +56,8 @@ interface TrashCollection {
   children?: { table: string; parentKey: string };
   /** Rows that are never offered (imported or automatically booked data). */
   skip?: (row: Record<string, unknown>) => boolean;
+  /** Rows sharing a value of this field are one entry (both halves of a transfer): listed once, restored together. */
+  group?: string;
 }
 
 /** Children deleted up to this long before their parent count as deleted together with it. */
@@ -112,6 +114,7 @@ export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
     kind: () => 'booking',
     // Bank imports (`imp-…` ids) and bookings made by other modules stay out, as before.
     skip: (r) => String(r.id).startsWith('imp-') || r.sourceRef !== undefined,
+    group: 'transferId',
   },
   {
     table: 'habits_goal',
@@ -177,9 +180,15 @@ export async function listTrash(
       .table<Record<string, unknown> & { id: string; deletedAt: number | null }, string>(c.table)
       .filter((r) => isRestorable(r.deletedAt, at, window))
       .toArray();
+    const groups = new Set<unknown>();
     for (const r of rows) {
       if (queued.has(keyOf(c.table, r.id))) continue;
       if (c.skip?.(r)) continue;
+      const group = c.group ? r[c.group] : undefined;
+      if (group !== undefined && group !== null) {
+        if (groups.has(group)) continue;
+        groups.add(group);
+      }
       if (parents && !parents.ids.has(String(r[parents.key]))) continue;
       const deletedAt = r.deletedAt as number;
       out.push({
@@ -203,9 +212,24 @@ export async function restoreEntry(
   const c = TRASH_COLLECTIONS.find((x) => x.table === entry.table);
   if (!c) throw new Error(`${entry.table} is not part of "Zuletzt gelöscht"`);
   const repo = createRepo(entry.table, z.looseObject({}), database);
-  const deletedAt = (await repo.table.get(entry.id))?.deletedAt;
+  const row = (await repo.table.get(entry.id)) as Record<string, unknown> | undefined;
+  const deletedAt = row?.deletedAt;
   await repo.restore(entry.id);
-  if (!c.children || typeof deletedAt !== 'number') return;
+  if (typeof deletedAt !== 'number') return;
+  const group = c.group ? row?.[c.group] : undefined;
+  if (group !== undefined && group !== null) {
+    // The other half of a transfer, deleted with it.
+    const mates = (await repo.table
+      .filter(
+        (r) =>
+          (r as Record<string, unknown>)[c.group!] === group &&
+          typeof r.deletedAt === 'number' &&
+          Math.abs(r.deletedAt - deletedAt) <= TOGETHER_MS,
+      )
+      .primaryKeys()) as string[];
+    for (const id of mates) await repo.restore(id);
+  }
+  if (!c.children) return;
   // The rows deleted together with it (`deleteAccount` removes the bookings first, then the account).
   const { table, parentKey } = c.children;
   const kids = createRepo(table, z.looseObject({}), database);

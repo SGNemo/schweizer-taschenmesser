@@ -102,6 +102,11 @@ export function PaymentsSection({
           type="date"
           value={date}
           onChange={(ev) => setDate(ev.target.value)}
+          onKeyDown={(ev) => {
+            if (ev.key !== 'Enter') return;
+            ev.preventDefault();
+            void add();
+          }}
         />
       </div>
       <div>

@@ -278,8 +278,10 @@ export async function buildCandidates(
         else {
           data[field.storeName] = resolved.id;
           refIds.set(field.storeName, resolved.id);
-          if (!dependsOn && drafts.some((d) => d !== draft && d.id === resolved.id))
-            dependsOn = resolved.id;
+          // Only a new entry of the batch (a change to an existing one is no dependency); the parent
+          // of a subtask wins over its list, a missing parent would leave it pointing at nothing.
+          const target = drafts.find((d) => d !== draft && d.id === resolved.id && !d.updateId);
+          if (target && (!dependsOn || field.refCollection === collection)) dependsOn = target.id;
         }
       } else {
         // The schemas check only the shape of a date; 2026-02-30 must not get in (X19).
@@ -358,8 +360,11 @@ async function pointsToChild(
   lookup: RefLookup,
 ): Promise<boolean> {
   const inBatch = drafts.find((d) => d.id === id);
-  if (inBatch) return inBatch.raw[field.name] !== undefined && inBatch.raw[field.name] !== null;
-  const stored = await lookup.record(collection, id);
+  if (inBatch && inBatch.raw[field.name] !== undefined && inBatch.raw[field.name] !== null)
+    return true;
+  if (inBatch && !inBatch.updateId) return false;
+  // A change in the batch to a stored entry keeps that entry's own reference unless it sets one.
+  const stored = await lookup.record(collection, inBatch?.updateId ?? id);
   return stored?.[field.storeName] !== undefined && stored[field.storeName] !== null;
 }
 

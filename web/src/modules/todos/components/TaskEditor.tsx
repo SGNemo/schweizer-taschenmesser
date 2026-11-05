@@ -117,7 +117,7 @@ function EditorForm({
       }),
     );
     // Subtasks always live in the list of their parent.
-    if (listId !== task.listId) {
+    if (listId !== (opened ?? task).listId) {
       await taskRepo.table
         .where('parentId')
         .equals(task.id)

@@ -78,10 +78,10 @@ export async function markOpen(id: string): Promise<void> {
   for (const next of await openSuccessors(id)) await invoiceRepo.remove(next.id);
 }
 
-/** Saves edits. Editing a paid invoice re-announces it so the booked expense stays in sync. */
 /**
  * Creates or changes an invoice. `base` is the record as the editor opened it: only the fields that
- * differ from it are written, so a change made meanwhile elsewhere is kept.
+ * differ from it are written, so a change made meanwhile elsewhere is kept. Editing a paid invoice
+ * re-announces it so the booked expense stays in sync.
  */
 export async function saveInvoice(
   id: string | null,

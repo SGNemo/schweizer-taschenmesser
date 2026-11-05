@@ -64,3 +64,29 @@ it('rejects a parent that is a subtask itself, and parent cycles', async () => {
     'Umzug',
   ]);
 });
+
+it('a change to a subtask in the same batch is no valid parent either', async () => {
+  const p = await taskRepo.create({
+    listId: INBOX_ID,
+    title: 'Umzug',
+    done: false,
+    priority: 0,
+    order: 0,
+  });
+  const sub = await taskRepo.create({
+    listId: INBOX_ID,
+    title: 'Kartons',
+    done: false,
+    priority: 0,
+    order: 1,
+    parentId: p.id,
+  });
+  const rows = await importJson(
+    [
+      { collection: 'task', key: 'k', id: sub.id, title: 'Kartons groß' },
+      { collection: 'task', title: 'Klebeband', listId: INBOX_ID, parentId: '@k' },
+    ],
+    'j4',
+  );
+  expect(rows.find((r) => r.candidate.label === 'Klebeband')?.invalid).toBeTruthy();
+});
