@@ -119,16 +119,19 @@ function exclusive<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * Is this device's view of the synced data settled enough to act on another device's fields? True
  * without a sync configuration. With one: only while this tab's sync chain is idle and the last pull
- * ended complete (`more: false`, recorded by `pullAll` in `_meta`); a round still running is awaited
- * first – a paged or failed pull can split
+ * ended complete (`more: false`, recorded by `pullAll` in `_meta`); with `wait` a round still running
+ * is awaited first – a paged or failed pull can split
  * the field ops of one record (a ToDo's `plannedFor` and `planMark`) across pages. The planner gates
  * its copies and overwrites of a user's date on this; it never touches `navigator.locks` itself.
  */
-export async function syncSettled(database: TaschenmesserDB = defaultDb): Promise<boolean> {
+export async function syncSettled(
+  database: TaschenmesserDB = defaultDb,
+  opts: { wait?: boolean } = {},
+): Promise<boolean> {
   if (!(await loadSyncConfig(database))) return true;
-  // A round in flight ends soon: wait for this tab's chain (bounded by the queued rounds), so a caller
-  // woken by the round's own `_meta` write does not read the gate a moment too early.
-  await chain;
+  // `wait`: a background caller woken by the round's own `_meta` write lets this tab's chain end first
+  // (bounded by the queued rounds); a user action reads the gate as it is.
+  if (opts.wait) await chain;
   if (inFlight > 0) return false;
   const row = await database
     .table<{ key: string; value: unknown }, string>('_meta')

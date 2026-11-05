@@ -28,7 +28,7 @@ export function restorePatch(
 export async function cleanupPlanMarks(): Promise<number> {
   const stored = await loadStoredModuleState(PLANNER_ID);
   if (!stored || stored.enabled) return 0;
-  if (!(await syncSettled())) return 0;
+  if (!(await syncSettled(undefined, { wait: true }))) return 0;
   let n = 0;
   for (const task of await taskRepo.active().toArray()) {
     const patch = restorePatch(task);

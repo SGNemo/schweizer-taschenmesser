@@ -74,16 +74,21 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // Seven narrow columns: no row runs past its column, nothing scrolls sideways.
-    const overflow = await page.evaluate(() => {
-      const main = document.querySelector('main')!;
-      const rows = Array.from(document.querySelectorAll('[data-testid^="day-"] li'));
-      return {
-        main: main.scrollWidth - main.clientWidth,
-        rows: rows.filter((li) => li.scrollWidth > li.clientWidth + 1).length,
-      };
-    });
-    expect(overflow).toEqual({ main: 0, rows: 0 });
+    // Four columns a row at 1280 px, seven from 73rem of page width; no row runs past its column, nothing scrolls sideways.
+    const measure = () =>
+      page.evaluate(() => {
+        const main = document.querySelector('main')!;
+        const board = document.querySelector('[aria-label="Wochenbrett"]')!;
+        const rows = Array.from(document.querySelectorAll('[data-testid^="day-"] li'));
+        return {
+          columns: getComputedStyle(board).gridTemplateColumns.split(' ').length,
+          main: main.scrollWidth - main.clientWidth,
+          rows: rows.filter((li) => li.scrollWidth > li.clientWidth + 1).length,
+        };
+      });
+    expect(await measure()).toEqual({ columns: 4, main: 0, rows: 0 });
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect.poll(measure).toEqual({ columns: 7, main: 0, rows: 0 });
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();

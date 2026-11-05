@@ -32,8 +32,10 @@ export function DaySheet({
     e.preventDefault();
     const min = Number(minutes);
     if (!label.trim() || !Number.isFinite(min) || min <= 0) return;
-    void addBlocker(day.date, label.trim(), Math.round(min), titles);
-    setLabel('');
+    // The label is cleared once the blocker is in; nothing is lost when the planner was switched off meanwhile.
+    void addBlocker(day.date, label.trim(), Math.round(min), titles).then((ok) => {
+      if (ok) setLabel('');
+    });
   };
   return (
     <Dialog open onClose={onClose} title={formatDay(day.date, 'EEEE, d. MMMM')}>

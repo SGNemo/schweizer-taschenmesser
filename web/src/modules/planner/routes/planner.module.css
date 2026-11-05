@@ -11,10 +11,15 @@
 
 .board {
   display: grid;
-  /* Seven days side by side where they fit; a narrower board flows them into two rows. */
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 73rem of page width. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   align-items: start;
+}
+@container page (min-width: 73rem) {
+  .board {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
 }
 .column {
   display: flex;

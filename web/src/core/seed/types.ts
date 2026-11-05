@@ -62,6 +62,11 @@ export interface SeedContext {
   id(moduleId: string, collection: string, key: string | number): string;
 }
 
+/** `afterSeed` also sees which rows the seed registered, e.g. the tasks of a module it depends on. */
+export interface AfterSeedContext extends SeedContext {
+  seeded(moduleId: string, collection: string): Promise<string[]>;
+}
+
 export interface SeedRow {
   id: string;
   data: Record<string, unknown>;
@@ -78,13 +83,13 @@ export interface SeedModule {
   seed(ctx: SeedContext): SeedRows;
   /**
    * Runs after the rows are written, for data that cannot be plain rows (the vault demo, the planner's
-   * first run). May only use the module's own API. Returns the ids of the records it created or
-   * changed, so they are registered as test data (removal finds them, they never sync); `module`
-   * names a module from `dependsOn` for rows written there.
+   * first run). May only use the module's own API. Returns the ids of its own records it created, so
+   * they are registered as test data too (removal finds them, they never sync). Writes to rows that
+   * are already registered need no return: the loader purges their outbox entries afterwards.
    */
-  afterSeed?(
-    ctx: SeedContext,
-  ): Promise<{ module?: string; collection: string; ids: string[] }[] | void>;
-  /** Undoes `afterSeed` side effects other than rows (called on removal). */
+  afterSeed?(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[] | void>;
+  /** Undoes `afterSeed` side effects other than rows; runs before the rows are removed. */
   beforeRemove?(): Promise<void>;
+  /** Runs after every seed row is gone (e.g. to resume what `beforeRemove` paused). */
+  afterRemove?(): Promise<void>;
 }

@@ -11,17 +11,22 @@ const compact = (min: number) => formatMinutes(min, { compact: true });
 /** One `ProgressList` row per day; `overText` is never set (an overrun is said in `detail`, never painted red). */
 export function weekEntries(days: readonly BoardDay[]): ProgressEntry[] {
   return days.map((d) => {
+    const noTime = d.usable === 0 && d.planned === 0;
     const label = d.isToday
       ? d.off
         ? t.planner.widget.todayOff
-        : d.free === 0 && d.planned > 0
-          ? t.planner.widget.todayFull
-          : t.planner.widget.today(compact(d.free))
+        : noTime
+          ? t.planner.widget.todayNoTime
+          : d.free === 0 && d.planned > 0
+            ? t.planner.widget.todayFull
+            : t.planner.widget.today(compact(d.free))
       : d.off
         ? t.planner.widget.dayOff(dayName(d.date))
-        : d.free === 0 && d.planned > 0
-          ? t.planner.widget.dayFull(dayName(d.date))
-          : t.planner.widget.day(dayName(d.date), compact(d.free));
+        : noTime
+          ? t.planner.widget.dayNoTime(dayName(d.date))
+          : d.free === 0 && d.planned > 0
+            ? t.planner.widget.dayFull(dayName(d.date))
+            : t.planner.widget.day(dayName(d.date), compact(d.free));
     const detail =
       d.over > 0
         ? t.planner.widget.over(compact(d.over))

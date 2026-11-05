@@ -1,10 +1,6 @@
-import { loadModuleStates } from '@/core/modules/activation';
-import { activeManifests, collectPlannable } from '@/core/modules/contributions';
-import { addDays } from '@/core/plan/dates';
-import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
-import { today } from '@/core/time/now';
-import { assignmentRepo, dayRepo, itemKeyOf, itemRepo } from './repo';
-import { runBackground, runsSettled } from './services';
+import type { AfterSeedContext, SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
+import { assignmentRepo, itemKeyOf, itemRepo } from './repo';
+import { resumeRuns, runBackground, suspendRuns } from './services';
 
 /**
  * Test data of the planner (contract: docs/howto/seed-data.md). Days the user touched (available
@@ -113,29 +109,32 @@ function seed(ctx: SeedContext): SeedRows {
 }
 
 /**
- * The first run over the test data, inside the seed: its rows and the marks it writes on the todos
- * seed's tasks are test data too (registered, never in the outbox, gone with „entfernen“).
+ * The first run over the test data, inside the seed: the rows it creates for the todos seed's tasks
+ * are test data too (registered, gone with „entfernen“). Rows and marks of a person's own things stay
+ * theirs – only rows whose thing is a registered seed task are returned.
  */
-async function afterSeed(): Promise<{ module?: string; collection: string; ids: string[] }[]> {
+async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[]> {
+  const seedTasks = new Set(await ctx.seeded('todos', 'task'));
+  const keys = async (repo: { active(): { primaryKeys(): Promise<unknown[]> } }) =>
+    new Set((await repo.active().primaryKeys()) as string[]);
+  const before = { item: await keys(itemRepo), assignment: await keys(assignmentRepo) };
   await runBackground({ force: true });
-  const ids = async (repo: { active(): { primaryKeys(): Promise<unknown[]> } }) =>
-    (await repo.active().primaryKeys()) as string[];
-  // The things the run marked, read through the contract (never a todos import).
-  const day = today();
-  const things = await collectPlannable(
-    { today: day, until: addDays(day, 60) },
-    activeManifests(await loadModuleStates()),
-  );
-  const marked = things.filter((e) => e.moduleId === 'todos' && e.planMark).map((e) => e.id);
+  const ofSeed = (itemKey: string) =>
+    itemKey.startsWith('todos:') && seedTasks.has(itemKey.slice('todos:'.length));
+  const items = (await itemRepo.active().toArray())
+    .filter((r) => !before.item.has(r.id) && ofSeed(r.id))
+    .map((r) => r.id);
+  const assignments = (await assignmentRepo.active().toArray())
+    .filter((r) => !before.assignment.has(r.id) && ofSeed(r.itemKey))
+    .map((r) => r.id);
   return [
-    { collection: 'day', ids: await ids(dayRepo) },
-    { collection: 'item', ids: await ids(itemRepo) },
-    { collection: 'assignment', ids: await ids(assignmentRepo) },
-    { module: 'todos', collection: 'task', ids: marked },
+    { collection: 'item', ids: items },
+    { collection: 'assignment', ids: assignments },
   ];
 }
 
-/** Removal deletes the todos and the rows table by table: no run may be in flight meanwhile. */
-const beforeRemove = (): Promise<void> => runsSettled().then(() => undefined);
+/** Removal deletes the todos and the rows table by table: no run may write meanwhile. */
+const beforeRemove = (): Promise<void> => suspendRuns();
+const afterRemove = async (): Promise<void> => resumeRuns();
 
-export default { seed, afterSeed, beforeRemove } satisfies SeedModule;
+export default { seed, afterSeed, beforeRemove, afterRemove } satisfies SeedModule;

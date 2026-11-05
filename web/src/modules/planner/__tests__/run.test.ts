@@ -610,24 +610,42 @@ describe('council round 1', () => {
     await runsSettled();
   });
 
-  it('the seed’s first run leaves nothing in the outbox and „entfernen“ takes every planner row with it', async () => {
+  it('the seed’s first run registers only its own rows: nothing of the seed in the outbox, „entfernen“ keeps a person’s task, day and marks', async () => {
     const { applySeed, removeSeed } = await import('@/core/seed/dev');
     await db.table('_seeds').clear();
-    await db.table('_outbox').clear(); // the inbox of beforeEach is this test's, not the seed's
+    await modulesRow('todos', true);
+    await modulesRow('calendar', true);
+    await modulesRow('planner', true);
+    // A person's own things, present before the test data arrives.
+    const real = await task('Echt', { estimateMin: 30 });
+    await dayRepo.create(
+      { date: '2026-11-11', availableMin: 90, blockers: [] },
+      { id: '2026-11-11' },
+    );
+    await db.table('_outbox').clear();
     await applySeed({
       scale: 'small',
       today: TODAY,
       manifests: [todos, calendar, manifest],
       prepareApp: true,
     });
-    expect(await assignmentRepo.active().count()).toBeGreaterThan(0);
-    const marked = (await taskRepo.active().toArray()).filter((x) => x.planMark);
-    expect(marked.length).toBeGreaterThan(0);
-    expect(await db.table('_outbox').count()).toBe(0);
+    expect(await assignmentRepo.active().count()).toBeGreaterThan(1);
+    // Only the real task's write-back and rows may be queued for sync.
+    const queued = (await db.table('_outbox').toArray()) as { collection: string; id: string }[];
+    expect(queued.length).toBeGreaterThan(0);
+    expect(queued.every((o) => o.id === real.id || o.id.startsWith(`todos:${real.id}`))).toBe(true);
     await removeSeed(db, [todos, calendar, manifest]);
     await runsSettled();
-    for (const t of ['planner_day', 'planner_item', 'planner_assignment', 'todos_task'])
-      expect(await db.table(t).count(), t).toBe(0);
+    // The real task keeps its day (nothing moves forward by itself) and its mark.
+    const kept = (await stored(real.id))!;
+    expect(kept.title).toBe('Echt');
+    expect(kept.planMark?.date).toBe(kept.plannedFor);
+    expect(await dayRepo.get('2026-11-11')).toMatchObject({ availableMin: 90 });
+    const tasks = await db.table('todos_task').toArray();
+    expect(tasks.map((x) => (x as { id: string }).id)).toEqual([real.id]);
+    const rows = (await assignmentRepo.active().toArray()).map((a) => a.itemKey);
+    expect(rows).toEqual([`todos:${real.id}`]);
+    expect(await db.table('planner_item').count()).toBe(0);
   });
 
   it('msUntilNextDay points just past the next local midnight', async () => {

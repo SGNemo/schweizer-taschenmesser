@@ -34,6 +34,10 @@ import { getPlannerSettings } from './prefs';
 
 let chain: Promise<unknown> = Promise.resolve();
 let stopped = false;
+/** Bumped by every `start()`: a run from an earlier life of the service writes nothing more. */
+let generation = 0;
+/** Set while the test data is removed (`suspendRuns`/`resumeRuns`): background runs skip. */
+let suspended = false;
 
 /** `runUser` while the module is switched off (a stale page in another tab): the UI says so, calmly. */
 export class PlannerOffError extends Error {
@@ -59,12 +63,14 @@ async function activeSources(): Promise<readonly ModuleManifest[]> {
   return activeManifests(await loadModuleStates());
 }
 
-async function depsNow(): Promise<RunDeps> {
+/** `wait`: a background run lets a running sync round end first; a user action never waits. */
+async function depsNow(wait: boolean): Promise<RunDeps> {
+  const gen = generation;
   const [settings, focus, manifests, settled] = await Promise.all([
     getPlannerSettings(),
     getFocusSettings(),
     activeSources(),
-    syncSettled(),
+    syncSettled(undefined, { wait }),
   ]);
   return {
     today: today(),
@@ -72,7 +78,7 @@ async function depsNow(): Promise<RunDeps> {
     settings,
     planLimit: focus.planLimit,
     settled,
-    aborted: () => stopped,
+    aborted: () => stopped || generation !== gen,
   };
 }
 
@@ -89,11 +95,23 @@ async function switchedOff(): Promise<boolean> {
  */
 export function runBackground(opts: { force?: boolean } = {}): Promise<RunOutcome | undefined> {
   return enqueue(async () => {
-    if (await switchedOff()) return undefined;
-    const deps = await depsNow();
+    if ((suspended && !opts.force) || (await switchedOff())) return undefined;
+    const deps = await depsNow(true);
     if (!deps.settings.autoReplan && !opts.force) return undefined;
     return runPlanner(deps, opts);
   });
+}
+
+/** The seed's removal: no background run until `resumeRuns`; resolves when the running one is done. */
+export async function suspendRuns(): Promise<void> {
+  suspended = true;
+  await chain;
+}
+
+/** … and one run afterwards, so the rows follow what is left. */
+export function resumeRuns(): void {
+  suspended = false;
+  void runBackground().catch(logError('planner.run'));
 }
 
 export interface UserRun {
@@ -112,7 +130,7 @@ export function runUser(label: string, act: () => Promise<void>): Promise<UserRu
       label,
       async () => {
         await act();
-        return runPlanner(await depsNow(), { force: true });
+        return runPlanner(await depsNow(false), { force: true });
       },
       MODULE_ID,
     );
@@ -175,6 +193,7 @@ async function preload(): Promise<void> {
 
 export default function start(): () => void {
   stopped = false;
+  generation++;
   manifestsFor = undefined;
   let active = true;
   let sub: { unsubscribe(): void } | undefined;
@@ -225,6 +244,7 @@ export default function start(): () => void {
   return () => {
     stopped = true;
     active = false;
+    forgetUndo(MODULE_ID);
     clearTimeout(timer);
     clearTimeout(midnight);
     sub?.unsubscribe();

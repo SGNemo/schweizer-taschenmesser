@@ -208,21 +208,26 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
   for (const m of ordered) {
     const mod = modules.get(m.id);
     if (!mod?.afterSeed || opts.afterSeed === false) continue;
-    const created =
-      (await mod.afterSeed(
-        createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang }),
-      )) ?? [];
+    const ctx = {
+      ...createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang }),
+      seeded: async (moduleId: string, collection: string) =>
+        (await registry(database).toArray())
+          .filter((r) => r.table === tableName(moduleId, collection))
+          .map((r) => r.rowId),
+    };
+    const created = (await mod.afterSeed(ctx)) ?? [];
     for (const c of created) {
-      const owner = c.module ? manifests.find((x) => x.id === c.module) : m;
-      if (!owner || (owner.id !== m.id && !m.seed.dependsOn.includes(owner.id)))
-        throw new Error(`${m.id}: afterSeed writes to ${c.module} without dependsOn`);
-      const table = tableName(owner.id, c.collection);
+      const table = tableName(m.id, c.collection);
       await registry(database).bulkPut(
         c.ids.map((id) => ({ id: seedKey(table, id), table, rowId: id, batchId })),
       );
-      await outbox(database).bulkDelete(c.ids.map((id) => [table, id]));
       records.push({ collection: c.collection, ids: c.ids, table });
     }
+  }
+  // Whatever the hooks wrote onto registered rows (the planner's marks on seed tasks) is test data too.
+  if (opts.afterSeed !== false) {
+    const all = await registry(database).toArray();
+    await outbox(database).bulkDelete(all.map((r) => [r.table, r.rowId]));
   }
 
   const at = now();
@@ -303,6 +308,10 @@ export async function removeSeed(
     await imports(database).put({ ...b, status: 'undone', undoneAt: at });
   }
   await meta(database).delete(SEED_STATE_KEY);
+  for (const m of manifests) {
+    const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
+    await mod?.afterRemove?.();
+  }
   return { removed };
 }
 

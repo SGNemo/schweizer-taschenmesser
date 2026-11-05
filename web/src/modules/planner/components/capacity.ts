@@ -13,10 +13,10 @@ export function capacityLabel(day: Capacity): string {
   return t.planner.board.freeOf(compact(day.free), compact(day.usable));
 }
 
-/** The strip chip: the free time alone, or the state word. */
+/** The strip chip: the free time alone, or one state word. */
 export function capacityShort(day: Capacity): string {
   if (day.off) return t.planner.board.off;
-  if (day.usable === 0 && day.planned === 0) return t.planner.board.noTime;
+  if (day.usable === 0 && day.planned === 0) return t.planner.board.noTimeShort;
   if (day.free === 0 && day.planned > 0) return t.planner.board.full;
   return compact(day.free);
 }

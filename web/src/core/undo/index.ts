@@ -74,7 +74,11 @@ export async function undoLast(): Promise<string | undefined> {
 
 export const undoDepth = (): number => journal.length;
 
-/** Drops every entry of `scope` (a module that is switched off must not be replayed into). */
+/**
+ * Drops every entry of `scope` (a module that is switched off must not be replayed into). An entry
+ * goes as a whole: writes it made in other modules (a ToDo created from the planner's field) are not
+ * undoable any more either; entries recorded without a scope stay.
+ */
 export function forgetUndo(scope: string): void {
   journal = journal.filter((e) => e.scope !== scope);
 }

@@ -55,8 +55,21 @@ async function cleanupInputs(): Promise<string> {
  */
 export default function start(): () => void {
   const offRequested = bus.on('todo.requested', (req) => addRequested(req));
+  // One clean-up at a time; emissions while one runs collapse into a single follow-up run.
+  let running: Promise<unknown> = Promise.resolve();
+  let queued = false;
+  const clean = () => {
+    if (queued) return;
+    queued = true;
+    running = running
+      .then(() => {
+        queued = false;
+        return cleanupPlanMarks();
+      })
+      .catch(logError('todos.planMark'));
+  };
   const sub = liveQuery(cleanupInputs).subscribe({
-    next: () => void cleanupPlanMarks().catch(logError('todos.planMark')),
+    next: clean,
     error: (e) => console.error('[todos] plan-mark stream failed', e),
   });
   return () => {

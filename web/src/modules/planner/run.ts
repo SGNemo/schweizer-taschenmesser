@@ -290,10 +290,12 @@ export async function writeRows(
   result: PlanResult,
   inputs: RunInputs,
   repos: PlannerRepos,
+  aborted?: () => boolean,
 ): Promise<number> {
   let n = 0;
   const live = new Set<string>();
   for (const a of result.assignments) {
+    if (aborted?.()) return n;
     live.add(a.id);
     const data: AssignmentRow = {
       itemKey: a.itemKey,
@@ -309,6 +311,7 @@ export async function writeRows(
     if (await putRow(repos.assignment, a.id, data)) n++;
   }
   for (const id of inputs.prevRows.keys()) {
+    if (aborted?.()) return n;
     if (live.has(id)) continue;
     await repos.assignment.remove(id);
     n++;
@@ -394,7 +397,7 @@ export async function runPlanner(
     settings: inputs.settings,
   });
   if (bail()) return { ran: false, inputs, rowWrites, writeBacks: 0 };
-  rowWrites += await writeRows(result, inputs, repos);
+  rowWrites += await writeRows(result, inputs, repos, deps.aborted);
   const writeBacks = await writeBackPlan(result, inputs, deps);
   if (bail()) return { ran: false, inputs, rowWrites, writeBacks };
   const written = (await repos.assignment.active().toArray()) as (AssignmentRow & { id: string })[];

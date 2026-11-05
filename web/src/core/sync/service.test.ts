@@ -254,10 +254,11 @@ describe('syncSettled', () => {
     expect((await connect(params, deps)).ok).toBe(true);
     expect(await syncSettled(db)).toBe(true);
 
-    // A round in flight: the gate waits for it and then answers for the state after the round.
+    // A round in flight: a plain read says false; with `wait` the gate answers for the state after the round.
     let ended = false;
     const round = syncNow(deps).then(() => (ended = true));
-    const settled = syncSettled(db);
+    expect(await syncSettled(db)).toBe(false);
+    const settled = syncSettled(db, { wait: true });
     expect(ended).toBe(false);
     expect(await settled).toBe(true);
     expect(ended).toBe(true);
