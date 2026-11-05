@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { FILE_KINDS, type FileKind } from '@/core/platform/disk';
 import { t } from '@/strings';
 import { AGE_VAR } from '../logic/age';
-import { KIND_PATTERN, KIND_VAR, drawPattern, type PatternId } from '../logic/colors';
+import { KIND_PATTERN, KIND_VAR, drawPattern, resolveColors, type PatternId } from '../logic/colors';
 import type { ColorMode } from './TreemapView';
 import { useThemeKey } from './useThemeKey';
 import styles from './Legend.module.css';
@@ -15,7 +15,7 @@ function ColorSwatch({ cssVar, pattern }: { cssVar: string; pattern: PatternId }
     const c = ref.current;
     const ctx = c?.getContext('2d');
     if (!c || !ctx) return;
-    const color = getComputedStyle(c).getPropertyValue(cssVar).trim() || '#7a7f87';
+    const color = resolveColors(c.parentElement ?? c, [cssVar])[cssVar]!;
     const dpr = window.devicePixelRatio || 1;
     c.width = 24 * dpr;
     c.height = 16 * dpr;

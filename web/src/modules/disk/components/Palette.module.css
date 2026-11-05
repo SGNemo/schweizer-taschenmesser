@@ -1,55 +1,24 @@
 /*
- * Fill colours per file type and age bucket; read by the treemap canvas and the legend swatches.
- * Data colours of a chart, not UI colours: listed in docs/DECISIONS.md as a special style.
+ * Fill colours per file type and age bucket, read by the treemap canvas and the legend swatches through
+ * `resolveColors` (logic/colors.ts). Identity v3.1 (G01): no hex of its own – file types map onto the module
+ * hues (`--mod-*`), the age ramp mixes the chart and state tokens, so both themes, "Ruhig" and
+ * "Modulfarben: Aus" come from `ui/tokens.css`. Every colour ≥ 3:1 on `--surface` in both themes
+ * (`__tests__/palette.test.ts`); each type also has its own hatch pattern and the legend names it.
  */
 .palette {
-  --k-video: #2a78d6;
-  --k-image: #1f9d63;
-  --k-audio: #8a5cd0;
-  --k-archive: #c78a0a;
-  --k-program: #d24a5a;
-  --k-document: #1d94a3;
-  --k-game: #b0388f;
-  /* Age of the data: fresh (cool) to untouched for years (warm). */
-  --age-0: #2b8a83;
-  --age-1: #4f9a5f;
-  --age-2: #8f9a2f;
-  --age-3: #c98a1c;
-  --age-4: #d4602a;
-  --age-5: #b93b3b;
-  --k-other: #7a7f87;
-}
-:global([data-theme='dark']) .palette {
-  --k-video: #5aa0f0;
-  --k-image: #4cc38a;
-  --k-audio: #b28cf0;
-  --k-archive: #e6b13a;
-  --k-program: #f07c88;
-  --k-document: #4fc0cf;
-  --k-game: #e07cc4;
-  --age-0: #4fb3ad;
-  --age-1: #77c08a;
-  --age-2: #bcc25a;
-  --age-3: #eeb04e;
-  --age-4: #f5874f;
-  --age-5: #ee6b6b;
-  --k-other: #9aa0a8;
-}
-@media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme='light'])) .palette {
-    --k-video: #5aa0f0;
-    --k-image: #4cc38a;
-    --k-audio: #b28cf0;
-    --k-archive: #e6b13a;
-    --k-program: #f07c88;
-    --k-document: #4fc0cf;
-    --k-game: #e07cc4;
-    --age-0: #4fb3ad;
-    --age-1: #77c08a;
-    --age-2: #bcc25a;
-    --age-3: #eeb04e;
-    --age-4: #f5874f;
-    --age-5: #ee6b6b;
-    --k-other: #9aa0a8;
-  }
+  --k-video: var(--mod-ocean);
+  --k-image: var(--mod-fern);
+  --k-audio: var(--mod-violet);
+  --k-archive: var(--mod-lime);
+  --k-program: var(--mod-orchid);
+  --k-document: var(--mod-teal);
+  --k-game: var(--mod-indigo);
+  --k-other: var(--mod-slate);
+  /* Age of the data: fresh (cool chart teal) to untouched for years (warm: warning, orange, danger). */
+  --age-0: var(--viz-1);
+  --age-1: color-mix(in srgb, var(--viz-1) 65%, var(--warning));
+  --age-2: color-mix(in srgb, var(--viz-1) 30%, var(--warning));
+  --age-3: var(--warning);
+  --age-4: var(--viz-2);
+  --age-5: var(--danger);
 }

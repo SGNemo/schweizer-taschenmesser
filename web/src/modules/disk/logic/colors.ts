@@ -15,7 +15,7 @@ export const KIND_PATTERN: Record<FileKind, PatternId> = {
   other: 'none',
 };
 
-/** CSS custom properties (defined in `TreemapView.module.css`) holding the fill colours. */
+/** CSS custom properties (`components/Palette.module.css`, mapped onto `--mod-*` tokens) holding the fill colours. */
 export const KIND_VAR: Record<FileKind, string> = {
   video: '--k-video',
   image: '--k-image',
@@ -26,6 +26,51 @@ export const KIND_VAR: Record<FileKind, string> = {
   game: '--k-game',
   other: '--k-other',
 };
+
+/**
+ * A computed CSS colour as `#rrggbb`: `rgb()`/`rgba()` (alpha ignored), `color(srgb r g b)` (how browsers
+ * serialise `color-mix(in srgb, …)`) or hex. `null` for anything else.
+ */
+export function toHex(css: string): string | null {
+  const v = css.trim().toLowerCase();
+  const byte = (n: number) =>
+    Math.max(0, Math.min(255, Math.round(n)))
+      .toString(16)
+      .padStart(2, '0');
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(v);
+  if (hex) {
+    const h = hex[1]!;
+    return h.length === 3 ? `#${[...h].map((c) => c + c).join('')}` : `#${h}`;
+  }
+  const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(v);
+  if (rgb) return `#${byte(+rgb[1]!)}${byte(+rgb[2]!)}${byte(+rgb[3]!)}`;
+  const srgb = /^color\(\s*srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)/.exec(v);
+  if (srgb) return `#${byte(+srgb[1]! * 255)}${byte(+srgb[2]! * 255)}${byte(+srgb[3]! * 255)}`;
+  return null;
+}
+
+/**
+ * Resolves custom properties holding colours (`--k-video`, `--age-2`, …) as seen from `el` to `#rrggbb`, so the
+ * canvas and `textOn` get plain colours even when a token is a `color-mix()`: a probe element takes each
+ * property as its `color` and the browser computes it. Unresolvable values keep the raw property value.
+ */
+export function resolveColors(el: HTMLElement, names: readonly string[]): Record<string, string> {
+  const probe = el.ownerDocument.createElement('span');
+  probe.style.display = 'none';
+  el.appendChild(probe);
+  const out: Record<string, string> = {};
+  try {
+    for (const name of names) {
+      probe.style.color = `var(${name})`;
+      const computed = getComputedStyle(probe).color;
+      out[name] =
+        toHex(computed) ?? (getComputedStyle(el).getPropertyValue(name).trim() || computed);
+    }
+  } finally {
+    probe.remove();
+  }
+  return out;
+}
 
 /** Black or white, whichever reads better on `hex` (WCAG relative luminance). */
 export function textOn(hex: string): '#111111' | '#ffffff' {
