@@ -969,6 +969,7 @@ export const de = {
       pastDate: 'liegt in der Vergangenheit',
       approxTime: 'Uhrzeit ungefähr',
       ambiguousTime: 'Uhrzeit prüfen',
+      invalidDate: 'Datum gibt es nicht – bitte prüfen',
       allDay: 'ganztägig',
       income: 'Einnahme',
       expense: 'Ausgabe',

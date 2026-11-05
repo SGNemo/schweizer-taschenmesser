@@ -52,7 +52,13 @@ export interface CaptureFields {
 
 /** Hints the UI can surface next to the chips; the parser never hides an assumption. */
 export type CaptureNote =
-  'assumed-date' | 'rolled-year' | 'past-date' | 'approx-time' | 'ambiguous-time';
+  | 'assumed-date'
+  | 'rolled-year'
+  | 'past-date'
+  | 'approx-time'
+  | 'ambiguous-time'
+  /** A typed date that does not exist ("31.11.", "15.13."); it stays in the title, no date is assumed. */
+  | 'invalid-date';
 
 export interface CaptureAlternative {
   type: CaptureType;

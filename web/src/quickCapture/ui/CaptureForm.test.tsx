@@ -100,6 +100,19 @@ describe('CaptureForm', () => {
     await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.assumedDate));
   });
 
+  it('a date that does not exist is shown and blocks saving instead of a silent today (X20)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Zahnarzt 31.11. 10 Uhr');
+    await waitFor(() => expect(chips()).toHaveTextContent(t.quickCapture.chip.invalidDate));
+    expect(chips()).not.toHaveTextContent(t.quickCapture.chip.assumedDate);
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.quickCapture.errors.invalid);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(await db.table('calendar_event').count()).toBe(0);
+  });
+
   it('without the question: unclear text is saved as typed in the ToDo inbox', async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();

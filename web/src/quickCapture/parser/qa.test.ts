@@ -101,3 +101,35 @@ describe('types', () => {
     expect(parse('bis Freitag Formular').fields.date).toBe('2026-10-30');
   });
 });
+
+describe('impossible dates are flagged, never replaced by an assumption (X20)', () => {
+  it.each([
+    ['Zahnarzt 31.11. 10 Uhr', '31.11.'],
+    ['32.1. Zahnarzt', '32.1.'],
+    ['Zahnarzt 15.13.', '15.13.'],
+    ['Zahnarzt 31.11.2026 10 Uhr', '31.11.2026'],
+    ['Party 30. Februar', '30. Februar'],
+    ['Termin 2026-02-30 9 Uhr', '2026-02-30'],
+  ])('%s', (text, typed) => {
+    const r = parse(text);
+    expect(r.notes).toContain('invalid-date');
+    expect(r.notes).not.toContain('assumed-date');
+    expect(r.fields.date).toBeUndefined();
+    expect(r.fields.title).toContain(typed);
+  });
+
+  it('an invoice with an impossible due date gets no assumed term', () => {
+    const r = parse('Rechnung Strom 120 € fällig 31.11.');
+    expect(r.type).toBe('invoice');
+    expect(r.fields.date).toBeUndefined();
+    expect(r.notes).toEqual(['invalid-date']);
+  });
+
+  it('real dates stay as they are', () => {
+    for (const text of ['Zahnarzt 30.11. 10 Uhr', 'Zahnarzt 29.2.2028', 'Party 28. Februar']) {
+      const r = parse(text);
+      expect(r.notes, text).not.toContain('invalid-date');
+      expect(r.fields.date, text).toBeDefined();
+    }
+  });
+});

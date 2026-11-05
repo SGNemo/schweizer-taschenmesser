@@ -241,6 +241,16 @@ describe('targets, changes and deletions', () => {
     expect(matchScore('netflix', 'Spotify')).toBe(0);
   });
 
+  it('proposes nothing for a sentence with an impossible date (X20)', async () => {
+    for (const text of [
+      'Rechnung Strom 120 € fällig 31.11.',
+      'Termin Zahnarzt 31.11. 10 Uhr',
+      'Aufgabe Steuer bis 15.13.',
+    ])
+      expect(await parseWrite(text, rules()), text).toBeUndefined();
+    expect(await parseWrite('Rechnung Strom 120 € fällig 30.11.', rules())).toBeDefined();
+  });
+
   it('shows what a deletion removes and undoes it', async () => {
     const proposal = await parseWrite('Lösche die Aufgabe Milch kaufen', rules());
     expect(proposal?.ops[0]).toMatchObject({ module: 'todos', action: 'delete' });

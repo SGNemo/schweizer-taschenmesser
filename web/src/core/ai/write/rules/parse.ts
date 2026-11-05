@@ -292,6 +292,8 @@ async function segmentToOp(
   const isUpdate = !isDelete && words.some((w) => isUpdateWord(w.n));
   const hasCreateVerb = words.some((w) => isCreateWord(w.n));
   const now = ctx.now;
+  // "fällig 31.11.": a date that does not exist is no rule answer; never fall back to today (X20).
+  if (extractFacts(segment, { now }).notes.includes('invalid-date')) return undefined;
 
   const dropVerbs = (list: Word[], verbs: readonly string[]): Word[] =>
     list.filter((w) => !startsWithAny(w, verbs));

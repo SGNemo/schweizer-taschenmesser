@@ -38,6 +38,7 @@ export const quickCapture: Strings['quickCapture'] = {
     pastDate: 'is in the past',
     approxTime: 'Approximate time',
     ambiguousTime: 'Check time',
+    invalidDate: 'This date doesn’t exist – please check',
     allDay: 'all day',
     income: 'Income',
     expense: 'Expense',

@@ -119,6 +119,10 @@ export function CaptureForm({
     [multi, parts, rowOverride, states, focus.captureNoQuestion, settings?.defaultType],
   );
   const rowsNeedConfirm = rows.some((r) => r.type && targetFor(r.type).requiresConfirm);
+  // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the
+  // entry is incomplete until the date is fixed (X20).
+  const badDate = (list: readonly { id: string }[]) =>
+    list.some((c) => c.id === 'note-invalid-date');
 
   useEffect(() => {
     clearReopenDraft();
@@ -219,11 +223,13 @@ export function CaptureForm({
     if (!text.trim()) return setError(t.quickCapture.empty);
     if (multi) {
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
+      if (rows.some((r) => badDate(r.chips))) return setError(t.quickCapture.errors.invalid);
       // Bookings stay drafts until confirmed, also when they come in a batch.
       if (rowsNeedConfirm && !confirming) return setConfirming(true);
       return void save(true);
     }
     if (!type) return setError(t.quickCapture.chooseType);
+    if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
     if (targetFor(type).requiresConfirm && !confirming) return setConfirming(true);
     void save(true);
   };

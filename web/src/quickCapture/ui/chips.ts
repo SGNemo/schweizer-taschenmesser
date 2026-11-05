@@ -26,6 +26,9 @@ const NOTE_LABEL: Record<CaptureNote, string> = {
   get 'ambiguous-time'() {
     return t.quickCapture.chip.ambiguousTime;
   },
+  get 'invalid-date'() {
+    return t.quickCapture.chip.invalidDate;
+  },
 };
 
 /** "Montag–Freitag" for a run of three or more days in a row, else the names with commas. */
