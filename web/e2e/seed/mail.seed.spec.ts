@@ -85,8 +85,10 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('1 Tracking-Pixel entfernt')).toBeVisible();
     expect(await frame.getAttribute('srcdoc')).not.toMatch(/track\.example|<script/);
     await expect(page.getByText(/Ungelesen-Status ändert sich dadurch nicht/)).toBeVisible();
-    // back to the list
+    // back to the list: the thread heading goes first, then the subject is the list row only (while both are
+    // there the text matches two elements and Playwright's strict mode fails at once instead of waiting)
     await page.getByRole('button', { name: 'Zur Liste' }).click();
+    await expect(page.getByRole('heading', { name: 'Ihre Rechnung für Oktober' })).toHaveCount(0);
     await expect(page.getByText('Ihre Rechnung für Oktober')).toBeVisible();
   });
 
