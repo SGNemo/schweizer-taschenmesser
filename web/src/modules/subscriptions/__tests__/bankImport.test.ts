@@ -30,11 +30,11 @@ describe('subscriptions from a bank statement use the bank layouts (X22)', () =>
     'sparkasse-mt940.csv',
     'volksbank.csv',
   ])('%s: finds the monthly 9,99 € charge', async (file) => {
-    const result = await runtime.parse('bank', {
-      kind: 'file',
-      text: threeCharges(file),
-      fileName: file,
-    });
+    const result = await runtime.parse(
+      'bank',
+      { kind: 'file', text: threeCharges(file), fileName: file },
+      { today: '2026-11-05', options: {}, batchId: 'b1' },
+    );
     expect(result.notes).toEqual([]);
     expect(result.candidates).toHaveLength(1);
     expect(result.candidates[0]!.data).toMatchObject({
