@@ -121,7 +121,7 @@ test.describe('Planer (week board, package 1)', () => {
     await enter(page, 'Angebot 45min !hoch');
     await expect(today(page)).toContainText('Angebot');
     // Erledigt is one tap (the tick in the row), with undo.
-    await today(page).getByRole('checkbox', { name: 'Erledigt' }).first().click();
+    await today(page).getByRole('checkbox', { name: 'Keller' }).click();
     await expect(today(page)).not.toContainText('Keller');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page)).toContainText('Keller');
