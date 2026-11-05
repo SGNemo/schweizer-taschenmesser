@@ -37,6 +37,8 @@ interface Props {
   tooltip: (node: DiskNode) => ReactNode;
   /** Shown over an empty map (default: "nothing uses space here"). */
   emptyText?: string;
+  /** Accessible name of the map instead of the default one (the live view has no key actions). */
+  ariaLabel?: string;
   testId?: string;
 }
 
@@ -46,6 +48,8 @@ interface Palette {
   surface: string;
   surface2: string;
   text: string;
+  /** Muted text: the dashed outline of entries the scan is still counting. */
+  muted: string;
   accent: string;
   focus: string;
   font: string;
@@ -62,6 +66,7 @@ const readPalette = (el: HTMLElement): Palette => {
     surface: v('--surface') || '#ffffff',
     surface2: v('--surface-2') || '#f0f0ed',
     text: v('--text') || '#1c1d1f',
+    muted: v('--text-muted') || '#7a7f87',
     accent: v('--accent') || '#2f6f8f',
     focus: v('--focus') || '#1a5fd0',
     font: cs.fontFamily || 'sans-serif',
@@ -92,6 +97,7 @@ export function TreemapView({
   onUp,
   tooltip,
   emptyText,
+  ariaLabel,
   testId = 'treemap',
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -154,6 +160,16 @@ export function TreemapView({
 
     const nowMs = now();
     const header = DEFAULT_LAYOUT.header;
+    // Live view: an entry the scan still counts gets a dashed outline next to the "…" in its label
+    // (shape and text, never colour alone).
+    const dashed = (x: number, y: number, w: number, h: number) => {
+      ctx.save();
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = p.muted;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.restore();
+    };
     const colorOf = (n: DiskNode): string =>
       colorBy === 'type'
         ? (p.kinds[n.fileKind] ?? p.kinds.other!)
@@ -184,13 +200,14 @@ export function TreemapView({
           const size = formatBytes(n.bytes);
           const sizeW = ctx.measureText(size).width;
           const room = w - 8 - (w > 120 ? sizeW + 8 : 0);
-          const label = fit(ctx, n.name, room);
+          const label = fit(ctx, n.pending ? `${n.name} …` : n.name, room);
           if (label) ctx.fillText(label, x + 4, y + 2);
           if (w > 120) {
             ctx.font = `11px ${p.font}`;
             ctx.fillText(size, x + w - 4 - sizeW, y + 2);
           }
         }
+        if (n.pending) dashed(x, y, w, h);
         continue;
       }
 
@@ -236,12 +253,13 @@ export function TreemapView({
         ctx.fillStyle = 'rgba(255,255,255,0.18)';
         ctx.fill();
       }
+      if (n.pending) dashed(rx, ry, rw, rh);
 
       if (rw > 50 && rh > 18) {
         ctx.fillStyle = textOn(color);
         ctx.font = `600 12px ${p.font}`;
-        const name = n.kind === 'small' ? t.disk.scan.smallFiles(n.files) : n.name;
-        const label = fit(ctx, name, rw - 10);
+        const base = n.kind === 'small' ? t.disk.scan.smallFiles(n.files) : n.name;
+        const label = fit(ctx, n.pending ? `${base} …` : base, rw - 10);
         if (label) ctx.fillText(label, rx + 5, ry + 4);
         if (rh > 36) {
           ctx.font = `11px ${p.font}`;
@@ -334,7 +352,7 @@ export function TreemapView({
         className={styles.canvas}
         tabIndex={0}
         role="img"
-        aria-label={t.disk.map.label(root.name, topLevel.length)}
+        aria-label={ariaLabel ?? t.disk.map.label(root.name, topLevel.length)}
         aria-describedby="disk-map-help"
         onPointerMove={onMove}
         onPointerLeave={() => setHoverId(null)}

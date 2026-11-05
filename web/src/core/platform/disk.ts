@@ -78,6 +78,11 @@ export interface DiskNode {
   /** Bytes per age bucket (`AGE_LIMITS_DAYS`) by each file's own change time, as of the scan. */
   ageBytes: number[];
   childCount: number;
+  /**
+   * Only in live snapshots of a running scan (`liveScan`): the walk below this entry has not
+   * returned yet, so its numbers still grow. Never set in the finished tree.
+   */
+  pending?: boolean;
   /** Parent folder relative to the scan root; only present in `query` results. */
   relPath?: string;
 }

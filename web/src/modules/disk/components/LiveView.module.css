@@ -13,3 +13,7 @@
   margin: 0;
   color: var(--text-muted);
 }
+.pending {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+}

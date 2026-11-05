@@ -6,6 +6,9 @@ name: CI
 on:
   push:
     branches: [develop, main]
+    # A push that only touches scribble/ (the chats' notes) starts no run at all. It cannot replace a pending
+    # run of a code merge any more (a newer push replaces a pending run), and it would build nothing anyway.
+    paths-ignore: ['scribble/**']
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
@@ -65,12 +68,28 @@ jobs:
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set +e
           code=true
           range=""
+          # Push to develop: look at everything since the last *published* Dev-Preview (its release name ends in
+          # +<sha7>), not only at this push. A code merge whose run was replaced by a newer push (a pending run is
+          # replaced, never a running one) is then built by the next run, whatever that push contained.
+          since=""
+          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/develop" ]; then
+            built="$(gh release view dev-preview --repo "$REPO" --json name -q .name 2>/dev/null | sed -n 's/.*+\([0-9a-f]\{7,40\}\)$/\1/p')"
+            if [ -n "$built" ] && git cat-file -e "$built^{commit}" 2>/dev/null && git merge-base --is-ancestor "$built" "$PUSH_AFTER" 2>/dev/null; then
+              since="$built"
+              echo "Last published Dev-Preview was built from $built: checking $built..$PUSH_AFTER"
+            fi
+          fi
           if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then
             range="$PR_BASE...$PR_HEAD"
+          elif [ -n "$since" ]; then
+            range="$since..$PUSH_AFTER"
           elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then
             range="$PUSH_BEFORE..$PUSH_AFTER"
           fi
