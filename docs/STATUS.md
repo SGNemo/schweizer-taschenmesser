@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3.1, Paket 1 Planen + Geld (`feat/identity-v3-plan-money-fix`, PR offen): zwölf Module inkl. Planer auf dem v3.1-Rahmen – Rechnungen `fokus` mit offener Summe, `bill`-Marke und „Nächste bezahlen“, Budgets mit `Envelope`-Karten, Abos-Ring in 12 Segmenten, Gewohnheiten-Widget mit Ringen, Karten mit Kategorie-Kacheln, Zeiterfassung mit Stoppuhr (`Stopwatch`), ToDos-Kopf ohne Abschneiden am Telefon, Kalender-Kopf ohne Termine mit nächster Handlung, Leerzustände auf `EmptyState motif` mit einem Verb; Fenster-Queries auf Seitenbreite.
+
 Planer, Paket 1 (`feat/plan-core`, PR offen): Engine `core/plan` (fünf Prototyp-Fixtures, Fixpunkt), Vertrag `contributions.plannable`, Modul `planner` (Wochenbrett, Tageszettel, „Woche prüfen“, Widget Wochenlast, Seed), ToDos als Quelle mit `planMark`; Kern: `ignoreFields`, `module.disabling`, `syncSettled()`, `formatMinutes`. Pakete 2–5 folgen nach dem Merge.
 
 Identität v3.1, Paket 3 Dieser PC (`feat/identity-v3-disk`, PR offen): Kopf `fortschritt` mit belegtem Platz des Systemlaufwerks, Zustand als Badge und Laufwerks-Ringen im Slot M; Widget-Ringe in der Modulfarbe; Baumkarten-Palette auf `--mod-*`/Zustands-Tokens statt Hex; Downloads mit `ArrowBand` aus der Bibliothek.
