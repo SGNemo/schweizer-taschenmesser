@@ -10,6 +10,7 @@ variants. Rules: [DESIGN-SPEC](../DESIGN-SPEC.md), [FOCUS-GUIDELINES](../FOCUS-G
 | 1 Diagnosis and direction | [ROUND-1-DIAGNOSIS.md](ROUND-1-DIAGNOSIS.md), `direction-{a,b,c}.html` | C + tiles from B, claim C, both buttons filled |
 | 2 Full page layout | [ROUND-2-LAYOUT.md](ROUND-2-LAYOUT.md), `layout-{1,2}.html` | Layout 1, "Übliche Apps", video later |
 | 3 Details and automation | [ROUND-3-DETAILS.md](ROUND-3-DETAILS.md), `round-3.html`, `round-3-details.html` | open |
+| 4 Identity v3.1 (diagnosis, target, directions, catalogue) | [ROUND-4-IDENTITY-V3.md](ROUND-4-IDENTITY-V3.md), `round-4-{a,b}.html` (+ `round-4.css`), sheets in `round-4/` | open |
 
 Render the sheets (desktop 1280 + phone 360, dark and light) from `site/`:
-`node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored); `SHEET_ROW=1` for long pages.
+`node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored); `MOCKUPS=round-4-a,round-4-b` picks sheets, `SHEET_ROW=1` for long pages.
