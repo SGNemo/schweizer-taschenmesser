@@ -108,7 +108,6 @@ export const calendar: Strings['calendar'] = {
     rest: 'Nada más por hoy',
     next: (when: string, title: string) => `Lo siguiente: ${when} · ${title}`,
     none: 'No hay nada previsto en las próximas dos semanas.',
-    add: 'Añadir un evento',
   },
   endsAt: (time: string) => `hasta ${time}`,
   recent: 'Como la última vez',

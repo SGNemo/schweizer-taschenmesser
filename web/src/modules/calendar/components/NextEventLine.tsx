@@ -18,7 +18,7 @@ const AHEAD_DAYS = 14;
 /**
  * Head line of the calendar. With an appointment left today: the countdown line ("in 20 Min · 10:00 Teammeeting",
  * follows the focus setting). Without one the head is not left empty: "Heute frei" with what comes next in the coming
- * two weeks, or – nothing planned at all – one quiet next step ("Termin eintragen").
+ * two weeks, or – nothing planned at all – the page's one verb again ("Neuer Termin").
  */
 export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
   const [settings] = useFocusSettings();
@@ -60,7 +60,7 @@ export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
               upcoming
                 ? h.next(
                     `${formatDay(upcoming.date, 'EEE, d. MMM')}${upcoming.time ? `, ${upcoming.time}` : ''}`,
-                    upcoming.title,
+                    `${upcoming.title} · ${kindLabel(upcoming.kind)}`,
                   )
                 : h.none
             }
@@ -69,7 +69,7 @@ export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
       </HeroSlot>
       {!upcoming && onAdd ? (
         <HeroSlot>
-          <Button onClick={onAdd}>{h.add}</Button>
+          <Button onClick={onAdd}>{t.calendar.newEvent}</Button>
         </HeroSlot>
       ) : null}
     </>

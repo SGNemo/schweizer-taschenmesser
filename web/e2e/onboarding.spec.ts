@@ -10,7 +10,9 @@ test('start-data wizard: paste lines → preview → import → undo', async ({ 
   await ready(page, '/todos');
   await expect(page.getByText('Nichts zu tun – gut so.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Importieren' }).click();
+  // C23: import sits in the page's ⋯ menu, not on the empty page.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Importieren' }).click();
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /Aufgaben einfügen/ }).click();
   await dialog
@@ -47,7 +49,9 @@ test('JSON fallback: paste → preview with a bad entry → import → repeat is
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByRole('button', { name: 'Importieren' }).click();
+  // C23: import sits in the page's ⋯ menu, not on the empty page.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Importieren' }).click();
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog.getByRole('button', { name: /JSON einfügen/ }).click();
   await expect(dialog.getByRole('button', { name: 'Schema für KI kopieren' })).toBeVisible();

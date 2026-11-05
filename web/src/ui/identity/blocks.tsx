@@ -204,12 +204,12 @@ export function Masthead({ size, children }: BlockProps) {
 
 /**
  * An envelope card (Budgets): the flap in the top corner and a fill level that rises from the bottom. `fill` (0..1) is
- * the spent share when a page knows it, else a still half; `over` tints the level with the danger colour (the page says
+ * the spent share when a page knows it, else empty (no invented share); `over` tints the level with the danger colour (the page says
  * "über" in words). `children` = the one line on it (the category name).
  */
 export function Envelope({
   size,
-  fill = 0.5,
+  fill = 0,
   over,
   children,
 }: BlockProps & { fill?: number; over?: boolean }) {

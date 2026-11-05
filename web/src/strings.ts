@@ -1670,7 +1670,6 @@ export const de = {
       rest: 'Heute nichts mehr',
       next: (when: string, title: string) => `Als Nächstes: ${when} · ${title}`,
       none: 'In den nächsten zwei Wochen ist nichts eingetragen.',
-      add: 'Termin eintragen',
     },
     endsAt: (time: string) => `bis ${time}`,
     recent: 'Wie zuletzt',

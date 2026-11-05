@@ -4,7 +4,6 @@ import { currencyOf, formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, FortschrittBody, Skeleton, useWidgetSize, WidgetBody } from '@/ui';
-import widgetStyles from './OverviewWidget.module.css';
 import { useBudgetData } from '../data';
 import { goalProgress } from '../compute';
 import { depositRepo, goalRepo } from '../repo';
@@ -51,10 +50,11 @@ export default function OverviewWidget() {
         empty={t.budgets.widgetEmpty}
         emptyAction={{ label: t.homeEmpty.budgets, to: '/budgets?tab=goals&new=1' }}
       >
-        {budgetEntries.length > 0 ? (
-          <p className={widgetStyles.summary}>{t.widgets.budgetsSummary(over.length)}</p>
-        ) : null}
-        <FortschrittBody kind="bars" entries={[...budgetEntries, ...goalEntries]} />
+        <FortschrittBody
+          kind="bars"
+          summary={budgetEntries.length > 0 ? t.widgets.budgetsSummary(over.length) : undefined}
+          entries={[...budgetEntries, ...goalEntries]}
+        />
       </WidgetBody>
       {/* The one thing done most often next to a budget: an expense (opens finance's booking dialog). */}
       {size !== 's' && budgetEntries.length > 0 ? (

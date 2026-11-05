@@ -24,60 +24,70 @@ export interface FortschrittEntry {
 export function FortschrittBody({
   kind,
   entries,
+  summary,
 }: {
   kind: 'rings' | 'bars';
   entries: readonly FortschrittEntry[];
+  /** One line above the rows ("2 von 3 geschafft"), the shared widget summary. */
+  summary?: string;
 }) {
   const size = useWidgetSize();
   const shown = entries.slice(0, rowsFor(size, [2, 4, 6]));
   const pct = (e: FortschrittEntry) => (e.max > 0 ? (100 * e.value) / e.max : 0);
+  const head = summary ? <p className={styles.summary}>{summary}</p> : null;
   if (kind === 'rings')
     return (
-      <ul className={own.rings} data-body="fortschritt" data-kind="rings">
+      <>
+        {head}
+        <ul className={own.rings} data-body="fortschritt" data-kind="rings">
+          {shown.map((e) => (
+            <li key={e.key} className={own.ringItem}>
+              {/* The ring's label carries title and detail once; the visible words are the same text. */}
+              <Ring
+                percent={Math.min(100, pct(e))}
+                level={e.overText ? 'full' : 'ok'}
+                size={size === 's' ? 'sm' : 'md'}
+                label={`${e.title} · ${e.overText ?? e.detail}`}
+              />
+              <span className={styles.rowTitle} aria-hidden="true">
+                {e.title}
+              </span>
+              {e.overText ? (
+                <span className={styles.over} aria-hidden="true">
+                  <Icon name="alert" size={14} />
+                  {e.overText}
+                </span>
+              ) : (
+                <span className={styles.sub} aria-hidden="true">
+                  {e.detail}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  return (
+    <>
+      {head}
+      <ul className={styles.rows} data-body="fortschritt" data-kind="bars">
         {shown.map((e) => (
-          <li key={e.key} className={own.ringItem}>
-            {/* The ring's label carries title and detail once; the visible words are the same text. */}
-            <Ring
-              percent={Math.min(100, pct(e))}
-              level={e.overText ? 'full' : 'ok'}
-              size={size === 's' ? 'sm' : 'md'}
-              label={`${e.title} · ${e.overText ?? e.detail}`}
-            />
-            <span className={styles.rowTitle} aria-hidden="true">
-              {e.title}
-            </span>
-            {e.overText ? (
-              <span className={styles.over} aria-hidden="true">
-                <Icon name="alert" size={14} />
-                {e.overText}
-              </span>
-            ) : (
-              <span className={styles.sub} aria-hidden="true">
-                {e.detail}
-              </span>
-            )}
+          <li key={e.key} className={styles.progressRow}>
+            <div className={styles.progressHead}>
+              <span className={styles.rowTitle}>{e.title}</span>
+              {e.overText ? (
+                <span className={styles.over}>
+                  <Icon name="alert" size={14} />
+                  {e.overText}
+                </span>
+              ) : (
+                <span className={styles.rowAmount}>{e.detail}</span>
+              )}
+            </div>
+            <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
           </li>
         ))}
       </ul>
-    );
-  return (
-    <ul className={styles.rows} data-body="fortschritt" data-kind="bars">
-      {shown.map((e) => (
-        <li key={e.key} className={styles.progressRow}>
-          <div className={styles.progressHead}>
-            <span className={styles.rowTitle}>{e.title}</span>
-            {e.overText ? (
-              <span className={styles.over}>
-                <Icon name="alert" size={14} />
-                {e.overText}
-              </span>
-            ) : (
-              <span className={styles.rowAmount}>{e.detail}</span>
-            )}
-          </div>
-          <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
-        </li>
-      ))}
-    </ul>
+    </>
   );
 }

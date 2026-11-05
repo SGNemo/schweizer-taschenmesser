@@ -3,7 +3,6 @@ import { today } from '@/core/time/dates';
 import { undoable } from '@/core/undo';
 import { t } from '@/strings';
 import { Button, FortschrittBody, WidgetBody } from '@/ui';
-import styles from '../habits.module.css';
 import { dailyTarget, dayState, isScheduled } from '../logic';
 import { entryRepo, goalRepo, bump, entryId, setEntry } from '../repo';
 
@@ -36,11 +35,9 @@ export default function HabitsWidget() {
         empty={t.habits.widget.empty}
         emptyAction={{ label: t.habits.widget.addAction, to: '/habits?new=1' }}
       >
-        {goals.length ? (
-          <p className={styles.widgetSummary}>{t.habits.widget.summary(done, goals.length)}</p>
-        ) : null}
         <FortschrittBody
           kind="rings"
+          summary={goals.length ? t.habits.widget.summary(done, goals.length) : undefined}
           entries={goals.map((g) => ({
             key: g.id,
             title: g.name,
