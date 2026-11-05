@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { installUpdate, postponeUpdate, useUpdateStore } from '@/core/update/controller';
 import { parseReleaseNotes, type NoteSection } from '@/core/changelog/notes';
 import { useInstalledBuild } from '@/core/changelog/useInstalledBuild';
@@ -8,10 +9,14 @@ import { Badge, Button, Icon, Progress } from '@/ui';
 import { ReleaseNotes } from './ReleaseNotes';
 import styles from './UpdateBanner.module.css';
 
+/** Without a known installed build (not a preview install) only the newest builds are shown first. */
+const UNKNOWN_BASE_BUILDS = 10;
+
 /** Unobtrusive offer of a new version. Never forces anything; "Später" hides it for that version. */
 export function UpdateBanner() {
   const lang = useLang();
   const installed = useInstalledBuild();
+  const [showAll, setShowAll] = useState(false);
   const state = useUpdateStore((s) => s.state);
   // Only these phases belong to an offered update; everything else shows nothing here.
   const info =
@@ -39,6 +44,24 @@ export function UpdateBanner() {
               .filter(Boolean)
               .join(' · ')
           : undefined;
+  // What the update brings: every build since the installed one (it ends the list, marked), newest first, scrollable;
+  // nothing older. Without a known installed build the newest few, the rest on request.
+  const withBuild = notes.sections.filter((sec) => sec.build !== undefined);
+  const fresh = notes.sections.filter((sec) => !(sec.build && installed && sec.build < installed));
+  const unknownBase = installed === undefined && withBuild.length > UNKNOWN_BASE_BUILDS;
+  const visible = unknownBase && !showAll ? fresh.slice(0, UNKNOWN_BASE_BUILDS) : fresh;
+  const renderSection = (sec: NoteSection, i: number) => (
+    <section key={`${sec.build ?? sec.version ?? 'x'}-${i}`} className={styles.part}>
+      {titleOf(sec) ? (
+        <p className={sec.blocks.length === 0 ? styles.versionEmpty : styles.version}>
+          {titleOf(sec)}{' '}
+          {sec.build && sec.build === installed ? <Badge>{c.installed}</Badge> : null}
+          {sec.blocks.length === 0 ? <span className={styles.muted}> · {c.noChanges}</span> : null}
+        </p>
+      ) : null}
+      {sec.blocks.length > 0 ? <ReleaseNotes blocks={sec.blocks} /> : null}
+    </section>
+  );
   const progress = state.phase === 'installing' ? state.progress : undefined;
   const pct =
     progress && progress.total > 0
@@ -94,17 +117,12 @@ export function UpdateBanner() {
         <details className={styles.notes} open>
           <summary>{t.update.whatsNew}</summary>
           <div className={styles.scroll}>
-            {notes.sections.map((sec, i) => (
-              <section key={i} className={styles.part}>
-                {titleOf(sec) ? (
-                  <p className={styles.version}>
-                    {titleOf(sec)}{' '}
-                    {sec.build && sec.build === installed ? <Badge>{c.installed}</Badge> : null}
-                  </p>
-                ) : null}
-                <ReleaseNotes blocks={sec.blocks} />
-              </section>
-            ))}
+            {visible.map(renderSection)}
+            {visible.length < fresh.length ? (
+              <Button variant="ghost" onClick={() => setShowAll(true)}>
+                {c.showMore} ({fresh.length - visible.length})
+              </Button>
+            ) : null}
           </div>
         </details>
       ) : null}

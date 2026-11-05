@@ -2,7 +2,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadChangelog } from '@/core/changelog/load';
 import { newToken, selectChangelog } from '@/core/changelog/select';
-import { isUnread, loadHint, loadSeen, markSeen, saveHint } from '@/core/changelog/seen';
+import {
+  SEEN_EVENT,
+  isUnread,
+  loadHint,
+  loadSeen,
+  markSeen,
+  saveHint,
+} from '@/core/changelog/seen';
 import type { ChangelogData, ChangelogVersion } from '@/core/changelog/types';
 import { useLang } from '@/core/i18n/lang';
 import { dateTimeFormat } from '@/core/i18n/format';
@@ -16,16 +23,23 @@ export function ChangelogList({ version }: { version: string }) {
   const [data, setData] = useState<ChangelogData | undefined>();
   const [seen, setSeen] = useState<string[]>([]);
   const [hint, setHint] = useState(true);
+  // Every async result is dropped once the list is gone: no state update after unmount. Marking a version
+  // seen fires SEEN_EVENT, which reloads the seen list here.
   useEffect(() => {
-    void loadChangelog().then(setData);
-    void loadSeen().then(setSeen);
-    void loadHint().then(setHint);
+    let alive = true;
+    const reloadSeen = () => void loadSeen().then((s) => alive && setSeen(s));
+    void loadChangelog().then((d) => alive && setData(d));
+    void loadHint().then((h) => alive && setHint(h));
+    reloadSeen();
+    window.addEventListener(SEEN_EVENT, reloadSeen);
+    return () => {
+      alive = false;
+      window.removeEventListener(SEEN_EVENT, reloadSeen);
+    };
   }, []);
   const c = t.about.changes;
   const view = data ? selectChangelog(data, version) : undefined;
-  const open = (v: string) => {
-    void markSeen(v).then(() => loadSeen().then(setSeen));
-  };
+  const open = (v: string) => void markSeen(v);
   const token = view ? newToken(view) : undefined;
   const unread = hint && isUnread(seen, token);
   const dateOf = (v: ChangelogVersion) =>

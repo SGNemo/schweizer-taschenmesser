@@ -12,13 +12,20 @@ import { Badge, Button, Card } from '@/ui';
 import styles from './settings.module.css';
 import { VersionNotes } from './VersionNotes';
 
+/** Builds shown at first and per "show older builds" (a preview has hundreds of build numbers). */
+const PAGE = 30;
 const CHANGELOG_URL = 'https://github.com/SGNemo/schweizer-taschenmesser/blob/main/CHANGELOG.md';
 
 export function ChangelogHistory({ version }: { version: string }) {
   const lang = useLang();
   const [data, setData] = useState<ChangelogData | undefined>();
+  const [limit, setLimit] = useState(PAGE);
   useEffect(() => {
-    void loadChangelog().then(setData);
+    let alive = true;
+    void loadChangelog().then((d) => alive && setData(d));
+    return () => {
+      alive = false;
+    };
   }, []);
   const view = data && version ? selectChangelog(data, version) : undefined;
   const token = view ? newToken(view) : undefined;
@@ -41,34 +48,71 @@ export function ChangelogHistory({ version }: { version: string }) {
       ? ` · ${dateTimeFormat({ dateStyle: 'medium' }).format(new Date(`${v.date}T00:00:00`))}`
       : '';
   const installed = devBuildNumber(version);
-  // The open notes of a preview, one card per build (newest first), notes without a known build last.
+  // The open notes of a preview: one row per build number that exists (newest first), a card where the build
+  // has notes, one quiet line where it has none; notes without a known build (local) last.
   const byBuild = new Map<number | undefined, ChangelogEntry[]>();
   for (const e of view.unreleased?.entries ?? [])
     byBuild.set(e.build, [...(byBuild.get(e.build) ?? []), e]);
-  const buildCards = [...byBuild.entries()]
-    .sort(([a], [b]) => (b ?? -1) - (a ?? -1))
-    .map(([build, entries]) => ({
-      v: { version: build ? `build-${build}` : 'unreleased', date: '', entries },
-      title: (
-        <>
-          {build ? c.build(build) : c.unreleased}{' '}
-          {build && build === installed ? <Badge>{c.installed}</Badge> : null}
-        </>
-      ),
-    }));
-  const versions: { v: ChangelogVersion; title: ReactNode }[] = [
-    ...buildCards,
+  const numbers = [
+    ...new Set([
+      ...(view.unreleased?.builds ?? []),
+      ...[...byBuild.keys()].filter((b): b is number => !!b),
+    ]),
+  ].sort((a, b) => b - a);
+  const rows: { build: number | undefined; entries: ChangelogEntry[] }[] = [
+    ...numbers.map((build) => ({ build, entries: byBuild.get(build) ?? [] })),
+    ...(byBuild.has(undefined) ? [{ build: undefined, entries: byBuild.get(undefined)! }] : []),
+  ];
+  const shownRows = rows.slice(0, limit);
+  const buildTitle = (build: number | undefined) => (
+    <>
+      {build ? c.build(build) : c.unreleased}{' '}
+      {build && build === installed ? <Badge>{c.installed}</Badge> : null}
+    </>
+  );
+  const released: { v: ChangelogVersion; title: ReactNode }[] = [
     ...(view.current
       ? [{ v: view.current, title: `${c.version(view.current.version)}${date(view.current)}` }]
       : []),
     ...view.older.map((v) => ({ v, title: `${c.version(v.version)}${date(v)}` })),
   ];
-  if (versions.length === 0) return null;
+  if (rows.length === 0 && released.length === 0) return null;
+  const rest = rows.length - shownRows.length;
 
   return (
     <section className={styles.history} aria-label={c.history} data-testid="changelog-history">
       <h3 className={styles.historyTitle}>{c.history}</h3>
-      {versions.map(({ v, title }) => (
+      {shownRows.map((r) =>
+        r.entries.length > 0 ? (
+          <Card
+            key={r.build ?? 'unreleased'}
+            title={buildTitle(r.build)}
+            data-testid={`history-${r.build ? `build-${r.build}` : 'unreleased'}`}
+          >
+            <VersionNotes
+              version={{
+                version: r.build ? `build-${r.build}` : 'unreleased',
+                date: '',
+                entries: r.entries,
+              }}
+              data={data}
+              lang={lang}
+            />
+          </Card>
+        ) : (
+          <p key={r.build} className={styles.emptyBuild} data-testid={`history-empty-${r.build}`}>
+            {buildTitle(r.build)} <span className={styles.muted}>· {c.noChanges}</span>
+          </p>
+        ),
+      )}
+      {rest > 0 ? (
+        <div className={styles.row}>
+          <Button onClick={() => setLimit((n) => n + PAGE)}>
+            {c.showMore} ({rest})
+          </Button>
+        </div>
+      ) : null}
+      {released.map(({ v, title }) => (
         <Card key={v.version} title={title} data-testid={`history-${v.version}`}>
           <VersionNotes version={v} data={data} lang={lang} />
         </Card>
