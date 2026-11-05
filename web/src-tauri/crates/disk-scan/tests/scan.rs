@@ -409,3 +409,30 @@ fn ages_count_from_the_last_use_where_access_times_are_trusted() {
     // … by last use both are new.
     assert_eq!(ages(&by_use)[0], total);
 }
+
+#[test]
+fn the_live_picture_marks_folders_pending_until_the_walk_returns() {
+    let t = fixture();
+    let control = ScanControl::default();
+    control.set_paused(true);
+    let r = std::thread::scope(|s| {
+        let walk = s.spawn(|| scan(t.path(), &opts(1), &control, |_| {}).unwrap());
+        // Paused, the walk waits at the root: the live picture has the root and nothing finished.
+        let snap = loop {
+            let snap = control.live.snapshot(0);
+            if !snap.is_empty() {
+                break snap;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        };
+        assert!(snap[0].pending, "the root is pending while the scan runs: {snap:?}");
+        control.set_paused(false);
+        walk.join().unwrap()
+    });
+    assert!(!r.cancelled);
+    let snap = control.live.snapshot(0);
+    assert!(snap.len() >= 3, "root, projects and media: {snap:?}");
+    assert!(snap.iter().all(|n| !n.pending), "nothing pending after the walk: {snap:?}");
+    // The finished tree never carries the flag.
+    assert!(r.tree.children(0, 4, 0).iter().all(|n| !n.pending));
+}

@@ -1,47 +1,33 @@
 import { Link, Navigate } from 'react-router';
 import { t } from '@/strings';
-import { Button, Card, HelpHint, Icon, PageHeader, Stat } from '@/ui';
-import { LiveMap } from '../components/LiveMap';
+import { Card, HelpHint, PageHeader, Stat } from '@/ui';
+import { LiveView } from '../components/LiveView';
+import { ScanStatusLine } from '../components/ScanStatusLine';
 import { ScanView } from '../components/ScanView';
 import { formatBytes, formatCount, formatDuration } from '../format';
 import { useDiskStore } from '../store';
 import styles from './ScanPage.module.css';
 
+/**
+ * A running scan: one calm status line (Pause, Abbrechen) and the growing live picture. Only the
+ * fields shown are subscribed, so the ten progress events a second from Rust do not re-render
+ * the page (the store passes one on at most every second anyway).
+ */
 function Running() {
-  const { progress, paused, cancel, togglePause, scanId } = useDiskStore();
+  const progress = useDiskStore((s) => s.progress);
+  const paused = useDiskStore((s) => s.paused);
+  const scanId = useDiskStore((s) => s.scanId);
+  const cancel = useDiskStore((s) => s.cancel);
+  const togglePause = useDiskStore((s) => s.togglePause);
   return (
     <>
-      <Card>
-        <p aria-live="polite" className={styles.status}>
-          {paused ? t.disk.scan.paused : t.disk.scan.scanning}
-        </p>
-        <progress className={styles.bar} aria-label={t.disk.scan.scanning} />
-        <div className={styles.stats}>
-          <Stat
-            label={t.disk.scan.files}
-            value={formatCount(progress?.files ?? 0)}
-            testId="scan-files"
-          />
-          <Stat label={t.disk.scan.folders} value={formatCount(progress?.dirs ?? 0)} />
-          <Stat label={t.disk.scan.used} value={formatBytes(progress?.bytes ?? 0)} />
-        </div>
-        {progress?.current ? (
-          <p className={styles.current} title={progress.current}>
-            <span className={styles.muted}>{t.disk.scan.current}: </span>
-            {progress.current}
-          </p>
-        ) : null}
-        <div className={styles.actions}>
-          <Button onClick={() => void togglePause()}>
-            <Icon name={paused ? 'play' : 'pause'} size={18} />
-            {paused ? t.disk.scan.resume : t.disk.scan.pause}
-          </Button>
-          <Button variant="danger" onClick={() => void cancel()}>
-            {t.disk.scan.cancel}
-          </Button>
-        </div>
-      </Card>
-      {scanId !== null ? <LiveMap scanId={scanId} /> : null}
+      <ScanStatusLine
+        progress={progress}
+        paused={paused}
+        onPause={() => void togglePause()}
+        onCancel={() => void cancel()}
+      />
+      {scanId !== null ? <LiveView scanId={scanId} /> : null}
     </>
   );
 }

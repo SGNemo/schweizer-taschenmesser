@@ -277,6 +277,9 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
         Ok(e) => e,
         Err(e) => {
             ctx.record(path, &e);
+            if depth <= LIVE_DEPTH {
+                ctx.control.live.finish(live_id);
+            }
             return out;
         }
     };
@@ -387,6 +390,11 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
         .map(|(p, n, id)| scan_dir(&p, n, depth + 1, id, ctx))
         .collect();
     out.dirs = children;
+    // Everything that counts towards this live node is in (deeper folders share the id of their
+    // ancestor on the last live level and are finished with it).
+    if depth <= LIVE_DEPTH {
+        ctx.control.live.finish(live_id);
+    }
     out
 }
 

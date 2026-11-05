@@ -27,6 +27,8 @@ Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
 
+Dieser PC – Scan blockiert nichts mehr (`fix/disk-scan-live`): eine ruhige Statuszeile mit Pause/Abbrechen statt Balken und Zählern (auch auf der Laufwerke-Seite), Karte und Ordnerliste wachsen alle 1,5 s während des Scans, unfertige Ordner sind als „zählt noch“ markiert, Wegnavigieren und Zurück zeigt den Stand sofort; Poll statt Event nach Messung ([features/disk-live-scan.md](features/disk-live-scan.md)); PR gegen `develop`; Handtest D18 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
 Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).
 Feeds (Modul, `feat/feeds-module`, Paket 2b): Abo-Liste für RSS/Atom/Podcasts mit Gruppen, Widget, Startdaten, Einstellung „Nach Gruppen ordnen“; ruft nichts ab (kein Reader); OPML-Import/-Export (2c, `feat/feeds-opml`): Datei oder eingefügte Adressen, Gruppen aus Ordnern, Export als OPML; Handtest IA7.
 Datenebene Performance, P2b (`perf/live-queries`): Kalenderpunkte, „Jetzt wichtig“ und Kennzahlen teilen eine Live-Abfrage statt je Aufruf eine (`core/modules/sharedQuery.ts`); Start mit 20k Buchungen 18,7 s → 3,6 s, Kalender 16,4 → 0,5 s, Vorräte 15,4 → 0,03 s ([perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md)).
