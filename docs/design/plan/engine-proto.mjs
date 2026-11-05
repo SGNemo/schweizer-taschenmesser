@@ -82,8 +82,9 @@ function latestStart(u, horizon, s) {
 // ---------- the plan ----------
 export function plan({ today, days, items, prev = [], settings = {} }) {
   const s = { ...DEFAULTS, ...settings };
+  const last = addDays(today, s.horizonDays - 1);
   const horizon = days
-    .filter((d) => d.date >= today)
+    .filter((d) => d.date >= today && d.date <= last)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const prevByUnit = new Map(prev.map((a) => [a.unitId, a]));
   const units = items.filter((i) => !i.done).flatMap((i) => toUnits(i, s));
@@ -228,7 +229,10 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
         };
         const by = todayList
           .filter(
-            (a) => prevByUnit.get(a.unitId)?.date !== day.date && outranks(a),
+            (a) =>
+              a.itemId !== u.itemId &&
+              prevByUnit.get(a.unitId)?.date !== day.date &&
+              outranks(a),
           )
           .sort((a, b) => b.min - a.min || cmp(a.unitId, b.unitId))
           .map((a) => a.unitId);
@@ -537,7 +541,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const r5 = plan(in5);
   console.log(
-    `\n=== S5 Erledigt macht Platz (heute Mo ${MON}) ===\n${r5.diff.moved.length === 0 && r5.diff.removed.length === 1 ? `0 verschoben · 1 erledigt · Montag: ${fmt(r5.load[MON].free)} frei` : "FEHLER – etwas wurde vorgezogen: " + JSON.stringify(r5.diff.moved)}`,
+    `\n=== S5 Erledigt macht Platz (heute Mo ${MON}) ===\n${r5.diff.moved.length === 0 && r5.diff.removed.length === 1 && r5.load[MON].free === 92 ? `0 verschoben · 1 erledigt · Montag: ${fmt(r5.load[MON].free)} frei` : "FEHLER – etwas wurde vorgezogen: " + JSON.stringify(r5.diff.moved)}`,
   );
 
   // S4 – Ferne Frist: ein Ding mit harter Frist weit hinter dem Horizont wird nicht erzwungen.
@@ -557,7 +561,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const r4 = plan(in4);
   const far =
     r4.assignments.find((a) => a.itemId === "k") ??
-    r4.unplaced.find((u) => u.unitId === "k#1");
+    r4.unplaced.find((u) => u.unitId === "k#0");
   console.log(
     `\n=== S4 Ferne Frist (heute Mo ${MON}) ===\nJahresabschluss (Frist 2026-12-20): ${far?.reason === "deadline" ? "FEHLER – als Frist erzwungen" : `${far?.date ?? "wartet"} · ${far?.reason}`}`,
   );
