@@ -244,6 +244,26 @@ describe('parseIcs: limits', () => {
     expect(e.uid).toHaveLength(ICS_TEXT_LIMIT);
     expect(e.note).toHaveLength(ICS_NOTE_LIMIT);
   });
+
+  it('never cuts an emoji in half at the limit (X37)', () => {
+    const at = (n: number) => `${'x'.repeat(n - 1)}😀yyy`;
+    const { events } = parseIcs(
+      wrap(
+        ev(
+          `SUMMARY:${at(ICS_TEXT_LIMIT)}`,
+          `LOCATION:${at(ICS_TEXT_LIMIT)}`,
+          `DESCRIPTION:${at(ICS_NOTE_LIMIT)}`,
+          'DTSTART;VALUE=DATE:20261003',
+        ),
+      ),
+    );
+    const e = events[0]!;
+    const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+    for (const text of [e.title, e.location!, e.note!]) expect(lone.test(text)).toBe(false);
+    expect(e.title).toBe('x'.repeat(ICS_TEXT_LIMIT - 1));
+    const whole = parseIcs(wrap(ev(`SUMMARY:${at(10)}`, 'DTSTART;VALUE=DATE:20261003')));
+    expect(whole.events[0]!.title).toBe(`${'x'.repeat(9)}😀yyy`);
+  });
 });
 
 describe('parseRrule / durationMinutes', () => {

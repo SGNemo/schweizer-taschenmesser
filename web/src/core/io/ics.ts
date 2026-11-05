@@ -315,11 +315,16 @@ export function parseIcs(text: string): IcsResult {
   return { events, issues };
 }
 
+/** At most `max` UTF-16 units, never half an emoji: a cut pair is dropped whole (X37). */
+function cut(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const last = text.charCodeAt(max - 1);
+  return text.slice(0, last >= 0xd800 && last <= 0xdbff ? max - 1 : max);
+}
+
 function convert(props: Prop[], events: IcsEvent[], issues: IcsIssue[]): void {
   const first = (name: string) => props.find((p) => p.name === name);
-  const summary = unescapeText(first('SUMMARY')?.value ?? '')
-    .trim()
-    .slice(0, ICS_TEXT_LIMIT);
+  const summary = cut(unescapeText(first('SUMMARY')?.value ?? '').trim(), ICS_TEXT_LIMIT);
   const title = summary || '(ohne Titel)';
 
   if (first('STATUS')?.value.toUpperCase() === 'CANCELLED') {
@@ -367,15 +372,11 @@ function convert(props: Prop[], events: IcsEvent[], issues: IcsIssue[]): void {
     }
   }
 
-  const location = unescapeText(first('LOCATION')?.value ?? '')
-    .trim()
-    .slice(0, ICS_TEXT_LIMIT);
+  const location = cut(unescapeText(first('LOCATION')?.value ?? '').trim(), ICS_TEXT_LIMIT);
   if (location) event.location = location;
-  const note = unescapeText(first('DESCRIPTION')?.value ?? '')
-    .trim()
-    .slice(0, ICS_NOTE_LIMIT);
+  const note = cut(unescapeText(first('DESCRIPTION')?.value ?? '').trim(), ICS_NOTE_LIMIT);
   if (note) event.note = note;
-  const uid = first('UID')?.value.trim().slice(0, ICS_TEXT_LIMIT);
+  const uid = cut(first('UID')?.value.trim() ?? '', ICS_TEXT_LIMIT);
   if (uid) event.uid = uid;
 
   const rrule = first('RRULE');
