@@ -8,6 +8,8 @@ Built on `fix/disk-scan-live` (2026-11-05). Module `disk`, desktop only. Decisio
 - On the drives page the line stays after the scan ended ("Scan von C:\ beendet · Zum Ergebnis"), and another drive's scan button leads to the running scan instead of replacing it (one toast). The live list keeps a stable order by name while sizes still move.
 - View only: opening, selecting and deleting come with the finished tree (`tree_of` answers `not-finished` in Rust until then). The finished result is unchanged.
 
+Screenshots (e2e build, invented data): [map](shots/disk-live-scan-map.jpg) · [list](shots/disk-live-scan-list.jpg) · [drives page](shots/disk-live-scan-drives.jpg).
+
 ## Numbers (Linux VM, 4 cores, release build of the crate; parse times measured in Node as a stand-in for the webview)
 | Case | Rust `snapshot` | payload | parse |
 |---|---|---|---|
