@@ -3,6 +3,7 @@
  * regular interval (weekly … yearly) and a stable amount. Pure; produces suggestions the user
  * confirms in the import preview.
  */
+import { addMonthsStr } from '@/core/time/dates';
 import type { BankTransaction } from './bank';
 
 export interface DetectedSubscription {
@@ -29,6 +30,13 @@ const RHYTHMS: { freq: DetectedSubscription['freq']; days: number; tolerance: nu
   { freq: 'quarterly', days: 91, tolerance: 8 },
   { freq: 'yearly', days: 365, tolerance: 14 },
 ];
+
+/** Calendar months per rhythm: the next charge keeps the day of the month (15th → 15th). */
+const MONTHS: Partial<Record<DetectedSubscription['freq'], number>> = {
+  monthly: 1,
+  quarterly: 3,
+  yearly: 12,
+};
 
 const MS_DAY = 86_400_000;
 const dayNumber = (date: string) => Math.round(Date.parse(`${date}T00:00:00Z`) / MS_DAY);
@@ -88,7 +96,9 @@ export function detectSubscriptions(
       freq: rhythm.freq,
       intervalDays: Math.round(mid),
       lastDate: last.date,
-      nextDate: dateOf(dayNumber(last.date) + Math.round(rhythm.days)),
+      nextDate: MONTHS[rhythm.freq]
+        ? addMonthsStr(last.date, MONTHS[rhythm.freq]!)
+        : dateOf(dayNumber(last.date) + Math.round(rhythm.days)),
       occurrences: sorted.length,
     });
   }
