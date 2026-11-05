@@ -179,3 +179,5 @@ Not module pages, so no `AreaFrame` band: they use the local `pages/settings/Pag
 **Cards show the identity colour:** wherever a module or tool appears as a row or card (libraries, settings lists), its icon sits on the same solid `ui/HuePlate` in `identity.hue` (hue fills, `--surface` draws the icon; grey in "Ruhig" / "Modulfarben: Aus"); a list without a hue keeps the accent tile. `e2e/hue-consistency.spec.ts` pins it.
 
 **Connect cards (settings):** Sync and Backup (later AI, connections) say the state first (`pages/settings/ConnectParts`: `StateBanner`, numbered `Step`s with a hint, `Facts` tiles, one `Actions` row with the main action first); labels and test ids of the fields stay as they were.
+
+**Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.

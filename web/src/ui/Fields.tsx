@@ -152,16 +152,37 @@ export function SelectField({
 export function Checkbox({
   label,
   labelHidden,
+  description,
   ...rest
 }: {
   label: ReactNode;
   /** Label for screen readers only (a checkbox inside a row). */
   labelHidden?: boolean;
+  /** A second, quieter line under the label (what the choice does); the box then sits beside the title. */
+  description?: ReactNode;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const id = useId();
   return (
-    <label className={styles.check}>
-      <input type="checkbox" {...rest} />
-      <span className={labelHidden ? 'sr-only' : undefined}>{label}</span>
+    <label className={styles.check} data-detail={description ? 'true' : undefined}>
+      <input
+        type="checkbox"
+        {...(description
+          ? { 'aria-labelledby': `${id}-t`, 'aria-describedby': `${id}-d` }
+          : undefined)}
+        {...rest}
+      />
+      {description ? (
+        <span className={styles.checkText}>
+          <span id={`${id}-t`} className={styles.checkTitle}>
+            {label}
+          </span>
+          <span id={`${id}-d`} className={styles.checkDetail}>
+            {description}
+          </span>
+        </span>
+      ) : (
+        <span className={labelHidden ? 'sr-only' : undefined}>{label}</span>
+      )}
     </label>
   );
 }
