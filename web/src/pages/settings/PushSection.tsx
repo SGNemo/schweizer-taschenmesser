@@ -9,6 +9,7 @@ import {
 } from '@/core/notifications/push';
 import { t } from '@/strings';
 import { Button, Card } from '@/ui';
+import { Actions, StateBanner } from './ConnectParts';
 import styles from './settings.module.css';
 
 /** Optional Web Push via the sync server (see core/notifications/push.ts). */
@@ -48,13 +49,15 @@ export function PushSection() {
   return (
     <Card title={t.notifications.push.title}>
       <div className={styles.form}>
-        <p>{t.notifications.push.intro}</p>
+        <p className={styles.muted}>{t.notifications.push.intro}</p>
         {state ? (
-          <p role="status" data-testid="push-status">
-            {t.notifications.push.state[state]}
-          </p>
+          <StateBanner
+            tone={state === 'on' ? 'ok' : state === 'denied' ? 'attention' : 'neutral'}
+            title={t.notifications.push.state[state] ?? ''}
+            testId="push-status"
+          />
         ) : null}
-        <div className={styles.row}>
+        <Actions>
           {state === 'off' || state === 'denied' ? (
             <Button
               variant="primary"
@@ -83,7 +86,7 @@ export function PushSection() {
               </Button>
             </>
           ) : null}
-        </div>
+        </Actions>
         {message ? (
           <p
             role={message.error ? 'alert' : 'status'}

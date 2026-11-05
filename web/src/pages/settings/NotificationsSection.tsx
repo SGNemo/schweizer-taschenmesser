@@ -3,6 +3,7 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, Card, SettingsGroup } from '@/ui';
+import { Actions, StateBanner } from './ConnectParts';
 import { GameModeCard } from './GameModeCard';
 import { PushSection } from './PushSection';
 import styles from './settings.module.css';
@@ -20,32 +21,37 @@ function NotificationsCard() {
   return (
     <Card>
       <div className={styles.form}>
-        <p>{introText()}</p>
-        <p role="status" data-testid="notification-status">
-          {t.notifications[permission]}
-        </p>
-        {permission === 'default' ? (
-          <Button
-            variant="primary"
-            onClick={async () =>
-              setPermission(await getPlatform().notifications.requestPermission())
-            }
-          >
-            {t.notifications.enable}
-          </Button>
-        ) : null}
-        {permission === 'granted' ? (
-          <Button
-            onClick={() =>
-              void getPlatform().notifications.show({
-                title: t.appName,
-                body: t.notifications.testBody,
-                tag: 'test',
-              })
-            }
-          >
-            {t.notifications.test}
-          </Button>
+        <StateBanner
+          tone={permission === 'granted' ? 'ok' : permission === 'denied' ? 'attention' : 'neutral'}
+          title={t.notifications[permission]}
+          line={introText()}
+          titleTestId="notification-status"
+        />
+        {permission === 'default' || permission === 'granted' ? (
+          <Actions>
+            {permission === 'default' ? (
+              <Button
+                variant="primary"
+                onClick={async () =>
+                  setPermission(await getPlatform().notifications.requestPermission())
+                }
+              >
+                {t.notifications.enable}
+              </Button>
+            ) : (
+              <Button
+                onClick={() =>
+                  void getPlatform().notifications.show({
+                    title: t.appName,
+                    body: t.notifications.testBody,
+                    tag: 'test',
+                  })
+                }
+              >
+                {t.notifications.test}
+              </Button>
+            )}
+          </Actions>
         ) : null}
       </div>
     </Card>
