@@ -112,6 +112,26 @@ describe('the aid keeps every word one piece in the host layout', () => {
     expect(bold?.hasAttribute('data-bold')).toBe(true);
     expect(plain?.hasAttribute('data-bold')).toBe(false);
   });
+
+  it('measures again when the link around it stops being the current page without re-rendering the text (N07)', async () => {
+    // A NavLink changes only its own class and aria-current on a route change; the text element is the same object, so
+    // React does not re-render it. The ink of the old state (bold, primary) must not stay on the now inactive entry.
+    const label = <ReadableText text="Kalender" level={75} />;
+    const { container } = wrap(
+      on(100),
+      <a href="/calendar" aria-current="page" className="active" style={{ fontWeight: 600 }}>
+        {label}
+      </a>,
+    );
+    const link = container.querySelector('a')!;
+    const rt = () => container.querySelector('[data-rt]')!;
+    expect(rt().hasAttribute('data-bold')).toBe(true);
+    link.style.fontWeight = '400';
+    link.removeAttribute('aria-current');
+    link.className = '';
+    await new Promise((r) => setTimeout(r, 0));
+    expect(rt().hasAttribute('data-bold')).toBe(false);
+  });
 });
 
 describe('the JSX runtime hands plain text children to the reading aid', () => {
