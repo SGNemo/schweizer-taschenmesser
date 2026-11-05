@@ -2,8 +2,8 @@
 type: changed
 area: ui
 breaking: false
-de: „Dieser PC“ zeigt oben jetzt den belegten Platz des Systemlaufwerks mit freiem Platz, Zustand („fast voll“) und letztem Scan sowie einen Ring je Laufwerk; die Ringe in den Widgets und auf den Laufwerkskarten tragen die Modulfarbe, der Zustand steht als Wort daneben.
-en: "This PC" now shows the used space of the system drive at the top, with free space, state ("almost full") and the last scan, plus one ring per drive; the rings in the widgets and on the drive cards use the module colour, with the state written next to them.
+de: „Dieser PC“ zeigt oben den belegten Platz des Systemlaufwerks, seinen Zustand als Wort und einen Ring je Laufwerk; alle Ringe tragen die Modulfarbe.
+en: "This PC" now shows the used space of the system drive at the top, its state in words and one ring per drive; all rings use the module colour.
 ---
 
 ---

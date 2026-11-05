@@ -378,7 +378,8 @@ describe('design tokens', () => {
         'modules/accounts/components/VaultDoor.module.css',
         'modules/pantry/components/ShelfSignature.module.css',
         'modules/lists/components/ListSignature.module.css',
-        'modules/downloads/components/ArrowBand.module.css',
+        'modules/downloads/components/DownloadsBand.module.css',
+        'modules/disk/components/DiskHead.module.css',
       ];
       expect(files.length).toBeGreaterThan(10);
       for (const rel of files)
