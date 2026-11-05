@@ -95,38 +95,6 @@
       }
     },
     {
-      "id": "planner",
-      "area": "plan",
-      "status": "preview",
-      "platforms": null,
-      "icon": "calendarDays",
-      "hue": "indigo",
-      "hue2": "cobalt",
-      "head": "kennzahl",
-      "widget": "fortschritt",
-      "name": {
-        "de": "Planer",
-        "en": "Planner",
-        "es": "Planificador",
-        "fr": "Planificateur",
-        "pt-BR": "Planejador"
-      },
-      "short": {
-        "de": "Verteilt deine offenen ToDos auf die nächsten Tage",
-        "en": "Spreads your open to-dos over the coming days",
-        "es": "Reparte tus tareas abiertas en los próximos días",
-        "fr": "Répartit vos tâches ouvertes sur les prochains jours",
-        "pt-BR": "Distribui suas tarefas abertas pelos próximos dias"
-      },
-      "description": {
-        "de": "Verteilt deine offenen ToDos auf die nächsten Tage – nach der Zeit, die du je Tag hast, nach Fristen und Wichtigkeit. Termine aus dem Kalender blocken Zeit, nichts rückt von selbst nach vorn, jede Verschiebung hat einen Grund.",
-        "en": "Spreads your open to-dos over the coming days: by the time you have each day, by deadlines and by importance. Appointments from the calendar block time, nothing moves forward by itself, and every move has a reason.",
-        "es": "Reparte tus tareas abiertas en los próximos días: según el tiempo que tienes cada día, las fechas límite y la importancia. Las citas del calendario bloquean tiempo, nada se adelanta solo y cada cambio tiene un motivo.",
-        "fr": "Répartit vos tâches ouvertes sur les prochains jours : selon le temps dont vous disposez chaque jour, les échéances et l’importance. Les rendez-vous du calendrier bloquent du temps, rien n’avance tout seul et chaque déplacement a une raison.",
-        "pt-BR": "Distribui suas tarefas abertas pelos próximos dias: pelo tempo que você tem em cada dia, pelos prazos e pela importância. Compromissos do calendário bloqueiam tempo, nada avança sozinho e cada mudança tem um motivo."
-      }
-    },
-    {
       "id": "todos",
       "area": "plan",
       "status": "default",
@@ -582,8 +550,8 @@
       "icon": "mail",
       "hue": "teal",
       "hue2": "ocean",
-      "head": "schreib",
-      "widget": "notiz",
+      "head": "kennzahl",
+      "widget": "kennzahl",
       "name": {
         "de": "E-Mail",
         "en": "Mail",
@@ -711,7 +679,7 @@
       "hue": "indigo",
       "hue2": "violet",
       "head": "regal",
-      "widget": "kennzahl",
+      "widget": "faellig",
       "name": {
         "de": "Unterlagen",
         "en": "Documents",
