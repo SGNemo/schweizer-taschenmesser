@@ -29,7 +29,8 @@ export function MuteSwitch() {
         options={(['off', ...MUTE_PRESETS] as const).map((v) => ({ value: v, label: labels[v] }))}
         onChange={(v) => setMute(v === 'off' ? undefined : v)}
       />
-      <span className={styles.quickLabel}>{text.hint}</span>
+      {/* The explanation only while a pause runs: that is when it matters; a quiet bar otherwise. */}
+      {mute ? <span className={styles.quickLabel}>{text.hint}</span> : null}
     </div>
   );
 }

@@ -17,6 +17,11 @@ export const tSettingsConnect = defineBundle(
       factPending: 'Noch zu senden',
       stepConnection: 'Verbindung',
     },
+    share: {
+      stepOnce: 'Einmal als Datei teilen',
+      stepOnceHint: 'Eine Auswahl packen und der anderen Person geben, ohne dauerhafte Verbindung.',
+      stepOpenHint: 'Eine erhaltene Datei ansehen und übernehmen.',
+    },
     backup: {
       stepSave: 'Sichern',
       stepSaveHint: 'Alle Daten als Datei auf dieses Gerät legen.',
@@ -37,6 +42,11 @@ export const tSettingsConnect = defineBundle(
         factPending: 'Still to send',
         stepConnection: 'Connection',
       },
+      share: {
+        stepOnce: 'Share once as a file',
+        stepOnceHint: 'Pack a selection and hand it over, without a standing connection.',
+        stepOpenHint: 'Look at a file you received and take it over.',
+      },
       backup: {
         stepSave: 'Save',
         stepSaveHint: 'Put all your data into a file on this device.',
@@ -55,6 +65,11 @@ export const tSettingsConnect = defineBundle(
         facts: 'Estado de la sincronización',
         factPending: 'Por enviar',
         stepConnection: 'Conexión',
+      },
+      share: {
+        stepOnce: 'Compartir una vez como archivo',
+        stepOnceHint: 'Prepara una selección y entrégala, sin conexión permanente.',
+        stepOpenHint: 'Mira un archivo recibido y acéptalo.',
       },
       backup: {
         stepSave: 'Guardar',
@@ -76,6 +91,11 @@ export const tSettingsConnect = defineBundle(
         factPending: 'À envoyer',
         stepConnection: 'Connexion',
       },
+      share: {
+        stepOnce: 'Partager une fois en fichier',
+        stepOnceHint: 'Prépare une sélection et remets-la, sans connexion permanente.',
+        stepOpenHint: 'Regarde un fichier reçu et reprends-le.',
+      },
       backup: {
         stepSave: 'Sauvegarder',
         stepSaveHint: 'Mets toutes tes données dans un fichier sur cet appareil.',
@@ -94,6 +114,11 @@ export const tSettingsConnect = defineBundle(
         facts: 'Estado da sincronização',
         factPending: 'A enviar',
         stepConnection: 'Conexão',
+      },
+      share: {
+        stepOnce: 'Compartilhar uma vez como arquivo',
+        stepOnceHint: 'Monte uma seleção e entregue, sem conexão permanente.',
+        stepOpenHint: 'Veja um arquivo recebido e aceite.',
       },
       backup: {
         stepSave: 'Salvar',

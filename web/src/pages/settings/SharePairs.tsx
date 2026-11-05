@@ -188,7 +188,7 @@ export function SharePairs({ version, onChanged }: { version: number; onChanged:
         </div>
       ) : null}
       <TextField label={n.pairName} value={name} onChange={(e) => setName(e.target.value)} />
-      <fieldset className={styles.fieldset}>
+      <fieldset className={`${styles.fieldset} ${styles.checkGrid}`}>
         <legend className={styles.legend}>{n.modules}</legend>
         {modules.map((m) => (
           <div key={m.id}>

@@ -45,6 +45,16 @@
   height: 1.1rem;
   accent-color: var(--accent);
 }
+.checkGrid {
+  /* A long list of choices (every module) in columns instead of twenty rows. */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0 var(--space-4);
+}
+.checkGrid > legend,
+.checkGrid > p {
+  grid-column: 1 / -1;
+}
 .legend {
   font-size: var(--text-sm);
   font-weight: 550;
