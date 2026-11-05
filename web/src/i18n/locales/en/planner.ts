@@ -9,7 +9,8 @@ export const planner: Strings['planner'] = {
     widget: 'Week load',
     settings: {
       availableWeekday: 'Available time Mon–Fri (minutes)',
-      availableWeekdayHelp: 'How much time a weekday gets unless you set something else for that day.',
+      availableWeekdayHelp:
+        'How much time a weekday gets unless you set something else for that day.',
       availableSaturday: 'Available time Saturday (minutes)',
       availableSaturdayHelp: '0 means: Saturday is off.',
       availableSunday: 'Available time Sunday (minutes)',
@@ -38,7 +39,8 @@ export const planner: Strings['planner'] = {
     full: 'Enough is planned for today.',
     dayOff: 'Today is off.',
     over: (min: string) => `${min} more than fits`,
-    context: (n: number, planned: string) => `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,
+    context: (n: number, planned: string) =>
+      `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,
     week: (week: string) => `Week ${week}`,
     menu: 'More options',
   },

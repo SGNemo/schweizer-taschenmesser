@@ -8,7 +8,10 @@ import { db as defaultDb, type TaschenmesserDB } from './db';
 const table = (database: TaschenmesserDB) =>
   database.table<{ key: string; value: unknown }, string>('_meta');
 
-export async function readMeta<T>(key: string, database: TaschenmesserDB = defaultDb): Promise<T | undefined> {
+export async function readMeta<T>(
+  key: string,
+  database: TaschenmesserDB = defaultDb,
+): Promise<T | undefined> {
   return (await table(database).get(key))?.value as T | undefined;
 }
 
@@ -20,6 +23,9 @@ export async function writeMeta(
   await table(database).put({ key, value });
 }
 
-export async function deleteMeta(key: string, database: TaschenmesserDB = defaultDb): Promise<void> {
+export async function deleteMeta(
+  key: string,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
   await table(database).delete(key);
 }

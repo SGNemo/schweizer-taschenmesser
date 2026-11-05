@@ -24,7 +24,12 @@ export function calendarBlockers(
     if (i.kind !== 'event' && i.kind !== 'external') continue;
     if (i.allDay || !i.time) {
       if (opts.allDayBlocks && i.allDay)
-        out.push({ id: `cal:${i.source}:${i.id}`, label: i.title, min: ALL_DAY_BLOCK_MIN, date: i.date });
+        out.push({
+          id: `cal:${i.source}:${i.id}`,
+          label: i.title,
+          min: ALL_DAY_BLOCK_MIN,
+          date: i.date,
+        });
       continue;
     }
     const start = toMinutes(i.time);

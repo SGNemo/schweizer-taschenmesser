@@ -47,18 +47,16 @@ const rows = async () =>
     .map((a) => [a.id, a.date, a.minutes, a.order, a.reason] as const)
     .sort();
 const modulesRow = (id: string, enabled: boolean) =>
-  db
-    .table('_modules')
-    .put({
-      id,
-      enabled,
-      dataPolicy: null,
-      createdAt: 1,
-      updatedAt: 1,
-      deviceId: 't',
-      deletedAt: null,
-      _f: {},
-    });
+  db.table('_modules').put({
+    id,
+    enabled,
+    dataPolicy: null,
+    createdAt: 1,
+    updatedAt: 1,
+    deviceId: 't',
+    deletedAt: null,
+    _f: {},
+  });
 
 beforeEach(async () => {
   setNow(() => NOW);
@@ -179,7 +177,7 @@ describe('a run', () => {
       plannedFor: '2026-11-12',
       planMark: { date: '2026-11-12' },
     });
-    expect((await stored(a.id))!.planMark!.prior).toBeUndefined();
+    expect(((await stored(a.id))!.planMark as { prior?: string }).prior).toBeUndefined();
   });
 
   it('gate closed → the user’s date is neither copied nor overwritten, but used as the lower bound', async () => {
@@ -209,12 +207,10 @@ describe('a run', () => {
     expect(planMarkOp).toBeGreaterThan(
       server.dump().findIndex((op) => op.id === t.id && op.field === 'plannedFor'),
     );
-    await db
-      .table('_secrets')
-      .put({
-        key: 'syncConfig',
-        value: { kind: 'selfHosted', url: 'https://sync.example', token: 'right-token' },
-      });
+    await db.table('_secrets').put({
+      key: 'syncConfig',
+      value: { kind: 'selfHosted', url: 'https://sync.example', token: 'right-token' },
+    });
     server.failPullAt = server.requests.pull + planMarkOp + 1; // the page with the mark never arrives
     await expect(
       runSync({ storage: new DexieStorageAdapter(db), adapter: server.adapter(), pullLimit: 1 }),
@@ -395,7 +391,7 @@ describe('the service', () => {
       plannedFor: '2026-11-12',
       planMark: { date: '2026-11-12' },
     });
-    expect((await stored(a.id))!.planMark!.prior).toBeUndefined();
+    expect(((await stored(a.id))!.planMark as { prior?: string }).prior).toBeUndefined();
     const stop = start();
     await disableModule(manifest, 'keep');
     stop();

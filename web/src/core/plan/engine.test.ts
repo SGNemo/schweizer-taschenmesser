@@ -271,9 +271,11 @@ describe('buffer, split, limit (rules 1, 2, 5)', () => {
   it('the usable minutes are never exceeded except by a deadline or a pin', () => {
     const r1 = plan(input(s1));
     for (const l of Object.values(r1.load)) expect(l.planned).toBeLessThanOrEqual(l.usable);
-    expect(capacity({ date: MON, availableMin: 240, blockers: [] }, { bufferShare: 0.2 })).toEqual(
-      { raw: 240, usable: 192, blocked: 0 },
-    );
+    expect(capacity({ date: MON, availableMin: 240, blockers: [] }, { bufferShare: 0.2 })).toEqual({
+      raw: 240,
+      usable: 192,
+      blocked: 0,
+    });
     const r = plan({
       today: MON,
       days: week([60, 0, 0, 0, 0, 0, 0]),
@@ -383,8 +385,9 @@ describe('blockers (rule 1)', () => {
       ['cal:calendar:a', 90],
       ['cal:calendar:b', 60],
     ]);
-    expect(calendarBlockers([cal({ id: 'f', allDay: true, time: undefined })], { allDayBlocks: true }))
-      .toHaveLength(1);
+    expect(
+      calendarBlockers([cal({ id: 'f', allDay: true, time: undefined })], { allDayBlocks: true }),
+    ).toHaveLength(1);
   });
 
   it('a reminder at a planned hour changes nothing in the plan', () => {

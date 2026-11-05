@@ -28,7 +28,13 @@ export function diffPlans(
     else {
       const b = bumps.find((x) => x.id === a.id);
       const reason: MoveReason = b?.cause ?? (a.date < p.date ? 'pulled' : 'carried');
-      diff.moved.push({ id: a.id, from: p.date, to: a.date, reason, ...(b?.by.length ? { by: b.by } : {}) });
+      diff.moved.push({
+        id: a.id,
+        from: p.date,
+        to: a.date,
+        reason,
+        ...(b?.by.length ? { by: b.by } : {}),
+      });
     }
   }
   for (const p of prev) {

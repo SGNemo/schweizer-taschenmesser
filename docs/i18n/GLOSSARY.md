@@ -32,6 +32,12 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | System | System | Sistema | Système | Sistema |
 | Kalender | Calendar | Calendario | Calendrier | Calendário |
 | ToDos | To-dos | Tareas | Tâches | Tarefas |
+| Planer | Planner | Planificador | Planificateur | Planejador |
+| Verfügbar (Zeit je Tag) | Available | Disponible | Disponible | Disponível |
+| Blocker | Blocker | Bloqueo | Blocage | Bloqueio |
+| Puffer | Buffer | Margen | Marge | Folga |
+| festnageln | pin | fijar | fixer | fixar |
+| Frist | Deadline | Fecha límite | Échéance | Prazo |
 | Finanzen | Finances | Finanzas | Finances | Finanças |
 | Rechnungen | Invoices | Facturas | Factures | Faturas |
 | Abos | Subscriptions | Suscripciones | Abonnements | Assinaturas |

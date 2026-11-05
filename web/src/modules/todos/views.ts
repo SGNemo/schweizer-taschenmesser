@@ -51,7 +51,10 @@ export function viewOf(task: V, day: string): TodoView {
 export const inView = (task: V, view: TodoView, day: string): boolean => viewOf(task, day) === view;
 
 export type MovePatch = Partial<
-  Pick<Task, 'someday' | 'plannedFor' | 'planMark' | 'dueDate' | 'done' | 'completedAt' | 'startDate'>
+  Pick<
+    Task,
+    'someday' | 'plannedFor' | 'planMark' | 'dueDate' | 'done' | 'completedAt' | 'startDate'
+  >
 >;
 
 /**

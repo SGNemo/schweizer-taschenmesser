@@ -9,7 +9,8 @@ export const planner: Strings['planner'] = {
     widget: 'Charge de la semaine',
     settings: {
       availableWeekday: 'Temps disponible lun.–ven. (minutes)',
-      availableWeekdayHelp: 'Le temps prévu un jour de semaine, tant que vous ne fixez rien d’autre pour ce jour.',
+      availableWeekdayHelp:
+        'Le temps prévu un jour de semaine, tant que vous ne fixez rien d’autre pour ce jour.',
       availableSaturday: 'Temps disponible samedi (minutes)',
       availableSaturdayHelp: '0 signifie : le samedi est libre.',
       availableSunday: 'Temps disponible dimanche (minutes)',
@@ -25,11 +26,14 @@ export const planner: Strings['planner'] = {
       minSessionMin: 'Séance la plus courte (minutes)',
       minSessionMinHelp: 'Une partie n’est jamais plus courte que cela.',
       autoReplan: 'Tenir le plan à jour tout seul',
-      autoReplanHelp: 'Désactivé : le plan ne change que lorsque vous agissez dans le planificateur.',
+      autoReplanHelp:
+        'Désactivé : le plan ne change que lorsque vous agissez dans le planificateur.',
       calendarBlocks: 'Les rendez-vous bloquent du temps',
-      calendarBlocksHelp: 'Les rendez-vous avec une heure retirent leur durée de la journée ; jamais les rappels.',
+      calendarBlocksHelp:
+        'Les rendez-vous avec une heure retirent leur durée de la journée ; jamais les rappels.',
       allDayBlocks: 'Les rendez-vous d’une journée bloquent du temps',
-      allDayBlocksHelp: 'Désactivé : un rendez-vous d’une journée entière ne coûte aucun temps planifiable.',
+      allDayBlocksHelp:
+        'Désactivé : un rendez-vous d’une journée entière ne coûte aucun temps planifiable.',
     },
   },
   title: 'Planificateur',
@@ -38,7 +42,8 @@ export const planner: Strings['planner'] = {
     full: 'Assez de choses sont prévues pour aujourd’hui.',
     dayOff: 'Aujourd’hui est libre.',
     over: (min: string) => `${min} de plus que possible`,
-    context: (n: number, planned: string) => `${n === 1 ? '1 chose' : `${n} choses`} · ${planned} prévus`,
+    context: (n: number, planned: string) =>
+      `${n === 1 ? '1 chose' : `${n} choses`} · ${planned} prévus`,
     week: (week: string) => `Semaine ${week}`,
     menu: 'Plus d’options',
   },
@@ -158,7 +163,8 @@ export const planner: Strings['planner'] = {
   },
   check: {
     title: 'Vérifier la semaine',
-    intro: 'Le temps par jour est-il juste ? Confirmer suffit ; chaque jour peut être changé à part.',
+    intro:
+      'Le temps par jour est-il juste ? Confirmer suffit ; chaque jour peut être changé à part.',
     confirm: 'C’est bon ainsi',
   },
 };

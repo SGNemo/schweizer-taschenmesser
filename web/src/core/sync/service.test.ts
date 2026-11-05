@@ -246,7 +246,6 @@ describe('disconnect', () => {
 });
 
 describe('syncSettled', () => {
-
   it('is true without a sync configuration', async () => {
     expect(await syncSettled(db)).toBe(true);
   });

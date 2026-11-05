@@ -245,7 +245,11 @@ function TaskRow({
           {task.startDate && task.startDate > day ? (
             <span>{t.todos.startsOn(formatDay(task.startDate, 'EEE, d. MMM'))}</span>
           ) : null}
-          {inPlan && !task.done && task.plannedFor && task.plannedFor > day && isPlannerOwned(task) ? (
+          {inPlan &&
+          !task.done &&
+          task.plannedFor &&
+          task.plannedFor > day &&
+          isPlannerOwned(task) ? (
             <span data-testid="in-plan">{t.todos.inPlan(dayName(task.plannedFor))}</span>
           ) : null}
           {task.recurrence ? <span>↻ {describeRecurrence(task.recurrence)}</span> : null}

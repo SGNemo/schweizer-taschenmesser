@@ -7672,13 +7672,15 @@ export const de = {
       widget: 'Wochenlast',
       settings: {
         availableWeekday: 'Verfügbare Zeit Mo–Fr (Minuten)',
-        availableWeekdayHelp: 'So viel Zeit planst du an einem Werktag ein, solange du für den Tag nichts anderes festlegst.',
+        availableWeekdayHelp:
+          'So viel Zeit planst du an einem Werktag ein, solange du für den Tag nichts anderes festlegst.',
         availableSaturday: 'Verfügbare Zeit Samstag (Minuten)',
         availableSaturdayHelp: '0 heißt: Samstag ist frei.',
         availableSunday: 'Verfügbare Zeit Sonntag (Minuten)',
         availableSundayHelp: '0 heißt: Sonntag ist frei.',
         bufferShare: 'Puffer',
-        bufferShareHelp: 'Dieser Anteil der freien Zeit bleibt ungeplant – für das, was zwischendurch kommt.',
+        bufferShareHelp:
+          'Dieser Anteil der freien Zeit bleibt ungeplant – für das, was zwischendurch kommt.',
         bufferOption: (pct: number) => (pct === 0 ? 'Kein Puffer' : `${pct} %`),
         horizonDays: 'Planungszeitraum',
         horizonDaysHelp: 'So viele Tage im Voraus verteilt der Planer.',
@@ -7701,7 +7703,8 @@ export const de = {
       full: 'Für heute ist genug geplant.',
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
-      context: (n: number, planned: string) => `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
+      context: (n: number, planned: string) =>
+        `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
       week: (week: string) => `KW ${week}`,
       menu: 'Weitere Optionen',
     },

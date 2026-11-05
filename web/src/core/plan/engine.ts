@@ -151,8 +151,7 @@ export function plan(input: PlanInput): PlanResult {
     // for a later day is never pulled forward here: only rule 4 (deadline) may pull.
     const rest = units
       .filter(
-        (u) =>
-          eligible(u) && !must.includes(u) && !((prevByUnit.get(u.id)?.date ?? '') > day.date),
+        (u) => eligible(u) && !must.includes(u) && !((prevByUnit.get(u.id)?.date ?? '') > day.date),
       )
       .sort(
         (a, b) =>
@@ -200,8 +199,7 @@ export function plan(input: PlanInput): PlanResult {
       };
       const by = todayList
         .filter(
-          (a) =>
-            a.itemKey !== u.itemKey && prevByUnit.get(a.id)?.date !== day.date && outranks(a),
+          (a) => a.itemKey !== u.itemKey && prevByUnit.get(a.id)?.date !== day.date && outranks(a),
         )
         .sort((a, b) => b.minutes - a.minutes || cmp(a.id, b.id))
         .map((a) => a.id);
@@ -210,12 +208,9 @@ export function plan(input: PlanInput): PlanResult {
 
     // Final order of the day without `prev`: pinned, deadline, then priority ↓, due ↑, age ↑, id –
     // so a rerun on the same input gives the same (unit, date, minutes, order).
-    const pinnedIds = new Set(
-      units.filter((u) => u.item.pinned === day.date).map((u) => u.id),
-    );
+    const pinnedIds = new Set(units.filter((u) => u.item.pinned === day.date).map((u) => u.id));
     const mustIds = new Set(must.map((u) => u.id));
-    const tierOf = (a: Assignment): number =>
-      pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2;
+    const tierOf = (a: Assignment): number => (pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2);
     todayList
       .sort((a, b) => {
         const ua = unitById.get(a.id)!.item;

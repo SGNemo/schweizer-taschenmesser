@@ -79,7 +79,7 @@ export interface UserRun {
 
 /**
  * A user action of the planner UI: `act` and the run it causes (write-backs included) are one undoable
- * action, so the toast's „Rückgängig“ restores everything. Returns the run and the undo entry.
+ * action, so the undo in the toast restores everything. Returns the run and the undo entry.
  */
 export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
   return enqueue(async () => {

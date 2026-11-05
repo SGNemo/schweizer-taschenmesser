@@ -103,6 +103,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | --- | --- | --- | --- | --- | --- | --- |
 | Kalender `calendar` | plan | sky | ocean | zeit | zeitleiste | `calendarLeaf` |
 | ToDos `todos` | plan | moss | lime | fokus | fokus | `todayCard` |
+| Planer `planner` | plan | indigo | cobalt | kennzahl | fortschritt | `weekBars` (order 15 between Kalender and ToDos; indigo is 26° from cobalt and violet, confirmed by `check:modules`) |
 | Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | `ring` |
 | Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `hourStrip` |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |

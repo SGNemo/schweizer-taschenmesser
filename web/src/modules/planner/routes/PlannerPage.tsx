@@ -72,7 +72,8 @@ export default function PlannerPage() {
     if (!value) return;
     setText('');
     await addFromField(value, titles);
-    addRef.current?.querySelector('input')?.focus();
+    // The next entry follows right away; no scroll jump while the board below re-renders.
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }
 
   const headValue = !todayDay

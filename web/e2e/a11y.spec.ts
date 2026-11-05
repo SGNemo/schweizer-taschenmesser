@@ -29,6 +29,7 @@ const MODULES = [
   'maps',
   'habits',
   'timetrack',
+  'planner',
   'weather',
   'music',
 ];
@@ -104,6 +105,7 @@ const PAGES = [
   ['settings-ueber', '/settings/ueber'],
   ['calendar', '/calendar'],
   ['todos', '/todos'],
+  ['planner', '/planner'],
   ['habits', '/habits'],
   ['timetrack', '/timetrack'],
   ['calendar reminders', '/calendar?tab=reminders'],

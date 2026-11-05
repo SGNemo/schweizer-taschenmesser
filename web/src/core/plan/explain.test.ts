@@ -5,7 +5,8 @@ import { dayName, explainAssignment, explainMove, explainWait } from './explain'
 import type { PlaceReason } from './types';
 
 afterEach(() => setLang('de'));
-const nameOf = (id: string) => ({ 'todos:a#1': 'Steuer · Teil 2/2', 'todos:j#0': 'Steuerbescheid' })[id] ?? id;
+const nameOf = (id: string) =>
+  ({ 'todos:a#1': 'Steuer · Teil 2/2', 'todos:j#0': 'Steuerbescheid' })[id] ?? id;
 
 describe('explain', () => {
   it('names the day in the German sentences', () => {

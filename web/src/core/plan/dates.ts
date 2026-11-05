@@ -8,5 +8,4 @@ export const addDays = (s: string, n: number): string =>
 export const daysBetween = (a: string, b: string): number =>
   Math.round((toDate(b).getTime() - toDate(a).getTime()) / DAY_MS);
 
-export const cmp = (a: string | number, b: string | number): number =>
-  a < b ? -1 : a > b ? 1 : 0;
+export const cmp = (a: string | number, b: string | number): number => (a < b ? -1 : a > b ? 1 : 0);

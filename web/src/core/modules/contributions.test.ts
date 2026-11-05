@@ -122,8 +122,16 @@ describe('collectPlannable', () => {
     const b = mk('b', async () => {
       throw new Error('boom');
     });
-    const none = { ...base, id: 'c', contributions: { onboarding: base.contributions!.onboarding } };
-    const items = await collectPlannable({ today: '2026-11-09', until: '2026-11-15' }, [a, b, none]);
+    const none = {
+      ...base,
+      id: 'c',
+      contributions: { onboarding: base.contributions!.onboarding },
+    };
+    const items = await collectPlannable({ today: '2026-11-09', until: '2026-11-15' }, [
+      a,
+      b,
+      none,
+    ]);
     expect(items).toEqual([{ id: '1', kind: 'task', title: 'A', to: '/a?open=1', moduleId: 'a' }]);
     expect(err).toHaveBeenCalledTimes(1);
     expect(await plannableSource(none)).toBeUndefined();

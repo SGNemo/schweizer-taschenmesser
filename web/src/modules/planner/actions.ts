@@ -1,6 +1,6 @@
 /**
  * What the planner UI can do: every action is one `undoable` together with the run it causes and its
- * write-backs (`runUser`), and ends in one toast line with „Rückgängig“ (`runToast`). Sources are
+ * write-backs (`runUser`), and ends in one toast line with the undo (`runToast`). Sources are
  * reached only through the contract (`plannableSource`), never by import.
  */
 import { randomId } from '@/core/db/util';
@@ -14,6 +14,7 @@ import { parseCapture } from '@/quickCapture/parser';
 import { saveCapture } from '@/quickCapture/targets';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import { extractDuePhrase } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { runUser, type UserRun } from './services';
@@ -72,12 +73,13 @@ async function itemPatch(entry: PlannableEntry, patch: Partial<PlanItemRow>): Pr
   await putRow(itemRepo, key, clean);
 }
 
-export const DUE_WORDS = /\b(bis|frist)\b/i;
-
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<void> {
-  const parsed = parseCapture(text, { now: new Date(now()), defaultType: 'todo' });
-  const hardDue = DUE_WORDS.test(text) && parsed.fields.date ? parsed.fields.date : undefined;
+  const phrase = extractDuePhrase(text, today());
+  const parsed = parseCapture(phrase.text, { now: new Date(now()), defaultType: 'todo' });
+  const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
+  // The deadline is the ToDo's date too, so the ToDo page shows it.
+  if (hardDue && !parsed.fields.date) parsed.fields.date = hardDue;
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
   await act(t.planner.toast.added, lead, titles, async () => {
     const saved = await saveCapture('todo', parsed.fields);

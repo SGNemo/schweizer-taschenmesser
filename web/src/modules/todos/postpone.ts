@@ -17,7 +17,8 @@ export function postponePatch(
   const tomorrow = addDaysStr(day, 1);
   const patch: PostponePatch = {};
   // A plan further ahead than tomorrow stays; "Später" never pulls something forward.
-  if (!task.plannedFor || task.plannedFor <= tomorrow) Object.assign(patch, userPlannedFor(task, tomorrow));
+  if (!task.plannedFor || task.plannedFor <= tomorrow)
+    Object.assign(patch, userPlannedFor(task, tomorrow));
   // A date that is due today or already passed would put the task right back on today's list.
   if (task.dueDate && task.dueDate <= day) patch.dueDate = tomorrow;
   return patch;

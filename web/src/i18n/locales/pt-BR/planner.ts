@@ -9,7 +9,8 @@ export const planner: Strings['planner'] = {
     widget: 'Carga da semana',
     settings: {
       availableWeekday: 'Tempo disponível seg–sex (minutos)',
-      availableWeekdayHelp: 'Quanto tempo um dia útil recebe enquanto você não definir outra coisa para esse dia.',
+      availableWeekdayHelp:
+        'Quanto tempo um dia útil recebe enquanto você não definir outra coisa para esse dia.',
       availableSaturday: 'Tempo disponível sábado (minutos)',
       availableSaturdayHelp: '0 significa: sábado é livre.',
       availableSunday: 'Tempo disponível domingo (minutos)',
@@ -38,7 +39,8 @@ export const planner: Strings['planner'] = {
     full: 'Para hoje já há o bastante planejado.',
     dayOff: 'Hoje é livre.',
     over: (min: string) => `${min} a mais do que cabe`,
-    context: (n: number, planned: string) => `${n === 1 ? '1 coisa' : `${n} coisas`} · ${planned} planejados`,
+    context: (n: number, planned: string) =>
+      `${n === 1 ? '1 coisa' : `${n} coisas`} · ${planned} planejados`,
     week: (week: string) => `Semana ${week}`,
     menu: 'Mais opções',
   },

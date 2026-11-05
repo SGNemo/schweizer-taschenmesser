@@ -86,3 +86,33 @@ describe('runToast', () => {
     expect(long).toBe('Erledigt · 2 mehr');
   });
 });
+
+describe('the field’s deadline phrase', async () => {
+  const { extractDuePhrase, nextWeekday } = await import('../dueWords');
+  it('reads „bis Do“ and „Frist Fr“, strips them, keeps everything else for the parser', () => {
+    expect(extractDuePhrase('Steuer 2 Std bis Do', '2026-11-09')).toEqual({
+      text: 'Steuer 2 Std',
+      date: '2026-11-12',
+      hasDueWord: true,
+    });
+    expect(extractDuePhrase('Frist Fr: Angebot', '2026-11-09')).toMatchObject({
+      date: '2026-11-13',
+      hasDueWord: true,
+    });
+    expect(extractDuePhrase('Steuer bis Donnerstag', '2026-11-11')).toMatchObject({
+      text: 'Steuer',
+      date: '2026-11-12',
+    });
+    expect(extractDuePhrase('Blogpost 90min', '2026-11-09')).toEqual({
+      text: 'Blogpost 90min',
+      hasDueWord: false,
+    });
+    expect(extractDuePhrase('Miete bis 12.11.', '2026-11-09')).toEqual({
+      text: 'Miete bis 12.11.',
+      hasDueWord: true,
+    });
+    // A weekday that is today is today, not next week.
+    expect(nextWeekday('2026-11-09', 1)).toBe('2026-11-09');
+    expect(nextWeekday('2026-11-09', 7)).toBe('2026-11-15');
+  });
+});

@@ -99,15 +99,24 @@ describe('ignoreFields', () => {
     expect(ignoredUpdate(upd({ plannedFor: '2026-11-09', planMark: undefined }), def)).toBe(true);
     expect(ignoredUpdate(upd({ plannedFor: '2026-11-09', title: 'A' }), def)).toBe(false);
     expect(ignoredUpdate(upd({}), def)).toBe(false);
-    expect(eventsOf(upd({ planMark: { date: '2026-11-09', order: 0 } }), 1, undefined, watched)).toEqual([]);
+    expect(
+      eventsOf(upd({ planMark: { date: '2026-11-09', order: 0 } }), 1, undefined, watched),
+    ).toEqual([]);
     expect(eventsOf(upd({ title: 'A' }), 1, undefined, watched)).toHaveLength(1);
   });
 
   it('only `updated` is filtered; created, deleted, restored and derived events pass', () => {
-    const created = { table: 'todos_task', kind: 'created', id: 't', data: { plannedFor: 'x' } } as const;
+    const created = {
+      table: 'todos_task',
+      kind: 'created',
+      id: 't',
+      data: { plannedFor: 'x' },
+    } as const;
     expect(ignoredUpdate(created, def)).toBe(false);
     expect(eventsOf(created, 1, undefined, watched)).toHaveLength(1);
-    expect(eventsOf({ table: 'todos_task', kind: 'deleted', id: 't' }, 1, undefined, watched)).toHaveLength(1);
+    expect(
+      eventsOf({ table: 'todos_task', kind: 'deleted', id: 't' }, 1, undefined, watched),
+    ).toHaveLength(1);
     // A derived event (completed) still fires when `done` is among the changed fields.
     const out = eventsOf(
       upd({ done: false, plannedFor: '2026-11-09' }),

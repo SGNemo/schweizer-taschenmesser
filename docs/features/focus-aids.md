@@ -56,6 +56,7 @@ All eight items are in `feat/adhd-friendly`. Deviations from the plan above, dec
 - Calendar: widget `modules/calendar/widgets/NextWidget.tsx`, helpers `until.ts`.
 - Shell: `layout/AppShell.tsx` (no chrome on focus routes), `layout/FocusWatcher.tsx` (once-only "Zeit ist um"), `layout/FocusIndicator.tsx` (top bar), `home/AttentionStrip.tsx` (calm mode), `home/layout.ts` (`FRONT_WIDGETS`).
 - Quick capture: `quickCapture/parser/estimate.ts` ("15 min", "1 Std"; ToDos only).
+- Planner (package 1, 2026-11-05): while the module `planner` is on, the ToDo page hides „Neu planen“ and the „Jetzt wichtig“ hint „Neu planen möglich“ (the planner distributes the open things and names every move); the „Heute“ card lists planner-set things first in the plan's order (`planMark`), the Bald view shows a quiet „im Plan: Mi“. Rules and screens: [docs/howto/planning-modules.md](../howto/planning-modules.md#planer--planner-modulesplanner-new-module-package-1-of-5), [docs/decisions/plan.md](../decisions/plan.md).
 - Tests: `core/focus/*.test.ts`, `modules/todos/next.test.ts`, `modules/todos/__tests__/{focusPage,nextWidget,attention}.test.tsx`, `modules/calendar/__tests__/nextWidget.test.tsx`, `home/AttentionStrip.test.tsx`, `e2e/focus.spec.ts`.
 
 ## Package 2 "Erinnerungen" – built (2026-10-03, branch `feat/focus-reminders`, stacked on package 1)
