@@ -74,7 +74,7 @@ export const vault: Strings['vault'] = {
     ok: 'En ordre',
   },
   privacyLine:
-    'Les fichiers restent sur cet appareil · titres, échéances et notes sont synchronisés',
+    'Les fichiers restent sur cet appareil, hors sauvegarde · titres, échéances et notes sont synchronisés',
   docCount: (n: number) => (n === 1 ? '1 document' : `${n} documents`),
   widgetRest: (due: number, total: number) =>
     [

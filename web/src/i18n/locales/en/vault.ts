@@ -73,7 +73,8 @@ export const vault: Strings['vault'] = {
     due: 'Deadline ahead',
     ok: 'Fine',
   },
-  privacyLine: 'Files stay on this device · titles, deadlines and notes are synced',
+  privacyLine:
+    'Files stay on this device and out of the backup · titles, deadlines and notes are synced',
   docCount: (n: number) => (n === 1 ? '1 document' : `${n} documents`),
   widgetRest: (due: number, total: number) =>
     [

@@ -28,7 +28,7 @@ export default function InboxWidget() {
             lines={s.top
               .slice(0, 2)
               .map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
-            meta={s.invoices > 0 ? undefined : t.mail.widget.inboxNoInvoices}
+            meta={s.invoices > 0 ? undefined : t.mail.widget.inboxNoInvoices(INVOICE_DAYS)}
           />
           {s.invoices > 0 ? (
             <p className={styles.foot}>

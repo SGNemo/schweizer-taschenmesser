@@ -48,6 +48,10 @@ export function migrateLegacyLayout(legacy: Record<string, unknown> | undefined)
 /** Widget keys of modules that were merged into another one (Systeminfo → "Dieser PC"). */
 export const LEGACY_WIDGET_KEYS: Readonly<Record<string, string>> = {
   'system:status': 'disk:system',
+  // Mail's three widgets became the one "Posteingang" (identity v3.1, G13).
+  'mail:unread': 'mail:inbox',
+  'mail:top': 'mail:inbox',
+  'mail:invoices': 'mail:inbox',
 };
 
 /** The one "Heute" card (ToDos): "Jetzt dran", the plan, the time to the next appointment and today's appointments. */

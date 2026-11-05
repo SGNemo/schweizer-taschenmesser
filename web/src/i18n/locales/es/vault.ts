@@ -74,7 +74,7 @@ export const vault: Strings['vault'] = {
     ok: 'En orden',
   },
   privacyLine:
-    'Los archivos se quedan en este dispositivo · títulos, plazos y notas se sincronizan',
+    'Los archivos se quedan en este dispositivo y fuera de la copia de seguridad · títulos, plazos y notas se sincronizan',
   docCount: (n: number) => (n === 1 ? '1 documento' : `${n} documentos`),
   widgetRest: (due: number, total: number) =>
     [

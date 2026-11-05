@@ -259,7 +259,7 @@ export const mail: Strings['mail'] = {
   widget: {
     inbox: 'Inbox',
     inboxTitle: (n: number) => (n === 0 ? 'All read' : `${n} unread`),
-    inboxNoInvoices: 'No invoice mails in the last 30 days',
+    inboxNoInvoices: (days: number) => `No invoice mails in the last ${days} days`,
     inboxInvoices: (n: number, days: number) =>
       n === 1 ? `1 invoice mail in ${days} days` : `${n} invoice mails in ${days} days`,
     inboxInvoicesAction: 'View',

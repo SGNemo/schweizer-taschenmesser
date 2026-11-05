@@ -269,7 +269,7 @@ export const mail: Strings['mail'] = {
   widget: {
     inbox: 'Boîte de réception',
     inboxTitle: (n: number) => (n === 0 ? 'Tout est lu' : `${n} non lus`),
-    inboxNoInvoices: 'Aucun e-mail de facture ces 30 derniers jours',
+    inboxNoInvoices: (days: number) => `Aucun e-mail de facture ces ${days} derniers jours`,
     inboxInvoices: (n: number, days: number) =>
       n === 1 ? `1 e-mail de facture en ${days} jours` : `${n} e-mails de facture en ${days} jours`,
     inboxInvoicesAction: 'Voir',

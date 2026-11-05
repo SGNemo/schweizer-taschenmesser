@@ -5158,7 +5158,8 @@ export const de = {
       due: 'Frist in Sicht',
       ok: 'In Ordnung',
     },
-    privacyLine: 'Dateien bleiben auf diesem Gerät · Titel, Fristen und Notizen werden abgeglichen',
+    privacyLine:
+      'Dateien bleiben auf diesem Gerät, nicht im Backup · Titel, Fristen und Notizen werden abgeglichen',
     docCount: (n: number) => (n === 1 ? '1 Unterlage' : `${n} Unterlagen`),
     widgetRest: (due: number, total: number) =>
       [
@@ -7056,7 +7057,7 @@ export const de = {
     widget: {
       inbox: 'Posteingang',
       inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
-      inboxNoInvoices: 'Keine Rechnungsmails in den letzten 30 Tagen',
+      inboxNoInvoices: (days: number) => `Keine Rechnungsmails in den letzten ${days} Tagen`,
       inboxInvoices: (n: number, days: number) =>
         n === 1 ? `1 Rechnungsmail in ${days} Tagen` : `${n} Rechnungsmails in ${days} Tagen`,
       inboxInvoicesAction: 'Ansehen',
