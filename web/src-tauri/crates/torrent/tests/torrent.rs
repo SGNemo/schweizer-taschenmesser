@@ -102,6 +102,18 @@ fn one(e: &Engine) -> TorrentInfo {
     e.list().into_iter().next().expect("a torrent")
 }
 
+/// The engine's progress counter and state can be ahead of the file on disk for a moment (CI saw
+/// `a.bin` still empty right after the counter reached its total). So a file is read only once it
+/// has the expected content, within the same 40 s as every other wait; then it is compared, so a
+/// wrong content still fails with the usual diff instead of a bare timeout.
+async fn file_is(path: &Path, want: Vec<u8>) {
+    until(&format!("{} to hold its content", path.display()), || {
+        std::fs::read(path).is_ok_and(|got| got == want)
+    })
+    .await;
+    assert_eq!(std::fs::read(path).unwrap(), want);
+}
+
 /// A seeder that serves `pack` (already on disk) and the address a leecher connects to.
 async fn seeder(env: &Env) -> (Engine, Vec<u8>, SocketAddr) {
     let seed_dir = env.dir("seed-files");
@@ -162,8 +174,8 @@ async fn preview_lists_files_and_selection_downloads_only_those() {
         one(&leech).progress_bytes >= (A + B) as u64
     })
     .await;
-    assert_eq!(std::fs::read(out.join("pack/a.bin")).unwrap(), bytes(A, 1));
-    assert_eq!(std::fs::read(out.join("pack/b.bin")).unwrap(), bytes(B, 2));
+    file_is(&out.join("pack/a.bin"), bytes(A, 1)).await;
+    file_is(&out.join("pack/b.bin"), bytes(B, 2)).await;
     let c = out.join("pack/c.bin");
     assert!(
         !c.exists()
@@ -214,7 +226,7 @@ async fn download_limit_pause_resume_and_remove() {
         "1.2 MB at 100 KB/s (after a small burst) cannot take {:?}",
         t0.elapsed()
     );
-    assert_eq!(std::fs::read(out.join("pack/a.bin")).unwrap(), bytes(A, 1));
+    file_is(&out.join("pack/a.bin"), bytes(A, 1)).await;
 
     // Remove without data: the files stay. With data: they go.
     leech.remove(id, false).await.unwrap();
