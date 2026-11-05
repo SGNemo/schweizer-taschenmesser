@@ -100,3 +100,16 @@ export function Facts({ label, items }: { label: string; items: readonly Fact[] 
 export function Actions({ children }: { children: ReactNode }) {
   return <div className={styles.actions}>{children}</div>;
 }
+
+/**
+ * A framed list of choices (checkboxes with a title and a detail line): one hairline between rows, the whole
+ * row is the target. The legend names the group for assistive tech and sits above the frame.
+ */
+export function ChoiceList({ legend, children }: { legend: string; children: ReactNode }) {
+  return (
+    <fieldset className={styles.choices}>
+      <legend className={styles.choicesLegend}>{legend}</legend>
+      <div className={styles.choicesFrame}>{children}</div>
+    </fieldset>
+  );
+}

@@ -5,6 +5,7 @@ import { render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ReadAidContext, type ReadAidConfig } from '@/core/text/ReadableText';
+import { READ_START_TAG, READ_TEXT_TAG } from '@/core/text/readable';
 import { NoReadAid, ReadableText } from './ReadableText';
 
 const on = (cover: ReadAidConfig['cover']): ReadAidConfig => ({
@@ -72,6 +73,44 @@ describe('ReadableText', () => {
       </NoReadAid>,
     );
     expect(blocked.container.querySelector('[data-rs]')).toBeNull();
+  });
+});
+
+describe('the aid keeps every word one piece in the host layout', () => {
+  it('uses its own inline elements, so a host rule for its spans never reaches the aid', () => {
+    const { container } = wrap(
+      on(100),
+      <a className="scratch" href="/notes">
+        <span>
+          <strong>Schmierzettel</strong>
+          <small>Notizzettel in Notizen</small>
+        </span>
+      </a>,
+    );
+    expect(container.querySelectorAll('[data-rs]').length).toBeGreaterThan(0);
+    // A rule like `.scratch span { display: flex; flex-direction: column }` (tools panel) once turned the aid's
+    // wrapper into a column: "Schmi / erzettel". Now it matches only the host's own span.
+    expect([...container.querySelectorAll('.scratch span')].length).toBe(1);
+    expect(container.querySelector('[data-rt]')?.localName).toBe(READ_TEXT_TAG);
+    expect(container.querySelector('[data-rs]')?.localName).toBe(READ_START_TAG);
+    for (const el of container.querySelectorAll('[data-rt], [data-rs]')) {
+      expect(el.tagName).not.toBe('SPAN');
+      expect(el.matches('.scratch span')).toBe(false);
+    }
+    expect(container.textContent).toBe('SchmierzettelNotizzettel in Notizen');
+  });
+
+  it('notes bold text around it, so the start takes the heavy weight instead of a thinner one', () => {
+    const { container } = wrap(
+      on(100),
+      <div>
+        <p style={{ fontWeight: 600 }}>Kalender</p>
+        <p style={{ fontWeight: 400 }}>Kalender</p>
+      </div>,
+    );
+    const [bold, plain] = [...container.querySelectorAll('[data-rt]')];
+    expect(bold?.hasAttribute('data-bold')).toBe(true);
+    expect(plain?.hasAttribute('data-bold')).toBe(false);
   });
 });
 

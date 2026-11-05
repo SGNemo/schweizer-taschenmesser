@@ -1,0 +1,8 @@
+/* Reading aid, the part that depends on the text around it (core/text/ReadableText.tsx). The base look (weight of the
+   start, dimmed rest by ink) lives in ui/tokens.css. */
+
+/* Already bold text (semibold and up: the active navigation entry, <strong>, bold labels): the start takes the heavy
+   weight like in headings, so it is never thinner than the rest of the word. */
+.rt[data-bold] > [data-rs] {
+  font-weight: var(--read-weight-heavy);
+}

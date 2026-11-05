@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Analisar ${name}`,
   usedOf: (used: string, total: string) => `${used} de ${total} em uso`,
   free: (free: string) => `${free} livre`,
-  percentUsed: (p: number) => `${p} % em uso`,
   card: {
     scan: 'Analisar',
     systemDrive: 'Unidade do sistema',
@@ -66,6 +65,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'Histórico desde que o app abriu – ele não é salvo.',
     io: (read: string, write: string) => `Leitura ${read} · Gravação ${write}`,
     model: 'Modelo',
+    details: 'Detalhes',
+    temperatureLabel: 'Temperatura',
+    ioLabel: 'Atividade',
   },
   quick: {
     title: 'Visão rápida',
@@ -371,16 +373,35 @@ export const disk: Strings['disk'] = {
   scan: {
     back: 'Voltar às unidades',
     title: (root: string) => `Análise de ${root}`,
-    scanning: 'Analisando …',
+    scanning: 'Análise em andamento',
     paused: 'Análise pausada',
-    liveLabel: 'Visão ao vivo da análise',
+    runningOf: (root: string) => `Análise de ${root} em andamento`,
+    pausedOf: (root: string) => `Análise de ${root} pausada`,
+    soFar: (files: string, size: string) => `até agora ${files} arquivos, ${size}`,
+    toScan: 'Abrir a análise',
+    liveList: 'Pastas até agora',
+    pendingShort: 'ainda contando',
+    pendingNote: 'Ainda sendo contado',
+    pendingLegend: '… = ainda sendo contado',
+    pendingCount: (n: number) =>
+      n === 1 ? '1 entrada ainda está sendo contada.' : `${n} entradas ainda estão sendo contadas.`,
+    endedOf: (root: string) => `Análise de ${root} concluída`,
+    cancelledOf: (root: string) => `Análise de ${root} cancelada`,
+    endedShort: 'Análise concluída',
+    cancelledShort: 'Análise cancelada',
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Visualização em mapa da análise em andamento com 1 entrada.'
+        : `Visualização em mapa da análise em andamento com ${n} entradas.`,
+    failedOf: (root: string) => `Análise de ${root} falhou`,
+    toResult: 'Ver o resultado',
+    alreadyRunning: 'Já há uma análise em andamento: encerre-a para iniciar outra.',
+    liveLabel: 'Visualização ao vivo da análise',
     liveHint:
-      'O mapa vai se preenchendo durante a contagem. Abrir, selecionar e excluir funcionam quando a análise terminar.',
+      'A visualização vai se preenchendo durante a contagem. Abrir, selecionar e excluir funcionam quando a análise terminar.',
     liveEmpty: 'Contando as primeiras pastas …',
     files: 'Arquivos',
     folders: 'Pastas',
-    used: 'Ocupado',
-    current: 'Pasta atual',
     cancel: 'Cancelar',
     pause: 'Pausar',
     resume: 'Continuar',

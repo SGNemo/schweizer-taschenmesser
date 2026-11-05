@@ -68,13 +68,19 @@ test('desktop: drive cards, scan with progress, result and unreadable folders', 
   await expect(cards.first()).toContainText('Systemlaufwerk');
   await expect(cards.first()).toContainText('Beispiel NVMe 512');
   await expect(cards.first()).toContainText('476,8 GB');
-  await expect(cards.first()).toContainText('41 °C');
-  // Health that Windows does not hand out says why, in words.
-  await expect(cards.nth(1)).toContainText(
-    'nicht verfügbar – Windows gibt den Wert nur mit Administratorrechten heraus',
-  );
-  await expect(cards.nth(1)).toContainText('Festplatte (HDD)');
   await expect(cards.first()).toContainText('Noch nicht gescannt');
+  await expect(cards.nth(1)).toContainText('Festplatte (HDD)');
+  // Health and temperature wait behind "Details"; the folded card stays short.
+  await expect(cards.first().getByText('41 °C')).toBeHidden();
+  await cards.first().getByText('Details', { exact: true }).click();
+  await expect(cards.first().getByText('41 °C')).toBeVisible();
+  // Health that Windows does not hand out says why, in words.
+  await cards.nth(1).getByText('Details', { exact: true }).click();
+  await expect(
+    cards
+      .nth(1)
+      .getByText('nicht verfügbar – Windows gibt den Wert nur mit Administratorrechten heraus'),
+  ).toBeVisible();
   await audit(page, 'drives page');
 
   await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
@@ -102,32 +108,100 @@ test('desktop: drive cards, scan with progress, result and unreadable folders', 
   await expect(page).toHaveURL(/\/disk$/);
 });
 
-test('the map fills up while the scan runs and stays usable as it grows', async ({ page }) => {
+test('a running scan blocks nothing: one calm line, map and list grow, leaving and coming back keeps it', async ({
+  page,
+}) => {
   await asDesktop(page);
+  // The fake scan only moves when the test says so (`__tmDiskScanStep`, see fakeDisk.ts), so the
+  // live picture can be watched growing in three steps.
+  await page.addInitScript(() => {
+    (window as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs = 0;
+  });
   await enableDisk(page);
   await page.goto('/disk');
   await page.getByRole('button', { name: 'C:\\ (System) scannen' }).click();
-  // Pause half-way: the live map already shows the folders counted so far.
-  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+  const step = () =>
+    page.evaluate(() => (window as { __tmDiskScanStep?: () => void }).__tmDiskScanStep?.());
+  const status = page.getByTestId('scan-status');
+  await expect(status).toContainText('Scan läuft');
+  // One calm line: no bar, no percentage; Pause and Abbrechen right there.
+  await expect(page.locator('progress')).toHaveCount(0);
+  await expect(status.getByRole('button', { name: 'Pause' })).toBeVisible();
+  await expect(status.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
   const live = page.getByRole('region', { name: 'Live-Ansicht des Scans' });
-  await expect(live).toBeVisible();
+  const map = live.getByRole('img', { name: /Kartenansicht/ });
+  // The map grows in steps: one top folder, then two, then three.
+  await step();
+  await expect(status).toContainText('bisher');
+  // The map's name counts the tiles and says how many of them are still being counted.
+  await expect(map).toHaveAccessibleName(/mit 1 Eintrag\. 1 Eintrag wird noch gezählt\./);
+  await step();
+  await step();
+  await expect(map).toHaveAccessibleName(/mit 2 Einträgen/);
+  // Unfinished folders say so in words, in the legend line and in the list.
+  await expect(live).toContainText('… = wird noch gezählt');
+  await live.getByRole('button', { name: 'Liste', exact: true }).click();
+  const list = page.getByRole('table', { name: 'Ordner bisher' });
+  await expect(list).toContainText('Nutzer');
+  await expect(list).toContainText('zählt noch');
+  await audit(page, 'running scan (list)');
+  // Leave the scan page and come back: the scan is still there, and the drives page says so.
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await expect(page).toHaveURL(/\/disk$/);
+  // The running scan shows its state in the card of its drive, not in a line above the grid.
+  const cards = page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem');
+  const drivesLine = cards.first().getByTestId('scan-status');
+  await expect(drivesLine).toContainText('Scan läuft');
+  await expect(drivesLine.getByRole('button', { name: 'Pause' })).toBeVisible();
+  await audit(page, 'drives page with a running scan');
+  await drivesLine.getByRole('link', { name: 'Zum Scan' }).click();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
   await expect(live.getByTestId('live-map')).toBeVisible();
-  await expect(live.getByRole('img', { name: /Kartenansicht/ })).toBeVisible();
-  await expect(live.getByRole('group', { name: 'Legende' })).toContainText('unter 1 Monat');
-  await audit(page, 'live map');
-  await page.getByRole('button', { name: 'Fortsetzen' }).click();
-  // When the scan is done the full, clickable map takes over.
+  // Another drive's scan button does not drop the running scan: it leads to it instead.
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await page.getByRole('button', { name: 'D:\\ (Daten) scannen' }).click();
+  await expect(page.getByText('Ein Scan läuft schon')).toBeVisible();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+  await expect(page.locator('main h1')).toHaveText('Scan von C:\\');
+  await expect(live.getByTestId('live-map')).toBeVisible();
+  await step();
+  await step();
+  await expect(map).toHaveAccessibleName(/mit 3 Einträgen/);
+  await audit(page, 'running scan (map)');
+  // The last step finishes the scan: the full, clickable map takes over.
+  await step();
   await expect(page.getByTestId('scan-total')).toBeVisible();
   await expect(live).toHaveCount(0);
   await expect(page.getByTestId('treemap')).toBeVisible();
+  // Back on the drives page the ended scan keeps one line with the way to its result.
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await expect(cards.first().getByTestId('scan-status')).toContainText('Scan beendet');
+  await page.getByRole('link', { name: 'Zum Ergebnis' }).click();
+  await expect(page.getByTestId('scan-total')).toBeVisible();
 });
 
-test('desktop: a running scan can be cancelled', async ({ page }) => {
+test('desktop: a running scan can be cancelled, also from the drives page', async ({ page }) => {
   await asDesktop(page);
+  await page.addInitScript(() => {
+    (window as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs = 0;
+  });
   await enableDisk(page);
   await page.goto('/disk');
   await page.getByRole('button', { name: 'D:\\ (Daten) scannen' }).click();
-  await page.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  const line = page
+    .getByRole('list', { name: 'Laufwerke' })
+    .getByRole('listitem')
+    .nth(1)
+    .getByTestId('scan-status');
+  await line.getByRole('button', { name: 'Abbrechen' }).click();
+  // The line says what happened and still leads to the (partial) result.
+  await expect(line).toContainText('Scan abgebrochen');
+  // The buttons are gone; the focus moved on to the next step instead of falling to the page.
+  await expect(line.getByRole('link', { name: 'Zum Ergebnis' })).toBeFocused();
+  await line.getByRole('link', { name: 'Zum Ergebnis' }).click();
   await expect(page.getByText('Der Scan wurde abgebrochen')).toBeVisible();
 });
 

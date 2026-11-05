@@ -15,7 +15,7 @@ Index: [HOW-TO](../HOW-TO.md). Website package: [site/README.md](../../site/READ
 | Log says | Cause | Fix |
 |---|---|---|
 | `Imprint details missing in the build of branch "<b>"` | `IMPRESSUM_NAME`/`_STREET`/`_POSTCODE_CITY` missing in the environment that builds `<b>`. `src/legal.js` counts `develop` **and `main`** as production, but Cloudflare builds `main` in Preview. | Set the three in **Production and Preview**, or `PRODUCTION_BRANCH` = `develop` in Preview; then *Retry deployment* |
-| Wrong Node (log line about the Node version is not 22.x), `EBADENGINE`, Astro refuses to start | `site/.node-version` not read (Root directory is not `site`) or build system older than v3 | Settings → Builds: Root directory `site`, *Build system version* v3; fallback variable `NODE_VERSION` = `22` (Astro 7 needs ≥ 22.12) |
+| Wrong Node (log line about the Node version is not 22.x), `EBADENGINE`, Astro refuses to start | `site/.node-version` not read (Root directory is not `site`) or build system older than v3 | Settings → Builds: Root directory `site`, *Build system version* v3; fallback variable `NODE_VERSION` = `22` (the site needs ≥ 22.18: Astro 7 ≥ 22.12, its tests need Node's type stripping) |
 | `npm ci` complains that lock and `package.json` differ | `site/package-lock.json` out of step | `cd site && npm install`, commit the lock file |
 | `fetch-release: HTTP 403 … keeping <tag>` | GitHub API rate limit for the shared build IP | Nothing: warning only, the committed `src/release/latest.json` is used |
 | `copy-brand` cannot find a file | a file under `web/brand`, `web/public`, `docs/brand` was moved | fix `site/scripts/copy-brand.mjs` |

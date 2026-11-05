@@ -453,6 +453,10 @@ export function createFakeDisk(): DiskService {
     dupCancelled: boolean;
     /** Share of the fake scan that has "run" (0–1); drives `liveScan`. */
     done: number;
+    /** Moves the fake scan one step; tests call it through `__tmDiskScanStep`. */
+    tick?: () => void;
+    /** Steps only by hand (`__tmDiskScanStepMs` 0): cancelling must then move it itself. */
+    manual: boolean;
   }
   const scans = new Map<number, State>();
   const plans = new Map<number, { scanId: number; plan: DeletePlan; cancelled: boolean }>();
@@ -466,6 +470,10 @@ export function createFakeDisk(): DiskService {
     t.nodes[0]!.name.startsWith('E:') ? ('removable' as const) : ('fixed' as const);
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   (globalThis as { __tmDiskRevealed?: string[] }).__tmDiskRevealed = [];
+  // Tests may slow the fake scan down or step it by hand: `__tmDiskScanStepMs` (default 60 ms;
+  // 0 = only `__tmDiskScanStep()` moves it), so a spec can watch the live picture grow in steps.
+  const stepMs = () =>
+    Number((globalThis as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs ?? 60);
 
   return {
     supported: true,
@@ -478,14 +486,19 @@ export function createFakeDisk(): DiskService {
         paused: false,
         dupCancelled: false,
         done: 0,
+        manual: stepMs() <= 0,
       };
       scans.set(scanId, state);
       const total = state.tree.nodes[0]!;
       const result = new Promise<ScanSummary>((resolve) => {
         let step = 0;
         const steps = 6;
+        const schedule = (ms: number) => {
+          if (!state.manual) setTimeout(tick, ms);
+        };
         const tick = () => {
-          if (state.paused && !state.cancelled) return void setTimeout(tick, 50);
+          if (step >= steps) return;
+          if (state.paused && !state.cancelled) return void schedule(50);
           step++;
           state.done = step / steps;
           const f = state.cancelled ? step / steps : Math.min(step / steps, 1);
@@ -513,14 +526,18 @@ export function createFakeDisk(): DiskService {
               notReadTotal: 1,
               elapsedMs: 300,
             });
-          } else setTimeout(tick, 60);
+          } else schedule(stepMs());
         };
-        setTimeout(tick, 60);
+        state.tick = tick;
+        (globalThis as { __tmDiskScanStep?: () => void }).__tmDiskScanStep = tick;
+        schedule(stepMs());
       });
       return { scanId, result };
     },
     async cancelScan(id) {
-      get(id).cancelled = true;
+      const state = get(id);
+      state.cancelled = true;
+      if (state.manual) state.tick?.();
     },
     async pauseScan(id, paused) {
       get(id).paused = paused;
@@ -533,11 +550,16 @@ export function createFakeDisk(): DiskService {
       const top = t.children(0, 1, 0).filter((n) => n.kind === 'dir');
       const shown = top.slice(0, Math.ceil(top.length * state.done));
       const ids = new Set(shown.map((n) => n.id));
+      // The folder revealed last is still being counted (like the native side, which marks a
+      // folder finished only when its walk returns); the ones before it are complete.
+      const running = state.done < 1;
+      const counting = running ? shown.at(-1)?.id : undefined;
       const nodes = t
         .children(0, 2, minBytes)
-        .filter((n) => n.kind === 'dir' && (ids.has(n.id) || ids.has(n.parentId ?? -1)));
+        .filter((n) => n.kind === 'dir' && (ids.has(n.id) || ids.has(n.parentId ?? -1)))
+        .map((n) => (n.id === counting || n.parentId === counting ? { ...n, pending: true } : n));
       const bytes = shown.reduce((s, n) => s + n.bytes, 0);
-      return [{ ...t.copy(0), bytes, childCount: shown.length }, ...nodes];
+      return [{ ...t.copy(0), bytes, childCount: shown.length, pending: running }, ...nodes];
     },
     async dropScan(id) {
       scans.delete(id);

@@ -20,6 +20,20 @@ for (const p of pages) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: scheme, deviceScaleFactor: width < 800 ? 2 : 1, reducedMotion: 'reduce' });
       await page.goto(base + p, { waitUntil: 'networkidle' });
       await page.evaluate(() => document.fonts.ready);
+      // Lazy pictures below the fold load only once scrolled to: walk the page, wait for the visible ones (the
+      // other theme's picture stays display:none and never loads), scroll back.
+      await page.evaluate(async () => {
+        for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight) {
+          scrollTo(0, y);
+          await new Promise((r) => setTimeout(r, 50));
+        }
+        const pending = [...document.images].filter((i) => !i.complete && i.getClientRects().length > 0);
+        await Promise.race([
+          Promise.all(pending.map((i) => new Promise((r) => { i.onload = i.onerror = r; }))),
+          new Promise((r) => setTimeout(r, 5000)),
+        ]);
+        scrollTo(0, 0);
+      });
       const name = (p === '/' ? 'home' : p.replace(/^\//, '').replace(/\//g, '-')) + `-${width}-${scheme}.png`;
       await page.screenshot({ path: path.join(out, name), fullPage: true });
       await page.close();

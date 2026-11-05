@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Scan ${name}`,
   usedOf: (used: string, total: string) => `${used} of ${total} used`,
   free: (free: string) => `${free} free`,
-  percentUsed: (p: number) => `${p}% used`,
   card: {
     scan: 'Scan',
     systemDrive: 'System drive',
@@ -66,6 +65,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'History since app start – it isn’t saved.',
     io: (read: string, write: string) => `Read ${read} · Write ${write}`,
     model: 'Model',
+    details: 'Details',
+    temperatureLabel: 'Temperature',
+    ioLabel: 'Activity',
   },
   quick: {
     title: 'Quick overview',
@@ -367,16 +369,35 @@ export const disk: Strings['disk'] = {
   scan: {
     back: 'Back to drives',
     title: (root: string) => `Scan of ${root}`,
-    scanning: 'Scanning …',
+    scanning: 'Scan running',
     paused: 'Scan paused',
+    runningOf: (root: string) => `Scan of ${root} running`,
+    pausedOf: (root: string) => `Scan of ${root} paused`,
+    soFar: (files: string, size: string) => `${files} files, ${size} so far`,
+    toScan: 'Open the scan',
+    liveList: 'Folders so far',
+    pendingShort: 'still counting',
+    pendingNote: 'Still being counted',
+    pendingLegend: '… = still being counted',
+    pendingCount: (n: number) =>
+      n === 1 ? '1 entry is still being counted.' : `${n} entries are still being counted.`,
+    endedOf: (root: string) => `Scan of ${root} finished`,
+    cancelledOf: (root: string) => `Scan of ${root} cancelled`,
+    endedShort: 'Scan finished',
+    cancelledShort: 'Scan cancelled',
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Map of the running scan with 1 entry.'
+        : `Map of the running scan with ${n} entries.`,
+    failedOf: (root: string) => `Scan of ${root} failed`,
+    toResult: 'Open the result',
+    alreadyRunning: 'A scan is already running – end it to start another one.',
     liveLabel: 'Live view of the scan',
     liveHint:
-      'The map fills up while counting. Opening, selecting and deleting work once the scan is done.',
+      'The picture fills up while counting. Opening, selecting and deleting work once the scan is done.',
     liveEmpty: 'Counting the first folders …',
     files: 'Files',
     folders: 'Folders',
-    used: 'Used',
-    current: 'Current folder',
     cancel: 'Cancel',
     pause: 'Pause',
     resume: 'Resume',
