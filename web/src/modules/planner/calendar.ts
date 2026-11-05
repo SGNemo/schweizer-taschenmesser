@@ -6,6 +6,8 @@
  * `planner.calendarChips` (default on).
  */
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
+import { addDays } from '@/core/plan/dates';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { compact } from './components/capacity';
 import { getPlannerSettings } from './prefs';
@@ -13,6 +15,8 @@ import { assignmentRepo, MODULE_ID } from './repo';
 import type { AssignmentRow } from './schema';
 
 export const PLAN_KIND = 'plan';
+/** Days the board shows from today (`routes/PlannerPage.tsx` SPAN). */
+export const BOARD_DAYS = 7;
 
 /** The chips of the stored assignments; pure (tests). */
 export function planChips(
@@ -41,9 +45,13 @@ export function planChips(
 const source: CalendarSource = async (range) => {
   const settings = await getPlannerSettings();
   if (!settings.calendarChips) return [];
+  // Only the board's week (today + 6): a chip opens the board on its day, later days are not on it.
+  const last = addDays(today(), BOARD_DAYS - 1);
+  const to = range.to < last ? range.to : last;
+  if (to < range.from) return [];
   const rows = await assignmentRepo.table
     .where('date')
-    .between(range.from, range.to, true, true)
+    .between(range.from, to, true, true)
     .filter((r) => r.deletedAt === null)
     .toArray();
   return planChips(rows);

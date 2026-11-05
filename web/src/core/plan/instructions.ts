@@ -78,7 +78,8 @@ const NUM = String.raw`\d{1,2}(?:[.,]\d)?|anderthalb|eineinhalb|halbe|${Object.k
   .sort((a, b) => b.length - a.length)
   .join('|')}`;
 const DURATION = String.raw`(?:(${NUM})\s*(h|std\.?|stunden?|min\.?|minuten))`;
-const MOVE = String.raw`(?:verschieb|schieb|leg)\w*`;
+/** The planning verbs as whole words („Schiebetür“, „Leggings“ are no verbs). */
+const MOVE = String.raw`(?:(?:ver)?schieb(?:e|en|t)?|leg(?:e|en|t)?)(?=\s)`;
 const TO = String.raw`(?:auf|nach)`;
 
 const re = (src: string) => new RegExp(`^(?:${src})$`, 'u');
@@ -142,7 +143,7 @@ function readWindow(
 }
 
 /** Words that make a sentence an instruction even when nothing else fits (then: explain, never a ToDo). */
-const VERB_START = re(String.raw`(?:${MOVE}|neu verteil\w*|alles neu\b|puffer\b).*`);
+const VERB_START = re(String.raw`(?:${MOVE}|neu verteil\w*|alles neu\b|puffer (?:auf )?\d).*`);
 /** „Dontag frei“: a misspelt day (a weekday's first letters) with the day-off words. */
 const DAY_OFF_TAIL = re(
   String.raw`(?:mo|di|mi|do|fr|sa|so|mon|die|mit|don|fre|sam|son)\p{L}*\.? (?:frei|keine zeit)`,

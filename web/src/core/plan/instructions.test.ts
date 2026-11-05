@@ -189,12 +189,18 @@ describe('parseInstruction – the whole day and runs', () => {
 });
 
 describe('parseInstruction – never guesses', () => {
-  it.each(['Steuer 2 Std bis Do', 'Zahnarzt anrufen', 'Milch kaufen morgen', 'Keller'])(
-    '%s is no instruction (a ToDo)',
-    (text) => {
-      expect(kind(text)).toBe('none');
-    },
-  );
+  it.each([
+    'Steuer 2 Std bis Do',
+    'Zahnarzt anrufen',
+    'Milch kaufen morgen',
+    'Keller',
+    'Leggings kaufen',
+    'Schiebetür ölen',
+    'Puffer tauschen',
+    'Legosteine aufräumen auf Montag',
+  ])('%s is no instruction (a ToDo)', (text) => {
+    expect(kind(text)).toBe('none');
+  });
 
   it.each(['schieb das irgendwie', 'Dontag frei', 'neu verteilen bitte morgen'])(
     '%s has a known verb but cannot be read → explain',

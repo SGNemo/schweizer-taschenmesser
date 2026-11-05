@@ -23,7 +23,8 @@ export default function TodayWidget() {
   const day = today();
   const next = addDaysStr(day, 1);
   const items = useCalendarItems({ from: day, to: next });
-  const open = (items ?? []).filter((i) => !i.done);
+  // The planner's day chip is no appointment: the day plan stays on the „Heute“ card.
+  const open = (items ?? []).filter((i) => !i.done && i.kind !== 'plan');
   const d = new Date(now());
   const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   const size = useWidgetSize();

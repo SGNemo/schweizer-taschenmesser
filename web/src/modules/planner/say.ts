@@ -3,7 +3,9 @@
  * matching targets for `core/plan/instructions.ts` and one calm line per op for the preview. Pure.
  */
 import { formatMinutes } from '@/core/i18n/format';
+import { addDays } from '@/core/plan/dates';
 import { dayName } from '@/core/plan/explain';
+import { formatDay } from '@/core/time/dates';
 import type { InstructionItem, PlanOp } from '@/core/plan/instructions';
 import { t } from '@/strings';
 import type { Board } from './board';
@@ -30,9 +32,17 @@ export function instructionItems(board: Board): InstructionItem[] {
   return [...out.values()];
 }
 
+/**
+ * A day in a preview line: the short weekday inside the board's week, with the date beyond it – on a
+ * Thursday „Donnerstag frei“ is next week's Thursday, and „Do“ alone would read as today.
+ */
+const dayOf = (date: string, today: string): string =>
+  date > addDays(today, 6) ? `${dayName(date)} ${formatDay(date, 'd.M.')}` : dayName(date);
+
 /** What one op asks for, in a calm line („Do ist frei.“, „Steuer festgenagelt auf Fr“). */
-export function opLine(op: PlanOp, titleOf: (key: string) => string): string {
+export function opLine(op: PlanOp, titleOf: (key: string) => string, today: string): string {
   const o = t.planner.ops;
+  const dayName = (date: string) => dayOf(date, today);
   const min = (m: number) => formatMinutes(m, { compact: true });
   switch (op.op) {
     case 'available':
@@ -59,12 +69,16 @@ export function opLine(op: PlanOp, titleOf: (key: string) => string): string {
 }
 
 /** The lines of a sentence: several „nicht vor Fr“ of one move are said once („3 Dinge nicht vor Fr“). */
-export function opLines(ops: readonly PlanOp[], titleOf: (key: string) => string): string[] {
+export function opLines(
+  ops: readonly PlanOp[],
+  titleOf: (key: string) => string,
+  today: string,
+): string[] {
   const earliest = ops.filter((o) => o.op === 'earliest');
   if (earliest.length > 1) {
-    const rest = ops.filter((o) => o.op !== 'earliest').map((o) => opLine(o, titleOf));
-    const day = dayName((earliest[0] as Extract<PlanOp, { op: 'earliest' }>).date);
+    const rest = ops.filter((o) => o.op !== 'earliest').map((o) => opLine(o, titleOf, today));
+    const day = dayOf((earliest[0] as Extract<PlanOp, { op: 'earliest' }>).date, today);
     return [...rest, t.planner.ops.earliestMany(earliest.length, day)];
   }
-  return ops.map((o) => opLine(o, titleOf));
+  return ops.map((o) => opLine(o, titleOf, today));
 }

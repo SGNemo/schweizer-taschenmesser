@@ -451,7 +451,8 @@ export function withOps(
       }
       case 'earliest': {
         const i = item(op.key);
-        if (i) i.earliest = op.date;
+        // Like the run: the thing's own start date stays a lower bound.
+        if (i) i.earliest = i.earliest && i.earliest > op.date ? i.earliest : op.date;
         break;
       }
       case 'priority': {

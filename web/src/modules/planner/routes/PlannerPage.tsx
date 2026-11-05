@@ -42,6 +42,7 @@ import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySheet } from '../components/DaySheet';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
+import { BOARD_DAYS } from '../calendar';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import { instructionItems, opLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
@@ -50,7 +51,7 @@ import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
 
 /** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
-const SPAN = 7;
+const SPAN = BOARD_DAYS;
 /** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
 const WIDE_REM = 60;
 
@@ -62,6 +63,8 @@ interface Pending {
   ops: PlanOp[];
   lead: string;
   data: PreviewData;
+  /** Said in the field (its text goes on „Übernehmen“), not chosen in ⋯. */
+  fromField: boolean;
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -126,17 +129,18 @@ export default function PlannerPage() {
   }, [params, setParams, board]);
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. */
-  async function showPreview(ops: PlanOp[]) {
+  async function showPreview(ops: PlanOp[], fromField = false) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
       const out = await previewUser(ops);
       const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
-      const lines = opLines(ops, titleOf);
+      const lines = opLines(ops, titleOf, data?.today ?? today());
       setPending({
         ops,
         lead: lines[0] ?? t.planner.ops.replan,
         data: { lines, diff: out.result.diff },
+        fromField,
       });
     } catch (e) {
       if (!(e instanceof PlannerOffError)) throw e;
@@ -147,9 +151,13 @@ export default function PlannerPage() {
   async function apply() {
     if (!pending) return;
     setBusy(true);
-    await applyOps(pending.ops, pending.lead, titles);
-    setBusy(false);
-    setPending(undefined);
+    try {
+      await applyOps(pending.ops, pending.lead, titles);
+      if (pending.fromField) setText('');
+      setPending(undefined);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function add(e: FormEvent) {
@@ -167,8 +175,8 @@ export default function PlannerPage() {
         items: board ? instructionItems(board) : [],
       });
       if (said.kind === 'ops') {
-        setText('');
-        await showPreview(said.ops);
+        // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
+        await showPreview(said.ops, true);
         return;
       }
       if (said.kind === 'ask') {
@@ -477,7 +485,7 @@ export default function PlannerPage() {
         <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
           <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
           {ask.options.map((o) => (
-            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key))}>
+            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
               {o.title}
             </Button>
           ))}
