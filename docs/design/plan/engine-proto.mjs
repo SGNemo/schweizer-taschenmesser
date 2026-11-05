@@ -201,9 +201,35 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     for (const u of units) {
       const p = prevByUnit.get(u.id);
       if (p && p.date === day.date && !placed.has(u.id)) {
-        // Who took the room: every unit placed today that was not planned for today before, largest first.
+        // A later session cannot stay on a day its earlier session has not reached: the cause is the part.
+        const partId = `${u.itemId}#${u.k - 1}`;
+        const part = u.k > 0 ? placed.get(partId) : undefined;
+        if (u.k > 0 && !(part && part.date < day.date)) {
+          bumps.push({
+            unitId: u.id,
+            day: day.date,
+            by: [partId],
+            cause: "after-part",
+          });
+          continue;
+        }
+        // Who took the room: only units placed today that outrank the bumped one, largest first.
+        const tier = (reason) =>
+          reason === "pinned" ? 0 : reason.startsWith("deadline") ? 1 : 2;
+        const tierOfU = must.includes(u) ? 1 : 2;
+        const outranks = (a) => {
+          const ta = tier(a.reason);
+          if (ta !== tierOfU) return ta < tierOfU;
+          const au = units.find((x) => x.id === a.unitId);
+          return (
+            au.item.prio > u.item.prio ||
+            (au.item.prio === u.item.prio && sticky(au) >= sticky(u))
+          );
+        };
         const by = todayList
-          .filter((a) => prevByUnit.get(a.unitId)?.date !== day.date)
+          .filter(
+            (a) => prevByUnit.get(a.unitId)?.date !== day.date && outranks(a),
+          )
           .sort((a, b) => b.min - a.min || cmp(a.unitId, b.unitId))
           .map((a) => a.unitId);
         bumps.push({
@@ -297,14 +323,32 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- printing ----------
-const REASON = {
-  pinned: "festgenagelt",
-  deadline: "muss bis zur Frist fertig sein",
-  "deadline-buffer": "Frist – nutzt den Puffer",
-  new: "neu, nach Priorität",
-  kept: "wie geplant",
-  carried: "weiter von früher",
-  pulled: "vorgezogen",
+/** The calm sentence per reason ("Warum hier?"); day names come from the item or the previous plan. */
+function reasonText(a, item, prev) {
+  const due = item?.due?.date ? weekday(item.due.date) : "zur Frist";
+  switch (a.reason) {
+    case "pinned":
+      return "festgenagelt";
+    case "deadline":
+      return `muss bis ${due} fertig sein`;
+    case "deadline-buffer":
+      return `muss bis ${due} fertig sein – nutzt den Puffer`;
+    case "new":
+      return "neu, nach Priorität";
+    case "kept":
+      return "wie geplant";
+    case "carried":
+      return `weiter von ${prev ? weekday(prev.date) : "früher"}`;
+    case "pulled":
+      return `vorgezogen, muss bis ${due} fertig sein`;
+    default:
+      return a.reason;
+  }
+}
+const CAUSE = {
+  bumped: "Platz nahmen",
+  capacity: "der Tag hat weniger Zeit",
+  "after-part": "folgt auf",
 };
 const fmt = (min) =>
   min >= 60
@@ -313,6 +357,9 @@ const fmt = (min) =>
 
 export function print(title, input, result) {
   const titles = new Map(input.items.map((i) => [i.id, i.title]));
+  const itemOf = (unitId) =>
+    input.items.find((i) => i.id === unitId.split("#")[0]);
+  const prevOf = new Map((input.prev ?? []).map((a) => [a.unitId, a]));
   const name = (unitId) => {
     const [id, k] = unitId.split("#");
     const u = result.assignments.find((a) => a.unitId === unitId);
@@ -333,7 +380,7 @@ export function print(title, input, result) {
     );
     for (const a of result.assignments.filter((a) => a.date === date))
       console.log(
-        `   ${String(a.order + 1).padStart(2)}. ${name(a.unitId).padEnd(32)} ${fmt(a.min).padStart(7)}   ${REASON[a.reason]}${a.late ? " · NACH DER FRIST" : ""}`,
+        `   ${String(a.order + 1).padStart(2)}. ${name(a.unitId).padEnd(32)} ${fmt(a.min).padStart(7)}   ${reasonText(a, itemOf(a.unitId), prevOf.get(a.unitId))}${a.late ? " · NACH DER FRIST" : ""}`,
       );
   }
   if (result.unplaced.length) {
@@ -347,18 +394,20 @@ export function print(title, input, result) {
   console.log(
     `Diff: ${d.added.length} neu · ${d.moved.length} verschoben · ${d.removed.length} weg · ${d.unchanged} unverändert`,
   );
-  const who = (by) =>
-    by?.length ? ` durch ${by.map((id) => `„${name(id)}“`).join(", ")}` : "";
+  const cause = (reason, by) =>
+    CAUSE[reason]
+      ? `${CAUSE[reason]}${by?.length ? ` ${by.map((id) => `„${name(id)}“`).join(", ")}` : ""}`
+      : reason;
   for (const m of d.moved)
     console.log(
-      `   ${name(m.unitId)}: ${m.from} → ${m.to} (${m.reason}${who(m.by)})`,
+      `   ${name(m.unitId)}: ${weekday(m.from)} → ${weekday(m.to)} (${cause(m.reason, m.by)})`,
     );
   for (const r of d.removed)
     console.log(
-      `   ${name(r.unitId)}: ${r.reason === "done" ? "erledigt" : `wartet (${r.reason}${who(r.by)})`}`,
+      `   ${name(r.unitId)}: ${r.reason === "done" ? "erledigt" : `wartet (${cause(r.reason, r.by)})`}`,
     );
   console.log(
-    `Bedarf ${fmt(result.demandMin)} · planbar ${fmt(result.usableMin)}${result.overflowMin ? ` · ${fmt(result.overflowMin)} mehr zu tun als frei` : " · passt"}`,
+    `Bedarf ${fmt(result.demandMin)} · planbar ${fmt(result.usableMin)}${result.overflowMin ? ` · ${fmt(result.overflowMin)} mehr zu tun, als Zeit frei ist` : " · passt"}`,
   );
 }
 
@@ -488,7 +537,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const r5 = plan(in5);
   console.log(
-    `\n=== S5 Erledigt macht Platz (heute Mo ${MON}) ===\n${r5.diff.moved.length === 0 && r5.diff.removed.length === 1 ? "0 verschoben · 1 erledigt · Montag behält 47 Min + 45 Min frei" : "FEHLER – etwas wurde vorgezogen: " + JSON.stringify(r5.diff.moved)}`,
+    `\n=== S5 Erledigt macht Platz (heute Mo ${MON}) ===\n${r5.diff.moved.length === 0 && r5.diff.removed.length === 1 ? `0 verschoben · 1 erledigt · Montag: ${fmt(r5.load[MON].free)} frei` : "FEHLER – etwas wurde vorgezogen: " + JSON.stringify(r5.diff.moved)}`,
   );
 
   // S4 – Ferne Frist: ein Ding mit harter Frist weit hinter dem Horizont wird nicht erzwungen.
@@ -510,6 +559,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     r4.assignments.find((a) => a.itemId === "k") ??
     r4.unplaced.find((u) => u.unitId === "k#1");
   console.log(
-    `\n=== S4 Ferne Frist (heute Mo ${MON}) ===\nJahresabschluss (Frist 2026-12-20): ${far?.reason === "deadline" ? "FEHLER – als Frist erzwungen" : `${far?.date ?? "wartet"} · ${REASON[far?.reason] ?? far?.reason}`}`,
+    `\n=== S4 Ferne Frist (heute Mo ${MON}) ===\nJahresabschluss (Frist 2026-12-20): ${far?.reason === "deadline" ? "FEHLER – als Frist erzwungen" : `${far?.date ?? "wartet"} · ${far?.reason}`}`,
   );
 }
