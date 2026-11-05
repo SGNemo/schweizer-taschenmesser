@@ -35,3 +35,35 @@ it('saving the editor keeps a title changed elsewhere while it was open', async 
   await waitFor(async () => expect((await taskRepo.get(task.id))?.priority).toBe(2));
   expect((await taskRepo.get(task.id))?.title).toBe('Titel aus Tab B');
 });
+
+it('a list move made elsewhere keeps the subtasks with their parent', async () => {
+  const task = await taskRepo.create({
+    listId: 'inbox',
+    title: 'Umzug',
+    done: false,
+    priority: 0,
+    order: 0,
+  });
+  const sub = await taskRepo.create({
+    listId: 'inbox',
+    title: 'Kartons',
+    done: false,
+    priority: 0,
+    order: 1,
+    parentId: task.id,
+  });
+  const editor = (t: typeof task) => (
+    <MemoryRouter>
+      <TaskEditor task={t} subtasks={[]} lists={[]} onClose={() => {}} />
+    </MemoryRouter>
+  );
+  const { rerender } = render(editor(task));
+  // The other tab moves the task (and, as its editor does, the subtask) to "work".
+  await taskRepo.update(sub.id, { listId: 'work' });
+  rerender(editor(await taskRepo.update(task.id, { listId: 'work' })));
+  await userEvent.selectOptions(await screen.findByLabelText('Priorität'), '2');
+  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await waitFor(async () => expect((await taskRepo.get(task.id))?.priority).toBe(2));
+  expect((await taskRepo.get(task.id))?.listId).toBe('work');
+  expect((await taskRepo.get(sub.id))?.listId).toBe('work');
+});
