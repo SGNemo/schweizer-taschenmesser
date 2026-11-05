@@ -104,6 +104,28 @@ describe('language preference', () => {
       setLangLoader(loadCatalog);
     }
   });
+
+  it('follows a switch made in another tab (X38)', async () => {
+    const loaded: string[] = [];
+    setLangLoader(async (lang) => void loaded.push(lang));
+    try {
+      const other = (key: string | null, newValue: string | null) =>
+        window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
+      localStorage.setItem('tm-lang', 'es');
+      other('tm-lang', 'es');
+      await vi.waitFor(() => expect(getLang()).toBe('es'));
+      expect(getLangPref()).toBe('es');
+      expect(loaded).toEqual(['es']);
+      expect(document.documentElement.lang).toBe('es');
+      // Other keys and a cleared storage leave the language alone.
+      other('tm-format', 'en-US');
+      other(null, null);
+      await Promise.resolve();
+      expect(getLang()).toBe('es');
+    } finally {
+      setLangLoader(loadCatalog);
+    }
+  });
 });
 
 describe('localized texts', () => {

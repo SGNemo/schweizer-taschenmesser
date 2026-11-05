@@ -135,6 +135,27 @@ export async function initLang(hasExistingData: () => Promise<boolean>): Promise
   }
 }
 
+/**
+ * Another tab of the app switched the language: `storage` fires in every other tab of this origin,
+ * so this one follows without a reload (X38). The stored value is already the new one.
+ */
+async function followOtherTab(e: StorageEvent): Promise<void> {
+  if (e.key !== KEY) return;
+  const next: LangPref = isLangPref(e.newValue) ? e.newValue : 'system';
+  const lang = resolveLang(next);
+  if (next === pref && lang === current) return;
+  pref = next;
+  try {
+    await prepare(lang);
+    apply(lang);
+  } catch {
+    // The texts cannot load right now: this tab keeps its language until the next start.
+  }
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function')
+  window.addEventListener('storage', (e) => void followOtherTab(e));
+
 const subscribe = (l: () => void) => {
   listeners.add(l);
   return () => void listeners.delete(l);
