@@ -45,3 +45,11 @@ it('a part payment added in the dialog survives "Speichern"', async () => {
   await waitFor(() => expect(screen.queryByLabelText('Gezahlte Summe')).toBeNull());
   expect((await invoiceRepo.get(inv.id))?.payments?.map((p) => p.amountMinor)).toEqual([10000]);
 });
+
+// QA round 4, X03: Enter in the payment field submitted the whole invoice form.
+it('Enter in "Gezahlte Summe" adds the part payment and keeps the dialog open', async () => {
+  const inv = await openInvoice('Werkstatt');
+  await userEvent.type(await screen.findByLabelText('Gezahlte Summe'), '50{Enter}');
+  await waitFor(async () => expect((await invoiceRepo.get(inv.id))?.payments?.length).toBe(1));
+  expect(screen.getByLabelText('Gezahlte Summe')).toBeTruthy();
+});
