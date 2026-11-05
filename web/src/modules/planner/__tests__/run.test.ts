@@ -610,6 +610,26 @@ describe('council round 1', () => {
     await runsSettled();
   });
 
+  it('the seed’s first run leaves nothing in the outbox and „entfernen“ takes every planner row with it', async () => {
+    const { applySeed, removeSeed } = await import('@/core/seed/dev');
+    await db.table('_seeds').clear();
+    await db.table('_outbox').clear(); // the inbox of beforeEach is this test's, not the seed's
+    await applySeed({
+      scale: 'small',
+      today: TODAY,
+      manifests: [todos, calendar, manifest],
+      prepareApp: true,
+    });
+    expect(await assignmentRepo.active().count()).toBeGreaterThan(0);
+    const marked = (await taskRepo.active().toArray()).filter((x) => x.planMark);
+    expect(marked.length).toBeGreaterThan(0);
+    expect(await db.table('_outbox').count()).toBe(0);
+    await removeSeed(db, [todos, calendar, manifest]);
+    await runsSettled();
+    for (const t of ['planner_day', 'planner_item', 'planner_assignment', 'todos_task'])
+      expect(await db.table(t).count(), t).toBe(0);
+  });
+
   it('msUntilNextDay points just past the next local midnight', async () => {
     const { msUntilNextDay } = await import('../services');
     const at = new Date(2026, 10, 9, 23, 59, 0).getTime();

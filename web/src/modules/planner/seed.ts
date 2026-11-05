@@ -1,5 +1,10 @@
+import { loadModuleStates } from '@/core/modules/activation';
+import { activeManifests, collectPlannable } from '@/core/modules/contributions';
+import { addDays } from '@/core/plan/dates';
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
-import { itemKeyOf } from './repo';
+import { today } from '@/core/time/now';
+import { assignmentRepo, dayRepo, itemKeyOf, itemRepo } from './repo';
+import { runBackground, runsSettled } from './services';
 
 /**
  * Test data of the planner (contract: docs/howto/seed-data.md). Days the user touched (available
@@ -107,4 +112,30 @@ function seed(ctx: SeedContext): SeedRows {
   return { day: days, item: items };
 }
 
-export default { seed } satisfies SeedModule;
+/**
+ * The first run over the test data, inside the seed: its rows and the marks it writes on the todos
+ * seed's tasks are test data too (registered, never in the outbox, gone with „entfernen“).
+ */
+async function afterSeed(): Promise<{ module?: string; collection: string; ids: string[] }[]> {
+  await runBackground({ force: true });
+  const ids = async (repo: { active(): { primaryKeys(): Promise<unknown[]> } }) =>
+    (await repo.active().primaryKeys()) as string[];
+  // The things the run marked, read through the contract (never a todos import).
+  const day = today();
+  const things = await collectPlannable(
+    { today: day, until: addDays(day, 60) },
+    activeManifests(await loadModuleStates()),
+  );
+  const marked = things.filter((e) => e.moduleId === 'todos' && e.planMark).map((e) => e.id);
+  return [
+    { collection: 'day', ids: await ids(dayRepo) },
+    { collection: 'item', ids: await ids(itemRepo) },
+    { collection: 'assignment', ids: await ids(assignmentRepo) },
+    { module: 'todos', collection: 'task', ids: marked },
+  ];
+}
+
+/** Removal deletes the todos and the rows table by table: no run may be in flight meanwhile. */
+const beforeRemove = (): Promise<void> => runsSettled().then(() => undefined);
+
+export default { seed, afterSeed, beforeRemove } satisfies SeedModule;

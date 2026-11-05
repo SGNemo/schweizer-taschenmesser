@@ -56,6 +56,11 @@ async function enter(page: Page, text: string) {
 const today = (page: Page) => page.getByTestId('day-2026-11-09');
 
 test.describe('Planer (week board, package 1)', () => {
+  // The board tests read seven columns side by side; the phone shows one day (its own test below).
+  test.beforeEach(({ isMobile }, info) => {
+    test.skip(isMobile && !info.title.startsWith('phone:'), 'wide board only');
+  });
+
   test('the one field makes a ToDo; „bis Do“ sets a deadline; the head counts the free time', async ({
     page,
   }) => {
@@ -69,6 +74,16 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
+    // Seven narrow columns: no row runs past its column, nothing scrolls sideways.
+    const overflow = await page.evaluate(() => {
+      const main = document.querySelector('main')!;
+      const rows = Array.from(document.querySelectorAll('[data-testid^="day-"] li'));
+      return {
+        main: main.scrollWidth - main.clientWidth,
+        rows: rows.filter((li) => li.scrollWidth > li.clientWidth + 1).length,
+      };
+    });
+    expect(overflow).toEqual({ main: 0, rows: 0 });
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();

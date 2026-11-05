@@ -189,19 +189,20 @@ export default function PlannerPage() {
           </span>
         }
         titleFull
+        // The minutes lead the meta line (a column is too narrow for a trailing figure), the deadline
+        // follows, the reason only while „Warum hier?“ is on.
         meta={
-          open || row.late || row.hardDue ? (
-            <span>
-              {row.hardDue ? (
-                <span className={row.late ? styles.dueWas : undefined}>
-                  {row.late
-                    ? t.planner.row.dueWas(dayName(row.hardDue))
-                    : t.planner.row.due(dayName(row.hardDue))}
-                </span>
-              ) : null}
-              {open ? <span className={styles.reason}>{reason}</span> : null}
+          <span>
+            <span className={styles.minutes}>
+              {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
             </span>
-          ) : undefined
+            {row.hardDue ? (
+              <span className={row.late ? styles.dueWas : undefined}>
+                {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
+              </span>
+            ) : null}
+            {open ? <span className={styles.reason}>{reason}</span> : null}
+          </span>
         }
         lead={
           row.entry ? (
@@ -214,11 +215,6 @@ export default function PlannerPage() {
               onChange={() => void markDone(row.entry!, titles)}
             />
           ) : undefined
-        }
-        end={
-          <span className={styles.minutes}>
-            {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
-          </span>
         }
         menu={rowMenu(row, day.date, reason)}
         menuLabel={t.planner.row.menu(row.title)}
@@ -261,8 +257,7 @@ export default function PlannerPage() {
               key={b.id}
               className={styles.blocker}
               title={b.label}
-              meta={t.planner.row.blocker}
-              end={<span className={styles.minutes}>{compact(b.min)}</span>}
+              meta={`${t.planner.row.blocker} · ${compact(b.min)}`}
             />
           ))}
           {day.rows.map((row) => renderRow(row, day))}

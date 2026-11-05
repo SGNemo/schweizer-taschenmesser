@@ -83,13 +83,16 @@ async function switchedOff(): Promise<boolean> {
   return stored !== undefined && !stored.enabled;
 }
 
-/** A background run: serialised, not undoable, skipped while nothing changed or the module is off. */
-export function runBackground(): Promise<RunOutcome | undefined> {
+/**
+ * A background run: serialised, not undoable, skipped while nothing changed or the module is off.
+ * `force` (the seed's first run) plans even when nothing changed and `autoReplan` is off.
+ */
+export function runBackground(opts: { force?: boolean } = {}): Promise<RunOutcome | undefined> {
   return enqueue(async () => {
     if (await switchedOff()) return undefined;
     const deps = await depsNow();
-    if (!deps.settings.autoReplan) return undefined;
-    return runPlanner(deps);
+    if (!deps.settings.autoReplan && !opts.force) return undefined;
+    return runPlanner(deps, opts);
   });
 }
 

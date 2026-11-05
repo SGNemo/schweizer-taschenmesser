@@ -77,10 +77,14 @@ export type SeedRows = Record<string, SeedRow[]>;
 export interface SeedModule {
   seed(ctx: SeedContext): SeedRows;
   /**
-   * Runs after the rows are written, for data that cannot be plain rows (the vault demo). May only
-   * use the module's own API. Returns the ids of the records it created, so removal can find them.
+   * Runs after the rows are written, for data that cannot be plain rows (the vault demo, the planner's
+   * first run). May only use the module's own API. Returns the ids of the records it created or
+   * changed, so they are registered as test data (removal finds them, they never sync); `module`
+   * names a module from `dependsOn` for rows written there.
    */
-  afterSeed?(ctx: SeedContext): Promise<{ collection: string; ids: string[] }[] | void>;
+  afterSeed?(
+    ctx: SeedContext,
+  ): Promise<{ module?: string; collection: string; ids: string[] }[] | void>;
   /** Undoes `afterSeed` side effects other than rows (called on removal). */
   beforeRemove?(): Promise<void>;
 }

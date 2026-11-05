@@ -213,7 +213,10 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
         createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang }),
       )) ?? [];
     for (const c of created) {
-      const table = tableName(m.id, c.collection);
+      const owner = c.module ? manifests.find((x) => x.id === c.module) : m;
+      if (!owner || (owner.id !== m.id && !m.seed.dependsOn.includes(owner.id)))
+        throw new Error(`${m.id}: afterSeed writes to ${c.module} without dependsOn`);
+      const table = tableName(owner.id, c.collection);
       await registry(database).bulkPut(
         c.ids.map((id) => ({ id: seedKey(table, id), table, rowId: id, batchId })),
       );
