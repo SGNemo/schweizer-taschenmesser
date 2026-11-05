@@ -1,0 +1,6 @@
+/* The widget's one summary line ("1 Budget überschritten"), the size of every widget summary. */
+.summary {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}

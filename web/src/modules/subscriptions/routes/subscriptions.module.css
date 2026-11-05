@@ -22,7 +22,7 @@
 }
 .statValue {
   font-size: var(--text-xl);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
 }
 .list {
   list-style: none;
@@ -55,7 +55,7 @@
   justify-content: center;
 }
 .name {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: break-word;
 }
 .muted {
@@ -64,10 +64,10 @@
 }
 .warn {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .amount {
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -111,14 +111,14 @@
 }
 .cancelBig strong {
   font-size: var(--text-xl);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
 }
 .missed {
   color: var(--text-muted);
 }
 .cancelLine {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 /* ---- money group: service tiles (signature), head, top list ---- */
@@ -132,7 +132,7 @@
   background: color-mix(in srgb, var(--module-color, var(--text-muted)) 22%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--module-color, var(--text-muted)) 45%, var(--border));
   color: var(--text);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
   letter-spacing: 0.02em;
 }
@@ -147,7 +147,7 @@
   margin: 0;
   font-size: var(--text-sm);
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .headNothing {

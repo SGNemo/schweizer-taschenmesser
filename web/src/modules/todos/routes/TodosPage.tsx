@@ -681,8 +681,10 @@ export default function TodosPage() {
         </p>
       ) : null}
 
+      {/* The card is the fokus head's "one thing" (extra: full width on the phone, so the title can shorten); the frame
+          draws the todayCard mark in the S slot beside it. */}
       {tasks ? (
-        <HeroSlot area="signature">
+        <HeroSlot>
           <TodayCard
             tasks={tasks}
             day={day}

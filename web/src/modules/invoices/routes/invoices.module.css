@@ -24,7 +24,7 @@
 }
 .statValue {
   font-size: var(--text-xl);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
 }
 .list {
   list-style: none;
@@ -56,7 +56,7 @@
   justify-content: center;
 }
 .payee {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 .muted {
@@ -65,14 +65,14 @@
 }
 .overdue {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .today {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .amount {
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
 .form {

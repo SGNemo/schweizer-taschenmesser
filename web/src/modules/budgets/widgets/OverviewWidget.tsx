@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router';
 import { currencyOf, formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, ProgressList, Skeleton, useWidgetSize } from '@/ui';
+import { Button, FortschrittBody, Skeleton, useWidgetSize, WidgetBody } from '@/ui';
+import widgetStyles from './OverviewWidget.module.css';
 import { useBudgetData } from '../data';
 import { goalProgress } from '../compute';
 import { depositRepo, goalRepo } from '../repo';
@@ -43,13 +44,18 @@ export default function OverviewWidget() {
   });
   return (
     <>
-      <ProgressList
+      {/* The `fortschritt` shape as bars (F05): budgets and goals fill in the module hue, an overrun says so in words. */}
+      <WidgetBody
         loading={false}
+        isEmpty={budgetEntries.length + goalEntries.length === 0}
         empty={t.budgets.widgetEmpty}
         emptyAction={{ label: t.homeEmpty.budgets, to: '/budgets?tab=goals&new=1' }}
-        summary={budgetEntries.length > 0 ? t.widgets.budgetsSummary(over.length) : undefined}
-        entries={[...budgetEntries, ...goalEntries]}
-      />
+      >
+        {budgetEntries.length > 0 ? (
+          <p className={widgetStyles.summary}>{t.widgets.budgetsSummary(over.length)}</p>
+        ) : null}
+        <FortschrittBody kind="bars" entries={[...budgetEntries, ...goalEntries]} />
+      </WidgetBody>
       {/* The one thing done most often next to a budget: an expense (opens finance's booking dialog). */}
       {size !== 's' && budgetEntries.length > 0 ? (
         <Button

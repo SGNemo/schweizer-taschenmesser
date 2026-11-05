@@ -39,7 +39,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .add {
   display: flex;
@@ -144,11 +144,11 @@
 }
 .overdue {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .today {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .prio3,
 .prio2 {
@@ -198,7 +198,7 @@
 }
 .sectionTitle {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 /* The list rail is gone (lists live in the "⋯" menu): the page is one column, never a grid with a
@@ -325,10 +325,10 @@
 }
 /* Narrow page: count, title and the two buttons on a tight card; the title takes what is left. */
 .todayCard[data-narrow='true'] {
+  flex: 1 1 100%;
   flex-wrap: nowrap;
   gap: var(--space-2);
   padding: var(--space-2);
-  width: 100%;
 }
 .todayCard[data-narrow='true'] .countBox {
   min-width: 3rem;
@@ -376,7 +376,7 @@
 }
 .tagChip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .boardHint {
   margin: 0 0 var(--space-2);
@@ -428,7 +428,7 @@
 }
 .columnCount {
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: normal;
 }
 .columnEmpty {
   margin: 0;
@@ -459,7 +459,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-weight: 550;
+  font-weight: var(--weight-medium);
   text-align: left;
   cursor: pointer;
 }

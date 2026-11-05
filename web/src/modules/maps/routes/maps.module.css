@@ -137,7 +137,7 @@
 }
 .catChip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 /* Place rows lead with a pin plate in the module colour. */

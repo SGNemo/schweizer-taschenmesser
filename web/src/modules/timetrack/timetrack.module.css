@@ -28,7 +28,7 @@
 }
 .chip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .dot {
   width: 0.75rem;
@@ -56,7 +56,7 @@
 }
 .runningName {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .meta {
   margin: 0;

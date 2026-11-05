@@ -25,7 +25,7 @@
 }
 .chip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .cards {
   list-style: none;
@@ -50,7 +50,7 @@
 }
 .name {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 .meta {
