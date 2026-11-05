@@ -133,3 +133,19 @@ describe('impossible dates are flagged, never replaced by an assumption (X20)', 
     }
   });
 });
+
+describe('a four-digit year is taken as written (X29)', () => {
+  it.each(['Zahnarzt 1.1.0001', 'Zahnarzt 0999-01-01', 'Zahnarzt 3. Oktober 0500'])(
+    '%s',
+    (text) => {
+      const r = parse(text);
+      expect(r.fields.date).toBeUndefined();
+      expect(r.notes).toContain('invalid-date');
+    },
+  );
+
+  it('a two-digit year still means 20xx', () => {
+    expect(parse('Zahnarzt 1.1.27').fields.date).toBe('2027-01-01');
+    expect(parse('Zahnarzt 1.1.2027').fields.date).toBe('2027-01-01');
+  });
+});

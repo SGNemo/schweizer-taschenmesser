@@ -152,7 +152,8 @@ function setExplicitDate(
   d: number,
 ): RuleOutcome {
   if (st.date) return false;
-  if (!isValidDate(y, m, d)) return INVALID;
+  // Years before 1000 are typos ("1.1.0001"), never a date to save (X29).
+  if (y < 1000 || !isValidDate(y, m, d)) return INVALID;
   st.date = { y, m, d };
   if (cmpDate(st.date, today) < 0) st.notes.add('past-date');
   return true;
@@ -298,8 +299,9 @@ function extractDate(s: Scan, st: DateTimeState, today: Ymd): void {
       // "am 3.10.", "3.10.2026", "3.10.26"
       re: /(?<![\p{L}\d.,])(?:am\s+)?(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{4})|(\d{2}))?(?![\d])/iu,
       run: (m) => {
-        const year = m[3] ?? m[4];
-        if (year) return setExplicitDate(st, today, fullYear(num(year)), num(m[2]), num(m[1]));
+        // A four-digit year is taken as written; only a two-digit one means 20xx.
+        const year = m[3] ? num(m[3]) : m[4] ? fullYear(num(m[4])) : undefined;
+        if (year !== undefined) return setExplicitDate(st, today, year, num(m[2]), num(m[1]));
         return yearless(st, today, num(m[2]), num(m[1]));
       },
     },
