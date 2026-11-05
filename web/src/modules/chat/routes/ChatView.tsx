@@ -96,7 +96,7 @@ export default function ChatPage() {
   if (selected && threads?.some((x) => x.id === selected)) {
     return (
       <>
-        <SetupHint />
+        <SetupHint setup={setup} />
         <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />
       </>
     );
@@ -117,7 +117,7 @@ export default function ChatPage() {
           {c.newChat}
         </Button>
       </PageHeader>
-      <SetupHint />
+      <SetupHint setup={setup} />
       <div className={styles.layout}>
         <TextField
           label={c.search}

@@ -135,13 +135,18 @@ export function ReadableText({
     const host = parent?.closest<HTMLElement>('a');
     if (!el || !parent || !host || typeof MutationObserver === 'undefined') return;
     const measure = () => measureInk(el, parent);
+    let frame = 0;
     const observer = new MutationObserver(() => {
       measure();
       // A colour transition on the link may still run in this frame: once more when it has settled.
-      requestAnimationFrame(measure);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
     });
     observer.observe(host, { attributes: true, attributeFilter: ['class', 'aria-current'] });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [shown]);
   if (!runs) return <>{text}</>;
   return (

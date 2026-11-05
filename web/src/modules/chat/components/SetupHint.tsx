@@ -25,9 +25,8 @@ export function useChatSetup(): { needed: boolean; canDownload: boolean } | unde
 }
 
 /** Shown in the chat until a local model is downloaded or a provider is usable; then it is the page's one action. */
-export function SetupHint() {
+export function SetupHint({ setup }: { setup: ReturnType<typeof useChatSetup> }) {
   const navigate = useNavigate();
-  const setup = useChatSetup();
   if (!setup?.needed) return null;
   const { canDownload } = setup;
   const c = t.chat.setup;

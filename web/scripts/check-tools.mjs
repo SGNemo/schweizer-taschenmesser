@@ -49,7 +49,8 @@ if (errors.length > 0) {
 const modulesDir = join(root, 'src', 'modules');
 const looks = readdirSync(modulesDir)
   .filter((id) => existsSync(join(modulesDir, id, 'manifest.ts')))
-  .map((id) => identityFacts(id, readFileSync(join(modulesDir, id, 'manifest.ts'), 'utf8')));
+  .map((id) => identityFacts(id, readFileSync(join(modulesDir, id, 'manifest.ts'), 'utf8')))
+  .filter((m) => !m.retired);
 const kin = toolModuleKinship(facts, looks);
 if (kin.length > 0)
   console.log(
