@@ -70,3 +70,28 @@ it('a deleted habit comes back with its history; a time entry is listed', async 
   await restoreEntry(listed.find((e) => e.kind === 'habit')!);
   expect(await entries.get(day.id)).toBeDefined();
 });
+
+it('a deleted transfer is listed once and comes back as a pair', async () => {
+  const a = await accounts.create({ name: 'Giro' });
+  const b = await accounts.create({ name: 'Spar' });
+  const out = await bookings.create({
+    accountId: a.id,
+    payee: 'Umbuchung',
+    amountMinor: 5000,
+    transferId: 't1',
+  });
+  const into = await bookings.create({
+    accountId: b.id,
+    payee: 'Umbuchung',
+    amountMinor: 5000,
+    transferId: 't1',
+  });
+  await bookings.removeMany([out.id, into.id]);
+
+  const listed = await listTrash();
+  expect(listed.map((e) => e.kind)).toEqual(['booking']);
+  await restoreEntry(listed[0]!);
+  expect((await bookings.active().toArray()).map((x) => x.id).sort()).toEqual(
+    [out.id, into.id].sort(),
+  );
+});
