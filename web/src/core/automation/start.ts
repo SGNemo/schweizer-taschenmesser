@@ -3,6 +3,7 @@ import { bus } from '@/core/events';
 import { availableManifests } from '@/core/modules/available';
 import { loadModuleStates } from '@/core/modules/activation';
 import type { ModuleManifest } from '@/core/modules/types';
+import type { AutomationEventDef } from './module';
 import { now } from '@/core/time/now';
 import { processEvent, type EngineDeps } from './engine';
 import { startWriteEvents } from './ingest';
@@ -25,7 +26,7 @@ export const getLiveDeps = (): LiveDeps => (live ??= createDeps());
 
 export interface LiveDeps extends TickDeps {
   wants: (type: string) => boolean;
-  watched: (moduleId: string, collection: string) => boolean;
+  watched: (moduleId: string, collection: string) => AutomationEventDef | undefined;
   derive: AutomationRegistry['derive'];
   refresh: () => Promise<void>;
 }
@@ -65,7 +66,7 @@ export function createDeps(onLoaded?: (enabled: boolean) => void): LiveDeps {
     known: () => availableManifests(),
     allowed: (module, action) => registry?.allowed(module, action) ?? false,
     wants: (type) => enabled && types.has(type),
-    watched: (moduleId, collection) => registry?.watched(moduleId, collection) ?? false,
+    watched: (moduleId, collection) => registry?.watched(moduleId, collection),
     derive: (signal, base) => registry?.derive(signal, base) ?? [],
     detectors: async () => {
       await fresh();

@@ -114,6 +114,9 @@ export async function disableModule(
   policy: DataPolicy,
   database: TaschenmesserDB = defaultDb,
 ): Promise<void> {
+  // Before the state and before the wipe, awaited: `bus.emit` swallows handler errors, so a failing
+  // listener never keeps the module switched on.
+  await bus.emit('module.disabling', { moduleId: manifest.id, policy });
   if (policy === 'delete') await wipeModuleData(manifest, database);
   await stateRepo(database).upsert(manifest.id, { enabled: false, dataPolicy: policy });
   await bus.emit('module.disabled', { moduleId: manifest.id, policy });

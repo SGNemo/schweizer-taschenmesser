@@ -23,5 +23,7 @@ export {
   Receipt,
   Shelf,
   Stamp,
+  WeekBars,
+  WEEK_BARS_DEFAULT,
   type BlockSize,
 } from './blocks';

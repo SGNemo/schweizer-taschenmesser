@@ -13,4 +13,5 @@ export const homeEmpty: Strings['homeEmpty'] = {
   vault: 'Adicionar documento',
   calendar: 'Adicionar evento',
   finance: 'Adicionar lançamento',
+  planner: 'Adicionar algo',
 };

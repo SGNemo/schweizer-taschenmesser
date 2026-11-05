@@ -13,6 +13,12 @@ export type FieldType = 'text' | 'number' | 'date' | 'time' | 'boolean';
 export interface AutomationEventDef {
   /** Fields the event carries (`event.data`): what conditions compare and `{field}` templates read. */
   fields: Record<string, FieldType>;
+  /**
+   * `watch` only: a write that changes nothing but these fields reports no `updated` event (the
+   * planner's `plannedFor`/`planMark` write-backs, which would otherwise fire a rule on every run).
+   * `created`, `deleted`, `restored` and derived events are unaffected.
+   */
+  ignoreFields?: string[];
 }
 
 export interface ModuleAutomation {

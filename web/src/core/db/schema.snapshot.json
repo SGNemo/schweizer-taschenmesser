@@ -1,5 +1,5 @@
 {
-  "version": 31,
+  "version": 32,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -50,6 +50,7 @@
     "pantry_item": "id, updatedAt, expires",
     "people_gift": "id, updatedAt, personId, status, date",
     "people_person": "id, updatedAt, name",
+    "planner_entry": "id, updatedAt, createdAt",
     "subscriptions_subscription": "id, updatedAt, startDate",
     "timetrack_client": "id, updatedAt, order",
     "timetrack_job": "id, updatedAt, clientId, order",

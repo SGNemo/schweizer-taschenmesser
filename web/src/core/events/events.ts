@@ -72,5 +72,11 @@ export interface EventMap {
     title?: string;
   };
   'module.enabled': { moduleId: string };
+  /**
+   * A module is about to be switched off: emitted and awaited before the state is written and before
+   * any data is wiped (delete policy), so a module can hand foreign records back (the planner restores
+   * the ToDos' own dates). A throwing handler never stops the switch-off.
+   */
+  'module.disabling': { moduleId: string; policy: DataPolicy };
   'module.disabled': { moduleId: string; policy: DataPolicy };
 }

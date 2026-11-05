@@ -79,6 +79,7 @@ export const SIGNATURES = [
   'vaultDoor',
   'gauges',
   'arrowProgress',
+  'weekBars',
   // tools
   'display',
   'flow',

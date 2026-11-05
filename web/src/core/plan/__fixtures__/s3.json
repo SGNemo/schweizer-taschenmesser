@@ -1,0 +1,353 @@
+{
+  "title": "S3 Mittwoch: Donnerstag frei, Steuerbescheid bis Donnerstag",
+  "input": {
+    "today": "2026-11-11",
+    "days": [
+      {
+        "date": "2026-11-09",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-10",
+        "availableMin": 240,
+        "blockers": [
+          {
+            "label": "Zahnarzt",
+            "min": 60
+          }
+        ]
+      },
+      {
+        "date": "2026-11-11",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-12",
+        "availableMin": 0,
+        "blockers": [
+          {
+            "label": "Tag frei",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-11-13",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-14",
+        "availableMin": 120,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-15",
+        "availableMin": 0,
+        "blockers": []
+      }
+    ],
+    "items": [
+      {
+        "key": "todos:a",
+        "title": "Steuererklärung",
+        "durationMin": 120,
+        "priority": 2,
+        "createdAt": 1,
+        "due": {
+          "date": "2026-11-12",
+          "hard": true
+        },
+        "splittable": true
+      },
+      {
+        "key": "todos:b",
+        "title": "Rechnung Strom zahlen",
+        "durationMin": 10,
+        "priority": 1,
+        "createdAt": 2,
+        "due": {
+          "date": "2026-11-11",
+          "hard": true
+        }
+      },
+      {
+        "key": "todos:c",
+        "title": "Angebot vergleichen",
+        "durationMin": 45,
+        "priority": 3,
+        "createdAt": 3,
+        "done": true
+      },
+      {
+        "key": "todos:d",
+        "title": "Keller aufräumen",
+        "durationMin": 180,
+        "priority": 0,
+        "createdAt": 4,
+        "splittable": true
+      },
+      {
+        "key": "todos:e",
+        "title": "Geschenk bestellen",
+        "durationMin": 20,
+        "priority": 2,
+        "createdAt": 5,
+        "due": {
+          "date": "2026-11-13",
+          "hard": false
+        }
+      },
+      {
+        "key": "todos:f",
+        "title": "Blogpost schreiben",
+        "durationMin": 90,
+        "priority": 1,
+        "createdAt": 6
+      },
+      {
+        "key": "todos:g",
+        "title": "Arzttermin vereinbaren",
+        "durationMin": 10,
+        "priority": 2,
+        "createdAt": 7
+      },
+      {
+        "key": "todos:h",
+        "title": "Fahrrad reparieren",
+        "durationMin": 60,
+        "priority": 1,
+        "createdAt": 8,
+        "earliest": "2026-11-14"
+      },
+      {
+        "key": "todos:i",
+        "title": "Vortrag vorbereiten",
+        "durationMin": 90,
+        "priority": 3,
+        "createdAt": 9,
+        "due": {
+          "date": "2026-11-13",
+          "hard": true
+        }
+      },
+      {
+        "key": "todos:j",
+        "title": "Steuerbescheid prüfen",
+        "durationMin": 60,
+        "priority": 2,
+        "createdAt": 10,
+        "due": {
+          "date": "2026-11-12",
+          "hard": true
+        }
+      }
+    ],
+    "prev": [
+      {
+        "id": "todos:i#0",
+        "date": "2026-11-10",
+        "reason": "new"
+      },
+      {
+        "id": "todos:e#0",
+        "date": "2026-11-10",
+        "reason": "carried"
+      },
+      {
+        "id": "todos:g#0",
+        "date": "2026-11-10",
+        "reason": "carried"
+      },
+      {
+        "id": "todos:b#0",
+        "date": "2026-11-10",
+        "reason": "carried"
+      },
+      {
+        "id": "todos:a#0",
+        "date": "2026-11-11",
+        "reason": "deadline"
+      },
+      {
+        "id": "todos:f#0",
+        "date": "2026-11-11",
+        "reason": "new"
+      },
+      {
+        "id": "todos:a#1",
+        "date": "2026-11-12",
+        "reason": "deadline"
+      },
+      {
+        "id": "todos:d#0",
+        "date": "2026-11-13",
+        "reason": "bumped",
+        "bumpedBy": [
+          "todos:a#0"
+        ]
+      },
+      {
+        "id": "todos:h#0",
+        "date": "2026-11-14",
+        "reason": "new"
+      }
+    ],
+    "settings": {
+      "horizonDays": 7
+    }
+  },
+  "expected": {
+    "assignments": [
+      [
+        "todos:a#0",
+        "2026-11-11",
+        60,
+        0
+      ],
+      [
+        "todos:a#1",
+        "2026-11-11",
+        60,
+        1
+      ],
+      [
+        "todos:b#0",
+        "2026-11-11",
+        10,
+        3
+      ],
+      [
+        "todos:e#0",
+        "2026-11-13",
+        20,
+        1
+      ],
+      [
+        "todos:g#0",
+        "2026-11-13",
+        10,
+        2
+      ],
+      [
+        "todos:h#0",
+        "2026-11-14",
+        60,
+        0
+      ],
+      [
+        "todos:i#0",
+        "2026-11-13",
+        90,
+        0
+      ],
+      [
+        "todos:j#0",
+        "2026-11-11",
+        60,
+        2
+      ]
+    ],
+    "reasons": {
+      "todos:a#0": "deadline",
+      "todos:b#0": "deadline",
+      "todos:j#0": "deadline",
+      "todos:a#1": "deadline",
+      "todos:i#0": "deadline",
+      "todos:e#0": "carried",
+      "todos:g#0": "carried",
+      "todos:h#0": "new"
+    },
+    "unplaced": [
+      {
+        "id": "todos:d#0",
+        "reason": "horizon"
+      },
+      {
+        "id": "todos:d#1",
+        "reason": "horizon"
+      },
+      {
+        "id": "todos:f#0",
+        "reason": "horizon"
+      }
+    ],
+    "diff": {
+      "added": 1,
+      "moved": 5,
+      "removed": 2,
+      "unchanged": 2,
+      "movedReasons": [
+        {
+          "id": "todos:b#0",
+          "from": "2026-11-10",
+          "to": "2026-11-11",
+          "reason": "carried",
+          "by": []
+        },
+        {
+          "id": "todos:a#1",
+          "from": "2026-11-12",
+          "to": "2026-11-11",
+          "reason": "pulled",
+          "by": []
+        },
+        {
+          "id": "todos:i#0",
+          "from": "2026-11-10",
+          "to": "2026-11-13",
+          "reason": "carried",
+          "by": []
+        },
+        {
+          "id": "todos:e#0",
+          "from": "2026-11-10",
+          "to": "2026-11-13",
+          "reason": "carried",
+          "by": []
+        },
+        {
+          "id": "todos:g#0",
+          "from": "2026-11-10",
+          "to": "2026-11-13",
+          "reason": "carried",
+          "by": []
+        }
+      ],
+      "removedReasons": [
+        {
+          "id": "todos:f#0",
+          "from": "2026-11-11",
+          "reason": "bumped",
+          "by": [
+            "todos:a#1",
+            "todos:j#0",
+            "todos:b#0"
+          ]
+        },
+        {
+          "id": "todos:d#0",
+          "from": "2026-11-13",
+          "reason": "bumped",
+          "by": [
+            "todos:i#0",
+            "todos:e#0",
+            "todos:g#0"
+          ]
+        }
+      ]
+    },
+    "free": {
+      "2026-11-11": 2,
+      "2026-11-12": 0,
+      "2026-11-13": 72,
+      "2026-11-14": 36,
+      "2026-11-15": 0
+    },
+    "overflowMin": 160,
+    "demandMin": 640,
+    "usableMin": 480
+  }
+}

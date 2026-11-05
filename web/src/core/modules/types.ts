@@ -196,6 +196,7 @@ export const SIGNATURES = [
   'vaultDoor',
   'gauges',
   'arrowProgress',
+  'weekBars',
   // tools
   'display',
   'flow',
@@ -547,6 +548,49 @@ export interface AttentionItem {
 export type AttentionSource = (ctx: { today: string }) => Promise<AttentionItem[]>;
 
 /**
+ * One open thing a module offers the planner (`contributions.plannable`, docs/design/plan/CONCEPT.md §4).
+ * The source keeps what it has (title, done, priority, due, estimate); the planner stores only its own
+ * planning facts. Dates are 'YYYY-MM-DD', durations whole minutes.
+ */
+export interface PlannableItem {
+  /** Unique within its source; the planner's item key is `<moduleId>:<id>`. */
+  id: string;
+  /** What kind of thing it is (`task`, `invoice`, …), for the row's icon and wording. */
+  kind: string;
+  title: string;
+  /** Route that opens the thing, usually `/<module>?open=<id>`. */
+  to: string;
+  durationMin?: number;
+  priority?: 0 | 1 | 2 | 3;
+  /** `hard` = must be done by then (invoice, cancellation); a ToDo's own date is soft. */
+  due?: { date: string; hard: boolean };
+  /** Not before this day. */
+  earliest?: string;
+  /** The day the source carries (a ToDo's `plannedFor`); the planner reads it as the earliest day. */
+  plannedFor?: string;
+  /** The planner's ownership mark on the source (a ToDo's `planMark`): `plannedFor` is planner-own only if `planMark.date === plannedFor`. */
+  planMark?: { date: string; order: number; prior?: string };
+  done?: boolean;
+  personId?: string;
+  link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+}
+
+/** The planner's view of a module's open things plus the write-back of the same contract (typed, no module import). */
+export interface PlannableSource {
+  /** Open, plannable things only (no done, no „Irgendwann“, no subtasks). */
+  list(ctx: { today: string; until: string }): Promise<PlannableItem[]>;
+  /**
+   * The planner assigned the thing to `date` (first session) at `order` inside that day, or took it out
+   * (`date` undefined). A ToDo writes `plannedFor` + `planMark`; no `order` clears the mark.
+   */
+  onAssign?(id: string, date: string | undefined, order?: number): Promise<void>;
+  /** Ticked off from the plan. */
+  onDone?(id: string): Promise<void>;
+  /** The estimate was edited in the plan. */
+  onEstimate?(id: string, minutes: number): Promise<void>;
+}
+
+/**
  * One large figure for the cockpit's "Großanzeige" (`home/CockpitStats`): a formatted value with a
  * label and a context line, e.g. the balance. Always formatted by the module; never raw numbers.
  */
@@ -572,6 +616,8 @@ export interface ModuleContributions {
   notifications?: () => Promise<{ default: NotificationSource }>;
   /** Items for "Jetzt wichtig" on the home screen (overdue, due today, exceeded, expiring). */
   attention?: () => Promise<{ default: AttentionSource }>;
+  /** Open things the planner may distribute over the days, with the write-back callbacks (lazy like `calendarItems`). */
+  plannable?: () => Promise<{ default: PlannableSource }>;
   /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */
   headline?: () => Promise<{ default: HeadlineSource }>;
   /** The calendar module only: receives events synced by connectors. */

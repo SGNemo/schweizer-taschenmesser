@@ -1,0 +1,226 @@
+{
+  "title": "S1 Wochenstart Montag",
+  "input": {
+    "today": "2026-11-09",
+    "days": [
+      {
+        "date": "2026-11-09",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-10",
+        "availableMin": 240,
+        "blockers": [
+          {
+            "label": "Zahnarzt",
+            "min": 60
+          }
+        ]
+      },
+      {
+        "date": "2026-11-11",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-12",
+        "availableMin": 240,
+        "blockers": [
+          {
+            "label": "Teamrunde",
+            "min": 90
+          }
+        ]
+      },
+      {
+        "date": "2026-11-13",
+        "availableMin": 240,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-14",
+        "availableMin": 120,
+        "blockers": []
+      },
+      {
+        "date": "2026-11-15",
+        "availableMin": 0,
+        "blockers": []
+      }
+    ],
+    "items": [
+      {
+        "key": "todos:a",
+        "title": "Steuererklärung",
+        "durationMin": 120,
+        "priority": 2,
+        "createdAt": 1,
+        "due": {
+          "date": "2026-11-12",
+          "hard": true
+        },
+        "splittable": true
+      },
+      {
+        "key": "todos:b",
+        "title": "Rechnung Strom zahlen",
+        "durationMin": 10,
+        "priority": 1,
+        "createdAt": 2,
+        "due": {
+          "date": "2026-11-11",
+          "hard": true
+        }
+      },
+      {
+        "key": "todos:c",
+        "title": "Angebot vergleichen",
+        "durationMin": 45,
+        "priority": 3,
+        "createdAt": 3
+      },
+      {
+        "key": "todos:d",
+        "title": "Keller aufräumen",
+        "durationMin": 180,
+        "priority": 0,
+        "createdAt": 4,
+        "splittable": true
+      },
+      {
+        "key": "todos:e",
+        "title": "Geschenk bestellen",
+        "durationMin": 20,
+        "priority": 2,
+        "createdAt": 5,
+        "due": {
+          "date": "2026-11-13",
+          "hard": false
+        }
+      },
+      {
+        "key": "todos:f",
+        "title": "Blogpost schreiben",
+        "durationMin": 90,
+        "priority": 1,
+        "createdAt": 6
+      },
+      {
+        "key": "todos:g",
+        "title": "Arzttermin vereinbaren",
+        "durationMin": 10,
+        "priority": 2,
+        "createdAt": 7
+      },
+      {
+        "key": "todos:h",
+        "title": "Fahrrad reparieren",
+        "durationMin": 60,
+        "priority": 1,
+        "createdAt": 8,
+        "earliest": "2026-11-14"
+      }
+    ],
+    "settings": {
+      "horizonDays": 7
+    }
+  },
+  "expected": {
+    "assignments": [
+      [
+        "todos:a#0",
+        "2026-11-09",
+        60,
+        1
+      ],
+      [
+        "todos:a#1",
+        "2026-11-10",
+        60,
+        0
+      ],
+      [
+        "todos:b#0",
+        "2026-11-09",
+        10,
+        4
+      ],
+      [
+        "todos:c#0",
+        "2026-11-09",
+        45,
+        0
+      ],
+      [
+        "todos:d#0",
+        "2026-11-11",
+        90,
+        1
+      ],
+      [
+        "todos:d#1",
+        "2026-11-12",
+        90,
+        0
+      ],
+      [
+        "todos:e#0",
+        "2026-11-09",
+        20,
+        2
+      ],
+      [
+        "todos:f#0",
+        "2026-11-11",
+        90,
+        0
+      ],
+      [
+        "todos:g#0",
+        "2026-11-09",
+        10,
+        3
+      ],
+      [
+        "todos:h#0",
+        "2026-11-14",
+        60,
+        0
+      ]
+    ],
+    "reasons": {
+      "todos:c#0": "new",
+      "todos:a#0": "new",
+      "todos:e#0": "new",
+      "todos:g#0": "new",
+      "todos:b#0": "new",
+      "todos:a#1": "new",
+      "todos:f#0": "new",
+      "todos:d#0": "new",
+      "todos:d#1": "new",
+      "todos:h#0": "new"
+    },
+    "unplaced": [],
+    "diff": {
+      "added": 10,
+      "moved": 0,
+      "removed": 0,
+      "unchanged": 0,
+      "movedReasons": [],
+      "removedReasons": []
+    },
+    "free": {
+      "2026-11-09": 47,
+      "2026-11-10": 84,
+      "2026-11-11": 12,
+      "2026-11-12": 30,
+      "2026-11-13": 192,
+      "2026-11-14": 36,
+      "2026-11-15": 0
+    },
+    "overflowMin": 0,
+    "demandMin": 535,
+    "usableMin": 936
+  }
+}

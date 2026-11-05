@@ -14,6 +14,7 @@ import {
   Receipt,
   Shelf,
   Stamp,
+  WeekBars,
   type BlockSize,
 } from './blocks';
 import { HourStrip } from './HourStrip';
@@ -37,6 +38,7 @@ export const SIGNATURE_BLOCKS: Partial<
   gauges: Gauges,
   arrowProgress: ArrowBand,
   masthead: Masthead,
+  weekBars: WeekBars,
   // Decoration only: the strip's own role/label ("no appointments") would be a false statement here.
   hourStrip: ({ size }) => (
     <div aria-hidden="true" data-signature="hourStrip" data-size={size}>

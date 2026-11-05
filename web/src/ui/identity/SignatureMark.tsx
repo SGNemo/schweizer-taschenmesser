@@ -189,6 +189,18 @@ export const SIGNATURE_MARKS: Record<Exclude<SignatureId, 'none'>, ReactNode> = 
       <path d="M3 12h7" strokeWidth="2.5" />
     </>
   ),
+  // Seven bars of a week, three of them filled: the planner's load.
+  weekBars: (
+    <>
+      <path d="M3 20h18" />
+      <rect x="4" y="9" width="2" height="11" fill="currentColor" stroke="none" />
+      <rect x="7" y="12" width="2" height="8" fill="currentColor" stroke="none" />
+      <rect x="10" y="6" width="2" height="14" fill="currentColor" stroke="none" />
+      <rect x="13" y="11" width="2" height="9" rx=".3" />
+      <rect x="16" y="14" width="2" height="6" rx=".3" />
+      <rect x="19" y="16" width="2" height="4" rx=".3" />
+    </>
+  ),
   /* ---- tools ---- */
   // Calculator display with a result line and a key row.
   display: (

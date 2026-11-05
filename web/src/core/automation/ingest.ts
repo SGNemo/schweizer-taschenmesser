@@ -5,6 +5,7 @@
 import { setWriteListener, type WriteSignal } from '@/core/db/writeHook';
 import { now } from '@/core/time/now';
 import { currentCause, processEvent, type EngineDeps } from './engine';
+import type { AutomationEventDef } from './module';
 import { EXCLUDED_MODULES, type AutomationEvent } from './types';
 
 /** `<moduleId>_<collection>` → ids; module ids contain no underscore. System tables start with one. */
@@ -22,16 +23,34 @@ const titleOf = (data: Record<string, unknown> | undefined): string | undefined 
 /** Optional per-module refinement: more events for the same write (e.g. `completed`). */
 export type Derive = (signal: WriteSignal, event: AutomationEvent) => AutomationEvent[];
 
+/** Which collections report their writes (`manifest.automation.watch`): the entry, a boolean, or nothing. */
+export type Watched = (
+  moduleId: string,
+  collection: string,
+) => AutomationEventDef | boolean | undefined;
+
+/** An update that touched only the entry's `ignoreFields` is no event (`Object.keys(before) ⊆ ignoreFields`). */
+export function ignoredUpdate(
+  signal: WriteSignal,
+  def: AutomationEventDef | boolean | undefined,
+): boolean {
+  if (signal.kind !== 'updated' || typeof def !== 'object' || !def.ignoreFields?.length)
+    return false;
+  const changed = Object.keys(signal.before ?? {});
+  return changed.length > 0 && changed.every((k) => def.ignoreFields!.includes(k));
+}
+
 export function eventsOf(
   signal: WriteSignal,
   at: number,
   derive?: Derive,
   /** Which collections report their writes (`manifest.automation.watch`); unset = all. */
-  watched?: (moduleId: string, collection: string) => boolean,
+  watched?: Watched,
 ): AutomationEvent[] {
   const parts = splitTable(signal.table);
   if (!parts || EXCLUDED_MODULES.includes(parts.moduleId)) return [];
-  const report = !watched || watched(parts.moduleId, parts.collection);
+  const def = watched?.(parts.moduleId, parts.collection);
+  const report = (!watched || !!def) && !ignoredUpdate(signal, def);
   const cause = currentCause();
   const title = titleOf(signal.data);
   const base: AutomationEvent = {
@@ -58,7 +77,7 @@ export function startWriteEvents(
   options: {
     derive?: Derive;
     wants?: (type: string) => boolean;
-    watched?: (moduleId: string, collection: string) => boolean;
+    watched?: Watched;
   } = {},
 ): () => void {
   setWriteListener((signal) => {
