@@ -101,6 +101,9 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     const todayList = [];
     const isMain = (u) => u.item.min >= s.mainThresholdMin;
     const put = (u, reason, extra = {}) => {
+      const prevA = prevByUnit.get(u.id);
+      if (prevA && prevA.date === day.date && prevA.bumpedBy)
+        extra = { bumpedBy: prevA.bumpedBy, ...extra };
       const a = {
         unitId: u.id,
         itemId: u.itemId,
@@ -193,11 +196,15 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       const reason = !p
         ? "new"
         : p.date === day.date
-          ? "kept"
+          ? (p.reason ?? "kept")
           : p.date < day.date
             ? (bump?.cause ?? "carried")
             : "pulled";
-      put(u, reason);
+      put(
+        u,
+        reason,
+        bump && reason === bump.cause ? { bumpedBy: bump.by } : {},
+      );
     }
     // what was planned for today before and did not get a place: who took it?
     for (const u of units) {
@@ -247,8 +254,12 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     }
     const plannedMin = todayList.reduce((n, a) => n + a.min, 0);
     // Final order of the day independent of the previous plan: pinned, deadline, then priority, due, age, id.
+    const pinnedIds = new Set(
+      units.filter((u) => u.item.pinned === day.date).map((u) => u.id),
+    );
+    const mustIds = new Set(must.map((u) => u.id));
     const tierOf = (a) =>
-      a.reason === "pinned" ? 0 : a.reason.startsWith("deadline") ? 1 : 2;
+      pinnedIds.has(a.unitId) ? 0 : mustIds.has(a.unitId) ? 1 : 2;
     todayList
       .sort((a, b) => {
         const ua = units.find((x) => x.id === a.unitId).item;
@@ -345,7 +356,7 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- printing ----------
 /** The calm sentence per reason ("Warum hier?"); day names come from the item or the previous plan. */
-function reasonText(a, item, prev) {
+function reasonText(a, item, prev, nameOf = (id) => id) {
   const due = item?.due?.date ? weekday(item.due.date) : "zur Frist";
   switch (a.reason) {
     case "pinned":
@@ -361,7 +372,7 @@ function reasonText(a, item, prev) {
     case "carried":
       return `weiter von ${prev ? weekday(prev.date) : "früher"}`;
     case "bumped":
-      return "Platz nahm etwas Wichtigeres";
+      return `Platz nahmen ${(a.bumpedBy ?? []).map((id) => nameOf(id)).join(", ") || "andere"}`;
     case "after-part":
       return "folgt auf den ersten Teil";
     case "pulled":
@@ -374,7 +385,7 @@ const CAUSE = {
   bumped: "Platz nahmen",
   capacity: "der Tag hat weniger Zeit",
   "after-part": "folgt auf",
-  carried: "nicht geschafft, weiter",
+  carried: "weiter von",
   pulled: "eine Frist zog es vor",
 };
 const WAIT = {
@@ -414,11 +425,11 @@ export function print(title, input, result) {
       .filter((a) => a.date === date)
       .sort((a, b) => a.order - b.order))
       console.log(
-        `   ${String(a.order + 1).padStart(2)}. ${name(a.unitId).padEnd(32)} ${fmt(a.min).padStart(7)}   ${reasonText(a, itemOf(a.unitId), prevOf.get(a.unitId))}${a.late ? " · NACH DER FRIST" : ""}`,
+        `   ${String(a.order + 1).padStart(2)}. ${name(a.unitId).padEnd(32)} ${fmt(a.min).padStart(7)}   ${reasonText(a, itemOf(a.unitId), prevOf.get(a.unitId), name)}${a.late ? ` · nach der Frist (Frist war ${weekday(itemOf(a.unitId).due.date)})` : ""}`,
       );
   }
   if (result.unplaced.length) {
-    console.log("Nicht unterbringbar:");
+    console.log("Wartet auf freie Zeit:");
     for (const u of result.unplaced)
       console.log(
         `   ${name(u.unitId)} – ${WAIT[u.reason] ?? u.reason}${u.due ? ` (Frist ${u.due}, geplant ${u.date})` : ""}`,
@@ -428,13 +439,15 @@ export function print(title, input, result) {
   console.log(
     `Diff: ${d.added.length} neu · ${d.moved.length} verschoben · ${d.removed.length} weg · ${d.unchanged} unverändert`,
   );
-  const cause = (reason, by) =>
-    CAUSE[reason]
-      ? `${CAUSE[reason]}${by?.length ? ` ${by.map((id) => `„${name(id)}“`).join(", ")}` : ""}`
-      : reason;
+  const cause = (reason, by, from) =>
+    reason === "carried"
+      ? `weiter von ${weekday(from)}`
+      : CAUSE[reason]
+        ? `${CAUSE[reason]}${by?.length ? ` ${by.map((id) => `„${name(id)}“`).join(", ")}` : ""}`
+        : reason;
   for (const m of d.moved)
     console.log(
-      `   ${name(m.unitId)}: ${weekday(m.from)} → ${weekday(m.to)} (${cause(m.reason, m.by)})`,
+      `   ${name(m.unitId)}: ${weekday(m.from)} → ${weekday(m.to)} (${cause(m.reason, m.by, m.from)})`,
     );
   for (const r of d.removed)
     console.log(
