@@ -14,10 +14,11 @@
   --k-document: var(--mod-teal);
   --k-game: var(--mod-indigo);
   --k-other: var(--mod-slate);
-  /* Age of the data: fresh (cool chart teal) to untouched for years (warm: warning, orange, danger). */
-  --age-0: var(--viz-1);
-  --age-1: color-mix(in srgb, var(--viz-1) 65%, var(--warning));
-  --age-2: color-mix(in srgb, var(--viz-1) 30%, var(--warning));
+  /* Age of the data: fresh (cool teal) to untouched for years (warm: warning, chart orange, danger). Not --viz-1:
+     inside a module `[data-hue]` rebinds it to the module hue, which is slate here (the ramp would start grey). */
+  --age-0: var(--mod-teal);
+  --age-1: color-mix(in srgb, var(--mod-teal) 65%, var(--warning));
+  --age-2: color-mix(in srgb, var(--mod-teal) 30%, var(--warning));
   --age-3: var(--warning);
   --age-4: var(--viz-2);
   --age-5: var(--danger);

@@ -105,7 +105,8 @@ export function DriveCard({
   return (
     <Card className={styles.card}>
       <div className={styles.top}>
-        <Ring percent={pct} level={level} label={name} />
+        {/* Identity v3.1 (G01): the ring stays in the module hue; the state is the advice line below. */}
+        <Ring percent={pct} label={name} />
         <div className={styles.head}>
           <div className={styles.name}>
             <h3 className={styles.title}>{name}</h3>

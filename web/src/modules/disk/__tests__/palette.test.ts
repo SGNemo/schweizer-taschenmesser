@@ -9,7 +9,11 @@ import { KIND_VAR, textOn, toHex } from '../logic/colors';
  * Identity v3.1 (G01): the treemap palette is made of tokens only, and every file-type and age colour stays
  * ≥ 3:1 against `--surface` in both themes (WCAG 1.4.11, graphical objects).
  */
-const palette = readFileSync(resolve(__dirname, '../components/Palette.module.css'), 'utf8');
+/** Without comments, so a token named in prose is never read as a declaration. */
+const palette = readFileSync(resolve(__dirname, '../components/Palette.module.css'), 'utf8').replace(
+  /\/\*[\s\S]*?\*\//g,
+  '',
+);
 const tokens = readFileSync(resolve(__dirname, '../../../ui/tokens.css'), 'utf8');
 
 /** Custom properties of the first block that follows `header`. */
@@ -68,6 +72,8 @@ describe('treemap palette (tokens only)', () => {
     for (const name of VARS) expect(own[name], name).toBeDefined();
     expect(Object.keys(KIND_VAR).sort()).toEqual([...FILE_KINDS].sort());
     expect(palette).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+    // `[data-hue]` rebinds --viz-1 and --module-color inside every module: the map would follow the module hue.
+    expect(palette).not.toMatch(/var\(--(viz-1|module-color)\)/);
   });
 
   it('maps the file types onto the module hues as agreed', () => {
