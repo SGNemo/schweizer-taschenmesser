@@ -113,12 +113,13 @@
 .home {
   color: var(--text);
 }
-/* An area: a block tinted in the area colour (3-6 %, off in "Ruhig"), a small caps head that folds it. */
+/* An area: a quiet neutral block (identity v3.1, F07: the area colour lives in the rail and the bottom navigation
+   only), a small caps head that folds it. */
 .group {
   margin-top: var(--space-2);
   padding: var(--space-1);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--area-color, var(--text-3)) var(--group-tint), transparent);
+  background: color-mix(in srgb, var(--text-3) var(--group-tint), transparent);
 }
 .groupHead {
   display: flex;
@@ -130,8 +131,8 @@
   border: 0;
   border-radius: var(--radius-md);
   background: none;
-  /* --text-muted, not --text-3: the head sits on the area's tint and keeps 4.5:1 there (AA). */
-  color: var(--text-muted);
+  /* The head sits on the group's tint: --text keeps AA whatever the wash behind it (C06). */
+  color: var(--text);
   font: inherit;
   font-size: var(--text-caps);
   font-weight: var(--weight-semibold);
@@ -195,6 +196,29 @@
 .footer {
   padding-top: var(--space-2);
   border-top: 1px solid var(--border);
+}
+/* Low windows with a pointer (identity v3.1, F06): rows 36 px, group padding 2 px, favourites 36 px, so all six
+   areas with every module fit 1920 × 1080 without scrolling. Touch screens keep the 44 px rows. */
+@media (max-height: 1100px) and (pointer: fine) {
+  .link {
+    min-height: 2.25rem;
+  }
+  .group {
+    padding: var(--space-hair);
+    margin-top: var(--space-1);
+  }
+  .groupHead {
+    min-height: 1.75rem;
+  }
+  .favLink {
+    height: 2.25rem;
+  }
+  .favbar {
+    margin-bottom: var(--space-1);
+  }
+  .heading {
+    margin: var(--space-1) 0 var(--space-hair);
+  }
 }
 
 /* Rail: icons only. The name is the tooltip (title) and the accessible name; the active area is a capsule in its colour. */

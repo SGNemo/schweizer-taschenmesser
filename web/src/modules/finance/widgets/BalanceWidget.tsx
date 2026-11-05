@@ -2,7 +2,7 @@ import { currencyOf, DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/mone
 import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useNavigate } from 'react-router';
-import { Button, KpiWidget, useWidgetSize } from '@/ui';
+import { Button, KennzahlBody, useWidgetSize, WidgetBody } from '@/ui';
 import { compareMonths } from '../analysis';
 import { BankCard } from '@/ui/identity';
 import { balances, currenciesOf, filterByCurrency, monthlyTrend, sortAccounts } from '../logic';
@@ -55,31 +55,36 @@ export default function BalanceWidget() {
       {size !== 's' && data && first && data.accounts.length > 1 ? (
         <BankCard compact name={first.name} balance={formatMoney(firstBalance, currency)} />
       ) : null}
-      <KpiWidget
+      {/* The kennzahl shape (identity v3.1): figure, context line, trend, sparkline at size l. */}
+      <WidgetBody
         loading={loading && !noAccounts}
-        value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
+        isEmpty={noAccounts || balance === undefined}
         empty={t.finance.noAccounts}
         emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-        context={
-          [
-            a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
-            others,
-            expenseChange,
-          ]
-            .filter(Boolean)
-            .join(' · ') || undefined
-        }
-        trend={
-          net !== 0
-            ? {
-                direction: net > 0 ? 'up' : 'down',
-                text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
-              }
-            : undefined
-        }
-        series={series}
-        seriesLabel={t.widgets.kpiSeries}
-      />
+      >
+        <KennzahlBody
+          value={balance === undefined ? '' : formatMoney(balance, currency)}
+          context={
+            [
+              a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
+              others,
+              expenseChange,
+            ]
+              .filter(Boolean)
+              .join(' · ') || undefined
+          }
+          trend={
+            net !== 0
+              ? {
+                  direction: net > 0 ? 'up' : 'down',
+                  text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
+                }
+              : undefined
+          }
+          series={series}
+          seriesLabel={t.widgets.kpiSeries}
+        />
+      </WidgetBody>
       {/* The one thing done most often: an expense, one click away (opens the booking dialog). */}
       {size !== 's' && !noAccounts ? (
         <Button

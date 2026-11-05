@@ -5,7 +5,7 @@ export const browser: Strings['browser'] = {
     name: 'Navegador',
     description:
       'Navegador simples com abas, marcadores e modo privado. Funciona separado dos seus dados do Nemo.',
-    widget: 'Marcadores',
+    widget: 'Favoritos do navegador',
     widgetEmpty: 'Ainda não há marcadores.',
     widgetAction: 'Abrir o navegador',
   },

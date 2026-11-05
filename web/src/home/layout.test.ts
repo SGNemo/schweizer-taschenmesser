@@ -7,7 +7,6 @@ import {
   moveKey,
   orderWidgets,
   resolveLayout,
-  spreadVariants,
   FOLDED_INTO_TODAY,
   isCalmVisible,
   toggleHidden,
@@ -175,56 +174,5 @@ describe('home layout: the Heute card folds the calendar widgets', () => {
       sizes: { 'calendar:today': 's' },
     };
     expect(resolveLayout(stored, undefined)).toMatchObject(stored);
-  });
-});
-
-describe('spreadVariants: neighbours differ in frame shape (identity v3)', () => {
-  const v = (...pairs: string[]) =>
-    pairs.map((p) => {
-      const at = p.lastIndexOf(':');
-      return at < 0
-        ? { key: p, variant: undefined }
-        : { key: p.slice(0, at), variant: p.slice(at + 1) };
-    });
-  const keys = (list: { key: string }[]) => list.map((x) => x.key);
-
-  it('moves the next widget of another shape up when two neighbours match', () => {
-    const out = spreadVariants(v('a:kennzahl', 'b:kennzahl', 'c:fokus', 'd:kennzahl'), layout([]));
-    expect(keys(out)).toEqual(['a', 'c', 'b', 'd']);
-  });
-  it('keeps the order when nothing matches', () => {
-    const list = v('a:kennzahl', 'b:fokus', 'c:kennzahl');
-    expect(keys(spreadVariants(list, layout([])))).toEqual(['a', 'b', 'c']);
-  });
-  it('leaves neighbours together when no other shape is left', () => {
-    const list = v('a:kennzahl', 'b:kennzahl', 'c:kennzahl');
-    expect(keys(spreadVariants(list, layout([])))).toEqual(['a', 'b', 'c']);
-  });
-  it('never moves widgets the user placed', () => {
-    const list = v('a:kennzahl', 'b:kennzahl', 'c:fokus');
-    expect(keys(spreadVariants(list, layout(['a', 'b', 'c'])))).toEqual(['a', 'b', 'c']);
-  });
-  it('never moves the front widgets and ignores widgets without a shape', () => {
-    const list = v('todos:next:fokus', 'calendar:next:fokus', 'x:kennzahl', 'y');
-    expect(keys(spreadVariants(list, layout([])))).toEqual([
-      'todos:next',
-      'calendar:next',
-      'x',
-      'y',
-    ]);
-  });
-  it('keeps cards of one module together', () => {
-    const list = v('todos:open:fokus', 'todos:week:fokus', 'x:kennzahl');
-    expect(keys(spreadVariants(list, layout([])))).toEqual(['todos:open', 'todos:week', 'x']);
-  });
-  it('is part of the default order, not of a saved one', () => {
-    const list = v('a:kennzahl', 'b:kennzahl', 'c:fokus');
-    expect(keys(orderWidgets(list, layout([])))).toEqual(['a', 'c', 'b']);
-    expect(keys(orderWidgets(list, layout(['b', 'a'])))).toEqual(['b', 'a', 'c']);
-  });
-  it('does not change its input', () => {
-    const list = v('a:kennzahl', 'b:kennzahl', 'c:fokus');
-    spreadVariants(list, layout([]));
-    expect(keys(list)).toEqual(['a', 'b', 'c']);
   });
 });

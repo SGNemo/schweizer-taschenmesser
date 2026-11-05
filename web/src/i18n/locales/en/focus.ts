@@ -32,6 +32,10 @@ export const focus: Strings['focus'] = {
     more: 'More settings',
     aids: 'Aids',
     aidsOn: (n: number, total: number) => `${n} of ${total} on`,
+    colors: 'Module colours',
+    colorsHint:
+      'Module colours and patterns are set under “Appearance” – “Calm” for fewer stimuli is there too.',
+    colorsLink: 'Go to module colours',
     planShort: (n: number) => `Day plan ${n}`,
     timerShort: (n: number) => `Timer ${n} min`,
     clearHistory: 'Clear history',

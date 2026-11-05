@@ -55,6 +55,21 @@ describe('every module offers a valid widget', () => {
   });
 });
 
+describe('widget titles', () => {
+  it('are unique app-wide, so the overview and the catalogue never show two cards with one name (identity v3.1, F10)', () => {
+    const seen = new Map<string, string>();
+    for (const m of visibleManifests)
+      for (const w of m.widgets) {
+        const key = `${m.id}:${w.id}`;
+        expect(
+          seen.get(w.title),
+          `${key} and ${seen.get(w.title)} share the title "${w.title}"`,
+        ).toBeUndefined();
+        seen.set(w.title, key);
+      }
+  });
+});
+
 describe('widgets render', () => {
   it.each(cases)('%s without data (empty state with a next step)', async (_key, m, w) => {
     const { container, errors } = await renderWidget(w);

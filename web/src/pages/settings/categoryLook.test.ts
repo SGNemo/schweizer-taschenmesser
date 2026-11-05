@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AREAS, MODULE_HUES } from '@/core/modules/types';
+import { allManifests } from '@/core/modules/registry';
 import { SETTINGS_CATEGORY_IDS } from '@/core/settings/registry/types';
 import { CATEGORY_LOOK, NAV_GROUPS } from './categoryLook';
 
@@ -20,6 +21,18 @@ describe('settings category look', () => {
       const a = CATEGORY_LOOK[id].hue;
       if (a !== 'slate') expect(CATEGORY_LOOK[next].hue, `${id} / ${next}`).not.toBe(a);
     });
+  });
+
+  it('identity v3.1: no area pattern on a settings head, and no hue + area pair of a module (slate excepted)', () => {
+    const modules = new Set(
+      allManifests.filter((m) => !m.retired).map((m) => `${m.identity.hue}/${m.area}`),
+    );
+    for (const id of SETTINGS_CATEGORY_IDS) {
+      const look = CATEGORY_LOOK[id];
+      expect(look.area, `${id}: pattern`).toBe('system');
+      if (look.hue !== 'slate')
+        expect(modules.has(`${look.hue}/${look.area}`), `${id} looks like a module`).toBe(false);
+    }
   });
 
   it('the nav groups list every category exactly once, in registry order', () => {

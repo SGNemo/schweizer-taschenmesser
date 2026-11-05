@@ -6,7 +6,7 @@ export const habits: Strings['habits'] = {
     description:
       'Daily and weekly goals with rings – a tick or a number like "8 glasses", with rest days, history and reminders that stop once the day\'s goal is met.',
     quickAdd: 'Habit',
-    widget: 'Today',
+    widget: 'Done today',
     settings: {
       remindersEnabled: 'Habit reminders',
       remindersHelp: 'Off: no reminders come, the rings stay.',

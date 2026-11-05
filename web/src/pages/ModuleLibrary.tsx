@@ -106,7 +106,7 @@ export function ModuleLibrary() {
   return (
     <>
       <PageHead
-        hue="cobalt"
+        hue="slate"
         area="system"
         icon="grid"
         eyebrow={v3.eyebrow}

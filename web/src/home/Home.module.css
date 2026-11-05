@@ -4,9 +4,10 @@
   display: grid;
   gap: var(--grid-gap);
   grid-template-columns: minmax(0, 1fr);
-  /* A card that needs more than its size class grows its rows; nothing is ever clipped. */
+  /* Identity v3.1 (F09): rows are the quantum, cards do not stretch to the row; each size class has its own
+     minimum height (below), a card that needs more grows on its own; nothing is ever clipped. */
   grid-auto-rows: minmax(var(--widget-unit), auto);
-  align-items: stretch;
+  align-items: start;
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
 }
@@ -15,16 +16,19 @@
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  /* Size classes = fixed row spans; on one column (phone) cards just take their content height. */
+  /* Size classes = row spans for the flow and a minimum height per size; on one column (phone) cards take their content height. */
   .s {
     grid-row: span 2;
+    min-height: calc(2 * var(--widget-unit) + var(--grid-gap));
   }
   .m {
     grid-column: span 2;
     grid-row: span 3;
+    min-height: calc(3 * var(--widget-unit) + 2 * var(--grid-gap));
   }
   .l {
     grid-row: span 4;
+    min-height: calc(4 * var(--widget-unit) + 3 * var(--grid-gap));
   }
 }
 .l {
@@ -88,10 +92,13 @@
 .widget {
   position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
-/* The card fills its grid cell. */
+/* The card fills the size class's height. */
 .widget > section {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 100%;
 }
 .head {
   display: flex;
@@ -129,8 +136,8 @@
   opacity: var(--pattern-widget);
 }
 .widget[data-hue] .head {
-  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) var(--space-3);
-  padding: var(--space-3) var(--space-5);
+  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) var(--space-3);
+  padding: var(--space-3) var(--card-pad);
   background: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
 }
 /* himmel: the card itself is a soft sky wash from the top, no head band and no pattern. */
