@@ -8,33 +8,33 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 
 <!-- modules:start -->
 
-| Bereich | Modul | Was es tut | Status |
-|---|---|---|---|
-| **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
-|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | Vorschau |
-|  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
-|  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
-|  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
-|  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
-|  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
-|  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
-| **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
-|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
-|  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional |
-| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | optional |
-|  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
-| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
-|  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
-|  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
-|  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
-|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert | optional |
-|  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
-|  | Musik | Spotify auf einer Seite | Vorschau |
-| **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
-|  | Passwörter | Passwort-Tresor | optional |
-| **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
-|  | Downloads | Lädt Dateien herunter | Vorschau, nur Windows-App |
+| Bereich      | Modul               | Was es tut                                                                                          | Status                                 |
+| ------------ | ------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **Planen**   | Kalender            | Termine in Monats-, Wochen- und Tagesansicht                                                        | standardmäßig an                       |
+|              | Planer              | Verteilt deine offenen ToDos auf die nächsten Tage                                                  | Vorschau                               |
+|              | ToDos               | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben                              | standardmäßig an                       |
+|              | Gewohnheiten        | Tägliche und wöchentliche Ziele mit Ringen                                                          | optional                               |
+|              | Zeiterfassung       | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz                      | optional                               |
+|              | Wetter              | Eine eigene Seite für das Wetter deines Ortes                                                       | standardmäßig an                       |
+|              | Karten & Orte       | Orte und Wege, die du oft brauchst                                                                  | Vorschau                               |
+|              | Personen            | Geburtstage nie mehr vergessen und Geschenke je Person sammeln                                      | optional                               |
+| **Geld**     | Finanzen            | Konten, Einnahmen und Ausgaben mit Kategorien                                                       | standardmäßig an                       |
+|              | Rechnungen          | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit                                              | standardmäßig an                       |
+|              | Abos                | Abos und wiederkehrende Zahlungen                                                                   | standardmäßig an                       |
+|              | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional                               |
+| **Haushalt** | Listen              | Einkauf, Packlisten und Checklisten                                                                 | optional                               |
+|              | Vorräte             | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler?                                        | optional                               |
+| **Wissen**   | Merkliste           | Links, Lesestoff, Filme, Orte und Ideen merken                                                      | optional                               |
+|              | Notizen             | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche     | optional                               |
+|              | Chat                | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern                                  | Vorschau                               |
+|              | Browser             | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus                                          | Vorschau, nur Windows- und Android-App |
+|              | Feeds               | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert          | optional                               |
+|              | E-Mail              | Posteingang, Suche und Mails lesen                                                                  | Vorschau, nur Windows-App              |
+|              | Musik               | Spotify auf einer Seite                                                                             | Vorschau                               |
+| **Tresor**   | Unterlagen          | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei    | optional                               |
+|              | Passwörter          | Passwort-Tresor                                                                                     | optional                               |
+| **System**   | Dieser PC           | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk)          | optional, nur Windows-App              |
+|              | Downloads           | Lädt Dateien herunter                                                                               | Vorschau, nur Windows-App              |
 
 **Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
 
@@ -50,6 +50,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
 - **Budgets & Sparziele:** Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen.
+- **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt.
 - **Karten & Orte** (Vorschau): gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest.
 - **Unterlagen:** Titel, Kategorie, Anbieter, Beginn, Ende, Kündigungsfrist und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
@@ -69,14 +70,16 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
   (den Kontakt wählst du in WhatsApp).
 
 ## Kontoauszug importieren
-In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → *Kontoauszug importieren*) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.
 
-Nach einem Import schlägt die Vorschau eventuell **Regeln** vor („Netflix immer in der Kategorie Abos buchen?“). Nichts ist angehakt: eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst, sie sortiert dann spätere Importe, und du entfernst sie unter Finanzen → Kategorien. Eine bezahlte Rechnung wird in Finanzen als Ausgabe gebucht (unter Rechnungen → Einstellungen abschaltbar), und eine Preiserhöhung bei einem Abo erscheint einmal unter *Jetzt wichtig* (unter Abos → Einstellungen abschaltbar).
+In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → _Kontoauszug importieren_) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.
+
+Nach einem Import schlägt die Vorschau eventuell **Regeln** vor („Netflix immer in der Kategorie Abos buchen?“). Nichts ist angehakt: eine Regel entsteht nur, wenn du sie ankreuzt und den Import bestätigst, sie sortiert dann spätere Importe, und du entfernst sie unter Finanzen → Kategorien. Eine bezahlte Rechnung wird in Finanzen als Ausgabe gebucht (unter Rechnungen → Einstellungen abschaltbar), und eine Preiserhöhung bei einem Abo erscheint einmal unter _Jetzt wichtig_ (unter Abos → Einstellungen abschaltbar).
 
 ## Aufgaben aus Todoist oder Google Tasks mitnehmen
+
 Öffne **ToDos → Importieren → Aus Todoist oder Google Tasks** (sobald das Modul Aufgaben enthält: Einstellungen → Module → ToDos → Startdaten einrichten) und wähle eine Datei, die du selbst exportiert hast. Es wird nichts hochgeladen und kein Konto gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen.
 
-- **Todoist:** Projektmenü (⋯) → *Als CSV exportieren*. Eine Datei pro Projekt; daraus wird eine Liste mit dem Namen der Datei.
-- **Google Tasks:** [Google Takeout](https://takeout.google.com) → nur *Tasks* → `Tasks.json`. Mit *Je Quell-Liste eine eigene Liste* bleiben deine Listen getrennt.
+- **Todoist:** Projektmenü (⋯) → _Als CSV exportieren_. Eine Datei pro Projekt; daraus wird eine Liste mit dem Namen der Datei.
+- **Google Tasks:** [Google Takeout](https://takeout.google.com) → nur _Tasks_ → `Tasks.json`. Mit _Je Quell-Liste eine eigene Liste_ bleiben deine Listen getrennt.
 
-Titel, Notizen, Priorität (Todoist), Fälligkeitstage und Unteraufgaben kommen mit. Erledigte Aufgaben bleiben draußen, solange du sie nicht einschaltest. Wiederkehrende Aufgaben werden **nicht** zu wiederkehrenden Aufgaben: die Wiederholung steht nur als Zeile in der Notiz, damit nichts von selbst zurückkommt. Aufgaben, die du schon hast (gleiche Liste und gleicher Titel), sind als *Schon vorhanden* markiert.
+Titel, Notizen, Priorität (Todoist), Fälligkeitstage und Unteraufgaben kommen mit. Erledigte Aufgaben bleiben draußen, solange du sie nicht einschaltest. Wiederkehrende Aufgaben werden **nicht** zu wiederkehrenden Aufgaben: die Wiederholung steht nur als Zeile in der Notiz, damit nichts von selbst zurückkommt. Aufgaben, die du schon hast (gleiche Liste und gleicher Titel), sind als _Schon vorhanden_ markiert.

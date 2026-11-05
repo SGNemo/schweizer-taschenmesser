@@ -8,33 +8,33 @@ In the **module library** you turn modules on and off (when turning one off: kee
 
 <!-- modules:start -->
 
-| Area | Module | What it does | Status |
-|---|---|---|---|
-| **Plan** | Calendar | Events in month, week and day view | on by default |
-|  | Planner | Spreads your open to-dos over the coming days | preview |
-|  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
-|  | Habits | Daily and weekly goals with rings | optional |
-|  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
-|  | Weather | A page of its own for the weather at your place | on by default |
-|  | Maps & places | Places and routes you need often | preview |
-|  | People | Never forget a birthday again and collect gifts per person | optional |
-| **Money** | Finances | Accounts, income and expenses with categories | on by default |
-|  | Invoices | Open invoices with amount, payee and due date | on by default |
-|  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | optional |
-| **Household** | Lists | Shopping, packing lists and checklists | optional |
-|  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
-|  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
-|  | Chat | Conversations with the built-in local model or your providers | preview |
-|  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
-|  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
-|  | Mail | Inbox, search and reading mail | preview, Windows app only |
-|  | Music | Spotify on one page | preview |
-| **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
-|  | Passwords | Password vault | optional |
-| **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | preview, Windows app only |
+| Area          | Module                  | What it does                                                                                      | Status                                 |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **Plan**      | Calendar                | Events in month, week and day view                                                                | on by default                          |
+|               | Planner                 | Spreads your open to-dos over the coming days                                                     | preview                                |
+|               | To-dos                  | Tasks in lists with priorities, due date and subtasks                                             | on by default                          |
+|               | Habits                  | Daily and weekly goals with rings                                                                 | optional                               |
+|               | Time tracking           | Start and stop with one click, projects and clients with colour and hourly rate                   | optional                               |
+|               | Weather                 | A page of its own for the weather at your place                                                   | on by default                          |
+|               | Maps & places           | Places and routes you need often                                                                  | preview                                |
+|               | People                  | Never forget a birthday again and collect gifts per person                                        | optional                               |
+| **Money**     | Finances                | Accounts, income and expenses with categories                                                     | on by default                          |
+|               | Invoices                | Open invoices with amount, payee and due date                                                     | on by default                          |
+|               | Subscriptions           | Subscriptions and recurring payments                                                              | on by default                          |
+|               | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress  | optional                               |
+| **Household** | Lists                   | Shopping, packing lists and checklists                                                            | optional                               |
+|               | Pantry                  | What’s in the fridge, the cupboard and the freezer?                                               | optional                               |
+| **Knowledge** | Saved                   | Save links, reading, films, places and ideas                                                      | optional                               |
+|               | Notes                   | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional                               |
+|               | Chat                    | Conversations with the built-in local model or your providers                                     | preview                                |
+|               | Browser                 | Simple browser with tabs, bookmarks and a private mode                                            | preview, Windows and Android apps only |
+|               | Feeds                   | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group                       | optional                               |
+|               | Mail                    | Inbox, search and reading mail                                                                    | preview, Windows app only              |
+|               | Music                   | Spotify on one page                                                                               | preview                                |
+| **Vault**     | Documents               | IDs, contracts, insurance and warranties with end date, notice period and an attached file        | optional                               |
+|               | Passwords               | Password vault                                                                                    | optional                               |
+| **System**    | This PC                 | Drives with a scan of the biggest folders and system info (processor, memory, battery, network)   | optional, Windows app only             |
+|               | Downloads               | Downloads files                                                                                   | preview, Windows app only              |
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 
@@ -50,6 +50,7 @@ Highlights of the modules that start with a short line above:
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.
 - **Budgets & savings goals:** monthly limits per finance category, savings goals with deposits.
+- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes).
 - **Maps & places** (preview): saved places and routes, a map with place search, open in your map app; the map only loads when you open it.
 - **Documents:** title, category, provider, start, end, notice period and note are synced like everything else; the **files stay only on the
   device** where they were added (not synced, not in the backup, max. 10 MB per file).
@@ -69,14 +70,16 @@ Highlights of the modules that start with a short line above:
   (you pick the contact in WhatsApp).
 
 ## Importing a bank statement
-In **Finances** (Settings → Modules → Finances → Set up starter data → *Import bank statement*) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.
 
-After an import the preview may suggest **rules** ("Always book Netflix in category Subscriptions?"). Nothing is ticked: a rule is only created if you tick it and confirm the import, it then sorts later imports, and you can remove it under Finances → Categories. A paid invoice is booked as an expense in Finances (Invoices → settings can turn that off), and a price rise of a subscription shows once under *Important now* (Subscriptions → settings can turn that off).
+In **Finances** (Settings → Modules → Finances → Set up starter data → _Import bank statement_) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.
+
+After an import the preview may suggest **rules** ("Always book Netflix in category Subscriptions?"). Nothing is ticked: a rule is only created if you tick it and confirm the import, it then sorts later imports, and you can remove it under Finances → Categories. A paid invoice is booked as an expense in Finances (Invoices → settings can turn that off), and a price rise of a subscription shows once under _Important now_ (Subscriptions → settings can turn that off).
 
 ## Bringing tasks from Todoist or Google Tasks
+
 Open **ToDos → Import → From Todoist or Google Tasks** (once the module holds tasks: Settings → Modules → ToDos → Set up starter data) and choose a file you exported yourself. Nothing is uploaded and no account is needed; you see a preview first and can undo the import.
 
-- **Todoist:** project menu (⋯) → *Export as CSV*. One file per project; it becomes one list named like the file.
-- **Google Tasks:** [Google Takeout](https://takeout.google.com) → only *Tasks* → `Tasks.json`. Choose *a separate list for each source list* to keep your lists apart.
+- **Todoist:** project menu (⋯) → _Export as CSV_. One file per project; it becomes one list named like the file.
+- **Google Tasks:** [Google Takeout](https://takeout.google.com) → only _Tasks_ → `Tasks.json`. Choose _a separate list for each source list_ to keep your lists apart.
 
-Titles, notes, priority (Todoist), due days and subtasks come along. Completed tasks stay out unless you switch them on. Repeating tasks are **not** turned into repeating tasks: the repeat only appears as a line in the note, so nothing comes back by itself. Tasks you already have (same list and title) are marked *already there*.
+Titles, notes, priority (Todoist), due days and subtasks come along. Completed tasks stay out unless you switch them on. Repeating tasks are **not** turned into repeating tasks: the repeat only appears as a line in the note, so nothing comes back by itself. Tasks you already have (same list and title) are marked _already there_.
