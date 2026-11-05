@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import type { ScanProgress } from '@/core/platform/disk';
 import { t } from '@/strings';
@@ -6,81 +7,68 @@ import { formatBytes, formatCount } from '../format';
 import styles from './ScanStatusLine.module.css';
 
 interface Props {
-  /** Scan root; named in the line where the page title does not say it already. */
-  root?: string;
-  progress: ScanProgress | null;
-  paused: boolean;
-  onPause: () => void;
-  onCancel: () => void;
-  /** Route of the scan page, for the line on the drives page. */
+  /** State of the scan ("Scan läuft", "Scan von C:\ beendet" …); announced when it changes. */
+  state: string;
+  /** Second part of the line: what was counted so far, or the reason of a failure. */
+  detail?: string;
+  /** Link at the end of the line where the page is not the scan page itself. */
   to?: string;
+  linkText?: string;
+  /** Pause and Abbrechen while the scan runs; left out once it ended. */
+  actions?: { paused: boolean; onPause: () => void; onCancel: () => void };
 }
 
+/** "bisher 312.000 Dateien, 210 GB" (read at render time). */
+export const soFarOf = (p: ScanProgress | null): string | undefined =>
+  p ? t.disk.scan.soFar(formatCount(p.files), formatBytes(p.bytes)) : undefined;
+
 /**
- * The one calm line of a running scan: its state and what was counted so far (a new figure at
- * most once a second, see `PROGRESS_MS` in the store), with Pause and Abbrechen. No bar, no
- * percentage, no animation (FOCUS-GUIDELINES). Shown on the scan page and, with a link, on the
- * drives page, so the rest of the app stays usable while the scan runs.
+ * The one calm line about a scan: its state, what was counted so far (a new figure at most once
+ * a second, see `PROGRESS_MS` in the store), Pause and Abbrechen while it runs, and a link where
+ * the page is not the scan page. No bar, no percentage, no animation (FOCUS-GUIDELINES). One
+ * element for the running and the ended scan, so the state changes inside a status region that
+ * is already there; after the user's own Abbrechen the focus moves on to the link.
  */
-export function ScanStatusLine({ root, progress, paused, onPause, onCancel, to }: Props) {
-  const state = root
-    ? paused
-      ? t.disk.scan.pausedOf(root)
-      : t.disk.scan.runningOf(root)
-    : paused
-      ? t.disk.scan.paused
-      : t.disk.scan.scanning;
-  const soFar = progress
-    ? t.disk.scan.soFar(formatCount(progress.files), formatBytes(progress.bytes))
-    : null;
+export function ScanStatusLine({ state, detail, to, linkText, actions }: Props) {
+  const link = useRef<HTMLAnchorElement>(null);
+  const cancelledHere = useRef(false);
+  useEffect(() => {
+    if (!actions && cancelledHere.current) {
+      cancelledHere.current = false;
+      link.current?.focus();
+    }
+  }, [actions]);
   return (
     <Card as="div" className={styles.card} data-testid="scan-status">
       <p className={styles.text}>
-        {/* Only the state is announced (it changes on the user's own Pause/Fortsetzen). */}
         <strong role="status">{state}</strong>
-        {soFar ? <span className={styles.muted}> · {soFar}</span> : null}
-        {to ? (
+        {detail ? <span className={styles.muted}> · {detail}</span> : null}
+        {to && linkText ? (
           <>
             <span className={styles.muted}> · </span>
-            <Link to={to} className={styles.link}>
-              {t.disk.scan.toScan}
+            <Link ref={link} to={to} className={styles.link}>
+              {linkText}
             </Link>
           </>
         ) : null}
       </p>
-      <div className={styles.actions}>
-        <Button onClick={onPause}>
-          <Icon name={paused ? 'play' : 'pause'} size={18} />
-          {paused ? t.disk.scan.resume : t.disk.scan.pause}
-        </Button>
-        <Button variant="secondary" onClick={onCancel}>
-          {t.disk.scan.cancel}
-        </Button>
-      </div>
-    </Card>
-  );
-}
-
-/** The scan ended while the user was on the drives page: one line with the way to the result. */
-export function ScanEndedLine({
-  text,
-  to,
-  linkText,
-}: {
-  text: string;
-  to: string;
-  linkText: string;
-}) {
-  return (
-    <Card as="div" className={styles.card} data-testid="scan-status">
-      <p className={styles.text}>
-        {/* Announced once when the running line gives way to this one. */}
-        <strong role="status">{text}</strong>
-        <span className={styles.muted}> · </span>
-        <Link to={to} className={styles.link}>
-          {linkText}
-        </Link>
-      </p>
+      {actions ? (
+        <div className={styles.actions}>
+          <Button onClick={actions.onPause}>
+            <Icon name={actions.paused ? 'play' : 'pause'} size={18} />
+            {actions.paused ? t.disk.scan.resume : t.disk.scan.pause}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              cancelledHere.current = true;
+              actions.onCancel();
+            }}
+          >
+            {t.disk.scan.cancel}
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }

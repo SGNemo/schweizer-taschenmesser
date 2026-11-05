@@ -394,7 +394,11 @@ export const disk: Strings['disk'] = {
         : `${n} entrées sont encore en cours de comptage.`,
     endedOf: (root: string) => `Analyse de ${root} terminée`,
     cancelledOf: (root: string) => `Analyse de ${root} annulée`,
-    liveMapLabel: (n: number) => `Vue en carte de l’analyse en cours avec ${n} entrées.`,
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Vue en carte de l’analyse en cours avec 1 entrée.'
+        : `Vue en carte de l’analyse en cours avec ${n} entrées.`,
+    failedOf: (root: string) => `Analyse de ${root} échouée`,
     toResult: 'Voir le résultat',
     alreadyRunning: 'Une analyse est déjà en cours : terminez-la pour en lancer une autre.',
     liveLabel: 'Vue en direct de l’analyse',

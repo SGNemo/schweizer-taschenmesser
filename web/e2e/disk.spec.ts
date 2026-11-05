@@ -129,7 +129,7 @@ test('a running scan blocks nothing: one calm line, map and list grow, leaving a
   await step();
   await expect(status).toContainText('bisher');
   // The map's name counts the tiles and says how many of them are still being counted.
-  await expect(map).toHaveAccessibleName(/mit 1 Einträgen\. 1 Eintrag wird noch gezählt\./);
+  await expect(map).toHaveAccessibleName(/mit 1 Eintrag\. 1 Eintrag wird noch gezählt\./);
   await step();
   await step();
   await expect(map).toHaveAccessibleName(/mit 2 Einträgen/);
@@ -187,6 +187,8 @@ test('desktop: a running scan can be cancelled, also from the drives page', asyn
   await line.getByRole('button', { name: 'Abbrechen' }).click();
   // The line says what happened and still leads to the (partial) result.
   await expect(line).toContainText('Scan von D:\\ abgebrochen');
+  // The buttons are gone; the focus moved on to the next step instead of falling to the page.
+  await expect(line.getByRole('link', { name: 'Zum Ergebnis' })).toBeFocused();
   await line.getByRole('link', { name: 'Zum Ergebnis' }).click();
   await expect(page.getByText('Der Scan wurde abgebrochen')).toBeVisible();
 });

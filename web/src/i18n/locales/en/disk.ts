@@ -381,7 +381,11 @@ export const disk: Strings['disk'] = {
       n === 1 ? '1 entry is still being counted.' : `${n} entries are still being counted.`,
     endedOf: (root: string) => `Scan of ${root} finished`,
     cancelledOf: (root: string) => `Scan of ${root} cancelled`,
-    liveMapLabel: (n: number) => `Map of the running scan with ${n} entries.`,
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Map of the running scan with 1 entry.'
+        : `Map of the running scan with ${n} entries.`,
+    failedOf: (root: string) => `Scan of ${root} failed`,
     toResult: 'Open the result',
     alreadyRunning: 'A scan is already running – end it to start another one.',
     liveLabel: 'Live view of the scan',

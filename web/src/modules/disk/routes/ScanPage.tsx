@@ -2,7 +2,7 @@ import { Link, Navigate } from 'react-router';
 import { t } from '@/strings';
 import { Card, HelpHint, PageHeader, Stat } from '@/ui';
 import { LiveView } from '../components/LiveView';
-import { ScanStatusLine } from '../components/ScanStatusLine';
+import { ScanStatusLine, soFarOf } from '../components/ScanStatusLine';
 import { ScanView } from '../components/ScanView';
 import { formatBytes, formatCount, formatDuration } from '../format';
 import { useDiskStore } from '../store';
@@ -22,10 +22,9 @@ function Running() {
   return (
     <>
       <ScanStatusLine
-        progress={progress}
-        paused={paused}
-        onPause={() => void togglePause()}
-        onCancel={() => void cancel()}
+        state={paused ? t.disk.scan.paused : t.disk.scan.scanning}
+        detail={soFarOf(progress)}
+        actions={{ paused, onPause: () => void togglePause(), onCancel: () => void cancel() }}
       />
       {scanId !== null ? <LiveView scanId={scanId} /> : null}
     </>

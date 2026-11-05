@@ -386,7 +386,11 @@ export const disk: Strings['disk'] = {
       n === 1 ? 'Aún se está contando 1 entrada.' : `Aún se están contando ${n} entradas.`,
     endedOf: (root: string) => `Análisis de ${root} terminado`,
     cancelledOf: (root: string) => `Análisis de ${root} cancelado`,
-    liveMapLabel: (n: number) => `Vista de mapa del análisis en curso con ${n} entradas.`,
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Vista de mapa del análisis en curso con 1 entrada.'
+        : `Vista de mapa del análisis en curso con ${n} entradas.`,
+    failedOf: (root: string) => `Análisis de ${root} fallido`,
     toResult: 'Ver el resultado',
     alreadyRunning: 'Ya hay un análisis en curso: termínalo para iniciar otro.',
     liveLabel: 'Vista en vivo del análisis',

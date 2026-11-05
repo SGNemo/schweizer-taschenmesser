@@ -4755,7 +4755,11 @@ export const de = {
         n === 1 ? '1 Eintrag wird noch gezählt.' : `${n} Einträge werden noch gezählt.`,
       endedOf: (root: string) => `Scan von ${root} beendet`,
       cancelledOf: (root: string) => `Scan von ${root} abgebrochen`,
-      liveMapLabel: (n: number) => `Kartenansicht des laufenden Scans mit ${n} Einträgen.`,
+      liveMapLabel: (n: number) =>
+        n === 1
+          ? 'Kartenansicht des laufenden Scans mit 1 Eintrag.'
+          : `Kartenansicht des laufenden Scans mit ${n} Einträgen.`,
+      failedOf: (root: string) => `Scan von ${root} fehlgeschlagen`,
       toResult: 'Zum Ergebnis',
       alreadyRunning: 'Ein Scan läuft schon – beende ihn, um einen anderen zu starten.',
       liveLabel: 'Live-Ansicht des Scans',

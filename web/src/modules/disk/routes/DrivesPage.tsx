@@ -9,7 +9,7 @@ import { EmptyState, PageHeader, patternStyles, Segmented, Skeleton } from '@/ui
 import SystemTab from '../components/SystemTab';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
-import { ScanEndedLine, ScanStatusLine } from '../components/ScanStatusLine';
+import { ScanStatusLine, soFarOf } from '../components/ScanStatusLine';
 import { useDriveHistory } from '../history';
 import { useDiskStore } from '../store';
 import styles from './DrivesPage.module.css';
@@ -42,9 +42,11 @@ export default function ThisPcPage() {
 }
 
 /**
- * The module's scan while the user is on the drives page: running (Pause, Abbrechen, Zum Scan)
- * or ended (Zum Ergebnis). Its own component, so the once-a-second figure re-renders this line
- * and not the drive cards.
+ * The module's scan while the user is on the drives page: running (Pause, Abbrechen, Zum Scan),
+ * ended or cancelled (Zum Ergebnis), failed (the reason, Zum Scan). One `ScanStatusLine` in every
+ * state, so the status text changes in place. Its own component, so the once-a-second figure
+ * re-renders this line and not the drive cards. The line stays until the next scan starts: it is
+ * the way back to the result.
  */
 function ScanLine() {
   const phase = useDiskStore((s) => s.phase);
@@ -59,26 +61,26 @@ function ScanLine() {
   if (phase === 'scanning')
     return (
       <ScanStatusLine
-        root={root}
-        progress={progress}
-        paused={paused}
-        onPause={() => void togglePause()}
-        onCancel={() => void cancel()}
+        state={paused ? t.disk.scan.pausedOf(root) : t.disk.scan.runningOf(root)}
+        detail={soFarOf(progress)}
         to="/disk/scan"
+        linkText={t.disk.scan.toScan}
+        actions={{ paused, onPause: () => void togglePause(), onCancel: () => void cancel() }}
       />
     );
-  // Failed: there is no result, only the reason on the scan page.
+  // Failed: there is no result, only the reason, and the scan page to try again.
   if (phase === 'failed')
     return (
-      <ScanEndedLine
-        text={t.disk.scan.failed(error ?? '')}
+      <ScanStatusLine
+        state={t.disk.scan.failedOf(root)}
+        detail={t.disk.scan.failed(error ?? '')}
         to="/disk/scan"
         linkText={t.disk.scan.toScan}
       />
     );
   return (
-    <ScanEndedLine
-      text={cancelled ? t.disk.scan.cancelledOf(root) : t.disk.scan.endedOf(root)}
+    <ScanStatusLine
+      state={cancelled ? t.disk.scan.cancelledOf(root) : t.disk.scan.endedOf(root)}
       to="/disk/scan"
       linkText={t.disk.scan.toResult}
     />
