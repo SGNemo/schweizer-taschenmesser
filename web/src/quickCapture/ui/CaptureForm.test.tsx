@@ -75,6 +75,16 @@ describe('CaptureForm', () => {
     expect(tx).toMatchObject({ amountMinor: 1250, kind: 'expense', payee: 'Mittagessen' });
   });
 
+  it('asks to book only a complete entry: "$ " alone is incomplete (X33)', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), '$ {Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.quickCapture.errors.invalid);
+    expect(screen.queryByTestId('capture-draft')).not.toBeInTheDocument();
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
   it('closes with Escape', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();

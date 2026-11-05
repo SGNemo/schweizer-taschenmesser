@@ -149,3 +149,18 @@ describe('a four-digit year is taken as written (X29)', () => {
     expect(parse('Zahnarzt 1.1.2027').fields.date).toBe('2027-01-01');
   });
 });
+
+describe('"alle 0 Tage" is no rule (X33)', () => {
+  it.each(['Termin alle 0 Tage', 'Sport alle 0 Wochen Montag', 'Gießen alle null Tage'])(
+    '%s',
+    (text) => {
+      const r = parse(text);
+      expect(r.fields.recurrence).toBeUndefined();
+      expect(r.fields.title).toMatch(/alle (0|null)/);
+    },
+  );
+
+  it('"alle 2 Tage" still repeats', () => {
+    expect(parse('Gießen alle 2 Tage').fields.recurrence).toEqual({ freq: 'daily', interval: 2 });
+  });
+});

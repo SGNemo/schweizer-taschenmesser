@@ -48,6 +48,16 @@ function errorText(e: unknown): string {
   return t.quickCapture.errors.failed;
 }
 
+/** The error a save would end with, found before a booking is offered for confirmation (X33). */
+function buildProblem(type: CaptureType, fields: CaptureFields): string | undefined {
+  try {
+    targetFor(type).build(fields, { today: today() });
+    return undefined;
+  } catch (e) {
+    return errorText(e);
+  }
+}
+
 /**
  * Free-text capture: live parse, type chips, Enter saves. Shared by the app sheet, the share page
  * and the capture window. Text with several lines (or "A, B und C" sentences, see
@@ -224,13 +234,19 @@ export function CaptureForm({
     if (multi) {
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
       if (rows.some((r) => badDate(r.chips))) return setError(t.quickCapture.errors.invalid);
-      // Bookings stay drafts until confirmed, also when they come in a batch.
-      if (rowsNeedConfirm && !confirming) return setConfirming(true);
+      // Bookings stay drafts until confirmed, also when they come in a batch; only complete ones.
+      if (rowsNeedConfirm && !confirming) {
+        const problem = rows.map((r) => buildProblem(r.type!, r.fields)).find(Boolean);
+        return problem ? setError(problem) : setConfirming(true);
+      }
       return void save(true);
     }
     if (!type) return setError(t.quickCapture.chooseType);
     if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
-    if (targetFor(type).requiresConfirm && !confirming) return setConfirming(true);
+    if (targetFor(type).requiresConfirm && !confirming) {
+      const problem = buildProblem(type, fields);
+      return problem ? setError(problem) : setConfirming(true);
+    }
     void save(true);
   };
 
