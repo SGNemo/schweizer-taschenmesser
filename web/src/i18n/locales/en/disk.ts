@@ -30,6 +30,14 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Scan ${name}`,
   usedOf: (used: string, total: string) => `${used} of ${total} used`,
   free: (free: string) => `${free} free`,
+  /** Module head (identity v3.1 G01): figure of the system drive, its state as a word, the drive rings. */
+  head: {
+    used: 'used',
+    of: (total: string) => `of ${total}`,
+    state: { ok: '', tight: 'getting tight', full: 'almost full' } as Record<string, string>,
+    lastScan: (when: string) => `last scanned: ${when}`,
+    neverScanned: 'not scanned yet',
+  },
   card: {
     scan: 'Scan',
     systemDrive: 'System drive',

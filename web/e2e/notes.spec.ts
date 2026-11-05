@@ -219,7 +219,7 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
 
     await page.getByLabel('Sortierung').selectOption({ label: 'Titel' });
     const titles = await rows(page)
-      .locator('span')
+      .locator('span:not(:has(span))')
       .filter({ hasText: /^(Apfel|Zebra)$/ })
       .allTextContents();
     expect(titles).toEqual(['Apfel', 'Zebra']);

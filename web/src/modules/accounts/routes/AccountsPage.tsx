@@ -12,6 +12,7 @@ import { t } from '@/strings';
 import {
   Badge,
   Button,
+  EmptyState,
   Icon,
   ItemList,
   ItemRow,
@@ -26,8 +27,8 @@ import { AuditDialog } from '../components/AuditDialog';
 import { EmergencySheet } from '../components/EmergencySheet';
 import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { MonogramTile } from '../components/MonogramTile';
-import { AccountsEmpty } from '../components/AccountsEmpty';
-import { VaultDoor } from '../components/VaultDoor';
+import { AccountsHead } from '../components/AccountsHead';
+import { SignatureMark } from '@/ui/identity';
 import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { GeneratorDialog } from '../components/GeneratorDialog';
@@ -83,7 +84,7 @@ export default function AccountsPage() {
   if (!header) return <PageHeader title={t.accounts.title} />;
   return (
     <>
-      {header.state === 'ready' ? <VaultDoor unlocked={session.status === 'unlocked'} /> : null}
+      {header.state === 'ready' ? <AccountsHead unlocked={session.status === 'unlocked'} /> : null}
       <PageHeader title={t.accounts.title}>
         {session.status === 'unlocked' ? (
           <Button onClick={lockVault}>
@@ -216,13 +217,19 @@ function Unlocked() {
               onEdit={(entry) => setForm(entry)}
             />
           ) : (
-            <AccountsEmpty title={t.accounts.pickEntry} />
+            <EmptyState
+              title={t.accounts.pickEntry}
+              testId="accounts-empty"
+              motif={<SignatureMark id="vaultDoor" size={64} />}
+            />
           )
         }
       >
         {shown.length === 0 ? (
-          <AccountsEmpty
+          <EmptyState
             title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
+            testId="accounts-empty"
+            motif={<SignatureMark id="vaultDoor" size={64} />}
           />
         ) : null}
         <ItemList label={t.accounts.title}>

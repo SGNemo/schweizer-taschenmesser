@@ -43,3 +43,13 @@
     border-right: 0;
   }
 }
+/* The note paper from the library at slot S: about 160 px wide beside the title (G08), 56 px high on the phone (G02). */
+.paper {
+  display: inline-grid;
+  zoom: 0.9;
+}
+@media (max-width: 899px) {
+  .paper {
+    zoom: 0.78;
+  }
+}

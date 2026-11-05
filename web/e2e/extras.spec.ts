@@ -176,7 +176,7 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   await expect(page.getByText('Jetzt kündigen')).toBeVisible();
 
   await open(page, '/calendar?view=week&date=2026-10-02');
-  await expect(calendarEntry(page, /Kündigungsfrist: Handyvertrag/)).toBeVisible();
+  await expect(calendarEntry(page, /Kündigungsfrist: 1 Unterlage/)).toBeVisible();
 });
 
 test.describe('Budgets & Sparziele', () => {
@@ -272,5 +272,5 @@ test('Unterlagen: metadata, local file and expiry', async ({ page }) => {
   expect(Buffer.concat(chunks).toString()).toBe('mein pass');
 
   await open(page, '/calendar?view=week&date=2026-10-20');
-  await expect(calendarEntry(page, /Läuft ab: Reisepass/)).toBeVisible();
+  await expect(calendarEntry(page, /Läuft ab: 1 Unterlage/)).toBeVisible();
 });

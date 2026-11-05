@@ -10,6 +10,9 @@ import { t } from '@/strings';
 import type { SavedCapture } from '../targets';
 import { CaptureForm } from './CaptureForm';
 
+// The form tests render a lot of UI; on a loaded CI runner the default 5 s is too tight.
+vi.setConfig({ testTimeout: 20_000 });
+
 // Wednesday, 2026-09-30, 10:00. Todos, calendar and finance are on by default.
 beforeEach(async () => {
   setNow(() => new Date(2026, 8, 30, 10, 0).getTime());

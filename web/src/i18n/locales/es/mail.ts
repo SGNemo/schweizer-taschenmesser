@@ -259,19 +259,19 @@ export const mail: Strings['mail'] = {
       'El texto del correo solo va al modelo local de este ordenador, nunca a un modelo en la nube.',
   },
   widget: {
-    unread: 'Sin leer',
-    unreadContext: (n: number) =>
-      n === 0
-        ? 'La bandeja está vacía'
-        : n === 1
-          ? 'Conversación sin leer en la bandeja'
-          : 'Conversaciones sin leer en la bandeja',
-    important: 'Correos destacados',
-    importantSummary: (n: number) => (n === 1 ? '1 sin leer' : `${n} sin leer`),
-    invoices: 'Correos de facturas',
-    invoicesContext: (days: number) => `en los últimos ${days} días`,
+    inbox: 'Bandeja de entrada',
+    inboxTitle: (n: number) => (n === 0 ? 'Todo leído' : `${n} sin leer`),
+    inboxNoInvoices: (days: number) => `Sin correos de facturas en los últimos ${days} días`,
+    inboxInvoices: (n: number, days: number) =>
+      n === 1 ? `1 correo de factura en ${days} días` : `${n} correos de facturas en ${days} días`,
+    inboxInvoicesAction: 'Ver',
     empty: 'Aún no hay correos.',
-    emptyAction: 'Abrir el correo',
+    emptyAction: 'Abrir correo',
     link: 'Abrir el correo',
+  },
+  head: {
+    inbox: 'Bandeja de entrada',
+    unread: (n: number) =>
+      n === 0 ? 'Todo leído' : n === 1 ? `1 hilo sin leer` : `${n} hilos sin leer`,
   },
 };

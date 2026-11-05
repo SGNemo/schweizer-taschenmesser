@@ -11,11 +11,11 @@ import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { PageTitle, useMediaQuery, useOpenParam } from '@/ui';
-import { HeroSlot } from '@/ui/identity';
+import { HeroSlot, NotePaper } from '@/ui/identity';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { ExportDialog, type ExportScope } from '../components/ExportDialog';
 import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
-import { NotePaper } from '../components/NotePaper';
 import { NotebookDialog } from '../components/NotebookDialog';
 import { NotePane } from '../components/NotePane';
 import { PageList } from '../components/PageList';
@@ -82,6 +82,9 @@ const remember = (sel: Sel) => {
   remembered = { sel, at: now() };
 };
 
+/** Page width (rem) from which the page list stands beside the open page. */
+const NOTES_SPLIT_REM = 44;
+
 export default function NotesPage() {
   const notes = useLiveQuery(() => noteRepo.active().toArray(), []);
   const bookRows = useLiveQuery(() => notebookRepo.active().toArray(), []);
@@ -90,7 +93,11 @@ export default function NotesPage() {
     [bookRows],
   );
   const moduleStates = useModuleStates();
-  const wide = useMediaQuery('(min-width: 900px)');
+  // List beside the page from the room the page container really has (sidebar and rail count, F15); outside a page
+  // container (tests) the window decides.
+  const pageWide = usePageWidthAtLeast(NOTES_SPLIT_REM);
+  const windowWide = useMediaQuery('(min-width: 900px)');
+  const wide = pageWide ?? windowWide;
   const [stored, setPrefs] = useSettings(
     'module.notes',
     settingsSchema,
@@ -320,14 +327,13 @@ export default function NotesPage() {
   return (
     <>
       <PageTitle title={t.notes.title} />
+      {/* Signature (slot S): the library's note paper with the first line of the scratch pad (own page only). */}
       <HeroSlot area="signature">
-        <NotePaper
-          text={
-            scratchNote
-              ? excerpt({ title: t.notes.scratch, body: scratchNote.body }, 120)
-              : undefined
-          }
-        />
+        <span className={styles.paper} data-testid="note-paper">
+          <NotePaper>
+            {scratchNote ? excerpt({ title: t.notes.scratch, body: scratchNote.body }, 60) : null}
+          </NotePaper>
+        </span>
       </HeroSlot>
       <div
         className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}

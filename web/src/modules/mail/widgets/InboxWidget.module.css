@@ -1,0 +1,6 @@
+/* The invoice line under the paper: context plus its one action. */
+.foot {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}

@@ -2719,6 +2719,8 @@ export const de = {
     ram: 'Arbeitsspeicher',
     battery: 'Akku',
     charging: 'lädt',
+    high: 'stark ausgelastet',
+    normal: 'im normalen Bereich',
     open: 'Systeminfo öffnen',
     unavailable: 'Systemdaten sind hier nicht verfügbar.',
   },
@@ -3879,6 +3881,8 @@ export const de = {
     tabLinks: 'Lesezeichen',
     addLink: 'Lesezeichen anlegen',
     linksWidgetEmpty: 'Noch keine Lesezeichen.',
+    linksContext: (n: number, groups: number) =>
+      `${n === 1 ? '1 Lesezeichen' : `${n} Lesezeichen`}${groups === 0 ? '' : ` · ${groups === 1 ? 'in 1 Gruppe' : `in ${groups} Gruppen`}`}`,
     noGroup: 'Ohne Gruppe',
     linksEmpty:
       'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
@@ -4412,6 +4416,14 @@ export const de = {
     open: (name: string) => `${name} scannen`,
     usedOf: (used: string, total: string) => `${used} von ${total} belegt`,
     free: (free: string) => `${free} frei`,
+    /** Module head (identity v3.1 G01): figure of the system drive, its state as a word, the drive rings. */
+    head: {
+      used: 'belegt',
+      of: (total: string) => `von ${total}`,
+      state: { ok: '', tight: 'wird knapp', full: 'fast voll' } as Record<string, string>,
+      lastScan: (when: string) => `zuletzt gescannt: ${when}`,
+      neverScanned: 'noch nicht gescannt',
+    },
     card: {
       scan: 'Scannen',
       systemDrive: 'Systemlaufwerk',
@@ -5158,6 +5170,22 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
+    stateTabs: 'Nach Zustand filtern',
+    stateGroups: {
+      expired: 'Abgelaufen',
+      due: 'Frist in Sicht',
+      ok: 'In Ordnung',
+    },
+    privacyLine:
+      'Dateien bleiben auf diesem Gerät, nicht im Backup · Titel, Fristen und Notizen werden abgeglichen',
+    docCount: (n: number) => (n === 1 ? '1 Unterlage' : `${n} Unterlagen`),
+    widgetRest: (due: number, total: number) =>
+      [
+        due > 0 ? `${due} mit Frist in Sicht` : '',
+        total === 1 ? '1 Unterlage insgesamt' : `${total} Unterlagen insgesamt`,
+      ]
+        .filter(Boolean)
+        .join(' · '),
     figureUnit: 'Unterlagen',
     figureDetail: (expired: number, due: number) =>
       [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
@@ -5852,6 +5880,7 @@ export const de = {
   },
   onboarding: {
     button: 'Importieren',
+    pageMenu: 'Weitere Aktionen',
     title: (module: string) => `Importieren: ${module}`,
     rowLabel: 'Einträge übernehmen',
     rowHint:
@@ -6401,6 +6430,8 @@ export const de = {
       empty: 'Noch kein Chat.',
       link: 'Chat öffnen',
       line: (n: number) => (n === 1 ? '1 Chat' : `${n} Chats`),
+      context: (n: number, when: string) =>
+        `${n === 1 ? '1 Chat' : `${n} Chats`} · zuletzt ${when}`,
     },
     seed: {
       title: 'Beispiel: Tipps für den Wochenplan',
@@ -7042,20 +7073,20 @@ export const de = {
         'Der Mailtext geht nur an das lokale Modell auf diesem Rechner, nie an ein Cloud-Modell.',
     },
     widget: {
-      unread: 'Ungelesen',
-      unreadContext: (n: number) =>
-        n === 0
-          ? 'Posteingang ist leer'
-          : n === 1
-            ? 'Ungelesener Thread im Posteingang'
-            : 'Ungelesene Threads im Posteingang',
-      important: 'Wichtigste Mails',
-      importantSummary: (n: number) => (n === 1 ? '1 ungelesen' : `${n} ungelesen`),
-      invoices: 'Rechnungsmails',
-      invoicesContext: (days: number) => `in den letzten ${days} Tagen`,
+      inbox: 'Posteingang',
+      inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
+      inboxNoInvoices: (days: number) => `Keine Rechnungsmails in den letzten ${days} Tagen`,
+      inboxInvoices: (n: number, days: number) =>
+        n === 1 ? `1 Rechnungsmail in ${days} Tagen` : `${n} Rechnungsmails in ${days} Tagen`,
+      inboxInvoicesAction: 'Ansehen',
       empty: 'Noch keine Mails.',
       emptyAction: 'E-Mail öffnen',
       link: 'E-Mail öffnen',
+    },
+    head: {
+      inbox: 'Posteingang',
+      unread: (n: number) =>
+        n === 0 ? 'Alles gelesen' : n === 1 ? '1 ungelesener Thread' : `${n} ungelesene Threads`,
     },
   },
   browser: {
@@ -7065,6 +7096,8 @@ export const de = {
         'Einfacher Browser mit Tabs, Lesezeichen und privatem Modus. Läuft getrennt von deinen Nemo-Daten.',
       widget: 'Browser-Lesezeichen',
       widgetEmpty: 'Noch keine Lesezeichen.',
+      widgetContext: (n: number) =>
+        n === 1 ? '1 Lesezeichen im Browser' : `${n} Lesezeichen im Browser`,
       widgetAction: 'Browser öffnen',
     },
     settings: {

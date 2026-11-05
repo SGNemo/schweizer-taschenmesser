@@ -25,3 +25,15 @@
 .doc.doc > div > [data-row] {
   flex: 1 1 100%;
 }
+/* Where the files live: one quiet line under the sub-navigation (G03), not a plate in the head. */
+.privacy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}
+.privacy > svg {
+  flex: none;
+}

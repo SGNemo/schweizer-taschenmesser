@@ -3,7 +3,7 @@ import { useLiveAttention } from '@/core/modules/liveAttention';
 import { getPlatform } from '@/core/platform';
 import type { DriveInfo } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { GaugeList } from '@/ui';
+import { FortschrittBody, WidgetBody } from '@/ui';
 import { percent } from '../format';
 import { driveAttention } from '../logic/attention';
 import { fillLevel, formatCapacity } from '../logic/drives';
@@ -36,23 +36,37 @@ export default function DrivesWidget() {
     };
   }, []);
   const dw = t.diskWidget;
+  // Identity v3.1 (G01): rings in the module hue; the state is a word in the line below the ring, never a ring colour.
   return (
-    <GaugeList
+    <WidgetBody
       loading={!drives && !failed}
+      isEmpty={(drives ?? []).length === 0}
       empty={failed ? dw.unavailable : dw.empty}
-      entries={(drives ?? []).map((d) => {
-        const used = Math.max(0, d.totalBytes - d.freeBytes);
-        const pct = percent(used, d.totalBytes);
-        const level = fillLevel(pct, d.freeBytes);
-        return {
-          key: d.root,
-          name: t.disk.driveName(d.root, d.label),
-          percent: pct,
-          level,
-          detail: dw.free(formatCapacity(d.freeBytes), formatCapacity(d.totalBytes)),
-          hint: t.disk.card.advice[level],
-        };
-      })}
-    />
+    >
+      <FortschrittBody
+        kind="rings"
+        // The widget shows 2 / 4 / 6 rings by size: the system drive first, then the fullest ones.
+        entries={[...(drives ?? [])]
+          .sort(
+            (a, b) =>
+              Number(b.isSystem) - Number(a.isSystem) ||
+              percent(b.totalBytes - b.freeBytes, b.totalBytes) -
+                percent(a.totalBytes - a.freeBytes, a.totalBytes),
+          )
+          .map((d) => {
+            const used = Math.max(0, d.totalBytes - d.freeBytes);
+            const level = fillLevel(percent(used, d.totalBytes), d.freeBytes);
+            const free = t.disk.free(formatCapacity(d.freeBytes));
+            const state = t.disk.head.state[level];
+            return {
+              key: d.root,
+              title: d.root,
+              value: used,
+              max: d.totalBytes,
+              detail: state ? `${free} · ${state}` : free,
+            };
+          })}
+      />
+    </WidgetBody>
   );
 }

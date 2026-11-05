@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ArrowBand } from '../components/ArrowBand';
+import { DownloadsBand } from '../components/DownloadsBand';
 import { bandSummary, etaSeconds, formatEta, matchesFilter } from '../lib/format';
 
 const j = (over: Partial<Parameters<typeof bandSummary>[0][number]> = {}) => ({
@@ -54,23 +54,24 @@ describe('filters and remaining time', () => {
   });
 });
 
-describe('ArrowBand (signature)', () => {
+describe('DownloadsBand (signature, library ArrowBand in slot M)', () => {
   it('shows the figure and its context as text; the band itself is decoration', () => {
-    render(<ArrowBand figure="2 laufen" context="64 % · mit 3 MB/s" percent={64} />);
+    render(<DownloadsBand figure="2 laufen" context="64 % · mit 3 MB/s" percent={64} />);
     const band = screen.getByTestId('arrow-band');
     expect(band).toHaveTextContent('2 laufen');
     expect(band).toHaveTextContent('64 %');
-    const track = band.querySelector('[aria-hidden="true"]') as HTMLElement;
-    expect(track).not.toBeNull();
-    expect((track.firstElementChild as HTMLElement).style.transform).toBe('scaleX(0.64)');
+    const arrow = band.querySelector('[data-signature="arrowProgress"]') as HTMLElement;
+    expect(arrow.getAttribute('aria-hidden')).toBe('true');
+    expect(arrow.dataset.size).toBe('M');
+    expect((arrow.firstElementChild as HTMLElement).style.width).toBe('64%');
   });
 
   it('keeps the fill inside the band', () => {
-    render(<ArrowBand figure="x" context="y" percent={180} />);
+    render(<DownloadsBand figure="x" context="y" percent={180} />);
     const fill = screen
       .getByTestId('arrow-band')
-      .querySelector('[aria-hidden] > span') as HTMLElement;
-    expect(fill.style.transform).toBe('scaleX(1)');
+      .querySelector('[data-signature="arrowProgress"] > i') as HTMLElement;
+    expect(fill.style.width).toBe('100%');
   });
 });
 

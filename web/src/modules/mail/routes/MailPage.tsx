@@ -14,6 +14,7 @@ import {
   IconButton,
   ItemList,
   ItemRow,
+  EmptyState,
   PageHeader,
   SelectField,
   Skeleton,
@@ -22,19 +23,17 @@ import {
   type GroupedListGroup,
   type RowMenuItem,
 } from '@/ui';
-import { HeroSlot } from '@/ui/identity';
+import { SignatureMark } from '@/ui/identity';
 import { DEMO_ACCOUNT, type CachedThreadView } from '../cache';
 import { MailError } from '../components/MailError';
 import { MailSettingsPanel } from '../components/MailSettingsPanel';
-import { Stamp } from '../components/Stamp';
 import { ComposeDialog } from '../components/ComposeDialog';
 import { PendingSendBar } from '../components/PendingSendBar';
 import { ThreadView } from '../components/ThreadView';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { hasFeature } from '@/core/mail/service';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
-import { MailEmpty } from '../components/MailEmpty';
-import { MailEnvelope } from '../components/MailEnvelope';
+import { InboxHead } from '../components/InboxHead';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -183,16 +182,7 @@ export default function MailPage() {
     !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
   const header = (
     <>
-      {summary ? (
-        <HeroSlot area="signature">
-          <Stamp
-            count={summary.unread}
-            label={t.mail.widget.unread}
-            context={t.mail.widget.unreadContext(summary.unread)}
-          />
-        </HeroSlot>
-      ) : null}
-      <MailEnvelope />
+      <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
       <PageHeader title={t.mail.meta.name}>
         {canWrite && account ? (
           <Button
@@ -214,10 +204,14 @@ export default function MailPage() {
     return (
       <>
         {header}
-        <MailEmpty title={t.mail.connect.title}>
+        <EmptyState
+          title={t.mail.connect.title}
+          testId="mail-empty"
+          motif={<SignatureMark id="stamp" size={64} />}
+        >
           <p>{t.mail.connect.body}</p>
           <Link to={settingsPath('verbindungen', 'connectors')}>{t.mail.connect.action}</Link>
-        </MailEmpty>
+        </EmptyState>
         <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
     );
@@ -377,7 +371,11 @@ export default function MailPage() {
       {box.threads.length === 0 && box.loading ? (
         <Skeleton height="10rem" />
       ) : box.threads.length === 0 && !box.error ? (
-        <MailEmpty title={query ? t.mail.page.emptySearch : t.mail.page.empty} />
+        <EmptyState
+          title={query ? t.mail.page.emptySearch : t.mail.page.empty}
+          testId="mail-empty"
+          motif={<SignatureMark id="stamp" size={64} />}
+        />
       ) : (
         <ThreadList
           threads={box.threads}

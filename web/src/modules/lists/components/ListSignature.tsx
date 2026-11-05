@@ -1,10 +1,10 @@
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot, Receipt } from '@/ui/identity';
 import { t } from '@/strings';
 import styles from './ListSignature.module.css';
 
 /**
  * Head of the shopping list (`kennzahl`): the open count as the figure with one context line (sum, store sections), and
- * a narrow receipt slip with a jagged lower edge that lists the next entries. The slip is decoration (`aria-hidden`,
+ * the receipt from the signature library in slot M with the next entry on it. The slip is decoration (`aria-hidden`,
  * the list below says the same in text) and never moves.
  */
 export function ReceiptSignature({
@@ -30,16 +30,9 @@ export function ReceiptSignature({
         />
       </HeroSlot>
       <HeroSlot area="signature">
-        {lines.length === 0 ? null : (
-          <div className={styles.receipt} data-testid="receipt-signature" aria-hidden="true">
-            {lines.slice(0, 3).map((l, i) => (
-              <span key={i} className={styles.slipLine}>
-                <span className={styles.slipName}>{l.name}</span>
-                {l.price ? <span className={styles.slipPrice}>{l.price}</span> : null}
-              </span>
-            ))}
-          </div>
-        )}
+        <span data-testid="receipt-signature">
+          <Receipt size="M">{lines[0]?.name}</Receipt>
+        </span>
       </HeroSlot>
     </>
   );
