@@ -10,7 +10,8 @@ export type IconName =
   | 'check' | 'pc' | 'phone' | 'server' | 'cloud' | 'target' | 'timer' | 'leaf'
   // Module icons, the same Lucide names as the app's manifests (web/src/ui/icons.tsx); the catalogue names them.
   | 'checklist' | 'clock' | 'cloudSun' | 'map' | 'users' | 'receipt' | 'repeat' | 'piggy' | 'cart' | 'package'
-  | 'bookmark' | 'note' | 'globe' | 'wifi' | 'mail' | 'music' | 'files' | 'lock' | 'disk' | 'download';
+  | 'bookmark' | 'note' | 'globe' | 'wifi' | 'mail' | 'music' | 'files' | 'lock' | 'disk' | 'download'
+  | 'calendarDays';
 interface Props { name: IconName; size?: number; label?: string; class?: string }
 const { name, size = 20, label, class: cls } = Astro.props;
 

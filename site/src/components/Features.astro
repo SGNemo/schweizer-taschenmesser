@@ -2,6 +2,7 @@
 import { t, type Locale } from '../i18n';
 import Icon, { type IconName } from './Icon.astro';
 import IdentityMini from './IdentityMini.astro';
+import Shot from './Shot.astro';
 // Generated from the app's own registry (`npm run gen:modules` in web/): names in five languages, plus
 // icon, hue, head and widget variant from every manifest's `identity`, so the site keeps no second mapping.
 import catalog from '../catalog/modules.json';
@@ -30,12 +31,27 @@ const areas = catalog.areas.map((a) => ({
         .join(', '),
     })),
 }));
+// The planner highlight: name, hue, icon and state come from the catalogue like every card.
+const planner = catalog.modules.find((x) => x.id === 'planner');
+const plannerNote = planner && planner.status !== 'default' ? m.status[planner.status as 'optional' | 'preview'] : null;
 ---
 <section class="block" id="features" aria-labelledby="features-title">
   <div class="wrap">
     <p class="eyebrow">{s.features.eyebrow}</p>
     <h2 id="features-title">{s.features.title}</h2>
     <p class="intro">{s.features.intro(catalog.modules.length, catalog.areas.length)}</p>
+    {planner && (
+      <div class="spot" data-hue={planner.hue}>
+        <div class="spottext">
+          <div class="mhead">
+            <span class="plate"><Icon name={planner.icon as IconName} size={18} /></span>
+            <span class="mname">{planner.name[locale]}{plannerNote && <span class="state">{plannerNote}</span>}</span>
+          </div>
+          <p>{s.features.planner.text}</p>
+        </div>
+        <Shot name="planner" frame="phone" class="spotshot" alt={s.features.planner.alt} sizes="(min-width: 48rem) 12rem, 55vw" widths={[220, 440, 824]} />
+      </div>
+    )}
     <div class="areas">
       {areas.map((a) => (
         <section class="area" data-area={a.id} aria-labelledby={`area-${a.id}`}>
@@ -68,6 +84,40 @@ const areas = catalog.areas.map((a) => ({
     margin-top: var(--space-3);
     color: var(--text-muted);
     max-width: var(--measure);
+  }
+  /* The planner highlight: one module card, wide, with its phone shot beside the text. */
+  .spot {
+    display: grid;
+    gap: var(--space-4);
+    align-items: center;
+    justify-items: center;
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .spottext {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    justify-self: stretch;
+  }
+  .spottext p {
+    font-size: var(--text-lg);
+    line-height: 1.45;
+    max-width: var(--measure);
+  }
+  .spot :global(.spotshot) {
+    width: min(12rem, 55vw);
+  }
+  @media (min-width: 48rem) {
+    .spot {
+      grid-template-columns: minmax(0, 34rem) auto;
+      justify-content: center;
+      column-gap: var(--space-8, 4rem);
+      padding: var(--space-5) var(--space-6);
+    }
   }
   .areas {
     display: grid;

@@ -5,10 +5,11 @@
  *   npm run app:screenshots            (in site/; builds ../web dist-e2e-seed if missing, serves it)
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
  *
- * Pages: home (1280×720, hero), phone (412×915), and one 1280×720 shot per feature tile (the vault
- * unlocked with the seed's demo passphrase, notifications granted so no permission banner shows). The seed's
- * texts are German, so one set serves every site language. The only cosmetic change is the hidden
- * "Dev" badge of the preview flavour; everything else is the real UI.
+ * Pages: home (1280×720, hero), phone (412×915) and the planner on the phone (412×915, Features
+ * highlight); notifications granted so no permission banner shows. `unlock` opens the vault with the
+ * seed's demo passphrase for a motif that needs it. The seed's texts are German, so one set serves
+ * every site language. The only cosmetic change is the hidden "Dev" badge of the preview flavour;
+ * everything else is the real UI.
  *
  *   npm run app:screenshots -- --readme   README motifs instead (../docs/assets/screenshots/*.webp):
  *     overview, calendar, finance, tools, settings; desktop 1920×1080 and phone 412×915, light and dark.
@@ -32,11 +33,9 @@ const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const PAGES = [
   { name: 'home', path: '/', viewport: { width: 1280, height: 720 } },
   { name: 'phone', path: '/', viewport: { width: 412, height: 915 }, mobile: true },
-  { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
-  { name: 'todos', path: '/todos' },
-  { name: 'finance', path: '/finance?tab=overview' },
-  { name: 'vault', path: '/accounts', unlock: true },
-  { name: 'reminders', path: '/calendar?tab=reminders' },
+  // The planner on the phone (Features highlight): one day per screen, the head figure is today's free time
+  // from the seed. The desktop board waits for planner package 2 (titles break inside words, N01).
+  { name: 'planner', path: '/planner', viewport: { width: 412, height: 915 }, mobile: true },
 ];
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
