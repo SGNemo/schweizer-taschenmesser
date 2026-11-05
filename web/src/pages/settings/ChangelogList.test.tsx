@@ -24,7 +24,13 @@ const data: ChangelogData = {
     { version: '0.3.1', date: '2026-10-01', entries: [entry('old note')] },
   ],
 };
-vi.mock('@/core/changelog/load', () => ({ loadChangelog: async () => data }));
+const gate = vi.hoisted(() => ({ wait: undefined as Promise<void> | undefined }));
+vi.mock('@/core/changelog/load', () => ({
+  loadChangelog: async () => {
+    await gate.wait;
+    return data;
+  },
+}));
 
 describe('ChangelogList', () => {
   it('shows exactly the running version, unreleased on top, older folded, newer hidden', async () => {
@@ -51,5 +57,27 @@ describe('ChangelogList', () => {
     render(<ChangelogList version="1.0.0" />);
     await waitFor(() => expect(screen.getByTestId('changelog-1.0.0')).toBeTruthy());
     expect(screen.queryByTestId('changelog-new')).toBeNull();
+  });
+});
+
+describe('ChangelogList teardown', () => {
+  it('does not update state after it was unmounted (a late result must not reach a torn-down DOM)', async () => {
+    const errors: unknown[] = [];
+    const onRejection = (e: unknown) => errors.push(e);
+    process.on('unhandledRejection', onRejection);
+    let release!: () => void;
+    gate.wait = new Promise<void>((r) => (release = r));
+    const { unmount } = render(<ChangelogList version="1.0.0" />);
+    unmount(); // the data load is still in flight
+    // The environment is torn down at the end of a test file: `window` is gone when the result arrives.
+    vi.stubGlobal('window', undefined);
+    release();
+    // Only the promise callbacks run in this window-less span (React's own scheduler tasks come later).
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+    vi.unstubAllGlobals();
+    await new Promise((r) => setTimeout(r, 100));
+    gate.wait = undefined;
+    process.off('unhandledRejection', onRejection);
+    expect(errors).toEqual([]);
   });
 });
