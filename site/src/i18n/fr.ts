@@ -45,12 +45,21 @@ export const fr = {
       { icon: 'bell', shot: 'reminders', title: 'Rappels', text: 'Regroupés, avec heures calmes et « plus tard », même quand l’appli est fermée.', alt: 'Rappels avec interrupteurs et prochaine heure' },
     ],
     more: 'Et aussi : notes, listes, signets, provisions, personnes, habitudes, suivi du temps, météo, nettoyage du PC, un chat avec un modèle local (aperçu). IA seulement si vous le souhaitez. L’appli parle allemand, anglais, espagnol, français et portugais (Brésil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number) => `${n} modules en six domaines. Chacun a sa couleur ; vous n’activez que ce qu’il vous faut. Le croquis sur chaque carte montre la forme de son widget sur la vue d’ensemble.`,
+    count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
+    areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Seulement dans l’appli Windows.' },
     modules: {
       summary: (n: number) => `Les ${n} modules`,
       status: { default: 'activé par défaut', optional: 'facultatif', preview: 'aperçu' },
       only: { windows: 'appli Windows uniquement', android: 'appli Android uniquement', both: 'applis Windows et Android uniquement' },
       hint: 'Les modules en aperçu restent masqués tant que « Afficher ce qui est en cours » est désactivé (Paramètres → Apparence). La liste est générée à partir de l’appli elle-même.',
     },
+  },
+  heads: {
+    eyebrow: 'Neuf formes d’en-tête, un langage',
+    note: 'Chaque module a sa couleur et sa forme d’en-tête ; le site les dessine, sans image.',
+    names: { kennzahl: 'Chiffre', zeit: 'Temps', fortschritt: 'Progression', cover: 'Pochette', himmel: 'Ciel', regal: 'Étagère', tresor: 'Coffre', schreib: 'Papier', fokus: 'Focus' },
   },
   data: {
     eyebrow: 'Vos données restent chez vous',

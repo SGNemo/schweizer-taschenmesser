@@ -14,7 +14,7 @@ const s = t(Astro.props.locale);
       <ul class="aids">
         {s.focus.items.map((it) => (
           <li>
-            <Icon name={it.icon} size={24} />
+            <span class="plate neutral"><Icon name={it.icon} size={20} /></span>
             <h3>{it.title}</h3>
             <p>{it.text}</p>
           </li>
@@ -23,11 +23,8 @@ const s = t(Astro.props.locale);
       <p class="note">{s.focus.honest}</p>
     </div>
     <div class="visual">
-      <div class="frame crop"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="cropbox">
-          <Shot name="home" alt={s.focus.shotAlt} sizes="(min-width: 64rem) 30rem, 100vw" widths={[480, 720, 960]} />
-        </div>
-      </div>
+      <!-- The phone overview, whole: "Jetzt wichtig" and today's card are its first screen, so no crop that breaks with new screenshots. -->
+      <Shot name="phone" frame="phone" class="handset" alt={s.hero.phoneAlt} sizes="(min-width: 64rem) 18rem, 60vw" widths={[412, 824]} />
     </div>
   </div>
 </section>
@@ -51,8 +48,7 @@ const s = t(Astro.props.locale);
     column-gap: var(--space-3);
     row-gap: 0.2rem;
   }
-  .aids :global(svg) {
-    color: var(--accent);
+  .aids .plate {
     grid-row: 1 / 3;
     margin-top: 0.15rem;
   }
@@ -67,17 +63,12 @@ const s = t(Astro.props.locale);
   .note {
     margin-top: var(--space-5);
   }
-  .cropbox {
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
+  .visual {
+    display: flex;
+    justify-content: center;
   }
-  .cropbox :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 40% 60%;
-    transform: scale(1.9);
-    transform-origin: 40% 60%;
+  .visual :global(.handset) {
+    width: min(18rem, 60vw);
   }
   @media (min-width: 64rem) {
     .pair {

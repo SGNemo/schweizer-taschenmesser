@@ -45,12 +45,21 @@ export const es = {
       { icon: 'bell', shot: 'reminders', title: 'Recordatorios', text: 'Agrupados, con horas de silencio y «más tarde», incluso con la app cerrada.', alt: 'Recordatorios con interruptores y próxima hora' },
     ],
     more: 'Además: notas, listas, marcadores, despensa, personas, hábitos, registro de tiempo, el tiempo, limpieza del PC, un chat con un modelo local (vista previa). IA solo si tú quieres. La app habla alemán, inglés, español, francés y portugués (Brasil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number) => `${n} módulos en seis áreas. Cada uno tiene su color; activa solo lo que necesitas. El boceto de cada tarjeta muestra la forma de su widget en el resumen.`,
+    count: (n: number) => (n === 1 ? '1 módulo' : `${n} módulos`),
+    areas: { plan: 'El día, la semana, la gente.', money: 'Cuentas, facturas, suscripciones, presupuestos.', household: 'Compras y despensa.', knowledge: 'Leer, escribir, recordar.', vault: 'Cifrado, solo aquí.', system: 'Solo en la app de Windows.' },
     modules: {
       summary: (n: number) => `Los ${n} módulos`,
       status: { default: 'activado por defecto', optional: 'opcional', preview: 'vista previa' },
       only: { windows: 'solo app de Windows', android: 'solo app de Android', both: 'solo apps de Windows y Android' },
       hint: 'Los módulos en vista previa siguen ocultos hasta que actives «Mostrar lo que está en desarrollo» (Ajustes → Apariencia). La lista se genera a partir de la propia app.',
     },
+  },
+  heads: {
+    eyebrow: 'Nueve formas de cabecera, un lenguaje',
+    note: 'Cada módulo tiene su color y su forma de cabecera; la web los dibuja, sin imagen.',
+    names: { kennzahl: 'Cifra', zeit: 'Tiempo', fortschritt: 'Progreso', cover: 'Portada', himmel: 'Cielo', regal: 'Estante', tresor: 'Caja fuerte', schreib: 'Papel', fokus: 'Foco' },
   },
   data: {
     eyebrow: 'Tus datos se quedan contigo',

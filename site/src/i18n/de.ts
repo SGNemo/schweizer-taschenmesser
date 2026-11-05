@@ -45,12 +45,21 @@ export const de = {
       { icon: 'bell', shot: 'reminders', title: 'Erinnerungen', text: 'Gebündelt, mit Ruhezeiten und „Später“, auch bei geschlossener App.', alt: 'Erinnerungen mit Schaltern und nächstem Zeitpunkt' },
     ],
     more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number) => `${n} Module in sechs Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst. Die Skizze auf jeder Karte zeigt die Form des Widgets auf der Übersicht.`,
+    count: (n: number) => (n === 1 ? '1 Modul' : `${n} Module`),
+    areas: { plan: 'Der Tag, die Woche, die Leute.', money: 'Konten, Rechnungen, Abos, Budgets.', household: 'Einkaufen und Vorräte.', knowledge: 'Lesen, schreiben, merken.', vault: 'Verschlüsselt, nur hier.', system: 'Nur in der Windows-App.' },
     modules: {
       summary: (n: number) => `Alle ${n} Module`,
       status: { default: 'standardmäßig an', optional: 'optional', preview: 'Vorschau' },
       only: { windows: 'nur Windows-App', android: 'nur Android-App', both: 'nur Windows- und Android-App' },
       hint: 'Vorschau-Module bleiben versteckt, bis „In Arbeit anzeigen“ an ist (Einstellungen → Darstellung). Die Liste wird aus der App selbst erzeugt.',
     },
+  },
+  heads: {
+    eyebrow: 'Neun Kopfformen, eine Sprache',
+    note: 'Jedes Modul hat seine Farbe und seine Kopfform; die Website zeichnet sie nach, ohne Bild.',
+    names: { kennzahl: 'Kennzahl', zeit: 'Zeit', fortschritt: 'Fortschritt', cover: 'Cover', himmel: 'Himmel', regal: 'Regal', tresor: 'Tresor', schreib: 'Papier', fokus: 'Fokus' },
   },
   data: {
     eyebrow: 'Deine Daten bleiben bei dir',

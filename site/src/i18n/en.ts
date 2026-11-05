@@ -45,12 +45,21 @@ export const en = {
       { icon: 'bell', shot: 'reminders', title: 'Reminders', text: 'Bundled, with quiet hours and “later”, even when the app is closed.', alt: 'Reminders with switches and next time' },
     ],
     more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number) => `${n} modules in six areas. Each has its colour; you turn on only what you need. The sketch on every card shows the shape of its widget on the overview.`,
+    count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
+    areas: { plan: 'The day, the week, the people.', money: 'Accounts, invoices, subscriptions, budgets.', household: 'Shopping and supplies.', knowledge: 'Read, write, remember.', vault: 'Encrypted, only here.', system: 'Windows app only.' },
     modules: {
       summary: (n: number) => `All ${n} modules`,
       status: { default: 'on by default', optional: 'optional', preview: 'preview' },
       only: { windows: 'Windows app only', android: 'Android app only', both: 'Windows and Android apps only' },
       hint: 'Preview modules stay hidden until “Show work in progress” is on (Settings → Appearance). The list is generated from the app itself.',
     },
+  },
+  heads: {
+    eyebrow: 'Nine head shapes, one language',
+    note: 'Every module has its colour and its head shape; the website draws them, no picture needed.',
+    names: { kennzahl: 'Figure', zeit: 'Time', fortschritt: 'Progress', cover: 'Cover', himmel: 'Sky', regal: 'Shelf', tresor: 'Vault', schreib: 'Paper', fokus: 'Focus' },
   },
   data: {
     eyebrow: 'Your data stays with you',
