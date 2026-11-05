@@ -18,7 +18,14 @@ import { completeSetup, setChecklistHidden } from '@/core/setup/state';
 import { getLang, type Lang } from '@/core/i18n/lang';
 import { now, today as realToday } from '@/core/time/now';
 import { createSeedContext } from './context';
-import { SEED_SYNC_KEY, SEED_TABLE, seedKey, type SeedRegistryRow } from './guard';
+import {
+  SEED_SYNC_KEY,
+  SEED_TABLE,
+  seedKey,
+  seededIdsOfTable,
+  seedSyncAllowed,
+  type SeedRegistryRow,
+} from './guard';
 import { loadSeedModule } from './modules';
 import type { SeedModule, SeedRows, SeedScale } from './types';
 
@@ -112,7 +119,16 @@ async function writePlan(
   const table = tableName(write.manifest.id, write.collection);
   const repo = createCollectionRepo(write.manifest, write.collection, database);
   for (let i = 0; i < write.items.length; i += CHUNK) {
-    const chunk = write.items.slice(i, i + CHUNK);
+    // A row that exists already (a person's own day row under a natural id such as the date) is theirs:
+    // neither registered nor overwritten.
+    const slice = write.items.slice(i, i + CHUNK);
+    const present = await database.table(table).bulkGet(slice.map((it) => it.id));
+    const chunk = slice.filter((_, k) => present[k] === undefined);
+    onProgress?.(slice.length - chunk.length);
+    if (chunk.length === 0) {
+      await yieldToUi();
+      continue;
+    }
     // Registry first: a crash in between leaves registered rows, never un-registered ones that sync.
     await registry(database).bulkPut(
       chunk.map((it) => ({ id: seedKey(table, it.id), table, rowId: it.id, batchId })),
@@ -210,10 +226,9 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
     if (!mod?.afterSeed || opts.afterSeed === false) continue;
     const ctx = {
       ...createSeedContext({ moduleId: m.id, today, scale: opts.scale, lang }),
-      seeded: async (moduleId: string, collection: string) =>
-        (await registry(database).toArray())
-          .filter((r) => r.table === tableName(moduleId, collection))
-          .map((r) => r.rowId),
+      seeded: async (moduleId: string, collection: string) => [
+        ...(await seededIdsOfTable(database, tableName(moduleId, collection))),
+      ],
     };
     const created = (await mod.afterSeed(ctx)) ?? [];
     for (const c of created) {
@@ -225,7 +240,7 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
     }
   }
   // Whatever the hooks wrote onto registered rows (the planner's marks on seed tasks) is test data too.
-  if (opts.afterSeed !== false) {
+  if (opts.afterSeed !== false && !(await seedSyncAllowed(database))) {
     const all = await registry(database).toArray();
     await outbox(database).bulkDelete(all.map((r) => [r.table, r.rowId]));
   }
@@ -276,41 +291,45 @@ export async function removeSeed(
     const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
     await mod?.beforeRemove?.();
   }
-  const rows = await registry(database).toArray();
-  const syncedOnce = (await meta(database).get(SEED_SYNCED_ONCE_KEY))?.value === true;
-  const byTable = new Map<string, string[]>();
-  for (const r of rows) byTable.set(r.table, [...(byTable.get(r.table) ?? []), r.rowId]);
-
   let removed = 0;
-  for (const [table, ids] of byTable) {
-    if (!database.tables.some((t) => t.name === table)) continue;
-    const owner = manifests.find((m) =>
-      Object.keys(m.dataSchema.collections).some((c) => tableName(m.id, c) === table),
-    );
-    const collection =
-      owner &&
-      Object.keys(owner.dataSchema.collections).find((c) => tableName(owner.id, c) === table);
-    if (syncedOnce && owner && collection && !owner.dataSchema.collections[collection]!.local) {
-      await createCollectionRepo(owner, collection, database).removeMany(ids);
-    } else {
-      await database.table(table).bulkDelete(ids);
-      await outbox(database).bulkDelete(ids.map((id) => [table, id]));
+  try {
+    const rows = await registry(database).toArray();
+    const syncedOnce = (await meta(database).get(SEED_SYNCED_ONCE_KEY))?.value === true;
+    const byTable = new Map<string, string[]>();
+    for (const r of rows) byTable.set(r.table, [...(byTable.get(r.table) ?? []), r.rowId]);
+
+    for (const [table, ids] of byTable) {
+      if (!database.tables.some((t) => t.name === table)) continue;
+      const owner = manifests.find((m) =>
+        Object.keys(m.dataSchema.collections).some((c) => tableName(m.id, c) === table),
+      );
+      const collection =
+        owner &&
+        Object.keys(owner.dataSchema.collections).find((c) => tableName(owner.id, c) === table);
+      if (syncedOnce && owner && collection && !owner.dataSchema.collections[collection]!.local) {
+        await createCollectionRepo(owner, collection, database).removeMany(ids);
+      } else {
+        await database.table(table).bulkDelete(ids);
+        await outbox(database).bulkDelete(ids.map((id) => [table, id]));
+      }
+      removed += ids.length;
     }
-    removed += ids.length;
-  }
-  await registry(database).clear();
-  const at = now();
-  for (const b of await imports(database)
-    .where('importerId')
-    .equals('seed')
-    .toArray()
-    .catch(() => [])) {
-    await imports(database).put({ ...b, status: 'undone', undoneAt: at });
-  }
-  await meta(database).delete(SEED_STATE_KEY);
-  for (const m of manifests) {
-    const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
-    await mod?.afterRemove?.();
+    await registry(database).clear();
+    const at = now();
+    for (const b of await imports(database)
+      .where('importerId')
+      .equals('seed')
+      .toArray()
+      .catch(() => [])) {
+      await imports(database).put({ ...b, status: 'undone', undoneAt: at });
+    }
+    await meta(database).delete(SEED_STATE_KEY);
+  } finally {
+    // The hooks that paused something (the planner's runs) resume even when a delete threw.
+    for (const m of manifests) {
+      const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
+      await mod?.afterRemove?.();
+    }
   }
   return { removed };
 }

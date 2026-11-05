@@ -616,12 +616,10 @@ describe('council round 1', () => {
     await modulesRow('todos', true);
     await modulesRow('calendar', true);
     await modulesRow('planner', true);
-    // A person's own things, present before the test data arrives.
+    // A person's own things, present before the test data arrives – the day row under a date the seed
+    // uses too (today), so the loader must leave it alone.
     const real = await task('Echt', { estimateMin: 30 });
-    await dayRepo.create(
-      { date: '2026-11-11', availableMin: 90, blockers: [] },
-      { id: '2026-11-11' },
-    );
+    await dayRepo.create({ date: TODAY, availableMin: 90, blockers: [] }, { id: TODAY });
     await db.table('_outbox').clear();
     await applySeed({
       scale: 'small',
@@ -634,13 +632,16 @@ describe('council round 1', () => {
     const queued = (await db.table('_outbox').toArray()) as { collection: string; id: string }[];
     expect(queued.length).toBeGreaterThan(0);
     expect(queued.every((o) => o.id === real.id || o.id.startsWith(`todos:${real.id}`))).toBe(true);
+    // The real day row was neither overwritten nor registered.
+    expect(await dayRepo.get(TODAY)).toMatchObject({ availableMin: 90 });
+    expect(await db.table('_seeds').get(`planner_day|${TODAY}`)).toBeUndefined();
     await removeSeed(db, [todos, calendar, manifest]);
     await runsSettled();
     // The real task keeps its day (nothing moves forward by itself) and its mark.
     const kept = (await stored(real.id))!;
     expect(kept.title).toBe('Echt');
-    expect(kept.planMark?.date).toBe(kept.plannedFor);
-    expect(await dayRepo.get('2026-11-11')).toMatchObject({ availableMin: 90 });
+    expect((kept.planMark as { date?: string } | undefined)?.date).toBe(kept.plannedFor);
+    expect(await dayRepo.get(TODAY)).toMatchObject({ availableMin: 90 });
     const tasks = await db.table('todos_task').toArray();
     expect(tasks.map((x) => (x as { id: string }).id)).toEqual([real.id]);
     const rows = (await assignmentRepo.active().toArray()).map((a) => a.itemKey);

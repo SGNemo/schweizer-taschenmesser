@@ -36,8 +36,10 @@ let chain: Promise<unknown> = Promise.resolve();
 let stopped = false;
 /** Bumped by every `start()`: a run from an earlier life of the service writes nothing more. */
 let generation = 0;
-/** Set while the test data is removed (`suspendRuns`/`resumeRuns`): background runs skip. */
+/** Set while the test data is removed (`suspendRuns`/`resumeRuns`): background runs skip, user runs wait. */
 let suspended = false;
+let resumed: Promise<void> = Promise.resolve();
+let release: () => void = () => undefined;
 
 /** `runUser` while the module is switched off (a stale page in another tab): the UI says so, calmly. */
 export class PlannerOffError extends Error {
@@ -102,16 +104,23 @@ export function runBackground(opts: { force?: boolean } = {}): Promise<RunOutcom
   });
 }
 
-/** The seed's removal: no background run until `resumeRuns`; resolves when the running one is done. */
+/**
+ * The seed's removal: no background run until `resumeRuns`; resolves when the running one is done. A
+ * planner action in the same second still runs (dev data, a known edge); `start()` lifts the flag too.
+ */
 export async function suspendRuns(): Promise<void> {
-  suspended = true;
+  if (!suspended) {
+    suspended = true;
+    resumed = new Promise((r) => (release = r));
+  }
   await chain;
 }
 
 /** … and one run afterwards, so the rows follow what is left. */
 export function resumeRuns(): void {
   suspended = false;
-  void runBackground().catch(logError('planner.run'));
+  release();
+  if (!stopped) void runBackground().catch(logError('planner.run'));
 }
 
 export interface UserRun {
@@ -125,6 +134,7 @@ export interface UserRun {
  */
 export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
   return enqueue(async () => {
+    await resumed; // a removal of test data in flight ends first
     if (await switchedOff()) throw new PlannerOffError();
     const { result, entry } = await undoable(
       label,
@@ -193,6 +203,7 @@ async function preload(): Promise<void> {
 
 export default function start(): () => void {
   stopped = false;
+  if (suspended) resumeRuns();
   generation++;
   manifestsFor = undefined;
   let active = true;

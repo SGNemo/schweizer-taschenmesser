@@ -51,7 +51,7 @@ export const planner: Strings['planner'] = {
     off: 'off',
     full: 'full',
     noTime: 'no free time',
-    noTimeShort: 'taken',
+    noTimeShort: 'busy',
     load: (planned: string, usable: string) => `${planned} of ${usable} planned`,
     strip: 'Days',
   },

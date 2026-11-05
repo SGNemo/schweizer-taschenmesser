@@ -1,4 +1,5 @@
 import type { AfterSeedContext, SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
+import { getPlannerSettings } from './prefs';
 import { assignmentRepo, itemKeyOf, itemRepo } from './repo';
 import { resumeRuns, runBackground, suspendRuns } from './services';
 
@@ -109,23 +110,22 @@ function seed(ctx: SeedContext): SeedRows {
 }
 
 /**
- * The first run over the test data, inside the seed: the rows it creates for the todos seed's tasks
- * are test data too (registered, gone with „entfernen“). Rows and marks of a person's own things stay
- * theirs – only rows whose thing is a registered seed task are returned.
+ * The first run over the test data, inside the seed: the rows for the todos seed's tasks are test data
+ * too (registered, gone with „entfernen“). Rows and marks of a person's own things stay theirs – only
+ * rows whose thing is a registered seed task are returned.
  */
 async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[]> {
-  const seedTasks = new Set(await ctx.seeded('todos', 'task'));
-  const keys = async (repo: { active(): { primaryKeys(): Promise<unknown[]> } }) =>
-    new Set((await repo.active().primaryKeys()) as string[]);
-  const before = { item: await keys(itemRepo), assignment: await keys(assignmentRepo) };
+  // Automatic planning switched off: the test data gets no run either (a run would also touch the
+  // person's own things); rows a later planner action makes for seed tasks are a known dev-data edge.
+  if (!(await getPlannerSettings()).autoReplan) return [];
+  const seedKeys = new Set((await ctx.seeded('todos', 'task')).map((id) => itemKeyOf('todos', id)));
   await runBackground({ force: true });
-  const ofSeed = (itemKey: string) =>
-    itemKey.startsWith('todos:') && seedTasks.has(itemKey.slice('todos:'.length));
+  // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless).
   const items = (await itemRepo.active().toArray())
-    .filter((r) => !before.item.has(r.id) && ofSeed(r.id))
+    .filter((r) => seedKeys.has(r.id))
     .map((r) => r.id);
   const assignments = (await assignmentRepo.active().toArray())
-    .filter((r) => !before.assignment.has(r.id) && ofSeed(r.itemKey))
+    .filter((r) => seedKeys.has(r.itemKey))
     .map((r) => r.id);
   return [
     { collection: 'item', ids: items },

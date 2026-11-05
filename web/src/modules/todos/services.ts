@@ -58,13 +58,14 @@ export default function start(): () => void {
   // One clean-up at a time; emissions while one runs collapse into a single follow-up run.
   let running: Promise<unknown> = Promise.resolve();
   let queued = false;
+  let active = true;
   const clean = () => {
     if (queued) return;
     queued = true;
     running = running
       .then(() => {
         queued = false;
-        return cleanupPlanMarks();
+        return active ? cleanupPlanMarks() : 0;
       })
       .catch(logError('todos.planMark'));
   };
@@ -73,6 +74,7 @@ export default function start(): () => void {
     error: (e) => console.error('[todos] plan-mark stream failed', e),
   });
   return () => {
+    active = false;
     offRequested();
     sub.unsubscribe();
   };
