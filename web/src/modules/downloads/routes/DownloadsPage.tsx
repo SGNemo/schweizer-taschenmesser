@@ -93,7 +93,7 @@ export default function DownloadsPage() {
 
   return (
     <>
-      <HeroSlot area="figure">
+      <HeroSlot area="signature">
         <ArrowBand
           figure={
             summary.running === 0

@@ -8,3 +8,20 @@ export { HeroFigure } from './HeroFigure';
 export { dominantColor, safeTint, toCss, useCoverTone, type Rgb } from './coverTone';
 export { HeroSlot } from './HeroSlot';
 export { SignatureMark, SIGNATURE_MARKS } from './SignatureMark';
+export { Signature, SignaturePlate, SIGNATURE_BLOCKS } from './Signature';
+export {
+  AddressBar,
+  ArrowBand,
+  AvatarRing,
+  Bill,
+  Bubble,
+  FolderTabs,
+  Gauges,
+  Masthead,
+  NotePaper,
+  Pinboard,
+  Receipt,
+  Shelf,
+  Stamp,
+  type BlockSize,
+} from './blocks';

@@ -95,7 +95,7 @@ export default function SubscriptionsPage() {
       </PageHeader>
 
       {cycle.length > 0 ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <div className={styles.cycle} data-testid="cycle-ring">
             <Ring
               parts={cycle}

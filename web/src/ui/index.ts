@@ -4,6 +4,7 @@ export { useHashTarget } from './useHashTarget';
 export { Card } from './Card';
 export { LibraryCard } from './LibraryCard';
 export { HuePlate } from './HuePlate';
+export { HeadEyebrow, HeadSurface, type HeadSurfaceProps } from './HeadSurface';
 export { Dialog } from './Dialog';
 export { useDraft } from './useDraft';
 export { useFormDraft } from './useFormDraft';

@@ -55,7 +55,7 @@ export function ShelfSignature({
           testId="pantry-total"
         />
       </HeroSlot>
-      <HeroSlot>
+      <HeroSlot area="signature">
         <div className={styles.shelf} data-testid="shelf-signature">
           {places.map((p) => {
             const state = stateLine(counts[p]);

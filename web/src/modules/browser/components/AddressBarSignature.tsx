@@ -8,7 +8,7 @@ import styles from './AddressBarSignature.module.css';
  */
 export function AddressBarSignature({ host }: { host?: string }) {
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.bar} aria-hidden="true" data-testid="address-bar-signature">
         <span className={styles.lock} />
         <span className={styles.text}>{host || t.browser.toolbar.address}</span>

@@ -647,7 +647,7 @@ export default function TodosPage() {
       ) : null}
 
       {tasks ? (
-        <HeroSlot>
+        <HeroSlot area="signature">
           <TodayCard
             tasks={tasks}
             day={day}

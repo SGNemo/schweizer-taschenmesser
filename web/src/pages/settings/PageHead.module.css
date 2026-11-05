@@ -1,7 +1,6 @@
-/* Head of settings and library pages (identity v3): tinted surface in the hue, the area's pattern, the hue as the icon
-   plate. Text on it is always `--text` (AA on every hue, both themes). No edge stripe; all hairlines run all around. */
+/* Head of settings and library pages (identity v3.1): the surface, pattern and height come from ui/HeadSurface; this is
+   the grid. Text on it is always `--text` (AA on every hue, both themes). No edge stripe; all hairlines run all around. */
 .head {
-  position: relative;
   /* DOM order is eyebrow, title, mark, actions, body (reading order); the grid puts the actions on the eyebrow's row. */
   display: grid;
   grid-template-columns: minmax(0, 1fr) fit-content(50%);
@@ -13,57 +12,12 @@
   gap: var(--space-2) var(--space-4);
   min-width: 0;
   padding: var(--space-4) var(--space-5);
-  border-radius: var(--shape-round);
-  background: var(--head-gradient);
-  box-shadow: var(--shadow-1);
-  color: var(--text);
+  min-height: var(--head-h);
   margin-bottom: var(--space-4);
-}
-.head[data-size='tall'] {
-  min-height: 12.5rem;
-}
-.head[data-size='compact'] {
-  min-height: 6rem;
-}
-.pattern {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-  background-image: var(--area-pattern, none);
-  background-size: var(--area-pattern-size, auto);
-  opacity: var(--pattern-head);
-}
-.head > :not(.pattern) {
-  position: relative;
 }
 .eyebrow {
   grid-area: eyebrow;
   align-self: center;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  margin: 0;
-  font-size: var(--text-caps);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text);
-}
-.plate {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--module-color);
-  color: var(--surface);
-}
-:global(:root[data-theme='dark']) .plate {
-  color: var(--bg);
 }
 .actions {
   grid-area: actions;
@@ -107,22 +61,22 @@
   .head {
     gap: var(--space-1) var(--space-3);
     padding: var(--space-2) var(--space-3);
-    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'eyebrow'
-      'titles'
-      'actions'
-      'body';
+      'eyebrow mark'
+      'titles titles'
+      'actions actions'
+      'body body';
+    grid-template-columns: minmax(0, 1fr) auto;
     border-radius: var(--radius-lg);
   }
-  .head[data-size='tall'] {
+  .head[data-size='hero'] {
     min-height: 0;
   }
-  .head[data-size='compact'] {
-    min-height: 5rem;
-  }
+  /* The mark stays (identity v3.1: nothing of the signature disappears on the phone), at the end of the eyebrow row. */
   .decoration {
-    display: none;
+    grid-area: mark;
+    justify-self: end;
+    zoom: 0.75;
   }
   .actions {
     justify-content: flex-start;

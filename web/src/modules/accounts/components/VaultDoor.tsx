@@ -32,7 +32,7 @@ function useMinutesToLock(active: boolean): number | undefined {
 export function VaultDoor({ unlocked }: { unlocked: boolean }) {
   const min = useMinutesToLock(unlocked);
   return (
-    <HeroSlot>
+    <HeroSlot area="signature">
       <div className={styles.door} data-testid="vault-door" data-state={unlocked ? 'open' : 'shut'}>
         <span className={styles.frame} aria-hidden="true">
           <span className={styles.leaf}>

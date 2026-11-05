@@ -1,20 +1,23 @@
+import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import type { ReactNode } from 'react';
-import { useHeroTargets, type HeroArea } from '@/core/shell/heroContext';
+import { useHeroControls, useHeroTargets, type HeroArea } from '@/core/shell/heroContext';
 
 /**
- * Content for the free slot of the module head: the module's signature or headline block (sky, bank cards, cover).
- * Renders nothing when there is no shell around (tests, dialogs). Keep it decorative or a figure with its context line.
+ * Renders its children into the module head (`layout/AreaFrame`): `signature` is the slot the head variant sizes
+ * for the module's signature (the frame draws the default mark until a page fills it), `figure` the headline
+ * block under the title, `extra` strips and controls, `backdrop`/`notice` decoration and a notice above. Outside a
+ * head (settings, dialogs, tests) it renders nothing. Mounting claims the area, so the frame's default steps back.
  */
 export function HeroSlot({
   area = 'extra',
   children,
 }: {
-  /** `extra` beside the title (default), `figure` under it, `backdrop` behind everything, `notice` above the head. */
   area?: Exclude<HeroArea, 'title'>;
   children: ReactNode;
 }) {
   const targets = useHeroTargets();
+  const controls = useHeroControls();
+  useEffect(() => controls?.claim(area), [controls, area]);
   const target = targets?.[area];
   return target ? createPortal(children, target) : null;
 }

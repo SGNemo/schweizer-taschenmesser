@@ -15,7 +15,8 @@ import { tSettings2 } from '@/strings.settings2';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
-import { Badge, Button, EmptyState, HuePlate, Icon, SettingRow, SettingsGroup } from '@/ui';
+import { Badge, Button, EmptyState, HuePlate, SettingRow, SettingsGroup } from '@/ui';
+import { Signature } from '@/ui/identity';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
@@ -42,16 +43,7 @@ function useChangedCounts(
   }, [ids]);
 }
 
-/** The module's icon large on a tinted plate: decoration only, never a number. */
-function HeadMark({ manifest }: { manifest: ModuleManifest }) {
-  return (
-    <span className={styles.mark}>
-      <Icon name={manifest.icon} size={48} />
-    </span>
-  );
-}
-
-/** Module identity in the page head (identity v3): tinted head in the module's hues with its area pattern, icon plate and a large icon mark. */
+/** Module identity in the page head (identity v3.1): tinted head in the module's hues with its area pattern, icon plate and the signature at size S. */
 function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
@@ -65,7 +57,7 @@ function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
       title={manifest.name}
       titleId={`module-${manifest.id}`}
       description={manifest.description}
-      decoration={<HeadMark manifest={manifest} />}
+      decoration={<Signature id={manifest.identity.signature} size="S" />}
       testId="module-settings-head"
       actions={
         <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>

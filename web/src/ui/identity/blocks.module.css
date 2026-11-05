@@ -1,0 +1,375 @@
+/* Signature blocks (identity v3.1): drawn from the module hue and the surface only. Lines are `--ink` (the hue at
+   a quiet mix), paper is the surface. Sizes: M fits the 36 rem slot, L stretches with the column. */
+.block {
+  --ink: color-mix(in srgb, var(--module-color) 55%, var(--surface));
+  --paper: var(--surface);
+  position: relative;
+  box-sizing: border-box;
+  flex: none;
+  max-width: 100%;
+  color: var(--text);
+}
+.block[data-size='L'] {
+  width: 100%;
+}
+.block i {
+  display: block;
+}
+.rule {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+.short {
+  width: 55%;
+}
+.text {
+  display: block;
+  position: relative;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.serif {
+  font-family: var(--font-serif);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
+}
+
+/* receipt: a paper strip, torn at the bottom. */
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 11rem;
+  padding: var(--space-4) var(--space-3) var(--space-5);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 0.5rem),
+    92% 100%,
+    84% calc(100% - 0.5rem),
+    76% 100%,
+    68% calc(100% - 0.5rem),
+    60% 100%,
+    52% calc(100% - 0.5rem),
+    44% 100%,
+    36% calc(100% - 0.5rem),
+    28% 100%,
+    20% calc(100% - 0.5rem),
+    12% 100%,
+    4% calc(100% - 0.5rem),
+    0 100%
+  );
+}
+.receipt .text {
+  margin-top: var(--space-1);
+}
+
+/* bill: a sheet with the sum line at the foot. */
+.bill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 10rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.sum {
+  display: block;
+  min-height: 1.5rem;
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 2px solid var(--module-color);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  text-align: right;
+}
+
+/* folderTab: three tabs on a shelf line, the front one lifted. */
+.folderTab {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  width: 14rem;
+  height: 4rem;
+  padding-bottom: 2px;
+}
+.tab {
+  position: relative;
+  flex: 1 1 0;
+  height: 2.25rem;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: color-mix(in srgb, var(--module-color) 22%, var(--paper));
+}
+.tab:nth-child(3) {
+  height: 3rem;
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.tab .text {
+  padding: var(--space-2);
+}
+.shelfLine {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--module-color);
+}
+
+/* stamp: perforated edge (a radial mask), a frame inside, the figure in it. */
+.stamp {
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  aspect-ratio: 1;
+  padding: 0.35rem;
+  border: 0.2rem dotted color-mix(in srgb, var(--module-color) 45%, var(--paper));
+  background: var(--paper);
+}
+.frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--ink);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: var(--font-num);
+  line-height: 1;
+}
+
+/* pinboard: a board with three notes, each with a pin. */
+.pinboard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 13rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--module-color) 18%, var(--paper));
+}
+.note {
+  position: relative;
+  flex: 1 1 0;
+  height: 3rem;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.note:nth-child(2) {
+  margin-top: var(--space-2);
+  height: 2.5rem;
+}
+.note::before {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--module-color);
+  transform: translateX(-50%);
+}
+
+/* notePaper: ruled lines, a folded corner. */
+.notePaper {
+  width: 11rem;
+  min-height: 4.5rem;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  background: repeating-linear-gradient(0deg, var(--ink) 0 1px, transparent 1px 0.75rem)
+    var(--paper);
+  background-position: 0 0.25rem;
+  box-shadow: var(--shadow-1);
+  clip-path: polygon(0 0, calc(100% - 1rem) 0, 100% 1rem, 100% 100%, 0 100%);
+}
+.notePaper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1rem;
+  height: 1rem;
+  background: color-mix(in srgb, var(--module-color) 30%, var(--paper));
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+/* bubble: two speech bubbles. */
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 12rem;
+}
+.bubbleA,
+.bubbleB {
+  position: relative;
+  min-height: 1.75rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-lg);
+}
+.bubbleA {
+  align-self: flex-start;
+  width: 75%;
+  border-bottom-left-radius: var(--space-1);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.bubbleB {
+  align-self: flex-end;
+  width: 45%;
+  border-bottom-right-radius: var(--space-1);
+  background: color-mix(in srgb, var(--module-color) 28%, var(--paper));
+}
+
+/* addressBar: a pill with the lock. */
+.addressBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 14rem;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.lock {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: var(--module-color);
+  stroke-width: 1.75;
+}
+.addressBar .text {
+  flex: 1 1 auto;
+}
+.addressBar:not(:has(.text))::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+
+/* shelf: four things on a line. */
+.shelf {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  width: 12rem;
+  height: 4rem;
+  padding: 0 var(--space-2) 2px;
+}
+.item {
+  flex: 1 1 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: color-mix(in srgb, var(--module-color) 35%, var(--paper));
+}
+.item:nth-child(1) {
+  height: 2rem;
+}
+.item:nth-child(2) {
+  height: 3.25rem;
+  background: var(--module-color);
+}
+.item:nth-child(3) {
+  height: 2.5rem;
+}
+.item:nth-child(4) {
+  height: 1.5rem;
+}
+
+/* avatarRing: the person mark inside a ring in the hue. */
+.avatarRing {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 3px var(--module-color);
+}
+.mark {
+  width: 60%;
+  height: 60%;
+  fill: none;
+  stroke: var(--module-color);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* gauges: two arcs with needles. */
+.gauges {
+  display: flex;
+  gap: var(--space-3);
+  width: 11rem;
+}
+.gauge {
+  flex: 1 1 0;
+  fill: none;
+  stroke: var(--module-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.gauge .track {
+  stroke: color-mix(in srgb, var(--module-color) 25%, var(--paper));
+}
+.gauge .needle {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+/* arrowProgress: an arrow-shaped track, filled from the left. */
+.arrowProgress {
+  width: 12rem;
+  height: 1.75rem;
+  background: color-mix(in srgb, var(--module-color) 22%, var(--paper));
+  clip-path: polygon(0 0, calc(100% - 1rem) 0, 100% 50%, calc(100% - 1rem) 100%, 0 100%);
+}
+.fill {
+  height: 100%;
+  background: var(--module-color);
+}
+
+/* masthead: title, thick rule, two columns of lines. */
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 14rem;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.mastTitle {
+  min-height: 1.25rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.thick {
+  height: 3px;
+  background: var(--module-color);
+}
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* "Ruhig" / module colours off: every block is grey (the hue is --text-3 then); paper stays paper. */

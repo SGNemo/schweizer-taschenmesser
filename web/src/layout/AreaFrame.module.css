@@ -1,27 +1,10 @@
-/* Module head ("band") and sub-navigation, identity v3 (docs/design/identity-v3/02-CONCEPT.md § 3). The band is a full-width
-   surface in the module hue over the surface colour with the area's quiet pattern; everything on it is text in `--text` (AA on
-   every hue, both themes, tokens.test.ts). The hue itself shows as the icon plate and in the sub-navigation's filled chip.
-   Variants (`data-head`) change height, arrangement and typography, never only the colour. */
+/* Module head ("band"), identity v3.1 (docs/design/MODULE-IDENTITY.md "Head variants"). The surface, pattern, heights and
+   identity hooks come from ui/HeadSurface; this file is the grid: eyebrow and actions on the first row, then the content
+   column (capped at --page-content, aligned to the page) with the title and one row of figure | signature slot | extra.
+   Everything on the band is text in --text or --text-on-tint (tokens.test.ts). */
 .band {
-  --hero-radius: var(--shape-round);
-  /* Bleeds through the page gutters (set by the shell around the page; 0 where there is none) up to the shell's edges. */
-  position: relative;
-  flex: none;
-  align-self: stretch;
-  margin: 0 calc(-1 * var(--frame-bleed-x, 0px)) var(--space-4);
-  border-radius: 0 0 var(--hero-radius) var(--hero-radius);
-  background: var(--head-gradient);
-  box-shadow: var(--shadow-1);
-  color: var(--text);
-}
-.notice:empty + .band {
-  margin-top: calc(-1 * var(--frame-bleed-top, 0px));
-}
-.band[data-shape='round'] {
-  --hero-radius: var(--shape-round);
-}
-.band[data-shape='sharp'] {
-  --hero-radius: var(--shape-sharp);
+  /* The frame's variants only change arrangement and typography; the hue is the plate and the sub-navigation's chip. */
+  overflow: clip;
 }
 .notice {
   margin-bottom: var(--space-3);
@@ -29,90 +12,61 @@
 .notice:empty {
   display: none;
 }
+.notice:empty + .band {
+  margin-top: calc(-1 * var(--frame-bleed-top, 0px));
+}
+/* The inner box follows the page container (same width variant, same left edge), so head and page line up. */
 .inner {
-  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'eyebrow actions'
-    'title extra'
-    'figure extra';
+    'column column';
   align-items: start;
   gap: var(--space-1) var(--space-5);
   width: 100%;
   max-width: var(--head-max, none);
-  min-height: var(--head-min-h, 12.5rem);
+  min-height: var(--head-h);
   margin-inline: auto;
   padding: var(--space-4) var(--frame-bleed-x, var(--space-5)) var(--space-5);
 }
-.band[data-size='compact'] {
-  --head-min-h: 6rem;
+.inner[data-width='narrow'] {
+  --head-max: calc(var(--page-narrow) + 2 * var(--frame-bleed-x, var(--space-5)));
+}
+.inner[data-width='content'] {
+  --head-max: calc(var(--page-content) + 2 * var(--frame-bleed-x, var(--space-5)));
+}
+.inner[data-width='wide'] {
+  --head-max: calc(var(--page-wide) + 2 * var(--frame-bleed-x, var(--space-5)));
 }
 .band[data-size='compact'] .inner {
   padding-block: var(--space-3) var(--space-4);
-}
-/* Decoration layers: the area's pattern (off in "Ruhig") and the module's backdrop (sky); both clipped to the band's corners. */
-.pattern,
-.backdrop {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-}
-.pattern {
-  background-image: var(--area-pattern, none);
-  background-size: var(--area-pattern-size, auto);
-  opacity: var(--pattern-head);
-}
-.backdrop:empty {
-  display: none;
-}
-.band > :not(.pattern, .backdrop) {
-  position: relative;
-}
-/* A night sky is dark whatever the theme: the head's text switches to the light ink (tokens.css --sky-night-ink). */
-.band:has([data-sky='night']) {
-  --text: var(--sky-night-ink);
-  color: var(--text);
 }
 .eyebrow {
   grid-area: eyebrow;
   /* The row is as tall as the 44 px actions: the label and its plate sit on their middle line. */
   align-self: center;
+}
+.actions {
+  grid-area: actions;
+  align-self: center;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-2);
+}
+/* The content column: 70 rem at most, left-aligned, whatever the page width (identity v3.1, F01). */
+.column {
+  grid-area: column;
   min-width: 0;
-  margin: 0;
-  font-size: var(--text-caps);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text);
-}
-/* The icon plate: the module's one solid spot of colour in the head (ink on the hue, AA by the hue contrast rule). */
-.plate {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--module-color);
-  color: var(--surface);
-}
-:global(:root[data-theme='dark']) .plate {
-  color: var(--bg);
+  max-width: var(--page-content);
 }
 .title {
-  grid-area: title;
   min-width: 0;
 }
 .title:empty,
-.extra:empty,
-.figure:empty,
-.notice:empty {
+.target:empty,
+.extra:empty {
   display: none;
 }
 .title h1 {
@@ -131,79 +85,86 @@
 .band[data-type='serif'] .title h1 {
   font-family: var(--font-serif);
 }
-.figure {
-  grid-area: figure;
+/* One row under the title: figure | signature slot | extra; the L slot takes a row of its own. */
+.body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-6);
+  min-width: 0;
   margin-top: var(--space-3);
 }
-.extra {
-  grid-area: extra;
-  align-self: end;
+.body:not(:has(.target:not(:empty), .signature, .extra:not(:empty), .figure > :not(.target))) {
+  display: none;
+}
+.figure {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.figure:not(:has(> :not(:empty))) {
+  display: none;
+}
+.figure > .target:not(:empty) + * {
+  display: none;
+}
+/* The signature slot (identity v3.1, F02): S = a 4 rem mark, M = a block of up to 36 rem, L = the whole column. The
+   frame's default steps in after a beat, so a page that fills the slot itself shows no swap. */
+.signature {
   display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.signature[data-slot='S'] {
+  flex: 0 1 auto;
+}
+.signature[data-slot='S'][data-default='true'] {
+  flex: 0 0 auto;
+  width: 4rem;
+}
+.signature[data-slot='M'] {
+  flex: 0 1 36rem;
+  max-width: 36rem;
+}
+.signature[data-slot='L'] {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 100%;
+}
+.signature > .target:not(:empty) {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.signature[data-default='true'] > :not(.target) {
+  animation: signatureIn 0ms 150ms both;
+}
+@keyframes signatureIn {
+  from {
+    opacity: 0;
+  }
+}
+.extra {
+  flex: 1 1 12rem;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
 }
-.actions {
-  grid-area: actions;
-  align-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-/* A head with nothing on the right lets the title use the full width. */
-.inner:not(:has(.extra:not(:empty))) {
-  grid-template-areas:
-    'eyebrow actions'
-    'title title'
-    'figure figure';
-}
 
-/* ---- Variants: height, arrangement, typography ---- */
-/* kennzahl: the figure is the page; the title steps back. */
+/* ---- Variants: arrangement and typography (C10: the height class is the token, not the content) ---- */
 .band[data-head='kennzahl'] .title h1,
 .band[data-head='zeit'] .title h1,
-.band[data-head='cover'] .title h1 {
-  font-size: var(--text-2xl);
-}
-.band[data-head='kennzahl'] .figure {
-  margin-top: var(--space-4);
-}
-/* zeit: the day number and the hour strip. */
-.band[data-head='zeit'] .extra {
-  align-items: flex-end;
-}
-/* fortschritt, regal: title large, the module's rings or tiles on the right. */
+.band[data-head='cover'] .title h1,
+.band[data-head='tresor'] .title h1,
 .band[data-head='himmel'] .title h1 {
   font-size: var(--text-2xl);
+}
+.band[data-head='himmel'] .title h1 {
   font-weight: var(--weight-light);
-}
-/* tresor: a framed head, the lock status on the right; fine rules as pattern are on by the vault area. */
-.band[data-head='tresor'] {
-  box-shadow: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--module-color) 28%, var(--border));
-}
-.band[data-head='tresor'] .title h1 {
-  font-size: var(--text-2xl);
-}
-/* schreib: paper. No tint, a hairline edge, ruled lines along the bottom and a serif title. */
-.band[data-head='schreib'] {
-  background: var(--surface);
-  box-shadow: none;
-  border-bottom: 1px solid var(--border);
-}
-.band[data-head='schreib']::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  height: 1.125rem;
-  border-radius: inherit;
-  background: repeating-linear-gradient(
-    0deg,
-    color-mix(in srgb, var(--module-color) 32%, var(--surface)) 0 1px,
-    transparent 1px 0.375rem
-  );
-  pointer-events: none;
 }
 .band[data-head='schreib'] .title h1 {
   font-family: var(--font-serif);
@@ -211,44 +172,55 @@
   font-weight: var(--weight-semibold);
   letter-spacing: 0;
 }
-/* fokus: one thing large; the title is the module's name at a small size. */
+/* fokus: the one thing large beside the module's name, which steps back. */
 .band[data-head='fokus'] .title h1 {
   font-size: var(--text-xl);
 }
+/* Compact heads: title, figure and the S mark on one line; nothing stacks. */
+.band[data-size='compact'] .column {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+}
+.band[data-size='compact'] .title {
+  flex: 0 1 auto;
+}
+.band[data-size='compact'] .body {
+  flex: 1 1 auto;
+  align-items: center;
+  margin-top: 0;
+}
 
-/* Phone: label and actions share one line, the title follows; hero 8.5 rem, compact 5 rem. Scrolled, the head scrolls away
-   like content (no height change, so the page never jumps) and a one-line bar fades in at the top (core/shell/heroCollapse.ts). */
+/* Phone: label and actions share one line, the title follows; the row under it stacks and the signature shrinks
+   (never hidden: it is the thing the head is recognised by). Scrolled, the head scrolls away like content and a
+   one-line bar fades in at the top (core/shell/heroCollapse.ts). */
 @media (max-width: 899px) {
   .inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'eyebrow actions'
-      'title title'
-      'figure figure'
-      'extra extra';
-    min-height: var(--head-min-h-phone, 8.5rem);
     padding: var(--space-3) var(--frame-bleed-x, var(--space-4)) var(--space-4);
   }
-  .band[data-size='compact'] {
-    --head-min-h-phone: 5rem;
+  .body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
   }
-  .inner:not(:has(.extra:not(:empty))) {
-    grid-template-areas:
-      'eyebrow actions'
-      'title title'
-      'figure figure';
+  .signature {
+    /* Layout-true scaling (zoom, not transform): the block keeps its place in the flow at 70 %. */
+    zoom: 0.7;
+  }
+  .signature[data-slot='S'] {
+    zoom: 0.85;
+  }
+  .signature[data-slot='M'] {
+    flex-basis: auto;
+    max-width: 100%;
+  }
+  .band[data-size='compact'] .column {
+    flex-direction: row;
   }
   .extra {
-    align-self: start;
-    margin-top: var(--space-3);
-  }
-  .eyebrow {
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .eyebrow > span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex-basis: auto;
+    width: 100%;
   }
   /* The write button keeps its icon and its accessible name; the words come back with the width. */
   .writeLabel {
@@ -288,11 +260,5 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-}
-/* The signature's own motion (Sky drift etc.) never runs with less motion; static art stays. */
-@media (prefers-reduced-motion: reduce) {
-  .band {
-    scroll-behavior: auto;
   }
 }
