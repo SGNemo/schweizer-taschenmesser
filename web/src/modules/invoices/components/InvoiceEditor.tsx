@@ -93,7 +93,9 @@ function Form({
       setError(t.money.currencyInvalid);
       return;
     }
-    const payments = existing?.payments;
+    // Part payments are added and removed in this dialog (PaymentsSection writes them at once):
+    // take the stored ones, not those of the moment the dialog opened.
+    const payments = existing ? (await invoiceRepo.get(existing.id))?.payments : undefined;
     const paidParts = (payments ?? []).reduce((sum, p) => sum + p.amountMinor, 0);
     if (amountMinor < paidParts) {
       setError(t.invoices.ext.payment.tooMuch(formatMoneyInput(paidParts)));
