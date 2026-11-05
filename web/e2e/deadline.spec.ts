@@ -11,7 +11,7 @@ test.describe('Deadlines (B08, V15)', () => {
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Zeitschrift');
     await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
-    // 4 calendar months before 31 Dec → deadline 2026-08-31, already behind us
+    // 4 calendar months before 31 Dec → deadline 2026-08-31, already behind us. The calendar shows counts, never a title (C04).
     await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('4');
     await dialog.getByLabel('Einheit').selectOption('months');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -22,7 +22,7 @@ test.describe('Deadlines (B08, V15)', () => {
     await expect(row).not.toContainText('Jetzt kündigen');
 
     await ready(page, '/calendar?view=week&date=2026-08-31');
-    await expect(page.getByText(/Frist vorbei: Zeitschrift/).first()).toBeVisible();
+    await expect(page.getByText(/Frist vorbei: 1 Unterlage/).first()).toBeVisible();
   });
 
   test('subscription: notice in months, "Kündigen bis" large, no 31-day grid', async ({ page }) => {
