@@ -8,8 +8,13 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Astro 7**, static output, no client JavaScript except `public/theme.js` (theme switch, ~1 KB,
   stores the choice in `localStorage` only). No cookies, no analytics, no external scripts or
   fonts. Every link to GitHub/Ko-fi carries `rel="noopener"`.
-- **Design** = Nemo tokens: `src/styles/tokens.css` is a subset of `web/src/ui/tokens.css`;
-  `scripts/tokens.test.mjs` fails when a colour differs. Logo, favicons, fonts (Inter Variable,
+- **Design** = Nemo tokens: `src/styles/tokens.css` is a subset of `web/src/ui/tokens.css` (colours, scale and
+  the identity v3 set: `--mod-*` hues, head/widget/group tints, pattern strengths); `scripts/tokens.test.mjs`
+  fails when a value differs. `src/styles/identity.css` maps `data-hue`/`data-hue2`/`data-area` to
+  `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). Module
+  cards and the nine head shapes are drawn by `IdentityMini.astro` from the catalogue; `scripts/catalog.test.mjs`
+  fails when a catalogue icon, hue, head or widget variant has no shape here (design rounds: `docs/design/site/`).
+  Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, fonts (Inter Variable,
   OFL) and the social preview are copied at build time from `web/brand`, `web/public`,
   `docs/brand` and `node_modules/@fontsource-variable/inter` (`scripts/copy-brand.mjs`, copies are
   git-ignored).
@@ -32,13 +37,16 @@ src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset 
 src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
+src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in five languages,
+                       icon, hue, hue2, head and widget variant per module
 src/components/        Hero, Features, Data, Focus, Compare, Support, Install, Header, Footer,
-                       Shot (one screenshot in both themes), Icon (inline Lucide)
+                       Shot (one screenshot in both themes, window or phone frame), Icon (inline Lucide),
+                       IdentityMini (widget miniatures and head silhouettes, no text, no data)
 src/pages/             index, impressum, datenschutz, 404, robots.txt.ts · en/index, en/imprint, en/privacy
 src/assets/screens/    <page>-{dark,light}.png from the seeded app (npm run app:screenshots; Astro makes AVIF/WebP)
 public/                .well-known/security.txt, _headers, theme.js
-scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse,
-                       screenshots (site), app-screenshots (app), *.test.mjs
+scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse (--dark audits
+                       the dark theme), screenshots (site), app-screenshots (app), *.test.mjs
 ```
 
 ## Commands (in `site/`)
@@ -47,11 +55,11 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run dev` | dev server (run `npm run build` once first so the brand copies exist) |
 | `npm run build` | prebuild (release fetch + brand copy), then `astro build` → `dist/` |
 | `npm run preview` | serves `dist/` on <http://localhost:4321> |
-| `npm test` | unit tests: tokens and Ko-fi URL pinned to the app, release parsing |
+| `npm test` | unit tests: tokens and Ko-fi URL pinned to the app, catalogue shapes and icons, release parsing |
 | `npm run check` | `astro check` (types, templates) + tests |
 | `npm run check:links` | linkinator over `dist/` (internal and external) |
 | `npm run check:downloads` | the download URLs answer 200 against the real latest release |
-| `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/` |
+| `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/`; `-- --dark` audits a copy with the dark theme forced |
 | `npm run screenshots` | renders the preview at 360/768/1280/1920, light and dark → `out/` |
 | `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
 | `npm run app:screenshots -- --readme` | the README pictures (overview, calendar, finance, toolbox, settings; desktop 1920×1080 and phone 412×915, light and dark, WebP) → `../docs/assets/screenshots/` |

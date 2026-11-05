@@ -88,6 +88,10 @@ pub struct NodeView {
     /// Bytes per age bucket of the files below (relative to the scan start).
     pub age_bytes: [u64; AGE_COUNT],
     pub child_count: u32,
+    /// Only in live snapshots of a running scan: the walk below this entry has not returned yet, so
+    /// its numbers still grow. Always false in the finished tree (and left out of the JSON then).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub pending: bool,
     /// Path relative to the scan root (OS separator; empty for the root). Only filled in
     /// query results, where the caller needs to show where an entry lives.
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -288,6 +292,7 @@ impl Tree {
             kind_bytes: n.kind_bytes,
             age_bytes: n.age_bytes,
             child_count: n.children.len() as u32,
+            pending: false,
             rel_path: String::new(),
         }
     }

@@ -20,6 +20,11 @@ vi.mock('../own/draw', () => ({
 }));
 import MapsPage from '../routes/MapsPage';
 
+// The page tests build maps and run searches against fake services: 0.2 to 2.2 s each on a quiet machine, and
+// several wait up to 5 s for the next screen (`slow`). The 5 s default per test is then used up on a loaded CI
+// runner (develop run 41953001598: "Test timed out in 5000ms" in the search test with two such waits).
+vi.setConfig({ testTimeout: 20_000 });
+
 const requests: string[] = [];
 const hostOf = (url: string): string => new URL(url).host;
 let blockTiles = false;

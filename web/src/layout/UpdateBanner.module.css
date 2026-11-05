@@ -85,3 +85,17 @@
     margin: var(--space-3) var(--space-6) 0;
   }
 }
+
+/* A build without a note for the user: one quiet line instead of a card. */
+.versionEmpty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+.muted {
+  color: var(--text-3);
+  font-weight: var(--weight-medium);
+}
+.part:has(> .versionEmpty) + .part:has(> .versionEmpty) {
+  margin-top: var(--space-1);
+}

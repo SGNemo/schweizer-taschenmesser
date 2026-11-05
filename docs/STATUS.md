@@ -8,6 +8,8 @@ Shell-Fixes (`fix/shell-topbar-focus`): Handy-Topbar nach Seitenwechsel sofort d
 
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
 
+Website auf Identität v3.1, Paket 1 (`design/site-identity-v3`): Designrunde 4 (Richtung B „Schaufenster“), Identity-Tokens und `identity.css`, Modulkarten in Modulfarbe mit Widget-Skizze aus dem Katalog (`gen:modules` liefert `icon`, `hue`, `head`, `widget`), Kopf-Silhouetten-Leiste, keine Streifen, keine Farbfläche; Paket 2 (neue Screenshots, OG-Bild) nach Identity-Paket 0–3.
+
 Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.
 
 Identität v3, Paket 2 (`feat/identity-v3-wissen`): Notizen (Reiter), Merkliste (Pinnwand, Kopfzahl), Feeds (Zeitungskopf, Aufmacher, Spalten), Chat (Sprechblasen) und Browser (Adressleiste) auf die v3-Kopf- und Widget-Varianten umgebaut; Paket 3 (Mail, Musik, Downloads) folgt.
@@ -28,6 +30,8 @@ Identität v3, Gruppen Planen + Geld (`feat/identity-v3-planen-geld`): Kalender 
 Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von 2): Status-Kopf mit sechs Kennzahl-Kacheln (Sicherheit, Sync, Backup, Updates, KI, Speicher), gruppierte Kategorienliste im Sidebar-Stil mit Farb-Plättchen und Punkt „vom Standard abweichend“, Kategorie- und Modul-Köpfe; Funktion, Schlüssel und Standardwerte unverändert. Paket 2: Modul- und Werkzeug-Bibliothek.
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
+
+Dieser PC – Scan blockiert nichts mehr (`fix/disk-scan-live`): eine ruhige Statuszeile mit Pause/Abbrechen statt Balken und Zählern (auch auf der Laufwerke-Seite), Karte und Ordnerliste wachsen alle 1,5 s während des Scans, unfertige Ordner sind als „zählt noch“ markiert, Wegnavigieren und Zurück zeigt den Stand sofort; Poll statt Event nach Messung ([features/disk-live-scan.md](features/disk-live-scan.md)); PR gegen `develop`; Handtest D18 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 Änderungsprotokoll (`feat/changelog-system`): Notizen je PR in `.changes/`, `npm run changelog:release` baut `CHANGELOG(.de).md` und `changelog.json`, die App zeigt es offline; [howto/changelog.md](howto/changelog.md).
 Feeds (Modul, `feat/feeds-module`, Paket 2b): Abo-Liste für RSS/Atom/Podcasts mit Gruppen, Widget, Startdaten, Einstellung „Nach Gruppen ordnen“; ruft nichts ab (kein Reader); OPML-Import/-Export (2c, `feat/feeds-opml`): Datei oder eingefügte Adressen, Gruppen aus Ordnern, Export als OPML; Handtest IA7.
@@ -228,3 +232,4 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `feat/settings-connect-ai`: Einstellungen Paket 2b – KI und Verbindungen auf den Schritt-Karten (`ConnectParts`); danach Paket 3 (Allgemein, Darstellung, Benachrichtigungen, Teilen).
 - Auf `feat/settings-compact`: Einstellungen Paket 3a – schlanke Schnellleiste (Ruhe-Hinweis nur bei laufender Pause), engere Abstände, „Mit Partner teilen“ in Schritten und Spalten.
 - Auf `feat/settings-cards`: Einstellungen Paket 3b – Benachrichtigungen mit Zustandsbanner (Aktivieren, Push), Aktionen als normale Schaltflächen; Allgemein und Darstellung bleiben (schon Zeilenlisten).
+- Auf `feat/settings-choices`: Auswahllisten mit Titel und Erklärung (`Checkbox` mit `description`, `ChoiceList`), Schnellerfassung mit Banner, Fakten und Schritten.

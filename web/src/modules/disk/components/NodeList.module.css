@@ -62,6 +62,9 @@
 .nameCell {
   min-width: 0;
 }
+.plain {
+  cursor: default;
+}
 .name {
   display: flex;
   align-items: center;

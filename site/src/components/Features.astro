@@ -1,24 +1,31 @@
 ---
 import { t, type Locale } from '../i18n';
-import Icon from './Icon.astro';
-import Shot from './Shot.astro';
-// Generated from the app's own registry (`npm run gen:modules` in web/), all five languages.
+import Icon, { type IconName } from './Icon.astro';
+import IdentityMini from './IdentityMini.astro';
+// Generated from the app's own registry (`npm run gen:modules` in web/): names in five languages, plus
+// icon, hue, head and widget variant from every manifest's `identity`, so the site keeps no second mapping.
 import catalog from '../catalog/modules.json';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
 const locale = Astro.props.locale;
 const m = s.features.modules;
+type AreaId = keyof typeof s.features.areas;
 const areas = catalog.areas.map((a) => ({
   id: a.id,
   name: a.name[locale],
+  subtitle: s.features.areas[a.id as AreaId],
   items: catalog.modules
     .filter((x) => x.area === a.id)
     .map((x) => ({
       id: x.id,
       name: x.name[locale],
       text: x.short[locale],
-      note: [m.status[x.status as 'default' | 'optional' | 'preview'], x.platforms ? m.only[x.platforms as 'windows' | 'android' | 'both'] : null]
+      icon: x.icon as IconName,
+      hue: x.hue,
+      widget: x.widget,
+      // "on by default" is the normal case and stays quiet; optional, preview and platform limits are said.
+      note: [x.status === 'default' ? null : m.status[x.status as 'optional' | 'preview'], x.platforms ? m.only[x.platforms as 'windows' | 'android' | 'both'] : null]
         .filter(Boolean)
         .join(', '),
     })),
@@ -28,183 +35,134 @@ const areas = catalog.areas.map((a) => ({
   <div class="wrap">
     <p class="eyebrow">{s.features.eyebrow}</p>
     <h2 id="features-title">{s.features.title}</h2>
-    <ul class="tiles">
-      {s.features.items.map((f) => (
-        <li class="tile">
-          <div class="mini" data-shot={f.shot}>
-            <Shot name={f.shot} alt={f.alt} sizes="(min-width: 64rem) 22rem, (min-width: 30rem) 50vw, 100vw" widths={[480, 720, 960]} />
-          </div>
-          <h3><Icon name={f.icon} size={18} />{f.title}</h3>
-          <p>{f.text}</p>
-        </li>
-      ))}
-    </ul>
-    <p class="more">{s.features.more}</p>
-    <details class="all">
-      <summary>{m.summary(catalog.modules.length)}</summary>
-      <div class="areas">
-        {areas.map((a) => (
-          <section aria-labelledby={`area-${a.id}`}>
+    <p class="intro">{s.features.intro(catalog.modules.length, catalog.areas.length)}</p>
+    <div class="areas">
+      {areas.map((a) => (
+        <section class="area" data-area={a.id} aria-labelledby={`area-${a.id}`}>
+          <div class="ahead">
             <h3 id={`area-${a.id}`}>{a.name}</h3>
-            <dl>
-              {a.items.map((x) => (
-                <div>
-                  <dt>{x.name} <span class="state">({x.note})</span></dt>
-                  <dd>{x.text}</dd>
+            <span class="acount">{s.features.count(a.items.length)}</span>
+            <p class="asub">{a.subtitle}</p>
+          </div>
+          <ul class="cards">
+            {a.items.map((x) => (
+              <li class="mcard" data-hue={x.hue}>
+                <div class="mhead">
+                  <span class="plate"><Icon name={x.icon} size={18} /></span>
+                  <span class="mname">{x.name}{x.note && <span class="state">{x.note}</span>}</span>
                 </div>
-              ))}
-            </dl>
-          </section>
-        ))}
-      </div>
-      <p class="hint">{m.hint}</p>
-    </details>
+                <IdentityMini kind="widget" variant={x.widget} />
+                <p>{x.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+    <p class="hint">{m.hint}</p>
   </div>
 </section>
 
 <style>
-  .tiles {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    gap: var(--space-4);
-    grid-template-columns: 1fr;
-    margin-top: var(--space-6);
-  }
-  .tile {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-1);
-    transition: border-color var(--dur-fast);
-  }
-  .tile:hover {
-    border-color: var(--border-strong);
-  }
-  /* Focal point of each 1280×720 shot inside the 16:9 tile (object-position + zoom origin).
-     Attributes instead of inline styles: the CSP allows no style="" (site.yml checks it). */
-  .mini {
-    --pos: 50% 50%;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-  }
-  .mini[data-shot='home'] { --pos: 50% 55%; }
-  .mini[data-shot='calendar'] { --pos: 58% 62%; }
-  .mini[data-shot='todos'] { --pos: 62% 72%; }
-  .mini[data-shot='finance'] { --pos: 45% 66%; }
-  .mini[data-shot='vault'] { --pos: 56% 70%; }
-  .mini[data-shot='reminders'] { --pos: 56% 82%; }
-  .mini :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: var(--pos);
-    transform: scale(1.6);
-    transform-origin: var(--pos);
-  }
-  .tile h3 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: var(--text-md);
-    padding: var(--space-4) var(--space-4) 0;
-  }
-  .tile h3 :global(svg) {
-    color: var(--accent);
-  }
-  .tile p {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    line-height: 1.5;
-    padding: var(--space-1) var(--space-4) var(--space-4);
-  }
-  .more {
-    margin-top: var(--space-5);
-    font-size: var(--text-sm);
+  .intro {
+    margin-top: var(--space-3);
     color: var(--text-muted);
     max-width: var(--measure);
-  }
-  .all {
-    margin-top: var(--space-5);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-  .all summary {
-    cursor: pointer;
-    min-height: 3.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    font-weight: var(--weight-medium);
-    list-style: none;
-  }
-  .all summary::-webkit-details-marker {
-    display: none;
-  }
-  .all summary::after {
-    content: '+';
-    color: var(--text-3);
-    font-size: var(--text-xl);
-    flex: none;
-  }
-  .all[open] summary::after {
-    content: '–';
-  }
-  .all summary:hover {
-    color: var(--accent);
   }
   .areas {
     display: grid;
-    gap: var(--space-5);
-    grid-template-columns: 1fr;
-    padding-bottom: var(--space-4);
+    gap: var(--space-4);
+    margin-top: var(--space-6);
   }
-  .areas h3 {
-    font-size: var(--text-label);
+  /* An area block: the library's neutral group tint, a hairline all around, the area's pattern behind it. */
+  .area {
+    position: relative;
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--text-3) var(--group-tint), var(--surface));
+    isolation: isolate;
+  }
+  .area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--area-pattern, none);
+    background-size: var(--area-pattern-size, auto);
+    opacity: var(--pattern-widget);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .ahead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .ahead h3 {
+    font-size: var(--text-lg);
+  }
+  .acount {
+    font-size: var(--text-meta);
+    font-weight: var(--weight-medium);
+    font-variant-numeric: var(--font-num);
+  }
+  .asub {
+    flex-basis: 100%;
+    font-size: var(--text-sm);
     color: var(--text-muted);
-    padding-bottom: var(--space-2);
   }
-  .areas dl {
+  .cards {
+    list-style: none;
     margin: 0;
+    padding: 0;
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
     gap: var(--space-3);
   }
-  .areas dt {
-    font-weight: var(--weight-medium);
-    font-size: var(--text-sm);
+  /* A module card: head zone in the flat tint of its hue, the plate as the one solid spot, text in --text. */
+  .mcard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
   }
-  .areas dd {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    line-height: 1.5;
+  .mhead {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: calc(-1 * var(--space-1));
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--head-flat);
+    color: var(--text);
+  }
+  .mname {
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-label);
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
   .state {
     font-weight: normal;
+    font-size: var(--text-meta);
     color: var(--text-muted);
+    margin-left: 0.3rem;
+  }
+  .mcard p {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.45;
   }
   .hint {
+    margin-top: var(--space-5);
     color: var(--text-muted);
     font-size: var(--text-sm);
-    padding-bottom: var(--space-4);
     max-width: var(--measure);
-  }
-  @media (min-width: 30rem) {
-    .areas {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .tiles {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  @media (min-width: 64rem) {
-    .tiles {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-5);
-    }
   }
 </style>
