@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { entryText, groupForDisplay, newToken, selectChangelog, stripBuild } from './select';
+import {
+  devBuildNumber,
+  entryText,
+  groupForDisplay,
+  newToken,
+  selectChangelog,
+  stripBuild,
+} from './select';
 import { isUnread } from './seen';
 import type { ChangelogData, ChangelogEntry } from './types';
 
@@ -119,5 +126,14 @@ describe('newToken', () => {
   });
   it('is undefined when there is nothing to show', () => {
     expect(newToken(selectChangelog({ areas: {}, versions: [] }, '1.0.0'))).toBeUndefined();
+  });
+});
+
+describe('devBuildNumber', () => {
+  it('reads the build of a Dev-Preview version only', () => {
+    expect(devBuildNumber('1.0.0-dev.683+abc1234')).toBe(683);
+    expect(devBuildNumber('1.0.0-dev.686')).toBe(686);
+    expect(devBuildNumber('1.0.0')).toBeUndefined();
+    expect(devBuildNumber('1.1.0-beta.2')).toBeUndefined();
   });
 });

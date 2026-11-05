@@ -35,6 +35,8 @@ export const about: Strings['about'] = {
   },
   changes: {
     history: 'What happened in the latest versions',
+    build: (n: number) => `Build ${n}`,
+    installed: 'installed',
     unreleased: 'Unreleased',
     unreleasedNote: 'Not released yet, only in this preview.',
     highlights: 'Highlights',

@@ -16,6 +16,8 @@ export interface ChangeEntry {
   de: string;
   en: string;
   pr?: number;
+  /** Dev-Preview only: the build (commit count) the note came with; never read from a file. */
+  build?: number;
 }
 
 type Label = { de: string; en: string };

@@ -9,6 +9,8 @@ export interface ChangelogEntry {
   de: string;
   en: string;
   pr?: number;
+  /** Preview builds only: the build number the note came with. */
+  build?: number;
 }
 export interface ChangelogVersion {
   /** 'x.y.z', a pre-release, or 'unreleased'. */
