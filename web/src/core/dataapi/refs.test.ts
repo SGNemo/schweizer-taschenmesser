@@ -110,6 +110,7 @@ it('an entry of another collection with the same id is no dependency (and nothin
   const rows = await importJson(
     [
       { collection: 'lists', id: INBOX_ID },
+      { collection: 'task', id: INBOX_ID, title: 'kein Eintrag' },
       { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
     ],
     'j8',

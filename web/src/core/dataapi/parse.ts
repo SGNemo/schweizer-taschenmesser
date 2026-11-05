@@ -362,7 +362,7 @@ async function pointsToChild(
   collection: string,
   lookup: RefLookup,
 ): Promise<boolean> {
-  const inBatch = drafts.find((d) => d.id === id);
+  const inBatch = drafts.find((d) => d.id === id && d.collection === collection);
   if (inBatch && inBatch.raw[field.name] !== undefined && inBatch.raw[field.name] !== null)
     return true;
   if (inBatch && !inBatch.updateId) return false;
