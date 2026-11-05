@@ -9,7 +9,9 @@ import { deleteBlob } from '@/core/blobs';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { isRestorable } from '@/core/db/trash';
+import { formatMoney } from '@/core/money';
 import { loadSyncConfig } from '@/core/sync/service';
+import { formatDay } from '@/core/time/dates';
 import { now } from '@/core/time/now';
 import { trashRetentionMs } from './settings';
 
@@ -27,7 +29,11 @@ export type TrashKind =
   | 'gift'
   | 'invoice'
   | 'budget'
-  | 'goal';
+  | 'goal'
+  | 'account'
+  | 'booking'
+  | 'habit'
+  | 'session';
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 /** First non-empty line of a text, for records without a real title (a note with only a body). */
@@ -43,11 +49,22 @@ interface TrashCollection {
   kind: (row: Record<string, unknown>) => TrashKind;
   /** Extra clean-up when the record is removed for good. */
   onPurge?: (id: string) => Promise<void>;
+  /**
+   * Rows of another table that are deleted together with this record (an account's bookings, a
+   * habit's days): restored with it. A child row is listed on its own only while its parent is active.
+   */
+  children?: { table: string; parentKey: string };
+  /** Rows that are never offered (imported or automatically booked data). */
+  skip?: (row: Record<string, unknown>) => boolean;
 }
+
+/** Children deleted up to this long before their parent count as deleted together with it. */
+const TOGETHER_MS = 60_000;
 
 /**
  * The collections that show up in "Zuletzt gelöscht": what people create by hand. Passwords
- * (`accounts`) never do; neither do bulk or derived data (bank transactions, list items, caches).
+ * (`accounts`) never do; neither do bulk or derived data (imported bank transactions, automatic
+ * bookings, list items, caches).
  */
 export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
   {
@@ -79,6 +96,34 @@ export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
     table: 'calendar_event',
     title: (r) => String(r.title ?? ''),
     kind: (r) => (r.kind === 'reminder' ? 'reminder' : 'event'),
+  },
+  {
+    table: 'finance_account',
+    title: (r) => str(r.name),
+    kind: () => 'account',
+    children: { table: 'finance_transaction', parentKey: 'accountId' },
+  },
+  {
+    table: 'finance_transaction',
+    title: (r) =>
+      str(r.payee).trim() ||
+      str(r.note).trim() ||
+      formatMoney(typeof r.amountMinor === 'number' ? r.amountMinor : 0),
+    kind: () => 'booking',
+    // Bank imports (`imp-…` ids) and bookings made by other modules stay out, as before.
+    skip: (r) => String(r.id).startsWith('imp-') || r.sourceRef !== undefined,
+  },
+  {
+    table: 'habits_goal',
+    title: (r) => str(r.name),
+    kind: () => 'habit',
+    children: { table: 'habits_entry', parentKey: 'goalId' },
+  },
+  {
+    table: 'timetrack_session',
+    title: (r) =>
+      str(r.note).trim() || `${formatDay(str(r.date), 'd. MMM yyyy')} ${str(r.startTime)}`,
+    kind: () => 'session',
   },
 ];
 
@@ -115,14 +160,27 @@ export async function listTrash(
 ): Promise<TrashEntry[]> {
   const window = retentionMs ?? (await trashRetentionMs());
   const queued = new Set(await readQueue(database));
+  // Child rows (an account's bookings) are only offered on their own while their parent is active.
+  const activeParents = new Map<string, { key: string; ids: Set<string> }>();
+  for (const c of TRASH_COLLECTIONS) {
+    if (!c.children) continue;
+    const ids = (await database
+      .table<{ id: string; deletedAt: number | null }, string>(c.table)
+      .filter((r) => r.deletedAt === null)
+      .primaryKeys()) as string[];
+    activeParents.set(c.children.table, { key: c.children.parentKey, ids: new Set(ids) });
+  }
   const out: TrashEntry[] = [];
   for (const c of TRASH_COLLECTIONS) {
+    const parents = activeParents.get(c.table);
     const rows = await database
       .table<Record<string, unknown> & { id: string; deletedAt: number | null }, string>(c.table)
       .filter((r) => isRestorable(r.deletedAt, at, window))
       .toArray();
     for (const r of rows) {
       if (queued.has(keyOf(c.table, r.id))) continue;
+      if (c.skip?.(r)) continue;
+      if (parents && !parents.ids.has(String(r[parents.key]))) continue;
       const deletedAt = r.deletedAt as number;
       out.push({
         table: c.table,
@@ -138,11 +196,29 @@ export async function listTrash(
 }
 
 /** Brings a record back (a repo write, so it syncs and can be undone with Ctrl+Z). */
-export async function restoreEntry(entry: Pick<TrashEntry, 'table' | 'id'>): Promise<void> {
-  if (!TRASH_COLLECTIONS.some((c) => c.table === entry.table)) {
-    throw new Error(`${entry.table} is not part of "Zuletzt gelöscht"`);
-  }
-  await createRepo(entry.table, z.looseObject({})).restore(entry.id);
+export async function restoreEntry(
+  entry: Pick<TrashEntry, 'table' | 'id'>,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
+  const c = TRASH_COLLECTIONS.find((x) => x.table === entry.table);
+  if (!c) throw new Error(`${entry.table} is not part of "Zuletzt gelöscht"`);
+  const repo = createRepo(entry.table, z.looseObject({}), database);
+  const deletedAt = (await repo.table.get(entry.id))?.deletedAt;
+  await repo.restore(entry.id);
+  if (!c.children || typeof deletedAt !== 'number') return;
+  // The rows deleted together with it (`deleteAccount` removes the bookings first, then the account).
+  const { table, parentKey } = c.children;
+  const kids = createRepo(table, z.looseObject({}), database);
+  const ids = (await kids.table
+    .filter(
+      (r) =>
+        (r as Record<string, unknown>)[parentKey] === entry.id &&
+        typeof r.deletedAt === 'number' &&
+        r.deletedAt >= deletedAt - TOGETHER_MS &&
+        r.deletedAt <= deletedAt,
+    )
+    .primaryKeys()) as string[];
+  for (const id of ids) await kids.restore(id);
 }
 
 /**
