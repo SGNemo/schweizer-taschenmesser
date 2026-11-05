@@ -18,7 +18,11 @@ export function ChangelogHistory({ version }: { version: string }) {
   const lang = useLang();
   const [data, setData] = useState<ChangelogData | undefined>();
   useEffect(() => {
-    void loadChangelog().then(setData);
+    let alive = true;
+    void loadChangelog().then((d) => alive && setData(d));
+    return () => {
+      alive = false;
+    };
   }, []);
   const view = data && version ? selectChangelog(data, version) : undefined;
   const token = view ? newToken(view) : undefined;
