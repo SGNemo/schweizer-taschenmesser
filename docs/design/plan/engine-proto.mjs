@@ -60,7 +60,11 @@ export function toUnits(item, s) {
  */
 function latestStart(u, horizon, s) {
   if (!u.item.due?.hard) return undefined;
-  const first = horizon[0]?.date ?? u.item.due.date;
+  // A due beyond the horizon is no pressure inside it (otherwise far invoices would be forced onto
+  // the last day and move again on every run).
+  if (horizon.length === 0 || u.item.due.date > horizon.at(-1).date)
+    return undefined;
+  const first = horizon[0].date;
   const room = (date) => {
     const d = horizon.find((x) => x.date === date);
     return d ? capacity(d, s).raw >= u.min : false;
@@ -159,16 +163,17 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     }
 
     // 3. everything else: priority, then what was already planned for this day, then soft due, age.
+    // 2 = was planned for this day (kept), 1 = planned for an earlier day (carried), 0 = new.
     const sticky = (u) => {
       const p = prevByUnit.get(u.id);
-      return p && p.date <= day.date ? p.date : undefined;
+      return !p || p.date > day.date ? 0 : p.date === day.date ? 2 : 1;
     };
     const rest = units
       .filter((u) => eligible(u) && !must.includes(u))
       .sort(
         (a, b) =>
           b.item.prio - a.item.prio ||
-          (sticky(b) ? 1 : 0) - (sticky(a) ? 1 : 0) ||
+          sticky(b) - sticky(a) ||
           cmp(a.item.due?.date ?? "9999", b.item.due?.date ?? "9999") ||
           a.item.createdAt - b.item.createdAt ||
           cmp(a.id, b.id),
@@ -190,19 +195,16 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     for (const u of units) {
       const p = prevByUnit.get(u.id);
       if (p && p.date === day.date && !placed.has(u.id)) {
-        const arrivals = todayList.filter(
-          (a) =>
-            prevByUnit.get(a.unitId)?.date !== day.date && a.reason !== "kept",
-        );
-        const by =
-          arrivals.find((a) =>
-            ["deadline", "deadline-buffer", "pinned", "new"].includes(a.reason),
-          ) ?? arrivals[0];
+        // Who took the room: every unit placed today that was not planned for today before, largest first.
+        const by = todayList
+          .filter((a) => prevByUnit.get(a.unitId)?.date !== day.date)
+          .sort((a, b) => b.min - a.min || cmp(a.unitId, b.unitId))
+          .map((a) => a.unitId);
         bumps.push({
           unitId: u.id,
           day: day.date,
-          by: by?.unitId,
-          cause: by ? "bumped" : "capacity",
+          by,
+          cause: by.length ? "bumped" : "capacity",
         });
       }
     }
@@ -260,12 +262,16 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
     }
   }
   for (const p of prev)
-    if (!placed.has(p.unitId))
+    if (!placed.has(p.unitId)) {
+      const b = bumps.find((x) => x.unitId === p.unitId);
+      const still = units.some((u) => u.id === p.unitId);
       diff.removed.push({
         unitId: p.unitId,
         from: p.date,
-        reason: units.some((u) => u.id === p.unitId) ? "unplaced" : "done",
+        reason: still ? (b?.cause ?? "capacity") : "done",
+        by: b?.by,
       });
+    }
 
   const demand = units.reduce((n, u) => n + u.min, 0);
   const usableTotal = Object.values(load).reduce((n, l) => n + l.usable, 0);
@@ -333,14 +339,18 @@ export function print(title, input, result) {
   console.log(
     `Diff: ${d.added.length} neu · ${d.moved.length} verschoben · ${d.removed.length} weg · ${d.unchanged} unverändert`,
   );
+  const who = (by) =>
+    by?.length ? ` durch ${by.map((id) => `„${name(id)}“`).join(", ")}` : "";
   for (const m of d.moved)
     console.log(
-      `   ${name(m.unitId)}: ${m.from} → ${m.to} (${m.reason}${m.by ? ` durch „${name(m.by)}“` : ""})`,
+      `   ${name(m.unitId)}: ${m.from} → ${m.to} (${m.reason}${who(m.by)})`,
     );
   for (const r of d.removed)
-    console.log(`   ${name(r.unitId)}: weg (${r.reason})`);
+    console.log(
+      `   ${name(r.unitId)}: ${r.reason === "done" ? "erledigt" : `wartet (${r.reason}${who(r.by)})`}`,
+    );
   console.log(
-    `Bedarf ${fmt(result.demandMin)} · planbar ${fmt(result.usableMin)}${result.overflowMin ? ` · ${fmt(result.overflowMin)} mehr geplant als frei` : " · passt"}`,
+    `Bedarf ${fmt(result.demandMin)} · planbar ${fmt(result.usableMin)}${result.overflowMin ? ` · ${fmt(result.overflowMin)} mehr zu tun als frei` : " · passt"}`,
   );
 }
 
@@ -456,4 +466,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const r3 = plan(in3);
   print("S3 Donnerstag frei + Überlast", in3, r3);
+
+  // S4 – Ferne Frist: ein Ding mit harter Frist weit hinter dem Horizont wird nicht erzwungen.
+  const in4 = {
+    today: MON,
+    days: days1,
+    items: ITEMS.concat({
+      id: "k",
+      title: "Jahresabschluss",
+      min: 60,
+      prio: 0,
+      due: { date: "2026-12-20", hard: true },
+      createdAt: 11,
+    }),
+  };
+  const r4 = plan(in4);
+  const far =
+    r4.assignments.find((a) => a.itemId === "k") ??
+    r4.unplaced.find((u) => u.unitId === "k#1");
+  console.log(
+    `\n=== S4 Ferne Frist (heute Mo ${MON}) ===\nJahresabschluss (Frist 2026-12-20): ${far?.reason === "deadline" ? "FEHLER – als Frist erzwungen" : `${far?.date ?? "wartet"} · ${REASON[far?.reason] ?? far?.reason}`}`,
+  );
 }
