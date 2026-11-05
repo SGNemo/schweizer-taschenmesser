@@ -140,6 +140,8 @@ try {
         if (p.mobile) await toolbox.getByText('Rechner', { exact: true }).first().click();
       }
       await page.addStyleTag({ content: '[data-testid="dev-badge"]{display:none !important}' });
+      // The last click leaves the pointer over the page; park it so no row shows a hover underline.
+      await page.mouse.move(0, 0);
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(Number(process.env.SCREENS_WAIT ?? 600));
       if (README) {
