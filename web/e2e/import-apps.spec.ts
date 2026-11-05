@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { backSettled, ready } from './helpers';
 
 const ENEX = `<?xml version="1.0" encoding="UTF-8"?>
 <en-export application="Evernote"><note><title>Rezept &amp; Tipps</title>
@@ -29,6 +29,8 @@ test('Aus anderer App importieren: Evernote erkannt → Vorschau → Bericht →
 
   // Undo takes it back again.
   await wizard.getByRole('button', { name: 'Rückgängig machen' }).click();
+  // The wizard pops its Back entry when it closes; a goto in that gap is aborted (ERR_ABORTED).
+  await backSettled(page);
   await page.goto('/notes');
   await expect(page.getByText('Rezept & Tipps')).toHaveCount(0);
 });
