@@ -62,7 +62,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'preview',
-  seed: { version: 1, dependsOn: ['todos'] },
+  seed: { version: 2, dependsOn: ['todos'] },
   layout: 'full',
   order: 15,
   area: 'plan',
