@@ -37,8 +37,3 @@
   line-height: var(--line);
   color: var(--text);
 }
-@media (max-width: 719px) {
-  .paper {
-    display: none;
-  }
-}
