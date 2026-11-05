@@ -45,19 +45,27 @@ export default function DrivesWidget() {
     >
       <FortschrittBody
         kind="rings"
-        entries={(drives ?? []).map((d) => {
-          const used = Math.max(0, d.totalBytes - d.freeBytes);
-          const level = fillLevel(percent(used, d.totalBytes), d.freeBytes);
-          const free = t.disk.free(formatCapacity(d.freeBytes));
-          const state = t.disk.head.state[level];
-          return {
-            key: d.root,
-            title: d.root,
-            value: used,
-            max: d.totalBytes,
-            detail: state ? `${free} · ${state}` : free,
-          };
-        })}
+        // The widget shows 2 / 4 / 6 rings by size: the system drive first, then the fullest ones.
+        entries={[...(drives ?? [])]
+          .sort(
+            (a, b) =>
+              Number(b.isSystem) - Number(a.isSystem) ||
+              percent(b.totalBytes - b.freeBytes, b.totalBytes) -
+                percent(a.totalBytes - a.freeBytes, a.totalBytes),
+          )
+          .map((d) => {
+            const used = Math.max(0, d.totalBytes - d.freeBytes);
+            const level = fillLevel(percent(used, d.totalBytes), d.freeBytes);
+            const free = t.disk.free(formatCapacity(d.freeBytes));
+            const state = t.disk.head.state[level];
+            return {
+              key: d.root,
+              title: d.root,
+              value: used,
+              max: d.totalBytes,
+              detail: state ? `${free} · ${state}` : free,
+            };
+          })}
       />
     </WidgetBody>
   );

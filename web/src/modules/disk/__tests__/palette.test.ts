@@ -10,10 +10,10 @@ import { KIND_VAR, textOn, toHex } from '../logic/colors';
  * ≥ 3:1 against `--surface` in both themes (WCAG 1.4.11, graphical objects).
  */
 /** Without comments, so a token named in prose is never read as a declaration. */
-const palette = readFileSync(resolve(__dirname, '../components/Palette.module.css'), 'utf8').replace(
-  /\/\*[\s\S]*?\*\//g,
-  '',
-);
+const palette = readFileSync(
+  resolve(__dirname, '../components/Palette.module.css'),
+  'utf8',
+).replace(/\/\*[\s\S]*?\*\//g, '');
 const tokens = readFileSync(resolve(__dirname, '../../../ui/tokens.css'), 'utf8');
 
 /** Custom properties of the first block that follows `header`. */

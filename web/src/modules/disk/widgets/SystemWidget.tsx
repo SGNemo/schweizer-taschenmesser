@@ -39,7 +39,7 @@ export default function SystemWidget() {
     title,
     value,
     max: 100,
-    detail: value >= 90 ? w.high : '',
+    detail: value >= 90 ? w.high : w.normal,
   });
   return (
     <div>

@@ -52,7 +52,7 @@ export function toHex(css: string): string | null {
 /**
  * Resolves custom properties holding colours (`--k-video`, `--age-2`, …) as seen from `el` to `#rrggbb`, so the
  * canvas and `textOn` get plain colours even when a token is a `color-mix()`: a probe element takes each
- * property as its `color` and the browser computes it. Unresolvable values keep the raw property value.
+ * property as its `color` and the browser computes it. Where the browser cannot compute a colour (tests), the raw property value is kept.
  */
 export function resolveColors(el: HTMLElement, names: readonly string[]): Record<string, string> {
   const probe = el.ownerDocument.createElement('span');

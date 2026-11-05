@@ -2712,6 +2712,7 @@ export const de = {
     battery: 'Akku',
     charging: 'lädt',
     high: 'stark ausgelastet',
+    normal: 'im normalen Bereich',
     open: 'Systeminfo öffnen',
     unavailable: 'Systemdaten sind hier nicht verfügbar.',
   },

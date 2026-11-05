@@ -26,7 +26,7 @@ export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab');
   const tab: Tab = TABS.find((k) => k === raw) ?? 'drives';
-  const list = useDriveList();
+  const list = useDriveList(tab === 'drives');
   return (
     <>
       <DiskHead drives={list.drives} />
@@ -96,8 +96,11 @@ interface DriveList {
   io: DiskIo[];
 }
 
-/** Drives (and their live I/O) for the head and the drives tab: one read every few seconds while visible. */
-function useDriveList(): DriveList {
+/**
+ * Drives for the head and the drives tab: one read every few seconds while visible; the live I/O only for
+ * the drives tab (`withIo`), the System tab reads its own.
+ */
+function useDriveList(withIo: boolean): DriveList {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [io, setIo] = useState<DiskIo[]>([]);
@@ -117,10 +120,11 @@ function useDriveList(): DriveList {
           record(d);
         })
         .catch(() => alive && setFailed(true));
-      system
-        .diskIo()
-        .then((r) => alive && setIo(r))
-        .catch(() => undefined);
+      if (withIo)
+        system
+          .diskIo()
+          .then((r) => alive && setIo(r))
+          .catch(() => undefined);
     };
     load();
     const id = setInterval(load, REFRESH_MS);
@@ -128,7 +132,7 @@ function useDriveList(): DriveList {
       alive = false;
       clearInterval(id);
     };
-  }, [record]);
+  }, [record, withIo]);
   return { drives, failed, io };
 }
 
