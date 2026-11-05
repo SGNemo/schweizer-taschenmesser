@@ -163,7 +163,7 @@ describe('where the reading aid must never appear', () => {
   it('the vault and accounts routes are wrapped in NoReadAid', () => {
     const router = readFileSync(join(root, 'router.tsx'), 'utf8');
     expect(router).toMatch(/NO_READ_AID_MODULES[^;]*'vault'[^;]*'accounts'/);
-    expect(router).toMatch(/<NoReadAid>/);
+    expect(router).toMatch(/<NoReadAid[ >]/);
   });
   it('no module or form field opts in by itself (only the runtime does)', () => {
     for (const f of [
