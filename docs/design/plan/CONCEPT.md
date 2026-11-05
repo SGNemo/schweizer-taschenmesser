@@ -1,0 +1,373 @@
+# Day and week planning – concept (phase 1)
+
+Branch `design/plan-concept`, 2026-11-05. Status: **waiting for „Plan freigegeben“** (phase 2 = decisions into `docs/decisions/plan.md`, prompts finalised in `PACKAGES.md`). Prototype of the engine: [`engine-proto.mjs`](engine-proto.mjs) (`node docs/design/plan/engine-proto.mjs`). Rules this concept obeys: root `CLAUDE.md`, [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC §4a](../DESIGN-SPEC.md). Nothing here is code; package 1 may start only after `feat/identity-v3-frame` is merged (hotspot `core/modules/types.ts`).
+
+## 0. In one paragraph
+
+A new module **`planner`** („Planer“, area Planen) distributes everything that has to get done over the coming days: the open ToDos (the backlog stays in ToDos, nothing is duplicated), later invoices, cancellation deadlines and notes marked „In den Plan“. Per day the user states **available time** and **blockers** (appointments come from the calendar by themselves). A pure, deterministic engine in `core/plan/` turns items + days into **assignments** (item → day, session minutes, reason), a short list „waits for a free day“ and a diff to the previous plan. Hard deadlines beat priority, priority beats age, a buffer is never planned, large items become sessions, existing assignments move only when they must and every move carries a reason. The planner writes `plannedFor` back to the ToDo, so the existing „Heute“ card, the morning digest, the focus round and „Später“ keep working unchanged. AI enters in three stages: rules (free, offline, also with „KI aus“), the local model (sees titles, stays on the device), and the cloud only with title-less numbers – if at all. Everything goes through a preview with a diff and an undo toast.
+
+## 1. Usage picture – four moments of Sven's week
+
+| Moment                                  | The app shows                                                                                                                                                                                                                                         | Sven does                                                                                                                | The engine does                                                                                                                                                                                                                                                                                       |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Monday 07:40, week start**            | Home: „Heute“ card (3 things from `plannedFor`), planner widget „Diese Woche: 8 h 55 geplant · 15 h 36 frei“. Planner page: week board Mo–So, per day a capacity line, items in order, blockers greyed (Zahnarzt Di, Teamrunde Do from the calendar). | Opens „Woche prüfen“ (one sheet, 2 taps): confirms Mo–Fr 4 h, sets Sa 2 h. Types in the add field „Steuer 2 Std bis Do“. | A ToDo is created through the quick-capture target (estimate 120, due Do). The run assigns two sessions (Mo 1 h, Di 1 h, reason „neu, nach Priorität“), toast „Eingeplant: Mo, Di · Rückgängig“. Nothing else moves.                                                                                  |
+| **Tuesday 11:20, something in between** | In Notes the ⋯ menu of a page offers „In den Plan“. Back on the planner the new row sits on Wednesday.                                                                                                                                                | Marks the note „Angebot vergleichen“ → In den Plan → duration 45 Min, priority hoch.                                     | `plan.requested` on the bus → ToDo with link to the note → planner item → run: priority 3 lands on the first day with room; a lower-priority item moves one day, toast names it: „Keller aufräumen (½) jetzt Fr · Rückgängig“.                                                                        |
+| **Tuesday 18:30, not finished**         | The „Heute“ card still lists „Geschenk bestellen“. From 17:00 the existing „Tag abschließen“ offers „Auf morgen schieben“.                                                                                                                            | Does nothing (or taps „Später“).                                                                                         | Next morning's run carries the item: reason „weiter von Di“, no counter, no colour; „Später“ is read as „earliest tomorrow“. Nothing is ever „überfällig“ in the planner – a passed hard due shows as „Frist war Do“ (text, warning tone, never red).                                                 |
+| **Wednesday 08:05, „Donnerstag frei“**  | Instruction field on the planner („Sag dem Plan etwas“).                                                                                                                                                                                              | Types „Donnerstag frei, schieb alles nach Freitag“.                                                                      | Rule parser (stage 0, no model): Thursday → 0 min; preview shows the diff (4 moved, 2 keep the deadline on Wednesday, „2 h 40 mehr geplant als frei“) → „Übernehmen“ → undo toast. With the local model on, the same sentence may also be understood by the model; the cloud never sees the sentence. |
+
+Week board (desktop, 1 400 px; phone = one day per screen with a day strip on top):
+
+```
+Planer · KW 46 · 8 h 55 geplant · 15 h 36 frei                 [Woche prüfen] [⋯]
+┌ Mo 9. ──────┬ Di 10. ─────┬ Mi 11. ─────┬ Do 12. ─────┬ Fr 13. ─────┬ Sa 14. ──┬ So ─┐
+│ 3 h 12 frei │ 2 h 24 frei │ 3 h 12 frei │ 2 h frei    │ 3 h 12 frei │ 1 h 36   │ –   │
+│ ▮▮▮▮▮▯▯     │ ▮▮▮▯▯▯      │ ▮▮▮▮▮▮▯     │ ▮▮▮▮▯       │ ▯▯▯▯▯▯      │ ▮▮▮▯     │     │
+│ Angebot  45 │ ░ Zahnarzt  │ Blogpost 1½h│ ░ Teamrunde │             │ Fahrrad 1h│    │
+│ Steuer ½ 1h │ Steuer ½ 1h │ Keller ½ 1½h│ Keller ½ 1½h│             │          │     │
+│ Geschenk 20 │             │             │             │             │          │     │
+│ Arzt     10 │             │             │             │             │          │     │
+│ Rechnung 10 │             │             │             │             │          │     │
+└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┴──────────┴─────┘
+Wartet auf einen freien Tag · 0                      [+ Was muss erledigt werden?]
+```
+
+Row actions (one tap, ⋯ for the rest, all with undo): **Erledigt** · **Später** (earliest tomorrow) · Auf einen Tag festnageln · Nicht planen · Fokus starten (session minutes) · Öffnen (the source). Day actions: Verfügbar ändern (− / + in 30-min steps), Blocker hinzufügen, Tag frei.
+
+## 2. Data model
+
+Three synced collections (`planner_day`, `planner_item`, `planner_assignment`; envelope + `createRepo`, dates `YYYY-MM-DD`, times `HH:mm`, minutes as integers):
+
+| Collection   | Fields                                                                                                                                                                                                                                                                             | Notes                                                                                                                                                                                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `day`        | `date` (unique index) · `availableMin?` 0–1440 · `blockers: [{ id, label, min, from?, to? }]` · `note?`                                                                                                                                                                            | Only days the user touched are stored; a missing day = the weekday default. **Calendar appointments are not stored** – they are read live from `calendarItems`. `from`/`to` are optional windows (package 5 uses them for timed chips).                                          |
+| `item`       | `source?: { module, id }` (index `sourceKey` = `module:id`) · `title?` (own entries only) · `durationMin?` · `priority?` · `due?: { date, hard }` · `earliest?` · `pinned?` · `splittable?` · `energy?: 'morning' \| 'evening'` · `excluded?` · `wrote?: { plannedFor }` · `order` | One row per planned thing. For a sourced item the planner stores **only what the source does not have** (see ownership). `wrote` remembers what the planner last wrote back, so a user edit at the source is recognised. v1 creates no own entries (the add field makes a ToDo). |
+| `assignment` | `itemKey` · `date` (index) · `session: { k, of }` · `minutes` · `order` · `reason` · `bumpedBy?` · `late?`                                                                                                                                                                         | Written by the engine in **one undo group** per run. Stored (not recomputed on every device) so all devices show the same plan and the diff has a base.                                                                                                                          |
+
+Ownership – which field lives where:
+
+| Fact                                             | Owner                                    | Planner reads it as                                                                                     | Planner writes back                                     |
+| ------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| title, done, note, link, person                  | source (ToDo, invoice, …)                | display, `done` removes the assignment                                                                  | `onDone` (tick from the plan)                           |
+| `estimateMin`                                    | ToDo                                     | `durationMin` (planner override only when the source has none)                                          | `onEstimate` only on an explicit edit in the plan       |
+| `priority`                                       | ToDo                                     | `prio` 0–3 (invoice: 2, cancellation: 3)                                                                | –                                                       |
+| `dueDate`                                        | ToDo (soft), invoice/cancellation (hard) | `due.date`; `due.hard` from the planner item (user may upgrade a ToDo's date to „Frist“)                | –                                                       |
+| `startDate`, `plannedFor` set by the user        | ToDo                                     | `earliest`; a `plannedFor` the planner did not write itself = pinned for that day („Später“ = tomorrow) | `plannedFor` = first assigned day (only when different) |
+| `someday`, subtasks, recurrence                  | ToDo                                     | excluded (`someday`, `parentId`); only the current occurrence                                           | –                                                       |
+| day, sessions, order, reason, pin, split, energy | planner                                  | –                                                                                                       | –                                                       |
+
+Settings (synced scope `planner`, registry section of the module, folded „Weitere Einstellungen“): `defaultAvailable` per weekday (Mo–Fr 240, Sa 120, So 0) · `bufferShare` 0 / 10 / **20** / 30 % · `horizonDays` 7 / **14** / 28 · `maxSessionMin` 45 / 60 / **90** / 120 · `minSessionMin` 25 · `autoReplan` on (run after every change) · `calendarBlocks` on · `allDayBlocks` off (an all-day event blocks the whole day). The number of main items per day **reuses** `focus.planLimit` (no second setting). Device-local (`_meta`): nothing except the last run's input hash (skip identical runs).
+
+Schema impact outside the planner: none in package 1 (no ToDo field changes). Package 5 adds optional fields with migrations (`timetrack.session.ref`, `habits.goal.minutes`).
+
+## 3. Engine – `core/plan/` (pure, deterministic, tested)
+
+Files: `types.ts` (contract), `capacity.ts`, `units.ts` (splitting), `engine.ts` (`plan()`), `diff.ts`, `explain.ts` (reason → German sentence via `t.planner.reasons`), `instructions.ts` (stage-0 parser, §6c). No clock inside; `today` is an input.
+
+```ts
+plan({ today, days: PlanDay[], items: PlanItem[], prev: Assignment[], settings }) → {
+  assignments: Assignment[],                      // unit → day, minutes, order, reason, bumpedBy?, late?
+  unplaced: { unit, reason: 'horizon' | 'too-long' | 'after-hard-due' }[],
+  diff: { added, moved: { unit, from, to, reason, by? }[], removed, unchanged },
+  load: Record<date, { raw, usable, planned, over, mains }>, overflowMin }
+```
+
+Rules, in the order they are applied per day (today → horizon end):
+
+| #   | Rule                         | Detail                                                                                                                                                                                                                                                                                                                     |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Capacity**                 | `raw = available − Σ blockers`; `usable = raw × (1 − buffer)`. Blockers = stored blockers + calendar items with a time (minutes = end − start, else 60 as in the calendar's `DEFAULT_BLOCK_MINUTES`); all-day items 0 unless `allDayBlocks`.                                                                               |
+| 2   | **Units**                    | An item longer than `maxSessionMin` and `splittable` becomes `ceil(min / max)` sessions of equal length (≥ `minSessionMin`); sessions of one item go on different days, except under deadline pressure.                                                                                                                    |
+| 3   | **Pinned first**             | A pinned item is placed on its day whatever the capacity (overload is counted, not refused).                                                                                                                                                                                                                               |
+| 4   | **Hard due before priority** | `latestStart(unit)` walks back from the due date over days that actually have room (a free Thursday does not count). A unit whose latest start is today is placed now – it may use the buffer, and a second session of the same item may land on the same day. Order inside: latest start, due date, priority.             |
+| 5   | **Priority before age**      | The rest: priority ↓, then items that were already planned for this day or earlier („sticky“), then soft due ↑, then `createdAt` ↑, then id. A unit is placed when it fits the remaining usable minutes and the day has fewer than `planLimit` main items (≥ 30 min); small things fill the rest.                          |
+| 6   | **Stability**                | An item keeps its day whenever it still fits; a new item with the same priority never displaces it (sticky wins the tie). A higher priority or a deadline may: the diff names the item that took the room (`bumpedBy`). Nothing is pulled forward on its own – free time stays free; „Lücke füllen“ is an explicit action. |
+| 7   | **Honest output**            | Items without room in the horizon → `unplaced: horizon`; longer than any day → `too-long`; placed after a hard due → `late` + `after-hard-due`. `overflowMin` = demand − usable of the horizon. Numbers, never alarms.                                                                                                     |
+| 8   | **Reasons**                  | `pinned` · `deadline` · `deadline-buffer` · `new` · `kept` · `carried` (not done earlier) · `pulled`; moves: `bumped` (by whom) · `capacity` (the day shrank). Every reason has one calm sentence („muss bis Do fertig sein“, „weiter von Di“, „Mi ist voll mit Fristen“).                                                 |
+
+Prototype results (`engine-proto.mjs`, availability Mo–Fr 4 h, Sa 2 h, buffer 20 %, 8 items):
+
+| Scenario                                                                      | Result (condensed)                                                                                                                                                                                                                                                                                                     | What it proves                                                                                                                                           |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S1 Monday, week start**                                                     | Mo: Angebot 45 (prio 3), Steuer ½ 1 h, Geschenk 20, Arzt 10, Rechnung 10 · Di: Steuer ½ (Zahnarzt blocks 1 h) · Mi: Blogpost 1½ h, Keller ½ · Do: Keller ½ (Teamrunde) · Fr: – · Sa: Fahrrad (earliest Sa). Demand 8 h 55, usable 15 h 36, „passt“.                                                                    | Priority first, the 2-h item is split, the hard-due invoice (Wed) is simply early, Friday stays free (no filling for its own sake), `earliest` honoured. |
+| **S2 Tuesday: „Angebot“ done, new prio-3 „Vortrag“ 1½ h, hard due Fri**       | Di: Vortrag (new) + the three small Monday leftovers (carried) · Mi: Steuer ½ („muss bis zur Frist“), Blogpost (kept) · Do: Steuer ½ (deadline) · Fr: Keller ½ · Keller ½ waits (horizon). Diff: 1 new, 6 moved, 2 gone, 2 unchanged; „Steuer ½: Di → Do, bumped by Vortrag“, „Keller ½: Mi → Fr, bumped by Steuer ½“. | A new important thing comes earlier and the plan says who moved why; the deadline is still met; unfinished small things roll on without comment.         |
+| **S3 Wednesday: Thursday free, new „Steuerbescheid prüfen“ 1 h hard due Thu** | Mi: Steuer ½ + Steuer ½ (second session on one day – deadline), Rechnung, Steuerbescheid (3 h 10 of 3 h 12) · Do: – · Fr: Vortrag (deadline Fri), Geschenk, Arzt · Sa: Blogpost · Keller ×2 and Fahrrad wait. „2 h 40 mehr geplant als frei“.                                                                          | A free day pulls deadline work forward instead of letting it slip; the engine reports the overload as a number and lists what waits.                     |
+
+Tests (package 1, Vitest, fixtures `core/plan/__fixtures__/*.json` = the three scenarios): determinism (same input → same output, twice), stability (unchanged input → zero moves), deadline (every hard due is met whenever the capacity allows, otherwise flagged), buffer (usable never exceeded except `deadline-buffer`/`pinned`), split (sessions ≤ max, distinct days unless deadline), limit (≤ `planLimit` main items per day), diff (moves name a cause), explain (every reason has a sentence in all five languages → `check:i18n`).
+
+## 4. Source contract – `contributions.plannable`
+
+```ts
+export interface PlannableItem {
+  id: string; kind: string; title: string; to: string;         // route with ?open=<id>
+  durationMin?: number; priority?: 0 | 1 | 2 | 3;
+  due?: { date: string; hard: boolean }; earliest?: string; plannedFor?: string;
+  done?: boolean; personId?: string;
+  link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+}
+export interface PlannableSource {
+  list(ctx: { today: string; until: string }): Promise<PlannableItem[]>;      // open, plannable things only
+  onAssign?(id: string, date: string | undefined): Promise<void>;           // ToDo: plannedFor
+  onDone?(id: string): Promise<void>;                                        // ToDo: done; invoice: never (paid stays in the module)
+  onEstimate?(id: string, minutes: number): Promise<void>;                   // ToDo: estimateMin
+}
+contributions.plannable?: () => Promise<{ default: PlannableSource }>;
+```
+
+- Lazy like `calendarItems`; collector `collectPlannable(manifests)` in `core/modules/contributions.ts` (a failing source never breaks the others, modules read only their own data). Write-back is the **callback surface of the same contract** (typed, testable, no module import). Requests _into_ the plan from other modules use the bus, mirroring `todo.requested`: `'plan.requested': { title; durationMin?; priority?; due?; link? }` – the planner service turns it into a ToDo (quick-capture target) plus a planner item.
+- Blockers need no new contract: timed `calendarItems` (not `kind: 'plan'`, not `source: 'todos'`, not done) are blockers.
+- `accounts` never gets `plannable`; `exclusion.test.ts` pins the key (its contribution keys stay `onboarding`, `services`). The automation engine already excludes the vault.
+- Retired modules: no contribution (registry rule).
+
+Which module delivers what, in which package:
+
+| Module                                  | Delivers                                                                                                                         | Hard due?                              | Write-back                                         | Package                 |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------- | ----------------------- |
+| ToDos                                   | open top-level tasks, not `someday`; `estimateMin`, `priority`, `dueDate` (soft), `startDate`/`plannedFor` (earliest/pin), links | no (user may mark „Frist“ in the plan) | `plannedFor`, `done`, `estimateMin`                | 1                       |
+| Calendar                                | blockers via `calendarItems`; shows plan chips (`kind: 'plan'`)                                                                  | –                                      | –                                                  | 1 (blockers), 2 (chips) |
+| Quick capture                           | prefix `p` / „plan:“ → ToDo + planner item with pin or earliest                                                                  | –                                      | –                                                  | 2                       |
+| Notes                                   | „In den Plan“ (⋯ menu) → `plan.requested` with link                                                                              | –                                      | –                                                  | 3                       |
+| Invoices                                | open invoices: „<payee> bezahlen · 10 Min“, due = hard                                                                           | yes                                    | none (paid is a money action, stays in Rechnungen) | 3                       |
+| Subscriptions                           | cancellation deadlines (`core/deadline/notice.ts`), 15 min, prio 3                                                               | yes                                    | none                                               | 3                       |
+| Reminders (calendar `kind: 'reminder'`) | not plannable: they are notifications, not work                                                                                  | –                                      | –                                                  | never                   |
+| Habits                                  | fixed blocks (new optional `goal.minutes` at `reminder.time`)                                                                    | –                                      | –                                                  | 5                       |
+| Timetrack                               | actual durations (`session.ref` = plan item) as a learning source                                                                | –                                      | –                                                  | 5                       |
+
+## 5. Plan view in the calendar
+
+| Option                       | What it is                                                                                                                                                                                                                                        | For                                                                                                    | Against                                                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A „Plan“ tab in the calendar | `?tab=plan` next to „Erinnerungen“, rendering the week board                                                                                                                                                                                      | one place for time                                                                                     | the calendar would import the planner (forbidden) or a core board component that reads planner tables (wrong layer); a tab that only navigates is a link in disguise   |
+| **B calendar integration**   | planner contributes `calendarItems` `kind: 'plan'` (all-day chips „Plan · Steuer 1 h“; timed blocks in the hour grid once availability windows exist, package 5); the calendar's view switcher gets a „Plan“ entry that links to `/planner?week=` | the plan sits where the appointments are; month/week/agenda, cockpit and tray snapshot get it for free | chips are not draggable in the grid (only calendar events are) – moving is done on the board; the „Heute“ card must skip `kind: 'plan'` (one line in `todos/today.ts`) |
+| C own page only              | week board under `/planner`, calendar untouched                                                                                                                                                                                                   | smallest; the board is the plan                                                                        | the calendar user never sees that Thursday is full                                                                                                                     |
+
+**Recommendation: C in package 1, B in package 2, A never.** The board is the planning surface (capacity, order, reasons, undo); the calendar shows the result. „Plan“ in the calendar's view switcher is a link, not a view – the calendar keeps its five views and its hotspots untouched.
+
+## 6. AI layer
+
+**a) Entering by speech or text** uses the existing write pipeline (`core/ai/write/*`, preview, undo). „Steuer zwei Stunden bis Donnerstag, wichtig“ → ToDo `create` (title, dueDate, priority; package 4 adds `estimateMin` to the ToDo `aiSchema` fields so the estimate survives – the quick-capture extractor already yields it). Planner actions (package 4, `aiSchema.actions`): `available` (update `day`: „Donnerstag zwei Stunden“), `block` (create blocker: „Donnerstag 14 bis 16 Uhr Werkstatt“), `pin` (transition on `item`: „Steuer auf Freitag“), `exclude` („Keller nicht planen“). Five eval inputs each in `web/tests/ai/eval-set.json`.
+
+**b) Replanning in stages** – the engine always decides; a model only translates wishes into engine inputs (ops), never into assignments:
+
+| Stage                                          | Sees                                                                                                                                                                                   | Produces                                                                                                                            | Cost                                                                      | Risk                                                                                                    | Pins in `privacy.test.ts`                                                                                                  |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 0 rules (`core/plan/instructions.ts` + engine) | everything, on the device                                                                                                                                                              | ops → run → preview with diff and „warum heute?“ per row                                                                            | 0                                                                         | misreads → shows a question instead of guessing                                                         | with „KI aus“: `plan()` and the parser run, **0 requests**                                                                 |
+| 1 local model (`core/ai/local`, grammar)       | compact plan: key, title, min, prio, due, day (≤ 30 items) + the sentence; nothing leaves the device                                                                                   | ≤ 8 ops `{ op: pin \| exclude \| available \| block \| priority \| duration, key \| date, value }`, keys validated against the plan | 0 tokens, ~1–3 s                                                          | wrong key → the preview shows names, the user sees it                                                   | the local stage never calls `fetch` (spy)                                                                                  |
+| 2 cloud (`core/ai/router`)                     | **title-less**: `{ k: 'i7', min: 45, p: 2, due: '11-13', hard: false, day: '11-11' }` per item, `{ date, free }` per day, and the sentence **only after local title→key substitution** | same ops                                                                                                                            | ≈ 1 000 tokens in / 150 out per run (≈ 0.3 ct), ~1 €/month at 10 runs/day | the free sentence may carry a name the substitution misses; dates and durations are still personal data | body contains no title/note/person of any fixture item and no raw sentence; only keys and numbers; keys are per-run random |
+
+Recommendation: **stages 0 + 1 in package 4, stage 2 not in v1** (question 1). Stage 0 already covers Sven's examples; stage 1 covers „weicher“ phrasing without any upload.
+
+**c) Free-text instructions without a model** (`instructions.ts`, built on the quick-capture date/time/end-time extractors and the write lexicon; item matching with `findTarget`/`withinOneEdit` from `core/ai/write/targets.ts`):
+
+| Sentence pattern                                                            | Ops                                                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `<Tag> frei` · `<Tag> nichts` · `<Tag> keine Zeit`                          | `available(date, 0)`                                                          |
+| `<Tag> nur zwei Stunden` · `<Tag> 3 h`                                      | `available(date, min)`                                                        |
+| `<Tag> 14 bis 16 Uhr Werkstatt`                                             | `block(date, from, to, label)`                                                |
+| `schieb(e) <X> auf/nach <Tag>` · `<X> auf <Tag>` · `<X> erst nächste Woche` | `pin(X, date)` / `earliest(X, date)`                                          |
+| `schieb alles von <Tag> auf <Tag>` · `<Tag> frei, alles nach <Tag>`         | `available(A, 0)` + `earliest(items of A, B)`                                 |
+| `<X> zuerst` · `<X> heute` · `<X> wichtig`                                  | `pin(X, today)` / `priority(X, 3)`                                            |
+| `<X> nicht planen` · `<X> raus`                                             | `exclude(X)`                                                                  |
+| `<X> dauert 45 Minuten` · `<X> 2 Std`                                       | `duration(X, min)`                                                            |
+| `neu verteilen`                                                             | run with the current inputs (calm); `alles neu mischen` runs with `prev = []` |
+| `Puffer 30 %`                                                               | setting                                                                       |
+
+Anything else → one calm line listing what the field understands („Ich kann: Tag frei, Zeit je Tag, verschieben, festnageln, nicht planen.“); two matching items → „Meinst du A oder B?“. Every instruction ends in the same `PlanPreview` (moved / added / waiting, with reasons) → „Übernehmen“ → undo toast.
+
+## 7. Proposals (benefit · cost · recommendation)
+
+| Proposal                                                     | Benefit                                                                                                                                                                         | Cost                                                                                                           | Now / later / no                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Day start with three things                                  | already there („Heute“ card, `planLimit`); the planner fills it via `plannedFor`                                                                                                | 0                                                                                                              | **now** (package 1, nothing new)                                     |
+| „Nicht geschafft“ rolls on without comment                   | calm; reason `carried` = „weiter von Di“, no counter, no colour                                                                                                                 | engine only                                                                                                    | **now** (1)                                                          |
+| Learning from time tracking (estimate vs actual)             | estimates get honest over time                                                                                                                                                  | `timetrack.session.ref` (optional, migration), hint line „Letztes Mal 50 Min“; never changes a value by itself | **later** (5)                                                        |
+| Energy / time-of-day profile                                 | mornings for hard things                                                                                                                                                        | availability windows + `energy` on items + engine rule; one more setting (off by default)                      | **later** (5)                                                        |
+| Pin to a day                                                 | the one override everybody needs                                                                                                                                                | `pinned` + ⋯ action + drag on the board                                                                        | **now** (1)                                                          |
+| Week review, quiet                                           | one line Monday („Letzte Woche: 9 von 12 Dingen · 11 h“), switch `focus.weekReview` reused                                                                                      | small; the automation template `weeklyReview` can notice it                                                    | **later** (5)                                                        |
+| Overload warning when adding                                 | „Diese Woche: 2 h 40 mehr geplant als frei“ as a toast line and one attention item (warning tone, text)                                                                         | engine number exists; strings                                                                                  | **now-ish** (3)                                                      |
+| Undo of a replan                                             | every run is one undo group                                                                                                                                                     | `undoGroup` exists                                                                                             | **now** (1)                                                          |
+| Android home-screen widget „Heute im Plan“                   | glance without opening                                                                                                                                                          | a native widget plugin (new Kotlin surface) for something the „Heute“ card and the tray snapshot already show  | **no** (v1); the overview tile = the planner widget (week load), now |
+| Automation hooks                                             | `planner.overloaded` event (`overMin`), rules may call `pin`; invoices need no rule (source)                                                                                    | event in package 3, action in 4                                                                                | **later** (3/4)                                                      |
+| Partner sharing                                              | –                                                                                                                                                                               | –                                                                                                              | **no** (v1), noted                                                   |
+| „Woche prüfen“ sheet (own)                                   | week start in 2 taps: confirm capacity per day, see the three biggest things                                                                                                    | one sheet                                                                                                      | **now-ish** (2)                                                      |
+| Focus round from a session (own)                             | tap a session → focus timer with its minutes (`core/focus/session.ts`, no ToDo import)                                                                                          | small                                                                                                          | **now-ish** (2)                                                      |
+| Availability templates „Arbeitswoche / Urlaub / Krank“ (own) | one tap instead of seven numbers                                                                                                                                                | small, after windows exist                                                                                     | **later** (5)                                                        |
+| What gets removed instead (focus checklist 9)                | ToDos' „Neu planen“ (spreads by due date) is redundant while the planner is on → hidden (`isEnabled('planner')` from core); the planner's run replaces it with reasons and undo | one condition                                                                                                  | package 3                                                            |
+
+Identity (v3.1, `npm run check:modules`): area `plan`, `order: 15` (between Kalender 10 and ToDos 20), `hue: 'indigo'` (280°; neighbours cobalt 254° and violet 306° keep the 25° rule; lime and fern are the alternatives), `hue2: 'sky'`, `head: 'kennzahl'` (neighbours use `zeit` and `fokus`; figure = „3 h 20 frei heute“, context „4 Dinge · 2 erledigt“), `widgetType: 'progress'`, `widget: 'fortschritt'` (week load Mo–So as `ProgressList`, today highlighted, context line; overrun as text, never red), `signature: 'weekBars'` (new block `WeekBars` in `@/ui/identity`, seven bars with fill – also the empty-state motif), `type: 'thin'`. The planner widget shows the **week**; the day stays with the „Heute“ card (no duplicate).
+
+Wording (German UI, [FOCUS-WORDING](../FOCUS-WORDING.md) style): „Heute: 3 Dinge · 2 h 15 von 3 h 12“ · „weiter von Dienstag“ · „muss bis Do fertig sein“ · „Wartet auf einen freien Tag · 3“ · „Donnerstag ist frei.“ · „Neu verteilt: 2 Dinge verschoben · Rückgängig“ · „2 h 40 mehr geplant als frei“ · „Frist war Do“ (warning tone, text) · empty: „Noch nichts geplant. Eine Sache reicht.“ No „überfällig“, no counters, red nowhere.
+
+Stimulus budget: the planner adds one widget (week load) and one page; it removes ToDos' „Neu planen“ and gives the „Heute“ card its content. One notification a day at most – the existing morning digest already lists the planned ToDos; the planner adds none.
+
+## 8. Package plan
+
+| #   | Package                                               | Branch                            | Scope                                                                                                                                                                                                                     | Hotspots to announce                                                                                 | Skills                  |
+| --- | ----------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | Engine, contract, module, ToDos source                | `feat/plan-core`                  | `core/plan/*`, `contributions.plannable` + `collectPlannable`, `modules/planner/*`, `modules/todos/plannable.ts`, strings + 4 locales, e2e                                                                                | `core/modules/types.ts`, `core/modules/registry.ts` (row in CHATS.md), `strings.ts` block, `db:bump` | council · full stop     |
+| 2   | Calendar chips, capture prefix, instructions, preview | `feat/plan-calendar-instructions` | `modules/planner/{calendar,instructions UI}`, `core/plan/instructions.ts`, `modules/todos/today.ts` (skip `kind: 'plan'`), `modules/calendar/routes/CalendarPage.tsx` (link), `quickCapture/{parser,targets}` (`p`)       | `quickCapture/parser` (isolation test), calendar page (small, local)                                 | review loop · full stop |
+| 3   | More sources, overload line, automation event         | `feat/plan-sources`               | `core/events/events.ts` (`plan.requested`), `modules/notes` (⋯ „In den Plan“), `modules/invoices/plannable.ts`, `modules/subscriptions/plannable.ts`, `modules/planner/attention.ts`, `modules/todos` (hide „Neu planen“) | `core/events/events.ts` (additive)                                                                   | review loop · full stop |
+| 4   | AI: actions, local stage, privacy pins                | `feat/plan-ai`                    | `modules/planner/ai.ts`, `modules/todos/ai.ts` (`estimateMin`), `core/ai/local/prompts/plan.ts` + grammar, `core/ai/privacy.test.ts`, `web/tests/ai/eval-set.json`, e2e „KI aus“                                          | `core/ai/write/*` (additive)                                                                         | council · full stop     |
+| 5   | Learning and windows                                  | `feat/plan-learn`                 | `modules/timetrack` (`session.ref`, migration), `modules/habits` (`goal.minutes`, blocks), `planner` windows + timed chips, energy, week review line, templates                                                           | `db:bump`                                                                                            | review loop · full stop |
+
+Each package: own branch from fresh `develop`, PR against `develop`, row in CHATS.md, `.changes/` note (DE/EN), STATUS one line, decisions in `docs/decisions/plan.md`. Package 1 starts after `feat/identity-v3-frame` is merged; 2 after 1; 3 and 4 may run in parallel after 2; 5 last.
+
+### Prompt – package 1: engine, contract, module, ToDos (`feat/plan-core`)
+
+```
+# Aufgabe: Planer – Engine, Vertrag `contributions.plannable`, Modul, ToDos als Quelle (Paket 1 von 5)
+
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch `feat/plan-core` von frischem `develop` – **erst nachdem `feat/identity-v3-frame` gemergt ist** (Hotspot `core/modules/types.ts`; vorher Zeile in docs/CHATS.md „Hotspots“: Manifest-Vertrag, ein Chat). Vorgegebene Session-Branches ignorieren.
+
+## Ausgangslage
+Konzept freigegeben: docs/design/plan/CONCEPT.md (Entscheidungen in „Entschieden“, Datenmodell §2, Engine §3 mit Prototyp docs/design/plan/engine-proto.mjs, Vertrag §4, Identität §7). Lies dazu web/src/modules/CLAUDE.md, docs/howto/new-module.md, docs/design/FOCUS-GUIDELINES.md, `modules/todos/{schema,next,postpone,today}.ts`, `core/modules/{types,contributions}.ts`, `core/undo`, `core/settings/focus.ts` (`planLimit`).
+
+## Pflichtliste
+- `core/plan/{types,capacity,units,engine,diff,explain}.ts`: reine Funktionen, kein `Date.now`, Vertrag wie CONCEPT §3; Regeln 1–8 in dieser Reihenfolge; Fixtures `core/plan/__fixtures__/{s1,s2,s3}.json` aus dem Prototyp (gleiche Eingaben, erwartete Zuweisungen als Snapshot); Tests: Determinismus, Stabilität, Frist, Puffer, Teilung, Limit, Diff-Ursache, Erklärungssatz in 5 Sprachen.
+- `core/modules/types.ts`: `PlannableItem`, `PlannableSource`, `contributions.plannable` (lazy); `core/modules/contributions.ts`: `collectPlannable` (fehlerisoliert wie `collectCalendarItems`); `SIGNATURES` + `weekBars`; `registry.test.ts`: `retired` ohne `plannable`; `modules/accounts/__tests__/exclusion.test.ts`: `plannable` ausdrücklich nie.
+- `modules/todos/plannable.ts`: `list` (offen, kein `someday`, kein `parentId`, nur aktuelle Wiederholung; `estimateMin`, `priority`, `dueDate` weich, `startDate`/`plannedFor` → `earliest`/Pin nach CONCEPT §2), `onAssign` (schreibt `plannedFor` nur bei Änderung), `onDone`, `onEstimate`; Eintrag im Manifest; Test.
+- `modules/planner/`: `npm run gen:module -- planner "Planer"`; Sammlungen `day`, `item`, `assignment` (CONCEPT §2, Indizes `date`, `sourceKey`, `date`), `db:bump`; `repo.ts`; `settings.ts` (Scope `planner`, Werte aus §2, `planLimit` aus `focus` wiederverwenden); `seed.ts` (deterministisch, kleine/mittlere/große Woche, Blocker, ein festgenageltes Ding); `run.ts` (sammelt Quellen + Kalender-Blocker über `collectCalendarItems`, ruft `plan()`, schreibt Zuweisungen in einer Undo-Gruppe, ruft `onAssign`; läuft bei Änderung der Eingaben und auf „Neu verteilen“, Hash der Eingabe in `_meta`); `services.ts` (Start des Laufs, Reaktion auf eigene und ToDo-Schreibungen über `core/db/writeHook` bzw. Live-Query); Seite `/planner` (Wochenbrett nach §1: Spalten Mo–So, Kapazitätszeile, Balken, Zeilen mit Minuten und Grund, Blocker grau, Tageszettel: Verfügbar −/+, Blocker hinzufügen, Tag frei; Eingabefeld → Quick-Capture-Ziel `todo` + Planer-Item; Zeilenaktionen Erledigt / Später / Festnageln / Nicht planen / Öffnen über `ItemRow` + ⋯, alles `undoableWithToast`; „Wartet auf einen freien Tag · n“ als `GroupedList`-Gruppe; Telefon: ein Tag je Bildschirm mit Tagesleiste); Widget `week` (`ProgressList`, Wochenlast Mo–So, heute hervorgehoben, Kontextzeile, Überhang als Text, nie rot, leer mit Aktion); `identity` nach §7 (`indigo`/`sky`, `kennzahl`, `fortschritt`, `weekBars`, `order: 15`), `area: 'plan'`, `layout: 'wide'`, `maturity: 'preview'`, `contributions.onboarding: noOnboarding`, `quickAdd`; Kopf: `PageHeader` mit Figur „3 h 20 frei heute“ + Kontext.
+- `@/ui/identity/WeekBars` (Dekoration, ohne Farbe lesbar) + Leerzustands-Motiv.
+- Strings `t.planner.*` (Deutsch in `strings.ts`, Block anhängen) + 4 Locales, Glossar-Einträge „Planer, Verfügbar, Blocker, Puffer, festnageln“; `check:i18n`.
+- E2E `e2e/planner.spec.ts`: Woche mit Seed, Verfügbar ändern, Eintrag über das Feld, Erledigt + Rückgängig, Festnageln; Seite in `e2e/a11y.spec.ts`.
+
+## Nicht in diesem Paket
+Kalender-Chips, Freitext-Anweisungen, KI, weitere Quellen (Notizen, Rechnungen, Abos), Zeitfenster/Energie, Zeiterfassung. Keine Änderung an ToDo-Feldern oder -Seite. Nichts an Tresor, Sync-Regel, Signing.
+
+## Abnahme
+- `npm run check`, `test`, `check:modules`, `check:i18n`, `e2e` grün; `npx vitest run src/core/plan src/core/seed`; die drei Fixtures liefern exakt die Zuweisungen des Prototyps.
+- Fokus-Checkliste (FOCUS-GUIDELINES) im PR-Text beantwortet (Reizlast, Aus-Schalter = Modul aus, nächster Schritt, Wortlaut, Unterbrechung, Tests, Lesbarkeit, Klicks, was entfällt).
+- Docs: STATUS eine Zeile; `docs/decisions/plan.md` zwei Bullets (Vertrag mit Rückschreib-Callbacks; Zuweisungen gespeichert, nicht je Gerät berechnet); ARCHITECTURE-MAP eine Zeile (`core/plan`, `modules/planner`); MODULE-IDENTITY Tabellenzeile; Abschnitt „Planer“ in `docs/howto/planning-modules.md`; `.changes/`-Notiz (DE/EN, Nutzersicht: „Neues Modul Planer (in Arbeit): verteilt ToDos auf die nächsten Tage nach verfügbarer Zeit“); Zeile in CHATS.md.
+
+## Skills
+Nach dem Bau `council` über den Diff (Architect: Vertrag und Modulgrenzen, Engine-Determinismus, keine Modul-Importe; Guardian: was in Sync/Backup landet, `exclusion.test.ts`, keine Uhr in der Engine; Advocate: Fokus-Regeln, Reizlast des Bretts, Verständlichkeit ohne Lesen, Telefon). Danach `full stop`: PR gegen develop, Council-Tabelle in der PR-Beschreibung, kein Merge. Ein STOPP vor dem Council, wenn das Datenmodell (§2) oder die Regelreihenfolge (§3) anders ausfallen muss (Frage mit Empfehlung, ≤ 4).
+```
+
+### Prompt – package 2: calendar chips, capture prefix, instructions, preview (`feat/plan-calendar-instructions`)
+
+```
+# Aufgabe: Planer – Kalender-Chips, Schnellerfassung „p“, Freitext-Anweisungen mit Vorschau (Paket 2 von 5)
+
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch `feat/plan-calendar-instructions` von frischem `develop` (nach Merge von `feat/plan-core`). Vorgegebene Session-Branches ignorieren.
+
+## Ausgangslage
+Paket 1 hat Engine, Vertrag, Modul und ToDos-Quelle geliefert (docs/design/plan/CONCEPT.md §1–4, Entscheidungen „Entschieden“). Dieses Paket macht den Plan im Kalender sichtbar, nimmt Einträge mit Präfix an und versteht Sätze wie „Donnerstag frei, schieb alles nach Freitag“ ohne Modell (§6c). Lies `core/ai/write/{rules/parse,targets}.ts`, `quickCapture/parser/{index,dates,endtime}.ts`, `modules/calendar/{calendar,views}.ts`, `modules/todos/today.ts`, `layout/assistant/WritePreview.tsx`.
+
+## Pflichtliste
+- `modules/planner/calendar.ts` (`contributions.calendarItems`): je Zuweisung ein ganztägiger Chip `kind: 'plan'`, Titel „Plan · <Titel> <Min>“, `to: /planner?day=`; `modules/todos/today.ts`: `kind === 'plan'` zählt nicht als Termin; `home/AgendaBlock`, `NextEventLine`, Cockpit, Tray prüfen (Chips erscheinen, verdrängen nichts); Kalender-Ansichtsschalter bekommt den Eintrag „Plan“ als Link auf `/planner?week=<Montag>` (kein sechster View, `VIEWS` unverändert).
+- `quickCapture/parser`: Präfix `p` und Wort „plan:“ → Typ `plan` (Felder wie `todo` + `estimateMin`, Datum = Pin oder frühester Tag nach Wort „ab“); `quickCapture/targets/adapters.ts`: Ziel `plan` = ToDo über `todo`-Ziel + Planer-Item (`modules/planner` darf nicht importiert werden: Item über `core/db` Manifest-Repo wie die anderen Adapter); Korpus-Fälle, Isolationstest bleibt grün.
+- `core/plan/instructions.ts`: Satzmuster aus CONCEPT §6c → Ops; Datumswörter aus `quickCapture/parser/dates.ts`, Zeitfenster aus `endtime.ts`, Ziel-Treffer mit `findTarget`/`withinOneEdit`; unbekannt → Rückfrage-Text, zweideutig → „Meinst du A oder B?“; 30 Tests (Korpus mit allen Mustern, Umlaute gefaltet, Wochentag „nächsten“, „alles von Do nach Fr“).
+- `modules/planner/components/PlanPreview.tsx`: Diff (verschoben mit Grund und Verursacher, neu, wartet), „Übernehmen“/„Verwerfen“, danach Undo-Toast; Eingabefeld „Sag dem Plan etwas“ auf der Seite (kein Modell, keine Netzanfrage – Test); „Neu verteilen“ im ⋯-Menü mit Vorschau; „Woche prüfen“-Zettel (Mo–So Verfügbar bestätigen, drei größte Dinge) als Dialog, Montag beim ersten Öffnen angeboten, abschaltbar.
+- Fokusrunde aus einer Sitzung: Zeilenaktion „Fokus starten“ → `core/focus/session.ts` + `state.ts` mit den Sitzungsminuten, Pfad `/planner/focus/:item` (Shell-Regel `isFocusPath`), keine ToDo-Importe.
+
+## Nicht in diesem Paket
+Modell-Stufen, Cloud, weitere Quellen, Zeitfenster im Stundenraster (Chips bleiben ganztägig), Drag im Kalenderraster.
+
+## Abnahme
+- `npm run check`, `test`, `check:modules`, `check:i18n`, `e2e` grün; `e2e/planner.spec.ts` erweitert: Chip im Kalender, Präfix „p“, Satz „Donnerstag frei“ → Vorschau → Übernehmen → Rückgängig; Netzmitschnitt im E2E: 0 Anfragen.
+- Fokus-Checkliste im PR-Text; Klickzahlen vorher/nachher für „Tag frei“ (Zettel vs. Satz).
+- Docs: STATUS eine Zeile; `decisions/plan.md` eine Bullet (Plan im Kalender = Chips + Link, kein Reiter); `docs/howto/planning-modules.md` (Abschnitt Planer: Präfix `p`, Anweisungen); `.changes/`-Notiz (DE/EN); Zeile in CHATS.md.
+
+## Skills
+`review loop` (ein Reviewer, Fokus: keine Modul-Importe, Parser rät nicht, Vorschau vor jedem Schreiben, Fokus-Wortlaut), dann `full stop`: PR gegen develop, kein Merge.
+```
+
+### Prompt – package 3: more sources, overload line, automation event (`feat/plan-sources`)
+
+```
+# Aufgabe: Planer – Notizen „In den Plan“, Rechnungen und Kündigungsfristen als Quellen, Überlast-Zeile (Paket 3 von 5)
+
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch `feat/plan-sources` von frischem `develop` (nach Merge von Paket 2; parallel zu Paket 4 möglich, keine gemeinsamen Dateien außer `strings.ts`-Blöcken). Vorgegebene Session-Branches ignorieren.
+
+## Ausgangslage
+Der Planer plant ToDos (Paket 1) und zeigt sie im Kalender (Paket 2). Dieses Paket bringt Dinge aus anderen Modulen in den Plan und macht Überlast als Zahl sichtbar (CONCEPT §4 Tabelle, §7). Lies `core/events/{events,bus}.ts`, `modules/todos/services.ts` (`todo.requested`), `modules/notes/routes/NotesPage.tsx` (⋯-Menü), `modules/invoices/{schema,attention,calendar}.ts`, `modules/subscriptions/calendar.ts`, `core/deadline/notice.ts`, `core/automation/module.ts`.
+
+## Pflichtliste
+- `core/events/events.ts`: `'plan.requested': { title; durationMin?; priority?; due?: { date; hard }; link? }` (additiv); `modules/planner/services.ts` hört zu: ToDo über das Quick-Capture-Ziel anlegen (Link mitgeben), Planer-Item mit Pin/Frist, Toast „Im Plan: <Titel> · Mi · Rückgängig“.
+- Notizen: ⋯-Menü der Seite „In den Plan“ → kleiner Zettel (Dauer 15/30/60/120, Priorität, optional Frist) → `plan.requested` mit `link: { kind: 'note' }`; keine Planer-Importe.
+- `modules/invoices/plannable.ts`: offene Rechnungen als Items „<Empfänger> bezahlen“, 10 Min, Prio 2, `due.hard = true`, `to: /invoices?open=`; kein `onDone` (Bezahlen bleibt im Modul; bezahlt = Item verschwindet). `modules/subscriptions/plannable.ts`: Kündigungsfristen aus `core/deadline/notice.ts` als „<Abo> kündigen“, 15 Min, Prio 3, hart. Beide mit Tests; `exclusion.test.ts` unverändert grün.
+- Überlast: nach jedem Lauf eine Zeile im Planer-Kopf und im Toast beim Eintragen („Diese Woche: 2 h 40 mehr geplant als frei“, nur wenn > 0, neutral); `modules/planner/attention.ts`: ein Item Ton `warning`, Icon, Text, Link (nie `danger`); Automations-Ereignis `planner.overloaded` (`overMin`, `week`) über `manifest.automation` (`events`, Detector alle 10 Min), keine Aktionen.
+- ToDos: „Neu planen“ auf der ToDo-Seite nur zeigen, wenn das Modul `planner` nicht aktiv ist (`core/modules/activation`, keine Importe); Zeile in `docs/features/focus-aids.md`.
+
+## Nicht in diesem Paket
+KI, Zeiterfassung, Gewohnheiten, Zeitfenster. Keine neuen Felder an Rechnungen oder Abos.
+
+## Abnahme
+- `npm run check`, `test`, `check:modules`, `check:i18n`, `e2e` grün; E2E: Notiz → In den Plan → Zeile im Brett mit Link zurück; Rechnung fällig Do → Item mit „muss bis Do fertig sein“.
+- Fokus-Checkliste im PR-Text (die Überlast-Zeile ist eine Zahl mit Kontext, kein Alarm; Aus-Schalter = Quelle im Modul deaktivierbar über die Modul-Einstellungen „Im Plan zeigen“).
+- Docs: STATUS eine Zeile; `decisions/plan.md` eine Bullet (Rechnungen/Abos ohne Rückschreiben); `.changes/`-Notiz (DE/EN); Zeile in CHATS.md.
+
+## Skills
+`review loop` (Fokus: Modulgrenzen, Bus-Vertrag additiv, keine Geldaktion aus dem Plan), dann `full stop`: PR gegen develop, kein Merge.
+```
+
+### Prompt – package 4: AI actions, local stage, privacy pins (`feat/plan-ai`)
+
+```
+# Aufgabe: Planer – KI-Schicht: Aktionen, lokales Modell für Anweisungen, Datenschutz-Pins (Paket 4 von 5)
+
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch `feat/plan-ai` von frischem `develop` (nach Merge von Paket 2; parallel zu Paket 3 möglich). Vorgegebene Session-Branches ignorieren.
+
+## Ausgangslage
+Entschieden (CONCEPT §6, „Entschieden“): Umplanung über Stufe 0 (Regeln) und Stufe 1 (lokales Modell); die Cloud sieht den Plan nicht [oder: nur titellose Merkmale – je nach Antwort auf Frage 1]. Lies docs/decisions/{local-model,ai-off}.md, `core/ai/write/{types,stages,prepare,commit}.ts`, `core/ai/local/{stage,grammar,prompts/v1}.ts`, `core/ai/privacy.test.ts`, `core/ai/switch.ts`, `docs/howto/ai-actions.md`, `core/modules/aiActions.ts`.
+
+## Pflichtliste
+- `modules/planner/ai.ts`: kompaktes `aiSchema` (Sammlung `day`: date, availableMin, note; Sammlung `item`: title, durationMin, priority, pinned, excluded – `searchable: false` für `assignment`), Aktionen `available` (update day), `block` (create Blocker), `pin` (transition item), `exclude` (transition item) mit `parse`-Hinweisen (Stichwörter „frei“, „verfügbar“, „festnageln“, „nicht planen“), je 5 Eval-Eingaben in `web/tests/ai/eval-set.json`; `contributions.aiActionHandlers` für `pin`/`exclude` (Lauf danach, Undo-Gruppe).
+- ToDos: `estimateMin` in `aiSchema` und in `actions.create.fields` (Rolle aus den Capture-Fakten), 2 Eval-Eingaben („Steuer zwei Stunden bis Donnerstag“).
+- Stufe 1 für Anweisungen: `core/ai/local/prompts/plan.ts` (System-Prompt mit dem kompakten Plan ≤ 30 Zeilen: Schlüssel, Titel, Min, Prio, Frist, Tag; Nutzertext = der Satz), Grammatik für ≤ 8 Ops `{ op, key|date, value }`, Schlüssel gegen den Plan geprüft, Ergebnis → Ops → Lauf → `PlanPreview` (immer); Fallback auf Stufe 0; nur wenn `localStageReady()`; `local/stage.test.ts`-Muster.
+- Datenschutz-Pins (`core/ai/privacy.test.ts` + `modules/planner/__tests__/privacy.test.ts`): (1) mit „KI aus“ laufen `plan()`, Anweisungen und Aktionen über die Regeln, 0 Netzanfragen; (2) die lokale Stufe ruft nie `fetch`; (3) [nur bei Cloud-Entscheidung] der Cloud-Body enthält keinen Titel, keine Notiz, keinen Personennamen der Fixtures und nicht den Rohsatz, nur Schlüssel und Zahlen, Schlüssel je Lauf zufällig; sonst: der Planer taucht in keinem Cloud-Prompt auf (`aiModules`-Filter + Test).
+- `core/ai/switch.ts`-Gating an den Verbrauchern: Eingabefeld und Vorschau funktionieren ohne KI (E2E mit Schalter aus).
+
+## Nicht in diesem Paket
+Zeiterfassung, Zeitfenster, Streaming, neue Provider. Keine Änderung an der Reihenfolge Regeln → lokal → Cloud.
+
+## Abnahme
+- `npm run check`, `test`, `check:modules`, `check:i18n`, `e2e`, `npm run ai:eval` grün; Eval-Tabelle im PR-Text (Stufe 0/1 je Eingabe).
+- Docs: STATUS eine Zeile; `decisions/plan.md` eine Bullet (Stufen und was die Cloud sieht); `docs/user/ai-assistant.md` + `.de.md` ein Absatz; `.changes/`-Notiz (DE/EN); Zeile in CHATS.md.
+
+## Skills
+Nach dem Bau `council` über den Diff (Guardian: Datenschutz der Stufen, Pins, KI-aus-Pfad, was in Sync/Backup landet; Advocate: Vorschau verständlich, kein Raten, Wortlaut; Architect: Grammatik, Ops-Vertrag, keine Modul-Importe). Danach `full stop`: PR gegen develop, Council-Tabelle in der PR-Beschreibung, kein Merge.
+```
+
+### Prompt – package 5: learning, windows, habits, week review (`feat/plan-learn`)
+
+```
+# Aufgabe: Planer – Lernen aus der Zeiterfassung, Zeitfenster, Gewohnheiten als Blöcke, ruhiger Wochenrückblick (Paket 5 von 5)
+
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch `feat/plan-learn` von frischem `develop` (nach Merge von Paket 3 und 4). Vorgegebene Session-Branches ignorieren.
+
+## Ausgangslage
+Der Planer plant, zeigt und versteht (Pakete 1–4). Dieses Paket macht Schätzungen ehrlicher und Tage feiner (CONCEPT §7). Lies `modules/timetrack/{schema,logic}.ts`, `core/events/events.ts` (`timetrack.start.requested`), `modules/habits/{schema,logic}.ts`, `modules/calendar/views.ts` (`splitDay`, `TimedItem`), `modules/todos/progress.ts` (`weekReview`), `core/automation/templates.ts` (`weeklyReview`).
+
+## Pflichtliste
+- Zeiterfassung: optionales Feld `session.ref` (Planer-Item-Schlüssel; `manifest.version` + Migration no-op), gesetzt wenn der Start über `timetrack.start.requested` mit `sourceRef` kommt (Planer-Zeilenaktion „Zeit erfassen“); `modules/timetrack/plannable.ts` liefert keine Items, sondern `actuals(keys)` als zweite Vertragsfläche (`PlannableSource.actuals?`) – Ist-Minuten je Schlüssel; der Planer zeigt im Zettel „Letztes Mal 50 Min · Schätzung 30“ und bietet „Übernehmen“; nie automatisch ändern.
+- Zeitfenster: `day.from`/`day.to` (Standard je Wochentag in den Einstellungen, z. B. 09:00–17:00) und Blocker mit `from`/`to`; Engine legt Sitzungen in freie Fenster (`core/plan/windows.ts`, deterministisch, Tests); Kalender-Chips werden Zeitblöcke (`time`/`endTime`), Stundenraster zeigt sie; Drag bleibt aus (nur Kalender-Termine).
+- Energie: `item.energy` (morgens/abends), `settings.energyProfile` (aus, Standard) – Engine bevorzugt passende Fenster, nie Pflicht; eine Zeile in den Einstellungen, Aus-Schalter.
+- Gewohnheiten: optionales `goal.minutes`; mit `reminder.time` + Minuten liefert `modules/habits/plannable.ts` feste Blöcke (`PlannableSource.blocks?`), sonst nichts; Migration no-op.
+- Wochenrückblick: eine Zeile im Planer-Widget am Montag („Letzte Woche: 9 von 12 Dingen · 11 h“), Schalter `focus.weekReview` wiederverwendet; Vorlage `weeklyReview` darf darauf hinweisen (`notice`, soft).
+- Verfügbarkeits-Vorlagen „Arbeitswoche / Urlaub / Krank“ im „Woche prüfen“-Zettel (eine Auswahl, überschreibt nur die Woche).
+
+## Nicht in diesem Paket
+Cloud, Partner-Freigabe, Android-Widget, Drag von Plan-Blöcken im Kalenderraster.
+
+## Abnahme
+- `npm run check`, `test`, `check:modules`, `check:i18n`, `e2e` grün; `db:bump` nach Merge von `develop` erneut; Engine-Fixtures um ein Fenster-Szenario ergänzt.
+- Fokus-Checkliste im PR-Text (Energieprofil aus, Rückblick ohne Verlustzahl, nichts wächst täglich).
+- Docs: STATUS eine Zeile; `decisions/plan.md` zwei Bullets (Ist-Dauer nur als Hinweis; Fenster statt Minuten); ARCHITECTURE-MAP-Zeile ergänzen; `.changes/`-Notiz (DE/EN); Zeile in CHATS.md.
+
+## Skills
+`review loop` (Fokus: Migrationen, Determinismus der Fenster, keine stillen Änderungen an Schätzungen), dann `full stop`: PR gegen develop, kein Merge.
+```
+
+## 9. Fragen an Sven (Empfehlung zuerst)
+
+1. **KI-Umplanung:** (a) **lokal-only** – Regeln + lokales Modell, die Cloud sieht den Plan nie _(Empfehlung: 0 Token, nichts verlässt das Gerät, Svens Beispiele versteht schon die Regelstufe)_ · (b) zusätzlich Cloud mit titellosen Merkmalen (Zahlen, Daten, Schlüssel; ~1 €/Monat; Datum und Dauer bleiben persönliche Daten) · (c) nur Regeln, kein Modell.
+2. **Plan-Ansicht:** (a) **Kalender-Integration** – geplante Blöcke als Chips im Monats-/Wochen-/Tagesraster plus „Plan“-Link im Ansichtsschalter, das Brett bleibt die Planungsfläche _(Empfehlung)_ · (b) eigener Reiter „Plan“ im Kalender (nur als Link machbar, Module importieren sich nicht) · (c) nur die eigene Seite.
+3. **Ort:** (a) **eigenes Modul „Planer“ im Bereich Planen** (eigene Tabellen, Vertrag für viele Quellen, Widget Wochenlast; ToDos bleiben die ruhige Liste) _(Empfehlung)_ · (b) Teil der ToDos (`/todos/plan`, keine neuen Tabellen außer Tage; Rechnungen/Notizen dann nur über den Vertrag in ToDos).
+4. **Umfang Paket 1:** (a) **Engine + Modul mit Wochenbrett + ToDos als Quelle + Verfügbar/Blocker (Kalender) + Rückschreiben `plannedFor` + Widget + Undo** – damit ist eine Woche planbar _(Empfehlung; ein Chat, Council)_ · (b) kleiner: nur die Engine und ein Knopf „Woche verteilen“ auf der ToDo-Seite (schreibt `plannedFor`), ohne neues Modul – könnte sofort starten, da kein Hotspot · (c) größer: zusätzlich Kalender-Chips und Freitext-Anweisungen (Paket 1 + 2 in einem).
+
+Decided by this chat without asking (named here, changeable in phase 2): all open ToDos are plannable by default (opt-out per item „Nicht planen“, `someday` and subtasks excluded); the add field creates a ToDo (no own entry type in v1); a user-set `plannedFor` is a pin for that day; nothing is pulled forward by itself; sessions on different days except under deadline pressure; main-items-per-day reuses `focus.planLimit`; identity `indigo`/`kennzahl`/`fortschritt`/`weekBars`, `order: 15`; `maturity: 'preview'` until package 3.
