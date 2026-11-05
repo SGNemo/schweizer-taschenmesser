@@ -35,7 +35,7 @@ export const focus: Strings['focus'] = {
     aidsOn: (n: number, total: number) => `${n} de ${total} ativadas`,
     colors: 'Cores dos módulos',
     colorsHint:
-      'As cores e os padrões dos módulos ficam em “Aparência”; lá também está “Calmo” para menos estímulos.',
+      'As cores e os padrões dos módulos ficam em “Aparência”; lá também está “Tranquilo” para menos estímulos.',
     colorsLink: 'Ir para as cores dos módulos',
     planShort: (n: number) => `Plano do dia ${n}`,
     timerShort: (n: number) => `Timer ${n} min`,
