@@ -1,7 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
-import { useOnboardingHost } from '@/core/importer/host';
 import { collator } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import { today } from '@/core/time/now';
@@ -13,6 +12,7 @@ import { t } from '@/strings';
 import {
   Button,
   Dialog,
+  EmptyState,
   GroupedList,
   Icon,
   ItemRow,
@@ -22,8 +22,8 @@ import {
 } from '@/ui';
 import { formatNumber } from '@/core/i18n/format';
 import { formatDay } from '@/core/time/dates';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
-import { FeedsEmpty } from '../components/FeedsEmpty';
+import { HeroFigure, HeroSlot, Masthead, SignatureMark } from '@/ui/identity';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { feedKey, groupFeeds, hostOf, normalizeFeedUrl } from '../logic';
 import { feedRepo } from '../repo';
 import { settings, type FeedsSettings } from '../settings';
@@ -45,7 +45,6 @@ export default function MainPage() {
   const [closed, setClosed] = useState(false);
   const [error, setError] = useState('');
   const [params, setParams] = useSearchParams();
-  const openImporter = useOnboardingHost((h) => h.open);
   const toast = useUiStore((st) => st.toast);
   const [prefs] = useSettings('module.feeds', settings.schema, settings.defaults);
 
@@ -106,17 +105,19 @@ export default function MainPage() {
           <Icon name="plus" size={18} />
           {s.add}
         </Button>
-        <Button onClick={() => openImporter('feeds')}>
-          <Icon name="download" size={18} />
-          {s.importOpml}
-        </Button>
-        {feeds && feeds.length > 0 ? (
-          <Button onClick={() => void exportOpml()}>
-            <Icon name="upload" size={18} />
-            {s.exportOpml}
-          </Button>
-        ) : null}
+        {/* Import and export in the ⋯ menu: an empty page offers one verb (C23). */}
+        <StartDataMenu
+          moduleId="feeds"
+          items={
+            feeds && feeds.length > 0
+              ? [{ id: 'export', label: s.exportOpml, onSelect: () => void exportOpml() }]
+              : []
+          }
+        />
       </PageHeader>
+      <HeroSlot area="signature">
+        <Masthead size="M">{s.title}</Masthead>
+      </HeroSlot>
       {feeds && feeds.length > 0 ? (
         <>
           <HeroSlot area="figure">
@@ -148,12 +149,13 @@ export default function MainPage() {
         </>
       ) : null}
       {feeds && feeds.length === 0 ? (
-        <FeedsEmpty title={s.empty}>
+        <EmptyState
+          title={s.empty}
+          testId="feeds-empty"
+          motif={<SignatureMark id="masthead" size={64} />}
+        >
           <p>{s.emptyHint}</p>
-          <Button variant="primary" onClick={() => setDraft(EMPTY)}>
-            {s.add}
-          </Button>
-        </FeedsEmpty>
+        </EmptyState>
       ) : null}
       {groups.length > 0 ? (
         <div className={styles.heads}>

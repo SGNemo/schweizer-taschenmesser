@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -14,6 +14,7 @@ import { t } from '@/strings';
 import {
   Badge,
   Button,
+  EmptyState,
   Checkbox,
   Dialog,
   Icon,
@@ -29,7 +30,7 @@ import {
   useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
-import { ListsEmpty } from '../components/ListsEmpty';
+import { SignatureMark } from '@/ui/identity';
 import { ListEditor, type ListTarget } from '../components/ListEditor';
 import {
   groupItems,
@@ -273,6 +274,7 @@ export default function ListsPage() {
           <Icon name="plus" size={18} />
           {t.lists.newList}
         </Button>
+        <StartDataMenu moduleId="lists" />
       </PageHeader>
       {lists && current && isShopping ? (
         <ReceiptSignature
@@ -412,9 +414,16 @@ export default function ListsPage() {
             </div>
           ) : null}
           {items && shown.length === 0 ? (
-            <ListsEmpty title={t.lists.empty} kind={current.kind}>
-              <StartDataButton moduleId="lists" />
-            </ListsEmpty>
+            <EmptyState
+              title={t.lists.empty}
+              testId="lists-empty"
+              motif={
+                <SignatureMark
+                  id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                  size={64}
+                />
+              }
+            />
           ) : null}
           {isShopping && sums.priced > 0 ? (
             <p className={styles.sums} data-testid="lists-sums">

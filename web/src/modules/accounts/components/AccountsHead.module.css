@@ -1,0 +1,15 @@
+/* The state beside the door plate: real text, mono like the head. */
+.text {
+  display: grid;
+  margin: 0;
+}
+.state {
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+.sub {
+  color: var(--text-on-tint);
+  font-size: var(--text-sm);
+}

@@ -4,8 +4,8 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import { Button, Card, Icon, PageTitle } from '@/ui';
-import { MusicEmpty } from '../components/MusicEmpty';
+import { Button, Card, EmptyState, Icon, PageTitle } from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { MusicHero } from '../components/MusicHero';
 import { SideLists } from '../components/SideLists';
 import { SourceView } from '../components/SourceView';
@@ -46,12 +46,15 @@ export default function MusicPage() {
       <>
         <PageTitle title={tm.name} />
         <div className={styles.empty} data-testid="music-empty">
-          <MusicEmpty title={tm.notConnectedTitle}>
+          <EmptyState
+            title={tm.notConnectedTitle}
+            motif={<SignatureMark id="coverTone" size={64} />}
+          >
             <p>{tm.notConnectedText}</p>
             <Link to={CONNECTIONS}>
               <Button variant="primary">{tm.connect}</Button>
             </Link>
-          </MusicEmpty>
+          </EmptyState>
         </div>
       </>
     );

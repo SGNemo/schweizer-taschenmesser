@@ -1,0 +1,6 @@
+/* The context line under the tiles (every widget says what its content means). */
+.context {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}

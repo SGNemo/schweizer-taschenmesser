@@ -51,7 +51,8 @@ const OPML = `<?xml version="1.0"?>
 test('Feeds: OPML importieren (Vorschau, Bericht, Duplikat) und exportieren', async ({ page }) => {
   await enable(page, 'feeds');
   await page.goto('/feeds');
-  await page.getByRole('button', { name: 'Importieren' }).first().click();
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'Importieren' }).click();
   const wizard = page.getByRole('dialog', { name: /Importieren/ });
   await wizard.getByRole('button', { name: /OPML-Datei/ }).click();
   const chooser = page.waitForEvent('filechooser');
@@ -69,7 +70,8 @@ test('Feeds: OPML importieren (Vorschau, Bericht, Duplikat) und exportieren', as
   await expect(page.getByRole('heading', { name: /Podcasts/ })).toBeVisible();
 
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Als OPML exportieren' }).click();
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'Als OPML exportieren' }).click();
   const file = await download;
   expect(file.suggestedFilename()).toMatch(/^nemo-feeds-\d{4}-\d{2}-\d{2}\.opml$/);
 });

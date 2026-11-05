@@ -64,34 +64,14 @@ const manifest: ModuleManifest = {
   platforms: ['desktop'],
   widgets: [
     {
-      id: 'unread',
+      id: 'inbox',
       get title() {
-        return t.mail.widget.unread;
-      },
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/UnreadWidget'),
-      to: '/mail',
-    },
-    {
-      id: 'top',
-      get title() {
-        return t.mail.widget.important;
+        return t.mail.widget.inbox;
       },
       defaultSize: 'm',
       sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/TopWidget'),
+      component: () => import('./widgets/InboxWidget'),
       to: '/mail',
-    },
-    {
-      id: 'invoices',
-      get title() {
-        return t.mail.widget.invoices;
-      },
-      defaultSize: 's',
-      sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/InvoicesWidget'),
-      to: '/mail?q=rechnung',
     },
   ],
   settings,

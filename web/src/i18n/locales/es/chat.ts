@@ -107,6 +107,7 @@ export const chat: Strings['chat'] = {
     empty: 'Aún no hay chats.',
     link: 'Abrir chat',
     line: (n: number) => (n === 1 ? '1 chat' : `${n} chats`),
+    context: (n: number, when: string) => `${n === 1 ? '1 chat' : `${n} chats`} · último ${when}`,
   },
   seed: {
     title: 'Ejemplo: consejos para el plan semanal',

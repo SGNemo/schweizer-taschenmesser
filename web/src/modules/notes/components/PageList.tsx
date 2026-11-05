@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { StartDataButton } from '@/core/importer/StartDataButton';
 import type { Stored } from '@/core/db/types';
 import { compareText } from '@/core/i18n/format';
 import { t } from '@/strings';
 import {
   Button,
   categoryColor,
+  EmptyState,
   FolderTabs,
   Icon,
   IconButton,
@@ -14,7 +14,6 @@ import {
   SelectField,
   SortableList,
   TextField,
-  type RowMenuItem,
 } from '@/ui';
 import type { IconName } from '@/ui/icons';
 import {
@@ -33,7 +32,8 @@ import {
 } from '../logic';
 import type { Note, Notebook } from '../schema';
 import { TEMPLATE_IDS, type TemplateId } from '../templates';
-import { NotesEmpty } from './NotesEmpty';
+import { pageMenuItems } from './pageMenu';
+import { SignatureMark } from '@/ui/identity';
 import styles from './PageList.module.css';
 
 type Page = Stored<Note>;
@@ -198,12 +198,18 @@ export function PageList(p: PageListProps) {
       </SelectField>
 
       {pages && rest.length === 0 && (query.trim() || filter !== 'all') ? (
-        <NotesEmpty title={t.notes.emptyFiltered} />
+        <EmptyState
+          title={t.notes.emptyFiltered}
+          testId="notes-empty"
+          motif={<SignatureMark id="notePaper" size={64} />}
+        />
       ) : null}
       {pages && total === 0 && !query.trim() && filter === 'all' ? (
-        <NotesEmpty title={t.notes.empty}>
-          <StartDataButton moduleId="notes" />
-        </NotesEmpty>
+        <EmptyState
+          title={t.notes.empty}
+          testId="notes-empty"
+          motif={<SignatureMark id="notePaper" size={64} />}
+        />
       ) : null}
 
       <div
@@ -273,15 +279,7 @@ function PageRow({
   ...p
 }: PageListProps & { page: Page; book: Book | undefined; handle?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const items: RowMenuItem[] = [
-    {
-      id: 'pin',
-      label: page.pinned ? t.notes.unpin : t.notes.pin,
-      onSelect: () => p.onTogglePin(page),
-    },
-    { id: 'move', label: t.notes.moveTo, onSelect: () => p.onMove(page) },
-    { id: 'delete', label: t.actions.delete, danger: true, onSelect: () => p.onDelete(page) },
-  ];
+  const items = pageMenuItems(page, p);
   return (
     <Row
       id={page.id}
@@ -332,7 +330,7 @@ function Row({
       >
         <span className={styles.title} title={title}>
           {pinned ? <Icon name="pin" size={14} /> : null}
-          {title}
+          <span className={styles.titleText}>{title}</span>
         </span>
         {book ? (
           <span className={styles.bookTag}>

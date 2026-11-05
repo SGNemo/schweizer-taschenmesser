@@ -1,5 +1,5 @@
 import { t } from '@/strings';
-import { Skeleton, StatusWidget as StatusCard } from '@/ui';
+import { Skeleton, StatusWidget as StatusCard, WidgetBody } from '@/ui';
 import { useHeaderState } from '../hooks';
 import { useSession } from '../session';
 
@@ -12,14 +12,17 @@ export default function StatusWidget() {
   const unlocked = useSession((s) => s.session.status === 'unlocked');
   const w = t.accountsWidget;
   if (!header) return <Skeleton width="60%" height="1.25rem" />;
+  // Not set up yet: the shared empty state (the fish) with one next step, like every other widget (C34).
   if (header.state === 'none')
     return (
-      <StatusCard
-        icon="lock"
-        state={w.notSetUp}
-        hint={w.hint}
-        action={{ label: w.setUp, to: '/accounts' }}
-      />
+      <WidgetBody
+        loading={false}
+        isEmpty
+        empty={w.notSetUp}
+        emptyAction={{ label: w.setUp, to: '/accounts' }}
+      >
+        {null}
+      </WidgetBody>
     );
   return (
     <StatusCard

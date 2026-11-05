@@ -8,7 +8,7 @@ import { looksLikeInvoice } from './format';
 import { threadRepo } from './repo';
 
 const REFRESH_EVERY = 10 * 60_000;
-const INVOICE_DAYS = 30;
+export const INVOICE_DAYS = 30;
 const lastRefresh = new Map<string, number>();
 
 /** Refreshes the inbox headers of every connected account, at most every ten minutes. Errors are ignored. */
@@ -26,13 +26,15 @@ async function refresh(): Promise<void> {
 }
 
 export interface MailSummary {
+  /** Threads in the local cache (all folders); 0 = nothing to show yet. */
+  total: number;
   unread: number;
   /** Unread inbox threads, "important" ones first, newest first. */
   top: CachedThreadView[];
   invoices: number;
 }
 
-/** Live data for the three widgets: reads the local cache only (plus a throttled inbox refresh). */
+/** Live data for the inbox widget and the head: reads the local cache only (plus a throttled inbox refresh). */
 export function useMailSummary(): MailSummary | undefined {
   useEffect(() => {
     void refresh();
@@ -51,6 +53,7 @@ export function useMailSummary(): MailSummary | undefined {
     );
     const since = now() - INVOICE_DAYS * 86_400_000;
     return {
+      total: all.length,
       unread: unread.length,
       top: top.slice(0, 3),
       invoices: all.filter((t) => t.date >= since && looksLikeInvoice(t.subject, t.from)).length,

@@ -1,40 +1,5 @@
-.receipt {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-1);
-  min-width: 11rem;
-  max-width: 15rem;
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  background: var(--surface);
-  color: var(--text);
-  border-top: 2px dashed var(--border-strong);
-  /* jagged lower edge */
-  --zig: 0.5rem;
-  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
-    var(--zig) 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig)
-    100%;
-  padding-bottom: calc(var(--space-4) + var(--zig));
-}
 .line {
   font-size: var(--text-sm);
-}
-.slipLine {
-  display: flex;
-  min-width: 0;
-  gap: var(--space-3);
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
-.slipName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.slipPrice {
-  font-variant-numeric: tabular-nums;
 }
 .case {
   display: flex;
@@ -77,9 +42,4 @@
 .sub {
   color: var(--text-on-tint);
   font-size: var(--text-xs);
-}
-@media (max-width: 600px) {
-  .receipt {
-    min-width: 0;
-  }
 }

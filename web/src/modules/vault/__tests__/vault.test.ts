@@ -14,6 +14,7 @@ import {
   nextRelevantDate,
   safeFileName,
   sortDocuments,
+  stateGroup,
   statusOf,
 } from '../logic';
 import manifest from '../manifest';
@@ -275,5 +276,14 @@ describe('start data: papers', () => {
       expect(c.data).not.toHaveProperty('expiresOn');
     }
     expect(new Set(res.candidates.map((c) => c.dedupeKey)).size).toBe(PAPER_TEMPLATES.length);
+  });
+});
+
+describe('stateGroup (head tabs, widget)', () => {
+  it('counts a passed cancellation deadline as fine, not as a deadline in sight', () => {
+    expect(stateGroup('missed')).toBe('ok');
+    expect(stateGroup('act-now')).toBe('due');
+    expect(stateGroup('soon')).toBe('due');
+    expect(stateGroup('expired')).toBe('expired');
   });
 });

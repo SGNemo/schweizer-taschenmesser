@@ -2,6 +2,7 @@ import type { Strings } from '@/strings';
 
 export const onboarding: Strings['onboarding'] = {
   button: 'Importer',
+  pageMenu: 'Autres actions',
   title: (module: string) => `Importer : ${module}`,
   rowLabel: 'Ajouter des entrées',
   rowHint:
