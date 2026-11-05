@@ -40,6 +40,21 @@ describe('planner module', () => {
   });
 });
 
+describe('capacity words', async () => {
+  const { capacityLabel, capacityShort } = await import('../components/capacity');
+  it('column and sheet say the phrase, the strip one word; off wins, full needs something planned', () => {
+    const none = { off: false, usable: 0, planned: 0, free: 0 };
+    expect(capacityLabel(none)).toBe('keine freie Zeit');
+    expect(capacityShort(none)).toBe('belegt');
+    expect(capacityShort({ ...none, off: true })).toBe('frei');
+    expect(capacityShort({ off: false, usable: 60, planned: 60, free: 0 })).toBe('voll');
+    expect(capacityLabel({ off: false, usable: 60, planned: 30, free: 30 })).toBe(
+      '30 Min frei von 1 h',
+    );
+    expect(capacityShort({ off: false, usable: 60, planned: 0, free: 60 })).toBe('1 h');
+  });
+});
+
 describe('runToast', () => {
   const titles: Record<string, string> = {
     'todos:f': 'Blogpost',

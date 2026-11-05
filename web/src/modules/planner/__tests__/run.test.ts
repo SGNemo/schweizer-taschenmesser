@@ -649,6 +649,24 @@ describe('council round 1', () => {
     expect(await db.table('planner_item').count()).toBe(0);
   });
 
+  it('a removal of test data: a queued action finishes first, a new one waits, both settle (no deadlock)', async () => {
+    const { resumeRuns, suspendRuns } = await import('../services');
+    await modulesRow('todos', true);
+    await modulesRow('planner', true);
+    await task('A', { estimateMin: 30 });
+    const queued = runUser('x', async () => undefined); // behind nothing, but still in the queue
+    await suspendRuns(); // waits for it
+    await expect(queued).resolves.toMatchObject({ outcome: { ran: true } });
+    let settled = false;
+    const later = runUser('y', async () => undefined).then((r) => ((settled = true), r));
+    expect(await runBackground()).toBeUndefined(); // skipped while suspended
+    await runsSettled();
+    expect(settled).toBe(false);
+    resumeRuns();
+    await expect(later).resolves.toMatchObject({ outcome: { ran: true } });
+    await runsSettled();
+  });
+
   it('msUntilNextDay points just past the next local midnight', async () => {
     const { msUntilNextDay } = await import('../services');
     const at = new Date(2026, 10, 9, 23, 59, 0).getTime();

@@ -5,18 +5,40 @@ export const compact = (min: number): string => formatMinutes(min, { compact: tr
 
 type Capacity = { off: boolean; free: number; planned: number; usable: number };
 
-/** The one capacity word of a day: „frei“ (off), „keine freie Zeit“, „voll“, or „x frei von y“. */
+export type CapacityState = 'off' | 'noTime' | 'full' | 'free';
+
+/** One reading of a day for every surface: off wins, then no usable time, then full, else free time. */
+export function capacityState(day: Capacity): CapacityState {
+  if (day.off) return 'off';
+  if (day.usable === 0 && day.planned === 0) return 'noTime';
+  if (day.free === 0 && day.planned > 0) return 'full';
+  return 'free';
+}
+
+/** The capacity phrase of a day (column, sheet): „frei“, „keine freie Zeit“, „voll“ or „x frei von y“. */
 export function capacityLabel(day: Capacity): string {
-  if (day.off) return t.planner.board.off;
-  if (day.usable === 0 && day.planned === 0) return t.planner.board.noTime;
-  if (day.free === 0 && day.planned > 0) return t.planner.board.full;
-  return t.planner.board.freeOf(compact(day.free), compact(day.usable));
+  switch (capacityState(day)) {
+    case 'off':
+      return t.planner.board.off;
+    case 'noTime':
+      return t.planner.board.noTime;
+    case 'full':
+      return t.planner.board.full;
+    case 'free':
+      return t.planner.board.freeOf(compact(day.free), compact(day.usable));
+  }
 }
 
 /** The strip chip: the free time alone, or one state word. */
 export function capacityShort(day: Capacity): string {
-  if (day.off) return t.planner.board.off;
-  if (day.usable === 0 && day.planned === 0) return t.planner.board.noTimeShort;
-  if (day.free === 0 && day.planned > 0) return t.planner.board.full;
-  return compact(day.free);
+  switch (capacityState(day)) {
+    case 'off':
+      return t.planner.board.off;
+    case 'noTime':
+      return t.planner.board.noTimeShort;
+    case 'full':
+      return t.planner.board.full;
+    case 'free':
+      return compact(day.free);
+  }
 }

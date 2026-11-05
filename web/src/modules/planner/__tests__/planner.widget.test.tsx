@@ -78,6 +78,17 @@ describe('week widget', () => {
     expect(document.querySelector('[class*="over"]')).toBeNull();
   });
 
+  it('a day with no usable time and nothing planned says so; a day off still wins, also today', () => {
+    const [none, off, todayOff] = weekEntries([
+      day({ isToday: true, usable: 0, raw: 0, free: 0, planned: 0 }),
+      day({ date: '2026-11-11', off: true, usable: 0, raw: 0, free: 0, planned: 0 }),
+      day({ isToday: true, off: true, usable: 0, raw: 0, free: 0, planned: 0 }),
+    ]);
+    expect(none!.title).toBe('Heute · keine freie Zeit');
+    expect(off!.title).toBe('Mi · frei');
+    expect(todayOff!.title).toBe('Heute · frei');
+  });
+
   it('entries: today, a full day, a day off, an overrun in the detail; the summary sums the shown rows', () => {
     const days = [
       day({ date: '2026-11-09', isToday: true, planned: 145, free: 47 }),

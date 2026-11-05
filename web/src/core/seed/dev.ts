@@ -236,7 +236,10 @@ export async function applySeed(opts: ApplyOptions): Promise<SeedState> {
       await registry(database).bulkPut(
         c.ids.map((id) => ({ id: seedKey(table, id), table, rowId: id, batchId })),
       );
-      records.push({ collection: c.collection, ids: c.ids, table });
+      // The batch record lists every id once (a hook may name rows the seed wrote already).
+      const known = new Set(records.filter((r) => r.table === table).flatMap((r) => r.ids));
+      const fresh = c.ids.filter((id) => !known.has(id));
+      if (fresh.length > 0) records.push({ collection: c.collection, ids: fresh, table });
     }
   }
   // Whatever the hooks wrote onto registered rows (the planner's marks on seed tasks) is test data too.
@@ -287,12 +290,12 @@ export async function removeSeed(
   database: TaschenmesserDB = defaultDb,
   manifests: readonly ModuleManifest[] = availableManifests(),
 ): Promise<{ removed: number }> {
-  for (const m of manifests) {
-    const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
-    await mod?.beforeRemove?.();
-  }
   let removed = 0;
   try {
+    for (const m of manifests) {
+      const mod = m.seed.none ? undefined : await loadSeedModule(m.id);
+      await mod?.beforeRemove?.();
+    }
     const rows = await registry(database).toArray();
     const syncedOnce = (await meta(database).get(SEED_SYNCED_ONCE_KEY))?.value === true;
     const byTable = new Map<string, string[]>();

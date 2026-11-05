@@ -105,8 +105,8 @@ export function runBackground(opts: { force?: boolean } = {}): Promise<RunOutcom
 }
 
 /**
- * The seed's removal: no background run until `resumeRuns`; resolves when the running one is done. A
- * planner action in the same second still runs (dev data, a known edge); `start()` lifts the flag too.
+ * The seed's removal: no background run until `resumeRuns`; resolves when the running one is done.
+ * `start()` lifts the flag too. Two removals at once share one suspension (a dev-only double click).
  */
 export async function suspendRuns(): Promise<void> {
   if (!suspended) {
@@ -133,19 +133,22 @@ export interface UserRun {
  * action, so the undo in the toast restores everything. Returns the run and the undo entry.
  */
 export function runUser(label: string, act: () => Promise<void>): Promise<UserRun> {
-  return enqueue(async () => {
-    await resumed; // a removal of test data in flight ends first
-    if (await switchedOff()) throw new PlannerOffError();
-    const { result, entry } = await undoable(
-      label,
-      async () => {
-        await act();
-        return runPlanner(await depsNow(false), { force: true });
-      },
-      MODULE_ID,
-    );
-    return { outcome: result, ...(entry ? { entry } : {}) };
-  });
+  // A removal of test data in flight ends first – waited for outside the queue, so `suspendRuns`
+  // (which awaits the queue) and a queued action can never wait for each other.
+  return resumed.then(() =>
+    enqueue(async () => {
+      if (await switchedOff()) throw new PlannerOffError();
+      const { result, entry } = await undoable(
+        label,
+        async () => {
+          await act();
+          return runPlanner(await depsNow(false), { force: true });
+        },
+        MODULE_ID,
+      );
+      return { outcome: result, ...(entry ? { entry } : {}) };
+    }),
+  );
 }
 
 /**

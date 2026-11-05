@@ -112,7 +112,8 @@ function seed(ctx: SeedContext): SeedRows {
 /**
  * The first run over the test data, inside the seed: the rows for the todos seed's tasks are test data
  * too (registered, gone with „entfernen“). Rows and marks of a person's own things stay theirs – only
- * rows whose thing is a registered seed task are returned.
+ * rows whose thing is a registered seed task are returned; a day row the run itself writes does not
+ * exist (runs never create days), so every day row is the seed's or the person's.
  */
 async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[]> {
   // Automatic planning switched off: the test data gets no run either (a run would also touch the
