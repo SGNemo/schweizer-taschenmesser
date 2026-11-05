@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
@@ -148,6 +149,8 @@ function Form({
   const setNotifyChoice = (v: string) => draft.set('notifyChoice', v);
   const setActive = (v: boolean) => draft.set('active', v);
   const setTaken = (v: boolean) => draft.set('taken', v);
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
@@ -195,7 +198,7 @@ function Form({
       );
       return;
     }
-    if (existing) await eventRepo.update(existing.id, data);
+    if (existing) await eventRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await eventRepo.create(data);
     draft.clear();
     onClose();

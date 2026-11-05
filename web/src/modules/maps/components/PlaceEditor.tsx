@@ -1,3 +1,4 @@
+import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -14,6 +15,7 @@ export function PlaceEditor({ target, onClose }: { target: PlaceTarget; onClose:
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.maps.place.titleEdit : t.maps.place.titleAdd}
@@ -31,6 +33,8 @@ function Fields({ target, onClose }: { target: NonNullable<PlaceTarget>; onClose
     ? undefined
     : (target as { name?: string; lat: number; lon: number; address?: string });
   const start = existing ?? draft!;
+  // The record as the editor opened it: only fields that differ from it are saved (QA X01).
+  const [opened] = useState(existing);
   const [name, setName] = useState(existing?.name ?? draft?.name ?? '');
   const [address, setAddress] = useState(existing?.address ?? draft?.address ?? '');
   const [coords, setCoords] = useState(show(start.lat, start.lon));
@@ -51,7 +55,7 @@ function Fields({ target, onClose }: { target: NonNullable<PlaceTarget>; onClose
       category,
       pinned,
     };
-    if (existing) await placeRepo.update(existing.id, data);
+    if (existing) await placeRepo.update(existing.id, changedFields(opened ?? existing, data));
     else await placeRepo.create(data);
     onClose();
   }

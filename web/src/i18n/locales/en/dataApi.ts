@@ -29,6 +29,7 @@ export const dataApi: Strings['dataApi'] = {
   badCurrency: 'Only EUR is supported.',
   keyNotFound: 'No entry with this key in the batch.',
   refSelf: 'An entry can’t refer to itself.',
+  refNested: 'Points to an entry that is itself a sub-entry (only one level).',
   refWrongCollection: (c: string) => `The key doesn’t belong to “${c}”.`,
   refNotFound: (c: string) => `No “${c}” entry with this title found.`,
   refAmbiguous: (c: string) => `Several “${c}” entries match – please use the ID or a key.`,

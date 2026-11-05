@@ -236,6 +236,8 @@ export async function buildCandidates(
       else Object.assign(data, existing);
     }
     const refIds = new Map<string, string>();
+    // An entry of this batch it points at: it is written only together with that one.
+    let dependsOn: string | undefined;
     // Accounts and invoices have a real `currency` field; elsewhere it only confirms the euro.
     const ownCurrency = format.fields.some((f) => f.name === 'currency');
 
@@ -266,10 +268,25 @@ export async function buildCandidates(
           batchTitles,
           entriesOf,
         );
+        const nested =
+          typeof resolved !== 'string' &&
+          field.refCollection === collection &&
+          (await pointsToChild(resolved.id, field, drafts, collection, opts.lookup));
         if (typeof resolved === 'string') errors.push(`${name}: ${resolved}`);
+        else if (nested) errors.push(`${name}: ${t.dataApi.refNested}`);
         else {
           data[field.storeName] = resolved.id;
           refIds.set(field.storeName, resolved.id);
+          // Only a new entry of the batch (a change to an existing one is no dependency); the parent
+          // of a subtask wins over its list, a missing parent would leave it pointing at nothing.
+          const target = drafts.find(
+            (d) => d !== draft && d.id === resolved.id && d.collection === field.refCollection,
+          );
+          const stored =
+            target?.updateId !== undefined &&
+            (await opts.lookup.record(target.collection!, target.updateId)) !== undefined;
+          if (target && !stored && (!dependsOn || field.refCollection === collection))
+            dependsOn = target.id;
         }
       } else {
         data[field.storeName] = value;
@@ -323,6 +340,7 @@ export async function buildCandidates(
       label: label.length > 0 ? label : collection,
       detail: format.label,
       dedupeKey,
+      ...(dependsOn ? { dependsOn } : {}),
       ...(update ? { update } : {}),
       error:
         errors.length > 0
@@ -331,6 +349,26 @@ export async function buildCandidates(
     });
   }
   return { candidates, notes: [] };
+}
+
+/**
+ * A reference within one collection (a subtask's `parentId`) may only point at an entry that has no
+ * such reference itself: the list shows one level, and a cycle or a third level would never be seen.
+ */
+async function pointsToChild(
+  id: string,
+  field: FieldFormat,
+  drafts: Draft[],
+  collection: string,
+  lookup: RefLookup,
+): Promise<boolean> {
+  const inBatch = drafts.find((d) => d.id === id && d.collection === collection);
+  if (inBatch && inBatch.raw[field.name] !== undefined && inBatch.raw[field.name] !== null)
+    return true;
+  if (inBatch && !inBatch.updateId) return false;
+  // A change in the batch to a stored entry keeps that entry's own reference unless it sets one.
+  const stored = await lookup.record(collection, inBatch?.updateId ?? id);
+  return stored?.[field.storeName] !== undefined && stored[field.storeName] !== null;
 }
 
 function invalid(draft: Draft, collection: string, error: string): ImportCandidate {
