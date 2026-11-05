@@ -93,3 +93,15 @@ it('a subtask is not written when its parent is left out because of its list', a
   await commitImport(todos, { batchId: 'j5', importerId: 'json', source: 'test', rows: unticked });
   expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
 });
+
+it('a task pointing at a change of an unknown list is not written', async () => {
+  await importJson(
+    [
+      { collection: 'list', key: 'x', id: 'nope', name: 'Garten' },
+      { collection: 'task', title: 'Rasen', listId: '@x' },
+      { collection: 'task', title: 'Einzeln', listId: INBOX_ID },
+    ],
+    'j6',
+  );
+  expect((await taskRepo.active().toArray()).map((t) => t.title)).toEqual(['Einzeln']);
+});
