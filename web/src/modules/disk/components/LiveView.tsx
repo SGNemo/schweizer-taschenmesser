@@ -3,7 +3,7 @@ import type { DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
 import { Segmented } from '@/ui';
 import { formatBytes, formatCount } from '../format';
-import { minBytesFor } from '../logic/tree';
+import { minBytesFor, sortNodes } from '../logic/tree';
 import { LIVE_POLL_MS, useDiskStore } from '../store';
 import { Legend } from './Legend';
 import { NodeList } from './NodeList';
@@ -18,7 +18,8 @@ const noop = () => undefined;
  * steps (one poll every `LIVE_POLL_MS` while this view is open; the store keeps the last picture,
  * so leaving the page and coming back shows it at once). View only – opening, selecting and
  * deleting come with the finished scan. Folders still being counted say so in text (an ellipsis
- * on the map, a note in the list) and with a dashed outline, never by colour alone.
+ * on the map, a note in the list) and with a dashed outline, never by colour alone. The list keeps
+ * a stable order (by name) while sizes still move.
  */
 export function LiveView({ scanId }: { scanId: number }) {
   const live = useDiskStore((s) => s.live);
@@ -45,9 +46,17 @@ export function LiveView({ scanId }: { scanId: number }) {
   }, [scanId, pollLive]);
 
   const topLevel = useMemo(
-    () => (root ? live.filter((n) => n.parentId === root.id) : []),
+    () =>
+      root
+        ? sortNodes(
+            live.filter((n) => n.parentId === root.id),
+            'name',
+            'asc',
+          )
+        : [],
     [live, root],
   );
+  const pendingCount = useMemo(() => live.filter((n) => n.pending).length, [live]);
   const pendingNote = useCallback(
     (n: DiskNode) => (n.pending ? t.disk.scan.pendingShort : undefined),
     [],
@@ -96,6 +105,7 @@ export function LiveView({ scanId }: { scanId: number }) {
             onUp={noop}
             tooltip={tooltip}
             emptyText={t.disk.scan.liveEmpty}
+            ariaNote={pendingCount > 0 ? t.disk.scan.pendingCount(pendingCount) : undefined}
             testId="live-map"
           />
           <Legend colorBy="age" />
@@ -105,14 +115,13 @@ export function LiveView({ scanId }: { scanId: number }) {
           nodes={topLevel}
           total={root.bytes}
           selectedId={null}
-          onSelect={noop}
-          onOpen={noop}
           note={pendingNote}
           label={t.disk.scan.liveList}
         />
       )}
       <p className={styles.hint} id="disk-map-help">
-        {t.disk.scan.pendingLegend} · {t.disk.scan.liveHint}
+        {view === 'map' && root ? `${t.disk.scan.pendingLegend} · ` : ''}
+        {t.disk.scan.liveHint}
       </p>
     </section>
   );

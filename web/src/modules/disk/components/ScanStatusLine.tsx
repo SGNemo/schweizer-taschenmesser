@@ -53,10 +53,25 @@ export function ScanStatusLine({ root, progress, paused, onPause, onCancel, to }
           <Icon name={paused ? 'play' : 'pause'} size={18} />
           {paused ? t.disk.scan.resume : t.disk.scan.pause}
         </Button>
-        <Button variant="danger" onClick={onCancel}>
+        <Button variant="secondary" onClick={onCancel}>
           {t.disk.scan.cancel}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+/** The scan ended while the user was on the drives page: one line with the way to the result. */
+export function ScanEndedLine({ text, to }: { text: string; to: string }) {
+  return (
+    <Card as="div" className={styles.card} data-testid="scan-status">
+      <p className={styles.text}>
+        <strong>{text}</strong>
+        <span className={styles.muted}> · </span>
+        <Link to={to} className={styles.link}>
+          {t.disk.scan.toResult}
+        </Link>
+      </p>
     </Card>
   );
 }

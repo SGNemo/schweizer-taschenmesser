@@ -266,6 +266,8 @@ fn scan_dir(path: &Path, name: String, depth: usize, live_id: u32, ctx: &Ctx) ->
         ..Default::default()
     };
     if ctx.should_stop() {
+        // Cancelled: the live node stays pending on purpose; the picture is discarded with the end
+        // of the scan.
         return out;
     }
     if let Ok(mut cur) = ctx.current.try_lock() {

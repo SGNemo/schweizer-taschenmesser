@@ -96,8 +96,9 @@ impl LiveTree {
 
     /// The live folders with their totals so far, biggest first within a folder, without entries
     /// smaller than `min_bytes`. A folder whose own files count gets an extra "files here" entry
-    /// so the map shows their share. Entries whose folder is not finished yet are `pending`. Empty
-    /// before the scan started.
+    /// so the map shows their share. Folders whose walk has not returned yet are `pending` (a
+    /// cancelled walk leaves them so on purpose; that picture is discarded). Empty before the scan
+    /// started.
     pub fn snapshot(&self, min_bytes: u64) -> Vec<NodeView> {
         let n = self.nodes.lock().unwrap_or_else(|e| e.into_inner());
         if n.is_empty() {
@@ -149,11 +150,9 @@ impl LiveTree {
             kind_bytes: c.kind_bytes,
             age_bytes: [0; AGE_COUNT],
             child_count,
-            pending: !n[match kind {
-                NodeKind::Small => id - OWN_FILES_ID,
-                _ => id,
-            } as usize]
-                .done,
+            // A folder's own files are counted before its sub-folders get live nodes, so a
+            // "files here" entry is complete as soon as it exists; a folder waits for its walk.
+            pending: kind != NodeKind::Small && !n[id as usize].done,
             rel_path: String::new(),
         };
         let mut out = vec![view(
@@ -262,9 +261,13 @@ mod tests {
         live.add(old, &c);
         let pending = |snap: &[NodeView], id: u32| snap.iter().find(|v| v.id == id).unwrap().pending;
         let s = live.snapshot(0);
-        assert!(s.iter().all(|v| v.pending), "nothing finished yet: {s:?}");
-        // The "files here" entry of a folder follows its folder.
-        assert!(pending(&s, OWN_FILES_ID));
+        assert!(
+            s.iter().filter(|v| v.kind != NodeKind::Small).all(|v| v.pending),
+            "no folder finished yet: {s:?}"
+        );
+        // The "files here" entry is complete as soon as it exists: the folder's own files were
+        // counted before its sub-folders got live nodes.
+        assert!(!pending(&s, OWN_FILES_ID));
         live.finish(old);
         let s = live.snapshot(0);
         assert!(!pending(&s, old));

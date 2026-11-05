@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
+import { useUiStore } from '@/stores/ui';
 import type { DriveInfo } from '@/core/platform/disk';
 import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
@@ -8,7 +9,7 @@ import { EmptyState, PageHeader, patternStyles, Segmented, Skeleton } from '@/ui
 import SystemTab from '../components/SystemTab';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
-import { ScanStatusLine } from '../components/ScanStatusLine';
+import { ScanEndedLine, ScanStatusLine } from '../components/ScanStatusLine';
 import { useDriveHistory } from '../history';
 import { useDiskStore } from '../store';
 import styles from './DrivesPage.module.css';
@@ -40,19 +41,47 @@ export default function ThisPcPage() {
   );
 }
 
+/**
+ * The module's scan while the user is on the drives page: running (Pause, Abbrechen, Zum Scan)
+ * or ended (Zum Ergebnis). Its own component, so the once-a-second figure re-renders this line
+ * and not the drive cards.
+ */
+function ScanLine() {
+  const phase = useDiskStore((s) => s.phase);
+  const root = useDiskStore((s) => s.root);
+  const progress = useDiskStore((s) => s.progress);
+  const paused = useDiskStore((s) => s.paused);
+  const error = useDiskStore((s) => s.error);
+  const cancel = useDiskStore((s) => s.cancel);
+  const togglePause = useDiskStore((s) => s.togglePause);
+  if (!root || phase === 'idle') return null;
+  if (phase === 'scanning')
+    return (
+      <ScanStatusLine
+        root={root}
+        progress={progress}
+        paused={paused}
+        onPause={() => void togglePause()}
+        onCancel={() => void cancel()}
+        to="/disk/scan"
+      />
+    );
+  return (
+    <ScanEndedLine
+      text={phase === 'failed' ? t.disk.scan.failed(error ?? '') : t.disk.scan.endedOf(root)}
+      to="/disk/scan"
+    />
+  );
+}
+
 function DrivesTab() {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [io, setIo] = useState<DiskIo[]>([]);
   const navigate = useNavigate();
   const start = useDiskStore((s) => s.start);
-  // A scan that runs while the user is here: one line with its state, the rest stays usable.
   const scanning = useDiskStore((s) => s.phase === 'scanning');
-  const scanRoot = useDiskStore((s) => s.root);
-  const progress = useDiskStore((s) => s.progress);
-  const paused = useDiskStore((s) => s.paused);
-  const cancel = useDiskStore((s) => s.cancel);
-  const togglePause = useDiskStore((s) => s.togglePause);
+  const toast = useUiStore((s) => s.toast);
   const record = useDriveHistory((s) => s.record);
 
   useEffect(() => {
@@ -83,6 +112,12 @@ function DrivesTab() {
   }, [record]);
 
   const startScan = (root: string) => {
+    if (scanning) {
+      // A second scan would drop the running one: lead to it instead, nothing is lost.
+      toast(t.disk.scan.alreadyRunning);
+      void navigate('/disk/scan');
+      return;
+    }
     void start(root);
     void navigate('/disk/scan');
   };
@@ -90,16 +125,7 @@ function DrivesTab() {
   return (
     <>
       <p className={styles.lead}>{t.disk.lead}</p>
-      {scanning && scanRoot ? (
-        <ScanStatusLine
-          root={scanRoot}
-          progress={progress}
-          paused={paused}
-          onPause={() => void togglePause()}
-          onCancel={() => void cancel()}
-          to="/disk/scan"
-        />
-      ) : null}
+      <ScanLine />
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
       {!drives && !failed ? (
         <div role="status" aria-label={t.disk.loading}>

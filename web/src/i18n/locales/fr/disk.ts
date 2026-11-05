@@ -388,13 +388,19 @@ export const disk: Strings['disk'] = {
     pendingShort: 'comptage en cours',
     pendingNote: 'Comptage encore en cours',
     pendingLegend: '… = comptage encore en cours',
+    pendingCount: (n: number) =>
+      n === 1
+        ? '1 entrée est encore en cours de comptage.'
+        : `${n} entrées sont encore en cours de comptage.`,
+    endedOf: (root: string) => `Analyse de ${root} terminée`,
+    toResult: 'Voir le résultat',
+    alreadyRunning: 'Une analyse est déjà en cours : terminez-la pour en lancer une autre.',
     liveLabel: 'Vue en direct de l’analyse',
     liveHint:
-      'La carte se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
+      'La vue se remplit pendant le comptage. Ouvrir, sélectionner et supprimer fonctionnent une fois l’analyse terminée.',
     liveEmpty: 'Comptage des premiers dossiers…',
     files: 'Fichiers',
     folders: 'Dossiers',
-    used: 'Occupé',
     cancel: 'Annuler',
     pause: 'Pause',
     resume: 'Reprendre',

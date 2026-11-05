@@ -9,6 +9,19 @@ export const PROGRESS_MS = 1000;
 /** How often the running scan is asked for its growing picture while the scan page is open. */
 export const LIVE_POLL_MS = 1500;
 
+/** Same picture as before (ids, sizes, counts, pending flags): nothing to draw again. */
+const sameLive = (a: readonly DiskNode[], b: readonly DiskNode[]): boolean =>
+  a.length === b.length &&
+  a.every((x, i) => {
+    const y = b[i]!;
+    return (
+      x.id === y.id && x.bytes === y.bytes && x.files === y.files && !!x.pending === !!y.pending
+    );
+  });
+
+/** Number of the latest poll: an older answer that lands later is ignored. */
+let pollSeq = 0;
+
 /** What the basket needs to show an entry; the entry itself stays in the native scan tree. */
 export interface BasketItem {
   id: number;
@@ -137,9 +150,11 @@ export const useDiskStore = create<DiskState>((set, get) => ({
   async pollLive(minBytes) {
     const { scanId, phase } = get();
     if (scanId === null || phase !== 'scanning') return;
+    const seq = ++pollSeq;
     try {
       const live = await getPlatform().disk.liveScan(scanId, minBytes);
-      if (get().scanId === scanId && get().phase === 'scanning') set({ live });
+      if (seq !== pollSeq || get().scanId !== scanId || get().phase !== 'scanning') return;
+      if (!sameLive(get().live, live)) set({ live });
     } catch {
       // The scan ended or was dropped meanwhile; the next phase change replaces the picture.
     }

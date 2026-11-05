@@ -8,6 +8,8 @@ let nextId = 0;
 const finish: Array<(s: ScanSummary) => void> = [];
 let report: ((p: ScanProgress) => void) | null = null;
 let picture: DiskNode[] = [];
+/** When set, `liveScan` answers only after it resolves. */
+let liveGate: Promise<void> | null = null;
 const disk = {
   startScan: vi.fn(async (root: string, onProgress: (p: ScanProgress) => void) => {
     calls.push(`start ${root}`);
@@ -24,7 +26,10 @@ const disk = {
   }),
   cancelScan: vi.fn(async () => undefined),
   pauseScan: vi.fn(async () => undefined),
-  liveScan: vi.fn(async () => picture),
+  liveScan: vi.fn(async () => {
+    await liveGate;
+    return picture;
+  }),
 };
 vi.mock('@/core/platform', () => ({ getPlatform: () => ({ disk }) }));
 
@@ -54,6 +59,7 @@ describe('scan session', () => {
     });
     report = null;
     picture = [];
+    liveGate = null;
   });
   afterEach(() => setNow());
 
@@ -102,11 +108,20 @@ describe('scan session', () => {
     await useDiskStore.getState().pollLive(123);
     expect(disk.liveScan).toHaveBeenLastCalledWith(nextId, 123);
     expect(useDiskStore.getState().live).toEqual(picture);
+    // The same picture again is not set again (nothing to draw).
+    const kept = useDiskStore.getState().live;
+    picture = [node(0, true), node(1)];
+    await useDiskStore.getState().pollLive(123);
+    expect(useDiskStore.getState().live).toBe(kept);
 
     // A picture that arrives after the scan finished is not kept.
+    let release!: () => void;
+    liveGate = new Promise<void>((r) => (release = r));
+    picture = [node(0), node(1), node(2)];
     const slow = useDiskStore.getState().pollLive(0);
     finish.at(-1)!(summary(nextId, 'C:\\'));
     await vi.waitFor(() => expect(useDiskStore.getState().phase).toBe('done'));
+    release();
     await slow;
     expect(useDiskStore.getState().live).toEqual([]);
 

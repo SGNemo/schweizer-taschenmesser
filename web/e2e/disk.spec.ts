@@ -149,6 +149,13 @@ test('a running scan blocks nothing: one calm line, map and list grow, leaving a
   await drivesLine.getByRole('link', { name: 'Zum Scan' }).click();
   await expect(page).toHaveURL(/\/disk\/scan$/);
   await expect(live.getByTestId('live-map')).toBeVisible();
+  // Another drive's scan button does not drop the running scan: it leads to it instead.
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await page.getByRole('button', { name: 'D:\\ (Daten) scannen' }).click();
+  await expect(page.getByText('Ein Scan läuft schon')).toBeVisible();
+  await expect(page).toHaveURL(/\/disk\/scan$/);
+  await expect(page.locator('main h1')).toHaveText('Scan von C:\\');
+  await expect(live.getByTestId('live-map')).toBeVisible();
   await step();
   await step();
   await expect(map).toHaveAccessibleName(/mit 3 Einträgen/);
@@ -158,6 +165,11 @@ test('a running scan blocks nothing: one calm line, map and list grow, leaving a
   await expect(page.getByTestId('scan-total')).toBeVisible();
   await expect(live).toHaveCount(0);
   await expect(page.getByTestId('treemap')).toBeVisible();
+  // Back on the drives page the ended scan keeps one line with the way to its result.
+  await page.getByRole('link', { name: 'Zurück zu den Laufwerken' }).click();
+  await expect(page.getByTestId('scan-status')).toContainText('Scan von C:\\ beendet');
+  await page.getByRole('link', { name: 'Zum Ergebnis' }).click();
+  await expect(page.getByTestId('scan-total')).toBeVisible();
 });
 
 test('desktop: a running scan can be cancelled', async ({ page }) => {
