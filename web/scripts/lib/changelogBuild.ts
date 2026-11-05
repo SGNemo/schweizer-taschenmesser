@@ -1,6 +1,8 @@
 /** Build-time data for the app: released versions (committed JSON) plus, in previews, the open notes. */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { entriesWithBuilds, noteBuilds } from './changesBuild.ts';
 import { loadChanges } from './changesDir.ts';
 import { upsertVersion, type ChangelogData } from './changelogRelease.ts';
 
@@ -19,7 +21,9 @@ export function buildChangelogData(opts: {
     }
   }
   if (opts.includeUnreleased) {
-    const { entries } = loadChanges(join(opts.rootDir, '.changes'));
+    const loaded = loadChanges(join(opts.rootDir, '.changes'));
+    const git = (a: string[]) => execFileSync('git', a, { cwd: opts.rootDir, encoding: 'utf8' });
+    const entries = entriesWithBuilds(loaded.byFile, noteBuilds(loaded.files, '.changes', git));
     if (entries.length > 0) {
       const withUnreleased = upsertVersion(data, { version: 'unreleased', date: '', entries });
       // upsert puts the new version first, which is where "unreleased" belongs

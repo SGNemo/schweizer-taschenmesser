@@ -2,6 +2,7 @@
  * Release changelog from change notes: grouping, Markdown (English + German) and the data file the
  * app reads. Pure functions; the CLI is `../changelog-release.mjs`. Erasable TypeScript only.
  */
+import { groupByBuild } from './changesBuild.ts';
 import { AREAS, TYPES, type ChangeEntry, type ChangeType } from './changes.ts';
 
 export type Lang = 'de' | 'en';
@@ -65,16 +66,34 @@ export function groupEntries(
   return groups.filter((g) => g.entries.length > 0);
 }
 
+/** The grouped, language-specific lines of a set of entries (no heading). */
+export function renderBody(entries: ChangeEntry[], lang: Lang): string {
+  return groupEntries(entries)
+    .map((g) =>
+      [
+        `### ${HEADINGS[lang][g.key]}`,
+        ...[...g.entries].sort(byArea(lang)).map((e) => line(e, lang)),
+      ].join('\n'),
+    )
+    .join('\n\n');
+}
+
 /** `## [x.y.z] – date` section, Keep-a-Changelog style, in one language. */
 export function renderSection(v: VersionData, lang: Lang): string {
-  const head = `## [${v.version}] – ${v.date}`;
-  const parts = groupEntries(v.entries).map((g) =>
-    [
-      `### ${HEADINGS[lang][g.key]}`,
-      ...[...g.entries].sort(byArea(lang)).map((e) => line(e, lang)),
-    ].join('\n'),
+  return [`## [${v.version}] – ${v.date}`, renderBody(v.entries, lang)].join('\n\n') + '\n';
+}
+
+/** Dev-Preview text: one `## Build N` section per build (newest first), notes without a build under `## Unreleased`. */
+export function renderBuilds(entries: ChangeEntry[], lang: Lang): string {
+  return (
+    groupByBuild(entries)
+      .map((g) =>
+        [g.build ? `## Build ${g.build}` : '## Unreleased', renderBody(g.entries, lang)].join(
+          '\n\n',
+        ),
+      )
+      .join('\n\n') + '\n'
   );
-  return [head, ...parts].join('\n\n') + '\n';
 }
 
 /** Puts `section` above the newest existing `## ` heading; replaces a section of the same version. */

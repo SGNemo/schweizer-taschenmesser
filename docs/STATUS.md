@@ -223,4 +223,5 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 - Auf `feat/library-hue`: Eine Farbsprache – Module und Werkzeuge tragen in Bibliothek und Einstellungen dasselbe Icon-Plättchen (`ui/HuePlate`) in ihrer Identitätsfarbe.
 - Auf `feat/settings-calm`: Einstellungen Paket 1 – ruhiges Menü (Kopf in der Inhaltsspalte, Gruppen als Reiter, „Häufig genutzt“ eingefroren); weitere Pakete: Formulare und Karten der Bereiche (Sync, KI, Verbindungen …).
 - Auf `feat/settings-connect`: Einstellungen Paket 2a – Sync und Backup als Schritt-Karten (`ConnectParts`: Zustandsbanner, Schritte, Fakten); KI und Verbindungen folgen als 2b.
+- Auf `feat/settings-connect-ai`: Einstellungen Paket 2b – KI und Verbindungen auf den Schritt-Karten (`ConnectParts`); danach Paket 3 (Allgemein, Darstellung, Benachrichtigungen, Teilen).
 - Auf `feat/settings-compact`: Einstellungen Paket 3a – schlanke Schnellleiste (Ruhe-Hinweis nur bei laufender Pause), engere Abstände, „Mit Partner teilen“ in Schritten und Spalten.

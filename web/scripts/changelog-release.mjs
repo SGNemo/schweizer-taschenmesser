@@ -8,12 +8,19 @@
  * src/generated/changelog.json, deletes the processed notes. Pre-releases (-beta.N) change nothing:
  * the notes stay for the final version. Prints the GitHub release notes with `--notes`.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isPrerelease, parseSemver } from '../src/core/update/semver.ts';
 import { loadChanges } from './lib/changesDir.ts';
-import { insertSection, renderSection, upsertVersion } from './lib/changelogRelease.ts';
+import {
+  insertSection,
+  renderBuilds,
+  renderSection,
+  upsertVersion,
+} from './lib/changelogRelease.ts';
+import { entriesWithBuilds, noteBuilds } from './lib/changesBuild.ts';
 
 const web = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const root = resolve(web, '..');
@@ -23,19 +30,19 @@ const opt = (n) => argv[argv.indexOf(`--${n}`) + 1];
 const version = argv.find((a) => !a.startsWith('--') && a !== opt('date'))?.replace(/^v/, '');
 
 if (flag('unreleased')) {
-  // Dev-Preview release text: the open notes, German above, English below. Deletes nothing.
+  // Dev-Preview release text: the open notes per build (newest first), German above, English below.
+  // Needs the git history for the build numbers; without it everything is one "Unreleased" section.
   const open = loadChanges(join(root, '.changes'));
   if (open.errors.length) {
     console.error(open.errors.join('\n'));
     process.exit(1);
   }
-  const head = (lang) =>
-    renderSection({ version: 'Unreleased', date: '', entries: open.entries }, lang).replace(
-      /^## \[Unreleased\] – \n/,
-      '## Unreleased\n',
-    );
+  const git = (a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' });
+  const entries = entriesWithBuilds(open.byFile, noteBuilds(open.files, '.changes', git));
   process.stdout.write(
-    open.entries.length ? `${head('de')}\n---\n\n${head('en')}` : 'No open change notes.\n',
+    entries.length
+      ? `${renderBuilds(entries, 'de')}\n---\n\n${renderBuilds(entries, 'en')}`
+      : 'No open change notes.\n',
   );
   process.exit(0);
 }
