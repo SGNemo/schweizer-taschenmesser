@@ -550,8 +550,8 @@
       "icon": "mail",
       "hue": "teal",
       "hue2": "ocean",
-      "head": "kennzahl",
-      "widget": "kennzahl",
+      "head": "schreib",
+      "widget": "notiz",
       "name": {
         "de": "E-Mail",
         "en": "Mail",
@@ -679,7 +679,7 @@
       "hue": "indigo",
       "hue2": "violet",
       "head": "regal",
-      "widget": "faellig",
+      "widget": "kennzahl",
       "name": {
         "de": "Unterlagen",
         "en": "Documents",
