@@ -1,4 +1,5 @@
 import { BankFormatError, parseBankFile } from '@/core/io/bank';
+import { detectBankPreset } from '@/core/io/bankPresets';
 import { parseDateInput } from '@/core/io/dates';
 import { detectSubscriptions, type DetectedSubscription } from '@/core/io/subscriptionDetect';
 import { formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
@@ -63,7 +64,9 @@ function parseBank(input: ImportInput): ImportParseResult {
   if (input.kind !== 'file') return { candidates: [], notes: [] };
   let transactions;
   try {
-    transactions = parseBankFile(input.text).transactions;
+    // The same bank layouts the finance import knows (ING, DKB, N26, comdirect …).
+    const preset = detectBankPreset(input.text);
+    transactions = parseBankFile(input.text, preset ? { layout: preset.layout } : {}).transactions;
   } catch (e) {
     if (e instanceof BankFormatError) return { candidates: [], notes: [s.bankFormat] };
     throw e;
