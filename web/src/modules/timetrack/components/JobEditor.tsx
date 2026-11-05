@@ -25,6 +25,7 @@ export function JobEditor({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={target === 'new' || target === null ? t.timetrack.job.add : t.timetrack.job.edit}

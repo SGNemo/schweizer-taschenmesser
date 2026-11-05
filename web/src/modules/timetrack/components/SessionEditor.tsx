@@ -22,6 +22,7 @@ export function SessionEditor({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={target === 'new' || target === null ? t.timetrack.add : t.timetrack.edit}

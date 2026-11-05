@@ -39,7 +39,12 @@ export function TransferEditor({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={target !== null} onClose={onClose} title={t.finance.ext.transfer.title}>
+    <Dialog
+      askAfterTyping
+      open={target !== null}
+      onClose={onClose}
+      title={t.finance.ext.transfer.title}
+    >
       {target ? (
         <TransferForm
           key={'out' in target ? target.out.id : 'new'}

@@ -35,6 +35,7 @@ export function PersonEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.people.edit : t.people.add}

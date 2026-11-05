@@ -36,6 +36,7 @@ export function RouteEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.maps.route.titleEdit : t.maps.route.titleAdd}

@@ -63,6 +63,7 @@ export function BudgetEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.budgets.editBudget : t.budgets.addBudget}
@@ -267,6 +268,7 @@ export function GoalEditor({ target, onClose }: { target: GoalTarget; onClose: (
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.budgets.editGoal : t.budgets.addGoal}
@@ -394,6 +396,7 @@ export function DepositDialog({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={goal !== null}
       onClose={onClose}
       title={goal ? t.budgets.depositTitle(goal.name) : ''}
@@ -474,6 +477,7 @@ export function HistoryDialog({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={goal !== null}
       onClose={onClose}
       title={goal ? t.budgets.historyTitle(goal.name) : ''}

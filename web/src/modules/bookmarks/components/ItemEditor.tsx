@@ -25,6 +25,7 @@ export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: (
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.bookmarks.edit : t.bookmarks.add}

@@ -18,7 +18,7 @@ export function ItemEditor({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={item !== null} onClose={onClose} title={t.lists.editItem}>
+    <Dialog askAfterTyping open={item !== null} onClose={onClose} title={t.lists.editItem}>
       {item ? <Fields key={item.id} item={item} kind={kind} onClose={onClose} /> : null}
     </Dialog>
   );

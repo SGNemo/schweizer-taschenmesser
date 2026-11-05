@@ -15,6 +15,7 @@ export function PlaceEditor({ target, onClose }: { target: PlaceTarget; onClose:
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.maps.place.titleEdit : t.maps.place.titleAdd}

@@ -105,6 +105,7 @@ export function TransactionEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.finance.editTransaction : t.finance.addTransaction}
@@ -382,6 +383,7 @@ export function AccountEditor({ target, onClose }: { target: AccountTarget; onCl
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.finance.editAccount : t.finance.addAccount}
@@ -504,6 +506,7 @@ export function CategoryEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.finance.editCategory : t.finance.addCategory}

@@ -26,6 +26,7 @@ export function ListEditor({
   const list = target && target !== 'new' ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={list ? t.lists.editList : t.lists.newList}

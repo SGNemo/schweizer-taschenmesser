@@ -23,6 +23,7 @@ export function GiftEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.people.editGift : t.people.addGift}

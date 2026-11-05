@@ -16,6 +16,7 @@ interface Props {
 export function ListEditor({ target, nextOrder, onClose }: Props) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={() => onClose()}
       title={target === 'new' ? t.todos.newList : t.todos.renameList}

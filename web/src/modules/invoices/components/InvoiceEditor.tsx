@@ -41,6 +41,7 @@ export function InvoiceEditor({
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={existing ? t.invoices.edit : t.invoices.add}

@@ -35,6 +35,7 @@ export function GoalEditor({
 }) {
   return (
     <Dialog
+      askAfterTyping
       open={target !== null}
       onClose={onClose}
       title={target === 'new' || target === null ? t.habits.add : t.habits.edit}
