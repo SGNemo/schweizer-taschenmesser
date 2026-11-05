@@ -7,6 +7,7 @@ import { LOCAL_MODELS } from '@/core/ai/local/catalogue';
 import { switchAiOff, switchAiOn } from '@/core/ai/switch';
 import type { AiProvider, CompletionRequest } from '@/core/ai/providers/types';
 import { setPlatform } from '@/core/platform';
+import { setNow } from '@/core/time/now';
 import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
 import {
@@ -56,7 +57,10 @@ beforeEach(async () => {
   for (const name of ['chat_thread', 'chat_message', '_aiUsage']) await db.table(name).clear();
   localStorage.clear();
 });
-afterEach(() => setPlatform(undefined));
+afterEach(() => {
+  setPlatform(undefined);
+  setNow();
+});
 
 describe('chat engine', () => {
   it('answers through the router with history, stores the answer and counts usage', async () => {
@@ -145,6 +149,10 @@ describe('chat engine', () => {
   });
 
   it('regenerate, edit and delete clean up the conversation', async () => {
+    // A running clock: with the real one, all four messages can land in the same millisecond on a fast
+    // machine, and then every question sorts before every answer (see `byTime`), not question/answer pairs.
+    let t = 1_000;
+    setNow(() => (t += 10));
     const thread = await threadRepo.create(base);
     const q1 = await addQuestion(thread.id, 'Eins');
     await generateReply(thread.id, { provider: provider('A1') });

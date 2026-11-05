@@ -4,9 +4,13 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Shell-Fixes (`fix/shell-topbar-focus`): Handy-Topbar nach Seitenwechsel sofort da (kein Nachrutschen), Fokus im Werkzeug-Panel (passendes Feld, Ring nicht abgeschnitten, Alt+1–9 im ganzen Fenster), Lesehilfe mit eigenen Inline-Elementen (`read-text`/`read-start`, keine Wortbrüche durch `span`-Regeln) und Tinte, die nach Hover neu gemessen wird.
+
 Tages- und Wochenplanung (`design/plan-concept`, Phase 2 fertig): Konzept, Engine-Prototyp mit fünf Szenarien, Vertrag `contributions.plannable`, fünf Paket-Prompts in `docs/design/plan/PACKAGES.md`; Svens Antworten (lokal-only, Kalender-Chips, eigenes Modul, Minimum-Paket 1) in `docs/decisions/plan.md`; Paket 1 `feat/plan-core` startet nach dem Merge von `feat/identity-v3-frame`.
 
 README und Auftritt (`docs/readme-refresh`): README EN/DE neu (Logo v2, Bildschirmfotos hell/dunkel als WebP, Modul- und Werkzeugtabellen aus der Registry mit `npm run gen:modules`), Nutzerdoku, Community-Dateien, Vorlagen und Website-Texte auf dem Stand von `develop`; `npm run check:doclinks`, `npm run gen:social`, Bilder mit `npm run app:screenshots -- --readme` (in `site/`); Handarbeit: Social-Preview hochladen, Beschreibung und Topics setzen ([meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md)); Bilder nach den Fix-PRs erneuern ([scribble/docs-readme-refresh.md](../scribble/docs-readme-refresh.md)).
+
+Website auf Identität v3.1, Paket 1 (`design/site-identity-v3`): Designrunde 4 (Richtung B „Schaufenster“), Identity-Tokens und `identity.css`, Modulkarten in Modulfarbe mit Widget-Skizze aus dem Katalog (`gen:modules` liefert `icon`, `hue`, `head`, `widget`), Kopf-Silhouetten-Leiste, keine Streifen, keine Farbfläche; Paket 2 (neue Screenshots, OG-Bild) nach Identity-Paket 0–3.
 
 Identität v3, Paket 3 (`feat/identity-v3-medien-dienste`): Mail (Umschlag, Spalten nach Seitenbreite, gefüllter Ordner-Chip), Musik (Warteschlange nach Seitenbreite) und Downloads (eigener Leerzustand); damit sind Haushalt, Tresor, Wissen, Medien und Dienste umgebaut.
 
@@ -28,6 +32,8 @@ Identität v3, Gruppen Planen + Geld (`feat/identity-v3-planen-geld`): Kalender 
 Einstellungen in Identität v3 (`feat/identity-v3-settings-library`, Paket 1 von 2): Status-Kopf mit sechs Kennzahl-Kacheln (Sicherheit, Sync, Backup, Updates, KI, Speicher), gruppierte Kategorienliste im Sidebar-Stil mit Farb-Plättchen und Punkt „vom Standard abweichend“, Kategorie- und Modul-Köpfe; Funktion, Schlüssel und Standardwerte unverändert. Paket 2: Modul- und Werkzeug-Bibliothek.
 
 Node 26 als Toolchain (CI, Docker-Image des Sync-Servers, `engines`, `@types/node`; Entscheidung in `decisions/distribution.md`): vor dem nächsten Release das Docker-Image einmal bauen und den Sync-Server damit starten (`docker build -f server/Dockerfile .`).
+
+Dieser PC – Laufwerke-Seite aufgeräumt (`feat/disk-drives-calm`, Rückmeldung des Maintainers nach #477): Karten mit Ring, Name, einer Zahlen-, einer Hinweis- und einer Typzeile, Zustand/Verlauf/Aktivität gefaltet unter „Details“, zwei gleich hohe Spalten, Scan-Zeile in der Karte des Laufwerks, Schnellübersicht als Liste; Kopf-Figur und Ring-Signatur bleiben Paket 3 nach dem v3.1-Fundament; PR gegen `develop`.
 
 Dieser PC – Scan blockiert nichts mehr (`fix/disk-scan-live`): eine ruhige Statuszeile mit Pause/Abbrechen statt Balken und Zählern (auch auf der Laufwerke-Seite), Karte und Ordnerliste wachsen alle 1,5 s während des Scans, unfertige Ordner sind als „zählt noch“ markiert, Wegnavigieren und Zurück zeigt den Stand sofort; Poll statt Event nach Messung ([features/disk-live-scan.md](features/disk-live-scan.md)); PR gegen `develop`; Handtest D18 in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 

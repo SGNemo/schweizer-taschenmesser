@@ -45,12 +45,21 @@ export const fr = {
       { icon: 'bell', shot: 'reminders', title: 'Rappels', text: 'Regroupés, avec heures calmes et « plus tard », même quand l’appli est fermée.', alt: 'Rappels avec interrupteurs et prochaine heure' },
     ],
     more: 'Et aussi : notes, listes, signets, provisions, personnes, habitudes, suivi du temps, météo, nettoyage du PC, un chat avec un modèle local (aperçu). IA seulement si vous le souhaitez. L’appli parle allemand, anglais, espagnol, français et portugais (Brésil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number, a: number) => `${n} modules en ${a} domaines. Chacun a sa couleur ; vous n’activez que ce qu’il vous faut.`,
+    count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
+    areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Ce que fait votre appareil en ce moment.' },
     modules: {
       summary: (n: number) => `Les ${n} modules`,
       status: { default: 'activé par défaut', optional: 'facultatif', preview: 'aperçu' },
       only: { windows: 'appli Windows uniquement', android: 'appli Android uniquement', both: 'applis Windows et Android uniquement' },
       hint: 'Les modules en aperçu restent masqués tant que « Afficher ce qui est en cours » est désactivé (Paramètres → Apparence). La liste est générée à partir de l’appli elle-même.',
     },
+  },
+  heads: {
+    eyebrow: 'Chaque module a sa forme',
+    note: 'Chaque page de module commence par un en-tête dans l’une des neuf formes et dans la couleur du module : vous voyez d’un coup d’œil où vous êtes.',
+    names: { kennzahl: 'Chiffre', zeit: 'Temps', fortschritt: 'Progression', cover: 'Pochette', himmel: 'Ciel', regal: 'Étagère', tresor: 'Coffre', schreib: 'Papier', fokus: 'Focus' },
   },
   data: {
     eyebrow: 'Vos données restent chez vous',
@@ -79,6 +88,7 @@ export const fr = {
     ],
     honest: 'Nemo est développée en pensant au TDAH et aide à démarrer et à garder le fil. Ce n’est pas un traitement et elle n’en promet pas. Chaque aide peut être désactivée séparément.',
     shotAlt: 'Détail de la vue d’ensemble : la carte « ensuite » avec « commencer · 5 min », « plus tard » et « autre chose »',
+    phoneAlt: 'La vue d’ensemble sur le téléphone : « important maintenant » et la carte « ensuite » avec la première étape et la durée',
   },
   compare: {
     eyebrow: 'Comparaison',

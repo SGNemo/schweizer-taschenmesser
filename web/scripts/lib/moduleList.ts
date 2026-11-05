@@ -15,6 +15,12 @@ export interface ModuleRecord {
   area: string;
   status: Status;
   platforms: PlatformKey;
+  /** `manifest.icon` (Lucide name) and `manifest.identity`: the website draws plate, card tint and widget sketch from them. */
+  icon: string;
+  hue: string;
+  hue2: string | null;
+  head: string;
+  widget: string;
   name: Names;
   /** `shortText` of the description: the one line the READMEs and the website show. */
   short: Names;

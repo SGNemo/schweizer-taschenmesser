@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openAppearanceGroup, openFoldedGroup, ready, showPreview } from './helpers';
+import { enable, openAppearanceGroup, openFoldedGroup, ready, showPreview } from './helpers';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -208,4 +208,62 @@ test.describe('Reading aid, colour mode and grouping', () => {
       }
     });
   }
+});
+
+test.describe('Reading aid keeps words whole and follows the state of controls', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('tm-read-aid', '1');
+      localStorage.setItem('tm-read-cover', '100');
+    });
+  });
+
+  test('the scratch-pad link in the tools panel keeps every word on one line', async ({ page }) => {
+    await enable(page, 'notes');
+    await ready(page, '/todos');
+    await page.getByRole('banner').getByRole('button', { name: 'Werkzeuge', exact: true }).click();
+    const link = page.getByRole('dialog').getByRole('link', { name: /Schmierzettel/ });
+    await expect(link.locator('[data-rs]').first()).toBeVisible();
+    // Before: the panel's `.scratch span` column rule reached the aid's spans ("Schmi / erzettel / Noti / …").
+    expect(await link.innerText()).toBe('Schmierzettel\nNotizzettel in Notizen');
+  });
+
+  test('a sidebar entry left while the pointer rests on it gets its resting look back', async ({
+    page,
+  }) => {
+    await ready(page, '/');
+    const calendar = page
+      .getByRole('navigation', { name: 'Hauptnavigation' })
+      .getByRole('link', { name: 'Kalender', exact: true })
+      .filter({ has: page.locator('[data-rt]') });
+    await calendar.click(); // the pointer stays on the entry
+    await expect(calendar).toHaveAttribute('aria-current', 'page');
+    // The current entry is bold: the start of its word is never thinner than the rest.
+    const [link, start] = await calendar.evaluate((a) => [
+      Number(getComputedStyle(a).fontWeight),
+      Number(getComputedStyle(a.querySelector('[data-rs]')!).fontWeight),
+    ]);
+    expect(start).toBeGreaterThanOrEqual(link);
+
+    // Leave the page without moving the pointer (Back, or a shortcut), then move the pointer away.
+    await page.goBack();
+    await expect(calendar).not.toHaveAttribute('aria-current', 'page');
+    await page.mouse.move(1200, 700);
+    const look = () =>
+      calendar.evaluate((a) => {
+        const rt = a.querySelector<HTMLElement>('[data-rt]')!;
+        return {
+          ink: rt.dataset.ink,
+          rest: getComputedStyle(rt).color,
+          start: getComputedStyle(a.querySelector('[data-rs]')!).color,
+        };
+      });
+    const after = await look();
+    expect(after.ink).toBe('m');
+    // The same as a fresh render of the resting entry.
+    await page.reload();
+    await expect(calendar.locator('[data-rs]').first()).toBeVisible();
+    expect(await look()).toEqual(after);
+  });
 });

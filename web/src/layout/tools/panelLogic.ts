@@ -77,3 +77,22 @@ export function stepIndex(index: number, count: number, dir: -1 | 1): number {
   if (count === 0) return -1;
   return (index + dir + count) % count;
 }
+
+/** Where focus goes in the panel: the search field, the tool's own field (`data-autofocus`) or the pane shown. */
+export type PanelFocus = 'search' | 'tool' | 'pane';
+
+/**
+ * Focus when the panel opens or a tool is picked. Desktop: with no tool asked for, the search (type to find); a tool
+ * asked for (palette, chord, `/tool/:id`, Alt+1…9, Enter in the search, a tile from the keyboard) → its own field.
+ * Phone: the pane shown (tool or list), never a field, so no on-screen keyboard pops up. A mouse pick on the desktop
+ * keeps focus on the tile (`null`: leave it where it is).
+ */
+export function panelFocus(i: {
+  phone: boolean;
+  toolAsked: boolean;
+  byKeyboard: boolean;
+}): PanelFocus | null {
+  if (i.phone) return 'pane';
+  if (!i.toolAsked) return 'search';
+  return i.byKeyboard ? 'tool' : null;
+}

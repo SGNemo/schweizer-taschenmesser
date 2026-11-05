@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Scan ${name}`,
   usedOf: (used: string, total: string) => `${used} of ${total} used`,
   free: (free: string) => `${free} free`,
-  percentUsed: (p: number) => `${p}% used`,
   card: {
     scan: 'Scan',
     systemDrive: 'System drive',
@@ -66,6 +65,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'History since app start – it isn’t saved.',
     io: (read: string, write: string) => `Read ${read} · Write ${write}`,
     model: 'Model',
+    details: 'Details',
+    temperatureLabel: 'Temperature',
+    ioLabel: 'Activity',
   },
   quick: {
     title: 'Quick overview',
@@ -381,6 +383,8 @@ export const disk: Strings['disk'] = {
       n === 1 ? '1 entry is still being counted.' : `${n} entries are still being counted.`,
     endedOf: (root: string) => `Scan of ${root} finished`,
     cancelledOf: (root: string) => `Scan of ${root} cancelled`,
+    endedShort: 'Scan finished',
+    cancelledShort: 'Scan cancelled',
     liveMapLabel: (n: number) =>
       n === 1
         ? 'Map of the running scan with 1 entry.'

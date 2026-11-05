@@ -3,6 +3,7 @@
 Rules: [DESIGN-SPEC §4b/§4c](../design/DESIGN-SPEC.md). Settings: Darstellung → Lesen (device-local, `stores/ui.ts`).
 
 - **Text:** nothing to do. The app's JSX runtime (`core/text/readjsx`, set as `jsxImportSource` in `tsconfig.app.json`, `vite.config.ts`, `vitest.config.ts`) wraps string children of ordinary elements into `ReadableText`; the level comes from the element (`p` 25 · headings/`li` 50 · others 75 · `button`/`a` 100). Plain strings passed through third-party components are not seen: use `<ReadableText text level />` there (React Router `Link`/`NavLink` are handled).
+- **Styling around it:** the aid renders its own inline elements `read-text` (`data-rt`) and `read-start` (`data-rs`), not spans, so a component's `.x span` rules never reach it; style only through those attributes. Bold surroundings (≥ 600) get the heavy start automatically (`data-bold`).
 - **Not wanted somewhere** (secrets, generated codes): render it in `<code>`/`<input>`, or wrap the subtree in `<NoReadAid>` (the vault routes are wrapped in `router.tsx`).
 - **Long text:** wrap paragraphs in `<Prose>` (68 ch, paragraph spacing); a long note or answer can offer `<ReaderView open onClose title text />` (Fokus-Lesen, aid forced on).
 - **List rows:** `ItemRow` gives titles `tone="ink"` (dimmed rest when the title is in primary ink) and sentence-like `meta` the aid at level 50.

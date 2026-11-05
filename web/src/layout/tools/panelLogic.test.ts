@@ -5,6 +5,7 @@ import {
   fold,
   groupByCategory,
   orderForPanel,
+  panelFocus,
   pickInitialTool,
   stepIndex,
   toolForDigit,
@@ -82,5 +83,21 @@ describe('toolForDigit and stepIndex', () => {
     expect(stepIndex(0, 3, -1)).toBe(2);
     expect(stepIndex(2, 3, 1)).toBe(0);
     expect(stepIndex(0, 0, 1)).toBe(-1);
+  });
+});
+
+describe('focus in the panel', () => {
+  it('desktop: the search when no tool was asked for, else the tool from the keyboard', () => {
+    expect(panelFocus({ phone: false, toolAsked: false, byKeyboard: true })).toBe('search');
+    expect(panelFocus({ phone: false, toolAsked: false, byKeyboard: false })).toBe('search');
+    expect(panelFocus({ phone: false, toolAsked: true, byKeyboard: true })).toBe('tool');
+  });
+  it('desktop: a mouse pick leaves focus on the tile', () => {
+    expect(panelFocus({ phone: false, toolAsked: true, byKeyboard: false })).toBeNull();
+  });
+  it('phone: always the pane shown, never a field (no on-screen keyboard)', () => {
+    for (const toolAsked of [false, true])
+      for (const byKeyboard of [false, true])
+        expect(panelFocus({ phone: true, toolAsked, byKeyboard })).toBe('pane');
   });
 });

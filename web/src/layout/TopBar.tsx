@@ -14,11 +14,12 @@ export function TopBar() {
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
   const openTools = useUiStore((s) => s.openTools);
-  const { collapsed, focusProps } = useTopbarCollapse();
+  const { collapsed, instant, focusProps } = useTopbarCollapse();
   return (
     <header
       className={styles.topbar}
       data-collapsed={collapsed ? 'true' : undefined}
+      data-instant={instant ? 'true' : undefined}
       {...focusProps}
     >
       <Link to="/" className={`${styles.brand} ${styles.phoneOnly}`} aria-label={t.nav.homeAria}>
