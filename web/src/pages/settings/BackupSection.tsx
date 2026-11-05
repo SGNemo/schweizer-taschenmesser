@@ -19,13 +19,16 @@ import { MigratePicker } from '@/layout/setup/steps/MigrateStep';
 import { openAppImport } from '@/core/importer/appImportStore';
 
 import { t } from '@/strings';
+import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, Dialog, TextField } from '@/ui';
 import { AutoBackupCard } from './AutoBackupCard';
 import { PlanView, VerifyReportView } from './BackupParts';
+import { Actions, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 export function BackupSection() {
+  const c = tSettingsConnect.use().backup;
   const toast = useUiStore((s) => s.toast);
   const [exportPass, setExportPass] = useState('');
   const [exportError, setExportError] = useState<string | undefined>();
@@ -153,109 +156,112 @@ export function BackupSection() {
     <>
       <Card>
         <div className={styles.form}>
-          <p>{t.backup.intro}</p>
-          <p className={styles.muted}>{t.backup.exportHint}</p>
-          <p className={styles.muted}>{t.backup.filesNote}</p>
-          <TextField
-            label={t.backup.exportPassphrase}
-            hint={t.backup.exportPassphraseHint}
-            type="password"
-            autoComplete="new-password"
-            value={exportPass}
-            onChange={(e) => setExportPass(e.target.value)}
-          />
-          {exportError ? (
-            <p role="alert" className={styles.error}>
-              {exportError}
-            </p>
-          ) : null}
-          <div className={styles.row}>
-            <Button variant="primary" disabled={busy} onClick={() => void exportEncrypted()}>
-              {t.backup.encryptedExport}
-            </Button>
-            <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>
-          </div>
-          <p className={styles.muted}>{t.backup.plainHint}</p>
-
-          <div>
-            <label htmlFor="backup-file" className={styles.legend}>
-              {t.backup.file}
-            </label>
-            <br />
-            <input
-              id="backup-file"
-              type="file"
-              accept="application/json,.json"
-              className={styles.file}
-              onChange={(e) => void onFile(e)}
+          <p className={styles.muted}>{t.backup.intro}</p>
+          <Step n={1} title={c.stepSave} hint={c.stepSaveHint}>
+            <p className={styles.muted}>{t.backup.exportHint}</p>
+            <p className={styles.muted}>{t.backup.filesNote}</p>
+            <TextField
+              label={t.backup.exportPassphrase}
+              hint={t.backup.exportPassphraseHint}
+              type="password"
+              autoComplete="new-password"
+              value={exportPass}
+              onChange={(e) => setExportPass(e.target.value)}
             />
-          </div>
-          {needPass ? (
-            <div className={styles.form}>
-              <TextField
-                label={t.backup.openPassphrase}
-                type="password"
-                autoComplete="off"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
+            {exportError ? (
+              <p role="alert" className={styles.error}>
+                {exportError}
+              </p>
+            ) : null}
+            <Actions>
+              <Button variant="primary" disabled={busy} onClick={() => void exportEncrypted()}>
+                {t.backup.encryptedExport}
+              </Button>
+              <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>
+            </Actions>
+            <p className={styles.muted}>{t.backup.plainHint}</p>
+          </Step>
+          <Step n={2} title={c.stepRestore} hint={c.stepRestoreHint}>
+            <div>
+              <label htmlFor="backup-file" className={styles.legend}>
+                {t.backup.file}
+              </label>
+              <br />
+              <input
+                id="backup-file"
+                type="file"
+                accept="application/json,.json"
+                className={styles.file}
+                onChange={(e) => void onFile(e)}
               />
-              <div className={styles.row}>
-                <Button
-                  variant="primary"
-                  disabled={busy || !pass || !text}
-                  onClick={() => text && void load(text, pass)}
-                >
-                  {t.backup.unlock}
-                </Button>
-              </div>
             </div>
-          ) : null}
-          {error ? (
-            <p role="alert" className={styles.error} data-testid="backup-error">
-              {error}
-            </p>
-          ) : null}
+            {needPass ? (
+              <div className={styles.form}>
+                <TextField
+                  label={t.backup.openPassphrase}
+                  type="password"
+                  autoComplete="off"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                />
+                <div className={styles.row}>
+                  <Button
+                    variant="primary"
+                    disabled={busy || !pass || !text}
+                    onClick={() => text && void load(text, pass)}
+                  >
+                    {t.backup.unlock}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+            {error ? (
+              <p role="alert" className={styles.error} data-testid="backup-error">
+                {error}
+              </p>
+            ) : null}
 
-          {backup ? (
-            <>
-              <p data-testid="backup-contents">{counts}</p>
-              <p className={styles.muted}>{t.backup.verifyHint}</p>
-              <div className={styles.row}>
-                <Button disabled={busy} onClick={() => void runVerify()}>
-                  {busy && !report ? t.backup.verifying : t.backup.verify}
-                </Button>
-              </div>
-              {report ? <VerifyReportView report={report} /> : null}
-              <fieldset className={styles.fieldset}>
-                <legend className={styles.legend}>{t.backup.mode}</legend>
-                {(['merge', 'replace'] as const).map((m) => (
-                  <label key={m} className={styles.choice}>
-                    <input
-                      type="radio"
-                      name="backup-mode"
-                      checked={mode === m}
-                      onChange={() => setMode(m)}
-                    />
-                    <span>
-                      {t.backup[m]}
-                      <br />
-                      <span className={styles.muted}>{t.backup[`${m}Hint`]}</span>
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
-              {plan ? <PlanView plan={plan} /> : null}
-              <div className={styles.row}>
-                <Button
-                  variant={mode === 'replace' ? 'danger' : 'primary'}
-                  disabled={busy}
-                  onClick={() => (mode === 'replace' ? setConfirm(true) : void runImport())}
-                >
-                  {busy ? t.backup.restoring : t.backup.doImport}
-                </Button>
-              </div>
-            </>
-          ) : null}
+            {backup ? (
+              <>
+                <p data-testid="backup-contents">{counts}</p>
+                <p className={styles.muted}>{t.backup.verifyHint}</p>
+                <div className={styles.row}>
+                  <Button disabled={busy} onClick={() => void runVerify()}>
+                    {busy && !report ? t.backup.verifying : t.backup.verify}
+                  </Button>
+                </div>
+                {report ? <VerifyReportView report={report} /> : null}
+                <fieldset className={styles.fieldset}>
+                  <legend className={styles.legend}>{t.backup.mode}</legend>
+                  {(['merge', 'replace'] as const).map((m) => (
+                    <label key={m} className={styles.choice}>
+                      <input
+                        type="radio"
+                        name="backup-mode"
+                        checked={mode === m}
+                        onChange={() => setMode(m)}
+                      />
+                      <span>
+                        {t.backup[m]}
+                        <br />
+                        <span className={styles.muted}>{t.backup[`${m}Hint`]}</span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+                {plan ? <PlanView plan={plan} /> : null}
+                <div className={styles.row}>
+                  <Button
+                    variant={mode === 'replace' ? 'danger' : 'primary'}
+                    disabled={busy}
+                    onClick={() => (mode === 'replace' ? setConfirm(true) : void runImport())}
+                  >
+                    {busy ? t.backup.restoring : t.backup.doImport}
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </Step>
         </div>
 
         <Dialog

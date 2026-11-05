@@ -44,7 +44,13 @@ export const pt = {
       { icon: 'key', shot: 'vault', title: 'Cofre', text: 'Senhas com TOTP e gerador, documentos com validade. Criptografado, invisível para a IA.', alt: 'Cofre desbloqueado com contas de exemplo' },
       { icon: 'bell', shot: 'reminders', title: 'Lembretes', text: 'Agrupados, com horário de silêncio e “mais tarde”, mesmo com o app fechado.', alt: 'Lembretes com chaves e próximo horário' },
     ],
-    more: 'Também: notas, listas, marcadores, despensa, pessoas, limpeza do PC, mensagens com um modelo local. IA só se você quiser. O app fala alemão, inglês, espanhol, francês e português (Brasil).',
+    more: 'Também: notas, listas, marcadores, despensa, pessoas, hábitos, controle de tempo, tempo, limpeza do PC, um chat com um modelo local (prévia). IA só se você quiser. O app fala alemão, inglês, espanhol, francês e português (Brasil).',
+    modules: {
+      summary: (n: number) => `Todos os ${n} módulos`,
+      status: { default: 'ligado por padrão', optional: 'opcional', preview: 'prévia' },
+      only: { windows: 'só no app para Windows', android: 'só no app para Android', both: 'só nos apps para Windows e Android' },
+      hint: 'Os módulos em prévia ficam ocultos até você ligar “Mostrar o que está em construção” (Configurações → Aparência). A lista é gerada a partir do próprio app.',
+    },
   },
   data: {
     eyebrow: 'Seus dados ficam com você',

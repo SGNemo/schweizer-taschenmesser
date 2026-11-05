@@ -8,7 +8,7 @@
 - **Sync is optional** and only runs through a server you operate yourself. Content can be end-to-end encrypted; the server then only sees collection, IDs and timestamps.
 - **AI sees no data:** the assistant only sends your question, the date and the field names of the active modules to a provider, never entries. Two exceptions are triggered only by you: in the chat you can attach a module's data (the app shows exactly what will be sent first), and through the local import API you can give an AI on your PC read access to individual modules. The password vault is invisible to AI, search and import.
 - **Passwords:** vault with Argon2id and AES-256-GCM, key in the operating system's key store (Windows Credential Manager, Android Keystore), optional biometrics; screenshot protection in the Android app.
-- **Downloads are signed:** the update payload is signed with the project's update key and checked before it is applied; the APK is signed with the project keystore. There is no Windows code-signing certificate (SmartScreen notice on first start). The app asks GitHub for updates once a day (on start and when it returns to the foreground); GitHub sees your IP address. Switch it off under Settings → App updates.
+- **Downloads are signed:** the update payload is signed with the project's update key and checked before it is applied; the APK is signed with the project keystore. There is no Windows code-signing certificate (SmartScreen notice on first start). The app asks GitHub for updates once a day (on start and when it returns to the foreground); GitHub sees your IP address. Switch it off under Settings → Updates.
 - **No telemetry, no ads.**
 
 ### External services without user data

@@ -44,7 +44,13 @@ export const es = {
       { icon: 'key', shot: 'vault', title: 'Bóveda', text: 'Contraseñas con TOTP y generador, documentos con fecha de caducidad. Cifrada, invisible para la IA.', alt: 'Bóveda desbloqueada con cuentas de ejemplo' },
       { icon: 'bell', shot: 'reminders', title: 'Recordatorios', text: 'Agrupados, con horas de silencio y «más tarde», incluso con la app cerrada.', alt: 'Recordatorios con interruptores y próxima hora' },
     ],
-    more: 'Además: notas, listas, marcadores, despensa, personas, limpieza del PC, mensajes con un modelo local. IA solo si tú quieres. La app habla alemán, inglés, español, francés y portugués (Brasil).',
+    more: 'Además: notas, listas, marcadores, despensa, personas, hábitos, registro de tiempo, el tiempo, limpieza del PC, un chat con un modelo local (vista previa). IA solo si tú quieres. La app habla alemán, inglés, español, francés y portugués (Brasil).',
+    modules: {
+      summary: (n: number) => `Los ${n} módulos`,
+      status: { default: 'activado por defecto', optional: 'opcional', preview: 'vista previa' },
+      only: { windows: 'solo app de Windows', android: 'solo app de Android', both: 'solo apps de Windows y Android' },
+      hint: 'Los módulos en vista previa siguen ocultos hasta que actives «Mostrar lo que está en desarrollo» (Ajustes → Apariencia). La lista se genera a partir de la propia app.',
+    },
   },
   data: {
     eyebrow: 'Tus datos se quedan contigo',

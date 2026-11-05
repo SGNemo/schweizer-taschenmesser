@@ -44,7 +44,13 @@ export const fr = {
       { icon: 'key', shot: 'vault', title: 'Coffre-fort', text: 'Mots de passe avec TOTP et générateur, documents avec date d’expiration. Chiffré, invisible pour l’IA.', alt: 'Coffre-fort déverrouillé avec des comptes de démonstration' },
       { icon: 'bell', shot: 'reminders', title: 'Rappels', text: 'Regroupés, avec heures calmes et « plus tard », même quand l’appli est fermée.', alt: 'Rappels avec interrupteurs et prochaine heure' },
     ],
-    more: 'Et aussi : notes, listes, signets, provisions, personnes, nettoyage du PC, messages avec un modèle local. IA seulement si vous le souhaitez. L’appli parle allemand, anglais, espagnol, français et portugais (Brésil).',
+    more: 'Et aussi : notes, listes, signets, provisions, personnes, habitudes, suivi du temps, météo, nettoyage du PC, un chat avec un modèle local (aperçu). IA seulement si vous le souhaitez. L’appli parle allemand, anglais, espagnol, français et portugais (Brésil).',
+    modules: {
+      summary: (n: number) => `Les ${n} modules`,
+      status: { default: 'activé par défaut', optional: 'facultatif', preview: 'aperçu' },
+      only: { windows: 'appli Windows uniquement', android: 'appli Android uniquement', both: 'applis Windows et Android uniquement' },
+      hint: 'Les modules en aperçu restent masqués tant que « Afficher ce qui est en cours » est désactivé (Paramètres → Apparence). La liste est générée à partir de l’appli elle-même.',
+    },
   },
   data: {
     eyebrow: 'Vos données restent chez vous',

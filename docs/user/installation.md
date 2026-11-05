@@ -18,7 +18,7 @@ Nemo comes as a portable Windows file, as an Android app and as a PWA in the bro
 3. **Requirement: Microsoft WebView2.** On Windows 10/11 the component is usually already there (it ships with Edge).
    If it is missing, the app explains this in a window and can open the
    [download page](https://developer.microsoft.com/microsoft-edge/webview2/) ("Evergreen Bootstrapper").
-4. **Updates:** Settings → App updates. The app first makes a backup copy, downloads the new `.exe`, checks the
+4. **Updates:** Settings → Updates. The app first makes a backup copy, downloads the new `.exe`, checks the
    signature, replaces itself and restarts (if anything fails, the old version stays).
    The folder of the `.exe` needs write access for this.
    Note: version 0.2.x (named "Taschenmesser") can no longer update itself, because new releases no longer contain `Taschenmesser-…` files. Download and install the current `Nemo-Portable.exe` or `Nemo.apk` once (bring your data along via backup or sync).
@@ -42,7 +42,8 @@ The old installed version cannot update itself to the portable file; the switch 
 2. The first time, Android asks whether **installing from unknown sources** is allowed: **"Settings" →
    "Allow from this source"** for the browser or the files app, then go back and tap "Install". Play Protect
    may offer an extra check ("Install anyway" or "Scan app").
-3. For later updates the app asks for permission itself ("Install update"); the new APK must be signed with the same
+3. For later updates open Settings → Updates and tap "Update now": the app downloads the update, checks its checksum and hands over to
+   Android's installer (if asked, allow installing from this source). The new APK must be signed with the same
    key, otherwise Android rejects it.
 
 > **Bringing data over from the PWA:** the installed app has its own storage. Move your data via *Settings → Backup*
@@ -57,9 +58,9 @@ Coming from Google, Todoist, Obsidian, a banking app or Bitwarden? Open the chec
 
 ## Dev preview (untested builds)
 
-After every change on `develop`, GitHub automatically builds a preview (Windows portable and Android APK). It is meant for testers and may contain bugs.
+After a green push to `develop` that changes code, GitHub automatically builds a preview (Windows portable and Android APK). It is meant for testers and may contain bugs.
 
 - **Separate app, separate data.** The dev preview is called "Nemo Dev" and runs next to the stable app. The stable app's data is not there; bring it over via sync or backup. On Windows it has its own data folder (portable: folder `data-dev` instead of `data` next to the exe).
 - **Download:** [Windows](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-Portable-dev.exe) · [Android](https://github.com/SGNemo/schweizer-taschenmesser/releases/download/dev-preview/Nemo-dev.apk). A "Dev" badge in the app shows that it is the preview.
-- **Updates:** the dev preview always follows the dev channel (Settings → App updates) and makes a backup copy before every update. The stable app never offers a dev preview.
+- **Updates:** the dev preview always follows the dev channel (Settings → Updates) and makes a backup copy before every update. The stable app never offers a dev preview.
 - **Back to the stable version:** the stable app is a separate program. Keep using it or reinstall it; you can simply delete the dev preview.
