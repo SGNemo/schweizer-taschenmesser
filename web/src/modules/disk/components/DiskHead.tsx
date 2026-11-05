@@ -18,20 +18,20 @@ function splitCapacity(text: string): { value: string; unit: string } {
 /**
  * The `fortschritt` head of "Dieser PC" (identity v3.1, G01). Figure: used space of the system drive in mono, one
  * context line with the total, the free space, the state as a word on a badge (`fast voll` is a warning badge,
- * never a ring colour) and when the drive was last scanned. Signature (slot M): one ring per drive in the module
- * hue with its root and percentage as text; before the first reading, the library's `Gauges` shape. Sizes only:
+ * never a ring colour) and when the drive was last scanned. Signature (slot M, decoration like every signature
+ * block): one ring per drive in the module hue with its name and percentage; before the first reading, the library's `Gauges` shape. Sizes only:
  * no file or folder names, nothing from a scan.
  */
 export function DiskHead({ drives }: { drives: readonly DriveInfo[] | null }) {
   const main = drives ? headDrive(drives) : undefined;
   const lastScan = useDriveHistory((s) => (main ? s.lastScan[main.root] : undefined));
-  const h = t.disk.head;
   return (
     <>
       {main ? <HeadFigure drive={main} lastScanAt={lastScan?.at} /> : null}
       <HeroSlot area="signature">
         {drives && drives.length > 0 ? (
-          <ul className={styles.rings} aria-label={h.rings} data-testid="disk-head-rings">
+          // Decoration like every signature block (aria-hidden): the figure and the drive cards say it in words.
+          <ul className={styles.rings} aria-hidden="true" data-testid="disk-head-rings">
             {drives.map((d) => {
               const pct = percent(Math.max(0, d.totalBytes - d.freeBytes), d.totalBytes);
               const name = t.disk.driveName(d.root, d.label);
@@ -39,9 +39,7 @@ export function DiskHead({ drives }: { drives: readonly DriveInfo[] | null }) {
                 <li key={d.root} className={styles.ring}>
                   {/* level stays `ok`: the hue fills the ring, the state is said in words below the figure */}
                   <Ring percent={pct} label={name} />
-                  <span className={styles.ringName} aria-hidden="true">
-                    {name}
-                  </span>
+                  <span className={styles.ringName}>{name}</span>
                 </li>
               );
             })}

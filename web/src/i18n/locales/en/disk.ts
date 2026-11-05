@@ -37,7 +37,6 @@ export const disk: Strings['disk'] = {
     state: { ok: '', tight: 'getting tight', full: 'almost full' } as Record<string, string>,
     lastScan: (when: string) => `last scanned: ${when}`,
     neverScanned: 'not scanned yet',
-    rings: 'Fill level of the drives',
   },
   card: {
     scan: 'Scan',

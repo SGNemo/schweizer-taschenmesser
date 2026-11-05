@@ -37,7 +37,6 @@ export const disk: Strings['disk'] = {
     state: { ok: '', tight: 'ficando cheio', full: 'quase cheio' } as Record<string, string>,
     lastScan: (when: string) => `última análise: ${when}`,
     neverScanned: 'ainda não analisada',
-    rings: 'Ocupação das unidades',
   },
   card: {
     scan: 'Analisar',

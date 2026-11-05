@@ -4413,7 +4413,6 @@ export const de = {
       state: { ok: '', tight: 'wird knapp', full: 'fast voll' } as Record<string, string>,
       lastScan: (when: string) => `zuletzt gescannt: ${when}`,
       neverScanned: 'noch nicht gescannt',
-      rings: 'Füllstand der Laufwerke',
     },
     card: {
       scan: 'Scannen',
