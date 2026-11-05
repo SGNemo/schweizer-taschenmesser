@@ -2,7 +2,13 @@ import { useEffect, useRef } from 'react';
 import { FILE_KINDS, type FileKind } from '@/core/platform/disk';
 import { t } from '@/strings';
 import { AGE_VAR } from '../logic/age';
-import { KIND_PATTERN, KIND_VAR, drawPattern, resolveColors, type PatternId } from '../logic/colors';
+import {
+  KIND_PATTERN,
+  KIND_VAR,
+  drawPattern,
+  resolveColors,
+  type PatternId,
+} from '../logic/colors';
 import type { ColorMode } from './TreemapView';
 import { useThemeKey } from './useThemeKey';
 import styles from './Legend.module.css';

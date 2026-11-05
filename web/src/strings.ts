@@ -2711,6 +2711,7 @@ export const de = {
     ram: 'Arbeitsspeicher',
     battery: 'Akku',
     charging: 'lädt',
+    high: 'stark ausgelastet',
     open: 'Systeminfo öffnen',
     unavailable: 'Systemdaten sind hier nicht verfügbar.',
   },
@@ -4404,6 +4405,15 @@ export const de = {
     open: (name: string) => `${name} scannen`,
     usedOf: (used: string, total: string) => `${used} von ${total} belegt`,
     free: (free: string) => `${free} frei`,
+    /** Module head (identity v3.1 G01): figure of the system drive, its state as a word, the drive rings. */
+    head: {
+      used: 'belegt',
+      of: (total: string) => `von ${total}`,
+      state: { ok: '', tight: 'wird knapp', full: 'fast voll' } as Record<string, string>,
+      lastScan: (when: string) => `zuletzt gescannt: ${when}`,
+      neverScanned: 'noch nicht gescannt',
+      rings: 'Füllstand der Laufwerke',
+    },
     card: {
       scan: 'Scannen',
       systemDrive: 'Systemlaufwerk',

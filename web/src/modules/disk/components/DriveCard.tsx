@@ -1,7 +1,5 @@
 import type { DriveInfo } from '@/core/platform/disk';
 import type { DiskIo } from '@/core/platform/system';
-import { relativeDayLabel } from '@/core/time/dates';
-import { pad2, toDateString, today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Badge, Button, Card, HelpHint, Icon, Ring, Sparkline } from '@/ui';
 import { percent } from '../format';
@@ -12,18 +10,13 @@ import {
   formatCapacity,
   formatDelta,
   healthView,
+  scanWhen,
 } from '../logic/drives';
 import { formatRate } from '../logic/system';
 import { growthSinceScan, useDriveHistory } from '../history';
 import { useDiskStore } from '../store';
 import { ScanStatusLine, soFarOf } from './ScanStatusLine';
 import styles from './DriveCard.module.css';
-
-/** "Heute, 10:14" for the time of the last scan. */
-function scanWhen(at: number): string {
-  const d = new Date(at);
-  return `${relativeDayLabel(toDateString(d), today())}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
 
 /**
  * The module's one scan while it is this drive's: running (Pause, Abbrechen, Zum Scan), ended or

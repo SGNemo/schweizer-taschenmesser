@@ -6,6 +6,7 @@ export const systemWidget: Strings['systemWidget'] = {
   ram: 'Memory',
   battery: 'Battery',
   charging: 'charging',
+  high: 'under heavy load',
   open: 'Open system info',
   unavailable: 'System data is not available here.',
 };

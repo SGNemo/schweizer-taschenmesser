@@ -56,7 +56,14 @@ interface Palette {
 }
 
 /** Tokens the canvas paints with besides the palette. */
-const UI_VARS = ['--surface', '--surface-2', '--text', '--text-muted', '--accent', '--focus'] as const;
+const UI_VARS = [
+  '--surface',
+  '--surface-2',
+  '--text',
+  '--text-muted',
+  '--accent',
+  '--focus',
+] as const;
 
 /** Reads the computed colours once per theme (palette + UI tokens), resolved to `#rrggbb` for the canvas. */
 const readPalette = (el: HTMLElement): Palette => {

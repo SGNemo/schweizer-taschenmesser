@@ -1,5 +1,7 @@
 import { numberFormat } from '@/core/i18n/format';
 import type { DriveInfo, DriveHealth } from '@/core/platform/disk';
+import { relativeDayLabel } from '@/core/time/dates';
+import { pad2, toDateString, today } from '@/core/time/now';
 import { driveLevel, type DriveLevel } from '../format';
 
 const nf1 = () => numberFormat({ minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -70,4 +72,17 @@ export function healthView(h: DriveHealth): {
   if (h.status === 'ok') return { key: 'ok', tone: 'ok' };
   if (h.status === 'warning') return { key: 'warning', tone: 'warning' };
   return { key: h.gap === 'unsupported' ? 'unsupported' : 'needsAdmin', tone: 'muted' };
+}
+
+/** "Heute, 10:14" for the time of the last scan. */
+export function scanWhen(at: number): string {
+  const d = new Date(at);
+  return `${relativeDayLabel(toDateString(d), today())}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** The drive the head speaks of: the system drive, else the first one. */
+export function headDrive<T extends Pick<DriveInfo, 'isSystem'>>(
+  drives: readonly T[],
+): T | undefined {
+  return drives.find((d) => d.isSystem) ?? drives[0];
 }

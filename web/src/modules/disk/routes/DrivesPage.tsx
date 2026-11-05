@@ -7,6 +7,7 @@ import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
 import { EmptyState, PageHeader, patternStyles, Segmented, Skeleton } from '@/ui';
 import SystemTab from '../components/SystemTab';
+import { DiskHead } from '../components/DiskHead';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
 import { ScanStatusLine, soFarOf } from '../components/ScanStatusLine';
@@ -25,8 +26,10 @@ export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab');
   const tab: Tab = TABS.find((k) => k === raw) ?? 'drives';
+  const list = useDriveList();
   return (
     <>
+      <DiskHead drives={list.drives} />
       <PageHeader title={t.disk.title} />
       <div className={patternStyles.gapBottom}>
         <Segmented
@@ -36,7 +39,7 @@ export default function ThisPcPage() {
           onChange={(k) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true })}
         />
       </div>
-      {tab === 'system' ? <SystemTab /> : <DrivesTab />}
+      {tab === 'system' ? <SystemTab /> : <DrivesTab {...list} />}
     </>
   );
 }
@@ -87,18 +90,17 @@ function ScanLine() {
   );
 }
 
-function DrivesTab() {
+interface DriveList {
+  drives: DriveInfo[] | null;
+  failed: boolean;
+  io: DiskIo[];
+}
+
+/** Drives (and their live I/O) for the head and the drives tab: one read every few seconds while visible. */
+function useDriveList(): DriveList {
   const [drives, setDrives] = useState<DriveInfo[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [io, setIo] = useState<DiskIo[]>([]);
-  const navigate = useNavigate();
-  const start = useDiskStore((s) => s.start);
-  const scanning = useDiskStore((s) => s.phase === 'scanning');
-  const scanRoot = useDiskStore((s) => s.root);
-  const toast = useUiStore((s) => s.toast);
-  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
-  // the drives still load, nothing flashes above the grid (unless loading failed).
-  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
   const record = useDriveHistory((s) => s.record);
 
   useEffect(() => {
@@ -127,6 +129,18 @@ function DrivesTab() {
       clearInterval(id);
     };
   }, [record]);
+  return { drives, failed, io };
+}
+
+function DrivesTab({ drives, failed, io }: DriveList) {
+  const navigate = useNavigate();
+  const start = useDiskStore((s) => s.start);
+  const scanning = useDiskStore((s) => s.phase === 'scanning');
+  const scanRoot = useDiskStore((s) => s.root);
+  const toast = useUiStore((s) => s.toast);
+  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
+  // the drives still load, nothing flashes above the grid (unless loading failed).
+  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
 
   const startScan = (root: string) => {
     if (scanning) {
