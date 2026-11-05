@@ -15,7 +15,7 @@ const nodes = s.data.nodes as readonly { icon: IconName; title: string; text: st
         <>
           {i > 0 && <div class="link" aria-hidden="true"><span>{s.data.links[i - 1]}</span></div>}
           <div class="node" role="listitem">
-            <Icon name={n.icon} size={24} />
+            <span class="plate neutral"><Icon name={n.icon} size={20} /></span>
             <strong>{n.title}</strong>
             <span>{n.text}</span>
           </div>
@@ -49,14 +49,13 @@ const nodes = s.data.nodes as readonly { icon: IconName; title: string; text: st
     display: grid;
     gap: 0.25rem;
   }
-  .node :global(svg) {
-    color: var(--accent);
+  .node .plate {
     margin-bottom: 0.25rem;
   }
   .node strong {
     font-size: var(--text-label);
   }
-  .node span {
+  .node span:not(.plate) {
     font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.45;
@@ -74,6 +73,7 @@ const nodes = s.data.nodes as readonly { icon: IconName; title: string; text: st
     position: relative;
     padding: 0 0.5rem;
   }
+  /* A hairline card, not a stripe (stripe rule). */
   .aside {
     margin-top: var(--space-5);
     display: flex;
@@ -82,8 +82,10 @@ const nodes = s.data.nodes as readonly { icon: IconName; title: string; text: st
     max-width: var(--measure);
     color: var(--text-muted);
     font-size: var(--text-sm);
-    border-left: 3px solid var(--border-strong);
-    padding-left: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
   }
   .aside :global(svg) {
     color: var(--text-3);
@@ -112,15 +114,7 @@ const nodes = s.data.nodes as readonly { icon: IconName; title: string; text: st
       opacity: 0.6;
     }
     .link span {
-      background: var(--surface);
-    }
-    :global(:root[data-theme='dark']) .link span {
-      background: color-mix(in srgb, var(--surface) 60%, var(--bg));
-    }
-    @media (prefers-color-scheme: dark) {
-      :global(:root:not([data-theme='light'])) .link span {
-        background: color-mix(in srgb, var(--surface) 60%, var(--bg));
-      }
+      background: var(--band, var(--surface));
     }
   }
 </style>

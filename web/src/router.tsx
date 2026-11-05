@@ -88,7 +88,7 @@ const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
 /** Credential screens: the reading aid never touches them (DESIGN-SPEC §4c) – the whole frame, head included (C05). */
 const NO_READ_AID_MODULES: ReadonlySet<string> = new Set(['vault', 'accounts']);
 const wrapReadAid = (id: string, el: ReactElement): ReactElement =>
-  NO_READ_AID_MODULES.has(id) ? <NoReadAid key={id}>{el}</NoReadAid> : el;
+  NO_READ_AID_MODULES.has(id) ? <NoReadAid>{el}</NoReadAid> : el;
 
 export function buildRoutes(states: ModuleStates): RouteObject[] {
   const moduleRoutes = availableManifests().flatMap((m) =>

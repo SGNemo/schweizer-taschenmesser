@@ -152,3 +152,5 @@ Tools speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature,
 ## Settings and libraries
 
 Not module pages, so no band: `pages/settings/PageHead` on `ui/HeadSurface` as a rounded card. **Settings:** the landing page has the "Status" head, each category a compact head in its hue **without area pattern** and never a module's hue + area pair (`categoryLook.ts`, test), a module's settings page the module's identity with its signature at S (kept on the phone, smaller). The category list uses the sidebar's look. **Libraries:** `/library` and `/tools` carry neutral (slate) heads, a toolbar and one neutral-tinted section per area; a module card shows a sketch of `identity.widget` (`WidgetMiniature`). **Cards show the identity colour** on `ui/HuePlate` (`e2e/hue-consistency.spec.ts`). **Connect cards** (`pages/settings/ConnectParts`) say the state first.
+
+**Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.

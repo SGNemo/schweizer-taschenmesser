@@ -30,7 +30,6 @@ export const disk: Strings['disk'] = {
   open: (name: string) => `Analizar ${name}`,
   usedOf: (used: string, total: string) => `${used} de ${total} ocupado`,
   free: (free: string) => `${free} libre`,
-  percentUsed: (p: number) => `${p} % ocupado`,
   card: {
     scan: 'Analizar',
     systemDrive: 'Unidad del sistema',
@@ -66,6 +65,9 @@ export const disk: Strings['disk'] = {
     historyHint: 'Historial desde que se abrió la app; no se guarda.',
     io: (read: string, write: string) => `Lectura ${read} · Escritura ${write}`,
     model: 'Modelo',
+    details: 'Detalles',
+    temperatureLabel: 'Temperatura',
+    ioLabel: 'Actividad',
   },
   quick: {
     title: 'Vista rápida',
@@ -372,16 +374,35 @@ export const disk: Strings['disk'] = {
   scan: {
     back: 'Volver a las unidades',
     title: (root: string) => `Análisis de ${root}`,
-    scanning: 'Analizando …',
+    scanning: 'Análisis en curso',
     paused: 'Análisis en pausa',
+    runningOf: (root: string) => `Análisis de ${root} en curso`,
+    pausedOf: (root: string) => `Análisis de ${root} en pausa`,
+    soFar: (files: string, size: string) => `hasta ahora ${files} archivos, ${size}`,
+    toScan: 'Ir al análisis',
+    liveList: 'Carpetas hasta ahora',
+    pendingShort: 'aún contando',
+    pendingNote: 'Aún se está contando',
+    pendingLegend: '… = aún se está contando',
+    pendingCount: (n: number) =>
+      n === 1 ? 'Aún se está contando 1 entrada.' : `Aún se están contando ${n} entradas.`,
+    endedOf: (root: string) => `Análisis de ${root} terminado`,
+    cancelledOf: (root: string) => `Análisis de ${root} cancelado`,
+    endedShort: 'Análisis terminado',
+    cancelledShort: 'Análisis cancelado',
+    liveMapLabel: (n: number) =>
+      n === 1
+        ? 'Vista de mapa del análisis en curso con 1 entrada.'
+        : `Vista de mapa del análisis en curso con ${n} entradas.`,
+    failedOf: (root: string) => `Análisis de ${root} fallido`,
+    toResult: 'Ver el resultado',
+    alreadyRunning: 'Ya hay un análisis en curso: termínalo para iniciar otro.',
     liveLabel: 'Vista en vivo del análisis',
     liveHint:
-      'El mapa se va llenando mientras se cuenta. Abrir, seleccionar y eliminar funcionan cuando termine el análisis.',
+      'La vista se va llenando mientras se cuenta. Abrir, seleccionar y eliminar funcionan cuando termine el análisis.',
     liveEmpty: 'Contando las primeras carpetas …',
     files: 'Archivos',
     folders: 'Carpetas',
-    used: 'Ocupado',
-    current: 'Carpeta actual',
     cancel: 'Cancelar',
     pause: 'Pausa',
     resume: 'Continuar',
