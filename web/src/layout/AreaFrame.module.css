@@ -3,8 +3,8 @@
    column (capped at --page-content, aligned to the page) with the title and one row of figure | signature slot | extra.
    Everything on the band is text in --text or --text-on-tint (tokens.test.ts). */
 .band {
-  /* The frame's variants only change arrangement and typography; the hue is the plate and the sub-navigation's chip. */
-  overflow: clip;
+  /* The frame's variants only change arrangement and typography; the hue is the plate and the sub-navigation's chip.
+     No overflow clipping here: menus opened from the head (the player's device list) reach over the page. */
 }
 .notice {
   margin-bottom: var(--space-3);
