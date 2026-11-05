@@ -16,14 +16,14 @@ async function addTask(page: Page, title: string) {
 test.describe('ToDos: Wiederholung und Irgendwann', () => {
   test('ticking off a recurring task creates the next one', async ({ page }) => {
     await addTask(page, 'Müll rausbringen');
-    await page.getByRole('button', { name: /Müll rausbringen/ }).click();
+    await page.getByRole('button', { name: /^Müll rausbringen/ }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Fällig am').fill('2026-09-29');
     await moreFields(page);
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /Müll rausbringen/ })).toContainText('↻');
+    await expect(page.getByRole('button', { name: /^Müll rausbringen/ })).toContainText('↻');
 
     await page.getByRole('checkbox', { name: 'Müll rausbringen' }).click();
     // Wait until the write is done (the toast comes after it), or the next page load aborts it.

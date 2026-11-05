@@ -12,6 +12,7 @@ import { PlaceChips } from '../components/PlaceChips';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
 import { WeatherHero } from '../components/WeatherHero';
+import { HeroSlot, SignatureMark, Sky } from '@/ui/identity';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
 
@@ -37,8 +38,12 @@ export default function WeatherPage() {
     return (
       <>
         <PageTitle title={tx.title} />
+        {/* C26: the sky stays in the head without a place (a calm day sky); the next step sits in the body. */}
+        <HeroSlot area="backdrop">
+          <Sky kind="clear" />
+        </HeroSlot>
         <div className={styles.empty} data-testid="weather-empty">
-          <EmptyState title={tp.emptyTitle}>
+          <EmptyState title={tp.emptyTitle} motif={<SignatureMark id="sky" size={64} />}>
             <p>{tp.emptyText}</p>
             <Link to={SETTINGS}>
               <Button variant="primary">{tp.emptyAction}</Button>

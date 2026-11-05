@@ -39,7 +39,7 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .add {
   display: flex;
@@ -144,11 +144,11 @@
 }
 .overdue {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .today {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .prio3,
 .prio2 {
@@ -198,7 +198,7 @@
 }
 .sectionTitle {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 /* The list rail is gone (lists live in the "⋯" menu): the page is one column, never a grid with a
@@ -274,6 +274,9 @@
   align-items: center;
   gap: var(--space-4);
   min-width: 0;
+  /* Never wider than the head's column (Sven's phone shot: the card ran past the right edge). */
+  max-width: 100%;
+  box-sizing: border-box;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--surface) 80%, transparent);
@@ -307,12 +310,42 @@
 .nextLabel,
 .nextDetail {
   font-size: var(--text-sm);
-  color: var(--text-muted);
 }
 .nextTitle {
   font-size: var(--text-xl, 1.5rem);
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  /* C22: one line, shortened; the full title is the button's name and the tooltip. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nextLabel,
+.nextDetail {
+  color: var(--text-on-tint);
+}
+/* Narrow page: count, title and the two buttons on a tight card; the title takes what is left. */
+.todayCard[data-narrow='true'] {
+  flex: 1 1 100%;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+.todayCard[data-narrow='true'] .countBox {
+  min-width: 3rem;
+  padding: var(--space-1) var(--space-2);
+}
+.todayCard[data-narrow='true'] .countBox strong {
+  font-size: var(--text-xl);
+}
+.todayCard[data-narrow='true'] .nextTask {
+  flex: 1 1 0;
+}
+.todayCard[data-narrow='true'] .nextTitle {
+  font-size: var(--text-md);
+}
+.todayCard[data-narrow='true'] .nextActions {
+  flex-wrap: nowrap;
+  gap: var(--space-1);
 }
 .nextActions {
   display: flex;
@@ -343,7 +376,7 @@
 }
 .tagChip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .boardHint {
   margin: 0 0 var(--space-2);
@@ -395,7 +428,7 @@
 }
 .columnCount {
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: normal;
 }
 .columnEmpty {
   margin: 0;
@@ -426,7 +459,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-weight: 550;
+  font-weight: var(--weight-medium);
   text-align: left;
   cursor: pointer;
 }
@@ -511,19 +544,4 @@
     padding-bottom: var(--space-1);
     mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
   }
-}
-
-.todayLine {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: var(--text-sm);
-  width: fit-content;
 }

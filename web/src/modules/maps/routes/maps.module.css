@@ -104,34 +104,17 @@
   overflow-y: auto;
 }
 
-/* Plan group package 3: pin head, places bar. */
-.pinHead {
+/* Head (G11): the pin plate beside the category tiles in slot M. */
+.headShelf {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  flex-wrap: wrap;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: var(--text-sm);
-  max-width: 30rem;
   min-width: 0;
 }
-.pinRings {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-full);
-  color: var(--module-color);
-  /* Two quiet rings around the pin: static, in the module hue. */
-  box-shadow:
-    0 0 0 0.35rem color-mix(in srgb, var(--module-color) 14%, transparent),
-    0 0 0 0.7rem color-mix(in srgb, var(--module-color) 7%, transparent);
+.headTiles {
+  flex: 1 1 18rem;
+  min-width: 0;
+  max-width: 26rem;
 }
 .placesBar {
   display: grid;
@@ -154,37 +137,7 @@
 }
 .catChip[aria-pressed='true'] {
   border-color: var(--text);
-  font-weight: 600;
-}
-
-/* Shelf head: category tiles with counts on a quiet shelf line (bottom hairline). */
-.shelf {
-  flex: 1 1 100%;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-  list-style: none;
-  margin: 0;
-  padding: 0 0 var(--space-2);
-  border-bottom: 1px solid color-mix(in srgb, var(--module-color) 35%, transparent);
-}
-.shelfTile {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
-  font-size: var(--text-sm);
-}
-.shelfTile strong {
-  font-variant-numeric: tabular-nums;
-}
-.shelfTile span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: var(--weight-semibold);
 }
 
 /* Place rows lead with a pin plate in the module colour. */

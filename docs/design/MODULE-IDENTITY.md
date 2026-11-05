@@ -60,7 +60,7 @@ identity: {
 
 ## Signatures (`@/ui/identity`)
 
-Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing in `currentColor`) and, for the ids with a block, a **decoration at M/L** (`Signature id size`): `Receipt`, `Bill`, `FolderTabs`, `Stamp`, `Pinboard`, `NotePaper`, `Bubble`, `AddressBar`, `Shelf`, `AvatarRing`, `Gauges`, `ArrowBand`, `Masthead`, `HourStrip`; the other ids draw their mark on a plate. Rules: decoration only (`aria-hidden`), no user data of its own (`children` is the one line a module may put on it), drawn from `--module-color` and `--surface` so it works without colour. The frame draws the module's signature in the slot until the page claims it; the calendar's leaf (`DayBlock` + today's `HourStrip`) is the one data-aware default (`layout/signatures.tsx`). Tools use the same list (`ToolIdentity.signature`), the tool stage shows the mark; the module settings head shows the signature at S. Module-local copies (`modules/*/components/*Signature*`) move onto the library in the module packages. Guard: `identity.test.tsx` renders every id.
+Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing in `currentColor`) and, for the ids with a block, a **decoration at M/L** (`Signature id size`): `Receipt`, `Bill`, `FolderTabs`, `Stamp`, `Pinboard`, `NotePaper`, `Bubble`, `AddressBar`, `Shelf`, `AvatarRing`, `Gauges`, `ArrowBand`, `Masthead`, `HourStrip`, `WeekBars`, `Envelope` (fill level); the other ids draw their mark on a plate. Rules: decoration only (`aria-hidden`), no user data of its own (`children` is the one line a module may put on it), drawn from `--module-color` and `--surface` so it works without colour. The frame draws the module's signature in the slot until the page claims it; the calendar's leaf (`DayBlock` + today's `HourStrip`) is the one data-aware default (`layout/signatures.tsx`). Tools use the same list (`ToolIdentity.signature`), the tool stage shows the mark; the module settings head shows the signature at S. Module-local copies (`modules/*/components/*Signature*`) move onto the library in the module packages. Guard: `identity.test.tsx` renders every id.
 
 ## Tokens (`ui/tokens.css`)
 
@@ -105,12 +105,12 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | ToDos `todos` | plan | moss | lime | fokus | fokus | `todayCard` |
 | Planer `planner` | plan | indigo | cobalt | kennzahl | fortschritt | `weekBars` (order 15 between Kalender and ToDos; indigo is 26° from cobalt and violet, confirmed by `check:modules`) |
 | Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | `ring` |
-| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `hourStrip` |
+| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `hourStrip` (the page fills the slot with `Stopwatch`, C25: round, not the calendar's strip) |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
-| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` (page: package 1) |
+| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` |
 | Abos `subscriptions` | money | indigo | cobalt | fortschritt | faellig | `cycle` |
 | Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | `envelope` |
 | Listen `lists` | household | orchid | violet | kennzahl | checkliste | `receipt` |

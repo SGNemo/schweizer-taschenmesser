@@ -27,7 +27,8 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
   }) => {
     await addAccount(page, 'Sparkonto', '1000,00');
 
-    await ready(page, '/finance?tab=transactions');
+    // C23: the empty bookings page offers one verb; transfers live on "Konten".
+    await ready(page, '/finance?tab=accounts');
     await page.getByRole('button', { name: 'Umbuchung', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Umbuchung' });
     await dialog.getByLabel('Von Konto').selectOption({ label: 'Girokonto' });

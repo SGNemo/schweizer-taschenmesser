@@ -18,7 +18,7 @@
 }
 .monthLabel {
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   min-width: 9rem;
   text-align: center;
 }
@@ -39,7 +39,7 @@
 .heroValue {
   font-size: 3rem;
   line-height: 1.1;
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   letter-spacing: -0.02em;
 }
 .negative {
@@ -67,7 +67,7 @@
 }
 .kpiValue {
   font-size: var(--text-lg);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 .income {
@@ -93,7 +93,7 @@
 }
 .chartTitle {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .legend {
   list-style: none;
@@ -139,7 +139,7 @@
   flex: none;
 }
 .tooltipValue {
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
 .tooltipName {
@@ -176,7 +176,7 @@
 }
 .dayHead {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--text-muted);
   margin: var(--space-4) 0 var(--space-2);
 }
@@ -208,13 +208,13 @@
   font-size: var(--text-sm);
 }
 .amount {
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .sectionTitle {
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   margin: var(--space-5) 0 var(--space-2);
 }
 .form {

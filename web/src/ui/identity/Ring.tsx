@@ -16,12 +16,18 @@ export function Ring({
   centre,
   label,
   size = 8.75,
+  segments,
 }: {
   parts: readonly RingPart[];
   centre?: ReactNode;
   /** Accessible summary ("5 Kategorien"). */
   label: string;
   size?: number;
+  /**
+   * Cut the ring into this many equal segments (thin gaps in the surface colour): the `cycle` shape of Abos (12 months),
+   * so a share ring never reads as the habit ring. Shape only, the shares stay as they are.
+   */
+  segments?: number;
 }) {
   const total = parts.reduce((s, p) => s + Math.max(0, p.share), 0) || 1;
   const stops: string[] = [];
@@ -44,7 +50,17 @@ export function Ring({
         background: `conic-gradient(${stops.join(', ')}${at < 100 ? `, var(--surface-2) ${at}% 100%` : ''})`,
       }}
       data-testid="ring"
+      data-segments={segments}
     >
+      {segments && segments > 1 ? (
+        <i
+          className={styles.gaps}
+          aria-hidden="true"
+          style={{
+            background: `repeating-conic-gradient(transparent 0 ${360 / segments - 3}deg, var(--surface) ${360 / segments - 3}deg ${360 / segments}deg)`,
+          }}
+        />
+      ) : null}
       <span className={styles.hole}>{centre}</span>
     </div>
   );

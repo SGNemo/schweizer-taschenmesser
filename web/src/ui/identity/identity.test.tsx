@@ -11,6 +11,7 @@ import {
   SIGNATURE_BLOCKS,
   SignatureMark,
   Sky,
+  Stopwatch,
   skyKind,
 } from './index';
 import { dominantColor, safeTint } from './coverTone';
@@ -159,5 +160,22 @@ describe('safeTint (cover tone vs. text contrast)', () => {
   it('never tints beyond the maximum, falls back safely for unknown token formats', () => {
     expect(safeTint({ r: 10, g: 10, b: 10 }, '#171c20', '#eceff1', 0.4)).toBeLessThanOrEqual(0.4);
     expect(safeTint({ r: 200, g: 0, b: 0 }, 'rgb(1 2 3)', '#fff')).toBeLessThanOrEqual(0.25);
+  });
+
+  it('Stopwatch is decoration: clamps the arc and draws the hand only while running', () => {
+    const { container, rerender } = render(<Stopwatch fill={3} />);
+    const watch = container.querySelector('[data-signature="stopwatch"]')!;
+    expect(watch).toHaveAttribute('aria-hidden', 'true');
+    const arcs = container.querySelectorAll('circle[stroke-dasharray]');
+    // track and fill: an overfull day draws the fill as long as the track, never longer
+    expect(arcs[1]!.getAttribute('stroke-dasharray')).toBe(
+      arcs[0]!.getAttribute('stroke-dasharray'),
+    );
+    expect(container.querySelector('line')).toBeNull();
+    rerender(<Stopwatch fill={-1} running />);
+    expect(
+      container.querySelectorAll('circle[stroke-dasharray]')[1]!.getAttribute('stroke-dasharray'),
+    ).toMatch(/^0 /);
+    expect(container.querySelector('line')).not.toBeNull();
   });
 });

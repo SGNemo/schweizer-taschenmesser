@@ -40,6 +40,6 @@ test('paying a repeating invoice brings the next one; undo takes it away', async
 
 test('the repeat is kept when the invoice is edited', async ({ page }) => {
   await addRent(page);
-  await page.getByRole('button', { name: /Vermieter/ }).click();
+  await page.getByRole('button', { name: /^Vermieter/ }).click();
   await expect(page.getByRole('dialog').getByLabel('Wiederholen')).toHaveValue('monthly');
 });

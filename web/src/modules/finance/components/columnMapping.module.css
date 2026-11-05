@@ -46,7 +46,7 @@
 
 .table th {
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .picked {

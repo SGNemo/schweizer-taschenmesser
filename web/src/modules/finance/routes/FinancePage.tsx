@@ -27,6 +27,7 @@ import { CurrencyContext } from '../currency';
 import { currenciesOf, filterByCurrency } from '../logic';
 import { AccountCards } from '../components/AccountCards';
 import { HeroSlot } from '@/ui/identity';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import styles from './finance.module.css';
 
 const TABS = ['overview', 'transactions', 'accounts', 'categories'] as const;
@@ -118,6 +119,7 @@ export default function FinancePage() {
           <Icon name="plus" size={18} />
           {t.finance.addTransactionShort}
         </Button>
+        <StartDataMenu moduleId="finance" />
       </PageHeader>
 
       {view ? (

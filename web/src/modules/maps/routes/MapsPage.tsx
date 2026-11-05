@@ -21,13 +21,13 @@ import {
   useOpenParam,
   type RowMenuItem,
 } from '@/ui';
-import { PinHead } from '../components/PinHead';
+import { MapsHead } from '../components/MapsHead';
 import { PlaceEditor, type PlaceTarget } from '../components/PlaceEditor';
 import { RouteEditor, type RouteTarget } from '../components/RouteEditor';
 import { RegionsCard } from '../components/RegionsCard';
 import { TileMap, type MapMarker, type TileResolver } from '../components/TileMap';
 import { TransitCard, type Trip } from '../components/TransitCard';
-import { HeroSlot } from '@/ui/identity';
+import { SignatureMark } from '@/ui/identity';
 import { searchPlaces, MapsError, type Hit } from '../geocode';
 import { lastPlace, viewPlaces, type PlaceSort } from '../placesView';
 import { CATEGORY_ICON, MODE_ICON } from '../icons';
@@ -590,20 +590,19 @@ export default function MapsPage() {
   return (
     <>
       {places ? (
-        <HeroSlot area="signature">
-          <PinHead
-            last={lastPlace(places)?.name}
-            tiles={PLACE_CATEGORIES.map((c) => ({
-              key: c,
-              label: t.maps.categories[c],
-              count: places.filter((p) => p.category === c).length,
-              icon: CATEGORY_ICON[c],
-            }))
-              .filter((x) => x.count > 0)
-              .sort((a, b) => b.count - a.count)
-              .slice(0, 4)}
-          />
-        </HeroSlot>
+        <MapsHead
+          count={places.length}
+          last={lastPlace(places)?.name}
+          tiles={PLACE_CATEGORIES.map((c) => ({
+            key: c,
+            label: t.maps.categories[c],
+            count: places.filter((p) => p.category === c).length,
+          }))
+            .filter((x) => x.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 4)
+            .map((x) => ({ key: x.key, value: String(x.count), label: x.label }))}
+        />
       ) : null}
       <PageHeader
         title={t.maps.meta.name}
@@ -624,10 +623,12 @@ export default function MapsPage() {
 
       {tab === 'places' ? (
         places && places.length === 0 ? (
-          <EmptyState title={t.maps.empty.places}>
-            <Button variant="primary" onClick={() => setTab('map')}>
-              {t.maps.add.place}
-            </Button>
+          <EmptyState
+            title={t.maps.empty.places}
+            testId="maps-empty"
+            motif={<SignatureMark id="pin" size={64} />}
+          >
+            <Button onClick={() => setTab('map')}>{t.maps.add.place}</Button>
           </EmptyState>
         ) : (
           <>
@@ -715,11 +716,7 @@ export default function MapsPage() {
 
       {tab === 'routes' ? (
         routes && routes.length === 0 ? (
-          <EmptyState title={t.maps.empty.routes}>
-            <Button variant="primary" onClick={() => setRouteTarget({ draft: true })}>
-              {t.maps.add.route}
-            </Button>
-          </EmptyState>
+          <EmptyState title={t.maps.empty.routes} motif={<SignatureMark id="pin" size={64} />} />
         ) : (
           <ItemList>
             {(routes ?? []).map((r) => (

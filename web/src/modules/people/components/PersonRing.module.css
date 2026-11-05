@@ -42,20 +42,3 @@
   background: var(--module-color-2, var(--module-color));
   rotate: -20deg;
 }
-.head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-md);
-}
-.text {
-  display: grid;
-}
-.name {
-  color: var(--text);
-  font-weight: var(--weight-bold);
-}
-.sub {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}

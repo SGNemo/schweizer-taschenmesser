@@ -400,3 +400,41 @@
   max-width: 24rem;
   height: 4.5rem;
 }
+
+/* envelope: a card with the flap in the top corner and a fill level from the bottom (the spent share). */
+.envelope {
+  display: flex;
+  align-items: flex-end;
+  width: 9rem;
+  height: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--module-color) 40%, var(--border));
+}
+.envLevel {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--module-color) 26%, var(--paper));
+}
+.envelope[data-over='true'] .envLevel {
+  background: color-mix(in srgb, var(--danger) 20%, var(--paper));
+}
+.envFlap {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 45%;
+  z-index: -1;
+  background: color-mix(in srgb, var(--module-color) 16%, var(--paper));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.envelope[data-size='L'] {
+  width: 100%;
+  max-width: 14rem;
+}
+.envelope .text {
+  min-width: 0;
+}

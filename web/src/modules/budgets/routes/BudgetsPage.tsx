@@ -4,9 +4,10 @@ import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
 import { currencyOf, formatMoney, DEFAULT_CURRENCY } from '@/core/money';
 import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core/time/dates';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
+  Badge,
   Button,
   Card,
   EmptyState,
@@ -21,8 +22,7 @@ import {
   useOpenParam,
 } from '@/ui';
 import { useBudgetData } from '../data';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
-import { EnvelopeMini } from '../components/Envelope';
+import { Envelope, HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import styles from './budgets.module.css';
 import {
   BudgetEditor,
@@ -80,6 +80,8 @@ export default function BudgetsPage() {
   const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
+  // The three fullest budgets: envelopes in the head's slot M (G05), the same three as percentage chips in the toolbar.
+  const fullest = [...inMain].sort((x, y) => y.status.pct - x.status.pct).slice(0, 3);
 
   return (
     <>
@@ -112,6 +114,7 @@ export default function BudgetsPage() {
             {t.budgets.addGoal}
           </Button>
         )}
+        <StartDataMenu moduleId="budgets" />
       </PageHeader>
       {tab === 'budgets' && data && inMain.length > 0 && mainCurrency ? (
         <>
@@ -123,30 +126,30 @@ export default function BudgetsPage() {
               testId="budgets-free"
             />
           </HeroSlot>
-          {inMain.length > 0 ? (
-            <HeroSlot area="signature">
-              <div className={styles.headEnvelopes}>
-                {[...inMain]
-                  .sort((x, y) => y.status.pct - x.status.pct)
-                  .slice(0, 3)
-                  .map((r) => (
-                    <EnvelopeMini
-                      key={r.budget.id}
-                      name={categoryName(r.budget.categoryId)}
-                      pct={r.status.pct}
-                      over={r.status.tone === 'over'}
-                    />
-                  ))}
-              </div>
-            </HeroSlot>
-          ) : null}
+          <HeroSlot area="signature">
+            <div className={styles.headEnvelopes} data-testid="budget-envelopes">
+              {fullest.map((r) => (
+                <Envelope
+                  key={r.budget.id}
+                  size="M"
+                  fill={r.status.pct / 100}
+                  over={r.status.tone === 'over'}
+                >
+                  {categoryName(r.budget.categoryId)}
+                </Envelope>
+              ))}
+            </div>
+          </HeroSlot>
         </>
       ) : null}
 
       {tab === 'budgets' ? (
         <>
           {!loading && !financeOn ? (
-            <EmptyState title={t.budgets.needFinance}>
+            <EmptyState
+              title={t.budgets.needFinance}
+              motif={<SignatureMark id="envelope" size={64} />}
+            >
               <p>{t.budgets.needFinanceHint}</p>
             </EmptyState>
           ) : (
@@ -165,11 +168,25 @@ export default function BudgetsPage() {
                 >
                   <span aria-hidden="true">›</span>
                 </IconButton>
+                {fullest.length > 0 ? (
+                  <span className={styles.chips} data-testid="budget-chips">
+                    {fullest.map((r) => (
+                      <Badge
+                        key={r.budget.id}
+                        tone={r.status.tone === 'over' ? 'danger' : 'neutral'}
+                      >
+                        {t.budgets.ext.head.chip(categoryName(r.budget.categoryId), r.status.pct)}
+                      </Badge>
+                    ))}
+                  </span>
+                ) : null}
               </div>
               {data && budgets.length === 0 ? (
-                <EmptyState title={t.budgets.emptyBudgets}>
-                  <StartDataButton moduleId="budgets" />
-                </EmptyState>
+                <EmptyState
+                  title={t.budgets.emptyBudgets}
+                  testId="budgets-empty"
+                  motif={<SignatureMark id="envelope" size={64} />}
+                />
               ) : null}
               <ItemList layout="grid" label={t.budgets.tabBudgets}>
                 {rows.map((r) => {
@@ -250,7 +267,12 @@ export default function BudgetsPage() {
         </>
       ) : (
         <>
-          {goals && goals.length === 0 ? <EmptyState title={t.budgets.emptyGoals} /> : null}
+          {goals && goals.length === 0 ? (
+            <EmptyState
+              title={t.budgets.emptyGoals}
+              motif={<SignatureMark id="envelope" size={64} />}
+            />
+          ) : null}
           <ItemList layout="grid" label={t.budgets.tabGoals}>
             {(goals ?? []).map((g) => {
               const own = (deposits ?? []).filter((d) => d.goalId === g.id);

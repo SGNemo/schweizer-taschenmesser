@@ -6,6 +6,7 @@ import {
   AvatarRing,
   Bill,
   Bubble,
+  Envelope,
   FolderTabs,
   Gauges,
   Masthead,
@@ -39,6 +40,7 @@ export const SIGNATURE_BLOCKS: Partial<
   arrowProgress: ArrowBand,
   masthead: Masthead,
   weekBars: WeekBars,
+  envelope: Envelope,
   // Decoration only: the strip's own role/label ("no appointments") would be a false statement here.
   hourStrip: ({ size }) => (
     <div aria-hidden="true" data-signature="hourStrip" data-size={size}>

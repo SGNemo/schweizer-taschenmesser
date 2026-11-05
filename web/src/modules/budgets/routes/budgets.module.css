@@ -31,51 +31,27 @@
   margin: 0;
   color: var(--text);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
-.headRing {
-  background: var(--surface);
-  color: var(--text);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-}
-
-/* Phone: the figure stays in the head, the ring (decoration) waits for the wide layout. */
-@media (max-width: 899px) {
-  .headRing {
-    display: none;
-  }
-}
-
-/* Envelope signature: a flap in the corner and a fill level that rises from the bottom (decoration; numbers are text). */
+/* The head's envelopes (library block `Envelope`, slot M) and the toolbar's percentage chips. */
 .headEnvelopes {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   min-width: 0;
 }
-.mini,
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-inline-start: var(--space-3);
+}
+/* A budget card on the page: a flap in the corner and a fill level that rises from the bottom (decoration; numbers are text). */
 .envelope {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-}
-.mini {
-  min-width: 8rem;
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5, 1.5rem);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--module-color) 35%, var(--border));
-  color: var(--text);
-  font-size: var(--text-sm);
-}
-.miniText {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-width: 0;
 }
 .level {
   position: absolute;
@@ -83,8 +59,7 @@
   z-index: -1;
   background: color-mix(in srgb, var(--module-color) 22%, transparent);
 }
-.levelOver,
-.miniOver .level {
+.levelOver {
   background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
 /* Flap: a corner triangle at the top, like the closed flap of an envelope. */

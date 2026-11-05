@@ -24,7 +24,7 @@
 }
 .statValue {
   font-size: var(--text-xl);
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
 }
 .list {
   list-style: none;
@@ -56,7 +56,7 @@
   justify-content: center;
 }
 .payee {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 .muted {
@@ -65,14 +65,14 @@
 }
 .overdue {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .today {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .amount {
-  font-weight: 650;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
 .form {
@@ -103,43 +103,7 @@
   }
 }
 
-/* ---- money group: receipt signature, part payments, payment data, attachment ---- */
-.receipt {
-  position: relative;
-  min-width: 14rem;
-  max-width: 18rem;
-  padding: var(--space-4) var(--space-4) calc(var(--space-4) + 10px);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  background: var(--surface);
-  color: var(--text);
-  border-top: 3px solid var(--module-color, var(--text-muted));
-  /* The jagged lower edge: a zigzag mask (decoration; the text above is the content). */
-  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
-    14px 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
-}
-
-.receiptEmpty {
-  border-top-color: var(--text-muted);
-  color: var(--text-muted);
-}
-
-.receiptLabel {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.receiptSum {
-  font-size: var(--text-xl);
-  font-variant-numeric: tabular-nums;
-}
-
-.receiptLine {
-  font-size: var(--text-sm);
-}
-
+/* ---- money group: part payments, payment data, attachment ---- */
 .paymentBox,
 .attachBox {
   display: grid;
@@ -184,7 +148,7 @@
   gap: var(--space-2);
 }
 
-/* The open sum stands in the head (receipt); this copy stays in the DOM for tests only. */
+/* The open sum stands in the head (figure); this copy stays in the DOM for tests only. */
 .srOnly {
   position: absolute;
   width: 1px;
@@ -192,18 +156,6 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-/* Phone: the receipt keeps the sum, the two detail lines wait on the page (less to look at above the list). */
-@media (max-width: 899px) {
-  .receipt {
-    min-width: 0;
-    padding-block: var(--space-2) calc(var(--space-2) + 8px);
-  }
-
-  .receiptLine {
-    display: none;
-  }
 }
 
 /* Receipt plate in front of every invoice (the money area has no left stripes; the plate carries the module colour). */
@@ -224,16 +176,9 @@
   content: attr(data-initial);
 }
 
-/* Phone: the plate would wrap the payee name; the row keeps its text. */
-@media (max-width: 700px) {
+/* Narrow page: the plate would wrap the payee name; the row keeps its text. */
+@container page (max-width: 40rem) {
   .plate {
-    display: none;
-  }
-}
-
-/* Phone: the receipt keeps the sum and the count; "Nächste: …" is the first row of the list anyway. */
-@media (max-width: 700px) {
-  .receiptLine + .receiptLine {
     display: none;
   }
 }

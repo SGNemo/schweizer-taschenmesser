@@ -4,11 +4,20 @@ import { useWeekStart } from '@/core/settings/core';
 import { addDaysStr, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Icon, ItemList, ItemRow, PageHeader, Segmented, useOpenParam } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  ItemList,
+  ItemRow,
+  PageHeader,
+  Segmented,
+  useOpenParam,
+} from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalCard } from '../components/GoalCard';
 import { GoalEditor, type GoalTarget } from '../components/GoalEditor';
-import { HabitsEmpty } from '../components/HabitsEmpty';
+import { HabitsMotif } from '../components/HabitsMotif';
 import { HabitRings } from '../components/HabitRings';
 import { History } from '../components/History';
 import { useEntries, useGoals } from '../data';
@@ -105,12 +114,9 @@ export default function HabitsPage() {
       ) : null}
 
       {goals && goals.length === 0 && view !== 'archive' ? (
-        <HabitsEmpty title={t.habits.empty}>
+        <EmptyState title={t.habits.empty} testId="habits-empty" motif={<HabitsMotif />}>
           <p>{t.habits.emptyHint}</p>
-          <Button variant="primary" onClick={() => setTarget('new')}>
-            {t.habits.add}
-          </Button>
-        </HabitsEmpty>
+        </EmptyState>
       ) : null}
 
       {view === 'today' && goals && goals.length > 0 ? (

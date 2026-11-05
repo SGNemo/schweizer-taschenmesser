@@ -69,9 +69,11 @@ Four packages, each one chat and one PR against `develop`. **Package 0 first**; 
 | # | Package | Branch | Findings (mandatory) | Hotspots to announce | Skills |
 | --- | --- | --- | --- | --- | --- |
 | 0 | Foundation: head grid v3.1, tokens, contract, shared blocks | `feat/identity-v3-frame` | F01 F02 F03 F04 F05 F06 F07 F08 F09 F10 F11 F12 F14 G12 G15 · council C01 C02 C05 C06 C07(guard) C08 C09 C10 C11 C12 C13 C15 C16 C17 C18 C20 C21 C28 C30 C31 C33 | `ui/tokens.css` (+ test), `core/modules/{types,registry}.ts`, `layout/AreaFrame*`, `home/Home*`, `ui/Misc` (EmptyState), `ui/identity/*`, `scripts/lib/checkIdentity.ts`, every `modules/*/manifest.ts` (ids only) | council · full stop |
-| 1 | Planen + Geld on the new frame | `feat/identity-v3-plan-money-fix` | G04 G05 G10 G11 F04(subs) F10(habits) F11 F15 · council C07(weather) C19 C22 C23 C25 C26 C27 C29 C34(timetrack) | `modules/{calendar,todos,habits,timetrack,weather,maps,people,finance,invoices,subscriptions,budgets}/*`, `strings.ts` blocks of those modules + 4 locales | review loop · full stop |
+| 1 | Planen + Geld on the new frame (started after `feat/plan-core`, #492) | `feat/identity-v3-plan-money-fix` | G04 G05 G10 G11 F04(subs) F10(habits) F11 F15 · council C07(weather) C19 C22 C23 C25 C26 C27 C29 C34(timetrack) | `modules/{calendar,planner,todos,habits,timetrack,weather,maps,people,finance,invoices,subscriptions,budgets}/*`, `strings.ts` blocks of those modules + 4 locales | review loop · full stop |
 | 2 | Haushalt / Tresor / Wissen / Medien on the new frame, E-Mail on paper | `feat/identity-v3-household-knowledge-fix` | G13 F04(mail, vault) G02 G03 G06 G07 G08 G09 F10(browser) F11 F15(notes) · council C03 C04 C23 C24 C34(accounts) | `modules/{lists,pantry,vault,accounts,bookmarks,notes,chat,browser,feeds,mail,music}/*`, `strings.ts` blocks + 4 locales | review loop · full stop |
 | 3 | Dieser PC + Downloads | `feat/identity-v3-disk` | G01 (+ downloads slot) | `modules/disk/*`, `modules/downloads/*` | review loop · full stop |
+
+Danach: `docs/site-screenshots-v3` (Website Paket 2) und `qa/identity-v3-sweep` (Abnahme, 03-acceptance.md).
 
 ### Prompt – package 0: foundation (`feat/identity-v3-frame`)
 

@@ -20,7 +20,6 @@ import {
   PageHeader,
   Segmented,
   StateBadge,
-  useMediaQuery,
   useOpenParam,
 } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
@@ -28,12 +27,13 @@ import { markOpen } from '../actions';
 import { payWithUndo } from '../quickActions';
 import { invoiceState, openTotalText, remainingMinor, sortInvoices } from '../logic';
 import { copyPaymentData } from '../pay';
-import { ReceiptCard } from '../components/ReceiptCard';
-import { HeroSlot } from '@/ui/identity';
+import { InvoicesHead } from '../components/InvoicesHead';
+import { SignatureMark } from '@/ui/identity';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
 type View = 'open' | 'paid' | 'all';
 
@@ -44,7 +44,8 @@ export default function InvoicesPage() {
   useOpenParam((id) => invoiceRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const day = today();
-  const narrow = useMediaQuery('(max-width: 899px)');
+  // F15: the row's pay button follows the page, not the window (icon below 48 rem of page).
+  const narrow = usePageWidthAtLeast(48) === false;
   const navigate = useNavigate();
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
@@ -193,13 +194,10 @@ export default function InvoicesPage() {
           <Icon name="plus" size={18} />
           {t.invoices.add}
         </Button>
+        <StartDataMenu moduleId="invoices" />
       </PageHeader>
 
-      {invoices ? (
-        <HeroSlot area="signature">
-          <ReceiptCard invoices={invoices} />
-        </HeroSlot>
-      ) : null}
+      {invoices ? <InvoicesHead invoices={invoices} /> : null}
 
       <div className={styles.toolbar}>
         <div className={styles.srOnly} aria-hidden="true">
@@ -211,9 +209,11 @@ export default function InvoicesPage() {
       </div>
 
       {invoices && shown.length === 0 ? (
-        <EmptyState title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}>
-          {view === 'open' ? <StartDataButton moduleId="invoices" /> : null}
-        </EmptyState>
+        <EmptyState
+          title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
+          testId="invoices-empty"
+          motif={<SignatureMark id="bill" size={64} />}
+        />
       ) : null}
       {view === 'open' ? (
         <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />

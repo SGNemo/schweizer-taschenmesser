@@ -70,6 +70,7 @@ export const todos: Strings['todos'] = {
     minutes: (m: number) => `cerca de ${m} min`,
     next: (title: string) => `Próxima: ${title}`,
     done: 'Tudo de hoje está concluído.',
+    named: (action: string, title: string) => `${action}: ${title}`,
   },
   somedayLabel: 'Algum dia (não mostrar nas listas abertas)',
   allOpen: 'Todas abertas',

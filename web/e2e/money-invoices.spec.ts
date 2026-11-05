@@ -122,8 +122,10 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await expect(again.getByRole('img', { name: 'Vorschau: beleg.png' })).toBeVisible();
   });
 
-  test('the head shows the receipt with the open sum', async ({ page }) => {
+  test('the head shows the open sum and pays the next invoice', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
-    await expect(page.getByTestId('receipt-card')).toContainText(/89,90\s€/);
+    await expect(page.getByTestId('invoices-head')).toContainText(/89,90\s€/);
+    await page.getByRole('button', { name: 'Nächste bezahlen: Stadtwerke' }).click();
+    await expect(page.getByTestId('invoices-head')).toContainText('Nichts offen');
   });
 });

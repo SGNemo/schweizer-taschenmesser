@@ -69,6 +69,7 @@ export const todos: Strings['todos'] = {
     minutes: (m: number) => `unos ${m} min`,
     next: (title: string) => `Lo siguiente: ${title}`,
     done: 'Todo lo de hoy está hecho.',
+    named: (action: string, title: string) => `${action}: ${title}`,
   },
   somedayLabel: 'Algún día (no mostrar en las listas pendientes)',
   allOpen: 'Todas las pendientes',

@@ -1,13 +1,14 @@
-import { HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { closeness, monogram } from '../logic';
-import styles from './AvatarRing.module.css';
+import styles from './PersonRing.module.css';
 
 /**
- * Signature "avatar ring": the person's monogram inside a ring that fills as the birthday comes closer
+ * A person's monogram in the list rows (content, not the module signature – that is the library's `avatarRing`, drawn
+ * by the frame): the monogram inside a ring that fills as the birthday comes closer
  * (a month ahead is empty, the day itself is full). On the day itself a few small static confetti pieces sit
  * around the ring: very quiet, no motion. Decoration only; the name and the countdown are text beside it.
  */
-export function AvatarRing({
+export function PersonRing({
   name,
   days,
   size = 2.75,
@@ -31,24 +32,15 @@ export function AvatarRing({
   );
 }
 
-/** The next birthday in the head of the page: ring, name and the countdown as text. */
-export function NextBirthdayHead({
-  name,
-  days,
-  label,
-}: {
-  name: string;
-  days: number;
-  label: string;
-}) {
+/**
+ * The `fokus` head of the people page: the next birthday is the one thing – the name large, when and the age as its
+ * context line. The frame draws the `avatarRing` mark beside it (slot S).
+ */
+export function NextBirthdayHead({ name, label }: { name: string; label: string }) {
   return (
-    <HeroSlot area="signature">
-      <div className={styles.head} data-testid="avatar-signature">
-        <AvatarRing name={name} days={days} size={4} />
-        <span className={styles.text}>
-          <span className={styles.name}>{name}</span>
-          <span className={styles.sub}>{label}</span>
-        </span>
+    <HeroSlot area="figure">
+      <div data-testid="avatar-signature">
+        <HeroFigure value={name} detail={label} />
       </div>
     </HeroSlot>
   );

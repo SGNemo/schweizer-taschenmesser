@@ -45,7 +45,7 @@ import {
   type CalendarView,
 } from '../views';
 import styles from './calendar.module.css';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
 const VIEW_LABEL: Record<CalendarView, string> = {
   get month() {
@@ -170,6 +170,7 @@ export default function CalendarPage() {
           }
         >
           <AdvancedToggle moduleId="calendar" />
+          <StartDataMenu moduleId="calendar" />
         </PageHeader>
 
         <RemindersTab
@@ -201,13 +202,13 @@ export default function CalendarPage() {
         }
       >
         <AdvancedToggle moduleId="calendar" />
-        {items && list.length === 0 ? <StartDataButton moduleId="calendar" /> : null}
         <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
           <Icon name="plus" size={18} />
           {t.calendar.newEvent}
         </Button>
+        <StartDataMenu moduleId="calendar" />
       </PageHeader>
-      <NextEventLine />
+      <NextEventLine onAdd={() => setTarget({ draft: { startDate: date } })} />
       <NowStrip modules={['calendar']} />
 
       <CalendarsBar advanced={advanced} />

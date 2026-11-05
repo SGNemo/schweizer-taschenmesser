@@ -263,7 +263,8 @@ for (const scheme of ['light', 'dark'] as const) {
 
     test('start-data wizard: choose, input, preview, result, help hint', async ({ page }) => {
       await page.goto('/todos');
-      await page.getByRole('button', { name: 'Importieren' }).click();
+      await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Importieren' }).click();
       const dialog = page.getByRole('dialog', { name: /Importieren/ });
       await expect(dialog).toBeVisible();
       await audit(page, `wizard choose (${scheme})`);

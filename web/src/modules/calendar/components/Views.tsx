@@ -4,6 +4,7 @@ import { weekdayShort } from '@/core/recurrence/describe';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { personName, usePeople } from '@/core/people/people';
 import type { Slot } from '../dragMath';
 import type { HolidayId } from '../holidays';
@@ -25,8 +26,20 @@ interface ViewProps {
   onCreateSlot?: (date: string, startTime: string, endTime: string) => void;
 }
 
-/** From this width week and day switch from plain lists to the hour grid. */
+/**
+ * From this page width week and day switch from plain lists to the hour grid (C19: the page container decides, not the
+ * window – with the sidebar open a 1400 px window has about 68 rem of page). The window query is the fallback before
+ * the page is measured (jsdom, first paint).
+ */
+const TIME_GRID_REM = 66;
 const TIME_GRID_QUERY = '(min-width: 1400px)';
+/** From this page width a month cell names its entries as chips (same threshold as `@container page` in the CSS). */
+const MONTH_CHIPS_REM = 40;
+
+function useTimeGrid(): boolean {
+  const viewport = useMediaQuery(TIME_GRID_QUERY);
+  return usePageWidthAtLeast(TIME_GRID_REM) ?? viewport;
+}
 
 /** Chips per month cell: taller windows have taller cells and room for more entries. */
 function useChipLimit(): number {
@@ -41,7 +54,8 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
   const now = today();
   const MAX_CHIPS = useChipLimit();
   // A phone cell has room for one line, not for buttons: the first entry is named as plain text.
-  const wide = useMediaQuery('(min-width: 700px)');
+  const wideViewport = useMediaQuery('(min-width: 700px)');
+  const wide = usePageWidthAtLeast(MONTH_CHIPS_REM) ?? wideViewport;
   const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
@@ -155,7 +169,7 @@ export function WeekView({
 }: Omit<ViewProps, 'date'> & { days: string[] }) {
   const byDate = groupByDate(items);
   const now = today();
-  const grid = useMediaQuery(TIME_GRID_QUERY);
+  const grid = useTimeGrid();
   const people = usePeople();
   if (grid)
     return (
@@ -217,7 +231,7 @@ export function DayView({
   onMoveItem,
   onCreateSlot,
 }: Omit<ViewProps, 'onPickDay'> & { onAdd: (date: string) => void }) {
-  const grid = useMediaQuery(TIME_GRID_QUERY);
+  const grid = useTimeGrid();
   const people = usePeople();
   if (grid)
     return (

@@ -103,6 +103,12 @@ export const calendar: Strings['calendar'] = {
   prev: 'Back',
   next: 'Next',
   newEvent: 'New event',
+  headFree: {
+    today: 'Free today',
+    rest: 'Nothing more today',
+    next: (when: string, title: string) => `Next: ${when} · ${title}`,
+    none: 'Nothing is planned for the next two weeks.',
+  },
   endsAt: (time: string) => `until ${time}`,
   recent: 'As before',
   editEvent: 'Edit event',

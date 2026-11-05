@@ -1505,6 +1505,8 @@ export const de = {
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
       done: 'Alles für heute erledigt.',
+      /** C22: the accessible name of the head's buttons says which task they act on ("Anfangen: Steuer"). */
+      named: (action: string, title: string) => `${action}: ${title}`,
     },
     somedayLabel: 'Irgendwann (nicht in den offenen Listen zeigen)',
     allOpen: 'Alle offenen',
@@ -1662,6 +1664,13 @@ export const de = {
     prev: 'Zurück',
     next: 'Weiter',
     newEvent: 'Neuer Termin',
+    /** Head without an appointment left today (Sven's shot: the head looked empty): what is next, or one step. */
+    headFree: {
+      today: 'Heute frei',
+      rest: 'Heute nichts mehr',
+      next: (when: string, title: string) => `Als Nächstes: ${when} · ${title}`,
+      none: 'In den nächsten zwei Wochen ist nichts eingetragen.',
+    },
     endsAt: (time: string) => `bis ${time}`,
     recent: 'Wie zuletzt',
     editEvent: 'Termin bearbeiten',
@@ -2792,6 +2801,11 @@ export const de = {
         count: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
         next: (payee: string, date: string) => `Nächste: ${payee} am ${date}`,
         nothing: 'Nichts offen',
+        open: 'offen',
+        overdue: (n: number) => `${n} überfällig`,
+        nextShort: (payee: string, date: string) => `nächste ${payee}, ${date}`,
+        payNext: 'Nächste bezahlen',
+        payNextName: (payee: string) => `Nächste bezahlen: ${payee}`,
       },
     },
     importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
@@ -2841,6 +2855,8 @@ export const de = {
     openTotal: 'Offen gesamt',
     overdue: 'Überfällig',
     widgetEmpty: 'Keine offenen Rechnungen.',
+    /** Widget badge of an overdue invoice (C27): the date it was due, not a counter that grows every day. */
+    widgetDue: (date: string) => `fällig ${date}`,
     openCount: (n: number) => (n === 1 ? '1 offene Rechnung' : `${n} offene Rechnungen`),
     view: 'Status',
   },
@@ -4868,6 +4884,7 @@ export const de = {
       },
       head: {
         free: 'Noch frei',
+        chip: (name: string, pct: number) => `${name} ${pct} %`,
         context: (n: number, over: number) =>
           over === 0
             ? n === 1
