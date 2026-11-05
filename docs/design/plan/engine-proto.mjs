@@ -189,12 +189,13 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       if (u.min > left) continue;
       if (isMain(u) && mains >= s.mainPerDay) continue;
       const p = prevByUnit.get(u.id);
+      const bump = bumps.find((x) => x.unitId === u.id);
       const reason = !p
         ? "new"
         : p.date === day.date
           ? "kept"
           : p.date < day.date
-            ? "carried"
+            ? (bump?.cause ?? "carried")
             : "pulled";
       put(u, reason);
     }
@@ -245,6 +246,22 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       }
     }
     const plannedMin = todayList.reduce((n, a) => n + a.min, 0);
+    // Final order of the day independent of the previous plan: pinned, deadline, then priority, due, age, id.
+    const tierOf = (a) =>
+      a.reason === "pinned" ? 0 : a.reason.startsWith("deadline") ? 1 : 2;
+    todayList
+      .sort((a, b) => {
+        const ua = units.find((x) => x.id === a.unitId).item;
+        const ub = units.find((x) => x.id === b.unitId).item;
+        return (
+          tierOf(a) - tierOf(b) ||
+          ub.prio - ua.prio ||
+          cmp(ua.due?.date ?? "9999", ub.due?.date ?? "9999") ||
+          ua.createdAt - ub.createdAt ||
+          cmp(a.unitId, b.unitId)
+        );
+      })
+      .forEach((a, i) => (a.order = i));
     load[day.date] = {
       usable: cap.usable,
       free: Math.max(0, cap.usable - plannedMin),
@@ -343,6 +360,10 @@ function reasonText(a, item, prev) {
       return "wie geplant";
     case "carried":
       return `weiter von ${prev ? weekday(prev.date) : "früher"}`;
+    case "bumped":
+      return "Platz nahm etwas Wichtigeres";
+    case "after-part":
+      return "folgt auf den ersten Teil";
     case "pulled":
       return `vorgezogen, muss bis ${due} fertig sein`;
     default:
@@ -353,6 +374,13 @@ const CAUSE = {
   bumped: "Platz nahmen",
   capacity: "der Tag hat weniger Zeit",
   "after-part": "folgt auf",
+  carried: "nicht geschafft, weiter",
+  pulled: "eine Frist zog es vor",
+};
+const WAIT = {
+  horizon: "keine freie Zeit im Planungszeitraum",
+  "too-long": "länger als jeder Tag",
+  "after-hard-due": "erst nach der Frist möglich",
 };
 const fmt = (min) =>
   min >= 60
@@ -382,7 +410,9 @@ export function print(title, input, result) {
     console.log(
       `${weekday(date)} ${date} · verfügbar ${fmt(l.raw)} · planbar ${fmt(l.usable)}${blockers ? ` · Blocker: ${blockers}` : ""} · geplant ${fmt(l.planned)} · frei ${fmt(l.free)}${l.over ? ` · ${fmt(l.over)} über dem Puffer` : ""}`,
     );
-    for (const a of result.assignments.filter((a) => a.date === date))
+    for (const a of result.assignments
+      .filter((a) => a.date === date)
+      .sort((a, b) => a.order - b.order))
       console.log(
         `   ${String(a.order + 1).padStart(2)}. ${name(a.unitId).padEnd(32)} ${fmt(a.min).padStart(7)}   ${reasonText(a, itemOf(a.unitId), prevOf.get(a.unitId))}${a.late ? " · NACH DER FRIST" : ""}`,
       );
@@ -391,7 +421,7 @@ export function print(title, input, result) {
     console.log("Nicht unterbringbar:");
     for (const u of result.unplaced)
       console.log(
-        `   ${name(u.unitId)} – ${u.reason}${u.due ? ` (Frist ${u.due}, geplant ${u.date})` : ""}`,
+        `   ${name(u.unitId)} – ${WAIT[u.reason] ?? u.reason}${u.due ? ` (Frist ${u.due}, geplant ${u.date})` : ""}`,
       );
   }
   const d = result.diff;
@@ -530,6 +560,27 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const r3 = plan(in3);
   print("S3 Donnerstag frei + Überlast", in3, r3);
+
+  // Fixpoint: feeding a plan back in as prev changes nothing but the reasons.
+  const shape = (r) =>
+    JSON.stringify(
+      r.assignments.map((a) => [a.unitId, a.date, a.min, a.order]).sort(),
+    );
+  const monday0 = plan({ ...in1, items: ITEMS.filter((i) => i.id !== "a") });
+  const mondayWithSteuer = plan({ ...in1, prev: monday0.assignments });
+  const fix = [
+    in1,
+    in2,
+    in3,
+    { ...in1, prev: mondayWithSteuer.assignments },
+  ].every(
+    (input) =>
+      shape(plan(input)) ===
+      shape(plan({ ...input, prev: plan(input).assignments })),
+  );
+  console.log(
+    `\n=== Fixpunkt ===\n${fix ? "plan(x, prev = plan(x)) hat dieselben Tage, Minuten und Reihenfolgen wie plan(x) (S1–S3, Montag mit Steuer)" : "FEHLER – Fixpunkt verletzt"}`,
+  );
 
   // S5 – Erledigt macht Platz: nichts rückt von selbst nach vorn (Regel 6).
   const in5 = {
