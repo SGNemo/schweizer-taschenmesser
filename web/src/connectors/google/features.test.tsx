@@ -46,11 +46,11 @@ describe('Settings → Verbindungen shows them as separate choices', () => {
 
   it('three mail/calendar boxes; the write ones are not ticked, with their explanation', async () => {
     render(<ConnectorCard def={google} />);
-    const manage = await screen.findByRole('checkbox', { name: /^E-Mails verwalten –/ });
-    const send = screen.getByRole('checkbox', { name: /^E-Mails senden –/ });
+    const manage = await screen.findByRole('checkbox', { name: 'E-Mails verwalten' });
+    const send = screen.getByRole('checkbox', { name: 'E-Mails senden' });
     expect(manage).not.toBeChecked();
     expect(send).not.toBeChecked();
-    expect(screen.getByRole('checkbox', { name: /^E-Mails –/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'E-Mails' })).toBeChecked();
     expect(manage.closest('label')).toHaveTextContent(/jedes Mal erst nach deiner Bestätigung/);
     expect(send.closest('label')).toHaveTextContent(/nur wenn du „Senden“ bestätigst/);
   });

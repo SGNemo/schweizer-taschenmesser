@@ -58,8 +58,16 @@ export function parseReleaseNotes(markdown: string, lang: string): ParsedNotes {
   let section: NoteSection | undefined;
   let block: NoteBlock | undefined;
   const startSection = (): NoteSection => {
-    // A heading right after an empty section (the title line of a release body) belongs to it.
-    if (section && section.blocks.length === 0) return section;
+    // A heading right after an empty section (the title line of a release body) belongs to it; a section
+    // that already is a build, version or "unreleased" stays (an empty `## Build 730` is its own row).
+    if (
+      section &&
+      section.blocks.length === 0 &&
+      section.build === undefined &&
+      section.version === undefined &&
+      !section.unreleased
+    )
+      return section;
     section = { blocks: [] };
     sections.push(section);
     block = undefined;
@@ -105,7 +113,7 @@ export function parseReleaseNotes(markdown: string, lang: string): ParsedNotes {
   }
   const kept = sections
     .map((x) => ({ ...x, blocks: x.blocks.filter((b) => b.items.length > 0) }))
-    .filter((x) => x.blocks.length > 0);
+    .filter((x) => x.blocks.length > 0 || x.build !== undefined);
   const first = kept[0] ?? sections[0];
   return {
     ...(first?.build ? { build: first.build } : {}),
