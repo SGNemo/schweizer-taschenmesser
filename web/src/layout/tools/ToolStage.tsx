@@ -4,9 +4,9 @@ import { getPlatform } from '@/core/platform';
 import { toolWindowPath } from '@/core/tools/window';
 import { t } from '@/strings';
 import { Button, Icon } from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { ToolBody } from './lazyTools';
 import { ToolPlate } from './ToolPlate';
-import { ToolSignature } from './ToolSignature';
 import styles from './ToolStage.module.css';
 
 const WINDOW_FEATURES = 'popup,width=540,height=760';
@@ -55,7 +55,7 @@ export const ToolStage = ({ tool, heading = false, onDetach }: StageProps) => (
         </p>
       </div>
       <span className={styles.signature}>
-        <ToolSignature id={tool.identity.signature} size={40} />
+        <SignatureMark id={tool.identity.signature} size={40} />
       </span>
       {onDetach ? (
         <Button variant="ghost" size="sm" className={styles.detach} onClick={onDetach}>

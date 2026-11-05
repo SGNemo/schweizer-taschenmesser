@@ -15,8 +15,7 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'indigo',
     hue2: 'violet',
-    widgetType: 'status',
-    widget: 'faellig',
+    widget: 'kennzahl',
     head: 'regal',
     signature: 'folderTab',
   },

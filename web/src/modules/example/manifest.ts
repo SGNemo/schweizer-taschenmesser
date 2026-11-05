@@ -14,7 +14,6 @@ const manifest: ModuleManifest = {
   icon: 'puzzle',
   identity: {
     hue: 'slate',
-    widgetType: 'kpi',
     widget: 'kennzahl',
     head: 'schreib',
     signature: 'none',

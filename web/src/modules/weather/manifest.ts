@@ -17,7 +17,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'cobalt',
     hue2: 'sky',
-    widgetType: 'kpi',
     widget: 'himmel',
     head: 'himmel',
     signature: 'sky',

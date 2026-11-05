@@ -15,7 +15,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'moss',
     hue2: 'lime',
-    widgetType: 'kpi',
     widget: 'kennzahl',
     head: 'regal',
     signature: 'masthead',

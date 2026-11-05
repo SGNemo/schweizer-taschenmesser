@@ -15,7 +15,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'indigo',
     hue2: 'cobalt',
-    widgetType: 'dueList',
     widget: 'faellig',
     head: 'fortschritt',
     signature: 'cycle',

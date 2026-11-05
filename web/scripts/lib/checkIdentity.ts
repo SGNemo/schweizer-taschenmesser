@@ -1,8 +1,11 @@
 /**
- * Cross-module identity checks of `npm run check:modules` (identity v3, docs/design/identity-v3/02-CONCEPT.md § 4):
- * inside one navigation area no two modules share a hue, the hues keep their distance, and two neighbours
- * (in the order of the navigation) never share a head variant. Works on manifest source text and `tokens.css`,
- * so it runs without a build; `src/core/modules/registry.test.ts` is the runtime counterpart.
+ * Cross-module identity checks (identity v3.1, docs/design/MODULE-IDENTITY.md "Rules"): inside one navigation
+ * area no two modules share a hue and two neighbours (in the order of the navigation) never share a head
+ * variant; app-wide two modules with the same hue never share head *and* widget, a shared head or widget needs
+ * a signature of its own, and two modules with the same widget shape differ in hue or head. Pure functions over
+ * facts: `npm run check:modules` reads them from the manifest source (no build), `src/core/modules/registry.test.ts`
+ * from the runtime registry, so both see the same rule. The palette pins every pair of hues at ≥ 26°
+ * (`ui/tokens.test.ts`), so "25° apart" is the same as "a different hue" and no angle is computed here.
  */
 
 export interface IdentityFacts {
@@ -14,6 +17,7 @@ export interface IdentityFacts {
   hue2?: string;
   head?: string;
   widget?: string;
+  signature?: string;
   retired: boolean;
 }
 
@@ -30,48 +34,13 @@ export function identityFacts(id: string, manifest: string): IdentityFacts {
     hue2: pick('hue2'),
     head: pick('head'),
     widget: pick('widget'),
+    signature: pick('signature'),
     retired: /\bretired:\s*true/.test(manifest),
   };
 }
 
-/** HSL hue angle (0–360) of `#rrggbb`: the measure `tokens.test.ts` uses between hues and state colours. */
-export function hueAngle(hex: string): number {
-  const [r, g, b] = hex
-    .replace('#', '')
-    .match(/../g)!
-    .map((h) => Number.parseInt(h, 16) / 255);
-  const max = Math.max(r!, g!, b!);
-  const d = max - Math.min(r!, g!, b!);
-  if (d === 0) return 0;
-  const h = max === r ? ((g! - b!) / d) % 6 : max === g ? (b! - r!) / d + 2 : (r! - g!) / d + 4;
-  return (h * 60 + 360) % 360;
-}
-
-export const MIN_HUE_DISTANCE = 25;
-
-/** `--mod-<hue>: #hex` of the light theme (first `:root` block) and the dark theme (`:root[data-theme='dark']`). */
-export function readHueTable(css: string): {
-  light: Record<string, string>;
-  dark: Record<string, string>;
-} {
-  const grab = (from: number): Record<string, string> => {
-    const out: Record<string, string> = {};
-    const end = css.indexOf('\n}', from);
-    for (const m of css.slice(from, end).matchAll(/--mod-([a-z]+):\s*(#[0-9a-f]{6});/g))
-      out[m[1]!] = m[2]!;
-    return out;
-  };
-  return {
-    light: grab(css.indexOf(':root {\n  --font-sans')),
-    dark: grab(css.indexOf(":root[data-theme='dark']")),
-  };
-}
-
 /** The problems of one area group; modules without an area and retired ones are not part of any group. */
-export function checkIdentityGroups(
-  facts: readonly IdentityFacts[],
-  table: { light: Record<string, string>; dark: Record<string, string> },
-): string[] {
+export function checkIdentityGroups(facts: readonly IdentityFacts[]): string[] {
   const errors: string[] = [];
   const areas = new Map<string, IdentityFacts[]>();
   for (const f of facts) {
@@ -87,20 +56,6 @@ export function checkIdentityGroups(
       if (other) errors.push(`${f.id} and ${other} share the hue "${f.hue}" in the area "${area}"`);
       else byHue.set(f.hue, f.id);
     }
-    for (const [theme, hues] of Object.entries(table))
-      for (const [i, a] of sorted.entries())
-        for (const b of sorted.slice(i + 1)) {
-          if (!a.hue || !b.hue || a.hue === b.hue || a.hue === 'slate' || b.hue === 'slate')
-            continue;
-          const ha = hues[a.hue];
-          const hb = hues[b.hue];
-          if (!ha || !hb) continue;
-          const d = Math.abs(hueAngle(ha) - hueAngle(hb));
-          if (Math.min(d, 360 - d) < MIN_HUE_DISTANCE)
-            errors.push(
-              `${a.id} (${a.hue}) and ${b.id} (${b.hue}) are less than ${MIN_HUE_DISTANCE}° of hue apart in ${theme} (area "${area}")`,
-            );
-        }
     for (const [i, f] of sorted.entries()) {
       const next = sorted[i + 1];
       if (next && f.head && f.head === next.head)
@@ -110,4 +65,64 @@ export function checkIdentityGroups(
     }
   }
   return errors;
+}
+
+/** A signature that tells two modules apart: a drawing of its own, so never `none` and never the same. */
+const ownSignature = (a: IdentityFacts, b: IdentityFacts): boolean =>
+  !!a.signature && !!b.signature && a.signature !== 'none' && b.signature !== 'none'
+    ? a.signature !== b.signature
+    : false;
+
+/**
+ * App-wide collisions (the overview, the sidebar and the library show every area side by side):
+ * same hue ⇒ head and widget never both the same, and a shared head or widget needs a signature of its own;
+ * same widget shape ⇒ a different hue or a different head. Retired modules take no part.
+ */
+export function checkIdentityCollisions(facts: readonly IdentityFacts[]): string[] {
+  const errors: string[] = [];
+  const live = facts.filter((f) => !f.retired).sort((a, b) => a.id.localeCompare(b.id));
+  for (const [i, a] of live.entries())
+    for (const b of live.slice(i + 1)) {
+      const pair = `${a.id} and ${b.id}`;
+      if (a.hue && a.hue === b.hue) {
+        const head = !!a.head && a.head === b.head;
+        const widget = !!a.widget && a.widget === b.widget;
+        if (head && widget)
+          errors.push(
+            `${pair} share the hue "${a.hue}", the head "${a.head}" and the widget "${a.widget}" (app-wide rule: differ in head or widget)`,
+          );
+        else if ((head || widget) && !ownSignature(a, b))
+          errors.push(
+            `${pair} share the hue "${a.hue}" and the ${head ? `head "${a.head}"` : `widget "${a.widget}"`}; each needs a signature of its own (not "none", not the same)`,
+          );
+      } else if (a.widget && a.widget === b.widget && a.hue === b.hue && a.head === b.head)
+        errors.push(
+          `${pair} share the widget "${a.widget}" with the same hue and head (differ in hue or head)`,
+        );
+    }
+  return errors;
+}
+
+/** Every identity rule over one set of facts. */
+export const checkIdentity = (facts: readonly IdentityFacts[]): string[] => [
+  ...checkIdentityGroups(facts),
+  ...checkIdentityCollisions(facts),
+];
+
+/**
+ * A module whose identity says `signature: 'none'` but whose page fills the head (`HeroSlot`) most likely forgot to
+ * name its signature: a warning (the checker prints it, the build stays green).
+ */
+export function checkSignatureUse(
+  id: string,
+  manifest: string,
+  pageSources: readonly string[],
+): string[] {
+  const facts = identityFacts(id, manifest);
+  if (facts.retired || facts.signature !== 'none') return [];
+  return pageSources.some((s) => /<HeroSlot\b/.test(s))
+    ? [
+        `${id}: identity.signature is "none" but the page renders a HeroSlot – name the signature (SIGNATURES) so the frame and the settings head show it`,
+      ]
+    : [];
 }

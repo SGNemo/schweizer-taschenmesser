@@ -20,7 +20,6 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'sky',
     hue2: 'cobalt',
-    widgetType: 'tiles',
     widget: 'notiz',
     head: 'fokus',
     signature: 'bubble',

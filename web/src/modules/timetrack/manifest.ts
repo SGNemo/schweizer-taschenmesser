@@ -20,12 +20,10 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'teal',
     hue2: 'ocean',
-    widgetType: 'status',
     widget: 'kennzahl',
     head: 'zeit',
-    signature: 'none',
+    signature: 'hourStrip',
     type: 'mono',
-    feedback: 'pulse',
   },
   version: 1,
   get description() {

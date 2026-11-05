@@ -7,3 +7,4 @@ export { HourStrip, type StripEvent } from './HourStrip';
 export { HeroFigure } from './HeroFigure';
 export { dominantColor, safeTint, toCss, useCoverTone, type Rgb } from './coverTone';
 export { HeroSlot } from './HeroSlot';
+export { SignatureMark, SIGNATURE_MARKS } from './SignatureMark';
