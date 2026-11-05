@@ -48,7 +48,7 @@ export const fr = {
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
     intro: (n: number, a: number) => `${n} modules en ${a} domaines. Chacun a sa couleur ; vous n’activez que ce qu’il vous faut.`,
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
-    areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Ce que fait votre appareil.' },
+    areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Ce que fait votre appareil en ce moment.' },
     modules: {
       summary: (n: number) => `Les ${n} modules`,
       status: { default: 'activé par défaut', optional: 'facultatif', preview: 'aperçu' },
