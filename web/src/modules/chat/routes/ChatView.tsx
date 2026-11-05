@@ -5,9 +5,8 @@ import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Badge, Button, Icon, PageHeader, TextField } from '@/ui';
-import { BubbleSignature } from '../components/BubbleSignature';
-import { ChatEmpty } from '../components/ChatEmpty';
+import { Badge, Button, EmptyState, Icon, PageHeader, TextField } from '@/ui';
+import { Bubble, HeroSlot, SignatureMark } from '@/ui/identity';
 import { SetupHint } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
 import { expiredThreads, searchThreads, sortThreads } from '../logic';
@@ -84,7 +83,11 @@ export default function ChatPage() {
     return (
       <>
         <PageHeader title={c.title} />
-        <ChatEmpty title={c.aiOff} />
+        <EmptyState
+          title={c.aiOff}
+          testId="chat-empty"
+          motif={<SignatureMark id="bubble" size={64} />}
+        />
       </>
     );
   }
@@ -100,7 +103,12 @@ export default function ChatPage() {
 
   return (
     <>
-      <BubbleSignature />
+      {/* Signature (slot S): the library's bubble pair, no text of any chat. */}
+      <HeroSlot area="signature">
+        <span className={styles.bubbles} data-testid="bubble-signature">
+          <Bubble size="M" />
+        </span>
+      </HeroSlot>
       <PageHeader title={c.title}>
         <Button variant="primary" onClick={() => void create()}>
           <Icon name="plus" size={18} />
@@ -126,11 +134,15 @@ export default function ChatPage() {
           {c.showArchived}
         </label>
         {threads && shown.length === 0 ? (
-          <ChatEmpty title={c.empty}>
+          <EmptyState
+            title={c.empty}
+            testId="chat-empty"
+            motif={<SignatureMark id="bubble" size={64} />}
+          >
             <Button variant="primary" onClick={() => void create()}>
               {c.emptyAction}
             </Button>
-          </ChatEmpty>
+          </EmptyState>
         ) : (
           <ul className={styles.list}>
             {shown.map((x) => (

@@ -6411,6 +6411,8 @@ export const de = {
       empty: 'Noch kein Chat.',
       link: 'Chat öffnen',
       line: (n: number) => (n === 1 ? '1 Chat' : `${n} Chats`),
+      context: (n: number, when: string) =>
+        `${n === 1 ? '1 Chat' : `${n} Chats`} · zuletzt ${when}`,
     },
     seed: {
       title: 'Beispiel: Tipps für den Wochenplan',
