@@ -112,13 +112,18 @@ test.describe('Module identity', () => {
       await ready(page, path);
       const frame = page.getByTestId('module-frame');
       await expect(frame.getByTestId('module-signature'), `${path} @412`).toBeVisible();
+      // Empty slot targets are hidden by design; anything with content must stay.
       const hidden = await frame.evaluate((el) =>
         [
           ...el.querySelectorAll<HTMLElement>(
             '[data-signature], [data-testid="module-signature"] *',
           ),
         ]
-          .filter((e) => getComputedStyle(e).display === 'none')
+          .filter(
+            (e) =>
+              (e.childElementCount > 0 || (e.textContent ?? '').trim() !== '') &&
+              getComputedStyle(e).display === 'none',
+          )
           .map((e) => e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0]),
       );
       expect(hidden, `${path} @412: hidden parts of the signature`).toEqual([]);

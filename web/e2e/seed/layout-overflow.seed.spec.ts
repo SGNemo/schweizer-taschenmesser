@@ -124,18 +124,42 @@ function report(page: Page): Promise<Report> {
       : [];
     // Identity v3.1 (C18): content cut off by `overflow: hidden` is as bad as content beyond the window; an ellipsis
     // (or a line clamp) says so and is fine, a horizontal scroller is a scroller.
+    // Real content (text, pictures) that ends beyond the right edge of a box with `overflow: hidden`; a decorative
+    // pseudo-element or an empty box that pokes out is not content.
+    const contentRight = (e: HTMLElement): number => {
+      let right = -Infinity;
+      const walker = document.createTreeWalker(e, NodeFilter.SHOW_TEXT);
+      const range = document.createRange();
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!(n.textContent ?? '').trim()) continue;
+        const parent = n.parentElement;
+        if (!parent || getComputedStyle(parent).textOverflow === 'ellipsis') continue;
+        range.selectNodeContents(n);
+        for (const r of range.getClientRects()) right = Math.max(right, r.right);
+      }
+      for (const m of e.querySelectorAll('img, svg, video, canvas'))
+        right = Math.max(right, m.getBoundingClientRect().right);
+      return right;
+    };
     const clipped = main
       ? [...main.querySelectorAll<HTMLElement>('*')]
           .filter((e) => {
             if (e.offsetParent === null || e.scrollWidth <= e.clientWidth + 1) return false;
+            // Visually hidden text (sr-only: 1 px, clipped) is for screen readers, not cut off.
+            if (e.clientWidth <= 1 || e.clientHeight <= 1) return false;
             const cs = getComputedStyle(e);
+            if (cs.clip !== 'auto' || cs.clipPath !== 'none') return false;
             if (cs.overflowX !== 'hidden' && cs.overflowX !== 'clip') return false;
             if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none') return false;
             // A scroller inside: the content is reachable there.
-            return ![...e.children].some((c) => {
-              const o = getComputedStyle(c).overflowX;
-              return o === 'auto' || o === 'scroll';
-            });
+            if (
+              [...e.children].some((c) => {
+                const o = getComputedStyle(c).overflowX;
+                return o === 'auto' || o === 'scroll';
+              })
+            )
+              return false;
+            return contentRight(e) > e.getBoundingClientRect().right + 1;
           })
           .slice(0, 6)
           .map(
@@ -143,7 +167,10 @@ function report(page: Page): Promise<Report> {
               `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]} +${e.scrollWidth - e.clientWidth}px`,
           )
       : [];
-    const nav = document.querySelector<HTMLElement>('nav[aria-label="Hauptnavigation"]');
+    // The sidebar and the bottom bar share the label; the sidebar is the one with the area groups.
+    const nav = [
+      ...document.querySelectorAll<HTMLElement>('nav[aria-label="Hauptnavigation"]'),
+    ].find((n) => n.querySelector('section[data-area]'));
     const groups = nav ? [...nav.querySelectorAll<HTMLElement>('section[data-area]')] : [];
     const sidebar =
       nav && groups.length > 0
@@ -212,7 +239,8 @@ for (const vp of VIEWPORTS) {
             0,
           );
           expect(r.sticking, `${path}: elements end beyond the window`).toEqual([]);
-          expect(r.clipped, `${path}: elements clip their content sideways`).toEqual([]);
+          // Soft: every page of the viewport reports its clipping before the test fails.
+          expect.soft(r.clipped, `${path}: elements clip their content sideways`).toEqual([]);
           // Identity v3.1 (F06): at 1920 × 1080 every area with every module fits the sidebar without scrolling.
           if (vp.width === 1920 && path === '/') {
             expect(r.sidebar, 'sidebar').not.toBeNull();
