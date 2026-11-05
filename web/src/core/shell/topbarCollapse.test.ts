@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextCollapsed, type CollapseInput } from './topbarCollapse';
+import { afterRouteChange, nextCollapsed, type CollapseInput } from './topbarCollapse';
 
 const base: CollapseInput = {
   collapsed: false,
@@ -37,5 +37,9 @@ describe('topbar collapse', () => {
   it('never moves with less motion or on the desktop', () => {
     expect(next({ reducedMotion: true, collapsed: true })).toBe(false);
     expect(next({ phone: false, collapsed: true })).toBe(false);
+  });
+  it('is back at once (no slide) after a route change', () => {
+    expect(afterRouteChange(true)).toEqual({ collapsed: false, instant: true });
+    expect(afterRouteChange(false)).toEqual({ collapsed: false, instant: false });
   });
 });
