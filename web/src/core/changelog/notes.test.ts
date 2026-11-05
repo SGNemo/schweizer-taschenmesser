@@ -109,4 +109,16 @@ describe('parseReleaseNotes', () => {
     expect(en.sections).toHaveLength(1);
     expect(en.sections[0]?.blocks[0]?.items[0]?.text).toBe('One.');
   });
+  it('keeps a build heading without notes as an empty section', () => {
+    const n = parseReleaseNotes(
+      '## Build 730\n\n## Build 727\n### Neu\n- **App:** Eins.\n\n## Build 723',
+      'de',
+    );
+    expect(n.sections.map((x) => [x.build, x.blocks.length])).toEqual([
+      [730, 0],
+      [727, 1],
+      [723, 0],
+    ]);
+    expect(n.blocks).toHaveLength(1); // the flattened blocks are only the ones with notes
+  });
 });

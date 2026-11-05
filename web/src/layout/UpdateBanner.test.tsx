@@ -77,18 +77,60 @@ describe('UpdateBanner', () => {
       .getState()
       .set({ phase: 'available', info: { ...info, version: '1.0.0-dev.686', notes } });
     render(<UpdateBanner />);
-    const titles = screen.getAllByText(/^Build \d+/).map((el) => el.textContent?.trim());
-    expect(titles.map((x) => x?.replace(/\s*installiert$/, ''))).toEqual([
-      'Build 686',
-      'Build 685',
-      'Build 684',
-    ]);
+    // The installed build is read asynchronously; once known, older builds disappear.
+    await vi.waitFor(() => {
+      const titles = screen.getAllByText(/^Build \d+/).map((el) => el.textContent?.trim());
+      expect(titles.map((x) => x?.replace(/\s*installiert$/, ''))).toEqual([
+        'Build 686',
+        'Build 685',
+      ]);
+    });
     expect(
       screen.getByText('Feiertage in der Jahresansicht.', { exact: false }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Holidays/)).toBeNull(); // the German block in a German app
     await vi.waitFor(() => expect(screen.getByText(t.about.changes.installed)).toBeInTheDocument());
     expect(screen.getByText(/^Build 685/).textContent).toContain(t.about.changes.installed);
+  });
+
+  it('shows every build since the installed one (it ends the list), newest first, and nothing older', () => {
+    const platform = fakeNative();
+    platform.app.version = async () => '1.0.0-dev.700+abc1234';
+    const notes = Array.from({ length: 60 }, (_, i) => 740 - i) // builds 740 … 681
+      .map((n) =>
+        n % 2 === 0 ? `## Build ${n}\n### Neu\n- **App:** Eintrag ${n}.` : `## Build ${n}`,
+      )
+      .join('\n\n');
+    useUpdateStore
+      .getState()
+      .set({ phase: 'available', info: { ...info, version: '1.0.0-dev.740', notes } });
+    render(<UpdateBanner />);
+    return vi.waitFor(() => {
+      const titles = screen
+        .getAllByText(/^Build \d+/)
+        .map((el) => Number(/\d+/.exec(el.textContent ?? '')![0]));
+      // 700 … 740: no cap, nothing older than the installed 700, the newest first.
+      expect(titles).toHaveLength(41);
+      expect(titles[0]).toBe(740);
+      expect(titles.at(-1)).toBe(700);
+      expect(Math.min(...titles)).toBe(700);
+      expect(screen.queryByText(t.about.changes.showMore, { exact: false })).toBeNull();
+      // A build without a note is one quiet line, not a card.
+      expect(screen.getAllByText(new RegExp(t.about.changes.noChanges)).length).toBeGreaterThan(0);
+    });
+  });
+
+  it('without a known installed build only the newest 10 builds show, the rest on request', async () => {
+    const notes = Array.from({ length: 25 }, (_, i) => 740 - i)
+      .map((n) => `## Build ${n}\n### Neu\n- **App:** Eintrag ${n}.`)
+      .join('\n\n');
+    useUpdateStore
+      .getState()
+      .set({ phase: 'available', info: { ...info, version: '1.0.0-dev.740', notes } });
+    render(<UpdateBanner />);
+    expect(screen.getAllByText(/^Build \d+/)).toHaveLength(10);
+    await userEvent.setup().click(screen.getByRole('button', { name: /anzeigen \(15\)/ }));
+    expect(screen.getAllByText(/^Build \d+/)).toHaveLength(25);
   });
 
   it('"Später" hides the offer without installing anything', async () => {
