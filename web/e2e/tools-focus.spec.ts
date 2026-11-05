@@ -43,8 +43,8 @@ test.describe('desktop', () => {
     });
     expect(room).toBeGreaterThanOrEqual(4);
 
-    // Alt+2 from the search: the tool shows and focus follows into it (Währung waits for its rates offline, so the
-    // surface takes focus); Alt+1 → the calculator's own input.
+    // Alt+2 from the search: the tool shows and focus follows into it (its amount field once the rates are there,
+    // the surface before); Alt+1 → the calculator's own input.
     await page.keyboard.press('Alt+Digit2');
     await expect(dialog(page).getByRole('heading', { name: 'Währung' })).toBeVisible();
     await expect.poll(() => focused(page)).toMatchObject({ tool: 'currency' });

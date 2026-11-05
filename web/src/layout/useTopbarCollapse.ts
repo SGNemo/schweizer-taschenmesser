@@ -37,7 +37,7 @@ export function useTopbarCollapse(): {
       setInstant(true);
     }
   }
-  // …and the scroll handler starts counting from where the new page is.
+  // …and the scroll handler counts from the scroll position the new page has.
   useLayoutEffect(() => {
     state.current.collapsed = false;
     state.current.prevY = document.scrollingElement?.scrollTop ?? 0;

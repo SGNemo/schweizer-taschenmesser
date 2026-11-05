@@ -110,7 +110,7 @@ export function ToolsPanel() {
   /**
    * Moves focus to `target` once it is on screen: the tool list and the tool body load lazily, so it looks again for
    * up to a second. It never takes focus back from where the user has gone meanwhile (only from where it was when the
-   * pick happened, the dialog head, the landing pane or nowhere). `now`: look in this frame already (on opening); a pick
+   * pick or the opening happened, the landing pane or nowhere). `now`: look in this frame already (on opening); a pick
    * waits for the new tool's render.
    */
   const focusIn = (target: PanelFocus | null, now = false) => {
@@ -127,12 +127,7 @@ export function ToolsPanel() {
       const stage = stageRef.current?.querySelector<HTMLElement>('section') ?? null;
       const pane = panel.dataset.pane === 'list' ? sideRef.current : stage;
       const active = document.activeElement;
-      const free =
-        !active ||
-        active === from ||
-        active === document.body ||
-        active === pane ||
-        !panel.contains(active);
+      const free = !active || active === from || active === document.body || active === pane;
       if (!free) return;
       const field =
         target === 'tool' ? stage?.querySelector<HTMLElement>('[data-autofocus]') : null;
@@ -295,7 +290,7 @@ export function ToolsPanel() {
             className={styles.side}
             aria-label={t.tools.panel.list}
             // Landing spot on a phone that shows the list (focus without a field, so no on-screen keyboard).
-            tabIndex={-1}
+            tabIndex={phone ? -1 : undefined}
             onKeyDown={onSideKey}
           >
             <input

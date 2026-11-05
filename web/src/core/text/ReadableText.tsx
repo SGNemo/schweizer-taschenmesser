@@ -11,17 +11,17 @@ import {
   type ReactNode,
 } from 'react';
 import { inkOf } from './ink';
-import { emphasize, isBoldWeight } from './readable';
+import { emphasize, isBoldWeight, READ_START_TAG, READ_TEXT_TAG } from './readable';
 import styles from './ReadableText.module.css';
 
-// The aid's own inline elements (`READ_TEXT_TAG`, `READ_START_TAG` in readable.ts): custom element names, no role.
+// The aid's own inline elements (readable.ts): custom element names, no role.
 type ReadElementProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>;
 declare module 'react' {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX intrinsic elements are declared in this namespace
   namespace JSX {
     interface IntrinsicElements {
-      'read-text': ReadElementProps;
-      'read-start': ReadElementProps;
+      [READ_TEXT_TAG]: ReadElementProps;
+      [READ_START_TAG]: ReadElementProps;
     }
   }
 }
@@ -125,16 +125,16 @@ export function ReadableText({
   if (!runs) return <>{text}</>;
   return (
     // One wrapper element: in a flex/grid container with a gap the words stay a single item, as the plain string was.
-    <read-text data-rt="" ref={wrapper} className={styles.rt}>
+    <READ_TEXT_TAG data-rt="" ref={wrapper} className={styles.rt}>
       {runs.map((r, i) =>
         r.strong ? (
-          <read-start key={i} data-rs={heavy ? 'h' : ''}>
+          <READ_START_TAG key={i} data-rs={heavy ? 'h' : ''}>
             {r.text}
-          </read-start>
+          </READ_START_TAG>
         ) : (
           r.text
         ),
       )}
-    </read-text>
+    </READ_TEXT_TAG>
   );
 }
