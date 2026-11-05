@@ -8,6 +8,15 @@
     color-mix(in srgb, var(--tone) calc(var(--tone-a) * 0.25), var(--surface)) 78%
   );
 }
+/* "Ruhig" / module colours off: no cover tone (the guard of BankCard and Sky; C03). */
+:global(:root[data-color='calm']) .tone,
+:global(:root[data-module-colors='off']) .tone {
+  display: none;
+}
+/* Phone: the player under the head, in the page (C10). */
+.phonePlayer {
+  min-width: 0;
+}
 .coverLarge {
   display: grid;
   place-items: center;
