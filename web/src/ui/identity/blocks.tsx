@@ -201,3 +201,24 @@ export function Masthead({ size, children }: BlockProps) {
     </div>
   );
 }
+
+/**
+ * An envelope card (Budgets): the flap in the top corner and a fill level that rises from the bottom. `fill` (0..1) is
+ * the spent share when a page knows it, else a still half; `over` tints the level with the danger colour (the page says
+ * "über" in words). `children` = the one line on it (the category name).
+ */
+export function Envelope({
+  size,
+  fill = 0.5,
+  over,
+  children,
+}: BlockProps & { fill?: number; over?: boolean }) {
+  const v = Math.max(0, Math.min(1, fill));
+  return (
+    <div {...block('envelope', size)} data-over={over ? 'true' : undefined}>
+      <i className={styles.envLevel} style={{ height: `${Math.round(v * 100)}%` }} />
+      <i className={styles.envFlap} />
+      {children ? <span className={styles.text}>{children}</span> : null}
+    </div>
+  );
+}

@@ -36,11 +36,11 @@ import {
 import { subscriptionRepo } from '../repo';
 import { NextChargesHead } from '../components/NextChargesHead';
 import { ServiceTile } from '../components/ServiceTile';
-import { HeroSlot, Ring } from '@/ui/identity';
+import { HeroSlot, Ring, SignatureMark } from '@/ui/identity';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
 /** Highlight a cancellation deadline that is closer than this many days. */
 const WARN_DAYS = 14;
@@ -92,6 +92,7 @@ export default function SubscriptionsPage() {
           <Icon name="plus" size={18} />
           {t.subscriptions.add}
         </Button>
+        <StartDataMenu moduleId="subscriptions" />
       </PageHeader>
 
       {cycle.length > 0 ? (
@@ -102,6 +103,7 @@ export default function SubscriptionsPage() {
               centre={<strong>{monthly.length}</strong>}
               label={`${t.subscriptions.perMonth}: ${cycle.map((p) => p.label).join(', ')}`}
               size={7.5}
+              segments={12}
             />
             <ul className={styles.cycleLegend}>
               {cycle.map((p) => (
@@ -148,9 +150,11 @@ export default function SubscriptionsPage() {
         </section>
       ) : null}
       {subs && subs.length === 0 ? (
-        <EmptyState title={t.subscriptions.empty}>
-          <StartDataButton moduleId="subscriptions" />
-        </EmptyState>
+        <EmptyState
+          title={t.subscriptions.empty}
+          testId="subscriptions-empty"
+          motif={<SignatureMark id="cycle" size={64} />}
+        />
       ) : null}
       <ItemList label={t.subscriptions.title}>
         {subs?.map((s) => {

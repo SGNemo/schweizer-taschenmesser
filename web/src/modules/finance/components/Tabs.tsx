@@ -33,7 +33,7 @@ import type { Stored } from '@/core/db/types';
 import type { Transaction } from '../schema';
 import { categoryIcon } from '../categoryIcon';
 import styles from '../routes/finance.module.css';
-import { StartDataButton } from '@/core/importer/StartDataButton';
+import { SignatureMark } from '@/ui/identity';
 
 export function TransactionsTab({
   data,
@@ -92,14 +92,12 @@ export function TransactionsTab({
   if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
       <>
-        <EmptyState title={t.finance.noTransactions}>
-          <StartDataButton moduleId="finance" />
-          {data.accounts.length > 1 ? (
-            <Button variant="ghost" onClick={() => setTransfer({ draft: true })}>
-              {t.finance.ext.transfer.button}
-            </Button>
-          ) : null}
-        </EmptyState>
+        {/* C23: one verb – the toolbar's "Buchung"; import and setup sit in the page's ⋯ menu, transfers on "Konten". */}
+        <EmptyState
+          title={t.finance.noTransactions}
+          testId="finance-empty"
+          motif={<SignatureMark id="bankCard" size={64} />}
+        />
         <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
       </>
     );
@@ -327,7 +325,12 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           </Button>
         ) : null}
       </div>
-      {data.accounts.length === 0 ? <EmptyState title={t.finance.noAccounts} /> : null}
+      {data.accounts.length === 0 ? (
+        <EmptyState
+          title={t.finance.noAccounts}
+          motif={<SignatureMark id="bankCard" size={64} />}
+        />
+      ) : null}
       <ul className={styles.list}>
         {data.accounts.map((a) => (
           <li key={a.id}>

@@ -15,6 +15,7 @@ export {
   AvatarRing,
   Bill,
   Bubble,
+  Envelope,
   FolderTabs,
   Gauges,
   Masthead,
