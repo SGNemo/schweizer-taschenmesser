@@ -45,6 +45,13 @@ test('every hue maps to --module-color and --module-color-2 (identity.css)', () 
   for (const k of ['--head-flat', '--head-gradient']) assert.equal(hue[k], appHue[k], k);
 });
 
+test('neutral plates keep the text ink in the dark theme', () => {
+  // The dark plate rules out-specify `.plate.neutral`; they must leave neutral plates alone.
+  const dark = identity.match(/:root(?:\[data-theme='dark'\]|:not\(\[data-theme='light'\]\)) \.plate[^{]*\{/g) ?? [];
+  assert.equal(dark.length, 2, 'two dark plate rules');
+  for (const rule of dark) assert.match(rule, /\.plate:not\(\.neutral\)/, rule);
+});
+
 test('area patterns match the app', () => {
   for (const id of AREAS) {
     const s = block(identity, `[data-area='${id}'] {`, '}');

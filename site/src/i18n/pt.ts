@@ -46,7 +46,7 @@ export const pt = {
     ],
     more: 'Também: notas, listas, marcadores, despensa, pessoas, hábitos, controle de tempo, tempo, limpeza do PC, um chat com um modelo local (prévia). IA só se você quiser. O app fala alemão, inglês, espanhol, francês e português (Brasil).',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number, a: number) => `${n} módulos em ${a} áreas. Cada um tem sua cor; você ativa só o que precisa. O esboço em cada cartão mostra a forma do seu widget na visão geral.`,
+    intro: (n: number, a: number) => `${n} módulos em ${a} áreas. Cada um tem sua cor; você ativa só o que precisa.`,
     count: (n: number) => (n === 1 ? '1 módulo' : `${n} módulos`),
     areas: { plan: 'O dia, a semana, as pessoas.', money: 'Contas, faturas, assinaturas, orçamentos.', household: 'Compras e despensa.', knowledge: 'Ler, escrever, lembrar.', vault: 'Criptografado, só aqui.', system: 'O que seu dispositivo está fazendo.' },
     modules: {

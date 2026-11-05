@@ -46,7 +46,7 @@ export const fr = {
     ],
     more: 'Et aussi : notes, listes, signets, provisions, personnes, habitudes, suivi du temps, météo, nettoyage du PC, un chat avec un modèle local (aperçu). IA seulement si vous le souhaitez. L’appli parle allemand, anglais, espagnol, français et portugais (Brésil).',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number, a: number) => `${n} modules en ${a} domaines. Chacun a sa couleur ; vous n’activez que ce qu’il vous faut. Le croquis sur chaque carte montre la forme de son widget sur la vue d’ensemble.`,
+    intro: (n: number, a: number) => `${n} modules en ${a} domaines. Chacun a sa couleur ; vous n’activez que ce qu’il vous faut.`,
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
     areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Ce que fait votre appareil.' },
     modules: {

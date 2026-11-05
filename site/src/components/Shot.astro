@@ -4,8 +4,8 @@
  * hidden one is lazy and never requested. `name` = file stem in src/assets/screens (see
  * scripts/app-screenshots.mjs). `priority` marks the hero image (eager, high fetch priority).
  * `frame` draws the device around it from tokens: `window` = thin title bar with three dots,
- * `phone` = a bezel with the screen in the phone's ratio (global.css .frame / .phone). Sizes come from
- * the image file, so renewed screenshots (other size, other ratio) need no change here.
+ * `phone` = a bezel around the picture (global.css .frame / .phone). The picture's own size sets the
+ * ratio in both frames, so renewed screenshots (other size, other ratio) need no change here.
  */
 import { Picture } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
@@ -23,7 +23,10 @@ const { name, alt, sizes, widths, priority = false, frame = 'none', class: cls }
 const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/{home,phone}-*.png', { eager: true });
 const pick = (scheme: 'dark' | 'light') => {
   const hit = all[`../assets/screens/${name}-${scheme}.png`];
-  if (!hit) throw new Error(`screenshot missing: ${name}-${scheme}.png (run npm run app:screenshots)`);
+  if (!hit)
+    throw new Error(
+      `screenshot missing: ${name}-${scheme}.png (run npm run app:screenshots; a new name must also be in the glob above)`,
+    );
   return hit.default;
 };
 const wrapper = frame === 'window' ? 'frame' : frame === 'phone' ? 'phone' : 'shot';

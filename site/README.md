@@ -13,7 +13,8 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
   fails when a value differs. `src/styles/identity.css` maps `data-hue`/`data-hue2`/`data-area` to
   `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). Module
   cards and the nine head shapes are drawn by `IdentityMini.astro` from the catalogue; `scripts/catalog.test.mjs`
-  fails when a catalogue icon, hue, head or widget variant has no shape here (design rounds: `docs/design/site/`). Logo, favicons, fonts (Inter Variable,
+  fails when a catalogue icon, hue, head or widget variant has no shape here (design rounds: `docs/design/site/`).
+  Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, fonts (Inter Variable,
   OFL) and the social preview are copied at build time from `web/brand`, `web/public`,
   `docs/brand` and `node_modules/@fontsource-variable/inter` (`scripts/copy-brand.mjs`, copies are
   git-ignored).

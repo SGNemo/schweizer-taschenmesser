@@ -99,11 +99,11 @@
   background: var(--surface-2);
   color: var(--text);
 }
-:root[data-theme='dark'] .plate {
+:root[data-theme='dark'] .plate:not(.neutral) {
   color: var(--bg);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .plate {
+  :root:not([data-theme='light']) .plate:not(.neutral) {
     color: var(--bg);
   }
 }
