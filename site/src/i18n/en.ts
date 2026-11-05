@@ -45,12 +45,21 @@ export const en = {
       { icon: 'bell', shot: 'reminders', title: 'Reminders', text: 'Bundled, with quiet hours and “later”, even when the app is closed.', alt: 'Reminders with switches and next time' },
     ],
     more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number, a: number) => `${n} modules in ${a} areas. Each has its colour; you turn on only what you need.`,
+    count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
+    areas: { plan: 'The day, the week, the people.', money: 'Accounts, invoices, subscriptions, budgets.', household: 'Shopping and supplies.', knowledge: 'Read, write, remember.', vault: 'Encrypted, only here.', system: 'What your device is up to.' },
     modules: {
       summary: (n: number) => `All ${n} modules`,
       status: { default: 'on by default', optional: 'optional', preview: 'preview' },
       only: { windows: 'Windows app only', android: 'Android app only', both: 'Windows and Android apps only' },
       hint: 'Preview modules stay hidden until “Show work in progress” is on (Settings → Appearance). The list is generated from the app itself.',
     },
+  },
+  heads: {
+    eyebrow: 'Every module has its shape',
+    note: 'Every module page starts with a head in one of nine shapes and in the module’s colour, so you see at a glance where you are.',
+    names: { kennzahl: 'Figure', zeit: 'Time', fortschritt: 'Progress', cover: 'Cover', himmel: 'Sky', regal: 'Shelf', tresor: 'Vault', schreib: 'Paper', fokus: 'Focus' },
   },
   data: {
     eyebrow: 'Your data stays with you',
@@ -79,6 +88,7 @@ export const en = {
     ],
     honest: 'Nemo is developed with ADHD in mind and helps with starting and staying on track. It is not a treatment and does not promise one. Every aid can be switched off individually.',
     shotAlt: 'Detail of the overview: the “up next” card with “start · 5 min”, “later” and “something else”',
+    phoneAlt: 'The overview on the phone: “important now” and the “up next” card with a first step and duration',
   },
   compare: {
     eyebrow: 'Comparison',

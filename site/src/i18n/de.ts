@@ -45,12 +45,21 @@ export const de = {
       { icon: 'bell', shot: 'reminders', title: 'Erinnerungen', text: 'Gebündelt, mit Ruhezeiten und „Später“, auch bei geschlossener App.', alt: 'Erinnerungen mit Schaltern und nächstem Zeitpunkt' },
     ],
     more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
+    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
+    intro: (n: number, a: number) => `${n} Module in ${a} Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst.`,
+    count: (n: number) => (n === 1 ? '1 Modul' : `${n} Module`),
+    areas: { plan: 'Der Tag, die Woche, die Leute.', money: 'Konten, Rechnungen, Abos, Budgets.', household: 'Einkaufen und Vorräte.', knowledge: 'Lesen, schreiben, merken.', vault: 'Verschlüsselt, nur hier.', system: 'Was dein Gerät gerade tut.' },
     modules: {
       summary: (n: number) => `Alle ${n} Module`,
       status: { default: 'standardmäßig an', optional: 'optional', preview: 'Vorschau' },
       only: { windows: 'nur Windows-App', android: 'nur Android-App', both: 'nur Windows- und Android-App' },
       hint: 'Vorschau-Module bleiben versteckt, bis „In Arbeit anzeigen“ an ist (Einstellungen → Darstellung). Die Liste wird aus der App selbst erzeugt.',
     },
+  },
+  heads: {
+    eyebrow: 'Jedes Modul hat seine Form',
+    note: 'Jede Modulseite beginnt mit einem Kopf in einer von neun Formen und in der Farbe des Moduls. So siehst du auf einen Blick, wo du bist.',
+    names: { kennzahl: 'Kennzahl', zeit: 'Zeit', fortschritt: 'Fortschritt', cover: 'Cover', himmel: 'Himmel', regal: 'Regal', tresor: 'Tresor', schreib: 'Papier', fokus: 'Fokus' },
   },
   data: {
     eyebrow: 'Deine Daten bleiben bei dir',
@@ -79,6 +88,7 @@ export const de = {
     ],
     honest: 'Nemo ist mit ADHS im Blick entwickelt und hilft beim Anfangen und Dranbleiben. Es ist keine Behandlung und verspricht keine. Jede Hilfe lässt sich einzeln abschalten.',
     shotAlt: 'Ausschnitt der Übersicht: die Karte „Jetzt dran“ mit „Anfangen · 5 Min“, „Später“ und „Etwas anderes“',
+    phoneAlt: 'Die Übersicht auf dem Handy: „Jetzt wichtig“ und die Karte „Jetzt dran“ mit erstem Schritt und Dauer',
   },
   compare: {
     eyebrow: 'Vergleich',
