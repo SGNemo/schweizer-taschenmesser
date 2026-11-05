@@ -216,7 +216,9 @@ test.describe('bank statement', () => {
 
   test('recurring debits become subscription suggestions', async ({ page }) => {
     await ready(page, '/subscriptions');
-    await page.getByRole('button', { name: 'Importieren' }).click();
+    // C23: import sits in the page's ⋯ menu.
+    await page.getByRole('button', { name: 'Weitere Aktionen', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Importieren' }).click();
     const dialog = page.getByRole('dialog', { name: /Importieren/ });
     await dialog.getByRole('button', { name: /Abos im Kontoauszug erkennen/ }).click();
     await uploadStatement(page, dialog);

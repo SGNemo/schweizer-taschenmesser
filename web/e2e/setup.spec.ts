@@ -256,7 +256,9 @@ test('an empty module page links to the assistant, which opens on the start-data
 }) => {
   await ready(page, '/todos');
   await expect(wizard(page)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Einrichtung öffnen' }).click();
+  // C23: "Einrichtung öffnen" sits in the page's ⋯ menu.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Einrichtung öffnen' }).click();
   await expect(wizard(page)).toBeVisible();
   await expect(wizard(page).getByRole('heading', { name: 'Importieren' })).toBeVisible();
 });
@@ -378,7 +380,8 @@ test('Back closes the import dialog above the assistant first, then asks about t
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByRole('button', { name: 'Einrichtung öffnen' }).click();
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Einrichtung öffnen' }).click();
   await expect(wizard(page).getByRole('heading', { name: 'Importieren' })).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Importieren' }).first().click();
   const importDialog = page.getByRole('dialog', { name: /^Importieren:/ });

@@ -130,8 +130,8 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
     await page.getByRole('menuitem', { name: 'Später', exact: true }).click();
     await expect(page.getByText('Auf morgen verschoben.')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Morgen');
+    await expect(page.getByRole('button', { name: /^Steuer vorbereiten/ })).toContainText('Morgen');
     await page.getByRole('status').getByRole('button', { name: 'Rückgängig' }).click();
-    await expect(page.getByRole('button', { name: /Steuer vorbereiten/ })).toContainText('Heute');
+    await expect(page.getByRole('button', { name: /^Steuer vorbereiten/ })).toContainText('Heute');
   });
 });

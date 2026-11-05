@@ -100,7 +100,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
     for (const name of ['Überfällig', 'Diese Woche', 'Später'])
       await expect(page.getByRole('button', { name: `${name} einklappen` })).toBeVisible();
     // The overdue row carries text next to its colour.
-    await expect(page.getByRole('button', { name: /Alt GmbH/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Alt GmbH/ })).toBeVisible();
     await expect(page.locator('[data-group="overdue"]')).toContainText('seit 9 Tagen');
 
     await page.getByRole('button', { name: 'Später einklappen' }).click();

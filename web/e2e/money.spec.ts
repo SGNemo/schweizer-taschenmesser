@@ -66,7 +66,7 @@ test.describe('Invoices', () => {
   test('creates an invoice, shows it on dashboard and calendar', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
     await expect(page.getByTestId('open-total')).toHaveText(/89,90\s€/);
-    await expect(page.getByRole('button', { name: /Stadtwerke/ })).toContainText('Fällig am');
+    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText('Fällig am');
 
     await ready(page, '/');
     await expect(page.getByTestId('widget-invoices:due')).toContainText('Stadtwerke');

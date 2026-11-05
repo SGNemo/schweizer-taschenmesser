@@ -30,15 +30,15 @@ const GOOGLE_JSON = JSON.stringify({
 
 async function openWizard(page: Page, url = '/todos') {
   await ready(page, url);
-  const start = page.getByRole('button', { name: 'Importieren' });
-  // Once the module holds data the button lives in its settings section.
-  await (
-    url === '/todos'
-      ? start
-      : page.locator('section[aria-labelledby="module-todos"]').getByRole('button', {
-          name: 'Importieren',
-        })
-  ).click();
+  // The page's ⋯ menu (C23); once the module holds data the tests use its settings section.
+  if (url === '/todos') {
+    await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Importieren' }).click();
+  } else
+    await page
+      .locator('section[aria-labelledby="module-todos"]')
+      .getByRole('button', { name: 'Importieren' })
+      .click();
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog
     .getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ })

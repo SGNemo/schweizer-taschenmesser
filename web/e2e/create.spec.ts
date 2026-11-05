@@ -68,7 +68,7 @@ test('"Duplizieren" copies an invoice one month later and opens the copy', async
   await dialog.getByLabel('Fällig am').fill('2026-10-01');
   await save(page);
 
-  await page.getByRole('button', { name: /Vermieter/ }).click();
+  await page.getByRole('button', { name: /^Vermieter/ }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Duplizieren' }).click();
   await expect(page.getByText(/Dupliziert/)).toBeVisible();
   await expect(page.getByRole('dialog').getByLabel('Fällig am')).toHaveValue('2026-11-01');
