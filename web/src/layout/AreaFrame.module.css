@@ -128,9 +128,14 @@
   max-width: var(--slot-m);
 }
 .signature[data-slot='L'] {
-  flex: 1 1 100%;
-  width: 100%;
+  /* The frame's own L default (the calendar leaf) takes the whole column on its own row; a page's block flows beside
+     the figure and may grow to the column (the music cover and the timer strip keep their place). */
+  flex: 1 1 20rem;
   max-width: 100%;
+}
+.signature[data-slot='L'][data-default='true'] {
+  flex-basis: 100%;
+  width: 100%;
 }
 .signature > .target:not(:empty) {
   flex: 1 1 auto;

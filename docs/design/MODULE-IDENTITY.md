@@ -12,7 +12,7 @@ Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) 
 | Head band, row 1 | shell | eyebrow (icon plate + "Bereich · Modul") left, gear and "Mit KI eintragen" at the band's right edge |
 | Head band, content column | shell + module | capped at `--page-content` (70 rem), aligned to the page: the page's **h1**, then one row **figure \| signature slot \| extra** |
 | Figure | module via `HeroSlot area="figure"` (else `contributions.headline`) | the headline figure (`HeroFigure`) |
-| Signature slot | frame draws `identity.signature`; module may fill it via `HeroSlot area="signature"` | sized by the head variant (S 4 rem · M 36 rem · L full column) |
+| Signature slot | frame draws `identity.signature`; module may fill it via `HeroSlot area="signature"` | sized by the head variant (S 4 rem · M 36 rem · L full column for the frame's default; a page's own block flows beside the figure and may grow to the column) |
 | Extra | module via `HeroSlot` (default area) | strips and controls (hour strip, start/stop) |
 | Sub-navigation | shell (`ui/SubNav`) | one pill per module of the area, the active one filled in its hue |
 | Toolbar, content | module | `PageHeader` views/children, `Toolbar`, lists, grids |
