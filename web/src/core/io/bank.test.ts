@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { setFormatPref } from '@/core/i18n/format';
 import { BankFormatError, bankDedupeKey, parseBankCsv, parseBankFile, parseCamt } from './bank';
 
 // Invented data in the layout of the savings banks' "CSV-CAMT" export (semicolon, quotes, dd.MM.yy).
@@ -127,6 +128,31 @@ describe('parseCamt', () => {
     );
     expect(() => parseCamt('<a><b/></a>')).toThrow(BankFormatError);
     expect(() => parseCamt('<a>')).toThrow(BankFormatError);
+  });
+
+  describe('amounts always use "." as the decimal mark, whatever the format region (X23)', () => {
+    const one = (amount: string) =>
+      CAMT.replace('<Amt Ccy="EUR">9.99</Amt>', `<Amt Ccy="EUR">${amount}</Amt>`);
+    afterEach(() => setFormatPref('auto'));
+
+    it.each(['de-DE', 'en-US', 'de-CH'] as const)('in %s', (region) => {
+      setFormatPref(region);
+      const amountOf = (amount: string) => parseCamt(one(amount)).transactions[0]!.amountMinor;
+      expect(amountOf('12.500')).toBe(-1250);
+      expect(amountOf('12.50000')).toBe(-1250);
+      expect(amountOf('12.5')).toBe(-1250);
+      expect(amountOf('1234')).toBe(-123400);
+      expect(amountOf('9.99')).toBe(-999);
+    });
+
+    it('skips an amount with a sub-cent part or a group mark', () => {
+      setFormatPref('de-DE');
+      for (const amount of ['12.505', '1,50', '1.234,56', '12.123456', '-5.00']) {
+        const r = parseCamt(one(amount));
+        expect(r.skipped, amount).toBe(2);
+        expect(r.transactions, amount).toHaveLength(1);
+      }
+    });
   });
 });
 

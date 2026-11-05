@@ -291,6 +291,20 @@ function descendants(el: Element, name: string): Element[] {
   return Array.from(el.getElementsByTagName('*')).filter((e) => e.localName === name);
 }
 
+/**
+ * ISO 20022 amount ("12.5", "12.500", "1234"): always "." as the decimal mark, no group marks, up
+ * to five decimals – independent of the format region. Digits past the cents must be zeros;
+ * anything else is not a whole cent amount and gives undefined.
+ */
+function parseIsoAmount(text: string): number | undefined {
+  const m = /^(\d{1,18})(?:\.(\d{1,5}))?$/.exec(text.trim());
+  if (!m) return undefined;
+  const fraction = (m[2] ?? '').padEnd(2, '0');
+  if (/[^0]/.test(fraction.slice(2))) return undefined;
+  const minor = Number(m[1]) * 100 + Number(fraction.slice(0, 2));
+  return Number.isSafeInteger(minor) ? minor : undefined;
+}
+
 export function parseCamt(xml: string): BankParseResult {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
   if (doc.getElementsByTagName('parsererror').length > 0 || !doc.documentElement)
@@ -309,7 +323,7 @@ export function parseCamt(xml: string): BankParseResult {
     const bookDate =
       path(ntry, 'BookgDt', 'Dt')?.textContent ?? path(ntry, 'ValDt', 'Dt')?.textContent;
     const date = bookDate ? parseDateInput(bookDate.slice(0, 10)) : undefined;
-    const value = amt?.textContent ? parseMoney(amt.textContent.trim()) : undefined;
+    const value = amt?.textContent ? parseIsoAmount(amt.textContent) : undefined;
     const debit = child(ntry, 'CdtDbtInd')?.textContent?.trim() === 'DBIT';
     if (!date || value === undefined || value === 0) {
       skipped += 1;
