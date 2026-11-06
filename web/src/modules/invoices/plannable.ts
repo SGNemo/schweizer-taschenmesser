@@ -9,14 +9,14 @@ import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { invoiceRepo } from './repo';
-import { settings, settingsSchema } from './settings';
+import { settings } from './settings';
 
 export const PAY_MINUTES = 10;
 export const PAY_PRIORITY = 2;
 
 const source: PlannableSource = {
   async list(ctx) {
-    const prefs = await getSettings('module.invoices', settingsSchema, settings.defaults as never);
+    const prefs = await getSettings('module.invoices', settings.schema, settings.defaults);
     if (!prefs.showInPlan) return [];
     const open = await invoiceRepo.table
       .where('dueDate')

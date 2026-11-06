@@ -357,7 +357,7 @@ async function put(page: Page, table: string, record: Record<string, unknown>) {
   );
 }
 
-/** Less time on weekdays (24 plannable minutes with the buffer), Saturday off: a big thing overloads the week. */
+/** Less time on weekdays (24 plannable minutes with the buffer), Saturday off: 240 minutes in the 14 days, a big thing overloads them. */
 async function smallWeek(page: Page) {
   await ready(page, '/settings/module/planner');
   for (const [label, value] of [
@@ -371,7 +371,8 @@ async function smallWeek(page: Page) {
   }
 }
 
-const toast = (page: Page) => page.getByRole('status');
+/** The toast region (the header has a status line of its own). */
+const toast = (page: Page) => page.getByRole('status').last();
 const waitingHead = (page: Page) => page.locator('[data-group="waiting"] h2');
 
 test.describe('Planer (more sources, overload – package 3)', () => {
@@ -392,7 +393,11 @@ test.describe('Planer (more sources, overload – package 3)', () => {
       order: 0,
     });
     await ready(page, '/notes');
-    const row = page.locator('li', { hasText: 'Vermieter antworten' }).first();
+    const row = page
+      .locator('div, li, article')
+      .filter({ has: page.getByRole('button', { name: /^Vermieter antworten/ }) })
+      .filter({ has: page.getByRole('button', { name: 'Seite: weitere Aktionen' }) })
+      .last();
     await row.getByRole('button', { name: 'Seite: weitere Aktionen' }).click();
     await page.getByRole('menuitem', { name: 'In den Plan' }).click();
     const sheet = page.getByRole('dialog', { name: 'In den Plan' });
@@ -434,7 +439,7 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await expect(day.getByRole('checkbox', { name: 'Stadtwerke bezahlen' })).toHaveCount(0);
     await day.getByRole('button', { name: 'Aktionen für Stadtwerke bezahlen' }).click();
     await expect(page.getByRole('menuitem', { name: 'Erledigt' })).toHaveCount(0);
-    await page.getByRole('menuitem', { name: 'Warum hier?' }).click();
+    await page.getByRole('menuitemcheckbox', { name: 'Warum hier?' }).click();
     await expect(day).toContainText(/muss bis Do fertig sein|neu, nach Priorität/);
     await ready(page, '/settings/module/invoices');
     const sw = page.getByRole('switch', { name: 'Im Plan zeigen' });
@@ -455,7 +460,7 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await enter(page, 'Kurz 15min');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
-    await enter(page, 'Umzug planen 3 Std');
+    await enter(page, 'Umzug planen 5 Std');
     await expect(toast(page)).toContainText('mehr zu tun, als Zeit frei ist');
     await expect(toast(page).getByRole('button', { name: 'Rückgängig' })).toBeVisible();
     await expect(waitingHead(page)).toContainText('Wartet auf freie Zeit');
@@ -477,7 +482,7 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await sw.click();
     await expect(sw).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/planner');
-    await enter(page, 'Umzug planen 3 Std');
+    await enter(page, 'Umzug planen 5 Std');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
     await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');

@@ -52,16 +52,6 @@ import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
 
-/** Where a thing's origin opens (`?open=<id>` is understood by every module page). */
-const LINK_BASE = {
-  note: '/notes',
-  mail: '/mail',
-  invoice: '/invoices',
-  event: '/calendar',
-} as const;
-const linkPath = (l: { kind: keyof typeof LINK_BASE; id: string }) =>
-  `${LINK_BASE[l.kind]}?open=${encodeURIComponent(l.id)}`;
-
 /** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
 const SPAN = BOARD_DAYS;
 /** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
@@ -128,8 +118,9 @@ export default function PlannerPage() {
       live = false;
     };
   }, []);
-  const canDone = (moduleId: string) => abilities?.[moduleId]?.done === true;
-  const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign === true;
+  // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
+  const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
+  const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
 
   const titles = data?.titles ?? {};
   const board = data?.board;
@@ -358,13 +349,13 @@ export default function PlannerPage() {
           ]
         : []),
       { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
-      // Back to where it came from (a note's „In den Plan“): `?open=` is understood by every module page.
-      ...(e.link
+      // Back to the note it came from (a note's „In den Plan“; the notes page reads `?open=`).
+      ...(e.link?.kind === 'note'
         ? [
             {
               id: 'link',
-              label: t.planner.row.openLink[e.link.kind],
-              onSelect: () => void navigate(linkPath(e.link!)),
+              label: t.planner.row.openNote,
+              onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
             },
           ]
         : []),

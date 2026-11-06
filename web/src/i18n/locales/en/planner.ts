@@ -98,12 +98,7 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Actions for ${title}`,
     due: (day: string) => `Deadline ${day}`,
     dueWas: (day: string) => `Deadline was ${day}`,
-    openLink: {
-      note: 'Go to note',
-      mail: 'Go to mail',
-      invoice: 'Go to invoice',
-      event: 'Go to appointment',
-    },
+    openNote: 'Go to note',
     blocker: 'Blocker',
     focus: 'Start focus',
   },

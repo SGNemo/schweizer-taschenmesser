@@ -423,7 +423,8 @@ export async function runPlanner(
     inputs,
     rowWrites,
     writeBacks,
-    prevOverflowMin: last?.overflowMin ?? 0,
+    // A run of an earlier day says nothing about today's start.
+    prevOverflowMin: last?.today === deps.today ? last.overflowMin : 0,
   };
 }
 

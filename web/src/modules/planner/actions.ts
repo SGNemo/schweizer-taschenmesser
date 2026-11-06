@@ -191,16 +191,24 @@ export async function addFromField(text: string, titles: Record<string, string>)
   });
 }
 
-export const markDone = (e: PlannableEntry, titles: Record<string, string>) =>
-  act(t.planner.toast.done, t.planner.toast.done, titles, async () => {
-    await (await source(e.moduleId))?.onDone?.(e.id);
-  });
+/** „Erledigt“: only for a source that takes it back (an invoice or a cancellation does not: false, nothing happens). */
+export async function markDone(
+  e: PlannableEntry,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onDone) return false;
+  return act(t.planner.toast.done, t.planner.toast.done, titles, () => s.onDone!(e.id));
+}
 
-/** „Später“: the thing's own date becomes tomorrow (an earliest day, never a pin). */
-export const later = (e: PlannableEntry, titles: Record<string, string>) =>
-  act(t.planner.toast.later, t.planner.toast.later, titles, async () => {
-    await (await source(e.moduleId))?.onAssign?.(e.id, addDays(today(), 1));
-  });
+/** „Später“: the thing's own date becomes tomorrow (an earliest day, never a pin); false for a source without a date. */
+export async function later(e: PlannableEntry, titles: Record<string, string>): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onAssign) return false;
+  return act(t.planner.toast.later, t.planner.toast.later, titles, () =>
+    s.onAssign!(e.id, addDays(today(), 1)),
+  );
+}
 
 export const pin = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.pin, t.planner.toast.pinned(dayName(date)), titles, () =>

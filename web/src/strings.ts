@@ -7841,12 +7841,7 @@ export const de = {
       menu: (title: string) => `Aktionen für ${title}`,
       due: (day: string) => `Frist ${day}`,
       dueWas: (day: string) => `Frist war ${day}`,
-      openLink: {
-        note: 'Zur Notiz',
-        mail: 'Zur Mail',
-        invoice: 'Zur Rechnung',
-        event: 'Zum Termin',
-      },
+      openNote: 'Zur Notiz',
       blocker: 'Blocker',
       focus: 'Fokus starten',
     },
