@@ -6,16 +6,16 @@ Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) 
 
 `router.tsx` wraps every module page in `layout/AreaFrame`: a full-bleed **head band** (`ui/HeadSurface`), the area's **sub-navigation**, then the `PageContainer` with the module's content.
 
-| Zone                      | Owner                                                                                | Content                                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Notice (optional)         | module via `HeroSlot area="notice"`                                                  | one hint that outranks the page                                                                                                                               |
-| Head band, row 1          | shell                                                                                | eyebrow (icon plate + "Bereich · Modul") left, gear and "Mit KI eintragen" at the band's right edge                                                           |
-| Head band, content column | shell + module                                                                       | capped at `--page-content` (70 rem), aligned to the page: the page's **h1**, then one row **figure \| signature slot \| extra**                               |
-| Figure                    | module via `HeroSlot area="figure"` (else `contributions.headline`)                  | the headline figure (`HeroFigure`)                                                                                                                            |
-| Signature slot            | frame draws `identity.signature`; module may fill it via `HeroSlot area="signature"` | sized by the head variant (S 4 rem · M 36 rem · L full column for the frame's default; a page's own block flows beside the figure and may grow to the column) |
-| Extra                     | module via `HeroSlot` (default area)                                                 | strips and controls (hour strip, start/stop)                                                                                                                  |
-| Sub-navigation            | shell (`ui/SubNav`)                                                                  | one pill per module of the area, the active one filled in its hue                                                                                             |
-| Toolbar, content          | module                                                                               | `PageHeader` views/children, `Toolbar`, lists, grids                                                                                                          |
+| Zone | Owner | Content |
+| --- | --- | --- |
+| Notice (optional) | module via `HeroSlot area="notice"` | one hint that outranks the page |
+| Head band, row 1 | shell | eyebrow (icon plate + "Bereich · Modul") left, gear and "Mit KI eintragen" at the band's right edge |
+| Head band, content column | shell + module | capped at `--page-content` (70 rem), aligned to the page: the page's **h1**, then one row **figure \| signature slot \| extra** |
+| Figure | module via `HeroSlot area="figure"` (else `contributions.headline`) | the headline figure (`HeroFigure`) |
+| Signature slot | frame draws `identity.signature`; module may fill it via `HeroSlot area="signature"` | sized by the head variant (S 4 rem · M 36 rem · L full column for the frame's default; a page's own block flows beside the figure and may grow to the column) |
+| Extra | module via `HeroSlot` (default area) | strips and controls (hour strip, start/stop) |
+| Sub-navigation | shell (`ui/SubNav`) | one pill per module of the area, the active one filled in its hue |
+| Toolbar, content | module | `PageHeader` views/children, `Toolbar`, lists, grids |
 
 - **A module never draws its own head or h1.** `PageHeader`/`PageTitle` render the h1 into the head (and hand the title text to the phone's compact bar); without a shell they render in place.
 - **Widths** (`manifest.layout`): `narrow` 45 rem, `content` 70 rem, `wide` 100 rem, `full`. The band stays full width; its inner box follows the page container, the content column ends at 70 rem even on a 100 rem page.
@@ -30,17 +30,17 @@ Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) 
 
 Nine silhouettes, two heights from tokens (`--head-h-tall` 12.5 rem / phone 8.5 rem; `--head-h-compact` 6 / 5 rem – the class is the token, content in `extra` does not change it). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %). **Text on the band is `--text` or `--text-on-tint`, nothing quieter** (`tokens.test.ts` scans the head-zone files).
 
-| Variant       | Height  | Slot | Content                                                                   | Modules                                              |
-| ------------- | ------- | ---- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `kennzahl`    | tall    | M    | the headline figure is the page, context line, cards beside it            | Finanzen, Budgets, Listen                            |
-| `zeit`        | tall    | L    | day number + hour strip with the "now" line (`calendarLeaf`, `stopwatch`) | Kalender, Zeiterfassung                              |
-| `fortschritt` | tall    | M    | title + "n von m"; rings of the module                                    | Gewohnheiten, Abos, Dieser PC                        |
-| `cover`       | tall    | L    | cover with its own tone, title, artist                                    | Musik                                                |
-| `himmel`      | tall    | –    | sky backdrop, thin temperature                                            | Wetter                                               |
-| `regal`       | tall    | M    | count figure + tiles on a shelf                                           | Karten & Orte, Vorräte, Merkliste, Feeds, Unterlagen |
-| `tresor`      | compact | S    | framed, lock status                                                       | Passwörter                                           |
-| `schreib`     | compact | S    | paper: plain surface, serif title, ruled edge; the mark beside the title  | Notizen, Browser, E-Mail, Beispiel                   |
-| `fokus`       | compact | S    | one thing large beside the small module name, the mark next to it         | ToDos, Personen, Rechnungen, Chat, Downloads         |
+| Variant | Height | Slot | Content | Modules |
+| --- | --- | --- | --- | --- |
+| `kennzahl` | tall | M | the headline figure is the page, context line, cards beside it | Finanzen, Budgets, Listen |
+| `zeit` | tall | L | day number + hour strip with the "now" line (`calendarLeaf`, `stopwatch`) | Kalender, Zeiterfassung |
+| `fortschritt` | tall | M | title + "n von m"; rings of the module | Gewohnheiten, Abos, Dieser PC |
+| `cover` | tall | L | cover with its own tone, title, artist | Musik |
+| `himmel` | tall | – | sky backdrop, thin temperature | Wetter |
+| `regal` | tall | M | count figure + tiles on a shelf | Karten & Orte, Vorräte, Merkliste, Feeds, Unterlagen |
+| `tresor` | compact | S | framed, lock status | Passwörter |
+| `schreib` | compact | S | paper: plain surface, serif title, ruled edge; the mark beside the title | Notizen, Browser, E-Mail, Beispiel |
+| `fokus` | compact | S | one thing large beside the small module name, the mark next to it | ToDos, Personen, Rechnungen, Chat, Downloads |
 
 `COMPACT_HEADS`/`headHeight()`/`SIGNATURE_SLOTS` in `core/modules/types.ts`. Compact heads put title, figure and mark on one line.
 
@@ -56,7 +56,7 @@ identity: {
 }
 ```
 
-`widgetType` and `feedback` were dropped in v3.1 (nothing read them). The area's **pattern** comes from `manifest.area`. Rules (`scripts/lib/checkIdentity.ts`, same function in `npm run check:modules` on the source and in `registry.test.ts` on the runtime registry): one hue per area; neighbours in an area never share a head; **app-wide** two modules with one hue never share head _and_ widget, and a shared head or widget needs a signature of its own (not `none`, not the same). The palette pins every pair of hues at ≥ 26°, so no angle is computed. `signature: 'none'` next to a `HeroSlot` in the page is a `check:modules` warning.
+`widgetType` and `feedback` were dropped in v3.1 (nothing read them). The area's **pattern** comes from `manifest.area`. Rules (`scripts/lib/checkIdentity.ts`, same function in `npm run check:modules` on the source and in `registry.test.ts` on the runtime registry): one hue per area; neighbours in an area never share a head; **app-wide** two modules with one hue never share head *and* widget, and a shared head or widget needs a signature of its own (not `none`, not the same). The palette pins every pair of hues at ≥ 26°, so no angle is computed. `signature: 'none'` next to a `HeroSlot` in the page is a `check:modules` warning.
 
 ## Signatures (`@/ui/identity`)
 
@@ -75,19 +75,19 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 
 The frame (`home/Home.module.css`, `data-widget`, `data-hue`, `data-area`): a head zone tinted `--widget-tint`, the module icon on a tinted plate, the area's pattern behind the content. The grid gives every size class its height (`align-items: start`, s/m/l minimum heights); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test).
 
-| Variant       | Shape                                      | Body in `@/ui/widgets`                                |
-| ------------- | ------------------------------------------ | ----------------------------------------------------- |
-| `kennzahl`    | one big number, context line, sparkline    | `KennzahlBody` (first example: Finanzen "Kontostand") |
-| `zeitleiste`  | timeline with dots                         | `TimelineWidget`                                      |
-| `fortschritt` | rings or bars                              | `FortschrittBody kind="rings" \| "bars"`              |
-| `cover`       | cover, title, controls                     | module                                                |
-| `himmel`      | sky wash from the top                      | module                                                |
-| `kacheln`     | 2 × 2 tiles, figure + state line           | `KachelnBody`                                         |
-| `status`      | status plate + one action                  | `StatusWidget`                                        |
-| `notiz`       | paper with serif title and the first lines | `NotizBody`                                           |
-| `fokus`       | the one next thing, primary action         | module                                                |
-| `faellig`     | due list with badges                       | `DueList`                                             |
-| `checkliste`  | checkboxes                                 | `ChecklistWidget`                                     |
+| Variant | Shape | Body in `@/ui/widgets` |
+| --- | --- | --- |
+| `kennzahl` | one big number, context line, sparkline | `KennzahlBody` (first example: Finanzen "Kontostand") |
+| `zeitleiste` | timeline with dots | `TimelineWidget` |
+| `fortschritt` | rings or bars | `FortschrittBody kind="rings" \| "bars"` |
+| `cover` | cover, title, controls | module |
+| `himmel` | sky wash from the top | module |
+| `kacheln` | 2 × 2 tiles, figure + state line | `KachelnBody` |
+| `status` | status plate + one action | `StatusWidget` |
+| `notiz` | paper with serif title and the first lines | `NotizBody` |
+| `fokus` | the one next thing, primary action | module |
+| `faellig` | due list with badges | `DueList` |
+| `checkliste` | checkboxes | `ChecklistWidget` |
 
 Default order: saved positions first, then the manifest order (no spreading by shape since v3.1).
 
@@ -99,33 +99,33 @@ Default order: saved positions first, then the manifest order (no spreading by s
 
 ## Mapping of every module
 
-| Module                    | Area      | `hue`  | `hue2` | `head`      | `widget`    | Signature                                                                                                            |
-| ------------------------- | --------- | ------ | ------ | ----------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| Kalender `calendar`       | plan      | sky    | ocean  | zeit        | zeitleiste  | `calendarLeaf`                                                                                                       |
-| ToDos `todos`             | plan      | moss   | lime   | fokus       | fokus       | `todayCard`                                                                                                          |
-| Planer `planner`          | plan      | indigo | cobalt | kennzahl    | fortschritt | `weekBars` (order 15 between Kalender and ToDos; indigo is 26° from cobalt and violet, confirmed by `check:modules`) |
-| Gewohnheiten `habits`     | plan      | violet | orchid | fortschritt | fortschritt | `ring`                                                                                                               |
-| Zeiterfassung `timetrack` | plan      | teal   | ocean  | zeit        | kennzahl    | `stopwatch` (round dial, C25/G12: not the calendar's hour strip)                                                     |
-| Wetter `weather`          | plan      | cobalt | sky    | himmel      | himmel      | `sky`                                                                                                                |
-| Karten & Orte `maps`      | plan      | ocean  | sky    | regal       | kacheln     | `pin`                                                                                                                |
-| Personen `people`         | plan      | orchid | violet | fokus       | faellig     | `avatarRing`                                                                                                         |
-| Finanzen `finance`        | money     | teal   | ocean  | kennzahl    | kennzahl    | `bankCard`                                                                                                           |
-| Rechnungen `invoices`     | money     | ocean  | sky    | fokus       | faellig     | `bill`                                                                                                               |
-| Abos `subscriptions`      | money     | indigo | cobalt | fortschritt | faellig     | `cycle`                                                                                                              |
-| Budgets `budgets`         | money     | lime   | moss   | kennzahl    | fortschritt | `envelope`                                                                                                           |
-| Listen `lists`            | household | orchid | violet | kennzahl    | checkliste  | `receipt`                                                                                                            |
-| Vorräte `pantry`          | household | fern   | moss   | regal       | kacheln     | `shelf`                                                                                                              |
-| Merkliste `bookmarks`     | knowledge | indigo | cobalt | regal       | kacheln     | `pinboard`                                                                                                           |
-| Notizen `notes`           | knowledge | violet | indigo | schreib     | notiz       | `notePaper`                                                                                                          |
-| Chat `chat`               | knowledge | sky    | cobalt | fokus       | notiz       | `bubble`                                                                                                             |
-| Browser `browser`         | knowledge | cobalt | sky    | schreib     | kacheln     | `addressBar`                                                                                                         |
-| Feeds `feeds`             | knowledge | moss   | lime   | regal       | kennzahl    | `masthead`                                                                                                           |
-| E-Mail `mail`             | knowledge | teal   | ocean  | schreib     | notiz       | `stamp` (page: package 2)                                                                                            |
-| Musik `music`             | knowledge | orchid | violet | cover       | cover       | `coverTone`                                                                                                          |
-| Unterlagen `vault`        | vault     | indigo | violet | regal       | kennzahl    | `folderTab` (widget: package 2)                                                                                      |
-| Passwörter `accounts`     | vault     | slate  | –      | tresor      | status      | `vaultDoor`                                                                                                          |
-| Dieser PC `disk`          | system    | slate  | –      | fortschritt | fortschritt | `gauges`                                                                                                             |
-| Downloads `downloads`     | system    | cobalt | sky    | fokus       | fortschritt | `arrowProgress`                                                                                                      |
+| Module | Area | `hue` | `hue2` | `head` | `widget` | Signature |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kalender `calendar` | plan | sky | ocean | zeit | zeitleiste | `calendarLeaf` |
+| ToDos `todos` | plan | moss | lime | fokus | fokus | `todayCard` |
+| Planer `planner` | plan | indigo | cobalt | kennzahl | fortschritt | `weekBars` (order 15 between Kalender and ToDos; indigo is 26° from cobalt and violet, confirmed by `check:modules`) |
+| Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | `ring` |
+| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `stopwatch` (round dial, C25/G12: not the calendar's hour strip) |
+| Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
+| Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
+| Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
+| Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
+| Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` |
+| Abos `subscriptions` | money | indigo | cobalt | fortschritt | faellig | `cycle` |
+| Budgets `budgets` | money | lime | moss | kennzahl | fortschritt | `envelope` |
+| Listen `lists` | household | orchid | violet | kennzahl | checkliste | `receipt` |
+| Vorräte `pantry` | household | fern | moss | regal | kacheln | `shelf` |
+| Merkliste `bookmarks` | knowledge | indigo | cobalt | regal | kacheln | `pinboard` |
+| Notizen `notes` | knowledge | violet | indigo | schreib | notiz | `notePaper` |
+| Chat `chat` | knowledge | sky | cobalt | fokus | notiz | `bubble` |
+| Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | `addressBar` |
+| Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | `masthead` |
+| E-Mail `mail` | knowledge | teal | ocean | schreib | notiz | `stamp` (page: package 2) |
+| Musik `music` | knowledge | orchid | violet | cover | cover | `coverTone` |
+| Unterlagen `vault` | vault | indigo | violet | regal | kennzahl | `folderTab` (widget: package 2) |
+| Passwörter `accounts` | vault | slate | – | tresor | status | `vaultDoor` |
+| Dieser PC `disk` | system | slate | – | fortschritt | fortschritt | `gauges` |
+| Downloads `downloads` | system | cobalt | sky | fokus | fortschritt | `arrowProgress` |
 
 Pages keep their content until their module package rebuilds them on the v3.1 grid; until then the page's own blocks sit in the signature slot (slot name only).
 
