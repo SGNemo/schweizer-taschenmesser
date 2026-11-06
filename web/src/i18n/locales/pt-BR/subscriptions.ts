@@ -63,6 +63,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = no último dia do prazo',
       remindTime: 'Horário do lembrete',
       remindTimeHelp: 'Formato HH:mm',
+      showInPlan: 'Mostrar no plano',
+      showInPlanHelp:
+        'Prazos de cancelamento aparecem no planejador como “Cancelar <assinatura>” (15 min, até o último dia do prazo). Só com o planejador ligado.',
       priceHint: 'Aviso de aumento de preço',
       priceHintHelp:
         'Mostra uma vez em “Importante agora” quando uma assinatura fica mais cara. Você pode desativar a qualquer momento.',
@@ -72,6 +75,7 @@ export const subscriptions: Strings['subscriptions'] = {
   add: 'Adicionar assinatura',
   edit: 'Editar assinatura',
   name: 'Nome',
+  planTitle: (name: string) => `Cancelar ${name}`,
   firstCharge: 'Cobrança em',
   noticeDays: 'Prazo de cancelamento (dias antes da cobrança)',
   noticeHint: 'Deixe vazio se dá para cancelar a qualquer momento.',

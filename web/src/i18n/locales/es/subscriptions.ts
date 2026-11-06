@@ -63,6 +63,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = el último día del plazo',
       remindTime: 'Hora del recordatorio',
       remindTimeHelp: 'Formato HH:mm',
+      showInPlan: 'Mostrar en el plan',
+      showInPlanHelp:
+        'Los plazos de cancelación aparecen en el planificador como “Cancelar <suscripción>” (15 min, hasta el último día del plazo). Solo con el planificador encendido.',
       priceHint: 'Aviso de subida de precio',
       priceHintHelp:
         'Muestra una vez en «Importante ahora» cuando una suscripción se encarece. Puedes desactivarlo en cualquier momento.',
@@ -72,6 +75,7 @@ export const subscriptions: Strings['subscriptions'] = {
   add: 'Añadir suscripción',
   edit: 'Editar suscripción',
   name: 'Nombre',
+  planTitle: (name: string) => `Cancelar ${name}`,
   firstCharge: 'Cargo el',
   noticeDays: 'Plazo de cancelación (días antes del cargo)',
   noticeHint: 'Déjalo vacío si se puede cancelar en cualquier momento.',

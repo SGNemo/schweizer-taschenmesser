@@ -32,6 +32,9 @@ export const planner: Strings['planner'] = {
       calendarChips: 'Mostrar el plan en el calendario',
       calendarChipsHelp:
         'Una entrada por día con el tiempo planificado; lleva al planificador. Desactivado: el calendario solo muestra citas.',
+      overloadToast: 'Mencionar la sobrecarga en un aviso',
+      overloadToastHelp:
+        'Una vez por semana, en cuanto hay más que hacer que tiempo libre: una línea después de añadir algo. La cifra siempre está junto a “Espera tiempo libre”.',
       allDayBlocks: 'Las citas de todo el día bloquean tiempo',
       allDayBlocksHelp: 'Apagado: una cita de todo el día no cuesta tiempo planificable.',
     },
@@ -95,6 +98,7 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Acciones para ${title}`,
     due: (day: string) => `Fecha límite ${day}`,
     dueWas: (day: string) => `La fecha límite era ${day}`,
+    openNote: 'Ir a la nota',
     blocker: 'Bloqueo',
     focus: 'Iniciar enfoque',
   },
@@ -114,6 +118,7 @@ export const planner: Strings['planner'] = {
   },
   wait: {
     title: 'Espera tiempo libre',
+    over: (min: string) => `${min} más por hacer que tiempo libre`,
     horizon: 'sin tiempo libre en el horizonte de planificación',
     'too-long': 'más largo que cualquier día',
     'after-hard-due': 'solo posible después de la fecha límite',
@@ -138,6 +143,8 @@ export const planner: Strings['planner'] = {
     available: (day: string, min: string) => `${day}: ${min} disponibles`,
     blockerAdded: 'Bloqueo añadido',
     blockerRemoved: 'Bloqueo quitado',
+    requested: (title: string, day: string) => `En el plan: ${title} · ${day}`,
+    requestedWaits: (title: string) => `En el plan: ${title} · en espera`,
     weekChecked: 'Semana confirmada.',
     off: 'El planificador está apagado.',
   },

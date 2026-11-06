@@ -56,6 +56,22 @@ export interface EventMap {
     /** Where the to-do came from (a note, a mail, an invoice, an event): only the id and the title. */
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
+  /**
+   * Something should go into the plan (a note: „In den Plan“). The planner adds a to-do through the
+   * quick-capture target (with the link) plus its planner item, plans it and says on which day it landed.
+   * Nothing happens while the planner is off.
+   */
+  'plan.requested': {
+    title: string;
+    /** Whole minutes the thing takes. */
+    durationMin?: number;
+    /** 0 none … 3 high, as in ToDos. */
+    priority?: 0 | 1 | 2 | 3;
+    /** 'YYYY-MM-DD'; `hard` = must be done by then (a deadline the planner keeps). */
+    due?: { date: string; hard: boolean };
+    /** Where it came from: only the id and the title. */
+    link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+  };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
   'timetrack.start.requested': { title: string; sourceRef?: string };
   /**

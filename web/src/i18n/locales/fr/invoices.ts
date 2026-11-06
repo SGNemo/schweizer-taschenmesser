@@ -81,6 +81,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = le jour de l’échéance',
       remindTime: 'Heure du rappel',
       remindTimeHelp: 'Au format HH:mm',
+      showInPlan: 'Afficher dans le plan',
+      showInPlanHelp:
+        'Les factures à payer apparaissent dans le planificateur comme « Payer <bénéficiaire> » (10 min, avant l’échéance). Le paiement reste ici. Seulement avec le planificateur activé.',
       bookWhenPaid: 'Enregistrer une facture payée comme dépense',
       bookWhenPaidHelp:
         'Crée l’opération dans Finances dès que vous marquez une facture comme payée. Sans le module Finances, rien ne se passe ; une opération récurrente avec le même bénéficiaire et le même montant n’est pas enregistrée deux fois.',
@@ -89,6 +92,7 @@ export const invoices: Strings['invoices'] = {
   title: 'Factures',
   add: 'Ajouter une facture',
   edit: 'Modifier la facture',
+  planTitle: (payee: string) => `Payer ${payee}`,
   payee: 'Bénéficiaire',
   reference: 'Référence / numéro de facture',
   dueDate: 'À échéance le',

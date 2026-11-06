@@ -271,6 +271,11 @@
         "type": "boolean",
         "label": "Bezahlte Rechnung als Ausgabe buchen",
         "default": true
+      },
+      "showInPlan": {
+        "type": "boolean",
+        "label": "Im Plan zeigen",
+        "default": true
       }
     }
   },
@@ -482,6 +487,11 @@
         "label": "Plan im Kalender zeigen",
         "default": true
       },
+      "overloadToast": {
+        "type": "boolean",
+        "label": "Überlast im Hinweis nennen",
+        "default": true
+      },
       "allDayBlocks": {
         "type": "boolean",
         "label": "Ganztägige Termine blocken Zeit",
@@ -510,6 +520,11 @@
       "priceHint": {
         "type": "boolean",
         "label": "Hinweis bei Preiserhöhung",
+        "default": true
+      },
+      "showInPlan": {
+        "type": "boolean",
+        "label": "Im Plan zeigen",
         "default": true
       }
     }

@@ -3,6 +3,8 @@ import type { ModuleSettings } from '@/core/modules/types';
 import { t } from '@/strings';
 
 export const settingsSchema = z.object({
+  /** Open things appear in the planner (`plannable.ts`); only read while the planner is on. */
+  showInPlan: z.boolean(),
   cancelRemindDaysBefore: z.number().int().min(0).max(60),
   /** Days before a trial ends that a reminder comes (0 = on the last day). */
   trialRemindDaysBefore: z.number().int().min(0).max(30),
@@ -14,6 +16,7 @@ export const settingsSchema = z.object({
 export const settings: ModuleSettings = {
   schema: settingsSchema,
   defaults: {
+    showInPlan: true,
     cancelRemindDaysBefore: 3,
     trialRemindDaysBefore: 3,
     remindTime: '09:00',
@@ -58,6 +61,16 @@ export const settings: ModuleSettings = {
       type: 'boolean',
       get help() {
         return t.subscriptions.meta.settings.priceHintHelp;
+      },
+    },
+    {
+      key: 'showInPlan',
+      get label() {
+        return t.subscriptions.meta.settings.showInPlan;
+      },
+      type: 'boolean',
+      get help() {
+        return t.subscriptions.meta.settings.showInPlanHelp;
       },
     },
   ],

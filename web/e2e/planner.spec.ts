@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Enables the planner (preview) and the ToDos with a raw write into the module table, like the library would. */
-async function enablePlanner(page: Page) {
+async function enablePlanner(page: Page, extra: string[] = []) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
   await page.evaluate(
@@ -38,7 +38,7 @@ async function enablePlanner(page: Page) {
           tx.onerror = () => reject(tx.error);
         };
       }),
-    ['todos', 'planner'],
+    ['todos', 'planner', ...extra],
   );
 }
 
@@ -74,7 +74,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // Four columns a row at 1280 px, seven from 73rem of page width; no row runs past its column, nothing scrolls sideways.
+    // Four columns a row at 1280 px, seven from 95rem of page width; no row runs past its column, nothing scrolls sideways.
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
@@ -87,13 +87,60 @@ test.describe('Planer (week board, package 1)', () => {
         };
       });
     expect(await measure()).toEqual({ columns: 4, main: 0, rows: 0 });
+    // 1600: still four a row (seven columns would leave a title ~100 px, N01); 1920: seven.
     await page.setViewportSize({ width: 1600, height: 900 });
+    await expect.poll(measure).toEqual({ columns: 4, main: 0, rows: 0 });
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await expect.poll(measure).toEqual({ columns: 7, main: 0, rows: 0 });
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();
     await page.getByRole('menuitemcheckbox', { name: 'Warum hier?' }).click();
     await expect(today(page)).toContainText('neu, nach Priorität');
+  });
+
+  test('board titles break between words, never inside one or cut, from 1280 to 1920 (N01)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await ready(page, '/planner');
+    for (const text of [
+      'Steuererklärung vorbereiten 30min',
+      'Urlaubsantrag einreichen 20min',
+      'Quartalsbericht schreiben 30min',
+    ])
+      await enter(page, text);
+    await expect(today(page)).toContainText('Quartalsbericht');
+    // Per word of every board title: one line box (not split), inside the title box (not cut off).
+    const broken = () =>
+      page.evaluate(() => {
+        const out: string[] = [];
+        for (const el of Array.from(document.querySelectorAll('[data-board-title]'))) {
+          const box = el.getBoundingClientRect();
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            const text = node.textContent ?? '';
+            for (const m of text.matchAll(/\S+/g)) {
+              const range = document.createRange();
+              range.setStart(node, m.index);
+              range.setEnd(node, m.index + m[0].length);
+              const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0);
+              const tops = new Set(rects.map((r) => Math.round(r.top)));
+              const right = Math.max(...rects.map((r) => r.right));
+              if (tops.size > 1 || right > box.right + 1) out.push(m[0]);
+            }
+          }
+        }
+        return out;
+      });
+    await expect(page.locator('[data-board-title]')).toHaveCount(3);
+    await expect.poll(broken).toEqual([]);
+    // Also between the two: below 95rem of page width the board stays at four a row.
+    for (const width of [1600, 1440, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(broken).toEqual([]);
+    }
   });
 
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
@@ -115,6 +162,35 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('day-2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+  });
+
+  test('the ToDo page counts what the plan counts and has no „Alle auf heute“ (N02)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/todos');
+    const add = page.getByRole('textbox', { name: 'ToDo hinzufügen' });
+    await add.fill('Alte Sache gestern 60min');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    // Without the plan the overdue thing is on today.
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('1');
+    // Today off: the planner puts the overdue thing on Tuesday.
+    await page.goto('/planner');
+    await today(page)
+      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .click();
+    await page.getByRole('dialog').getByTestId('day-off').click();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
+    // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
+    await page.goto('/todos?view=today');
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('0');
+    await expect(page.getByRole('button', { name: /Alte Sache/ })).toHaveCount(0);
+    await page.goto('/todos');
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    await expect(page.getByTestId('all-today')).toHaveCount(0);
   });
 
   test('Erledigt and Rückgängig, Festnageln, Später; the ToDo page shows „im Plan“', async ({
@@ -173,6 +249,13 @@ test.describe('Planer (week board, package 1)', () => {
   test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
+    // N04: the page's ⋯ sits beside the field, not in a toolbar row of its own.
+    await expect(
+      page
+        .locator('form')
+        .filter({ has: page.getByLabel('Eintragen oder sagen', { exact: true }) })
+        .getByRole('button', { name: 'Weitere Optionen' }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
     const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
@@ -325,5 +408,166 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await expect(page.getByRole('menuitem', { name: 'Woche prüfen' })).toBeVisible();
     await expect(page.getByTestId('week-check-link')).toHaveCount(0);
+  });
+});
+
+/** One raw record into a module table (the envelope as `createRepo` would write it). */
+async function put(page: Page, table: string, record: Record<string, unknown>) {
+  await page.evaluate(
+    ({ name, rec }) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction(name, 'readwrite');
+          tx.objectStore(name).put({
+            createdAt: 1,
+            updatedAt: 1,
+            deviceId: 'e2e',
+            deletedAt: null,
+            _f: {},
+            ...rec,
+          });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { name: table, rec: record },
+  );
+}
+
+/** Less time on weekdays (24 plannable minutes with the buffer), Saturday off: 240 minutes in the 14 days, a big thing overloads them. */
+async function smallWeek(page: Page) {
+  await ready(page, '/settings/module/planner');
+  for (const [label, value] of [
+    ['Verfügbare Zeit Mo–Fr (Minuten)', '30'],
+    ['Verfügbare Zeit Samstag (Minuten)', '0'],
+  ] as const) {
+    const field = page.getByLabel(label, { exact: true });
+    await field.fill(value);
+    await field.blur();
+    await expect(field).toHaveValue(value);
+  }
+}
+
+/** The toast region (the header has a status line of its own). */
+const toast = (page: Page) => page.getByRole('status').last();
+const waitingHead = (page: Page) => page.locator('[data-group="waiting"] h2');
+
+test.describe('Planer (more sources, overload – package 3)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('a note → „In den Plan“ → a row on the board with the way back to the note', async ({
+    page,
+  }) => {
+    await enablePlanner(page, ['notes']);
+    await put(page, 'notes_note', {
+      id: 'n-vermieter',
+      title: 'Vermieter antworten',
+      body: 'Heizung, Termin',
+      pinned: false,
+      notebookId: null,
+      order: 0,
+    });
+    await ready(page, '/notes');
+    const row = page
+      .locator('div, li, article')
+      .filter({ has: page.getByRole('button', { name: /^Vermieter antworten/ }) })
+      .filter({ has: page.getByRole('button', { name: 'Seite: weitere Aktionen' }) })
+      .last();
+    await row.getByRole('button', { name: 'Seite: weitere Aktionen' }).click();
+    await page.getByRole('menuitem', { name: 'In den Plan' }).click();
+    const sheet = page.getByRole('dialog', { name: 'In den Plan' });
+    await sheet.getByRole('button', { name: '15 Min' }).click();
+    await sheet.getByLabel('Priorität').selectOption({ label: 'Hoch' });
+    await sheet.getByRole('button', { name: 'In den Plan' }).click();
+    await expect(toast(page)).toContainText('Im Plan: Vermieter antworten · Mo');
+    const [task] = await rows(page, 'todos_task');
+    expect(task).toMatchObject({
+      title: 'Vermieter antworten',
+      estimateMin: 15,
+      priority: 3,
+      links: [{ kind: 'note', id: 'n-vermieter', label: 'Vermieter antworten' }],
+    });
+    await ready(page, '/planner');
+    await expect(today(page)).toContainText('Vermieter antworten');
+    await today(page).getByRole('button', { name: 'Aktionen für Vermieter antworten' }).click();
+    await page.getByRole('menuitem', { name: 'Zur Notiz' }).click();
+    await expect(page).toHaveURL(/\/notes/);
+  });
+
+  test('an invoice due Thursday is planned with its deadline; „Im Plan zeigen“ off takes it away', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await put(page, 'invoices_invoice', {
+      id: 'inv-stadtwerke',
+      payee: 'Stadtwerke',
+      amountMinor: 8990,
+      dueDate: '2026-11-12',
+      status: 'open',
+    });
+    await ready(page, '/planner');
+    const row = page.getByText('Stadtwerke bezahlen');
+    await expect(row).toBeVisible();
+    const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
+    await expect(day).toContainText('Frist Do');
+    // Paying stays in Rechnungen: no tick, no „Erledigt“ in the row menu.
+    await expect(day.getByRole('checkbox', { name: 'Stadtwerke bezahlen' })).toHaveCount(0);
+    await day.getByRole('button', { name: 'Aktionen für Stadtwerke bezahlen' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Erledigt' })).toHaveCount(0);
+    await page.getByRole('menuitemcheckbox', { name: 'Warum hier?' }).click();
+    await expect(day).toContainText(/muss bis Do fertig sein|neu, nach Priorität/);
+    await ready(page, '/settings/module/invoices');
+    const sw = page.getByRole('switch', { name: 'Im Plan zeigen' });
+    await expect(sw).toHaveAttribute('aria-checked', 'true');
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await ready(page, '/planner');
+    await expect(page.getByLabel('Eintragen oder sagen', { exact: true })).toBeVisible();
+    await expect(page.getByText('Stadtwerke bezahlen')).toHaveCount(0);
+  });
+
+  test('overflow 0 → above 0: one toast line; a second entry keeps quiet, the group head stays current', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await smallWeek(page);
+    await ready(page, '/planner');
+    await enter(page, 'Kurz 15min');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await enter(page, 'Umzug planen 5 Std');
+    await expect(toast(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await expect(toast(page).getByRole('button', { name: 'Rückgängig' })).toBeVisible();
+    await expect(waitingHead(page)).toContainText('Wartet auf freie Zeit');
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    const first = await waitingHead(page).innerText();
+    await enter(page, 'Keller 1 Std');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await expect(waitingHead(page)).not.toHaveText(first);
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+  });
+
+  test('switch `overloadToast` off → no toast line, the figure stays in the group head', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await smallWeek(page);
+    const sw = page.getByRole('switch', { name: 'Überlast im Hinweis nennen' });
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await ready(page, '/planner');
+    await enter(page, 'Umzug planen 5 Std');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 });

@@ -7,6 +7,8 @@ export interface PageMenuActions {
   onTogglePin: (page: Stored<Note>) => void;
   onMove: (page: Stored<Note>) => void;
   onDelete: (page: Stored<Note>) => void;
+  /** „In den Plan“; only passed while the planner is on. */
+  onPlan?: (page: Stored<Note>) => void;
 }
 
 /**
@@ -23,6 +25,9 @@ export function pageMenuItems(page: Stored<Note>, a: PageMenuActions): RowMenuIt
     },
     { id: 'move', label: t.notes.moveTo, onSelect: () => a.onMove(page) },
     // New page actions go here (before delete).
+    ...(a.onPlan
+      ? [{ id: 'plan', label: t.notes.plan.action, onSelect: () => a.onPlan!(page) }]
+      : []),
     { id: 'delete', label: t.actions.delete, danger: true, onSelect: () => a.onDelete(page) },
   ];
 }

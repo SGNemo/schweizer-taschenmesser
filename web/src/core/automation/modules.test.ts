@@ -42,6 +42,7 @@ describe('module contracts', () => {
       'lists',
       'mail',
       'pantry',
+      'planner',
       'subscriptions',
       'timetrack',
       'todos',

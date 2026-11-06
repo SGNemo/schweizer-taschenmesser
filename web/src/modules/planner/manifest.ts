@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
   get name() {
     return t.planner.meta.name;
   },
-  icon: 'calendarDays',
+  icon: 'chartGantt',
   identity: {
     hue: 'indigo',
     hue2: 'cobalt',
@@ -69,6 +69,8 @@ const manifest: ModuleManifest = {
     },
   ],
   settings,
+  // One event for rules (`planner.overloaded`); no `watch`, no `actions` (docs/decisions/plan.md).
+  automation: () => import('./automation'),
   defaultEnabled: false,
   maturity: 'preview',
   seed: { version: 2, dependsOn: ['todos'] },

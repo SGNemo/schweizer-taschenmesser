@@ -7,6 +7,8 @@
  *    the rows that differ.
  *  - user actions from the planner UI run inside one `undoable` together with their run and write-backs
  *    (`runUser`); every other run is background: serialised behind any open user action, not undoable.
+ *  - `plan.requested` (a note's „In den Plan“) becomes a ToDo plus planner item and one undoable run
+ *    (`actions.addRequested`, loaded on demand: `actions.ts` itself imports this file).
  *  - `module.disabling` for the planner stops the runs and hands every planner-own date back to its
  *    source (both policies), before the state is written and before any wipe.
  */
@@ -263,10 +265,16 @@ export default function start(): () => void {
       armMidnight();
       if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisible);
     });
+  const offRequested = bus.on('plan.requested', (req) =>
+    import('./actions')
+      .then((m) => m.addRequested(req))
+      .then(() => undefined, logError('planner.request')),
+  );
   const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
     if (moduleId !== MODULE_ID) return;
     stopped = true;
     active = false;
+    offRequested();
     clearTimeout(timer);
     clearTimeout(midnight);
     sub?.unsubscribe();
@@ -288,6 +296,7 @@ export default function start(): () => void {
     sub?.unsubscribe();
     if (typeof document !== 'undefined')
       document.removeEventListener('visibilitychange', onVisible);
+    offRequested();
     offDisabling();
   };
 }

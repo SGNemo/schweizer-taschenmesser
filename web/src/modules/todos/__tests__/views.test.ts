@@ -16,6 +16,23 @@ describe('viewOf', () => {
     expect(viewOf(t({ dueDate: '2026-11-10' }), DAY)).toBe('soon');
   });
 
+  it('with the planner on, a later day it gave wins over an older due date (N02); a user date does not', () => {
+    const placed = t({
+      dueDate: '2026-10-01',
+      plannedFor: '2026-11-05',
+      planMark: { date: '2026-11-05', order: 0 },
+    });
+    expect(viewOf(placed, DAY)).toBe('today');
+    expect(viewOf(placed, DAY, true)).toBe('soon');
+    // The planner's day has come: today again.
+    expect(viewOf(placed, '2026-11-05', true)).toBe('today');
+    // A user's own later date, a stale mark and an unplaced overdue thing keep the plain rule.
+    expect(viewOf(t({ dueDate: '2026-10-01', plannedFor: '2026-11-05' }), DAY, true)).toBe('today');
+    const stale = { plannedFor: '2026-11-05', planMark: { date: '2026-11-04', order: 0 } };
+    expect(viewOf(t({ dueDate: '2026-10-01', ...stale }), DAY, true)).toBe('today');
+    expect(viewOf(t({ dueDate: '2026-10-01' }), DAY, true)).toBe('today');
+  });
+
   it('keeps a task with a later start date out of today', () => {
     expect(viewOf(t({ dueDate: DAY, startDate: '2026-11-05' }), DAY)).toBe('soon');
     expect(viewOf(t({ dueDate: DAY, startDate: DAY }), DAY)).toBe('today');

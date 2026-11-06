@@ -40,6 +40,7 @@ const todos: CaptureTarget = {
     ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.priority ? { priority: f.priority } : {}),
     ...noteOf(f.time ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
+    ...(f.link ? { links: [f.link] } : {}),
   }),
 };
 

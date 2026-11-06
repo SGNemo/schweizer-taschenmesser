@@ -3,6 +3,8 @@ import type { ModuleSettings } from '@/core/modules/types';
 import { t } from '@/strings';
 
 export const settingsSchema = z.object({
+  /** Open things appear in the planner (`plannable.ts`); only read while the planner is on. */
+  showInPlan: z.boolean(),
   remindDaysBefore: z.number().int().min(0).max(60),
   remindTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   /** A paid invoice becomes an expense in Finances (the behaviour since the module exists). */
@@ -11,7 +13,12 @@ export const settingsSchema = z.object({
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { remindDaysBefore: 2, remindTime: '09:00', bookWhenPaid: true },
+  defaults: {
+    showInPlan: true,
+    remindDaysBefore: 2,
+    remindTime: '09:00',
+    bookWhenPaid: true,
+  },
   fields: [
     {
       key: 'remindDaysBefore',
@@ -41,6 +48,16 @@ export const settings: ModuleSettings = {
       type: 'boolean',
       get help() {
         return t.invoices.meta.settings.bookWhenPaidHelp;
+      },
+    },
+    {
+      key: 'showInPlan',
+      get label() {
+        return t.invoices.meta.settings.showInPlan;
+      },
+      type: 'boolean',
+      get help() {
+        return t.invoices.meta.settings.showInPlanHelp;
       },
     },
   ],

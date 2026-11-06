@@ -174,6 +174,26 @@ describe('Heute card', () => {
     expect(screen.getByText(/Als Nächstes: /)).toBeVisible();
   });
 
+  it('with the planner on counts what the plan counts: a later plan day beats an older due date (N02)', () => {
+    const tasks = [
+      task({ id: 'a', title: 'Heute geplant', plannedFor: '2026-11-03', estimateMin: 5 }),
+      task({
+        id: 'b',
+        title: 'Vom Planer verschoben',
+        dueDate: '2026-10-20',
+        estimateMin: 60,
+        plannedFor: '2026-11-05',
+        planMark: { date: '2026-11-05', order: 0 },
+      }),
+    ];
+    const { unmount } = render(<TodayCard day="2026-11-03" tasks={tasks} />);
+    expect(screen.getByTestId('today-count')).toHaveTextContent('2');
+    unmount();
+    render(<TodayCard day="2026-11-03" tasks={tasks} planner />);
+    expect(screen.getByTestId('today-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('today-count')).toHaveTextContent('etwa 5 Min');
+  });
+
   it('says so calmly when nothing is left for today', () => {
     render(<TodayCard day="2026-11-03" tasks={[task({ dueDate: '2026-11-20' })]} />);
     expect(screen.getByText('Alles für heute erledigt.')).toBeVisible();
@@ -181,6 +201,9 @@ describe('Heute card', () => {
 });
 
 describe('with the planner module on', () => {
+  beforeEach(async () => {
+    await db.table('_modules').delete('planner');
+  });
   const plannerOn = () =>
     db.table('_modules').put({
       id: 'planner',
@@ -203,6 +226,32 @@ describe('with the planner module on', () => {
     await screen.findByText('Alte Sache');
     await waitFor(() => expect(screen.queryByTestId('todos-waiting')).toBeNull());
     expect(screen.queryByRole('button', { name: 'Neu planen' })).toBeNull();
+  });
+
+  it('hides „Alle auf heute“ and leaves a thing the planner put later out of Heute (N02)', async () => {
+    await taskRepo.create({ ...base, title: 'Alte Sache', dueDate: '2026-10-20' });
+    await taskRepo.create({
+      ...base,
+      title: 'Vom Planer später',
+      dueDate: '2026-10-21',
+      plannedFor: '2026-11-05',
+      planMark: { date: '2026-11-05', order: 0 },
+    });
+    await patchFocusSettings({ calmAttention: false });
+    const first = draw('/todos');
+    await waitFor(() => expect(screen.getByTestId('all-today')).toBeInTheDocument());
+    first.unmount();
+    const before = draw('/todos?view=today');
+    await screen.findByText('Vom Planer später');
+    before.unmount();
+    await plannerOn();
+    const all = draw('/todos');
+    await screen.findByText('Alte Sache');
+    await waitFor(() => expect(screen.queryByTestId('all-today')).toBeNull());
+    all.unmount();
+    draw('/todos?view=today');
+    await screen.findByText('Alte Sache');
+    await waitFor(() => expect(screen.queryByText('Vom Planer später')).toBeNull());
   });
 
   it('shows „im Plan: <Tag>“ in Bald for a planner-set date, never for the user’s own', async () => {

@@ -123,7 +123,12 @@ export function buildBoard(input: BoardInput): Board {
             entry?.durationMin === undefined &&
             a.minutes === DEFAULT_MIN,
           pinned: item?.pinned === date,
-          ...(item?.due?.hard ? { hardDue: item.due.date } : {}),
+          // A deadline marked in the plan, or one the source holds as hard (an invoice, a cancellation).
+          ...(item?.due?.hard
+            ? { hardDue: item.due.date }
+            : entry?.due?.hard
+              ? { hardDue: entry.due.date }
+              : {}),
           ...(entry ? { entry } : {}),
           ...(item ? { item } : {}),
         };

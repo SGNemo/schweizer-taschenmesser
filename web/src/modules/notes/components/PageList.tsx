@@ -63,6 +63,8 @@ export interface PageListProps {
   onTogglePin: (page: Page) => void;
   onMove: (page: Page) => void;
   onDelete: (page: Page) => void;
+  /** „In den Plan“ in the page menu; absent while the planner is off. */
+  onPlan?: (page: Page) => void;
   onReorder: (patches: { id: string; order: number }[]) => void;
   onOpenTrash: () => void;
   onExport: () => void;

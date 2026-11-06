@@ -32,6 +32,9 @@ export const planner: Strings['planner'] = {
       calendarChips: 'Show the plan in the calendar',
       calendarChipsHelp:
         'One entry per day with the planned time; it leads to the planner. Off: the calendar shows appointments only.',
+      overloadToast: 'Mention overload in a notice',
+      overloadToastHelp:
+        'Once a week, as soon as there is more to do than free time: one line after you add something. The figure always sits next to “Waiting for free time”.',
       allDayBlocks: 'All-day appointments block time',
       allDayBlocksHelp: 'Off: an all-day appointment costs no plannable time.',
     },
@@ -95,6 +98,7 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Actions for ${title}`,
     due: (day: string) => `Deadline ${day}`,
     dueWas: (day: string) => `Deadline was ${day}`,
+    openNote: 'Go to note',
     blocker: 'Blocker',
     focus: 'Start focus',
   },
@@ -114,6 +118,7 @@ export const planner: Strings['planner'] = {
   },
   wait: {
     title: 'Waiting for free time',
+    over: (min: string) => `${min} more to do than there is free time`,
     horizon: 'no free time in the planning horizon',
     'too-long': 'longer than any day',
     'after-hard-due': 'only possible after the deadline',
@@ -138,6 +143,8 @@ export const planner: Strings['planner'] = {
     available: (day: string, min: string) => `${day}: ${min} available`,
     blockerAdded: 'Blocker added',
     blockerRemoved: 'Blocker removed',
+    requested: (title: string, day: string) => `In the plan: ${title} · ${day}`,
+    requestedWaits: (title: string) => `In the plan: ${title} · waiting`,
     weekChecked: 'Week confirmed.',
     off: 'The planner is off.',
   },
