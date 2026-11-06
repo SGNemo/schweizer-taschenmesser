@@ -185,16 +185,16 @@ function AppImport({ onClose }: { onClose: () => void }) {
     if (!read) return;
     // A source that lives behind the vault password opens the vault's own import.
     const route = sources.flatMap((s) => s.targets).find((tg) => tg.route)?.route;
+    // Only a move that really starts feeds the setup checklist ("Was fehlt noch").
+    const migrate = ORIGIN_TILES.find((o) => o.id === origin)?.migrate;
     const runs = planRuns(sources, read.files, read.binary, newBatchId(), read.name);
     if (runs.length === 0 && route) {
-      if (origin === 'passwords') await chooseOrigin('bitwarden').catch(() => {});
+      if (migrate) await chooseOrigin(migrate).catch(() => {});
       onClose();
       void navigate(route);
       return;
     }
     if (runs.length === 0) return setError(text.nothing);
-    // Only a move that really starts feeds the setup checklist ("Was fehlt noch").
-    const migrate = ORIGIN_TILES.find((o) => o.id === origin)?.migrate;
     if (migrate) await chooseOrigin(migrate).catch(() => {});
     for (const run of runs) {
       const manifest = getManifest(run.moduleId);
