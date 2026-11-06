@@ -1,6 +1,7 @@
-// Encrypted, mutually authenticated channel for the prototype. Noise-*like* (XX pattern with an
-// optional pre-shared key from the QR code), NOT Noise: the product would use a vetted
-// implementation (Rust `snow`), see CONCEPT.md §5. Not product code.
+// Encrypted, mutually authenticated channel for the prototype. Noise-*like* (IK shape: the phone
+// knows the hub's static key from the QR; pairing additionally mixes the QR's one-time secret into
+// message 2, like IKpsk2), NOT Noise: the product uses a vetted implementation (Rust `snow`), see
+// CONCEPT.md §5. The hub never sends its static key, so a stranger cannot learn it. Not product code.
 import crypto from 'node:crypto';
 
 const PROLOGUE = Buffer.from('nemo-lan-proto-v1');
@@ -35,11 +36,10 @@ function open(key, n, sealed, aad) {
   return Buffer.concat([d.update(sealed.subarray(0, sealed.length - 16)), d.final()]);
 }
 
-/** Hub answers with a single-byte frame when it refuses; the phone can tell this from a crash. */
-export const REFUSED = { 1: 'no-pairing-window', 2: 'unknown-device' };
-export const MAX_HANDSHAKE_FRAME = 256;
+/** Unauthenticated one-byte refusal, only for a closed pairing window (the UI shows it only while pairing). */
+export const REFUSED = { 1: 'no-pairing-window' };
+export const MAX_HANDSHAKE_FRAME = 256; // message 1 is 97 bytes
 const MAX_FRAME = 16 * 1024 * 1024;
-const refusal = (frame) => (frame.length === 1 ? new Error(`refused:${REFUSED[frame[0]] ?? 'unknown'}`) : null);
 
 /**
  * Length-prefixed frames on a net.Socket; `read()` resolves with the next frame. `max` caps the
@@ -88,6 +88,8 @@ export function framer(sock, max = MAX_HANDSHAKE_FRAME) {
 }
 
 function transport(f, sendKey, recvKey, sas) {
+  // Raised only after the handshake: in this IK shape message 1 already proved the phone's static
+  // key (its `ss` payload decrypted), unlike XX where that proof comes with the first data frame.
   f.max = MAX_FRAME;
   let sn = 0;
   let rn = 0;
@@ -97,34 +99,38 @@ function transport(f, sendKey, recvKey, sas) {
     },
     async recv() {
       const frame = await f.read();
-      const refused = refusal(frame);
-      if (refused) throw refused;
       return JSON.parse(open(recvKey, rn++, frame, PROLOGUE).toString());
     },
     sas,
   };
 }
 
+/** Short authentication string shown on both screens at pairing (6 digits from the transcript). */
+const sasOf = (t) => String(crypto.createHash('sha256').update(t).digest().readUInt32BE(0) % 1_000_000).padStart(6, '0');
+
 /**
- * Initiator (phone). PAIR: `psk` and `expectFp` come from the QR code. SESSION: `expectFp` is the
- * pinned fingerprint of the hub's static key stored at pairing time; no psk.
+ * Initiator (phone). `hubPub` = the hub's static key (from the QR, pinned afterwards).
+ * PAIR: `psk` from the QR. SESSION: no psk.
+ * Message 1: mode | e | AEAD_es(phone static) | AEAD_es+ss(empty) – only QR holders can build it.
  */
-export async function initiate(f, { mode, me, psk, expectFp }) {
+export async function initiate(f, { mode, me, psk, hubPub }) {
   const e = keyPair();
-  f.write(Buffer.concat([Buffer.from([mode]), e.pub]));
+  const es = dh(e, hubPub);
+  const ss = dh(me, hubPub);
+  const t0 = Buffer.concat([PROLOGUE, Buffer.from([mode]), e.pub, hubPub]);
+  const c1 = seal(hkdf(es, ZERO, t0, 32), 0, me.pub, t0);
+  const t1 = Buffer.concat([t0, c1]);
+  f.write(Buffer.concat([Buffer.from([mode]), e.pub, c1, seal(hkdf(Buffer.concat([es, ss]), ZERO, t1, 32), 0, Buffer.alloc(0), t1)]));
   const m2 = await f.read();
-  const refused = refusal(m2);
-  if (refused) throw refused;
+  if (m2.length === 1) throw new Error(`refused:${REFUSED[m2[0]] ?? 'unknown'}`); // unauthenticated (pairing only)
   const ea = m2.subarray(0, 32);
-  const sa = m2.subarray(32, 64);
-  if (!fingerprint(sa).equals(expectFp)) throw new Error('hub key does not match the pinned fingerprint');
-  const salt = mode === MODE.PAIR ? psk : ZERO;
-  const t1 = Buffer.concat([PROLOGUE, Buffer.from([mode]), e.pub, ea, sa]);
-  const k1 = hkdf(Buffer.concat([dh(e, ea), dh(e, sa)]), salt, t1, 32);
-  open(k1, 0, m2.subarray(64), t1); // proves: hub owns `sa` and (PAIR) knows the psk
-  f.write(seal(k1, 1, me.pub, t1));
-  const keys = hkdf(Buffer.concat([dh(e, ea), dh(e, sa), dh(me, ea)]), salt, Buffer.concat([t1, me.pub]), 64);
-  return transport(f, keys.subarray(0, 32), keys.subarray(32), sasOf(t1, me.pub));
+  const t2 = Buffer.concat([t1, ea]);
+  const ikm = Buffer.concat([es, ss, dh(e, ea), dh(me, ea)]);
+  const k2 = hkdf(ikm, mode === MODE.PAIR ? psk : ZERO, t2, 96);
+  // Decrypts only if the peer owns the hub's private key (es) and, when pairing, knows the psk.
+  const status = JSON.parse(open(k2.subarray(64), 0, m2.subarray(32), t2).toString());
+  if (!status.ok) throw new Error(`refused:${status.reason}`); // authenticated by the hub
+  return transport(f, k2.subarray(0, 32), k2.subarray(32, 64), sasOf(t2));
 }
 
 /** Responder (hub). `trusts(pub)` decides SESSION access; PAIR needs the live one-time psk. */
@@ -132,34 +138,36 @@ export async function respond(f, { me, pskFor, trusts }) {
   const m1 = await f.read();
   const mode = m1[0];
   const eb = m1.subarray(1, 33);
-  const psk = mode === MODE.PAIR ? pskFor() : ZERO; // pskFor() burns the window at message 1
+  const es = dh(me, eb);
+  const t0 = Buffer.concat([PROLOGUE, Buffer.from([mode]), eb, me.pub]);
+  const c1 = m1.subarray(33, 33 + 48);
+  const sb = open(hkdf(es, ZERO, t0, 32), 0, c1, t0); // fails for anyone without the hub's key
+  const t1 = Buffer.concat([t0, c1]);
+  const ss = dh(me, sb);
+  open(hkdf(Buffer.concat([es, ss]), ZERO, t1, 32), 0, m1.subarray(81), t1); // phone owns `sb`
+  // Only now – the sender holds the QR (knows the hub key) – may a pairing attempt burn the window.
+  const psk = mode === MODE.PAIR ? pskFor() : ZERO;
   if (!psk) {
     f.write(Buffer.from([1]));
     throw new Error('no pairing window open');
   }
   const e = keyPair();
-  const t1 = Buffer.concat([PROLOGUE, Buffer.from([mode]), eb, e.pub, me.pub]);
-  const k1 = hkdf(Buffer.concat([dh(e, eb), dh(me, eb)]), psk, t1, 32);
-  f.write(Buffer.concat([e.pub, me.pub, seal(k1, 0, Buffer.from('hub'), t1)]));
-  const sb = open(k1, 1, await f.read(), t1); // fails on a wrong psk
-  if (mode === MODE.SESSION && !trusts(sb)) {
-    f.write(Buffer.from([2]));
-    throw new Error('unknown device');
-  }
-  const keys = hkdf(Buffer.concat([dh(e, eb), dh(me, eb), dh(e, sb)]), psk, Buffer.concat([t1, sb]), 64);
-  return { mode, peer: sb, ch: transport(f, keys.subarray(32), keys.subarray(0, 32), sasOf(t1, sb)) };
+  const t2 = Buffer.concat([t1, e.pub]);
+  const k2 = hkdf(Buffer.concat([es, ss, dh(e, eb), dh(e, sb)]), psk, t2, 96);
+  const ok = mode === MODE.PAIR || trusts(sb);
+  const status = ok ? { ok: true } : { ok: false, reason: 'unknown-device' };
+  f.write(Buffer.concat([e.pub, seal(k2.subarray(64), 0, Buffer.from(JSON.stringify(status)), t2)]));
+  if (!ok) throw new Error('unknown device');
+  return { mode, peer: sb, ch: transport(f, k2.subarray(32, 64), k2.subarray(0, 32), sasOf(t2)) };
 }
 
-/** Short authentication string shown on both screens at pairing (6 digits from the transcript). */
-function sasOf(t1, phoneStatic) {
-  const h = crypto.createHash('sha256').update(t1).update(phoneStatic).digest();
-  return String(h.readUInt32BE(0) % 1_000_000).padStart(6, '0');
+/** mDNS hint that rotates daily: only devices that know the hub key can match it. */
+export function dailyHint(hubPub, day = new Date().toISOString().slice(0, 10)) {
+  return crypto.createHmac('sha256', fingerprint(hubPub)).update(day).digest().subarray(0, 8).toString('hex');
 }
-
-/** mDNS hint that rotates daily: only devices that know the fingerprint can match it. */
-export function dailyHint(fp, day = new Date().toISOString().slice(0, 10)) {
-  return crypto.createHmac('sha256', fp).update(day).digest().subarray(0, 8).toString('hex');
-}
+/** Yesterday, today, tomorrow (UTC) – tolerates midnight and small clock skew. */
+export const hintsAround = (hubPub, now = Date.now()) =>
+  [-1, 0, 1].map((d) => dailyHint(hubPub, new Date(now + d * 86_400_000).toISOString().slice(0, 10)));
 
 // ---- E2E value encryption, same format and AAD as web/src/core/sync/crypto.ts ----
 export function encryptValue(key, op, value) {
@@ -178,11 +186,11 @@ export function decryptValue(key, op) {
   return JSON.parse(Buffer.concat([d.update(ct.subarray(0, ct.length - 16)), d.final()]).toString());
 }
 
-// ---- QR payload: version | hub fingerprint (32) | one-time psk (16) | expiry (u32 s) | port (u16) | ipv4 (4) ----
-export function encodeQr({ fp, psk, expiresAt, port, ip }) {
+// ---- QR payload: version | hub static public key (32) | one-time psk (16) | expiry (u32 s) | port (u16) | ipv4 (4) ----
+export function encodeQr({ hubPub, psk, expiresAt, port, ip }) {
   const b = Buffer.alloc(1 + 32 + 16 + 4 + 2 + 4);
   b[0] = 1;
-  fp.copy(b, 1);
+  hubPub.copy(b, 1);
   psk.copy(b, 33);
   b.writeUInt32BE(Math.floor(expiresAt / 1000), 49);
   b.writeUInt16BE(port, 53);
@@ -193,7 +201,7 @@ export function decodeQr(text) {
   const b = Buffer.from(text.slice('NEMO1:'.length), 'base64url');
   if (b[0] !== 1 || b.length !== 59) throw new Error('bad qr');
   return {
-    fp: b.subarray(1, 33),
+    hubPub: b.subarray(1, 33),
     psk: b.subarray(33, 49),
     expiresAt: b.readUInt32BE(49) * 1000,
     port: b.readUInt16BE(53),

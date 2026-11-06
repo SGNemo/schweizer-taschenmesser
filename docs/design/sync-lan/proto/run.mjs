@@ -43,19 +43,6 @@ function lines(child) {
         : new Promise((resolve) => waiting.push(resolve));
 }
 
-function lineOf(child) {
-  return new Promise((resolve, reject) => {
-    let buf = '';
-    child.stdout.on('data', (d) => {
-      buf += d;
-      const i = buf.indexOf('\n');
-      if (i >= 0) resolve(JSON.parse(buf.slice(0, i)));
-    });
-    child.stderr.on('data', (d) => process.stderr.write(d));
-    child.on('exit', (code) => code && reject(new Error(`exit ${code}`)));
-  });
-}
-
 const runs = [];
 for (let r = 0; r < ROUNDS; r++) {
   const hub = spawn(process.execPath, [path.join(dir, 'hub.mjs'), `--ip=${ip}`, `--ops=${OPS}`, ...extra]);
@@ -64,8 +51,14 @@ for (let r = 0; r < ROUNDS; r++) {
     const { qr } = await next();
     if (r === 0) console.log(`QR payload (${qr.length} chars): ${qr.slice(0, 12)}…`);
     const phone = spawn(process.execPath, [path.join(dir, 'phone.mjs'), `--ip=${ip}`, `--ops=${OPS}`, `--qr=${qr}`, ...extra]);
-    const result = await lineOf(phone);
-    result.sasMatch = (await next()).sas === result.sas;
+    const fromPhone = lines(phone);
+    const phoneSas = (await fromPhone()).sas;
+    const hubSas = (await next()).sas;
+    if (hubSas === phoneSas) hub.stdin.write('confirm\n'); // the user compares the codes and taps „Koppeln“
+    const keyLine = await next();
+    const result = await fromPhone();
+    result.sasMatch = hubSas === phoneSas;
+    result.keyAfterConfirm = keyLine.keySentAfterConfirm === true;
     runs.push(result);
   } finally {
     hub.kill();
@@ -86,6 +79,6 @@ const pull = median(runs.map((x) => x.pullMs));
 console.log(`| push size | ${kb} KiB | | |`);
 console.log(`| push throughput | ${Math.round((OPS / push) * 1000)} ops/s | | |`);
 console.log(`| pull throughput (${runs[0].pulledOps} ops) | ${Math.round((runs[0].pulledOps / pull) * 1000)} ops/s | | |`);
-const checks = ['decryptedOk', 'sasMatch', 'sessionUpToDate', 'reusedQrRefused', 'strangerRefused', 'impostorRefused', 'oversizeDropped'];
+const checks = ['windowSurvivedStranger', 'sasMatch', 'keyAfterConfirm', 'decryptedOk', 'sessionUpToDate', 'reusedQrRefused', 'strangerRefused', 'impostorRefused', 'oversizeDropped'];
 for (const c of checks) console.log(`check ${c}: ${runs.every((x) => x[c] === true) ? 'ok' : 'FAILED'}`);
 if (!runs.every((x) => checks.every((c) => x[c] === true))) process.exit(1);

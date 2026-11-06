@@ -1,10 +1,11 @@
 // Process B – the "phone": reads the QR payload, finds the hub via mDNS, pairs, pushes N
-// E2E-encrypted ops, pulls everything back, reconnects with the pinned key and runs four negative
-// checks (reused QR, stranger, impostor hub, oversized pre-handshake frame). Prints one JSON line.
+// E2E-encrypted ops, pulls everything back, reconnects with the pinned key and runs negative checks
+// (stranger burning the window, reused QR, unpaired device, impostor hub, oversized frame).
+// Prints {sas} first (for the simulated confirmation), then one JSON line with the results.
 import crypto from 'node:crypto';
 import net from 'node:net';
 import { browse } from './mdns.mjs';
-import { MODE, dailyHint, decodeQr, decryptValue, encryptValue, framer, initiate, isLanV4, keyPair, respond } from './channel.mjs';
+import { MODE, decodeQr, hintsAround, decryptValue, encryptValue, framer, initiate, isLanV4, keyPair, respond } from './channel.mjs';
 
 const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=').slice(1).join('=') ?? d;
 const iface = arg('ip');
@@ -27,18 +28,28 @@ let t = performance.now();
 const found = await browse({
   service: '_nemo-sync._tcp.local',
   iface,
-  want: (x) => x.txt.h === dailyHint(qr.fp),
+  want: (x) => hintsAround(qr.hubPub).includes(x.txt.h),
 });
 out.discoveryMs = ms(t);
 if (!isLanV4(found.ip, allowTestNet)) throw new Error('hub is not on a private address');
 
+// A stranger who does not know the hub key cannot even burn the pairing window: send a PAIR
+// message 1 built against a random key first; the real pairing below must still succeed.
+{
+  const s = await connect(found.ip, found.port);
+  await initiate(framer(s), { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, hubPub: keyPair().pub }).catch(() => {});
+  s.destroy();
+}
+
 const me = keyPair();
 t = performance.now();
 let sock = await connect(found.ip, found.port);
-let ch = await initiate(framer(sock), { mode: MODE.PAIR, me, psk: qr.psk, expectFp: qr.fp });
-const dataKey = Buffer.from((await ch.recv()).k, 'base64');
-out.pairMs = ms(t);
+let ch = await initiate(framer(sock), { mode: MODE.PAIR, me, psk: qr.psk, hubPub: qr.hubPub });
 out.sas = ch.sas;
+process.stdout.write(`${JSON.stringify({ sas: ch.sas })}\n`); // run.mjs compares and confirms on the hub
+const dataKey = Buffer.from((await ch.recv()).k, 'base64');
+out.pairMs = ms(t); // includes the simulated confirmation round trip
+out.windowSurvivedStranger = true;
 
 t = performance.now();
 const ops = [];
@@ -79,7 +90,7 @@ sock.end();
 // Reconnect: no QR, no psk – the hub must recognise the paired key, the phone pins the hub key.
 t = performance.now();
 sock = await connect(found.ip, found.port);
-ch = await initiate(framer(sock), { mode: MODE.SESSION, me, expectFp: qr.fp });
+ch = await initiate(framer(sock), { mode: MODE.SESSION, me, hubPub: qr.hubPub });
 ch.send({ t: 'pull', since, limit: 1000 });
 const empty = await ch.recv();
 out.sessionMs = ms(t);
@@ -101,22 +112,21 @@ async function attempt(fn, port = found.port) {
     s.destroy();
   }
 }
-// The QR's psk is single-use (burned at message 1): a second pairing must get an explicit refusal.
+// The QR's psk is single-use: a second pairing with it gets the (unauthenticated) window refusal.
 out.reusedQrRefused =
-  (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, expectFp: qr.fp }))) ===
+  (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, hubPub: qr.hubPub }))) ===
   'refused:no-pairing-window';
-// An unpaired device without psk gets an explicit refusal after the handshake.
+// An unpaired device that even knows the hub key (old QR) gets a refusal authenticated by the hub.
 out.strangerRefused =
-  (await attempt((f) => initiate(f, { mode: MODE.SESSION, me: keyPair(), expectFp: qr.fp }))) ===
+  (await attempt((f) => initiate(f, { mode: MODE.SESSION, me: keyPair(), hubPub: qr.hubPub }))) ===
   'refused:unknown-device';
-// A real impostor hub that knows the psk (photographed QR) but not the hub's private key.
+// An impostor hub (other key, e.g. after ARP spoofing) cannot read message 1 and cannot answer.
 const impostor = net.createServer((s) =>
   respond(framer(s), { me: keyPair(), pskFor: () => qr.psk, trusts: () => true }).catch(() => s.destroy()),
 );
 await new Promise((r) => impostor.listen(0, found.ip, r));
-out.impostorRefused = /pinned fingerprint/.test(
-  (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, expectFp: qr.fp }), impostor.address().port)) ?? '',
-);
+const imp = await attempt((f) => initiate(f, { mode: MODE.SESSION, me, hubPub: qr.hubPub }), impostor.address().port);
+out.impostorRefused = imp !== null && !imp.startsWith('refused:'); // connection dropped, no session
 impostor.close();
 // Before authentication the hub drops frames above 256 bytes (connection closed, no refusal code).
 {

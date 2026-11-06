@@ -5,7 +5,7 @@
 import crypto from 'node:crypto';
 import net from 'node:net';
 import { announce } from './mdns.mjs';
-import { MODE, dailyHint, encodeQr, encryptValue, fingerprint, framer, isLanV4, keyPair, respond } from './channel.mjs';
+import { MODE, dailyHint, encodeQr, encryptValue, framer, isLanV4, keyPair, respond } from './channel.mjs';
 
 const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] ?? d;
 const ip = arg('ip');
@@ -24,13 +24,17 @@ for (let i = 0; i < N; i++) {
   log.push({ seq: log.length + 1, op });
 }
 
+const confirmed = new Promise((resolve) =>
+  process.stdin.on('data', (d) => d.toString().includes('confirm') && resolve()),
+);
+
 const server = net.createServer(async (sock) => {
   if (!isLanV4(sock.remoteAddress.replace(/^::ffff:/, ''), allowTestNet)) return sock.destroy();
   const f = framer(sock);
   try {
     const { mode, peer, ch } = await respond(f, {
       me,
-      // One attempt per window: the secret is burned when message 1 arrives, not after success.
+      // One attempt per window: burned once a message 1 decrypts (sender holds the QR), not before.
       pskFor: () => {
         const psk = pairing && Date.now() < pairing.expiresAt ? pairing.psk : null;
         pairing = null;
@@ -39,11 +43,13 @@ const server = net.createServer(async (sock) => {
       trusts: (pub) => trusted.has(pub.toString('hex')),
     });
     if (mode === MODE.PAIR) {
-      // Product: show `ch.sas` on the PC and wait for the confirmation tap before trusting the key.
-      // The prototype skips the tap and prints the code so run.mjs can compare it with the phone's.
+      // The PC shows `ch.sas` and waits for the confirmation tap; here run.mjs plays the user:
+      // it compares the code with the phone's and writes "confirm" to stdin.
       process.stdout.write(`${JSON.stringify({ sas: ch.sas })}\n`);
+      await confirmed;
       trusted.add(peer.toString('hex'));
-      ch.send({ t: 'key', k: dataKey.toString('base64') });
+      ch.send({ t: 'key', k: dataKey.toString('base64') }); // data key only after confirmation
+      process.stdout.write(`${JSON.stringify({ keySentAfterConfirm: true })}\n`);
     }
     for (;;) {
       const m = await ch.recv();
@@ -64,7 +70,6 @@ const server = net.createServer(async (sock) => {
 
 server.listen(0, ip, async () => {
   const { port } = server.address();
-  const fp = fingerprint(me.pub);
   const instance = `nemo-${crypto.randomBytes(2).toString('hex')}`; // new on every start
   await announce({
     service: '_nemo-sync._tcp.local',
@@ -72,8 +77,8 @@ server.listen(0, ip, async () => {
     host: `${instance}.local`,
     ip,
     port,
-    txt: { v: '1', h: dailyHint(fp) }, // rotating, not linkable across days by strangers
+    txt: { v: '1', h: dailyHint(me.pub) }, // rotating, not linkable across days by strangers
   });
-  const qr = encodeQr({ fp, psk: pairing.psk, expiresAt: pairing.expiresAt, port, ip });
+  const qr = encodeQr({ hubPub: me.pub, psk: pairing.psk, expiresAt: pairing.expiresAt, port, ip });
   process.stdout.write(`${JSON.stringify({ ready: true, qr })}\n`);
 });
