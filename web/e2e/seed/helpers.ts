@@ -44,45 +44,55 @@ type State = Exclude<BrowserContextOptions['storageState'], string | undefined>;
  * `test` with a seeded start: `test.use({ seeded: { scale: 'medium' } })` gives every test a fresh context
  * whose IndexedDB and localStorage are a copy of an app that went through "Testdaten laden" once per worker
  * (`seedApp`, the real UI path; 10 to 13 s per call). Tests still write only to their own copy. Specs about
- * loading the seed itself (`seed.spec.ts`) keep calling `seedApp`.
+ * loading the seed itself (`seed.spec.ts`) keep calling `seedApp`. The snapshot is taken in a plain context
+ * (no viewport or phone emulation; no seed code reads them) and built by the first test that needs it, which
+ * gets two extra minutes on its timeout for that.
  */
 export const test = base.extend<
   { seeded: SeedSnapshot | null },
-  { seedSnapshot: (o: SeedSnapshot) => Promise<State> }
+  { seedSnapshot: { has: (o: SeedSnapshot) => boolean; get: (o: SeedSnapshot) => Promise<State> } }
 >({
   seeded: [null, { option: true }],
   seedSnapshot: [
     async ({ browser }, provide, workerInfo) => {
       const cache = new Map<string, Promise<State>>();
       const { baseURL, locale, serviceWorkers } = workerInfo.project.use;
-      await provide((o) => {
-        const key = JSON.stringify([o.scale, !!o.desktop, !!o.preview]);
-        let state = cache.get(key);
-        if (!state) {
-          state = (async () => {
-            const context = await browser.newContext({ baseURL, locale, serviceWorkers });
-            const page = await context.newPage();
-            await page.addInitScript(
-              ({ desktop, preview }) => {
-                if (desktop) localStorage.setItem('__tmPlatformKind', 'desktop');
-                if (preview) localStorage.setItem('tm-show-preview', '1');
-              },
-              { desktop: !!o.desktop, preview: !!o.preview },
-            );
-            await bootDev(page);
-            await seedApp(page, o.scale);
-            const snapshot = await context.storageState({ indexedDB: true });
-            await context.close();
-            return snapshot;
-          })();
-          cache.set(key, state);
-        }
-        return state;
+      const keyOf = (o: SeedSnapshot) => JSON.stringify([o.scale, !!o.desktop, !!o.preview]);
+      await provide({
+        has: (o) => cache.has(keyOf(o)),
+        get: (o) => {
+          let state = cache.get(keyOf(o));
+          if (!state) {
+            state = (async () => {
+              const context = await browser.newContext({ baseURL, locale, serviceWorkers });
+              try {
+                const page = await context.newPage();
+                await page.addInitScript(
+                  ({ desktop, preview }) => {
+                    if (desktop) localStorage.setItem('__tmPlatformKind', 'desktop');
+                    if (preview) localStorage.setItem('tm-show-preview', '1');
+                  },
+                  { desktop: !!o.desktop, preview: !!o.preview },
+                );
+                await bootDev(page);
+                await seedApp(page, o.scale);
+                return await context.storageState({ indexedDB: true });
+              } finally {
+                await context.close();
+              }
+            })();
+            cache.set(keyOf(o), state);
+          }
+          return state;
+        },
       });
     },
-    { scope: 'worker', timeout: 120_000 },
+    { scope: 'worker' },
   ],
-  storageState: async ({ seeded, seedSnapshot, storageState }, provide) => {
-    await provide(seeded ? await seedSnapshot(seeded) : storageState);
+  storageState: async ({ seeded, seedSnapshot, storageState }, provide, testInfo) => {
+    if (!seeded) return provide(storageState);
+    // Building the snapshot runs inside this test's time budget: give it the time seedApp may take.
+    if (!seedSnapshot.has(seeded)) testInfo.setTimeout(testInfo.timeout + 120_000);
+    await provide(await seedSnapshot.get(seeded));
   },
 });

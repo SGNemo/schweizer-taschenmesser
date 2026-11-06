@@ -56,6 +56,7 @@ async function audit(page: Page, label: string) {
 if (process.env.MAIL_MOBILE) test.use({ viewport: { width: 412, height: 915 } });
 
 test.describe('mail (demo mails)', () => {
+  test.setTimeout(60_000); // axe audits and screenshots on a busy runner
   // The medium seed is loaded once per worker (as the desktop app, preview on); each test gets its own copy.
   test.use({ seeded: { scale: 'medium', desktop: true, preview: true } });
   test.beforeEach(async ({ page }) => {
