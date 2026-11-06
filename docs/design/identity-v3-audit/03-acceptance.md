@@ -57,7 +57,7 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | G14 | 1         | erledigt             | receipt (lists) vs bill (invoices); orchid shared by different heads (allowed)                                                                       | –                      |
 | G15 | 0         | erledigt             | scratch link `data-hue` violet, `--module-color`                                                                                                     | –                      |
 | G16 | audit     | erledigt             | `--module-color-2`                                                                                                                                   | –                      |
-| G17 | –         | offen (out of scope) | FAB over the last row / the planner board at 390 (sweep-planner-390)                                                                                 | layout owner           |
+| G17 | rest | erledigt | at the end of a page nothing is covered: the shell's `.main` keeps bottom-nav + 6rem below the content (`layout/AppShell.module.css`, one place, > FAB 56 px + gap); the sweep shot was mid-page, where a floating button lies over content by design | e2e `shell.spec.ts` „G17“ at 390 px (desktop + Pixel 7): last board day ends above the FAB; red with the padding removed (779 > 708), green with it |
 | T01 | –         | erledigt             | 0 px overflow, all pages, both sizes, themes, seeded and empty                                                                                       | –                      |
 | T02 | –         | erledigt             | checks + 440 tests green, no warnings                                                                                                                | –                      |
 | T03 | –         | erledigt             | G15/G16 fixed, disk palette on tokens                                                                                                                | –                      |
@@ -180,4 +180,6 @@ One commit per id; before/after from the rebuilt seeded preview: `shots/p4-*.jpg
 | F06 | `stores/ui.ts` `openAreas`, `Sidebar` `areaOpen()` | `nav.test.tsx`, `ui.test.ts`, e2e `shell`/`modules`/`readability` |
 | C31 | `layout/AreaFrame` `.writeShort` | `p4-c31-before-after` |
 
-Left open (outside this package): the pantry **page** still says „Seit n Tagen abgelaufen“ (`t.pantry.expired`, `PantryPage.tsx`) – same counter rule as N08; N01–N04 were fixed by `fix/planner-sweep` (#497). With this package identity v3.1 is complete.
+Left open after package 4, now **erledigt** (`fix/identity-v3-rest`): the pantry **page** names the best-before day like N08 („MHD war Mo.“ / date, `pantry/logic.ts` `expiryText` over `core/time/due.ts` `pastDay`; `t.pantry.expired` removed in five languages; proof `pantry/__tests__/expiryText.test.ts`, each language), and G17 (row above). N01–N04 were fixed by `fix/planner-sweep` (#497).
+
+**Identity v3.1 abgeschlossen (App + Website); Einstellungs-Identität folgt in `design/settings-identity`.**
