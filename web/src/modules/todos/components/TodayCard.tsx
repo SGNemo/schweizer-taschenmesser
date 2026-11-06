@@ -20,6 +20,7 @@ export function TodayCard({
   focusMinutes = 25,
   onStart,
   onLater,
+  planner = false,
 }: {
   tasks: readonly CardTask[];
   day: string;
@@ -28,13 +29,15 @@ export function TodayCard({
   /** "Anfangen" / "Später" for the suggested task; the page owns navigation and the repo. */
   onStart?: (task: CardTask) => void;
   onLater?: (task: CardTask) => void;
+  /** The planner module is on: it counts what the plan counts (a later plan day wins over an older due date, N02). */
+  planner?: boolean;
 }) {
   // C22/F15: a narrow page (phone) keeps the same parts – count, the task title on one line, "Anfangen", "Später" – only
   // the label line, the estimate and the minutes step back. The page container decides, not the window.
   const narrow = usePageWidthAtLeast(40) === false;
-  const today = tasks.filter((x) => !x.parentId && viewOf(x, day) === 'today');
+  const today = tasks.filter((x) => !x.parentId && viewOf(x, day, planner) === 'today');
   const minutes = today.reduce((sum, x) => sum + (x.estimateMin ?? 0), 0);
-  const next = pickNext(today, day);
+  const next = pickNext(today, day, [], planner);
   const detail = next
     ? next.estimateMin
       ? t.focus.next.about(next.estimateMin)

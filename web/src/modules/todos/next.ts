@@ -7,6 +7,7 @@ import { addDaysStr, daysBetween } from '@/core/time/dates';
 import { toDateString } from '@/core/time/now';
 import { compareTasks } from './logic';
 import type { Task } from './schema';
+import { isLaterInPlan } from './views';
 
 export type PickTask = Pick<
   Task,
@@ -53,14 +54,18 @@ function compareNext(a: PickTask, b: PickTask, today: string): number {
   return compareTasks(a, b);
 }
 
-/** The one task to suggest: open, not "Irgendwann", not a subtask, not skipped today. */
+/**
+ * The one task to suggest: open, not "Irgendwann", not a subtask, not skipped today. `planner` (the module is on):
+ * a thing the planner put on a later day waits for that day, even with an older due date.
+ */
 export function pickNext<T extends PickTask>(
   tasks: readonly T[],
   today: string,
   skipped: readonly string[] = [],
+  planner = false,
 ): T | undefined {
   return tasks
-    .filter((t) => isOpenTop(t) && !skipped.includes(t.id))
+    .filter((t) => isOpenTop(t) && !skipped.includes(t.id) && !(planner && isLaterInPlan(t, today)))
     .sort((a, b) => compareNext(a, b, today))[0];
 }
 

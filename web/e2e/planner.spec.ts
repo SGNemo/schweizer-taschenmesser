@@ -74,7 +74,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // Four columns a row at 1280 px, seven from 73rem of page width; no row runs past its column, nothing scrolls sideways.
+    // Four columns a row at 1280 px, seven from 95rem of page width; no row runs past its column, nothing scrolls sideways.
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
@@ -87,13 +87,60 @@ test.describe('Planer (week board, package 1)', () => {
         };
       });
     expect(await measure()).toEqual({ columns: 4, main: 0, rows: 0 });
+    // 1600: still four a row (seven columns would leave a title ~100 px, N01); 1920: seven.
     await page.setViewportSize({ width: 1600, height: 900 });
+    await expect.poll(measure).toEqual({ columns: 4, main: 0, rows: 0 });
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await expect.poll(measure).toEqual({ columns: 7, main: 0, rows: 0 });
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();
     await page.getByRole('menuitemcheckbox', { name: 'Warum hier?' }).click();
     await expect(today(page)).toContainText('neu, nach Priorität');
+  });
+
+  test('board titles break between words, never inside one or cut, from 1280 to 1920 (N01)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await ready(page, '/planner');
+    for (const text of [
+      'Steuererklärung vorbereiten 30min',
+      'Urlaubsantrag einreichen 20min',
+      'Quartalsbericht schreiben 30min',
+    ])
+      await enter(page, text);
+    await expect(today(page)).toContainText('Quartalsbericht');
+    // Per word of every board title: one line box (not split), inside the title box (not cut off).
+    const broken = () =>
+      page.evaluate(() => {
+        const out: string[] = [];
+        for (const el of Array.from(document.querySelectorAll('[data-board-title]'))) {
+          const box = el.getBoundingClientRect();
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            const text = node.textContent ?? '';
+            for (const m of text.matchAll(/\S+/g)) {
+              const range = document.createRange();
+              range.setStart(node, m.index);
+              range.setEnd(node, m.index + m[0].length);
+              const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0);
+              const tops = new Set(rects.map((r) => Math.round(r.top)));
+              const right = Math.max(...rects.map((r) => r.right));
+              if (tops.size > 1 || right > box.right + 1) out.push(m[0]);
+            }
+          }
+        }
+        return out;
+      });
+    await expect(page.locator('[data-board-title]')).toHaveCount(3);
+    await expect.poll(broken).toEqual([]);
+    // Also between the two: below 95rem of page width the board stays at four a row.
+    for (const width of [1600, 1440, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(broken).toEqual([]);
+    }
   });
 
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
@@ -115,6 +162,35 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('day-2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+  });
+
+  test('the ToDo page counts what the plan counts and has no „Alle auf heute“ (N02)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/todos');
+    const add = page.getByRole('textbox', { name: 'ToDo hinzufügen' });
+    await add.fill('Alte Sache gestern 60min');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    // Without the plan the overdue thing is on today.
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('1');
+    // Today off: the planner puts the overdue thing on Tuesday.
+    await page.goto('/planner');
+    await today(page)
+      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .click();
+    await page.getByRole('dialog').getByTestId('day-off').click();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
+    // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
+    await page.goto('/todos?view=today');
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('0');
+    await expect(page.getByRole('button', { name: /Alte Sache/ })).toHaveCount(0);
+    await page.goto('/todos');
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    await expect(page.getByTestId('all-today')).toHaveCount(0);
   });
 
   test('Erledigt and Rückgängig, Festnageln, Später; the ToDo page shows „im Plan“', async ({
@@ -173,6 +249,13 @@ test.describe('Planer (week board, package 1)', () => {
   test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
+    // N04: the page's ⋯ sits beside the field, not in a toolbar row of its own.
+    await expect(
+      page
+        .locator('form')
+        .filter({ has: page.getByLabel('Eintragen oder sagen', { exact: true }) })
+        .getByRole('button', { name: 'Weitere Optionen' }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
     const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
