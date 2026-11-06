@@ -115,6 +115,6 @@ export function parseTickTickCsv(text: string, fallbackList = 'Inbox'): ParsedTa
 
 /** Lists and open tasks, for the "recognised" line (counts only). */
 export function summarizeTickTick(text: string): { lists: number; tasks: number } {
-  const { tasks } = parseTickTickCsv(text);
-  return { lists: new Set(tasks.map((t) => t.list)).size, tasks: tasks.length };
+  const open = parseTickTickCsv(text).tasks.filter((t) => !t.done);
+  return { lists: new Set(open.map((t) => t.list)).size, tasks: open.length };
 }

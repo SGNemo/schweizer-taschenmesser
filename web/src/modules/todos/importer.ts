@@ -20,6 +20,8 @@ const baseName = (fileName: string) =>
   fileName
     .replace(/^.*[\\/]/, '')
     .replace(/\.[^.]*$/, '')
+    // Todoist backups name each project file "Inbox [2290578498].csv".
+    .replace(/\s*\[\d+\]$/, '')
     .trim();
 
 /** Description plus the quiet hints about dates and repeats; nothing here repeats by itself. */

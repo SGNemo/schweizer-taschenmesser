@@ -238,10 +238,6 @@ export const setup: Strings['setup'] = {
       tick: 'Cocher',
       untick: 'Rouvrir',
       subLabel: 'Ce qui manque encore',
-      settingsRow: 'Déménagement depuis une autre appli …',
-      settingsHint:
-        'Depuis Google, Todoist, Obsidian, une appli bancaire ou Bitwarden : mène aux imports adaptés.',
-      settingsOpen: 'Choisir l’origine',
     },
     startdata: {
       title: 'Importer',

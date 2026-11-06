@@ -122,7 +122,10 @@ describe('Todoist ZIP (one CSV per project) end to end', () => {
         '\n',
       ),
     ),
-    'Privat.csv': strToU8([head, 'task,Geburtstag planen,,4,1,,,jeden 3.,de,,,'].join('\n')),
+    // Todoist backups add the project id to the file name.
+    'Privat [2290578498].csv': strToU8(
+      [head, 'task,Geburtstag planen,,4,1,,,jeden 3.,de,,,'].join('\n'),
+    ),
   });
   const files = () => expandFiles([{ name: 'Todoist.zip', bytes: zip }]).files;
 
@@ -203,7 +206,7 @@ describe('TickTick backup end to end', () => {
   it('is recognised, counted, imported, a duplicate the second time and undone', async () => {
     const [top] = detectSources([file()]);
     expect(top!.source.id).toBe('ticktick');
-    expect(top!.source.summarize!([file()])).toEqual({ lists: 2, tasks: 6 });
+    expect(top!.source.summarize!([file()])).toEqual({ lists: 2, tasks: 5 });
     const { results } = await move([file()], 't1');
     const rows = results[0]!.rows;
     // Completed tasks stay out by default; the rest lands in one list per TickTick list.
@@ -231,7 +234,7 @@ describe('Contacts (vCard) end to end', () => {
   it('is recognised, counted, takes the birthdays, says what stays out, dedupes and undoes', async () => {
     const [top] = detectSources([file()]);
     expect(top!.source.id).toBe('contacts');
-    expect(top!.source.summarize!([file()])).toEqual({ contacts: 3 });
+    expect(top!.source.summarize!([file()])).toEqual({ contacts: 2 });
     const { results } = await move([file()], 'c1');
     expect(results[0]!.rows.map((r) => r.candidate.label)).toEqual([
       'Anna Beispiel',
@@ -286,6 +289,7 @@ describe('a Takeout with several parts is one run', () => {
     const [run] = await listRuns();
     expect(run!.parts.map((p) => p.moduleId).sort()).toEqual(['calendar', 'people']);
     expect(run!.count).toBe(3);
+    expect(run!.source).toBe('export.zip');
     await undoRun('tk');
     expect(await personRepo.active().count()).toBe(0);
     expect((await listRuns())[0]!.undone).toBe(true);

@@ -84,7 +84,8 @@ export function planRuns(
               importerId: target.importerId,
               files: [f],
               groupId,
-              source: f.name,
+              // The archive or file the person chose, not a path inside it (the run's label).
+              source,
               ...(options ? { options } : {}),
             },
           });
@@ -177,7 +178,7 @@ function AppImport({ onClose }: { onClose: () => void }) {
   const [read, setRead] = useState<{ files: SourceFile[]; binary: number; name: string } | null>(
     null,
   );
-  const [found, setFound] = useState<Detection[]>([]);
+  const [found, setFound] = useState<(Detection & { counts: string })[]>([]);
   const [manual, setManual] = useState(false);
 
   async function launch(sources: SourceDef[]) {
@@ -186,11 +187,15 @@ function AppImport({ onClose }: { onClose: () => void }) {
     const route = sources.flatMap((s) => s.targets).find((tg) => tg.route)?.route;
     const runs = planRuns(sources, read.files, read.binary, newBatchId(), read.name);
     if (runs.length === 0 && route) {
+      if (origin === 'passwords') await chooseOrigin('bitwarden').catch(() => {});
       onClose();
       void navigate(route);
       return;
     }
     if (runs.length === 0) return setError(text.nothing);
+    // Only a move that really starts feeds the setup checklist ("Was fehlt noch").
+    const migrate = ORIGIN_TILES.find((o) => o.id === origin)?.migrate;
+    if (migrate) await chooseOrigin(migrate).catch(() => {});
     for (const run of runs) {
       const manifest = getManifest(run.moduleId);
       if (manifest && !states?.[run.moduleId]) await enableModule(manifest);
@@ -202,8 +207,6 @@ function AppImport({ onClose }: { onClose: () => void }) {
   async function chooseTile(id: OriginId) {
     setError('');
     setOrigin(id);
-    const migrate = ORIGIN_TILES.find((o) => o.id === id)?.migrate;
-    if (migrate) await chooseOrigin(migrate).catch(() => {});
     if (id === 'other') return pick();
     setPhase('files');
   }
@@ -226,7 +229,13 @@ function AppImport({ onClose }: { onClose: () => void }) {
         binary: expanded.binary,
         name: raw.length === 1 ? raw[0]!.name : t.onboarding.filesChosen(raw.length),
       });
-      setFound(detectSources(expanded.files));
+      // Counted once here: some sources parse their files for it.
+      setFound(
+        detectSources(expanded.files).map((d) => ({
+          ...d,
+          counts: summaryLine(d.source.summarize?.(filesOf(d.source, expanded.files))),
+        })),
+      );
       setManual(false);
       setPhase('found');
     } catch (e) {
@@ -324,7 +333,7 @@ function AppImport({ onClose }: { onClose: () => void }) {
           <ul className={styles.found} aria-label={text.foundTitle}>
             {offered.map((d) => {
               const level = certainty(d.confidence);
-              const counts = summaryLine(d.source.summarize?.(filesOf(d.source, files)));
+              const counts = d.counts;
               const target = d.source.targets[0];
               const module = target ? getManifest(target.moduleId)?.name : undefined;
               return (

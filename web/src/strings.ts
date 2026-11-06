@@ -811,10 +811,6 @@ export const de = {
         tick: 'Abhaken',
         untick: 'Wieder öffnen',
         subLabel: 'Was noch fehlt',
-        settingsRow: 'Umzug von einer anderen App …',
-        settingsHint:
-          'Von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden: führt zu den passenden Importen.',
-        settingsOpen: 'Herkunft wählen',
       },
       startdata: {
         title: 'Importieren',

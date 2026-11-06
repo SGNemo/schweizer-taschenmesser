@@ -17,5 +17,6 @@ export const source: SourceDef = {
           ? 0.6
           : 0,
     ),
-  summarize: (files) => ({ contacts: countAll(files, /^BEGIN:VCARD/gim) }),
+  // Cards with a birthday: what the people module takes.
+  summarize: (files) => ({ contacts: countAll(files, /^BDAY[;:]/gim) }),
 };

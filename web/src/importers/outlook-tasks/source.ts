@@ -9,6 +9,9 @@ export const source: SourceDef = {
   detect: (files) =>
     best(files, (f) => (extOf(f.name) === 'csv' && isOutlookTasksCsv(f.text) ? 0.9 : 0)),
   summarize: (files) => ({
-    tasks: files.reduce((n, f) => n + parseOutlookTasks(f.text, { listName: '' }).tasks.length, 0),
+    tasks: files.reduce(
+      (n, f) => n + parseOutlookTasks(f.text, { listName: '' }).tasks.filter((t) => !t.done).length,
+      0,
+    ),
   }),
 };

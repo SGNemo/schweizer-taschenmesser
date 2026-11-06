@@ -18,13 +18,16 @@ describe('Todoist repeats', () => {
     ['jeden 1.', { freq: 'monthly', interval: 1, byMonthDay: 1 }],
     ['every month', { freq: 'monthly', interval: 1 }],
     ['jedes Jahr', { freq: 'yearly', interval: 1 }],
-    ['every year starting 1 Jan', { freq: 'yearly', interval: 1 }],
   ])('%s', (text, rule) => expect(parseTodoistRepeat(text)).toEqual(rule));
 
-  it.each(['every last friday', 'every 3rd monday', 'tomorrow', 'every'])(
-    '%s stays a hint',
-    (text) => expect(parseTodoistRepeat(text)).toBeUndefined(),
-  );
+  it.each([
+    'every last friday',
+    'every 3rd monday',
+    'tomorrow',
+    'every',
+    'every day until 31 dec',
+    'every year starting 1 Jan',
+  ])('%s stays a hint', (text) => expect(parseTodoistRepeat(text)).toBeUndefined());
 
   it('reads minutes, ignores days and junk', () => {
     expect(todoistMinutes('45', 'minute')).toBe(45);

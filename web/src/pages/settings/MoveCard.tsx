@@ -12,6 +12,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Card, Dialog, EmptyState } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
+import own from './MoveCard.module.css';
 import styles from './settings.module.css';
 
 export function MoveCard() {
@@ -46,7 +47,7 @@ export function MoveCard() {
         {runs && runs.length > 0 ? (
           <section aria-label={text.recentTitle}>
             <strong>{text.recentTitle}</strong>
-            <ul className={styles.form} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <ul className={own.runs}>
               {runs.slice(0, 5).map((run) => (
                 <li key={run.groupId} className={styles.row}>
                   <span>

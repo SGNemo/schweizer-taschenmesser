@@ -12,6 +12,9 @@ export const source: SourceDef = {
   // One CSV per project.
   summarize: (files) => ({
     projects: files.length,
-    tasks: files.reduce((n, f) => n + parseTodoistCsv(f.text, { listName: '' }).tasks.length, 0),
+    tasks: files.reduce(
+      (n, f) => n + parseTodoistCsv(f.text, { listName: '' }).tasks.filter((t) => !t.done).length,
+      0,
+    ),
   }),
 };

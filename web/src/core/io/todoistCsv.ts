@@ -149,10 +149,11 @@ export function parseTodoistRepeat(raw: string): Recurrence | undefined {
   const text = plain(raw)
     .replace(TIME, '')
     .replace(/\b(?:at|um)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|uhr)?\b/g, '')
-    .replace(/\b(?:starting|from|ab|until|bis)\b.*$/, '')
     .replace(/!/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+  // A start or end ("starting 1 Jan", "until 31 dec") the model could not keep exactly: stays a hint.
+  if (/\b(?:starting|from|ab|until|bis|for)\b/.test(text)) return undefined;
   const adverb = Object.entries(ADVERB).find(([word]) => plain(word) === text)?.[1];
   if (adverb) return { freq: adverb, interval: 1 };
   const m = /^(?:every|each|ev|jede[rsmn]?|alle)\s+(.+)$/.exec(text);
