@@ -219,6 +219,10 @@
   border-radius: var(--radius-lg);
 }
 .bubbleA {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
   align-self: flex-start;
   width: 75%;
   border-bottom-left-radius: var(--space-1);
@@ -226,10 +230,25 @@
   box-shadow: var(--shadow-1);
 }
 .bubbleB {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
   align-self: flex-end;
   width: 45%;
   border-bottom-right-radius: var(--space-1);
   background: color-mix(in srgb, var(--module-color) 28%, var(--paper));
+}
+
+/* Typing dots in the answer bubble: still (no motion), the ink of the hue. */
+.bubbleB .dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--module-color) 70%, var(--paper));
+}
+.bubbleA .rule {
+  border-radius: var(--radius-full);
 }
 
 /* addressBar: a pill with the lock. */

@@ -113,6 +113,25 @@ describe('signature marks (identity v3.1)', () => {
     },
   );
 
+  it('the chat bubbles read as a conversation without text: two hinted lines and three typing dots (G07)', () => {
+    const { container } = render(<Signature id="bubble" size="M" />);
+    expect(container.querySelectorAll('[data-typing] i')).toHaveLength(3);
+    expect(container.querySelector('[data-typing]')!.previousElementSibling!.children).toHaveLength(
+      2,
+    );
+  });
+
+  it('timetrack signature is the stopwatch dial at M, its mark at S (G12)', () => {
+    expect(
+      render(<Signature id="stopwatch" size="M" />).container.querySelector(
+        '[data-signature="stopwatch"] svg',
+      ),
+    ).not.toBeNull();
+    expect(
+      render(<Signature id="stopwatch" size="S" />).container.querySelector('[data-size="S"] svg'),
+    ).not.toBeNull();
+  });
+
   it('an id without a block draws its mark on a plate at M, every id the plate at S', () => {
     expect(
       render(<Signature id="bankCard" size="M" />).container.querySelector(
