@@ -21,6 +21,7 @@ import {
   type Unplaced,
 } from './types';
 import { toUnits, unitId } from './units';
+import { placeInWindow, validWindow } from './windows';
 
 /**
  * The last day a unit may start so that it and the remaining sessions of its item (one per day)
@@ -230,6 +231,14 @@ export function plan(input: PlanInput): PlanResult {
         );
       })
       .forEach((a, i) => (a.order = i));
+    // Package 5: a day with a window gives its sessions a time, in the order above; minutes stay as planned.
+    const window = validWindow(day.window);
+    if (window)
+      for (const [id, w] of placeInWindow(window, day.blockers, todayList)) {
+        const a = placed.get(id)!;
+        a.from = w.from;
+        a.to = w.to;
+      }
     const planned = todayList.reduce((n, a) => n + a.minutes, 0);
     load[day.date] = {
       raw: cap.raw,
