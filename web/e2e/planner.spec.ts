@@ -243,6 +243,13 @@ test.describe('Planer (week board, package 1)', () => {
   test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
+    // N04: the page's ⋯ sits beside the field, not in a toolbar row of its own.
+    await expect(
+      page
+        .locator('form')
+        .filter({ has: page.getByLabel('Eintragen oder sagen', { exact: true }) })
+        .getByRole('button', { name: 'Weitere Optionen' }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
     const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });

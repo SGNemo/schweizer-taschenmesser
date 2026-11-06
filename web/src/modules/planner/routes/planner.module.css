@@ -8,6 +8,16 @@
   flex: 1;
   min-width: 0;
 }
+/* N04: with ⋯ beside „Eintragen“ a phone keeps the field (and its hint) on the full width; the two buttons follow. */
+@container page (max-width: 40rem) {
+  .add {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .grow {
+    flex-basis: 100%;
+  }
+}
 
 .board {
   display: grid;

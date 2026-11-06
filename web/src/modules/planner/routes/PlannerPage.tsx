@@ -432,14 +432,7 @@ export default function PlannerPage() {
 
   return (
     <>
-      <PageHeader title={t.planner.title}>
-        <RowMenu
-          label={t.planner.head.menu}
-          items={pageMenu}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-        />
-      </PageHeader>
+      <PageHeader title={t.planner.title} />
       {todayDay ? (
         <HeroSlot area="figure">
           <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
@@ -480,6 +473,13 @@ export default function PlannerPage() {
         <Button type="submit" variant="primary" disabled={!text.trim()}>
           {t.planner.add.submit}
         </Button>
+        {/* N04: the page's ⋯ sits beside the field (a toolbar row with only ⋯ left ~100 px empty above it). */}
+        <RowMenu
+          label={t.planner.head.menu}
+          items={pageMenu}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+        />
       </form>
 
       {sayLine ? (
