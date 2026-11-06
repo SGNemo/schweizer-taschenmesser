@@ -1,11 +1,11 @@
 // Process A – the "PC hub": announces itself via mDNS, opens a 2-minute one-time pairing window,
 // prints the QR payload, then serves push/pull of E2E-encrypted ops over the encrypted channel.
-// The store is an append-only log with a sequence number and NO merge rule: in the product the
-// hub applies ops through the existing `mergeOps` (web/src/core/sync/ops.ts), see CONCEPT.md §3.
+// The store is an append-only log with a sequence number and NO merge rule: in the product
+// (variant b) the hub keeps the greatest HLC per field like server/src/store.ts, see CONCEPT.md §3.
 import crypto from 'node:crypto';
 import net from 'node:net';
 import { announce } from './mdns.mjs';
-import { MODE, encodeQr, encryptValue, fingerprint, framer, isLanV4, keyPair, respond } from './channel.mjs';
+import { MODE, dailyHint, encodeQr, encryptValue, fingerprint, framer, isLanV4, keyPair, respond } from './channel.mjs';
 
 const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] ?? d;
 const ip = arg('ip');
@@ -30,11 +30,18 @@ const server = net.createServer(async (sock) => {
   try {
     const { mode, peer, ch } = await respond(f, {
       me,
-      pskFor: () => (pairing && Date.now() < pairing.expiresAt ? pairing.psk : null),
+      // One attempt per window: the secret is burned when message 1 arrives, not after success.
+      pskFor: () => {
+        const psk = pairing && Date.now() < pairing.expiresAt ? pairing.psk : null;
+        pairing = null;
+        return psk;
+      },
       trusts: (pub) => trusted.has(pub.toString('hex')),
     });
     if (mode === MODE.PAIR) {
-      pairing = null; // single use
+      // Product: show `ch.sas` on the PC and wait for the confirmation tap before trusting the key.
+      // The prototype skips the tap and prints the code so run.mjs can compare it with the phone's.
+      process.stdout.write(`${JSON.stringify({ sas: ch.sas })}\n`);
       trusted.add(peer.toString('hex'));
       ch.send({ t: 'key', k: dataKey.toString('base64') });
     }
@@ -58,14 +65,14 @@ const server = net.createServer(async (sock) => {
 server.listen(0, ip, async () => {
   const { port } = server.address();
   const fp = fingerprint(me.pub);
-  const instance = `nemo-${crypto.randomBytes(2).toString('hex')}`;
+  const instance = `nemo-${crypto.randomBytes(2).toString('hex')}`; // new on every start
   await announce({
     service: '_nemo-sync._tcp.local',
     instance,
     host: `${instance}.local`,
     ip,
     port,
-    txt: { v: '1', fp: fp.subarray(0, 8).toString('hex') },
+    txt: { v: '1', h: dailyHint(fp) }, // rotating, not linkable across days by strangers
   });
   const qr = encodeQr({ fp, psk: pairing.psk, expiresAt: pairing.expiresAt, port, ip });
   process.stdout.write(`${JSON.stringify({ ready: true, qr })}\n`);

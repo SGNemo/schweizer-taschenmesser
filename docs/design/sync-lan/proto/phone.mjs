@@ -1,10 +1,10 @@
 // Process B – the "phone": reads the QR payload, finds the hub via mDNS, pairs, pushes N
-// E2E-encrypted ops, pulls everything back, reconnects with the pinned key and runs two negative
-// checks. Prints one JSON line with the measurements.
+// E2E-encrypted ops, pulls everything back, reconnects with the pinned key and runs four negative
+// checks (reused QR, stranger, impostor hub, oversized pre-handshake frame). Prints one JSON line.
 import crypto from 'node:crypto';
 import net from 'node:net';
 import { browse } from './mdns.mjs';
-import { MODE, decodeQr, decryptValue, encryptValue, framer, initiate, isLanV4, keyPair } from './channel.mjs';
+import { MODE, dailyHint, decodeQr, decryptValue, encryptValue, framer, initiate, isLanV4, keyPair, respond } from './channel.mjs';
 
 const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=').slice(1).join('=') ?? d;
 const iface = arg('ip');
@@ -27,7 +27,7 @@ let t = performance.now();
 const found = await browse({
   service: '_nemo-sync._tcp.local',
   iface,
-  want: (x) => x.txt.fp === qr.fp.subarray(0, 8).toString('hex'),
+  want: (x) => x.txt.h === dailyHint(qr.fp),
 });
 out.discoveryMs = ms(t);
 if (!isLanV4(found.ip, allowTestNet)) throw new Error('hub is not on a private address');
@@ -38,6 +38,7 @@ let sock = await connect(found.ip, found.port);
 let ch = await initiate(framer(sock), { mode: MODE.PAIR, me, psk: qr.psk, expectFp: qr.fp });
 const dataKey = Buffer.from((await ch.recv()).k, 'base64');
 out.pairMs = ms(t);
+out.sas = ch.sas;
 
 t = performance.now();
 const ops = [];
@@ -86,26 +87,49 @@ out.sessionUpToDate = empty.ops.length === 0;
 ch.send({ t: 'bye' });
 sock.end();
 
-async function refused(fn) {
-  const s = await connect(found.ip, found.port);
+/** Returns the error message of a refused attempt (`null` if it was NOT refused). */
+async function attempt(fn, port = found.port) {
+  const s = await connect(found.ip, port);
   try {
     const c = await fn(framer(s));
     c.send({ t: 'pull', since: 0, limit: 1 });
     await c.recv();
-    return false;
-  } catch {
-    return true;
+    return null;
+  } catch (e) {
+    return e.message;
   } finally {
     s.destroy();
   }
 }
-// The QR's psk is single-use: a second pairing with it must fail.
-out.reusedQrRefused = await refused((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, expectFp: qr.fp }));
-// An unpaired device without psk must be refused.
-out.strangerRefused = await refused((f) => initiate(f, { mode: MODE.SESSION, me: keyPair(), expectFp: qr.fp }));
-// A wrong hub key (e.g. a MITM answering instead) must be rejected by the phone.
-out.wrongHubRefused = await refused((f) =>
-  initiate(f, { mode: MODE.SESSION, me, expectFp: crypto.randomBytes(32) }),
+// The QR's psk is single-use (burned at message 1): a second pairing must get an explicit refusal.
+out.reusedQrRefused =
+  (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, expectFp: qr.fp }))) ===
+  'refused:no-pairing-window';
+// An unpaired device without psk gets an explicit refusal after the handshake.
+out.strangerRefused =
+  (await attempt((f) => initiate(f, { mode: MODE.SESSION, me: keyPair(), expectFp: qr.fp }))) ===
+  'refused:unknown-device';
+// A real impostor hub that knows the psk (photographed QR) but not the hub's private key.
+const impostor = net.createServer((s) =>
+  respond(framer(s), { me: keyPair(), pskFor: () => qr.psk, trusts: () => true }).catch(() => s.destroy()),
 );
+await new Promise((r) => impostor.listen(0, found.ip, r));
+out.impostorRefused = /pinned fingerprint/.test(
+  (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, expectFp: qr.fp }), impostor.address().port)) ?? '',
+);
+impostor.close();
+// Before authentication the hub drops frames above 256 bytes (connection closed, no refusal code).
+{
+  const s = await connect(found.ip, found.port);
+  const f = framer(s, 1 << 30);
+  const big = Buffer.alloc(4 + 1024 * 1024);
+  big.writeUInt32BE(1024 * 1024);
+  s.write(big);
+  out.oversizeDropped = await f.read().then(
+    () => false,
+    (e) => /^closed$|ECONNRESET|EPIPE/.test(e.message), // closed or reset, never a refusal code
+  );
+  s.destroy();
+}
 
 process.stdout.write(`${JSON.stringify(out)}\n`);

@@ -4,9 +4,9 @@ Decisions: [CONCEPT.md](CONCEPT.md) §10 (vorläufig) and [`docs/decisions/core.
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|
-| 1 | Contracts and rules: protocol contract, Rust store with LWW, rule lines | `feat/lan-sync-contract` | `contract/protocol-cases.json` (new), `server/test/protocol.test.ts`, new crate `web/src-tauri/crates/lan-sync` (store only), its contract tests, root `CLAUDE.md` + `docs/RULES.md` (two lines) | root `CLAUDE.md`, `contract/`, `web/src-tauri/Cargo.toml`/`Cargo.lock` | `council` |
-| 2 | Hub: Noise transport, mDNS, pairing window, trust list, desktop commands | `feat/lan-sync-hub` | `crates/lan-sync/{noise,discovery,hub,pairing}`, `src/lan_sync.rs`, `build.rs` `COMMANDS`, `capabilities/desktop.json`, `tests/commands.rs` | `Cargo.toml`/`Cargo.lock`, `capabilities/*` | `council` |
-| 3 | Client: `SyncAdapter` `lan`, platform seam, in-process PC adapter, first sync | `feat/lan-sync-client` | `core/sync/adapters/lan.ts`, `core/sync/service.ts` (adapter choice only), `core/platform/{types,web}.ts` + `tauri/lanSync.ts`, `crates/lan-sync/client`, e2e with two app instances against one hub | `core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/sync/service.ts` | `council` |
+| 1 | Contracts and rules: paging contract, Rust store with LWW, rule lines | `feat/lan-sync-contract` | `contract/sync-paging-cases.json` (new), `server/test/paging.test.ts`, new crate `web/src-tauri/crates/lan-sync` (store only), its contract tests, root `CLAUDE.md` + `docs/RULES.md` (two lines) | root `CLAUDE.md`, `contract/`, `web/src-tauri/Cargo.toml`/`Cargo.lock` | `council` |
+| 2 | Hub: Noise transport, mDNS, pairing window with code, trust list, key ownership, desktop commands | `feat/lan-sync-hub` | `crates/lan-sync/{noise,discovery,hub,pairing}`, `src/lan_sync.rs`, `build.rs` `COMMANDS`, `capabilities/desktop.json`, `tests/commands.rs` | `Cargo.toml`/`Cargo.lock`, `capabilities/*` | `council` |
+| 3 | Client: `SyncAdapter` `lan`, platform seam, hub-local dispatch, first sync | `feat/lan-sync-client` | `core/sync/adapters/lan.ts`, `core/sync/service.ts` (adapter choice only), `core/platform/{types,web}.ts` + `tauri/lanSync.ts`, `crates/lan-sync/client`, client commands (`src/lib.rs`, `build.rs` `COMMANDS`, `capabilities/default.json`, `tests/commands.rs`), e2e with two app instances against one hub | `core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/sync/service.ts`, `capabilities/*` | `council` |
 | 4 | UI, QR, Android: settings page, pairing flow, Wi-Fi trigger, docs | `feat/lan-sync-ui` | `pages/settings/Sync*.tsx`, strings `sync` (+4 locales), `tauri-plugin-barcode-scanner`, own plugin `plugins/lan-watch` (Kotlin: Wi-Fi callback, multicast lock / `NsdManager`), `docs/user/sync(.de).md`, MANUAL-TESTS rows | `strings.ts`, `pages/Settings.tsx`, `Cargo.toml`, `web/package.json` | `review loop` |
 
 Each package: own branch from fresh `develop`, row in CHATS.md, `.changes/` note (DE/EN, user view) where user-visible (1–3: label `no-changelog` unless something becomes visible), STATUS one line, decision bullets in `docs/decisions/core.md` "Sync". Not planned: real Android background sync (WorkManager) – only if Sven chooses it in CONCEPT §11 question 3, then as package 5 with its own concept step.
@@ -14,7 +14,7 @@ Each package: own branch from fresh `develop`, row in CHATS.md, `.changes/` note
 ### Prompt – package 1: contracts and rules (`feat/lan-sync-contract`)
 
 ```
-# Aufgabe: Sync im Heimnetz – Protokoll-Vertrag, Rust-Store mit LWW, Regelzeilen (Paket 1 von 4)
+# Aufgabe: Sync im Heimnetz – Seiten-Vertrag, Rust-Store mit LWW, Regelzeilen (Paket 1 von 4)
 
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch `feat/lan-sync-contract` von frischem `develop`. **Erst starten, wenn Sven die Fragen in docs/design/sync-lan/CONCEPT.md §11 beantwortet hat und Variante (b) gilt** – sonst STOPP und melden. Vorher Zeilen in docs/CHATS.md „Hotspots“: root `CLAUDE.md`, `contract/`, `web/src-tauri/Cargo.toml`.
@@ -23,9 +23,9 @@ Branch `feat/lan-sync-contract` von frischem `develop`. **Erst starten, wenn Sve
 Konzept: docs/design/sync-lan/CONCEPT.md (§3 Variante b, §5 Regel-Vorschläge, §10), Belege docs/design/sync-lan/NOTES.md. Lies `contract/lww-cases.json`, `web/src/core/sync/contract.test.ts`, `server/test/contract.test.ts`, `server/src/store.ts` (Tabellen :112-154, LWW :172-178), `server/src/app.ts` (Routen push/pull/info/status/devices), `web/src/core/sync/adapters/selfHosted.ts`, web/src-tauri/CLAUDE.md.
 
 ## Pflichtliste
-- `contract/protocol-cases.json`: Folgen von Anfrage → erwarteter Antwort für die Sync-Nachrichten `info, push, pull (Seiten, cursor, more), devices (list, register, revoke), status` – transportneutral (JSON-Nachrichten, keine HTTP-Details); Fehlerfälle `hlc-drift`, Grenze 5 000 Ops, widerrufenes Gerät. Kein Web Push, kein Proxy, kein Reset im LAN-Vertrag.
-- `server/test/protocol.test.ts`: der Node-Server besteht den Vertrag über einen dünnen Übersetzer Nachricht → Route (Server-Code unverändert).
-- Neue Crate `web/src-tauri/crates/lan-sync` (nur `store`): SQLite (`rusqlite` gebündelt, eigene Commit für die Abhängigkeit), Tabellen wie `server/src/store.ts`, LWW als dieselbe SQL-Bedingung; `cargo test` liest `../../../contract/lww-cases.json` (alle 10 Fälle) und `protocol-cases.json` (Store-Teil). In die `-p`-Liste in web/src-tauri/CLAUDE.md und CI aufnehmen.
+- `contract/sync-paging-cases.json`: nur was die Engine (`core/sync/engine.ts`) von einem Store annimmt – Push liefert `epoch`; Pull-Seiten mit `cursor`/`more`, Grenze je Seite, Reihenfolge nach `seq`; Epoch-Wechsel; Fehlercodes `hlc-drift` und Ops-Grenze. Keine Geräteverwaltung (die bleibt je Transport: Token am Server, Kopplung am Hub), kein Web Push, kein Proxy, kein Reset.
+- `server/test/paging.test.ts`: der Node-Store besteht den Vertrag direkt über `store.ts` (Server-Code unverändert).
+- Neue Crate `web/src-tauri/crates/lan-sync` (nur `store`): SQLite (`rusqlite` gebündelt, eigener Commit für die Abhängigkeit), Tabellen wie `server/src/store.ts`, LWW als dieselbe SQL-Bedingung; Werte, die nicht mit `enc:v1:` beginnen, werden abgewiesen; `cargo test` liest `concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../contract/lww-cases.json")` (alle 10 Fälle; vier Ebenen bis zur Repo-Wurzel) und ebenso `sync-paging-cases.json`. In die `-p`-Liste in web/src-tauri/CLAUDE.md und CI aufnehmen.
 - Regeln (Svens Ja vorausgesetzt): neue Zeile „LAN sync (desktop hub)“ wörtlich wie CONCEPT §5 in root `CLAUDE.md` + Volltext in `docs/RULES.md`; Sync-Regel auf „drei Kopien … alle gepinnt“; Local-API-Regel bleibt Wort für Wort.
 - Bundle-Messung: Größe des Release-Builds vorher/nachher (`cargo build --release`, Linux; Windows-exe im PR als offen markieren, falls nicht messbar).
 
@@ -34,10 +34,10 @@ Netzwerk, Noise, mDNS, Tauri-Befehle, TS-Adapter, UI. Kein Eingriff in `core/syn
 
 ## Abnahme
 - `cargo fmt --check`, `clippy -D warnings`, `cargo test -p taschenmesser-lan-sync` grün; `cd server && npm test`; `cd web && npm run check && npm test` (contract-Test unverändert grün); `npm run check:docs`.
-- Docs: `docs/decisions/core.md` „Sync“ – die vorläufigen Bullets aus dem Konzept werden endgültig (Variante, dritte Kopie, Protokoll-Vertrag); STATUS eine Zeile; ARCHITECTURE-MAP eine Zeile (`crates/lan-sync`).
+- Docs: `docs/decisions/core.md` „Sync“ – die vorläufige Bullet aus dem Konzept wird endgültig (Variante, dritte Kopie, Seiten-Vertrag); STATUS eine Zeile; ARCHITECTURE-MAP eine Zeile (`crates/lan-sync`).
 
 ## Skills
-`council` über den Diff (Guardian: Regeltexte, nichts an Local API/Secrets geschwächt, Vertrag deckt Widerruf und Grenzen; Architect: LWW-Kopie identisch zu SQL im Server, Vertrag transportneutral, keine doppelte Wahrheit; Advocate: Lesbarkeit der Regelzeile für spätere Chats). Full stop.
+`council` über den Diff (Guardian: Regeltexte, nichts an Local API/Secrets geschwächt, Vertrag deckt Widerruf und Grenzen; Architect: LWW-Kopie identisch zu SQL im Server, Seiten-Vertrag deckt genau die Annahmen der Engine, keine doppelte Wahrheit; Advocate: Lesbarkeit der Regelzeile für spätere Chats). Full stop.
 ```
 
 ### Prompt – package 2: hub (`feat/lan-sync-hub`)
@@ -49,21 +49,22 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `feat/lan-sync-hub` von frischem `develop`, erst nach Merge von Paket 1. Hotspot-Zeilen in docs/CHATS.md: `web/src-tauri/Cargo.toml`, `capabilities/*`.
 
 ## Ausgangslage
-CONCEPT §4 (Entdeckung, QR, Schlüsseltausch, nur private Adressen), §5 (Bedrohungen, Noise), Prototyp docs/design/sync-lan/proto/ (Ablauf und Prüfungen `reusedQrRefused`, `strangerRefused`, `wrongHubRefused` sind die Vorlage für Rust-Tests). Neue Hard Rule „LAN sync (desktop hub)“ aus Paket 1 gilt.
+CONCEPT §4 (Entdeckung, QR, Schlüsseltausch, nur private Adressen), §5 (Bedrohungen, Noise), Prototyp docs/design/sync-lan/proto/ (Ablauf und Prüfungen `sasMatch`, `reusedQrRefused`, `strangerRefused`, `impostorRefused`, `oversizeDropped` sind die Vorlage für Rust-Tests; der Prototyp lässt Bestätigung, Heimnetz-Prüfung und Rate-Limit weg). Neue Hard Rule „LAN sync (desktop hub)“ aus Paket 1 gilt.
 
 ## Pflichtliste
 - `crates/lan-sync/noise`: `snow` (eigener Commit), `XXpsk3` für Kopplung, `XX` danach; statischer X25519-Schlüssel pro Gerät; Fingerprint = SHA-256 des statischen Schlüssels.
-- `crates/lan-sync/discovery`: `mdns-sd`; Dienst `_nemo-sync._tcp.local`, zufälliger Instanzname, TXT `v=1`, `fp=<8 Byte hex>`; Ankündigung nur auf privaten Schnittstellen.
-- `crates/lan-sync/hub`: bindet nur RFC-1918-/Link-local-Adressen der Schnittstellen (nie `0.0.0.0`, nie Loopback, keine Adress-Einstellung), verwirft andere Peers vor dem Handshake, Handshake-Rate-Limit pro Adresse, Nachrichten nach `contract/protocol-cases.json`, kein Logging von Nutzdaten, Schlüsseln, Kopplungsgeheimnissen.
-- Kopplungsfenster: Einmalgeheimnis 16 Byte, 2 min, beim ersten Handshake verbraucht; QR-Nutzlast `NEMO1:` (Format CONCEPT §4, Test auf Länge und Inhalt: kein Langzeit-Geheimnis); Bestätigung „<Gerätename> koppeln?“ als Ereignis an die Oberfläche, ohne Bestätigung keine Aufnahme in die Vertrauensliste; Datenschlüssel nur im Kanal, nur nach Bestätigung.
-- Tauri-Befehle (desktop): `lan_hub_start/stop/status`, `lan_pair_open/confirm/cancel`, `lan_devices/revoke`, In-Prozess `lan_hub_push/pull` für die eigene WebView – je Handler in `src/lib.rs` + `build.rs` `COMMANDS` + `capabilities/desktop.json`; `tests/commands.rs` grün.
+- `crates/lan-sync/discovery`: `mdns-sd`; Dienst `_nemo-sync._tcp.local`, Instanzname zufällig und neu je Start, TXT `v=1`, `h=<täglicher HMAC-Hinweis>` (CONCEPT §4); Ankündigung nur auf privaten Schnittstellen im gekoppelten Heimnetz.
+- `crates/lan-sync/hub`: bindet nur RFC-1918-/Link-local-Adressen der Schnittstellen (nie `0.0.0.0`, nie Loopback, keine Adress-Einstellung), lauscht nur im beim Koppeln gemerkten Heimnetz (Gateway; Weg im PR belegen oder als offen markieren) und zeigt das im Tray-Menü, verwirft andere Peers und Rahmen > 256 B vor dem Handshake, Handshake-Rate-Limit pro Adresse, Schlüsselversion je Sitzung (Rotation nach CONCEPT §5), Push/Pull nach `contract/sync-paging-cases.json`, kein Logging von Nutzdaten, Schlüsseln, Kopplungsgeheimnissen.
+- Kopplungsfenster: Einmalgeheimnis 16 Byte, 2 min, verbraucht bei Nachricht 1 (Test: zwei gleichzeitige Versuche, nur einer kommt durch); QR-Nutzlast `NEMO1:` und Code-Form (Format CONCEPT §4, Test: kein Langzeit-Geheimnis); 6-stelliger Code aus dem Handshake; Bestätigung „<Gerätename> koppeln? Code …“ als Ereignis an die Oberfläche, ohne Bestätigung keine Aufnahme in die Vertrauensliste; Datenschlüssel nur im Kanal, nur nach Bestätigung.
+- Schlüssel: statischer Noise-Schlüssel und Hub-Datenschlüssel roh nur auf der Rust-Seite im OS-Schlüsselspeicher (CONCEPT §3 „Key ownership“; gewählte API im PR belegen); an TS geht nur der Datenschlüssel.
+- Tauri-Befehle (desktop): `lan_hub_start/stop/status`, `lan_pair_open/confirm/cancel`, `lan_devices/revoke`, `lan_hub_request` für die eigene WebView (nur über `getPlatform().lanSync` erreichbar) – je Handler in `src/lib.rs` + `build.rs` `COMMANDS` + `capabilities/desktop.json`; `tests/commands.rs` grün.
 - Hub aus, bis zur ersten Kopplung; startet mit der App, wenn mindestens ein Gerät gekoppelt ist.
 
 ## Nicht in diesem Paket
 TS-Adapter, Einstellungsseite, Android, Client-Seite des Handshakes außer in Tests. Keine Änderung an `crates/local-api`.
 
 ## Abnahme
-- Rust-Checks aus web/src-tauri/CLAUDE.md inkl. neuer Crate; Tests: falsches PSK, wiederverwendeter QR, fremder Schlüssel, falscher Hub-Fingerprint, öffentliche Peer-Adresse, widerrufenes Gerät – alle abgewiesen; 1 000 Ops push/pull über echten Socket auf 127.0.0.2 o. ä. nur im Test (Testschalter, nicht im Produkt erreichbar).
+- Rust-Checks aus web/src-tauri/CLAUDE.md inkl. neuer Crate; Tests: falsches PSK, wiederverwendeter QR, gleichzeitige Kopplung, fremder Schlüssel, Fremd-Hub mit bekanntem PSK, öffentliche Peer-Adresse, übergroßer Rahmen vor dem Handshake, widerrufenes Gerät, alte Schlüsselversion, Push ohne `enc:v1:` – alle abgewiesen, mit Ablehnungsgrund geprüft; 1 000 Ops push/pull über echten Socket auf 127.0.0.2 o. ä. nur im Test (Testschalter, nicht im Produkt erreichbar).
 - `cargo check --target x86_64-pc-windows-msvc -p taschenmesser-lan-sync`; Bundle-Größe vorher/nachher.
 - Docs: decisions core.md „Sync“ (Fenster, Bestätigung, Bindung), `docs/architecture/desktop.md` Abschnitt, STATUS eine Zeile.
 
@@ -83,15 +84,16 @@ Branch `feat/lan-sync-client` von frischem `develop`, erst nach Merge von Paket 
 CONCEPT §3 (Form von b), §6, §7; `web/src/core/sync/{types,engine,service}.ts`, `adapters/selfHosted.ts` (Abbildung der Routen), `vaultKey.ts`/`crypto.ts` (Werte bleiben `enc:v1:`).
 
 ## Pflichtliste
-- `getPlatform().lanSync` (optional, nur Tauri): `pair(qr)`, `request(msg)`, `status()`; Web/PWA: `undefined` (PWA bleibt beim Server-Weg).
-- `core/sync/adapters/lan.ts`: `SyncAdapter` über `lanSync.request`, gleiche Seitengrößen und Fehlercodes wie `selfHosted` (`network` = „PC nicht erreichbar“, kein neuer Fehlerzustand mit Rot); am Hub-PC In-Prozess-Variante über `lan_hub_push/pull`.
-- `SyncConfig` bekommt `kind: 'lan'` (Hub-Fingerprint, Gerätename, Schlüssel als nicht-extrahierbarer `CryptoKey` wie heute); Datenschlüssel am Hub in `getPlatform().secrets`; nie synchronisiert, nie im Backup (Test).
+- `getPlatform().lanSync` (optional, nur Tauri): `pair(qr)`, `request(msg)`, `status()`; am Hub-PC verteilt `request` lokal an den Hub (In-Prozess), an Clients über Noise; `core/sync` nennt nie einen Tauri-Befehl (`docs/RULES.md:14`); Web/PWA: `undefined` (PWA bleibt beim Server-Weg).
+- Client-Befehle: Handler in `src/lib.rs` + `build.rs` `COMMANDS` + Grant in `capabilities/default.json` (geteilt, Android + Desktop), `tests/commands.rs` grün.
+- `core/sync/adapters/lan.ts`: `SyncAdapter` nur über `getPlatform().lanSync.request`, gleiche Seitengrößen und Fehlercodes wie `selfHosted` (`network` = neutraler Banner aus CONCEPT §8, nie Rot); neue Codes `revoked`/Hub-neu nur mit nächstem Schritt „Neu koppeln“.
+- `SyncConfig` bekommt `kind: 'lan'` (Hub-Fingerprint, Gerätename, Datenschlüssel als nicht-extrahierbarer `CryptoKey` wie heute); rohe Schlüssel bleiben in Rust (Paket 2); nie synchronisiert, nie im Backup (Test).
 - Ein Weg pro Gerät: Wechsel Server ↔ LAN nur über Trennen; erster LAN-Abgleich `markAllDirty`.
 - `crates/lan-sync/client` für Android und zweiten PC (Noise-Initiator, Pinning, mDNS-Suche mit Adress-Hinweis als Rückfall).
 - E2E: zwei App-Instanzen (Playwright, Tauri-Mock oder Test-Hub-Binary) koppeln, Änderung auf A erscheint auf B, Konflikt nach Feld-LWW, PC aus → Status ruhig, Outbox wächst.
 
 ## Nicht in diesem Paket
-Einstellungs-UI über eine Test-Schaltfläche hinaus, Android-Plugin, Hintergrund-Abgleich, Tailscale.
+Einstellungs-UI über eine Test-Schaltfläche hinaus, Android-Plugin (WLAN-Auslöser), Hintergrund-Abgleich, Tailscale.
 
 ## Abnahme
 - `npm run check`, `test`, `e2e` (inkl. `e2e:sync` unverändert grün), Rust-Checks; `exclusion.test.ts`/`privacy.test.ts` unverändert; Test „Schlüssel und Kopplungsdaten nie in Backup/Diagnose“.
@@ -113,18 +115,25 @@ Branch `feat/lan-sync-ui` von frischem `develop`, erst nach Merge von Paket 3. H
 CONCEPT §2 (Nutzungsbild, drei Schritte ohne Tippen), §6 (Android), §8 (UI-Skizze, Fokus-Regeln); `pages/settings/{SyncSection,SyncDevices,ConnectParts}.tsx`; docs/design/FOCUS-GUIDELINES.md, FOCUS-WORDING.md.
 
 ## Pflichtliste
-- Sync-Seite nach CONCEPT §8: Banner (Abgeglichen / PC nicht erreichbar / Wartet aufs Heimnetz – grau, nie Rot ohne echten Fehler), Fakten, „Jetzt abgleichen“, Geräteliste mit „Kopplung lösen“ und einmaligem Hinweis nach 90 Tagen, „Gerät koppeln“ (QR groß, Restzeit, „Kopplungsdatei speichern“, Bestätigungsfrage), Schalter „Nemo im Tray weiterlaufen lassen“ vorausgewählt beim Koppeln; „Eigener Server (erweitert)“ eingeklappt.
-- Handy: „Mit PC koppeln“ → `tauri-plugin-barcode-scanner` (eigener Commit); Rechte nur Kamera.
+- Sync-Seite nach CONCEPT §8 (Zustandstabelle dort ist verbindlich): Banner nie Rot, Fehler im `attention`-Ton mit Text, Icon und „Neu koppeln“; Fakten mit Datum statt „vor n Tagen“; „Jetzt abgleichen“; Geräteliste nur am Hub mit „Kopplung lösen“ und einmaligem Hinweis nach 90 Tagen; „Gerät koppeln“ nur am Hub (QR groß, Restzeit, Code-Form klein, Bestätigung mit 6-stelligem Code); Schalter „Mit Windows starten“ und „Im Tray weiterlaufen“ vorausgewählt beim Koppeln; „Eigener Server (erweitert)“ eingeklappt.
+- Zweiter PC: „Mit PC koppeln“ mit Webcam-Scan (`getUserMedia`; Decoder im PR belegen) oder Code-Form.
+- Handy: „Mit PC koppeln“ → `tauri-plugin-barcode-scanner` (eigener Commit); gefährliche Rechte nur Kamera; normale Rechte `ACCESS_NETWORK_STATE`, `CHANGE_WIFI_MULTICAST_STATE`.
 - Eigenes Plugin `plugins/lan-watch` (Kotlin): `NetworkCallback` für WLAN → Ereignis → `syncNow()`; Multicast-Lock bzw. `NsdManager` für die Suche; keine Standort-Berechtigung, keine SSID.
-- Texte de/en (Vorschläge): „Mit PC koppeln / Pair with PC“, „Gerät koppeln / Pair a device“, „Gilt noch {m}:{ss} / Valid for {m}:{ss}“, „{name} koppeln? / Pair {name}?“, „Abgeglichen · {when} / Synced · {when}“, „PC nicht erreichbar · zuletzt {when} / PC not reachable · last {when}“, „Wartet aufs Heimnetz · {n} Änderungen / Waiting for home network · {n} changes“, „Kopplung lösen / Unpair“, „Nemo im Tray weiterlaufen lassen, damit dein Handy abgleichen kann / Keep Nemo running in the tray so your phone can sync“; alle fünf Sprachen über `check:i18n`.
-- Umstieg Server → LAN: Dialog mit Pflicht-Backup zuerst, dann Trennen, dann Koppeln (CONCEPT §7).
+- Texte de/en (Vorschläge, alle fünf Sprachen über `check:i18n`; `(P)` = Pluralfunktion):
+  - Koppeln: „Mit PC koppeln / Pair with PC“, „Gerät koppeln / Pair a device“, „Gilt noch {m}:{ss} / Valid for {m}:{ss}“, „{name} koppeln? Code {code} / Pair {name}? Code {code}“, „Steht derselbe Code auf dem anderen Gerät? / Does the other device show the same code?“, „Koppeln / Pair“, „Abbrechen / Cancel“, „{name} ist gekoppelt. / {name} is paired.“, „Mit {hub} gekoppelt / Paired with {hub}“, „Code eingeben / Enter code“.
+  - Zustand: „Abgeglichen / Synced“, „Gleicht ab … / Syncing …“, „Im Heimnetz mit „{hub}“ / On your home network with “{hub}”“, „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist / Syncs as soon as your PC is reachable on the same Wi-Fi“, „Läuft Nemo auf dem PC? / Is Nemo running on the PC?“, „Diese Kopplung wurde gelöst. / This pairing was removed.“, „Dein PC ist neu – bitte neu koppeln. / Your PC is new – please pair again.“, „Daten vom PC lassen sich nicht lesen. / Data from the PC cannot be read.“, „Neu koppeln / Pair again“.
+  - Fakten: „Zuletzt abgeglichen / Last synced“, „Noch nicht abgeglichen / Not yet synced“, „{n} Änderungen / {n} changes“ (P), „Jetzt abgleichen / Sync now“, „Nur im WLAN / Wi-Fi only“.
+  - Geräte: „Gekoppelte Geräte / Paired devices“, „Zuletzt gesehen {date} / Last seen {date}“, „Länger nicht gesehen. Lösen, wenn du es nicht mehr nutzt. / Not seen for a while. Unpair it if you no longer use it.“, „Kopplung lösen / Unpair“, „{name} kann nicht mehr abgleichen. / {name} can no longer sync.“.
+  - Schalter: „Mit Windows starten / Start with Windows“, „Im Tray weiterlaufen / Keep running in the tray“, „Damit dein Handy abgleichen kann, wenn du heimkommst / So your phone can sync when you get home“; „Eigener Server (erweitert) / Own server (advanced)“.
+  - Umstieg: „Vom Server auf das Heimnetz umstellen / Switch from server to home network“, „Zuerst eine Sicherung / Backup first“, „Diese Geräte gleichen weiter über den Server ab, bis du sie auch umstellst: / These devices keep syncing through the server until you switch them too:“, „Am Server sperren / Lock on server“, „Vom Server trennen / Disconnect from server“.
+- Umstieg Server → LAN: Dialog mit Pflicht-Backup zuerst, Liste der Geräte, die der Server noch kennt (mit „Am Server sperren“), dann Trennen, dann Koppeln (CONCEPT §7).
 - Doku: `docs/user/sync.md` + `.de.md` neuer erster Abschnitt „Im Heimnetz mit dem PC“; Server-Abschnitt bleibt; MANUAL-TESTS: Koppeln, Handy kommt heim, PC aus, Gäste-WLAN, Kopplung lösen; Messung Entdeckung/erster Abgleich auf echtem Handy in die Tabelle CONCEPT §9 nachtragen.
 
 ## Nicht in diesem Paket
 Hintergrund-Abgleich (WorkManager), Tailscale, Änderungen an Protokoll oder Crate außer Fehlerbehebungen.
 
 ## Abnahme
-- `npm run check`, `test`, `e2e`, `check:i18n`, `check:readme`; a11y für die Sync-Seite; 412 px ohne Überlauf; Fokus-Checkliste (FOCUS-GUIDELINES 1–9) im PR-Text; Klickzahl Koppeln ≤ 3 ohne Tippen.
+- `npm run check`, `test`, `e2e`, `check:i18n`, `check:readme`; a11y für die Sync-Seite; 412 px ohne Überlauf; Fokus-Checkliste (FOCUS-GUIDELINES 1–9) im PR-Text; Koppeln in drei Schritten ohne Tippen (Klicks je Gerät wie CONCEPT §2 gezählt und im PR genannt).
 - `.changes/`-Notiz (DE/EN): „Handy und PC gleichen sich im Heimnetz ab – koppeln per QR-Code, kein eigener Server nötig.“
 
 ## Skills

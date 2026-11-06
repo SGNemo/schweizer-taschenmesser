@@ -27,7 +27,7 @@ Base for [CONCEPT.md](CONCEPT.md). Paths relative to the repo root, read on `dev
 
 1. **Op:** `FieldOp = {collection, id, field, hlc, value}` (`value: null` = field removed) – `web/src/core/sync/types.ts:2-10`. `PullPage = {epoch, ops, cursor, more}`; `SyncAdapter.push/pull` – `types.ts:12-30`.
 2. **HLC:** `"<wallMs 13>-<counter 4>-<deviceId>"`, compared as plain strings, deviceId breaks ties – `web/src/core/db/hlc.ts:1-5,30-32,40-42`; drift bound 1 h – `hlc.ts:22-28`; validation regex – `web/src/core/sync/ops.ts:12`.
-3. **LWW (client):** `mergeOps()` – `ops.ts:38-76`, decision `if (current !== undefined && op.hlc <= current) continue;` – `ops.ts:55`. Contract test – `web/src/core/sync/contract.test.ts:15`.
+3. **LWW (client):** `mergeOps()` – `ops.ts:39-77`, decision `if (current !== undefined && op.hlc <= current) continue;` – `ops.ts:55`. Contract test – `web/src/core/sync/contract.test.ts:15`.
 4. **Engine:** pull first, then push; 3 retries on epoch change – `engine.ts:73-85`; pull pages of 1 000 with a server `seq` cursor, `adoptEpoch` resets cursor and marks all dirty – `engine.ts:87-132`; push reads the outbox 250 at a time, ≤ 2 000 ops / 3 MB per request – `engine.ts:34-36,134-153`.
 5. **Adapter:** routes `/v1/health, push, pull, vault, info, devices(+rotate, delete), status, reset` – `web/src/core/sync/adapters/selfHosted.ts:159-245`; Bearer token, 30 s timeout, via `getPlatform().fetch` – `selfHosted.ts:21,118,130-137`; only http/https URLs – `selfHosted.ts:249-253`.
 6. **Service:** in-tab promise chain + Web Lock `taschenmesser-sync`, no leader election – `service.ts:105-117`; phases `off | idle | syncing | error` – `web/src/core/sync/status.ts:4`; backoff 5 s doubling to 5 min ±20 % – `service.ts:143-149`; triggers: start, every 60 s, `online`, visible, 1.5 s after outbox changes – `service.ts:238-239,255-314`; started from `web/src/main.tsx:73`; `connect()` = health → vault → info → device registration (own revocable token) → save → sync – `service.ts:387-458`.
@@ -53,7 +53,7 @@ Base for [CONCEPT.md](CONCEPT.md). Paths relative to the repo root, read on `dev
 
 - Local API binds `Ipv4Addr::LOCALHOST`, "deliberately no setting" – `crates/local-api/src/server.rs:95-97`; Host check – `server.rs:330-334`; SHA-256 token check – `crates/local-api/src/auth.rs:17,42-54`; refuses `Origin`/`Sec-Fetch-Site` – `crates/local-api/src/lib.rs:1-9`; default port 47631 – `src/local_api.rs:5`; meaning in TS – `web/src/core/localapi/handler.ts:115-121`.
 - `capabilities/desktop.json` covers Windows/Linux/macOS only (`:6`); local-api grants `:51-54`.
-- Tray (`tray-icon` feature) – `Cargo.toml:29`, `src/capture.rs:17`; autostart plugin – `Cargo.toml:56`, `src/lib.rs:122-123`; started by autostart the main window stays hidden in the tray – `src/capture.rs:103-108`; "In den Tray minimieren statt beenden" defaults off – `web/src/quickCapture/device.ts:22`, `web/src/strings.ts:1080`.
+- Tray (`tray-icon` feature) – `Cargo.toml:29`, `src/capture.rs:17`; autostart plugin – `Cargo.toml:56`, `src/lib.rs:122-123`; started by autostart the main window stays hidden in the tray – `src/capture.rs:103-108`; "In den Tray minimieren statt beenden" defaults off – `web/src/quickCapture/device.ts:25`, `web/src/strings.ts:1080`; "Mit Windows starten" (`autostart`) defaults off too – `device.ts:26`.
 - Already in `Cargo.lock`: `tokio` 1.53, `hyper` 1.11, `axum` 0.8, `rustls` 0.23, `ring` 0.17, `sha2` 0.10 (`grep '^name' Cargo.lock`). No mDNS/zeroconf crate anywhere.
 - QR: generator `qrcode-generator` – `web/package.json:107`, `web/src/tools/qr/logic.ts:1`; scanning via the browser `BarcodeDetector` + `getUserMedia` – `web/src/tools/qr/View.tsx:13-19`, `web/src/pages/settings/ShareQr.tsx:85-88`. unsicher: `BarcodeDetector` in the Android WebView / WebView2.
 
@@ -74,3 +74,9 @@ Base for [CONCEPT.md](CONCEPT.md). Paths relative to the repo root, read on `dev
 ## 9. Measured with the prototype
 
 See CONCEPT.md §9 (`node docs/design/sync-lan/proto/run.mjs`).
+
+## 10. External sources (checked 2026-11-06)
+
+- crates.io API: `mdns-sd` 0.21.7 (Apache-2.0 OR MIT), `snow` 0.10.0 (Apache-2.0 OR MIT), `libmdns` 0.10.1 (MIT), `rustls` 0.23.46, `rcgen` 0.14.10, `tauri-plugin-barcode-scanner` 2.5.3 (Apache-2.0 OR MIT), `if-watch` 3.2.2.
+- Noise spec rev. 34 (noiseprotocol.org): handshake patterns §7, PSK §9. RFC 6762 §6 (mDNS response delay), RFC 6598 (`100.64.0.0/10`).
+- Android: `NsdManager`, `WifiManager.MulticastLock`, `ConnectivityManager.NetworkCallback`, WorkManager (developer.android.com, links in CONCEPT). Not tried on a device.

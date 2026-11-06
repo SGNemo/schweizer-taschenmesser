@@ -35,8 +35,17 @@ function open(key, n, sealed, aad) {
   return Buffer.concat([d.update(sealed.subarray(0, sealed.length - 16)), d.final()]);
 }
 
-/** Length-prefixed frames on a net.Socket; `read()` resolves with the next frame. */
-export function framer(sock) {
+/** Hub answers with a single-byte frame when it refuses; the phone can tell this from a crash. */
+export const REFUSED = { 1: 'no-pairing-window', 2: 'unknown-device' };
+export const MAX_HANDSHAKE_FRAME = 256;
+const MAX_FRAME = 16 * 1024 * 1024;
+const refusal = (frame) => (frame.length === 1 ? new Error(`refused:${REFUSED[frame[0]] ?? 'unknown'}`) : null);
+
+/**
+ * Length-prefixed frames on a net.Socket; `read()` resolves with the next frame. `max` caps the
+ * frame length (small during the handshake, raised after authentication).
+ */
+export function framer(sock, max = MAX_HANDSHAKE_FRAME) {
   sock.setNoDelay(true); // small handshake frames must not wait for Nagle
   let buf = Buffer.alloc(0);
   const waiting = [];
@@ -44,8 +53,13 @@ export function framer(sock) {
   let closed = null;
   sock.on('data', (d) => {
     buf = Buffer.concat([buf, d]);
-    while (buf.length >= 4 && buf.length >= 4 + buf.readUInt32BE(0)) {
+    while (buf.length >= 4) {
       const len = buf.readUInt32BE(0);
+      if (len > self.max) {
+        fail(new Error('frame too large'));
+        return void sock.destroy();
+      }
+      if (buf.length < 4 + len) break;
       const frame = buf.subarray(4, 4 + len);
       buf = buf.subarray(4 + len);
       waiting.length ? waiting.shift().resolve(frame) : ready.push(frame);
@@ -57,7 +71,8 @@ export function framer(sock) {
   };
   sock.on('close', () => fail());
   sock.on('error', fail);
-  return {
+  const self = {
+    max,
     write(b) {
       const h = Buffer.alloc(4);
       h.writeUInt32BE(b.length);
@@ -69,9 +84,11 @@ export function framer(sock) {
       return new Promise((resolve, reject) => waiting.push({ resolve, reject }));
     },
   };
+  return self;
 }
 
-function transport(f, sendKey, recvKey) {
+function transport(f, sendKey, recvKey, sas) {
+  f.max = MAX_FRAME;
   let sn = 0;
   let rn = 0;
   return {
@@ -79,9 +96,12 @@ function transport(f, sendKey, recvKey) {
       f.write(seal(sendKey, sn++, Buffer.from(JSON.stringify(obj)), PROLOGUE));
     },
     async recv() {
-      return JSON.parse(open(recvKey, rn++, await f.read(), PROLOGUE).toString());
+      const frame = await f.read();
+      const refused = refusal(frame);
+      if (refused) throw refused;
+      return JSON.parse(open(recvKey, rn++, frame, PROLOGUE).toString());
     },
-    sent: () => sn,
+    sas,
   };
 }
 
@@ -93,6 +113,8 @@ export async function initiate(f, { mode, me, psk, expectFp }) {
   const e = keyPair();
   f.write(Buffer.concat([Buffer.from([mode]), e.pub]));
   const m2 = await f.read();
+  const refused = refusal(m2);
+  if (refused) throw refused;
   const ea = m2.subarray(0, 32);
   const sa = m2.subarray(32, 64);
   if (!fingerprint(sa).equals(expectFp)) throw new Error('hub key does not match the pinned fingerprint');
@@ -102,7 +124,7 @@ export async function initiate(f, { mode, me, psk, expectFp }) {
   open(k1, 0, m2.subarray(64), t1); // proves: hub owns `sa` and (PAIR) knows the psk
   f.write(seal(k1, 1, me.pub, t1));
   const keys = hkdf(Buffer.concat([dh(e, ea), dh(e, sa), dh(me, ea)]), salt, Buffer.concat([t1, me.pub]), 64);
-  return transport(f, keys.subarray(0, 32), keys.subarray(32));
+  return transport(f, keys.subarray(0, 32), keys.subarray(32), sasOf(t1, me.pub));
 }
 
 /** Responder (hub). `trusts(pub)` decides SESSION access; PAIR needs the live one-time psk. */
@@ -110,16 +132,33 @@ export async function respond(f, { me, pskFor, trusts }) {
   const m1 = await f.read();
   const mode = m1[0];
   const eb = m1.subarray(1, 33);
-  const psk = mode === MODE.PAIR ? pskFor() : ZERO;
-  if (!psk) throw new Error('no pairing window open');
+  const psk = mode === MODE.PAIR ? pskFor() : ZERO; // pskFor() burns the window at message 1
+  if (!psk) {
+    f.write(Buffer.from([1]));
+    throw new Error('no pairing window open');
+  }
   const e = keyPair();
   const t1 = Buffer.concat([PROLOGUE, Buffer.from([mode]), eb, e.pub, me.pub]);
   const k1 = hkdf(Buffer.concat([dh(e, eb), dh(me, eb)]), psk, t1, 32);
   f.write(Buffer.concat([e.pub, me.pub, seal(k1, 0, Buffer.from('hub'), t1)]));
   const sb = open(k1, 1, await f.read(), t1); // fails on a wrong psk
-  if (mode === MODE.SESSION && !trusts(sb)) throw new Error('unknown device');
+  if (mode === MODE.SESSION && !trusts(sb)) {
+    f.write(Buffer.from([2]));
+    throw new Error('unknown device');
+  }
   const keys = hkdf(Buffer.concat([dh(e, eb), dh(me, eb), dh(e, sb)]), psk, Buffer.concat([t1, sb]), 64);
-  return { mode, peer: sb, ch: transport(f, keys.subarray(32), keys.subarray(0, 32)) };
+  return { mode, peer: sb, ch: transport(f, keys.subarray(32), keys.subarray(0, 32), sasOf(t1, sb)) };
+}
+
+/** Short authentication string shown on both screens at pairing (6 digits from the transcript). */
+function sasOf(t1, phoneStatic) {
+  const h = crypto.createHash('sha256').update(t1).update(phoneStatic).digest();
+  return String(h.readUInt32BE(0) % 1_000_000).padStart(6, '0');
+}
+
+/** mDNS hint that rotates daily: only devices that know the fingerprint can match it. */
+export function dailyHint(fp, day = new Date().toISOString().slice(0, 10)) {
+  return crypto.createHmac('sha256', fp).update(day).digest().subarray(0, 8).toString('hex');
 }
 
 // ---- E2E value encryption, same format and AAD as web/src/core/sync/crypto.ts ----
