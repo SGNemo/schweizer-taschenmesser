@@ -33,15 +33,24 @@ export function userPlannedFor(task: Marked, date: string | undefined): PlannedF
  * - `someday`: kept back on purpose, or without any date.
  * - `today`: due or planned for today or earlier (and not hidden by a later start date).
  * - `soon`: dated for a later day, or not started yet.
+ *
+ * `planner`: the planner module is on. A day it gave the thing (its own mark, `isPlannerOwned`) wins over an older
+ * due date – the thing is „soon“ until that day, so the ToDo page counts what the plan counts (N02, CONCEPT §7).
+ * A user's date, or a thing the planner has not placed, keeps the plain rule.
  */
-export function viewOf(task: V, day: string): TodoView {
+export function viewOf(task: V, day: string, planner = false): TodoView {
   if (task.done) return 'done';
   if (task.someday) return 'someday';
   if (task.startDate && task.startDate > day) return 'soon';
+  if (planner && isLaterInPlan(task, day)) return 'soon';
   const when = [task.plannedFor, task.dueDate].filter((d): d is string => !!d);
   if (when.length === 0) return 'someday';
   return when.some((d) => d <= day) ? 'today' : 'soon';
 }
+
+/** The planner put the thing on a later day (its own mark matches the date). */
+export const isLaterInPlan = (task: Marked, day: string): boolean =>
+  isPlannerOwned(task) && task.plannedFor! > day;
 
 export const inView = (task: V, view: TodoView, day: string): boolean => viewOf(task, day) === view;
 

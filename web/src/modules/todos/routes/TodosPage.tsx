@@ -331,8 +331,9 @@ export default function TodosPage() {
   const tasks = useLiveQuery(() => taskRepo.active().toArray(), []);
   const [prefs] = useSettings('module.todos', settings.schema, settings.defaults);
   const [focus] = useFocusSettings();
-  // While the planner module is on, it distributes the open things: the ToDo page's „Neu planen“
-  // (which rewrites due dates) steps back, and a planner-set date shows „im Plan“ in Bald.
+  // While the planner module is on, it distributes the open things: the ToDo page's „Neu planen“ and „Alle auf heute“
+  // (which rewrite dates) step back, a planner-set later day wins over an older due date (Heute counts what the plan
+  // counts, N02) and shows „im Plan“ in Bald.
   const plannerOn = useModuleStates()?.planner === true;
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -411,12 +412,12 @@ export default function TodosPage() {
         !x.parentId &&
         inList(x) &&
         matches(x) &&
-        (pageView === 'board' || viewOf(x, day) === pageView),
+        (pageView === 'board' || viewOf(x, day, plannerOn) === pageView),
     );
     if (pageView === 'board') return tops;
     const ids = new Set(tops.map((x) => x.id));
     return [...tops, ...all.filter((x) => x.parentId && ids.has(x.parentId))];
-  }, [tasks, selected, showDone, forPerson, tag, pageView, day]);
+  }, [tasks, selected, showDone, forPerson, tag, pageView, day, plannerOn]);
   const { top, children } = useMemo(() => groupTasks(visible), [visible]);
   const tagList = useMemo(() => tagCounts(tasks ?? []), [tasks]);
   const project = useMemo(() => {
@@ -510,7 +511,7 @@ export default function TodosPage() {
             </span>
             <Button onClick={replanNow}>{t.focus.waiting.replan}</Button>
           </div>
-        ) : g.id === 'overdue' ? (
+        ) : g.id === 'overdue' && !plannerOn ? (
           <div className={styles.waiting}>
             <Button onClick={moveOverdueToday} data-testid="all-today">
               {t.todos.allToday}
@@ -689,6 +690,7 @@ export default function TodosPage() {
             tasks={tasks}
             day={day}
             focusMinutes={focus.focusMinutes}
+            planner={plannerOn}
             onStart={(x) => void startFocus(x.id)}
             onLater={(x) => {
               const full = tasks.find((y) => y.id === x.id);
@@ -782,6 +784,7 @@ export default function TodosPage() {
               onOpen={setEditing}
               onMove={moveTo}
               onTomorrow={(x) => postpone(x, day)}
+              planner={plannerOn}
             />
           ) : null}
           {pageView !== 'board' && top.length > 0 ? (

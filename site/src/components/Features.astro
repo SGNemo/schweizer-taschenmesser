@@ -50,6 +50,7 @@ const plannerNote = planner && planner.status !== 'default' ? m.status[planner.s
           <p>{s.features.planner.text}</p>
         </div>
         <Shot name="planner" frame="phone" class="spotshot" alt={s.features.planner.alt} sizes="(min-width: 48rem) 12rem, 55vw" widths={[220, 440, 824]} />
+        <Shot name="planner-desktop" frame="window" class="spotwide" alt={s.features.planner.altDesktop} sizes="38rem" widths={[608, 960, 1216]} />
       </div>
     )}
     <div class="areas">
@@ -111,12 +112,29 @@ const plannerNote = planner && planner.status !== 'default' ? m.status[planner.s
   .spot :global(.spotshot) {
     width: min(12rem, 55vw);
   }
+  /* From 64rem the week board on the desktop takes the phone's place (a hidden lazy picture is never requested). */
+  .spot :global(.spotwide) {
+    display: none;
+    width: 100%;
+  }
   @media (min-width: 48rem) {
     .spot {
       grid-template-columns: minmax(0, 34rem) auto;
       justify-content: center;
       column-gap: var(--space-7);
       padding: var(--space-5) var(--space-6);
+    }
+  }
+  /* After the 48rem block: both set the spot's columns, the later one wins from 64rem. */
+  @media (min-width: 64rem) {
+    .spot {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 38rem);
+    }
+    .spot :global(.spotshot) {
+      display: none;
+    }
+    .spot :global(.spotwide) {
+      display: block;
     }
   }
   .areas {

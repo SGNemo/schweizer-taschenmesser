@@ -8,15 +8,26 @@
   flex: 1;
   min-width: 0;
 }
+/* N04: with ⋯ beside „Eintragen“ a phone keeps the field (and its hint) on the full width; the two buttons follow. */
+@container page (max-width: 40rem) {
+  .add {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .grow {
+    flex-basis: 100%;
+  }
+}
 
 .board {
   display: grid;
-  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 73rem of page width. */
+  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 95rem of page width, where a column keeps
+     ~210 px – room for a long German word in a title (N01); narrower, seven columns would end titles in „…“. */
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   align-items: start;
 }
-@container page (min-width: 73rem) {
+@container page (min-width: 95rem) {
   .board {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
@@ -76,6 +87,46 @@
   height: 1.5rem;
   margin: 0;
   accent-color: var(--module-color);
+}
+
+/* N01: a board column is ~210 px at 1920. The row gives its title the room – slim gap and padding, a smaller box,
+   no 10 rem floor on the main button, the ⋯ menu floats over the row end on hover devices – and a title takes at
+   most two lines, broken between words; a word wider than the column ends in „…“ instead of breaking inside. */
+.boardRow {
+  position: relative;
+}
+.boardRow > div {
+  gap: var(--space-2);
+  padding-inline: var(--space-1);
+}
+.boardRow [data-row] {
+  min-width: 0;
+}
+@media (hover: hover) {
+  /* A smaller box only with a pointer; a touch screen keeps the 24 px box. */
+  .boardRow .check {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .boardRow [data-row-actions] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+  }
+}
+.boardTitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+  text-overflow: ellipsis;
 }
 .minutes {
   color: var(--text-3);

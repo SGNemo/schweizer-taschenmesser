@@ -5,9 +5,9 @@
  *   npm run app:screenshots            (in site/; builds ../web dist-e2e-seed if missing, serves it)
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
  *
- * Pages: home (1280×720, hero), phone (412×915) and the planner on the phone (412×915, Features
- * highlight); notifications granted so no permission banner shows. `unlock` opens the vault with the
- * seed's demo passphrase for a motif that needs it. The seed's texts are German, so one set serves
+ * Pages: home (1280×720, hero), phone (412×915) and the planner on the phone (412×915) and the
+ * desktop (1920×1080, the seven-column board; Features highlight); notifications granted so no
+ * permission banner shows. `unlock` opens the vault with the seed's demo passphrase for a motif that needs it. The seed's texts are German, so one set serves
  * every site language. The only cosmetic change is the hidden "Dev" badge of the preview flavour;
  * everything else is the real UI.
  *
@@ -33,9 +33,10 @@ const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const PAGES = [
   { name: 'home', path: '/', viewport: { width: 1280, height: 720 } },
   { name: 'phone', path: '/', viewport: { width: 412, height: 915 }, mobile: true },
-  // The planner on the phone (Features highlight): one day per screen, the head figure is today's free time
-  // from the seed. The desktop board waits for planner package 2 (titles break inside words, N01).
+  // The planner (Features highlight): on the phone one day per screen, on the desktop the week board (N01 fixed:
+  // titles break between words); the head figure is today's free time from the seed.
   { name: 'planner', path: '/planner', viewport: { width: 412, height: 915 }, mobile: true },
+  { name: 'planner-desktop', path: '/planner', viewport: { width: 1920, height: 1080 } },
 ];
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */

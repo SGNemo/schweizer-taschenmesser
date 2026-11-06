@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
   get name() {
     return t.planner.meta.name;
   },
-  icon: 'calendarDays',
+  icon: 'chartGantt',
   identity: {
     hue: 'indigo',
     hue2: 'cobalt',

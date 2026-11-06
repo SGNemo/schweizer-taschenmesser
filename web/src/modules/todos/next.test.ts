@@ -19,6 +19,19 @@ describe('pickNext (nächste eine Sache)', () => {
     expect(pickNext([a, b], TODAY)?.id).toBe('plan');
   });
 
+  it('with the planner on, skips an overdue thing it put on a later day (N02)', () => {
+    const placed = task({
+      id: 'placed',
+      dueDate: '2026-09-01',
+      priority: 3,
+      plannedFor: '2026-10-06',
+      planMark: { date: '2026-10-06', order: 0 },
+    });
+    const other = task({ id: 'other' });
+    expect(pickNext([placed, other], TODAY)?.id).toBe('placed');
+    expect(pickNext([placed, other], TODAY, [], true)?.id).toBe('other');
+  });
+
   it('puts due today and soon before an old overdue date', () => {
     const old = task({ id: 'old', dueDate: '2026-09-01', priority: 3 });
     const soon = task({ id: 'soon', dueDate: '2026-10-04' });
