@@ -43,9 +43,17 @@ test.describe('Home screen', () => {
       await expect(mark).toHaveAttribute('aria-hidden', 'true');
       await expect(mark.locator('svg[data-signature]')).toHaveCount(1);
       // In the head row next to the title, at its right end, whatever the widget variant.
-      const [hb, mb] = [await w.locator('h2').first().boundingBox(), await mark.boundingBox()];
-      expect(Math.abs(hb!.y + hb!.height / 2 - (mb!.y + mb!.height / 2))).toBeLessThan(12);
-      expect(mb!.x).toBeGreaterThanOrEqual(hb!.x + hb!.width - 1);
+      // Measured in one go: widgets still loading above would shift two separate reads apart.
+      const { dy, gap } = await w.evaluate((el) => {
+        const h = el.querySelector('h2')!.getBoundingClientRect();
+        const m = el.querySelector('[data-testid="signature-mark"]')!.getBoundingClientRect();
+        return {
+          dy: Math.abs(h.top + h.height / 2 - (m.top + m.height / 2)),
+          gap: m.left - h.right,
+        };
+      });
+      expect(dy).toBeLessThan(12);
+      expect(gap).toBeGreaterThanOrEqual(-1);
     }
   });
 
