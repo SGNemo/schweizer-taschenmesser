@@ -7,7 +7,7 @@ import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Badge, Button, EmptyState, Icon, PageHeader, TextField } from '@/ui';
 import { Bubble, HeroSlot, SignatureMark } from '@/ui/identity';
-import { SetupHint } from '../components/SetupHint';
+import { SetupHint, useChatSetup } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
 import { expiredThreads, searchThreads, sortThreads } from '../logic';
 import { messageRepo, threadRepo } from '../repo';
@@ -20,6 +20,7 @@ export default function ChatPage() {
   const [params, setParams] = useSearchParams();
   const [prefs] = useSettings('module.chat', settings.schema, settings.defaults);
   const aiOn = useAiOn();
+  const setup = useChatSetup();
   const threads = useLiveQuery(() => threadRepo.active().toArray(), []);
   const messages = useLiveQuery(() => messageRepo.active().toArray(), []);
   const [query, setQuery] = useState('');
@@ -95,7 +96,7 @@ export default function ChatPage() {
   if (selected && threads?.some((x) => x.id === selected)) {
     return (
       <>
-        <SetupHint />
+        <SetupHint setup={setup} />
         <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />
       </>
     );
@@ -110,12 +111,13 @@ export default function ChatPage() {
         </span>
       </HeroSlot>
       <PageHeader title={c.title}>
-        <Button variant="primary" onClick={() => void create()}>
+        {/* One filled action per page (C23): while the setup hint shows, it is that one and this steps back. */}
+        <Button variant={setup?.needed ? 'secondary' : 'primary'} onClick={() => void create()}>
           <Icon name="plus" size={18} />
           {c.newChat}
         </Button>
       </PageHeader>
-      <SetupHint />
+      <SetupHint setup={setup} />
       <div className={styles.layout}>
         <TextField
           label={c.search}
@@ -134,15 +136,12 @@ export default function ChatPage() {
           {c.showArchived}
         </label>
         {threads && shown.length === 0 ? (
+          // Title and motif only: „Neuer Chat“ in the toolbar is the page's one verb (C23).
           <EmptyState
             title={c.empty}
             testId="chat-empty"
             motif={<SignatureMark id="bubble" size={64} />}
-          >
-            <Button variant="primary" onClick={() => void create()}>
-              {c.emptyAction}
-            </Button>
-          </EmptyState>
+          />
         ) : (
           <ul className={styles.list}>
             {shown.map((x) => (

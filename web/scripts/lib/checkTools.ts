@@ -84,3 +84,32 @@ export function checkToolKeywords(id: string, lang: string, catalog: string): st
     ? []
     : [`tool ${id}: no \`keywords\` in the ${lang} catalog`];
 }
+
+/** The signature and hue of a module, as far as the kinship note needs them. */
+export interface ModuleLook {
+  id: string;
+  hue?: string;
+  signature?: string;
+}
+
+/**
+ * Tools that share a signature with a module (F13): intended – a tool is not a module and the same page never shows
+ * both – so `check:tools` only prints these as information, never as a failure. The hue is named when it is shared too.
+ */
+export function toolModuleKinship(
+  tools: readonly ToolFacts[],
+  modules: readonly ModuleLook[],
+): string[] {
+  const notes: string[] = [];
+  for (const tool of tools) {
+    if (!tool.signature || tool.signature === 'none') continue;
+    for (const m of modules) {
+      if (m.signature !== tool.signature) continue;
+      const hue = tool.hue && tool.hue === m.hue ? ` and the hue "${m.hue}"` : '';
+      notes.push(
+        `tool ${tool.id} shares the signature "${tool.signature}"${hue} with the module ${m.id}`,
+      );
+    }
+  }
+  return notes;
+}

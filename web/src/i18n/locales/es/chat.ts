@@ -14,7 +14,6 @@ export const chat: Strings['chat'] = {
   chats: 'Chats',
   search: 'Buscar en chats',
   empty: 'Aún no hay chats. Haz una pregunta; no se guarda nada hasta que envías.',
-  emptyAction: 'Iniciar chat',
   noThread: 'Elige un chat a la izquierda o inicia uno nuevo.',
   back: 'Volver a la lista de chats',
   placeholder: 'Escribe un mensaje …',

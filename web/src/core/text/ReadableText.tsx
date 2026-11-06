@@ -32,6 +32,14 @@ const CONTROL =
 /** The moments such a passing state ends (the state is already gone when they fire). */
 const STATE_ENDS = ['pointerleave', 'pointerup', 'focusout'] as const;
 
+/** Writes the ink and the boldness of the text around the aid onto its wrapper (the parent's colour and weight). */
+function measureInk(el: HTMLElement, parent: HTMLElement): void {
+  const style = getComputedStyle(parent);
+  el.dataset.ink = inkOf(style.color);
+  if (isBoldWeight(style.fontWeight)) el.dataset.bold = '';
+  else delete el.dataset.bold;
+}
+
 /** Coverage levels (percent): the aid is shown where the element's level is at most the chosen coverage. */
 export type ReadLevel = 25 | 50 | 75 | 100;
 
@@ -101,12 +109,7 @@ export function ReadableText({
     // The parent's colour and weight: the wrapper's own colour is the dimmed one.
     const parent = el?.parentElement;
     if (!el || !parent) return;
-    const measure = () => {
-      const style = getComputedStyle(parent);
-      el.dataset.ink = inkOf(style.color);
-      if (isBoldWeight(style.fontWeight)) el.dataset.bold = '';
-      else delete el.dataset.bold;
-    };
+    const measure = () => measureInk(el, parent);
     measure();
     // Measured while the control around it is hovered, pressed or focused (a sidebar entry the pointer still rests on
     // when it stops being the current page): that colour does not last. Measure again the moment the state ends,
@@ -122,6 +125,29 @@ export function ReadableText({
       for (const ev of STATE_ENDS) host.removeEventListener(ev, again);
     };
   });
+  // A link that becomes (or stops being) the current page changes only its own class and aria-current (`NavLink` on a
+  // route change); the text element is the same, so React does not render it again and the effect above never runs.
+  // Watch those two attributes of the link around the text and measure again (N07: the sidebar kept the old ink).
+  const shown = runs !== null;
+  useLayoutEffect(() => {
+    const el = wrapper.current;
+    const parent = el?.parentElement;
+    const host = parent?.closest<HTMLElement>('a');
+    if (!el || !parent || !host || typeof MutationObserver === 'undefined') return;
+    const measure = () => measureInk(el, parent);
+    let frame = 0;
+    const observer = new MutationObserver(() => {
+      measure();
+      // A colour transition on the link may still run in this frame: once more when it has settled.
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
+    observer.observe(host, { attributes: true, attributeFilter: ['class', 'aria-current'] });
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [shown]);
   if (!runs) return <>{text}</>;
   return (
     // One wrapper element: in a flex/grid container with a gap the words stay a single item, as the plain string was.

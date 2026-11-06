@@ -18,7 +18,7 @@
 .text {
   max-width: 65ch;
   margin: var(--space-4) auto;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   font-size: var(--text-lg, 1.125rem);
   line-height: 1.7;
   color: var(--text);

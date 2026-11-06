@@ -137,7 +137,7 @@
   gap: var(--space-1);
 }
 .cards .title {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;

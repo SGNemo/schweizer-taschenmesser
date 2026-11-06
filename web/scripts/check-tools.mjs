@@ -11,7 +11,9 @@ import {
   checkToolManifest,
   checkToolNeighbours,
   toolFacts,
+  toolModuleKinship,
 } from './lib/checkTools.ts';
+import { identityFacts } from './lib/checkIdentity.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const toolsDir = join(root, 'src', 'tools');
@@ -43,4 +45,15 @@ if (errors.length > 0) {
   console.error(`check:tools found ${errors.length} problem(s):\n- ${errors.join('\n- ')}`);
   process.exit(1);
 }
+// Information only (F13): a tool may share a module's signature – a tool is not a module, the same page never shows both.
+const modulesDir = join(root, 'src', 'modules');
+const looks = readdirSync(modulesDir)
+  .filter((id) => existsSync(join(modulesDir, id, 'manifest.ts')))
+  .map((id) => identityFacts(id, readFileSync(join(modulesDir, id, 'manifest.ts'), 'utf8')))
+  .filter((m) => !m.retired);
+const kin = toolModuleKinship(facts, looks);
+if (kin.length > 0)
+  console.log(
+    `check:tools: ${kin.length} tool/module kinship(s), intended (information):\n- ${kin.join('\n- ')}`,
+  );
 console.log(`check:tools: ${facts.length} tools complete.`);

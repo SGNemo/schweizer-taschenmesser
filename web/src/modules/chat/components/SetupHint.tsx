@@ -7,18 +7,28 @@ import { t } from '@/strings';
 import { Button, Card } from '@/ui';
 import styles from '../chat.module.css';
 
-/** Shown in the chat until a local model is downloaded or a provider is usable. */
-export function SetupHint() {
-  const navigate = useNavigate();
+/**
+ * Whether the chat still needs a model: `undefined` while the config or the local-model status is unknown (nothing
+ * flashes up for someone who is set up), else true until a local model is downloaded or a provider is usable.
+ */
+export function useChatSetup(): { needed: boolean; canDownload: boolean } | undefined {
   const config = useAiConfig();
   const status = useLocalModel((s) => s.status);
   useEffect(() => {
     void useLocalModel.getState().refresh();
   }, []);
-  // Wait for both answers so the notice doesn't flash up for someone who is set up.
-  if (!config || !status) return null;
-  if (isAiConfigured(config) || status.models.length > 0) return null;
-  const canDownload = !status.unavailable;
+  if (!config || !status) return undefined;
+  return {
+    needed: !isAiConfigured(config) && status.models.length === 0,
+    canDownload: !status.unavailable,
+  };
+}
+
+/** Shown in the chat until a local model is downloaded or a provider is usable; then it is the page's one action. */
+export function SetupHint({ setup }: { setup: ReturnType<typeof useChatSetup> }) {
+  const navigate = useNavigate();
+  if (!setup?.needed) return null;
+  const { canDownload } = setup;
   const c = t.chat.setup;
   return (
     <Card>
