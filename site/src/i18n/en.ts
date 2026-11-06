@@ -49,6 +49,8 @@ export const en = {
     intro: (n: number, a: number) => `${n} modules in ${a} areas. Each has its colour; you turn on only what you need.`,
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
     areas: { plan: 'The day, the week, the people.', money: 'Accounts, invoices, subscriptions, budgets.', household: 'Shopping and supplies.', knowledge: 'Read, write, remember.', vault: 'Encrypted, only here.', system: 'What your device is up to.' },
+    // Planner highlight above the areas (shot: planner-*.png, name and state from the catalogue).
+    planner: { text: 'You enter what’s coming up; the planner spreads it over your free time – offline, no account.', alt: 'Planner on the phone: free time today, the week as bars and the day with its appointments' },
     modules: {
       summary: (n: number) => `All ${n} modules`,
       status: { default: 'on by default', optional: 'optional', preview: 'preview' },

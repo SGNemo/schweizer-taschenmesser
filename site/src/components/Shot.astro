@@ -19,8 +19,8 @@ interface Props {
   class?: string;
 }
 const { name, alt, sizes, widths, priority = false, frame = 'none', class: cls } = Astro.props;
-// Only the names a page renders; the other files in screens/ wait for package 2 (README motifs, more tiles).
-const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/{home,phone}-*.png', { eager: true });
+// Only the names a page renders (hero, focus band, planner highlight).
+const all = import.meta.glob<{ default: ImageMetadata }>('../assets/screens/{home,phone,planner}-*.png', { eager: true });
 const pick = (scheme: 'dark' | 'light') => {
   const hit = all[`../assets/screens/${name}-${scheme}.png`];
   if (!hit)
