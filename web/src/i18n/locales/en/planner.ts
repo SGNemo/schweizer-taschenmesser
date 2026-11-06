@@ -159,6 +159,8 @@ export const planner: Strings['planner'] = {
     missing: (query: string) => `I can’t find “${query}” in the plan.`,
     ask: (a: string, b: string) => `Do you mean ${a} or ${b}?`,
     askLabel: 'Which one is meant?',
+    reading: 'One moment – the local model is reading the sentence.',
+    localRead: 'Read by the local model – please check.',
   },
   preview: {
     label: 'Preview',

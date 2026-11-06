@@ -7903,6 +7903,8 @@ export const de = {
       missing: (query: string) => `„${query}“ finde ich nicht im Plan.`,
       ask: (a: string, b: string) => `Meinst du ${a} oder ${b}?`,
       askLabel: 'Welches ist gemeint?',
+      reading: 'Einen Moment – das lokale Modell liest den Satz.',
+      localRead: 'Vom lokalen Modell gelesen – bitte prüfen.',
     },
     preview: {
       label: 'Vorschau',

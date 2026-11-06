@@ -340,9 +340,18 @@ export interface AiActionDef {
   parse?: AiActionParseHints;
 }
 
-/** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`. */
+/** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`; `estimate` = an effort in minutes („2 Std“). */
 export type AiRole =
-  'title' | 'amount' | 'date' | 'startDate' | 'recurrence' | 'time' | 'note' | 'url' | 'quantity';
+  | 'title'
+  | 'amount'
+  | 'date'
+  | 'startDate'
+  | 'recurrence'
+  | 'time'
+  | 'note'
+  | 'url'
+  | 'quantity'
+  | 'estimate';
 
 export interface AiActionParseHints {
   /**

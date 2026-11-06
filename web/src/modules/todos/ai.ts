@@ -2,7 +2,7 @@ import type { ModuleAiSchema } from '@/core/modules/types';
 
 export const aiSchema: ModuleAiSchema = {
   description:
-    'Aufgaben in Listen mit Priorität (0-3), Fälligkeit, Wiederholung, „Irgendwann“ (someday) und Unteraufgaben (parentId)',
+    'Aufgaben in Listen mit Priorität (0-3), Fälligkeit, Wiederholung, „Irgendwann“ (someday), Aufwand in Minuten (estimateMin) und Unteraufgaben (parentId)',
   collections: {
     task: {
       label: 'Aufgabe',
@@ -14,6 +14,7 @@ export const aiSchema: ModuleAiSchema = {
         recurrence: 'recurrence',
         someday: 'bool',
         note: 'text',
+        estimateMin: 'num',
       },
       dateField: 'dueDate',
       titleField: 'title',
@@ -31,12 +32,13 @@ export const aiSchema: ModuleAiSchema = {
       kind: 'create',
       collection: 'task',
       label: 'Aufgabe anlegen',
-      description: 'Neue Aufgabe, optional mit Fälligkeit, Priorität (0-3) oder Wiederholung',
-      fields: ['title', 'dueDate', 'priority', 'recurrence', 'someday', 'note'],
+      description:
+        'Neue Aufgabe, optional mit Fälligkeit, Priorität (0-3), Wiederholung oder Aufwand in Minuten',
+      fields: ['title', 'dueDate', 'priority', 'recurrence', 'someday', 'note', 'estimateMin'],
       required: ['title'],
       parse: {
         keywords: ['aufgabe', 'todo', 'to-do', 'task'],
-        roles: { note: 'note' },
+        roles: { note: 'note', estimate: 'estimateMin' },
         fallback: 'date',
       },
       examples: [

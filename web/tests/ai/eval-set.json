@@ -487,6 +487,37 @@
       ]
     },
     {
+      "id": "todo-c15",
+      "input": "Steuer zwei Stunden bis Donnerstag",
+      "tags": ["create", "estimate", "relative-date"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Steuer",
+            "estimateMin": 120,
+            "dueDate": "2026-10-01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo-c16",
+      "input": "Aufgabe Keller aufräumen ca. 45 min",
+      "tags": ["create", "estimate"],
+      "expect": [
+        {
+          "module": "todos",
+          "action": "create",
+          "data": {
+            "title": "Keller aufräumen",
+            "estimateMin": 45
+          }
+        }
+      ]
+    },
+    {
       "id": "todo-t01",
       "input": "Aufgabe Hausarzt anrufen erledigt",
       "tags": ["transition"],

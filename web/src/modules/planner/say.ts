@@ -2,6 +2,7 @@
  * The planner's field as a place to *say* something (CONCEPT §6c): the things of the board as
  * matching targets for `core/plan/instructions.ts` and one calm line per op for the preview. Pure.
  */
+import type { PlanLine } from '@/core/ai/local/prompts/plan';
 import { formatMinutes } from '@/core/i18n/format';
 import { addDays } from '@/core/plan/dates';
 import { dayName } from '@/core/plan/explain';
@@ -29,6 +30,40 @@ export function instructionItems(board: Board): InstructionItem[] {
     const hardDue = w.item?.due?.hard ? w.item.due.date : undefined;
     out.set(w.itemKey, { key: w.itemKey, title: w.title, ...(hardDue ? { hardDue } : {}) });
   }
+  return [...out.values()];
+}
+
+/**
+ * The compact plan for the local stage (`localStage.ts`): every thing once with its minutes over all
+ * sessions, its priority, its hard due and the first day it is planned on. Titles and planning facts
+ * only – never blocker labels, day notes or anything the sentence does not need.
+ */
+export function planLines(board: Board): PlanLine[] {
+  const out = new Map<string, PlanLine>();
+  const add = (
+    row: { itemKey: string; title: string; minutes: number; hardDue?: string } & Pick<
+      Board['days'][number]['rows'][number],
+      'item' | 'entry'
+    >,
+    day?: string,
+  ) => {
+    const cur = out.get(row.itemKey);
+    if (cur) {
+      cur.min += row.minutes;
+      return;
+    }
+    const due = row.hardDue ?? (row.item?.due?.hard ? row.item.due.date : undefined);
+    out.set(row.itemKey, {
+      key: row.itemKey,
+      title: row.title,
+      min: row.minutes,
+      prio: row.item?.priority ?? row.entry?.priority ?? 0,
+      ...(due ? { due } : {}),
+      ...(day ? { day } : {}),
+    });
+  };
+  for (const day of board.days) for (const row of day.rows) add(row, day.date);
+  for (const w of board.waiting) add(w);
   return [...out.values()];
 }
 

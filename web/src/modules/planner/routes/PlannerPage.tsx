@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import { parseInstruction, type PlanOp } from '@/core/plan/instructions';
+import type { PlanOp } from '@/core/plan/instructions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -46,7 +46,8 @@ import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import { overloadText } from '../overload';
-import { instructionItems, opLines } from '../say';
+import { readSentence, warmLocalStage, type SayStage } from '../localStage';
+import { instructionItems, opLines, planLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
@@ -101,6 +102,8 @@ export default function PlannerPage() {
   >();
   const [sayLine, setSayLine] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  // The local model is reading a sentence (desktop with a model only): the field waits, one calm line says so.
+  const [reading, setReading] = useState(false);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
   const [focus] = useFocusSettings();
@@ -126,6 +129,11 @@ export default function PlannerPage() {
   const board = data?.board;
   const todayDay = board?.days[0];
 
+  // The local stage reads the shell's status once (the desktop app with AI on; nowhere else).
+  useEffect(() => {
+    void warmLocalStage();
+  }, []);
+
   // `?new=1` (quick add) focuses the one field; `?day=` (the calendar's plan chip) shows that day;
   // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
   useEffect(() => {
@@ -144,7 +152,7 @@ export default function PlannerPage() {
   }, [params, setParams, board]);
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. */
-  async function showPreview(ops: PlanOp[], fromField = false) {
+  async function showPreview(ops: PlanOp[], fromField = false, stage: SayStage = 0) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
@@ -154,7 +162,11 @@ export default function PlannerPage() {
       setPending({
         ops,
         lead: lines[0] ?? t.planner.ops.replan,
-        data: { lines, diff: out.result.diff },
+        // A sentence the local model read says so first: its reading is checked here, by the user.
+        data: {
+          lines: stage === 1 ? [t.planner.say.localRead, ...lines] : lines,
+          diff: out.result.diff,
+        },
         fromField,
       });
     } catch (e) {
@@ -185,13 +197,25 @@ export default function PlannerPage() {
     // Instructions first – German only, like the quick-capture parser; elsewhere the ⋯ actions do the same.
     if (getLang() === 'de') {
       // While the board loads the sentence still reads its days; things are matched once it is there.
-      const said = parseInstruction(value, {
-        today: data?.today ?? today(),
-        items: board ? instructionItems(board) : [],
-      });
+      // Stage 0 first; the local model only for what the rules could not read (desktop with a model, AI on).
+      let said;
+      try {
+        setReading(true);
+        said = await readSentence(
+          value,
+          {
+            today: data?.today ?? today(),
+            items: board ? instructionItems(board) : [],
+            lines: board ? planLines(board) : [],
+          },
+          { onModel: () => setSayLine(t.planner.say.reading) },
+        );
+      } finally {
+        setReading(false);
+      }
       if (said.kind === 'ops') {
         // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
-        await showPreview(said.ops, true);
+        await showPreview(said.ops, true, said.stage);
         return;
       }
       if (said.kind === 'ask') {
@@ -514,7 +538,7 @@ export default function PlannerPage() {
             onChange={(e) => setText(e.target.value)}
           />
         </div>
-        <Button type="submit" variant="primary" disabled={!text.trim()}>
+        <Button type="submit" variant="primary" disabled={!text.trim() || reading}>
           {t.planner.add.submit}
         </Button>
         {/* N04: the page's ⋯ sits beside the field (a toolbar row with only ⋯ left ~100 px empty above it). */}
