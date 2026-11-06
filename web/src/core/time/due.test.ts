@@ -44,10 +44,10 @@ describe('dueState', () => {
 describe('overdue wording in every language (N08)', () => {
   it.each([
     ['de', 'war am Mo. fällig', 'war am 17. Sep. fällig', 'MHD war Mo.'],
-    ['en', 'was due Mon', 'was due 17 Sep', 'best before Mon'],
-    ['es', 'venció el lun', 'venció el 17 sep', 'consumir antes del lun'],
-    ['fr', 'échu le lun.', 'échu le 17 sept.', 'à consommer avant lun.'],
-    ['pt-BR', 'venceu em segunda', 'venceu em 17 de set', 'validade segunda'],
+    ['en', 'was due Mon', 'was due 17 Sep', 'best-before was Mon'],
+    ['es', 'venció el lun', 'venció el 17 sep', 'consumo preferente era el lun'],
+    ['fr', 'échu le lun.', 'échu le 17 sept.', 'date dépassée : lun.'],
+    ['pt-BR', 'venceu em segunda', 'venceu em 17 de set', 'validade era segunda'],
   ] as const)('%s: the day, never a count', async (lang, week, older, pantry) => {
     if (lang !== 'de') await loadCatalog(lang as Lang);
     setLang(lang as Lang);

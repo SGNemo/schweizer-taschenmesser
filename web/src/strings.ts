@@ -2866,7 +2866,6 @@ export const de = {
     openTotal: 'Offen gesamt',
     overdue: 'Überfällig',
     widgetEmpty: 'Keine offenen Rechnungen.',
-    /** Widget badge of an overdue invoice (C27): the date it was due, not a counter that grows every day. */
     openCount: (n: number) => (n === 1 ? '1 offene Rechnung' : `${n} offene Rechnungen`),
     view: 'Status',
   },

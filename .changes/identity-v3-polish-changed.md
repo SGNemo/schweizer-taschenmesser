@@ -11,7 +11,7 @@ type: changed
 area: ui
 breaking: false
 de: Überfällige Einträge nennen den Tag („war am Di. fällig“, bei Vorräten „MHD war Mo.“) statt jeden Tag weiterzuzählen.
-en: Overdue entries name the day ("was due Tue", in the pantry "best before Mon") instead of counting up every day.
+en: Overdue entries name the day ("was due Tue", in the pantry "best-before was Mon") instead of counting up every day.
 ---
 
 ---

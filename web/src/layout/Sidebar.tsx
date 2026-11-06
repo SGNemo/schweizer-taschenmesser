@@ -90,7 +90,7 @@ function ItemRow({
 
 /**
  * Whether an area shows its modules (F06): what the user chose by hand, else open only for the area of the current
- * page – so the list fits a 1080 screen and the way back to the open module is never folded.
+ * page – so the list fits a 1080 screen. A hand choice (opened or folded) wins over the default.
  */
 export function areaOpen(id: string, active: boolean, open: string[], closed: string[]): boolean {
   if (closed.includes(id)) return false;
