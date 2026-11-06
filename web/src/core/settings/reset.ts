@@ -144,6 +144,7 @@ export const FOCUS_RESET_KEYS = [
   'resumeCard',
   'streaks',
   'weekReview',
+  'weekCheck',
   'eveningWrapUp',
   'searchHistory',
 ] as const satisfies readonly (keyof FocusSettings)[];

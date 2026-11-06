@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ready, showPreview } from './helpers';
+import { openMoreFocus, ready, showPreview } from './helpers';
 
 /** Deterministic "today": Monday 2026-11-09, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -44,7 +44,7 @@ async function enablePlanner(page: Page) {
 
 /** A ToDo through the planner's own field; the run follows and the row appears on the board. */
 async function enter(page: Page, text: string) {
-  const field = page.getByLabel('Eintragen', { exact: true });
+  const field = page.getByLabel('Eintragen oder sagen', { exact: true });
   await expect(field).toBeVisible();
   await field.focus();
   await page.keyboard.insertText(text);
@@ -180,5 +180,150 @@ test.describe('Planer (week board, package 1)', () => {
     await dialog.getByRole('button', { name: 'Passt so' }).click();
     await expect(page.getByText('Woche bestätigt.')).toBeVisible();
     await expect(page.getByTestId('planner-head')).toContainText('3 h 36 frei heute');
+  });
+});
+
+/** All rows of a table straight from IndexedDB. */
+async function rows(page: Page, table: string): Promise<Record<string, unknown>[]> {
+  return page.evaluate(
+    (name) =>
+      new Promise<Record<string, unknown>[]>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const req = db.transaction(name).objectStore(name).getAll();
+          req.onsuccess = () => {
+            db.close();
+            resolve(req.result as Record<string, unknown>[]);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+    table,
+  );
+}
+
+test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('one plan chip per day in the calendar; the switch turns them off', async ({ page }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Steuer 2 Std bis Do');
+    await enter(page, 'Keller 30min');
+    await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
+    const days = new Set(
+      (await rows(page, 'planner_assignment'))
+        .filter((r) => r.deletedAt === null)
+        .map((r) => r.date as string),
+    );
+    expect(days.size).toBeGreaterThan(1);
+    await ready(page, '/calendar?view=month&date=2026-11-09');
+    const chips = page.getByRole('button', { name: /^Plan · / });
+    await expect(chips).toHaveCount(days.size);
+    // Monday holds two things (Steuer · Teil 1/2 and Keller), still one chip.
+    await expect(chips.filter({ hasText: '2 Dinge' })).toHaveCount(1);
+    // The view switcher's „Plan“ is a link to the board, not a sixth view.
+    await page
+      .getByRole('group', { name: 'Ansicht' })
+      .last()
+      .getByRole('button', { name: 'Plan' })
+      .click();
+    await expect(page).toHaveURL(/\/planner/);
+    await ready(page, '/settings/module/planner');
+    const sw = page.getByRole('switch', { name: 'Plan im Kalender zeigen' });
+    await expect(sw).toHaveAttribute('aria-checked', 'true');
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await ready(page, '/calendar?view=month&date=2026-11-09');
+    await expect(page.getByRole('button', { name: 'Neuer Termin' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Plan · / })).toHaveCount(0);
+  });
+
+  test('quick capture: prefix „p“ makes a ToDo plus its plan entry with a hard due', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/?capture=1');
+    const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
+    await input.fill('p Steuer 2 Std bis Do');
+    await expect(page.getByTestId('capture-chips')).toContainText('Ziel: Planer');
+    await input.press('Enter');
+    await expect(page.getByText('Gespeichert in Planer')).toBeVisible();
+    const [task] = await rows(page, 'todos_task');
+    expect(task).toMatchObject({ title: 'Steuer', estimateMin: 120, dueDate: '2026-11-12' });
+    const items = await rows(page, 'planner_item');
+    expect(items.find((i) => i.id === `todos:${task!.id as string}`)).toMatchObject({
+      due: { date: '2026-11-12', hard: true },
+    });
+  });
+
+  test('„Donnerstag frei“ → preview → Übernehmen → Rückgängig, without a single request', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Blogpost 90min');
+    const thursday = page.getByTestId('day-2026-11-12');
+    await expect(thursday).toContainText('frei von');
+    const requests: string[] = [];
+    const origin = new URL(page.url()).origin;
+    page.on('request', (r) => {
+      if (['fetch', 'xhr', 'websocket'].includes(r.resourceType()) || !r.url().startsWith(origin))
+        requests.push(r.url());
+    });
+    const field = page.getByLabel('Eintragen oder sagen', { exact: true });
+    await field.fill('Donnerstag frei');
+    await field.press('Enter');
+    const preview = page.getByTestId('plan-preview');
+    await expect(preview).toContainText('Do ist frei.');
+    // Nothing is stored before „Übernehmen“.
+    await expect(thursday).toContainText('frei von');
+    await preview.getByRole('button', { name: 'Übernehmen' }).click();
+    await expect(preview).toHaveCount(0);
+    await expect(thursday).not.toContainText('frei von');
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(thursday).toContainText('frei von');
+    // No ToDo came from the sentence, and nothing left the device.
+    expect((await rows(page, 'todos_task')).map((r) => r.title)).toEqual(['Blogpost']);
+    expect(requests).toEqual([]);
+  });
+
+  test('Monday: „Woche prüfen“ line only with the switch; × hides it, also after a reload', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await expect(page.getByLabel('Eintragen oder sagen', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('week-check-link')).toHaveCount(0);
+    await ready(page, '/settings/barrierefreiheit');
+    await openMoreFocus(page);
+    const sw = page.getByRole('switch', { name: '„Woche prüfen“ am Montag' });
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'true');
+    await ready(page, '/planner');
+    const line = page.getByTestId('week-check-link');
+    await expect(line).toContainText('Woche prüfen · 2 Schritte');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // The line opens the sheet (Mo–So and the three biggest things) only when tapped.
+    await line.getByRole('button', { name: 'Woche prüfen · 2 Schritte' }).click();
+    await expect(page.getByRole('dialog', { name: 'Woche prüfen' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await line.getByRole('button', { name: 'Für diese Woche ausblenden' }).click();
+    await expect(page.getByTestId('week-check-link')).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByLabel('Eintragen oder sagen', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('week-check-link')).toHaveCount(0);
+    // Switched off: no line, the sheet stays in ⋯.
+    await ready(page, '/settings/barrierefreiheit');
+    await openMoreFocus(page);
+    await page.getByRole('switch', { name: '„Woche prüfen“ am Montag' }).click();
+    await ready(page, '/planner');
+    await page.getByRole('button', { name: 'Weitere Optionen' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Woche prüfen' })).toBeVisible();
+    await expect(page.getByTestId('week-check-link')).toHaveCount(0);
   });
 });

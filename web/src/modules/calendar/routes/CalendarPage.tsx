@@ -9,7 +9,8 @@ import type { CalendarItem } from '@/core/modules/types';
 import { useWeekStart } from '@/core/settings/core';
 import { useAdvanced } from '@/core/settings/comfort';
 import { useSettings } from '@/core/settings/settings';
-import { DATE_RE, eachDay, today } from '@/core/time/dates';
+import { addDaysStr, DATE_RE, eachDay, isoWeekday, today } from '@/core/time/dates';
+import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import {
   AdvancedToggle,
@@ -65,6 +66,9 @@ const VIEW_LABEL: Record<CalendarView, string> = {
   },
 };
 
+/** The view switcher's „Plan“ entry: a link to the planner's board, never a sixth view (CONCEPT §5). */
+const PLAN_LINK = 'plan' as const;
+
 export default function CalendarPage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -76,6 +80,7 @@ export default function CalendarPage() {
   const split = useSplitView();
   const [advanced] = useAdvanced('calendar');
   const weekStart = useWeekStart();
+  const plannerOn = useModuleStates()?.planner === true;
 
   const rawView = params.get('view');
   const view: CalendarView | null = isView(rawView)
@@ -234,11 +239,18 @@ export default function CalendarPage() {
         <h2 className={styles.title} aria-live="polite">
           {viewTitle(view, date, weekStart)}
         </h2>
-        <Segmented
+        <Segmented<CalendarView | typeof PLAN_LINK>
           label={t.calendar.view}
           value={view}
-          options={VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] }))}
-          onChange={(v) => go({ view: v })}
+          options={[
+            ...VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] })),
+            ...(plannerOn ? [{ value: PLAN_LINK, label: t.calendar.planLink }] : []),
+          ]}
+          onChange={(v) => {
+            if (v !== PLAN_LINK) return go({ view: v });
+            const monday = addDaysStr(date, 1 - isoWeekday(date));
+            void navigate(`/planner?week=${monday}`);
+          }}
         />
       </div>
 

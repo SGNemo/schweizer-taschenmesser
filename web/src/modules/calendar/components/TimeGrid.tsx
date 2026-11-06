@@ -12,6 +12,7 @@ import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
 import { groupByDate, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
+import { sourceHue } from './sourceHue';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -195,6 +196,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                     <button
                       type="button"
                       className={`${styles.chip} ${styles[`kind_${i.kind}`] ?? ''} ${i.done ? styles.done : ''}`}
+                      data-hue={sourceHue(i)}
                       title={`${kindLabel(i.kind)}: ${i.title}`}
                       onClick={() => onOpenItem(i)}
                     >

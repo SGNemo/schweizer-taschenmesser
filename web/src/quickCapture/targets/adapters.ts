@@ -36,6 +36,7 @@ const todos: CaptureTarget = {
   build: (f) => ({
     title: title(f),
     ...(f.date ? { dueDate: date(f.date) } : {}),
+    ...(f.startDate ? { startDate: date(f.startDate) } : {}),
     ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.priority ? { priority: f.priority } : {}),
     ...noteOf(f.time ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
@@ -194,6 +195,29 @@ const notes: CaptureTarget = {
 };
 
 /**
+ * „p Steuer 2 Std bis Do“: a ToDo (through the `todo` target, so the backlog stays in ToDos) plus its
+ * planner item `todos:<id>` with what only the planner holds – the pin of a plain day or the hard
+ * due of a deadline word; „ab Do“ is the ToDo's own `startDate` (the planner reads it as earliest).
+ */
+const plan: CaptureTarget = {
+  type: 'plan',
+  moduleId: 'planner',
+  collection: 'item',
+  via: { type: 'todo', id: (first) => `${first.moduleId}:${first.id}` },
+  build: (f, ctx, first) => {
+    // The checks of the first stage (a title, real dates) hold for the plan entry too.
+    todos.build(f, ctx);
+    const pinned = date(f.pin);
+    return {
+      source: { module: first?.moduleId ?? 'todos', id: first?.id ?? 'new' },
+      order: 0,
+      ...(pinned ? { pinned } : {}),
+      ...(f.hardDue && f.date ? { due: { date: date(f.date), hard: true } } : {}),
+    };
+  },
+};
+
+/**
  * Allowlist of destinations. The password vault (`accounts`) is deliberately not reachable:
  * `targets.test.ts` pins that no adapter points at it.
  */
@@ -208,4 +232,5 @@ export const TARGETS = {
   note: notes,
   subscription: subscriptions,
   birthday: people,
+  plan,
 };

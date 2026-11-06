@@ -187,6 +187,14 @@
   background: var(--danger-soft);
   color: var(--danger);
 }
+/* The planner's summary chip: its module hue (`data-hue`), the text stays body text. */
+.kind_plan {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.dot.kind_plan {
+  background: var(--module-color, var(--text-muted));
+}
 .dot.kind_external {
   background: var(--text-muted);
 }
@@ -604,6 +612,12 @@ button.itemRow[style*='--cal']:hover {
 .tgItem.kind_expiry {
   --kind: var(--warning);
   background: var(--surface-2);
+  color: var(--text);
+}
+.chip.kind_plan,
+.tgItem.kind_plan {
+  --kind: var(--module-color, var(--text-3));
+  background: color-mix(in srgb, var(--module-color, var(--surface-2)) 12%, var(--surface));
   color: var(--text);
 }
 .chip.kind_external,

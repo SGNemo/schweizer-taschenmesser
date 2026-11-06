@@ -41,7 +41,8 @@ const rank = (i: CalendarItem): number =>
 
 /**
  * Groups calendar items into "Heute · Morgen · diese Woche". Done items are left out, and so are
- * the ToDos due today: the "Heute" card already lists them as the day plan.
+ * the ToDos due today and the planner's day chips (`kind: 'plan'`): the "Heute" card already lists
+ * them as the day plan.
  */
 export function buildAgenda(
   items: readonly CalendarItem[],
@@ -59,7 +60,8 @@ export function buildAgenda(
         (a.time ?? '').localeCompare(b.time ?? ''),
     )
     .filter((i) => {
-      if (i.done) return false;
+      // The planner's day chip: the „Heute“ card lists the planned ToDos already.
+      if (i.done || i.kind === 'plan') return false;
       const key = `${i.source}:${i.id}`;
       if (seen.has(key)) return false;
       seen.add(key);

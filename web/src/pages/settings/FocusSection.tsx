@@ -9,6 +9,7 @@ import { Link } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import { useModuleStates } from '@/core/modules/activation';
 import { Button, Segmented, SettingRow, SettingsGroup, Switch } from '@/ui';
 import { FocusMusicRow } from './FocusMusicRow';
 import { FoldedGroup } from './FoldedGroup';
@@ -41,6 +42,9 @@ const EXTRAS: readonly BoolKey[] = [
  */
 export function FocusSection() {
   const [values, patch] = useFocusSettings();
+  // „Woche prüfen“ belongs to the planner: hidden while the planner is off.
+  const plannerOn = useModuleStates()?.planner === true;
+  const extras: readonly BoolKey[] = plannerOn ? [...EXTRAS, 'weekCheck'] : EXTRAS;
   const s = t.focus.settings;
   const toast = useUiStore((x) => x.toast);
   const on = (keys: readonly BoolKey[]) => keys.filter((k) => values[k]).length;
@@ -81,7 +85,7 @@ export function FocusSection() {
         current={[
           s.planShort(values.planLimit),
           s.timerShort(values.focusMinutes),
-          s.aidsOn(on(EXTRAS), EXTRAS.length),
+          s.aidsOn(on(extras), extras.length),
         ]}
       >
         <SettingRow id="focus--planLimit" label={s.planLimit} description={s.planLimitHint}>
@@ -112,6 +116,7 @@ export function FocusSection() {
         {toggle('focusIndicator', s.focusIndicator, s.focusIndicatorHint)}
         {toggle('streaks', s.streaks, s.streaksHint)}
         {toggle('weekReview', s.weekReview, s.weekReviewHint)}
+        {plannerOn ? toggle('weekCheck', s.weekCheck, s.weekCheckHint) : null}
         {toggle('searchHistory', s.searchHistory, s.searchHistoryHint)}
         <SettingRow
           id="focus--clearHistory"

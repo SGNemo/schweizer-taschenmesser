@@ -165,3 +165,54 @@
 .blockerMin {
   width: 6rem;
 }
+
+/* The preview of a sentence or of „Neu verteilen“: under the field, nothing stored until „Übernehmen“. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.previewLine {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+.previewActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* One quiet line under the field: an explanation, a question with its two answers. */
+.say {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+  color: var(--text-muted);
+}
+/* „Woche prüfen · 2 Schritte“ on Mondays: a text link, not a button; target ≥ 44 px. */
+.weekLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+}
+.weekLinkText {
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.biggest {
+  margin: var(--space-3) 0 0;
+}

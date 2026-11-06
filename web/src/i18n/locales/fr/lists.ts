@@ -8,6 +8,7 @@ export const lists: Strings['lists'] = {
     hint: 'Une petite liste de contrôle à cocher. Une fois cochée, « Réinitialiser » la remet en place.',
     add: 'Créer la liste',
     created: 'Liste créée.',
+    weekInPlanner: 'Vérifier la semaine dans le planificateur',
     morning: {
       name: 'Routine du matin',
       items: [

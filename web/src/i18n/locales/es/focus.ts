@@ -59,6 +59,9 @@ export const focus: Strings['focus'] = {
       'En las tareas recurrentes muestra cuántas veces seguidas las completaste. Un día de pausa no rompe nada y nunca se pierde nada.',
     weekReview: 'Repaso de la semana',
     weekReviewHint: 'Una mirada amable a lo que terminaste en los últimos siete días.',
+    weekCheck: '«Revisar la semana» los lunes',
+    weekCheckHint:
+      'Los lunes el planificador muestra una línea discreta que lleva a la hoja de la semana. Una × la oculta durante la semana; la hoja siempre está en el menú ⋯.',
     eveningWrapUp: '«Cerrar el día» por la tarde',
     eveningWrapUpHint: 'Desde media tarde puedes pasar lo pendiente a mañana con un toque.',
   },

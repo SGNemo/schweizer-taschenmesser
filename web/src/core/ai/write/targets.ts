@@ -98,6 +98,28 @@ export interface TargetSearch {
   candidates: TargetCandidate[];
 }
 
+/**
+ * The pure part of `findTarget`: rows with a title → the one clearly meant entry, or the equally good
+ * ones (≤ 5) to choose from. Also used where the rows are not a table (the planner's things).
+ */
+export function pickTarget(
+  rows: readonly { id: string; title: string }[],
+  query: string,
+  ignore: readonly string[] = [],
+): TargetSearch {
+  const scored = rows
+    .map((r) => ({ id: r.id, title: r.title, score: matchScore(query, r.title, ignore) }))
+    .filter((r) => r.score >= 0.6)
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+  const [first, second] = scored;
+  if (!first) return { candidates: [] };
+  const candidates = scored.slice(0, 5).map(({ id, title }) => ({ id, title }));
+  if (!second || first.score - second.score > 0.1) {
+    return { match: { id: first.id, title: first.title }, candidates };
+  }
+  return { candidates: candidates.filter((_, i) => scored[i]!.score >= first.score - 0.1) };
+}
+
 export async function findTarget(
   database: TaschenmesserDB,
   moduleId: string,
@@ -111,20 +133,11 @@ export async function findTarget(
       tableName(moduleId, collection),
     )
     .toArray();
-  const scored = rows
-    .filter((r) => r.deletedAt === null)
-    .map((r) => ({
-      id: r.id,
-      title: String(r[titleField] ?? ''),
-      score: matchScore(query, String(r[titleField] ?? ''), ignore),
-    }))
-    .filter((r) => r.score >= 0.6)
-    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
-  const [first, second] = scored;
-  if (!first) return { candidates: [] };
-  const candidates = scored.slice(0, 5).map(({ id, title }) => ({ id, title }));
-  if (!second || first.score - second.score > 0.1) {
-    return { match: { id: first.id, title: first.title }, candidates };
-  }
-  return { candidates: candidates.filter((_, i) => scored[i]!.score >= first.score - 0.1) };
+  return pickTarget(
+    rows
+      .filter((r) => r.deletedAt === null)
+      .map((r) => ({ id: r.id, title: String(r[titleField] ?? '') })),
+    query,
+    ignore,
+  );
 }

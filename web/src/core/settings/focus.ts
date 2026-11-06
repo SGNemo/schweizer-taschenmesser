@@ -84,6 +84,8 @@ export const focusSettingsSchema = z.object({
   streaks: z.boolean(),
   /** A positive look at the week in the "Jetzt dran" widget. */
   weekReview: z.boolean(),
+  /** Planner: on Mondays one quiet text link „Woche prüfen“ in the planner's head (dismissable per week). */
+  weekCheck: z.boolean(),
   /** In the evening: "Tag abschließen" moves what is left to tomorrow. */
   eveningWrapUp: z.boolean(),
 });
@@ -121,6 +123,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   searchHistory: true,
   streaks: false,
   weekReview: false,
+  weekCheck: false,
   eveningWrapUp: true,
 };
 

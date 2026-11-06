@@ -19,6 +19,11 @@ export interface CorpusCase {
   amountMinor?: number;
   kind?: 'expense' | 'income';
   priority?: 1 | 2 | 3;
+  estimateMin?: number;
+  /** Plan captures (`p` / „plan:“): pin, earliest day, hard due. */
+  pin?: string;
+  startDate?: string;
+  hardDue?: boolean;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -191,5 +196,40 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-11-02',
     title: 'Sport',
     recurrence: { freq: 'weekly', interval: 1, byWeekday: [1] },
+  },
+  // Planner capture (package 2): prefix „p“ or „plan:“ – a plain day pins, „ab“ is the earliest day, a deadline word is hard.
+  {
+    from: 'plan',
+    text: 'p Steuer 2 Std bis Do',
+    type: 'plan',
+    title: 'Steuer',
+    estimateMin: 120,
+    date: '2026-11-05',
+    hardDue: true,
+  },
+  {
+    from: 'plan',
+    text: 'plan: Keller aufräumen ab Sa',
+    type: 'plan',
+    title: 'Keller aufräumen',
+    startDate: '2026-10-31',
+  },
+  {
+    from: 'plan',
+    text: 'p Blogpost Freitag 90 min !wichtig',
+    type: 'plan',
+    title: 'Blogpost',
+    pin: '2026-10-30',
+    estimateMin: 90,
+    priority: 3,
+  },
+  { from: 'plan', text: 'P Fahrrad', type: 'plan', title: 'Fahrrad' },
+  {
+    from: 'plan',
+    text: 'Plan: Steuerbescheid prüfen Frist 3.11.',
+    type: 'plan',
+    title: 'Steuerbescheid prüfen',
+    date: '2026-11-03',
+    hardDue: true,
   },
 ];

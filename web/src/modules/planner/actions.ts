@@ -14,12 +14,15 @@ import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import { parseCapture } from '@/quickCapture/parser';
 import { saveCapture } from '@/quickCapture/targets';
+import type { PlanOp } from '@/core/plan/instructions';
+import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { extractDuePhrase } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { PlannerOffError, runUser, type UserRun } from './services';
+import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
 
 const toast = (message: string, run?: UserRun) =>
@@ -46,10 +49,11 @@ export async function act(
   lead: string,
   titles: Record<string, string>,
   fn: () => Promise<void>,
+  opts: { reshuffle?: boolean } = {},
 ): Promise<boolean> {
   let run: UserRun;
   try {
-    run = await runUser(label, fn);
+    run = await runUser(label, fn, opts);
   } catch (e) {
     if (!(e instanceof PlannerOffError)) throw e;
     toast(t.planner.toast.off);
@@ -67,7 +71,10 @@ const source = (moduleId: string) =>
   plannableSource(availableManifests().find((m) => m.id === moduleId));
 
 /** The item row of a thing, with its stored facts kept. */
-async function itemPatch(entry: PlannableEntry, patch: Partial<PlanItemRow>): Promise<void> {
+async function itemPatch(
+  entry: Pick<PlannableEntry, 'moduleId' | 'id'>,
+  patch: Partial<PlanItemRow>,
+): Promise<void> {
   const key = itemKeyOf(entry.moduleId, entry.id);
   const row = await itemRepo.get(key);
   const data: PlanItemRow = {
@@ -208,3 +215,74 @@ export const confirmWeek = (
     for (const v of values)
       if (v.availableMin !== v.current) await dayPatch(v.date, { availableMin: v.availableMin });
   });
+
+/** `<module>:<id>` → its parts (the id may contain a colon; the module never does). */
+const refOf = (key: string) => {
+  const at = key.indexOf(':');
+  return { moduleId: key.slice(0, at), id: key.slice(at + 1) };
+};
+
+/**
+ * „Übernehmen“ of a preview: the ops of a sentence (or „Neu verteilen“) are stored by the planner itself –
+ * the day's minutes and blockers, the item flags, the thing's own date (like „Später“) and its estimate
+ * through the source, the buffer in the settings – and planned in the same `undoable`, never through
+ * `core/ai/write`. One toast with the undo.
+ */
+export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<string, string>) {
+  const reshuffle = ops.some((o) => o.op === 'replan' && o.reshuffle);
+  return act(
+    lead,
+    lead,
+    titles,
+    async () => {
+      for (const op of ops) {
+        switch (op.op) {
+          case 'available':
+            await dayPatch(op.date, { availableMin: op.min });
+            break;
+          case 'block': {
+            const row = await dayRepo.get(op.date);
+            const blocker = {
+              id: randomId(),
+              label: op.label,
+              min: op.min,
+              from: op.from,
+              to: op.to,
+            };
+            await dayPatch(op.date, { blockers: [...(row?.blockers ?? []), blocker] });
+            break;
+          }
+          case 'pin':
+            await itemPatch(refOf(op.key), { pinned: op.date });
+            break;
+          case 'priority':
+            await itemPatch(refOf(op.key), { priority: op.value });
+            break;
+          case 'exclude':
+            await itemPatch(refOf(op.key), { excluded: true });
+            break;
+          case 'earliest': {
+            const ref = refOf(op.key);
+            await (await source(ref.moduleId))?.onAssign?.(ref.id, op.date);
+            break;
+          }
+          case 'duration': {
+            const ref = refOf(op.key);
+            await (await source(ref.moduleId))?.onEstimate?.(ref.id, op.min);
+            break;
+          }
+          case 'buffer':
+            await setSettings(
+              PLANNER_SCOPE,
+              { bufferShare: String(op.pct) },
+              DEFAULT_PLANNER_SETTINGS,
+            );
+            break;
+          case 'replan':
+            break;
+        }
+      }
+    },
+    { reshuffle },
+  );
+}

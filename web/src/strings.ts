@@ -957,6 +957,7 @@ export const de = {
       subscription: 'Abo',
       birthday: 'Geburtstag',
       note: 'Notiz',
+      plan: 'Plan',
     },
     target: {
       todo: 'ToDos',
@@ -969,6 +970,7 @@ export const de = {
       subscription: 'Abos',
       birthday: 'Personen',
       note: 'Notizen',
+      plan: 'Planer',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -982,6 +984,9 @@ export const de = {
       allDay: 'ganztägig',
       income: 'Einnahme',
       expense: 'Ausgabe',
+      planPin: (day: string) => `festgenagelt: ${day}`,
+      planFrom: (day: string) => `ab ${day}`,
+      planDue: (day: string) => `Frist ${day}`,
       priorityLow: 'Priorität niedrig',
       priorityMid: 'Priorität mittel',
       priorityHigh: 'Priorität hoch',
@@ -1216,6 +1221,9 @@ export const de = {
       weekReview: 'Rückblick auf die Woche',
       weekReviewHint:
         'Ein freundlicher Blick darauf, was in den letzten sieben Tagen fertig wurde.',
+      weekCheck: '„Woche prüfen“ am Montag',
+      weekCheckHint:
+        'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
       eveningWrapUp: '„Tag abschließen“ am Abend',
       eveningWrapUpHint:
         'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben.',
@@ -1767,7 +1775,9 @@ export const de = {
       end: 'Vertragsende',
       expiry: 'Ablauf',
       external: 'Extern',
+      plan: 'Plan',
     } as Record<string, string>,
+    planLink: 'Plan',
     external: {
       title: 'Externer Termin',
       readOnly:
@@ -4974,6 +4984,7 @@ export const de = {
       hint: 'Eine kleine Checkliste zum Abhaken. Nach dem Abhaken mit „Zurücksetzen“ ist sie wieder bereit.',
       add: 'Liste anlegen',
       created: 'Liste angelegt.',
+      weekInPlanner: 'Woche prüfen im Planer',
       morning: {
         name: 'Morgenroutine',
         items: [
@@ -7742,6 +7753,9 @@ export const de = {
         autoReplanHelp: 'Aus: der Plan ändert sich nur, wenn du im Planer etwas tust.',
         calendarBlocks: 'Termine blocken Zeit',
         calendarBlocksHelp: 'Termine mit Uhrzeit nehmen dem Tag ihre Dauer weg; Erinnerungen nie.',
+        calendarChips: 'Plan im Kalender zeigen',
+        calendarChipsHelp:
+          'Ein Eintrag je Tag mit der geplanten Zeit; er führt zum Planer. Aus: der Kalender zeigt nur Termine.',
         allDayBlocks: 'Ganztägige Termine blocken Zeit',
         allDayBlocksHelp: 'Aus: ein ganztägiger Termin kostet keine planbare Zeit.',
       },
@@ -7757,6 +7771,7 @@ export const de = {
         `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
       week: (week: string) => `KW ${week}`,
       menu: 'Weitere Optionen',
+      replan: 'Neu verteilen',
     },
     board: {
       label: 'Wochenbrett',
@@ -7805,6 +7820,7 @@ export const de = {
       due: (day: string) => `Frist ${day}`,
       dueWas: (day: string) => `Frist war ${day}`,
       blocker: 'Blocker',
+      focus: 'Fokus starten',
     },
     reasons: {
       pinned: 'festgenagelt',
@@ -7850,12 +7866,55 @@ export const de = {
       off: 'Der Planer ist aus.',
     },
     add: {
-      label: 'Eintragen',
-      placeholder: 'Steuer 2 Std bis Do',
-      hint: 'Ein ToDo entsteht; „bis Do“ oder „Frist“ setzt eine Frist.',
+      label: 'Eintragen oder sagen',
+      placeholder: 'Steuer 2 Std bis Do · Donnerstag frei',
+      hint: 'Ein ToDo entsteht; „bis Do“ setzt eine Frist. Sätze wie „Donnerstag frei“ oder „schieb Steuer auf Fr“ zeigen erst eine Vorschau.',
       submit: 'Eintragen',
     },
+    say: {
+      explain: 'Ich kann: Tag frei, Zeit je Tag, verschieben, festnageln, nicht planen.',
+      missing: (query: string) => `„${query}“ finde ich nicht im Plan.`,
+      ask: (a: string, b: string) => `Meinst du ${a} oder ${b}?`,
+      askLabel: 'Welches ist gemeint?',
+    },
+    preview: {
+      label: 'Vorschau',
+      moved: 'Verschoben',
+      added: 'Neu im Plan',
+      waits: 'Wartet',
+      move: (from: string, to: string) => `${from} → ${to}`,
+      from: (day: string) => `war ${day}`,
+      earlier: 'früher, weil Platz frei wurde',
+      later: 'später, weil der Tag voll ist',
+      nothing: 'Am Plan ändert sich nichts.',
+      apply: 'Übernehmen',
+      discard: 'Verwerfen',
+    },
+    ops: {
+      block: (day: string, label: string, from: string, to: string) =>
+        `${day}: ${label} ${from}–${to}`,
+      pin: (title: string, day: string) => `${title} festgenagelt auf ${day}`,
+      earliest: (title: string, day: string) => `${title} nicht vor ${day}`,
+      earliestMany: (n: number, day: string) => `${n} Dinge nicht vor ${day}`,
+      priority: (title: string) => `${title} ist wichtig`,
+      exclude: (title: string) => `${title} nicht planen`,
+      duration: (title: string, min: string) => `${title} dauert ${min}`,
+      buffer: (pct: number) => `Puffer ${pct} %`,
+      replan: 'Neu verteilt',
+      reshuffle: 'Alles neu gemischt',
+    },
+    weekLink: {
+      label: 'Woche prüfen · 2 Schritte',
+      dismiss: 'Für diese Woche ausblenden',
+    },
+    focus: {
+      back: 'Zum Planer',
+    },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    chip: {
+      title: (planned: string, n: number) =>
+        `Plan · ${planned} · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
+    },
     widget: {
       today: (free: string) => `Heute · ${free} frei`,
       todayFull: 'Heute · voll',
@@ -7875,6 +7934,7 @@ export const de = {
       title: 'Woche prüfen',
       intro: 'Stimmt die Zeit je Tag? Bestätigen reicht – ändern geht je Tag.',
       confirm: 'Passt so',
+      biggest: 'Die drei größten Dinge',
     },
   },
 } as const;

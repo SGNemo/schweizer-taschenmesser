@@ -8,6 +8,7 @@ export const lists: Strings['lists'] = {
     hint: 'Uma pequena checklist para marcar. Depois de marcar tudo, “Redefinir” a deixa pronta de novo.',
     add: 'Criar lista',
     created: 'Lista criada.',
+    weekInPlanner: 'Revisar a semana no planejador',
     morning: {
       name: 'Rotina da manhã',
       items: [

@@ -7,6 +7,9 @@ import type { CalendarItem } from '@/core/modules/types';
 import { minutesUntil, nextToday } from '@/core/time/until';
 import { dayPlan, pickNext, type DayPlan, type PickTask } from './next';
 
+/** The planner's day chip (`kind: 'plan'`): the card lists the planned ToDos already, so it is skipped. */
+const PLAN_KIND = 'plan';
+
 /** Appointments listed on the card before "all appointments". */
 export const APPOINTMENT_LIMIT = 4;
 
@@ -22,7 +25,7 @@ export function untilNext(
   nowHhmm: string,
 ): UntilNext | undefined {
   const item = nextToday(
-    items.filter((i) => i.date === day && i.source !== 'todos'),
+    items.filter((i) => i.date === day && i.source !== 'todos' && i.kind !== PLAN_KIND),
     nowHhmm,
   );
   return item ? { item, minutes: minutesUntil(nowHhmm, item.time!) } : undefined;
@@ -46,6 +49,7 @@ export function todayAppointments(
       (i) =>
         i.date === day &&
         i.source !== 'todos' &&
+        i.kind !== PLAN_KIND &&
         !i.done &&
         // Over once its end time has passed, unless it ends on a later day (overnight).
         (i.allDay || !i.time || (i.endDate ?? day) > day || (i.endTime ?? i.time) >= nowHhmm),

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
@@ -473,21 +473,31 @@ export default function ListsPage() {
       <Dialog open={templates} onClose={() => setTemplates(false)} title={t.lists.routines.title}>
         <p>{t.lists.routines.hint}</p>
         <ul className={styles.templates}>
-          {ROUTINES.map((id) => (
-            <li key={id}>
-              <Button
-                onClick={() => {
-                  void createRoutine(id).then((listId) => {
-                    setTemplates(false);
-                    setParams({ list: listId }, { replace: true });
-                    toast(t.lists.routines.created);
-                  });
-                }}
-              >
-                {t.lists.routines[id].name}
-              </Button>
-            </li>
-          ))}
+          {ROUTINES.map((id) =>
+            // Focus checklist 9 (planner package 2): with the planner on, its „Woche prüfen“ replaces the
+            // weekly routine – one place for the week; lists made from the template stay as they are.
+            id === 'week' && moduleStates?.planner ? (
+              <li key={id}>
+                <Link to="/planner?check=1" onClick={() => setTemplates(false)}>
+                  {t.lists.routines.weekInPlanner}
+                </Link>
+              </li>
+            ) : (
+              <li key={id}>
+                <Button
+                  onClick={() => {
+                    void createRoutine(id).then((listId) => {
+                      setTemplates(false);
+                      setParams({ list: listId }, { replace: true });
+                      toast(t.lists.routines.created);
+                    });
+                  }}
+                >
+                  {t.lists.routines[id].name}
+                </Button>
+              </li>
+            ),
+          )}
         </ul>
         <h3>{t.lists.fromTemplate}</h3>
         <ul className={styles.templates}>

@@ -81,6 +81,7 @@ const usesDate = (type: CaptureType) =>
   type === 'subscription' ||
   type === 'birthday';
 const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
+const isTask = (type: CaptureType) => type === 'todo' || type === 'plan';
 const usesMoney = (type: CaptureType) =>
   type === 'finance' || type === 'invoice' || type === 'subscription';
 
@@ -101,14 +102,27 @@ export function previewChips(
     const range = fields.endTime ? `${fields.time}–${fields.endTime}` : fields.time;
     chips.push({ id: 'time', label: t.time.atClock(range) });
   }
-  if (type === 'todo' && fields.priority) {
+  if (type === 'plan') {
+    const c = t.quickCapture.chip;
+    if (fields.pin) chips.push({ id: 'date', label: c.planPin(describeDate(fields.pin, today)) });
+    if (fields.startDate)
+      chips.push({ id: 'date', label: c.planFrom(describeDate(fields.startDate, today)) });
+    if (fields.date)
+      chips.push({
+        id: 'date',
+        label: fields.hardDue
+          ? c.planDue(describeDate(fields.date, today))
+          : describeDate(fields.date, today),
+      });
+  }
+  if (isTask(type) && fields.priority) {
     const c = t.quickCapture.chip;
     chips.push({
       id: 'priority',
       label: [c.priorityLow, c.priorityMid, c.priorityHigh][fields.priority - 1]!,
     });
   }
-  if (type === 'todo' && fields.estimateMin)
+  if (isTask(type) && fields.estimateMin)
     chips.push({ id: 'estimate', label: t.todos.estimateAbout(fields.estimateMin) });
   if (type === 'event' && fields.date && !fields.time)
     chips.push({ id: 'allDay', label: t.quickCapture.chip.allDay });

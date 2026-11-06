@@ -60,6 +60,9 @@ export const focus: Strings['focus'] = {
       'Indique pour les tâches récurrentes combien de fois de suite vous les avez faites. Un jour de pause n’interrompt rien, et rien n’est jamais perdu.',
     weekReview: 'Bilan de la semaine',
     weekReviewHint: 'Un regard bienveillant sur ce qui a été fait ces sept derniers jours.',
+    weekCheck: '« Vérifier la semaine » le lundi',
+    weekCheckHint:
+      'Le lundi, le planificateur affiche une ligne discrète qui mène à la fiche de la semaine. Un × la masque pour la semaine ; la fiche reste toujours dans le menu ⋯.',
     eveningWrapUp: '« Clore la journée » le soir',
     eveningWrapUpHint:
       'À partir de la fin d’après-midi, ce qui reste peut être reporté à demain d’un geste.',

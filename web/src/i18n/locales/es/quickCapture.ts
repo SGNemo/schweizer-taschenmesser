@@ -18,6 +18,7 @@ export const quickCapture: Strings['quickCapture'] = {
     subscription: 'Suscripción',
     birthday: 'Cumpleaños',
     note: 'Nota',
+    plan: 'Plan',
   },
   target: {
     todo: 'Tareas',
@@ -30,6 +31,7 @@ export const quickCapture: Strings['quickCapture'] = {
     subscription: 'Suscripciones',
     birthday: 'Personas',
     note: 'Notas',
+    plan: 'Planificador',
   },
   chip: {
     to: (name: string) => `Destino: ${name}`,
@@ -43,6 +45,9 @@ export const quickCapture: Strings['quickCapture'] = {
     allDay: 'todo el día',
     income: 'Ingreso',
     expense: 'Gasto',
+    planPin: (day: string) => `fijado: ${day}`,
+    planFrom: (day: string) => `desde ${day}`,
+    planDue: (day: string) => `plazo ${day}`,
     priorityLow: 'Prioridad baja',
     priorityMid: 'Prioridad media',
     priorityHigh: 'Prioridad alta',

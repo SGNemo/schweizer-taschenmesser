@@ -1,6 +1,7 @@
 {
   "$comment": "Files that may contain German-looking text outside the catalogs, with the reason. npm run check:i18n reads this list; everything else must use t / src/strings.ts.",
   "src/core/ai/write/rules/lexicon.ts": "parser vocabulary: the rule tier reads German sentences",
+  "src/core/plan/instructions.ts": "parser vocabulary: the planner field reads German plan sentences (stage 0)",
   "src/core/ai/write/targets.ts": "parser vocabulary (articles) for German sentences",
   "src/core/ai/intent/parser.ts": "parser vocabulary for German questions",
   "src/core/ai/testing.ts": "test fixtures for the AI tiers",

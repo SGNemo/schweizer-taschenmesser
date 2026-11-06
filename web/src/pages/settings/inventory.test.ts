@@ -88,6 +88,7 @@ const CORE_KEYS = {
     searchHistory: true,
     streaks: true,
     weekReview: true,
+    weekCheck: false,
     eveningWrapUp: true,
   },
   '_settings scope weather': { enabled: true, place: '', lat: 0, lon: 0 },
