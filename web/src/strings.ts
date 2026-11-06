@@ -6072,7 +6072,7 @@ export const de = {
     previewCounts: (fresh: number, duplicates: number, invalid: number) =>
       [
         `${fresh} neu`,
-        duplicates ? `${duplicates} schon vorhanden` : '',
+        duplicates ? `${duplicates} bereits gespeichert` : '',
         invalid ? `${invalid} nicht lesbar` : '',
       ]
         .filter(Boolean)

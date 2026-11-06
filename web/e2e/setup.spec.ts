@@ -416,7 +416,7 @@ test('"Umzug von einer anderen App": checklist row → Google → ToDos importer
 
   const importDialog = page.getByRole('dialog', { name: /^Importieren:/ });
   await importDialog
-    .getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ })
+    .getByRole('button', { name: /Aus Todoist, TickTick, Google Tasks oder Microsoft To Do/ })
     .click();
   const chooser = page.waitForEvent('filechooser');
   await importDialog.getByRole('button', { name: 'Datei wählen …' }).click();

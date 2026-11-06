@@ -44,3 +44,6 @@ Flow gaps (all sources):
 5. Todoist ZIP: the todos file importer takes several files, one list per project (`@source`) preset by the sheet.
 
 Vault imports stay on the vault's route (master password, `accounts/csv.ts`); nothing of it is read by the sheet beyond the CSV header.
+
+## Shots (seed-free e2e build, invented Todoist ZIP)
+`shots/import-v2-{where,found,card-runs}-{1920,412}-{light,dark}.jpg`: origin tiles, recognised step, Settings card with a run. 412 px: no horizontal overflow (checked in the shot run).
