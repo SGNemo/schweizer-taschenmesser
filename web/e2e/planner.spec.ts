@@ -375,6 +375,44 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     expect(requests).toEqual([]);
   });
 
+  test('with „KI abschalten“ the field and the preview work the same – rules only, not a single request', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    // The master switch, as the settings do it (this device).
+    await ready(page, '/settings/ki');
+    await page.getByTestId('ai-off').click();
+    await page.getByTestId('ai-off-confirm').click();
+    await expect(page.getByTestId('ai-on')).toBeVisible();
+    await ready(page, '/planner');
+    await enter(page, 'Blogpost 90min');
+    const friday = page.getByTestId('day-2026-11-13');
+    await expect(friday).toContainText('frei von');
+    const requests: string[] = [];
+    const origin = new URL(page.url()).origin;
+    page.on('request', (r) => {
+      if (['fetch', 'xhr', 'websocket'].includes(r.resourceType()) || !r.url().startsWith(origin))
+        requests.push(r.url());
+    });
+    const field = page.getByLabel('Eintragen oder sagen', { exact: true });
+    // No hint of a model anywhere near the field.
+    await expect(page.locator('form', { has: field })).not.toContainText('Modell');
+    await field.fill('Freitag frei');
+    await field.press('Enter');
+    const preview = page.getByTestId('plan-preview');
+    await expect(preview).toContainText('Fr ist frei.');
+    await expect(preview).not.toContainText('Modell');
+    await preview.getByRole('button', { name: 'Übernehmen' }).click();
+    await expect(preview).toHaveCount(0);
+    await expect(friday).not.toContainText('frei von');
+    // A sentence the rules cannot read gets the calm line, no model, no ToDo.
+    await field.fill('schieb das irgendwie');
+    await field.press('Enter');
+    await expect(page.getByTestId('plan-say')).toContainText('Ich kann: Tag frei');
+    expect((await rows(page, 'todos_task')).map((r) => r.title)).toEqual(['Blogpost']);
+    expect(requests).toEqual([]);
+  });
+
   test('Monday: „Woche prüfen“ line only with the switch; × hides it, also after a reload', async ({
     page,
   }) => {

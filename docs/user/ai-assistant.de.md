@@ -32,6 +32,7 @@ Schreibe einfach in die Leiste, was du eintragen willst – zum Beispiel „Rech
 - **Kostet fast nichts:** Zuerst versuchen feste Regeln den Satz zu verstehen (0 Token, nichts verlässt das Gerät). Nur wenn das nicht reicht und du es erlaubst, wird ein KI-Anbieter gefragt – mit dem Satz, dem Datum und den Feldnamen der Module, nie mit deinen Einträgen. Die Statistik unter *Einstellungen → KI* zeigt, woher jede Antwort kam.
 - **Steuerbar:** unter *Einstellungen → KI → Eintragen per KI* global und pro Modul ausschaltbar. Im Modul gibt es oben „Mit KI eintragen“. Der Passwort-Tresor ist nie dabei.
 - **Dein Claude-Abo:** Anthropic erlaubt Abo-Zugänge nur in Claude Code und claude.ai, nicht in anderen Apps. Wenn du dein Abo nutzen willst, lass Claude Code auf deinem PC Nemo befüllen (siehe unten).
+- **Plan-Sätze bleiben im Planer:** „Donnerstag frei“ oder „schieb Steuer auf Freitag“ sagst du im Feld auf der Planer-Seite, nicht in der Leiste (dort werden sie ein ToDo). Feste Regeln lesen sie zuerst; in der Windows-App mit heruntergeladenem lokalem Modell bekommt ein Satz, den die Regeln nicht lesen können, dieses Modell – es sieht nur Titel, Minuten und Tage deines Plans und verlässt das Gerät nie; die Vorschau sagt dann „Vom lokalen Modell gelesen – bitte prüfen“. Dein Plan, Blocker-Namen und Tagesnotizen erreichen nie einen KI-Anbieter, die Suche oder den Chat; mit „KI abschalten“ arbeiten die Regeln weiter wie bisher.
 
 ## Daten per KI importieren
 

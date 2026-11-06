@@ -2,8 +2,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { findModel } from '@/core/ai/local/catalogue';
+import { writeLocalPrefs } from '@/core/ai/local/prefs';
+import { useLocalModel } from '@/core/ai/local/state';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
+import { setPlatform } from '@/core/platform';
+import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
+import { createWebPlatform } from '@/core/platform/web';
 import { getManifest } from '@/core/modules/registry';
 import { getMeta } from '@/core/db/metaKv';
 import { FOCUS_SCOPE } from '@/core/settings/focus';
@@ -146,6 +152,39 @@ describe('planner page', () => {
     expect(await db.table('todos_task').count()).toBe(0);
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
+  });
+
+  it('a sentence the rules cannot read: the local model (desktop, model loaded) reads it, the preview says so, nothing is stored before „Übernehmen“', async () => {
+    const MODEL = findModel('qwen3.5-4b')!;
+    const fake = createFakeLocalModel({
+      models: [{ file: MODEL.file, bytes: MODEL.bytes }],
+      answer: () => JSON.stringify({ ops: [{ op: 'available', date: '2026-11-20', value: 0 }] }),
+    });
+    setPlatform({ ...createWebPlatform(), localModel: fake });
+    writeLocalPrefs({ file: MODEL.file, first: true, autoLoad: true, gpu: true });
+    await useLocalModel.getState().refresh();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    try {
+      draw();
+      const field = await screen.findByLabelText('Eintragen oder sagen');
+      fireEvent.change(field, { target: { value: 'schieb mal den übernächsten Freitag frei' } });
+      fireEvent.submit(field.closest('form')!);
+      const preview = await screen.findByTestId('plan-preview');
+      expect(preview).toHaveTextContent('Vom lokalen Modell gelesen – bitte prüfen.');
+      expect(preview).toHaveTextContent('Fr 20.11. ist frei.');
+      expect(fake.requests).toHaveLength(1);
+      expect(fake.requests[0]!.prompt).toContain('Satz: schieb mal den übernächsten Freitag frei');
+      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
+      expect(screen.queryByTestId('plan-preview')).toBeNull();
+      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      expect(await db.table('todos_task').count()).toBe(0);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+      setPlatform(undefined);
+      localStorage.clear();
+    }
   });
 
   it('„Verwerfen“ stores nothing; a sentence it cannot read gets one calm line, not a ToDo', async () => {
