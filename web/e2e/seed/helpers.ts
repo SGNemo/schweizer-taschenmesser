@@ -52,10 +52,10 @@ export const test = base.extend<
 >({
   seeded: [null, { option: true }],
   seedSnapshot: [
-    async ({ browser }, use, workerInfo) => {
+    async ({ browser }, provide, workerInfo) => {
       const cache = new Map<string, Promise<State>>();
       const { baseURL, locale, serviceWorkers } = workerInfo.project.use;
-      await use((o) => {
+      await provide((o) => {
         const key = JSON.stringify([o.scale, !!o.desktop, !!o.preview]);
         let state = cache.get(key);
         if (!state) {
@@ -82,7 +82,7 @@ export const test = base.extend<
     },
     { scope: 'worker', timeout: 120_000 },
   ],
-  storageState: async ({ seeded, seedSnapshot, storageState }, use) => {
-    await use(seeded ? await seedSnapshot(seeded) : storageState);
+  storageState: async ({ seeded, seedSnapshot, storageState }, provide) => {
+    await provide(seeded ? await seedSnapshot(seeded) : storageState);
   },
 });
