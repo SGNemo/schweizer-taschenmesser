@@ -92,7 +92,8 @@ export const test = base.extend<
   storageState: async ({ seeded, seedSnapshot, storageState }, provide, testInfo) => {
     if (!seeded) return provide(storageState);
     // Building the snapshot runs inside this test's time budget: give it the time seedApp may take.
-    if (!seedSnapshot.has(seeded)) testInfo.setTimeout(testInfo.timeout + 120_000);
+    if (testInfo.timeout && !seedSnapshot.has(seeded))
+      testInfo.setTimeout(testInfo.timeout + 120_000);
     await provide(await seedSnapshot.get(seeded));
   },
 });
