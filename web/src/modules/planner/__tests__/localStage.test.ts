@@ -173,6 +173,17 @@ describe('the planner’s local stage', () => {
     expect(worthAsking({ kind: 'none' }, 'Milch kaufen', items)).toBe(false);
     expect(worthAsking({ kind: 'none' }, 'Steuer lieber am Freitag', items)).toBe(true);
     expect(worthAsking({ kind: 'none' }, 'den Keller endlich mal angehen', items)).toBe(true);
+    // A verb or a filler the title shares with half of all ToDos names nothing.
+    expect(worthAsking({ kind: 'none' }, 'Oma anrufen und Brief schreiben', items)).toBe(false);
+    expect(worthAsking({ kind: 'none' }, 'noch Milch holen', items)).toBe(false);
     expect(worthAsking({ kind: 'ops', ops: [] }, 'Donnerstag frei', items)).toBe(false);
+  });
+
+  it('a discarded model reading is not asked again: `model: false` leaves the rules’ result', async () => {
+    expect(await readSentence(UNREAD, ctx, { model: false })).toEqual({
+      kind: 'explain',
+      stage: 0,
+    });
+    expect(fake.requests).toHaveLength(0);
   });
 });

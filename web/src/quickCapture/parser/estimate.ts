@@ -5,11 +5,16 @@ import { NUM_SRC, NUMBER_WORDS, take, type Scan } from './util';
  * capped like the ToDo field (1–480 min).
  */
 const ESTIMATE_RE = new RegExp(
-  String.raw`(?:^|(?<=\s))(?:ca\.?\s*|etwa\s*|~\s*)?(\d{1,3}|anderthalb|eineinhalb|halbe|${NUM_SRC})(?:\s*(min(?:uten)?\.?)|(?:[.,](\d))?\s*(std\.?|stunden?|h))(?=$|[\s,.;:!?])`,
+  String.raw`(?:^|(?<=\s))(?:ca\.?\s*|etwa\s*|~\s*)?(?:eine?r?\s+(?=halbe))?(\d{1,3}|anderthalb|eineinhalb|halben?|${NUM_SRC})(?:\s*(min(?:uten)?\.?)|(?:[.,](\d))?\s*(std\.?|stunden?|h))(?=$|[\s,.;:!?])`,
   'i',
 );
 
-const HALVES: Record<string, number> = { anderthalb: 1.5, eineinhalb: 1.5, halbe: 0.5 };
+const HALVES: Record<string, number> = {
+  anderthalb: 1.5,
+  eineinhalb: 1.5,
+  halbe: 0.5,
+  halben: 0.5,
+};
 
 const amountOf = (s: string): number => {
   const w = s.toLowerCase();

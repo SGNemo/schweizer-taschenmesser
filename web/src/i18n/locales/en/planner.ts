@@ -161,6 +161,7 @@ export const planner: Strings['planner'] = {
     askLabel: 'Which one is meant?',
     reading: 'One moment – the local model is reading the sentence.',
     localRead: 'Read by the local model – please check.',
+    discardedLocal: 'Discarded. “Add” once more creates a to-do.',
   },
   preview: {
     label: 'Preview',

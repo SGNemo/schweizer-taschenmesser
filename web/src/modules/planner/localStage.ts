@@ -90,15 +90,30 @@ export async function readWithModel(
   }
 }
 
+/** Words half of all ToDos share with a title never name a thing: fillers, and verbs by their ending. */
+const COMMON = new Set([
+  'noch',
+  'bitte',
+  'heute',
+  'morgen',
+  'dann',
+  'nicht',
+  'mehr',
+  'alles',
+  'wieder',
+]);
 const words = (s: string): string[] =>
   fold(s)
     .split(/[^a-z0-9]+/)
     .filter((w) => w.length >= 4);
+const nameWords = (s: string): string[] =>
+  words(s).filter((w) => !COMMON.has(w) && !/(?:en|ern|eln)$/.test(w));
 
 /**
  * Is the sentence worth a model call? The rules already said it looks like an instruction (a
- * planning verb, a day word) but could not read it – or it names a thing of the plan word for word,
- * which a plain new ToDo rarely does. Everything else stays a ToDo without waiting for a model.
+ * planning verb, a day word) but could not read it – or it names a thing of the plan by a word that
+ * is no verb and no filler („Steuer“, „Keller“ – not „anrufen“), which a plain new ToDo rarely does.
+ * Everything else stays a ToDo without waiting for a model.
  */
 export function worthAsking(
   said: Instruction,
@@ -108,7 +123,7 @@ export function worthAsking(
   if (said.kind === 'explain' || said.kind === 'missing') return true;
   if (said.kind !== 'none') return false;
   const own = new Set(words(text));
-  return items.some((i) => words(i.title).some((w) => own.has(w)));
+  return items.some((i) => nameWords(i.title).some((w) => own.has(w)));
 }
 
 /**
@@ -119,12 +134,13 @@ export function worthAsking(
 export async function readSentence(
   text: string,
   ctx: SayContext,
-  opts: { signal?: AbortSignal; onModel?: () => void } = {},
+  opts: { signal?: AbortSignal; onModel?: () => void; model?: boolean } = {},
 ): Promise<Said> {
   const said = parseInstruction(text, ctx);
   const byRules: Said = { ...said, stage: 0 };
   if (said.kind === 'ops' || said.kind === 'ask') return byRules;
-  if (!worthAsking(said, text, ctx.items)) return byRules;
+  // `model: false` = the user discarded the model's reading of this sentence: the rules' result stands.
+  if (opts.model === false || !worthAsking(said, text, ctx.items)) return byRules;
   if (!(await localStageAvailable())) return byRules;
   opts.onModel?.();
   const ops = await readWithModel(text, ctx.lines, ctx.today, opts.signal);

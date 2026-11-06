@@ -164,6 +164,7 @@ export const planner: Strings['planner'] = {
     askLabel: 'Lequel ?',
     reading: 'Un instant – le modèle local lit la phrase.',
     localRead: 'Lu par le modèle local – à vérifier.',
+    discardedLocal: 'Rejeté. « Ajouter » encore une fois crée une tâche.',
   },
   preview: {
     label: 'Aperçu',

@@ -10,7 +10,7 @@ import { setPlatform } from '@/core/platform';
 import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
 import { setNow } from '@/core/time/now';
-import { contextModules } from '@/modules/chat/context';
+import { buildContext, contextModules } from '@/modules/chat/context';
 import { addQuestion, generateReply } from '@/modules/chat/engine';
 import { threadRepo } from '@/modules/chat/repo';
 import plannerManifest from '@/modules/planner/manifest';
@@ -280,20 +280,26 @@ describe('pin (3): schemaHash and prompt with the planner enabled', () => {
     const { manifests } = ctxFor();
     const withPlanner = [...manifests, plannerManifest];
     expect(aiModules(withPlanner).map((m) => m.id)).not.toContain('planner');
-    for (const mode of [
+    const modes = (list: typeof manifests) => [
       { writable: [] },
-      { writable: writableModules(aiModules(manifests)) },
+      { writable: writableModules(aiModules(list)) },
       { writable: [], off: true },
-    ]) {
-      expect(schemaHash(aiModules(withPlanner), mode)).toBe(schemaHash(aiModules(manifests), mode));
-      expect(buildSystemPrompt(aiModules(withPlanner), mode)).not.toMatch(/planner/);
+    ];
+    const [a, b] = [modes(withPlanner), modes(manifests)];
+    for (let i = 0; i < a.length; i++) {
+      expect(schemaHash(aiModules(withPlanner), a[i])).toBe(schemaHash(aiModules(manifests), b[i]));
+      expect(buildSystemPrompt(aiModules(withPlanner), a[i])).not.toMatch(/planner/);
     }
   });
 });
 
 describe('pin (4): a chat with planner data in the database', () => {
   const MODEL = findModel('qwen3.5-4b')!;
-  afterEach(() => setPlatform(undefined));
+  afterEach(async () => {
+    setPlatform(undefined);
+    writeLocalPrefs({ file: '', first: true, autoLoad: true, gpu: true });
+    await useLocalModel.getState().refresh();
+  });
 
   it('carries no planner data on either engine, also after the switch to the router; the planner was never a context choice', async () => {
     expect(contextModules(visibleManifests).map((m) => m.id)).not.toContain('planner');
@@ -306,18 +312,27 @@ describe('pin (4): a chat with planner data in the database', () => {
     await useLocalModel.getState().refresh();
     await db.table('chat_thread').clear();
     await db.table('chat_message').clear();
+    // Even a stored thread that names the planner (an old or synced row) gets no planner context.
+    const allowed = [...contextModules(visibleManifests).map((m) => m.id), 'planner'];
     const thread = await threadRepo.create({
       title: 'Plan',
       autoTitle: true,
       pinned: false,
       archived: false,
       engine: 'local',
-      contextModules: contextModules(visibleManifests).map((m) => m.id),
+      contextModules: allowed,
       tokensIn: 0,
       tokensOut: 0,
       costUsd: 0,
     });
-    await addQuestion(thread.id, 'Was steht diese Woche im Plan und was blockt den Donnerstag?');
+    const question = 'Was steht diese Woche im Plan und was blockt den Donnerstag?';
+    const context = await buildContext(question, allowed, {
+      manifests: [...visibleManifests],
+      known: visibleManifests,
+      today: TODAY,
+    });
+    for (const secret of PLANNER_DATA) expect(context ?? '', secret).not.toContain(secret);
+    await addQuestion(thread.id, question, context);
     const local = await generateReply(thread.id, {});
     expect(local.ok).toBe(true);
     expect(fake.requests).toHaveLength(1);

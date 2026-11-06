@@ -175,10 +175,52 @@ describe('planner page', () => {
       expect(fake.requests).toHaveLength(1);
       expect(fake.requests[0]!.prompt).toContain('Satz: schieb mal den übernächsten Freitag frei');
       expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      // „Verwerfen“ keeps the sentence and says what the next „Eintragen“ does; it then skips the model.
       fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
       expect(screen.queryByTestId('plan-preview')).toBeNull();
       expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      expect(screen.getByTestId('plan-say')).toHaveTextContent(
+        'Verworfen. Noch einmal „Eintragen“ legt ein ToDo an.',
+      );
+      expect(field).toHaveValue('schieb mal den übernächsten Freitag frei');
+      fireEvent.submit(field.closest('form')!);
+      // The rules explain (a planning verb they cannot read); the model stays quiet.
+      await waitFor(() =>
+        expect(screen.getByTestId('plan-say')).toHaveTextContent('Ich kann: Tag frei'),
+      );
+      expect(fake.requests).toHaveLength(1);
       expect(await db.table('todos_task').count()).toBe(0);
+      // A sentence the model reads as "no instruction" becomes a ToDo, and no status line stays behind.
+      const steuer = await taskRepo.create({
+        listId: 'inbox',
+        title: 'Steuer',
+        done: false,
+        priority: 0,
+        order: 0,
+      });
+      await assignmentRepo.upsert(`todos:${steuer.id}#0`, {
+        itemKey: `todos:${steuer.id}`,
+        k: 0,
+        of: 1,
+        date: '2026-11-09',
+        minutes: 30,
+        order: 0,
+        reason: 'new',
+      });
+      fake.requests.length = 0;
+      const quiet = createFakeLocalModel({
+        models: [{ file: MODEL.file, bytes: MODEL.bytes }],
+        answer: () => JSON.stringify({ ops: [] }),
+      });
+      setPlatform({ ...createWebPlatform(), localModel: quiet });
+      await useLocalModel.getState().refresh();
+      await screen.findAllByText('Steuer');
+      fireEvent.change(field, { target: { value: 'Steuer Unterlagen sortieren' } });
+      fireEvent.submit(field.closest('form')!);
+      await waitFor(async () => expect(await db.table('todos_task').count()).toBe(2));
+      expect(quiet.requests).toHaveLength(1);
+      await waitFor(() => expect(screen.queryByTestId('plan-say')).toBeNull());
+      expect(screen.queryByTestId('plan-preview')).toBeNull();
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally {
       fetchSpy.mockRestore();

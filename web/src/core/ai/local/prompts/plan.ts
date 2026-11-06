@@ -24,6 +24,8 @@ export const PLAN_DAYS = 14;
 export const PLAN_MAX_TOKENS = 360;
 /** A day the model names may lie this far ahead; the engine's horizon is shorter anyway. */
 const MAX_DAYS_AHEAD = 365;
+/** Longest duration the model may set: the ToDo estimate's own cap (`todos/schema.ts`). */
+const MAX_DURATION_MIN = 480;
 const MAX_TITLE = 48;
 const MAX_SENTENCE = 200;
 
@@ -39,6 +41,8 @@ export interface PlanLine {
   due?: string;
   /** The first day it is planned on; absent = waits. */
   day?: string;
+  /** „Nicht planen“: the model sees it, so it does not pin or exclude it again blindly. */
+  excluded?: boolean;
 }
 
 const WEEKDAY = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] as const;
@@ -76,7 +80,7 @@ export function planText(lines: readonly PlanLine[]): string {
         `${Math.max(0, Math.round(l.min))} min`,
         `prio ${Math.max(0, Math.min(3, Math.round(l.prio)))}`,
         l.due ? `due ${l.due}` : undefined,
-        l.day ? `day ${weekdayOf(l.day)} ${l.day}` : 'waits',
+        l.day ? `day ${weekdayOf(l.day)} ${l.day}` : l.excluded ? 'excluded' : 'waits',
       ]
         .filter(Boolean)
         .join(' | '),
@@ -198,7 +202,7 @@ export function buildPlanGrammar(count: number): string {
     `minutes ::= [1-9] [0-9]{0,3}`,
     `minutes0 ::= "0" | [1-9] [0-9]{0,3}`,
     `time ::= [0-2] [0-9] ":" [0-5] [0-9]`,
-    `label ::= [^"\\\\\\n]{1,40}`,
+    `label ::= [^"\\\\\\x00-\\x1f]{1,40}`,
   ];
   return rules.join('\n');
 }
@@ -270,7 +274,7 @@ export function parsePlanAnswer(
       }
       case 'duration': {
         const key = keyOf(op.key);
-        if (!key || op.value < 1 || op.value > 1440) return undefined;
+        if (!key || op.value < 1 || op.value > MAX_DURATION_MIN) return undefined;
         out.push({ op: 'duration', key, min: op.value });
         break;
       }

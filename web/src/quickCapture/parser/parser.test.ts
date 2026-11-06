@@ -274,6 +274,8 @@ describe('effort estimate', () => {
     ['Bericht schreiben 1,5 h', 90, 'Bericht schreiben'],
     ['ca. 30 Minuten Wohnung saugen', 30, 'Wohnung saugen'],
     ['Aufgabe: Steuer 45min morgen', 45, 'Steuer'],
+    ['Keller zwei Stunden', 120, 'Keller'],
+    ['Steuer eine halbe Stunde', 30, 'Steuer'],
   ];
   it.each(cases)('%s', (text, minutes, title) => {
     const r = parse(`t ${text}`);

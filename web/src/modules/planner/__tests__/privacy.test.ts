@@ -37,7 +37,6 @@ const BLOCKER = 'Zahnarzt Dr. Fuchsbauer';
 const NOTE = 'Nachmittags Werkstatt aufräumen';
 const ITEM_TITLE = 'Dachboden entrümpeln';
 const FAR_DAY = '2026-11-13';
-const FIXTURES = [BLOCKER, NOTE, ITEM_TITLE];
 
 const UNREAD = 'schieb die Steuer auf übernächsten Freitag';
 const deps = (): RunDeps => ({
@@ -187,6 +186,10 @@ describe('pin (2): the local stage and the field never fetch', () => {
     expect(prompt).toContain(`| ${ITEM_TITLE} |`);
     expect(prompt).not.toContain(BLOCKER);
     expect(prompt).not.toContain(NOTE);
+    // Things are named by short aliases, never by their ids.
+    expect(prompt).not.toContain('todos:');
+    for (const t of await db.table('todos_task').toArray())
+      expect(prompt).not.toContain(t.id as string);
   });
 
   it('the sources of the local stage and the page know no fetch, no router, no write pipeline', () => {
@@ -195,7 +198,12 @@ describe('pin (2): the local stage and the field never fetch', () => {
       readFileSync(new URL(file, import.meta.url), 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\s*\/\/.*$/gm, '');
-    for (const file of ['../localStage.ts', '../routes/PlannerPage.tsx', '../say.ts']) {
+    for (const file of [
+      '../localStage.ts',
+      '../routes/PlannerPage.tsx',
+      '../say.ts',
+      '../../../core/ai/local/prompts/plan.ts',
+    ]) {
       const text = src(file);
       for (const forbidden of [
         'fetch(',
@@ -216,6 +224,5 @@ describe('pin (2): the local stage and the field never fetch', () => {
     expect(stage).toContain('getPlatform().localModel.generate');
     expect(stage).toContain('isAiOn()');
     expect(stage).toContain('localStageReady()');
-    expect(FIXTURES.length).toBe(3);
   });
 });

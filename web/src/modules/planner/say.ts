@@ -11,28 +11,6 @@ import type { InstructionItem, PlanOp } from '@/core/plan/instructions';
 import { t } from '@/strings';
 import type { Board } from './board';
 
-/** Every thing on the board (planned or waiting) once, with its first day and its hard due. */
-export function instructionItems(board: Board): InstructionItem[] {
-  const out = new Map<string, InstructionItem>();
-  for (const day of board.days)
-    for (const row of day.rows) {
-      if (out.has(row.itemKey)) continue;
-      const hardDue = row.hardDue ?? (row.item?.due?.hard ? row.item.due.date : undefined);
-      out.set(row.itemKey, {
-        key: row.itemKey,
-        title: row.title,
-        date: day.date,
-        ...(hardDue ? { hardDue } : {}),
-      });
-    }
-  for (const w of board.waiting) {
-    if (out.has(w.itemKey)) continue;
-    const hardDue = w.item?.due?.hard ? w.item.due.date : undefined;
-    out.set(w.itemKey, { key: w.itemKey, title: w.title, ...(hardDue ? { hardDue } : {}) });
-  }
-  return [...out.values()];
-}
-
 /**
  * The compact plan for the local stage (`localStage.ts`): every thing once with its minutes over all
  * sessions, its priority, its hard due and the first day it is planned on. Titles and planning facts
@@ -63,8 +41,21 @@ export function planLines(board: Board): PlanLine[] {
     });
   };
   for (const day of board.days) for (const row of day.rows) add(row, day.date);
-  for (const w of board.waiting) add(w);
+  for (const w of board.waiting) {
+    add(w);
+    if (w.reason === 'excluded') out.get(w.itemKey)!.excluded = true;
+  }
   return [...out.values()];
+}
+
+/** The rules' view of the same lines: every thing once with its first day and its hard due. */
+export function instructionItems(board: Board): InstructionItem[] {
+  return planLines(board).map((l) => ({
+    key: l.key,
+    title: l.title,
+    ...(l.day ? { date: l.day } : {}),
+    ...(l.due ? { hardDue: l.due } : {}),
+  }));
 }
 
 /**

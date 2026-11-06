@@ -7905,6 +7905,7 @@ export const de = {
       askLabel: 'Welches ist gemeint?',
       reading: 'Einen Moment – das lokale Modell liest den Satz.',
       localRead: 'Vom lokalen Modell gelesen – bitte prüfen.',
+      discardedLocal: 'Verworfen. Noch einmal „Eintragen“ legt ein ToDo an.',
     },
     preview: {
       label: 'Vorschau',

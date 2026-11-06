@@ -7,6 +7,8 @@ import styles from '../routes/planner.module.css';
 export interface PreviewData {
   /** What the sentence asks for, one calm line each („Do ist frei.“). */
   lines: string[];
+  /** Where the reading came from when it was not the rules („Vom lokalen Modell gelesen – bitte prüfen.“). */
+  note?: string;
   diff: PlanDiff;
 }
 
@@ -118,6 +120,7 @@ export function PlanPreview({
   ];
   return (
     <section className={styles.preview} aria-label={p.label} data-testid="plan-preview">
+      {data.note ? <p className={styles.previewNote}>{data.note}</p> : null}
       {data.lines.map((line) => (
         <p key={line} className={styles.previewLine}>
           {line}

@@ -168,7 +168,8 @@ function fieldFor(ref: ActionRef, role: AiRole, startDateHint = false): string |
     case 'quantity':
       return first((f) => f === 'count' || f === 'quantity');
     case 'estimate':
-      return first((f) => f === 'estimateMin');
+      // Only an explicit role: a minutes field is never guessed from its type.
+      return undefined;
   }
 }
 

@@ -160,7 +160,8 @@ export const planner: Strings['planner'] = {
     ask: (a: string, b: string) => `Você quer dizer ${a} ou ${b}?`,
     askLabel: 'Qual é?',
     reading: 'Um momento – o modelo local está lendo a frase.',
-    localRead: 'Lido pelo modelo local – confira.',
+    localRead: 'Lido pelo modelo local – confira, por favor.',
+    discardedLocal: 'Descartado. “Adicionar” mais uma vez cria uma tarefa.',
   },
   preview: {
     label: 'Prévia',
