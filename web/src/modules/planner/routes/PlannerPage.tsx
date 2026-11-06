@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import type { PlanOp } from '@/core/plan/instructions';
+import type { Instruction, PlanOp } from '@/core/plan/instructions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -46,7 +46,7 @@ import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import { overloadText } from '../overload';
-import { readSentence, warmLocalStage, type SayStage } from '../localStage';
+import { readSentence, warmLocalStage, type Said } from '../localStage';
 import { instructionItems, opLines, planLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
@@ -68,6 +68,8 @@ interface Pending {
   data: PreviewData;
   /** Said in the field (its text goes on „Übernehmen“), not chosen in ⋯. */
   fromField: boolean;
+  /** The model's reading of this sentence; `rules` = what the rules made of it (stands on „Verwerfen“). */
+  local?: { sentence: string; rules: Instruction };
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -104,9 +106,9 @@ export default function PlannerPage() {
   const [busy, setBusy] = useState(false);
   // The local model is reading a sentence (desktop with a model only): the field waits, one calm line says so.
   const [reading, setReading] = useState(false);
-  // The running model request; aborted on a new sentence, on Escape and when the page goes.
+  // The running model request; aborted on Escape and when the page goes.
   const readingRef = useRef<AbortController | undefined>(undefined);
-  // A stage-1 preview the user discarded: the same sentence, sent again, skips the model (a ToDo as before).
+  // A model reading the user discarded or stopped: the same sentence, sent again, skips the model.
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
@@ -156,8 +158,8 @@ export default function PlannerPage() {
     } else if (params.get('week') || params.get('check')) setParams({}, { replace: true });
   }, [params, setParams, board]);
 
-  /** Shows what `ops` would do; nothing is stored until „Übernehmen“. */
-  async function showPreview(ops: PlanOp[], fromField = false, stage: SayStage = 0) {
+  /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
+  async function showPreview(ops: PlanOp[], fromField = false, local?: Pending['local']) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
@@ -170,10 +172,11 @@ export default function PlannerPage() {
         // A sentence the local model read says so above the lines: its reading is checked here, by the user.
         data: {
           lines,
-          ...(stage === 1 ? { note: t.planner.say.localRead } : {}),
+          ...(local ? { note: t.planner.say.localRead } : {}),
           diff: out.result.diff,
         },
         fromField,
+        ...(local ? { local } : {}),
       });
     } catch (e) {
       if (!(e instanceof PlannerOffError)) throw e;
@@ -193,19 +196,30 @@ export default function PlannerPage() {
     }
   }
 
-  /** „Verwerfen“: the text stays; a discarded model reading is not asked again for the same sentence. */
-  function discard() {
-    if (pending?.fromField && pending.data.note) {
-      declinedRef.current = text.trim();
-      setSayLine(t.planner.say.discardedLocal);
-    }
-    setPending(undefined);
+  /**
+   * What stands when the user sets the model's reading aside: the rules' line, or – when the rules saw
+   * no instruction – the promise that the next „Eintragen“ makes the ToDo. The sentence is not asked again.
+   */
+  function fallBackToRules(sentence: string, rules: Instruction, stopped: boolean) {
+    declinedRef.current = sentence;
+    if (rules.kind === 'explain') setSayLine(t.planner.say.explain);
+    else if (rules.kind === 'missing') setSayLine(t.planner.say.missing(rules.query));
+    else setSayLine(stopped ? t.planner.say.stoppedLocal : t.planner.say.discardedLocal);
   }
 
-  /** Escape while the model reads: stop waiting, the sentence stays in the field. */
-  function onFieldKey(e: KeyboardEvent<HTMLInputElement>) {
+  /** „Verwerfen“: the text stays; a discarded model reading is not asked again for the same sentence. */
+  function discard() {
+    if (pending?.fromField && pending.local)
+      fallBackToRules(pending.local.sentence, pending.local.rules, false);
+    setPending(undefined);
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  }
+
+  /** Escape while the model reads (anywhere in the form): stop waiting, the sentence stays in the field. */
+  function onFormKey(e: KeyboardEvent<HTMLFormElement>) {
     if (e.key === 'Escape' && readingRef.current) {
       e.preventDefault();
+      e.stopPropagation();
       readingRef.current.abort();
     }
   }
@@ -225,7 +239,7 @@ export default function PlannerPage() {
       declinedRef.current = undefined;
       const abort = new AbortController();
       readingRef.current = abort;
-      let said;
+      let said: Said;
       try {
         setReading(true);
         said = await readSentence(
@@ -246,11 +260,18 @@ export default function PlannerPage() {
         setSayLine(undefined);
         if (readingRef.current === abort) readingRef.current = undefined;
       }
-      // The page went or the user pressed Escape: nothing happens, the sentence stays.
-      if (abort.signal.aborted) return;
+      // The user pressed Escape (or the page went): nothing happens, the sentence stays, the rules' line says what is next.
+      if (abort.signal.aborted) {
+        if (addRef.current) fallBackToRules(value, said.stage === 1 ? said.rules : said, true);
+        return;
+      }
       if (said.kind === 'ops') {
         // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
-        await showPreview(said.ops, true, said.stage);
+        await showPreview(
+          said.ops,
+          true,
+          said.stage === 1 ? { sentence: value, rules: said.rules } : undefined,
+        );
         return;
       }
       if (said.kind === 'ask') {
@@ -566,6 +587,7 @@ export default function PlannerPage() {
       <form
         ref={addRef}
         onSubmit={add}
+        onKeyDown={onFormKey}
         className={styles.add}
         data-keep-visible
         aria-busy={reading || undefined}
@@ -577,7 +599,6 @@ export default function PlannerPage() {
             hint={t.planner.add.hint}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={onFieldKey}
             readOnly={reading}
           />
         </div>

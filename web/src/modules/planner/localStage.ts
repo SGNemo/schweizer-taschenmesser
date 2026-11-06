@@ -38,7 +38,10 @@ import { getPlatform } from '@/core/platform';
 
 /** 0 = the rules read the sentence, 1 = the local model did (the preview says so). */
 export type SayStage = 0 | 1;
-export type Said = Instruction & { stage: SayStage };
+export type Said =
+  | (Instruction & { stage: 0 })
+  /** The model's reading, with what the rules made of the sentence (what stands when the user discards it). */
+  | { kind: 'ops'; ops: PlanOp[]; stage: 1; rules: Instruction };
 
 export interface SayContext extends InstructionContext {
   /** The compact plan the model may see (`say.ts` `planLines`). */
@@ -71,10 +74,11 @@ export async function readWithModel(
   signal?: AbortSignal,
 ): Promise<PlanOp[] | undefined> {
   const entry = findModelByFile(getLocalPrefs().file);
-  if (!entry) return undefined;
+  if (!entry || signal?.aborted) return undefined;
   const plan = compactPlan(lines);
   try {
-    if (!(await ensureLoaded())) return undefined;
+    // The first use loads the model (seconds): Escape ends the wait at once, the load may finish on its own.
+    if (!(await raceAbort(ensureLoaded(), signal)) || signal?.aborted) return undefined;
     const prompt = formatChat(
       entry.template,
       planSystemPrompt(),
@@ -102,6 +106,16 @@ const COMMON = new Set([
   'alles',
   'wieder',
 ]);
+/** Resolves to `false` as soon as the signal aborts, otherwise to the promise's value. */
+function raceAbort(p: Promise<boolean>, signal?: AbortSignal): Promise<boolean> {
+  if (!signal) return p;
+  return new Promise((resolve) => {
+    const stop = () => resolve(false);
+    signal.addEventListener('abort', stop, { once: true });
+    p.then(resolve, () => resolve(false)).finally(() => signal.removeEventListener('abort', stop));
+  });
+}
+
 const words = (s: string): string[] =>
   fold(s)
     .split(/[^a-z0-9]+/)
@@ -113,7 +127,9 @@ const nameWords = (s: string): string[] =>
  * Is the sentence worth a model call? The rules already said it looks like an instruction (a
  * planning verb, a day word) but could not read it – or it names a thing of the plan by a word that
  * is no verb and no filler („Steuer“, „Keller“ – not „anrufen“), which a plain new ToDo rarely does.
- * Everything else stays a ToDo without waiting for a model.
+ * The ending rule also drops plural nouns („Unterlagen“, „Rechnungen“): such a sentence without a
+ * planning verb or a day word stays a ToDo, as before this stage – the safe direction. Everything
+ * else stays a ToDo without waiting for a model.
  */
 export function worthAsking(
   said: Instruction,
@@ -145,5 +161,5 @@ export async function readSentence(
   opts.onModel?.();
   const ops = await readWithModel(text, ctx.lines, ctx.today, opts.signal);
   if (!ops || ops.length === 0) return byRules;
-  return { kind: 'ops', ops, stage: 1 };
+  return { kind: 'ops', ops, stage: 1, rules: said };
 }

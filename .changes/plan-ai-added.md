@@ -10,5 +10,5 @@ type: added
 area: todos
 breaking: false
 de: In der Eingabeleiste behält „Steuer zwei Stunden bis Donnerstag“ jetzt den Aufwand – das ToDo bekommt die Schätzung.
-en: In the entry bar, “Steuer zwei Stunden bis Donnerstag” now keeps the effort (German sentences) – the to-do gets the estimate.
+en: In the entry bar, German sentences like “Steuer zwei Stunden bis Donnerstag” now keep the effort – the to-do gets the estimate.
 ---

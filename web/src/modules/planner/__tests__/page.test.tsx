@@ -156,41 +156,21 @@ describe('planner page', () => {
 
   it('a sentence the rules cannot read: the local model (desktop, model loaded) reads it, the preview says so, nothing is stored before „Übernehmen“', async () => {
     const MODEL = findModel('qwen3.5-4b')!;
-    const fake = createFakeLocalModel({
-      models: [{ file: MODEL.file, bytes: MODEL.bytes }],
-      answer: () => JSON.stringify({ ops: [{ op: 'available', date: '2026-11-20', value: 0 }] }),
-    });
-    setPlatform({ ...createWebPlatform(), localModel: fake });
+    const model = (answer: () => string) => {
+      const fake = createFakeLocalModel({
+        models: [{ file: MODEL.file, bytes: MODEL.bytes }],
+        answer,
+      });
+      setPlatform({ ...createWebPlatform(), localModel: fake });
+      return fake;
+    };
+    let fake = model(() =>
+      JSON.stringify({ ops: [{ op: 'available', date: '2026-11-20', value: 0 }] }),
+    );
     writeLocalPrefs({ file: MODEL.file, first: true, autoLoad: true, gpu: true });
     await useLocalModel.getState().refresh();
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     try {
-      draw();
-      const field = await screen.findByLabelText('Eintragen oder sagen');
-      fireEvent.change(field, { target: { value: 'schieb mal den übernächsten Freitag frei' } });
-      fireEvent.submit(field.closest('form')!);
-      const preview = await screen.findByTestId('plan-preview');
-      expect(preview).toHaveTextContent('Vom lokalen Modell gelesen – bitte prüfen.');
-      expect(preview).toHaveTextContent('Fr 20.11. ist frei.');
-      expect(fake.requests).toHaveLength(1);
-      expect(fake.requests[0]!.prompt).toContain('Satz: schieb mal den übernächsten Freitag frei');
-      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
-      // „Verwerfen“ keeps the sentence and says what the next „Eintragen“ does; it then skips the model.
-      fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
-      expect(screen.queryByTestId('plan-preview')).toBeNull();
-      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
-      expect(screen.getByTestId('plan-say')).toHaveTextContent(
-        'Verworfen. Noch einmal „Eintragen“ legt ein ToDo an.',
-      );
-      expect(field).toHaveValue('schieb mal den übernächsten Freitag frei');
-      fireEvent.submit(field.closest('form')!);
-      // The rules explain (a planning verb they cannot read); the model stays quiet.
-      await waitFor(() =>
-        expect(screen.getByTestId('plan-say')).toHaveTextContent('Ich kann: Tag frei'),
-      );
-      expect(fake.requests).toHaveLength(1);
-      expect(await db.table('todos_task').count()).toBe(0);
-      // A sentence the model reads as "no instruction" becomes a ToDo, and no status line stays behind.
       const steuer = await taskRepo.create({
         listId: 'inbox',
         title: 'Steuer',
@@ -207,20 +187,86 @@ describe('planner page', () => {
         order: 0,
         reason: 'new',
       });
-      fake.requests.length = 0;
-      const quiet = createFakeLocalModel({
-        models: [{ file: MODEL.file, bytes: MODEL.bytes }],
-        answer: () => JSON.stringify({ ops: [] }),
-      });
-      setPlatform({ ...createWebPlatform(), localModel: quiet });
-      await useLocalModel.getState().refresh();
+      draw();
+      const field = await screen.findByLabelText('Eintragen oder sagen');
       await screen.findAllByText('Steuer');
-      fireEvent.change(field, { target: { value: 'Steuer Unterlagen sortieren' } });
+      // (a) A planning verb the rules cannot read: the model's reading, as a preview with the note.
+      fireEvent.change(field, { target: { value: 'schieb mal den übernächsten Freitag frei' } });
+      fireEvent.submit(field.closest('form')!);
+      const preview = await screen.findByTestId('plan-preview');
+      expect(preview).toHaveTextContent('Vom lokalen Modell gelesen – bitte prüfen.');
+      expect(preview).toHaveTextContent('Fr 20.11. ist frei.');
+      expect(fake.requests).toHaveLength(1);
+      expect(fake.requests[0]!.prompt).toContain('Satz: schieb mal den übernächsten Freitag frei');
+      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      // „Verwerfen“: the sentence stays, the rules' own line stands (no ToDo promised), the field has focus.
+      fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
+      expect(screen.queryByTestId('plan-preview')).toBeNull();
+      expect(await dayRepo.get('2026-11-20')).toBeUndefined();
+      expect(screen.getByTestId('plan-say')).toHaveTextContent('Ich kann: Tag frei');
+      expect(field).toHaveValue('schieb mal den übernächsten Freitag frei');
+      expect(document.activeElement).toBe(field);
+      // The same sentence again skips the model.
+      fireEvent.submit(field.closest('form')!);
+      await waitFor(() =>
+        expect(screen.getByTestId('plan-say')).toHaveTextContent('Ich kann: Tag frei'),
+      );
+      expect(fake.requests).toHaveLength(1);
+      expect(await db.table('todos_task').count()).toBe(1);
+
+      // (b) A sentence the rules saw no instruction in, but the model did: discard → the next „Eintragen“ makes the ToDo.
+      fake = model(() => JSON.stringify({ ops: [{ op: 'pin', key: 'k1', value: '2026-11-13' }] }));
+      await useLocalModel.getState().refresh();
+      fireEvent.change(field, { target: { value: 'Steuer lieber am Freitag' } });
+      fireEvent.submit(field.closest('form')!);
+      expect(await screen.findByTestId('plan-preview')).toHaveTextContent(
+        'Steuer festgenagelt auf Fr',
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Verwerfen' }));
+      expect(screen.getByTestId('plan-say')).toHaveTextContent(
+        'Verworfen. Noch einmal „Eintragen“ legt ein ToDo an.',
+      );
       fireEvent.submit(field.closest('form')!);
       await waitFor(async () => expect(await db.table('todos_task').count()).toBe(2));
-      expect(quiet.requests).toHaveLength(1);
+      expect(fake.requests).toHaveLength(1);
+      expect(screen.queryByTestId('plan-say')).toBeNull();
+
+      // (c) A sentence the model reads as "no instruction" becomes a ToDo at once, no status line stays behind.
+      fake = model(() => JSON.stringify({ ops: [] }));
+      await useLocalModel.getState().refresh();
+      fireEvent.change(field, { target: { value: 'Steuer Unterlagen sortieren' } });
+      fireEvent.submit(field.closest('form')!);
+      await waitFor(async () => expect(await db.table('todos_task').count()).toBe(3));
+      expect(fake.requests).toHaveLength(1);
       await waitFor(() => expect(screen.queryByTestId('plan-say')).toBeNull());
       expect(screen.queryByTestId('plan-preview')).toBeNull();
+
+      // (d) Escape while the model reads: the wait ends, the sentence stays, one line says what is next.
+      fake = model(() => JSON.stringify({ ops: [{ op: 'pin', key: 'k1', value: '2026-11-13' }] }));
+      // A generation that only ends when the signal aborts (a slow shell).
+      fake.generate = (_req, opts) =>
+        new Promise((_resolve, reject) => {
+          opts?.signal?.addEventListener('abort', () => reject(new Error('cancelled')));
+        });
+      await useLocalModel.getState().refresh();
+      fireEvent.change(field, { target: { value: 'Steuer erst nach dem Umzug' } });
+      fireEvent.submit(field.closest('form')!);
+      await waitFor(() =>
+        expect(screen.getByTestId('plan-say')).toHaveTextContent(
+          'das lokale Modell liest den Satz',
+        ),
+      );
+      expect(field).toHaveAttribute('readonly');
+      fireEvent.keyDown(field, { key: 'Escape' });
+      await waitFor(() =>
+        expect(screen.getByTestId('plan-say')).toHaveTextContent(
+          'Abgebrochen. Noch einmal „Eintragen“ legt ein ToDo an.',
+        ),
+      );
+      expect(field).toHaveValue('Steuer erst nach dem Umzug');
+      expect(field).not.toHaveAttribute('readonly');
+      expect(screen.queryByTestId('plan-preview')).toBeNull();
+      expect(await db.table('todos_task').count()).toBe(3);
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally {
       fetchSpy.mockRestore();

@@ -156,6 +156,10 @@ describe('parsePlanAnswer', () => {
     // One line, the title cut: no line of its own, no alias and no op text survives.
     expect(text.split('\n')).toHaveLength(1);
     expect(text).not.toMatch(/^(?:Satz|Ausgabe):/m);
+    // A pipe in a title cannot pose as a column.
+    expect(planText([{ key: 'k', title: 'A | 999 min | prio 3', min: 5, prio: 0 }])).toBe(
+      'k1 | A / 999 min / prio 3 | 5 min | prio 0 | waits',
+    );
     expect(text).not.toContain('k9');
     expect(text.length).toBeLessThan(120);
     // Only the plan's own aliases resolve, whatever the title says.

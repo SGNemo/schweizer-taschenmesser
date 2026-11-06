@@ -24,8 +24,8 @@ export const PLAN_DAYS = 14;
 export const PLAN_MAX_TOKENS = 360;
 /** A day the model names may lie this far ahead; the engine's horizon is shorter anyway. */
 const MAX_DAYS_AHEAD = 365;
-/** Longest duration the model may set: the ToDo estimate's own cap (`todos/schema.ts`). */
-const MAX_DURATION_MIN = 480;
+/** Longest duration the model may set: the ToDo estimate's own cap (`todos/schema.ts`, pinned by a planner test). */
+export const MAX_DURATION_MIN = 480;
 const MAX_TITLE = 48;
 const MAX_SENTENCE = 200;
 
@@ -66,7 +66,8 @@ export function compactPlan(lines: readonly PlanLine[]): PlanLine[] {
 }
 
 const alias = (i: number): string => `k${i + 1}`;
-const oneLine = (s: string): string => s.replace(/\s+/g, ' ').trim();
+/** One line, and no `|` – a title cannot pose as a column of the plan. */
+const oneLine = (s: string): string => s.replace(/\s+/g, ' ').replace(/\|/g, '/').trim();
 const cut = (s: string, max: number): string =>
   s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 
