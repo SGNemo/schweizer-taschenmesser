@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import {
   enableExample,
   mainNav,
+  openNavArea,
   moduleSwitch,
   showAllWidgets,
   openAppearanceGroup,
@@ -55,6 +56,8 @@ test.describe('module library', () => {
     await expect(exampleNav(page, phone)).toHaveCount(0);
 
     await enableExample(page);
+    // F06: on desktop only the area of the open page is unfolded; open "Wissen" by hand.
+    if (!phone) await openNavArea(page, 'Wissen');
     await expect(exampleNav(page, phone)).toBeVisible();
 
     const card = page.getByTestId('module-example');

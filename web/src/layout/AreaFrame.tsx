@@ -44,7 +44,8 @@ function WriteButton({ pathname }: { pathname: string }) {
   const available = useWriteAvailable(manifest?.id);
   const write = useWriteLabel();
   if (!available || writeInMenu) return null;
-  // On the phone only the icon shows: the name stays as the tooltip and the accessible name.
+  // C31: on the phone the short verb shows ("Eintragen") – a tooltip never shows on touch; the full name stays
+  // the accessible name and the tooltip.
   return (
     <Button
       variant="ghost"
@@ -55,6 +56,9 @@ function WriteButton({ pathname }: { pathname: string }) {
     >
       <Icon name={write.ai ? 'sparkles' : 'plus'} size={16} />
       <span className={styles.writeLabel}>{write.label}</span>
+      <span className={styles.writeShort} aria-hidden="true">
+        {t.ai.palette.write}
+      </span>
     </Button>
   );
 }

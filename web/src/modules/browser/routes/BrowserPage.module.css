@@ -27,7 +27,7 @@
 .tabActive {
   background: var(--surface);
   border-color: var(--border-strong);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .tabTitle {
   overflow: hidden;

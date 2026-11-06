@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { formatMoney } from '@/core/money';
-import { formatDay, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
 import { t } from '@/strings';
 import { DueList } from '@/ui';
@@ -32,9 +32,8 @@ export default function DueInvoicesWidget() {
         title: i.payee,
         amount: formatMoney(remainingMinor(i), i.currency),
         tone: s.tone,
-        // C27: an overdue invoice shows the day it was due, never "seit n Tagen" (a counter that grows daily).
-        label:
-          s.tone === 'overdue' ? t.invoices.widgetDue(formatDay(i.dueDate, 'd. MMM')) : s.label,
+        // C27/N08: an overdue invoice shows the day it was due (the shared `dueState` label), never a count.
+        label: s.label,
         action: { label: `${t.invoices.markPaid}: ${i.payee}`, run: () => void payWithUndo(i.id) },
       }))}
       moreLabel={t.widgets.more}

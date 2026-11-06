@@ -41,7 +41,7 @@
   background: var(--surface-2);
 }
 .name {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-lg);
 }
 .meta {

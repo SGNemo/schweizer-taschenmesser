@@ -40,7 +40,7 @@
 }
 
 .choiceTitle {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .muted {
@@ -86,7 +86,7 @@
 }
 
 .rowTitle {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 
@@ -137,5 +137,5 @@
 
 .diff ins {
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }

@@ -22,7 +22,7 @@ const manifest: ModuleManifest = {
     hue2: 'ocean',
     widget: 'kennzahl',
     head: 'zeit',
-    signature: 'hourStrip',
+    signature: 'stopwatch',
     type: 'mono',
   },
   version: 1,

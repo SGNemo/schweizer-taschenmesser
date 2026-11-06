@@ -140,7 +140,7 @@ export default function TimetrackPage() {
             <EmptyState
               title={t.timetrack.emptyJobs}
               testId="timetrack-empty"
-              motif={<SignatureMark id="hourStrip" size={64} />}
+              motif={<SignatureMark id="stopwatch" size={64} />}
             >
               <Button variant="primary" onClick={() => setJob('new')}>
                 {t.timetrack.job.add}

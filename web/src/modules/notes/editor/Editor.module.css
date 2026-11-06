@@ -172,7 +172,7 @@
 .content :global(.ProseMirror .hljs-selector-tag),
 .content :global(.ProseMirror .hljs-built_in) {
   color: var(--info-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .content :global(.ProseMirror .hljs-string),
 .content :global(.ProseMirror .hljs-attr),

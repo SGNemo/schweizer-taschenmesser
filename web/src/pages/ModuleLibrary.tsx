@@ -224,7 +224,12 @@ export function ModuleLibrary() {
                     name={m.name}
                     description={m.description}
                     hue={m.identity.hue}
-                    preview={<WidgetMiniature variant={m.identity.widget} />}
+                    preview={
+                      <WidgetMiniature
+                        variant={m.identity.widget}
+                        signature={m.identity.signature}
+                      />
+                    }
                     badges={
                       <>
                         {enabled ? <Badge>{t.library.active}</Badge> : null}

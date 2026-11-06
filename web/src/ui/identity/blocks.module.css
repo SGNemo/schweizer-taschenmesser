@@ -232,6 +232,29 @@
   background: color-mix(in srgb, var(--module-color) 28%, var(--paper));
 }
 
+/* G07: lines in the question, still typing dots in the answer (`.block i` sets block, so one class more here). */
+.bubble .bubbleA {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+}
+.bubble .bubbleB {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+.bubbleB .dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--module-color) 70%, var(--paper));
+}
+.bubbleA .rule {
+  border-radius: var(--radius-full);
+}
+
 /* addressBar: a pill with the lock. */
 .addressBar {
   display: flex;

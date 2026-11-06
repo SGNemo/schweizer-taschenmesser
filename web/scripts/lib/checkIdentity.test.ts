@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  checkFontWeights,
   checkIdentityCollisions,
   checkIdentityGroups,
   checkSignatureUse,
@@ -80,7 +81,7 @@ describe('identity checks (identity v3.1)', () => {
     expect(checkIdentityCollisions([finance, timetrack])).toEqual([
       'finance and timetrack share the hue "teal" and the widget "kennzahl"; each needs a signature of its own (not "none", not the same)',
     ]);
-    expect(checkIdentityCollisions([finance, { ...timetrack, signature: 'hourStrip' }])).toEqual(
+    expect(checkIdentityCollisions([finance, { ...timetrack, signature: 'stopwatch' }])).toEqual(
       [],
     );
     // The same signature twice is no signature either.
@@ -131,9 +132,24 @@ describe('identity checks (identity v3.1)', () => {
       [],
     );
     expect(
-      checkSignatureUse('x', manifest.replace("'none'", "'hourStrip'"), [
+      checkSignatureUse('x', manifest.replace("'none'", "'stopwatch'"), [
         '<HeroSlot area="signature">',
       ]),
     ).toEqual([]);
+  });
+});
+
+describe('checkFontWeights (C11)', () => {
+  it('reports raw numbers, keeps tokens, keywords and @font-face ranges', () => {
+    const css = [
+      '@font-face { font-family: X; font-weight: 100 900; }',
+      '.a { font-weight: 650; }',
+      '.b { font-weight: var(--weight-semibold); }',
+      '.c { font-weight: normal; }',
+      '/* font-weight: 600; */',
+    ].join('\n');
+    expect(checkFontWeights('x.css', css)).toEqual([
+      'x.css:2: font-weight 650 – use a token (var(--weight-…)) or "normal"',
+    ]);
   });
 });

@@ -7,6 +7,13 @@ export function mainNav(page: Page) {
   return page.getByRole('navigation', { name: NAV });
 }
 
+/** F06: sidebar areas are folded except the current page's; unfold one (no-op when already open). */
+export async function openNavArea(page: Page, area: string) {
+  const head = mainNav(page).getByRole('button', { name: `${area} auf- oder zuklappen` });
+  if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
+  await expect(head).toHaveAttribute('aria-expanded', 'true');
+}
+
 const handled = new WeakSet<Page>();
 
 /**

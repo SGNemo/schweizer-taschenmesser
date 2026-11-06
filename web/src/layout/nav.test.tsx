@@ -36,7 +36,7 @@ const tree: NavTree = {
 
 beforeEach(async () => {
   await db.table('_settings').clear();
-  useUiStore.setState({ closedAreas: [], sidebar: 'wide' });
+  useUiStore.setState({ closedAreas: [], openAreas: [], sidebar: 'wide' });
 });
 
 describe('sidebar', () => {
@@ -83,13 +83,30 @@ describe('sidebar', () => {
   it('folds an area and remembers it', async () => {
     const user = userEvent.setup();
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/finance']}>
         <Sidebar tree={tree} rail={false} canExpand />
       </MemoryRouter>,
     );
     await user.click(screen.getByRole('button', { name: t.nav.toggleArea('Geld') }));
     expect(screen.queryByRole('link', { name: 'Finanzen' })).toBeNull();
     expect(useUiStore.getState().closedAreas).toEqual(['money']);
+  });
+
+  it('F06: only the area of the open page is unfolded by default; a hand-opened area stays open', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/calendar']}>
+        <Sidebar tree={tree} rail={false} canExpand />
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByRole('link', { name: 'Kalender' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'Finanzen' })).toBeNull();
+    const geld = screen.getByRole('button', { name: t.nav.toggleArea('Geld') });
+    expect(geld).toHaveAttribute('aria-expanded', 'false');
+    await user.click(geld);
+    expect(screen.getByRole('link', { name: 'Finanzen' })).toBeVisible();
+    expect(useUiStore.getState().openAreas).toEqual(['money']);
+    expect(JSON.parse(localStorage.getItem('tm-nav-open')!)).toEqual(['money']);
   });
 
   it('the rail links the areas by name and can expand', async () => {

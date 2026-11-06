@@ -66,6 +66,7 @@ const READ_HINT_KEY = 'tm-read-hint';
 const COLOR_MODE_KEY = 'tm-color';
 const SIDEBAR_KEY = 'tm-sidebar';
 const AREAS_CLOSED_KEY = 'tm-nav-closed';
+const AREAS_OPEN_KEY = 'tm-nav-open';
 const GROUPS_CLOSED_KEY = 'tm-groups-closed';
 const TEXT_SIZE_KEY = 'tm-text-size';
 const DENSITY_KEY = 'tm-density';
@@ -263,9 +264,14 @@ interface UiState {
   /** Desktop sidebar: wide (248 px) or rail (76 px); below 1200 px the rail is automatic. */
   sidebar: SidebarChoice;
   setSidebar(sidebar: SidebarChoice): void;
-  /** Sidebar areas the user folded (device-local). */
+  /**
+   * Sidebar areas (F06): folded by default except the one of the open module; what the user opens or folds by hand
+   * is remembered (device-local) and wins over the default.
+   */
   closedAreas: string[];
-  toggleAreaOpen(area: string): void;
+  openAreas: string[];
+  /** Flip an area; `openNow` = what the user sees right now (default included). */
+  toggleAreaOpen(area: string, openNow?: boolean): void;
   /** Folded list groups as `<listId>:<groupId>` (device-local; see ui/GroupedList). */
   closedGroups: string[];
   toggleGroupOpen(key: string): void;
@@ -413,13 +419,19 @@ export const useUiStore = create<UiState>((set) => ({
     set({ sidebar });
   },
   closedAreas: readClosedAreas(),
-  toggleAreaOpen(area) {
+  openAreas: readClosedAreas(AREAS_OPEN_KEY),
+  toggleAreaOpen(area, openNow) {
     set((s) => {
-      const closedAreas = s.closedAreas.includes(area)
-        ? s.closedAreas.filter((a) => a !== area)
-        : [...s.closedAreas, area];
+      const open = openNow ?? !s.closedAreas.includes(area);
+      const closedAreas = open
+        ? [...s.closedAreas.filter((a) => a !== area), area]
+        : s.closedAreas.filter((a) => a !== area);
+      const openAreas = open
+        ? s.openAreas.filter((a) => a !== area)
+        : [...s.openAreas.filter((a) => a !== area), area];
       storeChoice(AREAS_CLOSED_KEY, JSON.stringify(closedAreas), closedAreas.length === 0);
-      return { closedAreas };
+      storeChoice(AREAS_OPEN_KEY, JSON.stringify(openAreas), openAreas.length === 0);
+      return { closedAreas, openAreas };
     });
   },
   closedGroups: readClosedAreas(GROUPS_CLOSED_KEY),

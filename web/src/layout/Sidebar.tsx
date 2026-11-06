@@ -88,9 +88,18 @@ function ItemRow({
   );
 }
 
+/**
+ * Whether an area shows its modules (F06): what the user chose by hand, else open only for the area of the current
+ * page – so the list fits a 1080 screen. A hand choice (opened or folded) wins over the default.
+ */
+export function areaOpen(id: string, active: boolean, open: string[], closed: string[]): boolean {
+  if (closed.includes(id)) return false;
+  return open.includes(id) || active;
+}
+
 /** One area as a quiet block (tinted in the area colour) with its modules; the head folds it. */
-function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
-  const closed = useUiStore((s) => s.closedAreas.includes(area.id));
+function AreaGroup({ area, shown, active }: { area: NavArea; shown: string[]; active: boolean }) {
+  const closed = !useUiStore((s) => areaOpen(area.id, active, s.openAreas, s.closedAreas));
   const toggle = useUiStore((s) => s.toggleAreaOpen);
   const listId = `area-${area.id}`;
   return (
@@ -101,7 +110,7 @@ function AreaGroup({ area, shown }: { area: NavArea; shown: string[] }) {
         aria-expanded={!closed}
         aria-controls={listId}
         aria-label={t.nav.toggleArea(area.label)}
-        onClick={() => toggle(area.id)}
+        onClick={() => toggle(area.id, !closed)}
       >
         <span>{area.label}</span>
         <span className={styles.chevron} data-open={!closed}>
@@ -245,7 +254,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
             </li>
           </ul>
           {tree.areas.map((a) => (
-            <AreaGroup key={a.id} area={a} shown={shown} />
+            <AreaGroup key={a.id} area={a} shown={shown} active={a.id === activeArea} />
           ))}
         </OverlayScroll>
       </nav>

@@ -117,7 +117,6 @@ export const invoices: Strings['invoices'] = {
   openTotal: 'Total ouvert',
   overdue: 'En retard',
   widgetEmpty: 'Aucune facture ouverte.',
-  widgetDue: (date: string) => `échéance ${date}`,
   openCount: (n: number) => (n <= 1 ? `${n} facture ouverte` : `${n} factures ouvertes`),
   view: 'Statut',
 };

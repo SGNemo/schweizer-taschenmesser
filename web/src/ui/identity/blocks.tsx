@@ -95,10 +95,22 @@ export function NotePaper({ size, children }: BlockProps) {
 export function Bubble({ size, children }: BlockProps) {
   return (
     <div {...block('bubble', size)}>
+      {/* G07: without a text the bubbles still read as a conversation – two hinted lines, three typing dots. */}
       <i className={styles.bubbleA}>
-        {children ? <span className={styles.text}>{children}</span> : null}
+        {children ? (
+          <span className={styles.text}>{children}</span>
+        ) : (
+          <>
+            <i className={styles.rule} />
+            <i className={`${styles.rule} ${styles.short}`} />
+          </>
+        )}
       </i>
-      <i className={styles.bubbleB} />
+      <i className={styles.bubbleB} data-typing="true">
+        <i className={styles.dot} />
+        <i className={styles.dot} />
+        <i className={styles.dot} />
+      </i>
     </div>
   );
 }

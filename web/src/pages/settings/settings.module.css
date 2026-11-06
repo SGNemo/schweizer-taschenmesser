@@ -57,7 +57,7 @@
 }
 .legend {
   font-size: var(--text-sm);
-  font-weight: 550;
+  font-weight: var(--weight-semibold);
   padding: 0;
 }
 .fieldset {
@@ -84,7 +84,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .providerList {
   list-style: none;
@@ -101,7 +101,7 @@
 }
 .aboutName {
   font-size: var(--text-xl);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 .aboutSub {
   margin-top: var(--space-4);

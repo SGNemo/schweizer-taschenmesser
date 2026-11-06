@@ -58,7 +58,7 @@
 }
 .legend {
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--text-muted);
 }
 .swatches,

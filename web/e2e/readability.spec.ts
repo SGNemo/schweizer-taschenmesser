@@ -101,7 +101,7 @@ test.describe('Reading aid, colour mode and grouping', () => {
       await expect(page.getByRole('button', { name: `${name} einklappen` })).toBeVisible();
     // The overdue row carries text next to its colour.
     await expect(page.getByRole('button', { name: /^Alt GmbH/ })).toBeVisible();
-    await expect(page.locator('[data-group="overdue"]')).toContainText('seit 9 Tagen');
+    await expect(page.locator('[data-group="overdue"]')).toContainText('war am 20. Sep. fällig');
 
     await page.getByRole('button', { name: 'Später einklappen' }).click();
     await expect(page.getByRole('button', { name: /Spät KG/ })).toBeHidden();
@@ -232,7 +232,8 @@ test.describe('Reading aid keeps words whole and follows the state of controls',
   test('a sidebar entry left while the pointer rests on it gets its resting look back', async ({
     page,
   }) => {
-    await ready(page, '/');
+    // From a page of the "Planen" area: its block is unfolded (F06), Kalender is in it.
+    await ready(page, '/todos');
     const calendar = page
       .getByRole('navigation', { name: 'Hauptnavigation' })
       .getByRole('link', { name: 'Kalender', exact: true })

@@ -75,6 +75,8 @@ Four packages, each one chat and one PR against `develop`. **Package 0 first**; 
 
 Danach: `docs/site-screenshots-v3` (Website Paket 2) und `qa/identity-v3-sweep` (Abnahme, 03-acceptance.md).
 
+Paket 4 (`feat/identity-v3-polish`): Restpunkte aus 03-acceptance.md.
+
 ### Prompt – package 0: foundation (`feat/identity-v3-frame`)
 
 ```

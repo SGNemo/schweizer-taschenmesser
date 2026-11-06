@@ -17,7 +17,7 @@ export interface DueState {
   tone: DueTone;
   /** Days until the date (negative = already past). */
   days: number;
-  /** Short German label: "seit 3 Tagen", "Heute", "in 2 Tagen", or the date for later ones. */
+  /** Short label: "war am Di. fällig", "Heute", "in 2 Tagen", or the date for later ones. */
   label: string;
 }
 
@@ -39,8 +39,18 @@ export function dueState(
   return { tone, days, label: dueLabel(tone, days, dueDate) };
 }
 
+/**
+ * The day a past date was (N08): the short weekday within the last week ("Di."), the date before that
+ * ("17. Sep."). Never a count of days, which would grow every day (FOCUS-GUIDELINES text rules).
+ */
+export function pastDay(date: string, today: string): string {
+  return dayOf(date, daysBetween(today, date));
+}
+
+const dayOf = (date: string, days: number) => formatDay(date, days >= -6 ? 'EEE' : 'd. MMM');
+
 function dueLabel(tone: DueTone, days: number, date: string): string {
-  if (tone === 'overdue') return t.time.overdueSince(-days);
+  if (tone === 'overdue') return t.time.overdueOn(dayOf(date, days));
   // "Heute", "Morgen", "in 3 Tagen" (Intl, UI language).
   if (tone === 'today' || tone === 'soon')
     return days <= 1 ? capitalize(relativeDays(days)) : relativeDays(days);

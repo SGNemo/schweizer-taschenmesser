@@ -28,6 +28,35 @@ test.describe('Home screen', () => {
     await expect(nav.getByRole('link', { name: 'Übersicht' })).toBeVisible();
   });
 
+  test('N05: every widget head carries its signature mark at the same place, hidden from assistive tech', async ({
+    page,
+  }) => {
+    await ready(page, '/');
+    const widgets = page.locator('[data-testid^="widget-"][data-widget]');
+    await expect(widgets.first()).toBeVisible();
+    const n = await widgets.count();
+    for (let i = 0; i < n; i++) {
+      const w = widgets.nth(i);
+      if (!(await w.isVisible())) continue;
+      const mark = w.getByTestId('signature-mark');
+      await expect(mark).toHaveCount(1);
+      await expect(mark).toHaveAttribute('aria-hidden', 'true');
+      await expect(mark.locator('svg[data-signature]')).toHaveCount(1);
+      // In the head row next to the title, at its right end, whatever the widget variant.
+      // Measured in one go: widgets still loading above would shift two separate reads apart.
+      const { dy, gap } = await w.evaluate((el) => {
+        const h = el.querySelector('h2')!.getBoundingClientRect();
+        const m = el.querySelector('[data-testid="signature-mark"]')!.getBoundingClientRect();
+        return {
+          dy: Math.abs(h.top + h.height / 2 - (m.top + m.height / 2)),
+          gap: m.left - h.right,
+        };
+      });
+      expect(dy).toBeLessThan(12);
+      expect(gap).toBeGreaterThanOrEqual(-1);
+    }
+  });
+
   test('Alt+Home goes to the home screen', async ({ page }, info) => {
     test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
     await ready(page, '/todos');
@@ -130,10 +159,10 @@ test.describe('Home screen', () => {
     await expect(items.nth(1)).toContainText('1 ToDo heute fällig');
     await expect(items.nth(1)).toHaveAttribute('data-tone', 'accent');
 
-    // State is never colour only: the overdue row says "seit 3 Tagen".
+    // State is never colour only: the overdue row names the day it was due (N08).
     const widget = page.getByTestId('widget-todos:open');
     await expect(widget).toContainText('2 offen · 1 überfällig');
-    await expect(widget).toContainText('seit 3 Tagen');
+    await expect(widget).toContainText('war am Sa. fällig');
     await expect(widget).toContainText('Heute');
 
     await widget.getByLabel('Steuer abgeben').click();

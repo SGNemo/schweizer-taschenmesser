@@ -60,7 +60,7 @@ export const SIGNATURES = [
   'bankCard',
   'ring',
   'calendarLeaf',
-  'hourStrip',
+  'stopwatch',
   'todayCard',
   'receipt',
   'bill',

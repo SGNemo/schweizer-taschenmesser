@@ -196,6 +196,10 @@
 /* Phone: label and actions share one line, the title follows; the row under it stacks and the signature shrinks
    (never hidden: it is the thing the head is recognised by). Scrolled, the head scrolls away like content and a
    one-line bar fades in at the top (core/shell/heroCollapse.ts). */
+/* The short verb of the write button: only on the phone (C31). */
+.writeShort {
+  display: none;
+}
 @media (max-width: 899px) {
   .inner {
     padding: var(--space-3) var(--frame-bleed-x, var(--space-4)) var(--space-4);
@@ -226,9 +230,12 @@
     flex-basis: auto;
     width: 100%;
   }
-  /* The write button keeps its icon and its accessible name; the words come back with the width. */
+  /* C31: the phone shows the short verb next to a small icon; the full name comes back with the width. */
   .writeLabel {
     display: none;
+  }
+  .writeShort {
+    display: inline;
   }
 }
 .compact {

@@ -228,6 +228,11 @@ for (const vp of VIEWPORTS) {
         await page.addInitScript(() => {
           localStorage.setItem('tm-show-preview', '1');
           if (innerWidth >= 900) localStorage.setItem('__tmPlatformKind', 'desktop');
+          // F06 folds every area but the current page's; this spec measures the full list (worst case).
+          localStorage.setItem(
+            'tm-nav-open',
+            JSON.stringify(['plan', 'money', 'household', 'knowledge', 'vault', 'system']),
+          );
         });
         await bootDev(page);
         await seedApp(page, 'small');
