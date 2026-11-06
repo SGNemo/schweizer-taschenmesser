@@ -41,7 +41,7 @@ async function openWizard(page: Page, url = '/todos') {
       .click();
   const dialog = page.getByRole('dialog', { name: /Importieren/ });
   await dialog
-    .getByRole('button', { name: /Aus Todoist, Google Tasks oder Microsoft To Do/ })
+    .getByRole('button', { name: /Aus Todoist, TickTick, Google Tasks oder Microsoft To Do/ })
     .click();
   return dialog;
 }
@@ -55,14 +55,14 @@ async function chooseFile(page: Page, name: string, mimeType: string, content: s
   await (await chooser).setFiles({ name, mimeType, buffer: Buffer.from(content, 'utf8') });
 }
 
-test('Todoist CSV: file → preview → import → tasks in the list, repeat is only a note', async ({
+test('Todoist CSV: file → preview → import → tasks in the list, the repeat is kept', async ({
   page,
 }) => {
   const dialog = await openWizard(page);
   await chooseFile(page, 'Haushalt.csv', 'text/csv', TODOIST_CSV);
 
   await expect(dialog.getByText('3 Einträge erkannt')).toBeVisible();
-  await expect(dialog.getByText(/wiederholt sich in der Quelle/)).toBeVisible();
+  await expect(dialog.getByText(/die Wiederholung wurde übernommen/)).toBeVisible();
   await dialog.getByRole('button', { name: '3 Einträge importieren' }).click();
   await expect(dialog.getByRole('status')).toHaveText('3 Einträge wurden importiert.');
   await dialog.getByRole('button', { name: 'Schließen' }).last().click();

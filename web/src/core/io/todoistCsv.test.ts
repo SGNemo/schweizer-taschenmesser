@@ -51,12 +51,17 @@ describe('parseTodoistCsv (German export)', () => {
     expect(by('Brot, Käse & Äpfel kaufen').parentKey).toBeUndefined();
   });
 
-  it('reads dates and keeps everything else as a hint', () => {
+  it('reads dates and repeats, keeps everything else as a hint', () => {
     expect(by('Küche aufräumen').due).toBe('2026-10-15');
     expect(by('Brot, Käse & Äpfel kaufen').due).toBe('2026-10-20');
     expect(by('Zahnarzt anrufen').due).toBe('2026-11-03');
     expect(by('Müll rausbringen').due).toBeUndefined();
-    expect(by('Müll rausbringen').dateHint).toEqual({ text: 'jeden Montag', recurring: true });
+    expect(by('Müll rausbringen').recurrence).toEqual({
+      freq: 'weekly',
+      interval: 1,
+      byWeekday: [1],
+    });
+    expect(by('Müll rausbringen').dateHint).toBeUndefined();
     expect(by('Größe prüfen').dateHint).toEqual({ text: 'morgen', recurring: false });
   });
 });
@@ -70,7 +75,7 @@ describe('parseTodoistCsv (English export, fewer columns)', () => {
       ['Book table', '2026-03-05', 1],
       ['Plain task', undefined, 0],
     ]);
-    expect(tasks[1]!.dateHint?.recurring).toBe(true);
+    expect(tasks[1]!.recurrence?.freq).toBeDefined();
   });
 });
 

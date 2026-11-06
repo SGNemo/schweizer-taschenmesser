@@ -25,6 +25,14 @@ export const onboarding: Strings['onboarding'] = {
   previewTitle: 'Prévia',
   previewIntro: 'Aqui você vê o que seria salvo. Desmarque os registros que você não quer.',
   found: (n: number) => (n <= 1 ? `${n} registro reconhecido` : `${n} registros reconhecidos`),
+  previewCounts: (fresh: number, duplicates: number, invalid: number) =>
+    [
+      `${fresh} novos`,
+      duplicates ? `${duplicates} já existentes` : '',
+      invalid ? `${invalid} ilegíveis` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
   selectAll: 'Selecionar todos',
   selectNone: 'Desmarcar todos',
   duplicate: 'Já existe',
@@ -104,7 +112,7 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Cole uma lista de um app de notas ou de uma mensagem: uma linha por tarefa.',
     placeholder: 'Organizar documentos do imposto\nLigar para o dentista\nConsertar a bicicleta',
     list: 'Nesta lista',
-    file: 'Do Todoist, Google Tasks ou Microsoft To Do',
+    file: 'Do Todoist, TickTick, Google Tasks ou Microsoft To Do',
     fileHint:
       'Escolha o arquivo que você mesmo exportou de lá: CSV do Todoist, arquivo do Google Tasks (JSON) ou o CSV de tarefas do Outlook (Microsoft To Do). Nada é enviado.',
     perSource: 'Uma lista própria para cada lista de origem',
@@ -127,8 +135,13 @@ export const onboarding: Strings['onboarding'] = {
         ? '1 tarefa se repete na origem. A repetição aparece só como aviso na nota; nada se repete automaticamente.'
         : `${n} tarefas se repetem na origem. A repetição aparece só como aviso na nota; nada se repete automaticamente.`,
     tooMany: (max: number) => `Mostrando as primeiras ${max} tarefas.`,
+    repeatsKept: (n: number) =>
+      n === 1
+        ? '1 tarefa se repete; a repetição foi mantida.'
+        : `${n} tarefas se repetem; a repetição foi mantida.`,
+    estimate: (min: number) => `cerca de ${min} min`,
     unknownFormat:
-      'O formato não foi reconhecido. É preciso o CSV do Todoist ou o arquivo do Google Tasks (JSON).',
+      'O formato não foi reconhecido. É preciso o CSV do Todoist, o backup do TickTick (CSV), o arquivo do Google Tasks (JSON) ou o CSV do Outlook.',
   },
   reminders: {
     textDetail: 'hoje, 09:00',
@@ -276,6 +289,10 @@ export const onboarding: Strings['onboarding'] = {
     fileHint:
       'Um arquivo .vcf (exportação de contatos) ou .ics de uma agenda de aniversários. O arquivo fica neste aparelho.',
     fileNone: 'Nenhum aniversário encontrado no arquivo.',
+    noBirthday: (n: number) =>
+      n === 1
+        ? '1 contato sem aniversário fica de fora.'
+        : `${n} contatos sem aniversário ficam de fora.`,
   },
   lists: {
     text: 'Colar lista de compras',

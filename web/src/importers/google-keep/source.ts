@@ -1,4 +1,4 @@
-import { best, extOf, head } from '../helpers';
+import { best, extOf, head, withExt } from '../helpers';
 import type { SourceDef } from '../types';
 
 export const source: SourceDef = {
@@ -14,4 +14,5 @@ export const source: SourceDef = {
         ? 0.9
         : 0;
     }),
+  summarize: (files) => ({ notes: withExt(files, 'json').length }),
 };

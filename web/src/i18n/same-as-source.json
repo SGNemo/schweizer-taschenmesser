@@ -2,6 +2,9 @@
   "en": [
     "ai.local.testSentence",
     "connectors.ics.name",
+    "importers.origins.apple.title",
+    "importers.origins.microsoft.title",
+    "importers.origins.obsidian.title",
     "importers.sources.enex",
     "importers.sources.google-keep",
     "importers.sources.todoist",
@@ -28,6 +31,9 @@
   ],
   "es": [
     "ai.local.testSentence",
+    "importers.origins.apple.title",
+    "importers.origins.microsoft.title",
+    "importers.origins.obsidian.title",
     "importers.sources.enex",
     "importers.sources.google-keep",
     "importers.sources.todoist",
@@ -43,6 +49,9 @@
   ],
   "fr": [
     "ai.local.testSentence",
+    "importers.origins.apple.title",
+    "importers.origins.microsoft.title",
+    "importers.origins.obsidian.title",
     "importers.sources.enex",
     "importers.sources.google-keep",
     "importers.sources.todoist",
@@ -61,6 +70,9 @@
   ],
   "pt-BR": [
     "ai.local.testSentence",
+    "importers.origins.apple.title",
+    "importers.origins.microsoft.title",
+    "importers.origins.obsidian.title",
     "importers.sources.enex",
     "importers.sources.google-keep",
     "importers.sources.todoist",

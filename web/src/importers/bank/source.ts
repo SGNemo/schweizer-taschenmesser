@@ -1,5 +1,5 @@
 import { inspectBankCsv, sniffBankFormat } from '@/core/io/bank';
-import { best, extOf } from '../helpers';
+import { best, countAll, extOf } from '../helpers';
 import type { SourceDef } from '../types';
 
 const DATE = ['buchungstag', 'buchungsdatum', 'datum', 'date', 'valuta', 'wertstellung'];
@@ -22,4 +22,20 @@ export const source: SourceDef = {
         keys.some((k) => list.some((n) => k === n || k.startsWith(`${n} `)));
       return has(DATE) && has(AMOUNT) ? 0.7 : 0;
     }),
+  summarize(files) {
+    let transactions = 0;
+    for (const f of files) {
+      const format = sniffBankFormat(f.text);
+      if (format !== 'csv') {
+        transactions += countAll([f], /<STMTTRN>|<Ntry>|^\^/gim);
+        continue;
+      }
+      const table = inspectBankCsv(f.text);
+      if (!table) continue;
+      const rows = f.text.split(/\r?\n/).filter((l) => l.trim());
+      const at = rows.findIndex((l) => l.includes(table.header[0] ?? '\u0000'));
+      transactions += Math.max(0, rows.length - at - 1);
+    }
+    return { transactions };
+  },
 };
