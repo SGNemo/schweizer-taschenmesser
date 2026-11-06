@@ -1,9 +1,9 @@
 # App languages
 
-The app UI is available in **Deutsch** (source), **English**, **Español**, **Français** and **Português (Brasil)**. People choose the language under Settings → Allgemein or in the first setup step; the default is the system language, otherwise English.
+The app UI is available in **Deutsch** (source) and **English**. People choose the language under Settings → Allgemein or in the first setup step; the default is the system language, otherwise English. Español, Français and Português (Brasil) are paused ([FROZEN.md](FROZEN.md)): a device that used one of them now shows English.
 
 ## Status of the translations
-The English, Spanish, French and Brazilian Portuguese texts were **machine-translated** (with an AI model, following the [glossary](GLOSSARY.md)) and have **not yet been reviewed by native speakers**. Some wording will be stiff or wrong. Corrections are very welcome.
+The English texts (and the paused Spanish, French and Brazilian Portuguese ones) were **machine-translated** (with an AI model, following the [glossary](GLOSSARY.md)) and have **not yet been reviewed by native speakers**. Some wording will be stiff or wrong. Corrections are very welcome.
 
 ## How to help
 - **Report a text:** open an issue with the *Translation* template (language, where you saw it, current text, suggestion).
@@ -13,7 +13,6 @@ The English, Spanish, French and Brazilian Portuguese texts were **machine-trans
 ## What stays German (known limits)
 - Things a person **types** and the app parses: quick capture ("morgen 15 Uhr Zahnarzt"), the AI bar's rules and the calculator's phrases understand German only. The help texts around them are translated.
 - **Starter data** (seed entries) and the AI's instructions to the model.
-- **Legal texts** (imprint, privacy notices) exist in German and English; the other languages show English.
 - Developer-only screens (Dev-Preview tools).
 
 Dates, numbers and money follow the language by default; Settings → Allgemein → *Formate* can pick another region (for example English UI with Swiss formats).

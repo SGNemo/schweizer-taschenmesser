@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Sprachen nur Deutsch + Englisch (`feat/lang-de-en`, PR offen): `ACTIVE_LOCALES = ['de', 'en']`, es/fr/pt-BR eingefroren statt gelöscht ([i18n/FROZEN.md](i18n/FROZEN.md)), Gerät mit eingefrorener Sprache fällt ruhig auf Englisch, Website leitet /es, /fr, /pt-br auf /en.
+
 Planer, Paket 5 (`feat/plan-windows`, PR offen): optionale Zeitfenster je Tag und je Wochentag (`core/plan/windows.ts`, Fixture S6; Minuten bleiben die Wahrheit), Sitzungen mit Uhrzeit als Blöcke im Kalender-Stundenraster (sonst bleibt der Tages-Chip), Tageszettel zeigt/setzt das Fenster, Blocker mit Von/Bis, Vorlagen Arbeitswoche/Urlaub/Krank in „Woche prüfen“.
 
 Planer, Paket 4 (`feat/plan-ai`, PR offen): lokales Modell liest im Planer-Feld, was die Regeln nicht lesen können – eigener Prompt und eigene Grammatik (`core/ai/local/prompts/plan.ts`, ≤ 30 Plan-Zeilen, ≤ 8 Ops), nur Desktop mit Modell und KI an, Vorschau sagt „Vom lokalen Modell gelesen“; ToDo `estimateMin` als KI-Feld (Rolle `estimate`, auch „zwei Stunden“); Datenschutz-Pins (1)–(4) für den Planer; Paket 5 (Zeitfenster) folgt.
