@@ -50,7 +50,7 @@ export const fr = {
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),
     areas: { plan: 'La journée, la semaine, les gens.', money: 'Comptes, factures, abonnements, budgets.', household: 'Courses et provisions.', knowledge: 'Lire, écrire, retenir.', vault: 'Chiffré, seulement ici.', system: 'Ce que fait votre appareil en ce moment.' },
     // Planner highlight above the areas (shot: planner-*.png, name and state from the catalogue).
-    planner: { text: 'Vous notez ce qui vous attend, le planificateur le répartit sur votre temps libre – hors ligne, sans compte.', alt: 'Planificateur sur mobile : temps libre aujourd’hui, la semaine en barres et la journée avec ses rendez-vous' },
+    planner: { text: 'Vous notez ce qui vous attend, le planificateur le répartit sur votre temps libre – hors ligne, sans compte.', alt: 'Planificateur sur mobile : temps libre aujourd’hui, la semaine en barres et la journée avec ses rendez-vous', altDesktop: 'Planificateur sur ordinateur : temps libre aujourd’hui, la semaine en barres et sept jours côte à côte avec rendez-vous et tâches' },
     modules: {
       summary: (n: number) => `Les ${n} modules`,
       status: { default: 'activé par défaut', optional: 'facultatif', preview: 'aperçu' },
