@@ -64,7 +64,7 @@ describe('reading comfort settings', () => {
 describe('sidebar state', () => {
   afterEach(() => {
     useUiStore.getState().setSidebar('wide');
-    useUiStore.setState({ closedAreas: [] });
+    useUiStore.setState({ closedAreas: [], openAreas: [] });
     localStorage.clear();
   });
 
@@ -77,12 +77,14 @@ describe('sidebar state', () => {
   });
 
   it('folded areas toggle and persist', () => {
-    useUiStore.getState().toggleAreaOpen('money');
+    useUiStore.getState().toggleAreaOpen('money', true);
     expect(useUiStore.getState().closedAreas).toEqual(['money']);
     expect(JSON.parse(localStorage.getItem('tm-nav-closed')!)).toEqual(['money']);
-    useUiStore.getState().toggleAreaOpen('money');
+    useUiStore.getState().toggleAreaOpen('money', false);
     expect(useUiStore.getState().closedAreas).toEqual([]);
+    expect(useUiStore.getState().openAreas).toEqual(['money']);
     expect(localStorage.getItem('tm-nav-closed')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('tm-nav-open')!)).toEqual(['money']);
   });
 });
 

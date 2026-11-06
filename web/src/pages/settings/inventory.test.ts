@@ -28,6 +28,7 @@ const CORE_KEYS = {
     'tm-show-preview': 'off',
     'tm-sidebar': 'wide',
     'tm-nav-closed': '[]',
+    'tm-nav-open': '[] (F06: areas opened by hand; default = only the area of the current page)',
     'tm-quick-capture': 'hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday',
     'tm-voice': 'enabled false, key F4, globalHotkey off, noticeSeen false',
     'tm-profile-schedules':

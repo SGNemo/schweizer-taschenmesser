@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { enable, mainNav, ready, openAppearanceGroup, openFoldedGroup } from './helpers';
+import {
+  enable,
+  mainNav,
+  openNavArea,
+  ready,
+  openAppearanceGroup,
+  openFoldedGroup,
+} from './helpers';
 
 test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   test.skip(({ isMobile }) => isMobile, 'sidebar is a desktop feature');
@@ -11,6 +18,9 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     await ready(page, '/');
     const nav = mainNav(page);
     await expect(nav.getByRole('heading', { name: 'Favoriten' })).toBeVisible();
+    // F06: on the overview every area is folded; open the two this test uses (kept after a reload).
+    await openNavArea(page, 'Geld');
+    await openNavArea(page, 'Wissen');
 
     const add = (name: string) =>
       nav.getByRole('button', { name: `${name} zu den Favoriten hinzufügen` }).first();
@@ -35,7 +45,12 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   });
 
   test('an area can be folded and the choice survives a reload', async ({ page }) => {
+    // F06: the overview folds every area; a page unfolds its own.
     await ready(page, '/');
+    await expect(
+      mainNav(page).getByRole('button', { name: 'Planen auf- oder zuklappen' }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await ready(page, '/todos');
     const nav = mainNav(page);
     // ToDos is also a favourite, so look inside the area.
     const inArea = nav.locator('#area-plan').getByRole('link', { name: 'ToDos' });

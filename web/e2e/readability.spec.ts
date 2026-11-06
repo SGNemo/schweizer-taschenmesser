@@ -232,7 +232,8 @@ test.describe('Reading aid keeps words whole and follows the state of controls',
   test('a sidebar entry left while the pointer rests on it gets its resting look back', async ({
     page,
   }) => {
-    await ready(page, '/');
+    // From a page of the "Planen" area: its block is unfolded (F06), Kalender is in it.
+    await ready(page, '/todos');
     const calendar = page
       .getByRole('navigation', { name: 'Hauptnavigation' })
       .getByRole('link', { name: 'Kalender', exact: true })
