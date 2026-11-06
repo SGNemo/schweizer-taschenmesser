@@ -15,14 +15,13 @@ import { verifyBackup, type VerifyReport } from '@/core/backup/verify';
 import { db } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
-import { MigratePicker } from '@/layout/setup/steps/MigrateStep';
-import { openAppImport } from '@/core/importer/appImportStore';
 
 import { t } from '@/strings';
 import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, Dialog, TextField } from '@/ui';
 import { AutoBackupCard } from './AutoBackupCard';
+import { MoveCard } from './MoveCard';
 import { PlanView, VerifyReportView } from './BackupParts';
 import { Actions, Step } from './ConnectParts';
 import styles from './settings.module.css';
@@ -45,7 +44,6 @@ export function BackupSection() {
   const [report, setReport] = useState<VerifyReport | undefined>();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [moving, setMoving] = useState(false);
 
   async function exportPlain() {
     const result = await downloadTextFile(
@@ -285,37 +283,7 @@ export function BackupSection() {
           ) : null}
         </Dialog>
       </Card>
-      <Card>
-        <div className={styles.form}>
-          <div className={styles.row}>
-            <div>
-              <strong>{t.setup.steps.migrate.settingsRow}</strong>
-              <p className={styles.muted}>{t.setup.steps.migrate.settingsHint}</p>
-            </div>
-            <Button data-testid="migrate-open" onClick={() => setMoving(true)}>
-              {t.setup.steps.migrate.settingsOpen}
-            </Button>
-          </div>
-          <div className={styles.row}>
-            <div>
-              <strong>{t.importers.title}</strong>
-              <p className={styles.muted}>{t.importers.intro}</p>
-            </div>
-            <Button data-testid="appimport-open" onClick={() => openAppImport()}>
-              {t.importers.choose}
-            </Button>
-          </div>
-        </div>
-        <Dialog
-          open={moving}
-          onClose={() => setMoving(false)}
-          title={t.setup.steps.migrate.title}
-          footer={<Button onClick={() => setMoving(false)}>{t.actions.close}</Button>}
-        >
-          <p>{t.setup.steps.migrate.description}</p>
-          {moving ? <MigratePicker onLeave={() => setMoving(false)} /> : null}
-        </Dialog>
-      </Card>
+      <MoveCard />
       <AutoBackupCard
         onOpen={(content, passphrase) =>
           void load(content, passphrase).then(() => setPass(passphrase))

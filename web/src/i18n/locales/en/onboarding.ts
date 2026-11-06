@@ -25,6 +25,14 @@ export const onboarding: Strings['onboarding'] = {
   previewTitle: 'Preview',
   previewIntro: 'This is what would be saved. Untick any entries you don’t want.',
   found: (n: number) => (n === 1 ? '1 entry recognised' : `${n} entries recognised`),
+  previewCounts: (fresh: number, duplicates: number, invalid: number) =>
+    [
+      `${fresh} new`,
+      duplicates ? `${duplicates} already there` : '',
+      invalid ? `${invalid} not readable` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
   selectAll: 'Select all',
   selectNone: 'Select none',
   duplicate: 'Already there',
@@ -92,7 +100,7 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'Paste a list from a notes app or a message: one line per task.',
     placeholder: 'Sort tax papers\nCall the dentist\nFix the bike',
     list: 'Into this list',
-    file: 'From Todoist, Google Tasks or Microsoft To Do',
+    file: 'From Todoist, TickTick, Google Tasks or Microsoft To Do',
     fileHint:
       'Choose the file you exported there yourself: Todoist CSV, Google Tasks file (JSON) or the tasks CSV from Outlook (Microsoft To Do). Nothing is uploaded.',
     perSource: 'A separate list for each source list',
@@ -113,8 +121,13 @@ export const onboarding: Strings['onboarding'] = {
         ? '1 task repeats in the source. The repeat is only a hint in its note; nothing repeats automatically.'
         : `${n} tasks repeat in the source. The repeat is only a hint in their note; nothing repeats automatically.`,
     tooMany: (max: number) => `Showing the first ${max} tasks.`,
+    repeatsKept: (n: number) =>
+      n === 1
+        ? '1 task repeats; the repeat was taken over.'
+        : `${n} tasks repeat; the repeat was taken over.`,
+    estimate: (min: number) => `about ${min} min`,
     unknownFormat:
-      'The format wasn’t recognised. You need the Todoist CSV or the Google Tasks file (JSON).',
+      'The format was not recognised. Needed: the Todoist CSV, the TickTick backup (CSV), the Google Tasks file (JSON) or the Outlook CSV.',
   },
   reminders: {
     textDetail: 'today, 09:00',
@@ -261,6 +274,10 @@ export const onboarding: Strings['onboarding'] = {
     fileHint:
       'A .vcf file (contacts export) or an .ics file of a birthday calendar. The file stays on this device.',
     fileNone: 'No birthdays were found in the file.',
+    noBirthday: (n: number) =>
+      n === 1
+        ? '1 contact without a birthday stays out.'
+        : `${n} contacts without a birthday stay out.`,
   },
   lists: {
     text: 'Paste shopping list',

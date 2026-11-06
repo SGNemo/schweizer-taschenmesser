@@ -16,4 +16,8 @@ export const source: SourceDef = {
       });
       return header && detectVaultCsv(header) ? 0.95 : 0;
     }),
+  // Rows only: the sheet never reads a field of a password export.
+  summarize: (files) => ({
+    entries: files.reduce((n, f) => n + Math.max(0, parseCsv(f.text).length - 1), 0),
+  }),
 };

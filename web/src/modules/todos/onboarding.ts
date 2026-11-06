@@ -36,6 +36,7 @@ export const onboarding: OnboardingDef = {
         return t.onboarding.todos.fileHint;
       },
       accept: '.csv,.json,text/csv,application/json',
+      multiple: true,
       options: [
         {
           key: 'fileList',

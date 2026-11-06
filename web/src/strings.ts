@@ -5851,9 +5851,9 @@ export const de = {
     outOfRange: 'außerhalb des erlaubten Bereichs',
   },
   importers: {
-    title: 'Aus anderer App importieren',
+    title: 'Umzug von einer anderen App',
     intro:
-      'Wähle die Datei(en) deines Exports, auch ZIP. Nemo erkennt, aus welcher App sie stammen, und zeigt vor dem Übernehmen eine Vorschau. Nichts verlässt dieses Gerät.',
+      'Hol deine Daten aus Google, Todoist, Notion, einer Bank-App und mehr. Nemo erkennt die Dateien und zeigt vor dem Übernehmen eine Vorschau; jeder Umzug lässt sich ganz zurücknehmen. Nichts verlässt dieses Gerät.',
     choose: 'Dateien wählen',
     reading: (done: number, total: number) => `Dateien werden gelesen … ${done} von ${total}`,
     cancel: 'Abbrechen',
@@ -5867,6 +5867,119 @@ export const de = {
       'Passwörter importierst du im Tresor, nach Eingabe des Master-Passworts. Dort öffnet sich der CSV-Import.',
     openVault: 'Zum Tresor',
     paletteCommand: 'Aus anderer App importieren …',
+    start: 'Umzug starten',
+    back: 'Zurück',
+    privacy: 'Die Dateien werden nur auf diesem Gerät gelesen. Nichts wird hochgeladen.',
+    whereTitle: 'Woher kommst du?',
+    whereLead:
+      'Woher kommst du? Wähle die App, aus der deine Daten kommen. Den Rest erkennt Nemo an den Dateien.',
+    stepOf: (i: number, n: number) => `Schritt ${i} von ${n}`,
+    steps: {
+      label: 'Schritte',
+      where: 'Woher',
+      files: 'Dateien',
+      check: 'Prüfen',
+    },
+    origins: {
+      google: {
+        title: 'Google',
+        how: 'Unter takeout.google.com Kalender, Kontakte, Keep und Tasks auswählen und die ZIP-Datei herunterladen. Du kannst die ZIP direkt wählen.',
+      },
+      apple: {
+        title: 'Apple (iPhone, Mac)',
+        how: 'Kalender: in der Kalender-App „Exportieren“ (.ics). Kontakte: in der Kontakte-App als vCard exportieren.',
+      },
+      microsoft: {
+        title: 'Microsoft (Outlook, To Do)',
+        how: 'Microsoft To Do hat keinen eigenen Export: in Outlook „Exportieren“ → CSV → Aufgaben. Kalender als .ics, Kontakte als vCard.',
+      },
+      todoist: {
+        title: 'Todoist',
+        how: 'In Todoist die Sicherung als ZIP herunterladen (Einstellungen → Sicherungen) oder ein Projekt als CSV-Vorlage exportieren.',
+      },
+      ticktick: {
+        title: 'TickTick',
+        how: 'In TickTick unter Einstellungen → Konto „Sicherung erstellen“ und die CSV-Datei speichern.',
+      },
+      notion: {
+        title: 'Notion',
+        how: 'In Notion „Exportieren“ → „Markdown & CSV“ wählen und die ZIP-Datei speichern.',
+      },
+      evernote: { title: 'Evernote', how: 'In Evernote Notizbücher als .enex-Datei exportieren.' },
+      obsidian: {
+        title: 'Obsidian, Markdown',
+        how: 'Wähle die Markdown-Dateien oder deinen Obsidian-Ordner als ZIP.',
+      },
+      bank: {
+        title: 'Bank, Kontoauszug',
+        how: 'Im Online-Banking die Umsätze als CSV, CAMT, OFX oder QIF herunterladen.',
+      },
+      passwords: {
+        title: 'Passwort-Manager',
+        how: 'Bitwarden, 1Password oder KeePass als CSV exportieren. Der Import läuft danach im Tresor, mit deinem Master-Passwort.',
+      },
+      browser: {
+        title: 'Browser-Lesezeichen',
+        how: 'Im Browser die Lesezeichen als HTML-Datei exportieren (Chrome, Firefox, Edge, Safari, Brave).',
+      },
+      other: {
+        title: 'Weiß ich nicht',
+        how: 'Wähle einfach die Dateien. Nemo erkennt, woher sie kommen.',
+      },
+    },
+    foundTitle: 'Erkannt',
+    nothingTitle: 'Nichts erkannt',
+    pickSource: 'Wähle die Quelle selbst:',
+    certainty: {
+      sure: 'sicher erkannt',
+      likely: 'wahrscheinlich',
+      maybe: 'vielleicht',
+    },
+    why: {
+      'vault-csv':
+        'Die Spalten passen zu einem Passwort-Manager. Gezählt werden nur die Zeilen; der Import läuft im Tresor.',
+      ticktick: 'Kopfzeile der TickTick-Sicherung (List Name, Title, Kind).',
+      todoist: 'Spalten TYPE und CONTENT wie im Todoist-Export, eine Datei je Projekt.',
+      'google-tasks': 'Aufgaben-Datei aus Google Takeout („tasks#…“).',
+      'outlook-tasks': 'Spalten wie Betreff und Fälligkeit aus dem Outlook-Aufgabenexport.',
+      'google-keep': 'Keep-Notizen aus Google Takeout (JSON).',
+      'google-calendar': 'Kalenderdatei im iCalendar-Format.',
+      enex: 'Evernote-Export (.enex).',
+      notion: 'Dateinamen mit der Notion-Kennung (Titel und 32 Zeichen).',
+      opml: 'OPML-Liste mit Feed-Adressen.',
+      contacts: 'Kontaktkarten im vCard-Format. Übernommen werden Kontakte mit Geburtstag.',
+      bookmarks: 'Lesezeichen-Datei, wie sie jeder Browser exportiert.',
+      obsidian: 'Markdown-Dateien; mit dem Ordner .obsidian sicher aus Obsidian.',
+      bank: 'Spalten für Datum und Betrag oder ein Bankformat (CAMT, OFX, QIF).',
+    },
+    units: {
+      projects: (n: number) => n1(n, '1 Projekt', `${n} Projekte`),
+      lists: (n: number) => n1(n, '1 Liste', `${n} Listen`),
+      tasks: (n: number) => n1(n, '1 Aufgabe', `${n} Aufgaben`),
+      notes: (n: number) => n1(n, '1 Notiz', `${n} Notizen`),
+      events: (n: number) => n1(n, '1 Termin', `${n} Termine`),
+      contacts: (n: number) => n1(n, '1 Kontakt', `${n} Kontakte`),
+      bookmarks: (n: number) => n1(n, '1 Lesezeichen', `${n} Lesezeichen`),
+      transactions: (n: number) => n1(n, '1 Umsatz', `${n} Umsätze`),
+      feeds: (n: number) => n1(n, '1 Feed', `${n} Feeds`),
+      entries: (n: number) => n1(n, '1 Eintrag', `${n} Einträge`),
+    },
+    goesTo: (module: string) => `Ziel: ${module}.`,
+    openPreview: 'Vorschau öffnen',
+    runDone: (n: number) =>
+      n1(n, '1 Eintrag wurde übernommen.', `${n} Einträge wurden übernommen.`),
+    runParts: 'Übernommen je Bereich',
+    runPart: (module: string, n: number) => `${module}: ${n}`,
+    runUndoHint:
+      '„Ganzen Umzug rückgängig machen“ nimmt alle Teile zurück. Was du seitdem geändert hast, bleibt.',
+    undoRun: 'Ganzen Umzug rückgängig machen',
+    undoRunShort: 'Rückgängig',
+    recentTitle: 'Letzte Umzüge',
+    recentRun: (source: string, date: string) => `${source}, ${date}`,
+    emptyTitle: 'Noch kein Umzug',
+    emptyText: 'Hier erscheint jeder Umzug. Du kannst ihn später ganz zurücknehmen.',
+    checklist: 'Checkliste',
+    checklistHint: 'Was beim Umzug noch fehlt, Schritt für Schritt.',
     sources: {
       enex: 'Evernote (.enex)',
       notion: 'Notion (Markdown- und CSV-Export)',
@@ -5879,6 +5992,9 @@ export const de = {
       'google-calendar': 'Google Kalender (.ics)',
       bank: 'Kontoumsätze (CSV, OFX, CAMT)',
       'vault-csv': 'Passwort-Manager (Bitwarden, KeePass, 1Password)',
+      ticktick: 'TickTick (CSV-Sicherung)',
+      contacts: 'Kontakte (vCard: Google, Apple, Outlook)',
+      bookmarks: 'Browser-Lesezeichen (HTML)',
     },
     reasons: {
       trashed: (n: number) =>
@@ -5953,6 +6069,14 @@ export const de = {
     previewIntro:
       'Hier siehst du, was gespeichert würde. Entferne das Häkchen bei Einträgen, die du nicht willst.',
     found: (n: number) => (n === 1 ? '1 Eintrag erkannt' : `${n} Einträge erkannt`),
+    previewCounts: (fresh: number, duplicates: number, invalid: number) =>
+      [
+        `${fresh} neu`,
+        duplicates ? `${duplicates} schon vorhanden` : '',
+        invalid ? `${invalid} nicht lesbar` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
     selectAll: 'Alle auswählen',
     selectNone: 'Keine auswählen',
     duplicate: 'Schon vorhanden',
@@ -6019,7 +6143,7 @@ export const de = {
         'Füge eine Liste aus einer Notiz-App oder einer Nachricht ein: eine Zeile pro Aufgabe.',
       placeholder: 'Steuerunterlagen sortieren\nZahnarzt anrufen\nFahrrad reparieren',
       list: 'In diese Liste',
-      file: 'Aus Todoist, Google Tasks oder Microsoft To Do',
+      file: 'Aus Todoist, TickTick, Google Tasks oder Microsoft To Do',
       fileHint:
         'Wähle die Datei, die du dort selbst exportiert hast: Todoist-CSV, Google-Tasks-Datei (JSON) oder die CSV-Datei der Aufgaben aus Outlook (Microsoft To Do). Es wird nichts hochgeladen.',
       perSource: 'Je Quell-Liste eine eigene Liste',
@@ -6043,8 +6167,13 @@ export const de = {
           ? '1 Aufgabe wiederholt sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.'
           : `${n} Aufgaben wiederholen sich in der Quelle. Die Wiederholung steht nur als Hinweis in der Notiz; nichts wiederholt sich automatisch.`,
       tooMany: (max: number) => `Es werden die ersten ${max} Aufgaben gezeigt.`,
+      repeatsKept: (n: number) =>
+        n === 1
+          ? '1 Aufgabe wiederholt sich; die Wiederholung wurde übernommen.'
+          : `${n} Aufgaben wiederholen sich; die Wiederholung wurde übernommen.`,
+      estimate: (min: number) => `etwa ${min} Min`,
       unknownFormat:
-        'Das Format wurde nicht erkannt. Gebraucht wird die Todoist-CSV oder die Google-Tasks-Datei (JSON).',
+        'Das Format wurde nicht erkannt. Gebraucht wird die Todoist-CSV, die TickTick-Sicherung (CSV), die Google-Tasks-Datei (JSON) oder die Outlook-CSV.',
     },
     reminders: {
       textDetail: 'heute, 09:00 Uhr',
@@ -6195,6 +6324,10 @@ export const de = {
       fileHint:
         'Eine .vcf-Datei (Kontakte-Export) oder eine .ics-Datei eines Geburtstagskalenders. Die Datei bleibt auf diesem Gerät.',
       fileNone: 'In der Datei wurden keine Geburtstage gefunden.',
+      noBirthday: (n: number) =>
+        n === 1
+          ? '1 Kontakt ohne Geburtstag bleibt draußen.'
+          : `${n} Kontakte ohne Geburtstag bleiben draußen.`,
     },
     lists: {
       text: 'Einkaufsliste einfügen',
