@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
 import type { PlanSettings } from '@/core/plan/types';
+import { parseWindow, windowText, type TimeWindow } from '@/core/plan/windows';
 import { formatMinutes } from '@/core/i18n/format';
 import { t } from '@/strings';
 
@@ -10,6 +11,17 @@ export const PLANNER_SCOPE = 'module.planner';
 export const BUFFER_SHARES = ['0', '10', '20', '30'] as const;
 export const HORIZONS = ['7', '14', '28'] as const;
 export const MAX_SESSIONS = ['45', '60', '90', '120'] as const;
+
+/** A window setting: '9-17' reads back as '09:00–17:00'; anything else stays as typed (and is no window). */
+const windowField = () =>
+  z
+    .string()
+    .max(40)
+    .transform((v) => {
+      const w = parseWindow(v);
+      return w ? windowText(w) : v.trim();
+    })
+    .catch('');
 
 /**
  * Synced module settings (CONCEPT §2). This file is loaded with the manifest, so it imports no
@@ -21,6 +33,14 @@ export const plannerSettingsSchema = z.object({
   availableWeekday: z.number().int().min(0).max(1440),
   availableSaturday: z.number().int().min(0).max(1440),
   availableSunday: z.number().int().min(0).max(1440),
+  /**
+   * The weekday's time window as typed ('09:00–17:00', '9-17'; '' = none, package 5). Read through
+   * `defaultWindow`; a readable one is shown in its written form, an unreadable text is no window and
+   * never fails the other settings (`catch`).
+   */
+  windowWeekday: windowField(),
+  windowSaturday: windowField(),
+  windowSunday: windowField(),
   /** Percent of the free time never planned. */
   bufferShare: z.enum(BUFFER_SHARES),
   horizonDays: z.enum(HORIZONS),
@@ -38,6 +58,9 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   availableWeekday: 240,
   availableSaturday: 120,
   availableSunday: 0,
+  windowWeekday: '',
+  windowSaturday: '',
+  windowSunday: '',
   bufferShare: '20',
   horizonDays: '14',
   maxSessionMin: '90',
@@ -54,6 +77,20 @@ export function defaultAvailable(settings: PlannerSettings, isoWeekday: number):
   if (isoWeekday === 6) return settings.availableSaturday;
   if (isoWeekday === 7) return settings.availableSunday;
   return settings.availableWeekday;
+}
+
+/** The time window of a weekday (Monday = 1 … Sunday = 7) when no day row has its own; `undefined` = none. */
+export function defaultWindow(
+  settings: PlannerSettings,
+  isoWeekday: number,
+): TimeWindow | undefined {
+  return parseWindow(
+    isoWeekday === 6
+      ? settings.windowSaturday
+      : isoWeekday === 7
+        ? settings.windowSunday
+        : settings.windowWeekday,
+  );
 }
 
 /** The engine's settings from the module settings plus `focus.planLimit`. */
@@ -84,6 +121,16 @@ export const settings: ModuleSettings = {
       },
     },
     {
+      key: 'windowWeekday',
+      type: 'text',
+      get label() {
+        return s().windowWeekday;
+      },
+      get help() {
+        return s().windowWeekdayHelp;
+      },
+    },
+    {
       key: 'availableSaturday',
       type: 'number',
       get label() {
@@ -94,6 +141,16 @@ export const settings: ModuleSettings = {
       },
     },
     {
+      key: 'windowSaturday',
+      type: 'text',
+      get label() {
+        return s().windowSaturday;
+      },
+      get help() {
+        return s().windowSaturdayHelp;
+      },
+    },
+    {
       key: 'availableSunday',
       type: 'number',
       get label() {
@@ -101,6 +158,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().availableSundayHelp;
+      },
+    },
+    {
+      key: 'windowSunday',
+      type: 'text',
+      get label() {
+        return s().windowSunday;
+      },
+      get help() {
+        return s().windowSundayHelp;
       },
     },
     {

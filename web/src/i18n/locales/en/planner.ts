@@ -15,6 +15,13 @@ export const planner: Strings['planner'] = {
       availableSaturdayHelp: '0 means: Saturday is off.',
       availableSunday: 'Available time Sunday (minutes)',
       availableSundayHelp: '0 means: Sunday is off.',
+      windowWeekday: 'Time window Mon–Fri',
+      windowWeekdayHelp:
+        "For example 09:00–17:00: planned things get a time inside it and show in the calendar's hour grid. Empty means no times, as before. What counts is still the available time.",
+      windowSaturday: 'Time window Saturday',
+      windowSaturdayHelp: 'Empty means: Saturday without times.',
+      windowSunday: 'Time window Sunday',
+      windowSundayHelp: 'Empty means: Sunday without times.',
       bufferShare: 'Buffer',
       bufferShareHelp: 'This share of the free time stays unplanned, for whatever comes up.',
       bufferOption: (pct: number) => (pct === 0 ? 'No buffer' : `${pct} %`),
@@ -77,6 +84,18 @@ export const planner: Strings['planner'] = {
     dayOff: 'Day off',
     dayOn: 'Plan time again',
     calendar: 'From the calendar',
+    window: 'Time window',
+    windowFrom: 'From',
+    windowTo: 'To',
+    windowSet: 'Set window',
+    windowDefault: 'As usual',
+    windowLine: (window: string, own: boolean) =>
+      own
+        ? `Time window ${window} – this day only.`
+        : `Time window ${window} – as in the settings.`,
+    noWindow: 'No time window: the things of the day have no time.',
+    blockerFrom: 'From',
+    blockerTo: 'To',
   },
   row: {
     part: (k: number, of: number) => `Part ${k}/${of}`,
@@ -146,6 +165,8 @@ export const planner: Strings['planner'] = {
     requested: (title: string, day: string) => `In the plan: ${title} · ${day}`,
     requestedWaits: (title: string) => `In the plan: ${title} · waiting`,
     weekChecked: 'Week confirmed.',
+    window: (day: string, window: string) => `${day}: time window ${window}`,
+    windowCleared: (day: string) => `${day}: time window as usual`,
     off: 'The planner is off.',
   },
   add: {
@@ -201,6 +222,7 @@ export const planner: Strings['planner'] = {
   chip: {
     title: (planned: string, n: number) =>
       `Plan · ${planned} · ${n === 1 ? '1 thing' : `${n} things`}`,
+    untitled: 'In the plan',
   },
   widget: {
     today: (free: string) => `Today · ${free} free`,
@@ -222,5 +244,12 @@ export const planner: Strings['planner'] = {
     intro: 'Is the time per day right? Confirming is enough; each day can be changed on its own.',
     confirm: 'Looks right',
     biggest: 'The three biggest things',
+    template: 'Template for the week',
+    templates: { work: 'Work week', vacation: 'Holiday', sick: 'Sick' },
+    done: {
+      work: 'Work week set – the usual time each day.',
+      vacation: 'Holiday set – everything waits calmly.',
+      sick: 'Rest up – the plan moves along calmly.',
+    },
   },
 };

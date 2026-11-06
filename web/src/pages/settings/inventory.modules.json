@@ -442,15 +442,30 @@
         "label": "Verfügbare Zeit Mo–Fr (Minuten)",
         "default": 240
       },
+      "windowWeekday": {
+        "type": "text",
+        "label": "Zeitfenster Mo–Fr",
+        "default": ""
+      },
       "availableSaturday": {
         "type": "number",
         "label": "Verfügbare Zeit Samstag (Minuten)",
         "default": 120
       },
+      "windowSaturday": {
+        "type": "text",
+        "label": "Zeitfenster Samstag",
+        "default": ""
+      },
       "availableSunday": {
         "type": "number",
         "label": "Verfügbare Zeit Sonntag (Minuten)",
         "default": 0
+      },
+      "windowSunday": {
+        "type": "text",
+        "label": "Zeitfenster Sonntag",
+        "default": ""
       },
       "bufferShare": {
         "type": "select",

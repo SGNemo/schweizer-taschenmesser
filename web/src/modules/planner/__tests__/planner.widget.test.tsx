@@ -23,6 +23,7 @@ const view = (size: 's' | 'm' | 'l' = 'm') =>
 const day = (over: Partial<BoardDay>): BoardDay => ({
   date: '2026-11-10',
   isToday: false,
+  defaultMin: 240,
   availableMin: 240,
   raw: 240,
   usable: 192,

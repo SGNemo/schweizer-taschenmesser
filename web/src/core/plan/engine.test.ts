@@ -7,6 +7,7 @@ import s2 from './__fixtures__/s2.json';
 import s3 from './__fixtures__/s3.json';
 import s4 from './__fixtures__/s4.json';
 import s5 from './__fixtures__/s5.json';
+import s6 from './__fixtures__/s6.json';
 import type { PlanDay, PlanInput, PlanItem, PlanResult } from './types';
 import { toUnits } from './units';
 
@@ -30,6 +31,8 @@ interface Fixture {
     overflowMin: number;
     demandMin: number;
     usableMin: number;
+    /** Package 5 (`windows.ts`): unit → [from, to]; every other unit keeps no time. */
+    times?: Record<string, string[]>;
   };
 }
 const FIXTURES: [string, Fixture][] = [
@@ -38,6 +41,7 @@ const FIXTURES: [string, Fixture][] = [
   ['s3', s3 as Fixture],
   ['s4', s4 as Fixture],
   ['s5', s5 as Fixture],
+  ['s6', s6 as Fixture],
 ];
 const input = (f: Fixture): PlanInput => f.input as PlanInput;
 /** The shape the fixpoint and the fixtures compare: (unit, date, minutes, order), sorted. */
@@ -81,6 +85,19 @@ describe('fixtures from the prototype (engine-proto.mjs, horizon 7 days)', () =>
     expect(r.overflowMin).toBe(f.expected.overflowMin);
     expect(r.demandMin).toBe(f.expected.demandMin);
     expect(r.usableMin).toBe(f.expected.usableMin);
+    const times = Object.fromEntries(
+      r.assignments.filter((a) => a.from).map((a) => [a.id, [a.from, a.to]]),
+    );
+    expect(times).toEqual(f.expected.times ?? {});
+  });
+
+  it('S6: windows give times only – minutes, days and order stay those of S1', () => {
+    const strip = (r: PlanResult) => ({ ...r, assignments: shape(r) });
+    expect(strip(plan(input(s6)))).toEqual(strip(plan(input(s1))));
+    const mon = plan(input(s6)).assignments.find((a) => a.id === 'todos:b#0');
+    // The last session of Monday does not fit before 12:00: it stays on Monday, without a time.
+    expect(mon).toMatchObject({ date: MON, minutes: 10 });
+    expect(mon?.from).toBeUndefined();
   });
 
   it('S1: Monday has 47 minutes free, Friday stays free, the bike waits for Saturday', () => {

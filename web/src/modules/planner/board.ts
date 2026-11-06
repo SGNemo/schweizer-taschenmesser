@@ -10,7 +10,8 @@ import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types'
 import { planDays, type DayBlocker } from './days';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
-import type { PlannerSettings } from './settings';
+import { defaultAvailable, type PlannerSettings } from './settings';
+import { isoWeekday } from '@/core/time/dates';
 
 export type BoardBlocker = DayBlocker;
 
@@ -46,6 +47,12 @@ export interface BoardDay {
   over: number;
   /** 0 minutes available: a day off. */
   off: boolean;
+  /** The weekday's minutes from the settings (the „Arbeitswoche“ template). */
+  defaultMin: number;
+  /** The day's time window (its own or the weekday's), package 5. */
+  window?: { from: string; to: string };
+  /** The window is the day's own. */
+  ownWindow?: boolean;
   blockers: BoardBlocker[];
   rows: BoardRow[];
 }
@@ -100,7 +107,7 @@ export function buildBoard(input: BoardInput): Board {
     dayRows: input.dayRows,
     calendar: input.calendar,
   });
-  const days: BoardDay[] = built.map(({ date, availableMin, blockers, row }) => {
+  const days: BoardDay[] = built.map(({ date, availableMin, blockers, row, window, ownWindow }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
     const rows: BoardRow[] = input.assignments
       .filter((a) => a.date === date)
@@ -145,6 +152,9 @@ export function buildBoard(input: BoardInput): Board {
       free: Math.max(0, cap.usable - planned),
       over: Math.max(0, planned - cap.usable),
       off: availableMin === 0,
+      defaultMin: defaultAvailable(input.settings, isoWeekday(date)),
+      ...(window ? { window } : {}),
+      ...(ownWindow ? { ownWindow: true } : {}),
       blockers,
       rows,
     };

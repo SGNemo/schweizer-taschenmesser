@@ -7758,6 +7758,13 @@ export const de = {
         availableSaturdayHelp: '0 heißt: Samstag ist frei.',
         availableSunday: 'Verfügbare Zeit Sonntag (Minuten)',
         availableSundayHelp: '0 heißt: Sonntag ist frei.',
+        windowWeekday: 'Zeitfenster Mo–Fr',
+        windowWeekdayHelp:
+          'Zum Beispiel 09:00–17:00: geplante Dinge bekommen darin eine Uhrzeit und stehen im Kalender im Stundenraster. Leer heißt ohne Uhrzeit, wie bisher. Was zählt, bleibt die verfügbare Zeit.',
+        windowSaturday: 'Zeitfenster Samstag',
+        windowSaturdayHelp: 'Leer heißt: Samstag ohne Uhrzeit.',
+        windowSunday: 'Zeitfenster Sonntag',
+        windowSundayHelp: 'Leer heißt: Sonntag ohne Uhrzeit.',
         bufferShare: 'Puffer',
         bufferShareHelp:
           'Dieser Anteil der freien Zeit bleibt ungeplant – für das, was zwischendurch kommt.',
@@ -7821,6 +7828,18 @@ export const de = {
       dayOff: 'Tag frei',
       dayOn: 'Zeit wieder einplanen',
       calendar: 'Aus dem Kalender',
+      window: 'Zeitfenster',
+      windowFrom: 'Von',
+      windowTo: 'Bis',
+      windowSet: 'Fenster setzen',
+      windowDefault: 'Wie üblich',
+      windowLine: (window: string, own: boolean) =>
+        own
+          ? `Zeitfenster ${window} – nur an diesem Tag.`
+          : `Zeitfenster ${window} – wie in den Einstellungen.`,
+      noWindow: 'Ohne Zeitfenster: die Dinge des Tages haben keine Uhrzeit.',
+      blockerFrom: 'Von',
+      blockerTo: 'Bis',
     },
     row: {
       part: (k: number, of: number) => `Teil ${k}/${of}`,
@@ -7890,6 +7909,8 @@ export const de = {
       requested: (title: string, day: string) => `Im Plan: ${title} · ${day}`,
       requestedWaits: (title: string) => `Im Plan: ${title} · wartet`,
       weekChecked: 'Woche bestätigt.',
+      window: (day: string, window: string) => `${day}: Zeitfenster ${window}`,
+      windowCleared: (day: string) => `${day}: Zeitfenster wie üblich`,
       off: 'Der Planer ist aus.',
     },
     add: {
@@ -7945,6 +7966,7 @@ export const de = {
     chip: {
       title: (planned: string, n: number) =>
         `Plan · ${planned} · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
+      untitled: 'Im Plan',
     },
     widget: {
       today: (free: string) => `Heute · ${free} frei`,
@@ -7966,6 +7988,13 @@ export const de = {
       intro: 'Stimmt die Zeit je Tag? Bestätigen reicht – ändern geht je Tag.',
       confirm: 'Passt so',
       biggest: 'Die drei größten Dinge',
+      template: 'Vorlage für die Woche',
+      templates: { work: 'Arbeitswoche', vacation: 'Urlaub', sick: 'Krank' },
+      done: {
+        work: 'Arbeitswoche eingetragen – die übliche Zeit je Tag.',
+        vacation: 'Urlaub eingetragen – alles wartet ruhig.',
+        sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
+      },
     },
   },
 } as const;

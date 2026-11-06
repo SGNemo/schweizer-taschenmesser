@@ -31,4 +31,12 @@ describe('time until the next appointment', () => {
     expect(nextToday(items, '14:00')?.title).toBe('Später');
     expect(nextToday(items, '16:00')).toBeUndefined();
   });
+
+  it('a planned work session (`kind: plan`) is no appointment', () => {
+    const items = [
+      { title: 'Steuer', kind: 'plan', time: '11:00', allDay: false },
+      { title: 'Zahnarzt', kind: 'event', time: '12:00', allDay: false },
+    ];
+    expect(nextToday(items, '10:00')?.title).toBe('Zahnarzt');
+  });
 });

@@ -12,6 +12,9 @@ export interface PlanBlocker {
   id?: string;
   label: string;
   min: number;
+  /** 'HH:mm': a blocker with both times also keeps that stretch of the day's window free (`windows.ts`). */
+  from?: string;
+  to?: string;
 }
 
 export interface PlanDay {
@@ -20,6 +23,8 @@ export interface PlanDay {
   availableMin: number;
   /** Stored blockers plus the timed calendar items of the day (`calendarBlockers`). */
   blockers: PlanBlocker[];
+  /** Optional time window ('HH:mm'): the sessions of the day get a start and an end inside it (`windows.ts`); never changes the minutes. */
+  window?: { from: string; to: string };
 }
 
 export type PlanPriority = 0 | 1 | 2 | 3;
@@ -108,6 +113,9 @@ export interface Assignment {
   bumpedBy?: string[];
   /** Placed after its hard due. */
   late?: boolean;
+  /** 'HH:mm' inside the day's window (`windows.ts`); missing without a window or when it does not fit. */
+  from?: string;
+  to?: string;
 }
 
 /** What a run needs of the previous plan (stored rows or the last result). */

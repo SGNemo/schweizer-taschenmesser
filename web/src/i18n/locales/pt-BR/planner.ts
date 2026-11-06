@@ -15,6 +15,13 @@ export const planner: Strings['planner'] = {
       availableSaturdayHelp: '0 significa: sábado é livre.',
       availableSunday: 'Tempo disponível domingo (minutos)',
       availableSundayHelp: '0 significa: domingo é livre.',
+      windowWeekday: 'Janela de horário seg–sex',
+      windowWeekdayHelp:
+        'Por exemplo 09:00–17:00: o que está planejado ganha um horário dentro dela e aparece na grade de horas do calendário. Vazio significa sem horário, como antes. O que conta continua sendo o tempo disponível.',
+      windowSaturday: 'Janela de horário sábado',
+      windowSaturdayHelp: 'Vazio significa: sábado sem horário.',
+      windowSunday: 'Janela de horário domingo',
+      windowSundayHelp: 'Vazio significa: domingo sem horário.',
       bufferShare: 'Folga',
       bufferShareHelp: 'Esta parte do tempo livre fica sem planejar, para o que aparecer.',
       bufferOption: (pct: number) => (pct === 0 ? 'Sem folga' : `${pct} %`),
@@ -77,6 +84,18 @@ export const planner: Strings['planner'] = {
     dayOff: 'Dia livre',
     dayOn: 'Planejar tempo de novo',
     calendar: 'Do calendário',
+    window: 'Janela de horário',
+    windowFrom: 'De',
+    windowTo: 'Até',
+    windowSet: 'Definir janela',
+    windowDefault: 'Como de costume',
+    windowLine: (window: string, own: boolean) =>
+      own
+        ? `Janela de horário ${window} – só neste dia.`
+        : `Janela de horário ${window} – como nas configurações.`,
+    noWindow: 'Sem janela de horário: as coisas do dia não têm horário.',
+    blockerFrom: 'De',
+    blockerTo: 'Até',
   },
   row: {
     part: (k: number, of: number) => `Parte ${k}/${of}`,
@@ -146,6 +165,8 @@ export const planner: Strings['planner'] = {
     requested: (title: string, day: string) => `No plano: ${title} · ${day}`,
     requestedWaits: (title: string) => `No plano: ${title} · aguardando`,
     weekChecked: 'Semana confirmada.',
+    window: (day: string, window: string) => `${day}: janela de horário ${window}`,
+    windowCleared: (day: string) => `${day}: janela de horário como de costume`,
     off: 'O planejador está desligado.',
   },
   add: {
@@ -201,6 +222,7 @@ export const planner: Strings['planner'] = {
   chip: {
     title: (planned: string, n: number) =>
       `Plano · ${planned} · ${n === 1 ? '1 coisa' : `${n} coisas`}`,
+    untitled: 'No plano',
   },
   widget: {
     today: (free: string) => `Hoje · ${free} livres`,
@@ -222,5 +244,12 @@ export const planner: Strings['planner'] = {
     intro: 'O tempo por dia está certo? Confirmar basta; cada dia pode ser mudado à parte.',
     confirm: 'Está bom assim',
     biggest: 'As três maiores coisas',
+    template: 'Modelo para a semana',
+    templates: { work: 'Semana de trabalho', vacation: 'Férias', sick: 'Doente' },
+    done: {
+      work: 'Semana de trabalho definida – o tempo de sempre a cada dia.',
+      vacation: 'Férias definidas – tudo espera com calma.',
+      sick: 'Descanse – o plano segue com calma.',
+    },
   },
 };

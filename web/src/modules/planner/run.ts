@@ -105,7 +105,16 @@ export function rowsSignature(rows: readonly (AssignmentRow & { id: string })[])
   return fnv1a(
     JSON.stringify(
       rows
-        .map((r) => [r.id, r.date, r.minutes, r.order, r.reason, r.bumpedBy ?? [], r.late ?? false])
+        .map((r) => [
+          r.id,
+          r.date,
+          r.minutes,
+          r.order,
+          r.reason,
+          r.bumpedBy ?? [],
+          r.late ?? false,
+          ...(r.from ? [r.from, r.to] : []),
+        ])
         .sort(),
     ),
   );
@@ -128,10 +137,16 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     settings: deps.settings,
     dayRows: await repos.day.active().toArray(),
     calendar,
-  }).map(({ date, availableMin, blockers }) => ({
+  }).map(({ date, availableMin, blockers, window }) => ({
     date,
     availableMin,
-    blockers: blockers.map(({ id, label, min }) => ({ id, label, min })),
+    blockers: blockers.map(({ id, label, min, from, to }) => ({
+      id,
+      label,
+      min,
+      ...(from && to ? { from, to } : {}),
+    })),
+    ...(window ? { window } : {}),
   }));
   const itemRows = new Map<string, PlanItemRow>(
     (await repos.item.active().toArray()).map((r) => [r.id, r]),
@@ -184,7 +199,15 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       today: deps.today,
       settings,
       items: [...items].sort((a, b) => (a.key < b.key ? -1 : 1)),
-      days: days.map((d) => [d.date, d.availableMin, d.blockers.map((b) => [b.label, b.min])]),
+      // Windows (and blocker times on a day with one) only enter the hash when set: a plan without windows hashes as before.
+      days: days.map((d) => [
+        d.date,
+        d.availableMin,
+        d.blockers.map((b) =>
+          d.window && b.from ? [b.label, b.min, b.from, b.to] : [b.label, b.min],
+        ),
+        ...(d.window ? [d.window.from, d.window.to] : []),
+      ]),
     }),
   );
   return {
@@ -311,6 +334,7 @@ export async function writeRows(
       reason: a.reason,
       ...(a.bumpedBy?.length ? { bumpedBy: a.bumpedBy } : {}),
       ...(a.late ? { late: true } : {}),
+      ...(a.from && a.to ? { from: a.from, to: a.to } : {}),
     };
     if (await putRow(repos.assignment, a.id, data)) n++;
   }
