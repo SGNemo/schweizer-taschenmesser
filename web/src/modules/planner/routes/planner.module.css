@@ -21,12 +21,13 @@
 
 .board {
   display: grid;
-  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 73rem of page width. */
+  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 95rem of page width, where a column keeps
+     ~210 px – room for a long German word in a title (N01); narrower, seven columns would end titles in „…“. */
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   align-items: start;
 }
-@container page (min-width: 73rem) {
+@container page (min-width: 95rem) {
   .board {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }

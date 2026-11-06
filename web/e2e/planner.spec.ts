@@ -74,7 +74,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
     await expect(today(page)).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // Four columns a row at 1280 px, seven from 73rem of page width; no row runs past its column, nothing scrolls sideways.
+    // Four columns a row at 1280 px, seven from 95rem of page width; no row runs past its column, nothing scrolls sideways.
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
@@ -87,7 +87,10 @@ test.describe('Planer (week board, package 1)', () => {
         };
       });
     expect(await measure()).toEqual({ columns: 4, main: 0, rows: 0 });
+    // 1600: still four a row (seven columns would leave a title ~100 px, N01); 1920: seven.
     await page.setViewportSize({ width: 1600, height: 900 });
+    await expect.poll(measure).toEqual({ columns: 4, main: 0, rows: 0 });
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await expect.poll(measure).toEqual({ columns: 7, main: 0, rows: 0 });
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
@@ -96,7 +99,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(today(page)).toContainText('neu, nach Priorität');
   });
 
-  test('board titles break between words, never inside one, at 1920 and 1280 (N01)', async ({
+  test('board titles break between words, never inside one or cut, from 1280 to 1920 (N01)', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -133,8 +136,11 @@ test.describe('Planer (week board, package 1)', () => {
       });
     await expect(page.locator('[data-board-title]')).toHaveCount(3);
     await expect.poll(broken).toEqual([]);
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await expect.poll(broken).toEqual([]);
+    // Also between the two: below 95rem of page width the board stays at four a row.
+    for (const width of [1600, 1440, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(broken).toEqual([]);
+    }
   });
 
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
