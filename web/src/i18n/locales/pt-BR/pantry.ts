@@ -58,7 +58,6 @@ export const pantry: Strings['pantry'] = {
   plus: (n: string) => `${n}: mais um`,
   minus: (n: string) => `${n}: menos um`,
   countOf: (n: number) => (n === 0 || n === 1 ? `${n} unidade` : `${n} unidades`),
-  expired: (d: number) => (d === -1 ? 'Venceu ontem' : `Vencido há ${-d} dias`),
   today: 'Vence hoje',
   inDays: (d: number) => (d === 1 ? 'Vence amanhã' : `Faltam ${d} dias`),
   until: (date: string) => `Validade: ${date}`,

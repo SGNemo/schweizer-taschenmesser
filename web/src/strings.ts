@@ -4220,7 +4220,6 @@ export const de = {
     plus: (n: string) => `${n}: einer mehr`,
     minus: (n: string) => `${n}: einer weniger`,
     countOf: (n: number) => `${n} Stück`,
-    expired: (d: number) => (d === -1 ? 'Seit gestern abgelaufen' : `Seit ${-d} Tagen abgelaufen`),
     today: 'Läuft heute ab',
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),
     until: (date: string) => `Haltbar bis ${date}`,

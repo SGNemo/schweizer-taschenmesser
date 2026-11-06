@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
+import { catalogManifests } from '@/core/modules/available';
 import { validateManifest } from '@/core/modules/registry';
 import manifest from '../manifest';
 import { assignmentSchema, daySchema, itemSchema } from '../schema';
 import { runToast } from '../toast';
 
 describe('planner module', () => {
+  it('is finished (packages 1–5): listed in the library without „In Arbeit anzeigen“, still off by default', () => {
+    expect(catalogManifests({ showPreview: false }).map((m) => m.id)).toContain('planner');
+  });
+
   it('has a valid manifest without aiSchema, without data API, requiring the ToDos', () => {
     expect(validateManifest(manifest)).toEqual([]);
     expect(manifest.aiSchema).toBeUndefined();
     expect(manifest.dataApi).toBe(false);
     expect(manifest.requires).toEqual(['todos']);
-    expect(manifest.maturity).toBe('preview');
+    expect(manifest.maturity).toBe('stable');
+    expect(manifest.defaultEnabled).toBe(false);
     expect(manifest.identity).toMatchObject({
       hue: 'indigo',
       hue2: 'cobalt',

@@ -165,3 +165,64 @@ test.describe('shell: phone', () => {
     await expect(page).toHaveURL(/\/settings(\/allgemein)?$/);
   });
 });
+
+test.describe('shell: the „+“ button never covers the end of a page (G17, phone 390 px)', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('scrolled to the end, the last day of the planner board ends above the „+“ button', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-11-09T10:00:00'));
+    await page.goto('/');
+    await expect(page.locator('main h1')).toBeVisible();
+    // Switch on the ToDos and the planner like the library would (raw write into the module table).
+    await page.evaluate(
+      (ids) =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction('_modules', 'readwrite');
+            for (const id of ids)
+              tx.objectStore('_modules').put({
+                id,
+                enabled: true,
+                dataPolicy: null,
+                createdAt: 1,
+                updatedAt: 1,
+                deviceId: 'e2e',
+                deletedAt: null,
+                _f: {},
+              });
+            tx.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+          };
+        }),
+      ['todos', 'planner'],
+    );
+    await ready(page, '/planner');
+    const field = page.getByLabel('Eintragen oder sagen', { exact: true });
+    for (const text of ['Steuer 30min', 'Keller 30min', 'Blogpost 30min', 'Anrufen 20min']) {
+      await field.fill(text);
+      await field.press('Enter');
+      await expect(field).toHaveValue('');
+    }
+    const fab = page.getByRole('button', { name: 'Schnell hinzufügen' });
+    await expect(fab).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    // The lowest content of the page (inside <main>) against the top of the floating button.
+    const contentBottom = await page.evaluate(() =>
+      Math.max(
+        ...[...document.querySelectorAll('main *')]
+          .map((e) => e.getBoundingClientRect())
+          .filter((r) => r.width > 0 && r.height > 0)
+          .map((r) => r.bottom),
+      ),
+    );
+    const fabBox = (await fab.boundingBox())!;
+    expect(contentBottom).toBeLessThanOrEqual(fabBox.y);
+  });
+});
