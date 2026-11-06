@@ -17,7 +17,8 @@ function TodayLeaf() {
   const day = today();
   const date = new Date(`${day}T12:00:00`);
   const items = useCalendarItems({ from: day, to: day });
-  const timed = (items ?? []).filter((i) => !i.allDay && !i.done && !!i.time);
+  // Planned work sessions (`kind: 'plan'`, package 5) are no appointments.
+  const timed = (items ?? []).filter((i) => !i.allDay && !i.done && i.kind !== 'plan' && !!i.time);
   return (
     <div className={styles.todayLeaf}>
       <DayBlock

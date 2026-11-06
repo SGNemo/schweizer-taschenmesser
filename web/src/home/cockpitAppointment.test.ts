@@ -27,6 +27,14 @@ describe('cockpit big stats', () => {
     expect(nextAppointment([], '09:00')).toBeUndefined();
   });
 
+  it('a planned work session (`kind: plan`, timed by a window) is no appointment', () => {
+    const items = [
+      item({ id: 'plan', source: 'planner', kind: 'plan', time: '14:00', endTime: '15:00' }),
+      item({ id: 'event', time: '16:00' }),
+    ];
+    expect(nextAppointment(items, '13:50')?.id).toBe('event');
+  });
+
   it('counts whole minutes until a time and never goes negative', () => {
     expect(minutesUntil('14:05', '13:50')).toBe(15);
     expect(minutesUntil('14:05', '14:05')).toBe(0);

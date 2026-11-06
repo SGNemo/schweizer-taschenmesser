@@ -25,9 +25,6 @@ export interface BoardRow {
   reason: PlaceReason;
   bumpedBy?: string[];
   late?: boolean;
-  /** 'HH:mm' inside the day's window, when the run gave the session a time (package 5). */
-  from?: string;
-  to?: string;
   /** No estimate on the source: shown as „~30 Min“. */
   approx: boolean;
   pinned: boolean;
@@ -128,7 +125,6 @@ export function buildBoard(input: BoardInput): Board {
           reason: a.reason,
           ...(a.bumpedBy ? { bumpedBy: a.bumpedBy } : {}),
           ...(a.late ? { late: true } : {}),
-          ...(a.from && a.to ? { from: a.from, to: a.to } : {}),
           approx:
             item?.durationMin === undefined &&
             entry?.durationMin === undefined &&

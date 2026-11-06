@@ -320,7 +320,7 @@ export type WeekTemplate = (typeof WEEK_TEMPLATES)[number];
 /**
  * „Woche prüfen“: stores the confirmed minutes of every shown day (only days that differ are written).
  * With a template (package 5) the toast is one calm sentence; „Arbeitswoche“ hands a day that is back
- * at its weekday minutes to the settings again (its own minutes and window are dropped). Only the shown
+ * at its weekday minutes to the settings again (its own minutes are dropped, its own window stays). Only the shown
  * days are touched, never the settings; one undo for all of it.
  */
 export const confirmWeek = (
@@ -335,9 +335,9 @@ export const confirmWeek = (
     async () => {
       for (const v of values) {
         if (template === 'work' && v.availableMin === v.defaultMin) {
+          // Back to the weekday minutes; a day's own window stays (the sheet shows minutes only).
           const row = await dayRepo.get(v.date);
-          if (row && (row.availableMin !== undefined || row.from || row.to))
-            await dayPatch(v.date, { availableMin: undefined, from: undefined, to: undefined });
+          if (row?.availableMin !== undefined) await dayPatch(v.date, { availableMin: undefined });
         } else if (v.availableMin !== v.current)
           await dayPatch(v.date, { availableMin: v.availableMin });
       }

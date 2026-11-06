@@ -135,7 +135,7 @@ export function DaySheet({
               title={b.label}
               meta={
                 [
-                  b.from && b.to ? `${b.from}–${b.to}` : '',
+                  day.window && b.from && b.to ? `${b.from}–${b.to}` : '',
                   b.calendar ? t.planner.day.calendar : '',
                 ]
                   .filter(Boolean)

@@ -1,12 +1,15 @@
 import type { CalendarItem } from '@/core/modules/types';
 
-/** The next appointment of the day: the first timed item that has not started yet (all-day items do not count as "next"). */
+/**
+ * The next appointment of the day: the first timed item that has not started yet (all-day items do not
+ * count as "next", nor do the planner's timed sessions, `kind: 'plan'`: planned work is no appointment).
+ */
 export function nextAppointment(
   items: readonly CalendarItem[],
   nowTime: string,
 ): CalendarItem | undefined {
   return items
-    .filter((i) => !i.allDay && !i.done && !!i.time && i.time >= nowTime)
+    .filter((i) => !i.allDay && !i.done && i.kind !== 'plan' && !!i.time && i.time >= nowTime)
     .sort((a, b) => a.time!.localeCompare(b.time!))[0];
 }
 

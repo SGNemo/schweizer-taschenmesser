@@ -224,7 +224,7 @@ describe('actions', () => {
     expect((await dayRepo.get(TODAY))!.from).toBeUndefined();
   });
 
-  it('„Krank“: today on 0 minutes, one calm sentence; „Arbeitswoche“ hands the days back to the settings', async () => {
+  it('„Krank“: today on 0 minutes, one calm sentence; „Arbeitswoche“ hands the minutes back to the settings', async () => {
     await on();
     await setSettings(PLANNER_SCOPE, { windowWeekday: '09:00–17:00' });
     await dayRepo.upsert('2026-11-10', {
@@ -256,7 +256,8 @@ describe('actions', () => {
     const [mon, tue] = [await dayRepo.get(TODAY), await dayRepo.get('2026-11-10')];
     expect(mon?.availableMin).toBeUndefined();
     expect(tue?.availableMin).toBeUndefined();
-    expect(tue?.from).toBeUndefined();
+    // The day's own window is not on the sheet: the template leaves it alone.
+    expect(tue).toMatchObject({ from: '07:00', to: '08:00' });
     expect(useUiStore.getState().toasts.at(-1)?.message).toBe(
       'Arbeitswoche eingetragen – die übliche Zeit je Tag.',
     );

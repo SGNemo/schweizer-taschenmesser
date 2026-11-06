@@ -199,11 +199,13 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       today: deps.today,
       settings,
       items: [...items].sort((a, b) => (a.key < b.key ? -1 : 1)),
-      // Windows and blocker times only enter the hash when they are set: a plan without them hashes as before.
+      // Windows (and blocker times on a day with one) only enter the hash when set: a plan without windows hashes as before.
       days: days.map((d) => [
         d.date,
         d.availableMin,
-        d.blockers.map((b) => (b.from ? [b.label, b.min, b.from, b.to] : [b.label, b.min])),
+        d.blockers.map((b) =>
+          d.window && b.from ? [b.label, b.min, b.from, b.to] : [b.label, b.min],
+        ),
         ...(d.window ? [d.window.from, d.window.to] : []),
       ]),
     }),
