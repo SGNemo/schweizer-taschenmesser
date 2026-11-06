@@ -43,6 +43,9 @@
   font: inherit;
   cursor: pointer;
 }
+.detail {
+  color: var(--text-3);
+}
 .toggle:hover {
   color: var(--text);
 }

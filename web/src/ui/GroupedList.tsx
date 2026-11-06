@@ -10,6 +10,8 @@ export interface GroupedListGroup {
   label: string;
   /** Number of entries, shown next to the label. */
   count: number;
+  /** A short neutral context after the count („2 h 40 mehr zu tun, als Zeit frei ist“); plain text, never a tone. */
+  detail?: string;
   /** The rows (`ItemRow`s) of this group. */
   children: ReactNode;
   /** Mark urgent groups (overdue): the header gets the danger tone, always with its text. */
@@ -67,6 +69,7 @@ export function GroupedList({
                   {g.count}
                 </span>
               </button>
+              {g.detail ? <span className={styles.detail}>{`· ${g.detail}`}</span> : null}
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
               {g.action}

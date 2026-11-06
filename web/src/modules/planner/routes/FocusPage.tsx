@@ -96,8 +96,9 @@ export default function PlannerFocusPage() {
   async function end(done: boolean) {
     if (mine) void onFocusEnd(mine.startedAt);
     await clearFocusSession();
-    if (done && row?.entry) await markDone(row.entry, data!.titles);
-    else toast(t.focus.mode.ended);
+    // A thing its source does not tick off from the plan (an invoice) just ends the round.
+    if (!(done && row?.entry && (await markDone(row.entry, data!.titles))))
+      toast(t.focus.mode.ended);
     void navigate('/planner');
   }
 

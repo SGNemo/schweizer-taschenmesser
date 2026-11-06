@@ -135,6 +135,8 @@
 }
 .toastText {
   flex: 1;
+  /* A second line (the planner's overload figure) stays a line of its own. */
+  white-space: pre-line;
 }
 .toastAction {
   background: none;

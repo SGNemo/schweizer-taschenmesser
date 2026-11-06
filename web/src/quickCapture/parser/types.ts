@@ -58,6 +58,8 @@ export interface CaptureFields {
   hardDue?: boolean;
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
+  /** ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser. */
+  link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
 }
 
 /** Hints the UI can surface next to the chips; the parser never hides an assumption. */

@@ -81,6 +81,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = el día del vencimiento',
       remindTime: 'Hora del recordatorio',
       remindTimeHelp: 'Formato HH:mm',
+      showInPlan: 'Mostrar en el plan',
+      showInPlanHelp:
+        'Las facturas pendientes aparecen en el planificador como “Pagar <beneficiario>” (10 min, hasta el vencimiento). El pago se sigue haciendo aquí. Solo con el planificador encendido.',
       bookWhenPaid: 'Registrar la factura pagada como gasto',
       bookWhenPaidHelp:
         'Crea el movimiento en Finanzas en cuanto marcas una factura como pagada. Sin el módulo de Finanzas no pasa nada; un movimiento recurrente con el mismo beneficiario e importe no se registra dos veces.',
@@ -89,6 +92,7 @@ export const invoices: Strings['invoices'] = {
   title: 'Facturas',
   add: 'Añadir factura',
   edit: 'Editar factura',
+  planTitle: (payee: string) => `Pagar ${payee}`,
   payee: 'Destinatario',
   reference: 'Concepto / número de factura',
   dueDate: 'Vence el',

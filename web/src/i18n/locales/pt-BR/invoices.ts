@@ -81,6 +81,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = no dia do vencimento',
       remindTime: 'Horário do lembrete',
       remindTimeHelp: 'Formato HH:mm',
+      showInPlan: 'Mostrar no plano',
+      showInPlanHelp:
+        'Faturas em aberto aparecem no planejador como “Pagar <favorecido>” (10 min, até o vencimento). O pagamento continua aqui. Só com o planejador ligado.',
       bookWhenPaid: 'Lançar a fatura paga como despesa',
       bookWhenPaidHelp:
         'Cria o lançamento em Finanças assim que você marca uma fatura como paga. Sem o módulo Finanças nada acontece; um lançamento recorrente com o mesmo beneficiário e valor não é lançado duas vezes.',
@@ -89,6 +92,7 @@ export const invoices: Strings['invoices'] = {
   title: 'Faturas',
   add: 'Adicionar fatura',
   edit: 'Editar fatura',
+  planTitle: (payee: string) => `Pagar ${payee}`,
   payee: 'Destinatário',
   reference: 'Descrição / número da fatura',
   dueDate: 'Vence em',

@@ -60,6 +60,8 @@ const manifest: ModuleManifest = {
   area: 'money',
   automation: () => import('./automation'),
   contributions: {
+    // Open things for the planner (read only; nothing is written back).
+    plannable: () => import('./plannable'),
     onboarding: onboarding,
     quickAdd: [
       {

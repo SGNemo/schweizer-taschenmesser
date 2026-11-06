@@ -16,6 +16,7 @@ import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { ExportDialog, type ExportScope } from '../components/ExportDialog';
 import { ImportDialog } from '../components/ImportDialog';
 import { MoveDialog } from '../components/MoveDialog';
+import { PlanDialog } from '../components/PlanDialog';
 import { NotebookDialog } from '../components/NotebookDialog';
 import { NotePane } from '../components/NotePane';
 import { PageList } from '../components/PageList';
@@ -131,6 +132,7 @@ export default function NotesPage() {
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [tabIds, setTabIds] = useState<string[]>(readTabs);
   const [moving, setMoving] = useState<Stored<Note> | null>(null);
+  const [planning, setPlanning] = useState<Stored<Note> | null>(null);
   const [bookDialog, setBookDialog] = useState<{
     open: boolean;
     book: (typeof books)[number] | null;
@@ -369,6 +371,7 @@ export default function NotesPage() {
             onEditNotebook={(book) => setBookDialog({ open: true, book })}
             onTogglePin={(p) => void noteRepo.update(p.id, { pinned: !p.pinned })}
             onMove={setMoving}
+            onPlan={moduleStates?.planner === true ? setPlanning : undefined}
             onDelete={(p) => {
               dropTab(p.id);
               void deleteWithUndo(() => noteRepo.remove(p.id)).then(() => {
@@ -452,6 +455,24 @@ export default function NotesPage() {
         onPick={(notebookId) => {
           if (moving) void noteRepo.update(moving.id, { notebookId });
           setMoving(null);
+        }}
+      />
+      <PlanDialog
+        title={planning ? titleOf(planning) : null}
+        onClose={() => setPlanning(null)}
+        onSubmit={(req) => {
+          if (planning) {
+            const label = titleOf(planning);
+            // The planner adds the ToDo with the link back and says on which day it landed.
+            void bus.emit('plan.requested', {
+              title: label,
+              durationMin: req.durationMin,
+              priority: req.priority,
+              ...(req.due ? { due: { date: req.due, hard: true } } : {}),
+              link: { kind: 'note', id: planning.id, label },
+            });
+          }
+          setPlanning(null);
         }}
       />
       <NotebookDialog

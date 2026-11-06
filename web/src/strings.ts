@@ -2833,6 +2833,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Fälligkeitstag',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Offene Rechnungen stehen im Planer als „<Empfänger> bezahlen“ (10 Min, bis zur Fälligkeit). Bezahlt wird weiter hier. Nur bei eingeschaltetem Planer.',
         bookWhenPaid: 'Bezahlte Rechnung als Ausgabe buchen',
         bookWhenPaidHelp:
           'Legt in Finanzen die Buchung an, sobald du eine Rechnung als bezahlt markierst. Ohne Finanz-Modul passiert nichts; eine wiederkehrende Buchung mit gleichem Empfänger und Betrag wird nicht doppelt gebucht.',
@@ -2841,6 +2844,7 @@ export const de = {
     title: 'Rechnungen',
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
+    planTitle: (payee: string) => `${payee} bezahlen`,
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -2933,6 +2937,9 @@ export const de = {
         cancelRemindDaysBeforeHelp: '0 = am letzten Tag der Frist',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“ (15 Min, bis zum letzten Tag der Frist). Nur bei eingeschaltetem Planer.',
         priceHint: 'Hinweis bei Preiserhöhung',
         priceHintHelp:
           'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
@@ -2942,6 +2949,7 @@ export const de = {
     add: 'Abo hinzufügen',
     edit: 'Abo bearbeiten',
     name: 'Name',
+    planTitle: (name: string) => `${name} kündigen`,
     firstCharge: 'Abbuchung am',
     noticeDays: 'Kündigungsfrist (Tage vor Abbuchung)',
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
@@ -4067,6 +4075,17 @@ export const de = {
     sortTitle: 'Titel',
     sortManual: 'Eigene Reihenfolge',
     moveTo: 'In Notizbuch verschieben',
+    plan: {
+      action: 'In den Plan',
+      duration: 'Dauer',
+      minutes: (n: number) => `${n} Min`,
+      other: 'Andere Dauer (Minuten)',
+      priority: 'Priorität',
+      prio: ['Keine', 'Niedrig', 'Mittel', 'Hoch'],
+      due: 'Frist (optional)',
+      dueHelp: 'Muss bis dahin fertig sein.',
+      invalid: 'Bitte eine Dauer in Minuten (1–600).',
+    },
     moveTitle: 'Verschieben nach',
     unpin: 'Nicht mehr oben',
     pageMenu: 'Seite: weitere Aktionen',
@@ -7756,6 +7775,9 @@ export const de = {
         calendarChips: 'Plan im Kalender zeigen',
         calendarChipsHelp:
           'Ein Eintrag je Tag mit der geplanten Zeit; er führt zum Planer. Aus: der Kalender zeigt nur Termine.',
+        overloadToast: 'Überlast im Hinweis nennen',
+        overloadToastHelp:
+          'Einmal je Woche, sobald mehr zu tun ist, als Zeit frei ist: eine Zeile nach dem Eintragen. Die Zahl steht immer bei „Wartet auf freie Zeit“.',
         allDayBlocks: 'Ganztägige Termine blocken Zeit',
         allDayBlocksHelp: 'Aus: ein ganztägiger Termin kostet keine planbare Zeit.',
       },
@@ -7819,6 +7841,7 @@ export const de = {
       menu: (title: string) => `Aktionen für ${title}`,
       due: (day: string) => `Frist ${day}`,
       dueWas: (day: string) => `Frist war ${day}`,
+      openNote: 'Zur Notiz',
       blocker: 'Blocker',
       focus: 'Fokus starten',
     },
@@ -7838,6 +7861,7 @@ export const de = {
     },
     wait: {
       title: 'Wartet auf freie Zeit',
+      over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
       horizon: 'keine freie Zeit im Planungszeitraum',
       'too-long': 'länger als jeder Tag',
       'after-hard-due': 'erst nach der Frist möglich',
@@ -7862,6 +7886,8 @@ export const de = {
       available: (day: string, min: string) => `${day}: ${min} verfügbar`,
       blockerAdded: 'Blocker eingetragen',
       blockerRemoved: 'Blocker entfernt',
+      requested: (title: string, day: string) => `Im Plan: ${title} · ${day}`,
+      requestedWaits: (title: string) => `Im Plan: ${title} · wartet`,
       weekChecked: 'Woche bestätigt.',
       off: 'Der Planer ist aus.',
     },
