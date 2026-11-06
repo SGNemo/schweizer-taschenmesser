@@ -2,17 +2,15 @@ import { FALLBACK_LANG, SOURCE_LANG, getLang, setLangLoader, type Lang } from '.
 
 /**
  * Catalogs of the main text object (`t` in `src/strings.ts`). German is the source and always
- * there; every other language is its own chunk, loaded on first use (and English with it, as the
- * fallback for anything a catalog misses). Loaded catalogs stay in memory.
+ * there; every other active language is its own chunk, loaded on first use (and English with it, as
+ * the fallback for anything a catalog misses). Loaded catalogs stay in memory. Frozen languages
+ * (es, fr, pt-BR) have no loader, so their catalogs are not part of the build.
  */
 type Catalog = object;
 type Loader = () => Promise<Catalog>;
 
 const LOADERS: Record<Exclude<Lang, 'de'>, Loader> = {
   en: () => import('@/i18n/locales/en').then((m) => m.en),
-  es: () => import('@/i18n/locales/es').then((m) => m.es),
-  fr: () => import('@/i18n/locales/fr').then((m) => m.fr),
-  'pt-BR': () => import('@/i18n/locales/pt-BR').then((m) => m.ptBR),
 };
 
 const loaded = new Map<Lang, Catalog>();

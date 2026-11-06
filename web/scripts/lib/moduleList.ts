@@ -3,7 +3,8 @@
  * one line, building the Markdown block, replacing a marked block in a file.
  */
 
-export const LANGS = ['de', 'en', 'es', 'fr', 'pt-BR'] as const;
+/** Active languages only (ACTIVE_LOCALES in src/core/i18n/lang.ts; es, fr, pt-BR are frozen). */
+export const LANGS = ['de', 'en'] as const;
 export type Lang = (typeof LANGS)[number];
 export type DocLang = 'en' | 'de';
 export type Names = Record<string, string>;

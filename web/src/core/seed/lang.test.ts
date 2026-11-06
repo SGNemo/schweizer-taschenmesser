@@ -21,15 +21,16 @@ const texts = (rows: Record<string, { data: Record<string, unknown> }[]>) =>
     .filter((v): v is string => typeof v === 'string');
 
 describe('localized seed text', () => {
-  it('text() falls back to German for a missing language', () => {
+  it('text() falls back to German for a missing language and ignores frozen ones', () => {
     const ctx = createSeedContext({
       moduleId: 'x',
       today: '2026-09-29',
       scale: 'small',
-      lang: 'fr',
+      lang: 'en',
     });
-    expect(ctx.text({ de: 'Hallo', en: 'Hello' })).toBe('Hallo');
-    expect(ctx.text({ de: 'Hallo', fr: 'Salut' })).toBe('Salut');
+    expect(ctx.text({ de: 'Hallo', en: 'Hello' })).toBe('Hello');
+    expect(ctx.text({ de: 'Hallo' })).toBe('Hallo');
+    expect(ctx.text({ de: 'Hallo', fr: 'Salut' })).toBe('Hallo');
   });
 
   it.each([

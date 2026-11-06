@@ -1,8 +1,14 @@
-import type { Lang } from '@/core/i18n/lang';
+import type { KnownLang } from '@/core/i18n/lang';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
 /** Source text and its translations (en, es, fr, pt-BR); `seed` picks by language. */
-const L = (de: string, en: string, es: string, fr: string, pt: string): Record<Lang, string> => ({
+const L = (
+  de: string,
+  en: string,
+  es: string,
+  fr: string,
+  pt: string,
+): Record<KnownLang, string> => ({
   de,
   en,
   es,
@@ -11,7 +17,7 @@ const L = (de: string, en: string, es: string, fr: string, pt: string): Record<L
 });
 
 /** [payee, min cents, max cents, reference prefix] */
-const PAYEES: readonly (readonly [Record<Lang, string>, number, number, string])[] = [
+const PAYEES: readonly (readonly [Record<KnownLang, string>, number, number, string])[] = [
   [
     L(
       'Stadtwerke Musterstadt',

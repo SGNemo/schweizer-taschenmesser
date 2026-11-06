@@ -4,9 +4,22 @@ import { useSyncExternalStore } from 'react';
  * UI language of this device. The choice stays in `localStorage` (like the other per-device
  * choices), not in the synced settings. "System" follows the device language; anything the app
  * does not speak falls back to English. German is the source language of every text.
+ *
+ * `ACTIVE_LOCALES` is the single source of the languages the app offers (picker, setup, system
+ * detection, catalogs, seed data, tests). Spanish, French and Brazilian Portuguese are frozen: their
+ * texts stay in the repo (`FROZEN_LOCALES`, docs/i18n/FROZEN.md) but are neither shipped nor kept up
+ * to date. Re-activating one = moving it from `FROZEN_LOCALES` to `ACTIVE_LOCALES` (see FROZEN.md).
  */
-export const LANGS = ['de', 'en', 'es', 'fr', 'pt-BR'] as const;
-export type Lang = (typeof LANGS)[number];
+export const ACTIVE_LOCALES = ['de', 'en'] as const;
+export const FROZEN_LOCALES = ['es', 'fr', 'pt-BR'] as const;
+/** A language the app offers. */
+export type Lang = (typeof ACTIVE_LOCALES)[number];
+/** A language whose texts are kept in the repo but not shipped. */
+export type FrozenLang = (typeof FROZEN_LOCALES)[number];
+/** Every language with texts in the repo (active or frozen); for typing kept translations only. */
+export type KnownLang = Lang | FrozenLang;
+/** Same list as `ACTIVE_LOCALES` (older name, kept so iterating code reads naturally). */
+export const LANGS: readonly Lang[] = ACTIVE_LOCALES;
 /** What the person picked: a language or "follow the device". */
 export type LangPref = Lang | 'system';
 export const SOURCE_LANG: Lang = 'de';
@@ -14,15 +27,14 @@ export const SOURCE_LANG: Lang = 'de';
 export const LANG_NAMES: Record<Lang, string> = {
   de: 'Deutsch',
   en: 'English',
-  es: 'Español',
-  fr: 'Français',
-  'pt-BR': 'Português (Brasil)',
 };
 export const FALLBACK_LANG: Lang = 'en';
 
 const KEY = 'tm-lang';
 
-export const isLang = (v: unknown): v is Lang => LANGS.includes(v as Lang);
+export const isLang = (v: unknown): v is Lang => ACTIVE_LOCALES.includes(v as Lang);
+export const isFrozenLang = (v: unknown): v is FrozenLang =>
+  FROZEN_LOCALES.includes(v as FrozenLang);
 export const isLangPref = (v: unknown): v is LangPref => v === 'system' || isLang(v);
 
 /** Best supported language for a list of BCP 47 tags (`navigator.languages`), English otherwise. */
@@ -32,7 +44,7 @@ export function matchLang(tags: readonly string[]): Lang {
     const exact = LANGS.find((l) => l.toLowerCase() === lower);
     if (exact) return exact;
     const base = lower.split('-')[0];
-    // Any Portuguese is served the Brazilian translation; any German, English, Spanish, French the one we have.
+    // Any German or English is served the one we have; every other language gets English.
     const byBase = LANGS.find((l) => l.toLowerCase().split('-')[0] === base);
     if (byBase) return byBase;
   }
@@ -45,11 +57,23 @@ export function systemLang(): Lang {
   return matchLang(tags.filter(Boolean));
 }
 
-/** Stored preference; nothing stored means "system". */
+/**
+ * A stored value as a preference: a frozen language (picked before es/fr/pt-BR were frozen) quietly
+ * becomes English, anything unknown "system".
+ */
+export const toLangPref = (v: unknown): LangPref =>
+  isLangPref(v) ? v : isFrozenLang(v) ? FALLBACK_LANG : 'system';
+
+/**
+ * Stored preference; nothing stored means "system". A frozen language is migrated to English once
+ * and written back, without a dialog (the release notes say so).
+ */
 export function readLangPref(): LangPref {
   try {
     const v = localStorage.getItem(KEY);
-    return isLangPref(v) ? v : 'system';
+    const next = toLangPref(v);
+    if (isFrozenLang(v)) localStorage.setItem(KEY, next);
+    return next;
   } catch {
     return 'system';
   }
@@ -115,7 +139,9 @@ export function setLang(lang: Lang): void {
  * keeps German instead of suddenly following an English device. New installations follow the device.
  */
 export async function initLang(hasExistingData: () => Promise<boolean>): Promise<void> {
-  if (!hasStoredLangPref()) {
+  // Re-read at start: migrates a frozen choice (es, fr, pt-BR) to English before anything loads.
+  if (hasStoredLangPref()) pref = readLangPref();
+  else {
     // Decided once: later starts must not mistake the new installation's own data for an old one.
     pref = (await hasExistingData().catch(() => false)) ? 'de' : 'system';
     try {
@@ -141,7 +167,7 @@ export async function initLang(hasExistingData: () => Promise<boolean>): Promise
  */
 async function followOtherTab(e: StorageEvent): Promise<void> {
   if (e.key !== KEY) return;
-  const next: LangPref = isLangPref(e.newValue) ? e.newValue : 'system';
+  const next = toLangPref(e.newValue);
   const lang = resolveLang(next);
   if (next === pref && lang === current) return;
   pref = next;

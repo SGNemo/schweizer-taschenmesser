@@ -12,7 +12,7 @@ import {
 } from 'date-fns';
 import { de, enGB, enIE, enUS, es, fr, ptBR, pt, deAT, type Locale } from 'date-fns/locale';
 import { capitalize, dateLocale, relativeDays } from '@/core/i18n/format';
-import { getLang, type Lang } from '@/core/i18n/lang';
+import { getLang, type KnownLang, type Lang } from '@/core/i18n/lang';
 import { t } from '@/strings';
 import { now, pad2, toDateString, today } from './now';
 
@@ -105,7 +105,7 @@ const DATE_FNS: Record<string, Locale> = {
  * "de", no period after the day). Numeric dates follow the format region. Unknown patterns are used
  * as they are, with the language's month and weekday names.
  */
-const PATTERNS: Record<string, Partial<Record<Lang | 'en-US', string>>> = {
+const PATTERNS: Record<string, Partial<Record<KnownLang | 'en-US', string>>> = {
   'd. MMM yyyy': {
     en: 'd MMM yyyy',
     'en-US': 'MMM d, yyyy',

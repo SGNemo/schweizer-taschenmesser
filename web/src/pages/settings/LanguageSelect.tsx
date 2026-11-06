@@ -12,8 +12,8 @@ import { t } from '@/strings';
 import { SelectField } from '@/ui';
 
 /**
- * Language of the interface: "like the device" or one of the five languages, each named in its
- * own language. The switch is immediate (the texts of the new language load first).
+ * Language of the interface: "like the device" or one of the active languages (German, English;
+ * `ACTIVE_LOCALES`), each named in its own language. The switch is immediate (the texts of the new language load first).
  */
 export function LanguageSelect({ labelHidden = true }: { labelHidden?: boolean }) {
   const pref = useLangPref();

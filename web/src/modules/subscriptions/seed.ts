@@ -1,4 +1,4 @@
-import type { Lang } from '@/core/i18n/lang';
+import type { KnownLang } from '@/core/i18n/lang';
 import type { Recurrence } from '@/core/recurrence/types';
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 
@@ -6,7 +6,13 @@ const monthly = (interval = 1): Recurrence => ({ freq: 'monthly', interval });
 const yearly: Recurrence = { freq: 'yearly', interval: 1 };
 
 /** Source text and its translations (en, es, fr, pt-BR); `seed` picks by language. */
-const L = (de: string, en: string, es: string, fr: string, pt: string): Record<Lang, string> => ({
+const L = (
+  de: string,
+  en: string,
+  es: string,
+  fr: string,
+  pt: string,
+): Record<KnownLang, string> => ({
   de,
   en,
   es,
@@ -16,7 +22,7 @@ const L = (de: string, en: string, es: string, fr: string, pt: string): Record<L
 
 /** [name, cents, rule, days since the last charge (startDate), cancel notice days, active] */
 const BASE: readonly (readonly [
-  Record<Lang, string>,
+  Record<KnownLang, string>,
   number,
   Recurrence,
   number,
@@ -171,9 +177,9 @@ const EXTRA_NAMES = [
 ];
 
 /** Extra names get the row number behind them in every language. */
-const numbered = (names: Record<Lang, string>, i: number): Record<Lang, string> =>
+const numbered = (names: Record<KnownLang, string>, i: number): Record<KnownLang, string> =>
   Object.fromEntries(Object.entries(names).map(([k, v]) => [k, `${v} ${i}`])) as Record<
-    Lang,
+    KnownLang,
     string
   >;
 

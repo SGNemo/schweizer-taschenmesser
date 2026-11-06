@@ -31,6 +31,6 @@ describe('voice availability', () => {
   });
 
   it('follows the UI language for every language the app has', () => {
-    expect(LANGS.map(recognitionLang)).toEqual(['de-DE', 'en-US', 'es-ES', 'fr-FR', 'pt-BR']);
+    expect(LANGS.map(recognitionLang)).toEqual(['de-DE', 'en-US']);
   });
 });
