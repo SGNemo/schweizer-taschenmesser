@@ -59,7 +59,6 @@ export const pantry: Strings['pantry'] = {
   plus: (n: string) => `${n} : un de plus`,
   minus: (n: string) => `${n} : un de moins`,
   countOf: (n: number) => (n <= 1 ? `${n} pièce` : `${n} pièces`),
-  expired: (d: number) => (d === -1 ? 'Périmé depuis hier' : `Périmé depuis ${-d} jours`),
   today: 'Périme aujourd’hui',
   inDays: (d: number) => (d === 1 ? 'Périme demain' : `Encore ${d} jours`),
   until: (date: string) => `À consommer avant le ${date}`,
