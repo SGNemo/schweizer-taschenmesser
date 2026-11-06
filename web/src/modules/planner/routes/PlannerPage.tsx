@@ -34,6 +34,7 @@ import {
   markDone,
   markDue,
   pin,
+  sourceAbilities,
   unmarkDue,
   unpin,
 } from '../actions';
@@ -44,11 +45,22 @@ import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { beginPlanFocus, planFocusPath } from '../focus';
+import { overloadText } from '../overload';
 import { instructionItems, opLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
+
+/** Where a thing's origin opens (`?open=<id>` is understood by every module page). */
+const LINK_BASE = {
+  note: '/notes',
+  mail: '/mail',
+  invoice: '/invoices',
+  event: '/calendar',
+} as const;
+const linkPath = (l: { kind: keyof typeof LINK_BASE; id: string }) =>
+  `${LINK_BASE[l.kind]}?open=${encodeURIComponent(l.id)}`;
 
 /** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
 const SPAN = BOARD_DAYS;
@@ -106,6 +118,18 @@ export default function PlannerPage() {
     async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
     [],
   );
+
+  // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
+  const [abilities, setAbilities] = useState<Record<string, { done: boolean; assign: boolean }>>();
+  useEffect(() => {
+    let live = true;
+    void sourceAbilities().then((a) => live && setAbilities(a));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const canDone = (moduleId: string) => abilities?.[moduleId]?.done === true;
+  const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign === true;
 
   const titles = data?.titles ?? {};
   const board = data?.board;
@@ -264,11 +288,17 @@ export default function PlannerPage() {
     const day = date ?? data!.today;
     const pinned = row.item?.pinned !== undefined;
     const hard = row.item?.due?.hard === true;
+    // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
+    const sourceHard = e.due?.hard === true;
     const excluded = row.item?.excluded === true;
     const open = why === row.unitId;
     return [
-      { id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) },
-      { id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) },
+      ...(canDone(e.moduleId)
+        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
+        : []),
+      ...(canAssign(e.moduleId)
+        ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
+        : []),
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
@@ -285,17 +315,21 @@ export default function PlannerPage() {
               onSelect: () => void exclude(e, titles),
             },
           ]),
-      hard
-        ? {
-            id: 'unmarkDue',
-            label: t.planner.row.unmarkDue,
-            onSelect: () => void unmarkDue(e, titles),
-          }
-        : {
-            id: 'markDue',
-            label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
-            onSelect: () => void markDue(e, e.due?.date ?? day, titles),
-          },
+      ...(sourceHard
+        ? []
+        : [
+            hard
+              ? {
+                  id: 'unmarkDue',
+                  label: t.planner.row.unmarkDue,
+                  onSelect: () => void unmarkDue(e, titles),
+                }
+              : {
+                  id: 'markDue',
+                  label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
+                  onSelect: () => void markDue(e, e.due?.date ?? day, titles),
+                },
+          ]),
       ...(reason
         ? [
             {
@@ -324,6 +358,16 @@ export default function PlannerPage() {
           ]
         : []),
       { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
+      // Back to where it came from (a note's „In den Plan“): `?open=` is understood by every module page.
+      ...(e.link
+        ? [
+            {
+              id: 'link',
+              label: t.planner.row.openLink[e.link.kind],
+              onSelect: () => void navigate(linkPath(e.link!)),
+            },
+          ]
+        : []),
     ];
   };
 
@@ -359,7 +403,7 @@ export default function PlannerPage() {
           </span>
         }
         lead={
-          row.entry ? (
+          row.entry && canDone(row.entry.moduleId) ? (
             <input
               type="checkbox"
               className={styles.check}
@@ -374,9 +418,17 @@ export default function PlannerPage() {
         menuLabel={t.planner.row.menu(row.title)}
         // Swipes only in the one-day layout: a swipeable row clips sideways, and in a narrow column the
         // ⋯ menu is wider than the row.
-        onSwipeRight={!wide && row.entry ? () => void markDone(row.entry!, titles) : undefined}
+        onSwipeRight={
+          !wide && row.entry && canDone(row.entry.moduleId)
+            ? () => void markDone(row.entry!, titles)
+            : undefined
+        }
         swipeRightLabel={t.planner.row.done}
-        onSwipeLeft={!wide && row.entry ? () => void later(row.entry!, titles) : undefined}
+        onSwipeLeft={
+          !wide && row.entry && canAssign(row.entry.moduleId)
+            ? () => void later(row.entry!, titles)
+            : undefined
+        }
         swipeLeftLabel={t.planner.row.later}
       />
     );
@@ -421,6 +473,7 @@ export default function PlannerPage() {
   );
 
   const waiting = board?.waiting ?? [];
+  const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
   const shownDay = board?.days.find((d) => d.date === pickedDay) ?? board?.days[0];
 
@@ -544,6 +597,8 @@ export default function PlannerPage() {
                 id: 'waiting',
                 label: t.planner.wait.title,
                 count: waiting.length,
+                // The overload figure: neutral text, no tone (CONCEPT §7).
+                ...(overflow > 0 ? { detail: overloadText(overflow) } : {}),
                 children: (
                   <ItemList>
                     {waiting.map((w) => (

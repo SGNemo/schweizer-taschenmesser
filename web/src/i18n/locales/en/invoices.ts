@@ -81,6 +81,9 @@ export const invoices: Strings['invoices'] = {
       remindDaysBeforeHelp: '0 = on the due date',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'Open invoices appear in the planner as “Pay <payee>” (10 min, by the due date). Paying stays here. Only with the planner on.',
       bookWhenPaid: 'Book a paid invoice as an expense',
       bookWhenPaidHelp:
         'Creates the booking in Finances as soon as you mark an invoice as paid. Without the Finance module nothing happens; a repeating booking with the same payee and amount is not booked twice.',
@@ -89,6 +92,7 @@ export const invoices: Strings['invoices'] = {
   title: 'Invoices',
   add: 'Add invoice',
   edit: 'Edit invoice',
+  planTitle: (payee: string) => `Pay ${payee}`,
   payee: 'Payee',
   reference: 'Reference / invoice number',
   dueDate: 'Due on',

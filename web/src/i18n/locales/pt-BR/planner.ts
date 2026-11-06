@@ -32,6 +32,9 @@ export const planner: Strings['planner'] = {
       calendarChips: 'Mostrar o plano no calendário',
       calendarChipsHelp:
         'Uma entrada por dia com o tempo planejado; ela leva ao planejador. Desligado: o calendário mostra só compromissos.',
+      overloadToast: 'Mencionar a sobrecarga em um aviso',
+      overloadToastHelp:
+        'Uma vez por semana, assim que há mais a fazer do que tempo livre: uma linha depois de adicionar algo. O número fica sempre junto de “Esperando tempo livre”.',
       allDayBlocks: 'Compromissos de dia inteiro bloqueiam tempo',
       allDayBlocksHelp: 'Desligado: um compromisso de dia inteiro não custa tempo planejável.',
     },
@@ -95,6 +98,12 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Ações para ${title}`,
     due: (day: string) => `Prazo ${day}`,
     dueWas: (day: string) => `O prazo era ${day}`,
+    openLink: {
+      note: 'Ir para a nota',
+      mail: 'Ir para o e-mail',
+      invoice: 'Ir para a fatura',
+      event: 'Ir para o compromisso',
+    },
     blocker: 'Bloqueio',
     focus: 'Iniciar foco',
   },
@@ -114,6 +123,7 @@ export const planner: Strings['planner'] = {
   },
   wait: {
     title: 'Esperando tempo livre',
+    over: (min: string) => `${min} a mais para fazer do que tempo livre`,
     horizon: 'sem tempo livre no horizonte de planejamento',
     'too-long': 'mais longo que qualquer dia',
     'after-hard-due': 'só possível depois do prazo',
@@ -138,6 +148,8 @@ export const planner: Strings['planner'] = {
     available: (day: string, min: string) => `${day}: ${min} disponíveis`,
     blockerAdded: 'Bloqueio adicionado',
     blockerRemoved: 'Bloqueio removido',
+    requested: (title: string, day: string) => `No plano: ${title} · ${day}`,
+    requestedWaits: (title: string) => `No plano: ${title} · aguardando`,
     weekChecked: 'Semana confirmada.',
     off: 'O planejador está desligado.',
   },

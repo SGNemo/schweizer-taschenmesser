@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Enables the planner (preview) and the ToDos with a raw write into the module table, like the library would. */
-async function enablePlanner(page: Page) {
+async function enablePlanner(page: Page, extra: string[] = []) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
   await page.evaluate(
@@ -38,7 +38,7 @@ async function enablePlanner(page: Page) {
           tx.onerror = () => reject(tx.error);
         };
       }),
-    ['todos', 'planner'],
+    ['todos', 'planner', ...extra],
   );
 }
 
@@ -325,5 +325,161 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await expect(page.getByRole('menuitem', { name: 'Woche prüfen' })).toBeVisible();
     await expect(page.getByTestId('week-check-link')).toHaveCount(0);
+  });
+});
+
+/** One raw record into a module table (the envelope as `createRepo` would write it). */
+async function put(page: Page, table: string, record: Record<string, unknown>) {
+  await page.evaluate(
+    ({ name, rec }) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction(name, 'readwrite');
+          tx.objectStore(name).put({
+            createdAt: 1,
+            updatedAt: 1,
+            deviceId: 'e2e',
+            deletedAt: null,
+            _f: {},
+            ...rec,
+          });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { name: table, rec: record },
+  );
+}
+
+/** Less time on weekdays (24 plannable minutes with the buffer), Saturday off: a big thing overloads the week. */
+async function smallWeek(page: Page) {
+  await ready(page, '/settings/module/planner');
+  for (const [label, value] of [
+    ['Verfügbare Zeit Mo–Fr (Minuten)', '30'],
+    ['Verfügbare Zeit Samstag (Minuten)', '0'],
+  ] as const) {
+    const field = page.getByLabel(label, { exact: true });
+    await field.fill(value);
+    await field.blur();
+    await expect(field).toHaveValue(value);
+  }
+}
+
+const toast = (page: Page) => page.getByRole('status');
+const waitingHead = (page: Page) => page.locator('[data-group="waiting"] h2');
+
+test.describe('Planer (more sources, overload – package 3)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('a note → „In den Plan“ → a row on the board with the way back to the note', async ({
+    page,
+  }) => {
+    await enablePlanner(page, ['notes']);
+    await put(page, 'notes_note', {
+      id: 'n-vermieter',
+      title: 'Vermieter antworten',
+      body: 'Heizung, Termin',
+      pinned: false,
+      notebookId: null,
+      order: 0,
+    });
+    await ready(page, '/notes');
+    const row = page.locator('li', { hasText: 'Vermieter antworten' }).first();
+    await row.getByRole('button', { name: 'Seite: weitere Aktionen' }).click();
+    await page.getByRole('menuitem', { name: 'In den Plan' }).click();
+    const sheet = page.getByRole('dialog', { name: 'In den Plan' });
+    await sheet.getByRole('button', { name: '15 Min' }).click();
+    await sheet.getByLabel('Priorität').selectOption({ label: 'Hoch' });
+    await sheet.getByRole('button', { name: 'In den Plan' }).click();
+    await expect(toast(page)).toContainText('Im Plan: Vermieter antworten · Mo');
+    const [task] = await rows(page, 'todos_task');
+    expect(task).toMatchObject({
+      title: 'Vermieter antworten',
+      estimateMin: 15,
+      priority: 3,
+      links: [{ kind: 'note', id: 'n-vermieter', label: 'Vermieter antworten' }],
+    });
+    await ready(page, '/planner');
+    await expect(today(page)).toContainText('Vermieter antworten');
+    await today(page).getByRole('button', { name: 'Aktionen für Vermieter antworten' }).click();
+    await page.getByRole('menuitem', { name: 'Zur Notiz' }).click();
+    await expect(page).toHaveURL(/\/notes/);
+  });
+
+  test('an invoice due Thursday is planned with its deadline; „Im Plan zeigen“ off takes it away', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await put(page, 'invoices_invoice', {
+      id: 'inv-stadtwerke',
+      payee: 'Stadtwerke',
+      amountMinor: 8990,
+      dueDate: '2026-11-12',
+      status: 'open',
+    });
+    await ready(page, '/planner');
+    const row = page.getByText('Stadtwerke bezahlen');
+    await expect(row).toBeVisible();
+    const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
+    await expect(day).toContainText('Frist Do');
+    // Paying stays in Rechnungen: no tick, no „Erledigt“ in the row menu.
+    await expect(day.getByRole('checkbox', { name: 'Stadtwerke bezahlen' })).toHaveCount(0);
+    await day.getByRole('button', { name: 'Aktionen für Stadtwerke bezahlen' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Erledigt' })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Warum hier?' }).click();
+    await expect(day).toContainText(/muss bis Do fertig sein|neu, nach Priorität/);
+    await ready(page, '/settings/module/invoices');
+    const sw = page.getByRole('switch', { name: 'Im Plan zeigen' });
+    await expect(sw).toHaveAttribute('aria-checked', 'true');
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await ready(page, '/planner');
+    await expect(page.getByLabel('Eintragen oder sagen', { exact: true })).toBeVisible();
+    await expect(page.getByText('Stadtwerke bezahlen')).toHaveCount(0);
+  });
+
+  test('overflow 0 → above 0: one toast line; a second entry keeps quiet, the group head stays current', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await smallWeek(page);
+    await ready(page, '/planner');
+    await enter(page, 'Kurz 15min');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await enter(page, 'Umzug planen 3 Std');
+    await expect(toast(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await expect(toast(page).getByRole('button', { name: 'Rückgängig' })).toBeVisible();
+    await expect(waitingHead(page)).toContainText('Wartet auf freie Zeit');
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    const first = await waitingHead(page).innerText();
+    await enter(page, 'Keller 1 Std');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await expect(waitingHead(page)).not.toHaveText(first);
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+  });
+
+  test('switch `overloadToast` off → no toast line, the figure stays in the group head', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await smallWeek(page);
+    const sw = page.getByRole('switch', { name: 'Überlast im Hinweis nennen' });
+    await sw.click();
+    await expect(sw).toHaveAttribute('aria-checked', 'false');
+    await ready(page, '/planner');
+    await enter(page, 'Umzug planen 3 Std');
+    await expect(toast(page)).toContainText('Eingetragen');
+    await expect(toast(page)).not.toContainText('mehr zu tun');
+    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 });

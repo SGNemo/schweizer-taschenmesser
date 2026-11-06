@@ -59,6 +59,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = on the last day of the notice period',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'Cancellation deadlines appear in the planner as “Cancel <subscription>” (15 min, by the last day of the notice period). Only with the planner on.',
       priceHint: 'Notice when a price goes up',
       priceHintHelp:
         'Shows once under “Important now” when a subscription got more expensive. You can switch it off at any time.',
@@ -68,6 +71,7 @@ export const subscriptions: Strings['subscriptions'] = {
   add: 'Add subscription',
   edit: 'Edit subscription',
   name: 'Name',
+  planTitle: (name: string) => `Cancel ${name}`,
   firstCharge: 'Charge on',
   noticeDays: 'Notice period (days before the charge)',
   noticeHint: 'Leave empty if you can cancel any time.',

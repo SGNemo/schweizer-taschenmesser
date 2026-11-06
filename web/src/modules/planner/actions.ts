@@ -12,8 +12,9 @@ import { addDays } from '@/core/plan/dates';
 import { dayName } from '@/core/plan/explain';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
-import { parseCapture } from '@/quickCapture/parser';
-import { saveCapture } from '@/quickCapture/targets';
+import type { EventMap } from '@/core/events/events';
+import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
+import { saveCapture, type SavedCapture } from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
@@ -21,6 +22,8 @@ import { t } from '@/strings';
 import { extractDuePhrase } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
+import { overloadLine } from './overload';
+import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type UserRun } from './services';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
@@ -63,8 +66,82 @@ export async function act(
     const key = unitId.slice(0, unitId.lastIndexOf('#'));
     return titles[key] ?? run.outcome.inputs.titles[key] ?? key;
   };
-  toast(runToast(run.outcome.result, titleOf, lead), run);
+  toast(withOverload(runToast(run.outcome.result, titleOf, lead), await overloadNotice(run)), run);
   return true;
+}
+
+/**
+ * The overload line after a user run (`overload.ts`): only when the overflow went from 0 to above 0, once
+ * per ISO week, with `overloadToast` on. It is the second line of the run's one toast (the toast keeps one
+ * message, so a toast of its own would push the undo away).
+ */
+async function overloadNotice(run: UserRun): Promise<string | undefined> {
+  const settings = await getPlannerSettings();
+  return overloadLine({
+    enabled: settings.overloadToast,
+    prevMin: run.outcome.prevOverflowMin,
+    nextMin: run.outcome.result?.overflowMin,
+    today: today(),
+  });
+}
+
+/** The run's line plus the overload line below it (the toast keeps line breaks). */
+export const withOverload = (line: string, overload: string | undefined): string =>
+  overload ? `${line}\n${overload}` : line;
+
+/** A title in a toast line stays short (the line keeps under `TOAST_MAX`). */
+const short = (title: string, max = 32) =>
+  title.length > max ? `${title.slice(0, max - 1).trimEnd()}…` : title;
+
+/**
+ * `plan.requested` (a note's „In den Plan“): a ToDo through the quick-capture target `plan` (with the
+ * link back), its planner item (a hard due when asked) and the run, as one undoable action; the toast says
+ * on which day it landed: „Im Plan: Vermieter antworten · Di · Rückgängig“.
+ */
+export async function addRequested(req: EventMap['plan.requested']): Promise<boolean> {
+  const title = req.title.trim();
+  if (!title) return false;
+  const fields: CaptureFields = {
+    title,
+    ...(req.durationMin && req.durationMin > 0 ? { estimateMin: Math.round(req.durationMin) } : {}),
+    ...(req.priority ? { priority: req.priority } : {}),
+    ...(req.due ? { date: req.due.date, hardDue: req.due.hard } : {}),
+    ...(req.link ? { link: req.link } : {}),
+  };
+  let saved: SavedCapture | undefined;
+  let run: UserRun;
+  try {
+    run = await runUser(t.planner.toast.added, async () => {
+      saved = await saveCapture('plan', fields);
+    });
+  } catch (e) {
+    if (!(e instanceof PlannerOffError)) throw e;
+    toast(t.planner.toast.off);
+    return false;
+  }
+  const key = saved ? itemKeyOf(saved.moduleId, saved.id) : undefined;
+  const first = run.outcome.result?.assignments
+    .filter((a) => a.itemKey === key)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const line = first
+    ? t.planner.toast.requested(short(title), dayName(first.date))
+    : t.planner.toast.requestedWaits(short(title));
+  toast(withOverload(line, await overloadNotice(run)), run);
+  return true;
+}
+
+/** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
+export async function sourceAbilities(): Promise<
+  Record<string, { done: boolean; assign: boolean }>
+> {
+  const out: Record<string, { done: boolean; assign: boolean }> = {};
+  await Promise.all(
+    availableManifests().map(async (m) => {
+      const s = await plannableSource(m).catch(() => undefined);
+      if (s) out[m.id] = { done: !!s.onDone, assign: !!s.onAssign };
+    }),
+  );
+  return out;
 }
 
 const source = (moduleId: string) =>

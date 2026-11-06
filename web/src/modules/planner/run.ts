@@ -229,6 +229,8 @@ export interface RunOutcome {
   rowWrites: number;
   /** Write-backs that reached a source. */
   writeBacks: number;
+  /** The overflow of the run before this one (0 without one): the overload toast fires on 0 → above 0. */
+  prevOverflowMin?: number;
 }
 
 /** Keeps the planner-owned item rows in step with the user's own date (copy, replace, remove) – only while the gate is open. */
@@ -415,7 +417,14 @@ export async function runPlanner(
     titles: inputs.titles,
   };
   await setMeta(LAST_RUN_KEY, lastRun, deps.database);
-  return { ran: true, result, inputs, rowWrites, writeBacks };
+  return {
+    ran: true,
+    result,
+    inputs,
+    rowWrites,
+    writeBacks,
+    prevOverflowMin: last?.overflowMin ?? 0,
+  };
 }
 
 /**

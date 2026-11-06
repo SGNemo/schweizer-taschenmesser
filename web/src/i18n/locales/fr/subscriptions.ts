@@ -63,6 +63,9 @@ export const subscriptions: Strings['subscriptions'] = {
       cancelRemindDaysBeforeHelp: '0 = le dernier jour du délai',
       remindTime: 'Heure du rappel',
       remindTimeHelp: 'Au format HH:mm',
+      showInPlan: 'Afficher dans le plan',
+      showInPlanHelp:
+        'Les délais de résiliation apparaissent dans le planificateur comme « Résilier <abonnement> » (15 min, avant le dernier jour du préavis). Seulement avec le planificateur activé.',
       priceHint: 'Avis en cas de hausse de prix',
       priceHintHelp:
         'Affiche une fois sous « Important maintenant » quand un abonnement devient plus cher. Vous pouvez le désactiver à tout moment.',
@@ -72,6 +75,7 @@ export const subscriptions: Strings['subscriptions'] = {
   add: 'Ajouter un abonnement',
   edit: 'Modifier l’abonnement',
   name: 'Nom',
+  planTitle: (name: string) => `Résilier ${name}`,
   firstCharge: 'Prélèvement le',
   noticeDays: 'Délai de résiliation (jours avant le prélèvement)',
   noticeHint: 'Laissez vide s’il est résiliable à tout moment.',

@@ -69,6 +69,8 @@ const manifest: ModuleManifest = {
     },
   ],
   settings,
+  // One event for rules (`planner.overloaded`); no `watch`, no `actions` (docs/decisions/plan.md).
+  automation: () => import('./automation'),
   defaultEnabled: false,
   maturity: 'preview',
   seed: { version: 2, dependsOn: ['todos'] },

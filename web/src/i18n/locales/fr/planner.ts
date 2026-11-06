@@ -34,6 +34,9 @@ export const planner: Strings['planner'] = {
       calendarChips: 'Afficher le plan dans le calendrier',
       calendarChipsHelp:
         'Une entrée par jour avec le temps prévu ; elle mène au planificateur. Désactivé : le calendrier ne montre que les rendez-vous.',
+      overloadToast: 'Signaler la surcharge dans un avis',
+      overloadToastHelp:
+        'Une fois par semaine, dès qu’il y a plus à faire que de temps libre : une ligne après un ajout. Le chiffre figure toujours à côté de « En attente de temps libre ».',
       allDayBlocks: 'Les rendez-vous d’une journée bloquent du temps',
       allDayBlocksHelp:
         'Désactivé : un rendez-vous d’une journée entière ne coûte aucun temps planifiable.',
@@ -98,6 +101,12 @@ export const planner: Strings['planner'] = {
     menu: (title: string) => `Actions pour ${title}`,
     due: (day: string) => `Échéance ${day}`,
     dueWas: (day: string) => `L’échéance était ${day}`,
+    openLink: {
+      note: 'Ouvrir la note',
+      mail: 'Ouvrir le mail',
+      invoice: 'Ouvrir la facture',
+      event: 'Ouvrir le rendez-vous',
+    },
     blocker: 'Blocage',
     focus: 'Démarrer le focus',
   },
@@ -117,6 +126,7 @@ export const planner: Strings['planner'] = {
   },
   wait: {
     title: 'En attente de temps libre',
+    over: (min: string) => `${min} de plus à faire que de temps libre`,
     horizon: 'pas de temps libre dans l’horizon de planification',
     'too-long': 'plus long que n’importe quel jour',
     'after-hard-due': 'possible seulement après l’échéance',
@@ -141,6 +151,8 @@ export const planner: Strings['planner'] = {
     available: (day: string, min: string) => `${day} : ${min} disponibles`,
     blockerAdded: 'Blocage ajouté',
     blockerRemoved: 'Blocage retiré',
+    requested: (title: string, day: string) => `Dans le plan : ${title} · ${day}`,
+    requestedWaits: (title: string) => `Dans le plan : ${title} · en attente`,
     weekChecked: 'Semaine confirmée.',
     off: 'Le planificateur est désactivé.',
   },
