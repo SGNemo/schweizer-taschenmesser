@@ -7,7 +7,7 @@ import { useModuleStates } from '@/core/modules/activation';
 import { offerEnableModule } from '@/core/modules/offerEnable';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettings } from '@/core/settings/settings';
-import { formatDay, today } from '@/core/time/dates';
+import { today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
@@ -31,8 +31,8 @@ import {
   applyFilter,
   countLabel,
   crossedMinimum,
-  daysLeft,
   expiryState,
+  expiryText,
   findByEan,
   needsRestock,
   sortItems,
@@ -125,14 +125,7 @@ export default function PantryPage() {
     [items, filter, day, soonDays],
   );
 
-  const expiryText = (i: NonNullable<typeof items>[number]) => {
-    const d = daysLeft(i, day);
-    if (d === undefined) return null;
-    if (d < 0) return t.pantry.expired(d);
-    if (d === 0) return t.pantry.today;
-    if (d <= soonDays) return t.pantry.inDays(d);
-    return t.pantry.until(formatDay(i.expires!, 'dd.MM.yyyy'));
-  };
+  const expiryLine = (i: NonNullable<typeof items>[number]) => expiryText(i, day, soonDays);
 
   return (
     <>
@@ -187,7 +180,7 @@ export default function PantryPage() {
             <ItemList label={t.pantry.places[place]} layout="grid">
               {group.map((i) => {
                 const state = expiryState(i, day, soonDays);
-                const text = expiryText(i);
+                const text = expiryLine(i);
                 const restockable = needsRestock(i);
                 return (
                   <ItemRow
