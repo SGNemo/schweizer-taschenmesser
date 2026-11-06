@@ -82,7 +82,8 @@ function ProviderCard({
   const [saved, setSaved] = useState(false);
   const localOffered = useLocalModel((st) => localModelOffered(st.status));
   useEffect(() => {
-    if (entry.kind === 'ollama') void useLocalModel.getState().refresh();
+    const local = useLocalModel.getState();
+    if (entry.kind === 'ollama' && !local.status) void local.refresh();
   }, [entry.kind]);
   const [test, setTest] = useState<ConnectionTest | 'running' | undefined>();
   const [confirmRemove, setConfirmRemove] = useState(false);

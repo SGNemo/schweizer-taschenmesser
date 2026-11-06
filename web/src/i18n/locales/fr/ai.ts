@@ -182,8 +182,7 @@ export const ai: Strings['ai'] = {
         'Sur Android, il n’y a pas de modèle local. L’application Windows en a un. Ici, l’IA répond via un fournisseur sous « Assistant IA ».',
       testBuild:
         'Le modèle local n’est pas intégré à la version de test. La version normale de Nemo l’a : là, vous téléchargez un modèle ici même.',
-      build:
-        'Cette version a été compilée sans modèle local. La version normale de Nemo l’a : là, vous téléchargez un modèle ici même.',
+      build: 'Cette version a été compilée sans modèle local.',
       cpu: 'Votre processeur est trop ancien (il lui faut AVX2).',
     } as Record<string, string>,
     getStable: 'Obtenir la version normale',

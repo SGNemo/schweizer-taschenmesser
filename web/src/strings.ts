@@ -3642,8 +3642,7 @@ export const de = {
           'Auf Android gibt es kein lokales Modell. In der Windows-App schon. Hier antwortet die KI über einen Anbieter unter „KI-Assistent“.',
         testBuild:
           'In der Testversion ist das lokale Modell nicht eingebaut. Die normale Version von Nemo hat es – dort lädst du hier ein Modell herunter.',
-        build:
-          'Diese Version wurde ohne lokales Modell gebaut. Die normale Version von Nemo hat es – dort lädst du hier ein Modell herunter.',
+        build: 'Diese Version wurde ohne lokales Modell gebaut.',
         cpu: 'Dein Prozessor ist zu alt (er braucht AVX2).',
       } as Record<string, string>,
       getStable: 'Normale Version holen',

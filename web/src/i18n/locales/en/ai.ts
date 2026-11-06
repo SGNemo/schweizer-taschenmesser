@@ -177,8 +177,7 @@ export const ai: Strings['ai'] = {
         'There is no local model on Android. The Windows app has one. Here the AI answers through a provider under “AI assistant”.',
       testBuild:
         'The local model is not built into the test version. The regular version of Nemo has it – there you download a model right here.',
-      build:
-        'This version was built without the local model. The regular version of Nemo has it – there you download a model right here.',
+      build: 'This version was built without the local model.',
       cpu: 'Your processor is too old (it needs AVX2).',
     } as Record<string, string>,
     getStable: 'Get the regular version',

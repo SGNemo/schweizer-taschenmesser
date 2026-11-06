@@ -94,6 +94,18 @@ describe('LocalModelSection', () => {
     expect(screen.getByText(l.next.pick)).toBeInTheDocument();
   });
 
+  it('a new download replaces a chosen model whose file is gone', async () => {
+    install();
+    const { writeLocalPrefs } = await import('@/core/ai/local/prefs');
+    writeLocalPrefs({ file: 'cancelled-earlier.gguf' });
+    const user = userEvent.setup();
+    render(<LocalModelSection models={[pinned]} />);
+    await user.click(await screen.findByTestId('local-next-download-test-model'));
+    await user.click(screen.getByTestId('local-consent-confirm'));
+    expect(await screen.findByText(l.next.ready)).toBeInTheDocument();
+    expect(getLocalPrefs().file).toBe(pinned.file);
+  });
+
   it('turns the next step into a test question once the model is there', async () => {
     install({ models: [{ file: pinned.file, bytes: pinned.bytes }] });
     localStorage.clear();

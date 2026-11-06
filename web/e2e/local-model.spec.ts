@@ -31,13 +31,15 @@ test('browser: no local model, no link to another download', async ({ page }) =>
   await expect(section.getByTestId('local-get-stable')).toHaveCount(0);
 });
 
-test('desktop build without the model: says so and links the regular version', async ({ page }) => {
+test('other desktop build without the model: says so, no link (the link is for the test version)', async ({
+  page,
+}) => {
   await pose(page, 'desktop', 'build');
   const section = await openSection(page);
-  await expect(section.getByTestId('local-unavailable')).toContainText(
-    'Die normale Version von Nemo hat es',
+  await expect(section.getByTestId('local-unavailable')).toHaveText(
+    'Diese Version wurde ohne lokales Modell gebaut.',
   );
-  await expect(section.getByTestId('local-get-stable')).toHaveText('Normale Version holen');
+  await expect(section.getByTestId('local-get-stable')).toHaveCount(0);
 });
 
 test('desktop with the model: next step goes from choice to download to test question', async ({

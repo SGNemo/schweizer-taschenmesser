@@ -168,7 +168,7 @@ export function LocalModelSection({
         hint={t.help.aiLocal}
       >
         <p data-testid="local-unavailable">{l.unavailable[gap]}</p>
-        {gap === 'testBuild' || gap === 'build' ? (
+        {gap === 'testBuild' ? (
           <p>
             <Button
               onClick={() => void getPlatform().app.openUrl(STABLE_RELEASE_PAGE)}
@@ -184,7 +184,10 @@ export function LocalModelSection({
 
   const ready = Boolean(prefs.file && downloaded.has(prefs.file));
   const downloading = busy === 'download' && progress !== undefined;
-  const suggestions = suggestedModels(models, recommended);
+  const suggestions = suggestedModels(
+    models.filter((m) => !downloaded.has(m.file)),
+    recommended,
+  );
 
   return (
     <SettingsGroup id="ai-local" title={l.title} description={l.description} hint={t.help.aiLocal}>
@@ -405,7 +408,8 @@ export function LocalModelSection({
           onConfirm={() => {
             const model = asking;
             setAsking(undefined);
-            if (!prefs.file) writeLocalPrefs({ file: model.file });
+            // A choice whose file is gone (cancelled, failed, removed) is replaced by the new download.
+            if (!prefs.file || !downloaded.has(prefs.file)) writeLocalPrefs({ file: model.file });
             void download(model);
           }}
         />
