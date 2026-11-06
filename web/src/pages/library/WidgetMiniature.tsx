@@ -1,8 +1,19 @@
-import type { WidgetVariant } from '@/core/modules/types';
+import type { SignatureId, WidgetVariant } from '@/core/modules/types';
 import styles from './WidgetMiniature.module.css';
 
 /** Heights of the rising bars of the figure variant (a sketch of a sparkline, not data). */
 const SPARK = [30, 42, 36, 55, 48, 70, 62];
+
+/** Fills of the bars sketch (a sketch, not data). */
+const BARS = [62, 85, 40];
+
+/**
+ * N06: the `fortschritt` shape comes as rings (habits, drives) or bars (planner, budgets, downloads). The library
+ * has no widget code at hand, so the module's signature tells: ring-shaped signatures draw rings, the rest bars.
+ */
+export function progressForm(signature?: SignatureId): 'rings' | 'bars' {
+  return signature === 'ring' || signature === 'gauges' ? 'rings' : 'bars';
+}
 
 /**
  * A drawn sketch of a widget's shape (identity v3 widget variants): boxes and bars, no text, no data. The
@@ -12,15 +23,20 @@ const SPARK = [30, 42, 36, 55, 48, 70, 62];
  */
 export function WidgetMiniature({
   variant,
+  signature,
   size = 'sm',
 }: {
   variant: WidgetVariant;
+  /** The module's signature: picks rings or bars for `fortschritt` (N06). */
+  signature?: SignatureId;
   size?: 'sm' | 'lg';
 }) {
+  const form = variant === 'fortschritt' ? progressForm(signature) : undefined;
   return (
     <span
       className={styles.mini}
       data-variant={variant}
+      data-form={form}
       data-size={size}
       aria-hidden="true"
       data-testid="widget-miniature"
@@ -46,7 +62,19 @@ export function WidgetMiniature({
           ))}
         </>
       ) : null}
-      {variant === 'fortschritt' ? (
+      {form === 'bars' ? (
+        <span className={styles.stack}>
+          {BARS.map((w, i) => (
+            <span key={i} className={styles.barRow}>
+              <span className={styles.line} data-w={i} />
+              <span className={styles.bar}>
+                <span style={{ width: `${w}%` }} />
+              </span>
+            </span>
+          ))}
+        </span>
+      ) : null}
+      {form === 'rings' ? (
         <>
           <span className={styles.ring} />
           <span className={styles.stack}>

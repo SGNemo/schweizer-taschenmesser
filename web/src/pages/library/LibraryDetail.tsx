@@ -74,7 +74,7 @@ export function LibraryDetail() {
       />
       <div className={styles.body}>
         <Card className={styles.preview} data-hue={m.identity.hue}>
-          <WidgetMiniature variant={m.identity.widget} size="lg" />
+          <WidgetMiniature variant={m.identity.widget} signature={m.identity.signature} size="lg" />
           <p className={styles.caption}>{d.widget}</p>
         </Card>
         <Card className={styles.facts}>

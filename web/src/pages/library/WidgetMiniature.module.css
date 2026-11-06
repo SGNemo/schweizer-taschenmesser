@@ -90,7 +90,25 @@
   background: conic-gradient(var(--mini-ink) 0 62%, var(--mini-soft) 62% 100%);
   mask: radial-gradient(circle, transparent 55%, var(--text) 56%);
 }
-.mini[data-variant='fortschritt'],
+.bar {
+  display: block;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--mini-soft);
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mini-ink);
+}
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.mini[data-form='rings'],
 .mini[data-variant='cover'] {
   flex-direction: row;
   align-items: center;
