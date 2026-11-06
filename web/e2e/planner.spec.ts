@@ -158,6 +158,35 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
   });
 
+  test('the ToDo page counts what the plan counts and has no „Alle auf heute“ (N02)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/todos');
+    const add = page.getByRole('textbox', { name: 'ToDo hinzufügen' });
+    await add.fill('Alte Sache gestern 60min');
+    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    // Without the plan the overdue thing is on today.
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('1');
+    // Today off: the planner puts the overdue thing on Tuesday.
+    await page.goto('/planner');
+    await today(page)
+      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .click();
+    await page.getByRole('dialog').getByTestId('day-off').click();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
+    // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
+    await page.goto('/todos?view=today');
+    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('0');
+    await expect(page.getByRole('button', { name: /Alte Sache/ })).toHaveCount(0);
+    await page.goto('/todos');
+    await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    await expect(page.getByTestId('all-today')).toHaveCount(0);
+  });
+
   test('Erledigt and Rückgängig, Festnageln, Später; the ToDo page shows „im Plan“', async ({
     page,
   }) => {

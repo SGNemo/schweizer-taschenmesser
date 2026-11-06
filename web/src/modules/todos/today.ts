@@ -81,7 +81,9 @@ export interface Today<T extends PickTask> {
 }
 
 export function buildToday<T extends PickTask>(input: TodayInput<T>): Today<T> {
-  const next = input.showNext ? pickNext(input.tasks, input.day, input.skipped) : undefined;
+  const next = input.showNext
+    ? pickNext(input.tasks, input.day, input.skipped, input.planMarks ?? true)
+    : undefined;
   const plan = dayPlan(input.tasks, input.day, input.planLimit, input.planMarks ?? true);
   return {
     next,
