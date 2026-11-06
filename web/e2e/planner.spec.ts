@@ -96,6 +96,47 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(today(page)).toContainText('neu, nach Priorität');
   });
 
+  test('board titles break between words, never inside one, at 1920 and 1280 (N01)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await ready(page, '/planner');
+    for (const text of [
+      'Steuererklärung vorbereiten 30min',
+      'Urlaubsantrag einreichen 20min',
+      'Quartalsbericht schreiben 30min',
+    ])
+      await enter(page, text);
+    await expect(today(page)).toContainText('Quartalsbericht');
+    // Per word of every board title: one line box (not split), inside the title box (not cut off).
+    const broken = () =>
+      page.evaluate(() => {
+        const out: string[] = [];
+        for (const el of Array.from(document.querySelectorAll('[data-board-title]'))) {
+          const box = el.getBoundingClientRect();
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            const text = node.textContent ?? '';
+            for (const m of text.matchAll(/\S+/g)) {
+              const range = document.createRange();
+              range.setStart(node, m.index);
+              range.setEnd(node, m.index + m[0].length);
+              const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0);
+              const tops = new Set(rects.map((r) => Math.round(r.top)));
+              const right = Math.max(...rects.map((r) => r.right));
+              if (tops.size > 1 || right > box.right + 1) out.push(m[0]);
+            }
+          }
+        }
+        return out;
+      });
+    await expect(page.locator('[data-board-title]')).toHaveCount(3);
+    await expect.poll(broken).toEqual([]);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect.poll(broken).toEqual([]);
+  });
+
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');

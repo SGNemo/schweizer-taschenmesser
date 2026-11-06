@@ -77,6 +77,45 @@
   margin: 0;
   accent-color: var(--module-color);
 }
+
+/* N01: a board column is ~210 px at 1920. The row gives its title the room – slim gap and padding, a smaller box,
+   no 10 rem floor on the main button, the ⋯ menu floats over the row end on hover devices – and a title takes at
+   most two lines, broken between words; a word wider than the column ends in „…“ instead of breaking inside. */
+.boardRow {
+  position: relative;
+}
+.boardRow > div {
+  gap: var(--space-2);
+  padding-inline: var(--space-1);
+}
+.boardRow [data-row] {
+  min-width: 0;
+}
+.boardRow .check {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+@media (hover: hover) {
+  .boardRow [data-row-actions] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+  }
+}
+.boardTitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+  text-overflow: ellipsis;
+}
 .minutes {
   color: var(--text-3);
   font-size: var(--text-meta);

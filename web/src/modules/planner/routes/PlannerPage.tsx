@@ -337,12 +337,18 @@ export default function PlannerPage() {
       <ItemRow
         key={row.unitId}
         title={
-          <span title={reason}>
+          // N01: in the seven-column board a title takes at most two lines and ends at a word, never inside one.
+          <span
+            title={wide ? `${row.title} – ${reason}` : reason}
+            className={wide ? styles.boardTitle : undefined}
+            data-board-title={wide || undefined}
+          >
             {row.title}
             {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
           </span>
         }
         titleFull
+        className={wide ? styles.boardRow : undefined}
         // The minutes lead the meta line (a column is too narrow for a trailing figure), the deadline
         // follows, the reason only while „Warum hier?“ is on.
         meta={

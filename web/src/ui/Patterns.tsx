@@ -312,7 +312,10 @@ export function ItemRow({
         )}
         {end}
         {actions || menu?.length ? (
-          <div className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''}`}>
+          <div
+            className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''}`}
+            data-row-actions
+          >
             {actions}
             {menu?.length ? (
               <RowMenu
