@@ -217,6 +217,10 @@
 .blockerMin {
   width: 6rem;
 }
+/* A time input carries its clock icon (package 5: window and blocker times). */
+.timeField {
+  width: 8rem;
+}
 
 /* The preview of a sentence or of „Neu verteilen“: under the field, nothing stored until „Übernehmen“. */
 .preview {

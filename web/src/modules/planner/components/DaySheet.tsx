@@ -88,7 +88,7 @@ export function DaySheet({
       </div>
       <p className={styles.capacity}>{capacityLabel(day)}</p>
       <form className={styles.blockerForm} onSubmit={submitWindow} data-testid="day-window">
-        <div className={styles.blockerMin}>
+        <div className={styles.timeField}>
           <TextField
             label={t.planner.day.windowFrom}
             type="time"
@@ -96,7 +96,7 @@ export function DaySheet({
             onChange={(e) => setWinFrom(e.target.value)}
           />
         </div>
-        <div className={styles.blockerMin}>
+        <div className={styles.timeField}>
           <TextField
             label={t.planner.day.windowTo}
             type="time"
@@ -167,7 +167,7 @@ export function DaySheet({
         </div>
         {day.window ? (
           <>
-            <div className={styles.blockerMin}>
+            <div className={styles.timeField}>
               <TextField
                 label={t.planner.day.blockerFrom}
                 type="time"
@@ -175,7 +175,7 @@ export function DaySheet({
                 onChange={(e) => setBlockFrom(e.target.value)}
               />
             </div>
-            <div className={styles.blockerMin}>
+            <div className={styles.timeField}>
               <TextField
                 label={t.planner.day.blockerTo}
                 type="time"
