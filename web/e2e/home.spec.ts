@@ -38,7 +38,7 @@ test.describe('Home screen', () => {
     for (let i = 0; i < n; i++) {
       const w = widgets.nth(i);
       if (!(await w.isVisible())) continue;
-      const mark = w.getByTestId('widget-mark');
+      const mark = w.getByTestId('signature-mark');
       await expect(mark).toHaveCount(1);
       await expect(mark).toHaveAttribute('aria-hidden', 'true');
       await expect(mark.locator('svg[data-signature]')).toHaveCount(1);

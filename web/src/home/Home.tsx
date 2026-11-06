@@ -504,7 +504,7 @@ function SortableWidget({
           {/* N05: the head signature as a small line mark, same place in every widget variant – the widget is
               told apart by form, not only by colour or title. Decoration only. */}
           {manifest && manifest.identity.signature !== 'none' ? (
-            <span className={styles.mark} aria-hidden="true" data-testid="widget-mark">
+            <span className={styles.mark} aria-hidden="true" data-testid="signature-mark">
               <SignatureMark id={manifest.identity.signature} size={22} />
             </span>
           ) : null}
