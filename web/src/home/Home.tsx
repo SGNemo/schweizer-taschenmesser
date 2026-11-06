@@ -31,6 +31,7 @@ import { tComfort } from '@/strings.comfort';
 import { tCockpit } from '@/strings.cockpit';
 import { enterCockpit } from '@/layout/useCockpit';
 import { HOME_VIEWS, useUiStore } from '@/stores/ui';
+import { SignatureMark } from '@/ui/identity';
 import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
@@ -500,6 +501,13 @@ function SortableWidget({
               entry.title
             )}
           </h2>
+          {/* N05: the head signature as a small line mark, same place in every widget variant – the widget is
+              told apart by form, not only by colour or title. Decoration only. */}
+          {manifest && manifest.identity.signature !== 'none' ? (
+            <span className={styles.mark} aria-hidden="true" data-testid="widget-mark">
+              <SignatureMark id={manifest.identity.signature} size={22} />
+            </span>
+          ) : null}
           {!editing && settingsTo ? (
             <span className={styles.gear}>
               <SettingsLink to={settingsTo} label={tComfort.get().gear.module} />

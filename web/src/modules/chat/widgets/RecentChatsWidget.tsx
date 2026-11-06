@@ -4,7 +4,6 @@ import { relativeDays } from '@/core/i18n/format';
 import { daysBetween, formatDay, toDateString, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { NotizBody, WidgetBody } from '@/ui';
-import { SignatureMark } from '@/ui/identity';
 import { sortThreads } from '../logic';
 import { threadRepo } from '../repo';
 import styles from './RecentChatsWidget.module.css';
@@ -34,7 +33,6 @@ export default function RecentChatsWidget() {
       {first ? (
         <Link to={`/chat?t=${first.id}`} className={styles.open}>
           <NotizBody
-            mark={<SignatureMark id="bubble" size={24} />}
             title={first.title}
             lines={rest.map((x) => x.title)}
             meta={t.chat.widget.context(threads!.length, when)}

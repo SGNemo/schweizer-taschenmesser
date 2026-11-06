@@ -218,6 +218,12 @@
   cursor: pointer;
 }
 /* Context gear of a widget: with a mouse it appears on hover or keyboard focus, on touch it is always there. */
+/* N05: the signature mark at the right end of the head, in every variant; ink, not hue (readable without colour). */
+.mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-muted);
+}
 .gear {
   display: inline-flex;
 }

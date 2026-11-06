@@ -28,6 +28,27 @@ test.describe('Home screen', () => {
     await expect(nav.getByRole('link', { name: 'Übersicht' })).toBeVisible();
   });
 
+  test('N05: every widget head carries its signature mark at the same place, hidden from assistive tech', async ({
+    page,
+  }) => {
+    await ready(page, '/');
+    const widgets = page.locator('[data-testid^="widget-"][data-widget]');
+    await expect(widgets.first()).toBeVisible();
+    const n = await widgets.count();
+    for (let i = 0; i < n; i++) {
+      const w = widgets.nth(i);
+      if (!(await w.isVisible())) continue;
+      const mark = w.getByTestId('widget-mark');
+      await expect(mark).toHaveCount(1);
+      await expect(mark).toHaveAttribute('aria-hidden', 'true');
+      await expect(mark.locator('svg[data-signature]')).toHaveCount(1);
+      // In the head row next to the title, at its right end, whatever the widget variant.
+      const [hb, mb] = [await w.locator('h2').first().boundingBox(), await mark.boundingBox()];
+      expect(Math.abs(hb!.y + hb!.height / 2 - (mb!.y + mb!.height / 2))).toBeLessThan(12);
+      expect(mb!.x).toBeGreaterThanOrEqual(hb!.x + hb!.width - 1);
+    }
+  });
+
   test('Alt+Home goes to the home screen', async ({ page }, info) => {
     test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
     await ready(page, '/todos');

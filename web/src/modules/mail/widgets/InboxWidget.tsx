@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
 import { t } from '@/strings';
 import { NotizBody, WidgetBody } from '@/ui';
-import { SignatureMark } from '@/ui/identity';
 import { personName, subjectOf } from '../format';
 import { INVOICE_DAYS, useMailSummary } from '../useSummary';
 import styles from './InboxWidget.module.css';
@@ -23,7 +22,6 @@ export default function InboxWidget() {
       {s && !empty ? (
         <>
           <NotizBody
-            mark={<SignatureMark id="stamp" size={24} />}
             title={t.mail.widget.inboxTitle(s.unread)}
             lines={s.top
               .slice(0, 2)
