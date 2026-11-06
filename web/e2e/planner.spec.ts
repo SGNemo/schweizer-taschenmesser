@@ -609,3 +609,65 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 });
+
+test.describe('Planer (time windows, templates – package 5)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('a window on the day sheet puts the sessions as blocks into the hour grid', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Blogpost 90min');
+    await enter(page, 'Keller 30min');
+    await expect(today(page)).toContainText('Keller');
+    await today(page)
+      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .click();
+    const sheet = page.getByRole('dialog');
+    await expect(sheet).toContainText('Ohne Zeitfenster');
+    const form = sheet.getByTestId('day-window');
+    await form.getByLabel('Von').fill('09:00');
+    await form.getByLabel('Bis').fill('12:00');
+    await form.getByRole('button', { name: 'Fenster setzen' }).click();
+    await expect(sheet).toContainText('Zeitfenster 09:00–12:00 – nur an diesem Tag.');
+    // Minutes stay the truth: the window changes nothing about what is planned.
+    await expect(sheet.getByTestId('day-available')).toHaveText('4 h');
+    await page.keyboard.press('Escape');
+    // The week view is the hour grid from 1400 px. Both things were entered in the same (fixed) minute,
+    // so their order is the id tie-break: the first starts at 09:00, the second after a pause.
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await ready(page, '/calendar?view=week&date=2026-11-09');
+    const grid = page.getByRole('group', { name: 'Zeitraster' });
+    const blog = grid.getByRole('button').filter({ hasText: 'Blogpost' });
+    const cellar = grid.getByRole('button').filter({ hasText: 'Keller' });
+    await expect(blog).toHaveText(/^(09:00|09:45) Blogpost$/);
+    await expect(cellar).toHaveText(/^(09:00|10:45) Keller$/);
+    expect(
+      [await blog.textContent(), await cellar.textContent()].some((x) => x?.startsWith('09:00')),
+    ).toBe(true);
+    // Every session of Monday has a time: no summary chip for Monday (other days keep theirs).
+    await expect(grid.getByRole('button').filter({ hasText: 'Plan · ' })).toHaveCount(0);
+  });
+
+  test('„Woche prüfen“ → „Krank“: today is free, one calm sentence, undo', async ({ page }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Blogpost 90min');
+    await page.getByRole('button', { name: 'Weitere Optionen' }).click();
+    await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
+    await dialog
+      .getByRole('group', { name: 'Vorlage für die Woche' })
+      .getByRole('button', { name: 'Krank' })
+      .click();
+    await dialog.getByRole('button', { name: 'Passt so' }).click();
+    await expect(page.getByText('Ruh dich aus – der Plan rückt ruhig weiter.')).toBeVisible();
+    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(page.getByTestId('day-2026-11-10')).toContainText('Blogpost');
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+  });
+});
