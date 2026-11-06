@@ -102,11 +102,12 @@
 .boardRow [data-row] {
   min-width: 0;
 }
-.boardRow .check {
-  width: 1.125rem;
-  height: 1.125rem;
-}
 @media (hover: hover) {
+  /* A smaller box only with a pointer; a touch screen keeps the 24 px box. */
+  .boardRow .check {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
   .boardRow [data-row-actions] {
     position: absolute;
     inset-block-start: 0;

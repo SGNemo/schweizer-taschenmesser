@@ -117,6 +117,15 @@ const plannerNote = planner && planner.status !== 'default' ? m.status[planner.s
     display: none;
     width: 100%;
   }
+  @media (min-width: 48rem) {
+    .spot {
+      grid-template-columns: minmax(0, 34rem) auto;
+      justify-content: center;
+      column-gap: var(--space-7);
+      padding: var(--space-5) var(--space-6);
+    }
+  }
+  /* After the 48rem block: both set the spot's columns, the later one wins from 64rem. */
   @media (min-width: 64rem) {
     .spot {
       grid-template-columns: minmax(0, 20rem) minmax(0, 38rem);
@@ -126,14 +135,6 @@ const plannerNote = planner && planner.status !== 'default' ? m.status[planner.s
     }
     .spot :global(.spotwide) {
       display: block;
-    }
-  }
-  @media (min-width: 48rem) {
-    .spot {
-      grid-template-columns: minmax(0, 34rem) auto;
-      justify-content: center;
-      column-gap: var(--space-7);
-      padding: var(--space-5) var(--space-6);
     }
   }
   .areas {

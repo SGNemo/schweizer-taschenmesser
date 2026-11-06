@@ -201,6 +201,9 @@ describe('Heute card', () => {
 });
 
 describe('with the planner module on', () => {
+  beforeEach(async () => {
+    await db.table('_modules').delete('planner');
+  });
   const plannerOn = () =>
     db.table('_modules').put({
       id: 'planner',
@@ -235,8 +238,6 @@ describe('with the planner module on', () => {
       planMark: { date: '2026-11-05', order: 0 },
     });
     await patchFocusSettings({ calmAttention: false });
-    // Starts with the planner off (an earlier test of this block left it on).
-    await db.table('_modules').delete('planner');
     const first = draw('/todos');
     await waitFor(() => expect(screen.getByTestId('all-today')).toBeInTheDocument());
     first.unmount();

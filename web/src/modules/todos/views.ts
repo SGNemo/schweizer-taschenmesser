@@ -52,8 +52,7 @@ export function viewOf(task: V, day: string, planner = false): TodoView {
 export const isLaterInPlan = (task: Marked, day: string): boolean =>
   isPlannerOwned(task) && task.plannedFor! > day;
 
-export const inView = (task: V, view: TodoView, day: string, planner = false): boolean =>
-  viewOf(task, day, planner) === view;
+export const inView = (task: V, view: TodoView, day: string): boolean => viewOf(task, day) === view;
 
 export type MovePatch = Partial<
   Pick<
