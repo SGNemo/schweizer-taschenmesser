@@ -136,6 +136,8 @@ export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
         placeholder={o.samplePlaceholder}
         value={text}
         autoComplete="off"
+        // Like the real capture field: no browser spellcheck, so the typed sentence never leaves the device.
+        spellCheck={false}
         onChange={(e) => setText(e.target.value)}
       />
       <ul className={styles.sampleChips} aria-label={o.sampleResult} aria-live="polite">
