@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { checkToolKeywords, checkToolManifest, checkToolNeighbours, toolFacts } from './checkTools';
+import {
+  checkToolKeywords,
+  checkToolManifest,
+  checkToolNeighbours,
+  toolFacts,
+  toolModuleKinship,
+} from './checkTools';
 
 const good = `
 const tool = {
@@ -52,5 +58,28 @@ describe('checkToolKeywords', () => {
     expect(checkToolKeywords('calc', 'de', de)).toEqual([]);
     expect(checkToolKeywords('dev', 'de', de)).toEqual([expect.stringContaining('no `keywords`')]);
     expect(checkToolKeywords('qr', 'de', de)).toEqual([expect.stringContaining('no text block')]);
+  });
+});
+
+describe('toolModuleKinship (F13)', () => {
+  const tool = (id: string, signature: string, hue = 'sky') => ({
+    ...toolFacts(id, ''),
+    signature,
+    hue,
+  });
+  it('names a tool that shares a signature with a module, and the hue when that is shared too', () => {
+    const notes = toolModuleKinship(
+      [tool('dates', 'calendarLeaf', 'sky'), tool('calc', 'display', 'violet')],
+      [
+        { id: 'calendar', hue: 'sky', signature: 'calendarLeaf' },
+        { id: 'notes', hue: 'violet', signature: 'notePaper' },
+      ],
+    );
+    expect(notes).toEqual([
+      'tool dates shares the signature "calendarLeaf" and the hue "sky" with the module calendar',
+    ]);
+  });
+  it('ignores "none"', () => {
+    expect(toolModuleKinship([tool('x', 'none')], [{ id: 'm', signature: 'none' }])).toEqual([]);
   });
 });

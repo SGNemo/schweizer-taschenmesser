@@ -131,7 +131,7 @@ Pages keep their content until their module package rebuilds them on the v3.1 gr
 
 ## Tools
 
-Tools speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature, type? }`, `category`, `keywords` (`npm run check:tools`; neighbours never share a hue; `signature` from the shared `SIGNATURES`). The toolbox (`layout/tools`): list left, the tool right on a `HeadSurface` in its hue (plate, one line, the mark). Tool ids: `display`, `flow`, `ring`, `calendarLeaf`, `globe`, `dice`, `qrFrame`, `idCard`, `notePaper`, `photoFrame`, `pageStack`, `viewfinder`, `terminal`, `splitPage`, `pattern`; mapping in each `tools/<id>/manifest.ts`. Recipe: [howto/new-tool.md](../howto/new-tool.md); contents built with `tools/kit.tsx`.
+Tools speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature, type? }`, `category`, `keywords` (`npm run check:tools`; neighbours never share a hue; `signature` from the shared `SIGNATURES`). The toolbox (`layout/tools`): list left, the tool right on a `HeadSurface` in its hue (plate, one line, the mark). Tool ids: `display`, `flow`, `ring`, `calendarLeaf`, `globe`, `dice`, `qrFrame`, `idCard`, `notePaper`, `photoFrame`, `pageStack`, `viewfinder`, `terminal`, `splitPage`, `pattern`; mapping in each `tools/<id>/manifest.ts`. Recipe: [howto/new-tool.md](../howto/new-tool.md); contents built with `tools/kit.tsx`. **A tool is not a module:** it may share a module's signature and hue (Datum ↔ Kalender, Timer ↔ Gewohnheiten, Text ↔ Notizen), because the same page never shows both; `check:tools` lists these overlaps as information, never as a failure (F13).
 
 ## Clarifications (audit 2026-11-04, kept as rules)
 

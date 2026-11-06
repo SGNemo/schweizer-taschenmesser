@@ -110,7 +110,7 @@ export function DriveCard({
         <div className={styles.head}>
           <div className={styles.name}>
             <h3 className={styles.title}>{name}</h3>
-            {d.isSystem ? <Badge tone="accent">{c.systemDrive}</Badge> : null}
+            {d.isSystem ? <Badge tone="neutral">{c.systemDrive}</Badge> : null}
           </div>
           <p className={styles.numbers}>
             {t.disk.usedOf(formatCapacity(used), formatCapacity(d.totalBytes))}

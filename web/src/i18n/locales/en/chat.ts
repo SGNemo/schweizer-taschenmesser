@@ -14,7 +14,6 @@ export const chat: Strings['chat'] = {
   chats: 'Chats',
   search: 'Search chats',
   empty: 'No chat yet. Ask a question – nothing is saved before you send.',
-  emptyAction: 'Start chat',
   noThread: 'Pick a chat on the left or start a new one.',
   back: 'Back to chat list',
   placeholder: 'Write a message …',

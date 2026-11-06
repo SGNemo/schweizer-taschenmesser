@@ -20,7 +20,7 @@
   text-transform: uppercase;
 }
 .leadTitle {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
   line-height: 1.15;
@@ -36,5 +36,5 @@
   list-style: none;
 }
 .heads h2 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-serif);
 }
