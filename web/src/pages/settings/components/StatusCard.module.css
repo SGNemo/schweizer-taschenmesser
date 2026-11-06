@@ -1,7 +1,7 @@
 /* Status card of a settings tab (identity v3.1): tokens only, a hairline all around, no edge stripe. The tint is the
    tab's hue (`--tab-color` from `data-tab-hue` on the category page); "Ruhig" and "Modulfarben: Aus" turn the
    `--mod-*` tokens grey, so the card follows. */
-/* The tab's hue (`data-tab-hue` on the category page) for the status card only. */
+/* One rule per hue of `MODULE_HUES` (core/modules/types.ts); categories pick theirs in `categoryLook.ts`. */
 [data-tab-hue='lime'] {
   --tab-color: var(--mod-lime);
 }
