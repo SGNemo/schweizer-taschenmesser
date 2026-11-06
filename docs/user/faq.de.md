@@ -12,7 +12,7 @@ Nein. Auf dem iPhone lässt sich die PWA im Browser nutzen (ohne Push).
 Ja. Einstellungen → Backup erzeugt eine Datei mit allem außer Zugangsdaten; der Tresor hat einen eigenen verschlüsselten Export. Details: [Backup](backup.de.md).
 
 ## Welche Sprachen spricht die App?
-Deutsch und Englisch. Die App folgt der Gerätesprache; ändern kannst du sie unter Einstellungen → Allgemein. Deine eigenen Einträge werden nie übersetzt. Die Schnellerfassung versteht vorerst nur deutsche Sätze.
+Deutsch und Englisch. Die App folgt der Gerätesprache (bei anderen Gerätesprachen Englisch); ändern kannst du sie unter Einstellungen → Allgemein. Deine eigenen Einträge werden nie übersetzt. Die Schnellerfassung versteht vorerst nur deutsche Sätze.
 
 ## Heißt das Projekt nicht „Schweizer Taschenmesser“?
 Das war der alte Name. Technische Kennungen (Paketname, Dateipfade) behalten ihn, damit Updates und Daten erhalten bleiben.
