@@ -177,10 +177,23 @@ export const ai: Strings['ai'] = {
     title: 'Modèle local',
     description: 'Étape 1 lors de l’ajout : gratuit et hors ligne, avant le cloud.',
     unavailable: {
-      platform: 'Le modèle local n’existe que dans l’application Windows.',
-      build: 'Cette version a été compilée sans modèle local.',
+      browser: 'Dans le navigateur, il n’y a pas de modèle local. L’application Windows en a un.',
+      android:
+        'Sur Android, il n’y a pas de modèle local. L’application Windows en a un. Ici, l’IA répond via un fournisseur sous « Assistant IA ».',
+      testBuild:
+        'Le modèle local n’est pas intégré à la version de test. La version normale de Nemo l’a : là, vous téléchargez un modèle ici même.',
+      build:
+        'Cette version a été compilée sans modèle local. La version normale de Nemo l’a : là, vous téléchargez un modèle ici même.',
       cpu: 'Votre processeur est trop ancien (il lui faut AVX2).',
     } as Record<string, string>,
+    getStable: 'Obtenir la version normale',
+    next: {
+      title: 'Étape suivante',
+      pick: 'Téléchargez l’un de ces modèles. Ensuite, il fonctionne hors ligne sur cet appareil.',
+      downloading: 'Le modèle est en cours de téléchargement.',
+      ready: 'Le modèle est là. Posez-lui une question de test.',
+      ask: 'Poser une question de test',
+    },
     status: 'Statut',
     loaded: (label: string, backend: string, memory: string) =>
       `Chargé : ${label} · ${backend} · ${memory}`,
@@ -198,7 +211,7 @@ export const ai: Strings['ai'] = {
     gpuNone: 'Aucune carte graphique détectée – cette version calcule avec le processeur.',
     backendCpu: 'Processeur',
     backendGpu: 'Carte graphique',
-    models: 'Modèles',
+    models: 'Tous les modèles',
     profile: { standard: 'Standard', light: 'Léger' } as Record<string, string>,
     recommended: 'Recommandé pour cet appareil',
     size: (gb: string) => `${gb} Go`,
@@ -398,6 +411,8 @@ export const ai: Strings['ai'] = {
       `Démarrez Ollama et autorisez cette app : définissez la variable d’environnement OLLAMA_ORIGINS sur ${origin} et redémarrez Ollama. Puis « Tester la connexion ».`,
     ollamaHelpNative:
       'Ollama ne tourne pas ou n’est pas installé. Vous n’en avez pas forcément besoin : téléchargez le modèle local intégré dans Réglages → Modèle local. Ou installez Ollama et démarrez-le (port 11434), puis « Tester la connexion ».',
+    ollamaHelpNoLocal:
+      'Ollama ne tourne pas ou n’est pas installé. Installez Ollama et démarrez-le (port 11434), puis « Tester la connexion ».',
     ollamaDownload: 'Télécharger Ollama',
     statusRunning: 'En marche',
     statusDown: 'Inaccessible',

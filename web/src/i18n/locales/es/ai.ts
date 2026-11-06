@@ -176,10 +176,23 @@ export const ai: Strings['ai'] = {
     title: 'Modelo local',
     description: 'Paso 1 al añadir: gratis y sin conexión, antes de la nube.',
     unavailable: {
-      platform: 'El modelo local solo está disponible en la app de Windows.',
-      build: 'Esta versión se compiló sin modelo local.',
+      browser: 'En el navegador no hay modelo local. En la app de Windows sí.',
+      android:
+        'En Android no hay modelo local. En la app de Windows sí. Aquí la IA responde a través de un proveedor en «Asistente de IA».',
+      testBuild:
+        'La versión de prueba no incluye el modelo local. La versión normal de Nemo sí lo tiene: allí descargas un modelo aquí mismo.',
+      build:
+        'Esta versión se compiló sin modelo local. La versión normal de Nemo sí lo tiene: allí descargas un modelo aquí mismo.',
       cpu: 'Tu procesador es demasiado antiguo (necesita AVX2).',
     } as Record<string, string>,
+    getStable: 'Obtener la versión normal',
+    next: {
+      title: 'Siguiente paso',
+      pick: 'Descarga uno de estos modelos. Después funciona sin conexión en este dispositivo.',
+      downloading: 'El modelo se está descargando.',
+      ready: 'El modelo ya está. Hazle una pregunta de prueba.',
+      ask: 'Hacer una pregunta de prueba',
+    },
     status: 'Estado',
     loaded: (label: string, backend: string, memory: string) =>
       `Cargado: ${label} · ${backend} · ${memory}`,
@@ -196,7 +209,7 @@ export const ai: Strings['ai'] = {
     gpuNone: 'No se detectó ninguna tarjeta gráfica: esta versión calcula con el procesador.',
     backendCpu: 'Procesador',
     backendGpu: 'Tarjeta gráfica',
-    models: 'Modelos',
+    models: 'Todos los modelos',
     profile: { standard: 'Estándar', light: 'Ligero' } as Record<string, string>,
     recommended: 'Recomendado para este dispositivo',
     size: (gb: string) => `${gb} GB`,
@@ -392,6 +405,8 @@ export const ai: Strings['ai'] = {
       `Inicia Ollama y permite esta app: define la variable de entorno OLLAMA_ORIGINS como ${origin} y reinicia Ollama. Después usa «Probar conexión».`,
     ollamaHelpNative:
       'Ollama no está en marcha o no está instalado. No lo necesitas por fuerza: descarga el modelo local integrado en Ajustes → Modelo local. O instala Ollama e inícialo (puerto 11434) y usa «Probar conexión».',
+    ollamaHelpNoLocal:
+      'Ollama no está en marcha o no está instalado. Instala Ollama e inícialo (puerto 11434) y usa «Probar conexión».',
     ollamaDownload: 'Descargar Ollama',
     statusRunning: 'En marcha',
     statusDown: 'No accesible',

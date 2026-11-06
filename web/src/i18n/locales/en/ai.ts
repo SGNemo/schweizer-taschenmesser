@@ -172,10 +172,23 @@ export const ai: Strings['ai'] = {
     title: 'Local model',
     description: 'Step 1 when adding entries: free and offline, before the cloud.',
     unavailable: {
-      platform: 'The local model is only available in the Windows app.',
-      build: 'This version was built without the local model.',
+      browser: 'There is no local model in the browser. The Windows app has one.',
+      android:
+        'There is no local model on Android. The Windows app has one. Here the AI answers through a provider under “AI assistant”.',
+      testBuild:
+        'The local model is not built into the test version. The regular version of Nemo has it – there you download a model right here.',
+      build:
+        'This version was built without the local model. The regular version of Nemo has it – there you download a model right here.',
       cpu: 'Your processor is too old (it needs AVX2).',
     } as Record<string, string>,
+    getStable: 'Get the regular version',
+    next: {
+      title: 'Next step',
+      pick: 'Download one of these models. After that it works offline on this device.',
+      downloading: 'The model is downloading.',
+      ready: 'The model is here. Ask it a test question.',
+      ask: 'Ask a test question',
+    },
     status: 'Status',
     loaded: (label: string, backend: string, memory: string) =>
       `Loaded: ${label} · ${backend} · ${memory}`,
@@ -192,7 +205,7 @@ export const ai: Strings['ai'] = {
     gpuNone: 'No graphics card detected – this build uses the processor.',
     backendCpu: 'Processor',
     backendGpu: 'Graphics card',
-    models: 'Models',
+    models: 'All models',
     profile: { standard: 'Standard', light: 'Light' } as Record<string, string>,
     recommended: 'Recommended for this device',
     size: (gb: string) => `${gb} GB`,
@@ -383,6 +396,8 @@ export const ai: Strings['ai'] = {
       `Start Ollama and allow this app: set the environment variable OLLAMA_ORIGINS to ${origin} and restart Ollama. Then use “Test connection”.`,
     ollamaHelpNative:
       'Ollama isn’t running or isn’t installed. You don’t strictly need it: download the built-in local model under Settings → Local model. Or install Ollama and start it (port 11434), then use “Test connection”.',
+    ollamaHelpNoLocal:
+      'Ollama isn’t running or isn’t installed. Install Ollama and start it (port 11434), then use “Test connection”.',
     ollamaDownload: 'Download Ollama',
     statusRunning: 'Running',
     statusDown: 'Not reachable',

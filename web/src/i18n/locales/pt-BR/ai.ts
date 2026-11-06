@@ -174,10 +174,23 @@ export const ai: Strings['ai'] = {
     title: 'Modelo local',
     description: 'Etapa 1 ao adicionar: gratuito e offline, antes da nuvem.',
     unavailable: {
-      platform: 'O modelo local só existe no app para Windows.',
-      build: 'Esta versão foi gerada sem modelo local.',
+      browser: 'No navegador não há modelo local. No app para Windows, sim.',
+      android:
+        'No Android não há modelo local. No app para Windows, sim. Aqui a IA responde por um provedor em “Assistente de IA”.',
+      testBuild:
+        'A versão de teste não traz o modelo local. A versão normal do Nemo tem: lá você baixa um modelo aqui mesmo.',
+      build:
+        'Esta versão foi gerada sem modelo local. A versão normal do Nemo tem: lá você baixa um modelo aqui mesmo.',
       cpu: 'Seu processador é antigo demais (ele precisa de AVX2).',
     } as Record<string, string>,
+    getStable: 'Baixar a versão normal',
+    next: {
+      title: 'Próximo passo',
+      pick: 'Baixe um destes modelos. Depois ele funciona offline neste dispositivo.',
+      downloading: 'O modelo está sendo baixado.',
+      ready: 'O modelo já está aqui. Faça uma pergunta de teste.',
+      ask: 'Fazer uma pergunta de teste',
+    },
     status: 'Status',
     loaded: (label: string, backend: string, memory: string) =>
       `Carregado: ${label} · ${backend} · ${memory}`,
@@ -194,7 +207,7 @@ export const ai: Strings['ai'] = {
     gpuNone: 'Nenhuma placa de vídeo detectada – esta versão usa o processador.',
     backendCpu: 'Processador',
     backendGpu: 'Placa de vídeo',
-    models: 'Modelos',
+    models: 'Todos os modelos',
     profile: { standard: 'Padrão', light: 'Leve' } as Record<string, string>,
     recommended: 'Recomendado para este dispositivo',
     size: (gb: string) => `${gb} GB`,
@@ -390,6 +403,8 @@ export const ai: Strings['ai'] = {
       `Inicie o Ollama e autorize este app: defina a variável de ambiente OLLAMA_ORIGINS como ${origin} e reinicie o Ollama. Depois use “Testar conexão”.`,
     ollamaHelpNative:
       'O Ollama não está em execução ou não está instalado. Você não precisa dele necessariamente: baixe o modelo local integrado em Configurações → Modelo local. Ou instale o Ollama e inicie-o (porta 11434) e use “Testar conexão”.',
+    ollamaHelpNoLocal:
+      'O Ollama não está em execução ou não está instalado. Instale o Ollama e inicie-o (porta 11434) e use “Testar conexão”.',
     ollamaDownload: 'Baixar Ollama',
     statusRunning: 'Em execução',
     statusDown: 'Inacessível',

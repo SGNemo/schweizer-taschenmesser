@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { localModelGap } from '@/core/ai/local/availability';
 import {
   findModelByFile,
   isVerifiable,
@@ -14,6 +15,8 @@ import { loadModuleStates } from '@/core/modules/activation';
 import { activeManifests } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
 import { today } from '@/core/time/dates';
+import { BUILD_CHANNEL } from '@/core/update/buildInfo';
+import { STABLE_RELEASE_PAGE } from '@/core/update/github';
 import { t } from '@/strings';
 import { Badge, Button, Dialog, SettingRow, SettingsGroup, Switch } from '@/ui';
 import styles from './settings.module.css';
@@ -41,6 +44,20 @@ function useRecommendedProfile(): 'standard' | 'light' | undefined {
     };
   }, []);
   return profile;
+}
+
+/**
+ * The two or three models offered as the next step: verifiable ones of the profile that fits this
+ * device (Standard when unknown), in catalogue order (the catalogue lists the preferred first).
+ */
+function suggestedModels(
+  models: readonly CatalogueModel[],
+  profile: 'standard' | 'light' | undefined,
+): (CatalogueModel & { sha256: string })[] {
+  const want = profile ?? 'standard';
+  const usable = models.filter((m): m is CatalogueModel & { sha256: string } => isVerifiable(m));
+  const fit = usable.filter((m) => m.profile === want);
+  return (fit.length > 0 ? fit : usable).slice(0, 3);
 }
 
 function Consent({
@@ -141,9 +158,8 @@ export function LocalModelSection({
   }
 
   if (!status) return null;
-  const unavailable =
-    status.unavailable ?? (getPlatform().localModel.supported ? undefined : 'platform');
-  if (unavailable) {
+  const gap = localModelGap(status, getPlatform().kind, BUILD_CHANNEL);
+  if (gap) {
     return (
       <SettingsGroup
         id="ai-local"
@@ -151,13 +167,90 @@ export function LocalModelSection({
         description={l.description}
         hint={t.help.aiLocal}
       >
-        <p data-testid="local-unavailable">{l.unavailable[unavailable]}</p>
+        <p data-testid="local-unavailable">{l.unavailable[gap]}</p>
+        {gap === 'testBuild' || gap === 'build' ? (
+          <p>
+            <Button
+              onClick={() => void getPlatform().app.openUrl(STABLE_RELEASE_PAGE)}
+              data-testid="local-get-stable"
+            >
+              {l.getStable}
+            </Button>
+          </p>
+        ) : null}
       </SettingsGroup>
     );
   }
 
+  const ready = Boolean(prefs.file && downloaded.has(prefs.file));
+  const downloading = busy === 'download' && progress !== undefined;
+  const suggestions = suggestedModels(models, recommended);
+
   return (
     <SettingsGroup id="ai-local" title={l.title} description={l.description} hint={t.help.aiLocal}>
+      <section aria-labelledby="ai-local-next" data-testid="local-next">
+        <h3 id="ai-local-next">{l.next.title}</h3>
+        {downloading ? (
+          <div role="status" data-testid="local-progress">
+            <p>{l.next.downloading}</p>
+            <progress value={progress.done} max={progress.total} />{' '}
+            {l.progress(gb(progress.done), gb(progress.total))}{' '}
+            <Button variant="ghost" onClick={cancelDownload}>
+              {l.cancel}
+            </Button>
+          </div>
+        ) : ready ? (
+          <>
+            <p>{l.next.ready}</p>
+            <Button
+              variant="primary"
+              onClick={() => void runTest()}
+              disabled={busy !== undefined || test?.state === 'running'}
+              data-testid="local-next-test"
+            >
+              {l.next.ask}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p>{l.next.pick}</p>
+            <ul className={styles.models} data-testid="local-suggestions">
+              {suggestions.map((m, i) => (
+                <li key={m.id} className={styles.model}>
+                  <div className={styles.modelHead}>
+                    <strong>{m.label}</strong>
+                    {recommended === m.profile ? (
+                      <Badge tone="accent">{l.recommended}</Badge>
+                    ) : null}
+                  </div>
+                  <p className={styles.modelMeta}>
+                    {l.size(gb(m.bytes))} · {l.license(m.license.name)}
+                  </p>
+                  <div className={styles.modelActions}>
+                    <Button
+                      variant={i === 0 ? 'primary' : undefined}
+                      onClick={() => setAsking(m)}
+                      disabled={busy !== undefined}
+                      data-testid={`local-next-download-${m.id}`}
+                    >
+                      {l.download}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {test && ready ? (
+          <p role="status" data-testid="local-test-result">
+            {test.state === 'running'
+              ? l.testRunning
+              : test.state === 'ok'
+                ? test.text
+                : l.testNone}
+          </p>
+        ) : null}
+      </section>
       <SettingRow
         id="ai-local--status"
         label={l.status}
@@ -282,15 +375,6 @@ export function LocalModelSection({
           );
         })}
       </ul>
-      {busy === 'download' && progress ? (
-        <div role="status" data-testid="local-progress">
-          <progress value={progress.done} max={progress.total} />{' '}
-          {l.progress(gb(progress.done), gb(progress.total))}{' '}
-          <Button variant="ghost" onClick={cancelDownload}>
-            {l.cancel}
-          </Button>
-        </div>
-      ) : null}
 
       <SettingRow id="ai-local--folder" label={l.folder} description={status.folder}>
         {getPlatform().desktop.supported ? (
@@ -313,11 +397,6 @@ export function LocalModelSection({
           {l.test}
         </Button>
       </SettingRow>
-      {test ? (
-        <p role="status" data-testid="local-test-result">
-          {test.state === 'running' ? l.testRunning : test.state === 'ok' ? test.text : l.testNone}
-        </p>
-      ) : null}
 
       {asking ? (
         <Consent
