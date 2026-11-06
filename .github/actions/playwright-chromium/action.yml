@@ -31,6 +31,11 @@ runs:
       with:
         path: ~/.cache/apt-playwright
         key: apt-playwright-${{ steps.image.outputs.id }}-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+        # A new runner image or lock file starts from the previous .deb files: apt then downloads only what changed
+        # (Nov 2026: a cold key made every E2E job of one run fetch the fonts at 39 kB/s, 9 min each).
+        restore-keys: |
+          apt-playwright-${{ steps.image.outputs.id }}-
+          apt-playwright-
     # System libraries and fonts are needed even when the browser itself comes from the cache.
     - name: System packages
       shell: bash
