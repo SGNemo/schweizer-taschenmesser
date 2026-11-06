@@ -3,14 +3,13 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vites
 import { findModel } from '@/core/ai/local/catalogue';
 import { writeLocalPrefs } from '@/core/ai/local/prefs';
 import { localStageReady, useLocalModel } from '@/core/ai/local/state';
-import { MAX_DURATION_MIN, type PlanLine } from '@/core/ai/local/prompts/plan';
+import type { PlanLine } from '@/core/ai/local/prompts/plan';
 import { switchAiOff, switchAiOn } from '@/core/ai/switch';
 import { db } from '@/core/db/db';
 import type { InstructionItem } from '@/core/plan/instructions';
 import { setPlatform } from '@/core/platform';
 import { createFakeLocalModel, type FakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
-import { taskSchema } from '@/modules/todos/schema';
 import { localStageAvailable, readSentence, readWithModel, worthAsking } from '../localStage';
 
 const MODEL = findModel('qwen3.5-4b')!;
@@ -30,8 +29,6 @@ const ctx = { today: TODAY, items: ITEMS, lines: LINES };
 /** The rules know the verb but not „übernächsten“: they explain; the model may read the day. */
 const UNREAD = 'schieb die Steuer auf übernächsten Freitag';
 const PIN = JSON.stringify({ ops: [{ op: 'pin', key: 'k1', value: '2026-11-20' }] });
-
-const TASK = { listId: 'inbox', title: 'Steuer', done: false, priority: 0, order: 0 };
 
 let fake: FakeLocalModel;
 
@@ -180,13 +177,6 @@ describe('the planner’s local stage', () => {
     slow.abort();
     expect(await reading).toBeUndefined();
     expect(generate).not.toHaveBeenCalled();
-  });
-
-  it('the model’s duration cap is the ToDo estimate’s cap', () => {
-    expect(taskSchema.safeParse({ ...TASK, estimateMin: MAX_DURATION_MIN }).success).toBe(true);
-    expect(taskSchema.safeParse({ ...TASK, estimateMin: MAX_DURATION_MIN + 1 }).success).toBe(
-      false,
-    );
   });
 
   it('only asks for what looks like an instruction: a planning verb, a day word, or a thing of the plan by name', () => {

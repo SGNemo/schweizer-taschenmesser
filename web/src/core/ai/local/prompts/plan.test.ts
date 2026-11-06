@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { taskSchema } from '@/modules/todos/schema';
 import {
   buildPlanGrammar,
   compactPlan,
   dayList,
+  MAX_DURATION_MIN,
   MAX_PLAN_LINES,
   MAX_PLAN_OPS,
   parsePlanAnswer,
@@ -174,6 +176,14 @@ describe('parsePlanAnswer', () => {
   it('shows an excluded thing as such, not as waiting', () => {
     expect(planText([{ key: 'todos:k', title: 'Keller', min: 30, prio: 0, excluded: true }])).toBe(
       'k1 | Keller | 30 min | prio 0 | excluded',
+    );
+  });
+
+  it('the duration cap is the ToDo estimate’s cap (the two cannot drift apart)', () => {
+    const task = { listId: 'inbox', title: 'Steuer', done: false, priority: 0, order: 0 };
+    expect(taskSchema.safeParse({ ...task, estimateMin: MAX_DURATION_MIN }).success).toBe(true);
+    expect(taskSchema.safeParse({ ...task, estimateMin: MAX_DURATION_MIN + 1 }).success).toBe(
+      false,
     );
   });
 
