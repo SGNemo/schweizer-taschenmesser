@@ -83,12 +83,7 @@ export function SupporterSection() {
           />
           <div className={styles.row}>
             <Button onClick={() => void paste()}>{s.paste}</Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={!input.trim()}
-              data-testid="supporter-code-save"
-            >
+            <Button type="submit" disabled={!input.trim()} data-testid="supporter-code-save">
               {s.save}
             </Button>
           </div>

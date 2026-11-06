@@ -1252,11 +1252,8 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
     ],
-    render: () => (
-      <SettingsGroup id="quickcapture" title={t.quickCapture.settings.title} bare>
-        <QuickCaptureSection />
-      </SettingsGroup>
-    ),
+    // The section brings its own groups (Ziel, Tastenkürzel, Im Hintergrund); `quickcapture` is the first one's anchor.
+    render: () => <QuickCaptureSection />,
   },
   {
     id: 'voice',
@@ -1376,21 +1373,26 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <ModelLicensesSection />,
   },
   {
+    // Own tab since settings identity v3.1 (was a card in "Über Nemo"); old `/settings/ueber#setup` links follow it.
     id: 'setup',
-    category: 'ueber',
+    category: 'einrichtung',
     maturity: 'stable',
-    order: 30,
+    order: 10,
     get title() {
       return t.setup.title;
     },
     get keywords() {
       return s.searchWords.setup;
     },
-    render: () => (
-      <SettingsGroup id="setup" title={t.setup.title} bare>
-        <SetupSection />
-      </SettingsGroup>
-    ),
+    fields: [
+      {
+        key: 'checklist',
+        get label() {
+          return t.setup.showChecklist;
+        },
+      },
+    ],
+    render: () => <SetupSection />,
   },
   {
     id: 'about',

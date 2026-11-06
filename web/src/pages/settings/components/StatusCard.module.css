@@ -1,0 +1,63 @@
+/* Status card of a settings tab (identity v3.1): tokens only, a hairline all around, no edge stripe. The tint is the
+   page's hue (`--module-color`, set by the category page); "Ruhig" and "Modulfarben: Aus" turn it grey. */
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.card[data-tinted='true'] {
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--module-color, var(--text-3)) 32%, var(--border));
+}
+.card[data-tone='attention'] {
+  border-color: var(--accent);
+}
+.icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.card[data-tone='ok'] .icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.figure {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.text {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.line {
+  margin: var(--space-hair) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.aside,
+.action {
+  flex: none;
+  max-width: 100%;
+}
+.body {
+  flex: 1 0 100%;
+  min-width: 0;
+}

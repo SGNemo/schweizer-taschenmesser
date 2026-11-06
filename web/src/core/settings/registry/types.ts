@@ -10,6 +10,7 @@ import type { ResetPlan } from '../reset';
 
 /** Route slug of a category: `/settings/<id>`. Order here is the order in the navigation. */
 export const SETTINGS_CATEGORY_IDS = [
+  'einrichtung',
   'allgemein',
   'darstellung',
   'barrierefreiheit',

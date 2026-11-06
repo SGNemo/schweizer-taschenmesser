@@ -212,6 +212,8 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     <Card title={def.name} data-testid={`connector-${def.id}`}>
       <div className={styles.form}>
         <StateBanner
+          // One card per connector: none of them takes the tab's single tint (settings identity v3.1).
+          tinted={false}
           icon={def.icon}
           tone={state === 'connected' ? 'ok' : state === 'error' ? 'attention' : 'neutral'}
           title={s.status[state] ?? state}
@@ -262,8 +264,8 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
                 ))}
               </ChoiceList>
               <div className={styles.row}>
+                {/* Secondary since settings identity v3.1: one card per connector, none outranks the others. */}
                 <Button
-                  variant="primary"
                   disabled={busy !== undefined || active.length === 0}
                   onClick={() => void login()}
                 >

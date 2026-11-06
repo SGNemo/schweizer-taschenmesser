@@ -3,20 +3,41 @@
   flex-direction: column;
   gap: var(--space-4);
 }
-.progress {
-  height: 6px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-2, var(--border));
-  overflow: hidden;
+/* Step head (settings identity v3.1): tinted compact surface, dot track as the step signature. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  min-height: 0;
 }
-.bar {
-  height: 100%;
-  background: var(--accent);
-  transition: width var(--dur) var(--ease);
+.track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--module-color);
+  background: var(--surface);
+}
+.dot[data-state='done'] {
+  background: var(--module-color);
+}
+.dot[data-state='current'] {
+  background: color-mix(in srgb, var(--module-color) 45%, var(--surface));
+  outline: 2px solid var(--module-color);
+  outline-offset: 1px;
 }
 .meta {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text);
   font-size: var(--text-sm);
 }
 .stepTitle {

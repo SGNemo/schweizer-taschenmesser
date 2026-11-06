@@ -17,7 +17,7 @@ export function LegalImprintSection() {
   const l = tLegal.use();
   const id = LEGAL_IDENTITY;
   return (
-    <SettingsGroup id="legal-imprint" title={l.imprint.title} description={l.imprint.intro}>
+    <SettingsGroup id="legal-imprint" title={l.imprint.title} description={l.imprint.intro} plain>
       <SettingRow id="legal-imprint--email" label={l.imprint.email}>
         <strong className={styles.value}>{id.email}</strong>
       </SettingRow>
@@ -35,7 +35,7 @@ export function LegalImprintSection() {
 export function LegalPrivacySection() {
   const l = tLegal.use();
   return (
-    <SettingsGroup id="legal-privacy" title={l.privacy.title} description={l.privacy.intro}>
+    <SettingsGroup id="legal-privacy" title={l.privacy.title} description={l.privacy.intro} plain>
       {dataFlows(l).map((f) => (
         <details key={f.id} className={styles.details} data-testid={`flow-${f.id}`}>
           <summary>{f.title}</summary>
@@ -70,7 +70,7 @@ export function LegalLicensesSection() {
     );
   };
   return (
-    <SettingsGroup id="legal-licenses" title={l.licenses.title} description={l.licenses.app}>
+    <SettingsGroup id="legal-licenses" title={l.licenses.title} description={l.licenses.app} plain>
       <SettingRow id="legal-licenses--app" label={t.about.license}>
         <Button onClick={() => void getPlatform().app.openUrl(LICENSE_URL)}>
           {l.licenses.appLicense}

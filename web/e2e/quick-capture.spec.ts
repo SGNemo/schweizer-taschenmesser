@@ -148,8 +148,8 @@ test('the settings page explains that hotkey and tray belong to the Windows app'
   page,
 }) => {
   await page.goto('/settings/schnellerfassung');
-  // the category head is the h1, the section the h2: this is about the section
-  await expect(page.getByRole('heading', { name: 'Schnellerfassung', level: 2 })).toBeVisible();
+  // the category head is the h1, the first group ("Ziel") an h2 (settings identity v3.1)
+  await expect(page.getByRole('heading', { name: 'Ziel', level: 2 })).toBeVisible();
   await expect(
     page.getByText('Tastenkürzel, Tray und Autostart gibt es nur in der Windows-App.'),
   ).toBeVisible();
