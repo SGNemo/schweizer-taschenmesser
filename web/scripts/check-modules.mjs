@@ -17,7 +17,12 @@ import {
   checkSettingsSource,
   checkWidgetSource,
 } from './lib/checkModules.ts';
-import { checkIdentity, checkSignatureUse, identityFacts } from './lib/checkIdentity.ts';
+import {
+  checkFontWeights,
+  checkIdentity,
+  checkSignatureUse,
+  identityFacts,
+} from './lib/checkIdentity.ts';
 import { validateAiActions } from '../src/core/modules/aiActions.ts';
 import {
   MODULE_FIELD_GROUPS,
@@ -87,6 +92,20 @@ for (const id of readdirSync(modulesDir).sort()) {
 
 // Identity v3.1: one hue per module and area, neighbours differ in head variant, no app-wide hue + head + widget twins.
 errors.push(...checkIdentity(identities));
+
+// C11: no raw font-weight numbers in app CSS (tokens.css defines them).
+const cssFiles = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory()
+      ? cssFiles(join(dir, e.name))
+      : e.name.endsWith('.css')
+        ? [join(dir, e.name)]
+        : [],
+  );
+for (const file of cssFiles(join(root, 'src'))) {
+  if (file.endsWith(join('ui', 'tokens.css'))) continue;
+  errors.push(...checkFontWeights(file.slice(root.length + 1), readFileSync(file, 'utf8')));
+}
 
 // Tools: every manifest names its maturity (docs/howto/new-extension.md).
 for (const id of readdirSync(toolsDir).sort()) {

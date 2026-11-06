@@ -34,7 +34,7 @@
 }
 .legend {
   font-size: var(--text-sm);
-  font-weight: 550;
+  font-weight: var(--weight-semibold);
   padding: 0;
 }
 .fieldset {

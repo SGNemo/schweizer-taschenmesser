@@ -41,7 +41,7 @@
 .head {
   background: var(--surface-2);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   min-height: var(--touch);
 }
 .body {

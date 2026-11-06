@@ -123,3 +123,23 @@ export function checkSignatureUse(
       ]
     : [];
 }
+
+/**
+ * C11: type weights come from the tokens (`--weight-*` in `ui/tokens.css`), never a raw number, so a weight
+ * change is one edit and no module invents its own (550, 650 …). `@font-face` ranges (`100 900`) describe the
+ * font file and stay. `tokens.css` itself defines the numbers and is not passed in.
+ */
+export function checkFontWeights(file: string, css: string): string[] {
+  const out: string[] = [];
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
+  const faces = [...plain.matchAll(/@font-face\s*\{[^}]*\}/g)].map((m) => [
+    m.index,
+    m.index + m[0].length,
+  ]);
+  for (const m of plain.matchAll(/font-weight\s*:\s*(\d+)/g)) {
+    if (faces.some(([a, b]) => m.index >= a && m.index < b)) continue;
+    const line = plain.slice(0, m.index).split('\n').length;
+    out.push(`${file}:${line}: font-weight ${m[1]} – use a token (var(--weight-…)) or "normal"`);
+  }
+  return out;
+}

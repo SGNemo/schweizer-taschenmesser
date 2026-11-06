@@ -32,6 +32,6 @@
 }
 .crumb:disabled {
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   cursor: default;
 }

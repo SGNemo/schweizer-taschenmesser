@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  checkFontWeights,
   checkIdentityCollisions,
   checkIdentityGroups,
   checkSignatureUse,
@@ -135,5 +136,20 @@ describe('identity checks (identity v3.1)', () => {
         '<HeroSlot area="signature">',
       ]),
     ).toEqual([]);
+  });
+});
+
+describe('checkFontWeights (C11)', () => {
+  it('reports raw numbers, keeps tokens, keywords and @font-face ranges', () => {
+    const css = [
+      '@font-face { font-family: X; font-weight: 100 900; }',
+      '.a { font-weight: 650; }',
+      '.b { font-weight: var(--weight-semibold); }',
+      '.c { font-weight: normal; }',
+      '/* font-weight: 600; */',
+    ].join('\n');
+    expect(checkFontWeights('x.css', css)).toEqual([
+      'x.css:2: font-weight 650 – use a token (var(--weight-…)) or "normal"',
+    ]);
   });
 });
