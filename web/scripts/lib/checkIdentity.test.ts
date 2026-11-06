@@ -80,7 +80,7 @@ describe('identity checks (identity v3.1)', () => {
     expect(checkIdentityCollisions([finance, timetrack])).toEqual([
       'finance and timetrack share the hue "teal" and the widget "kennzahl"; each needs a signature of its own (not "none", not the same)',
     ]);
-    expect(checkIdentityCollisions([finance, { ...timetrack, signature: 'hourStrip' }])).toEqual(
+    expect(checkIdentityCollisions([finance, { ...timetrack, signature: 'stopwatch' }])).toEqual(
       [],
     );
     // The same signature twice is no signature either.
@@ -131,7 +131,7 @@ describe('identity checks (identity v3.1)', () => {
       [],
     );
     expect(
-      checkSignatureUse('x', manifest.replace("'none'", "'hourStrip'"), [
+      checkSignatureUse('x', manifest.replace("'none'", "'stopwatch'"), [
         '<HeroSlot area="signature">',
       ]),
     ).toEqual([]);

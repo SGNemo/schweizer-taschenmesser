@@ -46,12 +46,12 @@ export const SIGNATURE_MARKS: Record<Exclude<SignatureId, 'none'>, ReactNode> = 
       <path d="M9 14.5h2" />
     </>
   ),
-  // The hours of a day as a strip, one block filled.
-  hourStrip: (
+  // A stopwatch: round face, crown on top, one hand (Zeiterfassung, G12).
+  stopwatch: (
     <>
-      <rect x="3" y="8" width="18" height="8" rx="2" />
-      <path d="M7.5 8v8M16.5 8v8M3 12h18" opacity=".5" />
-      <rect x="9" y="9.5" width="5" height="5" rx=".6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="13.5" r="7.5" />
+      <path d="M10 3h4M12 3v3M18.2 6.8l1.3-1.3" />
+      <path d="M12 13.5V9.5" />
     </>
   ),
   // A card with one tick.

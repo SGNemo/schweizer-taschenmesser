@@ -33,7 +33,7 @@ Nine silhouettes, two heights from tokens (`--head-h-tall` 12.5 rem / phone 8.5 
 | Variant | Height | Slot | Content | Modules |
 | --- | --- | --- | --- | --- |
 | `kennzahl` | tall | M | the headline figure is the page, context line, cards beside it | Finanzen, Budgets, Listen |
-| `zeit` | tall | L | day number + hour strip with the "now" line (`calendarLeaf`, `hourStrip`) | Kalender, Zeiterfassung |
+| `zeit` | tall | L | day number + hour strip with the "now" line (`calendarLeaf`, `stopwatch`) | Kalender, Zeiterfassung |
 | `fortschritt` | tall | M | title + "n von m"; rings of the module | Gewohnheiten, Abos, Dieser PC |
 | `cover` | tall | L | cover with its own tone, title, artist | Musik |
 | `himmel` | tall | – | sky backdrop, thin temperature | Wetter |
@@ -105,7 +105,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | ToDos `todos` | plan | moss | lime | fokus | fokus | `todayCard` |
 | Planer `planner` | plan | indigo | cobalt | kennzahl | fortschritt | `weekBars` (order 15 between Kalender and ToDos; indigo is 26° from cobalt and violet, confirmed by `check:modules`) |
 | Gewohnheiten `habits` | plan | violet | orchid | fortschritt | fortschritt | `ring` |
-| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `hourStrip` (the page fills the slot with `Stopwatch`, C25: round, not the calendar's strip) |
+| Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `stopwatch` (round dial, C25/G12: not the calendar's hour strip) |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |

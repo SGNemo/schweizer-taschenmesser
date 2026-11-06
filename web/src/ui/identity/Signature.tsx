@@ -18,7 +18,7 @@ import {
   WeekBars,
   type BlockSize,
 } from './blocks';
-import { HourStrip } from './HourStrip';
+import { Stopwatch } from './Stopwatch';
 import { SignatureMark } from './SignatureMark';
 import styles from './Signature.module.css';
 
@@ -41,10 +41,10 @@ export const SIGNATURE_BLOCKS: Partial<
   masthead: Masthead,
   weekBars: WeekBars,
   envelope: Envelope,
-  // Decoration only: the strip's own role/label ("no appointments") would be a false statement here.
-  hourStrip: ({ size }) => (
-    <div aria-hidden="true" data-signature="hourStrip" data-size={size}>
-      <HourStrip events={[]} />
+  // Decoration only: the dial without a value (the page draws the live one).
+  stopwatch: ({ size }) => (
+    <div aria-hidden="true" data-size={size}>
+      <Stopwatch />
     </div>
   ),
 };
