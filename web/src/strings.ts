@@ -15,7 +15,8 @@ export const de = {
   /** Building blocks for dates and durations (most wording comes from Intl). */
   time: {
     weekdayAndDistance: (weekday: string, distance: string) => `${weekday}, ${distance}`,
-    overdueSince: (days: number) => (days === 1 ? 'seit gestern' : `seit ${days} Tagen`),
+    /** An overdue date by its day, never a growing count (N08): "war am Di. fällig", "war am 17. Sep. fällig". */
+    overdueOn: (day: string) => `war am ${day} fällig`,
     /** A clock time inside a sentence; only German adds "Uhr". */
     atClock: (time: string) => `${time} Uhr`,
     /** "ab 29. Sep. 2026, 08:00 Uhr" */
@@ -2866,7 +2867,6 @@ export const de = {
     overdue: 'Überfällig',
     widgetEmpty: 'Keine offenen Rechnungen.',
     /** Widget badge of an overdue invoice (C27): the date it was due, not a counter that grows every day. */
-    widgetDue: (date: string) => `fällig ${date}`,
     openCount: (n: number) => (n === 1 ? '1 offene Rechnung' : `${n} offene Rechnungen`),
     view: 'Status',
   },
@@ -4212,6 +4212,8 @@ export const de = {
     restockedMany: (n: number) => `${n} Dinge an die Einkaufsliste gesendet.`,
     shoppingOff: 'Dafür braucht es das Modul „Listen“, das gerade ausgeschaltet ist.',
     lowStock: 'Wird knapp',
+    /** Widget row of an expired item (N08): the best-before day, never "seit n Tagen". */
+    expiredOn: (day: string) => `MHD war ${day}`,
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',

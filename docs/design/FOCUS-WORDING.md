@@ -7,6 +7,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Next step card | "Jetzt dran: Formular ausfüllen" · "Anfangen · 10 Min" · "Später" · "Etwas anderes" | "Du solltest jetzt …" |
 | Several things waiting | "Wartet noch · 5 Dinge" · "Nichts davon muss jetzt sein." | "5 Aufgaben überfällig!" |
 | Old ToDo | "offen seit letzter Woche" · "geplant für Mo., 21. Sep." | "Überfällig seit 12 Tagen" |
+| Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
 | Done | "Erledigt." · "Gut gemacht." (sparsam) | "Super!!! Weiter so!" |

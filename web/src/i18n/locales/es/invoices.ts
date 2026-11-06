@@ -108,7 +108,6 @@ export const invoices: Strings['invoices'] = {
   openTotal: 'Total pendiente',
   overdue: 'Vencida',
   widgetEmpty: 'No hay facturas pendientes.',
-  widgetDue: (date: string) => `vence ${date}`,
   openCount: (n: number) => (n === 1 ? '1 factura pendiente' : `${n} facturas pendientes`),
   view: 'Estado',
 };

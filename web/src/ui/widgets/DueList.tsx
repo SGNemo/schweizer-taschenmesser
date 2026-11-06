@@ -20,7 +20,7 @@ export interface DueEntry {
 
 /**
  * Due list: summary line on top ("897,89 € offen · 2 überfällig"), rows with the state on the right.
- * Overdue rows come with icon + "seit 3 Tagen" and stand out; later rows are muted. 3 / 5 / 8 rows.
+ * Overdue rows come with icon + "war am Di. fällig" (the day, never a count) and stand out; later rows are muted. 3 / 5 / 8 rows.
  */
 export function DueList({
   loading,

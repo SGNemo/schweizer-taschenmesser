@@ -130,10 +130,10 @@ test.describe('Home screen', () => {
     await expect(items.nth(1)).toContainText('1 ToDo heute fällig');
     await expect(items.nth(1)).toHaveAttribute('data-tone', 'accent');
 
-    // State is never colour only: the overdue row says "seit 3 Tagen".
+    // State is never colour only: the overdue row names the day it was due (N08).
     const widget = page.getByTestId('widget-todos:open');
     await expect(widget).toContainText('2 offen · 1 überfällig');
-    await expect(widget).toContainText('seit 3 Tagen');
+    await expect(widget).toContainText('war am Sa. fällig');
     await expect(widget).toContainText('Heute');
 
     await widget.getByLabel('Steuer abgeben').click();

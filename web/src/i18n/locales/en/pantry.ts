@@ -67,6 +67,7 @@ export const pantry: Strings['pantry'] = {
   restockedMany: (n: number) => `${n} things sent to the shopping list.`,
   shoppingOff: 'This needs the “Lists” module, which is turned off right now.',
   lowStock: 'Running low',
+  expiredOn: (day: string) => `best before ${day}`,
   expiresNotice: (n: string) => `Expiring soon: ${n}`,
   expiresBody: (date: string) => `Best before ${date}`,
   widgetEmpty: 'Nothing is expiring soon.',

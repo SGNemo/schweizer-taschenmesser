@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useSettings } from '@/core/settings/settings';
 import { today } from '@/core/time/dates';
-import { dueState } from '@/core/time/due';
+import { dueState, pastDay } from '@/core/time/due';
 import { t } from '@/strings';
 import { KachelnBody, WidgetBody, useWidgetSize, type Kachel } from '@/ui';
 import { expiryState, needsRestock, sortItems } from '../logic';
@@ -32,7 +32,11 @@ export default function ExpiringWidget() {
     ...due.map((i) => ({
       id: i.id,
       name: i.name,
-      label: dueState(i.expires!, day, { soonDays }).label,
+      // N08: an expired item names its best-before day ("MHD war Mo."), never a growing count.
+      label:
+        i.expires! < day
+          ? t.pantry.expiredOn(pastDay(i.expires!, day))
+          : dueState(i.expires!, day, { soonDays }).label,
     })),
     ...low.map((i) => ({ id: i.id, name: i.name, label: t.pantry.lowStock })),
   ].slice(0, size === 's' ? 2 : size === 'm' ? 3 : 5);

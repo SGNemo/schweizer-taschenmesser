@@ -69,6 +69,7 @@ export const pantry: Strings['pantry'] = {
   restockedMany: (n: number) => `${n} articles envoyés à la liste de courses.`,
   shoppingOff: 'Il faut pour cela le module « Listes », qui est actuellement désactivé.',
   lowStock: 'Bientôt épuisé',
+  expiredOn: (day: string) => `à consommer avant ${day}`,
   expiresNotice: (n: string) => `Bientôt périmé : ${n}`,
   expiresBody: (date: string) => `À consommer avant le ${date}`,
   widgetEmpty: 'Rien ne périme bientôt.',
