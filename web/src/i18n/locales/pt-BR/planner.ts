@@ -161,8 +161,8 @@ export const planner: Strings['planner'] = {
     askLabel: 'Qual é?',
     reading: 'Um momento – o modelo local está lendo a frase. Esc interrompe.',
     localRead: 'Lido pelo modelo local – confira, por favor.',
-    discardedLocal: 'Descartado. Toque em “Adicionar” de novo para criar uma tarefa.',
-    stoppedLocal: 'Interrompido. Toque em “Adicionar” de novo para criar uma tarefa.',
+    discardedLocal: 'Descartado. Clique em “Adicionar” de novo para criar uma tarefa.',
+    stoppedLocal: 'Interrompido. Clique em “Adicionar” de novo para criar uma tarefa.',
   },
   preview: {
     label: 'Prévia',

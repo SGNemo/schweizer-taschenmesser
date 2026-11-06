@@ -162,7 +162,7 @@ export const planner: Strings['planner'] = {
     missing: (query: string) => `Je ne trouve pas « ${query} » dans le plan.`,
     ask: (a: string, b: string) => `Tu veux dire ${a} ou ${b} ?`,
     askLabel: 'Lequel ?',
-    reading: 'Un instant – le modèle local lit la phrase. Échap interrompt.',
+    reading: 'Un instant – le modèle local lit la phrase. Échap pour interrompre.',
     localRead: 'Lu par le modèle local – à vérifier.',
     discardedLocal: 'Annulé. Appuyez encore sur « Ajouter » pour créer une tâche.',
     stoppedLocal: 'Interrompu. Appuyez encore sur « Ajouter » pour créer une tâche.',

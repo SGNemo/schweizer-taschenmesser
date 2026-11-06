@@ -250,14 +250,16 @@ describe('planner page', () => {
         });
       await useLocalModel.getState().refresh();
       fireEvent.change(field, { target: { value: 'Steuer erst nach dem Umzug' } });
-      fireEvent.submit(field.closest('form')!);
+      // A mouse user: the click lands on the button, which is disabled while the model reads.
+      fireEvent.click(screen.getByRole('button', { name: 'Eintragen' }));
       await waitFor(() =>
         expect(screen.getByTestId('plan-say')).toHaveTextContent(
           'das lokale Modell liest den Satz',
         ),
       );
       expect(field).toHaveAttribute('readonly');
-      fireEvent.keyDown(field, { key: 'Escape' });
+      expect(screen.getByRole('button', { name: 'Eintragen' })).toBeDisabled();
+      fireEvent.keyDown(document.body, { key: 'Escape' });
       await waitFor(() =>
         expect(screen.getByTestId('plan-say')).toHaveTextContent(
           'Abgebrochen. Noch einmal „Eintragen“ legt ein ToDo an.',
@@ -265,6 +267,7 @@ describe('planner page', () => {
       );
       expect(field).toHaveValue('Steuer erst nach dem Umzug');
       expect(field).not.toHaveAttribute('readonly');
+      expect(document.activeElement).toBe(field);
       expect(screen.queryByTestId('plan-preview')).toBeNull();
       expect(await db.table('todos_task').count()).toBe(3);
       expect(fetchSpy).not.toHaveBeenCalled();

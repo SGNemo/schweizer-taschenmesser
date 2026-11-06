@@ -157,7 +157,8 @@ export async function readSentence(
   if (said.kind === 'ops' || said.kind === 'ask') return byRules;
   // `model: false` = the user discarded the model's reading of this sentence: the rules' result stands.
   if (opts.model === false || !worthAsking(said, text, ctx.items)) return byRules;
-  if (!(await localStageAvailable())) return byRules;
+  // The switch and the status are read outside the model's own try: any trouble there means stage 0 stands.
+  if (!(await localStageAvailable().catch(() => false))) return byRules;
   opts.onModel?.();
   const ops = await readWithModel(text, ctx.lines, ctx.today, opts.signal);
   if (!ops || ops.length === 0) return byRules;

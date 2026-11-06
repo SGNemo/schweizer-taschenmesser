@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
@@ -215,14 +215,19 @@ export default function PlannerPage() {
     addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }
 
-  /** Escape while the model reads (anywhere in the form): stop waiting, the sentence stays in the field. */
-  function onFormKey(e: KeyboardEvent<HTMLFormElement>) {
-    if (e.key === 'Escape' && readingRef.current) {
+  // Escape while the model reads, wherever the focus is (the submit button is disabled meanwhile, so
+  // a mouse user's focus may be nowhere): stop waiting, the sentence stays in the field.
+  useEffect(() => {
+    if (!reading) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
       e.preventDefault();
       e.stopPropagation();
-      readingRef.current.abort();
-    }
-  }
+      readingRef.current?.abort();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [reading]);
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -239,6 +244,8 @@ export default function PlannerPage() {
       declinedRef.current = undefined;
       const abort = new AbortController();
       readingRef.current = abort;
+      // Only an Escape while the model was really asked counts as a stop (never a word about a model elsewhere).
+      let asked = false;
       let said: Said;
       try {
         setReading(true);
@@ -252,7 +259,10 @@ export default function PlannerPage() {
           {
             signal: abort.signal,
             model: !skipModel,
-            onModel: () => setSayLine(t.planner.say.reading),
+            onModel: () => {
+              asked = true;
+              setSayLine(t.planner.say.reading);
+            },
           },
         );
       } finally {
@@ -260,9 +270,14 @@ export default function PlannerPage() {
         setSayLine(undefined);
         if (readingRef.current === abort) readingRef.current = undefined;
       }
-      // The user pressed Escape (or the page went): nothing happens, the sentence stays, the rules' line says what is next.
-      if (abort.signal.aborted) {
-        if (addRef.current) fallBackToRules(value, said.stage === 1 ? said.rules : said, true);
+      // The user pressed Escape (or the page went) while the model read: nothing happens, the sentence
+      // stays, the rules' line says what is next. (`said` is then the rules' reading, never ops/ask: those
+      // return before any wait.)
+      if (abort.signal.aborted && asked) {
+        if (addRef.current) {
+          fallBackToRules(value, said.stage === 1 ? said.rules : said, true);
+          addRef.current.querySelector('input')?.focus({ preventScroll: true });
+        }
         return;
       }
       if (said.kind === 'ops') {
@@ -587,7 +602,6 @@ export default function PlannerPage() {
       <form
         ref={addRef}
         onSubmit={add}
-        onKeyDown={onFormKey}
         className={styles.add}
         data-keep-visible
         aria-busy={reading || undefined}

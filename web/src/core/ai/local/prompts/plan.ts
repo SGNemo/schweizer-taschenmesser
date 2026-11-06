@@ -24,7 +24,7 @@ export const PLAN_DAYS = 14;
 export const PLAN_MAX_TOKENS = 360;
 /** A day the model names may lie this far ahead; the engine's horizon is shorter anyway. */
 const MAX_DAYS_AHEAD = 365;
-/** Longest duration the model may set: the ToDo estimate's own cap (`todos/schema.ts`, pinned by a planner test). */
+/** Longest duration the model may set: the ToDo estimate's own cap (`todos/schema.ts`, pinned in `plan.test.ts`). */
 export const MAX_DURATION_MIN = 480;
 const MAX_TITLE = 48;
 const MAX_SENTENCE = 200;
