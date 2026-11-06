@@ -49,6 +49,8 @@ export const pt = {
     intro: (n: number, a: number) => `${n} módulos em ${a} áreas. Cada um tem sua cor; você ativa só o que precisa.`,
     count: (n: number) => (n === 1 ? '1 módulo' : `${n} módulos`),
     areas: { plan: 'O dia, a semana, as pessoas.', money: 'Contas, faturas, assinaturas, orçamentos.', household: 'Compras e despensa.', knowledge: 'Ler, escrever, lembrar.', vault: 'Criptografado, só aqui.', system: 'O que seu dispositivo está fazendo.' },
+    // Planner highlight above the areas (shot: planner-*.png, name and state from the catalogue).
+    planner: { text: 'Você anota o que tem pela frente e o planejador distribui no seu tempo livre – offline, sem conta.', alt: 'Planejador no celular: tempo livre hoje, a semana em barras e o dia com seus compromissos' },
     modules: {
       summary: (n: number) => `Todos os ${n} módulos`,
       status: { default: 'ligado por padrão', optional: 'opcional', preview: 'prévia' },
