@@ -24,6 +24,9 @@ export const daySchema = z.object({
   availableMin: z.number().int().min(0).max(1440).optional(),
   blockers: z.array(blockerSchema).default([]),
   note: z.string().optional(),
+  /** The day's own time window (package 5, `core/plan/windows.ts`); missing = the weekday window of the settings, if any. */
+  from: z.string().regex(TIME_RE).optional(),
+  to: z.string().regex(TIME_RE).optional(),
 });
 
 export const PLAN_PRIORITIES = [0, 1, 2, 3] as const;
@@ -72,6 +75,9 @@ export const assignmentSchema = z.object({
   reason: z.enum(ASSIGNMENT_REASONS),
   bumpedBy: z.array(z.string()).optional(),
   late: z.boolean().optional(),
+  /** Start and end inside the day's window (package 5); missing without a window or when the session does not fit. */
+  from: z.string().regex(TIME_RE).optional(),
+  to: z.string().regex(TIME_RE).optional(),
 });
 
 export type PlanBlockerRow = z.output<typeof blockerSchema>;

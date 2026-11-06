@@ -32,7 +32,7 @@ interface Fixture {
     demandMin: number;
     usableMin: number;
     /** Package 5 (`windows.ts`): unit → [from, to]; every other unit keeps no time. */
-    times?: Record<string, [string, string]>;
+    times?: Record<string, string[]>;
   };
 }
 const FIXTURES: [string, Fixture][] = [

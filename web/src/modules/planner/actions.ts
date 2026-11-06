@@ -10,6 +10,7 @@ import { plannableSource, type PlannableEntry } from '@/core/modules/contributio
 import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
 import { dayName } from '@/core/plan/explain';
+import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
@@ -52,7 +53,7 @@ export async function act(
   lead: string,
   titles: Record<string, string>,
   fn: () => Promise<void>,
-  opts: { reshuffle?: boolean } = {},
+  opts: { reshuffle?: boolean; leadOnly?: boolean } = {},
 ): Promise<boolean> {
   let run: UserRun;
   try {
@@ -66,7 +67,9 @@ export async function act(
     const key = unitId.slice(0, unitId.lastIndexOf('#'));
     return titles[key] ?? run.outcome.inputs.titles[key] ?? key;
   };
-  toast(withOverload(runToast(run.outcome.result, titleOf, lead), await overloadNotice(run)), run);
+  // `leadOnly`: one calm sentence (a template); the board shows where things went.
+  const line = opts.leadOnly ? lead : runToast(run.outcome.result, titleOf, lead);
+  toast(withOverload(line, await overloadNotice(run)), run);
   return true;
 }
 
@@ -248,6 +251,7 @@ async function dayPatch(date: string, patch: Partial<PlanDayRow>): Promise<void>
     blockers: row?.blockers ?? [],
     ...(row?.availableMin !== undefined ? { availableMin: row.availableMin } : {}),
     ...(row?.note ? { note: row.note } : {}),
+    ...(row?.from && row.to ? { from: row.from, to: row.to } : {}),
     ...patch,
   };
   const clean = Object.fromEntries(
@@ -274,16 +278,35 @@ export const clearAvailable = (date: string, titles: Record<string, string>) =>
     dayPatch(date, { availableMin: undefined }),
   );
 
+/** A blocker; with `times` ('HH:mm', from before to) it also keeps that stretch of the window free, its minutes = to − from. */
 export const addBlocker = (
   date: string,
   label: string,
   min: number,
   titles: Record<string, string>,
+  times?: { from: string; to: string },
 ) =>
   act(t.planner.day.addBlocker, t.planner.toast.blockerAdded, titles, async () => {
     const row = await dayRepo.get(date);
-    await dayPatch(date, { blockers: [...(row?.blockers ?? []), { id: randomId(), label, min }] });
+    const span = times ? spanMin(times) : undefined;
+    const blocker =
+      times && span !== undefined
+        ? { id: randomId(), label, min: span, from: times.from, to: times.to }
+        : { id: randomId(), label, min };
+    await dayPatch(date, { blockers: [...(row?.blockers ?? []), blocker] });
   });
+
+/** The day's own time window (package 5); the minutes stay as they are. */
+export const setWindow = (date: string, window: TimeWindow, titles: Record<string, string>) =>
+  act(t.planner.day.window, t.planner.toast.window(dayName(date), windowText(window)), titles, () =>
+    dayPatch(date, { from: window.from, to: window.to }),
+  );
+
+/** Drops the day's own window: the weekday's window of the settings (or none) applies again. */
+export const clearWindow = (date: string, titles: Record<string, string>) =>
+  act(t.planner.day.windowDefault, t.planner.toast.windowCleared(dayName(date)), titles, () =>
+    dayPatch(date, { from: undefined, to: undefined }),
+  );
 
 export const removeBlocker = (date: string, id: string, titles: Record<string, string>) =>
   act(t.planner.day.removeBlocker(''), t.planner.toast.blockerRemoved, titles, async () => {
@@ -291,15 +314,36 @@ export const removeBlocker = (date: string, id: string, titles: Record<string, s
     await dayPatch(date, { blockers: (row?.blockers ?? []).filter((b) => b.id !== id) });
   });
 
-/** „Woche prüfen“: stores the confirmed minutes of every shown day (only days that differ are written). */
+export const WEEK_TEMPLATES = ['work', 'vacation', 'sick'] as const;
+export type WeekTemplate = (typeof WEEK_TEMPLATES)[number];
+
+/**
+ * „Woche prüfen“: stores the confirmed minutes of every shown day (only days that differ are written).
+ * With a template (package 5) the toast is one calm sentence; „Arbeitswoche“ hands a day that is back
+ * at its weekday minutes to the settings again (its own minutes and window are dropped). Only the shown
+ * days are touched, never the settings; one undo for all of it.
+ */
 export const confirmWeek = (
-  values: { date: string; availableMin: number; current: number }[],
+  values: { date: string; availableMin: number; current: number; defaultMin?: number }[],
   titles: Record<string, string>,
+  template?: WeekTemplate,
 ) =>
-  act(t.planner.check.title, t.planner.toast.weekChecked, titles, async () => {
-    for (const v of values)
-      if (v.availableMin !== v.current) await dayPatch(v.date, { availableMin: v.availableMin });
-  });
+  act(
+    t.planner.check.title,
+    template ? t.planner.check.done[template] : t.planner.toast.weekChecked,
+    titles,
+    async () => {
+      for (const v of values) {
+        if (template === 'work' && v.availableMin === v.defaultMin) {
+          const row = await dayRepo.get(v.date);
+          if (row && (row.availableMin !== undefined || row.from || row.to))
+            await dayPatch(v.date, { availableMin: undefined, from: undefined, to: undefined });
+        } else if (v.availableMin !== v.current)
+          await dayPatch(v.date, { availableMin: v.availableMin });
+      }
+    },
+    { leadOnly: template !== undefined },
+  );
 
 /** `<module>:<id>` → its parts (the id may contain a colon; the module never does). */
 const refOf = (key: string) => {

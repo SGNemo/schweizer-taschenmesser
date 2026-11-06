@@ -24,12 +24,9 @@ describe('parseWindow / parseTime', () => {
     expect(parseWindow(text)).toEqual({ from, to });
   });
 
-  it.each(['', '17-9', '9', '9-9', '25-26', 'morgens', '9-12-15'])(
-    '%s is no window',
-    (text) => {
-      expect(parseWindow(text)).toBeUndefined();
-    },
-  );
+  it.each(['', '17-9', '9', '9-9', '25-26', 'morgens', '9-12-15'])('%s is no window', (text) => {
+    expect(parseWindow(text)).toBeUndefined();
+  });
 
   it('normalises single times and writes a window back', () => {
     expect(parseTime('7')).toBe('07:00');
@@ -82,7 +79,11 @@ describe('placeInWindow', () => {
   });
 
   it('a session that does not fit keeps no time; a later, shorter one may still fit', () => {
-    const out = placeInWindow({ from: '09:00', to: '11:00' }, [], [s('a', 60), s('b', 90), s('c', 30)]);
+    const out = placeInWindow(
+      { from: '09:00', to: '11:00' },
+      [],
+      [s('a', 60), s('b', 90), s('c', 30)],
+    );
     expect([...out.keys()]).toEqual(['a', 'c']);
     expect(out.get('c')).toEqual({ from: '10:15', to: '10:45' });
   });
