@@ -132,7 +132,7 @@ export function checkSignatureUse(
 export function checkFontWeights(file: string, css: string): string[] {
   const out: string[] = [];
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
-  const faces = [...plain.matchAll(/@font-face\s*\{[^}]*\}/g)].map((m) => [
+  const faces = [...plain.matchAll(/@font-face\s*\{[^}]*\}/g)].map((m): [number, number] => [
     m.index,
     m.index + m[0].length,
   ]);
