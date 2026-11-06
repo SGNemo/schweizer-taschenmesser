@@ -15,3 +15,7 @@
 - **Context from other modules is opt-in per chat** (default none, never the vault). The question is answered by the local rule parser (no model, no tokens), the text is capped at 2000 characters and shown in a dialog before it is sent; the stored message keeps what was attached.
 - **Answers are one piece** for providers (no streaming yet); the local model streams. Markdown is rendered by a small own renderer (no HTML, links only http/https/mailto).
 - **Not done:** proposals from inside a chat (the bar stays the place for writes), streaming for providers, token estimate before sending.
+
+## Modules without `aiSchema` (planner, package 4)
+
+- **A module without `aiSchema` may use the local stage with its own prompt and grammar (2026-11-06):** the entry pipeline (`stage.ts`, prompt `v1.ts`, `aiModules()`/`writableModules`) stays the one route for modules with a schema; a module that must stay invisible to the cloud, the search and the chat (the planner, `decisions/plan.md`) may still ask the built-in model directly – new files under `core/ai/local/prompts/` only (`plan.ts`), the same catalogue, prefs, `ensureLoaded`, `localStageReady()` and chat templates, the platform seam `getPlatform().localModel.generate` as the only way to the model, its own GBNF grammar with every repetition bounded, and the same gate `(await isAiOn()) && localStageReady()`. Nothing of it may touch `core/ai/{scope,assistant}.ts` or `core/ai/write/*`, and such a module never gets a cloud stage: without a schema the cloud cannot even name it (`privacy.test.ts` pins 3 and 4).

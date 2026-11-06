@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import { parseInstruction, type PlanOp } from '@/core/plan/instructions';
+import type { Instruction, PlanOp } from '@/core/plan/instructions';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -46,7 +46,8 @@ import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { beginPlanFocus, planFocusPath } from '../focus';
 import { overloadText } from '../overload';
-import { instructionItems, opLines } from '../say';
+import { readSentence, warmLocalStage, type Said } from '../localStage';
+import { instructionItems, opLines, planLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
@@ -67,6 +68,8 @@ interface Pending {
   data: PreviewData;
   /** Said in the field (its text goes on „Übernehmen“), not chosen in ⋯. */
   fromField: boolean;
+  /** The model's reading of this sentence; `rules` = what the rules made of it (stands on „Verwerfen“). */
+  local?: { sentence: string; rules: Instruction };
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -101,6 +104,12 @@ export default function PlannerPage() {
   >();
   const [sayLine, setSayLine] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  // The local model is reading a sentence (desktop with a model only): the field waits, one calm line says so.
+  const [reading, setReading] = useState(false);
+  // The running model request; aborted on Escape and when the page goes.
+  const readingRef = useRef<AbortController | undefined>(undefined);
+  // A model reading the user discarded or stopped: the same sentence, sent again, skips the model.
+  const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
   const [focus] = useFocusSettings();
@@ -126,6 +135,12 @@ export default function PlannerPage() {
   const board = data?.board;
   const todayDay = board?.days[0];
 
+  // The local stage reads the shell's status once (the desktop app with AI on; nowhere else).
+  useEffect(() => {
+    void warmLocalStage();
+    return () => readingRef.current?.abort();
+  }, []);
+
   // `?new=1` (quick add) focuses the one field; `?day=` (the calendar's plan chip) shows that day;
   // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
   useEffect(() => {
@@ -143,8 +158,8 @@ export default function PlannerPage() {
     } else if (params.get('week') || params.get('check')) setParams({}, { replace: true });
   }, [params, setParams, board]);
 
-  /** Shows what `ops` would do; nothing is stored until „Übernehmen“. */
-  async function showPreview(ops: PlanOp[], fromField = false) {
+  /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
+  async function showPreview(ops: PlanOp[], fromField = false, local?: Pending['local']) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
@@ -154,8 +169,14 @@ export default function PlannerPage() {
       setPending({
         ops,
         lead: lines[0] ?? t.planner.ops.replan,
-        data: { lines, diff: out.result.diff },
+        // A sentence the local model read says so above the lines: its reading is checked here, by the user.
+        data: {
+          lines,
+          ...(local ? { note: t.planner.say.localRead } : {}),
+          diff: out.result.diff,
+        },
         fromField,
+        ...(local ? { local } : {}),
       });
     } catch (e) {
       if (!(e instanceof PlannerOffError)) throw e;
@@ -175,23 +196,97 @@ export default function PlannerPage() {
     }
   }
 
+  /**
+   * What stands when the user sets the model's reading aside: the rules' line, or – when the rules saw
+   * no instruction – the promise that the next „Eintragen“ makes the ToDo. The sentence is not asked again.
+   */
+  function fallBackToRules(sentence: string, rules: Instruction, stopped: boolean) {
+    declinedRef.current = sentence;
+    if (rules.kind === 'explain') setSayLine(t.planner.say.explain);
+    else if (rules.kind === 'missing') setSayLine(t.planner.say.missing(rules.query));
+    else setSayLine(stopped ? t.planner.say.stoppedLocal : t.planner.say.discardedLocal);
+  }
+
+  /** „Verwerfen“: the text stays; a discarded model reading is not asked again for the same sentence. */
+  function discard() {
+    if (pending?.fromField && pending.local)
+      fallBackToRules(pending.local.sentence, pending.local.rules, false);
+    setPending(undefined);
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  }
+
+  // Escape while the model reads, wherever the focus is (the submit button is disabled meanwhile, so
+  // a mouse user's focus may be nowhere): stop waiting, the sentence stays in the field.
+  useEffect(() => {
+    if (!reading) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      readingRef.current?.abort();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [reading]);
+
   async function add(e: FormEvent) {
     e.preventDefault();
     const value = text.trim();
-    if (!value) return;
+    if (!value || reading) return;
     setPending(undefined);
     setAsk(undefined);
     setSayLine(undefined);
     // Instructions first – German only, like the quick-capture parser; elsewhere the ⋯ actions do the same.
     if (getLang() === 'de') {
       // While the board loads the sentence still reads its days; things are matched once it is there.
-      const said = parseInstruction(value, {
-        today: data?.today ?? today(),
-        items: board ? instructionItems(board) : [],
-      });
+      // Stage 0 first; the local model only for what the rules could not read (desktop with a model, AI on).
+      const skipModel = declinedRef.current === value;
+      declinedRef.current = undefined;
+      const abort = new AbortController();
+      readingRef.current = abort;
+      // Only an Escape while the model was really asked counts as a stop (never a word about a model elsewhere).
+      let asked = false;
+      let said: Said;
+      try {
+        setReading(true);
+        said = await readSentence(
+          value,
+          {
+            today: data?.today ?? today(),
+            items: board ? instructionItems(board) : [],
+            lines: board ? planLines(board) : [],
+          },
+          {
+            signal: abort.signal,
+            model: !skipModel,
+            onModel: () => {
+              asked = true;
+              setSayLine(t.planner.say.reading);
+            },
+          },
+        );
+      } finally {
+        setReading(false);
+        setSayLine(undefined);
+        if (readingRef.current === abort) readingRef.current = undefined;
+      }
+      // The user pressed Escape (or the page went) while the model read: nothing happens, the sentence
+      // stays, the rules' line says what is next. (`said` is then the rules' reading, never ops/ask: those
+      // return before any wait.)
+      if (abort.signal.aborted && asked) {
+        if (addRef.current) {
+          fallBackToRules(value, said.stage === 1 ? said.rules : said, true);
+          addRef.current.querySelector('input')?.focus({ preventScroll: true });
+        }
+        return;
+      }
       if (said.kind === 'ops') {
         // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
-        await showPreview(said.ops, true);
+        await showPreview(
+          said.ops,
+          true,
+          said.stage === 1 ? { sentence: value, rules: said.rules } : undefined,
+        );
         return;
       }
       if (said.kind === 'ask') {
@@ -504,7 +599,13 @@ export default function PlannerPage() {
         </p>
       ) : null}
 
-      <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
+      <form
+        ref={addRef}
+        onSubmit={add}
+        className={styles.add}
+        data-keep-visible
+        aria-busy={reading || undefined}
+      >
         <div className={styles.grow}>
           <TextField
             label={t.planner.add.label}
@@ -512,9 +613,10 @@ export default function PlannerPage() {
             hint={t.planner.add.hint}
             value={text}
             onChange={(e) => setText(e.target.value)}
+            readOnly={reading}
           />
         </div>
-        <Button type="submit" variant="primary" disabled={!text.trim()}>
+        <Button type="submit" variant="primary" disabled={!text.trim() || reading}>
           {t.planner.add.submit}
         </Button>
         {/* N04: the page's ⋯ sits beside the field (a toolbar row with only ⋯ left ~100 px empty above it). */}
@@ -547,7 +649,7 @@ export default function PlannerPage() {
           nameOf={nameOf}
           busy={busy}
           onApply={() => void apply()}
-          onDiscard={() => setPending(undefined)}
+          onDiscard={discard}
         />
       ) : null}
 

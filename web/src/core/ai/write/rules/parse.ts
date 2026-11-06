@@ -7,6 +7,7 @@
  */
 import type { TaschenmesserDB } from '@/core/db/db';
 import type { AiActionDef, AiRole, ModuleManifest } from '@/core/modules/types';
+import { extractEstimate } from '@/quickCapture/parser/estimate';
 import { extractFacts, type ExtractedFacts } from '@/quickCapture/parser/extract';
 import { fold } from '../../text';
 import { aiModules, type AiModule } from '../../scope';
@@ -166,6 +167,9 @@ function fieldFor(ref: ActionRef, role: AiRole, startDateHint = false): string |
       return first((f) => f === 'url');
     case 'quantity':
       return first((f) => f === 'count' || f === 'quantity');
+    case 'estimate':
+      // Only an explicit role: a minutes field is never guessed from its type.
+      return undefined;
   }
 }
 
@@ -176,7 +180,7 @@ const LEADING_QUANTITY_RE = /^\s*(\d{1,3})\s?x\s+/iu;
 function fillData(
   ref: ActionRef,
   facts: ExtractedFacts,
-  extra: { title?: string; quantity?: string; startDateHint: boolean },
+  extra: { title?: string; quantity?: string; estimate?: number; startDateHint: boolean },
 ): Record<string, unknown> {
   const { def, manifest } = ref;
   const schema = manifest.aiSchema.collections[def.collection]!;
@@ -196,6 +200,7 @@ function fillData(
   put('time', facts.time);
   put('recurrence', facts.recurrence);
   put('url', facts.url);
+  put('estimate', extra.estimate);
   const quantityField = fieldFor(ref, 'quantity');
   put(
     'quantity',
@@ -470,6 +475,14 @@ async function segmentToOp(
     }
   }
   const facts = extractFacts(text, { now, bareAmount: Boolean(fieldFor(ref, 'amount')) });
+  // An effort („2 Std“, „zwei Stunden“) for an action with an estimate field (ToDos): the quick-capture
+  // extractor reads it after the dates and times are gone, and the words leave the title.
+  let estimate: number | undefined;
+  if (fieldFor(ref, 'estimate')) {
+    const scan = { t: facts.rest };
+    estimate = extractEstimate(scan);
+    if (estimate !== undefined) facts.rest = scan.t;
+  }
   const restWords = toWords(facts.rest);
   const startHint = hasStartCue(facts.rest);
   const data0: Record<string, unknown> = {};
@@ -534,7 +547,7 @@ async function segmentToOp(
   if (!hasCreateVerb && !hasFacts && firstIsNoun && content <= 1 && !colon) return undefined;
 
   const ops = titles.map((title) => {
-    const data = fillData(ref, facts, { title, quantity, startDateHint: startHint });
+    const data = fillData(ref, facts, { title, quantity, estimate, startDateHint: startHint });
     Object.assign(data, data0);
     const hints = refineReminder(ref, data, facts, ctx, title, fallbackUsed);
     applyDefaults(ref, data, ctx.today);

@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Planer, Paket 4 (`feat/plan-ai`, PR offen): lokales Modell liest im Planer-Feld, was die Regeln nicht lesen können – eigener Prompt und eigene Grammatik (`core/ai/local/prompts/plan.ts`, ≤ 30 Plan-Zeilen, ≤ 8 Ops), nur Desktop mit Modell und KI an, Vorschau sagt „Vom lokalen Modell gelesen“; ToDo `estimateMin` als KI-Feld (Rolle `estimate`, auch „zwei Stunden“); Datenschutz-Pins (1)–(4) für den Planer; Paket 5 (Zeitfenster) folgt.
+
 Identität v3.1, Paket 4 (`feat/identity-v3-polish`, PR offen): Widget-Marke aus der Kopf-Signatur in jedem Widget-Kopf, Chat-Blasen mit Zeilen/Tipp-Punkten, Bibliotheks-Skizze Ringe/Balken je Modul, Überfällig-Texte mit Tag statt Zähler, `--weight-*` überall (+ Prüfregel), Clipped-Text-Messung je Bereich, Signatur `stopwatch`, Seitenleiste nur aktiver Bereich offen, „Eintragen“ am Handy; v3.1 damit abgeschlossen ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md) „Package 4“).
 
 Identität v3.1, Abnahme-Sweep (`qa/identity-v3-sweep`, PR offen): alle Fund-Ids nach Paket 0–3 und Planer-Paket 1 geprüft ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md), kalter Blindtest: Köpfe 82 % an der Form); Restfixes Seitenleisten-Lesehilfe, leerer Chat mit einer Aktion, Serifen-Token, Systemlaufwerk-Badge, Werkzeug≠Modul-Regel; Planer-Funde N01–N04 an Planer-Paket 2.

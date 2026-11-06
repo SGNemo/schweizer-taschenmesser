@@ -159,6 +159,10 @@ export const planner: Strings['planner'] = {
     missing: (query: string) => `Não encontro “${query}” no plano.`,
     ask: (a: string, b: string) => `Você quer dizer ${a} ou ${b}?`,
     askLabel: 'Qual é?',
+    reading: 'Um momento – o modelo local está lendo a frase. Esc interrompe.',
+    localRead: 'Lido pelo modelo local – confira, por favor.',
+    discardedLocal: 'Descartado. Clique em “Adicionar” de novo para criar uma tarefa.',
+    stoppedLocal: 'Interrompido. Clique em “Adicionar” de novo para criar uma tarefa.',
   },
   preview: {
     label: 'Prévia',

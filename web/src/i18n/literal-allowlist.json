@@ -30,5 +30,7 @@
   "src/core/notifications/pushPayload.ts": "service worker fallback in five languages (no catalogs there)",
   "src/core/time/dates.ts": "date-fns pattern table per language",
   "src/strings.ts": "the German source catalog",
-  "src/strings.dev.ts": "Dev-Preview tools for testers, German only (not shipped in stable builds)"
+  "src/strings.dev.ts": "Dev-Preview tools for testers, German only (not shipped in stable builds)",
+  "src/core/ai/local/prompts/plan.ts": "AI prompt of the planner's local stage: German example sentences and the German frame the model reads (stage 1)",
+  "src/modules/planner/localStage.ts": "parser vocabulary: German filler words that never name a thing of the plan (stage 1 gate)"
 }

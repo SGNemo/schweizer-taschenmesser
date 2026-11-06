@@ -232,6 +232,11 @@
   margin: 0;
   font-weight: var(--weight-semibold);
 }
+/* The one line above the ops when the local model read the sentence: quiet, not an op. */
+.previewNote {
+  margin: 0;
+  color: var(--text-muted);
+}
 .previewActions {
   display: flex;
   flex-wrap: wrap;

@@ -7903,6 +7903,10 @@ export const de = {
       missing: (query: string) => `„${query}“ finde ich nicht im Plan.`,
       ask: (a: string, b: string) => `Meinst du ${a} oder ${b}?`,
       askLabel: 'Welches ist gemeint?',
+      reading: 'Einen Moment – das lokale Modell liest den Satz. Esc bricht ab.',
+      localRead: 'Vom lokalen Modell gelesen – bitte prüfen.',
+      discardedLocal: 'Verworfen. Noch einmal „Eintragen“ legt ein ToDo an.',
+      stoppedLocal: 'Abgebrochen. Noch einmal „Eintragen“ legt ein ToDo an.',
     },
     preview: {
       label: 'Vorschau',
