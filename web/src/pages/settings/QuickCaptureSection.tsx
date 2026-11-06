@@ -12,7 +12,7 @@ import {
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
 import { now, today } from '@/core/time/now';
-import { parseCapture, type CaptureType } from '@/quickCapture/parser';
+import { parseCapture, PREFIXES, type CaptureType } from '@/quickCapture/parser';
 import { previewChips } from '@/quickCapture/ui/chips';
 import { t } from '@/strings';
 import { tSettingsV31 } from '@/strings.settingsV31';
@@ -107,13 +107,8 @@ export function HotkeyField({
   );
 }
 
-/** The prefixes a sentence can start with, as „p“ → Planer (the parser's own shortcut letters). */
-const SAMPLE_PREFIXES: readonly [string, CaptureType][] = [
-  ['p', 'plan'],
-  ['t', 'todo'],
-  ['k', 'event'],
-  ['$', 'finance'],
-];
+/** The prefixes shown under the sample; their targets come from the parser's own table. */
+const SAMPLE_PREFIXES = ['p', 't', 'k', '$'] as const;
 
 /**
  * A live sample of the parser: what a typed sentence would become (target, date, time) as chips. Saves nothing and
@@ -126,9 +121,9 @@ export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
   // React Compiler memoizes this; the parser is pure and fast (one short sentence).
   const result = parseCapture(sentence, { now: new Date(now()), defaultType });
   const chips = previewChips(result.fields, result.type, result.notes, today());
-  const prefixes = SAMPLE_PREFIXES.map(
-    ([p, type]) => `„${p}“ → ${t.quickCapture.target[type]}`,
-  ).join(' · ');
+  const prefixes = SAMPLE_PREFIXES.map((p) => `${p} → ${t.quickCapture.target[PREFIXES[p]!]}`).join(
+    ' · ',
+  );
   return (
     <div className={styles.sample} data-testid="capture-sample">
       <TextField
@@ -140,7 +135,7 @@ export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
         spellCheck={false}
         onChange={(e) => setText(e.target.value)}
       />
-      <ul className={styles.sampleChips} aria-label={o.sampleResult} aria-live="polite">
+      <ul className={styles.sampleChips} aria-label={o.sampleResult}>
         {chips.map((c) => (
           <li
             key={`${c.id}-${c.label}`}
@@ -191,7 +186,6 @@ export function QuickCaptureSection() {
   return (
     <div className={styles.quickStack}>
       <StatusCard
-        icon="plus"
         title={o.sampleTitle}
         line={o.sampleLine}
         testId="quick-capture-state"
@@ -239,7 +233,7 @@ export function QuickCaptureSection() {
               id="quickcapture--hotkey"
               label={qs.hotkey}
               description={o.hotkeyLine}
-              hint={`${qs.hotkeyHint} ${qs.trayHelp}`}
+              hint={qs.hotkeyHint}
             >
               <HotkeyField
                 value={prefs.hotkey}
@@ -280,7 +274,12 @@ export function QuickCaptureSection() {
                 }}
               />
             </SettingRow>
-            <SettingRow label={qs.trayToday} description={o.trayTodayLine} hint={qs.trayTodayHint}>
+            <SettingRow
+              id="quickcapture--trayToday"
+              label={qs.trayToday}
+              description={o.trayTodayLine}
+              hint={qs.trayTodayHint}
+            >
               <Switch
                 label={qs.trayToday}
                 labelHidden

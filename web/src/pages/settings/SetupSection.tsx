@@ -25,6 +25,8 @@ export function SetupSection() {
   const open = useSetupHost((s) => s.openWizard);
   const o = tSettingsV31.use().setup;
   const [all, setAll] = useState(false);
+  // Nothing until the device-local progress is read: a half-done setup never flashes "Noch nicht begonnen".
+  if (state === undefined) return null;
   const started = !!state && (state.doneSteps.length > 0 || state.status === 'inProgress');
   const list = checklist?.list;
   // Steps done elsewhere count too (a module already on): the card then says how far it is, the button still starts.
@@ -35,7 +37,7 @@ export function SetupSection() {
   const title = allDone
     ? o.allDone
     : list && progress
-      ? o.progress(list.done, list.total)
+      ? t.setup.checklistProgress(list.done, list.total)
       : o.notStarted;
   const line = allDone ? o.allDoneLine : next && progress ? o.next(next.title) : o.notStartedLine;
   const action = allDone ? o.review : started ? t.setup.resume : t.setup.start;
@@ -50,9 +52,9 @@ export function SetupSection() {
           list && list.total > 0 ? (
             <Ring
               size={3}
-              label={o.progress(list.done, list.total)}
+              label={t.setup.checklistProgress(list.done, list.total)}
               parts={[
-                { label: o.progress(list.done, list.total), share: list.done },
+                { label: t.setup.checklistProgress(list.done, list.total), share: list.done },
                 { label: o.openTitle, share: list.total - list.done },
               ]}
             />
@@ -67,18 +69,16 @@ export function SetupSection() {
       />
       {list && list.open.length > 0 ? (
         <SettingsGroup id="setup-open" title={o.openTitle} plain>
-          {(all ? list.open : list.open.slice(0, MAX_SHOWN)).map((item, i) => (
+          {(all ? list.open : list.open.slice(0, MAX_SHOWN)).map((item) => (
             <SettingRow
               key={item.id}
               label={item.title}
               description={
-                i === 0 && progress
-                  ? o.nextBadge
-                  : item.progress === 'skipped'
-                    ? o.skipped
-                    : item.isNew
-                      ? t.setup.isNew
-                      : undefined
+                item.progress === 'skipped'
+                  ? t.setup.statusSkipped
+                  : item.isNew
+                    ? t.setup.isNew
+                    : undefined
               }
             >
               <Button
@@ -92,7 +92,7 @@ export function SetupSection() {
           {list.open.length > MAX_SHOWN && !all ? (
             <div className={styles.more}>
               <Button variant="ghost" onClick={() => setAll(true)}>
-                {t.setup.moreOpen(list.open.length - MAX_SHOWN)}
+                {o.showAll(list.open.length - MAX_SHOWN)}
               </Button>
             </div>
           ) : null}

@@ -1,5 +1,6 @@
 /* Status card of a settings tab (identity v3.1): tokens only, a hairline all around, no edge stripe. The tint is the
-   page's hue (`--module-color`, set by the category page); "Ruhig" and "Modulfarben: Aus" turn it grey. */
+   tab's hue (`--tab-color` = `var(--mod-<hue>)`, set by the category page); "Ruhig" and "Modulfarben: Aus" turn the
+   `--mod-*` tokens grey, so the card follows. */
 .card {
   display: flex;
   flex-wrap: wrap;
@@ -11,8 +12,8 @@
   border: 1px solid var(--border);
 }
 .card[data-tinted='true'] {
-  background: color-mix(in srgb, var(--module-color, var(--text-3)) 10%, var(--surface));
-  border-color: color-mix(in srgb, var(--module-color, var(--text-3)) 32%, var(--border));
+  background: color-mix(in srgb, var(--tab-color, var(--text-3)) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--tab-color, var(--text-3)) 32%, var(--border));
 }
 .card[data-tone='attention'] {
   border-color: var(--accent);
@@ -32,6 +33,8 @@
   color: var(--accent);
 }
 .figure {
+  /* A ring in the figure draws in the tab's hue. */
+  --module-color: var(--tab-color, var(--text-3));
   display: inline-grid;
   place-items: center;
   flex: none;

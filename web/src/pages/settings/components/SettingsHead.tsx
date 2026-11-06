@@ -21,10 +21,8 @@ function safeDecode(segment: string): string {
 }
 
 /**
- * Head of a settings tab (identity v3.1), like the tool heads: the category's icon on a plate in its hue, the title and
- * one line of description, compact (variant B: a state figure belongs in the tab's `StatusCard`, not here).
- *
- * Head of the open settings page: "Status" on the landing page, the category's own head on a category, the module's on its page. */
+ * Head of the open settings page (moved out of `SettingsLayout` unchanged; settings v3.1 variant B keeps it compact –
+ * a state figure belongs in the tab's `StatusCard`, not here): "Status" on the landing page, the category's own head on a category, the module's on its page. */
 export function SettingsHead() {
   const { pathname } = useLocation();
   const v3 = tSettingsV3.use();

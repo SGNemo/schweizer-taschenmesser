@@ -30,8 +30,8 @@ import {
 export type * from './types';
 export { toCents } from './amount';
 
-/** Shortcut prefixes; they fix the type and skip detection. */
-const PREFIXES: Record<string, CaptureType> = {
+/** Shortcut prefixes; they fix the type and skip detection (also shown as a hint in Settings → Schnellerfassung). */
+export const PREFIXES: Record<string, CaptureType> = {
   t: 'todo',
   k: 'event',
   e: 'reminder',

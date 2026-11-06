@@ -317,7 +317,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             <p>{tSettingsV31.get().setup.doneLine}</p>
           </EmptyState>
         ) : null}
-        <p className={styles.meta}>{t.setup.checklistProgress(doneCount, counted.length)}</p>
+        {doneCount < counted.length ? (
+          <p className={styles.meta}>{t.setup.checklistProgress(doneCount, counted.length)}</p>
+        ) : null}
         <ul className={styles.list}>
           {counted.map((s) => {
             const i = list.findIndex((x) => x.id === s.id);

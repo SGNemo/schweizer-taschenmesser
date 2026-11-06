@@ -1240,6 +1240,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
       },
       {
+        key: 'trayToday',
+        get label() {
+          return t.quickCapture.settings.trayToday;
+        },
+      },
+      {
         key: 'autostart',
         get label() {
           return t.quickCapture.settings.autostart;

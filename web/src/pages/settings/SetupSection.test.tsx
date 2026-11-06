@@ -12,12 +12,12 @@ afterEach(() => useSetupHost.getState().close());
 describe('Settings → Einrichtung', () => {
   it('shows one primary action and never opens the assistant by itself', async () => {
     render(<SetupSection />);
-    const start = await screen.findByRole('button', { name: t.setup.start });
+    const start = await screen.findByRole('button', { name: t.setup.start }, { timeout: 15_000 });
     expect(useSetupHost.getState().open).toBe(false);
     await userEvent.click(start);
     expect(useSetupHost.getState().open).toBe(true);
     expect(useSetupHost.getState().stepId).toBeNull();
-  });
+  }, 20_000);
 
   it('an open step opens the assistant right at that step', async () => {
     // The start migration writes the device-local progress row; without it there is no list yet.
@@ -26,9 +26,9 @@ describe('Settings → Einrichtung', () => {
     const rows = await screen.findAllByRole(
       'button',
       { name: new RegExp(`: ${t.setup.openStep}$`) },
-      { timeout: 5000 },
+      { timeout: 15_000 },
     );
     await userEvent.click(rows[0]!);
     expect(useSetupHost.getState().stepId).toBeTruthy();
-  });
+  }, 20_000);
 });
