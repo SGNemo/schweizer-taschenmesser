@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Sync im Heimnetz (`design/sync-lan-concept`, PR offen, wartet auf Sven): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); Paket 1 erst nach Svens Antworten.
+
 Planer, Pakete 1–5 abgeschlossen (#492, #495, #498, #500, #501; Sweep #497): Engine `core/plan`, Wochenbrett, Kalender-Chip und Zeitblöcke im Stundenraster, Sätze im Feld (Regeln + lokales Modell), Notizen/Rechnungen/Abos als Quellen, Zeitfenster und Wochen-Vorlagen; Modul jetzt `stable` (in der Bibliothek ohne „In Arbeit anzeigen“, standardmäßig aus). Danach eigene Konzepte: Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
 
 Identität v3.1, Paket 4 (`feat/identity-v3-polish`, PR offen): Widget-Marke aus der Kopf-Signatur in jedem Widget-Kopf, Chat-Blasen mit Zeilen/Tipp-Punkten, Bibliotheks-Skizze Ringe/Balken je Modul, Überfällig-Texte mit Tag statt Zähler, `--weight-*` überall (+ Prüfregel), Clipped-Text-Messung je Bereich, Signatur `stopwatch`, Seitenleiste nur aktiver Bereich offen, „Eintragen“ am Handy; v3.1 damit abgeschlossen ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md) „Package 4“).
