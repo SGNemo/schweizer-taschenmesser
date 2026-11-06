@@ -28,3 +28,12 @@ test('a module card deep link marks the card', async ({ page }) => {
   await ready(page, '/library#module-calendar');
   await expect(page.locator('#module-calendar')).toHaveAttribute('data-hash-target', 'true');
 });
+
+test('the planner is finished: listed without „In Arbeit anzeigen“ and off until switched on', async ({
+  page,
+}) => {
+  await ready(page, '/library');
+  const card = page.getByTestId('module-planner');
+  await expect(card).toBeVisible();
+  await expect(card.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+});
