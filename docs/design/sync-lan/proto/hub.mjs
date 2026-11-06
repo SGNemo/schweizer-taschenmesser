@@ -24,29 +24,29 @@ for (let i = 0; i < N; i++) {
   log.push({ seq: log.length + 1, op });
 }
 
-const confirmed = new Promise((resolve) =>
-  process.stdin.on('data', (d) => d.toString().includes('confirm') && resolve()),
+const confirmation = new Promise((resolve) =>
+  process.stdin.on('data', (d) => {
+    const m = /^confirm (\d{6})/.exec(d.toString());
+    if (m) resolve(m[1]);
+  }),
 );
 
 const server = net.createServer(async (sock) => {
   if (!isLanV4(sock.remoteAddress.replace(/^::ffff:/, ''), allowTestNet)) return sock.destroy();
   const f = framer(sock);
   try {
-    const { mode, peer, ch } = await respond(f, {
+    const { mode, peer, name, ch } = await respond(f, {
       me,
-      // One attempt per window: burned once a message 1 decrypts (sender holds the QR), not before.
-      pskFor: () => {
-        const psk = pairing && Date.now() < pairing.expiresAt ? pairing.psk : null;
-        pairing = null;
-        return psk;
-      },
+      peekPsk: () => (pairing && Date.now() < pairing.expiresAt ? pairing.psk : null),
+      burn: () => (pairing = null), // only after message 1 proved the current secret
       trusts: (pub) => trusted.has(pub.toString('hex')),
     });
     if (mode === MODE.PAIR) {
       // The PC shows `ch.sas` and waits for the confirmation tap; here run.mjs plays the user:
       // it compares the code with the phone's and writes "confirm" to stdin.
-      process.stdout.write(`${JSON.stringify({ sas: ch.sas })}\n`);
-      await confirmed;
+      // The tap is bound to this attempt: the confirmation must carry this code.
+      process.stdout.write(`${JSON.stringify({ sas: ch.sas, name })}\n`);
+      if ((await confirmation) !== ch.sas) throw new Error('not confirmed');
       trusted.add(peer.toString('hex'));
       ch.send({ t: 'key', k: dataKey.toString('base64') }); // data key only after confirmation
       process.stdout.write(`${JSON.stringify({ keySentAfterConfirm: true })}\n`);

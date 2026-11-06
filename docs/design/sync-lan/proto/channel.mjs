@@ -1,6 +1,6 @@
 // Encrypted, mutually authenticated channel for the prototype. Noise-*like* (IK shape: the phone
-// knows the hub's static key from the QR; pairing additionally mixes the QR's one-time secret into
-// message 2, like IKpsk2), NOT Noise: the product uses a vetted implementation (Rust `snow`), see
+// knows the hub's static key from the QR; pairing mixes the QR's one-time secret into message 1,
+// like IKpsk1), NOT Noise: the product uses a vetted implementation (Rust `snow`), see
 // CONCEPT.md §5. The hub never sends its static key, so a stranger cannot learn it. Not product code.
 import crypto from 'node:crypto';
 
@@ -88,9 +88,6 @@ export function framer(sock, max = MAX_HANDSHAKE_FRAME) {
 }
 
 function transport(f, sendKey, recvKey, sas) {
-  // Raised only after the handshake: in this IK shape message 1 already proved the phone's static
-  // key (its `ss` payload decrypted), unlike XX where that proof comes with the first data frame.
-  f.max = MAX_FRAME;
   let sn = 0;
   let rn = 0;
   return {
@@ -99,7 +96,11 @@ function transport(f, sendKey, recvKey, sas) {
     },
     async recv() {
       const frame = await f.read();
-      return JSON.parse(open(recvKey, rn++, frame, PROLOGUE).toString());
+      const msg = JSON.parse(open(recvKey, rn++, frame, PROLOGUE).toString());
+      // Message 1 is replayable (Noise spec §7.7); only a decrypted transport frame proves the
+      // peer completed this handshake. Until then frames stay at the small handshake cap.
+      f.max = MAX_FRAME;
+      return msg;
     },
     sas,
   };
@@ -107,50 +108,66 @@ function transport(f, sendKey, recvKey, sas) {
 
 /** Short authentication string shown on both screens at pairing (6 digits from the transcript). */
 const sasOf = (t) => String(crypto.createHash('sha256').update(t).digest().readUInt32BE(0) % 1_000_000).padStart(6, '0');
+const M1_LEN = 1 + 32 + 48 + 16;
 
 /**
  * Initiator (phone). `hubPub` = the hub's static key (from the QR, pinned afterwards).
- * PAIR: `psk` from the QR. SESSION: no psk.
- * Message 1: mode | e | AEAD_es(phone static) | AEAD_es+ss(empty) – only QR holders can build it.
+ * PAIR: `psk` from the QR, mixed into the message-1 payload key (IKpsk1 shape), so the hub can
+ * check the current window's secret before it burns the window or shows a code. SESSION: no psk.
+ * Message 1: mode | e | AEAD_es(phone static) | AEAD_es+ss(+psk)(empty).
+ * After message 2 the phone sends a `hello` frame: the first proof of a live, complete handshake.
  */
-export async function initiate(f, { mode, me, psk, hubPub }) {
+export async function initiate(f, { mode, me, psk, hubPub, name = 'Pixel 7' }) {
+  const salt = mode === MODE.PAIR ? psk : ZERO;
   const e = keyPair();
   const es = dh(e, hubPub);
   const ss = dh(me, hubPub);
   const t0 = Buffer.concat([PROLOGUE, Buffer.from([mode]), e.pub, hubPub]);
   const c1 = seal(hkdf(es, ZERO, t0, 32), 0, me.pub, t0);
   const t1 = Buffer.concat([t0, c1]);
-  f.write(Buffer.concat([Buffer.from([mode]), e.pub, c1, seal(hkdf(Buffer.concat([es, ss]), ZERO, t1, 32), 0, Buffer.alloc(0), t1)]));
+  f.write(Buffer.concat([Buffer.from([mode]), e.pub, c1, seal(hkdf(Buffer.concat([es, ss]), salt, t1, 32), 0, Buffer.alloc(0), t1)]));
   const m2 = await f.read();
-  if (m2.length === 1) throw new Error(`refused:${REFUSED[m2[0]] ?? 'unknown'}`); // unauthenticated (pairing only)
+  if (m2.length === 1) {
+    // Unauthenticated: meaningful only inside the pairing flow; otherwise just "not reachable".
+    throw new Error(mode === MODE.PAIR ? `refused:${REFUSED[m2[0]] ?? 'unknown'}` : 'network');
+  }
   const ea = m2.subarray(0, 32);
   const t2 = Buffer.concat([t1, ea]);
-  const ikm = Buffer.concat([es, ss, dh(e, ea), dh(me, ea)]);
-  const k2 = hkdf(ikm, mode === MODE.PAIR ? psk : ZERO, t2, 96);
+  const k2 = hkdf(Buffer.concat([es, ss, dh(e, ea), dh(me, ea)]), salt, t2, 96);
   // Decrypts only if the peer owns the hub's private key (es) and, when pairing, knows the psk.
   const status = JSON.parse(open(k2.subarray(64), 0, m2.subarray(32), t2).toString());
   if (!status.ok) throw new Error(`refused:${status.reason}`); // authenticated by the hub
-  return transport(f, k2.subarray(0, 32), k2.subarray(32, 64), sasOf(t2));
+  const ch = transport(f, k2.subarray(0, 32), k2.subarray(32, 64), sasOf(t2));
+  ch.send({ t: 'hello', name });
+  return ch;
 }
 
-/** Responder (hub). `trusts(pub)` decides SESSION access; PAIR needs the live one-time psk. */
-export async function respond(f, { me, pskFor, trusts }) {
+/**
+ * Responder (hub). `peekPsk()` returns the live window's secret without consuming it; `burn()`
+ * consumes it. `trusts(pub)` decides SESSION access. Resolves after the peer's `hello` decrypted.
+ */
+export async function respond(f, { me, peekPsk, burn, trusts }) {
   const m1 = await f.read();
   const mode = m1[0];
+  if (m1.length !== M1_LEN || (mode !== MODE.PAIR && mode !== MODE.SESSION)) throw new Error('malformed');
   const eb = m1.subarray(1, 33);
   const es = dh(me, eb);
   const t0 = Buffer.concat([PROLOGUE, Buffer.from([mode]), eb, me.pub]);
-  const c1 = m1.subarray(33, 33 + 48);
+  const c1 = m1.subarray(33, 81);
   const sb = open(hkdf(es, ZERO, t0, 32), 0, c1, t0); // fails for anyone without the hub's key
   const t1 = Buffer.concat([t0, c1]);
   const ss = dh(me, sb);
-  open(hkdf(Buffer.concat([es, ss]), ZERO, t1, 32), 0, m1.subarray(81), t1); // phone owns `sb`
-  // Only now – the sender holds the QR (knows the hub key) – may a pairing attempt burn the window.
-  const psk = mode === MODE.PAIR ? pskFor() : ZERO;
-  if (!psk) {
-    f.write(Buffer.from([1]));
-    throw new Error('no pairing window open');
+  let psk = ZERO;
+  if (mode === MODE.PAIR) {
+    psk = peekPsk();
+    if (!psk) {
+      f.write(Buffer.from([1]));
+      throw new Error('no pairing window open');
+    }
   }
+  // PAIR: fails for an old QR, a revoked device or a replay from an earlier window – nothing burned.
+  open(hkdf(Buffer.concat([es, ss]), psk, t1, 32), 0, m1.subarray(81), t1);
+  if (mode === MODE.PAIR) burn(); // the sender proved the current secret
   const e = keyPair();
   const t2 = Buffer.concat([t1, e.pub]);
   const k2 = hkdf(Buffer.concat([es, ss, dh(e, eb), dh(e, sb)]), psk, t2, 96);
@@ -158,7 +175,10 @@ export async function respond(f, { me, pskFor, trusts }) {
   const status = ok ? { ok: true } : { ok: false, reason: 'unknown-device' };
   f.write(Buffer.concat([e.pub, seal(k2.subarray(64), 0, Buffer.from(JSON.stringify(status)), t2)]));
   if (!ok) throw new Error('unknown device');
-  return { mode, peer: sb, ch: transport(f, k2.subarray(32, 64), k2.subarray(0, 32), sasOf(t2)) };
+  const ch = transport(f, k2.subarray(32, 64), k2.subarray(0, 32), sasOf(t2));
+  const hello = await ch.recv(); // only now: raise frame cap, record activity, show the code
+  if (hello.t !== 'hello') throw new Error('expected hello');
+  return { mode, peer: sb, name: hello.name, ch };
 }
 
 /** mDNS hint that rotates daily: only devices that know the hub key can match it. */

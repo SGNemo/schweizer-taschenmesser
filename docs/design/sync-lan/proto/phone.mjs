@@ -1,6 +1,6 @@
 // Process B – the "phone": reads the QR payload, finds the hub via mDNS, pairs, pushes N
 // E2E-encrypted ops, pulls everything back, reconnects with the pinned key and runs negative checks
-// (stranger burning the window, reused QR, unpaired device, impostor hub, oversized frame).
+// (stranger / old-QR holder burning the window, reused QR, unpaired device, impostor hub, oversized frame).
 // Prints {sas} first (for the simulated confirmation), then one JSON line with the results.
 import crypto from 'node:crypto';
 import net from 'node:net';
@@ -33,13 +33,21 @@ const found = await browse({
 out.discoveryMs = ms(t);
 if (!isLanV4(found.ip, allowTestNet)) throw new Error('hub is not on a private address');
 
-// A stranger who does not know the hub key cannot even burn the pairing window: send a PAIR
-// message 1 built against a random key first; the real pairing below must still succeed.
-{
+// Before the real pairing, two attackers try to burn the window: a stranger without the hub key,
+// and someone who has the hub key but not the current secret (old QR, revoked device, replay of an
+// earlier window's message 1). Both must be dropped silently and the real pairing must still work.
+async function burnAttempt(opts) {
   const s = await connect(found.ip, found.port);
-  await initiate(framer(s), { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, hubPub: keyPair().pub }).catch(() => {});
+  const err = await initiate(framer(s), { mode: MODE.PAIR, me: keyPair(), ...opts }).then(
+    () => 'paired',
+    (e) => e.message,
+  );
   s.destroy();
+  return err;
 }
+const strangerErr = await burnAttempt({ psk: qr.psk, hubPub: keyPair().pub });
+const oldQrErr = await burnAttempt({ psk: crypto.randomBytes(16), hubPub: qr.hubPub });
+const dropped = (m) => /^closed$|ECONNRESET|EPIPE/.test(m);
 
 const me = keyPair();
 t = performance.now();
@@ -49,7 +57,8 @@ out.sas = ch.sas;
 process.stdout.write(`${JSON.stringify({ sas: ch.sas })}\n`); // run.mjs compares and confirms on the hub
 const dataKey = Buffer.from((await ch.recv()).k, 'base64');
 out.pairMs = ms(t); // includes the simulated confirmation round trip
-out.windowSurvivedStranger = true;
+out.windowSurvivedStranger = dropped(strangerErr);
+out.oldQrHolderCannotBurn = dropped(oldQrErr); // and the pairing above still succeeded
 
 t = performance.now();
 const ops = [];
@@ -122,7 +131,7 @@ out.strangerRefused =
   'refused:unknown-device';
 // An impostor hub (other key, e.g. after ARP spoofing) cannot read message 1 and cannot answer.
 const impostor = net.createServer((s) =>
-  respond(framer(s), { me: keyPair(), pskFor: () => qr.psk, trusts: () => true }).catch(() => s.destroy()),
+  respond(framer(s), { me: keyPair(), peekPsk: () => qr.psk, burn() {}, trusts: () => true }).catch(() => s.destroy()),
 );
 await new Promise((r) => impostor.listen(0, found.ip, r));
 const imp = await attempt((f) => initiate(f, { mode: MODE.SESSION, me, hubPub: qr.hubPub }), impostor.address().port);

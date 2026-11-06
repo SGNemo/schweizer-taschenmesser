@@ -1,6 +1,6 @@
 // LAN sync prototype – run: `node docs/design/sync-lan/proto/run.mjs` (Node ≥ 20, no install).
 // Starts hub (A) and phone (B) as separate processes ROUNDS times and prints a Markdown table.
-// Env: ROUNDS (default 5), OPS (default 1000), LAN_IP (interface address; default: first non-internal IPv4).
+// Env: ROUNDS (default 9), OPS (default 1000), LAN_IP (interface address; default: first non-internal IPv4).
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { isLanV4 } from './channel.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const ROUNDS = Number(process.env.ROUNDS ?? 5);
+const ROUNDS = Number(process.env.ROUNDS ?? 9);
 const OPS = Number(process.env.OPS ?? 1000);
 const ip =
   process.env.LAN_IP ??
@@ -54,7 +54,7 @@ for (let r = 0; r < ROUNDS; r++) {
     const fromPhone = lines(phone);
     const phoneSas = (await fromPhone()).sas;
     const hubSas = (await next()).sas;
-    if (hubSas === phoneSas) hub.stdin.write('confirm\n'); // the user compares the codes and taps „Koppeln“
+    if (hubSas === phoneSas) hub.stdin.write(`confirm ${hubSas}\n`); // the user compares the codes and taps „Koppeln“
     const keyLine = await next();
     const result = await fromPhone();
     result.sasMatch = hubSas === phoneSas;
@@ -79,6 +79,6 @@ const pull = median(runs.map((x) => x.pullMs));
 console.log(`| push size | ${kb} KiB | | |`);
 console.log(`| push throughput | ${Math.round((OPS / push) * 1000)} ops/s | | |`);
 console.log(`| pull throughput (${runs[0].pulledOps} ops) | ${Math.round((runs[0].pulledOps / pull) * 1000)} ops/s | | |`);
-const checks = ['windowSurvivedStranger', 'sasMatch', 'keyAfterConfirm', 'decryptedOk', 'sessionUpToDate', 'reusedQrRefused', 'strangerRefused', 'impostorRefused', 'oversizeDropped'];
+const checks = ['windowSurvivedStranger', 'oldQrHolderCannotBurn', 'sasMatch', 'keyAfterConfirm', 'decryptedOk', 'sessionUpToDate', 'reusedQrRefused', 'strangerRefused', 'impostorRefused', 'oversizeDropped'];
 for (const c of checks) console.log(`check ${c}: ${runs.every((x) => x[c] === true) ? 'ok' : 'FAILED'}`);
 if (!runs.every((x) => checks.every((c) => x[c] === true))) process.exit(1);
