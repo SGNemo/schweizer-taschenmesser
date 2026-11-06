@@ -1,0 +1,45 @@
+name: Playwright Chromium
+description: >
+  Chromium for Playwright plus its system packages, both cached. On the hosted Ubuntu runner every library is
+  already installed; `install-deps` only adds nine font packages (21 MB), and the Azure apt mirror sometimes
+  serves them at 40 kB/s (6 to 12 min per job, about 1 E2E job in 17 in Nov 2026). The .deb files are cached per
+  runner image and lock file, so apt installs them from disk.
+inputs:
+  working-directory:
+    description: Package that pins @playwright/test (its package-lock.json keys the caches).
+    default: web
+runs:
+  using: composite
+  steps:
+    - name: Runner image
+      id: image
+      shell: bash
+      run: echo "id=${ImageOS:-unknown}-${ImageVersion:-0}" >> "$GITHUB_OUTPUT"
+    - name: Playwright browser cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      id: browser
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+    - name: Download Chromium
+      if: steps.browser.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npx playwright install chromium
+    - name: System package cache (.deb files)
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/apt-playwright
+        key: apt-playwright-${{ steps.image.outputs.id }}-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+    # System libraries and fonts are needed even when the browser itself comes from the cache.
+    - name: System packages
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        dir="$HOME/.cache/apt-playwright"
+        mkdir -p "$dir/partial"
+        printf 'Dir::Cache::Archives "%s/";\nAPT::Keep-Downloaded-Packages "true";\n' "$dir" \
+          | sudo tee /etc/apt/apt.conf.d/99-playwright-cache > /dev/null
+        npx playwright install-deps chromium
+        sudo rm -f /etc/apt/apt.conf.d/99-playwright-cache
+        sudo chown -R "$(id -u):$(id -g)" "$dir"
