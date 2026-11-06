@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { moduleSwitch } from '../helpers';
+import { moduleSwitch, openNavArea } from '../helpers';
 import {
   addTask,
   connect,
@@ -119,6 +119,8 @@ test.describe('two devices', () => {
     await expect(
       b.page.getByTestId('module-example').getByText('Aktiv', { exact: true }),
     ).toBeVisible();
+    // F06: the sidebar folds every area but the current page's; open "Wissen" by hand.
+    await openNavArea(b.page, 'Wissen');
     await expect(
       b.page
         .getByRole('navigation', { name: 'Hauptnavigation' })
