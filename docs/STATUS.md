@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Identität v3.1, Paket 4 (`feat/identity-v3-polish`, PR offen): Widget-Marke aus der Kopf-Signatur in jedem Widget-Kopf, Chat-Blasen mit Zeilen/Tipp-Punkten, Bibliotheks-Skizze Ringe/Balken je Modul, Überfällig-Texte mit Tag statt Zähler, `--weight-*` überall (+ Prüfregel), Clipped-Text-Messung je Bereich, Signatur `stopwatch`, Seitenleiste nur aktiver Bereich offen, „Eintragen“ am Handy; v3.1 damit abgeschlossen ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md) „Package 4“).
+
 Identität v3.1, Abnahme-Sweep (`qa/identity-v3-sweep`, PR offen): alle Fund-Ids nach Paket 0–3 und Planer-Paket 1 geprüft ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md), kalter Blindtest: Köpfe 82 % an der Form); Restfixes Seitenleisten-Lesehilfe, leerer Chat mit einer Aktion, Serifen-Token, Systemlaufwerk-Badge, Werkzeug≠Modul-Regel; Planer-Funde N01–N04 an Planer-Paket 2.
 
 Identität v3.1, Paket 1 Planen + Geld (`feat/identity-v3-plan-money-fix`, PR offen): zwölf Module inkl. Planer auf dem v3.1-Rahmen – Rechnungen `fokus` mit offener Summe, `bill`-Marke und „Nächste bezahlen“, Budgets mit `Envelope`-Karten, Abos-Ring in 12 Segmenten, Gewohnheiten-Widget mit Ringen, Karten mit Kategorie-Kacheln, Zeiterfassung mit Stoppuhr (`Stopwatch`), ToDos-Kopf ohne Abschneiden am Telefon, Kalender-Kopf ohne Termine mit nächster Handlung, Leerzustände auf `EmptyState motif` mit einem Verb; Fenster-Queries auf Seitenbreite.

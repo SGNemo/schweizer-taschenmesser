@@ -31,7 +31,7 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | F03 | 0         | erledigt             | `--text-on-tint` (84 % / 94 %), head-ink guard in `tokens.test.ts`                                                                                   | –                      |
 | F04 | 0         | erledigt             | app-wide rule in `checkIdentity.ts`, `check:modules` green                                                                                           | –                      |
 | F05 | 0         | erledigt             | `KennzahlBody`/`KachelnBody`/`FortschrittBody`/`NotizBody` in use (widgets-1920); recognition see N05                                                | –                      |
-| F06 | 0         | teilweise            | 36 px rows in; at 1080 the list still scrolls from "Chat" (sweep-heads/pages). Maintainer question open in #485                                      | S (decision)           |
+| F06 | 0 + 4 | erledigt (4) | areas folded except the current page's, hand choice kept (`tm-nav-open`); 1080 no longer scrolls (`p4-f06-before-after`) | – |
 | F07 | 0         | erledigt             | neutral group tint in sidebar and library                                                                                                            | –                      |
 | F08 | 0         | erledigt             | `--focus` on the accent hue, `--info` warning test                                                                                                   | –                      |
 | F09 | 0         | erledigt             | `align-items: start`, widgets keep their height (overview)                                                                                           | –                      |
@@ -47,12 +47,12 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | G04 | 1         | erledigt             | invoices `fokus`: open sum, bill mark, „Nächste bezahlen“                                                                                            | –                      |
 | G05 | 1         | erledigt             | budgets envelopes in the slot (heads, sven-phone)                                                                                                    | –                      |
 | G06 | 2         | erledigt             | pinboard in slot M (still small at 1920, recognised strong in the cold test)                                                                         | –                      |
-| G07 | 2         | teilweise            | chat bubbles read as empty placeholders, weakest head of the cold test (sweep-empty-chat)                                                            | S–M (package 4)        |
+| G07 | 2 + 4 | erledigt (4) | bubbles carry two ink lines and three still typing dots, G02 size (`p4-g07-before-after`) | – |
 | G08 | 2         | erledigt             | notes paper beside the title, phone too; recognised strong                                                                                           | –                      |
 | G09 | 0 + 2     | erledigt             | `masthead` id, feeds head                                                                                                                            | –                      |
 | G10 | 1         | erledigt             | habits widget rings                                                                                                                                  | –                      |
 | G11 | 1         | erledigt             | maps pin + `KachelnBody` tiles                                                                                                                       | –                      |
-| G12 | 0 + 1     | teilweise            | feeds `masthead` ✓; timetrack manifest `hourStrip`, page draws `Stopwatch` (board: `stopwatch` id = contract)                                        | S (contract chat)      |
+| G12 | 0 + 1 + 4 | erledigt (4) | `SIGNATURES`: `hourStrip` → `stopwatch`, own mark + dial block; settings head and empty motif (`p4-g12-settings-before-after`) | – |
 | G13 | 2         | erledigt             | mail paper + stamp, one "Posteingang" widget                                                                                                         | –                      |
 | G14 | 1         | erledigt             | receipt (lists) vs bill (invoices); orchid shared by different heads (allowed)                                                                       | –                      |
 | G15 | 0         | erledigt             | scratch link `data-hue` violet, `--module-color`                                                                                                     | –                      |
@@ -76,14 +76,14 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | C08 | 0         | erledigt             | `feedback`/`widgetType` rejected by the registry, frame draws `identity.signature`                                                                   | –                      |
 | C09 | 0         | erledigt             | one `HeadSurface` for band, settings head, tool stage                                                                                                | –                      |
 | C10 | 0 + 2     | erledigt             | compact heads stay compact; music head compact on the phone                                                                                          | –                      |
-| C11 | 0         | teilweise            | serif: all module CSS on `var(--font-serif)` (phase 2, pixel-identical); 30 raw `font-weight` numbers left                                           | M (weights, package 4) |
+| C11 | 0 + 4 | erledigt (4) | 28 raw weights → `--weight-*` (550/650 → semibold, 400 → normal); `checkFontWeights` in `check:modules` fails on new ones | – |
 | C12 | 0         | erledigt             | `categoryLook.ts` + test                                                                                                                             | –                      |
 | C13 | 0         | erledigt             | no angle parsing, hue equality only                                                                                                                  | –                      |
 | C14 | audit     | erledigt             | MODULE-IDENTITY clarification                                                                                                                        | –                      |
 | C15 | 0         | erledigt             | spreading removed, manifest order                                                                                                                    | –                      |
 | C16 | 0         | erledigt             | compact bar title from state                                                                                                                         | –                      |
 | C17 | 0         | erledigt             | calm drops tint and pattern through tokens                                                                                                           | –                      |
-| C18 | 0         | teilweise            | `clipped-text.spec.ts` exists; this sweep measured document/main only                                                                                | S (tooling)            |
+| C18 | 0 + 4 | erledigt (4) | `clipped-text.spec.ts` by region (widget/head/row/page), 360 + 1920, planner + all widgets; first run: phone 0/4/1, desktop 3/3/39 | – |
 | C19 | 1         | erledigt             | calendar grid by page width                                                                                                                          | –                      |
 | C20 | 0         | erledigt             | tools draw through `SignatureMark`                                                                                                                   | –                      |
 | C21 | 0         | erledigt             | two fillers left by design (`headline` for finance, `HeroSlot figure`); shell branch gone                                                            | –                      |
@@ -92,11 +92,11 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | C24 | 2         | erledigt             | pantry/vault attention `warning`                                                                                                                     | –                      |
 | C25 | 1         | erledigt             | timetrack `Stopwatch`                                                                                                                                | –                      |
 | C26 | 1         | erledigt             | weather without place keeps the sky and one step                                                                                                     | –                      |
-| C27 | 1         | teilweise            | invoices widget shows the date ✓; pantry widget still „Joghurt natur · seit gestern“ (`core/time/due.ts` `overdueSince`, used by every `DueList`)    | S–M                    |
+| C27 | 1 + 4 | erledigt (4) | with N08: every `DueList` names the day, invoices on the shared label | – |
 | C28 | 0         | erledigt             | library head slate                                                                                                                                   | –                      |
 | C29 | 1         | erledigt             | one filled primary on todos/timetrack                                                                                                                | –                      |
 | C30 | 0         | erledigt             | link from "Fokus & Aufmerksamkeit"                                                                                                                   | –                      |
-| C31 | 0         | **offen**            | phone "Satz eintragen" still icon-only (`.writeLabel { display: none }`)                                                                             | S (decision)           |
+| C31 | 0 + 4 | erledigt (4) | phone shows „Eintragen“ beside a small icon; full name stays label + tooltip (`p4-c31-before-after`) | – |
 | C32 | audit     | erledigt             | rule in MODULE-IDENTITY                                                                                                                              | –                      |
 | C33 | 0         | erledigt             | widget head zone assertion                                                                                                                           | –                      |
 | C34 | 1 + 2     | erledigt             | timetrack fish; accounts is a status widget, not an empty state                                                                                      | –                      |
@@ -133,7 +133,7 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | „Heute“ card in plan order         | teilweise | next = the planner's today item ✓; but the card counts **10 Heute · etwa 65 Min** (8 waiting + 2 today) while the planner says **1 Ding · 5 Min** (N02) |
 | Board at 1920                      | teilweise | seven columns of ~210 px: titles break inside words („Urlaubsant/rag“, „Steuererkl/ärung“) (N01)                                                        |
 | No overflow at 390                 | erledigt  | day strip scrolls inside itself; page 0 px                                                                                                              |
-| Library card                       | teilweise | the sketch of `fortschritt` is a ring, same as habits; the planner widget is bars (N06)                                                                 |
+| Library card                       | erledigt (4) | the sketch of `fortschritt` is a ring, same as habits; the planner widget is bars (N06)                                                                 |
 
 ## New findings
 
@@ -143,10 +143,10 @@ Status: **erledigt** · **teilweise** · **offen**. Rest = effort left (S < ½ d
 | N02 | ToDo head „10 Heute · etwa 65 Min“ vs planner „1 Ding · 5 Min“; the ToDo „Wartet noch · Alle auf heute“ group stays while the planner already put those items on later days (rewrites `plannedFor`, against CONCEPT §7 "what gets removed"). | planner package 2 (`todos/today.ts`, todos page condition) | S–M  |
 | N03 | Planner icon `calendarDays` next to Kalender's `calendar`: two calendar glyphs in neighbouring sidebar rows.                                                                                                                                 | planner manifest                                           | S    |
 | N04 | Planner page: the toolbar row holds only the ⋯ menu above the field (≈ 100 px empty row at 1920).                                                                                                                                            | planner package 2                                          | S    |
-| N05 | Cold blind test: widgets of the indigo/cobalt family (planner, subscriptions, vault, bookmarks, downloads, browser) are told apart only by text or header icon; the head motif does not reach the overview.                                  | package 4 proposal (widget marks)                          | M    |
-| N06 | Library `WidgetMiniature` draws `fortschritt` as a ring for every module (planner = bars, habits = rings).                                                                                                                                   | library owner                                              | S    |
+| N05 | Cold blind test: widgets of the indigo/cobalt family (planner, subscriptions, vault, bookmarks, downloads, browser) are told apart only by text or header icon; the head motif does not reach the overview. **Erledigt in package 4:** every widget head draws its `SignatureMark` at the right end (ink, `aria-hidden`); cold reader 6/6 by the mark alone, grayscale, titles + icons hidden (`p4-n05-blind`). | package 4 proposal (widget marks)                          | – |
+| N06 | Library `WidgetMiniature` draws `fortschritt` as a ring for every module (planner = bars, habits = rings). **Erledigt in package 4:** `WidgetMiniature` draws rings for `ring`/`gauges`, bars for the rest (`p4-n06-g12-before-after`). | library owner                                              | – |
 | N07 | Sidebar reading aid kept stale ink after the active module changes. **Fixed in phase 2:** `ReadableText` watches `class`/`aria-current` of the link around it (unit test fails without the fix).                                             | shell                                                      | –    |
-| N08 | „seit gestern / seit n Tagen“ remains in the pantry widget and every `DueList` overdue label (`core/time/due.ts`), the counter C27 removed from invoices.                                                                                    | foundation / module owners                                 | S–M  |
+| N08 | „seit gestern / seit n Tagen“ remains in the pantry widget and every `DueList` overdue label (`core/time/due.ts`), the counter C27 removed from invoices. **Erledigt in package 4:** „war am Di. fällig“ / „war am 17. Sep. fällig“, pantry „MHD war Mo.“, test per language (`p4-n08-before-after`). | foundation / module owners                                 | – |
 
 ## Open points ≤ 1 day and proposal (phase 2)
 
@@ -163,3 +163,21 @@ Not mine (board notes for `feat/plan-calendar-instructions`): N01–N04. Propose
 ## Phase 2 – fixes (after „Plan freigegeben“)
 
 One commit per id: N07 sidebar stale ink (`core/text/ReadableText`, unit test red → green), C23 chat empty page (`modules/chat`, unit test with a mutation check; the unused `chat.emptyAction` removed in five languages, e2e starts from „Neuer Chat“), C11 serif token (6 CSS files, pixel-identical), C01 disk badge, F13 rule + `check:tools` information. After-shots from the rebuilt seeded preview: `shots/sweep-fix-*.jpg`. Left to the maintainer, nothing changed: C27 app-wide counter text (own package), C31 phone write button icon-only, F06 sidebar scroll at 1080. Proposed for package 4, not built: N05, G07, N06, N08, C11 weights, C18 tooling, G12 `stopwatch` id.
+
+## Package 4 – rest points (`feat/identity-v3-polish`)
+
+One commit per id; before/after from the rebuilt seeded preview: `shots/p4-*.jpg`. Maintainer answers: F06 fold areas (a), C31 show the text (a), pantry wording „MHD war Mo.“.
+
+| Id | Change | Proof |
+| --- | --- | --- |
+| N05 | `home/Home.tsx` widget head: `SignatureMark` of `identity.signature`, right end of the head row, `--text-muted`, `aria-hidden`; mail/chat drop their in-body mark | e2e `home.spec` (every widget, same row as the title); cold reader 6/6 by the mark alone (three only when zoomed: pinboard, arrow band, address bar are small at 22 px) |
+| G07 | `Bubble` block: two ink lines + three still dots | `identity.test.tsx`; `p4-g07-before-after` |
+| N06 | `WidgetMiniature` `signature` prop, `progressForm()` | `WidgetMiniature.test.tsx` |
+| N08 | `core/time/due.ts` `overdueOn`/`pastDay`; `overdueSince`, `invoices.widgetDue` removed (5 languages); FOCUS-WORDING row | `due.test.ts` (each language), e2e `home`/`readability` |
+| C11 | 17 CSS files on tokens; `checkFontWeights` | `checkIdentity.test.ts`; `check:modules` red before, green after |
+| C18 | `e2e/screenshots/clipped-text.spec.ts` regions + desktop | run on the seeded preview |
+| G12 | contract id `stopwatch` | `check:modules`, identity tests |
+| F06 | `stores/ui.ts` `openAreas`, `Sidebar` `areaOpen()` | `nav.test.tsx`, `ui.test.ts`, e2e `shell`/`modules`/`readability` |
+| C31 | `layout/AreaFrame` `.writeShort` | `p4-c31-before-after` |
+
+Left open (outside this package): the pantry **page** still says „Seit n Tagen abgelaufen“ (`t.pantry.expired`, `PantryPage.tsx`) – same counter rule as N08; N01–N04 stay with `fix/planner-sweep`. With this package identity v3.1 is complete.
