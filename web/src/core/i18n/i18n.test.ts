@@ -95,6 +95,31 @@ describe('language preference', () => {
     expect(localStorage.getItem('tm-lang')).toBe('en');
   });
 
+  it('keeps the formats a frozen language used (no change of decimal mark or date order)', () => {
+    localStorage.setItem('tm-lang', 'fr');
+    expect(readLangPref()).toBe('en');
+    expect(localStorage.getItem('tm-format')).toBe('fr-FR');
+
+    localStorage.setItem('tm-lang', 'pt-BR');
+    localStorage.setItem('tm-format', 'auto');
+    readLangPref();
+    expect(localStorage.getItem('tm-format')).toBe('pt-BR');
+
+    // A region the person picked stays.
+    localStorage.setItem('tm-lang', 'es');
+    localStorage.setItem('tm-format', 'de-CH');
+    readLangPref();
+    expect(localStorage.getItem('tm-format')).toBe('de-CH');
+  });
+
+  it('still shows English when the migrated choice cannot be written', () => {
+    localStorage.setItem('tm-lang', 'es');
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+    expect(readLangPref()).toBe('en');
+  });
+
   it('starts in English (never German, never a blank choice) after the old choice was French', async () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['fr-FR']);
     const loaded: string[] = [];
@@ -224,6 +249,15 @@ describe('bundles', () => {
     const fresh = defineBundle({ a: 'A' }, { en: { a: 'A (en)' } });
     setLang('en');
     expect(fresh.get().a).toBe('A (en)');
+  });
+
+  it('accepts a new German key without touching kept frozen texts (typecheck is the test)', () => {
+    const grown = defineBundle(
+      { a: 'A', added: 'Neu' },
+      { en: { a: 'A (en)', added: 'New' }, es: { a: 'A (es)' } },
+    );
+    setLang('en');
+    expect(grown.get().added).toBe('New');
   });
 });
 

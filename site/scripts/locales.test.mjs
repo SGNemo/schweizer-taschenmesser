@@ -10,9 +10,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (...p) => readFileSync(path.join(root, ...p), 'utf8');
 const FROZEN = ['/es', '/fr', '/pt-br'];
 
-test('the site offers German and English only', () => {
-  const index = read('src', 'i18n', 'index.ts');
-  assert.match(index, /export const LOCALES = \['de', 'en'\] as const;/);
+test('the site builds no pages for frozen languages', () => {
   for (const p of FROZEN) assert.ok(!existsSync(path.join(root, 'src', 'pages', p.slice(1))), `${p} page still built`);
 });
 
@@ -23,11 +21,9 @@ test('frozen languages keep their texts in the repo', () => {
 test('old URLs of frozen languages redirect to English (Cloudflare 301 and static page)', () => {
   const redirects = read('public', '_redirects');
   const config = read('astro.config.mjs');
-  const index = read('src', 'i18n', 'index.ts');
   for (const p of FROZEN) {
     assert.match(redirects, new RegExp(`^${p} /en 301$`, 'm'), `${p} in _redirects`);
     assert.match(redirects, new RegExp(`^${p}/\\* /en 301$`, 'm'), `${p}/* in _redirects`);
     assert.ok(config.includes(`'${p}': '/en'`), `${p} in astro.config.mjs`);
-    assert.ok(index.includes(`'${p}': '/en'`), `${p} in FROZEN_REDIRECTS`);
   }
 });

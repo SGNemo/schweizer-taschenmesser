@@ -5,16 +5,13 @@ import { en } from './en';
  * Languages the site offers: German and English, same as the app (`ACTIVE_LOCALES` in
  * web/src/core/i18n/lang.ts). Spanish, French and Brazilian Portuguese are frozen
  * (docs/i18n/FROZEN.md): their texts stay in es.ts, fr.ts, pt.ts but are not built; the old URLs
- * redirect to English (`FROZEN_REDIRECTS`, public/_redirects).
+ * redirect to English (`redirects` in astro.config.mjs, public/_redirects).
  */
 export const LOCALES = ['de', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export type Strings = typeof de | typeof en;
 
 export const strings: Record<Locale, Strings> = { de, en };
-
-/** URL prefixes of the frozen languages and where they go now (static, no script). */
-export const FROZEN_REDIRECTS = { '/es': '/en', '/fr': '/en', '/pt-br': '/en' } as const;
 
 /**
  * Route table: the same page per language (German without prefix, English under /en).

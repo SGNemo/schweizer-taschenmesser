@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { t } from '@/strings';
-import { getLang, useLang, type KnownLang, type Lang } from './lang';
+import { getLang, useLang, type ByLang, type Lang } from './lang';
 
 /**
  * Locale for dates, times and numbers. By default it follows the UI language (English → British
@@ -23,7 +23,7 @@ export const FORMAT_REGIONS = [
 export type FormatRegion = (typeof FORMAT_REGIONS)[number];
 export type FormatPref = 'auto' | FormatRegion;
 
-const DEFAULT_REGION: Record<KnownLang, FormatRegion> = {
+const DEFAULT_REGION: ByLang<FormatRegion> = {
   de: 'de-DE',
   en: 'en-GB',
   es: 'es-ES',
@@ -80,7 +80,7 @@ export function useFormatLocale(): FormatRegion {
   return p === 'auto' ? DEFAULT_REGION[lang] : p;
 }
 
-const QUOTES: Record<KnownLang, [string, string]> = {
+const QUOTES: ByLang<[string, string]> = {
   de: ['„', '“'],
   en: ['“', '”'],
   es: ['«', '»'],

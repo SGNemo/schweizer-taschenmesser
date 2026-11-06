@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'never',
   // Spanish, French and Brazilian Portuguese are frozen (docs/i18n/FROZEN.md): old links land on the
   // English page. Cloudflare answers with a 301 from public/_redirects; these pages (meta refresh,
-  // no script) cover any other host. Keep both in step with FROZEN_REDIRECTS in src/i18n/index.ts.
+  // no script) cover any other host. Keep both in step (scripts/locales.test.mjs).
   redirects: { '/es': '/en', '/fr': '/en', '/pt-br': '/en' },
   i18n: {
     defaultLocale: 'de',

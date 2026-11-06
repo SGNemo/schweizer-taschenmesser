@@ -20,7 +20,7 @@ import { createServer } from 'vite';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LANGS, moduleBlock, platformKey, replaceBlock, shortText } from './lib/moduleList.ts';
+import { moduleBlock, platformKey, replaceBlock, shortText } from './lib/moduleList.ts';
 
 const web = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = resolve(web, '..');
@@ -82,7 +82,8 @@ try {
     tools: tools.map((x) => ({ id: x.id, category: x.category, status: status(x), name: {} })),
   };
 
-  for (const l of LANGS) {
+  // Active languages only (ACTIVE_LOCALES; es, fr, pt-BR are frozen, docs/i18n/FROZEN.md).
+  for (const l of lang.ACTIVE_LOCALES) {
     await lang.setLangPref(l);
     data.areas.forEach((a) => (a.name[l] = t.nav.areas[a.id]));
     modules.forEach((m, i) => {

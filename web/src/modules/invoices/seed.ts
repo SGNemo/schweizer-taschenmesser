@@ -1,23 +1,18 @@
-import type { KnownLang } from '@/core/i18n/lang';
+import type { ByLang } from '@/core/i18n/lang';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
 /** Source text and its translations (en, es, fr, pt-BR); `seed` picks by language. */
 const L = (
   de: string,
   en: string,
-  es: string,
-  fr: string,
-  pt: string,
-): Record<KnownLang, string> => ({
-  de,
-  en,
-  es,
-  fr,
-  'pt-BR': pt,
-});
+  // Frozen languages (docs/i18n/FROZEN.md): kept where written, optional for new rows.
+  es?: string,
+  fr?: string,
+  pt?: string,
+): ByLang<string> => ({ de, en, es, fr, 'pt-BR': pt });
 
 /** [payee, min cents, max cents, reference prefix] */
-const PAYEES: readonly (readonly [Record<KnownLang, string>, number, number, string])[] = [
+const PAYEES: readonly (readonly [ByLang<string>, number, number, string])[] = [
   [
     L(
       'Stadtwerke Musterstadt',

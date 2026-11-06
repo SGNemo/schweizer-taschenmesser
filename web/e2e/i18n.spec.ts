@@ -76,6 +76,8 @@ test.describe('frozen language stored', () => {
     // No dialog about it.
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem('tm-lang'))).toBe('en');
+    // Formats that followed French stay French (decimal comma, day first).
+    expect(await page.evaluate(() => localStorage.getItem('tm-format'))).toBe('fr-FR');
   });
 });
 

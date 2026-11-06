@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LANGS } from '@/core/i18n/lang';
+import { ACTIVE_LOCALES } from '@/core/i18n/lang';
 import calendar from '@/modules/calendar/seed';
 import finance from '@/modules/finance/seed';
 import people from '@/modules/people/seed';
@@ -47,14 +47,14 @@ describe('localized seed text', () => {
     ['budgets', budgets],
     ['invoices', invoices],
   ])('%s: every language has its own text and the same row ids', (id, mod) => {
-    const make = (lang: (typeof LANGS)[number]) =>
+    const make = (lang: (typeof ACTIVE_LOCALES)[number]) =>
       mod.seed(createSeedContext({ moduleId: id, today: '2026-09-29', scale: 'medium', lang }));
     const de = make('de');
     const ids = (r: typeof de) =>
       Object.values(r)
         .flat()
         .map((x) => x.id);
-    for (const lang of LANGS.filter((l) => l !== 'de')) {
+    for (const lang of ACTIVE_LOCALES.filter((l) => l !== 'de')) {
       const other = make(lang);
       expect(ids(other)).toEqual(ids(de));
       expect(texts(other)).not.toEqual(texts(de));
@@ -66,7 +66,7 @@ describe('localized demo vault entries', () => {
   it('translates titles, notes and tags but keeps logins and passwords', async () => {
     const { demoEntries } = await import('@/modules/accounts/seed');
     const de = demoEntries('de');
-    for (const lang of LANGS.filter((l) => l !== 'de')) {
+    for (const lang of ACTIVE_LOCALES.filter((l) => l !== 'de')) {
       const other = demoEntries(lang);
       expect(other.map((e) => e.username)).toEqual(de.map((e) => e.username));
       expect(other.map((e) => e.password)).toEqual(de.map((e) => e.password));

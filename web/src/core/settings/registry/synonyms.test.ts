@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LANGS } from '@/core/i18n/lang';
+import { ACTIVE_LOCALES } from '@/core/i18n/lang';
 import { CORE_SECTIONS } from '@/pages/settings/sections';
 import { tComfort } from '@/strings.comfort';
 import { SETTINGS_CATEGORIES } from './categories';
@@ -29,7 +29,7 @@ describe('settings search synonyms', () => {
 
   it('has the same keys in every active language', () => {
     const keys = Object.keys(tComfort.de.synonyms).sort();
-    for (const lang of LANGS.filter((l) => l !== 'de'))
+    for (const lang of ACTIVE_LOCALES.filter((l) => l !== 'de'))
       expect(Object.keys(tComfort[lang]!.synonyms).sort(), lang).toEqual(keys);
   });
 });

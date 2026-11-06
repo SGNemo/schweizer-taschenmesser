@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LANGS } from '@/core/i18n/lang';
+import { ACTIVE_LOCALES } from '@/core/i18n/lang';
 import {
   findRecognitionCtor,
   recognitionLang,
@@ -31,6 +31,6 @@ describe('voice availability', () => {
   });
 
   it('follows the UI language for every language the app has', () => {
-    expect(LANGS.map(recognitionLang)).toEqual(['de-DE', 'en-US']);
+    expect(ACTIVE_LOCALES.map(recognitionLang)).toEqual(['de-DE', 'en-US']);
   });
 });

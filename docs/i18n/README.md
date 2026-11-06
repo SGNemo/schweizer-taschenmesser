@@ -9,6 +9,7 @@ The English texts (and the paused Spanish, French and Brazilian Portuguese ones)
 - **Report a text:** open an issue with the *Translation* template (language, where you saw it, current text, suggestion).
 - **Fix it yourself:** the texts live in `web/src/i18n/locales/<lang>/<area>.ts`, one file per area, same keys as the German source `web/src/strings.ts`. Change the text, keep the keys, the `${…}` placeholders and the plural logic; use the [glossary](GLOSSARY.md) terms. Then run `npm run check:i18n` in `web/` and open a pull request against `develop`.
 - **New term?** Add it to the glossary in the same pull request.
+- Español, Français and Português are paused, so corrections there are not taken for now ([FROZEN.md](FROZEN.md)); `<lang>` above is `en`.
 
 ## What stays German (known limits)
 - Things a person **types** and the app parses: quick capture ("morgen 15 Uhr Zahnarzt"), the AI bar's rules and the calculator's phrases understand German only. The help texts around them are translated.

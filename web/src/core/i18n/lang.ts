@@ -18,8 +18,8 @@ export type Lang = (typeof ACTIVE_LOCALES)[number];
 export type FrozenLang = (typeof FROZEN_LOCALES)[number];
 /** Every language with texts in the repo (active or frozen); for typing kept translations only. */
 export type KnownLang = Lang | FrozenLang;
-/** Same list as `ACTIVE_LOCALES` (older name, kept so iterating code reads naturally). */
-export const LANGS: readonly Lang[] = ACTIVE_LOCALES;
+/** Data per language: every active one required, frozen ones may stay (kept, never read). */
+export type ByLang<T> = Record<Lang, T> & Partial<Record<FrozenLang, T>>;
 /** What the person picked: a language or "follow the device". */
 export type LangPref = Lang | 'system';
 export const SOURCE_LANG: Lang = 'de';
@@ -41,11 +41,11 @@ export const isLangPref = (v: unknown): v is LangPref => v === 'system' || isLan
 export function matchLang(tags: readonly string[]): Lang {
   for (const tag of tags) {
     const lower = tag.toLowerCase();
-    const exact = LANGS.find((l) => l.toLowerCase() === lower);
+    const exact = ACTIVE_LOCALES.find((l) => l.toLowerCase() === lower);
     if (exact) return exact;
     const base = lower.split('-')[0];
     // Any German or English is served the one we have; every other language gets English.
-    const byBase = LANGS.find((l) => l.toLowerCase().split('-')[0] === base);
+    const byBase = ACTIVE_LOCALES.find((l) => l.toLowerCase().split('-')[0] === base);
     if (byBase) return byBase;
   }
   return FALLBACK_LANG;
@@ -64,19 +64,36 @@ export function systemLang(): Lang {
 export const toLangPref = (v: unknown): LangPref =>
   isLangPref(v) ? v : isFrozenLang(v) ? FALLBACK_LANG : 'system';
 
+/** Formats a frozen language used with "Same as language", so numbers and dates stay as they were. */
+const FROZEN_FORMATS: Record<FrozenLang, string> = { es: 'es-ES', fr: 'fr-FR', 'pt-BR': 'pt-BR' };
+const FORMAT_KEY = 'tm-format';
+
 /**
- * Stored preference; nothing stored means "system". A frozen language is migrated to English once
- * and written back, without a dialog (the release notes say so).
+ * A frozen language (es, fr, pt-BR) becomes English once, without a dialog (the release notes say
+ * so). Formats that followed the language are pinned to that language's region, so the decimal
+ * mark and date order do not change under the person's feet.
  */
-export function readLangPref(): LangPref {
+function migrateFrozen(frozen: FrozenLang): void {
   try {
-    const v = localStorage.getItem(KEY);
-    const next = toLangPref(v);
-    if (isFrozenLang(v)) localStorage.setItem(KEY, next);
-    return next;
+    const format = localStorage.getItem(FORMAT_KEY);
+    if (format === null || format === 'auto')
+      localStorage.setItem(FORMAT_KEY, FROZEN_FORMATS[frozen]);
+    localStorage.setItem(KEY, FALLBACK_LANG);
+  } catch {
+    // storage cannot be written: the read-time mapping still shows English on every start
+  }
+}
+
+/** Stored preference; nothing stored means "system"; a frozen language is migrated to English. */
+export function readLangPref(): LangPref {
+  let v: string | null;
+  try {
+    v = localStorage.getItem(KEY);
   } catch {
     return 'system';
   }
+  if (isFrozenLang(v)) migrateFrozen(v);
+  return toLangPref(v);
 }
 
 /** Whether a preference was stored at all (an older installation stores none). */
@@ -139,7 +156,8 @@ export function setLang(lang: Lang): void {
  * keeps German instead of suddenly following an English device. New installations follow the device.
  */
 export async function initLang(hasExistingData: () => Promise<boolean>): Promise<void> {
-  // Re-read at start: migrates a frozen choice (es, fr, pt-BR) to English before anything loads.
+  // Re-read the stored choice (the import-time read already migrated a frozen one; this keeps
+  // initLang correct on its own, e.g. when storage changed since the import).
   if (hasStoredLangPref()) pref = readLangPref();
   else {
     // Decided once: later starts must not mistake the new installation's own data for an old one.

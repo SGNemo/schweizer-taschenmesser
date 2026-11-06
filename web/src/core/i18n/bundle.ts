@@ -5,12 +5,12 @@ export type { Shape } from './shape';
 
 /**
  * Every active language except the German source, each with the source's shape: English is
- * required. Frozen languages (es, fr, pt-BR; docs/i18n/FROZEN.md) are optional and ignored at
- * runtime: texts already written stay, new bundles leave them out.
+ * required. Frozen languages (es, fr, pt-BR; docs/i18n/FROZEN.md) are kept as they are, never
+ * read and not type-checked, so a new German key never forces a frozen translation.
  */
 export type Translations<T> = { en: Shape<T> } & {
   [L in Exclude<Lang, 'de' | 'en'>]: Shape<T>;
-} & { [L in FrozenLang]?: Shape<T> };
+} & { [L in FrozenLang]?: unknown };
 
 /**
  * Small text bundle that lives next to a feature instead of in `strings.ts`: German source plus

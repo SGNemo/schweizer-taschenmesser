@@ -75,7 +75,7 @@ async function load() {
       import('@zxcvbn-ts/language-en'),
       import('@zxcvbn-ts/language-de'),
     ]);
-    // The texts live in our catalogs (five languages): the library only reports which warning applies.
+    // The texts live in our catalogs (German, English): the library only reports which warning applies.
     const keyed = (group: Record<string, string>) =>
       Object.fromEntries(Object.keys(group).map((k) => [k, k]));
     const translations = {

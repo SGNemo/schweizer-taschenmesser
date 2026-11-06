@@ -1,7 +1,7 @@
-import type { KnownLang } from '@/core/i18n/lang';
+import type { ByLang } from '@/core/i18n/lang';
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 
-const TITLES: Record<KnownLang, string[]> = {
+const TITLES: ByLang<string[]> = {
   de: [
     'Ideen für den Balkon',
     'Wochenplan Meal-Prep',
@@ -63,7 +63,7 @@ const TITLES: Record<KnownLang, string[]> = {
     'Plano de estudo de espanhol',
   ],
 };
-const BODIES: Record<KnownLang, string[]> = {
+const BODIES: ByLang<string[]> = {
   de: [
     'Kräuter in Kästen, Tomaten an die Südseite. Blumenerde und Rankhilfe besorgen.',
     'Montag Nudeln, Dienstag Suppe, Mittwoch Ofengemüse. Vorkochen am Sonntag.',
@@ -100,7 +100,7 @@ const BODIES: Record<KnownLang, string[]> = {
     'Definir o tamanho do piso, o preço do chuveiro, a duração da obra e sugerir uma data.',
   ],
 };
-const BOOKS: Record<KnownLang, string[]> = {
+const BOOKS: ByLang<string[]> = {
   de: ['Privat', 'Arbeit', 'Ideen'],
   en: ['Personal', 'Work', 'Ideas'],
   es: ['Personal', 'Trabajo', 'Ideas'],
@@ -108,7 +108,7 @@ const BOOKS: Record<KnownLang, string[]> = {
   'pt-BR': ['Pessoal', 'Trabalho', 'Ideias'],
 };
 const BOOK_ICONS = ['home', 'target', 'puzzle'];
-const SCRATCH: Record<KnownLang, { title: string; body: string }> = {
+const SCRATCH: ByLang<{ title: string; body: string }> = {
   de: { title: 'Schmierzettel', body: 'Milch nicht vergessen\nPaket abholen bis Freitag' },
   en: { title: 'Scratch pad', body: 'Don’t forget milk\nPick up parcel by Friday' },
   es: { title: 'Nota rápida', body: 'No olvidar la leche\nRecoger el paquete antes del viernes' },
@@ -117,7 +117,7 @@ const SCRATCH: Record<KnownLang, { title: string; body: string }> = {
 };
 
 /** Pages that show the formatting: checklist, table, highlight, link, headings, list, quote, code. */
-const FORMATTED: Record<KnownLang, { plan: [string, string]; guide: [string, string] }> = {
+const FORMATTED: ByLang<{ plan: [string, string]; guide: [string, string] }> = {
   de: {
     plan: [
       'Beispiel: Wochenplan mit Checkliste',
