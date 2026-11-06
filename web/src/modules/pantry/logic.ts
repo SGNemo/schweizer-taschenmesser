@@ -1,5 +1,7 @@
-import { compareText } from '@/core/i18n/format';
-import { daysBetween } from '@/core/time/dates';
+import { capitalize, compareText } from '@/core/i18n/format';
+import { daysBetween, formatDay } from '@/core/time/dates';
+import { pastDay } from '@/core/time/due';
+import { t } from '@/strings';
 import type { PantryItem } from './schema';
 
 export type ExpiryState = 'expired' | 'soon' | 'ok' | 'none';
@@ -7,6 +9,24 @@ export type ExpiryState = 'expired' | 'soon' | 'ok' | 'none';
 /** Days until the best-before date (negative = expired); undefined without a date. */
 export const daysLeft = (item: Pick<PantryItem, 'expires'>, today: string): number | undefined =>
   item.expires ? daysBetween(today, item.expires) : undefined;
+
+/**
+ * The page's best-before line. An expired item names its day like every overdue label (N08,
+ * `core/time/due.ts`): „MHD war Mo.“ within the last week, the date before that – never a count
+ * of days that grows every day.
+ */
+export function expiryText(
+  item: Pick<PantryItem, 'expires'>,
+  today: string,
+  soonDays: number,
+): string | null {
+  const d = daysLeft(item, today);
+  if (d === undefined) return null;
+  if (d < 0) return capitalize(t.pantry.expiredOn(pastDay(item.expires!, today)));
+  if (d === 0) return t.pantry.today;
+  if (d <= soonDays) return t.pantry.inDays(d);
+  return t.pantry.until(formatDay(item.expires!, 'dd.MM.yyyy'));
+}
 
 /** Empty stock never expires: there is nothing left that could spoil. */
 export function expiryState(item: PantryItem, today: string, soonDays: number): ExpiryState {
