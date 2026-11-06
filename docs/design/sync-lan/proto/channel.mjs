@@ -36,8 +36,6 @@ function open(key, n, sealed, aad) {
   return Buffer.concat([d.update(sealed.subarray(0, sealed.length - 16)), d.final()]);
 }
 
-/** Unauthenticated one-byte refusal, only for a closed pairing window (the UI shows it only while pairing). */
-export const REFUSED = { 1: 'no-pairing-window' };
 export const MAX_HANDSHAKE_FRAME = 256; // message 1 is 97 bytes
 const MAX_FRAME = 16 * 1024 * 1024;
 
@@ -118,6 +116,7 @@ const M1_LEN = 1 + 32 + 48 + 16;
  * After message 2 the phone sends a `hello` frame: the first proof of a live, complete handshake.
  */
 export async function initiate(f, { mode, me, psk, hubPub, name = 'Pixel 7' }) {
+  name = Buffer.from(name).subarray(0, 64).toString(); // fits the handshake frame cap (product: cut at a character boundary)
   const salt = mode === MODE.PAIR ? psk : ZERO;
   const e = keyPair();
   const es = dh(e, hubPub);
@@ -126,11 +125,11 @@ export async function initiate(f, { mode, me, psk, hubPub, name = 'Pixel 7' }) {
   const c1 = seal(hkdf(es, ZERO, t0, 32), 0, me.pub, t0);
   const t1 = Buffer.concat([t0, c1]);
   f.write(Buffer.concat([Buffer.from([mode]), e.pub, c1, seal(hkdf(Buffer.concat([es, ss]), salt, t1, 32), 0, Buffer.alloc(0), t1)]));
-  const m2 = await f.read();
-  if (m2.length === 1) {
-    // Unauthenticated: meaningful only inside the pairing flow; otherwise just "not reachable".
-    throw new Error(mode === MODE.PAIR ? `refused:${REFUSED[m2[0]] ?? 'unknown'}` : 'network');
-  }
+  // The hub answers nothing it cannot authenticate: a dropped connection while pairing means
+  // "Kopplung nicht möglich – am PC neu zeigen" (closed or stale window), otherwise "not reachable".
+  const m2 = await f.read().catch(() => {
+    throw new Error(mode === MODE.PAIR ? 'pairing-not-possible' : 'network');
+  });
   const ea = m2.subarray(0, 32);
   const t2 = Buffer.concat([t1, ea]);
   const k2 = hkdf(Buffer.concat([es, ss, dh(e, ea), dh(me, ea)]), salt, t2, 96);
@@ -160,10 +159,7 @@ export async function respond(f, { me, peekPsk, burn, trusts }) {
   let psk = ZERO;
   if (mode === MODE.PAIR) {
     psk = peekPsk();
-    if (!psk) {
-      f.write(Buffer.from([1]));
-      throw new Error('no pairing window open');
-    }
+    if (!psk) throw new Error('no pairing window open'); // silent drop: no probing of open windows
   }
   // PAIR: fails for an old QR, a revoked device or a replay from an earlier window – nothing burned.
   open(hkdf(Buffer.concat([es, ss]), psk, t1, 32), 0, m1.subarray(81), t1);
@@ -177,7 +173,7 @@ export async function respond(f, { me, peekPsk, burn, trusts }) {
   if (!ok) throw new Error('unknown device');
   const ch = transport(f, k2.subarray(32, 64), k2.subarray(0, 32), sasOf(t2));
   const hello = await ch.recv(); // only now: raise frame cap, record activity, show the code
-  if (hello.t !== 'hello') throw new Error('expected hello');
+  if (hello.t !== 'hello' || typeof hello.name !== 'string') throw new Error('expected hello'); // name is plain text
   return { mode, peer: sb, name: hello.name, ch };
 }
 

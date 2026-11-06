@@ -47,7 +47,7 @@ async function burnAttempt(opts) {
 }
 const strangerErr = await burnAttempt({ psk: qr.psk, hubPub: keyPair().pub });
 const oldQrErr = await burnAttempt({ psk: crypto.randomBytes(16), hubPub: qr.hubPub });
-const dropped = (m) => /^closed$|ECONNRESET|EPIPE/.test(m);
+const dropped = (m) => /^closed$|ECONNRESET|EPIPE|pairing-not-possible/.test(m);
 
 const me = keyPair();
 t = performance.now();
@@ -121,10 +121,10 @@ async function attempt(fn, port = found.port) {
     s.destroy();
   }
 }
-// The QR's psk is single-use: a second pairing with it gets the (unauthenticated) window refusal.
+// The QR's psk is single-use: a second pairing with it is dropped silently (phone: "am PC neu zeigen").
 out.reusedQrRefused =
   (await attempt((f) => initiate(f, { mode: MODE.PAIR, me: keyPair(), psk: qr.psk, hubPub: qr.hubPub }))) ===
-  'refused:no-pairing-window';
+  'pairing-not-possible';
 // An unpaired device that even knows the hub key (old QR) gets a refusal authenticated by the hub.
 out.strangerRefused =
   (await attempt((f) => initiate(f, { mode: MODE.SESSION, me: keyPair(), hubPub: qr.hubPub }))) ===
