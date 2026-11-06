@@ -4,6 +4,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Einstellungen auf Identität v3.1, Paket 1 (`design/settings-identity`, PR offen): eigener Reiter „Einrichtung“ (Fortschritt, nächster Schritt, eine Primäraktion), Schnellerfassung mit Live-Beispiel und Gruppen statt Nummern, Bausteine `SettingsHead`/`StatusCard`/`SettingsGroup plain`, Sync/KI/Über über die Bausteine; Paket 2–3 als Prompts in [settings-v3/PACKAGES.md](design/settings-v3/PACKAGES.md).
+
 Planer, Pakete 1–5 abgeschlossen (#492, #495, #498, #500, #501; Sweep #497): Engine `core/plan`, Wochenbrett, Kalender-Chip und Zeitblöcke im Stundenraster, Sätze im Feld (Regeln + lokales Modell), Notizen/Rechnungen/Abos als Quellen, Zeitfenster und Wochen-Vorlagen; Modul jetzt `stable` (in der Bibliothek ohne „In Arbeit anzeigen“, standardmäßig aus). Danach eigene Konzepte: Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
 
 Identität v3.1, Paket 4 (`feat/identity-v3-polish`, PR offen): Widget-Marke aus der Kopf-Signatur in jedem Widget-Kopf, Chat-Blasen mit Zeilen/Tipp-Punkten, Bibliotheks-Skizze Ringe/Balken je Modul, Überfällig-Texte mit Tag statt Zähler, `--weight-*` überall (+ Prüfregel), Clipped-Text-Messung je Bereich, Signatur `stopwatch`, Seitenleiste nur aktiver Bereich offen, „Eintragen“ am Handy; v3.1 damit abgeschlossen ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md) „Package 4“).
