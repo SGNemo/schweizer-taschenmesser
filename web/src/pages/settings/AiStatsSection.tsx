@@ -5,7 +5,8 @@ import {
   useUsageRows,
   type StageName,
 } from '@/core/ai/usage';
-import { today } from '@/core/time/dates';
+import { dateTimeFormat } from '@/core/i18n/format';
+import { parseDate, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, SettingRow, SettingsGroup } from '@/ui';
 
@@ -20,7 +21,14 @@ export function AiStatsSection() {
   const total = STAGES.reduce((n, k) => n + stages[k].answers, 0);
   const pct = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 100));
   const free = total - stages.cloud.answers;
-  const days = dailyByStage(rows ?? []).slice(0, 7);
+  // Only days with answers: an empty statistic is the one sentence, never a row of zeros.
+  const days =
+    total === 0
+      ? []
+      : dailyByStage(rows ?? [])
+          .filter((d) => STAGES.some((k) => d.stages[k].answers > 0))
+          .slice(0, 7);
+  const dayFmt = dateTimeFormat({ day: 'numeric', month: 'short', year: 'numeric' });
   return (
     <SettingsGroup id="ai-stats" title={s.title} description={s.description}>
       {total === 0 ? <p>{s.empty}</p> : null}
@@ -52,7 +60,7 @@ export function AiStatsSection() {
         return (
           <SettingRow
             key={d.day}
-            label={d.day === today() ? s.today : d.day}
+            label={d.day === today() ? s.today : dayFmt.format(parseDate(d.day))}
             description={[
               STAGES.filter((k) => d.stages[k].answers > 0)
                 .map((k) => `${s.stage[k]}: ${d.stages[k].answers}`)

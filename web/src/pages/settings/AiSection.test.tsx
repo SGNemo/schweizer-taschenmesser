@@ -7,7 +7,9 @@ import { clearCooldown } from '@/core/ai/router';
 import { recordUsage } from '@/core/ai/usage';
 import { db } from '@/core/db/db';
 import { setPlatform } from '@/core/platform';
+import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
+import { useLocalModel } from '@/core/ai/local/state';
 import { t } from '@/strings';
 import { AiSection } from './AiSection';
 
@@ -33,7 +35,34 @@ async function addProvider(label: string) {
   return user;
 }
 
+/** The installed app with Ollama not running; `withModel` = this build can download the local model. */
+function nativeWithoutOllama(withModel: boolean) {
+  const web = createWebPlatform();
+  useLocalModel.setState({ status: undefined });
+  setPlatform({
+    ...web,
+    isNative: true,
+    fetch: (async () => Promise.reject(new Error('offline'))) as typeof fetch,
+    ...(withModel ? { localModel: createFakeLocalModel() } : {}),
+  });
+}
+
 describe('AI settings', () => {
+  it('points a missing Ollama to the built-in model only when this build has one', async () => {
+    nativeWithoutOllama(true);
+    const first = render(<AiSection />);
+    await addProvider('Ollama (lokal)');
+    expect(await screen.findByText(s.ollamaHelpNative)).toBeInTheDocument();
+    first.unmount();
+    await db.table('_secrets').clear();
+
+    nativeWithoutOllama(false);
+    render(<AiSection />);
+    await addProvider('Ollama (lokal)');
+    expect(await screen.findByText(s.ollamaHelpNoLocal)).toBeInTheDocument();
+    expect(screen.queryByText(s.ollamaHelpNative)).toBeNull();
+  });
+
   it('starts without providers and explains the local-only mode', async () => {
     render(<AiSection />);
     expect(await screen.findByText(s.noProviders)).toBeInTheDocument();

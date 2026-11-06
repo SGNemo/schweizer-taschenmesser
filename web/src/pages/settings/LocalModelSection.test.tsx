@@ -1,15 +1,22 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LOCAL_MODELS, type CatalogueModel } from '@/core/ai/local/catalogue';
 import { getLocalPrefs } from '@/core/ai/local/prefs';
 import { useLocalModel } from '@/core/ai/local/state';
 import { setPlatform } from '@/core/platform';
 import { createFakeLocalModel } from '@/core/platform/fakeLocalModel';
 import { createWebPlatform } from '@/core/platform/web';
+import type * as BuildInfo from '@/core/update/buildInfo';
 import { t } from '@/strings';
 import { LocalModelSection } from './LocalModelSection';
+
+// The Dev-Preview flavour: a desktop build without the model must say "Testversion", not "built without".
+vi.mock('@/core/update/buildInfo', async (original) => ({
+  ...(await original<typeof BuildInfo>()),
+  BUILD_CHANNEL: 'dev',
+}));
 
 const l = t.ai.local;
 const pinned: CatalogueModel = {
@@ -41,11 +48,73 @@ beforeEach(() => {
 afterEach(() => setPlatform(undefined));
 
 describe('LocalModelSection', () => {
-  it('says so when the platform has no local model', async () => {
+  it('says so in the browser, without a link to another download', async () => {
     render(<LocalModelSection models={[pinned]} />);
     expect(await screen.findByTestId('local-unavailable')).toHaveTextContent(
-      l.unavailable.platform!,
+      l.unavailable.browser!,
     );
+    expect(screen.queryByTestId('local-get-stable')).toBeNull();
+  });
+
+  it('tells the Dev-Preview without the model where to get it', async () => {
+    const fake = createFakeLocalModel();
+    const openUrl = vi.fn(async () => undefined);
+    const web = createWebPlatform();
+    setPlatform({
+      ...web,
+      kind: 'desktop',
+      app: { ...web.app, openUrl },
+      localModel: {
+        ...fake,
+        status: async () => ({ unavailable: 'build', models: [], devices: [] }),
+      },
+    });
+    const user = userEvent.setup();
+    render(<LocalModelSection models={[pinned]} />);
+    expect(await screen.findByTestId('local-unavailable')).toHaveTextContent(
+      l.unavailable.testBuild!,
+    );
+    await user.click(screen.getByTestId('local-get-stable'));
+    expect(openUrl).toHaveBeenCalledWith(expect.stringMatching(/\/releases\/latest$/));
+  });
+
+  it('offers two or three models with their size as the next step', async () => {
+    install();
+    const models = [
+      pinned,
+      { ...pinned, id: 'b', file: 'b.gguf' },
+      { ...pinned, id: 'c', file: 'c.gguf' },
+      { ...pinned, id: 'd', file: 'd.gguf' },
+      { ...pinned, id: 'light', file: 'l.gguf', profile: 'light' as const },
+    ];
+    render(<LocalModelSection models={models} />);
+    const next = await screen.findByTestId('local-suggestions');
+    expect(within(next).getAllByRole('listitem')).toHaveLength(3);
+    expect(next).toHaveTextContent(l.size('2,00'));
+    expect(screen.getByText(l.next.pick)).toBeInTheDocument();
+  });
+
+  it('a new download replaces a chosen model whose file is gone', async () => {
+    install();
+    const { writeLocalPrefs } = await import('@/core/ai/local/prefs');
+    writeLocalPrefs({ file: 'cancelled-earlier.gguf' });
+    const user = userEvent.setup();
+    render(<LocalModelSection models={[pinned]} />);
+    await user.click(await screen.findByTestId('local-next-download-test-model'));
+    await user.click(screen.getByTestId('local-consent-confirm'));
+    expect(await screen.findByText(l.next.ready)).toBeInTheDocument();
+    expect(getLocalPrefs().file).toBe(pinned.file);
+  });
+
+  it('turns the next step into a test question once the model is there', async () => {
+    install({ models: [{ file: pinned.file, bytes: pinned.bytes }] });
+    localStorage.clear();
+    const { writeLocalPrefs } = await import('@/core/ai/local/prefs');
+    writeLocalPrefs({ file: pinned.file });
+    render(<LocalModelSection models={[pinned]} />);
+    expect(await screen.findByText(l.next.ready)).toBeInTheDocument();
+    expect(screen.getByTestId('local-next-test')).toHaveTextContent(l.next.ask);
+    expect(screen.queryByTestId('local-suggestions')).toBeNull();
   });
 
   it('locks the download of a model without a pinned checksum', async () => {

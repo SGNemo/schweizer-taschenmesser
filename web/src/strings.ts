@@ -3633,10 +3633,22 @@ export const de = {
       title: 'Lokales Modell',
       description: 'Stufe 1 beim Eintragen: kostenlos und offline, vor der Cloud.',
       unavailable: {
-        platform: 'Das lokale Modell gibt es nur in der Windows-App.',
+        browser: 'Im Browser gibt es kein lokales Modell. In der Windows-App schon.',
+        android:
+          'Auf Android gibt es kein lokales Modell. In der Windows-App schon. Hier antwortet die KI über einen Anbieter unter „KI-Assistent“.',
+        testBuild:
+          'In der Testversion ist das lokale Modell nicht eingebaut. Die normale Version von Nemo hat es – dort lädst du hier ein Modell herunter.',
         build: 'Diese Version wurde ohne lokales Modell gebaut.',
         cpu: 'Dein Prozessor ist zu alt (er braucht AVX2).',
       } as Record<string, string>,
+      getStable: 'Normale Version holen',
+      next: {
+        title: 'Nächster Schritt',
+        pick: 'Lade eines dieser Modelle herunter. Danach arbeitet es offline auf diesem Gerät.',
+        downloading: 'Das Modell wird heruntergeladen.',
+        ready: 'Das Modell ist da. Stell ihm eine Testfrage.',
+        ask: 'Testfrage stellen',
+      },
       status: 'Status',
       loaded: (label: string, backend: string, memory: string) =>
         `Geladen: ${label} · ${backend} · ${memory}`,
@@ -3654,7 +3666,7 @@ export const de = {
       gpuNone: 'Keine Grafikkarte erkannt – dieser Build rechnet mit dem Prozessor.',
       backendCpu: 'Prozessor',
       backendGpu: 'Grafikkarte',
-      models: 'Modelle',
+      models: 'Alle Modelle',
       profile: { standard: 'Standard', light: 'Leicht' } as Record<string, string>,
       recommended: 'Empfohlen für dieses Gerät',
       size: (gb: string) => `${gb} GB`,
@@ -3853,6 +3865,8 @@ export const de = {
         `Starte Ollama und erlaube diese App: Setze die Umgebungsvariable OLLAMA_ORIGINS auf ${origin} und starte Ollama neu. Danach „Verbindung testen“.`,
       ollamaHelpNative:
         'Ollama läuft nicht oder ist nicht installiert. Du brauchst es nicht unbedingt: Das eingebaute lokale Modell lädst du unter Einstellungen → Lokales Modell herunter. Oder installiere Ollama und starte es (Port 11434), dann „Verbindung testen“.',
+      ollamaHelpNoLocal:
+        'Ollama läuft nicht oder ist nicht installiert. Installiere Ollama und starte es (Port 11434), dann „Verbindung testen“.',
       ollamaDownload: 'Ollama herunterladen',
       statusRunning: 'Läuft',
       statusDown: 'Nicht erreichbar',
