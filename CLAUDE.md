@@ -16,7 +16,7 @@ Code, comments, commits **English**; UI in **5 languages**: German source `web/s
 ## Commands (run in `web/`; also `server/`, `mcp/`: `npm test|typecheck|lint|format:check|build`)
 - `npm run dev:all` (app with test data + local sync server, one command) · `dev` · `build` · `preview` (:4173; stop it before e2e) · `tauri -- dev|build` (Rust needed)
 - `npm run check` (format+lint+typecheck, parallel, cached = everyday gate) · `lint` · `typecheck` · `format:check|format` · `check:modules` · `check:docs`
-- `npm test` (`test:changed`) · `npm run e2e` (= `e2e:app` + `e2e:sync`); one spec: `npx playwright test e2e/<name>.spec.ts`
+- `npm test` (`test:changed`) · `npm run e2e` (= the plain-PR set: `e2e:smoke` + `e2e:sync`; everything: `e2e:full`); one spec: `npx playwright test e2e/<name>.spec.ts`
 - `npm run gen:module -- <id> "<Name>"` · `db:bump` · `gen:icons` · `version:check|sync|set -- <semver>` · `changelog -- --version <x.y.z>`
 - Rust, CI layout, release: [docs/HOW-TO.md](docs/HOW-TO.md). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
 - **CI:** a plain PR runs only the touched packages and the E2E smoke list; label `full-ci` = everything now, `develop`/nightly always run everything ([HOW-TO](docs/HOW-TO.md) "Which checks run when").

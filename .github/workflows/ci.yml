@@ -31,7 +31,7 @@ jobs:
   # heavy runs; the secret scan and the docs checks always run.
   #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
   #           whole E2E suite (smoke + rest on both browser projects) and the seed project
-  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (2 shards);
+  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards);
   #           a draft PR runs only the static checks and the unit tests of the web app
   changes:
     name: Which parts changed
@@ -146,9 +146,9 @@ jobs:
             web=false; e2e=false; sync=false; server=false; mcp=false; supporter=false; webhook=false
             extension=false; tauri=false; llm=false; shared=false
           fi
-          # The gate E2E (smoke list, 2 shards) runs everywhere; on full runs the rest of the suite follows in
+          # The gate E2E (smoke list, 3 shards) runs everywhere; on full runs the rest of the suite runs next to it in
           # its own jobs (they never hold up the Dev-Preview).
-          shards='[1,2]'; profile=smoke
+          shards='[1,2,3]'; profile=smoke
           rest=false
           if [ "$full" = "true" ] && [ "$e2e" = "true" ]; then rest=true; fi
           {
@@ -330,7 +330,7 @@ jobs:
 
   # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
   # cores were slower per test and failed under load). Sharding is by test: every test runs exactly once.
-  # This job is the smoke list (desktop-chrome, 24 spec files, 2 shards; E2E_PROFILE=smoke, list in
+  # This job is the smoke list (desktop-chrome, 24 spec files, 3 shards; E2E_PROFILE=smoke, list in
   # web/playwright.config.ts) and part of the Dev-Preview gate. Full runs add `web-e2e-rest` below.
   web-e2e:
     name: E2E app (smoke, shard ${{ matrix.shard }})
@@ -341,7 +341,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2]') }}
+        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2,3]') }}
     defaults:
       run:
         working-directory: web
@@ -388,7 +388,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: web
@@ -405,7 +405,7 @@ jobs:
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
           E2E_PROFILE: rest
-          E2E_SEED: '0' # the seed project runs in the sync job
+          E2E_SEED: '0' # the seed project runs in e2e-seed
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -599,11 +599,15 @@ jobs:
   # The Dev-Preview flavour (seed project, playwright.config.ts `seed-dev`) on every full run; the app shards skip
   # it. Its own job: it took 6.5 min behind the sync E2E in the same job.
   e2e-seed:
-    name: E2E seed project (Dev-Preview flavour)
+    name: E2E seed project (Dev-Preview flavour, shard ${{ matrix.shard }})
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2] # 12 of its 29 tests walk every page once per window size (about a minute each)
     defaults:
       run:
         working-directory: web
@@ -616,12 +620,12 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - uses: ./.github/actions/playwright-chromium
-      - run: npx playwright test --project=seed-dev
+      - run: npx playwright test --project=seed-dev --shard=${{ matrix.shard }}/${{ strategy.job-total }}
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-seed
+          name: playwright-report-seed-${{ matrix.shard }}
           path: web/playwright-report
           retention-days: 7
 
