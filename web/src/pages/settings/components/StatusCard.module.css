@@ -1,6 +1,40 @@
 /* Status card of a settings tab (identity v3.1): tokens only, a hairline all around, no edge stripe. The tint is the
-   tab's hue (`--tab-color` = `var(--mod-<hue>)`, set by the category page); "Ruhig" and "Modulfarben: Aus" turn the
+   tab's hue (`--tab-color` from `data-tab-hue` on the category page); "Ruhig" and "Modulfarben: Aus" turn the
    `--mod-*` tokens grey, so the card follows. */
+/* The tab's hue (`data-tab-hue` on the category page) for the status card only. */
+[data-tab-hue='lime'] {
+  --tab-color: var(--mod-lime);
+}
+[data-tab-hue='moss'] {
+  --tab-color: var(--mod-moss);
+}
+[data-tab-hue='fern'] {
+  --tab-color: var(--mod-fern);
+}
+[data-tab-hue='teal'] {
+  --tab-color: var(--mod-teal);
+}
+[data-tab-hue='ocean'] {
+  --tab-color: var(--mod-ocean);
+}
+[data-tab-hue='sky'] {
+  --tab-color: var(--mod-sky);
+}
+[data-tab-hue='cobalt'] {
+  --tab-color: var(--mod-cobalt);
+}
+[data-tab-hue='indigo'] {
+  --tab-color: var(--mod-indigo);
+}
+[data-tab-hue='violet'] {
+  --tab-color: var(--mod-violet);
+}
+[data-tab-hue='orchid'] {
+  --tab-color: var(--mod-orchid);
+}
+[data-tab-hue='slate'] {
+  --tab-color: var(--mod-slate);
+}
 .card {
   display: flex;
   flex-wrap: wrap;

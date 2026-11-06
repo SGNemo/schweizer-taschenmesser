@@ -548,7 +548,7 @@ export function CategoryPage() {
     <div
       className={styles.category}
       // The tab's hue for its status card only (not `data-hue`, which would recolour charts on the page too).
-      style={{ ['--tab-color' as string]: `var(--mod-${CATEGORY_LOOK[category].hue})` }}
+      data-tab-hue={CATEGORY_LOOK[category].hue}
       onChange={noteUse}
       onClick={noteUse}
     >
