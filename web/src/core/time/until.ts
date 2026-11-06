@@ -24,9 +24,14 @@ export interface NextItem {
   kind: string;
 }
 
-/** The first timed, open item that has not started yet; `undefined` when the day is through. */
+/**
+ * The first timed, open item that has not started yet; `undefined` when the day is through. The
+ * planner's timed work sessions (`kind: 'plan'`) are no appointments and never count.
+ */
 export function nextToday<T extends NextItem>(items: readonly T[], nowHhmm: string): T | undefined {
   return items
-    .filter((i) => !i.allDay && i.time !== undefined && !i.done && i.time > nowHhmm)
+    .filter(
+      (i) => !i.allDay && i.time !== undefined && !i.done && i.kind !== 'plan' && i.time > nowHhmm,
+    )
     .sort((a, b) => a.time!.localeCompare(b.time!))[0];
 }
