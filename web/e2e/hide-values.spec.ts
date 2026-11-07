@@ -32,6 +32,9 @@ test.describe('Werte ausblenden', () => {
     await expect(card.getByTestId('sensitive-value')).toBeVisible();
     // Not only invisible: the amount is not in the DOM text at all.
     await expect(card).not.toContainText(/1\.234,56\s€/);
+    // Nor in the accessibility tree.
+    expect(await card.ariaSnapshot()).not.toMatch(/1\.234,56/);
+    await expect(card.getByRole('button', { name: /Ausgeblendet/ })).toBeVisible();
 
     await page.reload();
     await expect(
