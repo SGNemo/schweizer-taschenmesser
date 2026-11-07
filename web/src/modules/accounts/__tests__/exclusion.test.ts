@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ask } from '@/core/ai/assistant';
 import { buildSchemaText, buildSystemPrompt, buildTools, schemaHash } from '@/core/ai/prompt';
 import type { AiProvider, CompletionResult } from '@/core/ai/providers/types';
+import { apiCollections, apiModules } from '@/core/dataapi/scope';
 import { searchEntries } from '@/core/ai/search/fulltext';
 import { clearAll, CORE_IDS, ctxFor, seed, TODAY, useFixedClock } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
@@ -59,6 +60,30 @@ describe('module definition', () => {
     expect(c).not.toHaveProperty('quickAdd');
     expect(c).not.toHaveProperty('aiComputed');
     expect(c).not.toHaveProperty('aiCreateDefaults');
+  });
+
+  it('declares no `searchable` field anywhere (full-text index input), not even outside aiSchema', () => {
+    // `searchable` only lives in `aiSchema.<collection>`; guard against it reappearing on the manifest
+    // or on a collection definition under another path.
+    const hasSearchable = (v: unknown, seen = new Set<unknown>()): boolean => {
+      if (!v || typeof v !== 'object' || seen.has(v)) return false;
+      seen.add(v);
+      return Object.entries(v).some(([k, x]) => k === 'searchable' || hasSearchable(x, seen));
+    };
+    expect(hasSearchable(manifest.aiSchema)).toBe(false);
+    expect(hasSearchable(manifest.dataSchema.collections)).toBe(false);
+    expect(manifest).not.toHaveProperty('searchable');
+  });
+
+  it('is closed to the local API and the data API (single filter core/dataapi/scope.ts)', () => {
+    // The local API (core/localapi/handler.ts) only serves apiModules(); the HTTP behaviour (404 like
+    // an unknown module, no listing, no import) is pinned in core/localapi/localapi.test.ts and the
+    // hard block in core/dataapi/dataapi.test.ts – this pins the manifest side.
+    expect(manifest.dataApi).toBe(false);
+    expect(apiCollections(manifest)).toEqual([]);
+    expect(apiModules([manifest], { accounts: true })).toEqual([]);
+    // the vault is closed even if a manifest tried to lift its opt-out
+    expect(apiCollections({ ...manifest, dataApi: undefined })).toEqual([]);
   });
 
   it('status widget reads no entry data (source check) and never shows contents', async () => {
