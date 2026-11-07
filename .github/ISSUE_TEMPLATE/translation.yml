@@ -9,7 +9,7 @@ body:
     id: language
     attributes:
       label: Language
-      options: [Deutsch, English, Español, Français, Português (Brasil)]
+      options: [Deutsch, English]
     validations:
       required: true
   - type: input

@@ -27,7 +27,7 @@
   "src/modules/chat/engine.ts": "system prompt sent to the model",
   "src/modules/todos/schema.ts": "schema description for AI tools",
   "src/modules/finance/repo.ts": "default category names become user data on first start",
-  "src/core/notifications/pushPayload.ts": "service worker fallback in five languages (no catalogs there)",
+  "src/core/notifications/pushPayload.ts": "service worker fallback in German and English (no catalogs there)",
   "src/core/time/dates.ts": "date-fns pattern table per language",
   "src/strings.ts": "the German source catalog",
   "src/strings.dev.ts": "Dev-Preview tools for testers, German only (not shipped in stable builds)",

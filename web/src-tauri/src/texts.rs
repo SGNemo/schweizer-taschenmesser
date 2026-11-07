@@ -1,14 +1,19 @@
 //! The few texts the native shell shows before (or outside) the web app: the OAuth result page in
 //! the browser and the "WebView2 missing" dialog. The web app's catalogs are not reachable there, so
-//! each text exists here in the five UI languages; the language comes from the browser's
-//! `Accept-Language` header or from the operating system.
+//! each text exists here in the active UI languages (German, English); the language comes from the
+//! browser's `Accept-Language` header or from the operating system. Spanish, French and Brazilian
+//! Portuguese are frozen (docs/i18n/FROZEN.md): their texts stay below but are never picked, so a
+//! device in one of them gets English, like the web app.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Lang {
     De,
     En,
+    #[allow(dead_code)] // frozen (docs/i18n/FROZEN.md)
     Es,
+    #[allow(dead_code)] // frozen
     Fr,
+    #[allow(dead_code)] // frozen
     Pt,
 }
 
@@ -28,9 +33,7 @@ impl Lang {
         match code {
             "de" => Some(Lang::De),
             "en" => Some(Lang::En),
-            "es" => Some(Lang::Es),
-            "fr" => Some(Lang::Fr),
-            "pt" => Some(Lang::Pt),
+            // es, fr, pt are frozen: not matched, the fallback is English.
             _ => None,
         }
     }
@@ -84,9 +87,7 @@ pub fn accept_language_of(request: &str) -> Lang {
 pub fn from_windows_langid(langid: u16) -> Lang {
     match langid & 0x3ff {
         0x07 => Lang::De,
-        0x0a => Lang::Es,
-        0x0c => Lang::Fr,
-        0x16 => Lang::Pt,
+        // Spanish (0x0a), French (0x0c), Portuguese (0x16) are frozen: English.
         _ => Lang::En,
     }
 }
@@ -187,16 +188,21 @@ mod tests {
     #[test]
     fn picks_the_best_supported_language() {
         assert_eq!(from_accept_language("de-CH,de;q=0.9,en;q=0.8"), Lang::De);
-        assert_eq!(from_accept_language("ja,fr;q=0.7,en;q=0.5"), Lang::Fr);
-        assert_eq!(from_accept_language("en;q=0.4,pt-PT;q=0.9"), Lang::Pt);
+        assert_eq!(from_accept_language("en;q=0.4,de-AT;q=0.9"), Lang::De);
+        // Frozen languages are skipped: the next active one, else English.
+        assert_eq!(from_accept_language("fr,de;q=0.5"), Lang::De);
+        assert_eq!(from_accept_language("ja,fr;q=0.7,en;q=0.5"), Lang::En);
+        assert_eq!(from_accept_language("pt-PT"), Lang::En);
         assert_eq!(from_accept_language("ja,ko"), Lang::En);
         assert_eq!(from_accept_language(""), Lang::En);
     }
 
     #[test]
     fn reads_the_header_from_a_request() {
-        let req = "GET /callback HTTP/1.1\r\nHost: 127.0.0.1\r\naccept-language: es-ES,es\r\n\r\n";
-        assert_eq!(accept_language_of(req), Lang::Es);
+        let req = "GET /callback HTTP/1.1\r\nHost: 127.0.0.1\r\naccept-language: de-DE,de\r\n\r\n";
+        assert_eq!(accept_language_of(req), Lang::De);
+        let frozen = "GET /callback HTTP/1.1\r\naccept-language: es-ES,es\r\n\r\n";
+        assert_eq!(accept_language_of(frozen), Lang::En);
         assert_eq!(accept_language_of("GET / HTTP/1.1\r\n\r\n"), Lang::En);
     }
 
@@ -204,12 +210,15 @@ mod tests {
     fn maps_windows_language_ids() {
         assert_eq!(from_windows_langid(0x0407), Lang::De);
         assert_eq!(from_windows_langid(0x0807), Lang::De);
-        assert_eq!(from_windows_langid(0x0416), Lang::Pt);
+        assert_eq!(from_windows_langid(0x0409), Lang::En);
+        assert_eq!(from_windows_langid(0x0416), Lang::En); // Portuguese: frozen
+        assert_eq!(from_windows_langid(0x040c), Lang::En); // French: frozen
         assert_eq!(from_windows_langid(0x0411), Lang::En);
     }
 
     #[test]
     fn every_language_has_every_text() {
+        // Frozen languages included: their texts are kept for re-activation.
         for lang in [Lang::De, Lang::En, Lang::Es, Lang::Fr, Lang::Pt] {
             let (ok, fail) = oauth_page(lang);
             let (title, text) = webview2_dialog(lang);

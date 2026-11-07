@@ -16,6 +16,7 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 - Verify every path and command against the repo; stale facts are removed or marked, not guessed.
 - Security rules (signing, secrets, vault, updater, "never user data to the AI") may be shortened but never weakened.
 - No secrets, tokens, real data or private paths (public repo).
+- UI texts in German and English only (`check:i18n`); es/fr/pt-BR are frozen ([i18n/FROZEN.md](i18n/FROZEN.md)): do not add or update them.
 
 ## knowledge
 

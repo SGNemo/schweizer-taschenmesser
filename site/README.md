@@ -37,7 +37,7 @@ src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset 
 src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
-src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in five languages,
+src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in German and English,
                        icon, hue, hue2, head and widget variant per module
 src/components/        Hero, Features, Data, Focus, Compare, Support, Install, Header, Footer,
                        Shot (one screenshot in both themes, window or phone frame), Icon (inline Lucide),

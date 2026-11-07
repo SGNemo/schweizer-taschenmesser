@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Sprachen nur Deutsch + Englisch (`feat/lang-de-en`, PR offen): `ACTIVE_LOCALES = ['de', 'en']`, es/fr/pt-BR eingefroren statt gelöscht ([i18n/FROZEN.md](i18n/FROZEN.md)), Gerät mit eingefrorener Sprache fällt ruhig auf Englisch, Website leitet /es, /fr, /pt-br auf /en.
 Sync im Heimnetz (`design/sync-lan-concept`, PR offen; Svens Antworten 2026-11-07: alle Empfehlungen, Fable-Kontrolle offen): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); danach Paket 1.
 Lokales Modell klarer (`fix/local-model-clarity`, PR offen): Text je Fall (Browser, Android, Testversion mit „Normale Version holen“), mit Modell „Nächster Schritt“ (2–3 Modelle → Fortschritt → Testfrage), Ollama-/Einrichtungs-Hinweis nur mit Modell, KI-Statistik leer = ein Satz, Dev-Preview (Windows) baut mit `local-llm-vulkan` (+≈2 min warm).
 

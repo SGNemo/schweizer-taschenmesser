@@ -20,9 +20,7 @@ const toolsDir = join(root, 'src', 'tools');
 const catalogs = {
   de: join(root, 'src', 'strings.ts'),
   en: join(root, 'src', 'i18n', 'locales', 'en', 'tools.ts'),
-  es: join(root, 'src', 'i18n', 'locales', 'es', 'tools.ts'),
-  fr: join(root, 'src', 'i18n', 'locales', 'fr', 'tools.ts'),
-  'pt-BR': join(root, 'src', 'i18n', 'locales', 'pt-BR', 'tools.ts'),
+  // es, fr, pt-BR are frozen (docs/i18n/FROZEN.md): not checked any more.
 };
 const texts = Object.fromEntries(
   Object.entries(catalogs).map(([lang, file]) => [lang, readFileSync(file, 'utf8')]),

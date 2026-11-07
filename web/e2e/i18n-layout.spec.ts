@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Layout check for long texts: every language, plus pseudo text (German source about 40 % longer,
+ * Layout check for long texts: every active language (de, en), plus pseudo text (German source about 40 % longer,
  * accented, in ⟦ ⟧; the English catalog is swapped for it in e2e builds only, `core/i18n/catalogs.ts`).
  * The main views must survive at phone and desktop width: no sideways page scroll and no text cut
  * off by a box that hides its overflow without an ellipsis.
@@ -19,7 +19,7 @@ const VIEWS = [
   '/settings/sync',
 ];
 const WIDTHS = [360, 1280];
-const LANGS = ['pseudo', 'de', 'en', 'es', 'fr', 'pt-BR'] as const;
+const LANGS = ['pseudo', 'de', 'en'] as const;
 
 interface Problem {
   kind: 'page-scroll' | 'clipped';

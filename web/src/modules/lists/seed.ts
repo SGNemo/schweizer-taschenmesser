@@ -1,4 +1,4 @@
-import type { Lang } from '@/core/i18n/lang';
+import type { ByLang } from '@/core/i18n/lang';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
 type Packing = { name: string; items: string[] };
@@ -10,7 +10,7 @@ interface Texts {
   checklistName: string;
 }
 
-const TEXTS: Record<Lang, Texts> = {
+const TEXTS: ByLang<Texts> = {
   de: {
     shopping: [
       '2 Milch',
@@ -244,7 +244,7 @@ const TEXTS: Record<Lang, Texts> = {
 const SECTION_CYCLE = ['dairy', 'bakery', 'produce'] as const;
 
 /** Where the first packing list goes and its two categories, per language. */
-const TRIP: Record<Lang, { place: string; cats: [string, string] }> = {
+const TRIP: ByLang<{ place: string; cats: [string, string] }> = {
   de: { place: 'Ostsee', cats: ['Kleidung', 'Technik'] },
   en: { place: 'Baltic coast', cats: ['Clothes', 'Tech'] },
   es: { place: 'Costa del Báltico', cats: ['Ropa', 'Tecnología'] },
