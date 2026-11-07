@@ -152,6 +152,11 @@ impl Psk {
     }
 
     #[cfg(test)]
+    pub(crate) fn bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+
+    #[cfg(test)]
     pub(crate) fn secret_ptr(&self) -> *const u8 {
         self.0.as_ptr()
     }

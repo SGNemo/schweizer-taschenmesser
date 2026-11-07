@@ -118,6 +118,8 @@ pub enum CancelReason {
     WrongCode,
     WrongAttempt,
     Rejected,
+    /// The connection that carried the attempt went away before the pairing finished.
+    ConnectionLost,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -570,6 +572,20 @@ impl PairingHost {
         body.extend_from_slice(&dk.version.to_be_bytes());
         body.extend_from_slice(&*dk.key);
         transport.seal(TAG_DATA_KEY, &body).map_err(PairError::Seal)
+    }
+
+    /// The connection of `attempt` is gone: ends exactly that attempt (a fresh window follows, like
+    /// after any failed attempt). Any other state or attempt id (finished, other connection): no-op.
+    pub fn abandon(&self, attempt: u64) {
+        let mut g = self.lock();
+        let now = g.advance(self.clock.now());
+        let mine = match &g.state {
+            State::AwaitHello(w) | State::AwaitConfirm(w, _) => w.attempt == attempt,
+            _ => false,
+        };
+        if mine {
+            g.end_attempt(now, CancelReason::ConnectionLost);
+        }
     }
 
     /// Closes the window and drops any attempt.
