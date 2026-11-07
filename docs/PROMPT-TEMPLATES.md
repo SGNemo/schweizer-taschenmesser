@@ -39,6 +39,10 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 - Before the PR: change note in `.changes/` (`npm run change`, [howto/changelog.md](howto/changelog.md)): short, user view, German and English; no note, no merge (docs/tests/CI only: label `no-changelog`).
 - Final message: **3 points + PR link**, nothing more. Point 1 what changed, point 2 how it was verified, point 3 what waits on the maintainer (also add it to "Wartet auf Sven" in [CHATS.md](CHATS.md)).
 
+## delegate
+
+Lead → agent, one block per task: **Goal** (why, what done looks like) · **Scope** (files/dirs; read-only or may edit) · **Acceptance** (checks + result) · **Docs** to read · **Branch** `<type>/<topic>` (or "no commit") · **Return** (file `/workspace/<agent-dir>/…` + short summary; verified vs. inferred) · last line: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`. Roster: [meta/AGENTS.md](meta/AGENTS.md).
+
 ## pr-text
 
 English. Sections: **What and why** · **Structure/changes** (tree or list, moved/merged/deleted → target, new files → purpose) · **Numbers** (before/after) · **How verified** (commands + result) · **Open questions** · **Hand-over** (Done / Open / Next). Repo template: `.github/PULL_REQUEST_TEMPLATE.md`.
