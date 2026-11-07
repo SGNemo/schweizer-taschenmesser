@@ -1,9 +1,9 @@
 import { formatMoney } from '@/core/money';
-import { formatMonth } from '@/core/time/dates';
+import { formatDay, formatMonth } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Card } from '@/ui';
 import { useCurrency } from '../currency';
-import type { MonthPoint } from '../netWorth';
+import { changeOver, type MonthPoint } from '../netWorth';
 import styles from '../routes/finance.module.css';
 
 const W = 640;
@@ -28,15 +28,28 @@ export function TrendChart({
   const values = points.map((p) => p.valueMinor);
   const lo = Math.min(...values);
   const hi = Math.max(...values);
-  const span = hi - lo || 1;
+  // Padded domain so a small change does not look like a crash; a flat series sits at mid-height.
+  const raw = hi - lo;
+  const pad = raw === 0 ? Math.max(Math.abs(hi) * 0.1, 100) : raw * 0.1;
+  const lo2 = lo - pad;
+  const span = hi + pad - lo2;
   const x = (i: number) => PAD + (i / (points.length - 1)) * (W - 2 * PAD);
-  const y = (v: number) => H - PAD - ((v - lo) / span) * (H - 2 * PAD);
+  const y = (v: number) => H - PAD - ((v - lo2) / span) * (H - 2 * PAD);
   const line = points
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(p.valueMinor).toFixed(1)}`)
     .join(' ');
   const area = `${line} L${x(points.length - 1).toFixed(1)} ${H} L${x(0).toFixed(1)} ${H} Z`;
   const first = points[0]!;
   const last = points[points.length - 1]!;
+  const change = changeOver(points)!;
+  const sinceLabel = formatDay(`${change.since}-01`, 'LLLL');
+  const changeText =
+    change.diffMinor === 0
+      ? t.finance.netWorthUnchanged(sinceLabel)
+      : t.finance.netWorthChange(
+          `${change.diffMinor > 0 ? '+' : ''}${formatMoney(change.diffMinor, currency)}`,
+          sinceLabel,
+        );
   return (
     <Card>
       <h2 className={styles.chartTitle}>{title}</h2>
@@ -62,6 +75,9 @@ export function TrendChart({
           {formatMonth(last.month)} · {formatMoney(last.valueMinor, currency)}
         </span>
       </div>
+      <p className={styles.curveFoot} data-testid={`${testId}-change`}>
+        {changeText}
+      </p>
       <table className="sr-only">
         <caption>{title}</caption>
         <tbody>

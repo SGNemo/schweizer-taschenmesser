@@ -69,3 +69,15 @@ export function netWorthSeries(
   }
   return points;
 }
+
+/** Change from the first to the last point and the month it is counted from; none below two points. */
+export function changeOver(
+  points: readonly MonthPoint[],
+): { diffMinor: number; since: string } | undefined {
+  if (points.length < 2) return undefined;
+  const first = points[0]!;
+  return {
+    diffMinor: points[points.length - 1]!.valueMinor - first.valueMinor,
+    since: first.month,
+  };
+}

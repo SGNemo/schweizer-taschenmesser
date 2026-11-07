@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lastMonths, netWorthSeries } from './netWorth';
+import { changeOver, lastMonths, netWorthSeries } from './netWorth';
 
 const acc = (id: string, openingBalanceMinor: number) => ({ id, openingBalanceMinor });
 const tx = (date: string, kind: 'income' | 'expense', amountMinor: number, accountId = 'a') => ({
@@ -73,5 +73,18 @@ describe('netWorthSeries', () => {
 
   it('has no points without bookings', () => {
     expect(netWorthSeries([acc('a', 1000)], [], '2026-09-15')).toEqual([]);
+  });
+});
+
+describe('changeOver', () => {
+  it('is the difference first to last, with the start month', () => {
+    const pts = [
+      { month: '2026-05', valueMinor: 1000 },
+      { month: '2026-09', valueMinor: 700 },
+    ];
+    expect(changeOver(pts)).toEqual({ diffMinor: -300, since: '2026-05' });
+  });
+  it('is undefined for fewer than two points', () => {
+    expect(changeOver([{ month: '2026-05', valueMinor: 1 }])).toBeUndefined();
   });
 });

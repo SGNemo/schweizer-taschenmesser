@@ -166,6 +166,8 @@ export const finance: Strings['finance'] = {
   ringTitle: 'Where the money went',
   cardAvailable: (v: string) => `available ${v}`,
   netWorthTitle: 'Total balance at month end',
+  netWorthChange: (amount: string, since: string) => `${amount} since ${since}`,
+  netWorthUnchanged: (since: string) => `unchanged since ${since}`,
   netWorthEmpty: 'Not enough history yet',
   netWorthEmptyHint:
     'From the second month with bookings, this shows how your total balance develops.',

@@ -3131,6 +3131,8 @@ export const de = {
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
     netWorthTitle: 'Gesamtstand am Monatsende',
+    netWorthChange: (amount: string, since: string) => `${amount} seit ${since}`,
+    netWorthUnchanged: (since: string) => `unverändert seit ${since}`,
     netWorthEmpty: 'Noch zu wenig Verlauf',
     netWorthEmptyHint:
       'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
