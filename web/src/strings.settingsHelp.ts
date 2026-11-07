@@ -17,6 +17,8 @@ export const tFieldHelp = defineBundle(
     'accounts.genSymbols': 'Neue Passwörter enthalten auch Sonderzeichen wie ! oder #.',
     'accounts.genAvoidAmbiguous':
       'Lässt Zeichen weg, die sich leicht verwechseln lassen, etwa I, l, 1, O und 0.',
+    'accounts.breachCheck':
+      'Prüft deine Passwörter gegen bekannte Datenlecks; dabei verlässt nur ein kurzer Teil eines Hashes das Gerät, nie das Passwort.',
     'browser.engine': 'Mit dieser Suchmaschine suchst du aus der Adressleiste.',
     'browser.history': 'Merkt sich besuchte Seiten auf diesem Gerät, damit du sie wiederfindest.',
     'browser.httpWarning':
@@ -71,6 +73,8 @@ export const tFieldHelp = defineBundle(
       'accounts.genSymbols': 'New passwords also contain special characters such as ! or #.',
       'accounts.genAvoidAmbiguous':
         'Leaves out characters that are easy to mix up, such as I, l, 1, O and 0.',
+      'accounts.breachCheck':
+        'Checks your passwords against known data leaks; only a short part of a hash leaves the device, never the password.',
       'browser.engine': 'The search engine used from the address bar.',
       'browser.history': 'Remembers visited pages on this device so you can find them again.',
       'browser.httpWarning': 'Shows a notice before you open a page without encryption (HTTP).',
