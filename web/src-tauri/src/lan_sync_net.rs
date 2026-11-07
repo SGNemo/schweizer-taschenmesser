@@ -40,9 +40,8 @@ mod win {
     };
     use windows::Win32::NetworkManagement::Ndis::IfOperStatusUp;
     use windows::Win32::Networking::NetworkListManager::{
-        INetworkListManager, NetworkListManager,
+        INetworkListManager, NetworkListManager, NLM_NETWORK_CATEGORY_DOMAIN_AUTHENTICATED,
         NLM_NETWORK_CATEGORY_PRIVATE, NLM_NETWORK_CATEGORY_PUBLIC,
-        NLM_NETWORK_CATEGORY_DOMAIN_AUTHENTICATED,
     };
     use windows::Win32::Networking::WinSock::{AF_INET, SOCKADDR_IN};
     use windows::Win32::System::Com::{
@@ -62,9 +61,7 @@ mod win {
             }
             let list: INetworkListManager =
                 CoCreateInstance(&NetworkListManager, None, CLSCTX_ALL).map_err(|_| NetError)?;
-            let conns = list
-                .GetNetworkConnections()
-                .map_err(|_| NetError)?;
+            let conns = list.GetNetworkConnections().map_err(|_| NetError)?;
             loop {
                 let mut one = [None];
                 let mut fetched = 0u32;
@@ -108,7 +105,9 @@ mod win {
             buf = vec![0u64; (size as usize).div_ceil(8)];
             let head = buf.as_mut_ptr().cast::<IP_ADAPTER_ADDRESSES_LH>();
             // SAFETY: `head` points to a zeroed buffer of at least `size` bytes.
-            let rc = unsafe { GetAdaptersAddresses(u32::from(AF_INET.0), flags, None, Some(head), &mut size) };
+            let rc = unsafe {
+                GetAdaptersAddresses(u32::from(AF_INET.0), flags, None, Some(head), &mut size)
+            };
             if rc == ERROR_SUCCESS.0 {
                 return Ok(walk(buf.as_ptr().cast(), &networks));
             }
@@ -135,7 +134,11 @@ mod win {
                 if a.OperStatus != IfOperStatusUp || a.AdapterName.is_null() {
                     continue;
                 }
-                let name = a.AdapterName.to_string().unwrap_or_default().to_ascii_uppercase();
+                let name = a
+                    .AdapterName
+                    .to_string()
+                    .unwrap_or_default()
+                    .to_ascii_uppercase();
                 let (network_id, category) = match networks.get(&name) {
                     Some((id, c)) => (Some(id.clone()), *c),
                     None => (None, NetCategory::Unknown),
@@ -146,7 +149,10 @@ mod win {
                     let ua = &*u;
                     u = ua.Next;
                     let sa = ua.Address.lpSockaddr;
-                    if sa.is_null() || (ua.Address.iSockaddrLength as usize) < std::mem::size_of::<SOCKADDR_IN>() {
+                    if sa.is_null()
+                        || (ua.Address.iSockaddrLength as usize)
+                            < std::mem::size_of::<SOCKADDR_IN>()
+                    {
                         continue;
                     }
                     let v4 = &*sa.cast::<SOCKADDR_IN>();

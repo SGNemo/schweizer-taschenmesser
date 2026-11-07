@@ -38,11 +38,11 @@ pub struct FileTrustStore {
     io: Mutex<()>,
 }
 
-pub(crate) fn to_hex(b: &[u8]) -> String {
+pub fn to_hex(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
 
-pub(crate) fn from_hex32(s: &str) -> Option<[u8; 32]> {
+pub fn from_hex32(s: &str) -> Option<[u8; 32]> {
     if s.len() != 64 || !s.is_ascii() {
         return None;
     }

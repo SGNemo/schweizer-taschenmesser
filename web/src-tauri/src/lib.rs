@@ -15,6 +15,10 @@ mod disk;
 #[cfg(desktop)]
 mod downloads;
 #[cfg(desktop)]
+mod lan_sync;
+#[cfg(desktop)]
+mod lan_sync_net;
+#[cfg(desktop)]
 mod local_api;
 #[cfg(desktop)]
 mod local_llm;
@@ -129,6 +133,7 @@ pub fn run() {
         .on_window_event(capture::on_window_event)
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
+        .manage(lan_sync::LanSync::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(downloads::Downloads::default())
@@ -173,6 +178,17 @@ pub fn run() {
             update::install_update,
             oauth::oauth_listen_start,
             oauth::oauth_listen_wait,
+            lan_sync::lan_hub_start,
+            lan_sync::lan_hub_stop,
+            lan_sync::lan_hub_status,
+            lan_sync::lan_pair_open,
+            lan_sync::lan_pair_confirm,
+            lan_sync::lan_pair_cancel,
+            lan_sync::lan_devices,
+            lan_sync::lan_revoke,
+            lan_sync::lan_hub_rotate,
+            lan_sync::lan_hub_request,
+            lan_sync::lan_home_set,
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
