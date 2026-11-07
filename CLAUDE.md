@@ -51,5 +51,6 @@ Code, comments, commits **English**; UI: source `web/src/strings.ts`, catalog `w
 | Why was it decided | [DECISIONS](docs/DECISIONS.md) → `docs/decisions/` |
 | Status, open items, hardware checklists | [STATUS](docs/STATUS.md), [MANUAL-TESTS](docs/MANUAL-TESTS.md); ideas: [ROADMAP](docs/ROADMAP.md) |
 | Local AI import API / MCP (German) | [AI-IMPORT](docs/AI-IMPORT.md) |
+| Agent team (roster, delegation, sandbox start) | [meta/AGENTS.md](docs/meta/AGENTS.md) |
 | Area rules | `web/src/modules/CLAUDE.md`, `web/src-tauri/CLAUDE.md`, `server/CLAUDE.md` (loaded when working there) |
 Docs are English; README and user docs (`docs/user/`) also German as `*.de.md`, change both (`npm run check:readme`). Latest release: see [STATUS](docs/STATUS.md).
