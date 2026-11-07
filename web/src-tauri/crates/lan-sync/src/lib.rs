@@ -21,6 +21,8 @@ pub mod hub;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod pairing;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod supervisor;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod transport;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod trust;
