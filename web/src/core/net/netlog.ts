@@ -24,6 +24,7 @@ export type NetReason =
   | 'maps'
   | 'currency'
   | 'ip'
+  | 'breach'
   | 'download'
   | 'other';
 
@@ -148,6 +149,7 @@ const HOST_REASONS: [RegExp, NetReason][] = [
   [/^overpass-api\.de$/, 'maps'],
   [/^api\.frankfurter\.(dev|app)$/, 'currency'],
   [/^api\.ipify\.org$/, 'ip'],
+  [/^api\.pwnedpasswords\.com$/, 'breach'],
   [/(^|\.)huggingface\.co$/, 'download'],
   [/^api\.(openai|anthropic)\.com$|^generativelanguage\.googleapis\.com$|:11434$/, 'ai'],
   [

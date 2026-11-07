@@ -63,6 +63,12 @@ V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-Verl
 V7. _Übersicht mit echten Daten:_ „Jetzt wichtig“ zeigt Überfälliges (rot), Heute (Akzent), bald Ablaufendes (Warnfarbe) – jeweils mit Icon/Text; leer = Bereich fehlt. ToDo im Widget abhaken → „Rückgängig“. Kachel „Heute“ zeigt Jetzt-Linie und „Als Nächstes“. Dichte „Kompakt“ in Einstellungen → Darstellung. ☐
 V8. _Android:_ Übersicht (Widgets, „Jetzt wichtig“ umbrechen sauber, Touch-Ziele), Dieser PC erscheint **nicht**. ☐
 
+### Tresor: Abgleich mit Datenlecks (`feat/vault-breach-check`)
+
+1. _Aus (Standard):_ Tresor → „Passwörter prüfen“; Einstellungen → Verbindungen → Protokoll zeigt keine Anfrage an api.pwnedpasswords.com. ☐
+2. _An:_ Einstellungen → Sicherheit → Abgleich mit Datenlecks einschalten; Eintrag mit Passwort „password“ anlegen; „Passwörter prüfen“ → Eintrag steht unter „In einem bekannten Datenleck gefunden“; Protokoll zeigt Anfragen als „Tresor: Abgleich mit Datenlecks“ (nur Host, 5 Zeichen im Pfad werden nicht gespeichert). ☐
+3. _Netzwerk sperren:_ Sperre an → Prüfung zeigt „nicht verfügbar“, Stärke/Wiederverwendung/Alter erscheinen trotzdem. ☐
+
 ### Schritt 11b – OS-Keystore, Biometrie, Bildschirmschutz
 
 **Windows (`Nemo-Portable.exe`)**

@@ -87,7 +87,10 @@ function Body({
       if (ctl.signal.aborted || !prefs.breachCheck) return;
       setBreachOn(true);
       try {
-        const ids = await findBreached(entries.slice(0, MAX_CHECKED), { signal: ctl.signal });
+        const ids = await findBreached(
+          entries.filter((e) => e.data.password).slice(0, MAX_CHECKED),
+          { signal: ctl.signal },
+        );
         if (!ctl.signal.aborted) setBreached(ids);
       } catch {
         if (!ctl.signal.aborted) setBreachFailed(true);
@@ -104,7 +107,6 @@ function Body({
   const none =
     done &&
     breachSettled &&
-    !breachFailed &&
     weak.length === 0 &&
     reused.length === 0 &&
     old.length === 0 &&

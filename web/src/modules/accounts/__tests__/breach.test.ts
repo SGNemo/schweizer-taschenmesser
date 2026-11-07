@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { defaultSettings } from '../settings';
 import { BreachUnavailable, findBreached, findSuffix, sha1Hex, splitHash } from '../breach';
 
 // SHA-1("password") = 5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8
@@ -7,6 +8,10 @@ const body = (rows: string[]) => new Response(rows.join('\r\n'));
 const entry = (id: string, password: string) => ({ id, data: { password } });
 
 describe('breach check', () => {
+  it('is off by default (real settings, no mock)', () => {
+    expect(defaultSettings.breachCheck).toBe(false);
+  });
+
   it('hashes with SHA-1 (uppercase) and splits 5 / 35', async () => {
     const h = await sha1Hex(PW);
     expect(h).toBe('5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8');
@@ -38,6 +43,8 @@ describe('breach check', () => {
       expect(call[0]).toMatch(/^https:\/\/api\.pwnedpasswords\.com\/range\/[0-9A-F]{5}$/);
       expect(call[1].headers).toEqual({ 'Add-Padding': 'true' });
       expect(call[1].body).toBeUndefined();
+      expect(call[1].credentials).toBe('omit');
+      expect(call[1].referrerPolicy).toBe('no-referrer');
     }
     expect(urls.join()).not.toContain('zq9');
   });

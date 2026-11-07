@@ -20,6 +20,7 @@ vi.mock('../strength', () => ({
 afterEach(() => {
   cleanup();
   h.fetch.mockReset();
+  h.on = false;
 });
 
 const entries = [
@@ -57,7 +58,8 @@ describe('AuditDialog leak check', () => {
     await open();
     await screen.findByText(t.accounts.audit.breachUnavailable);
     await waitFor(() => expect(screen.queryByText(t.accounts.audit.running(0, 1))).toBeNull());
-    expect(screen.queryByText(t.accounts.audit.nothing)).toBeNull();
+    // The local checks found nothing: that all-clear stays, the failed leak check does not hide it.
+    await screen.findByText(t.accounts.audit.nothing);
     h.on = false;
   });
 });
