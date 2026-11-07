@@ -136,6 +136,7 @@ export const finance: Strings['finance'] = {
   tabs: {
     overview: 'Overview',
     transactions: 'Transactions',
+    trend: 'History',
     accounts: 'Accounts',
     categories: 'Categories',
   },
@@ -164,6 +165,10 @@ export const finance: Strings['finance'] = {
   categoriesRing: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
   ringTitle: 'Where the money went',
   cardAvailable: (v: string) => `available ${v}`,
+  netWorthTitle: 'Total balance at month end',
+  netWorthEmpty: 'Not enough history yet',
+  netWorthEmptyHint:
+    'From the second month with bookings, this shows how your total balance develops.',
   curveFrom: 'Start of month',
   curveLabel: (a: string, b: string) => `Balance from ${a} to ${b}`,
   showTable: 'Show as table',

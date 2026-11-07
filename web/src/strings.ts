@@ -3104,6 +3104,7 @@ export const de = {
     tabs: {
       overview: 'Übersicht',
       transactions: 'Buchungen',
+      trend: 'Verlauf',
       accounts: 'Konten',
       categories: 'Kategorien',
     },
@@ -3129,6 +3130,10 @@ export const de = {
     expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
+    netWorthTitle: 'Gesamtstand am Monatsende',
+    netWorthEmpty: 'Noch zu wenig Verlauf',
+    netWorthEmptyHint:
+      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
     cardAvailable: (v: string) => `verfügbar ${v}`,
