@@ -3,6 +3,8 @@
 //! Package 1 holds only the store. Its last-write-wins rule is the third copy of the rule in
 //! `web/src/core/sync/ops.ts` and `server/src/store.ts` and is pinned by `contract/*.json`.
 
+//! The store assumes exactly one `Store` per database file (the sequence counter is cached in memory).
+
 mod store;
 
 pub use store::{FieldOp, PullResult, PushResult, Store, StoreError};

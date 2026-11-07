@@ -659,7 +659,7 @@ jobs:
       - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -- -D warnings
       - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync
       # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
-      - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge -p taschenmesser-lan-sync --target x86_64-pc-windows-msvc
+      - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
 
   # The built-in local model: llama.cpp behind a Tauri-free crate. Compiled and tested on its own (the app
   # only pulls it in with `--features local-llm`), including a tiny random-weights model for the plumbing

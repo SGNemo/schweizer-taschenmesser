@@ -170,7 +170,7 @@ impl Store {
             "SELECT collection, id, field, hlc, value, seq FROM field_state
              WHERE seq > ?1 ORDER BY seq LIMIT ?2",
         )?;
-        let rows = stmt.query_map(params![since, limit as i64 + 1], |r| {
+        let rows = stmt.query_map(params![since, i64::try_from(limit).unwrap_or(i64::MAX).saturating_add(1)], |r| {
             Ok((
                 FieldOp {
                     collection: r.get(0)?,
@@ -208,5 +208,18 @@ impl Store {
         tx.commit()?;
         self.seq = 0;
         Ok(epoch)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pull_with_huge_limit_does_not_overflow() {
+        let store = Store::open(":memory:").unwrap();
+        let page = store.pull(0, usize::MAX).unwrap();
+        assert!(page.ops.is_empty());
+        assert!(!page.more);
     }
 }
