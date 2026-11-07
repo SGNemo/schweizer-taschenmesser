@@ -661,6 +661,44 @@ jobs:
       # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
       - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
 
+  # The Windows-only code of the shell (network identification for LAN sync, keyring, mDNS) and the crate
+  # lan-sync with its bundled SQLite cannot be cross-checked from Linux: build, lint and test them natively.
+  # The release build reports the exe size (placeholder frontend, no local model: a trend value, not the
+  # shipped size). The signed release build stays in release.yml.
+  rust-windows:
+    name: Native shell on Windows (clippy, tests, size)
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.tauri != 'false' }}
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+        working-directory: web/src-tauri
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: web/src-tauri
+          shared-key: windows-ci
+      # tauri::generate_context! needs the frontend directory to exist; its content does not matter here.
+      - name: Placeholder frontend
+        run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
+      - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
+      - run: cargo test --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser
+      - run: cargo test --locked -p taschenmesser --test commands
+      - name: Release build and exe size
+        run: |
+          cargo build --release --locked -p taschenmesser
+          size=$(stat -c %s target/release/taschenmesser.exe)
+          echo "### Windows exe (release, placeholder frontend, no local model)" >> "$GITHUB_STEP_SUMMARY"
+          echo "taschenmesser.exe: $size bytes ($((size / 1024 / 1024)) MiB)" >> "$GITHUB_STEP_SUMMARY"
+          echo "exe size: $size bytes"
+
   # The built-in local model: llama.cpp behind a Tauri-free crate. Compiled and tested on its own (the app
   # only pulls it in with `--features local-llm`), including a tiny random-weights model for the plumbing
   # (load, grammar, KV-cache reuse, cancel). No real model is downloaded in CI.
