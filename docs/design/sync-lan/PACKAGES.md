@@ -96,6 +96,7 @@ TS-Adapter, Einstellungsseite, Android, Client-Seite des Handshakes außer in Te
 
 ## Abnahme
 - Rust-Checks aus web/src-tauri/CLAUDE.md inkl. neuer Crate; Tests: öffentliche Peer-Adresse, übergroßer Rahmen vor dem Handshake, alte Schlüsselversion, Push ohne `enc:v1:` – alle abgewiesen, mit Ablehnungsgrund geprüft; die Menge der gebundenen Adressen wird im Test aufgezählt und enthält nie `0.0.0.0` oder Loopback (F11a); ohne offenes Kopplungsfenster und ohne gekoppeltes Gerät lauscht der Hub nicht (F11b); Handshake-Rate-Limit pro Adresse greift (F11c); mDNS-TXT enthält nur `v` und `h`, nie den Namen (F11d); nach Rotation kein Wert der alten Version im Store, auch nicht durch einen unter n verschlüsselten Push, der nach dem Leeren ankommt; 1 000 Ops push/pull über einen Loopback-Socket nur unter `#[cfg(test)]` (kein Laufzeitschalter).
+- `lan_devices/revoke` schließt eine offene Socket-Sitzung des Geräts sofort (Test in 2b; der 2a-Test bleibt eine In-Memory-Sitzung).
 - `cargo check --target x86_64-pc-windows-msvc -p taschenmesser-lan-sync`; Bundle-Größe vorher/nachher.
 - Docs: decisions core.md „Sync“ (Bindung), `docs/architecture/desktop.md` Abschnitt, STATUS eine Zeile.
 
