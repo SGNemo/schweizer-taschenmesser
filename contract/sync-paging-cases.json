@@ -1,0 +1,521 @@
+{
+  "_comment": "Paging contract of a sync store, derived from what core/sync/engine.ts assumes. level 'store': checked against the store (server/src/store.ts, crates/lan-sync/src/store.rs); level 'handler': checked against the server's HTTP handler (server/test/paging.test.ts) and the hub handler (package 2). 'pushGenerated: n' pushes n distinct ops ({collection todos_task, id g<i>, field title, hlc 0000000001000-<i>-aaaa0001, value i}). 'epoch: same|changed' compares with the epoch seen in the previous step. Errors are abstract names; each transport maps them (server: hlc-drift = 400 hlc-drift, too-many-ops = 400, limit-too-large = 400).",
+  "cases": [
+    {
+      "name": "empty store pulls nothing",
+      "level": "store",
+      "steps": [
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 0,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "pages follow arrival order and report more",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "B"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r3",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "C"
+            }
+          ],
+          "expect": {
+            "accepted": 3,
+            "cursor": 3
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 2
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "A"
+              },
+              {
+                "collection": "todos_task",
+                "id": "r2",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "B"
+              }
+            ],
+            "cursor": 2,
+            "more": true
+          }
+        },
+        {
+          "pull": {
+            "since": 2,
+            "limit": 2
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r3",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "C"
+              }
+            ],
+            "cursor": 3,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a page that ends exactly at the last row has no more",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "B"
+            }
+          ],
+          "expect": {
+            "accepted": 2,
+            "cursor": 2
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 2
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "A"
+              },
+              {
+                "collection": "todos_task",
+                "id": "r2",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "B"
+              }
+            ],
+            "cursor": 2,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a refused op does not consume a sequence number",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000002000-0000-aaaa0001",
+              "value": "new"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 1
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "old"
+            }
+          ],
+          "expect": {
+            "accepted": 0,
+            "cursor": 1
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000002000-0000-aaaa0001",
+              "value": "same stamp"
+            }
+          ],
+          "expect": {
+            "accepted": 0,
+            "cursor": 1
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000002000-0000-aaaa0001",
+                "value": "new"
+              }
+            ],
+            "cursor": 1,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "an accepted update moves the field to the end of the order",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "B"
+            }
+          ],
+          "expect": {
+            "accepted": 2,
+            "cursor": 2
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000003000-0000-aaaa0001",
+              "value": "A2"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 3
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r2",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "B"
+              },
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000003000-0000-aaaa0001",
+                "value": "A2"
+              }
+            ],
+            "cursor": 3,
+            "more": false
+          }
+        },
+        {
+          "pull": {
+            "since": 2,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000003000-0000-aaaa0001",
+                "value": "A2"
+              }
+            ],
+            "cursor": 3,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a cursor at or past the end returns nothing and keeps the cursor",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "B"
+            }
+          ],
+          "expect": {
+            "accepted": 2,
+            "cursor": 2
+          }
+        },
+        {
+          "pull": {
+            "since": 2,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 2,
+            "more": false
+          }
+        },
+        {
+          "pull": {
+            "since": 7,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 7,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "epoch is stable while pushing and changes on reset",
+      "level": "store",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 1,
+            "epoch": "same"
+          }
+        },
+        {
+          "reset": true,
+          "expect": {
+            "epoch": "changed"
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 0,
+            "more": false
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 1,
+            "epoch": "same"
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [
+              {
+                "collection": "todos_task",
+                "id": "r1",
+                "field": "title",
+                "hlc": "0000000001000-0000-aaaa0001",
+                "value": "A"
+              }
+            ],
+            "cursor": 1,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a stamp too far in the future is refused as a whole batch",
+      "level": "handler",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r9",
+              "field": "title",
+              "hlc": "9000000000000-0000-aaaa0001",
+              "value": "future"
+            }
+          ],
+          "expect": {
+            "error": "hlc-drift"
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 0,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a push of exactly the maximum size is accepted, one more is refused",
+      "level": "handler",
+      "steps": [
+        {
+          "pushGenerated": 5000,
+          "expect": {
+            "accepted": 5000,
+            "cursor": 5000
+          }
+        },
+        {
+          "pushGenerated": 5001,
+          "expect": {
+            "error": "too-many-ops"
+          }
+        },
+        {
+          "pull": {
+            "since": 4999,
+            "limit": 5
+          },
+          "expect": {
+            "count": 1,
+            "cursor": 5000,
+            "more": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a pull limit above the maximum is refused",
+      "level": "handler",
+      "steps": [
+        {
+          "pull": {
+            "since": 0,
+            "limit": 5001
+          },
+          "expect": {
+            "error": "limit-too-large"
+          }
+        }
+      ]
+    }
+  ]
+}

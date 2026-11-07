@@ -10,3 +10,7 @@ equal HLCs change nothing).
 Every case is checked with the batches in the given order and in reverse order – the final state
 must not depend on arrival order. `expected` maps `"<collection>/<id>"` to the winning
 `{ hlc, value }` per field.
+
+## Paging contract
+
+`sync-paging-cases.json` pins what `core/sync/engine.ts` assumes of a store: pages in `seq` order with `cursor`/`more`, refused ops consume no `seq`, epoch changes on reset, plus the handler errors `hlc-drift` and the size limits. Cases have a `level`: `store` (checked in `server/test/paging.test.ts` and `web/src-tauri/crates/lan-sync/tests/contract.rs`) or `handler` (Node server now, hub handler in package 2). Device management, Web Push and the proxy are not part of it.
