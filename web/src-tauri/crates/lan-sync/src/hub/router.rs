@@ -144,6 +144,12 @@ impl Router {
         }
     }
 
+    /// Whether `peer` may connect at all (private address inside a bound subnet); the transport asks
+    /// before it takes a connection slot.
+    pub fn peer_allowed(&self, peer: IpAddr) -> bool {
+        self.admission.lock().is_ok_and(|a| a.peer_ok(peer))
+    }
+
     /// First message of a new connection from `peer`.
     pub fn accept(&self, peer: IpAddr, wire: &[u8], now: Duration) -> Opened {
         let admitted = match self.admission.lock() {

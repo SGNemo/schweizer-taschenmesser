@@ -31,7 +31,7 @@ impl FileHomeNetwork {
         .map_err(|_| NetError)?;
         let mut tmp = self.path.clone().into_os_string();
         tmp.push(".tmp");
-        std::fs::write(&tmp, bytes).map_err(|_| NetError)?;
+        crate::trust::file::write_synced(&tmp, &bytes).map_err(|_| NetError)?;
         std::fs::rename(&tmp, &self.path).map_err(|_| NetError)
     }
 

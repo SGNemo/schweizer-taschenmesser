@@ -4,8 +4,13 @@
 //! * TXT carries only `v=1` and `h=<daily hint>`: the first 8 bytes (hex) of
 //!   `HMAC-SHA256(key = SHA-256(hub static public key), msg = "YYYY-MM-DD" UTC)`. Only a device that
 //!   knows the hub key can match it; clients accept yesterday, today and tomorrow ([`hints_around`]).
-//! * The daemon is told to use **only** the interfaces of the bound addresses (everything else is
-//!   disabled first), so no virtual, public or IPv6 interface sees the announcement.
+//! * The daemon is told to announce **only** on the interfaces of the bound addresses (everything
+//!   else is disabled right after it is created). Be exact about what that does not do: `mdns-sd`
+//!   binds the wildcard sockets `0.0.0.0:5353`/`[::]:5353` and joins the multicast group on every
+//!   interface *before* `disable_interface(All)` is processed, and the wildcard socket stays open.
+//!   In that window and afterwards the hub may *receive* mDNS queries from any interface, but
+//!   nothing is *announced* except on the bound addresses; the announcement is registered only after
+//!   the interface commands.
 //!
 //! The announcement never contains a device name, a key or an address other than the bound ones.
 //! (The hint helpers are pure and tested on any machine; [`Announcer`] needs a multicast-capable

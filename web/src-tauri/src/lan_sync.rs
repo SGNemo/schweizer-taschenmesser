@@ -487,7 +487,7 @@ pub fn lan_pair_open(state: State<'_, LanSync>) -> Result<(), String> {
 }
 
 /// The user confirmed the code shown on the PC. The sealed data-key frame goes only to the
-/// connection of that attempt.
+/// connection of that attempt, and the device is trusted only if that write succeeded.
 #[tauri::command]
 pub fn lan_pair_confirm(
     state: State<'_, LanSync>,
@@ -495,25 +495,27 @@ pub fn lan_pair_confirm(
     code: String,
 ) -> Result<(), String> {
     with_core(&state, |core, wake| {
-        let sealed = core.host.confirm(attempt, &code).map_err(|e| match e {
-            PairError::WrongCode => "wrong-code",
-            PairError::Expired => "expired",
-            PairError::NotAwaiting | PairError::WrongAttempt => "not-awaiting",
-            _ => "failed",
-        })?;
-        let delivered = core
+        // the hub lock is not held while the frame is written: take the handle, let go, then confirm
+        let deliverer = core
             .live
             .lock()
             .map_err(|_| "internal")?
             .sup
             .handle()
-            .is_some_and(|live: &Live| live.deliver(attempt, sealed));
+            .and_then(Live::deliverer)
+            .ok_or("no-connection")?;
+        let result = core
+            .host
+            .confirm_deliver(attempt, &code, &mut |wire| deliverer.deliver(attempt, wire));
         let _ = wake.send(());
-        if delivered {
-            Ok(())
-        } else {
-            Err("no-connection".to_owned())
-        }
+        result.map_err(|e| match e {
+            PairError::WrongCode => "wrong-code",
+            PairError::Expired => "expired",
+            PairError::NotAwaiting | PairError::WrongAttempt => "not-awaiting",
+            PairError::Delivery => "no-connection",
+            _ => "failed",
+        })?;
+        Ok(())
     })
 }
 
@@ -571,9 +573,11 @@ pub fn lan_hub_rotate(state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
             .rotate()
             .map_err(|_| "keystore-unavailable")?;
         if core.hub.rotate_to(new.version).is_err() {
-            // the hub kept its old version and data: put the old key back
-            let _ = core.data_keys.restore(&old);
-            return Err("rotate-failed".to_owned());
+            // the hub kept its old version and data: put the old key back, and say so if that fails
+            return Err(match core.data_keys.restore(&old) {
+                Ok(()) => "rotate-failed".to_owned(),
+                Err(_) => "rotate-failed-keystore".to_owned(),
+            });
         }
         let _ = wake.send(());
         Ok(DataKeyDto {

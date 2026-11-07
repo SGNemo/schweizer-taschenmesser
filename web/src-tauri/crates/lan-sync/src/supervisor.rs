@@ -16,7 +16,7 @@ use crate::hub::netpolicy::{
 };
 use crate::hub::router::Router;
 use crate::noise::PublicKey;
-use crate::transport::{Server, ServerConfig};
+use crate::transport::{Deliverer, Server, ServerConfig};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -127,10 +127,9 @@ pub struct Live {
 }
 
 impl Live {
-    pub fn deliver(&self, attempt: u64, wire: Vec<u8>) -> bool {
-        self.server
-            .as_ref()
-            .is_some_and(|s| s.deliver(attempt, wire))
+    /// A handle that outlives the supervisor's lock (so confirming never holds it).
+    pub fn deliverer(&self) -> Option<Deliverer> {
+        self.server.as_ref().map(Server::deliverer)
     }
 }
 

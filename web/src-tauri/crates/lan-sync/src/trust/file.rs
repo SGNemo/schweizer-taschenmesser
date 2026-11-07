@@ -38,6 +38,14 @@ pub struct FileTrustStore {
     io: Mutex<()>,
 }
 
+/// Writes and flushes to disk before the caller renames the file into place.
+pub(crate) fn write_synced(path: &std::ffi::OsStr, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut f = std::fs::File::create(path)?;
+    f.write_all(bytes)?;
+    f.sync_all()
+}
+
 pub fn to_hex(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect()
 }
@@ -107,7 +115,7 @@ impl FileTrustStore {
         let bytes = serde_json::to_vec(&list).map_err(|_| TrustError::Storage)?;
         let mut tmp = self.path.clone().into_os_string();
         tmp.push(".tmp");
-        std::fs::write(&tmp, bytes).map_err(|_| TrustError::Storage)?;
+        write_synced(&tmp, &bytes).map_err(|_| TrustError::Storage)?;
         std::fs::rename(&tmp, &self.path).map_err(|_| TrustError::Storage)
     }
 }

@@ -7,7 +7,7 @@ use crate::noise::{self, Finished, Mode, Psk, StaticKey, Transport};
 use crate::pairing::{
     qr, DataKey, DataKeyError, DataKeyProvider, ManualClock, PairingEvent, PairingHost,
 };
-use crate::trust::{MemoryKeyStore, MemoryTrustStore, SessionRegistry, StaticKeyStore};
+use crate::trust::{MemoryKeyStore, MemoryTrustStore, SessionRegistry, StaticKeyStore, TrustStore};
 use crate::Store;
 use serde_json::{json, Value};
 use std::io::{Read, Write};
@@ -25,6 +25,7 @@ impl DataKeyProvider for Keys {
 }
 
 struct Rig {
+    router: Arc<Router>,
     server: Server,
     host: Arc<PairingHost>,
     trust: Arc<MemoryTrustStore>,
@@ -57,8 +58,9 @@ fn rig_with(cfg: ServerConfig) -> Rig {
     adm.set_binds(loopback());
     adm.allow_loopback_for_tests();
     let router = Arc::new(Router::new(ep, host.clone(), hub, adm));
-    let server = Server::start_for_tests(&loopback(), router, cfg).unwrap();
+    let server = Server::start_for_tests(&loopback(), router.clone(), cfg).unwrap();
     Rig {
+        router,
         server,
         host,
         trust,
@@ -346,4 +348,77 @@ fn a_foreign_connection_cannot_deliver_into_a_pairing() {
     let r = rig();
     // nothing registered: deliver reports false for any attempt id
     assert!(!r.server.deliver(1, vec![1, 2, 3]));
+}
+
+/// Window open, handshake and hello over a socket; returns the client side and the SAS code.
+fn pair_until_hello(r: &Rig, key: &StaticKey) -> (TcpStream, Transport, u64, String) {
+    r.host.open().unwrap();
+    let q = qr::decode(&r.host.qr(r.server.port(), [10, 0, 0, 1]).unwrap().unwrap()).unwrap();
+    let (init, m1) = noise::start_initiator(
+        Mode::Pair,
+        key,
+        &q.hub_key,
+        Some(&Psk::from_secret(&q.secret)),
+    )
+    .unwrap();
+    let mut s = connect(r);
+    send(&mut s, &m1);
+    let m2 = recv(&mut s).expect("m2");
+    let Finished::Established(mut t, sas) = init.finish(&m2).unwrap() else {
+        panic!()
+    };
+    send(&mut s, &t.seal(TAG_HELLO, b"Phone").unwrap());
+    let attempt = wait_hello(r);
+    (s, t, attempt, sas.digits())
+}
+
+#[test]
+fn confirm_without_a_live_connection_trusts_nobody() {
+    let r = rig();
+    let key = StaticKey::generate().unwrap();
+    let (s, _t, attempt, code) = pair_until_hello(&r, &key);
+    drop(s); // the device goes away before the user confirms
+    for _ in 0..100 {
+        if r.server.open_connections() == 0 {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    let deliverer = r.server.deliverer();
+    let res = r
+        .host
+        .confirm_deliver(attempt, &code, &mut |w| deliverer.deliver(attempt, w));
+    assert!(res.is_err(), "{res:?}");
+    assert!(r.trust.list().is_empty(), "nobody is trusted without a key");
+    // and nothing is delivered to an attempt that has no connection
+    assert!(!r.server.deliver(attempt, vec![1]));
+}
+
+#[test]
+fn a_failed_write_after_the_accept_rolls_the_trust_entry_back() {
+    let r = rig();
+    let key = StaticKey::generate().unwrap();
+    let (_s, _t, attempt, code) = pair_until_hello(&r, &key);
+    r.host.take_events();
+    let res = r.host.confirm_deliver(attempt, &code, &mut |_| false);
+    assert_eq!(res, Err(crate::pairing::PairError::Delivery));
+    assert!(r.trust.find_by_key(&key.public()).is_none());
+    assert!(r.trust.list().is_empty());
+    assert!(r.host.take_events().contains(&PairingEvent::Cancelled(
+        crate::pairing::CancelReason::Rejected
+    )));
+    assert!(
+        r.host.is_open(),
+        "a fresh window follows, like after any failed attempt"
+    );
+}
+
+#[test]
+fn a_peer_outside_every_bound_subnet_costs_no_slot() {
+    let r = rig();
+    r.router
+        .set_binds(vec![Bind::new(Ipv4Addr::new(10, 0, 0, 1), 8).unwrap()]);
+    let mut c = connect(&r);
+    assert!(closed(&mut c));
+    assert_eq!(r.server.open_connections(), 0);
 }

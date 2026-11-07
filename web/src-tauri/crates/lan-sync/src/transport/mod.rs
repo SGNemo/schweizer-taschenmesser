@@ -69,7 +69,41 @@ struct Shared {
     stop: AtomicBool,
     started: Instant,
     counts: Mutex<Counts>,
-    deliveries: Mutex<HashMap<u64, Sender<Vec<u8>>>>,
+    deliveries: Mutex<HashMap<u64, Sender<Delivery>>>,
+}
+
+/// A key frame for a pairing connection plus the channel on which that connection reports
+/// whether it wrote the frame to the socket.
+struct Delivery {
+    wire: Vec<u8>,
+    ack: Sender<bool>,
+}
+
+/// How long [`Deliverer::deliver`] waits for the connection to report its write.
+const ACK_TIMEOUT: Duration = Duration::from_secs(3);
+
+/// Cheap handle to hand a key frame to the connection of a pairing attempt. Does not keep the
+/// server running: after `stop` there are no connections and every delivery is `false`.
+#[derive(Clone)]
+pub struct Deliverer(Arc<Shared>);
+
+impl Deliverer {
+    /// `true` only if the connection of `attempt` is alive and wrote the frame (it then closes).
+    /// Any other outcome (no such connection, lost, write failed, timeout) is `false`.
+    pub fn deliver(&self, attempt: u64, wire: Vec<u8>) -> bool {
+        let (ack, done) = mpsc::channel();
+        let sent = self
+            .0
+            .deliveries
+            .lock()
+            .ok()
+            .and_then(|m| {
+                m.get(&attempt)
+                    .map(|tx| tx.send(Delivery { wire, ack }).is_ok())
+            })
+            .unwrap_or(false);
+        sent && done.recv_timeout(ACK_TIMEOUT).unwrap_or(false)
+    }
 }
 
 #[derive(Default)]
@@ -209,14 +243,14 @@ impl Server {
         self.shared.counts.lock().map_or(0, |c| c.total)
     }
 
-    /// Hands the sealed data-key frame of a confirmed pairing to the connection of `attempt`.
+    /// A handle for [`Deliverer::deliver`] that can be used without holding the server.
+    pub fn deliverer(&self) -> Deliverer {
+        Deliverer(self.shared.clone())
+    }
+
+    /// Hands the sealed data-key frame to the connection of `attempt` and waits for its write.
     pub fn deliver(&self, attempt: u64, wire: Vec<u8>) -> bool {
-        self.shared
-            .deliveries
-            .lock()
-            .ok()
-            .and_then(|m| m.get(&attempt).map(|tx| tx.send(wire).is_ok()))
-            .unwrap_or(false)
+        self.deliverer().deliver(attempt, wire)
     }
 
     /// Closes the listeners and every connection; returns when all threads are gone (or after
@@ -248,7 +282,11 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>) {
         match listener.accept() {
             Ok((stream, peer)) => {
                 let ip = peer.ip();
-                // slots first: a flood from one address costs a thread only up to its cap
+                // not a private peer inside a bound subnet: closed before it costs a slot or a thread
+                if !shared.router.peer_allowed(ip) {
+                    continue;
+                }
+                // slots next: a flood from one address costs a thread only up to its cap
                 let Some(slot) = Slot::take(&shared, ip) else {
                     continue; // dropped (closed) right here
                 };
@@ -384,7 +422,7 @@ fn serve(mut stream: TcpStream, ip: IpAddr, sh: &Arc<Shared>) {
     }
     // 2. the frames of this connection, routed to this connection's own state only
     let attempt = conn.pairing_attempt();
-    let (tx, rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = mpsc::channel();
+    let (tx, rx): (Sender<Delivery>, Receiver<Delivery>) = mpsc::channel();
     if let Some(a) = attempt {
         if let Ok(mut m) = sh.deliveries.lock() {
             m.insert(a, tx);
@@ -409,7 +447,7 @@ fn drive(
     stream: &mut TcpStream,
     reader: &mut FrameReader,
     conn: &mut Connection,
-    rx: &Receiver<Vec<u8>>,
+    rx: &Receiver<Delivery>,
     pairing: bool,
     sh: &Arc<Shared>,
 ) {
@@ -425,9 +463,10 @@ fn drive(
                 return;
             }
             match rx.try_recv() {
-                Ok(wire) => {
+                Ok(d) => {
                     // the key frame is the last thing a pairing connection ever carries
-                    let _ = write_frame(stream, &wire);
+                    let written = write_frame(stream, &d.wire);
+                    let _ = d.ack.send(written);
                     return;
                 }
                 Err(TryRecvError::Empty) => {}
