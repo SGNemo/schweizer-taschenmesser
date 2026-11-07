@@ -44,7 +44,7 @@ export const en = {
       { icon: 'key', shot: 'vault', title: 'Vault', text: 'Passwords with TOTP and a generator, documents with expiry dates. Encrypted, invisible to AI.', alt: 'Unlocked vault with demo accounts' },
       { icon: 'bell', shot: 'reminders', title: 'Reminders', text: 'Bundled, with quiet hours and “later”, even when the app is closed.', alt: 'Reminders with switches and next time' },
     ],
-    more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German, English, Spanish, French and Portuguese (Brazil).',
+    more: 'Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German and English.',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
     intro: (n: number, a: number) => `${n} modules in ${a} areas. Each has its colour; you turn on only what you need.`,
     count: (n: number) => (n === 1 ? '1 module' : `${n} modules`),

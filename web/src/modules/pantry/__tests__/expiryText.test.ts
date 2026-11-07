@@ -9,13 +9,10 @@ const at = (expires: string) => expiryText({ expires }, TODAY, 3);
 
 afterEach(() => setLang('de'));
 
-describe('pantry page: an expired item names its day (N08), in every language', () => {
+describe('pantry page: an expired item names its day (N08), in every active language', () => {
   it.each([
     ['de', 'MHD war Mo.', 'MHD war 17. Sep.'],
     ['en', 'Best-before was Mon', 'Best-before was 17 Sep'],
-    ['es', 'Consumo preferente era el lun', 'Consumo preferente era el 17 sep'],
-    ['fr', 'Date dépassée : lun.', 'Date dépassée : 17 sept.'],
-    ['pt-BR', 'Validade era segunda', 'Validade era 17 de set'],
   ] as const)('%s: the day, never a count', async (lang, week, older) => {
     if (lang !== 'de') await loadCatalog(lang as Lang);
     setLang(lang as Lang);

@@ -1,0 +1,9 @@
+# Cloudflare Pages redirects (https://developers.cloudflare.com/pages/configuration/redirects/).
+# Spanish, French and Brazilian Portuguese are frozen (docs/i18n/FROZEN.md): their old URLs go to
+# the English page. Keep in step with `redirects` in astro.config.mjs.
+/es /en 301
+/es/* /en 301
+/fr /en 301
+/fr/* /en 301
+/pt-br /en 301
+/pt-br/* /en 301

@@ -1,7 +1,7 @@
 # CLAUDE.md – Nemo
 
 Local-first modular everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA + portable Windows exe + Android APK (Tauri 2 shell, same web app). Data in IndexedDB, optional sync, the AI assistant never sees user data.
-Code, comments, commits **English**; UI in **5 languages**: German source `web/src/strings.ts`, catalogs `web/src/i18n/locales/{en,es,fr,pt-BR}/` (same keys, [glossary](docs/i18n/GLOSSARY.md)); every new text in all five, `npm run check:i18n` ([howto/i18n.md](docs/howto/i18n.md)).
+Code, comments, commits **English**; UI: source `web/src/strings.ts`, catalog `web/src/i18n/locales/en/` (same keys, [glossary](docs/i18n/GLOSSARY.md)); every new text in German and English; es/fr/pt-BR frozen, see [docs/i18n/FROZEN.md](docs/i18n/FROZEN.md); `npm run check:i18n` ([howto/i18n.md](docs/howto/i18n.md)).
 **Stack:** Vite, React 19, TypeScript strict (pinned 6.0.x), Dexie, Zod, zustand, CSS Modules; Tauri 2 (Rust); server Fastify 5 + better-sqlite3; Vitest, Playwright.
 
 ## How chats work here

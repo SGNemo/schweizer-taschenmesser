@@ -11,6 +11,7 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { localModelOffered } from '@/core/ai/local/availability';
 import { useLocalModel } from '@/core/ai/local/state';
 import { switchAiOff, switchAiOn, useAiOn } from '@/core/ai/switch';
 import { detectOllama } from '@/core/ai/detectOllama';
@@ -204,7 +205,7 @@ function AiProviders({ registerCommit }: SetupStepProps) {
         {t.ai.settings.privacy} <HelpHint text={t.help.aiRouter} label={t.help.label} />
       </p>
 
-      {localStatus && !localStatus.unavailable && localStatus.models.length === 0 ? (
+      {localModelOffered(localStatus) && localStatus?.models.length === 0 ? (
         <p role="note" data-testid="setup-local-model-hint">
           {s.localModelHint}
         </p>

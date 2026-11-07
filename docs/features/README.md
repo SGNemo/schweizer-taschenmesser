@@ -15,6 +15,7 @@
 | [weather.md](weather.md) | Wetterzeile auf der Übersicht: Verhalten, Cache, was das Gerät verlässt, CORS |
 | [import-todos.md](import-todos.md) | ToDo import from Todoist CSV / Google Tasks JSON: where to export, what is read, calm rules |
 | [bank-import.md](bank-import.md) | Kontoauszug-Import: OFX/QIF/CAMT/CSV, Bank-Vorlagen, Spaltenzuordnung, Regeln, Rechnung → Buchung, Preis erhöht |
+| [import-v2.md](import-v2.md) | Umzug v2: inventory of sources × support, gaps, one-sheet flow, TickTick/vCard/bookmarks |
 | [notes-import.md](notes-import.md) | Notizen-Import: Markdown/Obsidian und Google Keep, Parser, Dedupe, Grenzen |
 | [news-proposal.md](news-proposal.md) | News: proposal for a returning optional module (not built) |
 | [connection-log.md](connection-log.md) | Verbindungsprotokoll + "Netzwerk sperren": network inventory, design (draft) |

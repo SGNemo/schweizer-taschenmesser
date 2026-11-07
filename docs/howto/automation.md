@@ -15,7 +15,7 @@ A rule = trigger (`event` type, or `schedule` time + weekdays) + conditions (fie
 
 ## Templates (`core/automation/templates.ts`)
 
-12 ready rules, all off. A template has `id`, `modules`, `params` (number / time) and `build(params)`; texts live in `strings.automation.ts` (5 languages). `core/automation/modules.test.ts` checks that every template is a valid rule the registered modules can run.
+12 ready rules, all off. A template has `id`, `modules`, `params` (number / time) and `build(params)`; texts live in `strings.automation.ts` (German and English). `core/automation/modules.test.ts` checks that every template is a valid rule the registered modules can run.
 
 ## Guards and safety
 
@@ -31,5 +31,5 @@ Loop: a rule is not run inside its own cause chain (`cause.ruleIds`), depth ≤ 
 - **Command palette** (only while switched on): type "regel" for "Regel ausführen: <Name>" per rule; "Regel-Protokoll öffnen" and "Letzte Regel-Ausführung rückgängig" are always listed. They call `core/automation/api.ts` (`runRuleById`, `undoLastRun`, `undoRunById`, `dryRunAll`, `applyAutomationSettings`).
 - **A switch change applies at once** (`applyAutomationSettings` re-reads settings and modules). The write listener exists only while the master switch is on.
 - **Dev:** the Dev-Preview test data sets up `automation` with three example rules in dry run and the master switch **off** (so the pages stay as calm as without test data; only when the user has no such row; "remove" deletes it again); Settings → Entwickler has "Regeln trocken laufen lassen".
-- **Texts:** `strings.automation.ts` (`settings`, `log`, `palette`, `dev`, `templates`), 5 languages.
+- **Texts:** `strings.automation.ts` (`settings`, `log`, `palette`, `dev`, `templates`), German and English.
 - **Tests:** `core/automation/api.test.ts`, `e2e/automation.spec.ts`.

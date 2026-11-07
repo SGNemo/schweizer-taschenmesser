@@ -13,14 +13,13 @@ export const pushAad = (key: string): string => `push/${key}`;
 
 /**
  * Body shown when a payload cannot be read (e.g. no key on this device). The service worker has no
- * access to the catalogs or the language setting, so it picks by device language from this map.
+ * access to the catalogs or the language setting, so it picks by device language from this map:
+ * the active languages only (German, English), like the app. Frozen (docs/i18n/FROZEN.md), kept for
+ * re-activation: es 'Recordatorio', fr 'Rappel', pt 'Lembrete'.
  */
 const FALLBACK_BODY: Record<string, string> = {
   de: 'Erinnerung',
   en: 'Reminder',
-  es: 'Recordatorio',
-  fr: 'Rappel',
-  pt: 'Lembrete',
 };
 
 export function fallbackPayload(languages: readonly string[] = []): PushPayload {

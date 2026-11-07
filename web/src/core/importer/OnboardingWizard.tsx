@@ -298,6 +298,13 @@ function Wizard({
           defaults[field.key] = field.choices?.[0]?.value ?? '';
       }
       if (!alive.current) return;
+      // Options the sheet chose for this run win over the defaults, if they are valid choices.
+      for (const field of meta.options ?? []) {
+        const wanted = then ? preset?.options?.[field.key] : undefined;
+        const valid = field.dynamicChoices ? dynamic[field.key] : field.choices;
+        if (wanted !== undefined && (valid ?? []).some((c) => c.value === wanted))
+          defaults[field.key] = wanted;
+      }
       setRuntime(rt);
       setChoices(dynamic);
       setOptions(

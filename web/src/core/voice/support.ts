@@ -1,4 +1,4 @@
-import type { Lang } from '@/core/i18n/lang';
+import type { ByLang, Lang } from '@/core/i18n/lang';
 
 /**
  * What the browser's speech recognition (Web Speech API) needs from us. Typed by hand: the DOM lib
@@ -57,7 +57,7 @@ export function voiceSupport(
 }
 
 /** Recognition language follows the UI language, never the system's or a guess from the text. */
-const RECOGNITION_LANG: Record<Lang, string> = {
+const RECOGNITION_LANG: ByLang<string> = {
   de: 'de-DE',
   en: 'en-US',
   es: 'es-ES',

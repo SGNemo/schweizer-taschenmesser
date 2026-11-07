@@ -304,13 +304,13 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **B4 Pause:** „Nach 3 Sekunden aufnehmen“ an, Quelle wählen, zum Fenster wechseln: Zähler 3-2-1, dann Bild; „Abbrechen“ beim Zählen: „Nichts aufgenommen.“ ☐
 - **B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
 
-## Sprachen (App in fünf Sprachen)
+## Sprachen (App auf Deutsch und Englisch; es/fr/pt-BR eingefroren)
 
-- **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English, Español, Français, Português (Brasil) und Deutsch. Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
-- **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Spanisch → App startet auf Spanisch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Japanisch → Englisch.
-- **S3 – Bestandsinstallation:** ein Gerät mit vorhandenen Daten aktualisieren → bleibt Deutsch, bis die Sprache geändert wird.
+- **S1 – jede Sprache einmal durchklicken:** Einstellungen → Allgemein → Sprache nacheinander auf English und Deutsch (nur diese zwei plus „Wie das Gerät“ in der Liste). Je Sprache: Übersicht, Kalender, ToDos, Finanzen, Einstellungen, Befehlspalette (Strg+K) und einen Dialog öffnen. Erwartet: sofortige Umschaltung ohne Neustart, kein deutscher Rest außer Einträgen, Startdaten und den Beispielen für Schnell erfassen; nichts abgeschnitten (Telefon und Desktop); Datum, Zahlen und Beträge passend zur Sprache.
+- **S2 – Systemsprache:** neue Installation (Android: App-Daten löschen; Windows: portable exe in leerem Ordner; PWA: neues Browserprofil) mit Gerätesprache Deutsch (Österreich) → App startet auf Deutsch, Einrichtung fragt im ersten Schritt nach der Sprache. Gerätesprache Spanisch oder Japanisch → Englisch (die Liste zeigt dann „Same as device (English)“).
+- **S3 – Bestandsinstallation:** ein Gerät mit vorhandenen Daten aktualisieren → bleibt Deutsch, bis die Sprache geändert wird. Ein Gerät, auf dem Französisch (oder Spanisch, Portugiesisch) gewählt war → nach dem Update ruhig Englisch, ohne Dialog; Dezimalzeichen und Datumsreihenfolge unverändert (Einstellungen → Formate zeigt die alte Region). ☐
 - **S4 – native Texte (Windows):** Google-Anmeldung abschließen → die Ergebnisseite im Browser erscheint in der Browsersprache; ohne WebView2 erscheint der Hinweis in der Windows-Sprache.
-- **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. spanischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
+- **S5 – Datums-/Zeitfelder (QA B25):** auf echtem Windows (portable exe) und Android-Handy mit deutscher bzw. englischer Oberfläche einen Termin anlegen: zeigen die Felder Datum und Uhrzeit das Format des Geräts (TT.MM.JJJJ, 24 h) oder US-Format („10/29/2026“, AM/PM)? Der QA-Lauf sah US-Format in einem Test-Chromium; erst bei Bestätigung am Gerät wird Code geändert. ☐
 
 ## Befehlspalette lädt beim ersten Öffnen (nur von Hand prüfbar)
 

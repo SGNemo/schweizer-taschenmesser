@@ -23,10 +23,17 @@ export function parseBirthdayLine(
   return date && name ? { name, ...date } : undefined;
 }
 
+/** Cards of a vCard file that carry no birthday: the people module keeps birthdays, so they stay out. */
+function withoutBirthday(fileName: string, text: string, read: number): number {
+  if (/\.ics$/i.test(fileName) || /BEGIN:VCALENDAR/i.test(text)) return 0;
+  return Math.max(0, (text.match(/^BEGIN:VCARD/gim)?.length ?? 0) - read);
+}
+
 const runtime: ImporterRuntime = {
   parse(_id, input) {
     if (input.kind === 'file') {
       const people = parseContactsFile(input.fileName, input.text).slice(0, 2000);
+      const noBirthday = withoutBirthday(input.fileName, input.text, people.length);
       return {
         candidates: people.map((p): ImportCandidate => ({
           collection: 'person',
@@ -40,7 +47,10 @@ const runtime: ImporterRuntime = {
           detail: `${String(p.day).padStart(2, '0')}.${String(p.month).padStart(2, '0')}.${p.year ?? ''}`,
           dedupeKey: keyOf(p.name, p.month, p.day),
         })),
-        notes: people.length === 0 ? [t.onboarding.birthdays.fileNone] : [],
+        notes: [
+          ...(people.length === 0 ? [t.onboarding.birthdays.fileNone] : []),
+          ...(noBirthday > 0 ? [t.onboarding.birthdays.noBirthday(noBirthday)] : []),
+        ],
       };
     }
     if (input.kind !== 'text') return { candidates: [], notes: [] };

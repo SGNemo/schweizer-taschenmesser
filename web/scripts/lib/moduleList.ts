@@ -3,8 +3,6 @@
  * one line, building the Markdown block, replacing a marked block in a file.
  */
 
-export const LANGS = ['de', 'en', 'es', 'fr', 'pt-BR'] as const;
-export type Lang = (typeof LANGS)[number];
 export type DocLang = 'en' | 'de';
 export type Names = Record<string, string>;
 export type Status = 'default' | 'optional' | 'preview';
