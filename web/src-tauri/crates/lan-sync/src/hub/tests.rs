@@ -667,13 +667,10 @@ fn bind_set_is_enumerated_and_never_wildcard_or_loopback() {
         };
         assert_eq!(
             binds,
-            vec![Bind {
-                ip: Ipv4Addr::new(192, 168, 1, 20),
-                prefix: 24
-            }]
+            vec![Bind::new(Ipv4Addr::new(192, 168, 1, 20), 24).unwrap()]
         );
         for b in &binds {
-            assert!(!b.ip.is_unspecified() && !b.ip.is_loopback());
+            assert!(!b.ip().is_unspecified() && !b.ip().is_loopback());
         }
     }
 }
@@ -748,10 +745,7 @@ fn listening_state_machine() {
 
 #[test]
 fn peers_must_be_private_and_inside_a_bound_subnet() {
-    let binds = [Bind {
-        ip: Ipv4Addr::new(192, 168, 1, 20),
-        prefix: 24,
-    }];
+    let binds = [Bind::new(Ipv4Addr::new(192, 168, 1, 20), 24).unwrap()];
     assert!(peer_allowed(v4("192.168.1.77"), &binds));
     for no in [
         "192.168.2.77",
@@ -767,21 +761,15 @@ fn peers_must_be_private_and_inside_a_bound_subnet() {
     assert!(!peer_allowed(mapped, &binds));
     assert!(!peer_allowed(v4("192.168.1.77"), &[]));
     // a /0 or out-of-range prefix never opens everything
-    assert!(!Bind {
-        ip: Ipv4Addr::new(10, 0, 0, 1),
-        prefix: 33
-    }
-    .contains(Ipv4Addr::new(10, 0, 0, 2)));
+    assert!(Bind::new(Ipv4Addr::new(10, 0, 0, 1), 33).is_none());
+    assert!(Bind::new(Ipv4Addr::new(10, 0, 0, 1), 0).is_none());
 }
 
 // ---------- admission ----------
 
 fn adm() -> Admission {
     let mut a = Admission::new();
-    a.set_binds(vec![Bind {
-        ip: Ipv4Addr::new(10, 0, 0, 1),
-        prefix: 16,
-    }]);
+    a.set_binds(vec![Bind::new(Ipv4Addr::new(10, 0, 0, 1), 16).unwrap()]);
     a
 }
 
@@ -1295,4 +1283,45 @@ fn hub_and_an_independent_client_agree_on_the_padded_psk() {
             "{name}"
         );
     }
+}
+
+// ---------- security review of 2b-1 (M1, L1) ----------
+
+/// M1: a value of the maximum size with the worst-case metadata (every id/field character is a
+/// control character, escaped as `\u00XX` in the answer) can always be pulled with `limit: 1`
+/// through a real session, and one byte more is refused at push.
+#[test]
+fn one_max_value_is_always_deliverable() {
+    let r = rig();
+    let key = StaticKey::generate().unwrap();
+    pair_device(&r, &key);
+    let mut c = session(&r, &key);
+    let worst = |text_len: usize| FieldOp {
+        collection: "c".repeat(64),
+        id: "\u{1}".repeat(128),
+        field: "\u{1}".repeat(64),
+        hlc: format!("{:013}-0000-{}", NOW_MS - 1000, "z".repeat(32)),
+        value: json!(format!("enc:v1:{}", "a".repeat(text_len))),
+    };
+    let max_text = MAX_VALUE_BYTES - 2 - "enc:v1:".len();
+    let put = c.request(&json!({"keyVersion":1,"type":"push","ops":[worst(max_text)]}));
+    assert_eq!(put["accepted"], 1, "{put}");
+    let page = c.request(&json!({"keyVersion":1,"type":"pull","limit":1}));
+    assert_eq!(page["ops"].as_array().map(Vec::len), Some(1), "{page}");
+    // one byte more never gets in
+    let over = c.request(&json!({"keyVersion":1,"type":"push","ops":[worst(max_text + 1)]}));
+    assert_eq!(over, json!({"error":"value-too-large"}));
+}
+
+/// L1: rotation fails (and changes nothing) when the session registry cannot be locked.
+#[test]
+fn rotation_fails_when_sessions_cannot_be_closed() {
+    let (h, sessions) = hub_with_sessions(1);
+    push(&h, 1, vec![op("r1", 1)]).unwrap();
+    let before = snapshot(&h);
+    let poisoner = sessions.clone();
+    let _ = std::thread::spawn(move || poisoner.poison_for_test()).join();
+    assert_eq!(h.rotate_to(2), Err(HubError::Internal));
+    assert_eq!(snapshot(&h), before);
+    assert_eq!(h.key_version(), Ok(1));
 }

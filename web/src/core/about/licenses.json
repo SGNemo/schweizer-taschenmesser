@@ -2044,6 +2044,12 @@
       "url": "https://crates.io/crates/flate2/1.1.10"
     },
     {
+      "name": "flume",
+      "version": "0.12.0",
+      "license": "Apache-2.0/MIT",
+      "url": "https://crates.io/crates/flume/0.12.0"
+    },
+    {
       "name": "fnv",
       "version": "1.0.7",
       "license": "Apache-2.0 / MIT",
@@ -2524,6 +2530,12 @@
       "url": "https://crates.io/crates/idna_adapter/1.2.2"
     },
     {
+      "name": "if-addrs",
+      "version": "0.15.0",
+      "license": "MIT OR BSD-3-Clause",
+      "url": "https://crates.io/crates/if-addrs/0.15.0"
+    },
+    {
       "name": "image",
       "version": "0.25.10",
       "license": "MIT OR Apache-2.0",
@@ -2930,6 +2942,12 @@
       "version": "0.8.4",
       "license": "MIT AND BSD-3-Clause",
       "url": "https://crates.io/crates/matchit/0.8.4"
+    },
+    {
+      "name": "mdns-sd",
+      "version": "0.21.7",
+      "license": "Apache-2.0 OR MIT",
+      "url": "https://crates.io/crates/mdns-sd/0.21.7"
     },
     {
       "name": "memchr",
@@ -4048,6 +4066,12 @@
       "url": "https://crates.io/crates/snow/0.10.0"
     },
     {
+      "name": "socket-pktinfo",
+      "version": "0.4.1",
+      "license": "MIT",
+      "url": "https://crates.io/crates/socket-pktinfo/0.4.1"
+    },
+    {
       "name": "socket2",
       "version": "0.6.5",
       "license": "MIT OR Apache-2.0",
@@ -4070,6 +4094,12 @@
       "version": "0.5.0",
       "license": "MIT",
       "url": "https://crates.io/crates/soup3-sys/0.5.0"
+    },
+    {
+      "name": "spin",
+      "version": "0.9.9",
+      "license": "MIT",
+      "url": "https://crates.io/crates/spin/0.9.9"
     },
     {
       "name": "spinning_top",

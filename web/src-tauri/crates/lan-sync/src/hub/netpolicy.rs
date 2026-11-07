@@ -52,17 +52,26 @@ pub fn is_allowed_hub_addr(ip: IpAddr) -> bool {
 /// One address the hub binds, with its subnet for the peer check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Bind {
-    pub ip: Ipv4Addr,
-    pub prefix: u8,
+    ip: Ipv4Addr,
+    prefix: u8,
 }
 
 impl Bind {
+    /// `prefix` must be 1..=32: a /0 would match every peer.
+    pub fn new(ip: Ipv4Addr, prefix: u8) -> Option<Bind> {
+        (1..=32).contains(&prefix).then_some(Bind { ip, prefix })
+    }
+
+    pub fn ip(&self) -> Ipv4Addr {
+        self.ip
+    }
+
+    pub fn prefix(&self) -> u8 {
+        self.prefix
+    }
+
     pub fn contains(&self, peer: Ipv4Addr) -> bool {
-        let mask = match self.prefix {
-            0 => 0,
-            p @ 1..=32 => u32::MAX << (32 - u32::from(p)),
-            _ => return false,
-        };
+        let mask = u32::MAX << (32 - u32::from(self.prefix));
         u32::from(self.ip) & mask == u32::from(peer) & mask
     }
 }
@@ -116,10 +125,7 @@ fn qualifies(i: &IfaceInfo) -> Option<Bind> {
                 && i.category == NetCategory::Private
                 && (1..=30).contains(&i.prefix) =>
         {
-            Some(Bind {
-                ip,
-                prefix: i.prefix,
-            })
+            Bind::new(ip, i.prefix)
         }
         _ => None,
     }

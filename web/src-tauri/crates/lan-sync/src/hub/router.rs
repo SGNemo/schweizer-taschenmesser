@@ -11,7 +11,7 @@
 use super::netpolicy::{peer_allowed, Bind};
 use super::{Hub, HubError, Response, TAG_REQUEST, TAG_RESPONSE};
 use crate::endpoint::{Conn, Endpoint, FirstReply, Incoming, Session};
-use crate::noise::frame::{FrameError, PRE_HANDSHAKE_CAP};
+use crate::noise::frame::{FrameError, PRE_CONFIRM_CAP, PRE_HANDSHAKE_CAP};
 use crate::pairing::PairingHost;
 use std::collections::HashMap;
 use std::net::IpAddr;
@@ -43,11 +43,29 @@ struct Window {
 pub struct Admission {
     binds: Vec<Bind>,
     seen: HashMap<IpAddr, Window>,
+    /// Tests talk over the loopback interface; production never sets this (there is no such field).
+    #[cfg(test)]
+    loopback: bool,
 }
 
 impl Admission {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn allow_loopback_for_tests(&mut self) {
+        self.loopback = true;
+    }
+
+    fn peer_ok(&self, peer: IpAddr) -> bool {
+        #[cfg(test)]
+        if self.loopback {
+            if let IpAddr::V4(v4) = peer {
+                return v4.is_loopback() && self.binds.iter().any(|b| b.contains(v4));
+            }
+        }
+        peer_allowed(peer, &self.binds)
     }
 
     /// Replaces the bound subnets (after the network decision changed).
@@ -58,7 +76,7 @@ impl Admission {
     /// `now` is monotonic time (only differences count). Counted: only first messages that passed
     /// the address and size checks, so strangers from outside never fill the table.
     pub fn admit(&mut self, peer: IpAddr, first_len: usize, now: Duration) -> Result<(), Refusal> {
-        if !peer_allowed(peer, &self.binds) {
+        if !self.peer_ok(peer) {
             return Err(Refusal::Address);
         }
         if first_len > PRE_HANDSHAKE_CAP {
@@ -126,6 +144,12 @@ impl Router {
         }
     }
 
+    /// Whether `peer` may connect at all (private address inside a bound subnet); the transport asks
+    /// before it takes a connection slot.
+    pub fn peer_allowed(&self, peer: IpAddr) -> bool {
+        self.admission.lock().is_ok_and(|a| a.peer_ok(peer))
+    }
+
     /// First message of a new connection from `peer`.
     pub fn accept(&self, peer: IpAddr, wire: &[u8], now: Duration) -> Opened {
         let admitted = match self.admission.lock() {
@@ -191,6 +215,15 @@ impl Connection {
         match self.kind {
             Kind::Pairing { attempt, .. } => Some(attempt),
             Kind::Session(_) => None,
+        }
+    }
+
+    /// Largest frame the connection accepts right now (small until the peer proved itself). The
+    /// transport refuses longer frames before it buffers them.
+    pub fn frame_cap(&self) -> usize {
+        match &self.kind {
+            Kind::Pairing { .. } => PRE_CONFIRM_CAP,
+            Kind::Session(s) => s.cap(),
         }
     }
 

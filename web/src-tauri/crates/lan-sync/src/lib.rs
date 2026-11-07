@@ -13,11 +13,19 @@ pub mod noise;
 mod store;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod discovery;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod endpoint;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod hub;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod keys;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod pairing;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod supervisor;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod transport;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod trust;
 

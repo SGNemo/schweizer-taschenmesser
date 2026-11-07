@@ -201,9 +201,10 @@ impl Hub {
         if g.key_version.checked_add(1) != Some(new_version) {
             return Err(HubError::BadRequest);
         }
+        // sessions first: if they cannot be closed (poisoned registry) nothing has changed
+        self.sessions.close_all().map_err(|_| HubError::Internal)?;
         let epoch = g.store.reset().map_err(|_| HubError::Internal)?;
         g.key_version = new_version;
-        self.sessions.close_all();
         Ok(Rotated {
             version: new_version,
             epoch,

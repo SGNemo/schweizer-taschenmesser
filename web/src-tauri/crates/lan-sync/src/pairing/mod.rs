@@ -204,6 +204,8 @@ pub enum PairError {
     BadHello,
     WrongCode,
     WrongAttempt,
+    /// The key frame could not be written to the device's connection; nothing was trusted.
+    Delivery,
     KeyAlreadyTrusted,
     KeyRevoked,
     Trust(TrustError),
@@ -502,6 +504,29 @@ impl PairingHost {
     /// The user's confirmation: `code` as typed/shown (spaces ignored). Returns only the sealed
     /// data-key frame for the device. Any failure ends the attempt and leaves no trust entry.
     pub fn confirm(&self, attempt: u64, code: &str) -> Result<Vec<u8>, PairError> {
+        self.confirm_inner(attempt, code, None)
+            .map(Option::unwrap_or_default)
+    }
+
+    /// Like [`confirm`](Self::confirm), but the sealed frame goes through `deliver` while the
+    /// attempt is still open; `deliver` returns `true` only once the frame was written to the
+    /// device's connection. If it returns `false` the trust entry is rolled back and the attempt
+    /// ends (`PairError::Delivery`): a device is never trusted without having received its key.
+    pub fn confirm_deliver(
+        &self,
+        attempt: u64,
+        code: &str,
+        deliver: &mut dyn FnMut(Vec<u8>) -> bool,
+    ) -> Result<(), PairError> {
+        self.confirm_inner(attempt, code, Some(deliver)).map(|_| ())
+    }
+
+    fn confirm_inner(
+        &self,
+        attempt: u64,
+        code: &str,
+        deliver: Option<&mut dyn FnMut(Vec<u8>) -> bool>,
+    ) -> Result<Option<Vec<u8>>, PairError> {
         let mut g = self.lock();
         let was_waiting = matches!(g.state, State::AwaitConfirm(..));
         let now = g.advance(self.clock.now());
@@ -528,10 +553,24 @@ impl PairingHost {
         }
         match self.finish(&mut w, name.clone()) {
             Ok(sealed) => {
+                let returned = match deliver {
+                    Some(d) => {
+                        if !d(sealed) {
+                            let undone = self.trust.remove(&w.peer);
+                            g.end_attempt(now, CancelReason::Rejected);
+                            return Err(match undone {
+                                Ok(()) => PairError::Delivery,
+                                Err(e) => PairError::Trust(e),
+                            });
+                        }
+                        None
+                    }
+                    None => Some(sealed),
+                };
                 g.state = State::Closed;
                 g.events.push(PairingEvent::Paired { name });
                 g.events.push(PairingEvent::Closed);
-                Ok(sealed)
+                Ok(returned)
             }
             Err(e) => {
                 g.end_attempt(now, CancelReason::Rejected);
@@ -561,7 +600,8 @@ impl PairingHost {
             })?;
         let sealed = self.seal_key(&mut w.transport);
         if sealed.is_err() {
-            let _ = self.trust.remove(&w.peer);
+            // a rollback that fails is reported, not swallowed
+            self.trust.remove(&w.peer).map_err(PairError::Trust)?;
         }
         sealed
     }
