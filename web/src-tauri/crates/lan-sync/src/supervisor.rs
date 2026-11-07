@@ -180,7 +180,6 @@ mod tests {
     use crate::hub::netpolicy::{IfaceInfo, NetCategory, NetError};
     use std::cell::RefCell;
     use std::net::IpAddr;
-    use std::rc::Rc;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
     struct Net(RefCell<Result<Vec<IfaceInfo>, NetError>>);
