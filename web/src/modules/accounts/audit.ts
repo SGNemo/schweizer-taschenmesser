@@ -1,6 +1,6 @@
 /**
  * Local password check: reuse, age and (through `measureStrength`) strength. Pure functions over the
- * decrypted entries; the result holds entry ids only, never a password. Nothing here stores or sends anything.
+ * decrypted entries; the result holds entry ids only, never a password. Nothing here stores or sends anything (the optional leak check lives in `breach.ts`).
  */
 import { daysBetween } from '@/core/time/dates';
 import type { EntryData } from './schema';

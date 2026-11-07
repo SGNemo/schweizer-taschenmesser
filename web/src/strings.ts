@@ -5278,6 +5278,8 @@ export const de = {
         genLength_32: '32 Zeichen',
         genSymbols: 'Browser-Erweiterung: Sonderzeichen verwenden',
         genAvoidAmbiguous: 'Browser-Erweiterung: Ähnliche Zeichen vermeiden (Il1O0)',
+        breachCheck:
+          'Passwörter beim Prüfen mit bekannten Datenlecks abgleichen (sendet nur die ersten 5 Zeichen eines Hashes)',
       },
     },
     pickEntry: 'Zugang auswählen',
@@ -5358,6 +5360,14 @@ export const de = {
       unavailable:
         'Die Stärkeprüfung braucht einmal Internet, um ihre Wörterbücher zu laden. Wiederverwendung und Alter wurden trotzdem geprüft.',
       openEntry: 'Öffnen',
+      breached: (n: number) => `In einem bekannten Datenleck gefunden (${n})`,
+      breachHint:
+        'Diese Passwörter tauchen in öffentlich bekannten Datenlecks auf. Es lohnt sich, sie bei Gelegenheit zu ersetzen.',
+      breachUnavailable:
+        'Der Abgleich mit bekannten Datenlecks ist gerade nicht verfügbar. Alles andere wurde trotzdem geprüft.',
+      breachChecking: 'Gleiche mit bekannten Datenlecks ab …',
+      breachNote:
+        'Abgleich mit bekannten Datenlecks ist an: Pro Passwort verlassen nur die ersten 5 Zeichen eines Hashes das Gerät.',
     },
     emergency: {
       open: 'Notfallblatt',

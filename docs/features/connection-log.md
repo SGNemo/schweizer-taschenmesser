@@ -17,6 +17,7 @@ Almost everything goes through `getPlatform().fetch` (`core/platform/web.ts:153`
 | Weather (`core/weather/api.ts`) | open-meteo.com | search typing; forecast on home mount | `enabled && place` | place name, lat/lon |
 | Currency (`tools/currency/View.tsx`) | api.frankfurter.dev | opening the tool | none (named exception in legal text) | nothing |
 | Public IP (`modules/disk/.../PublicIp.tsx`) | api.ipify.org | click | click | nothing |
+| Vault leak check (`modules/accounts/breach.ts`) | api.pwnedpasswords.com | opening the vault check | setting `breachCheck`, off by default | first 5 hex chars of SHA-1 only, `Add-Padding` |
 | Settings → Sync (`pages/settings/SyncSection.tsx:51`) | own origin `/v1/health` | open section (web) | none | nothing |
 | Local model download (`src-tauri/crates/local-llm`) | allow-listed HTTPS host | click | click | nothing |
 | Updater plugin (Rust) | github.com `latest.json` | native, daily | `prefs.auto` | nothing |
