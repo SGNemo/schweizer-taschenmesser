@@ -1,4 +1,4 @@
-import { best, extOf, head } from '../helpers';
+import { best, countAll, extOf, head } from '../helpers';
 import type { SourceDef } from '../types';
 
 export const source: SourceDef = {
@@ -13,4 +13,5 @@ export const source: SourceDef = {
         ? 0.95
         : 0.8;
     }),
+  summarize: (files) => ({ events: countAll(files, /^BEGIN:VEVENT/gim) }),
 };

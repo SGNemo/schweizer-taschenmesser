@@ -11,7 +11,7 @@ export const LIMITS = {
   fileBytes: 50 * 1024 * 1024,
 } as const;
 
-const TEXT = /\.(?:md|markdown|txt|json|csv|ics|enex|xml|opml|html?|qif|ofx|sta|mt940)$/i;
+const TEXT = /\.(?:md|markdown|txt|json|csv|ics|vcf|vcard|enex|xml|opml|html?|qif|ofx|sta|mt940)$/i;
 
 export interface ExpandedFiles {
   files: SourceFile[];
@@ -36,9 +36,19 @@ export function safePath(name: string): string | undefined {
 const isZip = (bytes: Uint8Array) =>
   bytes.length > 3 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03;
 
-function decode(bytes: Uint8Array): string {
+/**
+ * Text of an export file: UTF-16 by its byte order mark (Excel "Unicode text"), else UTF-8, else
+ * Windows-1252 (older German bank and Outlook exports). A leading BOM never reaches the parsers.
+ * Exported for tests.
+ */
+export function decode(bytes: Uint8Array): string {
+  const stripBom = (s: string) => (s.charCodeAt(0) === 0xfeff ? s.slice(1) : s);
+  if (bytes[0] === 0xff && bytes[1] === 0xfe)
+    return stripBom(new TextDecoder('utf-16le').decode(bytes));
+  if (bytes[0] === 0xfe && bytes[1] === 0xff)
+    return stripBom(new TextDecoder('utf-16be').decode(bytes));
   const utf8 = strFromU8(bytes);
-  return utf8.includes('�') ? new TextDecoder('windows-1252').decode(bytes) : utf8;
+  return stripBom(utf8.includes('\uFFFD') ? new TextDecoder('windows-1252').decode(bytes) : utf8);
 }
 
 /**

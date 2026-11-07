@@ -50,10 +50,17 @@ export function ImportPreview({
   onChange: (rows: PreviewRow[]) => void;
 }) {
   const allSelected = rows.every((r) => r.invalid || r.selected);
+  const duplicates = rows.filter((r) => r.duplicate && !r.invalid).length;
+  const invalid = rows.filter((r) => r.invalid).length;
   return (
     <>
       <div className={styles.bar}>
         <strong>{t.onboarding.found(rows.length)}</strong>
+        {duplicates + invalid > 0 ? (
+          <span className={styles.muted} data-testid="preview-counts">
+            {t.onboarding.previewCounts(rows.length - duplicates - invalid, duplicates, invalid)}
+          </span>
+        ) : null}
         <Button
           onClick={() =>
             onChange(rows.map((r) => ({ ...r, selected: !r.invalid && !allSelected })))

@@ -44,9 +44,15 @@ export const useOnboardingHost = create<HostState>((set, get) => ({
     });
   },
   close: () => {
-    const [next, ...rest] = get().queue;
-    if (next) set({ moduleId: next.moduleId, preset: next.preset ?? null, queue: rest });
-    else set({ moduleId: null, preset: null, queue: [], total: 1 });
+    const { queue, preset, total } = get();
+    const [next, ...rest] = queue;
+    if (next) {
+      set({ moduleId: next.moduleId, preset: next.preset ?? null, queue: rest });
+      return;
+    }
+    set({ moduleId: null, preset: null, queue: [], total: 1 });
+    // The last part of a run with several parts: the sheet shows the run and can undo all of it.
+    if (total > 1 && preset?.groupId) useAppImport.getState().showRun(preset.groupId);
   },
 }));
 

@@ -109,7 +109,7 @@ describe('todos', () => {
     const task = (rows: Awaited<ReturnType<typeof run>>['rows'], title: string) =>
       rows.find((r) => r.candidate.label === title)!.candidate;
 
-    it('reads a Todoist CSV into the chosen list, with priority, day, subtask and hints', async () => {
+    it('reads a Todoist CSV into the chosen list, with priority, day, subtask and repeat', async () => {
       await listRepo.create({ name: 'Inbox', order: 0 }, { id: INBOX_ID });
       const { rows, notes, manifest } = await run('todos', 'file', fixture('todoist-de.csv'), {
         fileList: INBOX_ID,
@@ -128,8 +128,9 @@ describe('todos', () => {
       });
       expect(String(kitchen.note)).toContain('Spülmittel');
       const bins = task(rows, 'Müll rausbringen');
-      expect(String(bins.data.note)).toContain('jeden Montag');
-      expect(bins.data.recurrence).toBeUndefined();
+      // "jeden Montag" maps onto a real repeat, starting on the first Monday from today.
+      expect(bins.data.recurrence).toEqual({ freq: 'weekly', interval: 1, byWeekday: [1] });
+      expect(new Date(`${String(bins.data.dueDate)}T12:00`).getDay()).toBe(1);
       expect(task(rows, 'Gelbe Säcke holen').data.parentId).toBe(bins.id);
       expect(notes.join(' ')).toContain('wiederholt sich');
 

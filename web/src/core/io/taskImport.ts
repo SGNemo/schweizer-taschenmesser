@@ -2,9 +2,11 @@
  * Shared shape of task exports from other apps (Todoist CSV, Google Tasks JSON) and the detection of
  * which one a chosen file is. Pure functions; the todos importer turns the result into candidates.
  */
+import type { Recurrence } from '@/core/recurrence/types';
 import { parseTodoistCsv } from './todoistCsv';
 import { parseGoogleTasks } from './googleTasks';
 import { isOutlookTasksCsv, parseOutlookTasks } from '@/importers/outlook-tasks/parse';
+import { isTickTickCsv, parseTickTickCsv } from '@/importers/ticktick/parse';
 
 export interface ImportedTask {
   /** Unique within the file; `parentKey` points at it. */
@@ -17,6 +19,10 @@ export interface ImportedTask {
   due?: string;
   /** Date text that is not a calendar day ("every Monday", "tomorrow"); only ever shown as a hint. */
   dateHint?: { text: string; recurring: boolean };
+  /** Repeat rule the source states in a form the app knows; else only `dateHint` (a note). */
+  recurrence?: Recurrence;
+  /** Planned effort in minutes (Todoist `DURATION`, TickTick start–due span), 1..480. */
+  estimateMin?: number;
   done: boolean;
   /** One level only: deeper levels are attached to their top-level task. */
   parentKey?: string;
@@ -30,14 +36,15 @@ export interface ParsedTaskExport {
   skipped: number;
 }
 
-export type TaskExportFormat = 'todoist' | 'google' | 'outlook';
+export type TaskExportFormat = 'todoist' | 'google' | 'outlook' | 'ticktick';
 
 const stripBom = (s: string) => (s.charCodeAt(0) === 0xfeff ? s.slice(1) : s);
 
-/** Looks at the content, not the file name: JSON starts with `{`/`[`, Todoist CSV has TYPE + CONTENT. */
+/** Looks at the content, not the file name: JSON starts with `{`/`[`, Todoist CSV has TYPE + CONTENT, TickTick its preamble. */
 export function detectTaskExport(text: string): TaskExportFormat | undefined {
   const src = stripBom(text).trimStart();
   if (src.startsWith('{') || src.startsWith('[')) return 'google';
+  if (isTickTickCsv(src)) return 'ticktick';
   const header = (src.split(/\r?\n/, 1)[0] ?? '').toUpperCase();
   if (/\bTYPE\b/.test(header) && /\bCONTENT\b/.test(header)) return 'todoist';
   return isOutlookTasksCsv(src) ? 'outlook' : undefined;
@@ -49,5 +56,6 @@ export function parseTaskExport(
   opts: { listName: string; today?: string },
 ): ParsedTaskExport {
   if (format === 'google') return parseGoogleTasks(text, opts);
+  if (format === 'ticktick') return parseTickTickCsv(text, opts.listName);
   return format === 'outlook' ? parseOutlookTasks(text, opts) : parseTodoistCsv(text, opts);
 }
