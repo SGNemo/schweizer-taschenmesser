@@ -59,6 +59,9 @@ tauri-plugin-single-instance = "2"
 taschenmesser-local-api = { path = "crates/local-api" }
 # Home-network sync hub (desktop only; package 1 = the field store, see docs/design/sync-lan).
 taschenmesser-lan-sync = { path = "crates/lan-sync" }
+# Raw hub keys (static Noise key, data key) in the OS keystore, like the secure-store plugin; own service name.
+zeroize = "1"
+keyring = { version = "3", features = ["windows-native", "apple-native", "linux-native"] }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
 # Built-in browser: URL policy and ad/tracker blocker decisions (src/browser.rs).
@@ -84,6 +87,11 @@ windows_next = { package = "windows", version = "0.62" }
 windows = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Globalization",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_NetworkManagement_Ndis",
+  "Win32_Networking_NetworkListManager",
+  "Win32_Networking_WinSock",
+  "Win32_System_Com",
   "Win32_System_Registry",
   "Win32_UI_Shell",
   "Win32_UI_WindowsAndMessaging",

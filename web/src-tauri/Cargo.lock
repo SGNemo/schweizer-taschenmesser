@@ -5796,6 +5796,7 @@ name = "taschenmesser"
 version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
+ "keyring",
  "minisign-verify",
  "serde",
  "serde_json",
@@ -5830,6 +5831,7 @@ dependencies = [
  "webview2-com",
  "windows 0.61.3",
  "windows 0.62.2",
+ "zeroize",
 ]
 
 [[package]]
