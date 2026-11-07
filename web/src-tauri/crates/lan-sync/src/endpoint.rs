@@ -186,6 +186,13 @@ impl fmt::Debug for Session {
     }
 }
 
+impl Drop for Session {
+    /// A dropped connection must not stay "open" in the registry.
+    fn drop(&mut self) {
+        self.handle.close();
+    }
+}
+
 impl Session {
     pub fn peer(&self) -> PublicKey {
         self.peer

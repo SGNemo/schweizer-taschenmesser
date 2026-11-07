@@ -550,3 +550,18 @@ fn regenerated_hub_key_orphans_old_qr_and_sessions() {
     let (_, wire) = noise::start_initiator(Mode::Session, &dev_key, &old, None).unwrap();
     assert!(matches!(h.ep.handle_first(&wire), FirstReply::Drop));
 }
+
+#[test]
+fn replayed_session_message_one_leaves_no_open_session_after_drop() {
+    let h = harness();
+    let key = StaticKey::generate().unwrap();
+    trust_device(&h, &key);
+    let (_, wire) = session_start(&h, &key);
+    let mut held = Vec::new();
+    for _ in 0..50 {
+        held.push(h.ep.handle_first(&wire));
+    }
+    assert_eq!(h.sessions.open_count(), 50);
+    held.clear();
+    assert_eq!(h.sessions.open_count(), 0);
+}

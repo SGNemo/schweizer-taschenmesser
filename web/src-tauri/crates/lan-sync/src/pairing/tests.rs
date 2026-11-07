@@ -838,3 +838,38 @@ fn events_and_attempt_debug_hide_codes_and_names() {
     );
     assert_eq!(format!("{:?}", h.host.begin_attempt()), "None");
 }
+
+#[test]
+fn qr_past_the_hard_cap_is_refused_without_burning() {
+    let h = harness();
+    h.host.open().unwrap();
+    let t0 = h.clock.now();
+    h.clock.set(t0 + secs(239));
+    let p = phone_from_qr(&h); // silently renewed, opened_at stays t0
+    h.clock.set(t0 + secs(240));
+    assert!(try_burn(&h, &p.wire).is_none());
+    assert!(h.host.is_open());
+    assert!(!h
+        .host
+        .take_events()
+        .iter()
+        .any(|e| matches!(e, PairingEvent::Burned { .. })));
+}
+
+#[test]
+fn hello_at_or_after_the_computed_deadline_ends_the_attempt() {
+    let h = harness();
+    h.host.open().unwrap();
+    let t0 = h.clock.now();
+    h.clock.set(t0 + secs(235));
+    let mut l = burn(&h);
+    h.clock.set(t0 + secs(240));
+    assert_eq!(
+        h.host.on_hello(l.attempt, &hello(&mut l, b"x")),
+        Err(PairError::Expired)
+    );
+    assert_eq!(
+        h.host.confirm(l.attempt, &l.phone_sas.digits()).err(),
+        Some(PairError::NotAwaiting)
+    );
+}

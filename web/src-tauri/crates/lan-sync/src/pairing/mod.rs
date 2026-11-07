@@ -428,7 +428,9 @@ impl PairingHost {
                 ..
             }
         );
-        if !open || g.gen != ticket.gen || first.mode() != crate::noise::Mode::Pair {
+        // past the hard cap no confirm can succeed: refuse without burning the QR
+        let capped = now >= g.opened_at.saturating_add(CONFIRM_HARD_CAP);
+        if !open || capped || g.gen != ticket.gen || first.mode() != crate::noise::Mode::Pair {
             return Err(ConsumeError::Stale);
         }
         let peer = first.peer();
@@ -474,6 +476,10 @@ impl PairingHost {
                     .burned_at
                     .saturating_add(CONFIRM_WAIT)
                     .min(g.opened_at.saturating_add(CONFIRM_HARD_CAP));
+                if now >= deadline {
+                    g.end_attempt(now, CancelReason::ConfirmTimeout);
+                    return Err(PairError::Expired);
+                }
                 w.deadline = deadline;
                 let code = w.sas.digits();
                 g.events.push(PairingEvent::HelloReceived {
