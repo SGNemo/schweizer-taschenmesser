@@ -236,6 +236,19 @@ impl SessionRegistry {
         n
     }
 
+    /// Closes every open session (key rotation); returns how many were open.
+    pub fn close_all(&self) -> usize {
+        let Ok(mut s) = self.sessions.lock() else {
+            return 0;
+        };
+        let n = s.iter().filter(|(_, h)| !h.is_closed()).count();
+        for (_, h) in s.iter() {
+            h.close();
+        }
+        s.clear();
+        n
+    }
+
     pub fn open_count(&self) -> usize {
         self.sessions
             .lock()
