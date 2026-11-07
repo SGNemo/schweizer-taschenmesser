@@ -54,6 +54,7 @@ export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';
 export { FolderTabs, type FolderTab } from './FolderTabs';
 export * from './widgets';
+export { SensitiveValue } from './SensitiveValue';
 
 export { KeyRecorder } from './KeyRecorder';
 export { Keys } from './Keys';

@@ -29,6 +29,9 @@ export const focus: Strings['focus'] = {
     focusIndicatorHint: 'Shows in the top bar that a focus round is running.',
     searchHistory: 'History in search',
     searchHistoryHint: 'Search shows what you used last first. The history stays on this device.',
+    hideValues: 'Hide amounts',
+    hideValuesHint:
+      'Amounts in the balance card show a neutral pattern. A tap reveals them until you leave the view. This device only.',
     more: 'More settings',
     aids: 'Aids',
     aidsOn: (n: number, total: number) => `${n} of ${total} on`,

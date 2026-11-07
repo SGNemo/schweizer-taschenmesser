@@ -1,0 +1,23 @@
+.mask {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xl);
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.mask:hover {
+  opacity: 0.8;
+}
+.note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

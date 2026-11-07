@@ -1197,6 +1197,9 @@ export const de = {
       searchHistory: 'Verlauf in der Suche',
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
+      hideValues: 'Werte ausblenden',
+      hideValuesHint:
+        'Beträge in der Kontostand-Karte zeigen ein neutrales Muster. Ein Tipp blendet sie ein, bis du die Ansicht verlässt. Gilt nur auf diesem Gerät.',
       more: 'Weitere Einstellungen',
       aids: 'Hilfen',
       aidsOn: (n: number, total: number) => `${n} von ${total} an`,
@@ -2659,6 +2662,8 @@ export const de = {
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
     kpiMonthNet: (amount: string) => `${amount} in diesem Monat`,
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
+    valueHidden: 'Ausgeblendet',
+    valueReveal: 'Zum Einblenden tippen',
   },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
