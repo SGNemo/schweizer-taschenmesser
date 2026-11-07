@@ -14,10 +14,19 @@ For Claude Managed Agents sessions. `nemo-lead` delegates and writes no product 
 | `nemo-extension` | `extension/**`, `packages/vault-core` | `nemo-security`, `nemo-native` |
 | `nemo-qa` | tests, E2E, regressions | – |
 | `nemo-devops` | `.github/**`, release prep, changelog | `nemo-security` |
-| `nemo-docs` | `docs/**`, `README*`, `strings.ts`, `i18n/` | – |
+| `nemo-docs` | `docs/**`, `README*` (UI texts/catalogs: `nemo-i18n`) | `nemo-i18n` |
 | `nemo-design` | UI review against `docs/design/DESIGN-SPEC.md` §4a, FOCUS-GUIDELINES | – |
 | `nemo-security` | review of every security-relevant change ([RULES.md](../RULES.md)) | – |
 | `nemo-reviewer` | every finished PR, before hand-over | – |
+| `nemo-deps` | dependencies and supply chain: `package.json` + lock files (`web/`, `server/`, `mcp/`, `extension/`, `packages/vault-core`), `web/src-tauri/**/Cargo.toml`, `Cargo.lock`, `web/scripts/licenses.manual.json`, `web/src/core/about/licenses.json`; `cargo audit`, `npm audit`, `cargo tree -e features`, exact pins for security-critical crates, `npm run gen:licenses` after every change; deps in small separate commits | `nemo-security` (pins, bumps in crypto/sync/extension), `nemo-devops` (Dependabot, audit jobs), `nemo-perf` (before/after sizes) |
+| `nemo-perf` | bundle/critical path (`check:bundle`), cold start (`measure:coldstart`), data layer (`measure:data`, `measure:micro`), memory, exe/APK size from CI artifacts (sandbox cannot build Tauri/Windows); reports `docs/perf/**`, `web/scripts/bundle-budget.json` (baseline only on approval) | `nemo-deps` (numbers for every dependency change), `nemo-architekt` (indexes/schema), owner agent for fixes |
+| `nemo-triage` | scrum helper for the lead, docs only: `docs/CHATS.md` tables ("Wartet auf Sven", "Läuft gerade", hotspot heads-ups, stacked PR order), bundled hand-test checklist in `docs/MANUAL-TESTS.md`, PR hand-over format check (Done/Open/Next/How to verify), `scribble/` housekeeping | `nemo-merge` (merge order, labels), `nemo-qa` (hardware-only vs. automated) |
+| `nemo-i18n` | UI texts: `web/src/strings.ts` (append in the module's block only), `web/src/i18n/locales/{de,en}/**`, `docs/i18n/GLOSSARY.md`, `docs/howto/i18n.md`; `npm run check:i18n`; calm wording per FOCUS-WORDING; es/fr/pt-BR frozen, never touched | `nemo-docs` (user docs/README pairs), `nemo-frontend` (wiring keys), `nemo-design` (tone) |
+| `nemo-a11y` | accessibility review and small fixes: AA contrast, touch ≥ 44 px, keyboard/focus (`data-autofocus`), screen-reader semantics, motion transform/opacity, colour with text/icon (`ui/semantics.ts`), reading aid (`core/text/readjsx`); `web/e2e/a11y.spec.ts`, reports `docs/design/A11Y-<date>.md` | `nemo-design`, `nemo-qa`; fixes beyond small via `nemo-frontend` |
+| `nemo-merge` | merges merge-ready PRs into `develop` (standing order 2026-11-07): all checks green, non-stale approval (`nemo-reviewer`, `nemo-security` where RULES.md applies), change note or `no-changelog`, merge commit + `expectedHeadSha` only, `develop` brought in by merge, conflicts per CHATS.md hotspot rules (lock files by tools, `db:bump`, keep both rows/blocks), stacked PRs in order; never `main`/tags/releases/force-push, never over a real security/CodeQL finding | `nemo-reviewer`, `nemo-security`, `nemo-triage` |
+| `nemo-creativity` | idea generator and fresh-eyes reviewer (Fable): idea briefs ranked in `docs/product/ideas/**` (problem, idea, fit, shape, risks/rule conflicts, smallest first step), "Fable checks" of concepts and package plans (format `docs/design/sync-lan/REVIEW-FABLE.md`); checks every idea against privacy, supporter and FOCUS rules; no product code, no commits on feature branches | `nemo-po` (prioritisation), `nemo-architekt` (feasibility), `nemo-security` for vault/sync/extension ideas |
+
+Merge: `nemo-merge` is the only agent that merges PRs (maintainer's standing order 2026-11-07); every other agent still never merges its own PR.
 
 ## Sandbox start (every session)
 
