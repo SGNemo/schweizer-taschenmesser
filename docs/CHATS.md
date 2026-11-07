@@ -1,6 +1,6 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02.
+Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02. Agent threads of one session share one row (topic = session); roster: [meta/AGENTS.md](meta/AGENTS.md).
 
 ## Wartet auf Sven
 

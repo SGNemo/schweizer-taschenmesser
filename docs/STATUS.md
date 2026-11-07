@@ -182,6 +182,7 @@ Website (`site/`, Cloudflare-Pages-Projekt `nemo-site`): vom 08.10. bis 04.11. w
 
 ## Bekannte Probleme / Hinweise
 
+- Agenten-Team eingerichtet (2026-11-07): Roster, Delegation, Sandbox-Start in [meta/AGENTS.md](meta/AGENTS.md); Änderungen nur per Entscheidung des Maintainers.
 - README-Download-Badges zeigen auf das neueste _stabile_ Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
 - Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). Erledigt 2026-09-30: JS-Plugin-Bumps (`plugin-http` 2.8.0, `plugin-opener` 2.7.0; die Rust-Seite bleibt `~2.7`, siehe Cargo), CI-Caching. `serde_json` bleibt: `tauri::generate_context!` braucht es.
