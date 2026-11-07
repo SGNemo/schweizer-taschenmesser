@@ -60,9 +60,50 @@ fn assert_absent(needles: &[&str], only_under: Option<&str>) {
 #[test]
 fn no_sockets_or_async_runtime_outside_tests() {
     assert_absent(
-        &["std::net", "tokio", "TcpListener", "UdpSocket", "async fn"],
+        &[
+            "tokio",
+            "TcpListener",
+            "TcpStream",
+            "UdpSocket",
+            "ToSocketAddrs",
+            "SocketAddr",
+            "async fn",
+        ],
         None,
     );
+}
+
+/// The hub core uses `std::net` for address *types* only (policy decisions); sockets are package 2b-2.
+#[test]
+fn std_net_is_for_address_types_only() {
+    assert_absent(&["std::net::*", "use std::net;"], None);
+}
+
+#[test]
+fn the_hub_core_reads_no_clock() {
+    assert_absent(
+        &["SystemTime", "UNIX_EPOCH", "Instant::now"],
+        Some("src/hub"),
+    );
+}
+
+#[test]
+fn the_hub_never_touches_the_local_api() {
+    assert_absent(&["local_api", "local-api", "LOCAL_API"], None);
+}
+
+#[test]
+fn no_log_crate_in_the_manifest() {
+    let m = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    for banned in ["log", "tracing", "env_logger", "slog"] {
+        assert!(
+            !m.lines().any(|l| {
+                let t = l.trim_start();
+                t.starts_with(banned) && t[banned.len()..].trim_start().starts_with('=')
+            }),
+            "log crate `{banned}`"
+        );
+    }
 }
 
 #[test]
@@ -166,7 +207,7 @@ fn hub_modules_are_compiled_out_on_mobile() {
     let lib = fs::read_to_string(root().join("src/lib.rs")).unwrap();
     let gate = "#[cfg(not(any(target_os = \"android\", target_os = \"ios\")))]";
     let lines: Vec<&str> = lib.lines().map(str::trim).collect();
-    for module in ["pairing", "trust", "endpoint"] {
+    for module in ["pairing", "trust", "endpoint", "hub"] {
         let decl = format!("pub mod {module};");
         let at = lines
             .iter()
