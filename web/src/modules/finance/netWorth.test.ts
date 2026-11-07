@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { balances } from './logic';
 import { changeOver, lastMonths, netWorthSeries } from './netWorth';
 
 const acc = (id: string, openingBalanceMinor: number) => ({ id, openingBalanceMinor });
@@ -71,8 +72,39 @@ describe('netWorthSeries', () => {
     expect(s.map((p) => p.valueMinor)).toEqual([1001, 1001]);
   });
 
-  it('has no points without bookings', () => {
-    expect(netWorthSeries([acc('a', 1000)], [], '2026-09-15')).toEqual([]);
+  it('counts an account with an opening balance but no bookings', () => {
+    const ts = (d: string) => new Date(`${d}T12:00:00`).getTime();
+    const accounts = [
+      { ...acc('a', 0), createdAt: ts('2026-07-01') },
+      { ...acc('s', 500000), createdAt: ts('2026-08-10') },
+    ];
+    const s = netWorthSeries(
+      accounts,
+      [tx('2026-07-05', 'income', 100), tx('2026-09-02', 'income', 100)],
+      '2026-09-15',
+      4,
+    );
+    expect(s).toEqual([
+      { month: '2026-07', valueMinor: 100 },
+      { month: '2026-08', valueMinor: 500100 },
+      { month: '2026-09', valueMinor: 500200 },
+    ]);
+  });
+
+  it('counts accounts of unknown age from the window start; the last point equals the balances', () => {
+    const accounts = [acc('a', 0), acc('s', 500000)];
+    const txs = [tx('2026-08-05', 'income', 100), tx('2026-09-02', 'expense', 30)];
+    const s = netWorthSeries(accounts, txs, '2026-09-15', 12);
+    expect(s).toHaveLength(12);
+    const total = [...balances(accounts, txs, '2026-09-15').values()].reduce((x, y) => x + y, 0);
+    expect(s[s.length - 1]!.valueMinor).toBe(total);
+    expect(total).toBe(500070);
+  });
+
+  it('shows no history for a brand-new account with nothing else', () => {
+    const created = new Date('2026-09-10T12:00:00').getTime();
+    const s = netWorthSeries([{ ...acc('a', 1000), createdAt: created }], [], '2026-09-15');
+    expect(s).toEqual([{ month: '2026-09', valueMinor: 1000 }]);
   });
 });
 

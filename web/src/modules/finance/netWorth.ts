@@ -1,4 +1,5 @@
 import { addMonthsToMonth, monthOf } from '@/core/time/dates';
+import { toDateString } from '@/core/time/now';
 import { signed } from './logic';
 import type { Account, Transaction } from './schema';
 
@@ -20,13 +21,14 @@ export function lastMonths(through: string, count: number): string[] {
 
 /**
  * Total balance of the given accounts at each month end of the last `count` months (the running
- * month ends `through`, i.e. today). An account counts from the month of its first booking on
- * (opening balance included), so a late-opened account adds no fake zero before it; months before
+ * month ends `through`, i.e. today). An account counts from its creation or first booking month on
+ * (opening balance included, also without bookings), so a late-opened account adds no fake zero before it; months before
  * any account started are left out. Transfers are two bookings that cancel in the sum. Only
- * accounts of one currency should be passed (nothing is converted). Pure.
+ * accounts of one currency should be passed (nothing is converted; a transfer across currencies counts as
+ * income/expense there, like in the other finance views). Pure.
  */
 export function netWorthSeries(
-  accounts: (Pick<Account, 'openingBalanceMinor'> & { id: string })[],
+  accounts: (Pick<Account, 'openingBalanceMinor'> & { id: string; createdAt?: number })[],
   txs: readonly Tx[],
   through: string,
   count = 12,
@@ -49,6 +51,14 @@ export function netWorthSeries(
       perMonth.set(k, (perMonth.get(k) ?? 0) + signed(t));
     }
   }
+  // An account counts from the earlier of its creation and its first booking (older than the window: from the
+  // window start); with neither known it counts from the window start. So the last point equals the summed balances.
+  const startOf = (a: { id: string; createdAt?: number }): string => {
+    const created =
+      a.createdAt === undefined ? undefined : monthOf(toDateString(new Date(a.createdAt)));
+    const booked = firstMonth.get(a.id);
+    return [created, booked].filter((m): m is string => !!m).sort()[0] ?? windowStart;
+  };
   const running = new Map<string, number>(
     accounts.map((a) => [a.id, a.openingBalanceMinor + (beforeByAccount.get(a.id) ?? 0)]),
   );
@@ -59,8 +69,7 @@ export function netWorthSeries(
     for (const a of accounts) {
       const next = (running.get(a.id) ?? 0) + (perMonth.get(`${a.id}|${month}`) ?? 0);
       running.set(a.id, next);
-      const first = firstMonth.get(a.id);
-      if (first && first <= month) {
+      if (startOf(a) <= month) {
         total += next;
         any = true;
       }

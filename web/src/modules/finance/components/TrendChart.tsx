@@ -1,5 +1,5 @@
 import { formatMoney } from '@/core/money';
-import { formatDay, formatMonth } from '@/core/time/dates';
+import { formatMonth } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Card } from '@/ui';
 import { useCurrency } from '../currency';
@@ -42,7 +42,7 @@ export function TrendChart({
   const first = points[0]!;
   const last = points[points.length - 1]!;
   const change = changeOver(points)!;
-  const sinceLabel = formatDay(`${change.since}-01`, 'LLLL');
+  const sinceLabel = formatMonth(change.since);
   const changeText =
     change.diffMinor === 0
       ? t.finance.netWorthUnchanged(sinceLabel)
