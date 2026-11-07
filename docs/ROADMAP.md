@@ -1,6 +1,6 @@
 # Roadmap – ideas, not commitments (2026-09-30)
 
-Collected in the review round ([`archive/2026-10/REVIEW-2026-09-30.md`](archive/2026-10/REVIEW-2026-09-30.md)): what comparable everyday apps offer, what users ask for, and what the code already prepares. Nothing here is implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
+Collected in the review round ([`archive/2026-10/REVIEW-2026-09-30.md`](archive/2026-10/REVIEW-2026-09-30.md)): what comparable everyday apps offer, what users ask for, and what the code already prepares. Items marked **built** were verified against the code on 2026-11-07; the rest is not implemented; each idea lists benefit, effort (S = hours, M = days, L = a week or more), risk, dependencies and where it could collide with areas other sessions are working on.
 
 **Merged while this roadmap was written (do not duplicate):** PR #8 (`feat/disk-cleaner-and-modules`, now on `develop`) added the modules *Datenträger* (desktop disk cleaner), *Zeiterfassung* (timetrack), *Vorräte* (pantry), *Geschenke* (gifts), *System* (desktop), the tools *text*, *timezones*, *image*, *pdf*, a `manifest.platforms` filter and `PlatformService.disk/system`. Its own idea list (vehicle log, colour and contrast, checksum and text diff, journal, warranty and receipts, clipboard history, snippets, autostart overview, WLAN QR, regex tester, grade and BMI calculators, bulk rename, medication and water, watchlist, cleaning plan, savings goals, travel, Android storage overview, sunburst view, scan cache, MFT quick scan) lives in `docs/STATUS.md`; it is referenced below, not repeated. The backup/sync hardening (PR #7) and quick capture (PR #6) are merged as well. Other sessions may still be working on follow-ups of these areas.
 
@@ -11,10 +11,10 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 |---|---|---|
 | 1 | **Widget-level "add" and inline edit on the dashboard** (K1) | The dashboard is the start page; today every action leaves it. Cheapest big win for daily use. |
 | 2 | **Recurring tasks and "someday" list in ToDos** (M1) | The most requested to-do features in every comparison; the recurrence engine already exists (`core/recurrence`). |
-| 3 | **Budget carry-over and category rules** (M3) | Envelope budgeting (Actual/YNAB) is the reference; finance + budgets already have the data. |
-| 4 | **Calendar: drag to move, duration handles, ICS export** (M2) | Closes the gap to Google/Apple Calendar for the core module; export gives users a way out (local-first promise). |
+| 3 | **Budget carry-over and category rules** (M3, partly built: see M3) | Envelope budgeting (Actual/YNAB) is the reference; finance + budgets already have the data. |
+| 4 | **Calendar: drag to move, duration handles, ICS export** (M2, drag/handles built, ICS export open) | Closes the gap to Google/Apple Calendar for the core module; export gives users a way out (local-first promise). |
 | 5 | **Habit statistics: completion grid, best streak, per-weekday view** (M4) | Standard in every habit app; data is there, only views are missing. |
-| 6 | **Vault: password health and breach check (k-anonymity)** (S1) | Baseline expectation for a password manager; zxcvbn is already bundled, HIBP range API keeps the hash local. |
+| 6 | **Vault: password health and breach check (k-anonymity)** (S1, health built, breach check open) | Baseline expectation for a password manager; zxcvbn is already bundled, HIBP range API keeps the hash local. |
 | 7 | **Attachments in sync and backup** (K3) | Vault files and receipts are local-only today; users lose them on a second device. Large, but unblocks several modules. |
 | 8 | **Home-screen widgets (Android) and tray quick actions (Windows)** (P1) | Turns Nemo from an app you open into one that is present; quick capture already has the hotkey and tray. |
 | 9 | **Import from Google Tasks / Todoist / Bitwarden** (I2) | Switching cost is the main barrier to adoption; the importer framework and preview exist. |
@@ -26,20 +26,20 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | K1 | Dashboard: add/complete/tick directly in widgets, per-widget size choice | Fewer navigations | M | low | `WidgetList` (done in this PR) | dashboard layout store |
 | K2 | Global undo (toast "Rückgängig" for every delete/edit, 10 s) | Trust | M | medium (repo layer) | `createRepo` tombstones | sync ops (read-only for other sessions) |
 | K3 | Attachments (`_blobs`) in sync and backup, size limits, dedupe by hash | Multi-device vault files, receipts | L | high (formats, encryption) | sync protocol version, server storage | **sync/backup owned by the dev chat – coordinate first** |
-| K4 | Trash / restore for deleted records (tombstone browser) | Recover mistakes | M | low | tombstones exist | tombstone GC (not built) |
-| K5 | Search filters (`typ:rechnung fällig:<7d`) and saved searches | Power users | M | low | `search/fulltext` | palette parser |
+| K4 | Trash / restore for deleted records (tombstone browser) – **built:** `web/src/core/db/trash.ts`, `core/trash/trash.ts`, `pages/settings/RecentlyDeletedSection.tsx` | Recover mistakes | M | low | tombstones exist | tombstone GC (not built) |
+| K5 | Search filters (`typ:rechnung fällig:<7d`) and saved searches – **partly built:** natural-language filters in `web/src/core/ai/intent/parser.ts`, `core/ai/search/fulltext.ts`; the `typ:` syntax and saved searches not found | Power users | M | low | `search/fulltext` | palette parser |
 | K6 | Themes: high-contrast variant, font size setting, compact density | Accessibility | S–M | low | tokens (done) | none |
-| K7 | Offline indicator and conflict list surfaced in the shell | Clarity during sync | S | low | `core/sync/conflicts` | sync UI |
+| K7 | Offline indicator and conflict list surfaced in the shell – **conflict log + UI built:** `web/src/core/sync/conflicts.ts`, `pages/settings/SyncConflicts.tsx` (offline indicator not checked) | Clarity during sync | S | low | `core/sync/conflicts` | sync UI |
 
 ## Modules (M)
 | Id | Idea | Benefit | Effort | Risk | Depends on | Conflicts |
 |---|---|---|---|---|---|---|
 | M1 | ToDos: recurring tasks, someday/waiting lists, board view (columns = lists), task templates | Most requested | M | low | `core/recurrence` | PR #3 idea "board" (open) |
-| M2 | Calendar: drag/resize in week/day, multi-day events, ICS export, week numbers, working-hours shading | Parity with calendar apps | M–L | medium (touch DnD) | dnd-kit present | external calendar sinks |
-| M3 | Budgets: month carry-over, category auto-rules for imports, goal contributions from transactions | Envelope budgeting | M | low | finance public API | finance |
-| M4 | Habits: year grid, per-weekday stats, best streak, skip-with-reason, quantity habits (glasses of water) | Motivation | M | low | – | PR #8 idea "medication and water" |
-| M5 | Finance: split transactions, transfers between accounts, CSV/CAMT import mapping presets, net-worth chart | Bank-statement workflow | M–L | medium | `core/io` parsers | budgets |
-| M6 | Invoices/Subscriptions: price-change history, "cancel by" reminder from notice period, yearly total | Unused-subscription insight | S–M | low | notifications | contracts |
+| M2 | Calendar: drag/resize in week/day, multi-day events, ICS export, week numbers, working-hours shading – **built:** drag/resize `web/src/modules/calendar/dragMath.ts`, multi-day `endDate` in `calendar/schema.ts`; ICS export, working-hours shading not found (ICS import only: `core/io/ics.ts`) | Parity with calendar apps | M–L | medium (touch DnD) | dnd-kit present | external calendar sinks |
+| M3 | Budgets: month carry-over, category auto-rules for imports, goal contributions from transactions – **partly built:** carry-over `web/src/modules/budgets/{schema,data}.ts` (`carryOver`), import rules `modules/finance/rules.ts`, `components/RuleSuggestions.tsx`; goal contributions from transactions not found (`monthlyRateMinor` is a manual rate) | Envelope budgeting | M | low | finance public API | finance |
+| M4 | Habits: year grid, per-weekday stats, best streak, skip-with-reason, quantity habits (glasses of water) – **mostly built:** year grid `web/src/modules/habits/components/History.tsx` (`heatmap`), `perWeekday`, `longestRun`, quantity via `target` (`habits/logic.ts`, `schema.ts`); rest day `skipped` exists, a reason field not found | Motivation | M | low | – | PR #8 idea "medication and water" |
+| M5 | Finance: split transactions, transfers between accounts, CSV/CAMT import mapping presets, net-worth chart – **partly built:** split `web/src/modules/finance/components/SplitEditor.tsx`, transfers `components/TransferEditor.tsx`; net-worth chart not found (only the month curve `balanceSeries.ts`), presets not checked | Bank-statement workflow | M–L | medium | `core/io` parsers | budgets |
+| M6 | Invoices/Subscriptions: price-change history, "cancel by" reminder from notice period, yearly total – **built (subscriptions):** `web/src/modules/subscriptions/schema.ts` (`priceHistory`, `cancelNoticeDays`), `logic.ts` (`annualCost`, `totals`) | Unused-subscription insight | S–M | low | notifications | contracts |
 | M7 | Notes: Markdown preview, checklists, backlinks, pin to dashboard | Notion/Obsidian basics | M | low | – | none |
 | M8 | Contracts: document attachment, reminder before notice deadline | Completes the module | S (+K3 for files) | low | K3 | PR #8 "warranty and receipts" |
 | M9 | Shopping: recipe → list, price memory, store sections | Daily use | M | low | pantry hand-over (PR #8) | **PR #8 pantry** |
@@ -74,7 +74,7 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 ## Security (S)
 | Id | Idea | Benefit | Effort | Risk | Conflicts |
 |---|---|---|---|---|---|
-| S1 | Vault: password health (reused/weak via zxcvbn, already bundled), HIBP range check (k-anonymity, opt-in, via platform fetch), age | Baseline in 2026 | M | low | **crypto/vault – read-only for other sessions; UI only** |
+| S1 | Vault: password health (reused/weak via zxcvbn, already bundled), HIBP range check (k-anonymity, opt-in, via platform fetch), age – **health built:** `web/src/modules/accounts/{strength.ts,audit.ts}`, `components/AuditDialog.tsx` (reuse, age after `OLD_AFTER_DAYS`); HIBP check not found in the repo | Baseline in 2026 | M | low | **crypto/vault – read-only for other sessions; UI only** |
 | S2 | Passkeys storage (WebAuthn credential export/import format when browsers ship it) | Future-proof | L | high (spec in flux) | vault format |
 | S3 | App lock (PIN/biometric) for the whole app, not only the vault | Often asked | M | medium (Android back-stack) | secure-store plugin |
 | S4 | Emergency access / vault sharing via encrypted export with a second passphrase | Family use | M | medium | vault backup format (unchanged) |
@@ -94,8 +94,8 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 ## Module review 2026-10-01 (decided, see `docs/product/`)
 Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MODULE-PLAN.md); prompts (archived) in [`archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md`](archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md). Consequences for this list:
 - **Scheduled as packages (no longer open ideas):** K1 (package 2), M1 recurring tasks + someday (5), M7 notes checklists + pinned scratch note (1), D1 tool routes/palette/shortcuts (1), S1 password health (7), T1/T3 settled (tools 18 → 12, timer stays separate).
-- **Retired modules (data kept until package 6):** news, habits, timetrack; replaced by merges: reminders → calendar, shopping + packing → lists, launcher → bookmarks favourites, birthdays + gifts → people, contracts → vault ("Unterlagen"), system → disk ("Dieser PC").
-- **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module retired), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.
+- **Retired modules (data kept until package 6):** news, ~~habits, timetrack~~ (both returned as new modules, reversal of the retirement: [decisions/ui-shell.md](decisions/ui-shell.md) (2026-11-03); `web/src/modules/habits`, `modules/timetrack`); replaced by merges: reminders → calendar, shopping + packing → lists, launcher → bookmarks favourites, birthdays + gifts → people, contracts → vault ("Unterlagen"), system → disk ("Dieser PC").
+- **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module is back, see M4), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.
 
 ## Cleanup proposals 2026-10-03 (not built)
 Prioritised refactors, test-tooling ideas and hygiene items from the repo cleanup: [meta/IMPROVEMENTS-2026-10-03.md](meta/IMPROVEMENTS-2026-10-03.md) (top 10, effort, risk, PR order). Analysis and numbers: [meta/CLEANUP-2026-10-03.md](meta/CLEANUP-2026-10-03.md).
