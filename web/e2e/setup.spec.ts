@@ -123,7 +123,7 @@ test('an existing installation never shows the assistant by itself, but it start
   await expect(page.getByTestId('setup-checklist')).toHaveCount(0);
   await expect(wizard(page)).toHaveCount(0);
 
-  await page.goto('/settings/ueber');
+  await page.goto('/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   await expect(wizard(page)).toBeVisible();
   // The existing data is untouched by merely looking.
@@ -137,7 +137,7 @@ test('an existing installation never shows the assistant by itself, but it start
 test('full run: every step can be skipped, the summary lists them, "Fertig" completes', async ({
   page,
 }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await startFull(page);
   const dialog = wizard(page);
   await expect(dialog.getByRole('progressbar')).toBeVisible();
@@ -152,7 +152,7 @@ test('full run: every step can be skipped, the summary lists them, "Fertig" comp
 test('cancelling keeps finished steps, drops the current one and resumes after a reload', async ({
   page,
 }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await startFull(page);
   const dialog = wizard(page);
   await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
@@ -184,7 +184,7 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
 });
 
 test('the Android back gesture asks before leaving the assistant', async ({ page }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
   await page.goBack();
@@ -223,7 +223,7 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
   // Hide, and bring it back from the settings.
   await checklist.getByRole('button', { name: 'Ausblenden' }).click();
   await expect(checklist).toHaveCount(0);
-  await page.goto('/settings/ueber');
+  await page.goto('/settings/einrichtung');
   const show = page.getByRole('switch', { name: 'Checkliste auf der Übersicht anzeigen' });
   await show.click();
   await expect(show).toBeChecked(); // the write is done once the switch reflects it
@@ -234,7 +234,7 @@ test('starts from the command palette; ending leaves a checklist on the dashboar
 test('a profile shows its diff and needs a confirmation before it switches modules off', async ({
   page,
 }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await startFull(page);
   const dialog = wizard(page);
   await later(page).click(); // basics
@@ -333,7 +333,7 @@ test('"Rest später" on a question keeps everything open and shows the checklist
 });
 
 test('"Weiter" without a change is not "erledigt"; the sync default is', async ({ page }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await startFull(page);
   const dialog = wizard(page);
   await dialog.getByRole('button', { name: 'Weiter' }).click(); // basics: always writes
@@ -355,7 +355,7 @@ test('the AI step asks nothing until "nach Ollama suchen" is clicked; Spotify ha
   await page.route('http://localhost:11434/**', (route) =>
     route.fulfill({ json: { models: [{ name: 'llama3' }] } }),
   );
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await startFull(page);
   const dialog = wizard(page);
   for (let i = 0; i < 6; i++) {
@@ -399,7 +399,7 @@ test('Back closes the import dialog above the assistant first, then asks about t
 test('"Umzug von einer anderen App": checklist row → Google → ToDos importer → the point ticks itself', async ({
   page,
 }) => {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   await expect(wizard(page)).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Schließen' }).first().click();
@@ -445,4 +445,19 @@ test('Settings → Sync & Backup has a row that opens the same tiles', async ({ 
   const dialog = page.getByRole('dialog', { name: 'Umzug von einer anderen App' });
   await expect(dialog.getByRole('region', { name: 'Todoist' })).toBeVisible();
   await expect(dialog.getByText('Dann fang mit der Schnellerfassung an.')).toBeVisible();
+});
+
+test('Einrichtung is its own settings tab; the old link from "Über Nemo" arrives there', async ({
+  page,
+}) => {
+  await ready(page, '/settings/ueber#setup');
+  await expect(page).toHaveURL(/\/settings\/einrichtung#setup$/);
+  await expect(page.getByRole('heading', { name: 'Einrichtung', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('setup-status')).toBeVisible();
+  // The card is gone from "Über Nemo": no second way in on that page.
+  await page.goto('/settings/ueber');
+  await expect(page.getByRole('heading', { name: 'Über Nemo', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('setup-section')).toHaveCount(0);
+  // Nothing opened by itself.
+  await expect(wizard(page)).toHaveCount(0);
 });

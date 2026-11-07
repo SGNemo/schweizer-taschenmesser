@@ -1,0 +1,9 @@
+/* Settings → Einrichtung: status card, then the groups; space between them, no card stack. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.more {
+  padding-top: var(--space-2);
+}

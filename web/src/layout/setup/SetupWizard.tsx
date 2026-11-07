@@ -24,7 +24,9 @@ import {
 } from '@/core/setup/state';
 import type { SetupCtx, SetupStepDef, SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { Badge, Button, Dialog, ReadableText } from '@/ui';
+import { tSettingsV31 } from '@/strings.settingsV31';
+import { Badge, Button, Dialog, EmptyState, HeadEyebrow, HeadSurface, ReadableText } from '@/ui';
+import { Ring } from '@/ui/identity';
 import { PageContainer, PageFallback } from '../PageContainer';
 import styles from './SetupWizard.module.css';
 
@@ -46,6 +48,46 @@ function stepComponent(step: SetupStepDef): ComponentType<SetupStepProps> {
 function StepView({ step, ...props }: SetupStepProps & { step: SetupStepDef }) {
   const [Step] = useState(() => stepComponent(step));
   return <Step {...props} />;
+}
+
+/** Hue of the setup assistant: the same as its settings tab (`pages/settings/categoryLook.ts`, "einrichtung"). */
+const SETUP_HUE = 'fern';
+
+/**
+ * Head of a step (settings identity v3.1): a compact tinted surface in the setup hue with the plate, "Schritt n von m"
+ * and the step signature – one dot per step, the done ones filled in the hue, the current one ringed. The track is the
+ * progress bar for assistive tech; the dots are decoration.
+ */
+function StepHead({ position, of, label }: { position: number; of: number; label: string }) {
+  return (
+    <HeadSurface
+      className={styles.head}
+      hue={SETUP_HUE}
+      area="system"
+      size="compact"
+      testId="setup-head"
+    >
+      {/* The dialog title already says "Einrichtung": the eyebrow carries the position instead. */}
+      <HeadEyebrow icon="checklist">{label}</HeadEyebrow>
+      <div
+        className={styles.track}
+        role="progressbar"
+        aria-label={t.setup.progressLabel}
+        aria-valuemin={0}
+        aria-valuemax={of}
+        aria-valuenow={position}
+      >
+        {Array.from({ length: of }, (_, i) => (
+          <span
+            key={i}
+            className={styles.dot}
+            data-state={i + 1 < position ? 'done' : i + 1 === position ? 'current' : 'open'}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+    </HeadSurface>
+  );
 }
 
 interface Props {
@@ -251,18 +293,33 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
       </div>
     );
   } else if (view === 'summary') {
+    const doneCount = counted.filter(
+      (s) => stepProgress(state, s.id, auto.has(s.id)) === 'done',
+    ).length;
     body = (
       <div className={styles.body} data-testid="setup-summary">
         <h3 className={styles.stepTitle}>{t.setup.summaryTitle}</h3>
         <p className={styles.desc}>
           <ReadableText text={t.setup.summaryIntro} />
         </p>
-        <p className={styles.meta}>
-          {t.setup.checklistProgress(
-            counted.filter((s) => stepProgress(state, s.id, auto.has(s.id)) === 'done').length,
-            counted.length,
-          )}
-        </p>
+        {doneCount === counted.length && counted.length > 0 ? (
+          <EmptyState
+            title={tSettingsV31.get().setup.doneTitle}
+            motif={
+              <Ring
+                label={t.setup.checklistProgress(doneCount, counted.length)}
+                parts={[{ label: '', share: 1 }]}
+                size={5}
+              />
+            }
+            testId="setup-done"
+          >
+            <p>{tSettingsV31.get().setup.doneLine}</p>
+          </EmptyState>
+        ) : null}
+        {doneCount < counted.length ? (
+          <p className={styles.meta}>{t.setup.checklistProgress(doneCount, counted.length)}</p>
+        ) : null}
         <ul className={styles.list}>
           {counted.map((s) => {
             const i = list.findIndex((x) => x.id === s.id);
@@ -307,21 +364,11 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
     body = (
       <div className={styles.body} key={step.id}>
         {position > 0 ? (
-          <>
-            <div
-              className={styles.progress}
-              role="progressbar"
-              aria-label={t.setup.progressLabel}
-              aria-valuemin={0}
-              aria-valuemax={of}
-              aria-valuenow={position}
-            >
-              <div className={styles.bar} style={{ width: `${(position / of) * 100}%` }} />
-            </div>
-            <p className={styles.meta}>
-              {isQuick ? t.setup.questionOf(position, of) : t.setup.stepOf(position, of)}
-            </p>
-          </>
+          <StepHead
+            position={position}
+            of={of}
+            label={isQuick ? t.setup.questionOf(position, of) : t.setup.stepOf(position, of)}
+          />
         ) : null}
         <h3 className={styles.stepTitle}>{isQuick && quickText ? quickText.title : step.title}</h3>
         <p className={styles.desc}>

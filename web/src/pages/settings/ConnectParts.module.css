@@ -1,49 +1,5 @@
-/* Connect cards (identity v3): tokens only; the state is always said in words, never by colour alone. */
-.banner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-}
-.banner[data-tone='ok'] .bannerIcon {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.banner[data-tone='attention'] {
-  border-color: var(--accent);
-}
-.bannerIcon {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-muted);
-}
-.bannerText {
-  min-width: 0;
-  flex: 1;
-}
-.bannerTitle {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-  overflow-wrap: anywhere;
-}
-.bannerLine {
-  margin: var(--space-hair) 0 0;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  overflow-wrap: anywhere;
-}
-.bannerAside {
-  flex: none;
-}
+/* Connect cards (identity v3): tokens only; the state is always said in words, never by colour alone. The banner is
+   `components/StatusCard`. */
 .step {
   display: flex;
   flex-direction: column;
@@ -55,18 +11,6 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-}
-.stepNo {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-full);
-  background: var(--accent-soft);
-  color: var(--text);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
 }
 .stepTitle {
   margin: 0;

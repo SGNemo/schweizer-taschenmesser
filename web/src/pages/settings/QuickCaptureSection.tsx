@@ -11,10 +11,21 @@ import {
 } from '@/quickCapture/desktop';
 import { DEFAULT_HOTKEY, useDevicePrefs, writePrefs } from '@/quickCapture/device';
 import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
+import { now, today } from '@/core/time/now';
+import { parseCapture, PREFIXES, type CaptureType } from '@/quickCapture/parser';
+import { previewChips } from '@/quickCapture/ui/chips';
 import { t } from '@/strings';
-import { tSettingsConnect } from '@/strings.settingsConnect';
-import { Button, Card, HelpHint, KeyRecorder, SelectField, Switch } from '@/ui';
-import { Facts, StateBanner, Step } from './ConnectParts';
+import { tSettingsV31 } from '@/strings.settingsV31';
+import {
+  Button,
+  KeyRecorder,
+  SelectField,
+  SettingRow,
+  SettingsGroup,
+  Switch,
+  TextField,
+} from '@/ui';
+import { StatusCard } from './components/StatusCard';
 import styles from './settings.module.css';
 
 /**
@@ -30,8 +41,9 @@ export function HotkeyField({
   save,
   testId,
 }: {
-  label: ReactNode;
-  hint: string;
+  /** Leave out inside a `SettingRow` (the row shows the label). */
+  label?: ReactNode;
+  hint?: string;
   value: string;
   defaultValue?: string;
   apply: (accelerator: string) => Promise<HotkeyError | null>;
@@ -60,8 +72,8 @@ export function HotkeyField({
 
   return (
     <div>
-      <span className={styles.muted}>{label}</span>
-      <div>
+      {label ? <span className={styles.muted}>{label}</span> : null}
+      <div className={styles.keyRow}>
         <KeyRecorder
           value={value}
           onRecord={onRecord}
@@ -71,11 +83,13 @@ export function HotkeyField({
           emptyText={t.quickCapture.settings.hotkeyOff}
           ariaLabel={t.quickCapture.settings.hotkeyRecord}
           testId={testId}
-        />{' '}
-        {defaultValue ? (
-          <>
-            <Button onClick={() => void set(defaultValue)}>{hotkeyLabel(defaultValue)}</Button>{' '}
-          </>
+        />
+        {/* Settings identity v3.1: one key field; "back to the default" only when it differs, so no two buttons
+            ever show the same keys. */}
+        {defaultValue && value !== defaultValue ? (
+          <Button variant="ghost" onClick={() => void set(defaultValue)}>
+            {tSettingsV31.get().quick.hotkeyDefault(hotkeyLabel(defaultValue))}
+          </Button>
         ) : null}
         {value ? (
           <Button variant="ghost" onClick={() => void set('')}>
@@ -83,7 +97,7 @@ export function HotkeyField({
           </Button>
         ) : null}
       </div>
-      <span className={styles.muted}>{hint}</span>
+      {hint ? <span className={styles.muted}>{hint}</span> : null}
       {error ? (
         <p role="alert" className={styles.muted}>
           {error}
@@ -93,7 +107,54 @@ export function HotkeyField({
   );
 }
 
-/** Settings → "Schnellerfassung": default target plus (desktop only) hotkey, tray and autostart. */
+/** The prefixes shown under the sample; their targets come from the parser's own table. */
+const SAMPLE_PREFIXES = ['p', 't', 'k', '$'] as const;
+
+/**
+ * A live sample of the parser: what a typed sentence would become (target, date, time) as chips. Saves nothing and
+ * sends nothing; the text stays in this field (component state only).
+ */
+export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
+  const o = tSettingsV31.use().quick;
+  const [text, setText] = useState('');
+  const sentence = text.trim() || o.samplePlaceholder;
+  // React Compiler memoizes this; the parser is pure and fast (one short sentence).
+  const result = parseCapture(sentence, { now: new Date(now()), defaultType });
+  const chips = previewChips(result.fields, result.type, result.notes, today());
+  const prefixes = SAMPLE_PREFIXES.map((p) => `${p} → ${t.quickCapture.target[PREFIXES[p]!]}`).join(
+    ' · ',
+  );
+  return (
+    <div className={styles.sample} data-testid="capture-sample">
+      <TextField
+        label={o.sampleLabel}
+        placeholder={o.samplePlaceholder}
+        value={text}
+        autoComplete="off"
+        // Like the real capture field: no browser spellcheck, so the typed sentence never leaves the device.
+        spellCheck={false}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <ul className={styles.sampleChips} aria-label={o.sampleResult}>
+        {chips.map((c) => (
+          <li
+            key={`${c.id}-${c.label}`}
+            className={styles.sampleChip}
+            data-warn={c.warn || undefined}
+          >
+            {c.label}
+          </li>
+        ))}
+      </ul>
+      <p className={styles.muted}>{o.prefixes(prefixes)}</p>
+    </div>
+  );
+}
+
+/**
+ * Settings → "Schnellerfassung" (settings identity v3.1): a live sample in the tab's status card, then the groups
+ * "Ziel", "Tastenkürzel" and "Im Hintergrund" as rows (title, one line, control; long explanations behind ⓘ).
+ */
 export function QuickCaptureSection() {
   const desktop = getPlatform().desktop;
   const prefs = useDevicePrefs();
@@ -101,7 +162,8 @@ export function QuickCaptureSection() {
   const [focus, patchFocus] = useFocusSettings();
   const [error, setError] = useState('');
   const [portable, setPortable] = useState(false);
-  const c = tSettingsConnect.use().quickCapture;
+  const o = tSettingsV31.use().quick;
+  const qs = t.quickCapture.settings;
 
   useEffect(() => {
     if (desktop.supported)
@@ -117,42 +179,27 @@ export function QuickCaptureSection() {
       await desktop.setAutostart(enabled);
       writePrefs({ autostart: enabled });
     } catch {
-      setError(t.quickCapture.settings.autostartFailed);
+      setError(qs.autostartFailed);
     }
   }
 
   return (
-    <Card>
-      <div className={styles.form}>
-        <StateBanner
-          icon="plus"
-          tone="ok"
-          title={c.title}
-          line={t.quickCapture.settings.intro}
-          testId="quick-capture-state"
-        />
-        <Facts
-          label={c.title}
-          items={[
-            {
-              label: t.quickCapture.settings.defaultType,
-              value: t.quickCapture.target[settings?.defaultType ?? 'todo'],
-            },
-            ...(desktop.supported
-              ? [
-                  {
-                    label: t.quickCapture.settings.hotkey,
-                    value: prefs.hotkey
-                      ? hotkeyLabel(prefs.hotkey)
-                      : t.quickCapture.settings.hotkeyOff,
-                  },
-                ]
-              : []),
-          ]}
-        />
-        <Step n={1} title={c.stepEntry} hint={c.stepEntryHint}>
+    <div className={styles.quickStack}>
+      <StatusCard
+        title={o.sampleTitle}
+        line={o.sampleLine}
+        testId="quick-capture-state"
+        body={<CaptureSample defaultType={settings?.defaultType} />}
+      />
+      <SettingsGroup id="quickcapture" title={o.groupTarget} plain>
+        <SettingRow
+          id="quickcapture--defaultType"
+          label={qs.defaultType}
+          description={o.defaultTypeLine}
+        >
           <SelectField
-            label={t.quickCapture.settings.defaultType}
+            label={qs.defaultType}
+            labelHidden
             value={settings?.defaultType ?? 'todo'}
             onChange={(e) =>
               void patch({ defaultType: e.target.value as (typeof DEFAULT_TYPES)[number] })
@@ -164,82 +211,121 @@ export function QuickCaptureSection() {
               </option>
             ))}
           </SelectField>
+        </SettingRow>
+        <SettingRow
+          id="quickcapture--noQuestion"
+          label={qs.noQuestion}
+          description={o.noQuestionLine}
+          hint={qs.noQuestionHint}
+        >
           <Switch
-            label={t.quickCapture.settings.noQuestion}
-            hint={t.quickCapture.settings.noQuestionHint}
+            label={qs.noQuestion}
+            labelHidden
             checked={focus.captureNoQuestion}
             onChange={(v) => void patchFocus({ captureNoQuestion: v })}
           />
-        </Step>
-        {desktop.supported ? (
-          <>
-            <Step n={2} title={c.stepKeys} hint={c.stepKeysHint}>
+        </SettingRow>
+      </SettingsGroup>
+      {desktop.supported ? (
+        <>
+          <SettingsGroup id="quickcapture-keys" title={o.groupKeys} plain>
+            <SettingRow
+              id="quickcapture--hotkey"
+              label={qs.hotkey}
+              description={o.hotkeyLine}
+              hint={qs.hotkeyHint}
+            >
               <HotkeyField
-                label={
-                  <>
-                    {t.quickCapture.settings.hotkey}{' '}
-                    <HelpHint text={t.quickCapture.settings.trayHelp} />
-                  </>
-                }
-                hint={t.quickCapture.settings.hotkeyHint}
                 value={prefs.hotkey}
                 defaultValue={DEFAULT_HOTKEY}
                 apply={applyHotkey}
                 save={(hotkey) => writePrefs({ hotkey })}
                 testId="hotkey-record"
               />
+            </SettingRow>
+            <SettingRow
+              id="quickcapture--vaultHotkey"
+              label={qs.vaultHotkey}
+              description={o.vaultHotkeyLine}
+              hint={qs.vaultHotkeyHint}
+            >
               <HotkeyField
-                label={t.quickCapture.settings.vaultHotkey}
-                hint={t.quickCapture.settings.vaultHotkeyHint}
                 value={prefs.vaultHotkey}
                 apply={applyVaultHotkey}
                 save={(vaultHotkey) => writePrefs({ vaultHotkey })}
                 testId="vault-hotkey-record"
               />
-            </Step>
-            <Step n={3} title={c.stepBackground} hint={c.stepBackgroundHint}>
+            </SettingRow>
+          </SettingsGroup>
+          <SettingsGroup id="quickcapture-background" title={o.groupBackground} plain>
+            <SettingRow
+              id="quickcapture--closeToTray"
+              label={qs.closeToTray}
+              description={o.closeToTrayLine}
+              hint={qs.trayHelp}
+            >
               <Switch
-                label={t.quickCapture.settings.closeToTray}
+                label={qs.closeToTray}
+                labelHidden
                 checked={prefs.closeToTray}
                 onChange={(closeToTray) => {
                   writePrefs({ closeToTray });
                   void desktop.setCloseToTray(closeToTray);
                 }}
               />
+            </SettingRow>
+            <SettingRow
+              id="quickcapture--trayToday"
+              label={qs.trayToday}
+              description={o.trayTodayLine}
+              hint={qs.trayTodayHint}
+            >
               <Switch
-                label={t.quickCapture.settings.trayToday}
-                hint={t.quickCapture.settings.trayTodayHint}
+                label={qs.trayToday}
+                labelHidden
                 checked={prefs.trayToday}
                 onChange={(trayToday) => {
                   writePrefs({ trayToday });
                   refreshTrayToday();
                 }}
               />
+            </SettingRow>
+            <SettingRow
+              id="quickcapture--autostart"
+              label={qs.autostart}
+              description={o.autostartLine}
+              hint={portable ? qs.autostartPortable : undefined}
+            >
               <Switch
-                label={t.quickCapture.settings.autostart}
+                label={qs.autostart}
+                labelHidden
                 checked={prefs.autostart}
                 onChange={(v) => void toggleAutostart(v)}
               />
-              {error ? (
-                <p role="alert" className={styles.muted}>
-                  {error}
-                </p>
-              ) : null}
-              {portable ? (
-                <p className={styles.muted}>{t.quickCapture.settings.autostartPortable}</p>
-              ) : null}
+            </SettingRow>
+            {error ? (
+              <p role="alert" className={styles.muted}>
+                {error}
+              </p>
+            ) : null}
+            <SettingRow
+              id="quickcapture--clipboard"
+              label={qs.clipboard}
+              description={o.clipboardLine}
+              hint={qs.clipboardHint}
+            >
               <Switch
-                label={t.quickCapture.settings.clipboard}
-                hint={t.quickCapture.settings.clipboardHint}
+                label={qs.clipboard}
+                labelHidden
                 checked={prefs.clipboard}
                 onChange={(clipboard) => writePrefs({ clipboard })}
               />
-            </Step>
-          </>
-        ) : (
-          <p className={styles.muted}>{t.quickCapture.settings.desktopOnly}</p>
-        )}
-      </div>
-    </Card>
+            </SettingRow>
+          </SettingsGroup>
+        </>
+      ) : (
+        <p className={styles.muted}>{qs.desktopOnly}</p>
+      )}
+    </div>
   );
 }

@@ -27,7 +27,7 @@ async function save(page: Page) {
 }
 
 async function finishSetup(page: Page) {
-  await ready(page, '/settings/ueber');
+  await ready(page, '/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
   const dialog = wizard(page);
   // A fresh installation opens the three questions; this run wants the full list.
