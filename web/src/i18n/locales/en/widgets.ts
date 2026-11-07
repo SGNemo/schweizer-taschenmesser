@@ -33,4 +33,7 @@ export const widgets: Strings['widgets'] = {
   kpiAvailable: (amount: string) => `${amount} available`,
   kpiMonthNet: (amount: string) => `${amount} this month`,
   kpiSeries: 'Balance at month end, last 6 months',
+  valueHidden: 'Hidden',
+  valueReveal: 'Tap to show',
+  valueRehide: 'Hide again',
 };
