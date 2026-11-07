@@ -61,7 +61,7 @@ taschenmesser-local-api = { path = "crates/local-api" }
 taschenmesser-lan-sync = { path = "crates/lan-sync" }
 # Raw hub keys (static Noise key, data key) in the OS keystore, like the secure-store plugin; own service name.
 zeroize = "1"
-keyring = { version = "3", features = ["windows-native", "apple-native", "linux-native"] }
+keyring = { version = "=3.6.3", features = ["windows-native", "apple-native", "linux-native"] }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
 # Built-in browser: URL policy and ad/tracker blocker decisions (src/browser.rs).
