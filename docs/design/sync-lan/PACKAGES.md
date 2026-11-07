@@ -125,13 +125,13 @@ CONCEPT §3 (Form von b), §6, §7; `web/src/core/sync/{types,engine,service}.ts
 - Cargo-Features `hub`/`client` in `crates/lan-sync`: der Android-Build enthält nur `client` (kein Store, kein `rusqlite`); Bundle-Größe der APK vorher/nachher.
 - `crates/lan-sync/client` für Android und zweiten PC (Noise-Initiator `IK`/`IKpsk1`, `hello`-Rahmen, Pinning; eine verworfene Verbindung beim Koppeln = „Kopplung nicht möglich – am PC neu zeigen“, sonst `network`); Entdeckung als Trait: Desktop `mdns-sd`, Android vorerst nur Adress-Hinweis (Paket 4 speist `NsdManager`-Ergebnisse ein).
 - Statischer Client-Schlüssel: in Rust erzeugt, gespeichert über `secure-store` (Android) bzw. den Desktop-Schlüsselspeicher aus Paket 2b; API im PR belegen; Test: nie im Backup.
-- E2E: zwei App-Instanzen (Playwright, Tauri-Mock oder Test-Hub-Binary) koppeln, Änderung auf A erscheint auf B, Konflikt nach Feld-LWW, PC aus → Status ruhig, Outbox wächst.
+- Kein Playwright-Zweiinstanzen-E2E (die Web-App läuft dort ohne Tauri, der Hub lebt in der Rust-Schale, F10). Stattdessen: Rust-Integrationstest in `crates/lan-sync` (`#[cfg(test)]`: zwei `client`-Instanzen gegen einen In-Prozess-Hub über Loopback – koppeln, Änderung von A erscheint bei B, Konflikt nach Feld-LWW, Hub aus → Client meldet `network`) + vitest für `adapters/lan.ts` gegen ein Fake-`lanSync.request` (Seitengrößen, Fehlercodes, `revoked` nur nach authentisierter Antwort).
 
 ## Nicht in diesem Paket
 Einstellungs-UI über eine Test-Schaltfläche hinaus, Android-Plugin (WLAN-Auslöser), Hintergrund-Abgleich, Tailscale.
 
 ## Abnahme
-- `npm run check`, `test`, `e2e` (inkl. `e2e:sync` unverändert grün), Rust-Checks; `exclusion.test.ts`/`privacy.test.ts` unverändert; Test „Schlüssel und Kopplungsdaten nie in Backup/Diagnose“.
+- `npm run check`, `test`, `e2e` (`e2e:sync` unverändert grün; kein neuer Zweiinstanzen-Lauf), Rust-Checks; `exclusion.test.ts`/`privacy.test.ts` unverändert; Test „Schlüssel und Kopplungsdaten nie in Backup/Diagnose“.
 - Docs: decisions core.md „Sync“, ARCHITECTURE-MAP Zeile, STATUS eine Zeile.
 
 ## Skills
@@ -163,7 +163,7 @@ CONCEPT §2 (Nutzungsbild, drei Schritte ohne Eintippen), §6 (Android), §8 (UI
   - Schalter: „Mit Windows starten / Start with Windows“, „Im Tray weiterlaufen / Keep running in the tray“, „Damit dein Handy abgleichen kann, wenn du heimkommst / So your phone can sync when you get home“, „Nemo startet nicht mit Windows · Ändern / Nemo does not start with Windows · Change“, „Nemo läuft nach dem Schließen nicht weiter · Ändern / Nemo does not keep running after closing · Change“; „Eigener Server (erweitert) / Own server (advanced)“.
   - Umstieg: „Vom Server auf das Heimnetz umstellen / Switch from server to home network“, „Zuerst eine Sicherung / Backup first“, „Diese Geräte gleichen weiter über den Server ab, bis du sie auch umstellst: / These devices keep syncing through the server until you switch them too:“, „Am Server sperren / Lock on server“, „Vom Server trennen / Disconnect from server“.
 - Umstieg Server → LAN: Dialog mit Pflicht-Backup zuerst, Liste der Geräte, die der Server noch kennt (mit „Am Server sperren“), dann Trennen, dann Koppeln (CONCEPT §7).
-- Doku: `docs/user/sync.md` + `.de.md` neuer erster Abschnitt „Im Heimnetz mit dem PC“; Server-Abschnitt bleibt; MANUAL-TESTS: Koppeln, Handy kommt heim (App offen / App im Hintergrund / App geschlossen), PC aus, Gäste-WLAN, Kopplung lösen, Windows-Firewall beim ersten Koppeln; Messung Entdeckung/erster Abgleich auf echtem Handy in die Tabelle CONCEPT §9 nachtragen.
+- Doku: `docs/user/sync.md` + `.de.md` neuer erster Abschnitt „Im Heimnetz mit dem PC“; Server-Abschnitt bleibt; MANUAL-TESTS: echter Zweigeräte-Lauf (Handy + PC koppeln, Änderung hin und zurück, Feld-Konflikt, PC aus → ruhiger Status; ersetzt den E2E aus Paket 3, F10), Koppeln, Handy kommt heim (App offen / App im Hintergrund / App geschlossen), PC aus, Gäste-WLAN, Kopplung lösen, Windows-Firewall beim ersten Koppeln; Messung Entdeckung/erster Abgleich auf echtem Handy in die Tabelle CONCEPT §9 nachtragen.
 
 ## Nicht in diesem Paket
 Hintergrund-Abgleich (WorkManager), Tailscale, Änderungen an Protokoll oder Crate außer Fehlerbehebungen.
