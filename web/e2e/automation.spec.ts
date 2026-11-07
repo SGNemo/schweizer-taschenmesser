@@ -41,7 +41,10 @@ test.describe('Automatisierungen', () => {
     const section = page.locator('section[aria-labelledby="automation"]');
     await section.getByRole('switch', { name: 'Automatisierungen verwenden' }).click();
     await openFoldedGroup(page, 'automation', 'templates');
-    await section.getByRole('switch', { name: 'Wochenrückblick einschalten' }).click();
+    const rule = section.getByRole('switch', { name: 'Wochenrückblick einschalten' });
+    await rule.click();
+    // The switch shows the stored value: wait for it, or `enable()` reloads the page before the rule is saved.
+    await expect(rule).toHaveAttribute('aria-checked', 'true');
     await enable(page, 'todos');
 
     await page.keyboard.press('Control+k');
