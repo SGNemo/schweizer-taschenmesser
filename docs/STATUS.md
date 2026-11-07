@@ -5,6 +5,8 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 ## Nächste eine Sache
 
 Sprachen nur Deutsch + Englisch (`feat/lang-de-en`, PR offen): `ACTIVE_LOCALES = ['de', 'en']`, es/fr/pt-BR eingefroren statt gelöscht ([i18n/FROZEN.md](i18n/FROZEN.md)), Gerät mit eingefrorener Sprache fällt ruhig auf Englisch, Website leitet /es, /fr, /pt-br auf /en.
+Sync im Heimnetz (`design/sync-lan-concept`, PR offen; Svens Antworten 2026-11-07: alle Empfehlungen, Fable-Kontrolle offen): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); danach Paket 1.
+Lokales Modell klarer (`fix/local-model-clarity`, PR offen): Text je Fall (Browser, Android, Testversion mit „Normale Version holen“), mit Modell „Nächster Schritt“ (2–3 Modelle → Fortschritt → Testfrage), Ollama-/Einrichtungs-Hinweis nur mit Modell, KI-Statistik leer = ein Satz, Dev-Preview (Windows) baut mit `local-llm-vulkan` (+≈2 min warm).
 
 Planer, Pakete 1–5 abgeschlossen (#492, #495, #498, #500, #501; Sweep #497): Engine `core/plan`, Wochenbrett, Kalender-Chip und Zeitblöcke im Stundenraster, Sätze im Feld (Regeln + lokales Modell), Notizen/Rechnungen/Abos als Quellen, Zeitfenster und Wochen-Vorlagen; Modul jetzt `stable` (in der Bibliothek ohne „In Arbeit anzeigen“, standardmäßig aus). Danach eigene Konzepte: Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
 
@@ -14,6 +16,7 @@ Identität v3.1, Abnahme-Sweep (`qa/identity-v3-sweep`, PR offen): alle Fund-Ids
 
 Identität v3.1, Paket 1 Planen + Geld (`feat/identity-v3-plan-money-fix`, PR offen): zwölf Module inkl. Planer auf dem v3.1-Rahmen – Rechnungen `fokus` mit offener Summe, `bill`-Marke und „Nächste bezahlen“, Budgets mit `Envelope`-Karten, Abos-Ring in 12 Segmenten, Gewohnheiten-Widget mit Ringen, Karten mit Kategorie-Kacheln, Zeiterfassung mit Stoppuhr (`Stopwatch`), ToDos-Kopf ohne Abschneiden am Telefon, Kalender-Kopf ohne Termine mit nächster Handlung, Leerzustände auf `EmptyState motif` mit einem Verb; Fenster-Queries auf Seitenbreite.
 
+Umzug v2 (`feat/import-v2`, PR offen): ein Zettel „Woher kommst du?“ → Dateien/ZIP → Erkennung mit Begründung, Sicherheit und Anzahl → Vorschau → ganzer Umzug rückgängig (Karte „Letzte Umzüge“); neu TickTick, Kontakte (vCard), Browser-Lesezeichen; Todoist-ZIP in einer Vorschau, Wiederholungen und Dauern aus Todoist/TickTick; UTF-16/BOM; [features/import-v2.md](features/import-v2.md).
 Planer, Restfunde der Abnahme (`fix/planner-sweep`, PR offen): N01 Brett ohne Umbruch im Wort (zwei Zeilen + „…“, sieben Spalten ab 95rem), N02 ToDo-„Heute“ folgt bei aktivem Planer dessen späterem Tag, „Alle auf heute“ weg, N03 Icon `chartGantt`, N04 ⋯ neben „Eintragen“; Website zeigt das Desktop-Brett.
 
 Identität v3.1, Paket 3 Dieser PC (`feat/identity-v3-disk`, PR offen): Kopf `fortschritt` mit belegtem Platz des Systemlaufwerks, Zustand als Badge und Laufwerks-Ringen im Slot M; Widget-Ringe in der Modulfarbe; Baumkarten-Palette auf `--mod-*`/Zustands-Tokens statt Hex; Downloads mit `ArrowBand` aus der Bibliothek.

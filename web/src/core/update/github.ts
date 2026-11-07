@@ -6,6 +6,9 @@ import type { UpdateChannel } from './types';
 export const REPO = 'SGNemo/schweizer-taschenmesser';
 export const RELEASES_API = `https://api.github.com/repos/${REPO}/releases?per_page=30`;
 
+/** Page of the newest stable release (where the regular Windows app and APK are downloaded). */
+export const STABLE_RELEASE_PAGE = `https://github.com/${REPO}/releases/latest`;
+
 export const STABLE_MANIFEST_URL = `https://github.com/${REPO}/releases/latest/download/latest.json`;
 /**
  * APK + checksum pairs, newest name first. Releases carry the same signed file under the legacy name

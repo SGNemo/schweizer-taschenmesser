@@ -14,6 +14,9 @@
 | Notion | "Markdown & CSV" ZIP | notes | `Title <id>.md` pages: id dropped, property block kept, `Tags` → `#tags`, links between exported pages → `[[wikilinks]]`, wrapper folder skipped, top folder → notebook; images/files and CSV tables counted, not read |
 | Feed and podcast apps | OPML (`.opml`, `.xml`), or pasted addresses | feeds | folders → groups, nested folders use the innermost name, non-http(s) addresses counted; the Feeds page exports the list as OPML 2.0 (`nemo-feeds-<date>.opml`); Spotify has no feed export (only podcast apps do) |
 | Bitwarden / KeePass(XC) / 1Password | CSV | vault | mapping only in `accounts/csv.ts` (`importVaultCsv`); needs the master password, crypto untouched |
+| TickTick | backup CSV | todos | v2: lists, subtasks, RRULE repeats, start–due span → `estimateMin`, days in the task's time zone |
+| Contacts (Google, Apple, Outlook) | `.vcf` | people | v2: cards with a birthday; the others are counted |
+| Browser bookmarks | Netscape HTML | bookmarks | v2: Chrome, Firefox, Edge, Safari, Brave export |
 | German banks | CSV, CAMT, OFX, QIF | finance | presets for Sparkasse, DKB, ING, comdirect, N26 existed |
 
 Todoist JSON backup is not read (the CSV is the documented export). The header names of the KeePass, 1Password and Outlook CSVs vary by version and language and could not be checked against official docs; the readers match aliases, so report an unknown header as a bug.

@@ -1,4 +1,4 @@
-import { best, extOf, head } from '../helpers';
+import { best, countAll, extOf, head } from '../helpers';
 import type { SourceDef } from '../types';
 
 export const source: SourceDef = {
@@ -7,4 +7,5 @@ export const source: SourceDef = {
   extensions: ['enex'],
   detect: (files) =>
     best(files, (f) => (extOf(f.name) === 'enex' ? 1 : /<en-export[\s>]/.test(head(f)) ? 1 : 0)),
+  summarize: (files) => ({ notes: countAll(files, /<note>/g) }),
 };

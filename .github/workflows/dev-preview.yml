@@ -225,6 +225,9 @@ jobs:
       run:
         working-directory: web
         shell: bash
+    env:
+      # Short target path for llama.cpp's nested CMake builds (same as release.yml).
+      CARGO_TARGET_DIR: C:/t
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -237,11 +240,26 @@ jobs:
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
+      # C:/t is cached as an extra directory (rust-cache does not follow CARGO_TARGET_DIR); own key, because the
+      # build now carries the local model (llama.cpp + Vulkan) and the thin-LTO profile below.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-dev-thin
+          shared-key: windows-dev-thin-llm
+          cache-targets: false
+          cache-directories: C:/t
       - run: npm ci
+      # The Dev-Preview carries the built-in local model like the release (decisions/local-model.md):
+      # without it, testers cannot try "Lokales Modell". Measured before the change: same commit 6edfafd,
+      # release Windows job (with the model) 8:25 min vs. Dev-Preview 6:22 min, both on a warm cache.
+      - name: Vulkan SDK (for the local model's GPU backend)
+        shell: pwsh
+        run: |
+          choco install vulkan-sdk -y --no-progress
+          $sdk = (Get-ChildItem 'C:\VulkanSDK' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          if (-not $sdk) { throw 'Vulkan SDK not found after install' }
+          "VULKAN_SDK=$sdk" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "$sdk\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       # Own identifier (…taschenmesser.dev), name "Nemo Dev", version from the prepare job; the frontend is
       # built with the dev flags (badge, dev update channel). package.json is not touched.
@@ -258,7 +276,15 @@ jobs:
           # restored as an exact hit and nothing is ever saved for this one.
           CARGO_PROFILE_RELEASE_LTO: 'false'
           CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '16'
-        run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG" --config "$TAURI_FRONTEND_CONFIG" -- --locked
+          # llama.cpp's Vulkan shader generator needs Ninja on Windows (see release.yml).
+          CMAKE_GENERATOR: Ninja
+        run: npx tauri build --no-bundle --config src-tauri/tauri.dev.conf.json --config "$TAURI_VERSION_CONFIG" --config "$TAURI_FRONTEND_CONFIG" -- --features local-llm-vulkan --locked
+
+      - name: Put the executable where the next steps expect it
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/target/release
+          cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
       - name: Sign with the updater key
         env:

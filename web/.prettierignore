@@ -13,3 +13,5 @@ dist-e2e-seed
 dist-bundle
 src/pages/settings/inventory.*.json
 src/core/about/licenses.json
+# Invented export fixtures keep the exact (not well-formed) shape of the real files
+src/importers/__fixtures__/*.html

@@ -35,6 +35,21 @@ export interface SourceTarget {
   route?: string;
 }
 
+/** What a "recognised" line counts (`t.importers.units`). Counts only – never content. */
+export type SummaryUnit =
+  | 'projects'
+  | 'lists'
+  | 'tasks'
+  | 'notes'
+  | 'events'
+  | 'contacts'
+  | 'bookmarks'
+  | 'transactions'
+  | 'feeds'
+  | 'entries';
+
+export type SourceSummary = Partial<Record<SummaryUnit, number>>;
+
 /** The contract every source folder fulfils. */
 export interface SourceDef {
   id: string;
@@ -44,6 +59,11 @@ export interface SourceDef {
   extensions: string[];
   /** 0 = not this source … 1 = certain. Looks at names and the start of the content only. */
   detect(files: readonly SourceFile[]): number;
+  /**
+   * Counts for the "recognised" line ("3 Projekte, 214 Aufgaben"), from the files this source
+   * recognised. Cheap (no full import), runs before the preview; omitted = no counts shown.
+   */
+  summarize?(files: readonly SourceFile[]): SourceSummary;
 }
 
 /** Entry of the "which app is this from?" list; `confidence` is 0..1. */

@@ -7,6 +7,7 @@
 - **Models:** open licences only (Apache-2.0, MIT). Not bundled; the catalogue is data (`catalogue.json`), downloads are locked until `revision` and `sha256` are pinned. The choice between candidates is the maintainer's, based on `npm run ai:eval` tables; first round and a preliminary recommendation (Qwen3 4B for Standard, Leicht open) in [features/local-model-eval.md](../features/local-model-eval.md).
 - **Not in scope here:** Android (CPU "Leicht" profile is a proposal), PWA (no built-in model).
 - **Size:** +4.9 MB Linux release exe with the feature (CPU build).
+- **Dev-Preview builds with `local-llm-vulkan` too (2026-11-06):** measured warm cost ≈ +2 min on the Windows job (same commit: release 8:25 vs. preview 6:22); without it testers saw "built without" and could not try the model. Where a build lacks it, the UI names the case (browser, Android, test version, other build, CPU) via `core/ai/local/availability.ts`, and hints only send users to "Lokales Modell" when it can be downloaded there.
 
 ## Chat module (PR C)
 
