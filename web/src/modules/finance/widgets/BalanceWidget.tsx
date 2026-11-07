@@ -49,43 +49,50 @@ export default function BalanceWidget() {
     : undefined;
   const firstBalance =
     first && data ? (balances(data.accounts, data.txs, day).get(first.id) ?? 0) : 0;
+  const body = (
+    <>
+      {/* The module's signature in small (identity v2): the first account as a card; the figure below is the total. */}
+      {size !== 's' && data && first && data.accounts.length > 1 ? (
+        <BankCard compact name={first.name} balance={formatMoney(firstBalance, currency)} />
+      ) : null}
+      {/* The kennzahl shape (identity v3.1, KpiWidget = WidgetBody + KennzahlBody): figure, context line, trend, sparkline at l. */}
+      <KpiWidget
+        loading={loading && !noAccounts}
+        value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
+        empty={t.finance.noAccounts}
+        emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
+        context={
+          [
+            a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
+            others,
+            expenseChange,
+          ]
+            .filter(Boolean)
+            .join(' · ') || t.finance.headline.accounts(data?.accounts.length ?? 0)
+        }
+        trend={
+          net !== 0
+            ? {
+                direction: net > 0 ? 'up' : 'down',
+                text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
+              }
+            : undefined
+        }
+        series={series}
+        seriesLabel={t.widgets.kpiSeries}
+      />
+    </>
+  );
   return (
     <>
-      {/* Hidden amounts ("Werte ausblenden"): one placeholder for figure, context, trend and chart; the account count has no amount. */}
-      <SensitiveValue
-        note={noAccounts ? undefined : t.finance.headline.accounts(data?.accounts.length ?? 0)}
-      >
-        {/* The module's signature in small (identity v2): the first account as a card; the figure below is the total. */}
-        {size !== 's' && data && first && data.accounts.length > 1 ? (
-          <BankCard compact name={first.name} balance={formatMoney(firstBalance, currency)} />
-        ) : null}
-        {/* The kennzahl shape (identity v3.1, KpiWidget = WidgetBody + KennzahlBody): figure, context line, trend, sparkline at l. */}
-        <KpiWidget
-          loading={loading && !noAccounts}
-          value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
-          empty={t.finance.noAccounts}
-          emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-          context={
-            [
-              a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
-              others,
-              expenseChange,
-            ]
-              .filter(Boolean)
-              .join(' · ') || t.finance.headline.accounts(data?.accounts.length ?? 0)
-          }
-          trend={
-            net !== 0
-              ? {
-                  direction: net > 0 ? 'up' : 'down',
-                  text: t.widgets.kpiMonthNet(`${net > 0 ? '+' : ''}${formatMoney(net, currency)}`),
-                }
-              : undefined
-          }
-          series={series}
-          seriesLabel={t.widgets.kpiSeries}
-        />
-      </SensitiveValue>
+      {/* Hidden amounts ("Werte ausblenden"): only real data is masked, never the loading or empty state. */}
+      {loading || noAccounts ? (
+        body
+      ) : (
+        <SensitiveValue note={t.finance.headline.accounts(data?.accounts.length ?? 0)}>
+          {body}
+        </SensitiveValue>
+      )}
       {/* The one thing done most often: an expense, one click away (opens the booking dialog). */}
       {size !== 's' && !noAccounts ? (
         <Button

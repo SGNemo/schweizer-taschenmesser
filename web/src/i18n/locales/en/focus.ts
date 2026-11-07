@@ -5,7 +5,16 @@ export const focus: Strings['focus'] = {
     title: 'Focus & attention',
     description:
       'Aids for keeping track, getting started and staying with it. Each can be turned off on its own.',
-    keywords: ['Focus', 'Attention', 'Timer', 'Calm', 'next task', 'Day plan'],
+    keywords: [
+      'Focus',
+      'Attention',
+      'Hide amounts',
+      'Privacy',
+      'Timer',
+      'Calm',
+      'next task',
+      'Day plan',
+    ],
     nextOne: 'One next thing',
     nextOneHint: 'Shows a single task to start with at the top of the overview.',
     dayPlan: 'Day plan',

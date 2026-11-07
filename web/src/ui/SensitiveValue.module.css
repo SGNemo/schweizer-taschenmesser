@@ -1,9 +1,10 @@
 .mask {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   min-width: var(--touch);
   min-height: var(--touch);
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-md);
   background: var(--surface-2);
@@ -12,10 +13,28 @@
   font-size: var(--text-xl);
   letter-spacing: 0.15em;
   cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease-out);
 }
-.mask:hover {
-  opacity: 0.8;
+.mask:focus-visible,
+.again:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.hint {
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+}
+.again {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
 }
 .note {
   color: var(--text-muted);

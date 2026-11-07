@@ -1172,7 +1172,16 @@ export const de = {
       title: 'Fokus & Aufmerksamkeit',
       description:
         'Hilfen für Überblick, Anfangen und Dranbleiben. Jede lässt sich einzeln ausschalten.',
-      keywords: ['Fokus', 'Aufmerksamkeit', 'Timer', 'Ruhe', 'nächste Aufgabe', 'Tagesplan'],
+      keywords: [
+        'Fokus',
+        'Aufmerksamkeit',
+        'Werte ausblenden',
+        'Beträge verstecken',
+        'Timer',
+        'Ruhe',
+        'nächste Aufgabe',
+        'Tagesplan',
+      ],
       nextOne: 'Nächste eine Sache',
       nextOneHint: 'Zeigt oben auf der Übersicht eine einzige Aufgabe zum Anfangen.',
       dayPlan: 'Tagesplan',
@@ -2664,6 +2673,7 @@ export const de = {
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
     valueHidden: 'Ausgeblendet',
     valueReveal: 'Zum Einblenden tippen',
+    valueRehide: 'Wieder ausblenden',
   },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),

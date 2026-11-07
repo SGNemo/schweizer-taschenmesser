@@ -35,4 +35,5 @@ export const widgets: Strings['widgets'] = {
   kpiSeries: 'Balance at month end, last 6 months',
   valueHidden: 'Hidden',
   valueReveal: 'Tap to show',
+  valueRehide: 'Hide again',
 };

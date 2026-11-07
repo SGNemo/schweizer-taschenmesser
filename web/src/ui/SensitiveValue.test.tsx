@@ -26,6 +26,10 @@ describe('SensitiveValue', () => {
     expect(screen.getByText('2 Konten')).toBeTruthy();
     await userEvent.click(btn);
     expect(screen.getByText('1.234,56 €')).toBeTruthy();
+    // A way back: "Wieder ausblenden" hides the figure again.
+    await userEvent.click(screen.getByRole('button', { name: 'Wieder ausblenden' }));
+    expect(screen.queryByText('1.234,56 €')).toBeNull();
+    expect(screen.getByTestId('sensitive-value')).toBeTruthy();
   });
 
   it('persists the setting', async () => {
