@@ -19,6 +19,8 @@ pub mod endpoint;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod hub;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod keys;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod pairing;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod supervisor;
