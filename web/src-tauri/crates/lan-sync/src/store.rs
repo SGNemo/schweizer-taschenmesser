@@ -170,19 +170,25 @@ impl Store {
             "SELECT collection, id, field, hlc, value, seq FROM field_state
              WHERE seq > ?1 ORDER BY seq LIMIT ?2",
         )?;
-        let rows = stmt.query_map(params![since, i64::try_from(limit).unwrap_or(i64::MAX).saturating_add(1)], |r| {
-            Ok((
-                FieldOp {
-                    collection: r.get(0)?,
-                    id: r.get(1)?,
-                    field: r.get(2)?,
-                    hlc: r.get(3)?,
-                    value: serde_json::Value::Null,
-                },
-                r.get::<_, String>(4)?,
-                r.get::<_, i64>(5)?,
-            ))
-        })?;
+        let rows = stmt.query_map(
+            params![
+                since,
+                i64::try_from(limit).unwrap_or(i64::MAX).saturating_add(1)
+            ],
+            |r| {
+                Ok((
+                    FieldOp {
+                        collection: r.get(0)?,
+                        id: r.get(1)?,
+                        field: r.get(2)?,
+                        hlc: r.get(3)?,
+                        value: serde_json::Value::Null,
+                    },
+                    r.get::<_, String>(4)?,
+                    r.get::<_, i64>(5)?,
+                ))
+            },
+        )?;
         let mut page = Vec::new();
         for row in rows {
             let (mut op, raw, seq) = row?;
