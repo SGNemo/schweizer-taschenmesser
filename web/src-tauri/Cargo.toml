@@ -57,6 +57,8 @@ tauri-plugin-autostart = "2"
 tauri-plugin-single-instance = "2"
 # Local AI import API (loopback only, off by default; src/local_api.rs).
 taschenmesser-local-api = { path = "crates/local-api" }
+# Home-network sync hub (desktop only; package 1 = the field store, see docs/design/sync-lan).
+taschenmesser-lan-sync = { path = "crates/lan-sync" }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
 # Built-in browser: URL policy and ad/tracker blocker decisions (src/browser.rs).

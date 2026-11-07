@@ -1,0 +1,19 @@
+[package]
+name = "taschenmesser-lan-sync"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "Home-network sync hub of the desktop app. Package 1: the field store with last-write-wins, pinned by contract/*.json. No Tauri, no network, so it is unit-tested on any machine."
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "lan_sync"
+
+[dependencies]
+# SQLite is compiled in (like better-sqlite3 in the Node server): no system library needed.
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+getrandom = "0.3"

@@ -8,7 +8,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Path | What |
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
-| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info` |
+| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info`, `lan-sync` (home-network hub store, no network yet) |
 | `design/logo-v2/` | Logo workshop (no dependencies of its own, not part of the app; renders with Playwright from `web/`): parametric master (`mark.mjs`, `wordmark.mjs`), the chosen parameters `final.params.mjs`, `node export.mjs` → `web/brand/*.svg` + `Logo.tsx` + splash, preview sheets and screenshots per round in `rounds/` (`docs/HOW-TO.md` → Icons) |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
