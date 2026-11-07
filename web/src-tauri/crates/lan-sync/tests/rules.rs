@@ -45,8 +45,13 @@ fn code_lines(text: &str) -> impl Iterator<Item = &str> {
 }
 
 fn assert_absent(needles: &[&str], only_under: Option<&str>) {
+    assert_absent_outside(needles, only_under, None);
+}
+
+fn assert_absent_outside(needles: &[&str], only_under: Option<&str>, except: Option<&str>) {
     for (name, text) in production_sources() {
-        if only_under.is_some_and(|d| !name.contains(d)) {
+        if only_under.is_some_and(|d| !name.contains(d)) || except.is_some_and(|d| name.contains(d))
+        {
             continue;
         }
         for line in code_lines(&text) {
@@ -59,17 +64,27 @@ fn assert_absent(needles: &[&str], only_under: Option<&str>) {
 
 #[test]
 fn no_sockets_or_async_runtime_outside_tests() {
-    assert_absent(
+    assert_absent(&["tokio", "async fn", "ToSocketAddrs"], None);
+    // sockets live in `src/transport` and nowhere else
+    assert_absent_outside(
         &[
-            "tokio",
             "TcpListener",
             "TcpStream",
             "UdpSocket",
-            "ToSocketAddrs",
             "SocketAddr",
-            "async fn",
+            "TcpSocket",
         ],
         None,
+        Some("src/transport"),
+    );
+}
+
+/// The transport never formats a peer address or a frame (no `{:?}`/`{}` of either).
+#[test]
+fn the_transport_formats_nothing() {
+    assert_absent(
+        &["{:?}", "format!", "to_string()", "write!("],
+        Some("src/transport"),
     );
 }
 
@@ -207,7 +222,7 @@ fn hub_modules_are_compiled_out_on_mobile() {
     let lib = fs::read_to_string(root().join("src/lib.rs")).unwrap();
     let gate = "#[cfg(not(any(target_os = \"android\", target_os = \"ios\")))]";
     let lines: Vec<&str> = lib.lines().map(str::trim).collect();
-    for module in ["pairing", "trust", "endpoint", "hub"] {
+    for module in ["pairing", "trust", "endpoint", "hub", "transport"] {
         let decl = format!("pub mod {module};");
         let at = lines
             .iter()
