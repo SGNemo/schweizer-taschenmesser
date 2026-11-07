@@ -1,8 +1,8 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test, type Page } from '@playwright/test';
-import { bootDev, seedApp } from './helpers';
+import { expect, type Page } from '@playwright/test';
+import { bootDev, SEED_TODAY, test } from './helpers';
 
 /**
  * Identity v3 frame test (docs/design/identity-v3/02-CONCEPT.md § 1): on the seeded Dev-Preview build, every module's
@@ -219,6 +219,8 @@ for (const vp of VIEWPORTS) {
       viewport: { width: vp.width, height: vp.height },
       isMobile: 'mobile' in vp,
       hasTouch: 'mobile' in vp,
+      // The small seed, loaded once per worker the way this test sets the app up (desktop from 900 px).
+      seeded: { scale: 'small', desktop: vp.width >= 900, preview: true },
     });
 
     for (const scheme of ['light', 'dark'] as const) {
@@ -235,7 +237,8 @@ for (const vp of VIEWPORTS) {
           );
         });
         await bootDev(page);
-        await seedApp(page, 'small');
+        await page.goto('/settings/entwickler');
+        await expect(page.getByTestId('seed-status')).toContainText(SEED_TODAY);
         await enableModules(page, MODULE_IDS);
         for (const path of PAGES) {
           await page.goto(path);

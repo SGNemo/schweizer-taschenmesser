@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+E2E-Tempo (`ci/e2e-speed`, PR offen): E2E-Jobs laufen nebeneinander (Smoke 3, Rest 8, Seed 2 Shards, Sync), Playwright-Schriften aus dem Cache, Seed einmal je Worker; `npm run e2e` = PR-Satz (Smoke + Sync, ~10 min), `e2e:full` = alles.
 Einstellungen auf Identität v3.1, Paket 1 (`design/settings-identity`, PR offen): eigener Reiter „Einrichtung“ (Fortschritt, nächster Schritt, eine Primäraktion), Schnellerfassung mit Live-Beispiel und Gruppen statt Nummern, Bausteine `SettingsHead`/`StatusCard`/`SettingsGroup plain`, Sync/KI/Über über die Bausteine; Paket 2–3 als Prompts in [settings-v3/PACKAGES.md](design/settings-v3/PACKAGES.md).
 Sprachen nur Deutsch + Englisch (`feat/lang-de-en`, PR offen): `ACTIVE_LOCALES = ['de', 'en']`, es/fr/pt-BR eingefroren statt gelöscht ([i18n/FROZEN.md](i18n/FROZEN.md)), Gerät mit eingefrorener Sprache fällt ruhig auf Englisch, Website leitet /es, /fr, /pt-br auf /en.
 Sync im Heimnetz (`design/sync-lan-concept`, PR offen; Svens Antworten 2026-11-07: alle Empfehlungen, Fable-Kontrolle offen): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); danach Paket 1.
