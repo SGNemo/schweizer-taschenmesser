@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-Sync im Heimnetz (`design/sync-lan-concept`, PR offen, wartet auf Sven): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); Paket 1 erst nach Svens Antworten.
+Sync im Heimnetz (`design/sync-lan-concept`, PR offen; Svens Antworten 2026-11-07: alle Empfehlungen, Fable-Kontrolle offen): Konzept „PC ist der Server“ – Empfehlung Rust-Hub im Desktop-Shell, Koppeln per QR ohne Tippen, Noise + E2E, nur private Adressen; Prototyp mit Messung, vier Paket-Prompts ([CONCEPT](design/sync-lan/CONCEPT.md), [PACKAGES](design/sync-lan/PACKAGES.md)); danach Paket 1.
 Lokales Modell klarer (`fix/local-model-clarity`, PR offen): Text je Fall (Browser, Android, Testversion mit „Normale Version holen“), mit Modell „Nächster Schritt“ (2–3 Modelle → Fortschritt → Testfrage), Ollama-/Einrichtungs-Hinweis nur mit Modell, KI-Statistik leer = ein Satz, Dev-Preview (Windows) baut mit `local-llm-vulkan` (+≈2 min warm).
 
 Planer, Pakete 1–5 abgeschlossen (#492, #495, #498, #500, #501; Sweep #497): Engine `core/plan`, Wochenbrett, Kalender-Chip und Zeitblöcke im Stundenraster, Sätze im Feld (Regeln + lokales Modell), Notizen/Rechnungen/Abos als Quellen, Zeitfenster und Wochen-Vorlagen; Modul jetzt `stable` (in der Bibliothek ohne „In Arbeit anzeigen“, standardmäßig aus). Danach eigene Konzepte: Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
