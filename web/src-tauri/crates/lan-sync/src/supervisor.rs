@@ -181,7 +181,7 @@ mod tests {
     use std::cell::RefCell;
     use std::net::IpAddr;
     use std::rc::Rc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
     struct Net(RefCell<Result<Vec<IfaceInfo>, NetError>>);
     impl NetworkInfo for Net {
