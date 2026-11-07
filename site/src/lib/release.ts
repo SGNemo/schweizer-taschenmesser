@@ -19,7 +19,7 @@ export interface ReleaseInfo {
 export const release = data as ReleaseInfo;
 
 /** Intl locale per page language. */
-const INTL: Record<Locale, string> = { de: 'de-DE', en: 'en-GB', es: 'es-ES', fr: 'fr-FR', 'pt-BR': 'pt-BR' };
+const INTL: Record<Locale, string> = { de: 'de-DE', en: 'en-GB' };
 
 /** 10331648 → "10,3 MB" (de) / "10.3 MB" (en), in the page language. */
 export function formatSize(bytes: number, locale: Locale): string {

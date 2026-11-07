@@ -2,7 +2,7 @@ import { currencyOf, DEFAULT_CURRENCY, formatMoney, sumMinor } from '@/core/mone
 import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useNavigate } from 'react-router';
-import { Button, KpiWidget, useWidgetSize } from '@/ui';
+import { Button, KpiWidget, SensitiveValue, useWidgetSize } from '@/ui';
 import { compareMonths } from '../analysis';
 import { BankCard } from '@/ui/identity';
 import { balances, currenciesOf, filterByCurrency, monthlyTrend, sortAccounts } from '../logic';
@@ -49,7 +49,7 @@ export default function BalanceWidget() {
     : undefined;
   const firstBalance =
     first && data ? (balances(data.accounts, data.txs, day).get(first.id) ?? 0) : 0;
-  return (
+  const body = (
     <>
       {/* The module's signature in small (identity v2): the first account as a card; the figure below is the total. */}
       {size !== 's' && data && first && data.accounts.length > 1 ? (
@@ -81,6 +81,18 @@ export default function BalanceWidget() {
         series={series}
         seriesLabel={t.widgets.kpiSeries}
       />
+    </>
+  );
+  return (
+    <>
+      {/* Hidden amounts ("Werte ausblenden"): only real data is masked, never the loading or empty state. */}
+      {loading || noAccounts ? (
+        body
+      ) : (
+        <SensitiveValue note={t.finance.headline.accounts(data?.accounts.length ?? 0)}>
+          {body}
+        </SensitiveValue>
+      )}
       {/* The one thing done most often: an expense, one click away (opens the booking dialog). */}
       {size !== 's' && !noAccounts ? (
         <Button

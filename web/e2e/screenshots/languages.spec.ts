@@ -3,12 +3,12 @@ import { expect, test } from '@playwright/test';
 import { bootDev, seedApp } from '../seed/helpers';
 
 /**
- * The overview in every UI language, with the shared invented test data of the Dev-Preview build
+ * The overview in every active UI language (de, en), with the shared invented test data of the Dev-Preview build
  * (entries stay German: they are data, not UI). Output: SCREENS_DIR (default docs/i18n/screenshots).
  * Not part of CI; run with `npm run screenshots -- languages.spec.ts`.
  */
 const OUT = process.env.SCREENS_DIR ?? '../docs/i18n/screenshots';
-const LANGS = { de: 'Schließen', en: 'Close', es: 'Cerrar', fr: 'Fermer', 'pt-BR': 'Fechar' };
+const LANGS = { de: 'Schließen', en: 'Close' };
 
 test('overview in every language', async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });

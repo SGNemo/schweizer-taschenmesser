@@ -18,6 +18,6 @@ Recipes for generated test data. Index: [HOW-TO](../HOW-TO.md). Commands run in 
 - Seed rows are registered in the local table `_seeds` before they are written; `readOutbox`, `markAllDirty` and `createBackup` skip them. With the switch on they are queued once and removal writes tombstones.
 
 ## Test data for E2E and screenshots
-- `npm run e2e:seed` runs project `seed-dev` (`e2e/seed/`): the app built with `--mode e2e-seed` (`.env.e2e-seed`, `VITE_RELEASE_CHANNEL=dev`) on :4174 (`build:e2e-seed`, `preview:e2e-seed`, folder `dist-e2e-seed`). `npm run e2e` runs it too; the other specs stay on the stable build.
+- `npm run e2e:seed` runs project `seed-dev` (`e2e/seed/`): the app built with `--mode e2e-seed` (`.env.e2e-seed`, `VITE_RELEASE_CHANNEL=dev`) on :4174 (`build:e2e-seed`, `preview:e2e-seed`, folder `dist-e2e-seed`). `npm run e2e:full` runs it too; the other specs stay on the stable build. Specs that need seeded data use `test` from `e2e/seed/helpers.ts` with `test.use({ seeded: { scale } })`: the seed loads once per worker through the real UI and every test gets a copy of its IndexedDB (`storageState({ indexedDB: true })`).
 - `bootDev(page)` fixes the clock to `SEED_TODAY` and switches the first-start auto-fill off; `seedApp(page, 'small')` loads through Settings → Entwickler.
 - `npm run screenshots` (project `seeded`) uses the same seeds (`SCREENS_SCALE`, default `medium`); the demo vault passphrase unlocks the accounts shot. Setup/disk screenshots stay on the stable build.

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { backSettled, ready } from './helpers';
 
 test.describe('Calendar: repeating shifts (QA V04)', () => {
   test('an appointment repeating every 2 weeks on Mo–Mi shows on exactly those days, end time visible', async ({
@@ -19,6 +19,8 @@ test.describe('Calendar: repeating shifts (QA V04)', () => {
       await dialog.getByRole('button', { name: day, exact: true }).click();
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    // The editor closes with an in-app URL change (its Back entry pops); a goto in that gap can be aborted.
+    await backSettled(page);
 
     await page.goto('/calendar?view=month&date=2026-11-02');
     await expect(

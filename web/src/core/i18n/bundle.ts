@@ -1,16 +1,16 @@
-import { getLang, useLang, type Lang } from './lang';
+import { getLang, useLang, type FrozenLang, type Lang } from './lang';
 import type { Shape } from './shape';
 
 export type { Shape } from './shape';
 
 /**
- * Every language except the German source, each with the source's shape. English is required;
- * a language left out falls back to English. New feature texts give every language; leave one out
- * only for a reason stated at the bundle (legal texts stay German and English).
+ * Every active language except the German source, each with the source's shape: English is
+ * required. Frozen languages (es, fr, pt-BR; docs/i18n/FROZEN.md) are kept as they are, never
+ * read and not type-checked, so a new German key never forces a frozen translation.
  */
 export type Translations<T> = { en: Shape<T> } & {
-  [L in Exclude<Lang, 'de' | 'en'>]?: Shape<T>;
-};
+  [L in Exclude<Lang, 'de' | 'en'>]: Shape<T>;
+} & { [L in FrozenLang]?: unknown };
 
 /**
  * Small text bundle that lives next to a feature instead of in `strings.ts`: German source plus
@@ -19,6 +19,7 @@ export type Translations<T> = { en: Shape<T> } & {
  */
 export function defineBundle<T extends object>(de: T, translations: Translations<T>) {
   const map = { de, ...translations } as unknown as Partial<Record<Lang, T>> & { de: T; en: T };
+  // Frozen languages are never the current language (`getLang()` only returns active ones).
   /** Current language, non-reactive (use in event handlers and plain functions). */
   const get = (): T => map[getLang()] ?? map.en;
   /** Current language, re-renders when the language changes. */

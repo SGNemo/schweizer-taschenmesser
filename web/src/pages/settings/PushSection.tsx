@@ -52,6 +52,7 @@ export function PushSection() {
         <p className={styles.muted}>{t.notifications.push.intro}</p>
         {state ? (
           <StateBanner
+            tinted={false}
             tone={state === 'on' ? 'ok' : state === 'denied' ? 'attention' : 'neutral'}
             title={t.notifications.push.state[state] ?? ''}
             testId="push-status"

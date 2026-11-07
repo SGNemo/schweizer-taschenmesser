@@ -45,6 +45,13 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     await expect(page.getByTestId('kpi-income')).toHaveText(/0,00\s€/);
   });
 
+  test('the history tab shows a calm empty state without enough data', async ({ page }) => {
+    await ready(page, '/finance?tab=trend');
+    await expect(page.getByTestId('net-worth-empty')).toContainText('Noch zu wenig Verlauf');
+    await page.getByTestId('net-worth-empty').getByRole('button').click();
+    await expect(page.getByRole('dialog', { name: 'Buchung hinzufügen' })).toBeVisible();
+  });
+
   test('a booking can be split over two categories', async ({ page }) => {
     await ready(page, '/finance?new=1');
     const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });

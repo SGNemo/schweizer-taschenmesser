@@ -1,4 +1,4 @@
-import type { Lang } from '@/core/i18n/lang';
+import type { ByLang } from '@/core/i18n/lang';
 import type { SeedContext, SeedModule, SeedRow, SeedRows } from '@/core/seed/types';
 
 // Category ids are the fixed finance defaults. Finance's seed puts the 1st-of-month items (rent,
@@ -14,21 +14,22 @@ const BUDGETS: readonly (readonly [string, number])[] = [
 ];
 
 /** Source text and its translations (en, es, fr, pt-BR); `seed` picks by language. */
-const L = (de: string, en: string, es: string, fr: string, pt: string): Record<Lang, string> => ({
-  de,
-  en,
-  es,
-  fr,
-  'pt-BR': pt,
-});
+const L = (
+  de: string,
+  en: string,
+  // Frozen languages (docs/i18n/FROZEN.md): kept where written, optional for new rows.
+  es?: string,
+  fr?: string,
+  pt?: string,
+): ByLang<string> => ({ de, en, es, fr, 'pt-BR': pt });
 
 /** [name, target cents, deadline in days (undefined = none), monthly deposit cents, note] */
 const GOALS: readonly (readonly [
-  Record<Lang, string>,
+  ByLang<string>,
   number,
   number | undefined,
   number,
-  Record<Lang, string> | undefined,
+  ByLang<string> | undefined,
 ])[] = [
   [
     L(

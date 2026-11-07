@@ -172,7 +172,8 @@ export function BackupSection() {
               </p>
             ) : null}
             <Actions>
-              <Button variant="primary" disabled={busy} onClick={() => void exportEncrypted()}>
+              {/* Secondary since settings identity v3.1: the tab's one filled action is "Verbinden" (Sync). */}
+              <Button disabled={busy} onClick={() => void exportEncrypted()}>
                 {t.backup.encryptedExport}
               </Button>
               <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>

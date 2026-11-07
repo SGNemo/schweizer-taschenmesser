@@ -1,4 +1,6 @@
-# Glossary – UI terms in five languages
+# Glossary – UI terms
+
+Active: Deutsch, English. Español, Français, Português columns: frozen ([FROZEN.md](FROZEN.md)), kept, not extended.
 
 German is the source (`web/src/strings.ts`). Use these terms everywhere in the catalogs (`web/src/i18n/locales/<lang>/`) so the same thing always has the same name. Missing a term? Add it here in the same PR as the text.
 

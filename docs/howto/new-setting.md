@@ -12,7 +12,7 @@ Settings live on `/settings/<category>`. The page, the search, the palette ("Ein
 - **Erweitert fold:** a category folds its rarely needed sections behind one "Erweitert" line when it also has Basis sections (`levelOf` in `registry/meta.ts`; a section can set `level: 'advanced'` itself). The state is remembered per category on this device (`core/settings/foldState.ts`, `tm-settings-adv`), default = "Alle Module Erweitert". Keep daily things in Basis: help, diagnostics, reset, legal, sync, backup, anything that can be switched on and run. A link, search hit or the TOC opens the fold by itself.
 - **Scope line** ("Nur auf diesem Gerät" / "Abgeglichen" / "Teils …"): `scopeOf` in `registry/meta.ts` (table for core sections, module sections are always synced); a section can set `scope` itself. No entry = no label.
 - **"Vom Standard abweichend":** a section with `reset: <ResetPlan>` also needs `defaults()` in the plan; the reset row (badge + button) only shows while the values differ (`core/settings/changed.ts`). Module fields get "Geändert · Auf Standard" per field and "Alle Einstellungen des Moduls auf Standard" on the module page, both with an undo toast, from the module's `defaults`.
-- **Explanation:** every field needs a one-sentence `help`. If a module wrote none, `strings.settingsHelp.ts` (keyed `<module>.<field>`, five languages) fills in; a test fails for a field with neither.
+- **Explanation:** every field needs a one-sentence `help`. If a module wrote none, `strings.settingsHelp.ts` (keyed `<module>.<field>`, German and English) fills in; a test fails for a field with neither.
 - **Preview** (`SettingExtras.tsx`: `SettingPreview`, `LookPreview`, `ReminderPreview`): static, nothing is sent or saved; show it inside the open group, not at rest (stimulus budget).
 - **Security note:** `core/settings/warnings.ts` maps a field anchor + value to a calm note (`SecurityNote`); it informs, never blocks.
 
@@ -45,7 +45,7 @@ Where a setting matters (widget, module header, dialog) show `<SettingsLink to={
 ## Quick switch, reset, search words
 - **Quick switch** (palette command per value + the quick bar in Settings): add an entry to the allow-list in `core/settings/quick.ts`. Appearance choices only; anything security related never goes in (tested).
 - **Reset** (button under the section, toast with "Rückgängig"): set `reset: <ResetPlan>` on the section in `sections.tsx` (`core/settings/reset.ts`). Opt-in; never for vault, auto-lock, keys, tokens, update channel, disk (tested).
-- **Everyday search words** for a section or one setting: `synonyms` in `strings.comfort.ts` (`<section>` or `<section>--<field>`, all five languages; a test rejects ids that do not exist).
+- **Everyday search words** for a section or one setting: `synonyms` in `strings.comfort.ts` (`<section>` or `<section>--<field>`, German and English; a test rejects ids that do not exist).
 - **Frequently used** (top of the settings list) is device-local, switched off by "Verlauf in der Suche", emptied by "Verlauf löschen" (`core/settings/frequent.ts`).
 
 ## Checks
@@ -55,4 +55,4 @@ Where a setting matters (widget, module header, dialog) show `<SettingsLink to={
 A new core section's component goes through `pages/settings/sectionChunks.ts` (`lazyOnline` wrapper), never a direct import in `sections.tsx`; metadata (title, keywords, fields) stays cheap and string-bundle based. Exception: sections that must work offline without a service worker (Sync, Backup).
 
 ## Search
-Sub-groups, sections and settings are found without extra work; give a new setting a real `label`, a core section its `keywords` and, for everyday words, an entry in `strings.comfort` `synonyms` (all five languages, the test checks the keys). A module setting shows its page block in the path (`group`/`level` in `manifest.settings.fields`). Only the quick switches (`core/settings/quick.ts`) can be changed inside a hit; do not add security settings there.
+Sub-groups, sections and settings are found without extra work; give a new setting a real `label`, a core section its `keywords` and, for everyday words, an entry in `strings.comfort` `synonyms` (German and English, the test checks the keys). A module setting shows its page block in the path (`group`/`level` in `manifest.settings.fields`). Only the quick switches (`core/settings/quick.ts`) can be changed inside a hit; do not add security settings there.

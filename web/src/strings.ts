@@ -1172,7 +1172,16 @@ export const de = {
       title: 'Fokus & Aufmerksamkeit',
       description:
         'Hilfen für Überblick, Anfangen und Dranbleiben. Jede lässt sich einzeln ausschalten.',
-      keywords: ['Fokus', 'Aufmerksamkeit', 'Timer', 'Ruhe', 'nächste Aufgabe', 'Tagesplan'],
+      keywords: [
+        'Fokus',
+        'Aufmerksamkeit',
+        'Werte ausblenden',
+        'Beträge verstecken',
+        'Timer',
+        'Ruhe',
+        'nächste Aufgabe',
+        'Tagesplan',
+      ],
       nextOne: 'Nächste eine Sache',
       nextOneHint: 'Zeigt oben auf der Übersicht eine einzige Aufgabe zum Anfangen.',
       dayPlan: 'Tagesplan',
@@ -1197,6 +1206,9 @@ export const de = {
       searchHistory: 'Verlauf in der Suche',
       searchHistoryHint:
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
+      hideValues: 'Werte ausblenden',
+      hideValuesHint:
+        'Beträge in der Kontostand-Karte zeigen ein neutrales Muster. Ein Tipp blendet sie ein, bis du die Ansicht verlässt. Gilt nur auf diesem Gerät.',
       more: 'Weitere Einstellungen',
       aids: 'Hilfen',
       aidsOn: (n: number, total: number) => `${n} von ${total} an`,
@@ -2659,6 +2671,9 @@ export const de = {
     kpiAvailable: (amount: string) => `${amount} verfügbar`,
     kpiMonthNet: (amount: string) => `${amount} in diesem Monat`,
     kpiSeries: 'Kontostand am Monatsende, letzte 6 Monate',
+    valueHidden: 'Ausgeblendet',
+    valueReveal: 'Zum Einblenden tippen',
+    valueRehide: 'Wieder ausblenden',
   },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
@@ -3104,6 +3119,7 @@ export const de = {
     tabs: {
       overview: 'Übersicht',
       transactions: 'Buchungen',
+      trend: 'Verlauf',
       accounts: 'Konten',
       categories: 'Kategorien',
     },
@@ -3129,6 +3145,12 @@ export const de = {
     expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
+    netWorthTitle: 'Gesamtstand am Monatsende',
+    netWorthChange: (amount: string, since: string) => `${amount} seit ${since}`,
+    netWorthUnchanged: (since: string) => `unverändert seit ${since}`,
+    netWorthEmpty: 'Noch zu wenig Verlauf',
+    netWorthEmptyHint:
+      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
     cardAvailable: (v: string) => `verfügbar ${v}`,
@@ -5278,6 +5300,8 @@ export const de = {
         genLength_32: '32 Zeichen',
         genSymbols: 'Browser-Erweiterung: Sonderzeichen verwenden',
         genAvoidAmbiguous: 'Browser-Erweiterung: Ähnliche Zeichen vermeiden (Il1O0)',
+        breachCheck:
+          'Passwörter beim Prüfen mit bekannten Datenlecks abgleichen (sendet nur die ersten 5 Zeichen eines Hashes)',
       },
     },
     pickEntry: 'Zugang auswählen',
@@ -5358,6 +5382,14 @@ export const de = {
       unavailable:
         'Die Stärkeprüfung braucht einmal Internet, um ihre Wörterbücher zu laden. Wiederverwendung und Alter wurden trotzdem geprüft.',
       openEntry: 'Öffnen',
+      breached: (n: number) => `In einem bekannten Datenleck gefunden (${n})`,
+      breachHint:
+        'Diese Passwörter tauchen in öffentlich bekannten Datenlecks auf. Es lohnt sich, sie bei Gelegenheit zu ersetzen.',
+      breachUnavailable:
+        'Der Abgleich mit bekannten Datenlecks ist gerade nicht verfügbar. Alles andere wurde trotzdem geprüft.',
+      breachChecking: 'Gleiche mit bekannten Datenlecks ab …',
+      breachNote:
+        'Abgleich mit bekannten Datenlecks ist an: Pro Passwort verlassen nur die ersten 5 Zeichen eines Hashes das Gerät.',
     },
     emergency: {
       open: 'Notfallblatt',

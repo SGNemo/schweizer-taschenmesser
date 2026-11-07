@@ -178,7 +178,7 @@ const LINKS = [
 
 export function LinksSection() {
   return (
-    <SettingsGroup id="links" title={a.links.title}>
+    <SettingsGroup id="links" title={a.links.title} plain>
       {LINKS.map((l) => (
         <SettingRow key={l.key} id={`links--${l.key}`} label={a.links[l.key]}>
           <Button onClick={() => void getPlatform().app.openUrl(l.url)}>{a.links.open}</Button>
@@ -194,7 +194,7 @@ export function DiagnosticsSection() {
   const [text, setText] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
   return (
-    <SettingsGroup id="diagnostics" title={d.title}>
+    <SettingsGroup id="diagnostics" title={d.title} plain>
       <SettingRow
         id="diagnostics--export"
         label={d.export.label}

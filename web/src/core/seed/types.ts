@@ -4,7 +4,7 @@
  * builds; this file holds types only, so importing it costs nothing in stable builds.
  */
 
-import type { Lang } from '@/core/i18n/lang';
+import type { KnownLang, Lang } from '@/core/i18n/lang';
 
 export type SeedScale = 'small' | 'medium' | 'large' | 'xl';
 /** Scales every seed test iterates and the settings page offers. `xl` is for measurements only. */
@@ -35,7 +35,9 @@ export interface Rng {
 }
 
 /** Seed text per language; `de` is required, the others fall back to it. */
-export type LocalizedSeedText<T = string> = { de: T } & Partial<Record<Exclude<Lang, 'de'>, T>>;
+export type LocalizedSeedText<T = string> = { de: T } & Partial<
+  Record<Exclude<KnownLang, 'de'>, T>
+>;
 
 export interface SeedContext {
   rng: Rng;

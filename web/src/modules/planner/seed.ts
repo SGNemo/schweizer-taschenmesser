@@ -109,24 +109,39 @@ function seed(ctx: SeedContext): SeedRows {
   return { day: days, item: items };
 }
 
+/** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions). */
+const SEED_SOURCES: readonly (readonly [string, string])[] = [
+  ['todos', 'task'],
+  ['invoices', 'invoice'],
+  ['subscriptions', 'subscription'],
+];
+
 /**
  * The first run over the test data, inside the seed: the rows for the todos seed's tasks are test data
  * too (registered, gone with „entfernen“). Rows and marks of a person's own things stay theirs – only
- * rows whose thing is a registered seed task are returned; a day row the run itself writes does not
+ * rows whose thing is a registered seed row of a planner source are returned; a day row the run itself writes does not
  * exist (runs never create days), so every day row is the seed's or the person's.
  */
 async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[]> {
   // Automatic planning switched off: the test data gets no run either (a run would also touch the
   // person's own things); rows a later planner action makes for seed tasks are a known dev-data edge.
   if (!(await getPlannerSettings()).autoReplan) return [];
-  const seedKeys = new Set((await ctx.seeded('todos', 'task')).map((id) => itemKeyOf('todos', id)));
+  const seedKeys = new Set<string>();
+  for (const [moduleId, collection] of SEED_SOURCES)
+    for (const id of await ctx.seeded(moduleId, collection)) seedKeys.add(itemKeyOf(moduleId, id));
+  // A source may append a period to its row id (subscriptions: `<id>:<deadline>`), so a key counts
+  // as seed when it is a seed row's key or that key plus `:…`.
+  const isSeed = (key: string): boolean => {
+    if (seedKeys.has(key)) return true;
+    for (let i = key.lastIndexOf(':'); i > 0; i = key.lastIndexOf(':', i - 1))
+      if (seedKeys.has(key.slice(0, i))) return true;
+    return false;
+  };
   await runBackground({ force: true });
   // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless).
-  const items = (await itemRepo.active().toArray())
-    .filter((r) => seedKeys.has(r.id))
-    .map((r) => r.id);
+  const items = (await itemRepo.active().toArray()).filter((r) => isSeed(r.id)).map((r) => r.id);
   const assignments = (await assignmentRepo.active().toArray())
-    .filter((r) => seedKeys.has(r.itemKey))
+    .filter((r) => isSeed(r.itemKey))
     .map((r) => r.id);
   return [
     { collection: 'item', ids: items },

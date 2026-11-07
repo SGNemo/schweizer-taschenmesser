@@ -9,9 +9,9 @@ const executablePath =
 // CI profiles (docs/HOW-TO.md -> "Which checks run when"):
 //   E2E_PROFILE=smoke  plain pull request: desktop-chrome only, the critical-path files below
 //   E2E_PROFILE=rest   everything the smoke list does not cover (desktop-chrome without the smoke files, all of
-//                      pixel-7): smoke + rest = the full suite, run after the Dev-Preview is published
+//                      pixel-7): smoke + rest = the full suite, run next to the smoke list on full runs
 //   E2E_SEED=0         leave out the seed project and its second web server (CI shards; the seed project
-//                      runs in the sync job of full runs)
+//                      runs in its own job `e2e-seed` on full runs)
 // Nothing set (local, `npm run e2e:app`): everything, as before.
 const smoke = process.env.E2E_PROFILE === 'smoke';
 const rest = process.env.E2E_PROFILE === 'rest';

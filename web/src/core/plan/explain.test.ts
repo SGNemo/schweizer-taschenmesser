@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadCatalog } from '@/core/i18n/catalogs';
-import { LANGS, setLang } from '@/core/i18n/lang';
+import { ACTIVE_LOCALES, setLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from './explain';
 import type { PlaceReason } from './types';
 
@@ -42,7 +42,7 @@ describe('explain', () => {
       'after-part',
       'capacity',
     ];
-    for (const lang of LANGS) {
+    for (const lang of ACTIVE_LOCALES) {
       await loadCatalog(lang);
       setLang(lang);
       const seen = new Set<string>();

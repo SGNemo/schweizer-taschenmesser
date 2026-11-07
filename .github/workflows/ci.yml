@@ -31,7 +31,7 @@ jobs:
   # heavy runs; the secret scan and the docs checks always run.
   #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
   #           whole E2E suite (smoke + rest on both browser projects) and the seed project
-  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (2 shards);
+  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards);
   #           a draft PR runs only the static checks and the unit tests of the web app
   changes:
     name: Which parts changed
@@ -146,9 +146,9 @@ jobs:
             web=false; e2e=false; sync=false; server=false; mcp=false; supporter=false; webhook=false
             extension=false; tauri=false; llm=false; shared=false
           fi
-          # The gate E2E (smoke list, 2 shards) runs everywhere; on full runs the rest of the suite follows in
+          # The gate E2E (smoke list, 3 shards) runs everywhere; on full runs the rest of the suite runs next to it in
           # its own jobs (they never hold up the Dev-Preview).
-          shards='[1,2]'; profile=smoke
+          shards='[1,2,3]'; profile=smoke
           rest=false
           if [ "$full" = "true" ] && [ "$e2e" = "true" ]; then rest=true; fi
           {
@@ -233,16 +233,7 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - name: Playwright browser cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: pw-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
-      - run: npx playwright install --with-deps chromium
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-      - run: npx playwright install-deps chromium
-        if: steps.pw-cache.outputs.cache-hit == 'true'
+      - uses: ./.github/actions/playwright-chromium
       # playwright.stimulus.config.ts builds (build:e2e-seed) and serves (preview:e2e-seed) the seeded app itself
       # and uses /opt/pw-browsers/chromium only where it exists.
       - run: npm run check:stimulus
@@ -339,7 +330,7 @@ jobs:
 
   # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
   # cores were slower per test and failed under load). Sharding is by test: every test runs exactly once.
-  # This job is the smoke list (desktop-chrome, 24 spec files, 2 shards; E2E_PROFILE=smoke, list in
+  # This job is the smoke list (desktop-chrome, 24 spec files, 3 shards; E2E_PROFILE=smoke, list in
   # web/playwright.config.ts) and part of the Dev-Preview gate. Full runs add `web-e2e-rest` below.
   web-e2e:
     name: E2E app (smoke, shard ${{ matrix.shard }})
@@ -350,7 +341,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2]') }}
+        shard: ${{ fromJSON(needs.changes.outputs.shards || '[1,2,3]') }}
     defaults:
       run:
         working-directory: web
@@ -362,17 +353,7 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - name: Playwright browser cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: pw-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
-      - run: npx playwright install --with-deps chromium
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-      # System libraries are needed even when the browser itself comes from the cache.
-      - run: npx playwright install-deps chromium
-        if: steps.pw-cache.outputs.cache-hit == 'true'
+      - uses: ./.github/actions/playwright-chromium
       - name: E2E (smoke), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
@@ -394,20 +375,20 @@ jobs:
           retention-days: 7
 
   # The rest of the E2E suite (everything the smoke list above does not cover: Pixel 7, accessibility, layout, the
-  # other specs on desktop). Only on full runs; smoke + rest = the whole app suite (1714 tests), the seed project
-  # (29) runs in the sync job. Not part of the Dev-Preview gate: it runs next to the build and after the publish.
+  # other specs on desktop). Only on full runs; smoke + rest = the whole app suite, the seed project runs in its
+  # own job (`e2e-seed`). Not part of the Dev-Preview gate.
   web-e2e-rest:
     name: E2E app (rest, shard ${{ matrix.shard }})
-    # Starts after the smoke E2E so that its six runners do not compete with the Dev-Preview gate for the
-    # runner pool; it still runs when the smoke list failed (!cancelled()), so the run shows everything.
-    needs: [changes, web-e2e]
+    # Runs next to the smoke E2E, not after it: measured in Nov 2026, every job of a full run started within
+    # 2 s of being queued, so waiting for the smoke list only added its 4 to 12 min to the run.
+    needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: web
@@ -419,22 +400,12 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
-      - name: Playwright browser cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: pw-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
-      - run: npx playwright install --with-deps chromium
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-      # System libraries are needed even when the browser itself comes from the cache.
-      - run: npx playwright install-deps chromium
-        if: steps.pw-cache.outputs.cache-hit == 'true'
+      - uses: ./.github/actions/playwright-chromium
       - name: E2E (rest), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
           E2E_PROFILE: rest
-          E2E_SEED: '0' # the seed project runs in the sync job
+          E2E_SEED: '0' # the seed project runs in e2e-seed
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -579,8 +550,9 @@ jobs:
         working-directory: extension
       - run: npm run build:e2e
         working-directory: extension
-      - run: npx playwright install --with-deps chromium
-        working-directory: extension
+      - uses: ./.github/actions/playwright-chromium
+        with:
+          working-directory: extension
       - name: E2E (extension in Chromium against the web app)
         run: npx playwright test
         working-directory: extension
@@ -602,8 +574,8 @@ jobs:
 
   e2e-sync:
     name: Multi-device sync E2E
-    # After the smoke E2E, like the rest of the suite: keeps the runner pool free for the Dev-Preview gate.
-    needs: [changes, web-e2e]
+    # Next to the smoke E2E (see web-e2e-rest): on a plain PR it was the second half of an 8 min E2E wait.
+    needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.sync != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -620,25 +592,42 @@ jobs:
         working-directory: server
       - run: npm ci
         working-directory: web
-      - name: Playwright browser cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: pw-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
-      - run: npx playwright install --with-deps chromium
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        working-directory: web
-      - run: npx playwright install-deps chromium
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        working-directory: web
+      - uses: ./.github/actions/playwright-chromium
       - run: npm run e2e:sync
         working-directory: web
-      # The Dev-Preview flavour (seed project, 29 tests) is part of every full run; the shards skip it.
-      - name: E2E seed project (full runs only)
-        if: ${{ needs.changes.outputs.full != 'false' }}
-        run: npx playwright test --project=seed-dev
+
+  # The Dev-Preview flavour (seed project, playwright.config.ts `seed-dev`) on every full run; the app shards skip
+  # it. Its own job: it took 6.5 min behind the sync E2E in the same job.
+  e2e-seed:
+    name: E2E seed project (Dev-Preview flavour, shard ${{ matrix.shard }})
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2] # 12 of its 29 tests walk every page once per window size (about a minute each)
+    defaults:
+      run:
         working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - uses: ./.github/actions/playwright-chromium
+      - run: npx playwright test --project=seed-dev --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-seed-${{ matrix.shard }}
+          path: web/playwright-report
+          retention-days: 7
 
   rust:
     name: Native shell (fmt, clippy, tests)

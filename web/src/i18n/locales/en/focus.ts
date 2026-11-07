@@ -5,7 +5,16 @@ export const focus: Strings['focus'] = {
     title: 'Focus & attention',
     description:
       'Aids for keeping track, getting started and staying with it. Each can be turned off on its own.',
-    keywords: ['Focus', 'Attention', 'Timer', 'Calm', 'next task', 'Day plan'],
+    keywords: [
+      'Focus',
+      'Attention',
+      'Hide amounts',
+      'Privacy',
+      'Timer',
+      'Calm',
+      'next task',
+      'Day plan',
+    ],
     nextOne: 'One next thing',
     nextOneHint: 'Shows a single task to start with at the top of the overview.',
     dayPlan: 'Day plan',
@@ -29,6 +38,9 @@ export const focus: Strings['focus'] = {
     focusIndicatorHint: 'Shows in the top bar that a focus round is running.',
     searchHistory: 'History in search',
     searchHistoryHint: 'Search shows what you used last first. The history stays on this device.',
+    hideValues: 'Hide amounts',
+    hideValuesHint:
+      'Amounts in the balance card show a neutral pattern. A tap reveals them until you leave the view. This device only.',
     more: 'More settings',
     aids: 'Aids',
     aidsOn: (n: number, total: number) => `${n} of ${total} on`,

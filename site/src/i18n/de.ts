@@ -44,7 +44,7 @@ export const de = {
       { icon: 'key', shot: 'vault', title: 'Tresor', text: 'Passwörter mit TOTP und Generator, Unterlagen mit Ablaufdatum. Verschlüsselt, für KI unsichtbar.', alt: 'Entsperrter Tresor mit Demo-Zugängen' },
       { icon: 'bell', shot: 'reminders', title: 'Erinnerungen', text: 'Gebündelt, mit Ruhezeiten und „Später“, auch bei geschlossener App.', alt: 'Erinnerungen mit Schaltern und nächstem Zeitpunkt' },
     ],
-    more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch, Englisch, Spanisch, Französisch und Portugiesisch (Brasilien).',
+    more: 'Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch und Englisch.',
     // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
     intro: (n: number, a: number) => `${n} Module in ${a} Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst.`,
     count: (n: number) => (n === 1 ? '1 Modul' : `${n} Module`),

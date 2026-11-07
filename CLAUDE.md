@@ -1,7 +1,7 @@
 # CLAUDE.md – Nemo
 
 Local-first modular everyday app (formerly "Schweizer Taschenmesser" – internal identifiers keep that name): PWA + portable Windows exe + Android APK (Tauri 2 shell, same web app). Data in IndexedDB, optional sync, the AI assistant never sees user data.
-Code, comments, commits **English**; UI in **5 languages**: German source `web/src/strings.ts`, catalogs `web/src/i18n/locales/{en,es,fr,pt-BR}/` (same keys, [glossary](docs/i18n/GLOSSARY.md)); every new text in all five, `npm run check:i18n` ([howto/i18n.md](docs/howto/i18n.md)).
+Code, comments, commits **English**; UI: source `web/src/strings.ts`, catalog `web/src/i18n/locales/en/` (same keys, [glossary](docs/i18n/GLOSSARY.md)); every new text in German and English; es/fr/pt-BR frozen, see [docs/i18n/FROZEN.md](docs/i18n/FROZEN.md); `npm run check:i18n` ([howto/i18n.md](docs/howto/i18n.md)).
 **Stack:** Vite, React 19, TypeScript strict (pinned 6.0.x), Dexie, Zod, zustand, CSS Modules; Tauri 2 (Rust); server Fastify 5 + better-sqlite3; Vitest, Playwright.
 
 ## How chats work here
@@ -16,7 +16,7 @@ Code, comments, commits **English**; UI in **5 languages**: German source `web/s
 ## Commands (run in `web/`; also `server/`, `mcp/`: `npm test|typecheck|lint|format:check|build`)
 - `npm run dev:all` (app with test data + local sync server, one command) · `dev` · `build` · `preview` (:4173; stop it before e2e) · `tauri -- dev|build` (Rust needed)
 - `npm run check` (format+lint+typecheck, parallel, cached = everyday gate) · `lint` · `typecheck` · `format:check|format` · `check:modules` · `check:docs`
-- `npm test` (`test:changed`) · `npm run e2e` (= `e2e:app` + `e2e:sync`); one spec: `npx playwright test e2e/<name>.spec.ts`
+- `npm test` (`test:changed`) · `npm run e2e` (= PR set: smoke + sync; all: `e2e:full`); one spec: `npx playwright test e2e/<name>.spec.ts`
 - `npm run gen:module -- <id> "<Name>"` · `db:bump` · `gen:icons` · `version:check|sync|set -- <semver>` · `changelog -- --version <x.y.z>`
 - Rust, CI layout, release: [docs/HOW-TO.md](docs/HOW-TO.md). Chromium is at `/opt/pw-browsers/chromium`; never `playwright install`.
 - **CI:** a plain PR runs only the touched packages and the E2E smoke list; label `full-ci` = everything now, `develop`/nightly always run everything ([HOW-TO](docs/HOW-TO.md) "Which checks run when").
@@ -51,5 +51,6 @@ Code, comments, commits **English**; UI in **5 languages**: German source `web/s
 | Why was it decided | [DECISIONS](docs/DECISIONS.md) → `docs/decisions/` |
 | Status, open items, hardware checklists | [STATUS](docs/STATUS.md), [MANUAL-TESTS](docs/MANUAL-TESTS.md); ideas: [ROADMAP](docs/ROADMAP.md) |
 | Local AI import API / MCP (German) | [AI-IMPORT](docs/AI-IMPORT.md) |
+| Agent team (roster, delegation, sandbox start) | [meta/AGENTS.md](docs/meta/AGENTS.md) |
 | Area rules | `web/src/modules/CLAUDE.md`, `web/src-tauri/CLAUDE.md`, `server/CLAUDE.md` (loaded when working there) |
 Docs are English; README and user docs (`docs/user/`) also German as `*.de.md`, change both (`npm run check:readme`). Latest release: see [STATUS](docs/STATUS.md).

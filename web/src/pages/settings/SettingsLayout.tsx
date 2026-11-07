@@ -33,11 +33,10 @@ import {
   type IconName,
 } from '@/ui';
 import { Breadcrumb, type Crumb } from './Breadcrumb';
-import { CATEGORY_LOOK, NAV_GROUPS, STATUS_LOOK } from './categoryLook';
-import { PageHead } from './PageHead';
-import { StatusHead } from './StatusHead';
+import { CATEGORY_LOOK, NAV_GROUPS } from './categoryLook';
+import { SettingsHead } from './components/SettingsHead';
 import { CategoryStatus } from './CategoryStatus';
-import { ModuleList, ModuleRouteHead, ModuleSettingsPage } from './ModuleSettingsPage';
+import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar, QuickInline } from './QuickBar';
 import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
@@ -546,7 +545,13 @@ export function CategoryPage() {
   // Only a category with Basis sections folds the rest away; one that is all Erweitert shows it plainly.
   const fold = basic.length > 0 && advanced.length > 0;
   return (
-    <div className={styles.category} onChange={noteUse} onClick={noteUse}>
+    <div
+      className={styles.category}
+      // The tab's hue for its status card only (not `data-hue`, which would recolour charts on the page too).
+      data-tab-hue={CATEGORY_LOOK[category].hue}
+      onChange={noteUse}
+      onClick={noteUse}
+    >
       {wide ? (
         <Breadcrumb items={crumbsFor(category, current)} />
       ) : (
@@ -592,50 +597,6 @@ export function ModuleSettingsRoute() {
       )}
       <ModuleSettingsPage />
     </div>
-  );
-}
-
-/** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
-function safeDecode(segment: string): string {
-  try {
-    return decodeURIComponent(segment);
-  } catch {
-    return segment;
-  }
-}
-
-/** Head of the open settings page: "Status" on the landing page, the category's own head on a category, the module's on its page. */
-function SettingsHead() {
-  const { pathname } = useLocation();
-  const v3 = tSettingsV3.use();
-  const sections = useSettingsSections();
-  const moduleId = /^\/settings\/module\/([^/]+)/.exec(pathname)?.[1];
-  if (moduleId) return <ModuleRouteHead moduleId={safeDecode(moduleId)} />;
-  const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
-  if (!segment) return <StatusHead title={t.settings.title} />;
-  // Sections still loading: no head yet (CategoryPage shows its skeleton), so no category head flashes up for a hidden one.
-  if (sections.length === 0) return null;
-  // An unknown category, or a known one without visible sections (vault off, preview hidden): a "not found" page, no category head.
-  if (!isCategoryId(segment) || !visibleCategoryIds(sections).includes(segment))
-    return (
-      <PageHead
-        {...STATUS_LOOK}
-        icon="settings"
-        eyebrow={v3.eyebrow}
-        title={t.settings.title}
-        testId="settings-head-missing"
-      />
-    );
-  const c = categoryDef(segment);
-  return (
-    <PageHead
-      {...CATEGORY_LOOK[segment]}
-      icon={c.icon as IconName}
-      eyebrow={v3.eyebrow}
-      title={c.title}
-      description={c.description}
-      testId={`settings-head-${segment}`}
-    />
   );
 }
 

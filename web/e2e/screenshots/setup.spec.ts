@@ -57,8 +57,8 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByTestId('setup-checklist')).toBeVisible();
     await shot('6-dashboard-checklist');
 
-    await page.goto('/settings/ueber');
-    await expect(page.getByRole('heading', { name: 'Einrichtung', level: 2 })).toBeVisible();
+    await page.goto('/settings/einrichtung');
+    await expect(page.getByRole('heading', { name: 'Einrichtung', level: 1 })).toBeVisible();
     await shot('7-settings');
     await context.close();
   });

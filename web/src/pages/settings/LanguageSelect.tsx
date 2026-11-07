@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LANG_NAMES,
-  LANGS,
+  ACTIVE_LOCALES,
   isLangPref,
   setLangPref,
   systemLang,
@@ -12,8 +12,8 @@ import { t } from '@/strings';
 import { SelectField } from '@/ui';
 
 /**
- * Language of the interface: "like the device" or one of the five languages, each named in its
- * own language. The switch is immediate (the texts of the new language load first).
+ * Language of the interface: "like the device" or one of the active languages (German, English;
+ * `ACTIVE_LOCALES`), each named in its own language. The switch is immediate (the texts of the new language load first).
  */
 export function LanguageSelect({ labelHidden = true }: { labelHidden?: boolean }) {
   const pref = useLangPref();
@@ -33,7 +33,7 @@ export function LanguageSelect({ labelHidden = true }: { labelHidden?: boolean }
       }}
     >
       <option value="system">{s.languageSystem(LANG_NAMES[systemLang()])}</option>
-      {LANGS.map((l) => (
+      {ACTIVE_LOCALES.map((l) => (
         <option key={l} value={l} lang={l}>
           {LANG_NAMES[l]}
         </option>

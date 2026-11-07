@@ -20,6 +20,7 @@ import {
 } from '@/ui';
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
+import { NetWorthTab } from '../components/NetWorthTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
 import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
 import { useFinanceData } from '../summary';
@@ -30,7 +31,7 @@ import { HeroSlot } from '@/ui/identity';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import styles from './finance.module.css';
 
-const TABS = ['overview', 'transactions', 'accounts', 'categories'] as const;
+const TABS = ['overview', 'transactions', 'trend', 'accounts', 'categories'] as const;
 type Tab = (typeof TABS)[number];
 const MONTH_RE = /^\d{4}-\d{2}$/;
 
@@ -129,7 +130,8 @@ export default function FinancePage() {
       ) : null}
 
       <NowStrip modules={['finance', 'invoices', 'budgets']} />
-      {currencies.length > 1 && (tab === 'overview' || tab === 'transactions') ? (
+      {currencies.length > 1 &&
+      (tab === 'overview' || tab === 'transactions' || tab === 'trend') ? (
         <div className={styles.tabs}>
           <Segmented
             label={t.money.currency}
@@ -213,6 +215,7 @@ export default function FinancePage() {
             {tab === 'transactions' ? (
               <TransactionsTab data={view} month={month} onOpen={setTarget} />
             ) : null}
+            {tab === 'trend' ? <NetWorthTab data={view} /> : null}
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
           </SplitView>

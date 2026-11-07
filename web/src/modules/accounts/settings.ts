@@ -13,6 +13,8 @@ export const settingsSchema = z.object({
   genLength: z.enum(['16', '20', '24', '32']),
   genSymbols: z.boolean(),
   genAvoidAmbiguous: z.boolean(),
+  /** Opt-in: ask Have I Been Pwned (first 5 hash characters only) whether a password is in a known leak. */
+  breachCheck: z.boolean(),
 });
 export type FullAccountsSettings = z.output<typeof settingsSchema>;
 /** What the auto-lock needs; the other fields belong to the browser extension bridge. */
@@ -25,6 +27,7 @@ export const defaultSettings: FullAccountsSettings = {
   genLength: '20',
   genSymbols: true,
   genAvoidAmbiguous: false,
+  breachCheck: false,
 };
 
 export const settings: ModuleSettings = {
@@ -154,6 +157,13 @@ export const settings: ModuleSettings = {
       key: 'genAvoidAmbiguous',
       get label() {
         return t.accounts.meta.settings.genAvoidAmbiguous;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'breachCheck',
+      get label() {
+        return t.accounts.meta.settings.breachCheck;
       },
       type: 'boolean',
     },

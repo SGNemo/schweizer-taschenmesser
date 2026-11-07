@@ -2,16 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { checkCatalog } from '../../scripts/lib/i18nCheck';
 import { de } from '@/strings';
 import { en } from './locales/en';
-import { es } from './locales/es';
-import { fr } from './locales/fr';
-import { ptBR } from './locales/pt-BR';
+import { ACTIVE_LOCALES, type Lang } from '@/core/i18n/lang';
 import sameAsSource from './same-as-source.json';
 
 /**
- * Every catalog has every text of the German source, nothing extra, no empty or untranslated
+ * Every active catalog has every text of the German source, nothing extra, no empty or untranslated
  * sentences, and every text function keeps the values it is given. Part of `npm run check:i18n`.
+ * Frozen languages (es, fr, pt-BR) are not checked: docs/i18n/FROZEN.md.
  */
-const catalogs = { en, es, fr, 'pt-BR': ptBR } as const;
+const catalogs: Record<Exclude<Lang, 'de'>, object> = { en };
+
+it('covers every active language', () => {
+  expect(Object.keys(catalogs).sort()).toEqual(ACTIVE_LOCALES.filter((l) => l !== 'de').sort());
+});
 
 describe.each(Object.entries(catalogs))('catalog %s', (lang, catalog) => {
   it('matches the German source', () => {

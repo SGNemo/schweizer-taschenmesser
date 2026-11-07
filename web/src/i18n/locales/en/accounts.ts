@@ -27,6 +27,8 @@ export const accounts: Strings['accounts'] = {
       genLength_32: '32 characters',
       genSymbols: 'Browser extension: use symbols',
       genAvoidAmbiguous: 'Browser extension: avoid similar characters (Il1O0)',
+      breachCheck:
+        'Compare passwords with known data leaks when checking (sends only the first 5 characters of a hash)',
     },
   },
   pickEntry: 'Choose a login',
@@ -104,6 +106,14 @@ export const accounts: Strings['accounts'] = {
     unavailable:
       'The strength check needs the internet once to load its dictionaries. Reuse and age were checked anyway.',
     openEntry: 'Open',
+    breached: (n: number) => `Found in a known data leak (${n})`,
+    breachHint:
+      'These passwords appear in publicly known data leaks. It is worth replacing them when you get a chance.',
+    breachUnavailable:
+      'The comparison with known data leaks is not available right now. Everything else was checked anyway.',
+    breachChecking: 'Comparing with known data leaks …',
+    breachNote:
+      'Comparison with known data leaks is on: only the first 5 characters of a hash leave the device per password.',
   },
   emergency: {
     open: 'Emergency sheet',
