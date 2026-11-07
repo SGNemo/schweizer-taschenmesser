@@ -7,6 +7,9 @@ use crate::noise::{KeyError, PublicKey, StaticKey};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
+pub mod file;
+pub use file::{FileTrustStore, OpenError};
+
 use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 

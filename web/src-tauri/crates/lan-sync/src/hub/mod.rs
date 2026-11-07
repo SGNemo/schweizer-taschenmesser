@@ -11,6 +11,7 @@
 //! on Android and iOS (see `lib.rs`).
 
 pub mod handler;
+pub mod home;
 pub mod netpolicy;
 pub mod router;
 pub mod validate;
