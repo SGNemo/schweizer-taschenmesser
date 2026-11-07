@@ -5,6 +5,7 @@
 
 //! The store assumes exactly one `Store` per database file (the sequence counter is cached in memory).
 
+pub mod noise;
 mod store;
 
 pub use store::{FieldOp, PullResult, PushResult, Store, StoreError};

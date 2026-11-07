@@ -23,6 +23,3 @@ snow = { version = "=0.10.0", default-features = false, features = ["use-chacha2
 zeroize = "1"
 subtle = "2"
 base64 = "0.22"
-
-[dev-dependencies]
-static_assertions = "1"
