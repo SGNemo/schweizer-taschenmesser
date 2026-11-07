@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { showAllWidgets, showPreview } from '../helpers';
-import { bootDev, seedApp } from './helpers';
+import { bootDev, test } from './helpers';
 
 /**
  * Mail module on the invented demo mails of the seed (account `demo`): nothing leaves the machine, no
@@ -56,12 +56,13 @@ async function audit(page: Page, label: string) {
 if (process.env.MAIL_MOBILE) test.use({ viewport: { width: 412, height: 915 } });
 
 test.describe('mail (demo mails)', () => {
-  test.setTimeout(120_000); // each test loads the seed first
+  test.setTimeout(60_000); // axe audits and screenshots on a busy runner
+  // The medium seed is loaded once per worker (as the desktop app, preview on); each test gets its own copy.
+  test.use({ seeded: { scale: 'medium', desktop: true, preview: true } });
   test.beforeEach(async ({ page }) => {
     await bootDev(page);
     await showPreview(page);
     await asDesktop(page);
-    await seedApp(page, 'medium');
     await enableMail(page);
   });
 

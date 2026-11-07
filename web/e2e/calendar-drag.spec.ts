@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { backSettled, ready } from './helpers';
 
 // The hour grid (and so dragging) exists from 1400 px; phones use lists.
 test.use({ viewport: { width: 1600, height: 1000 } });
@@ -13,8 +13,8 @@ async function createEvent(page: Page) {
   await dialog.getByLabel('Ende', { exact: true }).fill('11:00');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  // The editor closes with an in-app URL change; a goto issued in the same instant can be aborted.
-  await page.waitForLoadState('networkidle');
+  // The editor closes with an in-app URL change (its Back entry pops); a goto in that gap can be aborted.
+  await backSettled(page);
   await page.goto('/calendar?view=day&date=2026-11-03');
 }
 

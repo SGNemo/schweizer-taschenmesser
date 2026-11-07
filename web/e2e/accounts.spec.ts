@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { moduleSwitch, pickTool } from './helpers';
+import { backSettled, moduleSwitch, pickTool } from './helpers';
 
 const MASTER = 'Mein-Master-Passwort-1';
 const SECRET_TITLE = 'Beispiel-Bank-Konto';
@@ -137,7 +137,12 @@ test('search finds entries only in the unlocked vault', async ({ page }) => {
   await page.keyboard.press('Escape'); // the detail view opens after saving
   await addEntry(page, { title: 'Beta Bank' });
   await page.keyboard.press('Escape');
-  await page.getByLabel('Passwörter durchsuchen').fill('beta');
+  // The detail view closes with an in-app Back; typing before it pops lets the pop reset the search.
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await backSettled(page);
+  const search = page.getByLabel('Passwörter durchsuchen');
+  await search.fill('beta');
+  await expect(search).toHaveValue('beta');
   await expect(page.getByRole('listitem').filter({ hasText: 'Beta Bank' })).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: 'Alpha Shop' })).toHaveCount(0);
 });
