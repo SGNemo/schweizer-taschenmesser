@@ -690,8 +690,11 @@ jobs:
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
       - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
       - run: cargo test --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser
-      - run: cargo test --locked -p taschenmesser --test commands
+      # The steps below run even after a red test step, so one failure does not hide the others (the job stays red).
+      - if: ${{ !cancelled() }}
+        run: cargo test --locked -p taschenmesser --test commands
       - name: Release build and exe size
+        if: ${{ !cancelled() }}
         run: |
           cargo build --release --locked -p taschenmesser
           size=$(stat -c %s target/release/taschenmesser.exe)
