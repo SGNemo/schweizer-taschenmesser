@@ -168,7 +168,7 @@
     },
     "phone--finance": {
       "height": 2954,
-      "buttons": 16,
+      "buttons": 18,
       "links": 11,
       "icons": 18,
       "firstScreenActions": 24
