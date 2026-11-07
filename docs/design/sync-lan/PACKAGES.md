@@ -1,6 +1,6 @@
 # Sync in the home network – packages (prompts)
 
-Decisions: [CONCEPT.md](CONCEPT.md) §10 (vorläufig) and [`docs/decisions/core.md`](../../decisions/core.md) "Sync". One package = one chat, one branch, one PR against `develop`; order 1 → 2 → 3 → 4. **Package 1 starts only after Sven has answered CONCEPT §11** – if he picks a variant other than (b), these prompts are rewritten first (one docs PR), not adapted on the fly.
+Decisions: [CONCEPT.md](CONCEPT.md) §10 (vorläufig) and [`docs/decisions/core.md`](../../decisions/core.md) "Sync". One package = one chat, one branch, one PR against `develop`; order 1 → 2 → 3 → 4. **Package 1 starts only after Sven has answered CONCEPT §11** (answered 2026-11-07: variant b and all other recommendations; the Fable check named in the PR comes first) – if he picks a variant other than (b), these prompts are rewritten first (one docs PR), not adapted on the fly.
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|

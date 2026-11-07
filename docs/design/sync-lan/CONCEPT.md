@@ -1,6 +1,6 @@
 # Sync in the home network – the PC is the server (concept)
 
-Branch `design/sync-lan-concept`, 2026-11-06. Status: **vorläufig** – decisions in §10 are provisional until Sven answers §11. No product code; prototype in [`proto/`](proto/). Facts with sources: [NOTES.md](NOTES.md) (cited as `N§x`). Package prompts: [PACKAGES.md](PACKAGES.md).
+Branch `design/sync-lan-concept`, 2026-11-06. Status: **answered 2026-11-07** – Sven chose the recommended option for all four questions in §11 (built-in hub incl. the new rule and autostart, server path stays folded, Android on open + Wi-Fi change, one main PC); §10 holds. Open before package 1: the Fable check named in the PR. No product code; prototype in [`proto/`](proto/). Facts with sources: [NOTES.md](NOTES.md) (cited as `N§x`). Package prompts: [PACKAGES.md](PACKAGES.md).
 
 Sven's wish: "Beim Wechsel vom Handy auf den PC syncen und andersrum, nur im WLAN – wenn das Handy heimkommt und der PC an ist. Wenn es nur mit Server geht, soll mein PC der Server sein." Today: own sync server with address + token + passphrase, otherwise "Nicht verbunden".
 
@@ -194,7 +194,7 @@ Checks, all 9 rounds ok: `windowSurvivedStranger`, `oldQrHolderCannotBurn`, `sas
 - **Pairing suggests „Mit Windows starten“ and „Im Tray weiterlaufen“ preselected (only in the pairing dialog).** Why: "PC an" must mean "Nemo an". Overturned by: Sven's answer to Frage 1.
 - **Unauthenticated refusals never change the phone's state beyond the neutral banner;** „gelöst“ only after an answer authenticated by the hub. Why: an ARP spoofer must not push the user into re-pairing.
 
-## 11. Fragen an Sven (Empfehlung zuerst)
+## 11. Fragen an Sven (Empfehlung zuerst) – answered 2026-11-07: all four with the recommendation
 
 1. **Wie soll der PC den Abgleich anbieten?** Als kleiner eingebauter Dienst (empfohlen: App bleibt ~10 MB und gleicht auch ab, wenn das Fenster zu ist; Preis: die Regel „neueste Änderung gewinnt“ steht dann dreimal im Code, ein Test hält alle drei gleich) · die App selbst übernimmt es (eine Kopie weniger, aber nur zuverlässig, solange die App wach ist) · den bisherigen Server mitliefern (App wird etwa zehnmal so groß). Ein Ja zur Empfehlung heißt auch: eine neue Sicherheitsregel für den Heimnetz-Dienst kommt in die Projektregeln (Wortlaut §5), und nach dem Koppeln startet Nemo mit Windows und bleibt im Tray (beides abschaltbar).
 2. **Alter Server-Weg:** bleibt als „Eigener Server (erweitert)“, eingeklappt (empfohlen) · bleibt und darf parallel zum Heimnetz laufen · wird später entfernt.
