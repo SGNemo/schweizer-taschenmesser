@@ -344,6 +344,11 @@ impl PairingHost {
         }
     }
 
+    /// The hub key this host puts into QR codes.
+    pub fn hub_key(&self) -> PublicKey {
+        self.hub_key
+    }
+
     fn lock(&self) -> MutexGuard<'_, Inner> {
         // A poisoned lock only means another thread panicked; the state is still consistent
         // (every transition assigns it whole), and refusing forever would lock the user out.
