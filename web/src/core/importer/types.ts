@@ -308,4 +308,6 @@ export interface ImportPreset {
   groupId?: string;
   /** Shown as the source of the batch ("Takeout.zip"). */
   source?: string;
+  /** Values for the importer's options that differ from its defaults (one list per project). */
+  options?: Record<string, string>;
 }

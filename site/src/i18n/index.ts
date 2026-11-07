@@ -1,24 +1,25 @@
 import { de } from './de';
 import { en } from './en';
-import { es } from './es';
-import { fr } from './fr';
-import { pt } from './pt';
-
-export const LOCALES = ['de', 'en', 'es', 'fr', 'pt-BR'] as const;
-export type Locale = (typeof LOCALES)[number];
-export type Strings = typeof de | typeof en | typeof es | typeof fr | typeof pt;
-
-export const strings: Record<Locale, Strings> = { de, en, es, fr, 'pt-BR': pt };
 
 /**
- * Route table: the same page per language (German without prefix, the others under /en, /es, /fr,
- * /pt-br). The legal pages exist in German and English only; the other languages point to the
- * English ones (their footer link says "in English").
+ * Languages the site offers: German and English, same as the app (`ACTIVE_LOCALES` in
+ * web/src/core/i18n/lang.ts). Spanish, French and Brazilian Portuguese are frozen
+ * (docs/i18n/FROZEN.md): their texts stay in es.ts, fr.ts, pt.ts but are not built; the old URLs
+ * redirect to English (`redirects` in astro.config.mjs, public/_redirects).
+ */
+export const LOCALES = ['de', 'en'] as const;
+export type Locale = (typeof LOCALES)[number];
+export type Strings = typeof de | typeof en;
+
+export const strings: Record<Locale, Strings> = { de, en };
+
+/**
+ * Route table: the same page per language (German without prefix, English under /en).
  */
 export const routes = {
-  home: { de: '/', en: '/en', es: '/es', fr: '/fr', 'pt-BR': '/pt-br' },
-  imprint: { de: '/impressum', en: '/en/imprint', es: '/en/imprint', fr: '/en/imprint', 'pt-BR': '/en/imprint' },
-  privacy: { de: '/datenschutz', en: '/en/privacy', es: '/en/privacy', fr: '/en/privacy', 'pt-BR': '/en/privacy' },
+  home: { de: '/', en: '/en' },
+  imprint: { de: '/impressum', en: '/en/imprint' },
+  privacy: { de: '/datenschutz', en: '/en/privacy' },
 } as const;
 export type RouteKey = keyof typeof routes;
 

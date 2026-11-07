@@ -232,10 +232,6 @@ export const setup: Strings['setup'] = {
       tick: 'Marcar como feito',
       untick: 'Reabrir',
       subLabel: 'O que ainda falta',
-      settingsRow: 'Mudança de outro app …',
-      settingsHint:
-        'Do Google, Todoist, Obsidian, de um app de banco ou do Bitwarden: leva às importações certas.',
-      settingsOpen: 'Escolher origem',
     },
     startdata: {
       title: 'Importar',

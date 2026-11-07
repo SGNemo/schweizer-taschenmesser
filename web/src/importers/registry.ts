@@ -1,4 +1,6 @@
 import { source as bank } from './bank/source';
+import { source as bookmarks } from './bookmarks/source';
+import { source as contacts } from './contacts/source';
 import { source as enex } from './enex/source';
 import { source as googleCalendar } from './google-calendar/source';
 import { source as googleKeep } from './google-keep/source';
@@ -7,6 +9,7 @@ import { source as notion } from './notion/source';
 import { source as obsidian } from './obsidian/source';
 import { source as opml } from './opml/source';
 import { source as outlookTasks } from './outlook-tasks/source';
+import { source as ticktick } from './ticktick/source';
 import { source as todoist } from './todoist/source';
 import type { Detection, SourceDef, SourceFile } from './types';
 import { source as vaultCsv } from './vault-csv/source';
@@ -14,6 +17,7 @@ import { source as vaultCsv } from './vault-csv/source';
 /** All sources, most specific first (ties keep this order). */
 export const SOURCES: readonly SourceDef[] = [
   vaultCsv,
+  ticktick,
   todoist,
   googleTasks,
   outlookTasks,
@@ -22,6 +26,8 @@ export const SOURCES: readonly SourceDef[] = [
   enex,
   notion,
   opml,
+  contacts,
+  bookmarks,
   obsidian,
   bank,
 ];

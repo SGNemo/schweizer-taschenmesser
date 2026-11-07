@@ -10,7 +10,7 @@ Ctrl+K (phone: the search field at the top) opens the search: jump, search acros
   "overdue tasks", "account balance", "What do my subscriptions cost?", "How much do I still have to pay?", "search dentist".
   Short keywords start the full-text search. (Today the app understands these questions in German.)
 - **With AI (optional):** more complex questions ("How much did I spend on groceries in September?") and sentences like
-  "Remind me of the rent every 1st" can be passed to AI providers. *Settings → AI assistant*: add providers:
+  "Remind me of the rent every 1st" can be passed to AI providers. _Settings → AI assistant_: add providers:
   **Claude**, **OpenAI**, **Google Gemini**, **Groq**, **OpenRouter** (including free models), **Mistral**, **Ollama** (local) or your
   own OpenAI-compatible server. Several providers are asked **in order** (local → free → paid, adjustable with the arrow
   keys); if one is exhausted, failing or refuses, the next one steps in. Per provider you can set limits (requests per day, cost
@@ -29,19 +29,28 @@ Ctrl+K (phone: the search field at the top) opens the search: jump, search acros
 Simply type into the bar what you want to add, for example "Rechnung Stadtwerke 89,90 € fällig 15.10.", "Abo Netflix 12,99 monatlich ab 1.11.", "Lösche das Abo Spotify" or "Markiere die Stadtwerke-Rechnung als bezahlt" (the built-in rules currently understand German sentences). Separate several entries with a line break or a semicolon.
 
 - **Always a preview first:** fields can be changed, for changes and deletions you see before/after, missing details are asked for in the preview. Nothing is saved until "Add" (Enter); "Undo" in the notice reverts everything.
-- **Costs almost nothing:** fixed rules try to understand the sentence first (0 tokens, nothing leaves the device). Only if that is not enough and you allow it is an AI provider asked, with the sentence, the date and the field names of the modules, never with your entries. The statistics under *Settings → AI* show where each answer came from.
-- **Under your control:** under *Settings → AI → Add with AI* it can be turned off globally and per module. Each module has "Add with AI" at the top. The password vault is never included.
+- **Costs almost nothing:** fixed rules try to understand the sentence first (0 tokens, nothing leaves the device). Only if that is not enough and you allow it is an AI provider asked, with the sentence, the date and the field names of the modules, never with your entries. The statistics under _Settings → AI_ show where each answer came from.
+- **Under your control:** under _Settings → AI → Add with AI_ it can be turned off globally and per module. Each module has "Add with AI" at the top. The password vault is never included.
 - **Your Claude subscription:** Anthropic only allows subscription access in Claude Code and claude.ai, not in other apps. If you want to use your subscription, let Claude Code on your PC fill Nemo (see below).
 - **Plan sentences stay in the planner:** "Donnerstag frei" or "schieb Steuer auf Freitag" are said in the field on the planner page, not in the bar (there they become a to-do). Fixed rules read them first; in the Windows app with a downloaded local model, a sentence the rules cannot read (app language German) is passed to that model, which sees only the things of your plan (title, minutes, priority, due date, planned day) and never leaves the device – the preview then says "Read by the local model – please check". Esc stops the wait; after "Discard" the same sentence does not ask the model again. Your plan, blocker labels and day notes never reach an AI provider, the search or the chat; with "Turn off AI" the rules keep working as before.
 
 ## Importing data with AI
 
 You do not have to type in existing data: an AI (Claude Code, ChatGPT …) delivers it in the app's format and you confirm a
-preview. In the Windows app this works through a local, secured interface (*Settings → AI access*, off by default),
+preview. In the Windows app this works through a local, secured interface (_Settings → AI access_, off by default),
 everywhere else via "Paste JSON" in the import assistant. Guide, examples and a ready-made prompt:
 [`docs/AI-IMPORT.md`](../AI-IMPORT.md).
 
+## Getting the local model
+
+The built-in local model runs only on your device, offline and free. Whether you have it is shown under _Settings → AI → Local model_:
+
+- **Windows app:** the section shows the next step – first two or three recommended models with their size and "Download …", then the progress, then "Ask a test question". The checksum is verified after the download.
+- **Test version (Dev-Preview):** if it is built without the model, it says "The local model is not built into the test version" with "Get the regular version". The regular Windows app always has it.
+- **Browser and Android:** there is no local model here. For AI answers, set up a provider under _AI assistant_.
+
 ## Chat
+
 The **Chat** module (enable it in the module library) is a simple chat with several conversations. Each chat answers either with the **built-in local model** (Windows only, offline, free) or with **your providers** from Settings → AI.
 
 - By default the chat sees **no data from the app**. In the chat's gear menu you can pick modules it may answer questions from. When sending with "Attach data" you first see exactly the text that is sent along. The vault is never included.

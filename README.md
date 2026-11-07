@@ -16,7 +16,7 @@
   <a href="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml"><img src="https://github.com/SGNemo/schweizer-taschenmesser/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI status of the develop branch"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b82f6" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/platforms-Windows%20%C2%B7%20Android%20%C2%B7%20PWA-555" alt="Platforms: Windows, Android and PWA">
-  <img src="https://img.shields.io/badge/languages-DE%20%C2%B7%20EN%20%C2%B7%20ES%20%C2%B7%20FR%20%C2%B7%20PT--BR-555" alt="Languages: German, English, Spanish, French, Brazilian Portuguese">
+  <img src="https://img.shields.io/badge/languages-DE%20%C2%B7%20EN-555" alt="Languages: German, English">
 </p>
 
 <p align="center">
@@ -99,7 +99,7 @@ Nemo is built with ADHD in mind. It helps with starting and staying on track; it
 
 ## Screenshots
 
-All pictures show made-up sample data in the German interface; the app also speaks English, Spanish, French and Brazilian Portuguese.
+All pictures show made-up sample data in the German interface; the app also speaks English.
 
 <table>
   <tr>
@@ -225,7 +225,7 @@ More: [FAQ](docs/user/faq.md).
 
 ## More
 
-- Website: [Deutsch](https://nemo-adhd-helper.online) · [English](https://nemo-adhd-helper.online/en) · [Español](https://nemo-adhd-helper.online/es) · [Français](https://nemo-adhd-helper.online/fr) · [Português (Brasil)](https://nemo-adhd-helper.online/pt-br)
+- Website: [Deutsch](https://nemo-adhd-helper.online) · [English](https://nemo-adhd-helper.online/en)
 - [Documentation](docs/README.md) for users and developers
 - [Roadmap](docs/ROADMAP.md) with ideas for later versions
 - [Changelog](CHANGELOG.md)

@@ -29,5 +29,5 @@
     }
   },
   "include": ["src", "vitest.setup.ts"],
-  "exclude": ["src/sw.ts"]
+  "exclude": ["src/sw.ts", "src/i18n/locales/es", "src/i18n/locales/fr", "src/i18n/locales/pt-BR"]
 }

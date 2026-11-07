@@ -227,10 +227,6 @@ export const setup: Strings['setup'] = {
       tick: 'Tick off',
       untick: 'Reopen',
       subLabel: 'What is still missing',
-      settingsRow: 'Moving from another app …',
-      settingsHint:
-        'From Google, Todoist, Obsidian, a banking app or Bitwarden: leads to the matching imports.',
-      settingsOpen: 'Choose origin',
     },
     startdata: {
       title: 'Import',

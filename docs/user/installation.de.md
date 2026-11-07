@@ -55,7 +55,12 @@ HTTPS (oder `localhost`).
 
 
 ## Umzug von einer anderen App
-Du kommst von Google, Todoist, Obsidian, einer Bank-App oder Bitwarden? Öffne die Checkliste auf der Übersicht (Zeile „Umzug von einer anderen App“) oder **Einstellungen → Sync & Backup → Umzug von einer anderen App …**. Wähle, woher du kommst: Nemo sagt, wo du den Export bekommst (bei Google: Google Takeout, die ZIP-Datei vorher entpacken), und öffnet den passenden Import mit Vorschau. Es wird nichts hochgeladen, du brauchst kein Konto, und jeder Import lässt sich rückgängig machen. Unter der Checklisten-Zeile siehst du, was je Herkunft noch fehlt; Punkte, die die App nicht erkennen kann (Kalender-Abo verbinden, Bitwarden-Import), hakst du selbst ab. Alles ist freiwillig.
+**Einstellungen → Sync & Backup → Umzug von einer anderen App → Umzug starten** (auch über die Befehlspalette, „Aus anderer App importieren“). Drei Schritte auf einem Zettel:
+1. **Woher kommst du?** Google, Apple, Microsoft, Todoist, TickTick, Notion, Evernote, Obsidian/Markdown, Kontoauszug, Passwort-Manager, Browser-Lesezeichen oder „Weiß ich nicht“. Nemo sagt, wo du den Export bekommst.
+2. **Dateien:** Wähle die Dateien oder die ZIP so, wie sie ist (Google Takeout, Todoist-Sicherung, Notion-Export). Gelesen wird nur auf diesem Gerät.
+3. **Prüfen:** Nemo zeigt, was es erkannt hat, warum, wie sicher und wie viel („Todoist (CSV) · 3 Projekte · 214 Aufgaben“). Danach die gewohnte Vorschau je Bereich: neu, bereits gespeichert, nicht lesbar und was warum draußen bleibt.
+
+Wiederholungen (Todoist „jeden Montag“, TickTick-Wiederholungen) und geplante Dauern werden zu echten Wiederholungen und Aufwandsschätzungen. Jeder Umzug lässt sich ganz zurücknehmen: in der Zusammenfassung nach einem Umzug mit mehreren Teilen oder später unter **Letzte Umzüge** auf derselben Karte; was du seitdem geändert hast, bleibt. Passwörter werden nur im Tresor importiert, mit deinem Master-Passwort. Die Schaltfläche **Checkliste** zeigt weiter, was je Herkunft noch fehlt. Alles ist freiwillig.
 
 ## Dev-Preview (ungetestete Zwischenstände)
 

@@ -66,7 +66,8 @@ const block = `
     addPlaceholder: 'Neuer Eintrag …',
   },`;
 writeFileSync(stringsPath, strings.slice(0, end) + block + strings.slice(end));
-for (const lang of ['en', 'es', 'fr', 'pt-BR']) {
+// Active languages besides German (ACTIVE_LOCALES in src/core/i18n/lang.ts; es, fr, pt-BR are frozen).
+for (const lang of ['en']) {
   const r = spawnSync(process.execPath, [join(root, 'scripts', 'i18n-scaffold.mjs'), lang], {
     stdio: 'inherit',
     cwd: root,

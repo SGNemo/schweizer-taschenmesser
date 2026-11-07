@@ -57,9 +57,10 @@ const sourceTexts = new Set(
 );
 
 describe('registries follow a language switch', () => {
-  beforeAll(() => provideCatalog('es', pseudoCatalog(de)));
+  // English slot, filled with pseudo text: every active language besides the German source.
+  beforeAll(() => provideCatalog('en', pseudoCatalog(de)));
   // The global setup switches back to German after every test.
-  beforeEach(() => setLang('es'));
+  beforeEach(() => setLang('en'));
 
   it.each([
     ['module manifests', () => allManifests],

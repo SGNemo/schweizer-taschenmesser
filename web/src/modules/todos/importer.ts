@@ -1,6 +1,8 @@
 import { detectTaskExport, parseTaskExport, type ImportedTask } from '@/core/io/taskImport';
 import { parseLines } from '@/core/io/textLines';
 import type { ImportCandidate, ImportParseResult, ImporterRuntime } from '@/core/importer/types';
+import { describeRecurrence } from '@/core/recurrence/describe';
+import { firstOnOrAfter } from '@/core/recurrence/expand';
 import { relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { ensureInbox, listRepo, taskRepo } from './repo';
@@ -18,6 +20,8 @@ const baseName = (fileName: string) =>
   fileName
     .replace(/^.*[\\/]/, '')
     .replace(/\.[^.]*$/, '')
+    // Todoist backups name each project file "Inbox [2290578498].csv".
+    .replace(/\s*\[\d+\]$/, '')
     .trim();
 
 /** Description plus the quiet hints about dates and repeats; nothing here repeats by itself. */
@@ -35,17 +39,38 @@ function noteOf(task: ImportedTask): string | undefined {
 }
 
 async function parseFile(
-  text: string,
-  fileName: string,
+  files: { name: string; text: string }[],
   ctx: Parameters<ImporterRuntime['parse']>[2],
 ): Promise<ImportParseResult> {
-  const format = detectTaskExport(text);
-  if (!format) return { candidates: [], notes: [t.onboarding.todos.unknownFormat] };
-  const parsed = parseTaskExport(text, format, {
-    listName: baseName(fileName) || t.todos.inbox,
-    today: ctx.today,
-  });
+  // Several files (a Todoist ZIP: one CSV per project) make one preview; the file name names the list.
+  const tasks: ImportedTask[] = [];
+  let skippedOther = 0;
+  let unknown = 0;
+  for (const file of files) {
+    const format = detectTaskExport(file.text);
+    if (!format) {
+      unknown++;
+      continue;
+    }
+    const one = parseTaskExport(file.text, format, {
+      listName: baseName(file.name) || t.todos.inbox,
+      today: ctx.today,
+    });
+    // Keys are unique per file only.
+    const prefix = `f${files.indexOf(file)}:`;
+    for (const task of one.tasks)
+      tasks.push({
+        ...task,
+        key: prefix + task.key,
+        ...(task.parentKey ? { parentKey: prefix + task.parentKey } : {}),
+      });
+    skippedOther += one.skipped;
+  }
+  if (tasks.length === 0 && unknown > 0)
+    return { candidates: [], notes: [t.onboarding.todos.unknownFormat] };
+  const parsed = { tasks, skipped: skippedOther };
   const notes: string[] = [];
+  if (unknown > 0) notes.push(t.importers.reasons.unreadable(unknown));
 
   const includeDone = ctx.options.includeDone === 'yes';
   const left = parsed.tasks.filter((task) => includeDone || !task.done);
@@ -57,6 +82,8 @@ async function parseFile(
   if (left.length > kept.length) notes.push(t.onboarding.todos.tooMany(MAX_TASKS));
   const repeats = kept.filter((task) => task.dateHint?.recurring).length;
   if (repeats > 0) notes.push(t.onboarding.todos.repeats(repeats));
+  const ruled = kept.filter((task) => task.recurrence).length;
+  if (ruled > 0) notes.push(t.onboarding.todos.repeatsKept(ruled));
 
   const perSource = ctx.options.fileList === PER_SOURCE;
   const candidates: ImportCandidate[] = [];
@@ -111,13 +138,19 @@ async function parseFile(
     const storedParent = parent ? storedIds.get(dedupeOf(parent)) : undefined;
     const newParent = parent && !storedParent ? taskIds.get(parent.key) : undefined;
     const parentId = storedParent ?? newParent;
+    // A repeat counts from its due day; without one it starts at its first day from today on.
+    const due =
+      task.due ??
+      (task.recurrence ? firstOnOrAfter(task.recurrence, ctx.today, ctx.today) : undefined);
     const data: Record<string, unknown> = {
       listId,
       title: task.title,
       done: task.done,
       priority: task.priority,
       order,
-      ...(task.due ? { dueDate: task.due } : {}),
+      ...(due ? { dueDate: due } : {}),
+      ...(task.recurrence ? { recurrence: task.recurrence } : {}),
+      ...(task.estimateMin ? { estimateMin: task.estimateMin } : {}),
       ...(note ? { note } : {}),
       ...(parentId ? { parentId } : {}),
     };
@@ -130,7 +163,12 @@ async function parseFile(
       data,
       label: task.title,
       detail:
-        [perSource ? task.list : '', task.due ? relativeDayLabel(task.due, ctx.today) : '']
+        [
+          perSource ? task.list : '',
+          due ? relativeDayLabel(due, ctx.today) : '',
+          task.recurrence ? describeRecurrence(task.recurrence) : '',
+          task.estimateMin ? t.onboarding.todos.estimate(task.estimateMin) : '',
+        ]
           .filter(Boolean)
           .join(' · ') || undefined,
       dedupeKey: dedupeOf(task),
@@ -141,7 +179,8 @@ async function parseFile(
 
 const runtime: ImporterRuntime = {
   parse(_id, input, ctx) {
-    if (input.kind === 'file') return parseFile(input.text, input.fileName, ctx);
+    if (input.kind === 'file')
+      return parseFile(input.files ?? [{ name: input.fileName, text: input.text }], ctx);
     if (input.kind !== 'text') return { candidates: [], notes: [] };
     const listId = ctx.options.listId ?? '';
     return {

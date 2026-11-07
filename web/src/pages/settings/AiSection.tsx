@@ -13,6 +13,8 @@ import {
   type AiConfig,
   type ProviderEntry,
 } from '@/core/ai/config';
+import { localModelOffered } from '@/core/ai/local/availability';
+import { useLocalModel } from '@/core/ai/local/state';
 import { detectOllama, type OllamaDetection } from '@/core/ai/detectOllama';
 import { PRESETS, getPreset, type PresetId } from '@/core/ai/providers/presets';
 import { coolingDown, clearCooldown } from '@/core/ai/router';
@@ -43,11 +45,15 @@ function parseNumber(text: string): number | undefined {
 const show = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','));
 
 /** Concrete next step when a local Ollama can't be reached (the common first-run problem). */
-function ollamaHelp(entry: ProviderEntry, code: string | undefined): string | undefined {
+function ollamaHelp(
+  entry: ProviderEntry,
+  code: string | undefined,
+  localOffered: boolean,
+): string | undefined {
   if (entry.kind !== 'ollama' || code !== 'unavailable') return undefined;
-  return getPlatform().isNative
-    ? t.ai.settings.ollamaHelpNative
-    : t.ai.settings.ollamaHelpWeb(window.location.origin);
+  if (!getPlatform().isNative) return t.ai.settings.ollamaHelpWeb(window.location.origin);
+  // Only point to "Lokales Modell" when this build can actually download one there.
+  return localOffered ? t.ai.settings.ollamaHelpNative : t.ai.settings.ollamaHelpNoLocal;
 }
 
 function ProviderCard({
@@ -74,6 +80,11 @@ function ProviderCard({
   const [priceIn, setPriceIn] = useState(show(entry.price?.inputPerMTok));
   const [priceOut, setPriceOut] = useState(show(entry.price?.outputPerMTok));
   const [saved, setSaved] = useState(false);
+  const localOffered = useLocalModel((st) => localModelOffered(st.status));
+  useEffect(() => {
+    const local = useLocalModel.getState();
+    if (entry.kind === 'ollama' && !local.status) void local.refresh();
+  }, [entry.kind]);
   const [test, setTest] = useState<ConnectionTest | 'running' | undefined>();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const preset = getPreset(entry.preset);
@@ -201,7 +212,7 @@ function ProviderCard({
       ) : null}
       {reach && !reach.found ? (
         <p className={styles.muted} role="status">
-          {ollamaHelp(entry, 'unavailable')}
+          {ollamaHelp(entry, 'unavailable', localOffered)}
           {getPlatform().isNative ? (
             <>
               {' '}
@@ -215,7 +226,7 @@ function ProviderCard({
       {cooling && !(reach && !reach.found) ? (
         <p className={styles.muted} role="status">
           {s.coolingDown(Math.max(1, Math.ceil((cooling.until - now()) / 60_000)))}{' '}
-          {s.errors[cooling.code] ?? ''} {ollamaHelp(entry, cooling.code) ?? ''}
+          {s.errors[cooling.code] ?? ''} {ollamaHelp(entry, cooling.code, localOffered) ?? ''}
         </p>
       ) : null}
 
@@ -350,7 +361,7 @@ function ProviderCard({
                 : s.testFailed(
                     `${s.errors[test.code] ?? test.code}${test.detail && test.detail !== test.code ? ` (${test.detail})` : ''}`,
                   )}
-              {failure ? ` ${ollamaHelp(entry, failure.code) ?? ''}` : ''}
+              {failure ? ` ${ollamaHelp(entry, failure.code, localOffered) ?? ''}` : ''}
             </p>
           ) : null}
           <div className={styles.row}>

@@ -3,12 +3,13 @@ import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeBrowser } from './fakeBrowser';
+import { createFakeLocalModel } from './fakeLocalModel';
 import { createFakeCustomTabs } from './fakeCustomTabs';
 import { createFakeLaunch } from './fakeLaunch';
 import { createFakeDownloads } from './fakeDownloads';
 import { createFakeTorrent } from './fakeTorrent';
 import { createFakeSystem } from './fakeSystem';
-import { noLocalModel } from './localModel';
+import { noLocalModel, type LocalModelService } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
 import type {
@@ -101,6 +102,28 @@ function e2eKind(): PlatformKind {
     // Storage blocked: stay a plain browser.
   }
   return 'web';
+}
+
+/**
+ * E2E builds posing as desktop only, opt-in per test (`localStorage.__tmLocalModel`): `ready` = a build
+ * with the model (fake download), `build` = a build without it. Anything else keeps the browser's answer.
+ */
+function e2eLocalModel(): LocalModelService {
+  let mode: string | null = null;
+  try {
+    mode = localStorage.getItem('__tmLocalModel');
+  } catch {
+    // Storage blocked: no model.
+  }
+  if (mode === 'ready') return createFakeLocalModel();
+  if (mode === 'build') {
+    return {
+      ...noLocalModel,
+      supported: true,
+      status: () => Promise.resolve({ unavailable: 'build', models: [], devices: [] }),
+    };
+  }
+  return noLocalModel;
 }
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('Not available in the browser'));
@@ -344,7 +367,7 @@ export function createWebPlatform(): PlatformService {
             configure: unsupported,
             clearData: unsupported,
           },
-    localModel: noLocalModel,
+    localModel: isE2eBuild() && e2eKind() === 'desktop' ? e2eLocalModel() : noLocalModel,
     desktop: webDesktop,
     share: webShare,
     lifecycle: { onBackground: onPageHidden },

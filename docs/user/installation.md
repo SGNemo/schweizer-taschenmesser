@@ -54,7 +54,12 @@ Open Chrome/Edge (Windows) or Chrome (Android) → "Install app". Service worker
 HTTPS (or `localhost`).
 
 ## Moving from another app
-Coming from Google, Todoist, Obsidian, a banking app or Bitwarden? Open the checklist on the Overview (row "Moving from another app") or **Settings → Sync & Backup → Moving from another app …**. Choose where you come from: Nemo says where to get the export (for Google: Google Takeout, unzip the ZIP first) and opens the matching import with a preview. Nothing is uploaded, no account is needed, every import can be undone. Under the checklist row you see what is still missing for each origin; points that cannot be detected (connecting a calendar subscription, the Bitwarden import) you tick off yourself. All of it is optional.
+**Settings → Sync & Backup → Move from another app → Start moving** (also from the command palette, "Import from another app"). Three steps on one sheet:
+1. **Where are you coming from?** Google, Apple, Microsoft, Todoist, TickTick, Notion, Evernote, Obsidian/Markdown, bank statement, password manager, browser bookmarks, or "I don't know". Nemo says where to get the export.
+2. **Files:** choose the files or the ZIP as it is (Google Takeout, Todoist backup, Notion export). They are read on this device only.
+3. **Check:** Nemo shows what it recognised, why, how sure it is and how much ("Todoist (CSV) · 3 projects · 214 tasks"). Then the usual preview per area: new entries, already there, not readable, and what stays out and why.
+
+Repeats (Todoist "every Monday", TickTick repeats) and planned durations become real repeats and effort estimates. Every move can be undone as a whole: in the summary after a move with several parts, or later under **Recent moves** on the same card; entries you changed since stay. Passwords are only imported in the vault, with your master password. The **Checklist** button keeps the list of what is still missing per origin. All of it is optional.
 
 ## Dev preview (untested builds)
 

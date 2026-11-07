@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * `npm run check:i18n`: keeps the five UI languages complete and the code free of UI text.
+ * `npm run check:i18n`: keeps the active UI languages (German, English) complete and the code free
+ * of UI text. Frozen languages (es, fr, pt-BR) are not required: docs/i18n/FROZEN.md.
  *   1. Code: no German-looking UI text outside the catalogs (scripts/lib/i18nLiterals.ts); files
  *      that legitimately hold German (parsers, AI prompts, …) are listed with a reason in
  *      src/i18n/literal-allowlist.json.
  *   2. Code: no text read at import time (scripts/lib/i18nCaptures.ts) – it would not follow a
  *      language switch; use a getter or read it inside a function.
- *   3. Catalogs: every language has every text, nothing extra, nothing empty or untranslated, and
+ *   3. Catalogs: every active language has every text, nothing extra, nothing empty or untranslated, and
  *      every text function keeps its values (src/i18n/catalogs.test.ts via Vitest), plus the
  *      registry test that switches the language at runtime (src/i18n/noStaleTexts.test.ts).
  * Exits 1 on any problem (runs in CI).

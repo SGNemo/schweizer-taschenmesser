@@ -9,7 +9,7 @@ Recipes: `docs/HOW-TO.md`; example module `notes/`; scaffold `web/templates/modu
 - `ai.ts`: tiny `aiSchema` (none for private/third-party data); optional `actions` (`docs/howto/ai-actions.md`) + **5 inputs in `web/tests/ai/eval-set.json`**. Secret/connector collections: `dataApi: false`.
 - **`accounts/` (password vault): never add `aiSchema`, `searchable`, widget, calendar item or data-API exposure** (`accounts/__tests__/exclusion.test.ts`). Decrypted data stays in memory only.
 - Money = integer cents; dates `YYYY-MM-DD`/`HH:mm`; `now()`/`today()` (`core/time/now.ts`).
-- UI: German only via `src/strings.ts`, primitives from `ui/`, `data-autofocus` in dialogs, touch targets ≥ 44 px. Add new pages to `e2e/a11y.spec.ts`.
+- UI: texts in `src/strings.ts` + `locales/en/`, primitives from `ui/`, `data-autofocus` in dialogs, touch targets ≥ 44 px. Add new pages to `e2e/a11y.spec.ts`.
 
 ## Module: Pflichtbestandteile
 

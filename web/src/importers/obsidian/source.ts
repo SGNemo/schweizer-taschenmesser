@@ -1,4 +1,4 @@
-import { extOf } from '../helpers';
+import { extOf, withExt } from '../helpers';
 import type { SourceDef } from '../types';
 
 export const source: SourceDef = {
@@ -10,4 +10,7 @@ export const source: SourceDef = {
     const md = files.filter((f) => ['md', 'markdown'].includes(extOf(f.name))).length;
     return md >= 2 ? 0.6 : md === 1 ? 0.4 : 0;
   },
+  summarize: (files) => ({
+    notes: withExt(files, 'md', 'markdown').filter((f) => !/(?:^|\/)\./.test(f.name)).length,
+  }),
 };
