@@ -160,7 +160,7 @@ export function AutoBackupCard({ onOpen }: { onOpen: (text: string, passphrase: 
           <Button onClick={() => void savePassphrase()} disabled={!pass}>
             {t.backup.autoSavePassphrase}
           </Button>
-          <Button variant="primary" onClick={() => void runNow()} disabled={busy}>
+          <Button onClick={() => void runNow()} disabled={busy}>
             {t.backup.autoRunNow}
           </Button>
         </div>

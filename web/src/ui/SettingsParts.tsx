@@ -61,7 +61,9 @@ export function SettingRow({
 
 /**
  * A titled block of a settings category. `bare` skips the card for content that brings its own cards
- * (the older sync / backup / AI sections).
+ * (the older sync / backup / AI sections). `plain` (settings identity v3.1) sets the rows on the page with a hairline
+ * above and between them instead of a card: groups are told apart by their heading and the space between them, not
+ * by a stack of cards.
  */
 export function SettingsGroup({
   id,
@@ -69,6 +71,7 @@ export function SettingsGroup({
   description,
   hint,
   bare,
+  plain,
   children,
 }: {
   id: string;
@@ -76,6 +79,7 @@ export function SettingsGroup({
   description?: string;
   hint?: string;
   bare?: boolean;
+  plain?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -86,7 +90,7 @@ export function SettingsGroup({
         {hint ? <HelpHint text={hint} label={t.help.label} /> : null}
       </header>
       {description ? <p className={styles.groupDescription}>{description}</p> : null}
-      {bare ? children : <div className={styles.card}>{children}</div>}
+      {bare ? children : <div className={plain ? styles.plain : styles.card}>{children}</div>}
     </section>
   );
 }

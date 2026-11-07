@@ -19,14 +19,26 @@ describe('ConnectParts', () => {
     expect(banner.getAttribute('data-tone')).toBe('attention');
   });
 
-  it('a step is a named region with its number hidden from assistive tech', () => {
+  it('a step is a named region with a heading and no drawn number (identity v3.1)', () => {
     render(
       <Step n={2} title="Gerät" hint="Name">
         <input aria-label="feld" />
       </Step>,
     );
     expect(screen.getByRole('region', { name: 'Gerät' })).toBeInTheDocument();
-    expect(screen.getByText('2').getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Gerät', level: 3 })).toBeInTheDocument();
+    expect(screen.queryByText('2')).toBeNull();
+  });
+
+  it('the banner is the shared status card: tinted unless told otherwise', () => {
+    render(
+      <>
+        <StateBanner title="Eins" testId="a" />
+        <StateBanner title="Zwei" testId="b" tinted={false} />
+      </>,
+    );
+    expect(screen.getByTestId('a').getAttribute('data-tinted')).toBe('true');
+    expect(screen.getByTestId('b').getAttribute('data-tinted')).toBe('false');
   });
 
   it('facts are label/value pairs; a fact keeps its test id', () => {

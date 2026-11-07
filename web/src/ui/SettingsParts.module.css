@@ -24,6 +24,12 @@
   border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-4);
 }
+.plain {
+  border-top: 1px solid var(--border);
+}
+.plain > .row:last-child {
+  border-bottom: 1px solid var(--border);
+}
 .row {
   position: relative;
   display: flex;

@@ -212,6 +212,8 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
     <Card title={def.name} data-testid={`connector-${def.id}`}>
       <div className={styles.form}>
         <StateBanner
+          // One card per connector: none of them takes the tab's single tint (settings identity v3.1).
+          tinted={false}
           icon={def.icon}
           tone={state === 'connected' ? 'ok' : state === 'error' ? 'attention' : 'neutral'}
           title={s.status[state] ?? state}

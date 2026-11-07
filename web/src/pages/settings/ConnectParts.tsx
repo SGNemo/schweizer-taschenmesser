@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Icon, type IconName } from '@/ui';
+import type { IconName } from '@/ui';
+import { StatusCard } from './components/StatusCard';
 import styles from './ConnectParts.module.css';
 
 /**
@@ -7,52 +8,36 @@ import styles from './ConnectParts.module.css';
  * the state first, numbered or plain steps with a short hint, a grid of facts and one row of actions.
  */
 
-/** The state in words and an icon (never colour alone); `children` sit on the right (a badge). */
-export function StateBanner({
-  icon,
-  title,
-  line,
-  tone = 'neutral',
-  testId,
-  titleTestId,
-  children,
-}: {
+/**
+ * The state in words and an icon (never colour alone); `children` sit on the right (a badge). Since settings identity
+ * v3.1 this is the shared `StatusCard` (tinted in the tab's hue); a second card on the same tab passes `tinted={false}`.
+ */
+export function StateBanner(props: {
   /** Leave out where the words say it all (keeps the page quiet). */
   icon?: IconName;
   title: string;
   line?: ReactNode;
   tone?: 'neutral' | 'ok' | 'attention';
+  tinted?: boolean;
   testId?: string;
   /** Test id on the state words alone (a test that reads exactly the status). */
   titleTestId?: string;
   children?: ReactNode;
 }) {
-  return (
-    <div className={styles.banner} data-tone={tone} data-testid={testId}>
-      {icon ? (
-        <span className={styles.bannerIcon} aria-hidden="true">
-          <Icon name={icon} size={22} />
-        </span>
-      ) : null}
-      <div className={styles.bannerText}>
-        <p className={styles.bannerTitle} data-testid={titleTestId}>
-          {title}
-        </p>
-        {line ? <p className={styles.bannerLine}>{line}</p> : null}
-      </div>
-      {children ? <div className={styles.bannerAside}>{children}</div> : null}
-    </div>
-  );
+  return <StatusCard {...props} />;
 }
 
-/** One step of a card: a title with a short hint above its fields; steps are separated by a hairline. */
+/**
+ * One group of a card: a heading with a short hint above its fields; groups are separated by a hairline. Settings
+ * identity v3.1: groups carry a heading, not a step number – `n` is accepted for the callers' reading order only and
+ * is not drawn.
+ */
 export function Step({
-  n,
   title,
   hint,
   children,
 }: {
-  /** Shown in a small round mark; leave out for a step that is not part of a sequence. */
+  /** Order of the group in its card; not drawn since identity v3.1 (headings instead of numbered steps). */
   n?: number;
   title: string;
   hint?: string;
@@ -61,11 +46,6 @@ export function Step({
   return (
     <section className={styles.step} aria-label={title}>
       <header className={styles.stepHead}>
-        {n ? (
-          <span className={styles.stepNo} aria-hidden="true">
-            {n}
-          </span>
-        ) : null}
         <div>
           <h3 className={styles.stepTitle}>{title}</h3>
           {hint ? <p className={styles.stepHint}>{hint}</p> : null}

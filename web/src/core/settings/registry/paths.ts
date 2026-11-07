@@ -30,7 +30,7 @@ export function settingsPath(
 
 /** Anchors of the old single-page settings (`/settings#sync`) and where they live now. */
 export const LEGACY_HASHES: Readonly<Record<string, SettingsCategoryId>> = {
-  setup: 'ueber',
+  setup: 'einrichtung',
   appearance: 'darstellung',
   favourites: 'darstellung',
   reading: 'barrierefreiheit',

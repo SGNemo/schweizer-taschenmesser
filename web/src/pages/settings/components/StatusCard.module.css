@@ -1,0 +1,100 @@
+/* Status card of a settings tab (identity v3.1): tokens only, a hairline all around, no edge stripe. The tint is the
+   tab's hue (`--tab-color` from `data-tab-hue` on the category page); "Ruhig" and "Modulfarben: Aus" turn the
+   `--mod-*` tokens grey, so the card follows. */
+/* One rule per hue of `MODULE_HUES` (core/modules/types.ts); categories pick theirs in `categoryLook.ts`. */
+[data-tab-hue='lime'] {
+  --tab-color: var(--mod-lime);
+}
+[data-tab-hue='moss'] {
+  --tab-color: var(--mod-moss);
+}
+[data-tab-hue='fern'] {
+  --tab-color: var(--mod-fern);
+}
+[data-tab-hue='teal'] {
+  --tab-color: var(--mod-teal);
+}
+[data-tab-hue='ocean'] {
+  --tab-color: var(--mod-ocean);
+}
+[data-tab-hue='sky'] {
+  --tab-color: var(--mod-sky);
+}
+[data-tab-hue='cobalt'] {
+  --tab-color: var(--mod-cobalt);
+}
+[data-tab-hue='indigo'] {
+  --tab-color: var(--mod-indigo);
+}
+[data-tab-hue='violet'] {
+  --tab-color: var(--mod-violet);
+}
+[data-tab-hue='orchid'] {
+  --tab-color: var(--mod-orchid);
+}
+[data-tab-hue='slate'] {
+  --tab-color: var(--mod-slate);
+}
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.card[data-tinted='true'] {
+  background: color-mix(in srgb, var(--tab-color, var(--text-3)) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--tab-color, var(--text-3)) 32%, var(--border));
+}
+.card[data-tone='attention'] {
+  border-color: var(--accent);
+}
+.icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.card[data-tone='ok'] .icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.figure {
+  /* A ring in the figure draws in the tab's hue. */
+  --module-color: var(--tab-color, var(--text-3));
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.text {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.line {
+  margin: var(--space-hair) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.aside,
+.action {
+  flex: none;
+  max-width: 100%;
+}
+.body {
+  flex: 1 0 100%;
+  min-width: 0;
+}

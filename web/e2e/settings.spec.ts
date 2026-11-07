@@ -101,7 +101,8 @@ test('search finds a setting by its description, jumps there and highlights it',
   await expect(hit).toContainText('Schnellerfassung');
   await hit.click();
   await expect(page).toHaveURL(/\/settings\/schnellerfassung#quickcapture--hotkey$/);
-  await expect(page.getByRole('heading', { name: 'Schnellerfassung', level: 2 })).toBeVisible();
+  // The browser has no hotkey row (Windows app only): the link lands on the page's first group.
+  await expect(page.getByRole('heading', { name: 'Ziel', level: 2 })).toBeVisible();
   await expect(page.locator('section[aria-labelledby="quickcapture"]')).toHaveAttribute(
     'data-highlight',
     'true',

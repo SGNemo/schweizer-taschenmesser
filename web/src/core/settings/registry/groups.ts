@@ -39,7 +39,6 @@ const SECTION_GROUP: Readonly<Record<string, string>> = {
   localapi: 'network',
   about: 'app',
   'about-updates': 'app',
-  setup: 'app',
   supporter: 'app',
   links: 'legal',
   'legal-imprint': 'legal',

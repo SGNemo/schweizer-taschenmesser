@@ -17,6 +17,7 @@ export interface CategoryLook {
  * module of that area; a hue + area pair of a module is not used (test), slate (the grey) excepted.
  */
 export const CATEGORY_LOOK: Readonly<Record<SettingsCategoryId, CategoryLook>> = {
+  einrichtung: { hue: 'fern', area: 'system' },
   allgemein: { hue: 'slate', area: 'system' },
   darstellung: { hue: 'orchid', area: 'system' },
   barrierefreiheit: { hue: 'teal', area: 'system' },
@@ -44,7 +45,7 @@ export type NavGroupId = 'you' | 'work' | 'data' | 'connect' | 'app';
 
 export const NAV_GROUPS: readonly { id: NavGroupId; categories: readonly SettingsCategoryId[] }[] =
   [
-    { id: 'you', categories: ['allgemein', 'darstellung', 'barrierefreiheit'] },
+    { id: 'you', categories: ['einrichtung', 'allgemein', 'darstellung', 'barrierefreiheit'] },
     { id: 'work', categories: ['module', 'werkzeuge', 'benachrichtigungen'] },
     { id: 'data', categories: ['sicherheit', 'sync'] },
     { id: 'connect', categories: ['ki', 'verbindungen', 'schnellerfassung'] },
