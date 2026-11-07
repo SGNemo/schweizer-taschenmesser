@@ -32,7 +32,14 @@ fn production_sources() -> Vec<(String, String)> {
                 Some(i) => text[..i].to_owned(),
                 None => text,
             };
-            (p.strip_prefix(root()).unwrap().display().to_string(), kept)
+            (
+                p.strip_prefix(root())
+                    .unwrap()
+                    .display()
+                    .to_string()
+                    .replace('\\', "/"),
+                kept,
+            )
         })
         .collect()
 }
