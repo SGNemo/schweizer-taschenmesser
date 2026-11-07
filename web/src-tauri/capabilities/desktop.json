@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-commands",
-  "description": "App commands of the desktop shell (data folder, updater, OAuth loopback, local API, disk and system modules). Not granted on Android, which has none of them. Nothing here opens the file system to the webview: the disk commands only take scan/plan ids and node ids.",
+  "description": "App commands of the desktop shell (data folder, updater, OAuth loopback, local API, LAN sync hub, disk and system modules). Not granted on Android, which has none of them. Nothing here opens the file system to the webview: the disk commands only take scan/plan ids and node ids.",
   "webviews": ["main"],
   "platforms": ["windows", "linux", "macOS"],
   "permissions": [

@@ -675,3 +675,10 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **MD2 Umschlag:** der Umschlag im Kopf zeigt keine Zahlen und keinen Mailtext; die Briefmarke daneben trägt die Zahl der ungelesenen Mails.
 - **MD3 Musik:** Warteschlange neben der Liste, sobald die Seite breit genug ist; Cover-Kopf unverändert.
 - **MD4 Downloads:** leere Ansicht zeigt den Pfeil in der Ablage; ein laufender Download zeigt Zahl und Band im Kopf.
+
+## Sync im Heimnetz: Hub im PC (Paket 2b-2) – nur auf Windows prüfbar
+- **L1 Firewall:** Hub starten, Kopplungsfenster öffnen: Windows fragt einmal nach Freigabe für private Netze; „Zulassen“ merken, „Abbrechen“ → `lan_hub_status` meldet weiter `listening`, ein Handy findet den Hub nicht (Hinweis „Windows blockiert“ in der Oberfläche folgt mit Paket 4).
+- **L2 Netzwerkart:** WLAN auf „Öffentlich“ stellen: `lan_hub_status` zeigt `off`, `blocked: true`, kein Port lauscht (`netstat -ano`); zurück auf „Privat“: lauscht wieder, ohne Neustart (≤ 2 s).
+- **L3 Netzwechsel:** erste Kopplung im Heim-WLAN, dann Hotspot des Handys: Hub lauscht nicht mehr; zurück ins Heim-WLAN: lauscht wieder. VPN/WSL/Docker-Adapter erscheinen nie in `netstat`.
+- **L4 mDNS:** `dns-sd -B _nemo-sync._tcp` (oder Handy-Scanner) zeigt einen zufälligen Namen `nemo-xxxxxxxx`, TXT nur `v=1` und `h=…`; nach Neustart anderer Name; nur auf der Heim-Schnittstelle.
+- **L5 Schlüsselspeicher:** In der Anmeldeinformationsverwaltung stehen Einträge `io.github.sgnemo.taschenmesser.lan-sync` (Dev-Preview: `….dev.lan-sync`); Eintrag löschen → nächster Start legt neue Schlüssel an, alle Geräte müssen neu koppeln.
