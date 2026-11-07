@@ -44,6 +44,7 @@ describe('describeRequest', () => {
     });
     expect(describeRequest('https://sync.example.test/v1/pull?since=3').reason).toBe('sync');
     expect(describeRequest('https://elsewhere.example.test/x').reason).toBe('other');
+    expect(describeRequest('https://api.pwnedpasswords.com/range/ABCDE').reason).toBe('breach');
   });
 });
 
