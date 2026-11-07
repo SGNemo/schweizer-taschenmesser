@@ -236,17 +236,24 @@ impl SessionRegistry {
         n
     }
 
-    /// Closes every open session (key rotation); returns how many were open.
-    pub fn close_all(&self) -> usize {
+    /// Closes every open session (key rotation); returns how many were open. A poisoned lock is an
+    /// error, never a silent "nothing to close".
+    pub fn close_all(&self) -> Result<usize, TrustError> {
         let Ok(mut s) = self.sessions.lock() else {
-            return 0;
+            return Err(TrustError::Storage);
         };
         let n = s.iter().filter(|(_, h)| !h.is_closed()).count();
         for (_, h) in s.iter() {
             h.close();
         }
         s.clear();
-        n
+        Ok(n)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn poison_for_test(&self) {
+        let _guard = self.sessions.lock().unwrap();
+        panic!("poison");
     }
 
     pub fn open_count(&self) -> usize {

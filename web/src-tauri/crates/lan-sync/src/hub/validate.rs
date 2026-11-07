@@ -100,8 +100,9 @@ pub fn validate_push(ops: &[FieldOp], now_ms: u64) -> Result<(), HubError> {
         let Some(text) = op.value.as_str().filter(|s| s.starts_with(ENC_PREFIX)) else {
             return Err(HubError::MissingEnc);
         };
-        // an `enc:v1:` value is a JSON string: two quotes plus the text (escapes only add)
-        if text.len().saturating_add(2) > MAX_VALUE_BYTES {
+        // exact length of the JSON the hub will send back
+        let json_len = serde_json::to_string(text).map_or(usize::MAX, |j| j.len());
+        if json_len > MAX_VALUE_BYTES {
             return Err(HubError::ValueTooLarge);
         }
         if wall > latest {
