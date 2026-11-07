@@ -16,12 +16,12 @@ Base for [CONCEPT.md](CONCEPT.md). Paths relative to the repo root, read on `dev
 - LWW twice + contract; server never merges, only assigns `seq` – `docs/decisions/core.md:16`.
 - `SyncAdapter` abstraction (`selfHosted` built, Google Drive stub) – `docs/decisions/core.md:17`.
 - E2E bullet says "PBKDF2 → AES-GCM" – `docs/decisions/core.md:18`; **stale**: the code uses Argon2id (see §3.4). Not fixed here (out of scope, noted for the PR).
-- Failed-login limit only slows wrong tokens, LAN clients behind one address must not lock each other out – `docs/decisions/core.md:48`.
-- Android cleartext left allowed for plain-HTTP LAN sync – `docs/decisions/core.md:54`.
-- `syncSettled()` + Web Locks – `docs/decisions/core.md:60`.
-- Local API: desktop only, off by default, loopback only, transport in Rust, meaning in TS, no bind-address setting – `docs/decisions/features.md:8`.
-- Extension uses native messaging instead of loopback (local API refuses `Origin`) – `docs/decisions/features.md:42`.
-- Extension pairing: app shows a 6-digit code, popup shows the same code, id stored device-locally in `_meta` – `docs/decisions/features.md:47`.
+- Failed-login limit only slows wrong tokens, LAN clients behind one address must not lock each other out – `docs/decisions/core.md:49`.
+- Android cleartext left allowed for plain-HTTP LAN sync – `docs/decisions/core.md:55`.
+- `syncSettled()` + Web Locks – `docs/decisions/core.md:61`.
+- Local API: desktop only, off by default, loopback only, transport in Rust, meaning in TS, no bind-address setting – `docs/decisions/features.md:9`.
+- Extension uses native messaging instead of loopback (local API refuses `Origin`) – `docs/decisions/features.md:43`.
+- Extension pairing: app shows a 6-digit code, popup shows the same code, id stored device-locally in `_meta` – `docs/decisions/features.md:48`.
 
 ## 3. Client sync (`web/src/core/sync`)
 
@@ -53,7 +53,7 @@ Base for [CONCEPT.md](CONCEPT.md). Paths relative to the repo root, read on `dev
 
 - Local API binds `Ipv4Addr::LOCALHOST`, "deliberately no setting" – `crates/local-api/src/server.rs:95-97`; Host check – `server.rs:330-334`; SHA-256 token check – `crates/local-api/src/auth.rs:17,42-54`; refuses `Origin`/`Sec-Fetch-Site` – `crates/local-api/src/lib.rs:1-9`; default port 47631 – `src/local_api.rs:5`; meaning in TS – `web/src/core/localapi/handler.ts:115-121`.
 - `capabilities/desktop.json` covers Windows/Linux/macOS only (`:6`); local-api grants `:51-54`.
-- Tray (`tray-icon` feature) – `Cargo.toml:29`, `src/capture.rs:17`; autostart plugin – `Cargo.toml:56`, `src/lib.rs:122-123`; started by autostart the main window stays hidden in the tray – `src/capture.rs:103-108`; "In den Tray minimieren statt beenden" defaults off – `web/src/quickCapture/device.ts:25`, `web/src/strings.ts:1080`; "Mit Windows starten" (`autostart`) defaults off too – `device.ts:26`.
+- Tray (`tray-icon` feature) – `Cargo.toml:29`, `src/capture.rs:17`; autostart plugin – `Cargo.toml:56`, `src/lib.rs:122-123`; started by autostart the main window stays hidden in the tray – `src/capture.rs:103-108`; "In den Tray minimieren statt beenden" defaults off – `web/src/quickCapture/device.ts:25`, `web/src/strings.ts:1076`; "Mit Windows starten" (`autostart`) defaults off too – `device.ts:26`.
 - Already in `Cargo.lock`: `tokio` 1.53, `hyper` 1.11, `axum` 0.8, `rustls` 0.23, `ring` 0.17, `sha2` 0.10 (`grep '^name' Cargo.lock`). No mDNS/zeroconf crate anywhere.
 - QR: generator `qrcode-generator` – `web/package.json:107`, `web/src/tools/qr/logic.ts:1`; scanning via the browser `BarcodeDetector` + `getUserMedia` – `web/src/tools/qr/View.tsx:13-19`, `web/src/pages/settings/ShareQr.tsx:85-88`. unsicher: `BarcodeDetector` in the Android WebView / WebView2.
 
