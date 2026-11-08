@@ -31,7 +31,7 @@ export function WeekView({
   const [offset, setOffset] = useState(0);
   const { from, to } = weekOf(addDaysStr(day, offset * 7), weekStart);
   const days = weekDays(from, sessions, meals, day);
-  const earliest = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
+  const canGoBack = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
   const total = days.reduce(
     (a, d) => ({
@@ -60,7 +60,7 @@ export function WeekView({
   return (
     <section aria-label={w.label} data-testid="fitness-week-view">
       <div className={styles.toolbar}>
-        <IconButton label={w.prev} disabled={!earliest} onClick={() => setOffset((o) => o - 1)}>
+        <IconButton label={w.prev} disabled={!canGoBack} onClick={() => setOffset((o) => o - 1)}>
           <Icon name="chevronLeft" />
         </IconButton>
         <p className={styles.groupLabel} aria-live="polite">

@@ -169,11 +169,13 @@ function Fields({
     const tpl = templateSchema.safeParse(toTemplate(collect(), t.fitness.untitled));
     if (!tpl.success || tpl.data.exercises.length === 0)
       return setError(t.fitness.form.emptySession);
-    // The same title again replaces that template (a second tap never makes a copy).
-    const same = templates.find(
-      (x) => x.title.trim().toLocaleLowerCase() === tpl.data.title.toLocaleLowerCase(),
-    );
-    if (same) await templateRepo.update(same.id, tpl.data);
+    // A typed title again replaces that template (a second tap never makes a copy); untitled ones stay apart.
+    const same = title.trim()
+      ? templates.find(
+          (x) => x.title.trim().toLocaleLowerCase() === tpl.data.title.toLocaleLowerCase(),
+        )
+      : undefined;
+    if (same) await templateRepo.update(same.id, { durationMin: undefined, ...tpl.data });
     else await templateRepo.create(tpl.data);
     useUiStore.getState().toast(t.fitness.templates.saved);
   }
@@ -245,6 +247,7 @@ function Fields({
               // Back to today or earlier: the automatic tick goes again (a tick the user set stays).
               setPlanned(false);
               setAutoPlanned(false);
+              setTime(nowTime());
             }
           }}
           required
