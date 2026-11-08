@@ -22,7 +22,7 @@ Stand 2026-11-08, `develop` @ `91a1eaa`, Branch `qa/ui-round-6`. Regeln: [MODULE
 
 ## Eigene Suche (U)
 
-U01–U36 und die Tabu-Notizen T01–T05: [U-FINDINGS.md](U-FINDINGS.md) (A Abbruch-relevant · H Hierarchie/Identität · K Kosmetik).
+U01–U36 und Tabu-Notizen T01–T05 in drei Dateien: [A · Abbruch-relevant](U-A-abbruch.md) (U01–U08), [H · Hierarchie/Identität](U-H-hierarchie.md) (U09–U27), [K · Kosmetik, Messwerte, Tabu](U-K-kosmetik.md) (U28–U36, T01–T05). Nicht gefunden (geprüft): horizontaler Überlauf (0 px überall), Fokusring nur bei Tastatur, Zahlen ohne Kontextzeile, Übergänge außer transform/opacity (einzig `accounts.module.css:32`).
 
 ## Reviewer
 
