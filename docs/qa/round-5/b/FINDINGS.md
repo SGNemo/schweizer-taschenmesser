@@ -3,7 +3,7 @@
 Lauf: `npm run dev:all` (Dev-Preview, leerer Start ohne Testdaten), Playwright mit Windows-UA 1920 × 1080 hell und Samsung-UA 412 px dunkel, Datum 8. Nov. 2026. Persona: [PERSONA.md](PERSONA.md). Screenshots: [`shots/`](shots/) (`before-*`, `after-*`). Alle Daten erfunden.
 
 ## Ablauf vorher (in seinen Worten)
-Einrichtung starten → Name/Text weiter → Profil „Finanz-Fokus“ → „Nur lokal“ → Fertig (5 Klicks). Die Übersicht ist bis auf „In den nächsten Tagen steht nichts an“ leer. Checkliste „Umzug von einer anderen App“ → Bank-Kachel unten suchen → „Kontoauszug importieren“ → Datei gewählt → **„Lege zuerst ein Konto an.“** Zurück, Konto mit Startsaldo anlegen, wieder „Kontoauszug importieren“, Datei, Import. Danach: alles „Ohne Kategorie“, Budget Lebensmittel 0 %, Kontostand 1.227,94 € statt der 1.250 € aus der Banking-App, Export nicht zu finden.
+Einrichtung starten → Name/Text weiter → Profil „Finanz-Fokus“ → „Nur lokal“ → Fertig (5 Klicks). Die Übersicht ist bis auf „In den nächsten Tagen steht nichts an“ leer. Checkliste „Umzug von einer anderen App“ → Bank-Kachel unten suchen → „Kontoauszug importieren“ → Datei gewählt → **„Lege zuerst ein Konto an.“** Zurück, Konto mit Startsaldo anlegen, wieder „Kontoauszug importieren“, Datei, Import. Danach: alles „Ohne Kategorie“, Budget Lebensmittel 0 %, Kontostand 1.227,94 € statt der 1.250 € aus der Online-Banking, Export nicht zu finden.
 
 ## Funde
 
@@ -39,7 +39,7 @@ Ohne Befund (hielt der Störung stand): dieselbe CSV zweimal (alle 10 „Schon v
 | Budget Lebensmittel nach Import (Nov.) | 0,00 € · 0 % | 61,17 € · 15 % |
 | Geld auf der ruhigen Übersicht | nichts (0 Karten) | „Diesen Monat“ |
 | Klicks bis zum Export | 3 (Mehr Felder → Weitere Filter → Export) | 1 |
-| Kontostand = Banking-App | nein (1.227,94 €) | ja, nach einem Eintrag (1.250,00 €) |
+| Kontostand = Online-Banking | nein (1.227,94 €) | ja, nach einem Eintrag (1.250,00 €) |
 
 Aufgabe 2 (zwei Abos, eine Rechnung): vorher und nachher 15 Klicks/Felder, ohne Fund; beide erscheinen auf der Übersicht („Nächste Abbuchungen“, „Fällige Rechnungen“) und jetzt zusätzlich in „Kommt noch“.
 

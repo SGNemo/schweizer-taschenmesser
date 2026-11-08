@@ -8,6 +8,6 @@
 > 2. Zwei Abos und eine Rechnung eintragen und schauen, ob du sie auf der Übersicht wiederfindest.
 > 3. Ein Budget fürs Essen (Kategorie „Lebensmittel“) anlegen und nach dem Import den Stand anschauen.
 > Deine Umsätze bleiben auf deinem Rechner, ich sehe davon nichts.
-> Sag mir bitte ehrlich, was dich genervt hat und wo du hängen geblieben bist – einfach per WhatsApp an mich, gern mit Screenshot.
+> Sag mir bitte ehrlich, was dich genervt hat und wo du hängen geblieben bist – einfach per WhatsApp an mich; Screenshots gern, aber deck die Beträge vorher ab (oder Einstellungen → „Werte ausblenden“).
 
 Hinweise für Sven: Die Installationsschritte sind bewusst knapp; den genauen Wortlaut für SmartScreen und APK liefert `docs/install-first-run`. Feedback bewusst per WhatsApp: „Fehler melden“ in der App führt zu GitHub und braucht ein Konto.
