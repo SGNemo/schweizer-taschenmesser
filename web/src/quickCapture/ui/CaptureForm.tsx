@@ -9,7 +9,6 @@ import { useCaptureSettings } from '../settings';
 import {
   amendCapture,
   CaptureError,
-  findOpenInvoice,
   saveCapture,
   saveCaptures,
   targetFor,
@@ -18,6 +17,11 @@ import {
   type SavedCapture,
 } from '../targets';
 import { formatDay } from '@/core/time/dates';
+import type { CaptureFields as LookupFields } from '../parser';
+
+/** The open-invoice lookup, loaded only when a payment reminder line appears. */
+const findOpenInvoice = async (fields: LookupFields, opts: { today: string }) =>
+  (await import('../targets/lookup')).findOpenInvoice(fields, opts);
 import { fullFormPath } from '../targets/fullForm';
 import { announceSaved } from './announceSaved';
 import { batchRow, batchTypes, isReminder, reminderRow, withoutPart } from './batch';

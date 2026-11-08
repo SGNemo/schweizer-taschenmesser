@@ -3,14 +3,8 @@ import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { createCollectionRepo } from '@/core/db/repo';
 import { setNow } from '@/core/time/now';
-import {
-  amendCapture,
-  captureId,
-  findOpenInvoice,
-  reinstateCapture,
-  saveCapture,
-  saveCaptures,
-} from './index';
+import { amendCapture, captureId, reinstateCapture, saveCapture, saveCaptures } from './index';
+import { findOpenInvoice } from './lookup';
 
 // „Kopf leer“ package 2: create-if-absent ids, the open-invoice lookup and `amend`. Invented data.
 const ON = { todos: true, calendar: true, invoices: true, finance: true, planner: true };
