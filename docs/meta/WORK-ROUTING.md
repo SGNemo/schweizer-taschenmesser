@@ -20,7 +20,7 @@ One page for chats, agents and Sven (2026-11-08). Agent budget: 200 USD/month; o
 
 ## Agents decline (one line, pointing here)
 
-Feature work, new modules, refactorings, design rounds, concepts; trial-and-error debugging; anything that will need questions back; a task without "done means …"; more than 4 delegations; a class above the session budget; secrets/signing/release (Sven himself); lead ↔ auditor directly.
+Feature work, new modules, refactorings, design rounds, concepts; trial-and-error debugging; anything that will need questions back; a task without "done means …" (or „fertig heißt …“); more than 4 delegations; a class above the session budget; secrets/signing/release (Sven himself); lead ↔ auditor directly.
 
 One format for every decline (lead and agents): `blocked – out of routing: <reason> · next: <step>`, where the step is a ready prompt head (`Routing: Claude Code · <title> · <model>`) or the split (`split into: …`).
 
@@ -28,7 +28,7 @@ One format for every decline (lead and agents): `blocked – out of routing: <re
 
 1. Is it new product work – a feature, module, refactoring, design round, or a contract/schema change? → yes: **Claude Code**. (A bounded fix on an open PR with a named finding is not.)
 2. Will it need questions about content or scope before it can finish? → yes: **Claude Code**. (An approval or a short answer is fine.)
-3. Can you say "done means …" in one sentence? → no: **Claude Code** (or write the sentence first).
+3. Can you say "done means …" (or „fertig heißt …“) in one sentence? → no: **Claude Code** (or write the sentence first).
 4. Does it fit in ≤ 4 delegations (one per agent, bundled)? → no: split it.
 5. Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD? Above L: split it. (L is Sven's choice for a night or unattended run.)
 

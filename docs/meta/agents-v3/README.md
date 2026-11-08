@@ -48,11 +48,11 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 ## Workflow v3.1 (one task from Sven)
 
 1. **Route:** `node scripts/agents/session.mjs --routing-check` or WORK-ROUTING; "Claude Code" → a chat, not a session.
-2. **Start:** `node scripts/agents/session.mjs --class S "<Auftrag>"` – one session = one task = one budget class (S 5, M 10, L 15 USD); the first message carries the class.
+2. **Start:** `node scripts/agents/session.mjs "Routing: Lead, S (5 USD) · <title> · done means <…>"` – one session = one task = one budget class (S 5, M 10, L 15 USD), taken from the routing line (or `--class`).
 3. **Gate + situation** – the lead classifies again (declines with a ready prompt head), reads SHARED.md, CHATS, open PRs, `chats:status`.
 4. **Delegate** – at most 4 child threads, one per agent, bundled per area; follow-ups go into the open thread.
 5. **Review** – `nemo-reviewer` with the lenses the paths need (security lens for every path outside the light-path allowlist in SHARED.md; light path = correctness only).
-6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. PRs under `docs/meta/agents-v3/**` or `scripts/agents/**` are merged by Sven.
+6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. PRs under `docs/meta/agents-v3/**`, `docs/meta/WORK-ROUTING.md` or `scripts/agents/**` are merged by Sven.
 7. **Report** – budget class first, 3 points + PR links; then the session ends (a new task = a new session).
 
 **Audit (Sven's tool, outside the flow):** `node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means: AUDIT-pr535.md"` – own session, `nemo-auditor` as primary agent; result `AUDIT-<pr|branch>.md` in the session outputs.

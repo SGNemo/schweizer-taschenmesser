@@ -95,7 +95,10 @@ const GH_NO_WRITES = [
   "sub_issue_write",
 ];
 const GH_OFF_ROLE = {
+  // write roles post no reviews: a COMMENT review starting `MERGE-READY` is part of the merge gate (reviewer only)
+  "nemo-builder": ["pull_request_review_write"],
   "nemo-docs": ["pull_request_review_write"],
+  "nemo-ops": ["pull_request_review_write"],
   "nemo-lead": GH_NO_WRITES,
   "nemo-reviewer": GH_NO_WRITES,
   "nemo-auditor": GH_NO_WRITES,
@@ -138,6 +141,21 @@ const MAX_SYSTEM_DEFAULT = 7000;
 const ROUTING_FILE = "docs/meta/WORK-ROUTING.md";
 const ROUTING_LINE =
   "**Routing gate:** check every delegation against `docs/meta/WORK-ROUTING.md` first; if it does not fit, answer `blocked – out of routing: <reason> · next: <step>` and start no work.";
+// the security-lens gate lives in two prompts; these exact pieces must stay (SHARED.md "Light path and security lens")
+const REQUIRED_TEXT = {
+  "nemo-reviewer": [
+    "light-path allowlist",
+    "`Security lens applied: <paths>`",
+    "`git diff --name-status -M origin/develop...HEAD`",
+    "In a thread opened by `nemo-auditor` you only answer with evidence",
+  ],
+  "nemo-merge": [
+    "light-path allowlist",
+    "`Security lens applied: <paths>`",
+    "`previous_filename`",
+    "you never write a review or comment carrying `MERGE-READY` yourself",
+  ],
+};
 // the lead's advisor (Opus) for decisions; the auditor runs without one
 const ADVISOR = {
   "nemo-lead": { type: "enabled", model: "claude-opus-5-5" },
@@ -247,6 +265,9 @@ for (const file of files) {
     bad(file, `system does not name ${ROUTING_FILE} (routing gate)`);
   if (a.name !== "nemo-lead" && !a.system.includes(ROUTING_LINE + "\n"))
     bad(file, "system lacks the pinned routing-gate line (ROUTING_LINE)");
+  for (const t of REQUIRED_TEXT[a.name] ?? [])
+    if (!a.system.includes(t))
+      bad(file, `security-lens text missing from the prompt: ${t}`);
   if (!(a.name in ROSTER))
     bad(file, `"${a.name}" is not one of the seven v3.1 agents`);
   else {

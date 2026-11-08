@@ -45,6 +45,8 @@ tools:
         enabled: false
       - name: actions_run_trigger
         enabled: false
+      - name: pull_request_review_write
+        enabled: false
 mcp_servers:
   - type: url
     name: github

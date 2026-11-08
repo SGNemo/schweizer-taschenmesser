@@ -145,8 +145,15 @@ const messageText = (() => {
 })();
 // the pasted first line from docs/meta/WORK-ROUTING.md: `Routing: Claude Code | Lead[ → builder] | Auditor, <S|M|L> …`
 const routing = (() => {
-  const first = messageText.trimStart().split("\n", 1)[0];
-  if (!/^Routing:/i.test(first)) return {};
+  // the first `Routing:` line among the first 5 non-empty lines (a brief may start with a heading); pointer lines
+  // such as `Routing: #routing` (PROMPT-TEMPLATES shorthand) are skipped
+  const first = messageText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 5)
+    .find((l) => /^Routing:/i.test(l) && !/^Routing:\s*#/i.test(l));
+  if (!first) return {};
   const m =
     /^Routing:\s*(Claude Code|Lead(?:\s*(?:→|->)\s*[\w-]+)?|Auditor)\b(?:\s*,?\s*([SML])\b)?/i.exec(
       first,
@@ -160,7 +167,7 @@ const routing = (() => {
   const who = m[1].toLowerCase();
   if (!who.startsWith("claude") && !m[2] && flags.class === undefined)
     console.warn(
-      `warning: routing line has no class (S|M|L) – the session runs as S unless --budget says more`,
+      `warning: routing line has no class – add S|M|L to it or pass --class; the session runs as S unless --budget says more`,
     );
   return {
     role: who.startsWith("claude")
@@ -797,6 +804,10 @@ async function main() {
   // a budget can only be added when the session is created: always send one (the class sets it, default S = 5 USD)
   if (cfg.budgetUsd === undefined) cfg.budgetUsd = CLASSES[taskClass];
   checkExpensive(cfg.budgetUsd);
+  if (cfg.budgetUsd > CLASSES[taskClass])
+    console.warn(
+      `warning: budget ${cfg.budgetUsd} USD is above ${classLine()} – the lead treats the task as ${taskClass}; pass --class for a bigger task`,
+    );
   // routing header: the lead's routing gate reads class and budget from the first line (docs/meta/WORK-ROUTING.md)
   const routed = `[session.mjs] Budget-Klasse ${taskClass} (≤ ${CLASSES[taskClass]} USD) · Session-Budget ${cfg.budgetUsd} USD · Routing: docs/meta/WORK-ROUTING.md\n\n${message}`;
   if (!repoToken)
