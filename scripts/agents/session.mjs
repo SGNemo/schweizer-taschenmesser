@@ -11,7 +11,8 @@
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
 //
-// Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mount only, sent only for the Nemo repo),
+// Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mounts only, sent only to the Nemo repo and the
+// private notes repo SGNemo/nemo-scribble, mounted as a second resource; --no-scribble leaves it out),
 // NEMO_LEAD_AGENT_ID / NEMO_ENV_ID / NEMO_VAULT_ID (or --agent/--env/--vault; defaults read from claude-lock.json).
 // Requires `npm i` in scripts/agents (@anthropic-ai/sdk 1.6.0, pinned; the SDK adds the managed-agents-2026-04-01 beta header).
 import fs from "node:fs";
@@ -24,6 +25,10 @@ const DEFAULTS = {
   repo: "https://github.com/SGNemo/schweizer-taschenmesser",
   mount: "/workspace/schweizer-taschenmesser",
   checkout: "develop",
+  // Private notes repo (scribble), second mount; the same token, nothing else gets it.
+  scribbleRepo: "https://github.com/SGNemo/nemo-scribble",
+  scribbleMount: "/workspace/nemo-scribble",
+  scribbleCheckout: "main",
   lock: path.join(REPO_ROOT, "claude-lock.json"),
   leadFile: "docs/meta/agents-v3/nemo-lead.md",
   envFile: "docs/meta/agents-v3/environment.yaml",
@@ -40,6 +45,7 @@ const boolFlags = new Set([
   "verbose",
   "help",
   "no-vault",
+  "no-scribble",
 ]);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -111,11 +117,22 @@ const cfg = {
   dryRun: !!flags["dry-run"],
 };
 const githubToken = process.env.GITHUB_TOKEN;
-// the PAT goes to the Nemo repository only; any other --repo is mounted without it
-const repoToken = foreignRepo ? undefined : githubToken;
+// the PAT goes to exactly these two repositories (the Nemo repo and the notes repo); any other --repo is mounted without it
+const TOKEN_REPOS = new Set(
+  [DEFAULTS.repo, DEFAULTS.scribbleRepo].map(normUrl),
+);
+const tokenFor = (url) =>
+  githubToken && TOKEN_REPOS.has(normUrl(url)) ? githubToken : undefined;
+const repoToken = tokenFor(cfg.repo);
 if (githubToken && !repoToken)
   console.warn(
-    `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo}; ${cfg.repo} is mounted without a token and without the vault`,
+    `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo} and ${DEFAULTS.scribbleRepo}; ${cfg.repo} is mounted without a token and without the vault`,
+  );
+// The notes repo is private: without the token the mount would fail, so it is left out then.
+const withScribble = !flags["no-scribble"] && !!githubToken;
+if (!flags["no-scribble"] && !githubToken)
+  console.warn(
+    "warning: no GITHUB_TOKEN – the private notes repo is not mounted (session folder /workspace/scribble only)",
   );
 
 function cents(usd) {
@@ -452,14 +469,26 @@ async function main() {
         checkout: { type: "branch", name: cfg.checkout },
         ...(repoToken ? { authorization_token: repoToken } : {}),
       },
+      ...(withScribble
+        ? [
+            {
+              type: "github_repository",
+              url: DEFAULTS.scribbleRepo,
+              mount_path: DEFAULTS.scribbleMount,
+              checkout: { type: "branch", name: DEFAULTS.scribbleCheckout },
+              authorization_token: tokenFor(DEFAULTS.scribbleRepo),
+            },
+          ]
+        : []),
     ],
     ...(cfg.vault ? { vault_ids: [cfg.vault] } : {}),
     metadata: { team: "nemo", runner: "session.mjs" },
   };
   if (cfg.dryRun) {
     const shown = structuredClone(body);
-    if (shown.resources[0].authorization_token)
-      shown.resources[0].authorization_token = "<GITHUB_TOKEN from env>";
+    for (const r of shown.resources)
+      if (r.authorization_token)
+        r.authorization_token = "<GITHUB_TOKEN from env>";
     console.log(
       JSON.stringify({ create: shown, first_message: message }, null, 2),
     );
@@ -468,7 +497,7 @@ async function main() {
   const c = await client();
   const session = await c.beta.sessions.create(body);
   console.log(
-    `session ${session.id} created (budget ${body.budget.max_list_cost.amount} cents, checkout ${cfg.checkout})`,
+    `session ${session.id} created (budget ${body.budget.max_list_cost.amount} cents, checkout ${cfg.checkout}, ${body.resources.length} repo mount(s))`,
   );
   console.log(
     `resume later: node scripts/agents/session.mjs --session ${session.id} "…"`,
