@@ -44,13 +44,13 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
    node scripts/agents/to-ant.mjs --check
    ant apply --dry-run docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md   # nicht hier geprüft
    ```
-   Der Dry-Run zeigt den Plan: 1 Environment, 21 Agenten; `nemo-lead.md` und `nemo-auditor.md` verweisen mit `./nemo-po.md` usw. auf dieselben 19 – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 19, dann Lead und Auditor mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig. Lead und Auditor stehen in **keiner** Liste: ein Agent mit `multiagent`-Block kann laut Doku kein Subagent sein (Tiefe eine Ebene, sonst 400).
+   Der Dry-Run zeigt den Plan: 1 Environment, 21 Agenten; `nemo-lead.md` verweist mit `./nemo-po.md` usw. auf die 19, `nemo-auditor.md` auf dieselben ohne `nemo-merge` (18; ein Audit mergt nie) – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 19, dann Lead und Auditor mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig. Lead und Auditor stehen in **keiner** Liste: ein Agent mit `multiagent`-Block kann laut Doku kein Subagent sein (Tiefe eine Ebene, sonst 400).
 4. **Anwenden** (nicht hier geprüft):
    ```bash
    ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
    ```
    Ergebnis: `claude-lock.json` im Repo-Root mit je Datei `kind`, `id` (`agent_…`, `env_…`), `version`, `hash`. **Committen** (Branch + PR wie immer; keine Secrets darin). `session.mjs` sucht darin die Einträge, deren Schlüssel auf `docs/meta/agents-v3/nemo-lead.md` bzw. `environment.yaml` enden (`cat claude-lock.json` zeigt die Schlüssel; beide Schreibweisen, mit und ohne `./`, werden erkannt – geprüft mit einer nachgebauten Lock-Datei, nicht mit einer echten). Findet es sie nicht: IDs als `NEMO_LEAD_AGENT_ID` und `NEMO_ENV_ID` setzen oder `--agent`/`--env` übergeben.
-5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen der 19 (Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
+5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen ihrer Subagenten (Lead 19, Auditor 18 ohne `nemo-merge`; Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
 6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. nach dem Umbenennen des Ordners beim Umstieg).
 
 ## 3 Vault und GitHub
@@ -98,13 +98,13 @@ Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `clau
 
 ### Auditor starten
 
-Einmalig anlegen (nur diese Datei; der Lead bleibt unberührt, nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 19 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
+Einmalig anlegen (nur diese Datei; der Lead bleibt unberührt, nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 18 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
 
 ```bash
 node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"
 ```
 
-Eigene Session, Auditor als Primär-Agent; er fragt die 19 nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
+Eigene Session, Auditor als Primär-Agent; er fragt die 18 (alle außer `nemo-merge`) nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
 
 ### Erster Testlauf (Budget 2 USD)
 
