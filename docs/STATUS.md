@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Installation ohne Sven daneben (`docs/install-first-run`, PR offen): Website `/install` + `/en/install` mit genauen Klicks für Windows-SmartScreen (Edge-Warnung, intelligente App-Steuerung) und Samsung (Quelle zulassen, Play Protect, automatische Blockierung), ehrlichem Warum und SHA-256-Prüfung; Dev-Preview-Release-Text beginnt mit Downloads, beiden Kurzanleitungen und SHA-256 je Datei; Screenshots fehlen noch (Windows-VM/Samsung nötig).
 Erstkontakt-Runde Person A (`feat/demo-a`, PR offen): Setup-Schritt „Fokus-Hilfen“ (Vorauswahl „Ruhig“), Fortsetzen genau an der Pause, Schrittübersicht vorab, Toasts warten bei Fokus + Schalter „Hinweise bleiben stehen“, wörtliche Texte (ToDos, Notizen, Einrichtung), Umzug-Fixes B05/B08 ([qa/round-5/a](qa/round-5/a/FINDINGS.md)).
 
 Erstkontakt-Runde 5, Person C (`feat/demo-c`, PR offen): Schnellerfassung am Handy – Erinnerung fragt einmal nach Benachrichtigungen, „Tanken 62,40“/„Do 14 Uhr“ erkannt, Entwurf übersteht App-Ende, 44-px-Umschalter; Funde [qa/round-5/c](qa/round-5/c/FINDINGS.md).

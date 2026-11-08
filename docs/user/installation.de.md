@@ -14,7 +14,9 @@ Nemo gibt es als portable Windows-Datei, als Android-App und als PWA im Browser.
 2. Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen), weil unbekannte
    `.exe`-Dateien ohne gekauftes Code-Signing-Zertifikat immer so behandelt werden: **„Weitere Informationen“ →
    „Trotzdem ausführen“**. Der Update-Inhalt ist mit dem Update-Schlüssel des Projekts signiert; die App prüft
-   die Signatur vor jedem Update selbst (und verweigert unsignierte oder fremd signierte Dateien).
+   die Signatur vor jedem Update selbst (und verweigert unsignierte oder fremd signierte Dateien). Meldet Windows
+   stattdessen die **intelligente App-Steuerung** (Smart App Control) ohne „Trotzdem ausführen“, lässt es unsignierte
+   Apps gar nicht zu; mehr dazu und alle Klicks mit Edge-Download-Warnung: [Schritt für Schritt](https://nemo-adhd-helper.online/install) ([English](https://nemo-adhd-helper.online/en/install)).
 3. **Voraussetzung: Microsoft WebView2.** Unter Windows 10/11 ist die Komponente in der Regel schon da (sie gehört zu
    Edge). Fehlt sie, erklärt die App das in einem Fenster und öffnet auf Wunsch die
    [Download-Seite](https://developer.microsoft.com/microsoft-edge/webview2/) („Evergreen Bootstrapper“).
@@ -40,8 +42,10 @@ Die alte installierte Version kann sich nicht selbst auf die portable Datei aktu
 
 1. `Nemo.apk` auf dem Handy herunterladen (z. B. im Chrome-Browser) und öffnen.
 2. Android fragt beim ersten Mal, ob die **Installation aus unbekannten Quellen** erlaubt ist: **„Einstellungen“ →
-   „Aus dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
-   kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“).
+   „Von dieser Quelle zulassen“** für den Browser bzw. die Dateien-App, dann zurück und „Installieren“. Play Protect
+   kann eine zusätzliche Prüfung anbieten („Trotzdem installieren“ bzw. „App scannen“). Blockiert die **Automatische
+   Blockierung** neuerer Samsung-Geräte die Installation: Einstellungen → Sicherheit und Datenschutz → Automatische
+   Blockierung aus, installieren, wieder einschalten (solange sie an ist, scheitern auch Updates aus der App).
 3. Für spätere Updates öffnest du Einstellungen → Updates und tippst auf „Jetzt aktualisieren“: Die App lädt das Update, prüft die
    Prüfsumme und übergibt an den Android-Installer (wenn gefragt, die Installation aus dieser Quelle erlauben). Die neue APK muss mit demselben
    Schlüssel signiert sein, sonst lehnt Android sie ab.

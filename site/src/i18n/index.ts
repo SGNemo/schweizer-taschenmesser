@@ -18,6 +18,7 @@ export const strings: Record<Locale, Strings> = { de, en };
  */
 export const routes = {
   home: { de: '/', en: '/en' },
+  install: { de: '/install', en: '/en/install' },
   imprint: { de: '/impressum', en: '/en/imprint' },
   privacy: { de: '/datenschutz', en: '/en/privacy' },
 } as const;

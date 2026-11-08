@@ -113,7 +113,7 @@ export const de = {
     },
     android: {
       summary: 'Android: APK installieren',
-      text: 'APK öffnen und „Aus dieser Quelle zulassen“ für den Browser oder Dateimanager erlauben. Spätere Updates lädt die App selbst und prüft die Prüfsumme; Android akzeptiert nur APKs mit demselben Signaturschlüssel.',
+      text: 'APK öffnen und „Von dieser Quelle zulassen“ für den Browser oder Dateimanager erlauben. Spätere Updates lädt die App selbst und prüft die Prüfsumme; Android akzeptiert nur APKs mit demselben Signaturschlüssel.',
     },
     updates: {
       summary: 'Updates kommen in der App',
@@ -125,7 +125,71 @@ export const de = {
       windows: 'Dev-Preview für Windows',
       android: 'Dev-Preview für Android',
     },
+    steps: 'Schritt für Schritt, mit den Warnungen von Windows und Android',
     more: 'Ausführliche Anleitung',
+  },
+  // Step-by-step page /install (components/InstallGuide.astro). Button labels are the exact wording of
+  // Windows 11 and Samsung One UI in German; `ui` marks the word to tap, `text` explains the step.
+  installPage: {
+    title: 'Installieren, Schritt für Schritt',
+    description: 'Nemo auf Windows und Android installieren: was die Warnungen von Windows SmartScreen und Android bedeuten, welche Knöpfe du drückst und wie du die Datei prüfst.',
+    lead: 'Windows und Android warnen beim ersten Start. Das ist bei Nemo im Moment normal. Hier steht, warum, und genau welche Knöpfe du drückst.',
+    downloads: {
+      title: 'Herunterladen',
+      stable: 'Stabile Version',
+      dev: 'Dev-Preview (ungetestet)',
+      devHint: 'Die Dev-Preview ist eine eigene App „Nemo Dev“ mit eigenen Daten. Sie läuft neben der stabilen App und ersetzt sie nicht.',
+    },
+    why: {
+      title: 'Warum warnt dein Gerät?',
+      text: 'Nemo ist ein kleines Open-Source-Projekt. Die Windows-Datei ist nicht mit einem gekauften Code-Signing-Zertifikat unterschrieben, und die Android-App kommt nicht aus dem Play Store. Deshalb kennen Windows und Android den Herausgeber nicht und fragen nach. Die Warnung ist berechtigt: Sie gilt für jede Datei aus dem Netz, die dein Gerät nicht kennt. Installiere nur, was du von dieser Seite oder vom GitHub-Release hast.',
+      signed: 'Was trotzdem signiert ist: Updates in der App sind mit dem Schlüssel des Projekts unterschrieben und werden vor dem Einspielen geprüft. Die Android-App ist mit einem festen Schlüssel signiert; Android nimmt Updates nur mit demselben Schlüssel an.',
+    },
+    check: {
+      title: 'Datei prüfen (optional)',
+      text: 'Jede Datei hat im GitHub-Release eine SHA-256-Prüfsumme. Stimmt sie mit deiner Datei überein, ist es genau die Datei, die das Projekt gebaut hat.',
+      windows: 'Windows: PowerShell im Download-Ordner öffnen und eingeben (Dev-Preview: Nemo-Portable-dev.exe):',
+      android: 'Android: eine Prüfsummen-App oder später am PC mit demselben Befehl.',
+      stable: 'Prüfsummen der stabilen Version',
+      dev: 'Prüfsummen der Dev-Preview',
+    },
+    windows: {
+      title: 'Windows 11 und 10',
+      steps: [
+        { text: 'Datei herunterladen. Meldet Edge „wird nicht häufig heruntergeladen“, auf die drei Punkte klicken, dann', ui: ['Beibehalten', 'Mehr anzeigen', 'Trotzdem beibehalten'] },
+        { text: 'Datei im Download-Ordner doppelt anklicken. Es erscheint „Der Computer wurde durch Windows geschützt“. Unter dem Text auf', ui: ['Weitere Informationen'] },
+        { text: 'Jetzt steht dort „Herausgeber: Unbekannter Herausgeber“. Prüfe, dass die App „Nemo-Portable.exe“ oder „Nemo-Portable-dev.exe“ heißt, dann', ui: ['Trotzdem ausführen'] },
+        { text: 'Nemo startet. Die Frage kommt nur beim ersten Start dieser Datei.', ui: [] },
+      ],
+      sac: 'Steht dort stattdessen „Intelligente App-Steuerung“ (Smart App Control) und es gibt keinen Knopf „Trotzdem ausführen“: Diese Schutzfunktion lässt unsignierte Apps gar nicht zu. Wir raten davon ab, sie für Nemo auszuschalten: Sie schützt alle Apps. Nimm dann lieber die Android-App oder warte auf eine signierte Version.',
+      webview: 'Nemo braucht WebView2. Windows 10 und 11 haben es fast immer schon; fehlt es, zeigt Windows einen Hinweis mit Link.',
+    },
+    android: {
+      title: 'Android (Samsung, One UI)',
+      steps: [
+        { text: 'APK im Browser herunterladen. Fragt Chrome, ob du die Datei behalten willst:', ui: ['Trotzdem herunterladen'] },
+        { text: 'Benachrichtigung „Download abgeschlossen“ antippen oder die Datei unter „Eigene Dateien → Downloads“ öffnen.', ui: [] },
+        { text: 'Android sagt, dass dein Telefon keine unbekannten Apps aus dieser Quelle installieren darf. Tippe auf', ui: ['Einstellungen'] },
+        { text: 'Den Schalter für den Browser oder die Dateien-App einschalten:', ui: ['Von dieser Quelle zulassen'] },
+        { text: 'Mit „Zurück“ zur Installation, dann', ui: ['Installieren'] },
+        { text: 'Fragt Google Play Protect nach, ist das dieselbe Warnung wie oben: Die App kommt nicht aus dem Play Store. Wähle „App scannen“; wenn danach „Trotzdem installieren“ erscheint, entscheidest du.', ui: [] },
+      ],
+      autoBlocker: 'Kommt die Meldung „Von der automatischen Blockierung blockiert“: Auf neueren Samsung-Geräten verhindert diese Funktion Apps außerhalb der Stores. Einstellungen → Sicherheit und Datenschutz → Automatische Blockierung → aus, Nemo installieren, danach wieder einschalten. Solange sie an ist, kann Nemo auch seine eigenen Updates nicht installieren.',
+      after: 'Danach kannst du „Von dieser Quelle zulassen“ für den Browser wieder ausschalten. Beim ersten Update aus der App fragt Android einmal, ob Nemo Updates installieren darf.',
+    },
+    firstStart: {
+      title: 'Beim ersten Start',
+      items: [
+        'Nemo öffnet sich in der Sprache deines Systems, Deutsch oder Englisch (andere Sprachen: Englisch). Ändern kannst du sie in den Einstellungen.',
+        'Die Dev-Preview zeigt oben ein Schild „Dev“ und kurz einen Hinweis darauf. Das ist kein Fehler, nur das Zeichen, dass du die Vorschau nutzt.',
+        'Die Dev-Preview füllt sich beim ersten Start mit erfundenen Testdaten, zum Ausprobieren. Rote Karten wie „Rechnungen überfällig“ gehören dazu. Entfernen: Einstellungen → Entwickler → „Testdaten entfernen“.',
+        'Die stabile Version startet leer und fragt, ob du sie Schritt für Schritt einrichten willst. Jeder Schritt lässt sich überspringen.',
+        'Kein Konto, keine Anmeldung. Gibt es ein Update, zeigt die App es an; du entscheidest, wann es kommt.',
+      ],
+    },
+    help: 'Hängst du irgendwo fest? Schreib, an welchem Schritt, ein Bildschirmfoto hilft.',
+    helpLink: 'Frage auf GitHub stellen',
+    back: 'Zur Startseite',
   },
   support: {
     eyebrow: 'Unterstützen',
