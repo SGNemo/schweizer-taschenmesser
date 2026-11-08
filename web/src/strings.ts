@@ -1098,6 +1098,10 @@ export const de = {
       bookExpense: 'Als Ausgabe buchen',
       bookIncome: 'Als Einnahme buchen',
       bookLine: (action: string, line: string) => `${action}: ${line}`,
+      calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      dunningMatch: (payee: string, due: string) =>
+        `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
+      dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
     },
     trayToday: {
       heading: 'Heute',

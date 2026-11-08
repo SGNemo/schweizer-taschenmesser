@@ -1,6 +1,7 @@
 import { formatMoney } from '@/core/money';
 import type { CaptureFields, CaptureType } from '../parser';
-import { targetFor } from '../targets';
+import { t } from '@/strings';
+import { targetFor, type InvoiceLookup, type OpenInvoice } from '../targets';
 
 /** One line of a many-lines capture as it will be saved. */
 export interface BatchRow {
@@ -73,4 +74,35 @@ export function withoutPart(text: string, part: string): string {
   if (rest.length < 3) lines.splice(i, 1);
   else lines[i] = rest;
   return lines.join('\n');
+}
+
+/**
+ * A payment reminder line (an invoice with `dunning`) after the open-invoice lookup: one open invoice
+ * → noted on it (`amend`, with a ToDo to fall back on when it was settled meanwhile); several equally
+ * good ones → a ToDo „Mahnung <Empfänger> prüfen“ (nothing asks while unloading); none → a new invoice
+ * at its dunning level. Everything else is passed through.
+ */
+export interface ReminderRow {
+  type?: CaptureType;
+  fields: CaptureFields;
+  amend?: OpenInvoice;
+  fallback?: { type: CaptureType; fields: CaptureFields };
+}
+
+export const isReminder = (type: CaptureType | undefined, fields: CaptureFields): boolean =>
+  type === 'invoice' && !!fields.dunning;
+
+export function reminderRow(
+  type: CaptureType | undefined,
+  fields: CaptureFields,
+  lookup: InvoiceLookup | undefined,
+  available: readonly CaptureType[],
+): ReminderRow {
+  if (!isReminder(type, fields) || !lookup) return { type, fields };
+  const check = available.includes('todo')
+    ? { type: 'todo' as const, fields: { title: t.quickCapture.multi.dunningCheck(fields.title) } }
+    : undefined;
+  if ('match' in lookup)
+    return { type, fields, amend: lookup.match, ...(check ? { fallback: check } : {}) };
+  return check ?? { type, fields };
 }

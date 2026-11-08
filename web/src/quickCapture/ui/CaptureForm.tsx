@@ -6,10 +6,21 @@ import { Button, Dialog } from '@/ui';
 import { parseCapture, type CaptureFields, type CaptureType } from '../parser';
 import { splitCapture } from '../parser/split';
 import { useCaptureSettings } from '../settings';
-import { CaptureError, saveCapture, saveCaptures, targetFor, type SavedCapture } from '../targets';
+import {
+  amendCapture,
+  CaptureError,
+  findOpenInvoice,
+  saveCapture,
+  saveCaptures,
+  targetFor,
+  type CaptureItem,
+  type InvoiceLookup,
+  type SavedCapture,
+} from '../targets';
+import { formatDay } from '@/core/time/dates';
 import { fullFormPath } from '../targets/fullForm';
 import { announceSaved } from './announceSaved';
-import { batchRow, batchTypes, withoutPart } from './batch';
+import { batchRow, batchTypes, isReminder, reminderRow, withoutPart } from './batch';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
@@ -95,6 +106,10 @@ export function CaptureForm({
   const [confirming, setConfirming] = useState(false);
   // „Als Ausgabe buchen“ on a line of a batch: that line in the single sheet, on top of this one.
   const [booking, setBooking] = useState<{ part: string; label: string } | undefined>();
+  // The row whose target choice is open (rows show their target as text; a tap opens the choice).
+  const [choosing, setChoosing] = useState<string | undefined>();
+  // Open-invoice lookups of payment reminder lines, keyed by the line (`findOpenInvoice`).
+  const [lookups, setLookups] = useState<Record<string, InvoiceLookup | null>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -130,8 +145,16 @@ export function CaptureForm({
   const resolved = resolveTarget(single, result, { ...resolveOpts, override });
   // No question: text the parser is unsure about goes to the default target (the ToDo inbox) as typed.
   const fallbackType = resolved.inbox ? resolved.type : undefined;
-  const type = resolved.type;
-  const fields: CaptureFields = { ...resolved.fields, ...extra };
+  const singleFields: CaptureFields = { ...resolved.fields, ...extra };
+  // The single sheet treats a payment reminder the same way as a line of a batch.
+  const singlePlan = reminderRow(
+    resolved.type,
+    singleFields,
+    multi ? undefined : (lookups[single] ?? undefined),
+    available,
+  );
+  const type = singlePlan.type;
+  const fields = singlePlan.fields;
   const chips = previewChips(fields, type, result.notes, today());
 
   const rows = useMemo(
@@ -146,10 +169,13 @@ export function CaptureForm({
             const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
             // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
             const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
-            const rowChips = previewChips(row.fields, row.type, r.notes, today()).filter(
+            // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice.
+            const reminder = isReminder(row.type, row.fields);
+            const plan = reminderRow(row.type, row.fields, lookups[part] ?? undefined, available);
+            const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
-            return { part, ...res, ...row, chips: rowChips };
+            return { part, ...res, ...row, ...plan, reminder, source: row.fields, chips: rowChips };
           })
         : [],
     // resolveOpts is rebuilt every render from the values listed here.
@@ -158,6 +184,7 @@ export function CaptureForm({
       multi,
       parts,
       rowOverride,
+      lookups,
       states,
       focus.captureNoQuestion,
       settings?.defaultType,
@@ -166,6 +193,32 @@ export function CaptureForm({
     ],
   );
   const rowTypes = batchTypes(available);
+
+  // Reminder lines look for their open invoice while the person types; the result only changes text.
+  const reminderKeys = (
+    multi
+      ? rows.filter((r) => r.reminder).map((r) => r.part)
+      : isReminder(resolved.type, singleFields)
+        ? [single]
+        : []
+  ).filter((k) => !(k in lookups));
+  const reminderKey = reminderKeys.join('\n');
+  useEffect(() => {
+    if (!reminderKey) return;
+    let live = true;
+    void (async () => {
+      const found: Record<string, InvoiceLookup | null> = {};
+      for (const key of reminderKey.split('\n')) {
+        const r = parseCapture(key, { now: new Date(now()), defaultType: settings?.defaultType });
+        found[key] =
+          (await findOpenInvoice(r.fields, { today: today() }).catch(() => undefined)) ?? null;
+      }
+      if (live) setLookups((cur) => ({ ...cur, ...found }));
+    })();
+    return () => {
+      live = false;
+    };
+  }, [reminderKey, settings?.defaultType]);
   // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the
   // entry is incomplete until the date is fixed (X20).
   const badDate = (list: readonly { id: string }[]) =>
@@ -242,6 +295,18 @@ export function CaptureForm({
     }
   };
 
+  /** The batch as saved: reminder lines are looked up once more, so a settled invoice is never noted. */
+  const batchItems = async (): Promise<CaptureItem[]> =>
+    Promise.all(
+      rows.map(async (r): Promise<CaptureItem> => {
+        if (!r.reminder) return { type: r.type!, fields: r.fields };
+        const lookup = await findOpenInvoice(r.source, { today: today() }).catch(() => undefined);
+        const plan = reminderRow('invoice', r.source, lookup, available);
+        if (!plan.type) throw new CaptureError('invalid');
+        return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
+      }),
+    );
+
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
   const save = async (confirmed: boolean) => {
     if (busy || (!multi && !type)) return;
@@ -249,11 +314,14 @@ export function CaptureForm({
     try {
       onSaved(
         multi
-          ? await saveCaptures(
-              rows.map((r) => ({ type: r.type!, fields: r.fields })),
-              text,
-            )
-          : await saveCapture(type!, fields, { confirmed }),
+          ? await saveCaptures(await batchItems(), text)
+          : singlePlan.amend
+            ? await amendCapture(type!, fields, singlePlan.amend).catch((e: unknown) => {
+                if (e instanceof CaptureError && e.code === 'stale' && singlePlan.fallback)
+                  return saveCapture(singlePlan.fallback.type, singlePlan.fallback.fields);
+                throw e;
+              })
+            : await saveCapture(type!, fields, { confirmed }),
       );
       setText('');
       if (keepDraft) clearCaptureDraft();
@@ -288,6 +356,18 @@ export function CaptureForm({
     void save(true);
   };
 
+  /** „ToDo“, „Rechnung · 13. Okt. · Datum angenommen“, „Mahnung zu Rechnung … · vermerken“. */
+  const rowTargetText = (r: (typeof rows)[number]): string => {
+    if (r.amend)
+      return t.quickCapture.multi.dunningMatch(r.amend.payee, formatDay(r.amend.dueDate, 'd.M.'));
+    if (!r.type) return t.quickCapture.multi.choose;
+    return [
+      typeLabel(r.type, r.fields.kind),
+      ...(r.inbox ? [t.quickCapture.multi.inbox] : []),
+      ...r.chips.map((c) => c.label),
+    ].join(' · ');
+  };
+
   return (
     <>
       <form
@@ -313,9 +393,16 @@ export function CaptureForm({
           spellCheck={false}
           enterKeyHint="done"
         />
-        <p className={[styles.hint, styles.lineHint].join(' ')} data-testid="capture-line-hint">
-          {t.quickCapture.multi.lineHint}
-        </p>
+        {multi ? (
+          // Several lines: the calm promise, on every device (U01).
+          <p className={styles.hint} data-testid="capture-line-hint">
+            {t.quickCapture.multi.calmHint}
+          </p>
+        ) : (
+          <p className={[styles.hint, styles.lineHint].join(' ')} data-testid="capture-line-hint">
+            {t.quickCapture.multi.lineHint}
+          </p>
+        )}
 
         {multi ? (
           <ul
@@ -328,23 +415,39 @@ export function CaptureForm({
               <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
                 <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
                 <div className={styles.chips}>
-                  <select
-                    className={styles.rowType}
-                    aria-label={t.quickCapture.multi.rowTarget(r.part)}
-                    value={r.type ?? ''}
-                    onChange={(e) => pickRow(r.part, e.target.value as CaptureType)}
-                    data-testid="capture-row-type"
-                  >
-                    {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
-                    {rowTypes.map((a) => (
-                      <option key={a} value={a}>
-                        {typeLabel(a, r.fields.kind)}
-                      </option>
-                    ))}
-                  </select>
-                  {r.inbox ? (
-                    <span className={styles.chip}>{t.quickCapture.multi.inbox}</span>
-                  ) : null}
+                  {choosing === r.part ? (
+                    <select
+                      className={styles.rowType}
+                      aria-label={t.quickCapture.multi.rowTarget(r.part)}
+                      value={r.type ?? ''}
+                      autoFocus
+                      onChange={(e) => {
+                        pickRow(r.part, e.target.value as CaptureType);
+                        setChoosing(undefined);
+                      }}
+                      onBlur={() => setChoosing(undefined)}
+                      data-testid="capture-row-type"
+                    >
+                      {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
+                      {rowTypes.map((a) => (
+                        <option key={a} value={a}>
+                          {typeLabel(a, r.fields.kind)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    // The target as words; a tap opens the choice (no select in the first view).
+                    <button
+                      type="button"
+                      className={styles.rowTarget}
+                      aria-label={`${t.quickCapture.multi.rowTarget(r.part)}: ${rowTargetText(r)}`}
+                      onClick={() => setChoosing(r.part)}
+                      data-testid="capture-row-target"
+                      data-type={r.type ?? ''}
+                    >
+                      {rowTargetText(r)}
+                    </button>
+                  )}
                   {r.booking && bookChip
                     ? (() => {
                         const label =
@@ -364,11 +467,6 @@ export function CaptureForm({
                         );
                       })()
                     : null}
-                  {r.chips.map((c) => (
-                    <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
-                      {c.label}
-                    </span>
-                  ))}
                 </div>
               </li>
             ))}
@@ -389,11 +487,6 @@ export function CaptureForm({
         {!multi && text.trim() && !type && available.length > 0 ? (
           <p className={styles.hint} role="status">
             {t.quickCapture.chooseType}
-          </p>
-        ) : null}
-        {multi ? (
-          <p className={[styles.hint, styles.desktopHint].join(' ')}>
-            {t.quickCapture.multi.shiftEnter}
           </p>
         ) : null}
         {!multi && fallbackType ? (
