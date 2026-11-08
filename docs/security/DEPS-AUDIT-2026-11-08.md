@@ -34,7 +34,7 @@ Severity is GitHub's. Rows 1, 2, 4, 5, 9 map to the 10 alerts; the others are au
 
 - `tokio` 1.53.1 RUSTSEC-2026-0386 (unsound `AsyncFd::new` I/O safety): runtime, but no caller of `AsyncFd` in the `librqbit*`/`tauri*` sources checked (inferred). Moves with the next `cargo update`.
 - Unmaintained: `proc-macro-error`, `unic-*` (5 crates, build-time macros), `zbus_names`/`zvariant*` (Linux). Yanked: `async-executor` 1.14.0, `clipboard-win` 5.4.1 (Windows runtime via `arboard`), `yoke-derive` 0.8.3. Fixing yanked ones is a plain `cargo update -p <crate>`.
-- `crates/downloader/Cargo.lock`: clean. `crates/local-llm/Cargo.lock`: only 2 and 3 above; `crates/torrent/Cargo.lock`: only 5.
+- `crates/downloader/Cargo.lock`: clean. `crates/local-llm/Cargo.lock`: only 3 above (its `rustls` is already 0.23.46); `crates/torrent/Cargo.lock`: only 6.
 
 ## Counts
 
