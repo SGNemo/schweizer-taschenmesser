@@ -37,6 +37,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
+| Sync im Heimnetz, Paket 3b: Handy koppelt per QR (Rust-Client, Android-Befehle, Scanner, Handy-Seite) | `feat/lan-sync-phone` | `src-tauri/crates/lan-sync/{src/lib.rs,src/qr.rs,src/transport/client.rs,Cargo.toml}`, `src-tauri/{Cargo.toml,Cargo.lock,build.rs,src/lib.rs,src/lan_client.rs,capabilities/*}`, `web/package.json`, `core/platform/{types,web,tauri/*,fakeLanClient}.ts`, `core/sync/{service,status,adapters/lanHub}.ts`, `pages/settings/{SyncSection,LanClientSection}.tsx` | läuft | code | 2026-11-08 |
 | Sync im Heimnetz, Paket 3a: PC-Seite in der App (Plattformnaht `lanHub`, Hub-lokaler Adapter, Sync-Seite mit „Gerät koppeln“) | `feat/lan-sync-pc` | `core/platform/{types,web,tauri/index,tauri/lanHub,fakeLanHub}.ts`, `core/sync/{service,status,adapters/lanHub}.ts`, `core/notifications/push.ts`, `core/net/fetchPublic.ts`, `pages/settings/{SyncSection,LanHubSection}.tsx`, `strings.lanSync.ts` | läuft | code | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
