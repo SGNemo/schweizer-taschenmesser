@@ -40,6 +40,10 @@ export function expiryState(item: PantryItem, today: string, soonDays: number): 
 export const needsRestock = (item: PantryItem): boolean =>
   item.minCount !== undefined ? item.count <= item.minCount : item.count === 0;
 
+/** Same product name, ignoring case and surrounding spaces (modules may not import each other's helpers). */
+export const sameName = (a: string, b: string): boolean =>
+  a.trim().toLowerCase() === b.trim().toLowerCase();
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

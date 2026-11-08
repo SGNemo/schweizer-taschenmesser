@@ -4,8 +4,7 @@ import { today } from '@/core/time/dates';
 import { dueState, pastDay } from '@/core/time/due';
 import { t } from '@/strings';
 import { KachelnBody, WidgetBody, useWidgetSize, type Kachel } from '@/ui';
-import { isDuplicate } from '../../lists/logic';
-import { expiryState, isFresh, needsRestock, sortItems, widgetLine } from '../logic';
+import { expiryState, isFresh, needsRestock, sameName, sortItems, widgetLine } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
 import { settings as moduleSettings, settingsSchema } from '../settings';
@@ -43,13 +42,7 @@ export default function ExpiringWidget() {
   ];
   // Same name twice (two packs of milk in two places) is one row: the first, most urgent one.
   const next = rows
-    .filter(
-      (r, idx) =>
-        !isDuplicate(
-          rows.slice(0, idx).map((p) => ({ ...p, done: false })),
-          r.name,
-        ),
-    )
+    .filter((r, idx) => !rows.slice(0, idx).some((p) => sameName(p.name, r.name)))
     .slice(0, size === 's' ? 2 : size === 'm' ? 3 : 5);
 
   const tiles: Kachel[] = PLACES.map((p) => {
