@@ -92,7 +92,7 @@ Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`),
 - `requires_action`: ein Tool wartet auf Freigabe (sollte mit `always_allow` nicht vorkommen) → `node scripts/agents/session.mjs --session sess_… --auto-approve` (ohne Nachricht: gibt die wartenden Aufrufe frei und streamt weiter) oder in der Console freigeben.
 - `budget_reached`: Session pausiert mit Stand; siehe 5.
 
-Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity, auditor) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity, lead **und** auditor, neu starten. Betrifft es eine Auditor-Session, in `nemo-auditor.json` ebenso `claude-opus-5-5` eintragen und nur `nemo-auditor.md` neu anwenden.
+Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity, auditor) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity, lead **und** auditor, neu starten. Betrifft es eine Auditor-Session, zusätzlich zum creativity-Wechsel oben in `nemo-auditor.json` ebenso `claude-opus-5-5` eintragen und `nemo-auditor.md` neu anwenden (der Lead braucht dafür kein neues `apply`).
 
 Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `claude-lock.json`), `--env/--vault` überschreiben die IDs, `--no-wait` siehe oben, `--checkout` den Branch, `--verbose` zeigt Tool-Ergebnisse, `--dry-run` zeigt nur den Request (Token maskiert). Konsole: zum Nachsehen `platform.claude.com` → Sessions.
 
@@ -104,7 +104,7 @@ Einmalig anlegen (nur diese Datei; der Lead bleibt unberührt, nicht hier geprü
 node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"
 ```
 
-Eigene Session, Auditor als Primär-Agent; er fragt die 19 nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Zwischen Lead und Auditor trägst du die Berichte selbst.
+Eigene Session, Auditor als Primär-Agent; er fragt die 19 nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
 
 ### Erster Testlauf (Budget 2 USD)
 

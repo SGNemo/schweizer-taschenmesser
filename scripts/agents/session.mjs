@@ -340,12 +340,17 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
   let lastNote = "";
   let quietPolls = 0;
   let endedQuietly = false;
+  let inFlight = false; // one thread check at a time
+  let done = false; // set when the stream loop has returned
+  let reportThisTurn = false; // a child report reached the primary thread since its last end_turn
   const note = (kids) => {
     const line = `${stamp()} wartet auf ${kids.length} Kind-Thread${kids.length === 1 ? "" : "s"} (${kids.join(", ")})`;
     if (line.slice(9) !== lastNote) console.log(line);
     lastNote = line.slice(9);
   };
   const poll = async () => {
+    if (inFlight || done) return;
+    inFlight = true;
     try {
       const kids = await runningChildren(c, sessionId);
       if (kids.length) {
@@ -353,6 +358,7 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
         return note(kids);
       }
       const s = await c.beta.sessions.retrieve(sessionId);
+      if (done) return;
       if (s.status !== "idle") quietPolls = 0;
       else if (++quietPolls >= 2) {
         console.log(
@@ -364,6 +370,8 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
       }
     } catch (e) {
       console.log(`${stamp()} thread check failed: ${e.message ?? e}`);
+    } finally {
+      inFlight = false;
     }
   };
   try {
@@ -371,6 +379,7 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
     for await (const ev of stream) {
       printEvent(ev);
       if (ev.type === "session.status_running") quietPolls = 0;
+      if (ev.type === "agent.thread_message_received") reportThisTurn = true;
       if (ev.type !== "session.status_idle") {
         if (ev.type === "session.status_terminated") return "terminated";
         continue;
@@ -378,11 +387,16 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
       const reason = ev.stop_reason?.type;
       if (reason === "end_turn" && !cfg.noWait) {
         const kids = await runningChildren(c, sessionId);
+        const report = reportThisTurn;
+        reportThisTurn = false;
         if (kids.length) {
           note(kids);
           if (!timer) timer = setInterval(poll, POLL_MS);
           continue;
         }
+        // already waiting and this turn saw no child report: a child may have gone idle before its report
+        // woke the lead – the poll's two-quiet-checks rule decides, not this end_turn
+        if (timer && !report) continue;
       }
       if (reason === "requires_action") {
         const ids = ev.stop_reason.event_ids ?? [];
@@ -406,6 +420,7 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
   } catch (e) {
     if (!endedQuietly) throw e;
   } finally {
+    done = true;
     clearInterval(timer);
   }
   return endedQuietly ? "end_turn" : "stream_closed";
@@ -515,7 +530,9 @@ async function main() {
     cfg.agent = `<id of ${AGENT_FILES[agentRole]} from claude-lock.json – run ant apply first>`;
   if (!cfg.agent || !cfg.env)
     throw new Error(
-      `${agentRole ?? "agent"} id and environment id missing: run \`ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md\` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID`,
+      agentRole === "auditor"
+        ? "auditor id or environment id missing: run `ant apply --yes docs/meta/agents-v3/nemo-auditor.md` (claude-lock.json in the repo root), or pass --agent agent_…/--env"
+        : `${agentRole ?? "agent"} id and environment id missing: run \`ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md\` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID`,
     );
   if (cfg.budgetUsd === undefined)
     throw new Error(

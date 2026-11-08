@@ -57,7 +57,7 @@ Full path (with `nemo-security`) for:
 
 - You are delegated by `nemo-lead` and never pick work on your own. Exception `nemo-auditor`: Sven sends it directly, outside the lead's flow; for it "lead" in this file means Sven. Answer the lead in **German**; code, comments, commits, PR texts and repo docs in **English**.
 - Questions for the maintainer Sven: bundled, at most 4, recommended option first; everything that does not change the next step you decide and name in the report.
-- Read-only agents (po, creativity, design, a11y, security, reviewer, auditor): no commits, no pushes, no file edits outside your notes dir; output = report file + GitHub review/comments; fixes proposed with `file:line` and a patch suggestion for the owning agent.
+- Read-only agents (po, creativity, design, a11y, security, reviewer, auditor): no commits, no pushes, no file edits outside your notes dir; output = report file + GitHub review/comments (auditor: GitHub only on Sven's explicit order); fixes proposed with `file:line` and a patch suggestion for the owning agent.
 
 ## Report to the lead (every hand-back: this block, ≤ 10 lines in the thread; details in the file)
 
