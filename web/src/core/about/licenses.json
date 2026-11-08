@@ -128,6 +128,12 @@
       "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.4"
     },
     {
+      "name": "@tauri-apps/plugin-barcode-scanner",
+      "version": "2.5.3",
+      "license": "MIT OR Apache-2.0",
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-barcode-scanner/v/2.5.3"
+    },
+    {
       "name": "@tauri-apps/plugin-clipboard-manager",
       "version": "2.5.0",
       "license": "MIT OR Apache-2.0",
@@ -1078,12 +1084,6 @@
       "url": "https://crates.io/crates/anyhow/1.0.104"
     },
     {
-      "name": "arbitrary",
-      "version": "1.4.2",
-      "license": "MIT OR Apache-2.0",
-      "url": "https://crates.io/crates/arbitrary/1.4.2"
-    },
-    {
       "name": "arboard",
       "version": "3.6.1",
       "license": "MIT OR Apache-2.0",
@@ -1450,12 +1450,6 @@
       "url": "https://crates.io/crates/cfb/0.14.0"
     },
     {
-      "name": "cfb",
-      "version": "0.7.3",
-      "license": "MIT",
-      "url": "https://crates.io/crates/cfb/0.7.3"
-    },
-    {
       "name": "cfg_aliases",
       "version": "0.2.2",
       "license": "MIT",
@@ -1556,6 +1550,12 @@
       "version": "0.2.17",
       "license": "Zlib",
       "url": "https://crates.io/crates/const_panic/0.2.17"
+    },
+    {
+      "name": "constant_time_eq",
+      "version": "0.6.1",
+      "license": "CC0-1.0 OR MIT-0 OR Apache-2.0",
+      "url": "https://crates.io/crates/constant_time_eq/0.6.1"
     },
     {
       "name": "cookie",
@@ -1756,12 +1756,6 @@
       "url": "https://crates.io/crates/deranged/0.5.8"
     },
     {
-      "name": "derive_arbitrary",
-      "version": "1.4.2",
-      "license": "MIT OR Apache-2.0",
-      "url": "https://crates.io/crates/derive_arbitrary/1.4.2"
-    },
-    {
       "name": "derive_more",
       "version": "2.1.1",
       "license": "MIT",
@@ -1790,12 +1784,6 @@
       "version": "4.0.0",
       "license": "MIT OR Apache-2.0",
       "url": "https://crates.io/crates/dirs/4.0.0"
-    },
-    {
-      "name": "dirs",
-      "version": "6.0.0",
-      "license": "MIT OR Apache-2.0",
-      "url": "https://crates.io/crates/dirs/6.0.0"
     },
     {
       "name": "dirs",
@@ -2555,12 +2543,6 @@
     },
     {
       "name": "infer",
-      "version": "0.19.0",
-      "license": "MIT",
-      "url": "https://crates.io/crates/infer/0.19.0"
-    },
-    {
-      "name": "infer",
       "version": "0.22.0",
       "license": "MIT",
       "url": "https://crates.io/crates/infer/0.22.0"
@@ -2998,6 +2980,12 @@
       "url": "https://crates.io/crates/minisign-verify/0.2.5"
     },
     {
+      "name": "minisign-verify",
+      "version": "0.3.0",
+      "license": "MIT",
+      "url": "https://crates.io/crates/minisign-verify/0.3.0"
+    },
+    {
       "name": "miniz_oxide",
       "version": "0.8.9",
       "license": "MIT OR Zlib OR Apache-2.0",
@@ -3068,6 +3056,12 @@
       "version": "0.30.1",
       "license": "MIT",
       "url": "https://crates.io/crates/nix/0.30.1"
+    },
+    {
+      "name": "nix",
+      "version": "0.31.3",
+      "license": "MIT",
+      "url": "https://crates.io/crates/nix/0.31.3"
     },
     {
       "name": "nom",
@@ -4264,6 +4258,12 @@
       "url": "https://crates.io/crates/tauri-plugin-autostart/2.6.0"
     },
     {
+      "name": "tauri-plugin-barcode-scanner",
+      "version": "2.5.3",
+      "license": "Apache-2.0 OR MIT",
+      "url": "https://crates.io/crates/tauri-plugin-barcode-scanner/2.5.3"
+    },
+    {
       "name": "tauri-plugin-clipboard-manager",
       "version": "2.5.0",
       "license": "Apache-2.0 OR MIT",
@@ -4313,9 +4313,9 @@
     },
     {
       "name": "tauri-plugin-updater",
-      "version": "2.13.0",
+      "version": "2.14.1",
       "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-updater/2.13.0"
+      "url": "https://crates.io/crates/tauri-plugin-updater/2.14.1"
     },
     {
       "name": "tauri-runtime",
@@ -4568,6 +4568,12 @@
       "version": "0.2.5",
       "license": "MIT",
       "url": "https://crates.io/crates/try-lock/0.2.5"
+    },
+    {
+      "name": "typed-path",
+      "version": "0.13.0",
+      "license": "MIT OR Apache-2.0",
+      "url": "https://crates.io/crates/typed-path/0.13.0"
     },
     {
       "name": "typeid",
@@ -5416,6 +5422,12 @@
       "url": "https://crates.io/crates/zeroize/1.9.0"
     },
     {
+      "name": "zeroize_derive",
+      "version": "1.5.0",
+      "license": "Apache-2.0 OR MIT",
+      "url": "https://crates.io/crates/zeroize_derive/1.5.0"
+    },
+    {
       "name": "zerotrie",
       "version": "0.2.5",
       "license": "Unicode-3.0",
@@ -5435,9 +5447,9 @@
     },
     {
       "name": "zip",
-      "version": "4.6.1",
+      "version": "9.4.2",
       "license": "MIT",
-      "url": "https://crates.io/crates/zip/4.6.1"
+      "url": "https://crates.io/crates/zip/9.4.2"
     },
     {
       "name": "zlib-rs",

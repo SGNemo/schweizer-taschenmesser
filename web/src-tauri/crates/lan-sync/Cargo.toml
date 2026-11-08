@@ -11,9 +11,15 @@ publish = false
 [lib]
 name = "lan_sync"
 
+# `store` = the hub's SQLite field store (and with it the hub). Devices (Android, the client of a second
+# PC) build without it: no SQLite in the APK.
+[features]
+default = ["store"]
+store = ["dep:rusqlite"]
+
 [dependencies]
 # SQLite is compiled in (like better-sqlite3 in the Node server): no system library needed.
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 getrandom = "0.3"

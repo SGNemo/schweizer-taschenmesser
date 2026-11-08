@@ -77,7 +77,9 @@ export function ChecklistCard() {
                     >
                       <span>
                         {sub.done ? '✓ ' : ''}
-                        {t.setup.steps.migrate.items[sub.id]}
+                        {sub.done
+                          ? t.setup.steps.migrate.items[sub.id]
+                          : t.setup.steps.migrate.goals[sub.id]}
                       </span>
                       {sub.manual ? (
                         <Button

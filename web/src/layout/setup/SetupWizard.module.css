@@ -93,3 +93,32 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+/* The whole way at a glance (A02): a quiet fold, no colour, no motion. */
+.overview {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.overview > summary {
+  /* list-item keeps the fold triangle, so it reads as something that opens */
+  display: list-item;
+  min-height: 44px;
+  padding-block: var(--space-3);
+  box-sizing: border-box;
+  cursor: pointer;
+  color: var(--text);
+}
+.overviewList {
+  margin: 0 0 var(--space-2);
+  padding-inline-start: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.overviewList > li[aria-current='step'] {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+.overviewState {
+  color: var(--text-muted);
+  font-weight: normal;
+}
