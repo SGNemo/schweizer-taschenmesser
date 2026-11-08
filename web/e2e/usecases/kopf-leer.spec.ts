@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { dismissNotices, ready, showPreview } from '../helpers';
 
@@ -15,7 +15,10 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * The mail path needs the demo mails of the seed, which only the Dev-Preview flavour has:
  *   npm run build:e2e-seed && npm run preview:e2e-seed   (port 4174)
  *   USECASE_SEED_URL=http://localhost:4174 npx playwright test e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome
- * Without the variable the mail path is skipped (mail is a desktop-only module; the phone never has it).
+ * Without the variable the mail path is skipped (mail is a desktop-only module; the phone never has it). It stays in
+ * this file on purpose: one script per use case (docs/design/usecases), and the seed project is a Dev-Preview build.
+ * Friction that the packages will remove is counted as a detour, never asserted, so a package lowers the numbers
+ * instead of breaking the script.
  */
 
 const OUT = 'test-results/usecase-kopf-leer';
@@ -34,7 +37,7 @@ const MAX: Record<string, Record<Metric, number>> = {
   // prettier-ignore
   'A Kopf leeren: fünf Dinge auf einmal · pixel-7': { taps: 3, keys: 141, screens: 2, dialogs: 2, detours: 1 },
   // prettier-ignore
-  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 9, keys: 0, screens: 2, dialogs: 2, detours: 1 },
+  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 9, keys: 0, screens: 2, dialogs: 2, detours: 0 },
   // prettier-ignore
   'C Handy: eine Sache im Vorbeigehen · pixel-7': { taps: 1, keys: 19, screens: 1, dialogs: 1, detours: 0 },
   // prettier-ignore
@@ -101,6 +104,7 @@ class Meter {
 function writeTable() {
   const rows: Row[] = readdirSync(OUT)
     .filter((f) => f.endsWith('.json') && !f.includes('stimulus'))
+    .filter((f) => !f.endsWith('.tmp'))
     .sort()
     .map((f) => JSON.parse(readFileSync(`${OUT}/${f}`, 'utf8')));
   const table = [
@@ -111,14 +115,19 @@ function writeTable() {
         `| ${r.name} | ${r.project} | ${r.taps} | ${r.keys} | ${r.screens} | ${r.dialogs} | ${r.detours} | ${r.seconds} | ${r.ms} |`,
     ),
   ].join('\n');
-  writeFileSync('test-results/usecase-kopf-leer.md', `${table}\n`);
+  // Temp file + rename: workers run in parallel and a half-written file must never be read.
+  const tmp = `${OUT}/table.${process.pid}.tmp`;
+  writeFileSync(tmp, `${table}\n`);
+  renameSync(tmp, 'test-results/usecase-kopf-leer.md');
 }
 
 async function record(info: TestInfo, meter: Meter, name: string) {
   const project = info.project.name;
   const row = meter.row(name, project);
   mkdirSync(OUT, { recursive: true });
-  writeFileSync(`${OUT}/${name.slice(0, 1)}-${project}.json`, JSON.stringify(row));
+  const file = `${OUT}/${name.slice(0, 1)}-${project}.json`;
+  writeFileSync(`${file}.tmp`, JSON.stringify(row));
+  renameSync(`${file}.tmp`, file);
   writeTable();
   await info.attach('usecase-kopf-leer', { path: 'test-results/usecase-kopf-leer.md' });
   const max = MAX[`${name} · ${project}`];
@@ -143,7 +152,11 @@ async function stimulus(page: Page) {
       main.querySelectorAll('button, a[href], input, select, textarea, [role="button"]'),
     ).filter(visible).length;
     const rows = Array.from(main.querySelectorAll('li')).filter(visible).length;
-    const words = (main.textContent ?? '').trim().split(/\s+/).filter(Boolean).length;
+    // innerText leaves out what is not rendered (closed groups, display: none).
+    const words = ((main as HTMLElement).innerText ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
     const scroller = main.scrollHeight > main.clientHeight + 1 ? main : document.scrollingElement!;
     const scroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
     return { interactive, rows, words, scroll };
@@ -281,7 +294,10 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   await prepare(page);
   const m = new Meter(page, isMobile);
   await m.go('/');
-  // The person looks for a place to unload: the one round button is it.
+  // The home screen shows the pile first („Jetzt wichtig“ with the overdue invoice); then the one round button.
+  await expect(page.getByRole('region', { name: 'Jetzt wichtig' }))
+    .toBeVisible({ timeout: 5_000 })
+    .catch(() => undefined);
   await m.tap(page.getByRole('button', { name: 'Schnell hinzufügen' }));
   m.dialog();
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
@@ -295,20 +311,45 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   ];
   await m.type(input, lines.join('\n'));
   // One line per entry; the sheet shows a target per line.
-  await expect(page.getByText('Steuerbescheid prüfen', { exact: true })).toBeVisible();
-  // U03: „Mahnung … €“ is read as an expense booking, not as an invoice.
-  await expect(page.getByTestId('capture-chips').or(page.getByRole('dialog'))).toContainText(
-    'Buchung (Entwurf)',
-  );
-  await m.tap(page.getByRole('button', { name: 'Alle speichern (5)' }));
-  // U04: the first „Alle speichern“ saves nothing – the booking asks for a confirmation first.
-  await expect(page.getByTestId('capture-draft')).toBeVisible();
-  m.detour();
-  m.dialog();
-  await m.tap(
-    page.getByTestId('capture-draft').getByRole('button', { name: 'Alle speichern (5)' }),
-  );
-  await expect(page.getByText('5 Dinge gespeichert')).toBeVisible();
+  const rows = page.getByTestId('capture-rows');
+  await expect(rows.getByText('Steuerbescheid prüfen', { exact: true })).toBeVisible();
+  // S7 while unloading: what the person sees beside the sheet (the pile) and inside it (choices per line).
+  const pile = await page.evaluate(() => {
+    const visible = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    };
+    const strip = document.querySelector('section[aria-label="Jetzt wichtig"]');
+    const cards = strip
+      ? Array.from(strip.querySelectorAll('a, button')).filter(visible).length
+      : 0;
+    const list = document.querySelector('[data-testid="capture-rows"]');
+    const selects = list ? Array.from(list.querySelectorAll('select')).filter(visible).length : 0;
+    // U03: „Mahnung … €“ read as an expense booking, not as an invoice (the selected option of a row).
+    const booking = list
+      ? Array.from(list.querySelectorAll('select')).some(
+          (sel) => sel.selectedOptions[0]?.textContent?.trim() === 'Buchung (Entwurf)',
+        )
+      : false;
+    return { cards, selects, booking };
+  });
+  await m.tap(page.getByRole('button', { name: 'Alle speichern (5)' }).first());
+  // U04: the first „Alle speichern“ may save nothing – a booking line asks for a confirmation first.
+  const draft = page.getByTestId('capture-draft');
+  const saved = page.getByText('5 Dinge gespeichert');
+  await expect(draft.or(saved).first()).toBeVisible();
+  if (await draft.count()) {
+    m.detour();
+    m.dialog();
+    await m.tap(draft.getByRole('button', { name: 'Alle speichern (5)' }));
+  }
+  await expect(saved).toBeVisible();
+  mkdirSync(OUT, { recursive: true });
+  writeFileSync(`${OUT}/A-${info.project.name}-stimulus.json`, JSON.stringify(pile));
+  info.annotations.push({
+    type: 'stimulus',
+    description: `while unloading: ${pile.cards} attention cards visible beside the sheet · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
+  });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Where did they land? The person checks the ToDos.
   await m.go('/todos');
@@ -377,8 +418,9 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await m.tap(page.getByRole('menuitem', { name: 'ToDo' }));
   m.dialog();
   const dialog = page.getByRole('dialog');
-  // U07: the ToDo is prefilled with the subject, not with the intent („Anna antworten“).
-  await expect(dialog.getByRole('textbox')).toHaveValue('Wochenende?');
+  // U07: today the ToDo is prefilled with the subject („Wochenende?“), not with the intent; recorded, not asserted.
+  const prefilled = await dialog.getByRole('textbox').inputValue();
+  info.annotations.push({ type: 'usecase', description: `mail → ToDo prefill: „${prefilled}“` });
   await m.tap(dialog.getByRole('button', { name: 'Speichern' }));
   await expect(page.getByTestId('mail-linked')).toContainText('ToDo');
   // The invoice mail.
@@ -390,16 +432,19 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
   await m.tap(dialog.getByRole('button', { name: 'Speichern' }));
   await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');
-  // Is it in the plan? A second screen to check (U08: no word about the plan in the mail).
+  // Is it in the plan? A second screen to check (U09: nothing in the mail says so).
   m.screens += 1;
   await page.goto(`${seed}/planner`);
   await expect(page.getByTestId('planner-head')).toBeVisible();
   await expect(page.getByText('Stadtwerke Musterstadt bezahlen').first()).toBeVisible({
     timeout: 15_000,
   });
-  // U09: the reply sits in the plan under the mail's subject; nothing says it came from a mail.
-  const reply = page.getByText('Wochenende?', { exact: true });
-  if ((await reply.count()) === 0) m.detour(); // not placed yet or waiting: the person has to look for it
+  // U09: the reply sits in the plan under the mail's subject; nothing says it came from a mail. The run that
+  // places it follows the ToDo write; wait for it to settle before deciding whether the person has to search.
+  const reply = page.getByText('Wochenende?', { exact: true }).first();
+  await expect(reply)
+    .toBeVisible({ timeout: 15_000 })
+    .catch(() => m.detour()); // waiting or not placed: the person has to look for it
   await record(info, m, name);
 });
 
@@ -429,6 +474,15 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   // The overload shows as a number in the head of the waiting group – and as the whole waiting list.
   const waiting = page.getByText(/Wartet auf freie Zeit/);
   await expect(waiting).toBeVisible({ timeout: 15_000 });
+  // Settled: the run may still add rows after the heading appears.
+  const rowCount = () => page.locator('main li').count();
+  let last = await rowCount();
+  for (let i = 0; i < 10; i += 1) {
+    await page.waitForTimeout(300);
+    const now = await rowCount();
+    if (now === last) break;
+    last = now;
+  }
   const s = await stimulus(page);
   // Rows outside the day columns = the waiting group (every waiting thing is listed, with its reason).
   const waitingCount = await page.evaluate(() => {
@@ -449,8 +503,13 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
     body: JSON.stringify({ ...s, waitingCount }),
     contentType: 'application/json',
   });
-  // Baseline on develop: the page is long (U10) – no package may make it longer.
-  expect(s.interactive).toBeLessThanOrEqual(isMobile ? 90 : 160);
-  expect(s.words).toBeLessThanOrEqual(isMobile ? 400 : 700);
+  // Baseline on develop (U12), measured + about a tenth: no package may make the page longer.
+  const bound = isMobile
+    ? { interactive: 43, words: 425, rows: 22, scroll: 1600 }
+    : { interactive: 62, words: 560, rows: 32, scroll: 1400 };
+  expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
+  expect(s.words, 'words').toBeLessThanOrEqual(bound.words);
+  expect(s.rows, 'rows').toBeLessThanOrEqual(bound.rows);
+  expect(s.scroll, 'scroll px').toBeLessThanOrEqual(bound.scroll);
   await record(info, m, name);
 });

@@ -1,24 +1,29 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup: Abladen (F1)</title><link rel="stylesheet" href="mock.css"></head><body>
-<p class="label">F1 · Abladen – while unloading (the page behind is dimmed; on the phone the sheet covers it)</p>
-<section class="sheet" aria-label="Abladen">
-  <div class="bar"><h1>Abladen</h1><button class="btn">Fertig</button></div>
-  <p class="hint">Alles raus, eins pro Zeile. Sortiert wird später.</p>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup: der mehrzeilige Zettel wird ruhig (F1)</title><link rel="stylesheet" href="mock.css"></head><body>
+<p class="label">F1 · the many-lines sheet while unloading (the page behind it is covered on the phone and not rendered on the PC)</p>
+<section class="sheet" aria-label="Schnell hinzufügen">
+  <div class="bar"><h1>Schnell hinzufügen</h1><button class="btn">×</button></div>
+  <div class="field">Müll runterbringen<br>Wohnzimmer aufräumen<br>Vermieter wegen Heizung antworten<br>Steuerbescheid prüfen bis Freitag<br>Mahnung Stadtwerke 87,40 € zahlen</div>
+  <p class="hint">Eine Zeile = ein Eintrag. Sortiert wird später.</p>
   <div class="done">
     <div>Müll runterbringen<span>ToDo</span></div>
     <div>Wohnzimmer aufräumen<span>ToDo</span></div>
     <div>Vermieter wegen Heizung antworten<span>ToDo</span></div>
-    <div>Steuerbescheid prüfen<span>ToDo · Fr. 2. Okt. · <u>Frist?</u></span></div>
-    <div>Mahnung Stadtwerke 87,40 €<span>Rechnung · 13. Okt.</span></div>
+    <div>Steuerbescheid prüfen<span>ToDo · Fr. 2. Okt.</span></div>
+    <div>Mahnung Stadtwerke 87,40 €<span>Rechnung · ohne Frist</span></div>
   </div>
-  <div class="field">Anna wegen Samstag antworten</div>
-  <p class="hint">Enter speichert die Zeile · Umschalt+Enter: Absatz · Esc beendet</p>
+  <div class="bar"><button class="btn">Abbrechen</button><button class="btn primary">Alle speichern (5)</button></div>
 </section>
-<p class="label">After „Fertig“ – one line, one verb (planner on)</p>
-<div class="toast">6 Dinge gespeichert · im Plan ab Mi <b>Ansehen</b> <b>Rückgängig</b></div>
-<p class="label">After „Fertig“ – planner off</p>
-<div class="toast">6 Dinge im Eingang <b>Sortieren</b> <b>Rückgängig</b></div>
-<p class="label">A money line without an invoice word (Priya's expense) – nothing is booked here</p>
+<p class="label">After „Alle speichern“ – one line, one optional verb (planner on)</p>
+<div class="toast">5 Dinge gespeichert. Sortiert wird später. <b>Ansehen</b> <b>Rückgängig</b></div>
+<p class="label">A money line without an invoice word (Priya's expense) – nothing is booked in a batch; the chip opens the single sheet prefilled</p>
 <section class="sheet dim">
-  <div class="done"><div>Mittagessen 12,50 €<span>ToDo · als Buchung: mit $ im normalen Zettel</span></div></div>
+  <div class="done"><div>Mittagessen 12,50 €<span>ToDo · <u>Als Ausgabe buchen</u></span></div></div>
+</section>
+<p class="label">Later (F1 large): the explicit mode „Abladen“ keeps the field open after Enter – saved lines above, the field below, „Fertig“ closes</p>
+<section class="sheet dim">
+  <div class="bar"><h1>Abladen</h1><button class="btn">Fertig</button></div>
+  <div class="done"><div>Müll runterbringen<span>ToDo</span></div><div>Wohnzimmer aufräumen<span>ToDo</span></div></div>
+  <div class="field">Anna wegen Samstag antworten</div>
+  <p class="hint">Enter speichert die Zeile · Esc beendet</p>
 </section>
 </body></html>

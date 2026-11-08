@@ -12,7 +12,7 @@ const { chromium } = require('playwright-core');
 const here = path.dirname(fileURLToPath(import.meta.url));
 const out = path.join(here, '../../../../../web/.screens/usecase-kopf-leer');
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
 for (const f of (process.env.MOCKUPS ?? 'abladen,mail-plan,planer-ruhig').split(','))
   for (const scheme of ['light', 'dark'])
     for (const width of [1280, 412]) {

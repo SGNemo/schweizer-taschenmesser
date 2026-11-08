@@ -1,27 +1,27 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup: In den Plan aus der Mail (F2, F3)</title><link rel="stylesheet" href="mock.css"></head><body>
-<p class="label">F2 · mail list, folder „Antworten“ (the label the filter chat sets) – one tap per row, „im Plan“ as text</p>
+<p class="label">F2 · mail list with the local filter „Persönlich“ on – one tap per row, „im Plan“ as text, no counts</p>
 <div class="list">
-  <div class="head">Antworten <span>4 Threads</span><button class="btn">Alle in den Plan…</button></div>
+  <div class="head">Posteingang · <span class="chip">Persönlich</span><button class="btn">Alle in den Plan…</button></div>
   <div class="row"><div><div class="s">Anna Beispiel</div><div class="t">Wochenende? – Hast du am Samstag Zeit für einen Spaziergang?</div></div><div><div class="time">07:40</div><button class="btn">In den Plan</button></div></div>
   <div class="row"><div><div class="s">Max Muster</div><div class="t">Fotos vom Ausflug – Hier sind die Fotos vom Ausflug.</div></div><div><div class="time">17. Sept.</div><span class="mark">im Plan · Mi</span></div></div>
   <div class="row"><div><div class="s">Hausverwaltung Muster</div><div class="t">Termin Ablesung Heizung – Die Ablesung findet am Donnerstag zwischen 9 und 12 Uhr statt.</div></div><div><div class="time">28. Sept.</div><button class="btn">In den Plan</button></div></div>
 </div>
-<p class="label">F3 · folder „Posteingang“ – a recognised invoice mail shows one muted line with one verb</p>
+<p class="label">F3 · a recognised invoice mail shows payee, amount and date with one verb; a reminder for an open invoice raises it instead of doubling it</p>
 <div class="list">
   <div class="head">Posteingang <span>2 ungelesen</span></div>
-  <div class="row"><div><div class="s">Stadtwerke Musterstadt</div><div class="t">Ihre Rechnung für Oktober – Guten Tag, Ihre Rechnung über 84,30 EUR ist fällig am 15.11.</div><div class="inv">Rechnung · 84,30 € · fällig 15.11.<b>Anlegen</b></div></div><div class="time">08:15</div></div>
+  <div class="row"><div><div class="s">Stadtwerke Musterstadt</div><div class="t">Ihre Rechnung für Oktober – Guten Tag, Ihre Rechnung über 84,30 EUR ist fällig am 15.11.</div><div class="inv">Stadtwerke Musterstadt · 84,30 € · fällig 15.11.<b>Anlegen</b></div></div><div class="time">08:15</div></div>
   <div class="row"><div><div class="s">Internetanbieter Muster</div><div class="t">Rechnung 2026-1042 – Anbei Ihre Rechnung über 39,99 EUR. Der Betrag wird am 03.11. abgebucht.</div><div class="inv">Rechnung angelegt · im Plan · Do</div></div><div class="time">25. Sept.</div></div>
-  <div class="row"><div><div class="s">Inkasso Muster</div><div class="t">Zahlungserinnerung – offener Betrag 87,40 EUR bis 13.10.</div><div class="inv">Mahnung · 87,40 € · fällig 13.10.<b>Anlegen</b></div></div><div class="time">Gestern</div></div>
+  <div class="row"><div><div class="s">Inkasso Muster</div><div class="t">Zahlungserinnerung – offener Betrag 87,40 EUR bis 13.10.</div><div class="inv">Mahnung zu offener Rechnung Stadtwerke · 87,40 €<b>Mahnung vermerken</b></div></div><div class="time">Gestern</div></div>
 </div>
-<p class="label">The plan afterwards – rows name the intent, „Mail“ is a word, „Zur Mail“ opens the thread</p>
+<p class="label">The plan afterwards – rows carry name and topic, „Mail“ is a word, „Zur Mail“ opens the thread; an invoice row says „Rechnung“</p>
 <div class="col">
   <div class="day"><h3>Mi 30.</h3><p class="cap">1 h 24 frei von 2 h 24</p>
-    <div class="r"><span>Anna Beispiel antworten<small>Mail · Wochenende? · ⋯ Erledigt · Später · Zur Mail</small></span><span>15 Min</span></div>
-    <div class="r"><span>Hausverwaltung Muster antworten<small>Mail · Termin Ablesung Heizung</small></span><span>15 Min</span></div>
+    <div class="r"><span>Anna Beispiel · Wochenende?<small>Mail · ⋯ Erledigt · Später · Zur Mail</small></span><span>15 Min</span></div>
+    <div class="r"><span>Hausverwaltung Muster · Termin Ablesung Heizung<small>Mail</small></span><span>15 Min</span></div>
   </div>
   <div class="day"><h3>Do 1.</h3><p class="cap">30 Min frei von 2 h</p>
     <div class="r"><span>Stadtwerke Musterstadt bezahlen<small>Rechnung · Frist Do</small></span><span>10 Min</span></div>
-    <div class="r"><span>Inkasso Muster bezahlen<small>Rechnung · Mahnstufe 1 · Frist 13.10.</small></span><span>10 Min</span></div>
+    <div class="r"><span>Stadtwerke Musterstadt bezahlen<small>Rechnung · Mahnung · Frist war 13.10.</small></span><span>10 Min</span></div>
   </div>
 </div>
 </body></html>
