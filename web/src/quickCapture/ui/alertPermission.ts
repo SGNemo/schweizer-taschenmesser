@@ -41,7 +41,9 @@ export async function ensureAlertPermission(
   if (state === 'default' && !askedBefore()) {
     try {
       state = await notifications.requestPermission();
-      markAsked(); // answered or dismissed: never again; a prompt that failed to show may retry
+      // Answered or dismissed: never again. A prompt that failed to show, or an app killed while the
+      // system dialog was open, may ask one more time.
+      markAsked();
       // The save already passed the OS schedule while alerts were still undecided: rebuild it.
       if (state === 'granted') return { justGranted: true };
     } catch {

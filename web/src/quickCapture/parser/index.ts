@@ -56,18 +56,18 @@ const SHORT_DAYS: Record<string, string> = {
 };
 const SHORT_DAY_RE = word(String.raw`(ab|bis|am|frist)\s+(mo|di|mi|do|fr|sa|so)\.?`);
 /**
- * Outside plans a short weekday counts only where it cannot be a plain word (C03): after „am“, or
+ * Outside plans a short weekday counts only where it cannot be a plain word (C03): after „am/ab/bis/Frist“, or
  * right before a time with „Uhr“ or a colon („Do 14 Uhr“, „Di. 14:30“), written as a day (capital or
  * dot). „So ein …“, „Fr. Müller“, „kommt so 15 Uhr“, „am so schönsten“ stay text.
  */
 const SHORT_DAY_ANY_RE =
-  /(?<![\p{L}\d])(?:([Aa]m)\s+(Mo|Di|Mi|Do|Fr|Sa|So|mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)\.?|()(Mo|Di|Mi|Do|Fr|Sa|So)\.?(?=\s+(?:um\s+)?\d{1,2}(?::\d{2}\s*(?:[Uu]hr)?|\s*[Uu]hr)(?![\p{L}\d])))(?![\p{L}\d])/u;
+  /(?<![\p{L}\d])(?:([Aa]m|[Aa]b|[Bb]is|[Ff]rist)\s+(Mo|Di|Mi|Do|Fr|Sa|So|mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)\.?|()(Mo|Di|Mi|Do|Fr|Sa|So)\.?(?=\s+(?:um\s+)?\d{1,2}(?::\d{2}\s*(?:[Uu]hr)?|\s*[Uu]hr)(?![\p{L}\d])))(?![\p{L}\d])/u;
 /**
  * A euro amount without currency word at the very start or end („Tanken 62,40“, C02): two decimals
- * only, never after a time word („um 14,30“, „bis 12,30“, „gegen 7,45“).
+ * only. A clock-shaped value („14,30“) is no amount after a time word or next to a day (see below).
  */
 const EDGE_CENTS_RE =
-  /^\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(?=\s+\S)|(?<=\S\s+)(?<!(?:^|\s)(?:um|bis|gegen)\s+)(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})\s*$/iu;
+  /^\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(?=\s+\S)|(?<=\S\s+)(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})\s*$/iu;
 /** „ab Do“: the day is the earliest one, not a pin. */
 const FROM_WORD = word(String.raw`ab`);
 /** „bis Do“, „Frist Do“: a hard deadline in a plan capture. */
@@ -212,12 +212,22 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
       : slowRecurrence
         ? extractAmount(scan, 'decimal')
         : undefined;
-  // Not when the text has a time („morgen 9 Uhr Zahnarzt 45,00“ stays an event); a day is fine.
+  // Not when the text has a time („morgen 9 Uhr Zahnarzt 45,00“ stays an event). With a day, only a
+  // value that cannot be a clock time („gestern Tanken 62,40“ yes, „Training am Do 18,30“ no).
   const edgeMatch =
     amount || bare || forced || recurrence || dt.time !== undefined
       ? null
       : EDGE_CENTS_RE.exec(scan.t);
-  const edgeCents = edgeMatch ? toCents((edgeMatch[1] ?? edgeMatch[2])!) : undefined;
+  const edgeNum = edgeMatch ? (edgeMatch[1] ?? edgeMatch[2])! : undefined;
+  const timeShaped = edgeNum ? /^([01]?\d|2[0-3]),[0-5]\d$/.test(edgeNum) : false;
+  const afterTimeWord = edgeNum
+    ? new RegExp(
+        String.raw`(?:^|\s)(?:um|bis|ab|gegen|von)\s+${edgeNum.replace(/\./g, '\\.')}\s*$`,
+        'i',
+      ).test(scan.t)
+    : false;
+  const edgeCents =
+    edgeNum && !(timeShaped && (dt.date || afterTimeWord)) ? toCents(edgeNum) : undefined;
   if (edgeCents) take(scan, EDGE_CENTS_RE);
   const money =
     amount ??

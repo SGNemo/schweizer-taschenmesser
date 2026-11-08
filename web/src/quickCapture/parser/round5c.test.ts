@@ -33,9 +33,17 @@ describe('C02: an amount with decimal comma at the start or end is an expense', 
   });
 });
 
-describe('C02: a comma time or a dated text is not money', () => {
-  it('„Termin um 14,30“ and „Werkstatt bis 12,30“ keep no amount', () => {
-    for (const text of ['Termin um 14,30', 'Werkstatt bis 12,30']) {
+describe('C02: a comma time is not money; a day keeps a real amount', () => {
+  it('a time written with a comma keeps no amount', () => {
+    for (const text of [
+      'Termin um 14,30',
+      'Werkstatt bis 12,30',
+      'Treffen ab 14,30',
+      'Termin von 9,30',
+      'Training am Do 18,30',
+      'Kino Sa ab 20,15',
+      'Meeting morgen von 14,30',
+    ]) {
       const r = parse(text);
       expect(r.fields.amountMinor, text).toBeUndefined();
       expect(r.type, text).not.toBe('finance');
@@ -52,8 +60,16 @@ describe('C02: a comma time or a dated text is not money', () => {
     });
   });
 
-  it('„Abo von 9,99“ keeps its amount', () => {
+  it('„Abo von 9,99“ keeps its amount (99 is no minute)', () => {
     expect(parse('Abo von 9,99').fields.amountMinor).toBe(999);
+  });
+
+  it('„bis Fr Miete 850,00“ reads the day and keeps a clean title', () => {
+    expect(parse('bis Fr Miete 850,00').fields).toMatchObject({
+      title: 'Miete',
+      amountMinor: 85000,
+      date: '2026-10-30',
+    });
   });
 
   it('„morgen 9 Uhr Zahnarzt 45,00“ stays a clean appointment', () => {

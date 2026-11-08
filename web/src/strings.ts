@@ -1013,9 +1013,9 @@ export const de = {
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
     alertsOff: (saved: string) =>
-      `${saved}. Benachrichtigungen sind aus – Einstellungen → Benachrichtigungen.`,
+      `${saved}. Damit die Erinnerung klingelt: Einstellungen → Benachrichtigungen.`,
     alertsBlocked: (saved: string) =>
-      `${saved}. Benachrichtigungen sind blockiert – in den Handy- oder Browser-Einstellungen erlauben.`,
+      `${saved}. Damit die Erinnerung klingelt: Benachrichtigungen in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
