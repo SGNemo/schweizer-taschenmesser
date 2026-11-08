@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
-import { enableModule } from '@/core/modules/activation';
+import { disableModule, enableModule } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
@@ -492,7 +492,7 @@ describe('payment reminders in a batch („Kopf leer“ package 2)', () => {
 });
 
 describe('a target picked by hand is final (council round 3)', () => {
-  it('picking „Rechnung“ for a reminder line makes a new invoice, without the lookup', async () => {
+  it('another target picked by hand is final; re-picking „Rechnung“ keeps the check', async () => {
     await enableModule(getManifest('invoices')!);
     await createCollectionRepo(getManifest('invoices')!, 'invoice').createMany([
       {
@@ -507,15 +507,69 @@ describe('a target picked by hand is final (council round 3)', () => {
       await box(),
       'Müll runterbringen{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 €',
     );
-    const target = (await screen.findAllByTestId('capture-row-target'))[1]!;
-    await waitFor(() => expect(target).toHaveTextContent('Mahnung zu Rechnung'));
+    const target = () => screen.getAllByTestId('capture-row-target')[1]!;
+    await waitFor(() => expect(target()).toHaveTextContent('Mahnung zu Rechnung'));
+    // The read target again: still noted on the open invoice.
     await pickTarget(user, 1, 'invoice');
-    await waitFor(() =>
-      expect(screen.getAllByTestId('capture-row-target')[1]).not.toHaveTextContent('Mahnung zu'),
-    );
+    await waitFor(() => expect(target()).toHaveTextContent('Mahnung zu Rechnung'));
+    // Another target: final.
+    await pickTarget(user, 1, 'reminder');
+    await waitFor(() => expect(target()).toHaveAttribute('data-type', 'reminder'));
     await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    expect(await db.table('invoices_invoice').count()).toBe(2);
+    expect(await db.table('invoices_invoice').count()).toBe(1);
     expect((await db.table('invoices_invoice').get('inv-1'))!.dunningLevel).toBeUndefined();
+  });
+});
+
+describe('council round 4 – presets, ToDos off, moving lines', () => {
+  const invoicesRepo = () => createCollectionRepo(getManifest('invoices')!, 'invoice');
+  const open = (id: string) =>
+    invoicesRepo().createMany([
+      {
+        id,
+        data: { payee: 'Stadtwerke', amountMinor: 8430, dueDate: '2026-09-15', status: 'open' },
+      },
+    ]);
+
+  it('a preset target (the mail dialog’s initialType) still looks for the open invoice', async () => {
+    await enableModule(getManifest('invoices')!);
+    await open('inv-1');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(
+      <CaptureForm
+        initialType="invoice"
+        initialText="Mahnung Stadtwerke 87,40 €"
+        onSaved={onSaved}
+      />,
+    );
+    expect(await screen.findByTestId('capture-dunning-hint')).toHaveTextContent('Stadtwerke');
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(await db.table('invoices_invoice').count()).toBe(1);
+    expect((await db.table('invoices_invoice').get('inv-1'))!.dunningLevel).toBe(1);
+  });
+
+  it('ToDos off and unsure: the line says why and nothing is saved until a target is picked', async () => {
+    await enableModule(getManifest('invoices')!);
+    await disableModule(getManifest('todos')!, 'keep');
+    await open('a');
+    await open('b');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(
+      await box(),
+      'Zahnarzt morgen 9 Uhr{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 €',
+    );
+    const reason = t.quickCapture.multi.dunningChoose('Stadtwerke');
+    await waitFor(() =>
+      expect(screen.getAllByTestId('capture-row-target')[1]).toHaveTextContent(reason),
+    );
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(reason);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect((await db.table('invoices_invoice').toArray()).every((x) => !x.dunningLevel)).toBe(true);
   });
 });

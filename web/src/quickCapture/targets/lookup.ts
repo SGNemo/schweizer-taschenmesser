@@ -123,7 +123,8 @@ export async function findOpenInvoice(
     // A paid one counts only when paid shortly before the reminder (they crossed); old history does not.
     const since = addDaysStr(fields.dunning?.date ?? opts.today, -CROSSED_DAYS);
     const known = all.filter(
-      (r) => named(r) && (r.status !== 'paid' || (r.paidAt !== '' && r.paidAt >= since)),
+      // Paid without a date (imports, the data API): its age is unknown, so it counts as recent.
+      (r) => named(r) && (r.status !== 'paid' || r.paidAt === '' || r.paidAt >= since),
     );
     return known.length > 0 ? { candidates: open.filter(named).map(strip) } : undefined;
   }

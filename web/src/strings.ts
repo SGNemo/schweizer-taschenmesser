@@ -1103,7 +1103,7 @@ export const de = {
         `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
       dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
       dunningChoose: (payee: string) =>
-        `Zu ${payee} gibt es schon Rechnungen. Bitte ein Ziel für die Mahnung wählen.`,
+        `Bei ${payee} ist nicht klar, welche Rechnung gemeint ist. Bitte ein Ziel wählen.`,
       dunningWill: (payee: string, due: string) =>
         `Wird bei Rechnung ${payee}, fällig ${due}, vermerkt.`,
     },

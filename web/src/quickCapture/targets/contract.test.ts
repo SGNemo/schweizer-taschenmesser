@@ -360,3 +360,16 @@ describe('council round 3', () => {
     expect(await live('todos_task')).toHaveLength(0);
   });
 });
+
+describe('council round 4', () => {
+  it('paid without a date counts as recent: unsure, never a new invoice', async () => {
+    await invoice('a', { payee: 'Stadtwerke' });
+    await db.table('invoices_invoice').update('a', { status: 'paid' });
+    expect(
+      await findOpenInvoice(
+        { title: 'Stadtwerke', amountMinor: 8740 },
+        { today: TODAY, states: ON },
+      ),
+    ).toEqual({ candidates: [] });
+  });
+});

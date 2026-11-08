@@ -39,7 +39,7 @@ import { useCaptureTypes } from './useCaptureTypes';
 /** A reminder line turned unsure at save while there is no ToDo target: the person picks one. */
 class ChooseTarget extends Error {
   constructor(
-    readonly key: string,
+    readonly keys: string[],
     readonly payee: string,
   ) {
     super('choose-target');
@@ -119,7 +119,10 @@ export function CaptureForm({
     () => initialText || peekReopenDraft() || (keepDraft ? readCaptureDraft() : undefined) || '',
   );
   const [override, setOverride] = useState<CaptureType | undefined>(initialType);
-  // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text.
+  // The person picked the target in this sheet (not a preset like the mail dialog's `initialType`).
+  const [picked, setPicked] = useState(false);
+  // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text and how often
+  // that text came before (two identical lines keep their own choice; lines may move).
   const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
   const [confirming, setConfirming] = useState(false);
   // „Als Ausgabe buchen“ on a line of a batch: that line in the single sheet, on top of this one.
@@ -167,14 +170,19 @@ export function CaptureForm({
   // The single sheet treats a payment reminder the same way as a line of a batch.
   // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
   const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;
-  const singlePlan = override
-    ? { type: resolved.type, fields: singleFields, amend: undefined }
-    : reminderRow(
-        resolved.type,
-        singleFields,
-        multi ? undefined : lookups[lookupKey(single)],
-        available,
-      );
+  const basePlan = reminderRow(
+    resolved.type,
+    singleFields,
+    multi ? undefined : lookups[lookupKey(single)],
+    available,
+  );
+  // A target picked by hand is final when it differs from what was read, or when the line was unsure
+  // (asked for a target); a preset or re-picking the read target keeps the open-invoice check.
+  const singleFinal =
+    picked && override !== undefined && (override !== result.type || !basePlan.type);
+  const singlePlan: ReminderRow = singleFinal
+    ? { type: resolved.type, fields: singleFields }
+    : basePlan;
   const type = singlePlan.type;
   const fields = singlePlan.fields;
   // Noted on an existing invoice: no new-invoice chips (its own due date would contradict the hint).
@@ -186,7 +194,7 @@ export function CaptureForm({
     () =>
       multi
         ? parts.map((part, i) => {
-            const key = `${i}:${part}`;
+            const key = `${part}#${parts.slice(0, i).filter((p) => p === part).length}`;
             const r = parseCapture(part, {
               now: new Date(now()),
               defaultType: settings?.defaultType,
@@ -197,16 +205,20 @@ export function CaptureForm({
             // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
             const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
             // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice. A target
-            // the person picked by hand is final (a deliberate new invoice included).
-            const reminder = !chosen && isReminder(row.type, row.fields);
-            const plan: ReminderRow = reminder
+            // picked by hand is final when it differs from what was read or the line was unsure.
+            const asReminder = isReminder(row.type, row.fields);
+            const base: ReminderRow = asReminder
               ? reminderRow(row.type, row.fields, lookups[lookupKey(part)], available)
               : row;
+            const final = !!chosen && (chosen !== r.type || !base.type);
+            const reminder = asReminder && !final;
+            const plan: ReminderRow = reminder ? base : row;
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
             return {
               part,
+              key,
               ...res,
               ...row,
               ...plan,
@@ -238,7 +250,7 @@ export function CaptureForm({
   const pending = (
     multi
       ? rows.filter((r) => r.reminder).map((r) => ({ key: lookupKey(r.part), fields: r.source }))
-      : !override && isReminder(resolved.type, singleFields)
+      : !singleFinal && isReminder(resolved.type, singleFields)
         ? [{ key: lookupKey(single), fields: singleFields }]
         : []
   ).filter((p) => !(p.key in lookups));
@@ -285,6 +297,7 @@ export function CaptureForm({
     // A new prefix or a cleared field starts over; otherwise the user's manual choice sticks.
     if (!value.trim()) {
       setOverride(undefined);
+      setPicked(false);
       setRowOverride({});
     }
   };
@@ -298,6 +311,7 @@ export function CaptureForm({
 
   const pick = (next: CaptureType) => {
     setOverride(next);
+    setPicked(true);
     setConfirming(false);
     setError('');
     // Back to the field so Enter saves right after a mouse pick.
@@ -337,25 +351,39 @@ export function CaptureForm({
   };
 
   /** The batch as saved: reminder lines are looked up once more, so a settled invoice is never noted. */
-  const batchItems = async (): Promise<CaptureItem[]> =>
-    Promise.all(
+  const batchItems = async (): Promise<CaptureItem[]> => {
+    const settled = await Promise.allSettled(
       rows.map(async (r): Promise<CaptureItem> => {
         if (!r.reminder) return { type: r.type!, fields: r.fields };
         const plan = await resolveReminder('invoice', r.source, available, r.lookup);
-        if (!plan.type) throw new ChooseTarget(lookupKey(r.part), r.source.title);
+        if (!plan.type) throw new ChooseTarget([lookupKey(r.part)], r.source.title);
         return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
       }),
     );
+    // Every line that needs a target asks at once, not one per attempt.
+    const choose = settled.flatMap((s) =>
+      s.status === 'rejected' && s.reason instanceof ChooseTarget ? [s.reason] : [],
+    );
+    if (choose.length > 0)
+      throw new ChooseTarget(
+        choose.flatMap((c) => c.keys),
+        choose[0]!.payee,
+      );
+    return settled.map((s) => {
+      if (s.status === 'rejected') throw s.reason;
+      return s.value;
+    });
+  };
   /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
   const singleItem = async (): Promise<CaptureItem> => {
-    if (override || !isReminder(resolved.type, singleFields)) return { type: type!, fields };
+    if (singleFinal || !isReminder(resolved.type, singleFields)) return { type: type!, fields };
     const plan = await resolveReminder(
       resolved.type,
       singleFields,
       available,
       lookups[lookupKey(single)],
     );
-    if (!plan.type) throw new ChooseTarget(lookupKey(single), singleFields.title);
+    if (!plan.type) throw new ChooseTarget([lookupKey(single)], singleFields.title);
     return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
   };
 
@@ -374,13 +402,17 @@ export function CaptureForm({
       setText('');
       if (keepDraft) clearCaptureDraft();
       setOverride(undefined);
+      setPicked(false);
       setRowOverride({});
       setConfirming(false);
       inputRef.current?.focus();
     } catch (e) {
       if (e instanceof ChooseTarget) {
         // Unsure at save and no ToDos: the line now asks for its target, with the reason.
-        setLookups((cur) => ({ ...cur, [e.key]: 'failed' }));
+        setLookups((cur) => ({
+          ...cur,
+          ...Object.fromEntries(e.keys.map((k) => [k, 'failed' as const])),
+        }));
         setError(t.quickCapture.multi.dunningChoose(e.payee));
       } else setError(errorText(e));
       setConfirming(false);
@@ -396,11 +428,15 @@ export function CaptureForm({
     if (pending.length > 0) return;
     if (!text.trim()) return setError(t.quickCapture.empty);
     if (multi) {
+      const unsure = rows.find((r) => !r.type && r.reminder);
+      if (unsure) return setError(t.quickCapture.multi.dunningChoose(unsure.source.title));
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
       if (rows.some((r) => badDate(r.chips))) return setError(t.quickCapture.errors.invalid);
       // One tap saves the batch; nothing in it books, so nothing asks for a confirmation (U04).
       return void save(false);
     }
+    if (!type && isReminder(resolved.type, singleFields))
+      return setError(t.quickCapture.multi.dunningChoose(singleFields.title));
     if (!type) return setError(t.quickCapture.chooseType);
     if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
     if (targetFor(type).requiresConfirm && !confirming) {
@@ -431,6 +467,8 @@ export function CaptureForm({
   const rowTargetText = (r: (typeof rows)[number]): string => {
     if (r.amend)
       return t.quickCapture.multi.dunningMatch(r.amend.payee, formatDay(r.amend.dueDate, 'd. MMM'));
+    // Unsure and no ToDos: the line says why it asks for a target.
+    if (!r.type && r.reminder) return t.quickCapture.multi.dunningChoose(r.source.title);
     if (!r.type) return t.quickCapture.multi.choose;
     return [
       typeLabel(r.type, r.fields.kind),
@@ -486,7 +524,7 @@ export function CaptureForm({
               <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
                 <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
                 <div className={styles.chips}>
-                  {choosing === `${i}:${r.part}` ? (
+                  {choosing === r.key ? (
                     <select
                       className={styles.rowType}
                       aria-label={t.quickCapture.multi.rowTarget(r.part)}
@@ -494,16 +532,16 @@ export function CaptureForm({
                       // One tap: the list opens right away where the browser allows it.
                       ref={openPicker}
                       onChange={(e) => {
-                        pickRow(`${i}:${r.part}`, e.target.value as CaptureType);
-                        closeChoice(`${i}:${r.part}`, true);
+                        pickRow(r.key, e.target.value as CaptureType);
+                        closeChoice(r.key, true);
                       }}
                       onKeyDown={(e) => {
                         if (e.key !== 'Escape') return;
                         e.preventDefault();
                         e.stopPropagation();
-                        closeChoice(`${i}:${r.part}`, true);
+                        closeChoice(r.key, true);
                       }}
-                      onBlur={() => closeChoice(`${i}:${r.part}`, false)}
+                      onBlur={() => closeChoice(r.key, false)}
                       data-testid="capture-row-type"
                     >
                       {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
@@ -518,11 +556,11 @@ export function CaptureForm({
                     <button
                       type="button"
                       ref={(el) => {
-                        targetRefs.current[`${i}:${r.part}`] = el;
+                        targetRefs.current[r.key] = el;
                       }}
                       className={styles.rowTarget}
                       aria-label={`${t.quickCapture.multi.rowTarget(r.part)}: ${rowTargetText(r)}`}
-                      onClick={() => setChoosing(`${i}:${r.part}`)}
+                      onClick={() => setChoosing(r.key)}
                       data-testid="capture-row-target"
                       data-type={r.type ?? ''}
                     >

@@ -234,11 +234,20 @@ export async function reinstateCapture(
   }
   // Only what is deleted now comes back, and only that is deleted again by the undo.
   const rows = await Promise.all(all.map((s) => s.repo.table.get(s.id)));
-  if (!rows[0]) throw new CaptureError('invalid');
   const stages = all.filter((_, i) => rows[i] && rows[i]!.deletedAt !== null);
   // A stage missing: a half entry (a ToDo without its plan row) is never brought back.
   if (rows.some((r) => !r)) throw new CaptureError('invalid');
-  for (const stage of stages) await stage.repo.restore(stage.id);
+  // All or nothing: a failing second restore takes the first back (never half an entry).
+  const done: typeof stages = [];
+  try {
+    for (const stage of stages) {
+      await stage.repo.restore(stage.id);
+      done.push(stage);
+    }
+  } catch (e) {
+    for (const stage of done.reverse()) await stage.repo.remove(stage.id).catch(() => undefined);
+    throw e;
+  }
   return {
     id,
     type,
