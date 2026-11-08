@@ -60,7 +60,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   3. Type "1234" as master password; later type a strong one or add a login with a password.
 - **Expected:** Everything in the strength hint is in Spanish.
 - **Actual:** "aprox. weniger als eine Sekunde", "Dies ist ein sehr häufig verwendetes Passwort.", "aprox. 2 Stunden", "aprox. Jahrhunderte". Same text appears in the add-login form.
-- **Screenshot:** [31-vault-weak.png](screenshots/31-vault-weak.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B02 · AI provider names and options are German in the Spanish setup wizard
 
@@ -70,7 +70,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Open the "Añadir proveedor" dropdown.
 - **Expected:** Provider names like "Ollama (local)", "OpenRouter (modelos gratuitos)", "Proveedor propio (compatible con OpenAI)".
 - **Actual:** "Ollama (lokal)", "OpenRouter (kostenlose Modelle)", "Eigener Anbieter (OpenAI-kompatibel)".
-- **Screenshot:** [03-setup-step05.png](screenshots/03-setup-step05.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B03 · README and website tell international visitors the app is German-only
 
@@ -89,7 +89,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Type password "Tortilla-2026-xyz!".
 - **Expected:** Consistent label ("Moderada/Fuerte") for a password that is cracked offline in about 2 hours.
 - **Actual:** Label "Muy fuerte" next to "aprox. 2 Stunden" (and a full bar).
-- **Screenshot:** [36-after-save.png](screenshots/36-after-save.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B05 · Website field rejects "service.berlin.de" with a browser tooltip
 
@@ -99,7 +99,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Website: type service.berlin.de, tap Guardar.
 - **Expected:** Domain accepted (the Saved module accepts "elpais.com") or a clear Spanish hint.
 - **Actual:** Save does nothing visible except the browser tooltip "Please enter a URL." (English in my test browser). Easy to think saving is broken.
-- **Screenshot:** [36-after-save.png](screenshots/36-after-save.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B06 · Calendar/Reminders switch is squeezed and cut off next to the page title at phone width
 
@@ -108,7 +108,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Phone width 412 px, Planificar → Calendario.
 - **Expected:** Readable switch or placed on its own row.
 - **Actual:** A pill with the text "Calenda" (cut) sits between the title "Calendario" and the "Avanzado" toggle. The same screen has two other ways to switch (top tabs Calendario/Tareas).
-- **Screenshot:** [16-calendar.png](screenshots/16-calendar.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B07 · Two identical checkboxes per shopping-list row
 
@@ -118,7 +118,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Try to tick it off.
 - **Expected:** One clear checkbox for "bought".
 - **Actual:** Two same-looking checkboxes side by side: left = "Seleccionar" (bulk select), right = bought. In a shop I tapped the wrong one first and got a "1 seleccionado / Marcar / Eliminar" bar.
-- **Screenshot:** [23-groceries.png](screenshots/23-groceries.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B08 · "KW 44" (German Kalenderwoche) in week header
 
@@ -127,7 +127,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Planificar → Calendario → Semana.
 - **Expected:** "Sem. 44" or no week number.
 - **Actual:** "KW 44 · 26 Oct – 1 Nov 2026"; month names also capitalised here but lower-case elsewhere ("1 nov 2026").
-- **Screenshot:** [18-cal-week.png](screenshots/18-cal-week.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B09 · Day-of-month list uses German ordinal dots ("1.", "2.", "3.")
 
@@ -137,7 +137,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Open "Día del mes".
 - **Expected:** "1", "2", "3" or "día 1".
 - **Actual:** "1." … "31." and "Último día".
-- **Screenshot:** [11-sub-form.png](screenshots/11-sub-form.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B10 · Month headings are title-cased in Spanish: "Octubre De 2026"
 
@@ -146,7 +146,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Dinero → Finanzas or Planificar → Calendario.
 - **Expected:** "octubre de 2026" (or "Octubre 2026").
 - **Actual:** "Octubre De 2026" (capital D). Looks like a bug on every month header, phone and desktop.
-- **Screenshot:** [09-money-hub.png](screenshots/09-money-hub.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B11 · Explanatory paragraphs are cut off mid-word with "…" and no way to read the rest
 
@@ -156,7 +156,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Look at the welcome card on Resumen and step 5 (AI provider).
 - **Expected:** Full text or a "more" link, especially for the privacy statement.
 - **Actual:** "…cuando quieras e…", "…en Ajustes → IA….", "…la breve descripción de l…" (privacy sentence cut).
-- **Screenshot:** [03-setup-step05.png](screenshots/03-setup-step05.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B12 · Setup wizard has 12 steps with technical topics for a first-time user
 
@@ -165,7 +165,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Start setup, tap through steps 1–12.
 - **Expected:** Short start (language, modules) with the rest optional later.
 - **Actual:** AI provider, calendar subscription (ICS), "Importar con IA", JSON schema, update channel, "Mostrar herramientas de desarrollo" before I have used the app. I would quit at step 5–6.
-- **Screenshot:** [03-setup-step05.png](screenshots/03-setup-step05.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B13 · German-style quotation marks in Spanish
 
@@ -174,7 +174,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Open search (Buscar), type "noticias RSS".
 - **Expected:** «noticias RSS».
 - **Actual:** "Preguntar al asistente: „noticias RSS“" (German low-9 quote). Elsewhere the app correctly uses «…».
-- **Screenshot:** [38-search-news.png](screenshots/38-search-news.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B14 · English text in Spanish "Acerca de Nemo" legal block
 
@@ -183,7 +183,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Settings → Acerca de Nemo, scroll to the end.
 - **Expected:** Spanish.
 - **Actual:** "Legal: imprint and contact", "Whom to contact with questions".
-- **Screenshot:** [50-about.png](screenshots/50-about.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B15 · Same feature has two names: "Silencio" and "Modo juego"
 
@@ -193,7 +193,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   2. Open Settings → Notificaciones.
 - **Expected:** One name.
 - **Actual:** Home card says "Silencio: Desactivado / 1 hora / Hasta mañana"; the Notifications page calls the same idea "Modo juego" (gaming mode). I would not find it.
-- **Screenshot:** [04-settings-es.png](screenshots/04-settings-es.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B16 · Currency tool error is unclear and gives no offline fallback
 
@@ -202,7 +202,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Open Herramientas → Divisas without internet.
 - **Expected:** Short sentence with "tipos de cambio" and a retry; ideally bundled rates.
 - **Actual:** "No se pudieron cargar los tipos y aún no hay ninguno guardado." ("tipos" alone is not clear.) Tool is useless until first online use.
-- **Screenshot:** [39-currency.png](screenshots/39-currency.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B17 · Long invoice title is cut in the list and cannot be read in full
 
@@ -211,7 +211,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Facturas → add "Hausverwaltung Miete Nachzahlung (Nebenkostenabrechnung 2025)".
 - **Expected:** Wrap to two lines or full text on tap.
 - **Actual:** "Hausverwaltung Miete Nachzahlung…" cut; the brackets part is lost.
-- **Screenshot:** [14-invoices.png](screenshots/14-invoices.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B18 · Redundant "Mañana" (group header and chip on the row)
 
@@ -220,7 +220,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Add an invoice due tomorrow.
 - **Expected:** Say it once.
 - **Actual:** Group header "Mañana" and the row repeats "Mañana" next to the amount.
-- **Screenshot:** [14-invoices.png](screenshots/14-invoices.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B19 · "Saldo", "Balance" and "Disponible" next to each other
 
@@ -229,7 +229,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Dinero → Finanzas.
 - **Expected:** Clear difference or fewer terms.
 - **Actual:** "Saldo 0,00 €" above "Balance 0,00 €"; on desktop "Disponible" plus "Saldo … · facturas pendientes". For me saldo and balance are the same word.
-- **Screenshot:** [09-money-hub.png](screenshots/09-money-hub.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B20 · Keyboard shortcut hint is shown on the phone
 
@@ -238,7 +238,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Open a login detail in the vault.
 - **Expected:** No keyboard hints on touch devices.
 - **Actual:** "Teclas: U usuario, P contraseña, T código, O abrir sitio web."
-- **Screenshot:** [37-access-detail.png](screenshots/37-access-detail.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B21 · Module settings summaries show values without labels
 
@@ -247,7 +247,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Settings → Módulos.
 - **Expected:** Label for each value.
 - **Actual:** "Campos: Mes · 09:00 · 09:00", "Campos: 2 · 09:00", "Campos: 3 · 09:00".
-- **Screenshot:** [05-module-library.png](screenshots/05-module-library.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B22 · Developer module "Ejemplo" is offered in the module library for normal users
 
@@ -256,7 +256,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. More → Biblioteca de módulos → Hogar/Conocimiento.
 - **Expected:** Hidden unless developer mode.
 - **Actual:** "Ejemplo – Desarrolladores – Módulo de referencia del generador…" can be switched on.
-- **Screenshot:** [06-module-library.png](screenshots/06-module-library.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B23 · Dev-preview banners and the Settings → Desarrollo page are German in a Spanish UI
 
@@ -265,7 +265,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Open the dev build (linked from README), language Spanish.
 - **Expected:** Spanish or clearly marked English.
 - **Actual:** "Testdaten geladen, entfernen unter Einstellungen → Entwickler." and the whole developer page in German. Low because it is the untested preview.
-- **Screenshot:** [43-dev-first.png](screenshots/43-dev-first.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ### B24 · Native date field format follows the test browser (10/29/2026)
 
@@ -274,7 +274,7 @@ Long invoice title (cut, B17); 7 grocery items; deleting and restoring (undo toa
   1. Add subscription → "Cargo el".
 - **Expected:** dd/mm/aaaa (what I use).
 - **Actual:** Showed 10/29/2026 in my headless Chromium. Not verified on a real Android phone, so unclear whether this is the app or the test setup.
-- **Screenshot:** [11-sub-form.png](screenshots/11-sub-form.png)
+- Screenshots: [PR #265](https://github.com/SGNemo/schweizer-taschenmesser/pull/265)
 
 ## Improvements
 

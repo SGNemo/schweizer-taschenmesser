@@ -1,6 +1,6 @@
 # Design evaluation – round 1: diagnosis (2026-10-01)
 
-State of `develop` @ `a43eb0f` (v0.3.1), rendered with invented data (`npm run screenshots`, `SCREENS_DESKTOP=1`), 1280×720 / 1920×1080 / 2560×1440 / 412×915, light + dark. Annotated screenshots: [`screenshots/round-1/`](screenshots/round-1/) (numbers in the images = problem ids below). Nothing in the app was changed.
+State of `develop` @ `a43eb0f` (v0.3.1), rendered with invented data (`npm run screenshots`, `SCREENS_DESKTOP=1`), 1280×720 / 1920×1080 / 2560×1440 / 412×915, light + dark. Annotated screenshots: [PR #39](https://github.com/SGNemo/schweizer-taschenmesser/pull/39) (numbers in the images = problem ids below). Nothing in the app was changed.
 
 ## 1. What works today (keep)
 - **Token discipline.** One `tokens.css`, AA-checked palette, three weights, type scale, radii, z-index, motion tokens. Any redesign can be done through tokens + `ui/` without touching modules first.

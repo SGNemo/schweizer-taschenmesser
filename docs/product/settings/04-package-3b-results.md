@@ -1,6 +1,6 @@
 # Settings v2 – package 3b (more control)
 
-Branch `feat/settings-control`, 2026-11-03. Screens in [screens/p3b/](screens/p3b/) (Seeds `medium`, Dev-Preview; 1920 and 412 px, light and dark).
+Branch `feat/settings-control`, 2026-11-03. Screenshots: [PR #408](https://github.com/SGNemo/schweizer-taschenmesser/pull/408) (Seeds `medium`, Dev-Preview; 1920 and 412 px, light and dark).
 
 | Item | Before | After |
 |---|---|---|

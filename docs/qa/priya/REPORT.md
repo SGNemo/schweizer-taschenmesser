@@ -29,7 +29,7 @@
   3. Zwei ToDos anlegen oder die überfälligen Einträge der Testdaten ansehen.
 - **Erwartet:** Liste nutzt die Inhaltsbreite wie Kalender und Finanzen; Titel stehen lesbar in einer Zeile.
 - **Tatsächlich:** Liste, Eingabefeld und „Wartet noch“-Karte sind nur 240 px breit, rechts bleibt über 1000 px leer. Das Eingabefeld zeigt „Neue Aufg…“, das Label „ToDo hinzufügen“ bricht um, überfällige Einträge zeigen je einen Buchstaben pro Zeile (neben „Auf heute“). Lange Titel werden nach zwei Zeilen mit „…“ abgeschnitten.
-- **Screenshot:** [30-todos.png](screenshots/30-todos.png), [31-todos-1440.png](screenshots/31-todos-1440.png), [32-todos-stable.png](screenshots/32-todos-stable.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B02 · Schnell hinzufügen: „Rechnung …“ und „… Ausgabe“ landen als ToDo, Betrag wird nicht erkannt, Endzeit und Priorität werden ignoriert
 
@@ -42,7 +42,7 @@
   5. „Angebot an Kunde Schmidt schicken bis Freitag !hoch“: Datum stimmt, die Priorität „!hoch“ wird nicht erkannt.
 - **Erwartet:** Das Wort „Rechnung“ bzw. „Ausgabe“ und eine Zahl mit € oder Komma wählen Rechnung bzw. Buchung mit Betrag; Endzeit und Priorität werden übernommen.
 - **Tatsächlich:** Das Ziel muss von Hand umgeschaltet werden, und es ist nicht sichtbar, ob der Betrag beim Umschalten erhalten bleibt (nicht geprüft).
-- **Screenshot:** [22-neu-menu.png](screenshots/22-neu-menu.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B03 · „Mit KI eintragen“ macht aus einem Satz mit zwei Vorgängen einen einzigen Rechnungseintrag mit Fließtext im Empfängerfeld
 
@@ -53,7 +53,7 @@
   3. Enter, Vorschau lesen.
 - **Erwartet:** Zwei Vorschläge (Rechnung, Termin) mit Empfänger „Müller GmbH“; „netto“ als Hinweis.
 - **Tatsächlich:** Ein Vorschlag „Rechnung anlegen“, Empfänger = „Kunde Müller GmbH, Beratung Oktober, netto, fällig , außerdem Workshop mit Müller am 12.11.“. Der Termin geht verloren. Gut: Die Vorschau fängt es ab („Es wird erst etwas gespeichert, wenn du bestätigst“). Mit echtem Anbieter nicht prüfbar (kein Netz in der Testumgebung).
-- **Screenshot:** [49-ki-eintragen-result.png](screenshots/49-ki-eintragen-result.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B04 · Kontoauszug-Import verwirft den Auftraggeber/Empfänger und bietet weder Konto noch Kategorie in der Vorschau
 
@@ -63,7 +63,7 @@
   2. Eine Semikolon-CSV mit Spalten Buchungstag;Wertstellung;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Betrag;Währung wählen (6 erfundene Zeilen).
 - **Erwartet:** Titel enthält die Gegenpartei („Müller GmbH“), Vorschau zeigt Konto und vorgeschlagene Kategorie, Doppelte werden markiert.
 - **Tatsächlich:** 6 Einträge werden erkannt (Beträge und Daten richtig), aber nur der Verwendungszweck erscheint („Rechnung 2026-041 Beratung Oktober“). „Müller GmbH“ ist nirgends zu sehen, keine Kategorie, keine Konto-Auswahl, kein Duplikat-Hinweis in der Vorschau.
-- **Screenshot:** [102-bank-import-preview.png](screenshots/102-bank-import-preview.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B05 · Verpasste Kündigungsfrist wird nicht als solche markiert: Vertrag mit „Kündigen bis“ in der Vergangenheit steht nur auf „Bald“
 
@@ -74,7 +74,7 @@
   3. Ebenso „Handyvertrag · Kündigen bis 20. Okt.“, „Wartungsvertrag Heizung · Kündigen bis 26. Aug.“.
 - **Erwartet:** Hinweis „Kündigungsfrist verpasst“ bzw. Sortierung/Status nach der Frist, nicht nur nach dem Vertragsende.
 - **Tatsächlich:** Status „Bald“, Sortierung nach Ende. Wer Verträge wegen der Frist verwaltet, sieht die gerissene Frist nicht. Beim Wartungsvertrag lag die Frist 2 Monate zurück.
-- **Screenshot:** [43-vault.png](screenshots/43-vault.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B06 · Einrichtung: Fortschrittszahlen widersprechen sich und durchgeklickte Schritte gelten als „Erledigt“
 
@@ -84,7 +84,7 @@
   2. Zusammenfassung und Übersicht-Karte ansehen.
 - **Erwartet:** Zusammenfassung zeigt, was wirklich eingerichtet ist; Zahlen stimmen überein.
 - **Tatsächlich:** Dialog: „Schritt x von 12“. Karte auf der Übersicht danach: „10 von 11 Schritten erledigt“. KI-Anbieter, Konten verknüpfen, Startdaten, Import per KI stehen auf „Erledigt“, obwohl nichts eingerichtet wurde. Nur der Schritt „Benachrichtigungen“ steht auf „Übersprungen“.
-- **Screenshot:** [04-after-setup.png](screenshots/04-after-setup.png), [05-dashboard-fresh.png](screenshots/05-dashboard-fresh.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B07 · Einrichtung Schritt 6: Beim Spotify-Block steht der Kalender-Hinweistext
 
@@ -103,7 +103,7 @@
   2. Liste „Das ändert sich“ lesen.
 - **Erwartet:** Die Beschreibung auf der Karte nennt, was abgeschaltet wird, oder ein Profil schaltet nur ein.
 - **Tatsächlich:** Karte: „Finanzen, Budgets, Abos, Rechnungen, Verträge – dazu Kalender und Erinnerungen.“ Erst darunter: „Wird deaktiviert: ToDos“ und „Werkzeuge aus: Timer & Stoppuhr, QR-Code“, dazu ein Pflicht-Häkchen. Außerdem trägt jede Karte den Profilnamen doppelt (Titel und gleichnamiger Button).
-- **Screenshot:** [03-setup-profile.png](screenshots/03-setup-profile.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B09 · Einstellungen: „Benachrichtigungen“ und „Nicht erlaubt“ überlappen in der Seitenleiste
 
@@ -112,7 +112,7 @@
   1. Einstellungen öffnen, Fenster 1440×900.
 - **Erwartet:** Beschriftung und Status stehen getrennt.
 - **Tatsächlich:** „BenachrichtigungenNicht erlaubt“ läuft ineinander.
-- **Screenshot:** [55-ki-add-claude.png](screenshots/55-ki-add-claude.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B10 · Modul-Einstellungen zeigen unbeschriftete Rohwerte („Felder: Monat · 09:00 · 09:00“) und je Modul zwei gleiche Buttons „Startdaten einrichten“
 
@@ -122,7 +122,7 @@
   2. Die Zeilen von Kalender, Personen, Rechnungen, Unterlagen lesen.
 - **Erwartet:** Jeder Wert mit Namen („Ansicht: Monat · Erinnerung 09:00“).
 - **Tatsächlich:** „Felder: 0 · 09:00“ (Personen), „Felder: 30 · 14 · 09:00“ (Unterlagen), „Felder: 2 · 09:00“ (Rechnungen). Man weiß nicht, was 0, 2, 30, 14 bedeuten. „Startdaten einrichten“ steht doppelt je Modul.
-- **Screenshot:** [99-module-settings-finance.png](screenshots/99-module-settings-finance.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B11 · „Verbindung testen“ meldet nur „Test fehlgeschlagen: Nicht erreichbar“
 
@@ -132,7 +132,7 @@
   2. „Verbindung testen“, Hinweis „Verstanden“.
 - **Erwartet:** Ursache unterscheiden: kein Netz / Schlüssel abgelehnt / Zertifikat / Browser blockiert.
 - **Tatsächlich:** Eine Meldung für alles. Hinweis: In der Testumgebung gab es kein echtes Netz (Zertifikatsfehler im Proxy), echte Antworten eines Anbieters konnte ich nicht prüfen. Ein Test mit echtem Token fehlt daher im Bericht.
-- **Screenshot:** [57-ki-test-result.png](screenshots/57-ki-test-result.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B12 · Sync-Zähler passen nicht zur Erwartung: „Zuletzt: 6 empfangen, 0 gesendet“ nach dem Schreiben, „9 empfangen“ auf dem zweiten Gerät bei „2 Einträgen“ auf dem Server
 
@@ -142,7 +142,7 @@
   2. Gerät B verbinden.
 - **Erwartet:** Zähler zeigen gesendete und empfangene Einträge nachvollziehbar.
 - **Tatsächlich:** Gerät A meldet „6 empfangen, 0 gesendet“, obwohl es der Absender war; Server zeigt „2 Einträge“. Daten kamen auf B korrekt an. Zahlen sind nicht deutbar.
-- **Screenshot:** [53-sync-connected.png](screenshots/53-sync-connected.png), [62-phone-synced.png](screenshots/62-phone-synced.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B13 · Schwebender „+“-Knopf überdeckt Felder am unteren Rand von Formularen (Passphrase-Feld im Sync-Formular)
 
@@ -151,7 +151,7 @@
   1. Handy-Viewport, Einstellungen → Sync & Backup, nach unten bis „Passphrase“ scrollen.
 - **Erwartet:** Knopf verdeckt keine Eingabe.
 - **Tatsächlich:** Der Knopf liegt auf dem rechten Ende des Passphrase-Feldes (Auge/Text).
-- **Screenshot:** [61-phone-sync-section.png](screenshots/61-phone-sync-section.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B14 · Kalender bei 640 px Breite: „Erinnerungen“ im Umschalter abgeschnitten („Remind…“)
 
@@ -160,7 +160,7 @@
   1. Kalender, Fenster auf 640 px verkleinern (englische Oberfläche).
 - **Erwartet:** Beschriftung vollständig.
 - **Tatsächlich:** Segment-Beschriftung wird abgeschnitten, „Advanced“-Schalter rückt daneben.
-- **Screenshot:** [93-narrow-640.png](screenshots/93-narrow-640.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B15 · Bestätigungs-Toasts stapeln sich („ToDo hinzugefügt.“ doppelt) und verschwinden nicht von selbst
 
@@ -169,7 +169,7 @@
   1. ToDos: zwei Aufgaben schnell hintereinander anlegen.
 - **Erwartet:** Ein Toast, der sich selbst schließt oder ersetzt wird.
 - **Tatsächlich:** Zwei gleiche Toasts übereinander, jeder mit „Schließen“.
-- **Screenshot:** [32-todos-stable.png](screenshots/32-todos-stable.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B16 · „Mit KI eintragen“ öffnet ein Fenster mit dem Titel „Befehlspalette“; ohne Anbieter trägt es per Regeln ein
 
@@ -178,7 +178,7 @@
   1. Finanzen → „Mit KI eintragen“.
 - **Erwartet:** Fenstertitel passt zum Knopf; ohne Anbieter steht „ohne KI, Regeln“.
 - **Tatsächlich:** Titel „Befehlspalette“, erste Zeile „Eintragen“, zweite „Mit KI fragen“. Erst im Ergebnis zeigt ein kleiner Chip „Regeln · 0 Token“, dass keine KI beteiligt war.
-- **Screenshot:** [48-ki-eintragen.png](screenshots/48-ki-eintragen.png), [49-ki-eintragen-result.png](screenshots/49-ki-eintragen-result.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B17 · Hinweis zur Lesehilfe: „Einschalten“ und „Nicht jetzt“ sehen aus wie Fließtext, nicht wie Knöpfe
 
@@ -187,7 +187,7 @@
   1. Frische Installation, Übersicht ansehen.
 - **Erwartet:** Erkennbare Knöpfe.
 - **Tatsächlich:** Beide Wörter stehen fett am Zeilenende ohne Rahmen; ebenso „Später nicht mehr“ beim Wetter.
-- **Screenshot:** [01-fresh-start.png](screenshots/01-fresh-start.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B18 · Englisch: überfällige Rechnung zeigt „for 12 days“ statt „12 days overdue“
 
@@ -197,7 +197,7 @@
   2. Invoices öffnen.
 - **Erwartet:** „12 days overdue“.
 - **Tatsächlich:** „⚠ for 12 days“ – ohne „overdue“ unklar.
-- **Screenshot:** [92-dark-english-invoices.png](screenshots/92-dark-english-invoices.png)
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266)
 
 ### B19 · README sagt „The app interface is German today; more languages are on the way“, die App hat fünf Sprachen
 
@@ -398,5 +398,5 @@
 
 ## Anhang
 - Maschinenlesbar: [findings.json](findings.json) (20 Fehler, 18 Verbesserungen).
-- Screenshots: [screenshots/](screenshots/).
+- Screenshots: [PR #266](https://github.com/SGNemo/schweizer-taschenmesser/pull/266).
 - Testumgebung: Headless-Chromium über Playwright, Sync-Server lokal, kein Internet; Zeitzone UTC. Zeiten aus Dev-Server (Vite) sind nicht aussagekräftig; die Testdaten „groß“ (ca. 5.200 Buchungen, 550 Termine) luden in rund 8 s und blieben bedienbar.

@@ -1,6 +1,6 @@
 # Settings v2 – package 2 (clarity)
 
-Branch `feat/settings-clarity`, 2026-11-03. Screens (Seeds `medium`, Dev-Preview, 1920×1080 and 412×915): [screens/p2/](screens/p2/); "before" = the package 1 screens in `screens/after/`.
+Branch `feat/settings-clarity`, 2026-11-03. Screens (Seeds `medium`, Dev-Preview, 1920×1080 and 412×915): Screenshots: [PR #399](https://github.com/SGNemo/schweizer-taschenmesser/pull/399); "before" = the package 1 screens in `screens/after/`.
 
 | Item | Before (package 1) | After |
 |---|---|---|

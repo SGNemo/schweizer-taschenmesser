@@ -64,7 +64,7 @@ G17 (phone FAB over the last widget row) is not identity work; noted for the lay
 
 ## Part B – fix packages (phase 4)
 
-Four packages, each one chat and one PR against `develop`. **Package 0 first**; 1, 2 and 3 branch from `develop` after 0 is merged and may run in parallel (they touch different modules; the only shared files are `strings.ts` blocks and `docs/`). Every package: before-screenshots are the sheets in [`shots/`](shots/), the after-states for 0, 2 and 3 are the [`mockups/`](mockups/). The prompts below are complete; paste one per chat.
+Four packages, each one chat and one PR against `develop`. **Package 0 first**; 1, 2 and 3 branch from `develop` after 0 is merged and may run in parallel (they touch different modules; the only shared files are `strings.ts` blocks and `docs/`). Every package: before-screenshots are the sheets in [PR #457](https://github.com/SGNemo/schweizer-taschenmesser/pull/457), the after-states for 0, 2 and 3 are the [`mockups/`](mockups/). The prompts below are complete; paste one per chat.
 
 | # | Package | Branch | Findings (mandatory) | Hotspots to announce | Skills |
 | --- | --- | --- | --- | --- | --- |
