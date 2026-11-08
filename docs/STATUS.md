@@ -8,6 +8,8 @@ Erstkontakt-Runde Person A (`feat/demo-a`, PR offen): Setup-Schritt „Fokus-Hil
 
 Erstkontakt-Runde 5, Person C (`feat/demo-c`, PR offen): Schnellerfassung am Handy – Erinnerung fragt einmal nach Benachrichtigungen, „Tanken 62,40“/„Do 14 Uhr“ erkannt, Entwurf übersteht App-Ende, 44-px-Umschalter; Funde [qa/round-5/c](qa/round-5/c/FINDINGS.md).
 
+Erstkontakt-Runde, Person B (`feat/demo-b`, PR offen): Bank-Import aus der Einrichtung ohne Sackgasse, Standardkategorien für bekannte Empfänger, Excel-tauglicher Export direkt über den Buchungen, „Kontostand heute laut Bank“, Karte „Diesen Monat“ (auch in der ruhigen Übersicht ohne ToDos); Funde und Follow-ups in [qa/round-5/b](qa/round-5/b/FINDINGS.md).
+
 Fitness, Paket 1 (`feat/fitness-1`, PR offen): Modul `fitness` (preview, aus) in Haushalt – Einheiten + Mahlzeiten, Widget Woche/heute, Kalender, Schnellerfassung `training …`/`kcal …`, Tagesziel direkt oder Mifflin-St-Jeor (Körperdaten nie gespeichert); Paket 2 (Wochenansicht, Vorlagen, Planer) und 3 (CSV-Import) offen ([features/fitness.md](features/fitness.md)).
 Agenten-Team v3 (`review/agents-v3`, PR offen): Prüfung der v2-Definitionen gegen die Managed-Agents-Doku (Befund 1: Lead ohne `multiagent`-Block), 20 Definitionen mit Modellen je Rolle, gemeinsamer Regelblock `SHARED.md`, `ant apply`-Dateien, Einrichtung und Session-Skript ([meta/agents-v3/README.md](meta/agents-v3/README.md)); gilt erst nach Svens Umstellung.
 Agenten v3 Auditor (`feat/agents-v3-auditor`, PR offen): `nemo-auditor` (Fable, zweiter Einstiegspunkt für Svens Prüfaufträge, fragt die 19 nur zum Nachprüfen), `session.mjs` wartet auf laufende Kind-Threads und kennt `--agent auditor`, LF für Agenten-Dateien unter Windows; Sven mergt und wendet nur `nemo-auditor.md` an.
