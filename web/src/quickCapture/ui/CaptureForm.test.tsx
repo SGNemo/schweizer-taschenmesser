@@ -16,6 +16,7 @@ vi.setConfig({ testTimeout: 20_000 });
 // Wednesday, 2026-09-30, 10:00. Todos, calendar and finance are on by default.
 beforeEach(async () => {
   setNow(() => new Date(2026, 8, 30, 10, 0).getTime());
+  localStorage.clear();
   await clearAll();
 });
 afterEach(() => setNow());
@@ -276,5 +277,51 @@ describe('CaptureForm', () => {
     const tasks = await db.table('todos_task').toArray();
     expect(tasks.map((x) => x.title).sort()).toEqual(['Milch kaufen', 'Oma anrufen']);
     expect(tasks.every((x) => !x.notes)).toBe(true);
+  });
+
+  describe('C04: typed text survives the app being killed in the background', () => {
+    it('restores the text in a fresh form when the old one never closed', async () => {
+      const user = userEvent.setup();
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      await user.type(await box(), 'Bremsen prüfen morgen');
+      // A killed app never unmounts: the next start renders a new form next to nothing.
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      const boxes = await screen.findAllByRole('textbox', { name: t.quickCapture.inputLabel });
+      expect(boxes.at(-1)).toHaveValue('Bremsen prüfen morgen');
+    });
+
+    it('forgets the text once the sheet was closed or the entry saved', async () => {
+      const user = userEvent.setup();
+      const first = render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      await user.type(await box(), 'Weg damit');
+      first.unmount();
+      const second = render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      expect(await box()).toHaveValue('');
+      await user.type(await box(), 'Ölwechsel');
+      await user.keyboard('{Enter}');
+      await waitFor(async () => expect(await db.table('todos_task').count()).toBe(1));
+      second.unmount();
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      expect(await box()).toHaveValue('');
+    });
+
+    it('drops a draft older than 30 minutes', async () => {
+      const user = userEvent.setup();
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      await user.type(await box(), 'Alt');
+      setNow(() => new Date(2026, 8, 30, 10, 31).getTime());
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      const boxes = await screen.findAllByRole('textbox', { name: t.quickCapture.inputLabel });
+      expect(boxes.at(-1)).toHaveValue('');
+    });
+
+    it('is off for the other capture places (share page, desktop window)', async () => {
+      const user = userEvent.setup();
+      render(<CaptureForm keepDraft onSaved={() => undefined} />);
+      await user.type(await box(), 'Nur im Blatt');
+      render(<CaptureForm onSaved={() => undefined} />);
+      const boxes = await screen.findAllByRole('textbox', { name: t.quickCapture.inputLabel });
+      expect(boxes.at(-1)).toHaveValue('');
+    });
   });
 });

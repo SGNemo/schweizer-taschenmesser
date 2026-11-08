@@ -35,6 +35,7 @@ export function QuickAdd() {
     >
       {open ? (
         <CaptureForm
+          keepDraft
           onSaved={onSaved}
           onCancel={() => setOpen(false)}
           onOpenFull={(path) => {
