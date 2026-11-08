@@ -17,11 +17,11 @@ const BARE_NUMBER = /(?<![\p{L}\d.,:×x*])(\d{1,4})(?![\p{L}\d.,:×x*])/giu;
 const DAY_WORDS: [RegExp, number][] = [
   [word('vorgestern'), -2],
   [word('gestern|yesterday'), -1],
-  [word('heute|today'), 0],
+  [word(String.raw`heute(?:\s+(?:morgen|früh|mittag|abend))?|today`), 0],
 ];
 /** Times and days this parser does not read: the text is then no fitness capture. */
 const FOREIGN_WHEN = word(
-  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|\d{1,2}\.\d{1,2}\.?`,
+  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|(?<!heute\s)morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|\d{1,2}\.\d{1,2}\.(?:\d{2,4})?`,
 );
 
 const SETS_REPS = /(?<!\d)(\d{1,2})\s*[x×*]\s*(\d{1,3})(?!\d)/i;
@@ -33,7 +33,8 @@ const TRAILING_WEIGHT = /(?:@\s*)?(?<![\d.,])(\d{1,4}(?:[.,]\d{1,2})?)(?![\d.,\p
 /** Exercises are cut at „;“, „und“ and commas that are no decimal comma („72,5 kg“ stays). */
 const PARTS = /\s*;\s*|\s*(?<!\d),\s*|\s*,(?!\d)\s*|\s+(?:und|and)\s+/i;
 /** A day word in front of the prefix: „gestern kcal 400 Pizza“. */
-const LEADING_DAY = /^\s*(vorgestern|gestern|heute|yesterday|today)\s+/i;
+const LEADING_DAY =
+  /^\s*(vorgestern|gestern|heute(?:\s+(?:morgen|früh|mittag|abend))?|yesterday|today)\s+/i;
 
 /** Bounds of the module's schema; a value outside is dropped, never saved half-valid. */
 const within = (v: number, max: number, min = 1) => (v >= min && v <= max ? v : undefined);
@@ -79,8 +80,8 @@ function parseMeal(input: string, forced: boolean, opts: ParseOptions): CaptureR
   // „650 kcal“ wins; without the unit exactly one plain number („kcal Döner 650“), never a guess.
   let m = KCAL_RE.exec(text);
   if (!m && forced) {
-    const bare = [...text.matchAll(BARE_NUMBER)];
-    if (bare.length === 1) m = bare[0]!;
+    // Every digit run counts („Döner 650, Cola 140“ is two numbers, so no guess).
+    if ((text.match(/\d+/g) ?? []).length === 1) m = [...text.matchAll(BARE_NUMBER)][0] ?? null;
   }
   if (!m) return undefined;
   const kcal = within(Number(m[1]), 9999, 0);

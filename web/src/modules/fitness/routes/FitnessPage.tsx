@@ -88,10 +88,11 @@ export default function FitnessPage() {
 
   const week = weekSummary(sessions ?? [], weekOf(day, weekStart));
   const todayKcal = daySum(meals ?? [], day);
-  const last = latestSession(sessions ?? []);
+  // Only what already happened; a session planned for later is no „last time“.
+  const last = latestSession((sessions ?? []).filter((s) => s.date <= day));
 
   // „Wie letztes Mal“ only while today has no session yet: a second tap would only log a copy.
-  const canRepeat = !!last && last.date !== day;
+  const canRepeat = !!last && !(sessions ?? []).some((s) => s.date === day);
   async function repeatLast() {
     if (!last) return;
     const done = t.fitness.repeated(sessionTitle(last));
@@ -150,7 +151,7 @@ export default function FitnessPage() {
 
       {view === 'training' ? (
         <>
-          {last && canRepeat ? (
+          {canRepeat && last ? (
             <div className={styles.toolbar}>
               <Button variant="secondary" onClick={() => void repeatLast()}>
                 <Icon name="repeat" size={18} />

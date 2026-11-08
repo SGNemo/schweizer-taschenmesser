@@ -2,6 +2,6 @@
 type: added
 area: fitness
 breaking: false
-de: Neues Modul Fitness (Vorschau, zuerst aus, in der Modul-Bibliothek einschalten) hält Training und Essen grob fest.
-en: New module Fitness (preview, off at first, turn it on in the module library) keeps a rough log of training and food.
+de: Neues Modul Fitness (in Arbeit): hält Training und Essen grob fest; „In Arbeit anzeigen“ (Darstellung) einschalten, dann Fitness in der Bibliothek.
+en: New module Fitness (in progress): keeps a rough log of training and food; switch on “Show work in progress” (Appearance), then Fitness in the library.
 ---

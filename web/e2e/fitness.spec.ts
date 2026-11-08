@@ -135,6 +135,6 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
     JSON.stringify(await rows(page, 'fitness_session')),
     await page.evaluate(() => JSON.stringify({ ...localStorage })),
   ].join('\n');
-  for (const value of ['weightKg', 'heightCm', '"age"', '"sex"', '"180"', ':180', '"80"'])
+  for (const value of ['weightKg', 'heightCm', '"age"', '"sex"', '"180"', ':180', '"80"', '"30"'])
     expect(stored).not.toContain(value);
 });

@@ -1,29 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
 import { useFocusSettings } from '@/core/settings/focus';
-import { useSettings } from '@/core/settings/settings';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { parseCapture, type CaptureFields, type CaptureType } from '../parser';
 import { splitCapture } from '../parser/split';
 import { useCaptureSettings } from '../settings';
-import {
-  CaptureError,
-  availableTypes,
-  saveCapture,
-  saveCaptures,
-  targetFor,
-  type SavedCapture,
-} from '../targets';
+import { CaptureError, saveCapture, saveCaptures, targetFor, type SavedCapture } from '../targets';
 import { fullFormPath } from '../targets/fullForm';
 import { previewChips } from './chips';
 import { clearReopenDraft, peekReopenDraft } from './reopen';
 import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
-import { z } from 'zod';
-
-const LOOSE = z.looseObject({ nutrition: z.boolean().optional() });
+import { useCaptureTypes } from './useCaptureTypes';
 
 export interface CaptureFormProps {
   initialText?: string;
@@ -81,12 +71,7 @@ export function CaptureForm({
 }: CaptureFormProps) {
   const states = useModuleStates();
   const [settings] = useCaptureSettings();
-  // „Kalorien erfassen“ off: no meal target. Read as plain settings (no module import).
-  const [fitnessPrefs] = useSettings('module.fitness', LOOSE, {});
-  const available = availableTypes(states).filter(
-    (type) => type !== 'meal' || fitnessPrefs?.nutrition !== false,
-  );
-  const fitness = { meal: available.includes('meal'), workout: available.includes('workout') };
+  const { available, fitness } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   const [text, setText] = useState(() => initialText || peekReopenDraft() || '');

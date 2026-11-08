@@ -168,7 +168,7 @@ const meal: CaptureTarget = {
       kcal: f.kcal,
       date: date(f.date ?? ctx.today),
       // Logged now unless a past day was typed („gestern kcal 400 Pizza“).
-      ...(f.date ? {} : { time: nowTime() }),
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
     };
   },
 };
@@ -181,7 +181,7 @@ const workout: CaptureTarget = {
     if (!f.exercises?.length) throw new CaptureError('invalid');
     return {
       date: date(f.date ?? ctx.today),
-      ...(f.date ? {} : { time: nowTime() }),
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
       exercises: f.exercises.map((e) => ({ ...e })),
     };
   },

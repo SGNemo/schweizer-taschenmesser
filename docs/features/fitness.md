@@ -80,7 +80,7 @@ Built: the fitness parser runs only while Fitness is on (meals only with „Kalo
 
 ## 8. Privacy
 
-- `aiSchema` minimal: the two actions "Mahlzeit anlegen" (`text`, `kcal`, `date`, `time`) and "Einheit anlegen" (`date`, `title`, `exercises[].name/sets/reps/weightKg`, `durationMin`) with field names only; never entries (pinned by `privacy.test.ts` as for every module). Like every module with an `aiSchema`, a chat thread may attach fitness rows as context only when the user ticks it for that thread and after the text preview (`modules/chat/context.ts`); nothing is sent by itself. 5 inputs in `web/tests/ai/eval-set.json`.
+- `aiSchema` minimal: the two actions "Mahlzeit anlegen" (`text`, `kcal`, `date`) and "Einheit anlegen" (`title`, `date`, `durationMin`; exercises only in the form and quick capture) with field names only; never entries (pinned by `privacy.test.ts` as for every module). Like every module with an `aiSchema`, a chat thread may attach fitness rows as context only when the user ticks it for that thread and after the text preview (`modules/chat/context.ts`); nothing is sent by itself. 5 inputs in `web/tests/ai/eval-set.json`.
 - **`dataApi: false`** (recommended, like `planner`): health-adjacent data stays out of the local API/MCP and the generic JSON import; nothing in package 1 needs it; import comes as an own importer in package 3. `searchable`: no (global search does not need meal texts).
 - Seed (`seed.ts`, small|medium|large, deterministic, invented): a few sessions with catalogue exercises and plain meals ("Haferflocken mit Obst · 350 kcal"); no body data, no goal set.
 - Diagnostics/bug reports: nothing new (entries are on the negative list anyway). Sync: normal synced collections.

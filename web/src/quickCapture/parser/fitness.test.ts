@@ -93,6 +93,30 @@ describe('fitness captures', () => {
     expect(parseExercise('3x8')).toBeUndefined();
   });
 
+  it('reads decimal points as weights and hours, not as a date', () => {
+    expect(parse('training Kniebeuge 4x6 72.5 kg').fields.exercises).toEqual([
+      { name: 'Kniebeuge', sets: 4, reps: 6, weightKg: 72.5 },
+    ]);
+    expect(parse('training Radfahren 1.5 h').fields.exercises).toEqual([
+      { name: 'Radfahren', durationMin: 90 },
+    ]);
+    expect(parse('training Bankdrücken 3x8 62.5').fields.exercises).toEqual([
+      { name: 'Bankdrücken', sets: 3, reps: 8, weightKg: 62.5 },
+    ]);
+  });
+
+  it('counts every number: two foods without a unit are no guess', () => {
+    expect(parse('kcal Döner 650, Cola 140').type).not.toBe('meal');
+  });
+
+  it('reads „heute morgen“ as today, not as tomorrow', () => {
+    expect(parse('heute morgen kcal 400 Müsli').fields).toEqual({
+      title: 'Müsli',
+      kcal: 400,
+      date: '2026-10-29',
+    });
+  });
+
   it('accepts the English prefix', () => {
     expect(parse('workout Squat 5x5 100').fields.exercises).toEqual([
       { name: 'Squat', sets: 5, reps: 5, weightKg: 100 },

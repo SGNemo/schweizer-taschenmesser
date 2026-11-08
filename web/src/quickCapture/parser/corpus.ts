@@ -24,6 +24,8 @@ export interface CorpusCase {
   pin?: string;
   startDate?: string;
   hardDue?: boolean;
+  /** Run with Fitness on (`ParseOptions.fitness`): the meal and workout sentences. */
+  fitness?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -231,5 +233,54 @@ export const CORPUS: CorpusCase[] = [
     title: 'Steuerbescheid prüfen',
     date: '2026-11-03',
     hardDue: true,
+  },
+  // Fitness (docs/features/fitness.md §5), parsed with Fitness on.
+  { from: 'fitness', fitness: true, text: 'kcal 650 Döner', type: 'meal', title: 'Döner' },
+  { from: 'fitness', fitness: true, text: 'Döner 650 kcal', type: 'meal', title: 'Döner' },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'gestern kcal 400 Pizza',
+    type: 'meal',
+    title: 'Pizza',
+    date: '2026-10-28',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'training Bankdrücken 3×8 60',
+    type: 'workout',
+    title: 'Bankdrücken',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Training: Bankdrücken 3x8 60kg, Kniebeuge 3×5 80',
+    type: 'workout',
+    title: 'Bankdrücken, Kniebeuge',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'training Laufen 30 Min',
+    type: 'workout',
+    title: 'Laufen',
+  },
+  // … and these stay what they were.
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Essen mit Anna Freitag 19 Uhr',
+    type: 'event',
+    date: '2026-10-30',
+    time: '19:00',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Training morgen 18 Uhr',
+    type: 'event',
+    date: '2026-10-30',
+    time: '18:00',
   },
 ];
