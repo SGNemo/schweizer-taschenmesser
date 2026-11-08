@@ -7,6 +7,7 @@ import { source as googleCalendar } from './google-calendar/source';
 import { source as googleKeep } from './google-keep/source';
 import { source as googleTasks } from './google-tasks/source';
 import { source as hevy } from './hevy/source';
+import { source as myfitnesspal } from './myfitnesspal/source';
 import { source as notion } from './notion/source';
 import { source as obsidian } from './obsidian/source';
 import { source as opml } from './opml/source';
@@ -32,6 +33,7 @@ export const SOURCES: readonly SourceDef[] = [
   strong,
   hevy,
   cronometer,
+  myfitnesspal,
   contacts,
   bookmarks,
   obsidian,
