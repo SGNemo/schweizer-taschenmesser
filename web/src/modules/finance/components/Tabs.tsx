@@ -27,6 +27,7 @@ import { RulesList } from './RulesList';
 import { balances, filterTransactions, isTransfer, signed, type TxFilter } from '../logic';
 import { applyBookingFilter, type BookingFilter } from '../analysis';
 import { bookingsCsv } from '../export';
+import { decimalSeparator } from '@/core/i18n/format';
 import { TransferEditor, transferPair, type TransferTarget } from './TransferEditor';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
@@ -109,6 +110,7 @@ export function TransactionsTab({
       (id) => account.get(id) ?? '',
       (id) => (id ? (category.get(id) ?? '') : ''),
       { header: e.header, expense: e.expense, income: e.income, transfer: e.transfer },
+      { decimal: decimalSeparator() === ',' ? ',' : '.', bom: true },
     );
     const name = `${e.file}-${searching || narrowed ? 'filter' : month}.csv`;
     if ((await getPlatform().saveFile({ fileName: name, data: csv, mime: 'text/csv' })) === 'saved')

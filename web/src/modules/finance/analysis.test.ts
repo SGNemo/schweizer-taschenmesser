@@ -466,4 +466,17 @@ describe('export', () => {
       '2026-03-10;Checking;;Transfer;Transfer;-0.05;',
     ]);
   });
+
+  // B02 (round 5, person B): German Excel reads "12.50" as a date or text and UTF-8 without a BOM as Windows-1252.
+  it('writes the decimal mark of the region and a BOM so Excel opens it with umlauts and numbers', () => {
+    const csv = bookingsCsv(
+      [tx({ date: '2026-03-09', amountMinor: 123456, payee: 'Bäckerei Müller' })],
+      acc,
+      cat,
+      labels,
+      { decimal: ',', bom: true },
+    );
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv.slice(1).split(/\r?\n/)[1]).toBe('2026-03-09;Checking;Bäckerei Müller;;Expense;-1234,56;');
+  });
 });
