@@ -2,26 +2,26 @@
 
 | Agent           | Model             | Effort | GitHub MCP | Prompt chars |
 | --------------- | ----------------- | ------ | ---------- | ------------ |
-| nemo-a11y       | claude-sonnet-5-5 | medium | review     | 3941         |
-| nemo-architekt  | claude-opus-5-5   | high   | write      | 4324         |
-| nemo-auditor    | claude-fable-5-1  | high   | review     | 6906         |
-| nemo-backend    | claude-sonnet-5-5 | medium | write      | 3902         |
-| nemo-creativity | claude-fable-5-1  | high   | review     | 4767         |
-| nemo-deps       | claude-sonnet-5-5 | medium | write      | 4370         |
-| nemo-design     | claude-sonnet-5-5 | medium | review     | 3541         |
-| nemo-devops     | claude-sonnet-5-5 | medium | write      | 4243         |
-| nemo-docs       | claude-haiku-5-5  | medium | write      | 3359         |
-| nemo-extension  | claude-sonnet-5-5 | medium | write      | 3631         |
-| nemo-frontend   | claude-sonnet-5-5 | medium | write      | 4353         |
-| nemo-i18n       | claude-haiku-5-5  | medium | write      | 3799         |
-| nemo-lead       | claude-sonnet-5-5 | high   | review     | 6679         |
-| nemo-merge      | claude-sonnet-5-5 | medium | merge      | 7006         |
-| nemo-native     | claude-sonnet-5-5 | medium | write      | 4364         |
-| nemo-perf       | claude-sonnet-5-5 | medium | write      | 4172         |
-| nemo-po         | claude-sonnet-5-5 | medium | review     | 3623         |
-| nemo-qa         | claude-sonnet-5-5 | medium | write      | 3524         |
-| nemo-reviewer   | claude-opus-5-5   | medium | review     | 4857         |
-| nemo-security   | claude-opus-5-5   | high   | review     | 4571         |
-| nemo-triage     | claude-haiku-5-5  | low    | write      | 4224         |
+| nemo-a11y       | claude-sonnet-5-5 | medium | review     | 4181         |
+| nemo-architekt  | claude-opus-5-5   | high   | write      | 4509         |
+| nemo-auditor    | claude-fable-5-1  | high   | review     | 7146         |
+| nemo-backend    | claude-sonnet-5-5 | medium | write      | 4087         |
+| nemo-creativity | claude-fable-5-1  | high   | review     | 5007         |
+| nemo-deps       | claude-sonnet-5-5 | medium | write      | 4555         |
+| nemo-design     | claude-sonnet-5-5 | medium | review     | 3781         |
+| nemo-devops     | claude-sonnet-5-5 | medium | write      | 4428         |
+| nemo-docs       | claude-haiku-5-5  | medium | write      | 3544         |
+| nemo-extension  | claude-sonnet-5-5 | medium | write      | 3816         |
+| nemo-frontend   | claude-sonnet-5-5 | medium | write      | 4538         |
+| nemo-i18n       | claude-haiku-5-5  | medium | write      | 3984         |
+| nemo-lead       | claude-sonnet-5-5 | high   | review     | 6895         |
+| nemo-merge      | claude-sonnet-5-5 | medium | merge      | 7239         |
+| nemo-native     | claude-sonnet-5-5 | medium | write      | 4549         |
+| nemo-perf       | claude-sonnet-5-5 | medium | write      | 4357         |
+| nemo-po         | claude-sonnet-5-5 | medium | review     | 3863         |
+| nemo-qa         | claude-sonnet-5-5 | medium | write      | 3709         |
+| nemo-reviewer   | claude-opus-5-5   | medium | review     | 5097         |
+| nemo-security   | claude-opus-5-5   | high   | review     | 4811         |
+| nemo-triage     | claude-haiku-5-5  | low    | write      | 4477         |
 
 "write" = PRs, comments, reviews; "review" = comments and reviews only; "merge" = may merge. Web search/fetch are disabled in every definition.

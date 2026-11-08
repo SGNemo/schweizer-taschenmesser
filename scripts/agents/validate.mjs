@@ -110,11 +110,15 @@ const READ_ONLY = new Set([
 const READ_ONLY_EXTRA = {
   "nemo-auditor": " and the report copy in `/mnt/session/outputs/`",
 };
+// first hard-limits line, pinned: "never main" is scoped to this repo; the one exception is the agent's own notes
+// on main of the private notes repo (SHARED.md "Scribble"); force-push and history rewrite stay banned everywhere
+const NEVER_LINE =
+  '- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").';
 const MERGE_LINE = {
   merge:
     "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
   other:
-    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR).",
+    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`.",
 };
 function hardLimitsOf(a) {
   const i = a.system.indexOf("## Hard limits");
@@ -123,9 +127,14 @@ function hardLimitsOf(a) {
   const expect =
     (a.name === "nemo-merge" ? MERGE_LINE.merge : MERGE_LINE.other) +
     (READ_ONLY.has(a.name)
-      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}.`
+      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}, except your own scribble notes (SHARED.md "Scribble").`
       : "");
   const block = a.system.slice(i);
+  if (!block.includes("\n" + NEVER_LINE + "\n"))
+    return {
+      error:
+        "first line of the hard limits is not the pinned NEVER_LINE (repo scope + notes-repo exception)",
+    };
   if (!block.includes(expect + "\n"))
     return {
       error:
@@ -369,7 +378,7 @@ for (const file of files) {
   for (const [k, v] of Object.entries(md))
     if (k.length > 64 || String(v).length > 512)
       bad(file, `metadata "${k}" too long`);
-  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
+  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows off
   if (a.multiagent) {
     withMultiagent.push(a.name);
     if (!COORDINATORS.includes(a.name))
@@ -458,11 +467,11 @@ for (const file of files) {
     for (const n of others)
       if (!excluded.includes(n) && !pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the ${a.name} roster`);
-    if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
-      bad(file, "multiagent.workflows must be enabled|disabled");
-    if (!ma.workflows || ma.workflows.type === "enabled")
-      console.log(
-        `  note ${file}: workflows enabled – the lead may start workflow runs (cost: own threads, 24 h lifetime)`,
+    // workflow runs are started by the coordinator itself (own threads, 24 h lifetime): off for both, like inline agents
+    if (ma.workflows?.type !== "disabled")
+      bad(
+        file,
+        "multiagent.workflows must be explicitly disabled for a coordinator",
       );
     if (ma.advisor && ma.advisor.type === "enabled" && !ma.advisor.model)
       bad(file, "advisor enabled needs a model");

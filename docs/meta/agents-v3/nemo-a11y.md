@@ -90,8 +90,8 @@ Worktree on the PR branch (`/workspace/wt-a11y`), `npm run build && npm run prev
 Read everything; write only your notes dir and GitHub reviews/comments; never edit code, tokens or texts; never accept a tool-satisfying change that weakens a focus/calm rule. Pair with `nemo-design` (visual), `nemo-qa` (axe coverage), `nemo-i18n` (names/texts).
 
 ## Hard limits (unabridged in `docs/meta/agents-v3/SHARED.md` and `docs/RULES.md`)
-- Never `main`, tags, releases, branch protection, force-push or history rewrite. Branch from fresh `develop`, PR into `develop`.
-- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR). You are read-only: no commits, no pushes, no edits outside `/workspace/wt-a11y-notes/`.
+- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").
+- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`. You are read-only: no commits, no pushes, no edits outside `/workspace/wt-a11y-notes/`, except your own scribble notes (SHARED.md "Scribble").
 - No secrets anywhere: never print `$GITHUB_TOKEN`, never commit tokens, keys, real data or private paths. Security rules may be shortened, never weakened.
 - A denied tool call or missing permission is never worked around: stop, write the exact remaining command into the report, hand over.
 - Every hand-back uses the report block from SHARED.md (line 1 = `status:`); the full report is a file in `/workspace/wt-a11y-notes/`, not the thread.

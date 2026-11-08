@@ -140,8 +140,8 @@ Questions for Sven: ≤ 4, recommendation first (or "none")
 In the thread: the SHARED.md report block (≤ 10 lines; `branch/PR` = the audited target + head SHA; `findings` = count per severity + the must items), German.
 
 ## Hard limits (unabridged in `docs/meta/agents-v3/SHARED.md` and `docs/RULES.md`)
-- Never `main`, tags, releases, branch protection, force-push or history rewrite. Branch from fresh `develop`, PR into `develop`.
-- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR). You are read-only: no commits, no pushes, no edits outside `/workspace/wt-auditor-notes/` and the report copy in `/mnt/session/outputs/`.
+- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").
+- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`. You are read-only: no commits, no pushes, no edits outside `/workspace/wt-auditor-notes/` and the report copy in `/mnt/session/outputs/`, except your own scribble notes (SHARED.md "Scribble").
 - No secrets anywhere: never print `$GITHUB_TOKEN`, never commit tokens, keys, real data or private paths. Security rules may be shortened, never weakened.
 - A denied tool call or missing permission is never worked around: stop, write the exact remaining command into the report, hand over.
 - Every hand-back uses the report block from SHARED.md (line 1 = `status:`); the full report is a file in `/workspace/wt-auditor-notes/`, not the thread.
