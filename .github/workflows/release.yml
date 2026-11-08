@@ -5,8 +5,13 @@ name: Release
 # exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
 # Pushes to `develop` or `main` that touch the native shell (the `main` run also warms the cache that a
 # manual release run on `main` can read: caches written on develop are not visible there), and manual runs WITHOUT `version`, are DRY RUNS: they
-# build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
+# build and upload UNSIGNED artifacts but never create a release. How to create keys/secrets and cut a release:
 # see docs/howto/release-deps.md ("Release").
+#
+# Signing keys live in the GitHub Environment `release-signing` (tags v*.*.* and main only) and are touched by
+# exactly one job, `sign`: build (no keys, caches only for dry runs) -> sign (inline shell, no checkout, no repo
+# scripts, no caches) -> verify (no keys, repo scripts) -> release (contents: write, no keys) -> website
+# (environment `site-hook`). A run that does not publish never requests an environment. docs/howto/ci.md.
 
 on:
   push:
@@ -23,6 +28,11 @@ on:
         required: false
         default: ''
         type: string
+      sign_only:
+        description: 'Rehearsal on main: run sign + verify with the real environment, publish nothing, upload nothing.'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -36,6 +46,11 @@ concurrency:
 env:
   NODE_VERSION: 26
   NDK_VERSION: '27.2.12479018'
+  # The signer is installed in the sign job from the npm registry without install scripts; both packages are
+  # pinned by integrity (same values as web/package-lock.json). Bump together with @tauri-apps/cli.
+  TAURI_CLI_VERSION: '2.12.4'
+  TAURI_CLI_INTEGRITY: 'sha512-JI9bHfudSRJikGOrjbXEm6RjzzvmKuLc+JixB1NE8hNzQkNlCCIC3pTES3uypkR9lxHrsbxzcnSwhI2IxBQphw=='
+  TAURI_CLI_LINUX_INTEGRITY: 'sha512-tNzZSa79Z1nRpHxEpQ38lsAFpKlFlYvoXzjTV+lRRn/zSf3wrdUC3wnLcq2XEadchPu4ttK0zivhYzr+XGD19Q=='
 
 jobs:
   secret-scan:
@@ -62,7 +77,7 @@ jobs:
 
   prepare:
     needs: secret-scan
-    name: Version, changelog, signing check
+    name: Version, changelog, publish check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -70,9 +85,7 @@ jobs:
       tag: ${{ steps.meta.outputs.tag }}
       prerelease: ${{ steps.meta.outputs.prerelease }}
       publish: ${{ steps.meta.outputs.publish }}
-      updater_key: ${{ steps.keys.outputs.updater }}
-      android_key: ${{ steps.keys.outputs.android }}
-      missing_secrets: ${{ steps.keys.outputs.missing }}
+      sign: ${{ steps.meta.outputs.sign }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -86,11 +99,13 @@ jobs:
         working-directory: web
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          SIGN_ONLY: ${{ inputs.sign_only }}
         run: |
           set -euo pipefail
           VERSION="$(node scripts/version.mjs print)"
           node scripts/version.mjs check
           PUBLISH=false
+          SIGN=false
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             PUBLISH=true
             if [[ "$GITHUB_REF_NAME" != "v$VERSION" ]]; then
@@ -112,13 +127,28 @@ jobs:
             fi
             PUBLISH=true
           fi
+          if [[ "$SIGN_ONLY" == "true" ]]; then
+            if [[ "$PUBLISH" == "true" || "$GITHUB_REF" != "refs/heads/main" ]]; then
+              echo "::error::sign_only is a rehearsal on main without a version (this run: $GITHUB_REF, publish=$PUBLISH)."
+              exit 1
+            fi
+            SIGN=true
+          fi
+          if [[ "$PUBLISH" == "true" ]]; then SIGN=true; fi
+          # Only commits that are already on main are ever signed: a tag (or a manual run) on a commit that
+          # never went through main does not get the keys, whoever created it.
+          if [[ "$SIGN" == "true" ]] && ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_SHA is not on main. Signing keys are only used for commits that are on main."
+            exit 1
+          fi
           {
             echo "version=$VERSION"
             echo "tag=v$VERSION"
             echo "prerelease=$([[ "$VERSION" == *-* ]] && echo true || echo false)"
             echo "publish=$PUBLISH"
+            echo "sign=$SIGN"
           } >> "$GITHUB_OUTPUT"
-          echo "Version $VERSION, versionCode $(node scripts/version.mjs code), publish=$PUBLISH"
+          echo "Version $VERSION, versionCode $(node scripts/version.mjs code), publish=$PUBLISH, sign=$SIGN"
 
       - name: Legal placeholders are filled (blocks publishing only)
         working-directory: web
@@ -132,38 +162,8 @@ jobs:
             node scripts/check-legal.mjs
           fi
 
-      - name: Which signing keys are configured
-        id: keys
-        env:
-          TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-          missing=()
-          [ -n "$TAURI_KEY" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY)
-          [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
-          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
-          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
-          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
-          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
-          echo "updater=$([ -n "$TAURI_KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "android=$([ -n "$ANDROID_KS" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "missing=${missing[*]:-}" >> "$GITHUB_OUTPUT"
-
-      - name: Published releases must be signed (all six secrets present)
-        if: steps.meta.outputs.publish == 'true'
-        run: |
-          if [ -n "${{ steps.keys.outputs.missing }}" ]; then
-            echo "::error::Missing GitHub secrets: ${{ steps.keys.outputs.missing }}. Nothing was built or published – see docs/howto/release-deps.md → Release."
-            exit 1
-          fi
-
       - name: Updater public key must not be the development placeholder
-        if: steps.meta.outputs.publish == 'true'
+        if: steps.meta.outputs.sign == 'true'
         working-directory: web
         run: |
           KEY_ID="$(node -e "const c=require('./src-tauri/tauri.conf.json');console.log(Buffer.from(c.plugins.updater.pubkey,'base64').toString().split('\n')[0])")"
@@ -185,10 +185,12 @@ jobs:
           path: ${{ runner.temp }}/RELEASE_NOTES.md
 
   windows:
-    name: Windows (portable)
+    name: Windows (portable, unsigned)
     needs: prepare
     runs-on: windows-latest
     timeout-minutes: 45
+    outputs:
+      sha: ${{ steps.collect.outputs.sha }}
     env:
       CARGO_TARGET_DIR: C:/t
     defaults:
@@ -197,10 +199,12 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # A build that goes to the sign job (publish) restores no cache at all: a cache entry written by any
+      # earlier run could otherwise end up inside a signed binary. Dry runs keep the caches.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: ${{ needs.prepare.outputs.sign != 'true' && 'npm' || '' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
@@ -210,12 +214,11 @@ jobs:
       # 476 crates were rebuilt on every run, 19 min), so C:/t is cached as an extra directory and the
       # unused default target is skipped. The registry and cargo bin are still cached as before.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ needs.prepare.outputs.sign != 'true' }}
         with:
           workspaces: web/src-tauri
           shared-key: windows-release
           cache-targets: false
-          # A release (tag / manual run with version) reads the cache but never writes it.
-          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
           cache-directories: C:/t
       - run: npm ci
       # Built-in local model (llama.cpp, Vulkan + CPU in one exe). cmake and LLVM (bindgen) are on the
@@ -250,29 +253,15 @@ jobs:
           mkdir -p src-tauri/target/release
           cp C:/t/release/taschenmesser.exe src-tauri/target/release/taschenmesser.exe
 
-      - name: Sign with the updater key
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          PUBLISH: ${{ needs.prepare.outputs.publish }}
-          UPDATER_KEY: ${{ needs.prepare.outputs.updater_key }}
-        run: |
-          set -euo pipefail
-          # Only a published release is signed: dry-run artifacts (every develop push touching the
-          # shell) must not carry a valid release signature.
-          if [ "$PUBLISH" = "true" ] && [ "$UPDATER_KEY" = "true" ]; then
-            npx tauri signer sign src-tauri/target/release/taschenmesser.exe
-          else
-            echo "::warning::Dry run or no updater signing key: the portable executable is UNSIGNED."
-          fi
-
-      - name: Collect assets under their stable names
+      # Nothing is signed here: this job holds no key. Dry runs end with this unsigned file; a publishing run
+      # hands it to the `sign` job together with its SHA-256.
+      - name: Collect the unsigned executable
+        id: collect
         run: |
           set -euo pipefail
           mkdir -p ../assets
-          EXE=src-tauri/target/release/taschenmesser.exe
-          cp "$EXE" ../assets/Nemo-Portable.exe
-          [ -f "$EXE.sig" ] && cp "$EXE.sig" ../assets/Nemo-Portable.exe.sig
+          cp src-tauri/target/release/taschenmesser.exe ../assets/Nemo-Portable-UNSIGNED.exe
+          echo "sha=$(sha256sum ../assets/Nemo-Portable-UNSIGNED.exe | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           ls -l ../assets
 
       # The program has to stay alive for a while (window created, WebView2 found). Informational only:
@@ -281,7 +270,7 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          ../assets/Nemo-Portable.exe &
+          ../assets/Nemo-Portable-UNSIGNED.exe &
           PID=$!
           sleep 20
           if kill -0 "$PID" 2>/dev/null; then
@@ -292,30 +281,26 @@ jobs:
             exit 1
           fi
 
-      - name: Audit – no secrets in the executable or what goes into it
-        env:
-          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # This job holds no secret, so there is no secret value to look for; the pattern checks still run. The full
+      # audit (with the key pair and the signed files) runs in `verify`.
+      - name: Audit – patterns in the executable or what goes into it
         run: |
           set -euo pipefail
-          EXE=src-tauri/target/release/taschenmesser.exe
-          node scripts/audit-release.mjs --path dist --path ../assets --path "$EXE" --pubkey-from src-tauri/tauri.conf.json
+          node scripts/audit-release.mjs --path dist --path ../assets --path src-tauri/target/release/taschenmesser.exe
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows
+          name: windows-unsigned
           path: assets/*
           if-no-files-found: error
 
   android:
-    name: Android APK
+    name: Android APK (unsigned)
     needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    outputs:
+      sha: ${{ steps.collect.outputs.sha }}
     defaults:
       run:
         working-directory: web
@@ -325,21 +310,20 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+          cache: ${{ needs.prepare.outputs.sign != 'true' && 'gradle' || '' }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: ${{ needs.prepare.outputs.sign != 'true' && 'npm' || '' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
           toolchain: stable
           targets: aarch64-linux-android,armv7-linux-androideabi
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ needs.prepare.outputs.sign != 'true' }}
         with:
           workspaces: web/src-tauri
-          # A release reads the cache but never writes it.
-          save-if: ${{ needs.prepare.outputs.publish != 'true' }}
       - run: npm ci
 
       - name: Android SDK and NDK
@@ -376,58 +360,215 @@ jobs:
           echo "path=$APK" >> "$GITHUB_OUTPUT"
           ls -l "$APK"
 
-      - name: Sign
-        if: needs.prepare.outputs.android_key == 'true'
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # Nothing is signed here: this job holds no key and no keystore.
+      - name: Collect the unsigned APK
+        id: collect
         run: |
           set -euo pipefail
           mkdir -p ../assets
+          cp "${{ steps.apk.outputs.path }}" ../assets/Nemo-UNSIGNED.apk
+          echo "sha=$(sha256sum ../assets/Nemo-UNSIGNED.apk | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          ls -l ../assets
+
+      # No secret in this job, so no secret value to look for; the full audit runs in `verify`.
+      - name: Audit – patterns in the APK or what goes into it
+        run: |
+          set -euo pipefail
+          node scripts/audit-release.mjs --path dist --path ../assets
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-unsigned
+          path: assets/*
+          if-no-files-found: error
+
+  # The only job that sees the signing keys. Everything in it is written here, in this file: no checkout, no
+  # repository script, no `npm ci` of the app, no cache, no third-party action, nothing written to GITHUB_ENV or
+  # GITHUB_PATH. Environment `release-signing` allows only tags v*.*.* and main (GitHub enforces that, a branch
+  # cannot change it). It signs only when publishing (or for the `sign_only` rehearsal on main).
+  sign:
+    name: Sign (release keys)
+    needs: [prepare, windows, android]
+    if: needs.prepare.outputs.sign == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: release-signing
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-unsigned
+          path: in
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: android-unsigned
+          path: in
+
+      # What is signed is exactly what the build jobs produced (the hashes come from their job outputs).
+      - name: The unsigned files are the ones the build jobs produced
+        env:
+          WIN_SHA: ${{ needs.windows.outputs.sha }}
+          ANDROID_SHA: ${{ needs.android.outputs.sha }}
+        run: |
+          set -euo pipefail
+          cd in
+          echo "$WIN_SHA  Nemo-Portable-UNSIGNED.exe" | sha256sum -c -
+          echo "$ANDROID_SHA  Nemo-UNSIGNED.apk" | sha256sum -c -
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: All six signing secrets must be present
+        env:
+          TAURI_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$TAURI_KEY" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY)
+          [ -n "$TAURI_KEY_PASSWORD" ] || missing+=(TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          [ -n "$ANDROID_KS" ] || missing+=(ANDROID_KEYSTORE_BASE64)
+          [ -n "$ANDROID_KS_PASSWORD" ] || missing+=(ANDROID_KEYSTORE_PASSWORD)
+          [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_KEY_ALIAS)
+          [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_KEY_PASSWORD)
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing secrets in the release-signing environment: ${missing[*]}. Nothing was signed or published – see docs/howto/release-deps.md → Release."
+            exit 1
+          fi
+
+      # The Tauri CLI is installed without install scripts; both packages must match the pinned integrity.
+      - name: Install the signer
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/signer"
+          cd "$RUNNER_TEMP/signer"
+          npm init -y > /dev/null
+          npm install --ignore-scripts --no-audit --no-fund "@tauri-apps/cli@$TAURI_CLI_VERSION"
+          node -e '
+          const lock = require("./package-lock.json").packages;
+          const want = {
+            "node_modules/@tauri-apps/cli": process.env.TAURI_CLI_INTEGRITY,
+            "node_modules/@tauri-apps/cli-linux-x64-gnu": process.env.TAURI_CLI_LINUX_INTEGRITY,
+          };
+          const unknown = Object.keys(lock).filter((k) => k && !k.startsWith("node_modules/@tauri-apps/cli"));
+          if (unknown.length) throw new Error("unexpected packages: " + unknown.join(", "));
+          for (const [k, v] of Object.entries(want)) {
+            if (lock[k]?.integrity !== v) throw new Error("integrity mismatch for " + k);
+          }
+          console.log("signer packages match the pinned integrity");
+          '
+          ./node_modules/.bin/tauri --version
+
+      - name: Sign the portable executable with the updater key
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cp in/Nemo-Portable-UNSIGNED.exe out/Nemo-Portable.exe
+          "$RUNNER_TEMP/signer/node_modules/.bin/tauri" signer sign out/Nemo-Portable.exe
+          test -s out/Nemo-Portable.exe.sig
+
+      - name: Android build-tools
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "build-tools;35.0.0"
+
+      - name: Sign the APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          APK_KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          APK_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          BT="$ANDROID_HOME/build-tools/35.0.0"
           KEYSTORE="$RUNNER_TEMP/release.jks"
           # The keystore file exists only while signing – removed on success AND on failure.
           trap 'rm -f "$KEYSTORE"' EXIT
           umask 077
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
-          ANDROID_KEYSTORE_PATH="$KEYSTORE" \
-            node scripts/android-sign.mjs "${{ steps.apk.outputs.path }}" ../assets/Nemo.apk
-          (cd ../assets && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
-
-      - name: Unsigned APK (dry run without keystore)
-        if: needs.prepare.outputs.android_key != 'true'
-        run: |
-          set -euo pipefail
-          echo "::warning::No Android keystore configured: the APK is UNSIGNED and cannot be installed."
-          mkdir -p ../assets
-          cp "${{ steps.apk.outputs.path }}" ../assets/Nemo-unsigned.apk
-
-      - name: Audit – no secrets in the APK or what goes into it
-        env:
-          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          set -euo pipefail
-          node scripts/audit-release.mjs --path dist --path ../assets
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          mkdir -p out
+          # -p: page-align stored .so files (16 KB page devices), 4-byte alignment; passwords by environment only.
+          "$BT/zipalign" -p -f 4 in/Nemo-UNSIGNED.apk "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" sign --ks "$KEYSTORE" --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:APK_KS_PASS --key-pass env:APK_KEY_PASS \
+            --out out/Nemo.apk "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" verify --verbose --print-certs out/Nemo.apk
+          "$BT/zipalign" -c -p 4 out/Nemo.apk
+          (cd out && sha256sum Nemo.apk > Nemo.apk.sha256 && cat Nemo.apk.sha256)
 
       - name: Make sure no keystore file is left on the runner
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
+      # Rehearsal (sign_only): proves environment, secrets and signer; nothing is uploaded.
+      - name: Rehearsal summary
+        if: needs.prepare.outputs.publish != 'true'
+        run: |
+          {
+            echo "## Signing rehearsal – nothing was uploaded or published"
+            echo
+            echo '```'
+            (cd out && sha256sum Nemo-Portable.exe Nemo-Portable.exe.sig Nemo.apk)
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: needs.prepare.outputs.publish == 'true'
+        with:
+          name: signed
+          path: out/*
+          if-no-files-found: error
+
+  # No keys here. Repository scripts check what the sign job produced before anything is published.
+  verify:
+    name: Verify the signed files
+    needs: [prepare, sign]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: signed
+          path: dl
+      - name: Executable signature matches the updater public key
+        working-directory: web
+        run: node scripts/verify-sig.mjs ../dl/Nemo-Portable.exe --pubkey-from src-tauri/tauri.conf.json
+      - name: APK signature and package id
+        run: |
+          set -euo pipefail
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n1)"
+          "${BT}apksigner" verify --print-certs dl/Nemo.apk | grep -E "Verifies|SHA-256 digest" | sed 's/^/  /'
+          "${BT}aapt2" dump badging dl/Nemo.apk | grep -E "^package: name='io.github.sgnemo.taschenmesser' "
+          (cd dl && sha256sum -c Nemo.apk.sha256)
+      - name: Audit – patterns and signatures in what is about to be published
+        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: android
-          path: assets/*
+          name: verified
+          path: dl/*
           if-no-files-found: error
 
   release:
     name: GitHub Release
-    needs: [prepare, windows, android]
+    needs: [prepare, verify]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -440,18 +581,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          name: verified
           path: dl
-          merge-multiple: true
-
-      - name: Final audit before anything is published
-        env:
-          AUDIT_SECRET_ENV: TAURI_SIGNING_PRIVATE_KEY,TAURI_SIGNING_PRIVATE_KEY_PASSWORD,ANDROID_KEYSTORE_BASE64,ANDROID_KEYSTORE_PASSWORD,ANDROID_KEY_PASSWORD
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: node web/scripts/audit-release.mjs --path dl --pubkey-from web/src-tauri/tauri.conf.json
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+          path: dl
 
       - name: Updater manifest (latest.json)
         run: |
@@ -501,9 +636,19 @@ jobs:
           STABLE=""
           if [ "${{ needs.prepare.outputs.prerelease }}" != "true" ]; then STABLE="--stable"; fi
           node web/scripts/check-links.mjs --repo "$GITHUB_REPOSITORY" --tag "${{ needs.prepare.outputs.tag }}" $STABLE
-      # The website (site/) shows version, size and checksums of the latest release; the Cloudflare
-      # Pages deploy hook rebuilds it. No-op while the secret is empty (site/README.md, step 6).
-      - name: Rebuild the website
+
+  # Deploy hook of the Cloudflare Pages site (shows version, size and checksums of the latest release). Own
+  # environment so that it needs no second approval and `release` holds no environment secret. No-op while the
+  # secret is empty (site/README.md, step 6).
+  website:
+    name: Rebuild the website
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: site-hook
+    permissions: {}
+    steps:
+      - name: Call the deploy hook
         env:
           CF_PAGES_DEPLOY_HOOK: ${{ secrets.CF_PAGES_DEPLOY_HOOK }}
         # The check lives in the script: a step's own `env` is not visible to its `if:`.
@@ -527,7 +672,7 @@ jobs:
           {
             echo "## Dry run – nothing was published"
             echo
-            echo "Version \`${{ needs.prepare.outputs.version }}\`, updater key: **${{ needs.prepare.outputs.updater_key }}**, Android keystore: **${{ needs.prepare.outputs.android_key }}**, missing secrets: **${{ needs.prepare.outputs.missing_secrets || 'none' }}**"
+            echo "Version \`${{ needs.prepare.outputs.version }}\`. The files are UNSIGNED: no signing key is used by a run that does not publish."
             echo
             echo '```'
             ls -l dl
