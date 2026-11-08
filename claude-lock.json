@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "origin": {
+    "base_url": "https://api.anthropic.com",
+    "organization_id": "7b69f045-9c60-47b1-86a9-a97c0ede1c0e",
+    "workspace_id": "wrkspc_01S5dn5LVKRYuA9WJVak51x1"
+  },
+  "resources": {
+    "./docs/meta/agents-v3/environment.yaml": {
+      "kind": "environment",
+      "id": "env_016dHEKRnCEKT9ZNVrNhurtg",
+      "hash": "bd742ae89fdba91d9d6d2e4114c8fb4d",
+      "remote_hash": "87b18d2b5017dabf01f026e0115c04b3",
+      "stamp": "2026-11-08T02:37:26.436092Z"
+    },
+    "./docs/meta/agents-v3/nemo-a11y.md": {
+      "kind": "agent",
+      "id": "agent_01M1zLUnbX3XQmj6a5fjwWMT",
+      "version": "1",
+      "hash": "89917be8447b2865140ba49c5264b955",
+      "remote_hash": "e944fc80d20fccb932cba77376e0ecca",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-architekt.md": {
+      "kind": "agent",
+      "id": "agent_017SADhzJehEfbefhrZAX1RG",
+      "version": "1",
+      "hash": "da5153cfc807c165baf9218ad362ef85",
+      "remote_hash": "909a8b62f9a115d57c56b38a9e7a0900",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-backend.md": {
+      "kind": "agent",
+      "id": "agent_01LmfXxSmt1xShE8aECjtvCD",
+      "version": "1",
+      "hash": "413be4dbef58d93df04c85de2e10f867",
+      "remote_hash": "1a0cf8018972966abbbf1987e439b809",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-creativity.md": {
+      "kind": "agent",
+      "id": "agent_01PN4xT2vSYYF4pSPCj9VY8h",
+      "version": "1",
+      "hash": "6f3bfdfae50bb400966ecc0e627db400",
+      "remote_hash": "5619bcf353f68abbd18e7083964caa49",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-deps.md": {
+      "kind": "agent",
+      "id": "agent_011khmg8NHKS4SXcSpELV7Um",
+      "version": "1",
+      "hash": "2fb83ea89c3d6dd9ae4b6178e0b7e2df",
+      "remote_hash": "67e8ef8fc6520e353ad0b49a457cfc4c",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-design.md": {
+      "kind": "agent",
+      "id": "agent_01JfuiWYH554LhUPDcMi8g8W",
+      "version": "1",
+      "hash": "5423ca935b3bd6f045bf2a7ee0f1bbba",
+      "remote_hash": "a9687040a26567832cd3039547a374b7",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-devops.md": {
+      "kind": "agent",
+      "id": "agent_01JYkKFNNFBhGcvcWpvPyAxX",
+      "version": "1",
+      "hash": "c3ea111a6b17fde27d5b4fea25d5cb8f",
+      "remote_hash": "5304444e6d6ffe2ee045557f502f0296",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-docs.md": {
+      "kind": "agent",
+      "id": "agent_01CsHsDWRmcFBrVv3qv6Cm4E",
+      "version": "1",
+      "hash": "7201e9b6a61b4901ec4d1d9523c52d06",
+      "remote_hash": "5621631e48c32df4200c54117f35e5aa",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-extension.md": {
+      "kind": "agent",
+      "id": "agent_01KfCvbuaJ7cBkk9qDELueFz",
+      "version": "1",
+      "hash": "d278aa5ac7a31b8b3e64e2f59e801c09",
+      "remote_hash": "2fe5bc0d823728916138edd2717102ea",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-frontend.md": {
+      "kind": "agent",
+      "id": "agent_015LQQG5p8cNu3ain3D9JqCT",
+      "version": "1",
+      "hash": "769784416c7613d386a69041905df322",
+      "remote_hash": "15dacabb2deae0f2dcbc7341e2ed4b2d",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-i18n.md": {
+      "kind": "agent",
+      "id": "agent_01RxUNwd5MADrgiGLmqhsbFp",
+      "version": "1",
+      "hash": "81150eeb1128cc4672d80024266fa5f7",
+      "remote_hash": "4be486264ea4e27a2334512b2f31bfb2",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-lead.md": {
+      "kind": "agent",
+      "id": "agent_01HK8JdfGEhw7ppR5FeG8fs6",
+      "version": "1",
+      "hash": "59b34cfd2ea150daccc752c5275d4ec4",
+      "remote_hash": "ed6f2c4cd49888fdba2821df84659e9e",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-merge.md": {
+      "kind": "agent",
+      "id": "agent_01UvN1DixZWdQn9VpTaRxfZ3",
+      "version": "1",
+      "hash": "e152883e8b984a3abb14b5ac5053cec5",
+      "remote_hash": "0612238e06039f39306b35d393e0cadd",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-native.md": {
+      "kind": "agent",
+      "id": "agent_015q41JmTrCzRz6eZfNgJfje",
+      "version": "1",
+      "hash": "d6d5b9485afb5174675ed5ca43d7ca66",
+      "remote_hash": "a1cdc4d093b18a0dd24691aa74d61d67",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-perf.md": {
+      "kind": "agent",
+      "id": "agent_01SpcBmpTiLJnmxuCUN5mWBo",
+      "version": "1",
+      "hash": "fe1ad66371f1cea753b74ba402c527e4",
+      "remote_hash": "3aafeaa8888404c1a835cc7693d95f3f",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-po.md": {
+      "kind": "agent",
+      "id": "agent_01DMwUGC5ibd7axXZWtkfVY3",
+      "version": "1",
+      "hash": "4554d8d0c5ad6852523a184e44ca472b",
+      "remote_hash": "0e51e29d9481e819058fdb1ef281e2c4",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-qa.md": {
+      "kind": "agent",
+      "id": "agent_01EbZUsuCbAXaJqifK6iTQCn",
+      "version": "1",
+      "hash": "86b97b25b74c28930fba6f9397f71416",
+      "remote_hash": "a9e98fd010ae85c713c11d22e9ef0173",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-reviewer.md": {
+      "kind": "agent",
+      "id": "agent_019nEqgEeHc62aSy3q5KrndC",
+      "version": "1",
+      "hash": "4b2e764b37a1f1d52ab17719c6a13a95",
+      "remote_hash": "7033441e0f7d9c2b6690e9fe027e7569",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-security.md": {
+      "kind": "agent",
+      "id": "agent_01MPUYGJMCPDuUJmwqk3mXB6",
+      "version": "1",
+      "hash": "3238d73bd1cc34d77e4aba10645b172f",
+      "remote_hash": "c694470b4dc9d0d6b1e5f865d062f25b",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-triage.md": {
+      "kind": "agent",
+      "id": "agent_017oeRVW4KY9iXEDkTeGTSLh",
+      "version": "1",
+      "hash": "19ed6ac618d4ba79cc46d50c9a96bfbe",
+      "remote_hash": "d7a3aa0035a99d8a8213199e8942f8e2",
+      "stamp": "1"
+    }
+  }
+}
