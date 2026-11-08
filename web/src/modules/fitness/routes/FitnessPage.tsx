@@ -22,7 +22,10 @@ import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalDialog } from '../components/GoalDialog';
 import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
+import { ExercisePicto } from '../components/ExercisePicto';
+import { WeekPlates } from '../components/WeekPlates';
 import { WeekView } from '../components/WeekView';
+import { patternOf } from '../catalog';
 import {
   exerciseDetail,
   kcalLine,
@@ -133,6 +136,7 @@ export default function FitnessPage() {
         .filter(Boolean)
         .join(' · ')}
       onOpen={() => setSession(s)}
+      lead={<ExercisePicto pattern={s.exercises[0] ? patternOf(s.exercises[0].name) : 'other'} />}
       end={
         s.planned ? (
           <Button
@@ -202,6 +206,11 @@ export default function FitnessPage() {
               testId="fitness-kcal"
             />
           )}
+        </HeroSlot>
+      ) : null}
+      {sessions && view !== 'week' ? (
+        <HeroSlot area="signature">
+          <WeekPlates day={day} weekStart={weekStart} sessions={sessions} />
         </HeroSlot>
       ) : null}
 
