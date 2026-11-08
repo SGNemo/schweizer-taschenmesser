@@ -9,7 +9,10 @@ const service = (initial: string, answer = 'granted') => {
 describe('ensureAlertPermission (C01)', () => {
   it('asks once when a reminder is saved and nothing was decided yet', async () => {
     const s = service('default');
-    expect(await ensureAlertPermission(['reminder'], s)).toEqual({ blocked: false });
+    expect(await ensureAlertPermission(['reminder'], s)).toEqual({
+      blocked: false,
+      justGranted: true,
+    });
     expect(s.requestPermission).toHaveBeenCalledTimes(1);
   });
 
@@ -44,5 +47,11 @@ describe('ensureAlertPermission (C01)', () => {
     expect(await ensureAlertPermission(['reminder'], service('unsupported'))).toEqual({
       blocked: false,
     });
+  });
+
+  it('reports nothing new when alerts were already allowed', async () => {
+    const s = service('granted');
+    expect(await ensureAlertPermission(['reminder'], s)).toEqual({ blocked: false });
+    expect(s.requestPermission).not.toHaveBeenCalled();
   });
 });
