@@ -23,7 +23,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - A denied tool call ("Permission to use bash has been denied", a 403 the REST fallback does not cover, a missing token) is **never** worked around: stop, write the exact remaining command into your report, hand over.
 - **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main`.
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
-- Approvals: GitHub refuses self-approval when the token owner authored the PR. A review posted as COMMENT whose first line is `MERGE-READY yes|no` + reviewed head SHA counts as the reviewer's approval for `nemo-merge`.
+- Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` (`nemo-security`: `SECURITY pass|changes|block`; only an exact `pass` is merge-ready) + reviewed head SHA – that is the public record. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
 
 ## Recurring CI traps
 

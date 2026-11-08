@@ -188,7 +188,8 @@ for (const file of files) {
     const hl = hardLimitsOf(a);
     if (!hl) bad(file, 'no "## Hard limits" block');
     else if (hl.error) bad(file, hl.error);
-    else if (file === 'nemo-qa.json') hardRef = { file, hl: hl.norm }; // fixed template file, compared after the loop
+    else if (file === "nemo-qa.json")
+      hardRef = { file, hl: hl.norm }; // fixed template file, compared after the loop
     else hardBlocks.push({ file, hl: hl.norm });
   }
   // model
@@ -293,7 +294,11 @@ for (const file of files) {
           "default_config",
         );
       const cfgNames = new Set();
-      for (const c of t.configs ?? []) { if (cfgNames.has(c.name)) bad(file, `mcp config "${c.name}" listed twice`); cfgNames.add(c.name); }
+      for (const c of t.configs ?? []) {
+        if (cfgNames.has(c.name))
+          bad(file, `mcp config "${c.name}" listed twice`);
+        cfgNames.add(c.name);
+      }
       for (const c of t.configs ?? []) {
         if (!c.name) bad(file, "mcp config without name");
         checkCfg(c, `mcp config ${c.name}`, undefined, "mcp_config");
@@ -433,8 +438,18 @@ for (const file of files) {
     );
 }
 // cross-file: merge capability and inference_geo
-if (!hardRef) { problems++; console.log('✗ nemo-qa.json (template for the hard-limits block) missing or invalid'); }
-else for (const b of hardBlocks) if (b.hl !== hardRef.hl) bad(b.file, 'hard-limits block differs from the template nemo-qa.json (one block for all 19)');
+if (!hardRef) {
+  problems++;
+  console.log(
+    "✗ nemo-qa.json (template for the hard-limits block) missing or invalid",
+  );
+} else
+  for (const b of hardBlocks)
+    if (b.hl !== hardRef.hl)
+      bad(
+        b.file,
+        "hard-limits block differs from the template nemo-qa.json (one block for all 19)",
+      );
 if (mergeCapable.join() !== "nemo-merge") {
   problems++;
   console.log(
