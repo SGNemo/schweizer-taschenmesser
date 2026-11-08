@@ -4,7 +4,7 @@ import { createCollectionRepo } from '@/core/db/repo';
 import { enableModule } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import { resolveReminder } from './batch';
+import { resolveReminder, type LookupResult } from './batch';
 
 // The save-time check must save what the preview showed (council round 2). Invented data.
 beforeEach(async () => {
@@ -49,7 +49,8 @@ describe('resolveReminder', () => {
 
   it('the preview was unsure (or promised a new invoice) and one fits now: still the ToDo, no unseen note', async () => {
     await add('a', '2026-08-15');
-    for (const preview of [{ candidates: [] }, 'failed', 'none'] as const) {
+    const previews: LookupResult[] = [{ candidates: [] }, 'failed', 'none'];
+    for (const preview of previews) {
       const plan = await resolveReminder('invoice', fields, [...all], preview);
       expect(plan.type).toBe('todo');
       expect(plan.amend).toBeUndefined();

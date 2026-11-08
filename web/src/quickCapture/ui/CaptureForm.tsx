@@ -27,6 +27,7 @@ import {
   resolveReminder,
   withoutPart,
   type LookupResult,
+  type ReminderRow,
 } from './batch';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
@@ -198,7 +199,7 @@ export function CaptureForm({
             // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice. A target
             // the person picked by hand is final (a deliberate new invoice included).
             const reminder = !chosen && isReminder(row.type, row.fields);
-            const plan = reminder
+            const plan: ReminderRow = reminder
               ? reminderRow(row.type, row.fields, lookups[lookupKey(part)], available)
               : row;
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
