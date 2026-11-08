@@ -91,6 +91,8 @@ export const quickCapture: Strings['quickCapture'] = {
       `Amount in ${code}: please record it in the full form in Finances, where the account fits.`,
     failed: 'Saving failed.',
   },
+  dunningNote: (day: string, amount: string, due?: string) =>
+    `Reminder of ${day}: ${amount}${due ? ` by ${due}` : ''}`,
   todoTimeNote: (time: string) => `Time: ${time}`,
   noTargets: 'No target module is turned on.',
   multi: {

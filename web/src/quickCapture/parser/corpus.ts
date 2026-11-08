@@ -334,4 +334,22 @@ export const CORPUS: CorpusCase[] = [
   { from: 'KL', text: 'Miete bezahlt 850 €', type: 'finance', amountMinor: 85000, title: 'Miete' },
   // Without an amount a past-tense word is just text.
   { from: 'KL', text: 'Schuhe gekauft', type: 'todo', title: 'Schuhe gekauft' },
+  // „Kopf leer“ package 2: payment reminder words are invoice words; „zahlen“ + amount points to an invoice.
+  {
+    from: 'KL2',
+    text: 'Mahnung Stadtwerke 87,40 € zahlen',
+    type: 'invoice',
+    amountMinor: 8740,
+    title: 'Stadtwerke',
+  },
+  { from: 'KL2', text: '2. Mahnung Telekom 45,90 €', type: 'invoice', title: 'Telekom' },
+  { from: 'KL2', text: 'Zahlungserinnerung Zahnarzt 120 €', type: 'invoice', amountMinor: 12000 },
+  { from: 'KL2', text: 'Stadtwerke 84,30 € zahlen', type: 'invoice', title: 'Stadtwerke' },
+  // Without an amount a reminder word stays text: a ToDo to check it.
+  {
+    from: 'KL2',
+    text: 'Mahnung Stadtwerke prüfen',
+    type: 'todo',
+    title: 'Mahnung Stadtwerke prüfen',
+  },
 ];

@@ -36,6 +36,7 @@ export function QuickAdd() {
       title={t.quickAdd.title}
       size="roomy"
       askAfterTyping
+      backdrop="opaque"
     >
       {open ? (
         <CaptureForm

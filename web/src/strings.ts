@@ -1080,6 +1080,8 @@ export const de = {
       failed: 'Speichern fehlgeschlagen.',
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
+    dunningNote: (day: string, amount: string, due?: string) =>
+      `Mahnung vom ${day}: ${amount}${due ? ` bis ${due}` : ''}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
     multi: {
       lineHint: 'Eine Zeile = ein Eintrag',

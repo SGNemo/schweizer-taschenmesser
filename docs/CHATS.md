@@ -67,6 +67,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
+| Kopf leer Paket 2: der mehrzeilige Zettel wird ruhig, Mahnungswörter, Rechnungs-Abgleich, Erfassungs-Vertrag | `feat/capture-multi-calm` | `quickCapture/{parser,targets,ui}`, `layout/QuickAdd.tsx`, `ui/Dialog.tsx` (+ css) | in progress | – | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
@@ -84,6 +85,7 @@ How: add your row in the **first commit** of your branch (or in a draft PR as ea
 | `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx`                                | keep edits small and local to your section                                                                                                    |
 | images under `docs/`                                                                             | none (only `docs/assets/screenshots/*.webp`, `docs/brand/**`, user-doc images); screenshots go into the PR text, `check:docs` fails otherwise |
 | `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting                                                                              |
+| `quickCapture/targets/{types,index}.ts`, `quickCapture/parser/types.ts`, `ui/Dialog.tsx` | heads-up `feat/capture-multi-calm` (Kopf leer Paket 2): additive only (`CaptureItem.id`, `SaveOptions.id`, `existed`, `amend`, `dunning`, Dialog `backdrop`); one chat at a time until merged |
 
 ## Hand-over conventions
 
