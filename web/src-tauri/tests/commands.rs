@@ -130,10 +130,11 @@ fn browser_commands_check_the_caller() {
     assert_eq!(commands, src.matches("ensure_main(&webview)?;").count());
 }
 
-/// The music page opens the Spotify app with a `spotify:` link: the opener may open exactly that scheme besides the default
-/// ones (http, https, mailto, tel), nothing broader.
+/// The music page opens the Spotify app with a `spotify:` link, and home-network sync opens Windows' network page (to set
+/// the network to "Private"): the opener may open exactly these besides the default ones (http, https, mailto, tel) –
+/// the one `ms-settings:` page, not the scheme.
 #[test]
-fn opener_scope_adds_only_the_spotify_scheme() {
+fn opener_scope_adds_only_spotify_and_the_network_settings_page() {
     let value: serde_json::Value =
         serde_json::from_str(&read("capabilities/default.json")).unwrap();
     let scoped: Vec<&serde_json::Value> = value["permissions"]
@@ -149,5 +150,5 @@ fn opener_scope_adds_only_the_spotify_scheme() {
         .iter()
         .map(|a| a["url"].as_str().unwrap())
         .collect();
-    assert_eq!(urls, ["spotify:*"]);
+    assert_eq!(urls, ["spotify:*", "ms-settings:network-status"]);
 }
