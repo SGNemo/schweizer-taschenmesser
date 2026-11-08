@@ -3454,7 +3454,8 @@ export const de = {
     replace: 'Ersetzen',
     replaceHint: 'Das Backup wird zum Stand: Einträge, die nicht im Backup sind, werden gelöscht.',
     doImport: 'Importieren',
-    contains: (records: number, tables: number) => `${records} Einträge in ${tables} Tabellen`,
+    contains: (records: number, tables: number) =>
+      `${records} ${records === 1 ? 'Eintrag' : 'Einträge'} in ${tables} ${tables === 1 ? 'Tabelle' : 'Tabellen'}`,
     confirmTitle: 'Backup ersetzen?',
     confirmText:
       'Alle Einträge, die nicht im Backup stehen, werden gelöscht – auch auf anderen Geräten, sobald sie synchronisieren.',
@@ -4258,7 +4259,7 @@ export const de = {
       title: 'Dateien importieren',
       files: 'Dateien wählen',
       folder: 'Ordner wählen',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>

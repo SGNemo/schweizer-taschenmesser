@@ -189,7 +189,7 @@ export const notes: Strings['notes'] = {
     title: 'Import files',
     files: 'Choose files',
     folder: 'Choose folder',
-    hint: '.md and .txt files. A folder becomes a notebook, its files become pages.',
+    hint: '.md and .txt files. A folder becomes a notebook, its files become pages. An Obsidian export (or a folder with several sub-folders) becomes one notebook per sub-folder; deeper folders become a tag.',
     none: 'No matching files found.',
     confirm: 'Import',
     summary: (pages: number, books: number) =>

@@ -1,6 +1,13 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { backupFileName, createBackup, type Backup, type ImportMode } from '@/core/backup/backup';
+import {
+  backupCounts,
+  backupFileName,
+  createBackup,
+  type Backup,
+  type ImportMode,
+} from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
+import { recordFileBackup } from '@/core/backup/lastBackup';
 import {
   MIN_BACKUP_PASSPHRASE_LENGTH,
   encryptBackup,
@@ -48,9 +55,12 @@ export function BackupSection() {
   async function exportPlain() {
     const result = await downloadTextFile(
       backupFileName(),
-      await serializeSealedBackup(await createBackup()),
+      await serializeSealedBackup(await createBackup(), { readable: true }),
     );
-    if (result === 'saved') toast(t.backup.exported);
+    if (result === 'saved') {
+      toast(t.backup.exported);
+      await recordFileBackup().catch(() => undefined); // only the status head reads it
+    }
   }
 
   async function exportEncrypted() {
@@ -65,6 +75,7 @@ export function BackupSection() {
     );
     setBusy(false);
     if (result === 'saved') {
+      await recordFileBackup().catch(() => undefined); // only the status head reads it
       setExportPass('');
       toast(t.backup.encryptedExported);
     }
@@ -143,12 +154,8 @@ export function BackupSection() {
     setBusy(false);
   }
 
-  const counts = backup
-    ? t.backup.contains(
-        Object.values(backup.tables).reduce((n, rows) => n + rows.length, 0),
-        Object.keys(backup.tables).length,
-      )
-    : '';
+  const filled = backup ? backupCounts(backup) : undefined;
+  const counts = filled ? t.backup.contains(filled.records, filled.tables) : '';
 
   return (
     <>

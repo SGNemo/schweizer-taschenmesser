@@ -884,7 +884,7 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
   {
     id: 'network',
     category: 'verbindungen',
-    maturity: 'preview',
+    maturity: 'stable',
     order: 20,
     get title() {
       return tNet.get().title;

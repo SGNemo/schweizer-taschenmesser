@@ -10,6 +10,7 @@ import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
 import type { TaschenmesserDB } from '@/core/db/db';
 import {
+  backupCounts,
   BACKUP_VERSION,
   backupFileName,
   createBackup,
@@ -264,5 +265,17 @@ describe('import: replace', () => {
     expect(await titles(a)).toEqual(['Original']);
     expect(await titles(b)).toEqual(['Original']);
     expect(await b.repo.get(bOnly.id)).toBeUndefined();
+  });
+});
+
+describe('backupCounts (D08)', () => {
+  it('counts only tables that hold rows', () => {
+    const row = { id: 'a' } as never;
+    expect(backupCounts({ tables: { notes_note: [row], todos_task: [], lists_item: [] } })).toEqual(
+      {
+        records: 1,
+        tables: 1,
+      },
+    );
   });
 });
