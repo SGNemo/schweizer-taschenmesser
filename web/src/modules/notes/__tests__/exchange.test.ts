@@ -46,4 +46,21 @@ describe('import', () => {
     expect(pages[1]!.body).toBe('Socken  \nZahnbürste');
     expect(skipped).toBe(2);
   });
+
+  it('reads a picked vault folder like the vault importer (D03)', () => {
+    const { pages, skipped } = parseImport([
+      { path: 'Vault/.obsidian/app.json', text: '{}' },
+      { path: 'Vault/10_Arbeit/Halle 3.md', text: '# Halle 3\n\nIP-Plan ![[plan.png]]' },
+      { path: 'Vault/10_Arbeit/Projekte/Netzplan.md', text: '# Netzplan\n\nVLAN 10' },
+      { path: 'Vault/20_Privat/Ideen.md', text: 'Kleine Ideen' },
+      { path: 'Vault/Start.md', text: '# Start\n\nÜbersicht' },
+    ]);
+    expect(pages).toEqual([
+      { folder: '10_Arbeit', title: 'Halle 3', body: 'IP-Plan' },
+      { folder: '10_Arbeit', title: 'Netzplan', body: 'VLAN 10\n\n#Projekte' },
+      { folder: '20_Privat', title: 'Ideen', body: 'Kleine Ideen' },
+      { folder: null, title: 'Start', body: 'Übersicht' },
+    ]);
+    expect(skipped).toBe(0);
+  });
 });
