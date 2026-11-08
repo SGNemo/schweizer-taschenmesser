@@ -92,3 +92,46 @@ test('Notizen: eingefügtes Markdown wird eine Notiz', async ({ page }) => {
   await page.goto('/notes');
   await expect(page.getByText('Wochenplan')).toBeVisible();
 });
+
+test('Notizen: ein Obsidian-Export (ZIP) behält Ordner, Reihenfolge und Unterordner (D03–D06)', async ({
+  page,
+}) => {
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { join, relative, resolve } = await import('node:path');
+  const { zipSync } = await import('fflate');
+  const root = resolve(process.cwd(), 'e2e/fixtures/obsidian-d');
+  const entries: Record<string, Uint8Array> = {};
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else entries[relative(root, path).replaceAll('\\', '/')] = readFileSync(path);
+    }
+  };
+  walk(root);
+
+  await enable(page, 'notes');
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
+  await dialog
+    .getByRole('button', { name: /Markdown, Obsidian, Evernote oder Google Keep/ })
+    .click();
+  const chooser = page.waitForEvent('filechooser');
+  await dialog.getByRole('button', { name: 'Datei wählen …' }).click();
+  await (
+    await chooser
+  ).setFiles([
+    { name: 'Vault.zip', mimeType: 'application/zip', buffer: Buffer.from(zipSync(entries)) },
+  ]);
+
+  await expect(dialog.getByText('10 Einträge erkannt')).toBeVisible();
+  await expect(dialog.getByText(/nicht lesbar/)).toHaveCount(0);
+  const books = dialog.getByText('Neues Notizbuch').locator('..');
+  await expect(books).toHaveText([/10_Arbeit/, /20_Privat/, /90_Archiv/]);
+  await dialog.getByRole('button', { name: '10 Einträge importieren' }).click();
+  await expect(dialog.getByRole('status')).toHaveText(/importiert/);
+  await dialog.getByRole('button', { name: 'Schließen' }).last().click();
+
+  await page.goto('/notes');
+  await expect(page.getByRole('button', { name: /10_Arbeit · 3/ })).toBeVisible();
+  await expect(page.getByText('#Projekte').first()).toBeVisible();
+});
