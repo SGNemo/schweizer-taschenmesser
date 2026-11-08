@@ -378,7 +378,7 @@ for (const file of files) {
   for (const [k, v] of Object.entries(md))
     if (k.length > 64 || String(v).length > 512)
       bad(file, `metadata "${k}" too long`);
-  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
+  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows off
   if (a.multiagent) {
     withMultiagent.push(a.name);
     if (!COORDINATORS.includes(a.name))
@@ -467,11 +467,11 @@ for (const file of files) {
     for (const n of others)
       if (!excluded.includes(n) && !pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the ${a.name} roster`);
-    if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
-      bad(file, "multiagent.workflows must be enabled|disabled");
-    if (!ma.workflows || ma.workflows.type === "enabled")
-      console.log(
-        `  note ${file}: workflows enabled – the lead may start workflow runs (cost: own threads, 24 h lifetime)`,
+    // workflow runs are started by the coordinator itself (own threads, 24 h lifetime): off for both, like inline agents
+    if (ma.workflows?.type !== "disabled")
+      bad(
+        file,
+        "multiagent.workflows must be explicitly disabled for a coordinator",
       );
     if (ma.advisor && ma.advisor.type === "enabled" && !ma.advisor.model)
       bad(file, "advisor enabled needs a model");
