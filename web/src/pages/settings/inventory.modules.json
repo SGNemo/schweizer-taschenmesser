@@ -322,6 +322,16 @@
         "label": "Vor dem Archivieren und Beschriften fragen",
         "default": true
       },
+      "offerPersonal": {
+        "type": "boolean",
+        "label": "Filter „Persönlich“ anbieten",
+        "default": true
+      },
+      "offerPlanAll": {
+        "type": "boolean",
+        "label": "„Alle in den Plan…“ anbieten",
+        "default": true
+      },
       "notify": {
         "type": "boolean",
         "label": "Bei neuen Mails benachrichtigen",
