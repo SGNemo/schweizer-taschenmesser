@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { setNow } from '@/core/time/now';
+import aiDefaults from '../aiDefaults';
 import attention from '../attention';
-import { latestSession, toTemplate, weekDays, weekSummary } from '../logic';
+import { lastOf, latestSession, toTemplate, weekDays, weekSummary } from '../logic';
 import plannable, { DEFAULT_MINUTES } from '../plannable';
 import { sessionRepo } from '../repo';
 
@@ -30,6 +32,7 @@ describe('fitness logic, package 2', () => {
         { date: '2026-11-02', kcal: 500 },
         { date: '2026-11-02', kcal: 300 },
       ],
+      '2026-11-02',
     );
     expect(days).toHaveLength(7);
     expect(days[0]).toEqual({
@@ -42,6 +45,22 @@ describe('fitness logic, package 2', () => {
     });
     expect(days[2]).toMatchObject({ date: '2026-11-04', sessions: 0, planned: 1 });
     expect(days[6]!.date).toBe('2026-11-08');
+  });
+
+  it('fills „last time“ only from what was done, and shows plans only from today on', () => {
+    const sessions = [
+      s('2026-11-03', { exercises: [{ name: 'Rudern', weightKg: 40 }] }),
+      s('2026-11-09', { planned: true, exercises: [{ name: 'Rudern', weightKg: 60 }] }),
+    ];
+    expect(lastOf(sessions, 'Rudern')?.weightKg).toBe(40);
+    const days = weekDays(
+      '2026-11-02',
+      [s('2026-11-03', { planned: true }), s('2026-11-06', { planned: true })],
+      [],
+      '2026-11-05',
+    );
+    expect(days[1]!.planned).toBe(0);
+    expect(days[4]!.planned).toBe(1);
   });
 
   it('makes a template without date, time, note or plan', () => {
@@ -63,8 +82,10 @@ describe('fitness logic, package 2', () => {
 
 describe('fitness planner source and attention', () => {
   beforeEach(async () => {
+    setNow(() => new Date(2026, 10, 8, 12, 0).getTime());
     await db.table('fitness_session').clear();
   });
+  afterEach(() => setNow());
 
   it('offers only planned sessions in the window, pinned to their day', async () => {
     await sessionRepo.create({
@@ -94,6 +115,15 @@ describe('fitness planner source and attention', () => {
     const after = await sessionRepo.get(s1.id);
     expect(after?.planned).toBeFalsy();
     expect(after?.durationMin).toBe(70);
+    // Planned for tomorrow, ticked off today: it counts today (same as „Erledigt“ on the page).
+    expect(after?.date).toBe('2026-11-08');
+  });
+
+  it('makes a session for a later day from the assistant a plan', async () => {
+    expect(await aiDefaults('session', { date: '2026-11-12' })).toEqual({ planned: true });
+    expect(await aiDefaults('session', { date: '2026-11-08' })).toEqual({});
+    expect(await aiDefaults('session', {})).toEqual({ date: '2026-11-08' });
+    expect(await aiDefaults('meal', { date: '2026-11-12' })).toEqual({});
   });
 
   it('shows only a plan for today with a time the user set', async () => {

@@ -6,9 +6,10 @@
  */
 import { notDeleted } from '@/core/db/repo';
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
+import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { sessionTitle } from './data';
-import { sessionMinutes } from './logic';
+import { doneToday, sessionMinutes } from './logic';
 import { sessionRepo } from './repo';
 
 /** A planned session without any duration still takes some time in the plan. */
@@ -33,7 +34,8 @@ const source: PlannableSource = {
     }));
   },
   async onDone(id) {
-    await sessionRepo.update(id, { planned: undefined });
+    // Same as „Erledigt“ on the page: it counts today.
+    await sessionRepo.update(id, doneToday(today()));
   },
   async onEstimate(id, minutes) {
     await sessionRepo.update(id, { durationMin: Math.max(1, Math.min(1440, Math.round(minutes))) });

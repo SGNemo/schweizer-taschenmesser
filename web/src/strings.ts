@@ -8396,8 +8396,9 @@ export const de = {
     planned: {
       group: 'Geplant',
       toggle: 'Geplant, noch nicht gemacht',
-      toggleHint:
-        'Zählt erst, wenn du „Erledigt“ tippst. Mit Uhrzeit steht es heute unter „Jetzt wichtig“.',
+      toggleHint: 'Zählt erst, wenn du „Erledigt“ tippst.',
+      timeHint: 'Mit Uhrzeit steht es am Tag unter „Jetzt wichtig“.',
+      waiting: 'Wartet noch',
       done: 'Erledigt',
       doneFor: (title: string) => `Erledigt: ${title}`,
       logged: (title: string) => `Eingetragen: ${title}`,

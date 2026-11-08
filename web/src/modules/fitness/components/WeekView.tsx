@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatMinutes } from '@/core/i18n/format';
 import { addDaysStr, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Icon, IconButton, ItemList, ItemRow } from '@/ui';
+import { Button, Icon, IconButton, ItemList, ItemRow } from '@/ui';
 import { kcalText } from '../data';
 import { weekDays, weekOf } from '../logic';
 import type { Meal, Session } from '../schema';
@@ -18,16 +18,20 @@ export function WeekView({
   sessions,
   meals,
   nutrition,
+  loadedFrom,
 }: {
   day: string;
   weekStart: 1 | 7;
   sessions: readonly Session[];
   meals: readonly Meal[];
   nutrition: boolean;
+  /** The first day the page loaded; the arrows never step to a week before it (it would look empty). */
+  loadedFrom: string;
 }) {
   const [offset, setOffset] = useState(0);
   const { from, to } = weekOf(addDaysStr(day, offset * 7), weekStart);
-  const days = weekDays(from, sessions, meals);
+  const days = weekDays(from, sessions, meals, day);
+  const earliest = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
   const total = days.reduce(
     (a, d) => ({
@@ -56,7 +60,7 @@ export function WeekView({
   return (
     <section aria-label={w.label} data-testid="fitness-week-view">
       <div className={styles.toolbar}>
-        <IconButton label={w.prev} onClick={() => setOffset((o) => o - 1)}>
+        <IconButton label={w.prev} disabled={!earliest} onClick={() => setOffset((o) => o - 1)}>
           <Icon name="chevronLeft" />
         </IconButton>
         <p className={styles.groupLabel} aria-live="polite">
@@ -65,6 +69,11 @@ export function WeekView({
         <IconButton label={w.next} onClick={() => setOffset((o) => o + 1)}>
           <Icon name="chevronRight" />
         </IconButton>
+        {offset !== 0 ? (
+          <Button variant="secondary" size="sm" onClick={() => setOffset(0)}>
+            {w.today}
+          </Button>
+        ) : null}
       </div>
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}

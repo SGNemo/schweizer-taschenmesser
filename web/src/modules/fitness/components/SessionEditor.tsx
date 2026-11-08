@@ -106,6 +106,7 @@ function Fields({
   const [duration, setDuration] = useState(str(existing?.durationMin));
   const [note, setNote] = useState(existing?.note ?? '');
   const [planned, setPlanned] = useState(existing?.planned ?? false);
+  const [autoPlanned, setAutoPlanned] = useState(false);
   const [rows, setRows] = useState<Row[]>(() =>
     toRows(existing?.exercises.length ? existing.exercises : [{ name: '' }]),
   );
@@ -168,14 +169,20 @@ function Fields({
     const tpl = templateSchema.safeParse(toTemplate(collect(), t.fitness.untitled));
     if (!tpl.success || tpl.data.exercises.length === 0)
       return setError(t.fitness.form.emptySession);
-    await templateRepo.create(tpl.data);
+    // The same title again replaces that template (a second tap never makes a copy).
+    const same = templates.find(
+      (x) => x.title.trim().toLocaleLowerCase() === tpl.data.title.toLocaleLowerCase(),
+    );
+    if (same) await templateRepo.update(same.id, tpl.data);
+    else await templateRepo.create(tpl.data);
     useUiStore.getState().toast(t.fitness.templates.saved);
   }
 
   async function save() {
     const data = collect();
     // A new session needs one exercise or a duration; an existing one (e.g. from the assistant) stays editable.
-    if (!existing && data.exercises.length === 0 && !data.durationMin)
+    // A plan may be just its title („Beine“); the planner gives it a usual length.
+    if (!existing && data.exercises.length === 0 && !data.durationMin && !(planned && data.title))
       return setError(t.fitness.form.emptySession);
     const parsed = sessionSchema.safeParse(data);
     if (!parsed.success) return setError(t.fitness.form.invalid);
@@ -195,7 +202,8 @@ function Fields({
 
   return (
     <Form onSubmit={save}>
-      {!existing && templates.length > 0 ? (
+      {/* Templates only on a fresh form: a tap never overwrites exercises already typed. */}
+      {!existing && templates.length > 0 && !rows.some((r) => r.name.trim()) ? (
         <div className={styles.chips} role="group" aria-label={t.fitness.templates.label}>
           {templates.map((tpl) => (
             <span key={tpl.id} className={styles.chip}>
@@ -230,7 +238,14 @@ function Fields({
           onChange={(e) => {
             setDate(e.target.value);
             // A new session on a later day is a plan, unless the user says otherwise.
-            if (!existing && e.target.value > today()) togglePlanned(true);
+            if (!existing && e.target.value > today()) {
+              togglePlanned(true);
+              setAutoPlanned(true);
+            } else if (autoPlanned) {
+              // Back to today or earlier: the automatic tick goes again (a tick the user set stays).
+              setPlanned(false);
+              setAutoPlanned(false);
+            }
           }}
           required
         />
@@ -247,11 +262,15 @@ function Fields({
         label={t.fitness.planned.toggle}
         description={t.fitness.planned.toggleHint}
         checked={planned}
-        onChange={(e) => togglePlanned(e.target.checked)}
+        onChange={(e) => {
+          togglePlanned(e.target.checked);
+          setAutoPlanned(false);
+        }}
       />
       {planned ? (
         <TextField
           label={t.fitness.form.time}
+          hint={t.fitness.planned.timeHint}
           type="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}

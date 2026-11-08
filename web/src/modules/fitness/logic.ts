@@ -66,10 +66,11 @@ export function exerciseSuggestions(
 
 /** The last time an exercise was done (for prefilling sets/reps/weight), or undefined. */
 export function lastOf(
-  sessions: readonly Pick<Session, 'date' | 'exercises'>[],
+  sessions: readonly Pick<Session, 'date' | 'exercises' | 'planned'>[],
   name: string,
 ): Exercise | undefined {
-  const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
+  // What was done, never what is only planned.
+  const sorted = [...sessions].filter(isLogged).sort((a, b) => b.date.localeCompare(a.date));
   for (const s of sorted) {
     const hit = s.exercises.find((e) => key(e.name) === key(name));
     if (hit) return hit;
@@ -118,6 +119,8 @@ export function weekDays(
   from: string,
   sessions: readonly Pick<Session, 'date' | 'durationMin' | 'exercises' | 'planned'>[],
   meals: readonly Pick<Meal, 'date' | 'kcal'>[],
+  /** Plans are shown from this day on; a past day never lists what was not done. */
+  today: string,
 ): WeekDay[] {
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDaysStr(from, i);
@@ -128,7 +131,7 @@ export function weekDays(
       date,
       sessions: logged.length,
       minutes: logged.reduce((m, s) => m + sessionMinutes(s), 0),
-      planned: own.length - logged.length,
+      planned: date >= today ? own.length - logged.length : 0,
       kcal: daySum(dayMeals, date),
       meals: dayMeals.length,
     };
@@ -143,3 +146,15 @@ export function toTemplate(s: Session, fallbackTitle: string): Template {
     ...(s.durationMin ? { durationMin: s.durationMin } : {}),
   };
 }
+
+/**
+ * „Erledigt“ on a planned session, from the list or from the planner: it counts on the day it was done –
+ * today –, whatever day it was planned for.
+ */
+export const doneToday = (day: string): Pick<Session, 'planned' | 'date'> => ({
+  planned: undefined,
+  date: day,
+});
+
+/** A plan that is still ahead (today or later) vs. one whose day has passed („Wartet noch“). */
+export const isAhead = (s: Pick<Session, 'date'>, day: string): boolean => s.date >= day;

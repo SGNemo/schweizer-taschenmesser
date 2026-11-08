@@ -35,6 +35,8 @@ import {
 import {
   byDay,
   daySum,
+  doneToday,
+  isAhead,
   isLogged,
   latestSession,
   repeatSession,
@@ -47,7 +49,7 @@ import type { Session } from '../schema';
 import styles from '../fitness.module.css';
 
 type View = 'training' | 'food' | 'week';
-/** How far back the lists go; older entries stay stored (the week view steps further back). */
+/** How far back the lists and the week view go; older entries stay stored. */
 const WINDOW_DAYS = 90;
 
 export default function FitnessPage() {
@@ -101,17 +103,18 @@ export default function FitnessPage() {
 
   // „Wie letztes Mal“ only while today has no session yet: a second tap would only log a copy.
   const canRepeat = !!last && !(sessions ?? []).some((s) => s.date === day && isLogged(s));
-  const planned = (sessions ?? [])
+  const plans = (sessions ?? [])
     .filter((s) => !isLogged(s))
     .sort((a, b) => a.date.localeCompare(b.date));
+  const planned = plans.filter((s) => isAhead(s, day));
+  // Plans whose day has passed: folded away under „Wartet noch“, never a list of misses.
+  const waiting = plans.filter((s) => !isAhead(s, day));
   const logged = (sessions ?? []).filter(isLogged);
 
   /** A planned session is done: it counts from now on, on today when it was planned for later. */
   async function markDone(s: Stored<Session>) {
     const done = t.fitness.planned.logged(sessionTitle(s));
-    await undoableWithToast(done, done, () =>
-      sessionRepo.update(s.id, { planned: undefined, ...(s.date > day ? { date: day } : {}) }),
-    );
+    await undoableWithToast(done, done, () => sessionRepo.update(s.id, doneToday(day)));
   }
 
   const sessionRow = (s: Stored<Session>) => (
@@ -177,7 +180,7 @@ export default function FitnessPage() {
           </Button>
         )}
       </PageHeader>
-      {sessions && meals ? (
+      {sessions && meals && view !== 'week' ? (
         <HeroSlot area="figure">
           {view !== 'food' ? (
             <HeroFigure
@@ -206,6 +209,7 @@ export default function FitnessPage() {
           sessions={sessions ?? []}
           meals={meals ?? []}
           nutrition={prefs.nutrition}
+          loadedFrom={from}
         />
       ) : view === 'training' ? (
         <>
@@ -234,6 +238,17 @@ export default function FitnessPage() {
                         label: t.fitness.planned.group,
                         count: planned.length,
                         children: <ItemList>{planned.map(sessionRow)}</ItemList>,
+                      },
+                    ]
+                  : []),
+                ...(waiting.length
+                  ? [
+                      {
+                        id: 'waiting',
+                        label: t.fitness.planned.waiting,
+                        count: waiting.length,
+                        defaultClosed: true,
+                        children: <ItemList>{waiting.map(sessionRow)}</ItemList>,
                       },
                     ]
                   : []),
