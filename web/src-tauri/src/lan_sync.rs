@@ -365,11 +365,13 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
         hub.clone(),
         Admission::new(),
     ));
-    let launcher = RealLauncher {
+    let launcher = RealLauncher::new(
         router,
-        hub_key: PublicKey::from_bytes(*hub_key.as_bytes()),
-        cfg: ServerConfig::default(),
-    };
+        PublicKey::from_bytes(*hub_key.as_bytes()),
+        ServerConfig::default(),
+        // the same port across restarts: paired phones only know the address of the QR
+        Some(dir.join("port")),
+    );
     let core = Arc::new(Core {
         hub,
         host,
