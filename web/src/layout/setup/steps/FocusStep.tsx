@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { calmPreset, readFocusAids, writeFocusAids, type FocusAids } from '@/core/setup/focusAids';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
-import { PageFallback } from '@/layout/PageContainer';
 import { patternStyles, Switch } from '@/ui';
 
 const KEYS = ['motion', 'ownReminders', 'noCounts', 'toastStay', 'readAid'] as const;
@@ -39,7 +38,9 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
     return () => registerCommit(null);
   }, [registerCommit, before, draft]);
 
-  if (!draft) return <PageFallback />;
+  // Loads in a moment; the wizard keeps "Weiter" off meanwhile. No PageContainer import: it would
+  // split a shared chunk onto the start path (bundle budget).
+  if (!draft) return null;
   return (
     <>
       <p className={patternStyles.muted} data-testid="setup-focus-preselect">
