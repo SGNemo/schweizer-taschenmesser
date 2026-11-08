@@ -144,6 +144,7 @@ export async function saveCaptures(
     moduleId: first.moduleId,
     count: saved.length,
     text,
+    types: saved.map((s) => s.type),
     undo: async () => {
       await Promise.all(saved.map((s) => s.undo()));
     },

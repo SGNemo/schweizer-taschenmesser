@@ -64,10 +64,17 @@
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target (track 38 px for the mouse). */
+/* Touch devices get the full 44 px target (track 38 px for the mouse): the button looks 38 px and
+   its hit strip reaches over the 3 px track padding (C09; the padding alone took no taps). */
 @media (pointer: coarse) {
   .segment button {
+    position: relative;
     min-height: calc(var(--touch) - 6px);
+  }
+  .segment button::after {
+    content: '';
+    position: absolute;
+    inset: -3px 0;
   }
 }
 .segment button:hover:not([aria-pressed='true']) {

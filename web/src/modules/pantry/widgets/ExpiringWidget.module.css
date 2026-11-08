@@ -4,6 +4,10 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+.calm {
+  /* Nothing to do: a quieter, slightly green-grey line. */
+  color: #5f7368;
+}
 .next {
   margin: var(--space-1) 0 0;
   padding: 0;
