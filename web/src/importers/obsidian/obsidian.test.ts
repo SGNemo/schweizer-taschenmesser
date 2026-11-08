@@ -61,7 +61,10 @@ describe('Obsidian / Markdown folder', () => {
 describe('Obsidian vault with numbered folders and sub-folders (D04)', () => {
   const files = [
     { name: 'Vault/.obsidian/app.json', text: '{"theme":"obsidian"}' },
-    { name: 'Vault/10_Arbeit/Inbetriebnahme Halle 3.md', text: '# Inbetriebnahme Halle 3\nIP-Plan' },
+    {
+      name: 'Vault/10_Arbeit/Inbetriebnahme Halle 3.md',
+      text: '# Inbetriebnahme Halle 3\nIP-Plan',
+    },
     { name: 'Vault/10_Arbeit/Projekte/Netzplan.md', text: '# Netzplan\nVLAN 10 #netz' },
     { name: 'Vault/10_Arbeit/Projekte/Kunde A/Abnahme.md', text: '# Abnahme\nOk' },
     { name: 'Vault/Start.md', text: '# Start\nÜbersicht' },
