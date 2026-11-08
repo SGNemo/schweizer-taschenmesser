@@ -3,7 +3,7 @@
 Findings: [FINDINGS.md](FINDINGS.md). Each block is a prompt sketch for a later chat.
 
 ## F1 · Phone pairing text and one name (D01, D02, D18) – LAN-sync chat
-Owner: `feat/lan-sync-phone` (package 3b; touches `strings.lanSync.ts`, `SyncSection.tsx`, `LanClientSection.tsx`).
+Owner: the LAN-sync chat (package 3b is merged; files `strings.lanSync.ts`, `SyncSection.tsx`, `LanClientSection.tsx`).
 > In the PC pairing dialog name the phone's path with the words the phone shows (today „Einstellungen → Synchronisation → „Mit PC koppeln““, the menu says „Sync & Backup“). On both sides add one sentence: „Zuletzt mit <Gerätename> abgeglichen: vor 2 Min, 14 Änderungen“ (device name from the trust list, count of ops of the last cycle). Test: unit test of the sentence; e2e with the fake hub/client.
 
 ## F2 · Dev-Preview: empty start on request (D14) – install-first-run

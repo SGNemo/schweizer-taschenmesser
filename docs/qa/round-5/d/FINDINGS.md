@@ -7,7 +7,7 @@ Persona: [PERSONA.md](PERSONA.md). Run 2026-11-08 on `develop` (`37fc11bd`) with
 | Step | Before | After |
 |---|---|---|
 | First start with the setup assistant | 3 questions, 4 clicks, ~7 s to the overview, 0 requests | unchanged (setup belongs to demo-a) |
-| Task 1: pair PC and phone, one note on both | not possible: the phone has no "Mit PC koppeln" ([before-lan-3-phone](shots/before-lan-3-phone.jpg)) | unchanged, LAN-sync chat (D01) |
+| Task 1: pair PC and phone, one note on both | not possible: the phone has no "Mit PC koppeln" ([before-lan-3-phone](shots/before-lan-3-phone.jpg)) | phone side now on `develop` (LAN-sync chat); device test with Sven's hardware open (D01) |
 | Task 2: backup → fresh device → restore | 6 clicks, ~15 s; user rows identical (37 of 37; `null` fields come back as absent, same value for the app); status still says "Kein Backup" | same, status "Gesichert · Als Datei: …" ([after-backup-status](shots/after-backup-status.jpg)) |
 | Task 3a: Notizen → Importieren → "Ordner wählen" (vault) | 5 clicks, ~6 s; **1** notebook "Vault", 0 of 3 folders kept, "!schaltplan.png" left in the text | 5 clicks, ~6 s; **3** notebooks `10_Arbeit`, `20_Privat`, `90_Archiv`, sub-folder as `#Projekte`, no leftovers ([after-import-3-list](shots/after-import-3-list.jpg)) |
 | Task 3b: Modul-Bibliothek → Importieren → ZIP | notebooks in ZIP order 10/90/20, `Projekte` lost, "1 Datei ist nicht lesbar" (the `.obsidian` settings) | 10/20/90, `#Projekte`, no false message ([after-import-4-wizard](shots/after-import-4-wizard.jpg)) |
@@ -21,7 +21,7 @@ Severity: **Abbrecher** (he puts the app away) · Stolperstein · Kosmetik.
 
 | Id | Step | Expected / actual (his words) | Severity | Where | Fix | Effort | Status |
 |---|---|---|---|---|---|---|---|
-| D01 | Task 1 | "The PC shows a QR code and says: on the phone open Einstellungen → Synchronisation → „Mit PC koppeln“. That button does not exist on my phone." | Abbrecher | `strings.lanSync.ts:67`; phone side missing | package 3b (`feat/lan-sync-phone`) | L | Board an LAN-Sync-Chat |
+| D01 | Task 1 | "The PC shows a QR code and says: on the phone open Einstellungen → Synchronisation → „Mit PC koppeln“. That button does not exist on my phone." | Abbrecher | `strings.lanSync.ts:67`; phone side missing | package 3b (`feat/lan-sync-phone`) | L | Board an LAN-Sync-Chat; phone side (`LanClientSection`, „Mit PC koppeln“) merged into `develop` during this round (PR #559) – not tested on devices here |
 | D02 | Task 1 | "The dialog says „Synchronisation“, the menu says „Sync & Backup“. Which one?" | Stolperstein | `strings.lanSync.ts:67` vs settings title | one name in the pairing text | S | Board an LAN-Sync-Chat |
 | D03 | Task 3a | "I picked my vault folder and got one notebook called „Vault“. My folders are gone, the picture link is still in the text." | Abbrecher | `modules/notes/exchange.ts:70` | a picked export (`.obsidian` folder or several sub-folders) is read like the vault importer (root dropped, sub-folders = notebooks, hidden folders skipped, embeds removed); a plain folder stays one notebook, deeper folders become a tag; hint text says so | S | gefixt (`a9396ed9`, hint `strings.ts:4185`) |
 | D04 | Task 3a/3b | "`10_Arbeit/Projekte/Netzplan.md` lands in 10_Arbeit, the „Projekte“ part is lost." | Stolperstein | `importers/obsidian/parse.ts` | deeper folders become one nested tag (`#Projekte`, `#Projekte/Kunde-A`); notebooks stay flat | S | gefixt (`0ba52a64`) |

@@ -4,7 +4,7 @@ Hi Daniel, hier ist die Testversion von Nemo: <LINK-DEV-PREVIEW> (sie füllt bei
 PC: die `.exe` laden und starten; Windows warnt vor einem unbekannten Herausgeber, „Weitere Informationen → Trotzdem ausführen“.
 Handy: die `.apk` laden und öffnen; Android fragt einmal, ob du Apps aus dieser Quelle erlauben willst.
 Für dich wahrscheinlich spannend:
-1. Abgleich im Heimnetz: am PC unter Einstellungen → Sync & Backup „Gerät koppeln“ ansehen. Die Handy-Seite (QR scannen) ist noch nicht drin, die kommt als Nächstes; sag mir, was dir am PC-Teil fehlt.
+1. PC und Handy koppeln: am PC Einstellungen → Sync & Backup → „Gerät koppeln“, am Handy dort „Mit PC koppeln“ und den QR-Code scannen; dann eine Notiz anlegen und auf beiden ansehen.
 2. Backup anlegen (Einstellungen → Sync & Backup), App-Daten löschen (am einfachsten am Handy: Android-Einstellungen → Apps → Nemo Dev → Speicher → Daten löschen), Backup zurückspielen und vergleichen; die Datei ohne Passwort kannst du im Editor lesen.
 3. Deinen Obsidian-Export (Ordner oder ZIP) unter Notizen → Importieren einlesen und schauen, ob deine Ordner stimmen.
 Unter Einstellungen → Verbindungen steht, was überhaupt ins Netz gehen kann; dein Netzwerk-Tab darf gern dagegen prüfen.
