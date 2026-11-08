@@ -131,7 +131,8 @@ function Fields({
           ...(num(r.minutes) ? { durationMin: Math.round(num(r.minutes)!) } : {}),
         })),
     };
-    if (data.exercises.length === 0 && !data.durationMin)
+    // A new session needs one exercise or a duration; an existing one (e.g. from the assistant) stays editable.
+    if (!existing && data.exercises.length === 0 && !data.durationMin)
       return setError(t.fitness.form.emptySession);
     const parsed = sessionSchema.safeParse(data);
     if (!parsed.success) return setError(t.fitness.form.invalid);

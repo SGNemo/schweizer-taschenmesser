@@ -21,7 +21,7 @@ const DAY_WORDS: [RegExp, number][] = [
 ];
 /** Times and days this parser does not read: the text is then no fitness capture. */
 const FOREIGN_WHEN = word(
-  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|(?<!heute\s)morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|\d{1,2}\.\d{1,2}\.(?:\d{2,4})?`,
+  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|(?<!heute\s+)morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|\d{1,2}\.\d{1,2}\.(?:\d{2,4})?`,
 );
 
 const SETS_REPS = /(?<!\d)(\d{1,2})\s*[x×*]\s*(\d{1,3})(?!\d)/i;
