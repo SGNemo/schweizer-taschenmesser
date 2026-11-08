@@ -1,4 +1,4 @@
-/* One line, only in the Dev-Preview build: text (shortened with an ellipsis), settings, dismiss. */
+/* Only in the Dev-Preview build: text (wraps, never cut: A13, round 5), settings, dismiss. */
 .banner {
   display: flex;
   align-items: center;
@@ -12,9 +12,7 @@
 .title {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding-block: var(--space-2);
   font-size: var(--text-sm);
 }
 .actions {

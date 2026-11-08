@@ -373,11 +373,18 @@ function safeLocal(fn: () => void): void {
   }
 }
 
-/** First start of a dev build with an empty database: fill it once (never over existing data). */
-export async function autoFillIfEmpty(database: TaschenmesserDB = defaultDb): Promise<boolean> {
+/**
+ * "Mit Testdaten ansehen" on the welcome card of an empty dev app: fill it once (never over existing
+ * data). Since round 5 nothing calls this at start-up any more; the tester chooses.
+ */
+export async function autoFillIfEmpty(
+  database: TaschenmesserDB = defaultDb,
+  opts: { asked?: boolean } = {},
+): Promise<boolean> {
   let marked = false;
   safeLocal(() => (marked = localStorage.getItem(AUTOFILL_MARK) === '1'));
-  if (marked) return false;
+  // A tap on "Mit Testdaten ansehen" is a fresh answer (also after "Alles zurücksetzen").
+  if (marked && !opts.asked) return false;
   if (await readSeedState(database)) return false;
   const hasData = await appHasData(database, availableManifests());
   if (hasData) {

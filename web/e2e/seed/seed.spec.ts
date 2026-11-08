@@ -91,9 +91,16 @@ test.describe('Dev-Preview test data', () => {
     expect(outbox).toBe(0);
   });
 
-  test('first start of an empty dev app fills it and shows the banner', async ({ page }) => {
+  test('first start of an empty dev app asks first; "Mit Testdaten ansehen" fills it and shows the banner', async ({
+    page,
+  }) => {
     await bootDev(page, { autofill: true });
     await page.goto('/');
+    // A10 (round 5): nothing is filled by itself; the welcome card offers both ways.
+    const welcome = page.getByTestId('setup-welcome');
+    await expect(welcome.getByRole('button', { name: 'Einrichtung starten' })).toBeVisible();
+    await expect(page.getByTestId('seed-banner')).toHaveCount(0);
+    await welcome.getByRole('button', { name: 'Mit Testdaten ansehen' }).click();
     await expect(page.getByTestId('seed-banner')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId('seed-banner')).toContainText('Testdaten geladen');
     await page.getByRole('button', { name: 'Verstanden' }).click();

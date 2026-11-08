@@ -20,5 +20,11 @@ export const ComponentSheet =
 export const SeedBanner =
   import.meta.env.VITE_RELEASE_CHANNEL === 'dev' ? lazy(() => import('./SeedBanner')) : undefined;
 
+/** "Mit Testdaten ansehen" on the welcome card of an empty Dev-Preview app. */
+export const TestDataOffer =
+  import.meta.env.VITE_RELEASE_CHANNEL === 'dev'
+    ? lazy(() => import('./setup/TestDataOffer'))
+    : undefined;
+
 export const loadDevCommands =
   import.meta.env.VITE_RELEASE_CHANNEL === 'dev' ? () => import('./devCommands') : undefined;
