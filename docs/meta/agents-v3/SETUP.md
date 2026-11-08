@@ -61,7 +61,7 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
    - `develop`: Require a pull request before merging mit **0 required approvals** (sperrt direkte Pushes, der API-Merge von `nemo-merge` geht weiter; Approvals vom Token-Inhaber zählen auf eigenen PRs ohnehin nicht), Require status checks, Block force pushes.
    - **Tag-Ruleset nur `refs/tags/v*`**: Restrict creations, updates, deletions – `release.yml` läuft auf jedem `v*.*.*`-Tag; ohne diese Sperre könnte jeder Agent mit Contents: write ein Release auslösen. **Nicht** `dev-preview*`: `dev-preview.yml` verschiebt diesen Tag bei jedem grünen `develop`-Push selbst (`PATCH git/refs/tags/dev-preview`, `force=true`) und ersetzt die Assets (`--clobber`); eine Sperre dort bricht die Dev-Preview. Auf `dev-preview` löst kein Workflow aus, das Risiko ist klein.
    - **Immutable releases vorerst aus lassen:** sie würden auch das rollende Pre-Release `dev-preview` einfrieren (Asset-Austausch scheitert). Erst sinnvoll, wenn die Dev-Preview als Draft veröffentlicht oder anders gelöst ist – Punkt für `nemo-devops`.
-   - Folge für dich: mit dem `develop`-Ruleset pushen auch deine normalen Claude-Code-Chats `scribble/` nicht mehr direkt nach `develop` (CLAUDE.md Schritt 2, „you may push changes to `scribble/` straight to develop“); ab dann per Mini-PR. Die CLAUDE.md-Zeile ändert die Switch-over-PR (entschieden 2026-11-08, `docs/decisions/meta.md`).
+   - Folge für dich: mit dem `develop`-Ruleset pushen auch deine normalen Claude-Code-Chats nicht mehr direkt nach `develop`; Notizen liegen deshalb nicht mehr in `scribble/` im Repo, sondern im Session-Ordner `/workspace/scribble/` und im privaten Repo SGNemo/nemo-scribble (SHARED.md „Scribble“; entschieden 2026-11-08, `docs/decisions/meta.md`).
 3. **Vault anlegen** (Console → Vaults, oder API; nicht hier geprüft):
    ```bash
    H=(-H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2026-10-21" -H "anthropic-beta: managed-agents-2026-04-01" -H "content-type: application/json")
@@ -109,7 +109,7 @@ Eigene Session, Auditor als Primär-Agent; er fragt die 18 (alle außer `nemo-me
 ### Erster Testlauf (Budget 2 USD)
 
 ```bash
-node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branch test/agents-v3-smoke von origin/develop an, committe eine Zeile in scribble/BOARD.md, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
+node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branch test/agents-v3-smoke von origin/develop an, committe eine neue Datei smoke.txt, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
 ```
 
 Die Rulesets prüfst du **nur lesend** – ein Push-Versuch mit echten Rechten würde bei einem fehlenden Ruleset wirklich `main`/`develop` bewegen, und ein Tag `v…` startet `release.yml`:

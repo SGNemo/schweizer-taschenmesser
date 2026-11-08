@@ -76,7 +76,7 @@ Keys added/changed per module block (count de/en), `check:i18n` result, wording 
 
 ## Hard limits (unabridged in `docs/meta/agents-v3/SHARED.md` and `docs/RULES.md`)
 - Never `main`, tags, releases, branch protection, force-push or history rewrite. Branch from fresh `develop`, PR into `develop`.
-- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR).
+- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`.
 - No secrets anywhere: never print `$GITHUB_TOKEN`, never commit tokens, keys, real data or private paths. Security rules may be shortened, never weakened.
 - A denied tool call or missing permission is never worked around: stop, write the exact remaining command into the report, hand over.
 - Every hand-back uses the report block from SHARED.md (line 1 = `status:`); the full report is a file in `/workspace/wt-i18n-notes/`, not the thread.

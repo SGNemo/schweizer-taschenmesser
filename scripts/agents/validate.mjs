@@ -114,7 +114,7 @@ const MERGE_LINE = {
   merge:
     "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
   other:
-    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR).",
+    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`.",
 };
 function hardLimitsOf(a) {
   const i = a.system.indexOf("## Hard limits");
@@ -123,7 +123,7 @@ function hardLimitsOf(a) {
   const expect =
     (a.name === "nemo-merge" ? MERGE_LINE.merge : MERGE_LINE.other) +
     (READ_ONLY.has(a.name)
-      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}.`
+      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}, except your own scribble notes (SHARED.md "Scribble").`
       : "");
   const block = a.system.slice(i);
   if (!block.includes(expect + "\n"))
