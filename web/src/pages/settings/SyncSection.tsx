@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import {
   connect,
   disconnect,
@@ -19,9 +19,19 @@ import { Badge, Button, Card, Dialog, Switch, TextField } from '@/ui';
 import { Actions, Facts, StateBanner, Step } from './ConnectParts';
 import { SyncConflicts } from './SyncConflicts';
 import { SyncDevices } from './SyncDevices';
+import { FoldedGroup } from './FoldedGroup';
+import { tLanSync } from '@/strings.lanSync';
 import styles from './settings.module.css';
 
 const formatTime = (at: number | undefined): string => (at ? formatDateTime(at) : t.sync.never);
+
+/**
+ * Desktop app only (the hub lives in the native shell): loaded on demand, so the QR generator and
+ * the hub screens never weigh on the browser's and the phone's start.
+ */
+const LanHubSection = lazy(() =>
+  import('./LanHubSection').then((m) => ({ default: m.LanHubSection })),
+);
 
 /** A first connect proposes end-to-end encryption; the switch stays an explicit opt-out. */
 export const ENCRYPT_BY_DEFAULT = true;
@@ -40,7 +50,10 @@ export function SyncSection() {
   const [failure, setFailure] = useState<ConnectFailure | undefined>();
   const [confirmReset, setConfirmReset] = useState(false);
 
-  const connected = status.phase !== 'off';
+  const l = tLanSync.use();
+  // Desktop app: this PC can be the home-network hub; the own server moves into a folded group.
+  const lan = getPlatform().lanHub.supported;
+  const connected = status.phase !== 'off' && status.via !== 'lanHub';
 
   // The size on the server is read once per successful sync, not on every render.
   useEffect(() => {
@@ -85,173 +98,197 @@ export function SyncSection() {
     await run({ url, token, encrypt, passphrase: passphrase || undefined, deviceName });
   }
 
+  const serverBody = (
+    <div className={styles.form}>
+      {connected || lan ? null : (
+        <StateBanner icon="cloudOff" title={c.off} line={c.offLine} testId="sync-off" />
+      )}
+      <p className={styles.muted}>{t.sync.intro}</p>
+
+      {connected ? (
+        <>
+          <StateBanner
+            icon={status.phase === 'error' ? 'alert' : 'sync'}
+            tone={status.phase === 'error' ? 'attention' : 'ok'}
+            title={t.sync.state[status.phase]}
+            line={t.sync.connected(status.server ?? '')}
+            tinted={!lan}
+            testId="sync-status"
+          >
+            <Badge tone={status.encrypted ? 'accent' : 'neutral'}>
+              {status.encrypted ? t.sync.encryptedBadge : t.sync.plainBadge}
+            </Badge>
+          </StateBanner>
+          <Facts
+            label={c.facts}
+            items={[
+              { label: t.sync.lastSync, value: formatTime(status.lastSyncAt) },
+              {
+                label: c.factPending,
+                value: t.sync.pending(status.pending),
+                testId: 'sync-pending',
+              },
+              ...(status.lastResult
+                ? [
+                    {
+                      label: t.sync.detailsTitle,
+                      value: t.sync.lastResult(status.lastResult.applied, status.lastResult.pushed),
+                      testId: 'sync-last-result',
+                    },
+                  ]
+                : []),
+              ...(status.serverStats
+                ? [
+                    {
+                      label: t.sync.serverSize,
+                      value: t.sync.serverSizeValue(
+                        status.serverStats.records,
+                        Math.max(1, Math.round(status.serverStats.bytes / 1024)),
+                      ),
+                      testId: 'sync-server-size',
+                    },
+                  ]
+                : []),
+            ]}
+          />
+          {status.rejected > 0 ? (
+            <p role="alert" className={styles.error}>
+              {t.sync.rejected(status.rejected)}
+            </p>
+          ) : null}
+          {status.phase === 'error' ? (
+            <p role="alert" className={styles.error}>
+              {t.sync.errors[status.error ?? 'unknown']}
+            </p>
+          ) : null}
+          {status.phase === 'error' && status.failures > 1 ? (
+            <p className={styles.muted} data-testid="sync-failures">
+              {t.sync.failuresInRow(status.failures)}
+            </p>
+          ) : null}
+          <Actions>
+            <Button
+              variant="primary"
+              onClick={() => void syncNow()}
+              disabled={status.phase === 'syncing'}
+            >
+              {t.sync.syncNow}
+            </Button>
+          </Actions>
+          <Step title={c.stepConnection}>
+            <Actions>
+              <Button onClick={() => void disconnect()}>{t.sync.disconnect}</Button>
+              <Button variant="danger" onClick={() => void signOutThisDevice()}>
+                {t.sync.signOut}
+              </Button>
+            </Actions>
+            <p className={styles.muted}>{t.sync.disconnectHint}</p>
+            <p className={styles.muted}>{t.sync.signOutHint}</p>
+          </Step>
+          <SyncDevices />
+          <SyncConflicts />
+        </>
+      ) : (
+        <form onSubmit={submit} className={styles.form}>
+          <Step n={1} title={c.stepServer} hint={c.stepServerHint}>
+            <TextField
+              label={t.sync.serverUrl}
+              hint={t.sync.serverUrlHint}
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              required
+            />
+            {isInsecureRemoteUrl(url) ? (
+              <p role="note" className={styles.error} data-testid="sync-http-warning">
+                {t.sync.httpWarning}
+              </p>
+            ) : null}
+            <TextField
+              label={t.sync.token}
+              type="password"
+              autoComplete="off"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              required
+            />
+          </Step>
+          <Step n={2} title={c.stepDevice} hint={c.stepDeviceHint}>
+            <TextField
+              label={t.sync.deviceName}
+              hint={t.sync.deviceNameHint}
+              maxLength={64}
+              autoComplete="off"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
+            />
+            <Switch
+              label={t.sync.encrypt}
+              hint={t.sync.encryptHint}
+              checked={encrypt}
+              onChange={setEncrypt}
+            />
+            {!encrypt ? (
+              <p className={styles.muted} data-testid="sync-plain-warning">
+                {t.sync.plainWarning}
+              </p>
+            ) : null}
+            <TextField
+              label={t.sync.passphrase}
+              hint={encrypt ? t.sync.passphraseHint : t.sync.passphraseJoinHint}
+              type="password"
+              autoComplete="off"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+            />
+          </Step>
+          {failure ? (
+            <p role="alert" className={styles.error} data-testid="sync-failure">
+              {t.sync.failures[failure]}
+            </p>
+          ) : null}
+          <Actions>
+            <Button type="submit" variant="primary" disabled={busy}>
+              {busy ? t.sync.connecting : t.sync.connect}
+            </Button>
+            {failure === 'server-has-plain-data' || failure === 'vault-outdated' ? (
+              <Button variant="danger" onClick={() => setConfirmReset(true)}>
+                {t.sync.resetServer}
+              </Button>
+            ) : null}
+          </Actions>
+        </form>
+      )}
+    </div>
+  );
+
   return (
     <Card>
-      <div className={styles.form}>
-        {connected ? null : (
-          <StateBanner icon="cloudOff" title={c.off} line={c.offLine} testId="sync-off" />
-        )}
-        <p className={styles.muted}>{t.sync.intro}</p>
-
-        {connected ? (
-          <>
-            <StateBanner
-              icon={status.phase === 'error' ? 'alert' : 'sync'}
-              tone={status.phase === 'error' ? 'attention' : 'ok'}
-              title={t.sync.state[status.phase]}
-              line={t.sync.connected(status.server ?? '')}
-              testId="sync-status"
-            >
-              <Badge tone={status.encrypted ? 'accent' : 'neutral'}>
-                {status.encrypted ? t.sync.encryptedBadge : t.sync.plainBadge}
-              </Badge>
-            </StateBanner>
-            <Facts
-              label={c.facts}
-              items={[
-                { label: t.sync.lastSync, value: formatTime(status.lastSyncAt) },
-                {
-                  label: c.factPending,
-                  value: t.sync.pending(status.pending),
-                  testId: 'sync-pending',
-                },
-                ...(status.lastResult
-                  ? [
-                      {
-                        label: t.sync.detailsTitle,
-                        value: t.sync.lastResult(
-                          status.lastResult.applied,
-                          status.lastResult.pushed,
-                        ),
-                        testId: 'sync-last-result',
-                      },
-                    ]
-                  : []),
-                ...(status.serverStats
-                  ? [
-                      {
-                        label: t.sync.serverSize,
-                        value: t.sync.serverSizeValue(
-                          status.serverStats.records,
-                          Math.max(1, Math.round(status.serverStats.bytes / 1024)),
-                        ),
-                        testId: 'sync-server-size',
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-            {status.rejected > 0 ? (
-              <p role="alert" className={styles.error}>
-                {t.sync.rejected(status.rejected)}
+      {lan ? (
+        <div className={styles.form}>
+          <Suspense fallback={null}>
+            <LanHubSection />
+          </Suspense>
+          <FoldedGroup
+            id="server"
+            section="sync"
+            title={l.ownServer}
+            current={[connected ? (status.server ?? '') : l.ownServerOff]}
+          >
+            {status.via === 'lanHub' ? (
+              <p className={styles.muted} data-testid="sync-server-blocked">
+                {l.serverBlocked}
               </p>
-            ) : null}
-            {status.phase === 'error' ? (
-              <p role="alert" className={styles.error}>
-                {t.sync.errors[status.error ?? 'unknown']}
-              </p>
-            ) : null}
-            {status.phase === 'error' && status.failures > 1 ? (
-              <p className={styles.muted} data-testid="sync-failures">
-                {t.sync.failuresInRow(status.failures)}
-              </p>
-            ) : null}
-            <Actions>
-              <Button
-                variant="primary"
-                onClick={() => void syncNow()}
-                disabled={status.phase === 'syncing'}
-              >
-                {t.sync.syncNow}
-              </Button>
-            </Actions>
-            <Step title={c.stepConnection}>
-              <Actions>
-                <Button onClick={() => void disconnect()}>{t.sync.disconnect}</Button>
-                <Button variant="danger" onClick={() => void signOutThisDevice()}>
-                  {t.sync.signOut}
-                </Button>
-              </Actions>
-              <p className={styles.muted}>{t.sync.disconnectHint}</p>
-              <p className={styles.muted}>{t.sync.signOutHint}</p>
-            </Step>
-            <SyncDevices />
-            <SyncConflicts />
-          </>
-        ) : (
-          <form onSubmit={submit} className={styles.form}>
-            <Step n={1} title={c.stepServer} hint={c.stepServerHint}>
-              <TextField
-                label={t.sync.serverUrl}
-                hint={t.sync.serverUrlHint}
-                type="url"
-                inputMode="url"
-                autoComplete="off"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                required
-              />
-              {isInsecureRemoteUrl(url) ? (
-                <p role="note" className={styles.error} data-testid="sync-http-warning">
-                  {t.sync.httpWarning}
-                </p>
-              ) : null}
-              <TextField
-                label={t.sync.token}
-                type="password"
-                autoComplete="off"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                required
-              />
-            </Step>
-            <Step n={2} title={c.stepDevice} hint={c.stepDeviceHint}>
-              <TextField
-                label={t.sync.deviceName}
-                hint={t.sync.deviceNameHint}
-                maxLength={64}
-                autoComplete="off"
-                value={deviceName}
-                onChange={(e) => setDeviceName(e.target.value)}
-              />
-              <Switch
-                label={t.sync.encrypt}
-                hint={t.sync.encryptHint}
-                checked={encrypt}
-                onChange={setEncrypt}
-              />
-              {!encrypt ? (
-                <p className={styles.muted} data-testid="sync-plain-warning">
-                  {t.sync.plainWarning}
-                </p>
-              ) : null}
-              <TextField
-                label={t.sync.passphrase}
-                hint={encrypt ? t.sync.passphraseHint : t.sync.passphraseJoinHint}
-                type="password"
-                autoComplete="off"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-              />
-            </Step>
-            {failure ? (
-              <p role="alert" className={styles.error} data-testid="sync-failure">
-                {t.sync.failures[failure]}
-              </p>
-            ) : null}
-            <Actions>
-              <Button type="submit" variant="primary" disabled={busy}>
-                {busy ? t.sync.connecting : t.sync.connect}
-              </Button>
-              {failure === 'server-has-plain-data' || failure === 'vault-outdated' ? (
-                <Button variant="danger" onClick={() => setConfirmReset(true)}>
-                  {t.sync.resetServer}
-                </Button>
-              ) : null}
-            </Actions>
-          </form>
-        )}
-      </div>
+            ) : (
+              serverBody
+            )}
+          </FoldedGroup>
+        </div>
+      ) : (
+        serverBody
+      )}
 
       <Dialog
         open={confirmReset}
