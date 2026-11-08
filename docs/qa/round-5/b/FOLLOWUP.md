@@ -1,6 +1,6 @@
 # Person B – Follow-ups (nicht in `feat/demo-b` gebaut)
 
-## B09 Druckansicht (M, modulübergreifend)
+## B09 Druckansicht (M, modulübergreifend) – erledigt in `fix/print-view`
 
 Drucken einer Liste (Buchungen, Rechnungen) legt Navigation unten, „+“-Knopf, Toasts und die Kopfleiste über den Inhalt; es gibt kein `@media print` in der App. Shot: `shots/before-24-print-transactions.png`.
 
