@@ -41,7 +41,7 @@ Proposal, not in force until Sven re-creates the agents ([SETUP.md](SETUP.md) "U
 
 Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude Code) and `nemo-architekt` (contracts are planned by a Claude Code chat; the lead declines contract/schema work per WORK-ROUTING).
 
-"write" = PRs, comments, reviews; never merge/auto-merge/file writes via MCP. "review" = additionally no PR/branch/issue writes. "merge" = everything except repo-destructive tools. Web search/fetch off everywhere.
+"write" = PRs and comments (no reviews – only the reviewer posts them); never merge/auto-merge/file writes via MCP. "review" = additionally no PR/branch/issue writes. "merge" = everything except repo-destructive tools. Web search/fetch off everywhere.
 
 **One level deep:** an agent with a `multiagent` block cannot be anyone's subagent (the API answers 400), so `nemo-auditor` is not in the lead's roster and `nemo-lead` is not in the auditor's. `nemo-merge` is left out of the auditor's roster (4 roles): an audit never merges, and a manipulated audit must not reach the only merging agent. `validate.mjs` checks exactly these two carry the block, every list ≤ 20, the lead's roster = all 5, the auditor's = all except `nemo-merge` (`ROSTER_EXCLUDE`), sibling names only, `inline_agents` and `workflows` disabled, the lead's advisor = Opus.
 
@@ -59,21 +59,21 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 
 ## Changes v2 → v3 (history; v3 roles were merged in v3.1)
 
-| Change                                                                                                      | Why (evidence in REVIEW.md)                                                                           |
-| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `multiagent` block in `nemo-lead` (19 predefined, inline off, workflows off, Opus advisor)                  | v2 lead had none → it would do everything itself (finding 1)                                          |
-| Shared block → `SHARED.md`, prompts keep role + 5 hard limits                                               | one source, −45 % prompt per agent, no 20× re-apply on a rule change (3a)                             |
-| Models per role (Opus/Sonnet/Haiku/Fable) + effort                                                          | doc example "strong coordinator, small specialists"; Fable is in the model list (3c)                  |
-| `web_search`/`web_fetch` off; GitHub-MCP deny lists per role                                                | limited networking blocks them anyway; tool lock beats prompt-only limits (1.3, 3e)                   |
-| CI is the truth: no local `npm test`/full E2E                                                               | 13 + 10 min per agent, $0.08/h running time, CI runs them on every PR (3i)                            |
-| Light path for small PRs (docs/test/i18n; `.github/**` stays on the full path)                              | v2 sent docs-only PRs through five agents (1.2)                                                       |
-| Report = fixed block (≤ 10 lines) + file, never the diff in the thread                                      | lead context, thread reuse (3g)                                                                       |
-| `checkout: develop` on the repo mount (`session.mjs`)                                                       | default is the repo's default branch = `main` (lesson 2026-11-07)                                     |
-| Budget mandatory at session start                                                                           | can be raised/removed later, never added (3d)                                                         |
-| `$GITHUB_TOKEN` = egress-substituted placeholder; REST via header only, git via the mount                   | vault mechanics (1.4)                                                                                 |
-| `always_allow` kept explicit on both toolsets                                                               | MCP default is `always_ask`; "Permission … denied" is the `auto` policy's wording (1.4)               |
-| Owners for `site/`, `services/`, `tools/`, `design/icon/`; `dependabot.yml` → deps; `contract/` → architekt | gaps/overlaps (1.1, 6)                                                                                |
-| `ant apply` + `claude-lock.json` instead of the Console                                                     | Console-made agents cannot be adopted by `ant`; multiagent/effort/budget are API/CLI-only (SETUP 1–2) |
+| Change                                                                                                              | Why (evidence in REVIEW.md)                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `multiagent` block in `nemo-lead` (19 predefined, inline off, workflows off, Opus advisor)                          | v2 lead had none → it would do everything itself (finding 1)                                          |
+| Shared block → `SHARED.md`, prompts keep role + 5 hard limits                                                       | one source, −45 % prompt per agent, no 20× re-apply on a rule change (3a)                             |
+| Models per role (Opus/Sonnet/Haiku/Fable) + effort                                                                  | doc example "strong coordinator, small specialists"; Fable is in the model list (3c)                  |
+| `web_search`/`web_fetch` off; GitHub-MCP deny lists per role                                                        | limited networking blocks them anyway; tool lock beats prompt-only limits (1.3, 3e)                   |
+| CI is the truth: no local `npm test`/full E2E                                                                       | 13 + 10 min per agent, $0.08/h running time, CI runs them on every PR (3i)                            |
+| Light path for small PRs (docs/test/i18n; `.github/**` stays on the full path; v3.1: plain docs + `.changes/` only) | v2 sent docs-only PRs through five agents (1.2)                                                       |
+| Report = fixed block (≤ 10 lines) + file, never the diff in the thread                                              | lead context, thread reuse (3g)                                                                       |
+| `checkout: develop` on the repo mount (`session.mjs`)                                                               | default is the repo's default branch = `main` (lesson 2026-11-07)                                     |
+| Budget mandatory at session start                                                                                   | can be raised/removed later, never added (3d)                                                         |
+| `$GITHUB_TOKEN` = egress-substituted placeholder; REST via header only, git via the mount                           | vault mechanics (1.4)                                                                                 |
+| `always_allow` kept explicit on both toolsets                                                                       | MCP default is `always_ask`; "Permission … denied" is the `auto` policy's wording (1.4)               |
+| Owners for `site/`, `services/`, `tools/`, `design/icon/`; `dependabot.yml` → deps; `contract/` → architekt         | gaps/overlaps (1.1, 6)                                                                                |
+| `ant apply` + `claude-lock.json` instead of the Console                                                             | Console-made agents cannot be adopted by `ant`; multiagent/effort/budget are API/CLI-only (SETUP 1–2) |
 
 ## Switch-over (after Sven's decision)
 

@@ -151,7 +151,7 @@ const rows = [
   "| " + widths.map((w) => "-".repeat(w)).join(" | ") + " |",
   ...table.slice(1).map(line),
   "",
-  `"write" = PRs, comments, reviews; "review" = comments and reviews only; "merge" = may merge. Web search/fetch ${allWebOff ? "are disabled in every definition" : "are ENABLED in at least one definition"}.`,
+  `"write" = PRs and comments (no reviews – only the reviewer posts them); "review" = comments and reviews; "merge" = may merge. Web search/fetch ${allWebOff ? "are disabled in every definition" : "are ENABLED in at least one definition"}.`,
   "",
 ];
 outputs.set("MODELS.md", rows.join("\n"));

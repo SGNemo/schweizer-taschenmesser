@@ -153,7 +153,13 @@ const routing = (() => {
     .filter(Boolean)
     .slice(0, 5)
     .find((l) => /^Routing:/i.test(l) && !/^Routing:\s*#/i.test(l));
-  if (!first) return {};
+  if (!first) {
+    if (!sub && messageText.trim())
+      console.warn(
+        "warning: no routing line – runs as Lead S; check: node scripts/agents/session.mjs --routing-check",
+      );
+    return {};
+  }
   const m =
     /^Routing:\s*(Claude Code|Lead(?:\s*(?:→|->)\s*[\w-]+)?|Auditor)\b(?:\s*,?\s*([SML])\b)?/i.exec(
       first,
@@ -176,6 +182,7 @@ const routing = (() => {
         ? "auditor"
         : "lead",
     cls: m[2]?.toUpperCase(),
+    title: first.split(" · ").slice(1).join(" · "),
   };
 })();
 // --agent: short role name (lead | auditor, with or without `nemo-`) resolved via claude-lock.json, or an agent_… id;
@@ -824,7 +831,7 @@ async function main() {
     environment_id: cfg.env,
     title:
       cfg.title ??
-      `nemo${agentRole === "auditor" ? "-auditor" : ""}: ${short(message.replace(/^\s*Routing:[^·\n]*·\s*/i, ""), 60)}`,
+      `nemo${agentRole === "auditor" ? "-auditor" : ""}: ${short(routing.title || message, 60)}`,
     budget: budgetObj(cfg.budgetUsd),
     resources: [
       {

@@ -99,7 +99,7 @@ const GH_OFF_ROLE = {
   "nemo-builder": ["pull_request_review_write"],
   "nemo-docs": ["pull_request_review_write"],
   "nemo-ops": ["pull_request_review_write"],
-  "nemo-lead": GH_NO_WRITES,
+  "nemo-lead": [...GH_NO_WRITES, "pull_request_review_write"],
   "nemo-reviewer": GH_NO_WRITES,
   "nemo-auditor": GH_NO_WRITES,
   "nemo-merge": [
@@ -147,7 +147,10 @@ const REQUIRED_TEXT = {
     "light-path allowlist",
     "`Security lens applied: <paths>`",
     "`git diff --name-status -M origin/develop...HEAD`",
-    "In a thread opened by `nemo-auditor` you only answer with evidence",
+    "In an auditor session (primary agent `nemo-auditor`) you only answer with evidence",
+  ],
+  "nemo-lead": [
+    "Du schreibst nie ein Review oder einen Kommentar mit `MERGE-READY` oder `Security lens applied`.",
   ],
   "nemo-merge": [
     "light-path allowlist",

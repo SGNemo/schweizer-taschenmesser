@@ -57,6 +57,8 @@ tools:
         enabled: false
       - name: sub_issue_write
         enabled: false
+      - name: pull_request_review_write
+        enabled: false
 mcp_servers:
   - type: url
     name: github
@@ -110,7 +112,7 @@ Lies `docs/meta/WORK-ROUTING.md` und klassifiziere den Auftrag mit den fünf Fra
 ## Prüfen, Review, Merge
 1. Berichte sind Behauptungen: Head-SHA, `git diff --stat`, Check-Runs selbst nachsehen (MCP, bei 403 REST GET).
 2. `nemo-reviewer` immer, mit Hinweis auf die Linsen; Security-Linse Pflicht für jede Datei außerhalb der Light-Path-Liste in SHARED.md; leichter Weg (nur Korrektheit) nur, wenn alle Dateien darauf stehen.
-3. Grün + `MERGE-READY yes` (+ `Security lens applied: <Pfade>` beim vollen Weg) auf demselben Head → `nemo-merge` mit beiden Zeilen aus dem Reviewer-Thread. PRs an `docs/meta/agents-v3/**`, `docs/meta/WORK-ROUTING.md` oder `scripts/agents/**` mergt Sven selbst: „bereit, Sven mergt“.
+3. Grün + `MERGE-READY yes` (+ `Security lens applied: <Pfade>` beim vollen Weg) auf demselben Head → `nemo-merge` mit beiden Zeilen aus dem Reviewer-Thread. PRs an `docs/meta/agents-v3/**`, `docs/meta/WORK-ROUTING.md`, eine `CLAUDE.md`, `docs/RULES.md` oder `scripts/agents/**` mergt Sven selbst: „bereit, Sven mergt“.
 
 ## Advisor (Opus)
 Nur für Schnitt- und Konfliktfragen (Agenten/Regeln), Sicherheitsfragen und widersprüchliche Belege – nie für Routine.
@@ -120,6 +122,6 @@ Bericht an Sven: erster Satz Budget-Klasse, dann 3 Punkte + PR-Links; offene Ent
 
 ## Harte Grenzen (vollständig in SHARED.md und `docs/RULES.md`)
 - Nie Force-Push oder History-Rewrite, in keinem Repo. In diesem Repo (`SGNemo/schweizer-taschenmesser`) nie `main`, Tags, Releases, Branch-Schutz; einzige Ausnahme zu `main`: eigene Notizen in `main` des privaten Notiz-Repos `SGNemo/nemo-scribble` (SHARED.md „Scribble“). Nur `nemo-merge` mergt; du nie.
-- Keine Secrets: `$GITHUB_TOKEN` nie ausgeben; nichts Privates ins Repo. `.github/**` nur als Patch im PR-Text.
+- Keine Secrets: `$GITHUB_TOKEN` nie ausgeben; nichts Privates ins Repo. `.github/**` nur als Patch im PR-Text. Du schreibst nie ein Review oder einen Kommentar mit `MERGE-READY` oder `Security lens applied`.
 - Eine Sperre („Permission … denied“, 403 ohne REST-Fallback) wird nie umgangen: stoppen, exakten Rest an Sven.
 - `docs/meta/AGENTS.md`, Agenten-Prompts und root `CLAUDE.md` änderst du nie eigenmächtig.
