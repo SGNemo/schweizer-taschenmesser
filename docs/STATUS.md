@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Dev-Preview Erststart (`feat/devpreview-first-start`, PR offen): keine Testdaten mehr von selbst, die Willkommenskarte fragt „Einrichtung starten“ oder „Mit Testdaten ansehen“; Testdaten-Banner bricht um (Svens Antworten zu #564).
 Installation ohne Sven daneben (`docs/install-first-run`, PR offen): Website `/install` + `/en/install` mit genauen Klicks für Windows-SmartScreen (Edge-Warnung, intelligente App-Steuerung) und Samsung (Quelle zulassen, Play Protect, automatische Blockierung), ehrlichem Warum und SHA-256-Prüfung; Dev-Preview-Release-Text beginnt mit Downloads, beiden Kurzanleitungen und SHA-256 je Datei; Screenshots fehlen noch (Windows-VM/Samsung nötig).
 Erstkontakt-Runde Person A (`feat/demo-a`, PR offen): Setup-Schritt „Fokus-Hilfen“ (Vorauswahl „Ruhig“), Fortsetzen genau an der Pause, Schrittübersicht vorab, Toasts warten bei Fokus + Schalter „Hinweise bleiben stehen“, wörtliche Texte (ToDos, Notizen, Einrichtung), Umzug-Fixes B05/B08 ([qa/round-5/a](qa/round-5/a/FINDINGS.md)).
 
