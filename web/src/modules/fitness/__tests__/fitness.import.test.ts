@@ -77,4 +77,42 @@ describe('fitness import runtime', () => {
     expect(r.candidates).toEqual([]);
     expect(r.skipped).toEqual({ unsupported: 1 });
   });
+
+  it('turns a MyFitnessPal export into sessions and meals; body measurements are not read', async () => {
+    const r = await runtime.parse(
+      'file',
+      {
+        kind: 'file',
+        fileName: 'File-Export.zip',
+        text: '',
+        files: [
+          { name: 'File-Export.zip/Nutrition-Summary.csv', text: fixture('mfp-nutrition.csv') },
+          { name: 'File-Export.zip/Exercise-Summary.csv', text: fixture('mfp-exercise.csv') },
+          {
+            name: 'File-Export.zip/Measurement-Summary.csv',
+            text: 'Date,Weight\n2026-10-14,80.0\n',
+          },
+        ],
+      },
+      {} as never,
+    );
+    const sessions = r.candidates.filter((c) => c.collection === 'session');
+    const meals = r.candidates.filter((c) => c.collection === 'meal');
+    expect([sessions.length, meals.length]).toEqual([2, 3]);
+    for (const c of sessions) expect(sessionSchema.safeParse(c.data).success, c.label).toBe(true);
+    for (const c of meals) expect(mealSchema.safeParse(c.data).success, c.label).toBe(true);
+    // A run is minutes, not "1 set"; a day of several exercises has no title of its own.
+    expect(sessions[0]!.data.exercises).toEqual([
+      { name: 'Running (jogging), 10 km/h', durationMin: 35 },
+    ]);
+    expect(sessions[1]!.data.title).toBeUndefined();
+    expect(sessions[1]!.label).toBe('Einheit');
+    expect(sessions[1]!.data.exercises).toEqual([
+      { name: 'Bench Press, Barbell', sets: 3, reps: 8, weightKg: 61.2 },
+      { name: 'Squats, Barbell', sets: 4, reps: 6, weightKg: 83.9 },
+      { name: 'Walking, 5 km/h', durationMin: 20 },
+    ]);
+    expect(JSON.stringify(r.candidates)).not.toContain('80.0');
+    expect(r.skipped).toEqual({ empty: 2, unsupported: 1 });
+  });
 });

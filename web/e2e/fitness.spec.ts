@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { strToU8, zipSync } from 'fflate';
 import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
 
 /**
@@ -226,4 +227,48 @@ test('import from another app: a Strong export is recognised, previewed and land
   // The page's ⋯ menu offers the import too.
   await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await expect(page.getByRole('menuitem', { name: /Importieren/ })).toBeVisible();
+});
+
+test('import from MyFitnessPal: the export ZIP brings a day of exercise and a meal, never the body weight', async ({
+  page,
+}) => {
+  const zip = zipSync({
+    'Exercise-Summary-2026-11-01-to-2026-11-07.csv': strToU8(
+      [
+        'Date,Exercise,Type,Exercise Calories,Exercise Minutes,Sets,Reps Per Set,Kilograms,Steps,Note',
+        '2026-11-05,"Squats, Barbell",Strength,,,3,5,80.0,,',
+      ].join('\n'),
+    ),
+    'Nutrition-Summary-2026-11-01-to-2026-11-07.csv': strToU8(
+      [
+        'Date,Meal,Calories,Fat (g),Saturated Fat,Polyunsaturated Fat,Monounsaturated Fat,Trans Fat,Cholesterol,Sodium (mg),Potassium,Carbohydrates (g),Fiber,Sugar,Protein (g),Vitamin A,Vitamin C,Calcium,Iron,Note',
+        '2026-11-08,Breakfast,412.6,9.1,2.0,1.5,3.2,0.0,15.0,210.4,320.0,63.5,7.1,18.2,16.4,4.0,12.0,15.0,10.0,',
+      ].join('\n'),
+    ),
+    'Measurement-Summary-2026-11-01-to-2026-11-07.csv': strToU8('Date,Weight\n2026-11-05,81.4\n'),
+  });
+  await ready(page, '/');
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('Aus anderer App');
+  await page.keyboard.press('Enter');
+  const sheet = page.getByRole('dialog', { name: 'Umzug von einer anderen App' });
+  const chooser = page.waitForEvent('filechooser');
+  await sheet.getByRole('button', { name: 'Weiß ich nicht' }).click();
+  await (
+    await chooser
+  ).setFiles([{ name: 'File-Export.zip', mimeType: 'application/zip', buffer: Buffer.from(zip) }]);
+  await expect(sheet.getByText('MyFitnessPal (Essen und Training, Export)')).toBeVisible();
+  await sheet.getByRole('button', { name: 'Vorschau öffnen' }).click();
+
+  const wizard = page.getByRole('dialog', { name: /Importieren/ });
+  await expect(wizard.getByText('2 Einträge erkannt')).toBeVisible();
+  await wizard.getByRole('button', { name: '2 Einträge importieren' }).click();
+  await expect(wizard.getByRole('status')).toHaveText('2 Einträge wurden importiert.');
+  await wizard.getByRole('button', { name: 'Schließen' }).last().click();
+  await backSettled(page);
+
+  await ready(page, '/fitness');
+  await expect(page.getByText(/Squats, Barbell 3 × 5 · 80 kg/)).toBeVisible();
+  // The weight from Measurement-Summary is nowhere.
+  await expect(page.getByText('81,4')).toHaveCount(0);
 });

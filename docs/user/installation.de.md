@@ -64,7 +64,7 @@ HTTPS (oder `localhost`).
 2. **Dateien:** Wähle die Dateien oder die ZIP so, wie sie ist (Google Takeout, Todoist-Sicherung, Notion-Export). Gelesen wird nur auf diesem Gerät.
 3. **Prüfen:** Nemo zeigt, was es erkannt hat, warum, wie sicher und wie viel („Todoist (CSV) · 3 Projekte · 214 Aufgaben“). Danach die gewohnte Vorschau je Bereich: neu, bereits gespeichert, nicht lesbar und was warum draußen bleibt.
 
-Trainings- und Ernährungs-Exporte aus Strong, Hevy und Cronometer (CSV) erkennt Nemo unter „Weiß ich nicht“ und übernimmt sie in Fitness (in Arbeit, vorher einschalten).
+Trainings- und Ernährungs-Exporte aus Strong, Hevy, Cronometer (CSV) und MyFitnessPal (die Export-ZIP) erkennt Nemo unter „Weiß ich nicht“ und übernimmt sie in Fitness (in Arbeit, vorher einschalten).
 
 Wiederholungen (Todoist „jeden Montag“, TickTick-Wiederholungen) und geplante Dauern werden zu echten Wiederholungen und Aufwandsschätzungen. Jeder Umzug lässt sich ganz zurücknehmen: in der Zusammenfassung nach einem Umzug mit mehreren Teilen oder später unter **Letzte Umzüge** auf derselben Karte; was du seitdem geändert hast, bleibt. Passwörter werden nur im Tresor importiert, mit deinem Master-Passwort. Die Schaltfläche **Checkliste** zeigt weiter, was je Herkunft noch fehlt. Alles ist freiwillig.
 
