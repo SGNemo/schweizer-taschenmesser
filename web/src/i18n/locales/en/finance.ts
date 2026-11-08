@@ -104,6 +104,14 @@ export const finance: Strings['finance'] = {
       file: 'transactions',
     },
     widget: { addExpense: 'Expense +', vsPrevious: (change: string) => `${change} vs. last month` },
+    month: {
+      title: 'This month',
+      free: 'Free until month end',
+      coming: (amount: string) => `Still coming ${amount}`,
+      nothingComing: 'Nothing else due',
+      spent: (amount: string) => `spent so far ${amount}`,
+      open: 'What is still coming',
+    },
     settings: {
       bookSubscriptions: 'Book subscription charges as expenses',
       bookSubscriptionsHelp:

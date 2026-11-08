@@ -3087,6 +3087,14 @@ export const de = {
         file: 'buchungen',
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      month: {
+        title: 'Diesen Monat',
+        free: 'Frei bis Monatsende',
+        coming: (amount: string) => `Kommt noch ${amount}`,
+        nothingComing: 'Nichts mehr fällig',
+        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        open: 'Was noch kommt',
+      },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
         bookSubscriptionsHelp:
