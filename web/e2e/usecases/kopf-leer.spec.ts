@@ -322,12 +322,16 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
       return r.width > 0 && r.height > 0;
     };
     // A card counts as visible while it has a box and the sheet's backdrop lets it through (today a
-    // translucent dim; F1's target is an opaque backdrop, which takes the count to 0).
+    // translucent dim; F1's target is an opaque backdrop, which takes the count to 0). The native modal makes
+    // the page inert, so a hit test would say nothing; the backdrop's computed alpha is what a person sees.
     const strip = document.querySelector('section[aria-label="Jetzt wichtig"]');
     const dialog = document.querySelector('dialog[open]');
     const backdrop = dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : '';
-    const alpha = /rgba?\([^)]*,\s*([\d.]+)\)$/.exec(backdrop)?.[1];
-    const opaque = backdrop !== '' && (alpha === undefined || Number(alpha) >= 0.98);
+    // Alpha only from a fourth component (`rgba(r, g, b, a)` or `rgb(r g b / a)`); three components = opaque.
+    const parts = /^(?:rgba?|color)\((.*)\)$/.exec(backdrop)?.[1] ?? '';
+    const numbers = parts.split(/[\s,/]+/).filter(Boolean);
+    const alpha = numbers.length >= 4 ? Number(numbers[numbers.length - 1]) : 1;
+    const opaque = backdrop !== '' && alpha >= 0.98;
     const cards =
       strip && !opaque ? Array.from(strip.querySelectorAll('a, button')).filter(visible).length : 0;
     const list = document.querySelector('[data-testid="capture-rows"]');
