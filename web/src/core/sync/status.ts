@@ -5,8 +5,10 @@ export type SyncPhase = 'off' | 'idle' | 'syncing' | 'error';
 
 export interface SyncStatusState {
   phase: SyncPhase;
-  /** Host of the configured server, for display. */
+  /** Host of the configured server, for display (unset for the home-network hub). */
   server?: string;
+  /** How this device syncs: through an own server or as the home-network hub PC. */
+  via?: 'server' | 'lanHub';
   encrypted: boolean;
   /** Epoch ms of the last successful sync. */
   lastSyncAt?: number;
