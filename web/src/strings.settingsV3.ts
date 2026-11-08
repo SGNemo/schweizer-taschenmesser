@@ -24,6 +24,7 @@ export const tSettingsV3 = defineBundle(
       failed: 'Letztes Backup fehlgeschlagen',
       at: (when: string) => `Letztes Backup: ${when}`,
       tried: (when: string) => `Zuletzt versucht: ${when}`,
+      fileAt: (when: string) => `Als Datei gesichert: ${when}`,
       noneContext: 'Noch kein automatisches Backup',
     },
     navGroups: {
@@ -55,6 +56,7 @@ export const tSettingsV3 = defineBundle(
         failed: 'Last backup failed',
         at: (when: string) => `Last backup: ${when}`,
         tried: (when: string) => `Last tried: ${when}`,
+        fileAt: (when: string) => `Saved as a file: ${when}`,
         noneContext: 'No automatic backup yet',
       },
       navGroups: {

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { backupFileName, createBackup, type Backup, type ImportMode } from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
+import { recordFileBackup } from '@/core/backup/lastBackup';
 import {
   MIN_BACKUP_PASSPHRASE_LENGTH,
   encryptBackup,
@@ -50,7 +51,10 @@ export function BackupSection() {
       backupFileName(),
       await serializeSealedBackup(await createBackup()),
     );
-    if (result === 'saved') toast(t.backup.exported);
+    if (result === 'saved') {
+      await recordFileBackup(false);
+      toast(t.backup.exported);
+    }
   }
 
   async function exportEncrypted() {
@@ -65,6 +69,7 @@ export function BackupSection() {
     );
     setBusy(false);
     if (result === 'saved') {
+      await recordFileBackup(true);
       setExportPass('');
       toast(t.backup.encryptedExported);
     }

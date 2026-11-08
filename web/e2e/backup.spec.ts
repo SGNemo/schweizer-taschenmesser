@@ -171,4 +171,15 @@ test.describe('backup', () => {
     );
     await expect(page.getByRole('button', { name: 'Importieren' })).toHaveCount(0);
   });
+
+  test('a backup saved as a file shows in the settings status (D07)', async ({ page }) => {
+    await page.goto('/settings');
+    await expect(page.getByTestId('overview-backup')).toContainText('Kein Backup');
+    await page.goto('/settings/sync');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Backup herunterladen' }).click();
+    await download;
+    await page.goto('/settings');
+    await expect(page.getByTestId('overview-backup')).toContainText('Als Datei gesichert');
+  });
 });
