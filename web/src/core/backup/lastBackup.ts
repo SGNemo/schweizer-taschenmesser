@@ -1,7 +1,7 @@
 /**
  * The newest backup of this device, for the settings status head: an automatic run (native app)
  * or a backup the user saved as a file. Without the file case the head said "Kein Backup" right
- * after a download. Only the time and whether it was encrypted are kept, device-local in `_meta`
+ * after a download. Only the time is kept, device-local in `_meta`
  * (never synced, never in a backup); never a file name or path.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
@@ -21,11 +21,10 @@ const meta = (database: TaschenmesserDB) =>
 
 /** Call after a backup file was saved (not when the save dialog was cancelled). */
 export async function recordFileBackup(
-  encrypted: boolean,
   database: TaschenmesserDB = defaultDb,
   at: number = now(),
 ): Promise<void> {
-  await meta(database).put({ key: FILE_KEY, value: { at, encrypted } });
+  await meta(database).put({ key: FILE_KEY, value: { at } });
 }
 
 export async function loadLastBackup(

@@ -27,6 +27,6 @@ The download without a password is readable JSON (indented, opens in any text ed
 - `format` (`taschenmesser-backup`), `version`, `about` (this description in one line), `exportedAt`.
 - `tables`: one list per collection, named `<module>_<collection>` (e.g. `notes_note`, `notes_notebook`). Each entry has its fields plus `id`, `createdAt`, `updatedAt`, `deviceId`, `deletedAt` (deleted entries stay so merging works) and `_f` (a time stamp per field; the newer one wins).
 - `checksum`: SHA-256 of `tables`; an edited file is refused.
-- Restoring the same file gives the same entries (tested). Invented test data of the Dev-Preview is never part of a backup.
+- Restoring the same file gives the same entries (tested).
 
 Moving between devices also works without a file via the [sync server](sync.md).

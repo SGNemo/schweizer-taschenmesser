@@ -58,11 +58,13 @@ describe('plain backup checksum', () => {
 });
 
 describe('readable plain backup (D10)', () => {
-  it('names its format in the file and is indented for a text editor', async () => {
-    const text = await sealed();
+  it('the download names its format and is indented for a text editor; own copies stay compact', async () => {
+    expect((await sealed()).split('\n')).toHaveLength(1);
+    const text = await serializeSealedBackup(await createBackup(newDb()), { readable: true });
+    expect(await readBackupText(text)).toMatchObject({ ok: true });
     const json = JSON.parse(text) as Record<string, unknown>;
     expect(Object.keys(json).slice(0, 3)).toEqual(['format', 'version', 'about']);
-    expect(json.about).toMatch(/docs\/user\/backup\.md#file-format/);
+    expect(json.about).toMatch(/docs\/user\/backup\.md/);
     expect(text.split('\n').length).toBeGreaterThan(10);
   });
 
@@ -86,7 +88,7 @@ describe('readable plain backup (D10)', () => {
         ]),
       ),
     });
-    const first = await serializeSealedBackup(await createBackup(source));
+    const first = await serializeSealedBackup(await createBackup(source), { readable: true });
     const read = await readBackupText(first);
     if (!read.ok) throw new Error(read.reason);
     const target = newDb();

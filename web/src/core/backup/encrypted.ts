@@ -86,11 +86,18 @@ export type PlainChecksumStatus = 'ok' | 'mismatch' | 'missing';
 
 /** Read by people who open the file in a text editor; the app ignores it when reading. */
 export const PLAIN_BACKUP_ABOUT =
-  'Nemo backup, readable JSON. tables: one list per collection (<module>_<collection>); each entry has id, createdAt, updatedAt, deviceId, deletedAt (deleted entries stay for merging) and _f (a time stamp per field). checksum: SHA-256 of tables. Format: https://github.com/SGNemo/schweizer-taschenmesser/blob/main/docs/user/backup.md#file-format';
+  'Nemo backup, readable JSON. tables: one list per collection (<module>_<collection>); each entry has id, createdAt, updatedAt, deviceId, deletedAt (deleted entries stay for merging) and _f (a time stamp per field). checksum: SHA-256 of tables. Format: https://github.com/SGNemo/schweizer-taschenmesser/blob/main/docs/user/backup.md';
 
-/** The plain backup as text, sealed with its checksum, indented for a text editor. */
-export async function serializeSealedBackup(backup: Backup): Promise<string> {
+/**
+ * The plain backup as text, sealed with its checksum. `readable` (the download a person opens)
+ * indents it and names the format; copies the app keeps for itself stay compact.
+ */
+export async function serializeSealedBackup(
+  backup: Backup,
+  opts: { readable?: boolean } = {},
+): Promise<string> {
   const checksum = await sha256Hex(JSON.stringify(backup.tables));
+  if (!opts.readable) return JSON.stringify({ ...backup, checksum });
   const { format, version, ...rest } = backup;
   return JSON.stringify({ format, version, about: PLAIN_BACKUP_ABOUT, ...rest, checksum }, null, 1);
 }

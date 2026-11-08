@@ -55,11 +55,11 @@ export function BackupSection() {
   async function exportPlain() {
     const result = await downloadTextFile(
       backupFileName(),
-      await serializeSealedBackup(await createBackup()),
+      await serializeSealedBackup(await createBackup(), { readable: true }),
     );
     if (result === 'saved') {
-      await recordFileBackup(false);
       toast(t.backup.exported);
+      await recordFileBackup().catch(() => undefined); // only the status head reads it
     }
   }
 
@@ -75,7 +75,7 @@ export function BackupSection() {
     );
     setBusy(false);
     if (result === 'saved') {
-      await recordFileBackup(true);
+      await recordFileBackup().catch(() => undefined); // only the status head reads it
       setExportPass('');
       toast(t.backup.encryptedExported);
     }
