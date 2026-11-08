@@ -16,7 +16,7 @@ For Claude Managed Agents sessions (one session = one task = `nemo-lead` + at mo
 | `nemo-merge`    | merges merge-ready PRs into `develop` (standing order 2026-11-07): green checks, non-stale `MERGE-READY yes` + head SHA (+ `Security lens applied` on the full path), note or `no-changelog`; trivial conflicts only, everything else back to builder/ops; never `main`/tags/releases/force-push | `nemo-reviewer`                              |
 | `nemo-auditor`  | the maintainer's independent audit (own session, never in the lead's roster); asks builder/reviewer/ops/docs read-only, never `nemo-merge`                                                                                                                                                       | –                                            |
 
-Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude Code) and `nemo-architekt` (contracts are planned in a Claude Code chat; the lead declines contract/schema work per WORK-ROUTING). The other 12 roles live on as lenses or modes of the seven above.
+Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude Code) and `nemo-architekt` (contracts are planned in a Claude Code chat; the lead declines contract/schema work per WORK-ROUTING). The other 14 roles live on as lenses or modes of the seven above.
 
 Merge: `nemo-merge` is the only agent that merges PRs (maintainer's standing order 2026-11-07, [decisions/meta.md](../../decisions/meta.md)); every other agent, incl. the lead, never merges.
 

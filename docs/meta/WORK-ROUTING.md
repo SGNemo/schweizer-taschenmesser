@@ -9,8 +9,9 @@ One page for chats, agents and Sven (2026-11-08). Agent budget: 200 USD/month; o
 | Features, new modules, refactorings, design rounds, concepts, debugging | Claude Code       | –          |
 | Contract/schema changes (manifest, Dexie, sync, LWW fixtures)           | Claude Code       | –          |
 | Check and merge ready PRs; tidy CHATS.md/board; one review or check     | Lead              | S ≤ 5 USD  |
-| Bounded fix on an open PR (review finding, red check, format, licences) | Lead → builder    | S ≤ 5 USD  |
-| Dependency patch/minor bump, one CI measurement, one perf number        | Lead → ops        | S ≤ 5 USD  |
+| Bounded fix on an open PR (review finding, red check, format, licences) | Lead → builder    | M ≤ 10 USD |
+| Dependency patch/minor bump with review and merge                       | Lead → ops        | M ≤ 10 USD |
+| One CI measurement or one perf number                                   | Lead → ops        | S ≤ 5 USD  |
 | Consolidate several reports; small docs fixes bundled                   | Lead              | M ≤ 10 USD |
 | Independent audit of one PR, branch or report                           | Auditor           | M ≤ 10 USD |
 | Round with up to 4 delegations (night/unattended only)                  | Lead              | L ≤ 15 USD |
@@ -21,15 +22,15 @@ One page for chats, agents and Sven (2026-11-08). Agent budget: 200 USD/month; o
 
 Feature work, new modules, refactorings, design rounds, concepts; trial-and-error debugging; anything that will need questions back; a task without "done means …"; more than 4 delegations; a class above the session budget; secrets/signing/release (Sven himself); lead ↔ auditor directly.
 
-Wording: `blocked – out of routing: <reason> · docs/meta/WORK-ROUTING.md · next: <Claude Code prompt head | split into …>`.
+One format for every decline (lead and agents): `blocked – out of routing: <reason> · next: <step>`, where the step is a ready prompt head (`Routing: Claude Code · <title> · <model>`) or the split (`split into: …`).
 
 ## Decision tree (30 seconds)
 
-1. Does it write or change product code, tests or contracts? → yes: **Claude Code**.
-2. Will it need questions back to Sven before it can finish? → yes: **Claude Code**.
+1. Is it new product work – a feature, module, refactoring, design round, or a contract/schema change? → yes: **Claude Code**. (A bounded fix on an open PR with a named finding is not.)
+2. Will it need questions about content or scope before it can finish? → yes: **Claude Code**. (An approval or a short answer is fine.)
 3. Can you say "done means …" in one sentence? → no: **Claude Code** (or write the sentence first).
 4. Does it fit in ≤ 4 delegations (one per agent, bundled)? → no: split it.
-5. Which class – S, M or L (table above)? Above L: split it.
+5. Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD (L only at night/unattended)? Above L: split it.
 
 Result line, first line of the prompt:
 

@@ -4,7 +4,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Guardrails (v3.1 – read first, they beat everything below)
 
-- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` and start no work (no worktree, no `npm ci`).
+- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` (format and next steps: WORK-ROUTING) and start no work (no worktree, no `npm ci`).
 - **Budget:** the delegation names the class (S ≤ 5, M ≤ 10, L ≤ 15 USD); none named = S. When an overrun is foreseeable (`npm ci` failed, a test run > 10 min, repro not found in 3 tries), stop and report `partial` with an exact hand-over (branch, last command, next step) instead of trying on. At most **2 attempts per check**; a third run is the lead's decision.
 - **Tests:** locally only `npm run check` + the specs/tests your diff touches; full `npm test` and E2E are CI's (cite the run id). Never repeat a check that a run id already proves on the same head.
 - **Reading:** never a log, diff or file in full (`tail -40`, `grep -n`, `git diff --stat` first; full text only for the lines you change or cite); only the docs of your own area; thread answers ≤ 15 lines, the rest as a file.
@@ -33,13 +33,13 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 ## Git and GitHub
 
 - Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), PR into `develop`. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases, branch protection; never force-push or history rewrite in any repo. Sole `main` exception: your own notes pushed to `main` of `SGNemo/nemo-scribble` ("Scribble" below). Bring `develop` in with `git merge` (no rebase); `git pull --no-rebase` before every push.
-- GitHub MCP first. On 403 "Resource not accessible by integration": REST with `$GITHUB_TOKEN` (`curl -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SGNemo/schweizer-taschenmesser/…`) – writers: PR create/edit, labels, comments, reviews; read-only roles: comments and reviews only; everybody: check runs (GET). Never `workflow_dispatch`, releases, tags, merges via REST. `$GITHUB_TOKEN` is an opaque placeholder; never print, log or commit it, never print `git config`/remote/credential settings; `git push` uses the mounted repository's own credential, not the variable.
+- GitHub MCP first. On 403 "Resource not accessible by integration": REST with `$GITHUB_TOKEN` (`curl -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SGNemo/schweizer-taschenmesser/…`) – writers: PR create/edit, labels, comments, reviews; read-only roles: comments and reviews only; everybody: check runs (GET). Never `workflow_dispatch`, releases, tags, merges via REST (only exception: `nemo-merge`'s sanctioned merge fallback). `$GITHUB_TOKEN` is an opaque placeholder; never print, log or commit it, never print `git config`/remote/credential settings; `git push` uses the mounted repository's own credential, not the variable.
 - The MCP deny lists and the token scope are tripwires, not fences: bash, git and REST stay available to every role, the token can edit release assets, and code you push runs in CI jobs that hold the signing secrets (dry runs on `develop`), so a review is a security control, not a formality. The role limits (read-only, "only nemo-merge merges") are kept because you keep them.
 - A denied tool call ("Permission to use bash has been denied", a 403 the REST fallback does not cover, a missing token) is **never** worked around: stop, write the exact remaining command into your report, hand over.
 - **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main` of this repository.
 - Workflow changes (`.github/workflows/**`, `.github/actions/**`) are never pushed by an agent, whatever the token allows: the PR text carries them as a patch, Sven applies it.
-- Dependabot alerts: only `nemo-ops` (mode `deps`) dismisses one, only after `nemo-reviewer` with the security lens concurs in its thread, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
-- Code-scanning (CodeQL) alerts: fix instead of dismiss. Dismiss only a real false positive, after `nemo-reviewer` with the security lens concurs, with the justification in the dismissal and in the PR; never change the scan configuration to hide an alert (`docs/howto/release-deps.md`).
+- Dependabot alerts: only `nemo-ops` (mode `deps`) dismisses one, only after `nemo-reviewer` with the security lens concurs in its thread **and** as a GitHub comment naming the alert id and head SHA, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
+- Code-scanning (CodeQL) alerts: fix instead of dismiss. Dismiss only a real false positive, after `nemo-reviewer` with the security lens concurs (thread + GitHub comment with alert id), with the justification in the dismissal and in the PR; never change the scan configuration to hide an alert (`docs/howto/release-deps.md`).
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
 - Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` + reviewed head SHA, followed by `Security lens applied: <paths>` whenever the diff touches a full-path file (list below) – that is the public record; a full-path PR without that line is not merge-ready. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
 
@@ -57,12 +57,12 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 Docs-only, test-only or i18n-only PRs: `nemo-reviewer` with the correctness lens only (scope, CI, hand-over format); then `nemo-merge`.
 
-Full path (`nemo-reviewer` with the **security lens**, `Security lens applied: <paths>`) for:
+Full path (`nemo-reviewer` with the **security lens**, `Security lens applied: <paths>`) – **the one canonical list** (reviewer, merge, builder and lead point here; a file you cannot place is treated as on the list):
 
-- anything in a `docs/RULES.md` area;
-- everything under `.github/` (gitleaks, scribble-guard, `permissions:`, publish and signing steps live there);
-- build inputs that run in CI jobs holding the signing secrets: `web/scripts/`, `build.rs`, gradle files, `tauri*.conf.json`, lock files;
-- `CLAUDE.md` (root and the area files `web/src/modules/`, `web/src-tauri/`, `server/`), `docs/meta/AGENTS.md`.
+- `docs/RULES.md` areas: `web/src/core/{sync,localapi,dataapi,ai,platform,secrets,crypto,vaultbridge,diagnostics,supporter,setup,update,net}/**`, `web/src/modules/{accounts,disk}/**`, `server/**`, `mcp/**`, `packages/**`, `extension/**`, `web/src-tauri/**` (all crates incl. `lan-sync`, `local-api`, `vault-bridge`, `disk-scan`/`guard.rs`, `update.rs`, `capabilities/`, `build.rs`, `tauri*.conf.json`, gradle);
+- `.github/**`, `.gitleaksignore` (gitleaks, scribble-guard, `permissions:`, publish and signing steps);
+- build inputs of CI jobs holding the signing secrets: `web/scripts/**`, lock files (`package-lock.json`, `Cargo.lock`);
+- `CLAUDE.md` (root and area files), `docs/RULES.md`, `docs/meta/AGENTS.md`.
 
 **Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 7 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 

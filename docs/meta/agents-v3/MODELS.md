@@ -2,12 +2,12 @@
 
 | Agent         | Model             | Effort | GitHub MCP | Prompt chars |
 | ------------- | ----------------- | ------ | ---------- | ------------ |
-| nemo-auditor  | claude-fable-5-1  | high   | review     | 6955         |
-| nemo-builder  | claude-sonnet-5-5 | medium | write      | 4117         |
-| nemo-docs     | claude-haiku-5-5  | medium | write      | 3784         |
-| nemo-lead     | claude-sonnet-5-5 | high   | review     | 4582         |
-| nemo-merge    | claude-haiku-5-5  | low    | merge      | 6979         |
-| nemo-ops      | claude-sonnet-5-5 | medium | write      | 4188         |
-| nemo-reviewer | claude-opus-5-5   | medium | review     | 5350         |
+| nemo-auditor  | claude-fable-5-1  | high   | review     | 6970         |
+| nemo-builder  | claude-sonnet-5-5 | medium | write      | 4208         |
+| nemo-docs     | claude-haiku-5-5  | medium | write      | 3799         |
+| nemo-lead     | claude-sonnet-5-5 | high   | review     | 4753         |
+| nemo-merge    | claude-haiku-5-5  | low    | merge      | 6878         |
+| nemo-ops      | claude-sonnet-5-5 | medium | write      | 4203         |
+| nemo-reviewer | claude-opus-5-5   | medium | review     | 5499         |
 
 "write" = PRs, comments, reviews; "review" = comments and reviews only; "merge" = may merge. Web search/fetch are disabled in every definition.

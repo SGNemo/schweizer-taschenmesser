@@ -108,13 +108,13 @@ const ROSTER = {
   "nemo-ops": ["claude-sonnet-5-5", "medium"],
   "nemo-reviewer": ["claude-opus-5-5", "medium"],
 };
-// prompt length caps (token diet): 7 000 chars, the lead 8 000
-const MAX_SYSTEM = { "nemo-lead": 8000 };
+// prompt length caps (token diet): 7 000 chars, the lead 8 000, the builder 4 353
+const MAX_SYSTEM = { "nemo-lead": 8000, "nemo-builder": 4353 }; // builder ≤ the old nemo-frontend prompt
 const MAX_SYSTEM_DEFAULT = 7000;
 // the one routing source; every prompt names it, every prompt except the lead's (German) carries this exact gate
 const ROUTING_FILE = "docs/meta/WORK-ROUTING.md";
 const ROUTING_LINE =
-  "**Routing gate:** check every delegation against `docs/meta/WORK-ROUTING.md` first; if it does not fit, answer `blocked – out of routing: <reason>` and start no work.";
+  "**Routing gate:** check every delegation against `docs/meta/WORK-ROUTING.md` first; if it does not fit, answer `blocked – out of routing: <reason> · next: <step>` and start no work.";
 // the lead's advisor (Opus) for decisions; the auditor runs without one
 const ADVISOR = {
   "nemo-lead": { type: "enabled", model: "claude-opus-5-5" },

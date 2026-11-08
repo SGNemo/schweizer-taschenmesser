@@ -65,7 +65,7 @@ ant apply --prune --dry-run docs/meta/agents-v3/environment.yaml docs/meta/agent
 ant apply --prune docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
 ```
 
-Dann `claude-lock.json` committen (kleiner PR; keine Secrets darin). Erster Lauf: `node scripts/agents/session.mjs --class S "Prüfe die offenen PRs auf Merge-Bereitschaft, merge nichts"` – der Lead nennt im ersten Satz die Klasse.
+Danach stehen die 16 alten Agenten nicht mehr in `claude-lock.json`; die Datei committen (kleiner PR; keine Secrets darin). Erster Lauf: `node scripts/agents/session.mjs --class S "Routing: Lead, S (5 USD) · Merge-Check · fertig heißt: je offener PR eine Zeile merge-bereit ja/nein mit Grund; nichts mergen"` – der Lead nennt im ersten Satz die Klasse.
 
 ## 3 Vault und GitHub
 
@@ -97,13 +97,13 @@ Dann `claude-lock.json` committen (kleiner PR; keine Secrets darin). Erster Lauf
 cd scripts/agents && npm i && cd ../..          # einmalig: @anthropic-ai/sdk
  export ANTHROPIC_API_KEY=… GITHUB_TOKEN=… NEMO_VAULT_ID=vlt_…   # führendes Leerzeichen + HISTCONTROL=ignorespace hält die Werte aus der History; besser aus dem Passwort-Manager laden
 node scripts/agents/session.mjs --routing-check                      # erst prüfen: Claude Code oder Agenten?
-node scripts/agents/session.mjs --class S "Prüfe und merge PR #560"
+node scripts/agents/session.mjs --class S "Routing: Lead, S (5 USD) · PR #560 · fertig heißt: gemergt oder ein Satz, warum nicht"
 node scripts/agents/session.mjs --class M --title "Berichte" --file auftrag.md
 ```
 
-Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget aus der Klasse** (`--class S|M|L` = 5/10/15 $, Standard S; `--budget` überschreibt, über 15 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `5` → `"500"`; die erste Nachricht beginnt mit einer Kopfzeile „Budget-Klasse · Session-Budget“, die der Lead prüft), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
+Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget aus der Klasse** (`--class S|M|L` = 5/10/15 $; ohne `--class` gilt die Klasse aus der Zeile `Routing: Lead, M …` am Anfang des Auftrags, sonst die kleinste, die `--budget` fasst, sonst S; `--budget` überschreibt den Betrag, über 15 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `5` → `"500"`; die erste Nachricht beginnt mit einer Kopfzeile „Budget-Klasse · Session-Budget“, die der Lead prüft), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-builder: …`), Berichte (`← nemo-builder: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
 
-- `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links). Laufen dann noch Kind-Threads, wartet das Skript weiter (Zeile „wartet auf 2 Kind-Threads (docs, deps)“, alle 30 s neu geprüft) und endet erst, wenn der Lead nach dem letzten Kind-Bericht erneut `end_turn` meldet – oder wenn alle Kinder fertig sind und die Session zwei Prüfungen lang still bleibt. `--no-wait`: Ende beim ersten `end_turn` (altes Verhalten).
+- `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links). Laufen dann noch Kind-Threads, wartet das Skript weiter (Zeile „wartet auf 2 Kind-Threads (docs, ops)“, alle 30 s neu geprüft) und endet erst, wenn der Lead nach dem letzten Kind-Bericht erneut `end_turn` meldet – oder wenn alle Kinder fertig sind und die Session zwei Prüfungen lang still bleibt. `--no-wait`: Ende beim ersten `end_turn` (altes Verhalten).
 - `requires_action`: ein Tool wartet auf Freigabe (sollte mit `always_allow` nicht vorkommen) → `node scripts/agents/session.mjs --session sess_… --auto-approve` (ohne Nachricht: gibt die wartenden Aufrufe frei und streamt weiter) oder in der Console freigeben.
 - `budget_reached`: Session pausiert mit Stand; siehe 5 und „Was kostet was“.
 
@@ -143,7 +143,7 @@ Eigene Session, Auditor als Primär-Agent; er fragt die 4 (builder, reviewer, op
 ### Erster Testlauf (Budget 2 USD)
 
 ```bash
-node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branch test/agents-v3-smoke von origin/develop an, committe eine neue Datei smoke.txt, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
+node scripts/agents/session.mjs --class S --budget 2 --title "agents-v3 smoke" "Routing: Lead, S (≤ 2 USD, Smoke-Test) · fertig heißt: Branch gepusht und eine Zahl gemeldet. Lege Branch test/agents-v3-smoke von origin/develop an, committe eine neue Datei smoke.txt, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
 ```
 
 Die Rulesets prüfst du **nur lesend** – ein Push-Versuch mit echten Rechten würde bei einem fehlenden Ruleset wirklich `main`/`develop` bewegen, und ein Tag `v…` startet `release.yml`:

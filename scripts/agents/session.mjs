@@ -15,7 +15,8 @@
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
 //
-// Budget (docs/meta/WORK-ROUTING.md): --class S|M|L sets it (S 5, M 10, L 15 USD; default S); --budget <USD> overrides,
+// Budget (docs/meta/WORK-ROUTING.md): the class sets it (S 5, M 10, L 15 USD) – --class, else a leading `Routing: Lead, M …`
+// line in the message, else the smallest class holding --budget, else S; --budget <USD> overrides the amount,
 // above 15 USD only with --yes-expensive. The first message starts with a routing header (class + budget) that the lead
 // checks. A warning is printed at 70 % of the budget, and every run ends with a cost line (primary / children / advisor,
 // class). Rule: when a budget runs out, do not raise it – start a new session (SETUP.md §4 "Was kostet was").
@@ -69,19 +70,23 @@ for (let i = 0; i < argv.length; i++) {
     flags[k] = boolFlags.has(k) ? true : argv[++i];
   } else positional.push(a);
 }
-// the five questions of docs/meta/WORK-ROUTING.md; prints and exits before anything needs a key, a lock file or the SDK
-const ROUTING_QUESTIONS = [
-  "Does it write or change product code, tests or contracts? → yes: Claude Code",
-  "Will it need questions back to Sven before it can finish? → yes: Claude Code",
-  'Can you say "done means …" in one sentence? → no: Claude Code (or write the sentence first)',
-  "Does it fit in ≤ 4 delegations (one per agent, bundled)? → no: split it",
-  "Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD (L only at night/unattended)? Above L: split it",
-];
+// --routing-check prints the decision tree straight from docs/meta/WORK-ROUTING.md (the one source) and exits before
+// anything needs a key, a lock file or the SDK
 if (flags["routing-check"]) {
-  console.log("Routing check (docs/meta/WORK-ROUTING.md):");
-  ROUTING_QUESTIONS.forEach((q, i) => console.log(`  ${i + 1}. ${q}`));
+  const routing = path.join(REPO_ROOT, "docs/meta/WORK-ROUTING.md");
+  const md = fs.readFileSync(routing, "utf8");
+  const tree = md.slice(
+    md.indexOf("## Decision tree"),
+    md.indexOf("## Session rules"),
+  );
   console.log(
-    '\nFirst line of the prompt:\n  Routing: Claude Code · <title> · <model suggestion>\n  Routing: Lead, S (5 USD) · <title> · done means <…>\n  Routing: Auditor, M (10 USD) · PR #<n>\nThen: node scripts/agents/session.mjs --class <S|M|L> "…"   (no session was started)',
+    tree
+      .replace(/\*\*/g, "")
+      .replace(/^```\n?/gm, "")
+      .trimEnd(),
+  );
+  console.log(
+    `\nSource: docs/meta/WORK-ROUTING.md · then: node scripts/agents/session.mjs --class <S|M|L> "…"   (no session was started)`,
   );
   process.exit(0);
 }
@@ -198,13 +203,38 @@ const CLASSES = { S: 5, M: 10, L: 15 };
 const DEFAULT_CLASS = "S";
 const EXPENSIVE_USD = 15; // above this only with --yes-expensive (above class L: split the task)
 const WARN_SHARE = 0.7; // warn once the session has used 70 % of its budget
+// class: --class wins; else the pasted first line `Routing: Lead|Auditor, <S|M|L> …`; else the smallest class that
+// holds --budget; else S
+const routingClass = () => {
+  const text = flags.file
+    ? fs.readFileSync(flags.file, "utf8")
+    : positional.join(" ");
+  return /^\s*Routing:\s*(?:Lead|Auditor)\s*,\s*([SML])\b/i
+    .exec(text)?.[1]
+    ?.toUpperCase();
+};
 const taskClass = (() => {
-  const c = String(flags.class ?? DEFAULT_CLASS).toUpperCase();
-  if (!(c in CLASSES)) {
-    console.error(`error: --class "${flags.class}": use S, M or L`);
-    process.exit(1);
+  if (flags.class !== undefined) {
+    const c = String(flags.class).toUpperCase();
+    if (!(c in CLASSES)) {
+      console.error(`error: --class "${flags.class}": use S, M or L`);
+      process.exit(1);
+    }
+    const pasted = routingClass();
+    if (pasted && pasted !== c)
+      console.warn(
+        `warning: --class ${c} but the prompt's routing line says ${pasted} – the session runs as ${c}`,
+      );
+    return c;
   }
-  return c;
+  const pasted = routingClass();
+  if (pasted) return pasted;
+  if (flags.budget !== undefined)
+    return (
+      Object.keys(CLASSES).find((k) => CLASSES[k] >= Number(flags.budget)) ??
+      "L"
+    );
+  return DEFAULT_CLASS;
 })();
 function checkExpensive(usd) {
   if (usd > EXPENSIVE_USD && !flags["yes-expensive"])
@@ -342,15 +372,6 @@ function warnBudget(ev) {
   console.log(
     `\n${stamp()} WARNING: ${Math.round((used / cap) * 100)} % of the budget used (${usd(used)} of ${usd(cap)}). Let the lead finish this request; for the next one start a new session instead of raising the budget.\n`,
   );
-}
-
-// raising a budget is never a prompt answer: it needs --yes on the command line, after the usage was printed
-async function confirm(question) {
-  if (flags.yes) return true;
-  console.error(
-    `${question} Not done: read the usage above, then re-run with --yes (WORK-ROUTING: a new session is usually the better step).`,
-  );
-  return false;
 }
 
 function printEvent(ev) {
@@ -628,8 +649,11 @@ async function main() {
     console.log(
       "Rule (WORK-ROUTING): never raise to keep going – start a new session; raise only to let a nearly finished step land.",
     );
-    if (!(await confirm(`Raise the budget of ${sessionId} to ${usdArg} USD?`)))
-      return console.log("budget unchanged");
+    // raising is never a prompt answer: only --yes on the command line, after the usage above was printed
+    if (!flags.yes)
+      return console.log(
+        `budget unchanged: read the usage above, then re-run with --yes (WORK-ROUTING: a new session is usually the better step)`,
+      );
     const s = await c.beta.sessions.update(sessionId, {
       budget: budgetObj(Number(usdArg)),
     });
@@ -732,10 +756,6 @@ async function main() {
   // a budget can only be added when the session is created: always send one (the class sets it, default S = 5 USD)
   if (cfg.budgetUsd === undefined) cfg.budgetUsd = CLASSES[taskClass];
   checkExpensive(cfg.budgetUsd);
-  if (cfg.budgetUsd < CLASSES[taskClass])
-    console.warn(
-      `warning: budget ${cfg.budgetUsd} USD is below ${classLine()} – the lead declines a class above the session budget`,
-    );
   // routing header: the lead's routing gate reads class and budget from the first line (docs/meta/WORK-ROUTING.md)
   const routed = `[session.mjs] Budget-Klasse ${taskClass} (≤ ${CLASSES[taskClass]} USD) · Session-Budget ${cfg.budgetUsd} USD · Routing: docs/meta/WORK-ROUTING.md\n\n${message}`;
   if (!repoToken)

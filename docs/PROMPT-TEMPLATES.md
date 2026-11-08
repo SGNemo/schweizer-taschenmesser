@@ -5,7 +5,7 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 ## routing
 
 - Before every prompt: check [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md) (Claude Code or agents, budget class S/M/L).
-- The prompt's first line names the routing: `Routing: Claude Code · <title> · <model>` or `Routing: Lead, S (5 USD) · <title> · done means <…>`.
+- The prompt's first line names the routing: `Routing: Claude Code · <title> · <model>` or `Routing: Lead, S (5 USD) · <title> · done means <…>` or `Routing: Auditor, M (10 USD) · PR #<n>`.
 
 ## git
 
