@@ -72,6 +72,8 @@ for (const run of RUNS) {
       const path = tab === 'index' ? '/settings' : `/settings/${tab}`;
       await page.goto(path);
       await settle(page);
+      // The setup checklist takes a moment on a seeded app; shoot the tab once its card is there.
+      if (tab === 'einrichtung') await page.getByTestId('setup-status').waitFor({ timeout: 15_000 });
       if (tab !== 'index' && (await page.getByText('Diese Kategorie gibt es nicht').count())) continue;
       primaries[tab] = await page.evaluate(
         () =>

@@ -2,7 +2,7 @@
 
 Package 1 (blocks, Einrichtung tab, Schnellerfassung, large tabs via blocks): [ROUND-1.md](ROUND-1.md), branch `design/settings-identity`. Each package below is its own branch and PR from fresh `develop`.
 
-## Package 2 – the remaining tabs (`design/settings-identity-2`)
+## Package 2 – the remaining tabs (`design/settings-identity-2`) – built, see [ROUND-2.md](ROUND-2.md)
 
 **DE (Prompt):**
 
@@ -12,7 +12,7 @@ Package 1 (blocks, Einrichtung tab, Schnellerfassung, large tabs via blocks): [R
 
 > Settings on identity v3.1, package 2: the remaining tabs. Branch `design/settings-identity-2` from fresh `develop`. Read `docs/design/settings-v3/ROUND-1.md` (variant B, blocks) and MODULE-IDENTITY "Settings and libraries". Use only the package 1 blocks (`SettingsHead`, `StatusCard`, `SettingsGroup plain`, `SettingRow hint`, `StateBanner`/`Step`). Tabs: Allgemein, Darstellung, Barrierefreiheit, Module, Werkzeugkasten, Benachrichtigungen (one tinted card), Sicherheit, Verbindungen (share and local API as headed groups, at most one filled button per card), Updates, Entwickler. Per tab: at most one filled primary, no repetition, one-line sub-lines, long text behind ⓘ, card stacks → plain groups. Other branches' content only through the blocks. Before/after shots with `tools/shots.spec.ts`. Acceptance: `check`, `test`, `check:i18n`, `e2e` (settings, a11y) green; texts in every language.
 
-## Package 3 – navigation and search of the settings (`design/settings-nav`)
+## Package 3 – navigation and search of the settings (`design/settings-nav`) – built, see [ROUND-3.md](ROUND-3.md)
 
 **DE (Prompt):**
 

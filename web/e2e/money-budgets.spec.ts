@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, moreFields, showAllWidgets } from './helpers';
+import { backSettled, enable, moreFields, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time (day 29 of 30, third quarter). */
 test.beforeEach(async ({ page }) => {
@@ -8,7 +8,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function open(page: Page, url: string) {
+  // A closed dialog pops its history entry with a late `history.back()`; a `goto` before that has run is
+  // undone by it (ERR_ABORTED, or the old page stays and its h1 passes the check below).
+  await backSettled(page);
   await page.goto(url);
+  await expect(page).toHaveURL((u) => u.pathname === new URL(url, u).pathname);
   await expect(page.locator('main h1')).toBeVisible();
 }
 

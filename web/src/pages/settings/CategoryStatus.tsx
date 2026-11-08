@@ -9,7 +9,9 @@ import type { SettingsCategoryId } from '@/core/settings/registry/types';
 import { useSyncStatus } from '@/core/sync/status';
 import { useNewChangelog } from '@/core/changelog/useNewChangelog';
 import { useUpdateStore } from '@/core/update/controller';
+import { useChecklist } from '@/core/setup/checklist';
 import { t } from '@/strings';
+import { tSettingsV31 } from '@/strings.settingsV31';
 import { tComfort } from '@/strings.comfort';
 import styles from './SettingsLayout.module.css';
 
@@ -61,10 +63,21 @@ function Notifications() {
   return <>{permission === 'granted' ? null : tComfort.get().status.notificationsOff}</>;
 }
 
+/** Setup progress ("4 von 12") while steps are open; nothing once all is done (calm, no badge to clear). */
+function Setup() {
+  const checklist = useChecklist();
+  const o = tSettingsV31.use().setup;
+  const list = checklist?.list;
+  if (!list || list.total === 0 || list.open.length === 0) return null;
+  return <>{o.navProgress(list.done, list.total)}</>;
+}
+
 /** Short state next to a category ("Verbunden", "1 verfügbar") where it helps; nothing for the rest. */
 export function CategoryStatus({ id }: { id: SettingsCategoryId }) {
   const content =
-    id === 'sync' ? (
+    id === 'einrichtung' ? (
+      <Setup />
+    ) : id === 'sync' ? (
       <Sync />
     ) : id === 'updates' ? (
       <Updates />
