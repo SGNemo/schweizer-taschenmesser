@@ -18,9 +18,15 @@ test.describe('desktop', () => {
 
   test('T then T opens the timer, T then R the calculator', async ({ page }) => {
     await ready(page, '/');
-    await page.keyboard.press('t');
-    await page.keyboard.press('t');
-    await expect(page.getByRole('dialog', { name: 'Timer & Stoppuhr' })).toBeVisible();
+    // Right after load the list of active tools is still being read: a chord that early finds no tool and
+    // does nothing (no person types that fast). Repeat the chord until the shortcuts are armed.
+    await expect(async () => {
+      await page.keyboard.press('t');
+      await page.keyboard.press('t');
+      await expect(page.getByRole('dialog', { name: 'Timer & Stoppuhr' })).toBeVisible({
+        timeout: 1000,
+      });
+    }).toPass({ timeout: 10_000 });
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.keyboard.press('t');
