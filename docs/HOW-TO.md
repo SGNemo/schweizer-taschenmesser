@@ -24,7 +24,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
 How to read it:
-- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs; `scribble-guard` runs only for `main` (push or PR into `main`).
+- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs.
 - **Skipped means "not needed for this diff"** and counts as passed. The check **Web (lint, types, unit, E2E)** fails if a part that was needed did not run or one that was not needed did.
 - **Need everything on your PR now** (UI-wide change, accessibility, layout, Pixel 7)? Add the label `full-ci` (the immediate full run starts only for branches of this repository; later pushes follow the label). It starts one separate full run now and makes every later push run the full set; a red smoke run from before stays visible next to it until the next push. Removing the label applies from the next push.
 - **A draft PR** runs the web static checks and unit tests only (if `web/` changed); marking it ready starts the plain PR set.
