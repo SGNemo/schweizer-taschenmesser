@@ -151,7 +151,10 @@ const HOST_REASONS: [RegExp, NetReason][] = [
   [/^api\.ipify\.org$/, 'ip'],
   [/^api\.pwnedpasswords\.com$/, 'breach'],
   [/(^|\.)huggingface\.co$/, 'download'],
-  [/^api\.(openai|anthropic)\.com$|^generativelanguage\.googleapis\.com$|:11434$/, 'ai'],
+  [
+    /^api\.(openai|anthropic|groq)\.com$|^api\.mistral\.ai$|^openrouter\.ai$|^generativelanguage\.googleapis\.com$|:11434$/,
+    'ai',
+  ],
   [
     /(^|\.)googleapis\.com$|^accounts\.google\.com$|(^|\.)spotify\.com$|(^|\.)scdn\.co$/,
     'connector',

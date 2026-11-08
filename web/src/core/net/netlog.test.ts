@@ -113,3 +113,11 @@ describe('storage', () => {
     expect(localStorage.getItem('tm-net-log')).toBeNull();
   });
 });
+
+describe('every AI provider preset is logged as AI (D09)', () => {
+  it('maps the preset hosts to "ai", not "other"', async () => {
+    const { PRESETS } = await import('@/core/ai/providers/presets');
+    for (const p of PRESETS.filter((x) => x.baseUrl))
+      expect([p.id, describeRequest(p.baseUrl).reason]).toEqual([p.id, 'ai']);
+  });
+});
