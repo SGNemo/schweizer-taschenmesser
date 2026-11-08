@@ -145,6 +145,9 @@ export const importers: Strings['importers'] = {
     ticktick: 'TickTick (CSV backup)',
     contacts: 'Contacts (vCard: Google, Apple, Outlook)',
     bookmarks: 'Browser bookmarks (HTML)',
+    strong: 'Strong (training, CSV)',
+    hevy: 'Hevy (training, CSV)',
+    cronometer: 'Cronometer (food, CSV)',
   },
   reasons: {
     trashed: (n: number) =>
