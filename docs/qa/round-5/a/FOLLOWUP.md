@@ -22,6 +22,6 @@
 
 „2 von 10“ am ersten Tag, „2 von 9“ am nächsten: `core.migrate` gilt nur für eine leere Installation (`migrateStepApplies`, `core/setup/migrate.ts:225`) und fällt nach der ersten eigenen Notiz aus der Liste. Vorschlag (S, `core/setup/**`, demo-a-Besitz, nach dieser Runde): einmal angezeigte Schritte bleiben in der Zählung, bis sie erledigt oder ausgeblendet sind, oder die Checkliste sagt in einem Satz, warum ein Schritt weggefallen ist.
 
-## F3 Planer im Einrichtungsweg (Frage an Sven, siehe PR)
+## F3 Planer im Einrichtungsweg (entschieden 2026-11-08: bleibt so)
 
-Das Modul „Planer“ (verteilt ToDos auf Tage) ist standardmäßig aus und in keinem Profil. A sucht „Planung“ und landet über „Planen“ bei Kalender/ToDos – das reicht für seine Aufgaben. Ob der Planer in „Alltag“/„Studium“ gehört, ist eine Produktentscheidung.
+Das Modul „Planer“ (verteilt ToDos auf Tage) ist standardmäßig aus und in keinem Profil. A sucht „Planung“ und landet über „Planen“ bei Kalender/ToDos – das reicht für seine Aufgaben. Sven hat der Empfehlung zugestimmt: der Planer bleibt standardmäßig aus und in keinem Profil.

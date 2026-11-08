@@ -84,6 +84,15 @@ describe('auto fill', () => {
     expect(await notes().active().count()).toBe(0);
   }, 60_000);
 
+  it('A10: a tap on "Mit Testdaten ansehen" fills again after a reset, never over real data', async () => {
+    localStorage.setItem('tm-seed-autofilled', '1');
+    expect(await autoFillIfEmpty(db)).toBe(false);
+    expect(await autoFillIfEmpty(db, { asked: true })).toBe(true);
+    await removeSeed();
+    await notes().create({ title: 'Echt', body: '', pinned: false });
+    expect(await autoFillIfEmpty(db, { asked: true })).toBe(false);
+  }, 60_000);
+
   it('never touches an app that already has data', async () => {
     await notes().create({ title: 'Echt', body: '', pinned: false });
     expect(await autoFillIfEmpty(db)).toBe(false);

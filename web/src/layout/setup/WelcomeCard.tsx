@@ -2,7 +2,9 @@ import { useSetupHost } from '@/core/setup/host';
 import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
 import { t } from '@/strings';
+import { Suspense } from 'react';
 import { Button, Card } from '@/ui';
+import { TestDataOffer } from '../devTools';
 import styles from './WelcomeCard.module.css';
 
 /**
@@ -25,6 +27,11 @@ export function WelcomeCard() {
           </Button>
           <Button onClick={() => void dismissSetup()}>{t.setup.welcomeLater}</Button>
         </div>
+        {TestDataOffer ? (
+          <Suspense fallback={null}>
+            <TestDataOffer />
+          </Suspense>
+        ) : null}
       </Card>
     </div>
   );

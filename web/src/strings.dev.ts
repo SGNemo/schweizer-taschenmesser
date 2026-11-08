@@ -53,6 +53,11 @@ export const tDev = {
     demoVault: (phrase: string) =>
       `Demo-Tresor (Modul Passwörter): Passwortsatz „${phrase}“. Ein vorhandener Tresor wird nie überschrieben.`,
   },
+  offer: {
+    button: 'Mit Testdaten ansehen',
+    busy: 'Lade Testdaten …',
+    hint: 'Oder sieh dir Nemo zuerst mit erfundenen Beispieldaten an. Sie bleiben auf diesem Gerät und lassen sich unter Einstellungen → Entwickler wieder entfernen.',
+  },
   banner: {
     text: 'Testdaten geladen, entfernen unter Einstellungen → Entwickler.',
     open: 'Zu den Einstellungen',
