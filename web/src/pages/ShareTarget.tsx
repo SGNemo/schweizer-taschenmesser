@@ -25,13 +25,15 @@ export function sharedContent(params: URLSearchParams): {
  * on the line (unless it sits in a longer text), so a shared page still reads as a bookmark.
  */
 export function sharedLine(c: ReturnType<typeof sharedContent>): { line: string; rest: string } {
-  const text = c.text.split('\n').map((l) => l.trim());
-  // Only a text that repeats the title on its first line loses that line; the rest stays as shared.
-  const lines = [c.title.trim(), ...text]
-    .filter((l, i) => !(i === 1 && l === c.title.trim()))
-    .filter(Boolean);
-  let line = lines[0] ?? '';
-  const rest = lines.slice(1).join('\n');
+  const title = c.title.trim();
+  let text = c.text.trim();
+  // Only a text that repeats the title on its first line loses that line; the rest stays as shared
+  // (paragraph breaks included).
+  const firstOf = (s: string) => s.split('\n', 1)[0]!.trim();
+  const dropFirst = (s: string) => s.slice(s.indexOf('\n') + 1 || s.length).trim();
+  if (title && firstOf(text) === title) text = dropFirst(text);
+  let line = title || firstOf(text);
+  const rest = title ? text : dropFirst(text);
   // The link stays on the line when it was shared beside the text or in a one-line text („Schau mal
   // https://…“); a long text (a mail body) keeps its links in the rest.
   const textLines = c.text.split('\n').filter((l) => l.trim()).length;

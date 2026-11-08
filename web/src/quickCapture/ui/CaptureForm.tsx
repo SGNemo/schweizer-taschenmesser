@@ -12,7 +12,7 @@ import { announceSaved } from './announceSaved';
 import { batchRow, batchTypes, withoutPart } from './batch';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
-import { clearReopenDraft, peekReopenDraft } from './reopen';
+import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
 import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
 import { useCaptureTypes } from './useCaptureTypes';
@@ -95,6 +95,18 @@ export function CaptureForm({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // The booking toast outlives the sheet: its undo must know whether the sheet is still there.
+  const mounted = useRef(true);
+  const textRef = useRef(text);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const formRef = useRef<HTMLFormElement>(null);
 
   const parts = useMemo(() => (oneEntry ? [text] : splitCapture(text)), [text, oneEntry]);
@@ -451,11 +463,10 @@ export function CaptureForm({
                 ...saved,
                 undo: async () => {
                   await saved.undo();
-                  setText((cur) => {
-                    const next = cur.trim() ? `${cur}\n${part}` : part;
-                    if (keepDraft) writeCaptureDraft(next);
-                    return next;
-                  });
+                  // The sheet is gone: the line comes back in a fresh one, never lost.
+                  if (!mounted.current) return reopenCapture(part);
+                  const cur = textRef.current;
+                  change(cur.trim() ? `${cur}\n${part}` : part);
                 },
               });
               inputRef.current?.focus();

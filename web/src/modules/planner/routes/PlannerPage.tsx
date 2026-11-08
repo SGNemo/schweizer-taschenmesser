@@ -733,7 +733,8 @@ export default function PlannerPage() {
                           }
                           titleFull
                           // The reason only behind „Warum hier?“, like on the board (U12).
-                          meta={why === w.unitId ? reason : undefined}
+                          // A row without a menu (no entry) keeps its reason in sight.
+                          meta={why === w.unitId || !w.entry ? reason : undefined}
                           end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
                           menu={rowMenu(w, undefined, reason)}
                           menuLabel={t.planner.row.menu(w.title)}

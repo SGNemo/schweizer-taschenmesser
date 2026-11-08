@@ -31,14 +31,10 @@ export function batchRow(
   /** The title is the line as typed (inbox fallback): it already holds the amount. */
   asTyped = false,
 ): BatchRow {
-  const money =
-    books(type) ||
-    (type === 'todo' &&
-      books(parsedType) &&
-      !!parsedType &&
-      available.includes(parsedType) &&
-      !!fields.amountMinor);
+  const money = books(type) || (type === 'todo' && books(parsedType) && !!fields.amountMinor);
   if (!money) return { type, fields };
+  // The chip only where a booking can be made; the amount stays in the title either way.
+  const bookable = !!parsedType && books(parsedType) && available.includes(parsedType);
   const amount =
     fields.amountMinor && !asTyped ? formatMoney(fields.amountMinor, fields.currency) : '';
   return {
@@ -48,7 +44,9 @@ export function batchRow(
       ...(fields.note ? { note: fields.note } : {}),
       ...(fields.link ? { link: fields.link } : {}),
     },
-    booking: fields.kind === 'income' ? 'income' : 'expense',
+    ...(bookable || books(type)
+      ? { booking: fields.kind === 'income' ? 'income' : 'expense' }
+      : {}),
   };
 }
 
