@@ -19,6 +19,10 @@ export const setupStateSchema = z.strictObject({
   /** `SETUP_VERSION` the user last went through; newer steps are offered afterwards. */
   version: z.number().int().min(0),
   lastStep: z.string().optional(),
+  /** The step that was on screen at "Später fortsetzen"; "Fortsetzen" opens exactly there. */
+  pausedAt: z.string().optional(),
+  /** The pause happened in the first-run questions, so they continue as questions. */
+  pausedQuick: z.boolean().optional(),
   checklistHidden: z.boolean(),
 });
 export type SetupState = z.infer<typeof setupStateSchema>;
@@ -93,10 +97,17 @@ export const markStepSkipped = (id: string, database?: TaschenmesserDB) =>
     database,
   );
 
-/** "Später fortsetzen": keeps all progress. */
-export const pauseSetup = (database?: TaschenmesserDB) =>
+/** "Später fortsetzen": keeps all progress and remembers the step on screen (ids only). */
+export const pauseSetup = (database?: TaschenmesserDB, at?: { step: string; quick: boolean }) =>
   updateSetupState(
-    (s) => (s.status === 'completed' ? s : { ...s, status: 'inProgress' }),
+    (s) =>
+      s.status === 'completed'
+        ? s
+        : {
+            ...s,
+            status: 'inProgress',
+            ...(at ? { pausedAt: at.step, pausedQuick: at.quick } : {}),
+          },
     database,
   );
 
@@ -132,6 +143,21 @@ export function resumeStep<T extends StepLike>(
   state: SetupState,
 ): T | undefined {
   return steps.find((s) => stepProgress(state, s.id) === 'open');
+}
+
+/**
+ * Where "Fortsetzen" opens: the step that was on screen at the pause while it is still open (in the
+ * questions when it was paused there), else the first open step.
+ */
+export function resumeTarget<T extends StepLike>(
+  steps: readonly T[],
+  state: SetupState,
+): { step: T; quick: boolean } | undefined {
+  const paused = state.pausedAt ? steps.find((s) => s.id === state.pausedAt) : undefined;
+  if (paused && stepProgress(state, paused.id) === 'open')
+    return { step: paused, quick: state.pausedQuick === true };
+  const first = resumeStep(steps, state);
+  return first ? { step: first, quick: false } : undefined;
 }
 
 /**
