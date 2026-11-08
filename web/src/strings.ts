@@ -6114,6 +6114,9 @@ export const de = {
       ticktick: 'TickTick (CSV-Sicherung)',
       contacts: 'Kontakte (vCard: Google, Apple, Outlook)',
       bookmarks: 'Browser-Lesezeichen (HTML)',
+      strong: 'Strong (Training, CSV)',
+      hevy: 'Hevy (Training, CSV)',
+      cronometer: 'Cronometer (Essen, CSV)',
     },
     reasons: {
       trashed: (n: number) =>
@@ -6427,6 +6430,11 @@ export const de = {
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
       placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+    },
+    fitness: {
+      file: 'CSV aus einer Trainings- oder Ernährungs-App',
+      fileHint:
+        'Strong und Hevy (Training) oder Cronometer (Essen): exportiere dort die CSV-Datei und wähle sie hier. Sätze einer Übung werden zu einer Übung zusammengefasst, Doppeltes erkennt Nemo. Es wird nichts hochgeladen.',
     },
     feeds: {
       file: 'OPML-Datei (Feeds und Podcasts)',

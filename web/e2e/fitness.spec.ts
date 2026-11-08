@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
+import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
 
 /**
  * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
@@ -191,4 +191,39 @@ test('a template: saved from the form, filled into a new session with one tap', 
   await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
   await expect(dialog.getByLabel('Sätze')).toHaveValue('3');
+});
+
+test('import from another app: a Strong export is recognised, previewed and lands as a session', async ({
+  page,
+}) => {
+  const strong = [
+    'Date;Workout Name;Duration;Exercise Name;Set Order;Weight;Reps;Distance;Seconds;Notes;Workout Notes;RPE',
+    '2026-11-05 18:05:00;Oberkörper;55m;Bankdrücken (Langhantel);1;50;10;0;0;;;',
+    '2026-11-05 18:05:00;Oberkörper;55m;Bankdrücken (Langhantel);2;60;8;0;0;;;',
+  ].join('\n');
+  await ready(page, '/');
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('Aus anderer App');
+  await page.keyboard.press('Enter');
+  const sheet = page.getByRole('dialog', { name: 'Umzug von einer anderen App' });
+  const chooser = page.waitForEvent('filechooser');
+  await sheet.getByRole('button', { name: 'Weiß ich nicht' }).click();
+  await (
+    await chooser
+  ).setFiles([{ name: 'strong.csv', mimeType: 'text/csv', buffer: Buffer.from(strong) }]);
+  await expect(sheet.getByText('Strong (Training, CSV)')).toBeVisible();
+  await sheet.getByRole('button', { name: 'Vorschau öffnen' }).click();
+
+  const wizard = page.getByRole('dialog', { name: /Importieren/ });
+  await expect(wizard.getByText('1 Eintrag erkannt')).toBeVisible();
+  await wizard.getByRole('button', { name: '1 Eintrag importieren' }).click();
+  await expect(wizard.getByRole('status')).toHaveText('1 Eintrag wurde importiert.');
+  await wizard.getByRole('button', { name: 'Schließen' }).last().click();
+  await backSettled(page);
+
+  await ready(page, '/fitness');
+  await expect(page.getByText(/Bankdrücken \(Langhantel\) 2 × 8 · 60 kg/)).toBeVisible();
+  // The page's ⋯ menu offers the import too.
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await expect(page.getByRole('menuitem', { name: /Importieren/ })).toBeVisible();
 });
