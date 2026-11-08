@@ -1,6 +1,6 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02. Agent threads of one session share one row (topic = session); roster: [meta/AGENTS.md](meta/AGENTS.md).
+Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to `/workspace/scribble/` and the private repo SGNemo/nemo-scribble. Keep this file short; delete finished rows. Last full review: 2026-10-02. Agent threads of one session share one row (topic = session); roster: [meta/AGENTS.md](meta/AGENTS.md).
 
 ## Wartet auf Sven
 
@@ -36,6 +36,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
+| scribble moves to session folder + private repo (step 2: docs and rules) | `docs/scribble-move-rules` | root `CLAUDE.md` (hotspot), `docs/**` rules, `docs/decisions/meta.md` | PR open, merge after agent-rules PR (step 3) | – | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
