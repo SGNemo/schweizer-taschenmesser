@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
 
 /** Erstkontakt-Runde, person C (docs/qa/round-5/c/FINDINGS.md): quick capture on a phone. */
 test.use({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
 
-const openSheet = async (page: import('@playwright/test').Page) => {
+const openSheet = async (page: Page) => {
   await page.getByRole('button', { name: 'Schnell hinzufügen' }).tap();
   return page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
 };
