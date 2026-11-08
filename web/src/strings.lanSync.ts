@@ -102,6 +102,8 @@ export const tLanSync = defineBundle(
     syncing: 'Gleicht ab …',
     waitingForPc: 'Gleicht ab, sobald dein PC im selben WLAN erreichbar ist',
     isNemoRunning: 'Läuft Nemo auf dem PC?',
+    triedNotReached:
+      'Eben versucht – der PC hat nicht geantwortet. Läuft Nemo dort, und sind beide im selben Netz?',
     offlineLine: 'Dieses Handy ist gerade ohne Netz.',
     clockOff: 'Die Uhrzeit des Handys weicht ab.',
     clockLine: 'Stelle Datum und Uhrzeit auf automatisch, dann geht es weiter.',
@@ -223,6 +225,8 @@ export const tLanSync = defineBundle(
       syncing: 'Syncing …',
       waitingForPc: 'Syncs as soon as your PC is reachable on the same Wi-Fi',
       isNemoRunning: 'Is Nemo running on the PC?',
+      triedNotReached:
+        'Just tried – the PC did not answer. Is Nemo running there, and are both on the same network?',
       offlineLine: 'This phone has no connection right now.',
       clockOff: "The phone's clock is off.",
       clockLine: 'Set date and time to automatic, then syncing continues.',

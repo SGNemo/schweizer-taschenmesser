@@ -36,6 +36,8 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   const [code, setCode] = useState<string>();
   const [failure, setFailure] = useState<Failure>();
   const [askUnpair, setAskUnpair] = useState(false);
+  // "Jetzt abgleichen" was tapped: a round that does not reach the PC says so (not just the same line)
+  const [tried, setTried] = useState(false);
   // A cancelled attempt may still answer late: only the current one may change the screen.
   const attempt = useRef(0);
 
@@ -197,8 +199,19 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
         ]}
       />
       {failureLine}
+      {tried && sync.phase === 'error' && sync.error === 'network' ? (
+        <p role="status" className={styles.muted} data-testid="lan-tried">
+          {l.triedNotReached}
+        </p>
+      ) : null}
       <Actions>
-        <Button onClick={() => void syncNow()} disabled={sync.phase === 'syncing'}>
+        <Button
+          onClick={() => {
+            setTried(true);
+            void syncNow();
+          }}
+          disabled={sync.phase === 'syncing'}
+        >
           {l.syncNow}
         </Button>
         <Button onClick={() => setAskUnpair(true)}>{l.unpair}</Button>
