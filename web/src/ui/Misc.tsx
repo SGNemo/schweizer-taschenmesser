@@ -119,12 +119,14 @@ const TOAST_MS = 6000;
 export function Toaster() {
   const toasts = useUiStore((s) => s.toasts);
   const dismiss = useUiStore((s) => s.dismissToast);
-  // "Hinweise bleiben stehen" (focus aid): no clock at all, only "Schließen" or the action closes.
+  // "Hinweise bleiben stehen" (focus aid): no clock at all; "Schließen" is then always there.
   const stay = useUiStore((s) => s.toastStay);
   // While the pointer or the keyboard focus is in a toast, no toast hides itself (A04, round 5).
-  const [pointer, setPointer] = useState(false);
-  const [focus, setFocus] = useState(false);
-  const held = stay || (toasts.length > 0 && (pointer || focus));
+  // The hold belongs to one toast: a toast that is replaced while held cannot report leaving, and
+  // its id simply is no longer shown, so the next toast runs its clock again.
+  const [pointer, setPointer] = useState<number | null>(null);
+  const [focus, setFocus] = useState<number | null>(null);
+  const held = stay || toasts.some((x) => x.id === pointer || x.id === focus);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
   // One timer per toast: a new toast never restarts the countdown of an older one. Holding clears
@@ -159,8 +161,8 @@ export function Toaster() {
   }, []);
   // A closed toast cannot report leaving any more: closing by hand lets go of the hold.
   const close = (id: number) => {
-    setPointer(false);
-    setFocus(false);
+    setPointer(null);
+    setFocus(null);
     dismiss(id);
   };
 
@@ -170,11 +172,11 @@ export function Toaster() {
         <div
           key={x.id}
           className={styles.toast}
-          onPointerEnter={() => setPointer(true)}
-          onPointerLeave={() => setPointer(false)}
-          onFocus={() => setFocus(true)}
+          onPointerEnter={() => setPointer(x.id)}
+          onPointerLeave={() => setPointer(null)}
+          onFocus={() => setFocus(x.id)}
           onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(false);
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(null);
           }}
         >
           {x.icon ? <Icon name={x.icon} size={18} /> : null}
@@ -190,11 +192,13 @@ export function Toaster() {
             >
               {x.action.label}
             </button>
-          ) : (
+          ) : null}
+          {/* Without an action always; with one when toasts stay, so a staying toast can always be closed. */}
+          {!x.action || stay ? (
             <button type="button" className={styles.toastAction} onClick={() => close(x.id)}>
               {t.actions.close}
             </button>
-          )}
+          ) : null}
         </div>
       ))}
     </div>

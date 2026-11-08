@@ -98,10 +98,10 @@ export const hasMigrateChoice = (state: MigrateState): boolean => chosenOrigins(
  */
 export function migrateItems(
   state: MigrateState,
-  batches: readonly (Pick<
+  batches: readonly Pick<
     ImportBatch,
-    'moduleId' | 'createdAt' | 'committedAt' | 'status' | 'undoneAt'
-  > & { importerId?: string })[],
+    'moduleId' | 'importerId' | 'createdAt' | 'committedAt' | 'status' | 'undoneAt'
+  >[],
   defs: readonly MigrateItemDef[] = MIGRATE_ITEMS,
 ): MigrateItemStatus[] {
   const committed = batches.filter((b) => batchStatus(b as ImportBatch) === 'committed');

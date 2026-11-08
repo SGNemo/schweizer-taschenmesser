@@ -12,7 +12,7 @@ export interface FocusAids {
   motion: boolean;
   /** No morning ToDo digest and no extra staggered leads; reminders set on an entry still come. */
   ownReminders: boolean;
-  /** No "n in Folge" on recurring ToDos and no week review in "Jetzt dran". */
+  /** No "n in Folge" on recurring ToDos, no longest habit streak, no week review in "Jetzt dran". */
   noCounts: boolean;
   /** Toasts stay until "Schließen". */
   toastStay: boolean;
@@ -59,7 +59,7 @@ export function focusAidsPatch(
   }
   if (next.noCounts !== before.noCounts) {
     if (next.noCounts) Object.assign(focus, { streaks: false, weekReview: false });
-    else focus.streaks = true;
+    else Object.assign(focus, { streaks: true, weekReview: true });
   }
   return { ui, focus };
 }

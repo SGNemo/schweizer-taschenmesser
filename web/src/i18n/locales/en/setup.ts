@@ -47,11 +47,11 @@ export const setup: Strings['setup'] = {
   allSteps: 'See all steps',
   questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
   finishQuestions: 'Finish the questions',
-  overviewNow: 'now',
+  overviewNow: 'Now',
   overviewQuestions: (n: number) => `All ${n} questions and what comes after`,
   overviewSteps: (n: number) => `All ${n} steps at a glance`,
-  overviewAfter: (titles: string[]) =>
-    `After the last question the setup closes. ${titles.length === 1 ? 'One more step is' : `${titles.length} more steps are`} optional and ${titles.length === 1 ? 'appears' : 'appear'} afterwards as a checklist on the overview: ${titles.join(', ')}.`,
+  overviewAfter:
+    'After the last question the setup closes. The remaining steps are optional and appear afterwards as a checklist on the overview.',
   quick: {
     basics: {
       title: 'Language, name and text size',
@@ -66,7 +66,7 @@ export const setup: Strings['setup'] = {
     focus: {
       title: 'How calm should the app be?',
       description:
-        'Four switches for motion, reminders, counts and notices, plus the reading aid. The preselection “Calm” is recommended. You can change every switch later in Settings.',
+        'Four switches for motion, reminders, streaks and notices, plus the reading aid.',
     },
     ai: {
       title: 'Should an AI help?',
@@ -125,29 +125,28 @@ export const setup: Strings['setup'] = {
     },
     focus: {
       title: 'Focus aids',
-      description:
-        'Five switches decide how calm the app behaves. You can change every switch later in Settings.',
+      description: 'Five switches decide how calm the app behaves.',
       preselect:
-        'Preselected is “Calm”: the first four switches are on, the reading aid stays as it is now. Only “Next” saves the switches as they stand here.',
+        'Recommended and preselected: the first four switches are on, the reading aid stays as it is now. Nothing is saved until the button at the bottom right, exactly as the switches stand here.',
       laterFull: '“Later” changes nothing.',
       laterQuick: '“Rest later” changes nothing.',
       motion: 'Reduce motion',
       motionHint:
         'On: the app’s transitions and animations are off; content appears in place at once.',
-      ownReminders: 'No automatic extra reminders',
+      ownReminders: 'No morning overview and no early reminders',
       ownRemindersHint:
         'On: the app sends no morning overview of today’s to-dos and no extra early reminders before appointments. Reminders you set on an entry yourself still come.',
       noCounts: 'No streaks or reviews',
       noCountsHint:
-        'On: recurring to-dos show no “n in a row”, and “Up next” shows no “Look back on the week”.',
+        'On: recurring to-dos show no “n in a row”, habits no longest streak, and “Up next” shows no “Look back on the week”. Off: all of it is visible again.',
       toastStay: 'Notices stay',
       toastStayHint:
-        'On: short notices at the bottom (for example “To-do added.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you point at them or are inside, they wait.',
+        'On: short notices at the bottom (for example “Task changed.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you touch them or are inside with the keyboard, they wait.',
       readAid: 'Reading aid',
       readAidHint:
         'On: the beginnings of words in longer texts are bold, which guides the eye. Numbers and input fields stay without. Not preselected; try it if you like.',
       where:
-        'Later in Settings: motion, notices and reading aid under “Accessibility”, the reminders under “Calm reminders”, streaks and review under “Focus & attention”.',
+        'You can change every switch later in Settings: motion, notices and reading aid under “Accessibility” (this device only), the reminders under “Calm reminders”, streaks and review under “Focus & attention”. Reminders, streaks and review apply on all your devices when sync is on.',
     },
     tools: {
       title: 'Toolbox',

@@ -32,7 +32,7 @@ import styles from './SetupWizard.module.css';
 
 type View = 'start' | 'step' | 'summary' | 'confirm' | 'quick';
 
-/** The three first-run questions, in order; a step the app does not offer right now is left out. */
+/** The four first-run questions, in order; a step the app does not offer right now is left out. */
 const QUICK_IDS = ['core.basics', 'core.profiles', 'core.focus', 'core.ai'] as const;
 
 /** The short question title of a first-run step, else its normal title. */
@@ -93,9 +93,7 @@ function StepOverview({
           </li>
         ))}
       </ol>
-      {quick ? (
-        <p className={styles.hint}>{t.setup.overviewAfter(after.map((s) => s.title))}</p>
-      ) : null}
+      {quick ? <p className={styles.hint}>{t.setup.overviewAfter}</p> : null}
     </details>
   );
 }
@@ -205,8 +203,10 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   // Where to begin: the checklist target, else the resume offer when there is progress.
   const target = list && stepId ? list.findIndex((s) => s.id === stepId) : -1;
-  const hasProgress = !!state && state.doneSteps.length + state.skippedSteps.length > 0;
-  // A really empty installation gets the three questions; everyone else (or a checklist link) the full list.
+  // A pause on the very first question (nothing answered yet) counts as progress too (council F2).
+  const hasProgress =
+    !!state && (state.doneSteps.length + state.skippedSteps.length > 0 || !!state.pausedAt);
+  // A really empty installation gets the four questions; everyone else (or a checklist link) the full list.
   const quickSteps = (list ?? []).filter((s) => (QUICK_IDS as readonly string[]).includes(s.id));
   const firstRun =
     quickSteps.length > 0 &&
@@ -298,10 +298,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   async function leave(kind: 'later' | 'end') {
     cancelled.current = true;
     // The step on screen (also behind the "Unterbrechen?" question) is where "Fortsetzen" opens.
-    const quickNow = view === 'quick' || (view === 'confirm' && before === 'quick');
     const onScreen = view === 'step' || view === 'quick' || view === 'confirm' ? step : undefined;
     if (kind === 'later')
-      await pauseSetup(undefined, onScreen ? { step: onScreen.id, quick: quickNow } : undefined);
+      await pauseSetup(undefined, onScreen ? { step: onScreen.id, quick: inQuestions } : undefined);
     else await dismissSetup();
     onClose();
   }

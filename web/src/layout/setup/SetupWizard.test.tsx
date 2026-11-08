@@ -155,6 +155,21 @@ describe('setup wizard', () => {
     expect(screen.queryByText('Inhalt core.sync')).toBeNull();
   });
 
+  it('council F2: a pause on question 1 before any answer resumes at question 1', async () => {
+    steps = [makeStep('core.basics', 10), makeStep('core.sync', 20), makeStep('core.profiles', 30)];
+    const first = await open();
+    await screen.findByText('Inhalt core.basics');
+    await first.user.click(screen.getByRole('button', { name: s.restLater }));
+    await waitFor(() => expect(first.onClose).toHaveBeenCalled());
+    cleanup();
+    const again = await open();
+    await again.user.click(
+      await screen.findByRole('button', { name: s.resumeAt(s.quick.basics.title) }),
+    );
+    expect(await screen.findByText('Inhalt core.basics')).toBeInTheDocument();
+    expect(screen.getByText(s.questionOf(1, 2))).toBeInTheDocument();
+  });
+
   it('A02: the questions show the whole way up front, and the last button says what it does', async () => {
     steps = [makeStep('core.basics', 10), makeStep('core.sync', 20), makeStep('core.profiles', 30)];
     await open();
@@ -162,7 +177,7 @@ describe('setup wizard', () => {
     const overview = screen.getByTestId('setup-overview');
     expect(overview).toHaveAttribute('open');
     expect(overview).toHaveTextContent(s.overviewQuestions(2));
-    expect(overview).toHaveTextContent(s.overviewAfter(['Schritt core.sync']));
+    expect(overview).toHaveTextContent(s.overviewAfter);
     await userEvent.setup().click(screen.getByRole('button', { name: s.next }));
     expect(await screen.findByRole('button', { name: s.finishQuestions })).toBeInTheDocument();
     // Open on the first question only; later it is one folded line, so the question stays on top.

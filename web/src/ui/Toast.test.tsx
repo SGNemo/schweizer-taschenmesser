@@ -102,4 +102,33 @@ describe('toasts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Schließen' }));
     expect(screen.queryByText('ToDo hinzugefügt.')).toBeNull();
   });
+
+  it('council F1: a staying toast with an action can still be closed without undoing', () => {
+    useUiStore.setState({ toastStay: true });
+    const run = vi.fn();
+    render(<Toaster />);
+    act(() => {
+      useUiStore.getState().toast('ToDo hinzugefügt.', { label: 'Rückgängig', run });
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(run).not.toHaveBeenCalled();
+    expect(screen.queryByText('ToDo hinzugefügt.')).toBeNull();
+  });
+
+  it('council F2: a toast replaced while held does not hold the next one', () => {
+    render(<Toaster />);
+    act(() => {
+      useUiStore.getState().toast('eins');
+    });
+    act(() => {
+      fireEvent.pointerEnter(screen.getByText('eins').parentElement!);
+    });
+    act(() => {
+      useUiStore.getState().toast('zwei'); // replaces 'eins' (one toast at a time), no pointerleave
+    });
+    act(() => {
+      vi.advanceTimersByTime(6100);
+    });
+    expect(screen.queryByText('zwei')).toBeNull();
+  });
 });

@@ -628,11 +628,11 @@ export const de = {
     allSteps: 'Alle Schritte ansehen',
     questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
     finishQuestions: 'Fragen abschließen',
-    overviewNow: 'jetzt',
+    overviewNow: 'Jetzt',
     overviewQuestions: (n: number) => `Alle ${n} Fragen und was danach kommt`,
     overviewSteps: (n: number) => `Alle ${n} Schritte im Überblick`,
-    overviewAfter: (titles: string[]) =>
-      `Nach der letzten Frage schließt sich die Einrichtung. ${titles.length === 1 ? 'Ein weiterer Schritt ist' : `${titles.length} weitere Schritte sind`} freiwillig und ${titles.length === 1 ? 'steht' : 'stehen'} danach als Checkliste auf der Übersicht: ${titles.join(', ')}.`,
+    overviewAfter:
+      'Nach der letzten Frage schließt sich die Einrichtung. Die übrigen Schritte sind freiwillig und stehen danach als Checkliste auf der Übersicht.',
     quick: {
       basics: {
         title: 'Sprache, Name und Textgröße',
@@ -647,7 +647,7 @@ export const de = {
       focus: {
         title: 'Wie ruhig soll die App sein?',
         description:
-          'Vier Schalter für Bewegung, Erinnerungen, Zählungen und Hinweise, dazu die Lesehilfe. Die Vorauswahl „Ruhig“ ist empfohlen. Jeder Schalter lässt sich später in den Einstellungen ändern.',
+          'Vier Schalter für Bewegung, Erinnerungen, Serien und Hinweise, dazu die Lesehilfe.',
       },
       ai: {
         title: 'Soll eine KI helfen?',
@@ -707,29 +707,28 @@ export const de = {
       },
       focus: {
         title: 'Fokus-Hilfen',
-        description:
-          'Fünf Schalter bestimmen, wie ruhig sich die App verhält. Jeder Schalter lässt sich später in den Einstellungen ändern.',
+        description: 'Fünf Schalter bestimmen, wie ruhig sich die App verhält.',
         preselect:
-          'Vorausgewählt ist „Ruhig“: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Erst „Weiter“ speichert die Schalter so, wie sie hier stehen.',
+          'Empfohlen und vorausgewählt: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Gespeichert wird erst mit dem Knopf unten rechts, genau so, wie die Schalter hier stehen.',
         laterFull: '„Später“ ändert nichts.',
         laterQuick: '„Rest später“ ändert nichts.',
         motion: 'Bewegung reduzieren',
         motionHint:
           'An: Übergänge und Animationen der App sind aus, Inhalte erscheinen sofort an ihrer Stelle.',
-        ownReminders: 'Keine automatischen Zusatz-Erinnerungen',
+        ownReminders: 'Keine Morgen-Übersicht und keine Vorab-Erinnerungen',
         ownRemindersHint:
           'An: Die App schickt keine Morgen-Übersicht der heutigen ToDos und keine zusätzlichen Vorab-Erinnerungen vor Terminen. Erinnerungen, die du an einem Eintrag selbst einstellst, kommen weiterhin.',
         noCounts: 'Keine Serien und Rückblicke',
         noCountsHint:
-          'An: Wiederkehrende ToDos zeigen kein „n in Folge“, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“.',
+          'An: Wiederkehrende ToDos zeigen kein „n in Folge“, Gewohnheiten keine längste Serie, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“. Aus: All das ist wieder sichtbar.',
         toastStay: 'Hinweise bleiben stehen',
         toastStayHint:
-          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo hinzugefügt.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst. Aus: Sie verschwinden nach 6 Sekunden; solange du darauf zeigst oder darin bist, warten sie.',
+          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst oder mit der Tastatur darin bist, warten sie.',
         readAid: 'Lesehilfe',
         readAidHint:
           'An: Die Anfänge der Wörter in längeren Texten werden fett, das führt den Blick. Zahlen und Eingabefelder bleiben ohne. Nicht vorausgewählt, probiere sie aus, wenn du magst.',
         where:
-          'Später in den Einstellungen: Bewegung, Hinweise und Lesehilfe unter „Barrierefreiheit“, die Erinnerungen unter „Ruhige Erinnerungen“, Serien und Rückblick unter „Fokus & Aufmerksamkeit“.',
+          'Jeder Schalter lässt sich später in den Einstellungen ändern: Bewegung, Hinweise und Lesehilfe unter „Barrierefreiheit“ (nur dieses Gerät), die Erinnerungen unter „Ruhige Erinnerungen“, Serien und Rückblick unter „Fokus & Aufmerksamkeit“. Erinnerungen, Serien und Rückblick gelten mit Sync auf allen deinen Geräten.',
       },
       tools: {
         title: 'Werkzeugkasten',

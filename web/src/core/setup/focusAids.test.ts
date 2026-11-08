@@ -62,6 +62,6 @@ describe('setup step "Fokus-Hilfen"', () => {
       noCounts: false,
     });
     expect(patch.ui).toEqual({ motion: 'system' });
-    expect(patch.focus).toEqual({ todoDigest: true, streaks: true });
+    expect(patch.focus).toEqual({ todoDigest: true, streaks: true, weekReview: true });
   });
 });

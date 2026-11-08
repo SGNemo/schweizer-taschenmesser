@@ -141,6 +141,13 @@ describe('A01: resume exactly where the setup was paused', () => {
     expect(resumeTarget(steps, state)).toEqual({ step: steps[2], quick: true });
   });
 
+  it('answering a step or ending the setup forgets the pause', async () => {
+    await pauseSetup(undefined, { step: 'core.profiles', quick: true });
+    expect((await markStepDone('core.profiles')).pausedAt).toBeUndefined();
+    await pauseSetup(undefined, { step: 'core.sync', quick: false });
+    expect((await pauseSetup()).pausedAt).toBeUndefined();
+  });
+
   it('falls back to the first open step once the paused one is handled', () => {
     const state = {
       ...initialState('inProgress'),

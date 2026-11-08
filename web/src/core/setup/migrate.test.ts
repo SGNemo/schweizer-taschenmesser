@@ -19,6 +19,7 @@ import {
 
 const batch = (moduleId: string, at: number, extra = {}) => ({
   moduleId,
+  importerId: 'file',
   createdAt: at,
   committedAt: at,
   ...extra,
