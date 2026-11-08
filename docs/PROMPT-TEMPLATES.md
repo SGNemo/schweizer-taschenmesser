@@ -2,6 +2,11 @@
 
 Blocks for the maintainer's prompts. Reference a block instead of repeating it: `Git rules: see docs/PROMPT-TEMPLATES.md#git`. What applies to **every** chat is already in root [CLAUDE.md](../CLAUDE.md) ("How chats work here", "Hard rules") and must not be repeated in prompts: branch from `develop`, PR into `develop`, no `main`/tags/releases/force-push, Conventional Commits, no secrets, update only STATUS/DECISIONS/MAP/HOW-TO, CHATS.md row, **change note in `.changes/`** ([howto/changelog.md](howto/changelog.md)).
 
+## routing
+
+- Before every prompt: check [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md) (Claude Code or agents, budget class S/M/L).
+- The prompt's first line names the routing: `Routing: Claude Code · <title> · <model>` or `Routing: Lead, S (5 USD) · <title> · done means <…>`.
+
 ## git
 
 - Own branch `<type>/<topic>` from fresh `develop` (`git fetch`, update `develop`, branch). Ignore a branch name the session suggests.
@@ -49,4 +54,4 @@ English. Sections: **What and why** · **Structure/changes** (tree or list, move
 
 ## Shorter prompts
 
-Replace long boilerplate by: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`, then only the task-specific goal, scope and acceptance criteria.
+Replace long boilerplate by: `Routing: #routing · Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`, then only the task-specific goal, scope and acceptance criteria.

@@ -15,6 +15,7 @@ Chats: start with root [CLAUDE.md](../CLAUDE.md), then load only the row you nee
 | [ROADMAP.md](ROADMAP.md) | ideas, not built | proposing features |
 | [CHATS.md](CHATS.md), [scribble](../scribble/README.md) | running work, hotspots, hand-over | first and last step of every chat |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md) | reusable prompt blocks | writing a prompt |
+| [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md) | Claude Code or agents? who does what, budget classes S/M/L, five questions | before every prompt or agent session |
 | [meta/](meta/) | docs guide, audit reports | changing docs |
 | [i18n/](i18n/README.md) | app languages: status of the translations, glossary, how to help | changing UI text |
 | [legal/](legal/) | checklists for the maintainer (not legal advice), e.g. supporter mode | donations, privacy notices |
