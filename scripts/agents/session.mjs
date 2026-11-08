@@ -128,9 +128,19 @@ if (githubToken && !repoToken)
   console.warn(
     `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo} and ${DEFAULTS.scribbleRepo}; ${cfg.repo} is mounted without a token and without the vault`,
   );
-// The notes repo is private: without the token the mount would fail, so it is left out then.
-const withScribble = !flags["no-scribble"] && !!githubToken;
-if (!flags["no-scribble"] && !githubToken)
+// The notes repo is the second mount of a session for the Nemo repo only: a session for any other --repo
+// (including the notes repo itself) never gets it, so the token never reaches a foreign repo through it.
+// It is private: without the token the mount would fail, so it is left out then.
+const withScribble = !flags["no-scribble"] && !!githubToken && !foreignRepo;
+if (
+  !flags["no-scribble"] &&
+  foreignRepo &&
+  normUrl(cfg.repo) !== normUrl(DEFAULTS.scribbleRepo)
+)
+  console.warn(
+    `warning: --repo is not ${DEFAULTS.repo}: the private notes repo is not mounted`,
+  );
+else if (!flags["no-scribble"] && !githubToken)
   console.warn(
     "warning: no GITHUB_TOKEN – the private notes repo is not mounted (session folder /workspace/scribble only)",
   );
