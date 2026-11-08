@@ -36,3 +36,11 @@ CI jobs, caches, sharding; rolling Dev-Preview build. Index: [HOW-TO](../HOW-TO.
 - **Trigger manually:** Actions → Dev-Preview → Run workflow (`artifact-only`, `dev-preview-test` = throw-away pre-release `dev-preview-test`, or `dev-preview`; both signed targets only from `develop`). Manual runs work once the workflow file is on `main` (GitHub only offers dispatch for the default branch's workflows); otherwise push to `develop`. Delete a test release with `gh release delete dev-preview-test --cleanup-tag`.
 - **Cleanup:** the rolling release keeps only the latest state; workflow artifacts expire after 3 days.
 
+## Signing (release.yml; Dev-Preview follows)
+- **Keys live in GitHub Environments, not repo secrets:** `release-signing` (tags `v*.*.*` and `main` only; the six stable secrets), `site-hook` (same refs; `CF_PAGES_DEPLOY_HOOK`). Sven creates them in Settings; agents never do.
+- **Jobs:** `windows`/`android` build UNSIGNED (no environment, no secret; caches only for dry runs) → `sign` (`environment: release-signing`, only steps written in the workflow: no checkout, no repo script, no `npm ci`, no cache, no third-party action; signer installed with `--ignore-scripts` and pinned integrity `TAURI_CLI_*` in `release.yml` – bump with `@tauri-apps/cli`) → `verify` (no key: `verify-sig.mjs`, `apksigner verify`, package id, `audit-release.mjs`) → `release` (`contents: write`, no key) → `website` (`site-hook`).
+- **Dry runs never sign** (develop/main pushes, manual run without `version`): artifacts are `*-UNSIGNED`, no environment is requested. Publishing (tag or manual run with `version`) additionally requires the commit to be an ancestor of `main` (`prepare`).
+- **Rehearsal without a release:** Actions → Release → Run workflow on `main` with `sign_only` ticked and no `version`: runs `sign` with the real environment, uploads and publishes nothing.
+- **Release builds restore no cache** (a poisoned cache entry would end up inside a signed binary); slower Windows build.
+- Pinned by `web/scripts/lib/signingEnvironments.test.ts` (signing secrets only in environment jobs; no checkout/cache/script/third-party action there). Add a workflow to its `CONVERTED` list when its signing jobs are split.
+
