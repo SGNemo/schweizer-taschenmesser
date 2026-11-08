@@ -6,14 +6,22 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 1. `cd /workspace/schweizer-taschenmesser && git fetch origin`. Work from **`origin/develop`**; the mounted checkout is `develop` (session resource `checkout: develop`), never trust it to be fresh.
 2. Own worktree, never the shared checkout: `git worktree add --detach /workspace/wt-<agent> origin/develop` (reuse: `git -C /workspace/wt-<agent> merge --ff-only origin/develop`). Branch already checked out elsewhere: `git worktree add /workspace/wt-<agent>-<topic> -b tmp-<agent> origin/<branch>`, push with `git push origin HEAD:<branch>`. Notes, logs, reports: `/workspace/wt-<agent>-notes/`.
-3. Read only the docs of your area (`docs/README.md` is the index); never scan `docs/`.
+3. Read only the one doc file of your area (`docs/README.md` is the index; the lead names it in the brief); never scan or `cat` through `docs/`.
 4. Long commands (`npm ci`, `npm test` ≈ 13 min, one E2E spec ≈ 10 min, cargo builds): `nohup … > /tmp/<job>.log 2>&1 &` and poll. Chromium: `/opt/pw-browsers/chromium`; never `playwright install`.
 5. Sandbox limits: no GTK/WebKit (shell crate, `tauri build`), no Windows/Android targets, no msvc. Write "unverified here, CI covers it"; never guess.
 
 ## Verification: CI is the truth
 
-- Before a push: `npm run check` (format + lint + typecheck) in every touched package and the unit/E2E specs your diff touches (`npm run test:changed`, `npx playwright test e2e/<name>.spec.ts`). Do **not** run the full `npm test` or `npm run e2e` locally unless the lead asks; CI runs them on every PR.
+- Before a push: `npm run check` (format + lint + typecheck) in every touched package and only the unit/E2E specs your diff touches (`npm run test:changed`, `npx playwright test e2e/<name>.spec.ts`). **Never** the full `npm test` or `npm run e2e` locally (not even "to be safe"); CI runs them on every PR and is the only full run that counts.
 - After a push: read the real check runs (MCP `pull_request_read` get_check_runs; on 403 REST `GET /repos/SGNemo/schweizer-taschenmesser/actions/runs?branch=<branch>`) and report job name → state → run id. A red job is a finding, a flake needs a green re-run, not an opinion.
+- A check that a predecessor (author, reviewer, earlier thread) proved with a run id or head SHA on the same head is not repeated; cite it. Re-run only what changed since that head.
+
+## Token diet (binding; one lead session once cost 215 M tokens)
+
+- **Outputs:** never read a log, diff or file in full. First `tail -40 <log>`, `grep -n <pattern>`, `git diff --stat`, `wc -l`; then read only the lines you change or cite (`sed -n 'a,bp'`, `git diff -- <file>`). Long commands write to a log file (Session start 4), never into your context.
+- **Docs:** only the doc file of your own area (Session start 3); CLAUDE.md and this file once per thread, not again on follow-ups.
+- **Reports:** every message in a thread ≤ 15 lines (the report block below ≤ 10); everything longer (tables, command output, diffs) goes into the report file in your notes dir and is referenced by path.
+- **Follow-ups:** a follow-up in an open thread continues from your notes file; do not redo the session start, re-read docs or re-run checks that still hold.
 
 ## Git and GitHub
 

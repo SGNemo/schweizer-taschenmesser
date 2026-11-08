@@ -86,15 +86,31 @@ node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
 node scripts/agents/session.mjs --budget 15 --title "Paket 2" --file auftrag.md
 ```
 
-Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget in USD** (Pflicht – nachträglich nicht setzbar; intern Cent, `15` → `"1500"`), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
+Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget in USD** (Standard 10 $, `--budget` ändert es, über 30 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `15` → `"1500"`), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
 
 - `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links). Laufen dann noch Kind-Threads, wartet das Skript weiter (Zeile „wartet auf 2 Kind-Threads (docs, deps)“, alle 30 s neu geprüft) und endet erst, wenn der Lead nach dem letzten Kind-Bericht erneut `end_turn` meldet – oder wenn alle Kinder fertig sind und die Session zwei Prüfungen lang still bleibt. `--no-wait`: Ende beim ersten `end_turn` (altes Verhalten).
 - `requires_action`: ein Tool wartet auf Freigabe (sollte mit `always_allow` nicht vorkommen) → `node scripts/agents/session.mjs --session sess_… --auto-approve` (ohne Nachricht: gibt die wartenden Aufrufe frei und streamt weiter) oder in der Console freigeben.
-- `budget_reached`: Session pausiert mit Stand; siehe 5.
+- `budget_reached`: Session pausiert mit Stand; siehe 5 und „Was kostet was“.
+
+Ab 70 % des Budgets druckt das Skript eine Warnung; am Ende jedes Laufs steht eine `usage`-Zeile (Gesamt laut Session, Aufschlüsselung Lead / Kind-Threads / Advisor). `threads sess_…` zeigt Tokens und Kosten je Thread. `budget sess_… <USD>` zeigt erst die bisherige Nutzung und fragt nach (ohne Terminal: `--yes`).
 
 Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity, auditor) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity, lead **und** auditor, neu starten. Betrifft es eine Auditor-Session, zusätzlich zum creativity-Wechsel oben in `nemo-auditor.json` ebenso `claude-opus-5-5` eintragen und `nemo-auditor.md` neu anwenden (der Lead braucht dafür kein neues `apply`).
 
 Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `claude-lock.json`), `--env/--vault` überschreiben die IDs, `--no-wait` siehe oben, `--checkout` den Branch, `--verbose` zeigt Tool-Ergebnisse, `--dry-run` zeigt nur den Request (Token maskiert). Konsole: zum Nachsehen `platform.claude.com` → Sessions.
+
+### Was kostet was
+
+Richtwerte (Listenpreis, Lead auf Sonnet mit Opus-Advisor):
+
+| Auftrag                                   | Budget  |
+| ----------------------------------------- | ------- |
+| Doku-PR                                   | 1–3 $   |
+| Fix-PR mit Review                         | 5–10 $  |
+| Runde mit mehreren PRs und Konsolidierung | 20–30 $ |
+
+Regel: **nicht erhöhen, neu starten.** Eine Session = ein Auftrag; reicht das Budget nicht, steht im letzten Bericht des Leads, wo er aufgehört hat – den Rest als neue Session mit eigenem Budget. Eine Session als Chat weiterzuführen lässt den Kontext jedes Threads wachsen (der Grund für 215 Mio. Tokens / 82 $ in einer Session am 2026-11-08). Erhöhen nur, um einen fast fertigen Schritt landen zu lassen.
+
+Claude-Code-Chats (claude.ai/code, Desktop-App) laufen über das Abo statt über API-Listenpreise und bleiben für Bauarbeit die günstigere Wahl; das Agenten-Team lohnt sich für parallele, gut geschnittene Aufträge.
 
 ### Auditor starten
 
