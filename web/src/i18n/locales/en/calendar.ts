@@ -203,6 +203,7 @@ export const calendar: Strings['calendar'] = {
     expiry: 'Expiry',
     external: 'External',
     plan: 'Plan',
+    training: 'Training',
   } as Record<string, string>,
   planLink: 'Plan',
   external: {

@@ -113,4 +113,10 @@ export interface ParseOptions {
   now: Date;
   /** Type used for plain text without any signal. Defaults to `todo`. */
   defaultType?: CaptureType;
+  /**
+   * Fitness captures the caller can save (the module is on; `meal` only while „Kalorien erfassen“ is on).
+   * Without it the fitness parser never runs, so other callers (planner field, ToDo quick add) keep the
+   * general parse.
+   */
+  fitness?: { meal?: boolean; workout?: boolean };
 }

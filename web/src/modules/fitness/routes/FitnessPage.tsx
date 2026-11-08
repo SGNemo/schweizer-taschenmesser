@@ -90,11 +90,12 @@ export default function FitnessPage() {
   const todayKcal = daySum(meals ?? [], day);
   const last = latestSession(sessions ?? []);
 
+  // „Wie letztes Mal“ only while today has no session yet: a second tap would only log a copy.
+  const canRepeat = !!last && last.date !== day;
   async function repeatLast() {
     if (!last) return;
-    await undoableWithToast(t.fitness.repeated, t.fitness.repeated, () =>
-      sessionRepo.create(repeatSession(last, day)),
-    );
+    const done = t.fitness.repeated(sessionTitle(last));
+    await undoableWithToast(done, done, () => sessionRepo.create(repeatSession(last, day)));
   }
 
   const views = prefs.nutrition ? (['training', 'food'] as const) : (['training'] as const);
@@ -149,7 +150,7 @@ export default function FitnessPage() {
 
       {view === 'training' ? (
         <>
-          {last ? (
+          {last && canRepeat ? (
             <div className={styles.toolbar}>
               <Button variant="secondary" onClick={() => void repeatLast()}>
                 <Icon name="repeat" size={18} />

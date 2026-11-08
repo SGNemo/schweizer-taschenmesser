@@ -84,7 +84,10 @@ export function FortschrittBody({
                 <span className={styles.rowAmount}>{e.detail}</span>
               )}
             </div>
-            <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
+            {/* No target (max 0): the row says the number in words, an empty bar would read as „0 % done“. */}
+            {e.max > 0 ? (
+              <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
+            ) : null}
           </li>
         ))}
       </ul>

@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { notDeleted } from '@/core/db/repo';
 import type { Stored } from '@/core/db/types';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { useSettings } from '@/core/settings/settings';
@@ -10,20 +11,24 @@ import { DEFAULTS, settingsSchema, type FitnessSettings } from './settings';
 /** Sessions from `from` on (newest first); `undefined` while loading. */
 export function useSessions(from?: string): Stored<Session>[] | undefined {
   return useLiveQuery(async () => {
-    const all = await sessionRepo.active().toArray();
-    return all
-      .filter((s) => !from || s.date >= from)
-      .sort((a, b) => `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`));
+    const all = from
+      ? (await sessionRepo.table.where('date').aboveOrEqual(from).toArray()).filter(notDeleted)
+      : await sessionRepo.active().toArray();
+    return all.sort((a, b) =>
+      `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`),
+    );
   }, [from]);
 }
 
 /** Meals from `from` on (newest first); `undefined` while loading. */
 export function useMeals(from?: string): Stored<Meal>[] | undefined {
   return useLiveQuery(async () => {
-    const all = await mealRepo.active().toArray();
-    return all
-      .filter((m) => !from || m.date >= from)
-      .sort((a, b) => `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`));
+    const all = from
+      ? (await mealRepo.table.where('date').aboveOrEqual(from).toArray()).filter(notDeleted)
+      : await mealRepo.active().toArray();
+    return all.sort((a, b) =>
+      `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`),
+    );
   }, [from]);
 }
 

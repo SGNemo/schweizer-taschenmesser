@@ -9,9 +9,9 @@ import { sessionRepo } from './repo';
  * purpose: they would only add noise to the days.
  */
 const source: CalendarSource = async (range) => {
-  const sessions = (await sessionRepo.table.filter(notDeleted).toArray()).filter(
-    (s) => s.date >= range.from && s.date <= range.to,
-  );
+  const sessions = (
+    await sessionRepo.table.where('date').between(range.from, range.to, true, true).toArray()
+  ).filter(notDeleted);
   return sessions.map<CalendarItem>((s) => ({
     id: s.id,
     source: 'fitness',

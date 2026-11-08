@@ -1,5 +1,5 @@
 import { DEFAULT_CURRENCY } from '@/core/money';
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, nowTime } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
 import { CaptureError, type BuildContext, type CaptureTarget } from './types';
@@ -167,7 +167,8 @@ const meal: CaptureTarget = {
       text: f.title.trim(),
       kcal: f.kcal,
       date: date(f.date ?? ctx.today),
-      ...(f.time ? { time: f.time } : {}),
+      // Logged now unless a past day was typed („gestern kcal 400 Pizza“).
+      ...(f.date ? {} : { time: nowTime() }),
     };
   },
 };
@@ -180,7 +181,7 @@ const workout: CaptureTarget = {
     if (!f.exercises?.length) throw new CaptureError('invalid');
     return {
       date: date(f.date ?? ctx.today),
-      ...(f.time ? { time: f.time } : {}),
+      ...(f.date ? {} : { time: nowTime() }),
       exercises: f.exercises.map((e) => ({ ...e })),
     };
   },

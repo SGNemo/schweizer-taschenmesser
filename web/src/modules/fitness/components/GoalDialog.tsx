@@ -113,7 +113,7 @@ function Fields({ current, onClose }: { current: number; onClose: () => void }) 
             ))}
           </SelectField>
           <p className={styles.result} aria-live="polite" data-testid="fitness-estimate">
-            {estimate ? g.result(kcalText(estimate)) : g.noResult}
+            {estimate ? g.result(kcalText(estimate)) : weight || height || age ? g.noResult : null}
           </p>
           {estimate ? (
             <Button variant="secondary" size="sm" onClick={() => setGoal(String(estimate))}>

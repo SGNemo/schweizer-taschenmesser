@@ -46,6 +46,8 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 }) => {
   await page.goto('/fitness?new=session');
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  // Yesterday, so „Wie letztes Mal“ is offered for today below.
+  await dialog.getByLabel('Datum').fill('2026-11-07');
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Bankdrücken');
   await dialog.getByLabel('Sätze').fill('3');
   await dialog.getByLabel('Wdh.').fill('8');
@@ -63,14 +65,16 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
   await expect(widget).toContainText('1 Einheit · 45 Min');
   await expect(widget).toContainText('0 kcal');
 
-  await ready(page, '/calendar?view=day&date=2026-11-08');
+  await ready(page, '/calendar?view=day&date=2026-11-07');
   await expect(calendarEntry(page, /Training: Bankdrücken/).first()).toBeVisible();
 
   // "Wie letztes Mal" repeats it for today with one tap (toast with undo).
   await page.goto('/fitness');
   await page.getByRole('button', { name: 'Wie letztes Mal: Bankdrücken' }).click();
-  await expect(page.getByText('Einheit für heute eingetragen.')).toBeVisible();
+  await expect(page.getByText('Für heute eingetragen: Bankdrücken')).toBeVisible();
   await expect(page.getByTestId('fitness-week')).toContainText('2');
+  // Today has its session now: no second copy by a second tap.
+  await expect(page.getByRole('button', { name: /Wie letztes Mal/ })).toHaveCount(0);
 });
 
 test('kcal by quick capture adds up to the day sum, past the goal only in words', async ({
@@ -124,7 +128,13 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
 
   const settings = (await rows(page, '_settings')).find((r) => r.id === 'module.fitness');
   expect(settings).toMatchObject({ kcalGoal: 2750 });
-  const stored = JSON.stringify(await rows(page, '_settings'));
-  for (const value of ['"weight', '"height', '"age', '"sex', ':180', ':30,'])
+  // Neither the settings, their change history nor any other storage holds the formula's inputs.
+  const stored = [
+    JSON.stringify(await rows(page, '_settings')),
+    JSON.stringify(await rows(page, 'fitness_meal')),
+    JSON.stringify(await rows(page, 'fitness_session')),
+    await page.evaluate(() => JSON.stringify({ ...localStorage })),
+  ].join('\n');
+  for (const value of ['weightKg', 'heightCm', '"age"', '"sex"', '"180"', ':180', '"80"'])
     expect(stored).not.toContain(value);
 });

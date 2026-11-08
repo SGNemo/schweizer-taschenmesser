@@ -175,8 +175,17 @@ function fieldFor(ref: ActionRef, role: AiRole, startDateHint = false): string |
 
 const QUANTITY_RE = /(?<![\d.,])(\d{1,3})\s?(?:x|stk\.?|stuck|stück|stueck|mal)(?![\p{L}])/iu;
 const LEADING_QUANTITY_RE = /^\s*(\d{1,3})\s?x\s+/iu;
-/** A plain whole number („Döner 650“): read only for an action that maps `quantity` to a number field explicitly. */
-const BARE_QUANTITY_RE = /(?<![\d.,:])(\d{1,5})(?![\d.,:])/u;
+/**
+ * A plain whole number („Döner 650“): read only for an action that maps `quantity` to a number field explicitly,
+ * and only when it is the one number left – never a clock time („12 Uhr“, „12:30“) or a distance in time
+ * („vor 2 Tagen“); two candidates („2 Brötchen 300“) are no guess, the preview then asks.
+ */
+const BARE_QUANTITY_RE =
+  /(?<![\d.,:])(\d{1,5})(?![\d.,:])(?!\s*(?:uhr|tag|tage|tagen|woche|wochen|monat|monate|monaten|jahr|jahre|jahren|min|minuten|std|stunde|stunden|h)(?![\p{L}]))/giu;
+const singleBare = (text: string): RegExpExecArray | null => {
+  const all = [...text.matchAll(BARE_QUANTITY_RE)];
+  return all.length === 1 ? (all[0] as RegExpExecArray) : null;
+};
 
 /** Copies extracted facts into the fields of the action (by role). */
 function fillData(
@@ -477,7 +486,7 @@ async function segmentToOp(
     const q =
       QUANTITY_RE.exec(text) ??
       LEADING_QUANTITY_RE.exec(text) ??
-      (bareQuantity ? BARE_QUANTITY_RE.exec(text) : null);
+      (bareQuantity ? singleBare(text) : null);
     if (q) {
       quantity = q[1];
       text = text.replace(q[0], ' ');

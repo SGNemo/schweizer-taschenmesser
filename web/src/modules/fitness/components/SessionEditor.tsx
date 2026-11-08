@@ -131,9 +131,10 @@ function Fields({
           ...(num(r.minutes) ? { durationMin: Math.round(num(r.minutes)!) } : {}),
         })),
     };
+    if (data.exercises.length === 0 && !data.durationMin && !data.title)
+      return setError(t.fitness.form.emptySession);
     const parsed = sessionSchema.safeParse(data);
-    if (!parsed.success || (data.exercises.length === 0 && !data.durationMin && !data.title))
-      return setError(t.fitness.form.invalid);
+    if (!parsed.success) return setError(t.fitness.form.invalid);
     if (existing) {
       const full = {
         time: undefined,
@@ -183,12 +184,14 @@ function Fields({
               onBlur={() => prefill(r)}
               {...(i === 0 ? { 'data-autofocus': true } : {})}
             />
-            <IconButton
-              label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
-              onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-            >
-              <Icon name="trash" />
-            </IconButton>
+            {rows.length > 1 ? (
+              <IconButton
+                label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
+                onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+              >
+                <Icon name="trash" />
+              </IconButton>
+            ) : null}
             <div className={styles.numbers}>
               <TextField
                 label={t.fitness.form.sets}

@@ -23,7 +23,7 @@ export const fitness: Strings['fitness'] = {
   editSession: 'Edit session',
   editMeal: 'Edit meal',
   repeat: (title) => `Same as last time: ${title}`,
-  repeated: 'Session logged for today.',
+  repeated: (title) => `Logged for today: ${title}`,
   untitled: 'Session',
   figure: {
     week: 'This week',
@@ -72,6 +72,7 @@ export const fitness: Strings['fitness'] = {
     fat: 'Fat in g',
     known: 'Logged before',
     invalid: 'Please check the entries.',
+    emptySession: 'Add an exercise or a duration.',
   },
   builtIn: {
     benchPress: 'Bench press',
@@ -97,7 +98,7 @@ export const fitness: Strings['fitness'] = {
     weight: 'Weight in kg',
     height: 'Height in cm',
     age: 'Age',
-    sex: 'Formula',
+    sex: 'Formula variant (sex)',
     sexes: { male: 'male', female: 'female', none: 'not stated' },
     activity: 'Everyday life',
     activities: {
@@ -108,7 +109,7 @@ export const fitness: Strings['fitness'] = {
       veryActive: 'physical work and sport',
     },
     result: (kcal) => `About ${kcal} kcal per day`,
-    noResult: 'For the estimate: values for adults (18–99 years).',
+    noResult: 'Enter weight, height and age (adults, 18–99 years).',
     hint: 'A rough estimate, not medical advice. Weight, height and age are not saved.',
     take: 'Use this',
     saved: 'Daily goal saved.',

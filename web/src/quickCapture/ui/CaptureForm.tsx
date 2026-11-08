@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
 import { useFocusSettings } from '@/core/settings/focus';
+import { useSettings } from '@/core/settings/settings';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -20,6 +21,9 @@ import { previewChips } from './chips';
 import { clearReopenDraft, peekReopenDraft } from './reopen';
 import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
+import { z } from 'zod';
+
+const LOOSE = z.looseObject({ nutrition: z.boolean().optional() });
 
 export interface CaptureFormProps {
   initialText?: string;
@@ -77,6 +81,12 @@ export function CaptureForm({
 }: CaptureFormProps) {
   const states = useModuleStates();
   const [settings] = useCaptureSettings();
+  // „Kalorien erfassen“ off: no meal target. Read as plain settings (no module import).
+  const [fitnessPrefs] = useSettings('module.fitness', LOOSE, {});
+  const available = availableTypes(states).filter(
+    (type) => type !== 'meal' || fitnessPrefs?.nutrition !== false,
+  );
+  const fitness = { meal: available.includes('meal'), workout: available.includes('workout') };
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   const [text, setText] = useState(() => initialText || peekReopenDraft() || '');
@@ -94,10 +104,11 @@ export function CaptureForm({
   // One entry: the text as typed (a single line is read exactly as before the split existed).
   const single = parts.length === 1 && text.includes('\n') ? parts[0]! : text;
   const result = useMemo(
-    () => parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType }),
-    [single, settings?.defaultType],
+    () =>
+      parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType, fitness }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitness` is rebuilt per render; its two flags are the deps
+    [single, settings?.defaultType, fitness.meal, fitness.workout],
   );
-  const available = availableTypes(states);
   const resolveOpts = {
     available,
     noQuestion: focus.captureNoQuestion,
@@ -117,6 +128,7 @@ export function CaptureForm({
             const r = parseCapture(part, {
               now: new Date(now()),
               defaultType: settings?.defaultType,
+              fitness,
             });
             const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
             const rowChips = previewChips(res.fields, res.type, r.notes, today()).filter(
@@ -127,7 +139,16 @@ export function CaptureForm({
         : [],
     // resolveOpts is rebuilt every render from the values listed here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [multi, parts, rowOverride, states, focus.captureNoQuestion, settings?.defaultType],
+    [
+      multi,
+      parts,
+      rowOverride,
+      states,
+      focus.captureNoQuestion,
+      settings?.defaultType,
+      fitness.meal,
+      fitness.workout,
+    ],
   );
   const rowsNeedConfirm = rows.some((r) => r.type && targetFor(r.type).requiresConfirm);
   // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the

@@ -1789,6 +1789,7 @@ export const de = {
       expiry: 'Ablauf',
       external: 'Extern',
       plan: 'Plan',
+      training: 'Training',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -8198,7 +8199,7 @@ export const de = {
     editSession: 'Einheit bearbeiten',
     editMeal: 'Mahlzeit bearbeiten',
     repeat: (title: string) => `Wie letztes Mal: ${title}`,
-    repeated: 'Einheit für heute eingetragen.',
+    repeated: (title: string) => `Für heute eingetragen: ${title}`,
     untitled: 'Einheit',
     figure: {
       week: 'Diese Woche',
@@ -8247,6 +8248,7 @@ export const de = {
       fat: 'Fett in g',
       known: 'Schon einmal eingetragen',
       invalid: 'Bitte prüfe die Angaben.',
+      emptySession: 'Trag eine Übung oder eine Dauer ein.',
     },
     builtIn: {
       benchPress: 'Bankdrücken',
@@ -8272,7 +8274,7 @@ export const de = {
       weight: 'Gewicht in kg',
       height: 'Größe in cm',
       age: 'Alter',
-      sex: 'Formel',
+      sex: 'Formel-Variante (Geschlecht)',
       sexes: { male: 'männlich', female: 'weiblich', none: 'keine Angabe' },
       activity: 'Alltag',
       activities: {
@@ -8283,7 +8285,7 @@ export const de = {
         veryActive: 'körperliche Arbeit und Sport',
       },
       result: (kcal: string) => `Etwa ${kcal} kcal pro Tag`,
-      noResult: 'Für die Schätzung: Werte für Erwachsene (18–99 Jahre).',
+      noResult: 'Gewicht, Größe und Alter eintragen (Erwachsene, 18–99 Jahre).',
       hint: 'Grobe Schätzung, keine medizinische Beratung. Gewicht, Größe und Alter werden nicht gespeichert.',
       take: 'Übernehmen',
       saved: 'Tagesziel gespeichert.',
