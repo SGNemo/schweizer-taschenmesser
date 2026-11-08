@@ -245,7 +245,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-dev-thin-llm
+          shared-key: windows-dev-thin-llm-vk1.4.363.1
           cache-targets: false
           cache-directories: C:/t
       - run: npm ci
@@ -255,7 +255,7 @@ jobs:
       - name: Vulkan SDK (for the local model's GPU backend)
         shell: pwsh
         run: |
-          choco install vulkan-sdk -y --no-progress
+          choco install vulkan-sdk --version 1.4.363.1 -y --no-progress
           $sdk = (Get-ChildItem 'C:\VulkanSDK' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
           if (-not $sdk) { throw 'Vulkan SDK not found after install' }
           "VULKAN_SDK=$sdk" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
