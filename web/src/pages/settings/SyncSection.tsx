@@ -32,6 +32,10 @@ const formatTime = (at: number | undefined): string => (at ? formatDateTime(at) 
 const LanHubSection = lazy(() =>
   import('./LanHubSection').then((m) => ({ default: m.LanHubSection })),
 );
+/** The phone's side (Android app): pairing with the hub PC by its QR. Loaded on demand as well. */
+const LanClientSection = lazy(() =>
+  import('./LanClientSection').then((m) => ({ default: m.LanClientSection })),
+);
 
 /** A first connect proposes end-to-end encryption; the switch stays an explicit opt-out. */
 export const ENCRYPT_BY_DEFAULT = true;
@@ -52,8 +56,11 @@ export function SyncSection() {
 
   const l = tLanSync.use();
   // Desktop app: this PC can be the home-network hub; the own server moves into a folded group.
-  const lan = getPlatform().lanHub.supported;
-  const connected = status.phase !== 'off' && status.via !== 'lanHub';
+  const lanHub = getPlatform().lanHub.supported;
+  const lanPhone = getPlatform().lanClient?.supported ?? false;
+  const lan = lanHub || lanPhone;
+  const viaLan = status.via === 'lanHub' || status.via === 'lanClient';
+  const connected = status.phase !== 'off' && !viaLan;
 
   // The size on the server is read once per successful sync, not on every render.
   useEffect(() => {
@@ -268,18 +275,16 @@ export function SyncSection() {
     <Card>
       {lan ? (
         <div className={styles.form}>
-          <Suspense fallback={null}>
-            <LanHubSection />
-          </Suspense>
+          <Suspense fallback={null}>{lanHub ? <LanHubSection /> : <LanClientSection />}</Suspense>
           <FoldedGroup
             id="server"
             section="sync"
             title={l.ownServer}
             current={[connected ? (status.server ?? '') : l.ownServerOff]}
           >
-            {status.via === 'lanHub' ? (
+            {viaLan ? (
               <p className={styles.muted} data-testid="sync-server-blocked">
-                {l.serverBlocked}
+                {status.via === 'lanClient' ? l.serverBlockedPhone : l.serverBlocked}
               </p>
             ) : (
               serverBody

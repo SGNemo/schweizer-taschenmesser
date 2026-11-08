@@ -196,6 +196,26 @@ export interface LanHubService {
 }
 
 /**
+ * The device side of home-network sync (Android): pairing with a hub PC by its QR and the sync
+ * engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
+ * the OS keystore on the Rust side; only the data key comes back, once, after the pairing.
+ * Errors are short codes: `bad-qr`, `network`, `pairing-not-possible`, `unknown-device`,
+ * `cancelled`, `not-paired`, `keystore-unavailable`, `protocol`.
+ */
+export interface LanClientService {
+  supported: boolean;
+  /** Opens the camera and returns the text of one QR code (rejects with `cancelled`). */
+  scan(): Promise<string>;
+  /** Pairs with the hub of `qr`; `onCode` gets the 6-digit code to show while the PC asks. */
+  pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanHubDataKey>;
+  /** Stops waiting for the confirmation on the PC. */
+  cancelPair(): Promise<void>;
+  request(body: string): Promise<string>;
+  /** Tells the hub when it is reachable, then forgets hub and key on this device. */
+  unpair(): Promise<void>;
+}
+
+/**
  * Desktop only: the channel to the browser extension's native messaging host. Nothing listens until
  * `start` is called; every request is answered with the JSON text the handler returns.
  */
@@ -344,6 +364,8 @@ export interface PlatformService {
   vaultBridge: VaultBridgeService;
   /** Home-network sync hub (desktop only). */
   lanHub: LanHubService;
+  /** Home-network sync, device side (Android). */
+  lanClient: LanClientService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
