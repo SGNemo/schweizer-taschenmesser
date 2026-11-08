@@ -35,14 +35,14 @@ type: added
 area: finance
 breaking: false
 de: Neue Übersichtskarte „Diesen Monat“: frei bis Monatsende, was noch kommt (Abos, Rechnungen) und was bisher ausgegeben ist.
-en: New overview card “This month”: free until month end, what is still coming (subscriptions, invoices) and what was spent so far.
+en: New overview card “This month”: free until month end, what is still to pay (subscriptions, invoices) and what was spent so far.
 ---
 
 ---
 type: fixed
 area: home
 breaking: false
-de: Übersicht: Ist ToDos aus (Profil „Finanz-Fokus“), zeigt die ruhige Ansicht die Karte „Diesen Monat“ statt einer leeren Seite.
+de: Übersicht: Sind die ToDos aus (Profil „Finanz-Fokus“), zeigt die ruhige Ansicht die Karte „Diesen Monat“ statt einer leeren Seite.
 en: Overview: with ToDos switched off (“Finance focus” profile) the calm view shows the “This month” card instead of an empty page.
 ---
 
@@ -51,5 +51,5 @@ type: added
 area: finance
 breaking: false
 de: Finanzen: Im Konto lässt sich „Kontostand heute laut Bank“ eintragen; Nemo passt den Anfangssaldo nach einem Import älterer Buchungen an.
-en: Finance: an account takes “today's balance according to the bank”; Nemo adjusts the opening balance after older bookings were imported.
+en: Finance: you can enter an account's balance as your bank shows it today; Nemo adjusts the opening balance to match.
 ---

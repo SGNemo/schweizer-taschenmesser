@@ -11,7 +11,7 @@ import type {
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
 import { listSubscriptionNames } from '@/modules/subscriptions/public';
-import { accountRepo, categoryRepo, ensureAnAccount, transactionRepo } from './repo';
+import { accountRepo, categoryRepo, ensureDefaults, transactionRepo } from './repo';
 import { keywordCategory, suggestCategories } from './categoryHints';
 import { MAPPING_EXTRA, readBank } from './bankRead';
 import { ColumnMapping } from './components/ColumnMapping';
@@ -91,11 +91,11 @@ async function parseBank(
     loadRules(),
     listSubscriptionNames(),
   ]);
-  // A first import into an account that starts at 0: today's balance will not match the bank yet (B06).
+  // A first import into an account that starts at 0: today's balance will not match the bank yet.
   const target = await accountRepo.get(accountId);
   if (target?.openingBalanceMinor === 0 && !past.some((x) => x.accountId === accountId))
     notes.push(s.bankBalanceHint);
-  // Then, for payees the app has never seen, a default category from well-known names (B03).
+  // Then, for payees the app has never seen, a default category from well-known names.
   const hints = suggestCategories(
     past,
     rows.map((tx) => ({ payee: tx.payee, kind: kindOf(tx) })),
@@ -263,7 +263,8 @@ const runtime: ImporterRuntime = {
   },
   async optionChoices(key) {
     if (key !== 'accountId') return [];
-    await ensureAnAccount();
+    // Opened from the setup assistant before the finance page ever ran: create the defaults.
+    await ensureDefaults();
     const accounts = (await accountRepo.active().toArray()).sort((a, b) => a.order - b.order);
     return accounts.map((a) => ({ value: a.id, label: a.name }));
   },

@@ -414,7 +414,7 @@ function AccountForm({
     existing ? formatMoneyInput(existing.openingBalanceMinor) : '0,00',
   );
   const [currency, setCurrency] = useState(currencyOf(existing));
-  // Only for an account with bookings: "what the bank app says today" sets the opening balance (B06).
+  // Only for an account with bookings: "what the bank app says today" sets the opening balance.
   const finance = useFinanceData();
   const accountTxs = existing
     ? (finance?.txs ?? []).filter((x) => x.accountId === existing.id)
@@ -491,6 +491,8 @@ function AccountForm({
           setOpening(e.target.value);
           setError('');
         }}
+        // One number at a time: while "Kontostand heute" is filled, it decides the opening balance.
+        disabled={balanceToday.trim() !== ''}
         error={error}
       />
       {accountTxs.length > 0 ? (

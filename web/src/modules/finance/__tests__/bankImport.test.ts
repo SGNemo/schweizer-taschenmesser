@@ -273,6 +273,8 @@ describe('rules from suggestions', () => {
 describe('a bank import on an installation without an account', () => {
   it('offers a ready account instead of a dead end', async () => {
     await db.table('finance_account').clear();
+    // A fresh installation: the defaults were never created.
+    await db.table('_settings').delete('module.finance');
     const runtime = (await manifest.contributions!.onboarding!.load!()).default;
     const choices = await runtime.optionChoices!('accountId');
     expect(choices).toHaveLength(1);

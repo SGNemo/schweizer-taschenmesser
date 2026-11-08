@@ -79,3 +79,16 @@ test('B06: after importing older bookings the balance can be set to what the ban
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('balance-Girokonto')).toHaveText(/1\.250,00\s€/);
 });
+
+test('B04: with ToDos off the calm overview shows the month card', async ({ page }) => {
+  await page.goto('/library');
+  const card = page.getByTestId('module-todos');
+  const toggle = card.getByRole('switch', { name: /einschalten|ausschalten/ });
+  await expect(toggle).toBeEnabled();
+  if (await toggle.isChecked()) await toggle.click();
+  await expect(toggle).not.toBeChecked();
+  await ready(page, '/');
+  // A fresh app starts in the calm view ("Ruhig").
+  await expect(page.getByTestId('widget-finance:month')).toBeVisible();
+  await expect(page.getByTestId('widget-finance:balance')).toHaveCount(0);
+});

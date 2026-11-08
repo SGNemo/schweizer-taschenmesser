@@ -3094,6 +3094,8 @@ export const de = {
         nothingComing: 'Nichts mehr fällig',
         spent: (amount: string) => `bisher ausgegeben ${amount}`,
         open: 'Was noch kommt',
+        unmatched: 'Kontostand noch nicht mit der Bank abgeglichen',
+        setBalance: 'Kontostand eintragen',
       },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',

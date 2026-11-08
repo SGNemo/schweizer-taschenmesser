@@ -127,7 +127,7 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {/* The export sits next to the list it exports (B07); the filters stay in the "Erweitert" layer. */}
+      {/* The export sits next to the list it exports; the filters stay in the "Erweitert" layer. */}
       <div className={styles.toolbarRow}>
         {advanced || narrowed || more ? (
           <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
@@ -136,6 +136,7 @@ export function TransactionsTab({
           </Button>
         ) : null}
         <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
+          <Icon name="download" size={18} />
           {t.finance.ext.export.button}
         </Button>
       </div>

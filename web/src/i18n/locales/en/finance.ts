@@ -107,10 +107,12 @@ export const finance: Strings['finance'] = {
     month: {
       title: 'This month',
       free: 'Free until month end',
-      coming: (amount: string) => `Still coming ${amount}`,
+      coming: (amount: string) => `Still to pay ${amount}`,
       nothingComing: 'Nothing else due',
       spent: (amount: string) => `spent so far ${amount}`,
-      open: 'What is still coming',
+      open: 'Still due',
+      unmatched: 'Balance not yet matched with the bank',
+      setBalance: 'Enter balance',
     },
     settings: {
       bookSubscriptions: 'Book subscription charges as expenses',

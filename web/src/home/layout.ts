@@ -189,7 +189,7 @@ export function togglePinned(
   return { pinned: [...saved.pinned, key], hidden: saved.hidden.filter((k) => k !== key) };
 }
 
-/** The money month card stands in for the "Heute" card when ToDos are off (Finanz-Fokus profile). */
+/** The money month card stands in for the "Heute" card when ToDos are off. */
 export const CALM_STAND_IN = 'finance:month';
 
 /**

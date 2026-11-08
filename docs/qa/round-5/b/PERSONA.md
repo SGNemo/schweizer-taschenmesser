@@ -1,6 +1,6 @@
 # Person B – Erstkontakt allein (Runde 5)
 
-Grundlage: Svens Angaben (Bürokaufmann, Samsung-Handy, viel PC, Excel, Sparkasse, Interesse an Abos/Rechnungen/Budget, „grobe Übersicht reicht“). Alles mit **(A)** ist eine Annahme dieses Chats, nicht Svens Angabe.
+Zusammengesetzte Persona, keine Beschreibung einer bestimmten Person. Grundlage: wenige Stichworte (Bürokaufmann, Samsung-Handy, viel PC, Excel, Sparkasse, Interesse an Abos/Rechnungen/Budget, „grobe Übersicht reicht“). Alles mit **(A)** ist eine Annahme dieses Chats, nicht Svens Angabe.
 
 ## Wer er ist
 - Mitte 30 **(A)**, Bürokaufmann in einem mittelständischen Betrieb; tippt den ganzen Tag in Excel, DATEV-Masken und Outlook. Tabellen, Spalten, Summen sind sein Handwerk.
