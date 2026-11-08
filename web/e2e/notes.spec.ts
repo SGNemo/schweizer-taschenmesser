@@ -88,6 +88,8 @@ test.describe('desktop layout', () => {
     await expect(page.getByText('Gespeichert')).toBeVisible();
     await page.getByRole('button', { name: 'Karten', pressed: false }).click();
     await expect(page.getByTestId('note-row').first()).toBeVisible();
+    // The switch shows "pressed" once the stored setting came back: reload only after the write.
+    await expect(page.getByRole('button', { name: 'Karten', pressed: true })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('button', { name: 'Karten', pressed: true })).toBeVisible();
   });

@@ -19,6 +19,7 @@ const CORE_KEYS = {
     'tm-leading': 'normal',
     'tm-motion': 'system',
     'tm-read-aid': 'off',
+    'tm-toast-stay': 'off (toasts stay until closed; focus aid, setup step core.focus)',
     'tm-read-share': '40',
     'tm-read-style': 'soft',
     'tm-read-cover': '25',

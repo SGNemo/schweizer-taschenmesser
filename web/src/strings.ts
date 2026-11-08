@@ -627,15 +627,27 @@ export const de = {
     restLater: 'Rest später',
     allSteps: 'Alle Schritte ansehen',
     questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
+    finishQuestions: 'Fragen abschließen',
+    overviewNow: 'Jetzt',
+    overviewQuestions: (n: number) => `Alle ${n} Fragen und was danach kommt`,
+    overviewSteps: (n: number) => `Alle ${n} Schritte im Überblick`,
+    overviewAfter:
+      'Nach der letzten Frage schließt sich die Einrichtung. Die übrigen Schritte sind freiwillig und stehen danach als Checkliste auf der Übersicht.',
     quick: {
       basics: {
-        title: 'Wie darfst du heißen?',
-        description: 'Name und Textgröße. Beides lässt sich später ändern.',
+        title: 'Sprache, Name und Textgröße',
+        description:
+          'Hier stellst du die Sprache, deinen Namen und die Textgröße ein. Unter „Weitere Einstellungen“ folgen Farbschema und Wochenstart. Alles lässt sich später in den Einstellungen ändern.',
       },
       profiles: {
         title: 'Was passt zu dir?',
         description:
-          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet.',
+          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet. Passt keins genau, wähle das nächste: Einzelne Module schaltest du danach unter Mehr → Modul-Bibliothek ein oder aus. „Weiter“ ohne Auswahl lässt die Module, wie sie sind.',
+      },
+      focus: {
+        title: 'Wie ruhig soll die App sein?',
+        description:
+          'Vier Schalter: Bewegung, Erinnerungen, Serien und Rückblicke, Hinweise; dazu die Lesehilfe.',
       },
       ai: {
         title: 'Soll eine KI helfen?',
@@ -692,6 +704,33 @@ export const de = {
         dataKept: 'Daten bleiben erhalten, alles lässt sich wieder einschalten.',
         pick: 'Wählen',
         picked: 'Gewählt',
+      },
+      focus: {
+        title: 'Fokus-Hilfen',
+        description: 'Fünf Schalter bestimmen, wie ruhig sich die App verhält.',
+        preselect:
+          'Empfohlen und vorausgewählt: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        preselectDone:
+          'Die Schalter zeigen, wie sie gerade eingestellt sind. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        laterFull: '„Später“ ändert nichts.',
+        laterQuick: '„Rest später“ ändert nichts.',
+        motion: 'Bewegung reduzieren',
+        motionHint:
+          'An: Übergänge und Animationen der App sind aus, Inhalte erscheinen sofort an ihrer Stelle.',
+        ownReminders: 'Keine Morgen-Übersicht und keine Vorab-Erinnerungen',
+        ownRemindersHint:
+          'An: Die App schickt keine Morgen-Übersicht der heutigen ToDos und keine zusätzlichen Vorab-Erinnerungen vor Terminen. Erinnerungen, die du an einem Eintrag selbst einstellst, kommen weiterhin.',
+        noCounts: 'Keine Serien und Rückblicke',
+        noCountsHint:
+          'An: Wiederkehrende ToDos zeigen kein „n in Folge“, Gewohnheiten keine längste Serie, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“.',
+        toastStay: 'Hinweise bleiben stehen',
+        toastStayHint:
+          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ oder die Aktion tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
+        readAid: 'Lesehilfe',
+        readAidHint:
+          'An: Die Anfänge der Wörter in längeren Texten werden fett, das führt den Blick. Zahlen und Eingabefelder bleiben ohne. Nicht vorausgewählt, probiere sie aus, wenn du magst.',
+        where:
+          'Jeder Schalter lässt sich später in den Einstellungen ändern: Bewegung, Hinweise und Lesehilfe unter „Barrierefreiheit“ (nur dieses Gerät), die Erinnerungen unter „Ruhige Erinnerungen“, Serien und Rückblick unter „Fokus & Aufmerksamkeit“. Erinnerungen, Serien und Rückblick gelten mit Sync auf allen deinen Geräten.',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -807,6 +846,19 @@ export const de = {
           'obsidian.notes': 'Markdown-Notizen importiert',
           'bank.statement': 'Kontoauszug importiert',
           'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
+        } as Record<string, string>,
+        /** The same points as a goal, while not done yet (B08, round 5). */
+        goals: {
+          'google.calendar': 'Kalender (.ics) importieren',
+          'google.tasks': 'Tasks.json importieren',
+          'google.keep': 'Keep-Notizen importieren',
+          'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
+          'todoist.tasks': 'Todoist-CSV importieren',
+          'evernote.notes': 'Evernote-Notizen importieren',
+          'microsoft.tasks': 'Microsoft-To-Do-Aufgaben (Outlook-CSV) importieren',
+          'obsidian.notes': 'Markdown-Notizen importieren',
+          'bank.statement': 'Kontoauszug importieren',
+          'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importieren',
         } as Record<string, string>,
         tick: 'Abhaken',
         untick: 'Wieder öffnen',
@@ -1522,6 +1574,7 @@ export const de = {
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
       done: 'Alles für heute erledigt.',
+      nothing: 'Für heute ist nichts eingetragen.',
       /** C22: the accessible name of the head's buttons says which task they act on ("Anfangen: Steuer"). */
       named: (action: string, title: string) => `${action}: ${title}`,
     },
@@ -1547,7 +1600,9 @@ export const de = {
       open: (n: number) =>
         n === 1 ? 'Eingang sortieren · 1 Ding' : `Eingang sortieren · ${n} Dinge`,
       hint: (n: number) =>
-        n === 1 ? '1 Ding wartet auf einen Platz.' : `${n} Dinge warten auf einen Platz.`,
+        n === 1
+          ? '1 Aufgabe liegt im Eingang, noch in keiner Liste.'
+          : `${n} Aufgaben liegen im Eingang, noch in keiner Liste.`,
       progress: (n: number, total: number) => `${n} von ${total}`,
       today: 'Für heute',
       skip: 'Überspringen',
@@ -4050,6 +4105,7 @@ export const de = {
     editorLabel: 'Text der Seite',
     placeholder: 'Einfach losschreiben … „/“ öffnet das Befehlsmenü.',
     saved: 'Gespeichert',
+    savedWhere: 'Gespeichert. Die Seite steht unter Notizen → Alle Seiten.',
     saving: 'Speichert …',
     words: (n: number) => (n === 1 ? '1 Wort' : `${n} Wörter`),
     writingMode: 'Schreibmodus',

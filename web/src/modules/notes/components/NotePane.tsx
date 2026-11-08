@@ -3,6 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
+import { saveStatusText } from '../saveStatus';
 import { Button, Icon, IconButton, Skeleton } from '@/ui';
 import { randomId } from '@/core/db/util';
 import { useUiStore } from '@/stores/ui';
@@ -357,7 +358,7 @@ export function NotePane(props: NotePaneProps) {
         />
       ) : null}
       <footer className={styles.foot} aria-live="polite">
-        <span>{status === 'saving' ? t.notes.saving : t.notes.saved}</span>
+        <span>{saveStatusText(status, scratch)}</span>
         {prefs.wordCount ? <span>{t.notes.words(words)}</span> : null}
       </footer>
     </section>
