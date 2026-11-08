@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { useModuleStates } from '@/core/modules/activation';
+import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { useSettings } from '@/core/settings/settings';
 import type { CaptureType, ParseOptions } from '../parser';
 import { availableTypes } from '../targets';
@@ -13,6 +13,8 @@ const FITNESS_PREFS = z.looseObject({ nutrition: z.boolean().optional() });
  * live sample in Settings, so both read a sentence the same way.
  */
 export function useCaptureTypes(): {
+  /** The module states the list comes from (`undefined` while loading); callers use these, never a second query. */
+  states: ModuleStates | undefined;
   available: CaptureType[];
   fitness: NonNullable<ParseOptions['fitness']>;
 } {
@@ -22,6 +24,7 @@ export function useCaptureTypes(): {
     (type) => type !== 'meal' || prefs?.nutrition !== false,
   );
   return {
+    states,
     available,
     fitness: { meal: available.includes('meal'), workout: available.includes('workout') },
   };

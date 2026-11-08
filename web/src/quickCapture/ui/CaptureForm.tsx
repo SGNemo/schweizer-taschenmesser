@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { useModuleStates } from '@/core/modules/activation';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
@@ -69,9 +68,9 @@ export function CaptureForm({
   onSaved,
   onCancel,
 }: CaptureFormProps) {
-  const states = useModuleStates();
   const [settings] = useCaptureSettings();
-  const { available, fitness } = useCaptureTypes();
+  // One source for the module states and the types they allow (a second query could lag behind).
+  const { states, available, fitness } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   const [text, setText] = useState(() => initialText || peekReopenDraft() || '');
