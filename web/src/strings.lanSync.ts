@@ -31,6 +31,10 @@ export const tLanSync = defineBundle(
     blocked: 'Windows blockiert den Abgleich.',
     blockedLine:
       'Windows hält dieses Netz für öffentlich. In den Windows-Einstellungen das Netz als „Privat“ einstellen.',
+    blockedSteps:
+      'In Windows: Einstellungen → Netzwerk und Internet → dein WLAN oder Ethernet → Netzwerkprofiltyp „Privates Netzwerk“. Nur in deinem Netz zu Hause.',
+    openWindowsSettings: 'Windows-Einstellungen öffnen',
+    qrAppears: 'Danach erscheint der QR-Code hier von selbst.',
     noNetwork: 'Kein Heimnetz gefunden',
     noNetworkLine: 'Der PC ist gerade in keinem WLAN oder Kabelnetz zu Hause.',
     notListening: 'Wartet auf das erste Gerät',
@@ -110,6 +114,8 @@ export const tLanSync = defineBundle(
     notPossible: 'Kopplung nicht möglich – am PC neu zeigen.',
     pcNotFound: 'PC nicht gefunden – sind beide im selben WLAN?',
     scanAgain: 'Neu scannen',
+    scanTitle: 'Code am PC scannen',
+    scanHint: 'Halte die Kamera auf den QR-Code am PC.',
     tryAgain: 'Neu versuchen',
     pairFailed: 'Das Koppeln hat nicht geklappt. Versuche es noch einmal.',
     pairAborted: 'Kopplung abgebrochen.',
@@ -151,6 +157,10 @@ export const tLanSync = defineBundle(
       blocked: 'Windows is blocking sync.',
       blockedLine:
         'Windows treats this network as public. Set the network to “Private” in the Windows settings.',
+      blockedSteps:
+        'In Windows: Settings → Network & internet → your Wi-Fi or Ethernet → Network profile type “Private network”. Only on your network at home.',
+      openWindowsSettings: 'Open Windows settings',
+      qrAppears: 'Then the QR code appears here by itself.',
       noNetwork: 'No home network found',
       noNetworkLine: 'The PC is not on a Wi-Fi or cable network at home right now.',
       notListening: 'Waiting for the first device',
@@ -225,6 +235,8 @@ export const tLanSync = defineBundle(
       notPossible: 'Pairing not possible – show the code on your PC again.',
       pcNotFound: 'PC not found – are both on the same Wi-Fi?',
       scanAgain: 'Scan again',
+      scanTitle: 'Scan the code on the PC',
+      scanHint: 'Point the camera at the QR code on the PC.',
       tryAgain: 'Try again',
       pairFailed: 'Pairing did not work. Try again.',
       pairAborted: 'Pairing was cancelled.',

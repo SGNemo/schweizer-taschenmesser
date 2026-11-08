@@ -72,7 +72,7 @@
     "opener:allow-default-urls",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "spotify:*" }]
+      "allow": [{ "url": "spotify:*" }, { "url": "ms-settings:network-status" }]
     },
     "apk-installer:default",
     "secure-store:default",

@@ -285,6 +285,9 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
 
 type Texts = ReturnType<typeof tLanSync.use>;
 
+/** Windows' network page; from there "Properties" leads to the network profile type. */
+const WINDOWS_NETWORK_SETTINGS = 'ms-settings:network-status';
+
 function hubBanner(
   status: LanHubStatus | undefined,
   devices: number,
@@ -463,6 +466,27 @@ function PairDialog({
               <Button onClick={() => void reject()}>{t.actions.cancel}</Button>
             </Actions>
           </>
+        ) : status?.reason === 'public-network' && !drawn ? (
+          // no QR while Windows calls the network public: only the way out, nothing else
+          <>
+            <p data-testid="lan-pair-blocked">
+              <strong>{l.blockedLine}</strong>
+            </p>
+            <p className={styles.muted}>{l.blockedSteps}</p>
+            <Actions>
+              <Button
+                variant="primary"
+                onClick={() =>
+                  void getPlatform()
+                    .app.openUrl(WINDOWS_NETWORK_SETTINGS)
+                    .catch(() => undefined)
+                }
+              >
+                {l.openWindowsSettings}
+              </Button>
+            </Actions>
+            <p className={styles.muted}>{l.qrAppears}</p>
+          </>
         ) : (
           <>
             <p className={styles.muted}>{l.pairSteps}</p>
@@ -477,8 +501,6 @@ function PairDialog({
               >
                 <path d={drawn.path} />
               </svg>
-            ) : status?.reason === 'public-network' ? (
-              <p className={styles.muted}>{l.blockedLine}</p>
             ) : (
               <p className={styles.muted} data-testid="lan-pair-preparing">
                 {l.preparing}

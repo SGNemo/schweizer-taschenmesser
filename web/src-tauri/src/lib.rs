@@ -121,12 +121,10 @@ pub fn run() {
         // Android: system bars hidden and screen kept on while the cockpit is open.
         .plugin(tauri_plugin_screen_mode::init());
 
-    // Android: the device side of home-network sync (pairing by QR, requests to the hub PC) and the
-    // native QR scanner for "Mit PC koppeln".
+    // Android: the device side of home-network sync (pairing by QR, requests to the hub PC). The QR
+    // is scanned in the app (camera in the WebView), not by a native scanner view.
     #[cfg(mobile)]
-    let builder = builder
-        .manage(lan_client::LanClient::default())
-        .plugin(tauri_plugin_barcode_scanner::init());
+    let builder = builder.manage(lan_client::LanClient::default());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]

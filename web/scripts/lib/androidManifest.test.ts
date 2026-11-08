@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { hardenManifest } from './androidManifest';
+import { hardenManifest, withCamera } from './androidManifest';
 
 // Shape of the Tauri 2 template (placeholder for cleartext, no allowBackup).
 const template = `<?xml version="1.0" encoding="utf-8"?>
@@ -60,5 +60,15 @@ describe('CI wiring', () => {
       expect(step, f).toBeGreaterThan(init);
       expect(step, f).toBeLessThan(build);
     }
+  });
+});
+
+describe('camera for in-app QR scanning', () => {
+  it('declares CAMERA and an optional camera feature before <application>, once', () => {
+    const once = withCamera(hardenManifest(template).xml);
+    expect(once).toContain('<uses-permission android:name="android.permission.CAMERA" />');
+    expect(once).toContain('android:name="android.hardware.camera.any" android:required="false"');
+    expect(once.indexOf('android.permission.CAMERA')).toBeLessThan(once.indexOf('<application'));
+    expect(withCamera(once)).toBe(once);
   });
 });
