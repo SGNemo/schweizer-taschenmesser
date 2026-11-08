@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { expandFiles } from '../files';
 import { runJob, isAbort } from '../run';
 import { detectSources } from '../registry';
-import { parseMarkdownFolder } from './parse';
+import { parseMarkdownFolder, placeOf } from './parse';
 
 const vault = {
   'MeinVault/.obsidian/app.json': strToU8('{"x":1}'),
@@ -55,6 +55,39 @@ describe('Obsidian / Markdown folder', () => {
     const top = detectSources(expanded.files)[0]!;
     expect(top.source.id).toBe('obsidian');
     expect(top.confidence).toBe(1);
+  });
+});
+
+describe('Obsidian vault with numbered folders and sub-folders (D04)', () => {
+  const files = [
+    { name: 'Vault/.obsidian/app.json', text: '{"theme":"obsidian"}' },
+    { name: 'Vault/10_Arbeit/Inbetriebnahme Halle 3.md', text: '# Inbetriebnahme Halle 3\nIP-Plan' },
+    { name: 'Vault/10_Arbeit/Projekte/Netzplan.md', text: '# Netzplan\nVLAN 10 #netz' },
+    { name: 'Vault/10_Arbeit/Projekte/Kunde A/Abnahme.md', text: '# Abnahme\nOk' },
+    { name: 'Vault/Start.md', text: '# Start\nÜbersicht' },
+  ];
+  const r = parseMarkdownFolder(files);
+  const by = (title: string) => r.notes.find((n) => n.title === title)!;
+
+  it('keeps the top folder as notebook and the deeper folders as a tag', () => {
+    expect(by('Inbetriebnahme Halle 3')).toMatchObject({ folder: '10_Arbeit', tags: [] });
+    expect(by('Netzplan').folder).toBe('10_Arbeit');
+    expect(by('Netzplan').tags).toEqual(['netz', 'Projekte']);
+    expect(by('Netzplan').body).toBe('VLAN 10 #netz\n\n#Projekte');
+    expect(by('Abnahme').tags).toEqual(['Projekte/Kunde-A']);
+    expect(by('Start').folder).toBeUndefined();
+  });
+
+  it('never counts hidden settings files as notes or as skipped', () => {
+    expect(r.total).toBe(4);
+    expect(r.skipped).toEqual({});
+  });
+
+  it('places files by their folders, whatever the folder names hold', () => {
+    expect(placeOf([])).toEqual({});
+    expect(placeOf(['A'])).toEqual({ folder: 'A' });
+    expect(placeOf(['A', 'B.C (alt)'])).toEqual({ folder: 'A', tag: 'B-C-alt' });
+    expect(placeOf(['A', '***'])).toEqual({ folder: 'A' });
   });
 });
 
