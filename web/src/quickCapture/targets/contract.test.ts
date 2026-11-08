@@ -268,3 +268,50 @@ describe('amend (a reminder on its open invoice)', () => {
     expect(after!.note ?? '').toBe('');
   });
 });
+
+describe('council round 1 – edges of the contract', () => {
+  it('reinstate brings back only what is deleted; its undo leaves a row it did not revive', async () => {
+    const saved = await saveCapture('plan', { title: 'Steuer' }, { states: ON, id: 'p3' });
+    // Only the plan row was deleted (the ToDo stays live).
+    await db.table('planner_item').update('todos:p3', { deletedAt: 1 });
+    void saved;
+    const back = await reinstateCapture('plan', 'p3', { states: ON });
+    expect((await live('planner_item')).map((x) => x.id)).toEqual(['todos:p3']);
+    await back.undo();
+    expect((await live('todos_task')).map((x) => x.id)).toEqual(['p3']);
+    await expect(reinstateCapture('plan', 'nothing-here', { states: ON })).rejects.toMatchObject({
+      code: 'invalid',
+    });
+  });
+
+  it('a rollback leaves a tombstone under the id: saving again says so, reinstate is the way back', async () => {
+    await expect(
+      saveCaptures(
+        [
+          { type: 'todo', fields: { title: 'Antworten' }, id: 'r1' },
+          { type: 'todo', fields: { title: ' ' } },
+        ],
+        'x',
+        { states: ON },
+      ),
+    ).rejects.toBeTruthy();
+    expect(
+      (await saveCapture('todo', { title: 'Antworten' }, { states: ON, id: 'r1' })).existed,
+    ).toBe('tombstone');
+    await reinstateCapture('todo', 'r1', { states: ON });
+    expect((await live('todos_task')).map((x) => x.id)).toEqual(['r1']);
+  });
+
+  it('amend undo removes exactly its line; the person’s blank lines and spaces stay', async () => {
+    const own = 'Kundennummer 12\n\n  Zählerstand im Keller  ';
+    await invoice('a', { payee: 'Stadtwerke', note: own });
+    const saved = await amendCapture(
+      'invoice',
+      { title: 'Stadtwerke', amountMinor: 8740, dunning: { level: 1, date: TODAY } },
+      { id: 'a', payee: 'Stadtwerke', dueDate: '2026-09-15', restMinor: 8430 },
+      { states: ON },
+    );
+    await saved.undo();
+    expect((await invoiceRepo().get('a'))!.note).toBe(own);
+  });
+});

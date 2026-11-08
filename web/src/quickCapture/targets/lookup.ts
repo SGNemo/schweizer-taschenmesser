@@ -3,6 +3,7 @@ import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import type { CaptureFields } from '../parser';
+import { openRest } from './adapters';
 import type { OpenInvoice } from './types';
 
 export type InvoiceLookup = { match: OpenInvoice } | { candidates: OpenInvoice[] };
@@ -71,15 +72,11 @@ export async function findOpenInvoice(
   const rows = (await repo.active().toArray()) as Record<string, unknown>[];
   const open = rows
     .map((r) => {
-      const amount = Number(r.amountMinor) || 0;
-      const paid = Array.isArray(r.payments)
-        ? (r.payments as { amountMinor?: number }[]).reduce((n, p) => n + (p.amountMinor ?? 0), 0)
-        : 0;
       return {
         id: String(r.id),
         payee: String(r.payee ?? ''),
         dueDate: String(r.dueDate ?? ''),
-        restMinor: amount - paid,
+        restMinor: openRest(r),
         reference: typeof r.reference === 'string' ? r.reference : '',
         status: r.status,
       };

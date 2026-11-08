@@ -30,6 +30,8 @@ export interface SaveOptions {
   /**
    * Create-if-absent under this id (deterministic, see `captureId`): written through `createMany`, so an
    * existing record – live or tombstone – is never overwritten or revived; the result says `existed`.
+   * An undo or a batch rollback leaves a tombstone under the id like any delete: saving the same thing
+   * again then reports `'tombstone'`, and `reinstateCapture` is the way back.
    */
   id?: string;
 }
@@ -63,7 +65,9 @@ async function createIfAbsent(
   }
   if (rows.length > 0) return { written: true };
   const row = await repo.table.get(id);
-  return { written: false, existed: row && row.deletedAt === null ? true : 'tombstone' };
+  // Skipped but not there at all (a race with a purge): nothing to point at, never „Wieder einplanen“.
+  if (!row) throw new CaptureError('invalid');
+  return { written: false, existed: row.deletedAt === null ? true : 'tombstone' };
 }
 
 /** Target types whose module is currently enabled and installed, in a stable UI order. */
@@ -217,17 +221,21 @@ export async function reinstateCapture(
   opts: SaveOptions = {},
 ): Promise<SavedCapture> {
   const target = targetFor(type);
-  const stages: { repo: Repo<Record<string, unknown>>; id: string }[] = [];
+  const all: { repo: Repo<Record<string, unknown>>; id: string }[] = [];
   if (target.via) {
     const first = await targetRepo(target.via.type, opts);
     const ref: CaptureRef = { moduleId: first.target.moduleId, id };
-    stages.push(
+    all.push(
       { repo: first.repo, id },
       { repo: (await targetRepo(type, opts)).repo, id: target.via.id(ref) },
     );
   } else {
-    stages.push({ repo: (await targetRepo(type, opts)).repo, id });
+    all.push({ repo: (await targetRepo(type, opts)).repo, id });
   }
+  // Only what is deleted now comes back, and only that is deleted again by the undo.
+  const rows = await Promise.all(all.map((s) => s.repo.table.get(s.id)));
+  if (!rows[0]) throw new CaptureError('invalid');
+  const stages = all.filter((_, i) => rows[i] && rows[i]!.deletedAt !== null);
   for (const stage of stages) await stage.repo.restore(stage.id);
   return {
     id,
@@ -239,7 +247,11 @@ export async function reinstateCapture(
   };
 }
 
-async function saveItem(item: CaptureItem, opts: SaveOptions): Promise<SavedCapture> {
+/**
+ * Saves one entry as planned: noted on its record (`amend`), or – when that record was settled since
+ * the preview – its fallback; everything else through `saveCapture`. Used by the batch and the sheet.
+ */
+export async function saveItem(item: CaptureItem, opts: SaveOptions = {}): Promise<SavedCapture> {
   if (item.amend) {
     try {
       return await amendCapture(item.type, item.fields, item.amend, opts);

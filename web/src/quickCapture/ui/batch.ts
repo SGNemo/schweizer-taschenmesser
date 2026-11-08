@@ -1,5 +1,6 @@
 import { formatMoney } from '@/core/money';
 import type { CaptureFields, CaptureType } from '../parser';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { targetFor, type InvoiceLookup, type OpenInvoice } from '../targets';
 
@@ -92,17 +93,51 @@ export interface ReminderRow {
 export const isReminder = (type: CaptureType | undefined, fields: CaptureFields): boolean =>
   type === 'invoice' && !!fields.dunning;
 
+/** A lookup as the sheet keeps it: found, nothing open, or failed (then nothing is guessed). */
+export type LookupResult = InvoiceLookup | 'none' | 'failed';
+
+/** The open-invoice lookup, loaded on demand (only reminder lines need it). */
+export async function lookupInvoice(fields: CaptureFields): Promise<LookupResult> {
+  try {
+    const { findOpenInvoice } = await import('../targets/lookup');
+    return (await findOpenInvoice(fields, { today: today() })) ?? 'none';
+  } catch {
+    return 'failed';
+  }
+}
+
+/**
+ * The plan for a reminder line at save time: looked up once more, so a settled invoice is never noted.
+ * When the preview showed a match and nothing fits any more, or the lookup failed, the line becomes the
+ * ToDo „Mahnung … prüfen“ – never a second invoice.
+ */
+export async function resolveReminder(
+  type: CaptureType | undefined,
+  fields: CaptureFields,
+  available: readonly CaptureType[],
+  previewHadMatch: boolean,
+): Promise<ReminderRow> {
+  if (!isReminder(type, fields)) return { type, fields };
+  const found = await lookupInvoice(fields);
+  return reminderRow(
+    type,
+    fields,
+    found === 'none' && previewHadMatch ? 'failed' : found,
+    available,
+  );
+}
+
 export function reminderRow(
   type: CaptureType | undefined,
   fields: CaptureFields,
-  lookup: InvoiceLookup | undefined,
+  lookup: LookupResult | undefined,
   available: readonly CaptureType[],
 ): ReminderRow {
-  if (!isReminder(type, fields) || !lookup) return { type, fields };
+  if (!isReminder(type, fields) || !lookup || lookup === 'none') return { type, fields };
   const check = available.includes('todo')
     ? { type: 'todo' as const, fields: { title: t.quickCapture.multi.dunningCheck(fields.title) } }
     : undefined;
-  if ('match' in lookup)
+  if (lookup !== 'failed' && 'match' in lookup)
     return { type, fields, amend: lookup.match, ...(check ? { fallback: check } : {}) };
   return check ?? { type, fields };
 }

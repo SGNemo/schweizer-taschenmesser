@@ -171,7 +171,8 @@ const invoices: CaptureTarget = {
   amend: amendInvoice,
 };
 
-const openRest = (row: Record<string, unknown>): number =>
+/** What is still open on an invoice row: amount minus part payments, cents (shared with `lookup.ts`). */
+export const openRest = (row: Record<string, unknown>): number =>
   (Number(row.amountMinor) || 0) -
   (Array.isArray(row.payments)
     ? (row.payments as { amountMinor?: number }[]).reduce((n, p) => n + (p.amountMinor ?? 0), 0)
@@ -200,10 +201,12 @@ async function amendInvoice(
   if (before.at && before.at >= day)
     return { ...base, amended: true, existed: true, undo: async () => undefined };
   const level = Math.min(3, (before.level ?? 0) + 1);
+  // The invoice's own currency and today's rest when the line names no amount (never the preview's).
+  const currency = f.currency ?? (row.currency as string | undefined);
   const line = t.quickCapture.dunningNote(
-    formatDay(day, 'd.M.yyyy'),
-    formatMoney(f.amountMinor ?? match.restMinor, f.currency),
-    f.date ? formatDay(f.date, 'd.M.yyyy') : undefined,
+    formatDay(day, 'dd.MM.yyyy'),
+    formatMoney(f.amountMinor ?? openRest(row), currency),
+    f.date ? formatDay(f.date, 'dd.MM.yyyy') : undefined,
   );
   const note = [row.note as string | undefined, line].filter(Boolean).join('\n');
   await repo.update(match.id, { dunningLevel: level, dunnedAt: day, note });
@@ -215,11 +218,14 @@ async function amendInvoice(
       if (!now) return;
       const patch: Record<string, unknown> = {};
       const text = typeof now.note === 'string' ? now.note : '';
+      // Exactly the line and the one line break that joined it; the person's own text stays as it is.
       const at = text.lastIndexOf(line);
       if (at >= 0) {
-        const kept = (text.slice(0, at) + text.slice(at + line.length))
-          .replace(/\n{2,}/g, '\n')
-          .trim();
+        const end = at + line.length;
+        const kept =
+          at > 0 && text[at - 1] === '\n'
+            ? text.slice(0, at - 1) + text.slice(end)
+            : text.slice(0, at) + text.slice(text[end] === '\n' ? end + 1 : end);
         patch.note = kept || undefined;
       }
       if (now.dunningLevel === level) patch.dunningLevel = before.level;

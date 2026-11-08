@@ -7,24 +7,27 @@ import { parseCapture, type CaptureFields, type CaptureType } from '../parser';
 import { splitCapture } from '../parser/split';
 import { useCaptureSettings } from '../settings';
 import {
-  amendCapture,
   CaptureError,
   saveCapture,
   saveCaptures,
+  saveItem,
   targetFor,
   type CaptureItem,
-  type InvoiceLookup,
   type SavedCapture,
 } from '../targets';
 import { formatDay } from '@/core/time/dates';
-import type { CaptureFields as LookupFields } from '../parser';
-
-/** The open-invoice lookup, loaded only when a payment reminder line appears. */
-const findOpenInvoice = async (fields: LookupFields, opts: { today: string }) =>
-  (await import('../targets/lookup')).findOpenInvoice(fields, opts);
 import { fullFormPath } from '../targets/fullForm';
 import { announceSaved } from './announceSaved';
-import { batchRow, batchTypes, isReminder, reminderRow, withoutPart } from './batch';
+import {
+  batchRow,
+  batchTypes,
+  isReminder,
+  lookupInvoice,
+  reminderRow,
+  resolveReminder,
+  withoutPart,
+  type LookupResult,
+} from './batch';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
@@ -113,7 +116,7 @@ export function CaptureForm({
   // The row whose target choice is open (rows show their target as text; a tap opens the choice).
   const [choosing, setChoosing] = useState<string | undefined>();
   // Open-invoice lookups of payment reminder lines, keyed by the line (`findOpenInvoice`).
-  const [lookups, setLookups] = useState<Record<string, InvoiceLookup | null>>({});
+  const [lookups, setLookups] = useState<Record<string, LookupResult>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -151,10 +154,12 @@ export function CaptureForm({
   const fallbackType = resolved.inbox ? resolved.type : undefined;
   const singleFields: CaptureFields = { ...resolved.fields, ...extra };
   // The single sheet treats a payment reminder the same way as a line of a batch.
+  // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
+  const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;
   const singlePlan = reminderRow(
     resolved.type,
     singleFields,
-    multi ? undefined : (lookups[single] ?? undefined),
+    multi ? undefined : lookups[lookupKey(single)],
     available,
   );
   const type = singlePlan.type;
@@ -175,7 +180,7 @@ export function CaptureForm({
             const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
             // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice.
             const reminder = isReminder(row.type, row.fields);
-            const plan = reminderRow(row.type, row.fields, lookups[part] ?? undefined, available);
+            const plan = reminderRow(row.type, row.fields, lookups[lookupKey(part)], available);
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
@@ -199,30 +204,31 @@ export function CaptureForm({
   const rowTypes = batchTypes(available);
 
   // Reminder lines look for their open invoice while the person types; the result only changes text.
-  const reminderKeys = (
+  // Keyed by the line and whether invoices are on, so switching the module on or off looks again.
+  const pending = (
     multi
-      ? rows.filter((r) => r.reminder).map((r) => r.part)
+      ? rows.filter((r) => r.reminder).map((r) => ({ key: lookupKey(r.part), fields: r.source }))
       : isReminder(resolved.type, singleFields)
-        ? [single]
+        ? [{ key: lookupKey(single), fields: singleFields }]
         : []
-  ).filter((k) => !(k in lookups));
-  const reminderKey = reminderKeys.join('\n');
+  ).filter((p) => !(p.key in lookups));
+  const pendingKey = pending.map((p) => p.key).join('\n');
+  const pendingRef = useRef(pending);
   useEffect(() => {
-    if (!reminderKey) return;
+    pendingRef.current = pending;
+  });
+  useEffect(() => {
+    if (!pendingKey) return;
     let live = true;
     void (async () => {
-      const found: Record<string, InvoiceLookup | null> = {};
-      for (const key of reminderKey.split('\n')) {
-        const r = parseCapture(key, { now: new Date(now()), defaultType: settings?.defaultType });
-        found[key] =
-          (await findOpenInvoice(r.fields, { today: today() }).catch(() => undefined)) ?? null;
-      }
+      const found: Record<string, LookupResult> = {};
+      for (const p of pendingRef.current) found[p.key] = await lookupInvoice(p.fields);
       if (live) setLookups((cur) => ({ ...cur, ...found }));
     })();
     return () => {
       live = false;
     };
-  }, [reminderKey, settings?.defaultType]);
+  }, [pendingKey]);
   // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the
   // entry is incomplete until the date is fixed (X20).
   const badDate = (list: readonly { id: string }[]) =>
@@ -304,12 +310,18 @@ export function CaptureForm({
     Promise.all(
       rows.map(async (r): Promise<CaptureItem> => {
         if (!r.reminder) return { type: r.type!, fields: r.fields };
-        const lookup = await findOpenInvoice(r.source, { today: today() }).catch(() => undefined);
-        const plan = reminderRow('invoice', r.source, lookup, available);
+        const plan = await resolveReminder('invoice', r.source, available, !!r.amend);
         if (!plan.type) throw new CaptureError('invalid');
         return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
       }),
     );
+  /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
+  const singleItem = async (): Promise<CaptureItem> => {
+    if (!isReminder(resolved.type, singleFields)) return { type: type!, fields };
+    const plan = await resolveReminder(resolved.type, singleFields, available, !!singlePlan.amend);
+    if (!plan.type) throw new CaptureError('invalid');
+    return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
+  };
 
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
   const save = async (confirmed: boolean) => {
@@ -319,12 +331,8 @@ export function CaptureForm({
       onSaved(
         multi
           ? await saveCaptures(await batchItems(), text)
-          : singlePlan.amend
-            ? await amendCapture(type!, fields, singlePlan.amend).catch((e: unknown) => {
-                if (e instanceof CaptureError && e.code === 'stale' && singlePlan.fallback)
-                  return saveCapture(singlePlan.fallback.type, singlePlan.fallback.fields);
-                throw e;
-              })
+          : isReminder(resolved.type, singleFields)
+            ? await saveItem(await singleItem())
             : await saveCapture(type!, fields, { confirmed }),
       );
       setText('');
@@ -360,10 +368,26 @@ export function CaptureForm({
     void save(true);
   };
 
+  /** The row target buttons, so focus returns to the row when its choice closes. */
+  const targetRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const openPicker = (el: HTMLSelectElement | null) => {
+    if (!el) return;
+    el.focus();
+    try {
+      el.showPicker?.();
+    } catch {
+      // Not allowed here (no user activation, older browser): the focused select opens on the next tap.
+    }
+  };
+  const closeChoice = (part: string, refocus: boolean) => {
+    setChoosing(undefined);
+    if (refocus) requestAnimationFrame(() => targetRefs.current[part]?.focus());
+  };
+
   /** „ToDo“, „Rechnung · 13. Okt. · Datum angenommen“, „Mahnung zu Rechnung … · vermerken“. */
   const rowTargetText = (r: (typeof rows)[number]): string => {
     if (r.amend)
-      return t.quickCapture.multi.dunningMatch(r.amend.payee, formatDay(r.amend.dueDate, 'd.M.'));
+      return t.quickCapture.multi.dunningMatch(r.amend.payee, formatDay(r.amend.dueDate, 'd. MMM'));
     if (!r.type) return t.quickCapture.multi.choose;
     return [
       typeLabel(r.type, r.fields.kind),
@@ -424,12 +448,19 @@ export function CaptureForm({
                       className={styles.rowType}
                       aria-label={t.quickCapture.multi.rowTarget(r.part)}
                       value={r.type ?? ''}
-                      autoFocus
+                      // One tap: the list opens right away where the browser allows it.
+                      ref={openPicker}
                       onChange={(e) => {
                         pickRow(r.part, e.target.value as CaptureType);
-                        setChoosing(undefined);
+                        closeChoice(r.part, true);
                       }}
-                      onBlur={() => setChoosing(undefined)}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Escape') return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeChoice(r.part, true);
+                      }}
+                      onBlur={() => closeChoice(r.part, false)}
                       data-testid="capture-row-type"
                     >
                       {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
@@ -443,6 +474,9 @@ export function CaptureForm({
                     // The target as words; a tap opens the choice (no select in the first view).
                     <button
                       type="button"
+                      ref={(el) => {
+                        targetRefs.current[r.part] = el;
+                      }}
                       className={styles.rowTarget}
                       aria-label={`${t.quickCapture.multi.rowTarget(r.part)}: ${rowTargetText(r)}`}
                       onClick={() => setChoosing(r.part)}
@@ -484,6 +518,15 @@ export function CaptureForm({
             ))}
           </div>
         )}
+        {!multi && singlePlan.amend ? (
+          // The single sheet says too that an existing invoice is noted, not a new one created.
+          <p className={styles.hint} role="status" data-testid="capture-dunning-hint">
+            {t.quickCapture.multi.dunningMatch(
+              singlePlan.amend.payee,
+              formatDay(singlePlan.amend.dueDate, 'd. MMM'),
+            )}
+          </p>
+        ) : null}
 
         {available.length === 0 && states ? (
           <p className={styles.hint}>{t.quickCapture.noTargets}</p>
