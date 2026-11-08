@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { parseCapture } from '@/quickCapture/parser';
-import { mailPrefill, mailText } from './prefill';
+import { MAIL_LINK_TYPES, mailPrefill, mailText } from './prefill';
+import { mailWebUrl } from './service';
 
 const TODAY = '2026-10-29';
 const NOW = new Date(2026, 9, 29, 10, 0);
@@ -87,5 +88,29 @@ describe('mailPrefill', () => {
     expect(mailText({ html: '<p>Betrag <b>12,00 EUR</b></p><style>p{color:red}</style>' })).toBe(
       'Betrag 12,00 EUR',
     );
+  });
+});
+
+describe('stored mail links carry no address (U17) and point back to the thread (U09)', () => {
+  const ref = { key: 'google', connectorId: 'google', email: 'me@example.org' };
+
+  it('`forStorage` drops `?authuser=`; the opening link keeps the account', () => {
+    expect(mailWebUrl(ref, 't1')).toContain('authuser=');
+    const stored = mailWebUrl(ref, 't1', { forStorage: true });
+    expect(stored).toBe('https://mail.google.com/mail/#all/t1');
+  });
+
+  it('none of the six target types stores `authuser` or an `@` in note or url', () => {
+    const stored = mailWebUrl(ref, 't1', { forStorage: true });
+    expect(stored).toBeTruthy();
+    for (const type of MAIL_LINK_TYPES) {
+      for (const mail of [invoiceMail, eventMail]) {
+        const p = mailPrefill(type, mail, { link: stored, threadId: 't1', today: TODAY });
+        for (const value of [p.extra.note, p.extra.url]) {
+          expect(value ?? '', `${type}: ${value}`).not.toMatch(/authuser|@/);
+        }
+        expect(p.extra.link).toEqual({ kind: 'mail', id: 't1', label: expect.any(String) });
+      }
+    }
   });
 });

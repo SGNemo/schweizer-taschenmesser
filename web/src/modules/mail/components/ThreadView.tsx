@@ -331,6 +331,8 @@ export function ThreadView({
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   const web = mailWebUrl(account, threadId);
+  // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
+  const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
     <div className={styles.thread}>
       <div className={styles.row}>
@@ -365,7 +367,7 @@ export function ThreadView({
           key={m.id}
           account={account}
           threadId={threadId}
-          link={web}
+          link={stored}
           message={m}
           open={openIds.includes(m.id) || messages.length === 1}
           autoLoadImages={autoLoadImages}

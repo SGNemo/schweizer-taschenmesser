@@ -280,7 +280,15 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (money) score(scores, 'finance', kw.spend || kw.income || spentPast ? 92 : 80);
   if (money && slowRecurrence && !hasTime && !kw.invoice) score(scores, 'subscription', 92);
   if (money && kw.invoice) score(scores, 'invoice', 92);
-  else if (money && hasDate && !recurrence && (kw.due || kw.dueHint) && !kw.spend && !spentPast && !kw.income)
+  else if (
+    money &&
+    hasDate &&
+    !recurrence &&
+    (kw.due || kw.dueHint) &&
+    !kw.spend &&
+    !spentPast &&
+    !kw.income
+  )
     score(scores, 'invoice', 90);
   if (kw.birthday && hasDate && !hasTime && !recurrence) score(scores, 'birthday', 93);
   if (kw.deadline && !money && !recurrence) score(scores, 'todo', 96);
