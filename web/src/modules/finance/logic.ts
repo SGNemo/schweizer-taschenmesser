@@ -43,6 +43,14 @@ export function accountBalance(
   );
 }
 
+/**
+ * The opening balance that makes the account show `balanceToday` on `asOf`: what the bank app
+ * says today, after older bookings were imported (round 5, B06).
+ */
+export function openingForBalance(balanceToday: number, accountTxs: Tx[], asOf: string): number {
+  return balanceToday - accountBalance({ openingBalanceMinor: 0 }, accountTxs, asOf);
+}
+
 export function balances<A extends Pick<Account, 'openingBalanceMinor'> & { id: string }>(
   accounts: A[],
   txs: Tx[],

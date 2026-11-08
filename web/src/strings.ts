@@ -3203,6 +3203,9 @@ export const de = {
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
+    balanceToday: 'Kontostand heute laut Bank (optional)',
+    balanceTodayHint:
+      'Steht in deiner Banking-App. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',

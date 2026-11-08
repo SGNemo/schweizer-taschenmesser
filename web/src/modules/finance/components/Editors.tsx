@@ -13,7 +13,8 @@ import {
 import { formatDay, today } from '@/core/time/dates';
 import { copyData } from '@/core/db/copy';
 import { t } from '@/strings';
-import { lastUsedFor, splitsValid } from '../logic';
+import { lastUsedFor, openingForBalance, splitsValid } from '../logic';
+import { useFinanceData } from '../summary';
 import { findPossibleDuplicate } from '../analysis';
 import { CATEGORY_ICONS, categoryIcon } from '../categoryIcon';
 import { SplitEditor, rowsToSplits, splitsToRows, type SplitRow } from './SplitEditor';
@@ -413,6 +414,12 @@ function AccountForm({
     existing ? formatMoneyInput(existing.openingBalanceMinor) : '0,00',
   );
   const [currency, setCurrency] = useState(currencyOf(existing));
+  // Only for an account with bookings: "what the bank app says today" sets the opening balance (B06).
+  const finance = useFinanceData();
+  const accountTxs = existing
+    ? (finance?.txs ?? []).filter((x) => x.accountId === existing.id)
+    : [];
+  const [balanceToday, setBalanceToday] = useState('');
   const [accountKind, setAccountKind] = useState<AccountKind | ''>(existing?.kind ?? '');
   const [error, setError] = useState('');
 
@@ -427,8 +434,18 @@ function AccountForm({
       setError(t.money.currencyInvalid);
       return;
     }
+    const todayMinor =
+      balanceToday.trim() === '' ? undefined : parseMoney(balanceToday, { allowNegative: true });
+    if (balanceToday.trim() !== '' && todayMinor === undefined) {
+      setError(t.money.invalidAmount(formatMoneyInput(1250)));
+      return;
+    }
     const openingBalanceMinor =
-      opening.trim() === '' ? 0 : parseMoney(opening, { allowNegative: true });
+      todayMinor !== undefined
+        ? openingForBalance(todayMinor, accountTxs, today())
+        : opening.trim() === ''
+          ? 0
+          : parseMoney(opening, { allowNegative: true });
     if (openingBalanceMinor === undefined) {
       setError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
@@ -476,6 +493,18 @@ function AccountForm({
         }}
         error={error}
       />
+      {accountTxs.length > 0 ? (
+        <TextField
+          label={t.finance.balanceToday}
+          hint={t.finance.balanceTodayHint}
+          inputMode="decimal"
+          value={balanceToday}
+          onChange={(e) => {
+            setBalanceToday(e.target.value);
+            setError('');
+          }}
+        />
+      ) : null}
       <SelectField
         label={t.finance.ext.accountKind.label}
         value={accountKind}

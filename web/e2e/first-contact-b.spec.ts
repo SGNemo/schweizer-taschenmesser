@@ -66,3 +66,16 @@ test('B02/B07: the export sits next to the bookings and opens in Excel', async (
   const text = bytes.toString('utf8');
   expect(text).toContain('Rewe Markt Müllerstraße;Lebensmittel;Ausgabe;-54,37;');
 });
+
+test('B06: after importing older bookings the balance can be set to what the bank shows', async ({
+  page,
+}) => {
+  await importStatement(page);
+  await ready(page, '/finance?tab=accounts');
+  await page.getByTestId('balance-Girokonto').click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel(/Kontostand heute laut Bank/).fill('1.250,00');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByTestId('balance-Girokonto')).toHaveText(/1\.250,00\s€/);
+});

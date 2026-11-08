@@ -45,3 +45,11 @@ breaking: false
 de: Übersicht: Ist ToDos aus (Profil „Finanz-Fokus“), zeigt die ruhige Ansicht die Karte „Diesen Monat“ statt einer leeren Seite.
 en: Overview: with ToDos switched off (“Finance focus” profile) the calm view shows the “This month” card instead of an empty page.
 ---
+
+---
+type: added
+area: finance
+breaking: false
+de: Finanzen: Im Konto lässt sich „Kontostand heute laut Bank“ eintragen; Nemo passt den Anfangssaldo nach einem Import älterer Buchungen an.
+en: Finance: an account takes “today's balance according to the bank”; Nemo adjusts the opening balance after older bookings were imported.
+---
