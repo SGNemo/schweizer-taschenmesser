@@ -1,8 +1,8 @@
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 
 /**
- * Test data: a few training sessions this and last week (strength + running) and plain meals for
- * today and the last days. Harmless and invented: no body data, no goal set.
+ * Test data: a few training sessions this and last week (strength + running), one planned for tomorrow,
+ * one template („Beine“) and plain meals for today and the last days. Harmless and invented: no body data, no goal set.
  * Pure and deterministic; dates relative to `ctx.today`.
  */
 const tx = (de: string, en: string) => ({ de, en });
@@ -68,7 +68,35 @@ function seed(ctx: SeedContext): SeedRows {
         data: { date: ctx.day(-d), time: m.time, text: ctx.text(m.text), kcal: m.kcal },
       });
   }
-  return { session, meal };
+  // One plan for tomorrow (shows in the planner and the calendar as open) and one template.
+  session.push({
+    id: ctx.id('fitness', 'session', 'planned'),
+    data: {
+      date: ctx.day(1),
+      time: '18:00',
+      title: ctx.text(SESSIONS[0]!.title),
+      durationMin: SESSIONS[0]!.durationMin,
+      exercises: SESSIONS[0]!.exercises.map(({ name, ...rest }) => ({
+        name: ctx.text(name),
+        ...rest,
+      })),
+      planned: true,
+    },
+  });
+  const template = [
+    {
+      id: ctx.id('fitness', 'template', 0),
+      data: {
+        title: ctx.text(SESSIONS[2]!.title),
+        durationMin: SESSIONS[2]!.durationMin,
+        exercises: SESSIONS[2]!.exercises.map(({ name, ...rest }) => ({
+          name: ctx.text(name),
+          ...rest,
+        })),
+      },
+    },
+  ];
+  return { session, meal, template };
 }
 
 export default { seed } satisfies SeedModule;

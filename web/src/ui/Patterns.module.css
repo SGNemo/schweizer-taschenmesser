@@ -93,13 +93,15 @@
   flex: 1;
   min-width: 0;
 }
-.actions {
+/* FormActions: its own class names. A shared `.actions` with the row actions below (opacity 0 until the
+   row is hovered) made every form's save button invisible on devices with a mouse. */
+.formActions {
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
   flex-wrap: wrap;
 }
-.actionsEnd {
+.formActionsEnd {
   display: flex;
   gap: var(--space-2);
 }

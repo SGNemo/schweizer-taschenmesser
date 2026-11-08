@@ -9,6 +9,10 @@
 //!
 //! What "start" means is behind [`Launcher`] (tests count calls; [`RealLauncher`] opens the
 //! transport and the announcement).
+//!
+//! The port stays the same across restarts (app start, midnight, a new address set): a paired
+//! device knows the hub only by the address of the QR (no mDNS on Android), so a new random port
+//! would leave every device waiting. The first start picks a free port and remembers it.
 
 use crate::discovery::Announcer;
 use crate::hub::netpolicy::{
@@ -17,6 +21,7 @@ use crate::hub::netpolicy::{
 use crate::hub::router::Router;
 use crate::noise::PublicKey;
 use crate::transport::{Deliverer, Server, ServerConfig};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -113,9 +118,50 @@ impl<L: Launcher> Supervisor<L> {
 
 /// The real thing: transport server plus mDNS announcement on the same addresses.
 pub struct RealLauncher {
-    pub router: Arc<Router>,
-    pub hub_key: PublicKey,
-    pub cfg: ServerConfig,
+    router: Arc<Router>,
+    hub_key: PublicKey,
+    cfg: ServerConfig,
+    /// The port of the last start (0 = none yet) and where it is remembered.
+    port: u16,
+    port_file: Option<PathBuf>,
+}
+
+impl RealLauncher {
+    /// `port_file`: where the hub's port is remembered (read now, written when it changes).
+    pub fn new(
+        router: Arc<Router>,
+        hub_key: PublicKey,
+        cfg: ServerConfig,
+        port_file: Option<PathBuf>,
+    ) -> Self {
+        let port = port_file.as_deref().map_or(0, read_port);
+        RealLauncher {
+            router,
+            hub_key,
+            cfg,
+            port,
+            port_file,
+        }
+    }
+}
+
+/// The remembered port, or 0 (none, unreadable, or not a sensible port).
+fn read_port(path: &std::path::Path) -> u16 {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|t| t.trim().parse::<u16>().ok())
+        .filter(|p| *p >= 1024)
+        .unwrap_or(0)
+}
+
+/// Starts on the remembered port first; only if that is taken (or there is none) on a free one.
+fn start_on<T, E>(remembered: u16, mut start: impl FnMut(u16) -> Result<T, E>) -> Result<T, E> {
+    if remembered != 0 {
+        if let Ok(started) = start(remembered) {
+            return Ok(started);
+        }
+    }
+    start(0)
 }
 
 /// What a running hub consists of. Dropping it closes the listeners and withdraws the
@@ -152,7 +198,10 @@ impl Launcher for RealLauncher {
 
     fn launch(&mut self, binds: &[Bind], _day: i64) -> Result<(Live, u16), ()> {
         self.router.set_binds(binds.to_vec());
-        let server = match Server::start(binds, 0, self.router.clone(), self.cfg) {
+        let (router, cfg) = (self.router.clone(), self.cfg);
+        let server = match start_on(self.port, |port| {
+            Server::start(binds, port, router.clone(), cfg)
+        }) {
             Ok(s) => s,
             Err(_) => {
                 self.router.set_binds(Vec::new());
@@ -160,6 +209,13 @@ impl Launcher for RealLauncher {
             }
         };
         let port = server.port();
+        if port != self.port {
+            self.port = port;
+            if let Some(path) = &self.port_file {
+                // best effort: without it the next start picks a free port again
+                let _ = std::fs::write(path, port.to_string());
+            }
+        }
         // no mDNS (multicast blocked, no permission): the hub still serves, the QR carries the address
         let announcer = Announcer::start(binds, port, &self.hub_key, unix_secs()).ok();
         Ok((
@@ -175,6 +231,55 @@ impl Launcher for RealLauncher {
 
 #[cfg(test)]
 mod tests {
+    use super::{read_port, start_on};
+
+    #[test]
+    fn the_remembered_port_comes_first_and_a_taken_one_falls_back_to_a_free_one() {
+        let mut tried = Vec::new();
+        let got: Result<u16, ()> = start_on(47_123, |p| {
+            tried.push(p);
+            Ok(if p == 0 { 50_000 } else { p })
+        });
+        assert_eq!((got, tried.clone()), (Ok(47_123), vec![47_123]));
+
+        tried.clear();
+        let got: Result<u16, ()> = start_on(47_123, |p| {
+            tried.push(p);
+            if p == 0 {
+                Ok(50_000)
+            } else {
+                Err(())
+            }
+        });
+        assert_eq!((got, tried.clone()), (Ok(50_000), vec![47_123, 0]));
+
+        tried.clear();
+        let got: Result<u16, ()> = start_on(0, |p| {
+            tried.push(p);
+            Ok(50_000)
+        });
+        assert_eq!((got, tried), (Ok(50_000), vec![0]));
+    }
+
+    #[test]
+    fn a_remembered_port_is_read_back_and_nonsense_means_none() {
+        let dir = std::env::temp_dir().join(format!("lan-port-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("port");
+        assert_eq!(read_port(&file), 0, "no file yet");
+        for (text, want) in [
+            ("47123", 47_123),
+            (" 47123\n", 47_123),
+            ("80", 0),
+            ("x", 0),
+            ("70000", 0),
+        ] {
+            std::fs::write(&file, text).unwrap();
+            assert_eq!(read_port(&file), want, "{text:?}");
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
     use super::*;
     use crate::hub::netpolicy::{IfaceInfo, NetCategory, NetError};
     use std::cell::RefCell;

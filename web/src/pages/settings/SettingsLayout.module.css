@@ -296,6 +296,26 @@
     z-index: calc(var(--z-sticky, 1) - 1);
     background: var(--bg);
     padding-block: var(--space-2);
+    /* Moves with the top bar (same timing), so nothing hangs in the air while the bar is folded away. */
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  /* The bar folds away while reading (useTopbarCollapse): the search follows it up to the status bar instead of
+     keeping the bar's place, which left a band of scrolling content showing above it. */
+  :global(body:has([data-topbar][data-collapsed='true'])) .search.stickySearch {
+    transform: translateY(calc(-1 * (var(--touch) + 2 * var(--space-3))));
+  }
+  :global(body:has([data-topbar][data-instant='true'])) .search.stickySearch {
+    transition: none;
+  }
+  /* Under the status bar (Android edge-to-edge: safe-area inset) the page background closes the strip above the
+     search, so no content shows through between the status bar and the field. Nothing without an inset. */
+  .search.stickySearch::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    height: env(safe-area-inset-top);
+    background: var(--bg);
   }
 }
 

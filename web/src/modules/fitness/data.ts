@@ -4,8 +4,8 @@ import type { Stored } from '@/core/db/types';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
-import { mealRepo, sessionRepo } from './repo';
-import type { Exercise, Meal, Session } from './schema';
+import { mealRepo, sessionRepo, templateRepo } from './repo';
+import type { Exercise, Meal, Session, Template } from './schema';
 import { DEFAULTS, settingsSchema, type FitnessSettings } from './settings';
 
 /** Sessions from `from` on (newest first); `undefined` while loading. */
@@ -30,6 +30,15 @@ export function useMeals(from?: string): Stored<Meal>[] | undefined {
       `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`),
     );
   }, [from]);
+}
+
+/** Saved templates by title (`undefined` while loading). */
+export function useTemplates(): Stored<Template>[] | undefined {
+  return useLiveQuery(
+    async () =>
+      (await templateRepo.active().toArray()).sort((a, b) => a.title.localeCompare(b.title)),
+    [],
+  );
 }
 
 /** The module's settings with defaults filled in. */
