@@ -39,9 +39,9 @@ export async function ensureAlertPermission(
   if (!types.includes('reminder')) return {};
   let state = notifications.permission();
   if (state === 'default' && !askedBefore()) {
-    markAsked();
     try {
       state = await notifications.requestPermission();
+      markAsked(); // answered or dismissed: never again; a prompt that failed to show may retry
       // The save already passed the OS schedule while alerts were still undecided: rebuild it.
       if (state === 'granted') return { justGranted: true };
     } catch {

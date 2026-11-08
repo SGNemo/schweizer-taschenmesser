@@ -64,10 +64,10 @@ const SHORT_DAY_ANY_RE =
   /(?<![\p{L}\d])(?:([Aa]m)\s+(Mo|Di|Mi|Do|Fr|Sa|So|mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)\.?|()(Mo|Di|Mi|Do|Fr|Sa|So)\.?(?=\s+(?:um\s+)?\d{1,2}(?::\d{2}\s*(?:[Uu]hr)?|\s*[Uu]hr)(?![\p{L}\d])))(?![\p{L}\d])/u;
 /**
  * A euro amount without currency word at the very start or end („Tanken 62,40“, C02): two decimals
- * only, never after a time word („um 14,30“, „bis 12,30“).
+ * only, never after a time word („um 14,30“, „bis 12,30“, „gegen 7,45“).
  */
 const EDGE_CENTS_RE =
-  /^\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(?=\s+\S)|(?<=\S\s+)(?<!(?:^|\s)(?:um|bis|ab|gegen|von)\s+)(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})\s*$/iu;
+  /^\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(?=\s+\S)|(?<=\S\s+)(?<!(?:^|\s)(?:um|bis|gegen)\s+)(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})\s*$/iu;
 /** „ab Do“: the day is the earliest one, not a pin. */
 const FROM_WORD = word(String.raw`ab`);
 /** „bis Do“, „Frist Do“: a hard deadline in a plan capture. */
@@ -212,9 +212,9 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
       : slowRecurrence
         ? extractAmount(scan, 'decimal')
         : undefined;
-  // Only when nothing else gave the text a date or time („morgen 9 Uhr Zahnarzt 45,00“ stays an event).
+  // Not when the text has a time („morgen 9 Uhr Zahnarzt 45,00“ stays an event); a day is fine.
   const edgeMatch =
-    amount || bare || forced || recurrence || dt.date || dt.time !== undefined
+    amount || bare || forced || recurrence || dt.time !== undefined
       ? null
       : EDGE_CENTS_RE.exec(scan.t);
   const edgeCents = edgeMatch ? toCents((edgeMatch[1] ?? edgeMatch[2])!) : undefined;

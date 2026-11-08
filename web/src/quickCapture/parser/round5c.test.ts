@@ -42,6 +42,20 @@ describe('C02: a comma time or a dated text is not money', () => {
     }
   });
 
+  it.each([
+    ['gestern Tanken 62,40', '2026-10-28'],
+    ['Tanken 62,40 am Do', '2026-11-05'],
+  ])('a day does not stop the amount: %s', (text, date) => {
+    expect(parse(text)).toMatchObject({
+      type: 'finance',
+      fields: { title: 'Tanken', amountMinor: 6240, date },
+    });
+  });
+
+  it('„Abo von 9,99“ keeps its amount', () => {
+    expect(parse('Abo von 9,99').fields.amountMinor).toBe(999);
+  });
+
   it('„morgen 9 Uhr Zahnarzt 45,00“ stays a clean appointment', () => {
     const r = parse('morgen 9 Uhr Zahnarzt 45,00');
     expect(r.type).toBe('event');
@@ -79,6 +93,10 @@ describe('C03: short weekday before a time („Do 14 Uhr“) or after „am“',
     expect(r.fields.date).toBeUndefined();
     expect(r.fields.title).toBe(text);
   });
+});
+
+it('C03 trade-off: a capital „So“ before a time is Sunday', () => {
+  expect(parse('So 15 Uhr passt').fields).toMatchObject({ date: '2026-11-01', time: '15:00' });
 });
 
 it('C03: lowercase „so“ before a time means „about“, not Sunday', () => {
