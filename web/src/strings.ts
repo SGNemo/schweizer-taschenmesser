@@ -6263,6 +6263,8 @@ export const de = {
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
         'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
+      bankBalanceHint:
+        'Stimmt der Kontostand danach nicht mit deiner Bank überein? Trag ihn unter Finanzen → Konten als „Kontostand heute laut Bank“ ein.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'

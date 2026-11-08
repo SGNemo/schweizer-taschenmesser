@@ -91,6 +91,10 @@ async function parseBank(
     loadRules(),
     listSubscriptionNames(),
   ]);
+  // A first import into an account that starts at 0: today's balance will not match the bank yet (B06).
+  const target = await accountRepo.get(accountId);
+  if (target?.openingBalanceMinor === 0 && !past.some((x) => x.accountId === accountId))
+    notes.push(s.bankBalanceHint);
   // Then, for payees the app has never seen, a default category from well-known names (B03).
   const hints = suggestCategories(
     past,

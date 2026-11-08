@@ -296,3 +296,13 @@ describe('a first bank import', () => {
     expect(byPayee['Elektro Möller']!.categoryId).toBeUndefined();
   });
 });
+
+describe('the first import into an account that starts at 0', () => {
+  it('says where to enter the balance the bank shows (B06)', async () => {
+    const { result } = await parse(file(fixture('sparkasse-camt.csv')), account);
+    expect(result.notes.some((n) => n.includes('Kontostand heute laut Bank'))).toBe(true);
+    await importAll(file(fixture('sparkasse-camt.csv')), account);
+    const again = await parse(file(fixture('ing.csv')), account);
+    expect(again.result.notes.some((n) => n.includes('Kontostand heute laut Bank'))).toBe(false);
+  });
+});
