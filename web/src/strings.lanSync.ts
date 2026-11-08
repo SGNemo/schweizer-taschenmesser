@@ -7,6 +7,7 @@ import { defineBundle } from '@/core/i18n/bundle';
 export const tLanSync = defineBundle(
   {
     title: 'Im Heimnetz',
+    badgeWaiting: 'Synchronisation: wartet auf deinen PC',
     hint: 'Handy und PC gleichen sich ab, sobald beide im selben WLAN sind. Kein eigener Server nötig.',
     introPc: 'Gleiche dein Handy im Heimnetz mit diesem PC ab.',
     introPcLine:
@@ -82,6 +83,42 @@ export const tLanSync = defineBundle(
     tray: 'Im Tray weiterlaufen',
     close: 'Schließen',
     done: 'Fertig',
+    // phone (device paired with a PC)
+    introPhone: 'Gleiche im Heimnetz mit deinem PC ab.',
+    introPhoneLine:
+      'Auf dem PC: Einstellungen → Synchronisation → „Gerät koppeln“. Dann hier den Code scannen.',
+    pairWithPc: 'Mit PC koppeln',
+    otherPath:
+      'Dieses Gerät gleicht über einen eigenen Server ab. Trenne es dort zuerst, um es mit deinem PC zu koppeln.',
+    confirmOnPc: (code: string) => `Am PC bestätigen · Code ${code}`,
+    confirmOnPcLine: 'Steht derselbe Code auf dem PC, klicke dort auf „Koppeln“.',
+    connecting: 'Verbindet mit dem PC …',
+    pairedWith: 'Mit deinem PC gekoppelt',
+    synced: 'Abgeglichen',
+    syncing: 'Gleicht ab …',
+    waitingForPc: 'Gleicht ab, sobald dein PC im selben WLAN erreichbar ist',
+    isNemoRunning: 'Läuft Nemo auf dem PC?',
+    offlineLine: 'Dieses Handy ist gerade ohne Netz.',
+    clockOff: 'Die Uhrzeit des Handys weicht ab.',
+    clockLine: 'Stelle Datum und Uhrzeit auf automatisch, dann geht es weiter.',
+    pcUnexpected: 'Der PC hat unerwartet geantwortet.',
+    pcUnexpectedLine: 'Bring Nemo auf beiden Geräten auf den neuesten Stand.',
+    revoked: 'Diese Kopplung wurde gelöst.',
+    cannotRead: 'Daten vom PC lassen sich nicht lesen.',
+    pairAgain: 'Neu koppeln',
+    badQr: 'Das ist kein Kopplungscode von Nemo.',
+    notPossible: 'Kopplung nicht möglich – am PC neu zeigen.',
+    pcNotFound: 'PC nicht gefunden – sind beide im selben WLAN?',
+    scanAgain: 'Neu scannen',
+    tryAgain: 'Neu versuchen',
+    pairFailed: 'Das Koppeln hat nicht geklappt. Versuche es noch einmal.',
+    pairAborted: 'Kopplung abgebrochen.',
+    cameraDenied: 'Kamera ist aus. In den Einstellungen des Handys erlauben.',
+    keystorePhone:
+      'Der sichere Schlüsselspeicher des Handys antwortet nicht. Starte Nemo neu und versuche es noch einmal.',
+    unpairFromPcAsk: 'Vom PC lösen? Dieses Gerät gleicht erst wieder ab, wenn du es neu koppelst.',
+    serverBlockedPhone:
+      'Dieses Gerät ist mit deinem PC gekoppelt. Löse die Kopplung oben, um stattdessen einen eigenen Server zu verbinden.',
     // folded server form
     ownServer: 'Eigener Server (erweitert)',
     ownServerOff: 'Aus',
@@ -91,11 +128,12 @@ export const tLanSync = defineBundle(
   {
     en: {
       title: 'On your home network',
+      badgeWaiting: 'Sync: waiting for your PC',
       hint: 'Phone and PC sync as soon as both are on the same Wi-Fi. No own server needed.',
       introPc: 'Sync your phone with this PC on your home network.',
       introPcLine: 'Pairing works with a QR code, nothing to type. Your data stays encrypted.',
       serverFirst:
-        'This device syncs through an own server. Disconnect it there first to use this PC as the sync point.',
+        'This device syncs through your own server. Disconnect it there first to use this PC as the sync point.',
       pairDevice: 'Pair a device',
       syncNow: 'Sync now',
       hubOn: (n: number) =>
@@ -162,10 +200,44 @@ export const tLanSync = defineBundle(
       tray: 'Keep running in the tray',
       close: 'Close',
       done: 'Done',
+      introPhone: 'Sync with your PC on your home network.',
+      introPhoneLine: 'On the PC: Settings → Sync → “Pair a device”. Then scan the code here.',
+      pairWithPc: 'Pair with PC',
+      otherPath:
+        'This device syncs through your own server. Disconnect it there first to pair it with your PC.',
+      confirmOnPc: (code: string) => `Confirm on your PC · Code ${code}`,
+      confirmOnPcLine: 'If the PC shows the same code, click “Pair” there.',
+      connecting: 'Connecting to the PC …',
+      pairedWith: 'Paired with your PC',
+      synced: 'Synced',
+      syncing: 'Syncing …',
+      waitingForPc: 'Syncs as soon as your PC is reachable on the same Wi-Fi',
+      isNemoRunning: 'Is Nemo running on the PC?',
+      offlineLine: 'This phone has no connection right now.',
+      clockOff: "The phone's clock is off.",
+      clockLine: 'Set date and time to automatic, then syncing continues.',
+      pcUnexpected: 'The PC gave an unexpected answer.',
+      pcUnexpectedLine: 'Update Nemo on both devices.',
+      revoked: 'This pairing was removed.',
+      cannotRead: 'Data from the PC cannot be read.',
+      pairAgain: 'Pair again',
+      badQr: 'This is not a Nemo pairing code.',
+      notPossible: 'Pairing not possible – show the code on your PC again.',
+      pcNotFound: 'PC not found – are both on the same Wi-Fi?',
+      scanAgain: 'Scan again',
+      tryAgain: 'Try again',
+      pairFailed: 'Pairing did not work. Try again.',
+      pairAborted: 'Pairing was cancelled.',
+      cameraDenied: 'The camera is off. Allow it in the phone settings.',
+      keystorePhone: 'The phone’s secure key store does not answer. Restart Nemo and try again.',
+      unpairFromPcAsk:
+        'Unpair from the PC? This device will only sync again after you pair it again.',
+      serverBlockedPhone:
+        'This device is paired with your PC. Unpair it above to connect your own server instead.',
       ownServer: 'Own server (advanced)',
       ownServerOff: 'Off',
       serverBlocked:
-        'This PC syncs on your home network right now. Turn that off under “More settings” to connect an own server instead.',
+        'This PC syncs on your home network right now. Turn that off under “More settings” to connect your own server instead.',
     },
   },
 );

@@ -308,6 +308,22 @@ impl Core {
     }
 }
 
+impl Core {
+    /// Closes the connection of the attempt waiting for a confirmation (cancel on the PC), so the
+    /// device shows "Kopplung abgebrochen" at once. The hub lock is released before the transport
+    /// is touched.
+    fn end_waiting_connection(&self) {
+        let found = self.live.lock().ok().and_then(|live| {
+            let attempt = live.pending.as_ref().map(|p| p.attempt)?;
+            let deliverer = live.sup.handle().and_then(Live::deliverer)?;
+            Some((attempt, deliverer))
+        });
+        if let Some((attempt, deliverer)) = found {
+            deliverer.abort(attempt);
+        }
+    }
+}
+
 fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
     let dir = lan_dir(app)?;
     let service = format!("{}.lan-sync", app.config().identifier);
@@ -507,6 +523,12 @@ pub fn lan_pair_confirm(
         let result = core
             .host
             .confirm_deliver(attempt, &code, &mut |wire| deliverer.deliver(attempt, wire));
+        if result.is_err() {
+            // a wrong code or a lost attempt: neither device may wait for its own timeout (the id the
+            // UI passed, and the attempt the hub still showed as waiting)
+            deliverer.abort(attempt);
+            core.end_waiting_connection();
+        }
         let _ = wake.send(());
         result.map_err(|e| match e {
             PairError::WrongCode => "wrong-code",
@@ -522,6 +544,8 @@ pub fn lan_pair_confirm(
 #[tauri::command]
 pub fn lan_pair_cancel(state: State<'_, LanSync>) -> Result<(), String> {
     with_core(&state, |core, wake| {
+        // the waiting attempt is read before the window closes (a supervisor round clears it after)
+        core.end_waiting_connection();
         core.host.cancel();
         let _ = wake.send(());
         Ok(())

@@ -1,0 +1,48 @@
+import { Channel, invoke } from '@tauri-apps/api/core';
+import type { LanClientService, LanPairing } from '../types';
+
+/** Rust answers with a short code string on failure; keep it as the error message. */
+const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> =>
+  invoke<T>(cmd, args).catch((e: unknown) => {
+    throw new Error(typeof e === 'string' ? e : 'failed');
+  });
+
+/** The phone's side of home-network sync (`src-tauri/src/lan_client.rs`) and the native QR scanner. */
+export function createLanClient(supported: boolean): LanClientService {
+  const unsupported = () => Promise.reject(new Error('unsupported'));
+  if (!supported) {
+    return {
+      supported,
+      scan: unsupported,
+      pair: unsupported,
+      cancelPair: async () => undefined,
+      request: unsupported,
+      unpair: unsupported,
+    };
+  }
+  return {
+    supported,
+    async scan() {
+      const scanner = await import('@tauri-apps/plugin-barcode-scanner');
+      let permission = await scanner.checkPermissions();
+      if (permission !== 'granted') permission = await scanner.requestPermissions();
+      if (permission !== 'granted') throw new Error('camera-denied');
+      try {
+        const result = await scanner.scan({ formats: [scanner.Format.QRCode] });
+        return result.content;
+      } catch (e) {
+        // the user closed the scanner: nothing to report; anything else is a real failure
+        const text = typeof e === 'string' ? e : e instanceof Error ? e.message : '';
+        throw new Error(/cancel/i.test(text) ? 'cancelled' : 'failed', { cause: e });
+      }
+    },
+    pair(qr, name, onCode) {
+      const channel = new Channel<string>();
+      channel.onmessage = (code) => onCode(code);
+      return call<LanPairing>('lan_client_pair', { qr, name, onCode: channel });
+    },
+    cancelPair: () => call<void>('lan_client_pair_cancel'),
+    request: (body, hub) => call<string>('lan_client_request', { body, hub }),
+    unpair: () => call<void>('lan_client_unpair'),
+  };
+}
