@@ -65,9 +65,10 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 ## Läuft gerade (Running work)
 
-| Topic                                                                           | Branch          | Area / files                                                                                    | State                                                                     | Last commit | Updated    |
-| ------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- | ---------- |
-| UI schärfen, Runde 6 (Review + Fundliste; Fixes folgen als `fix/ui6-<bereich>`) | `qa/ui-round-6` | `docs/qa/round-6/**` only (Fix-PRs: home, layout, settings, modules/<x>, ui – announced per PR) | paused – Phase 3: list + 4 questions sent, waiting for „Plan freigegeben“ | see branch  | 2026-11-08 |
+| Topic                                                                           | Branch           | Area / files                                                                                    | State                                                                     | Last commit | Updated    |
+| ------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- | ---------- |
+| UI schärfen, Runde 6 (Review + Fundliste; Fixes folgen als `fix/ui6-<bereich>`) | `qa/ui-round-6`  | `docs/qa/round-6/**` only (Fix-PRs: home, layout, settings, modules/<x>, ui – announced per PR) | paused – Phase 3: list + 4 questions sent, waiting for „Plan freigegeben“ | see branch  | 2026-11-08 |
+| UI Runde 6 – layout (U01, U06, U24, U59)                                        | `fix/ui6-layout` | `layout/AreaFrame*`, `layout/setup/**`, `router.tsx`, `e2e/layout`+`setup` specs                | in progress                                                               | see branch  | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
