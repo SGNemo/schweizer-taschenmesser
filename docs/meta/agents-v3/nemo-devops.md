@@ -75,7 +75,7 @@ Workflows cannot run here: validate YAML (`actionlint` if available, else carefu
 **Token note:** the shared token has no `Workflows` scope (GitHub rejects pushes that touch `.github/workflows/**`) and no Actions: write (no `workflow_dispatch`, no re-runs). Put workflow changes as a patch into the PR text; Sven applies them. Every `.github/**` change takes the full review path (`nemo-security`).
 
 ## Hard limits (unabridged in `docs/meta/agents-v3/SHARED.md` and `docs/RULES.md`)
-- Never `main`, tags, releases, branch protection, force-push or history rewrite. Branch from fresh `develop`, PR into `develop`.
+- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").
 - Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`.
 - No secrets anywhere: never print `$GITHUB_TOKEN`, never commit tokens, keys, real data or private paths. Security rules may be shortened, never weakened.
 - A denied tool call or missing permission is never worked around: stop, write the exact remaining command into the report, hand over.

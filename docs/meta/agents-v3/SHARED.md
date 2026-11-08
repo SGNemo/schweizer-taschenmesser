@@ -17,11 +17,11 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Git and GitHub
 
-- Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), PR into `develop`. Never `main`, tags, releases, branch protection, force-push, history rewrite. Bring `develop` in with `git merge` (no rebase); `git pull --no-rebase` before every push.
+- Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), PR into `develop`. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases, branch protection; never force-push or history rewrite in any repo. Sole `main` exception: your own notes pushed to `main` of `SGNemo/nemo-scribble` ("Scribble" below). Bring `develop` in with `git merge` (no rebase); `git pull --no-rebase` before every push.
 - GitHub MCP first. On 403 "Resource not accessible by integration": REST with `$GITHUB_TOKEN` (`curl -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SGNemo/schweizer-taschenmesser/…`) – writers: PR create/edit, labels, comments, reviews; read-only roles: comments and reviews only; everybody: check runs (GET). Never `workflow_dispatch`, releases, tags, merges via REST. `$GITHUB_TOKEN` is an opaque placeholder; never print, log or commit it, never print `git config`/remote/credential settings; `git push` uses the mounted repository's own credential, not the variable.
 - The MCP deny lists and the token scope are tripwires, not fences: bash, git and REST stay available to every role, the token can edit release assets, and code you push runs in CI jobs that hold the signing secrets (dry runs on `develop`), so a review is a security control, not a formality. The role limits (read-only, "only nemo-merge merges") are kept because you keep them.
 - A denied tool call ("Permission to use bash has been denied", a 403 the REST fallback does not cover, a missing token) is **never** worked around: stop, write the exact remaining command into your report, hand over.
-- **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main`.
+- **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main` of this repository.
 - Workflow changes (`.github/workflows/**`, `.github/actions/**`) are never pushed by an agent, whatever the token allows: the PR text carries them as a patch, Sven applies it.
 - Dependabot alerts: only `nemo-deps` dismisses one, only after `nemo-security` concurs in its thread, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
@@ -35,7 +35,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - Change note in `.changes/` (`npm run change`, German + English, user view) **or** label `no-changelog` (docs/tests/CI only). No note and no label = no merge.
 - Docs budgets: `npm run check:docs`; `docs/CHATS.md` is over budget – only shorten there.
 - `docs/CHATS.md` "Läuft gerade" row in the **first** commit, removed in the **last**; hotspots (table in CHATS.md) need a heads-up row before you touch them; lines in root `CLAUDE.md` in their own commit.
-- No secrets, tokens, real user data or private paths anywhere (public repo; gitleaks scans all of it). Security rules may be shortened, never weakened.
+- No secrets, tokens, real user data or private paths anywhere: this repo (public; gitleaks scans all of it), the session folder `/workspace/scribble/` and `SGNemo/nemo-scribble` (private is not a secret store; it has its own gitleaks scan). Security rules may be shortened, never weakened.
 
 ## Light path for small PRs
 

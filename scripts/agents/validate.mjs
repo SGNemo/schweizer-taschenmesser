@@ -110,6 +110,10 @@ const READ_ONLY = new Set([
 const READ_ONLY_EXTRA = {
   "nemo-auditor": " and the report copy in `/mnt/session/outputs/`",
 };
+// first hard-limits line, pinned: "never main" is scoped to this repo; the one exception is the agent's own notes
+// on main of the private notes repo (SHARED.md "Scribble"); force-push and history rewrite stay banned everywhere
+const NEVER_LINE =
+  '- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").';
 const MERGE_LINE = {
   merge:
     "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
@@ -126,6 +130,11 @@ function hardLimitsOf(a) {
       ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}, except your own scribble notes (SHARED.md "Scribble").`
       : "");
   const block = a.system.slice(i);
+  if (!block.includes("\n" + NEVER_LINE + "\n"))
+    return {
+      error:
+        "first line of the hard limits is not the pinned NEVER_LINE (repo scope + notes-repo exception)",
+    };
   if (!block.includes(expect + "\n"))
     return {
       error:
