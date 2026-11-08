@@ -156,6 +156,36 @@ const invoices: CaptureTarget = {
   },
 };
 
+/** Fitness (docs/features/fitness.md §5): a meal with rough kcal, a session with its exercises. */
+const meal: CaptureTarget = {
+  type: 'meal',
+  moduleId: 'fitness',
+  collection: 'meal',
+  build: (f, ctx) => {
+    if (f.kcal === undefined || !f.title.trim()) throw new CaptureError('invalid');
+    return {
+      text: f.title.trim(),
+      kcal: f.kcal,
+      date: date(f.date ?? ctx.today),
+      ...(f.time ? { time: f.time } : {}),
+    };
+  },
+};
+
+const workout: CaptureTarget = {
+  type: 'workout',
+  moduleId: 'fitness',
+  collection: 'session',
+  build: (f, ctx) => {
+    if (!f.exercises?.length) throw new CaptureError('invalid');
+    return {
+      date: date(f.date ?? ctx.today),
+      ...(f.time ? { time: f.time } : {}),
+      exercises: f.exercises.map((e) => ({ ...e })),
+    };
+  },
+};
+
 const subscriptions: CaptureTarget = {
   type: 'subscription',
   moduleId: 'subscriptions',
@@ -230,6 +260,8 @@ export const TARGETS = {
   list: lists,
   finance,
   invoice: invoices,
+  meal,
+  workout,
   note: notes,
   subscription: subscriptions,
   birthday: people,

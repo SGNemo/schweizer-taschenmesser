@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Fitness, Paket 1 (`feat/fitness-1`, PR offen): Modul `fitness` (preview, aus) in Haushalt – Einheiten + Mahlzeiten, Widget Woche/heute, Kalender, Schnellerfassung `training …`/`kcal …`, Tagesziel direkt oder Mifflin-St-Jeor (Körperdaten nie gespeichert); Paket 2 (Wochenansicht, Vorlagen, Planer) und 3 (CSV-Import) offen ([features/fitness.md](features/fitness.md)).
 Agenten-Team v3 (`review/agents-v3`, PR offen): Prüfung der v2-Definitionen gegen die Managed-Agents-Doku (Befund 1: Lead ohne `multiagent`-Block), 20 Definitionen mit Modellen je Rolle, gemeinsamer Regelblock `SHARED.md`, `ant apply`-Dateien, Einrichtung und Session-Skript ([meta/agents-v3/README.md](meta/agents-v3/README.md)); gilt erst nach Svens Umstellung.
 Agenten v3 Auditor (`feat/agents-v3-auditor`, PR offen): `nemo-auditor` (Fable, zweiter Einstiegspunkt für Svens Prüfaufträge, fragt die 19 nur zum Nachprüfen), `session.mjs` wartet auf laufende Kind-Threads und kennt `--agent auditor`, LF für Agenten-Dateien unter Windows; Sven mergt und wendet nur `nemo-auditor.md` an.
 E2E-Tempo (#509, gemergt; volle CI-Läufe auf develop 9–12 statt 23 min E2E): E2E-Jobs laufen nebeneinander (Smoke 3, Rest 8, Seed 2 Shards, Sync), Playwright-Schriften aus dem Cache, Seed einmal je Worker; `npm run e2e` = PR-Satz (Smoke + Sync, ~10 min), `e2e:full` = alles.

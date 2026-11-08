@@ -1,6 +1,6 @@
 # Fitness (module, concept – phase 1)
 
-Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **concept, questions answered, waiting for "Plan freigegeben"**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
+Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **package 1 built (`feat/fitness-1`)**; packages 2–3 open. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
 
 ## 1. One module or two – recommendation: **one module `fitness`**
 
@@ -48,16 +48,16 @@ Why one: the widget rule (one widget per module, "only what matters today") fits
 
 **Quick capture** (`quickCapture/parser` + `targets/adapters.ts`; two new types `meal`, `workout`; word prefixes like `plan:` since the one letters are taken; corpus cases in `parser/corpus.ts`):
 
-| Input                                                          | Result                                                                                       |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `kcal 650 Döner` · `Döner 650 kcal` · `gestern kcal 400 Pizza` | meal: text "Döner", 650 kcal, today/now (date words as usual)                                |
-| `650 kcal Döner` without prefix                                | detected as meal (the unit `kcal` is an unambiguous signal)                                  |
-| `training Bankdrücken 3×8 60` · `3x8 60kg` · `3 × 8 @ 60 kg`   | exercise Bankdrücken, 3 sets × 8 reps, 60 kg, added to **today's session** (created if none) |
-| `training Laufen 30 Min`                                       | exercise Laufen, 30 min (estimate parser)                                                    |
-| `training Bankdrücken 3×8 60, Kniebeuge 3×5 80`                | two exercises; `split.ts` keeps a `training` line whole                                      |
-| `kcal` while "Kalorien erfassen" is off                        | not offered as a type; text stays a ToDo                                                     |
+| Input                                                          | Result                                                                                                                                                                        |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kcal 650 Döner` · `Döner 650 kcal` · `gestern kcal 400 Pizza` | meal: text "Döner", 650 kcal, today/now (date words as usual)                                                                                                                 |
+| `650 kcal Döner` without prefix                                | detected as meal (the unit `kcal` is an unambiguous signal)                                                                                                                   |
+| `training Bankdrücken 3×8 60` · `3x8 60kg` · `3 × 8 @ 60 kg`   | exercise Bankdrücken, 3 sets × 8 reps, 60 kg, as **one new session** for today (built: every `training` line is its own session; append to today's session = later, if asked) |
+| `training Laufen 30 Min`                                       | exercise Laufen, 30 min (estimate parser)                                                                                                                                     |
+| `training Bankdrücken 3×8 60, Kniebeuge 3×5 80`                | two exercises; `split.ts` keeps a `training` line whole                                                                                                                       |
+| `kcal` while "Kalorien erfassen" is off                        | built: still saved (it is an explicit entry) and shown again once the switch is on; the switch hides the view and the widget row                                              |
 
-Undo removes the meal / restores the session's previous exercise list. en: `kcal`, `workout`. The prefixes appear in Settings → Schnellerfassung like the others.
+Undo removes the meal or the session. en: `kcal`, `workout`; a day word may come first (`gestern kcal 400 Pizza`). Built: the preview shows a chip per exercise and the kcal.
 
 **In the module:** primary action per view ("Einheit eintragen" / "Mahlzeit eintragen"); **"Wie letztes Mal"** = one tap copies the last session to today (toast with "Rückgängig", then editable); the meal field suggests own foods with their kcal ("Döner · 650 kcal"); the exercise field suggests catalogue + own names, sets/reps/weight prefilled from the last time.
 

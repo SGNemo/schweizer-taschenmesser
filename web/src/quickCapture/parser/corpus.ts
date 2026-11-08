@@ -232,4 +232,28 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-11-03',
     hardDue: true,
   },
+  // Fitness (docs/features/fitness.md §5): word prefixes and the unit „kcal“.
+  { from: 'fitness', text: 'kcal 650 Döner', type: 'meal', title: 'Döner', date: '2026-10-29' },
+  { from: 'fitness', text: 'Döner 650 kcal', type: 'meal', title: 'Döner', date: '2026-10-29' },
+  {
+    from: 'fitness',
+    text: 'gestern kcal 400 Pizza',
+    type: 'meal',
+    title: 'Pizza',
+    date: '2026-10-28',
+  },
+  {
+    from: 'fitness',
+    text: 'training Bankdrücken 3×8 60',
+    type: 'workout',
+    title: 'Bankdrücken',
+    date: '2026-10-29',
+  },
+  {
+    from: 'fitness',
+    text: 'Training: Bankdrücken 3x8 60kg, Kniebeuge 3×5 80',
+    type: 'workout',
+    title: 'Bankdrücken, Kniebeuge',
+  },
+  { from: 'fitness', text: 'training Laufen 30 Min', type: 'workout', title: 'Laufen' },
 ];

@@ -1,0 +1,127 @@
+import { expect, test, type Page } from '@playwright/test';
+import { calendarEntry, enable, showAllWidgets, showPreview } from './helpers';
+
+/**
+ * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
+ * a `kcal` capture adds to today's sum, the goal calculator keeps no body data. Desktop and pixel-7.
+ */
+test.beforeEach(async ({ page }) => {
+  // Sunday 2026-11-08, 10:00: the week (Monday start) runs from 2026-11-02.
+  await page.clock.setFixedTime(new Date('2026-11-08T10:00:00'));
+  await showAllWidgets(page);
+  await showPreview(page);
+  await enable(page, 'fitness');
+});
+
+async function rows(page: Page, table: string): Promise<Record<string, unknown>[]> {
+  return page.evaluate(
+    (name) =>
+      new Promise<Record<string, unknown>[]>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const req = open.result.transaction(name).objectStore(name).getAll();
+          req.onsuccess = () => {
+            open.result.close();
+            resolve(req.result as Record<string, unknown>[]);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+    table,
+  );
+}
+
+async function capture(page: Page, text: string) {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).fill(text);
+  await expect(page.getByText('Ziel: Fitness')).toBeVisible();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+}
+
+test('a session: logged in the form, counted in the widget, shown in the calendar', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByLabel('Übung').fill('Bankdrücken');
+  await dialog.getByLabel('Sätze').fill('3');
+  await dialog.getByLabel('Wdh.').fill('8');
+  await dialog.getByLabel('kg', { exact: true }).fill('60');
+  await dialog.getByLabel('Dauer in Minuten').fill('45');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await expect(page.getByTestId('fitness-week')).toContainText('1');
+  await expect(page.getByRole('button', { name: /Bankdrücken/ }).first()).toBeVisible();
+  await expect(page.getByText(/Bankdrücken 3 × 8 · 60 kg/)).toBeVisible();
+
+  await page.goto('/');
+  const widget = page.getByTestId('widget-fitness:week');
+  await expect(widget).toContainText('1 Einheit · 45 Min');
+  await expect(widget).toContainText('0 kcal');
+
+  await page.goto('/calendar');
+  await expect(calendarEntry(page, /Training: Bankdrücken/).first()).toBeVisible();
+
+  // "Wie letztes Mal" repeats it for today with one tap (toast with undo).
+  await page.goto('/fitness');
+  await page.getByRole('button', { name: 'Wie letztes Mal: Bankdrücken' }).click();
+  await expect(page.getByText('Einheit für heute eingetragen.')).toBeVisible();
+  await expect(page.getByTestId('fitness-week')).toContainText('2');
+});
+
+test('kcal by quick capture adds up to the day sum, past the goal only in words', async ({
+  page,
+}) => {
+  await capture(page, 'kcal 650 Döner');
+  await capture(page, 'Haferflocken 350 kcal');
+  expect((await rows(page, 'fitness_meal')).map((m) => [m.text, m.kcal, m.date])).toEqual(
+    expect.arrayContaining([
+      ['Döner', 650, '2026-11-08'],
+      ['Haferflocken', 350, '2026-11-08'],
+    ]),
+  );
+
+  await page.goto('/fitness?view=food');
+  await expect(page.getByTestId('fitness-kcal')).toContainText('1.000');
+  await expect(page.getByText('1.000 kcal').first()).toBeVisible();
+
+  await page.goto('/');
+  const widget = page.getByTestId('widget-fitness:week');
+  await expect(widget).toContainText('1.000 kcal');
+
+  // A goal below the sum: said in words, no overrun mark.
+  await page.goto('/fitness?view=food');
+  await page.getByRole('button', { name: 'Tagesziel' }).click();
+  await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page.goto('/');
+  await expect(widget).toContainText('1.000 kcal · Ziel 900');
+  await expect(widget.getByRole('img', { name: /drüber|over/i })).toHaveCount(0);
+});
+
+test('the goal can be worked out; weight, height and age are never stored', async ({ page }) => {
+  await page.goto('/fitness?view=food');
+  await page.getByRole('button', { name: 'Tagesziel' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Tagesziel kcal' });
+  await dialog.getByRole('button', { name: 'Ausrechnen' }).click();
+  await dialog.getByLabel('Gewicht in kg').fill('80');
+  await dialog.getByLabel('Größe in cm').fill('180');
+  await dialog.getByLabel('Alter').fill('30');
+  await dialog.getByLabel('Formel').selectOption('male');
+  await dialog.getByLabel('Alltag').selectOption('moderate');
+  await expect(dialog.getByTestId('fitness-estimate')).toHaveText('Etwa 2.750 kcal pro Tag');
+  await dialog.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(dialog.getByLabel('kcal pro Tag')).toHaveValue('2750');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  const settings = (await rows(page, '_settings')).find((r) => r.id === 'module.fitness');
+  expect(settings).toMatchObject({ kcalGoal: 2750 });
+  const stored = JSON.stringify(await rows(page, '_settings'));
+  for (const value of ['"weight', '"height', '"age', '"sex', ':180', ':30,'])
+    expect(stored).not.toContain(value);
+});

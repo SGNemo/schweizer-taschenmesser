@@ -46,6 +46,7 @@ export const AREAS: Record<string, Label> = {
   feeds: { de: 'Feeds', en: 'Feeds' },
   finance: { de: 'Finanzen', en: 'Finance' },
   habits: { de: 'Gewohnheiten', en: 'Habits' },
+  fitness: { de: 'Fitness', en: 'Fitness' },
   invoices: { de: 'Rechnungen', en: 'Invoices' },
   lists: { de: 'Listen', en: 'Lists' },
   mail: { de: 'Mail', en: 'Mail' },

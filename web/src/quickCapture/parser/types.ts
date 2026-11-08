@@ -15,7 +15,20 @@ export type CaptureType =
   | 'subscription'
   | 'birthday'
   /** A ToDo that goes into the planner at once (prefix `p` or „plan:“): a pin, an earliest day or a hard due. */
-  | 'plan';
+  | 'plan'
+  /** A meal for Fitness (prefix „kcal“/„essen“, or „650 kcal“ anywhere). */
+  | 'meal'
+  /** A training session for Fitness (prefix „training“/„workout“). */
+  | 'workout';
+
+/** One exercise of a `workout` capture („Bankdrücken 3×8 60“). */
+export interface CaptureExercise {
+  name: string;
+  sets?: number;
+  reps?: number;
+  weightKg?: number;
+  durationMin?: number;
+}
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {
@@ -56,6 +69,10 @@ export interface CaptureFields {
   pin?: string;
   /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
   hardDue?: boolean;
+  /** Meal captures: rough kcal. */
+  kcal?: number;
+  /** Workout captures: the exercises of the line. */
+  exercises?: CaptureExercise[];
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
   /** ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser. */
