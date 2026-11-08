@@ -14,20 +14,29 @@ export interface ExportLabels {
 type Row = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'> &
   Partial<Pick<Transaction, 'payee' | 'note' | 'transferId' | 'splits'>>;
 
+export interface ExportOptions {
+  /** Decimal mark of the amounts (default "."); the app passes the region's, so Excel reads numbers. */
+  decimal?: '.' | ',';
+  /** Start with a UTF-8 BOM: Excel otherwise opens the file as Windows-1252 and breaks umlauts. */
+  bom?: boolean;
+}
+
 /**
- * Columns: date, account, payee, category, kind, amount (signed, always "12.50", independent of the app language), note.
- * The amount uses a dot so spreadsheets in any locale read it after import settings; the delimiter is ';'.
+ * Columns: date, account, payee, category, kind, amount (signed, no group marks), note. The
+ * delimiter is ';' (what German Excel expects); the decimal mark and the BOM come from `opts`.
  */
 export function bookingsCsv(
   rows: readonly Row[],
   accountName: (id: string) => string,
   categoryName: (id: string | undefined) => string,
   labels: ExportLabels,
+  opts: ExportOptions = {},
 ): string {
+  const mark = opts.decimal ?? '.';
   const dec = (minor: number) => {
     const sign = minor < 0 ? '-' : '';
     const abs = Math.abs(minor);
-    return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
+    return `${sign}${Math.floor(abs / 100)}${mark}${String(abs % 100).padStart(2, '0')}`;
   };
   const out: string[][] = [[...labels.header]];
   const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
@@ -48,5 +57,5 @@ export function bookingsCsv(
       ]);
     }
   }
-  return toCsv(out, ';');
+  return (opts.bom ? '\uFEFF' : '') + toCsv(out, ';');
 }

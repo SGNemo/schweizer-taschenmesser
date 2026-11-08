@@ -80,6 +80,7 @@ export const SIGNATURES = [
   'gauges',
   'arrowProgress',
   'weekBars',
+  'dumbbell',
   // tools
   'display',
   'flow',

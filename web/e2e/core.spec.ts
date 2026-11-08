@@ -265,6 +265,7 @@ test.describe('Dashboard', () => {
       'widget-todos:next',
       'widget-todos:open',
       'widget-finance:balance',
+      'widget-finance:month',
       'widget-weather:today',
       'widget-invoices:due',
       'widget-subscriptions:next',

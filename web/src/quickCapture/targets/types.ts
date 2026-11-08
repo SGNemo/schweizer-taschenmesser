@@ -64,4 +64,6 @@ export interface SavedCapture {
   count?: number;
   /** The text they came from, so "Ändern" can put it back into the form. */
   text?: string;
+  /** Every entry's type in a multi-line save (a reminder among them asks for alerts, C01). */
+  types?: CaptureType[];
 }

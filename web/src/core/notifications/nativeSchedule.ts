@@ -70,6 +70,10 @@ function defaultDeps(): NativeScheduleDeps {
   };
 }
 
+/** Rebuilds the OS schedule now, e.g. right after the user allowed notifications (C01). */
+export const resyncNativeSchedule = (): Promise<number | undefined> =>
+  syncNativeSchedule(defaultDeps());
+
 /** Keeps the OS schedule current. A no-op (returns a no-op stop function) where it is not supported. */
 export function startNativeSchedule(
   deps: NativeScheduleDeps = defaultDeps(),
