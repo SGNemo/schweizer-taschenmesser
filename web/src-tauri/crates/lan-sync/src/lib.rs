@@ -10,23 +10,32 @@
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
 pub mod noise;
+/// The pairing QR (hub writes it, devices read it): on every target.
+pub mod qr;
+#[cfg(feature = "store")]
 mod store;
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+/// The device side (phone, second PC): pairing by QR and sessions with the hub. Its sockets live
+/// under `src/transport` like the hub's (`tests/rules.rs`), but it is compiled on every target.
+#[path = "transport/client.rs"]
+pub mod client;
+
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), feature = "store"))]
 pub mod discovery;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod endpoint;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), feature = "store"))]
 pub mod hub;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod keys;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod pairing;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), feature = "store"))]
 pub mod supervisor;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(all(not(any(target_os = "android", target_os = "ios")), feature = "store"))]
 pub mod transport;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod trust;
 
+#[cfg(feature = "store")]
 pub use store::{FieldOp, PullResult, PushResult, Store, StoreError};
