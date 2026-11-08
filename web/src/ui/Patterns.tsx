@@ -140,9 +140,9 @@ export function Form({
 /** Footer of an editor form: `start` (e.g. delete) on the left, `children` (cancel/save) on the right. */
 export function FormActions({ start, children }: { start?: ReactNode; children: ReactNode }) {
   return (
-    <div className={styles.actions}>
+    <div className={styles.formActions}>
       {start ?? <span />}
-      <span className={styles.actionsEnd}>{children}</span>
+      <span className={styles.formActionsEnd}>{children}</span>
     </div>
   );
 }
