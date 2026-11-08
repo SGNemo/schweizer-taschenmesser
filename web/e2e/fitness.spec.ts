@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { calendarEntry, enable, showAllWidgets, showPreview } from './helpers';
+import { calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
 
 /**
  * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
@@ -46,7 +46,7 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 }) => {
   await page.goto('/fitness?new=session');
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
-  await dialog.getByLabel('Übung').fill('Bankdrücken');
+  await dialog.getByRole('combobox', { name: 'Übung' }).fill('Bankdrücken');
   await dialog.getByLabel('Sätze').fill('3');
   await dialog.getByLabel('Wdh.').fill('8');
   await dialog.getByLabel('kg', { exact: true }).fill('60');
@@ -58,12 +58,12 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
   await expect(page.getByRole('button', { name: /Bankdrücken/ }).first()).toBeVisible();
   await expect(page.getByText(/Bankdrücken 3 × 8 · 60 kg/)).toBeVisible();
 
-  await page.goto('/');
+  await ready(page, '/');
   const widget = page.getByTestId('widget-fitness:week');
   await expect(widget).toContainText('1 Einheit · 45 Min');
   await expect(widget).toContainText('0 kcal');
 
-  await page.goto('/calendar');
+  await ready(page, '/calendar?view=day&date=2026-11-08');
   await expect(calendarEntry(page, /Training: Bankdrücken/).first()).toBeVisible();
 
   // "Wie letztes Mal" repeats it for today with one tap (toast with undo).
@@ -89,7 +89,7 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
   await expect(page.getByTestId('fitness-kcal')).toContainText('1.000');
   await expect(page.getByText('1.000 kcal').first()).toBeVisible();
 
-  await page.goto('/');
+  await ready(page, '/');
   const widget = page.getByTestId('widget-fitness:week');
   await expect(widget).toContainText('1.000 kcal');
 
@@ -98,7 +98,10 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
   await page.getByRole('button', { name: 'Tagesziel' }).click();
   await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
   await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
-  await page.goto('/');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The head says it the same calm way.
+  await expect(page.locator('main').getByText('1.000 kcal · Ziel 900')).toBeVisible();
+  await ready(page, '/');
   await expect(widget).toContainText('1.000 kcal · Ziel 900');
   await expect(widget.getByRole('img', { name: /drüber|over/i })).toHaveCount(0);
 });

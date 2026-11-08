@@ -2,7 +2,7 @@ import { formatMinutes } from '@/core/i18n/format';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
 import { FortschrittBody, WidgetBody, type FortschrittEntry } from '@/ui';
-import { kcalText, useFitnessSettings } from '../data';
+import { kcalLine, useFitnessSettings } from '../data';
 import { useFitness } from './useFitness';
 
 /**
@@ -32,17 +32,12 @@ export default function FitnessWidget() {
     });
     if (prefs.nutrition) {
       const goal = prefs.kcalGoal;
-      const kcal = kcalText(data.kcal);
       entries.push({
         key: 'today',
         title: w.today,
         value: Math.min(data.kcal, goal),
         max: goal,
-        detail: !goal
-          ? w.kcal(kcal)
-          : data.kcal > goal
-            ? w.kcalPastGoal(kcal, kcalText(goal))
-            : w.kcalOf(kcal, kcalText(goal)),
+        detail: kcalLine(data.kcal, goal),
       });
     }
   }

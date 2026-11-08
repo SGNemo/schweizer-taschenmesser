@@ -249,6 +249,26 @@
       }
     }
   },
+  "fitness": {
+    "scope": "module.fitness",
+    "fields": {
+      "nutrition": {
+        "type": "boolean",
+        "label": "Kalorien erfassen",
+        "default": true
+      },
+      "kcalGoal": {
+        "type": "number",
+        "label": "Tagesziel kcal",
+        "default": 0
+      },
+      "weekSessions": {
+        "type": "number",
+        "label": "Einheiten pro Woche",
+        "default": 0
+      }
+    }
+  },
   "habits": {
     "scope": "module.habits",
     "fields": {

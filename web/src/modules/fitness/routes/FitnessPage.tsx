@@ -10,6 +10,7 @@ import {
   EmptyState,
   GroupedList,
   Icon,
+  ItemList,
   ItemRow,
   PageHeader,
   Segmented,
@@ -21,6 +22,7 @@ import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import {
   exerciseDetail,
+  kcalLine,
   kcalText,
   sessionTitle,
   useFitnessSettings,
@@ -138,11 +140,7 @@ export default function FitnessPage() {
               label={t.fitness.figure.today}
               value={kcalText(todayKcal)}
               unit="kcal"
-              detail={
-                prefs.kcalGoal
-                  ? t.fitness.widget.kcalOf(kcalText(todayKcal), kcalText(prefs.kcalGoal))
-                  : undefined
-              }
+              detail={prefs.kcalGoal ? kcalLine(todayKcal, prefs.kcalGoal) : undefined}
               testId="fitness-kcal"
             />
           )}
@@ -172,22 +170,28 @@ export default function FitnessPage() {
                 id: date,
                 label: relativeDayLabel(date, day),
                 count: items.length,
-                children: items.map((s) => (
-                  <ItemRow
-                    key={s.id}
-                    title={sessionTitle(s)}
-                    meta={[
-                      s.exercises.length ? t.fitness.list.exercises(s.exercises.length) : '',
-                      sessionMinutes(s) ? formatMinutes(sessionMinutes(s), { compact: true }) : '',
-                      ...s.exercises
-                        .slice(0, 2)
-                        .map((e) => [e.name, exerciseDetail(e)].filter(Boolean).join(' ')),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    onOpen={() => setSession(s)}
-                  />
-                )),
+                children: (
+                  <ItemList>
+                    {items.map((s) => (
+                      <ItemRow
+                        key={s.id}
+                        title={sessionTitle(s)}
+                        meta={[
+                          s.exercises.length ? t.fitness.list.exercises(s.exercises.length) : '',
+                          sessionMinutes(s)
+                            ? formatMinutes(sessionMinutes(s), { compact: true })
+                            : '',
+                          ...s.exercises
+                            .slice(0, 2)
+                            .map((e) => [e.name, exerciseDetail(e)].filter(Boolean).join(' ')),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                        onOpen={() => setSession(s)}
+                      />
+                    ))}
+                  </ItemList>
+                ),
               }))}
             />
           ) : null}
@@ -214,16 +218,20 @@ export default function FitnessPage() {
                 label: relativeDayLabel(date, day),
                 count: items.length,
                 detail: t.fitness.list.dayKcal(kcalText(daySum(items, date))),
-                children: items.map((m) => (
-                  <ItemRow
-                    key={m.id}
-                    title={m.text}
-                    meta={[m.time ?? '', t.fitness.line.kcal(kcalText(m.kcal))]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    onOpen={() => setMeal(m)}
-                  />
-                )),
+                children: (
+                  <ItemList>
+                    {items.map((m) => (
+                      <ItemRow
+                        key={m.id}
+                        title={m.text}
+                        meta={[m.time ?? '', t.fitness.line.kcal(kcalText(m.kcal))]
+                          .filter(Boolean)
+                          .join(' · ')}
+                        onOpen={() => setMeal(m)}
+                      />
+                    ))}
+                  </ItemList>
+                ),
               }))}
             />
           ) : null}

@@ -57,3 +57,15 @@ export function sessionTitle(s: Pick<Session, 'title' | 'exercises'>): string {
 }
 
 export const kcalText = (n: number): string => formatNumber(n);
+
+/**
+ * Today's kcal in words: "1.450 kcal von 2.200"; past the goal only "2.450 kcal · Ziel 2.200" – neutral,
+ * never an overrun (no red, no "zu viel"). Without a goal just the sum.
+ */
+export function kcalLine(kcal: number, goal: number): string {
+  const w = t.fitness.widget;
+  if (!goal) return w.kcal(kcalText(kcal));
+  return kcal > goal
+    ? w.kcalPastGoal(kcalText(kcal), kcalText(goal))
+    : w.kcalOf(kcalText(kcal), kcalText(goal));
+}
