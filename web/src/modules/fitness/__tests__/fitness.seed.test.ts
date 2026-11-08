@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createSeedContext } from '@/core/seed/context';
 import { SEED_SCALES } from '@/core/seed/types';
 import manifest from '../manifest';
-import { mealSchema, sessionSchema } from '../schema';
+import { mealSchema, sessionSchema, templateSchema } from '../schema';
 import seedModule from '../seed';
 
 // The generic contract (all modules, runner, removal) lives in core/seed/registry.test.ts.
@@ -21,6 +21,12 @@ describe('fitness seed', () => {
         expect(row.data.date).not.toBe('2026-09-29');
       }
       for (const row of rows.meal!) expect(mealSchema.safeParse(row.data).success).toBe(true);
+      // One plan for tomorrow, one template.
+      expect(rows.session!.filter((r) => r.data.planned).map((r) => r.data.date)).toEqual([
+        '2026-09-30',
+      ]);
+      for (const row of rows.template!)
+        expect(templateSchema.safeParse(row.data).success).toBe(true);
     },
   );
 });

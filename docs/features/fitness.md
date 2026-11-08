@@ -1,6 +1,6 @@
 # Fitness (module, concept – phase 1)
 
-Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **package 1 built (`feat/fitness-1`)**; packages 2–3 open. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
+Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **package 1 built (`feat/fitness-1`), package 2 built (`feat/fitness-2`)**; package 3 open. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
 
 ## 1. One module or two – recommendation: **one module `fitness`**
 
@@ -91,11 +91,11 @@ Built: the fitness parser runs only while Fitness is on (meals only with „Kalo
 
 ## 10. Packages
 
-| Package | Branch           | Content                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1       | `feat/fitness-1` | module `fitness` (`preview`, off by default): two collections, page with two views, forms, "Wie letztes Mal", suggestions, widget, head, identity + `dumbbell` mark, seed, settings (kcal goal + "Ausrechnen" dialog, `goal.ts`), quick capture `kcal`/`training` + corpus, `calendarItems`, `aiSchema` + eval, a11y, e2e (session → widget → calendar; `kcal` prefix → day sum), strings de/en, `.changes/` DE+EN |
-| 2       | `feat/fitness-2` | week view, templates ("Oberkörper", "Laufen"), planned sessions + `plannable` + user reminders (`attention`)                                                                                                                                                                                                                                                                                                       |
-| 3       | `feat/fitness-3` | CSV import (e.g. from another training/food app) as an onboarding importer                                                                                                                                                                                                                                                                                                                                         |
+| Package   | Branch           | Content                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1         | `feat/fitness-1` | module `fitness` (`preview`, off by default): two collections, page with two views, forms, "Wie letztes Mal", suggestions, widget, head, identity + `dumbbell` mark, seed, settings (kcal goal + "Ausrechnen" dialog, `goal.ts`), quick capture `kcal`/`training` + corpus, `calendarItems`, `aiSchema` + eval, a11y, e2e (session → widget → calendar; `kcal` prefix → day sum), strings de/en, `.changes/` DE+EN |
+| 2 (built) | `feat/fitness-2` | week view, templates ("Oberkörper", "Laufen"), planned sessions + `plannable` + user reminders (`attention`)                                                                                                                                                                                                                                                                                                       |
+| 3         | `feat/fitness-3` | CSV import (e.g. from another training/food app) as an onboarding importer                                                                                                                                                                                                                                                                                                                                         |
 
 Not planned: body data, weight trend, step counter, external food databases, special sync/export paths, Android widget.
 
@@ -105,3 +105,11 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 2. Optional daily kcal goal? – answered: yes, typed directly or calculated (Mifflin-St Jeor × activity, inputs not stored).
 3. Area? – answered: Haushalt.
 4. Macros in package 1? – answered: optional fields behind "Erweitert", not in the widget.
+
+## Package 2 as built
+
+- **Week view** (`Woche`): seven rows (Heute marked), each „1 Einheit · 55 Min · 1 geplant · 1.990 kcal“ or „Nichts eingetragen“, a „Zusammen“ line, arrows for earlier/later weeks. No averages, no colours.
+- **Planned session** = a session with `planned: true` (manifest v2, optional field). A new session on a later day is planned by default; the form then asks for a time instead of taking now. Planned sessions are listed under „Geplant“ with „Erledigt“ (one tap, undo; done later than planned = today). They never count in the week, the widget or „Wie letztes Mal“.
+- **Planner** (`plannable.ts`): planned sessions in the window, pinned to their day (`earliest` = `due` hard), duration or 45 min; ticked off in the plan = logged, an edited estimate = the duration. No `onAssign`: the user's day is kept.
+- **Calendar:** planned sessions open, logged ones done. **„Jetzt wichtig“** (`attention.ts`): only a session planned for today with a time („Heute 18:00 · Training: Beine“), accent; nothing else.
+- **Templates** (`fitness_template`: title, duration, exercises; DB 35): „Als Vorlage speichern“ in the form, chips on a new session fill it in one tap, × removes one (undo).

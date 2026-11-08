@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { formatMinutes } from '@/core/i18n/format';
 import { useWeekStart } from '@/core/settings/core';
 import { addDaysStr, relativeDayLabel, today } from '@/core/time/dates';
+import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
@@ -20,6 +21,7 @@ import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalDialog } from '../components/GoalDialog';
 import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
+import { WeekView } from '../components/WeekView';
 import {
   exerciseDetail,
   kcalLine,
@@ -28,10 +30,12 @@ import {
   useFitnessSettings,
   useMeals,
   useSessions,
+  useTemplates,
 } from '../data';
 import {
   byDay,
   daySum,
+  isLogged,
   latestSession,
   repeatSession,
   sessionMinutes,
@@ -39,19 +43,23 @@ import {
   weekSummary,
 } from '../logic';
 import { mealRepo, sessionRepo } from '../repo';
+import type { Session } from '../schema';
 import styles from '../fitness.module.css';
 
-type View = 'training' | 'food';
-/** How far back the lists go; older entries stay stored (the week view comes in package 2). */
+type View = 'training' | 'food' | 'week';
+/** How far back the lists go; older entries stay stored (the week view steps further back). */
 const WINDOW_DAYS = 90;
 
 export default function FitnessPage() {
   const [params, setParams] = useSearchParams();
   const prefs = useFitnessSettings();
-  const view: View = params.get('view') === 'food' && prefs.nutrition ? 'food' : 'training';
+  const raw = params.get('view');
+  const view: View =
+    raw === 'food' && prefs.nutrition ? 'food' : raw === 'week' ? 'week' : 'training';
   const day = today();
   const from = addDaysStr(day, -WINDOW_DAYS);
   const sessions = useSessions(from);
+  const templates = useTemplates();
   const meals = useMeals(from);
   const weekStart = useWeekStart();
   const [session, setSession] = useState<SessionTarget>(null);
@@ -92,30 +100,72 @@ export default function FitnessPage() {
   const last = latestSession((sessions ?? []).filter((s) => s.date <= day));
 
   // „Wie letztes Mal“ only while today has no session yet: a second tap would only log a copy.
-  const canRepeat = !!last && !(sessions ?? []).some((s) => s.date === day);
+  const canRepeat = !!last && !(sessions ?? []).some((s) => s.date === day && isLogged(s));
+  const planned = (sessions ?? [])
+    .filter((s) => !isLogged(s))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const logged = (sessions ?? []).filter(isLogged);
+
+  /** A planned session is done: it counts from now on, on today when it was planned for later. */
+  async function markDone(s: Stored<Session>) {
+    const done = t.fitness.planned.logged(sessionTitle(s));
+    await undoableWithToast(done, done, () =>
+      sessionRepo.update(s.id, { planned: undefined, ...(s.date > day ? { date: day } : {}) }),
+    );
+  }
+
+  const sessionRow = (s: Stored<Session>) => (
+    <ItemRow
+      key={s.id}
+      title={sessionTitle(s)}
+      meta={[
+        s.planned ? relativeDayLabel(s.date, day) + (s.time ? ` · ${s.time}` : '') : '',
+        s.exercises.length ? t.fitness.list.exercises(s.exercises.length) : '',
+        sessionMinutes(s) ? formatMinutes(sessionMinutes(s), { compact: true }) : '',
+        ...s.exercises
+          .slice(0, 2)
+          .map((e) => [e.name, exerciseDetail(e)].filter(Boolean).join(' ')),
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+      onOpen={() => setSession(s)}
+      end={
+        s.planned ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            aria-label={t.fitness.planned.doneFor(sessionTitle(s))}
+            onClick={() => void markDone(s)}
+          >
+            {t.fitness.planned.done}
+          </Button>
+        ) : undefined
+      }
+    />
+  );
   async function repeatLast() {
     if (!last) return;
     const done = t.fitness.repeated(sessionTitle(last));
     await undoableWithToast(done, done, () => sessionRepo.create(repeatSession(last, day)));
   }
 
-  const views = prefs.nutrition ? (['training', 'food'] as const) : (['training'] as const);
+  const views: readonly View[] = prefs.nutrition
+    ? ['training', 'food', 'week']
+    : ['training', 'week'];
   return (
     <>
       <PageHeader
         title={t.fitness.meta.name}
         views={
-          views.length > 1 ? (
-            <Segmented
-              label={t.fitness.tabs.label}
-              value={view}
-              options={views.map((v) => ({ value: v, label: t.fitness.tabs[v] }))}
-              onChange={setView}
-            />
-          ) : undefined
+          <Segmented
+            label={t.fitness.tabs.label}
+            value={view}
+            options={views.map((v) => ({ value: v, label: t.fitness.tabs[v] }))}
+            onChange={setView}
+          />
         }
       >
-        {view === 'training' ? (
+        {view !== 'food' ? (
           <Button variant="primary" onClick={() => setSession('new')}>
             <Icon name="plus" size={18} />
             {t.fitness.addSession}
@@ -129,7 +179,7 @@ export default function FitnessPage() {
       </PageHeader>
       {sessions && meals ? (
         <HeroSlot area="figure">
-          {view === 'training' ? (
+          {view !== 'food' ? (
             <HeroFigure
               label={t.fitness.figure.week}
               value={String(week.count)}
@@ -149,7 +199,15 @@ export default function FitnessPage() {
         </HeroSlot>
       ) : null}
 
-      {view === 'training' ? (
+      {view === 'week' ? (
+        <WeekView
+          day={day}
+          weekStart={weekStart}
+          sessions={sessions ?? []}
+          meals={meals ?? []}
+          nutrition={prefs.nutrition}
+        />
+      ) : view === 'training' ? (
         <>
           {canRepeat && last ? (
             <div className={styles.toolbar}>
@@ -168,33 +226,24 @@ export default function FitnessPage() {
             <GroupedList
               listId="fitness-sessions"
               label={t.fitness.list.training}
-              groups={byDay(sessions).map(([date, items]) => ({
-                id: date,
-                label: relativeDayLabel(date, day),
-                count: items.length,
-                children: (
-                  <ItemList>
-                    {items.map((s) => (
-                      <ItemRow
-                        key={s.id}
-                        title={sessionTitle(s)}
-                        meta={[
-                          s.exercises.length ? t.fitness.list.exercises(s.exercises.length) : '',
-                          sessionMinutes(s)
-                            ? formatMinutes(sessionMinutes(s), { compact: true })
-                            : '',
-                          ...s.exercises
-                            .slice(0, 2)
-                            .map((e) => [e.name, exerciseDetail(e)].filter(Boolean).join(' ')),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                        onOpen={() => setSession(s)}
-                      />
-                    ))}
-                  </ItemList>
-                ),
-              }))}
+              groups={[
+                ...(planned.length
+                  ? [
+                      {
+                        id: 'planned',
+                        label: t.fitness.planned.group,
+                        count: planned.length,
+                        children: <ItemList>{planned.map(sessionRow)}</ItemList>,
+                      },
+                    ]
+                  : []),
+                ...byDay(logged).map(([date, items]) => ({
+                  id: date,
+                  label: relativeDayLabel(date, day),
+                  count: items.length,
+                  children: <ItemList>{items.map(sessionRow)}</ItemList>,
+                })),
+              ]}
             />
           ) : null}
         </>
@@ -240,7 +289,12 @@ export default function FitnessPage() {
         </>
       )}
 
-      <SessionEditor target={sessionTarget} sessions={sessions ?? []} onClose={close} />
+      <SessionEditor
+        target={sessionTarget}
+        sessions={sessions ?? []}
+        templates={templates ?? []}
+        onClose={close}
+      />
       <MealEditor target={mealTarget} meals={meals ?? []} onClose={close} />
       <GoalDialog open={goalOpen} current={prefs.kcalGoal} onClose={() => setGoalOpen(false)} />
     </>

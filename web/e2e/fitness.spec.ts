@@ -53,7 +53,7 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
   await dialog.getByLabel('Wdh.').fill('8');
   await dialog.getByLabel('kg', { exact: true }).fill('60');
   await dialog.getByLabel('Dauer in Minuten').fill('45');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await expect(page.getByTestId('fitness-week')).toContainText('1');
@@ -101,7 +101,7 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
   await page.goto('/fitness?view=food');
   await page.getByRole('button', { name: 'Tagesziel' }).click();
   await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The head says it the same calm way.
   await expect(page.locator('main').getByText('1.000 kcal · Ziel 900')).toBeVisible();
@@ -123,7 +123,7 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
   await expect(dialog.getByTestId('fitness-estimate')).toHaveText('Etwa 2.750 kcal pro Tag');
   await dialog.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(dialog.getByLabel('kcal pro Tag')).toHaveValue('2750');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   const settings = (await rows(page, '_settings')).find((r) => r.id === 'module.fitness');
@@ -137,4 +137,58 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
   ].join('\n');
   for (const value of ['weightKg', 'heightCm', '"age"', '"sex"', '"180"', ':180', '"80"', '"30"'])
     expect(stored).not.toContain(value);
+});
+
+test('a planned session: in „Jetzt wichtig“ with its time, counted only once done, the week in rows', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
+  await dialog.getByLabel('Sätze').fill('4');
+  await dialog.getByLabel('Geplant, noch nicht gemacht').check();
+  await dialog.getByLabel('Uhrzeit').fill('18:00');
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // Planned: listed under „Geplant“, not counted.
+  await expect(page.getByText('Geplant', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('fitness-week')).toContainText('0');
+
+  await ready(page, '/');
+  await expect(page.getByText('Heute 18:00 · Training: Kniebeuge')).toBeVisible();
+
+  await ready(page, '/fitness');
+  await page.getByRole('button', { name: 'Erledigt: Kniebeuge' }).click();
+  await expect(page.getByText('Eingetragen: Kniebeuge')).toBeVisible();
+  await expect(page.getByTestId('fitness-week')).toContainText('1');
+
+  await page.getByRole('button', { name: 'Woche', exact: true }).click();
+  const week = page.getByTestId('fitness-week-view');
+  await expect(week.getByTestId('fitness-week-total')).toContainText('1 Einheit');
+  await expect(week.getByRole('listitem')).toHaveCount(7);
+  await week.getByRole('button', { name: 'Vorherige Woche' }).click();
+  await expect(week.getByTestId('fitness-week-total')).toContainText('Nichts eingetragen');
+});
+
+test('a template: saved from the form, filled into a new session with one tap', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  let dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('combobox', { name: 'Übung' }).fill('Rudern');
+  await dialog.getByLabel('Sätze').fill('3');
+  await dialog.getByRole('button', { name: 'Als Vorlage speichern' }).click();
+  await expect(page.getByText('Als Vorlage gespeichert.')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Abbrechen' }).click();
+  // Leaving a dialog with typed text asks first.
+  const discard = page.getByRole('button', { name: /Verwerfen|Nicht speichern/ });
+  if (await discard.count()) await discard.first().click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Einheit eintragen' }).click();
+  dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
+  await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
+  await expect(dialog.getByLabel('Sätze')).toHaveValue('3');
 });

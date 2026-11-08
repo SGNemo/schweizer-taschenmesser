@@ -5,8 +5,8 @@ import { sessionTitle } from './data';
 import { sessionRepo } from './repo';
 
 /**
- * Logged sessions in the calendar (`done`, so they never block the planner). Meals are left out on
- * purpose: they would only add noise to the days.
+ * Sessions in the calendar: logged ones `done` (never a planner blocker), planned ones open. Meals are left
+ * out on purpose: they would only add noise to the days.
  */
 const source: CalendarSource = async (range) => {
   const sessions = (
@@ -20,7 +20,7 @@ const source: CalendarSource = async (range) => {
     date: s.date,
     ...(s.time ? { time: s.time } : {}),
     allDay: !s.time,
-    done: true,
+    done: !s.planned,
     to: `/fitness?open=${s.id}`,
   }));
 };

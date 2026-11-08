@@ -1,5 +1,5 @@
 import { addDaysStr, startOfWeekStr } from '@/core/time/dates';
-import type { Exercise, Meal, Session } from './schema';
+import type { Exercise, Meal, Session, Template } from './schema';
 
 /** Pure calculations of the fitness module (no clock, no database). */
 
@@ -15,12 +15,15 @@ export function sessionMinutes(s: Pick<Session, 'durationMin' | 'exercises'>): n
   return s.exercises.reduce((sum, e) => sum + (e.durationMin ?? 0), 0);
 }
 
-/** Sessions and minutes inside a date range. */
+/** A session that happened (a planned one is not counted anywhere until it is done). */
+export const isLogged = (s: Pick<Session, 'planned'>): boolean => !s.planned;
+
+/** Logged sessions and minutes inside a date range. */
 export function weekSummary(
-  sessions: readonly Pick<Session, 'date' | 'durationMin' | 'exercises'>[],
+  sessions: readonly Pick<Session, 'date' | 'durationMin' | 'exercises' | 'planned'>[],
   range: { from: string; to: string },
 ): { count: number; minutes: number } {
-  const inside = sessions.filter((s) => s.date >= range.from && s.date <= range.to);
+  const inside = sessions.filter((s) => isLogged(s) && s.date >= range.from && s.date <= range.to);
   return { count: inside.length, minutes: inside.reduce((m, s) => m + sessionMinutes(s), 0) };
 }
 
@@ -74,13 +77,13 @@ export function lastOf(
   return undefined;
 }
 
-/** The latest session (by date, then time) – the source of "Wie letztes Mal". */
-export function latestSession<T extends Pick<Session, 'date' | 'time'>>(
+/** The latest logged session (by date, then time) – the source of "Wie letztes Mal". */
+export function latestSession<T extends Pick<Session, 'date' | 'time' | 'planned'>>(
   sessions: readonly T[],
 ): T | undefined {
-  return [...sessions].sort((a, b) =>
-    `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`),
-  )[0];
+  return [...sessions]
+    .filter(isLogged)
+    .sort((a, b) => `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`))[0];
 }
 
 /** A copy of a session for `day` (same exercises, title and duration; no note, no time). */
@@ -98,4 +101,45 @@ export function byDay<T extends { date: string }>(items: readonly T[]): [string,
   const map = new Map<string, T[]>();
   for (const i of items) map.set(i.date, [...(map.get(i.date) ?? []), i]);
   return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+/** One day of the week view: logged sessions, their minutes, planned sessions and kcal. */
+export interface WeekDay {
+  date: string;
+  sessions: number;
+  minutes: number;
+  planned: number;
+  kcal: number;
+  meals: number;
+}
+
+/** The seven days `from`…`from + 6` with plain sums (no averages, no judgement). */
+export function weekDays(
+  from: string,
+  sessions: readonly Pick<Session, 'date' | 'durationMin' | 'exercises' | 'planned'>[],
+  meals: readonly Pick<Meal, 'date' | 'kcal'>[],
+): WeekDay[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDaysStr(from, i);
+    const own = sessions.filter((s) => s.date === date);
+    const logged = own.filter(isLogged);
+    const dayMeals = meals.filter((m) => m.date === date);
+    return {
+      date,
+      sessions: logged.length,
+      minutes: logged.reduce((m, s) => m + sessionMinutes(s), 0),
+      planned: own.length - logged.length,
+      kcal: daySum(dayMeals, date),
+      meals: dayMeals.length,
+    };
+  });
+}
+
+/** A template from a session (title, duration, exercises; never date, time or note). */
+export function toTemplate(s: Session, fallbackTitle: string): Template {
+  return {
+    title: s.title?.trim() || fallbackTitle,
+    exercises: s.exercises.map((e) => ({ ...e })),
+    ...(s.durationMin ? { durationMin: s.durationMin } : {}),
+  };
 }

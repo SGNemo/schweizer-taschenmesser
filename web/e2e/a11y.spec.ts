@@ -111,6 +111,7 @@ const PAGES = [
   ['habits', '/habits'],
   ['fitness', '/fitness'],
   ['fitness food', '/fitness?view=food'],
+  ['fitness week', '/fitness?view=week'],
   ['timetrack', '/timetrack'],
   ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
