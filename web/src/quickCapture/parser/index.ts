@@ -220,12 +220,9 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
       : EDGE_CENTS_RE.exec(scan.t);
   const edgeNum = edgeMatch ? (edgeMatch[1] ?? edgeMatch[2])! : undefined;
   const timeShaped = edgeNum ? /^([01]?\d|2[0-3]),[0-5]\d$/.test(edgeNum) : false;
-  const afterTimeWord = edgeNum
-    ? new RegExp(
-        String.raw`(?:^|\s)(?:um|bis|ab|gegen|von)\s+${edgeNum.replace(/\./g, '\\.')}\s*$`,
-        'i',
-      ).test(scan.t)
-    : false;
+  // „um 14,30“: the clock-shaped value right after a time word, at the end of the text.
+  const afterTimeWord =
+    timeShaped && /(?:^|\s)(?:um|bis|ab|gegen|von)\s+\d{1,2},\d{2}\s*$/i.test(scan.t);
   const edgeCents =
     edgeNum && !(timeShaped && (dt.date || afterTimeWord)) ? toCents(edgeNum) : undefined;
   if (edgeCents) take(scan, EDGE_CENTS_RE);
