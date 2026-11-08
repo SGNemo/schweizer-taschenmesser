@@ -23,10 +23,10 @@ In the installed app, Nemo can back up regularly and encrypted into its own data
 - Tables of old, removed modules are skipped on restore; the app tells you how many.
 
 ## File format
-The download without a password is readable JSON (indented, opens in any text editor):
+The download without a password is readable JSON (indented, opens in any text editor; a very large backup stays compact so it can be read back):
 - `format` (`taschenmesser-backup`), `version`, `about` (this description in one line), `exportedAt`.
 - `tables`: one list per collection, named `<module>_<collection>` (e.g. `notes_note`, `notes_notebook`). Each entry has its fields plus `id`, `createdAt`, `updatedAt`, `deviceId`, `deletedAt` (deleted entries stay so merging works) and `_f` (a time stamp per field; the newer one wins).
-- `checksum`: SHA-256 of `tables` as compact JSON (no spaces); an edited file is refused.
+- `checksum`: SHA-256 of `tables` as compact JSON (no spaces between values); an edited file is refused.
 - Restoring the same file gives the same entries (tested).
 
 Moving between devices also works without a file via the [sync server](sync.md).

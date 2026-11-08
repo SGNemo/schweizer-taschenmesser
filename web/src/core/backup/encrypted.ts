@@ -105,7 +105,9 @@ export async function serializeSealedBackup(
     1,
   );
   // Indenting adds about a quarter; a file over the read limit falls back to the compact form.
-  return text.length > MAX_BACKUP_CHARS ? JSON.stringify({ ...backup, checksum }) : text;
+  return text.length > MAX_BACKUP_CHARS
+    ? JSON.stringify({ format, version, about: PLAIN_BACKUP_ABOUT, ...rest, checksum })
+    : text;
 }
 
 export async function plainChecksumStatus(text: string): Promise<PlainChecksumStatus> {
