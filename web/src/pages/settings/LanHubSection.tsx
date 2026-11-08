@@ -144,7 +144,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
           }
         />
         {failure ? (
-          <p role="alert" className={styles.error} data-testid="lan-hub-failure">
+          <p role="status" className={styles.muted} data-testid="lan-hub-failure">
             {failure}
           </p>
         ) : null}
@@ -208,7 +208,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
         </Button>
       </Actions>
       {failure ? (
-        <p role="alert" className={styles.error}>
+        <p role="status" className={styles.muted}>
           {failure}
         </p>
       ) : null}
@@ -448,7 +448,7 @@ function PairDialog({
             </p>
             <p className={styles.muted}>{l.pairCheck(pending.name)}</p>
             {error ? (
-              <p role="alert" className={styles.error}>
+              <p role="status" className={styles.muted}>
                 {error}
               </p>
             ) : null}
