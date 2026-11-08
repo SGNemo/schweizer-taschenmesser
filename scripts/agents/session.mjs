@@ -1,0 +1,397 @@
+#!/usr/bin/env node
+// Nemo agent team – everyday runner for a Managed Agents session (lead + environment + repo mount + budget).
+// Streams events to the console, sends Sven's message, answers permission prompts on request.
+//
+//   node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
+//   node scripts/agents/session.mjs --budget 15 --file brief.md
+//   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
+//   node scripts/agents/session.mjs budget sess_… 30                      raise the cap to 30 USD
+//   node scripts/agents/session.mjs threads sess_… [--archive-idle]       list child threads, free slots
+//   node scripts/agents/session.mjs interrupt sess_…
+//   node scripts/agents/session.mjs --dry-run …                           print the request, no network
+//
+// Configuration (env or flags): ANTHROPIC_API_KEY (or `ant auth login`), GITHUB_TOKEN (repo mount only),
+// NEMO_LEAD_AGENT_ID / NEMO_ENV_ID / NEMO_VAULT_ID (or --agent/--env/--vault; defaults read from claude-lock.json).
+// Requires `npm i` in scripts/agents (@anthropic-ai/sdk ≥ 1.6; the SDK adds the managed-agents-2026-04-01 beta header).
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(here, "../..");
+const DEFAULTS = {
+  repo: "https://github.com/SGNemo/schweizer-taschenmesser",
+  mount: "/workspace/schweizer-taschenmesser",
+  checkout: "develop",
+  lock: path.join(REPO_ROOT, "claude-lock.json"),
+  leadFile: "./docs/meta/agents-v3/nemo-lead.md",
+  envFile: "./docs/meta/agents-v3/environment.yaml",
+};
+
+// ---------- args ----------
+const argv = process.argv.slice(2);
+const flags = {};
+const positional = [];
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a.startsWith("--")) {
+    const k = a.slice(2);
+    const boolFlags = new Set([
+      "dry-run",
+      "auto-approve",
+      "archive-idle",
+      "verbose",
+      "help",
+      "no-vault",
+    ]);
+    flags[k] = boolFlags.has(k) ? true : argv[++i];
+  } else positional.push(a);
+}
+if (flags.help || (positional.length === 0 && !flags.file && !flags.session)) {
+  console.log(
+    fs
+      .readFileSync(fileURLToPath(import.meta.url), "utf8")
+      .split("\n")
+      .slice(1, 17)
+      .map((l) => l.replace(/^\/\/ ?/, ""))
+      .join("\n"),
+  );
+  process.exit(0);
+}
+const sub = ["budget", "threads", "interrupt"].includes(positional[0])
+  ? positional.shift()
+  : null;
+
+function fromLock(fileKey) {
+  try {
+    const lock = JSON.parse(
+      fs.readFileSync(flags.lock ?? DEFAULTS.lock, "utf8"),
+    );
+    return lock.resources?.[fileKey]?.id;
+  } catch {
+    return undefined;
+  }
+}
+const cfg = {
+  agent:
+    flags.agent ??
+    process.env.NEMO_LEAD_AGENT_ID ??
+    fromLock(DEFAULTS.leadFile),
+  env: flags.env ?? process.env.NEMO_ENV_ID ?? fromLock(DEFAULTS.envFile),
+  vault: flags["no-vault"]
+    ? undefined
+    : (flags.vault ?? process.env.NEMO_VAULT_ID),
+  repo: flags.repo ?? process.env.NEMO_REPO ?? DEFAULTS.repo,
+  mount: flags.mount ?? DEFAULTS.mount,
+  checkout: flags.checkout ?? DEFAULTS.checkout,
+  title: flags.title,
+  budgetUsd: flags.budget !== undefined ? Number(flags.budget) : undefined,
+  session: flags.session,
+  autoApprove: !!flags["auto-approve"],
+  verbose: !!flags.verbose,
+  dryRun: !!flags["dry-run"],
+};
+const githubToken = process.env.GITHUB_TOKEN;
+
+function cents(usd) {
+  if (!Number.isFinite(usd) || usd <= 0)
+    throw new Error("--budget must be a positive number of US dollars");
+  return String(Math.round(usd * 100));
+}
+function budgetObj(usd) {
+  return {
+    type: "limit",
+    max_list_cost: { amount: cents(usd), currency: "USD" },
+  };
+}
+
+function readMessage() {
+  if (flags.file) return fs.readFileSync(flags.file, "utf8");
+  return positional.join(" ");
+}
+
+// ---------- client ----------
+async function client() {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  return new Anthropic(); // ANTHROPIC_API_KEY or `ant auth login` credentials
+}
+
+const short = (s, n = 160) =>
+  (s ?? "").toString().replace(/\s+/g, " ").slice(0, n);
+const textOf = (content) =>
+  Array.isArray(content)
+    ? content
+        .filter((b) => b.type === "text")
+        .map((b) => b.text)
+        .join("\n")
+    : "";
+const stamp = () => new Date().toISOString().slice(11, 19);
+
+function printEvent(ev) {
+  const t = ev.type;
+  if (t === "event_start" || t === "event_delta" || t?.startsWith("span."))
+    return;
+  const thread = ev.session_thread_id
+    ? ` [${ev.session_thread_id.slice(-6)}]`
+    : "";
+  switch (t) {
+    case "agent.message":
+      console.log(`\n${stamp()} LEAD${thread}:\n${textOf(ev.content)}\n`);
+      break;
+    case "agent.thinking":
+      if (cfg.verbose) console.log(`${stamp()} …thinking`);
+      break;
+    case "agent.tool_use":
+      console.log(
+        `${stamp()} tool ${ev.name}${thread}: ${short(JSON.stringify(ev.input))}`,
+      );
+      break;
+    case "agent.mcp_tool_use":
+      console.log(
+        `${stamp()} mcp ${ev.mcp_server_name}/${ev.name}${thread}: ${short(JSON.stringify(ev.input))}`,
+      );
+      break;
+    case "agent.tool_result":
+    case "agent.mcp_tool_result":
+      if (cfg.verbose)
+        console.log(
+          `${stamp()} result${thread}: ${short(textOf(ev.content), 300)}`,
+        );
+      break;
+    case "agent.thread_message_sent":
+      console.log(
+        `${stamp()} → ${ev.to_agent_name}: ${short(textOf(ev.content), 200)}`,
+      );
+      break;
+    case "agent.thread_message_received":
+      console.log(
+        `\n${stamp()} ← ${ev.from_agent_name}:\n${textOf(ev.content)}\n`,
+      );
+      break;
+    case "session.thread_created":
+      console.log(
+        `${stamp()} thread created for ${ev.agent_name} (${ev.session_thread_id})`,
+      );
+      break;
+    case "session.thread_status_idle":
+      console.log(`${stamp()} thread idle${thread}: ${ev.stop_reason?.type}`);
+      break;
+    case "session.usage":
+      console.log(
+        `${stamp()} usage: list cost ${ev.usage?.list_cost?.amount ?? "?"} ${ev.usage?.list_cost?.currency ?? ""} (cents), active ${ev.usage?.active_seconds ?? "?"} s, budget ${ev.budget?.max_list_cost?.amount ?? "none"}`,
+      );
+      break;
+    case "session.error":
+      console.log(
+        `${stamp()} ERROR ${ev.error?.type}: ${ev.error?.message ?? ""} ${ev.mcp_server_name ?? ""}`,
+      );
+      break;
+    case "session.status_running":
+      console.log(`${stamp()} running`);
+      break;
+    case "session.status_idle":
+      console.log(`${stamp()} idle: ${ev.stop_reason?.type}`);
+      break;
+    case "session.status_terminated":
+      console.log(`${stamp()} terminated`);
+      break;
+    case "session.updated":
+      console.log(
+        `${stamp()} session updated (budget ${JSON.stringify(ev.budget ?? null)})`,
+      );
+      break;
+    case "user.message":
+      break;
+    default:
+      if (cfg.verbose) console.log(`${stamp()} ${t}`);
+  }
+}
+
+async function streamUntilIdle(c, sessionId, afterOpen) {
+  const stream = await c.beta.sessions.events.stream(sessionId);
+  if (afterOpen) await afterOpen();
+  for await (const ev of stream) {
+    printEvent(ev);
+    if (ev.type === "session.status_idle") {
+      const reason = ev.stop_reason?.type;
+      if (reason === "requires_action") {
+        const ids = ev.stop_reason.event_ids ?? [];
+        if (cfg.autoApprove) {
+          console.log(
+            `${stamp()} approving ${ids.length} tool call(s) (--auto-approve)`,
+          );
+          await c.beta.sessions.events.send(sessionId, {
+            events: ids.map((id) => ({
+              type: "user.tool_confirmation",
+              tool_use_id: id,
+              result: "allow",
+            })),
+          });
+          continue;
+        }
+        console.log(
+          `\nThe session waits for a tool confirmation (${ids.join(", ")}). Re-run with --auto-approve, or answer in the Console: platform.claude.com → Agents → Sessions.`,
+        );
+        return "requires_action";
+      }
+      if (reason === "budget_reached") {
+        console.log(
+          `\nBudget reached. Raise it and the session continues by itself:\n  node scripts/agents/session.mjs budget ${sessionId} <USD>`,
+        );
+        return "budget_reached";
+      }
+      return reason ?? "idle";
+    }
+    if (ev.type === "session.status_terminated") return "terminated";
+  }
+  return "stream_closed";
+}
+
+async function main() {
+  if (sub === "budget") {
+    const [sessionId, usd] = positional;
+    if (!sessionId || !usd) throw new Error("usage: budget <session_id> <USD>");
+    if (cfg.dryRun)
+      return console.log(
+        JSON.stringify(
+          { update: sessionId, budget: budgetObj(Number(usd)) },
+          null,
+          2,
+        ),
+      );
+    const c = await client();
+    const s = await c.beta.sessions.update(sessionId, {
+      budget: budgetObj(Number(usd)),
+    });
+    console.log(
+      `budget of ${s.id} is now ${s.budget?.max_list_cost?.amount} cents (${s.status}); a paused session resumes on its own`,
+    );
+    return;
+  }
+  if (sub === "threads") {
+    const [sessionId] = positional;
+    if (!sessionId)
+      throw new Error("usage: threads <session_id> [--archive-idle]");
+    const c = await client();
+    let idle = 0,
+      archived = 0;
+    for await (const th of c.beta.sessions.threads.list(sessionId)) {
+      const child = th.parent_thread_id ? "child" : "primary";
+      console.log(
+        `${th.id}  ${child.padEnd(7)} ${String(th.status).padEnd(10)} ${th.agent?.name ?? th.agent?.id ?? th.agent?.type ?? ""}`,
+      );
+      if (child === "child" && th.status === "idle") {
+        idle++;
+        if (flags["archive-idle"]) {
+          await c.beta.sessions.threads.archive(th.id, {
+            session_id: sessionId,
+          });
+          archived++;
+        }
+      }
+    }
+    console.log(
+      `${idle} idle child thread(s)${flags["archive-idle"] ? `, ${archived} archived (frees slots under the 25-thread limit; the lead loses follow-up access to them)` : " – add --archive-idle to free slots"}`,
+    );
+    return;
+  }
+  if (sub === "interrupt") {
+    const [sessionId] = positional;
+    const c = await client();
+    await c.beta.sessions.events.send(sessionId, {
+      events: [{ type: "user.interrupt" }],
+    });
+    console.log(
+      "interrupt sent to every thread; the session goes idle, then send a new message to continue",
+    );
+    return;
+  }
+
+  const message = readMessage();
+  if (!message.trim())
+    throw new Error("no message: pass it as argument or --file <path>");
+
+  if (cfg.session) {
+    if (cfg.dryRun)
+      return console.log(
+        JSON.stringify({ resume: cfg.session, message }, null, 2),
+      );
+    const c = await client();
+    console.log(`resuming ${cfg.session}`);
+    const outcome = await streamUntilIdle(c, cfg.session, () =>
+      c.beta.sessions.events.send(cfg.session, {
+        events: [
+          { type: "user.message", content: [{ type: "text", text: message }] },
+        ],
+      }),
+    );
+    console.log(`\nsession ${cfg.session} → ${outcome}`);
+    return;
+  }
+
+  if (!cfg.agent || !cfg.env)
+    throw new Error(
+      "lead agent id and environment id missing: run `ant apply docs/meta/agents-v3` first (claude-lock.json), or pass --agent/--env or NEMO_LEAD_AGENT_ID/NEMO_ENV_ID",
+    );
+  if (cfg.budgetUsd === undefined)
+    throw new Error(
+      "--budget <USD> is required: a budget can only be set when the session is created, never later",
+    );
+  if (!githubToken)
+    console.warn(
+      "warning: GITHUB_TOKEN not set – the repository is cloned without a token; git push will fail",
+    );
+  if (!cfg.vault)
+    console.warn(
+      "warning: no vault id (NEMO_VAULT_ID / --vault) – the GitHub MCP server and $GITHUB_TOKEN in the sandbox will be unauthenticated",
+    );
+
+  const body = {
+    agent: cfg.agent,
+    environment_id: cfg.env,
+    title: cfg.title ?? `nemo: ${short(message, 60)}`,
+    budget: budgetObj(cfg.budgetUsd),
+    resources: [
+      {
+        type: "github_repository",
+        url: cfg.repo,
+        mount_path: cfg.mount,
+        checkout: { type: "branch", name: cfg.checkout },
+        ...(githubToken ? { authorization_token: githubToken } : {}),
+      },
+    ],
+    ...(cfg.vault ? { vault_ids: [cfg.vault] } : {}),
+    metadata: { team: "nemo", runner: "session.mjs" },
+  };
+  if (cfg.dryRun) {
+    const shown = structuredClone(body);
+    if (shown.resources[0].authorization_token)
+      shown.resources[0].authorization_token = "<GITHUB_TOKEN from env>";
+    console.log(
+      JSON.stringify({ create: shown, first_message: message }, null, 2),
+    );
+    return;
+  }
+  const c = await client();
+  const session = await c.beta.sessions.create(body);
+  console.log(
+    `session ${session.id} created (budget ${body.budget.max_list_cost.amount} cents, checkout ${cfg.checkout})`,
+  );
+  console.log(
+    `resume later: node scripts/agents/session.mjs --session ${session.id} "…"`,
+  );
+  const outcome = await streamUntilIdle(c, session.id, () =>
+    c.beta.sessions.events.send(session.id, {
+      events: [
+        { type: "user.message", content: [{ type: "text", text: message }] },
+      ],
+    }),
+  );
+  console.log(`\nsession ${session.id} → ${outcome}`);
+}
+
+main().catch((e) => {
+  console.error(`error: ${e.message ?? e}`);
+  if (cfg.verbose) console.error(e);
+  process.exit(1);
+});
