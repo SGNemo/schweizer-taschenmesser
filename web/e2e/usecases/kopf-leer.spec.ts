@@ -345,7 +345,8 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     return { cards, selects, booking, backdrop };
   });
   await m.tap(page.getByRole('button', { name: 'Alle speichern (5)' }).first());
-  // U04: the first „Alle speichern“ may save nothing – a booking line asks for a confirmation first.
+  // U04: the first „Alle speichern“ may save nothing – a booking line asks for a confirmation first
+  // (gone since package 1: a batch never books, the money line is a ToDo with a booking chip).
   const draft = page.getByTestId('capture-draft');
   const saved = page.getByText('5 Dinge gespeichert');
   await expect(draft.or(saved).first()).toBeVisible();
@@ -363,8 +364,12 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     description: `while unloading: ${pile.cards} attention cards visible beside the sheet (backdrop ${pile.backdrop}) · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
   });
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  // Where did they land? The person checks the ToDos.
-  await m.go('/todos');
+  // Where did they land? Until package 1 the person checked the ToDos (a second screen); the closing
+  // line now names the place („Sortiert wird später. · Ansehen“), so no visit is counted. The machine
+  // still checks that everything arrived.
+  const named = await page.getByText('Sortiert wird später.').count();
+  if (named) await ready(page, '/todos');
+  else await m.go('/todos');
   await expect(page.getByText('Müll runterbringen', { exact: true }).first()).toBeVisible();
   await expect(
     page.getByText('Vermieter wegen Heizung antworten', { exact: true }).first(),

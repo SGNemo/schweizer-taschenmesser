@@ -122,17 +122,20 @@ export interface CaptureItem {
 /**
  * Saves several entries as one batch: one after the other (so a new ToDo inbox is created once),
  * all or nothing (a failing entry removes the ones written before it). The result counts as one
- * saved capture whose `undo` takes every entry back.
+ * saved capture whose `undo` takes every entry back. A batch never books money: it never passes
+ * `confirmed`, so a booking in it fails the whole batch (decisions/features.md, „Kopf leer“ Q1 a);
+ * the sheet turns money lines into ToDos before it gets here.
  */
 export async function saveCaptures(
   items: readonly CaptureItem[],
   text: string,
-  opts: SaveOptions = {},
+  opts: Omit<SaveOptions, 'confirmed'> = {},
 ): Promise<SavedCapture> {
   if (items.length === 0) throw new CaptureError('invalid');
   const saved: SavedCapture[] = [];
+  const batch: SaveOptions = { ...opts, confirmed: false };
   try {
-    for (const item of items) saved.push(await saveCapture(item.type, item.fields, opts));
+    for (const item of items) saved.push(await saveCapture(item.type, item.fields, batch));
   } catch (e) {
     await Promise.allSettled(saved.map((s) => s.undo()));
     throw e;

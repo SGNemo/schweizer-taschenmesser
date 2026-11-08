@@ -181,6 +181,18 @@ export function Toaster() {
         >
           {x.icon ? <Icon name={x.icon} size={18} /> : null}
           <span className={styles.toastText}>{x.message}</span>
+          {x.lead ? (
+            <button
+              type="button"
+              className={styles.toastAction}
+              onClick={() => {
+                x.lead?.run();
+                close(x.id);
+              }}
+            >
+              {x.lead.label}
+            </button>
+          ) : null}
           {x.action ? (
             <button
               type="button"

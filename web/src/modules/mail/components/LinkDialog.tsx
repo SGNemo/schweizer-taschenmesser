@@ -27,7 +27,7 @@ export function LinkDialog({
   account: MailAccountRef;
   threadId: string;
   message: MailMessage;
-  /** Address that opens the mail; absent for sample mail. */
+  /** Address that opens the mail, without the account's address (`forStorage`); absent for sample mail. */
   link?: string;
   /** The local model may read mail (module setting): offers a suggestion for the line. */
   localAi?: boolean;
@@ -58,7 +58,7 @@ export function LinkDialog({
     }
   }
   const prefill = type
-    ? mailPrefill(type, message, { link, today: today(), withExcerpt: excerpt })
+    ? mailPrefill(type, message, { link, threadId, today: today(), withExcerpt: excerpt })
     : undefined;
 
   return (

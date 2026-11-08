@@ -1,3 +1,5 @@
+import { loadModuleStates } from '@/core/modules/activation';
+import { visibleManifests } from '@/core/modules/registry';
 import { resyncNativeSchedule } from '@/core/notifications/nativeSchedule';
 import { getPlatform } from '@/core/platform';
 import { getFocusSettings } from '@/core/settings/focus';
@@ -27,24 +29,46 @@ async function alertLine(
 }
 
 /**
+ * Where „Ansehen“ after a batch leads: the planner when it is on, else the ToDo inbox with „Eingang
+ * sortieren“; nowhere (no „Ansehen“) when neither is on.
+ */
+export async function batchPlace(): Promise<string | undefined> {
+  try {
+    const states = await loadModuleStates(visibleManifests);
+    return states.planner ? '/planner' : states.todos ? '/todos?list=inbox' : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Toast "Gespeichert in …" with an undo action; used wherever the main app window saved a capture.
- * Several entries at once: "3 Dinge gespeichert · Ändern" takes all of them back and puts the text
- * into the capture sheet again. A saved reminder asks for notification permission once (C01); when
- * alerts stay off, the same toast says where to turn them on (switch: Fokus → `leadHint`).
+ * Several entries at once (U05): "5 Dinge gespeichert. Sortiert wird später. · Ansehen · Rückgängig" –
+ * „Ansehen“ (only where the caller can navigate) opens the place they landed, „Rückgängig“ takes all
+ * of them back and puts the text into the capture sheet again, so nothing typed is lost. A saved
+ * reminder asks for notification permission once (C01); when alerts stay off, the same toast says
+ * where to turn them on (switch: Fokus → `leadHint`).
  */
 export async function announceSaved(
   saved: SavedCapture,
   notifications = getPlatform().notifications,
+  navigate?: (to: string) => void,
 ): Promise<void> {
   const { toast } = useUiStore.getState();
   const extra = await alertLine(saved, notifications);
   const say = (text: string) => (extra ? extra(text) : text);
   if (saved.count && saved.count > 1) {
     const text = saved.text ?? '';
-    toast(say(t.quickCapture.multi.saved(saved.count)), {
-      label: t.quickCapture.multi.change,
-      run: () => void saved.undo().then(() => reopenCapture(text)),
-    });
+    const place = navigate ? await batchPlace() : undefined;
+    toast(
+      say(t.quickCapture.multi.saved(saved.count)),
+      {
+        label: t.quickCapture.undo,
+        run: () => void saved.undo().then(() => reopenCapture(text)),
+      },
+      undefined,
+      place ? { label: t.quickCapture.multi.view, run: () => navigate!(place) } : undefined,
+    );
     return;
   }
   toast(say(t.quickCapture.saved(t.quickCapture.target[saved.type])), {

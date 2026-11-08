@@ -214,6 +214,8 @@ export interface Toast {
   /** Optional leading icon (a check for confirmations). */
   icon?: IconName;
   action?: { label: string; run: () => void };
+  /** A second action shown before `action` („Ansehen · Rückgängig“). */
+  lead?: { label: string; run: () => void };
 }
 
 interface UiState {
@@ -298,7 +300,7 @@ interface UiState {
   setHomeEditing(editing: boolean): void;
   toasts: Toast[];
   /** One notice at a time: a new one replaces the old (stacked notices covered a fifth of a phone). */
-  toast(message: string, action?: Toast['action'], icon?: IconName): number;
+  toast(message: string, action?: Toast['action'], icon?: IconName, lead?: Toast['lead']): number;
   dismissToast(id: number): void;
 }
 
@@ -469,9 +471,11 @@ export const useUiStore = create<UiState>((set) => ({
   homeEditing: false,
   setHomeEditing: (homeEditing) => set({ homeEditing }),
   toasts: [],
-  toast(message, action, icon) {
+  toast(message, action, icon, lead) {
     const id = ++toastId;
-    set((s) => ({ toasts: [...s.toasts, { id, message, action, icon }].slice(-MAX_TOASTS) }));
+    set((s) => ({
+      toasts: [...s.toasts, { id, message, action, icon, lead }].slice(-MAX_TOASTS),
+    }));
     return id;
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),

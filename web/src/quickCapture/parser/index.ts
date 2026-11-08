@@ -87,6 +87,11 @@ const KEYWORDS = {
   income: word(String.raw`einnahmen?`),
   due: word(String.raw`fällig(?:keit)?(?:\s+am)?|zahlbar`),
 };
+/**
+ * Past-tense spend words („Brot gekauft 3,80 €“, „Miete bezahlt 850 €“): with an amount the line is a
+ * booking and the word leaves the title; without one („Schuhe gekauft“) the text stays as typed.
+ */
+const SPEND_PAST = word(String.raw`bezahlt|gekauft`);
 /** Words that make a dated sentence a deadline (a ToDo), even with a clock time. */
 const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|deadline|frist`);
 /** "bis 5.11.", "fällig am": a payment target when an amount is there. */
@@ -188,6 +193,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     spend: !!take(scan, KEYWORDS.spend),
     income: !!take(scan, KEYWORDS.income),
     due: !!take(scan, KEYWORDS.due),
+    spendPast: SPEND_PAST.test(scan.t),
     deadline: DEADLINE.test(scan.t),
     dueHint: DUE_HINT.test(scan.t),
   };
@@ -218,22 +224,31 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
         : undefined;
   // Not when the text has a time („morgen 9 Uhr Zahnarzt 45,00“ stays an event). With a day, only a
   // value that cannot be a clock time („gestern Tanken 62,40“ yes, „Training am Do 18,30“ no).
+  // „Tanken 62,40 bezahlt“: a trailing past-tense spend word does not hide the amount before it.
+  const edgeText =
+    kw.spendPast && !kw.invoice ? scan.t.replace(/\s+(?:bezahlt|gekauft)\s*$/iu, '') : scan.t;
   const edgeMatch =
     amount || bare || forced || recurrence || dt.time !== undefined
       ? null
-      : EDGE_CENTS_RE.exec(scan.t);
+      : EDGE_CENTS_RE.exec(edgeText);
   const edgeNum = edgeMatch ? (edgeMatch[1] ?? edgeMatch[2])! : undefined;
   const timeShaped = edgeNum ? /^([01]?\d|2[0-3]),[0-5]\d$/.test(edgeNum) : false;
   // „um 14,30“: the clock-shaped value right after a time word, at the end of the text.
   const afterTimeWord =
-    timeShaped && /(?:^|\s)(?:um|bis|ab|gegen|von)\s+\d{1,2},\d{2}\s*$/i.test(scan.t);
+    timeShaped && /(?:^|\s)(?:um|bis|ab|gegen|von)\s+\d{1,2},\d{2}\s*$/i.test(edgeText);
   const edgeCents =
     edgeNum && !(timeShaped && (dt.date || afterTimeWord)) ? toCents(edgeNum) : undefined;
-  if (edgeCents) take(scan, EDGE_CENTS_RE);
+  if (edgeCents) {
+    scan.t = edgeText;
+    take(scan, EDGE_CENTS_RE);
+  }
   const money =
     amount ??
     bare ??
     (edgeCents ? { amountMinor: edgeCents, kind: 'expense' as const } : undefined);
+  // A past-tense spend word counts only next to an amount, and never against an invoice word.
+  const spentPast = !!money && kw.spendPast && !kw.invoice;
+  if (spentPast) take(scan, SPEND_PAST);
   if (money) {
     fields.amountMinor = money.amountMinor;
     fields.kind = kw.income ? 'income' : money.kind;
@@ -262,10 +277,18 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     score(scores, 'reminder', slot ? 60 : 75);
     if (hasTime) score(scores, 'event', slot ? 88 : 40);
   }
-  if (money) score(scores, 'finance', kw.spend || kw.income ? 92 : 80);
+  if (money) score(scores, 'finance', kw.spend || kw.income || spentPast ? 92 : 80);
   if (money && slowRecurrence && !hasTime && !kw.invoice) score(scores, 'subscription', 92);
   if (money && kw.invoice) score(scores, 'invoice', 92);
-  else if (money && hasDate && !recurrence && (kw.due || kw.dueHint) && !kw.spend && !kw.income)
+  else if (
+    money &&
+    hasDate &&
+    !recurrence &&
+    (kw.due || kw.dueHint) &&
+    !kw.spend &&
+    !spentPast &&
+    !kw.income
+  )
     score(scores, 'invoice', 90);
   if (kw.birthday && hasDate && !hasTime && !recurrence) score(scores, 'birthday', 93);
   if (kw.deadline && !money && !recurrence) score(scores, 'todo', 96);

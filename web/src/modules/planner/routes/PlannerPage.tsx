@@ -321,9 +321,15 @@ export default function PlannerPage() {
           : todayDay.usable === 0
             ? t.planner.head.noTime
             : t.planner.head.full;
-  const headDetail = todayDay
-    ? `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`
-    : undefined;
+  // U13: the detail line names the next step – today's first thing, or the next day with free time.
+  const nextFree = board?.days.slice(1).find((d) => !d.off && d.free > 0);
+  const headDetail = !todayDay
+    ? undefined
+    : !todayDay.off && todayDay.rows[0]
+      ? t.planner.head.first(todayDay.rows[0].title)
+      : !todayDay.off && todayDay.usable > 0 && nextFree
+        ? t.planner.head.nextFree(dayName(nextFree.date), compact(nextFree.free))
+        : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
 
   const pageMenu: RowMenuItem[] = [
     {
@@ -693,33 +699,48 @@ export default function PlannerPage() {
             listId="planner"
             groups={[
               {
-                id: 'waiting',
+                // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
+                id: 'wait',
+                defaultClosed: true,
                 label: t.planner.wait.title,
                 count: waiting.length,
-                // The overload figure: neutral text, no tone (CONCEPT §7).
-                ...(overflow > 0 ? { detail: overloadText(overflow) } : {}),
+                detail: t.planner.wait.calm,
+                // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
+                ...(overflow > 0
+                  ? {
+                      action: (
+                        <p className={styles.reason} data-testid="planner-overload">
+                          {overloadText(overflow)}
+                        </p>
+                      ),
+                    }
+                  : {}),
                 children: (
                   <ItemList>
-                    {waiting.map((w) => (
-                      <ItemRow
-                        key={w.unitId}
-                        title={
-                          <span>
-                            {w.title}
-                            {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
-                          </span>
-                        }
-                        titleFull
-                        meta={
-                          w.reason === 'excluded'
-                            ? t.planner.row.excludedState
-                            : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf)
-                        }
-                        end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
-                        menu={rowMenu(w)}
-                        menuLabel={t.planner.row.menu(w.title)}
-                      />
-                    ))}
+                    {waiting.map((w) => {
+                      const reason =
+                        w.reason === 'excluded'
+                          ? t.planner.row.excludedState
+                          : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+                      return (
+                        <ItemRow
+                          key={w.unitId}
+                          title={
+                            <span>
+                              {w.title}
+                              {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
+                            </span>
+                          }
+                          titleFull
+                          // The reason only behind „Warum hier?“, like on the board (U12).
+                          // A row without a menu (no entry) keeps its reason in sight.
+                          meta={why === w.unitId || !w.entry ? reason : undefined}
+                          end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
+                          menu={rowMenu(w, undefined, reason)}
+                          menuLabel={t.planner.row.menu(w.title)}
+                        />
+                      );
+                    })}
                   </ItemList>
                 ),
               },

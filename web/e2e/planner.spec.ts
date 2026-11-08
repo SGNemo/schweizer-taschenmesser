@@ -494,7 +494,14 @@ async function smallWeek(page: Page) {
 
 /** The toast region (the header has a status line of its own). */
 const toast = (page: Page) => page.getByRole('status').last();
-const waitingHead = (page: Page) => page.locator('[data-group="waiting"] h2');
+const waitingHead = (page: Page) => page.locator('[data-group="wait"] h2');
+/** The waiting group is folded by default („Kopf leer“ Q4 a): open it before reading what it holds. */
+async function openWaiting(page: Page) {
+  const toggle = waitingHead(page).getByRole('button');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+const overload = (page: Page) => page.getByTestId('planner-overload');
 
 test.describe('Planer (more sources, overload – package 3)', () => {
   test.beforeEach(({ isMobile }) => {
@@ -552,7 +559,8 @@ test.describe('Planer (more sources, overload – package 3)', () => {
       status: 'open',
     });
     await ready(page, '/planner');
-    const row = page.getByText('Stadtwerke bezahlen');
+    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“).
+    const row = page.getByText('Stadtwerke bezahlen', { exact: true });
     await expect(row).toBeVisible();
     const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
     await expect(day).toContainText('Frist Do');
@@ -585,16 +593,20 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await expect(toast(page)).toContainText('mehr zu tun, als Zeit frei ist');
     await expect(toast(page).getByRole('button', { name: 'Rückgängig' })).toBeVisible();
     await expect(waitingHead(page)).toContainText('Wartet auf freie Zeit');
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
-    const first = await waitingHead(page).innerText();
+    // Folded, the head carries the count and the calming sentence; the hours wait inside.
+    await expect(waitingHead(page)).toContainText('Nichts davon muss heute sein.');
+    await expect(waitingHead(page)).not.toContainText('mehr zu tun');
+    await openWaiting(page);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    const first = await overload(page).innerText();
     await enter(page, 'Keller 1 Std');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
-    await expect(waitingHead(page)).not.toHaveText(first);
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await expect(overload(page)).not.toHaveText(first);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 
-  test('switch `overloadToast` off → no toast line, the figure stays in the group head', async ({
+  test('switch `overloadToast` off → no toast line, the figure stays in the opened group', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -606,7 +618,8 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await enter(page, 'Umzug planen 5 Std');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await openWaiting(page);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 });
 

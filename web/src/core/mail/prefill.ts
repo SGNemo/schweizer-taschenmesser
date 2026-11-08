@@ -24,8 +24,8 @@ export interface MailPrefill {
   type: MailLinkType;
   /** What the capture sheet starts with (one line; the parser reads date, time and amount from it). */
   text: string;
-  /** Fields saved along with the entry, merged over the parsed ones. */
-  extra: { note?: string; url?: string };
+  /** Fields saved along with the entry, merged over the parsed ones; `link` points back to the thread (U09). */
+  extra: { note?: string; url?: string; link?: { kind: 'mail'; id: string; label: string } };
   /** The plain-text excerpt the user may add to a note (not part of `extra` unless chosen). */
   excerpt?: string;
 }
@@ -44,14 +44,16 @@ export function mailText(m: Pick<MailMessage, 'text' | 'html'>, limit = 4000): s
 }
 
 /**
- * @param link   address that opens the mail (`MailProvider.webUrl`), stored in the entry; absent for sample mail.
+ * @param link   address that opens the mail (`mailWebUrl(…, { forStorage: true })`, no account address), stored
+ *   in the entry; absent for sample mail.
+ * @param threadId  the thread the entry came from: saved as `extra.link` (a ToDo lists it in `links`).
  * @param today  'YYYY-MM-DD' (the reminder starts tomorrow).
  * @param withExcerpt  copy the first lines of the mail into a note (off unless the user ticks it).
  */
 export function mailPrefill(
   type: MailLinkType,
   m: Pick<MailMessage, 'id' | 'from' | 'subject' | 'date' | 'text' | 'html'>,
-  opts: { link?: string; today: string; withExcerpt?: boolean },
+  opts: { link?: string; threadId?: string; today: string; withExcerpt?: boolean },
 ): MailPrefill {
   const subject = cleanSubject(m.subject);
   const sender = senderName(m.from.name ? `${m.from.name} <${m.from.email}>` : m.from.email);
@@ -69,7 +71,40 @@ export function mailPrefill(
   });
   const link = opts.link;
   const base = { type, extra: {} as MailPrefill['extra'], excerpt };
+  const back = opts.threadId
+    ? {
+        // Never an address in the stored label (U17): the subject, else a name, else „Mail“.
+        link: {
+          kind: 'mail' as const,
+          id: opts.threadId,
+          label: subject || (sender.includes('@') ? 'Mail' : sender),
+        },
+      }
+    : {};
+  const result = mailPrefillFor(type, { subject, sender, found, link, excerpt, base, opts });
+  return { ...result, extra: { ...result.extra, ...back } };
+}
 
+function mailPrefillFor(
+  type: MailLinkType,
+  {
+    subject,
+    sender,
+    found,
+    link,
+    excerpt,
+    base,
+    opts,
+  }: {
+    subject: string;
+    sender: string;
+    found: ReturnType<typeof analyzeMessage>;
+    link: string | undefined;
+    excerpt: string | undefined;
+    base: Pick<MailPrefill, 'type' | 'extra' | 'excerpt'>;
+    opts: { today: string; withExcerpt?: boolean };
+  },
+): MailPrefill {
   switch (type) {
     case 'invoice': {
       const amount = found?.amountMinor;

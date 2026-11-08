@@ -102,8 +102,12 @@ export const quickCapture: Strings['quickCapture'] = {
     inbox: 'Inbox',
     financeDraft: 'Booking (draft)',
     saveAll: (n: number) => `Save all (${n})`,
-    saved: (n: number) => `${n} things saved`,
+    saved: (n: number) => `${n} things saved. Sorting comes later.`,
     change: 'Change',
+    view: 'View',
+    bookExpense: 'Book as expense',
+    bookIncome: 'Book as income',
+    bookLine: (action: string, line: string) => `${action}: ${line}`,
   },
   trayToday: {
     heading: 'Today',
@@ -162,5 +166,6 @@ export const quickCapture: Strings['quickCapture'] = {
     suggestion: 'Suggestion',
     saveAs: 'Save as',
     or: 'or open in module',
+    asNote: 'Text as note',
   },
 };

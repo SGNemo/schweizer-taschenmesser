@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
-import { Button, Card, EmptyState, Icon, patternStyles, type IconName } from '@/ui';
+import { Button, Card, Checkbox, EmptyState, Icon, patternStyles, type IconName } from '@/ui';
 import styles from './Page.module.css';
 
 /** What Android's "Share" hands over: `title`, `text` and/or `url` (apps differ in what they fill). */
@@ -16,6 +17,30 @@ export function sharedContent(params: URLSearchParams): {
   const text = params.get('text')?.trim() ?? '';
   const url = params.get('url')?.trim() || text.match(/https?:\/\/\S+/)?.[0] || '';
   return { title: params.get('title')?.trim() ?? '', text, url };
+}
+
+/**
+ * Shared text as one entry (U17): the first non-empty line is the line the sheet reads, the rest is
+ * offered as a note (behind a tick, off by default) and never split into entries. A shared link stays
+ * on the line (unless it sits in a longer text), so a shared page still reads as a bookmark.
+ */
+export function sharedLine(c: ReturnType<typeof sharedContent>): { line: string; rest: string } {
+  const title = c.title.trim();
+  let text = c.text.trim();
+  // Only a text that repeats the title on its first line loses that line; the rest stays as shared
+  // (paragraph breaks included).
+  const firstOf = (s: string) => s.split('\n', 1)[0]!.trim();
+  const dropFirst = (s: string) => s.slice(s.indexOf('\n') + 1 || s.length).trim();
+  if (title && firstOf(text) === title) text = dropFirst(text);
+  let line = title || firstOf(text);
+  const rest = title ? text : dropFirst(text);
+  // The link stays on the line when it was shared beside the text or in a one-line text („Schau mal
+  // https://…“); a long text (a mail body) keeps its links in the rest.
+  const textLines = c.text.split('\n').filter((l) => l.trim()).length;
+  if (c.url && !line.includes(c.url) && (!c.text.includes(c.url) || textLines <= 1)) {
+    line = line ? `${line} ${c.url}` : c.url;
+  }
+  return { line, rest };
 }
 
 interface Target {
@@ -70,6 +95,8 @@ export function ShareTarget() {
       !all.some((o) => o && o !== v && o.includes(v) && v === content.url),
   );
   const has = content.title || content.text || content.url;
+  const { line, rest } = sharedLine(content);
+  const [asNote, setAsNote] = useState(false);
 
   return (
     <>
@@ -89,9 +116,17 @@ export function ShareTarget() {
             </p>
           </Card>
           <Card title={t.quickCapture.share.suggestion}>
+            {rest ? (
+              <Checkbox
+                label={t.quickCapture.share.asNote}
+                checked={asNote}
+                onChange={(e) => setAsNote(e.target.checked)}
+              />
+            ) : null}
             <CaptureForm
-              initialText={parts.join(' ')}
-              extra={{ note: parts.join('\n') }}
+              oneEntry
+              initialText={line}
+              extra={asNote && rest ? { note: rest } : undefined}
               onSaved={(saved) => {
                 void announceSaved(saved);
                 void navigate('/');
