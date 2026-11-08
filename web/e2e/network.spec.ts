@@ -51,7 +51,9 @@ test('the connection log lists host and reason, the block stops requests before 
   await ready(page, '/settings/verbindungen');
   await page.getByRole('switch', { name: 'Liste auf diesem Gerät behalten' }).click();
   await page.getByRole('switch', { name: 'Netzwerk sperren' }).click();
-  await expect(page.getByText('Das Netzwerk ist gesperrt. Es geht nichts raus.')).toBeVisible();
+  await expect(
+    page.getByText('Das Netzwerk ist für die App gesperrt.', { exact: false }),
+  ).toBeVisible();
 
   await openCurrency(page);
   await page.waitForTimeout(800);

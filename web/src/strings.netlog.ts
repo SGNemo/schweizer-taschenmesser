@@ -6,7 +6,7 @@ export const tNet = defineBundle(
   {
     title: 'Was ging wohin?',
     description:
-      'Alles, was die App seit dem Start ins Netz geschickt hat: Zeit, Ziel, Anlass und Größe, nie Inhalte. Die Liste bleibt auf diesem Gerät.',
+      'Was die App selbst seit dem Start ins Netz geschickt hat: Zeit, Ziel, Anlass und Größe, nie Inhalte. Die Liste bleibt auf diesem Gerät. Nicht darin: was die Windows- oder Android-App direkt lädt (Seiten im Browser-Modul, Downloads und Torrents, Abgleich im Heimnetz).',
     keywords: [
       'Netzwerk',
       'Verbindungsprotokoll',
@@ -14,7 +14,7 @@ export const tNet = defineBundle(
       'Offline',
       'Datenschutz',
       'Protokoll',
-      'Was überhaupt ins Netz gehen kann',
+      'Adressen',
     ],
     summary: (n: number, hosts: number) =>
       n === 0
@@ -49,8 +49,9 @@ export const tNet = defineBundle(
         : `gesendet ${bytes(out)}, empfangen ${bytes(inn)}`,
     block: 'Netzwerk sperren',
     blockHint:
-      'Die App sendet nichts mehr, bis du es wieder erlaubst. Synchronisierung, Update-Prüfung, Wetter und KI melden dann „gesperrt“. Deine Daten auf dem Gerät und diese Liste funktionieren weiter. Nicht erfasst: Seiten im Browser-Modul, Downloads und Torrents, der Abgleich im Heimnetz und die Push-Anmeldung des Browsers; sie starten nur, wenn du sie öffnest oder einrichtest.',
-    blockedNote: 'Das Netzwerk ist gesperrt. Es geht nichts raus.',
+      'Die App selbst sendet nichts mehr, bis du es wieder erlaubst. Synchronisierung, Update-Prüfung, Wetter und KI melden dann „gesperrt“. Deine Daten auf dem Gerät und diese Liste funktionieren weiter. Nicht erfasst: Seiten im Browser-Modul, Downloads und Torrents, der Abgleich im Heimnetz und die Push-Anmeldung des Browsers; sie starten nur, wenn du sie öffnest oder einrichtest, und laufen dann auch bei gesperrtem Netz.',
+    blockedNote:
+      'Das Netzwerk ist für die App gesperrt. Ausnahmen stehen unter „Netzwerk sperren“.',
     keep: 'Liste auf diesem Gerät behalten',
     keepHint:
       'Sonst gilt sie nur bis zum Schließen der App. Die Liste wird nie synchronisiert, gesichert oder in die Diagnose übernommen.',
@@ -59,7 +60,7 @@ export const tNet = defineBundle(
     catalogue: {
       title: 'Was überhaupt ins Netz gehen kann',
       intro:
-        'Alle festen Adressen aus dem Code der App, bei jedem Testlauf gegen den Code geprüft. Dazu kommen nur Adressen, die du selbst einträgst oder öffnest.',
+        'Die festen Adressen aus dem Code der App (mit ihren Download-Servern), bei jedem Testlauf gegen den Code geprüft. Dazu kommt, was du selbst einträgst oder öffnest, und mit Push der Push-Dienst deines Browsers.',
       when: {
         auto: 'Automatisch, höchstens einmal am Tag; abschaltbar unter Updates',
         setup: 'Nur wenn du es eingerichtet hast',
@@ -67,23 +68,15 @@ export const tNet = defineBundle(
       } satisfies Record<NetWhen, string>,
       own: 'eine Adresse, die du selbst einträgst',
       other:
-        'Was du selbst einträgst oder öffnest: Feeds, E-Mail-Konto und Bilder in Mails (nur wenn du sie erlaubst), Seiten im Browser-Modul, Downloads, Abgleich im Heimnetz',
+        'Was du selbst einträgst oder öffnest: Feeds, E-Mail-Konto und Bilder in Mails (nur wenn du sie erlaubst), Link-Vorschauen, Seiten im Browser-Modul, Downloads und Torrents, Abgleich im Heimnetz',
     },
   },
   {
     en: {
       title: 'What went where?',
       description:
-        'Everything the app has sent to the network since it started: time, destination, reason and size, never content. The list stays on this device.',
-      keywords: [
-        'network',
-        'connection log',
-        'block',
-        'offline',
-        'privacy',
-        'log',
-        'Everything that can go to the network',
-      ],
+        'What the app itself has sent to the network since it started: time, destination, reason and size, never content. The list stays on this device. Not in it: what the Windows or Android app loads directly (pages in the browser module, downloads and torrents, home-network sync).',
+      keywords: ['network', 'connection log', 'block', 'offline', 'privacy', 'log', 'destinations'],
       summary: (n: number, hosts: number) =>
         n === 0
           ? 'Since start: no connection.'
@@ -115,8 +108,9 @@ export const tNet = defineBundle(
         inn === undefined ? `sent ${bytes(out)}` : `sent ${bytes(out)}, received ${bytes(inn)}`,
       block: 'Block network',
       blockHint:
-        'The app sends nothing until you allow it again. Sync, update check, weather and AI then report “blocked”. Your data on this device and this list keep working. Not covered: pages in the browser module, downloads and torrents, home-network sync and the browser’s push sign-up; they only start when you open or set them up.',
-      blockedNote: 'The network is blocked. Nothing goes out.',
+        'The app itself sends nothing until you allow it again. Sync, update check, weather and AI then report “blocked”. Your data on this device and this list keep working. Not covered: pages in the browser module, downloads and torrents, home-network sync and the browser’s push sign-up; they only start when you open or set them up, and then keep running while the network is blocked.',
+      blockedNote:
+        'The network is blocked for the app. Exceptions are listed under “Block network”.',
       keep: 'Keep the list on this device',
       keepHint:
         'Otherwise it only lasts until the app closes. The list is never synced, backed up or added to diagnostics.',
@@ -125,7 +119,7 @@ export const tNet = defineBundle(
       catalogue: {
         title: 'Everything that can go to the network',
         intro:
-          "Every fixed address in the app's code, checked against the code on every test run. Beyond these, only addresses you enter or open yourself.",
+          "The fixed addresses in the app's code (with their download servers), checked against the code on every test run. Beyond these, what you enter or open yourself, and with push your browser's push service.",
         when: {
           auto: 'Automatic, at most once a day; can be switched off under Updates',
           setup: 'Only when you set it up',
@@ -133,7 +127,7 @@ export const tNet = defineBundle(
         } satisfies Record<NetWhen, string>,
         own: 'an address you enter yourself',
         other:
-          'What you enter or open yourself: feeds, your mail account and images in mails (only when you allow them), pages in the browser module, downloads, home-network sync',
+          'What you enter or open yourself: feeds, your mail account and images in mails (only when you allow them), link previews, pages in the browser module, downloads and torrents, home-network sync',
       },
     },
     es: {

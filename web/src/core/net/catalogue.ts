@@ -65,6 +65,7 @@ export const NET_CATALOGUE: readonly NetUse[] = [
   {
     reason: 'maps',
     when: 'click',
+    own: true,
     hosts: [
       'tile.openstreetmap.org',
       'nominatim.openstreetmap.org',
