@@ -2,7 +2,7 @@
 
 # Backup
 
-*Settings → Backup* saves all data to a file and restores a backup. Credentials (sync token, keys) are never part of a backup.
+*Settings → Sync & Backup* saves all data to a file and restores a backup. Credentials (sync token, keys) are never part of a backup.
 
 ## Creating a backup
 - **Encrypted export (recommended):** the file is protected with a password (Argon2id, AES-256), at least 8 characters. Without this password the backup cannot be opened; there is no reset.
@@ -21,5 +21,12 @@ In the installed app, Nemo can back up regularly and encrypted into its own data
 - **Replace:** the backup becomes the current state. Entries that are not in the backup are deleted, also on other devices as soon as they sync.
 - Beforehand the app shows what changes per module and automatically makes a safety copy of your current data. If anything fails, everything stays as it was.
 - Tables of old, removed modules are skipped on restore; the app tells you how many.
+
+## File format
+The download without a password is readable JSON (indented, opens in any text editor):
+- `format` (`taschenmesser-backup`), `version`, `about` (this description in one line), `exportedAt`.
+- `tables`: one list per collection, named `<module>_<collection>` (e.g. `notes_note`, `notes_notebook`). Each entry has its fields plus `id`, `createdAt`, `updatedAt`, `deviceId`, `deletedAt` (deleted entries stay so merging works) and `_f` (a time stamp per field; the newer one wins).
+- `checksum`: SHA-256 of `tables`; an edited file is refused.
+- Restoring the same file gives the same entries (tested). Invented test data of the Dev-Preview is never part of a backup.
 
 Moving between devices also works without a file via the [sync server](sync.md).

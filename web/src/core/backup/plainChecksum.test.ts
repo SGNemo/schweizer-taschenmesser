@@ -3,7 +3,7 @@ import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { createTestDb } from '@/test-utils';
-import { createBackup, serializeBackup } from './backup';
+import { createBackup, importBackup, serializeBackup } from './backup';
 import { plainChecksumStatus, readBackupText, serializeSealedBackup } from './encrypted';
 import { verifyBackup, type VerifyDeps } from './verify';
 
@@ -54,5 +54,44 @@ describe('plain backup checksum', () => {
     expect(await readBackupText(text)).toMatchObject({ ok: true });
     const report = await verifyBackup(text, undefined, deps());
     expect(report).toMatchObject({ ok: true, unprotected: true });
+  });
+});
+
+describe('readable plain backup (D10)', () => {
+  it('names its format in the file and is indented for a text editor', async () => {
+    const text = await sealed();
+    const json = JSON.parse(text) as Record<string, unknown>;
+    expect(Object.keys(json).slice(0, 3)).toEqual(['format', 'version', 'about']);
+    expect(json.about).toMatch(/docs\/user\/backup\.md#file-format/);
+    expect(text.split('\n').length).toBeGreaterThan(10);
+  });
+
+  it('the same file imports without loss: export → restore → export gives the same tables', async () => {
+    const source = newDb();
+    await source.table('notes_note').put({
+      id: 'n1',
+      title: 'Netzplan',
+      body: 'VLAN 10 #netz',
+      pinned: false,
+      notebookId: 'nb1',
+      order: 3,
+      createdAt: 1794000000000,
+      updatedAt: 1794000000000,
+      deviceId: 'pc',
+      deletedAt: null,
+      _f: Object.fromEntries(
+        ['title', 'body', 'pinned', 'notebookId', 'order', 'deletedAt'].map((f) => [
+          f,
+          '1794000000000-0000-pc',
+        ]),
+      ),
+    });
+    const first = await serializeSealedBackup(await createBackup(source));
+    const read = await readBackupText(first);
+    if (!read.ok) throw new Error(read.reason);
+    const target = newDb();
+    await importBackup(read.backup, 'merge', target);
+    const again = JSON.parse(serializeBackup(await createBackup(target))) as { tables: unknown };
+    expect(again.tables).toEqual((JSON.parse(first) as { tables: unknown }).tables);
   });
 });
