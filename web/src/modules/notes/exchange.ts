@@ -1,6 +1,7 @@
 import { markdownToPlain, plainToMarkdown } from './editor/markdown';
 import { parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
-import { isHiddenPath, placeOf, stripAttachments, withFolderTag } from '@/importers/obsidian/parse';
+import { isHiddenPath } from '@/importers/files';
+import { placeOf, stripAttachments, withFolderTag } from '@/importers/obsidian/parse';
 import { displayTitle, isScratch } from './logic';
 import type { Note } from './schema';
 
@@ -93,7 +94,7 @@ export function parseImport(files: readonly ImportFile[]): {
   );
   const vault =
     roots.size === 1 &&
-    (paths.some((f) => isHiddenPath(f.path)) || subFolders.size > 1) &&
+    (paths.some((f) => f.path.split('/').includes('.obsidian')) || subFolders.size > 1) &&
     subFolders.size > 0;
   for (const file of visible) {
     const segments = file.path.split('/').filter(Boolean);

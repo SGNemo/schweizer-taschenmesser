@@ -26,8 +26,6 @@ const LOCAL_IMAGE = new RegExp(
   'gi',
 );
 
-export { isHiddenPath };
-
 /** Numbered folders (`10_Arbeit`, `2_Privat`) in the order of their numbers. */
 export const byFolderOrder = (a: string, b: string): number =>
   a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });

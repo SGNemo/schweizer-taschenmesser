@@ -66,6 +66,7 @@ describe('import', () => {
 
   it('a plain folder with one sub-folder stays one notebook, the sub-folder becomes a tag', () => {
     const { pages } = parseImport([
+      { path: 'Rezepte/.DS_Store', text: '' },
       { path: 'Rezepte/Suppe.md', text: '# Suppe\n\nLinsen' },
       { path: 'Rezepte/Kuchen/Apfel.md', text: '# Apfel\n\nMürbeteig' },
     ]);

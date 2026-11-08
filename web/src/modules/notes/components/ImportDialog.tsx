@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { isHiddenPath } from '@/importers/files';
 import { byFolderOrder } from '@/importers/obsidian/parse';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -25,10 +26,12 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
   async function read(list: FileList | null) {
     if (!list || list.length === 0) return;
     const picked = await Promise.all(
-      [...list].map(async (f) => ({
-        path: (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name,
-        text: await f.text(),
-      })),
+      [...list].map(async (f) => {
+        const path = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
+        // Only notes are read; plugins, git objects and pictures of an export only need their path.
+        const read = /\.(?:md|markdown|txt)$/i.test(path) && !isHiddenPath(path);
+        return { path, text: read ? await f.text() : '' };
+      }),
     );
     const parsed = parseImport(picked);
     const known = new Set((await noteRepo.active().toArray()).map((n) => noteKey(n.title, n.body)));

@@ -12,7 +12,8 @@ import { addSkip, type SkipCounts, type SourceFile } from '@/importers/types';
 
 import { t } from '@/strings';
 import { isNotionPath } from '@/importers/notion/parse';
-import { byFolderOrder, isHiddenPath } from '@/importers/obsidian/parse';
+import { isHiddenPath } from '@/importers/files';
+import { byFolderOrder } from '@/importers/obsidian/parse';
 import { noteKey } from './exchange';
 import { noteRepo, notebookRepo } from './repo';
 
