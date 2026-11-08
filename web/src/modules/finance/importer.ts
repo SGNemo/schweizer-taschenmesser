@@ -12,7 +12,7 @@ import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
 import { listSubscriptionNames } from '@/modules/subscriptions/public';
 import { accountRepo, categoryRepo, ensureAnAccount, transactionRepo } from './repo';
-import { suggestCategories } from './categoryHints';
+import { keywordCategory, suggestCategories } from './categoryHints';
 import { MAPPING_EXTRA, readBank } from './bankRead';
 import { ColumnMapping } from './components/ColumnMapping';
 import { RuleSuggestions } from './components/RuleSuggestions';
@@ -91,9 +91,14 @@ async function parseBank(
     loadRules(),
     listSubscriptionNames(),
   ]);
+  // Then, for payees the app has never seen, a default category from well-known names (B03).
   const hints = suggestCategories(
     past,
     rows.map((tx) => ({ payee: tx.payee, kind: kindOf(tx) })),
+  ).map(
+    (hint, i) =>
+      hint ??
+      keywordCategory({ payee: rows[i]!.payee, purpose: rows[i]!.purpose, kind: kindOf(rows[i]!) }),
   );
   const categoryName = (id: string | undefined) => categories.find((c) => c.id === id)?.name;
   const subscriptionName = (id: string | undefined) => subscriptions.find((x) => x.id === id)?.name;

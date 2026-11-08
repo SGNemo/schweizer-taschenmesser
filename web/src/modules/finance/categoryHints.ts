@@ -30,3 +30,70 @@ export function suggestCategories(
     return [...per.entries()].sort((a, b) => b[1] - a[1])[0]![0];
   });
 }
+
+/**
+ * Default categories for payees and purposes everybody has (German shops, rent, energy, fuel,
+ * salary): used only when no earlier booking of the payee says otherwise, shown in the preview row
+ * and changeable later. Whole words only, so "Gasthaus" is never "Gas".
+ */
+const KEYWORDS: readonly { id: string; kind: 'expense' | 'income'; words: readonly string[] }[] = [
+  {
+    id: 'cat-food',
+    kind: 'expense',
+    words: [
+      'rewe',
+      'edeka',
+      'aldi',
+      'lidl',
+      'penny',
+      'netto',
+      'kaufland',
+      'norma',
+      'globus',
+      'tegut',
+      'alnatura',
+      'denns',
+      'bäckerei',
+      'baeckerei',
+      'metzgerei',
+      'lebensmittel',
+      'supermarkt',
+    ],
+  },
+  {
+    id: 'cat-home',
+    kind: 'expense',
+    words: ['miete', 'hausverwaltung', 'stadtwerke', 'strom', 'nebenkosten', 'rundfunkbeitrag'],
+  },
+  {
+    id: 'cat-mobility',
+    kind: 'expense',
+    words: [
+      'tankstelle',
+      'aral',
+      'esso',
+      'shell',
+      'deutsche bahn',
+      'db vertrieb',
+      'deutschlandticket',
+    ],
+  },
+  { id: 'cat-health', kind: 'expense', words: ['apotheke', 'zahnarzt', 'arztpraxis'] },
+  { id: 'cat-salary', kind: 'income', words: ['gehalt', 'lohn', 'bezüge'] },
+];
+
+const LETTER = 'a-zäöüß0-9';
+const MATCHERS = KEYWORDS.map((k) => ({
+  ...k,
+  re: new RegExp(`(^|[^${LETTER}])(${k.words.join('|')})($|[^${LETTER}])`),
+}));
+
+export function keywordCategory(row: {
+  payee?: string;
+  purpose?: string;
+  kind: 'expense' | 'income';
+}): string | undefined {
+  const text = norm(`${row.payee ?? ''} ${row.purpose ?? ''}`);
+  if (!text) return undefined;
+  return MATCHERS.find((m) => m.kind === row.kind && m.re.test(text))?.id;
+}

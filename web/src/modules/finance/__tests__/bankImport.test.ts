@@ -281,3 +281,18 @@ describe('a bank import on an installation without an account', () => {
     expect(rows.length).toBeGreaterThan(0);
   });
 });
+
+describe('a first bank import', () => {
+  it('puts default categories on well-known payees so a grocery budget fills (B03)', async () => {
+    await categoryRepo.create({ name: 'Lebensmittel', kind: 'expense' }, { id: 'cat-food' });
+    const csv = [
+      'Buchungstag;Betrag;Beguenstigter/Zahlungspflichtiger;Verwendungszweck',
+      '02.10.26;-54,37;Rewe Markt;Einkauf',
+      '03.10.26;-1.234,56;Elektro Möller;Kühlschrank',
+    ].join('\n');
+    const { rows } = await parse(file(csv), account);
+    const byPayee = Object.fromEntries(rows.map((r) => [r.candidate.data.payee, r.candidate.data]));
+    expect(byPayee['Rewe Markt']!.categoryId).toBe('cat-food');
+    expect(byPayee['Elektro Möller']!.categoryId).toBeUndefined();
+  });
+});
