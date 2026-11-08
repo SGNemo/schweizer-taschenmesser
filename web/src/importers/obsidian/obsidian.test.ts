@@ -8,6 +8,9 @@ import { parseMarkdownFolder, placeOf } from './parse';
 const vault = {
   'MeinVault/.obsidian/app.json': strToU8('{"x":1}'),
   'MeinVault/.trash/alt.md': strToU8('# Gelöscht'),
+  'MeinVault/.obsidian/plugins/x/main.js': strToU8('module.exports = {}'),
+  'MeinVault/.git/objects/ab/cdef': new Uint8Array([1, 2, 3]),
+  'MeinVault/.trash/alt.png': new Uint8Array([0x89, 0x50]),
   'MeinVault/Projekte/Garten.md': strToU8(
     '---\ntitle: Gartenplan\ntags: [haus, garten]\n---\nBeete ![[beet.png]] und [[Kompost]]\n![Skizze](bilder/skizze.jpg)\n',
   ),
@@ -91,6 +94,7 @@ describe('Obsidian vault with numbered folders and sub-folders (D04)', () => {
     expect(placeOf(['A'])).toEqual({ folder: 'A' });
     expect(placeOf(['A', 'B.C (alt)'])).toEqual({ folder: 'A', tag: 'B-C-alt' });
     expect(placeOf(['A', '***'])).toEqual({ folder: 'A' });
+    expect(placeOf(['90_Archiv', '2024'])).toEqual({ folder: '90_Archiv' });
   });
 });
 

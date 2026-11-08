@@ -12,7 +12,7 @@ import { addSkip, type SkipCounts, type SourceFile } from '@/importers/types';
 
 import { t } from '@/strings';
 import { isNotionPath } from '@/importers/notion/parse';
-import { isHiddenPath } from '@/importers/obsidian/parse';
+import { byFolderOrder, isHiddenPath } from '@/importers/obsidian/parse';
 import { noteKey } from './exchange';
 import { noteRepo, notebookRepo } from './repo';
 
@@ -58,7 +58,7 @@ const isEnexFile = (f: SourceFile) =>
 async function withNotebooks(notes: ParsedNote[], ctx: ImportContext): Promise<ImportCandidate[]> {
   const folders = [...new Set(notes.map((n) => n.folder).filter((f): f is string => !!f))];
   // Numbered folders (`10_Arbeit`, `20_Privat`) keep their order as notebooks.
-  folders.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  folders.sort(byFolderOrder);
   if (folders.length === 0) return notes.map((n) => candidate(n));
   const stored = await notebookRepo.active().toArray();
   let order = stored.reduce((max, nb) => Math.max(max, nb.order), 0);

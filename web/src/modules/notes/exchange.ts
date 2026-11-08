@@ -69,9 +69,10 @@ const TEXT_FILE = /\.(?:md|markdown|txt)$/i;
 
 /**
  * Reads `.md` / `.txt` files; a picked folder becomes the notebook, `.txt` keeps its line breaks.
- * A picked folder with sub-folders (an Obsidian vault) is read like the vault importer: the picked
- * folder itself is no notebook, its sub-folders are, deeper folders become a tag, hidden folders
- * (`.obsidian`, `.trash`) are left out and embedded pictures are removed from the text.
+ * An export (an Obsidian vault with `.obsidian`, or a folder with several sub-folders) is read like
+ * the vault importer: the picked folder itself is no notebook, its sub-folders are. Deeper folders
+ * become a tag, hidden folders (`.obsidian`, `.trash`) are left out and embedded pictures are
+ * removed from the text.
  */
 export function parseImport(files: readonly ImportFile[]): {
   pages: ImportedPage[];
@@ -79,12 +80,21 @@ export function parseImport(files: readonly ImportFile[]): {
 } {
   const pages: ImportedPage[] = [];
   let skipped = 0;
-  const visible = files
-    .map((f) => ({ ...f, path: f.path.replaceAll('\\', '/') }))
-    .filter((f) => !isHiddenPath(f.path));
+  const paths = files.map((f) => ({ ...f, path: f.path.replaceAll('\\', '/') }));
+  const visible = paths.filter((f) => !isHiddenPath(f.path));
+  // An export (Obsidian vault: a `.obsidian` folder, or several sub-folders under the picked one):
+  // the picked folder is no notebook, its sub-folders are. A plain folder stays one notebook.
   const roots = new Set(visible.map((f) => f.path.split('/')[0]));
+  const subFolders = new Set(
+    visible
+      .map((f) => f.path.split('/').filter(Boolean))
+      .filter((s) => s.length > 2)
+      .map((s) => s[1]),
+  );
   const vault =
-    roots.size === 1 && visible.some((f) => f.path.split('/').filter(Boolean).length > 2);
+    roots.size === 1 &&
+    (paths.some((f) => isHiddenPath(f.path)) || subFolders.size > 1) &&
+    subFolders.size > 0;
   for (const file of visible) {
     const segments = file.path.split('/').filter(Boolean);
     const base = segments[segments.length - 1] ?? file.path;
@@ -100,14 +110,11 @@ export function parseImport(files: readonly ImportFile[]): {
       skipped++;
       continue;
     }
+    // Deeper folders become a tag, so nothing of the folder order is lost.
     const place = placeOf(segments.slice(vault ? 1 : 0, -1));
-    const note = vault ? withFolderTag(parsed, place.tag) : parsed;
+    const note = withFolderTag(parsed, place.tag);
     const body = /\.txt$/i.test(base) ? plainToMarkdown(note.body) : note.body;
-    pages.push({
-      folder: (vault ? place.folder : segments.length > 1 ? segments[0] : null) ?? null,
-      title: note.title,
-      body,
-    });
+    pages.push({ folder: place.folder ?? null, title: note.title, body });
   }
   return { pages, skipped };
 }

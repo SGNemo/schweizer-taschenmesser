@@ -63,4 +63,15 @@ describe('import', () => {
     ]);
     expect(skipped).toBe(0);
   });
+
+  it('a plain folder with one sub-folder stays one notebook, the sub-folder becomes a tag', () => {
+    const { pages } = parseImport([
+      { path: 'Rezepte/Suppe.md', text: '# Suppe\n\nLinsen' },
+      { path: 'Rezepte/Kuchen/Apfel.md', text: '# Apfel\n\nMürbeteig' },
+    ]);
+    expect(pages).toEqual([
+      { folder: 'Rezepte', title: 'Suppe', body: 'Linsen' },
+      { folder: 'Rezepte', title: 'Apfel', body: 'Mürbeteig\n\n#Kuchen' },
+    ]);
+  });
 });

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { byFolderOrder } from '@/importers/obsidian/parse';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Dialog } from '@/ui';
@@ -48,7 +49,7 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
     let order = nextNotebookOrder(books);
     // Numbered folders (`10_Arbeit`, `20_Privat`) keep their order as notebooks.
     const names = [...new Set(result.fresh.map((p) => p.folder).filter((f): f is string => !!f))];
-    names.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    names.sort(byFolderOrder);
     for (const name of names) {
       if (idOf.has(name.trim().toLowerCase())) continue;
       const created = await notebookRepo.create({

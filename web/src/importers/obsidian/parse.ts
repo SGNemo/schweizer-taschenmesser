@@ -7,6 +7,7 @@
  * are counted.
  */
 import { parseMarkdownNote, withTagLine, type ParsedNote } from '@/core/io/markdownNote';
+import { isHiddenPath } from '../files';
 import { addSkip, type SkipCounts, type SourceFile } from '../types';
 
 export interface MarkdownFolderResult {
@@ -25,12 +26,11 @@ const LOCAL_IMAGE = new RegExp(
   'gi',
 );
 
-/** `.obsidian`, `.trash`, `.git` and other hidden files or folders: settings, not notes. */
-export const isHiddenPath = (path: string): boolean =>
-  path
-    .replaceAll('\\', '/')
-    .split('/')
-    .some((seg) => seg.startsWith('.') && seg !== '.' && seg !== '..');
+export { isHiddenPath };
+
+/** Numbered folders (`10_Arbeit`, `2_Privat`) in the order of their numbers. */
+export const byFolderOrder = (a: string, b: string): number =>
+  a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 /** Removes embedded or linked local media (`![[a.png]]`, `![x](bilder/a.jpg)`); web images stay. */
 export function stripAttachments(text: string): { text: string; removed: number } {
@@ -62,7 +62,8 @@ export function placeOf(dirs: readonly string[]): { folder?: string; tag?: strin
   const folder = dirs[0]?.trim();
   if (!folder) return {};
   const tag = dirs.slice(1).map(folderTag).filter(Boolean).join('/');
-  return tag && /^[\p{L}\p{N}_]/u.test(tag) ? { folder, tag } : { folder };
+  // A purely numeric name (`2024`) is no tag in Markdown (`#2024`); it stays out.
+  return tag && /^[\p{L}\p{N}_]/u.test(tag) && !/^\d+$/.test(tag) ? { folder, tag } : { folder };
 }
 
 /** Adds the sub-folder tag to a parsed note (text and tag list). */

@@ -33,6 +33,13 @@ export function safePath(name: string): string | undefined {
   return path;
 }
 
+/** `.obsidian`, `.trash`, `.git` and other hidden files or folders of an export: settings, not content. */
+export const isHiddenPath = (path: string): boolean =>
+  path
+    .replaceAll('\\', '/')
+    .split('/')
+    .some((seg) => seg.startsWith('.') && seg !== '.' && seg !== '..');
+
 const isZip = (bytes: Uint8Array) =>
   bytes.length > 3 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03;
 
@@ -64,6 +71,9 @@ export function expandFiles(
   let textBytes = 0;
   const take = (name: string, bytes: Uint8Array) => {
     const path = safePath(name);
+    // Binaries in hidden folders of an export (plugins, git objects, trash) are not counted as
+    // attachments; hidden text files stay readable for detection (`.obsidian/app.json`).
+    if (path && isHiddenPath(path) && !TEXT.test(path)) return;
     if (!path || bytes.length > LIMITS.fileBytes || textBytes + bytes.length > LIMITS.textBytes) {
       out.refused++;
       return;
@@ -86,6 +96,7 @@ export function expandFiles(
         const entries = unzipSync(file.bytes, {
           filter: (entry) => {
             if (entry.name.endsWith('/')) return false;
+            if (isHiddenPath(entry.name) && !TEXT.test(entry.name)) return false;
             seen++;
             // Decide before inflating: too many entries or an oversized file never get unpacked.
             return seen <= LIMITS.entries && entry.originalSize <= LIMITS.fileBytes;
