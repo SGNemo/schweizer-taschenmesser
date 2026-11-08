@@ -148,7 +148,7 @@ export const en = {
     check: {
       title: 'Check the file (optional)',
       text: 'Every file has a SHA-256 checksum in the GitHub release. If it matches your file, it is exactly the file the project built.',
-      windows: 'Windows: open PowerShell in your Downloads folder and type:',
+      windows: 'Windows: open PowerShell in your Downloads folder and type (Dev-Preview: Nemo-Portable-dev.exe):',
       android: 'Android: a checksum app, or later on a PC with the same command.',
       stable: 'Checksums of the stable version',
       dev: 'Checksums of the Dev-Preview',
@@ -182,7 +182,7 @@ export const en = {
       items: [
         'Nemo opens in your system language, German or English (other languages: English). You can change it in Settings.',
         'The Dev-Preview shows a “Dev” label at the top and briefly a note about it. That is not an error, just the sign that you are using the preview.',
-        'The Dev-Preview fills itself with made-up test data on the first start, so you can try things out. Red cards like “invoices overdue” are part of it. To remove them: Settings → Developer (“Entwickler”) → “Testdaten entfernen”; these test tools are in German only.',
+        'The Dev-Preview fills itself with made-up test data on the first start, so you can try things out. Red cards like “invoices overdue” are part of it. To remove them: Settings → “Entwickler” → “Testdaten entfernen” (the test tools are in German only).',
         'The stable version starts empty and asks whether you want to set it up step by step. Every step can be skipped.',
         'No account, no sign-in. When there is an update, the app shows it; you decide when it comes.',
       ],

@@ -148,7 +148,7 @@ export const de = {
     check: {
       title: 'Datei prüfen (optional)',
       text: 'Jede Datei hat im GitHub-Release eine SHA-256-Prüfsumme. Stimmt sie mit deiner Datei überein, ist es genau die Datei, die das Projekt gebaut hat.',
-      windows: 'Windows: PowerShell im Download-Ordner öffnen und eingeben:',
+      windows: 'Windows: PowerShell im Download-Ordner öffnen und eingeben (Dev-Preview: Nemo-Portable-dev.exe):',
       android: 'Android: eine Prüfsummen-App oder später am PC mit demselben Befehl.',
       stable: 'Prüfsummen der stabilen Version',
       dev: 'Prüfsummen der Dev-Preview',
