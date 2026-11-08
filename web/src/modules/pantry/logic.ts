@@ -40,6 +40,24 @@ export function expiryState(item: PantryItem, today: string, soonDays: number): 
 export const needsRestock = (item: PantryItem): boolean =>
   item.minCount !== undefined ? item.count <= item.minCount : item.count === 0;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Added within the last day: the widget does not call it "running low" yet – a fresh entry with
+ * count 0 is usually still being filled in, not a shopping reminder.
+ */
+export const isFresh = (item: { createdAt: number }): boolean =>
+  Date.now() - item.createdAt < DAY_MS;
+
+/**
+ * The widget's context line. With nothing expiring it says so first and only then what runs low,
+ * so a short stock never reads like an alarm (FOCUS-GUIDELINES: calm wording).
+ */
+export const widgetLine = (expired: number, soon: number, low: number): string =>
+  expired + soon + low === 0
+    ? t.pantry.shelf.summaryFine
+    : t.pantry.shelf.summary(expired, soon, low);
+
 const RANK: Record<ExpiryState, number> = { expired: 0, soon: 1, ok: 2, none: 3 };
 
 /** Expired first, then soon, then by date; items without a date by name. */
