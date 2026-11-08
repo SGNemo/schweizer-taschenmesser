@@ -1,5 +1,5 @@
 import { SafeModeBanner } from './SafeModeBanner';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useLaunchOpen } from '@/quickCapture/launchOpen';
 import { useNativeShare } from '@/quickCapture/nativeShare';
@@ -88,7 +88,9 @@ export function AppShell() {
   const cockpit = useUiStore((s) => s.cockpit);
 
   // Global shortcuts: Ctrl/Cmd+K opens the command palette, Ctrl/Cmd+. the tools, Alt+Home goes home.
-  useEffect(() => {
+  // A layout effect, like useShortcuts: the listener is there when the first frame is painted (Home renders
+  // with the shell), so a key pressed right after load is not lost before a passive effect runs.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
