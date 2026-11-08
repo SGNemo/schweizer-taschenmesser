@@ -9,6 +9,7 @@ import { useCaptureSettings } from '../settings';
 import { CaptureError, saveCapture, saveCaptures, targetFor, type SavedCapture } from '../targets';
 import { fullFormPath } from '../targets/fullForm';
 import { previewChips } from './chips';
+import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft } from './reopen';
 import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
@@ -24,6 +25,8 @@ export interface CaptureFormProps {
   tabSwitchesType?: boolean;
   /** Select the initial text so that typing replaces it (clipboard prefill). */
   selectInitial?: boolean;
+  /** Keep typed text on the device until the sheet closes, so a killed app gets it back (C04). */
+  keepDraft?: boolean;
   /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
   onOpenFull?: (path: string) => void;
   onSaved: (saved: SavedCapture) => void;
@@ -64,6 +67,7 @@ export function CaptureForm({
   extra,
   tabSwitchesType,
   selectInitial,
+  keepDraft,
   onOpenFull,
   onSaved,
   onCancel,
@@ -73,7 +77,10 @@ export function CaptureForm({
   const { states, available, fitness } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
-  const [text, setText] = useState(() => initialText || peekReopenDraft() || '');
+  // A text kept from an app the phone killed mid-typing comes back too (C04, `draft.ts`).
+  const [text, setText] = useState(
+    () => initialText || peekReopenDraft() || (keepDraft ? readCaptureDraft() : undefined) || '',
+  );
   const [override, setOverride] = useState<CaptureType | undefined>(initialType);
   // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text.
   const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
@@ -146,12 +153,16 @@ export function CaptureForm({
     if (selectInitial) inputRef.current?.select();
   }, [selectInitial]);
 
+  // Closing the sheet (or saving, below) ends the draft; a killed app never gets here.
+  useEffect(() => (keepDraft ? clearCaptureDraft : undefined), [keepDraft]);
+
   useEffect(() => {
     if (confirming) formRef.current?.querySelector<HTMLElement>('[data-confirm]')?.focus();
   }, [confirming]);
 
   const change = (value: string) => {
     setText(value);
+    if (keepDraft) writeCaptureDraft(value);
     setConfirming(false);
     setError('');
     // A new prefix or a cleared field starts over; otherwise the user's manual choice sticks.
@@ -221,6 +232,7 @@ export function CaptureForm({
           : await saveCapture(type!, fields, { confirmed }),
       );
       setText('');
+      if (keepDraft) clearCaptureDraft();
       setOverride(undefined);
       setRowOverride({});
       setConfirming(false);

@@ -3,7 +3,7 @@ import type { Strings } from '@/strings';
 export const quickCapture: Strings['quickCapture'] = {
   title: 'Quick capture',
   inputLabel: 'What would you like to note down?',
-  placeholder: 'e.g. “morgen 15 Uhr Zahnarzt” (German for now)',
+  placeholder: 'e.g. “Tanken 62,40, morgen 9 Uhr Kunde anrufen” (German for now)',
   save: 'Save',
   book: 'Record',
   type: {
@@ -81,6 +81,9 @@ export const quickCapture: Strings['quickCapture'] = {
   undo: 'Undo',
   undone: 'Undone.',
   empty: 'Please enter something.',
+  alertsOff: (saved: string) => `${saved}. So the reminder can ring: Settings → Notifications.`,
+  alertsBlocked: (saved: string) =>
+    `${saved}. So the reminder can ring: allow notifications in the phone or browser settings.`,
   errors: {
     moduleOff: (name: string) => `The “${name}” module is turned off.`,
     invalid: 'The entry is incomplete. Check title, date and amount.',
