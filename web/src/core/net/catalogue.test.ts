@@ -18,7 +18,8 @@ function hostsInSource(): Map<string, string[]> {
         continue;
       }
       if (!/\.tsx?$/.test(name) || /\.test\.|\.d\.ts$|^strings/.test(name)) continue;
-      const text = readFileSync(path, 'utf8');
+      // Regex sources count too: `^https:\/\/i\.scdn\.co\/` reads as `https://i.scdn.co/`.
+      const text = readFileSync(path, 'utf8').replace(/\\([./])/g, '$1');
       for (const m of text.matchAll(/https?:\/\/([a-z0-9.-]+\.[a-z]{2,}|localhost)(:\d+)?/gi)) {
         const host = `${m[1]!.toLowerCase()}${m[2] ?? ''}`;
         found.set(host, [...(found.get(host) ?? []), path.slice(SRC.length + 1)]);

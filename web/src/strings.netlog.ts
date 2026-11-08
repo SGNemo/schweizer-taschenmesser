@@ -1,4 +1,5 @@
 import { defineBundle } from '@/core/i18n/bundle';
+import type { NetWhen } from '@/core/net/catalogue';
 
 /** Texts of the connection log and "Netzwerk sperren" (Einstellungen → Verbindungen). */
 export const tNet = defineBundle(
@@ -13,7 +14,7 @@ export const tNet = defineBundle(
       'Offline',
       'Datenschutz',
       'Protokoll',
-      'Was geht ins Netz',
+      'Was überhaupt ins Netz gehen kann',
     ],
     summary: (n: number, hosts: number) =>
       n === 0
@@ -48,7 +49,7 @@ export const tNet = defineBundle(
         : `gesendet ${bytes(out)}, empfangen ${bytes(inn)}`,
     block: 'Netzwerk sperren',
     blockHint:
-      'Die App sendet nichts mehr, bis du es wieder erlaubst. Synchronisierung, Update-Prüfung, Wetter und KI melden dann „gesperrt“. Deine Daten auf dem Gerät und diese Liste funktionieren weiter.',
+      'Die App sendet nichts mehr, bis du es wieder erlaubst. Synchronisierung, Update-Prüfung, Wetter und KI melden dann „gesperrt“. Deine Daten auf dem Gerät und diese Liste funktionieren weiter. Nicht erfasst: Seiten im Browser-Modul, Downloads und Torrents, der Abgleich im Heimnetz und die Push-Anmeldung des Browsers; sie starten nur, wenn du sie öffnest oder einrichtest.',
     blockedNote: 'Das Netzwerk ist gesperrt. Es geht nichts raus.',
     keep: 'Liste auf diesem Gerät behalten',
     keepHint:
@@ -58,14 +59,15 @@ export const tNet = defineBundle(
     catalogue: {
       title: 'Was überhaupt ins Netz gehen kann',
       intro:
-        'Die vollständige Liste aus dem Code der App, bei jedem Build gegen den Code geprüft. Alles andere bleibt auf diesem Gerät.',
+        'Alle festen Adressen aus dem Code der App, bei jedem Testlauf gegen den Code geprüft. Dazu kommen nur Adressen, die du selbst einträgst oder öffnest.',
       when: {
         auto: 'Automatisch, höchstens einmal am Tag; abschaltbar unter Updates',
         setup: 'Nur wenn du es eingerichtet hast',
         click: 'Nur nach deinem Klick',
-      } as Record<string, string>,
+      } satisfies Record<NetWhen, string>,
       own: 'eine Adresse, die du selbst einträgst',
-      other: 'Feeds und andere Adressen, die du selbst einträgst',
+      other:
+        'Was du selbst einträgst oder öffnest: Feeds, E-Mail-Konto und Bilder in Mails (nur wenn du sie erlaubst), Seiten im Browser-Modul, Downloads, Abgleich im Heimnetz',
     },
   },
   {
@@ -80,7 +82,7 @@ export const tNet = defineBundle(
         'offline',
         'privacy',
         'log',
-        'what goes to the network',
+        'Everything that can go to the network',
       ],
       summary: (n: number, hosts: number) =>
         n === 0
@@ -113,7 +115,7 @@ export const tNet = defineBundle(
         inn === undefined ? `sent ${bytes(out)}` : `sent ${bytes(out)}, received ${bytes(inn)}`,
       block: 'Block network',
       blockHint:
-        'The app sends nothing until you allow it again. Sync, update check, weather and AI then report “blocked”. Your data on this device and this list keep working.',
+        'The app sends nothing until you allow it again. Sync, update check, weather and AI then report “blocked”. Your data on this device and this list keep working. Not covered: pages in the browser module, downloads and torrents, home-network sync and the browser’s push sign-up; they only start when you open or set them up.',
       blockedNote: 'The network is blocked. Nothing goes out.',
       keep: 'Keep the list on this device',
       keepHint:
@@ -123,14 +125,15 @@ export const tNet = defineBundle(
       catalogue: {
         title: 'Everything that can go to the network',
         intro:
-          "The complete list from the app's code, checked against the code on every build. Everything else stays on this device.",
+          "Every fixed address in the app's code, checked against the code on every test run. Beyond these, only addresses you enter or open yourself.",
         when: {
           auto: 'Automatic, at most once a day; can be switched off under Updates',
           setup: 'Only when you set it up',
           click: 'Only after your click',
-        } as Record<string, string>,
+        } satisfies Record<NetWhen, string>,
         own: 'an address you enter yourself',
-        other: 'Feeds and other addresses you enter yourself',
+        other:
+          'What you enter or open yourself: feeds, your mail account and images in mails (only when you allow them), pages in the browser module, downloads, home-network sync',
       },
     },
     es: {

@@ -1,9 +1,10 @@
 /**
- * "Was geht ins Netz": every destination the app can contact, grouped by the reason the connection
- * log uses, with when it happens. Derived from the code: `catalogue.test.ts` scans the source for
- * addresses and fails when one that the log files under a reason is missing here, or when a host
- * listed here no longer appears in the code. Addresses the user types in (own sync server, feeds,
- * a custom AI endpoint) cannot be listed; `own` marks the reasons that use them.
+ * "Was überhaupt ins Netz gehen kann": every fixed destination in the app's code, grouped by the
+ * reason the connection log uses, with when it happens. `catalogue.test.ts` scans the source (string
+ * literals and regex sources) and fails when a host the log files under a reason is missing here, or
+ * when a host listed here no longer appears in the code. Addresses the user enters or opens (own sync
+ * server, feeds, mail, browser module, downloads) cannot be listed; `own` and the `other` row name
+ * them. Native traffic (browser webview, downloads, LAN sync) is not in the log; the UI says so.
  */
 import type { NetReason } from './netlog';
 
@@ -48,6 +49,7 @@ export const NET_CATALOGUE: readonly NetUse[] = [
       'accounts.spotify.com',
       'api.spotify.com',
       'open.spotify.com',
+      'i.scdn.co',
     ],
   },
   {
