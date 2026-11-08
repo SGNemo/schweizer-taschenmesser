@@ -229,6 +229,34 @@ test('import from another app: a Strong export is recognised, previewed and land
   await expect(page.getByRole('menuitem', { name: /Importieren/ })).toBeVisible();
 });
 
+test('the catalogue: picked by group with its pictogram, the plate week fills', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('button', { name: 'Aus dem Katalog' }).click();
+  const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
+  await expect(picker.getByRole('heading', { name: 'Rücken' })).toBeVisible();
+  // No catalogue label overflows its button, also on the phone.
+  const overflowing = await picker
+    .locator('button[aria-label$="hinzufügen"]')
+    .evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
+  expect(overflowing).toBe(0);
+  await picker.getByRole('button', { name: 'Klimmzüge hinzufügen' }).click();
+  await expect(picker).toHaveCount(0);
+  await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Klimmzüge');
+  await dialog.getByLabel('Sätze').fill('3');
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // Sunday 2026-11-08 is the last plate of the week (Monday start): full now.
+  const plates = page.getByTestId('fitness-plates');
+  await expect(plates).toHaveAttribute('aria-label', 'Diese Woche trainiert: Sonntag');
+  await expect(plates.locator('[data-state="done"]')).toHaveCount(1);
+  // The row shows the pull-up pictogram.
+  await expect(page.locator('svg[data-pattern="pullup"]').first()).toBeVisible();
+});
+
 test('import from MyFitnessPal: the export ZIP brings a day of exercise and a meal, never the body weight', async ({
   page,
 }) => {

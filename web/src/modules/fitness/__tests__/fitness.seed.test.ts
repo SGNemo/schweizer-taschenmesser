@@ -24,7 +24,11 @@ describe('fitness seed', () => {
       // One plan for tomorrow, one template.
       expect(rows.session!.filter((r) => r.data.planned).map((r) => r.data.date)).toEqual([
         '2026-09-30',
+        '2026-10-02',
       ]);
+      expect(rows.template!).toHaveLength(3);
+      // Yesterday always has a session (the plate week is never empty in the test data).
+      expect(rows.session!.some((r) => r.data.date === '2026-09-28' && !r.data.planned)).toBe(true);
       for (const row of rows.template!)
         expect(templateSchema.safeParse(row.data).success).toBe(true);
     },

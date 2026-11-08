@@ -4,6 +4,7 @@ import type { Stored } from '@/core/db/types';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
+import { catalogNames } from './catalog';
 import { mealRepo, sessionRepo, templateRepo } from './repo';
 import type { Exercise, Meal, Session, Template } from './schema';
 import { DEFAULTS, settingsSchema, type FitnessSettings } from './settings';
@@ -47,8 +48,8 @@ export function useFitnessSettings(): FitnessSettings {
   return { ...DEFAULTS, ...(values as Partial<FitnessSettings> | undefined) };
 }
 
-/** The built-in exercise names in the UI language. */
-export const builtInExercises = (): string[] => Object.values(t.fitness.builtIn);
+/** The catalogue's exercise names in the UI language (suggestions; see `catalog.ts`). */
+export const builtInExercises = (): string[] => catalogNames();
 
 /** "3 × 8 · 60 kg" / "30 Min" for one exercise (without its name). */
 export function exerciseDetail(e: Exercise): string {
