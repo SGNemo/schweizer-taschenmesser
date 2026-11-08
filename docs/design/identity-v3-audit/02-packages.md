@@ -110,7 +110,7 @@ Modul-Inhalte (Köpfe, Widgets, Leerzustände der Module), Dieser PC, E-Mail-Sei
 
 ## Abnahme
 - `npm run check`, `test`, `check:modules`, `check:tools`, `check:i18n`, `e2e` grün; `e2e/seed/layout-overflow.seed.spec.ts` und `identity.spec.ts` erweitert: Kopf-Crops bei 1920 und 2560 prüfen, dass der Signatur-Slot innerhalb von 40 rem vom linken Seiten-Gutter beginnt; kein Element verschwindet bei 412 px (`display: none` an Signaturen = Fehler).
-- Vorher/Nachher-Raster wie im Audit: `docs/design/identity-v3-audit/tools/` nach `web/` kopieren, `identity-audit.spec.ts` laufen lassen, Sheets in `docs/design/identity-v3/shots/` als `frame-v31-*.jpg` ablegen (Köpfe hell/dunkel 1920, Telefon 412, Widgets 1920).
+- Vorher/Nachher-Raster wie im Audit: `docs/design/identity-v3-audit/tools/` nach `web/` kopieren, `identity-audit.spec.ts` laufen lassen, Sheets als `frame-v31-*.jpg` nach `web/.screens/` und in den PR-Text (nicht ins Repo) (Köpfe hell/dunkel 1920, Telefon 412, Widgets 1920).
 - MODULE-IDENTITY.md: Abschnitt „Head variants“ und „Widgets“ auf v3.1 bringen (Slot-Größen, Inhaltsspalte, Tokens); DECISIONS (`decisions/ui-shell.md`) eine Bullet; STATUS eine Zeile; `.changes/`-Notiz (DE/EN, Nutzersicht: „Modulköpfe zeigen ihr Kennzeichen neben der Zahl; Text auf farbigen Köpfen besser lesbar“).
 
 ## Skills

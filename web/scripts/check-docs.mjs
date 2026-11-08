@@ -9,6 +9,7 @@
  * Tokens are estimated as bytes / 4 (no tokenizer needed). Budgets live in docs/meta/DOCS-GUIDE.md.
  * Budgets and links warn (exit 0; `--strict` exits 1); an image rule violation always exits 1.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -142,7 +143,20 @@ for (const file of files) {
 
 // 4. images under docs/ (always fatal: binaries bloat every clone)
 const imageProblems = [];
-for (const file of walk(join(repo, 'docs'), [], (n) => IMAGES.ext.test(n))) {
+// Tracked + untracked-but-not-ignored files (what a commit could add); plain walk outside a git checkout.
+let docFiles;
+try {
+  docFiles = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z', 'docs'], {
+    cwd: repo,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter((p) => p && existsSync(join(repo, p)))
+    .map((p) => join(repo, p));
+} catch {
+  docFiles = walk(join(repo, 'docs'), [], () => true);
+}
+for (const file of docFiles.filter((f) => IMAGES.ext.test(f))) {
   const name = rel(file);
   const allowed = IMAGES.allowed.some((r) => r.test(name)) || userDocImages.has(name);
   if (!allowed) {

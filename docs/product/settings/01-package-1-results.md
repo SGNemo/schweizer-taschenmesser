@@ -1,6 +1,6 @@
 # Settings v2 – package 1 (overview, navigation, module pages)
 
-Branch `feat/settings-overhaul`, 2026-11-03. Seeds `medium`, Dev-Preview build; Screenshots: [PR #392](https://github.com/SGNemo/schweizer-taschenmesser/pull/392) (`before/`, `after/`; 1920×1080, 2560×1440, 412×915, light and dark; a selection, the rest on request).
+Branch `feat/settings-overhaul`, 2026-11-03. Seeds `medium`, Dev-Preview build; Screenshots: [PR #392](https://github.com/SGNemo/schweizer-taschenmesser/pull/392) (before/after; 1920×1080, 2560×1440, 412×915, light and dark; a selection, the rest on request).
 
 | Area | Before | After |
 |---|---|---|
