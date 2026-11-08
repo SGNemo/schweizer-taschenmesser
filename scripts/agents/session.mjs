@@ -126,7 +126,7 @@ const tokenFor = (url) =>
 const repoToken = tokenFor(cfg.repo);
 if (githubToken && !repoToken)
   console.warn(
-    `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo} and ${DEFAULTS.scribbleRepo}; ${cfg.repo} is mounted without a token and without the vault`,
+    `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo} and ${DEFAULTS.scribbleRepo}; ${cfg.repo} is mounted without a token${cfg.vault ? " (the vault is attached because --vault was given)" : " and without the vault"}`,
   );
 // The notes repo is the second mount of a session for the Nemo repo only: a session for any other --repo
 // (including the notes repo itself) never gets it, so the token never reaches a foreign repo through it.
