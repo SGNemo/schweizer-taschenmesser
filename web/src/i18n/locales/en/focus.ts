@@ -97,9 +97,9 @@ export const focus: Strings['focus'] = {
         : m >= 60
           ? `${Math.round(m / 60)} h`
           : `${m} min`,
-    leadHintTitle: 'Note in the appointment form',
+    leadHintTitle: 'Note when notifications are off',
     leadHintHint:
-      'Shows one calm sentence when you pick a reminder but notifications are not allowed.',
+      'Shows one calm sentence in the appointment form and after saving a reminder when notifications are not allowed.',
     followUp: 'Repeat quietly',
     followUpHint:
       'A reminder you set yourself comes back at intervals until you choose “Done” or “Later”. Nothing at night.',

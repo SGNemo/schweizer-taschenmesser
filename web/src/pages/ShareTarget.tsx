@@ -93,7 +93,7 @@ export function ShareTarget() {
               initialText={parts.join(' ')}
               extra={{ note: parts.join('\n') }}
               onSaved={(saved) => {
-                announceSaved(saved);
+                void announceSaved(saved);
                 void navigate('/');
               }}
             />

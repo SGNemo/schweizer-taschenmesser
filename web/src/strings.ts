@@ -991,7 +991,7 @@ export const de = {
   quickCapture: {
     title: 'Schnell erfassen',
     inputLabel: 'Was möchtest du festhalten?',
-    placeholder: 'z. B. „morgen 15 Uhr Zahnarzt“',
+    placeholder: 'z. B. „Tanken 62,40, morgen 9 Uhr Kunde anrufen“',
     save: 'Speichern',
     book: 'Buchen',
     type: {
@@ -1064,6 +1064,10 @@ export const de = {
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
+    alertsOff: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Einstellungen → Benachrichtigungen.`,
+    alertsBlocked: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Benachrichtigungen in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
@@ -1320,9 +1324,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintTitle: 'Hinweis, wenn Benachrichtigungen aus sind',
       leadHintHint:
-        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+        'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -4336,6 +4340,7 @@ export const de = {
         [
           expired > 0 ? `${expired} abgelaufen` : '',
           soon > 0 ? `${soon} laufen bald ab` : '',
+          expired + soon === 0 && low > 0 ? 'Nichts läuft ab' : '',
           low > 0 ? `${low} werden knapp` : '',
         ]
           .filter(Boolean)
