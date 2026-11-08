@@ -24,7 +24,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
 How to read it:
-- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs; `scribble-guard` runs only for `main` (push or PR into `main`).
+- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs; `scribble-guard` runs only for `main` (push or PR into `main`) and fails there while a `scribble/` folder exists (removal: [decisions/meta.md](decisions/meta.md)).
 - **Skipped means "not needed for this diff"** and counts as passed. The check **Web (lint, types, unit, E2E)** fails if a part that was needed did not run or one that was not needed did.
 - **Need everything on your PR now** (UI-wide change, accessibility, layout, Pixel 7)? Add the label `full-ci` (the immediate full run starts only for branches of this repository; later pushes follow the label). It starts one separate full run now and makes every later push run the full set; a red smoke run from before stays visible next to it until the next push. Removing the label applies from the next push.
 - **A draft PR** runs the web static checks and unit tests only (if `web/` changed); marking it ready starts the plain PR set.
@@ -99,7 +99,7 @@ How to read it:
 ## Other recipes
 
 - Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon brand/app-icon.svg`, see [howto/design-brand.md](howto/design-brand.md)).
-- Parallel chats: `npm run chats:status` (other branches, files, overlap with yours, open scribble items); scratch notes between chats in `scribble/` (develop only, removed in the release merge, CI guard on `main`).
+- Parallel chats: `npm run chats:status` (other branches, files, overlap with yours, open scribble items); scratch notes between chats outside this repo (`/workspace/scribble/`, private repo nemo-scribble).
 - Stimulus inventory (manual) and budget (`npm run check:stimulus`, warning in CI; `stimulus:baseline` for intended changes, [howto/ci.md](howto/ci.md)): `STIMULUS_DIR=<dir> npm run measure:stimulus` counts buttons, links, icons, badge-like elements, colours and page height per view (phone + desktop, seeded Dev build) into `<dir>/inventory.json`; compare in `docs/product/focus/12-results-2.md`.
 - Bundle and cold start (`web/`): `npm run check:bundle` (critical path per entry, lazy chunks, precache, budget `scripts/bundle-budget.json`; warning in `npm run check` and CI E2E shard 1; `-- --baseline` for intended changes, `-- --modules` for the largest modules) · `npm run measure:coldstart` (pixel-7, CPU 4×, Fast 3G, median of 5): [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
 - Screenshots (manual, not CI): `npm run screenshots`; filters `SCREENS_VIEWPORTS`, `SCREENS_PAGES`, `SCREENS_SCHEME=dark`, `SCREENS_DIR`, `SCREENS_CSS`. The README pictures are `docs/assets/screenshots/*.webp`, shot from the seeded build with `npm run app:screenshots -- --readme` (in `site/`); the social preview comes from `npm run gen:social`.
