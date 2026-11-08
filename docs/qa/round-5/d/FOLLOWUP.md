@@ -11,7 +11,7 @@ Owner: `docs/install-first-run` (first start).
 > The Dev-Preview fills invented test data on the first start (`core/seed/dev.ts` `autoFillIfEmpty`) before the person decides anything; a tester who imports their own notes gets them mixed with 12 example notes. Ask once on the first start: „Mit Beispieldaten ansehen“ / „Leer starten“ (default Beispieldaten, as today). Never in stable builds (`core/seed/devFlag.test.ts`).
 
 ## F3 · Derived planner rows of test data (D15) – planner owner (demo-a)
-> Planner rows computed from seed items (`planner_assignment`, `planner_item` with `seed-…` sources) are not registered as seed, so they go into backups and stay after „Testdaten entfernen“. Register them in `_seeds` or skip rows whose source is seeded. Test in `core/seed/registry.test.ts`.
+> Planner rows computed from seed items (`planner_assignment`, `planner_item` with `seed-…` sources) are not registered as seed, so they go into backups and stay after „Testdaten entfernen“. Register them in `_seeds` or skip rows whose source is seeded. Test in `core/seed/registry.test.ts`. Then the dev hint in `strings.dev.ts` („kein Backup“) is true again.
 
 ## F4 · Keep the note date on import (D17) – notes + core
 > Imported Markdown notes get „today“. Read `created:`/`date:` from front matter (and the ZIP entry date) and store it as `createdAt` (and `updatedAt` = `modified:` if present). Needs a `createRepo` option to accept an envelope date from an import (core contract, hotspot). Test: an Obsidian fixture with `created: 2025-12-01` sorts below today's notes under „Zuletzt geändert“.

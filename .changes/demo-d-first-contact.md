@@ -26,8 +26,8 @@ en: The backup without a password reads well in a text editor and explains its o
 type: added
 area: settings
 breaking: false
-de: Einstellungen → Verbindungen zeigt, was überhaupt ins Netz gehen kann, und nennt, was die Sperre nicht erfasst; „Was ging wohin?“ ist ohne „In Arbeit anzeigen“ sichtbar.
-en: Settings → Connections shows everything that can go to the network and names what the block does not cover; "What went where?" is visible without "Show work in progress".
+de: Einstellungen → Verbindungen zeigt die festen Adressen, die die App ansprechen kann, und nennt, was die Sperre nicht erfasst; „Was ging wohin?“ ist ohne „In Arbeit anzeigen“ sichtbar.
+en: Settings → Connections shows the fixed addresses the app can contact and names what the block does not cover; "What went where?" is visible without "Show work in progress".
 ---
 
 ---
