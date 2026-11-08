@@ -4,13 +4,29 @@ Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.m
 
 Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 20 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
+## 0 Windows (Git Bash / MinTTY)
+
+Einmalig in PowerShell oder Git Bash (nicht hier geprüft), danach **das Fenster neu öffnen**, damit `jq` und `ant` im `PATH` stehen:
+
+```bash
+winget install jqlang.jq
+```
+
+```bash
+winget install --id Anthropic.Ant --exact
+```
+
+Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents/**` auf LF, sonst meldet `to-ant.mjs --check` bei `core.autocrlf=true` jede Datei als „stale“ (so gesehen am 2026-11-08: 20× stale bei identischem Inhalt). Bestehender Checkout nach dem Merge einmal, bei sauberem Arbeitsbaum (nicht hier geprüft): `git ls-files -z docs/meta/agents-v3 scripts/agents | xargs -0 rm && git checkout -- docs/meta/agents-v3 scripts/agents` – schreibt die Dateien mit LF neu.
+
 ## 1 Console (`platform.claude.com`) – API-Key anlegen, sonst nur zum Nachsehen
 
 1. **API-Key:** `platform.claude.com/settings/keys` → „Create Key“ → Name `nemo-agents` → Wert einmal kopieren (die Seite zeigt ihn nur einmal), lokal als `ANTHROPIC_API_KEY` setzen (Shell-Profil oder Passwort-Manager; nie ins Repo). Der Key ist der eine Pfad für CLI, SDK und die curl-Aufrufe unten.
-2. **Agent-Builder** (`platform.claude.com/workspaces/default/agent-quickstart`): einstellbar laut Doku: Modell, System-Prompt (Volltext-Editor), MCP-Server per URL + Anmeldung, Tools (vorgefertigtes Toolset + MCP-Tools), Skills aus der Workspace-Bibliothek, Test-Session mit Event-Stream; die Console zeigt daneben den äquivalenten API-Aufruf. **Nicht** in der Console (laut Doku nur API/CLI): `multiagent`-Block, `effort`/`speed`, Repo-Mount, Session-Budget, Environment-Netzwerk-Details, Vault-Zuordnung je Session. Deshalb Weg 2 für alle 20 Agenten. Wichtig: in der Console angelegte Agenten kann `ant apply` **nicht übernehmen** (es legt Duplikate an) – also nichts von Hand anlegen, nur ansehen.
+2. **Agent-Builder** (`platform.claude.com/workspaces/default/agent-quickstart`): einstellbar laut Doku: Modell, System-Prompt (Volltext-Editor), MCP-Server per URL + Anmeldung, Tools (vorgefertigtes Toolset + MCP-Tools), Skills aus der Workspace-Bibliothek, Test-Session mit Event-Stream; die Console zeigt daneben den äquivalenten API-Aufruf. **Nicht** in der Console (laut Doku nur API/CLI): `multiagent`-Block, `effort`/`speed`, Repo-Mount, Session-Budget, Environment-Netzwerk-Details, Vault-Zuordnung je Session. Deshalb Weg 2 für alle 21 Agenten. Wichtig: in der Console angelegte Agenten kann `ant apply` **nicht übernehmen** (es legt Duplikate an) – also nichts von Hand anlegen, nur ansehen.
 3. **Sessions nachsehen:** Console → Agents → Sessions: Event-Stream, Threads je Subagent, Budget-Stand (`session.usage`), offene Tool-Bestätigungen.
 
-## 2 `ant` CLI – alle 20 Agenten + Environment
+## 2 `ant` CLI – alle 21 Agenten + Environment
+
+**Git Bash/MinTTY:** `gh auth login` nur mit `winpty gh auth login` (sonst hängt die Eingabe), `ant apply` immer mit `--yes` (die Rückfrage kann MinTTY nicht beantworten).
 
 1. **Installieren** (nicht hier geprüft):
    ```bash
@@ -28,13 +44,13 @@ Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.c
    node scripts/agents/to-ant.mjs --check
    ant apply --dry-run docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md   # nicht hier geprüft
    ```
-   Der Dry-Run zeigt den Plan: 1 Environment, 20 Agenten; `nemo-lead.md` verweist mit `./nemo-po.md` usw. auf die 19 – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 19, dann der Lead mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig.
+   Der Dry-Run zeigt den Plan: 1 Environment, 21 Agenten; `nemo-lead.md` und `nemo-auditor.md` verweisen mit `./nemo-po.md` usw. auf dieselben 19 – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 19, dann Lead und Auditor mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig. Lead und Auditor stehen in **keiner** Liste: ein Agent mit `multiagent`-Block kann laut Doku kein Subagent sein (Tiefe eine Ebene, sonst 400).
 4. **Anwenden** (nicht hier geprüft):
    ```bash
    ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
    ```
    Ergebnis: `claude-lock.json` im Repo-Root mit je Datei `kind`, `id` (`agent_…`, `env_…`), `version`, `hash`. **Committen** (Branch + PR wie immer; keine Secrets darin). `session.mjs` sucht darin die Einträge, deren Schlüssel auf `docs/meta/agents-v3/nemo-lead.md` bzw. `environment.yaml` enden (`cat claude-lock.json` zeigt die Schlüssel; beide Schreibweisen, mit und ohne `./`, werden erkannt – geprüft mit einer nachgebauten Lock-Datei, nicht mit einer echten). Findet es sie nicht: IDs als `NEMO_LEAD_AGENT_ID` und `NEMO_ENV_ID` setzen oder `--agent`/`--env` übergeben.
-5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Der Lead pinnt die Versionen der 19 (Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md`** ausführen, sonst delegiert er an die alte Version. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
+5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen der 19 (Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
 6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. nach dem Umbenennen des Ordners beim Umstieg).
 
 ## 3 Vault und GitHub
@@ -72,13 +88,23 @@ node scripts/agents/session.mjs --budget 15 --title "Paket 2" --file auftrag.md
 
 Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget in USD** (Pflicht – nachträglich nicht setzbar; intern Cent, `15` → `"1500"`), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
 
-- `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links).
+- `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links). Laufen dann noch Kind-Threads, wartet das Skript weiter (Zeile „wartet auf 2 Kind-Threads (docs, deps)“, alle 30 s neu geprüft) und endet erst, wenn der Lead nach dem letzten Kind-Bericht erneut `end_turn` meldet – oder wenn alle Kinder fertig sind und die Session zwei Prüfungen lang still bleibt. `--no-wait`: Ende beim ersten `end_turn` (altes Verhalten).
 - `requires_action`: ein Tool wartet auf Freigabe (sollte mit `always_allow` nicht vorkommen) → `node scripts/agents/session.mjs --session sess_… --auto-approve` (ohne Nachricht: gibt die wartenden Aufrufe frei und streamt weiter) oder in der Console freigeben.
 - `budget_reached`: Session pausiert mit Stand; siehe 5.
 
-Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity **und** lead, neu starten.
+Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity, auditor) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity, lead **und** auditor, neu starten. Betrifft es eine Auditor-Session, in `nemo-auditor.json` ebenso `claude-opus-5-5` eintragen und nur `nemo-auditor.md` neu anwenden.
 
-Flags: `--agent/--env/--vault` überschreiben die IDs, `--checkout` den Branch, `--verbose` zeigt Tool-Ergebnisse, `--dry-run` zeigt nur den Request (Token maskiert). Konsole: zum Nachsehen `platform.claude.com` → Sessions.
+Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `claude-lock.json`), `--env/--vault` überschreiben die IDs, `--no-wait` siehe oben, `--checkout` den Branch, `--verbose` zeigt Tool-Ergebnisse, `--dry-run` zeigt nur den Request (Token maskiert). Konsole: zum Nachsehen `platform.claude.com` → Sessions.
+
+### Auditor starten
+
+Einmalig anlegen (nur diese Datei; der Lead bleibt unberührt, nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 19 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
+
+```bash
+node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"
+```
+
+Eigene Session, Auditor als Primär-Agent; er fragt die 19 nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Zwischen Lead und Auditor trägst du die Berichte selbst.
 
 ### Erster Testlauf (Budget 2 USD)
 

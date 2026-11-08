@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 // Nemo agent team – everyday runner for a Managed Agents session (lead + environment + repo mount + budget).
-// Streams events to the console, sends Sven's message, answers permission prompts on request.
+// Streams events to the console, sends Sven's message, answers permission prompts on request. After the primary
+// thread ends its turn it keeps listening while child threads still run (checks threads every 30 s) and stops only
+// when the primary thread ends its turn again after the last child report; --no-wait stops at the first end_turn.
 //
 //   node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
 //   node scripts/agents/session.mjs --budget 15 --file brief.md
+//   node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"   auditor instead of the lead
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
 //   node scripts/agents/session.mjs --session sess_… --auto-approve       approve waiting tool calls, keep streaming
 //   node scripts/agents/session.mjs budget sess_… 30                      raise the cap to 30 USD
@@ -13,6 +16,7 @@
 //
 // Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mount only, sent only for the Nemo repo),
 // NEMO_LEAD_AGENT_ID / NEMO_ENV_ID / NEMO_VAULT_ID (or --agent/--env/--vault; defaults read from claude-lock.json).
+// --agent takes `lead` (default), `auditor` (resolved via claude-lock.json) or an agent_… id.
 // Requires `npm i` in scripts/agents (@anthropic-ai/sdk 1.6.0, pinned; the SDK adds the managed-agents-2026-04-01 beta header).
 import fs from "node:fs";
 import path from "node:path";
@@ -26,6 +30,7 @@ const DEFAULTS = {
   checkout: "develop",
   lock: path.join(REPO_ROOT, "claude-lock.json"),
   leadFile: "docs/meta/agents-v3/nemo-lead.md",
+  auditorFile: "docs/meta/agents-v3/nemo-auditor.md",
   envFile: "docs/meta/agents-v3/environment.yaml",
 };
 
@@ -40,6 +45,7 @@ const boolFlags = new Set([
   "verbose",
   "help",
   "no-vault",
+  "no-wait",
 ]);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -90,11 +96,27 @@ const normUrl = (u) =>
     .toLowerCase();
 const repoUrl = flags.repo ?? process.env.NEMO_REPO ?? DEFAULTS.repo;
 const foreignRepo = normUrl(repoUrl) !== normUrl(DEFAULTS.repo);
+// --agent: short role name (lead | auditor, with or without `nemo-`) resolved via claude-lock.json, or an agent_… id
+const AGENT_FILES = { lead: DEFAULTS.leadFile, auditor: DEFAULTS.auditorFile };
+const agentRole = (() => {
+  if (flags.agent === undefined) return "lead";
+  const r = String(flags.agent).replace(/^nemo-/, "");
+  if (AGENT_FILES[r]) return r;
+  if (/^agent_/.test(flags.agent)) return null; // explicit id
+  console.error(
+    `error: --agent "${flags.agent}": use lead, auditor or an agent_… id`,
+  );
+  process.exit(1);
+})();
+const agentId =
+  agentRole === null
+    ? flags.agent
+    : agentRole === "lead"
+      ? (process.env.NEMO_LEAD_AGENT_ID ?? fromLock(DEFAULTS.leadFile))
+      : fromLock(AGENT_FILES[agentRole]);
 const cfg = {
-  agent:
-    flags.agent ??
-    process.env.NEMO_LEAD_AGENT_ID ??
-    fromLock(DEFAULTS.leadFile),
+  agent: agentId,
+  agentLabel: (agentRole ?? "agent").toUpperCase(),
   env: flags.env ?? process.env.NEMO_ENV_ID ?? fromLock(DEFAULTS.envFile),
   // the vault holds the Nemo repo's GitHub credentials: not attached to another --repo unless --vault is explicit
   vault: flags["no-vault"]
@@ -109,6 +131,7 @@ const cfg = {
   autoApprove: !!flags["auto-approve"],
   verbose: !!flags.verbose,
   dryRun: !!flags["dry-run"],
+  noWait: !!flags["no-wait"],
 };
 const githubToken = process.env.GITHUB_TOKEN;
 // the PAT goes to the Nemo repository only; any other --repo is mounted without it
@@ -164,7 +187,9 @@ function printEvent(ev) {
     : "";
   switch (t) {
     case "agent.message":
-      console.log(`\n${stamp()} LEAD${thread}:\n${textOf(ev.content)}\n`);
+      console.log(
+        `\n${stamp()} ${cfg.agentLabel}${thread}:\n${textOf(ev.content)}\n`,
+      );
       break;
     case "agent.thinking":
       if (cfg.verbose) console.log(`${stamp()} …thinking`);
@@ -291,13 +316,74 @@ async function listPending(c, sessionId) {
   return pending;
 }
 
+// child threads that are still working (archived ones are done for good)
+async function runningChildren(c, sessionId) {
+  const names = [];
+  for await (const th of c.beta.sessions.threads.list(sessionId))
+    if (
+      th.parent_thread_id &&
+      !th.archived_at &&
+      (th.status === "running" || th.status === "rescheduling")
+    )
+      names.push(
+        String(th.agent?.name ?? th.agent?.type ?? th.id).replace(/^nemo-/, ""),
+      );
+  return names;
+}
+
+const POLL_MS = 30_000;
 async function streamUntilIdle(c, sessionId, afterOpen) {
   const stream = await c.beta.sessions.events.stream(sessionId);
-  if (afterOpen) await afterOpen();
-  for await (const ev of stream) {
-    printEvent(ev);
-    if (ev.type === "session.status_idle") {
+  // waiting for child threads: poll every 30 s; if every child is done and the session stays idle for two polls
+  // (no report woke the primary thread again), stop instead of waiting forever
+  let timer = null;
+  let lastNote = "";
+  let quietPolls = 0;
+  let endedQuietly = false;
+  const note = (kids) => {
+    const line = `${stamp()} wartet auf ${kids.length} Kind-Thread${kids.length === 1 ? "" : "s"} (${kids.join(", ")})`;
+    if (line.slice(9) !== lastNote) console.log(line);
+    lastNote = line.slice(9);
+  };
+  const poll = async () => {
+    try {
+      const kids = await runningChildren(c, sessionId);
+      if (kids.length) {
+        quietPolls = 0;
+        return note(kids);
+      }
+      const s = await c.beta.sessions.retrieve(sessionId);
+      if (s.status !== "idle") quietPolls = 0;
+      else if (++quietPolls >= 2) {
+        console.log(
+          `${stamp()} all child threads done, the session stayed idle – stopping`,
+        );
+        endedQuietly = true;
+        clearInterval(timer);
+        stream.controller.abort();
+      }
+    } catch (e) {
+      console.log(`${stamp()} thread check failed: ${e.message ?? e}`);
+    }
+  };
+  try {
+    if (afterOpen) await afterOpen();
+    for await (const ev of stream) {
+      printEvent(ev);
+      if (ev.type === "session.status_running") quietPolls = 0;
+      if (ev.type !== "session.status_idle") {
+        if (ev.type === "session.status_terminated") return "terminated";
+        continue;
+      }
       const reason = ev.stop_reason?.type;
+      if (reason === "end_turn" && !cfg.noWait) {
+        const kids = await runningChildren(c, sessionId);
+        if (kids.length) {
+          note(kids);
+          if (!timer) timer = setInterval(poll, POLL_MS);
+          continue;
+        }
+      }
       if (reason === "requires_action") {
         const ids = ev.stop_reason.event_ids ?? [];
         if (cfg.autoApprove) {
@@ -317,9 +403,12 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
       }
       return reason ?? "idle";
     }
-    if (ev.type === "session.status_terminated") return "terminated";
+  } catch (e) {
+    if (!endedQuietly) throw e;
+  } finally {
+    clearInterval(timer);
   }
-  return "stream_closed";
+  return endedQuietly ? "end_turn" : "stream_closed";
 }
 
 async function main() {
@@ -422,9 +511,11 @@ async function main() {
     return;
   }
 
+  if (cfg.dryRun && !cfg.agent && agentRole)
+    cfg.agent = `<id of ${AGENT_FILES[agentRole]} from claude-lock.json – run ant apply first>`;
   if (!cfg.agent || !cfg.env)
     throw new Error(
-      "lead agent id and environment id missing: run `ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID",
+      `${agentRole ?? "agent"} id and environment id missing: run \`ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md\` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID`,
     );
   if (cfg.budgetUsd === undefined)
     throw new Error(
@@ -442,7 +533,9 @@ async function main() {
   const body = {
     agent: cfg.agent,
     environment_id: cfg.env,
-    title: cfg.title ?? `nemo: ${short(message, 60)}`,
+    title:
+      cfg.title ??
+      `nemo${agentRole === "auditor" ? "-auditor" : ""}: ${short(message, 60)}`,
     budget: budgetObj(cfg.budgetUsd),
     resources: [
       {

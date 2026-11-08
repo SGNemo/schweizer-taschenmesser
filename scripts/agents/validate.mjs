@@ -89,8 +89,11 @@ const SECRET =
 const PLACEHOLDER =
   /(<token>|<github_token>|ghp_x+|github_pat_x+|REPLACE_ME|TODO_TOKEN)/i;
 
-// the five hard limits are one template for all 19 subagents; role name, the merge line (nemo-merge only) and the
-// read-only clause (six review roles only) are the per-role parts, each checked exactly
+// coordinators: exactly these carry a multiagent block; delegation is one level deep (an agent with multiagent
+// cannot be anyone's subagent – the API answers 400), so neither may appear in any predefined_agents list
+const COORDINATORS = ["nemo-auditor", "nemo-lead"];
+// the five hard limits are one template for every agent except the lead; role name, the merge line (nemo-merge only)
+// and the read-only clause (review roles + auditor) are the per-role parts, each checked exactly
 const READ_ONLY = new Set([
   "nemo-po",
   "nemo-creativity",
@@ -98,7 +101,12 @@ const READ_ONLY = new Set([
   "nemo-a11y",
   "nemo-security",
   "nemo-reviewer",
+  "nemo-auditor",
 ]);
+// the auditor also copies its report to the session outputs (Sven downloads it from there)
+const READ_ONLY_EXTRA = {
+  "nemo-auditor": " and the report copy in `/mnt/session/outputs/`",
+};
 const MERGE_LINE = {
   merge:
     "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
@@ -112,7 +120,7 @@ function hardLimitsOf(a) {
   const expect =
     (a.name === "nemo-merge" ? MERGE_LINE.merge : MERGE_LINE.other) +
     (READ_ONLY.has(a.name)
-      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`.`
+      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}.`
       : "");
   const block = a.system.slice(i);
   if (!block.includes(expect + "\n"))
@@ -132,6 +140,7 @@ const names = new Set();
 let hardRef = null;
 const hardBlocks = [];
 const mergeCapable = [];
+const withMultiagent = [];
 function bad(file, msg) {
   problems++;
   console.log(`✗ ${file}: ${msg}`);
@@ -357,12 +366,13 @@ for (const file of files) {
   for (const [k, v] of Object.entries(md))
     if (k.length > 64 || String(v).length > 512)
       bad(file, `metadata "${k}" too long`);
-  // multiagent: only the lead, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
+  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
   if (a.multiagent) {
-    if (a.name !== "nemo-lead")
+    withMultiagent.push(a.name);
+    if (!COORDINATORS.includes(a.name))
       bad(
         file,
-        "only nemo-lead may carry a multiagent block (delegation is one level deep)",
+        `only ${COORDINATORS.join(" and ")} may carry a multiagent block (delegation is one level deep)`,
       );
     const ma = a.multiagent;
     keys(file, ma, "multiagent", "multiagent");
@@ -386,9 +396,10 @@ for (const file of files) {
       bad(file, `predefined_agents must hold 1–20 entries (has ${pre.length})`);
     if (sub?.inline_agents?.type === "disabled" && pre.length === 0)
       bad(file, "inline_agents disabled needs ≥ 1 predefined agent");
+    // every coordinator's roster = all agents that are not coordinators (the lead's 19 = the auditor's 19)
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
-      .filter((n) => n !== "nemo-lead");
+      .filter((n) => !COORDINATORS.includes(n));
     const roster = (list, where) => {
       const seen = new Set();
       for (const p of list) {
@@ -404,7 +415,12 @@ for (const file of files) {
             `${where}: "${ref}" listed twice (entries must be distinct)`,
           );
         seen.add(ref);
-        if (
+        if (COORDINATORS.includes(ref))
+          bad(
+            file,
+            `${where}: "${ref}" carries a multiagent block and cannot be a subagent (one level deep, API 400)`,
+          );
+        else if (
           ref !== "self" &&
           !others.includes(ref) &&
           !/^agent_/.test(ref ?? "")
@@ -416,13 +432,16 @@ for (const file of files) {
       }
     };
     roster(pre, "subagents.predefined_agents");
-    roster(
-      ma.workflows?.predefined_agents ?? [],
-      "workflows.predefined_agents",
-    );
+    const wfPre = ma.workflows?.predefined_agents ?? [];
+    if (wfPre.length > 20)
+      bad(
+        file,
+        `workflows.predefined_agents must hold ≤ 20 entries (has ${wfPre.length})`,
+      );
+    roster(wfPre, "workflows.predefined_agents");
     for (const n of others)
       if (!pre.some((p) => refOf(p) === n))
-        bad(file, `subagent ${n} missing from the lead's roster`);
+        bad(file, `subagent ${n} missing from the ${a.name} roster`);
     if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
       bad(file, "multiagent.workflows must be enabled|disabled");
     if (!ma.workflows || ma.workflows.type === "enabled")
@@ -431,11 +450,21 @@ for (const file of files) {
       );
     if (ma.advisor && ma.advisor.type === "enabled" && !ma.advisor.model)
       bad(file, "advisor enabled needs a model");
-  } else if (a.name === "nemo-lead")
+  } else if (COORDINATORS.includes(a.name))
     bad(
       file,
-      "nemo-lead has no multiagent block – it would do everything itself",
+      `${a.name} has no multiagent block – it would do everything itself`,
     );
+}
+// cross-file: the agents with a multiagent block are exactly the coordinators (present ones, sorted)
+const presentCoordinators = COORDINATORS.filter((n) =>
+  files.includes(`${n}.json`),
+);
+if (withMultiagent.sort().join() !== presentCoordinators.join()) {
+  problems++;
+  console.log(
+    `✗ agents with a multiagent block must be exactly [${presentCoordinators.join(", ")}], found [${withMultiagent.join(", ")}]`,
+  );
 }
 // cross-file: merge capability and inference_geo
 if (!hardRef) {

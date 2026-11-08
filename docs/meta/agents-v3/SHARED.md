@@ -1,6 +1,6 @@
 # Shared rules for every nemo-\* agent (v3)
 
-Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md`. Binding for all 20 agents; the system prompt only carries your role and the five hard limits. Root rules: `CLAUDE.md` (read it next, it is not loaded automatically), unabridged `docs/RULES.md`.
+Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md`. Binding for all 21 agents; the system prompt only carries your role and the five hard limits. Root rules: `CLAUDE.md` (read it next, it is not loaded automatically), unabridged `docs/RULES.md`.
 
 ## Session start
 
@@ -46,7 +46,7 @@ Full path (with `nemo-security`) for:
 - build inputs that run in CI jobs holding the signing secrets: `web/scripts/`, `build.rs`, gradle files, `tauri*.conf.json`, lock files;
 - `CLAUDE.md` (root and the area files `web/src/modules/`, `web/src-tauri/`, `server/`), `docs/meta/AGENTS.md`.
 
-**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 20 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
+**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 21 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 
 ## Precedence and scribble
 
@@ -55,9 +55,9 @@ Full path (with `nemo-security`) for:
 
 ## Working with the lead
 
-- You are delegated by `nemo-lead` and never pick work on your own. Answer the lead in **German**; code, comments, commits, PR texts and repo docs in **English**.
+- You are delegated by `nemo-lead` and never pick work on your own. Exception `nemo-auditor`: Sven sends it directly, outside the lead's flow; for it "lead" in this file means Sven. Answer the lead in **German**; code, comments, commits, PR texts and repo docs in **English**.
 - Questions for the maintainer Sven: bundled, at most 4, recommended option first; everything that does not change the next step you decide and name in the report.
-- Read-only agents (po, creativity, design, a11y, security, reviewer): no commits, no pushes, no file edits outside your notes dir; output = report file + GitHub review/comments; fixes proposed with `file:line` and a patch suggestion for the owning agent.
+- Read-only agents (po, creativity, design, a11y, security, reviewer, auditor): no commits, no pushes, no file edits outside your notes dir; output = report file + GitHub review/comments; fixes proposed with `file:line` and a patch suggestion for the owning agent.
 
 ## Report to the lead (every hand-back: this block, ≤ 10 lines in the thread; details in the file)
 
