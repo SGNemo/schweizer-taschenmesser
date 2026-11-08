@@ -48,3 +48,16 @@ test('C01: saving a reminder asks for notifications once', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { __asked: number }).__asked)).toBe(1);
 });
+
+test('C06: a toast never covers the „+“ on the phone', async ({ page }) => {
+  await ready(page, '/');
+  const plus = page.getByRole('button', { name: 'Schnell hinzufügen' });
+  const box = await openSheet(page);
+  await box.fill('Ölwechsel');
+  await box.press('Enter');
+  const toast = page.getByText('Gespeichert in ToDos');
+  await expect(toast).toBeVisible();
+  const [t, p] = await Promise.all([toast.boundingBox(), plus.boundingBox()]);
+  // The toast ends above the „+“, so the next capture is one tap away.
+  expect(t!.y + t!.height).toBeLessThanOrEqual(p!.y);
+});
