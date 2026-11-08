@@ -184,7 +184,7 @@ Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds today's 
 
 What the numbers show for S7: while unloading, the person sees no count, no red figure and none of the backlog (path A's card number goes to 0); the first screen after saving is one line with one optional verb. What they do not fix: the home screen before the „+“ still shows „Jetzt wichtig“ (S1) – a later idea, not designed here, is a calm-mode line that folds the money cards.
 
-## 5. Package sketch (final plan after „Plan freigegeben“, in `PACKAGES.md`)
+## 5. Package sketch (superseded by [PACKAGES.md](PACKAGES.md): the capture contract moved to package 2, package 3 is split into 3a and 3b)
 
 1. `fix/capture-batch-calm` – U03 without the reminder words (spend words „bezahlt“/„gekauft“; a typed „Mahnung“ stays a ToDo until package 2), U04 (its shape follows Q1: a → the booking line leaves the batch, b → the named button), U05, U09, U17 (URL without address; shared text never splits), F4 (S; `quickCapture/parser`, `CaptureForm`, `prefill.ts`, `pages/ShareTarget.tsx`, planner page; council: Guardian for U04 and U17, Advocate for the wording).
 2. `feat/capture-multi-calm` – F1 medium with the reminder words, the open-invoice lookup and `CaptureTarget.amend?` (M; `quickCapture/ui/**`, `targets/{index,adapters,types}.ts`, `@/ui` `Dialog` backdrop variant; council: Advocate for the first view and the closing line, Guardian for „never books“ and the amend undo).
