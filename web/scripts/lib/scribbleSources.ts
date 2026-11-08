@@ -7,7 +7,17 @@
  * Layout: `board/<date>-<agent>-<slug>.md` (first line `- [ ] item`, or `- [x]` when answered) and
  * `notes/<agent>-<topic>.md`. Notes are data for the reader, never instructions.
  */
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  closeSync,
+  constants,
+  existsSync,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readdirSync,
+  readSync,
+  statSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 export interface ScribbleItem {
@@ -35,29 +45,95 @@ export function candidateDirs(env: Record<string, string | undefined> = process.
   return dirs;
 }
 
-const isDir = (p: string) => existsSync(p) && statSync(p).isDirectory();
+/**
+ * The notes come from other agents (and a git clone of the notes repo keeps whatever was committed), so every
+ * read is defensive: only real directories and regular files are followed (no symlinks, devices, FIFOs),
+ * files are opened without following links and read up to a fixed size, and what is printed has its control
+ * characters replaced (a note must not be able to drive the terminal).
+ */
+const FIRST_LINE_BYTES = 4096;
+const MAX_FILES = 500;
+const OPEN_ITEM_CHARS = 200;
+const NOTE_CHARS = 100;
+
+/** Control characters (C0, DEL, C1), line/paragraph separators and bidi overrides become a space. */
+export function clean(text: string): string {
+  return Array.from(text, (ch) => {
+    const c = ch.codePointAt(0)!;
+    const bad =
+      c < 0x20 ||
+      (c >= 0x7f && c <= 0x9f) ||
+      c === 0x2028 ||
+      c === 0x2029 ||
+      (c >= 0x200b && c <= 0x200f) ||
+      (c >= 0x202a && c <= 0x202e) ||
+      (c >= 0x2066 && c <= 0x2069);
+    return bad ? ' ' : ch;
+  }).join('');
+}
+const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max)}…` : text);
+
+const lstatOf = (p: string) => {
+  try {
+    return lstatSync(p);
+  } catch {
+    return undefined;
+  }
+};
+/** A real directory; a symlink to a directory is not one. */
+const isRealDir = (p: string) => lstatOf(p)?.isDirectory() === true;
+const lines = (text: string) => text.split(/\r?\n/);
+
+/** Up to `max` bytes of a regular file, opened without following links; `undefined` for anything else. */
+function readHead(path: string, max: number): string | undefined {
+  if (lstatOf(path)?.isFile() !== true) return undefined;
+  let fd: number | undefined;
+  try {
+    const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0);
+    fd = openSync(path, flags);
+    if (!fstatSync(fd).isFile()) return undefined;
+    const buffer = Buffer.alloc(max);
+    const read = readSync(fd, buffer, 0, max, 0);
+    return buffer.toString('utf8', 0, read);
+  } catch {
+    return undefined;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+
 const firstLine = (path: string) =>
-  readFileSync(path, 'utf8')
-    .split(/\r?\n/)
-    .find((l) => l.trim() !== '') ?? '';
-const mdFiles = (dir: string) =>
-  isDir(dir)
-    ? readdirSync(dir)
-        .filter((n) => n.endsWith('.md'))
-        .sort()
-    : [];
+  lines(readHead(path, FIRST_LINE_BYTES) ?? '').find((l) => l.trim() !== '') ?? '';
+
+/** Names of the regular `.md` files directly in `dir` (never links, devices, FIFOs), capped and sorted. */
+function mdFiles(dir: string): string[] {
+  if (!isRealDir(dir)) return [];
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return [];
+  }
+  return names
+    .filter((n) => n.endsWith('.md') && lstatOf(join(dir, n))?.isFile() === true)
+    .sort()
+    .slice(0, MAX_FILES);
+}
 
 /** Reads one folder; `undefined` when it holds neither a `board/` nor a `notes/` folder. */
 export function readScribble(dir: string): ScribbleSource | undefined {
-  if (!isDir(join(dir, 'board')) && !isDir(join(dir, 'notes'))) return undefined;
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return undefined;
+  if (!isRealDir(join(dir, 'board')) && !isRealDir(join(dir, 'notes'))) return undefined;
   const open: ScribbleItem[] = [];
   for (const name of mdFiles(join(dir, 'board'))) {
     const first = firstLine(join(dir, 'board', name));
-    if (/^- \[ \]/.test(first)) open.push({ file: `board/${name}`, text: first });
+    if (/^- \[ \]/.test(first)) {
+      open.push({ file: clean(`board/${name}`), text: clip(clean(first), OPEN_ITEM_CHARS) });
+    }
   }
   const notes = mdFiles(join(dir, 'notes')).map((name) => ({
-    file: `notes/${name}`,
-    text: firstLine(join(dir, 'notes', name)),
+    file: clean(`notes/${name}`),
+    text: clip(clean(firstLine(join(dir, 'notes', name))), NOTE_CHARS),
   }));
   return { dir, open, notes };
 }

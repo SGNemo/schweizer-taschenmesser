@@ -11,7 +11,7 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findScribble } from './lib/scribbleSources.ts';
+import { clean, findScribble } from './lib/scribbleSources.ts';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const argv = new Set(process.argv.slice(2));
@@ -93,9 +93,9 @@ if (!scribble) {
     'no scribble source found (NEMO_SCRIBBLE_DIR, /workspace/scribble, /workspace/nemo-scribble).',
   );
 } else {
-  console.log(`scribble (${scribble.dir}): ${scribble.open.length} open item(s)`);
+  console.log(`scribble (${clean(scribble.dir)}): ${scribble.open.length} open item(s)`);
   for (const item of scribble.open) {
     console.log(`   ${item.text}  (${item.file})`);
   }
-  for (const note of scribble.notes) console.log(`${note.file}: ${note.text.slice(0, 100)}`);
+  for (const note of scribble.notes) console.log(`${note.file}: ${note.text}`);
 }
