@@ -69,7 +69,7 @@ describe('scribble sources', () => {
     const repo = join(root, 'repo');
     write(repo, 'scribble/BOARD.md', '- [ ] legacy item\n');
     expect(readScribble(empty)).toBeUndefined();
-    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: empty });
+    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: empty }, []);
     expect(source?.dir).toBe(join(repo, 'scribble'));
   });
 
@@ -78,18 +78,23 @@ describe('scribble sources', () => {
     write(override, 'board/2026-11-08-x-y.md', '- [ ] from the override\n');
     const repo = temp();
     write(repo, 'scribble/BOARD.md', '- [ ] legacy\n');
-    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: override });
+    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: override }, []);
     expect(source?.dir).toBe(override);
     expect(source?.open[0]?.text).toBe('- [ ] from the override');
   });
 
-  it('finds nothing when no candidate holds notes', () => {
-    const repo = temp();
-    // The fixed /workspace folders are not touched: only assert on a repo without a scribble folder when the
-    // session folders are absent in this environment.
-    const source = findScribble(repo, {});
-    if (source) expect(['/workspace/scribble', '/workspace/nemo-scribble']).toContain(source.dir);
-    else expect(source).toBeUndefined();
+  it('finds nothing when no candidate holds notes (the fixed /workspace folders are not read in tests)', () => {
+    expect(findScribble(temp(), {}, [])).toBeUndefined();
+    expect(findScribble(temp(), { NEMO_SCRIBBLE_DIR: temp() }, [temp()])).toBeUndefined();
+  });
+
+  it('reads the fixed folders in order when no override is set', () => {
+    const session = temp();
+    const notesRepo = temp();
+    write(notesRepo, 'board/2026-11-08-a-b.md', '- [ ] from the notes repo\n');
+    expect(findScribble(temp(), {}, [session, notesRepo])?.dir).toBe(notesRepo);
+    write(session, 'board/2026-11-08-c-d.md', '- [ ] from the session\n');
+    expect(findScribble(temp(), {}, [session, notesRepo])?.dir).toBe(session);
   });
 
   describe('hostile content', () => {

@@ -42,11 +42,12 @@ export const NOTES_REPO_DIR = '/workspace/nemo-scribble';
 export function candidateDirs(
   repoRoot: string,
   env: Record<string, string | undefined> = process.env,
+  fixedDirs: readonly string[] = [SESSION_DIR, NOTES_REPO_DIR],
 ): string[] {
   const dirs: string[] = [];
   const override = env.NEMO_SCRIBBLE_DIR?.trim();
   if (override) dirs.push(override);
-  dirs.push(SESSION_DIR, NOTES_REPO_DIR, join(repoRoot, 'scribble'));
+  dirs.push(...fixedDirs, join(repoRoot, 'scribble'));
   return dirs;
 }
 
@@ -162,8 +163,9 @@ export function readScribble(dir: string): ScribbleSource | undefined {
 export function findScribble(
   repoRoot: string,
   env: Record<string, string | undefined> = process.env,
+  fixedDirs: readonly string[] = [SESSION_DIR, NOTES_REPO_DIR],
 ): ScribbleSource | undefined {
-  for (const dir of candidateDirs(repoRoot, env)) {
+  for (const dir of candidateDirs(repoRoot, env, fixedDirs)) {
     const source = readScribble(dir);
     if (source) return source;
   }
