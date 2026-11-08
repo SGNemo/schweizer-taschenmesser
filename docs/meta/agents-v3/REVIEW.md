@@ -127,7 +127,9 @@ Managed Agents kennen Workspace-Skills (Upload `POST /v1/skills`, Zip mit `SKILL
 - **`always_allow`:** Agent-Toolset-Default ist `always_allow`, MCP-Default `always_ask` [MA-perm] – v2 hatte beides explizit gesetzt, v3 auch; `session.mjs` zeigt `requires_action` an und kann mit `--auto-approve` antworten.
 - **Console vs. `ant`:** `ant apply` adoptiert keine in der Console angelegten Agenten (Doppelanlage) [ant-apply] → alle 20 nur per `ant` (SETUP.md).
 
-## Für Sven zu entscheiden (Empfehlung zuerst)
+## Entschieden (Sven, 2026-11-08: alle Empfehlungen; Bullets in `docs/decisions/meta.md`)
+
+Die vier Fragen mit der jeweils gewählten Option (Empfehlung zuerst, so übernommen):
 
 1. **Token und Rulesets:** (Empfohlen) ein Fine-grained PAT ohne `Administration`/`Workflows`/Actions-write + Rulesets auf `main`, `develop` (PR-Pflicht, 0 Approvals – damit pushen auch deine Claude-Code-Chats `scribble/` nur noch per Mini-PR; CLAUDE.md-Zeile entsprechend ändern) und Tags `v*` + MERGE-READY-Verfahren – oder zweiter Account für merge/reviewer in eigener Session (echte Approvals, mehr Betrieb).
 2. **Lead-Modell:** (Empfohlen) Opus 5.5 high ohne Advisor – oder Sonnet 5.5 high mit Opus-Advisor (billiger je Turn, aber jede Konsultation schickt den ganzen Thread; Advisor-Antworten können im Event-Stream redigiert sein [MA-multi]).
