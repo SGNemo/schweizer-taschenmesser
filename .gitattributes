@@ -1,3 +1,6 @@
 # Agent definitions and their scripts are compared byte for byte (to-ant.mjs --check); keep LF on Windows checkouts
 docs/meta/agents-v3/** text eol=lf
+# The only images allowed under docs/ (check:docs, docs/meta/DOCS-GUIDE.md "Images"); everything else goes into the PR text
+docs/assets/screenshots/*.webp binary
+docs/brand/** binary
 scripts/agents/** text eol=lf

@@ -32,5 +32,8 @@ A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed b
 - Pinned names: `docs/AI-IMPORT.md` + `.de.md` (read by `core/localapi/prompt.test.ts`), `README.md`, `README.de.md`, `docs/user/installation.md` + `.de.md` (read by `scripts/lib/releaseAssets.test.ts`, `docPairs.test.ts`), heading "Offen – macht Sven" in STATUS (referenced from `web/src/strings.ts`). Old section names ("Sync & backup", "Local AI import API", "Releases & CI") are kept inside the topic files because code comments cite them.
 - Doc-only PRs skip heavy CI jobs (`ci.yml` `changes`): everything under `docs/` except the pinned files, root `CLAUDE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
 
+## Images
+Images belong in the PR text (drag & drop, GitHub hosts them) or in a workflow artifact; in the repo only README pictures (`docs/assets/screenshots/*.webp`, `npm run app:screenshots -- --readme`), user-doc images (linked from `docs/user/`) and brand files (`docs/brand/`), each ≤ 100 KB. Local captures go to `web/.screens/` (gitignored). `check:docs` fails on any other image under `docs/` (blocking in CI); old screenshots stay in the git history and in their PRs.
+
 ## Archive rule
 Move a report to `docs/archive/<yyyy-mm>/` when its findings are fixed or summarised in STATUS/DECISIONS; keep it unchanged below a banner (date, pointer). After a release, collapse the round log in STATUS to one line per release. `docs/archive/` is excluded from ripgrep/fd via `.ignore`.

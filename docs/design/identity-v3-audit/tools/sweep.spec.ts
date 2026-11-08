@@ -14,7 +14,7 @@ import { mockWeather, pickWeatherPlace } from '../weather-mock';
  * preview on :4174): SCREENS_DIR=<dir> SWEEP_RUNS=d-light,d-dark,p-light,p-dark SWEEP_PARTS=seed,empty,plan,sven
  *   npx playwright test -c playwright.sweep.config.ts
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/sweep';
+const OUT = process.env.SCREENS_DIR ?? '.screens/sweep';
 const WAIT = Number(process.env.SCREENS_WAIT ?? 900);
 const ONLY = process.env.SWEEP_PARTS?.split(',');
 const part = (name: string) => !ONLY || ONLY.includes(name);

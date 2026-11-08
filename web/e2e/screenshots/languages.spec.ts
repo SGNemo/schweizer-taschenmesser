@@ -4,10 +4,10 @@ import { bootDev, seedApp } from '../seed/helpers';
 
 /**
  * The overview in every active UI language (de, en), with the shared invented test data of the Dev-Preview build
- * (entries stay German: they are data, not UI). Output: SCREENS_DIR (default docs/i18n/screenshots).
+ * (entries stay German: they are data, not UI). Output: SCREENS_DIR (default .screens/languages, gitignored).
  * Not part of CI; run with `npm run screenshots -- languages.spec.ts`.
  */
-const OUT = process.env.SCREENS_DIR ?? '../docs/i18n/screenshots';
+const OUT = process.env.SCREENS_DIR ?? '.screens/languages';
 const LANGS = { de: 'Schließen', en: 'Close' };
 
 test('overview in every language', async ({ browser }) => {

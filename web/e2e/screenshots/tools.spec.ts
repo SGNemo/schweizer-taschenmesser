@@ -4,9 +4,9 @@ import { expect, test } from '@playwright/test';
 /**
  * Screenshots of the tools sheet and the phone "Mehr" sheet (manual tooling, see
  * playwright.screens.config.ts). Invented data only. Output: SCREENS_DIR (default
- * test-results/screens/tools).
+ * .screens/tools).
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/tools';
+const OUT = process.env.SCREENS_DIR ?? '.screens/tools';
 const VIEWPORTS = [
   { name: '1920x1080', width: 1920, height: 1080, mobile: false },
   { name: '412x915', width: 412, height: 915, mobile: true },

@@ -8,3 +8,5 @@ test-results
 .env.local
 dist-e2e-seed
 dist-bundle
+# Local screenshot/capture output (never commit images to docs/, see docs/meta/DOCS-GUIDE.md "Images")
+.screens

@@ -185,6 +185,7 @@ Website (`site/`, Cloudflare-Pages-Projekt `nemo-site`): vom 08.10. bis 04.11. w
 
 ## Bekannte Probleme / Hinweise
 
+- Keine Screenshots mehr in `docs/` (2026-11-08, `chore/docs-no-images`): 1 703 Bilder (≈ 214 MB) entfernt, Links zeigen auf den PR („Screenshots: PR #n“); `check:docs` blockiert neue Bilder außer README/Brand/User-Docs ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)).
 - Agenten-Team eingerichtet (2026-11-07): Roster, Delegation, Sandbox-Start in [meta/AGENTS.md](meta/AGENTS.md); Änderungen nur per Entscheidung des Maintainers.
 - README-Download-Badges zeigen auf das neueste _stabile_ Release und funktionieren jetzt (seit `v0.2.0`).
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).

@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { defineConfig } from '@playwright/test';
 
 // Manual tooling (not part of `npm run e2e` / CI): renders every module in a set of viewports
-// with invented demo data. Usage: SCREENS_DIR=test-results/screens/before npm run screenshots
+// with invented demo data. Usage: SCREENS_DIR=.screens/before npm run screenshots
 const executablePath =
   process.env.PW_CHROMIUM_PATH ??
   (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);

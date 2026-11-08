@@ -12,7 +12,7 @@ import { openToolbox } from '../helpers';
  * head. Not part of CI. Usage (web/, seeded preview on :4174):
  *   SCREENS_DIR=<dir> npx playwright test -c playwright.screens.config.ts identity-audit --project=seeded
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/identity-audit';
+const OUT = process.env.SCREENS_DIR ?? '.screens/identity-audit';
 const WAIT = Number(process.env.SCREENS_WAIT ?? 900);
 const MASTER = 'nemo-demo-tresor'; // gitleaks:allow (invented demo value)
 const SCALE = (process.env.SCREENS_SCALE as 'small' | 'medium' | 'large' | undefined) ?? 'medium';
