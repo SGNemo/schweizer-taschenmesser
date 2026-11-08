@@ -179,6 +179,7 @@ test.describe('backup', () => {
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     await download;
+    await expect(page.getByText('Backup heruntergeladen.')).toBeVisible();
     await page.goto('/settings');
     await expect(page.getByTestId('overview-backup')).toContainText('Als Datei:');
   });

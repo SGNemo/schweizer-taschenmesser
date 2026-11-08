@@ -26,7 +26,7 @@ In der installierten App sichert Nemo auf Wunsch regelmäßig verschlüsselt in 
 Der Download ohne Passwort ist lesbares JSON (eingerückt, öffnet sich in jedem Texteditor):
 - `format` (`taschenmesser-backup`), `version`, `about` (diese Beschreibung in einer Zeile, englisch), `exportedAt`.
 - `tables`: eine Liste je Sammlung, benannt `<modul>_<sammlung>` (z. B. `notes_note`, `notes_notebook`). Jeder Eintrag hat seine Felder plus `id`, `createdAt`, `updatedAt`, `deviceId`, `deletedAt` (gelöschte Einträge bleiben für das Zusammenführen) und `_f` (ein Zeitstempel je Feld; der neuere gewinnt).
-- `checksum`: SHA-256 von `tables`; eine veränderte Datei wird abgelehnt.
+- `checksum`: SHA-256 von `tables` als kompaktes JSON (ohne Leerzeichen); eine veränderte Datei wird abgelehnt.
 - Dieselbe Datei wieder einspielen ergibt dieselben Einträge (getestet).
 
 Umzug zwischen Geräten geht auch ohne Datei über den [Sync-Server](sync.de.md).
