@@ -267,3 +267,17 @@ describe('rules from suggestions', () => {
     expect(await loadRules()).toEqual([]);
   });
 });
+
+// B01 (round 5, person B): the bank import opened from the setup assistant before the finance page
+// was ever shown had no account to book on and ended in "Lege zuerst ein Konto an".
+describe('a bank import on an installation without an account', () => {
+  it('offers a ready account instead of a dead end', async () => {
+    await db.table('finance_account').clear();
+    const runtime = (await manifest.contributions!.onboarding!.load!()).default;
+    const choices = await runtime.optionChoices!('accountId');
+    expect(choices).toHaveLength(1);
+    expect(choices[0]!.label).toBe('Girokonto');
+    const { rows } = await parse(file(fixture('sparkasse-camt.csv')), choices[0]!.value);
+    expect(rows.length).toBeGreaterThan(0);
+  });
+});

@@ -11,7 +11,7 @@ import type {
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
 import { listSubscriptionNames } from '@/modules/subscriptions/public';
-import { accountRepo, categoryRepo, transactionRepo } from './repo';
+import { accountRepo, categoryRepo, ensureAnAccount, transactionRepo } from './repo';
 import { suggestCategories } from './categoryHints';
 import { MAPPING_EXTRA, readBank } from './bankRead';
 import { ColumnMapping } from './components/ColumnMapping';
@@ -254,6 +254,7 @@ const runtime: ImporterRuntime = {
   },
   async optionChoices(key) {
     if (key !== 'accountId') return [];
+    await ensureAnAccount();
     const accounts = (await accountRepo.active().toArray()).sort((a, b) => a.order - b.order);
     return accounts.map((a) => ({ value: a.id, label: a.name }));
   },

@@ -58,6 +58,20 @@ export async function ensureDefaults(): Promise<void> {
   });
 }
 
+/**
+ * An account to book an import on: the defaults, and the default account again when none is left
+ * (a bank import opened before the finance page was ever shown must not end in "create one first").
+ */
+export async function ensureAnAccount(): Promise<void> {
+  await ensureDefaults();
+  if ((await accountRepo.active().count()) > 0) return;
+  const taken = Boolean(await accountRepo.table.get(DEFAULT_ACCOUNT_ID));
+  await accountRepo.create(
+    { name: 'Girokonto', openingBalanceMinor: 0, order: 0 },
+    taken ? {} : { id: DEFAULT_ACCOUNT_ID },
+  );
+}
+
 function stripEnvelope(row: Record<string, unknown>): Record<string, unknown> {
   const {
     id: _id,
