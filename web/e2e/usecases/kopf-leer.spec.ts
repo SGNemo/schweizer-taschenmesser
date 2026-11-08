@@ -175,9 +175,11 @@ const env = (data: Record<string, unknown>, id: string) => ({
 
 /** Days from TODAY as 'YYYY-MM-DD'. */
 const day = (offset: number) => {
+  // Local date parts, not toISOString: a runner east of UTC+12 would otherwise shift the fixture by a day.
   const d = new Date(`${TODAY}T12:00:00`);
   d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
 /**
@@ -319,10 +321,15 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0;
     };
+    // A card counts as visible while it has a box and the sheet's backdrop lets it through (today a
+    // translucent dim; F1's target is an opaque backdrop, which takes the count to 0).
     const strip = document.querySelector('section[aria-label="Jetzt wichtig"]');
-    const cards = strip
-      ? Array.from(strip.querySelectorAll('a, button')).filter(visible).length
-      : 0;
+    const dialog = document.querySelector('dialog[open]');
+    const backdrop = dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : '';
+    const alpha = /rgba?\([^)]*,\s*([\d.]+)\)$/.exec(backdrop)?.[1];
+    const opaque = backdrop !== '' && (alpha === undefined || Number(alpha) >= 0.98);
+    const cards =
+      strip && !opaque ? Array.from(strip.querySelectorAll('a, button')).filter(visible).length : 0;
     const list = document.querySelector('[data-testid="capture-rows"]');
     const selects = list ? Array.from(list.querySelectorAll('select')).filter(visible).length : 0;
     // U03: „Mahnung … €“ read as an expense booking, not as an invoice (the selected option of a row).
@@ -331,7 +338,7 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
           (sel) => sel.selectedOptions[0]?.textContent?.trim() === 'Buchung (Entwurf)',
         )
       : false;
-    return { cards, selects, booking };
+    return { cards, selects, booking, backdrop };
   });
   await m.tap(page.getByRole('button', { name: 'Alle speichern (5)' }).first());
   // U04: the first „Alle speichern“ may save nothing – a booking line asks for a confirmation first.
@@ -339,6 +346,7 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   const saved = page.getByText('5 Dinge gespeichert');
   await expect(draft.or(saved).first()).toBeVisible();
   if (await draft.count()) {
+    pile.booking = true; // the confirmation box only appears for a booking line
     m.detour();
     m.dialog();
     await m.tap(draft.getByRole('button', { name: 'Alle speichern (5)' }));
@@ -348,7 +356,7 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   writeFileSync(`${OUT}/A-${info.project.name}-stimulus.json`, JSON.stringify(pile));
   info.annotations.push({
     type: 'stimulus',
-    description: `while unloading: ${pile.cards} attention cards visible beside the sheet · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
+    description: `while unloading: ${pile.cards} attention cards visible beside the sheet (backdrop ${pile.backdrop}) · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
   });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Where did they land? The person checks the ToDos.
