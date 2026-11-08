@@ -98,7 +98,7 @@ cd scripts/agents && npm i && cd ../..          # einmalig: @anthropic-ai/sdk
  export ANTHROPIC_API_KEY=… GITHUB_TOKEN=… NEMO_VAULT_ID=vlt_…   # führendes Leerzeichen + HISTCONTROL=ignorespace hält die Werte aus der History; besser aus dem Passwort-Manager laden
 node scripts/agents/session.mjs --routing-check                      # erst prüfen: Claude Code oder Agenten?
 node scripts/agents/session.mjs --class S "Routing: Lead, S (5 USD) · PR #560 · fertig heißt: gemergt oder ein Satz, warum nicht"
-node scripts/agents/session.mjs --class M --title "Berichte" --file auftrag.md
+node scripts/agents/session.mjs --title "Berichte" --file auftrag.md   # Zeile 1 von auftrag.md: "Routing: Lead, M (10 USD) · … · fertig heißt …" (setzt die Klasse)
 ```
 
 Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget aus der Klasse** (`--class S|M|L` = 5/10/15 $; ohne `--class` gilt die Klasse aus der Zeile `Routing: Lead, M …` am Anfang des Auftrags, sonst die kleinste, die `--budget` fasst, sonst S; `--budget` überschreibt den Betrag, über 15 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `5` → `"500"`; die erste Nachricht beginnt mit einer Kopfzeile „Budget-Klasse · Session-Budget“, die der Lead prüft), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-builder: …`), Berichte (`← nemo-builder: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
@@ -124,6 +124,8 @@ Richtwerte (Listenpreis, Lead auf Sonnet mit Opus-Advisor; Klassen und Ablehnung
 | Runde mit bis zu 4 Delegationen (nur nachts/unbeaufsichtigt) | L      | ≤ 15 $   |
 | alles darüber                                                | –      | zerlegen |
 
+Vollständige Zuordnung (auch Fix auf offenem PR, Dependency-Bump = M): [../WORK-ROUTING.md](../WORK-ROUTING.md).
+
 **Claude Code läuft über das Abo – Bauarbeit (Features, Module, Refactorings, Konzepte, Debugging) immer dort**, nie im Agenten-Team (Monatsbudget Agenten 200 $).
 
 Regel: **nicht erhöhen, neu starten.** Eine Session = ein Auftrag; reicht das Budget nicht, steht im letzten Bericht des Leads, wo er aufgehört hat – den Rest als neue Session mit eigenem Budget. Eine Session als Chat weiterzuführen lässt den Kontext jedes Threads wachsen (der Grund für 215 Mio. Tokens / 82 $ in einer Session am 2026-11-08). Erhöhen nur, um einen fast fertigen Schritt landen zu lassen.
@@ -135,7 +137,7 @@ Das Agenten-Team lohnt sich nur für klar umrissene Koordinations- und Prüfauft
 Wird mit §2a angelegt. Einzeln (nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 4 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
 
 ```bash
-node scripts/agents/session.mjs --agent auditor --class M "Prüfe PR #535"
+node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · fertig heißt: AUDIT-pr535.md mit Urteil und Befunden"   # die Zeile wählt den Auditor und Klasse M
 ```
 
 Eigene Session, Auditor als Primär-Agent; er fragt die 4 (builder, reviewer, ops, docs; nie `nemo-merge`) nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
@@ -143,7 +145,7 @@ Eigene Session, Auditor als Primär-Agent; er fragt die 4 (builder, reviewer, op
 ### Erster Testlauf (Budget 2 USD)
 
 ```bash
-node scripts/agents/session.mjs --class S --budget 2 --title "agents-v3 smoke" "Routing: Lead, S (≤ 2 USD, Smoke-Test) · fertig heißt: Branch gepusht und eine Zahl gemeldet. Lege Branch test/agents-v3-smoke von origin/develop an, committe eine neue Datei smoke.txt, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
+node scripts/agents/session.mjs --class S --budget 2 --title "agents-v3 smoke" "Routing: Lead → builder, S (≤ 2 USD, Einrichtungs-Check) · fertig heißt: Branch gepusht und eine Zahl gemeldet. Lass nemo-builder den Branch test/agents-v3-smoke von origin/develop anlegen, eine neue Datei smoke.txt committen und den Branch pushen; er prüft als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und meldet nur die Zahl. Nichts mergen, keine PR."
 ```
 
 Die Rulesets prüfst du **nur lesend** – ein Push-Versuch mit echten Rechten würde bei einem fehlenden Ruleset wirklich `main`/`develop` bewegen, und ein Tag `v…` startet `release.yml`:

@@ -4,11 +4,11 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Guardrails (v3.1 – read first, they beat everything below)
 
-- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` (format and next steps: WORK-ROUTING) and start no work (no worktree, no `npm ci`).
+- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` (format and next steps: WORK-ROUTING) and start no work (no worktree, no `npm ci`). A message starting `Read-only request from nemo-auditor` is class S and needs no "done means": answer the question with evidence, change nothing.
 - **Budget:** the delegation names the class (S ≤ 5, M ≤ 10, L ≤ 15 USD); none named = S. When an overrun is foreseeable (`npm ci` failed, a test run > 10 min, repro not found in 3 tries), stop and report `partial` with an exact hand-over (branch, last command, next step) instead of trying on. At most **2 attempts per check**; a third run is the lead's decision.
 - **Tests:** locally only `npm run check` + the specs/tests your diff touches; full `npm test` and E2E are CI's (cite the run id). Never repeat a check that a run id already proves on the same head.
 - **Reading:** never a log, diff or file in full (`tail -40`, `grep -n`, `git diff --stat` first; full text only for the lines you change or cite); only the docs of your own area; thread answers ≤ 15 lines, the rest as a file.
-- **Hard stops (all agents, no exception):** never `main`, tags, releases, secrets, signing, branch protection, rulesets, force-push or history rewrite; never push `.github/**` (patch in the PR text, Sven applies it); only `nemo-merge` merges; lead, auditor and `nemo-docs` write no product code; a denied tool call is never worked around.
+- **Hard stops (all agents, no exception):** never `main`, tags, releases, secrets, signing, branch protection, rulesets, force-push or history rewrite; never push `.github/**` (patch in the PR text, Sven applies it; a conflict resolution that would edit `.github/**` is handed back); only `nemo-merge` merges; lead, auditor and `nemo-docs` write no product code; a denied tool call is never worked around.
 
 ## Session start
 
@@ -41,7 +41,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - Dependabot alerts: only `nemo-ops` (mode `deps`) dismisses one, only after `nemo-reviewer` with the security lens concurs in its thread **and** as a GitHub comment naming the alert id and head SHA, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
 - Code-scanning (CodeQL) alerts: fix instead of dismiss. Dismiss only a real false positive, after `nemo-reviewer` with the security lens concurs (thread + GitHub comment with alert id), with the justification in the dismissal and in the PR; never change the scan configuration to hide an alert (`docs/howto/release-deps.md`).
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
-- Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` + reviewed head SHA, followed by `Security lens applied: <paths>` whenever the diff touches a full-path file (list below) – that is the public record; a full-path PR without that line is not merge-ready. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
+- Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` + reviewed head SHA, followed by `Security lens applied: <paths>` whenever the diff holds a file outside the light-path allowlist (below) – that is the public record; a full-path PR without that line is not merge-ready. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
 
 ## Recurring CI traps
 
@@ -53,18 +53,17 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - `docs/CHATS.md` "Läuft gerade" row in the **first** commit, removed in the **last**; hotspots (table in CHATS.md) need a heads-up row before you touch them; lines in root `CLAUDE.md` in their own commit.
 - No secrets, tokens, real user data or private paths anywhere: this repo (public; gitleaks scans all of it), the session folder `/workspace/scribble/` and `SGNemo/nemo-scribble` (private is not a secret store; it has its own gitleaks scan). Security rules may be shortened, never weakened.
 
-## Light path for small PRs
+## Light path and security lens (one rule for reviewer, merge, builder, lead)
 
-Docs-only, test-only or i18n-only PRs: `nemo-reviewer` with the correctness lens only (scope, CI, hand-over format); then `nemo-merge`.
+**Light path** (correctness lens only: scope, CI, hand-over) – only when **every** file of the diff is on this allowlist:
 
-Full path (`nemo-reviewer` with the **security lens**, `Security lens applied: <paths>`) – **the one canonical list** (reviewer, merge, builder and lead point here; a file you cannot place is treated as on the list):
+- `docs/**`, `README*`, `*.de.md`, `.changes/**` – **except** `docs/RULES.md`, `docs/security/**`, `docs/meta/**`, `docs/howto/{release-deps,supporter,bug-reports}.md`, `SECURITY.md`;
+- UI texts: `web/src/strings*.ts`, `web/src/i18n/locales/{de,en}/**`;
+- tests: `*.test.ts(x)`, `web/e2e/**/*.spec.ts` – **except** guard tests (`*privacy*`, `*exclusion*`, `*isolation*`, `localapi*`, `proxy*`, `registry*`, `tokens*`, `brand-ids*`, `contract/**`).
 
-- `docs/RULES.md` areas: `web/src/core/{sync,localapi,dataapi,ai,platform,secrets,crypto,vaultbridge,diagnostics,supporter,setup,update,net}/**`, `web/src/modules/{accounts,disk}/**`, `server/**`, `mcp/**`, `packages/**`, `extension/**`, `web/src-tauri/**` (all crates incl. `lan-sync`, `local-api`, `vault-bridge`, `disk-scan`/`guard.rs`, `update.rs`, `capabilities/`, `build.rs`, `tauri*.conf.json`, gradle);
-- `.github/**`, `.gitleaksignore` (gitleaks, scribble-guard, `permissions:`, publish and signing steps);
-- build inputs of CI jobs holding the signing secrets: `web/scripts/**`, lock files (`package-lock.json`, `Cargo.lock`);
-- `CLAUDE.md` (root and area files), `docs/RULES.md`, `docs/meta/AGENTS.md`.
+**Security lens** (`Security lens applied: <paths>` in the verdict) for **every other file** – code, configs and build inputs (`package.json`, `vite.config.ts`, `tsconfig*`, `.npmrc`, lock files, `web/scripts/**`), `.github/**`, `.gitleaksignore`, `web/src-tauri/**`, `server/**`, `services/**`, `tools/**`, `contract/**`, `core/db/**`, `CLAUDE.md`, the exceptions above. No list of risky paths to keep in sync: what is not on the allowlist gets the lens.
 
-**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 7 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
+**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 7 agents, read live from `develop`), `docs/meta/WORK-ROUTING.md` (the routing gate every prompt obeys) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 
 ## Precedence and scribble
 

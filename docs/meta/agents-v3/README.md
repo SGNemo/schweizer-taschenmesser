@@ -55,7 +55,7 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. PRs under `docs/meta/agents-v3/**` or `scripts/agents/**` are merged by Sven.
 7. **Report** – budget class first, 3 points + PR links; then the session ends (a new task = a new session).
 
-**Audit (Sven's tool, outside the flow):** `node scripts/agents/session.mjs --agent auditor --class M "Prüfe PR #535"` – own session, `nemo-auditor` as primary agent; result `AUDIT-<pr|branch>.md` in the session outputs.
+**Audit (Sven's tool, outside the flow):** `node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means: AUDIT-pr535.md"` – own session, `nemo-auditor` as primary agent; result `AUDIT-<pr|branch>.md` in the session outputs.
 
 ## Changes v2 → v3 (history; v3 roles were merged in v3.1)
 

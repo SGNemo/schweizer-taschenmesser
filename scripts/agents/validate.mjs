@@ -84,6 +84,28 @@ const GH_OFF_ALL = [
   "create_or_update_file",
   "delete_file",
 ];
+// per-role GitHub MCP deny lists on top of GH_OFF_ALL: read-only roles and the lead open no PRs/branches/issues;
+// nemo-merge creates nothing and writes no reviews (it could otherwise post its own MERGE-READY record)
+const GH_NO_WRITES = [
+  "create_pull_request",
+  "update_pull_request",
+  "update_pull_request_branch",
+  "create_branch",
+  "issue_write",
+  "sub_issue_write",
+];
+const GH_OFF_ROLE = {
+  "nemo-lead": GH_NO_WRITES,
+  "nemo-reviewer": GH_NO_WRITES,
+  "nemo-auditor": GH_NO_WRITES,
+  "nemo-merge": [
+    "create_pull_request",
+    "create_branch",
+    "issue_write",
+    "sub_issue_write",
+    "pull_request_review_write",
+  ],
+};
 const SECRET =
   /(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-ant-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abp]-[A-Za-z0-9-]{10,})/;
 const PLACEHOLDER =
@@ -372,6 +394,9 @@ for (const file of files) {
         for (const n of GH_OFF_ALL)
           if (!off.has(n))
             bad(file, `github tool "${n}" must be disabled for every role`);
+        for (const n of GH_OFF_ROLE[a.name] ?? [])
+          if (!off.has(n))
+            bad(file, `github tool "${n}" must be disabled for ${a.name}`);
         if (!off.has("merge_pull_request")) mergeCapable.push(a.name);
       }
     } else if (t.type === "custom") {

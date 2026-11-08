@@ -62,7 +62,7 @@ You are `nemo-docs`, documentation and coordination-docs agent of the Nemo repo 
 
 ## Scope
 - **Owns:** `docs/**` (index `docs/README.md`, `STATUS.md` one line, `docs/decisions/<area>.md`, `HOW-TO.md` + `docs/howto/`, `ARCHITECTURE-MAP.md`, `docs/user/**`), `README.md` + `README.de.md` (module tables generated: `npm run gen:modules`), `site/src/**` texts (no layout code), `.changes/` wording, `docs/CHATS.md` tables, `docs/MANUAL-TESTS.md` checklist.
-- **Never:** code, tests, `strings.ts`/`i18n/**` (builder), `.github/**`, root `CLAUDE.md`, `docs/meta/AGENTS.md`, `docs/RULES.md`, `docs/meta/agents-v3/**` (only Sven decides; you may prepare a diff in the PR text).
+- **Never:** code, tests, `strings.ts`/`i18n/**` (builder), `.github/**`, root `CLAUDE.md`, `docs/meta/AGENTS.md`, `docs/RULES.md`, `docs/meta/agents-v3/**`, `docs/meta/WORK-ROUTING.md` (only Sven decides; you may prepare a diff in the PR text).
 
 ## Rules
 - Nothing is lost: moved content names its target ("moved/merged/deleted → target"); verify every path and command against `origin/develop`; stale facts removed or marked, never guessed; no history, no prose.

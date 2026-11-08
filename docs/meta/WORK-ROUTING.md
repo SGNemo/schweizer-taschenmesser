@@ -30,14 +30,14 @@ One format for every decline (lead and agents): `blocked – out of routing: <re
 2. Will it need questions about content or scope before it can finish? → yes: **Claude Code**. (An approval or a short answer is fine.)
 3. Can you say "done means …" in one sentence? → no: **Claude Code** (or write the sentence first).
 4. Does it fit in ≤ 4 delegations (one per agent, bundled)? → no: split it.
-5. Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD (L only at night/unattended)? Above L: split it.
+5. Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD? Above L: split it. (L is Sven's choice for a night or unattended run.)
 
 Result line, first line of the prompt:
 
 ```
 Routing: Claude Code · <title> · <model suggestion>
 Routing: Lead, S (5 USD) · <title> · done means <…>
-Routing: Auditor, M (10 USD) · PR #<n>
+Routing: Auditor, M (10 USD) · PR #<n> · done means <verdict + findings file>
 ```
 
 ## Session rules
@@ -45,4 +45,5 @@ Routing: Auditor, M (10 USD) · PR #<n>
 - One session = one task = one budget (`session.mjs --class S|M|L`). Never raise it to keep going; start a new session (the lead's last report says where it stopped).
 - The session ends with the report; a new topic is a new session.
 - Status questions cost a full turn of the lead: read `docs/CHATS.md`, the PR list or the board instead.
-- Check before a run: `node scripts/agents/session.mjs --routing-check` (prints the five questions, starts nothing).
+- Check before a run: `node scripts/agents/session.mjs --routing-check` (prints this decision tree, starts nothing). `session.mjs` reads the pasted routing line: `Claude Code` stops locally, `Auditor` starts the auditor, the class sets the budget.
+- This file is merged by Sven himself (like `docs/meta/agents-v3/`).

@@ -7,7 +7,7 @@
 //   node scripts/agents/session.mjs --routing-check                       the five routing questions, no session
 //   node scripts/agents/session.mjs --class S "Prüfe und merge PR #560"   class S = 5 USD (M = 10, L = 15)
 //   node scripts/agents/session.mjs --class M --file brief.md
-//   node scripts/agents/session.mjs --agent auditor --class M "Prüfe PR #535"   auditor instead of the lead
+//   node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means …"   the line picks the auditor
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
 //   node scripts/agents/session.mjs --session sess_… --auto-approve       approve waiting tool calls, keep streaming
 //   node scripts/agents/session.mjs budget sess_… 12 --yes                raise the cap (prints usage so far; without --yes it stops)
@@ -86,7 +86,7 @@ if (flags["routing-check"]) {
       .trimEnd(),
   );
   console.log(
-    `\nSource: docs/meta/WORK-ROUTING.md · then: node scripts/agents/session.mjs --class <S|M|L> "…"   (no session was started)`,
+    `\nSource: docs/meta/WORK-ROUTING.md · then: Claude Code → a chat, no session; Lead → node scripts/agents/session.mjs "Routing: Lead, S … · done means …"; Auditor → the same with "Routing: Auditor, M …" (picks --agent auditor). No session was started.`,
   );
   process.exit(0);
 }
@@ -132,12 +132,55 @@ const normUrl = (u) =>
     .toLowerCase();
 const repoUrl = flags.repo ?? process.env.NEMO_REPO ?? DEFAULTS.repo;
 const foreignRepo = normUrl(repoUrl) !== normUrl(DEFAULTS.repo);
-// --agent: short role name (lead | auditor, with or without `nemo-`) resolved via claude-lock.json, or an agent_… id
+// the message is read once (new session or resume); a missing --file is a clean error, not a stack trace
+const messageText = (() => {
+  if (sub) return "";
+  if (!flags.file) return positional.join(" ");
+  try {
+    return fs.readFileSync(flags.file, "utf8");
+  } catch (e) {
+    console.error(`error: --file ${flags.file}: ${e.code ?? e.message}`);
+    process.exit(1);
+  }
+})();
+// the pasted first line from docs/meta/WORK-ROUTING.md: `Routing: Claude Code | Lead[ → builder] | Auditor, <S|M|L> …`
+const routing = (() => {
+  const first = messageText.trimStart().split("\n", 1)[0];
+  if (!/^Routing:/i.test(first)) return {};
+  const m =
+    /^Routing:\s*(Claude Code|Lead(?:\s*→\s*\w+)?|Auditor)\b(?:\s*,\s*([SML])\b)?/i.exec(
+      first,
+    );
+  if (!m) {
+    console.warn(
+      `warning: routing line not understood (forms: docs/meta/WORK-ROUTING.md): ${first.slice(0, 80)}`,
+    );
+    return {};
+  }
+  const who = m[1].toLowerCase();
+  return {
+    role: who.startsWith("claude")
+      ? "claude-code"
+      : who.startsWith("auditor")
+        ? "auditor"
+        : "lead",
+    cls: m[2]?.toUpperCase(),
+  };
+})();
+// --agent: short role name (lead | auditor, with or without `nemo-`) resolved via claude-lock.json, or an agent_… id;
+// without --agent the routing line picks the auditor
 const AGENT_FILES = { lead: DEFAULTS.leadFile, auditor: DEFAULTS.auditorFile };
 const agentRole = (() => {
-  if (flags.agent === undefined) return "lead";
+  if (flags.agent === undefined)
+    return routing.role === "auditor" ? "auditor" : "lead";
   const r = String(flags.agent).replace(/^nemo-/, "");
-  if (AGENT_FILES[r]) return r;
+  if (AGENT_FILES[r]) {
+    if (routing.role && routing.role !== "claude-code" && routing.role !== r)
+      console.warn(
+        `warning: --agent ${r} but the routing line names ${routing.role} – the session starts ${r}`,
+      );
+    return r;
+  }
   if (/^agent_/.test(flags.agent)) return null; // explicit id
   console.error(
     `error: --agent "${flags.agent}": use lead, auditor or an agent_… id`,
@@ -203,32 +246,23 @@ const CLASSES = { S: 5, M: 10, L: 15 };
 const DEFAULT_CLASS = "S";
 const EXPENSIVE_USD = 15; // above this only with --yes-expensive (above class L: split the task)
 const WARN_SHARE = 0.7; // warn once the session has used 70 % of its budget
-// class: --class wins; else the pasted first line `Routing: Lead|Auditor, <S|M|L> …`; else the smallest class that
-// holds --budget; else S
-const routingClass = () => {
-  const text = flags.file
-    ? fs.readFileSync(flags.file, "utf8")
-    : positional.join(" ");
-  return /^\s*Routing:\s*(?:Lead|Auditor)\s*,\s*([SML])\b/i
-    .exec(text)?.[1]
-    ?.toUpperCase();
-};
+// class: --class wins; else the routing line's class; else the smallest class that holds --budget; else S
+// (subcommands such as `budget` never look at it)
 const taskClass = (() => {
+  if (sub) return DEFAULT_CLASS;
   if (flags.class !== undefined) {
     const c = String(flags.class).toUpperCase();
     if (!(c in CLASSES)) {
       console.error(`error: --class "${flags.class}": use S, M or L`);
       process.exit(1);
     }
-    const pasted = routingClass();
-    if (pasted && pasted !== c)
+    if (routing.cls && routing.cls !== c)
       console.warn(
-        `warning: --class ${c} but the prompt's routing line says ${pasted} – the session runs as ${c}`,
+        `warning: --class ${c} but the routing line says ${routing.cls} – the session runs as ${c}`,
       );
     return c;
   }
-  const pasted = routingClass();
-  if (pasted) return pasted;
+  if (routing.cls) return routing.cls;
   if (flags.budget !== undefined)
     return (
       Object.keys(CLASSES).find((k) => CLASSES[k] >= Number(flags.budget)) ??
@@ -253,10 +287,6 @@ function budgetObj(usd) {
     type: "limit",
     max_list_cost: { amount: cents(usd), currency: "USD" },
   };
-}
-function readMessage() {
-  if (flags.file) return fs.readFileSync(flags.file, "utf8");
-  return positional.join(" ");
 }
 const userMessage = (text) => ({
   type: "user.message",
@@ -713,7 +743,14 @@ async function main() {
     return;
   }
 
-  const message = readMessage();
+  const message = messageText;
+  // a task routed to Claude Code never starts a paid session
+  if (routing.role === "claude-code" && !cfg.session) {
+    console.log(
+      "blocked – out of routing: Claude Code task · next: open a Claude Code chat with this prompt (no session was started)",
+    );
+    return;
+  }
   if (!message.trim() && !(cfg.session && cfg.autoApprove))
     throw new Error("no message: pass it as argument or --file <path>");
 
