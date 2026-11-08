@@ -1,5 +1,11 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { backupFileName, createBackup, type Backup, type ImportMode } from '@/core/backup/backup';
+import {
+  backupCounts,
+  backupFileName,
+  createBackup,
+  type Backup,
+  type ImportMode,
+} from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
 import { recordFileBackup } from '@/core/backup/lastBackup';
 import {
@@ -148,12 +154,8 @@ export function BackupSection() {
     setBusy(false);
   }
 
-  const counts = backup
-    ? t.backup.contains(
-        Object.values(backup.tables).reduce((n, rows) => n + rows.length, 0),
-        Object.keys(backup.tables).length,
-      )
-    : '';
+  const filled = backup ? backupCounts(backup) : undefined;
+  const counts = filled ? t.backup.contains(filled.records, filled.tables) : '';
 
   return (
     <>

@@ -3378,7 +3378,8 @@ export const de = {
     replace: 'Ersetzen',
     replaceHint: 'Das Backup wird zum Stand: Einträge, die nicht im Backup sind, werden gelöscht.',
     doImport: 'Importieren',
-    contains: (records: number, tables: number) => `${records} Einträge in ${tables} Tabellen`,
+    contains: (records: number, tables: number) =>
+      `${records} ${records === 1 ? 'Eintrag' : 'Einträge'} in ${tables} ${tables === 1 ? 'Tabelle' : 'Tabellen'}`,
     confirmTitle: 'Backup ersetzen?',
     confirmText:
       'Alle Einträge, die nicht im Backup stehen, werden gelöscht – auch auf anderen Geräten, sobald sie synchronisieren.',
