@@ -27,6 +27,16 @@
 .plain {
   border-top: 1px solid var(--border);
 }
+/* Settings identity v3.1 package 2: on a settings tab (`data-groups="plain"` on the category page) every group sits on
+   the page between hairlines, told apart by its heading and the space above it – no stack of cards. */
+[data-groups='plain'] .card {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding-inline: 0;
+}
 .plain > .row:last-child {
   border-bottom: 1px solid var(--border);
 }

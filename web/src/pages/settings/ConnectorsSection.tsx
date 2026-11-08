@@ -264,8 +264,8 @@ export function ConnectorCard({ def }: { def: ConnectorDef }) {
                 ))}
               </ChoiceList>
               <div className={styles.row}>
+                {/* Secondary (settings identity v3.1): one card per connector, none outranks the others. */}
                 <Button
-                  variant="primary"
                   disabled={busy !== undefined || active.length === 0}
                   onClick={() => void login()}
                 >

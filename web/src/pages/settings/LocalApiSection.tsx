@@ -230,7 +230,6 @@ export function LocalApiSection() {
         </ul>
         <div className={styles.row}>
           <Button
-            variant="primary"
             onClick={() => {
               setDraftError('');
               setDraft(emptyDraft());

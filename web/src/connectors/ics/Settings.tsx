@@ -109,7 +109,8 @@ export default function IcsSettings({
           </p>
         ) : null}
         <div>
-          <Button type="submit" variant="primary" disabled={busy || !url.trim()}>
+          {/* Secondary like every connector card on Verbindungen (settings identity v3.1). */}
+          <Button type="submit" disabled={busy || !url.trim()}>
             {busy ? s.checking : s.add}
           </Button>
         </div>
