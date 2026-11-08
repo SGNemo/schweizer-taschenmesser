@@ -21,7 +21,7 @@ import {
   connect,
   disconnect,
   fetchDevices,
-  loadSyncConfig,
+  loadServerConfig,
   lockDevice,
   rotateThisDeviceToken,
   runMaintenance,
@@ -96,7 +96,7 @@ describe('devices', () => {
       ok: true,
       encrypted: false,
     });
-    const config = await loadSyncConfig(a.db);
+    const config = await loadServerConfig(a.db);
     expect(config?.deviceName).toBe('Laptop');
     expect(config?.deviceId).toBeTruthy();
     expect(config?.token).not.toBe('right-token');
@@ -111,17 +111,17 @@ describe('devices', () => {
     server.supportsDevices = false;
     const a = dev();
     await connect(params, a.deps);
-    expect((await loadSyncConfig(a.db))?.token).toBe('right-token');
+    expect((await loadServerConfig(a.db))?.token).toBe('right-token');
     expect(await fetchDevices(a.deps)).toBeUndefined();
   });
 
   it('connecting again with the same device rotates its token instead of failing', async () => {
     const a = dev();
     await connect(params, a.deps);
-    const first = (await loadSyncConfig(a.db))!.token;
+    const first = (await loadServerConfig(a.db))!.token;
     await disconnect(a.deps);
     expect((await connect(params, a.deps)).ok).toBe(true);
-    const second = (await loadSyncConfig(a.db))!.token;
+    const second = (await loadServerConfig(a.db))!.token;
     expect(second).not.toBe(first);
     expect(useSyncStatus.getState().phase).toBe('idle');
   });
@@ -131,7 +131,7 @@ describe('devices', () => {
     const b = dev();
     await connect({ ...params, deviceName: 'Handy' }, a.deps);
     await connect({ ...params, deviceName: 'Laptop' }, b.deps);
-    const phone = (await loadSyncConfig(a.db))!.deviceId!;
+    const phone = (await loadServerConfig(a.db))!.deviceId!;
     await a.repo.create({ title: 'lokal', done: false });
 
     expect(await lockDevice(phone, b.deps)).toBe(true);
@@ -152,18 +152,18 @@ describe('devices', () => {
     const b = dev();
     await connect(params, a.deps);
     await connect(params, b.deps);
-    const token = (await loadSyncConfig(a.db))!.token;
+    const token = (await loadServerConfig(a.db))!.token;
     await signOutThisDevice(a.deps);
-    expect(await loadSyncConfig(a.db)).toBeUndefined();
+    expect(await loadServerConfig(a.db)).toBeUndefined();
     await expect(server.remote(token).getVault()).rejects.toMatchObject({ code: 'revoked' });
   });
 
   it('rotating the token replaces it and the old one is dead', async () => {
     const a = dev();
     await connect(params, a.deps);
-    const old = (await loadSyncConfig(a.db))!.token;
+    const old = (await loadServerConfig(a.db))!.token;
     expect(await rotateThisDeviceToken(a.deps)).toBe(true);
-    expect((await loadSyncConfig(a.db))!.token).not.toBe(old);
+    expect((await loadServerConfig(a.db))!.token).not.toBe(old);
     await expect(server.remote(old).getVault()).rejects.toBeDefined();
     await syncNow(a.deps);
     expect(useSyncStatus.getState().phase).toBe('idle');
@@ -202,7 +202,7 @@ describe('vault v2 (Argon2id)', () => {
       ok: false,
       reason: 'vault-outdated',
     });
-    expect(await loadSyncConfig(a.db)).toBeUndefined();
+    expect(await loadServerConfig(a.db)).toBeUndefined();
   });
 
   it('refuses KDF parameters that are too weak or absurdly expensive (hostile server)', async () => {
@@ -542,7 +542,7 @@ describe('no secrets in sync payloads', () => {
     await a.db.table('_secrets').put({ key: 'secret:ai.claude', value: 'sk-test-fake-key' });
     await a.repo.create({ title: 'normal', done: false });
     await syncNow(a.deps);
-    const token = (await loadSyncConfig(a.db))!.token;
+    const token = (await loadServerConfig(a.db))!.token;
     const wire = JSON.stringify(server.dump());
     for (const needle of [
       'sk-test-fake-key',

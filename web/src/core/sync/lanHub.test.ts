@@ -1,0 +1,185 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createRepo, type Repo } from '@/core/db/repo';
+import type { TaschenmesserDB } from '@/core/db/db';
+import { allManifests } from '@/core/modules/registry';
+import { createFakeLanHubParts } from '@/core/platform/fakeLanHub';
+import type { LanHubService } from '@/core/platform/types';
+import { DexieStorageAdapter } from '@/core/storage/dexie';
+import { createTestDb } from '@/test-utils';
+import { LanHubAdapter } from './adapters/lanHub';
+import {
+  connect,
+  disableLanHub,
+  enableLanHub,
+  loadServerConfig,
+  loadSyncConfig,
+  renewLanHubKey,
+  syncNow,
+  type SyncServiceDeps,
+} from './service';
+import { useSyncStatus } from './status';
+import { MemoryServer } from './testing';
+import { SyncError } from './types';
+
+const schema = allManifests.find((m) => m.id === 'example')!.dataSchema.collections.entry!.schema;
+type Entry = { title: string; done: boolean };
+
+const dbs: TaschenmesserDB[] = [];
+let fake: ReturnType<typeof createFakeLanHubParts>;
+
+/** A desktop app on the hub PC (or a second PC sharing the hub process, which stands in for a client). */
+function pc(hub: LanHubService = fake.hub) {
+  const database = createTestDb();
+  dbs.push(database);
+  const deps: SyncServiceDeps = {
+    database,
+    storage: new DexieStorageAdapter(database),
+    remote: () => new MemoryServer().remote('t'),
+    lanHub: () => hub,
+  };
+  return {
+    db: database,
+    deps,
+    repo: createRepo('example_entry', schema, database) as unknown as Repo<Entry>,
+  };
+}
+
+beforeEach(() => {
+  fake = createFakeLanHubParts();
+  useSyncStatus.getState().set({
+    phase: 'off',
+    server: undefined,
+    via: undefined,
+    encrypted: false,
+    error: undefined,
+    pending: 0,
+    failures: 0,
+    retryAt: undefined,
+    lastSyncAt: undefined,
+  });
+});
+afterEach(async () => {
+  for (const d of dbs.splice(0)) {
+    d.close();
+    await d.delete();
+  }
+});
+
+describe('LanHubAdapter', () => {
+  it('sends the key version with every request and maps hub errors to calm codes', async () => {
+    const bodies: string[] = [];
+    const adapter = new LanHubAdapter(
+      {
+        request: async (body) => {
+          bodies.push(body);
+          return JSON.stringify({ error: 'stale-key-version' });
+        },
+      },
+      7,
+    );
+    await expect(adapter.pull(0, 10)).rejects.toMatchObject({ code: 'server' });
+    expect(JSON.parse(bodies[0]!)).toEqual({ keyVersion: 7, type: 'pull', since: 0, limit: 10 });
+
+    const drift = new LanHubAdapter(
+      { request: async () => JSON.stringify({ error: 'hlc-drift' }) },
+      1,
+    );
+    await expect(drift.push([])).rejects.toMatchObject({ code: 'clock' });
+  });
+
+  it('treats a hub that is not running as "not reachable", and a malformed page as a server problem', async () => {
+    const off = new LanHubAdapter({ request: () => Promise.reject(new Error('not-started')) }, 1);
+    await expect(off.pull(0, 10)).rejects.toEqual(new SyncError('network'));
+    const odd = new LanHubAdapter(
+      { request: async () => JSON.stringify({ epoch: 'e', ops: 'x', cursor: -1 }) },
+      1,
+    );
+    await expect(odd.pull(0, 10)).rejects.toMatchObject({ code: 'server' });
+  });
+});
+
+describe('this PC as the home-network hub', () => {
+  it('turns on, stores only an encrypted copy in the hub and a non-extractable key on the device', async () => {
+    const a = pc();
+    await a.repo.create({ title: 'Milch kaufen', done: false });
+    expect(await enableLanHub(a.deps)).toEqual({ ok: true });
+
+    const config = await loadSyncConfig(a.db);
+    expect(config?.kind).toBe('lanHub');
+    expect(config?.key?.extractable).toBe(false);
+    expect(await loadServerConfig(a.db)).toBeUndefined();
+    expect(useSyncStatus.getState()).toMatchObject({
+      phase: 'idle',
+      via: 'lanHub',
+      encrypted: true,
+    });
+    expect(fake.hooks.opsCount()).toBeGreaterThan(0);
+    expect(fake.hooks.allEncrypted()).toBe(true);
+  });
+
+  it('brings data from one device to another through the hub', async () => {
+    const a = pc();
+    const b = pc();
+    await a.repo.create({ title: 'Vom PC', done: false });
+    await enableLanHub(a.deps);
+    await enableLanHub(b.deps);
+    expect((await b.repo.active().toArray()).map((e) => e.title)).toEqual(['Vom PC']);
+  });
+
+  it('refuses while this device syncs through an own server (one path per device)', async () => {
+    const server = new MemoryServer();
+    const a = pc();
+    a.deps.remote = (_url, token) => server.remote(token);
+    expect(
+      (await connect({ url: 'https://sync.example', token: 'right-token', encrypt: false }, a.deps))
+        .ok,
+    ).toBe(true);
+    expect(await enableLanHub(a.deps)).toEqual({ ok: false, reason: 'server-connected' });
+    expect((await loadSyncConfig(a.db))?.kind).toBe('selfHosted');
+  });
+
+  it('says "unsupported" where there is no hub, and "keystore" when the OS key store fails', async () => {
+    const noHub = pc({ ...fake.hub, supported: false });
+    expect(await enableLanHub(noHub.deps)).toEqual({ ok: false, reason: 'unsupported' });
+    const broken = pc({
+      ...fake.hub,
+      start: () => Promise.reject(new Error('keystore-unavailable')),
+    });
+    expect(await enableLanHub(broken.deps)).toEqual({ ok: false, reason: 'keystore' });
+    expect(await loadSyncConfig(broken.db)).toBeUndefined();
+  });
+
+  it('after "Schlüssel erneuern" uploads everything again under the new key version', async () => {
+    const a = pc();
+    await a.repo.create({ title: 'Eins', done: false });
+    await enableLanHub(a.deps);
+    const before = (await loadSyncConfig(a.db)) as { keyVersion: number };
+    expect(await renewLanHubKey(a.deps)).toBe(true);
+    const after = (await loadSyncConfig(a.db)) as { keyVersion: number };
+    expect(after.keyVersion).toBe(before.keyVersion + 1);
+    expect(fake.hooks.opsCount()).toBeGreaterThan(0);
+    expect(fake.hooks.allEncrypted()).toBe(true);
+  });
+
+  it('picks up a key renewed elsewhere before the next round instead of failing', async () => {
+    const a = pc();
+    await enableLanHub(a.deps);
+    await fake.hub.rotate(); // e.g. renewed from another window
+    await a.repo.create({ title: 'Nach dem Erneuern', done: false });
+    await syncNow(a.deps);
+    expect(useSyncStatus.getState().phase).toBe('idle');
+    const config = (await loadSyncConfig(a.db)) as { keyVersion: number };
+    expect(config.keyVersion).toBe(2);
+  });
+
+  it('turning it off stops the hub and forgets the connection, the data stays', async () => {
+    const a = pc();
+    await a.repo.create({ title: 'Bleibt', done: false });
+    await enableLanHub(a.deps);
+    await disableLanHub(a.deps);
+    expect(await loadSyncConfig(a.db)).toBeUndefined();
+    expect((await fake.hub.status()).running).toBe(false);
+    expect((await a.repo.active().toArray()).length).toBe(1);
+    expect(useSyncStatus.getState()).toMatchObject({ phase: 'off', via: undefined });
+  });
+});
