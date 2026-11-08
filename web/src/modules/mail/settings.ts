@@ -18,6 +18,10 @@ const schema = z.object({
   notifyNames: z.boolean(),
   /** A local model (built-in or Ollama on this computer, never a cloud one) may summarise mail. */
   localAi: z.boolean(),
+  /** The list offers the filter „Persönlich“ (sender is a person, header logic). */
+  offerPersonal: z.boolean(),
+  /** The list offers „Alle in den Plan…“ (a preview with ticks). */
+  offerPlanAll: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -33,6 +37,8 @@ export const settings: ModuleSettings = {
     notifyLabels: ['INBOX'],
     notifyNames: false,
     localAi: false,
+    offerPersonal: true,
+    offerPlanAll: true,
   },
   get keywords() {
     return [
@@ -77,6 +83,26 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.confirmMovesHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'offerPersonal',
+      get label() {
+        return t.mail.meta.offerPersonal;
+      },
+      get help() {
+        return t.mail.meta.offerPersonalHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'offerPlanAll',
+      get label() {
+        return t.mail.meta.offerPlanAll;
+      },
+      get help() {
+        return t.mail.meta.offerPlanAllHelp;
       },
       type: 'boolean',
     },

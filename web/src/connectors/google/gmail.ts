@@ -18,6 +18,7 @@ import type {
 } from '@/core/mail/types';
 import { parseAddress, parseAddressList } from '@/core/mail/address';
 import { buildRaw } from '@/core/mail/compose';
+import { isPersonalMail } from '@/core/mail/heuristics';
 import { googleRequest, type GoogleResponse } from './http';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -195,6 +196,11 @@ function summarize(raw: unknown, snippetFallback = ''): MailThreadSummary {
     unread: labelIds.includes('UNREAD'),
     labelIds,
     hasAttachment: false,
+    personal: isPersonalMail({
+      listUnsubscribe: header(lastPayload, 'List-Unsubscribe'),
+      precedence: header(lastPayload, 'Precedence'),
+      labelIds,
+    }),
   };
 }
 
@@ -236,7 +242,8 @@ export const gmailProvider: MailProvider = {
     const threads = await mapLimited(ids, async (t) => {
       const full = await gmailGet(ctx, `/threads/${encodeURIComponent(str(t.id))}`, {
         format: 'metadata',
-        metadataHeaders: ['From', 'Subject'],
+        // List-Unsubscribe and Precedence only feed the derived „personal“ flag; they are not kept.
+        metadataHeaders: ['From', 'Subject', 'List-Unsubscribe', 'Precedence'],
       });
       return summarize(full.json, str(t.snippet));
     });

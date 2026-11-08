@@ -154,3 +154,15 @@ function mailPrefillFor(
       return { ...base, text: subject || sender, extra: link ? { note: link } : {} };
   }
 }
+
+/**
+ * Title of a ToDo made from a mail with one tap („Kopf leer“ Q3 a): „<Absendername> · <Betreff>“, „Re:/AW:“
+ * dropped. Never an address: a sender without a display name (or one that is itself an address) gives
+ * the subject alone.
+ */
+export function mailPlanTitle(from: { name?: string; email: string }, subject: string): string {
+  const name = (from.name ?? '').trim();
+  const topic = cleanSubject(subject);
+  const safeName = name && !name.includes('@') ? name : '';
+  return [safeName, topic].filter(Boolean).join(' · ') || safeName || topic;
+}

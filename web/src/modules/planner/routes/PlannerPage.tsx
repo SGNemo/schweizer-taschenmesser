@@ -460,6 +460,16 @@ export default function PlannerPage() {
             },
           ]
         : []),
+      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
+      ...(e.link?.kind === 'mail'
+        ? [
+            {
+              id: 'mail',
+              label: t.planner.row.openMail,
+              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
+            },
+          ]
+        : []),
     ];
   };
 

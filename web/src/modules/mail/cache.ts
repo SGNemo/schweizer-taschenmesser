@@ -27,6 +27,7 @@ export async function saveThreads(accountKey: string, threads: MailThreadSummary
       messageCount: t.messageCount,
       hasAttachment: t.hasAttachment,
       labelIds: t.labelIds,
+      ...(t.personal !== undefined ? { personal: t.personal } : {}),
     };
     await threadRepo.upsert(id, {
       accountKey,

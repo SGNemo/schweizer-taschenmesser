@@ -7,8 +7,11 @@ import type { MailAccountRef, MailLabel } from '@/core/mail/types';
 import { useSettings } from '@/core/settings/settings';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
+import { useModuleStates } from '@/core/modules/activation';
 import {
   Button,
+  Chip,
+  Chips,
   GroupedList,
   Icon,
   IconButton,
@@ -34,6 +37,8 @@ import { emptyCompose, type ComposeState } from '../composeState';
 import { hasFeature } from '@/core/mail/service';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { InboxHead } from '../components/InboxHead';
+import { PlanAllDialog } from '../components/PlanAllDialog';
+import { planMail, planMany, plannedThreads, safeThreadId } from '../planMail';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -56,11 +61,19 @@ function ThreadList({
   threads,
   onOpen,
   menuFor,
+  planned,
+  planLabel,
+  onPlan,
 }: {
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
-  /** Quick actions of one row (read/unread, archive); none without write permission. */
+  /** Quick actions of one row (in den Plan, read/unread, archive). */
   menuFor?: (th: CachedThreadView) => RowMenuItem[];
+  /** Threads that have a ToDo made from them: the row says „im Plan“ instead of offering it. */
+  planned: ReadonlySet<string>;
+  /** „In den Plan“ (planner on) or „Als ToDo“. */
+  planLabel: string;
+  onPlan?: (th: CachedThreadView) => void;
 }) {
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
     const rows = threads.filter((th) => dayGroup(th.date) === g);
@@ -87,9 +100,36 @@ function ThreadList({
                   {th.snippet ? <span className={styles.snippet}> – {th.snippet}</span> : null}
                 </>
               }
-              end={<span className={styles.meta}>{shortWhen(th.date)}</span>}
+              end={
+                <span className={styles.meta}>
+                  {planned.has(th.id) ? (
+                    <span className={styles.planMark} data-testid="mail-in-plan">
+                      {t.mail.plan.mark} ·{' '}
+                    </span>
+                  ) : null}
+                  {shortWhen(th.date)}
+                </span>
+              }
               onOpen={() => onOpen(th.id)}
               menu={menuFor?.(th)}
+              // Like „Archivieren“: a quiet action on hover (PC), in ⋯ and as a swipe (phone).
+              actions={
+                onPlan && !planned.has(th.id) ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={t.mail.plan.actionFor(
+                      `${personName(th.from)} · ${subjectOf(th.subject)}`,
+                    )}
+                    onClick={() => onPlan(th)}
+                    data-testid="mail-plan-row"
+                  >
+                    {planLabel}
+                  </Button>
+                ) : undefined
+              }
+              onSwipeLeft={onPlan && !planned.has(th.id) ? () => onPlan(th) : undefined}
+              swipeLeftLabel={planLabel}
             />
           ))}
         </ItemList>
@@ -124,6 +164,16 @@ export default function MailPage() {
   const labelId = params.get('label') ?? 'INBOX';
   const query = params.get('q') ?? '';
   const threadId = params.get('thread');
+  const personalOnly = params.get('personal') === '1';
+  const states = useModuleStates();
+  const planLabel = states?.planner ? t.mail.plan.action : t.mail.plan.asTodo;
+  const canPlan = !!states?.todos;
+  const planned =
+    useLiveQuery(
+      () => (account ? plannedThreads(account.key) : Promise.resolve(new Set<string>())),
+      [account?.key],
+    ) ?? new Set<string>();
+  const [planAll, setPlanAll] = useState(false);
   const [draft, setDraft] = useState(query);
   const [seenQuery, setSeenQuery] = useState(query);
   if (seenQuery !== query) {
@@ -157,6 +207,25 @@ export default function MailPage() {
   const cacheBodies = (prefs as { cacheBodies?: boolean } | undefined)?.cacheBodies ?? true;
   const confirmMoves = (prefs as { confirmMoves?: boolean } | undefined)?.confirmMoves ?? true;
   const localAi = (prefs as { localAi?: boolean } | undefined)?.localAi ?? false;
+  const offerPersonal = (prefs as { offerPersonal?: boolean } | undefined)?.offerPersonal ?? true;
+  const offerPlanAll = (prefs as { offerPlanAll?: boolean } | undefined)?.offerPlanAll ?? true;
+  const shown =
+    personalOnly && offerPersonal ? box.threads.filter((th) => th.personal) : box.threads;
+
+  // `?open=<threadId>` (a link back from a ToDo or the planner) is untrusted: a plain id, and only a
+  // thread this account has in its cache, is opened; anything else is dropped without a request.
+  const openParam = params.get('open');
+  useEffect(() => {
+    if (openParam === null || !account) return;
+    const id = safeThreadId(openParam);
+    void (async () => {
+      const known = id ? await threadRepo.get(`${account.key}|${id}`) : undefined;
+      const p = new URLSearchParams(params);
+      p.delete('open');
+      if (known) p.set('thread', id!);
+      setParams(p, { replace: true });
+    })();
+  }, [openParam, account, params, setParams]);
 
   useEffect(() => {
     if (!account || account.key === DEMO_ACCOUNT) return;
@@ -269,30 +338,37 @@ export default function MailPage() {
     );
 
   const canModify = hasFeature(account, 'mail-modify');
-  const menuFor = canModify
-    ? (th: (typeof box.threads)[number]): RowMenuItem[] => [
-        th.unread
-          ? {
-              id: 'read',
-              label: t.mail.page.rowRead,
-              onSelect: () => void rowAction(account, th.id, 'read', box.reload),
-            }
-          : {
-              id: 'unread',
-              label: t.mail.page.rowUnread,
-              onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
-            },
-        ...(th.labelIds.includes('INBOX')
-          ? [
-              {
-                id: 'archive',
-                label: t.mail.page.rowArchive,
-                onSelect: () => void rowAction(account, th.id, 'archive', box.reload),
-              },
-            ]
-          : []),
-      ]
+  const onPlan = canPlan
+    ? (th: CachedThreadView) => void planMail(account, th, box.reload)
     : undefined;
+  const menuFor = (th: (typeof box.threads)[number]): RowMenuItem[] => [
+    ...(onPlan && !planned.has(th.id)
+      ? [{ id: 'plan', label: planLabel, onSelect: () => onPlan(th) }]
+      : []),
+    ...(canModify ? modifyItems(th) : []),
+  ];
+  const modifyItems = (th: (typeof box.threads)[number]): RowMenuItem[] => [
+    th.unread
+      ? {
+          id: 'read',
+          label: t.mail.page.rowRead,
+          onSelect: () => void rowAction(account, th.id, 'read', box.reload),
+        }
+      : {
+          id: 'unread',
+          label: t.mail.page.rowUnread,
+          onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
+        },
+    ...(th.labelIds.includes('INBOX')
+      ? [
+          {
+            id: 'archive',
+            label: t.mail.page.rowArchive,
+            onSelect: () => void rowAction(account, th.id, 'archive', box.reload),
+          },
+        ]
+      : []),
+  ];
 
   const listPane = (
     <>
@@ -365,12 +441,46 @@ export default function MailPage() {
         </Button>
       </form>
 
+      {(offerPersonal || (offerPlanAll && onPlan)) && box.threads.length > 0 ? (
+        <div className={styles.row}>
+          {offerPersonal ? (
+            <Chips>
+              <Chip
+                label={t.mail.plan.personal}
+                selected={personalOnly}
+                onClick={() => update({ personal: personalOnly ? null : '1', thread: null })}
+              />
+            </Chips>
+          ) : null}
+          {offerPlanAll && onPlan && shown.length > 0 ? (
+            <Button
+              variant="ghost"
+              onClick={() => setPlanAll(true)}
+              data-testid="mail-plan-all-open"
+            >
+              {t.mail.plan.all}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {planAll ? (
+        <PlanAllDialog
+          threads={shown}
+          planned={planned}
+          onClose={() => setPlanAll(false)}
+          onPlan={(picked) => {
+            setPlanAll(false);
+            void planMany(account, picked, box.reload);
+          }}
+        />
+      ) : null}
+
       {box.error ? <MailError code={box.error} /> : null}
       {box.fromCache ? <p className={styles.hint}>{t.mail.page.cached}</p> : null}
 
-      {box.threads.length === 0 && box.loading ? (
+      {shown.length === 0 && box.loading ? (
         <Skeleton height="10rem" />
-      ) : box.threads.length === 0 && !box.error ? (
+      ) : shown.length === 0 && !box.error ? (
         <EmptyState
           title={query ? t.mail.page.emptySearch : t.mail.page.empty}
           testId="mail-empty"
@@ -378,9 +488,12 @@ export default function MailPage() {
         />
       ) : (
         <ThreadList
-          threads={box.threads}
+          threads={shown}
           onOpen={(id) => update({ thread: id })}
           menuFor={menuFor}
+          planned={planned}
+          planLabel={planLabel}
+          onPlan={onPlan}
         />
       )}
       {box.hasMore ? (

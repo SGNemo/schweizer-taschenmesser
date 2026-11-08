@@ -248,3 +248,25 @@ export function dedupeFindings(findings: MailFinding[]): MailFinding[] {
   }
   return [...best.values()].sort((a, b) => b.mailDate.localeCompare(a.mailDate));
 }
+
+/** Gmail's bulk categories: mail there is not from a person. */
+const BULK_LABELS = [
+  'CATEGORY_PROMOTIONS',
+  'CATEGORY_SOCIAL',
+  'CATEGORY_UPDATES',
+  'CATEGORY_FORUMS',
+];
+
+/**
+ * „Persönlich“: the sender is a person, read from headers only (no model): no `List-Unsubscribe`, no
+ * `Precedence: bulk|list|junk`, no Gmail bulk category. Only this boolean is kept, never the headers.
+ */
+export function isPersonalMail(m: {
+  listUnsubscribe?: string;
+  precedence?: string;
+  labelIds: readonly string[];
+}): boolean {
+  if ((m.listUnsubscribe ?? '').trim()) return false;
+  if (/^\s*(bulk|list|junk)\b/i.test(m.precedence ?? '')) return false;
+  return !m.labelIds.some((l) => BULK_LABELS.includes(l));
+}

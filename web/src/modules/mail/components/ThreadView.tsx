@@ -15,6 +15,8 @@ import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
+import { useModuleStates } from '@/core/modules/activation';
+import { planMail } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
@@ -331,6 +333,7 @@ export function ThreadView({
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   const web = mailWebUrl(account, threadId);
+  const states = useModuleStates();
   // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
   const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
@@ -342,6 +345,24 @@ export function ThreadView({
         {web && account.key !== DEMO_ACCOUNT ? (
           <Button onClick={() => void getPlatform().app.openUrl(web)}>
             {t.mail.view.openInGmail}
+          </Button>
+        ) : null}
+        {states?.todos && messages?.length ? (
+          <Button
+            data-testid="mail-plan-thread"
+            onClick={() =>
+              void planMail(
+                account,
+                {
+                  id: threadId,
+                  from: messages[messages.length - 1]!.from,
+                  subject: messages[0]!.subject,
+                },
+                () => onChanged?.(),
+              )
+            }
+          >
+            {states.planner ? t.mail.plan.action : t.mail.plan.asTodo}
           </Button>
         ) : null}
       </div>
