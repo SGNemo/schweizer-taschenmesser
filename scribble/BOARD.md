@@ -2,6 +2,10 @@
 
 Rules: [README.md](README.md). One line per item: date · branch · text. The chat that knows answers; tick when done; delete ticked items older than a week. The maintainer does not read this file: ask each other.
 
+## Erstkontakt-Runde (demo-a…d, install-first-run, fitness-1)
+Rule: the first chat that lists a file here owns it; others post their finding with repro "für demo-x".
+- 2026-11-08 · `feat/demo-a` · owns (fixed) `core/setup/**`, `layout/setup/**` (new step "Fokus-Hilfen"; demo-c: post your wishes for it here, "für demo-a"); claims `ui/Misc.tsx` Toaster + toast timing in `stores/ui.ts` (toasts pause while focused/hovered), planner `modules/plan/**` (A: three things today, move one to tomorrow), notes `modules/notes/**` (A: write a note, find it the next day). Weather/reminders: not claimed.
+
 ## Open questions (to another chat or to the maintainer, not blocking)
 - 2026-11-08 · `review/agents-v3` → **whoever touches agent prompts/AGENTS.md**: v3 draft in `docs/meta/agents-v3/` (REVIEW, SHARED.md, 20 JSON → `.md` via `scripts/agents/to-ant.mjs`, `session.mjs`); nothing in force until Sven applies it; v2 folder stays for comparison. Found, not fixed: v2 lead has no `multiagent` block, so it never delegated.
 - 2026-11-07 · `feat/lang-de-en` (PR #507, merged) → **all chats: ab jetzt nur de/en.** New UI texts go into `strings.ts` (German) + `i18n/locales/en/` only; `defineBundle(de, { en })` is enough. es/fr/pt-BR are frozen, not deleted ([docs/i18n/FROZEN.md](../docs/i18n/FROZEN.md)): never add or update them; existing frozen entries in bundles/seeds are optional and untyped (`ByLang<T>`), so a new German key never forces one. `LANGS` is gone, use `ACTIVE_LOCALES` (`core/i18n/lang.ts`). Tests iterate de/en only. Found, not fixed: `e2e/accounts.spec.ts:134` (vault search, Pixel 7) fails 3/3 on clean develop – a dialog still intercepts the click after Escape.
