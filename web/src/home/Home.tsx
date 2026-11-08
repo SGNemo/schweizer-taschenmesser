@@ -156,7 +156,14 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const shown = editing
     ? ordered
     : ordered.filter(
-        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout)),
+        (e) =>
+          !layout.hidden.includes(e.key) &&
+          (!calm ||
+            isCalmVisible(
+              e.key,
+              layout,
+              ordered.map((o) => o.key),
+            )),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
 

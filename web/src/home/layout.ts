@@ -189,9 +189,21 @@ export function togglePinned(
   return { pinned: [...saved.pinned, key], hidden: saved.hidden.filter((k) => k !== key) };
 }
 
-/** What the calm view shows: the "Heute" card, the user's pins; the rest waits behind "Mehr anzeigen". */
-export const isCalmVisible = (key: string, saved: HomeLayout): boolean =>
-  key === TODAY_KEY || saved.pinned.includes(key);
+/** The money month card stands in for the "Heute" card when ToDos are off (Finanz-Fokus profile). */
+export const CALM_STAND_IN = 'finance:month';
+
+/**
+ * What the calm view shows: the "Heute" card (or, without it, the month card), the user's pins;
+ * the rest waits behind "Mehr anzeigen". `available` = keys of the widgets that can be shown.
+ */
+export const isCalmVisible = (
+  key: string,
+  saved: HomeLayout,
+  available?: readonly string[],
+): boolean =>
+  key === TODAY_KEY ||
+  saved.pinned.includes(key) ||
+  (key === CALM_STAND_IN && available !== undefined && !available.includes(TODAY_KEY));
 
 export function toggleHidden(saved: HomeLayout, key: string): string[] {
   return saved.hidden.includes(key)

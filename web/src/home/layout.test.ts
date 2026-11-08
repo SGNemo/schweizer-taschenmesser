@@ -12,6 +12,7 @@ import {
   toggleHidden,
   togglePinned,
   TODAY_KEY,
+  CALM_STAND_IN,
   withoutFolded,
   withSize,
 } from './layout';
@@ -163,6 +164,14 @@ describe('home layout: pinned widgets (additive field)', () => {
     expect(isCalmVisible(TODAY_KEY, saved)).toBe(true);
     expect(isCalmVisible('finance:balance', saved)).toBe(true);
     expect(isCalmVisible('todos:open', saved)).toBe(false);
+  });
+
+  // B04 (round 5, person B): the Finanz-Fokus profile switches ToDos off, so the calm view was empty.
+  it('lets the money month card stand in when there is no Heute card', () => {
+    const saved = layout([], [], []);
+    expect(isCalmVisible(CALM_STAND_IN, saved, [CALM_STAND_IN, 'finance:balance'])).toBe(true);
+    expect(isCalmVisible('finance:balance', saved, [CALM_STAND_IN, 'finance:balance'])).toBe(false);
+    expect(isCalmVisible(CALM_STAND_IN, saved, [TODAY_KEY, CALM_STAND_IN])).toBe(false);
   });
 });
 
