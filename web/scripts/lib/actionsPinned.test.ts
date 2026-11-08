@@ -8,18 +8,37 @@ import { describe, expect, it } from 'vitest';
  * workflows (`./.github/...`) are exempt. Dependabot keeps the pins fresh (`github-actions`
  * ecosystem in `.github/dependabot.yml`).
  */
-const workflowsDir = resolve(__dirname, '../../../.github/workflows');
+const githubDir = resolve(__dirname, '../../../.github');
+const workflowsDir = join(githubDir, 'workflows');
+const actionsDir = join(githubDir, 'actions');
+
+/** Workflow files plus the composite actions under `.github/actions/<name>/action.yml`. */
+function yamlFiles(): { file: string; path: string }[] {
+  const isYaml = (f: string) => f.endsWith('.yml') || f.endsWith('.yaml');
+  const workflows = readdirSync(workflowsDir)
+    .filter(isYaml)
+    .map((file) => ({ file, path: join(workflowsDir, file) }));
+  const actions = readdirSync(actionsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .flatMap((d) =>
+      readdirSync(join(actionsDir, d.name))
+        .filter(isYaml)
+        .map((file) => ({
+          file: `actions/${d.name}/${file}`,
+          path: join(actionsDir, d.name, file),
+        })),
+    );
+  return [...workflows, ...actions];
+}
 
 function usesLines(): { file: string; line: number; ref: string }[] {
-  return readdirSync(workflowsDir)
-    .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
-    .flatMap((file) =>
-      readFileSync(join(workflowsDir, file), 'utf8')
-        .split('\n')
-        .map((text, i) => ({ file, line: i + 1, text: text.replace(/#.*$/, '').trim() }))
-        .filter((l) => /^(- )?uses:\s/.test(l.text))
-        .map((l) => ({ file: l.file, line: l.line, ref: l.text.replace(/^(- )?uses:\s*/, '') })),
-    );
+  return yamlFiles().flatMap(({ file, path }) =>
+    readFileSync(path, 'utf8')
+      .split('\n')
+      .map((text, i) => ({ file, line: i + 1, text: text.replace(/#.*$/, '').trim() }))
+      .filter((l) => /^(- )?uses:\s/.test(l.text))
+      .map((l) => ({ file: l.file, line: l.line, ref: l.text.replace(/^(- )?uses:\s*/, '') })),
+  );
 }
 
 describe('GitHub Actions pinning', () => {
