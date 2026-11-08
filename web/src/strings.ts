@@ -8402,7 +8402,7 @@ export const de = {
     plates: {
       label: (trained: string, planned: string) =>
         [
-          trained ? `Diese Woche trainiert: ${trained}` : 'Diese Woche noch kein Training',
+          trained ? `Diese Woche trainiert: ${trained}` : 'Diese Woche: kein Training eingetragen',
           planned ? `geplant: ${planned}` : '',
         ]
           .filter(Boolean)

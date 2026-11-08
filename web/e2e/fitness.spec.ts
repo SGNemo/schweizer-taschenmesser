@@ -236,6 +236,11 @@ test('the catalogue: picked by group with its pictogram, the plate week fills', 
   await dialog.getByRole('button', { name: 'Aus dem Katalog' }).click();
   const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
   await expect(picker.getByRole('heading', { name: 'Rücken' })).toBeVisible();
+  // No catalogue label overflows its button, also on the phone.
+  const overflowing = await picker
+    .locator('button[aria-label$="hinzufügen"]')
+    .evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
+  expect(overflowing).toBe(0);
   await picker.getByRole('button', { name: 'Klimmzüge hinzufügen' }).click();
   await expect(picker).toHaveCount(0);
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Klimmzüge');

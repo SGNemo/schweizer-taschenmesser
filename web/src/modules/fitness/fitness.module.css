@@ -103,7 +103,7 @@
   margin: var(--space-2) 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
   gap: var(--space-2);
 }
 .catalogItem {
@@ -119,6 +119,12 @@
   color: var(--text);
   text-align: left;
   cursor: pointer;
+}
+.catalogItem > span {
+  /* Long German compounds („Schrägbankdrücken“) break inside the button instead of running out of it. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .catalogItem:hover {
   border-color: var(--border-strong);

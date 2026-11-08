@@ -135,7 +135,7 @@ export const fitness: Strings['fitness'] = {
   plates: {
     label: (trained, planned) =>
       [
-        trained ? `Trained this week: ${trained}` : 'No training this week yet',
+        trained ? `Trained this week: ${trained}` : 'This week: nothing logged',
         planned ? `planned: ${planned}` : '',
       ]
         .filter(Boolean)

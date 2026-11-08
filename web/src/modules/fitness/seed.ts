@@ -52,7 +52,7 @@ const PROGRAMS: Program[] = [
     lines: [
       { ex: 'benchPress', sets: 4, reps: 8, kg: 50, step: 2.5 },
       { ex: 'row', sets: 4, reps: 10, kg: 40, step: 2.5 },
-      { ex: 'shoulderPress', sets: 3, reps: 10, kg: 22.5, step: 1.25 },
+      { ex: 'shoulderPress', sets: 3, reps: 10, kg: 22, step: 1 },
       { ex: 'latPulldown', sets: 3, reps: 10, kg: 45, step: 2.5 },
       { ex: 'bicepsCurl', sets: 3, reps: 12, kg: 10, step: 1 },
     ],
@@ -131,7 +131,7 @@ function seed(ctx: SeedContext): SeedRows {
   for (let w = 0; w < weeks; w++) {
     // 2–4 sessions a week on spread-out days (1 = yesterday … 7 = a week ago), never today.
     const count = ctx.rng.int(2, 4);
-    // The latest week always has yesterday, so the head's plate week shows something at once.
+    // The latest session is always yesterday (on the first day of a week that is last week's plate).
     const picked = ctx.rng.shuffle(w === 0 ? [2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5, 6, 7]);
     const days = (w === 0 ? [1, ...picked.slice(0, count - 1)] : picked.slice(0, count)).sort(
       (a, b) => a - b,
