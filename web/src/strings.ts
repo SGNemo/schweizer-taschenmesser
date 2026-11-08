@@ -4276,6 +4276,7 @@ export const de = {
       figureLabel: 'Im Haus',
       figureUnit: 'Vorräte',
       summaryFine: 'Nichts läuft ab, nichts wird knapp.',
+      onlyLow: (n: number) => `Nichts läuft ab · ${n === 1 ? 'eins wird' : `${n} werden`} knapp`,
       summary: (expired: number, soon: number, low: number) =>
         [
           expired > 0 ? `${expired} abgelaufen` : '',
