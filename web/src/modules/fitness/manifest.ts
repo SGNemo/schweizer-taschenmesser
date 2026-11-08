@@ -61,7 +61,7 @@ const manifest: ModuleManifest = {
   dataApi: false,
   defaultEnabled: false,
   maturity: 'preview',
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'content',
   order: 98,
   area: 'household',

@@ -1,6 +1,6 @@
 # Fitness (module, concept – phase 1)
 
-Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–2 merged (#565, #573), package 3 built (`feat/fitness-3`)**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
+Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–3 merged (#565, #573, #581), package 4 („Eigenart“) built (`feat/fitness-4`)**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
 
 ## 1. One module or two – recommendation: **one module `fitness`**
 
@@ -122,3 +122,10 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 - **Runtime** (`modules/fitness/importer.ts`, `onboarding.ts`): sets of one exercise → one exercise (number of sets, heaviest weight with its reps, seconds → minutes); preview/commit/undo of the shared wizard; dedupe `session:date|time|title`, `meal:date|time|text|kcal#n` (two equal coffees stay two, a second import adds nothing); at most 5 000 rows, the rest counted.
 - **Where:** the move sheet („Weiß ich nicht“ recognises the file) and Fitness → ⋯ → Importieren. No app picker buttons (that list is a shared hotspot; detection covers it).
 - **Known limits:** formats from the apps' documented exports, checked with invented files only – a real export is a manual test (MANUAL-TESTS candidate); only Strong's old semicolon export has no unit at all and is read as kg (Strong 6 names it in the header: `Weight (kg)` / `Weight (lbs)`, `Duration (sec)`); other apps (MyFitnessPal, Yazio …) not yet.
+
+## Package 4 as built („Eigenart“, Sven 2026-11-08: all four recommendations)
+
+- **Catalogue** (`catalog.ts`): 40 exercises in eight groups (Brust, Rücken, Beine, Schultern, Arme, Rumpf, Ausdauer, Beweglichkeit), names in the strings (de/en), the 12 earlier names unchanged. „Aus dem Katalog“ in the session form opens the picker by group; a pick fills the empty row or adds one, with last time's values. Own exercises stay free text.
+- **Pictograms** (`components/ExercisePicto.tsx`): 13 line drawings by movement pattern (press, overhead, row, pull-up, squat, hinge, lunge, curl, core, run, bike, swim, stretch) plus the dumbbell for anything else; `patternOf(name)` finds the catalogue entry or guesses from words („Kurzhantel-Rudern“ → row). Decorative only, `currentColor` in the module hue. Shown in the catalogue and as the lead of each session row.
+- **Plate week** (`components/WeekPlates.tsx`, the head's signature slot in Training and Essen): seven plates, full = trained, dashed = planned ahead, faint = nothing; a past plan is no outline (never „missed“); the label says it in words („Diese Woche trainiert: Montag; geplant: Freitag“). Still, no count, no streak.
+- **Test data** (seed v3): 4 / 8 / 13 weeks at 2–4 sessions (upper body, legs, running, full body, sometimes yoga) with weights rising every two weeks, always a session yesterday; varied meals with snacks for 7 / 21 / 60 days, macros on some; three templates; two plans ahead. Not seeded: a kcal goal (seeds write no settings).

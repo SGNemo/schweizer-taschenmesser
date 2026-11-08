@@ -53,3 +53,73 @@
   align-items: center;
   gap: var(--space-1);
 }
+/* Package 4: pictograms, the plate week, the catalogue. */
+.picto {
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--module-color);
+}
+.plates {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+.plate {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text);
+}
+.plate svg circle {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+.plate[data-state='done'] svg circle:first-child {
+  fill: var(--module-color);
+  stroke: var(--module-color);
+}
+.plate[data-state='planned'] svg circle:first-child {
+  stroke: var(--module-color);
+  stroke-dasharray: 4 3;
+}
+.plate svg .plateHole {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+}
+.plate[data-today] {
+  font-weight: var(--weight-semibold);
+}
+.catalogGroup + .catalogGroup {
+  margin-top: var(--space-4);
+}
+.catalogList {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-2);
+}
+.catalogItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.catalogItem:hover {
+  border-color: var(--border-strong);
+}

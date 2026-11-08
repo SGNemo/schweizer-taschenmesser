@@ -17,6 +17,7 @@ import {
   TextField,
 } from '@/ui';
 import { builtInExercises } from '../data';
+import { CatalogPicker } from './CatalogPicker';
 import { exerciseSuggestions, lastOf, toTemplate } from '../logic';
 import { sessionRepo, templateRepo } from '../repo';
 import {
@@ -107,6 +108,7 @@ function Fields({
   const [note, setNote] = useState(existing?.note ?? '');
   const [planned, setPlanned] = useState(existing?.planned ?? false);
   const [autoPlanned, setAutoPlanned] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [rows, setRows] = useState<Row[]>(() =>
     toRows(existing?.exercises.length ? existing.exercises : [{ name: '' }]),
   );
@@ -128,6 +130,24 @@ function Fields({
         weight: str(last.weightKg),
         minutes: str(last.durationMin),
       });
+  }
+
+  /** A catalogue pick: fills the one empty row or adds a row, with the values of last time. */
+  function addFromCatalog(name: string) {
+    setPicking(false);
+    const last = lastOf(sessions, name);
+    const values = {
+      name,
+      sets: str(last?.sets),
+      reps: str(last?.reps),
+      weight: str(last?.weightKg),
+      minutes: str(last?.durationMin),
+    };
+    setRows((rs) => {
+      const empty = rs.find((r) => !r.name.trim() && !r.sets && !r.reps && !r.weight && !r.minutes);
+      if (empty) return rs.map((r) => (r.key === empty.key ? { ...r, ...values } : r));
+      return [...rs, { key: Math.max(0, ...rs.map((x) => x.key)) + 1, ...values }];
+    });
   }
 
   /** A template fills title, duration and exercises (the date and the plan stay as they are). */
@@ -340,6 +360,10 @@ function Fields({
         ))}
       </ul>
       <div className={styles.chips}>
+        <Button variant="secondary" size="sm" onClick={() => setPicking(true)}>
+          <Icon name="dumbbell" size={16} />
+          {t.fitness.catalog.pick}
+        </Button>
         <Button
           variant="secondary"
           size="sm"
@@ -390,6 +414,7 @@ function Fields({
           onChange={(e) => setNote(e.target.value)}
         />
       </AdvancedFields>
+      <CatalogPicker open={picking} onPick={addFromCatalog} onClose={() => setPicking(false)} />
       {error ? <p role="alert">{error}</p> : null}
       <FormActions
         start={
