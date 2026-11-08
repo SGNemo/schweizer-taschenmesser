@@ -46,13 +46,14 @@ describe('setup step "Fokus-Hilfen"', () => {
     useUiStore.getState().setToastStay(false);
     useUiStore.getState().setReadAid(false);
     let commit: (() => Promise<void | 'skipped'>) | null = null;
+    const can: boolean[] = [];
     render(
       <FocusStep
         ctx={{ modules: {}, platform: 'web', isNative: false }}
         registerCommit={(fn) => {
           commit = fn;
         }}
-        setCanContinue={() => {}}
+        setCanContinue={(ok) => can.push(ok)}
       />,
     );
     const s = t.setup.steps.focus;
@@ -63,6 +64,9 @@ describe('setup step "Fokus-Hilfen"', () => {
     expect(screen.getByRole('switch', { name: s.readAid })).not.toBeChecked();
     for (const k of ['motion', 'ownReminders', 'noCounts', 'toastStay', 'readAid'] as const)
       expect(screen.getByText(s[`${k}Hint`])).toBeInTheDocument();
+    // "Weiter" was held until the switches were there.
+    expect(can[0]).toBe(false);
+    expect(can.at(-1)).toBe(true);
     // Nothing written yet.
     expect(useUiStore.getState().motion).toBe('system');
     await userEvent.setup().click(screen.getByRole('switch', { name: s.readAid }));

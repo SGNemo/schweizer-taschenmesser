@@ -11,7 +11,7 @@ const KEYS = ['motion', 'ownReminders', 'noCounts', 'toastStay', 'readAid'] as c
  * "Fokus-Hilfen": five switches, one complete sentence each, preselected "Ruhig" (the reading aid
  * stays as it is). Nothing is written until "Weiter"; then only the switches that changed.
  */
-export default function FocusStep({ registerCommit }: SetupStepProps) {
+export default function FocusStep({ registerCommit, setCanContinue }: SetupStepProps) {
   const s = t.setup.steps.focus;
   const [before, setBefore] = useState<FocusAids | null>(null);
   const [draft, setDraft] = useState<FocusAids | null>(null);
@@ -27,6 +27,11 @@ export default function FocusStep({ registerCommit }: SetupStepProps) {
       live = false;
     };
   }, []);
+
+  // "Weiter" waits until the switches are shown: a tap before would record the step without writing.
+  useEffect(() => {
+    setCanContinue(!!draft);
+  }, [setCanContinue, draft]);
 
   useEffect(() => {
     if (!before || !draft) return;
