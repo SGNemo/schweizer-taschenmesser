@@ -1012,6 +1012,8 @@ export const de = {
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
+    alertsOff: (saved: string) =>
+      `${saved}. Benachrichtigungen sind aus, die Erinnerung käme nur bei offener App. Einschalten: Einstellungen → Benachrichtigungen.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
