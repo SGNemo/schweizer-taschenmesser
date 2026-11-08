@@ -3094,8 +3094,6 @@ export const de = {
         nothingComing: 'Nichts mehr fällig',
         spent: (amount: string) => `bisher ausgegeben ${amount}`,
         open: 'Was noch kommt',
-        unmatched: 'Kontostand noch nicht mit der Bank abgeglichen',
-        setBalance: 'Kontostand eintragen',
       },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
@@ -3206,8 +3204,9 @@ export const de = {
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
     balanceToday: 'Kontostand heute laut Bank (optional)',
+    openingFromToday: 'Wird aus dem Kontostand heute berechnet.',
     balanceTodayHint:
-      'Steht in deiner Banking-App. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
+      'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',

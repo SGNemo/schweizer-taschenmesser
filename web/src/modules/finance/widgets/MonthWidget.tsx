@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { DEFAULT_CURRENCY, formatMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, KpiWidget, SensitiveValue } from '@/ui';
+import { Button, KpiWidget, SensitiveValue, useWidgetSize } from '@/ui';
 import { currenciesOf, filterByCurrency } from '../logic';
 import { monthGlance } from '../month';
 import { useFinanceData, useForecast } from '../summary';
@@ -14,18 +14,11 @@ export default function MonthWidget() {
   const data = all ? filterByCurrency(all, currency) : undefined;
   const forecast = useForecast(data, currency, 'month');
   const navigate = useNavigate();
+  const size = useWidgetSize();
   const m = t.finance.ext.month;
   const day = today();
   const noAccounts = Boolean(data && data.accounts.length === 0);
   const g = data && forecast ? monthGlance({ forecast, today: day, txs: data.txs }) : undefined;
-  // Only imported history on an account that starts at 0: the figure cannot match the bank yet.
-  const unmatched = Boolean(
-    data &&
-    data.txs.length > 0 &&
-    data.accounts.every((a) => a.openingBalanceMinor === 0) &&
-    g &&
-    g.freeMinor < 0,
-  );
   const body = (
     <KpiWidget
       loading={!g && !noAccounts}
@@ -36,25 +29,18 @@ export default function MonthWidget() {
       context={
         !g
           ? ''
-          : unmatched
-            ? m.unmatched
-            : [
-                g.comingCount > 0
-                  ? m.coming(formatMoney(g.comingMinor, currency))
-                  : m.nothingComing,
-                m.spent(formatMoney(g.spentMinor, currency)),
-              ].join(' · ')
+          : [
+              g.comingCount > 0 ? m.coming(formatMoney(g.comingMinor, currency)) : m.nothingComing,
+              m.spent(formatMoney(g.spentMinor, currency)),
+            ].join(' · ')
       }
     />
   );
   return (
     <>
       {g ? <SensitiveValue note={m.title}>{body}</SensitiveValue> : body}
-      {g && unmatched ? (
-        <Button size="sm" variant="ghost" onClick={() => void navigate('/finance?tab=accounts')}>
-          {m.setBalance}
-        </Button>
-      ) : g && g.comingCount > 0 ? (
+      {/* Like the balance card: the extra button only from size m; the head opens the module. */}
+      {size !== 's' && g && g.comingCount > 0 ? (
         <Button size="sm" variant="ghost" onClick={() => void navigate('/finance?tab=overview')}>
           {m.open}
         </Button>

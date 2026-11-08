@@ -34,8 +34,8 @@ en: Finance: “Export as CSV” now sits right above the bookings instead of be
 type: added
 area: finance
 breaking: false
-de: Neue Übersichtskarte „Diesen Monat“: frei bis Monatsende, was noch kommt (Abos, Rechnungen) und was bisher ausgegeben ist.
-en: New overview card “This month”: free until month end, what is still to pay (subscriptions, invoices) and what was spent so far.
+de: Neue Übersichtskarte „Diesen Monat“: frei bis Monatsende, was noch kommt (Abos, Rechnungen, Daueraufträge) und was bisher ausgegeben ist.
+en: New overview card “This month”: free until month end, what is still to pay (subscriptions, invoices, standing orders) and what was spent so far.
 ---
 
 ---

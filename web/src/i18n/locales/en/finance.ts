@@ -110,9 +110,7 @@ export const finance: Strings['finance'] = {
       coming: (amount: string) => `Still to pay ${amount}`,
       nothingComing: 'Nothing else due',
       spent: (amount: string) => `spent so far ${amount}`,
-      open: 'Still due',
-      unmatched: 'Balance not yet matched with the bank',
-      setBalance: 'Enter balance',
+      open: "What's still to pay",
     },
     settings: {
       bookSubscriptions: 'Book subscription charges as expenses',
@@ -223,8 +221,9 @@ export const finance: Strings['finance'] = {
   accountName: 'Account name',
   openingBalance: 'Opening balance',
   balanceToday: "Today's balance according to the bank (optional)",
+  openingFromToday: "Calculated from today's balance.",
   balanceTodayHint:
-    "Shown in your banking app. Nemo sets the opening balance so that today's balance matches.",
+    "Shown in your online banking. Nemo sets the opening balance so that today's balance matches.",
   deleteAccountHint: 'Also deletes all transactions of this account.',
   noAccounts: 'No accounts yet.',
   fromSubscription: 'Assigned to the subscription by a rule.',

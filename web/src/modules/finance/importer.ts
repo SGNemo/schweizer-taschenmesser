@@ -264,6 +264,7 @@ const runtime: ImporterRuntime = {
   async optionChoices(key) {
     if (key !== 'accountId') return [];
     // Opened from the setup assistant before the finance page ever ran: create the defaults.
+    // (After the user deleted every account on purpose, the import still asks for one first.)
     await ensureDefaults();
     const accounts = (await accountRepo.active().toArray()).sort((a, b) => a.order - b.order);
     return accounts.map((a) => ({ value: a.id, label: a.name }));

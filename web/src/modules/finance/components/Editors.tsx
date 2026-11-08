@@ -420,6 +420,7 @@ function AccountForm({
     ? (finance?.txs ?? []).filter((x) => x.accountId === existing.id)
     : [];
   const [balanceToday, setBalanceToday] = useState('');
+  const [todayError, setTodayError] = useState('');
   const [accountKind, setAccountKind] = useState<AccountKind | ''>(existing?.kind ?? '');
   const [error, setError] = useState('');
 
@@ -437,7 +438,7 @@ function AccountForm({
     const todayMinor =
       balanceToday.trim() === '' ? undefined : parseMoney(balanceToday, { allowNegative: true });
     if (balanceToday.trim() !== '' && todayMinor === undefined) {
-      setError(t.money.invalidAmount(formatMoneyInput(1250)));
+      setTodayError(t.money.invalidAmount(formatMoneyInput(1250)));
       return;
     }
     const openingBalanceMinor =
@@ -493,6 +494,7 @@ function AccountForm({
         }}
         // One number at a time: while "Kontostand heute" is filled, it decides the opening balance.
         disabled={balanceToday.trim() !== ''}
+        hint={balanceToday.trim() !== '' ? t.finance.openingFromToday : undefined}
         error={error}
       />
       {accountTxs.length > 0 ? (
@@ -503,8 +505,9 @@ function AccountForm({
           value={balanceToday}
           onChange={(e) => {
             setBalanceToday(e.target.value);
-            setError('');
+            setTodayError('');
           }}
+          error={todayError}
         />
       ) : null}
       <SelectField
