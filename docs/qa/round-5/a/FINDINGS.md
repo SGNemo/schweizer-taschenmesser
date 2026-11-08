@@ -44,7 +44,7 @@ Weitere Beobachtungen ohne Fix (geprüft, wörtlich korrekt oder schon bekannt):
 |---|---|---|
 | Aufgabe 1: Fortsetzen genau an der Pause | nein („Sync und Wiederherstellung“) | ja („Was passt zu dir?“) |
 | Aufgabe 1: Taps bis Einrichtung zu | 15, Assistent danach noch offen (volle Liste) | 11 (eine Frage mehr: Fokus-Hilfen) |
-| Aufgabe 1: Sekunden (Maschine) | 23 | 20 |
+| Aufgabe 1: Sekunden (Maschine) | 23 | 23 (eine Frage mehr) |
 | Aufgabe 2: Taps (3 ToDos + eins auf morgen) | 7 | 7 |
 | Aufgabe 2: Titel „Rechnung zahlen“ erhalten | nein („Zahlen“) | ja |
 | Aufgabe 2: Toast nach 7 s Tippen noch da | nein | ja („Ruhig“) |
