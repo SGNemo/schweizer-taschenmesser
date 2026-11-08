@@ -8,3 +8,4 @@ Rules live in root `CLAUDE.md` and [../RULES.md](../RULES.md); reporting path fo
 | [VAULT-EXTENSION.md](VAULT-EXTENSION.md) | 2026-10-01 | threat model of the browser extension and the vault bridge |
 | [FINDINGS-2026-10-01.md](FINDINGS-2026-10-01.md) | 2026-10-01 | open code-scanning/Dependabot alerts and their handling |
 | [LAUNCH-REVIEW-2026-10-06.md](LAUNCH-REVIEW-2026-10-06.md) | 2026-10-06 | read-only launch review of all security areas, privacy comparison, phase-2 plan |
+| [DEPS-AUDIT-2026-11-08.md](DEPS-AUDIT-2026-11-08.md) | 2026-11-08 | read-only review of dependency advisories on `develop` (cargo/npm audit), real vs. dev-only, proposals |
