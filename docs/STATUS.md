@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Agenten-Team v3 (`review/agents-v3`, PR offen): Prüfung der v2-Definitionen gegen die Managed-Agents-Doku (Befund 1: Lead ohne `multiagent`-Block), 20 Definitionen mit Modellen je Rolle, gemeinsamer Regelblock `SHARED.md`, `ant apply`-Dateien, Einrichtung und Session-Skript ([meta/agents-v3/README.md](meta/agents-v3/README.md)); gilt erst nach Svens Umstellung.
 E2E-Tempo (#509, gemergt; volle CI-Läufe auf develop 9–12 statt 23 min E2E): E2E-Jobs laufen nebeneinander (Smoke 3, Rest 8, Seed 2 Shards, Sync), Playwright-Schriften aus dem Cache, Seed einmal je Worker; `npm run e2e` = PR-Satz (Smoke + Sync, ~10 min), `e2e:full` = alles.
 Einstellungen auf Identität v3.1: Paket 1 (#508) und 2 (#531) gemergt – eigener Reiter „Einrichtung“, Schnellerfassung mit Live-Beispiel, keine Kartenstapel, höchstens ein gefüllter Knopf je Reiter; Paket 3 (`design/settings-nav`, PR offen): Suche oben in der Kategorie-Spalte, Einrichtung zeigt „n von m“ in der Liste ([settings-v3](design/settings-v3/ROUND-3.md)).
 Sprachen nur Deutsch + Englisch (`feat/lang-de-en`, PR offen): `ACTIVE_LOCALES = ['de', 'en']`, es/fr/pt-BR eingefroren statt gelöscht ([i18n/FROZEN.md](i18n/FROZEN.md)), Gerät mit eingefrorener Sprache fällt ruhig auf Englisch, Website leitet /es, /fr, /pt-br auf /en.

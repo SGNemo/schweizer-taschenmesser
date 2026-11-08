@@ -1,0 +1,14 @@
+{
+  "name": "nemo-agent-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Helper scripts for the Nemo Managed Agents team (validate, to-ant, session). Not part of the app; no licence list.",
+  "scripts": {
+    "validate": "node validate.mjs",
+    "to-ant": "node to-ant.mjs",
+    "session": "node session.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0"
+  }
+}
