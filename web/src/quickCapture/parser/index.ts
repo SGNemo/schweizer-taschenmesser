@@ -1,7 +1,8 @@
-import { extractAmount } from './amount';
+import { extractAmount, toCents } from './amount';
 import { extractDateTime } from './dates';
 import { extractEndTime } from './endtime';
 import { extractEstimate } from './estimate';
+import { parseFitness } from './fitness';
 import { extractRecurrence } from './recurrence';
 import { extractUntil } from './until';
 import type {
@@ -55,6 +56,19 @@ const SHORT_DAYS: Record<string, string> = {
   so: 'Sonntag',
 };
 const SHORT_DAY_RE = word(String.raw`(ab|bis|am|frist)\s+(mo|di|mi|do|fr|sa|so)\.?`);
+/**
+ * Outside plans a short weekday counts only where it cannot be a plain word (C03): after „am/ab/bis/Frist“, or
+ * right before a time with „Uhr“ or a colon („Do 14 Uhr“, „Di. 14:30“), written as a day (capital or
+ * dot). „So ein …“, „Fr. Müller“, „kommt so 15 Uhr“, „am so schönsten“ stay text.
+ */
+const SHORT_DAY_ANY_RE =
+  /(?<![\p{L}\d])(?:([Aa]m|[Aa]b|[Bb]is|[Ff]rist)\s+(Mo|Di|Mi|Do|Fr|Sa|So|mo\.|di\.|mi\.|do\.|fr\.|sa\.|so\.)\.?|()(Mo|Di|Mi|Do|Fr|Sa|So)\.?(?=\s+(?:um\s+)?\d{1,2}(?::\d{2}\s*(?:[Uu]hr)?|\s*[Uu]hr)(?![\p{L}\d])))(?![\p{L}\d])/u;
+/**
+ * A euro amount without currency word at the very start or end („Tanken 62,40“, C02): two decimals
+ * only. A clock-shaped value („14,30“) is no amount after a time word or next to a day (see below).
+ */
+const EDGE_CENTS_RE =
+  /^\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})(?=\s+\S)|(?<=\S\s+)(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})\s*$/iu;
 /** „ab Do“: the day is the earliest one, not a pin. */
 const FROM_WORD = word(String.raw`ab`);
 /** „bis Do“, „Frist Do“: a hard deadline in a plan capture. */
@@ -130,6 +144,9 @@ const score = (m: Map<CaptureType, number>, type: CaptureType, value: number): v
  * logs its input. Low confidence sets `needsChoice`; the caller must not pick silently then.
  */
 export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
+  // Fitness only where the caller can save it, and never over a one-letter prefix („t Döner 650 kcal“).
+  const fitness = opts.fitness && !PREFIX_RE.test(input) ? parseFitness(input, opts) : undefined;
+  if (fitness) return fitness;
   const defaultType = opts.defaultType ?? 'todo';
   const today = fromDate(opts.now);
   const notes = new Set<CaptureNote>();
@@ -145,6 +162,12 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     for (let m = SHORT_DAY_RE.exec(text); m; m = SHORT_DAY_RE.exec(text)) {
       const long = SHORT_DAYS[m[2]!.toLowerCase()]!;
       text = `${text.slice(0, m.index)}${m[1]} ${long}${text.slice(m.index + m[0].length)}`;
+    }
+  }
+  if (forced !== 'plan') {
+    for (let m = SHORT_DAY_ANY_RE.exec(text); m; m = SHORT_DAY_ANY_RE.exec(text)) {
+      const long = SHORT_DAYS[(m[2] ?? m[4])!.toLowerCase().replace('.', '')]!;
+      text = `${text.slice(0, m.index)}${m[1] ? `${m[1]} ` : ''}${long}${text.slice(m.index + m[0].length)}`;
     }
   }
   const plan =
@@ -193,7 +216,24 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
       : slowRecurrence
         ? extractAmount(scan, 'decimal')
         : undefined;
-  const money = amount ?? bare;
+  // Not when the text has a time („morgen 9 Uhr Zahnarzt 45,00“ stays an event). With a day, only a
+  // value that cannot be a clock time („gestern Tanken 62,40“ yes, „Training am Do 18,30“ no).
+  const edgeMatch =
+    amount || bare || forced || recurrence || dt.time !== undefined
+      ? null
+      : EDGE_CENTS_RE.exec(scan.t);
+  const edgeNum = edgeMatch ? (edgeMatch[1] ?? edgeMatch[2])! : undefined;
+  const timeShaped = edgeNum ? /^([01]?\d|2[0-3]),[0-5]\d$/.test(edgeNum) : false;
+  // „um 14,30“: the clock-shaped value right after a time word, at the end of the text.
+  const afterTimeWord =
+    timeShaped && /(?:^|\s)(?:um|bis|ab|gegen|von)\s+\d{1,2},\d{2}\s*$/i.test(scan.t);
+  const edgeCents =
+    edgeNum && !(timeShaped && (dt.date || afterTimeWord)) ? toCents(edgeNum) : undefined;
+  if (edgeCents) take(scan, EDGE_CENTS_RE);
+  const money =
+    amount ??
+    bare ??
+    (edgeCents ? { amountMinor: edgeCents, kind: 'expense' as const } : undefined);
   if (money) {
     fields.amountMinor = money.amountMinor;
     fields.kind = kw.income ? 'income' : money.kind;

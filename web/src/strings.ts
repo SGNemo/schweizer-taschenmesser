@@ -991,7 +991,7 @@ export const de = {
   quickCapture: {
     title: 'Schnell erfassen',
     inputLabel: 'Was möchtest du festhalten?',
-    placeholder: 'z. B. „morgen 15 Uhr Zahnarzt“',
+    placeholder: 'z. B. „Tanken 62,40, morgen 9 Uhr Kunde anrufen“',
     save: 'Speichern',
     book: 'Buchen',
     type: {
@@ -1007,6 +1007,8 @@ export const de = {
       birthday: 'Geburtstag',
       note: 'Notiz',
       plan: 'Plan',
+      meal: 'Mahlzeit',
+      workout: 'Training',
     },
     target: {
       todo: 'ToDos',
@@ -1020,6 +1022,8 @@ export const de = {
       birthday: 'Personen',
       note: 'Notizen',
       plan: 'Planer',
+      meal: 'Fitness',
+      workout: 'Fitness',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -1064,6 +1068,10 @@ export const de = {
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
+    alertsOff: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Einstellungen → Benachrichtigungen.`,
+    alertsBlocked: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Benachrichtigungen in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
@@ -1320,9 +1328,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintTitle: 'Hinweis, wenn Benachrichtigungen aus sind',
       leadHintHint:
-        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+        'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -1840,6 +1848,7 @@ export const de = {
       expiry: 'Ablauf',
       external: 'Extern',
       plan: 'Plan',
+      training: 'Training',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -3142,6 +3151,14 @@ export const de = {
         file: 'buchungen',
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      month: {
+        title: 'Diesen Monat',
+        free: 'Frei bis Monatsende',
+        coming: (amount: string) => `Kommt noch ${amount}`,
+        nothingComing: 'Nichts mehr fällig',
+        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        open: 'Was noch kommt',
+      },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
         bookSubscriptionsHelp:
@@ -3250,6 +3267,10 @@ export const de = {
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
+    balanceToday: 'Kontostand heute laut Bank (optional)',
+    openingFromToday: 'Wird aus „Kontostand heute laut Bank“ berechnet.',
+    balanceTodayHint:
+      'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
@@ -6308,6 +6329,8 @@ export const de = {
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
         'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
+      bankBalanceHint:
+        'Stimmt der Kontostand danach nicht mit deiner Bank überein? Trag ihn unter Finanzen → Konten als „Kontostand heute laut Bank“ ein.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
@@ -8226,6 +8249,136 @@ export const de = {
         sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
       },
     },
+  },
+  fitness: {
+    meta: {
+      name: 'Fitness',
+      description: 'Training und Essen grob festhalten: Einheiten, Sätze, Gewichte und kcal.',
+      quickAddSession: 'Fitness: Einheit eintragen',
+      quickAddMeal: 'Fitness: Mahlzeit eintragen',
+      widget: 'Fitness',
+      settings: {
+        nutrition: 'Kalorien erfassen',
+        nutritionHelp:
+          'Aus: Die Ansicht „Essen“ und die kcal-Zeile im Widget verschwinden. Deine Einträge bleiben.',
+        kcalGoal: 'Tagesziel kcal',
+        kcalGoalHelp: '0 = kein Ziel. Unter „Essen“ → „Tagesziel“ kannst du es grob ausrechnen.',
+        weekSessions: 'Einheiten pro Woche',
+        weekSessionsHelp: '0 = kein Ziel, das Widget zählt dann nur.',
+      },
+    },
+    tabs: { label: 'Ansicht', training: 'Training', food: 'Essen' },
+    addSession: 'Einheit eintragen',
+    addMeal: 'Mahlzeit eintragen',
+    editSession: 'Einheit bearbeiten',
+    editMeal: 'Mahlzeit bearbeiten',
+    repeat: (title: string) => `Wie letztes Mal: ${title}`,
+    repeated: (title: string) => `Für heute eingetragen: ${title}`,
+    untitled: 'Einheit',
+    figure: {
+      week: 'Diese Woche',
+      sessions: (n: number) => (n === 1 ? 'Einheit' : 'Einheiten'),
+      today: 'Heute',
+    },
+    empty: {
+      training: 'Noch nichts eingetragen. Eine Einheit reicht.',
+      trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
+      food: 'Noch keine Mahlzeit eingetragen.',
+      foodHint: 'Auch in der Schnellerfassung: „kcal 650 Döner“.',
+    },
+    list: {
+      training: 'Einheiten nach Tag',
+      food: 'Mahlzeiten nach Tag',
+      dayKcal: (kcal: string) => `${kcal} kcal`,
+      exercises: (n: number) => (n === 1 ? '1 Übung' : `${n} Übungen`),
+    },
+    line: {
+      setsReps: (sets: number, reps: number) => `${sets} × ${reps}`,
+      sets: (sets: number) => (sets === 1 ? '1 Satz' : `${sets} Sätze`),
+      reps: (reps: number) => `${reps} Wdh.`,
+      weight: (kg: string) => `${kg} kg`,
+      kcal: (kcal: string) => `${kcal} kcal`,
+    },
+    form: {
+      date: 'Datum',
+      time: 'Uhrzeit',
+      title: 'Titel',
+      titleHint: 'Zum Beispiel „Oberkörper“ (freiwillig)',
+      duration: 'Dauer in Minuten',
+      exercises: 'Übungen',
+      exercise: 'Übung',
+      sets: 'Sätze',
+      reps: 'Wdh.',
+      weight: 'kg',
+      minutes: 'Min',
+      addExercise: 'Übung hinzufügen',
+      removeExercise: (name: string) => `${name} entfernen`,
+      note: 'Notiz',
+      text: 'Was',
+      textHint: 'Zum Beispiel „Haferflocken mit Obst“',
+      kcal: 'kcal',
+      protein: 'Eiweiß in g',
+      carbs: 'Kohlenhydrate in g',
+      fat: 'Fett in g',
+      known: 'Schon einmal eingetragen',
+      invalid: 'Bitte prüfe die Angaben.',
+      emptySession: 'Trag eine Übung oder eine Dauer ein.',
+    },
+    builtIn: {
+      benchPress: 'Bankdrücken',
+      squat: 'Kniebeuge',
+      deadlift: 'Kreuzheben',
+      row: 'Rudern',
+      shoulderPress: 'Schulterdrücken',
+      pullUp: 'Klimmzüge',
+      pushUp: 'Liegestütze',
+      plank: 'Plank',
+      run: 'Laufen',
+      bike: 'Radfahren',
+      swim: 'Schwimmen',
+      stretch: 'Dehnen',
+    },
+    goal: {
+      open: 'Tagesziel',
+      title: 'Tagesziel kcal',
+      direct: 'kcal pro Tag',
+      directHint: '0 = kein Ziel',
+      calc: 'Ausrechnen',
+      calcIntro: 'Grobe Schätzung nach der Mifflin-St-Jeor-Formel.',
+      weight: 'Gewicht in kg',
+      height: 'Größe in cm',
+      age: 'Alter',
+      sex: 'Formel-Variante (Geschlecht)',
+      sexes: { male: 'männlich', female: 'weiblich', none: 'keine Angabe' },
+      activity: 'Alltag',
+      activities: {
+        sitting: 'meist sitzend',
+        light: 'leicht aktiv (1–3 × Sport pro Woche)',
+        moderate: 'mäßig aktiv (3–5 × pro Woche)',
+        active: 'sehr aktiv (6–7 × pro Woche)',
+        veryActive: 'körperliche Arbeit und Sport',
+      },
+      result: (kcal: string) => `Etwa ${kcal} kcal pro Tag`,
+      noResult: 'Gewicht, Größe und Alter eintragen (Erwachsene, 18–99 Jahre).',
+      hint: 'Grobe Schätzung, keine medizinische Beratung. Gewicht, Größe und Alter werden nicht gespeichert.',
+      take: 'Übernehmen',
+      saved: 'Tagesziel gespeichert.',
+    },
+    widget: {
+      week: 'Diese Woche',
+      weekDetail: (sessions: string, duration: string) =>
+        duration ? `${sessions} · ${duration}` : sessions,
+      sessions: (n: number) => (n === 1 ? '1 Einheit' : `${n} Einheiten`),
+      sessionsOf: (n: number, goal: number) => `${n} von ${goal} Einheiten`,
+      today: 'Heute',
+      kcal: (kcal: string) => `${kcal} kcal`,
+      kcalOf: (kcal: string, goal: string) => `${kcal} kcal von ${goal}`,
+      kcalPastGoal: (kcal: string, goal: string) => `${kcal} kcal · Ziel ${goal}`,
+      summary: (sessions: string) => `Diese Woche: ${sessions}`,
+      empty: 'Noch nichts diese Woche.',
+    },
+    calendar: { session: (title: string) => `Training: ${title}` },
+    saved: 'Gespeichert.',
   },
 } as const;
 

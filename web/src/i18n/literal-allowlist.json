@@ -22,6 +22,7 @@
   "src/quickCapture/parser/until.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/split.ts": "parser vocabulary for quick capture (German input: when-words that never make an entry alone)",
   "src/quickCapture/parser/corpus.ts": "German test sentences for the quick-capture parser",
+  "src/quickCapture/parser/fitness.ts": "parser vocabulary for quick capture (German input: day words, times and prefixes of fitness captures)",
   "src/connectors/google/mail.ts": "keywords to recognise German mails",
   "src/modules/chat/logic.ts": "prompt text sent to the model",
   "src/modules/chat/engine.ts": "system prompt sent to the model",

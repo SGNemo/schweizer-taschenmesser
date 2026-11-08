@@ -51,6 +51,15 @@ const manifest: ModuleManifest = {
       sizes: ALL_WIDGET_SIZES,
       component: () => import('./widgets/BalanceWidget'),
     },
+    {
+      id: 'month',
+      get title() {
+        return t.finance.ext.month.title;
+      },
+      defaultSize: 's',
+      sizes: ALL_WIDGET_SIZES,
+      component: () => import('./widgets/MonthWidget'),
+    },
   ],
   aiSchema,
   settings,

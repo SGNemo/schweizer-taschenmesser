@@ -70,7 +70,7 @@
     {
       "id": "planner",
       "area": "plan",
-      "status": "preview",
+      "status": "optional",
       "platforms": null,
       "icon": "chartGantt",
       "hue": "indigo",
@@ -364,6 +364,29 @@
       "description": {
         "de": "Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? Mit Ablaufdaten, Erinnerung vor Ablauf und „Auf die Einkaufsliste“, wenn etwas zur Neige geht.",
         "en": "What’s in the fridge, the cupboard and the freezer? With best-before dates, a reminder before they expire and “Add to shopping list” when something runs low."
+      }
+    },
+    {
+      "id": "fitness",
+      "area": "household",
+      "status": "preview",
+      "platforms": null,
+      "icon": "dumbbell",
+      "hue": "sky",
+      "hue2": "ocean",
+      "head": "fortschritt",
+      "widget": "fortschritt",
+      "name": {
+        "de": "Fitness",
+        "en": "Fitness"
+      },
+      "short": {
+        "de": "Training und Essen grob festhalten",
+        "en": "Keep a rough log of training and food"
+      },
+      "description": {
+        "de": "Training und Essen grob festhalten: Einheiten, Sätze, Gewichte und kcal.",
+        "en": "Keep a rough log of training and food: sessions, sets, weights and kcal."
       }
     },
     {
