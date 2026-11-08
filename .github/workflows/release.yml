@@ -29,7 +29,7 @@ on:
         default: ''
         type: string
       sign_only:
-        description: 'Rehearsal on main: run sign + verify with the real environment, publish nothing, upload nothing.'
+        description: 'Rehearsal on main: run sign (not verify) with the real environment, publish nothing, upload nothing.'
         required: false
         default: false
         type: boolean
@@ -463,7 +463,7 @@ jobs:
           }
           console.log("signer packages match the pinned integrity");
           '
-          ./node_modules/.bin/tauri --version
+          "$RUNNER_TEMP/signer/node_modules/.bin/tauri" --version
 
       - name: Sign the portable executable with the updater key
         env:
@@ -510,6 +510,96 @@ jobs:
       - name: Make sure no keystore file is left on the runner
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
+
+      # The audit's secret-value check, done here because this is the only job that has the values (the build
+      # jobs have none, `verify` has none). Plain Node built-ins, values only from this step's environment, only
+      # the NAME of a secret is ever printed. Looks into the raw files and into zip/APK entries (3 levels).
+      - name: Audit – no secret value in what was signed
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const zlib = require('node:zlib');
+          const MIN = 12;
+          const names = [
+            'TAURI_SIGNING_PRIVATE_KEY',
+            'TAURI_SIGNING_PRIVATE_KEY_PASSWORD',
+            'ANDROID_KEYSTORE_BASE64',
+            'ANDROID_KEYSTORE_PASSWORD',
+            'ANDROID_KEY_PASSWORD',
+          ];
+          function needles(value) {
+            const list = [Buffer.from(value, 'utf8')];
+            const compact = value.replace(/\s+/g, '');
+            if (/^[A-Za-z0-9+/=]{16,}$/.test(compact)) {
+              const decoded = Buffer.from(compact, 'base64');
+              if (decoded.length >= MIN) list.push(decoded);
+            }
+            for (const line of value.split(/\r?\n/)) {
+              if (line.trim().length >= MIN) list.push(Buffer.from(line.trim(), 'utf8'));
+            }
+            return list;
+          }
+          function zipEntries(buf) {
+            const out = [];
+            const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+            if (eocd < 0) return out;
+            const count = buf.readUInt16LE(eocd + 10);
+            let p = buf.readUInt32LE(eocd + 16);
+            for (let i = 0; i < count && buf.readUInt32LE(p) === 0x02014b50; i++) {
+              const method = buf.readUInt16LE(p + 10);
+              const size = buf.readUInt32LE(p + 20);
+              const nameLen = buf.readUInt16LE(p + 28);
+              const extraLen = buf.readUInt16LE(p + 30);
+              const commentLen = buf.readUInt16LE(p + 32);
+              const local = buf.readUInt32LE(p + 42);
+              const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
+              const raw = buf.subarray(start, start + size);
+              try {
+                const data = method === 0 ? raw : method === 8 ? zlib.inflateRawSync(raw) : Buffer.alloc(0);
+                out.push(data);
+              } catch {
+                /* an entry that cannot be inflated holds no readable secret */
+              }
+              p += 46 + nameLen + extraLen + commentLen;
+            }
+            return out;
+          }
+          function expand(data, depth = 0) {
+            const list = [data];
+            if (depth < 3 && data.length > 22 && data.readUInt32LE(0) === 0x04034b50) {
+              for (const e of zipEntries(data)) list.push(...expand(e, depth + 1));
+            }
+            return list;
+          }
+          const searchable = names
+            .map((name) => ({ name, value: (process.env[name] ?? '').trim() }))
+            .filter((s) => s.value.length >= MIN)
+            .map((s) => ({ name: s.name, needles: needles(s.value) }));
+          if (searchable.length !== names.length) {
+            console.error('::error::A signing secret is missing or too short for the audit.');
+            process.exit(1);
+          }
+          let bad = 0;
+          for (const file of fs.readdirSync('out')) {
+            for (const data of expand(fs.readFileSync(path.join('out', file)))) {
+              for (const s of searchable) {
+                if (s.needles.some((n) => data.includes(n))) {
+                  console.error(`::error::The value of ${s.name} appears in out/${file}.`);
+                  bad++;
+                }
+              }
+            }
+          }
+          if (bad > 0) process.exit(1);
+          console.log(`No secret value found in ${fs.readdirSync('out').length} signed file(s).`);
+          NODE
 
       # Rehearsal (sign_only): proves environment, secrets and signer; nothing is uploaded.
       - name: Rehearsal summary
