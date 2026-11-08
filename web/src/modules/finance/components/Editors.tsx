@@ -506,6 +506,7 @@ function AccountForm({
           onChange={(e) => {
             setBalanceToday(e.target.value);
             setTodayError('');
+            setError('');
           }}
           error={todayError}
         />

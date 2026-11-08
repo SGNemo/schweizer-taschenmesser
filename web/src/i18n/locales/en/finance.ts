@@ -221,7 +221,7 @@ export const finance: Strings['finance'] = {
   accountName: 'Account name',
   openingBalance: 'Opening balance',
   balanceToday: "Today's balance according to the bank (optional)",
-  openingFromToday: "Calculated from today's balance.",
+  openingFromToday: "Calculated from “Today's balance according to the bank”.",
   balanceTodayHint:
     "Shown in your online banking. Nemo sets the opening balance so that today's balance matches.",
   deleteAccountHint: 'Also deletes all transactions of this account.',

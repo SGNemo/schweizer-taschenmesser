@@ -3204,7 +3204,7 @@ export const de = {
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
     balanceToday: 'Kontostand heute laut Bank (optional)',
-    openingFromToday: 'Wird aus dem Kontostand heute berechnet.',
+    openingFromToday: 'Wird aus „Kontostand heute laut Bank“ berechnet.',
     balanceTodayHint:
       'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
