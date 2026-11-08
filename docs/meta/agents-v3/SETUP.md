@@ -1,8 +1,8 @@
-# Einrichtung des Agenten-Teams v3 – Schritt für Schritt (für Sven)
+# Einrichtung des Agenten-Teams v3.1 – Schritt für Schritt (für Sven)
 
 Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.md) hat die Links). Befehle, die die Sandbox nicht ausführen konnte, sind mit **„nicht hier geprüft“** markiert. Die Sandbox hat geprüft: `validate.mjs`, `to-ant.mjs`, `session.mjs --dry-run`, das SDK-Paket `@anthropic-ai/sdk@1.6.0` (Methoden `beta.sessions.create/update`, `events.stream/send`, `threads.list/archive`).
 
-Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 20 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
+Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 7 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
 ## 0 Windows (Git Bash / MinTTY)
 
@@ -21,10 +21,10 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
 ## 1 Console (`platform.claude.com`) – API-Key anlegen, sonst nur zum Nachsehen
 
 1. **API-Key:** `platform.claude.com/settings/keys` → „Create Key“ → Name `nemo-agents` → Wert einmal kopieren (die Seite zeigt ihn nur einmal), lokal als `ANTHROPIC_API_KEY` setzen (Shell-Profil oder Passwort-Manager; nie ins Repo). Der Key ist der eine Pfad für CLI, SDK und die curl-Aufrufe unten.
-2. **Agent-Builder** (`platform.claude.com/workspaces/default/agent-quickstart`): einstellbar laut Doku: Modell, System-Prompt (Volltext-Editor), MCP-Server per URL + Anmeldung, Tools (vorgefertigtes Toolset + MCP-Tools), Skills aus der Workspace-Bibliothek, Test-Session mit Event-Stream; die Console zeigt daneben den äquivalenten API-Aufruf. **Nicht** in der Console (laut Doku nur API/CLI): `multiagent`-Block, `effort`/`speed`, Repo-Mount, Session-Budget, Environment-Netzwerk-Details, Vault-Zuordnung je Session. Deshalb Weg 2 für alle 21 Agenten. Wichtig: in der Console angelegte Agenten kann `ant apply` **nicht übernehmen** (es legt Duplikate an) – also nichts von Hand anlegen, nur ansehen.
+2. **Agent-Builder** (`platform.claude.com/workspaces/default/agent-quickstart`): einstellbar laut Doku: Modell, System-Prompt (Volltext-Editor), MCP-Server per URL + Anmeldung, Tools (vorgefertigtes Toolset + MCP-Tools), Skills aus der Workspace-Bibliothek, Test-Session mit Event-Stream; die Console zeigt daneben den äquivalenten API-Aufruf. **Nicht** in der Console (laut Doku nur API/CLI): `multiagent`-Block, `effort`/`speed`, Repo-Mount, Session-Budget, Environment-Netzwerk-Details, Vault-Zuordnung je Session. Deshalb Weg 2 für alle 7 Agenten. Wichtig: in der Console angelegte Agenten kann `ant apply` **nicht übernehmen** (es legt Duplikate an) – also nichts von Hand anlegen, nur ansehen.
 3. **Sessions nachsehen:** Console → Agents → Sessions: Event-Stream, Threads je Subagent, Budget-Stand (`session.usage`), offene Tool-Bestätigungen.
 
-## 2 `ant` CLI – alle 21 Agenten + Environment
+## 2 `ant` CLI – alle 7 Agenten + Environment
 
 **Git Bash/MinTTY:** `gh auth login` nur mit `winpty gh auth login` (sonst hängt die Eingabe), `ant apply` immer mit `--yes` (die Rückfrage kann MinTTY nicht beantworten).
 
@@ -44,14 +44,28 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
    node scripts/agents/to-ant.mjs --check
    ant apply --dry-run docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md   # nicht hier geprüft
    ```
-   Der Dry-Run zeigt den Plan: 1 Environment, 21 Agenten; `nemo-lead.md` verweist mit `./nemo-po.md` usw. auf die 19, `nemo-auditor.md` auf dieselben ohne `nemo-merge` (18; ein Audit mergt nie) – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 19, dann Lead und Auditor mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig. Lead und Auditor stehen in **keiner** Liste: ein Agent mit `multiagent`-Block kann laut Doku kein Subagent sein (Tiefe eine Ebene, sonst 400).
+   Der Dry-Run zeigt den Plan: 1 Environment, 7 Agenten; `nemo-lead.md` verweist mit `./nemo-builder.md` usw. auf die 5, `nemo-auditor.md` auf dieselben ohne `nemo-merge` (4; ein Audit mergt nie) – `ant apply` legt sie **in Abhängigkeitsreihenfolge** an (erst die 5, dann Lead und Auditor mit den echten IDs). Eine Reihenfolge von Hand ist nicht nötig. Lead und Auditor stehen in **keiner** Liste: ein Agent mit `multiagent`-Block kann laut Doku kein Subagent sein (Tiefe eine Ebene, sonst 400).
 4. **Anwenden** (nicht hier geprüft):
    ```bash
    ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
    ```
    Ergebnis: `claude-lock.json` im Repo-Root mit je Datei `kind`, `id` (`agent_…`, `env_…`), `version`, `hash`. **Committen** (Branch + PR wie immer; keine Secrets darin). `session.mjs` sucht darin die Einträge, deren Schlüssel auf `docs/meta/agents-v3/nemo-lead.md` bzw. `environment.yaml` enden (`cat claude-lock.json` zeigt die Schlüssel; beide Schreibweisen, mit und ohne `./`, werden erkannt – geprüft mit einer nachgebauten Lock-Datei, nicht mit einer echten). Findet es sie nicht: IDs als `NEMO_LEAD_AGENT_ID` und `NEMO_ENV_ID` setzen oder `--agent`/`--env` übergeben.
-5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen ihrer Subagenten (Lead 19, Auditor 18 ohne `nemo-merge`; Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
+5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen ihrer Subagenten (Lead 5, Auditor 4 ohne `nemo-merge`; Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
 6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. nach dem Umbenennen des Ordners beim Umstieg).
+
+## 2a Umstieg v3 → v3.1 (21 → 7 Agenten; nicht hier geprüft, kein `ant` in der Sandbox)
+
+Nach dem Merge dieses PRs, im Repo-Root auf frischem `develop`:
+
+```bash
+node scripts/agents/validate.mjs && node scripts/agents/to-ant.mjs --check     # ✓ 7 / ✓ 8
+ant apply --yes docs/meta/agents-v3/nemo-builder.md docs/meta/agents-v3/nemo-ops.md docs/meta/agents-v3/nemo-docs.md docs/meta/agents-v3/nemo-reviewer.md docs/meta/agents-v3/nemo-merge.md
+ant apply --yes docs/meta/agents-v3/nemo-lead.md docs/meta/agents-v3/nemo-auditor.md   # zuletzt: sie pinnen die Versionen der fünf
+ant apply --prune --dry-run docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md   # Plan lesen: genau die 16 alten Agenten (a11y, architekt, backend, creativity, deps, design, devops, extension, frontend, i18n, native, perf, po, qa, security, triage) dürfen als „remove“ erscheinen, nichts sonst
+ant apply --prune docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
+```
+
+Dann `claude-lock.json` committen (kleiner PR; keine Secrets darin). Erster Lauf: `node scripts/agents/session.mjs --class S "Prüfe die offenen PRs auf Merge-Bereitschaft, merge nichts"` – der Lead nennt im ersten Satz die Klasse.
 
 ## 3 Vault und GitHub
 
@@ -60,7 +74,7 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
    - `main`: Restrict deletions, Block force pushes, Require a pull request before merging **mit 1 Required approval** (der PAT handelt als Sven und kann die eigene PR nicht approven – so kann kein Agent eine develop→main-PR selbst durchmergen; Release-PRs approvest du von einem zweiten Login aus oder hebst die Regel kurz auf), Require status checks (CI-Jobs).
    - `develop`: Require a pull request before merging mit **0 required approvals** (sperrt direkte Pushes, der API-Merge von `nemo-merge` geht weiter; Approvals vom Token-Inhaber zählen auf eigenen PRs ohnehin nicht), Require status checks, Block force pushes.
    - **Tag-Ruleset nur `refs/tags/v*`**: Restrict creations, updates, deletions – `release.yml` läuft auf jedem `v*.*.*`-Tag; ohne diese Sperre könnte jeder Agent mit Contents: write ein Release auslösen. **Nicht** `dev-preview*`: `dev-preview.yml` verschiebt diesen Tag bei jedem grünen `develop`-Push selbst (`PATCH git/refs/tags/dev-preview`, `force=true`) und ersetzt die Assets (`--clobber`); eine Sperre dort bricht die Dev-Preview. Auf `dev-preview` löst kein Workflow aus, das Risiko ist klein.
-   - **Immutable releases vorerst aus lassen:** sie würden auch das rollende Pre-Release `dev-preview` einfrieren (Asset-Austausch scheitert). Erst sinnvoll, wenn die Dev-Preview als Draft veröffentlicht oder anders gelöst ist – Punkt für `nemo-devops`.
+   - **Immutable releases vorerst aus lassen:** sie würden auch das rollende Pre-Release `dev-preview` einfrieren (Asset-Austausch scheitert). Erst sinnvoll, wenn die Dev-Preview als Draft veröffentlicht oder anders gelöst ist – Punkt für `nemo-ops` (Modus `ci`).
    - Folge für dich: mit dem `develop`-Ruleset pushen auch deine normalen Claude-Code-Chats nicht mehr direkt nach `develop`; Notizen liegen deshalb nicht mehr in `scribble/` im Repo, sondern im Session-Ordner `/workspace/scribble/` und im privaten Repo SGNemo/nemo-scribble (SHARED.md „Scribble“; entschieden 2026-11-08, `docs/decisions/meta.md`).
 3. **Vault anlegen** (Console → Vaults, oder API; nicht hier geprüft):
    ```bash
@@ -82,45 +96,49 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
 ```bash
 cd scripts/agents && npm i && cd ../..          # einmalig: @anthropic-ai/sdk
  export ANTHROPIC_API_KEY=… GITHUB_TOKEN=… NEMO_VAULT_ID=vlt_…   # führendes Leerzeichen + HISTCONTROL=ignorespace hält die Werte aus der History; besser aus dem Passwort-Manager laden
-node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
-node scripts/agents/session.mjs --budget 15 --title "Paket 2" --file auftrag.md
+node scripts/agents/session.mjs --routing-check                      # erst prüfen: Claude Code oder Agenten?
+node scripts/agents/session.mjs --class S "Prüfe und merge PR #560"
+node scripts/agents/session.mjs --class M --title "Berichte" --file auftrag.md
 ```
 
-Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget in USD** (Standard 10 $, `--budget` ändert es, über 30 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `15` → `"1500"`), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
+Was passiert: Session mit Lead-Agent + Environment (IDs aus `claude-lock.json`), Repo-Mount auf `develop`, Vault, **Budget aus der Klasse** (`--class S|M|L` = 5/10/15 $, Standard S; `--budget` überschreibt, über 15 $ nur mit `--yes-expensive`; nachträglich nicht hinzufügbar; intern Cent, `5` → `"500"`; die erste Nachricht beginnt mit einer Kopfzeile „Budget-Klasse · Session-Budget“, die der Lead prüft), Titel; dann wird die Nachricht gesendet und der Event-Stream in die Konsole geschrieben: Lead-Texte, Tool-Aufrufe (kurz), Delegationen (`→ nemo-frontend: …`), Berichte (`← nemo-frontend: …`), Nutzung (`list cost` in Cent). Ende, wenn die Session `idle` wird:
 
 - `end_turn`: der Lead ist fertig – Antwort steht in der Konsole (3 Punkte + PR-Links). Laufen dann noch Kind-Threads, wartet das Skript weiter (Zeile „wartet auf 2 Kind-Threads (docs, deps)“, alle 30 s neu geprüft) und endet erst, wenn der Lead nach dem letzten Kind-Bericht erneut `end_turn` meldet – oder wenn alle Kinder fertig sind und die Session zwei Prüfungen lang still bleibt. `--no-wait`: Ende beim ersten `end_turn` (altes Verhalten).
 - `requires_action`: ein Tool wartet auf Freigabe (sollte mit `always_allow` nicht vorkommen) → `node scripts/agents/session.mjs --session sess_… --auto-approve` (ohne Nachricht: gibt die wartenden Aufrufe frei und streamt weiter) oder in der Console freigeben.
 - `budget_reached`: Session pausiert mit Stand; siehe 5 und „Was kostet was“.
 
-Ab 70 % des Budgets druckt das Skript eine Warnung; am Ende jedes Laufs steht eine `usage`-Zeile (Gesamt laut Session, Aufschlüsselung Lead / Kind-Threads / Advisor). `threads sess_…` zeigt Tokens und Kosten je Thread. `budget sess_… <USD>` zeigt erst die bisherige Nutzung und fragt nach (ohne Terminal: `--yes`).
+Ab 70 % des Budgets druckt das Skript eine Warnung; am Ende jedes Laufs steht eine Kostenzeile (Gesamt laut Session, Aufschlüsselung Lead / Kind-Threads / Advisor, dazu die Klasse und ein Hinweis, wenn die Kosten darüber lagen). `threads sess_…` zeigt Tokens und Kosten je Thread (laut API ohne Laufzeitkosten; meldet kein Thread Kosten, gilt die Gesamtzeile). `budget sess_… <USD>` zeigt die bisherige Nutzung und ändert nur mit `--yes`.
 
-Schlägt schon das Anlegen mit `model_not_budgetable` fehl, hat `claude-fable-5-1` (creativity, auditor) keinen Listenpreis: in `nemo-creativity.json` `claude-opus-5-5` eintragen, `to-ant.mjs`, `ant apply` für creativity, lead **und** auditor, neu starten. Betrifft es eine Auditor-Session, zusätzlich zum creativity-Wechsel oben in `nemo-auditor.json` ebenso `claude-opus-5-5` eintragen und `nemo-auditor.md` neu anwenden (der Lead braucht dafür kein neues `apply`).
+Schlägt das Anlegen einer Auditor-Session mit `model_not_budgetable` fehl, hat `claude-fable-5-1` keinen Listenpreis: in `nemo-auditor.json` `claude-opus-5-5` eintragen (und in `validate.mjs` `ROSTER`), `to-ant.mjs`, `ant apply --yes docs/meta/agents-v3/nemo-auditor.md` (der Lead braucht dafür kein neues `apply`).
 
 Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `claude-lock.json`), `--env/--vault` überschreiben die IDs, `--no-wait` siehe oben, `--checkout` den Branch, `--verbose` zeigt Tool-Ergebnisse, `--dry-run` zeigt nur den Request (Token maskiert). Konsole: zum Nachsehen `platform.claude.com` → Sessions.
 
 ### Was kostet was
 
-Richtwerte (Listenpreis, Lead auf Sonnet mit Opus-Advisor):
+Richtwerte (Listenpreis, Lead auf Sonnet mit Opus-Advisor; Klassen und Ablehnungen: [../WORK-ROUTING.md](../WORK-ROUTING.md)):
 
-| Auftrag                                   | Budget  |
-| ----------------------------------------- | ------- |
-| Doku-PR                                   | 1–3 $   |
-| Fix-PR mit Review                         | 5–10 $  |
-| Runde mit mehreren PRs und Konsolidierung | 20–30 $ |
+| Auftrag                                                      | Klasse | Budget   |
+| ------------------------------------------------------------ | ------ | -------- |
+| PRs prüfen und mergen, CHATS aufräumen, eine Prüfung         | S      | 2–5 $    |
+| Mehrere Berichte konsolidieren, Auditor auf einen PR         | M      | 5–10 $   |
+| Runde mit bis zu 4 Delegationen (nur nachts/unbeaufsichtigt) | L      | ≤ 15 $   |
+| alles darüber                                                | –      | zerlegen |
+
+**Claude Code läuft über das Abo – Bauarbeit (Features, Module, Refactorings, Konzepte, Debugging) immer dort**, nie im Agenten-Team (Monatsbudget Agenten 200 $).
 
 Regel: **nicht erhöhen, neu starten.** Eine Session = ein Auftrag; reicht das Budget nicht, steht im letzten Bericht des Leads, wo er aufgehört hat – den Rest als neue Session mit eigenem Budget. Eine Session als Chat weiterzuführen lässt den Kontext jedes Threads wachsen (der Grund für 215 Mio. Tokens / 82 $ in einer Session am 2026-11-08). Erhöhen nur, um einen fast fertigen Schritt landen zu lassen.
 
-Claude-Code-Chats (claude.ai/code, Desktop-App) laufen über das Abo statt über API-Listenpreise und bleiben für Bauarbeit die günstigere Wahl; das Agenten-Team lohnt sich für parallele, gut geschnittene Aufträge.
+Das Agenten-Team lohnt sich nur für klar umrissene Koordinations- und Prüfaufträge mit „fertig heißt …“ in einem Satz.
 
 ### Auditor starten
 
-Einmalig anlegen (nur diese Datei; der Lead bleibt unberührt, nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 18 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
+Wird mit §2a angelegt. Einzeln (nicht hier geprüft): `ant apply --yes docs/meta/agents-v3/nemo-auditor.md`, dann `claude-lock.json` committen (PR). Löst `ant` die Pfad-Verweise auf die 4 so nicht auf, `ant apply --yes docs/meta/agents-v3/nemo-*.md` (unveränderte Agenten bleiben gleich).
 
 ```bash
-node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"
+node scripts/agents/session.mjs --agent auditor --class M "Prüfe PR #535"
 ```
 
-Eigene Session, Auditor als Primär-Agent; er fragt die 18 (alle außer `nemo-merge`) nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
+Eigene Session, Auditor als Primär-Agent; er fragt die 4 (builder, reviewer, ops, docs; nie `nemo-merge`) nur zum Nachprüfen, ändert nichts, mergt nicht und kommentiert auf GitHub nur, wenn du es in der Nachricht ausdrücklich sagst. Ergebnis: `AUDIT-pr535.md` in den Session-Outputs + Berichtsblock in der Konsole. Nachfragen: `--session sess_… --agent auditor "…"` (`--agent` setzt dabei nur die Konsolen-Beschriftung). Zwischen Lead und Auditor trägst du die Berichte selbst.
 
 ### Erster Testlauf (Budget 2 USD)
 
@@ -143,7 +161,7 @@ Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiv
 ## 5 Wiederanlauf
 
 - **Fortsetzen / Antwort:** `node scripts/agents/session.mjs --session sess_… "Plan freigegeben"` – nur Freigaben und Antworten auf Fragen des Leads; ein neues Paket oder Thema = neue Session (§4 „Was kostet was“). Verlauf und Sandbox bleiben (Sandbox-Zustand 30 Tage ab Erstellung).
-- **Budget erhöhen** (Ausnahme, §4: „nicht erhöhen, neu starten“): `node scripts/agents/session.mjs budget sess_… 15` – zeigt die bisherige Nutzung und fragt nach (ohne Terminal `--yes`, über 30 $ `--yes-expensive`); muss über dem verbrauchten Betrag liegen; eine pausierte Session läuft von selbst weiter. Entfernen (einmalig, nicht rückgängig) nur per API (`budget: null`).
+- **Budget erhöhen** (Ausnahme, §4: „nicht erhöhen, neu starten“): `node scripts/agents/session.mjs budget sess_… 15` – zeigt die bisherige Nutzung, ändert nur mit `--yes` (über 15 $ zusätzlich `--yes-expensive`); muss über dem verbrauchten Betrag liegen; eine pausierte Session läuft von selbst weiter. Entfernen (einmalig, nicht rückgängig) nur per API (`budget: null`).
 - **Unterbrechen:** `node scripts/agents/session.mjs interrupt sess_…`, dann neue Nachricht.
 - **Threads:** `node scripts/agents/session.mjs threads sess_…` zeigt Primär- und Kind-Threads (Grenze 25 gleichzeitig); `--archive-idle` archiviert fertige Kind-Threads (gibt Plätze frei, der Lead kann sie dann nicht mehr nachfragen).
 - **Agenten aktualisieren:** Schritt 2.5; danach neue Session (laufende behalten die alte Konfiguration).

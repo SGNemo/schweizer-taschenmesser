@@ -135,3 +135,27 @@ Die vier Fragen mit der jeweils gewählten Option (Empfehlung zuerst, so überno
 2. **Lead-Modell:** (Empfohlen) Opus 5.5 high ohne Advisor – oder Sonnet 5.5 high mit Opus-Advisor (billiger je Turn, aber jede Konsultation schickt den ganzen Thread; Advisor-Antworten können im Event-Stream redigiert sein [MA-multi]).
 3. **Workflows für den Lead:** (Empfohlen) aus – oder an mit Prompt-Grenze „nur auf Svens Wort, ≤ 5 Agenten je Run“.
 4. **Fable für creativity:** (Empfohlen) ja, `claude-fable-5-1` ist verfügbar; falls Session-Create `model_not_budgetable` meldet, auf Opus high zurück.
+
+## v3.1 – warum sieben (2026-11-08)
+
+Ausgangslage: Budget 200 $/Monat; eine Lead-Session mit 9 Delegationen kostete 82 $ (215 Mio. Tokens, 2 h). Kosten treibt die Zahl der Threads (jeder liest SHARED.md, CLAUDE.md, Bereichsdoku, macht `npm ci`, wächst mit jeder Rückfrage), nicht die eigentliche Arbeit. Bauarbeit wandert deshalb in Claude-Code-Chats (Abo), das Team behält nur klar umrissene Koordinations- und Prüfaufträge ([../WORK-ROUTING.md](../WORK-ROUTING.md)).
+
+| v3 (21)                                              | v3.1 (7)                                       | Warum zusammen                                                                                         |
+| ---------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| lead, po, triage                                     | `nemo-lead`                                    | Priorisieren und CHATS-Pflege brauchen den Kontext, den der Lead schon hat; kein eigener Thread        |
+| frontend, backend, native, extension, i18n, qa-Fixes | `nemo-builder`                                 | Bereichs-CLAUDE.md nach Pfad laden statt Rolle; ein Thread pro Auftrag statt einer pro Bereich         |
+| reviewer, security, design, a11y                     | `nemo-reviewer` (Linsen)                       | ein Diff, ein Lesedurchgang; Security-Linse ist Pflicht und im Urteil belegt (`Security lens applied`) |
+| devops, deps, perf                                   | `nemo-ops` (Modi)                              | gleiche Werkzeuge (CI-Läufe, Lock-Dateien, Messungen), Modus im Auftrag                                |
+| docs                                                 | `nemo-docs` (+ Website-Texte, Triage-Tabellen) | Haiku reicht für Doku und Tabellen                                                                     |
+| merge, auditor                                       | unverändert                                    | Merge-Gate und unabhängige Prüfung bleiben getrennt                                                    |
+| creativity, architekt                                | entfallen                                      | Ideen = Fable-Chat in Claude Code; Verträge plant ein Claude-Code-Chat, der Lead lehnt ab              |
+
+Erwartete Kind-Threads je Auftragsklasse (Grenze im Lead-Prompt: 4):
+
+| Klasse   | Beispiel                                     | Threads | Typisch                         |
+| -------- | -------------------------------------------- | ------- | ------------------------------- |
+| S ≤ 5 $  | PR prüfen und mergen; CHATS aufräumen        | 1–2     | reviewer → merge, oder nur docs |
+| M ≤ 10 $ | Berichte konsolidieren; Fix + Review + Merge | 2–3     | builder → reviewer → merge      |
+| L ≤ 15 $ | Runde (nachts) mit mehreren kleinen PRs      | ≤ 4     | builder, ops, reviewer, merge   |
+
+Follow-ups (Nachbesserung nach Review, zweite Docs-Korrektur) gehen in den offenen Thread desselben Agenten und zählen nicht als neuer Thread.
