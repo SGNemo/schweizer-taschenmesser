@@ -3,7 +3,7 @@
 Report: `docs/qa/round-5/b/` (PERSONA, FINDINGS, FOLLOWUP, MESSAGE, shots, invented Sparkasse CSVs).
 
 - New widget `finance:month` („Diesen Monat“); `home/layout.ts` `CALM_STAND_IN`: shows in the calm view only when the Heute card (`todos:next`) is missing. Specs that list the home widget order now include it (`e2e/core.spec.ts`).
-- `finance/repo.ts` `ensureAnAccount()`: the bank importer's account choice always has one (default „Girokonto“). Other importers that need an account can reuse it.
+- The bank importer runs `ensureDefaults()` in `optionChoices`, so an import before the finance page was ever opened has the default „Girokonto“.
 - `finance/categoryHints.ts` `keywordCategory`: whole-word table for well-known payees → default category ids; only a fallback after the payee's own history. Extend the table there, not in the importer.
 - `bookingsCsv(…, { decimal, bom })`: the app passes the region's decimal mark and a BOM.
 - `logic.ts` `openingForBalance`: account editor field „Kontostand heute laut Bank“.
