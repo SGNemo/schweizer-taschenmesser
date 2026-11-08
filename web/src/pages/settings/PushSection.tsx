@@ -60,11 +60,7 @@ export function PushSection() {
         ) : null}
         <Actions>
           {state === 'off' || state === 'denied' ? (
-            <Button
-              variant="primary"
-              disabled={busy || state === 'denied'}
-              onClick={() => void run(enablePush)}
-            >
+            <Button disabled={busy || state === 'denied'} onClick={() => void run(enablePush)}>
               {t.notifications.push.enable}
             </Button>
           ) : null}

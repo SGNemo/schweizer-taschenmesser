@@ -3,7 +3,7 @@ import type { NotificationPermissionState } from '@/core/notifications/service';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Button, Card, SettingsGroup } from '@/ui';
-import { Actions, StateBanner } from './ConnectParts';
+import { StateBanner } from './ConnectParts';
 import { GameModeCard } from './GameModeCard';
 import { PushSection } from './PushSection';
 import styles from './settings.module.css';
@@ -26,10 +26,9 @@ function NotificationsCard() {
           title={t.notifications[permission]}
           line={introText()}
           titleTestId="notification-status"
-        />
-        {permission === 'default' || permission === 'granted' ? (
-          <Actions>
-            {permission === 'default' ? (
+          // Settings identity v3.1: the state and its one action in one card.
+          action={
+            permission === 'default' ? (
               <Button
                 variant="primary"
                 onClick={async () =>
@@ -38,7 +37,7 @@ function NotificationsCard() {
               >
                 {t.notifications.enable}
               </Button>
-            ) : (
+            ) : permission === 'granted' ? (
               <Button
                 onClick={() =>
                   void getPlatform().notifications.show({
@@ -50,9 +49,9 @@ function NotificationsCard() {
               >
                 {t.notifications.test}
               </Button>
-            )}
-          </Actions>
-        ) : null}
+            ) : undefined
+          }
+        />
       </div>
     </Card>
   );

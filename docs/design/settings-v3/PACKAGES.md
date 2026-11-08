@@ -2,7 +2,7 @@
 
 Package 1 (blocks, Einrichtung tab, Schnellerfassung, large tabs via blocks): [ROUND-1.md](ROUND-1.md), branch `design/settings-identity`. Each package below is its own branch and PR from fresh `develop`.
 
-## Package 2 – the remaining tabs (`design/settings-identity-2`)
+## Package 2 – the remaining tabs (`design/settings-identity-2`) – built, see [ROUND-2.md](ROUND-2.md)
 
 **DE (Prompt):**
 
