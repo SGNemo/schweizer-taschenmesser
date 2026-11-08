@@ -4,6 +4,7 @@
 | --------------- | ----------------- | ------ | ---------- | ------------ |
 | nemo-a11y       | claude-sonnet-5-5 | medium | review     | 3941         |
 | nemo-architekt  | claude-opus-5-5   | high   | write      | 4324         |
+| nemo-auditor    | claude-fable-5-1  | high   | review     | 6757         |
 | nemo-backend    | claude-sonnet-5-5 | medium | write      | 3902         |
 | nemo-creativity | claude-fable-5-1  | high   | review     | 4767         |
 | nemo-deps       | claude-sonnet-5-5 | medium | write      | 4370         |

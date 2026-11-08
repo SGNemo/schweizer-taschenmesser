@@ -29,6 +29,14 @@
       "remote_hash": "909a8b62f9a115d57c56b38a9e7a0900",
       "stamp": "1"
     },
+    "./docs/meta/agents-v3/nemo-auditor.md": {
+      "kind": "agent",
+      "id": "agent_01JBG7U9B9MthEWZ2LwmUphK",
+      "version": "1",
+      "hash": "17d4ae3a3f67bc733b4e352b32e46f99",
+      "remote_hash": "28e2dc27f45e4c8f345646b012b7bcd4",
+      "stamp": "1"
+    },
     "./docs/meta/agents-v3/nemo-backend.md": {
       "kind": "agent",
       "id": "agent_01LmfXxSmt1xShE8aECjtvCD",
