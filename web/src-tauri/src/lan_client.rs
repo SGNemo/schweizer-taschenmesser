@@ -52,6 +52,9 @@ pub struct DataKeyDto {
     version: u32,
     /// base64 of the 32-byte key.
     key: String,
+    /// Hex of the hub's static public key: the web app passes it with every request, so a round of
+    /// a previous pairing never reaches a newly paired PC.
+    hub: String,
 }
 
 fn code(e: ClientError) -> String {
@@ -138,9 +141,19 @@ fn hub_entry<R: Runtime>(app: &AppHandle<R>) -> Result<(PublicKey, SocketAddrV4,
     Ok((PublicKey::from_bytes(hub), addr, entry.name))
 }
 
+/// Only a missing pairing is "unknown device"; a keystore that does not answer right now is a calm,
+/// retried `network` (it must never look like "the PC unpaired this device").
+fn missing_or_retry(e: String) -> ClientError {
+    if e == "not-paired" {
+        ClientError::UnknownDevice
+    } else {
+        ClientError::Network
+    }
+}
+
 fn open<R: Runtime>(app: &AppHandle<R>) -> Result<Session, ClientError> {
-    let (hub, addr, name) = hub_entry(app).map_err(|_| ClientError::UnknownDevice)?;
-    let key = stored_key(app).map_err(|_| ClientError::UnknownDevice)?;
+    let (hub, addr, name) = hub_entry(app).map_err(missing_or_retry)?;
+    let key = stored_key(app).map_err(missing_or_retry)?;
     Session::open(addr, &key, &hub, &name)
 }
 
@@ -149,6 +162,30 @@ fn open<R: Runtime>(app: &AppHandle<R>) -> Result<Session, ClientError> {
 fn tell_hub_goodbye<R: Runtime>(app: &AppHandle<R>) {
     if let Ok(session) = open(app) {
         let _ = session.unpair();
+    }
+}
+
+/// `unpair` to a hub given by its stored entries (used for the previous pairing after a new one).
+fn goodbye_with(key_text: &str, hub_text: &str) {
+    let Ok(raw) = STANDARD.decode(key_text.as_bytes()).map(Zeroizing::new) else {
+        return;
+    };
+    if raw.len() != 32 {
+        return;
+    }
+    let mut secret = Zeroizing::new([0u8; 32]);
+    secret.copy_from_slice(&raw);
+    let (Ok(key), Ok(entry)) = (
+        StaticKey::from_secret_bytes(secret),
+        serde_json::from_str::<HubEntry>(hub_text),
+    ) else {
+        return;
+    };
+    let (Some(hub), Ok(addr)) = (hex32(&entry.hub), entry.addr.parse::<SocketAddrV4>()) else {
+        return;
+    };
+    if let Ok(s) = Session::open(addr, &key, &PublicKey::from_bytes(hub), &entry.name) {
+        let _ = s.unpair();
     }
 }
 
@@ -184,22 +221,42 @@ pub async fn lan_client_pair<R: Runtime>(
         let state = app.state::<LanClient>();
         let mut link = state.link.lock().map_err(|_| "internal")?;
         link.close();
-        // a previous pairing (another PC, or this one before "Neu koppeln"): say goodbye with the old key
-        tell_hub_goodbye(&app);
+        // the previous pairing (another PC, or this one before "Neu koppeln"), kept until the new one
+        // is stored for good
+        let previous = (get(&app, KEY_NAME), get(&app, HUB_NAME));
         let entry = HubEntry {
             hub: to_hex(paired.hub_key.as_bytes()),
             addr: paired.addr.to_string(),
             name: client::hello_name(&name),
         };
-        set(&app, KEY_NAME, STANDARD.encode(&key.to_secret_bytes()[..]))?;
-        set(
-            &app,
-            HUB_NAME,
-            serde_json::to_string(&entry).map_err(|_| "internal")?,
-        )?;
+        let stored = serde_json::to_string(&entry)
+            .map_err(|_| "internal".to_owned())
+            .and_then(|json| {
+                set(&app, KEY_NAME, STANDARD.encode(&key.to_secret_bytes()[..]))?;
+                set(&app, HUB_NAME, json)
+            });
+        if let Err(e) = stored {
+            // the new PC trusts a key this device cannot keep: undo it there, put the old entries back
+            if let Ok(s) = Session::open(paired.addr, &key, &paired.hub_key, &entry.name) {
+                let _ = s.unpair();
+            }
+            match previous {
+                (Ok(Some(k)), Ok(Some(h))) => {
+                    let _ = set(&app, KEY_NAME, k);
+                    let _ = set(&app, HUB_NAME, h);
+                }
+                _ => forget(&app),
+            }
+            return Err(e);
+        }
+        // now say goodbye to the previous hub with the previous key (best effort, once)
+        if let (Ok(Some(k)), Ok(Some(h))) = previous {
+            goodbye_with(&k, &h);
+        }
         Ok(DataKeyDto {
             version: paired.data_key_version,
             key: STANDARD.encode(&paired.data_key[..]),
+            hub: entry.hub,
         })
     })
     .await
@@ -225,10 +282,20 @@ pub fn lan_client_pair_cancel<R: Runtime>(app: AppHandle<R>) {
 pub async fn lan_client_request<R: Runtime>(
     app: AppHandle<R>,
     body: String,
+    hub: String,
 ) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<LanClient>();
+        // during a pairing, and for a round that belongs to another pairing: nothing goes out (calm)
+        if state.pairing.load(Ordering::SeqCst) {
+            return Err("network".to_owned());
+        }
         let mut link = state.link.lock().map_err(|_| "internal")?;
+        match hub_entry(&app) {
+            Ok((pinned, _, _)) if to_hex(pinned.as_bytes()) == hub => {}
+            Ok(_) => return Err("network".to_owned()),
+            Err(e) => return Err(code(missing_or_retry(e))),
+        }
         let answer = link
             .request(body.as_bytes(), &mut || open(&app))
             .map_err(code)?;

@@ -161,6 +161,11 @@ export interface LanHubDataKey {
   key: string;
 }
 
+/** A device's pairing result: the data key plus the hub it is pinned to (hex public key). */
+export interface LanPairing extends LanHubDataKey {
+  hub: string;
+}
+
 export interface LanHubDevice {
   /** Hex of the device's static key. */
   id: string;
@@ -207,10 +212,11 @@ export interface LanClientService {
   /** Opens the camera and returns the text of one QR code (rejects with `cancelled`, `camera-denied` or `failed`). */
   scan(): Promise<string>;
   /** Pairs with the hub of `qr`; `onCode` gets the 6-digit code to show while the PC asks. */
-  pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanHubDataKey>;
+  pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanPairing>;
   /** Stops waiting for the confirmation on the PC. */
   cancelPair(): Promise<void>;
-  request(body: string): Promise<string>;
+  /** One sync request to the pinned hub `hub`; refused (`network`) during a pairing or for another hub. */
+  request(body: string, hub: string): Promise<string>;
   /** Tells the hub once if it is reachable right now, then forgets hub and key on this device. */
   unpair(): Promise<void>;
 }

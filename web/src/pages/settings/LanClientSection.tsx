@@ -207,8 +207,17 @@ function clientBanner(
     if (error === 'revoked') return { title: l.revoked, tone: 'attention', repair: true };
     if (error === 'decrypt' || error === 'no-key')
       return { title: l.cannotRead, tone: 'attention', repair: true };
+    // the same cases the badge does not call "waiting": each with its next step
+    if (error === 'clock') return { title: l.clockOff, line: l.clockLine, tone: 'attention' };
+    if (error === 'server')
+      return { title: l.pcUnexpected, line: l.pcUnexpectedLine, tone: 'attention' };
     // not reachable is the normal state away from home: neutral, with the one helpful question
-    return { title: l.waitingForPc, line: l.isNemoRunning, tone: 'neutral' };
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    return {
+      title: l.waitingForPc,
+      line: offline ? l.offlineLine : l.isNemoRunning,
+      tone: 'neutral',
+    };
   }
   // paired, but no round got through yet: say what is true
   if (!lastSyncAt) return { title: l.pairedWith, line: l.waitingForPc, tone: 'neutral' };

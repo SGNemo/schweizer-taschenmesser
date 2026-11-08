@@ -1,5 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
-import type { LanClientService, LanHubDataKey } from '../types';
+import type { LanClientService, LanPairing } from '../types';
 
 /** Rust answers with a short code string on failure; keep it as the error message. */
 const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> =>
@@ -39,10 +39,10 @@ export function createLanClient(supported: boolean): LanClientService {
     pair(qr, name, onCode) {
       const channel = new Channel<string>();
       channel.onmessage = (code) => onCode(code);
-      return call<LanHubDataKey>('lan_client_pair', { qr, name, onCode: channel });
+      return call<LanPairing>('lan_client_pair', { qr, name, onCode: channel });
     },
     cancelPair: () => call<void>('lan_client_pair_cancel'),
-    request: (body) => call<string>('lan_client_request', { body }),
+    request: (body, hub) => call<string>('lan_client_request', { body, hub }),
     unpair: () => call<void>('lan_client_unpair'),
   };
 }

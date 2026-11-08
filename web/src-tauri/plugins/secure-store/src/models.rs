@@ -143,7 +143,10 @@ mod tests {
         assert!(validate_webview_name("lan-client:static-key").is_err());
         assert!(validate_webview_name("lan-client:hub").is_err());
         assert!(validate_webview_name("ai-key:groq").is_ok());
-        assert!(validate_name("lan-client:hub").is_ok(), "Rust itself still may");
+        assert!(
+            validate_name("lan-client:hub").is_ok(),
+            "Rust itself still may"
+        );
     }
 
     #[test]

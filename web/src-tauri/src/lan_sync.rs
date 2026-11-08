@@ -524,8 +524,10 @@ pub fn lan_pair_confirm(
             .host
             .confirm_deliver(attempt, &code, &mut |wire| deliverer.deliver(attempt, wire));
         if result.is_err() {
-            // a wrong code or a lost attempt: the device must not wait for its own timeout
+            // a wrong code or a lost attempt: neither device may wait for its own timeout (the id the
+            // UI passed, and the attempt the hub still showed as waiting)
             deliverer.abort(attempt);
+            core.end_waiting_connection();
         }
         let _ = wake.send(());
         result.map_err(|e| match e {
@@ -542,8 +544,9 @@ pub fn lan_pair_confirm(
 #[tauri::command]
 pub fn lan_pair_cancel(state: State<'_, LanSync>) -> Result<(), String> {
     with_core(&state, |core, wake| {
-        core.host.cancel();
+        // the waiting attempt is read before the window closes (a supervisor round clears it after)
         core.end_waiting_connection();
+        core.host.cancel();
         let _ = wake.send(());
         Ok(())
     })

@@ -208,6 +208,10 @@ describe('a phone paired with the hub PC', () => {
 
     expect((await loadSyncConfig(p.db))?.kind).toBe('lanClient');
     expect((await loadSyncConfig(p.db))?.key?.extractable).toBe(false);
+    // the first round runs in the background (the dialog closes at once)
+    await vi.waitFor(async () =>
+      expect((await p.repo.active().toArray()).map((e) => e.title).sort()).toHaveLength(2),
+    );
     expect((await p.repo.active().toArray()).map((e) => e.title).sort()).toEqual([
       'Vom Handy',
       'Vom PC',
@@ -284,7 +288,7 @@ function createFakeLanClientForTest() {
       const confirmed = new Promise<void>((r) => (resolveConfirm = r));
       onCode('482913');
       await confirmed;
-      return dataKey;
+      return { ...dataKey, hub: 'ab'.repeat(32) };
     },
     cancelPair: async () => undefined,
     request: async (body) => {

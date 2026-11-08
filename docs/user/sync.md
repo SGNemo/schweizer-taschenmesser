@@ -10,11 +10,11 @@ The Windows app can be the sync point itself. Phone and PC sync as soon as both 
 2. **Phone:** *Settings → Sync → Pair with PC*, allow the camera, scan the code.
 3. Both show the same 6-digit code. On the PC: *Pair*.
 
-Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; *More settings* has *Renew key* and *Turn off home-network sync*. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet.
+Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; *More settings* has *Renew key* and *Turn off home-network sync*. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
 
-An own server (below) is still possible: on the desktop and the phone it sits folded under *Own server (advanced)*. One way per device: disconnect one before using the other.
+Your own server (below) still works: on the desktop and the phone it sits folded under *Own server (advanced)*. One way per device: disconnect one before using the other.
 
-## Own sync server
+## Your own sync server
 
 A small Node server (Fastify + SQLite) with token authentication. Per field it only stores the value with the
 greatest timestamp ("last change wins"); merging happens in the app. Run it in your LAN or via

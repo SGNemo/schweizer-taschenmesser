@@ -8,6 +8,8 @@
 import { createFakeLanHubParts } from './fakeLanHub';
 import type { LanClientService, LanHubDataKey } from './types';
 
+const FAKE_HUB = 'ab'.repeat(32);
+
 const E2E_FLAG = 'tm-e2e-lanclient';
 
 export const noLanClient: LanClientService = {
@@ -55,11 +57,12 @@ export function createFakeLanClient(): LanClientService {
       });
       paired = true;
       refused = false;
-      return key ?? dataKey;
+      return { ...(key ?? dataKey), hub: FAKE_HUB };
     },
     cancelPair: async () => fail?.(new Error('cancelled')),
-    request: async (body) => {
+    request: async (body, pinned) => {
       if (!paired) throw new Error('not-paired');
+      if (pinned !== FAKE_HUB) throw new Error('network');
       if (refused) throw new Error('unknown-device');
       return hub.request(body);
     },

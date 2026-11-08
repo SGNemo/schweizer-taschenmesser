@@ -11,7 +11,12 @@ import { allManifests } from '@/core/modules/registry';
 import { SelfHostedAdapter, normalizeServerUrl, type VaultInfo } from './adapters/selfHosted';
 import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
 import { getPlatform } from '@/core/platform';
-import type { LanClientService, LanHubDataKey, LanHubService } from '@/core/platform/types';
+import type {
+  LanClientService,
+  LanHubDataKey,
+  LanHubService,
+  LanPairing,
+} from '@/core/platform/types';
 import { makeVaultCheck, verifyVaultCheck } from './crypto';
 import { purgeConflicts } from './conflicts';
 import { runSync } from './engine';
@@ -61,6 +66,8 @@ export interface LanClientSyncConfig {
   kind: 'lanClient';
   key: CryptoKey;
   keyVersion: number;
+  /** The pinned hub (hex public key): every request names it, so no round reaches another PC. */
+  hub: string;
 }
 
 /** The server API the service needs beyond the SyncAdapter contract. */
@@ -205,7 +212,9 @@ async function adapterFor(
   if (config.kind === 'lanClient') {
     const client = deps.lanClient?.();
     if (!client?.supported) throw new SyncError('unsupported');
-    return { adapter: new LanClientAdapter(client, config.keyVersion), key: config.key };
+    const hub = config.hub;
+    const transport = { request: (body: string) => client.request(body, hub) };
+    return { adapter: new LanClientAdapter(transport, config.keyVersion), key: config.key };
   }
   const hub = deps.lanHub?.();
   if (!hub?.supported) throw new SyncError('unsupported');
@@ -695,7 +704,7 @@ export async function pairWithPc(
   if (!client?.supported) return { ok: false, reason: 'unsupported' };
   const existing = await loadSyncConfig(deps.database);
   if (existing && existing.kind !== 'lanClient') return { ok: false, reason: 'other-path' };
-  let dataKey: LanHubDataKey;
+  let dataKey: LanPairing;
   try {
     dataKey = await client.pair(qr.trim(), name, onCode);
   } catch (e) {
@@ -713,7 +722,12 @@ export async function pairWithPc(
       // still one path per device: an own server connected while the PC was asking wins
       const now = await loadSyncConfig(deps.database);
       if (now && now.kind !== 'lanClient') return false;
-      await saveSyncConfig(deps.database, { kind: 'lanClient', key, keyVersion: dataKey.version });
+      await saveSyncConfig(deps.database, {
+        kind: 'lanClient',
+        key,
+        keyVersion: dataKey.version,
+        hub: dataKey.hub,
+      });
       // a new hub store: cursor 0, everything local goes up once
       await deps.storage.setEpoch(undefined);
       await deps.storage.setCursor(0);
@@ -724,10 +738,13 @@ export async function pairWithPc(
   }
   if (!stored) {
     await client.unpair().catch(() => undefined);
+    // Rust already replaced the previous pairing; an old lanClient config would point at nothing
+    if (existing?.kind === 'lanClient') await disconnect(deps).catch(() => undefined);
     return { ok: false, reason: 'failed' };
   }
   useSyncStatus.getState().set({ failures: 0, retryAt: undefined, errorAt: undefined });
-  await syncNow(deps);
+  // the dialog closes now; the first round shows its progress in the status line
+  void syncNow(deps);
   return { ok: true };
 }
 
