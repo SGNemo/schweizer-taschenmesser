@@ -9,10 +9,16 @@ import { describe, expect, it } from 'vitest';
  * and first-party actions do. This test is a tripwire for honest mistakes; the real boundary is the environment's
  * branch/tag policy in the repository settings.
  *
- * Every workflow and composite action is scanned. `TEMPORARY` lists files that still use repository-level
- * secrets and are converted in their own PR; take a file off the list when its signing jobs are split.
+ * Every workflow and composite action is scanned. `TEMPORARY` names, per file, the one exemption it still needs
+ * (repository-level secrets of a group, or `secrets: inherit`) until its own PR converts it; a stale-entry test
+ * fails as soon as a file no longer uses its exemption, so the entry must then be deleted.
  */
-const TEMPORARY = new Set(['dev-preview.yml', 'ci.yml']);
+const TEMPORARY: Record<string, { names?: RegExp; inherit?: boolean }> = {
+  // Dev-Preview: the dev updater key pair and the (still shared) Android keystore; never the stable updater key.
+  'dev-preview.yml': { names: /^(android_[a-z0-9_]+|tauri_dev_[a-z0-9_]+)$/ },
+  // ci.yml hands the repository secrets to dev-preview.yml with `secrets: inherit`; nothing else.
+  'ci.yml': { inherit: true },
+};
 const githubDir = resolve(__dirname, '../../../.github');
 
 /** Signing secret group -> the environment that must be bound by every job that reads it (lower case). */
@@ -95,7 +101,8 @@ function secretNames(text: string): string[] {
 }
 /** Ways to reach every secret at once or by computed name. */
 const BULK =
-  /toJSON\(\s*secrets\s*\)|secrets\s*\[\s*(?!['"])|secrets\s*:\s*inherit|\bsecrets\s*\}\}/i;
+  /toJSON\(\s*secrets\s*\)|secrets\s*\[\s*(?!['"])|secrets\s*:\s*inherit|\bsecrets\s*\}\}|secrets\s*\.\s*\*/i;
+const INHERIT = /secrets\s*:\s*inherit/i;
 
 const all = sources();
 const jobsOf = (s: Source) => s.jobs.map((j) => ({ file: s.file, ...j }));
@@ -118,9 +125,10 @@ describe('signing environments', () => {
 
   it('reads a signing secret only in a job bound to the matching environment', () => {
     const wrong: string[] = [];
-    for (const job of allJobs.filter((j) => !TEMPORARY.has(j.file))) {
+    for (const job of allJobs) {
       for (const name of new Set(secretNames(job.body))) {
         const group = GROUPS.find((g) => g.names.test(name));
+        if (TEMPORARY[job.file]?.names?.test(name)) continue;
         if (group && job.environment?.toLowerCase() !== group.env) {
           wrong.push(`${job.file}:${job.name} reads ${name} without environment ${group.env}`);
         }
@@ -141,7 +149,6 @@ describe('signing environments', () => {
 
   it('keeps secrets out of workflow-level `env:` and out of composite actions', () => {
     const leaks = all
-      .filter((s) => !TEMPORARY.has(s.file) || s.file.startsWith('actions/'))
       .filter(
         (s) =>
           secretNames(s.header).some((n) => n !== 'github_token') ||
@@ -152,12 +159,34 @@ describe('signing environments', () => {
     expect(leaks).toEqual([]);
   });
 
-  it('never passes all secrets at once or by computed name', () => {
+  it('never passes all secrets at once or by computed name (only ci.yml may inherit)', () => {
     const bulk = all
-      .filter((s) => !TEMPORARY.has(s.file))
-      .filter((s) => BULK.test(s.header + s.jobs.map((j) => j.body).join('\n')))
+      .filter((s) => {
+        let text = s.header + s.jobs.map((j) => j.body).join('\n');
+        if (TEMPORARY[s.file]?.inherit) text = text.replace(new RegExp(INHERIT, 'gi'), '');
+        return BULK.test(text);
+      })
       .map((s) => s.file);
     expect(bulk).toEqual([]);
+  });
+
+  it('has no stale TEMPORARY entry (remove the file from the list once it needs no exemption)', () => {
+    const stale = Object.entries(TEMPORARY)
+      .filter(([file, rule]) => {
+        const src = all.find((s) => s.file === file);
+        if (!src) return true;
+        const text = src.header + src.jobs.map((j) => j.body).join('\n');
+        const usesNames =
+          rule.names !== undefined &&
+          src.jobs.some(
+            (j) =>
+              j.environment === undefined && secretNames(j.body).some((n) => rule.names!.test(n)),
+          );
+        const usesInherit = rule.inherit === true && INHERIT.test(text);
+        return !usesNames && !usesInherit;
+      })
+      .map(([file]) => file);
+    expect(stale).toEqual([]);
   });
 
   it('runs nothing from the repository, from an artifact or from the network in an environment job', () => {
@@ -182,6 +211,10 @@ describe('signing environments', () => {
       ['GITHUB_PATH', /GITHUB_PATH/],
       ['secrets: inherit', /secrets:\s*inherit/],
       ['curl | sh', /\|\s*(ba)?sh\b/],
+      ['eval', /\beval\b/],
+      ['dot-sourcing', /(^|[;&|(\s])\.\s+\S/],
+      ['npm exec', /\bnpm\s+(exec|x)\b/],
+      ['require of a local file', /require\(\s*['"][./]/],
     ];
     const found = envJobs.flatMap((j) =>
       forbidden.filter(([, re]) => re.test(j.body)).map(([what]) => `${j.file}:${j.name} ${what}`),

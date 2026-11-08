@@ -451,7 +451,7 @@ jobs:
           npm init -y > /dev/null
           npm install --ignore-scripts --no-audit --no-fund "@tauri-apps/cli@$TAURI_CLI_VERSION"
           node -e '
-          const lock = require("./package-lock.json").packages;
+          const lock = JSON.parse(require("node:fs").readFileSync("package-lock.json", "utf8")).packages;
           const want = {
             "node_modules/@tauri-apps/cli": process.env.TAURI_CLI_INTEGRITY,
             "node_modules/@tauri-apps/cli-linux-x64-gnu": process.env.TAURI_CLI_LINUX_INTEGRITY,
@@ -578,13 +578,20 @@ jobs:
             }
             return list;
           }
-          const searchable = names
-            .map((name) => ({ name, value: (process.env[name] ?? '').trim() }))
-            .filter((s) => s.value.length >= MIN)
-            .map((s) => ({ name: s.name, needles: needles(s.value) }));
-          if (searchable.length !== names.length) {
-            console.error('::error::A signing secret is missing or too short for the audit.');
-            process.exit(1);
+          // Same rule as web/scripts/lib/audit.ts: a value shorter than MIN is not searched (it would match
+          // anything). A secret that is missing altogether stops the run; a short one is named in a warning.
+          const searchable = [];
+          for (const name of names) {
+            const value = (process.env[name] ?? '').trim();
+            if (value.length === 0) {
+              console.error(`::error::${name} is empty.`);
+              process.exit(1);
+            }
+            if (value.length < MIN) {
+              console.log(`::warning::${name} is shorter than ${MIN} characters and is not searched for.`);
+              continue;
+            }
+            searchable.push({ name, needles: needles(value) });
           }
           let bad = 0;
           for (const file of fs.readdirSync('out')) {
