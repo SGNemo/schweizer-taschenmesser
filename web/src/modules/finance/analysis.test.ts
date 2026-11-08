@@ -477,6 +477,8 @@ describe('export', () => {
       { decimal: ',', bom: true },
     );
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    expect(csv.slice(1).split(/\r?\n/)[1]).toBe('2026-03-09;Checking;Bäckerei Müller;;Expense;-1234,56;');
+    expect(csv.slice(1).split(/\r?\n/)[1]).toBe(
+      '2026-03-09;Checking;Bäckerei Müller;;Expense;-1234,56;',
+    );
   });
 });
