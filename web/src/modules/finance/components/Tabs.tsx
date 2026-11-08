@@ -127,14 +127,18 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {advanced || narrowed || more ? (
-        <div className={styles.toolbarRow}>
+      {/* The export sits next to the list it exports (B07); the filters stay in the "Erweitert" layer. */}
+      <div className={styles.toolbarRow}>
+        {advanced || narrowed || more ? (
           <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
             {t.finance.ext.filter.more}
             {narrowed ? ' •' : ''}
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+        <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
+          {t.finance.ext.export.button}
+        </Button>
+      </div>
       {more ? (
         <div className={styles.filterBox}>
           <div className={styles.toolbarRow}>
@@ -145,13 +149,6 @@ export function TransactionsTab({
             >
               <Icon name="repeat" size={18} />
               {t.finance.ext.transfer.button}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => void exportCsv()}
-              disabled={inMonth.length === 0}
-            >
-              {t.finance.ext.export.button}
             </Button>
           </div>
           <div className={styles.split}>

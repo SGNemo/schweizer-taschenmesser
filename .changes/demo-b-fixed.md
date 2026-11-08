@@ -21,3 +21,11 @@ breaking: false
 de: Finanzen: Der Kontoauszug-Import schlägt für bekannte Läden, Miete, Strom, Tanken und Gehalt gleich eine Kategorie vor; Budgets zeigen danach den Stand.
 en: Finance: the bank import suggests a category for well-known shops, rent, energy, fuel and salary, so budgets show their state right after.
 ---
+
+---
+type: changed
+area: finance
+breaking: false
+de: Finanzen: „Als CSV exportieren“ steht jetzt direkt über den Buchungen, nicht mehr hinter „Mehr Felder anzeigen“.
+en: Finance: “Export as CSV” now sits right above the bookings instead of behind “Show more fields”.
+---
