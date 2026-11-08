@@ -84,6 +84,32 @@ const GH_OFF_ALL = [
   "create_or_update_file",
   "delete_file",
 ];
+// per-role GitHub MCP deny lists on top of GH_OFF_ALL: read-only roles and the lead open no PRs/branches/issues;
+// nemo-merge creates nothing and writes no reviews (it could otherwise post its own MERGE-READY record)
+const GH_NO_WRITES = [
+  "create_pull_request",
+  "update_pull_request",
+  "update_pull_request_branch",
+  "create_branch",
+  "issue_write",
+  "sub_issue_write",
+];
+const GH_OFF_ROLE = {
+  // write roles post no reviews: a COMMENT review starting `MERGE-READY` is part of the merge gate (reviewer only)
+  "nemo-builder": ["pull_request_review_write"],
+  "nemo-docs": ["pull_request_review_write"],
+  "nemo-ops": ["pull_request_review_write"],
+  "nemo-lead": [...GH_NO_WRITES, "pull_request_review_write"],
+  "nemo-reviewer": GH_NO_WRITES,
+  "nemo-auditor": GH_NO_WRITES,
+  "nemo-merge": [
+    "create_pull_request",
+    "create_branch",
+    "issue_write",
+    "sub_issue_write",
+    "pull_request_review_write",
+  ],
+};
 const SECRET =
   /(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-ant-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abp]-[A-Za-z0-9-]{10,})/;
 const PLACEHOLDER =
@@ -97,24 +123,60 @@ const COORDINATORS = ["nemo-auditor", "nemo-lead"];
 const ROSTER_EXCLUDE = { "nemo-auditor": ["nemo-merge"] };
 // the five hard limits are one template for every agent except the lead; role name, the merge line (nemo-merge only)
 // and the read-only clause (review roles + auditor) are the per-role parts, each checked exactly
-const READ_ONLY = new Set([
-  "nemo-po",
-  "nemo-creativity",
-  "nemo-design",
-  "nemo-a11y",
-  "nemo-security",
-  "nemo-reviewer",
-  "nemo-auditor",
-]);
+const READ_ONLY = new Set(["nemo-reviewer", "nemo-auditor"]);
+// v3.1 roster (docs/meta/agents-v3/README.md): exactly these seven, each with its model and effort
+const ROSTER = {
+  "nemo-auditor": ["claude-fable-5-1", "high"],
+  "nemo-builder": ["claude-sonnet-5-5", "medium"],
+  "nemo-docs": ["claude-haiku-5-5", "medium"],
+  "nemo-lead": ["claude-sonnet-5-5", "high"],
+  "nemo-merge": ["claude-haiku-5-5", "low"],
+  "nemo-ops": ["claude-sonnet-5-5", "medium"],
+  "nemo-reviewer": ["claude-opus-5-5", "medium"],
+};
+// prompt length caps (token diet): 7 000 chars, the lead 8 000, the builder 4 353
+const MAX_SYSTEM = { "nemo-lead": 8000, "nemo-builder": 4353 }; // builder ≤ the old nemo-frontend prompt
+const MAX_SYSTEM_DEFAULT = 7000;
+// the one routing source; every prompt names it, every prompt except the lead's (German) carries this exact gate
+const ROUTING_FILE = "docs/meta/WORK-ROUTING.md";
+const ROUTING_LINE =
+  "**Routing gate:** check every delegation against `docs/meta/WORK-ROUTING.md` first; if it does not fit, answer `blocked – out of routing: <reason> · next: <step>` and start no work.";
+// the security-lens gate lives in two prompts; these exact pieces must stay (SHARED.md "Light path and security lens")
+const REQUIRED_TEXT = {
+  "nemo-reviewer": [
+    "light-path allowlist",
+    "`Security lens applied: <paths>`",
+    "`git diff --name-status -M origin/develop...HEAD`",
+    "In an auditor session (primary agent `nemo-auditor`) you only answer with evidence",
+  ],
+  "nemo-lead": [
+    "Du schreibst nie ein Review oder einen Kommentar mit `MERGE-READY` oder `Security lens applied`.",
+  ],
+  "nemo-merge": [
+    "light-path allowlist",
+    "`Security lens applied: <paths>`",
+    "`previous_filename`",
+    "you never write a review or comment carrying `MERGE-READY` yourself",
+  ],
+};
+// the lead's advisor (Opus) for decisions; the auditor runs without one
+const ADVISOR = {
+  "nemo-lead": { type: "enabled", model: "claude-opus-5-5" },
+  "nemo-auditor": { type: "disabled" },
+};
 // the auditor also copies its report to the session outputs (Sven downloads it from there)
 const READ_ONLY_EXTRA = {
   "nemo-auditor": " and the report copy in `/mnt/session/outputs/`",
 };
+// first hard-limits line, pinned: "never main" is scoped to this repo; the one exception is the agent's own notes
+// on main of the private notes repo (SHARED.md "Scribble"); force-push and history rewrite stay banned everywhere
+const NEVER_LINE =
+  '- Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").';
 const MERGE_LINE = {
   merge:
     "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
   other:
-    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR).",
+    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main`.",
 };
 function hardLimitsOf(a) {
   const i = a.system.indexOf("## Hard limits");
@@ -123,9 +185,14 @@ function hardLimitsOf(a) {
   const expect =
     (a.name === "nemo-merge" ? MERGE_LINE.merge : MERGE_LINE.other) +
     (READ_ONLY.has(a.name)
-      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}.`
+      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`${READ_ONLY_EXTRA[a.name] ?? ""}, except your own scribble notes (SHARED.md "Scribble").`
       : "");
   const block = a.system.slice(i);
+  if (!block.includes("\n" + NEVER_LINE + "\n"))
+    return {
+      error:
+        "first line of the hard limits is not the pinned NEVER_LINE (repo scope + notes-repo exception)",
+    };
   if (!block.includes(expect + "\n"))
     return {
       error:
@@ -194,13 +261,36 @@ for (const file of files) {
     continue;
   }
   if (a.system.length > 100000) bad(file, "system > 100000 chars");
+  const cap = MAX_SYSTEM[a.name] ?? MAX_SYSTEM_DEFAULT;
+  if (a.system.length > cap)
+    bad(file, `system prompt ${a.system.length} chars > ${cap} (token diet)`);
+  if (!a.system.includes(ROUTING_FILE))
+    bad(file, `system does not name ${ROUTING_FILE} (routing gate)`);
+  if (a.name !== "nemo-lead" && !a.system.includes(ROUTING_LINE + "\n"))
+    bad(file, "system lacks the pinned routing-gate line (ROUTING_LINE)");
+  for (const t of REQUIRED_TEXT[a.name] ?? [])
+    if (!a.system.includes(t))
+      bad(file, `security-lens text missing from the prompt: ${t}`);
+  if (!(a.name in ROSTER))
+    bad(file, `"${a.name}" is not one of the seven v3.1 agents`);
+  else {
+    const [wantModel, wantEffort] = ROSTER[a.name];
+    const got = typeof a.model === "string" ? { id: a.model } : a.model;
+    const gotEffort =
+      typeof got?.effort === "string" ? got.effort : got?.effort?.type;
+    if (got?.id !== wantModel || gotEffort !== wantEffort)
+      bad(
+        file,
+        `model ${got?.id} · ${gotEffort} – the v3.1 roster says ${wantModel} · ${wantEffort}`,
+      );
+  }
   if (!a.system.includes("docs/meta/agents-v3/SHARED.md"))
     bad(file, "system does not reference SHARED.md");
   if (a.name !== "nemo-lead") {
     const hl = hardLimitsOf(a);
     if (!hl) bad(file, 'no "## Hard limits" block');
     else if (hl.error) bad(file, hl.error);
-    else if (file === "nemo-qa.json")
+    else if (file === "nemo-builder.json")
       hardRef = { file, hl: hl.norm }; // fixed template file, compared after the loop
     else hardBlocks.push({ file, hl: hl.norm });
   }
@@ -329,6 +419,9 @@ for (const file of files) {
         for (const n of GH_OFF_ALL)
           if (!off.has(n))
             bad(file, `github tool "${n}" must be disabled for every role`);
+        for (const n of GH_OFF_ROLE[a.name] ?? [])
+          if (!off.has(n))
+            bad(file, `github tool "${n}" must be disabled for ${a.name}`);
         if (!off.has("merge_pull_request")) mergeCapable.push(a.name);
       }
     } else if (t.type === "custom") {
@@ -369,7 +462,7 @@ for (const file of files) {
   for (const [k, v] of Object.entries(md))
     if (k.length > 64 || String(v).length > 512)
       bad(file, `metadata "${k}" too long`);
-  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
+  // multiagent: only the coordinators, one level, ≤ 20 distinct, inline off → predefined required, workflows off
   if (a.multiagent) {
     withMultiagent.push(a.name);
     if (!COORDINATORS.includes(a.name))
@@ -397,10 +490,16 @@ for (const file of files) {
     const pre = sub?.predefined_agents ?? [];
     if (pre.length < 1 || pre.length > 20)
       bad(file, `predefined_agents must hold 1–20 entries (has ${pre.length})`);
+    // inline agents are defined at runtime by the coordinator itself (tools and prompt unchecked here): off for both
+    if (sub?.inline_agents?.type !== "disabled")
+      bad(
+        file,
+        "multiagent.subagents.inline_agents must be explicitly disabled for a coordinator",
+      );
     if (sub?.inline_agents?.type === "disabled" && pre.length === 0)
       bad(file, "inline_agents disabled needs ≥ 1 predefined agent");
     // every coordinator's roster = all agents that are not coordinators, minus its ROSTER_EXCLUDE entries
-    // (lead: all 19; auditor: 18, nemo-merge excluded)
+    // (lead: all 5; auditor: 4, nemo-merge excluded)
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
       .filter((n) => !COORDINATORS.includes(n));
@@ -433,14 +532,11 @@ for (const file of files) {
             file,
             `${where}: "${ref}" carries a multiagent block and cannot be a subagent (one level deep, API 400)`,
           );
-        else if (
-          ref !== "self" &&
-          !others.includes(ref) &&
-          !/^agent_/.test(ref ?? "")
-        )
+        // names only: a raw agent_ id cannot be mapped to a role offline, so it would slip past ROSTER_EXCLUDE
+        else if (ref !== "self" && !others.includes(ref))
           bad(
             file,
-            `${where}: "${ref}" is neither a sibling file nor an agent_ id`,
+            `${where}: "${ref}" is not a sibling agent name (raw agent_ ids are not allowed in coordinator rosters)`,
           );
       }
     };
@@ -455,14 +551,23 @@ for (const file of files) {
     for (const n of others)
       if (!excluded.includes(n) && !pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the ${a.name} roster`);
-    if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
-      bad(file, "multiagent.workflows must be enabled|disabled");
-    if (!ma.workflows || ma.workflows.type === "enabled")
-      console.log(
-        `  note ${file}: workflows enabled – the lead may start workflow runs (cost: own threads, 24 h lifetime)`,
+    // workflow runs are started by the coordinator itself (own threads, 24 h lifetime): off for both, like inline agents
+    if (ma.workflows?.type !== "disabled")
+      bad(
+        file,
+        "multiagent.workflows must be explicitly disabled for a coordinator",
       );
     if (ma.advisor && ma.advisor.type === "enabled" && !ma.advisor.model)
       bad(file, "advisor enabled needs a model");
+    const wantAdv = ADVISOR[a.name];
+    if (
+      wantAdv &&
+      JSON.stringify(ma.advisor ?? null) !== JSON.stringify(wantAdv)
+    )
+      bad(
+        file,
+        `multiagent.advisor must be ${JSON.stringify(wantAdv)} (found ${JSON.stringify(ma.advisor ?? null)})`,
+      );
   } else if (COORDINATORS.includes(a.name))
     bad(
       file,
@@ -479,18 +584,26 @@ if (withMultiagent.sort().join() !== presentCoordinators.join()) {
     `✗ agents with a multiagent block must be exactly [${presentCoordinators.join(", ")}], found [${withMultiagent.join(", ")}]`,
   );
 }
+// cross-file: exactly the seven v3.1 agents, none missing (an extra file is reported in the loop)
+for (const n of Object.keys(ROSTER))
+  if (!files.includes(`${n}.json`)) {
+    problems++;
+    console.log(
+      `✗ ${n}.json missing – the v3.1 roster has exactly seven agents`,
+    );
+  }
 // cross-file: merge capability and inference_geo
 if (!hardRef) {
   problems++;
   console.log(
-    "✗ nemo-qa.json (template for the hard-limits block) missing or invalid",
+    "✗ nemo-builder.json (template for the hard-limits block) missing or invalid",
   );
 } else
   for (const b of hardBlocks)
     if (b.hl !== hardRef.hl)
       bad(
         b.file,
-        "hard-limits block differs from the template nemo-qa.json (one block for all 19)",
+        "hard-limits block differs from the template nemo-builder.json (one block for all six non-lead agents)",
       );
 if (mergeCapable.join() !== "nemo-merge") {
   problems++;

@@ -56,6 +56,19 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/ProfilesStep'),
   },
   {
+    // Round 5 (demo-a): one of the first-run questions. since 1, so a finished setup is not reopened for it.
+    id: 'core.focus',
+    get title() {
+      return s.focus.title;
+    },
+    get description() {
+      return s.focus.description;
+    },
+    order: 35,
+    since: 1,
+    component: () => import('@/layout/setup/steps/FocusStep'),
+  },
+  {
     id: 'core.tools',
     get title() {
       return s.tools.title;
@@ -108,7 +121,7 @@ export const CORE_STEPS: SetupStepDef[] = [
     get description() {
       return s.migrate.description;
     },
-    order: 75, // directly before the start data; not one of the three first-run questions
+    order: 75, // directly before the start data; not one of the four first-run questions
     since: 1,
     when: async () => (await import('../migrate')).migrateStepApplies(),
     component: () => import('@/layout/setup/steps/MigrateStep'),

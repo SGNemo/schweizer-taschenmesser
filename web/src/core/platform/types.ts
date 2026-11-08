@@ -130,6 +130,97 @@ export interface VaultBridgeRegistration {
 
 export type VaultBridgeStartError = 'channel-taken' | 'failed';
 
+/** Why the home-network hub does not listen (`lan_hub_status`). */
+export type LanHubOffReason =
+  'nothing-wanted' | 'unreadable' | 'no-home' | 'public-network' | 'no-network';
+
+/** A device asking to pair; the PC shows `name` (plain text, the device's own claim) and `code`. */
+export interface LanHubPending {
+  attempt: number;
+  name: string;
+  code: string;
+}
+
+export interface LanHubStatus {
+  running: boolean;
+  state: 'off' | 'failed' | 'listening';
+  reason?: LanHubOffReason | null;
+  /** Windows files the network as "Public" and blocks incoming connections. */
+  blocked: boolean;
+  port?: number | null;
+  pairingOpen: boolean;
+  /** QR payload while a pairing window is open and the hub listens; renews itself. */
+  qr?: string | null;
+  pending?: LanHubPending | null;
+  devices: number;
+}
+
+/** The versioned E2E data key (base64 of 32 bytes); handed to the web app only, never stored there raw. */
+export interface LanHubDataKey {
+  version: number;
+  key: string;
+}
+
+/** A device's pairing result: the data key plus the hub it is pinned to (hex public key). */
+export interface LanPairing extends LanHubDataKey {
+  hub: string;
+}
+
+export interface LanHubDevice {
+  /** Hex of the device's static key. */
+  id: string;
+  name: string;
+  /** Unix seconds. */
+  lastSeen?: number | null;
+  revoked: boolean;
+}
+
+/**
+ * Desktop only (Windows listens; elsewhere the hub stays off): the home-network sync hub of
+ * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`,
+ * `keystore-unavailable`, `busy`, `wrong-code`, …). Never logs, never stores the key in the web app
+ * beyond the non-extractable `CryptoKey` the sync service imports.
+ */
+export interface LanHubService {
+  supported: boolean;
+  /** Starts the hub (idempotent) and returns its status and the current data key. */
+  start(): Promise<{ status: LanHubStatus; dataKey: LanHubDataKey }>;
+  stop(): Promise<void>;
+  status(): Promise<LanHubStatus>;
+  pairOpen(): Promise<void>;
+  pairConfirm(attempt: number, code: string): Promise<void>;
+  pairCancel(): Promise<void>;
+  devices(): Promise<LanHubDevice[]>;
+  revoke(id: string): Promise<boolean>;
+  /** "Schlüssel erneuern": new key version, the hub store is emptied, devices pair again. */
+  rotate(): Promise<LanHubDataKey>;
+  /** The hub-local client's request (JSON text in, JSON text out; same shape as remote clients). */
+  request(body: string): Promise<string>;
+  /** "Dieses Netz als Heimnetz verwenden". */
+  setHome(): Promise<void>;
+}
+
+/**
+ * The device side of home-network sync (Android): pairing with a hub PC by its QR and the sync
+ * engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
+ * the OS keystore on the Rust side; only the data key comes back, once, after the pairing.
+ * Errors are short codes: `bad-qr`, `network`, `pairing-not-possible`, `unknown-device`,
+ * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`.
+ */
+export interface LanClientService {
+  supported: boolean;
+  /** Opens the camera and returns the text of one QR code (rejects with `cancelled`, `camera-denied` or `failed`). */
+  scan(): Promise<string>;
+  /** Pairs with the hub of `qr`; `onCode` gets the 6-digit code to show while the PC asks. */
+  pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanPairing>;
+  /** Stops waiting for the confirmation on the PC. */
+  cancelPair(): Promise<void>;
+  /** One sync request to the pinned hub `hub`; refused (`network`) during a pairing or for another hub. */
+  request(body: string, hub: string): Promise<string>;
+  /** Tells the hub once if it is reachable right now, then forgets hub and key on this device. */
+  unpair(): Promise<void>;
+}
+
 /**
  * Desktop only: the channel to the browser extension's native messaging host. Nothing listens until
  * `start` is called; every request is answered with the JSON text the handler returns.
@@ -277,6 +368,10 @@ export interface PlatformService {
   oauth: OAuthLoopback;
   localApi: LocalApiService;
   vaultBridge: VaultBridgeService;
+  /** Home-network sync hub (desktop only). */
+  lanHub: LanHubService;
+  /** Home-network sync, device side (Android). */
+  lanClient: LanClientService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
