@@ -1,6 +1,20 @@
 **English** | [Deutsch](sync.de.md)
 
-# Sync server
+# Sync
+
+## On your home network with your PC (no server needed)
+
+The Windows app can be the sync point itself. Phone and PC sync as soon as both are on the same Wi-Fi and Nemo runs on the PC.
+
+1. **PC:** *Settings → Sync → Pair a device*. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose *Allow*).
+2. **Phone:** *Settings → Sync → Pair with PC*, allow the camera, scan the code.
+3. Both show the same 6-digit code. On the PC: *Pair*.
+
+Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; *More settings* has *Renew key* and *Turn off home-network sync*. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet.
+
+An own server (below) is still possible: on the desktop and the phone it sits folded under *Own server (advanced)*. One way per device: disconnect one before using the other.
+
+## Own sync server
 
 A small Node server (Fastify + SQLite) with token authentication. Per field it only stores the value with the
 greatest timestamp ("last change wins"); merging happens in the app. Run it in your LAN or via
