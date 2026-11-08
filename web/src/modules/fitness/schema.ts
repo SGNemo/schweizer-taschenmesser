@@ -27,8 +27,21 @@ export const sessionSchema = z.object({
   durationMin: z.number().int().min(1).max(1440).optional(),
   exercises: z.array(exerciseSchema).max(30).default([]),
   note: z.string().max(2000).optional(),
+  /**
+   * Planned, not done yet (package 2): offered to the planner, shown in the calendar as open and, with a
+   * time on today, as one quiet line under „Jetzt wichtig“. Never counted in the week or „Wie letztes Mal“.
+   */
+  planned: z.boolean().optional(),
 });
 export type Session = z.output<typeof sessionSchema>;
+
+/** A reusable session („Oberkörper“): title, duration and exercises, no date. */
+export const templateSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  durationMin: z.number().int().min(1).max(1440).optional(),
+  exercises: z.array(exerciseSchema).max(30).default([]),
+});
+export type Template = z.output<typeof templateSchema>;
 
 /** A meal or snack: a short text and rough kcal; macros only behind "Erweitert". */
 export const mealSchema = z.object({

@@ -84,4 +84,12 @@ describe('LanClientSection (phone)', () => {
     expect(screen.getByTestId('lan-client-state').textContent).toBe('Diese Kopplung wurde gelöst.');
     expect(screen.getByTestId('lan-pair-pc').textContent).toBe('Neu koppeln');
   });
+
+  it('"Jetzt abgleichen" that does not reach the PC says so, not just the same line', () => {
+    useSyncStatus.getState().set({ phase: 'error', via: 'lanClient', error: 'network' });
+    render(<LanClientSection />);
+    expect(screen.queryByTestId('lan-tried')).toBeNull();
+    fireEvent.click(screen.getByText('Jetzt abgleichen'));
+    expect(screen.getByTestId('lan-tried').textContent).toContain('der PC hat nicht geantwortet');
+  });
 });

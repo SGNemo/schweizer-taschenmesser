@@ -18,6 +18,7 @@ export function TopBar() {
   return (
     <header
       className={styles.topbar}
+      data-topbar
       data-collapsed={collapsed ? 'true' : undefined}
       data-instant={instant ? 'true' : undefined}
       {...focusProps}

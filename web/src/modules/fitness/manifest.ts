@@ -3,7 +3,7 @@ import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
-import { mealSchema, sessionSchema } from './schema';
+import { mealSchema, sessionSchema, templateSchema } from './schema';
 import { settings } from './settings';
 
 /**
@@ -23,7 +23,7 @@ const manifest: ModuleManifest = {
     head: 'fortschritt',
     signature: 'dumbbell',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.fitness.meta.description;
   },
@@ -41,6 +41,7 @@ const manifest: ModuleManifest = {
     collections: {
       session: { schema: sessionSchema, indexes: ['date'] },
       meal: { schema: mealSchema, indexes: ['date'] },
+      template: { schema: templateSchema, indexes: [] },
     },
   },
   migrations,
@@ -60,7 +61,7 @@ const manifest: ModuleManifest = {
   dataApi: false,
   defaultEnabled: false,
   maturity: 'preview',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'content',
   order: 98,
   area: 'household',
@@ -68,6 +69,8 @@ const manifest: ModuleManifest = {
     onboarding: noOnboarding,
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),
+    plannable: () => import('./plannable'),
+    attention: () => import('./attention'),
     quickAdd: [
       {
         id: 'session',
