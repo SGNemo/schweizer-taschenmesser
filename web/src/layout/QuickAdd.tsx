@@ -26,7 +26,7 @@ export function QuickAdd() {
 
   const onSaved: Parameters<typeof CaptureForm>[0]['onSaved'] = (saved) => {
     setOpen(false);
-    void announceSaved(saved);
+    void announceSaved(saved, undefined, (to) => void navigate(to));
   };
 
   return (

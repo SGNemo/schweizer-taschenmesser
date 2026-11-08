@@ -396,4 +396,20 @@ describe('saveCaptures', () => {
     await expect(saveCaptures([], '', { states: ON })).rejects.toBeInstanceOf(CaptureError);
     expect(await rows('finance_transaction')).toHaveLength(0);
   });
+
+  it('never books: a batch with a finance item writes nothing, even with `confirmed` smuggled in', async () => {
+    const sneaky = { states: ON, confirmed: true } as Parameters<typeof saveCaptures>[2];
+    await expect(
+      saveCaptures(
+        [
+          { type: 'todo', fields: { title: 'Müll runterbringen' } },
+          { type: 'finance', fields: { title: 'Mittagessen', amountMinor: 1250, kind: 'expense' } },
+        ],
+        'Müll runterbringen\nMittagessen 12,50 € ausgegeben',
+        sneaky,
+      ),
+    ).rejects.toMatchObject({ code: 'invalid' });
+    expect(await rows('finance_transaction')).toHaveLength(0);
+    expect((await rows('todos_task')).every((x) => x.deletedAt)).toBe(true);
+  });
 });

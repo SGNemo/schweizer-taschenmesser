@@ -67,6 +67,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
+| Kopf leer Paket 1: Stapel ohne Umweg, Planer zeigt weniger, Mail-Link ohne Adresse, geteilter Text | `fix/capture-batch-calm` | `quickCapture/{parser,targets,ui}`, `core/mail/{service,prefill}.ts`, `modules/mail/components/{LinkDialog,ThreadView}.tsx`, `pages/ShareTarget.tsx`, `modules/planner/routes/PlannerPage.tsx`, `stores/ui.ts` + `ui/Misc.tsx` (toast `lead`, additive) | in progress | – | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

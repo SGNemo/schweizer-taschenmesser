@@ -31,6 +31,19 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* „Als Ausgabe buchen“: a chip that acts; the hit area grows to the touch size without a bigger look. */
+.chipAction {
+  position: relative;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.chipAction::after {
+  content: '';
+  position: absolute;
+  inset: calc((28px - var(--touch)) / 2) 0;
+}
 .warn {
   border-color: var(--warning, var(--accent));
   color: var(--text);

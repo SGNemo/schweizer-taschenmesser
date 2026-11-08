@@ -1090,8 +1090,11 @@ export const de = {
       inbox: 'Eingang',
       financeDraft: 'Buchung (Entwurf)',
       saveAll: (n: number) => `Alle speichern (${n})`,
-      saved: (n: number) => `${n} Dinge gespeichert`,
+      saved: (n: number) => `${n} Dinge gespeichert. Sortiert wird später.`,
       change: 'Ändern',
+      view: 'Ansehen',
+      bookExpense: 'Als Ausgabe buchen',
+      bookIncome: 'Als Einnahme buchen',
     },
     trayToday: {
       heading: 'Heute',
@@ -1152,6 +1155,7 @@ export const de = {
       suggestion: 'Vorschlag',
       saveAs: 'Speichern als',
       or: 'oder im Modul öffnen',
+      asNote: 'Text als Notiz',
     },
   },
   pwa: {
@@ -8059,6 +8063,8 @@ export const de = {
       noTime: 'Heute ist keine Zeit frei.',
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
+      first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
+      nextFree: (day: string, free: string) => `Heute ist frei. ${day}: ${free} frei.`,
       context: (n: number, planned: string) =>
         `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
       week: (week: string) => `KW ${week}`,
@@ -8143,6 +8149,7 @@ export const de = {
     },
     wait: {
       title: 'Wartet auf freie Zeit',
+      calm: 'Nichts davon muss heute sein.',
       over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
       horizon: 'keine freie Zeit im Planungszeitraum',
       'too-long': 'länger als jeder Tag',

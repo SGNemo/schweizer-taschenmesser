@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
@@ -223,7 +223,7 @@ describe('CaptureForm', () => {
     expect(reminder).toMatchObject({ title: 'Oma anrufen', kind: 'reminder' });
   });
 
-  it('unclear rows land in the inbox as typed; bookings in a batch wait for confirmation', async () => {
+  it('unclear rows land in the inbox as typed; a batch never books (one tap, a `$` line becomes a ToDo)', async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
     render(<CaptureForm onSaved={onSaved} />);
@@ -233,15 +233,57 @@ describe('CaptureForm', () => {
     );
     const rows = await screen.findAllByTestId('capture-row');
     expect(rows[0]).toHaveTextContent(t.quickCapture.multi.inbox);
+    // The money line offers to be booked on its own; the batch target list has no booking.
+    expect(screen.getByTestId('capture-row-book')).toHaveTextContent(
+      t.quickCapture.multi.bookExpense,
+    );
+    for (const select of screen.getAllByTestId('capture-row-type'))
+      expect(Array.from((select as HTMLSelectElement).options).map((o) => o.value)).not.toContain(
+        'finance',
+      );
     await user.keyboard('{Enter}');
-    expect(await screen.findByTestId('capture-draft')).toBeInTheDocument();
-    expect(onSaved).not.toHaveBeenCalled();
-    expect(await db.table('finance_transaction').count()).toBe(0);
-    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    const [task] = await db.table('todos_task').toArray();
-    expect(task).toMatchObject({ title: 'Zahnarzt morgen 15 Uhr 80 €', listId: 'inbox' });
-    expect(await db.table('finance_transaction').count()).toBe(1);
+    expect(screen.queryByTestId('capture-draft')).toBeNull();
+    const tasks = await db.table('todos_task').toArray();
+    const titles = tasks.map((x) => String(x.title).replace(/\s/g, ' ')).sort();
+    expect(titles).toEqual(['Mittagessen · 12,50 €', 'Zahnarzt morgen 15 Uhr 80 €']);
+    expect(await db.table('finance_transaction').count()).toBe(0);
+  });
+
+  it('„Als Ausgabe buchen“ opens the single sheet with the line; booked, it leaves the batch', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(
+      await box(),
+      'Müll runterbringen{Shift>}{Enter}{/Shift}Mittagessen 12,50 € ausgegeben',
+    );
+    await user.click(await screen.findByTestId('capture-row-book'));
+    const sheet = await screen.findByRole('dialog', { name: t.quickCapture.multi.bookExpense });
+    const inner = (await screen.findAllByRole('textbox', { name: t.quickCapture.inputLabel })).at(
+      -1,
+    )! as HTMLTextAreaElement;
+    expect(inner.value).toBe('Mittagessen 12,50 € ausgegeben');
+    // The single sheet keeps the draft and „Buchen“.
+    await user.click(within(sheet).getByRole('button', { name: t.quickCapture.save }));
+    await user.click(await within(sheet).findByRole('button', { name: t.quickCapture.book }));
+    await waitFor(async () => expect(await db.table('finance_transaction').count()).toBe(1));
+    const outer = (await screen.findAllByRole('textbox', { name: t.quickCapture.inputLabel }))[0]!;
+    await waitFor(() => expect((outer as HTMLTextAreaElement).value).toBe('Müll runterbringen'));
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('shared text (`oneEntry`) is one entry, never split', async () => {
+    render(
+      <CaptureForm
+        oneEntry
+        initialText={'Hallo, kannst du das prüfen\nund mir sagen'}
+        onSaved={() => undefined}
+      />,
+    );
+    await box();
+    expect(screen.queryByTestId('capture-rows')).toBeNull();
+    expect(screen.getByTestId('capture-chips')).toBeInTheDocument();
   });
 
   it('with "Ohne Rückfrage" off, an unclear row must be chosen first', async () => {

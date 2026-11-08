@@ -53,6 +53,8 @@ export const planner: Strings['planner'] = {
     noTime: 'No time is free today.',
     dayOff: 'Today is off.',
     over: (min: string) => `${min} more than fits`,
+    first: (title: string) => `Today: ${title}. That is enough for today.`,
+    nextFree: (day: string, free: string) => `Today is free. ${day}: ${free} free.`,
     context: (n: number, planned: string) =>
       `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,
     week: (week: string) => `Week ${week}`,
@@ -137,6 +139,7 @@ export const planner: Strings['planner'] = {
   },
   wait: {
     title: 'Waiting for free time',
+    calm: 'None of it has to be today.',
     over: (min: string) => `${min} more to do than there is free time`,
     horizon: 'no free time in the planning horizon',
     'too-long': 'longer than any day',

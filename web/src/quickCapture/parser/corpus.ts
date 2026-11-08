@@ -283,4 +283,57 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-10-30',
     time: '18:00',
   },
+  // Use case „Kopf leer“ (docs/design/usecases/kopf-leer/TARGET.md §3): the five lines of a brain dump
+  // (reminder words wait for package 2), the counter-scenarios, and past-tense spend words.
+  { from: 'KL', text: 'Müll runterbringen', type: 'todo', title: 'Müll runterbringen' },
+  { from: 'KL', text: 'Wohnzimmer aufräumen', type: 'todo', title: 'Wohnzimmer aufräumen' },
+  {
+    from: 'KL',
+    text: 'Vermieter wegen Heizung antworten',
+    type: 'todo',
+    title: 'Vermieter wegen Heizung antworten',
+  },
+  {
+    from: 'KL',
+    text: 'Steuerbescheid prüfen bis Freitag',
+    type: 'todo',
+    date: '2026-10-30',
+    title: 'Steuerbescheid prüfen',
+  },
+  {
+    from: 'KL',
+    text: 'Mittagessen 12,50 € ausgegeben',
+    type: 'finance',
+    amountMinor: 1250,
+    kind: 'expense',
+    title: 'Mittagessen',
+  },
+  {
+    from: 'KL',
+    text: 'Rechnung an Kunde Nord 500 € bis 30.10.',
+    type: 'invoice',
+    amountMinor: 50000,
+    date: '2026-10-30',
+  },
+  {
+    from: 'KL',
+    text: 'Brot gekauft 3,80 €',
+    type: 'finance',
+    amountMinor: 380,
+    kind: 'expense',
+    title: 'Brot',
+  },
+  {
+    from: 'KL',
+    text: 'Tanken 62,40 bezahlt',
+    type: 'finance',
+    amountMinor: 6240,
+    kind: 'expense',
+    title: 'Tanken',
+  },
+  { from: 'KL', text: 'Miete bezahlt 850 €', type: 'finance', amountMinor: 85000, title: 'Miete' },
+  // Without an amount a past-tense word is just text.
+  { from: 'KL', text: 'Schuhe gekauft', type: 'todo', title: 'Schuhe gekauft' },
+  // An invoice word wins over „bezahlt“ (no tie, no question).
+  { from: 'KL', text: 'Rechnung Stadtwerke bezahlt 84,30 €', type: 'invoice', amountMinor: 8430 },
 ];

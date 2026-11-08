@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button } from '@/ui';
+import { Button, Dialog } from '@/ui';
 import { parseCapture, type CaptureFields, type CaptureType } from '../parser';
 import { splitCapture } from '../parser/split';
 import { useCaptureSettings } from '../settings';
 import { CaptureError, saveCapture, saveCaptures, targetFor, type SavedCapture } from '../targets';
 import { fullFormPath } from '../targets/fullForm';
+import { announceSaved } from './announceSaved';
+import { batchRow, batchTypes, withoutPart } from './batch';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft } from './reopen';
@@ -27,6 +29,8 @@ export interface CaptureFormProps {
   selectInitial?: boolean;
   /** Keep typed text on the device until the sheet closes, so a killed app gets it back (C04). */
   keepDraft?: boolean;
+  /** Shared text: always one entry, never split into lines or sentences (U17). */
+  oneEntry?: boolean;
   /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
   onOpenFull?: (path: string) => void;
   onSaved: (saved: SavedCapture) => void;
@@ -68,6 +72,7 @@ export function CaptureForm({
   tabSwitchesType,
   selectInitial,
   keepDraft,
+  oneEntry,
   onOpenFull,
   onSaved,
   onCancel,
@@ -85,15 +90,17 @@ export function CaptureForm({
   // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text.
   const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
   const [confirming, setConfirming] = useState(false);
+  // „Als Ausgabe buchen“ on a line of a batch: that line in the single sheet, on top of this one.
+  const [booking, setBooking] = useState<string | undefined>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const parts = useMemo(() => splitCapture(text), [text]);
+  const parts = useMemo(() => (oneEntry ? [text] : splitCapture(text)), [text, oneEntry]);
   const multi = parts.length > 1;
   // One entry: the text as typed (a single line is read exactly as before the split existed).
-  const single = parts.length === 1 && text.includes('\n') ? parts[0]! : text;
+  const single = parts.length === 1 && text.includes('\n') && !oneEntry ? parts[0]! : text;
   const result = useMemo(
     () =>
       parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType, fitness }),
@@ -122,10 +129,12 @@ export function CaptureForm({
               fitness,
             });
             const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
-            const rowChips = previewChips(res.fields, res.type, r.notes, today()).filter(
+            // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
+            const row = batchRow(res.type, res.fields, available, r.type);
+            const rowChips = previewChips(row.fields, row.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
-            return { part, ...res, chips: rowChips };
+            return { part, ...res, ...row, chips: rowChips };
           })
         : [],
     // resolveOpts is rebuilt every render from the values listed here.
@@ -141,7 +150,7 @@ export function CaptureForm({
       fitness.workout,
     ],
   );
-  const rowsNeedConfirm = rows.some((r) => r.type && targetFor(r.type).requiresConfirm);
+  const rowTypes = batchTypes(available);
   // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the
   // entry is incomplete until the date is fixed (X20).
   const badDate = (list: readonly { id: string }[]) =>
@@ -218,6 +227,7 @@ export function CaptureForm({
     }
   };
 
+  // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
   const save = async (confirmed: boolean) => {
     if (busy || (!multi && !type)) return;
     setBusy(true);
@@ -227,7 +237,6 @@ export function CaptureForm({
           ? await saveCaptures(
               rows.map((r) => ({ type: r.type!, fields: r.fields })),
               text,
-              { confirmed },
             )
           : await saveCapture(type!, fields, { confirmed }),
       );
@@ -252,12 +261,8 @@ export function CaptureForm({
     if (multi) {
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
       if (rows.some((r) => badDate(r.chips))) return setError(t.quickCapture.errors.invalid);
-      // Bookings stay drafts until confirmed, also when they come in a batch; only complete ones.
-      if (rowsNeedConfirm && !confirming) {
-        const problem = rows.map((r) => buildProblem(r.type!, r.fields)).find(Boolean);
-        return problem ? setError(problem) : setConfirming(true);
-      }
-      return void save(true);
+      // One tap saves the batch; nothing in it books, so nothing asks for a confirmation (U04).
+      return void save(false);
     }
     if (!type) return setError(t.quickCapture.chooseType);
     if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
@@ -268,165 +273,183 @@ export function CaptureForm({
     void save(true);
   };
 
-  const rowLabel = (a: CaptureType, kind: CaptureFields['kind']) =>
-    a === 'finance' ? t.quickCapture.multi.financeDraft : typeLabel(a, kind);
-
   return (
-    <form
-      ref={formRef}
-      className={styles.form}
-      data-keep-visible
-      onSubmit={(e) => {
-        e.preventDefault();
-        submit();
-      }}
-    >
-      <textarea
-        ref={inputRef}
-        data-autofocus
-        className={styles.input}
-        value={text}
-        rows={Math.min(6, text.split('\n').length)}
-        onChange={(e) => change(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={t.quickCapture.placeholder}
-        aria-label={t.quickCapture.inputLabel}
-        autoComplete="off"
-        spellCheck={false}
-        enterKeyHint="done"
-      />
-      <p className={[styles.hint, styles.lineHint].join(' ')} data-testid="capture-line-hint">
-        {t.quickCapture.multi.lineHint}
-      </p>
+    <>
+      <form
+        ref={formRef}
+        className={styles.form}
+        data-keep-visible
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <textarea
+          ref={inputRef}
+          data-autofocus
+          className={styles.input}
+          value={text}
+          rows={Math.min(6, text.split('\n').length)}
+          onChange={(e) => change(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={t.quickCapture.placeholder}
+          aria-label={t.quickCapture.inputLabel}
+          autoComplete="off"
+          spellCheck={false}
+          enterKeyHint="done"
+        />
+        <p className={[styles.hint, styles.lineHint].join(' ')} data-testid="capture-line-hint">
+          {t.quickCapture.multi.lineHint}
+        </p>
 
-      {multi ? (
-        <ul
-          className={styles.rows}
-          aria-label={t.quickCapture.multi.listLabel(rows.length)}
-          aria-live="polite"
-          data-testid="capture-rows"
-        >
-          {rows.map((r, i) => (
-            <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
-              <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
-              <div className={styles.chips}>
-                <select
-                  className={styles.rowType}
-                  aria-label={t.quickCapture.multi.rowTarget(r.part)}
-                  value={r.type ?? ''}
-                  onChange={(e) => pickRow(r.part, e.target.value as CaptureType)}
-                  data-testid="capture-row-type"
-                >
-                  {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
-                  {available.map((a) => (
-                    <option key={a} value={a}>
-                      {rowLabel(a, r.fields.kind)}
-                    </option>
+        {multi ? (
+          <ul
+            className={styles.rows}
+            aria-label={t.quickCapture.multi.listLabel(rows.length)}
+            aria-live="polite"
+            data-testid="capture-rows"
+          >
+            {rows.map((r, i) => (
+              <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
+                <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
+                <div className={styles.chips}>
+                  <select
+                    className={styles.rowType}
+                    aria-label={t.quickCapture.multi.rowTarget(r.part)}
+                    value={r.type ?? ''}
+                    onChange={(e) => pickRow(r.part, e.target.value as CaptureType)}
+                    data-testid="capture-row-type"
+                  >
+                    {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
+                    {rowTypes.map((a) => (
+                      <option key={a} value={a}>
+                        {typeLabel(a, r.fields.kind)}
+                      </option>
+                    ))}
+                  </select>
+                  {r.inbox ? (
+                    <span className={styles.chip}>{t.quickCapture.multi.inbox}</span>
+                  ) : null}
+                  {r.booking ? (
+                    <button
+                      type="button"
+                      className={[styles.chip, styles.chipAction].join(' ')}
+                      onClick={() => setBooking(r.part)}
+                      data-testid="capture-row-book"
+                    >
+                      {r.booking === 'income'
+                        ? t.quickCapture.multi.bookIncome
+                        : t.quickCapture.multi.bookExpense}
+                    </button>
+                  ) : null}
+                  {r.chips.map((c) => (
+                    <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
+                      {c.label}
+                    </span>
                   ))}
-                </select>
-                {r.inbox ? <span className={styles.chip}>{t.quickCapture.multi.inbox}</span> : null}
-                {r.chips.map((c) => (
-                  <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
-                    {c.label}
-                  </span>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className={styles.chips} aria-live="polite" data-testid="capture-chips">
-          {chips.map((c) => (
-            <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
-              {c.label}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {available.length === 0 && states ? (
-        <p className={styles.hint}>{t.quickCapture.noTargets}</p>
-      ) : null}
-      {!multi && text.trim() && !type && available.length > 0 ? (
-        <p className={styles.hint} role="status">
-          {t.quickCapture.chooseType}
-        </p>
-      ) : null}
-      {multi ? (
-        <p className={[styles.hint, styles.desktopHint].join(' ')}>
-          {t.quickCapture.multi.shiftEnter}
-        </p>
-      ) : null}
-      {!multi && fallbackType ? (
-        <p className={styles.hint} role="status" data-testid="capture-inbox-hint">
-          {t.quickCapture.inboxHint(t.quickCapture.target[fallbackType])}
-        </p>
-      ) : null}
-      {!multi && onOpenFull && type && fullFormPath(type, fields, text) && text.trim() ? (
-        <p className={styles.hint}>{t.quickCapture.fullFormHint}</p>
-      ) : null}
-
-      {multi ? null : (
-        <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>
-          {available.map((a) => (
-            <button
-              key={a}
-              type="button"
-              role="radio"
-              aria-checked={a === type}
-              tabIndex={tabSwitchesType ? -1 : 0}
-              className={styles.type}
-              onClick={() => pick(a)}
-            >
-              {typeLabel(a, fields.kind)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {confirming && multi ? (
-        <div className={styles.draft} data-testid="capture-draft">
-          <p className={styles.hint}>{t.quickCapture.financeConfirm}</p>
-          {rows
-            .filter((r) => r.type && targetFor(r.type).requiresConfirm)
-            .map((r, i) => (
-              <span key={`${i}-${r.part}`}>
-                <strong>{r.chips.find((c) => c.id === 'amount')?.label}</strong> {r.fields.title}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className={styles.chips} aria-live="polite" data-testid="capture-chips">
+            {chips.map((c) => (
+              <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
+                {c.label}
               </span>
             ))}
+          </div>
+        )}
+
+        {available.length === 0 && states ? (
+          <p className={styles.hint}>{t.quickCapture.noTargets}</p>
+        ) : null}
+        {!multi && text.trim() && !type && available.length > 0 ? (
+          <p className={styles.hint} role="status">
+            {t.quickCapture.chooseType}
+          </p>
+        ) : null}
+        {multi ? (
+          <p className={[styles.hint, styles.desktopHint].join(' ')}>
+            {t.quickCapture.multi.shiftEnter}
+          </p>
+        ) : null}
+        {!multi && fallbackType ? (
+          <p className={styles.hint} role="status" data-testid="capture-inbox-hint">
+            {t.quickCapture.inboxHint(t.quickCapture.target[fallbackType])}
+          </p>
+        ) : null}
+        {!multi && onOpenFull && type && fullFormPath(type, fields, text) && text.trim() ? (
+          <p className={styles.hint}>{t.quickCapture.fullFormHint}</p>
+        ) : null}
+
+        {multi ? null : (
+          <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>
+            {available.map((a) => (
+              <button
+                key={a}
+                type="button"
+                role="radio"
+                aria-checked={a === type}
+                tabIndex={tabSwitchesType ? -1 : 0}
+                className={styles.type}
+                onClick={() => pick(a)}
+              >
+                {typeLabel(a, fields.kind)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {confirming && type && !multi ? (
+          <div className={styles.draft} data-testid="capture-draft">
+            <p className={styles.hint}>{t.quickCapture.financeConfirm}</p>
+            <strong>{chips.find((c) => c.id === 'amount')?.label}</strong>
+            <span>{fields.title}</span>
+            <div className={styles.actions}>
+              <Button onClick={() => setConfirming(false)}>{t.actions.cancel}</Button>
+              <Button variant="primary" onClick={() => void save(true)} data-confirm>
+                {t.quickCapture.book}
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className={styles.actions}>
-            <Button onClick={() => setConfirming(false)}>{t.actions.cancel}</Button>
-            <Button variant="primary" onClick={() => void save(true)} data-confirm>
-              {t.quickCapture.multi.saveAll(rows.length)}
+            {onCancel ? <Button onClick={onCancel}>{t.actions.cancel}</Button> : null}
+            {/* Disabled for the moment module states load: which modules are on is not known yet. */}
+            <Button type="submit" variant="primary" disabled={busy || !text.trim() || !states}>
+              {multi ? t.quickCapture.multi.saveAll(rows.length) : t.quickCapture.save}
             </Button>
           </div>
-        </div>
-      ) : confirming && type ? (
-        <div className={styles.draft} data-testid="capture-draft">
-          <p className={styles.hint}>{t.quickCapture.financeConfirm}</p>
-          <strong>{chips.find((c) => c.id === 'amount')?.label}</strong>
-          <span>{fields.title}</span>
-          <div className={styles.actions}>
-            <Button onClick={() => setConfirming(false)}>{t.actions.cancel}</Button>
-            <Button variant="primary" onClick={() => void save(true)} data-confirm>
-              {t.quickCapture.book}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className={styles.actions}>
-          {onCancel ? <Button onClick={onCancel}>{t.actions.cancel}</Button> : null}
-          {/* Disabled for the moment module states load: which modules are on is not known yet. */}
-          <Button type="submit" variant="primary" disabled={busy || !text.trim() || !states}>
-            {multi ? t.quickCapture.multi.saveAll(rows.length) : t.quickCapture.save}
-          </Button>
-        </div>
-      )}
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
+        )}
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+      </form>
+      {booking !== undefined ? (
+        // The single sheet with the line: draft and „Buchen“ as always; booked, the line leaves the batch.
+        <Dialog
+          open
+          onClose={() => setBooking(undefined)}
+          title={t.quickCapture.multi.bookExpense}
+          size="roomy"
+        >
+          <CaptureForm
+            initialText={booking}
+            initialType="finance"
+            onCancel={() => setBooking(undefined)}
+            onSaved={(saved) => {
+              const rest = withoutPart(text, booking);
+              setBooking(undefined);
+              change(rest);
+              void announceSaved(saved);
+              inputRef.current?.focus();
+            }}
+          />
+        </Dialog>
       ) : null}
-    </form>
+    </>
   );
 }
