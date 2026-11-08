@@ -8,33 +8,34 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 
 <!-- modules:start -->
 
-| Bereich      | Modul               | Was es tut                                                                                          | Status                                 |
-| ------------ | ------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **Planen**   | Kalender            | Termine in Monats-, Wochen- und Tagesansicht                                                        | standardmäßig an                       |
-|              | Planer              | Verteilt deine offenen ToDos auf die nächsten Tage                                                  | Vorschau                               |
-|              | ToDos               | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben                              | standardmäßig an                       |
-|              | Gewohnheiten        | Tägliche und wöchentliche Ziele mit Ringen                                                          | optional                               |
-|              | Zeiterfassung       | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz                      | optional                               |
-|              | Wetter              | Eine eigene Seite für das Wetter deines Ortes                                                       | standardmäßig an                       |
-|              | Karten & Orte       | Orte und Wege, die du oft brauchst                                                                  | Vorschau                               |
-|              | Personen            | Geburtstage nie mehr vergessen und Geschenke je Person sammeln                                      | optional                               |
-| **Geld**     | Finanzen            | Konten, Einnahmen und Ausgaben mit Kategorien                                                       | standardmäßig an                       |
-|              | Rechnungen          | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit                                              | standardmäßig an                       |
-|              | Abos                | Abos und wiederkehrende Zahlungen                                                                   | standardmäßig an                       |
-|              | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional                               |
-| **Haushalt** | Listen              | Einkauf, Packlisten und Checklisten                                                                 | optional                               |
-|              | Vorräte             | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler?                                        | optional                               |
-| **Wissen**   | Merkliste           | Links, Lesestoff, Filme, Orte und Ideen merken                                                      | optional                               |
-|              | Notizen             | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche     | optional                               |
-|              | Chat                | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern                                  | Vorschau                               |
-|              | Browser             | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus                                          | Vorschau, nur Windows- und Android-App |
-|              | Feeds               | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert          | optional                               |
-|              | E-Mail              | Posteingang, Suche und Mails lesen                                                                  | Vorschau, nur Windows-App              |
-|              | Musik               | Spotify auf einer Seite                                                                             | Vorschau                               |
-| **Tresor**   | Unterlagen          | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei    | optional                               |
-|              | Passwörter          | Passwort-Tresor                                                                                     | optional                               |
-| **System**   | Dieser PC           | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk)          | optional, nur Windows-App              |
-|              | Downloads           | Lädt Dateien herunter                                                                               | Vorschau, nur Windows-App              |
+| Bereich | Modul | Was es tut | Status |
+|---|---|---|---|
+| **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
+|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | optional |
+|  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
+|  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
+|  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
+|  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
+|  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
+|  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
+| **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
+|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
+|  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
+|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional |
+| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | optional |
+|  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
+|  | Fitness | Training und Essen grob festhalten | Vorschau |
+| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
+|  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
+|  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
+|  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
+|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert | optional |
+|  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
+|  | Musik | Spotify auf einer Seite | Vorschau |
+| **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
+|  | Passwörter | Passwort-Tresor | optional |
+| **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
+|  | Downloads | Lädt Dateien herunter | Vorschau, nur Windows-App |
 
 **Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
 

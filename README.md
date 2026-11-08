@@ -42,7 +42,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 | Area | Module | What it does | Status |
 |---|---|---|---|
 | **Plan** | Calendar | Events in month, week and day view | on by default |
-|  | Planner | Spreads your open to-dos over the coming days | preview |
+|  | Planner | Spreads your open to-dos over the coming days | optional |
 |  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
 |  | Habits | Daily and weekly goals with rings | optional |
 |  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
@@ -55,6 +55,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | optional |
 | **Household** | Lists | Shopping, packing lists and checklists | optional |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
+|  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
 |  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
 |  | Chat | Conversations with the built-in local model or your providers | preview |
