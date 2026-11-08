@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoable } from '@/core/undo';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -33,6 +33,9 @@ export function GoalCard({
 }) {
   const [popped, setPopped] = useState(false);
   const [menu, setMenu] = useState(false);
+  const popTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // The pop animation ends on a timer; a card that goes away before it fires must not set state afterwards.
+  useEffect(() => () => clearTimeout(popTimer.current), []);
   const count = entry?.count ?? 0;
   const target = dailyTarget(goal);
   const rest = Boolean(entry?.skipped) && count === 0;
@@ -41,7 +44,8 @@ export function GoalCard({
 
   const pop = () => {
     setPopped(true);
-    setTimeout(() => setPopped(false), 250);
+    clearTimeout(popTimer.current);
+    popTimer.current = setTimeout(() => setPopped(false), 250);
   };
   const silent = (label: string, fn: () => Promise<void>) => void undoable(label, fn);
 
