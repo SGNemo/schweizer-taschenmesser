@@ -4,7 +4,7 @@
 | --------------- | ----------------- | ------ | ---------- | ------------ |
 | nemo-a11y       | claude-sonnet-5-5 | medium | review     | 3941         |
 | nemo-architekt  | claude-opus-5-5   | high   | write      | 4324         |
-| nemo-auditor    | claude-fable-5-1  | high   | review     | 6757         |
+| nemo-auditor    | claude-fable-5-1  | high   | review     | 6906         |
 | nemo-backend    | claude-sonnet-5-5 | medium | write      | 3902         |
 | nemo-creativity | claude-fable-5-1  | high   | review     | 4767         |
 | nemo-deps       | claude-sonnet-5-5 | medium | write      | 4370         |
@@ -15,7 +15,7 @@
 | nemo-frontend   | claude-sonnet-5-5 | medium | write      | 4353         |
 | nemo-i18n       | claude-haiku-5-5  | medium | write      | 3799         |
 | nemo-lead       | claude-opus-5-5   | high   | review     | 5295         |
-| nemo-merge      | claude-sonnet-5-5 | medium | merge      | 6750         |
+| nemo-merge      | claude-sonnet-5-5 | medium | merge      | 7006         |
 | nemo-native     | claude-sonnet-5-5 | medium | write      | 4364         |
 | nemo-perf       | claude-sonnet-5-5 | medium | write      | 4172         |
 | nemo-po         | claude-sonnet-5-5 | medium | review     | 3623         |
