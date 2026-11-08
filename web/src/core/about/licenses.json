@@ -128,12 +128,6 @@
       "url": "https://www.npmjs.com/package/@tauri-apps/api/v/2.12.4"
     },
     {
-      "name": "@tauri-apps/plugin-barcode-scanner",
-      "version": "2.5.3",
-      "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-barcode-scanner/v/2.5.3"
-    },
-    {
       "name": "@tauri-apps/plugin-clipboard-manager",
       "version": "2.5.0",
       "license": "MIT OR Apache-2.0",
@@ -726,6 +720,12 @@
       "version": "3.1.1",
       "license": "MIT",
       "url": "https://www.npmjs.com/package/json-schema-to-ts/v/3.1.1"
+    },
+    {
+      "name": "jsqr",
+      "version": "1.4.0",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/jsqr/v/1.4.0"
     },
     {
       "name": "linkifyjs",
@@ -4256,12 +4256,6 @@
       "version": "2.6.0",
       "license": "Apache-2.0 OR MIT",
       "url": "https://crates.io/crates/tauri-plugin-autostart/2.6.0"
-    },
-    {
-      "name": "tauri-plugin-barcode-scanner",
-      "version": "2.5.3",
-      "license": "Apache-2.0 OR MIT",
-      "url": "https://crates.io/crates/tauri-plugin-barcode-scanner/2.5.3"
     },
     {
       "name": "tauri-plugin-clipboard-manager",

@@ -15,10 +15,11 @@ import { t } from '@/strings';
 import { tLanSync } from '@/strings.lanSync';
 import { Button, Dialog } from '@/ui';
 import { Actions, Facts, StateBanner } from './ConnectParts';
+import { QrScanDialog, type ScanFailure } from './QrScanDialog';
 import styles from './settings.module.css';
 
 type Texts = ReturnType<typeof tLanSync.use>;
-type Failure = PairFailure | 'camera-denied' | 'scan-failed';
+type Failure = PairFailure | ScanFailure;
 
 /**
  * Settings → Sync on the phone: pairing with the hub PC by its QR (three steps, nothing typed) and
@@ -43,18 +44,36 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
     setFailure(undefined);
     setCode(undefined);
     setStep('scanning');
+    const scan = getPlatform().lanClient.scan;
+    // no scanner of the platform: the app's own camera dialog opens (rendered below)
+    if (!scan) return;
     let qr: string;
     try {
-      qr = await getPlatform().lanClient.scan();
+      qr = await scan();
     } catch (e) {
       if (attempt.current !== mine) return;
-      setStep('idle');
       const reason = e instanceof Error ? e.message : '';
       // the user closed the camera: nothing to report
-      if (reason === 'camera-denied') setFailure('camera-denied');
-      else if (reason !== 'cancelled') setFailure('scan-failed');
+      scanEnded(
+        mine,
+        reason === 'cancelled'
+          ? undefined
+          : reason === 'camera-denied'
+            ? 'camera-denied'
+            : 'scan-failed',
+      );
       return;
     }
+    await connect(mine, qr);
+  }
+
+  function scanEnded(mine: number, reason: ScanFailure | undefined) {
+    if (attempt.current !== mine) return;
+    setStep('idle');
+    if (reason) setFailure(reason);
+  }
+
+  async function connect(mine: number, qr: string) {
     if (attempt.current !== mine) return;
     setStep('connecting');
     const result = await pairWithPc(
@@ -90,7 +109,19 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
     </Button>
   );
 
-  // No dialog while the native scanner is on screen; it opens once a code was read.
+  // The app's own camera while scanning (a platform scanner shows its own view instead).
+  const scanning =
+    step === 'scanning' && !getPlatform().lanClient.scan ? (
+      <QrScanDialog
+        onResult={(qr) => void connect(attempt.current, qr)}
+        onCancel={() => {
+          attempt.current++;
+          setStep('idle');
+        }}
+        onFailure={(reason) => scanEnded(attempt.current, reason)}
+      />
+    ) : null;
+
   const progress =
     step === 'connecting' || step === 'confirm' ? (
       <Dialog
@@ -112,7 +143,9 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
           )}
         </div>
       </Dialog>
-    ) : null;
+    ) : (
+      scanning
+    );
 
   const failureLine = failureInfo ? (
     <p role="status" className={styles.muted} data-testid="lan-pair-failure">
