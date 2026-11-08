@@ -92,6 +92,9 @@ const PLACEHOLDER =
 // coordinators: exactly these carry a multiagent block; delegation is one level deep (an agent with multiagent
 // cannot be anyone's subagent – the API answers 400), so neither may appear in any predefined_agents list
 const COORDINATORS = ["nemo-auditor", "nemo-lead"];
+// per-coordinator roster exclusions: these agents must NOT be in that coordinator's lists. The auditor never reaches
+// nemo-merge, so a manipulated audit cannot message the only merging agent (security finding on PR #537)
+const ROSTER_EXCLUDE = { "nemo-auditor": ["nemo-merge"] };
 // the five hard limits are one template for every agent except the lead; role name, the merge line (nemo-merge only)
 // and the read-only clause (review roles + auditor) are the per-role parts, each checked exactly
 const READ_ONLY = new Set([
@@ -396,10 +399,15 @@ for (const file of files) {
       bad(file, `predefined_agents must hold 1–20 entries (has ${pre.length})`);
     if (sub?.inline_agents?.type === "disabled" && pre.length === 0)
       bad(file, "inline_agents disabled needs ≥ 1 predefined agent");
-    // every coordinator's roster = all agents that are not coordinators (the lead's 19 = the auditor's 19)
+    // every coordinator's roster = all agents that are not coordinators, minus its ROSTER_EXCLUDE entries
+    // (lead: all 19; auditor: 18, nemo-merge excluded)
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
       .filter((n) => !COORDINATORS.includes(n));
+    const excluded = ROSTER_EXCLUDE[a.name] ?? [];
+    for (const n of excluded)
+      if (!others.includes(n))
+        bad(file, `roster exclusion "${n}" is not a sibling subagent file`);
     const roster = (list, where) => {
       const seen = new Set();
       for (const p of list) {
@@ -415,7 +423,12 @@ for (const file of files) {
             `${where}: "${ref}" listed twice (entries must be distinct)`,
           );
         seen.add(ref);
-        if (COORDINATORS.includes(ref))
+        if (excluded.includes(ref))
+          bad(
+            file,
+            `${where}: "${ref}" must not be in the ${a.name} roster (excluded for this coordinator)`,
+          );
+        else if (COORDINATORS.includes(ref))
           bad(
             file,
             `${where}: "${ref}" carries a multiagent block and cannot be a subagent (one level deep, API 400)`,
@@ -440,7 +453,7 @@ for (const file of files) {
       );
     roster(wfPre, "workflows.predefined_agents");
     for (const n of others)
-      if (!pre.some((p) => refOf(p) === n))
+      if (!excluded.includes(n) && !pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the ${a.name} roster`);
     if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
       bad(file, "multiagent.workflows must be enabled|disabled");
