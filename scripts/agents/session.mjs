@@ -4,19 +4,21 @@
 // thread ends its turn it keeps listening while child threads still run (checks threads every 30 s) and stops only
 // when the primary thread ends its turn again after the last child report; --no-wait stops at the first end_turn.
 //
-//   node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
-//   node scripts/agents/session.mjs --budget 15 --file brief.md
-//   node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"   auditor instead of the lead
+//   node scripts/agents/session.mjs --routing-check                       the five routing questions, no session
+//   node scripts/agents/session.mjs --class S "Prüfe und merge PR #560"   class S = 5 USD (M = 10, L = 15)
+//   node scripts/agents/session.mjs --class M --file brief.md
+//   node scripts/agents/session.mjs --agent auditor --class M "Prüfe PR #535"   auditor instead of the lead
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
 //   node scripts/agents/session.mjs --session sess_… --auto-approve       approve waiting tool calls, keep streaming
-//   node scripts/agents/session.mjs budget sess_… 12 [--yes]              raise the cap (prints usage so far, asks first)
+//   node scripts/agents/session.mjs budget sess_… 12 --yes                raise the cap (prints usage so far; without --yes it stops)
 //   node scripts/agents/session.mjs threads sess_… [--archive-idle]       threads with tokens/cost, free slots
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
 //
-// Budget: default 10 USD (--budget <USD> to change); above 30 USD only with --yes-expensive. A warning is printed
-// once the session reaches 70 % of its budget, and every run ends with a usage line (primary / children / advisor).
-// Rule: when a budget runs out, do not raise it to keep chatting – start a new session (SETUP.md §4 "Was kostet was").
+// Budget (docs/meta/WORK-ROUTING.md): --class S|M|L sets it (S 5, M 10, L 15 USD; default S); --budget <USD> overrides,
+// above 15 USD only with --yes-expensive. The first message starts with a routing header (class + budget) that the lead
+// checks. A warning is printed at 70 % of the budget, and every run ends with a cost line (primary / children / advisor,
+// class). Rule: when a budget runs out, do not raise it – start a new session (SETUP.md §4 "Was kostet was").
 //
 // Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mounts only, sent only to the Nemo repo and the
 // private notes repo SGNemo/nemo-scribble, mounted as a second resource; --no-scribble leaves it out),
@@ -58,6 +60,7 @@ const boolFlags = new Set([
   "no-scribble",
   "yes",
   "yes-expensive",
+  "routing-check",
 ]);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -65,6 +68,22 @@ for (let i = 0; i < argv.length; i++) {
     const k = a.slice(2);
     flags[k] = boolFlags.has(k) ? true : argv[++i];
   } else positional.push(a);
+}
+// the five questions of docs/meta/WORK-ROUTING.md; prints and exits before anything needs a key, a lock file or the SDK
+const ROUTING_QUESTIONS = [
+  "Does it write or change product code, tests or contracts? → yes: Claude Code",
+  "Will it need questions back to Sven before it can finish? → yes: Claude Code",
+  'Can you say "done means …" in one sentence? → no: Claude Code (or write the sentence first)',
+  "Does it fit in ≤ 4 delegations (one per agent, bundled)? → no: split it",
+  "Which class – S ≤ 5, M ≤ 10, L ≤ 15 USD (L only at night/unattended)? Above L: split it",
+];
+if (flags["routing-check"]) {
+  console.log("Routing check (docs/meta/WORK-ROUTING.md):");
+  ROUTING_QUESTIONS.forEach((q, i) => console.log(`  ${i + 1}. ${q}`));
+  console.log(
+    '\nFirst line of the prompt:\n  Routing: Claude Code · <title> · <model suggestion>\n  Routing: Lead, S (5 USD) · <title> · done means <…>\n  Routing: Auditor, M (10 USD) · PR #<n>\nThen: node scripts/agents/session.mjs --class <S|M|L> "…"   (no session was started)',
+  );
+  process.exit(0);
 }
 if (flags.help || (positional.length === 0 && !flags.file && !flags.session)) {
   const lines = fs
@@ -174,15 +193,26 @@ else if (!flags["no-scribble"] && !githubToken)
     "warning: no GITHUB_TOKEN – the private notes repo is not mounted (session folder /workspace/scribble only)",
   );
 
-const DEFAULT_BUDGET_USD = 10;
-const EXPENSIVE_USD = 30; // above this only with --yes-expensive
+// budget classes (docs/meta/WORK-ROUTING.md): the class names the expected cost of the task and sets the budget
+const CLASSES = { S: 5, M: 10, L: 15 };
+const DEFAULT_CLASS = "S";
+const EXPENSIVE_USD = 15; // above this only with --yes-expensive (above class L: split the task)
 const WARN_SHARE = 0.7; // warn once the session has used 70 % of its budget
+const taskClass = (() => {
+  const c = String(flags.class ?? DEFAULT_CLASS).toUpperCase();
+  if (!(c in CLASSES)) {
+    console.error(`error: --class "${flags.class}": use S, M or L`);
+    process.exit(1);
+  }
+  return c;
+})();
 function checkExpensive(usd) {
   if (usd > EXPENSIVE_USD && !flags["yes-expensive"])
     throw new Error(
-      `a budget above ${EXPENSIVE_USD} USD needs --yes-expensive (SETUP.md §4: a round with consolidation costs 20–30 USD; more usually means: start a new session)`,
+      `a budget above ${EXPENSIVE_USD} USD needs --yes-expensive (WORK-ROUTING: above class L means split the task into several sessions)`,
     );
 }
+const classLine = () => `class ${taskClass} (≤ ${CLASSES[taskClass]} USD)`;
 function cents(usd) {
   if (!Number.isFinite(usd) || usd <= 0)
     throw new Error("--budget must be a positive number of US dollars");
@@ -255,22 +285,47 @@ const threadName = (th) =>
 
 // one line per session: authoritative session total (incl. runtime) + split by primary / children / advisor
 // (thread figures are rounded per thread and exclude runtime, so they do not add up exactly)
-async function printUsage(c, sessionId) {
+// a thread from the list carries `usage` once it was idle once; otherwise ask for the single thread
+async function threadUsage(c, sessionId, th) {
+  if (th.usage) return th.usage;
+  try {
+    return (
+      (await c.beta.sessions.threads.retrieve(th.id, { session_id: sessionId }))
+        .usage ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+async function printUsage(c, sessionId, { withClass = false } = {}) {
   try {
     const s = await c.beta.sessions.retrieve(sessionId);
     const split = { primary: 0, child: 0, advisor: 0 };
     let kids = 0;
     let missing = 0;
+    let threads = 0;
     for await (const th of c.beta.sessions.threads.list(sessionId)) {
+      threads++;
       const k = threadKind(th);
       if (k === "child") kids++;
-      const cost = amountCents(th.usage?.list_cost);
+      const cost = amountCents(
+        (await threadUsage(c, sessionId, th))?.list_cost,
+      );
       if (cost === undefined) missing++;
       else split[k] += cost;
     }
     const cap = amountCents(s.budget?.max_list_cost);
+    const total = amountCents(s.usage?.list_cost);
+    const perThread =
+      threads > 0 && missing === threads
+        ? "  no per-thread cost reported (yet) – the session total above is the figure that counts"
+        : `  primary ${usd(split.primary)} · ${kids} child thread(s) ${usd(split.child)}${split.advisor ? ` · advisor ${usd(split.advisor)}` : ""}${missing ? ` · ${missing} thread(s) without cost yet` : ""} (per-thread figures exclude session runtime)`;
+    const over =
+      withClass && total !== undefined && total > CLASSES[taskClass] * 100
+        ? ` – above ${classLine()}: next time split the task or pick a higher class`
+        : "";
     console.log(
-      `usage ${sessionId}: ${usageText(s.usage)}${cap ? ` · budget ${usd(cap)} (${Math.round(((amountCents(s.usage?.list_cost) ?? 0) / cap) * 100)} %)` : ""}\n  primary ${usd(split.primary)} · ${kids} child thread(s) ${usd(split.child)}${split.advisor ? ` · advisor ${usd(split.advisor)}` : ""}${missing ? ` · ${missing} thread(s) without cost yet` : ""} (per-thread figures exclude session runtime)`,
+      `usage ${sessionId}: ${usageText(s.usage)}${cap ? ` · budget ${usd(cap)} (${Math.round(((total ?? 0) / cap) * 100)} %)` : ""}\n${perThread}${withClass ? `\n  ${classLine()}${over}` : ""}`,
     );
     return s;
   } catch (e) {
@@ -289,23 +344,13 @@ function warnBudget(ev) {
   );
 }
 
+// raising a budget is never a prompt answer: it needs --yes on the command line, after the usage was printed
 async function confirm(question) {
   if (flags.yes) return true;
-  if (!process.stdin.isTTY) {
-    console.error("no terminal to ask: re-run with --yes to confirm");
-    return false;
-  }
-  const rl = (await import("node:readline/promises")).createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  try {
-    return /^(y|yes|j|ja)$/i.test(
-      (await rl.question(`${question} [y/N] `)).trim(),
-    );
-  } finally {
-    rl.close();
-  }
+  console.error(
+    `${question} Not done: read the usage above, then re-run with --yes (WORK-ROUTING: a new session is usually the better step).`,
+  );
+  return false;
 }
 
 function printEvent(ev) {
@@ -581,7 +626,7 @@ async function main() {
         `the new budget must be above the cost so far (${usd(used)})`,
       );
     console.log(
-      "Rule: do not raise to keep chatting – a finished request means a new session (SETUP.md §4).",
+      "Rule (WORK-ROUTING): never raise to keep going – start a new session; raise only to let a nearly finished step land.",
     );
     if (!(await confirm(`Raise the budget of ${sessionId} to ${usdArg} USD?`)))
       return console.log("budget unchanged");
@@ -611,7 +656,7 @@ async function main() {
     for await (const th of c.beta.sessions.threads.list(sessionId)) {
       const child = threadKind(th);
       console.log(
-        `${th.id}  ${child.padEnd(7)} ${String(th.status).padEnd(10)} ${threadName(th).padEnd(24)} ${usageText(th.usage)}`,
+        `${th.id}  ${child.padEnd(7)} ${String(th.status).padEnd(10)} ${threadName(th).padEnd(24)} ${usageText(await threadUsage(c, sessionId, th))}`,
       );
       if (child === "child" && th.status === "idle") {
         idle++;
@@ -670,21 +715,29 @@ async function main() {
         });
     });
     console.log(`\nsession ${cfg.session} → ${outcome}`);
-    await printUsage(c, cfg.session);
+    await printUsage(c, cfg.session, { withClass: flags.class !== undefined });
     return;
   }
 
   if (cfg.dryRun && !cfg.agent && agentRole)
     cfg.agent = `<id of ${AGENT_FILES[agentRole]} from claude-lock.json – run ant apply first>`;
+  if (cfg.dryRun && !cfg.env)
+    cfg.env = `<id of ${DEFAULTS.envFile} from claude-lock.json – run ant apply first>`;
   if (!cfg.agent || !cfg.env)
     throw new Error(
       agentRole === "auditor"
         ? "auditor id or environment id missing: run `ant apply --yes docs/meta/agents-v3/nemo-auditor.md` (claude-lock.json in the repo root), or pass --agent agent_…/--env"
         : `${agentRole ?? "agent"} id and environment id missing: run \`ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md\` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID`,
     );
-  // a budget can only be added when the session is created: always send one (default 10 USD)
-  if (cfg.budgetUsd === undefined) cfg.budgetUsd = DEFAULT_BUDGET_USD;
+  // a budget can only be added when the session is created: always send one (the class sets it, default S = 5 USD)
+  if (cfg.budgetUsd === undefined) cfg.budgetUsd = CLASSES[taskClass];
   checkExpensive(cfg.budgetUsd);
+  if (cfg.budgetUsd < CLASSES[taskClass])
+    console.warn(
+      `warning: budget ${cfg.budgetUsd} USD is below ${classLine()} – the lead declines a class above the session budget`,
+    );
+  // routing header: the lead's routing gate reads class and budget from the first line (docs/meta/WORK-ROUTING.md)
+  const routed = `[session.mjs] Budget-Klasse ${taskClass} (≤ ${CLASSES[taskClass]} USD) · Session-Budget ${cfg.budgetUsd} USD · Routing: docs/meta/WORK-ROUTING.md\n\n${message}`;
   if (!repoToken)
     console.warn(
       "warning: no GITHUB_TOKEN for the repository – it is cloned without a token; git push will fail",
@@ -730,7 +783,11 @@ async function main() {
       if (r.authorization_token)
         r.authorization_token = "<GITHUB_TOKEN from env>";
     console.log(
-      JSON.stringify({ create: shown, first_message: message }, null, 2),
+      JSON.stringify(
+        { create: shown, class: taskClass, first_message: routed },
+        null,
+        2,
+      ),
     );
     return;
   }
@@ -743,10 +800,10 @@ async function main() {
     `approve the plan / answer the lead: node scripts/agents/session.mjs --session ${session.id} "…" (a new request = a new session)`,
   );
   const outcome = await streamUntilIdle(c, session.id, () =>
-    c.beta.sessions.events.send(session.id, { events: [userMessage(message)] }),
+    c.beta.sessions.events.send(session.id, { events: [userMessage(routed)] }),
   );
   console.log(`\nsession ${session.id} → ${outcome}`);
-  await printUsage(c, session.id);
+  await printUsage(c, session.id, { withClass: true });
 }
 
 main().catch((e) => {
