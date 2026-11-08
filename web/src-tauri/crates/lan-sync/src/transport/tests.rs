@@ -422,3 +422,183 @@ fn a_peer_outside_every_bound_subnet_costs_no_slot() {
     assert!(closed(&mut c));
     assert_eq!(r.server.open_connections(), 0);
 }
+
+// ---- the device side (`client`) against this hub ----
+
+mod device_client {
+    use super::*;
+    use crate::client::testing::{open_via, pair_via};
+    use crate::client::{self, ClientError};
+    use std::sync::atomic::AtomicBool;
+
+    fn qr_text(r: &Rig) -> String {
+        r.host.qr(r.server.port(), [10, 0, 0, 1]).unwrap().unwrap()
+    }
+
+    fn addr(r: &Rig) -> std::net::SocketAddrV4 {
+        r.server.local_addrs()[0]
+    }
+
+    /// Pairs `key` through the client, playing the user who confirms the code on the PC.
+    fn pair_client(r: &Rig, key: &StaticKey) -> (client::Paired, String) {
+        r.host.open().unwrap();
+        let text = qr_text(r);
+        let a = addr(r);
+        let k = StaticKey::from_secret_bytes(key.to_secret_bytes()).unwrap();
+        let shown = Arc::new(Mutex::new(String::new()));
+        let shown2 = shown.clone();
+        let device = std::thread::spawn(move || {
+            pair_via(
+                a,
+                &text,
+                &k,
+                "Pixel 7",
+                &mut |code| *shown2.lock().unwrap() = code.to_owned(),
+                &|| false,
+            )
+        });
+        let attempt = wait_hello(r);
+        // the PC compares the code the device shows
+        let code = loop {
+            let c = shown.lock().unwrap().clone();
+            if !c.is_empty() {
+                break c;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        };
+        let sealed = r.host.confirm(attempt, &code).unwrap();
+        assert!(r.server.deliver(attempt, sealed));
+        (device.join().unwrap().expect("paired"), code)
+    }
+
+    #[test]
+    fn tags_match_the_hub() {
+        assert_eq!(client::TAG_REQUEST, TAG_REQUEST);
+        assert_eq!(client::TAG_RESPONSE, TAG_RESPONSE);
+    }
+
+    #[test]
+    fn a_device_pairs_by_qr_gets_the_data_key_and_syncs() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        let (paired, code) = pair_client(&r, &key);
+        assert_eq!(code.len(), 6);
+        assert_eq!(paired.data_key_version, 1);
+        assert_eq!(*paired.data_key, [5u8; 32]);
+        assert_eq!(paired.hub_key, r.hub_key);
+        assert!(r
+            .trust
+            .list()
+            .iter()
+            .any(|d| d.name == "Pixel 7" && !d.revoked));
+
+        let mut s = open_via(addr(&r), &key, &r.hub_key, "Pixel 7").unwrap();
+        let ops = json!([{"collection":"todos_task","id":"r1","field":"title","hlc":hlc(1),"value":"enc:v1:a:b"}]);
+        let put: Value = serde_json::from_slice(
+            &s.request(
+                json!({"keyVersion":1,"type":"push","ops":ops})
+                    .to_string()
+                    .as_bytes(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(put["accepted"], 1, "{put}");
+        let page: Value = serde_json::from_slice(
+            &s.request(br#"{"keyVersion":1,"type":"pull","since":0,"limit":10}"#)
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(page["ops"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_used_or_closed_window_is_pairing_not_possible() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_client(&r, &key);
+        // the QR of that window again: the hub drops it silently
+        r.host.open().unwrap();
+        let text = qr_text(&r);
+        r.host.cancel();
+        let err = pair_via(
+            addr(&r),
+            &text,
+            &StaticKey::generate().unwrap(),
+            "Other",
+            &mut |_| {},
+            &|| false,
+        )
+        .unwrap_err();
+        assert_eq!(err, ClientError::PairingNotPossible);
+    }
+
+    #[test]
+    fn only_the_hub_can_say_unknown_device_and_a_wrong_hub_is_just_unreachable() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        // never paired: authenticated refusal
+        assert_eq!(
+            open_via(addr(&r), &key, &r.hub_key, "X").unwrap_err(),
+            ClientError::UnknownDevice
+        );
+        // pinned key of another hub (reinstalled PC, impostor): no claim, calm network
+        let other = StaticKey::generate().unwrap().public();
+        assert_eq!(
+            open_via(addr(&r), &key, &other, "X").unwrap_err(),
+            ClientError::Network
+        );
+    }
+
+    #[test]
+    fn a_device_can_unpair_itself_and_is_refused_afterwards() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_client(&r, &key);
+        let s = open_via(addr(&r), &key, &r.hub_key, "Pixel 7").unwrap();
+        s.unpair().unwrap();
+        for _ in 0..100 {
+            if r.trust.list().iter().all(|d| d.revoked) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(r.trust.list().iter().all(|d| d.revoked));
+        assert_eq!(
+            open_via(addr(&r), &key, &r.hub_key, "Pixel 7").unwrap_err(),
+            ClientError::UnknownDevice
+        );
+    }
+
+    #[test]
+    fn waiting_for_the_pc_can_be_cancelled_on_the_device() {
+        let r = rig();
+        r.host.open().unwrap();
+        let text = qr_text(&r);
+        let stop = Arc::new(AtomicBool::new(false));
+        let stop2 = stop.clone();
+        let a = addr(&r);
+        let device = std::thread::spawn(move || {
+            pair_via(
+                a,
+                &text,
+                &StaticKey::generate().unwrap(),
+                "P",
+                &mut |_| {},
+                &move || stop2.load(Ordering::SeqCst),
+            )
+        });
+        wait_hello(&r);
+        stop.store(true, Ordering::SeqCst);
+        assert_eq!(device.join().unwrap().unwrap_err(), ClientError::Cancelled);
+    }
+
+    #[test]
+    fn names_are_cleaned_for_the_hub() {
+        assert_eq!(client::hello_name("  Pixel 7\n "), "Pixel 7");
+        assert_eq!(client::hello_name(""), "Gerät");
+        let long = "ä".repeat(40);
+        let cut = client::hello_name(&long);
+        assert!(cut.len() <= 64 && cut.chars().all(|c| c == 'ä'));
+    }
+}

@@ -14,6 +14,7 @@ mod capture;
 mod disk;
 #[cfg(desktop)]
 mod downloads;
+mod lan_client;
 #[cfg(desktop)]
 mod lan_sync;
 #[cfg(desktop)]
@@ -115,7 +116,13 @@ pub fn run() {
         // Text and links shared from other Android apps (ACTION_SEND).
         .plugin(tauri_plugin_share_intent::init())
         // Android: system bars hidden and screen kept on while the cockpit is open.
-        .plugin(tauri_plugin_screen_mode::init());
+        .plugin(tauri_plugin_screen_mode::init())
+        // Home-network sync, device side (phone, second PC): pairing by QR, requests to the hub PC.
+        .manage(lan_client::LanClient::default());
+
+    // Android: the native QR scanner for "Mit PC koppeln" (home-network sync).
+    #[cfg(mobile)]
+    let builder = builder.plugin(tauri_plugin_barcode_scanner::init());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]
@@ -189,6 +196,10 @@ pub fn run() {
             lan_sync::lan_hub_rotate,
             lan_sync::lan_hub_request,
             lan_sync::lan_home_set,
+            lan_client::lan_client_pair,
+            lan_client::lan_client_pair_cancel,
+            lan_client::lan_client_request,
+            lan_client::lan_client_unpair,
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
@@ -251,6 +262,16 @@ pub fn run() {
             capture::desktop_open_data_dir,
             capture::desktop_show_main
         ]);
+
+    // Android has no other app command: only the device side of home-network sync. (The desktop
+    // list above is the one `tests/commands.rs` reads; it carries the same four commands.)
+    #[cfg(mobile)]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        lan_client::lan_client_pair,
+        lan_client::lan_client_pair_cancel,
+        lan_client::lan_client_request,
+        lan_client::lan_client_unpair
+    ]);
 
     // Windows creates the main window itself (portable data folder); every desktop OS then sets up
     // the hidden capture window and the tray.

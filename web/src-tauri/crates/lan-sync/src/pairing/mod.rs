@@ -26,7 +26,7 @@
 //!   throughout (the only place with store I/O), so nothing else can interleave.
 //! * Nothing here logs; secrets are `Zeroizing`.
 
-pub mod qr;
+pub use crate::qr;
 
 use crate::noise::frame::{self, FrameError, TAG_DATA_KEY, TAG_HELLO};
 use crate::noise::{Psk, PublicKey, Responder1, Sas, Transport};
