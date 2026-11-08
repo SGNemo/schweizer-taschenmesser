@@ -46,7 +46,10 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
     const books = await notebookRepo.active().toArray();
     const idOf = new Map(books.map((b) => [b.name.trim().toLowerCase(), b.id]));
     let order = nextNotebookOrder(books);
-    for (const name of new Set(result.fresh.map((p) => p.folder).filter((f): f is string => !!f))) {
+    // Numbered folders (`10_Arbeit`, `20_Privat`) keep their order as notebooks.
+    const names = [...new Set(result.fresh.map((p) => p.folder).filter((f): f is string => !!f))];
+    names.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    for (const name of names) {
       if (idOf.has(name.trim().toLowerCase())) continue;
       const created = await notebookRepo.create({
         name,

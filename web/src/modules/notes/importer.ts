@@ -12,6 +12,7 @@ import { addSkip, type SkipCounts, type SourceFile } from '@/importers/types';
 
 import { t } from '@/strings';
 import { isNotionPath } from '@/importers/notion/parse';
+import { isHiddenPath } from '@/importers/obsidian/parse';
 import { noteKey } from './exchange';
 import { noteRepo, notebookRepo } from './repo';
 
@@ -56,6 +57,8 @@ const isEnexFile = (f: SourceFile) =>
 /** Top-level folders of an import become notebooks: an existing one with the same name is reused. */
 async function withNotebooks(notes: ParsedNote[], ctx: ImportContext): Promise<ImportCandidate[]> {
   const folders = [...new Set(notes.map((n) => n.folder).filter((f): f is string => !!f))];
+  // Numbered folders (`10_Arbeit`, `20_Privat`) keep their order as notebooks.
+  folders.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   if (folders.length === 0) return notes.map((n) => candidate(n));
   const stored = await notebookRepo.active().toArray();
   let order = stored.reduce((max, nb) => Math.max(max, nb.order), 0);
@@ -93,7 +96,10 @@ const runtime: ImporterRuntime = {
       const note = parseMarkdownNote(input.text);
       if (note) notes.push(note);
     } else if (input.kind === 'file') {
-      const files = input.files ?? [{ name: input.fileName, text: input.text }];
+      // Hidden folders of an export (`.obsidian`, `.trash`, `.git`) hold app settings, not notes.
+      const files = (input.files ?? [{ name: input.fileName, text: input.text }]).filter(
+        (f) => !isHiddenPath(f.name),
+      );
       const opts = { signal: ctx.signal, onProgress: ctx.progress };
       const enex = files.filter(isEnexFile);
       const notion = files.filter((f) => isNotionPath(f.name));
