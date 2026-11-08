@@ -3,6 +3,7 @@
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
 ## Imports & AI import API
+
 - **Preview-before-write for every import:** wizard shows per-row checkboxes, duplicates pre-deselected, invalid rows; nothing is written before confirmation; each import is one undoable batch (`_imports`, ids `imp-<batch>-<n>`). Source: architecture.md "Start data"; commit 14205c5.
 - **One import format per collection derived from its Zod schema** (no second hand-kept schema); `scope.ts` is the single filter. Source: commit 4d8b3f1; architecture.md "Data contract".
 - **A move from another app is one run:** the sheet gives every part one `groupId`; the run is listed and undone as a whole (`core/importer/runs.ts`), each batch keeps its own undo rules; recognition shows reason, certainty in words and counts before the preview. Source: [features/import-v2.md](../features/import-v2.md).
@@ -10,12 +11,14 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **MCP wrapper is a thin separate project with no data access, not shipped in release downloads.** Token only sent to 127.0.0.1/localhost, no redirects. Source: commit c4e9b30.
 
 ## Connectors & network
+
 - **User brings their own Google OAuth client (Desktop app type); nothing shipped in repo/binary.** OAuth via PKCE + loopback listener; Google login not on Android yet. Source: architecture.md "Connectors"; CLAUDE.md.
 - **Gmail scan reads only metadata + snippet, never the body; user confirms each suggestion.** Source: architecture.md.
 - **Sync-server proxy `/v1/proxy` is deliberately narrow (SSRF hardening)** – needed by the PWA for ICS/RSS; native app fetches directly. Source: commit 7e93948; architecture.md.
 - **Spotify connector (desktop): own Client ID, fixed port 38417; "Läuft gerade" line, ≤ 1 request/30 s while visible.** [spotify.md](../features/spotify.md)
 
 ## Disk module & platform-only modules
+
 - **Modules can declare `platforms`; the filter is `availableManifests()`, resolved lazily.** Module states are synced, so a desktop-only module must vanish from router, nav, dashboard and services on the other platforms, not only from the library. The platform is known only after `initPlatform()`; importing it in the registry would create a cycle through the DB, hence `core/modules/available.ts`. Source: PR #8 (2026-09-30).
 - **Own recursive scan with `read_dir` + `rayon`, not `jwalk`/`walkdir`.** Folder sums come straight from the recursion (jwalk yields flat entries and would need a rebuild), cancel is per folder, errors are collected per folder, no hidden-file skipping by default. `walkdir` is single-threaded. Source: PR #8 (2026-09-30).
 - **Size = space on the volume (rounded to clusters), file size shown next to it; cloud-only files count 0.** The tool answers "what eats my space". `GetCompressedFileSizeW` per file would be too slow. Source: PR #8 (2026-09-30).
@@ -29,6 +32,7 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **Pantry → shopping list through the event `shopping.requested`**; the shopping module subscribes while enabled (no module import). Source: PR #8 (2026-09-30).
 
 ## Setup assistant
+
 - **Manual start, never forced.** Fresh empty app: a discreet welcome card ("Später" = `dismissed` for good). Existing installations: the start migration sets `dismissed` + hidden checklist, the assistant stays available in the settings. Why: no surprise for users with data. Source: task brief; `core/setup/detect.ts`.
 - **Progress is device-local (`_meta` `setup.state`), holds step ids only.** Not synced, not in backups, no values/secrets (strict Zod schema, tested). Why: setup differs per device (notifications, keystore), and secrets must never leak through it.
 - **Each step saves on its own "Weiter"; cancelling drops only the current draft.** No end-of-run commit, so an abort never applies half a setup. Vault is created only with a confirmed password on "Weiter".
@@ -39,6 +43,7 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **First weekday is a synced setting (scope `core`, `useWeekStart`).** Currency/format/language/time zone are shown as info only (fixed: EUR, de-DE, local wall clock). AI week ranges still use Monday.
 
 ## Browser extension & vault bridge (2026-10)
+
 - **App as the only source.** Entries are read and written only through the app's vault (`decryptAll`, `saveEntry` → normal repo/outbox), so sync brings extension-created entries to the phone without a special path. The extension keeps in memory only the bridge session and per-tab pending saves (5 min, dropped on tab close); no `chrome.storage`, no web storage.
 - **Native messaging instead of loopback.** The local import API (`crates/local-api`) rejects every request with an `Origin` header and has no CORS; extension fetches carry one. Opening a vault endpoint there would mean weakening a security rule. Native messaging gives a fixed allowlist (`allowed_origins`), a per-user pipe and no open port.
 - **Host as a mode of the portable exe.** One signed file, no second artifact for audit/update; `main.rs` runs the relay before Tauri starts when the first argument is the extension origin. A moved portable folder only means re-registering the path (done at start when the bridge is on). A separate small binary was rejected (second signed artifact, easy to forget when moving the folder). Unverified on hardware: GUI-subsystem exe as host (stdio handles).
@@ -66,3 +71,4 @@ Full text (decision, reason, source). One-line summary table: [DECISIONS](../DEC
 - **New-mail notifications (2026-11-02):** opt-in and read-only, built on the existing calm pipeline instead of a second one: a poller keeps ids and times, a `soft` notification source says "N neue E-Mails". The text is a count by default (a lock screen is not private); names are a switch. `DueNotification.local` keeps such notifications off the Web Push upload (the sync server would see the text). Quiet hours, "Stumm", game mode and the per-hour limit apply unchanged, so there is no mail-specific quiet-hours setting. Only while the app runs: pushing "new mail" needs either the content on a server or a provider push channel (Gmail Pub/Sub), both rejected for a local-first app. Polling is at most every 5 minutes and slows down after failures.
 - **Local model may read mail (2026-11-02):** opt-in, default off, and structurally local: the guard resolves only the built-in model or Ollama on loopback and routes its fetch through `loopbackOnly`, so a cloud or LAN endpoint cannot be reached even by a misconfigured entry; when no local model is ready the user gets a hint and a link to the AI settings, never a cloud fallback. Loopback instead of the existing `isLocalHost` because a LAN host is another machine. Results are plain text on screen only (not cached, not in `mail_link`); the model gets no tools or grammar, and the prompt says the mail is data, not instructions.
 - **Spotify playlist editing (2026-11-03):** its own opt-in feature `playlistEdit` (`playlist-modify-private`, `playlist-modify-public`), off by default; no other feature asks for a modify scope (test). Add to a playlist from the track menu, create a playlist by name; paths `/items` first, `/tracks` as fallback (docs were unreachable; live check open). The queue stays append-only because the API offers nothing else. Keyboard shortcuts are a module setting (on, skipped while typing). Header mini player not built (AppShell hotspot).
+- **Use case „Kopf leer“ (2026-11-08, maintainer answers in `docs/design/usecases/kopf-leer/TARGET.md` §6):** a many-lines capture never books money (an invoice word makes an invoice, a reminder word raises the open invoice through a module-free lookup and `CaptureTarget.amend?` in the capture layer, everything else becomes a ToDo with the amount and a chip „Als Ausgabe buchen“; the single sheet keeps the draft and „Buchen“); the mail row action „In den Plan“ writes without the capture sheet (title „<Absendername> · <Betreff>“, link `kind: 'mail'`, deterministic id `mail-<hash(threadId)>` create-if-absent via `createMany`, link row of type `todo`) – the one named exception to the „Vorschau-Pflicht“ of 2026-11-02; the folder batch keeps a real preview; entries made from a mail store the Gmail URL without `?authuser=<address>`; shared text never splits (first line = title, the body only behind a tick). Rejected: a separate brain-dump mode now (F1 large, later), the automation „Label → Plan“ (reverses „mail only reports“).
