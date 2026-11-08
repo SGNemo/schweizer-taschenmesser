@@ -21,7 +21,7 @@ const DAY_WORDS: [RegExp, number][] = [
 ];
 /** Times and days this parser does not read: the text is then no fitness capture. */
 const FOREIGN_WHEN = word(
-  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|(?<!heute\s+)morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|\d{1,2}\.\d{1,2}\.(?:\d{2,4})?`,
+  String.raw`\d{1,2}\s*uhr|\d{1,2}:\d{2}|(?<!heute\s+)morgen|übermorgen|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|(?<![x×*]\s*\d{1,3}\s*@?\s*)\d{1,2}\.\d{1,2}(?:\.(?:\d{2,4})?)?(?!\d|\s*(?:kg|h|std|stunden?|min))`,
 );
 
 const SETS_REPS = /(?<!\d)(\d{1,2})\s*[x×*]\s*(\d{1,3})(?!\d)/i;
@@ -81,7 +81,8 @@ function parseMeal(input: string, forced: boolean, opts: ParseOptions): CaptureR
   let m = KCAL_RE.exec(text);
   if (!m && forced) {
     // Every digit run counts („Döner 650, Cola 140“ is two numbers, so no guess).
-    if ((text.match(/\d+/g) ?? []).length === 1) m = [...text.matchAll(BARE_NUMBER)][0] ?? null;
+    if ((text.match(/(?<!\p{L})\d+(?!\p{L})/gu) ?? []).length === 1)
+      m = [...text.matchAll(BARE_NUMBER)][0] ?? null;
   }
   if (!m) return undefined;
   const kcal = within(Number(m[1]), 9999, 0);

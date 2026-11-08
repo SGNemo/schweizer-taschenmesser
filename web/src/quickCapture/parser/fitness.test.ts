@@ -105,8 +105,15 @@ describe('fitness captures', () => {
     ]);
   });
 
+  it('hands a typed date (with or without the last dot) to the general parser', () => {
+    expect(parse('Pizza 400 kcal am 12.10').type).not.toBe('meal');
+    expect(parse('Pizza 400 kcal am 12.10.').type).not.toBe('meal');
+    expect(parse('training Laufen 30 Min am 3.11').type).not.toBe('workout');
+  });
+
   it('counts every number: two foods without a unit are no guess', () => {
     expect(parse('kcal Döner 650, Cola 140').type).not.toBe('meal');
+    expect(parse('kcal 7Up 140').fields).toMatchObject({ title: '7Up', kcal: 140 });
   });
 
   it('reads „heute morgen“ as today, not as tomorrow', () => {
