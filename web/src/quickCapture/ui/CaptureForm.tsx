@@ -227,7 +227,7 @@ export function CaptureForm({
           : await saveCapture(type!, fields, { confirmed }),
       );
       setText('');
-      clearCaptureDraft();
+      if (keepDraft) clearCaptureDraft();
       setOverride(undefined);
       setRowOverride({});
       setConfirming(false);

@@ -9,8 +9,7 @@ Link: <LINK>
 Installieren: APK laden und öffnen. Samsung fragt nach „Installation aus unbekannten Quellen“: einmal für den Browser erlauben.
 Beim ersten Start sind Testdaten drin, damit du was siehst. Die Einrichtung kannst du mit „Später“ überspringen.
 Für dich wahrscheinlich spannend:
-1. Unten rechts aufs „+“ und drei Sachen in eine Zeile tippen, eine mit Uhrzeit, z. B. „Bremsbeläge bestellen, Kunde anrufen Do 14 Uhr, Garage aufräumen“.
-2. „erinnere mich in 10 Minuten an …“ eintippen, Benachrichtigungen erlauben, App zumachen und schauen, ob sie kommt.
-3. „Tanken 62,40“ eintragen und unter „Geld“ schauen, was diesen Monat noch offen ist.
-Wenn's dir zu viel wuselt: Einstellungen → „Fokus & Aufmerksamkeit“.
+1. Unten rechts aufs „+“ und drei Sachen, die du nicht vergessen willst, in 10 Sekunden reintippen, eine mit Uhrzeit.
+2. Dir eine Erinnerung in 10 Minuten setzen, App zumachen und schauen, ob sie kommt.
+3. Eine Ausgabe eintragen, z. B. das letzte Tanken, und schauen, was diesen Monat noch offen ist.
 Sag mir ehrlich, was nervt und was du kaputt gekriegt hast, gern mit Screenshot, einfach als Antwort hier.

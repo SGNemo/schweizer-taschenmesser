@@ -1013,7 +1013,9 @@ export const de = {
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
     alertsOff: (saved: string) =>
-      `${saved}. Benachrichtigungen sind aus, die Erinnerung käme nur bei offener App. Einschalten: Einstellungen → Benachrichtigungen.`,
+      `${saved}. Benachrichtigungen sind aus – Einstellungen → Benachrichtigungen.`,
+    alertsBlocked: (saved: string) =>
+      `${saved}. Benachrichtigungen sind blockiert – in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
@@ -1270,9 +1272,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintTitle: 'Hinweis, wenn Benachrichtigungen aus sind',
       leadHintHint:
-        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+        'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',

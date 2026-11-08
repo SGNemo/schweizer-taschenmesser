@@ -3,8 +3,8 @@ type: fixed
 area: app
 breaking: false
 highlight: true
-de: Eine Erinnerung aus der Schnellerfassung fragt jetzt einmal nach Benachrichtigungen, damit sie auch bei geschlossener App kommt.
-en: A reminder from quick capture now asks once for notifications, so it also arrives with the app closed.
+de: Eine Erinnerung aus der Schnellerfassung fragt jetzt einmal nach Benachrichtigungen, damit sie in der Android-App auch bei geschlossener App kommt.
+en: A reminder from quick capture now asks once for notifications, so in the Android app it also arrives with the app closed.
 ---
 type: fixed
 area: app

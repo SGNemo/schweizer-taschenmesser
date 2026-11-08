@@ -324,4 +324,17 @@ describe('CaptureForm', () => {
       expect(boxes.at(-1)).toHaveValue('');
     });
   });
+
+  it('C08: typing the field example shows two rows: an expense and an appointment', async () => {
+    const user = userEvent.setup();
+    render(<CaptureForm onSaved={() => undefined} />);
+    const example = /„(.+)“/.exec(t.quickCapture.placeholder)?.[1] ?? '';
+    await user.type(await box(), example);
+    const rows = await screen.findAllByTestId('capture-row');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Tanken');
+    expect(rows[0]).toHaveTextContent('62,40');
+    expect(rows[1]).toHaveTextContent('Kunde anrufen');
+    expect(rows[1]).toHaveTextContent('09:00');
+  });
 });

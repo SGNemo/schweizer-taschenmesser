@@ -25,6 +25,7 @@ const lastToast = () => useUiStore.getState().toasts.at(-1);
 
 beforeEach(async () => {
   resync.mockClear();
+  localStorage.clear();
   await clearAll();
   useUiStore.setState({ toasts: [] });
 });
@@ -39,13 +40,13 @@ describe('announceSaved – a reminder must be able to arrive (C01)', () => {
     expect(lastToast()?.action?.label).toBe(t.quickCapture.undo);
   });
 
-  it('says calmly where to turn alerts on after a no, and keeps undo', async () => {
+  it('says calmly where to unblock alerts after a no, and keeps undo', async () => {
     const s = service('denied');
     await announceSaved(saved('reminder'), s);
     expect(s.requestPermission).not.toHaveBeenCalled();
     expect(resync).not.toHaveBeenCalled();
     expect(lastToast()?.message).toBe(
-      t.quickCapture.alertsOff(t.quickCapture.saved(t.quickCapture.target.reminder)),
+      t.quickCapture.alertsBlocked(t.quickCapture.saved(t.quickCapture.target.reminder)),
     );
     expect(lastToast()?.action?.label).toBe(t.quickCapture.undo);
   });
@@ -70,5 +71,26 @@ describe('announceSaved – a reminder must be able to arrive (C01)', () => {
     );
     expect(s.requestPermission).toHaveBeenCalledTimes(1);
     expect(lastToast()?.message).toBe(t.quickCapture.multi.saved(2));
+  });
+
+  it('a dismissed prompt is not asked again; the toast points to the settings', async () => {
+    await announceSaved(saved('reminder'), service('default', 'default'));
+    const again = service('default', 'granted');
+    await announceSaved(saved('reminder'), again);
+    expect(again.requestPermission).not.toHaveBeenCalled();
+    expect(lastToast()?.message).toBe(
+      t.quickCapture.alertsOff(t.quickCapture.saved(t.quickCapture.target.reminder)),
+    );
+  });
+
+  it('still shows the toast with undo when the permission check fails', async () => {
+    const broken = {
+      ...service('default'),
+      permission: () => {
+        throw new Error('x');
+      },
+    };
+    await announceSaved(saved('reminder'), broken as never);
+    expect(lastToast()?.action?.label).toBe(t.quickCapture.undo);
   });
 });

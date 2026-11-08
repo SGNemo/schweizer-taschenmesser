@@ -20,14 +20,33 @@ describe('C02: an amount with decimal comma at the start or end is an expense', 
     expect(r.fields).toMatchObject({ title, amountMinor: cents, kind: 'expense' });
   });
 
-  it.each(['Version 1,25 testen', 'Arbeitszeit 7,5', 'Reifen 4 Stück', 'Seite 12,50 lesen'])(
-    'no amount guessed: %s',
-    (text) => {
+  it.each([
+    'Version 1,25 testen',
+    'Arbeitszeit 7,5',
+    'Reifen 4 Stück',
+    'Seite 12,50 lesen',
+    'Preis 0,00',
+  ])('no amount guessed: %s', (text) => {
+    const r = parse(text);
+    expect(r.fields.amountMinor).toBeUndefined();
+    expect(r.fields.title).toBe(text);
+  });
+});
+
+describe('C02: a comma time or a dated text is not money', () => {
+  it('„Termin um 14,30“ and „Werkstatt bis 12,30“ keep no amount', () => {
+    for (const text of ['Termin um 14,30', 'Werkstatt bis 12,30']) {
       const r = parse(text);
-      expect(r.fields.amountMinor).toBeUndefined();
-      expect(r.fields.title).toBe(text);
-    },
-  );
+      expect(r.fields.amountMinor, text).toBeUndefined();
+      expect(r.type, text).not.toBe('finance');
+    }
+  });
+
+  it('„morgen 9 Uhr Zahnarzt 45,00“ stays a clean appointment', () => {
+    const r = parse('morgen 9 Uhr Zahnarzt 45,00');
+    expect(r.type).toBe('event');
+    expect(r.needsChoice).toBe(false);
+  });
 });
 
 describe('C03: short weekday before a time („Do 14 Uhr“) or after „am“', () => {
@@ -49,14 +68,22 @@ describe('C03: short weekday before a time („Do 14 Uhr“) or after „am“',
     });
   });
 
-  it.each(['So ein Mist', 'Fr. Müller anrufen', 'Mo und Lisa grüßen', 'Do it yourself Regal'])(
-    'plain words stay in the title: %s',
-    (text) => {
-      const r = parse(text);
-      expect(r.fields.date).toBeUndefined();
-      expect(r.fields.title).toBe(text);
-    },
-  );
+  it.each([
+    'So ein Mist',
+    'Fr. Müller anrufen',
+    'Mo und Lisa grüßen',
+    'Do it yourself Regal',
+    'Reifen am so schönsten',
+  ])('plain words stay in the title: %s', (text) => {
+    const r = parse(text);
+    expect(r.fields.date).toBeUndefined();
+    expect(r.fields.title).toBe(text);
+  });
+});
+
+it('C03: lowercase „so“ before a time means „about“, not Sunday', () => {
+  const r = parse('Kunde kommt so 15 Uhr');
+  expect(r.fields).toMatchObject({ title: 'Kunde kommt so', date: '2026-10-29', time: '15:00' });
 });
 
 describe('C08: the field example is a sentence the parser really reads', () => {

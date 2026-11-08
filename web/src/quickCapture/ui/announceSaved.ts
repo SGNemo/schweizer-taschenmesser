@@ -4,8 +4,27 @@ import { getFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import type { SavedCapture } from '../targets';
-import { ensureAlertPermission } from './alertPermission';
+import { ensureAlertPermission, type AlertCheck } from './alertPermission';
 import { reopenCapture } from './reopen';
+
+/** C01: asks for alerts when a reminder was saved; a failure here never costs the toast. */
+async function alertLine(
+  saved: SavedCapture,
+  notifications: Parameters<typeof ensureAlertPermission>[1],
+) {
+  try {
+    const check: AlertCheck = await ensureAlertPermission(
+      saved.types ?? [saved.type],
+      notifications,
+    );
+    // Android: put the new reminder into the OS alarms now, not at the next 10-minute run.
+    if (check.justGranted) void resyncNativeSchedule().catch(() => undefined);
+    if (!check.off || !(await getFocusSettings()).leadHint) return undefined;
+    return check.off === 'denied' ? t.quickCapture.alertsBlocked : t.quickCapture.alertsOff;
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Toast "Gespeichert in …" with an undo action; used wherever the main app window saved a capture.
@@ -18,14 +37,8 @@ export async function announceSaved(
   notifications = getPlatform().notifications,
 ): Promise<void> {
   const { toast } = useUiStore.getState();
-  const { blocked, justGranted } = await ensureAlertPermission(
-    saved.types ?? [saved.type],
-    notifications,
-  );
-  // Android: put the new reminder into the OS alarms now, not at the next 10-minute run.
-  if (justGranted) void resyncNativeSchedule().catch(() => undefined);
-  const hint = blocked && (await getFocusSettings()).leadHint;
-  const say = (text: string) => (hint ? t.quickCapture.alertsOff(text) : text);
+  const extra = await alertLine(saved, notifications);
+  const say = (text: string) => (extra ? extra(text) : text);
   if (saved.count && saved.count > 1) {
     const text = saved.text ?? '';
     toast(say(t.quickCapture.multi.saved(saved.count)), {

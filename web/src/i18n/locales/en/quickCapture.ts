@@ -77,8 +77,9 @@ export const quickCapture: Strings['quickCapture'] = {
   undo: 'Undo',
   undone: 'Undone.',
   empty: 'Please enter something.',
-  alertsOff: (saved: string) =>
-    `${saved}. Notifications are off, so the reminder would only show while the app is open. Turn them on: Settings → Notifications.`,
+  alertsOff: (saved: string) => `${saved}. Notifications are off – Settings → Notifications.`,
+  alertsBlocked: (saved: string) =>
+    `${saved}. Notifications are blocked – allow them in the phone or browser settings.`,
   errors: {
     moduleOff: (name: string) => `The “${name}” module is turned off.`,
     invalid: 'The entry is incomplete. Check title, date and amount.',

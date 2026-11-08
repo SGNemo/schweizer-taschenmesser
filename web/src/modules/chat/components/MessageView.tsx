@@ -20,7 +20,7 @@ async function saveAsNote(text: string): Promise<void> {
     .find(Boolean);
   const title = (first ?? '').length > 60 ? `${(first ?? '').slice(0, 57)}…` : (first ?? '');
   try {
-    announceSaved(await saveCapture('note', { title, note: text }));
+    void announceSaved(await saveCapture('note', { title, note: text }));
   } catch (e) {
     toast(e instanceof CaptureError && e.code === 'module-off' ? c.noteOff : c.noteFailed);
   }

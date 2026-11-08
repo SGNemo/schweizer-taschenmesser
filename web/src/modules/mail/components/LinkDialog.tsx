@@ -129,7 +129,7 @@ export function LinkDialog({
             onCancel={close}
             onSaved={(saved) => {
               void saveLink(account.key, threadId, message.id, saved);
-              announceSaved(saved);
+              void announceSaved(saved);
               close();
             }}
           />
