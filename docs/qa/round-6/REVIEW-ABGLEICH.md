@@ -1,0 +1,16 @@
+# UI schärfen, Runde 6 – Abgleich mit dem unabhängigen Reviewer
+
+Teil von [FINDINGS.md](FINDINGS.md).
+
+Unabhängige Zweitmeinung (Opus, frischer Kontext, nur Screenshots + Regeln, ohne meine Liste): [REVIEWER.md](REVIEWER.md) – 46 Funde R01–R46, Urteil je Modul. 64 Bilder gesichtet; `412x915-light` war zu dem Zeitpunkt noch leer. Abgleich:
+
+**Beide sahen (hoch):** S01/U20 ↔ R15 (Vorräte-Kacheln, Titelkanten 26 px versetzt) · S03/U25 ↔ R06 (Monat am Handy unlesbar, FAB über Sa/So) · S04 ↔ R05 (Woche: Ganztags-Bereich über dem Raster) · S08 ↔ R23 (Planer-Kästchen; der Reviewer misst 26 px) · U03/U31 ↔ R37 (Einstellungen „Benachrichtig/ungen“) · U06 ↔ R41/R42 (Einrichtungs-Fußzeile unter dem Falz) · U09/U11/U12/U13 ↔ R04 (mehrere Primäre) · U18 ↔ R07 (Abos rot ohne Frist vorbei – der Reviewer hatte Recht: `--danger`, nicht Akzent; korrigiert) · U22 ↔ R33 (Notizen-Reiter) · U24 ↔ R18 (Personen-Kopf am Handy) · U26 ↔ R45 (Leerzustände ohne Verb; Rechnungen leer ergänzt) · U32 ↔ R40 (Bibliothek/Werkzeuge Kartenfüße und -köpfe) · U34 ↔ R20 (⋯ allein in einer Zeile) · T01 ↔ R30 (E-Mail) · T02 ↔ R44 (Schnellerfassung).
+
+**Nur der Reviewer – übernommen (geprüft, mit eigener Messung):** R01/R02/R46 → **U41** Kopfbandhöhen 114–292 px statt 96/200 px (nachgemessen `head-heights.json`, systemisch) · R32 → U37 · R26 (Chat-Beispiel im leeren Profil) → U38 · R27 → U39 · R25 → U40 · R10 → U42 · R12 → U43 · R13/R14 → U44 · R17 → U47 · R22 → U48 · R28 → U49 · R29 → U50 · R31 → U51 · R34 → U52 · R35 → U53 · R38 → U54 · R39 → U55 · R08 → U56 · R16 → in S01.
+
+**Nur ich – vom Reviewer nicht gesehen (bleiben, mit Messung belegt):** U01 Layout-Shift (CLS-Quellen), U02 Teilschritt durchgestrichen, U04 Browser-Kacheln (R32 nennt es mit), U07 Dateifeld, U08 rote Art-Badges im Kalender, U15–U17, U19, U21, U23, U28–U30, U33, U35, U57–U59.
+
+**Abgelehnt oder Artefakt (mit Grund):** R03 h1-Größen (32 px hoch / 20 px `fokus` / Serif und Mono je `identity.type` – so in MODULE-IDENTITY vorgesehen) · R05-Zusatz „Chips durchgestrichen, Toast“ (die Tour hatte die Kalender-Filter gerade umgeschaltet) · R09 Verlauf auf den Konto-Karten (Signatur `bankCard`, Identitäts-Audit F12; Kontextzeile fehlt beim Sparkonto – kleiner Zusatz zu U42) · R11 US-Datumsformat (natives Datumsfeld im Headless-Chromium ohne System-Locale; Svens Screenshot zeigt „TT.mm.jjjj“) · R19 angeschnittene Segmente am Handy (scrollen; `overflow`-Wächter 0 px – bleibt als Teil von U25 nur für den Kalender) · R20 „⋯ 40 px“ (Trefferfläche 44 px über `::after`, `Button.module.css:87`) · R21 ToDo-Titel gekürzt am Handy (Entscheidung C22, Paket 1) · R24 Wetter ohne Ort im Seed (Dev-Seed bewusst ohne Netzort, `seed.spec.ts`) · R26 Laufwerke/Downloads/Akku im leeren Profil (Web-Vorschau stellt Desktop-Module mit Beispielwerten dar; auf Windows echte Werte) · R36 Merkliste/Unterlagen gleicher Kopf (offener Audit-Punkt, Paket-2-Entscheidung) · R43 Handy-Overlay „nur 100 vh“ (Full-Page-Screenshot-Artefakt eines fixen Overlays).
+
+**Urteile des Reviewers je Modul** (aus REVIEWER.md): „wirkt fertig“ Finanzen-Übersicht, Rechnungen, Unterlagen, Dieser PC, Werkzeuge; „fast“ die meisten; „unruhig“ Kalender, Gewohnheiten, Notizen, Musik, E-Mail, Übersicht (leer), Einrichtung. Deckt sich mit der Gewichtung der Liste.
+
