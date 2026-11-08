@@ -44,7 +44,7 @@ test('C01: saving a reminder asks for notifications once', async ({ page }) => {
   const box = await openSheet(page);
   await box.fill('erinnere mich in 10 Minuten an Öl nachfüllen');
   await box.press('Enter');
-  await expect(page.getByText(/Benachrichtigungen sind aus/)).toBeVisible();
+  await expect(page.getByText(/Damit die Erinnerung klingelt/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { __asked: number }).__asked)).toBe(1);
 });
