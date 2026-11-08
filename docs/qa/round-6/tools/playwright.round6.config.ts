@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
 const executablePath = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
 export default defineConfig({
   testDir: './e2e/screenshots',
-  testMatch: ['round6.spec.ts'],
+  testMatch: ['round6.spec.ts', 'round6-setup.spec.ts', 'round6-cls.spec.ts'],
   workers: Number(process.env.R6_WORKERS ?? 3),
   fullyParallel: true,
   timeout: 0,

@@ -517,14 +517,20 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
     await page.goto(m.path);
     await settle(page);
     const buttons = page.locator('main button, main a[href]');
-    const n = Math.min(await buttons.count(), 60);
+    const names: string[] = await buttons
+      .evaluateAll((els) =>
+        els
+          .slice(0, 60)
+          .map((e) => (e.getAttribute('aria-label') || (e as HTMLElement).innerText || '').trim()),
+      )
+      .catch(() => []);
     let opened = false;
-    for (let i = 0; i < n && !opened; i++) {
-      const b = buttons.nth(i);
-      const name = ((await b.getAttribute('aria-label')) || (await b.innerText().catch(() => ''))).trim();
+    for (let i = 0; i < names.length && !opened; i++) {
+      const name = names[i]!;
       if (!ADD.test(name) || /importieren|einrichtung|kalender verwalten|nachkaufen/i.test(name)) continue;
-      if (!(await b.isVisible().catch(() => false))) continue;
-      await b.click().catch(() => {});
+      const b = page.locator('main button, main a[href]').nth(i);
+      if (!(await b.isVisible({ timeout: 1500 }).catch(() => false))) continue;
+      await b.click({ timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(WAIT);
       const dlg = page.locator('dialog[open], [role="dialog"]').last();
       if ((await dlg.count()) && (await dlg.isVisible().catch(() => false))) {
@@ -533,13 +539,17 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
         await dlg.screenshot({ path: `${dir}/dialog-${m.id}-box.png` }).catch(() => {});
         facts[`dialog-${m.id}`] = {
           trigger: name,
-          title: await dlg.locator('h2').first().innerText().catch(() => null),
+          title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null),
           box: await dlg.boundingBox(),
           ...(await measure(page, 'dialog', !!vp.mobile)),
           axe: await axe(page),
         };
       }
       await closeDialogs(page);
+      if (!opened && page.url().replace(/[?#].*$/, '') !== new URL(m.path, page.url()).pathname) {
+        await page.goto(m.path);
+        await settle(page);
+      }
     }
     if (!opened) facts[`dialog-${m.id}`] = { trigger: null };
   }

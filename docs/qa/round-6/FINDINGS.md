@@ -22,7 +22,7 @@ Stand 2026-11-08, `develop` @ `91a1eaa`, Branch `qa/ui-round-6`. Regeln: [MODULE
 
 ## Eigene Suche (U)
 
-_Wird nach der Tour gefüllt._
+U01–U36 und die Tabu-Notizen T01–T05: [U-FINDINGS.md](U-FINDINGS.md) (A Abbruch-relevant · H Hierarchie/Identität · K Kosmetik).
 
 ## Reviewer
 
