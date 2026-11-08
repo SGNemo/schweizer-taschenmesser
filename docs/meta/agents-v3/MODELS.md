@@ -6,8 +6,8 @@
 | nemo-builder  | claude-sonnet-5-5 | medium | write      | 4075         |
 | nemo-docs     | claude-haiku-5-5  | medium | write      | 3828         |
 | nemo-lead     | claude-sonnet-5-5 | high   | review     | 4790         |
-| nemo-merge    | claude-haiku-5-5  | low    | merge      | 6837         |
+| nemo-merge    | claude-haiku-5-5  | low    | merge      | 6860         |
 | nemo-ops      | claude-sonnet-5-5 | medium | write      | 4134         |
-| nemo-reviewer | claude-opus-5-5   | medium | review     | 5377         |
+| nemo-reviewer | claude-opus-5-5   | medium | review     | 5573         |
 
 "write" = PRs, comments, reviews; "review" = comments and reviews only; "merge" = may merge. Web search/fetch are disabled in every definition.

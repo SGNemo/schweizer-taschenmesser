@@ -51,7 +51,7 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 2. **Start:** `node scripts/agents/session.mjs --class S "<Auftrag>"` – one session = one task = one budget class (S 5, M 10, L 15 USD); the first message carries the class.
 3. **Gate + situation** – the lead classifies again (declines with a ready prompt head), reads SHARED.md, CHATS, open PRs, `chats:status`.
 4. **Delegate** – at most 4 child threads, one per agent, bundled per area; follow-ups go into the open thread.
-5. **Review** – `nemo-reviewer` with the lenses the paths need (security lens mandatory on the full-path list in SHARED.md; light path = correctness only).
+5. **Review** – `nemo-reviewer` with the lenses the paths need (security lens for every path outside the light-path allowlist in SHARED.md; light path = correctness only).
 6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. PRs under `docs/meta/agents-v3/**` or `scripts/agents/**` are merged by Sven.
 7. **Report** – budget class first, 3 points + PR links; then the session ends (a new task = a new session).
 

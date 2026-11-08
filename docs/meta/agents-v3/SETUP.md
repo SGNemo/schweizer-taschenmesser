@@ -117,12 +117,12 @@ Flags: `--agent lead|auditor|agent_…` (Standard `lead`; Kurzformen über `clau
 
 Richtwerte (Listenpreis, Lead auf Sonnet mit Opus-Advisor; Klassen und Ablehnungen: [../WORK-ROUTING.md](../WORK-ROUTING.md)):
 
-| Auftrag                                                      | Klasse | Budget   |
-| ------------------------------------------------------------ | ------ | -------- |
-| PRs prüfen und mergen, CHATS aufräumen, eine Prüfung         | S      | 2–5 $    |
-| Mehrere Berichte konsolidieren, Auditor auf einen PR         | M      | 5–10 $   |
-| Runde mit bis zu 4 Delegationen (nur nachts/unbeaufsichtigt) | L      | ≤ 15 $   |
-| alles darüber                                                | –      | zerlegen |
+| Auftrag                                                              | Klasse | Budget   |
+| -------------------------------------------------------------------- | ------ | -------- |
+| PRs prüfen und mergen, CHATS aufräumen, eine Prüfung                 | S      | 2–5 $    |
+| Mehrere Berichte konsolidieren, Auditor auf einen PR                 | M      | 5–10 $   |
+| Runde mit bis zu 4 Delegationen (deine Wahl: nachts/unbeaufsichtigt) | L      | ≤ 15 $   |
+| alles darüber                                                        | –      | zerlegen |
 
 Vollständige Zuordnung (auch Fix auf offenem PR, Dependency-Bump = M): [../WORK-ROUTING.md](../WORK-ROUTING.md).
 

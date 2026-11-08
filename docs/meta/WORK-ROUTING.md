@@ -14,7 +14,7 @@ One page for chats, agents and Sven (2026-11-08). Agent budget: 200 USD/month; o
 | One CI measurement or one perf number                                   | Lead → ops        | S ≤ 5 USD  |
 | Consolidate several reports; small docs fixes bundled                   | Lead              | M ≤ 10 USD |
 | Independent audit of one PR, branch or report                           | Auditor           | M ≤ 10 USD |
-| Round with up to 4 delegations (night/unattended only)                  | Lead              | L ≤ 15 USD |
+| Round with up to 4 delegations (Sven's choice: night/unattended)        | Lead              | L ≤ 15 USD |
 | Anything above 15 USD or more than 4 delegations                        | nobody – split it | –          |
 | Secrets, signing, keystore, releases, tags, rulesets, `ant apply`, PAT  | Sven himself      | –          |
 
@@ -45,5 +45,5 @@ Routing: Auditor, M (10 USD) · PR #<n> · done means <verdict + findings file>
 - One session = one task = one budget (`session.mjs --class S|M|L`). Never raise it to keep going; start a new session (the lead's last report says where it stopped).
 - The session ends with the report; a new topic is a new session.
 - Status questions cost a full turn of the lead: read `docs/CHATS.md`, the PR list or the board instead.
-- Check before a run: `node scripts/agents/session.mjs --routing-check` (prints this decision tree, starts nothing). `session.mjs` reads the pasted routing line: `Claude Code` stops locally, `Auditor` starts the auditor, the class sets the budget.
+- Check before a run: `node scripts/agents/session.mjs --routing-check` (prints this decision tree, starts nothing). `session.mjs` reads the pasted routing line: `Claude Code` stops a new session locally, `Auditor` starts the auditor, the class sets the budget.
 - This file is merged by Sven himself (like `docs/meta/agents-v3/`).

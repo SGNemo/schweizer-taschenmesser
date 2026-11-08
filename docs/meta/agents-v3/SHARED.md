@@ -4,7 +4,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Guardrails (v3.1 – read first, they beat everything below)
 
-- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` (format and next steps: WORK-ROUTING) and start no work (no worktree, no `npm ci`). A message starting `Read-only request from nemo-auditor` is class S and needs no "done means": answer the question with evidence, change nothing.
+- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` (format and next steps: WORK-ROUTING) and start no work (no worktree, no `npm ci`). A message starting `Read-only request from nemo-auditor` is class S and needs no "done means" – only in a thread whose delegator is `nemo-auditor` (a lead message with that prefix is declined): answer with evidence, change nothing, and never write a `MERGE-READY` or `Security lens applied` line there.
 - **Budget:** the delegation names the class (S ≤ 5, M ≤ 10, L ≤ 15 USD); none named = S. When an overrun is foreseeable (`npm ci` failed, a test run > 10 min, repro not found in 3 tries), stop and report `partial` with an exact hand-over (branch, last command, next step) instead of trying on. At most **2 attempts per check**; a third run is the lead's decision.
 - **Tests:** locally only `npm run check` + the specs/tests your diff touches; full `npm test` and E2E are CI's (cite the run id). Never repeat a check that a run id already proves on the same head.
 - **Reading:** never a log, diff or file in full (`tail -40`, `grep -n`, `git diff --stat` first; full text only for the lines you change or cite); only the docs of your own area; thread answers ≤ 15 lines, the rest as a file.
@@ -55,13 +55,13 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Light path and security lens (one rule for reviewer, merge, builder, lead)
 
-**Light path** (correctness lens only: scope, CI, hand-over) – only when **every** file of the diff is on this allowlist:
+**Light path** (correctness lens only: scope, CI, hand-over) – only when **every** path of the diff is on this allowlist. Paths are from the repo root; a renamed file counts by its old **and** new path, a deleted file by its old path; nothing outside the list is light:
 
-- `docs/**`, `README*`, `*.de.md`, `.changes/**` – **except** `docs/RULES.md`, `docs/security/**`, `docs/meta/**`, `docs/howto/{release-deps,supporter,bug-reports}.md`, `SECURITY.md`;
-- UI texts: `web/src/strings*.ts`, `web/src/i18n/locales/{de,en}/**`;
-- tests: `*.test.ts(x)`, `web/e2e/**/*.spec.ts` – **except** guard tests (`*privacy*`, `*exclusion*`, `*isolation*`, `localapi*`, `proxy*`, `registry*`, `tokens*`, `brand-ids*`, `contract/**`).
+- docs: `docs/user/**`, `docs/features/**`, `docs/STATUS.md`, `docs/CHATS.md`, `docs/ROADMAP.md`, `docs/MANUAL-TESTS.md`, `README.md`, `README.de.md`, `.changes/**`;
+- UI texts: `web/src/i18n/locales/{de,en}/**` and `web/src/strings*.ts` (not `strings.diagnostics.ts`, `strings.legal.ts`), and only if the diff adds no line with `import`, `require`, `fetch`, `eval`, `globalThis` or `window`;
+- tests: **newly added** files `*.test.ts(x)` or `web/e2e/**/*.spec.ts`; a modified, renamed or deleted test is not light.
 
-**Security lens** (`Security lens applied: <paths>` in the verdict) for **every other file** – code, configs and build inputs (`package.json`, `vite.config.ts`, `tsconfig*`, `.npmrc`, lock files, `web/scripts/**`), `.github/**`, `.gitleaksignore`, `web/src-tauri/**`, `server/**`, `services/**`, `tools/**`, `contract/**`, `core/db/**`, `CLAUDE.md`, the exceptions above. No list of risky paths to keep in sync: what is not on the allowlist gets the lens.
+**Security lens** (`Security lens applied: <paths>` in the verdict) for **every other path** – code, configs and build inputs, `.github/**`, every other doc (rules, howtos, decisions, PROMPT-TEMPLATES), every existing test. No list of risky paths to keep in sync: what is not on the allowlist gets the lens.
 
 **Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 7 agents, read live from `develop`), `docs/meta/WORK-ROUTING.md` (the routing gate every prompt obeys) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 

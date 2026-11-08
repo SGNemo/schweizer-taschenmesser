@@ -4,8 +4,8 @@
 // thread ends its turn it keeps listening while child threads still run (checks threads every 30 s) and stops only
 // when the primary thread ends its turn again after the last child report; --no-wait stops at the first end_turn.
 //
-//   node scripts/agents/session.mjs --routing-check                       the five routing questions, no session
-//   node scripts/agents/session.mjs --class S "Prüfe und merge PR #560"   class S = 5 USD (M = 10, L = 15)
+//   node scripts/agents/session.mjs --routing-check                       the decision tree (five questions), no session
+//   node scripts/agents/session.mjs "Routing: Lead, S (5 USD) · PR #560 · done means: merged or one sentence why not"
 //   node scripts/agents/session.mjs --class M --file brief.md
 //   node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means …"   the line picks the auditor
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
@@ -148,7 +148,7 @@ const routing = (() => {
   const first = messageText.trimStart().split("\n", 1)[0];
   if (!/^Routing:/i.test(first)) return {};
   const m =
-    /^Routing:\s*(Claude Code|Lead(?:\s*→\s*\w+)?|Auditor)\b(?:\s*,\s*([SML])\b)?/i.exec(
+    /^Routing:\s*(Claude Code|Lead(?:\s*(?:→|->)\s*[\w-]+)?|Auditor)\b(?:\s*,?\s*([SML])\b)?/i.exec(
       first,
     );
   if (!m) {
@@ -158,6 +158,10 @@ const routing = (() => {
     return {};
   }
   const who = m[1].toLowerCase();
+  if (!who.startsWith("claude") && !m[2] && flags.class === undefined)
+    console.warn(
+      `warning: routing line has no class (S|M|L) – the session runs as S unless --budget says more`,
+    );
   return {
     role: who.startsWith("claude")
       ? "claude-code"
@@ -809,7 +813,7 @@ async function main() {
     environment_id: cfg.env,
     title:
       cfg.title ??
-      `nemo${agentRole === "auditor" ? "-auditor" : ""}: ${short(message, 60)}`,
+      `nemo${agentRole === "auditor" ? "-auditor" : ""}: ${short(message.replace(/^\s*Routing:[^·\n]*·\s*/i, ""), 60)}`,
     budget: budgetObj(cfg.budgetUsd),
     resources: [
       {

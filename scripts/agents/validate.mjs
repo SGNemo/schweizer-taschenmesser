@@ -95,6 +95,7 @@ const GH_NO_WRITES = [
   "sub_issue_write",
 ];
 const GH_OFF_ROLE = {
+  "nemo-docs": ["pull_request_review_write"],
   "nemo-lead": GH_NO_WRITES,
   "nemo-reviewer": GH_NO_WRITES,
   "nemo-auditor": GH_NO_WRITES,
