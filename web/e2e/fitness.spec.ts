@@ -270,5 +270,5 @@ test('import from MyFitnessPal: the export ZIP brings a day of exercise and a me
   await ready(page, '/fitness');
   await expect(page.getByText(/Squats, Barbell 3 × 5 · 80 kg/)).toBeVisible();
   // The weight from Measurement-Summary is nowhere.
-  await expect(page.getByText('81,4')).toHaveCount(0);
+  await expect(page.getByText(/81[,.]4/)).toHaveCount(0);
 });

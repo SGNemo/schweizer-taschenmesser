@@ -116,6 +116,8 @@ describe('fitness exports (invented fixtures)', () => {
       { date: '2026-10-14', text: 'Breakfast', kcal: 413, proteinG: 16, carbsG: 64, fatG: 9 },
       { date: '2026-10-14', text: 'Lunch', kcal: 1045, proteinG: 53, carbsG: 110, fatG: 38 },
       { date: '2026-10-15', text: 'Breakfast', kcal: 380, proteinG: 15, carbsG: 60, fatG: 8 },
+      // „2,100“ without decimals is two thousand one hundred (MFP writes English numbers).
+      { date: '2026-10-15', text: 'Dinner', kcal: 2100, proteinG: 95, carbsG: 190, fatG: 80 },
     ]);
   });
 
@@ -123,8 +125,8 @@ describe('fitness exports (invented fixtures)', () => {
     const { workouts, unreadable, empty } = parseMfpExercise(fixture('mfp-exercise.csv'));
     expect([unreadable, empty]).toEqual([0, 1]);
     expect(workouts.map((w) => [w.date, w.title, w.durationMin, w.sets.length])).toEqual([
-      ['2026-10-14', 'Running (jogging), 10 km/h', 35, 1],
-      ['2026-10-15', '', 20, 8],
+      ['2026-10-14', 'MyFitnessPal', 35, 1],
+      ['2026-10-15', 'MyFitnessPal', 20, 8],
     ]);
     expect(workouts[1]!.sets[0]).toEqual({
       exercise: 'Bench Press, Barbell',
@@ -132,8 +134,10 @@ describe('fitness exports (invented fixtures)', () => {
       weightKg: 135 * 0.45359237,
     });
     expect(workouts[1]!.sets.at(-1)).toEqual({ exercise: 'Walking, 5 km/h', seconds: 1200 });
-    // The kilogram variant of the header, and one exercise twice in a day.
+    // The kilogram variant of the header; one exercise twice in a day is one entry of all its minutes.
     const kg = parseMfpExercise(fixture('mfp-exercise-kg.csv')).workouts;
-    expect(kg.map((w) => [w.title, w.durationMin, w.sets.length])).toEqual([['Rowing', 35, 2]]);
+    expect(kg.map((w) => [w.durationMin, w.sets])).toEqual([
+      [35, [{ exercise: 'Rowing', seconds: 2100 }]],
+    ]);
   });
 });
