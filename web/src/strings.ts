@@ -627,15 +627,27 @@ export const de = {
     restLater: 'Rest später',
     allSteps: 'Alle Schritte ansehen',
     questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
+    finishQuestions: 'Fragen abschließen',
+    overviewNow: 'Jetzt',
+    overviewQuestions: (n: number) => `Alle ${n} Fragen und was danach kommt`,
+    overviewSteps: (n: number) => `Alle ${n} Schritte im Überblick`,
+    overviewAfter:
+      'Nach der letzten Frage schließt sich die Einrichtung. Die übrigen Schritte sind freiwillig und stehen danach als Checkliste auf der Übersicht.',
     quick: {
       basics: {
-        title: 'Wie darfst du heißen?',
-        description: 'Name und Textgröße. Beides lässt sich später ändern.',
+        title: 'Sprache, Name und Textgröße',
+        description:
+          'Hier stellst du die Sprache, deinen Namen und die Textgröße ein. Unter „Weitere Einstellungen“ folgen Farbschema und Wochenstart. Alles lässt sich später in den Einstellungen ändern.',
       },
       profiles: {
         title: 'Was passt zu dir?',
         description:
-          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet.',
+          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet. Passt keins genau, wähle das nächste: Einzelne Module schaltest du danach unter Mehr → Modul-Bibliothek ein oder aus. „Weiter“ ohne Auswahl lässt die Module, wie sie sind.',
+      },
+      focus: {
+        title: 'Wie ruhig soll die App sein?',
+        description:
+          'Vier Schalter: Bewegung, Erinnerungen, Serien und Rückblicke, Hinweise; dazu die Lesehilfe.',
       },
       ai: {
         title: 'Soll eine KI helfen?',
@@ -692,6 +704,33 @@ export const de = {
         dataKept: 'Daten bleiben erhalten, alles lässt sich wieder einschalten.',
         pick: 'Wählen',
         picked: 'Gewählt',
+      },
+      focus: {
+        title: 'Fokus-Hilfen',
+        description: 'Fünf Schalter bestimmen, wie ruhig sich die App verhält.',
+        preselect:
+          'Empfohlen und vorausgewählt: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        preselectDone:
+          'Die Schalter zeigen, wie sie gerade eingestellt sind. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        laterFull: '„Später“ ändert nichts.',
+        laterQuick: '„Rest später“ ändert nichts.',
+        motion: 'Bewegung reduzieren',
+        motionHint:
+          'An: Übergänge und Animationen der App sind aus, Inhalte erscheinen sofort an ihrer Stelle.',
+        ownReminders: 'Keine Morgen-Übersicht und keine Vorab-Erinnerungen',
+        ownRemindersHint:
+          'An: Die App schickt keine Morgen-Übersicht der heutigen ToDos und keine zusätzlichen Vorab-Erinnerungen vor Terminen. Erinnerungen, die du an einem Eintrag selbst einstellst, kommen weiterhin.',
+        noCounts: 'Keine Serien und Rückblicke',
+        noCountsHint:
+          'An: Wiederkehrende ToDos zeigen kein „n in Folge“, Gewohnheiten keine längste Serie, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“.',
+        toastStay: 'Hinweise bleiben stehen',
+        toastStayHint:
+          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ oder die Aktion tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
+        readAid: 'Lesehilfe',
+        readAidHint:
+          'An: Die Anfänge der Wörter in längeren Texten werden fett, das führt den Blick. Zahlen und Eingabefelder bleiben ohne. Nicht vorausgewählt, probiere sie aus, wenn du magst.',
+        where:
+          'Jeder Schalter lässt sich später in den Einstellungen ändern: Bewegung, Hinweise und Lesehilfe unter „Barrierefreiheit“ (nur dieses Gerät), die Erinnerungen unter „Ruhige Erinnerungen“, Serien und Rückblick unter „Fokus & Aufmerksamkeit“. Erinnerungen, Serien und Rückblick gelten mit Sync auf allen deinen Geräten.',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -807,6 +846,19 @@ export const de = {
           'obsidian.notes': 'Markdown-Notizen importiert',
           'bank.statement': 'Kontoauszug importiert',
           'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
+        } as Record<string, string>,
+        /** The same points as a goal, while not done yet (B08, round 5). */
+        goals: {
+          'google.calendar': 'Kalender (.ics) importieren',
+          'google.tasks': 'Tasks.json importieren',
+          'google.keep': 'Keep-Notizen importieren',
+          'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
+          'todoist.tasks': 'Todoist-CSV importieren',
+          'evernote.notes': 'Evernote-Notizen importieren',
+          'microsoft.tasks': 'Microsoft-To-Do-Aufgaben (Outlook-CSV) importieren',
+          'obsidian.notes': 'Markdown-Notizen importieren',
+          'bank.statement': 'Kontoauszug importieren',
+          'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importieren',
         } as Record<string, string>,
         tick: 'Abhaken',
         untick: 'Wieder öffnen',
@@ -939,7 +991,7 @@ export const de = {
   quickCapture: {
     title: 'Schnell erfassen',
     inputLabel: 'Was möchtest du festhalten?',
-    placeholder: 'z. B. „morgen 15 Uhr Zahnarzt“',
+    placeholder: 'z. B. „Tanken 62,40, morgen 9 Uhr Kunde anrufen“',
     save: 'Speichern',
     book: 'Buchen',
     type: {
@@ -955,6 +1007,8 @@ export const de = {
       birthday: 'Geburtstag',
       note: 'Notiz',
       plan: 'Plan',
+      meal: 'Mahlzeit',
+      workout: 'Training',
     },
     target: {
       todo: 'ToDos',
@@ -968,6 +1022,8 @@ export const de = {
       birthday: 'Personen',
       note: 'Notizen',
       plan: 'Planer',
+      meal: 'Fitness',
+      workout: 'Fitness',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -1012,6 +1068,10 @@ export const de = {
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
+    alertsOff: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Einstellungen → Benachrichtigungen.`,
+    alertsBlocked: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Benachrichtigungen in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
@@ -1268,9 +1328,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintTitle: 'Hinweis, wenn Benachrichtigungen aus sind',
       leadHintHint:
-        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+        'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -1522,6 +1582,7 @@ export const de = {
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
       done: 'Alles für heute erledigt.',
+      nothing: 'Für heute ist nichts eingetragen.',
       /** C22: the accessible name of the head's buttons says which task they act on ("Anfangen: Steuer"). */
       named: (action: string, title: string) => `${action}: ${title}`,
     },
@@ -1547,7 +1608,9 @@ export const de = {
       open: (n: number) =>
         n === 1 ? 'Eingang sortieren · 1 Ding' : `Eingang sortieren · ${n} Dinge`,
       hint: (n: number) =>
-        n === 1 ? '1 Ding wartet auf einen Platz.' : `${n} Dinge warten auf einen Platz.`,
+        n === 1
+          ? '1 Aufgabe liegt im Eingang, noch in keiner Liste.'
+          : `${n} Aufgaben liegen im Eingang, noch in keiner Liste.`,
       progress: (n: number, total: number) => `${n} von ${total}`,
       today: 'Für heute',
       skip: 'Überspringen',
@@ -1785,6 +1848,7 @@ export const de = {
       expiry: 'Ablauf',
       external: 'Extern',
       plan: 'Plan',
+      training: 'Training',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -3087,6 +3151,14 @@ export const de = {
         file: 'buchungen',
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      month: {
+        title: 'Diesen Monat',
+        free: 'Frei bis Monatsende',
+        coming: (amount: string) => `Kommt noch ${amount}`,
+        nothingComing: 'Nichts mehr fällig',
+        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        open: 'Was noch kommt',
+      },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
         bookSubscriptionsHelp:
@@ -3195,6 +3267,10 @@ export const de = {
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
+    balanceToday: 'Kontostand heute laut Bank (optional)',
+    openingFromToday: 'Wird aus „Kontostand heute laut Bank“ berechnet.',
+    balanceTodayHint:
+      'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
@@ -3378,7 +3454,8 @@ export const de = {
     replace: 'Ersetzen',
     replaceHint: 'Das Backup wird zum Stand: Einträge, die nicht im Backup sind, werden gelöscht.',
     doImport: 'Importieren',
-    contains: (records: number, tables: number) => `${records} Einträge in ${tables} Tabellen`,
+    contains: (records: number, tables: number) =>
+      `${records} ${records === 1 ? 'Eintrag' : 'Einträge'} in ${tables} ${tables === 1 ? 'Tabelle' : 'Tabellen'}`,
     confirmTitle: 'Backup ersetzen?',
     confirmText:
       'Alle Einträge, die nicht im Backup stehen, werden gelöscht – auch auf anderen Geräten, sobald sie synchronisieren.',
@@ -4049,6 +4126,7 @@ export const de = {
     editorLabel: 'Text der Seite',
     placeholder: 'Einfach losschreiben … „/“ öffnet das Befehlsmenü.',
     saved: 'Gespeichert',
+    savedWhere: 'Gespeichert. Die Seite steht unter Notizen → Alle Seiten.',
     saving: 'Speichert …',
     words: (n: number) => (n === 1 ? '1 Wort' : `${n} Wörter`),
     writingMode: 'Schreibmodus',
@@ -4181,7 +4259,7 @@ export const de = {
       title: 'Dateien importieren',
       files: 'Dateien wählen',
       folder: 'Ordner wählen',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
@@ -6252,6 +6330,8 @@ export const de = {
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
         'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
+      bankBalanceHint:
+        'Stimmt der Kontostand danach nicht mit deiner Bank überein? Trag ihn unter Finanzen → Konten als „Kontostand heute laut Bank“ ein.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
@@ -8170,6 +8250,136 @@ export const de = {
         sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
       },
     },
+  },
+  fitness: {
+    meta: {
+      name: 'Fitness',
+      description: 'Training und Essen grob festhalten: Einheiten, Sätze, Gewichte und kcal.',
+      quickAddSession: 'Fitness: Einheit eintragen',
+      quickAddMeal: 'Fitness: Mahlzeit eintragen',
+      widget: 'Fitness',
+      settings: {
+        nutrition: 'Kalorien erfassen',
+        nutritionHelp:
+          'Aus: Die Ansicht „Essen“ und die kcal-Zeile im Widget verschwinden. Deine Einträge bleiben.',
+        kcalGoal: 'Tagesziel kcal',
+        kcalGoalHelp: '0 = kein Ziel. Unter „Essen“ → „Tagesziel“ kannst du es grob ausrechnen.',
+        weekSessions: 'Einheiten pro Woche',
+        weekSessionsHelp: '0 = kein Ziel, das Widget zählt dann nur.',
+      },
+    },
+    tabs: { label: 'Ansicht', training: 'Training', food: 'Essen' },
+    addSession: 'Einheit eintragen',
+    addMeal: 'Mahlzeit eintragen',
+    editSession: 'Einheit bearbeiten',
+    editMeal: 'Mahlzeit bearbeiten',
+    repeat: (title: string) => `Wie letztes Mal: ${title}`,
+    repeated: (title: string) => `Für heute eingetragen: ${title}`,
+    untitled: 'Einheit',
+    figure: {
+      week: 'Diese Woche',
+      sessions: (n: number) => (n === 1 ? 'Einheit' : 'Einheiten'),
+      today: 'Heute',
+    },
+    empty: {
+      training: 'Noch nichts eingetragen. Eine Einheit reicht.',
+      trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
+      food: 'Noch keine Mahlzeit eingetragen.',
+      foodHint: 'Auch in der Schnellerfassung: „kcal 650 Döner“.',
+    },
+    list: {
+      training: 'Einheiten nach Tag',
+      food: 'Mahlzeiten nach Tag',
+      dayKcal: (kcal: string) => `${kcal} kcal`,
+      exercises: (n: number) => (n === 1 ? '1 Übung' : `${n} Übungen`),
+    },
+    line: {
+      setsReps: (sets: number, reps: number) => `${sets} × ${reps}`,
+      sets: (sets: number) => (sets === 1 ? '1 Satz' : `${sets} Sätze`),
+      reps: (reps: number) => `${reps} Wdh.`,
+      weight: (kg: string) => `${kg} kg`,
+      kcal: (kcal: string) => `${kcal} kcal`,
+    },
+    form: {
+      date: 'Datum',
+      time: 'Uhrzeit',
+      title: 'Titel',
+      titleHint: 'Zum Beispiel „Oberkörper“ (freiwillig)',
+      duration: 'Dauer in Minuten',
+      exercises: 'Übungen',
+      exercise: 'Übung',
+      sets: 'Sätze',
+      reps: 'Wdh.',
+      weight: 'kg',
+      minutes: 'Min',
+      addExercise: 'Übung hinzufügen',
+      removeExercise: (name: string) => `${name} entfernen`,
+      note: 'Notiz',
+      text: 'Was',
+      textHint: 'Zum Beispiel „Haferflocken mit Obst“',
+      kcal: 'kcal',
+      protein: 'Eiweiß in g',
+      carbs: 'Kohlenhydrate in g',
+      fat: 'Fett in g',
+      known: 'Schon einmal eingetragen',
+      invalid: 'Bitte prüfe die Angaben.',
+      emptySession: 'Trag eine Übung oder eine Dauer ein.',
+    },
+    builtIn: {
+      benchPress: 'Bankdrücken',
+      squat: 'Kniebeuge',
+      deadlift: 'Kreuzheben',
+      row: 'Rudern',
+      shoulderPress: 'Schulterdrücken',
+      pullUp: 'Klimmzüge',
+      pushUp: 'Liegestütze',
+      plank: 'Plank',
+      run: 'Laufen',
+      bike: 'Radfahren',
+      swim: 'Schwimmen',
+      stretch: 'Dehnen',
+    },
+    goal: {
+      open: 'Tagesziel',
+      title: 'Tagesziel kcal',
+      direct: 'kcal pro Tag',
+      directHint: '0 = kein Ziel',
+      calc: 'Ausrechnen',
+      calcIntro: 'Grobe Schätzung nach der Mifflin-St-Jeor-Formel.',
+      weight: 'Gewicht in kg',
+      height: 'Größe in cm',
+      age: 'Alter',
+      sex: 'Formel-Variante (Geschlecht)',
+      sexes: { male: 'männlich', female: 'weiblich', none: 'keine Angabe' },
+      activity: 'Alltag',
+      activities: {
+        sitting: 'meist sitzend',
+        light: 'leicht aktiv (1–3 × Sport pro Woche)',
+        moderate: 'mäßig aktiv (3–5 × pro Woche)',
+        active: 'sehr aktiv (6–7 × pro Woche)',
+        veryActive: 'körperliche Arbeit und Sport',
+      },
+      result: (kcal: string) => `Etwa ${kcal} kcal pro Tag`,
+      noResult: 'Gewicht, Größe und Alter eintragen (Erwachsene, 18–99 Jahre).',
+      hint: 'Grobe Schätzung, keine medizinische Beratung. Gewicht, Größe und Alter werden nicht gespeichert.',
+      take: 'Übernehmen',
+      saved: 'Tagesziel gespeichert.',
+    },
+    widget: {
+      week: 'Diese Woche',
+      weekDetail: (sessions: string, duration: string) =>
+        duration ? `${sessions} · ${duration}` : sessions,
+      sessions: (n: number) => (n === 1 ? '1 Einheit' : `${n} Einheiten`),
+      sessionsOf: (n: number, goal: number) => `${n} von ${goal} Einheiten`,
+      today: 'Heute',
+      kcal: (kcal: string) => `${kcal} kcal`,
+      kcalOf: (kcal: string, goal: string) => `${kcal} kcal von ${goal}`,
+      kcalPastGoal: (kcal: string, goal: string) => `${kcal} kcal · Ziel ${goal}`,
+      summary: (sessions: string) => `Diese Woche: ${sessions}`,
+      empty: 'Noch nichts diese Woche.',
+    },
+    calendar: { session: (title: string) => `Training: ${title}` },
+    saved: 'Gespeichert.',
   },
 } as const;
 

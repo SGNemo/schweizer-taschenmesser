@@ -14,7 +14,6 @@ const E2E_FLAG = 'tm-e2e-lanclient';
 
 export const noLanClient: LanClientService = {
   supported: false,
-  scan: () => Promise.reject(new Error('unsupported')),
   pair: () => Promise.reject(new Error('unsupported')),
   cancelPair: async () => undefined,
   request: () => Promise.reject(new Error('unsupported')),

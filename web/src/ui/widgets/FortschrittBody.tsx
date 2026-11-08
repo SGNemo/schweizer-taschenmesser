@@ -9,6 +9,7 @@ export interface FortschrittEntry {
   key: string;
   title: string;
   value: number;
+  /** Target of the bar; 0 = no target: the row shows its words only, no bar. */
   max: number;
   /** Right-hand text: "60 % von 400 €", "3 von 5". */
   detail: string;
@@ -84,7 +85,10 @@ export function FortschrittBody({
                 <span className={styles.rowAmount}>{e.detail}</span>
               )}
             </div>
-            <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
+            {/* No target (max 0): the row says the number in words, an empty bar would read as „0 % done“. */}
+            {e.max > 0 ? (
+              <Progress value={e.value} max={e.max} label={e.title} over={Boolean(e.overText)} />
+            ) : null}
           </li>
         ))}
       </ul>

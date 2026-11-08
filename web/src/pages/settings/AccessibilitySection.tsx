@@ -24,6 +24,8 @@ export function AccessibilitySection() {
   const setMotion = useUiStore((s) => s.setMotion);
   const readAid = useUiStore((s) => s.readAid);
   const setReadAid = useUiStore((s) => s.setReadAid);
+  const toastStay = useUiStore((s) => s.toastStay);
+  const setToastStay = useUiStore((s) => s.setToastStay);
   return (
     <SettingsGroup id="accessibility" title={a.title} description={a.description}>
       <SettingRow id="accessibility--textSize" label={a.textSize}>
@@ -44,6 +46,9 @@ export function AccessibilitySection() {
       </SettingRow>
       <SettingRow id="accessibility--readAid" label={a.readAid}>
         <Switch label={a.readAid} labelHidden checked={readAid} onChange={setReadAid} />
+      </SettingRow>
+      <SettingRow id="accessibility--toastStay" label={a.toastStay} description={a.toastStayHint}>
+        <Switch label={a.toastStay} labelHidden checked={toastStay} onChange={setToastStay} />
       </SettingRow>
       <SettingRow id="accessibility--colors" label={a.colors} description={a.colorsHint}>
         <Link to={settingsPath('darstellung', 'appearance', 'color')}>{a.change}</Link>

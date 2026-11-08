@@ -6,7 +6,7 @@
 
 Die Windows-App kann selbst der Abgleich-Punkt sein. Handy und PC gleichen sich ab, sobald beide im selben WLAN sind und Nemo auf dem PC läuft.
 
-1. **PC:** *Einstellungen → Synchronisation → Gerät koppeln*. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: *Zulassen*).
+1. **PC:** *Einstellungen → Synchronisation → Gerät koppeln*. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: *Zulassen*). Hält Windows dein Netz für öffentlich, zeigt Nemo statt des Codes den Weg zu *Privat*; danach erscheint der Code von selbst.
 2. **Handy:** *Einstellungen → Synchronisation → Mit PC koppeln*, Kamera erlauben, Code scannen.
 3. Beide zeigen denselben 6-stelligen Code. Am PC: *Koppeln*.
 

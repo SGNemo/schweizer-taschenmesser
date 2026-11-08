@@ -209,8 +209,12 @@ export interface LanHubService {
  */
 export interface LanClientService {
   supported: boolean;
-  /** Opens the camera and returns the text of one QR code (rejects with `cancelled`, `camera-denied` or `failed`). */
-  scan(): Promise<string>;
+  /**
+   * A scanner the platform brings (the E2E fake): returns the text of one QR code (rejects with
+   * `cancelled`, `camera-denied` or `failed`). Absent on the phone: the app scans in its own camera
+   * dialog (`QrScanDialog`), so no native view can cover the app.
+   */
+  scan?(): Promise<string>;
   /** Pairs with the hub of `qr`; `onCode` gets the 6-digit code to show while the PC asks. */
   pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanPairing>;
   /** Stops waiting for the confirmation on the PC. */

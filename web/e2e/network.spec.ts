@@ -51,7 +51,9 @@ test('the connection log lists host and reason, the block stops requests before 
   await ready(page, '/settings/verbindungen');
   await page.getByRole('switch', { name: 'Liste auf diesem Gerät behalten' }).click();
   await page.getByRole('switch', { name: 'Netzwerk sperren' }).click();
-  await expect(page.getByText('Das Netzwerk ist gesperrt. Es geht nichts raus.')).toBeVisible();
+  await expect(
+    page.getByText('Das Netzwerk ist für die App gesperrt.', { exact: false }),
+  ).toBeVisible();
 
   await openCurrency(page);
   await page.waitForTimeout(800);
@@ -74,4 +76,17 @@ test('the connection log lists host and reason, the block stops requests before 
 
   await page.getByRole('button', { name: 'Liste leeren' }).click();
   await expect(page.getByTestId('net-summary')).toContainText('keine Verbindung');
+});
+
+test('"Was geht ins Netz": the folded list names every destination and when it is used (D09)', async ({
+  page,
+}) => {
+  await ready(page, '/settings/verbindungen');
+  const list = page.getByTestId('net-catalogue');
+  await expect(list.getByText('Was überhaupt ins Netz gehen kann')).toBeVisible();
+  await list.locator('summary').click();
+  await expect(list).toContainText('Update-Prüfung');
+  await expect(list).toContainText('api.github.com');
+  await expect(list).toContainText('Nur nach deinem Klick');
+  await expect(list).toContainText('api.frankfurter.dev');
 });

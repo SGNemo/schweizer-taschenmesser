@@ -1,5 +1,5 @@
 import { DEFAULT_CURRENCY } from '@/core/money';
-import { addDaysStr } from '@/core/time/dates';
+import { addDaysStr, nowTime } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
 import { CaptureError, type BuildContext, type CaptureTarget } from './types';
@@ -156,6 +156,37 @@ const invoices: CaptureTarget = {
   },
 };
 
+/** Fitness (docs/features/fitness.md §5): a meal with rough kcal, a session with its exercises. */
+const meal: CaptureTarget = {
+  type: 'meal',
+  moduleId: 'fitness',
+  collection: 'meal',
+  build: (f, ctx) => {
+    if (f.kcal === undefined || !f.title.trim()) throw new CaptureError('invalid');
+    return {
+      text: f.title.trim(),
+      kcal: f.kcal,
+      date: date(f.date ?? ctx.today),
+      // Logged now unless a past day was typed („gestern kcal 400 Pizza“).
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
+    };
+  },
+};
+
+const workout: CaptureTarget = {
+  type: 'workout',
+  moduleId: 'fitness',
+  collection: 'session',
+  build: (f, ctx) => {
+    if (!f.exercises?.length) throw new CaptureError('invalid');
+    return {
+      date: date(f.date ?? ctx.today),
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
+      exercises: f.exercises.map((e) => ({ ...e })),
+    };
+  },
+};
+
 const subscriptions: CaptureTarget = {
   type: 'subscription',
   moduleId: 'subscriptions',
@@ -230,6 +261,8 @@ export const TARGETS = {
   list: lists,
   finance,
   invoice: invoices,
+  meal,
+  workout,
   note: notes,
   subscription: subscriptions,
   birthday: people,

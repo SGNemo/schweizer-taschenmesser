@@ -6,7 +6,7 @@
 
 The Windows app can be the sync point itself. Phone and PC sync as soon as both are on the same Wi-Fi and Nemo runs on the PC.
 
-1. **PC:** *Settings → Sync → Pair a device*. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose *Allow*).
+1. **PC:** *Settings → Sync → Pair a device*. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose *Allow*). If Windows treats your network as public, Nemo shows no code but the way to switch it to *Private*; the code then appears by itself.
 2. **Phone:** *Settings → Sync → Pair with PC*, allow the camera, scan the code.
 3. Both show the same 6-digit code. On the PC: *Pair*.
 

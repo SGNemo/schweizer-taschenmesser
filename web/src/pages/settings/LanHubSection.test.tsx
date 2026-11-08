@@ -6,6 +6,7 @@ import { useSyncStatus } from '@/core/sync/status';
 
 const fake = vi.hoisted(() => ({
   parts: undefined as unknown as ReturnType<typeof createFakeLanHubParts>,
+  openUrl: vi.fn(async () => undefined),
 }));
 
 vi.mock('@/core/platform', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/core/platform', () => ({
     isNative: true,
     lanHub: fake.parts.hub,
     desktop: { supported: false },
+    app: { openUrl: fake.openUrl },
   }),
 }));
 vi.mock('@/core/sync/service', () => ({
@@ -71,5 +73,31 @@ describe('LanHubSection (desktop)', () => {
     render(<LanHubSection />);
     await flush();
     expect(screen.getByTestId('lan-hub-state').textContent).toBe('Windows blockiert den Abgleich.');
+  });
+
+  it('a public network shows the way out instead of a missing QR, and the QR follows by itself', async () => {
+    useSyncStatus.getState().set({ phase: 'idle', via: 'lanHub', encrypted: true });
+    await fake.parts.hub.start();
+    const real = fake.parts.hub.status.bind(fake.parts.hub);
+    let isPublic = true;
+    fake.parts.hub.status = async () =>
+      isPublic
+        ? { ...(await real()), state: 'off', reason: 'public-network', blocked: true, qr: null }
+        : real();
+    render(<LanHubSection />);
+    await flush();
+    fireEvent.click(screen.getByTestId('lan-pair'));
+    await flush();
+    expect(screen.getByTestId('lan-pair-blocked').textContent).toContain('„Privat“');
+    expect(screen.queryByTestId('lan-pair-qr')).toBeNull();
+    fireEvent.click(screen.getByText('Windows-Einstellungen öffnen'));
+    expect(fake.openUrl).toHaveBeenCalledWith('ms-settings:network-status');
+
+    // the user switched the network to "Privat": the next status shows the QR
+    isPublic = false;
+    fake.parts.hub.status = real;
+    await act(async () => new Promise((r) => setTimeout(r, 1600)));
+    expect(screen.queryByTestId('lan-pair-blocked')).toBeNull();
+    expect(screen.getByTestId('lan-pair-qr')).toBeTruthy();
   });
 });

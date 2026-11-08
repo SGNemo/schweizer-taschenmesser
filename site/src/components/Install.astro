@@ -1,6 +1,6 @@
 ---
 import { DEV_PREVIEW, INSTALL_DOCS_URL } from '../config.js';
-import { t, type Locale } from '../i18n';
+import { routes, t, type Locale } from '../i18n';
 import Icon from './Icon.astro';
 
 interface Props { locale: Locale }
@@ -27,7 +27,7 @@ const items = [s.install.windows, s.install.android, s.install.updates];
         </p>
       </details>
     </div>
-    <p class="more"><a href={INSTALL_DOCS_URL} rel="noopener">{s.install.more} <Icon name="external" size={14} /></a></p>
+    <p class="more"><a href={routes.install[Astro.props.locale]}>{s.install.steps}</a> · <a href={INSTALL_DOCS_URL} rel="noopener">{s.install.more} <Icon name="external" size={14} /></a></p>
   </div>
 </section>
 

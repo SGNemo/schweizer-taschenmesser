@@ -55,7 +55,7 @@ export const focusSettingsSchema = z.object({
   repeatMax: z.number().int().min(1).max(20),
   /** Remembered "Erinnern" choice of the appointment editor (minutes before); null = none. Only preselects, never switches anything on. */
   eventLead: z.number().int().min(0).max(10080).nullable(),
-  /** Calm note in the appointment editor when notifications are not allowed yet. */
+  /** Calm note when notifications are not allowed: appointment editor and quick-capture reminder toast. */
   leadHint: z.boolean(),
   /**
    * Per module and channel switch-off of its notifications: `{ [moduleId]: { center?: false, alert?: false } }`.

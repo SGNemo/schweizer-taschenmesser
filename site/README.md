@@ -39,10 +39,10 @@ src/release/latest.json  last known release (updated by the build, committed as 
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
 src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in German and English,
                        icon, hue, hue2, head and widget variant per module
-src/components/        Hero, Features, Data, Focus, Compare, Support, Install, Header, Footer,
+src/components/        Hero, Features, Data, Focus, Compare, Support, Install, InstallGuide (/install: warnings, clicks, SHA-256), Header, Footer,
                        Shot (one screenshot in both themes, window or phone frame), Icon (inline Lucide),
                        IdentityMini (widget miniatures and head silhouettes, no text, no data)
-src/pages/             index, impressum, datenschutz, 404, robots.txt.ts · en/index, en/imprint, en/privacy
+src/pages/             index, install, impressum, datenschutz, 404, robots.txt.ts · en/index, en/install, en/imprint, en/privacy
 src/assets/screens/    <page>-{dark,light}.png from the seeded app (npm run app:screenshots; Astro makes AVIF/WebP)
 public/                .well-known/security.txt, _headers, theme.js
 scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse (--dark audits
