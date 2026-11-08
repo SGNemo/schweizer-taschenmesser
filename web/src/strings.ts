@@ -4352,7 +4352,6 @@ export const de = {
         [
           expired > 0 ? `${expired} abgelaufen` : '',
           soon > 0 ? `${soon} laufen bald ab` : '',
-          expired + soon === 0 && low > 0 ? 'Nichts läuft ab' : '',
           low > 0 ? `${low} werden knapp` : '',
         ]
           .filter(Boolean)

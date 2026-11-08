@@ -4,7 +4,7 @@ import { today } from '@/core/time/dates';
 import { dueState, pastDay } from '@/core/time/due';
 import { t } from '@/strings';
 import { KachelnBody, WidgetBody, useWidgetSize, type Kachel } from '@/ui';
-import { expiryState, isFresh, needsRestock, sameName, sortItems, widgetLine } from '../logic';
+import { expiryState, needsRestock, sortItems } from '../logic';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
 import { settings as moduleSettings, settingsSchema } from '../settings';
@@ -25,10 +25,10 @@ export default function ExpiringWidget() {
   );
   const expired = due.filter((i) => expiryState(i, day, soonDays) === 'expired').length;
   const dueIds = new Set(due.map((i) => i.id));
-  const low = list.filter((i) => needsRestock(i) && !isFresh(i) && !dueIds.has(i.id));
+  const low = list.filter((i) => needsRestock(i) && !dueIds.has(i.id));
   const total = due.length + low.length;
   // What needs a look, by name (up to three): expiring first, then what runs low.
-  const rows = [
+  const next = [
     ...due.map((i) => ({
       id: i.id,
       name: i.name,
@@ -39,11 +39,7 @@ export default function ExpiringWidget() {
           : dueState(i.expires!, day, { soonDays }).label,
     })),
     ...low.map((i) => ({ id: i.id, name: i.name, label: t.pantry.lowStock })),
-  ];
-  // Same name twice (two packs of milk in two places) is one row: the first, most urgent one.
-  const next = rows
-    .filter((r, idx) => !rows.slice(0, idx).some((p) => sameName(p.name, r.name)))
-    .slice(0, size === 's' ? 2 : size === 'm' ? 3 : 5);
+  ].slice(0, size === 's' ? 2 : size === 'm' ? 3 : 5);
 
   const tiles: Kachel[] = PLACES.map((p) => {
     const here = list.filter((i) => i.place === p);
@@ -78,8 +74,10 @@ export default function ExpiringWidget() {
       emptyAction={{ label: t.homeEmpty.pantry, to: '/pantry?new=1' }}
     >
       <KachelnBody tiles={tiles} />
-      <p className={total > 0 ? styles.context : `${styles.context} ${styles.calm}`}>
-        {widgetLine(expired, due.length - expired, low.length)}
+      <p className={styles.context}>
+        {total > 0
+          ? t.widgets.expirySummary(expired, due.length - expired, low.length)
+          : t.pantry.shelf.summaryFine}
       </p>
       {next.length > 0 ? (
         <ul className={styles.next}>
