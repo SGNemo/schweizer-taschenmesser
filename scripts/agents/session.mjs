@@ -11,7 +11,7 @@
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
 //
-// Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mount only),
+// Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mount only, sent only for the Nemo repo),
 // NEMO_LEAD_AGENT_ID / NEMO_ENV_ID / NEMO_VAULT_ID (or --agent/--env/--vault; defaults read from claude-lock.json).
 // Requires `npm i` in scripts/agents (@anthropic-ai/sdk 1.6.0, pinned; the SDK adds the managed-agents-2026-04-01 beta header).
 import fs from "node:fs";
@@ -49,14 +49,15 @@ for (let i = 0; i < argv.length; i++) {
   } else positional.push(a);
 }
 if (flags.help || (positional.length === 0 && !flags.file && !flags.session)) {
-  console.log(
-    fs
-      .readFileSync(fileURLToPath(import.meta.url), "utf8")
-      .split("\n")
-      .slice(1, 18)
-      .map((l) => l.replace(/^\/\/ ?/, ""))
-      .join("\n"),
+  const lines = fs
+    .readFileSync(fileURLToPath(import.meta.url), "utf8")
+    .split("\n")
+    .slice(1);
+  const header = lines.slice(
+    0,
+    lines.findIndex((l) => !l.startsWith("//")),
   );
+  console.log(header.map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
   process.exit(0);
 }
 const sub = ["budget", "threads", "interrupt"].includes(positional[0])
@@ -64,13 +65,14 @@ const sub = ["budget", "threads", "interrupt"].includes(positional[0])
   : null;
 
 function fromLock(fileKey) {
-  // claude-lock.json keys are the paths as given to `ant apply` (with or without ./); match on the normalised tail
+  // claude-lock.json: { resources: { '<path as given to ant apply>': { kind, id, … } } } – match on the normalised path tail
   try {
     const lock = JSON.parse(
       fs.readFileSync(flags.lock ?? DEFAULTS.lock, "utf8"),
     );
     const want = path.normalize(fileKey).replace(/^\.\//, "");
-    for (const [k, v] of Object.entries(lock.resources ?? {})) {
+    for (const [k, v] of Object.entries(lock.resources ?? lock)) {
+      if (!v || typeof v !== "object" || !v.id) continue;
       const key = path.normalize(k).replace(/^\.\//, "");
       if (key === want || key.endsWith("/" + want) || want.endsWith("/" + key))
         return v.id;
@@ -100,6 +102,12 @@ const cfg = {
   dryRun: !!flags["dry-run"],
 };
 const githubToken = process.env.GITHUB_TOKEN;
+// the PAT goes to the Nemo repository only; any other --repo is mounted without it
+const repoToken = cfg.repo === DEFAULTS.repo ? githubToken : undefined;
+if (githubToken && !repoToken)
+  console.warn(
+    `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo}; ${cfg.repo} is mounted without a token`,
+  );
 
 function cents(usd) {
   if (!Number.isFinite(usd) || usd <= 0)
@@ -231,6 +239,40 @@ async function approve(c, sessionId, ids) {
   });
 }
 
+// approve only what the session is waiting for right now: status idle, latest idle event, listed before approval
+async function approvePending(c, sessionId) {
+  const current = await c.beta.sessions.retrieve(sessionId);
+  let latest = null;
+  if (current.status === "idle")
+    for await (const ev of c.beta.sessions.events.list(sessionId, {
+      types: ["session.status_idle"],
+      order: "desc",
+      limit: 1,
+    })) {
+      latest = ev;
+      break;
+    }
+  const pending =
+    latest?.stop_reason?.type === "requires_action"
+      ? (latest.stop_reason.event_ids ?? [])
+      : [];
+  if (!pending.length) {
+    console.log(
+      `${stamp()} nothing waiting for approval (status ${current.status})`,
+    );
+    return;
+  }
+  for await (const ev of c.beta.sessions.events.list(sessionId, {
+    types: ["agent.tool_use", "agent.mcp_tool_use"],
+  })) {
+    if (pending.includes(ev.id))
+      console.log(
+        `${stamp()} waiting: ${ev.mcp_server_name ? ev.mcp_server_name + "/" : ""}${ev.name} ${short(JSON.stringify(ev.input), 200)}`,
+      );
+  }
+  await approve(c, sessionId, pending);
+}
+
 async function streamUntilIdle(c, sessionId, afterOpen) {
   const stream = await c.beta.sessions.events.stream(sessionId);
   if (afterOpen) await afterOpen();
@@ -348,24 +390,13 @@ async function main() {
       );
     const c = await client();
     console.log(`resuming ${cfg.session}`);
-    const afterOpen = async () => {
-      if (cfg.autoApprove) {
-        // approve calls that were already waiting before the stream opened (a stream only carries new events)
-        const pending = [];
-        for await (const ev of c.beta.sessions.events.list(cfg.session, {
-          types: ["session.status_idle"],
-        })) {
-          if (ev.stop_reason?.type === "requires_action")
-            pending.push(...(ev.stop_reason.event_ids ?? []));
-        }
-        if (pending.length) await approve(c, cfg.session, pending);
-      }
+    const outcome = await streamUntilIdle(c, cfg.session, async () => {
+      if (cfg.autoApprove) await approvePending(c, cfg.session);
       if (message.trim())
         await c.beta.sessions.events.send(cfg.session, {
           events: [userMessage(message)],
         });
-    };
-    const outcome = await streamUntilIdle(c, cfg.session, afterOpen);
+    });
     console.log(`\nsession ${cfg.session} → ${outcome}`);
     return;
   }
@@ -376,11 +407,11 @@ async function main() {
     );
   if (cfg.budgetUsd === undefined)
     throw new Error(
-      "--budget <USD> is required: a budget can only be set when the session is created, never later",
+      "--budget <USD> is required: a budget can only be added when the session is created (raise it later with `budget <id> <USD>`)",
     );
-  if (!githubToken)
+  if (!repoToken)
     console.warn(
-      "warning: GITHUB_TOKEN not set – the repository is cloned without a token; git push will fail",
+      "warning: no GITHUB_TOKEN for the repository – it is cloned without a token; git push will fail",
     );
   if (!cfg.vault)
     console.warn(
@@ -398,7 +429,7 @@ async function main() {
         url: cfg.repo,
         mount_path: cfg.mount,
         checkout: { type: "branch", name: cfg.checkout },
-        ...(githubToken ? { authorization_token: githubToken } : {}),
+        ...(repoToken ? { authorization_token: repoToken } : {}),
       },
     ],
     ...(cfg.vault ? { vault_ids: [cfg.vault] } : {}),

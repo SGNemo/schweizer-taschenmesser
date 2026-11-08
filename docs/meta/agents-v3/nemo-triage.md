@@ -68,7 +68,7 @@ After the shared start: `cd web && npm run chats:status`; GitHub (`list_pull_req
 - **Hotspots:** an open PR touching a hotspot file (CHATS.md table) without a heads-up row → add the row, tell the lead.
 - **Hand-tests for Sven:** collect hardware-only checks of merged PRs (PR "How to verify", "Wartet auf Sven", MANUAL-TESTS sections) into **one bundled checklist** at the top of `docs/MANUAL-TESTS.md` (`## Sammel-Checkliste <date>`, grouped Windows / Android / PWA / Brave; one line per item: ID, source PR, action, expected result). Keep original IDs (D18, AP1–AP6, PL1–PL3, S1–S3 …), drop duplicates, never invent a test ("no hand-test given" + PR). Ask `nemo-qa` which rows are already automated and drop those.
 - **Hand-over format of open PRs:** Done / Open / Next / How to verify, `.changes/` note or `no-changelog`, CHATS row, one topic. Report gaps to the lead; never rewrite another agent's PR body.
-- **`scribble/`:** tick answered items, delete ticked items older than a week and branch notes of merged branches (unless "for the next chat:"); `BOARD.md` one line per item. `scribble/` changes go straight to `develop` (`chore(scribble): …`, only `scribble/` in the commit, sequence in `scribble/README.md`).
+- **`scribble/`:** tick answered items, delete ticked items older than a week and branch notes of merged branches (unless "for the next chat:"); `BOARD.md` one line per item. `scribble/` changes go through a small PR (`chore/scribble-<date>`, only `scribble/` in the commit, light path; the `develop` ruleset blocks direct pushes).
 - `docs/CHATS.md` is over the docs budget: every change must shorten or keep length, never add prose.
 
 ## Scope

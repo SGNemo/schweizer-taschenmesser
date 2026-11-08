@@ -4,7 +4,7 @@ Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.m
 
 Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 20 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
-## 1 Console (`platform.claude.com`) – nur zum Nachsehen
+## 1 Console (`platform.claude.com`) – API-Key anlegen, sonst nur zum Nachsehen
 
 1. **API-Key:** `platform.claude.com/settings/keys` → „Create Key“ → Name `nemo-agents` → Wert einmal kopieren (die Seite zeigt ihn nur einmal), lokal als `ANTHROPIC_API_KEY` setzen (Shell-Profil oder Passwort-Manager; nie ins Repo). Der Key ist der eine Pfad für CLI, SDK und die curl-Aufrufe unten.
 2. **Agent-Builder** (`platform.claude.com/workspaces/default/agent-quickstart`): einstellbar laut Doku: Modell, System-Prompt (Volltext-Editor), MCP-Server per URL + Anmeldung, Tools (vorgefertigtes Toolset + MCP-Tools), Skills aus der Workspace-Bibliothek, Test-Session mit Event-Stream; die Console zeigt daneben den äquivalenten API-Aufruf. **Nicht** in der Console (laut Doku nur API/CLI): `multiagent`-Block, `effort`/`speed`, Repo-Mount, Session-Budget, Environment-Netzwerk-Details, Vault-Zuordnung je Session. Deshalb Weg 2 für alle 20 Agenten. Wichtig: in der Console angelegte Agenten kann `ant apply` **nicht übernehmen** (es legt Duplikate an) – also nichts von Hand anlegen, nur ansehen.
@@ -43,21 +43,20 @@ Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Work
 2. **Rulesets** (Repo → Settings → Rules → Rulesets; Bypass list überall **leer** – auch Sven hebt ein Ruleset zum Release kurz auf, statt sich einzutragen, denn der PAT handelt als Sven):
    - `main`: Restrict deletions, Block force pushes, Require a pull request before merging, Require status checks (CI-Jobs).
    - `develop`: Require a pull request before merging mit **0 required approvals** (sperrt direkte Pushes, der API-Merge von `nemo-merge` geht weiter; Approvals vom Token-Inhaber zählen auf eigenen PRs ohnehin nicht), Require status checks, Block force pushes.
-   - **Tag-Ruleset** `refs/tags/v*` und `dev-preview*`: Restrict creations, updates, deletions – `release.yml` läuft auf jedem `v*.*.*`-Tag, `dev-preview.yml` veröffentlicht das rollende Release; ohne diese Sperre könnte jeder Agent mit Contents: write ein Release auslösen.
-   - Settings → General → Releases: **Immutable releases** einschalten (Contents: write dürfte sonst Assets bestehender Releases, auch `latest.json` des Updaters, ändern).
+   - **Tag-Ruleset nur `refs/tags/v*`**: Restrict creations, updates, deletions – `release.yml` läuft auf jedem `v*.*.*`-Tag; ohne diese Sperre könnte jeder Agent mit Contents: write ein Release auslösen. **Nicht** `dev-preview*`: `dev-preview.yml` verschiebt diesen Tag bei jedem grünen `develop`-Push selbst (`PATCH git/refs/tags/dev-preview`, `force=true`) und ersetzt die Assets (`--clobber`); eine Sperre dort bricht die Dev-Preview. Auf `dev-preview` löst kein Workflow aus, das Risiko ist klein.
+   - **Immutable releases vorerst aus lassen:** sie würden auch das rollende Pre-Release `dev-preview` einfrieren (Asset-Austausch scheitert). Erst sinnvoll, wenn die Dev-Preview als Draft veröffentlicht oder anders gelöst ist – Punkt für `nemo-devops`.
+   - Folge für dich: mit dem `develop`-Ruleset pushen auch deine normalen Claude-Code-Chats `scribble/` nicht mehr direkt nach `develop` (CLAUDE.md Schritt 2, „you may push changes to `scribble/` straight to develop“); ab dann per Mini-PR. Die CLAUDE.md-Zeile änderst du mit der Umstellung (Entscheidung in REVIEW, Frage 1).
 3. **Vault anlegen** (Console → Vaults, oder API; nicht hier geprüft):
    ```bash
    H=(-H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2026-10-21" -H "anthropic-beta: managed-agents-2026-04-01" -H "content-type: application/json")
    # Vault – die ID (vlt_…) landet in VAULT_ID
    VAULT_ID=$(curl -s https://api.anthropic.com/v1/vaults "${H[@]}" -d '{"display_name":"nemo-github"}' | jq -r .id); echo "$VAULT_ID"
-   # Credential 1: GitHub MCP (Bearer = PAT), gematcht über die Server-URL – Token per stdin, nie in argv (ps)
-   curl https://api.anthropic.com/v1/vaults/$VAULT_ID/credentials "${H[@]}" --data @- <<JSON
-   {"display_name":"github-mcp","auth":{"type":"static_bearer","mcp_server_url":"https://api.githubcopilot.com/mcp/","token":"$GITHUB_TOKEN"}}
-   JSON
+   # Credential 1: GitHub MCP (Bearer = PAT), gematcht über die Server-URL – jq liest den Token aus der Umgebung und reicht ihn per stdin an curl: nie in argv (ps), kein Heredoc
+   jq -n '{display_name:"github-mcp",auth:{type:"static_bearer",mcp_server_url:"https://api.githubcopilot.com/mcp/",token:env.GITHUB_TOKEN}}' \
+     | curl https://api.anthropic.com/v1/vaults/$VAULT_ID/credentials "${H[@]}" --data @-
    # Credential 2: $GITHUB_TOKEN in der Sandbox (Platzhalter, am Ausgang nur im Header ersetzt, nur für api.github.com)
-   curl https://api.anthropic.com/v1/vaults/$VAULT_ID/credentials "${H[@]}" --data @- <<JSON
-   {"display_name":"github-rest","auth":{"type":"environment_variable","secret_name":"GITHUB_TOKEN","secret_value":"$GITHUB_TOKEN","networking":{"type":"limited","allowed_hosts":["api.github.com"]},"injection_location":{"header":true}}}
-   JSON
+   jq -n '{display_name:"github-rest",auth:{type:"environment_variable",secret_name:"GITHUB_TOKEN",secret_value:env.GITHUB_TOKEN,networking:{type:"limited",allowed_hosts:["api.github.com"]},injection_location:{header:true}}}' \
+     | curl https://api.anthropic.com/v1/vaults/$VAULT_ID/credentials "${H[@]}" --data @-
    ```
    `export NEMO_VAULT_ID=$VAULT_ID` (dauerhaft ins Shell-Profil). Ein Eintrag für beides gibt es nicht (ein Credential = ein `auth.type`). Rotation: Credential aktualisieren (Wert änderbar, Schlüssel nicht) – wirkt auch in laufenden Sessions.
 4. **Repo-Ressource:** macht `session.mjs` bei jedem Start (`url`, `mount_path: /workspace/schweizer-taschenmesser`, `checkout: develop`, `authorization_token` = `$GITHUB_TOKEN`). Das ist die dritte Stelle desselben PAT; sie allein regelt `git clone/push`.
@@ -84,10 +83,18 @@ Flags: `--agent/--env/--vault` überschreiben die IDs, `--checkout` den Branch, 
 ### Erster Testlauf (Budget 2 USD)
 
 ```bash
-node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branch test/agents-v3-smoke von origin/develop an, committe eine Zeile in scribble/BOARD.md, pushe den Branch; führe git config --get-regexp 'remote|credential' aus und melde nur, ob ein Klartext-Token darin steht (den Wert nicht ausgeben). Nichts mergen, keine PR."
+node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branch test/agents-v3-smoke von origin/develop an, committe eine Zeile in scribble/BOARD.md, pushe den Branch; prüfe als ausdrücklich erlaubte Ausnahme der SHARED-Regel nur mit git config --get-regexp 'remote|credential' | grep -cE 'gh[pousr]_|github_pat_|x-access-token:' || true, ob ein Klartext-Token in der Git-Konfiguration steht, und melde nur die Zahl. Nichts mergen, keine PR."
 ```
 
-Die Ruleset-Proben machst du selbst aus einem lokalen Klon mit dem PAT (die Agenten verbieten sich `main`, Tags und Force-Push selbst): `git -c http.extraheader="Authorization: Bearer $GITHUB_TOKEN" push origin HEAD:main`, ebenso `HEAD:develop` und `HEAD:refs/tags/v0.0.0-agenttest`. Erwartet: der Agent-Push auf den Branch geht; `main`, `develop` und der Tag scheitern an den Rulesets; kein Klartext-Token in der Git-Konfiguration der Sandbox (sonst gilt der Platzhalter-Schutz für git nicht – dann in SHARED.md die Regel „nie Remote-/Credential-Konfiguration ausgeben“ zusätzlich einschärfen). Branch danach löschen (nicht hier geprüft).
+Die Rulesets prüfst du **nur lesend** – ein Push-Versuch mit echten Rechten würde bei einem fehlenden Ruleset wirklich `main`/`develop` bewegen, und ein Tag `v…` startet `release.yml`:
+
+```bash
+gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/main      # erwartet: pull_request, required_status_checks, non_fast_forward, deletion
+gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/develop   # erwartet: pull_request (0 approvals), required_status_checks, non_fast_forward
+gh api repos/SGNemo/schweizer-taschenmesser/rulesets                 # das Tag-Ruleset mit target tag, refs/tags/v*
+```
+
+Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiven Regeln ohne Bypass-Einträge; Zahl 0 bei der Token-Prüfung (sonst gilt der Platzhalter-Schutz für git nicht – dann in SHARED.md die Regel „nie Remote-/Credential-Konfiguration ausgeben“ zusätzlich einschärfen). Branch danach löschen (nicht hier geprüft).
 
 ## 5 Wiederanlauf
 

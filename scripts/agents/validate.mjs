@@ -75,13 +75,62 @@ const KEYS = {
   advisor: ["type", "model"],
   predefined: ["type", "id", "version"],
 };
+// GitHub MCP policy (tool names as the remote server reports them): off for every role / merge only for nemo-merge
+const GH_OFF_ALL = [
+  "enable_pr_auto_merge",
+  "disable_pr_auto_merge",
+  "actions_run_trigger",
+  "push_files",
+  "create_or_update_file",
+  "delete_file",
+];
 const SECRET =
   /(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-ant-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abp]-[A-Za-z0-9-]{10,})/;
 const PLACEHOLDER =
   /(<token>|<github_token>|ghp_x+|github_pat_x+|REPLACE_ME|TODO_TOKEN)/i;
 
+// the five hard limits are one template for all 19 subagents; role name, the merge line (nemo-merge only) and the
+// read-only clause (six review roles only) are the per-role parts, each checked exactly
+const READ_ONLY = new Set([
+  "nemo-po",
+  "nemo-creativity",
+  "nemo-design",
+  "nemo-a11y",
+  "nemo-security",
+  "nemo-reviewer",
+]);
+const MERGE_LINE = {
+  merge:
+    "- You are the only agent that merges, and only into `develop` per your six merge-ready rules (merge commit, `expectedHeadSha`); never auto-merge, never a direct push to `develop`/`main`, never over a red check or a missing MERGE-READY.",
+  other:
+    "- Only `nemo-merge` merges; you never merge, enable auto-merge or push to `develop`/`main` (`scribble/` changes too go through a small PR).",
+};
+function hardLimitsOf(a) {
+  const i = a.system.indexOf("## Hard limits");
+  if (i < 0) return null;
+  const role = a.name.replace("nemo-", "");
+  const expect =
+    (a.name === "nemo-merge" ? MERGE_LINE.merge : MERGE_LINE.other) +
+    (READ_ONLY.has(a.name)
+      ? ` You are read-only: no commits, no pushes, no edits outside \`/workspace/wt-${role}-notes/\`.`
+      : "");
+  const block = a.system.slice(i);
+  if (!block.includes(expect + "\n"))
+    return {
+      error:
+        "merge/read-only line of the hard limits is not the expected one for this role",
+    };
+  return {
+    norm: block
+      .replace(expect, "- MERGE-LINE")
+      .replace(new RegExp(`wt-${role}`, "g"), "wt-ROLE"),
+  };
+}
+
 let problems = 0;
 const names = new Set();
+let hardRef = null;
+const mergeCapable = [];
 function bad(file, msg) {
   problems++;
   console.log(`✗ ${file}: ${msg}`);
@@ -97,20 +146,6 @@ function keys(file, obj, kind, where) {
 }
 const refOf = (p) =>
   typeof p === "string" ? p : p?.type === "self" ? "self" : p?.id;
-// the five hard limits are one block for all 19 subagents; only the role name and the merge line differ
-const hardLimitsOf = (a) => {
-  const i = a.system.indexOf("## Hard limits");
-  if (i < 0) return null;
-  return a.system
-    .slice(i)
-    .replace(new RegExp(a.name.replace("nemo-", "wt-"), "g"), "wt-ROLE")
-    .replace(
-      /^- (You are the only agent that merges|Only `nemo-merge` merges)[^\n]*$/m,
-      "- MERGE-LINE",
-    )
-    .replace(/ You are read-only:[^\n]*/, "");
-};
-let hardRef = null;
 
 for (const file of files) {
   const raw = fs.readFileSync(path.join(dir, file), "utf8");
@@ -151,8 +186,9 @@ for (const file of files) {
   if (a.name !== "nemo-lead") {
     const hl = hardLimitsOf(a);
     if (!hl) bad(file, 'no "## Hard limits" block');
-    else if (hardRef === null) hardRef = { file, hl };
-    else if (hl !== hardRef.hl)
+    else if (hl.error) bad(file, hl.error);
+    else if (hardRef === null) hardRef = { file, hl: hl.norm };
+    else if (hl.norm !== hardRef.hl)
       bad(
         file,
         `hard-limits block differs from ${hardRef.file} (one template for all 19)`,
@@ -193,7 +229,7 @@ for (const file of files) {
   if (!Array.isArray(a.tools) || a.tools.length === 0)
     bad(file, "tools missing");
   if ((a.tools ?? []).length > 256) bad(file, "more than 256 tools");
-  let hasToolset = false;
+  let toolset = null;
   for (const t of a.tools ?? []) {
     const checkCfg = (c, where, known, kind = "config") => {
       keys(file, c, kind, where);
@@ -215,7 +251,7 @@ for (const file of files) {
         bad(file, `${where}: unknown tool "${c.name}"`);
     };
     if (t.type === "agent_toolset_20260401") {
-      hasToolset = true;
+      toolset = t;
       keys(file, t, "toolset", "agent toolset");
       if (t.default_config)
         checkCfg(
@@ -255,6 +291,17 @@ for (const file of files) {
         console.log(
           `  note ${file}: mcp toolset defaults to always_ask – sessions will pause on every GitHub call`,
         );
+      if (t.mcp_server_name === "github") {
+        const off = new Set(
+          (t.configs ?? [])
+            .filter((c) => c.enabled === false)
+            .map((c) => c.name),
+        );
+        for (const n of GH_OFF_ALL)
+          if (!off.has(n))
+            bad(file, `github tool "${n}" must be disabled for every role`);
+        if (!off.has("merge_pull_request")) mergeCapable.push(a.name);
+      }
     } else if (t.type === "custom") {
       keys(file, t, "custom_tool", `custom tool ${t.name}`);
       if (
@@ -264,7 +311,15 @@ for (const file of files) {
         bad(file, `custom tool name "${t.name}" invalid`);
     } else bad(file, `unknown tool type "${t.type}"`);
   }
-  if (!hasToolset) bad(file, "agent_toolset_20260401 missing (no bash/files)");
+  if (!toolset) bad(file, "agent_toolset_20260401 missing (no bash/files)");
+  for (const w of ["web_search", "web_fetch"])
+    if (
+      !(toolset?.configs ?? []).some((c) => c.name === w && c.enabled === false)
+    )
+      bad(
+        file,
+        `${w} must be disabled (limited networking; MODELS.md states it)`,
+      );
   for (const [n, used] of servers)
     if (!used)
       bad(file, `mcp server "${n}" has no mcp_toolset (API rejects it)`);
@@ -317,24 +372,37 @@ for (const file of files) {
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
       .filter((n) => n !== "nemo-lead");
-    const seen = new Set();
-    for (const p of pre) {
-      if (typeof p === "object")
-        keys(file, p, "predefined", "predefined agent");
-      const ref = refOf(p);
-      if (seen.has(ref))
-        bad(
-          file,
-          `predefined agent "${ref}" listed twice (entries must be distinct)`,
-        );
-      seen.add(ref);
-      if (ref === "self") continue;
-      if (!others.includes(ref) && !/^agent_/.test(ref ?? ""))
-        bad(
-          file,
-          `predefined agent "${ref}" is neither a sibling file nor an agent_ id`,
-        );
-    }
+    const roster = (list, where) => {
+      const seen = new Set();
+      for (const p of list) {
+        if (typeof p === "object") {
+          keys(file, p, "predefined", `${where} entry`);
+          if (p.type !== "agent" && p.type !== "self")
+            bad(file, `${where}: entry type must be "agent" or "self"`);
+        }
+        const ref = refOf(p);
+        if (seen.has(ref))
+          bad(
+            file,
+            `${where}: "${ref}" listed twice (entries must be distinct)`,
+          );
+        seen.add(ref);
+        if (
+          ref !== "self" &&
+          !others.includes(ref) &&
+          !/^agent_/.test(ref ?? "")
+        )
+          bad(
+            file,
+            `${where}: "${ref}" is neither a sibling file nor an agent_ id`,
+          );
+      }
+    };
+    roster(pre, "subagents.predefined_agents");
+    roster(
+      ma.workflows?.predefined_agents ?? [],
+      "workflows.predefined_agents",
+    );
     for (const n of others)
       if (!pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the lead's roster`);
@@ -352,7 +420,13 @@ for (const file of files) {
       "nemo-lead has no multiagent block – it would do everything itself",
     );
 }
-// inference_geo must agree across the roster (all unset or all equal)
+// cross-file: merge capability and inference_geo
+if (mergeCapable.join() !== "nemo-merge") {
+  problems++;
+  console.log(
+    `✗ merge-capable roles must be exactly [nemo-merge], found [${mergeCapable.join(", ")}]`,
+  );
+}
 const geos = new Set(
   files.map((f) => {
     const a = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
