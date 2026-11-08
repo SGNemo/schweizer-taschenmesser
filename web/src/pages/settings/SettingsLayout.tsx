@@ -549,6 +549,7 @@ export function CategoryPage() {
       className={styles.category}
       // The tab's hue for its status card only (not `data-hue`, which would recolour charts on the page too).
       data-tab-hue={CATEGORY_LOOK[category].hue}
+      data-groups="plain"
       onChange={noteUse}
       onClick={noteUse}
     >

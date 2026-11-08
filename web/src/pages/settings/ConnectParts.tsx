@@ -19,6 +19,8 @@ export function StateBanner(props: {
   line?: ReactNode;
   tone?: 'neutral' | 'ok' | 'attention';
   tinted?: boolean;
+  /** The one action of the state (the tab's primary), inside the card. */
+  action?: ReactNode;
   testId?: string;
   /** Test id on the state words alone (a test that reads exactly the status). */
   titleTestId?: string;
