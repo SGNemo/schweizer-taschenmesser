@@ -33,7 +33,7 @@ Branch `review/agents-v3`, PR into `develop`. Nothing here is binding until Sven
 
 "write" = PRs, comments, reviews; never merge/auto-merge/file writes via MCP. "review" = additionally no PR/branch/issue writes. "merge" = everything except repo-destructive tools. Web search/fetch off everywhere.
 
-**One level deep:** an agent with a `multiagent` block cannot be anyone's subagent (the API answers 400), so `nemo-auditor` is **not** in the lead's roster and `nemo-lead` is not in the auditor's. `nemo-merge` is left out of the auditor's roster too (18 roles): an audit never merges, and a manipulated audit must not reach the only merging agent. `validate.mjs` checks that exactly these two carry the block, that every list holds ≤ 20, that the lead's roster holds all 19 and that the auditor's holds all of them except `nemo-merge` (`ROSTER_EXCLUDE`).
+**One level deep:** an agent with a `multiagent` block cannot be anyone's subagent (the API answers 400), so `nemo-auditor` is **not** in the lead's roster and `nemo-lead` is not in the auditor's. `nemo-merge` is left out of the auditor's roster too (18 roles): an audit never merges, and a manipulated audit must not reach the only merging agent. `validate.mjs` checks that exactly these two carry the block, that every list holds ≤ 20, that the lead's roster holds all 19 and that the auditor's holds all of them except `nemo-merge` (`ROSTER_EXCLUDE`); rosters take sibling names only (no raw `agent_…` ids, which would slip past the exclusion) and both coordinators keep `inline_agents` disabled.
 
 ## Workflow v3 (one request from Sven)
 
