@@ -337,3 +337,26 @@ describe('council round 2 – unsure stays a ToDo', () => {
     expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 8740 }, opts)).toBeUndefined();
   });
 });
+
+describe('council round 3', () => {
+  it('a payee paid long ago is history: the reminder may become a new invoice', async () => {
+    await invoice('a', { payee: 'Stadtwerke' });
+    await invoiceRepo().update('a', { status: 'paid', paidAt: '2026-03-01' });
+    expect(
+      await findOpenInvoice(
+        { title: 'Stadtwerke', amountMinor: 8740, dunning: { level: 1, date: TODAY } },
+        { today: TODAY, states: ON },
+      ),
+    ).toBeUndefined();
+  });
+
+  it('reinstate never brings back half an entry (the plan row is missing)', async () => {
+    const saved = await saveCapture('plan', { title: 'Steuer' }, { states: ON, id: 'p4' });
+    await saved.undo();
+    await db.table('planner_item').delete('todos:p4');
+    await expect(reinstateCapture('plan', 'p4', { states: ON })).rejects.toMatchObject({
+      code: 'invalid',
+    });
+    expect(await live('todos_task')).toHaveLength(0);
+  });
+});

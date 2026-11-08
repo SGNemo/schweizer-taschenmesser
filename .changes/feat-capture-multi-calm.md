@@ -11,6 +11,6 @@ en: Several lines in quick capture show their target as text instead of drop-dow
 type: added
 area: invoices
 breaking: false
-de: Eine getippte Mahnung wird bei der offenen Rechnung vermerkt; passen mehrere, entsteht ein ToDo zum Prüfen, sonst eine neue Rechnung.
-en: A typed payment reminder is noted on its open invoice; if several fit it becomes a to-do to check, otherwise a new invoice.
+de: Eine getippte Mahnung wird bei der offenen Rechnung vermerkt; ist das nicht eindeutig, entsteht ein ToDo zum Prüfen, eine neue Rechnung nur ohne Rechnung zu dem Empfänger.
+en: A typed payment reminder is noted on its open invoice; if that is unclear it becomes a to-do to check, a new invoice only when that payee has none.
 ---

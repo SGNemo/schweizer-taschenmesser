@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
 import { createCollectionRepo } from '@/core/db/repo';
 import { enableModule } from '@/core/modules/activation';
@@ -12,6 +12,7 @@ beforeEach(async () => {
   await clearAll();
   await enableModule(getManifest('invoices')!);
 });
+afterEach(() => setNow());
 
 const repo = () => createCollectionRepo(getManifest('invoices')!, 'invoice');
 const add = (id: string, dueDate: string) =>
@@ -44,5 +45,14 @@ describe('resolveReminder', () => {
       match: { id: 'a', payee: 'Stadtwerke', dueDate: '2026-08-15', restMinor: 8430 },
     };
     expect((await resolveReminder('invoice', fields, [...all], shown)).amend?.id).toBe('a');
+  });
+
+  it('the preview was unsure (or promised a new invoice) and one fits now: still the ToDo, no unseen note', async () => {
+    await add('a', '2026-08-15');
+    for (const preview of [{ candidates: [] }, 'failed', 'none'] as const) {
+      const plan = await resolveReminder('invoice', fields, [...all], preview);
+      expect(plan.type).toBe('todo');
+      expect(plan.amend).toBeUndefined();
+    }
   });
 });

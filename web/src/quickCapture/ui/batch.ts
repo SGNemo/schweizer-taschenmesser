@@ -79,9 +79,10 @@ export function withoutPart(text: string, part: string): string {
 
 /**
  * A payment reminder line (an invoice with `dunning`) after the open-invoice lookup: one open invoice
- * → noted on it (`amend`, with a ToDo to fall back on when it was settled meanwhile); several equally
- * good ones → a ToDo „Mahnung <Empfänger> prüfen“ (nothing asks while unloading); none → a new invoice
- * at its dunning level. Everything else is passed through.
+ * → noted on it (`amend`, with a ToDo to fall back on when it was settled meanwhile); unsure (several
+ * fit, a known payee whose amount does not fit, a recently paid one, a failed lookup) → a ToDo
+ * „Mahnung <Empfänger> prüfen“, or without ToDos no target (the person picks); no invoice of that payee
+ * → a new invoice at its dunning level. Everything else is passed through.
  */
 export interface ReminderRow {
   type?: CaptureType;
@@ -108,8 +109,9 @@ export async function lookupInvoice(fields: CaptureFields): Promise<LookupResult
 
 /**
  * The plan for a reminder line at save time: looked up once more, so a settled invoice is never noted.
- * When the preview showed a match and nothing fits any more, or the lookup failed, the line becomes the
- * ToDo „Mahnung … prüfen“ – never a second invoice.
+ * When the result differs from what the preview showed (another invoice, none, or now one where the
+ * preview was unsure), the line becomes the ToDo „Mahnung … prüfen“ – never a second invoice and never
+ * a note on an invoice the person did not see.
  */
 export async function resolveReminder(
   type: CaptureType | undefined,
@@ -119,21 +121,22 @@ export async function resolveReminder(
 ): Promise<ReminderRow> {
   if (!isReminder(type, fields)) return { type, fields };
   const found = await lookupInvoice(fields);
-  // What is saved must be what the preview showed: another invoice than the one shown, or nothing where
-  // the preview was unsure, is unsure again.
-  const shown = preview && preview !== 'none' && preview !== 'failed' ? preview : undefined;
-  const changed =
-    (shown &&
-      'match' in shown &&
-      !(
-        found !== 'none' &&
-        found !== 'failed' &&
-        'match' in found &&
-        found.match.id === shown.match.id
-      )) ||
-    (((shown && 'candidates' in shown) || preview === 'failed') && found === 'none');
-  return reminderRow(type, fields, changed ? 'failed' : found, available);
+  return reminderRow(type, fields, sameAsShown(preview, found) ? found : 'failed', available);
 }
+
+/** What a lookup means for the line: noted on one invoice, unsure, or a new invoice. */
+const outcome = (r: LookupResult | undefined): string =>
+  r === undefined
+    ? 'pending'
+    : r === 'none'
+      ? 'new'
+      : r === 'failed' || 'candidates' in r
+        ? 'unsure'
+        : `match:${r.match.id}`;
+
+/** The save must be what the preview showed; any difference is unsure (the ToDo „Mahnung … prüfen“). */
+export const sameAsShown = (preview: LookupResult | undefined, found: LookupResult): boolean =>
+  outcome(preview) === outcome(found);
 
 export function reminderRow(
   type: CaptureType | undefined,

@@ -490,3 +490,32 @@ describe('payment reminders in a batch („Kopf leer“ package 2)', () => {
     expect(inv).toMatchObject({ payee: 'Stadtwerke', amountMinor: 8740, dunningLevel: 1 });
   });
 });
+
+describe('a target picked by hand is final (council round 3)', () => {
+  it('picking „Rechnung“ for a reminder line makes a new invoice, without the lookup', async () => {
+    await enableModule(getManifest('invoices')!);
+    await createCollectionRepo(getManifest('invoices')!, 'invoice').createMany([
+      {
+        id: 'inv-1',
+        data: { payee: 'Stadtwerke', amountMinor: 8430, dueDate: '2026-09-15', status: 'open' },
+      },
+    ]);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(
+      await box(),
+      'Müll runterbringen{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 €',
+    );
+    const target = (await screen.findAllByTestId('capture-row-target'))[1]!;
+    await waitFor(() => expect(target).toHaveTextContent('Mahnung zu Rechnung'));
+    await pickTarget(user, 1, 'invoice');
+    await waitFor(() =>
+      expect(screen.getAllByTestId('capture-row-target')[1]).not.toHaveTextContent('Mahnung zu'),
+    );
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(await db.table('invoices_invoice').count()).toBe(2);
+    expect((await db.table('invoices_invoice').get('inv-1'))!.dunningLevel).toBeUndefined();
+  });
+});

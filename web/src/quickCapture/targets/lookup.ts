@@ -2,6 +2,7 @@ import { createCollectionRepo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
+import { addDaysStr } from '@/core/time/dates';
 import type { CaptureFields } from '../parser';
 import { openRest } from './adapters';
 import type { OpenInvoice } from './types';
@@ -11,6 +12,8 @@ export type InvoiceLookup = { match: OpenInvoice } | { candidates: OpenInvoice[]
 /** A reminder may add a fee: the amount may lie this much above the open rest (cents or share). */
 const FEE_MINOR = 2000;
 const FEE_SHARE = 0.25;
+/** A reminder and a payment cross in the post: a payee paid this many days before still makes it unsure. */
+const CROSSED_DAYS = 45;
 
 /** Words around a payee in a reminder line that are not part of its name. */
 const NOISE = new Set([
@@ -56,10 +59,12 @@ const compact = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}]+/g
 
 /**
  * Finds the open invoice a payment reminder belongs to. A pure read through the manifest repo (live
- * invoices with an open rest > 0 only); `undefined` while the invoices module is off or nothing fits.
- * Order: a reference or invoice number in the line → the payee by name prefix (also after „im Auftrag
- * von“) with an amount at least the open rest and at most the rest plus a fee → the oldest overdue.
- * Several equally good ones come back as `candidates` (the line then stays a ToDo „… prüfen“).
+ * records only); `undefined` while the invoices module is off or no invoice of that payee exists (a new
+ * one may then be made). Order: a reference or invoice number in the line → the payee by name prefix
+ * (also after „im Auftrag von“) with an amount at least the open rest and at most the rest plus a fee
+ * → the oldest overdue. Unsure comes back as `candidates`, possibly empty: several equally good ones,
+ * a known payee whose amount does not fit, or one paid in the last weeks (the line then becomes a ToDo
+ * „… prüfen“).
  */
 export async function findOpenInvoice(
   fields: CaptureFields,
@@ -78,12 +83,19 @@ export async function findOpenInvoice(
       restMinor: openRest(r),
       reference: typeof r.reference === 'string' ? r.reference : '',
       status: r.status,
+      paidAt: typeof r.paidAt === 'string' ? r.paidAt : '',
     };
   });
   const open = all.filter((r) => r.status !== 'paid' && r.restMinor > 0);
-  const strip = ({ reference: _r, status: _s, ...inv }: (typeof open)[number]): OpenInvoice => {
+  const strip = ({
+    reference: _r,
+    status: _s,
+    paidAt: _p,
+    ...inv
+  }: (typeof open)[number]): OpenInvoice => {
     void _r;
     void _s;
+    void _p;
     return inv;
   };
 
@@ -108,7 +120,11 @@ export async function findOpenInvoice(
   if (fits.length === 0) {
     // The payee is known – an amount outside the window (an unrecorded part payment, interest) or a
     // reminder that crossed with the payment: unsure, so a ToDo to check, never a second invoice.
-    const known = all.filter(named);
+    // A paid one counts only when paid shortly before the reminder (they crossed); old history does not.
+    const since = addDaysStr(fields.dunning?.date ?? opts.today, -CROSSED_DAYS);
+    const known = all.filter(
+      (r) => named(r) && (r.status !== 'paid' || (r.paidAt !== '' && r.paidAt >= since)),
+    );
     return known.length > 0 ? { candidates: open.filter(named).map(strip) } : undefined;
   }
   if (fits.length === 1) return { match: strip(fits[0]!) };

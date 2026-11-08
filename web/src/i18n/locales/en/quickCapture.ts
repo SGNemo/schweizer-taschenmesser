@@ -114,6 +114,8 @@ export const quickCapture: Strings['quickCapture'] = {
     dunningMatch: (payee: string, due: string) =>
       `Reminder for invoice ${payee}, due ${due} · note it`,
     dunningCheck: (payee: string) => `Check reminder ${payee}`,
+    dunningChoose: (payee: string) =>
+      `There are invoices for ${payee} already. Please choose a target for the reminder.`,
     dunningWill: (payee: string, due: string) => `Will be noted on invoice ${payee}, due ${due}.`,
   },
   trayToday: {

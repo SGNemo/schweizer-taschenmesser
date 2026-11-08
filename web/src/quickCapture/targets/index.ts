@@ -236,8 +236,8 @@ export async function reinstateCapture(
   const rows = await Promise.all(all.map((s) => s.repo.table.get(s.id)));
   if (!rows[0]) throw new CaptureError('invalid');
   const stages = all.filter((_, i) => rows[i] && rows[i]!.deletedAt !== null);
-  // Nothing deleted and a stage missing: there is nothing to bring back.
-  if (stages.length === 0 && rows.some((r) => !r)) throw new CaptureError('invalid');
+  // A stage missing: a half entry (a ToDo without its plan row) is never brought back.
+  if (rows.some((r) => !r)) throw new CaptureError('invalid');
   for (const stage of stages) await stage.repo.restore(stage.id);
   return {
     id,

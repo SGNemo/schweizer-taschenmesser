@@ -35,6 +35,16 @@ import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
 import { useCaptureTypes } from './useCaptureTypes';
 
+/** A reminder line turned unsure at save while there is no ToDo target: the person picks one. */
+class ChooseTarget extends Error {
+  constructor(
+    readonly key: string,
+    readonly payee: string,
+  ) {
+    super('choose-target');
+  }
+}
+
 export interface CaptureFormProps {
   initialText?: string;
   /** Starts with this destination chosen ("create from this mail"); the user can still pick another. */
@@ -156,12 +166,14 @@ export function CaptureForm({
   // The single sheet treats a payment reminder the same way as a line of a batch.
   // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
   const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;
-  const singlePlan = reminderRow(
-    resolved.type,
-    singleFields,
-    multi ? undefined : lookups[lookupKey(single)],
-    available,
-  );
+  const singlePlan = override
+    ? { type: resolved.type, fields: singleFields, amend: undefined }
+    : reminderRow(
+        resolved.type,
+        singleFields,
+        multi ? undefined : lookups[lookupKey(single)],
+        available,
+      );
   const type = singlePlan.type;
   const fields = singlePlan.fields;
   // Noted on an existing invoice: no new-invoice chips (its own due date would contradict the hint).
@@ -172,18 +184,23 @@ export function CaptureForm({
   const rows = useMemo(
     () =>
       multi
-        ? parts.map((part) => {
+        ? parts.map((part, i) => {
+            const key = `${i}:${part}`;
             const r = parseCapture(part, {
               now: new Date(now()),
               defaultType: settings?.defaultType,
               fitness,
             });
-            const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
+            const chosen = rowOverride[key];
+            const res = resolveTarget(part, r, { ...resolveOpts, override: chosen });
             // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
             const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
-            // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice.
-            const reminder = isReminder(row.type, row.fields);
-            const plan = reminderRow(row.type, row.fields, lookups[lookupKey(part)], available);
+            // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice. A target
+            // the person picked by hand is final (a deliberate new invoice included).
+            const reminder = !chosen && isReminder(row.type, row.fields);
+            const plan = reminder
+              ? reminderRow(row.type, row.fields, lookups[lookupKey(part)], available)
+              : row;
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
@@ -220,7 +237,7 @@ export function CaptureForm({
   const pending = (
     multi
       ? rows.filter((r) => r.reminder).map((r) => ({ key: lookupKey(r.part), fields: r.source }))
-      : isReminder(resolved.type, singleFields)
+      : !override && isReminder(resolved.type, singleFields)
         ? [{ key: lookupKey(single), fields: singleFields }]
         : []
   ).filter((p) => !(p.key in lookups));
@@ -271,8 +288,9 @@ export function CaptureForm({
     }
   };
 
-  const pickRow = (part: string, next: CaptureType) => {
-    setRowOverride((o) => ({ ...o, [part]: next }));
+  /** `key` is the row's index and text, so two identical lines keep their own choice. */
+  const pickRow = (key: string, next: CaptureType) => {
+    setRowOverride((o) => ({ ...o, [key]: next }));
     setConfirming(false);
     setError('');
   };
@@ -323,20 +341,20 @@ export function CaptureForm({
       rows.map(async (r): Promise<CaptureItem> => {
         if (!r.reminder) return { type: r.type!, fields: r.fields };
         const plan = await resolveReminder('invoice', r.source, available, r.lookup);
-        if (!plan.type) throw new CaptureError('invalid');
+        if (!plan.type) throw new ChooseTarget(lookupKey(r.part), r.source.title);
         return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
       }),
     );
   /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
   const singleItem = async (): Promise<CaptureItem> => {
-    if (!isReminder(resolved.type, singleFields)) return { type: type!, fields };
+    if (override || !isReminder(resolved.type, singleFields)) return { type: type!, fields };
     const plan = await resolveReminder(
       resolved.type,
       singleFields,
       available,
       lookups[lookupKey(single)],
     );
-    if (!plan.type) throw new CaptureError('invalid');
+    if (!plan.type) throw new ChooseTarget(lookupKey(single), singleFields.title);
     return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
   };
 
@@ -359,7 +377,11 @@ export function CaptureForm({
       setConfirming(false);
       inputRef.current?.focus();
     } catch (e) {
-      setError(errorText(e));
+      if (e instanceof ChooseTarget) {
+        // Unsure at save and no ToDos: the line now asks for its target, with the reason.
+        setLookups((cur) => ({ ...cur, [e.key]: 'failed' }));
+        setError(t.quickCapture.multi.dunningChoose(e.payee));
+      } else setError(errorText(e));
       setConfirming(false);
     } finally {
       setBusy(false);
@@ -369,6 +391,8 @@ export function CaptureForm({
   const submit = () => {
     // Module states are still loading: which modules are on is not known yet, so do not guess.
     if (!states) return;
+    // A reminder line is still being looked up: wait (milliseconds), never save a guess.
+    if (pending.length > 0) return;
     if (!text.trim()) return setError(t.quickCapture.empty);
     if (multi) {
       if (rows.some((r) => !r.type)) return setError(t.quickCapture.chooseType);
@@ -469,7 +493,7 @@ export function CaptureForm({
                       // One tap: the list opens right away where the browser allows it.
                       ref={openPicker}
                       onChange={(e) => {
-                        pickRow(r.part, e.target.value as CaptureType);
+                        pickRow(`${i}:${r.part}`, e.target.value as CaptureType);
                         closeChoice(`${i}:${r.part}`, true);
                       }}
                       onKeyDown={(e) => {
@@ -597,7 +621,11 @@ export function CaptureForm({
           <div className={styles.actions}>
             {onCancel ? <Button onClick={onCancel}>{t.actions.cancel}</Button> : null}
             {/* Disabled for the moment module states load: which modules are on is not known yet. */}
-            <Button type="submit" variant="primary" disabled={busy || !text.trim() || !states}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={busy || !text.trim() || !states || pending.length > 0}
+            >
               {multi ? t.quickCapture.multi.saveAll(rows.length) : t.quickCapture.save}
             </Button>
           </div>
