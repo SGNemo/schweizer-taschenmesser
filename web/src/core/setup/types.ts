@@ -29,7 +29,7 @@ export interface SetupStepProps {
   setCanContinue(ok: boolean): void;
   /** Why "Weiter" is disabled; shown next to the button. `null` clears it. */
   setBlockedReason?(reason: string | null): void;
-  /** `quick` = one of the three first-run questions (short form of the step); default `full`. */
+  /** `quick` = one of the four first-run questions (short form of the step); default `full`. */
   mode?: 'quick' | 'full';
 }
 

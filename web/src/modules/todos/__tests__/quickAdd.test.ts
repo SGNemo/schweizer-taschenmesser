@@ -28,3 +28,17 @@ describe('readQuickAdd', () => {
     expect(readQuickAdd('Morgenroutine planen', NOW)).toEqual({ title: 'Morgenroutine planen' });
   });
 });
+
+describe('A05 (round 5): words of the title stay', () => {
+  const at = new Date(2026, 10, 8, 10, 0);
+  it.each([
+    ['Rechnung zahlen heute', 'Rechnung zahlen'],
+    ['Aufgabe 3 abschreiben morgen', 'Aufgabe 3 abschreiben'],
+    ['Geburtstag von Ana planen heute', 'Geburtstag von Ana planen'],
+    ['Ausgaben notieren heute', 'Ausgaben notieren'],
+  ])('"%s" keeps "%s" and still gets its date', (typed, title) => {
+    const q = readQuickAdd(typed, at);
+    expect(q.title).toBe(title);
+    expect(q.dueDate).toMatch(/^2026-11-0[89]$/);
+  });
+});

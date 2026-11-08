@@ -70,6 +70,7 @@ export const todos: Strings['todos'] = {
     minutes: (m: number) => `about ${m} min`,
     next: (title: string) => `Next: ${title}`,
     done: 'Everything for today is done.',
+    nothing: 'Nothing is set for today.',
     named: (action: string, title: string) => `${action}: ${title}`,
   },
   somedayLabel: 'Someday (don’t show in the open lists)',
@@ -93,7 +94,9 @@ export const todos: Strings['todos'] = {
     title: 'Sort inbox',
     open: (n: number) => (n === 1 ? 'Sort inbox · 1 thing' : `Sort inbox · ${n} things`),
     hint: (n: number) =>
-      n === 1 ? '1 thing is waiting for a place.' : `${n} things are waiting for a place.`,
+      n === 1
+        ? '1 task is in the inbox, not in a list yet.'
+        : `${n} tasks are in the inbox, not in a list yet.`,
     progress: (n: number, total: number) => `${n} of ${total}`,
     today: 'For today',
     skip: 'Skip',

@@ -42,7 +42,7 @@ test('the setup assistant asks for the language in its first question', async ({
     .getByRole('button', { name: 'Einrichtung starten' })
     .click();
   const wizard = page.getByRole('dialog', { name: 'Einrichtung' });
-  await expect(wizard.getByText('Frage 1 von 3')).toBeVisible();
+  await expect(wizard.getByText('Frage 1 von 4')).toBeVisible();
   const select = wizard.getByRole('combobox', { name: 'Sprache', exact: true });
   // German and English only (es, fr, pt-BR are frozen), plus "like the device".
   await expect(select.locator('option')).toHaveCount(3);
@@ -50,7 +50,7 @@ test('the setup assistant asks for the language in its first question', async ({
 
   // The assistant stays open on the same step, now in English.
   const setup = page.getByRole('dialog', { name: 'Setup' });
-  await expect(setup.getByText('Question 1 of 3')).toBeVisible();
+  await expect(setup.getByText('Question 1 of 4')).toBeVisible();
   await expect(setup.getByRole('combobox', { name: 'Language', exact: true })).toHaveValue('en');
 });
 

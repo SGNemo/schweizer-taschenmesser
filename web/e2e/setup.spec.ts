@@ -186,11 +186,11 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
 test('the Android back gesture asks before leaving the assistant', async ({ page }) => {
   await ready(page, '/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
-  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 4')).toBeVisible();
   await page.goBack();
   await expect(wizard(page).getByTestId('setup-confirm')).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Weiter einrichten' }).click();
-  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 4')).toBeVisible();
 });
 
 test('starts from the command palette; ending leaves a checklist on the dashboard', async ({
@@ -273,7 +273,7 @@ function watchNetwork(page: Page) {
   return external;
 }
 
-test('first run: three questions, five taps, nothing leaves the page, the rest waits in the checklist', async ({
+test('first run: four questions, six taps, nothing leaves the page, the rest waits in the checklist', async ({
   page,
 }) => {
   const external = watchNetwork(page);
@@ -285,11 +285,11 @@ test('first run: three questions, five taps, nothing leaves the page, the rest w
   };
   await tap(page.getByTestId('setup-welcome').getByRole('button', { name: 'Einrichtung starten' }));
   const dialog = wizard(page);
-  await expect(dialog.getByText('Frage 1 von 3')).toBeVisible();
+  await expect(dialog.getByText('Frage 1 von 4')).toBeVisible();
   await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
   await tap(dialog.getByRole('button', { name: 'Weiter' }));
 
-  await expect(dialog.getByText('Frage 2 von 3')).toBeVisible();
+  await expect(dialog.getByText('Frage 2 von 4')).toBeVisible();
   // Each card says what it switches off; the choice is shown as chosen.
   await expect(dialog.getByTestId('profile-everyday').locator('xpath=ancestor::li')).toContainText(
     'Schaltet ab:',
@@ -299,19 +299,24 @@ test('first run: three questions, five taps, nothing leaves the page, the rest w
   await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeEnabled();
   await tap(dialog.getByRole('button', { name: 'Weiter' }));
 
-  await expect(dialog.getByText('Frage 3 von 3')).toBeVisible();
+  // Round 5: "Fokus-Hilfen", preselected "Ruhig", one tap.
+  await expect(dialog.getByText('Frage 3 von 4')).toBeVisible();
+  await expect(dialog.getByRole('switch', { name: 'Bewegung reduzieren' })).toBeChecked();
+  await tap(dialog.getByRole('button', { name: 'Weiter' }));
+
+  await expect(dialog.getByText('Frage 4 von 4')).toBeVisible();
   await expect(dialog.getByTestId('ai-choice-local')).toBeChecked();
-  await tap(dialog.getByRole('button', { name: 'Fertig' }));
+  await tap(dialog.getByRole('button', { name: 'Fragen abschließen' }));
   await expect(wizard(page)).toHaveCount(0);
 
-  expect(taps).toBeLessThanOrEqual(6);
+  expect(taps).toBeLessThanOrEqual(7); // one more question since round 5 (Fokus-Hilfen)
   await expect.poll(async () => (await setupState(page))?.status).toBe('completed');
   const state = await setupState(page);
-  expect(state?.doneSteps).toEqual(['core.basics', 'core.profiles', 'core.ai']);
+  expect(state?.doneSteps).toEqual(['core.basics', 'core.profiles', 'core.focus', 'core.ai']);
   // One number, and the open steps wait on the dashboard.
   const checklist = page.getByTestId('setup-checklist');
   await expect(checklist).toBeVisible();
-  await expect(checklist.getByText(/^2 von \d+ Schritten erledigt$/)).toBeVisible();
+  await expect(checklist.getByText(/^3 von \d+ Schritten erledigt$/)).toBeVisible();
   expect(external).toEqual([]);
 });
 
@@ -341,11 +346,13 @@ test('"Weiter" without a change is not "erledigt"; the sync default is', async (
   await dialog.getByRole('button', { name: 'Weiter' }).click(); // sync default is the answer
   await expect(dialog.getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Weiter' }).click(); // nothing chosen
+  await expect(dialog.getByRole('heading', { name: 'Fokus-Hilfen' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Später', exact: true }).click(); // round 5 step, skipped
   await expect(dialog.getByRole('heading', { name: 'Werkzeugkasten' })).toBeVisible();
   await expect
     .poll(async () => (await setupState(page))?.doneSteps)
     .toEqual(['core.basics', 'core.sync']);
-  expect((await setupState(page))?.skippedSteps).toEqual(['core.profiles']);
+  expect((await setupState(page))?.skippedSteps).toEqual(['core.profiles', 'core.focus']);
 });
 
 test('the AI step asks nothing until "nach Ollama suchen" is clicked; Spotify has no Google note', async ({
