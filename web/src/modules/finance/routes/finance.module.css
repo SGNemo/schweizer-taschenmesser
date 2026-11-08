@@ -95,7 +95,8 @@
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
 }
-.legend {
+/* Legend of the two-series charts: one row above the chart (not the ring's column legend below). */
+.seriesLegend {
   list-style: none;
   display: flex;
   gap: var(--space-4);
@@ -104,12 +105,12 @@
   font-size: var(--text-sm);
   color: var(--text);
 }
-.legend li {
+.seriesLegend li {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
-.swatch {
+.seriesSwatch {
   width: 10px;
   height: 10px;
   border-radius: 2px;

@@ -1,8 +1,8 @@
-import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { mealSchema, sessionSchema, templateSchema } from './schema';
 import { settings } from './settings';
 
@@ -66,7 +66,7 @@ const manifest: ModuleManifest = {
   order: 98,
   area: 'household',
   contributions: {
-    onboarding: noOnboarding,
+    onboarding,
     calendarItems: () => import('./calendar'),
     aiCreateDefaults: () => import('./aiDefaults'),
     plannable: () => import('./plannable'),

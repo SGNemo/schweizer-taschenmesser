@@ -4,6 +4,7 @@ import { formatMinutes } from '@/core/i18n/format';
 import { useWeekStart } from '@/core/settings/core';
 import { addDaysStr, relativeDayLabel, today } from '@/core/time/dates';
 import type { Stored } from '@/core/db/types';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
@@ -179,6 +180,8 @@ export default function FitnessPage() {
             {t.fitness.addMeal}
           </Button>
         )}
+        {/* ⋯: Importieren (Strong, Hevy, Cronometer) and the setup, as on the other module pages. */}
+        <StartDataMenu moduleId="fitness" />
       </PageHeader>
       {sessions && meals && view !== 'week' ? (
         <HeroSlot area="figure">

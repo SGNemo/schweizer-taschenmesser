@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Dev-Preview Erststart (`feat/devpreview-first-start`, PR offen): keine Testdaten mehr von selbst, die Willkommenskarte fragt „Einrichtung starten“ oder „Mit Testdaten ansehen“; Testdaten-Banner bricht um (Svens Antworten zu #564).
 Installation ohne Sven daneben (`docs/install-first-run`, PR offen): Website `/install` + `/en/install` mit genauen Klicks für Windows-SmartScreen (Edge-Warnung, intelligente App-Steuerung) und Samsung (Quelle zulassen, Play Protect, automatische Blockierung), ehrlichem Warum und SHA-256-Prüfung; Dev-Preview-Release-Text beginnt mit Downloads, beiden Kurzanleitungen und SHA-256 je Datei; Screenshots fehlen noch (Windows-VM/Samsung nötig).
 Erstkontakt-Runde Person A (`feat/demo-a`, PR offen): Setup-Schritt „Fokus-Hilfen“ (Vorauswahl „Ruhig“), Fortsetzen genau an der Pause, Schrittübersicht vorab, Toasts warten bei Fokus + Schalter „Hinweise bleiben stehen“, wörtliche Texte (ToDos, Notizen, Einrichtung), Umzug-Fixes B05/B08 ([qa/round-5/a](qa/round-5/a/FINDINGS.md)).
 
@@ -11,7 +12,7 @@ Erstkontakt-Runde 5, Person C (`feat/demo-c`, PR offen): Schnellerfassung am Han
 
 Erstkontakt-Runde, Person B (`feat/demo-b`, PR offen): Bank-Import aus der Einrichtung ohne Sackgasse, Standardkategorien für bekannte Empfänger, Excel-tauglicher Export direkt über den Buchungen, „Kontostand heute laut Bank“, Karte „Diesen Monat“ (auch in der ruhigen Übersicht ohne ToDos); Funde und Follow-ups in [qa/round-5/b](qa/round-5/b/FINDINGS.md).
 
-Fitness, Pakete 1–2 (#565 gemergt, `feat/fitness-2` PR offen): Modul `fitness` (preview, aus) in Haushalt – Einheiten + Mahlzeiten, Widget, Kalender, Schnellerfassung, Tagesziel (Körperdaten nie gespeichert); Paket 2: Wochenansicht, Vorlagen, geplante Einheiten im Planer und mit Uhrzeit unter „Jetzt wichtig“; Paket 3 (CSV-Import) offen ([features/fitness.md](features/fitness.md)).
+Fitness, Pakete 1–3 (#565, #573 gemergt; `feat/fitness-3` PR offen): Modul `fitness` (preview, aus) in Haushalt – Einheiten + Mahlzeiten, Widget, Kalender, Schnellerfassung, Tagesziel (Körperdaten nie gespeichert), Wochenansicht, Vorlagen, Planer, „Jetzt wichtig“; Paket 3: Import aus Strong, Hevy (Training) und Cronometer (Essen) per CSV ([features/fitness.md](features/fitness.md)).
 
 Erstkontakt-Runde, Person D (`feat/demo-d`, PR offen): Obsidian-Import mit Unterordnern und Nummernreihenfolge, Backup-Status nach Datei-Backup, lesbares Klartext-Backup mit Formathinweis, „Was überhaupt ins Netz gehen kann“ aus dem Code (Test prüft den Quelltext), „Was ging wohin?“ sichtbar; Funde, Persona, Nachricht: [qa/round-5/d](qa/round-5/d/FINDINGS.md).
 Agenten-Team v3 (`review/agents-v3`, PR offen): Prüfung der v2-Definitionen gegen die Managed-Agents-Doku (Befund 1: Lead ohne `multiagent`-Block), 20 Definitionen mit Modellen je Rolle, gemeinsamer Regelblock `SHARED.md`, `ant apply`-Dateien, Einrichtung und Session-Skript ([meta/agents-v3/README.md](meta/agents-v3/README.md)); gilt erst nach Svens Umstellung.

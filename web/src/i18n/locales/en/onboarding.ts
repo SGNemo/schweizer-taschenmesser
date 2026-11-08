@@ -259,6 +259,11 @@ export const onboarding: Strings['onboarding'] = {
     textLabel: 'Markdown text',
     placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
   },
+  fitness: {
+    file: 'CSV from a training or food app',
+    fileHint:
+      'Strong and Hevy (training) or Cronometer (food): export the CSV file there and choose it here. Sets of one exercise are combined into one exercise, Nemo spots duplicates. Nothing is uploaded.',
+  },
   feeds: {
     file: 'OPML file (feeds and podcasts)',
     fileHint:
