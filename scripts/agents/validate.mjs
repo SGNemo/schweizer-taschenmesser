@@ -406,6 +406,12 @@ for (const file of files) {
     const pre = sub?.predefined_agents ?? [];
     if (pre.length < 1 || pre.length > 20)
       bad(file, `predefined_agents must hold 1–20 entries (has ${pre.length})`);
+    // inline agents are defined at runtime by the coordinator itself (tools and prompt unchecked here): off for both
+    if (sub?.inline_agents?.type !== "disabled")
+      bad(
+        file,
+        "multiagent.subagents.inline_agents must be explicitly disabled for a coordinator",
+      );
     if (sub?.inline_agents?.type === "disabled" && pre.length === 0)
       bad(file, "inline_agents disabled needs ≥ 1 predefined agent");
     // every coordinator's roster = all agents that are not coordinators, minus its ROSTER_EXCLUDE entries
@@ -442,14 +448,11 @@ for (const file of files) {
             file,
             `${where}: "${ref}" carries a multiagent block and cannot be a subagent (one level deep, API 400)`,
           );
-        else if (
-          ref !== "self" &&
-          !others.includes(ref) &&
-          !/^agent_/.test(ref ?? "")
-        )
+        // names only: a raw agent_ id cannot be mapped to a role offline, so it would slip past ROSTER_EXCLUDE
+        else if (ref !== "self" && !others.includes(ref))
           bad(
             file,
-            `${where}: "${ref}" is neither a sibling file nor an agent_ id`,
+            `${where}: "${ref}" is not a sibling agent name (raw agent_ ids are not allowed in coordinator rosters)`,
           );
       }
     };
