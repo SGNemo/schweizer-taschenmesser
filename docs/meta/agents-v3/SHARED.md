@@ -18,7 +18,8 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 ## Git and GitHub
 
 - Branch from fresh `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), PR into `develop`. Never `main`, tags, releases, branch protection, force-push, history rewrite. Bring `develop` in with `git merge` (no rebase); `git pull --no-rebase` before every push.
-- GitHub MCP first. On 403 "Resource not accessible by integration": REST with `$GITHUB_TOKEN` (`curl -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SGNemo/schweizer-taschenmesser/…`) for PR create/edit, labels, comments, reviews, check runs. `$GITHUB_TOKEN` is an opaque placeholder; never print, log or commit it; `git push` uses the mounted repository's own credential, not the variable.
+- GitHub MCP first. On 403 "Resource not accessible by integration": REST with `$GITHUB_TOKEN` (`curl -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/SGNemo/schweizer-taschenmesser/…`) – writers: PR create/edit, labels, comments, reviews; read-only roles: comments and reviews only; everybody: check runs (GET). Never `workflow_dispatch`, releases, tags, merges via REST. `$GITHUB_TOKEN` is an opaque placeholder; never print, log or commit it, never print `git config`/remote/credential settings; `git push` uses the mounted repository's own credential, not the variable.
+- The MCP deny lists and the token scope are tripwires, not fences: bash, git and REST stay available to every role. The role limits (read-only, "only nemo-merge merges") are kept because you keep them.
 - A denied tool call ("Permission to use bash has been denied", a 403 the REST fallback does not cover, a missing token) is **never** worked around: stop, write the exact remaining command into your report, hand over.
 - **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main`.
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
@@ -36,7 +37,12 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Light path for small PRs
 
-Docs-only, CI-only, test-only or i18n-only PRs: no `nemo-security`, `nemo-design`, `nemo-a11y`; `nemo-reviewer` checks scope, CI and hand-over format only; then `nemo-merge`. Exceptions back to the full path: anything under `docs/RULES.md` areas, `.github/workflows/release.yml`/`dev-preview.yml` publish or signing steps, `CLAUDE.md`, `docs/meta/AGENTS.md`.
+Docs-only, test-only or i18n-only PRs: no `nemo-security`, `nemo-design`, `nemo-a11y`; `nemo-reviewer` checks scope, CI and hand-over format only; then `nemo-merge`. Full path (security review) for: anything under `docs/RULES.md` areas, **everything under `.github/**`** (gitleaks, scribble-guard, `permissions:`, publish/signing steps live there), `CLAUDE.md`, `docs/meta/AGENTS.md`. **Never merged without Sven's explicit OK in the thread:** `docs/meta/agents-v3/**`(SHARED.md and the prompts are the binding rules of all 20 agents, read live from`develop`) and `scripts/agents/**`.
+
+## Precedence and scribble
+
+- Where `docs/PROMPT-TEMPLATES.md` blocks (`#git`, `#knowledge`, `#questions`, `#closing`) differ from this file, this file wins: no `AskUserQuestion` (not available here; questions go into the report block), the report block replaces the "3 points" closing, `scribble/` changes go through a small PR (`chore/scribble-<date>`, only `scribble/` in the commit, light path) because the `develop` ruleset blocks direct pushes.
+- Small packages (`server/`, `mcp/`, `extension/`, `packages/vault-core`): their own `npm test` is short – run it; the "no full suites" rule is about `web/`.
 
 ## Working with the lead
 
@@ -44,7 +50,7 @@ Docs-only, CI-only, test-only or i18n-only PRs: no `nemo-security`, `nemo-design
 - Questions for the maintainer Sven: bundled, at most 4, recommended option first; everything that does not change the next step you decide and name in the report.
 - Read-only agents (po, creativity, design, a11y, security, reviewer): no commits, no pushes, no file edits outside your notes dir; output = report file + GitHub review/comments; fixes proposed with `file:line` and a patch suggestion for the owning agent.
 
-## Report to the lead (every hand-back, ≤ 10 lines in the thread; details in the file)
+## Report to the lead (every hand-back: this block, ≤ 10 lines in the thread; details in the file)
 
 ```
 status: done | partial – <missing> | blocked – <blocker>

@@ -5,14 +5,15 @@
 //   node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
 //   node scripts/agents/session.mjs --budget 15 --file brief.md
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
+//   node scripts/agents/session.mjs --session sess_… --auto-approve       approve waiting tool calls, keep streaming
 //   node scripts/agents/session.mjs budget sess_… 30                      raise the cap to 30 USD
 //   node scripts/agents/session.mjs threads sess_… [--archive-idle]       list child threads, free slots
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
 //
-// Configuration (env or flags): ANTHROPIC_API_KEY (or `ant auth login`), GITHUB_TOKEN (repo mount only),
+// Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mount only),
 // NEMO_LEAD_AGENT_ID / NEMO_ENV_ID / NEMO_VAULT_ID (or --agent/--env/--vault; defaults read from claude-lock.json).
-// Requires `npm i` in scripts/agents (@anthropic-ai/sdk ≥ 1.6; the SDK adds the managed-agents-2026-04-01 beta header).
+// Requires `npm i` in scripts/agents (@anthropic-ai/sdk 1.6.0, pinned; the SDK adds the managed-agents-2026-04-01 beta header).
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,26 +25,26 @@ const DEFAULTS = {
   mount: "/workspace/schweizer-taschenmesser",
   checkout: "develop",
   lock: path.join(REPO_ROOT, "claude-lock.json"),
-  leadFile: "./docs/meta/agents-v3/nemo-lead.md",
-  envFile: "./docs/meta/agents-v3/environment.yaml",
+  leadFile: "docs/meta/agents-v3/nemo-lead.md",
+  envFile: "docs/meta/agents-v3/environment.yaml",
 };
 
 // ---------- args ----------
 const argv = process.argv.slice(2);
 const flags = {};
 const positional = [];
+const boolFlags = new Set([
+  "dry-run",
+  "auto-approve",
+  "archive-idle",
+  "verbose",
+  "help",
+  "no-vault",
+]);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (a.startsWith("--")) {
     const k = a.slice(2);
-    const boolFlags = new Set([
-      "dry-run",
-      "auto-approve",
-      "archive-idle",
-      "verbose",
-      "help",
-      "no-vault",
-    ]);
     flags[k] = boolFlags.has(k) ? true : argv[++i];
   } else positional.push(a);
 }
@@ -52,7 +53,7 @@ if (flags.help || (positional.length === 0 && !flags.file && !flags.session)) {
     fs
       .readFileSync(fileURLToPath(import.meta.url), "utf8")
       .split("\n")
-      .slice(1, 17)
+      .slice(1, 18)
       .map((l) => l.replace(/^\/\/ ?/, ""))
       .join("\n"),
   );
@@ -63,14 +64,21 @@ const sub = ["budget", "threads", "interrupt"].includes(positional[0])
   : null;
 
 function fromLock(fileKey) {
+  // claude-lock.json keys are the paths as given to `ant apply` (with or without ./); match on the normalised tail
   try {
     const lock = JSON.parse(
       fs.readFileSync(flags.lock ?? DEFAULTS.lock, "utf8"),
     );
-    return lock.resources?.[fileKey]?.id;
+    const want = path.normalize(fileKey).replace(/^\.\//, "");
+    for (const [k, v] of Object.entries(lock.resources ?? {})) {
+      const key = path.normalize(k).replace(/^\.\//, "");
+      if (key === want || key.endsWith("/" + want) || want.endsWith("/" + key))
+        return v.id;
+    }
   } catch {
-    return undefined;
+    /* no lockfile yet */
   }
+  return undefined;
 }
 const cfg = {
   agent:
@@ -104,16 +112,19 @@ function budgetObj(usd) {
     max_list_cost: { amount: cents(usd), currency: "USD" },
   };
 }
-
 function readMessage() {
   if (flags.file) return fs.readFileSync(flags.file, "utf8");
   return positional.join(" ");
 }
+const userMessage = (text) => ({
+  type: "user.message",
+  content: [{ type: "text", text }],
+});
 
 // ---------- client ----------
 async function client() {
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
-  return new Anthropic(); // ANTHROPIC_API_KEY or `ant auth login` credentials
+  return new Anthropic(); // reads ANTHROPIC_API_KEY
 }
 
 const short = (s, n = 160) =>
@@ -207,6 +218,19 @@ function printEvent(ev) {
   }
 }
 
+async function approve(c, sessionId, ids) {
+  console.log(
+    `${stamp()} approving ${ids.length} tool call(s) (--auto-approve)`,
+  );
+  await c.beta.sessions.events.send(sessionId, {
+    events: ids.map((id) => ({
+      type: "user.tool_confirmation",
+      tool_use_id: id,
+      result: "allow",
+    })),
+  });
+}
+
 async function streamUntilIdle(c, sessionId, afterOpen) {
   const stream = await c.beta.sessions.events.stream(sessionId);
   if (afterOpen) await afterOpen();
@@ -217,20 +241,11 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
       if (reason === "requires_action") {
         const ids = ev.stop_reason.event_ids ?? [];
         if (cfg.autoApprove) {
-          console.log(
-            `${stamp()} approving ${ids.length} tool call(s) (--auto-approve)`,
-          );
-          await c.beta.sessions.events.send(sessionId, {
-            events: ids.map((id) => ({
-              type: "user.tool_confirmation",
-              tool_use_id: id,
-              result: "allow",
-            })),
-          });
+          await approve(c, sessionId, ids);
           continue;
         }
         console.log(
-          `\nThe session waits for a tool confirmation (${ids.join(", ")}). Re-run with --auto-approve, or answer in the Console: platform.claude.com → Agents → Sessions.`,
+          `\nThe session waits for a tool confirmation (${ids.join(", ")}). Run: node scripts/agents/session.mjs --session ${sessionId} --auto-approve   (or answer in the Console: platform.claude.com → Agents → Sessions)`,
         );
         return "requires_action";
       }
@@ -272,6 +287,14 @@ async function main() {
     const [sessionId] = positional;
     if (!sessionId)
       throw new Error("usage: threads <session_id> [--archive-idle]");
+    if (cfg.dryRun)
+      return console.log(
+        JSON.stringify(
+          { list_threads: sessionId, archive_idle: !!flags["archive-idle"] },
+          null,
+          2,
+        ),
+      );
     const c = await client();
     let idle = 0,
       archived = 0;
@@ -297,6 +320,9 @@ async function main() {
   }
   if (sub === "interrupt") {
     const [sessionId] = positional;
+    if (!sessionId) throw new Error("usage: interrupt <session_id>");
+    if (cfg.dryRun)
+      return console.log(JSON.stringify({ interrupt: sessionId }, null, 2));
     const c = await client();
     await c.beta.sessions.events.send(sessionId, {
       events: [{ type: "user.interrupt" }],
@@ -308,30 +334,45 @@ async function main() {
   }
 
   const message = readMessage();
-  if (!message.trim())
+  if (!message.trim() && !(cfg.session && cfg.autoApprove))
     throw new Error("no message: pass it as argument or --file <path>");
 
   if (cfg.session) {
     if (cfg.dryRun)
       return console.log(
-        JSON.stringify({ resume: cfg.session, message }, null, 2),
+        JSON.stringify(
+          { resume: cfg.session, message, autoApprove: cfg.autoApprove },
+          null,
+          2,
+        ),
       );
     const c = await client();
     console.log(`resuming ${cfg.session}`);
-    const outcome = await streamUntilIdle(c, cfg.session, () =>
-      c.beta.sessions.events.send(cfg.session, {
-        events: [
-          { type: "user.message", content: [{ type: "text", text: message }] },
-        ],
-      }),
-    );
+    const afterOpen = async () => {
+      if (cfg.autoApprove) {
+        // approve calls that were already waiting before the stream opened (a stream only carries new events)
+        const pending = [];
+        for await (const ev of c.beta.sessions.events.list(cfg.session, {
+          types: ["session.status_idle"],
+        })) {
+          if (ev.stop_reason?.type === "requires_action")
+            pending.push(...(ev.stop_reason.event_ids ?? []));
+        }
+        if (pending.length) await approve(c, cfg.session, pending);
+      }
+      if (message.trim())
+        await c.beta.sessions.events.send(cfg.session, {
+          events: [userMessage(message)],
+        });
+    };
+    const outcome = await streamUntilIdle(c, cfg.session, afterOpen);
     console.log(`\nsession ${cfg.session} → ${outcome}`);
     return;
   }
 
   if (!cfg.agent || !cfg.env)
     throw new Error(
-      "lead agent id and environment id missing: run `ant apply docs/meta/agents-v3` first (claude-lock.json), or pass --agent/--env or NEMO_LEAD_AGENT_ID/NEMO_ENV_ID",
+      "lead agent id and environment id missing: run `ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID",
     );
   if (cfg.budgetUsd === undefined)
     throw new Error(
@@ -381,11 +422,7 @@ async function main() {
     `resume later: node scripts/agents/session.mjs --session ${session.id} "…"`,
   );
   const outcome = await streamUntilIdle(c, session.id, () =>
-    c.beta.sessions.events.send(session.id, {
-      events: [
-        { type: "user.message", content: [{ type: "text", text: message }] },
-      ],
-    }),
+    c.beta.sessions.events.send(session.id, { events: [userMessage(message)] }),
   );
   console.log(`\nsession ${session.id} → ${outcome}`);
 }

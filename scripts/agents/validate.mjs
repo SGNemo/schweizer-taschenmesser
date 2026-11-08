@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Offline schema check for the Managed Agents definitions in docs/meta/agents-v3/nemo-*.json.
-// Field names and limits follow https://platform.claude.com/docs/en/api/beta/agents/create (2026-11-08);
-// no network, no SDK. Usage: node scripts/agents/validate.mjs [dir]
+// Field names and limits follow https://platform.claude.com/docs/en/api/beta/agents/create and the
+// @anthropic-ai/sdk 1.6 Params types (2026-11-08); no network, no SDK. Usage: node scripts/agents/validate.mjs [dir]
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,7 +34,7 @@ const TOOLSET = new Set([
   "web_fetch",
   "web_search",
 ]);
-const TOP = new Set([
+const TOP = [
   "name",
   "description",
   "model",
@@ -45,7 +45,36 @@ const TOP = new Set([
   "multiagent",
   "metadata",
   "execution_identity",
-]);
+];
+// nested key whitelists
+const KEYS = {
+  model: ["id", "effort", "speed", "inference_geo"],
+  effort: ["type"],
+  mcp_server: ["type", "name", "url"],
+  toolset: ["type", "configs", "default_config"],
+  mcp_toolset: ["type", "mcp_server_name", "configs", "default_config"],
+  custom_tool: ["type", "name", "description", "input_schema"],
+  config: [
+    "name",
+    "type",
+    "enabled",
+    "permission_policy",
+    "allowed_domains",
+    "blocked_domains",
+    "max_content_tokens",
+    "url_sources",
+    "user_location",
+  ],
+  mcp_config: ["name", "enabled", "permission_policy"],
+  default_config: ["enabled", "permission_policy"],
+  permission_policy: ["type"],
+  skill: ["type", "skill_id", "version"],
+  multiagent: ["type", "subagents", "workflows", "advisor"],
+  subagents: ["type", "inline_agents", "predefined_agents"],
+  inline_agents: ["type"],
+  advisor: ["type", "model"],
+  predefined: ["type", "id", "version"],
+};
 const SECRET =
   /(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-ant-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abp]-[A-Za-z0-9-]{10,})/;
 const PLACEHOLDER =
@@ -57,6 +86,31 @@ function bad(file, msg) {
   problems++;
   console.log(`✗ ${file}: ${msg}`);
 }
+function keys(file, obj, kind, where) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
+  for (const k of Object.keys(obj))
+    if (!KEYS[kind].includes(k))
+      bad(
+        file,
+        `${where}: unknown field "${k}" (allowed: ${KEYS[kind].join(", ")})`,
+      );
+}
+const refOf = (p) =>
+  typeof p === "string" ? p : p?.type === "self" ? "self" : p?.id;
+// the five hard limits are one block for all 19 subagents; only the role name and the merge line differ
+const hardLimitsOf = (a) => {
+  const i = a.system.indexOf("## Hard limits");
+  if (i < 0) return null;
+  return a.system
+    .slice(i)
+    .replace(new RegExp(a.name.replace("nemo-", "wt-"), "g"), "wt-ROLE")
+    .replace(
+      /^- (You are the only agent that merges|Only `nemo-merge` merges)[^\n]*$/m,
+      "- MERGE-LINE",
+    )
+    .replace(/ You are read-only:[^\n]*/, "");
+};
+let hardRef = null;
 
 for (const file of files) {
   const raw = fs.readFileSync(path.join(dir, file), "utf8");
@@ -74,7 +128,7 @@ for (const file of files) {
     continue;
   }
   for (const k of Object.keys(a))
-    if (!TOP.has(k)) bad(file, `unknown top-level field "${k}"`);
+    if (!TOP.includes(k)) bad(file, `unknown top-level field "${k}"`);
   // name / description / system
   if (typeof a.name !== "string" || a.name.length < 1 || a.name.length > 256)
     bad(file, "name missing or > 256 chars");
@@ -87,13 +141,28 @@ for (const file of files) {
     (typeof a.description !== "string" || a.description.length > 2048)
   )
     bad(file, "description > 2048 chars");
-  if (typeof a.system !== "string" || a.system.length < 200)
+  if (typeof a.system !== "string" || a.system.length < 200) {
     bad(file, "system prompt missing or suspiciously short");
+    continue;
+  }
   if (a.system.length > 100000) bad(file, "system > 100000 chars");
   if (!a.system.includes("docs/meta/agents-v3/SHARED.md"))
     bad(file, "system does not reference SHARED.md");
+  if (a.name !== "nemo-lead") {
+    const hl = hardLimitsOf(a);
+    if (!hl) bad(file, 'no "## Hard limits" block');
+    else if (hardRef === null) hardRef = { file, hl };
+    else if (hl !== hardRef.hl)
+      bad(
+        file,
+        `hard-limits block differs from ${hardRef.file} (one template for all 19)`,
+      );
+  }
   // model
   const m = typeof a.model === "string" ? { id: a.model } : a.model;
+  keys(file, m, "model", "model");
+  if (m?.effort && typeof m.effort === "object")
+    keys(file, m.effort, "effort", "model.effort");
   if (!m || !MODELS.has(m.id))
     bad(
       file,
@@ -114,19 +183,27 @@ for (const file of files) {
   // mcp servers + toolsets
   const servers = new Map();
   for (const s of a.mcp_servers ?? []) {
+    keys(file, s, "mcp_server", `mcp server ${s.name}`);
     if (s.type !== "url" || !s.name || !s.url)
       bad(file, "mcp_servers entry needs type=url, name, url");
-    if (s.authorization_token || s.token || s.headers)
-      bad(file, `mcp server "${s.name}" carries credentials (use the vault)`);
     if (servers.has(s.name)) bad(file, `duplicate mcp server name "${s.name}"`);
     servers.set(s.name, false);
   }
   if ((a.mcp_servers ?? []).length > 20) bad(file, "more than 20 mcp servers");
   if (!Array.isArray(a.tools) || a.tools.length === 0)
     bad(file, "tools missing");
+  if ((a.tools ?? []).length > 256) bad(file, "more than 256 tools");
   let hasToolset = false;
   for (const t of a.tools ?? []) {
-    const checkCfg = (c, where, known) => {
+    const checkCfg = (c, where, known, kind = "config") => {
+      keys(file, c, kind, where);
+      if (c.permission_policy)
+        keys(
+          file,
+          c.permission_policy,
+          "permission_policy",
+          `${where}.permission_policy`,
+        );
       if (c.permission_policy && !POLICY.has(c.permission_policy.type))
         bad(
           file,
@@ -139,27 +216,39 @@ for (const file of files) {
     };
     if (t.type === "agent_toolset_20260401") {
       hasToolset = true;
+      keys(file, t, "toolset", "agent toolset");
       if (t.default_config)
-        checkCfg(t.default_config, "agent toolset default_config");
+        checkCfg(
+          t.default_config,
+          "agent toolset default_config",
+          undefined,
+          "default_config",
+        );
       for (const c of t.configs ?? [])
-        checkCfg(c, "agent toolset config", TOOLSET);
+        checkCfg(c, `agent toolset config ${c.name}`, TOOLSET);
       const pol = t.default_config?.permission_policy?.type ?? "always_allow";
       if (pol !== "always_allow")
         console.log(
           `  note ${file}: agent toolset policy ${pol} – the session runner must answer requires_action`,
         );
     } else if (t.type === "mcp_toolset") {
+      keys(file, t, "mcp_toolset", "mcp toolset");
       if (!servers.has(t.mcp_server_name))
         bad(
           file,
           `mcp_toolset references undeclared server "${t.mcp_server_name}"`,
         );
       else servers.set(t.mcp_server_name, true);
-      if (t.default_config) checkCfg(t.default_config, "mcp default_config");
+      if (t.default_config)
+        checkCfg(
+          t.default_config,
+          "mcp default_config",
+          undefined,
+          "default_config",
+        );
       for (const c of t.configs ?? []) {
         if (!c.name) bad(file, "mcp config without name");
-        if (c.type) bad(file, 'mcp config entries take no "type"');
-        checkCfg(c, `mcp config ${c.name}`);
+        checkCfg(c, `mcp config ${c.name}`, undefined, "mcp_config");
       }
       const pol = t.default_config?.permission_policy?.type ?? "always_ask";
       if (pol === "always_ask")
@@ -167,6 +256,7 @@ for (const file of files) {
           `  note ${file}: mcp toolset defaults to always_ask – sessions will pause on every GitHub call`,
         );
     } else if (t.type === "custom") {
+      keys(file, t, "custom_tool", `custom tool ${t.name}`);
       if (
         !/^[a-zA-Z0-9_-]{1,128}$/.test(t.name ?? "") ||
         /^(mcp__|ant__)/.test(t.name)
@@ -180,6 +270,7 @@ for (const file of files) {
       bad(file, `mcp server "${n}" has no mcp_toolset (API rejects it)`);
   // skills
   for (const s of a.skills ?? []) {
+    keys(file, s, "skill", "skills entry");
     if (!["anthropic", "custom"].includes(s.type) || !s.skill_id)
       bad(file, "skills entry needs type anthropic|custom and skill_id");
     if (s.type === "custom" && !/^skill_/.test(s.skill_id))
@@ -194,7 +285,7 @@ for (const file of files) {
   for (const [k, v] of Object.entries(md))
     if (k.length > 64 || String(v).length > 512)
       bad(file, `metadata "${k}" too long`);
-  // multiagent: only the lead, one level, ≤ 20, inline off → predefined required, workflows explicit
+  // multiagent: only the lead, one level, ≤ 20 distinct, inline off → predefined required, workflows explicit
   if (a.multiagent) {
     if (a.name !== "nemo-lead")
       bad(
@@ -202,6 +293,17 @@ for (const file of files) {
         "only nemo-lead may carry a multiagent block (delegation is one level deep)",
       );
     const ma = a.multiagent;
+    keys(file, ma, "multiagent", "multiagent");
+    keys(file, ma.subagents, "subagents", "multiagent.subagents");
+    keys(file, ma.workflows, "subagents", "multiagent.workflows");
+    keys(file, ma.advisor, "advisor", "multiagent.advisor");
+    if (ma.subagents?.inline_agents)
+      keys(
+        file,
+        ma.subagents.inline_agents,
+        "inline_agents",
+        "multiagent.subagents.inline_agents",
+      );
     if (ma.type !== "multiagent_20261001")
       bad(file, `multiagent.type "${ma.type}" unexpected`);
     const sub = ma.subagents;
@@ -215,16 +317,26 @@ for (const file of files) {
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
       .filter((n) => n !== "nemo-lead");
+    const seen = new Set();
     for (const p of pre) {
-      const ref = typeof p === "string" ? p : p.id;
-      if (!others.includes(ref) && !/^agent_/.test(ref))
+      if (typeof p === "object")
+        keys(file, p, "predefined", "predefined agent");
+      const ref = refOf(p);
+      if (seen.has(ref))
+        bad(
+          file,
+          `predefined agent "${ref}" listed twice (entries must be distinct)`,
+        );
+      seen.add(ref);
+      if (ref === "self") continue;
+      if (!others.includes(ref) && !/^agent_/.test(ref ?? ""))
         bad(
           file,
           `predefined agent "${ref}" is neither a sibling file nor an agent_ id`,
         );
     }
     for (const n of others)
-      if (!pre.some((p) => (typeof p === "string" ? p : p.id) === n))
+      if (!pre.some((p) => refOf(p) === n))
         bad(file, `subagent ${n} missing from the lead's roster`);
     if (ma.workflows && !["enabled", "disabled"].includes(ma.workflows.type))
       bad(file, "multiagent.workflows must be enabled|disabled");
@@ -239,8 +351,8 @@ for (const file of files) {
       file,
       "nemo-lead has no multiagent block – it would do everything itself",
     );
-  // inference_geo must agree across the roster (all unset or all equal)
 }
+// inference_geo must agree across the roster (all unset or all equal)
 const geos = new Set(
   files.map((f) => {
     const a = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
