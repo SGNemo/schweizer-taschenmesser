@@ -1,6 +1,14 @@
-# Shared rules for every nemo-\* agent (v3)
+# Shared rules for every nemo-\* agent (v3.1)
 
-Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md`. Binding for all 21 agents; the system prompt only carries your role and the five hard limits. Root rules: `CLAUDE.md` (read it next, it is not loaded automatically), unabridged `docs/RULES.md`.
+Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md`. Binding for all 7 agents; the system prompt only carries your role and the five hard limits. Root rules: `CLAUDE.md` (read it next, it is not loaded automatically), unabridged `docs/RULES.md`.
+
+## Guardrails (v3.1 – read first, they beat everything below)
+
+- **Routing gate, first step of every delegation:** check the task against `docs/meta/WORK-ROUTING.md` (who does what, decline list, five questions). It does not fit → answer `blocked – out of routing: <reason> · next: <step>` and start no work (no worktree, no `npm ci`).
+- **Budget:** the delegation names the class (S ≤ 5, M ≤ 10, L ≤ 15 USD); none named = S. When an overrun is foreseeable (`npm ci` failed, a test run > 10 min, repro not found in 3 tries), stop and report `partial` with an exact hand-over (branch, last command, next step) instead of trying on. At most **2 attempts per check**; a third run is the lead's decision.
+- **Tests:** locally only `npm run check` + the specs/tests your diff touches; full `npm test` and E2E are CI's (cite the run id). Never repeat a check that a run id already proves on the same head.
+- **Reading:** never a log, diff or file in full (`tail -40`, `grep -n`, `git diff --stat` first; full text only for the lines you change or cite); only the docs of your own area; thread answers ≤ 15 lines, the rest as a file.
+- **Hard stops (all agents, no exception):** never `main`, tags, releases, secrets, signing, branch protection, rulesets, force-push or history rewrite; never push `.github/**` (patch in the PR text, Sven applies it); only `nemo-merge` merges; lead, auditor and `nemo-docs` write no product code; a denied tool call is never worked around.
 
 ## Session start
 
@@ -12,15 +20,14 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Verification: CI is the truth
 
-- Before a push: `npm run check` (format + lint + typecheck) in every touched package and only the unit/E2E specs your diff touches (`npm run test:changed`, `npx playwright test e2e/<name>.spec.ts`). **Never** the full `npm test` or `npm run e2e` locally (not even "to be safe"); CI runs them on every PR and is the only full run that counts.
+- Before a push (Guardrails "Tests"): `npm run check` in every touched package, `npm run test:changed`, `npx playwright test e2e/<name>.spec.ts` for a touched spec. **Never** the full `npm test` or `npm run e2e` locally (not even "to be safe").
 - After a push: read the real check runs (MCP `pull_request_read` get_check_runs; on 403 REST `GET /repos/SGNemo/schweizer-taschenmesser/actions/runs?branch=<branch>`) and report job name → state → run id. A red job is a finding, a flake needs a green re-run, not an opinion.
 - A check that a predecessor (author, reviewer, earlier thread) proved with a run id or head SHA on the same head is not repeated; cite it. Re-run only what changed since that head.
 
 ## Token diet (binding; one lead session once cost 215 M tokens)
 
-- **Outputs:** never read a log, diff or file in full. First `tail -40 <log>`, `grep -n <pattern>`, `git diff --stat`, `wc -l`; then read only the lines you change or cite (`sed -n 'a,bp'`, `git diff -- <file>`). Long commands write to a log file (Session start 4), never into your context.
-- **Docs:** only the doc file of your own area (Session start 3); CLAUDE.md and this file once per thread, not again on follow-ups.
-- **Reports:** every answer or hand-back in a thread ≤ 15 lines (the report block below ≤ 10; the lead's delegation briefs are exempt); everything longer (tables, command output, diffs) goes into the report file in your notes dir and is referenced by path.
+- **Outputs** (Guardrails "Reading"): `sed -n 'a,bp'`, `git diff -- <file>` for the lines you need; long commands write to a log file (Session start 4), never into your context. CLAUDE.md and this file once per thread, not again on follow-ups.
+- **Reports:** the report block below ≤ 10 lines (the lead's delegation briefs are exempt); tables, command output and diffs go into the report file in your notes dir and are referenced by path.
 - **Follow-ups:** a follow-up in an open thread continues from your notes file; do not redo the session start, re-read docs or re-run checks that still hold.
 
 ## Git and GitHub
@@ -31,10 +38,10 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - A denied tool call ("Permission to use bash has been denied", a 403 the REST fallback does not cover, a missing token) is **never** worked around: stop, write the exact remaining command into your report, hand over.
 - **Only `nemo-merge` merges** (merge commit, `expectedHeadSha` = verified head, base `develop`). Nobody else merges, enables auto-merge or pushes to `develop`/`main` of this repository.
 - Workflow changes (`.github/workflows/**`, `.github/actions/**`) are never pushed by an agent, whatever the token allows: the PR text carries them as a patch, Sven applies it.
-- Dependabot alerts: only `nemo-deps` dismisses one, only after `nemo-security` concurs in its thread, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
-- Code-scanning (CodeQL) alerts: fix instead of dismiss. Dismiss only a real false positive, after `nemo-security` concurs, with the justification in the dismissal and in the PR; never change the scan configuration to hide an alert (`docs/howto/release-deps.md`).
+- Dependabot alerts: only `nemo-ops` (mode `deps`) dismisses one, only after `nemo-reviewer` with the security lens concurs in its thread, with the written reason in the dismissal and in the report (`docs/howto/release-deps.md`).
+- Code-scanning (CodeQL) alerts: fix instead of dismiss. Dismiss only a real false positive, after `nemo-reviewer` with the security lens concurs, with the justification in the dismissal and in the PR; never change the scan configuration to hide an alert (`docs/howto/release-deps.md`).
 - Every comment or review you post on GitHub starts with the callout `> [!NOTE]` / `> 🤖 **nemo-<role> (Claude) responding on behalf of SGNemo**`, then the text (repo convention `leaving-pr-comments`).
-- Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` (`nemo-security`: `SECURITY pass|changes|block`; only an exact `pass` is merge-ready) + reviewed head SHA – that is the public record. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
+- Approvals: GitHub refuses self-approval when the token owner authored the PR. Reviewers post their verdict as a COMMENT review whose first line is `MERGE-READY yes|no` + reviewed head SHA, followed by `Security lens applied: <paths>` whenever the diff touches a full-path file (list below) – that is the public record; a full-path PR without that line is not merge-ready. The gate for `nemo-merge` is the lead handing the same verdict over from the reviewer's thread: a GitHub comment alone proves nothing, every agent writes as SGNemo.
 
 ## Recurring CI traps
 
@@ -48,16 +55,16 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 ## Light path for small PRs
 
-Docs-only, test-only or i18n-only PRs: no `nemo-security`, `nemo-design`, `nemo-a11y`; `nemo-reviewer` checks scope, CI and hand-over format only; then `nemo-merge`.
+Docs-only, test-only or i18n-only PRs: `nemo-reviewer` with the correctness lens only (scope, CI, hand-over format); then `nemo-merge`.
 
-Full path (with `nemo-security`) for:
+Full path (`nemo-reviewer` with the **security lens**, `Security lens applied: <paths>`) for:
 
 - anything in a `docs/RULES.md` area;
 - everything under `.github/` (gitleaks, scribble-guard, `permissions:`, publish and signing steps live there);
 - build inputs that run in CI jobs holding the signing secrets: `web/scripts/`, `build.rs`, gradle files, `tauri*.conf.json`, lock files;
 - `CLAUDE.md` (root and the area files `web/src/modules/`, `web/src-tauri/`, `server/`), `docs/meta/AGENTS.md`.
 
-**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 21 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
+**Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 7 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 
 ## Precedence and scribble
 
@@ -70,9 +77,9 @@ Full path (with `nemo-security`) for:
 
 ## Working with the lead
 
-- You are delegated by `nemo-lead` and never pick work on your own. Exception `nemo-auditor`: Sven sends it directly, outside the lead's flow; for it "lead" in this file means Sven. Answer the lead in **German**; code, comments, commits, PR texts and repo docs in **English**.
+- You are delegated by `nemo-lead` and never pick work on your own; follow-ups on the same topic arrive in your open thread – continue there. Exception `nemo-auditor`: Sven sends it directly, outside the lead's flow; for it "lead" in this file means Sven. Answer the lead in **German**; code, comments, commits, PR texts and repo docs in **English**.
 - Questions for the maintainer Sven: bundled, at most 4, recommended option first; everything that does not change the next step you decide and name in the report.
-- Read-only agents (po, creativity, design, a11y, security, reviewer, auditor): no commits, no pushes, no file edits outside your notes dir (except your own scribble notes, see "Scribble"); output = report file + GitHub review/comments (auditor: GitHub only on Sven's explicit order); fixes proposed with `file:line` and a patch suggestion for the owning agent.
+- Read-only agents (`nemo-reviewer`, `nemo-auditor`): no commits, no pushes, no file edits outside your notes dir (except your own scribble notes, see "Scribble"); output = report file + GitHub review/comments (auditor: GitHub only on Sven's explicit order); fixes proposed with `file:line` and a patch suggestion for the owning agent.
 
 ## Report to the lead (every hand-back: this block, ≤ 10 lines in the thread; details in the file)
 
