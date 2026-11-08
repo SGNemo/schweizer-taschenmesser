@@ -14,7 +14,8 @@ Nemo comes as a portable Windows file, as an Android app and as a PWA in the bro
 2. Windows may show "Windows protected your PC" (SmartScreen), because unknown `.exe` files without a purchased
    code-signing certificate are always treated this way: **"More info" → "Run anyway"**. The update payload is signed
    with the project's update key; the app checks the signature itself before every update (and refuses unsigned or
-   foreign-signed files).
+   foreign-signed files). If Windows shows **Smart App Control** instead, with no "Run anyway", it does not allow
+   unsigned apps at all; more on this and every click including the Edge download warning: [step by step](https://nemo-adhd-helper.online/en/install) ([Deutsch](https://nemo-adhd-helper.online/install)).
 3. **Requirement: Microsoft WebView2.** On Windows 10/11 the component is usually already there (it ships with Edge).
    If it is missing, the app explains this in a window and can open the
    [download page](https://developer.microsoft.com/microsoft-edge/webview2/) ("Evergreen Bootstrapper").
@@ -41,7 +42,9 @@ The old installed version cannot update itself to the portable file; the switch 
 1. Download `Nemo.apk` on your phone (for example in Chrome) and open it.
 2. The first time, Android asks whether **installing from unknown sources** is allowed: **"Settings" →
    "Allow from this source"** for the browser or the files app, then go back and tap "Install". Play Protect
-   may offer an extra check ("Install anyway" or "Scan app").
+   may offer an extra check ("Install anyway" or "Scan app"). If **Auto Blocker** on newer Samsung phones blocks
+   the installation: Settings → Security and privacy → Auto Blocker off, install, turn it back on (while it is on,
+   updates from inside the app fail too).
 3. For later updates open Settings → Updates and tap "Update now": the app downloads the update, checks its checksum and hands over to
    Android's installer (if asked, allow installing from this source). The new APK must be signed with the same
    key, otherwise Android rejects it.

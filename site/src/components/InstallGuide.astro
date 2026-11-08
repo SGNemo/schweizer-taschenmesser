@@ -1,0 +1,192 @@
+---
+import { DEV_PREVIEW, RELEASES_URL, REPO_URL } from '../config.js';
+import { routes, t, type Locale } from '../i18n';
+import { assetUrl } from '../lib/release';
+import Icon from './Icon.astro';
+
+/**
+ * The /install page: downloads, why Windows and Android warn, the exact clicks per platform, how to check
+ * the SHA-256 and what the first start looks like. Text only (no screenshots yet, docs/howto/site-install.md),
+ * no script, no inline style.
+ */
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = t(locale);
+const p = s.installPage;
+const DEV_RELEASE_URL = `${RELEASES_URL}/tag/dev-preview`;
+const STABLE_RELEASE_URL = `${RELEASES_URL}/latest`;
+const platforms = [
+  { id: 'windows', icon: 'windows' as const, title: p.windows.title, steps: p.windows.steps, notes: [p.windows.sac, p.windows.webview] },
+  { id: 'android', icon: 'android' as const, title: p.android.title, steps: p.android.steps, notes: [p.android.autoBlocker, p.android.after] },
+];
+---
+<article class="wrap narrow guide">
+  <h1>{p.title}</h1>
+  <p class="lead">{p.lead}</p>
+
+  <section aria-labelledby="dl-title" class="card">
+    <h2 id="dl-title">{p.downloads.title}</h2>
+    <div class="dl">
+      <p class="label">{p.downloads.stable}</p>
+      <a class="btn btn-primary" href={assetUrl('windows')} rel="noopener" download><Icon name="windows" size={22} />{s.hero.windows}</a>
+      <a class="btn btn-primary" href={assetUrl('android')} rel="noopener" download><Icon name="android" size={22} />{s.hero.android}</a>
+    </div>
+    <div class="dl">
+      <p class="label">{p.downloads.dev}</p>
+      <a class="btn btn-secondary" href={DEV_PREVIEW.windows} rel="noopener"><Icon name="windows" size={22} />{s.hero.windows}</a>
+      <a class="btn btn-secondary" href={DEV_PREVIEW.android} rel="noopener"><Icon name="android" size={22} />{s.hero.android}</a>
+    </div>
+    <p class="muted small">{p.downloads.devHint}</p>
+  </section>
+
+  <section aria-labelledby="why-title">
+    <h2 id="why-title">{p.why.title}</h2>
+    <p>{p.why.text}</p>
+    <p class="muted">{p.why.signed}</p>
+  </section>
+
+  {platforms.map((pl) => (
+    <section aria-labelledby={`${pl.id}-title`} class="card" id={pl.id}>
+      <h2 id={`${pl.id}-title`}><Icon name={pl.icon} size={22} />{pl.title}</h2>
+      <ol class="steps">
+        {pl.steps.map((st) => (
+          <li>
+            {st.text}
+            {st.ui.length > 0 && (
+              <span class="path">
+                {st.ui.map((label, i) => <>{i > 0 && <span class="sep" aria-hidden="true">→</span>}<kbd class="ui">{label}</kbd></>)}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+      {pl.notes.map((n) => <p class="note">{n}</p>)}
+    </section>
+  ))}
+
+  <section aria-labelledby="check-title">
+    <h2 id="check-title">{p.check.title}</h2>
+    <p>{p.check.text}</p>
+    <p>{p.check.windows}</p>
+    <pre><code>Get-FileHash .\Nemo-Portable.exe -Algorithm SHA256</code></pre>
+    <p class="muted">{p.check.android}</p>
+    <p class="links">
+      <a href={STABLE_RELEASE_URL} rel="noopener">{p.check.stable} <Icon name="external" size={14} /></a>
+      <a href={DEV_RELEASE_URL} rel="noopener">{p.check.dev} <Icon name="external" size={14} /></a>
+    </p>
+  </section>
+
+  <section aria-labelledby="first-title">
+    <h2 id="first-title">{p.firstStart.title}</h2>
+    <ul class="first">
+      {p.firstStart.items.map((it) => <li>{it}</li>)}
+    </ul>
+  </section>
+
+  <p class="help">{p.help} <a href={`${REPO_URL}/issues/new/choose`} rel="noopener">{p.helpLink} <Icon name="external" size={14} /></a></p>
+  <p class="back"><a href={routes.home[locale]}>{p.back}</a></p>
+</article>
+
+<style>
+  .guide {
+    padding-block: clamp(2.5rem, 5vw, 4rem);
+    display: grid;
+    gap: var(--space-6);
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    max-width: var(--measure);
+  }
+  section {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h2 {
+    font-size: var(--text-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .card {
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .dl {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .label {
+    flex-basis: 100%;
+    font-weight: var(--weight-semibold);
+  }
+  .small {
+    font-size: var(--text-sm);
+  }
+  .steps {
+    padding-left: 1.5rem;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .steps li::marker {
+    font-weight: var(--weight-semibold);
+    color: var(--text-3);
+  }
+  .path {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    margin-left: var(--space-1);
+  }
+  .ui {
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    padding: 0.15em 0.6em;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .sep {
+    color: var(--text-3);
+  }
+  pre {
+    margin: 0;
+    overflow-x: auto;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .links a,
+  .help a,
+  .back a {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: var(--touch);
+  }
+  .first {
+    padding-left: 1.25rem;
+    display: grid;
+    gap: var(--space-2);
+    max-width: var(--measure);
+  }
+  .help {
+    color: var(--text-muted);
+  }
+</style>

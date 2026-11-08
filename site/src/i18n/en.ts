@@ -125,7 +125,71 @@ export const en = {
       windows: 'Dev preview for Windows',
       android: 'Dev preview for Android',
     },
+    steps: 'Step by step, with the Windows and Android warnings',
     more: 'Full guide',
+  },
+  // Step-by-step page /en/install (components/InstallGuide.astro). Button labels are the exact wording of
+  // Windows 11 and Samsung One UI in English; `ui` marks the word to tap, `text` explains the step.
+  installPage: {
+    title: 'Install, step by step',
+    description: 'Installing Nemo on Windows and Android: what the Windows SmartScreen and Android warnings mean, which buttons to press and how to check the file.',
+    lead: 'Windows and Android warn you the first time. For Nemo that is normal at the moment. Here is why, and exactly which buttons to press.',
+    downloads: {
+      title: 'Download',
+      stable: 'Stable version',
+      dev: 'Dev-Preview (untested)',
+      devHint: 'The Dev-Preview is a separate app “Nemo Dev” with its own data. It runs next to the stable app and does not replace it.',
+    },
+    why: {
+      title: 'Why does your device warn you?',
+      text: 'Nemo is a small open-source project. The Windows file is not signed with a purchased code-signing certificate, and the Android app does not come from the Play Store. So Windows and Android do not know the publisher and ask first. The warning is fair: it applies to every file from the internet your device does not know. Only install what you got from this site or the GitHub release.',
+      signed: 'What is signed anyway: updates inside the app are signed with the project key and checked before they are applied. The Android app is signed with a fixed key; Android only accepts updates signed with the same key.',
+    },
+    check: {
+      title: 'Check the file (optional)',
+      text: 'Every file has a SHA-256 checksum in the GitHub release. If it matches your file, it is exactly the file the project built.',
+      windows: 'Windows: open PowerShell in your Downloads folder and type:',
+      android: 'Android: a checksum app, or later on a PC with the same command.',
+      stable: 'Checksums of the stable version',
+      dev: 'Checksums of the Dev-Preview',
+    },
+    windows: {
+      title: 'Windows 11 and 10',
+      steps: [
+        { text: 'Download the file. If Edge says it “isn’t commonly downloaded”, click the three dots, then', ui: ['Keep', 'Show more', 'Keep anyway'] },
+        { text: 'Double-click the file in your Downloads folder. “Windows protected your PC” appears. Below the text, click', ui: ['More info'] },
+        { text: 'Now it says “Publisher: Unknown publisher”. Check that the app is called “Nemo-Portable.exe” or “Nemo-Portable-dev.exe”, then', ui: ['Run anyway'] },
+        { text: 'Nemo starts. Windows only asks the first time you run this file.', ui: [] },
+      ],
+      sac: 'If it says “Smart App Control” instead and there is no “Run anyway” button: this protection does not allow unsigned apps at all. We advise against turning it off for Nemo: it protects all apps. Use the Android app instead, or wait for a signed version.',
+      webview: 'Nemo needs WebView2. Windows 10 and 11 almost always have it; if it is missing, Windows shows a notice with a link.',
+    },
+    android: {
+      title: 'Android (Samsung, One UI)',
+      steps: [
+        { text: 'Download the APK in your browser. If Chrome asks whether to keep the file:', ui: ['Download anyway'] },
+        { text: 'Tap the “Download complete” notification, or open the file in “My Files → Downloads”.', ui: [] },
+        { text: 'Android says your phone is not allowed to install unknown apps from this source. Tap', ui: ['Settings'] },
+        { text: 'Turn on the switch for your browser or the Files app:', ui: ['Allow from this source'] },
+        { text: 'Go back to the installer, then', ui: ['Install'] },
+        { text: 'If Google Play Protect asks, it is the same warning as above: the app is not from the Play Store. Choose “Scan app”; if “Install anyway” appears afterwards, the decision is yours.', ui: [] },
+      ],
+      autoBlocker: 'If it says “Blocked by Auto Blocker”: on newer Samsung phones this feature stops apps from outside the stores. Settings → Security and privacy → Auto Blocker → off, install Nemo, then turn it back on. While it is on, Nemo cannot install its own updates either.',
+      after: 'Afterwards you can turn “Allow from this source” off again for the browser. At the first update from inside the app, Android asks once whether Nemo may install updates.',
+    },
+    firstStart: {
+      title: 'The first start',
+      items: [
+        'Nemo opens in your system language, German or English (other languages: English). You can change it in Settings.',
+        'The Dev-Preview shows a “Dev” label at the top and briefly a note about it. That is not an error, just the sign that you are using the preview.',
+        'The Dev-Preview fills itself with made-up test data on the first start, so you can try things out. Red cards like “invoices overdue” are part of it. To remove them: Settings → Developer (“Entwickler”) → “Testdaten entfernen”; these test tools are in German only.',
+        'The stable version starts empty and asks whether you want to set it up step by step. Every step can be skipped.',
+        'No account, no sign-in. When there is an update, the app shows it; you decide when it comes.',
+      ],
+    },
+    help: 'Stuck somewhere? Tell us at which step; a screenshot helps.',
+    helpLink: 'Ask on GitHub',
+    back: 'Back to the start page',
   },
   support: {
     eyebrow: 'Support',

@@ -511,8 +511,10 @@ jobs:
             echo "::error::releases/latest points at $TAG – refusing to continue."
             exit 1
           fi
-          cp dl/DEV_NOTES.md notes.md
           mapfile -t NAMES < assets.txt
+          # Download links, the short Windows/Android install guides and the SHA-256 of every file go on top.
+          node web/scripts/dev-release-body.mjs --dir dl --repo "$GITHUB_REPOSITORY" --tag "$TAG" \
+            --notes dl/DEV_NOTES.md --out notes.md "${NAMES[@]}"
           BINARIES=(); MANIFEST=()
           for n in "${NAMES[@]}"; do
             if [[ "$n" == dev-latest.json ]]; then MANIFEST+=("dl/$n"); else BINARIES+=("dl/$n"); fi
