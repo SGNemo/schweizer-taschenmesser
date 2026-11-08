@@ -4182,7 +4182,7 @@ export const de = {
       title: 'Dateien importieren',
       files: 'Dateien wählen',
       folder: 'Ordner wählen',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Hat er Unterordner (etwa ein Obsidian-Export), wird jeder Unterordner ein Notizbuch und tiefere Ordner ein Schlagwort.',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
