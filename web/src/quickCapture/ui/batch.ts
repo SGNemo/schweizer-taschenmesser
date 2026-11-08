@@ -153,3 +153,19 @@ export function reminderRow(
   // Unsure and no ToDos: the line asks for a target instead of becoming a second invoice.
   return check ?? { type: undefined, fields };
 }
+
+/**
+ * A hand pick is final (skips the open-invoice check) when it differs from the target the line shows at
+ * that moment – also when the line showed it was unsure (a ToDo „… prüfen“ or no target). While the
+ * lookup is still running only a target other than the one read counts; re-picking the shown target
+ * keeps the check.
+ */
+export function finalPick(
+  next: CaptureType,
+  readType: CaptureType | undefined,
+  shownType: CaptureType | undefined,
+  pending: boolean,
+): boolean {
+  if (pending) return next !== readType;
+  return next !== shownType || !shownType;
+}

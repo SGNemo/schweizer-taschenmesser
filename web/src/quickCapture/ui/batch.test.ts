@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { batchRow, batchTypes, reminderRow, withoutPart } from './batch';
+import { batchRow, batchTypes, finalPick, reminderRow, withoutPart } from './batch';
 
 const plain = (s: string) => s.replace(/\s/g, ' ');
 
@@ -80,5 +80,21 @@ describe('council round 2 – no ToDos, no second invoice', () => {
       fields,
     });
     expect(reminderRow('invoice', fields, { candidates: [] }, ['invoice']).type).toBeUndefined();
+  });
+});
+
+describe('finalPick – decided at the moment of the pick (council round 5)', () => {
+  it('re-picking the shown target keeps the check; another target is final', () => {
+    // A matched reminder shows „Rechnung“ (noted on it): picking „Rechnung“ again is not final.
+    expect(finalPick('invoice', 'invoice', 'invoice', false)).toBe(false);
+    expect(finalPick('reminder', 'invoice', 'invoice', false)).toBe(true);
+  });
+  it('an unsure line (a ToDo „… prüfen“ or no target): picking „Rechnung“ is a deliberate new invoice', () => {
+    expect(finalPick('invoice', 'invoice', 'todo', false)).toBe(true);
+    expect(finalPick('invoice', 'invoice', undefined, false)).toBe(true);
+  });
+  it('while the lookup runs only another target than the read one counts', () => {
+    expect(finalPick('invoice', 'invoice', 'invoice', true)).toBe(false);
+    expect(finalPick('todo', 'invoice', 'invoice', true)).toBe(true);
   });
 });

@@ -245,7 +245,9 @@ export async function reinstateCapture(
       done.push(stage);
     }
   } catch (e) {
-    for (const stage of done.reverse()) await stage.repo.remove(stage.id).catch(() => undefined);
+    const undone = await Promise.allSettled(done.reverse().map((st) => st.repo.remove(st.id)));
+    // A failed take-back is said, never hidden: the caller must not assume nothing is live.
+    if (undone.some((u) => u.status === 'rejected')) throw new CaptureError('invalid');
     throw e;
   }
   return {

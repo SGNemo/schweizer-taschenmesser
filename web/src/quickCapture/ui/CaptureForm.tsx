@@ -21,6 +21,7 @@ import { announceSaved } from './announceSaved';
 import {
   batchRow,
   batchTypes,
+  finalPick,
   isReminder,
   lookupInvoice,
   reminderRow,
@@ -120,10 +121,13 @@ export function CaptureForm({
   );
   const [override, setOverride] = useState<CaptureType | undefined>(initialType);
   // The person picked the target in this sheet (not a preset like the mail dialog's `initialType`).
+  // A target picked in this sheet that is final (decided at the moment of the pick, see `finalPick`).
   const [picked, setPicked] = useState(false);
   // Hand-picked targets of single rows in a multi-line capture, keyed by the row's text and how often
   // that text came before (two identical lines keep their own choice; lines may move).
-  const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
+  const [rowOverride, setRowOverride] = useState<
+    Record<string, { type: CaptureType; final: boolean }>
+  >({});
   const [confirming, setConfirming] = useState(false);
   // „Als Ausgabe buchen“ on a line of a batch: that line in the single sheet, on top of this one.
   const [booking, setBooking] = useState<{ part: string; label: string } | undefined>();
@@ -176,10 +180,9 @@ export function CaptureForm({
     multi ? undefined : lookups[lookupKey(single)],
     available,
   );
-  // A target picked by hand is final when it differs from what was read, or when the line was unsure
-  // (asked for a target); a preset or re-picking the read target keeps the open-invoice check.
-  const singleFinal =
-    picked && override !== undefined && (override !== result.type || !basePlan.type);
+  const singlePending =
+    !multi && isReminder(resolved.type, singleFields) && !(lookupKey(single) in lookups);
+  const singleFinal = picked && override !== undefined;
   const singlePlan: ReminderRow = singleFinal
     ? { type: resolved.type, fields: singleFields }
     : basePlan;
@@ -201,17 +204,16 @@ export function CaptureForm({
               fitness,
             });
             const chosen = rowOverride[key];
-            const res = resolveTarget(part, r, { ...resolveOpts, override: chosen });
+            const res = resolveTarget(part, r, { ...resolveOpts, override: chosen?.type });
             // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
             const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
             // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice. A target
-            // picked by hand is final when it differs from what was read or the line was unsure.
+            // picked by hand is final when the pick said so (`finalPick`, decided at the moment of the pick).
             const asReminder = isReminder(row.type, row.fields);
             const base: ReminderRow = asReminder
               ? reminderRow(row.type, row.fields, lookups[lookupKey(part)], available)
               : row;
-            const final = !!chosen && (chosen !== r.type || !base.type);
-            const reminder = asReminder && !final;
+            const reminder = asReminder && !chosen?.final;
             const plan: ReminderRow = reminder ? base : row;
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
@@ -223,6 +225,8 @@ export function CaptureForm({
               ...row,
               ...plan,
               reminder,
+              readType: r.type,
+              pending: asReminder && !(lookupKey(part) in lookups),
               source: row.fields,
               lookup: lookups[lookupKey(part)],
               chips: rowChips,
@@ -302,16 +306,21 @@ export function CaptureForm({
     }
   };
 
-  /** `key` is the row's index and text, so two identical lines keep their own choice. */
+  /**
+   * `key` is the row's text and how often it came before. Whether the pick is final is decided now,
+   * against what the row shows at this moment (`finalPick`), never later.
+   */
   const pickRow = (key: string, next: CaptureType) => {
-    setRowOverride((o) => ({ ...o, [key]: next }));
+    const row = rows.find((r) => r.key === key);
+    const final = row ? finalPick(next, row.readType, row.type, row.pending) : true;
+    setRowOverride((o) => ({ ...o, [key]: { type: next, final } }));
     setConfirming(false);
     setError('');
   };
 
   const pick = (next: CaptureType) => {
     setOverride(next);
-    setPicked(true);
+    setPicked(finalPick(next, result.type, singlePlan.type, singlePending));
     setConfirming(false);
     setError('');
     // Back to the field so Enter saves right after a mouse pick.
@@ -458,9 +467,9 @@ export function CaptureForm({
       // Not allowed here (no user activation, older browser): the focused select opens on the next tap.
     }
   }, []);
-  const closeChoice = (part: string, refocus: boolean) => {
+  const closeChoice = (key: string, refocus: boolean) => {
     setChoosing(undefined);
-    if (refocus) requestAnimationFrame(() => targetRefs.current[part]?.focus());
+    if (refocus) requestAnimationFrame(() => targetRefs.current[key]?.focus());
   };
 
   /** „ToDo“, „Rechnung · 13. Okt. · Datum angenommen“, „Mahnung zu Rechnung … · vermerken“. */
@@ -520,8 +529,8 @@ export function CaptureForm({
             aria-live="polite"
             data-testid="capture-rows"
           >
-            {rows.map((r, i) => (
-              <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
+            {rows.map((r) => (
+              <li key={r.key} className={styles.row} data-testid="capture-row">
                 <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
                 <div className={styles.chips}>
                   {choosing === r.key ? (
