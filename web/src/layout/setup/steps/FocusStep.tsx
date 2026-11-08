@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { calmPreset, readFocusAids, writeFocusAids, type FocusAids } from '@/core/setup/focusAids';
+import { readSetupState } from '@/core/setup/state';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
 import { patternStyles, Switch } from '@/ui';
@@ -7,8 +8,9 @@ import { patternStyles, Switch } from '@/ui';
 const KEYS = ['motion', 'ownReminders', 'noCounts', 'toastStay', 'readAid'] as const;
 
 /**
- * "Fokus-Hilfen": five switches, one complete sentence each, preselected "Ruhig" (the reading aid
- * stays as it is). Nothing is written until "Weiter"; then only the switches that changed.
+ * "Fokus-Hilfen": five switches, one complete sentence each, the calm preselection (the reading aid
+ * stays as it is) – only while the step is still open; reopened after it was done, it shows the
+ * current values. Nothing is written until the wizard's primary button; then only what changed.
  */
 export default function FocusStep({ registerCommit, setCanContinue, mode }: SetupStepProps) {
   const s = t.setup.steps.focus;
@@ -17,10 +19,11 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
 
   useEffect(() => {
     let live = true;
-    void readFocusAids().then((current) => {
+    void Promise.all([readFocusAids(), readSetupState()]).then(([current, state]) => {
       if (!live) return;
       setBefore(current);
-      setDraft(calmPreset(current));
+      const done = state?.doneSteps.includes('core.focus') ?? false;
+      setDraft(done ? current : calmPreset(current));
     });
     return () => {
       live = false;

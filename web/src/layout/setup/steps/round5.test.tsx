@@ -91,4 +91,20 @@ describe('setup step "Fokus-Hilfen"', () => {
       weekReview: false,
     });
   });
+
+  it('council R2 F7: reopened after it was done, it shows the current values, not the preselection', async () => {
+    const { markStepDone } = await import('@/core/setup/state');
+    await markStepDone('core.focus');
+    useUiStore.getState().setMotion('system');
+    render(
+      <FocusStep
+        ctx={{ modules: {}, platform: 'web', isNative: false }}
+        registerCommit={() => {}}
+        setCanContinue={() => {}}
+      />,
+    );
+    expect(
+      await screen.findByRole('switch', { name: t.setup.steps.focus.motion }),
+    ).not.toBeChecked();
+  });
 });

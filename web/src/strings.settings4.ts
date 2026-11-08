@@ -59,7 +59,7 @@ export const tSettings4 = defineBundle(
       readAid: 'Lesehilfe',
       toastStay: 'Hinweise bleiben stehen',
       toastStayHint:
-        'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst oder mit der Tastatur darin bist, warten sie.',
+        'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
       on: 'An',
       off: 'Aus',
       more: 'Weitere Einstellungen',
@@ -154,7 +154,7 @@ export const tSettings4 = defineBundle(
         readAid: 'Reading aid',
         toastStay: 'Notices stay',
         toastStayHint:
-          'On: short notices at the bottom (for example “Task changed.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you touch them or are inside with the keyboard, they wait.',
+          'On: short notices at the bottom (for example “Task changed.” with “Undo”) stay until you tap “Close” or a new notice replaces them. Off: they disappear after 6 seconds; while you touch them, point at them with the mouse or are inside with the keyboard, they wait.',
         on: 'On',
         off: 'Off',
         more: 'More settings',

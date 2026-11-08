@@ -66,7 +66,7 @@ export const setup: Strings['setup'] = {
     focus: {
       title: 'How calm should the app be?',
       description:
-        'Four switches for motion, reminders, streaks and notices, plus the reading aid.',
+        'Four switches for motion, reminders, streaks and reviews and notices, plus the reading aid.',
     },
     ai: {
       title: 'Should an AI help?',
@@ -127,7 +127,7 @@ export const setup: Strings['setup'] = {
       title: 'Focus aids',
       description: 'Five switches decide how calm the app behaves.',
       preselect:
-        'Recommended and preselected: the first four switches are on, the reading aid stays as it is now. Nothing is saved until the button at the bottom right, exactly as the switches stand here.',
+        'Recommended and preselected: the first four switches are on, the reading aid stays as it is now. Nothing is saved until you go on with the highlighted button, exactly as the switches stand here.',
       laterFull: '“Later” changes nothing.',
       laterQuick: '“Rest later” changes nothing.',
       motion: 'Reduce motion',
@@ -138,10 +138,10 @@ export const setup: Strings['setup'] = {
         'On: the app sends no morning overview of today’s to-dos and no extra early reminders before appointments. Reminders you set on an entry yourself still come.',
       noCounts: 'No streaks or reviews',
       noCountsHint:
-        'On: recurring to-dos show no “n in a row”, habits no longest streak, and “Up next” shows no “Look back on the week”. Off: all of it is visible again.',
+        'On: recurring to-dos show no “n in a row”, habits no longest run, and “Up next” shows no “Look back on the week”.',
       toastStay: 'Notices stay',
       toastStayHint:
-        'On: short notices at the bottom (for example “Task changed.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you touch them or are inside with the keyboard, they wait.',
+        'On: short notices at the bottom (for example “Task changed.” with “Undo”) stay until you tap “Close” or a new notice replaces them. Off: they disappear after 6 seconds; while you touch them, point at them with the mouse or are inside with the keyboard, they wait.',
       readAid: 'Reading aid',
       readAidHint:
         'On: the beginnings of words in longer texts are bold, which guides the eye. Numbers and input fields stay without. Not preselected; try it if you like.',
