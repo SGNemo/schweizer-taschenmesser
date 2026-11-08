@@ -13,6 +13,7 @@ export const tNet = defineBundle(
       'Offline',
       'Datenschutz',
       'Protokoll',
+      'Was geht ins Netz',
     ],
     summary: (n: number, hosts: number) =>
       n === 0
@@ -54,13 +55,33 @@ export const tNet = defineBundle(
       'Sonst gilt sie nur bis zum Schließen der App. Die Liste wird nie synchronisiert, gesichert oder in die Diagnose übernommen.',
     clear: 'Liste leeren',
     cleared: 'Liste geleert.',
+    catalogue: {
+      title: 'Was überhaupt ins Netz gehen kann',
+      intro:
+        'Die vollständige Liste aus dem Code der App, bei jedem Build gegen den Code geprüft. Alles andere bleibt auf diesem Gerät.',
+      when: {
+        auto: 'Automatisch, höchstens einmal am Tag; abschaltbar unter Updates',
+        setup: 'Nur wenn du es eingerichtet hast',
+        click: 'Nur nach deinem Klick',
+      } as Record<string, string>,
+      own: 'eine Adresse, die du selbst einträgst',
+      other: 'Feeds und andere Adressen, die du selbst einträgst',
+    },
   },
   {
     en: {
       title: 'What went where?',
       description:
         'Everything the app has sent to the network since it started: time, destination, reason and size, never content. The list stays on this device.',
-      keywords: ['network', 'connection log', 'block', 'offline', 'privacy', 'log'],
+      keywords: [
+        'network',
+        'connection log',
+        'block',
+        'offline',
+        'privacy',
+        'log',
+        'what goes to the network',
+      ],
       summary: (n: number, hosts: number) =>
         n === 0
           ? 'Since start: no connection.'
@@ -99,6 +120,18 @@ export const tNet = defineBundle(
         'Otherwise it only lasts until the app closes. The list is never synced, backed up or added to diagnostics.',
       clear: 'Clear list',
       cleared: 'List cleared.',
+      catalogue: {
+        title: 'Everything that can go to the network',
+        intro:
+          "The complete list from the app's code, checked against the code on every build. Everything else stays on this device.",
+        when: {
+          auto: 'Automatic, at most once a day; can be switched off under Updates',
+          setup: 'Only when you set it up',
+          click: 'Only after your click',
+        } as Record<string, string>,
+        own: 'an address you enter yourself',
+        other: 'Feeds and other addresses you enter yourself',
+      },
     },
     es: {
       title: '¿Qué salió y adónde?',
