@@ -50,8 +50,22 @@ describe('scribble sources', () => {
     expect(readScribble(empty)).toBeUndefined();
     const override = temp();
     write(override, 'board/2026-11-08-x-y.md', '- [ ] from the override\n');
-    expect(findScribble({ NEMO_SCRIBBLE_DIR: empty })?.dir).not.toBe(empty);
-    expect(findScribble({ NEMO_SCRIBBLE_DIR: override })?.dir).toBe(override);
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: empty }, [])).toBeUndefined();
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: override }, [])?.dir).toBe(override);
+  });
+
+  it('finds nothing when no candidate holds notes (the fixed /workspace folders are not read in tests)', () => {
+    expect(findScribble({}, [])).toBeUndefined();
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: temp() }, [temp()])).toBeUndefined();
+  });
+
+  it('reads the fixed folders in order when no override is set', () => {
+    const session = temp();
+    const notesRepo = temp();
+    write(notesRepo, 'board/2026-11-08-a-b.md', '- [ ] from the notes repo\n');
+    expect(findScribble({}, [session, notesRepo])?.dir).toBe(notesRepo);
+    write(session, 'board/2026-11-08-c-d.md', '- [ ] from the session\n');
+    expect(findScribble({}, [session, notesRepo])?.dir).toBe(session);
   });
 
   describe('hostile content', () => {
