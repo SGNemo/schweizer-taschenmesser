@@ -9,6 +9,14 @@ import { getDeviceContext } from '@/core/db/device';
 import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import { SelfHostedAdapter, normalizeServerUrl, type VaultInfo } from './adapters/selfHosted';
+import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
+import { getPlatform } from '@/core/platform';
+import type {
+  LanClientService,
+  LanHubDataKey,
+  LanHubService,
+  LanPairing,
+} from '@/core/platform/types';
 import { makeVaultCheck, verifyVaultCheck } from './crypto';
 import { purgeConflicts } from './conflicts';
 import { runSync } from './engine';
@@ -24,7 +32,10 @@ import {
 import { deriveVaultKey, newVaultParams, toVaultInfo, vaultParams } from './vaultKey';
 
 /** Connection settings of this device. Local only – lives in `_secrets`, is never synced or exported. */
-export interface SyncConfig {
+export type SyncConfig = ServerSyncConfig | LanHubSyncConfig | LanClientSyncConfig;
+
+/** Sync through an own server (`server/`). */
+export interface ServerSyncConfig {
   kind: 'selfHosted';
   url: string;
   token: string;
@@ -33,6 +44,30 @@ export interface SyncConfig {
   /** Set when the server knows this device (protocol 2): `token` is then its own, revocable token. */
   deviceId?: string;
   deviceName?: string;
+}
+
+/**
+ * This PC is the home-network hub (`src-tauri/crates/lan-sync`) and syncs with it in process. The
+ * data key comes from the hub (OS keystore) on every start; here it is only the non-extractable
+ * `CryptoKey` imported from it, plus its version, which every request carries.
+ */
+export interface LanHubSyncConfig {
+  kind: 'lanHub';
+  key: CryptoKey;
+  keyVersion: number;
+}
+
+/**
+ * This device (phone) is paired with a hub PC. The device key and the pinned hub live in the OS
+ * keystore on the Rust side (`lan_client.rs`); here only the data key (non-extractable) and its
+ * version, received once when the pairing was confirmed on the PC.
+ */
+export interface LanClientSyncConfig {
+  kind: 'lanClient';
+  key: CryptoKey;
+  keyVersion: number;
+  /** The pinned hub (hex public key): every request names it, so no round reaches another PC. */
+  hub: string;
 }
 
 /** The server API the service needs beyond the SyncAdapter contract. */
@@ -61,6 +96,10 @@ export interface SyncServiceDeps {
   iterations?: number;
   /** Argon2id parameters for a new vault; lowered in tests (only accepted in test mode). */
   kdf?: { m?: number; t?: number; p?: number };
+  /** The home-network hub of the desktop shell (absent or unsupported elsewhere). */
+  lanHub?: () => LanHubService;
+  /** The device side of home-network sync (Android). */
+  lanClient?: () => LanClientService;
 }
 
 export function defaultDeps(): SyncServiceDeps {
@@ -68,6 +107,8 @@ export function defaultDeps(): SyncServiceDeps {
     database: defaultDb,
     storage: new DexieStorageAdapter(defaultDb),
     remote: (url, token) => new SelfHostedAdapter(url, token),
+    lanHub: () => getPlatform().lanHub,
+    lanClient: () => getPlatform().lanClient,
   };
 }
 
@@ -84,6 +125,14 @@ export async function loadSyncConfig(
   return (
     await database.table<{ key: string; value: SyncConfig }, string>('_secrets').get(CONFIG_KEY)
   )?.value;
+}
+
+/** The own-server settings only: push, the feed proxy and the device list need a server. */
+export async function loadServerConfig(
+  database: TaschenmesserDB = defaultDb,
+): Promise<ServerSyncConfig | undefined> {
+  const config = await loadSyncConfig(database);
+  return config?.kind === 'selfHosted' ? config : undefined;
 }
 
 async function saveSyncConfig(database: TaschenmesserDB, config: SyncConfig): Promise<void> {
@@ -139,6 +188,77 @@ export async function syncSettled(
   return row?.value === true;
 }
 
+function statusLabel(config: SyncConfig): {
+  server: string | undefined;
+  via: 'server' | 'lanHub' | 'lanClient';
+  encrypted: boolean;
+} {
+  return config.kind === 'selfHosted'
+    ? { server: new URL(config.url).host, via: 'server', encrypted: Boolean(config.key) }
+    : { server: undefined, via: config.kind, encrypted: true };
+}
+
+/**
+ * The transport of one round. For the hub PC the hub is (re)started first – idempotent, and it hands
+ * out the current data key: if the key was renewed meanwhile, the new one is imported and the next
+ * pull sees the new epoch, so everything is uploaded again under the new key.
+ */
+async function adapterFor(
+  config: SyncConfig,
+  deps: SyncServiceDeps,
+): Promise<{ adapter: SyncAdapter; key: CryptoKey | undefined }> {
+  if (config.kind === 'selfHosted')
+    return { adapter: deps.remote(config.url, config.token), key: config.key };
+  if (config.kind === 'lanClient') {
+    const client = deps.lanClient?.();
+    if (!client?.supported) throw new SyncError('unsupported');
+    const hub = config.hub;
+    const transport = { request: (body: string) => client.request(body, hub) };
+    return { adapter: new LanClientAdapter(transport, config.keyVersion), key: config.key };
+  }
+  const hub = deps.lanHub?.();
+  if (!hub?.supported) throw new SyncError('unsupported');
+  let started: { dataKey: LanHubDataKey };
+  try {
+    started = await hub.start();
+  } catch {
+    throw new SyncError('network');
+  }
+  let current = config;
+  if (started.dataKey.version !== config.keyVersion) {
+    current = await adoptLanHubKey(deps, started.dataKey);
+  }
+  return { adapter: new LanHubAdapter(hub, current.keyVersion), key: current.key };
+}
+
+/** Imports the hub's data key as a non-extractable AES-GCM key. */
+async function importDataKey(dataKey: LanHubDataKey): Promise<CryptoKey> {
+  const raw = Uint8Array.from(atob(dataKey.key), (c) => c.charCodeAt(0));
+  if (raw.length !== 32) throw new SyncError('no-key');
+  try {
+    return await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [
+      'encrypt',
+      'decrypt',
+    ]);
+  } finally {
+    raw.fill(0);
+  }
+}
+
+/** Stores the hub PC's own connection with its current data key. */
+async function adoptLanHubKey(
+  deps: SyncServiceDeps,
+  dataKey: LanHubDataKey,
+): Promise<LanHubSyncConfig> {
+  const config: LanHubSyncConfig = {
+    kind: 'lanHub',
+    key: await importDataKey(dataKey),
+    keyVersion: dataKey.version,
+  };
+  await saveSyncConfig(deps.database, config);
+  return config;
+}
+
 /** Errors that can heal by themselves; everything else needs the user (token, passphrase, lock). */
 const RETRYABLE = new Set(['network', 'server', 'rate-limited', 'unknown']);
 
@@ -157,6 +277,7 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
       status.set({
         phase: 'off',
         server: undefined,
+        via: undefined,
         encrypted: false,
         error: undefined,
         pending: 0,
@@ -168,17 +289,10 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
       });
       return;
     }
-    status.set({
-      phase: 'syncing',
-      server: new URL(config.url).host,
-      encrypted: Boolean(config.key),
-    });
+    status.set({ phase: 'syncing', ...statusLabel(config) });
     try {
-      const result = await runSync({
-        storage: deps.storage,
-        adapter: deps.remote(config.url, config.token),
-        key: config.key,
-      });
+      const { adapter, key } = await adapterFor(config, deps);
+      const result = await runSync({ storage: deps.storage, adapter, key });
       // Older devices keep writing the retired tables: copy what the pull brought into the new ones.
       if (result.applied > 0) await runAppMigrations(deps.database);
       const at = now();
@@ -226,12 +340,17 @@ export async function restoreSyncStatus(deps: SyncServiceDeps = defaultDeps()): 
     config
       ? {
           phase: 'idle',
-          server: new URL(config.url).host,
-          encrypted: Boolean(config.key),
+          ...statusLabel(config),
           lastSyncAt: last,
           pending: await deps.storage.pendingCount(),
         }
-      : { phase: 'off', server: undefined, encrypted: false, lastSyncAt: undefined },
+      : {
+          phase: 'off',
+          server: undefined,
+          via: undefined,
+          encrypted: false,
+          lastSyncAt: undefined,
+        },
   );
 }
 
@@ -467,6 +586,7 @@ export async function disconnect(deps: SyncServiceDeps = defaultDeps()): Promise
   useSyncStatus.getState().set({
     phase: 'off',
     server: undefined,
+    via: undefined,
     encrypted: false,
     error: undefined,
     pending: 0,
@@ -478,10 +598,177 @@ export async function disconnect(deps: SyncServiceDeps = defaultDeps()): Promise
   });
 }
 
+/* -------------------------------- home-network hub -------------------------------- */
+
+export type LanHubFailure = 'unsupported' | 'server-connected' | 'keystore' | 'failed';
+export type LanHubResult = { ok: true } | { ok: false; reason: LanHubFailure };
+
+/**
+ * Turns this PC into the home-network hub: starts the hub, imports its data key and runs the first
+ * round (everything local is uploaded into the hub's store, encrypted). One path per device: a
+ * device connected to an own server disconnects from it first.
+ */
+export async function enableLanHub(deps: SyncServiceDeps = defaultDeps()): Promise<LanHubResult> {
+  const hub = deps.lanHub?.();
+  if (!hub?.supported) return { ok: false, reason: 'unsupported' };
+  const existing = await loadSyncConfig(deps.database);
+  if (existing?.kind === 'selfHosted') return { ok: false, reason: 'server-connected' };
+  let dataKey: LanHubDataKey;
+  try {
+    dataKey = (await hub.start()).dataKey;
+  } catch (e) {
+    const code = e instanceof Error ? e.message : '';
+    return { ok: false, reason: code === 'keystore-unavailable' ? 'keystore' : 'failed' };
+  }
+  await exclusive(async () => {
+    await adoptLanHubKey(deps, dataKey);
+    if (!existing) {
+      // A new hub store: cursor 0 and a full upload on the first round.
+      await deps.storage.setEpoch(undefined);
+      await deps.storage.setCursor(0);
+    }
+  });
+  useSyncStatus.getState().set({ failures: 0, retryAt: undefined, errorAt: undefined });
+  await syncNow(deps);
+  return { ok: true };
+}
+
+/** Stops the hub and this PC's syncing with it. Local data, paired devices and keys stay. */
+export async function disableLanHub(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
+  await deps
+    .lanHub?.()
+    .stop()
+    .catch(() => undefined);
+  await disconnect(deps);
+}
+
+/**
+ * "Schlüssel erneuern": the hub empties its store under a new key version; this PC imports the new
+ * key and uploads everything again. Paired devices pair again (they never get the new key otherwise).
+ */
+export async function renewLanHubKey(deps: SyncServiceDeps = defaultDeps()): Promise<boolean> {
+  const hub = deps.lanHub?.();
+  if (!hub?.supported) return false;
+  const done = await exclusive(async () => {
+    const config = await loadSyncConfig(deps.database);
+    if (config?.kind !== 'lanHub') return false;
+    try {
+      await adoptLanHubKey(deps, await hub.rotate());
+    } catch {
+      return false;
+    }
+    await deps.storage.setEpoch(undefined);
+    await deps.storage.setCursor(0);
+    return true;
+  });
+  if (done) await syncNow(deps);
+  return done;
+}
+
+/* ------------------------------ device paired with a PC ------------------------------ */
+
+export type PairFailure =
+  | 'unsupported'
+  | 'other-path'
+  | 'bad-qr'
+  | 'network'
+  | 'pairing-not-possible'
+  | 'pairing-aborted'
+  | 'cancelled'
+  | 'busy'
+  | 'keystore'
+  | 'failed';
+export type PairResult = { ok: true } | { ok: false; reason: PairFailure };
+
+const PAIR_FAILURES: readonly PairFailure[] = [
+  'bad-qr',
+  'network',
+  'pairing-not-possible',
+  'pairing-aborted',
+  'cancelled',
+  'busy',
+];
+
+/**
+ * "Mit PC koppeln": pairs this device with the hub PC of `qr` (the PC asks the user to compare the
+ * code that `onCode` receives), imports the data key and runs the first round. One path per device:
+ * refused while an own server is connected.
+ */
+export async function pairWithPc(
+  qr: string,
+  name: string,
+  onCode: (code: string) => void,
+  deps: SyncServiceDeps = defaultDeps(),
+): Promise<PairResult> {
+  const client = deps.lanClient?.();
+  if (!client?.supported) return { ok: false, reason: 'unsupported' };
+  const existing = await loadSyncConfig(deps.database);
+  if (existing && existing.kind !== 'lanClient') return { ok: false, reason: 'other-path' };
+  let dataKey: LanPairing;
+  try {
+    dataKey = await client.pair(qr.trim(), name, onCode);
+  } catch (e) {
+    const code = e instanceof Error ? e.message : '';
+    if (code === 'keystore-unavailable') return { ok: false, reason: 'keystore' };
+    const known = PAIR_FAILURES.find((f) => f === code);
+    return { ok: false, reason: known ?? 'failed' };
+  }
+  // The PC trusts this device now. Anything that fails from here on would leave the PC with a paired
+  // device the phone does not know: undo the pairing on the PC (best effort) and say so.
+  let stored: boolean;
+  try {
+    const key = await importDataKey(dataKey);
+    stored = await exclusive(async () => {
+      // still one path per device: an own server connected while the PC was asking wins
+      const now = await loadSyncConfig(deps.database);
+      if (now && now.kind !== 'lanClient') return false;
+      await saveSyncConfig(deps.database, {
+        kind: 'lanClient',
+        key,
+        keyVersion: dataKey.version,
+        hub: dataKey.hub,
+      });
+      // a new hub store: cursor 0, everything local goes up once
+      await deps.storage.setEpoch(undefined);
+      await deps.storage.setCursor(0);
+      return true;
+    });
+  } catch {
+    stored = false;
+  }
+  if (!stored) {
+    await client.unpair().catch(() => undefined);
+    // Rust already replaced the previous pairing; an old lanClient config would point at nothing
+    if (existing?.kind === 'lanClient') await disconnect(deps).catch(() => undefined);
+    return { ok: false, reason: 'failed' };
+  }
+  useSyncStatus.getState().set({ failures: 0, retryAt: undefined, errorAt: undefined });
+  // the dialog closes now; the first round shows its progress in the status line
+  void syncNow(deps);
+  return { ok: true };
+}
+
+/** Stops waiting for the confirmation on the PC. */
+export async function cancelPairing(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
+  await deps
+    .lanClient?.()
+    .cancelPair()
+    .catch(() => undefined);
+}
+
+/** "Kopplung lösen" on this device: tells the PC when reachable, forgets the keys; data stays. */
+export async function unpairFromPc(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
+  await deps
+    .lanClient?.()
+    .unpair()
+    .catch(() => undefined);
+  await disconnect(deps);
+}
+
 /* ------------------------------------- devices ------------------------------------- */
 
 async function connectedRemote(deps: SyncServiceDeps) {
-  const config = await loadSyncConfig(deps.database);
+  const config = await loadServerConfig(deps.database);
   return config ? { config, remote: deps.remote(config.url, config.token) } : undefined;
 }
 

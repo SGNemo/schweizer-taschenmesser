@@ -9,7 +9,7 @@
  */
 import { getPlatform } from '@/core/platform';
 import { isPublicHttpsUrl } from './publicUrl';
-import { loadSyncConfig } from '@/core/sync/service';
+import { loadServerConfig } from '@/core/sync/service';
 
 export class PublicFetchError extends Error {
   constructor(
@@ -149,7 +149,7 @@ export async function fetchPublic(
       throw asNetworkError(e);
     }
   }
-  const config = await loadSyncConfig();
+  const config = await loadServerConfig();
   if (!config) throw new PublicFetchError('no-proxy');
   const kindParam = kind === 'feed' ? '' : `&kind=${kind}`;
   const proxied = `${config.url.replace(/\/+$/, '')}/v1/proxy?url=${encodeURIComponent(url)}${kindParam}`;
