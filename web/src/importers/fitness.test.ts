@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { clockTime, parseCronometer } from './cronometer/parse';
 import { parseHevy } from './hevy/parse';
+import { parseMfpExercise, parseMfpNutrition } from './myfitnesspal/parse';
 import { detectSources } from './registry';
 import { parseStrong } from './strong/parse';
 import { durationMinutes, englishDateTime, num } from './workouts';
@@ -16,6 +17,9 @@ describe('fitness exports (invented fixtures)', () => {
       ['strong.csv', 'strong'],
       ['hevy.csv', 'hevy'],
       ['cronometer.csv', 'cronometer'],
+      ['mfp-nutrition.csv', 'myfitnesspal'],
+      ['mfp-exercise.csv', 'myfitnesspal'],
+      ['mfp-exercise-kg.csv', 'myfitnesspal'],
     ] as const) {
       const found = detectSources([{ name: `export.csv`, text: fixture(file) }]);
       expect(found[0]?.source.id, file).toBe(id);
@@ -23,7 +27,7 @@ describe('fitness exports (invented fixtures)', () => {
     }
     expect(
       detectSources([{ name: 'x.csv', text: fixture('ticktick.csv') }])[0]?.source.id,
-    ).not.toMatch(/strong|hevy|cronometer/);
+    ).not.toMatch(/strong|hevy|cronometer|myfitnesspal/);
   });
 
   it('reads Strong: workouts by date + name, rest timers left out, durations', () => {
@@ -103,5 +107,37 @@ describe('fitness exports (invented fixtures)', () => {
     expect(durationMinutes('')).toBeUndefined();
     expect(englishDateTime('3 Nov 2026, 07:05')).toEqual({ date: '2026-11-03', time: '07:05' });
     expect(englishDateTime('Hallo')).toBeUndefined();
+  });
+
+  it('reads MyFitnessPal food: one meal per meal row, thousands separators, empty rows counted', () => {
+    const { meals, unreadable, empty } = parseMfpNutrition(fixture('mfp-nutrition.csv'));
+    expect([unreadable, empty]).toEqual([0, 1]);
+    expect(meals).toEqual([
+      { date: '2026-10-14', text: 'Breakfast', kcal: 413, proteinG: 16, carbsG: 64, fatG: 9 },
+      { date: '2026-10-14', text: 'Lunch', kcal: 1045, proteinG: 53, carbsG: 110, fatG: 38 },
+      { date: '2026-10-15', text: 'Breakfast', kcal: 380, proteinG: 15, carbsG: 60, fatG: 8 },
+      // „2,100“ without decimals is two thousand one hundred (MFP writes English numbers).
+      { date: '2026-10-15', text: 'Dinner', kcal: 2100, proteinG: 95, carbsG: 190, fatG: 80 },
+    ]);
+  });
+
+  it('reads MyFitnessPal exercise: one session per day, sets × reps × pounds, minutes, adjustments left out', () => {
+    const { workouts, unreadable, empty } = parseMfpExercise(fixture('mfp-exercise.csv'));
+    expect([unreadable, empty]).toEqual([0, 1]);
+    expect(workouts.map((w) => [w.date, w.title, w.durationMin, w.sets.length])).toEqual([
+      ['2026-10-14', 'MyFitnessPal', 35, 1],
+      ['2026-10-15', 'MyFitnessPal', 20, 8],
+    ]);
+    expect(workouts[1]!.sets[0]).toEqual({
+      exercise: 'Bench Press, Barbell',
+      reps: 8,
+      weightKg: 135 * 0.45359237,
+    });
+    expect(workouts[1]!.sets.at(-1)).toEqual({ exercise: 'Walking, 5 km/h', seconds: 1200 });
+    // The kilogram variant of the header; one exercise twice in a day is one entry of all its minutes.
+    const kg = parseMfpExercise(fixture('mfp-exercise-kg.csv')).workouts;
+    expect(kg.map((w) => [w.durationMin, w.sets])).toEqual([
+      [35, [{ exercise: 'Rowing', seconds: 2100 }]],
+    ]);
   });
 });

@@ -148,6 +148,7 @@ export const importers: Strings['importers'] = {
     strong: 'Strong (training, CSV)',
     hevy: 'Hevy (training, CSV)',
     cronometer: 'Cronometer (food, CSV)',
+    myfitnesspal: 'MyFitnessPal (food and exercise, export)',
   },
   reasons: {
     trashed: (n: number) =>

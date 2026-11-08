@@ -77,4 +77,70 @@ describe('fitness import runtime', () => {
     expect(r.candidates).toEqual([]);
     expect(r.skipped).toEqual({ unsupported: 1 });
   });
+
+  it('turns a MyFitnessPal export into sessions and meals; body measurements are not read', async () => {
+    const r = await runtime.parse(
+      'file',
+      {
+        kind: 'file',
+        fileName: 'File-Export.zip',
+        text: '',
+        files: [
+          { name: 'File-Export.zip/Nutrition-Summary.csv', text: fixture('mfp-nutrition.csv') },
+          { name: 'File-Export.zip/Exercise-Summary.csv', text: fixture('mfp-exercise.csv') },
+          {
+            name: 'File-Export.zip/Measurement-Summary.csv',
+            text: 'Date,Body Fat %,Weight\n2026-10-14,18.5,80.0\n',
+          },
+        ],
+      },
+      {} as never,
+    );
+    const sessions = r.candidates.filter((c) => c.collection === 'session');
+    const meals = r.candidates.filter((c) => c.collection === 'meal');
+    expect([sessions.length, meals.length]).toEqual([2, 4]);
+    for (const c of sessions) expect(sessionSchema.safeParse(c.data).success, c.label).toBe(true);
+    for (const c of meals) expect(mealSchema.safeParse(c.data).success, c.label).toBe(true);
+    // A run is minutes, not "1 set"; every MFP day has the same fixed title.
+    expect(sessions[0]!.data.exercises).toEqual([
+      { name: 'Running (jogging), 10 km/h', durationMin: 35 },
+    ]);
+    expect(sessions.map((c) => c.data.title)).toEqual(['MyFitnessPal', 'MyFitnessPal']);
+    expect(sessions[1]!.data.exercises).toEqual([
+      { name: 'Bench Press, Barbell', sets: 3, reps: 8, weightKg: 61.2 },
+      { name: 'Squats, Barbell', sets: 4, reps: 6, weightKg: 83.9 },
+      { name: 'Walking, 5 km/h', durationMin: 20 },
+    ]);
+    expect(JSON.stringify(r.candidates)).not.toMatch(/80\.0|18\.5|Body Fat|Weight/);
+    expect(r.skipped).toEqual({ empty: 2, unsupported: 1 });
+  });
+
+  it('finds a MyFitnessPal day again after an exercise was added to it in MFP', async () => {
+    const one =
+      'Date,Exercise,Type,Exercise Calories,Exercise Minutes,Sets,Reps Per Set,Kilograms,Steps,Note\n2026-10-15,Running,Cardio,300.0,30,,,,,\n';
+    const first = await runtime.parse(
+      'file',
+      { kind: 'file', fileName: 'e.csv', text: one },
+      {} as never,
+    );
+    for (const c of first.candidates) await sessionRepo.create(c.data as never);
+    const again = await runtime.parse(
+      'file',
+      {
+        kind: 'file',
+        fileName: 'e.csv',
+        text: one + '2026-10-15,"Squats, Barbell",Strength,,,3,5,80.0,,\n',
+      },
+      {} as never,
+    );
+    const stored = await runtime.existingKeys('session');
+    expect(again.candidates.map((c) => stored.has(c.dedupeKey))).toEqual([true]);
+  });
+
+  it('two cardio rows of one exercise on a day are minutes, not sets', async () => {
+    const r = await parse('mfp-exercise-kg.csv');
+    expect(r.candidates.map((c) => c.data.exercises)).toEqual([
+      [{ name: 'Rowing', durationMin: 35 }],
+    ]);
+  });
 });

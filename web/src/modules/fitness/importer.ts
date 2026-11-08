@@ -1,6 +1,6 @@
 /**
- * Import from other apps (package 3): Strong and Hevy workouts, Cronometer food. The parsers in
- * `importers/{strong,hevy,cronometer}` read the CSV; this runtime turns their rows into candidates for the
+ * Import from other apps (packages 3 and 5): Strong and Hevy workouts, Cronometer food, MyFitnessPal food
+ * and exercise. The parsers in `importers/{strong,hevy,cronometer,myfitnesspal}` read the CSV; this runtime turns their rows into candidates for the
  * shared preview/commit/undo flow. Sets of one exercise become one exercise (number of sets, the
  * heaviest weight with its reps, seconds summed to minutes). Nothing leaves the device.
  */
@@ -8,6 +8,12 @@ import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
 import { formatNumber } from '@/core/i18n/format';
 import { looksLikeCronometer, parseCronometer } from '@/importers/cronometer/parse';
 import { looksLikeHevy, parseHevy } from '@/importers/hevy/parse';
+import {
+  looksLikeMfpExercise,
+  looksLikeMfpNutrition,
+  parseMfpExercise,
+  parseMfpNutrition,
+} from '@/importers/myfitnesspal/parse';
 import { skipNotes } from '@/importers/report';
 import { looksLikeStrong, parseStrong } from '@/importers/strong/parse';
 import { addSkip, type SkipCounts } from '@/importers/types';
@@ -34,7 +40,9 @@ export function toExercises(sets: readonly ParsedSet[]): Exercise[] {
     const reps = heaviest?.reps ?? list.find((s) => s.reps)?.reps;
     const seconds = list.reduce((sum, s) => sum + (s.seconds ?? 0), 0);
     const kg = heaviest?.weightKg;
-    const sets = clamp(list.length, 50);
+    // A lone entry with only a duration (a run) is no "1 set".
+    const onlyTime = list.length === 1 && !reps && !(kg && kg > 0);
+    const sets = onlyTime ? undefined : clamp(list.length, 50);
     return {
       name: name.slice(0, 80),
       ...(sets ? { sets } : {}),
@@ -66,14 +74,14 @@ function sessionCandidate(w: ParsedWorkout): ImportCandidate {
   const data: Session = {
     date: w.date,
     ...(w.time ? { time: w.time } : {}),
-    title: w.title.slice(0, 80),
+    ...(w.title.trim() ? { title: w.title.trim().slice(0, 80) } : {}),
     ...(clamp(w.durationMin, 1440) ? { durationMin: clamp(w.durationMin, 1440) } : {}),
     exercises,
   };
   return {
     collection: 'session',
     data,
-    label: data.title!,
+    label: data.title ?? t.fitness.untitled,
     detail: [w.date, t.fitness.list.exercises(exercises.length)].join(' · '),
     dedupeKey: sessionKey(data),
   };
@@ -111,6 +119,16 @@ const runtime: ImporterRuntime = {
           if (w.sets.length === 0) addSkip(skipped, 'empty');
           else candidates.push(sessionCandidate(w));
         }
+      } else if (looksLikeMfpExercise(text)) {
+        const r = parseMfpExercise(text);
+        addSkip(skipped, 'unreadable', r.unreadable);
+        addSkip(skipped, 'empty', r.empty);
+        candidates.push(...r.workouts.filter((w) => w.sets.length > 0).map(sessionCandidate));
+      } else if (looksLikeMfpNutrition(text)) {
+        const r = parseMfpNutrition(text);
+        addSkip(skipped, 'unreadable', r.unreadable);
+        addSkip(skipped, 'empty', r.empty);
+        candidates.push(...mealCandidates(r.meals));
       } else if (looksLikeCronometer(text)) {
         const r = parseCronometer(text);
         addSkip(skipped, 'unreadable', r.unreadable);

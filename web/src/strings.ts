@@ -6132,6 +6132,7 @@ export const de = {
       strong: 'Strong (Training, CSV)',
       hevy: 'Hevy (Training, CSV)',
       cronometer: 'Cronometer (Essen, CSV)',
+      myfitnesspal: 'MyFitnessPal (Essen und Training, Export)',
     },
     reasons: {
       trashed: (n: number) =>
