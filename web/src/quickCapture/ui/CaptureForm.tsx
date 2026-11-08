@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { useModuleStates } from '@/core/modules/activation';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
@@ -7,20 +6,14 @@ import { Button } from '@/ui';
 import { parseCapture, type CaptureFields, type CaptureType } from '../parser';
 import { splitCapture } from '../parser/split';
 import { useCaptureSettings } from '../settings';
-import {
-  CaptureError,
-  availableTypes,
-  saveCapture,
-  saveCaptures,
-  targetFor,
-  type SavedCapture,
-} from '../targets';
+import { CaptureError, saveCapture, saveCaptures, targetFor, type SavedCapture } from '../targets';
 import { fullFormPath } from '../targets/fullForm';
 import { previewChips } from './chips';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft } from './reopen';
 import { resolveTarget } from './resolve';
 import styles from './CaptureForm.module.css';
+import { useCaptureTypes } from './useCaptureTypes';
 
 export interface CaptureFormProps {
   initialText?: string;
@@ -79,8 +72,9 @@ export function CaptureForm({
   onSaved,
   onCancel,
 }: CaptureFormProps) {
-  const states = useModuleStates();
   const [settings] = useCaptureSettings();
+  // One source for the module states and the types they allow (a second query could lag behind).
+  const { states, available, fitness } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   // A text kept from an app the phone killed mid-typing comes back too (C04, `draft.ts`).
@@ -101,10 +95,11 @@ export function CaptureForm({
   // One entry: the text as typed (a single line is read exactly as before the split existed).
   const single = parts.length === 1 && text.includes('\n') ? parts[0]! : text;
   const result = useMemo(
-    () => parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType }),
-    [single, settings?.defaultType],
+    () =>
+      parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType, fitness }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitness` is rebuilt per render; its two flags are the deps
+    [single, settings?.defaultType, fitness.meal, fitness.workout],
   );
-  const available = availableTypes(states);
   const resolveOpts = {
     available,
     noQuestion: focus.captureNoQuestion,
@@ -124,6 +119,7 @@ export function CaptureForm({
             const r = parseCapture(part, {
               now: new Date(now()),
               defaultType: settings?.defaultType,
+              fitness,
             });
             const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
             const rowChips = previewChips(res.fields, res.type, r.notes, today()).filter(
@@ -134,7 +130,16 @@ export function CaptureForm({
         : [],
     // resolveOpts is rebuilt every render from the values listed here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [multi, parts, rowOverride, states, focus.captureNoQuestion, settings?.defaultType],
+    [
+      multi,
+      parts,
+      rowOverride,
+      states,
+      focus.captureNoQuestion,
+      settings?.defaultType,
+      fitness.meal,
+      fitness.workout,
+    ],
   );
   const rowsNeedConfirm = rows.some((r) => r.type && targetFor(r.type).requiresConfirm);
   // A typed date that does not exist ("31.11."): the adapters would fall back to today, so the

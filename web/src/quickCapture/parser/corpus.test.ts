@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CORPUS, CORPUS_NOW, type CorpusCase } from './corpus';
 import { parseCapture, type CaptureResult } from './index';
 
-type Flat = Omit<CorpusCase, 'from' | 'text'>;
+type Flat = Omit<CorpusCase, 'from' | 'text' | 'fitness'>;
 
 /** The corpus fields a result offers; fields the parser does not know yet are simply absent. */
 function flatten(r: CaptureResult): Flat {
@@ -25,24 +25,26 @@ function flatten(r: CaptureResult): Flat {
 }
 
 function misses(c: CorpusCase): string[] {
-  const got = flatten(parseCapture(c.text, { now: CORPUS_NOW }));
-  const { from: _from, text: _text, ...want } = c;
+  const fitness = c.fitness ? { meal: true, workout: true } : undefined;
+  const got = flatten(parseCapture(c.text, { now: CORPUS_NOW, fitness }));
+  const { from: _from, text: _text, fitness: _fitness, ...want } = c;
   void _from;
   void _text;
+  void _fitness;
   return (Object.keys(want) as (keyof Flat)[]).filter(
     (k) => JSON.stringify(got[k]) !== JSON.stringify(want[k]),
   );
 }
 
 // Ratchet: raise this when the parser gets better, never lower it.
-const MIN_HITS = 27;
+const MIN_HITS = 35;
 
 describe('parser corpus (QA sentences)', () => {
   it('reports the hit rate', () => {
     const rows = CORPUS.map((c) => ({ c, miss: misses(c) }));
     const hits = rows.filter((r) => r.miss.length === 0).length;
     const fields = rows.flatMap((r) =>
-      Object.keys(r.c).filter((k) => k !== 'from' && k !== 'text'),
+      Object.keys(r.c).filter((k) => k !== 'from' && k !== 'text' && k !== 'fitness'),
     );
     const missed = rows.reduce((n, r) => n + r.miss.length, 0);
     console.info(

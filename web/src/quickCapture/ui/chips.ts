@@ -1,4 +1,5 @@
 import { formatMoney } from '@/core/money';
+import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { daysBetween, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields, CaptureNote, CaptureRecurrence, CaptureType } from '../parser';
@@ -79,7 +80,9 @@ const usesDate = (type: CaptureType) =>
   type === 'finance' ||
   type === 'invoice' ||
   type === 'subscription' ||
-  type === 'birthday';
+  type === 'birthday' ||
+  type === 'meal' ||
+  type === 'workout';
 const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
 const isTask = (type: CaptureType) => type === 'todo' || type === 'plan';
 const usesMoney = (type: CaptureType) =>
@@ -146,6 +149,18 @@ export function previewChips(
       label: t.quickCapture.chip.currency(fields.currency),
       warn: true,
     });
+  if (type === 'meal' && fields.kcal !== undefined)
+    chips.push({ id: 'kcal', label: t.fitness.line.kcal(formatNumber(fields.kcal)) });
+  if (type === 'workout')
+    for (const [i, e] of (fields.exercises ?? []).entries()) {
+      const l = t.fitness.line;
+      const parts = [e.name];
+      if (e.sets && e.reps) parts.push(l.setsReps(e.sets, e.reps));
+      else if (e.sets) parts.push(l.sets(e.sets));
+      if (e.weightKg !== undefined) parts.push(l.weight(formatNumber(e.weightKg)));
+      if (e.durationMin) parts.push(formatMinutes(e.durationMin));
+      chips.push({ id: `exercise-${i}`, label: parts.join(' · ') });
+    }
   if (fields.url && type !== 'note') {
     try {
       chips.push({ id: 'url', label: new URL(fields.url).hostname });

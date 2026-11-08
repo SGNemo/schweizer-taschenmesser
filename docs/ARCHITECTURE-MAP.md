@@ -20,7 +20,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, **fitness** (training + rough kcal, preview), invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
 - `src/tools/<id>/` – helpers (16: calc, currency, dates, dev, dice, diff, image, pdf, persona, qr, regex, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `tools/` (toolbox panel), `assistant/`.

@@ -2,6 +2,7 @@ import { extractAmount, toCents } from './amount';
 import { extractDateTime } from './dates';
 import { extractEndTime } from './endtime';
 import { extractEstimate } from './estimate';
+import { parseFitness } from './fitness';
 import { extractRecurrence } from './recurrence';
 import { extractUntil } from './until';
 import type {
@@ -143,6 +144,9 @@ const score = (m: Map<CaptureType, number>, type: CaptureType, value: number): v
  * logs its input. Low confidence sets `needsChoice`; the caller must not pick silently then.
  */
 export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
+  // Fitness only where the caller can save it, and never over a one-letter prefix („t Döner 650 kcal“).
+  const fitness = opts.fitness && !PREFIX_RE.test(input) ? parseFitness(input, opts) : undefined;
+  if (fitness) return fitness;
   const defaultType = opts.defaultType ?? 'todo';
   const today = fromDate(opts.now);
   const notes = new Set<CaptureNote>();

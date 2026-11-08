@@ -2978,6 +2978,62 @@
       "expect": []
     },
     {
+      "id": "fit-c01",
+      "input": "Neue Trainingseinheit Laufen 30 Minuten",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createSession",
+          "data": {
+            "title": "Laufen",
+            "durationMin": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-c02",
+      "input": "Training Oberkörper eintragen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createSession",
+          "data": {
+            "title": "Oberkörper"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-c03",
+      "input": "Mahlzeit Haferflocken mit Obst 350 kcal",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createMeal",
+          "data": {
+            "text": "Haferflocken mit Obst",
+            "kcal": 350
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-n01",
+      "input": "Wie viele Kalorien hatte ich gestern?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "fit-n02",
+      "input": "Wie oft war ich diese Woche beim Training?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
       "id": "tt-c01",
       "input": "Neues Zeiterfassungs-Projekt Hausbau",
       "tags": ["create"],
