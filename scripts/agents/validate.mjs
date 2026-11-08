@@ -130,6 +130,7 @@ function hardLimitsOf(a) {
 let problems = 0;
 const names = new Set();
 let hardRef = null;
+const hardBlocks = [];
 const mergeCapable = [];
 function bad(file, msg) {
   problems++;
@@ -187,12 +188,8 @@ for (const file of files) {
     const hl = hardLimitsOf(a);
     if (!hl) bad(file, 'no "## Hard limits" block');
     else if (hl.error) bad(file, hl.error);
-    else if (hardRef === null) hardRef = { file, hl: hl.norm };
-    else if (hl.norm !== hardRef.hl)
-      bad(
-        file,
-        `hard-limits block differs from ${hardRef.file} (one template for all 19)`,
-      );
+    else if (file === 'nemo-qa.json') hardRef = { file, hl: hl.norm }; // fixed template file, compared after the loop
+    else hardBlocks.push({ file, hl: hl.norm });
   }
   // model
   const m = typeof a.model === "string" ? { id: a.model } : a.model;
@@ -218,12 +215,25 @@ for (const file of files) {
     bad(file, "inference_geo must be us|global");
   // mcp servers + toolsets
   const servers = new Map();
+  const githubServers = new Set();
   for (const s of a.mcp_servers ?? []) {
     keys(file, s, "mcp_server", `mcp server ${s.name}`);
     if (s.type !== "url" || !s.name || !s.url)
       bad(file, "mcp_servers entry needs type=url, name, url");
     if (servers.has(s.name)) bad(file, `duplicate mcp server name "${s.name}"`);
     servers.set(s.name, false);
+    if (
+      /(^|\.)githubcopilot\.com$/.test(
+        (() => {
+          try {
+            return new URL(s.url).hostname;
+          } catch {
+            return "";
+          }
+        })(),
+      )
+    )
+      githubServers.add(s.name);
   }
   if ((a.mcp_servers ?? []).length > 20) bad(file, "more than 20 mcp servers");
   if (!Array.isArray(a.tools) || a.tools.length === 0)
@@ -282,6 +292,8 @@ for (const file of files) {
           undefined,
           "default_config",
         );
+      const cfgNames = new Set();
+      for (const c of t.configs ?? []) { if (cfgNames.has(c.name)) bad(file, `mcp config "${c.name}" listed twice`); cfgNames.add(c.name); }
       for (const c of t.configs ?? []) {
         if (!c.name) bad(file, "mcp config without name");
         checkCfg(c, `mcp config ${c.name}`, undefined, "mcp_config");
@@ -291,7 +303,7 @@ for (const file of files) {
         console.log(
           `  note ${file}: mcp toolset defaults to always_ask – sessions will pause on every GitHub call`,
         );
-      if (t.mcp_server_name === "github") {
+      if (githubServers.has(t.mcp_server_name)) {
         const off = new Set(
           (t.configs ?? [])
             .filter((c) => c.enabled === false)
@@ -421,6 +433,8 @@ for (const file of files) {
     );
 }
 // cross-file: merge capability and inference_geo
+if (!hardRef) { problems++; console.log('✗ nemo-qa.json (template for the hard-limits block) missing or invalid'); }
+else for (const b of hardBlocks) if (b.hl !== hardRef.hl) bad(b.file, 'hard-limits block differs from the template nemo-qa.json (one block for all 19)');
 if (mergeCapable.join() !== "nemo-merge") {
   problems++;
   console.log(

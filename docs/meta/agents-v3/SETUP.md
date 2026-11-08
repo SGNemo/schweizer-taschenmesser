@@ -2,7 +2,7 @@
 
 Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.md) hat die Links). Befehle, die die Sandbox nicht ausführen konnte, sind mit **„nicht hier geprüft“** markiert. Die Sandbox hat geprüft: `validate.mjs`, `to-ant.mjs`, `session.mjs --dry-run`, das SDK-Paket `@anthropic-ai/sdk@1.6.0` (Methoden `beta.sessions.create/update`, `events.stream/send`, `threads.list/archive`).
 
-Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 20 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
+Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 20 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
 ## 1 Console (`platform.claude.com`) – API-Key anlegen, sonst nur zum Nachsehen
 
@@ -34,14 +34,14 @@ Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Work
    ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md
    ```
    Ergebnis: `claude-lock.json` im Repo-Root mit je Datei `kind`, `id` (`agent_…`, `env_…`), `version`, `hash`. **Committen** (Branch + PR wie immer; keine Secrets darin). `session.mjs` sucht darin die Einträge, deren Schlüssel auf `docs/meta/agents-v3/nemo-lead.md` bzw. `environment.yaml` enden (`cat claude-lock.json` zeigt die Schlüssel; beide Schreibweisen, mit und ohne `./`, werden erkannt – geprüft mit einer nachgebauten Lock-Datei, nicht mit einer echten). Findet es sie nicht: IDs als `NEMO_LEAD_AGENT_ID` und `NEMO_ENV_ID` setzen oder `--agent`/`--env` übergeben.
-5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Der Lead pinnt die Versionen der 19 (Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md`** ausführen, sonst delegiert er an die alte Version. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum nie ohne Svens OK mergen.
+5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Der Lead pinnt die Versionen der 19 (Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md`** ausführen, sonst delegiert er an die alte Version. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
 6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. nach dem Umbenennen des Ordners beim Umstieg).
 
 ## 3 Vault und GitHub
 
-1. **Fine-grained PAT** (GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → Generate): Resource owner SGNemo, nur Repository `schweizer-taschenmesser`, Laufzeit ≤ 90 Tage. Rechte: **Contents: Read and write**, **Pull requests: Read and write**, **Issues: Read and write** (Labels, Kommentare), **Actions: Read** (Runs und Logs lesen), **Metadata: Read** (automatisch). **Kein** `Administration`, kein `Secrets`, kein `Environments`, **kein `Workflows`** und **kein Actions: write** – beides erst, wenn die Signier-Secrets (`TAURI_SIGNING_PRIVATE_KEY*`, `ANDROID_KEYSTORE_*`) aus den Repo-Secrets in ein GitHub-Environment mit Sven als Required reviewer gewandert sind (heute liest `release.yml` sie direkt; mit `Workflows: write` könnte jeder Agent einen Branch mit einem `on: push`-Workflow pushen, der sie ausliest; mit `Actions: write` ließe sich `release.yml`/`dev-preview.yml` per `workflow_dispatch` starten). Folgen: devops legt Workflow-Änderungen als Patch in den PR-Text, Sven pusht sie; flakige Jobs startet Sven neu (nemo-merge meldet die Run-ID). Wert einmal kopieren → lokal `GITHUB_TOKEN` (für `session.mjs`).
+1. **Fine-grained PAT** (GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → Generate): Resource owner SGNemo, nur Repository `schweizer-taschenmesser`, Laufzeit ≤ 90 Tage. Rechte: **Contents: Read and write**, **Pull requests: Read and write**, **Issues: Read and write** (Labels, Kommentare), **Actions: Read** (Runs und Logs lesen), **Metadata: Read** (automatisch). **Kein** `Administration`, kein `Secrets`, kein `Environments`, **kein `Workflows`** und **kein Actions: write** – beides erst, wenn die Signier-Secrets (`TAURI_SIGNING_PRIVATE_KEY*`, `ANDROID_KEYSTORE_*`) aus den Repo-Secrets in ein GitHub-Environment mit Sven als Required reviewer gewandert sind (heute liest `release.yml` sie direkt; mit `Workflows: write` könnte jeder Agent einen Branch mit einem `on: push`-Workflow pushen, der sie ausliest; mit `Actions: write` ließe sich `release.yml`/`dev-preview.yml` per `workflow_dispatch` starten). Folgen: devops legt Workflow-Änderungen als Patch in den PR-Text, Sven pusht sie; flakige Jobs startet Sven neu (nemo-merge meldet die Run-ID). Ehrlich dazu: Contents: write kann trotzdem bestehende Release-Objekte und Assets ändern (`latest.json`, exe/APK, Dev-Preview) – Releases schützt heute nur der Prompt; Abhilfe später: Immutable releases (sobald die Dev-Preview nicht mehr rollend ist) oder ein eigener Publish-Token. Wert einmal kopieren → `export GITHUB_TOKEN=…` (für `session.mjs` und die `jq`-Aufrufe in §3.3, die ihn aus der Umgebung lesen).
 2. **Rulesets** (Repo → Settings → Rules → Rulesets; Bypass list überall **leer** – auch Sven hebt ein Ruleset zum Release kurz auf, statt sich einzutragen, denn der PAT handelt als Sven):
-   - `main`: Restrict deletions, Block force pushes, Require a pull request before merging, Require status checks (CI-Jobs).
+   - `main`: Restrict deletions, Block force pushes, Require a pull request before merging **mit 1 Required approval** (der PAT handelt als Sven und kann die eigene PR nicht approven – so kann kein Agent eine develop→main-PR selbst durchmergen; Release-PRs approvest du von einem zweiten Login aus oder hebst die Regel kurz auf), Require status checks (CI-Jobs).
    - `develop`: Require a pull request before merging mit **0 required approvals** (sperrt direkte Pushes, der API-Merge von `nemo-merge` geht weiter; Approvals vom Token-Inhaber zählen auf eigenen PRs ohnehin nicht), Require status checks, Block force pushes.
    - **Tag-Ruleset nur `refs/tags/v*`**: Restrict creations, updates, deletions – `release.yml` läuft auf jedem `v*.*.*`-Tag; ohne diese Sperre könnte jeder Agent mit Contents: write ein Release auslösen. **Nicht** `dev-preview*`: `dev-preview.yml` verschiebt diesen Tag bei jedem grünen `develop`-Push selbst (`PATCH git/refs/tags/dev-preview`, `force=true`) und ersetzt die Assets (`--clobber`); eine Sperre dort bricht die Dev-Preview. Auf `dev-preview` löst kein Workflow aus, das Risiko ist klein.
    - **Immutable releases vorerst aus lassen:** sie würden auch das rollende Pre-Release `dev-preview` einfrieren (Asset-Austausch scheitert). Erst sinnvoll, wenn die Dev-Preview als Draft veröffentlicht oder anders gelöst ist – Punkt für `nemo-devops`.
@@ -50,7 +50,7 @@ Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Work
    ```bash
    H=(-H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2026-10-21" -H "anthropic-beta: managed-agents-2026-04-01" -H "content-type: application/json")
    # Vault – die ID (vlt_…) landet in VAULT_ID
-   VAULT_ID=$(curl -s https://api.anthropic.com/v1/vaults "${H[@]}" -d '{"display_name":"nemo-github"}' | jq -r .id); echo "$VAULT_ID"
+   VAULT_ID=$(curl -s https://api.anthropic.com/v1/vaults "${H[@]}" -d '{"display_name":"nemo-github"}' | jq -r .id); [ "$VAULT_ID" != null ] && echo "$VAULT_ID" || echo "Fehler: keine Vault-ID (Antwort prüfen)"
    # Credential 1: GitHub MCP (Bearer = PAT), gematcht über die Server-URL – jq liest den Token aus der Umgebung und reicht ihn per stdin an curl: nie in argv (ps), kein Heredoc
    jq -n '{display_name:"github-mcp",auth:{type:"static_bearer",mcp_server_url:"https://api.githubcopilot.com/mcp/",token:env.GITHUB_TOKEN}}' \
      | curl https://api.anthropic.com/v1/vaults/$VAULT_ID/credentials "${H[@]}" --data @-
@@ -65,7 +65,7 @@ Voraussetzungen: Node ≥ 20, `jq`, ein Konto auf `platform.claude.com` mit Work
 
 ```bash
 cd scripts/agents && npm i && cd ../..          # einmalig: @anthropic-ai/sdk
-export ANTHROPIC_API_KEY=… GITHUB_TOKEN=… NEMO_VAULT_ID=vlt_…
+ export ANTHROPIC_API_KEY=… GITHUB_TOKEN=… NEMO_VAULT_ID=vlt_…   # führendes Leerzeichen + HISTCONTROL=ignorespace hält die Werte aus der History; besser aus dem Passwort-Manager laden
 node scripts/agents/session.mjs --budget 15 "Starte Paket 2 Website"
 node scripts/agents/session.mjs --budget 15 --title "Paket 2" --file auftrag.md
 ```
@@ -89,12 +89,14 @@ node scripts/agents/session.mjs --budget 2 --title "agents-v3 smoke" "Lege Branc
 Die Rulesets prüfst du **nur lesend** – ein Push-Versuch mit echten Rechten würde bei einem fehlenden Ruleset wirklich `main`/`develop` bewegen, und ein Tag `v…` startet `release.yml`:
 
 ```bash
-gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/main      # erwartet: pull_request, required_status_checks, non_fast_forward, deletion
-gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/develop   # erwartet: pull_request (0 approvals), required_status_checks, non_fast_forward
-gh api repos/SGNemo/schweizer-taschenmesser/rulesets                 # das Tag-Ruleset mit target tag, refs/tags/v*
+# nicht hier geprüft (kein gh-Login in der Sandbox); Feldnamen aus der GitHub-REST-Referenz
+gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/main      # erwartet: pull_request (required_approving_review_count 1), required_status_checks, non_fast_forward, deletion
+gh api repos/SGNemo/schweizer-taschenmesser/rules/branches/develop   # erwartet: pull_request (0), required_status_checks, non_fast_forward
+gh api repos/SGNemo/schweizer-taschenmesser/rulesets --jq '.[].id'   # dann je ID:
+gh api repos/SGNemo/schweizer-taschenmesser/rulesets/<id> --jq '{name,target,conditions,bypass_actors}'   # Tag-Ruleset: target tag, refs/tags/v*; bypass_actors überall leer
 ```
 
-Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiven Regeln ohne Bypass-Einträge; Zahl 0 bei der Token-Prüfung (sonst gilt der Platzhalter-Schutz für git nicht – dann in SHARED.md die Regel „nie Remote-/Credential-Konfiguration ausgeben“ zusätzlich einschärfen). Branch danach löschen (nicht hier geprüft).
+Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiven Regeln ohne Bypass-Einträge; Zahl 0 bei der Token-Prüfung (sonst gilt der Platzhalter-Schutz für git nicht – dann in SHARED.md die Regel „nie Remote-/Credential-Konfiguration ausgeben“ zusätzlich einschärfen). Branch danach löschen: `gh api -X DELETE repos/SGNemo/schweizer-taschenmesser/git/refs/heads/test/agents-v3-smoke` (nicht hier geprüft).
 
 ## 5 Wiederanlauf
 
@@ -103,5 +105,5 @@ Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiv
 - **Unterbrechen:** `node scripts/agents/session.mjs interrupt sess_…`, dann neue Nachricht.
 - **Threads:** `node scripts/agents/session.mjs threads sess_…` zeigt Primär- und Kind-Threads (Grenze 25 gleichzeitig); `--archive-idle` archiviert fertige Kind-Threads (gibt Plätze frei, der Lead kann sie dann nicht mehr nachfragen).
 - **Agenten aktualisieren:** Schritt 2.5; danach neue Session (laufende behalten die alte Konfiguration).
-- **Repo wechseln oder Token rotieren:** Repo = neue Session; Token = `ant beta:sessions:resources update` bzw. Vault-Credential aktualisieren.
+- **Repo wechseln oder Token rotieren:** Repo = neue Session. Neuer PAT: lokal `export GITHUB_TOKEN=…` (gilt für neue Sessions) und die beiden Vault-Credentials aktualisieren (Console → Vaults, oder `POST /v1/vaults/$VAULT_ID/credentials/<id>` mit neuem `token`/`secret_value` – wirkt auch in laufenden Sessions); das Repo-Mount einer laufenden Session: Console → Session → Resources, oder `ant beta:sessions:resources update <session> <resource> --authorization-token …` (nicht hier geprüft).
 - **Archivieren:** Console oder API (`POST /v1/sessions/{id}/archive`) – beendet den Container; Löschen entfernt auch den Verlauf.

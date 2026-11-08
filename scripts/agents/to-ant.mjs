@@ -98,12 +98,12 @@ function toAnt(a) {
 
 // MODELS.md: roster table derived from the JSON (README links it instead of repeating values by hand)
 function ghMode(a) {
-  const mcp = (a.tools ?? []).find((t) => t.type === "mcp_toolset");
-  const off = new Set(
-    (mcp?.configs ?? []).filter((c) => c.enabled === false).map((c) => c.name),
-  );
-  if (!off.has("merge_pull_request")) return "merge";
-  return off.has("create_pull_request") ? "review" : "write";
+  const gh = (a.mcp_servers ?? []).find((m) => { try { return /(^|\.)githubcopilot\.com$/.test(new URL(m.url).hostname); } catch { return false; } });
+  const mcp = gh && (a.tools ?? []).find((t) => t.type === 'mcp_toolset' && t.mcp_server_name === gh.name);
+  if (!mcp) return 'none';
+  const off = new Set((mcp.configs ?? []).filter((c) => c.enabled === false).map((c) => c.name));
+  if (!off.has('merge_pull_request')) return 'merge';
+  return off.has('create_pull_request') ? 'review' : 'write';
 }
 const webOff = (a) => {
   const ts = (a.tools ?? []).find((t) => t.type === "agent_toolset_20260401");
