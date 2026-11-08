@@ -4,9 +4,11 @@ import type { Stored } from '@/core/db/types';
 import { nowTime, today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
+import { useUiStore } from '@/stores/ui';
 import {
   AdvancedFields,
   Button,
+  Checkbox,
   Dialog,
   Form,
   FormActions,
@@ -15,9 +17,15 @@ import {
   TextField,
 } from '@/ui';
 import { builtInExercises } from '../data';
-import { exerciseSuggestions, lastOf } from '../logic';
-import { sessionRepo } from '../repo';
-import { sessionSchema, type Session } from '../schema';
+import { exerciseSuggestions, lastOf, toTemplate } from '../logic';
+import { sessionRepo, templateRepo } from '../repo';
+import {
+  sessionSchema,
+  templateSchema,
+  type Exercise,
+  type Session,
+  type Template,
+} from '../schema';
 import styles from '../fitness.module.css';
 
 export type SessionTarget = Stored<Session> | 'new' | null;
@@ -36,15 +44,27 @@ const num = (s: string): number | undefined => {
   return s.trim() && Number.isFinite(v) && v > 0 ? v : undefined;
 };
 const str = (n: number | undefined) => (n === undefined ? '' : String(n));
+const toRows = (list: readonly (Exercise | { name: string })[]): Row[] =>
+  list.map((e, i) => ({
+    key: i,
+    name: e.name,
+    sets: str('sets' in e ? e.sets : undefined),
+    reps: str('reps' in e ? e.reps : undefined),
+    weight: str('weightKg' in e ? e.weightKg : undefined),
+    minutes: str('durationMin' in e ? e.durationMin : undefined),
+  }));
 
 export function SessionEditor({
   target,
   sessions,
+  templates,
   onClose,
 }: {
   target: SessionTarget;
   /** Own sessions (suggestions and "last time" values). */
   sessions: readonly Session[];
+  /** Saved templates, offered as chips on a new session. */
+  templates: readonly Stored<Template>[];
   onClose: () => void;
 }) {
   return (
@@ -59,6 +79,7 @@ export function SessionEditor({
           key={target === 'new' ? 'new' : target.id}
           target={target}
           sessions={sessions}
+          templates={templates}
           onClose={onClose}
         />
       ) : null}
@@ -69,10 +90,12 @@ export function SessionEditor({
 function Fields({
   target,
   sessions,
+  templates,
   onClose,
 }: {
   target: NonNullable<SessionTarget>;
   sessions: readonly Session[];
+  templates: readonly Stored<Template>[];
   onClose: () => void;
 }) {
   const existing = target === 'new' ? null : target;
@@ -82,15 +105,10 @@ function Fields({
   const [title, setTitle] = useState(existing?.title ?? '');
   const [duration, setDuration] = useState(str(existing?.durationMin));
   const [note, setNote] = useState(existing?.note ?? '');
+  const [planned, setPlanned] = useState(existing?.planned ?? false);
+  const [autoPlanned, setAutoPlanned] = useState(false);
   const [rows, setRows] = useState<Row[]>(() =>
-    (existing?.exercises.length ? existing.exercises : [{ name: '' }]).map((e, i) => ({
-      key: i,
-      name: e.name,
-      sets: str('sets' in e ? e.sets : undefined),
-      reps: str('reps' in e ? e.reps : undefined),
-      weight: str('weightKg' in e ? e.weightKg : undefined),
-      minutes: str('durationMin' in e ? e.durationMin : undefined),
-    })),
+    toRows(existing?.exercises.length ? existing.exercises : [{ name: '' }]),
   );
   const [error, setError] = useState('');
   const names = exerciseSuggestions(sessions, builtInExercises());
@@ -112,8 +130,21 @@ function Fields({
       });
   }
 
-  async function save() {
-    const data = {
+  /** A template fills title, duration and exercises (the date and the plan stay as they are). */
+  function apply(tpl: Template) {
+    setTitle(tpl.title);
+    setDuration(str(tpl.durationMin));
+    setRows(toRows(tpl.exercises.length ? tpl.exercises : [{ name: '' }]));
+  }
+
+  /** „Geplant“ on a new session: the clock time of now makes no sense for later, the user sets one. */
+  function togglePlanned(on: boolean) {
+    setPlanned(on);
+    if (on && !existing) setTime('');
+  }
+
+  function collect() {
+    return {
       date,
       ...(time ? { time } : {}),
       ...(title.trim() ? { title: title.trim() } : {}),
@@ -130,9 +161,30 @@ function Fields({
             : {}),
           ...(num(r.minutes) ? { durationMin: Math.round(num(r.minutes)!) } : {}),
         })),
+      ...(planned ? { planned: true } : {}),
     };
+  }
+
+  async function saveTemplate() {
+    const tpl = templateSchema.safeParse(toTemplate(collect(), t.fitness.untitled));
+    if (!tpl.success || tpl.data.exercises.length === 0)
+      return setError(t.fitness.form.emptySession);
+    // A typed title again replaces that template (a second tap never makes a copy); untitled ones stay apart.
+    const same = title.trim()
+      ? templates.find(
+          (x) => x.title.trim().toLocaleLowerCase() === tpl.data.title.toLocaleLowerCase(),
+        )
+      : undefined;
+    if (same) await templateRepo.update(same.id, { durationMin: undefined, ...tpl.data });
+    else await templateRepo.create(tpl.data);
+    useUiStore.getState().toast(t.fitness.templates.saved);
+  }
+
+  async function save() {
+    const data = collect();
     // A new session needs one exercise or a duration; an existing one (e.g. from the assistant) stays editable.
-    if (!existing && data.exercises.length === 0 && !data.durationMin)
+    // A plan may be just its title („Beine“); the planner gives it a usual length.
+    if (!existing && data.exercises.length === 0 && !data.durationMin && !(planned && data.title))
       return setError(t.fitness.form.emptySession);
     const parsed = sessionSchema.safeParse(data);
     if (!parsed.success) return setError(t.fitness.form.invalid);
@@ -142,6 +194,7 @@ function Fields({
         title: undefined,
         durationMin: undefined,
         note: undefined,
+        planned: undefined,
         ...parsed.data,
       };
       await sessionRepo.update(existing.id, changedFields(opened ?? existing, full));
@@ -151,12 +204,52 @@ function Fields({
 
   return (
     <Form onSubmit={save}>
+      {/* Templates only on a fresh form: a tap never overwrites exercises already typed. */}
+      {!existing && templates.length > 0 && !rows.some((r) => r.name.trim()) ? (
+        <div className={styles.chips} role="group" aria-label={t.fitness.templates.label}>
+          {templates.map((tpl) => (
+            <span key={tpl.id} className={styles.chip}>
+              <Button
+                variant="secondary"
+                size="sm"
+                aria-label={t.fitness.templates.use(tpl.title)}
+                onClick={() => apply(tpl)}
+              >
+                {tpl.title}
+              </Button>
+              <IconButton
+                label={t.fitness.templates.remove(tpl.title)}
+                onClick={() =>
+                  void deleteWithUndo(
+                    () => templateRepo.remove(tpl.id),
+                    t.fitness.templates.removed,
+                  )
+                }
+              >
+                <Icon name="close" size={16} />
+              </IconButton>
+            </span>
+          ))}
+        </div>
+      ) : null}
       <div className={styles.split}>
         <TextField
           label={t.fitness.form.date}
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => {
+            setDate(e.target.value);
+            // A new session on a later day is a plan, unless the user says otherwise.
+            if (!existing && e.target.value > today()) {
+              togglePlanned(true);
+              setAutoPlanned(true);
+            } else if (autoPlanned) {
+              // Back to today or earlier: the automatic tick goes again (a tick the user set stays).
+              setPlanned(false);
+              setAutoPlanned(false);
+              setTime(nowTime());
+            }
+          }}
           required
         />
         <TextField
@@ -168,6 +261,24 @@ function Fields({
           onChange={(e) => setDuration(e.target.value)}
         />
       </div>
+      <Checkbox
+        label={t.fitness.planned.toggle}
+        description={t.fitness.planned.toggleHint}
+        checked={planned}
+        onChange={(e) => {
+          togglePlanned(e.target.checked);
+          setAutoPlanned(false);
+        }}
+      />
+      {planned ? (
+        <TextField
+          label={t.fitness.form.time}
+          hint={t.fitness.planned.timeHint}
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+      ) : null}
       <p className={styles.groupLabel}>{t.fitness.form.exercises}</p>
       <datalist id={listId}>
         {names.map((n) => (
@@ -228,7 +339,7 @@ function Fields({
           </li>
         ))}
       </ul>
-      <div>
+      <div className={styles.chips}>
         <Button
           variant="secondary"
           size="sm"
@@ -249,6 +360,11 @@ function Fields({
           <Icon name="plus" size={16} />
           {t.fitness.form.addExercise}
         </Button>
+        {rows.some((r) => r.name.trim()) ? (
+          <Button variant="secondary" size="sm" onClick={() => void saveTemplate()}>
+            {t.fitness.templates.save}
+          </Button>
+        ) : null}
       </div>
       <AdvancedFields
         moduleId="fitness"
@@ -260,12 +376,14 @@ function Fields({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <TextField
-          label={t.fitness.form.time}
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
+        {planned ? null : (
+          <TextField
+            label={t.fitness.form.time}
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
+        )}
         <TextField
           label={t.fitness.form.note}
           value={note}
