@@ -97,15 +97,29 @@ const COORDINATORS = ["nemo-auditor", "nemo-lead"];
 const ROSTER_EXCLUDE = { "nemo-auditor": ["nemo-merge"] };
 // the five hard limits are one template for every agent except the lead; role name, the merge line (nemo-merge only)
 // and the read-only clause (review roles + auditor) are the per-role parts, each checked exactly
-const READ_ONLY = new Set([
-  "nemo-po",
-  "nemo-creativity",
-  "nemo-design",
-  "nemo-a11y",
-  "nemo-security",
-  "nemo-reviewer",
-  "nemo-auditor",
-]);
+const READ_ONLY = new Set(["nemo-reviewer", "nemo-auditor"]);
+// v3.1 roster (docs/meta/agents-v3/README.md): exactly these seven, each with its model and effort
+const ROSTER = {
+  "nemo-auditor": ["claude-fable-5-1", "high"],
+  "nemo-builder": ["claude-sonnet-5-5", "medium"],
+  "nemo-docs": ["claude-haiku-5-5", "medium"],
+  "nemo-lead": ["claude-sonnet-5-5", "high"],
+  "nemo-merge": ["claude-haiku-5-5", "low"],
+  "nemo-ops": ["claude-sonnet-5-5", "medium"],
+  "nemo-reviewer": ["claude-opus-5-5", "medium"],
+};
+// prompt length caps (token diet): 7 000 chars, the lead 8 000
+const MAX_SYSTEM = { "nemo-lead": 8000 };
+const MAX_SYSTEM_DEFAULT = 7000;
+// the one routing source; every prompt names it, every prompt except the lead's (German) carries this exact gate
+const ROUTING_FILE = "docs/meta/WORK-ROUTING.md";
+const ROUTING_LINE =
+  "**Routing gate:** check every delegation against `docs/meta/WORK-ROUTING.md` first; if it does not fit, answer `blocked – out of routing: <reason>` and start no work.";
+// the lead's advisor (Opus) for decisions; the auditor runs without one
+const ADVISOR = {
+  "nemo-lead": { type: "enabled", model: "claude-opus-5-5" },
+  "nemo-auditor": { type: "disabled" },
+};
 // the auditor also copies its report to the session outputs (Sven downloads it from there)
 const READ_ONLY_EXTRA = {
   "nemo-auditor": " and the report copy in `/mnt/session/outputs/`",
@@ -203,13 +217,33 @@ for (const file of files) {
     continue;
   }
   if (a.system.length > 100000) bad(file, "system > 100000 chars");
+  const cap = MAX_SYSTEM[a.name] ?? MAX_SYSTEM_DEFAULT;
+  if (a.system.length > cap)
+    bad(file, `system prompt ${a.system.length} chars > ${cap} (token diet)`);
+  if (!a.system.includes(ROUTING_FILE))
+    bad(file, `system does not name ${ROUTING_FILE} (routing gate)`);
+  if (a.name !== "nemo-lead" && !a.system.includes(ROUTING_LINE + "\n"))
+    bad(file, "system lacks the pinned routing-gate line (ROUTING_LINE)");
+  if (!(a.name in ROSTER))
+    bad(file, `"${a.name}" is not one of the seven v3.1 agents`);
+  else {
+    const [wantModel, wantEffort] = ROSTER[a.name];
+    const got = typeof a.model === "string" ? { id: a.model } : a.model;
+    const gotEffort =
+      typeof got?.effort === "string" ? got.effort : got?.effort?.type;
+    if (got?.id !== wantModel || gotEffort !== wantEffort)
+      bad(
+        file,
+        `model ${got?.id} · ${gotEffort} – the v3.1 roster says ${wantModel} · ${wantEffort}`,
+      );
+  }
   if (!a.system.includes("docs/meta/agents-v3/SHARED.md"))
     bad(file, "system does not reference SHARED.md");
   if (a.name !== "nemo-lead") {
     const hl = hardLimitsOf(a);
     if (!hl) bad(file, 'no "## Hard limits" block');
     else if (hl.error) bad(file, hl.error);
-    else if (file === "nemo-qa.json")
+    else if (file === "nemo-builder.json")
       hardRef = { file, hl: hl.norm }; // fixed template file, compared after the loop
     else hardBlocks.push({ file, hl: hl.norm });
   }
@@ -415,7 +449,7 @@ for (const file of files) {
     if (sub?.inline_agents?.type === "disabled" && pre.length === 0)
       bad(file, "inline_agents disabled needs ≥ 1 predefined agent");
     // every coordinator's roster = all agents that are not coordinators, minus its ROSTER_EXCLUDE entries
-    // (lead: all 19; auditor: 18, nemo-merge excluded)
+    // (lead: all 5; auditor: 4, nemo-merge excluded)
     const others = files
       .map((f) => f.replace(/\.json$/, ""))
       .filter((n) => !COORDINATORS.includes(n));
@@ -475,6 +509,15 @@ for (const file of files) {
       );
     if (ma.advisor && ma.advisor.type === "enabled" && !ma.advisor.model)
       bad(file, "advisor enabled needs a model");
+    const wantAdv = ADVISOR[a.name];
+    if (
+      wantAdv &&
+      JSON.stringify(ma.advisor ?? null) !== JSON.stringify(wantAdv)
+    )
+      bad(
+        file,
+        `multiagent.advisor must be ${JSON.stringify(wantAdv)} (found ${JSON.stringify(ma.advisor ?? null)})`,
+      );
   } else if (COORDINATORS.includes(a.name))
     bad(
       file,
@@ -491,18 +534,26 @@ if (withMultiagent.sort().join() !== presentCoordinators.join()) {
     `✗ agents with a multiagent block must be exactly [${presentCoordinators.join(", ")}], found [${withMultiagent.join(", ")}]`,
   );
 }
+// cross-file: exactly the seven v3.1 agents, none missing (an extra file is reported in the loop)
+for (const n of Object.keys(ROSTER))
+  if (!files.includes(`${n}.json`)) {
+    problems++;
+    console.log(
+      `✗ ${n}.json missing – the v3.1 roster has exactly seven agents`,
+    );
+  }
 // cross-file: merge capability and inference_geo
 if (!hardRef) {
   problems++;
   console.log(
-    "✗ nemo-qa.json (template for the hard-limits block) missing or invalid",
+    "✗ nemo-builder.json (template for the hard-limits block) missing or invalid",
   );
 } else
   for (const b of hardBlocks)
     if (b.hl !== hardRef.hl)
       bad(
         b.file,
-        "hard-limits block differs from the template nemo-qa.json (one block for all 19)",
+        "hard-limits block differs from the template nemo-builder.json (one block for all six non-lead agents)",
       );
 if (mergeCapable.join() !== "nemo-merge") {
   problems++;

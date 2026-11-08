@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generates the `ant apply` files (Markdown with YAML front matter, body = system prompt) and MODELS.md from the
 // JSON source in docs/meta/agents-v3. One source, no hand sync. The lead's predefined_agents become relative
-// file paths (`./nemo-po.md`), which `ant apply` resolves to agent IDs in dependency order (CLI ≥ 1.40.0).
+// file paths (`./nemo-builder.md`), which `ant apply` resolves to agent IDs in dependency order (CLI ≥ 1.40.0).
 // Usage: node scripts/agents/to-ant.mjs [dir]            write nemo-*.md + MODELS.md
 //        node scripts/agents/to-ant.mjs --check [dir]    exit 1 when a generated file is stale (CI/PR proof)
 import fs from "node:fs";
