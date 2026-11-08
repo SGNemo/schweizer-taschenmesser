@@ -20,6 +20,7 @@
   "src/quickCapture/parser/amount.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/index.ts": "parser vocabulary for quick capture (German input)",
   "src/quickCapture/parser/until.ts": "parser vocabulary for quick capture (German input)",
+  "src/quickCapture/targets/lookup.ts": "payee matching vocabulary for typed payment reminders (German input)",
   "src/quickCapture/parser/split.ts": "parser vocabulary for quick capture (German input: when-words that never make an entry alone)",
   "src/quickCapture/parser/corpus.ts": "German test sentences for the quick-capture parser",
   "src/quickCapture/parser/fitness.ts": "parser vocabulary for quick capture (German input: day words, times and prefixes of fitness captures)",
