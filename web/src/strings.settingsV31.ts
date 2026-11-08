@@ -14,6 +14,7 @@ export const tSettingsV31 = defineBundle(
     setup: {
       next: (title: string) => `Als Nächstes: ${title}`,
       showAll: (n: number) => `Alle zeigen (${n} weitere)`,
+      navProgress: (done: number, total: number) => `${done} von ${total}`,
       allDone: 'Alles eingerichtet',
       allDoneLine: 'Jeder Schritt lässt sich jederzeit wieder öffnen.',
       notStarted: 'Noch nicht begonnen',
@@ -56,6 +57,7 @@ export const tSettingsV31 = defineBundle(
       setup: {
         next: (title: string) => `Next: ${title}`,
         showAll: (n: number) => `Show all (${n} more)`,
+        navProgress: (done: number, total: number) => `${done} of ${total}`,
         allDone: 'All set up',
         allDoneLine: 'You can open every step again at any time.',
         notStarted: 'Not started yet',
@@ -98,6 +100,7 @@ export const tSettingsV31 = defineBundle(
       setup: {
         next: (title: string) => `Siguiente: ${title}`,
         showAll: (n: number) => `Mostrar todo (${n} más)`,
+        navProgress: (done: number, total: number) => `${done} de ${total}`,
         allDone: 'Todo configurado',
         allDoneLine: 'Puedes volver a abrir cada paso cuando quieras.',
         notStarted: 'Aún sin empezar',
@@ -140,6 +143,7 @@ export const tSettingsV31 = defineBundle(
       setup: {
         next: (title: string) => `Ensuite : ${title}`,
         showAll: (n: number) => `Tout afficher (${n} de plus)`,
+        navProgress: (done: number, total: number) => `${done} sur ${total}`,
         allDone: 'Tout est configuré',
         allDoneLine: 'Chaque étape peut être rouverte à tout moment.',
         notStarted: 'Pas encore commencé',
@@ -183,6 +187,7 @@ export const tSettingsV31 = defineBundle(
       setup: {
         next: (title: string) => `Próximo: ${title}`,
         showAll: (n: number) => `Mostrar tudo (mais ${n})`,
+        navProgress: (done: number, total: number) => `${done} de ${total}`,
         allDone: 'Tudo configurado',
         allDoneLine: 'Você pode abrir cada passo de novo quando quiser.',
         notStarted: 'Ainda não começou',
