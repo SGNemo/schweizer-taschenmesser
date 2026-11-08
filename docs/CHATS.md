@@ -36,7 +36,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
-| scribble moves to session folder + private repo (step 2: docs and rules) | `docs/scribble-move-rules` | root `CLAUDE.md` (hotspot), `docs/**` rules, `docs/decisions/meta.md` | PR open, merge after agent-rules PR (step 3) | – | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
