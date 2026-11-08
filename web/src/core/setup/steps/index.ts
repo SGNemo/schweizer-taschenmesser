@@ -56,6 +56,19 @@ export const CORE_STEPS: SetupStepDef[] = [
     component: () => import('@/layout/setup/steps/ProfilesStep'),
   },
   {
+    // Round 5 (demo-a): one of the first-run questions. since 1, so a finished setup is not reopened for it.
+    id: 'core.focus',
+    get title() {
+      return s.focus.title;
+    },
+    get description() {
+      return s.focus.description;
+    },
+    order: 35,
+    since: 1,
+    component: () => import('@/layout/setup/steps/FocusStep'),
+  },
+  {
     id: 'core.tools',
     get title() {
       return s.tools.title;

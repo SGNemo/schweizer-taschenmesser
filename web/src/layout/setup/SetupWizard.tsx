@@ -19,7 +19,7 @@ import {
   markStepSkipped,
   newSteps,
   pauseSetup,
-  resumeStep,
+  resumeTarget,
   stepProgress,
 } from '@/core/setup/state';
 import type { SetupCtx, SetupStepDef, SetupStepProps } from '@/core/setup/types';
@@ -33,7 +33,68 @@ import styles from './SetupWizard.module.css';
 type View = 'start' | 'step' | 'summary' | 'confirm' | 'quick';
 
 /** The three first-run questions, in order; a step the app does not offer right now is left out. */
-const QUICK_IDS = ['core.basics', 'core.profiles', 'core.ai'] as const;
+const QUICK_IDS = ['core.basics', 'core.profiles', 'core.focus', 'core.ai'] as const;
+
+/** The short question title of a first-run step, else its normal title. */
+function quickTitle(step: SetupStepDef): string {
+  const q = t.setup.quick[step.id.replace('core.', '') as keyof typeof t.setup.quick];
+  return q ? q.title : step.title;
+}
+
+/**
+ * The whole way at a glance (A02, round 5): every question or step with its state, the current one
+ * marked, and in the questions also what comes afterwards – so "Frage 3 von 4" and the checklist's
+ * "x von y" never contradict each other.
+ */
+function StepOverview({
+  items,
+  current,
+  after,
+  open,
+  onToggle,
+  progressOf,
+}: {
+  items: readonly SetupStepDef[];
+  current: string;
+  after: readonly SetupStepDef[];
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  progressOf: (s: SetupStepDef) => 'done' | 'skipped' | 'open';
+}) {
+  const quick = after.length > 0;
+  const label = (s: SetupStepDef) => {
+    if (s.id === current) return t.setup.overviewNow;
+    const p = progressOf(s);
+    return p === 'done'
+      ? t.setup.statusDone
+      : p === 'skipped'
+        ? t.setup.statusSkipped
+        : t.setup.statusOpen;
+  };
+  return (
+    <details
+      className={styles.overview}
+      open={open}
+      onToggle={(e) => onToggle((e.currentTarget as HTMLDetailsElement).open)}
+      data-testid="setup-overview"
+    >
+      <summary>
+        {quick ? t.setup.overviewQuestions(items.length) : t.setup.overviewSteps(items.length)}
+      </summary>
+      <ol className={styles.overviewList}>
+        {items.map((s) => (
+          <li key={s.id} aria-current={s.id === current ? 'step' : undefined}>
+            {quick ? quickTitle(s) : s.title}{' '}
+            <span className={styles.overviewState}>· {label(s)}</span>
+          </li>
+        ))}
+      </ol>
+      {quick ? (
+        <p className={styles.hint}>{t.setup.overviewAfter(after.map((s) => s.title))}</p>
+      ) : null}
+    </details>
+  );
+}
 
 const lazyCache = new WeakMap<object, ComponentType<SetupStepProps>>();
 function stepComponent(step: SetupStepDef): ComponentType<SetupStepProps> {
@@ -117,6 +178,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [canContinue, setCanContinue] = useState(true);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [quickIndex, setQuickIndex] = useState(0);
+  const [overviewOpen, setOverviewOpen] = useState<boolean | null>(null);
   const commit = useRef<(() => Promise<void | 'skipped'>) | null>(null);
   const cancelled = useRef(false);
 
@@ -154,7 +216,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   const total = list?.length ?? 0;
   const counted = countedSteps(list ?? []);
-  const step = view === 'quick' ? quickSteps[quickIndex] : list?.[index];
+  const inQuestions = view === 'quick' || (view === 'confirm' && before === 'quick');
+  const step = inQuestions ? quickSteps[quickIndex] : list?.[index];
   const numberOf = (s: SetupStepDef) => counted.findIndex((c) => c.id === s.id) + 1;
 
   const requestClose = useCallback(() => {
@@ -230,7 +293,11 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   async function leave(kind: 'later' | 'end') {
     cancelled.current = true;
-    if (kind === 'later') await pauseSetup();
+    // The step on screen (also behind the "Unterbrechen?" question) is where "Fortsetzen" opens.
+    const quickNow = view === 'quick' || (view === 'confirm' && before === 'quick');
+    const onScreen = view === 'step' || view === 'quick' || view === 'confirm' ? step : undefined;
+    if (kind === 'later')
+      await pauseSetup(undefined, onScreen ? { step: onScreen.id, quick: quickNow } : undefined);
     else await dismissSetup();
     onClose();
   }
@@ -264,7 +331,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   } else if (total === 0) {
     body = <p className={styles.desc}>{t.setup.noSteps}</p>;
   } else if (view === 'start') {
-    const next = resumeStep(list, state);
+    const target = resumeTarget(list, state);
+    const next = target?.step;
+    const quickAt = target?.quick ? quickSteps.findIndex((q) => q.id === next?.id) : -1;
     const fresh = newSteps(list, state);
     body = (
       <div className={styles.body}>
@@ -278,9 +347,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             <Button
               variant="primary"
               data-autofocus
-              onClick={() => go(list.findIndex((s) => s.id === next.id))}
+              onClick={() => {
+                if (quickAt >= 0) {
+                  setQuickIndex(quickAt);
+                  setView('quick');
+                } else go(list.findIndex((s) => s.id === next.id));
+              }}
             >
-              {t.setup.resumeAt(next.title)}
+              {t.setup.resumeAt(quickAt >= 0 ? quickTitle(next) : next.title)}
             </Button>
           ) : (
             <Button variant="primary" data-autofocus onClick={() => setView('summary')}>
@@ -370,6 +444,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             label={isQuick ? t.setup.questionOf(position, of) : t.setup.stepOf(position, of)}
           />
         ) : null}
+        <StepOverview
+          items={isQuick ? quickSteps : counted}
+          current={step.id}
+          after={isQuick ? counted.filter((c) => !quickSteps.some((q) => q.id === c.id)) : []}
+          open={overviewOpen ?? isQuick}
+          onToggle={setOverviewOpen}
+          progressOf={(s) => stepProgress(state, s.id, auto.has(s.id))}
+        />
         <h3 className={styles.stepTitle}>{isQuick && quickText ? quickText.title : step.title}</h3>
         <p className={styles.desc}>
           <ReadableText text={isQuick && quickText ? quickText.description : step.description} />
@@ -423,7 +505,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             </Button>
           )}
           <Button variant="primary" onClick={() => void onNext()} disabled={busy || !canContinue}>
-            {last ? t.setup.finish : t.setup.next}
+            {last ? (isQuick ? t.setup.finishQuestions : t.setup.finish) : t.setup.next}
           </Button>
         </span>
       </>

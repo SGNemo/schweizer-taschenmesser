@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
@@ -135,6 +135,39 @@ describe('setup wizard', () => {
     expect(await screen.findByText('Inhalt b')).toBeInTheDocument();
   });
 
+  it('A01: a pause in the first-run questions resumes at that very question', async () => {
+    steps = [makeStep('core.basics', 10), makeStep('core.sync', 20), makeStep('core.profiles', 30)];
+    const first = await open();
+    await screen.findByText('Inhalt core.basics');
+    expect(screen.getByText(s.questionOf(1, 2))).toBeInTheDocument();
+    await first.user.click(screen.getByRole('button', { name: s.next }));
+    await screen.findByText('Inhalt core.profiles');
+    await first.user.click(screen.getByRole('button', { name: t.actions.close }));
+    await first.user.click(await screen.findByRole('button', { name: s.later }));
+    await waitFor(() => expect(first.onClose).toHaveBeenCalled());
+    cleanup();
+    const again = await open();
+    await again.user.click(
+      await screen.findByRole('button', { name: s.resumeAt(s.quick.profiles.title) }),
+    );
+    expect(await screen.findByText('Inhalt core.profiles')).toBeInTheDocument();
+    expect(screen.getByText(s.questionOf(2, 2))).toBeInTheDocument();
+    expect(screen.queryByText('Inhalt core.sync')).toBeNull();
+  });
+
+  it('A02: the questions show the whole way up front, and the last button says what it does', async () => {
+    steps = [makeStep('core.basics', 10), makeStep('core.sync', 20), makeStep('core.profiles', 30)];
+    await open();
+    await screen.findByText('Inhalt core.basics');
+    const overview = screen.getByTestId('setup-overview');
+    expect(overview).toHaveAttribute('open');
+    expect(overview).toHaveTextContent(s.overviewQuestions(2));
+    expect(overview).toHaveTextContent(s.overviewAfter(['Schritt core.sync']));
+    expect(screen.getByRole('button', { name: s.next })).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: s.next }));
+    expect(await screen.findByRole('button', { name: s.finishQuestions })).toBeInTheDocument();
+  });
+
   it('"Von vorn" shows all steps again and changes no progress', async () => {
     await markStepDone('a');
     const { user } = await open();
@@ -195,5 +228,22 @@ describe('welcome card', () => {
     render(<WelcomeCard />);
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.queryByTestId('setup-welcome')).toBeNull();
+  });
+
+  it('round 5: the welcome card asks one thing only (the reading aid lives in "Fokus-Hilfen")', async () => {
+    await db.table('_meta').put({
+      key: SETUP_STATE_KEY,
+      value: {
+        status: 'notStarted',
+        doneSteps: [],
+        skippedSteps: [],
+        version: 1,
+        checklistHidden: false,
+      },
+    });
+    render(<WelcomeCard />);
+    const card = await screen.findByTestId('setup-welcome');
+    expect(screen.queryByTestId('read-hint')).toBeNull();
+    expect(card.querySelectorAll('button')).toHaveLength(2);
   });
 });

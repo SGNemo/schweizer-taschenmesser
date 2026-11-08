@@ -46,15 +46,27 @@ export const setup: Strings['setup'] = {
   restLater: 'Rest later',
   allSteps: 'See all steps',
   questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
+  finishQuestions: 'Finish the questions',
+  overviewNow: 'now',
+  overviewQuestions: (n: number) => `All ${n} questions and what comes after`,
+  overviewSteps: (n: number) => `All ${n} steps at a glance`,
+  overviewAfter: (titles: string[]) =>
+    `After the last question the setup closes. ${titles.length === 1 ? 'One more step is' : `${titles.length} more steps are`} optional and ${titles.length === 1 ? 'appears' : 'appear'} afterwards as a checklist on the overview: ${titles.join(', ')}.`,
   quick: {
     basics: {
-      title: 'What should we call you?',
-      description: 'Name and text size. You can change both later.',
+      title: 'Language, name and text size',
+      description:
+        'Here you set the language, your name and the text size. Under “More settings” you find colour scheme and week start. You can change all of it later in Settings.',
     },
     profiles: {
       title: 'What fits you?',
       description:
-        'The profile switches on matching modules. Each profile says what it switches off.',
+        'The profile switches on matching modules. Each profile says what it switches off. If none fits exactly, pick the closest: you can switch single modules on or off afterwards under More → Module library. “Next” without a choice leaves the modules as they are.',
+    },
+    focus: {
+      title: 'How calm should the app be?',
+      description:
+        'Four switches for motion, reminders, counts and notices, plus the reading aid. The preselection “Calm” is recommended. You can change every switch later in Settings.',
     },
     ai: {
       title: 'Should an AI help?',
@@ -110,6 +122,30 @@ export const setup: Strings['setup'] = {
       dataKept: 'Data is kept; you can switch everything back on.',
       pick: 'Choose',
       picked: 'Chosen',
+    },
+    focus: {
+      title: 'Focus aids',
+      description:
+        'Five switches decide how calm the app behaves. You can change every switch later in Settings.',
+      preselect:
+        'Preselected is “Calm”: the first four switches are on, the reading aid stays as it is now. Only “Next” saves the switches as they stand here. “Later” changes nothing.',
+      motion: 'Reduce motion',
+      motionHint:
+        'On: the app’s transitions and animations are off; content appears in place at once.',
+      ownReminders: 'No automatic extra reminders',
+      ownRemindersHint:
+        'On: the app sends no morning overview of today’s to-dos and no extra early reminders before appointments. Reminders you set on an entry yourself still come.',
+      noCounts: 'No streaks or reviews',
+      noCountsHint:
+        'On: recurring to-dos show no “n in a row”, and “Up next” shows no “Look back on the week”.',
+      toastStay: 'Notices stay',
+      toastStayHint:
+        'On: short notices at the bottom (for example “To-do added.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you point at them or are inside, they wait.',
+      readAid: 'Reading aid',
+      readAidHint:
+        'On: the beginnings of words in longer texts are bold, which guides the eye. Numbers and input fields stay without. Not preselected; try it if you like.',
+      where:
+        'Later in Settings: motion, notices and reading aid under “Accessibility”, the reminders under “Calm reminders”, streaks and review under “Focus & attention”.',
     },
     tools: {
       title: 'Toolbox',
@@ -209,7 +245,7 @@ export const setup: Strings['setup'] = {
         calendar: 'Import calendar',
         tasks: 'Import to-dos',
         notes: 'Import notes',
-        bank: 'Import statement',
+        bank: 'Import the statement',
         vault: 'Import in Passwords',
       } as Record<string, string>,
       items: {
@@ -223,6 +259,19 @@ export const setup: Strings['setup'] = {
         'obsidian.notes': 'Markdown notes imported',
         'bank.statement': 'Statement imported',
         'bitwarden.vault': 'Bitwarden CSV imported in Passwords',
+      } as Record<string, string>,
+      /** The same points as a goal, while not done yet (B08, round 5). */
+      goals: {
+        'google.calendar': 'Import the calendar (.ics)',
+        'google.tasks': 'Import Tasks.json',
+        'google.keep': 'Import Keep notes',
+        'google.subscription': 'Connect the calendar as a subscription (Settings → Connections)',
+        'todoist.tasks': 'Import Todoist CSV',
+        'evernote.notes': 'Import Evernote notes',
+        'microsoft.tasks': 'Import Microsoft To Do tasks (Outlook CSV)',
+        'obsidian.notes': 'Import Markdown notes',
+        'bank.statement': 'Import the statement',
+        'bitwarden.vault': 'Import the Bitwarden CSV in Passwords',
       } as Record<string, string>,
       tick: 'Tick off',
       untick: 'Reopen',
