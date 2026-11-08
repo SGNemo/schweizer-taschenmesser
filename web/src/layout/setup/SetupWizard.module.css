@@ -99,9 +99,11 @@
   color: var(--text-muted);
 }
 .overview > summary {
+  /* list-item keeps the fold triangle, so it reads as something that opens */
+  display: list-item;
   min-height: 44px;
-  display: flex;
-  align-items: center;
+  padding-block: var(--space-3);
+  box-sizing: border-box;
   cursor: pointer;
   color: var(--text);
 }
