@@ -14,7 +14,7 @@ import { collectDue } from './collect';
 import { getPlatform } from '@/core/platform';
 import { normalizeServerUrl } from '@/core/sync/adapters/selfHosted';
 import { encryptValue, fromBase64Url } from '@/core/sync/crypto';
-import { loadSyncConfig, type SyncConfig } from '@/core/sync/service';
+import { loadServerConfig, type ServerSyncConfig } from '@/core/sync/service';
 import { now as clockNow } from '@/core/time/now';
 import { pushAad, type PushPayload } from './pushPayload';
 import { startScheduleTriggers } from './triggers';
@@ -64,7 +64,7 @@ export interface PushRemote {
 }
 
 export function createPushRemote(
-  config: Pick<SyncConfig, 'url' | 'token'>,
+  config: Pick<ServerSyncConfig, 'url' | 'token'>,
   fetchFn: typeof fetch = (input, init) => getPlatform().fetch(input, init),
 ): PushRemote {
   const base = normalizeServerUrl(config.url) ?? config.url;
@@ -117,7 +117,7 @@ export interface PushDeps {
   permission(): NotificationPermission;
   requestPermission(): Promise<NotificationPermission>;
   registration(): Promise<Pick<ServiceWorkerRegistration, 'pushManager'> | undefined>;
-  remote(config: SyncConfig): PushRemote;
+  remote(config: ServerSyncConfig): PushRemote;
   loadDue(range: { from: number; to: number }): Promise<DueNotification[]>;
 }
 
@@ -163,7 +163,7 @@ export type PushStatus =
 export async function pushStatus(deps: PushDeps = defaultPushDeps()): Promise<PushStatus> {
   if (!deps.supported()) return { state: 'unsupported' };
   const [sync, config] = await Promise.all([
-    loadSyncConfig(deps.database),
+    loadServerConfig(deps.database),
     loadConfig(deps.database),
   ]);
   if (!sync) return { state: 'needs-sync' };
@@ -203,7 +203,7 @@ export async function buildSchedule(
 /** Uploads the current schedule. Safe to call at any time; does nothing while push is off. */
 export async function syncPushSchedule(deps: PushDeps = defaultPushDeps()): Promise<boolean> {
   const [sync, config] = await Promise.all([
-    loadSyncConfig(deps.database),
+    loadServerConfig(deps.database),
     loadConfig(deps.database),
   ]);
   if (!sync || !config) return false;
@@ -226,7 +226,7 @@ export async function syncPushSchedule(deps: PushDeps = defaultPushDeps()): Prom
 
 export async function enablePush(deps: PushDeps = defaultPushDeps()): Promise<void> {
   if (!deps.supported()) throw new PushError('unsupported');
-  const sync = await loadSyncConfig(deps.database);
+  const sync = await loadServerConfig(deps.database);
   if (!sync) throw new PushError('needs-sync');
   let permission = deps.permission();
   if (permission === 'default') permission = await deps.requestPermission();
@@ -258,7 +258,7 @@ export async function enablePush(deps: PushDeps = defaultPushDeps()): Promise<vo
 
 export async function disablePush(deps: PushDeps = defaultPushDeps()): Promise<void> {
   const [sync, config] = await Promise.all([
-    loadSyncConfig(deps.database),
+    loadServerConfig(deps.database),
     loadConfig(deps.database),
   ]);
   await clearConfig(deps.database);
@@ -276,7 +276,7 @@ export async function disablePush(deps: PushDeps = defaultPushDeps()): Promise<v
 /** Sends a message through the whole chain (server → push service → this browser). */
 export async function sendTestPush(deps: PushDeps = defaultPushDeps()): Promise<boolean> {
   const [sync, config] = await Promise.all([
-    loadSyncConfig(deps.database),
+    loadServerConfig(deps.database),
     loadConfig(deps.database),
   ]);
   if (!sync || !config) throw new PushError('needs-sync');
