@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/core/platform', () => ({
-  getPlatform: () => ({ kind: 'desktop', isNative: true }),
+  getPlatform: () => ({ kind: 'desktop', isNative: true, lanHub: { supported: false } }),
 }));
 vi.mock('@/core/sync/service', () => ({
   connect: vi.fn(),

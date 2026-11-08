@@ -39,6 +39,8 @@ import { createDesktopService } from './desktop';
 import { createDisplay } from './display';
 import { createDisk } from './disk';
 import { createLocalApi } from './localApi';
+import { createLanHub } from './lanHub';
+import { createLanClient } from './lanClient';
 import { createVaultBridge } from './vaultBridge';
 import { createShare } from './share';
 import { createLocalModel } from './localModel';
@@ -213,6 +215,8 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     },
     localApi: createLocalApi(kind === 'desktop'),
     vaultBridge: createVaultBridge(kind === 'desktop'),
+    lanHub: createLanHub(kind === 'desktop'),
+    lanClient: createLanClient(kind === 'android'),
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
     browser: createBrowser(kind === 'desktop'),

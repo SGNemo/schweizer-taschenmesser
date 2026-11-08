@@ -14,14 +14,14 @@
 | nemo-extension  | claude-sonnet-5-5 | medium | write      | 3631         |
 | nemo-frontend   | claude-sonnet-5-5 | medium | write      | 4353         |
 | nemo-i18n       | claude-haiku-5-5  | medium | write      | 3799         |
-| nemo-lead       | claude-opus-5-5   | high   | review     | 5295         |
+| nemo-lead       | claude-sonnet-5-5 | high   | review     | 6679         |
 | nemo-merge      | claude-sonnet-5-5 | medium | merge      | 7006         |
 | nemo-native     | claude-sonnet-5-5 | medium | write      | 4364         |
 | nemo-perf       | claude-sonnet-5-5 | medium | write      | 4172         |
 | nemo-po         | claude-sonnet-5-5 | medium | review     | 3623         |
 | nemo-qa         | claude-sonnet-5-5 | medium | write      | 3524         |
-| nemo-reviewer   | claude-opus-5-5   | medium | review     | 4601         |
-| nemo-security   | claude-opus-5-5   | high   | review     | 4349         |
+| nemo-reviewer   | claude-opus-5-5   | medium | review     | 4857         |
+| nemo-security   | claude-opus-5-5   | high   | review     | 4571         |
 | nemo-triage     | claude-haiku-5-5  | low    | write      | 4224         |
 
 "write" = PRs, comments, reviews; "review" = comments and reviews only; "merge" = may merge. Web search/fetch are disabled in every definition.

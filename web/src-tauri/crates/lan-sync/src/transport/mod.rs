@@ -104,6 +104,15 @@ impl Deliverer {
             .unwrap_or(false);
         sent && done.recv_timeout(ACK_TIMEOUT).unwrap_or(false)
     }
+
+    /// Ends the waiting connection of `attempt` without a key frame (the user cancelled on the PC
+    /// or the code was wrong): the device sees the connection close at once instead of waiting for
+    /// its own timeout. Nothing to do if there is no such connection.
+    pub fn abort(&self, attempt: u64) {
+        if let Ok(mut m) = self.0.deliveries.lock() {
+            m.remove(&attempt);
+        }
+    }
 }
 
 #[derive(Default)]
