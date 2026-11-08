@@ -128,7 +128,9 @@ export const setup: Strings['setup'] = {
       description:
         'Five switches decide how calm the app behaves. You can change every switch later in Settings.',
       preselect:
-        'Preselected is “Calm”: the first four switches are on, the reading aid stays as it is now. Only “Next” saves the switches as they stand here. “Later” changes nothing.',
+        'Preselected is “Calm”: the first four switches are on, the reading aid stays as it is now. Only “Next” saves the switches as they stand here.',
+      laterFull: '“Later” changes nothing.',
+      laterQuick: '“Rest later” changes nothing.',
       motion: 'Reduce motion',
       motionHint:
         'On: the app’s transitions and animations are off; content appears in place at once.',

@@ -163,9 +163,10 @@ describe('setup wizard', () => {
     expect(overview).toHaveAttribute('open');
     expect(overview).toHaveTextContent(s.overviewQuestions(2));
     expect(overview).toHaveTextContent(s.overviewAfter(['Schritt core.sync']));
-    expect(screen.getByRole('button', { name: s.next })).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: s.next }));
     expect(await screen.findByRole('button', { name: s.finishQuestions })).toBeInTheDocument();
+    // Open on the first question only; later it is one folded line, so the question stays on top.
+    expect(screen.getByTestId('setup-overview')).not.toHaveAttribute('open');
   });
 
   it('"Von vorn" shows all steps again and changes no progress', async () => {

@@ -32,6 +32,13 @@ describe('setup wording is literal', () => {
     }
   });
 
+  it('the focus step names only buttons that exist in its mode', () => {
+    const f = t.setup.steps.focus;
+    expect(f.laterQuick).toContain(t.setup.restLater);
+    expect(f.laterFull).toContain(t.setup.skip);
+    expect(f.preselect).not.toContain(t.setup.skip);
+  });
+
   it('the focus step is a core step between profiles and tools', () => {
     const ids = CORE_STEPS.slice()
       .sort((a, b) => a.order - b.order)

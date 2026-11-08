@@ -11,7 +11,7 @@ const KEYS = ['motion', 'ownReminders', 'noCounts', 'toastStay', 'readAid'] as c
  * "Fokus-Hilfen": five switches, one complete sentence each, preselected "Ruhig" (the reading aid
  * stays as it is). Nothing is written until "Weiter"; then only the switches that changed.
  */
-export default function FocusStep({ registerCommit, setCanContinue }: SetupStepProps) {
+export default function FocusStep({ registerCommit, setCanContinue, mode }: SetupStepProps) {
   const s = t.setup.steps.focus;
   const [before, setBefore] = useState<FocusAids | null>(null);
   const [draft, setDraft] = useState<FocusAids | null>(null);
@@ -43,7 +43,7 @@ export default function FocusStep({ registerCommit, setCanContinue }: SetupStepP
   return (
     <>
       <p className={patternStyles.muted} data-testid="setup-focus-preselect">
-        {s.preselect}
+        {s.preselect} {mode === 'quick' ? s.laterQuick : s.laterFull}
       </p>
       {KEYS.map((key) => (
         <div key={key} data-testid={`setup-focus-${key}`}>

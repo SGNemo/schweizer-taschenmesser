@@ -710,7 +710,9 @@ export const de = {
         description:
           'Fünf Schalter bestimmen, wie ruhig sich die App verhält. Jeder Schalter lässt sich später in den Einstellungen ändern.',
         preselect:
-          'Vorausgewählt ist „Ruhig“: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Erst „Weiter“ speichert die Schalter so, wie sie hier stehen. „Später“ ändert nichts.',
+          'Vorausgewählt ist „Ruhig“: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Erst „Weiter“ speichert die Schalter so, wie sie hier stehen.',
+        laterFull: '„Später“ ändert nichts.',
+        laterQuick: '„Rest später“ ändert nichts.',
         motion: 'Bewegung reduzieren',
         motionHint:
           'An: Übergänge und Animationen der App sind aus, Inhalte erscheinen sofort an ihrer Stelle.',

@@ -75,7 +75,11 @@ function StepOverview({
     <details
       className={styles.overview}
       open={open}
-      onToggle={(e) => onToggle((e.currentTarget as HTMLDetailsElement).open)}
+      // The browser also fires "toggle" for the initial open state: only a real change is a choice.
+      onToggle={(e) => {
+        const now = (e.currentTarget as HTMLDetailsElement).open;
+        if (now !== open) onToggle(now);
+      }}
       data-testid="setup-overview"
     >
       <summary>
@@ -448,7 +452,7 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
           items={isQuick ? quickSteps : counted}
           current={step.id}
           after={isQuick ? counted.filter((c) => !quickSteps.some((q) => q.id === c.id)) : []}
-          open={overviewOpen ?? isQuick}
+          open={overviewOpen ?? (isQuick && position === 1)}
           onToggle={setOverviewOpen}
           progressOf={(s) => stepProgress(state, s.id, auto.has(s.id))}
         />
