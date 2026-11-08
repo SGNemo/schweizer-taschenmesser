@@ -57,6 +57,9 @@ export const tSettings4 = defineBundle(
       motion: 'Bewegung',
       motionOptions: { system: 'Wie das System', reduce: 'Weniger' },
       readAid: 'Lesehilfe',
+      toastStay: 'Hinweise bleiben stehen',
+      toastStayHint:
+        'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo hinzugefügt.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst. Aus: Sie verschwinden nach 6 Sekunden; solange du darauf zeigst oder darin bist, warten sie.',
       on: 'An',
       off: 'Aus',
       more: 'Weitere Einstellungen',
@@ -149,6 +152,9 @@ export const tSettings4 = defineBundle(
         motion: 'Motion',
         motionOptions: { system: 'Like the system', reduce: 'Less' },
         readAid: 'Reading aid',
+        toastStay: 'Notices stay',
+        toastStayHint:
+          'On: short notices at the bottom (for example “To-do added.” with “Undo”) stay until you tap “Close”. Off: they disappear after 6 seconds; while you point at them or are inside, they wait.',
         on: 'On',
         off: 'Off',
         more: 'More settings',
