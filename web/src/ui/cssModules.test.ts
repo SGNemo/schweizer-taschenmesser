@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -24,16 +24,28 @@ function plainClassBlocks(css: string): string[] {
   return out;
 }
 
-describe('shared UI styles', () => {
+/** Every `*.module.css` below `dir`, recursively. */
+function cssModules(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name);
+    if (e.isDirectory()) return cssModules(path);
+    return e.name.endsWith('.module.css') ? [path] : [];
+  });
+}
+
+describe('CSS modules', () => {
   // One class written twice in a module is one class: FormActions shared `.actions` with the row
   // actions (opacity 0 until hovered), and every form's save button was invisible with a mouse.
-  it('no CSS module of @/ui defines the same class in two top-level blocks', () => {
-    const dir = join(__dirname);
+  // A deliberate override goes into the one block; a different element gets its own name.
+  it('no CSS module in src/ defines the same class in two top-level blocks', () => {
+    const src = join(__dirname, '..');
+    const files = cssModules(src);
+    expect(files.length).toBeGreaterThan(50);
     const twice: string[] = [];
-    for (const file of readdirSync(dir).filter((f) => f.endsWith('.module.css'))) {
+    for (const file of files) {
       const seen = new Set<string>();
-      for (const cls of plainClassBlocks(readFileSync(join(dir, file), 'utf8'))) {
-        if (seen.has(cls)) twice.push(`${file} ${cls}`);
+      for (const cls of plainClassBlocks(readFileSync(file, 'utf8'))) {
+        if (seen.has(cls)) twice.push(`${relative(src, file)} ${cls}`);
         seen.add(cls);
       }
     }

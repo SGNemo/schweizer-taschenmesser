@@ -418,13 +418,11 @@
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--module-color) 14%, transparent);
   width: fit-content;
+  margin: 0;
+  font-size: var(--text-base);
 }
 .columnOver {
   border-color: var(--text);
-}
-.columnTitle {
-  margin: 0;
-  font-size: var(--text-base);
 }
 .columnCount {
   color: var(--text-muted);

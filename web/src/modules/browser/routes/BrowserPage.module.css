@@ -9,6 +9,7 @@
   gap: var(--space-1);
   overflow-x: auto;
   align-items: center;
+  border-bottom: 1px solid var(--border);
 }
 .tab {
   display: flex;
@@ -24,9 +25,10 @@
   font: inherit;
   cursor: pointer;
 }
+/* The active tab is a filled chip (the fill, not an edge bar, carries the module colour); text stays --text. */
 .tabActive {
-  background: var(--surface);
-  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
+  border-radius: var(--radius-full);
   font-weight: var(--weight-semibold);
 }
 .tabTitle {
@@ -105,16 +107,6 @@
   border-radius: var(--radius-sm);
 }
 
-/* Tab strip in the module hue: the active tab carries the colour as an underline and a light tint; text stays --text. */
-.tabs {
-  border-bottom: 1px solid var(--border);
-}
-.tabActive {
-  border-color: var(--border);
-  /* The active tab is a filled chip (the fill, not an edge bar, carries the module colour). */
-  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
-  border-radius: var(--radius-full);
-}
 .address input {
   font-family: var(--font-mono);
 }
