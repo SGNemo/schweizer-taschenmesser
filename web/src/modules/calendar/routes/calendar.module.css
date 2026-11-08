@@ -429,6 +429,8 @@ button.itemRow[style*='--cal']:hover {
   overflow-y: auto;
   display: grid;
   grid-template-columns: 3.5rem repeat(var(--cols), minmax(0, 1fr));
+  --tg-hour-line: color-mix(in srgb, var(--text-3) 45%, var(--border));
+  --tg-half-line: color-mix(in srgb, var(--border) 55%, transparent);
 }
 .tgHours {
   display: flex;
@@ -447,7 +449,7 @@ button.itemRow[style*='--cal']:hover {
 .tgCol {
   position: relative;
   height: calc(var(--hour) * 24);
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--tg-hour-line);
   /* Graded lines: the full hour is clearly visible, the half hour only a hint. */
   background-image:
     repeating-linear-gradient(
@@ -466,13 +468,6 @@ button.itemRow[style*='--cal']:hover {
       transparent calc(var(--hour) / 2 + 1px),
       transparent var(--hour)
     );
-}
-.tgBody {
-  --tg-hour-line: color-mix(in srgb, var(--text-3) 45%, var(--border));
-  --tg-half-line: color-mix(in srgb, var(--border) 55%, transparent);
-}
-.tgCol {
-  border-left-color: var(--tg-hour-line);
 }
 /* The weekend is set apart quietly; today is a soft accent wash (the head also names it). */
 .tgWeekend {
@@ -493,6 +488,8 @@ button.itemRow[style*='--cal']:hover {
   text-align: left;
   font-size: var(--text-xs);
   cursor: pointer;
+  touch-action: none;
+  user-select: none;
 }
 .tgTime {
   font-variant-numeric: tabular-nums;
@@ -838,10 +835,6 @@ button.itemRow[style*='--cal']:hover {
   z-index: 3;
   outline: 2px solid var(--accent);
   box-shadow: var(--shadow-2, 0 2px 8px color-mix(in srgb, var(--text) 25%, transparent));
-}
-.tgItem {
-  touch-action: none;
-  user-select: none;
 }
 .tgResize {
   position: absolute;
