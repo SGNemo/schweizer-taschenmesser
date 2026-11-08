@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Erstkontakt-Runde Person A (`feat/demo-a`, PR offen): Setup-Schritt „Fokus-Hilfen“ (Vorauswahl „Ruhig“), Fortsetzen genau an der Pause, Schrittübersicht vorab, Toasts warten bei Fokus + Schalter „Hinweise bleiben stehen“, wörtliche Texte (ToDos, Notizen, Einrichtung), Umzug-Fixes B05/B08 ([qa/round-5/a](qa/round-5/a/FINDINGS.md)).
 Agenten-Team v3 (`review/agents-v3`, PR offen): Prüfung der v2-Definitionen gegen die Managed-Agents-Doku (Befund 1: Lead ohne `multiagent`-Block), 20 Definitionen mit Modellen je Rolle, gemeinsamer Regelblock `SHARED.md`, `ant apply`-Dateien, Einrichtung und Session-Skript ([meta/agents-v3/README.md](meta/agents-v3/README.md)); gilt erst nach Svens Umstellung.
 Agenten v3 Auditor (`feat/agents-v3-auditor`, PR offen): `nemo-auditor` (Fable, zweiter Einstiegspunkt für Svens Prüfaufträge, fragt die 19 nur zum Nachprüfen), `session.mjs` wartet auf laufende Kind-Threads und kennt `--agent auditor`, LF für Agenten-Dateien unter Windows; Sven mergt und wendet nur `nemo-auditor.md` an.
 Agenten-Token-Diät (`fix/agents-token-diet`, PR offen, Sven mergt): Lead auf Sonnet 5.5 high + Opus-Advisor, eine Session = ein Auftrag, keine vollen Suiten lokal, `session.mjs` mit Kosten je Thread, Standard-Budget 10 $ (Warnung ab 70 %, über 30 $ nur mit `--yes-expensive`), SETUP §4 „Was kostet was“.

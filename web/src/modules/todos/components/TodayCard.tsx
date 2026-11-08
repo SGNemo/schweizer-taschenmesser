@@ -4,6 +4,7 @@ import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { focusMinutesFor } from '../focus';
 import { pickNext, type PickTask } from '../next';
 import { viewOf } from '../views';
+import { toDateString } from '@/core/time/now';
 import type { Task } from '../schema';
 import styles from '../routes/todos.module.css';
 
@@ -43,7 +44,13 @@ export function TodayCard({
       ? t.focus.next.about(next.estimateMin)
       : undefined
     : today.length === 0
-      ? t.todos.todayCard.done
+      ? // A07 (round 5): "erledigt" only when something was really done today.
+        tasks.some(
+          (x) =>
+            x.done && x.completedAt !== undefined && toDateString(new Date(x.completedAt)) === day,
+        )
+        ? t.todos.todayCard.done
+        : t.todos.todayCard.nothing
       : undefined;
 
   const count = (

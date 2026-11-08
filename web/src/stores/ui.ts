@@ -59,6 +59,8 @@ export const MODULE_COLOR_MODES = ['on', 'off'] as const;
 export type ModuleColorMode = (typeof MODULE_COLOR_MODES)[number];
 const MODULE_COLORS_KEY = 'tm-module-colors';
 const READ_AID_KEY = 'tm-read-aid';
+/** Toasts stay until closed by hand (focus aid, setup step "Fokus-Hilfen"). */
+const TOAST_STAY_KEY = 'tm-toast-stay';
 const READ_SHARE_KEY = 'tm-read-share';
 const READ_STYLE_KEY = 'tm-read-style';
 const READ_COVER_KEY = 'tm-read-cover';
@@ -227,6 +229,9 @@ interface UiState {
   setLeading(leading: LeadingChoice): void;
   readAid: boolean;
   setReadAid(on: boolean): void;
+  /** Toasts stay until "Schließen" instead of hiding after a few seconds. */
+  toastStay: boolean;
+  setToastStay(on: boolean): void;
   readShare: ReadShare;
   setReadShare(share: ReadShare): void;
   readStyle: ReadStyle;
@@ -341,6 +346,11 @@ export const useUiStore = create<UiState>((set) => ({
     storeChoice(LEADING_KEY, leading, leading === 'normal');
     applyLeading(leading);
     set({ leading });
+  },
+  toastStay: readFlag(TOAST_STAY_KEY),
+  setToastStay(toastStay) {
+    storeChoice(TOAST_STAY_KEY, '1', !toastStay);
+    set({ toastStay });
   },
   readAid: readFlag(READ_AID_KEY),
   setReadAid(readAid) {

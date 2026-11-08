@@ -56,6 +56,7 @@ export const notes: Strings['notes'] = {
   editorLabel: 'Page text',
   placeholder: 'Just start writing … “/” opens the command menu.',
   saved: 'Saved',
+  savedWhere: 'Saved. The page is under Notes → All pages.',
   saving: 'Saving …',
   words: (n: number) => (n === 1 ? '1 word' : `${n} words`),
   writingMode: 'Writing mode',

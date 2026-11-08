@@ -46,6 +46,9 @@ for (const vp of VIEWPORTS) {
     await wizard(page).getByTestId('profile-minimal').click();
     await shot('3-profiles-diff');
     await wizard(page).getByRole('button', { name: 'Später', exact: true }).click();
+    await expect(wizard(page).getByRole('heading', { name: 'Fokus-Hilfen' })).toBeVisible();
+    await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // focus aids
+    await expect(wizard(page).getByRole('heading', { name: 'Werkzeugkasten' })).toBeVisible();
     await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // tools
     await expect(wizard(page).getByRole('heading', { name: 'KI-Anbieter' })).toBeVisible();
     await shot('4-ai');
