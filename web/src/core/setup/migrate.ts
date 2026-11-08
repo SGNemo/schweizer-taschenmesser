@@ -31,6 +31,8 @@ export interface MigrateItemDef {
   origin: Origin;
   /** Done as soon as an import batch of this module exists (committed after the origin was chosen). */
   moduleId?: string;
+  /** Only an import by this importer of the module counts (the bank statement, not an opening balance). */
+  importerId?: string;
   /** Ticked by hand: nothing in the app can see it (vault import, calendar subscription). */
   manual?: boolean;
 }
@@ -45,7 +47,7 @@ export const MIGRATE_ITEMS: readonly MigrateItemDef[] = [
   { id: 'microsoft.tasks', origin: 'microsoft', moduleId: 'todos' },
   { id: 'evernote.notes', origin: 'evernote', moduleId: 'notes' },
   { id: 'obsidian.notes', origin: 'obsidian', moduleId: 'notes' },
-  { id: 'bank.statement', origin: 'bank', moduleId: 'finance' },
+  { id: 'bank.statement', origin: 'bank', moduleId: 'finance', importerId: 'bank' },
   { id: 'bitwarden.vault', origin: 'bitwarden', manual: true },
 ];
 
@@ -73,6 +75,20 @@ export function chosenOrigins(state: MigrateState): Origin[] {
   return ORIGINS.filter((o) => o in state.origins);
 }
 
+/**
+ * Tile order (B05, round 5): origins whose target module is switched on first, the rest after,
+ * each group in the fixed order; "paper" always last. Computed once when the tiles appear, so a
+ * tile never moves while the person looks at it.
+ */
+export function orderOrigins(
+  targets: Readonly<Record<Origin, readonly string[]>>,
+  modules: Readonly<Record<string, boolean>>,
+): Origin[] {
+  const active = (o: Origin) => targets[o].some((m) => modules[m]);
+  const rest = ORIGINS.filter((o) => o !== 'paper');
+  return [...rest.filter(active), ...rest.filter((o) => !active(o)), 'paper'];
+}
+
 /** Has the person chosen anything at all (a tile)? */
 export const hasMigrateChoice = (state: MigrateState): boolean => chosenOrigins(state).length > 0;
 
@@ -82,10 +98,10 @@ export const hasMigrateChoice = (state: MigrateState): boolean => chosenOrigins(
  */
 export function migrateItems(
   state: MigrateState,
-  batches: readonly Pick<
+  batches: readonly (Pick<
     ImportBatch,
     'moduleId' | 'createdAt' | 'committedAt' | 'status' | 'undoneAt'
-  >[],
+  > & { importerId?: string })[],
   defs: readonly MigrateItemDef[] = MIGRATE_ITEMS,
 ): MigrateItemStatus[] {
   const committed = batches.filter((b) => batchStatus(b as ImportBatch) === 'committed');
@@ -96,7 +112,10 @@ export function migrateItems(
       const done = d.manual
         ? state.manualDone.includes(d.id)
         : committed.some(
-            (b) => b.moduleId === d.moduleId && (b.committedAt ?? b.createdAt) >= since,
+            (b) =>
+              b.moduleId === d.moduleId &&
+              (!d.importerId || b.importerId === d.importerId) &&
+              (b.committedAt ?? b.createdAt) >= since,
           );
       return { id: d.id, origin: d.origin, manual: !!d.manual, done };
     });

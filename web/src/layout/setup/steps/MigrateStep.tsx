@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useOnboardingHost } from '@/core/importer/host';
 import { enableModule, useModuleStates } from '@/core/modules/activation';
@@ -9,6 +9,7 @@ import {
   hasMigrateChoice,
   migrateOutcome,
   ORIGINS,
+  orderOrigins,
   setManualDone,
   useMigrateOverview,
   type MigrateItemStatus,
@@ -49,7 +50,7 @@ export function MigrateItemLine({ item }: { item: MigrateItemStatus }) {
     >
       <span data-testid={`migrate-item-${item.id}`}>
         {item.done ? '✓ ' : ''}
-        {s.items[item.id]}
+        {item.done ? s.items[item.id] : s.goals[item.id]}
       </span>
       {item.manual ? (
         <Button size="sm" variant="ghost" onClick={() => void setManualDone(item.id, !item.done)}>
@@ -88,11 +89,29 @@ export function MigratePicker({ onLeave }: { onLeave?: () => void }) {
   }
 
   if (!overview || !states) return null;
+  return <Tiles overview={overview} states={states} start={start} />;
+}
+
+const TARGET_MODULES = Object.fromEntries(
+  ORIGINS.map((o) => [o, TARGETS[o].map((tg) => tg.moduleId)]),
+) as Record<Origin, string[]>;
+
+function Tiles({
+  overview,
+  states,
+  start,
+}: {
+  overview: NonNullable<ReturnType<typeof useMigrateOverview>>;
+  states: Readonly<Record<string, boolean>>;
+  start: (origin: Origin, moduleId: string) => Promise<void>;
+}) {
+  // Fixed for as long as the tiles are shown: switching a module on by a tile moves nothing (B05).
+  const [order] = useState(() => orderOrigins(TARGET_MODULES, states));
   const chosen = new Set(Object.keys(overview.state.origins));
   return (
     <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
       <p className={patternStyles.muted}>{s.optional}</p>
-      {ORIGINS.map((origin) => {
+      {order.map((origin) => {
         const info = s.origins[origin]!;
         const items = overview.items.filter((i) => i.origin === origin);
         const picked = chosen.has(origin);
