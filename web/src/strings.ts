@@ -647,7 +647,7 @@ export const de = {
       focus: {
         title: 'Wie ruhig soll die App sein?',
         description:
-          'Vier Schalter für Bewegung, Erinnerungen, Serien und Rückblicke und Hinweise, dazu die Lesehilfe.',
+          'Vier Schalter: Bewegung, Erinnerungen, Serien und Rückblicke, Hinweise; dazu die Lesehilfe.',
       },
       ai: {
         title: 'Soll eine KI helfen?',
@@ -710,6 +710,8 @@ export const de = {
         description: 'Fünf Schalter bestimmen, wie ruhig sich die App verhält.',
         preselect:
           'Empfohlen und vorausgewählt: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        preselectDone:
+          'Die Schalter zeigen, wie sie gerade eingestellt sind. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
         laterFull: '„Später“ ändert nichts.',
         laterQuick: '„Rest später“ ändert nichts.',
         motion: 'Bewegung reduzieren',
@@ -723,7 +725,7 @@ export const de = {
           'An: Wiederkehrende ToDos zeigen kein „n in Folge“, Gewohnheiten keine längste Serie, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“.',
         toastStay: 'Hinweise bleiben stehen',
         toastStayHint:
-          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
+          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ oder die Aktion tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
         readAid: 'Lesehilfe',
         readAidHint:
           'An: Die Anfänge der Wörter in längeren Texten werden fett, das führt den Blick. Zahlen und Eingabefelder bleiben ohne. Nicht vorausgewählt, probiere sie aus, wenn du magst.',

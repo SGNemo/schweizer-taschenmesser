@@ -106,5 +106,9 @@ describe('setup step "Fokus-Hilfen"', () => {
     expect(
       await screen.findByRole('switch', { name: t.setup.steps.focus.motion }),
     ).not.toBeChecked();
+    expect(screen.getByTestId('setup-focus-preselect')).toHaveTextContent(
+      t.setup.steps.focus.preselectDone,
+    );
+    expect(screen.queryByText(t.setup.steps.focus.preselect, { exact: false })).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
   const s = t.setup.steps.focus;
   const [before, setBefore] = useState<FocusAids | null>(null);
   const [draft, setDraft] = useState<FocusAids | null>(null);
+  const [wasDone, setWasDone] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -23,6 +24,7 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
       if (!live) return;
       setBefore(current);
       const done = state?.doneSteps.includes('core.focus') ?? false;
+      setWasDone(done);
       setDraft(done ? current : calmPreset(current));
     });
     return () => {
@@ -47,7 +49,7 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
   return (
     <>
       <p className={patternStyles.muted} data-testid="setup-focus-preselect">
-        {s.preselect} {mode === 'quick' ? s.laterQuick : s.laterFull}
+        {wasDone ? s.preselectDone : s.preselect} {mode === 'quick' ? s.laterQuick : s.laterFull}
       </p>
       {KEYS.map((key) => (
         <div key={key} data-testid={`setup-focus-${key}`}>
