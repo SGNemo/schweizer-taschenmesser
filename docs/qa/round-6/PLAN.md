@@ -27,7 +27,16 @@ Reihenfolge (höchstens drei gleichzeitig): Welle 1 `ui`, `calendar-views`, `lay
 | T01 E-Mail (zweites Zahnrad, zwei Primäre), T02 Schnellerfassung (13 Chips), T05 Einrichtung Frage 3 (Textmenge) | Tabu-Bereiche | Board an `modules/mail/**`, `quickCapture/**`, `core/setup/**` |
 | U07 Aufrufstellen in Werkzeugen (`tools/image`, `tools/pdf`), RecoveryScreen | nach dem Baustein, eigener kleiner PR | `fix/ui6-filefield-rest` |
 
-## Fragen an Sven (max. 4, Empfehlung zuerst)
+## Antworten (2026-11-08, Sven)
+
+1. S02 Dialog-Identität: **Kopfzone mit Modulfarbe, Icon-Plate und Signatur-Marke** (Council vor dem `ui`-PR; Entscheidungs-Bullet kommt mit dem PR nach `docs/decisions/ui-components.md`).
+2. S03 Monatsansicht: **Zeilen statt Pillen** (Fläche nur für eigene Termine/heute, Wiederholungen gebündelt).
+3. Umfang: **alle S und M, acht PRs in drei Wellen.**
+4. U41 Kopfbandhöhen: **eigenes Paket danach** (`fix/ui6-head-heights`, Mockup + Stopp).
+
+Start der Umsetzer nach dem Satz „Plan freigegeben“.
+
+## Fragen an Sven (gestellt, beantwortet – siehe oben)
 
 1. **S02 Dialog-Identität:** (a) Kopfzone mit Modulfarbe, Icon-Plate und Signatur-Marke, Hairline darunter – **empfohlen**; (b) nur Icon-Plate neben dem Titel; (c) lassen.
 2. **S03 Monatsansicht:** (a) Einträge als Zeilen (Art-Punkt + Titel, Zeit gedämpft, Fläche nur für eigene Termine/heute), tägliche Wiederholungen als eine Zeile – **empfohlen**; (b) Pillen behalten, nur Limit 3 und Wiederholungen bündeln.
