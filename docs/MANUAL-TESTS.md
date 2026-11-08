@@ -682,3 +682,13 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **L3 Netzwechsel:** erste Kopplung im Heim-WLAN, dann Hotspot des Handys: Hub lauscht nicht mehr; zurück ins Heim-WLAN: lauscht wieder. VPN/WSL/Docker-Adapter erscheinen nie in `netstat`.
 - **L4 mDNS:** `dns-sd -B _nemo-sync._tcp` (oder Handy-Scanner) zeigt einen zufälligen Namen `nemo-xxxxxxxx`, TXT nur `v=1` und `h=…`; nach Neustart anderer Name; nur auf der Heim-Schnittstelle.
 - **L5 Schlüsselspeicher:** In der Anmeldeinformationsverwaltung stehen Einträge `io.github.sgnemo.taschenmesser.lan-sync` (Dev-Preview: `….dev.lan-sync`); Eintrag löschen → nächster Start legt neue Schlüssel an, alle Geräte müssen neu koppeln.
+
+## Sync im Heimnetz: PC und Handy koppeln (Pakete 3a/3b) – nur mit Windows-PC und Android-Handy prüfbar
+- **L6 Koppeln:** PC: Einstellungen → Synchronisation → „Gerät koppeln“ → QR erscheint (Firewall-Abfrage beim ersten Mal: „Zulassen“). Handy: Einstellungen → Synchronisation → „Mit PC koppeln“ → Kamera-Erlaubnis → QR scannen. Beide zeigen denselben 6-stelligen Code; PC: „Koppeln“. Handy: „Abgeglichen · Mit deinem PC gekoppelt“; PC listet das Gerät. Nichts eingetippt. ☐
+- **L7 Abgleich hin und zurück:** ToDo am Handy anlegen → am PC „Jetzt abgleichen“ → erscheint; am PC ändern → Handy „Jetzt abgleichen“ → geändert. Dasselbe Feld auf beiden geändert: die spätere Änderung gewinnt. ☐
+- **L8 PC aus:** Nemo am PC beenden → Handy „Jetzt abgleichen“: ruhige Zeile „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“, kein Rot, keine Meldung; Nemo wieder starten → nächster Abgleich klappt. Neue IP des PCs (Router-DHCP neu vergeben): Handy wartet ruhig weiter; „Kopplung lösen“ + neu koppeln → klappt. ☐
+- **L9 Handy kommt heim:** Handy im Mobilfunk, App im Hintergrund lassen, ins Heim-WLAN → App öffnen: gleicht nach wenigen Sekunden ab. (Abgleich ganz im Hintergrund ist nicht gebaut.) ☐
+- **L10 Kopplung lösen:** am PC „Kopplung lösen“ → Handy „Jetzt abgleichen“: „Diese Kopplung wurde gelöst.“ mit „Neu koppeln“. Am Handy „Kopplung lösen“ → am PC verschwindet das Gerät beim nächsten Kontakt. ☐
+- **L11 Abbruch / alter Code:** am PC beim Code „Abbrechen“: Handy zeigt sofort (nicht erst nach Minuten) „Kopplung abgebrochen.“ mit „Neu versuchen“; einen alten QR (Foto) scannen: „Kopplung nicht möglich – am PC neu zeigen.“ mit „Neu scannen“. Am Handy während „Verbindet …“ „Abbrechen“: Dialog schließt sofort. Nach „Kopplung lösen“ am PC: am Handy „Neu koppeln“ → klappt (frischer Geräteschlüssel). ☐
+- **L12 Kopfleiste unterwegs:** Handy im Mobilfunk: das Sync-Symbol oben ist grau (kein Rot), Tooltip „Synchronisation: wartet auf deinen PC“. ☐
+

@@ -242,11 +242,23 @@ fn hub_modules_are_compiled_out_on_mobile() {
             .iter()
             .position(|l| *l == decl)
             .unwrap_or_else(|| panic!("{decl} missing"));
+        // the hub parts that need the store also need the `store` feature (devices build without it)
+        let with_store =
+            "#[cfg(all(not(any(target_os = \"android\", target_os = \"ios\")), feature = \"store\"))]";
         assert!(
-            at > 0 && lines[at - 1] == gate,
+            at > 0 && (lines[at - 1] == gate || lines[at - 1] == with_store),
             "{module} must carry the mobile cfg gate"
         );
     }
+    // the device side is on every target
+    let at = lines
+        .iter()
+        .position(|l| *l == "pub mod client;")
+        .expect("client module");
+    assert!(
+        !lines[at - 1].starts_with("#[cfg") && !lines[at - 2].starts_with("#[cfg"),
+        "the client stays available to devices"
+    );
     let at = lines
         .iter()
         .position(|l| *l == "pub mod noise;")

@@ -7,8 +7,8 @@ export interface SyncStatusState {
   phase: SyncPhase;
   /** Host of the configured server, for display (unset for the home-network hub). */
   server?: string;
-  /** How this device syncs: through an own server or as the home-network hub PC. */
-  via?: 'server' | 'lanHub';
+  /** How this device syncs: an own server, as the home-network hub PC, or with a hub PC (phone). */
+  via?: 'server' | 'lanHub' | 'lanClient';
   encrypted: boolean;
   /** Epoch ms of the last successful sync. */
   lastSyncAt?: number;

@@ -195,8 +195,23 @@ describe('Heute card', () => {
   });
 
   it('says so calmly when nothing is left for today', () => {
-    render(<TodayCard day="2026-11-03" tasks={[task({ dueDate: '2026-11-20' })]} />);
+    const doneToday = new Date(2026, 10, 3, 9, 30).getTime();
+    render(
+      <TodayCard
+        day="2026-11-03"
+        tasks={[
+          task({ dueDate: '2026-11-20' }),
+          task({ id: 'd', dueDate: '2026-11-03', done: true, completedAt: doneToday }),
+        ]}
+      />,
+    );
     expect(screen.getByText('Alles für heute erledigt.')).toBeVisible();
+  });
+
+  it('A07: never says "erledigt" when nothing was there for today', () => {
+    render(<TodayCard day="2026-11-03" tasks={[task({ dueDate: '2026-11-20' })]} />);
+    expect(screen.queryByText('Alles für heute erledigt.')).toBeNull();
+    expect(screen.getByText('Für heute ist nichts eingetragen.')).toBeVisible();
   });
 });
 
