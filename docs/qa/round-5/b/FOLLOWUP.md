@@ -13,3 +13,9 @@ B06 ist mit „Kontostand heute laut Bank“ gelöst, aber ein späterer Import 
 
 ## Für demo-a (Board-Einträge vom 2026-11-08)
 B05 Bank-Kachel nach vorn, wenn das Zielmodul an ist; B08 „Kontoauszug importiert“ nur durch den Importer `bank`. Außerdem beobachtet (Handy, 412 px): die Einrichtungs-Checkliste füllt den ersten Bildschirm, die Karte „Diesen Monat“ liegt darunter (`shots/after-30-phone-home.png`) – kein Fund für B, nur Hinweis.
+
+## Aus dem Council (offen, klein)
+- Karte „Diesen Monat“ nach dem ersten Import in ein Konto mit 0 €: die Zahl „Frei bis Monatsende“ kann negativ sein, bis der Kontostand laut Bank eingetragen ist. Die Karte kann Import und Handeingabe nicht unterscheiden (Buchungen tragen kein Import-Merkmal); der Hinweis steht in der Import-Vorschau und in MESSAGE.md. Sauber: ein Merkmal am Konto „Kontostand noch nicht abgeglichen“.
+- Konto-Dialog: Fehler zu leerem Namen und Währung erscheinen unter dem Feld „Anfangssaldo“ (vor dieser Runde schon so); eigene Fehlerplätze je Feld.
+- Konto-Dialog: das gesperrte Feld „Anfangssaldo“ zeigt den alten Wert statt des berechneten.
+- „Frei bis Monatsende“ zählt Sparkonten mit (wie der Ausblick); ggf. nur Girokonten.
