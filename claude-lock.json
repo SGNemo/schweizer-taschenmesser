@@ -29,20 +29,20 @@
       "remote_hash": "909a8b62f9a115d57c56b38a9e7a0900",
       "stamp": "1"
     },
-    "./docs/meta/agents-v3/nemo-auditor.md": {
-      "kind": "agent",
-      "id": "agent_01JBG7U9B9MthEWZ2LwmUphK",
-      "version": "1",
-      "hash": "17d4ae3a3f67bc733b4e352b32e46f99",
-      "remote_hash": "28e2dc27f45e4c8f345646b012b7bcd4",
-      "stamp": "1"
-    },
     "./docs/meta/agents-v3/nemo-backend.md": {
       "kind": "agent",
       "id": "agent_01LmfXxSmt1xShE8aECjtvCD",
       "version": "1",
       "hash": "413be4dbef58d93df04c85de2e10f867",
       "remote_hash": "1a0cf8018972966abbbf1987e439b809",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-builder.md": {
+      "kind": "agent",
+      "id": "agent_01RLfNhLFXvofpbAt3oS9PwJ",
+      "version": "1",
+      "hash": "2e93c416f961106c382ff6a2b3a3dd17",
+      "remote_hash": "f49eb6430ebd6847a6eeef408dc159f7",
       "stamp": "1"
     },
     "./docs/meta/agents-v3/nemo-creativity.md": {
@@ -80,10 +80,10 @@
     "./docs/meta/agents-v3/nemo-docs.md": {
       "kind": "agent",
       "id": "agent_01CsHsDWRmcFBrVv3qv6Cm4E",
-      "version": "1",
-      "hash": "7201e9b6a61b4901ec4d1d9523c52d06",
-      "remote_hash": "5621631e48c32df4200c54117f35e5aa",
-      "stamp": "1"
+      "version": "2",
+      "hash": "37187bb0acf051310954f84b544b2e15",
+      "remote_hash": "57ba95a517f3fd885b68a71c43f67a73",
+      "stamp": "2"
     },
     "./docs/meta/agents-v3/nemo-extension.md": {
       "kind": "agent",
@@ -112,18 +112,18 @@
     "./docs/meta/agents-v3/nemo-lead.md": {
       "kind": "agent",
       "id": "agent_01HK8JdfGEhw7ppR5FeG8fs6",
-      "version": "1",
-      "hash": "59b34cfd2ea150daccc752c5275d4ec4",
-      "remote_hash": "ed6f2c4cd49888fdba2821df84659e9e",
-      "stamp": "1"
+      "version": "2",
+      "hash": "29a2c86a112d61d0d91715cf1e8c3f85",
+      "remote_hash": "3e3f0bb7f788953cab54a0b6f66cdbdf",
+      "stamp": "2"
     },
     "./docs/meta/agents-v3/nemo-merge.md": {
       "kind": "agent",
       "id": "agent_01UvN1DixZWdQn9VpTaRxfZ3",
-      "version": "1",
-      "hash": "e152883e8b984a3abb14b5ac5053cec5",
-      "remote_hash": "0612238e06039f39306b35d393e0cadd",
-      "stamp": "1"
+      "version": "2",
+      "hash": "7f2b06520c3125e4fc5042be3583767b",
+      "remote_hash": "b3b044305b926861400b81749039f031",
+      "stamp": "2"
     },
     "./docs/meta/agents-v3/nemo-native.md": {
       "kind": "agent",
@@ -131,6 +131,14 @@
       "version": "1",
       "hash": "d6d5b9485afb5174675ed5ca43d7ca66",
       "remote_hash": "a1cdc4d093b18a0dd24691aa74d61d67",
+      "stamp": "1"
+    },
+    "./docs/meta/agents-v3/nemo-ops.md": {
+      "kind": "agent",
+      "id": "agent_01RDVySALryBNHTBW5Ytx3Te",
+      "version": "1",
+      "hash": "4f018487f797b6c73779fd2c89ce99eb",
+      "remote_hash": "e440790b92d0dce795eb2433cad8a4e8",
       "stamp": "1"
     },
     "./docs/meta/agents-v3/nemo-perf.md": {
@@ -160,10 +168,10 @@
     "./docs/meta/agents-v3/nemo-reviewer.md": {
       "kind": "agent",
       "id": "agent_019nEqgEeHc62aSy3q5KrndC",
-      "version": "1",
-      "hash": "4b2e764b37a1f1d52ab17719c6a13a95",
-      "remote_hash": "7033441e0f7d9c2b6690e9fe027e7569",
-      "stamp": "1"
+      "version": "2",
+      "hash": "0d86a5bed9e1f9592006a13775729531",
+      "remote_hash": "edf5874874a56abce6ea343d8fb69415",
+      "stamp": "2"
     },
     "./docs/meta/agents-v3/nemo-security.md": {
       "kind": "agent",
