@@ -5,7 +5,7 @@ import { useSetupState } from '@/core/setup/hooks';
 import { setChecklistHidden } from '@/core/setup/state';
 import { t } from '@/strings';
 import { tSettingsV31 } from '@/strings.settingsV31';
-import { Button, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { Button, SettingRow, SettingsGroup, Skeleton, Switch } from '@/ui';
 import { Ring } from '@/ui/identity';
 import { StatusCard } from './components/StatusCard';
 import styles from './SetupSection.module.css';
@@ -25,9 +25,15 @@ export function SetupSection() {
   const open = useSetupHost((s) => s.openWizard);
   const o = tSettingsV31.use().setup;
   const [all, setAll] = useState(false);
-  // Nothing until the progress and the checklist are read: a half-done setup never flashes "Noch nicht begonnen".
-  // Without a progress row (`null`, before the start migration) the checklist never loads: that is "not started".
-  if (state === undefined || (state && !checklist)) return null;
+  // A placeholder until the progress and the checklist are read (the checklist takes a moment on a full app): a
+  // half-done setup never flashes "Noch nicht begonnen". Without a progress row (`null`, before the start migration)
+  // the checklist never loads: that is "not started".
+  if (state === undefined || (state && !checklist))
+    return (
+      <div id="setup" data-testid="setup-loading">
+        <Skeleton height="5rem" />
+      </div>
+    );
   const started = !!state && (state.doneSteps.length > 0 || state.status === 'inProgress');
   const list = checklist?.list;
   // Steps done elsewhere count too (a module already on): the card then says how far it is, the button still starts.

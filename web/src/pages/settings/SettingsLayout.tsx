@@ -51,7 +51,12 @@ const TOC_QUERY = '(min-width: 1440px)';
 /** How long a deep-linked settings section stays highlighted. */
 const HIGHLIGHT_MS = 1600;
 
-function SettingsSearch() {
+/**
+ * Settings search. On the phone it sticks under the top bar above the page; on the desktop (`inNav`, settings
+ * identity v3.1 package 3) it heads the category column, so the page loses a band and the search sits next to the
+ * list it filters; its hits open as an overlay over the content.
+ */
+function SettingsSearch({ inNav }: { inNav?: boolean }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const sections = useSettingsSections();
@@ -64,7 +69,12 @@ function SettingsSearch() {
     void navigate(settingsPath(r.category, r.sectionId, r.fieldKey));
   };
   return (
-    <div role="search" className={`${styles.search} ${styles.stickySearch}`}>
+    <div
+      role="search"
+      className={
+        inNav ? `${styles.search} ${styles.navSearch}` : `${styles.search} ${styles.stickySearch}`
+      }
+    >
       <TextField
         label={t.settings.search}
         labelHidden
@@ -79,7 +89,10 @@ function SettingsSearch() {
         }}
       />
       {query.trim() ? (
-        <div className={styles.results} aria-label={t.settings.searchResults}>
+        <div
+          className={inNav ? `${styles.results} ${styles.resultsOverlay}` : styles.results}
+          aria-label={t.settings.searchResults}
+        >
           {results.length === 0 ? (
             <p role="status" className={styles.noResults}>
               {t.settings.noResults}
@@ -613,12 +626,15 @@ export function SettingsLayout() {
   const showToc = wide && tocWide && entries.length >= 3;
   return (
     <>
-      <SettingsSearch />
+      {wide ? null : <SettingsSearch />}
       {wide ? null : <SettingsHead />}
       {wide ? <QuickBar /> : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
-          <CategoryNav />
+          <div className={styles.navCol}>
+            <SettingsSearch inNav />
+            <CategoryNav />
+          </div>
           <div className={styles.content}>
             <SettingsHead />
             <Outlet />
