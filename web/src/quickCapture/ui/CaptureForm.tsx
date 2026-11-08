@@ -29,6 +29,8 @@ export interface CaptureFormProps {
   selectInitial?: boolean;
   /** Keep typed text on the device until the sheet closes, so a killed app gets it back (C04). */
   keepDraft?: boolean;
+  /** „Als Ausgabe buchen“ on money lines of a batch; off where no toast can confirm or undo it (capture window). */
+  bookChip?: boolean;
   /** Shared text: always one entry, never split into lines or sentences (U17). */
   oneEntry?: boolean;
   /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
@@ -73,6 +75,7 @@ export function CaptureForm({
   selectInitial,
   keepDraft,
   oneEntry,
+  bookChip = true,
   onOpenFull,
   onSaved,
   onCancel,
@@ -342,7 +345,7 @@ export function CaptureForm({
                   {r.inbox ? (
                     <span className={styles.chip}>{t.quickCapture.multi.inbox}</span>
                   ) : null}
-                  {r.booking
+                  {r.booking && bookChip
                     ? (() => {
                         const label =
                           r.booking === 'income'

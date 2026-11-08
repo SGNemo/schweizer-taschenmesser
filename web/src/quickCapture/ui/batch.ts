@@ -44,7 +44,7 @@ export function batchRow(
       ...(fields.note ? { note: fields.note } : {}),
       ...(fields.link ? { link: fields.link } : {}),
     },
-    ...(bookable || books(type)
+    ...(bookable || (books(type) && available.includes(type!))
       ? { booking: fields.kind === 'income' ? 'income' : 'expense' }
       : {}),
   };

@@ -49,6 +49,16 @@ describe('sharedLine (U17)', () => {
   });
 });
 
+describe('sharedLine – edge cases', () => {
+  const line = (v: Record<string, string>) => sharedLine(sharedContent(new URLSearchParams(v)));
+  it('blank-led text, kept paragraph breaks, a repeated title, no title', () => {
+    expect(line({ text: '\n\nHallo\nzweite' })).toEqual({ line: 'Hallo', rest: 'zweite' });
+    expect(line({ title: 'T', text: 'a\n\nb' }).rest).toBe('a\n\nb');
+    expect(line({ title: 'T', text: 'T\nRest' })).toEqual({ line: 'T', rest: 'Rest' });
+    expect(line({ text: 'Nur eine Zeile' })).toEqual({ line: 'Nur eine Zeile', rest: '' });
+  });
+});
+
 describe('ShareTarget', () => {
   const open = () =>
     render(
