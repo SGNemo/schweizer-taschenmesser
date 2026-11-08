@@ -21,8 +21,8 @@ export function sharedContent(params: URLSearchParams): {
 
 /**
  * Shared text as one entry (U17): the first non-empty line is the line the sheet reads, the rest is
- * offered as a note (behind a tick, off by default) and never split into entries. A link shared on its
- * own (not inside the text) stays on the line, so a shared page still reads as a bookmark.
+ * offered as a note (behind a tick, off by default) and never split into entries. A shared link stays
+ * on the line (unless it sits in a longer text), so a shared page still reads as a bookmark.
  */
 export function sharedLine(c: ReturnType<typeof sharedContent>): { line: string; rest: string } {
   const lines = `${c.title}\n${c.text}`
@@ -31,8 +31,12 @@ export function sharedLine(c: ReturnType<typeof sharedContent>): { line: string;
     .filter((l, i, all) => l && all.indexOf(l) === i);
   let line = lines[0] ?? '';
   const rest = lines.slice(1).join('\n');
-  if (c.url && !line.includes(c.url) && !rest.includes(c.url))
+  // The link stays on the line when it was shared beside the text or in a one-line text („Schau mal
+  // https://…“); a long text (a mail body) keeps its links in the rest.
+  const textLines = c.text.split('\n').filter((l) => l.trim()).length;
+  if (c.url && !line.includes(c.url) && (!c.text.includes(c.url) || textLines <= 1)) {
     line = line ? `${line} ${c.url}` : c.url;
+  }
   return { line, rest };
 }
 

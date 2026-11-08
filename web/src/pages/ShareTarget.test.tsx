@@ -38,6 +38,15 @@ describe('sharedLine (U17)', () => {
     const c = sharedContent(new URLSearchParams({ title: 'Rezept', url: 'https://example.org/r' }));
     expect(sharedLine(c)).toEqual({ line: 'Rezept https://example.org/r', rest: '' });
   });
+
+  it('keeps the link of a one-line text on the line, but not the links of a long text', () => {
+    const short = { title: 'Schöner Weg', text: 'Schau mal https://wandern.example/weg' };
+    expect(sharedLine(sharedContent(new URLSearchParams(short))).line).toBe(
+      'Schöner Weg https://wandern.example/weg',
+    );
+    const long = { title: 'Termin', text: 'Hallo,\nhier der Link: https://example.org/t\nGrüße' };
+    expect(sharedLine(sharedContent(new URLSearchParams(long))).line).toBe('Termin');
+  });
 });
 
 describe('ShareTarget', () => {

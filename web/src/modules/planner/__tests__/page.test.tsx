@@ -118,8 +118,17 @@ describe('planner page', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Aktionen für Steuer' })[0]!);
     fireEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Warum hier?' }));
     await waitFor(() => expect(screen.getByText('neu, nach Priorität')).toBeInTheDocument());
-    // Excluded things carry a state, not a verb.
-    expect(screen.getByText('nicht im Plan')).toBeInTheDocument();
+    // The waiting group starts folded with its calming sentence (Q4 a); its rows keep the reason
+    // behind „Warum hier?“ too. Excluded things carry a state, not a verb.
+    expect(screen.getByText('· Nichts davon muss heute sein.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Wartet auf freie Zeit/ }).getAttribute('aria-expanded'),
+    ).toBe('false');
+    fireEvent.click(screen.getByRole('button', { name: /Wartet auf freie Zeit/ }));
+    expect(screen.queryByText('nicht im Plan')).toBeNull();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Aktionen für Keller' })[0]!);
+    fireEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Warum hier?' }));
+    await waitFor(() => expect(screen.getByText('nicht im Plan')).toBeInTheDocument());
   });
 
   it('a day off says so in the head and the empty board offers the one field', async () => {
