@@ -1,6 +1,6 @@
 # Settings v2 – package 3a (manage your settings)
 
-Branch `feat/settings-manage`, 2026-11-03. Screens in [screens/p3a/](screens/p3a/) (Seeds `medium`, Dev-Preview; 1920 and 412 px, light and dark).
+Branch `feat/settings-manage`, 2026-11-03. Screenshots: [PR #403](https://github.com/SGNemo/schweizer-taschenmesser/pull/403) (Seeds `medium`, Dev-Preview; 1920 and 412 px, light and dark).
 
 | Item | Before | After |
 |---|---|---|

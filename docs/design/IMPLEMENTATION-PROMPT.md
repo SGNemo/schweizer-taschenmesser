@@ -31,7 +31,7 @@ Read first: `CLAUDE.md`, `docs/README.md`, `docs/design/DESIGN-SPEC.md` (all of 
 ## Way of working
 - Start in **plan mode**: inventory of affected files, plan per step with order, risks, test plan. STOP until "Plan freigegeben" (plan approved).
 - Then implement step by step; after each step `cd web && npm run check && npm test` (for UI steps also the affected E2E specs). Red is fixed immediately, never skipped or disabled.
-- **Before/after screenshots** per step: `SCREENS_DESKTOP=1 SCREENS_SCHEME=dark|light SCREENS_VIEWPORTS=1280x720,1920x1080,412x915 SCREENS_PAGES='^(…)$' SCREENS_DIR=test-results/screens/<phase>/<before|after> npm run screenshots`. Take the before set before the first change. Both themes, desktop and phone.
+- **Before/after screenshots** per step: `SCREENS_DESKTOP=1 SCREENS_SCHEME=dark|light SCREENS_VIEWPORTS=1280x720,1920x1080,412x915 SCREENS_PAGES='^(…)$' SCREENS_DIR=.screens/<phase>/<before|after> npm run screenshots`. Take the before set before the first change. Both themes, desktop and phone.
 - After each step: send screenshots via SendUserFile, report briefly, ask when deviating from the specification. Intermediate stops: after the plan, after the first visible step (tokens or shell), before the PR.
 - Ask only when the specification is really silent (§ 13 "Open items") or something is technically impossible; then with a proposal and recommendation, bundled via AskUserQuestion.
 - Parallel chats work on other phases (see part B). Only touch files of your phase; hotspots only with an announcement in `docs/CHATS.md`; on conflicts in `tokens.css` or `strings.ts` keep both contents.

@@ -8,7 +8,7 @@ import { mockWeather } from '../weather-mock';
  * Manual tooling (playwright.screens.config.ts, project `plain`): screenshots of the two modules that open as
  * pages (weather, music; before identity v2 they were dialogs) with invented API answers. Output: SCREENS_DIR.
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/current';
+const OUT = process.env.SCREENS_DIR ?? '.screens/current';
 const VIEWPORTS = [
   { name: '1920x1080', width: 1920, height: 1080 },
   { name: '2560x1440', width: 2560, height: 1440 },

@@ -19,7 +19,7 @@
 
 **Website/README gelesen.** Die Website-Texte („Alles Wichtige an einem Ort. Und nur bei dir.“, „Kein Konto“, „Kostenlos, kein Tracking“) beruhigen Herbert sofort. Er versteht: Kalender, Aufgaben, Geld, Passwörter, offline. Er stolpert über „ADHS“ (die Website nennt Fokus-Hilfen „für volle Köpfe“; er fragt sich, ob die App für ihn gedacht ist) und über die Installation („SmartScreen“, „Trotzdem ausführen“, „WebView2“, „APK“): Das ist richtig erklärt, klingt aber für einen vorsichtigen Menschen riskant. Ein Bild „so sieht die Warnung aus“ würde helfen. In der README steht „Die App-Oberfläche ist heute Deutsch; weitere Sprachen sind in Arbeit“, die App kennt aber schon fünf Sprachen. Veraltet.
 
-**Start (frische App).** Die Übersicht zeigt oben die Karte „Willkommen bei Nemo“ mit einer Zeile in winziger Grauschrift: „Die Lesehilfe hebt Wortanfänge hervor … Einschalten / Nicht jetzt“. Herbert versteht nicht, was eine Lesehilfe ist, und liest den Satz zweimal. Darunter „Wetter: Stadt wählen · Später nicht mehr“. Rechts ist über die Hälfte der Fläche leer ([Bild](screenshots/01-erststart.png)).
+**Start (frische App).** Die Übersicht zeigt oben die Karte „Willkommen bei Nemo“ mit einer Zeile in winziger Grauschrift: „Die Lesehilfe hebt Wortanfänge hervor … Einschalten / Nicht jetzt“. Herbert versteht nicht, was eine Lesehilfe ist, und liest den Satz zweimal. Darunter „Wetter: Stadt wählen · Später nicht mehr“. Rechts ist über die Hälfte der Fläche leer (Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)).
 
 **Einrichtung** (12 Schritte, ca. 8 Minuten): 1 Grundlagen · 2 Sync und Wiederherstellung · 3 Profil und Module · 4 Werkzeugkasten · 5 KI-Anbieter · 6 Konten verknüpfen (Google, Kalender-Abo, Spotify) · 7 Startdaten · 8 Import per KI · 9 Benachrichtigungen · 10 Backup und Updates · 11 Übersicht · 12 Nemo unterstützen. Herbert bricht nicht ab, weil es „Überspringen“ und ein X gibt, aber bei Schritt 3 hängt er (B01), bei 5, 6 und 8 hat er Angst (KI, Google-Konto, „Import per KI“). Beruhigend: „Nichts wird verbunden“, „Ich möchte keine KI nutzen“, „Alles ist optional“. Die Berechtigung „Benachrichtigungen“ wird erklärt („damit Erinnerungen dich erreichen“), mit Rückweg: gut.
 
@@ -41,7 +41,7 @@ Eine „Aktion“ ist ein Klick, eine Eingabe in ein Feld oder ein Tastendruck.
 | Sicherung zurückspielen | Datei wählen → Passwort → „Öffnen“ → „Backup prüfen“ → „Importieren“ | 6 | Funktioniert; Fachwörter (V09). |
 
 
-Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screenshots/51-unterlage-dialog.png) · [Rechnung](screenshots/83-rechnung-dialog.png) · [Person](screenshots/82-person-gespeichert.png) · [Zugang](screenshots/75-zugang-hinzufuegen.png) · [Backup](screenshots/134-backup-vorschau.png).
+Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269).
 
 ## 3. Ein ganzer Tag (Dev-Daten, Uhr gesetzt)
 
@@ -62,8 +62,8 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 | Offline (Produktions-Build, Netz aus, Neuladen) | App lädt, Eingaben werden gespeichert. In der Dev-Variante (Vite) funktioniert Offline nicht, das ist normal. |
 | Fenster klein ziehen (1024, 640, 412 px) | Kein waagerechtes Scrollen. Unter ca. 640 px wechselt das Layout zur Handy-Leiste unten. Umschalter im Kalender abgeschnitten (B07), Suchfeld bei 412 px winzig (B08). |
 | Sprache wechseln (Deutsch ↔ English) | Wirkt sofort, keine deutschen Reste auf Übersicht, Einstellungen, Unterlagen. Das Passwort-Modul heißt auf Englisch „Passwords“, auf Deutsch „Accounts“ (V14). Spanisch/Französisch/Portugiesisch nicht angesehen. |
-| Theme wechseln (Hell/Dunkel) | Dunkel sauber lesbar, Toast „Farbschema: Dunkel · Rückgängig“ ([Bild](screenshots/100-dunkel-kalender.png)). |
-| Textgröße „Sehr groß“ | Seiten brechen nicht, Kalender kürzt stärker (V05, [Bild](screenshots/63-sehr-gross-kalender.png)). |
+| Theme wechseln (Hell/Dunkel) | Dunkel sauber lesbar, Toast „Farbschema: Dunkel · Rückgängig“ (Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)). |
+| Textgröße „Sehr groß“ | Seiten brechen nicht, Kalender kürzt stärker (V05, Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)). |
 | Löschen und Wiederherstellen | Löschen von Unterlagen ohne Rückfrage/Rückgängig (B02). Schnellerfassung hat „Rückgängig“. Kein Papierkorb (V06). |
 | Backup erstellen und einspielen | Funktioniert (19 Einträge inkl. Module, falsches Passwort wird erkannt). Nach Import wieder „Willkommen bei Nemo“ (B16). |
 | Sync | Nicht getestet (kein zweites Gerät, Server nicht gestartet). |
@@ -87,7 +87,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   3. In Schritt 3 auf „Alltag“ klicken.
 - **Erwartet:** Entweder wird das Profil sofort übernommen, oder neben „Weiter“ steht, was fehlt.
 - **Tatsächlich:** Sichtbar ändert sich nur der Knopf „Alltag“ (leicht grau). „Weiter“ wird ausgegraut. Die Box „Das ändert sich“ mit dem Pflicht-Häkchen „Ich habe die Änderungen geprüft …“ liegt erst nach etwa einem Bildschirm Scrollen. Kein Hinweis, warum nichts mehr geht.
-- **Screenshot:** [03-setup-03b-nach-alltag.png](screenshots/03-setup-03b-nach-alltag.png) · [03-setup-03c-weiter-gesperrt.png](screenshots/03-setup-03c-weiter-gesperrt.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert klickt „Alltag“, Weiter bleibt grau, er klickt mehrfach und denkt, die App hängt. Nur „Überspringen“ rettet ihn, dann hat er kein Profil.
 
 ### B02 · Unterlage löschen: sofort weg, keine Rückfrage, kein „Rückgängig“
@@ -97,7 +97,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   2. Karte anklicken, im Fenster „Unterlage bearbeiten“ auf „Löschen“.
 - **Erwartet:** Rückfrage oder eine Meldung mit „Rückgängig“ (wie bei der Schnellerfassung: „Gespeichert in ToDos · Rückgängig“).
 - **Tatsächlich:** Die Unterlage ist sofort verschwunden. Nach 0,1 s, 0,6 s, 2,5 s und 5,5 s keine Meldung, kein Papierkorb in den Einstellungen (Suche „Papierkorb“ ohne Treffer). Hing eine Datei dran, ist sie auch weg und steht laut Hinweis nicht im Backup.
-- **Screenshot:** [141-loeschen-frage.png](screenshots/141-loeschen-frage.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert hat Angst, etwas Falsches zu löschen. Hier passiert es ohne Vorwarnung bei seinen wichtigsten Dokumenten (Pass, Vertrag). Der Löschen-Knopf sitzt im Bearbeiten-Fenster direkt neben „Abbrechen“ und „Speichern“.
 
 ### B03 · Verstrichene Kündigungsfrist wird nirgends als verpasst markiert
@@ -108,7 +108,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   3. Auf der Übersicht das Widget „Fristen & Ablauf“ ansehen.
 - **Erwartet:** Eine Frist, die vor neun Tagen endete, ist als verstrichen gekennzeichnet („Kündigungsfrist vorbei“) und fällt auf.
 - **Tatsächlich:** Die Karte trägt nur den Chip „Bald“ (bezogen auf das Ende). „Kündigen bis“ steht als normaler Text. Das Widget „Fristen & Ablauf“ führt unter „abgelaufen“ nur die drei Dokumente mit verstrichenem Ende (Laptop Garantie, Rechtsschutz 21, Impfpass), keine verstrichene Kündigungsfrist. Auch „Wartungsvertrag Heizung“ (Kündigen bis 26. Aug.) und „Fitnessstudio“ (24. Okt.) sind betroffen.
-- **Screenshot:** [20-unterlagen.png](screenshots/20-unterlagen.png) · [11-uebersicht-alle-widgets.png](screenshots/11-uebersicht-alle-widgets.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Das ist Herberts Hauptgrund für die App („Verträge mit Kündigungsfristen“). Er verlässt sich darauf, dass die App ihn warnt, bevor er in eine Vertragsverlängerung rutscht. Die Testdaten sind künstlich, die Logik darf trotzdem nicht stillschweigend sein.
 
 ### B04 · Esc oder Klick neben das Fenster verwirft getippten Text ohne Rückfrage
@@ -119,7 +119,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   3. Esc drücken (oder neben das Fenster klicken).
 - **Erwartet:** Rückfrage („Eingaben verwerfen?“) oder Entwurf bleibt erhalten.
 - **Tatsächlich:** Fenster schließt, nichts gespeichert, beim erneuten Öffnen ist der Titel leer. Gilt für Esc und Klick auf den Hintergrund.
-- **Screenshot:** [120-escape-mitten.png](screenshots/120-escape-mitten.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert tippt langsam. Ein versehentlicher Klick daneben kostet ihn mehrere Minuten Arbeit.
 
 ### B05 · Seitenleiste der Einstellungen: „Benachrichtigungen“ überlappt „Nicht erlaubt“
@@ -128,7 +128,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Einstellungen öffnen (1920×1080).
 - **Erwartet:** Beschriftung und Status stehen nebeneinander.
 - **Tatsächlich:** Der Text „Nicht erlaubt“ liegt über dem Ende von „Benachrichtigungen“, beide unleserlich.
-- **Screenshot:** [61-einst-darstellung.png](screenshots/61-einst-darstellung.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert liest genau und hält das für einen Fehler der App, nicht für Absicht.
 
 ### B06 · Sehr langer Titel ohne Leerzeichen sprengt Karte und Seite
@@ -138,7 +138,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   2. Titel: 300 mal „A“ (oder einen langen Link) einfügen, speichern.
 - **Erwartet:** Titel wird umgebrochen oder mit „…“ gekürzt.
 - **Tatsächlich:** Der Text läuft aus der Karte hinaus über den rechten Rand des Bildschirms.
-- **Screenshot:** [121-lange-notiz.png](screenshots/121-lange-notiz.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Er fügt gern Links in Notizen ein; lange Adressen haben auch keine Leerzeichen.
 
 ### B07 · Schmales Fenster: Umschalter „Kalender | Erinnerungen“ abgeschnitten
@@ -147,7 +147,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Fenster auf 640 px Breite ziehen, Kalender öffnen.
 - **Erwartet:** Beide Schalter lesbar.
 - **Tatsächlich:** Es steht nur „Kal“, der Rest ist abgeschnitten und stößt an „Erweitert“.
-- **Screenshot:** [110-fenster-640-kalender.png](screenshots/110-fenster-640-kalender.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert zieht Fenster gern halb groß neben ein anderes.
 
 ### B08 · Handy: Suchfeld nur noch ein kleines Oval mit „S“
@@ -156,7 +156,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Viewport 412 px, Übersicht öffnen.
 - **Erwartet:** Lupe oder lesbares Suchfeld.
 - **Tatsächlich:** Ein winziges Oval mit abgeschnittenem Buchstaben „S“.
-- **Screenshot:** [110-fenster-412-uebersicht.png](screenshots/110-fenster-412-uebersicht.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert nutzt das Handy selten, würde das Oval aber nicht als Suche erkennen.
 
 ### B09 · Spotify-Karte trägt den Hinweistext der Kalender-Verbindung
@@ -165,7 +165,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Einstellungen → Verbindungen (oder Einrichtung Schritt 6) → Karte „Spotify“.
 - **Erwartet:** Hinweis passt zu Spotify.
 - **Tatsächlich:** Unter Spotify steht: „… Auf dem Handy und im Browser kommen die Termine über die Synchronisierung oder über ein Kalender-Abo (ICS).“ Der Play-Knopf hat keine Beschriftung.
-- **Screenshot:** [161-wetter.png](screenshots/161-wetter.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert nimmt den Text wörtlich und wundert sich, was Spotify mit Terminen zu tun hat.
 
 ### B10 · Fokusring am Favoriten-Stern rechts angeschnitten
@@ -174,7 +174,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Übersicht öffnen, 4× Tab drücken.
 - **Erwartet:** Kompletter Fokusrahmen.
 - **Tatsächlich:** Der Rahmen um den Stern („ToDos aus den Favoriten entfernen“) ist am rechten Rand der Seitenleiste abgeschnitten.
-- **Screenshot:** [180-tab-fokus.png](screenshots/180-tab-fokus.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert bedient viel mit Tab; Fokus ist sonst gut sichtbar.
 
 ### B11 · Zusammenfassung meldet übergangene Schritte als „Erledigt“
@@ -183,7 +183,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Einrichtung durchklicken, in den Schritten 5 bis 8 (KI, Konten, Startdaten, Import per KI) nur „Weiter“ drücken.
 - **Erwartet:** „Übersprungen“ (wie bei Benachrichtigungen).
 - **Tatsächlich:** Alle vier stehen als „Erledigt“. Zusätzlich „10 von 11 Schritten“ im Assistenten gegenüber „11 von 12“ auf der Übersicht.
-- **Screenshot:** [04-nach-einrichtung.png](screenshots/04-nach-einrichtung.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert glaubt dann, er habe Google oder KI eingerichtet, und wird misstrauisch.
 
 ### B12 · Schalter heißt „Kalender einschalten“, obwohl er bereits eingeschaltet ist
@@ -192,7 +192,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Modul-Bibliothek öffnen, Karte „Kalender“ ansehen.
 - **Erwartet:** Beschriftung nennt den Zustand („Kalender: an“).
 - **Tatsächlich:** Neben dem aktiven Schalter steht „Kalender einschalten“, neben ausgeschalteten das Gleiche.
-- **Screenshot:** [30-modulbibliothek.png](screenshots/30-modulbibliothek.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert weiß nicht, ob er klicken muss, um das Modul an- oder auszuschalten.
 
 ### B13 · Touch-Ziele unter 44 px
@@ -201,7 +201,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   1. Viewport 412 px, Kalender → „Neuer Termin“ öffnen, Maße der Knöpfe messen.
 - **Erwartet:** Mindestens 44 px (steht so in den Projektregeln).
 - **Tatsächlich:** Tageskacheln im Mini-Kalender 32×32 px, Monat/Woche/Tag 38 px hoch, Umschalter „Kalender | Erinnerungen“ 38 px.
-- **Screenshot:** [213-phone-termin-dialog.png](screenshots/213-phone-termin-dialog.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herberts Finger sind nicht mehr so treffsicher.
 
 ### B14 · Lesehilfe wirkt nicht überall und zerlegt Wörter
@@ -211,7 +211,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   2. Einstellungen und Unterlagen ansehen.
 - **Erwartet:** Einheitliche Hervorhebung.
 - **Tatsächlich:** In den Einstellungen sind nur Wortanfänge fett („Sch|alter“, „Ko|pf“), auf der Seite Unterlagen ist kein Unterschied zu sehen (Attribut data-read-aid=25 ist gesetzt). Die Zeile „Lesehilfe: An · 40 % · Weich · 25 %“ ist ohne Erklärung.
-- **Screenshot:** [193-lesehilfe-einstellung.png](screenshots/193-lesehilfe-einstellung.png) · [190b-lesehilfe-zoom.png](screenshots/190b-lesehilfe-zoom.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert findet die halbfetten Wortfetzen eher störend als hilfreich.
 
 ### B15 · Name „für die Begrüßung auf der Übersicht“ – keine Begrüßung zu sehen
@@ -221,7 +221,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   2. Übersicht ansehen (frisch, befüllt, nach Backup-Import).
 - **Erwartet:** Eine Begrüßung mit Namen, wie die Einstellung verspricht.
 - **Tatsächlich:** In der frischen App und im Import-Profil (beide mit Namen „Herbert“, Testzeit nachts) keine Begrüßung gesehen. Eventuell tageszeitabhängig, nicht weiter geprüft.
-- **Screenshot:** [160-uebersicht-imp.png](screenshots/160-uebersicht-imp.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Das wäre für Herbert ein freundlicher Einstieg.
 
 ### B16 · Nach Backup-Import in leere App erscheint wieder „Willkommen bei Nemo – Einrichtung starten“
@@ -232,7 +232,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
   3. Übersicht öffnen.
 - **Erwartet:** Keine Einrichtungs-Einladung, die Daten sind ja da.
 - **Tatsächlich:** Die Willkommenskarte samt „Lesehilfe …“-Frage erscheint erneut.
-- **Screenshot:** [160-uebersicht-imp.png](screenshots/160-uebersicht-imp.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Für Herbert:** Herbert fragt sich, ob die Wiederherstellung wirklich geklappt hat.
 
 ## Verbesserungen
@@ -242,7 +242,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert öffnet die App morgens und will wissen: Arzt, Familie, Rechnungen?
 - **Problem heute:** Die Übersicht startet im Modus „Nur das Wichtigste“: Auf 1920 px Breite steht links eine einzige Karte mit EINER Aufgabe („Urlaubsantrag einreichen“), rechts ist über 60 % der Fläche leer. Termine (Medikament 08:00, Teammeeting 10:00), „Jetzt wichtig“ und Rechnungen erscheinen erst nach „Mehr anzeigen · 16 Widgets“.
 - **Vorschlag:** Heutige Termine und Fristen der nächsten 7 Tage standardmäßig oben zeigen (mit Uhrzeit, Ort). Die „eine Sache“ bleibt, aber darunter. Bei breitem Fenster zwei Spalten nutzen.
-- **Screenshot:** [10-dev-uebersicht.png](screenshots/10-dev-uebersicht.png) · [11-uebersicht-alle-widgets.png](screenshots/11-uebersicht-alle-widgets.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Apple Kalender „Heute“-Ansicht, Thunderbird Tagesansicht
 
 ### V02 · Profil „Papiere & Termine“ für Menschen wie Herbert
@@ -250,7 +250,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert wählt in Schritt 3 ein Profil.
 - **Problem heute:** „Alltag“ schaltet Finanzen, Rechnungen, Abos aus und lässt Unterlagen und Accounts aus. „Finanz-Fokus“ nennt „Verträge“, aber nicht Geburtstage oder Notizen. Er muss in einer Liste mit 15 Zeilen in kleiner Grauschrift 5 Schalter selbst umlegen (Finanzen, Rechnungen, Abos, Unterlagen, Accounts). Jede Karte zeigt den Namen doppelt („Alltag“ + Knopf „Alltag“).
 - **Vorschlag:** Profil „Papiere, Termine, Rechnungen“ (Kalender, Unterlagen, Rechnungen, Abos, Personen, Notizen, Accounts) und einen Knopf „Auswählen“ statt Namensdoppelung. „Beispiel (Entwickler)“ aus der Liste für Nutzer ausblenden.
-- **Screenshot:** [03-setup-03b-nach-alltag.png](screenshots/03-setup-03b-nach-alltag.png) · [03-setup-03c-weiter-gesperrt.png](screenshots/03-setup-03c-weiter-gesperrt.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Notion-Onboarding „Wofür nutzt du …?“
 
 ### V03 · Kündigungsfrist in Monaten/Wochen eingeben, „Kündigen bis“ groß zeigen, früh erinnern
@@ -258,7 +258,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Im Zeitungsabo steht „3 Monate zum Quartalsende“.
 - **Problem heute:** Der Dialog verlangt „Kündigungsfrist (Tage vor Ende)“, im Abo-Dialog „Tage vor Abbuchung“ (nur unter „Mehr Felder“). Herbert muss Tage rechnen (3 Monate = 90?). Das Ergebnis „Kündigen bis: Do., 31. Dez.“ ist korrekt, aber klein im Kartentext. Eine Erinnerung davor richtet er nicht von selbst ein.
 - **Vorschlag:** Auswahl „Tage / Wochen / Monate“, danach Vorschau „Kündigen bis 31.12.2026“. Standard-Erinnerung 14 Tage vor „Kündigen bis“, sichtbar als Chip auf der Karte („Kündigen in 12 Tagen“, „Frist verpasst“).
-- **Screenshot:** [51-unterlage-dialog.png](screenshots/51-unterlage-dialog.png) · [240-abo-dialog.png](screenshots/240-abo-dialog.png) · [53-unterlagen-befuellt.png](screenshots/53-unterlagen-befuellt.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Check24-Vertragsmanager
 
 ### V04 · „Nur lokal, ohne KI“ als allererste Wahl und sichtbar in der Kopfzeile
@@ -266,7 +266,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert hat Angst vor KI und Konten.
 - **Problem heute:** „Mit KI eintragen“ (Funkel-Symbol) steht auf jeder Modulseite, in der Schnellerfassung und die Suche startet mit „Assistent fragen“. Die Option „Ich möchte keine KI nutzen“ erscheint erst in Schritt 5 von 12. Sie wirkt (Kalender, Suche, Schnellerfassung zeigen danach keine KI mehr, Test „KI abschalten“), aber bis dahin ist die Skepsis geweckt.
 - **Vorschlag:** In Schritt 1 eine einzige Frage: „Soll Nemo KI-Funktionen zeigen? (Standard: nein)“. Die Schritte 5, 6 und 8 (KI, Konten, Import per KI) entfallen dann. Ein Hinweis in den Einstellungen „KI: aus“.
-- **Screenshot:** [03-setup-01.png](screenshots/03-setup-01.png) · [251-einst-ki.png](screenshots/251-einst-ki.png) · [252-ki-abschalten-dialog.png](screenshots/252-ki-abschalten-dialog.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Firefox „Standardmäßig keine KI“-Schalter
 
 ### V05 · Textgröße gleich in Schritt 1 abfragen, „Sehr groß“ wirklich groß machen
@@ -274,7 +274,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert sitzt vor einem großen Monitor und liest ungern kleine Schrift.
 - **Problem heute:** Die Einstellung existiert (Einstellungen → Darstellung → „Schrift & Lesen: Normal · Normal · Normal“ → Ändern → „Textgröße“), ist aber verschachtelt und die Zeile zeigt nur drei „Normal“ ohne Namen. Die Einrichtung fragt nicht danach.
 - **Vorschlag:** Schritt 1: Textgröße mit Vorschauzeile („So groß ist die Schrift“). „Sehr groß“ ist nur etwa 20 % größer. Der Monatskalender kürzt bei „Sehr groß“ noch mehr („Garantie endet:…“); dort Wochenliste als Standard vorschlagen. Graue Nebentexte (ca. 12–13 px, z. B. Modulbeschreibungen, „Schritt 3 von 12“) ebenfalls mit skalieren.
-- **Screenshot:** [61-einst-darstellung.png](screenshots/61-einst-darstellung.png) · [62-schrift-lesen.png](screenshots/62-schrift-lesen.png) · [63-sehr-gross-kalender.png](screenshots/63-sehr-gross-kalender.png) · [63-sehr-gross-uebersicht.png](screenshots/63-sehr-gross-uebersicht.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Windows „Textgröße“ beim ersten Start, Firefox Reader-Ansicht
 
 ### V06 · Gelöschtes 30 Tage wiederherstellbar („Zuletzt gelöscht“)
@@ -282,7 +282,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert löscht aus Versehen oder ändert seine Meinung.
 - **Problem heute:** Schnellerfassung bietet „Rückgängig“, Löschen von Unterlagen nicht. Es gibt keinen Papierkorb (Einstellungs-Suche „Papierkorb“ ohne Treffer).
 - **Vorschlag:** Einheitlich: jede Löschung zeigt „Gelöscht · Rückgängig“ und landet 30 Tage in „Zuletzt gelöscht“ (lokal; vereinbar mit Local-First).
-- **Screenshot:** [141-loeschen-frage.png](screenshots/141-loeschen-frage.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Fotos-App „Zuletzt gelöscht“
 
 ### V07 · Suche: echte Treffer zuerst, „Assistent fragen“ nur wenn KI an
@@ -290,7 +290,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert tippt „Zahnarzt“ und drückt Enter.
 - **Problem heute:** Erste, vorausgewählte Zeile ist „Assistent fragen: „Zahnarzt““ (KI-Symbol). Der Dialog heißt „Befehlspalette“, der Hinweis „Ctrl+K“ (nicht „Strg+K“).
 - **Vorschlag:** Treffer vorauswählen, Assistent-Zeile ans Ende. Dialog „Suchen“, Hinweis „Strg+K“. (Die Trefferliste selbst ist gut: „Kalender · Termin“ pro Zeile.)
-- **Screenshot:** [91-suche-zahnarzt.png](screenshots/91-suche-zahnarzt.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Windows-Suche
 
 ### V08 · „Dieser PC“: Vorab erklären, was gelöscht wird und was nie
@@ -306,7 +306,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert will seine Daten auf einen USB-Stick sichern und später zurückspielen.
 - **Problem heute:** Das Backup funktioniert gut (Vorschau, Zusammenführen/Ersetzen, Sicherheitskopie vorher), aber die Seite ist voll Fachwörter: „Passphrase“, „Chiffretext“, „Argon2id“, „19 Einträge in 27 Tabellen“, „Backup prüfen“, „Importieren“. Die Seite „Sync & Backup“ beginnt mit Sync (Server, Token, Tailscale), nicht mit dem Backup.
 - **Vorschlag:** Backup nach oben, Beschriftungen „Sicherung speichern“ / „Sicherung zurückspielen“. Schrittfolge „1 Datei wählen · 2 Passwort · 3 Prüfen · 4 Zurückspielen“. Optional Erinnerung alle 30 Tage („Letzte Sicherung: vor 45 Tagen“).
-- **Screenshot:** [134-backup-vorschau.png](screenshots/134-backup-vorschau.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Time Machine, Fritz!Box-Sicherung
 
 ### V10 · Nach „Speichern“ zeigen, wohin der Termin gegangen ist
@@ -314,7 +314,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert trägt „Augenarzt 12. Nov.“ ein, der Kalender zeigt Oktober.
 - **Problem heute:** Der Termin war gespeichert (geprüft im November). Das Fenster schließt, der Kalender bleibt im Oktober, ich habe keine Bestätigung erfasst.
 - **Vorschlag:** Meldung „Augenarzt, Do. 12. Nov. 10:30 gespeichert · Anzeigen“ und Sprung in den Monat.
-- **Screenshot:** [43-termin-gespeichert.png](screenshots/43-termin-gespeichert.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Google Kalender „Termin erstellt · Ansehen“
 
 ### V11 · Kurzer Einrichtungsweg („in 3 Fragen fertig“)
@@ -322,7 +322,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert will loslegen, nicht 12 Schritte lesen.
 - **Problem heute:** 12 Schritte, davon 4 (KI-Anbieter, Konten verknüpfen mit Google/Spotify, Startdaten, Import per KI) für ihn Internet-, Konto- oder KI-Themen. Der Assistent lässt sich schließen (X) und überspringen, die Karte „Einrichtung 11 von 12“ bleibt aber auf der Übersicht.
 - **Vorschlag:** Standardweg: Name, Textgröße, Module. Alles Weitere unter „Mehr einrichten“ gebündelt.
-- **Screenshot:** [04-nach-einrichtung.png](screenshots/04-nach-einrichtung.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Signal-Einrichtung
 
 ### V12 · Erinnerungsfenster: konkrete Titel, verständliche Knöpfe
@@ -330,7 +330,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert öffnet die Glocke (Zahl 12).
 - **Problem heute:** Gruppen heißen „Weitere Erinnerungen · 3“, ohne dass man sieht, was drinsteckt. „Zufällige Erinnerung“ ist unklar. Alle Einträge „Gestern“ ohne Datum.
 - **Vorschlag:** Gruppen mit den ersten zwei Titeln aufklappbar. „Zufällige Erinnerung“ erklären oder entfernen.
-- **Screenshot:** [95-glocke.png](screenshots/95-glocke.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** iOS Mitteilungszentrale
 
 ### V13 · „Wartet noch“ konkret benennen
@@ -338,7 +338,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Rechnungen sind seit 12 Tagen offen.
 - **Problem heute:** Die Übersicht fasst in einer winzigen grauen Zeile zusammen: „Wartet noch · 4 · 2 Rechnungen überfällig · Budget „Freizeit“ überschritten“. Die Namen stehen erst im aufgeklappten Zustand oder im Widget „Fällige Rechnungen“. Der ruhige Ton ist gut, die Schrift klein.
 - **Vorschlag:** Zeile größer, mit Namen und Betrag („Stadtwerke 87,40 €, seit 12 Tagen“), weiter ohne Rot außer bei Geld.
-- **Screenshot:** [11-uebersicht-alle-widgets.png](screenshots/11-uebersicht-alle-widgets.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Banking-Apps „Fällig“-Liste
 
 ### V14 · „Passwörter“ statt „Accounts“, Generator erkennbar benennen
@@ -346,7 +346,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert sucht, wo er Passwörter aufbewahrt.
 - **Problem heute:** Der Menüpunkt heißt „Accounts“ (auf Englisch „Passwords“, also fehlt nur die deutsche Übersetzung), Knopf „Neues Passwort“ (ist der Generator, klingt nach „Master-Passwort ändern“). Neben dem Passwortfeld sitzt ein Funkel-Symbol, das sonst „KI“ bedeutet (Generator). Kopieren, Auge und „Öffnen“ sind reine Symbole. Formularfeld „Einmalcode (TOTP) – Base32 oder otpauth://-Link“ ist unverständlich.
 - **Vorschlag:** „Passwörter“, „Passwort erzeugen“, Würfel-Symbol, Symbole mit Text beim Überfahren und auf Wunsch dauerhaft. Das TOTP-Feld erst unter „Mehr Felder“.
-- **Screenshot:** [75-zugang-hinzufuegen.png](screenshots/75-zugang-hinzufuegen.png) · [76-zugang-details.png](screenshots/76-zugang-details.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Bitwarden „Passwort generieren“
 
 ### V15 · Abo-Dialog: Datumsfeld statt 31-Tage-Raster
@@ -354,7 +354,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert trägt „Zeitung, monatlich, 24,90 €“ ein.
 - **Problem heute:** Der Dialog zeigt als erstes „Tag des Monats“ mit 31 Knöpfen plus „Letzter Tag“ und „Alle (Monate)“, die Kündigungsfrist steckt hinter „Mehr Felder“.
 - **Vorschlag:** Feld „Nächste Abbuchung“ (Datum) und Auswahl „Monatlich“; Kündigungsfrist sichtbar.
-- **Screenshot:** [240-abo-dialog.png](screenshots/240-abo-dialog.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Rocket Money
 
 ### V16 · Vorlagen für typische Papiere (Pass, Führerschein, TÜV, Versicherung)
@@ -362,7 +362,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert hat Pass, Personalausweis, Führerschein, TÜV, Hausrat- und Haftpflicht.
 - **Problem heute:** Es gibt nur sieben Kategorien (Ausweise, Versicherung, Verträge, Garantien, Steuer, Gesundheit, Sonstiges). Das TÜV-Datum landet in „Sonstiges“. Der Chip „Bald“ folgt keiner erkennbaren Regel: „Waschmaschine Garantie“ (Ende in 45 Tagen) trägt „Bald“, „Zeitschriften-Abo 18“ (Ende in 33 Tagen) nicht; im eigenen Test hat der TÜV (37 Tage) „Bald“, der Reisepass (78 Tage) nicht.
 - **Vorschlag:** Vorlagen „Reisepass (Erinnerung 6 Monate vorher)“, „TÜV (4 Wochen)“, Kategorie „Fahrzeug“, Schwelle für „Bald“ einstellbar.
-- **Screenshot:** [53-unterlagen-befuellt.png](screenshots/53-unterlagen-befuellt.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Wallet-Apps
 
 ### V17 · Zeilen in „Darstellung“ benennen, nicht nur Werte zeigen
@@ -370,7 +370,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert sucht die Schriftgröße.
 - **Problem heute:** „Schrift & Lesen: Normal · Normal · Normal“, „Sonstiges: Breit · Nur das Wichtigste“, „Farben: Nemo-Orange · Standard · Mit Bedeutung“ sagen nicht, was „Normal“ ist. Die Einstellungs-Suche hilft allerdings (Schriftgröße → Textgröße gefunden).
 - **Vorschlag:** „Textgröße: Normal · Zeilenabstand: Normal · Dichte: Normal“.
-- **Screenshot:** [61-einst-darstellung.png](screenshots/61-einst-darstellung.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** macOS Systemeinstellungen
 
 ### V19 · Anleitung in der App verlinken
@@ -386,7 +386,7 @@ Screenshots: [Termin](screenshots/41b-neuer-termin-de.png) · [Unterlage](screen
 - **Situation:** Herbert bedient viel mit Tastatur.
 - **Problem heute:** Hinweise zeigen „Ctrl+K“, im Fenster „Strg+Enter“; jede Favoriten-Zeile hat zwei Tab-Stopps (Link + Stern), so sind es ca. 25 Tab bis zum Inhalt. F2/F3/Strg+K funktionieren (gut).
 - **Vorschlag:** Überall „Strg“; Stern per Kontextaktion statt eigenem Tab-Stopp; „Zum Inhalt springen“ beim ersten Tab sichtbar machen.
-- **Screenshot:** [180-tab-fokus.png](screenshots/180-tab-fokus.png)
+- Screenshots: [PR #269](https://github.com/SGNemo/schweizer-taschenmesser/pull/269)
 - **Anregung (keine Kopie):** Windows-Explorer
 
 Keine dieser Vorschläge berührt Local-First, „kein Tracking“ oder die Fokus-Richtlinien. Zwei Wünsche von Herbert stehen in Spannung zu den Fokus-Grundsätzen und sind **nur als Nutzerwunsch** vermerkt: V13 (Rechnungen im Überblick deutlicher als „Wartet noch“) und V03 („Frist verpasst“ als deutliche Kennzeichnung). Beide lassen sich ohne Rot und ohne Schuldton lösen.

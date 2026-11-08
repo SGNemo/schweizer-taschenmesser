@@ -6,10 +6,10 @@ import { mockWeather } from '../weather-mock';
 /**
  * Settings identity v3.1 before/after shots (docs/design/settings-v3/ROUND-1.md). Not part of CI. Usage (web/, seeded
  * preview on :4174): copy into e2e/screenshots/, then
- *   SHOTS_DIR=../docs/design/settings-v3/shots SHOTS_PREFIX=before npx playwright test -c playwright.settings-v3.config.ts
+ *   SHOTS_DIR=.screens/settings-v3 SHOTS_PREFIX=before npx playwright test -c playwright.settings-v3.config.ts
  * One jpg per tab × {1920, 412} × {light, dark}, full page; the setup assistant opened from Settings.
  */
-const OUT = process.env.SHOTS_DIR ?? 'test-results/settings-v3';
+const OUT = process.env.SHOTS_DIR ?? '.screens/settings-v3';
 const PREFIX = process.env.SHOTS_PREFIX ?? 'before';
 const TABS = (process.env.SHOTS_TABS ??
   'index,allgemein,darstellung,barrierefreiheit,module,werkzeuge,benachrichtigungen,sicherheit,sync,ki,verbindungen,schnellerfassung,einrichtung,updates,entwickler,ueber'

@@ -5,11 +5,11 @@ import { bootDev, seedApp } from '../seed/helpers';
 /**
  * Manual tooling (focus audit 2): the stimulus numbers of docs/product/focus/10-audit-2.md for the
  * seeded Dev-Preview build (medium data) on a phone and a desktop viewport, plus full-page
- * screenshots. Usage: `MEASURE_OUT=../docs/product/focus/img MEASURE_TAG=after npx playwright test
+ * screenshots. Usage: `MEASURE_OUT=.screens/focus MEASURE_TAG=after npx playwright test
  * -c playwright.screens.config.ts measure-focus` (needs `npm run build:e2e-seed && npm run
  * preview:e2e-seed`). Counts only visible elements; "small" = an interactive element under 44 px.
  */
-const OUT = process.env.MEASURE_OUT ?? 'test-results/measure';
+const OUT = process.env.MEASURE_OUT ?? '.screens/measure';
 const TAG = process.env.MEASURE_TAG ?? 'run';
 const VIEWPORTS = {
   phone: { width: 412, height: 915 },

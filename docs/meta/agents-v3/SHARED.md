@@ -95,3 +95,4 @@ questions for Sven: ≤ 4, recommendation first (or "none")
 ```
 
 The full report (diff summary, commands run with results, screenshots, tables) lives in the file, never in the thread.
+Screenshots go to `/mnt/session/outputs` (and into the PR text), never into the repo: `check:docs` fails on images under `docs/`.

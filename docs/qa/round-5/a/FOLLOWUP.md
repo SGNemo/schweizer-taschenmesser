@@ -2,7 +2,7 @@
 
 ## F1 Android-Widget „Heute“ für das Außendisplay (A12)
 
-**Warum:** Auf dem zugeklappten Flip (Außendisplay 720 × 748 px, ≈ 320 × 332 CSS-px) läuft die App zwar ohne Querscrollen, zeigt aber nur Kopf, Begrüßung und Leiste; der „+“-Knopf liegt über „Ruhig/Ausführlich“, im Assistenten ist „Weiter“ erst nach Scrollen erreichbar ([shots/after-13-cover-display.jpg](shots/after-13-cover-display.jpg)). A will dort nur sehen: Wetter jetzt und die drei Dinge von heute. One UI erlaubt auf dem Außendisplay Widgets, keine Vollbild-Apps (außer per Labs-Schalter).
+**Warum:** Auf dem zugeklappten Flip (Außendisplay 720 × 748 px, ≈ 320 × 332 CSS-px) läuft die App zwar ohne Querscrollen, zeigt aber nur Kopf, Begrüßung und Leiste; der „+“-Knopf liegt über „Ruhig/Ausführlich“, im Assistenten ist „Weiter“ erst nach Scrollen erreichbar (shots/after-13-cover-display.jpg (screenshots: PR #564)). A will dort nur sehen: Wetter jetzt und die drei Dinge von heute. One UI erlaubt auf dem Außendisplay Widgets, keine Vollbild-Apps (außer per Labs-Schalter).
 
 **Was es gibt:** Keine eigene „Local-Widget-Schnittstelle“ für Android. Am nächsten dran ist der Tray-Snapshot der Windows-App (`web/src/core/platform/tauri/traySnapshot.ts` → Rust `desktop_set_tray_today` in `src-tauri/src/capture.rs`): höchstens 5 Zeilen, nur ToDos + Kalender, nie Beträge, Tresor oder Notizinhalte, Klick = Index → Route. Dieses Muster passt 1:1.
 

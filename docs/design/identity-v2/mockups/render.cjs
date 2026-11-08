@@ -1,6 +1,6 @@
 // Renders the identity v2 mockups: 5 pages × variants A/B/C × light/dark × desktop (1920×1080) / phone (412×915),
 // plus the phone head collapsed and the Spotify "no active device" state. Single shots go to OUT (default:
-// a temp folder), contact sheets to this folder. Usage: node render.cjs [outDir]
+// a temp folder; never into docs/). Usage: node render.cjs [outDir]
 // Needs the web/ node_modules (playwright) and the pre-installed Chromium.
 const path = require('node:path');
 const fs = require('node:fs');

@@ -14,6 +14,6 @@ Page height (phone): todos 4015 → 3971, calendar 1122 → 1074, finance 1800 �
 
 What gave the ~48 px: area label and tabs share one line (`AreaFrame`), title one step smaller (`--text-2xl`, `ui/global.css`). The topbar folds on scrolling down (> 48 px) and returns on scrolling up, at the top, with keyboard focus in the bar, with palette/dialog/on-screen keyboard open; with less motion it stays fixed.
 
-Screenshots: [todos](img/04-before-todos.png) → [after](img/04-after-todos.png), [calendar](img/04-before-calendar.png) → [after](img/04-after-calendar.png), [finance](img/04-before-finance.png) → [after](img/04-after-finance.png).
+Screenshots: [PR #341](https://github.com/SGNemo/schweizer-taschenmesser/pull/341).
 
 Not done: the "Erweitert" switch stays right of the title on the six pages (none of them has a "⋯" menu). `pageChrome.advancedInMenu` exists: a page that gets a menu sets it and `AdvancedToggle` steps aside.

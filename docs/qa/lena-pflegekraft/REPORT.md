@@ -37,7 +37,7 @@
   2. Das linke, ganz außen liegende Kästchen bei „Milch“ antippen
 - **Erwartet:** Artikel ist abgehakt (so verhalten sich alle Einkaufslisten-Apps).
 - **Tatsächlich:** Es erscheint eine Leiste „1 ausgewählt · Abhaken · Löschen · Abbrechen“. Abgehakt wird erst mit dem zweiten, rechten Kästchen. Beide sehen gleich aus; das linke trägt nur das Etikett „Auswählen“. Im Laden (einhändig, im Gehen) trifft man oft das falsche; daneben liegt der Papierkorb.
-- **Screenshot:** ![B-01](screenshots/46-list-second-box.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-02 · Medikamenten-Erinnerung: bei geschlossener App nur mit Sync-Server-Push zugestellt (laut App-Text)
 - **Schwere:** hoch · **Plattform:** Browser/PWA (APK nicht prüfbar) · **Häufigkeit:** immer (laut UI-Text)
@@ -46,7 +46,7 @@
   2. Einstellungen → Benachrichtigungen lesen
 - **Erwartet:** Eine täglich wiederkehrende Erinnerung klingelt auch, wenn die App zu ist.
 - **Tatsächlich:** Der Text sagt: „Bei geschlossener App kommen sie nur mit Push (siehe unten)“, und Push braucht „deinen Sync-Server“. Lena hat keinen. Die Erinnerung wird im Browser/PWA also nur geliefert, solange die App läuft. Im Dev-Build gespeichert und angezeigt (Jetzt wichtig), aber nirgends ein Hinweis beim Speichern, dass sie ohne Server evtl. nicht kommt. Ob die Android-APK lokal plant, konnte ohne Gerät nicht geprüft werden (README sagt „reminders even when the app is closed“, dann widerspricht der Einstellungstext dem).
-- **Screenshot:** ![B-02](screenshots/52-notif-settings.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-03 · Willkommenskarte überdeckt das Lesehilfe-Angebot; Text abgeschnitten, Schalter nicht bedienbar
 - **Schwere:** mittel · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer bei leerer App
@@ -55,7 +55,7 @@
   2. Startseite ansehen
 - **Erwartet:** Zwei getrennte, lesbare Hinweise oder einer.
 - **Tatsächlich:** In der Karte „Willkommen bei Nemo“ sind zwei Sätze mit „…“ abgeschnitten („…in den Einstellungen…“, „…abschalten.…“). Die Knöpfe „Einschalten / Nicht jetzt“ der Lesehilfe liegen laut DOM bei y≈292 px genau unter den Knöpfen „Einrichtung starten / Später“; sichtbar sind sie nicht. Der erste Eindruck wirkt kaputt. Tritt auch nach Backup-Import in leere App auf.
-- **Screenshot:** ![B-03](screenshots/01-fresh-start.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-04 · Runder „+“-Knopf verdeckt Bedienelemente und Inhalte
 - **Schwere:** mittel · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -64,7 +64,7 @@
   2. Mehr → Werkzeuge: Schalter bei „Währung“ liegt unter dem Knopf
 - **Erwartet:** Inhalt und Schalter bleiben erreichbar.
 - **Tatsächlich:** Der Knopf liegt über dem rechten Rand; dort sitzen oft Schalter, Papierkörbe, Sonntagsspalte. Muss erst weiter scrollen oder daneben tippen.
-- **Screenshot:** ![B-04](screenshots/90-tools.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-05 · „Heute“ sagt „Noch nichts geplant“, obwohl „Jetzt wichtig“ eine Erinnerung für heute zeigt
 - **Schwere:** mittel · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -73,7 +73,7 @@
   2. Startseite öffnen
 - **Erwartet:** „Heute“ enthält die Erinnerung oder spricht nicht von „nichts geplant“.
 - **Tatsächlich:** Oben „Jetzt wichtig: Tabletten Mama, heute um 08:00“, direkt darunter „Heute · Noch nichts geplant. Eine Sache reicht.“ Wirkt widersprüchlich; die Karte „Heute“ kennt nur ToDos.
-- **Screenshot:** ![B-05](screenshots/20-home-with-reminder.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-06 · Einrichtung: „Schritt x von 12“, später „10 von 11 Schritten erledigt“; Karte bleibt mit drei Knöpfen auf der Startseite
 - **Schwere:** niedrig · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -82,7 +82,7 @@
   2. Startseite ansehen
 - **Erwartet:** Eine Zahl, und die Karte verschwindet oder hat einen Knopf.
 - **Tatsächlich:** Zahlen passen nicht zusammen. Es bleibt die Karte „Einrichtung“ mit „Einrichtung öffnen“, „Einrichtung fortsetzen“ und „Ausblenden“ (die ersten zwei tun fast dasselbe). Das übersprungene Benachrichtigungen-Häkchen hält sie dauerhaft sichtbar.
-- **Screenshot:** ![B-06](screenshots/04-home-after-setup.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-07 · Kalender-Kopf: Bereichsauswahl „Kalender“ wird zum Schnipsel zusammengedrückt; bei 320 px Tab „Personen“ und Suchfeld abgeschnitten
 - **Schwere:** niedrig · **Plattform:** 320x568 und Desktop 1280x800 · **Häufigkeit:** immer
@@ -90,7 +90,7 @@
   1. Fenster auf 320 px (oder Desktop-Breite) ziehen, Planen → Kalender
 - **Erwartet:** Alle Tabs/Chips lesbar.
 - **Tatsächlich:** Die Pille neben „Kalender“ ist nur ein Strich/Halbkreis, das Suchfeld zeigt „S.“, der Tab „Personen“ fehlt.
-- **Screenshot:** ![B-07](screenshots/72-small-320.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-08 · Mehrtägiger Nachtdienst zeigt nur Beginn („21:30“), kein Ende
 - **Schwere:** niedrig · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -99,7 +99,7 @@
   2. Wochenliste ansehen
 - **Erwartet:** „21:30–06:30“ oder „bis Mo 06:30“.
 - **Tatsächlich:** Nur „21:30“. Ob 6:30 gespeichert ist, sieht man erst im Bearbeiten-Dialog.
-- **Screenshot:** ![B-08](screenshots/11-week.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-09 · Englische Oberfläche: Schnellerfassung zeigt „06:00 Uhr“
 - **Schwere:** niedrig · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -108,7 +108,7 @@
   2. Schnellerfassung: „Frühdienst morgen 6 Uhr“ eintippen
 - **Erwartet:** „06:00“ bzw. englisches Zeitformat.
 - **Tatsächlich:** Chip „06:00 Uhr“ bleibt deutsch.
-- **Screenshot:** ![B-09](screenshots/95-quickadd-shift.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-10 · Datum/Uhrzeit-Felder zeigen US-Format („10/29/2026“, „09:00 AM“) in deutscher Oberfläche
 - **Schwere:** niedrig · **Plattform:** Chromium-Testumgebung (unsicher) · **Häufigkeit:** immer in dieser Umgebung
@@ -116,7 +116,7 @@
   1. Planen → Neuer Termin
 - **Erwartet:** 29.10.2026 / 09:00.
 - **Tatsächlich:** US-Format, Platzhalter „mm/dd/yyyy“. Kann an der Test-Chromium-Locale liegen (native Eingabefelder folgen dem System), auf dem Handy der Persona nicht verifiziert. Notiert, weil Lena sich bei 05.11. vs. 11.05. vertun würde.
-- **Screenshot:** ![B-10](screenshots/09-more-fields.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 ### B-11 · Zwei gestapelte Hinweise („Abgehakt.“, „1 Eintrag gelöscht.“) verdecken ca. ein Fünftel des Bildschirms samt Navigation
 - **Schwere:** niedrig · **Plattform:** Android-Viewport 412x915 · **Häufigkeit:** immer
@@ -124,7 +124,7 @@
   1. Einkauf: einen Artikel abhaken, gleich danach einen löschen
 - **Erwartet:** Hinweise stören die Liste nicht, oder ein einzelner Hinweis.
 - **Tatsächlich:** Beide stehen übereinander über den letzten Zeilen und der unteren Leiste, solange sie sichtbar sind.
-- **Screenshot:** ![B-11](screenshots/48-after-add.png)
+- Screenshots: [PR #264](https://github.com/SGNemo/schweizer-taschenmesser/pull/264)
 
 
 ## Verbesserungen

@@ -4,9 +4,9 @@ import { expect, test } from '@playwright/test';
 
 /**
  * Screenshots for the bug-report PRs (diagnostics preview, recovery screen, safe mode). Not part of
- * CI (see playwright.screens.config.ts). Output: docs/screenshots/diagnostics.
+ * CI (see playwright.screens.config.ts). Output: SCREENS_DIR (default .screens/diagnostics, gitignored).
  */
-const OUT = resolve(process.cwd(), '../docs/screenshots/diagnostics');
+const OUT = resolve(process.cwd(), process.env.SCREENS_DIR ?? '.screens/diagnostics');
 mkdirSync(OUT, { recursive: true });
 test.use({ viewport: { width: 1100, height: 760 }, colorScheme: 'light' });
 

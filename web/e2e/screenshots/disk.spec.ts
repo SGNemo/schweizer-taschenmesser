@@ -3,9 +3,9 @@ import { expect, test } from '@playwright/test';
 
 /**
  * Screenshots of the disk module with the invented folder tree of `core/platform/fakeDisk.ts`.
- * Manual tooling like `capture.spec.ts` (not part of CI): SCREENS_DIR=../docs/screenshots/disk npm run screenshots -- disk
+ * Manual tooling like `capture.spec.ts` (not part of CI): SCREENS_DIR=.screens/disk npm run screenshots -- disk
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/disk';
+const OUT = process.env.SCREENS_DIR ?? '.screens/disk';
 
 test('disk module screenshots', async ({ page }) => {
   mkdirSync(OUT, { recursive: true });

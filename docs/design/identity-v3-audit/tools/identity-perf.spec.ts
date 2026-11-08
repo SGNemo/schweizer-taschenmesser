@@ -11,7 +11,7 @@ import { mockWeather, pickWeatherPlace } from '../weather-mock';
  * (patterns + tints) and the calm colour mode (patterns off), so the cost of the decoration is visible.
  * Usage (web/, seeded preview on :4174): SCREENS_DIR=<dir> npx playwright test -c playwright.audit.config.ts identity-perf
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/identity-audit';
+const OUT = process.env.SCREENS_DIR ?? '.screens/identity-audit';
 const PAGES = [
   { name: 'dashboard-calm-view', path: '/' },
   { name: 'dashboard-all', path: '/', all: true },

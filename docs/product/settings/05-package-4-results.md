@@ -1,6 +1,6 @@
 # Settings v2 – package 4 (search)
 
-Branch `feat/settings-search`, after #392, #399, #403, #408, #410. Screens: [screens/p4/](screens/p4/).
+Branch `feat/settings-search`, after #392, #399, #403, #408, #410. Screenshots: [PR #413](https://github.com/SGNemo/schweizer-taschenmesser/pull/413).
 
 | Search for | Before | Now |
 |---|---|---|

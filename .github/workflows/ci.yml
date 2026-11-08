@@ -198,13 +198,13 @@ jobs:
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
-  # Non-blocking docs budget check (start context, file sizes, dead links; needs only Node, no install).
-  # Warnings never fail the run; budgets: docs/meta/DOCS-GUIDE.md.
+  # Docs budget check (start context, file sizes, dead links; needs only Node, no install).
+  # Budget and link warnings never fail the run; an image under docs/ outside the allowed paths or over
+  # 100 KB does (binaries bloat every clone). Rules: docs/meta/DOCS-GUIDE.md.
   docs-budget:
-    name: Docs budget (warnings only)
+    name: Docs budget and images
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

@@ -1,6 +1,6 @@
 # Focus audit 2 – phase 2: measures and packages (2026-10-14)
 
-Basis: [10-audit-2.md](10-audit-2.md) and the maintainer's answers. Rules: nothing is deleted; "streichen" = off by default or folded, data and code stay; every addition needs a situation (the diary is still outstanding, so additions rest on the maintainer's direct wishes and are marked so). Mockups: [home-two-layers](mockups/home-two-layers.png), [todos-calm](mockups/todos-calm.png) (HTML next to them).
+Basis: [10-audit-2.md](10-audit-2.md) and the maintainer's answers. Rules: nothing is deleted; "streichen" = off by default or folded, data and code stay; every addition needs a situation (the diary is still outstanding, so additions rest on the maintainer's direct wishes and are marked so). Mockups: [PR #176](https://github.com/SGNemo/schweizer-taschenmesser/pull/176) (HTML next to them).
 
 ## Decisions so far (maintainer)
 1. Home default = "Nur das Wichtigste", with a clear way to see more or pin chosen widgets.
@@ -38,8 +38,8 @@ Basis: [10-audit-2.md](10-audit-2.md) and the maintainer's answers. Rules: nothi
 | Ideas to test against the diary (not planned): countdown to an event, "what did I do today" log, medication/routine times | unconfirmed | – | only if the diary names a situation |
 
 ## Mockups (two biggest changes)
-- **Home** ([png](mockups/home-two-layers.png)): A (recommended) = Jetzt + Heute + weather + "Mehr anzeigen"; B = same plus own pinned widgets. B is A with pins, so the default is A and B is the user path.
-- **ToDos** ([png](mockups/todos-calm.png)): A (recommended) = add field, Heute, Später, "Wartet noch" handle, "⋯" menu; B = ToDos opens on "Heute" only, bigger change.
+- **Home** (Screenshots: [PR #176](https://github.com/SGNemo/schweizer-taschenmesser/pull/176)): A (recommended) = Jetzt + Heute + weather + "Mehr anzeigen"; B = same plus own pinned widgets. B is A with pins, so the default is A and B is the user path.
+- **ToDos** (Screenshots: [PR #176](https://github.com/SGNemo/schweizer-taschenmesser/pull/176)): A (recommended) = add field, Heute, Später, "Wartet noch" handle, "⋯" menu; B = ToDos opens on "Heute" only, bigger change.
 
 ## Packages (small, one PR each, by impact; a stop and a week of use between them)
 1. **Paket 1 – Defaults and settings** (`feat/focus2-defaults`): new-install defaults (home "Nur das Wichtigste", streaks/week review/module strips off), focus settings 27 → ~12 visible, Darstellung grouped. Tests: defaults for new vs existing installs, stored values untouched, settings inventory. Lowest risk, biggest drop of the stimulus numbers.
