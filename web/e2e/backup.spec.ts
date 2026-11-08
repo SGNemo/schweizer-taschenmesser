@@ -180,6 +180,6 @@ test.describe('backup', () => {
     await page.getByRole('button', { name: 'Backup herunterladen' }).click();
     await download;
     await page.goto('/settings');
-    await expect(page.getByTestId('overview-backup')).toContainText('Als Datei gesichert');
+    await expect(page.getByTestId('overview-backup')).toContainText('Als Datei:');
   });
 });
