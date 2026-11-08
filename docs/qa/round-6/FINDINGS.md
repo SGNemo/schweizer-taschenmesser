@@ -28,6 +28,10 @@ U01–U36 und Tabu-Notizen T01–T05 in drei Dateien: [A · Abbruch-relevant](U-
 
 _Phase 2._
 
-## Vorschläge S06/S07 (Konzept, eigene Pakete)
+## Liste und Plan
 
-_Phase 3._
+Gruppierte Liste, Wellen, Fragen: [PLAN.md](PLAN.md).
+
+## Vorschläge S06/S07
+
+Konzeptlisten (Haushalt/Wissen/Tresor-Module, „Dieser PC“-Pakete D1–D3): [CONCEPTS-S06-S07.md](CONCEPTS-S06-S07.md).
