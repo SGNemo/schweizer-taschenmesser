@@ -53,7 +53,6 @@ const KEYWORDS: readonly { id: string; kind: 'expense' | 'income'; words: readon
       'alnatura',
       "denn's",
       'denns',
-      'bäckerei',
       'baeckerei',
       'metzgerei',
       'lebensmittel',
@@ -79,10 +78,18 @@ const KEYWORDS: readonly { id: string; kind: 'expense' | 'income'; words: readon
     ],
   },
   { id: 'cat-health', kind: 'expense', words: ['apotheke', 'zahnarzt', 'arztpraxis'] },
-  { id: 'cat-salary', kind: 'income', words: ['gehalt', 'lohn', 'bezüge'] },
+  { id: 'cat-salary', kind: 'income', words: ['gehalt', 'lohn', 'bezuege'] },
 ];
 
-const LETTER = 'a-zäöüß0-9';
+// Umlauts are spelled out before matching ("Bäckerei" → "baeckerei"), so the list stays ASCII.
+const ASCII: Record<string, string> = {
+  '\u00e4': 'ae',
+  '\u00f6': 'oe',
+  '\u00fc': 'ue',
+  '\u00df': 'ss',
+};
+const ascii = (s: string) => s.replace(/[\u00e4\u00f6\u00fc\u00df]/g, (c) => ASCII[c] ?? c);
+const LETTER = 'a-z0-9';
 const MATCHERS = KEYWORDS.map((k) => ({
   ...k,
   re: new RegExp(`(^|[^${LETTER}])(${k.words.join('|')})($|[^${LETTER}])`),
@@ -93,7 +100,7 @@ export function keywordCategory(row: {
   purpose?: string;
   kind: 'expense' | 'income';
 }): string | undefined {
-  const text = norm(`${row.payee ?? ''} ${row.purpose ?? ''}`);
+  const text = ascii(norm(`${row.payee ?? ''} ${row.purpose ?? ''}`));
   if (!text) return undefined;
   return MATCHERS.find((m) => m.kind === row.kind && m.re.test(text))?.id;
 }
