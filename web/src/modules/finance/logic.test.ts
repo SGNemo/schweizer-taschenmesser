@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountBalance,
+  openingForBalance,
   availability,
   balances,
   currenciesOf,
@@ -215,5 +216,19 @@ describe('balances: same result as the straightforward per-account sum', () => {
         );
       expect(result.has('gone')).toBe(false);
     }
+  });
+});
+
+// B06 (round 5, person B): after importing older bookings the balance no longer matched the bank.
+describe('openingForBalance', () => {
+  it('sets the opening balance so that today shows what the bank says', () => {
+    const txs = [
+      tx({ amountMinor: 234_567, kind: 'income', date: '2026-10-31' }),
+      tx({ amountMinor: 89_000, date: '2026-11-01' }),
+      tx({ amountMinor: 999, date: '2026-11-20' }), // later: not part of today's balance
+    ];
+    const opening = openingForBalance(125_000, txs, '2026-11-08');
+    expect(opening).toBe(125_000 - 234_567 + 89_000);
+    expect(accountBalance({ openingBalanceMinor: opening }, txs, '2026-11-08')).toBe(125_000);
   });
 });

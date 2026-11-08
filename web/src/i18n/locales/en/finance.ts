@@ -104,6 +104,14 @@ export const finance: Strings['finance'] = {
       file: 'transactions',
     },
     widget: { addExpense: 'Expense +', vsPrevious: (change: string) => `${change} vs. last month` },
+    month: {
+      title: 'This month',
+      free: 'Free until month end',
+      coming: (amount: string) => `Still to pay ${amount}`,
+      nothingComing: 'Nothing else due',
+      spent: (amount: string) => `spent so far ${amount}`,
+      open: "What's still to pay",
+    },
     settings: {
       bookSubscriptions: 'Book subscription charges as expenses',
       bookSubscriptionsHelp:
@@ -212,6 +220,10 @@ export const finance: Strings['finance'] = {
   editAccount: 'Edit account',
   accountName: 'Account name',
   openingBalance: 'Opening balance',
+  balanceToday: "Today's balance according to the bank (optional)",
+  openingFromToday: "Calculated from “Today's balance according to the bank”.",
+  balanceTodayHint:
+    "Shown in your online banking. Nemo sets the opening balance so that today's balance matches.",
   deleteAccountHint: 'Also deletes all transactions of this account.',
   noAccounts: 'No accounts yet.',
   fromSubscription: 'Assigned to the subscription by a rule.',

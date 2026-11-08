@@ -3146,6 +3146,14 @@ export const de = {
         file: 'buchungen',
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      month: {
+        title: 'Diesen Monat',
+        free: 'Frei bis Monatsende',
+        coming: (amount: string) => `Kommt noch ${amount}`,
+        nothingComing: 'Nichts mehr fällig',
+        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        open: 'Was noch kommt',
+      },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
         bookSubscriptionsHelp:
@@ -3254,6 +3262,10 @@ export const de = {
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
+    balanceToday: 'Kontostand heute laut Bank (optional)',
+    openingFromToday: 'Wird aus „Kontostand heute laut Bank“ berechnet.',
+    balanceTodayHint:
+      'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
@@ -6313,6 +6325,8 @@ export const de = {
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
         'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
+      bankBalanceHint:
+        'Stimmt der Kontostand danach nicht mit deiner Bank überein? Trag ihn unter Finanzen → Konten als „Kontostand heute laut Bank“ ein.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'

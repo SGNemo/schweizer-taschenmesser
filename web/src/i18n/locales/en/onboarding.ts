@@ -163,6 +163,8 @@ export const onboarding: Strings['onboarding'] = {
     noAccounts: 'Add an account first.',
     bankFormat:
       'The file format wasn’t recognised. Expected is an OFX, QIF or CAMT file, or a CSV file with date and amount.',
+    bankBalanceHint:
+      "Balance not matching your bank afterwards? Enter it under Finance → Accounts as “Today's balance according to the bank”.",
     bankSkipped: (n: number) =>
       n === 1
         ? '1 line without a valid date or amount was skipped.'
