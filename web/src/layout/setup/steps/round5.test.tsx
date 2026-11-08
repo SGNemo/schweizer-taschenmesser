@@ -73,7 +73,8 @@ describe('setup step "Fokus-Hilfen"', () => {
       expect(screen.getByText(s[`${k}Hint`])).toBeInTheDocument();
     // "Weiter" was held until the switches were there.
     expect(can[0]).toBe(false);
-    expect(can.at(-1)).toBe(true);
+    // The release is a passive effect: it may run just after the switches are in the DOM.
+    await waitFor(() => expect(can.at(-1)).toBe(true));
     // Nothing written yet.
     expect(useUiStore.getState().motion).toBe('system');
     await userEvent.setup().click(screen.getByRole('switch', { name: s.readAid }));
