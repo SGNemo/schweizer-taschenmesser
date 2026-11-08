@@ -119,13 +119,13 @@ describe('create-if-absent (SaveOptions.id)', () => {
 describe('findOpenInvoice', () => {
   const opts = { today: TODAY, states: ON };
 
-  it('nothing while invoices are off or nothing is open', async () => {
+  it('nothing while invoices are off; only a paid one with that name is a question, not a match', async () => {
     await invoice('a', { payee: 'Stadtwerke Musterstadt GmbH' });
     expect(
       await findOpenInvoice({ title: 'Stadtwerke' }, { today: TODAY, states: { invoices: false } }),
     ).toBeUndefined();
     await invoiceRepo().update('a', { status: 'paid', paidAt: TODAY });
-    expect(await findOpenInvoice({ title: 'Stadtwerke' }, opts)).toBeUndefined();
+    expect(await findOpenInvoice({ title: 'Stadtwerke' }, opts)).toEqual({ candidates: [] });
   });
 
   it('payee prefix with an amount between the rest and the rest plus a fee', async () => {
@@ -142,10 +142,11 @@ describe('findOpenInvoice', () => {
         restMinor: 7430,
       },
     });
-    expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 5000 }, opts)).toBeUndefined();
-    expect(
-      await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 99000 }, opts),
-    ).toBeUndefined();
+    // Outside the window the payee is still known: a question (candidates), never a match.
+    for (const amountMinor of [5000, 99000])
+      expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor }, opts)).toMatchObject({
+        candidates: [{ id: 'a' }],
+      });
   });
 
   it('also the creditor behind „im Auftrag von“, and a reference first', async () => {
@@ -313,5 +314,26 @@ describe('council round 1 – edges of the contract', () => {
     );
     await saved.undo();
     expect((await invoiceRepo().get('a'))!.note).toBe(own);
+  });
+});
+
+describe('council round 2 – unsure stays a ToDo', () => {
+  const opts = { today: TODAY, states: ON };
+  it('the payee is known but the amount is outside the window: candidates, never a new invoice', async () => {
+    await invoice('a', { payee: 'Stadtwerke' });
+    expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 99000 }, opts)).toEqual({
+      candidates: [{ id: 'a', payee: 'Stadtwerke', dueDate: '2026-09-15', restMinor: 8430 }],
+    });
+  });
+  it('a reminder that crossed with the payment: the paid invoice makes it a question', async () => {
+    await invoice('a', { payee: 'Stadtwerke' });
+    await invoiceRepo().update('a', { status: 'paid', paidAt: TODAY });
+    expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 8740 }, opts)).toEqual({
+      candidates: [],
+    });
+  });
+  it('nothing with that name at all: a new invoice may be made', async () => {
+    await invoice('a', { payee: 'Telekom' });
+    expect(await findOpenInvoice({ title: 'Stadtwerke', amountMinor: 8740 }, opts)).toBeUndefined();
   });
 });

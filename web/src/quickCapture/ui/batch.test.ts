@@ -67,3 +67,18 @@ describe('reminderRow – never a second invoice when unsure', () => {
     });
   });
 });
+
+describe('council round 2 – no ToDos, no second invoice', () => {
+  const fields = {
+    title: 'Stadtwerke',
+    amountMinor: 8740,
+    dunning: { level: 1, date: '2026-09-30' },
+  };
+  it('unsure without the ToDo target: the line asks for a target', () => {
+    expect(reminderRow('invoice', fields, 'failed', ['invoice'])).toEqual({
+      type: undefined,
+      fields,
+    });
+    expect(reminderRow('invoice', fields, { candidates: [] }, ['invoice']).type).toBeUndefined();
+  });
+});

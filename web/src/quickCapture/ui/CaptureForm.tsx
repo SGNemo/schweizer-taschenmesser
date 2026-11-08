@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
@@ -164,7 +164,10 @@ export function CaptureForm({
   );
   const type = singlePlan.type;
   const fields = singlePlan.fields;
-  const chips = previewChips(fields, type, result.notes, today());
+  // Noted on an existing invoice: no new-invoice chips (its own due date would contradict the hint).
+  const chips = previewChips(fields, type, result.notes, today()).filter(
+    (c) => !singlePlan.amend || c.id === 'amount',
+  );
 
   const rows = useMemo(
     () =>
@@ -184,7 +187,16 @@ export function CaptureForm({
             const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
-            return { part, ...res, ...row, ...plan, reminder, source: row.fields, chips: rowChips };
+            return {
+              part,
+              ...res,
+              ...row,
+              ...plan,
+              reminder,
+              source: row.fields,
+              lookup: lookups[lookupKey(part)],
+              chips: rowChips,
+            };
           })
         : [],
     // resolveOpts is rebuilt every render from the values listed here.
@@ -310,7 +322,7 @@ export function CaptureForm({
     Promise.all(
       rows.map(async (r): Promise<CaptureItem> => {
         if (!r.reminder) return { type: r.type!, fields: r.fields };
-        const plan = await resolveReminder('invoice', r.source, available, !!r.amend);
+        const plan = await resolveReminder('invoice', r.source, available, r.lookup);
         if (!plan.type) throw new CaptureError('invalid');
         return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
       }),
@@ -318,7 +330,12 @@ export function CaptureForm({
   /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
   const singleItem = async (): Promise<CaptureItem> => {
     if (!isReminder(resolved.type, singleFields)) return { type: type!, fields };
-    const plan = await resolveReminder(resolved.type, singleFields, available, !!singlePlan.amend);
+    const plan = await resolveReminder(
+      resolved.type,
+      singleFields,
+      available,
+      lookups[lookupKey(single)],
+    );
     if (!plan.type) throw new CaptureError('invalid');
     return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
   };
@@ -370,7 +387,8 @@ export function CaptureForm({
 
   /** The row target buttons, so focus returns to the row when its choice closes. */
   const targetRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const openPicker = (el: HTMLSelectElement | null) => {
+  // Stable, so a re-render while the choice is open (a lookup finishing) does not open it again.
+  const openPicker = useCallback((el: HTMLSelectElement | null) => {
     if (!el) return;
     el.focus();
     try {
@@ -378,7 +396,7 @@ export function CaptureForm({
     } catch {
       // Not allowed here (no user activation, older browser): the focused select opens on the next tap.
     }
-  };
+  }, []);
   const closeChoice = (part: string, refocus: boolean) => {
     setChoosing(undefined);
     if (refocus) requestAnimationFrame(() => targetRefs.current[part]?.focus());
@@ -443,7 +461,7 @@ export function CaptureForm({
               <li key={`${i}-${r.part}`} className={styles.row} data-testid="capture-row">
                 <span className={styles.rowTitle}>{r.fields.title || r.part}</span>
                 <div className={styles.chips}>
-                  {choosing === r.part ? (
+                  {choosing === `${i}:${r.part}` ? (
                     <select
                       className={styles.rowType}
                       aria-label={t.quickCapture.multi.rowTarget(r.part)}
@@ -452,15 +470,15 @@ export function CaptureForm({
                       ref={openPicker}
                       onChange={(e) => {
                         pickRow(r.part, e.target.value as CaptureType);
-                        closeChoice(r.part, true);
+                        closeChoice(`${i}:${r.part}`, true);
                       }}
                       onKeyDown={(e) => {
                         if (e.key !== 'Escape') return;
                         e.preventDefault();
                         e.stopPropagation();
-                        closeChoice(r.part, true);
+                        closeChoice(`${i}:${r.part}`, true);
                       }}
-                      onBlur={() => closeChoice(r.part, false)}
+                      onBlur={() => closeChoice(`${i}:${r.part}`, false)}
                       data-testid="capture-row-type"
                     >
                       {r.type ? null : <option value="">{t.quickCapture.multi.choose}</option>}
@@ -475,11 +493,11 @@ export function CaptureForm({
                     <button
                       type="button"
                       ref={(el) => {
-                        targetRefs.current[r.part] = el;
+                        targetRefs.current[`${i}:${r.part}`] = el;
                       }}
                       className={styles.rowTarget}
                       aria-label={`${t.quickCapture.multi.rowTarget(r.part)}: ${rowTargetText(r)}`}
-                      onClick={() => setChoosing(r.part)}
+                      onClick={() => setChoosing(`${i}:${r.part}`)}
                       data-testid="capture-row-target"
                       data-type={r.type ?? ''}
                     >
@@ -521,7 +539,7 @@ export function CaptureForm({
         {!multi && singlePlan.amend ? (
           // The single sheet says too that an existing invoice is noted, not a new one created.
           <p className={styles.hint} role="status" data-testid="capture-dunning-hint">
-            {t.quickCapture.multi.dunningMatch(
+            {t.quickCapture.multi.dunningWill(
               singlePlan.amend.payee,
               formatDay(singlePlan.amend.dueDate, 'd. MMM'),
             )}

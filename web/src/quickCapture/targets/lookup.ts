@@ -70,19 +70,17 @@ export async function findOpenInvoice(
   if (!manifest || !states.invoices) return undefined;
   const repo = createCollectionRepo(manifest, 'invoice', opts.database);
   const rows = (await repo.active().toArray()) as Record<string, unknown>[];
-  const open = rows
-    .map((r) => {
-      return {
-        id: String(r.id),
-        payee: String(r.payee ?? ''),
-        dueDate: String(r.dueDate ?? ''),
-        restMinor: openRest(r),
-        reference: typeof r.reference === 'string' ? r.reference : '',
-        status: r.status,
-      };
-    })
-    .filter((r) => r.status !== 'paid' && r.restMinor > 0);
-  if (open.length === 0) return undefined;
+  const all = rows.map((r) => {
+    return {
+      id: String(r.id),
+      payee: String(r.payee ?? ''),
+      dueDate: String(r.dueDate ?? ''),
+      restMinor: openRest(r),
+      reference: typeof r.reference === 'string' ? r.reference : '',
+      status: r.status,
+    };
+  });
+  const open = all.filter((r) => r.status !== 'paid' && r.restMinor > 0);
   const strip = ({ reference: _r, status: _s, ...inv }: (typeof open)[number]): OpenInvoice => {
     void _r;
     void _s;
@@ -99,14 +97,20 @@ export async function findOpenInvoice(
   // 2. The payee by name prefix, with an amount that covers the rest (plus a fee).
   const query = words(fields.title).filter((w) => !NOISE.has(w) && !/^\d/.test(w));
   const amount = fields.amountMinor;
+  const named = (r: (typeof all)[number]) => names(r.payee).some((n) => namesPayee(query, n));
   const fits = open.filter((r) => {
-    if (!names(r.payee).some((n) => namesPayee(query, n))) return false;
+    if (!named(r)) return false;
     if (amount === undefined) return true;
     return (
       amount >= r.restMinor && amount <= r.restMinor + Math.max(FEE_MINOR, r.restMinor * FEE_SHARE)
     );
   });
-  if (fits.length === 0) return undefined;
+  if (fits.length === 0) {
+    // The payee is known – an amount outside the window (an unrecorded part payment, interest) or a
+    // reminder that crossed with the payment: unsure, so a ToDo to check, never a second invoice.
+    const known = all.filter(named);
+    return known.length > 0 ? { candidates: open.filter(named).map(strip) } : undefined;
+  }
   if (fits.length === 1) return { match: strip(fits[0]!) };
 
   // 3. The oldest overdue one; a tie stays a question for later, never a guess.

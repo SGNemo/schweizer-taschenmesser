@@ -1102,6 +1102,8 @@ export const de = {
       dunningMatch: (payee: string, due: string) =>
         `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
       dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
+      dunningWill: (payee: string, due: string) =>
+        `Wird bei Rechnung ${payee}, fällig ${due}, vermerkt.`,
     },
     trayToday: {
       heading: 'Heute',

@@ -1,7 +1,7 @@
 import { formatMoney } from '@/core/money';
-import type { CaptureFields, CaptureType } from '../parser';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
+import type { CaptureFields, CaptureType } from '../parser';
 import { targetFor, type InvoiceLookup, type OpenInvoice } from '../targets';
 
 /** One line of a many-lines capture as it will be saved. */
@@ -115,16 +115,24 @@ export async function resolveReminder(
   type: CaptureType | undefined,
   fields: CaptureFields,
   available: readonly CaptureType[],
-  previewHadMatch: boolean,
+  preview: LookupResult | undefined,
 ): Promise<ReminderRow> {
   if (!isReminder(type, fields)) return { type, fields };
   const found = await lookupInvoice(fields);
-  return reminderRow(
-    type,
-    fields,
-    found === 'none' && previewHadMatch ? 'failed' : found,
-    available,
-  );
+  // What is saved must be what the preview showed: another invoice than the one shown, or nothing where
+  // the preview was unsure, is unsure again.
+  const shown = preview && preview !== 'none' && preview !== 'failed' ? preview : undefined;
+  const changed =
+    (shown &&
+      'match' in shown &&
+      !(
+        found !== 'none' &&
+        found !== 'failed' &&
+        'match' in found &&
+        found.match.id === shown.match.id
+      )) ||
+    (((shown && 'candidates' in shown) || preview === 'failed') && found === 'none');
+  return reminderRow(type, fields, changed ? 'failed' : found, available);
 }
 
 export function reminderRow(
@@ -139,5 +147,6 @@ export function reminderRow(
     : undefined;
   if (lookup !== 'failed' && 'match' in lookup)
     return { type, fields, amend: lookup.match, ...(check ? { fallback: check } : {}) };
-  return check ?? { type, fields };
+  // Unsure and no ToDos: the line asks for a target instead of becoming a second invoice.
+  return check ?? { type: undefined, fields };
 }
