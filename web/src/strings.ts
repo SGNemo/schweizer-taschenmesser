@@ -939,7 +939,7 @@ export const de = {
   quickCapture: {
     title: 'Schnell erfassen',
     inputLabel: 'Was möchtest du festhalten?',
-    placeholder: 'z. B. „morgen 15 Uhr Zahnarzt“',
+    placeholder: 'z. B. „Tanken 62,40, morgen 9 Uhr Kunde anrufen“',
     save: 'Speichern',
     book: 'Buchen',
     type: {

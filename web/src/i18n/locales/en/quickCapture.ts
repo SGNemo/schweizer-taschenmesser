@@ -3,7 +3,7 @@ import type { Strings } from '@/strings';
 export const quickCapture: Strings['quickCapture'] = {
   title: 'Quick capture',
   inputLabel: 'What would you like to note down?',
-  placeholder: 'e.g. “morgen 15 Uhr Zahnarzt” (German for now)',
+  placeholder: 'e.g. “Tanken 62,40, morgen 9 Uhr Kunde anrufen” (German for now)',
   save: 'Save',
   book: 'Record',
   type: {

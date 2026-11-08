@@ -58,3 +58,22 @@ describe('C03: short weekday before a time („Do 14 Uhr“) or after „am“',
     },
   );
 });
+
+describe('C08: the field example is a sentence the parser really reads', () => {
+  it('„Tanken 62,40, morgen 9 Uhr Kunde anrufen“ = one expense + one appointment', async () => {
+    const { splitCapture } = await import('./split');
+    const { t } = await import('@/strings');
+    const example = /„(.+)“/.exec(t.quickCapture.placeholder)?.[1] ?? '';
+    const parts = splitCapture(example);
+    expect(parts).toHaveLength(2);
+    const [spend, call] = parts.map(parse);
+    expect(spend).toMatchObject({
+      type: 'finance',
+      fields: { title: 'Tanken', amountMinor: 6240 },
+    });
+    expect(call).toMatchObject({
+      type: 'event',
+      fields: { title: 'Kunde anrufen', date: '2026-10-30', time: '09:00' },
+    });
+  });
+});
