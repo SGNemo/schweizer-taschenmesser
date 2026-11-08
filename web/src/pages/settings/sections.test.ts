@@ -50,7 +50,6 @@ describe('preview sections (maturity)', () => {
   const PREVIEW = [
     'localapi',
     'share',
-    'network',
     'browser-extension',
     'reading',
     'voice',
@@ -68,8 +67,12 @@ describe('preview sections (maturity)', () => {
     for (const id of PREVIEW) expect(shown, id).toContain(id);
   });
 
+  it('"Was ging wohin?" (connection log, network block, what can go out) is visible by default (D11)', () => {
+    expect(ids(ctx())).toContain('network');
+  });
+
   it('stay reachable while in use, one by one', () => {
-    for (const id of ['localapi', 'share', 'network', 'reading', 'voice']) {
+    for (const id of ['localapi', 'share', 'reading', 'voice']) {
       expect(ids(ctx({ inUse: { [id]: true } })), id).toContain(id);
     }
   });
