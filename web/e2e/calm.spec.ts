@@ -92,7 +92,9 @@ test.describe('Calm display, capture and finding things again', () => {
     await expect(page.getByText('Gespeichert in ToDos')).toBeVisible();
 
     await ready(page, '/todos');
-    await expect(page.getByTestId('todos-inbox')).toContainText('1 Ding wartet auf einen Platz.');
+    await expect(page.getByTestId('todos-inbox')).toContainText(
+      '1 Aufgabe liegt im Eingang, noch in keiner Liste.',
+    );
     await page.getByRole('button', { name: 'Eingang sortieren' }).click();
     const sorter = page.getByTestId('inbox-sorter');
     await expect(sorter).toContainText('Irgendwas mit Oma klären');
