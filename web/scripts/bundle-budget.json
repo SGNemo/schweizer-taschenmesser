@@ -3,6 +3,6 @@
   "tolerancePercent": 5,
   "criticalGzip": 698090,
   "criticalRequests": 87,
-  "precacheFiles": 526,
+  "precacheFiles": 529,
   "precacheBytes": 6859650
 }

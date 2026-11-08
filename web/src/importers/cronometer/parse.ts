@@ -6,7 +6,22 @@ export const looksLikeCronometer = (text: string): boolean => {
   return h.includes('food name') && h.includes('energy (kcal)') && /(^|,|;)"?day"?(,|;)/.test(h);
 };
 
-const int = (v: number | undefined) => (v === undefined ? undefined : Math.round(v));
+/** „07:30“, „7:30 PM“ → „19:30“; anything else → no time (never a wrong one). */
+export function clockTime(s: string | undefined): string | undefined {
+  const m = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?$/i.exec(s?.trim() ?? '');
+  if (!m) return undefined;
+  let h = Number(m[1]);
+  const half = m[3]?.toLowerCase();
+  if (half) {
+    if (h < 1 || h > 12) return undefined;
+    h = (h % 12) + (half === 'pm' ? 12 : 0);
+  }
+  if (h > 23 || Number(m[2]) > 59) return undefined;
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
+}
+
+const int = (v: number | undefined) =>
+  v === undefined ? undefined : Math.min(999, Math.max(0, Math.round(v)));
 
 export function parseCronometer(text: string): {
   meals: ParsedMeal[];
@@ -28,10 +43,10 @@ export function parseCronometer(text: string): {
       empty++;
       continue;
     }
-    const time = /^\d{1,2}:\d{2}/.exec(r['time'] ?? '')?.[0];
+    const time = clockTime(r['time']);
     meals.push({
       date: day.date,
-      ...(time ? { time: time.padStart(5, '0') } : {}),
+      ...(time ? { time } : {}),
       text: name,
       kcal: Math.round(kcal),
       ...(num(r['protein (g)']) !== undefined ? { proteinG: int(num(r['protein (g)'])) } : {}),

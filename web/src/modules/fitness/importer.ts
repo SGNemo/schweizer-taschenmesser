@@ -39,7 +39,7 @@ export function toExercises(sets: readonly ParsedSet[]): Exercise[] {
       name: name.slice(0, 80),
       ...(sets ? { sets } : {}),
       ...(clamp(reps, 500) ? { reps: clamp(reps, 500) } : {}),
-      ...(kg ? { weightKg: Math.min(1000, Math.round(kg * 10) / 10) } : {}),
+      ...(kg && kg > 0 ? { weightKg: Math.min(1000, Math.round(kg * 10) / 10) } : {}),
       ...(seconds > 0 ? { durationMin: clamp(seconds / 60, 1440) } : {}),
     };
   });
@@ -126,7 +126,8 @@ const runtime: ImporterRuntime = {
   },
   async existingKeys(collection) {
     if (collection === 'session') {
-      const rows = await sessionRepo.active().toArray();
+      // A plan is no workout yet: an imported workout on its day and with its title is still imported.
+      const rows = (await sessionRepo.active().toArray()).filter((r) => !r.planned);
       return new Set(rows.map(sessionKey));
     }
     if (collection === 'meal') {

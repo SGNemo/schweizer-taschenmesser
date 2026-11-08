@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseCronometer } from './cronometer/parse';
+import { clockTime, parseCronometer } from './cronometer/parse';
 import { parseHevy } from './hevy/parse';
 import { detectSources } from './registry';
 import { parseStrong } from './strong/parse';
-import { durationMinutes, englishDateTime } from './workouts';
+import { durationMinutes, englishDateTime, num } from './workouts';
 
 const fixture = (n: string) =>
   readFileSync(resolve(process.cwd(), 'src/importers/__fixtures__', n), 'utf8');
@@ -68,10 +68,38 @@ describe('fitness exports (invented fixtures)', () => {
     ]);
   });
 
+  it('reads the Strong 6 header: weight in kg or lbs by column, duration in seconds', () => {
+    const text = [
+      'Workout #,Date,Workout Name,Duration (sec),Exercise Name,Set Order,Weight (lbs),Reps,RPE,Distance (meters),Seconds,Notes,Workout Notes',
+      '7,2026-10-20 18:00:00,Push,3300,Bench Press,1,135,8,,,,,',
+    ].join('\n');
+    const { workouts } = parseStrong(text);
+    expect(workouts[0]).toMatchObject({ date: '2026-10-20', title: 'Push', durationMin: 55 });
+    expect(workouts[0]!.sets[0]!.weightKg).toBeCloseTo(61.2, 1);
+    const kg = parseStrong(text.replace('Weight (lbs)', 'Weight (kg)').replace(',135,', ',60,'));
+    expect(kg.workouts[0]!.sets[0]!.weightKg).toBe(60);
+  });
+
+  it('reads 12-hour times and never stores a time it does not understand', () => {
+    expect(clockTime('7:30 PM')).toBe('19:30');
+    expect(clockTime('12:15 AM')).toBe('00:15');
+    expect(clockTime('12:15 PM')).toBe('12:15');
+    expect(clockTime('07:30')).toBe('07:30');
+    expect(clockTime('abends')).toBeUndefined();
+    expect(clockTime('13:00 PM')).toBeUndefined();
+  });
+
+  it('reads thousands separators either way', () => {
+    expect(num('1,234.5')).toBe(1234.5);
+    expect(num('1.234,5')).toBe(1234.5);
+    expect(num('62,5')).toBe(62.5);
+  });
+
   it('understands the usual duration and date spellings', () => {
     expect(durationMinutes('1h 5m')).toBe(65);
     expect(durationMinutes('45m')).toBe(45);
     expect(durationMinutes('1:05:00')).toBe(65);
+    expect(durationMinutes('45:30')).toBeUndefined();
     expect(durationMinutes('')).toBeUndefined();
     expect(englishDateTime('3 Nov 2026, 07:05')).toEqual({ date: '2026-11-03', time: '07:05' });
     expect(englishDateTime('Hallo')).toBeUndefined();

@@ -34,7 +34,7 @@ export interface ParsedMeal {
 
 /** Rows of a CSV with a header, as objects keyed by the lower-cased column name. */
 export function csvRecords(text: string): Record<string, string>[] {
-  const rows = parseCsv(text.replace(/^﻿/, ''));
+  const rows = parseCsv(text.replace(/^\uFEFF/, ''));
   const [header, ...body] = rows;
   if (!header) return [];
   const keys = header.map((h) => h.trim().toLowerCase());
@@ -45,12 +45,20 @@ export function csvRecords(text: string): Record<string, string>[] {
 
 /** The header line of a CSV, lower-cased (for detection; cheap). */
 export const csvHeader = (text: string): string =>
-  (text.replace(/^﻿/, '').split(/\r?\n/, 1)[0] ?? '').toLowerCase();
+  (text.replace(/^\uFEFF/, '').split(/\r?\n/, 1)[0] ?? '').toLowerCase();
 
 /** A number in either notation („62,5“, „62.5“); undefined for empty or invalid. */
 export function num(s: string | undefined): number | undefined {
   if (!s?.trim()) return undefined;
-  const v = Number(s.replace(',', '.'));
+  const t = s.trim();
+  // „1,234.5“ / „1.234,5“: the earlier mark separates thousands and goes.
+  const both = t.includes(',') && t.includes('.');
+  const clean = both
+    ? t.lastIndexOf(',') > t.lastIndexOf('.')
+      ? t.replace(/\./g, '').replace(',', '.')
+      : t.replace(/,/g, '')
+    : t.replace(',', '.');
+  const v = Number(clean);
   return Number.isFinite(v) ? v : undefined;
 }
 
@@ -86,11 +94,10 @@ export function englishDateTime(s: string): { date: string; time?: string } | un
 /** „1h 5m“, „45m“, „3600s“, „1:05:00“ → minutes (rounded); undefined when unreadable. */
 export function durationMinutes(s: string | undefined): number | undefined {
   if (!s?.trim()) return undefined;
-  const clock = /^(\d+):(\d{2})(?::(\d{2}))?$/.exec(s.trim());
-  if (clock)
-    return clock[3]
-      ? Number(clock[1]) * 60 + Number(clock[2]) + Math.round(Number(clock[3]) / 60)
-      : Number(clock[1]) * 60 + Number(clock[2]);
+  // Only h:mm:ss is a clock duration; two parts are ambiguous (h:mm or mm:ss) and left unread.
+  const clock = /^(\d+):(\d{2}):(\d{2})$/.exec(s.trim());
+  if (clock) return Number(clock[1]) * 60 + Number(clock[2]) + Math.round(Number(clock[3]) / 60);
+  if (/^\d+:\d{2}$/.test(s.trim())) return undefined;
   let sec = 0;
   let any = false;
   for (const m of s.matchAll(/(\d+(?:[.,]\d+)?)\s*(h|m|s)/gi)) {
