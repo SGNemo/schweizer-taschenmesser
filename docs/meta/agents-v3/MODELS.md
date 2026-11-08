@@ -14,7 +14,7 @@
 | nemo-extension  | claude-sonnet-5-5 | medium | write      | 3631         |
 | nemo-frontend   | claude-sonnet-5-5 | medium | write      | 4353         |
 | nemo-i18n       | claude-haiku-5-5  | medium | write      | 3799         |
-| nemo-lead       | claude-sonnet-5-5 | high   | review     | 6530         |
+| nemo-lead       | claude-sonnet-5-5 | high   | review     | 6679         |
 | nemo-merge      | claude-sonnet-5-5 | medium | merge      | 7006         |
 | nemo-native     | claude-sonnet-5-5 | medium | write      | 4364         |
 | nemo-perf       | claude-sonnet-5-5 | medium | write      | 4172         |

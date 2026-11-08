@@ -740,7 +740,7 @@ async function main() {
     `session ${session.id} created (budget ${body.budget.max_list_cost.amount} cents, checkout ${cfg.checkout}, ${body.resources.length} repo mount(s))`,
   );
   console.log(
-    `resume later: node scripts/agents/session.mjs --session ${session.id} "…"`,
+    `approve the plan / answer the lead: node scripts/agents/session.mjs --session ${session.id} "…" (a new request = a new session)`,
   );
   const outcome = await streamUntilIdle(c, session.id, () =>
     c.beta.sessions.events.send(session.id, { events: [userMessage(message)] }),

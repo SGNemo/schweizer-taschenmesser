@@ -142,8 +142,8 @@ Erwartet: der Agent-Push auf den Branch geht; die drei Abfragen zeigen die aktiv
 
 ## 5 Wiederanlauf
 
-- **Fortsetzen / Nachfrage:** `node scripts/agents/session.mjs --session sess_… "Bitte Paket 2b starten"` – Verlauf und Sandbox bleiben (Sandbox-Zustand 30 Tage ab Erstellung).
-- **Budget erhöhen:** `node scripts/agents/session.mjs budget sess_… 30` – muss über dem verbrauchten Betrag liegen; eine pausierte Session läuft von selbst weiter. Entfernen (einmalig, nicht rückgängig) nur per API (`budget: null`).
+- **Fortsetzen / Antwort:** `node scripts/agents/session.mjs --session sess_… "Plan freigegeben"` – nur Freigaben und Antworten auf Fragen des Leads; ein neues Paket oder Thema = neue Session (§4 „Was kostet was“). Verlauf und Sandbox bleiben (Sandbox-Zustand 30 Tage ab Erstellung).
+- **Budget erhöhen** (Ausnahme, §4: „nicht erhöhen, neu starten“): `node scripts/agents/session.mjs budget sess_… 15` – zeigt die bisherige Nutzung und fragt nach (ohne Terminal `--yes`, über 30 $ `--yes-expensive`); muss über dem verbrauchten Betrag liegen; eine pausierte Session läuft von selbst weiter. Entfernen (einmalig, nicht rückgängig) nur per API (`budget: null`).
 - **Unterbrechen:** `node scripts/agents/session.mjs interrupt sess_…`, dann neue Nachricht.
 - **Threads:** `node scripts/agents/session.mjs threads sess_…` zeigt Primär- und Kind-Threads (Grenze 25 gleichzeitig); `--archive-idle` archiviert fertige Kind-Threads (gibt Plätze frei, der Lead kann sie dann nicht mehr nachfragen).
 - **Agenten aktualisieren:** Schritt 2.5; danach neue Session (laufende behalten die alte Konfiguration).

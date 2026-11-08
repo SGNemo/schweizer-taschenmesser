@@ -20,7 +20,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 
 - **Outputs:** never read a log, diff or file in full. First `tail -40 <log>`, `grep -n <pattern>`, `git diff --stat`, `wc -l`; then read only the lines you change or cite (`sed -n 'a,bp'`, `git diff -- <file>`). Long commands write to a log file (Session start 4), never into your context.
 - **Docs:** only the doc file of your own area (Session start 3); CLAUDE.md and this file once per thread, not again on follow-ups.
-- **Reports:** every message in a thread ≤ 15 lines (the report block below ≤ 10); everything longer (tables, command output, diffs) goes into the report file in your notes dir and is referenced by path.
+- **Reports:** every answer or hand-back in a thread ≤ 15 lines (the report block below ≤ 10; the lead's delegation briefs are exempt); everything longer (tables, command output, diffs) goes into the report file in your notes dir and is referenced by path.
 - **Follow-ups:** a follow-up in an open thread continues from your notes file; do not redo the session start, re-read docs or re-run checks that still hold.
 
 ## Git and GitHub
