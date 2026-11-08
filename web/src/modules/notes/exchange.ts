@@ -66,7 +66,8 @@ export interface ImportedPage {
   body: string;
 }
 
-const TEXT_FILE = /\.(?:md|markdown|txt)$/i;
+/** Files the notes import reads as pages. */
+export const TEXT_FILE = /\.(?:md|markdown|txt)$/i;
 
 /**
  * Reads `.md` / `.txt` files; a picked folder becomes the notebook, `.txt` keeps its line breaks.

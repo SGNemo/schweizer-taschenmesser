@@ -4,7 +4,7 @@ import { byFolderOrder } from '@/importers/obsidian/parse';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Dialog } from '@/ui';
-import { noteKey, parseImport, type ImportedPage } from '../exchange';
+import { noteKey, parseImport, TEXT_FILE, type ImportedPage } from '../exchange';
 import { nextNotebookOrder } from '../logic';
 import { noteRepo, notebookRepo } from '../repo';
 import styles from './Dialogs.module.css';
@@ -29,7 +29,7 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
       [...list].map(async (f) => {
         const path = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
         // Only notes are read; plugins, git objects and pictures of an export only need their path.
-        const read = /\.(?:md|markdown|txt)$/i.test(path) && !isHiddenPath(path);
+        const read = TEXT_FILE.test(path) && !isHiddenPath(path);
         return { path, text: read ? await f.text() : '' };
       }),
     );
