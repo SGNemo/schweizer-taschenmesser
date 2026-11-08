@@ -83,6 +83,18 @@ describe('widget bodies (identity v3.1)', () => {
     expect(screen.getAllByRole('progressbar')).toHaveLength(2);
   });
 
+  it('FortschrittBody: a bar row without a target (max 0) keeps its words and draws no bar', () => {
+    wrap(
+      'm',
+      <FortschrittBody
+        kind="bars"
+        entries={[{ key: 'a', title: 'Heute', value: 0, max: 0, detail: '770 kcal' }]}
+      />,
+    );
+    expect(screen.getByText('770 kcal')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
+
   it('NotizBody: a serif title with a mark, the first lines by size, a meta line', () => {
     wrap(
       's',

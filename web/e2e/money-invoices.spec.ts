@@ -44,6 +44,31 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
       'Teilweise bezahlt',
     );
 
+    // The booking is written by an async finance handler after the dialog: wait for it before
+    // leaving the page, or the navigation cuts it off (docs/howto/gotchas.md; flaked ~1 in 6).
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            new Promise<number>((resolve, reject) => {
+              const open = indexedDB.open('taschenmesser');
+              open.onerror = () => reject(open.error);
+              open.onsuccess = () => {
+                const db = open.result;
+                const req = db
+                  .transaction('finance_transaction', 'readonly')
+                  .objectStore('finance_transaction')
+                  .count();
+                req.onsuccess = () => {
+                  db.close();
+                  resolve(req.result);
+                };
+                req.onerror = () => reject(req.error);
+              };
+            }),
+        ),
+      )
+      .toBeGreaterThanOrEqual(1);
     await ready(page, '/finance?tab=transactions');
     await expect(page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ })).toContainText(
       /−40,00\s€/,

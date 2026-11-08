@@ -201,6 +201,15 @@ export const SIGNATURE_MARKS: Record<Exclude<SignatureId, 'none'>, ReactNode> = 
       <rect x="19" y="16" width="2" height="4" rx=".3" />
     </>
   ),
+  // A dumbbell: two plates on a bar (Fitness).
+  dumbbell: (
+    <>
+      <path d="M7 12h10" />
+      <rect x="3.5" y="8" width="3.5" height="8" rx="1" />
+      <rect x="17" y="8" width="3.5" height="8" rx="1" />
+      <path d="M2 10.5v3M22 10.5v3" />
+    </>
+  ),
   /* ---- tools ---- */
   // Calculator display with a result line and a key row.
   display: (

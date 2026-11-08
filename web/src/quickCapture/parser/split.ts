@@ -15,6 +15,7 @@
  * When unsure it does not split: a wrong split makes several entries out of one thought, a missed
  * split only leaves one entry with a longer title.
  */
+import { looksLikeWorkout } from './fitness';
 
 /** Words that only say when (or connect), never what: a part made only of these is no entry. */
 const WHEN_WORDS = new Set(
@@ -147,6 +148,8 @@ function splitSentence(sentence: string): string[] {
 }
 
 function splitLine(line: string): string[] {
+  // „training Bankdrücken 3×8 60, Kniebeuge 3×5 80“: the commas separate exercises of one session.
+  if (looksLikeWorkout(line)) return [line];
   const cuts = sentenceCuts(line, protectedSpans(line));
   const sentences = cuts.length > 0 ? cutAt(line, cuts) : [line];
   // Sentence ends count only when every sentence is an entry; else the whole line is one.

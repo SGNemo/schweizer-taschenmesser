@@ -153,10 +153,12 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const setHomeView = useUiStore((s) => s.setHomeView);
   const calm = homeView === 'calm' && !editing && !cockpit;
   const hiddenByUser = ordered.filter((e) => layout.hidden.includes(e.key));
+  // Keys the calm view may show; a Heute card the user hid lets the month card stand in.
+  const available = ordered.filter((e) => !layout.hidden.includes(e.key)).map((e) => e.key);
   const shown = editing
     ? ordered
     : ordered.filter(
-        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout)),
+        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
 
