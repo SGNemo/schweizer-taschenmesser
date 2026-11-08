@@ -112,5 +112,8 @@ describe('stored mail links carry no address (U17) and point back to the thread 
         expect(p.extra.link).toEqual({ kind: 'mail', id: 't1', label: expect.any(String) });
       }
     }
+    const bare = { ...eventMail, subject: '', from: { name: '', email: 'info@hv.example.org' } };
+    const p = mailPrefill('todo', bare, { link: stored, threadId: 't1', today: TODAY });
+    expect(p.extra.link?.label).not.toContain('@');
   });
 });

@@ -107,6 +107,7 @@ export const quickCapture: Strings['quickCapture'] = {
     view: 'View',
     bookExpense: 'Book as expense',
     bookIncome: 'Book as income',
+    bookLine: (action: string, line: string) => `${action}: ${line}`,
   },
   trayToday: {
     heading: 'Today',

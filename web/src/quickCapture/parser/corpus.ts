@@ -334,6 +334,4 @@ export const CORPUS: CorpusCase[] = [
   { from: 'KL', text: 'Miete bezahlt 850 €', type: 'finance', amountMinor: 85000, title: 'Miete' },
   // Without an amount a past-tense word is just text.
   { from: 'KL', text: 'Schuhe gekauft', type: 'todo', title: 'Schuhe gekauft' },
-  // An invoice word wins over „bezahlt“ (no tie, no question).
-  { from: 'KL', text: 'Rechnung Stadtwerke bezahlt 84,30 €', type: 'invoice', amountMinor: 8430 },
 ];

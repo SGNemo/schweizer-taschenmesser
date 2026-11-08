@@ -3,7 +3,7 @@ type: changed
 area: app
 breaking: false
 highlight: true
-de: Mehrere Zeilen in der Schnellerfassung speichern mit einem Tipp und buchen nie; eine Geldzeile wird ToDo mit „Als Ausgabe buchen“.
+de: Mehrere Zeilen in der Schnellerfassung werden mit einem Tipp gespeichert und nie gebucht; eine Geldzeile wird ein ToDo mit „Als Ausgabe buchen“.
 en: Several lines in quick capture save with one tap and never book money; a money line becomes a to-do with “Book as expense”.
 ---
 

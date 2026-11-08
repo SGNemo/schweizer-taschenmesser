@@ -28,13 +28,16 @@ async function alertLine(
   }
 }
 
-/** Where „Ansehen“ after a batch leads: the planner when it is on, else the ToDo inbox with „Eingang sortieren“. */
-export async function batchPlace(): Promise<string> {
+/**
+ * Where „Ansehen“ after a batch leads: the planner when it is on, else the ToDo inbox with „Eingang
+ * sortieren“; nowhere (no „Ansehen“) when neither is on.
+ */
+export async function batchPlace(): Promise<string | undefined> {
   try {
     const states = await loadModuleStates(visibleManifests);
-    return states.planner ? '/planner' : '/todos?list=inbox';
+    return states.planner ? '/planner' : states.todos ? '/todos?list=inbox' : undefined;
   } catch {
-    return '/todos?list=inbox';
+    return undefined;
   }
 }
 

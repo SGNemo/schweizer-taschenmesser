@@ -138,6 +138,9 @@ export function Dialog({
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       aria-labelledby={titleId}
       onCancel={(e) => {
+        // React bubbles `cancel` through the component tree: a dialog opened inside this one (the
+        // capture sheet's booking sheet) must not close this one too.
+        if (e.target !== ref.current) return;
         e.preventDefault();
         requestClose();
       }}

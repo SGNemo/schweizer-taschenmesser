@@ -28,10 +28,19 @@ export function batchRow(
   fields: CaptureFields,
   available: readonly CaptureType[],
   parsedType?: CaptureType,
+  /** The title is the line as typed (inbox fallback): it already holds the amount. */
+  asTyped = false,
 ): BatchRow {
-  const money = books(type) || (type === 'todo' && books(parsedType) && !!fields.amountMinor);
+  const money =
+    books(type) ||
+    (type === 'todo' &&
+      books(parsedType) &&
+      !!parsedType &&
+      available.includes(parsedType) &&
+      !!fields.amountMinor);
   if (!money) return { type, fields };
-  const amount = fields.amountMinor ? formatMoney(fields.amountMinor, fields.currency) : '';
+  const amount =
+    fields.amountMinor && !asTyped ? formatMoney(fields.amountMinor, fields.currency) : '';
   return {
     type: available.includes('todo') ? 'todo' : undefined,
     fields: {
@@ -49,6 +58,13 @@ export function batchRow(
  */
 export function withoutPart(text: string, part: string): string {
   const lines = text.split('\n');
+  // The whole line first (list markers aside), so a shorter part never cuts into another line.
+  const bare = (l: string) => l.replace(/^\s*(?:[-*•–·]|\d+[.)])\s+/u, '').trim();
+  const whole = lines.findIndex((l) => bare(l) === part);
+  if (whole >= 0) {
+    lines.splice(whole, 1);
+    return lines.join('\n');
+  }
   const i = lines.findIndex((l) => l.includes(part));
   if (i < 0) return text;
   const rest = lines[i]!.replace(part, '')

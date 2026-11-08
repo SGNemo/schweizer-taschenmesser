@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
@@ -7,6 +7,7 @@ import { db } from '@/core/db/db';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
 import { t } from '@/strings';
+import { Dialog } from '@/ui';
 import type { SavedCapture } from '../targets';
 import { CaptureForm } from './CaptureForm';
 
@@ -378,5 +379,25 @@ describe('CaptureForm', () => {
     expect(rows[0]).toHaveTextContent('62,40');
     expect(rows[1]).toHaveTextContent('Kunde anrufen');
     expect(rows[1]).toHaveTextContent('09:00');
+  });
+});
+
+describe('the booking sheet inside the capture sheet', () => {
+  it('Esc in the booking sheet closes only that sheet, never the capture sheet around it', async () => {
+    const user = userEvent.setup();
+    const outerClose = vi.fn();
+    render(
+      <Dialog open onClose={outerClose} title="Schnell hinzufügen">
+        <CaptureForm onSaved={() => undefined} />
+      </Dialog>,
+    );
+    await user.type(await box(), 'Müll runterbringen{Shift>}{Enter}{/Shift}Brot gekauft 3,80 €');
+    await user.click(await screen.findByTestId('capture-row-book'));
+    const sheet = await screen.findByRole('dialog', { name: t.quickCapture.multi.bookExpense });
+    fireEvent(sheet, new Event('cancel', { cancelable: true }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: t.quickCapture.multi.bookExpense })).toBeNull(),
+    );
+    expect(outerClose).not.toHaveBeenCalled();
   });
 });

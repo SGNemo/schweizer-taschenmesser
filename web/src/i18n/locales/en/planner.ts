@@ -53,7 +53,7 @@ export const planner: Strings['planner'] = {
     noTime: 'No time is free today.',
     dayOff: 'Today is off.',
     over: (min: string) => `${min} more than fits`,
-    first: (title: string) => `Today: ${title}. That is enough for today.`,
+    first: (title: string) => `Today: ${title}. That's enough for today.`,
     nextFree: (day: string, free: string) => `Today is free. ${day}: ${free} free.`,
     context: (n: number, planned: string) =>
       `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,

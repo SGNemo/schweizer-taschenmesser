@@ -25,10 +25,11 @@ export function sharedContent(params: URLSearchParams): {
  * on the line (unless it sits in a longer text), so a shared page still reads as a bookmark.
  */
 export function sharedLine(c: ReturnType<typeof sharedContent>): { line: string; rest: string } {
-  const lines = `${c.title}\n${c.text}`
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l, i, all) => l && all.indexOf(l) === i);
+  const text = c.text.split('\n').map((l) => l.trim());
+  // Only a text that repeats the title on its first line loses that line; the rest stays as shared.
+  const lines = [c.title.trim(), ...text]
+    .filter((l, i) => !(i === 1 && l === c.title.trim()))
+    .filter(Boolean);
   let line = lines[0] ?? '';
   const rest = lines.slice(1).join('\n');
   // The link stays on the line when it was shared beside the text or in a one-line text („Schau mal
@@ -113,6 +114,13 @@ export function ShareTarget() {
             </p>
           </Card>
           <Card title={t.quickCapture.share.suggestion}>
+            {rest ? (
+              <Checkbox
+                label={t.quickCapture.share.asNote}
+                checked={asNote}
+                onChange={(e) => setAsNote(e.target.checked)}
+              />
+            ) : null}
             <CaptureForm
               oneEntry
               initialText={line}
@@ -122,13 +130,6 @@ export function ShareTarget() {
                 void navigate('/');
               }}
             />
-            {rest ? (
-              <Checkbox
-                label={t.quickCapture.share.asNote}
-                checked={asNote}
-                onChange={(e) => setAsNote(e.target.checked)}
-              />
-            ) : null}
           </Card>
           <h2>{t.quickCapture.share.or}</h2>
           <ul className={styles.list} aria-label={t.share.where}>

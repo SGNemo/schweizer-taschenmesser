@@ -327,7 +327,7 @@ export default function PlannerPage() {
     ? undefined
     : !todayDay.off && todayDay.rows[0]
       ? t.planner.head.first(todayDay.rows[0].title)
-      : !todayDay.off && nextFree
+      : !todayDay.off && todayDay.usable > 0 && nextFree
         ? t.planner.head.nextFree(dayName(nextFree.date), compact(nextFree.free))
         : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
 

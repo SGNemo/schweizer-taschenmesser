@@ -91,7 +91,7 @@ export function CaptureForm({
   const [rowOverride, setRowOverride] = useState<Record<string, CaptureType>>({});
   const [confirming, setConfirming] = useState(false);
   // „Als Ausgabe buchen“ on a line of a batch: that line in the single sheet, on top of this one.
-  const [booking, setBooking] = useState<string | undefined>();
+  const [booking, setBooking] = useState<{ part: string; label: string } | undefined>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -130,7 +130,7 @@ export function CaptureForm({
             });
             const res = resolveTarget(part, r, { ...resolveOpts, override: rowOverride[part] });
             // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
-            const row = batchRow(res.type, res.fields, available, r.type);
+            const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
             const rowChips = previewChips(row.fields, row.type, r.notes, today()).filter(
               (c) => c.id !== 'target',
             );
@@ -330,18 +330,25 @@ export function CaptureForm({
                   {r.inbox ? (
                     <span className={styles.chip}>{t.quickCapture.multi.inbox}</span>
                   ) : null}
-                  {r.booking ? (
-                    <button
-                      type="button"
-                      className={[styles.chip, styles.chipAction].join(' ')}
-                      onClick={() => setBooking(r.part)}
-                      data-testid="capture-row-book"
-                    >
-                      {r.booking === 'income'
-                        ? t.quickCapture.multi.bookIncome
-                        : t.quickCapture.multi.bookExpense}
-                    </button>
-                  ) : null}
+                  {r.booking
+                    ? (() => {
+                        const label =
+                          r.booking === 'income'
+                            ? t.quickCapture.multi.bookIncome
+                            : t.quickCapture.multi.bookExpense;
+                        return (
+                          <button
+                            type="button"
+                            className={[styles.chip, styles.chipAction].join(' ')}
+                            aria-label={t.quickCapture.multi.bookLine(label, r.part)}
+                            onClick={() => setBooking({ part: r.part, label })}
+                            data-testid="capture-row-book"
+                          >
+                            {label}
+                          </button>
+                        );
+                      })()
+                    : null}
                   {r.chips.map((c) => (
                     <span key={c.id} className={[styles.chip, c.warn ? styles.warn : ''].join(' ')}>
                       {c.label}
@@ -430,21 +437,27 @@ export function CaptureForm({
       </form>
       {booking !== undefined ? (
         // The single sheet with the line: draft and „Buchen“ as always; booked, the line leaves the batch.
-        <Dialog
-          open
-          onClose={() => setBooking(undefined)}
-          title={t.quickCapture.multi.bookExpense}
-          size="roomy"
-        >
+        <Dialog open onClose={() => setBooking(undefined)} title={booking.label} size="roomy">
           <CaptureForm
-            initialText={booking}
+            initialText={booking.part}
             initialType="finance"
             onCancel={() => setBooking(undefined)}
             onSaved={(saved) => {
-              const rest = withoutPart(text, booking);
+              const { part } = booking;
               setBooking(undefined);
-              change(rest);
-              void announceSaved(saved);
+              change(withoutPart(text, part));
+              // „Rückgängig“ takes the booking back and puts the line back into the batch.
+              void announceSaved({
+                ...saved,
+                undo: async () => {
+                  await saved.undo();
+                  setText((cur) => {
+                    const next = cur.trim() ? `${cur}\n${part}` : part;
+                    if (keepDraft) writeCaptureDraft(next);
+                    return next;
+                  });
+                },
+              });
               inputRef.current?.focus();
             }}
           />

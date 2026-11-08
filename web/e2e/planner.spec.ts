@@ -606,7 +606,7 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 
-  test('switch `overloadToast` off → no toast line, the figure stays in the group head', async ({
+  test('switch `overloadToast` off → no toast line, the figure stays in the opened group', async ({
     page,
   }) => {
     await enablePlanner(page);

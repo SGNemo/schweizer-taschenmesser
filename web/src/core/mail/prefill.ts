@@ -72,7 +72,14 @@ export function mailPrefill(
   const link = opts.link;
   const base = { type, extra: {} as MailPrefill['extra'], excerpt };
   const back = opts.threadId
-    ? { link: { kind: 'mail' as const, id: opts.threadId, label: subject || sender } }
+    ? {
+        // Never an address in the stored label (U17): the subject, else a name, else „Mail“.
+        link: {
+          kind: 'mail' as const,
+          id: opts.threadId,
+          label: subject || (sender.includes('@') ? 'Mail' : sender),
+        },
+      }
     : {};
   const result = mailPrefillFor(type, { subject, sender, found, link, excerpt, base, opts });
   return { ...result, extra: { ...result.extra, ...back } };

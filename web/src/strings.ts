@@ -1095,6 +1095,7 @@ export const de = {
       view: 'Ansehen',
       bookExpense: 'Als Ausgabe buchen',
       bookIncome: 'Als Einnahme buchen',
+      bookLine: (action: string, line: string) => `${action}: ${line}`,
     },
     trayToday: {
       heading: 'Heute',

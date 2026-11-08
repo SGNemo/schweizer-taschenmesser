@@ -214,7 +214,7 @@ export interface Toast {
   /** Optional leading icon (a check for confirmations). */
   icon?: IconName;
   action?: { label: string; run: () => void };
-  /** A second, quieter action shown before `action` („Ansehen · Rückgängig“). */
+  /** A second action shown before `action` („Ansehen · Rückgängig“). */
   lead?: { label: string; run: () => void };
 }
 
