@@ -149,6 +149,7 @@ try {
   docFiles = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z', 'docs'], {
     cwd: repo,
     encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
   })
     .split('\0')
     .filter((p) => p && existsSync(join(repo, p)))
