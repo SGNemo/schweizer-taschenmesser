@@ -1,6 +1,20 @@
 [English](sync.md) | **Deutsch**
 
-# Sync-Server
+# Synchronisation
+
+## Im Heimnetz mit deinem PC (ohne Server)
+
+Die Windows-App kann selbst der Abgleich-Punkt sein. Handy und PC gleichen sich ab, sobald beide im selben WLAN sind und Nemo auf dem PC läuft.
+
+1. **PC:** *Einstellungen → Synchronisation → Gerät koppeln*. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: *Zulassen*).
+2. **Handy:** *Einstellungen → Synchronisation → Mit PC koppeln*, Kamera erlauben, Code scannen.
+3. Beide zeigen denselben 6-stelligen Code. Am PC: *Koppeln*.
+
+Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC hört nur im Heimnetz zu (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter *Weitere Einstellungen* gibt es *Schlüssel erneuern* und *Abgleich im Heimnetz ausschalten*. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
+
+Ein eigener Server (unten) geht weiterhin: auf PC und Handy liegt er eingeklappt unter *Eigener Server (erweitert)*. Ein Weg pro Gerät: erst den einen trennen, dann den anderen nutzen.
+
+## Eigener Sync-Server
 
 Ein kleiner Node-Server (Fastify + SQLite) mit Token-Authentifizierung. Er speichert pro Feld nur den Wert mit dem
 größten Zeitstempel („letzte Änderung gewinnt“); das Zusammenführen passiert in der App. Betrieb im LAN oder über

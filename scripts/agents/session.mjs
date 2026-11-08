@@ -9,10 +9,14 @@
 //   node scripts/agents/session.mjs --agent auditor --budget 5 "Prüfe PR #535"   auditor instead of the lead
 //   node scripts/agents/session.mjs --session sess_… "Nachfrage …"        resume an existing session
 //   node scripts/agents/session.mjs --session sess_… --auto-approve       approve waiting tool calls, keep streaming
-//   node scripts/agents/session.mjs budget sess_… 30                      raise the cap to 30 USD
-//   node scripts/agents/session.mjs threads sess_… [--archive-idle]       list child threads, free slots
+//   node scripts/agents/session.mjs budget sess_… 12 [--yes]              raise the cap (prints usage so far, asks first)
+//   node scripts/agents/session.mjs threads sess_… [--archive-idle]       threads with tokens/cost, free slots
 //   node scripts/agents/session.mjs interrupt sess_…
 //   node scripts/agents/session.mjs --dry-run …                           print the request, no network
+//
+// Budget: default 10 USD (--budget <USD> to change); above 30 USD only with --yes-expensive. A warning is printed
+// once the session reaches 70 % of its budget, and every run ends with a usage line (primary / children / advisor).
+// Rule: when a budget runs out, do not raise it to keep chatting – start a new session (SETUP.md §4 "Was kostet was").
 //
 // Configuration (env or flags): ANTHROPIC_API_KEY, GITHUB_TOKEN (repo mounts only, sent only to the Nemo repo and the
 // private notes repo SGNemo/nemo-scribble, mounted as a second resource; --no-scribble leaves it out),
@@ -52,6 +56,8 @@ const boolFlags = new Set([
   "no-vault",
   "no-wait",
   "no-scribble",
+  "yes",
+  "yes-expensive",
 ]);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -168,6 +174,15 @@ else if (!flags["no-scribble"] && !githubToken)
     "warning: no GITHUB_TOKEN – the private notes repo is not mounted (session folder /workspace/scribble only)",
   );
 
+const DEFAULT_BUDGET_USD = 10;
+const EXPENSIVE_USD = 30; // above this only with --yes-expensive
+const WARN_SHARE = 0.7; // warn once the session has used 70 % of its budget
+function checkExpensive(usd) {
+  if (usd > EXPENSIVE_USD && !flags["yes-expensive"])
+    throw new Error(
+      `a budget above ${EXPENSIVE_USD} USD needs --yes-expensive (SETUP.md §4: a round with consolidation costs 20–30 USD; more usually means: start a new session)`,
+    );
+}
 function cents(usd) {
   if (!Number.isFinite(usd) || usd <= 0)
     throw new Error("--budget must be a positive number of US dollars");
@@ -204,6 +219,94 @@ const textOf = (content) =>
         .join("\n")
     : "";
 const stamp = () => new Date().toISOString().slice(11, 19);
+
+// ---------- usage ----------
+const amountCents = (m) =>
+  m?.amount !== undefined && m.amount !== null ? Number(m.amount) : undefined;
+const usd = (c) => (c === undefined ? "?" : `${(c / 100).toFixed(2)} $`);
+const tok = (n) =>
+  !n
+    ? "0"
+    : n >= 1e6
+      ? `${(n / 1e6).toFixed(1)}M`
+      : n >= 1e3
+        ? `${Math.round(n / 1e3)}k`
+        : String(n);
+// input side = fresh input + cache reads + cache writes (what grows with the context)
+const inTokens = (u) =>
+  (u?.input_tokens ?? 0) +
+  (u?.cache_read_input_tokens ?? 0) +
+  (u?.cache_creation?.ephemeral_5m_input_tokens ?? 0) +
+  (u?.cache_creation?.ephemeral_1h_input_tokens ?? 0);
+const usageText = (u) =>
+  u
+    ? `${usd(amountCents(u.list_cost))}  in ${tok(inTokens(u))} (cache read ${tok(u.cache_read_input_tokens)})  out ${tok(u.output_tokens)}`
+    : "no usage reported";
+const threadKind = (th) =>
+  th.agent?.type === "advisor"
+    ? "advisor"
+    : th.parent_thread_id
+      ? "child"
+      : "primary";
+const threadName = (th) =>
+  th.agent?.type === "advisor"
+    ? `advisor ${th.agent.model ?? ""}`.trim()
+    : String(th.agent?.name ?? th.agent?.id ?? th.agent?.type ?? "");
+
+// one line per session: authoritative session total (incl. runtime) + split by primary / children / advisor
+// (thread figures are rounded per thread and exclude runtime, so they do not add up exactly)
+async function printUsage(c, sessionId) {
+  try {
+    const s = await c.beta.sessions.retrieve(sessionId);
+    const split = { primary: 0, child: 0, advisor: 0 };
+    let kids = 0;
+    let missing = 0;
+    for await (const th of c.beta.sessions.threads.list(sessionId)) {
+      const k = threadKind(th);
+      if (k === "child") kids++;
+      const cost = amountCents(th.usage?.list_cost);
+      if (cost === undefined) missing++;
+      else split[k] += cost;
+    }
+    const cap = amountCents(s.budget?.max_list_cost);
+    console.log(
+      `usage ${sessionId}: ${usageText(s.usage)}${cap ? ` · budget ${usd(cap)} (${Math.round(((amountCents(s.usage?.list_cost) ?? 0) / cap) * 100)} %)` : ""}\n  primary ${usd(split.primary)} · ${kids} child thread(s) ${usd(split.child)}${split.advisor ? ` · advisor ${usd(split.advisor)}` : ""}${missing ? ` · ${missing} thread(s) without cost yet` : ""} (per-thread figures exclude session runtime)`,
+    );
+    return s;
+  } catch (e) {
+    console.log(`usage: not available (${e.message ?? e})`);
+  }
+}
+
+let warned70 = false;
+function warnBudget(ev) {
+  const used = amountCents(ev.usage?.list_cost);
+  const cap = amountCents(ev.budget?.max_list_cost);
+  if (warned70 || used === undefined || !cap || used < cap * WARN_SHARE) return;
+  warned70 = true;
+  console.log(
+    `\n${stamp()} WARNING: ${Math.round((used / cap) * 100)} % of the budget used (${usd(used)} of ${usd(cap)}). Let the lead finish this request; for the next one start a new session instead of raising the budget.\n`,
+  );
+}
+
+async function confirm(question) {
+  if (flags.yes) return true;
+  if (!process.stdin.isTTY) {
+    console.error("no terminal to ask: re-run with --yes to confirm");
+    return false;
+  }
+  const rl = (await import("node:readline/promises")).createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  try {
+    return /^(y|yes|j|ja)$/i.test(
+      (await rl.question(`${question} [y/N] `)).trim(),
+    );
+  } finally {
+    rl.close();
+  }
+}
 
 function printEvent(ev) {
   const t = ev.type;
@@ -257,6 +360,7 @@ function printEvent(ev) {
       console.log(`${stamp()} thread idle${thread}: ${ev.stop_reason?.type}`);
       break;
     case "session.usage":
+      warnBudget(ev);
       console.log(
         `${stamp()} usage: list cost ${ev.usage?.list_cost?.amount ?? "?"} ${ev.usage?.list_cost?.currency ?? ""} (cents), active ${ev.usage?.active_seconds ?? "?"} s, budget ${ev.budget?.max_list_cost?.amount ?? "none"}`,
       );
@@ -438,7 +542,7 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
       }
       if (reason === "budget_reached") {
         console.log(
-          `\nBudget reached. Raise it and the session continues by itself:\n  node scripts/agents/session.mjs budget ${sessionId} <USD>`,
+          `\nBudget reached. Rule: start a new session for the rest (the lead's last report says where it stopped).\nOnly to let a nearly finished step land: node scripts/agents/session.mjs budget ${sessionId} <USD>  (shows the usage, asks first)`,
         );
         return "budget_reached";
       }
@@ -455,19 +559,34 @@ async function streamUntilIdle(c, sessionId, afterOpen) {
 
 async function main() {
   if (sub === "budget") {
-    const [sessionId, usd] = positional;
-    if (!sessionId || !usd) throw new Error("usage: budget <session_id> <USD>");
+    const [sessionId, usdArg] = positional;
+    if (!sessionId || !usdArg)
+      throw new Error(
+        "usage: budget <session_id> <USD> [--yes] [--yes-expensive]",
+      );
+    checkExpensive(Number(usdArg));
     if (cfg.dryRun)
       return console.log(
         JSON.stringify(
-          { update: sessionId, budget: budgetObj(Number(usd)) },
+          { update: sessionId, budget: budgetObj(Number(usdArg)) },
           null,
           2,
         ),
       );
     const c = await client();
+    const before = await printUsage(c, sessionId);
+    const used = amountCents(before?.usage?.list_cost);
+    if (used !== undefined && Number(cents(Number(usdArg))) <= used)
+      throw new Error(
+        `the new budget must be above the cost so far (${usd(used)})`,
+      );
+    console.log(
+      "Rule: do not raise to keep chatting – a finished request means a new session (SETUP.md §4).",
+    );
+    if (!(await confirm(`Raise the budget of ${sessionId} to ${usdArg} USD?`)))
+      return console.log("budget unchanged");
     const s = await c.beta.sessions.update(sessionId, {
-      budget: budgetObj(Number(usd)),
+      budget: budgetObj(Number(usdArg)),
     });
     console.log(
       `budget of ${s.id} is now ${s.budget?.max_list_cost?.amount} cents (${s.status}); a paused session resumes on its own`,
@@ -490,9 +609,9 @@ async function main() {
     let idle = 0,
       archived = 0;
     for await (const th of c.beta.sessions.threads.list(sessionId)) {
-      const child = th.parent_thread_id ? "child" : "primary";
+      const child = threadKind(th);
       console.log(
-        `${th.id}  ${child.padEnd(7)} ${String(th.status).padEnd(10)} ${th.agent?.name ?? th.agent?.id ?? th.agent?.type ?? ""}`,
+        `${th.id}  ${child.padEnd(7)} ${String(th.status).padEnd(10)} ${threadName(th).padEnd(24)} ${usageText(th.usage)}`,
       );
       if (child === "child" && th.status === "idle") {
         idle++;
@@ -507,6 +626,7 @@ async function main() {
     console.log(
       `${idle} idle child thread(s)${flags["archive-idle"] ? `, ${archived} archived (frees slots under the 25-thread limit; the lead loses follow-up access to them)` : " – add --archive-idle to free slots"}`,
     );
+    await printUsage(c, sessionId);
     return;
   }
   if (sub === "interrupt") {
@@ -550,6 +670,7 @@ async function main() {
         });
     });
     console.log(`\nsession ${cfg.session} → ${outcome}`);
+    await printUsage(c, cfg.session);
     return;
   }
 
@@ -561,10 +682,9 @@ async function main() {
         ? "auditor id or environment id missing: run `ant apply --yes docs/meta/agents-v3/nemo-auditor.md` (claude-lock.json in the repo root), or pass --agent agent_…/--env"
         : `${agentRole ?? "agent"} id and environment id missing: run \`ant apply docs/meta/agents-v3/environment.yaml docs/meta/agents-v3/nemo-*.md\` first (claude-lock.json in the repo root), or pass --agent/--env or set NEMO_LEAD_AGENT_ID/NEMO_ENV_ID`,
     );
-  if (cfg.budgetUsd === undefined)
-    throw new Error(
-      "--budget <USD> is required: a budget can only be added when the session is created (raise it later with `budget <id> <USD>`)",
-    );
+  // a budget can only be added when the session is created: always send one (default 10 USD)
+  if (cfg.budgetUsd === undefined) cfg.budgetUsd = DEFAULT_BUDGET_USD;
+  checkExpensive(cfg.budgetUsd);
   if (!repoToken)
     console.warn(
       "warning: no GITHUB_TOKEN for the repository – it is cloned without a token; git push will fail",
@@ -620,12 +740,13 @@ async function main() {
     `session ${session.id} created (budget ${body.budget.max_list_cost.amount} cents, checkout ${cfg.checkout}, ${body.resources.length} repo mount(s))`,
   );
   console.log(
-    `resume later: node scripts/agents/session.mjs --session ${session.id} "…"`,
+    `approve the plan / answer the lead: node scripts/agents/session.mjs --session ${session.id} "…" (a new request = a new session)`,
   );
   const outcome = await streamUntilIdle(c, session.id, () =>
     c.beta.sessions.events.send(session.id, { events: [userMessage(message)] }),
   );
   console.log(`\nsession ${session.id} → ${outcome}`);
+  await printUsage(c, session.id);
 }
 
 main().catch((e) => {

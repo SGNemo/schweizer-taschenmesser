@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Android only: the device side of home-network sync (pair with the hub PC by QR, sync requests) and the native QR scanner. Scan once on a tap, nothing in the background.",
+  "webviews": ["main"],
+  "platforms": ["android", "iOS"],
+  "permissions": [
+    "allow-lan-client-pair",
+    "allow-lan-client-pair-cancel",
+    "allow-lan-client-request",
+    "allow-lan-client-unpair",
+    "barcode-scanner:allow-scan",
+    "barcode-scanner:allow-cancel",
+    "barcode-scanner:allow-check-permissions",
+    "barcode-scanner:allow-request-permissions",
+    "barcode-scanner:allow-open-app-settings"
+  ]
+}
