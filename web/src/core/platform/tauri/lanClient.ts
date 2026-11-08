@@ -30,8 +30,10 @@ export function createLanClient(supported: boolean): LanClientService {
       try {
         const result = await scanner.scan({ formats: [scanner.Format.QRCode] });
         return result.content;
-      } catch {
-        throw new Error('cancelled');
+      } catch (e) {
+        // the user closed the scanner: nothing to report; anything else is a real failure
+        const text = typeof e === 'string' ? e : e instanceof Error ? e.message : '';
+        throw new Error(/cancel/i.test(text) ? 'cancelled' : 'failed', { cause: e });
       }
     },
     pair(qr, name, onCode) {

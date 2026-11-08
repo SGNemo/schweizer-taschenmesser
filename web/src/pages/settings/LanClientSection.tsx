@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import {
   cancelPairing,
@@ -8,8 +8,9 @@ import {
   type PairFailure,
 } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
-import { now } from '@/core/time/now';
+import { formatTimestamp } from '@/core/i18n/format';
 import { formatDateTime } from '@/core/time/dates';
+import { now, toDateString, today } from '@/core/time/now';
 import { t } from '@/strings';
 import { tLanSync } from '@/strings.lanSync';
 import { Button, Dialog } from '@/ui';
@@ -17,12 +18,13 @@ import { Actions, Facts, StateBanner } from './ConnectParts';
 import styles from './settings.module.css';
 
 type Texts = ReturnType<typeof tLanSync.use>;
+type Failure = PairFailure | 'camera-denied' | 'scan-failed';
 
 /**
  * Settings → Sync on the phone: pairing with the hub PC by its QR (three steps, nothing typed) and
  * the state of the home-network sync (CONCEPT §2, §8). Calm: a PC out of reach is the normal case away
  * from home, so it is a neutral line; only the hub's authenticated "unpaired" and unreadable data get
- * the attention tone, each with the next step.
+ * the attention tone, each with the next step. Nothing here is red.
  */
 export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   const l = tLanSync.use();
@@ -31,10 +33,13 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   const otherPath = sync.via === 'server' || sync.via === 'lanHub';
   const [step, setStep] = useState<'idle' | 'scanning' | 'connecting' | 'confirm'>('idle');
   const [code, setCode] = useState<string>();
-  const [failure, setFailure] = useState<PairFailure>();
+  const [failure, setFailure] = useState<Failure>();
   const [askUnpair, setAskUnpair] = useState(false);
+  // A cancelled attempt may still answer late: only the current one may change the screen.
+  const attempt = useRef(0);
 
   async function startPairing() {
+    const mine = ++attempt.current;
     setFailure(undefined);
     setCode(undefined);
     setStep('scanning');
@@ -42,44 +47,57 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
     try {
       qr = await getPlatform().lanClient.scan();
     } catch (e) {
+      if (attempt.current !== mine) return;
       setStep('idle');
       const reason = e instanceof Error ? e.message : '';
       // the user closed the camera: nothing to report
-      if (reason !== 'cancelled') setFailure(reason === 'camera-denied' ? 'unsupported' : 'failed');
+      if (reason === 'camera-denied') setFailure('camera-denied');
+      else if (reason !== 'cancelled') setFailure('scan-failed');
       return;
     }
+    if (attempt.current !== mine) return;
     setStep('connecting');
     const result = await pairWithPc(
       qr,
       t.sync.deviceNames[getPlatform().kind] ?? t.sync.defaultDeviceName,
       (c) => {
+        if (attempt.current !== mine) return;
         setCode(c);
         setStep('confirm');
       },
     );
+    if (attempt.current !== mine) return;
     setStep('idle');
     if (!result.ok && result.reason !== 'cancelled') setFailure(result.reason);
   }
 
-  const failureText = failure ? pairFailureText(failure, l) : undefined;
-  const pairButton = (
+  function cancel() {
+    // the dialog closes at once; the shell stops waiting in the background
+    attempt.current++;
+    setStep('idle');
+    void cancelPairing();
+  }
+
+  const failureInfo = failure ? pairFailure(failure, l) : undefined;
+  const pairButton = (label: string) => (
     <Button
       variant="primary"
       onClick={() => void startPairing()}
       disabled={step !== 'idle'}
       data-testid="lan-pair-pc"
     >
-      {paired ? l.pairAgain : l.pairWithPc}
+      {label}
     </Button>
   );
 
+  // No dialog while the native scanner is on screen; it opens once a code was read.
   const progress =
-    step === 'idle' ? null : (
+    step === 'connecting' || step === 'confirm' ? (
       <Dialog
         open
-        onClose={() => void cancelPairing()}
+        onClose={cancel}
         title={l.pairWithPc}
-        footer={<Button onClick={() => void cancelPairing()}>{t.actions.cancel}</Button>}
+        footer={<Button onClick={cancel}>{t.actions.cancel}</Button>}
       >
         <div className={styles.form} data-testid="lan-pair-progress">
           {step === 'confirm' && code ? (
@@ -94,7 +112,13 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
           )}
         </div>
       </Dialog>
-    );
+    ) : null;
+
+  const failureLine = failureInfo ? (
+    <p role="status" className={styles.muted} data-testid="lan-pair-failure">
+      {failureInfo.text}
+    </p>
+  ) : null;
 
   if (!paired) {
     return (
@@ -105,19 +129,15 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
           line={otherPath ? l.otherPath : l.introPhoneLine}
           tinted={tinted}
           testId="lan-client-intro"
-          action={otherPath ? undefined : pairButton}
+          action={otherPath ? undefined : pairButton(failureInfo?.again ?? l.pairWithPc)}
         />
-        {failureText ? (
-          <p role="alert" className={styles.error} data-testid="lan-pair-failure">
-            {failureText}
-          </p>
-        ) : null}
+        {failureLine}
         {progress}
       </div>
     );
   }
 
-  const banner = clientBanner(sync.phase, sync.error, l);
+  const banner = clientBanner(sync.phase, sync.error, sync.lastSyncAt, l);
   return (
     <div className={styles.form} data-testid="lan-client">
       <StateBanner
@@ -128,7 +148,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
         tinted={tinted}
         testId="lan-client-status"
         titleTestId="lan-client-state"
-        action={banner.repair ? pairButton : undefined}
+        action={banner.repair ? pairButton(failureInfo?.again ?? l.pairAgain) : undefined}
       />
       <Facts
         label={l.title}
@@ -143,11 +163,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
             : []),
         ]}
       />
-      {failureText ? (
-        <p role="alert" className={styles.error} data-testid="lan-pair-failure">
-          {failureText}
-        </p>
-      ) : null}
+      {failureLine}
       <Actions>
         <Button onClick={() => void syncNow()} disabled={sync.phase === 'syncing'}>
           {l.syncNow}
@@ -183,6 +199,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
 function clientBanner(
   phase: string,
   error: string | undefined,
+  lastSyncAt: number | undefined,
   l: Texts,
 ): { title: string; line?: string; tone: 'ok' | 'neutral' | 'attention'; repair?: boolean } {
   if (phase === 'syncing') return { title: l.syncing, line: l.pairedWith, tone: 'ok' };
@@ -193,23 +210,30 @@ function clientBanner(
     // not reachable is the normal state away from home: neutral, with the one helpful question
     return { title: l.waitingForPc, line: l.isNemoRunning, tone: 'neutral' };
   }
+  // paired, but no round got through yet: say what is true
+  if (!lastSyncAt) return { title: l.pairedWith, line: l.waitingForPc, tone: 'neutral' };
   return { title: l.synced, line: l.pairedWith, tone: 'ok' };
 }
 
-function pairFailureText(reason: PairFailure, l: Texts): string {
+/** The words for a failed pairing and the label of the button that tries again. */
+function pairFailure(reason: Failure, l: Texts): { text: string; again: string } {
   switch (reason) {
     case 'bad-qr':
-      return l.badQr;
+      return { text: l.badQr, again: l.scanAgain };
     case 'pairing-not-possible':
-      return l.notPossible;
+      return { text: l.notPossible, again: l.scanAgain };
+    case 'pairing-aborted':
+      return { text: l.pairAborted, again: l.tryAgain };
     case 'network':
-      return l.pcNotFound;
-    case 'unsupported':
-      return l.cameraOff;
+      return { text: l.pcNotFound, again: l.tryAgain };
+    case 'camera-denied':
+      return { text: l.cameraDenied, again: l.tryAgain };
     case 'other-path':
-      return l.otherPath;
+      return { text: l.otherPath, again: l.pairWithPc };
+    case 'keystore':
+      return { text: l.keystorePhone, again: l.tryAgain };
     default:
-      return l.pairFailed;
+      return { text: l.pairFailed, again: l.tryAgain };
   }
 }
 
@@ -217,7 +241,11 @@ function pairFailureText(reason: PairFailure, l: Texts): string {
 const groupCode = (code: string): string =>
   code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code;
 
+/** "gerade eben", the time for today, the date from yesterday on (never "vor n Tagen"). */
 function lastSyncedText(at: number | undefined, l: Texts): string {
   if (!at) return l.never;
-  return now() - at < 60_000 ? l.justNow : formatDateTime(at);
+  if (now() - at < 60_000) return l.justNow;
+  return toDateString(new Date(at)) === today()
+    ? formatTimestamp(at, { timeStyle: 'short' })
+    : formatDateTime(at);
 }

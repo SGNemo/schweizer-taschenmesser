@@ -664,7 +664,9 @@ export type PairFailure =
   | 'bad-qr'
   | 'network'
   | 'pairing-not-possible'
+  | 'pairing-aborted'
   | 'cancelled'
+  | 'busy'
   | 'keystore'
   | 'failed';
 export type PairResult = { ok: true } | { ok: false; reason: PairFailure };
@@ -673,7 +675,9 @@ const PAIR_FAILURES: readonly PairFailure[] = [
   'bad-qr',
   'network',
   'pairing-not-possible',
+  'pairing-aborted',
   'cancelled',
+  'busy',
 ];
 
 /**
@@ -700,13 +704,28 @@ export async function pairWithPc(
     const known = PAIR_FAILURES.find((f) => f === code);
     return { ok: false, reason: known ?? 'failed' };
   }
-  const key = await importDataKey(dataKey);
-  await exclusive(async () => {
-    await saveSyncConfig(deps.database, { kind: 'lanClient', key, keyVersion: dataKey.version });
-    // a new hub store: cursor 0, everything local goes up once
-    await deps.storage.setEpoch(undefined);
-    await deps.storage.setCursor(0);
-  });
+  // The PC trusts this device now. Anything that fails from here on would leave the PC with a paired
+  // device the phone does not know: undo the pairing on the PC (best effort) and say so.
+  let stored: boolean;
+  try {
+    const key = await importDataKey(dataKey);
+    stored = await exclusive(async () => {
+      // still one path per device: an own server connected while the PC was asking wins
+      const now = await loadSyncConfig(deps.database);
+      if (now && now.kind !== 'lanClient') return false;
+      await saveSyncConfig(deps.database, { kind: 'lanClient', key, keyVersion: dataKey.version });
+      // a new hub store: cursor 0, everything local goes up once
+      await deps.storage.setEpoch(undefined);
+      await deps.storage.setCursor(0);
+      return true;
+    });
+  } catch {
+    stored = false;
+  }
+  if (!stored) {
+    await client.unpair().catch(() => undefined);
+    return { ok: false, reason: 'failed' };
+  }
   useSyncStatus.getState().set({ failures: 0, retryAt: undefined, errorAt: undefined });
   await syncNow(deps);
   return { ok: true };

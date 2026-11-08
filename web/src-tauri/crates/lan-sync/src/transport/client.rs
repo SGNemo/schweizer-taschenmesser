@@ -41,6 +41,8 @@ pub enum ClientError {
     Network,
     /// The hub dropped the pairing attempt (window closed, secret used or stale, key refused).
     PairingNotPossible,
+    /// The code was shown, then the hub closed: the user cancelled on the PC or the codes differed.
+    PairingAborted,
     /// The hub authenticated itself and said it does not know this device (unpaired or revoked).
     UnknownDevice,
     /// The user cancelled on the device while waiting for the confirmation on the PC.
@@ -111,8 +113,11 @@ fn pair_at(
         .map_err(|_| ClientError::Protocol)?;
     conn.write(&m1)?;
     let m2 = conn
-        .read(PRE_CONFIRM_CAP, IO_TIMEOUT, &|| false)
-        .map_err(|_| ClientError::PairingNotPossible)?;
+        .read(PRE_CONFIRM_CAP, IO_TIMEOUT, cancelled)
+        .map_err(|e| match e {
+            ClientError::Cancelled => e,
+            _ => ClientError::PairingNotPossible,
+        })?;
     let (mut transport, sas) = match init.finish(&m2) {
         Ok(Finished::Established(t, sas)) => (t, sas),
         Ok(Finished::Refused(_)) | Err(_) => return Err(ClientError::PairingNotPossible),
@@ -122,7 +127,12 @@ fn pair_at(
         .map_err(|_| ClientError::Protocol)?;
     conn.write(&hello)?;
     on_code(&sas.digits());
-    let wire = conn.read(PRE_CONFIRM_CAP, CONFIRM_WAIT, cancelled)?;
+    let wire = conn
+        .read(PRE_CONFIRM_CAP, CONFIRM_WAIT, cancelled)
+        .map_err(|e| match e {
+            ClientError::Network => ClientError::PairingAborted,
+            other => other,
+        })?;
     let (tag, body) = transport.open(&wire).map_err(|_| ClientError::Protocol)?;
     if tag != TAG_DATA_KEY || body.len() != 36 {
         return Err(ClientError::Protocol);
@@ -199,10 +209,11 @@ impl Session {
             .map_err(|_| ClientError::Protocol)?;
         self.conn.write(&wire)?;
         let answer = self.conn.read(MAX_FRAME, IO_TIMEOUT, &|| false)?;
+        // an answer that does not decrypt is not the hub's: never retried as a network hiccup
         let (tag, body) = self
             .transport
             .open(&answer)
-            .map_err(|_| ClientError::Network)?;
+            .map_err(|_| ClientError::Protocol)?;
         if tag != TAG_RESPONSE {
             return Err(ClientError::Protocol);
         }
@@ -216,6 +227,50 @@ impl Session {
             .seal(TAG_UNPAIR, &[])
             .map_err(|_| ClientError::Protocol)?;
         self.conn.write(&wire)
+    }
+}
+
+/// One kept session and the "open again once" rule: a session the hub closed meanwhile (idle
+/// timeout, restart) is replaced by a fresh one and the request sent again; any other failure is
+/// handed back and the session dropped. Replaying a request is harmless: pushes are last-write-wins
+/// and pulls read.
+#[derive(Debug, Default)]
+pub struct Link {
+    session: Option<Session>,
+}
+
+impl Link {
+    pub fn new() -> Self {
+        Link { session: None }
+    }
+
+    pub fn request(
+        &mut self,
+        body: &[u8],
+        open: &mut dyn FnMut() -> Result<Session, ClientError>,
+    ) -> Result<Zeroizing<Vec<u8>>, ClientError> {
+        for attempt in 0..2 {
+            if self.session.is_none() {
+                self.session = Some(open()?);
+            }
+            let Some(session) = self.session.as_mut() else {
+                return Err(ClientError::Protocol);
+            };
+            match session.request(body) {
+                Ok(answer) => return Ok(answer),
+                Err(ClientError::Network) if attempt == 0 => self.session = None,
+                Err(e) => {
+                    self.session = None;
+                    return Err(e);
+                }
+            }
+        }
+        Err(ClientError::Network)
+    }
+
+    /// Drops the kept session (before unpairing or pairing anew).
+    pub fn close(&mut self) {
+        self.session = None;
     }
 }
 

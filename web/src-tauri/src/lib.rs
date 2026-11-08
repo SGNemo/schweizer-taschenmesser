@@ -14,6 +14,9 @@ mod capture;
 mod disk;
 #[cfg(desktop)]
 mod downloads;
+// Android only; also built for the desktop tests so it is type-checked and tested on CI.
+#[cfg(any(mobile, test))]
+#[cfg_attr(test, allow(dead_code))]
 mod lan_client;
 #[cfg(desktop)]
 mod lan_sync;
@@ -116,13 +119,14 @@ pub fn run() {
         // Text and links shared from other Android apps (ACTION_SEND).
         .plugin(tauri_plugin_share_intent::init())
         // Android: system bars hidden and screen kept on while the cockpit is open.
-        .plugin(tauri_plugin_screen_mode::init())
-        // Home-network sync, device side (phone, second PC): pairing by QR, requests to the hub PC.
-        .manage(lan_client::LanClient::default());
+        .plugin(tauri_plugin_screen_mode::init());
 
-    // Android: the native QR scanner for "Mit PC koppeln" (home-network sync).
+    // Android: the device side of home-network sync (pairing by QR, requests to the hub PC) and the
+    // native QR scanner for "Mit PC koppeln".
     #[cfg(mobile)]
-    let builder = builder.plugin(tauri_plugin_barcode_scanner::init());
+    let builder = builder
+        .manage(lan_client::LanClient::default())
+        .plugin(tauri_plugin_barcode_scanner::init());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]
@@ -196,10 +200,6 @@ pub fn run() {
             lan_sync::lan_hub_rotate,
             lan_sync::lan_hub_request,
             lan_sync::lan_home_set,
-            lan_client::lan_client_pair,
-            lan_client::lan_client_pair_cancel,
-            lan_client::lan_client_request,
-            lan_client::lan_client_unpair,
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
@@ -263,8 +263,8 @@ pub fn run() {
             capture::desktop_show_main
         ]);
 
-    // Android has no other app command: only the device side of home-network sync. (The desktop
-    // list above is the one `tests/commands.rs` reads; it carries the same four commands.)
+    // Android has no other app command: only the device side of home-network sync (granted in
+    // capabilities/mobile.json; the desktop list above is the one `tests/commands.rs` reads).
     #[cfg(mobile)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         lan_client::lan_client_pair,

@@ -21,6 +21,19 @@ pub fn validate_name(name: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Entries only Rust may touch: the device key of home-network sync (`src/lan_client.rs`). The
+/// plugin's commands refuse them, so the webview can neither read nor replace them.
+pub const RUST_ONLY_PREFIX: &str = "lan-client:";
+
+/// What the webview's commands may name (everything `validate_name` accepts, minus Rust-only entries).
+pub fn validate_webview_name(name: &str) -> Result<(), String> {
+    validate_name(name)?;
+    if name.starts_with(RUST_ONLY_PREFIX) {
+        return Err("reserved name".into());
+    }
+    Ok(())
+}
+
 /// Windows Credential Manager blobs are limited to 2560 bytes; secrets here are small (keys, a 32-byte DEK).
 pub fn validate_value(value: &str) -> Result<(), String> {
     if value.len() > MAX_VALUE {
@@ -123,6 +136,14 @@ mod tests {
         for n in ["a b", "a/b", "a\\b", "ünï", "a\nb", "../x", "a\0b"] {
             assert!(validate_name(n).is_err(), "{n:?}");
         }
+    }
+
+    #[test]
+    fn the_webview_cannot_name_rust_only_entries() {
+        assert!(validate_webview_name("lan-client:static-key").is_err());
+        assert!(validate_webview_name("lan-client:hub").is_err());
+        assert!(validate_webview_name("ai-key:groq").is_ok());
+        assert!(validate_name("lan-client:hub").is_ok(), "Rust itself still may");
     }
 
     #[test]

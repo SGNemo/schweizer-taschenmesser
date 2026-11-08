@@ -32,12 +32,17 @@ interface Options {
 const pushSchema = z.object({ epoch: z.string().min(1).max(64) });
 
 export class HubJsonAdapter implements SyncAdapter {
+  /** Page size that last fitted one frame: kept between calls, grows back gently. */
+  private pullAsk: number;
+
   constructor(
     readonly kind: string,
     private readonly transport: HubTransport,
     private readonly keyVersion: number,
     private readonly opts: Options,
-  ) {}
+  ) {
+    this.pullAsk = opts.pullLimit;
+  }
 
   private async send(body: Record<string, unknown>): Promise<unknown> {
     let text: string;
@@ -81,18 +86,20 @@ export class HubJsonAdapter implements SyncAdapter {
   }
 
   async pull(since: number, limit: number): Promise<PullPage> {
-    let ask = Math.max(1, Math.min(limit, this.opts.pullLimit));
     for (;;) {
+      const ask = Math.max(1, Math.min(limit, this.pullAsk));
       try {
         const parsed = pullPageSchema.safeParse(
           await this.send({ type: 'pull', since, limit: ask }),
         );
         if (!parsed.success) throw new SyncError('server', 'unexpected response shape');
+        // it fitted: allow a little more next time, never more than the configured page
+        this.pullAsk = Math.min(this.opts.pullLimit, Math.max(ask, this.pullAsk) + 25);
         return parsed.data;
       } catch (e) {
         // the page would not fit one frame: smaller pages (one op always fits, see hub MAX_VALUE_BYTES)
         if (e instanceof SyncError && e.message === 'response-too-large' && ask > 1) {
-          ask = Math.max(1, Math.floor(ask / 2));
+          this.pullAsk = Math.max(1, Math.floor(ask / 2));
           continue;
         }
         throw e;

@@ -689,5 +689,6 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **L8 PC aus:** Nemo am PC beenden → Handy „Jetzt abgleichen“: ruhige Zeile „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“, kein Rot, keine Meldung; Nemo wieder starten → nächster Abgleich klappt. ☐
 - **L9 Handy kommt heim:** Handy im Mobilfunk, App im Hintergrund lassen, ins Heim-WLAN → App öffnen: gleicht nach wenigen Sekunden ab. (Abgleich ganz im Hintergrund ist nicht gebaut.) ☐
 - **L10 Kopplung lösen:** am PC „Kopplung lösen“ → Handy „Jetzt abgleichen“: „Diese Kopplung wurde gelöst.“ mit „Neu koppeln“. Am Handy „Kopplung lösen“ → am PC verschwindet das Gerät beim nächsten Kontakt. ☐
-- **L11 Falscher Code / abgelaufen:** am PC „Abbrechen“ beim Code: Handy zeigt „Kopplung abgebrochen …/nicht möglich – am PC neu zeigen“; einen alten QR (Foto) scannen: „Kopplung nicht möglich – am PC neu zeigen“. ☐
+- **L11 Abbruch / alter Code:** am PC beim Code „Abbrechen“: Handy zeigt sofort (nicht erst nach Minuten) „Kopplung abgebrochen.“ mit „Neu versuchen“; einen alten QR (Foto) scannen: „Kopplung nicht möglich – am PC neu zeigen.“ mit „Neu scannen“. Am Handy während „Verbindet …“ „Abbrechen“: Dialog schließt sofort. Nach „Kopplung lösen“ am PC: am Handy „Neu koppeln“ → klappt (frischer Geräteschlüssel). ☐
+- **L12 Kopfleiste unterwegs:** Handy im Mobilfunk: das Sync-Symbol oben ist grau (kein Rot), Tooltip „Synchronisation: wartet auf deinen PC“. ☐
 

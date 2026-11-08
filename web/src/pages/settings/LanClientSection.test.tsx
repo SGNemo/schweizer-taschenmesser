@@ -51,7 +51,9 @@ describe('LanClientSection (phone)', () => {
       'Am PC bestätigen · Code 482 913',
     );
     await act(async () => {
-      useSyncStatus.getState().set({ phase: 'idle', via: 'lanClient', encrypted: true });
+      useSyncStatus
+        .getState()
+        .set({ phase: 'idle', via: 'lanClient', encrypted: true, lastSyncAt: Date.now() });
       finish({ ok: true });
     });
     expect(screen.getByTestId('lan-client-state').textContent).toBe('Abgeglichen');
@@ -65,6 +67,8 @@ describe('LanClientSection (phone)', () => {
     expect(screen.getByTestId('lan-pair-failure').textContent).toBe(
       'Kopplung nicht möglich – am PC neu zeigen.',
     );
+    // the next step names itself
+    expect(screen.getByTestId('lan-pair-pc').textContent).toBe('Neu scannen');
   });
 
   it('a PC out of reach is a calm line, an authenticated refusal offers "Neu koppeln"', () => {

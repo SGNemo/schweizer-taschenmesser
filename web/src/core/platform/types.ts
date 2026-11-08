@@ -200,18 +200,18 @@ export interface LanHubService {
  * engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
  * the OS keystore on the Rust side; only the data key comes back, once, after the pairing.
  * Errors are short codes: `bad-qr`, `network`, `pairing-not-possible`, `unknown-device`,
- * `cancelled`, `not-paired`, `keystore-unavailable`, `protocol`.
+ * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`.
  */
 export interface LanClientService {
   supported: boolean;
-  /** Opens the camera and returns the text of one QR code (rejects with `cancelled`). */
+  /** Opens the camera and returns the text of one QR code (rejects with `cancelled`, `camera-denied` or `failed`). */
   scan(): Promise<string>;
   /** Pairs with the hub of `qr`; `onCode` gets the 6-digit code to show while the PC asks. */
   pair(qr: string, name: string, onCode: (code: string) => void): Promise<LanHubDataKey>;
   /** Stops waiting for the confirmation on the PC. */
   cancelPair(): Promise<void>;
   request(body: string): Promise<string>;
-  /** Tells the hub when it is reachable, then forgets hub and key on this device. */
+  /** Tells the hub once if it is reachable right now, then forgets hub and key on this device. */
   unpair(): Promise<void>;
 }
 

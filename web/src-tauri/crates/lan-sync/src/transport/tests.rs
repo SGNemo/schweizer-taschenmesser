@@ -594,6 +594,147 @@ mod device_client {
     }
 
     #[test]
+    fn after_unpairing_only_a_fresh_device_key_pairs_again() {
+        let r = rig();
+        let old = StaticKey::generate().unwrap();
+        pair_client(&r, &old);
+        let s = open_via(addr(&r), &old, &r.hub_key, "Pixel 7").unwrap();
+        s.unpair().unwrap();
+        for _ in 0..100 {
+            if r.trust.list().iter().all(|d| d.revoked) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        // the old key never pairs again: the hub drops the attempt silently
+        r.host.open().unwrap();
+        let text = qr_text(&r);
+        let err = pair_via(addr(&r), &text, &old, "Pixel 7", &mut |_| {}, &|| false).unwrap_err();
+        assert_eq!(err, ClientError::PairingNotPossible);
+        // a fresh key ("Neu koppeln") does
+        let fresh = StaticKey::generate().unwrap();
+        let (paired, _) = pair_client(&r, &fresh);
+        assert_eq!(paired.hub_key, r.hub_key);
+        assert!(open_via(addr(&r), &fresh, &r.hub_key, "Pixel 7").is_ok());
+    }
+
+    #[test]
+    fn the_link_opens_a_fresh_session_once_after_the_hub_closed_an_idle_one() {
+        let r = rig_with(ServerConfig {
+            tick: Duration::from_millis(20),
+            idle_timeout: Duration::from_millis(300),
+            ..ServerConfig::default()
+        });
+        let key = StaticKey::generate().unwrap();
+        pair_client(&r, &key);
+        let mut link = client::Link::new();
+        let mut opened = 0;
+        let a = addr(&r);
+        let hub = r.hub_key;
+        let mut open = || {
+            opened += 1;
+            open_via(a, &key, &hub, "Pixel 7")
+        };
+        let body = br#"{"keyVersion":1,"type":"info"}"#;
+        assert!(link.request(body, &mut open).is_ok());
+        std::thread::sleep(Duration::from_millis(700)); // the hub closes the idle session
+        assert!(link.request(body, &mut open).is_ok());
+        assert_eq!(opened, 2);
+    }
+
+    #[test]
+    fn a_largest_value_travels_in_one_frame_and_a_too_big_page_says_so() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_client(&r, &key);
+        let mut s = open_via(addr(&r), &key, &r.hub_key, "Pixel 7").unwrap();
+        // the JSON-encoded value (with quotes) may be 60 000 bytes
+        let value = format!("enc:v1:{}", "a".repeat(60_000 - 2 - 7));
+        for i in 0..2 {
+            let ops = json!([{"collection":"todos_task","id":format!("big{i}"),"field":"title","hlc":hlc(i),"value":value}]);
+            let put: Value = serde_json::from_slice(
+                &s.request(
+                    json!({"keyVersion":1,"type":"push","ops":ops})
+                        .to_string()
+                        .as_bytes(),
+                )
+                .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(put["accepted"], 1, "{put}");
+        }
+        let two: Value = serde_json::from_slice(
+            &s.request(br#"{"keyVersion":1,"type":"pull","since":0,"limit":2}"#)
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(two["error"], "response-too-large");
+        let one: Value = serde_json::from_slice(
+            &s.request(br#"{"keyVersion":1,"type":"pull","since":0,"limit":1}"#)
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(one["ops"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn cancelling_while_still_connecting_ends_at_once() {
+        let r = rig();
+        r.host.open().unwrap();
+        let text = qr_text(&r);
+        // a host that accepts but never answers message 1
+        let silent = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let std::net::SocketAddr::V4(silent_addr) = silent.local_addr().unwrap() else {
+            panic!()
+        };
+        let began = std::time::Instant::now();
+        let stop_at = began + Duration::from_millis(300);
+        let err = pair_via(
+            silent_addr,
+            &text,
+            &StaticKey::generate().unwrap(),
+            "P",
+            &mut |_| {},
+            &|| std::time::Instant::now() > stop_at,
+        )
+        .unwrap_err();
+        assert_eq!(err, ClientError::Cancelled);
+        assert!(began.elapsed() < Duration::from_secs(3));
+        drop(silent);
+    }
+
+    #[test]
+    fn cancel_on_the_pc_is_pairing_aborted_not_a_network_problem() {
+        let r = rig();
+        r.host.open().unwrap();
+        let text = qr_text(&r);
+        let a = addr(&r);
+        let device = std::thread::spawn(move || {
+            pair_via(
+                a,
+                &text,
+                &StaticKey::generate().unwrap(),
+                "P",
+                &mut |_| {},
+                &|| false,
+            )
+        });
+        let attempt = wait_hello(&r);
+        // the user pressed "Abbrechen" on the PC: the shell cancels and ends that connection
+        r.host.cancel();
+        let began = std::time::Instant::now();
+        r.server.deliverer().abort(attempt);
+        assert_eq!(
+            device.join().unwrap().unwrap_err(),
+            ClientError::PairingAborted
+        );
+        assert!(
+            began.elapsed() < Duration::from_secs(3),
+            "not the device's own timeout"
+        );
+    }
+
+    #[test]
     fn names_are_cleaned_for_the_hub() {
         assert_eq!(client::hello_name("  Pixel 7\n "), "Pixel 7");
         assert_eq!(client::hello_name(""), "Gerät");

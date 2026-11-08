@@ -6,7 +6,7 @@ import { createFakeLanHubParts } from '@/core/platform/fakeLanHub';
 import type { LanClientService, LanHubService } from '@/core/platform/types';
 import { DexieStorageAdapter } from '@/core/storage/dexie';
 import { createTestDb } from '@/test-utils';
-import { LanHubAdapter } from './adapters/lanHub';
+import { LanClientAdapter, LanHubAdapter, slices } from './adapters/lanHub';
 import {
   connect,
   disableLanHub,
@@ -298,3 +298,68 @@ function createFakeLanClientForTest() {
   };
   return state;
 }
+
+describe('requests that fit one frame', () => {
+  const op = (i: number, size: number) => ({
+    collection: 'todos_task',
+    id: `r${i}`,
+    field: 'title',
+    hlc: `1790000000000-0000-dev${i}`,
+    value: `enc:v1:${'a'.repeat(size)}`,
+  });
+
+  it('slices pushes under the budget; an op larger than the budget goes alone', () => {
+    const ops = [op(1, 100), op(2, 100), op(3, 70_000), op(4, 100)];
+    const parts = slices(ops, 1_000);
+    expect(parts.map((p) => p.map((o) => o.id))).toEqual([['r1', 'r2'], ['r3'], ['r4']]);
+    for (const p of parts.filter((x) => x.length > 1))
+      expect(JSON.stringify({ keyVersion: 1, type: 'push', ops: p }).length).toBeLessThan(1_000);
+  });
+
+  it('halves the page after response-too-large and remembers what fitted', async () => {
+    const asked: number[] = [];
+    const adapter = new LanClientAdapter(
+      {
+        request: async (body) => {
+          const { limit } = JSON.parse(body) as { limit: number };
+          asked.push(limit);
+          return JSON.stringify(
+            limit > 50
+              ? { error: 'response-too-large' }
+              : { epoch: 'e', ops: [], cursor: 0, more: false },
+          );
+        },
+      },
+      1,
+    );
+    await adapter.pull(0, 1000);
+    expect(asked).toEqual([200, 100, 50]);
+    asked.length = 0;
+    await adapter.pull(0, 1000);
+    // starts near the last size that fitted instead of at 200 again
+    expect(asked[0]).toBe(75);
+  });
+});
+
+describe('pairing that cannot be kept', () => {
+  it('undoes the pairing on the PC when an own server got connected meanwhile', async () => {
+    const server = new MemoryServer();
+    const p = pc();
+    p.deps.remote = (_url, token) => server.remote(token);
+    const client = createFakeLanClientForTest();
+    p.deps.lanClient = () => client.client;
+    const result = pairWithPc(
+      'NEMO1:qr',
+      'X',
+      () =>
+        void connect(
+          { url: 'https://sync.example', token: 'right-token', encrypt: false },
+          p.deps,
+        ).then(() => client.confirm()),
+      p.deps,
+    );
+    expect(await result).toEqual({ ok: false, reason: 'failed' });
+    expect(client.unpaired).toBe(true);
+    expect((await loadSyncConfig(p.db))?.kind).toBe('selfHosted');
+  });
+});
