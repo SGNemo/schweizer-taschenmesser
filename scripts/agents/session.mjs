@@ -82,8 +82,14 @@ function fromLock(fileKey) {
   }
   return undefined;
 }
+const normUrl = (u) =>
+  String(u)
+    .trim()
+    .replace(/\.git$/, "")
+    .replace(/\/+$/, "")
+    .toLowerCase();
 const repoUrl = flags.repo ?? process.env.NEMO_REPO ?? DEFAULTS.repo;
-const foreignRepo = repoUrl !== DEFAULTS.repo;
+const foreignRepo = normUrl(repoUrl) !== normUrl(DEFAULTS.repo);
 const cfg = {
   agent:
     flags.agent ??
@@ -106,7 +112,7 @@ const cfg = {
 };
 const githubToken = process.env.GITHUB_TOKEN;
 // the PAT goes to the Nemo repository only; any other --repo is mounted without it
-const repoToken = cfg.repo === DEFAULTS.repo ? githubToken : undefined;
+const repoToken = foreignRepo ? undefined : githubToken;
 if (githubToken && !repoToken)
   console.warn(
     `warning: GITHUB_TOKEN is sent only to ${DEFAULTS.repo}; ${cfg.repo} is mounted without a token and without the vault`,
@@ -229,7 +235,11 @@ function printEvent(ev) {
   }
 }
 
-async function approve(c, sessionId, ids) {
+const approvedIds = new Set(); // a stream may replay the idle event that listPending already handled
+async function approve(c, sessionId, allIds) {
+  const ids = allIds.filter((id) => !approvedIds.has(id));
+  if (!ids.length) return;
+  ids.forEach((id) => approvedIds.add(id));
   console.log(
     `${stamp()} approving ${ids.length} tool call(s) (--auto-approve)`,
   );

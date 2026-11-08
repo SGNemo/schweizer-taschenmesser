@@ -8,6 +8,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Was                                                                                                                               | Was zu tun ist                                                                                                                                                                                                                                                                                                                                      |
 | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent-Team v3 (`review/agents-v3`, PR offen) | 4 Fragen im PR beantworten, dann [meta/agents-v3/SETUP.md](meta/agents-v3/SETUP.md) |
 | Neue Agenten anlegen (v2 JSON in Session-Outputs (agents-v2-json); Prompts: nemo-deps, -perf, -triage, -i18n, -a11y, -merge, -creativity, nemo-lead aktualisiert) | Agenten in der Konsole anlegen, Roster: [meta/AGENTS.md](meta/AGENTS.md) |
 | PR #507 `feat/lang-de-en` (gemergt): Sprachen nur Deutsch + Englisch, es/fr/pt-BR eingefroren ([i18n/FROZEN.md](i18n/FROZEN.md))  | Handtest MANUAL-TESTS „Sprachen“ S1–S3 und Website `/es`, `/fr`, `/pt-br` → `/en`; danach Zeile löschen (BOARD-Notiz „ab jetzt nur de/en“ steht)                                                                                                                                                                                                                                                  |
 | PR #504 `fix/local-model-clarity` (gemergt): Lokales Modell – Texte je Fall, Dev-Preview mit `local-llm-vulkan`                   | erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig), Lokales Modell → Download → Testfrage von Hand                                                                                                                                                                                                                                       |
@@ -36,7 +37,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic | Branch | Area / files | State | Last commit | Updated |
 | ----- | ------ | ------------ | ----- | ----------- | ------- |
-| Agent-Team v3 (Review v2, Prompts, Setup, Scripts) | `review/agents-v3` | `docs/meta/agents-v3/**`, `scripts/agents/**` | PR offen | – | 2026-11-08 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 

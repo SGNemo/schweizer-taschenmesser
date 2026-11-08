@@ -44,7 +44,7 @@ Full path (with `nemo-security`) for:
 - anything in a `docs/RULES.md` area;
 - everything under `.github/` (gitleaks, scribble-guard, `permissions:`, publish and signing steps live there);
 - build inputs that run in CI jobs holding the signing secrets: `web/scripts/`, `build.rs`, gradle files, `tauri*.conf.json`, lock files;
-- `CLAUDE.md`, `docs/meta/AGENTS.md`.
+- `CLAUDE.md` (root and the area files `web/src/modules/`, `web/src-tauri/`, `server/`), `docs/meta/AGENTS.md`.
 
 **Sven merges himself, never an agent:** `docs/meta/agents-v3/` (SHARED.md and the prompts are the binding rules of all 20 agents, read live from `develop`) and `scripts/agents/` (runs on Sven's machine with his keys). Agents prepare the PR and stop.
 
