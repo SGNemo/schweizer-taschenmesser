@@ -1,9 +1,25 @@
+import type { Repo } from '@/core/db/repo';
 import type { CaptureFields, CaptureType } from '../parser';
 
 /** What an adapter needs besides the parsed fields. */
 export interface BuildContext {
   /** Today's local date, 'YYYY-MM-DD'. */
   today: string;
+}
+
+/** What `amend` gets: the date of the line and the target collection's repo (the adapter stays module-free). */
+export interface AmendContext extends BuildContext {
+  repo: Repo<Record<string, unknown>>;
+}
+
+/** An open invoice a payment reminder belongs to (`findOpenInvoice`). */
+export interface OpenInvoice {
+  id: string;
+  payee: string;
+  /** 'YYYY-MM-DD'. */
+  dueDate: string;
+  /** What is still open: amount minus part payments, cents. */
+  restMinor: number;
 }
 
 /** The record a first stage wrote (module + id), handed to the second stage. */
@@ -40,9 +56,21 @@ export interface CaptureTarget {
   build(fields: CaptureFields, ctx: BuildContext, first?: CaptureRef): Record<string, unknown>;
   /** Two-stage save: the entry is written by another target first (see `CaptureVia`). */
   via?: CaptureVia;
+  /**
+   * Notes something on an existing record instead of creating one (a payment reminder on its open
+   * invoice). Re-reads the record and throws `CaptureError('stale')` when it is gone or settled; the
+   * returned `undo` takes back only what it wrote and never removes the record.
+   */
+  amend?(fields: CaptureFields, match: OpenInvoice, ctx: AmendContext): Promise<SavedCapture>;
 }
 
-export type CaptureErrorCode = 'module-off' | 'invalid' | 'unknown-target' | 'currency';
+export type CaptureErrorCode =
+  | 'module-off'
+  | 'invalid'
+  | 'unknown-target'
+  | 'currency'
+  /** `amend`: the record is gone or settled since the preview. */
+  | 'stale';
 
 export class CaptureError extends Error {
   constructor(
@@ -66,4 +94,11 @@ export interface SavedCapture {
   text?: string;
   /** Every entry's type in a multi-line save (a reminder among them asks for alerts, C01). */
   types?: CaptureType[];
+  /**
+   * A save with a fixed id found the record already there: `true` live, `'tombstone'` deleted. Nothing
+   * was written (neither stage) and `undo` does nothing. Also `true` for an `amend` that was already noted.
+   */
+  existed?: true | 'tombstone';
+  /** The entry noted something on an existing record (`amend`) instead of creating one. */
+  amended?: boolean;
 }

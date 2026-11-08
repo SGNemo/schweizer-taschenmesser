@@ -45,7 +45,7 @@ test('three lines become three entries in one click, and "Rückgängig" takes al
   const list = page.getByTestId('capture-row');
   await expect(list).toHaveCount(3);
   await expect(list.nth(2)).toContainText('9:00 Uhr');
-  await expect(page.getByTestId('capture-row-type').nth(2)).toHaveValue('event');
+  await expect(page.getByTestId('capture-row-target').nth(2)).toHaveAttribute('data-type', 'event');
   await expect(page.getByRole('radio')).toHaveCount(0);
   const results = await new AxeBuilder({ page })
     .include('[data-testid="capture-rows"]')
@@ -74,7 +74,7 @@ test('a sentence with commas and "und" splits; Mo, Mi und Fr does not', async ({
   await expect(page.getByTestId('capture-rows')).toHaveCount(0);
 
   await input(page).fill('Milch kaufen, morgen Oma anrufen und Freitag Zahnarzt 9 Uhr');
-  await expect(page.getByTestId('capture-row-type').nth(2)).toHaveValue('event');
+  await expect(page.getByTestId('capture-row-target').nth(2)).toHaveAttribute('data-type', 'event');
   await input(page).press('Enter');
   await expect(page.getByText('3 Dinge gespeichert')).toBeVisible();
 });
@@ -93,7 +93,7 @@ test('Shift+Enter starts a new line, Enter saves; the phone shows "Eine Zeile = 
   await input(page).press('Shift+Enter');
   await input(page).pressSequentially('Auto waschen');
   await expect(page.getByTestId('capture-row')).toHaveCount(2);
-  await expect(page.getByTestId('capture-row-type').first()).toHaveValue('todo');
+  await expect(page.getByTestId('capture-row-target').first()).toHaveAttribute('data-type', 'todo');
   await input(page).press('Enter');
   await expect(page.getByText('2 Dinge gespeichert')).toBeVisible();
   expect(
@@ -113,18 +113,30 @@ test('a batch with a money line: one tap saves all, nothing is booked, the line 
   await expect(list).toHaveCount(3);
   // Both money lines (the spend word and the `$` line) are ToDos with their amount and the chip.
   for (const i of [1, 2])
-    await expect(page.getByTestId('capture-row-type').nth(i)).toHaveValue('todo');
+    await expect(page.getByTestId('capture-row-target').nth(i)).toHaveAttribute(
+      'data-type',
+      'todo',
+    );
   await expect(page.getByTestId('capture-row-book')).toHaveCount(2);
-  await expect(
-    page.getByTestId('capture-row-type').first().locator('option[value="finance"]'),
-  ).toHaveCount(0);
+  // The first view has no select; a tap on the target text opens the choice, which has no booking.
+  await expect(page.locator('[data-testid="capture-rows"] select')).toHaveCount(0);
+  await page.getByTestId('capture-row-target').first().click();
+  await expect(page.getByTestId('capture-row-type').locator('option[value="finance"]')).toHaveCount(
+    0,
+  );
+  await page.getByTestId('capture-row-type').selectOption('reminder');
+  await expect(page.getByTestId('capture-row-target').first()).toHaveAttribute(
+    'data-type',
+    'reminder',
+  );
   await page.getByRole('button', { name: 'Alle speichern (3)' }).click();
   await expect(page.getByText('3 Dinge gespeichert. Sortiert wird später.')).toBeVisible();
   await expect(page.getByTestId('capture-draft')).toHaveCount(0);
+  expect(live(await rows(page, 'calendar_event'))).toHaveLength(1);
   const titles = live(await rows(page, 'todos_task')).map((x) =>
     String(x.title).replace(/\s/g, ' '),
   );
-  expect(titles.sort()).toEqual(['Mittagessen · 12,50 €', 'Müll runterbringen', 'Pizza · 8,90 €']);
+  expect(titles.sort()).toEqual(['Mittagessen · 12,50 €', 'Pizza · 8,90 €']);
   expect(live(await rows(page, 'finance_transaction'))).toHaveLength(0);
 });
 
@@ -146,7 +158,7 @@ test('shared text with several lines arrives as one entry; the rest only behind 
 test('the capture window saves several lines at once', async ({ page }) => {
   await page.goto('/capture.html');
   await input(page).fill('Milch kaufen\nOma anrufen');
-  await expect(page.getByTestId('capture-row-type').first()).toHaveValue('todo');
+  await expect(page.getByTestId('capture-row-target').first()).toHaveAttribute('data-type', 'todo');
   await input(page).press('Enter');
   await expect(page.getByTestId('capture-saved')).toContainText('2 Dinge gespeichert');
   expect(live(await rows(page, 'todos_task'))).toHaveLength(2);

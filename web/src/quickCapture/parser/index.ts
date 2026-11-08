@@ -92,6 +92,15 @@ const KEYWORDS = {
  * booking and the word leaves the title; without one („Schuhe gekauft“) the text stays as typed.
  */
 const SPEND_PAST = word(String.raw`bezahlt|gekauft`);
+/**
+ * Payment reminder words (as in `core/mail/heuristics.ts`): they make the line an invoice and carry a
+ * dunning level („2. Mahnung“ → 2, else 1). The capture layer first looks for the open invoice.
+ */
+const DUNNING = word(
+  String.raw`(?:([1-3])\.\s*)?(?:mahnung|zahlungserinnerung|zahlungsaufforderung)`,
+);
+/** „Stadtwerke 84,30 € zahlen“: with an amount and no spend word, paying points to an invoice. */
+const PAY = word(String.raw`zahlen|bezahlen|überweisen`);
 /** Words that make a dated sentence a deadline (a ToDo), even with a clock time. */
 const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|deadline|frist`);
 /** "bis 5.11.", "fällig am": a payment target when an amount is there. */
@@ -183,17 +192,20 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   const url = take(scan, URL_RE)?.[0]?.replace(/[.,;:!?)]+$/, '');
   if (url) fields.url = /^www\./i.test(url) ? `https://${url}` : url;
 
+  // Read here, carved out of the title only when the line becomes an invoice („Mahnung … prüfen“ stays).
+  const dunning = DUNNING.exec(scan.t);
   const kw = {
     reminder: !!take(scan, KEYWORDS.reminder),
     todo: !!take(scan, KEYWORDS.todo),
     bookmark: !!take(scan, KEYWORDS.bookmark),
     list: !!take(scan, KEYWORDS.list),
-    invoice: !!take(scan, KEYWORDS.invoice),
+    invoice: !!take(scan, KEYWORDS.invoice) || !!dunning,
     birthday: !!take(scan, KEYWORDS.birthday),
     spend: !!take(scan, KEYWORDS.spend),
     income: !!take(scan, KEYWORDS.income),
     due: !!take(scan, KEYWORDS.due),
     spendPast: SPEND_PAST.test(scan.t),
+    pay: PAY.test(scan.t),
     deadline: DEADLINE.test(scan.t),
     dueHint: DUE_HINT.test(scan.t),
   };
@@ -280,6 +292,8 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (money) score(scores, 'finance', kw.spend || kw.income || spentPast ? 92 : 80);
   if (money && slowRecurrence && !hasTime && !kw.invoice) score(scores, 'subscription', 92);
   if (money && kw.invoice) score(scores, 'invoice', 92);
+  else if (money && kw.pay && !kw.spend && !spentPast && !kw.income && !slowRecurrence)
+    score(scores, 'invoice', 90);
   else if (
     money &&
     hasDate &&
@@ -357,6 +371,14 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     }
   }
 
+  if (primaryType === 'invoice') {
+    if (dunning) take(scan, DUNNING);
+    // The payee, not the verb: „Stadtwerke 84,30 € zahlen“ → „Stadtwerke“.
+    const payee = scan.t.replace(PAY, ' ');
+    if (cleanTitle(payee)) scan.t = payee;
+    if (dunning)
+      fields.dunning = { level: dunning[1] ? Number(dunning[1]) : 1, date: fmtDate(today) };
+  }
   fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);
 
   const alternatives: CaptureAlternative[] = ranked

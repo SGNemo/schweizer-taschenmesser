@@ -357,8 +357,30 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     await m.tap(draft.getByRole('button', { name: 'Alle speichern (5)' }));
   }
   await expect(saved).toBeVisible();
+  // U03: the reminder line must raise the open Stadtwerke invoice, never file a second one (package 2).
+  const stadtwerke = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onsuccess = () => {
+          const req = open.result
+            .transaction('invoices_invoice')
+            .objectStore('invoices_invoice')
+            .getAll();
+          req.onsuccess = () => {
+            open.result.close();
+            const all = req.result as { payee?: string; deletedAt?: number | null }[];
+            resolve(all.filter((r) => !r.deletedAt && /Stadtwerke/.test(r.payee ?? '')).length);
+          };
+        };
+      }),
+  );
+  if (stadtwerke > 1) m.detour(); // a doubled invoice the person has to find and delete
   mkdirSync(OUT, { recursive: true });
-  writeFileSync(`${OUT}/A-${info.project.name}-stimulus.json`, JSON.stringify(pile));
+  writeFileSync(
+    `${OUT}/A-${info.project.name}-stimulus.json`,
+    JSON.stringify({ ...pile, stadtwerkeInvoices: stadtwerke }),
+  );
   info.annotations.push({
     type: 'stimulus',
     description: `while unloading: ${pile.cards} attention cards visible beside the sheet (backdrop ${pile.backdrop}) · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,

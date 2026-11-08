@@ -134,6 +134,24 @@ textarea.input {
 .rowTitle {
   overflow-wrap: anywhere;
 }
+/* The target of a line as words: quiet, a full-size tap target that opens the choice. */
+.rowTarget {
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.rowTarget:hover {
+  color: var(--text);
+}
 .rowType {
   min-height: var(--touch);
   padding: 0 var(--space-2);

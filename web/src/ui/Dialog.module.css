@@ -23,6 +23,13 @@
 .dialog::backdrop {
   background: var(--overlay);
 }
+/* The capture sheet: the page behind is covered, not dimmed (a token colour, so it serialises as rgb()),
+   from the first frame on (no fade). */
+.opaque::backdrop,
+.opaque[open]::backdrop {
+  background: var(--bg);
+  animation: none;
+}
 .dialog[open] {
   animation: pop var(--dur) var(--ease-out);
 }

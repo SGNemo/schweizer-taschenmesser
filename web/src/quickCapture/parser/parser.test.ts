@@ -297,3 +297,20 @@ describe('effort estimate', () => {
     expect(ev.fields.title).toContain('20 min');
   });
 });
+
+describe('payment reminders („Kopf leer“ package 2)', () => {
+  const at = new Date(2026, 9, 29, 10, 0);
+  it('carries the dunning level and the day it was noted', () => {
+    expect(parseCapture('2. Mahnung Telekom 45,90 €', { now: at }).fields.dunning).toEqual({
+      level: 2,
+      date: '2026-10-29',
+    });
+    expect(parseCapture('Mahnung Stadtwerke 87,40 € zahlen', { now: at }).fields.dunning).toEqual({
+      level: 1,
+      date: '2026-10-29',
+    });
+  });
+  it('no dunning on a line that is no invoice', () => {
+    expect(parseCapture('Mahnung Stadtwerke prüfen', { now: at }).fields.dunning).toBeUndefined();
+  });
+});

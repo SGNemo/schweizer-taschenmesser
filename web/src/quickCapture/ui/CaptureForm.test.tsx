@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAll } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
+import { createCollectionRepo } from '@/core/db/repo';
+import { disableModule, enableModule } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
 import { t } from '@/strings';
@@ -23,6 +26,14 @@ beforeEach(async () => {
 afterEach(() => setNow());
 
 const box = () => screen.findByRole('textbox', { name: t.quickCapture.inputLabel });
+/** The target of each row, as the row says it (text, no select in the first view). */
+const rowTypes = () =>
+  screen.getAllByTestId('capture-row-target').map((b) => b.getAttribute('data-type'));
+/** A tap on a row's target text opens its choice. */
+async function pickTarget(user: ReturnType<typeof userEvent.setup>, row: number, type: string) {
+  await user.click(screen.getAllByTestId('capture-row-target')[row]!);
+  await user.selectOptions(await screen.findByTestId('capture-row-type'), type);
+}
 const chips = () => screen.getByTestId('capture-chips');
 
 describe('CaptureForm', () => {
@@ -194,8 +205,10 @@ describe('CaptureForm', () => {
     await user.type(await box(), 'Milch kaufen{Shift>}{Enter}{/Shift}morgen 15 Uhr Zahnarzt');
     const rows = await screen.findAllByTestId('capture-row');
     expect(rows).toHaveLength(2);
-    const targets = screen.getAllByTestId('capture-row-type');
-    expect(targets.map((s) => (s as HTMLSelectElement).value)).toEqual(['todo', 'event']);
+    expect(rowTypes()).toEqual(['todo', 'event']);
+    // The first view has no select: the target is text („Termin · …“), a tap opens the choice.
+    expect(screen.queryByTestId('capture-row-type')).toBeNull();
+    expect(rows[1]).toHaveTextContent(t.quickCapture.type.event);
     expect(rows[1]).toHaveTextContent('Morgen, 1. Okt');
     expect(rows[1]).toHaveTextContent('15:00 Uhr');
     // No type radios in the list view: each row has its own menu.
@@ -216,8 +229,8 @@ describe('CaptureForm', () => {
     const user = userEvent.setup();
     render(<CaptureForm onSaved={() => undefined} />);
     await user.type(await box(), 'Milch kaufen, Oma anrufen');
-    const targets = await screen.findAllByTestId('capture-row-type');
-    await user.selectOptions(targets[1]!, 'reminder');
+    await screen.findAllByTestId('capture-row-target');
+    await pickTarget(user, 1, 'reminder');
     await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
     await waitFor(async () => expect(await db.table('todos_task').count()).toBe(1));
     const [reminder] = await db.table('calendar_event').toArray();
@@ -238,10 +251,12 @@ describe('CaptureForm', () => {
     expect(screen.getByTestId('capture-row-book')).toHaveTextContent(
       t.quickCapture.multi.bookExpense,
     );
-    for (const select of screen.getAllByTestId('capture-row-type'))
-      expect(Array.from((select as HTMLSelectElement).options).map((o) => o.value)).not.toContain(
-        'finance',
-      );
+    await user.click(screen.getAllByTestId('capture-row-target')[1]!);
+    const select = await screen.findByTestId('capture-row-type');
+    expect(Array.from((select as HTMLSelectElement).options).map((o) => o.value)).not.toContain(
+      'finance',
+    );
+    await user.click(await box());
     await user.keyboard('{Enter}');
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(screen.queryByTestId('capture-draft')).toBeNull();
@@ -296,7 +311,7 @@ describe('CaptureForm', () => {
     await user.keyboard('{Enter}');
     expect(await screen.findByRole('alert')).toHaveTextContent(t.quickCapture.chooseType);
     expect(onSaved).not.toHaveBeenCalled();
-    await user.selectOptions(screen.getAllByTestId('capture-row-type')[1]!, 'event');
+    await pickTarget(user, 1, 'event');
     await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(await db.table('calendar_event').count()).toBe(1);
@@ -399,5 +414,162 @@ describe('the booking sheet inside the capture sheet', () => {
       expect(screen.queryByRole('dialog', { name: t.quickCapture.multi.bookExpense })).toBeNull(),
     );
     expect(outerClose).not.toHaveBeenCalled();
+  });
+});
+
+describe('payment reminders in a batch („Kopf leer“ package 2)', () => {
+  const invoices = () =>
+    createCollectionRepo(getManifest('invoices')!, 'invoice') as ReturnType<
+      typeof createCollectionRepo
+    >;
+  const LINES = 'Müll runterbringen{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 € zahlen';
+
+  it('an open invoice: the line reads „Mahnung zu Rechnung …“ and is noted on it, never a second invoice', async () => {
+    await enableModule(getManifest('invoices')!);
+    await invoices().createMany([
+      {
+        id: 'inv-1',
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-09-15',
+          status: 'open',
+        },
+      },
+    ]);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), LINES);
+    const target = (await screen.findAllByTestId('capture-row-target'))[1]!;
+    await waitFor(() =>
+      expect(target).toHaveTextContent('Mahnung zu Rechnung Stadtwerke Musterstadt'),
+    );
+    // Nothing asks while unloading: no question mark, no select.
+    expect(screen.getByTestId('capture-rows').textContent).not.toContain('?');
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const all = await db.table('invoices_invoice').toArray();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ id: 'inv-1', amountMinor: 8430, dunningLevel: 1 });
+  });
+
+  it('two equally good invoices: the line stays a ToDo „Mahnung … prüfen“', async () => {
+    await enableModule(getManifest('invoices')!);
+    for (const id of ['a', 'b'])
+      await invoices().createMany([
+        {
+          id,
+          data: { payee: 'Stadtwerke', amountMinor: 8430, dueDate: '2026-09-15', status: 'open' },
+        },
+      ]);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), LINES);
+    const target = (await screen.findAllByTestId('capture-row-target'))[1]!;
+    await waitFor(() => expect(target).toHaveAttribute('data-type', 'todo'));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const titles = (await db.table('todos_task').toArray()).map((x) => x.title).sort();
+    expect(titles).toEqual(['Mahnung Stadtwerke prüfen', 'Müll runterbringen']);
+    expect((await db.table('invoices_invoice').toArray()).every((x) => !x.dunningLevel)).toBe(true);
+  });
+
+  it('no open invoice: a new invoice at dunning level 1', async () => {
+    await enableModule(getManifest('invoices')!);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), LINES);
+    const target = (await screen.findAllByTestId('capture-row-target'))[1]!;
+    await waitFor(() => expect(target).toHaveAttribute('data-type', 'invoice'));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const [inv] = await db.table('invoices_invoice').toArray();
+    expect(inv).toMatchObject({ payee: 'Stadtwerke', amountMinor: 8740, dunningLevel: 1 });
+  });
+});
+
+describe('a target picked by hand is final (council round 3)', () => {
+  it('another target picked by hand is final; re-picking „Rechnung“ keeps the check', async () => {
+    await enableModule(getManifest('invoices')!);
+    await createCollectionRepo(getManifest('invoices')!, 'invoice').createMany([
+      {
+        id: 'inv-1',
+        data: { payee: 'Stadtwerke', amountMinor: 8430, dueDate: '2026-09-15', status: 'open' },
+      },
+    ]);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(
+      await box(),
+      'Müll runterbringen{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 €',
+    );
+    const target = () => screen.getAllByTestId('capture-row-target')[1]!;
+    await waitFor(() => expect(target()).toHaveTextContent('Mahnung zu Rechnung'));
+    // The read target again: still noted on the open invoice.
+    await pickTarget(user, 1, 'invoice');
+    await waitFor(() => expect(target()).toHaveTextContent('Mahnung zu Rechnung'));
+    // Another target: final.
+    await pickTarget(user, 1, 'reminder');
+    await waitFor(() => expect(target()).toHaveAttribute('data-type', 'reminder'));
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(await db.table('invoices_invoice').count()).toBe(1);
+    expect((await db.table('invoices_invoice').get('inv-1'))!.dunningLevel).toBeUndefined();
+  });
+});
+
+describe('council round 4 – presets, ToDos off, moving lines', () => {
+  const invoicesRepo = () => createCollectionRepo(getManifest('invoices')!, 'invoice');
+  const open = (id: string) =>
+    invoicesRepo().createMany([
+      {
+        id,
+        data: { payee: 'Stadtwerke', amountMinor: 8430, dueDate: '2026-09-15', status: 'open' },
+      },
+    ]);
+
+  it('a preset target (the mail dialog’s initialType) still looks for the open invoice', async () => {
+    await enableModule(getManifest('invoices')!);
+    await open('inv-1');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(
+      <CaptureForm
+        initialType="invoice"
+        initialText="Mahnung Stadtwerke 87,40 €"
+        onSaved={onSaved}
+      />,
+    );
+    expect(await screen.findByTestId('capture-dunning-hint')).toHaveTextContent('Stadtwerke');
+    await user.click(screen.getByRole('button', { name: t.quickCapture.save }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(await db.table('invoices_invoice').count()).toBe(1);
+    expect((await db.table('invoices_invoice').get('inv-1'))!.dunningLevel).toBe(1);
+  });
+
+  it('ToDos off and unsure: the line says why and nothing is saved until a target is picked', async () => {
+    await enableModule(getManifest('invoices')!);
+    await disableModule(getManifest('todos')!, 'keep');
+    await open('a');
+    await open('b');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(
+      await box(),
+      'Zahnarzt morgen 9 Uhr{Shift>}{Enter}{/Shift}Mahnung Stadtwerke 87,40 €',
+    );
+    const reason = t.quickCapture.multi.dunningChoose('Stadtwerke');
+    await waitFor(() =>
+      expect(screen.getAllByTestId('capture-row-target')[1]).toHaveTextContent(reason),
+    );
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(reason);
+    expect(onSaved).not.toHaveBeenCalled();
+    expect((await db.table('invoices_invoice').toArray()).every((x) => !x.dunningLevel)).toBe(true);
   });
 });

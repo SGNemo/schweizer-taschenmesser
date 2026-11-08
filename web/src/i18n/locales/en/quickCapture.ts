@@ -91,6 +91,8 @@ export const quickCapture: Strings['quickCapture'] = {
       `Amount in ${code}: please record it in the full form in Finances, where the account fits.`,
     failed: 'Saving failed.',
   },
+  dunningNote: (day: string, amount: string, due?: string) =>
+    `Reminder dated ${day}: ${amount}${due ? ` by ${due}` : ''}`,
   todoTimeNote: (time: string) => `Time: ${time}`,
   noTargets: 'No target module is turned on.',
   multi: {
@@ -108,6 +110,13 @@ export const quickCapture: Strings['quickCapture'] = {
     bookExpense: 'Book as expense',
     bookIncome: 'Book as income',
     bookLine: (action: string, line: string) => `${action}: ${line}`,
+    calmHint: 'One line = one entry. Sorting comes later.',
+    dunningMatch: (payee: string, due: string) =>
+      `Reminder for invoice ${payee}, due ${due} · note it`,
+    dunningCheck: (payee: string) => `Check reminder ${payee}`,
+    dunningChoose: (payee: string) =>
+      `It is not clear which invoice for ${payee} is meant. Please choose a target.`,
+    dunningWill: (payee: string, due: string) => `Will be noted on invoice ${payee}, due ${due}.`,
   },
   trayToday: {
     heading: 'Today',

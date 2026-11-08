@@ -1080,6 +1080,8 @@ export const de = {
       failed: 'Speichern fehlgeschlagen.',
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
+    dunningNote: (day: string, amount: string, due?: string) =>
+      `Mahnung vom ${day}: ${amount}${due ? ` bis ${due}` : ''}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
     multi: {
       lineHint: 'Eine Zeile = ein Eintrag',
@@ -1096,6 +1098,14 @@ export const de = {
       bookExpense: 'Als Ausgabe buchen',
       bookIncome: 'Als Einnahme buchen',
       bookLine: (action: string, line: string) => `${action}: ${line}`,
+      calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      dunningMatch: (payee: string, due: string) =>
+        `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
+      dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
+      dunningChoose: (payee: string) =>
+        `Bei ${payee} ist nicht klar, welche Rechnung gemeint ist. Bitte ein Ziel wählen.`,
+      dunningWill: (payee: string, due: string) =>
+        `Wird bei Rechnung ${payee}, fällig ${due}, vermerkt.`,
     },
     trayToday: {
       heading: 'Heute',

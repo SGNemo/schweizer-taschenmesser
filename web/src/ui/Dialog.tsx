@@ -23,6 +23,11 @@ interface DialogProps {
   askAfterTyping?: boolean;
   /** The parent registers "Back" itself (setup assistant): the dialog adds no entry of its own. */
   backHandled?: boolean;
+  /**
+   * `dim` (default) lets the page show through; `opaque` covers it with the page background from the
+   * moment it opens (the capture sheet: nothing of the pile beside it, the page stays mounted).
+   */
+  backdrop?: 'dim' | 'opaque';
 }
 
 /** Distance in px a sheet must be pulled down to close. */
@@ -55,6 +60,7 @@ export function Dialog({
   dirty: dirtyProp = false,
   askAfterTyping = false,
   backHandled = false,
+  backdrop = 'dim',
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -134,6 +140,7 @@ export function Dialog({
         size === 'roomy' ? styles.roomy : '',
         size === 'xl' ? styles.xl : '',
         variant === 'full' ? styles.full : '',
+        backdrop === 'opaque' ? styles.opaque : '',
       ].join(' ')}
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       aria-labelledby={titleId}
