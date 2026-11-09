@@ -226,8 +226,10 @@ export async function secondStage(
     const ref: CaptureRef = { moduleId: targetFor(target.via.type).moduleId, id };
     const row = await repo.table.get(target.via.id(ref));
     return row ? (row.deletedAt === null ? 'live' : 'deleted') : undefined;
-  } catch {
-    return undefined;
+  } catch (e) {
+    // Only a switched-off module means „no second record“; a failed read reaches the caller.
+    if (e instanceof CaptureError && e.code === 'module-off') return undefined;
+    throw e;
   }
 }
 

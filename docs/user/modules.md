@@ -8,34 +8,34 @@ In the **module library** you turn modules on and off (when turning one off: kee
 
 <!-- modules:start -->
 
-| Area          | Module                  | What it does                                                                                      | Status                                 |
-| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **Plan**      | Calendar                | Events in month, week and day view                                                                | on by default                          |
-|               | Planner                 | Spreads your open to-dos over the coming days                                                     | optional                               |
-|               | To-dos                  | Tasks in lists with priorities, due date and subtasks                                             | on by default                          |
-|               | Habits                  | Daily and weekly goals with rings                                                                 | optional                               |
-|               | Time tracking           | Start and stop with one click, projects and clients with colour and hourly rate                   | optional                               |
-|               | Weather                 | A page of its own for the weather at your place                                                   | on by default                          |
-|               | Maps & places           | Places and routes you need often                                                                  | preview                                |
-|               | People                  | Never forget a birthday again and collect gifts per person                                        | optional                               |
-| **Money**     | Finances                | Accounts, income and expenses with categories                                                     | on by default                          |
-|               | Invoices                | Open invoices with amount, payee and due date                                                     | on by default                          |
-|               | Subscriptions           | Subscriptions and recurring payments                                                              | on by default                          |
-|               | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress  | optional                               |
-| **Household** | Lists                   | Shopping, packing lists and checklists                                                            | optional                               |
-|               | Pantry                  | What’s in the fridge, the cupboard and the freezer?                                               | optional                               |
-|               | Fitness                 | Keep a rough log of training and food                                                             | preview                                |
-| **Knowledge** | Saved                   | Save links, reading, films, places and ideas                                                      | optional                               |
-|               | Notes                   | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional                               |
-|               | Chat                    | Conversations with the built-in local model or your providers                                     | preview                                |
-|               | Browser                 | Simple browser with tabs, bookmarks and a private mode                                            | preview, Windows and Android apps only |
-|               | Feeds                   | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group                       | optional                               |
-|               | Mail                    | Inbox, search and reading mail                                                                    | preview, Windows app only              |
-|               | Music                   | Spotify on one page                                                                               | preview                                |
-| **Vault**     | Documents               | IDs, contracts, insurance and warranties with end date, notice period and an attached file        | optional                               |
-|               | Passwords               | Password vault                                                                                    | optional                               |
-| **System**    | This PC                 | Drives with a scan of the biggest folders and system info (processor, memory, battery, network)   | optional, Windows app only             |
-|               | Downloads               | Downloads files                                                                                   | preview, Windows app only              |
+| Area | Module | What it does | Status |
+|---|---|---|---|
+| **Plan** | Calendar | Events in month, week and day view | on by default |
+|  | Planner | Spreads your open to-dos over the coming days | optional |
+|  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
+|  | Habits | Daily and weekly goals with rings | optional |
+|  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
+|  | Weather | A page of its own for the weather at your place | on by default |
+|  | Maps & places | Places and routes you need often | preview |
+|  | People | Never forget a birthday again and collect gifts per person | optional |
+| **Money** | Finances | Accounts, income and expenses with categories | on by default |
+|  | Invoices | Open invoices with amount, payee and due date | on by default |
+|  | Subscriptions | Subscriptions and recurring payments | on by default |
+|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | optional |
+| **Household** | Lists | Shopping, packing lists and checklists | optional |
+|  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
+|  | Fitness | Keep a rough log of training and food | preview |
+| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
+|  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
+|  | Chat | Conversations with the built-in local model or your providers | preview |
+|  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
+|  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
+|  | Mail | Inbox, search and reading mail | preview, Windows app only |
+|  | Music | Spotify on one page | preview |
+| **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
+|  | Passwords | Password vault | optional |
+| **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
+|  | Downloads | Downloads files | preview, Windows app only |
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 
