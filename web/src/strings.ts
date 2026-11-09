@@ -1548,6 +1548,7 @@ export const de = {
     changed: 'ToDo geändert.',
     noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
+    emptyAction: 'Eine Sache eintragen',
     someday: 'Irgendwann',
     views: {
       label: 'Ansicht',
@@ -1560,6 +1561,7 @@ export const de = {
     },
     board: {
       empty: 'Hier ist nichts.',
+      wasDue: (date: string) => `war am ${date} fällig`,
       moveTo: (view: string) => `Verschieben nach ${view}`,
       hint: 'Karte ziehen oder „⋯“ nutzen.',
     },
@@ -1584,7 +1586,7 @@ export const de = {
     startDate: 'Beginnt am',
     startHint: 'Bis dahin steht die Aufgabe unter „Demnächst“.',
     startsOn: (date: string) => `ab ${date}`,
-    moveTomorrow: 'Morgen',
+    moveTomorrow: 'Auf morgen',
     allToday: 'Alle auf heute',
     allTodayDone: (n: number) =>
       n === 1 ? '1 ToDo auf heute gelegt.' : `${n} ToDos auf heute gelegt.`,
@@ -7929,6 +7931,7 @@ export const de = {
     emptyHint:
       'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
     add: 'Gewohnheit hinzufügen',
+    addFirst: 'Erste Gewohnheit',
     edit: 'Gewohnheit bearbeiten',
     form: {
       name: 'Name',

@@ -71,6 +71,18 @@
 .sub {
   margin-left: var(--space-6);
 }
+/* U02: the shared row rule strikes every title inside a done row, so it also reached the open subtasks nested in it;
+   an open subtask keeps its own plain title. */
+.subOpen [data-row] > :first-child {
+  color: inherit;
+  text-decoration: none;
+}
+/* U21: on the phone the row's quick button ("Auf heute", "Morgen") gives the title its width; the ⋯ menu has both. */
+@media (max-width: 40rem) {
+  .rowQuick {
+    display: none;
+  }
+}
 /* The ToDos tick: a round check in the module colour (pantry has squares, habits rings). Still a native checkbox. */
 .check {
   flex: none;
@@ -128,7 +140,8 @@
   cursor: pointer;
 }
 .title {
-  overflow-wrap: anywhere;
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 .done .title {
   text-decoration: line-through;
