@@ -1,5 +1,5 @@
 /**
- * UI audit 2026-11: turns the facts files of the tour (`audit-tour.spec.ts`) into the tables of REPORT.md.
+ * UI audit 2026-11: turns the facts files of the tour (`audit-tour.spec.ts`) into the tables of MEASURES.md.
  * Usage (web/): node ../docs/design/ui-audit-2026-11/tools/summarize.mjs [.screens/ui-audit] > ../docs/design/ui-audit-2026-11/MEASURES.md
  * Reads <dir>/<viewport>-<scheme>/<seed|empty>/facts-*.json and prints Markdown: stimulus per page, head and type
  * consistency, surfaces (borders / shadows / tints), motion, states, dialogs, layout shift, axe, phone targets.

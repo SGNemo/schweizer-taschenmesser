@@ -58,10 +58,10 @@
 
   // modules: id, icon, label, hue, area
   const MODS = {
-    plan: [['calendar','cal','Kalender','sky'],['todos','todo','ToDos','moss'],['habits','target','Gewohnheiten','violet'],['timetrack','clock','Zeiterfassung','teal'],['weather','sun','Wetter','cobalt'],['maps','map','Karten &amp; Orte','ocean'],['people','people','Personen','orchid']],
+    plan: [['calendar','cal','Kalender','sky'],['todos','todo','ToDos','moss'],['habits','target','Gewohnheiten','violet'],['timetrack','clock','Zeiterfassung','teal'],['weather','sun','Wetter','cobalt'],['maps','map','Karten &amp; Orte','ocean'],['people','people','Personen','orchid'],['planner','grid','Planer','lime']],
     money: [['finance','wallet','Finanzen','teal'],['invoices','bill','Rechnungen','ocean'],['subscriptions','repeat','Abos','indigo'],['budgets','piggy','Budgets','lime']],
-    household: [['lists','cart','Listen','orchid'],['pantry','box','Vorräte','fern']],
-    knowledge: [['bookmarks','bookmark','Merkliste','indigo'],['notes','note','Notizen','violet'],['chat','spark','Chat','sky'],['browser','globe','Browser','cobalt'],['mail','mail','E-Mail','teal'],['music','music','Musik','orchid']],
+    household: [['lists','cart','Listen','orchid'],['pantry','box','Vorräte','fern'],['fitness','target','Fitness','ocean']],
+    knowledge: [['bookmarks','bookmark','Merkliste','indigo'],['notes','note','Notizen','violet'],['chat','spark','Chat','sky'],['browser','globe','Browser','cobalt'],['mail','mail','E-Mail','teal'],['music','music','Musik','orchid'],['feeds','note','Feeds','lime']],
     vault: [['vault','files','Unterlagen','indigo'],['accounts','lock','Passwörter','slate']],
     system: [['disk','disk','Dieser PC','slate'],['downloads','download','Downloads','cobalt']],
   };
@@ -69,6 +69,7 @@
   const AREA_HUE = { plan: 'sky', money: 'teal', household: 'fern', knowledge: 'violet', vault: 'indigo', system: 'slate' };
   window.MODS = MODS;
   const active = document.body.dataset.active || '';
+  const area = document.body.dataset.area || '';
   const nav = ([id, icon, label, hue], cnt = '') =>
     `<a class="nav${id === active ? ' active' : ''}" style="--mod:var(--mod-${hue})">${I[icon]}<span>${label}</span>${cnt ? `<span class="cnt">${cnt}</span>` : ''}</a>`;
   const sb = document.getElementById('sb');
@@ -78,15 +79,14 @@
       <div class="favbar">${[MODS.plan[0], MODS.plan[1], MODS.money[0], MODS.household[1]].map(([id, icon, , hue]) => `<a class="${id === active ? 'cur' : ''}" style="--mod:var(--mod-${hue})" title="">${I[icon]}</a>`).join('')}</div>
       <div class="navscroll">
         <a class="nav${active === 'home' ? ' active-accent' : ''}">${I.home}<span>Übersicht</span></a>
-        ${Object.entries(MODS).map(([a, mods]) => `<div class="navgrp" style="--area:var(--mod-${AREA_HUE[a]})"><div class="navh">${AREA[a][0]}${I.chevd}</div>${mods.map((m) => nav(m, m[0] === 'invoices' ? '2' : m[0] === 'todos' ? '11' : '')).join('')}</div>`).join('')}
+        ${Object.entries(MODS).map(([a, mods]) => `<div class="navgrp" style="--area:var(--mod-${AREA_HUE[a]})"><div class="navh">${AREA[a][0]}${a === area ? I.chevd : I.chev}</div>${a === area ? mods.map((m) => nav(m, m[0] === 'invoices' ? '2' : m[0] === 'todos' ? '11' : '')).join('') : ''}</div>`).join('')}
       </div>
       <div class="navfoot"><a class="nav">${I.grid}<span>Modul-Bibliothek</span></a><a class="nav">${I.gear}<span>Einstellungen</span></a><a class="nav">${I.panel}<span>Einklappen</span></a></div>`;
   const tb = document.getElementById('tb');
   if (tb)
     tb.innerHTML = `${h.dataset.device === 'mobile' ? '<a class="brand" style="padding:0 4px 0 0"><span class="logo">N</span></a>' : ''}<div class="search">${I.search}<span class="lbl">Suchen oder fragen</span><span class="kbd">Strg K</span></div>
-      <a class="btn primary">${I.plus}<span class="lbl">Neu</span></a><a class="btn ghost">${I.tools}<span class="lbl">Werkzeuge</span></a><a class="btn ghost icon">${I.bell}</a>`;
+      ${h.dataset.device === 'mobile' ? '' : `<a class="btn primary">${I.plus}<span class="lbl">Neu</span></a>`}<a class="btn ghost">${I.tools}<span class="lbl">Werkzeuge</span></a><a class="btn ghost icon">${I.bell}</a>`;
   const bn = document.getElementById('bn');
-  const area = document.body.dataset.area || '';
   if (bn)
     bn.innerHTML = `<a class="${area === 'home' ? 'on-accent' : ''}">${I.home}Übersicht</a><a class="${area === 'plan' ? 'on' : ''}" style="--mod:var(--mod-sky)">${I.cal}Planen</a><a class="${area === 'money' ? 'on' : ''}" style="--mod:var(--mod-teal)">${I.wallet}Geld</a><a class="${area === 'household' ? 'on' : ''}" style="--mod:var(--mod-fern)">${I.box}Haushalt</a><a>${I.more}Mehr</a>`;
   // sub-navigation: the active module's area

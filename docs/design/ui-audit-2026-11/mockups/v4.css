@@ -2,7 +2,7 @@
    Not app code. Shows the five 4.0 rules: (1) tone steps instead of shadows, (2) one title row with tabs,
    (3) navigation in one level (no sub-navigation on the desktop; one module row under the head on the phone),
    (4) one entry point for capture (neutral "Neu", one module action), (5) density per device (master–detail,
-   reading measure, phone content on screen 1). Query: ?theme=light|dark&device=desktop|mobile */
+   reading measure, rows 44 px desktop / 48 px phone, phone content on screen 1; the 36-px pointer-fine rows are not shown). Query: ?theme=light|dark&device=desktop|mobile */
 @import url(../../identity-v3/mockups/v3.css);
 
 /* (1) tone steps: two neutral surface levels, shadows only for floating things, borders only as hairlines in lists */
@@ -103,3 +103,28 @@ html[data-v=four][data-device=mobile] .greet .tools .btn{display:none}
 html[data-v=four][data-device=mobile] .attn{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 html[data-v=four][data-device=mobile] .attn a{min-height:52px;padding:8px 12px}
 html[data-v=four][data-device=mobile] .attn a.quiet{grid-column:1/-1;min-height:40px}
+
+/* touch: every target in head, module row and tabs is at least 44 px high */
+html[data-v=four][data-device=mobile] .modrow a,html[data-v=four][data-device=mobile] .tabs a,html[data-v=four][data-device=mobile] .titlerow .act .btn{height:44px}
+html[data-v=four][data-device=mobile] .modrow,html[data-v=four][data-device=mobile] .tabs{margin-top:0}
+html[data-v=four][data-device=mobile] .head{padding-top:6px}
+html[data-v=four][data-device=mobile] .list .row .btn{height:44px}
+html[data-v=four] .list .row .btn{height:40px}
+html[data-v=four] .list .grp .btn{height:40px}
+/* desktop rows 44 px */
+html[data-v=four] .list .row{min-height:44px}
+/* no coloured underline on tiles (stripe rule) */
+html[data-v=four] .w .tiles a{border-bottom:0;background:var(--surface-sunken)}
+/* reading pages: the head content follows the reading measure */
+html[data-v=four] body[data-reading] .titlerow,html[data-v=four] body[data-reading] .tabs{max-width:56rem}
+/* favourites: plain icons, the active one tinted, no ring */
+html[data-v=four] .favbar a{background:transparent;color:var(--text-2)}
+html[data-v=four] .favbar a.cur{outline:0;background:color-mix(in srgb,var(--mod) 14%,var(--surface-raised));color:var(--mod)}
+/* sidebar: closed areas show only their header */
+html[data-v=four] .navh .ic{width:14px;height:14px}
+/* phone: list buttons and top-bar buttons are touch targets too */
+html[data-v=four][data-device=mobile] .list .btn{height:44px !important}
+html[data-v=four][data-device=mobile] .top .btn{height:44px;width:44px}
+html[data-v=four][data-device=mobile] .top .search{height:44px}
+html[data-v=four][data-device=mobile] .w .btn,html[data-v=four][data-device=mobile] .greet .btn,html[data-v=four][data-device=mobile] .attn a{min-height:44px}
+html[data-v=four][data-device=mobile] .w .focus .acts .btn{height:44px}

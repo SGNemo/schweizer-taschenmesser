@@ -1,48 +1,131 @@
 # PACKAGES – Identity 4.0 als Stopp-Pakete
 
-Gehört zu [REPORT.md](REPORT.md) (Entscheidung, Befunde, Fragen) und [PACKAGE-0.md](PACKAGE-0.md) (0a im Detail). Stand: Sven neigt zu 4.0 (2026-11-09, „eher 4“); die Fragen 2–4 sind offen, ihre Empfehlungen stehen hier als Vorgabe und werden nach seiner Antwort angepasst. Mockups der Zielform: [mockups/](mockups/) (HTML; gerenderte Bilder auf dem Branch `shots/ui-audit-2026-11`). Einheiten: S ≈ 0,5–1, M ≈ 2–3, L ≈ 4–5 Chat-Tage; jedes Paket = eigener Branch + PR + Council + Stopp.
+Gehört zu [REPORT.md](REPORT.md) (Entscheidung, Befunde, Fragen) und [PACKAGE-0.md](PACKAGE-0.md) (0a im Detail). Stand: Du neigst zu 4.0 (2026-11-09, „eher 4“); die Fragen 2–4 sind offen, ihre Empfehlungen stehen hier als Vorgabe, die Alternativen am Ende. Zielform: [mockups/README.md](mockups/README.md) (drei Seiten, Bilder auf dem Branch `shots/ui-audit-2026-11`). Einheiten: S ≈ 0,5–1, M ≈ 2–3, L ≈ 4–5 Chat-Tage; jedes Paket = eigener Branch + PR + Council + Stopp. Alle 26 Module: Planen (Kalender, ToDos, Gewohnheiten, Zeiterfassung, Wetter, Karten, Personen, Planer), Geld (Finanzen, Rechnungen, Abos, Budgets), Haushalt (Listen, Vorräte, Fitness), Wissen (Merkliste, Notizen, Chat, Browser, Mail, Musik, Feeds), Tresor (Unterlagen, Passwörter), System (Dieser PC, Downloads).
 
 ## Was 4.0 ändert – die fünf Regeln
 
-(1) Flächen-/Tiefenmodell: Tonstufen statt Schatten (`--surface-raised`/`-sunken`, `--shadow-1` nur für Schwebendes), Karten ohne Rahmen, Zeilen als Flächen, höchstens zwei Ebenen; Lint. (2) Kopf-Logik: eine Titelzeile (Eyebrow, h1 28/600, eine Kennzahl, eine Aktion, Tabs an der Unterkante), sticky, mit Tabs ≤ 7.5 rem Desktop / ≤ 7 rem (≈ 110 px) Handy; die neun Varianten werden zu „Standard“ und „Bühne“ (Wetter, Musik), die Kopf-Signatur-Slots (`SIGNATURE_SLOTS`, `core/modules/types.ts`) ziehen in Widget-Marke, Leerzustand und Bibliothek um; die Marke selbst (`identity.signature`) und die Palette bleiben. (3) Navigation in einer Ebene: Bereiche bleiben die Ordnung der Seitenleiste; Sub-Navigation entfällt am Desktop, am Handy wird sie die eine Modul-Zeile unter dem Kopf (die Bottom-Bar bleibt). (4) Ein Eintragen-Einstieg je Bildschirm (Schnellerfassung ist der Weg; Modulknopf im Kopf; „Satz eintragen“ als Modus). (5) Dichte je Gerät: Master–Detail als Standard für Listenmodule, Lesemaß über `manifest.layout`/`PageContainer` (kein Modul-`max-width`), Handy-Inhalt ab Bildschirm 1.
+4.0 ändert das Gerüst, drei Identitätsregeln (MODULE-IDENTITY: Kopf-Silhouetten :33–45, Sub-Navigations-Zone :17, Band-Geometrie :21) und zwei Spec-Regeln (DESIGN-SPEC §7 „Schatten, kein Rahmen“ wird zu Tonstufen, :24 das gefüllte „+ Neu“ wird neutral); Palette, Marken (`identity.signature`), Widget-Katalog und die gerahmten Signatur-Blöcke bleiben.
 
-**Was 4.0 aufhebt (mit Regel und Zeile):** **Was 4.0 aufhebt (mit Regel und Zeile):** die neun Kopf-Silhouetten als Manifest-Identität (`identity.head`, MODULE-IDENTITY „Head variants“ :33–45) werden zu „Standard“ und „Bühne“ – die Marke (`identity.signature`) trägt die Erkennbarkeit; die Sub-Navigation als eigene Rahmen-Zone (:17) entfällt am Desktop; das vollbreite Band mit 70-rem-Spalte (:21) wird zur Titelzeile in Seitenbreite; „Hairline all around“ bleibt ein erlaubter Identitätsträger (:27) – der Rahmen-Lint aus B4 trifft Karten und Zeilen, **nicht** die bewusst gerahmten Signaturen (Unterlagen „like a file in a folder“ `VaultPage.module.css:1`, Vorräte „a label“ `PantryPage.module.css:21`), die als Signatur-Blöcke markiert werden; die Wiederholung von Inhalt auf der eigenen Seite (:138) bleibt erlaubt, die Zahl im Kopf wird nur nicht mehr darunter wiederholt.
+1. **Flächen-/Tiefenmodell:** Tonstufen statt Schatten (`--surface-raised`/`-sunken`, `--shadow-1` nur für Schwebendes), Karten ohne Rahmen, Zeilen als Flächen, höchstens zwei Ebenen; Lint mit eingefrorener Baseline, die je Bereichs-Paket schrumpft.
+2. **Kopf-Logik:** eine Titelzeile in Seitenbreite – Eyebrow (Bereich · Kontext), h1 28/600 Desktop und 22/600 Handy, **eine** Kennzahl mit Kontextzeile, **eine** gefüllte Modul-Aktion, Tabs an der Unterkante; sticky. Höhe: Desktop Titelzeile + Tabs ≤ 7,5 rem (120 px); Handy Titelzeile + Modul-Zeile + Tabs ≤ 9 rem (144 px), Inhalt ab y ≤ 220 px (mit Topbar). Die neun Varianten werden zu „Standard“ und „Bühne“ (Wetter, Musik; die Bühne darf höher sein, bleibt aber unter dem Falz); die Kopf-Signatur-Slots ziehen in Widget-Marke, Leerzustand und Bibliothek um.
+3. **Navigation in einer Ebene:** Bereiche bleiben die Ordnung der Seitenleiste (nur der aktive Bereich offen, wie heute); Sub-Navigation entfällt am Desktop, am Handy wird sie die eine Modul-Zeile unter dem Kopf; die Bottom-Bar bleibt.
+4. **Ein Eintragen-Einstieg je Bildschirm:** die gefüllte Modul-Aktion im Kopf ist der eine Einstieg des Moduls; global bleibt die Schnellerfassung über das neutrale „Neu“ in der Topbar (Desktop) bzw. das Suchfeld (Handy, „Neu“ dort ausgeblendet); kein FAB, kein Inline-Feld, kein zweiter Toolbar-Knopf; „Satz eintragen“ wird ein Modus der Schnellerfassung.
+5. **Dichte je Gerät:** Master–Detail als Standard für Listenmodule, Lesemaß über `manifest.layout`/`PageContainer` (kein Modul-`max-width`), Zeilen 48 px am Handy und 44 px am Desktop (36 px nur unter `pointer: fine`), Handy-Inhalt ab Bildschirm 1.
 
-**Was bleibt, wörtlich und mit Test:** Palette v3, Marken (`identity.signature`), Widget-Katalog, gerahmte Signatur-Blöcke, Lesehilfe, Tresor-Ausschluss, KI-Datenschutz, Reizbudget, Touch ≥ 44 px, ruhiger Modus, Werte verbergen, Overflow, axe, Diagnose-Negativliste – die Liste mit dem Test je Zusage steht in PACKAGE-0 „Zusagen“.
+Dazu die 3.2-Politur (Einstiege zusammenlegen, Status-Wege kürzen, Dialoge „erst das Nötige“) als Inhalt der Bereichs-Pakete. **Was bleibt, wörtlich und mit Test:** Palette v3 und Marken, Widget-Katalog, Stripe-Regel, AA-Kontrast inkl. `--text-on-tint`, Touch ≥ 44 px, Bewegung nur `transform`/`opacity`, ruhiger Farbmodus, Werte verbergen, Lesehilfe- und Tresor-Ausschluss, KI-Datenschutz, Datenschutz-Sätze, Farbe nur mit Text/Icon, Reizbudget, Overflow, axe, Diagnose-Negativliste, Einrichtung nie von selbst, `forced-colors`, die harten UI-Regeln aus CLAUDE.md – je Zusage der Test in [PACKAGE-0.md](PACKAGE-0.md) „Zusagen“.
 
 ## Reihenfolge und Go/No-Go
 
-0a (≈ 5 Chat-Tage, PACKAGE-0) → **Go-Punkt:** 0a inklusive `e2e-seed` grün, Handtest (Maßnahme 0) erledigt, Council-Abnahme → 0b-1 … 0b-8 mit Stopp nach jedem. No-Go = 0b wartet; ein Rückfall auf 3.2 nur durch Svens Entscheidung. Jeder 0b-PR: Label `full-ci` nicht nötig (die Wächter laufen über den `seed`-Output), Council vor der Übergabe, Reizbudget-Ratsche grün oder von Sven per Label freigegeben (genau einmal, in 0b-1, mit neuer Baseline).
+0a (≈ 5 Chat-Tage, PACKAGE-0) → **V-1 Sichtbarkeit** (Frage 2, unabhängig vom Go) → **Go-Punkt:** 0a inklusive `e2e-seed` grün, Handtest (Maßnahme 0) erledigt, Council-Abnahme → 0b-1, 0b-1r, 0b-2 … 0b-8 mit Stopp nach jedem. No-Go = 0b wartet, V-1 bleibt; ein Rückfall auf 3.2 nur durch Svens Entscheidung. Jeder 0b-PR: kein `full-ci`-Label nötig (die Wächter laufen über den `seed`-Output), Council vor der Übergabe, Reizbudget-Ratsche grün oder von Sven per Label freigegeben (genau einmal, in 0b-1, mit neuer Baseline).
+
+| Paket | Umfang | Aufwand |
+| --- | --- | --- |
+| V-1 | Sichtbarkeit: Listen und Budgets bei Neuinstallationen an, Downloads `stable` (Windows) | S–M, 1,5–2 |
+| 0b-1 | Fundament: Tokens, Bausteine, Lints | L, 4–5 |
+| 0b-1r | Lade-Maßnahme 4 (Rust): `async`-Commands, Inventur | M, 2–3 |
+| 0b-2 | Kopf + Navigation | L, 4–5 |
+| 0b-3 | Bereich Geld | M, 2–3 |
+| 0b-4 | Bereich Planen | M, 2–3 |
+| 0b-5 | Bereiche Haushalt + Tresor | M, 2–3 |
+| 0b-6 | Bereiche Wissen + System | M, 2–3 |
+| 0b-7 | Übersicht und Leerzustände | M, 2–3 |
+| 0b-8 | Abnahme-Sweep | M, 2–3 |
+
+**0b ≈ 22–31 Chat-Tage** in neun Paketen (0b-1 bis 0b-8 plus 0b-1r); mit 0a (≈ 5) **4.0 gesamt ≈ 27–36 Chat-Tage**; 3.2 käme auf ≈ 13–17 (0a 5 + Politur 8–12); V-1 (1,5–2) kommt bei beiden Wegen dazu, wenn Frage 2 so beantwortet wird. Reihenfolge der Bereiche: Geld zuerst (Svens Schwerpunkt, vier Module, Master–Detail und Kennzahl-Kopf als Muster), dann Planen (die meistgenutzten Seiten Kalender und ToDos, acht Module, das größte Paket), dann Haushalt + Tresor (fünf Module, darunter die beiden Signatur-Blöcke), zuletzt Wissen + System (neun Module, sechs davon nur Desktop oder selten).
+
+## V-1 · Sichtbarkeit (S–M, 1,5–2 Chat-Tage)
+
+- **Umfang:** Listen und Budgets bei Neuinstallationen an, Downloads unter Windows `stable` ohne Torrent-Teil; Bestandsinstallationen und Sync-Geräte unverändert. Mechanik: gerätelokaler Default-Stand in `_meta` mit Reset beim ersten Pull mit Fremd-Ops oder Restore, benutzte Module bleiben an ([PACKAGE-0.md](PACKAGE-0.md) „H-a“).
+- **Regeln/Tests:** keine synchronisierte `_modules`-Zeile ohne Nutzung; `core/setup/detect.ts`-Test „Einrichtung erscheint nie von selbst bei Daten“ bleibt grün; vier neue Tests (PACKAGE-0 „H-a“).
+- **Abnahme:** Neuinstallation zeigt Haushalt, Geld mit Budgets und (Windows) System in der Seitenleiste; ein Altgerät mit Sync zeigt nach dem Beitritt eines Neugeräts keine neue Zeile.
+- **Stopp:** PR + Council; unabhängig vom Go-Punkt, läuft auch bei No-Go.
 
 ## 0b-1 · Fundament (L, 4–5 Chat-Tage)
 
-- **Tokens:** `--surface-raised`, `--surface-sunken` (neutrale Tonstufen, beide Themes, AA gegen `--text`/`--text-muted`/`--text-3`, Test `ui/tokens.test.ts:112` erweitert), `--shadow-1` nur noch für Schwebendes (Menü, Dialog, Toast), `--border` nur für Trennlinien in Listen und Formularen; `ruhig`/`aus` behalten ihre Flachstellung (`tokens.css:430`).
-- **Bausteine:** `Card` ohne Schatten (Tonstufe), `ListSurface` (Zeilen als Flächen, Hairline nur zwischen Zeilen), `Tabs` als die eine Ansichten-Navigation (`Segmented` nur noch für Filter), `PageContainer` mit `manifest.layout`-Variante `reading` (56–64 rem) und `split` (Master–Detail); `HeadSurface` wird zur Titelzeile (siehe 0b-2, hier nur die Tokens).
-- **Lint/Wächter:** Rahmen-Lint (Karten und Zeilen ohne `border` außer Signatur-Blöcken), Schatten-Lint (nur Schwebendes), die Ratsche bekommt die neue Baseline (einmalig, mit Label).
-- **Lade-Maßnahme 4** (PACKAGE-0 „0a-2“, Punkt 4): `browser_open`/`browser_show` als `async`, Inventur der synchronen Commands.
-- **Stopp-Kriterium:** alle Zusagen grün, kein Modul angefasst, Übersicht und zwei Modulseiten (Finanzen, ToDos) als Vorher/Nachher-Bilder im PR; Council-Abnahme.
+- **Umfang:** Tokens `--surface-raised`, `--surface-sunken` (neutrale Tonstufen, beide Themes), `--shadow-1` nur noch für Schwebendes (Menü, Dialog, Toast), `--border` nur für Trennlinien in Listen und Formularen; `ruhig`/`aus` behalten ihre Flachstellung (`tokens.css:430`). Bausteine: `Card` ohne Schatten (Tonstufe), `ListSurface` (Zeilen als Flächen, Hairline nur zwischen Zeilen), `Tabs` als die eine Ansichten-Navigation (`Segmented` nur noch für Filter), `PageContainer` mit `manifest.layout`-Varianten `reading` (56–64 rem) und `split` (Master–Detail). Rahmen-Lint (Karten und Zeilen ohne `border` außer Signatur-Blöcken) und Schatten-Lint (nur Schwebendes) mit **eingefrorener Baseline** der heutigen Treffer (Kalender 37, Unterlagen 34, Vorräte 28, Einstellungen→Module 24, Abos 15 …), die je Bereichs-Paket schrumpft – sonst wäre 0b-1 sofort rot.
+- **Regeln/Tests:** `ui/tokens.test.ts:112` schließt die neuen Flächen-Tokens in beiden Themes ein (AA gegen `--text`, `--text-muted`, `--text-3`); `noStripes.test.ts`, `calm.spec.ts`, `hide-values.spec.ts` unverändert grün; die Ratsche bekommt genau hier die neue Baseline (einmalig, mit Label).
+- **Abnahme:** kein Modul angefasst (Diff nur `ui/**`, `layout/**`, Tokens, Lints, Baselines); Übersicht sowie Finanzen und ToDos als Vorher/Nachher-Bilder im PR; Council.
+- **Stopp:** Paket 0b-1r und 0b-2 warten auf die Abnahme.
+
+## 0b-1r · Lade-Maßnahme 4 (M, 2–3 Chat-Tage, Rust)
+
+- **Umfang:** `browser_open`/`browser_show` als `async`-Commands, `opened` erst nach Erfolg, `browser_show` meldet fehlende Tabs, Inventur der 87 synchronen Commands nach „kann blockieren“ – Spezifikation in [PACKAGE-0.md](PACKAGE-0.md) „0a-2, Maßnahme 4“.
+- **Regeln/Tests:** `guard.rs` und `confirmed_twice` in `disk_delete` unverändert; keine neuen Commands ohne `build.rs` `COMMANDS` + `capabilities/desktop.json`; `cargo check`, `cargo test` der Crates.
+- **Abnahme:** Windows-Handtest (Maßnahme 0 als MANUAL-TESTS-Schritt): Browser-Tab öffnen, dann drei Module – kein „…“, kein „Keine Rückmeldung“ in der Titelleiste.
+- **Stopp:** eigener PR, unabhängig von 0b-2; kann parallel zu 0b-2 laufen.
 
 ## 0b-2 · Kopf + Navigation (L, 4–5 Chat-Tage)
 
-- **Kopf:** eine Titelzeile in Seitenbreite – Eyebrow (Bereich · Modul), h1 28/600, eine Kennzahl mit Kontextzeile, eine Aktion, Tabs an der Unterkante; sticky; Höhe mit Tabs ≤ 7,5 rem Desktop / ≤ 7 rem (≈ 110 px) Handy. Varianten nur noch „Standard“ und „Bühne“ (Wetter, Musik). Die Kopf-Signatur-Slots ziehen in Widget-Marke, Leerzustand und Bibliothek um.
-- **Navigation:** Sub-Navigation entfällt am Desktop (Seitenleiste = Favoriten + Bereiche, Ansichten als Tabs im Kopf); am Handy wird sie die eine Modul-Zeile unter dem Kopf, die Bottom-Bar bleibt (Frage 3, Empfehlung a). Topbar: „Neu“ wird neutral (DESIGN-SPEC :24), die Schnellerfassung bleibt der eine Eintragen-Einstieg.
-- **Tests, die sich hier ändern (als eigener, benannter Schritt):** `core/modules/registry.test.ts:80–82, :104, :110–124, :133, :139–141, :159`, `scripts/lib/checkIdentity.ts:59–65` und der Kopf-Anteil von `:81–100`, `layout/moduleShell.test.tsx:19–28, :30–42, :44–60` (Ersatz für `:62–68`: „genau ein `PageTitle`-h1 im Kopf-Slot“ + Quelltext-Test gegen eigene `<h1>`), `modules/music/__tests__/music.test.tsx:315`, `scripts/lib/checkModules.test.ts:20, :78–79`, `scripts/lib/moduleCatalog.test.ts:34`. MODULE-IDENTITY.md bekommt den Abschnitt „4.0 – Entwurf“.
-- **Stopp-Kriterium:** Handy: Inhalt ab Bildschirm 1 auf allen Modulseiten (Seed-e2e „Inhalt ab y ≤ 360“), Desktop: Kopf ≤ 7,5 rem; Overflow 0; Council-Abnahme mit Bildern aller 26 Köpfe.
+- **Umfang:** die Titelzeile aus Regel 2 (Standard und Bühne), Sub-Navigation entfällt am Desktop, am Handy die Modul-Zeile unter dem Kopf, Bottom-Bar bleibt (Frage 3, Empfehlung A); Topbar „Neu“ neutral (DESIGN-SPEC :24), am Handy ausgeblendet; die Schnellerfassung bleibt der globale Einstieg, der Modulknopf im Kopf der eine Einstieg des Moduls (Regel 4). Handy-Dichte (Frage 4, Empfehlung A): Kopf ≤ 9 rem inkl. Modul-Zeile, Inhalt ab Bildschirm 1; die Zeilenhöhe 48 px kommt mit den Bereichs-Paketen.
+- **Regeln/Tests, die sich hier ändern (als eigener, benannter Schritt):** `core/modules/registry.test.ts:80–82, :104, :110–124, :133, :139–141, :159`; `scripts/lib/checkIdentity.ts:59–65` und der Kopf-Anteil von `:81–101`; `layout/moduleShell.test.tsx:19–28, :30–42, :44–60, :62–68` (Ersatz aus 0a-1b: „genau ein `PageTitle`-h1 im Kopf-Slot“ + Quelltext-Test gegen eigene `<h1>`); `modules/music/__tests__/music.test.tsx:315`; `scripts/lib/checkModules.test.ts:20, :78–79`; `scripts/lib/moduleCatalog.test.ts:34`. MODULE-IDENTITY.md bekommt den Abschnitt „4.0 – Entwurf“, DESIGN-SPEC :24 den neutralen „Neu“.
+- **Abnahme:** Seed-e2e „Inhalt ab y ≤ 220 px am Handy auf allen 26 Modulseiten“ und „Kopf ≤ 120 px Desktop / ≤ 144 px Handy“ (Bühne ausgenommen: ≤ 320 px); Overflow 0; Bilder aller 26 Köpfe im PR; Council.
+- **Stopp:** die Bereichs-Pakete warten auf die Abnahme.
 
-## 0b-3 bis 0b-6 · Bereiche (je M, 2–3 Chat-Tage)
+## 0b-3 · Geld (M, 2–3 Chat-Tage)
 
-Reihenfolge: **Geld** (Finanzen, Rechnungen, Abos, Budgets) → **Haushalt** (Listen, Vorräte) → **Tresor + Wissen** (Unterlagen, Passwörter, Merkliste, Notizen, Chat, Browser, Mail, Musik) → **System + Planen** (Dieser PC, Downloads, Kalender, ToDos, Gewohnheiten, Zeiterfassung, Wetter, Karten, Personen). Je Bereich: Seiten auf die neuen Bausteine (Tonstufen, `ListSurface`, Tabs), Master–Detail als Standard für Listenmodule, Lesemaß über `manifest.layout`, die 3.2-Politur als Inhalt (Einstiege zusammenlegen, Dialoge „erst das Nötige“, Leerzustand mit Motiv + Verb), Handy-Zeilen 48 px (Frage 4, Empfehlung a). Die Modul-Kandidaten aus Frage 2 (G-b Vermögen, H-b Routinen, T-a Fristen, S-b „Dieses Gerät“) sind **eigene** Pakete nach dem jeweiligen Bereichs-Paket, nicht Teil davon (REPORT „Fragen“, 2).
+- **Umfang:** Finanzen, Rechnungen, Abos, Budgets auf Tonstufen, `ListSurface`, Tabs; Finanzen und Rechnungen als Master–Detail (`manifest.layout: 'split'`); ein Einstieg je Seite (Toolbar-Knopf und „Mehr Felder“-Schalter weg, Regel 4); Dialoge „erst das Nötige“ (Buchung 3 Felder sichtbar, Rest aufklappbar); Leerzustand Motiv + ein Verb (B6); Abos: Schalter neutral, nur die Warn-Zeilen farbig (B7); Zeilen 48 px Handy / 44 px Desktop.
+- **Regeln/Tests:** `exclusion.test.ts` unberührt; Modul-Importregel (`finance` → `subscriptions/public.ts`, `invoices/public.ts`; `budgets` → `finance/public.ts`); Rahmen-/Schatten-Baseline sinkt um die Treffer der vier Module (Abos 15); `GroupedList`- und `max-width`-Baselines sinken.
+- **Abnahme:** Reizbudget-Ratsche grün ohne Label; MEASURES-Lauf der vier Seiten: Rahmen 0 außer Signatur-Blöcken, farbige Flächen über dem Falz ≤ 10, Inhalt ab y ≤ 220 Handy; Klickweg „Buchung eintragen“ ≤ 2 Klicks + Enter.
+- **Stopp:** PR + Council; danach optional das Modul-Paket G-b Vermögen (Frage 2).
+
+## 0b-4 · Planen (M, 2–3 Chat-Tage)
+
+- **Umfang:** Kalender, ToDos, Gewohnheiten, Zeiterfassung, Wetter (Bühne), Karten, Personen, Planer; Kalender-Raster und Kopf-Chips auf Tonstufen (B4: 37 Rahmen), ToDos ohne Inline-Feld (Regel 4), Lesemaß für ToDos/Gewohnheiten/Zeiterfassung, Personen und Planer als Master–Detail; Leerzustände; Zeilen 48/44 px.
+- **Regeln/Tests:** Kalender-Overflow-Spec, `touch-hit-phone.spec.ts`, `.lineTime` bleibt auf `--text-on-tint`; Baselines sinken um Kalender 37.
+- **Abnahme:** wie 0b-3; zusätzlich Klickwege „Aufgabe eintragen“ und „Termin eintragen“ ≤ 2 Klicks + Enter, Termin-Dialog ≤ 5 sichtbare Felder.
+- **Stopp:** PR + Council.
+
+## 0b-5 · Haushalt + Tresor (M, 2–3 Chat-Tage)
+
+- **Umfang:** Listen, Vorräte, Fitness, Unterlagen, Passwörter; die Signatur-Blöcke `.doc` (Unterlagen) und `.label` (Vorräte) bleiben gerahmt und werden markiert (Ratsche zählt sie nicht); alles andere auf Tonstufen; Unterlagen als Master–Detail; Passwörter-Dialog mit fester Fußleiste am Handy (B10); Datenschutz-Sätze sichtbar (0a-1b-Test).
+- **Regeln/Tests:** Tresor-Ausschluss (`exclusion.test.ts`), Lesehilfe-Laufzeit-e2e, `NoReadAid` unverändert; Signatur-Block-Liste der Ratsche genau um diese zwei Blöcke erweitert (mit Label).
+- **Abnahme:** wie 0b-3; `/vault` und `/accounts` ohne `[data-rs]`.
+- **Stopp:** PR + Council; danach optional T-a Fristen und H-b Routinen (Frage 2).
+
+## 0b-6 · Wissen + System (M, 2–3 Chat-Tage)
+
+- **Umfang:** Merkliste, Notizen, Chat, Browser, Mail, Musik (Bühne), Feeds, Dieser PC, Downloads; Merkliste ohne die drei leeren Kopf-Karten (Runde-6 R36), Bibliothek mit Tonstufen statt 78 Tönungen (B4), Browser-Leerzustand mit „Tab neu öffnen“ (H5); Notizen und Mail behalten ihr Zweispalten-Layout, umgestellt auf `split`.
+- **Regeln/Tests:** `manifest.platforms` (Desktop-Module) unverändert; Disk-Regeln (`guard.rs`) unberührt; Baselines sinken.
+- **Abnahme:** wie 0b-3; Desktop-Module per Windows-Handtest (MANUAL-TESTS).
+- **Stopp:** PR + Council; danach optional S-b „Dieses Gerät“ (Frage 2).
 
 ## 0b-7 · Übersicht und Leerzustände (M, 2–3 Chat-Tage)
 
-„Jetzt wichtig“ nur danger + heute fällig, max. 4 + „n weitere“ (Test „überfällige/danger-Einträge fallen nie weg“); Widgets mit Tonstufe statt getöntem Kopf, Marke als Plate; keine Dubletten zu Agenda; Leerzustände mit Motiv + einem Verb in jedem Modul (B6); Einblend-Animationen je Zeile nur noch beim ersten Laden und mit Reduced-Motion-Pfad (M5-Befund).
+- **Umfang:** „Jetzt wichtig“ nur danger + heute fällig, max. 4 + „n weitere“ (B9); Widgets mit Tonstufe statt getöntem Kopf, Marke als Plakette, Höhe nach Inhalt, Ruhig-Karte auf Inhaltsbreite; keine Dubletten zwischen Strip, Agenda und Widgets (ein Termin erscheint einmal); Leerzustände mit Motiv + einem Verb in jedem Modul (B6); Einblend-Animationen `pageIn`/`itemIn` nur beim ersten Laden einer Sitzung und mit Reduced-Motion-Pfad (M5-Befund).
+- **Regeln/Tests:** `home/AttentionStrip.test.tsx` „überfällige/danger-Einträge fallen nie weg“; `widgets.test.tsx` (Katalog, eindeutige Titel) unverändert; Dubletten-Test auf dem Seed (ein Termin-Titel höchstens einmal auf der Übersicht).
+- **Abnahme:** MEASURES „Übersicht ausführlich“: farbige Flächen über dem Falz ≤ 12, CLS ≤ 0,05 in beiden Geräten; Council.
+- **Stopp:** PR + Council.
 
 ## 0b-8 · Abnahme-Sweep (M, 2–3 Chat-Tage)
 
-Alle 26 Module × 2 Geräte × 2 Themes mit der Audit-Tour neu gemessen (tools/), MEASURES vorher/nachher, Modern-Checkliste neu bewertet, Council auf den Gesamtstand; offene Nits in Follow-ups.
+- **Umfang:** alle 26 Module × 2 Geräte × 2 Themes mit der Audit-Tour neu gemessen (tools/, mit dem korrigierten Werkzeug: Animationen ohne Kappung, `__cls` vor jedem Dialog zurückgesetzt), MEASURES vorher/nachher, Modern-Checkliste M1–M10 neu bewertet, Klickwege neu gezählt, Council auf den Gesamtstand; offene Nits als Follow-ups.
+- **Abnahme:** Checkliste ≥ 8 × erfüllt; kein „nicht“ mehr; Reizbudget-Baseline unter dem Stand von 0b-1.
+- **Stopp:** Ende von 4.0; MODULE-IDENTITY „4.0“ wird von „Entwurf“ zu „gültig“.
 
-## Nach Svens Antworten auf 2–4
+## Befund → Paket
 
-- **Frage 2 (Bereiche):** Sichtbarkeit (S–M, PACKAGE-0 „H-a“) direkt nach 0a; die Modul-Pakete G-b/H-b/T-a/S-b nach dem jeweiligen Bereichs-Paket; zweite Welle (G-c, H-c, T-c, S-c/S-d) danach.
-- **Frage 3 (Navigation):** Option a ist in 0b-2 enthalten; b (+ ≈ 1 Chat-Tag) oder c (+ ≈ 2) ändern 0b-2.
-- **Frage 4 (Handy-Dichte):** Option a ist in 0b-2 und den Bereichs-Paketen enthalten; b ändert nur die Zeilenhöhe (48 → 44 px).
+| Befund / Klickweg | Paket |
+| --- | --- |
+| B1 Navigation dreifach, Kopf über dem Falz | 0b-2 |
+| B2 Kopfband wiederholt Zahlen | 0b-2 (Kopf), 0b-3…6 (Kontextzeilen) |
+| B3 drei bis vier Einstiege | 0b-2 (Topbar/Schnellerfassung), 0b-3…6 (Toolbar, Inline, FAB weg) |
+| B4 zwei Flächensprachen | 0b-1 (Tokens, Lints), 0b-3…6 (Seiten) |
+| B5 Dichte gleich und spät | 0b-1 (`split`, `reading`), 0b-2 (Handy-Kopf), 0b-3…6 (Zeilen, Master–Detail) |
+| B6 Leerzustände ohne Verb | 0b-7 (Muster), 0b-3…6 (je Modul) |
+| B7 Akzent-Orange, Links ohne Unterstreichung | 0b-1 (Tokens: Link-Unterstreichung, Akzent nur Hauptaktion und Aktiv), 0b-3 (Abos-Schalter) |
+| B8 Tabs vs. Segment, drei Schriften | 0b-1 (`Tabs`/`Segmented`), 0b-2 (ein h1-Stil, Mono nur für Zahlen) |
+| B9 Übersicht | 0b-7 |
+| B10 Dialoge zu lang, Handy ohne festen Fuß | 0b-1 (Sheet-Baustein mit fester Fußleiste, Datums-/Zeitfeld in `@/ui`), 0b-3…6 („erst das Nötige“) |
+| Klickweg: Enter im Suchfeld landet bei der KI | 0b-2 (Schnellerfassung als Modus der Palette: Enter = eintragen, „?“ = fragen) |
+| Klickweg: ToDo „auf heute“ am Handy über ⋯ | 0b-4 (Wischen bleibt, „Heute“ als erste Aktion im Blatt) |
+| Klickweg: Darstellung am Handy (Messung fehlgeschlagen) | 0b-6 (Einstellungen-Reiter als Tabs im Kopf, dann neu messen) |
+| Klickweg: Backup-/Sync-Status 3–4 Klicks | S-b „Dieses Gerät“ (Frage 2) – ohne S-b bleibt der Weg; 0b-6 setzt die Status-Kacheln der Einstellungs-Startseite auf eine Zeile |
+| Lade-Robustheit H1–H5 | 0a-2 (Maßnahmen 1–3), 0b-1r (Maßnahme 4) |
+
+## Wenn du anders antwortest
+
+- **Frage 1 B (erst nach 0a entscheiden):** 0a und V-1 laufen wie geplant; vor 0b-1 eine Council-Runde mit Go/No-Go-Frage an dich; kein Mehraufwand, nur ein Stopp mehr.
+- **Frage 1 C (3.2):** 0a und V-1 laufen; statt 0b-1…0b-8 vier Politur-Pakete auf dem v3.1-Rahmen (Klickwege, Dichte, Bewegung, Konsistenz; 8–12 Chat-Tage); B1, B2, B4 bleiben bestehen.
+- **Frage 2 B (nur Sichtbarkeit):** die Modul-Pakete G-b/H-b/T-a/S-b entfallen; der Klickweg „Backup-Status“ bleibt bei 3–4 Klicks. **Frage 2 C (nur ein Bereich):** Empfehlung Geld, also nur G-b Vermögen (M, 2–3) nach 0b-3.
+- **Frage 3 B (weniger Bereiche):** 0b-2 + ≈ 1 Chat-Tag (Bereichs-Umbau, Setup-Profile, `registry.test.ts:144`); **Frage 3 C (Favoriten-first):** 0b-2 + ≈ 2 Chat-Tage (neue Leerzustände für Nutzer ohne Favoriten).
+- **Frage 4 B (44 px):** nur die Zeilenhöhe in 0b-3…6 (48 → 44 px), 0 Mehraufwand; **Frage 4 C (wie heute):** die Handy-Dichte entfällt aus 0b-2 und 0b-3…6 (−1 Chat-Tag), widerspricht aber Regel 5 – dann steht „Inhalt ab Bildschirm 1“ nicht mehr in 4.0.
