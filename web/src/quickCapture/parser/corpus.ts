@@ -26,6 +26,8 @@ export interface CorpusCase {
   hardDue?: boolean;
   /** Run with Fitness on (`ParseOptions.fitness`): the meal and workout sentences. */
   fitness?: true;
+  /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
+  place?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -234,6 +236,12 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-11-03',
     hardDue: true,
   },
+  // Uhr: „uhr <Stadt>“ adds a place, parsed with the module on; anything that is no place stays a ToDo.
+  { from: 'clock', place: true, text: 'uhr Tokio', type: 'place', title: 'Tokio' },
+  { from: 'clock', place: true, text: 'Uhr: New York', type: 'place', title: 'New York' },
+  { from: 'clock', place: true, text: 'clock lisbon', type: 'place', title: 'lisbon' },
+  { from: 'clock', place: true, text: 'Uhr reparieren lassen', type: 'todo' },
+  { from: 'clock', text: 'uhr Tokio', type: 'todo' },
   // Fitness (docs/features/fitness.md §5), parsed with Fitness on.
   { from: 'fitness', fitness: true, text: 'kcal 650 Döner', type: 'meal', title: 'Döner' },
   { from: 'fitness', fitness: true, text: 'Döner 650 kcal', type: 'meal', title: 'Döner' },

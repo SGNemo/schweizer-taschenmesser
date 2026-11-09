@@ -1,0 +1,113 @@
+/* Uhr: one row per place – handle, name with zone and context line, the time large, ⋯. Nothing moves but the drag. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-hair);
+}
+.name {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.zone {
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.context {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.time {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.note {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+/* Search hits in the add dialog: one button per place, the zone and its time beside the name. */
+.hits {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.hit {
+  width: 100%;
+  min-height: var(--touch);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'name time' 'zone time';
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.hit:hover {
+  border-color: var(--border-strong);
+}
+.hitName {
+  grid-area: name;
+  font-weight: var(--weight-semibold);
+}
+.hitZone {
+  grid-area: zone;
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.hitTime {
+  grid-area: time;
+  font-variant-numeric: var(--font-num);
+}
+/* Phone: the time moves under the name, so a long name and a 12-hour time never squeeze each other. */
+@media (max-width: 30rem) {
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'handle body menu' 'handle time menu';
+  }
+  .row > :first-child {
+    grid-area: handle;
+  }
+  .body {
+    grid-area: body;
+  }
+  .time {
+    grid-area: time;
+    font-size: var(--text-xl);
+  }
+  .row > :last-child {
+    grid-area: menu;
+  }
+}

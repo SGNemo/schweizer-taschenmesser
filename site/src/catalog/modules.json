@@ -206,6 +206,29 @@
       }
     },
     {
+      "id": "clock",
+      "area": "plan",
+      "status": "preview",
+      "platforms": null,
+      "icon": "globe",
+      "hue": "lime",
+      "hue2": "fern",
+      "head": "fokus",
+      "widget": "kacheln",
+      "name": {
+        "de": "Uhr",
+        "en": "Clock"
+      },
+      "short": {
+        "de": "Orte eintragen und ihre Uhrzeit immer sehen",
+        "en": "Add places and always see their time"
+      },
+      "description": {
+        "de": "Orte eintragen und ihre Uhrzeit immer sehen – mit Tag, Nacht und Zeitversatz.",
+        "en": "Add places and always see their time – with day, night and time difference."
+      }
+    },
+    {
       "id": "invoices",
       "area": "money",
       "status": "default",

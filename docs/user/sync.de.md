@@ -6,13 +6,13 @@
 
 Die Windows-App kann selbst der Abgleich-Punkt sein. Handy und PC gleichen sich ab, sobald beide im selben WLAN sind und Nemo auf dem PC läuft.
 
-1. **PC:** *Einstellungen → Synchronisation → Gerät koppeln*. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: *Zulassen*). Hält Windows dein Netz für öffentlich, zeigt Nemo statt des Codes den Weg zu *Privat*; danach erscheint der Code von selbst.
-2. **Handy:** *Einstellungen → Synchronisation → Mit PC koppeln*, Kamera erlauben, Code scannen.
-3. Beide zeigen denselben 6-stelligen Code. Am PC: *Koppeln*.
+1. **PC:** _Einstellungen → Synchronisation → Gerät koppeln_. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: _Zulassen_). Hält Windows dein Netz für öffentlich, zeigt Nemo statt des Codes den Weg zu _Privat_; danach erscheint der Code von selbst.
+2. **Handy:** _Einstellungen → Synchronisation → Mit PC koppeln_, Kamera erlauben, Code scannen.
+3. Beide zeigen denselben 6-stelligen Code. Am PC: _Koppeln_.
 
-Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC hört nur im Heimnetz zu (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter *Weitere Einstellungen* gibt es *Schlüssel erneuern* und *Abgleich im Heimnetz ausschalten*. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
+Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC hört nur im Heimnetz zu (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter _Weitere Einstellungen_ gibt es _Schlüssel erneuern_ und _Abgleich im Heimnetz ausschalten_. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
 
-Ein eigener Server (unten) geht weiterhin: auf PC und Handy liegt er eingeklappt unter *Eigener Server (erweitert)*. Ein Weg pro Gerät: erst den einen trennen, dann den anderen nutzen.
+Ein eigener Server (unten) geht weiterhin: auf PC und Handy liegt er eingeklappt unter _Eigener Server (erweitert)_. Ein Weg pro Gerät: erst den einen trennen, dann den anderen nutzen. Ein Gerät am eigenen Server bietet _Vom Server auf das Heimnetz umstellen_: erst eine Sicherung, dann die Liste der Geräte, die der Server noch kennt (jedes lässt sich dort sperren – sie gleichen weiter über den Server ab, bis du sie auch umstellst), dann Trennen; deine Daten bleiben auf dem Gerät, danach koppelst du wie gewohnt.
 
 ## Eigener Sync-Server
 
@@ -50,14 +50,14 @@ SYNC_TOKEN=<dein-token> WEB_DIR=../web/dist npm start
 
 ## Konfiguration (Umgebungsvariablen)
 
-| Variable | Bedeutung | Standard |
-|---|---|---|
-| `SYNC_TOKEN` / `SYNC_TOKENS` | Zugangstoken(s), mind. 16 Zeichen, mehrere kommagetrennt. **Pflicht** | – |
-| `PORT`, `HOST` | Adresse des Servers | `8787`, `0.0.0.0` |
-| `DB_PATH` | SQLite-Datei | `./data/sync.db` (Docker: `/data/sync.db`) |
-| `WEB_DIR` | gebaute PWA (`web/dist`), wird mit SPA-Fallback ausgeliefert | aus |
-| `CORS_ORIGINS` | erlaubte Origins, kommagetrennt (`*` = alle) | `*` |
-| `RATE_LIMIT` | Anfragen pro Minute und Adresse | `600` |
+| Variable                     | Bedeutung                                                             | Standard                                   |
+| ---------------------------- | --------------------------------------------------------------------- | ------------------------------------------ |
+| `SYNC_TOKEN` / `SYNC_TOKENS` | Zugangstoken(s), mind. 16 Zeichen, mehrere kommagetrennt. **Pflicht** | –                                          |
+| `PORT`, `HOST`               | Adresse des Servers                                                   | `8787`, `0.0.0.0`                          |
+| `DB_PATH`                    | SQLite-Datei                                                          | `./data/sync.db` (Docker: `/data/sync.db`) |
+| `WEB_DIR`                    | gebaute PWA (`web/dist`), wird mit SPA-Fallback ausgeliefert          | aus                                        |
+| `CORS_ORIGINS`               | erlaubte Origins, kommagetrennt (`*` = alle)                          | `*`                                        |
+| `RATE_LIMIT`                 | Anfragen pro Minute und Adresse                                       | `600`                                      |
 
 ## Von unterwegs: Tailscale und HTTPS
 
@@ -78,7 +78,7 @@ wenn die App selbst per `http://` (oder `localhost`) geöffnet wurde.
 
 Ohne Push erscheinen Erinnerungen nur, solange die App geöffnet ist. Mit **Web Push** schickt dein Sync-Server sie auch bei geschlossener
 App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und einen Browser mit Push-Dienst). Aktivieren:
-*Einstellungen → Benachrichtigungen → Push aktivieren* (die App muss mit dem Sync-Server verbunden sein).
+_Einstellungen → Benachrichtigungen → Push aktivieren_ (die App muss mit dem Sync-Server verbunden sein).
 
 - Die App lädt die anstehenden Benachrichtigungen der nächsten 14 Tage (Zeitpunkt, Titel, Text) zum Server hoch und hält sie aktuell;
   der Server sendet sie zum Zeitpunkt über den Push-Dienst des Browsers (Google/Mozilla/Microsoft sehen nur verschlüsselte Nachrichten).
@@ -89,7 +89,7 @@ App (Windows/Android Chrome/Edge; braucht HTTPS, z. B. über Tailscale, und eine
 
 ## In der App verbinden
 
-*Einstellungen → Synchronisation*: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
+_Einstellungen → Synchronisation_: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
 einer Passphrase (mind. 12 Zeichen, am besten mehrere Wörter) einschalten; die Verschlüsselung ist beim ersten Verbinden
 vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
 Änderungen und wenn sie wieder online/sichtbar wird; der Status steht in den Einstellungen und als Symbol oben.

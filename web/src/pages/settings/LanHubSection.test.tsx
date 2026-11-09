@@ -7,6 +7,7 @@ import { useSyncStatus } from '@/core/sync/status';
 const fake = vi.hoisted(() => ({
   parts: undefined as unknown as ReturnType<typeof createFakeLanHubParts>,
   openUrl: vi.fn(async () => undefined),
+  client: undefined as undefined | { supported: boolean },
 }));
 
 vi.mock('@/core/platform', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/core/platform', () => ({
     kind: 'desktop',
     isNative: true,
     lanHub: fake.parts.hub,
+    lanClient: fake.client,
     desktop: { supported: false },
     app: { openUrl: fake.openUrl },
   }),
@@ -27,12 +29,15 @@ vi.mock('@/core/sync/service', () => ({
   disableLanHub: vi.fn(),
   renewLanHubKey: vi.fn(async () => true),
   syncNow: vi.fn(),
+  pairWithPc: vi.fn(),
+  cancelPairing: vi.fn(),
 }));
 
 import { LanHubSection } from './LanHubSection';
 
 beforeEach(() => {
   fake.parts = createFakeLanHubParts();
+  fake.client = undefined;
   useSyncStatus.getState().set({ phase: 'off', via: undefined, encrypted: false, pending: 0 });
 });
 
@@ -99,5 +104,40 @@ describe('LanHubSection (desktop)', () => {
     await act(async () => new Promise((r) => setTimeout(r, 1600)));
     expect(screen.queryByTestId('lan-pair-blocked')).toBeNull();
     expect(screen.getByTestId('lan-pair-qr')).toBeTruthy();
+  });
+
+  it('offers "Mit einem anderen PC koppeln" only where this PC can pair as a client', () => {
+    const { unmount } = render(<LanHubSection />);
+    expect(screen.queryByTestId('lan-pair-other-pc')).toBeNull();
+    unmount();
+    fake.client = { supported: true };
+    render(<LanHubSection />);
+    expect(screen.getByTestId('lan-pair-other-pc').textContent).toBe(
+      'Mit einem anderen PC koppeln',
+    );
+  });
+
+  it('a PC without a webcam gets a calm line and the way to the own server', async () => {
+    fake.client = { supported: true };
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn(async () => {
+          throw new DOMException('no device', 'NotFoundError');
+        }),
+      },
+    });
+    render(<LanHubSection />);
+    fireEvent.click(screen.getByTestId('lan-pair-other-pc'));
+    await flush();
+    await flush();
+    const line = screen.getByTestId('lan-pair-failure');
+    expect(line.textContent).toContain(
+      'Ohne Kamera geht das Koppeln mit einem anderen PC noch nicht.',
+    );
+    expect(line.textContent).toContain('„Eigener Server (erweitert)“');
+    expect(line.getAttribute('role')).toBe('status');
+    // nothing was turned on: still the hub's start screen
+    expect(screen.getByTestId('lan-hub-intro')).toBeTruthy();
   });
 });

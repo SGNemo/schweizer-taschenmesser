@@ -15,7 +15,24 @@ export const tLanSync = defineBundle(
     serverFirst:
       'Dieses Gerät gleicht über einen eigenen Server ab. Trenne es dort zuerst, um den PC als Abgleich-Punkt zu nutzen.',
     pairDevice: 'Gerät koppeln',
+    switchToLan: 'Vom Server auf das Heimnetz umstellen',
+    switchTitle: 'Auf das Heimnetz umstellen',
+    switchBackupTitle: 'Zuerst eine Sicherung',
+    switchBackupHint: 'Damit nichts verloren geht, falls etwas schiefläuft.',
+    switchBackupSave: 'Sicherung speichern',
+    switchBackupSaved: 'Sicherung gespeichert.',
+    switchDevicesTitle: 'Geräte am Server',
+    switchDevicesStay:
+      'Diese Geräte gleichen weiter über den Server ab, bis du sie auch umstellst:',
+    switchNoDevices: 'Der Server kennt keine weiteren Geräte.',
+    switchLock: 'Am Server sperren',
+    switchLocked: 'Gesperrt',
+    switchLockFailed: 'Sperren hat nicht geklappt. Ist der Server erreichbar?',
+    switchDisconnect: 'Vom Server trennen',
+    switchNeedBackup: 'Trennen geht nach der Sicherung. Deine Daten bleiben auf diesem Gerät.',
+    switchThen: 'Nach dem Trennen bleiben deine Daten hier. Danach koppelst du wie gewohnt.',
     syncNow: 'Jetzt abgleichen',
+    wifiOnly: 'Nur im WLAN',
     hubOn: (n: number) =>
       n === 0
         ? 'Dieser PC gleicht ab · noch kein Gerät gekoppelt'
@@ -102,6 +119,7 @@ export const tLanSync = defineBundle(
     syncing: 'Gleicht ab …',
     waitingForPc: 'Gleicht ab, sobald dein PC im selben WLAN erreichbar ist',
     isNemoRunning: 'Läuft Nemo auf dem PC?',
+    longNoPc: 'Lange keinen PC gefunden. Falls du ihn neu eingerichtet hast: neu koppeln.',
     triedNotReached:
       'Eben versucht – der PC hat nicht geantwortet. Läuft Nemo dort, und sind beide im selben Netz?',
     offlineLine: 'Dieses Handy ist gerade ohne Netz.',
@@ -127,6 +145,20 @@ export const tLanSync = defineBundle(
     unpairFromPcAsk: 'Vom PC lösen? Dieses Gerät gleicht erst wieder ab, wenn du es neu koppelst.',
     serverBlockedPhone:
       'Dieses Gerät ist mit deinem PC gekoppelt. Löse die Kopplung oben, um stattdessen einen eigenen Server zu verbinden.',
+    // a second PC that pairs with the hub PC (client by webcam)
+    pairWithOtherPc: 'Mit einem anderen PC koppeln',
+    scanHintPc: 'Richte die Webcam auf den QR-Code am anderen PC.',
+    noCamera: 'Ohne Kamera geht das Koppeln mit einem anderen PC noch nicht.',
+    noCameraServer: 'Abgleichen geht trotzdem: über „Eigener Server (erweitert)“ weiter unten.',
+    isHubAlready:
+      'Dieser PC ist schon der Abgleich-Punkt im Heimnetz. Schalte das zuerst aus, um ihn mit einem anderen PC zu koppeln.',
+    clientPaired:
+      'Dieser PC ist mit einem anderen PC gekoppelt. Löse die Kopplung zuerst, um ihn selbst als Abgleich-Punkt zu nutzen.',
+    cameraDeniedPc: 'Die Webcam ist aus. In den Windows-Einstellungen unter „Kamera“ erlauben.',
+    keystorePc:
+      'Der sichere Schlüsselspeicher von Windows antwortet nicht. Starte Nemo neu und versuche es noch einmal.',
+    offlineLinePc: 'Dieser PC ist gerade ohne Netz.',
+    clockOffPc: 'Die Uhrzeit dieses PCs weicht ab.',
     // folded server form
     ownServer: 'Eigener Server (erweitert)',
     ownServerOff: 'Aus',
@@ -143,7 +175,23 @@ export const tLanSync = defineBundle(
       serverFirst:
         'This device syncs through your own server. Disconnect it there first to use this PC as the sync point.',
       pairDevice: 'Pair a device',
+      switchToLan: 'Switch from server to home network',
+      switchTitle: 'Switch to your home network',
+      switchBackupTitle: 'Backup first',
+      switchBackupHint: 'So nothing is lost if something goes wrong.',
+      switchBackupSave: 'Save a backup',
+      switchBackupSaved: 'Backup saved.',
+      switchDevicesTitle: 'Devices on the server',
+      switchDevicesStay: 'These devices keep syncing through the server until you switch them too:',
+      switchNoDevices: 'The server knows no other devices.',
+      switchLock: 'Lock on server',
+      switchLocked: 'Locked',
+      switchLockFailed: 'Locking did not work. Is the server reachable?',
+      switchDisconnect: 'Disconnect from server',
+      switchNeedBackup: 'You can disconnect after the backup. Your data stays on this device.',
+      switchThen: 'After disconnecting your data stays here. Then you pair as usual.',
       syncNow: 'Sync now',
+      wifiOnly: 'Wi-Fi only',
       hubOn: (n: number) =>
         n === 0
           ? 'This PC syncs · no device paired yet'
@@ -225,6 +273,7 @@ export const tLanSync = defineBundle(
       syncing: 'Syncing …',
       waitingForPc: 'Syncs as soon as your PC is reachable on the same Wi-Fi',
       isNemoRunning: 'Is Nemo running on the PC?',
+      longNoPc: 'No PC found for a long time. If you set it up again: pair again.',
       triedNotReached:
         'Just tried – the PC did not answer. Is Nemo running there, and are both on the same network?',
       offlineLine: 'This phone has no connection right now.',
@@ -250,6 +299,18 @@ export const tLanSync = defineBundle(
         'Unpair from the PC? This device will only sync again after you pair it again.',
       serverBlockedPhone:
         'This device is paired with your PC. Unpair it above to connect your own server instead.',
+      pairWithOtherPc: 'Pair with another PC',
+      scanHintPc: 'Point the webcam at the QR code on the other PC.',
+      noCamera: 'Pairing with another PC needs a camera for now.',
+      noCameraServer: 'You can still sync: use “Own server (advanced)” below.',
+      isHubAlready:
+        'This PC already is the sync point on your home network. Turn that off first to pair it with another PC.',
+      clientPaired:
+        'This PC is paired with another PC. Unpair it first to use it as the sync point itself.',
+      cameraDeniedPc: 'The webcam is off. Allow it in the Windows settings under “Camera”.',
+      keystorePc: 'The Windows secure key store does not answer. Restart Nemo and try again.',
+      offlineLinePc: 'This PC has no connection right now.',
+      clockOffPc: "This PC's clock is off.",
       ownServer: 'Own server (advanced)',
       ownServerOff: 'Off',
       serverBlocked:

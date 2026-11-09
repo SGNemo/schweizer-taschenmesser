@@ -21,6 +21,7 @@ export const quickCapture: Strings['quickCapture'] = {
     plan: 'Plan',
     meal: 'Meal',
     workout: 'Workout',
+    place: 'Place',
   },
   target: {
     todo: 'To-dos',
@@ -36,6 +37,7 @@ export const quickCapture: Strings['quickCapture'] = {
     plan: 'Planner',
     meal: 'Fitness',
     workout: 'Fitness',
+    place: 'Clock',
   },
   chip: {
     to: (name: string) => `To: ${name}`,

@@ -177,7 +177,7 @@ export interface LanHubDevice {
 
 /**
  * Desktop only (Windows listens; elsewhere the hub stays off): the home-network sync hub of
- * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`,
+ * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`, `client-paired`,
  * `keystore-unavailable`, `busy`, `wrong-code`, …). Never logs, never stores the key in the web app
  * beyond the non-extractable `CryptoKey` the sync service imports.
  */
@@ -201,11 +201,12 @@ export interface LanHubService {
 }
 
 /**
- * The device side of home-network sync (Android): pairing with a hub PC by its QR and the sync
- * engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
+ * The device side of home-network sync (Android, and a second PC that pairs with the hub PC):
+ * pairing with a hub PC by its QR and the sync engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
  * the OS keystore on the Rust side; only the data key comes back, once, after the pairing.
  * Errors are short codes: `bad-qr`, `network`, `pairing-not-possible`, `unknown-device`,
- * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`.
+ * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`, `hub-on`
+ * (this PC is the hub itself: one path per device).
  */
 export interface LanClientService {
   supported: boolean;
@@ -223,6 +224,20 @@ export interface LanClientService {
   request(body: string, hub: string): Promise<string>;
   /** Tells the hub once if it is reachable right now, then forgets hub and key on this device. */
   unpair(): Promise<void>;
+}
+
+/**
+ * Android: the phone's Wi-Fi as home-network sync sees it (`src-tauri/plugins/lan-watch`). No
+ * network name, no location: only whether some Wi-Fi network is connected. Elsewhere unsupported
+ * (`wifi()` answers `undefined`, nothing fires). The plugin's search for a moved PC is Rust-only
+ * and not part of this service.
+ */
+export interface LanWatchService {
+  supported: boolean;
+  /** Whether a Wi-Fi network is connected right now; `undefined` when unknown or unsupported. */
+  wifi(): Promise<boolean | undefined>;
+  /** Fires `true` when the first Wi-Fi network comes up, `false` when the last one goes. */
+  onWifiChange(callback: (connected: boolean) => void): () => void;
 }
 
 /**
@@ -376,6 +391,8 @@ export interface PlatformService {
   lanHub: LanHubService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
+  /** Wi-Fi available/lost for home-network sync (Android). */
+  lanWatch: LanWatchService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */

@@ -47,6 +47,7 @@ Nemo ist eine Sammlung kleiner Module für den Alltag. Was du brauchst, schaltes
 |  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
 |  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
 |  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
+|  | Uhr | Orte eintragen und ihre Uhrzeit immer sehen | Vorschau |
 |  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
 |  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |

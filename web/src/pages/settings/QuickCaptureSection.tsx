@@ -120,8 +120,8 @@ export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
   const [text, setText] = useState('');
   const sentence = text.trim() || o.samplePlaceholder;
   // React Compiler memoizes this; the parser is pure and fast (one short sentence).
-  const { fitness } = useCaptureTypes();
-  const result = parseCapture(sentence, { now: new Date(now()), defaultType, fitness });
+  const { fitness, place } = useCaptureTypes();
+  const result = parseCapture(sentence, { now: new Date(now()), defaultType, fitness, place });
   const chips = previewChips(result.fields, result.type, result.notes, today());
   const prefixes = SAMPLE_PREFIXES.map((p) => `${p} → ${t.quickCapture.target[PREFIXES[p]!]}`).join(
     ' · ',

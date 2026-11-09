@@ -13,6 +13,7 @@ import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
 import { getPlatform } from '@/core/platform';
 import type {
   LanClientService,
+  LanWatchService,
   LanHubDataKey,
   LanHubService,
   LanPairing,
@@ -100,6 +101,8 @@ export interface SyncServiceDeps {
   lanHub?: () => LanHubService;
   /** The device side of home-network sync (Android). */
   lanClient?: () => LanClientService;
+  /** Wi-Fi available/lost (Android): a phone paired with a PC syncs when it comes home. */
+  lanWatch?: () => LanWatchService;
 }
 
 export function defaultDeps(): SyncServiceDeps {
@@ -109,6 +112,7 @@ export function defaultDeps(): SyncServiceDeps {
     remote: (url, token) => new SelfHostedAdapter(url, token),
     lanHub: () => getPlatform().lanHub,
     lanClient: () => getPlatform().lanClient,
+    lanWatch: () => getPlatform().lanWatch,
   };
 }
 
@@ -369,7 +373,8 @@ function ignoreClosedDatabase(e: unknown): void {
 
 /**
  * Keeps the device in sync: on start, every minute, when coming back online or visible, and
- * shortly after local changes. Returns a function that stops everything.
+ * shortly after local changes; a phone paired with a PC also when Wi-Fi comes up (it came home).
+ * Returns a function that stops everything.
  */
 export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   let debounce: ReturnType<typeof setTimeout> | undefined;
@@ -404,6 +409,7 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   const interval = setInterval(() => tick(), INTERVAL_MS);
   window.addEventListener('online', onOnline);
   document.addEventListener('visibilitychange', onVisible);
+  const stopWifi = watchWifi(deps, () => stopped, tick);
 
   // Local writes queue records in the outbox; sync soon after they settle.
   const sub = liveQuery(() => deps.storage.pendingCount()).subscribe({
@@ -428,8 +434,40 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
     clearTimeout(retry);
     window.removeEventListener('online', onOnline);
     document.removeEventListener('visibilitychange', onVisible);
+    stopWifi();
     sub.unsubscribe();
   };
+}
+
+/**
+ * Android: keeps `wifi` in the status store and, when Wi-Fi comes up on a phone paired with a PC
+ * (`lanClient`), starts a round at once (CONCEPT §6). Only the platform knows how; this names no
+ * command. Elsewhere nothing is watched and `wifi` stays unset.
+ */
+function watchWifi(
+  deps: SyncServiceDeps,
+  stopped: () => boolean,
+  tick: (force?: boolean) => void,
+): () => void {
+  const watch = deps.lanWatch?.();
+  if (!watch?.supported) return () => undefined;
+  const status = useSyncStatus.getState();
+  void watch
+    .wifi()
+    .then((wifi) => {
+      if (!stopped()) status.set({ wifi });
+    })
+    .catch(() => undefined);
+  return watch.onWifiChange((connected) => {
+    if (stopped()) return;
+    status.set({ wifi: connected });
+    if (!connected) return;
+    void loadSyncConfig(deps.database)
+      .then((config) => {
+        if (config?.kind === 'lanClient') tick(true);
+      })
+      .catch(ignoreClosedDatabase);
+  });
 }
 
 const MAINTENANCE_KEY = 'sync.maintenance.at';
@@ -600,24 +638,28 @@ export async function disconnect(deps: SyncServiceDeps = defaultDeps()): Promise
 
 /* -------------------------------- home-network hub -------------------------------- */
 
-export type LanHubFailure = 'unsupported' | 'server-connected' | 'keystore' | 'failed';
+export type LanHubFailure =
+  'unsupported' | 'server-connected' | 'client-paired' | 'keystore' | 'failed';
 export type LanHubResult = { ok: true } | { ok: false; reason: LanHubFailure };
 
 /**
  * Turns this PC into the home-network hub: starts the hub, imports its data key and runs the first
  * round (everything local is uploaded into the hub's store, encrypted). One path per device: a
- * device connected to an own server disconnects from it first.
+ * device connected to an own server disconnects from it first, and a PC paired with another hub PC
+ * never becomes a hub itself (refused here and again in Rust).
  */
 export async function enableLanHub(deps: SyncServiceDeps = defaultDeps()): Promise<LanHubResult> {
   const hub = deps.lanHub?.();
   if (!hub?.supported) return { ok: false, reason: 'unsupported' };
   const existing = await loadSyncConfig(deps.database);
   if (existing?.kind === 'selfHosted') return { ok: false, reason: 'server-connected' };
+  if (existing?.kind === 'lanClient') return { ok: false, reason: 'client-paired' };
   let dataKey: LanHubDataKey;
   try {
     dataKey = (await hub.start()).dataKey;
   } catch (e) {
     const code = e instanceof Error ? e.message : '';
+    if (code === 'client-paired') return { ok: false, reason: 'client-paired' };
     return { ok: false, reason: code === 'keystore-unavailable' ? 'keystore' : 'failed' };
   }
   await exclusive(async () => {
@@ -670,6 +712,7 @@ export async function renewLanHubKey(deps: SyncServiceDeps = defaultDeps()): Pro
 export type PairFailure =
   | 'unsupported'
   | 'other-path'
+  | 'hub-on'
   | 'bad-qr'
   | 'network'
   | 'pairing-not-possible'
@@ -687,12 +730,14 @@ const PAIR_FAILURES: readonly PairFailure[] = [
   'pairing-aborted',
   'cancelled',
   'busy',
+  'hub-on',
 ];
 
 /**
  * "Mit PC koppeln": pairs this device with the hub PC of `qr` (the PC asks the user to compare the
  * code that `onCode` receives), imports the data key and runs the first round. One path per device:
- * refused while an own server is connected.
+ * refused while an own server is connected, and on a PC while it is the hub itself (`hub-on`, also
+ * checked in Rust): a second PC pairs as a client only.
  */
 export async function pairWithPc(
   qr: string,
@@ -703,6 +748,7 @@ export async function pairWithPc(
   const client = deps.lanClient?.();
   if (!client?.supported) return { ok: false, reason: 'unsupported' };
   const existing = await loadSyncConfig(deps.database);
+  if (existing?.kind === 'lanHub') return { ok: false, reason: 'hub-on' };
   if (existing && existing.kind !== 'lanClient') return { ok: false, reason: 'other-path' };
   let dataKey: LanPairing;
   try {

@@ -6,13 +6,13 @@
 
 The Windows app can be the sync point itself. Phone and PC sync as soon as both are on the same Wi-Fi and Nemo runs on the PC.
 
-1. **PC:** *Settings → Sync → Pair a device*. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose *Allow*). If Windows treats your network as public, Nemo shows no code but the way to switch it to *Private*; the code then appears by itself.
-2. **Phone:** *Settings → Sync → Pair with PC*, allow the camera, scan the code.
-3. Both show the same 6-digit code. On the PC: *Pair*.
+1. **PC:** _Settings → Sync → Pair a device_. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose _Allow_). If Windows treats your network as public, Nemo shows no code but the way to switch it to _Private_; the code then appears by itself.
+2. **Phone:** _Settings → Sync → Pair with PC_, allow the camera, scan the code.
+3. Both show the same 6-digit code. On the PC: _Pair_.
 
-Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; *More settings* has *Renew key* and *Turn off home-network sync*. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
+Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; _More settings_ has _Renew key_ and _Turn off home-network sync_. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
 
-Your own server (below) still works: on the desktop and the phone it sits folded under *Own server (advanced)*. One way per device: disconnect one before using the other.
+Your own server (below) still works: on the desktop and the phone it sits folded under _Own server (advanced)_. One way per device: disconnect one before using the other. A device on your own server offers _Switch from server to home network_: it saves a backup first, lists the devices the server still knows (each can be locked there – they keep syncing through the server until you switch them too), then disconnects; your data stays on the device, and you pair as usual.
 
 ## Your own sync server
 
@@ -50,14 +50,14 @@ SYNC_TOKEN=<your-token> WEB_DIR=../web/dist npm start
 
 ## Configuration (environment variables)
 
-| Variable | Meaning | Default |
-|---|---|---|
-| `SYNC_TOKEN` / `SYNC_TOKENS` | access token(s), at least 16 characters, several comma-separated. **Required** | – |
-| `PORT`, `HOST` | server address | `8787`, `0.0.0.0` |
-| `DB_PATH` | SQLite file | `./data/sync.db` (Docker: `/data/sync.db`) |
-| `WEB_DIR` | built PWA (`web/dist`), served with SPA fallback | off |
-| `CORS_ORIGINS` | allowed origins, comma-separated (`*` = all) | `*` |
-| `RATE_LIMIT` | requests per minute and address | `600` |
+| Variable                     | Meaning                                                                        | Default                                    |
+| ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| `SYNC_TOKEN` / `SYNC_TOKENS` | access token(s), at least 16 characters, several comma-separated. **Required** | –                                          |
+| `PORT`, `HOST`               | server address                                                                 | `8787`, `0.0.0.0`                          |
+| `DB_PATH`                    | SQLite file                                                                    | `./data/sync.db` (Docker: `/data/sync.db`) |
+| `WEB_DIR`                    | built PWA (`web/dist`), served with SPA fallback                               | off                                        |
+| `CORS_ORIGINS`               | allowed origins, comma-separated (`*` = all)                                   | `*`                                        |
+| `RATE_LIMIT`                 | requests per minute and address                                                | `600`                                      |
 
 ## On the go: Tailscale and HTTPS
 
@@ -78,7 +78,7 @@ if the app itself was opened via `http://` (or `localhost`).
 
 Without push, reminders only appear while the app is open. With **Web Push** your sync server sends them even when the app
 is closed (Windows/Android Chrome/Edge; needs HTTPS, for example via Tailscale, and a browser with a push service). Turn it on:
-*Settings → Notifications → Enable push* (the app must be connected to the sync server).
+_Settings → Notifications → Enable push_ (the app must be connected to the sync server).
 
 - The app uploads the upcoming notifications of the next 14 days (time, title, text) to the server and keeps them current;
   the server sends them on time through the browser's push service (Google/Mozilla/Microsoft only see encrypted messages).
@@ -89,7 +89,7 @@ is closed (Windows/Android Chrome/Edge; needs HTTPS, for example via Tailscale, 
 
 ## Connecting in the app
 
-*Settings → Sync*: enter server address and token, optionally turn on **end-to-end encryption** with
+_Settings → Sync_: enter server address and token, optionally turn on **end-to-end encryption** with
 a passphrase (at least 12 characters, ideally several words); encryption is preselected on the first
 connection. The app then syncs on start, every minute, after local
 changes and when it comes back online/visible; the status is shown in the settings and as an icon at the top.

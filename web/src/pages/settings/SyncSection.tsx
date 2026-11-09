@@ -275,7 +275,10 @@ export function SyncSection() {
     <Card>
       {lan ? (
         <div className={styles.form}>
-          <Suspense fallback={null}>{lanHub ? <LanHubSection /> : <LanClientSection />}</Suspense>
+          <Suspense fallback={null}>
+            {/* a PC paired with another hub PC shows the device side, like a phone */}
+            {lanHub && status.via !== 'lanClient' ? <LanHubSection /> : <LanClientSection />}
+          </Suspense>
           <FoldedGroup
             id="server"
             section="sync"

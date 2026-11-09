@@ -385,7 +385,8 @@ test.describe('Keyboard', () => {
     // Not under the keyboard: the field's bottom edge is inside the visible part.
     const box = (await field.boundingBox())!;
     const visibleBottom = await page.evaluate(() => window.innerHeight - 320);
-    expect(box.y + box.height).toBeLessThanOrEqual(visibleBottom);
+    // 1 px of slack: the browser snaps the scroll position to whole device pixels, a fractional field top can end 0.6 px low.
+    expect(box.y + box.height).toBeLessThanOrEqual(visibleBottom + 1);
     await field.fill('Müll rausbringen');
     await field.press('Enter');
     await expect(page.getByRole('checkbox', { name: 'Müll rausbringen' })).toBeVisible();

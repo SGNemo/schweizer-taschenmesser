@@ -9,6 +9,8 @@
 
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
+/// The daily mDNS hint (hub announces it, devices match it to find a hub that got a new address).
+pub mod hint;
 pub mod noise;
 /// The pairing QR (hub writes it, devices read it): on every target.
 pub mod qr;
@@ -19,6 +21,9 @@ mod store;
 /// under `src/transport` like the hub's (`tests/rules.rs`), but it is compiled on every target.
 #[path = "transport/client.rs"]
 pub mod client;
+/// Device side: picks the announcements of the pinned hub after it got a new address.
+#[path = "transport/rediscover.rs"]
+pub mod rediscover;
 
 #[cfg(all(not(any(target_os = "android", target_os = "ios")), feature = "store"))]
 pub mod discovery;

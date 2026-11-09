@@ -153,9 +153,9 @@
     },
     {
       "name": "@tauri-apps/plugin-notification",
-      "version": "2.8.0",
+      "version": "2.7.0",
       "license": "MIT OR Apache-2.0",
-      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.8.0"
+      "url": "https://www.npmjs.com/package/@tauri-apps/plugin-notification/v/2.7.0"
     },
     {
       "name": "@tauri-apps/plugin-opener",

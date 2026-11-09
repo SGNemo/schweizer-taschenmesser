@@ -210,6 +210,19 @@ export const SIGNATURE_MARKS: Record<Exclude<SignatureId, 'none'>, ReactNode> = 
       <path d="M2 10.5v3M22 10.5v3" />
     </>
   ),
+  // A dial with a tick at twelve, two hands and the night as a shaded lower arc (Uhr).
+  dial: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path
+        d="M5.3 16.3A8 8 0 0 0 18.7 16.3L16.6 15A5.5 5.5 0 0 1 7.4 15Z"
+        fill="currentColor"
+        fillOpacity=".35"
+        stroke="none"
+      />
+      <path d="M12 3.5V5.5M12 12V7.5M12 12l3 1.8" />
+    </>
+  ),
   /* ---- tools ---- */
   // Calculator display with a result line and a key row.
   display: (

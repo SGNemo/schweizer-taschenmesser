@@ -34,5 +34,6 @@
   "src/strings.ts": "the German source catalog",
   "src/strings.dev.ts": "Dev-Preview tools for testers, German only (not shipped in stable builds)",
   "src/core/ai/local/prompts/plan.ts": "AI prompt of the planner's local stage: German example sentences and the German frame the model reads (stage 1)",
-  "src/modules/planner/localStage.ts": "parser vocabulary: German filler words that never name a thing of the plan (stage 1 gate)"
+  "src/modules/planner/localStage.ts": "parser vocabulary: German filler words that never name a thing of the plan (stage 1 gate)",
+  "src/core/time/cities.ts": "place names in German and English (search data for the offline place search, not UI text)"
 }

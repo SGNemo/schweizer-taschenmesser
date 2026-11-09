@@ -2323,6 +2323,26 @@
       "input": "Habe ich heute schon zu viel gegessen?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "b-clk-c01",
+      "input": "Weltuhr: Seoul hinzufügen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Seoul"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-clk-n01",
+      "input": "Wie groß ist der Zeitunterschied nach Tokio?",
+      "tags": ["negative"],
+      "expect": []
     }
   ]
 }

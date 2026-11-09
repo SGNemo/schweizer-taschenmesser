@@ -148,6 +148,8 @@ function report(page: Page): Promise<Report> {
             // Visually hidden text (sr-only: 1 px, clipped) is for screen readers, not cut off.
             if (e.clientWidth <= 1 || e.clientHeight <= 1) return false;
             const cs = getComputedStyle(e);
+            // Text that is deliberately not shown (visibility: hidden, e.g. a month-cell label that does not fit, S03) is not cut off.
+            if (cs.visibility === 'hidden') return false;
             if (cs.clip !== 'auto' || cs.clipPath !== 'none') return false;
             if (cs.overflowX !== 'hidden' && cs.overflowX !== 'clip') return false;
             if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none') return false;

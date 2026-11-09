@@ -6,7 +6,8 @@ import { Button, Icon, IconButton, SelectField, TextField } from '@/ui';
 import { readStored, writeStored } from '../shared';
 import { kit } from '../kit';
 import styles from '../tools.module.css';
-import { ZONES, isKnownZone, showIn, zoneLabel, zonedInstant } from './logic';
+import { isKnownZone, showIn, zonedInstant } from '@/core/time/zones';
+import { ZONES, zoneLabel } from './logic';
 
 const s = t.tools.timezones;
 const KEY = 'tm.tools.timezones';

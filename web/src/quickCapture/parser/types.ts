@@ -19,7 +19,9 @@ export type CaptureType =
   /** A meal for Fitness (prefix „kcal“/„essen“, or „650 kcal“ anywhere). */
   | 'meal'
   /** A training session for Fitness (prefix „training“/„workout“). */
-  | 'workout';
+  | 'workout'
+  /** A place for the Uhr module (prefix „uhr“/„clock“ and a known city or zone). */
+  | 'place';
 
 /** One exercise of a `workout` capture („Bankdrücken 3×8 60“). */
 export interface CaptureExercise {
@@ -121,4 +123,9 @@ export interface ParseOptions {
    * general parse.
    */
   fitness?: { meal?: boolean; workout?: boolean };
+  /**
+   * Set while the Uhr module is on: whether a name is a place the offline city search knows. Without it „uhr …“
+   * is read like any other text.
+   */
+  place?: (name: string) => boolean;
 }

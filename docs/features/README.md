@@ -24,3 +24,4 @@
 | [disk-live-scan.md](disk-live-scan.md) | Dieser PC: live scan – one calm status line, map and list grow while the scan runs, pending folders, poll vs. event numbers |
 | [map-own.md](map-own.md) | Own offline map from OSM data (phase 0): sources, builder, renderer, storage, levels, progress, packages, open questions |
 | [fitness.md](fitness.md) | Fitness module (concept): training log + rough kcal, one module in Haushalt, data model, quick capture, packages |
+| [clock.md](clock.md) | Uhr: places with their time (package 1 done), follow-ups, next packages (Wecker, Besprechungsplaner, Wetter je Ort) |

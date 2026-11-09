@@ -5798,6 +5798,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-http",
+ "tauri-plugin-lan-watch",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
  "tauri-plugin-screen-mode",
@@ -6172,6 +6173,16 @@ dependencies = [
  "tokio",
  "url",
  "urlpattern 0.3.0",
+]
+
+[[package]]
+name = "tauri-plugin-lan-watch"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

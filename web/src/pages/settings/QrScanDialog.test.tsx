@@ -87,6 +87,24 @@ describe('QrScanDialog (phone camera in the app)', () => {
     expect(onFailure).toHaveBeenCalledWith('camera-denied');
   });
 
+  it('a PC without a webcam is "no-camera" (NotFoundError), and the webcam hint replaces the phone line', async () => {
+    camera(async () => {
+      throw new DOMException('no device', 'NotFoundError');
+    });
+    const onFailure = vi.fn();
+    render(
+      <QrScanDialog
+        hint="Richte die Webcam auf den QR-Code am anderen PC."
+        onResult={vi.fn()}
+        onCancel={vi.fn()}
+        onFailure={onFailure}
+      />,
+    );
+    expect(screen.getByText('Richte die Webcam auf den QR-Code am anderen PC.')).toBeTruthy();
+    await flush();
+    expect(onFailure).toHaveBeenCalledWith('no-camera');
+  });
+
   it('"Abbrechen" closes it and the camera goes off; a late camera is stopped too', async () => {
     let give: (s: MediaStream) => void = () => undefined;
     camera(() => new Promise((r) => (give = r)));
