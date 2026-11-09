@@ -246,7 +246,7 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       for (const el of Array.from(scope.querySelectorAll<SVGElement>('svg')).filter(visible)) { const r = el.getBoundingClientRect(); const sw = el.getAttribute('stroke-width') ?? el.querySelector('[stroke-width]')?.getAttribute('stroke-width') ?? '-'; const key = `${Math.round(r.width)}px/${sw}`; icons.set(key, (icons.get(key) ?? 0) + 1); }
       const gaps = new Map<string, number>();
       for (const el of all.slice(0, 2500)) { if (!visible(el)) continue; const s = getComputedStyle(el); for (const p of ['gap', 'rowGap', 'paddingTop', 'paddingLeft'] as const) { const v = parseFloat(s[p]); if (v > 0) gaps.set(`${v}`, (gaps.get(`${v}`) ?? 0) + 1); } }
-      let bordered = 0, shadowed = 0, tinted = 0, surface2Count = 0, ringed = 0, radii = new Map<string, number>();
+      let bordered = 0, shadowed = 0, tinted = 0, neutralFills = 0, surface2Count = 0, ringed = 0, radii = new Map<string, number>();
       const visibleBorder = (c: string) => { const p = parseRgb(c); return !!p && p.a > 0.05; };
       for (const el of all) {
         if (!visible(el) || el instanceof SVGElement) continue;
@@ -261,7 +261,8 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         }
         const pb = parseRgb(s.backgroundColor);
         if (s.backgroundColor === surface2) surface2Count++;
-        else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) tinted++;
+        else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && saturation(s.backgroundColor) > 0.12 && !el.matches('button, input, select, [role="tab"]')) tinted++;
+        else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) neutralFills++;
         if (s.borderTopLeftRadius !== '0px' && r.width > 80) radii.set(s.borderTopLeftRadius, (radii.get(s.borderTopLeftRadius) ?? 0) + 1);
       }
       const rows = Array.from(scope.querySelectorAll<HTMLElement>('[data-row]')).filter(visible).map((el) => Math.round(el.closest('li')?.getBoundingClientRect().height ?? el.getBoundingClientRect().height));
@@ -296,7 +297,7 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         h1: h1s ? { size: h1s.fontSize, weight: h1s.fontWeight, family: h1s.fontFamily.split(',')[0]!.replace(/"/g, ''), text: txt(h1!) } : null,
         headings: Object.fromEntries(h2),
         fontSizes: top(sizes, 12), fontWeights: top(weights, 6), icons: top(icons, 10), spacing: { distinct: gaps.size, top: top(gaps, 10) },
-        surfaces: { bordered, ringed, shadowed, tinted, surface2: surface2Count, gradients, radii: top(radii, 6) },
+        surfaces: { bordered, ringed, shadowed, tinted, neutralFills, surface2: surface2Count, gradients, radii: top(radii, 6) },
         rows: { n: rows.length, median: rowMedian, min: rows[0] ?? null, max: rows[rows.length - 1] ?? null },
         motion: { animated: animated.slice(0, 10), transitions: top(transitions, 10) },
         overflow, clipped, small,

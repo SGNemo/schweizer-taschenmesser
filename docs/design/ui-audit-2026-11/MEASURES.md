@@ -361,6 +361,47 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 | disk:system | 379 | 234 |
 | downloads:running | 379 | 224 |
 
+### Handy: Zeilenhöhen – 412 dunkel, Seed
+
+| Seite | Zeilen (n · Median · min–max) |
+| --- | --- |
+| planner | 5 · 57 · 56–57 |
+| todos | 42 · 59 · 56–210 |
+| timetrack | 1 · 56 · 56–56 |
+| maps | 8 · 57 · 56–78 |
+| people | 28 · 104 · 82–104 |
+| fitness | 29 · 77 · 56–119 |
+| invoices | 7 · 130 · 103–176 |
+| subscriptions | 9 · 155 · 81–181 |
+| lists | 14 · 57 · 56–109 |
+| pantry | 14 · 98 · 76–126 |
+| bookmarks | 31 · 83 · 57–104 |
+| feeds | 6 · 50 · 50–50 |
+| vault | 34 · 106 · 84–150 |
+
+### Layout-Sprung (CLS) über alle Läufe – nur Werte, die in mindestens zwei Läufen ≥ 0,05 sind
+
+| Seite | Läufe mit CLS ≥ 0,05 |
+| --- | --- |
+| page-maps--v-orte | D-dark/seed 0.06, D-light/seed 0.06 |
+| page-maps--v-routen | D-dark/seed 0.06, D-light/seed 0.06 |
+| page-maps--v-karte | D-dark/seed 0.06, D-light/seed 0.06 |
+| page-disk | D-dark/seed 0.13, D-dark/empty 0.13, D-light/seed 0.13 |
+| palette | D-dark/seed 0.08, D-light/seed 0.12, P-dark/seed 0.40, P-dark/empty 0.20, P-light/empty 0.07 |
+| toolbox | D-dark/seed 0.06, D-light/seed 0.14, P-light/empty 0.07 |
+| overview-calm | D-dark/seed 0.06, P-dark/seed 0.57, P-light/empty 0.07 |
+| overview-all | D-dark/seed 0.19, D-dark/empty 0.12, D-light/seed 0.18, D-light/empty 0.12, P-dark/seed 0.89, P-light/seed 0.25, P-light/empty 0.07 |
+| page-settings-allgemein | D-dark/empty 0.07, D-light/seed 0.07, D-light/empty 0.07, P-dark/seed 0.09, P-dark/empty 0.09, P-light/seed 0.08 |
+| page-lists | D-light/seed 0.07, P-light/seed 0.08 |
+| page-music | D-light/seed 0.14, P-dark/seed 0.12 |
+| page-settings-benachrichtigungen | D-light/empty 0.05, P-dark/seed 0.12 |
+| page-timetrack | P-dark/seed 0.06, P-light/empty 0.05 |
+| page-subscriptions | P-dark/seed 0.07, P-dark/empty 0.08 |
+| page-settings-barrierefreiheit | P-dark/seed 0.07, P-light/seed 0.07, P-light/empty 0.07 |
+| page-invoices | P-dark/empty 0.10, P-light/empty 0.10 |
+| page-bookmarks | P-dark/empty 0.07, P-light/empty 0.07 |
+| page-feeds | P-dark/empty 0.06, P-light/empty 0.06 |
+
 ### Handy: kleine Ziele (< 40 px) und abgeschnittener Text – 412 dunkel, Seed
 
 | Seite | klein n | Beispiele | abgeschnitten n | Beispiele |
