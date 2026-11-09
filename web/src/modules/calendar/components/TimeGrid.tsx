@@ -10,7 +10,7 @@ import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, isoWeekday, nowTime, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
-import { groupByDate, splitDay } from '../views';
+import { ALL_DAY_LIMIT, groupByDate, initialScrollMinute, splitDay } from '../views';
 import { kindLabel } from './ItemRow';
 import { sourceHue } from './sourceHue';
 import styles from '../routes/calendar.module.css';
@@ -42,7 +42,9 @@ const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.sl
 
 /**
  * Week / day view with an hour grid that fills the available height. Untimed items sit in a row
- * above the grid; on open the grid scrolls to the current time (or shortly before the first item).
+ * above the grid: in the week at most `ALL_DAY_LIMIT` per day plus "+n weitere" (opens the day), in the day view
+ * all of them side by side; the pane scrolls on its own, so the grid keeps its hours (S04, UI round 6). On open the
+ * grid scrolls to the current time (or shortly before the first item) without cutting a block at its top edge.
  */
 export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCreateSlot }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -54,20 +56,23 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
   const perDay = days.map((d) => ({ d, ...splitDay(byDate.get(d) ?? []) }));
   const hasUntimed = perDay.some((p) => p.untimed.length > 0);
 
-  // Scroll once per shown range: to "now" when today is visible, else to the earliest item.
-  const rangeKey = `${days[0]}:${days.length}`;
+  // Scroll once per shown range: to "now" when today is visible, else to the earliest item. Once more when the
+  // entries arrive (they load after the first paint), so a block at the top edge is never cut.
+  const rangeKey = `${days[0]}:${days.length}:${items.length > 0}`;
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;
     const hourPx = body.scrollHeight / 24;
     const visibleToday = days.includes(now);
-    const first = Math.min(...perDay.flatMap((p) => p.timed.map((x) => x.start)), 8 * 60);
-    const target = visibleToday ? minutes(nowTime()) : first;
-    body.scrollTop = Math.max(0, (target / 60 - 1.5) * hourPx);
+    const blocks = perDay.flatMap((p) => p.timed);
+    const first = Math.min(...blocks.map((x) => x.start), 8 * 60);
+    const anchor = visibleToday ? minutes(nowTime()) : first;
+    body.scrollTop = (initialScrollMinute(blocks, anchor) / 60) * hourPx;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the shown range changes
   }, [rangeKey]);
 
   const cols = { '--cols': days.length } as CSSProperties;
+  const single = days.length === 1;
 
   /** Pixels per minute and the width of one day column, read from the first column. */
   function geometry() {
@@ -174,7 +179,11 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
     col.addEventListener('pointercancel', finish);
   }
   return (
-    <div className={styles.tg} role="group" aria-label={t.calendar.timeGrid}>
+    <div
+      className={`${styles.tg} ${hasUntimed ? styles.tgWithAllDay : ''}`}
+      role="group"
+      aria-label={t.calendar.timeGrid}
+    >
       <div className={styles.tgInner} style={cols}>
         <div className={styles.tgHead}>
           <span className={styles.tgGutter} />
@@ -187,11 +196,15 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
           ))}
         </div>
         {hasUntimed ? (
-          <div className={styles.tgHead} role="group" aria-label={t.calendar.allDayRow}>
+          <div
+            className={`${styles.tgHead} ${styles.tgAllDay}`}
+            role="group"
+            aria-label={t.calendar.allDayRow}
+          >
             <span className={styles.tgGutter} />
             {perDay.map(({ d, untimed }) => (
-              <ul key={d} className={styles.tgUntimed}>
-                {untimed.map((i) => (
+              <ul key={d} className={`${styles.tgUntimed} ${single ? styles.tgUntimedWide : ''}`}>
+                {(single ? untimed : untimed.slice(0, ALL_DAY_LIMIT)).map((i) => (
                   <li key={`${i.source}:${i.id}`}>
                     <button
                       type="button"
@@ -204,6 +217,18 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                     </button>
                   </li>
                 ))}
+                {!single && untimed.length > ALL_DAY_LIMIT ? (
+                  <li>
+                    <button
+                      type="button"
+                      className={styles.more}
+                      aria-label={`${t.calendar.more(untimed.length - ALL_DAY_LIMIT)}, ${formatDay(d, 'EEEE, d. MMMM')}`}
+                      onClick={() => onPickDay(d)}
+                    >
+                      {t.calendar.more(untimed.length - ALL_DAY_LIMIT)}
+                    </button>
+                  </li>
+                ) : null}
               </ul>
             ))}
           </div>
