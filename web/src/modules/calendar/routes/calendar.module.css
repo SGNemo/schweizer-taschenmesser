@@ -283,10 +283,14 @@
   background: var(--surface-2);
   color: var(--text);
 }
-.kind_invoice,
+/* Deadlines (U08): an invoice is neutral, cancellation/end/expiry are a quiet warning; red only once overdue. */
+.kind_invoice {
+  background: var(--surface-2);
+  color: var(--text);
+}
 .kind_cancel {
-  background: var(--danger-soft);
-  color: var(--danger);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 .kind_subscription {
   background: var(--surface-2);
@@ -303,8 +307,12 @@
 }
 .kind_end,
 .kind_expiry {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+.kind_overdue {
   background: var(--danger-soft);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 /* The planner's summary chip: its module hue (`data-hue`), the text stays body text. */
 .kind_plan {
