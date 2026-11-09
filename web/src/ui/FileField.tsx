@@ -45,7 +45,10 @@ export function FileField({
    * (the owner keeps the file elsewhere, or the pick was refused).
    */
   fileName?: string | null;
-  /** The picked files. The input is cleared afterwards, so picking the same file again fires again. */
+  /**
+   * The picked files. Read the list synchronously: the input is cleared right after the call (Firefox empties the
+   * same FileList), so picking the same file again fires again.
+   */
   onFiles: (files: FileList) => void;
   /** Shows "Entfernen" while something is chosen. */
   onRemove?: () => void;
@@ -65,16 +68,22 @@ export function FileField({
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    setPicked(files.length === 1 ? (files[0]?.name ?? '') : t.ui.file.count(files.length));
+    const first = files[0] as (File & { webkitRelativePath?: string }) | undefined;
+    const folder = directory ? first?.webkitRelativePath?.split('/')[0] : undefined;
+    setPicked(folder || (files.length === 1 ? (first?.name ?? '') : t.ui.file.count(files.length)));
     onFiles(files);
     e.target.value = '';
   };
 
   return (
     <div className={fieldStyles.field}>
-      <span id={`${id}-label`} className={labelHidden ? 'sr-only' : fieldStyles.label}>
+      <label
+        htmlFor={id}
+        id={`${id}-label`}
+        className={labelHidden ? 'sr-only' : fieldStyles.label}
+      >
         {label}
-      </span>
+      </label>
       <div className={styles.row}>
         <span className={styles.pickWrap} data-disabled={disabled ? 'true' : undefined}>
           <span

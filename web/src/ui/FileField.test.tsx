@@ -38,10 +38,15 @@ describe('FileField (U07)', () => {
     expect(screen.getByText('2 Dateien gewählt')).toHaveAttribute('aria-live', 'polite');
   });
 
-  it('says "Kein Ordner gewählt" for a folder picker', () => {
+  it('says "Kein Ordner gewählt" for a folder picker, then the folder name', async () => {
     render(<FileField label="Ordner" directory buttonLabel="Ordner wählen" onFiles={() => {}} />);
     expect(screen.getByText('Kein Ordner gewählt')).toBeInTheDocument();
-    expect(screen.getByLabelText('Ordner Ordner wählen')).toHaveAttribute('webkitdirectory');
+    const input = screen.getByLabelText<HTMLInputElement>('Ordner Ordner wählen');
+    expect(input).toHaveAttribute('webkitdirectory');
+    const inFolder = (name: string) =>
+      Object.defineProperty(file(name), 'webkitRelativePath', { value: `Reisen/${name}` });
+    await userEvent.upload(input, [inFolder('Rom.md'), inFolder('Packliste.txt')]);
+    expect(screen.getByText('Reisen')).toBeInTheDocument();
   });
 
   it('offers "Entfernen" while a file is chosen and marks an error', () => {

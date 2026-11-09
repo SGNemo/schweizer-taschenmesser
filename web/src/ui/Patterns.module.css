@@ -23,6 +23,9 @@
   align-items: center;
   flex-wrap: nowrap;
   gap: var(--space-3);
+  /* A long primary label shrinks on a 320–360 px phone instead of widening the header. */
+  min-width: 0;
+  max-width: 100%;
 }
 .headerViews {
   /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */

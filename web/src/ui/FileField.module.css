@@ -23,7 +23,7 @@
 .input::file-selector-button {
   cursor: pointer;
 }
-.pickWrap:hover .pick {
+.pickWrap:not([data-disabled='true']):hover .pick {
   background: var(--surface-2);
 }
 .pickWrap:has(.input:focus-visible) .pick {
