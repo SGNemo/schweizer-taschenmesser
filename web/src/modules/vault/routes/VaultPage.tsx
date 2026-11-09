@@ -1,6 +1,6 @@
 import { tDeadline } from '@/strings.deadline';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
@@ -49,6 +49,19 @@ async function download(id: string, name: string) {
     data: blob,
     mime: blob.type || 'application/octet-stream',
   });
+}
+
+/** A date segment of a card's meta line: never broken between day, month and year (U53). */
+const dated = (text: string) => <span className={styles.nowrap}>{text}</span>;
+
+/** The card's meta line: its parts joined with " · ", empty parts left out. */
+function metaLine(parts: (ReactNode | undefined)[]) {
+  return parts.filter(Boolean).map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 ? ' · ' : null}
+      {part}
+    </Fragment>
+  ));
 }
 
 export default function VaultPage() {
@@ -142,21 +155,19 @@ export default function VaultPage() {
               className={styles.doc}
               title={d.title}
               onOpen={() => setTarget(d)}
-              meta={[
+              meta={metaLine([
                 t.vault.categories[d.category],
                 d.provider,
-                end ? `${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}` : undefined,
+                end ? dated(`${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}`) : undefined,
                 deadline && state === 'missed'
-                  ? tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy'))
+                  ? dated(tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy')))
                   : deadline && state !== 'expired'
-                    ? `${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`
+                    ? dated(`${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`)
                     : undefined,
                 d.fileName
                   ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
                   : undefined,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
+              ])}
               end={
                 <>
                   {state === 'ok' || state === 'open-ended' ? null : (
