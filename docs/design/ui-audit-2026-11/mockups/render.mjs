@@ -1,5 +1,5 @@
 /**
- * Renders the Identity 4.0 mockups (finanzen, todos, uebersicht) at 1920×1080 and 412×915, light and dark, into
+ * Renders the Identity 4.0 mockups (finanzen, todos, uebersicht, uebersicht-ruhig) at 1920×1080 and 412×915, light and dark, into
  * web/.screens/ui-audit/mockups/ (gitignored; the images go to the branch shots/ui-audit-2026-11), plus
  * before/after sheets that put the audit screenshot of the same page and view next to the mockup, both cropped to the first screen.
  * Run from web/:  node ../docs/design/ui-audit-2026-11/mockups/render.mjs

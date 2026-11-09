@@ -173,3 +173,17 @@ html[data-v=four] .attn{grid-template-columns:repeat(5,minmax(0,1fr))}
 html[data-v=four] .attn a.quiet{grid-column:span 2}
 html[data-v=four][data-device=mobile] .attn{grid-template-columns:repeat(2,minmax(0,1fr))}
 html[data-v=four][data-device=mobile] .attn a.quiet{grid-column:1/-1}
+
+/* round-9: one h1 style on the overview too; desktop targets ≥ 44 px like the app's hit areas */
+html[data-v=four] .greet h1{font-size:1.75rem;font-weight:600;letter-spacing:-.015em}
+html[data-v=four][data-device=mobile] .greet h1{font-size:1.375rem}
+html[data-v=four] .btn{min-height:44px}
+html[data-v=four] .btn.icon{width:44px}
+html[data-v=four] .nav{min-height:44px}
+html[data-v=four] .top .btn{height:44px}
+html[data-v=four] .seg span{min-height:38px;display:inline-flex;align-items:center}
+html[data-v=four] .seg{padding:3px}
+html[data-v=four] .favbar a{height:44px}
+html[data-v=four] .w .mini .ctl span{width:44px;height:44px}
+html[data-v=four] .seg{padding:0}
+html[data-v=four] .seg span{min-height:44px;padding:0 14px}
