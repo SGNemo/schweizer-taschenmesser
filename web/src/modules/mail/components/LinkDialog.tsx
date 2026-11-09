@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
 import { today } from '@/core/time/now';
+import type { SavedCapture } from '@/quickCapture/targets';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
+import { sheetInvoiceId } from '../invoiceRow';
 import { saveLink } from '../links';
+import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
 
 /**
@@ -35,10 +38,43 @@ export function LinkDialog({
   onClose: () => void;
 }) {
   const [excerpt, setExcerpt] = useState(false);
+  // An invoice from this message gets the id the mail list's „Anlegen“ uses (Kopf leer, Nachlese): the sheet
+  // and the row find the same invoice, also on another device once it has synced. Not while a deleted invoice
+  // sits under that id: bringing it back would write its old values, not the ones this sheet shows – the sheet
+  // then saves a new one under its own id (the row knows it through the link). The sheet opens once this is
+  // settled, so a quick save never misses the id.
+  const [invoiceId, setInvoiceId] = useState<{ message: string; id?: string }>();
+  useEffect(() => {
+    let alive = true;
+    void sheetInvoiceId(message.id).then(
+      (id) => alive && setInvoiceId({ message: message.id, ...(id ? { id } : {}) }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [message.id]);
+  const idReady = invoiceId?.message === message.id;
+  const idFor = idReady && invoiceId.id ? { invoice: invoiceId.id } : undefined;
   const [suggestion, setSuggestion] = useState<
     { phase: 'idle' } | { phase: 'working' } | { phase: 'done'; text: string } | { phase: 'none' }
   >({ phase: 'idle' });
   const [applied, setApplied] = useState<string | undefined>();
+
+  /** After the sheet saved: the link back, and the right words for an invoice that was there already. */
+  async function filed(saved: SavedCapture) {
+    if (saved.existed === true) {
+      await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
+      useUiStore
+        .getState()
+        .toast(saved.amended ? t.mail.invoice.alreadyNoted : t.mail.invoice.already);
+      return;
+    }
+    // Not expected (the sheet saves the shown values anew over a deleted entry); if ever, nothing was written.
+    if (saved.existed === 'tombstone')
+      return void useUiStore.getState().toast(t.mail.invoice.failed);
+    await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
+    await announceSaved(saved);
+  }
 
   // A fresh start for the next time the dialog opens (another destination, another mail).
   const close = () => {
@@ -121,18 +157,17 @@ export function LinkDialog({
               )}
             </div>
           ) : null}
-          <CaptureForm
-            key={`${type}-${message.id}-${applied ?? ''}`}
-            initialText={applied ?? prefill.text}
-            initialType={type}
-            extra={prefill.extra}
-            onCancel={close}
-            onSaved={(saved) => {
-              void saveLink(account.key, threadId, message.id, saved);
-              void announceSaved(saved);
-              close();
-            }}
-          />
+          {idReady ? (
+            <CaptureForm
+              key={`${type}-${message.id}-${applied ?? ''}`}
+              initialText={applied ?? prefill.text}
+              initialType={type}
+              extra={prefill.extra}
+              onCancel={close}
+              idFor={idFor}
+              onSaved={(saved) => void filed(saved).finally(close)}
+            />
+          ) : null}
           <p className={styles.hint}>{link ? t.mail.link.stores : t.mail.link.storesNothing}</p>
         </div>
       ) : null}

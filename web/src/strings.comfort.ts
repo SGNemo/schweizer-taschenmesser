@@ -30,7 +30,8 @@ export const tComfort = defineBundle(
     },
     status: {
       modulesActive: (n: number) => `${n} aktiv`,
-      notificationsOff: 'Nicht erlaubt',
+      // U31: one short word, so the state stays on the line of "Benachrichtigungen" in the settings navigation.
+      notificationsOff: 'Aus',
     },
     reset: {
       button: 'Auf Standard zurücksetzen',
@@ -58,6 +59,7 @@ export const tComfort = defineBundle(
       'appearance--theme': ['dunkel', 'hell', 'Nachtmodus', 'Dark Mode'],
       'appearance--density': ['kompakt', 'enger', 'Abstand', 'Platz'],
       'appearance--textSize': ['Schrift größer', 'Schriftgröße', 'Zoom', 'besser lesen'],
+      'appearance--clock': ['Uhr', 'Uhrzeit', 'Zeit', 'Clock'],
       reading: ['Lesehilfe', 'Bionic', 'Lesen leichter'],
       'calm-reminders': ['leise', 'stumm', 'nicht stören', 'Ruhe', 'Pieps', 'Töne'],
       notifications: ['stumm', 'Töne', 'Mitteilungen', 'Pieps'],
@@ -129,7 +131,7 @@ export const tComfort = defineBundle(
       },
       status: {
         modulesActive: (n: number) => `${n} on`,
-        notificationsOff: 'Not allowed',
+        notificationsOff: 'Off',
       },
       reset: {
         button: 'Reset to default',
@@ -157,6 +159,7 @@ export const tComfort = defineBundle(
         'appearance--theme': ['dark', 'light', 'night mode', 'dark mode'],
         'appearance--density': ['compact', 'tighter', 'spacing', 'room'],
         'appearance--textSize': ['bigger text', 'font size', 'zoom', 'easier to read'],
+        'appearance--clock': ['clock', 'time', 'Uhr', 'Uhrzeit'],
         reading: ['reading aid', 'bionic', 'easier reading'],
         'calm-reminders': ['quiet', 'mute', 'do not disturb', 'silence', 'beep', 'sounds'],
         notifications: ['mute', 'sounds', 'alerts', 'beep'],

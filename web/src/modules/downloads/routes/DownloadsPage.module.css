@@ -16,6 +16,10 @@
   margin-top: var(--space-2);
   padding: 0 var(--space-3) var(--space-3);
 }
+.metaLines {
+  display: grid;
+  gap: var(--space-1);
+}
 .sub {
   color: var(--text-muted);
   font-size: var(--text-sm);
