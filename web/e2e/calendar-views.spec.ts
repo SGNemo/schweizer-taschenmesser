@@ -183,7 +183,10 @@ test.describe('Calendar: month lines, all-day pane, phone toolbar (UI round 6: S
         views,
       ];
       const tops = new Set<number>();
-      for (const c of controls) tops.add(Math.round((await c.boundingBox())!.y / 8));
+      for (const c of controls) {
+        await expect(c).toBeVisible();
+        tops.add(Math.round((await c.boundingBox())!.y / 8));
+      }
       expect(tops.size).toBeLessThanOrEqual(3);
       const clipped = await views.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
       expect(clipped).toBe(false);
