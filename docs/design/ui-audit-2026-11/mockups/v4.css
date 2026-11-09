@@ -128,3 +128,30 @@ html[data-v=four][data-device=mobile] .top .btn{height:44px;width:44px}
 html[data-v=four][data-device=mobile] .top .search{height:44px}
 html[data-v=four][data-device=mobile] .w .btn,html[data-v=four][data-device=mobile] .greet .btn,html[data-v=four][data-device=mobile] .attn a{min-height:44px}
 html[data-v=four][data-device=mobile] .w .focus .acts .btn{height:44px}
+
+/* phone: no action in the head – the plus in the bottom bar is the one entry (thumb zone) */
+html[data-v=four][data-device=mobile] .titlerow .act{display:none}
+html[data-v=four][data-device=mobile] .titlerow .figure small{display:block;max-width:12rem}
+html[data-v=four][data-device=mobile] .titlerow .figure{max-width:12rem}
+html[data-v=four][data-device=mobile] .bottomnav a.add{color:var(--text);font-weight:600}
+html[data-v=four][data-device=mobile] .bottomnav a.add .plus{width:40px;height:40px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin-top:-14px}
+html[data-v=four][data-device=mobile] .bottomnav a.add .plus .ic{width:22px;height:22px}
+html[data-v=four][data-device=mobile] .bottomnav a.add::before{display:none}
+/* accent only for the main action and the one active state */
+html[data-v=four] .badge.today{background:var(--surface-sunken);color:var(--text-2)}
+html[data-v=four] .agenda .day h3.today{color:var(--text)}
+html[data-v=four] .nav.active-accent{background:color-mix(in srgb,var(--text) 10%,var(--surface-raised));color:var(--text)}
+html[data-v=four] .nav.active-accent .ic{color:var(--text)}
+html[data-v=four] .attn a.warn b{color:var(--warning)}
+html[data-v=four] .w .spark i{background:var(--surface-sunken)}
+html[data-v=four] .w .spark i.hi{background:var(--mod)}
+/* desktop-only selection tint in the master list */
+html[data-v=four] .split .list .row.sel-desktop{background:color-mix(in srgb,var(--mod) 10%,var(--surface-raised));margin:0 -16px;padding:4px 16px;border-radius:var(--r-sm)}
+html[data-v=four][data-device=mobile] .split .list .row.sel-desktop{background:transparent;margin:0;padding:4px 0}
+/* finance detail stretches to the KPI edge */
+html[data-v=four] .detail{max-width:none}
+/* overview greeting breathes */
+html[data-v=four] .greet{padding-top:8px}
+/* waits row */
+html[data-v=four] .grp.waits{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+html[data-v=four][data-device=mobile] .grp.waits .meta{flex-basis:100%}

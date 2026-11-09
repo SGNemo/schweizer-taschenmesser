@@ -9,7 +9,7 @@ body{--mod:var(--mod-slate)}
 .w.accounts{--mod:var(--mod-slate)}.w.lists{--mod:var(--mod-orchid)}
 .w.music .pattern,.w.calendar .pattern,.w.weather .pattern{display:none}
 </style></head>
-<body data-active="home" data-area="home">
+<body data-active="home" data-area="home" data-add-label="Neu">
 <div class="app">
 <aside class="sidebar" id="sb"></aside>
 <div class="main">
@@ -27,9 +27,8 @@ body{--mod:var(--mod-slate)}
     <div class="attn">
       <a class="danger" style="--mod:var(--mod-ocean)"><span class="plate" data-i="bill"></span><div><b>2</b><span>Rechnungen offen · Frist vorbei</span></div></a>
       <a class="danger" style="--mod:var(--mod-lime)"><span class="plate" data-i="piggy"></span><div><b>35 €</b><span>Budget „Freizeit“ drüber</span></div></a>
-      <a class="danger" style="--mod:var(--mod-fern)"><span class="plate" data-i="box"></span><div><b>1</b><span>Vorrat abgelaufen</span></div></a>
-      <a class="danger" style="--mod:var(--mod-indigo)"><span class="plate" data-i="files"></span><div><b>3</b><span>Dokumente abgelaufen</span></div></a>
-      <a class="quiet"><span data-i="chevd"></span><div><span>2 weitere · 2 ToDos heute fällig, Garantie endet am Donnerstag</span></div></a>
+      <a style="--mod:var(--mod-moss)"><span class="plate" data-i="todo"></span><div><b>3</b><span>ToDos heute fällig</span></div></a>
+      <a class="quiet"><span data-i="chevd"></span><div><span>2 weitere · 1 Vorrat abgelaufen, 3 Dokumente abgelaufen</span></div></a>
     </div>
   </div>
   <div class="agenda">
@@ -44,22 +43,19 @@ body{--mod:var(--mod-slate)}
       <div class="ev" style="--c:var(--mod-sky)"><span class="t">12:15</span><span class="dt"></span><span class="x">Mittagessen mit Anna</span></div>
       <div class="ev" style="--c:var(--mod-sky)"><span class="t">ganztägig</span><span class="dt"></span><span class="x">Müllabfuhr: Biotonne</span></div></div></div>
     <div class="day"><h3>Diese Woche <small>Do 1. – So 4. Okt</small></h3><div class="tl">
-      <div class="ev" style="--c:var(--mod-indigo)"><span class="t">Do</span><span class="dt"></span><span class="x">Garantie endet: Cloud-Speicher 22</span></div>
+      <div class="ev" style="--c:var(--mod-indigo)"><span class="t">Do</span><span class="dt"></span><span class="x">Garantie endet: Cloud-Speicher</span></div>
       <div class="ev" style="--c:var(--mod-orchid)"><span class="t">Do</span><span class="dt"></span><span class="x">Geschenk für Oma besorgen</span></div>
-      <div class="ev" style="--c:var(--mod-indigo)"><span class="t">Sa</span><span class="dt"></span><span class="x">Internet &amp; Telefon Küstennetz · 39,99 €</span></div>
       <div class="ev" style="--c:var(--mod-sky)"><span class="t">So</span><span class="dt"></span><span class="x">Wochenendausflug</span></div></div></div>
   </div>
   <div class="wgrid">
     <div class="w todos"><div class="wh"><span class="plate" data-i="todo"></span>Heute<span class="chev" data-i="chev"></span></div>
-      <div class="focus"><div class="meta">Als Nächstes</div><b>Urlaubsantrag einreichen</b><div class="meta">Arbeit · etwa 5 Min</div><div class="acts"><a class="btn primary">Anfangen · 5 Min</a><a class="btn ghost">Später</a></div></div>
-      <div class="meta">+ Fenster putzen · Zahnbürsten kaufen · 3 Dinge reichen für heute.</div></div>
+      <div class="focus"><div class="meta">Als Nächstes</div><b>Urlaubsantrag einreichen</b><div class="meta">Arbeit · etwa 5 Min</div><div class="acts"><a class="btn ghost">Anfangen · 5 Min</a><a class="btn ghost">Später</a></div></div>
+      <div class="meta">+ Fenster putzen · Zahnbürsten kaufen · 3 Dinge heute.</div></div>
     <div class="w finance"><div class="wh"><span class="plate" data-i="wallet"></span>Kontostand<span class="chev" data-i="chev"></span></div>
       <div class="big">12.616,33 €</div><div class="ctx">11.598,49 € verfügbar · Ausgaben ▲ 463 € zum Vormonat</div>
       <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:50%"></i><i style="height:62%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:48%"></i><i class="hi" style="height:90%"></i></div></div>
-    <div class="w calendar"><div class="wh"><span class="plate" data-i="cal"></span>Morgen<span class="chev" data-i="chev"></span></div>
-      <div class="tl"><div class="ev"><span class="t">ganztägig</span><span class="dt"></span><span>Müllabfuhr: Biotonne</span></div><div class="ev"><span class="t">12:15</span><span class="dt"></span><span>Mittagessen mit Anna</span></div></div><div class="ctx">2 Einträge · Woche: 4</div></div>
-    <div class="w weather skyw"><span class="sky"><span class="sun"></span><span class="cloud"></span></span><div class="wh"><span class="plate" data-i="sun"></span>Wetter · Bern</div>
-      <div class="skybody"><div class="big thin">14°</div><div class="ctx">leicht bewölkt · ab 15 Uhr Regen · UV 3</div></div></div>
+    <div class="w weather"><div class="wh"><span class="plate" data-i="sun"></span>Wetter · Bern<span class="chev" data-i="chev"></span></div>
+      <div><div class="big thin">14°</div><div class="ctx">leicht bewölkt · ab 15 Uhr Regen · UV 3</div></div></div>
     <div class="w habits"><div class="wh"><span class="plate" data-i="target"></span>Gewohnheiten<span class="chev" data-i="chev"></span></div>
       <div class="rings"><div class="ringl"><div class="ringx" style="--p:38"><span>3</span></div>Wasser</div><div class="ringl"><div class="ringx done"><span data-i="check" style="display:grid"></span></div>Spazieren</div><div class="ringl"><div class="ringx" style="--p:0"><span>·</span></div>Dehnen</div><div class="ringl"><div class="ringx" style="--p:0"><span>·</span></div>Medikament</div></div>
       <div class="ctx">1 von 4 geschafft</div></div>

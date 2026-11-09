@@ -1,7 +1,7 @@
 /**
  * Renders the Identity 4.0 mockups (finanzen, todos, uebersicht) at 1920×1080 and 412×915, light and dark, into
  * web/.screens/ui-audit/mockups/ (gitignored; the images go to the branch shots/ui-audit-2026-11), plus
- * before/after sheets that put the audit screenshot of the same page next to the mockup.
+ * before/after sheets that put the audit screenshot of the same page and view next to the mockup, both cropped to the first screen.
  * Run from web/:  node ../docs/design/ui-audit-2026-11/mockups/render.mjs
  */
 import { createRequire } from 'node:module';
@@ -14,7 +14,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const shots = path.resolve(process.cwd(), '.screens/ui-audit');
 const out = path.join(shots, 'mockups');
 mkdirSync(out, { recursive: true });
-const PAGES = { finanzen: 'page-finance', todos: 'page-todos', uebersicht: 'overview-all' };
+const PAGES = { finanzen: 'page-finance', todos: 'page-todos--v-heute', uebersicht: 'overview-all', 'uebersicht-ruhig': 'overview-calm' };
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
 const files = [];
 for (const [name, before] of Object.entries(PAGES))
@@ -38,7 +38,7 @@ for (const name of Object.keys(PAGES))
     const w = device === 'mobile' ? 412 : 960;
     const html = `<!doctype html><html><body style="margin:0;padding:16px;background:#888;font:600 14px system-ui;color:#fff;display:grid;grid-template-columns:repeat(2,auto);gap:12px 16px;width:max-content">
       <div>heute (Audit-Lauf)</div><div>4.0 Mockup</div>
-      ${rows.map((r) => `<img src="${r.old ? pathToFileURL(r.old).href : ''}" style="display:block;width:${w}px"><img src="${pathToFileURL(r.file).href}" style="display:block;width:${w}px">`).join('')}</body></html>`;
+      ${rows.map((r) => { const hh = Math.round(w * (device === 'mobile' ? 915 / 412 : 1080 / 1920)); const box = (src) => `<div style="width:${w}px;height:${hh}px;overflow:hidden"><img src="${src}" style="display:block;width:${w}px"></div>`; return box(r.old ? pathToFileURL(r.old).href : '') + box(pathToFileURL(r.file).href); }).join('')}</body></html>`;
     const tmp = path.join(out, `sheet-${name}-${device}.html`);
     writeFileSync(tmp, html);
     const ctx = await browser.newContext({ viewport: { width: 400, height: 300 }, deviceScaleFactor: 1 });

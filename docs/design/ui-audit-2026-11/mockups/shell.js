@@ -88,7 +88,7 @@
       ${h.dataset.device === 'mobile' ? '' : `<a class="btn primary">${I.plus}<span class="lbl">Neu</span></a>`}<a class="btn ghost">${I.tools}<span class="lbl">Werkzeuge</span></a><a class="btn ghost icon">${I.bell}</a>`;
   const bn = document.getElementById('bn');
   if (bn)
-    bn.innerHTML = `<a class="${area === 'home' ? 'on-accent' : ''}">${I.home}Übersicht</a><a class="${area === 'plan' ? 'on' : ''}" style="--mod:var(--mod-sky)">${I.cal}Planen</a><a class="${area === 'money' ? 'on' : ''}" style="--mod:var(--mod-teal)">${I.wallet}Geld</a><a class="${area === 'household' ? 'on' : ''}" style="--mod:var(--mod-fern)">${I.box}Haushalt</a><a>${I.more}Mehr</a>`;
+    bn.innerHTML = `<a class="${area === 'home' ? 'on' : ''}" style="--mod:var(--text)">${I.home}Übersicht</a><a class="${area === 'plan' ? 'on' : ''}" style="--mod:var(--mod-sky)">${I.cal}Planen</a><a class="add" aria-label="${document.body.dataset.addLabel || 'Eintragen'}"><span class="plus">${I.plus}</span>${document.body.dataset.addLabel || 'Eintragen'}</a><a class="${area === 'money' ? 'on' : ''}" style="--mod:var(--mod-teal)">${I.wallet}Geld</a><a>${I.more}Mehr</a>`;
   // sub-navigation: the active module's area
   document.querySelectorAll('.subnav[data-area], .modrow[data-area]').forEach((el) => {
     const a = el.dataset.area;
