@@ -10,7 +10,7 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * person needs for them (model: tap 1 s, character 0,25 s on a keyboard / 0,4 s on a phone, screen change 2 s,
  * reading a dialog 3 s, detour 5 s). The last path measures the stimulus load of the planner page (interactive
  * elements, words, rows, scroll length). `MAX` holds the target column of TARGET §4 as remeasured after the
- * packages (2026-11-09; the one miss is named there): no path may get longer. The table lands in
+ * packages (2026-11-09; the misses are named there): no path may get longer. The table lands in
  * `test-results/usecase-kopf-leer.md` and as the attachment `usecase-kopf-leer`.
  *
  * The mail path needs the demo mails of the seed, which only the Dev-Preview flavour has:
@@ -18,9 +18,8 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  *   USECASE_SEED_URL=http://localhost:4174 npx playwright test e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome
  * Without the variable the mail path is skipped (mail is a desktop-only module; the phone never has it). It stays in
  * this file on purpose: one script per use case (docs/design/usecases), and the seed project is a Dev-Preview build.
- * Friction is counted as taps, keys, screens, dialogs and detours (a scroll is not counted; the docs name it where it
- * happens), never assumed away: a later change lowers the
- * numbers instead of breaking the script. Since package 4 the target state of path A (no pile visible, no select,
+ * Friction is counted as taps, keys, screens, dialogs and detours (a scroll is not counted; the docs name it where
+ * it happens), never assumed away: a later change lowers the numbers instead of breaking the script. Since package 4 the target state of path A (no pile visible, no select,
  * no booking, no doubled invoice) and the planner's folded group are asserted directly.
  */
 
@@ -367,10 +366,15 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
           const open = indexedDB.open('taschenmesser');
           open.onerror = () => reject(new Error('IndexedDB taschenmesser'));
           open.onsuccess = () => {
-            const req = open.result
-              .transaction('finance_transaction')
-              .objectStore('finance_transaction')
-              .getAll();
+            let req: IDBRequest;
+            try {
+              req = open.result
+                .transaction('finance_transaction')
+                .objectStore('finance_transaction')
+                .getAll();
+            } catch (e) {
+              return reject(new Error(`store finance_transaction: ${String(e)}`));
+            }
             req.onerror = () => reject(new Error('store finance_transaction'));
             req.onsuccess = () => {
               open.result.close();
@@ -398,13 +402,20 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   // U03: the reminder line must raise the open Stadtwerke invoice, never file a second one (package 2).
   const stadtwerke = await page.evaluate(
     () =>
-      new Promise<number>((resolve) => {
+      new Promise<number>((resolve, reject) => {
         const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(new Error('IndexedDB taschenmesser'));
         open.onsuccess = () => {
-          const req = open.result
-            .transaction('invoices_invoice')
-            .objectStore('invoices_invoice')
-            .getAll();
+          let req: IDBRequest;
+          try {
+            req = open.result
+              .transaction('invoices_invoice')
+              .objectStore('invoices_invoice')
+              .getAll();
+          } catch (e) {
+            return reject(new Error(`store invoices_invoice: ${String(e)}`));
+          }
+          req.onerror = () => reject(new Error('store invoices_invoice'));
           req.onsuccess = () => {
             open.result.close();
             const all = req.result as { payee?: string; deletedAt?: number | null }[];
@@ -513,7 +524,8 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await expect(page.getByText('Rechnung angelegt')).toBeVisible();
   // Is it in the plan? The reply's row says „Im Plan“ (3a); the invoice line says only „angelegt“. While the invoice
   // line's done mark does not say „Im Plan“, the person opens the planner to see it (a counted screen). Only a
-  // positive mark counts – „nicht im Plan“, „war im Plan“ or „im Planer“ never drop the screen.
+  // positive mark counts – „nicht im Plan“, „war im Plan“ or „im Planer“ never drop the screen; it is the capitalised
+  // mark of the mail strings (a lowercase one would still count the screen: stricter, never a false pass).
   const invoiceLine = page
     .getByTestId('mail-invoice-line')
     .filter({ hasText: 'Stadtwerke Musterstadt' });

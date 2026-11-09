@@ -40,7 +40,7 @@ Played on `develop` (`ef3f85e`) in the seeded Dev-Preview flavour (`npm run buil
 | D planner at overload     | PC     | 29 · 508 · 56 · 1 274 px                    | ≤ 13 · ≤ 280 · ≤ 40 · ≤ 700 px               | **13 · 244 · 40 · 549 px** – head „2 Min frei heute“, „Heute: Stadtwerke bezahlen. Das reicht für heute.“ (with a noted reminder: „… bezahlen · Mahnung. …“) and a week bar chart; waiting group folded: „Wartet auf freie Zeit · 16 · Nichts davon muss heute sein.“                           |
 | D planner at overload     | phone  | 20 · 384 · 39 · 1 442 px                    | ≤ 5 · ≤ 200 · ≤ 25 · ≤ 800 px                | **4 · 120 · 23 · 437 px** – same head; the folded line wraps („sein.“ on its own line); the script's data has 16 waiting things on both devices                                                                                                                                                 |
 
-The script's `MAX` and the path D bounds are the target column now; path B keeps its measured 2 screens (named in `docs/STATUS.md`).
+The script's `MAX` and the path D bounds are the target column now; path B keeps its measured 2 screens (named in `docs/STATUS.md`); path A's fold miss is not a script number (see the A rows).
 
 Stimulus on the way (focus checklist 1, seeded home, „Ruhig“ view): the first screen shows six „Jetzt wichtig“ cards, two of them red („2 Rechnungen überfällig · 169,90 €“, „Budget überschritten“), before any field – S7 starts on the home screen. The capture sheet opens over it as a dialog; the pile stays visible around the edges on the PC.
 
