@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { mailThreadUrl } from '@/core/mail/service';
+import { useModuleStates } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
+import { getPlatform } from '@/core/platform';
 import { useFocusSettings } from '@/core/settings/focus';
 import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
@@ -88,6 +92,7 @@ function EditorForm({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [itemText, setItemText] = useState('');
   const [links, setLinks] = useState<TaskLink[]>(task.links ?? []);
+  const states = useModuleStates();
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
   const navigate = useNavigate();
@@ -302,6 +307,13 @@ function EditorForm({
                 <Button
                   variant="ghost"
                   onClick={() => {
+                    // A mail opens in the app where the mail module is (desktop), else on the web.
+                    // While the states load, a desktop with the mail module opens the app (the common case).
+                    if (l.kind === 'mail' && (!getManifest('mail') || states?.mail === false)) {
+                      const url = mailThreadUrl(l.id);
+                      if (url) void getPlatform().app.openUrl(url);
+                      return;
+                    }
                     onClose();
                     void navigate(linkPath(l));
                   }}

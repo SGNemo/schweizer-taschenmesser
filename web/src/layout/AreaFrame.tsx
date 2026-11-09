@@ -19,6 +19,7 @@ import { areaOfPath } from '@/core/modules/areas';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { availableManifests } from '@/core/modules/available';
+import { ModuleIdentityContext } from '@/core/modules/identityContext';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
@@ -241,6 +242,18 @@ export function AreaFrame({
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     writeHeadRoom(roomKey, el.getBoundingClientRect().height / rem);
   }, [figureHold, framed, roomKey]);
+  // Dialogs opened inside the page wear the module's identity in their head (S02, `ui/Dialog`).
+  const dialogIdentity = useMemo(
+    () =>
+      manifest
+        ? {
+            hue: manifest.identity.hue,
+            icon: manifest.icon,
+            signature: manifest.identity.signature,
+          }
+        : undefined,
+    [manifest],
+  );
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
@@ -354,9 +367,12 @@ export function AreaFrame({
               }))}
             />
           ) : null}
-          <PageLoadingContext.Provider value={setPageLoading}>
-            {children}
-          </PageLoadingContext.Provider>
+          {/* The fallback (U01) and the page both sit inside both providers. */}
+          <ModuleIdentityContext.Provider value={dialogIdentity}>
+            <PageLoadingContext.Provider value={setPageLoading}>
+              {children}
+            </PageLoadingContext.Provider>
+          </ModuleIdentityContext.Provider>
         </PageContainer>
       </HeroControlsContext.Provider>
     </HeroContext.Provider>

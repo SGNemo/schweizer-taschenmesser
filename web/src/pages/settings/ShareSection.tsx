@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { downloadTextFile } from '@/core/backup/download';
 import type { RestorePlan } from '@/core/backup/restore';
 import type { Backup } from '@/core/backup/backup';
@@ -23,7 +23,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tShare } from '@/strings.share';
 import { tSettingsConnect } from '@/strings.settingsConnect';
-import { Button, Card, Checkbox, NoReadAid, TextField } from '@/ui';
+import { Button, Card, Checkbox, FileField, NoReadAid, TextField } from '@/ui';
 import { Actions, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
@@ -146,10 +146,10 @@ export function ShareSection() {
     }
   }
 
-  async function onFile(e: ChangeEvent<HTMLInputElement>) {
+  async function onFile(files: FileList) {
     setOpened(undefined);
     setOpenError('');
-    const file = e.target.files?.[0];
+    const file = files[0];
     setText(file ? await file.text() : undefined);
   }
 
@@ -207,19 +207,12 @@ export function ShareSection() {
           </Actions>
         </Step>
         <Step title={n.openTitle} hint={sc.stepOpenHint}>
-          <div>
-            <label htmlFor="share-file" className={styles.legend}>
-              {n.file}
-            </label>
-            <br />
-            <input
-              id="share-file"
-              type="file"
-              accept="application/json,.json"
-              className={styles.file}
-              onChange={(e) => void onFile(e)}
-            />
-          </div>
+          <FileField
+            id="share-file"
+            label={n.file}
+            accept="application/json,.json"
+            onFiles={(files) => void onFile(files)}
+          />
           {scanning ? (
             <QrScanner
               onStop={() => setScanning(false)}

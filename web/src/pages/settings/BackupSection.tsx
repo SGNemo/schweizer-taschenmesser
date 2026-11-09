@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import {
   backupCounts,
   backupFileName,
@@ -26,7 +26,7 @@ import { allManifests } from '@/core/modules/registry';
 import { t } from '@/strings';
 import { tSettingsConnect } from '@/strings.settingsConnect';
 import { useUiStore } from '@/stores/ui';
-import { Button, Card, Dialog, TextField } from '@/ui';
+import { Button, Card, Dialog, FileField, TextField } from '@/ui';
 import { AutoBackupCard } from './AutoBackupCard';
 import { MoveCard } from './MoveCard';
 import { PlanView, VerifyReportView } from './BackupParts';
@@ -102,8 +102,8 @@ export function BackupSection() {
     setError(t.backup.errors[result.reason]);
   }
 
-  async function onFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function onFile(files: FileList) {
+    const file = files[0];
     setText(undefined);
     setPass('');
     reset();
@@ -188,19 +188,12 @@ export function BackupSection() {
             <p className={styles.muted}>{t.backup.plainHint}</p>
           </Step>
           <Step n={2} title={c.stepRestore} hint={c.stepRestoreHint}>
-            <div>
-              <label htmlFor="backup-file" className={styles.legend}>
-                {t.backup.file}
-              </label>
-              <br />
-              <input
-                id="backup-file"
-                type="file"
-                accept="application/json,.json"
-                className={styles.file}
-                onChange={(e) => void onFile(e)}
-              />
-            </div>
+            <FileField
+              id="backup-file"
+              label={t.backup.file}
+              accept="application/json,.json"
+              onFiles={(files) => void onFile(files)}
+            />
             {needPass ? (
               <div className={styles.form}>
                 <TextField

@@ -70,6 +70,10 @@ Highlights of the modules that start with a short line above:
 - **Map & WhatsApp:** events with a location have "Show on map"; for people with a birthday the button opens WhatsApp with a greeting
   (you pick the contact in WhatsApp).
 
+## Mail into the plan (Windows app)
+
+Point at a mail's row and the button “Add to plan” appears (“As to-do” without the planner; on a touch screen: swipe or ⋯). It makes a to-do “sender · subject” that leads back to the mail, and the notice offers an undo; the planner offers “Go to mail” for it. Planning the same mail again adds no second entry (“Already in the plan”); if the to-do was deleted, the notice offers “Plan again”. The filter “Personal” shows only mail from people, and “Add all to plan…” adds the ticked mails of a folder after a preview; both can be switched off in the mail settings.
+
 ## Importing a bank statement
 
 In **Finances** (Settings → Modules → Finances → Set up starter data → _Import bank statement_) choose the file you exported in online banking: **OFX**, **QIF**, **CAMT** or **CSV**. Nothing is uploaded and no login is needed; you see a preview first and can undo the import. Well-known banks (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) are recognised from the file and named in the preview ("Recognised: DKB"). For a CSV the app does not know, you assign the columns date / amount / payee / purpose once; the app remembers it for the next export of that kind. A file imported twice adds nothing new, and a file in another currency is only booked to an account in that currency.

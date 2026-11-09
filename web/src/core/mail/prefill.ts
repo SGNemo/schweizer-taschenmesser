@@ -35,7 +35,9 @@ const EXCERPT_CHARS = 400;
 /** 'YYYY-MM-DD' → '15.11.2026' (a form every language of the parser reads). */
 const dmy = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 const money = (cents: number) => `${Math.floor(cents / 100)},${pad2(cents % 100)} €`;
-const cleanSubject = (s: string) => s.replace(/^\s*((re|aw|fwd|wg):\s*)+/i, '').trim();
+/** The subject without „Re:/AW:/Fwd:/WG:“ prefixes (shared by the prefill and the one-tap plan). */
+export const cleanSubject = (s: string): string =>
+  s.replace(/^\s*((re|aw|fwd|wg):\s*)+/i, '').trim();
 
 /** The mail as plain text (text part, else the HTML stripped), capped. */
 export function mailText(m: Pick<MailMessage, 'text' | 'html'>, limit = 4000): string {
@@ -153,4 +155,21 @@ function mailPrefillFor(
     default:
       return { ...base, text: subject || sender, extra: link ? { note: link } : {} };
   }
+}
+
+/**
+ * Title of a ToDo made from a mail with one tap („Kopf leer“ Q3 a): „<Absendername> · <Betreff>“, „Re:/AW:“
+ * dropped. Never an address: a sender without a display name (or one that is itself an address) gives
+ * the subject alone.
+ */
+export function mailPlanTitle(
+  from: { name?: string; email: string },
+  subject: string,
+  /** Shown when there is neither a name nor a subject (a title is required; never an address). */
+  fallback: string,
+): string {
+  const name = (from.name ?? '').trim();
+  const topic = cleanSubject(subject);
+  const safeName = name && !name.includes('@') ? name : '';
+  return [safeName, topic].filter(Boolean).join(' · ') || fallback;
 }

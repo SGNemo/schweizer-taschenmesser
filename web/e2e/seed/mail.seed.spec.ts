@@ -113,6 +113,56 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
   });
 
+  test('„In den Plan“ from a row: one tap, the row says „im Plan“, the open thread says so too', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const row = page.getByRole('button', {
+      name: /^(In den Plan|Als ToDo): Anna Beispiel · Wochenende\?/,
+    });
+    await row.click();
+    await expect(page.getByText(/^(Im Plan|Als ToDo gespeichert)/).first()).toBeVisible();
+    await expect(page.getByTestId('mail-in-plan').first()).toBeVisible();
+    // No second action anywhere: the row and the open thread both say where it is.
+    await expect(row).toHaveCount(0);
+    await page.getByText('Wochenende?').first().click();
+    await expect(page.getByTestId('mail-plan-thread')).toHaveCount(0);
+    await expect(page.getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
+    // The ToDo carries the way back: a mail link, never an address.
+    await page.goto('/todos');
+    await expect(page.getByText('Anna Beispiel · Wochenende?').first()).toBeVisible();
+  });
+
+  test('filter „Persönlich“ shows people only, without a count; „Alle in den Plan…“ previews first', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const chip = page.getByRole('button', { name: 'Persönlich' });
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('Wochenende?')).toBeVisible();
+    await expect(page.getByText('Ihre Rechnung für Oktober')).toHaveCount(0);
+    await chip.click();
+    await page.getByTestId('mail-plan-all-open').click();
+    const dialog = page.getByRole('dialog');
+    const list = dialog.getByTestId('mail-plan-all');
+    // Personal senders ticked, bulk / invoice senders not; nothing written before the button.
+    await expect(list.getByRole('checkbox', { name: /Anna Beispiel/ })).toBeChecked();
+    await expect(list.getByRole('checkbox', { name: /Stadtwerke/ })).not.toBeChecked();
+    const save = dialog.getByRole('button', { name: /^In den Plan \(\d+\)$/ });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(page.getByText(/Mails im Plan/)).toBeVisible();
+  });
+
+  test('`?open=` opens a known thread and ignores anything else', async ({ page }) => {
+    await page.goto('/mail?open=%3Cimg%20src%3Dx%3E');
+    await expect(page).not.toHaveURL(/open=/);
+    await expect(page).not.toHaveURL(/thread=/);
+    await page.goto('/mail?open=no-such-thread');
+    await expect(page).not.toHaveURL(/thread=/);
+  });
+
   test('from 1200 px folders, list and mail stand side by side; below it the mail replaces the list', async ({
     page,
   }) => {

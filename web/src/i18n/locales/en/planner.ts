@@ -120,6 +120,7 @@ export const planner: Strings['planner'] = {
     due: (day: string) => `Deadline ${day}`,
     dueWas: (day: string) => `Deadline was ${day}`,
     openNote: 'Go to note',
+    openMail: 'Go to mail',
     blocker: 'Blocker',
     focus: 'Start focus',
   },
