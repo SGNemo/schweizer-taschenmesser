@@ -24,6 +24,7 @@ describe('Time tracking widget (U30)', () => {
       date: '2026-11-03',
       startTime: '10:00',
       endTime: '12:00',
+      breakMin: 0,
     });
     render(
       <MemoryRouter>
