@@ -15,9 +15,18 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 | `fix/ui6-modules-knowledge-system` [#596](https://github.com/SGNemo/schweizer-taschenmesser/pull/596) (offen) | U22 · U04 · U37 · U23a · U50 · U33 · U51 · U52 · U38 (geprüft, kein Code) · U11 · U29 · U27b · U53 | review-loop 2 Runden |
 | `fix/ui6-home-settings` [#599](https://github.com/SGNemo/schweizer-taschenmesser/pull/599) (offen) | U19 · U39 · U49 · U03 · U31 · U54 · U55 · U32 | review-loop 2 Runden |
 
-## Nachmessung auf `develop`
+## Nachmessung auf `develop` (ad3e1cd1, nach #590 #591 #592 #594 #595 #598; ohne #596 #599)
 
-Wird nach dem letzten Merge ergänzt (Tour-Zahlen: Primärknöpfe je Ansicht, Rot, abgeschnittene Texte, Wortumbrüche, CLS).
+1920×1080 dunkel, mit und ohne Testdaten (`tools/round6.spec.ts`, `round6-cls.spec.ts`, `round6-setup.spec.ts`), Handy folgt unten.
+
+- **Layout-Sprung (U01):** /invoices 0,009 · /pantry 0,012 · /budgets 0,011 · /people 0,03 (vorher 0,23–0,36); Rest wie in #598 beschrieben: /todos 0,068, /disk 0,13, / 0,146. Einrichtung: ein Primärknopf je Schritt, kein Überlauf.
+- **Primärknöpfe > 1 je Ansicht:** nur noch Downloads („Download hinzufügen“ + „Torrent-Teil einschalten“, U11 → #596) und zwei nicht erfasste Stellen: Finanzen → Verlauf ohne Daten („Buchung“ + „Buchung hinzufügen“), Einstellungen → Sync („Verbinden“ + „Umzug starten“).
+- **Rot:** nur noch „KI abschalten“ und die Gefahrenzone (zerstörende Aktionen, gewollt). U08/U18 bestätigt.
+- **Wortumbruch:** nur „Benachrichtig/ungen“ (U03 → #599).
+- **Abgeschnitten:** Monatszeilen und Ganztags-Chips im Kalender kürzen mit Ellipse (S03/S04, gewollt, Titel im `title`); neu: Finanzen-Kontokarten („Girokonto 3.567,01 € verfügbar …“), Browser-Kopfmarke-Text (U37 → #596).
+- **Kontrast (axe serious):** Kalender-Monat – Uhrzeit (`--text-3`) auf der Fläche eigener Termine (`.lineOwn`) – Regression aus S03, kleiner Fix in `calendar.module.css`; Notizen-Karten-Meta (`.meta`, Bestand).
+- **Raster (U28):** Segment 4 px ✓; der Kopfband-Innenabstand bleibt 36,8 px, weil er aus `--page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem)` kommt (fließend, bei 1920 nicht auf dem 4-px-Raster) – Token-Änderung, `ui/tokens.css` ist tabu → Follow-up.
+- **Übersicht „Alle Widgets“:** Zeilen weiter ungleich hoch (U19 → #599); CLS 0,03.
 
 ## Offen aus den PRs (Follow-ups, je ein kleiner PR)
 
@@ -28,6 +37,7 @@ Wird nach dem letzten Merge ergänzt (Tour-Zahlen: Primärknöpfe je Ansicht, Ro
 - **Einrichtung:** Fußzeile ohne `--kb-inset` (Handy-Tastatur); `e2e/setup.spec.ts` hat `localhost:4173` fest verdrahtet.
 - **Kalender:** „Ablauf · Überfällig“ (per-Art-Wort fehlt), Art „gift“ unübersetzt, Handy-Raster-Oberkante 569 statt ≤ 480 px (braucht Kopfband/Reiter, siehe U41).
 - **Texte:** eingefrorene es/fr/pt-BR behalten alte Kontextzeilen (Feeds-Widget, Zeiterfassung, Benachrichtigungs-Status); ungenutzte Schlüssel (`budgets.ext.head.chip`, `maps.placesBar.navigateTo`, `tMusicPage.libraryTitle`) für die nächste String-Bereinigung.
+- **Neu aus der Nachmessung:** Uhrzeit-Kontrast auf eigenen Monatszeilen (S03), Finanzen → Verlauf und Einstellungen → Sync je zwei Primärknöpfe, Finanzen-Kontokarten kürzen den Text, `--page-gutter` nicht auf dem 4-px-Raster (Token).
 - **Handy-FAB** überdeckt Zeilen-⋯ und Karten-Knöpfe (Abos, Gewohnheiten) – Board-Notiz für `layout/`.
 
 ## Später (unverändert aus PLAN.md)
