@@ -225,14 +225,14 @@ Je Option: **Gesamt · Δ zur Empfehlung** in Chat-Tagen · spürbar für Nutzer
 
 - Jetzt: der Handtest zur Lade-Robustheit (Abschnitt „Lade-Robustheit“, Maßnahme 0, zehn Minuten) – entscheidet, ob 0a-4 sofort folgt.
 - In 0a-1a, bevor der erste Label-pflichtige PR kommt: (a) den `ci.yml`-Patch aus dem PR-Text einspielen (Agenten pushen keine Workflow-Änderungen); (b) ein Ed25519-Schlüsselpaar nur auf deinem Rechner erzeugen, ohne Repo-Skript: `openssl genpkey -algorithm ed25519 -aes256 -out ~/.nemo/ratchet.pem` (Passphrase) und `openssl pkey -in ~/.nemo/ratchet.pem -pubout` – der öffentliche Schlüssel landet als Konstante in `ratchet.mjs` (im 0a-1a-PR, den du selbst prüfst), der private wird gesichert wie der Updater-Key; Deny-Regel `Read(~/.nemo/**)` für lokale Chats; (c) Regel 7 in den `nemo-merge`-Prompt (`nemo-merge.json`) schreiben – Wortlaut in PACKAGE-0 „Vertrauenswurzel“; (d) die lokale Deny-Regel für das Label eintragen (Hygiene); (e) optional, nur du: im `develop`-Ruleset (es sperrt heute schon Löschen, Force-Push und direkte Pushes) den Check `Web (lint, types, unit, E2E)` als Pflicht-Check eintragen – das deckt auch „full send“ und deine eigenen Merges technisch ab (das Tabu „keine Branch-Protection“ gilt für Agenten).
-- Bei jedem Treffer-PR (0a-1a, 0a-1b, V-1, 0b-1, 0b-2, 0b-5, 0b-7, Modul-Pakete bei steigenden Messwerten), auf deinem Rechner im Repo (Git Bash unter Windows), zwei Befehle – immer die `develop`-Fassung des Skripts, nie die des PR-Branches, und kein Repo-Skript fasst den Schlüssel an:
+- Bei jedem Treffer-PR (0a-1b, V-1, 0b-1, 0b-2, 0b-5, 0b-7, Modul-Pakete bei steigenden Messwerten), auf deinem Rechner im Repo (Git Bash unter Windows), zwei Befehle – immer die `develop`-Fassung des Skripts, nie die des PR-Branches, und kein Repo-Skript fasst den Schlüssel an:
 
 ```bash
 git fetch origin develop && git show origin/develop:web/scripts/ratchet.mjs > /tmp/ratchet.mjs && GITHUB_TOKEN=$(gh auth token) node /tmp/ratchet.mjs --pr <n>
 ```
 
 ```bash
-printf '%s' 'stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>' | openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem | base64 -w0
+printf '%s' 'stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>' > /tmp/ratchet-msg && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg | base64 -w0
 ```
 
-  Der erste druckt die Treffer-Tabelle, den Hash, die Nachricht und den zweiten Befehl fertig zum Kopieren; der zweite fragt die Passphrase ab und druckt die Signatur. Kommentar = Nachricht + Leerzeichen + Signatur, als PR-Kommentar posten, Label `stimulus-raise` setzen (nur für CI), dann „Re-run failed jobs“ am CI-Lauf. Nach einem Push mit neuen Treffern dasselbe noch einmal. Schlüsselwechsel: neuer öffentlicher Schlüssel in `ratchet.mjs`, diesen PR mergst du selbst (benannte Ausnahme).
+  Der erste druckt die Treffer-Tabelle, den Hash, die Nachricht und den zweiten Befehl fertig zum Kopieren; der zweite fragt die Passphrase ab und druckt die Signatur (88 Zeichen; die Nachricht geht über eine Datei, weil `openssl` sie bei Ed25519 nicht von stdin liest). Den 0a-1a-PR selbst gibst du nach eigener Prüfung frei – dafür gibt es noch keine `develop`-Fassung (PACKAGE-0 „Bootstrap“). Kommentar = Nachricht + Leerzeichen + Signatur, als PR-Kommentar posten, Label `stimulus-raise` setzen (nur für CI), dann „Re-run failed jobs“ am CI-Lauf. Nach einem Push mit neuen Treffern dasselbe noch einmal. Schlüsselwechsel: neuer öffentlicher Schlüssel in `ratchet.mjs`, diesen PR mergst du selbst (benannte Ausnahme).
