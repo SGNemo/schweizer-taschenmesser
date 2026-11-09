@@ -11,7 +11,15 @@ import { setNow } from '@/core/time/now';
 import { captureId } from '@/quickCapture/targets';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { planMail, planMailId, planMany, plannedThreads, safeThreadId } from '../planMail';
+import {
+  deletedThreads,
+  fromOf,
+  planMail,
+  planMailId,
+  planMany,
+  plannedThreads,
+  safeThreadId,
+} from '../planMail';
 import { linkRepo } from '../repo';
 
 // „Kopf leer“ 3a: one tap from a mail into the plan. Invented data.
@@ -70,6 +78,25 @@ describe('ids and titles', () => {
   });
 });
 
+describe('words and the other party', () => {
+  it('the thread view takes the newest message not from this account, else the first', () => {
+    const me = { name: 'Ich', email: 'ME@example.org' };
+    const msgs = [{ from: anna.from }, { from: me }];
+    expect(fromOf(account, msgs)).toEqual(anna.from);
+    expect(fromOf(account, [{ from: me }])).toEqual(me);
+  });
+
+  it('planner off: the undo/again words say „ToDo“, never „Plan“', async () => {
+    await planMail(account, anna, () => undefined);
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
+    expect(await deletedThreads(['t-anna', 't-x'])).toEqual(new Set(['t-anna']));
+    await planMail(account, anna, () => undefined);
+    expect(lastToast()?.message).toBe(t.mail.plan.todo.was);
+    expect(lastToast()?.action?.label).toBe(t.mail.plan.todo.reinstate);
+  });
+});
+
 describe('planMail', () => {
   it('one tap: a ToDo with title, 15 minutes, the way back; no address or account key anywhere', async () => {
     await planMail(account, anna, () => undefined);
@@ -86,7 +113,7 @@ describe('planMail', () => {
     await planMail(account, anna, () => undefined);
     await planMail(other, anna, () => undefined);
     expect(await live('todos_task')).toHaveLength(1);
-    expect(lastToast()?.message).toBe(t.mail.plan.already);
+    expect(lastToast()?.message).toBe(t.mail.plan.alreadyTodo);
     expect(lastToast()?.action).toBeUndefined();
     // Each account key keeps its own link row (device-local); the entry is shared.
     expect((await live('mail_link')).map((r) => r.accountKey).sort()).toEqual([
@@ -100,7 +127,7 @@ describe('planMail', () => {
     lastToast()!.action!.run();
     await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
     await planMail(account, anna, () => undefined);
-    expect(lastToast()?.message).toBe(t.mail.plan.was);
+    expect(lastToast()?.message).toBe(t.mail.plan.todo.was);
     lastToast()!.action!.run();
     await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(1));
     expect((await live('todos_task'))[0]!.id).toBe(await planMailId('t-anna'));
@@ -130,9 +157,9 @@ describe('planMany', () => {
     await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
     await planMany(account, [anna], () => undefined);
     expect((await live('todos_task')).map((x) => x.title)).toEqual(['Anna Beispiel · Wochenende?']);
-    expect(lastToast()?.message).toBe(t.mail.plan.allDone(1));
+    expect(lastToast()?.message).toBe(t.mail.plan.todo.allDone(1));
     await planMany(account, [anna], () => undefined);
-    expect(lastToast()?.message).toBe(t.mail.plan.already);
+    expect(lastToast()?.message).toBe(t.mail.plan.alreadyTodo);
     expect(lastToast()?.action).toBeUndefined();
   });
 
@@ -143,7 +170,7 @@ describe('planMany', () => {
     const tasks = await live('todos_task');
     expect(tasks.map((x) => x.title).sort()).toEqual(['Anna Beispiel · Wochenende?', 'Unterlagen']);
     expect(tasks.find((x) => x.id === before.id)!.updatedAt).toBe(before.updatedAt);
-    expect(lastToast()?.message).toBe(t.mail.plan.allDone(1));
+    expect(lastToast()?.message).toBe(t.mail.plan.todo.allDone(1));
     lastToast()!.action!.run();
     await vi.waitFor(async () =>
       expect((await live('todos_task')).map((x) => x.title)).toEqual([

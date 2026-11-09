@@ -41,15 +41,26 @@ export interface PlanThread {
 export const planMailId = async (threadId: string): Promise<string> =>
   `mail-${await captureId([threadId, 'todo'])}`;
 
-/** The fields of the ToDo: title, 15 minutes, a soft due date when the subject names one, the way back. */
+const own = (account: MailAccountRef, from: MailAddress): boolean =>
+  !!account.email && from.email.toLowerCase() === account.email.toLowerCase();
+
 /** The other party: the account's own address never names the ToDo (a reply of one's own gives the subject). */
 const otherParty = (account: MailAccountRef, from: MailAddress): MailAddress =>
-  account.email && from.email.toLowerCase() === account.email.toLowerCase() ? { email: '' } : from;
+  own(account, from) ? { email: '' } : from;
+
+/**
+ * The sender a thread is planned under: the newest message not written from this account, else the
+ * first. The list keeps only the newest sender; `otherParty` then drops one's own name.
+ */
+export function fromOf(account: MailAccountRef, messages: readonly { from: MailAddress }[]) {
+  return ([...messages].reverse().find((m) => !own(account, m.from)) ?? messages[0]!).from;
+}
 
 /** The title the ToDo gets (the preview shows exactly this). */
 export const planTitle = (account: MailAccountRef, th: PlanThread): string =>
   mailPlanTitle(otherParty(account, th.from), th.subject, t.mail.page.noSubject);
 
+/** The fields of the ToDo: title, 15 minutes, a soft due date when the subject names one, the way back. */
 export function planFields(account: MailAccountRef, th: PlanThread) {
   const subject = cleanSubject(th.subject);
   const read = subject ? parseCapture(subject, { now: new Date(now()) }).fields : undefined;
@@ -79,10 +90,49 @@ export async function plannedThreads(accountKey: string): Promise<Set<string>> {
     .toArray();
   const todos = getManifest('todos');
   if (!todos) return new Set();
-  const repo = createCollectionRepo(todos, 'task');
-  const out = new Set<string>();
-  for (const r of rows) if (await repo.get(r.entryId)) out.add(r.threadId);
-  return out;
+  const tasks = await createCollectionRepo(todos, 'task').table.bulkGet(rows.map((r) => r.entryId));
+  return new Set(rows.filter((_, i) => tasks[i]?.deletedAt === null).map((r) => r.threadId));
+}
+
+/**
+ * Threads whose ToDo from a mail was deleted (on this device or synced from another): the preview marks
+ * them „war im Plan“ and leaves them unticked; only an explicit tick brings the entry back.
+ */
+export async function deletedThreads(threadIds: readonly string[]): Promise<Set<string>> {
+  const todos = getManifest('todos');
+  if (!todos || threadIds.length === 0) return new Set();
+  const ids = await Promise.all(threadIds.map((id) => planMailId(id)));
+  const rows = await createCollectionRepo(todos, 'task').table.bulkGet(ids);
+  return new Set(threadIds.filter((_, i) => rows[i] && rows[i]!.deletedAt !== null));
+}
+
+/** The words for one mode: the planner on („im Plan“) or off (a plain ToDo). */
+export const planWords = (type: 'plan' | 'todo') =>
+  type === 'plan'
+    ? {
+        already: t.mail.plan.already,
+        was: t.mail.plan.was,
+        reinstate: t.mail.plan.reinstate,
+        allDone: t.mail.plan.allDone,
+      }
+    : {
+        already: t.mail.plan.alreadyTodo,
+        was: t.mail.plan.todo.was,
+        reinstate: t.mail.plan.todo.reinstate,
+        allDone: t.mail.plan.todo.allDone,
+      };
+
+/**
+ * Brings a deleted entry back. A ToDo saved while the planner was off has no plan row: then the ToDo
+ * comes back alone (the planner reads ToDos anyway); never half of a two-stage entry.
+ */
+async function reinstate(type: 'plan' | 'todo', id: string): Promise<SavedCapture> {
+  try {
+    return await reinstateCapture(type, id);
+  } catch (e) {
+    if (type !== 'plan') throw e;
+    return reinstateCapture('todo', id);
+  }
 }
 
 /** Writes this device's link row once (another device's entry may already exist after sync). */
@@ -128,6 +178,7 @@ export async function planMail(
   const toast = useUiStore.getState().toast;
   const type = await planType();
   if (!type) return void toast(t.mail.plan.failed);
+  const words = planWords(type);
   try {
     const id = await planMailId(th.id);
     const saved = await saveCapture(type, planFields(account, th), { id });
@@ -136,22 +187,26 @@ export async function planMail(
       onChanged();
       // „Schon im Plan“ only when it is in the plan; a ToDo from before the planner was on says so.
       return void toast(
-        type === 'plan' && !(await inPlan(saved.id))
-          ? t.mail.plan.alreadyTodo
-          : t.mail.plan.already,
+        type === 'plan' && !(await inPlan(saved.id)) ? t.mail.plan.alreadyTodo : words.already,
       );
     }
     if (saved.existed === 'tombstone') {
-      return void toast(t.mail.plan.was, {
-        label: t.mail.plan.reinstate,
+      return void toast(words.was, {
+        label: words.reinstate,
         run: () =>
           void (async () => {
             try {
-              const back = await reinstateCapture(type, id);
+              const back = await reinstate(type, id);
               const link = await linkOnce(account, th.id, back);
               onChanged();
               const again = type === 'plan' ? await plannedDay(back.id) : undefined;
-              toast(again ? t.mail.plan.planned(dayName(again)) : t.mail.plan.plannedNoDay, {
+              const said =
+                type === 'todo'
+                  ? t.mail.plan.savedTodo
+                  : again
+                    ? t.mail.plan.planned(dayName(again))
+                    : t.mail.plan.plannedNoDay;
+              toast(said, {
                 label: t.mail.write.undo,
                 run: () => void undoPlan(back, link, onChanged),
               });
@@ -186,7 +241,9 @@ async function undoPlan(saved: SavedCapture, link: string | undefined, onChanged
 
 /**
  * „Alle in den Plan…“ after the preview: only the ticked threads, one id per mail; an entry that is
- * already there is skipped and never touched. One undo takes back what this tap wrote.
+ * already there is skipped and never touched; a deleted one comes back only when it was ticked while
+ * marked „war im Plan“. All or nothing: a failure takes back everything this tap wrote or brought back.
+ * One undo takes back what this tap did.
  */
 export async function planMany(
   account: MailAccountRef,
@@ -196,20 +253,21 @@ export async function planMany(
   const toast = useUiStore.getState().toast;
   const type = await planType();
   if (!type || threads.length === 0) return;
+  const words = planWords(type);
+  const items: CaptureItem[] = [];
+  for (const th of threads)
+    items.push({ type, fields: planFields(account, th), id: await planMailId(th.id) });
+  let saved: SavedCapture | undefined;
+  const revived: SavedCapture[] = [];
   try {
-    const items: CaptureItem[] = [];
-    for (const th of threads)
-      items.push({ type, fields: planFields(account, th), id: await planMailId(th.id) });
-    const saved = await saveCaptures(items, '');
+    saved = await saveCaptures(items, '');
     const todos = getManifest('todos');
     const taskRepo = todos ? createCollectionRepo(todos, 'task') : undefined;
-    // A ticked mail whose ToDo was deleted before: ticked after a preview, so it comes back.
-    const revived: SavedCapture[] = [];
     for (const item of items) {
       const row = taskRepo ? await taskRepo.table.get(item.id!) : undefined;
-      if (row && row.deletedAt !== null) revived.push(await reinstateCapture(type, item.id!));
+      if (row && row.deletedAt !== null) revived.push(await reinstate(type, item.id!));
     }
-    // Link rows for every mail whose ToDo is live now (written, revived or already there).
+    // Link rows for every mail whose ToDo is live now (written, brought back or already there).
     const links: string[] = [];
     for (let i = 0; i < threads.length; i++) {
       if (!taskRepo || !(await taskRepo.get(items[i]!.id!))) continue;
@@ -224,12 +282,13 @@ export async function planMany(
     }
     onChanged();
     const added = (saved.count ?? 0) + revived.length;
-    if (added === 0) return void toast(t.mail.plan.already);
-    toast(t.mail.plan.allDone(added), {
+    if (added === 0) return void toast(words.already);
+    const done = saved;
+    toast(words.allDone(added), {
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
-          await saved.undo();
+          await done.undo();
           for (const r of revived) await r.undo();
           for (const l of links) await linkRepo.remove(l);
           onChanged();
@@ -237,6 +296,9 @@ export async function planMany(
         })(),
     });
   } catch {
+    // All or nothing: what this tap wrote or brought back goes again.
+    await Promise.allSettled([saved?.undo(), ...revived.map((r) => r.undo())]);
+    onChanged();
     toast(t.mail.plan.failed);
   }
 }

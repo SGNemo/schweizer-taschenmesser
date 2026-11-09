@@ -7165,7 +7165,7 @@ export const de = {
         'Aus. Wenn an, kann das lokale Modell (das eingebaute oder Ollama auf diesem Rechner) eine Mail zusammenfassen und Vorschläge für „Aus dieser Mail anlegen“ machen. Der Mailtext geht nie an ein Cloud-Modell und nie ins Netz; ist kein lokales Modell bereit, passiert nichts. Nichts davon wird gespeichert.',
       offerPersonal: 'Filter „Persönlich“ anbieten',
       offerPersonalHelp:
-        'Zeigt nur Mails von Menschen – keine Newsletter, Werbung oder Benachrichtigungen.',
+        'Zeigt nur Mails, die meist von Menschen kommen – Newsletter, Werbung und Benachrichtigungen bleiben weg.',
       offerPlanAll: '„Alle in den Plan…“ anbieten',
       offerPlanAllHelp:
         'Ein Knopf über der Liste legt die angehakten Mails mit Vorschau als ToDos in den Plan.',
@@ -7179,6 +7179,21 @@ export const de = {
       savedTodo: 'Als ToDo gespeichert',
       already: 'Schon im Plan',
       alreadyTodo: 'Schon als ToDo da',
+      /** The same moments while the planner is off: the mail becomes a plain ToDo. */
+      todo: {
+        was: 'War als ToDo da',
+        reinstate: 'Wieder anlegen',
+        mark: 'als ToDo',
+        all: 'Alle als ToDo…',
+        allTitle: 'Als ToDo',
+        allSave: (n: number) => `Als ToDo (${n})`,
+        allDone: (n: number) => (n === 1 ? '1 Mail als ToDo' : `${n} Mails als ToDo`),
+        thread: 'Als ToDo da',
+      },
+      wasMark: 'war im Plan',
+      thread: 'Im Plan',
+      emptyPersonal: 'Hier sind gerade keine Mails von Menschen.',
+      clearPersonal: 'Alle Mails zeigen',
       was: 'War im Plan',
       reinstate: 'Wieder einplanen',
       mark: 'im Plan',

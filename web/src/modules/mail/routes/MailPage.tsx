@@ -38,7 +38,14 @@ import { hasFeature } from '@/core/mail/service';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { InboxHead } from '../components/InboxHead';
 import { PlanAllDialog } from '../components/PlanAllDialog';
-import { planMail, planMany, plannedThreads, planTitle, safeThreadId } from '../planMail';
+import {
+  deletedThreads,
+  planMail,
+  planMany,
+  plannedThreads,
+  planTitle,
+  safeThreadId,
+} from '../planMail';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -108,7 +115,8 @@ function ThreadList({
                 <span className={styles.meta}>
                   {planned.has(th.id) ? (
                     <span className={styles.planMark} data-testid="mail-in-plan">
-                      {t.mail.plan.mark} ·{' '}
+                      {planLabel === t.mail.plan.action ? t.mail.plan.mark : t.mail.plan.todo.mark}{' '}
+                      ·{' '}
                     </span>
                   ) : null}
                   {shortWhen(th.date)}
@@ -177,6 +185,8 @@ export default function MailPage() {
       [account?.key],
     ) ?? new Set<string>();
   const [planAll, setPlanAll] = useState(false);
+  // Read when the preview opens: which listed mails had a ToDo that was deleted since.
+  const [deleted, setDeleted] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState(query);
   const [seenQuery, setSeenQuery] = useState(query);
   if (seenQuery !== query) {
@@ -214,6 +224,8 @@ export default function MailPage() {
   const offerPlanAll = (prefs as { offerPlanAll?: boolean } | undefined)?.offerPlanAll ?? true;
   const shown =
     personalOnly && offerPersonal ? box.threads.filter((th) => th.personal) : box.threads;
+  // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
+  const filteredOut = personalOnly && offerPersonal && box.threads.length > 0;
 
   // `?open=<threadId>` (a link back from a ToDo or the planner) is untrusted: a plain id, and only a
   // thread this account has in its cache, is opened; anything else is dropped without a request.
@@ -461,10 +473,15 @@ export default function MailPage() {
           {offerPlanAll && onPlan && shown.length > 0 ? (
             <Button
               variant="ghost"
-              onClick={() => setPlanAll(true)}
+              onClick={() =>
+                void deletedThreads(shown.map((th) => th.id)).then((d) => {
+                  setDeleted(d);
+                  setPlanAll(true);
+                })
+              }
               data-testid="mail-plan-all-open"
             >
-              {t.mail.plan.all}
+              {states?.planner ? t.mail.plan.all : t.mail.plan.todo.all}
             </Button>
           ) : null}
         </div>
@@ -474,6 +491,8 @@ export default function MailPage() {
           threads={shown}
           titleOf={(th) => planTitle(account, th)}
           planned={planned}
+          deleted={deleted}
+          plannerOn={!!states?.planner}
           onClose={() => setPlanAll(false)}
           onPlan={(picked) => {
             setPlanAll(false);
@@ -489,10 +508,20 @@ export default function MailPage() {
         <Skeleton height="10rem" />
       ) : shown.length === 0 && !box.error ? (
         <EmptyState
-          title={query ? t.mail.page.emptySearch : t.mail.page.empty}
+          title={
+            query
+              ? t.mail.page.emptySearch
+              : filteredOut
+                ? t.mail.plan.emptyPersonal
+                : t.mail.page.empty
+          }
           testId="mail-empty"
           motif={<SignatureMark id="stamp" size={64} />}
-        />
+        >
+          {filteredOut ? (
+            <Button onClick={() => update({ personal: null })}>{t.mail.plan.clearPersonal}</Button>
+          ) : null}
+        </EmptyState>
       ) : (
         <ThreadList
           threads={shown}

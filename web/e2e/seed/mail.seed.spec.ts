@@ -113,7 +113,7 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
   });
 
-  test('„In den Plan“ from a row: one tap, the row says „im Plan“, a second tap finds it', async ({
+  test('„In den Plan“ from a row: one tap, the row says „im Plan“, the open thread says so too', async ({
     page,
   }) => {
     await page.goto('/mail');
@@ -123,11 +123,11 @@ test.describe('mail (demo mails)', () => {
     await row.click();
     await expect(page.getByText(/^(Im Plan|Als ToDo gespeichert)/).first()).toBeVisible();
     await expect(page.getByTestId('mail-in-plan').first()).toBeVisible();
-    // The row offers no second action; the thread view finds the existing entry.
+    // No second action anywhere: the row and the open thread both say where it is.
     await expect(row).toHaveCount(0);
     await page.getByText('Wochenende?').first().click();
-    await page.getByTestId('mail-plan-thread').click();
-    await expect(page.getByText('Schon im Plan')).toBeVisible();
+    await expect(page.getByTestId('mail-plan-thread')).toHaveCount(0);
+    await expect(page.getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
     // The ToDo carries the way back: a mail link, never an address.
     await page.goto('/todos');
     await expect(page.getByText('Anna Beispiel · Wochenende?').first()).toBeVisible();

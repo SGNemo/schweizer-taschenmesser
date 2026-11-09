@@ -31,7 +31,8 @@ export const mail: Strings['mail'] = {
     localAiHelp:
       'Off. When on, the local model (the built-in one or Ollama on this computer) can summarise a mail and make suggestions for “Create from this mail”. The mail text never goes to a cloud model or onto the network; if no local model is ready, nothing happens. None of it is stored.',
     offerPersonal: 'Offer the filter “Personal”',
-    offerPersonalHelp: 'Shows only mail from people – no newsletters, promotions or notifications.',
+    offerPersonalHelp:
+      'Shows mail that mostly comes from people – newsletters, promotions and notifications stay out.',
     offerPlanAll: 'Offer “Add all to plan…”',
     offerPlanAllHelp:
       'A button above the list adds the ticked mails to the plan as to-dos, with a preview.',
@@ -45,6 +46,20 @@ export const mail: Strings['mail'] = {
     savedTodo: 'Saved as to-do',
     already: 'Already in the plan',
     alreadyTodo: 'Already a to-do',
+    todo: {
+      was: 'Was a to-do',
+      reinstate: 'Add again',
+      mark: 'as to-do',
+      all: 'Add all as to-dos…',
+      allTitle: 'As to-do',
+      allSave: (n: number) => `As to-do (${n})`,
+      allDone: (n: number) => (n === 1 ? '1 mail as to-do' : `${n} mails as to-dos`),
+      thread: 'A to-do already',
+    },
+    wasMark: 'was in the plan',
+    thread: 'In the plan',
+    emptyPersonal: 'No mail from people here right now.',
+    clearPersonal: 'Show all mail',
     was: 'Was in the plan',
     reinstate: 'Plan again',
     mark: 'in the plan',

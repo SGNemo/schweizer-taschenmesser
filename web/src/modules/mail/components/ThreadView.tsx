@@ -17,7 +17,7 @@ import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
 import { useModuleStates } from '@/core/modules/activation';
-import { planMail, plannedThreads } from '../planMail';
+import { fromOf, planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
@@ -352,7 +352,7 @@ export function ThreadView({
         {states?.todos && messages?.length ? (
           planned?.has(threadId) ? (
             <span className={styles.planMark} data-testid="mail-in-plan">
-              {t.mail.plan.mark}
+              {states.planner ? t.mail.plan.thread : t.mail.plan.todo.thread}
             </span>
           ) : (
             <Button
@@ -362,16 +362,7 @@ export function ThreadView({
                   account,
                   {
                     id: threadId,
-                    // The other party: the newest message not written from this account, else the first.
-                    from: (
-                      [...messages]
-                        .reverse()
-                        .find(
-                          (m) =>
-                            !account.email ||
-                            m.from.email.toLowerCase() !== account.email.toLowerCase(),
-                        ) ?? messages[0]!
-                    ).from,
+                    from: fromOf(account, messages),
                     subject: messages[0]!.subject,
                   },
                   onChanged,
