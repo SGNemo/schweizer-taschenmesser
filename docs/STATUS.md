@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Browser friert Windows-App ein (`fix/browser-webview-breaks-app`, PR offen): Tab-Webview wurde in einem synchronen Befehl auf dem Hauptthread angelegt (WebView2-Deadlock) – danach blieben alle anderen Modulseiten bei „…“; jetzt `async`, Zeitlimit 15 s, Fehlerzustand im Rahmen mit „Im Systembrowser öffnen“.
 UI schärfen Runde 6 (`docs/qa/round-6`, 8 Fix-PRs `fix/ui6-*`, alle gemergt: #590 ui, #591 Planen, #592 Haushalt & Geld, #594 Kalender-Ansichten, #595 Kalender klein, #596 Wissen/System, #598 Layout, #599 Übersicht/Einstellungen): Stand je Fund, Nachmessung und Follow-ups in [qa/round-6/STATUS.md](qa/round-6/STATUS.md); offen: Entscheidung zur leeren Übersicht (springt 0,18 je Laden), U41 Kopfbandhöhen als eigenes Paket, Follow-up-Sammel-PR.
 Modul Uhr, Paket 1 (`feat/clock-module`, PR offen): Orte eintragen (offline suchen, Tippfehler ok, Stadt de/en oder Zeitzone), Uhrzeit groß mit „morgen · +8 h“ und Tag/Nacht als Wort, Widget 2/4/6 Orte, Umbenennen, Sortieren, „uhr Tokio“ in der Schnellerfassung; Klick auf die Uhr neben dem Logo öffnet das Modul (preview, aus).
 Uhrzeit neben dem Logo (`feat/sidebar-clock`, PR offen): Sidebar-Kopf rechts der Wortmarke, eingeklappt „14“/„07“ unter dem Zeichen, Handy-Topbar nur mit Schalter; Einstellung Darstellung → „Uhrzeit neben dem Logo“ (Desktop-App an, Android/PWA aus).

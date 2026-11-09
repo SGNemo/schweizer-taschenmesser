@@ -7541,6 +7541,15 @@ export const de = {
     },
     hint: 'Kein vollwertiger Browser. Für Online-Banking den Systembrowser nutzen.',
     hintClose: 'Hinweis ausblenden',
+    failed: {
+      title: (reason: string) => `Seite konnte nicht geladen werden: ${reason}`,
+      timeout: 'Das Seitenfenster hat nicht rechtzeitig geantwortet',
+      address: 'Diese Adresse kann der eingebaute Browser nicht öffnen',
+      native: 'Das Seitenfenster ließ sich nicht anlegen',
+      body: 'Der Rest von Nemo ist davon nicht betroffen.',
+      openSystem: 'Im Systembrowser öffnen',
+      retry: 'Noch einmal versuchen',
+    },
     tabs: {
       title: 'Offene Tabs',
       openAll: 'Alle Tabs anzeigen',

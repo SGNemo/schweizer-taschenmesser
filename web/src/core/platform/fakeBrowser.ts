@@ -1,7 +1,7 @@
 /**
  * E2E stand-in for the native browser tabs (only wired in `--mode e2e` builds). No real page is
  * loaded: it answers navigations with url/title events and records what the UI asked for on
- * `window.__tmBrowserCalls`, so specs can assert on it. Addresses are example.org-style test data.
+ * `window.__tmBrowserCalls`, so specs can assert on it. An address containing `fail-test` fails to open. Addresses are example.org-style test data.
  */
 import type { BrowserEvent, BrowserService } from './browser';
 
@@ -30,6 +30,8 @@ export function createFakeBrowser(): BrowserService {
     async open(o, onEvent) {
       sinks.set(o.tab, onEvent);
       log(`open:${o.tab}:${o.privateTab ? 'private' : 'normal'}:${o.url}`);
+      // The native side could not create the tab's webview (what Windows did when the command hung).
+      if (o.url.includes('fail-test')) throw new Error('webview');
       if (o.url.startsWith('http://') && !o.allowHttp) {
         onEvent({ event: 'httpHeld', tab: o.tab, url: o.url });
         return;
