@@ -58,7 +58,7 @@
 
   // modules: id, icon, label, hue, area
   const MODS = {
-    plan: [['calendar','cal','Kalender','sky'],['todos','todo','ToDos','moss'],['habits','target','Gewohnheiten','violet'],['timetrack','clock','Zeiterfassung','teal'],['weather','sun','Wetter','cobalt'],['maps','map','Karten &amp; Orte','ocean'],['people','people','Personen','orchid'],['planner','grid','Planer','lime']],
+    plan: [['calendar','cal','Kalender','sky'],['planner','grid','Planer','lime'],['todos','todo','ToDos','moss'],['habits','target','Gewohnheiten','violet'],['timetrack','clock','Zeiterfassung','teal'],['weather','sun','Wetter','cobalt'],['maps','map','Karten &amp; Orte','ocean'],['people','people','Personen','orchid']],
     money: [['finance','wallet','Finanzen','teal'],['invoices','bill','Rechnungen','ocean'],['subscriptions','repeat','Abos','indigo'],['budgets','piggy','Budgets','lime']],
     household: [['lists','cart','Listen','orchid'],['pantry','box','Vorräte','fern'],['fitness','target','Fitness','ocean']],
     knowledge: [['bookmarks','bookmark','Merkliste','indigo'],['notes','note','Notizen','violet'],['chat','spark','Chat','sky'],['browser','globe','Browser','cobalt'],['mail','mail','E-Mail','teal'],['music','music','Musik','orchid'],['feeds','note','Feeds','lime']],

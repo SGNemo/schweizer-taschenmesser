@@ -195,3 +195,18 @@ html[data-v=four] body[data-reading] .head{text-align:initial}
 html[data-v=four][data-device=mobile] .kpiline{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.5}
 html[data-v=four][data-device=mobile] .label{bottom:70px;top:auto;right:8px;opacity:.6}
 html[data-v=four] .reading{width:100%}
+
+/* round-12: widgets take the height of their content (masonry columns, no stretched rows); Ruhig: greeting, strip and
+   today card share the reading column; the mockup label sits over the bottom bar on the phone, never over content */
+html[data-v=four] .wgrid{display:block;columns:4;column-gap:16px}
+html[data-v=four] .w{grid-row:auto;break-inside:avoid;margin-bottom:16px}
+html[data-v=four][data-device=mobile] .wgrid{columns:1}
+html[data-v=four][data-device=mobile] .w{margin-bottom:10px}
+html[data-v=four] .reading .attn{grid-template-columns:repeat(4,minmax(0,1fr))}
+html[data-v=four] .reading > .greet{width:100%}
+html[data-v=four][data-device=mobile] .label{bottom:4px;right:8px;top:auto;opacity:.85;pointer-events:none;z-index:30}
+/* round-12: the phone label lives in its own 16-px strip below the bottom bar (like a gesture bar), never over content */
+html[data-v=four][data-device=mobile] body{padding-bottom:16px}
+html[data-v=four][data-device=mobile] .bottomnav{bottom:16px}
+html[data-v=four][data-device=mobile] .label{left:0;right:0;bottom:0;top:auto;height:16px;line-height:16px;padding:0;border-radius:0;text-align:center;font-size:.625rem;opacity:1}
+html[data-v=four] .reading.calm{display:flex;flex-direction:column;gap:var(--s5)}
