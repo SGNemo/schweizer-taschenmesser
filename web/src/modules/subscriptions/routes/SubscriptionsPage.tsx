@@ -44,8 +44,6 @@ import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
-/** Highlight a cancellation deadline that is closer than this many days. */
-
 export default function SubscriptionsPage() {
   const day = today();
   const subs = useLiveQuery(

@@ -55,6 +55,10 @@
   min-width: 9rem;
   text-align: center;
 }
+/* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
+.monthLabel::first-letter {
+  text-transform: uppercase;
+}
 /* A budget card on the page: a flap in the corner and a fill level that rises from the bottom (decoration; numbers are text). */
 .envelope {
   position: relative;

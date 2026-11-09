@@ -5097,6 +5097,7 @@ export const de = {
     needFinance: 'Budgets brauchen das Modul „Finanzen“.',
     needFinanceHint:
       'Aktiviere es in der Modul-Bibliothek – die Ausgaben je Kategorie kommen von dort.',
+    month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',

@@ -17,7 +17,7 @@ async function addItem(page: Page, name: string, count: string, min: string) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-test('everything that runs low goes to the shopping list with one click; the home widget shows it', async ({
+test('everything that runs low goes to the shopping list from the ⋯ menu; the home widget shows it', async ({
   page,
 }) => {
   await enable(page, 'pantry');

@@ -282,6 +282,14 @@ export default function MapsPage() {
     void requireNotice('maps').then(() => setReady(true));
   }, [tab, ready]);
 
+  // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered.
+  const [focusSearch, setFocusSearch] = useState(false);
+  useEffect(() => {
+    if (!focusSearch || tab !== 'map' || !searchInput.current) return;
+    searchInput.current.focus();
+    setFocusSearch(false);
+  }, [focusSearch, tab]);
+
   // `?new=1` (Quick-Add): the map tab with the search field ready.
   useEffect(() => {
     if (!params.get('new')) return;
@@ -531,7 +539,7 @@ export default function MapsPage() {
   /** "Ort hinzufügen": places come from the map (search or a tap), so it opens the map with the search ready. */
   const addPlace = () => {
     setTab('map');
-    requestAnimationFrame(() => searchInput.current?.focus());
+    setFocusSearch(true);
   };
   const placeMenu = (p: Stored<Place>): RowMenuItem[] => [
     // "Navigieren" moved from every row into the menu (U14); a swipe to the right keeps it one gesture.

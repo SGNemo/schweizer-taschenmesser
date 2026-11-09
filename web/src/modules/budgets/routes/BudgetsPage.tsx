@@ -155,7 +155,12 @@ export default function BudgetsPage() {
             <>
               {/* Month navigation grouped like in Finanzen: ‹ month › side by side (U44). The fullest budgets are in
                   the head and on the cards; no third copy as chips. */}
-              <div className={styles.monthNav} data-testid="budget-month-nav">
+              <div
+                className={styles.monthNav}
+                role="group"
+                aria-label={t.budgets.month}
+                data-testid="budget-month-nav"
+              >
                 <IconButton
                   label={t.budgets.prevMonth}
                   onClick={() => setMonth(addMonthsToMonth(month, -1))}
