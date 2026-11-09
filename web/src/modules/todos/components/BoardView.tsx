@@ -14,7 +14,7 @@ interface Props {
   tasks: StoredTask[];
   day: string;
   onOpen: (task: StoredTask) => void;
-  /** Moves a card into a column (drag, the "⋯" menu, or "Morgen"). */
+  /** Moves a card into a column (drag, the "⋯" menu, or "Auf morgen"). */
   onMove: (task: StoredTask, to: TodoView) => void;
   onTomorrow: (task: StoredTask) => void;
   /** The planner module is on: a day it gave a thing decides the column (`viewOf`). */
@@ -69,6 +69,7 @@ export function BoardView({ tasks, day, onOpen, onMove, onTomorrow, planner = fa
                   key={task.id}
                   task={task}
                   view={view}
+                  day={day}
                   onOpen={onOpen}
                   onMove={onMove}
                   onTomorrow={onTomorrow}
@@ -86,6 +87,7 @@ export function BoardView({ tasks, day, onOpen, onMove, onTomorrow, planner = fa
 function Card({
   task,
   view,
+  day,
   onOpen,
   onMove,
   onTomorrow,
@@ -93,6 +95,7 @@ function Card({
 }: {
   task: StoredTask;
   view: TodoView;
+  day: string;
   onDragStart: (id: string) => void;
   onOpen: Props['onOpen'];
   onMove: Props['onMove'];
@@ -118,7 +121,12 @@ function Card({
         {task.title}
       </button>
       <span className={styles.cardMeta}>
-        {task.dueDate ? formatDay(task.dueDate, 'EEE, d. MMM') : null}
+        {/* U48: a passed date says so (a planner-placed card can sit in "Demnächst" with it). */}
+        {task.dueDate
+          ? task.dueDate < day && !task.done
+            ? t.todos.board.wasDue(formatDay(task.dueDate, 'EEE, d. MMM'))
+            : formatDay(task.dueDate, 'EEE, d. MMM')
+          : null}
         {task.estimateMin ? ` · ${t.todos.estimateMin(task.estimateMin)}` : null}
         {task.tags?.length ? ` · ${task.tags.map((x) => `#${x}`).join(' ')}` : null}
       </span>

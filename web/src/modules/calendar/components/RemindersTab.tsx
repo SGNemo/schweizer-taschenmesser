@@ -1,7 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { SignatureMark } from '@/ui/identity';
+import { HeroSlot, SignatureMark } from '@/ui/identity';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
+import { useFocusSettings } from '@/core/settings/focus';
+import { useHeroTargets } from '@/core/shell/heroContext';
 import { getPlatform } from '@/core/platform';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -28,8 +31,9 @@ import { groupReminders } from '../reminderGroups';
 import { isActive, isReminder, nextOccurrenceAt, reminderStatus } from '../reminders';
 import { eventRepo } from '../repo';
 import styles from '../routes/reminders.module.css';
+import calendarStyles from '../routes/calendar.module.css';
 import { settings } from '../settings';
-import { BellRing } from './BellRing';
+import { BellRing, HORIZON_MINUTES } from './BellRing';
 import { EventEditor, type EventTarget } from './EventEditor';
 
 /** Pause or resume the notification; the reminder stays in the list (undoable). */
@@ -153,6 +157,11 @@ export function RemindersTab({
   const [target, setTarget] = useState<EventTarget>(null);
   const defaultTime = (prefs as { defaultReminderTime?: string } | undefined)?.defaultReminderTime;
   const permission = getPlatform().notifications.permission();
+  const [focus] = useFocusSettings();
+  // U17: like the calendar tab, a wide page names the next reminder in the head's figure line, so the head keeps its
+  // height when the tab changes; a phone, "time to next" off or a page without a head keeps the ring in the list.
+  const wide = usePageWidthAtLeast(40) !== false;
+  const inHead = !!useHeroTargets()?.figure && wide && focus.timeToNext;
 
   const draft: EventTarget = {
     draft: {
@@ -177,7 +186,18 @@ export function RemindersTab({
         </Button>
       </div>
 
-      {reminders && reminders.length > 0 ? <BellRing minutesUntilNext={minutesUntilNext} /> : null}
+      {reminders && inHead ? (
+        <HeroSlot area="figure">
+          <p className={calendarStyles.nextLine} data-testid="reminders-next">
+            {minutesUntilNext !== null && minutesUntilNext <= HORIZON_MINUTES
+              ? t.calendar.reminders.ringLabel(t.calendar.reminders.ringIn(minutesUntilNext))
+              : t.calendar.reminders.ringNone}
+          </p>
+        </HeroSlot>
+      ) : null}
+      {reminders && reminders.length > 0 && !inHead ? (
+        <BellRing minutesUntilNext={minutesUntilNext} />
+      ) : null}
 
       {permission !== 'granted' && permission !== 'unsupported' ? (
         <div className={styles.banner} role="note">

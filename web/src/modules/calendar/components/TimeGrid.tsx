@@ -248,7 +248,14 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
             ))}
           </div>
         ) : null}
-        <div className={styles.tgBody} ref={bodyRef}>
+        {/* It scrolls, so the keyboard must reach it (U35, WCAG 2.1.1). */}
+        <div
+          className={styles.tgBody}
+          ref={bodyRef}
+          role="region"
+          aria-label={t.calendar.hoursRegion}
+          tabIndex={0}
+        >
           <div className={styles.tgHours} aria-hidden="true">
             {HOURS.map((h) => (
               <span key={h}>{`${String(h).padStart(2, '0')}:00`}</span>

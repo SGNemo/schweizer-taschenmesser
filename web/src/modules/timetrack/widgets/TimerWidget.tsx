@@ -53,11 +53,11 @@ export default function TimerWidget() {
   const first = data.jobs[0]!;
   return (
     <>
+      {/* U30: the figure is today's total; one context line says what it is and that nothing runs. */}
       <KpiWidget
         loading={false}
-        label={t.timetrack.widgetText.idle}
         value={stopwatch(total * 60, false)}
-        context={t.timetrack.todayTotal(duration(total))}
+        context={t.timetrack.widgetText.idle}
       />
       <Button
         size="sm"

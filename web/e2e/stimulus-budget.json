@@ -258,11 +258,11 @@
       "firstScreenActions": 23
     },
     "phone--todos": {
-      "height": 4262,
-      "buttons": 111,
-      "links": 14,
-      "icons": 60,
-      "firstScreenActions": 35
+      "height": 3830,
+      "buttons": 103,
+      "links": 15,
+      "icons": 61,
+      "firstScreenActions": 39
     },
     "phone--vault": {
       "height": 5745,

@@ -135,6 +135,34 @@ describe('ToDos board', () => {
   });
 });
 
+describe('ToDos board wording (U48)', () => {
+  it('names a passed due date as passed and gives the card button a verb', async () => {
+    await taskRepo.create({ ...base, title: 'Recherche', dueDate: '2026-11-01' });
+    draw('/todos?view=board');
+    const card = (await screen.findByText('Recherche')).closest('li')!;
+    expect(card).toHaveTextContent('war am So., 1. Nov. fällig');
+    expect(within(card).getByRole('button', { name: 'Auf morgen' })).toBeVisible();
+  });
+
+  it('keeps a coming due date as a plain date', async () => {
+    await taskRepo.create({ ...base, title: 'Bald', dueDate: '2026-11-10' });
+    draw('/todos?view=board');
+    const card = (await screen.findByText('Bald')).closest('li')!;
+    expect(card).toHaveTextContent('Di., 10. Nov.');
+    expect(card).not.toHaveTextContent('war am');
+  });
+});
+
+describe('ToDos empty page (U26)', () => {
+  it('offers one next step that puts the cursor into the add field', async () => {
+    draw('/todos');
+    const empty = await screen.findByTestId('todos-empty');
+    expect(empty).toHaveTextContent('Nichts zu tun – gut so.');
+    await userEvent.click(within(empty).getByRole('button', { name: 'Eine Sache eintragen' }));
+    expect(screen.getByRole('textbox', { name: 'ToDo hinzufügen' })).toHaveFocus();
+  });
+});
+
 describe('ToDos board drag and drop', () => {
   it('drops a card onto another column', async () => {
     const task = await taskRepo.create({ ...base, title: 'Ziehkarte' });

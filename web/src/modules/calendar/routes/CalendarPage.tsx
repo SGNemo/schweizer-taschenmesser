@@ -219,7 +219,7 @@ export default function CalendarPage() {
         </Button>
         <StartDataMenu moduleId="calendar" items={[advancedItem]} />
       </PageHeader>
-      <NextEventLine onAdd={() => setTarget({ draft: { startDate: date } })} />
+      <NextEventLine />
       <NowStrip modules={['calendar']} />
 
       <PersonFilter usedIds={(items ?? []).flatMap((i) => (i.personId ? [i.personId] : []))} />

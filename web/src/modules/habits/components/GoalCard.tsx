@@ -111,8 +111,9 @@ export function GoalCard({
       </div>
       <div className={styles.actions}>
         {isCount ? (
+          // U09: a card action is a quiet everyday tap; the page head keeps the one filled button.
           <Button
-            variant="primary"
+            variant="secondary"
             size="sm"
             aria-label={t.habits.today.plusFor(goal.name)}
             onClick={() => {
@@ -124,7 +125,7 @@ export function GoalCard({
           </Button>
         ) : (
           <Button
-            variant={count >= 1 ? 'secondary' : 'primary'}
+            variant="secondary"
             size="sm"
             aria-pressed={count >= 1}
             aria-label={`${goal.name}: ${t.habits.today.markDone}`}

@@ -121,6 +121,16 @@ function TaskRow({
     label: t.focus.next.later,
     onSelect: () => postpone(task, day),
   };
+  // U21: on the phone the row's "Auf heute" button gives way to the title; the menu always offers it.
+  const todayItem: RowMenuItem[] = waiting
+    ? [
+        {
+          id: 'today',
+          label: t.todos.moveToday,
+          onSelect: () => moveDue(task, presetDate('today', day)),
+        },
+      ]
+    : [];
   const dueMenu: RowMenuItem[] = DATE_PRESETS.map((p) => ({
     id: `due-${p}`,
     group: t.todos.due,
@@ -148,14 +158,15 @@ function TaskRow({
       title={task.title}
       done={task.done}
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
-      className={sub ? styles.sub : undefined}
+      // U02: an open subtask under a done parent keeps its plain title (see `.subOpen`).
+      className={sub ? `${styles.sub} ${task.done ? '' : styles.subOpen}` : undefined}
       onOpen={() => onOpen(task)}
       onSwipeRight={() => onToggle(task, !task.done)}
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
       onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
       swipeLeftLabel={t.focus.next.later}
       menu={[
-        ...(task.done ? [] : [laterItem, ...dueMenu]),
+        ...(task.done ? [] : [...todayItem, laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
           id: 'duplicate',
@@ -183,6 +194,7 @@ function TaskRow({
           <Button
             variant="ghost"
             size="sm"
+            className={styles.rowQuick}
             onClick={() => moveDue(task, presetDate('today', day))}
             data-testid="move-today"
           >
@@ -192,6 +204,7 @@ function TaskRow({
           <Button
             variant="ghost"
             size="sm"
+            className={styles.rowQuick}
             onClick={() => postpone(task, day)}
             data-testid="move-tomorrow"
           >
@@ -775,7 +788,15 @@ export default function TodosPage() {
               title={t.todos.empty}
               testId="todos-empty"
               motif={<SignatureMark id="todayCard" size={64} />}
-            />
+            >
+              {/* U26: one next step – the add field above takes the first thing. */}
+              <Button
+                onClick={() => addRef.current?.querySelector('input')?.focus()}
+                data-testid="todos-empty-add"
+              >
+                {t.todos.emptyAction}
+              </Button>
+            </EmptyState>
           ) : null}
           {pageView === 'board' ? (
             <BoardView
