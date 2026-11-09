@@ -31,6 +31,7 @@ export function StatusHead({ title }: { title: string }) {
                 className={styles.tile}
                 data-testid={tile.testId}
                 data-attention={tile.attention}
+                data-generic={tile.generic || undefined}
               >
                 <span className={styles.name}>
                   <Icon name={tile.icon} />

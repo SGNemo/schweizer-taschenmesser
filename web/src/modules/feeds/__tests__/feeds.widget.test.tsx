@@ -26,12 +26,20 @@ describe('feeds widget', () => {
     );
   });
 
-  it('shows the number of feeds with the number of groups as context', async () => {
+  it('shows the number of feeds; the context names the groups and does not repeat the number', async () => {
     await feedRepo.create({ title: 'A', url: 'https://a.example/f', category: 'Nachrichten' });
     await feedRepo.create({ title: 'B', url: 'https://b.example/f', category: 'Nachrichten' });
     await feedRepo.create({ title: 'C', url: 'https://c.example/f', category: '' });
     view();
     expect(await screen.findByText('3')).toBeInTheDocument();
-    expect(screen.getByText('3 Feeds · 1 Gruppe')).toBeInTheDocument();
+    expect(screen.getByText('aus 1 Gruppe')).toBeInTheDocument();
+    expect(screen.queryByText(/3 Feeds/)).toBeNull();
+  });
+
+  it('says so calmly when no feed has a group', async () => {
+    await feedRepo.create({ title: 'A', url: 'https://a.example/f', category: '' });
+    view();
+    expect(await screen.findByText('1')).toBeInTheDocument();
+    expect(screen.getByText('ohne Gruppen')).toBeInTheDocument();
   });
 });
