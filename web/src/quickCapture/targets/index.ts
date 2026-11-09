@@ -5,7 +5,7 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { today } from '@/core/time/now';
 import type { CaptureFields, CaptureType } from '../parser';
-import { TARGETS } from './adapters';
+import { planItemKey, TARGETS } from './adapters';
 import {
   CaptureError,
   type CaptureRef,
@@ -20,7 +20,6 @@ export type { CaptureRef, CaptureTarget, CaptureVia, OpenInvoice, SavedCapture }
 // `findOpenInvoice` lives in `./lookup` and is loaded on demand (only reminder lines need it).
 export type { InvoiceLookup } from './lookup';
 export { TARGETS, planItemKey } from './adapters';
-import { planItemKey } from './adapters';
 
 export interface SaveOptions {
   database?: TaschenmesserDB;
@@ -213,7 +212,8 @@ export async function amendCapture(
 
 /**
  * The first day from today the planner placed an entry on (its assignments), or undefined: not placed (yet),
- * waiting, or the planner off. The key is `planItemKey` (the plan target's `via.id` uses it too), so callers never build it. Dexie
+ * waiting, or the planner off. The key is `planItemKey` (the plan target's `via.id` uses it too), so callers
+ * never build it. Dexie
  * reads only (safe in a live query): a mail row can say „Im Plan · Mi“ the moment the planner placed it.
  */
 export async function plannedOn(

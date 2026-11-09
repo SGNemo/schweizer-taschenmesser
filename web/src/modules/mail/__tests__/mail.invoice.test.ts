@@ -399,3 +399,26 @@ describe('Nachlese: the row says where the invoice is', () => {
     expect(await offerOf(bill)).toMatchObject({ planned: '2026-10-01' });
   });
 });
+
+describe('Nachlese, council round 2', () => {
+  it('„Anlegen“ never brings back other values a sheet wrote under the row id: the shown values go into a new invoice', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8340,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ amountMinor: 8430, dueDate: '2026-10-15' });
+    expect(rows[0]!.id).not.toBe(id);
+  });
+});

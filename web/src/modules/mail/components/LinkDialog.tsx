@@ -4,13 +4,11 @@ import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
 import { today } from '@/core/time/now';
 import type { SavedCapture } from '@/quickCapture/targets';
-import { createCollectionRepo } from '@/core/db/repo';
-import { getManifest } from '@/core/modules/registry';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
-import { invoiceMailId } from '../invoiceRow';
+import { sheetInvoiceId } from '../invoiceRow';
 import { saveLink } from '../links';
 import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
@@ -48,14 +46,9 @@ export function LinkDialog({
   const [invoiceId, setInvoiceId] = useState<{ message: string; id?: string }>();
   useEffect(() => {
     let alive = true;
-    void (async () => {
-      const id = await invoiceMailId(message.id);
-      const invoices = getManifest('invoices');
-      const row = invoices
-        ? await createCollectionRepo(invoices, 'invoice').table.get(id)
-        : undefined;
-      if (alive) setInvoiceId({ message: message.id, ...(row?.deletedAt != null ? {} : { id }) });
-    })();
+    void sheetInvoiceId(message.id).then(
+      (id) => alive && setInvoiceId({ message: message.id, ...(id ? { id } : {}) }),
+    );
     return () => {
       alive = false;
     };

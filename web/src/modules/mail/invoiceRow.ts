@@ -217,6 +217,33 @@ async function filedMessages(
   );
 }
 
+/** A deleted invoice under the row's id still holds the row's payee, amount and due day. */
+async function holdsRead(id: string, read: InvoiceRead): Promise<boolean> {
+  const row = (await invoicesRepo()?.table.get(id)) as
+    { payee?: string; amountMinor?: number; dueDate?: string } | undefined;
+  return (
+    !!row &&
+    row.payee === read.payee &&
+    row.amountMinor === read.amountMinor &&
+    row.dueDate === read.date
+  );
+}
+
+/**
+ * The id the capture sheet saves an invoice from this message under: the row's id, unless a deleted invoice
+ * sits there (bringing it back would write its old values, not the sheet's). Never throws: without an id the
+ * sheet saves under its own (the row counts it through the link).
+ */
+export async function sheetInvoiceId(messageId: string): Promise<string | undefined> {
+  try {
+    const id = await invoiceMailId(messageId);
+    const row = await invoicesRepo()?.table.get(id);
+    return row?.deletedAt != null ? undefined : id;
+  } catch {
+    return undefined;
+  }
+}
+
 /** The capture fields of a reminder: payee, new amount and deadline, level and the mail's day. */
 function reminderFields(read: InvoiceRead) {
   return {
@@ -305,24 +332,26 @@ export async function createInvoice(
   const { read } = offer;
   const note =
     account.key === DEMO_ACCOUNT ? undefined : mailWebUrl(account, th.id, { forStorage: true });
+  const fields = {
+    title: read.payee,
+    amountMinor: read.amountMinor,
+    date: read.date,
+    ...(read.dunning ? { dunning: { level: read.dunning, date: read.mailDate } } : {}),
+    ...(note ? { note } : {}),
+  };
   try {
-    let saved = await saveCapture(
-      'invoice',
-      {
-        title: read.payee,
-        amountMinor: read.amountMinor,
-        date: read.date,
-        ...(read.dunning ? { dunning: { level: read.dunning, date: read.mailDate } } : {}),
-        ...(note ? { note } : {}),
-      },
-      { id: offer.id },
-    );
+    let saved = await saveCapture('invoice', fields, { id: offer.id });
     if (saved.existed === true) {
       await linkOnce(account, th, saved);
       onChanged();
       return void toast(t.mail.invoice.already);
     }
-    if (saved.existed === 'tombstone') saved = await reinstateCapture('invoice', offer.id);
+    // Deleted before: the same invoice comes back only while it holds exactly what the row shows (the sheet
+    // may have written corrected values under this id); otherwise the row's values go into a new invoice.
+    if (saved.existed === 'tombstone')
+      saved = (await holdsRead(offer.id, read))
+        ? await reinstateCapture('invoice', offer.id)
+        : await saveCapture('invoice', fields);
     const link = await linkOnce(account, th, saved);
     onChanged();
     const done = saved;

@@ -410,6 +410,14 @@ export function CaptureForm({
     };
   };
 
+  // A fixed id (`idFor`) is a wish, never a reason to lose what the sheet shows: when an entry under it was
+  // deleted meanwhile, nothing is brought back – the shown values are saved under a new id.
+  const saveWithId = async (ty: CaptureType, f: CaptureFields, confirmed: boolean) => {
+    const id = idFor?.[ty];
+    const saved = await saveCapture(ty, f, { confirmed, ...(id ? { id } : {}) });
+    return id && saved.existed === 'tombstone' ? saveCapture(ty, f, { confirmed }) : saved;
+  };
+
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
   const save = async (confirmed: boolean) => {
     if (busy || (!multi && !type)) return;
@@ -420,10 +428,7 @@ export function CaptureForm({
           ? await saveCaptures(await batchItems(), text)
           : isReminder(resolved.type, singleFields)
             ? await saveItem(await singleItem())
-            : await saveCapture(type!, fields, {
-                confirmed,
-                ...(idFor?.[type!] ? { id: idFor[type!] } : {}),
-              }),
+            : await saveWithId(type!, fields, confirmed),
       );
       setText('');
       if (keepDraft) clearCaptureDraft();
