@@ -64,6 +64,15 @@ describe('PageLoadingCard', () => {
     expect(inPlace).toHaveBeenCalledTimes(2);
   });
 
+  it('offers no button offline when nothing can be tried in place: the text is the next step', () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    render(<PageLoadingCard />);
+    expect(screen.getByTestId('page-loading-card')).toHaveTextContent('wieder online');
+    expect(screen.queryByRole('button')).toBeNull();
+    act(() => void window.dispatchEvent(new Event('online')));
+    expect(screen.getByRole('button', { name: 'Neu laden' })).toBeInTheDocument();
+  });
+
   it('warns about unsaved input only while a form draft is alive', () => {
     const first = render(<PageLoadingCard />);
     expect(screen.queryByText('Ungespeicherte Eingaben gehen verloren.')).toBeNull();

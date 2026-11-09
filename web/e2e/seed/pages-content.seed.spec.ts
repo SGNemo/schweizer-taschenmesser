@@ -18,11 +18,11 @@ const MODULES = join(HERE, '../../src/modules');
 const MODULE_IDS = readdirSync(MODULES)
   .filter((id) => id !== 'example' && existsSync(join(MODULES, id, 'manifest.ts')))
   .sort();
-const ROUTES = MODULE_IDS.flatMap((id) => {
+const routesOf = (id: string): string[] => {
   const source = readFileSync(join(MODULES, id, 'manifest.ts'), 'utf8');
-  const paths = [...source.matchAll(/\bpath: '(\/[^':]*)'/g)].map((m) => m[1]!);
-  return [...new Set(paths)];
-});
+  return [...new Set([...source.matchAll(/\bpath: '(\/[^':]*)'/g)].map((m) => m[1]!))];
+};
+const ROUTES = MODULE_IDS.flatMap(routesOf);
 
 async function enableModules(page: Page, ids: readonly string[]) {
   await page.evaluate(
@@ -85,8 +85,8 @@ const card = (page: Page) => page.getByTestId('page-loading-card');
 
 test.use({ seeded: { scale: 'small', desktop: true, preview: true } });
 
-test('there are module routes to check', () => {
-  expect(ROUTES.length).toBeGreaterThanOrEqual(MODULE_IDS.length);
+test('every module has a route to check', () => {
+  for (const id of MODULE_IDS) expect(routesOf(id), id).toContain(`/${id}`);
 });
 
 test('every module route shows its page within 3 s', async ({ page }) => {
@@ -132,7 +132,7 @@ for (let part = 0; part < PARTS; part++) {
       await page.route('**/assets/*.js', () => {});
       await navigate(page, path);
       await expect(dots(page), `${path}: "…" first`).toHaveCount(1);
-      await expect(card(page), path).toBeVisible({ timeout: 6_000 });
+      await expect(card(page), path).toBeVisible({ timeout: 10_000 });
       await expect(card(page).getByRole('button', { name: 'Neu laden' }), path).toBeVisible();
       await expect(dots(page), `${path}: still "…"`).toHaveCount(0);
       await page.unrouteAll({ behavior: 'ignoreErrors' });

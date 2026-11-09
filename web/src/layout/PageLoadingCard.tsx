@@ -15,7 +15,6 @@ export const PAGE_STUCK_MS = 15_000;
 /** An import that never arrived: the browser's wording for a failed dynamic import, or Vite's preload error. */
 export function isLoadError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  if (error.name === 'ChunkUnavailable') return true;
   return /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(
     error.message,
   );
@@ -57,10 +56,13 @@ export function PageLoadingCard({ onRetryInPlace }: { onRetryInPlace?: () => voi
     <div className={styles.wrap}>
       <div className={styles.card} role="status" data-testid="page-loading-card">
         <p className={styles.text}>{offline ? offlineText : texts.still}</p>
-        <Button size="sm" onClick={() => retryPage(onRetryInPlace)}>
-          {t.actions.reload}
-        </Button>
-        {hasDrafts() ? <p className={styles.hint}>{texts.drafts}</p> : null}
+        {/* Offline a reload is not offered; without something to try in place the text is the next step. */}
+        {!offline || onRetryInPlace ? (
+          <Button size="sm" onClick={() => retryPage(onRetryInPlace)}>
+            {t.actions.reload}
+          </Button>
+        ) : null}
+        {!offline && hasDrafts() ? <p className={styles.hint}>{texts.drafts}</p> : null}
       </div>
     </div>
   );

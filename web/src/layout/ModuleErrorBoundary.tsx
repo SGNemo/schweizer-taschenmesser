@@ -7,7 +7,9 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { useLang } from '@/core/i18n/lang';
 import { tDiag } from '@/strings.diagnostics';
 import { useUiStore } from '@/stores/ui';
+import { tLoading } from '@/strings.loading';
 import { Button, Card } from '@/ui';
+import { hasDrafts } from '@/ui/useFormDraft';
 import { isLoadError, PageLoadingCard, retryPage } from './PageLoadingCard';
 
 interface Props {
@@ -53,6 +55,7 @@ class Boundary extends Component<Props & { onDisable: () => void; lang: string }
     return (
       <Card title={d.title(this.props.manifest.name)} role="alert" data-testid="module-error">
         <p>{d.body}</p>
+        {navigator.onLine && hasDrafts() ? <p>{tLoading.get().drafts}</p> : null}
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Button variant="primary" onClick={() => retryPage(inPlace)}>
             {d.retry}
