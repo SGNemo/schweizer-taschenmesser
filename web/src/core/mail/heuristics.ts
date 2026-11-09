@@ -235,11 +235,12 @@ export function analyzeMessage(m: MailMeta): MailFinding | undefined {
 
 /** „Mahnung“, „2. Mahnung“, „Zahlungserinnerung“, „Zahlungsaufforderung“ (the words of the parser). */
 const DUNNING =
-  /(?<![\p{L}\p{N}])(?:([1-3])\.\s*)?(mahnung|zahlungserinnerung|zahlungsaufforderung)(?![\p{L}\p{N}])/iu;
+  /(?<![\p{L}\p{N}])(?:(\d)\.\s*)?(mahnung|zahlungserinnerung|zahlungsaufforderung)(?![\p{L}\p{N}])/iu;
 /** The level of a payment reminder named in the text („2. Mahnung“ → 2, „Zahlungserinnerung“ → 1). */
 export function dunningOf(text: string): number | undefined {
   const m = DUNNING.exec(text);
-  return m ? (m[1] ? Number(m[1]) : 1) : undefined;
+  // Levels above 3 („4. Mahnung“) are the highest level the invoices know.
+  return m ? Math.min(3, Math.max(1, m[1] ? Number(m[1]) : 1)) : undefined;
 }
 
 /** The amount is collected by the payee: nothing to pay or plan. */

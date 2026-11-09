@@ -339,4 +339,36 @@ describe('council round 3', () => {
     await link('l-same', 'm-0b', 'same');
     expect(await offerOf(bill)).toMatchObject({ kind: 'create', state: 'live' });
   });
+
+  it('„Anlegen“, undone, then filed through the sheet: „angelegt“, never the deleted one back', async () => {
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live()).toHaveLength(0));
+    await invoices().createMany([
+      {
+        id: 'sheet',
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8340,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await link('l-sheet', 'm-1', 'sheet');
+    expect(await offerOf(bill)).toMatchObject({ kind: 'create', state: 'live' });
+  });
+
+  it('„4. Mahnung“ is the highest level the invoices know', () => {
+    expect(
+      readInvoiceMail({
+        id: 'm',
+        from: 'Stadtwerke Musterstadt <x@example.org>',
+        subject: '4. Mahnung',
+        snippet: 'Bitte zahlen Sie 99,00 EUR bis 13.10.',
+        dateMs: at('2026-09-28'),
+        bulk: false,
+      })?.dunning,
+    ).toBe(3);
+  });
 });

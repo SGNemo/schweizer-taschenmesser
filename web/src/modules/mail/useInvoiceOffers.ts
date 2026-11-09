@@ -23,7 +23,8 @@ export function useInvoiceOffers(
         ? threads
             .map((th) => {
               const wrote = th.labelIds.includes('SENT') || th.labelIds.includes('DRAFT');
-              return `${th.id}:${th.lastMessageId ?? ''}:${wrote ? 1 : 0}`;
+              // Subject and preview too: the values a tap writes are read from them.
+              return `${th.id}:${th.lastMessageId ?? ''}:${wrote ? 1 : 0}:${th.subject}:${th.snippet}`;
             })
             .join('|')
         : '',

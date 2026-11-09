@@ -119,6 +119,12 @@ export async function invoiceOffers(
       continue;
     }
     const mine = own[i];
+    // „Anlegen“, undone, then filed through the sheet: the sheet's invoice counts; the deleted one stays
+    // deleted (a tap would bring it back beside the corrected one).
+    if (mine && mine.deletedAt !== null && filed.has(th.lastMessageId!)) {
+      out.set(th.id, { kind: 'create', read, id, state: 'live' });
+      continue;
+    }
     if (mine) {
       out.set(th.id, {
         kind: 'create',
@@ -159,7 +165,8 @@ async function filedMessages(
 ): Promise<Set<string>> {
   // The newest message; for an invoice (not a reminder) also another message of its thread – the sheet links
   // the message that was open – but only when that invoice has the row's amount and due day: a thread of
-  // monthly bills („Ihre Rechnung ist da“) must still offer next month's.
+  // monthly bills („Ihre Rechnung ist da“) must still offer next month's. Known limit: values corrected in
+  // the sheet do not match, so that row offers „Anlegen“ again.
   const byMessage = new Set(rows.map((x) => x.th.lastMessageId!));
   const byThread = new Set(rows.filter((x) => !x.read.dunning).map((x) => x.th.id));
   const links = await linkRepo
@@ -181,6 +188,7 @@ async function filedMessages(
         (x) =>
           byMsg.has(x.th.lastMessageId!) ||
           (!x.read.dunning &&
+            x.read.sure &&
             live.some(
               ({ link, row }) =>
                 link.threadId === x.th.id &&
