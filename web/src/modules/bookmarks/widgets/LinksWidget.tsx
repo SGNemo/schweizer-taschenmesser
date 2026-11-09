@@ -19,16 +19,18 @@ export default function LinksWidget() {
   const links = data?.links;
   return (
     <>
-      <TileGrid
-        loading={!links}
-        empty={t.bookmarks.linksWidgetEmpty}
-        emptyAction={{ label: t.bookmarks.addLink, to: '/bookmarks?view=links' }}
-        entries={(links ?? []).map((l) => ({
-          key: l.id,
-          label: l.title,
-          onOpen: () => void getPlatform().app.openUrl(l.url!),
-        }))}
-      />
+      <div className={styles.tiles}>
+        <TileGrid
+          loading={!links}
+          empty={t.bookmarks.linksWidgetEmpty}
+          emptyAction={{ label: t.bookmarks.addLink, to: '/bookmarks?view=links' }}
+          entries={(links ?? []).map((l) => ({
+            key: l.id,
+            label: l.title,
+            onOpen: () => void getPlatform().app.openUrl(l.url!),
+          }))}
+        />
+      </div>
       {links && links.length > 0 ? (
         <p className={styles.context}>{t.bookmarks.linksContext(links.length, data.groups)}</p>
       ) : null}

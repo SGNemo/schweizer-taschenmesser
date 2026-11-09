@@ -98,7 +98,7 @@ function ModulesCard() {
 export function SettingsOverview() {
   const o = tSettings2.use().overview;
   return (
-    <section aria-label={o.title} data-testid="settings-overview">
+    <section aria-label={o.title} data-testid="settings-overview" className={styles.wrap}>
       <ul className={styles.grid}>
         <LookCard />
         <NotificationsCard />

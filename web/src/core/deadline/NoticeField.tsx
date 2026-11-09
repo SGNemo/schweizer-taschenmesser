@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { tDeadline } from '@/strings.deadline';
 import { SelectField, TextField } from '@/ui';
 import {
@@ -34,6 +34,7 @@ export function NoticeField({
   label?: string;
 }) {
   const s = tDeadline.use();
+  const hintId = useId();
   const storedMonths = days === undefined ? undefined : noticeMonthsOf({ days, months });
   const initial =
     days === undefined
@@ -47,39 +48,45 @@ export function NoticeField({
     const v = noticeFromInput(t, u, max);
     onChange(v?.days, v?.months);
   };
+  // The hint belongs to amount and unit together: it sits under the row, so both fields keep one height (U27b).
   return (
-    <div className={styles.row}>
-      <div className={styles.amount}>
-        <TextField
-          label={label ?? s.noticeLabel}
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={text}
-          hint={s.hint}
-          onChange={(e) => {
-            setText(e.target.value);
-            emit(e.target.value, unit);
-          }}
-        />
+    <div className={styles.field}>
+      <div className={styles.row} data-notice-row>
+        <div className={styles.amount}>
+          <TextField
+            label={label ?? s.noticeLabel}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={text}
+            aria-describedby={hintId}
+            onChange={(e) => {
+              setText(e.target.value);
+              emit(e.target.value, unit);
+            }}
+          />
+        </div>
+        <div className={styles.unit}>
+          <SelectField
+            label={s.unit}
+            value={unit}
+            onChange={(e) => {
+              const u = e.target.value as NoticeUnit;
+              setUnit(u);
+              emit(text, u);
+            }}
+          >
+            {NOTICE_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {s.units[u]}
+              </option>
+            ))}
+          </SelectField>
+        </div>
       </div>
-      <div className={styles.unit}>
-        <SelectField
-          label={s.unit}
-          value={unit}
-          onChange={(e) => {
-            const u = e.target.value as NoticeUnit;
-            setUnit(u);
-            emit(text, u);
-          }}
-        >
-          {NOTICE_UNITS.map((u) => (
-            <option key={u} value={u}>
-              {s.units[u]}
-            </option>
-          ))}
-        </SelectField>
-      </div>
+      <p id={hintId} className={styles.hint}>
+        {s.hint}
+      </p>
     </div>
   );
 }

@@ -11,8 +11,8 @@ const LONG = 'Emma Auerbacher wird heute vierunddreißig Jahre alt';
 
 /** A birthday-like all-day entry with a long title, a timed meeting later today, a reminder and
  * past slots with long titles (for "Zuletzt"), straight into IndexedDB. */
-async function fill(page: Page) {
-  await page.clock.install({ time: new Date('2026-11-03T10:00:00') });
+async function fill(page: Page, time = '10:00') {
+  await page.clock.install({ time: new Date(`2026-11-03T${time}:00`) });
   await ready(page, '/calendar');
   await page.evaluate(
     (long) =>
@@ -177,6 +177,44 @@ test.describe('Calendar polish (UI round 6)', () => {
       .withRules(['scrollable-region-focusable'])
       .analyze();
     expect(results.violations).toEqual([]);
+  });
+
+  test('S04 follow-up: at night the week grid opens around the day, not on empty night hours', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the phone shows a list, no hour grid');
+    await page.setViewportSize({ width: 1536, height: 864 });
+    await fill(page, '04:45');
+    await page.goto('/calendar?view=week&date=2026-11-03');
+    const body = page.getByRole('region', { name: 'Stunden' });
+    await expect(body).toBeVisible();
+    const hourAtTop = await body.evaluate((el) =>
+      Math.round((el.scrollTop / el.scrollHeight) * 24),
+    );
+    // first choice: 08:00 → opens at 06:00 (before: now − 1.5 h → 03:00)
+    expect(hourAtTop).toBe(6);
+  });
+
+  test("Week look: all-day entries are the month's lines, blocks have no frame", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the phone shows a list, no hour grid');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await fill(page);
+    await page.goto('/calendar?view=week&date=2026-11-03');
+    const allDay = page.getByRole('group', { name: 'Ganztägig und ohne Uhrzeit' });
+    const line = allDay.getByRole('button', { name: LONG });
+    await expect(line).toBeVisible();
+    // no pill: no border, the kind is a mark in front of the title
+    expect(await line.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
+    await expect(line.locator('[data-kind]')).toHaveCount(1);
+    const block = page
+      .getByRole('region', { name: 'Stunden' })
+      .getByRole('button', { name: /Teammeeting/ });
+    expect(await block.evaluate((el) => getComputedStyle(el).borderLeftWidth)).toBe('0px');
+    await expect(block.locator('[data-kind]')).toHaveCount(1);
   });
 
   test('U58: the month names of the year view are touch targets on the phone', async ({ page }) => {

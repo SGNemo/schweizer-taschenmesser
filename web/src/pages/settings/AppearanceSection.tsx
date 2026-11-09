@@ -22,6 +22,8 @@ import {
   type ThemeChoice,
 } from '@/stores/ui';
 import { getPlatform } from '@/core/platform';
+import { setClockOn, useClockOn } from '@/core/settings/clock';
+import { tClock } from '@/strings.clock';
 import { tCockpit } from '@/strings.cockpit';
 import { tIdentity } from '@/strings.identity';
 import { Segmented, SelectField, SettingRow, SettingsGroup, Switch } from '@/ui';
@@ -84,6 +86,8 @@ export function AppearanceSection() {
   const cockpitAwake = useUiStore((s) => s.cockpitAwake);
   const setCockpitAwake = useUiStore((s) => s.setCockpitAwake);
   const tx = tCockpit.use();
+  const tc = tClock.use();
+  const clockOn = useClockOn();
   const r = t.settings.rows;
   const { tier } = useSupporter();
   const chosenPalette = usePaletteStore((p) => p.chosen);
@@ -163,9 +167,9 @@ export function AppearanceSection() {
         id="text"
         title={g.text}
         current={[
-          t.settings.textSizeOptions[textSize],
-          t.settings.leadingOptions[leading],
-          t.settings.densityOptions[density],
+          g.named(t.settings.textSize, t.settings.textSizeOptions[textSize]),
+          g.named(t.settings.leading, t.settings.leadingOptions[leading]),
+          g.named(t.settings.density, t.settings.densityOptions[density]),
         ]}
       >
         <LookPreview />
@@ -226,6 +230,9 @@ export function AppearanceSection() {
             options={SIDEBARS.map((v) => ({ value: v, label: t.settings.sidebarOptions[v] }))}
             onChange={setSidebar}
           />
+        </SettingRow>
+        <SettingRow id="appearance--clock" label={tc.setting} description={tc.settingHint}>
+          <Switch label={tc.setting} labelHidden checked={clockOn} onChange={setClockOn} />
         </SettingRow>
         <SettingRow
           id="appearance--homeView"

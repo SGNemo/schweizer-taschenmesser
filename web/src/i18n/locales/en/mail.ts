@@ -47,6 +47,8 @@ export const mail: Strings['mail'] = {
     checkFor: (line: string) => `View and add: ${line}`,
     created: 'Invoice added',
     createdMark: 'added',
+    inPlan: (day: string) => `In the plan · ${day}`,
+    today: 'today',
     already: 'Already added',
     reminderWord: (level: number) =>
       level >= 3 ? 'Third reminder' : level === 2 ? 'Second reminder' : 'Reminder',
