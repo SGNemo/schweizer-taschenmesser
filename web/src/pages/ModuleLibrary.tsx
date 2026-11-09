@@ -257,15 +257,19 @@ export function ModuleLibrary() {
                         <StartDataButton moduleId={m.id} setupLink={false} />
                       </span>
                     ) : null}
-                    <Switch
-                      label={text.toggle(m.name)}
-                      checked={enabled}
-                      disabled={!states}
-                      onChange={(on) => {
-                        setHeld((h) => new Set(h).add(m.id));
-                        sw.set(m, on);
-                      }}
-                    />
+                    {/* U32: the switch always has its own row under "Details" (and "Importieren"), so every
+                        card's foot has the same two rows. */}
+                    <span className={library.switchRow}>
+                      <Switch
+                        label={text.toggle(m.name)}
+                        checked={enabled}
+                        disabled={!states}
+                        onChange={(on) => {
+                          setHeld((h) => new Set(h).add(m.id));
+                          sw.set(m, on);
+                        }}
+                      />
+                    </span>
                   </LibraryCard>
                 );
               })}

@@ -12,6 +12,7 @@ import {
   dailyRepeats,
   gridScroll,
   initialScrollMinute,
+  scrollAnchor,
   repeatKey,
   weekNumberOf,
 } from './views';
@@ -286,6 +287,19 @@ describe('splitDay with a multi-day entry', () => {
 });
 
 describe('hour grid start (S04, UI round 6)', () => {
+  it('at night opens around the first entry, not on empty night hours (S04 follow-up)', () => {
+    const day = [{ start: 8 * 60 }, { start: 9 * 60 }];
+    // 04:45 with today shown: the first entry (08:00) leads, so the grid opens at 06:00, not 03:00
+    expect(scrollAnchor(day, 4 * 60 + 45, true)).toBe(8 * 60);
+    expect(initialScrollMinute([], scrollAnchor(day, 4 * 60 + 45, true))).toBe(6 * 60);
+    // an early entry (06:30) still leads at night
+    expect(scrollAnchor([{ start: 6 * 60 + 30 }], 2 * 60, true)).toBe(6 * 60 + 30);
+    // nothing timed: 08:00
+    expect(scrollAnchor([], 3 * 60, true)).toBe(8 * 60);
+    // during the day now leads as before; without today the first entry leads
+    expect(scrollAnchor(day, 14 * 60, true)).toBe(14 * 60);
+    expect(scrollAnchor(day, 14 * 60, false)).toBe(8 * 60);
+  });
   it('opens an hour and a half before now, on the full hour', () => {
     expect(initialScrollMinute([], 10 * 60)).toBe(8 * 60);
     expect(initialScrollMinute([], 60)).toBe(0);

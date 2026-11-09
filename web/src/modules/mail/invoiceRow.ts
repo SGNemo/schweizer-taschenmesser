@@ -18,12 +18,14 @@ import { formatMoney } from '@/core/money';
 import { readInvoiceMail, type InvoiceRead } from '@/core/mail/heuristics';
 import { mailWebUrl } from '@/core/mail/service';
 import type { MailAccountRef, MailAddress } from '@/core/mail/types';
-import { getManifest } from '@/core/modules/registry';
+import { loadModuleStates } from '@/core/modules/activation';
+import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { formatDay } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import {
   amendCapture,
   captureId,
+  plannedOn,
   CaptureError,
   reinstateCapture,
   saveCapture,
@@ -77,7 +79,14 @@ export type InvoiceOffer =
   /** „wird abgebucht“: the values as text, no verb. */
   | { kind: 'debit'; read: InvoiceRead }
   /** One tap writes a new invoice (also a reminder whose invoice was never filed: at its level). */
-  | { kind: 'create'; read: InvoiceRead; id: string; state?: 'live' | 'deleted' }
+  | {
+      kind: 'create';
+      read: InvoiceRead;
+      id: string;
+      state?: 'live' | 'deleted';
+      /** The day the planner placed the written invoice on (its row says „Im Plan · Mi“). */
+      planned?: string;
+    }
   /** A reminder on an open invoice: one tap notes it there. */
   | { kind: 'note'; read: InvoiceRead; match: OpenInvoice; noted: boolean }
   /** Something is missing or unsure: the tap opens the preview sheet. */
@@ -119,8 +128,8 @@ export async function invoiceOffers(
       continue;
     }
     const mine = own[i];
-    // „Anlegen“, undone, then filed through the sheet: the sheet's invoice counts; the deleted one stays
-    // deleted (a tap would bring it back beside the corrected one).
+    // „Anlegen“, undone, then filed through the sheet (under its own id, since a deleted invoice sits under the
+    // row's): the sheet's invoice counts; the deleted one stays deleted.
     if (mine && mine.deletedAt !== null && filed.has(th.lastMessageId!)) {
       out.set(th.id, { kind: 'create', read, id, state: 'live' });
       continue;
@@ -156,6 +165,14 @@ export async function invoiceOffers(
     if (filed.has(th.lastMessageId!)) out.set(th.id, { kind: 'create', read, id, state: 'live' });
     else out.set(th.id, read.sure ? { kind: 'create', read, id } : { kind: 'check', read });
   }
+  // Written under the row's own id, live, and placed: the row says where it is, so nobody opens the planner.
+  const liveOwn = new Set(own.filter((r) => r && r.deletedAt === null).map((r) => r!.id));
+  const states = liveOwn.size ? await loadModuleStates(visibleManifests) : undefined;
+  for (const o of out.values())
+    if (o.kind === 'create' && o.state === 'live' && liveOwn.has(o.id)) {
+      const day = await plannedOn('invoices', o.id, { states });
+      if (day) o.planned = day;
+    }
   return out;
 }
 
@@ -198,6 +215,54 @@ async function filedMessages(
       )
       .map((x) => x.th.lastMessageId!),
   );
+}
+
+/** The reminder level as the invoices store it (1–3; none = 0). */
+const levelOf = (read: InvoiceRead): number =>
+  read.dunning ? Math.min(3, Math.max(1, read.dunning)) : 0;
+
+/** Envelope fields every record carries; everything else is what an invoice holds. */
+const ENVELOPE = new Set(['id', 'createdAt', 'updatedAt', 'deviceId', 'deletedAt', '_f']);
+
+/**
+ * A deleted invoice under one of the row's ids still is exactly what the row would write – and nothing else:
+ * payee, amount, due day, open, the reminder level and day, the note with the mail's web link. Any other field
+ * (a part payment, a currency, an account, a repeat rule, a reference, a paid date) only an edit can set, so
+ * such an invoice never comes back unseen.
+ */
+async function holdsRead(
+  id: string,
+  read: InvoiceRead,
+  note: string | undefined,
+): Promise<boolean> {
+  const row = (await invoicesRepo()?.table.get(id)) as Record<string, unknown> | undefined;
+  if (!row) return false;
+  const level = levelOf(read);
+  const expected: Record<string, unknown> = {
+    payee: read.payee,
+    amountMinor: read.amountMinor,
+    dueDate: read.date,
+    status: 'open',
+    ...(level ? { dunningLevel: level, dunnedAt: read.mailDate } : {}),
+    ...(note ? { note } : {}),
+  };
+  const keys = Object.keys(row).filter((k) => !ENVELOPE.has(k) && row[k] !== undefined);
+  return keys.length === Object.keys(expected).length && keys.every((k) => row[k] === expected[k]);
+}
+
+/**
+ * The id the capture sheet saves an invoice from this message under: the row's id, unless a deleted invoice
+ * sits there (bringing it back would write its old values, not the sheet's). Never throws: without an id the
+ * sheet saves under its own (the row counts it through the link).
+ */
+export async function sheetInvoiceId(messageId: string): Promise<string | undefined> {
+  try {
+    const id = await invoiceMailId(messageId);
+    const row = await invoicesRepo()?.table.get(id);
+    return row?.deletedAt != null ? undefined : id;
+  } catch {
+    return undefined;
+  }
 }
 
 /** The capture fields of a reminder: payee, new amount and deadline, level and the mail's day. */
@@ -288,24 +353,39 @@ export async function createInvoice(
   const { read } = offer;
   const note =
     account.key === DEMO_ACCOUNT ? undefined : mailWebUrl(account, th.id, { forStorage: true });
+  const fields = {
+    title: read.payee,
+    amountMinor: read.amountMinor,
+    date: read.date,
+    ...(read.dunning ? { dunning: { level: read.dunning, date: read.mailDate } } : {}),
+    ...(note ? { note } : {}),
+  };
   try {
-    let saved = await saveCapture(
-      'invoice',
-      {
-        title: read.payee,
-        amountMinor: read.amountMinor,
-        date: read.date,
-        ...(read.dunning ? { dunning: { level: read.dunning, date: read.mailDate } } : {}),
-        ...(note ? { note } : {}),
-      },
-      { id: offer.id },
-    );
-    if (saved.existed === true) {
-      await linkOnce(account, th, saved);
-      onChanged();
-      return void toast(t.mail.invoice.already);
+    // The row's id first, then a second fixed id from the message and the shown values (so a repeat tap after
+    // a deleted invoice with other values finds the new one). Under each: there → „Schon angelegt“; deleted →
+    // back only while it holds exactly what the row shows, else on to the next; none left → a new invoice.
+    const ids = [
+      offer.id,
+      `mail-${await captureId([th.lastMessageId!, 'invoice', read.payee, String(read.amountMinor), read.date ?? '', String(levelOf(read))])}`,
+    ];
+    let saved: SavedCapture | undefined;
+    for (const id of ids) {
+      const tried = await saveCapture('invoice', fields, { id });
+      if (tried.existed === true) {
+        await linkOnce(account, th, tried);
+        onChanged();
+        return void toast(t.mail.invoice.already);
+      }
+      if (!tried.existed) {
+        saved = tried;
+        break;
+      }
+      if (await holdsRead(id, read, note)) {
+        saved = await reinstateCapture('invoice', id);
+        break;
+      }
     }
-    if (saved.existed === 'tombstone') saved = await reinstateCapture('invoice', offer.id);
+    saved ??= await saveCapture('invoice', fields);
     const link = await linkOnce(account, th, saved);
     onChanged();
     const done = saved;

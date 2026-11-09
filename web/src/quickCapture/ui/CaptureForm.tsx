@@ -65,6 +65,11 @@ export interface CaptureFormProps {
   oneEntry?: boolean;
   /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
   onOpenFull?: (path: string) => void;
+  /**
+   * A fixed id per target type for the single sheet (create-if-absent, `SaveOptions.id`): an invoice from a
+   * mail is saved under the id the mail list uses, so both ways find the same entry. Never used by a batch.
+   */
+  idFor?: Partial<Record<CaptureType, string>>;
   onSaved: (saved: SavedCapture) => void;
   onCancel?: () => void;
 }
@@ -107,6 +112,7 @@ export function CaptureForm({
   oneEntry,
   bookChip = true,
   onOpenFull,
+  idFor,
   onSaved,
   onCancel,
 }: CaptureFormProps) {
@@ -385,7 +391,8 @@ export function CaptureForm({
   };
   /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
   const singleItem = async (): Promise<CaptureItem> => {
-    if (singleFinal || !isReminder(resolved.type, singleFields)) return { type: type!, fields };
+    if (singleFinal || !isReminder(resolved.type, singleFields))
+      return { type: type!, fields, ...(idFor?.[type!] ? { id: idFor[type!] } : {}) };
     const plan = await resolveReminder(
       resolved.type,
       singleFields,
@@ -393,7 +400,27 @@ export function CaptureForm({
       lookups[lookupKey(single)],
     );
     if (!plan.type) throw new ChooseTarget([lookupKey(single)], singleFields.title);
-    return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
+    const id = !plan.amend ? idFor?.[plan.type] : undefined;
+    return {
+      type: plan.type,
+      fields: plan.fields,
+      amend: plan.amend,
+      fallback: plan.fallback,
+      ...(id ? { id } : {}),
+    };
+  };
+
+  // A fixed id (`idFor`) is a wish, never a reason to lose what the sheet shows: when an entry under it was
+  // deleted meanwhile, nothing is brought back – the shown values are saved under a new id.
+  const saveWithId = async (ty: CaptureType, f: CaptureFields, confirmed: boolean) => {
+    const id = idFor?.[ty];
+    const saved = await saveCapture(ty, f, { confirmed, ...(id ? { id } : {}) });
+    return id && saved.existed === 'tombstone' ? saveCapture(ty, f, { confirmed }) : saved;
+  };
+  // The same rule for a reminder line that becomes a new invoice (`saveItem` with the item's id).
+  const saveItemWithId = async (item: CaptureItem) => {
+    const saved = await saveItem(item);
+    return item.id && saved.existed === 'tombstone' ? saveItem({ ...item, id: undefined }) : saved;
   };
 
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
@@ -405,8 +432,8 @@ export function CaptureForm({
         multi
           ? await saveCaptures(await batchItems(), text)
           : isReminder(resolved.type, singleFields)
-            ? await saveItem(await singleItem())
-            : await saveCapture(type!, fields, { confirmed }),
+            ? await saveItemWithId(await singleItem())
+            : await saveWithId(type!, fields, confirmed),
       );
       setText('');
       if (keepDraft) clearCaptureDraft();
@@ -666,7 +693,7 @@ export function CaptureForm({
             </div>
           </div>
         ) : (
-          <div className={styles.actions}>
+          <div className={multi ? `${styles.actions} ${styles.actionsSticky}` : styles.actions}>
             {onCancel ? <Button onClick={onCancel}>{t.actions.cancel}</Button> : null}
             {/* Disabled for the moment module states load: which modules are on is not known yet. */}
             <Button
