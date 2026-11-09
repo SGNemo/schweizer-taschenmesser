@@ -44,7 +44,7 @@ const manifest: ModuleManifest = {
       place: {
         schema: placeSchema,
         indexes: ['order'],
-        example: { label: 'Büro Tokio', zone: 'Asia/Tokyo' },
+        example: { label: 'Tokyo', zone: 'Asia/Tokyo' },
       },
     },
   },
