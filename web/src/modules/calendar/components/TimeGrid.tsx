@@ -12,14 +12,17 @@ import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
 import {
   ALL_DAY_LIMIT,
+  dailyRepeats,
   gridScroll,
   groupByDate,
   initialScrollMinute,
+  repeatKey,
+  scrollAnchor,
   splitDay,
   type GridScrollMemo,
 } from '../views';
 import { kindLabel } from './ItemRow';
-import { sourceHue } from './sourceHue';
+import { KindMark } from './KindMark';
 import styles from '../routes/calendar.module.css';
 
 interface Props {
@@ -62,6 +65,8 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
   const now = today();
   const perDay = days.map((d) => ({ d, ...splitDay(byDate.get(d) ?? []) }));
   const hasUntimed = perDay.some((p) => p.untimed.length > 0);
+  // A daily medication reminder stays a quiet line or block, like in the month (S03 look in the week).
+  const repeats = dailyRepeats(items);
 
   // Scroll once per shown range: to "now" when today is visible, else to the earliest item. Once more when the
   // shown days' entries arrive (they load after the first paint, and after Prev/Next the previous range's entries are
@@ -78,10 +83,8 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
     scrollMemo.current = step.memo;
     if (!step.scroll) return;
     const hourPx = body.scrollHeight / 24;
-    const visibleToday = days.includes(now);
     const blocks = perDay.flatMap((p) => p.timed);
-    const first = Math.min(...blocks.map((x) => x.start), 8 * 60);
-    const anchor = visibleToday ? minutes(nowTime()) : first;
+    const anchor = scrollAnchor(blocks, minutes(nowTime()), days.includes(now));
     body.scrollTop = (initialScrollMinute(blocks, anchor) / 60) * hourPx;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the shown range changes
   }, [rangeKey]);
@@ -221,14 +224,16 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
               <ul key={d} className={`${styles.tgUntimed} ${single ? styles.tgUntimedWide : ''}`}>
                 {(single ? untimed : untimed.slice(0, ALL_DAY_LIMIT)).map((i) => (
                   <li key={`${i.source}:${i.id}`}>
+                    {/* Same quiet line as the month (mark + title, a surface only for own events). */}
                     <button
                       type="button"
-                      className={`${styles.chip} ${styles[`kind_${i.kind}`] ?? ''} ${i.done ? styles.done : ''}`}
-                      data-hue={sourceHue(i)}
+                      className={`${styles.line} ${i.kind === 'event' && !repeats.has(repeatKey(i)) ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
                       title={`${kindLabel(i.kind)}: ${i.title}`}
+                      style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
                       onClick={() => onOpenItem(i)}
                     >
-                      {i.title}
+                      <KindMark item={i} />
+                      <span className={styles.lineTitle}>{i.title}</span>
                     </button>
                   </li>
                 ))}
@@ -289,7 +294,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                   <button
                     key={`${item.source}:${item.id}`}
                     type="button"
-                    className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
+                    className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${repeats.has(repeatKey(item)) ? styles.tgRepeat : ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
                     style={
                       {
                         '--start': start + dStart,
@@ -319,6 +324,7 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
                       onOpenItem(item);
                     }}
                   >
+                    <KindMark item={item} />
                     <span className={styles.tgTime}>{item.time}</span> {item.title}
                     {lanes > 1 ? (
                       <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>

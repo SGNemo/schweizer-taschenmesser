@@ -14,6 +14,7 @@ import {
   REMINDER_RESET_KEYS,
 } from '@/core/settings/reset';
 import { t } from '@/strings';
+import { tClock } from '@/strings.clock';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import {
@@ -252,6 +253,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         },
         get description() {
           return tIdentity.get().moduleColorsHint;
+        },
+      },
+      {
+        key: 'clock',
+        get label() {
+          return tClock.get().setting;
+        },
+        get description() {
+          return tClock.get().settingHint;
         },
       },
       {

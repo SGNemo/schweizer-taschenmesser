@@ -9,6 +9,7 @@ import {
   reinstateCapture,
   saveCapture,
   saveCaptures,
+  plannedOn,
   secondStage,
 } from './index';
 import { findOpenInvoice } from './lookup';
@@ -390,5 +391,33 @@ describe('secondStage (package 3a)', () => {
     expect(await secondStage('plan', 'p9', { states: ON })).toBe('deleted');
     expect(await secondStage('todo', 'p9', { states: ON })).toBeUndefined();
     expect(await secondStage('plan', 'p9', { states: { ...ON, planner: false } })).toBeUndefined();
+  });
+});
+
+describe('plannedOn (Nachlese)', () => {
+  it('the first day from today the planner placed an entry on; nothing with the planner off', async () => {
+    const repo = createCollectionRepo(getManifest('planner')!, 'assignment');
+    const row = (date: string, id: string) => ({
+      id,
+      data: {
+        itemKey: 'invoices:inv-9',
+        k: 0,
+        of: 1,
+        date,
+        minutes: 10,
+        order: 0,
+        reason: 'deadline',
+      },
+    });
+    await repo.createMany([
+      row('2026-09-28', 'a0'),
+      row('2026-10-02', 'a1'),
+      row('2026-10-01', 'a2'),
+    ]);
+    expect(await plannedOn('invoices', 'inv-9', { states: ON })).toBe('2026-10-01');
+    expect(
+      await plannedOn('invoices', 'inv-9', { states: { ...ON, planner: false } }),
+    ).toBeUndefined();
+    expect(await plannedOn('invoices', 'other', { states: ON })).toBeUndefined();
   });
 });

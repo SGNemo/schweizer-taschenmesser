@@ -1,11 +1,25 @@
 /* Overview cards: tokens only. Status is text; the accent marks "needs a look", never red. */
+.wrap {
+  container: settings-overview / inline-size;
+}
 .grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  /* U03: at full width the status tiles' grid (three columns, same gap, inset by the head's padding), so the cards
+     line up with the tiles above; below 50 rem two columns (container query below), wide enough for
+     "Benachrichtigungen" on one line. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+  padding-inline: var(--space-5);
+}
+/* U03: a narrower settings column (about 1600 px windows and below) has two columns, so a card stays wide enough
+   for "Benachrichtigungen". */
+@container settings-overview (max-width: 50rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .card {
   display: flex;
@@ -45,7 +59,10 @@
 .title {
   flex: 1;
   min-width: 0;
+  /* U03: no hyphenation; a word breaks only as a last resort when it cannot fit the card at all (the grid above keeps
+     the cards wide enough for "Benachrichtigungen"). */
   overflow-wrap: break-word;
+  hyphens: manual;
   font-size: var(--text-label);
   font-weight: var(--weight-semibold);
   color: var(--text);
@@ -64,6 +81,7 @@
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-2);
+    padding-inline: 0;
   }
   .status {
     font-size: var(--text-label);

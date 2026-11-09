@@ -512,6 +512,7 @@ export default function PlannerPage() {
                 {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
               </span>
             ) : null}
+            {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
             {open ? <span className={styles.reason}>{reason}</span> : null}
           </span>
         }
