@@ -1777,7 +1777,7 @@ export const de = {
     location: 'Ort',
     showOnMap: 'Auf der Karte zeigen',
     saveAsPlace: 'Als Ort merken',
-    nothing: 'Keine Einträge',
+    nothing: 'Noch nichts geplant.',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
     agenda: 'Agenda',
