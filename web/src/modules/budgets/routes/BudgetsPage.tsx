@@ -7,7 +7,6 @@ import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
-  Badge,
   Button,
   Card,
   EmptyState,
@@ -80,7 +79,7 @@ export default function BudgetsPage() {
   const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
-  // The three fullest budgets: envelopes in the head's slot M (G05), the same three as percentage chips in the toolbar.
+  // The three fullest budgets: envelopes in the head's slot M (G05), the cards below carry every percentage.
   const fullest = [...inMain].sort((x, y) => y.status.pct - x.status.pct).slice(0, 3);
 
   return (
@@ -154,32 +153,24 @@ export default function BudgetsPage() {
             </EmptyState>
           ) : (
             <>
-              <div className={patternStyles.toolbar}>
+              {/* Month navigation grouped like in Finanzen: ‹ month › side by side (U44). The fullest budgets are in
+                  the head and on the cards; no third copy as chips. */}
+              <div className={styles.monthNav} data-testid="budget-month-nav">
                 <IconButton
                   label={t.budgets.prevMonth}
                   onClick={() => setMonth(addMonthsToMonth(month, -1))}
                 >
                   <span aria-hidden="true">‹</span>
                 </IconButton>
-                <strong aria-live="polite">{formatMonth(month)}</strong>
+                <strong className={styles.monthLabel} aria-live="polite">
+                  {formatMonth(month)}
+                </strong>
                 <IconButton
                   label={t.budgets.nextMonth}
                   onClick={() => setMonth(addMonthsToMonth(month, 1))}
                 >
                   <span aria-hidden="true">›</span>
                 </IconButton>
-                {fullest.length > 0 ? (
-                  <span className={styles.chips} data-testid="budget-chips">
-                    {fullest.map((r) => (
-                      <Badge
-                        key={r.budget.id}
-                        tone={r.status.tone === 'over' ? 'danger' : 'neutral'}
-                      >
-                        {t.budgets.ext.head.chip(categoryName(r.budget.categoryId), r.status.pct)}
-                      </Badge>
-                    ))}
-                  </span>
-                ) : null}
               </div>
               {data && budgets.length === 0 ? (
                 <EmptyState
