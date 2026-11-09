@@ -66,7 +66,6 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic                                                                           | Branch          | Area / files                                                                                    | State                                                                     | Last commit | Updated    |
 | ------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- | ---------- |
-| Modul „Uhr“, Paket 1 (Orte, Zeit immer sehen) | `feat/clock-module` | new `modules/clock`, new `core/time/zones.ts` (shared with `tools/timezones`), `core/modules/types.ts` (one new signature id `dial`), `ui/identity` (mark), `layout/LogoClock.tsx` (click opens the module), strings `clock`, `db:bump` | in progress | – | 2026-11-09 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
