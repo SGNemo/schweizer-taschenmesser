@@ -341,7 +341,7 @@ export function signatureHits(path, baseText, headText) {
   return hits;
 }
 
-/** `web/package.json`: the whole `scripts` object; dependencies and `version` stay free. */
+/** `web/package.json`: `scripts`, every other field, and dependency sources that are no plain version range. */
 export function scriptsHits(baseText, headText) {
   const base = parseJson(baseText);
   const head = parseJson(headText);
@@ -1036,7 +1036,11 @@ export async function runCi({
   if (!hits.length) return 0;
   const slug = env.GITHUB_REPOSITORY || REPO;
   if (!env.PR_NUMBER) {
-    out('No PR_NUMBER: the label cannot be read, hits stay red.');
+    out(
+      env.GITHUB_ACTIONS
+        ? 'No PR_NUMBER: the label cannot be read, hits stay red.'
+        : "Local run: each hit above needs the maintainer's approval. Name them in the pull request text (docs/howto/ci.md).",
+    );
     return 1;
   }
   try {
@@ -1117,9 +1121,6 @@ export async function runPr({
       const comments = await githubAll(fetchImpl, token, `/repos/${slug}/issues/${pr}/comments`);
       approved = comments.some((c) => isApproval(c?.body, { pr, hash, key, repo: slug }));
     }
-    out(
-      `\nHit lines (the hash is the SHA-256 over them, sorted, one per line):\n${hits.join('\n')}`,
-    );
     out(`\nHash: ${hash}`);
     out(`Message: ${message}`);
     if (approved) out('Approval: a comment with a valid signature over this message exists.');
@@ -1134,6 +1135,11 @@ export async function runPr({
       );
     }
   }
+
+  if (hits.length)
+    out(
+      `\nHit lines (the hash is the SHA-256 over them, sorted, one per line):\n${hits.join('\n')}`,
+    );
 
   const web = await webCheckPassed({ fetchImpl, token, repo: slug, pr, head });
   out(`\nCheck: ${web.why}.`);

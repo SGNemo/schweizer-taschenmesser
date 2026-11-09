@@ -6,8 +6,8 @@
  * This file is ratchet-protected (scripts/ratchet.mjs).
  *
  *   npm run check:stimulus                       measure + compare
- *   npm run stimulus:baseline                    measure + rewrite the budget (first values of a new page only:
- *                                                the committed numbers are the ones the CI run measured)
+ *   npm run stimulus:baseline                    measure + rewrite the budget with local numbers: to look, not to
+ *                                                commit (the committed numbers are the ones the CI run measured)
  *   node scripts/check-stimulus.mjs --from <inventory.json> [--baseline]    skip the measurement
  */
 import { spawnSync } from 'node:child_process';
@@ -72,7 +72,7 @@ if (process.env.CI || args.includes('--print')) {
 if (result.violations.length) {
   console.error(
     '\nBelow budget? Take the measured values of the CI run (job summary) into e2e/stimulus-budget.json: lowering is free.' +
-      '\nOver budget on purpose, or a page added or removed? Take the CI values too; that raise is a ratchet hit:' +
+      '\nOver budget on purpose, a page removed, or one added without a new manifest route? Take the CI values too; that is a ratchet hit:' +
       '\nname it in the PR text and wait for the maintainer (docs/howto/ci.md).',
   );
   process.exit(1);

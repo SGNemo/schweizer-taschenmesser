@@ -404,13 +404,12 @@ describe('pages of the inventory', () => {
     for (const p of MODULE_PAGES) expect(p.name).toBe(routeSlug(p.path));
   });
   it('platform-bound modules are measured on the desktop window only', () => {
-    expect(MODULE_PAGES.filter((p) => p.desktop).map((p) => p.name)).toEqual([
-      'browser',
-      'disk',
-      'disk-scan',
-      'downloads',
-      'mail',
-    ]);
+    const bound = MODULE_PAGES.filter((p) => p.desktop);
+    expect(bound.map((p) => p.name)).toEqual(expect.arrayContaining(['browser', 'disk', 'mail']));
+    for (const p of MODULE_PAGES)
+      expect(!!p.desktop, p.name).toBe(
+        /\bplatforms:\s*\[/.test(read(`src/modules/${p.module}/manifest.ts`)),
+      );
   });
   it('the budget holds exactly the measured pages, with every metric', () => {
     const budget = JSON.parse(read('e2e/stimulus-budget.json'));

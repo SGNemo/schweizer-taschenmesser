@@ -352,7 +352,7 @@ describe('protected paths', () => {
     expect(found('web/e2e/seed/other-helpers.ts')).toBe(0);
     expect(found('web/src/modules/finance/helpers.js')).toBe(0);
   });
-  it('new files: free for new guards and tests, always a hit for workflows, configs and .env.e2e*', () => {
+  it('new files: free for new guards and tests, always a hit for workflows, configs and web/.env*', () => {
     expect(
       hits(
         {},
