@@ -1,4 +1,7 @@
+import { getLang } from '@/core/i18n/lang';
 import { DEFAULT_CURRENCY, formatMoney } from '@/core/money';
+import { now } from '@/core/time/now';
+import { resolvePlace } from '@/core/time/placeSearch';
 import { addDaysStr, formatDay, nowTime } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
@@ -266,6 +269,21 @@ const workout: CaptureTarget = {
   },
 };
 
+/**
+ * Uhr: „uhr Tokio“ → a place named like the city in the UI language, at the end of the list (an order above any
+ * the page hands out; the page renumbers on the next move). Offline city search, never a guess on a loose match.
+ */
+const place: CaptureTarget = {
+  type: 'place',
+  moduleId: 'clock',
+  collection: 'place',
+  build: (f) => {
+    const hit = resolvePlace(f.title, getLang());
+    if (!hit) throw new CaptureError('invalid');
+    return { label: hit.name, zone: hit.zone, order: Math.floor(now() / 1000) };
+  },
+};
+
 const subscriptions: CaptureTarget = {
   type: 'subscription',
   moduleId: 'subscriptions',
@@ -345,6 +363,7 @@ export const TARGETS = {
   invoice: invoices,
   meal,
   workout,
+  place,
   note: notes,
   subscription: subscriptions,
   birthday: people,

@@ -1020,6 +1020,7 @@ export const de = {
       plan: 'Plan',
       meal: 'Mahlzeit',
       workout: 'Training',
+      place: 'Ort',
     },
     target: {
       todo: 'ToDos',
@@ -1035,6 +1036,7 @@ export const de = {
       plan: 'Planer',
       meal: 'Fitness',
       workout: 'Fitness',
+      place: 'Uhr',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -8590,6 +8592,62 @@ export const de = {
       saved: 'Als Vorlage gespeichert.',
       remove: (title: string) => `Vorlage ${title} entfernen`,
       removed: 'Vorlage entfernt.',
+    },
+  },
+  clock: {
+    meta: {
+      name: 'Uhr',
+      description: 'Orte eintragen und ihre Uhrzeit immer sehen – mit Tag, Nacht und Zeitversatz.',
+      quickAdd: 'Uhr: Ort hinzufügen',
+      widget: 'Uhrzeit anderswo',
+      showZone: 'Zeitzone unter dem Ort zeigen',
+      showZoneHelp: 'Zeigt auf der Seite unter jedem Ort seine Zeitzone, zum Beispiel Asia/Tokyo.',
+    },
+    title: 'Uhr',
+    here: 'Hier',
+    hereLine: (zone: string) => `Deine Zeit · ${zone}`,
+    add: 'Ort hinzufügen',
+    addFirst: 'Ersten Ort hinzufügen',
+    empty: 'Noch keine Orte',
+    emptyHint:
+      'Trag einen Ort ein, zum Beispiel wo Familie oder Kolleg*innen leben. Seine Uhrzeit steht dann hier und auf der Übersicht.',
+    full: (n: number) =>
+      `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
+    list: 'Deine Orte',
+    search: {
+      title: 'Ort hinzufügen',
+      label: 'Stadt oder Zeitzone',
+      placeholder: 'z. B. Tokio, New York, Asia/Kolkata',
+      hint: 'Funktioniert ohne Internet. Den Namen kannst du danach ändern.',
+      none: 'Nichts gefunden. Versuch eine größere Stadt in der Nähe oder die Zeitzone, z. B. Europe/Lisbon.',
+      results: 'Treffer',
+    },
+    rename: {
+      title: 'Ort umbenennen',
+      label: 'Name',
+      hint: (zone: string) => `Zum Beispiel „Mama“ oder „Büro“. Zeitzone: ${zone}`,
+    },
+    menu: {
+      label: (name: string) => `Aktionen für ${name}`,
+      rename: 'Umbenennen',
+      up: 'Nach oben',
+      down: 'Nach unten',
+      remove: 'Entfernen',
+    },
+    added: (name: string) => `${name} hinzugefügt.`,
+    removed: (name: string) => `${name} entfernt.`,
+    renamed: 'Name geändert.',
+    moved: 'Reihenfolge geändert.',
+    day: 'Tag',
+    night: 'Nacht',
+    tomorrow: 'morgen',
+    yesterday: 'gestern',
+    sameTime: 'gleiche Zeit',
+    /** Screen reader text of one place: "Tokio: 23:07, Nacht, morgen, 8 Stunden später". */
+    aria: (name: string, time: string, parts: string) => `${name}: ${time}, ${parts}`,
+    widget: {
+      empty: 'Noch keine Orte.',
+      add: 'Ort hinzufügen',
     },
   },
 } as const;

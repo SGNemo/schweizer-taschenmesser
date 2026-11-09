@@ -1,18 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
+import { Link } from 'react-router';
 import { dateTimeFormat, useFormatLocale } from '@/core/i18n/format';
-import { startMinuteTicker } from '@/core/time/minuteTicker';
-import { now, pad2 } from '@/core/time/now';
+import { useModuleStates } from '@/core/modules/activation';
+import { pad2 } from '@/core/time/now';
+import { useMinuteNow } from '@/core/time/useMinuteNow';
 import { tClock } from '@/strings.clock';
 import styles from './LogoClock.module.css';
-
-/** The current time in ms, re-read at every full minute (and when the page comes back). */
-function useMinuteNow(): number {
-  const [at, setAt] = useState(now);
-  // The time rendered first: a minute that turned before the effect runs is shown at once.
-  const shown = useRef(at);
-  useEffect(() => startMinuteTicker(setAt, shown.current), []);
-  return at;
-}
 
 const HOUR_MINUTE: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
 
@@ -33,11 +26,13 @@ function widthCh(fmt: Intl.DateTimeFormat): number {
 
 /**
  * The time next to the Nemo logo (the window often covers the taskbar): quiet secondary text, no seconds, no
- * date, no click target. `wide` sits right of the wordmark in the sidebar head, `rail` under the mark of the
+ * date. While the Uhr module is on, a click opens it (`/clock`, by route only: no module import); otherwise it is
+ * no click target. `wide` sits right of the wordmark in the sidebar head, `rail` under the mark of the
  * folded sidebar as "14" over "07" (hidden by a container query when the rail is too narrow, and for 12-hour
  * locales, whose "PM" does not fit), `bar` next to the logo in the phone top bar.
  */
 export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
+  const clockModule = useModuleStates()?.['clock'] === true;
   const tx = tClock.use();
   useFormatLocale();
   const at = useMinuteNow();
@@ -46,6 +41,19 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
   const text = fmt.format(d);
   const iso = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   const label = `${tx.label} ${text}`;
+  const linked = (time: ReactElement): ReactElement =>
+    clockModule ? (
+      <Link
+        to="/clock"
+        className={styles.link}
+        aria-label={tx.open(text)}
+        data-testid="logo-clock-link"
+      >
+        {time}
+      </Link>
+    ) : (
+      time
+    );
   const parts = fmt.formatToParts(d);
   const period = parts.find((p) => p.type === 'dayPeriod')?.value;
 
@@ -53,7 +61,7 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
     if (period) return null;
     const part = (type: Intl.DateTimeFormatPartTypes) =>
       parts.find((p) => p.type === type)?.value ?? '';
-    return (
+    return linked(
       <time
         className={`${styles.clock} ${styles.rail}`}
         dateTime={iso}
@@ -63,10 +71,10 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
         <span>{part('hour')}</span>
         <span className="sr-only">{part('literal') || ':'}</span>
         <span>{part('minute')}</span>
-      </time>
+      </time>,
     );
   }
-  return (
+  return linked(
     <time
       className={`${styles.clock} ${styles[variant]}`}
       data-period={period ? 'true' : undefined}
@@ -78,6 +86,6 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
         {digits(parts)}
       </span>
       {period ? <span className={styles.period}>{period}</span> : null}
-    </time>
+    </time>,
   );
 }

@@ -81,6 +81,7 @@ export const SIGNATURES = [
   'arrowProgress',
   'weekBars',
   'dumbbell',
+  'dial',
   // tools
   'display',
   'flow',

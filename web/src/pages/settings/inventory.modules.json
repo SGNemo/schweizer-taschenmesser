@@ -154,6 +154,16 @@
       }
     }
   },
+  "clock": {
+    "scope": "module.clock",
+    "fields": {
+      "showZone": {
+        "type": "boolean",
+        "label": "Zeitzone unter dem Ort zeigen",
+        "default": true
+      }
+    }
+  },
   "downloads": {
     "scope": "module.downloads",
     "fields": {

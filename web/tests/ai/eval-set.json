@@ -3096,6 +3096,68 @@
           "target": "Hausbau"
         }
       ]
+    },
+    {
+      "id": "clk-c01",
+      "input": "Füge Tokio zur Weltuhr hinzu",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Tokio"
+          }
+        }
+      ]
+    },
+    {
+      "id": "clk-c02",
+      "input": "Neuer Ort für die Uhr: New York",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "New York"
+          }
+        }
+      ]
+    },
+    {
+      "id": "clk-c03",
+      "input": "Lissabon in die Weltuhr",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Lissabon"
+          }
+        }
+      ]
+    },
+    {
+      "id": "clk-c04",
+      "input": "weltuhr sydney dazu",
+      "tags": ["create", "slang"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Sydney"
+          }
+        }
+      ]
+    },
+    {
+      "id": "clk-n01",
+      "input": "Wie spät ist es gerade in Tokio?",
+      "tags": ["negative"],
+      "expect": []
     }
   ]
 }

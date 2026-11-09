@@ -34,7 +34,24 @@
 }
 /* Only when two digits fit the rail without overflow (sidebar width, not the window). */
 @container sidebar (max-width: 2em) {
-  .rail {
+  .rail,
+  .link:has(.rail) {
     display: none;
   }
+}
+/* While the Uhr module is on, the time opens it: a quiet link, ≥ 44 px tall, underline only on hover/focus. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.link:hover .clock,
+.link:focus-visible .clock {
+  color: var(--text);
+  text-decoration: underline;
 }

@@ -87,9 +87,9 @@ describe('module visibility filter', () => {
     expect(isVisible(base({}), { showPreview: false, isEnabled: () => false })).toBe(true);
   });
 
-  it("the preview modules are the maintainer's list (chat, fitness, maps, music; the planner is stable since package 5), hidden until the switch", () => {
+  it("the preview modules are the maintainer's list (chat, clock, fitness, maps, music; the planner is stable since package 5), hidden until the switch", () => {
     const preview = catalogManifests({ showPreview: true }).filter((m) => m.maturity === 'preview');
-    expect(preview.map((m) => m.id).sort()).toEqual(['chat', 'fitness', 'maps', 'music']);
+    expect(preview.map((m) => m.id).sort()).toEqual(['chat', 'clock', 'fitness', 'maps', 'music']);
     const ids = catalogManifests({ showPreview: false }).map((m) => m.id);
     expect(ids).not.toContain('chat');
     expect(ids).not.toContain('maps');

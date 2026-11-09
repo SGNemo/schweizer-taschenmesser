@@ -108,6 +108,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `stopwatch` (round dial, C25/G12: not the calendar's hour strip) |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
+| Uhr `clock` | plan | lime | fern | fokus | kacheln | `dial` (order 47 after Wetter; lime shares neither head nor widget with Budgets) |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
 | Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` |
