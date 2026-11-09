@@ -1,5 +1,5 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { useCurrentModuleIdentity, type ModuleIdentityMark } from '@/core/modules/currentModule';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useModuleIdentity, type ModuleIdentityMark } from '@/core/modules/identityContext';
 import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
 import { Button, IconButton } from './Button';
@@ -32,9 +32,9 @@ interface DialogProps {
    */
   backdrop?: 'dim' | 'opaque';
   /**
-   * The module identity of the head zone (S02): tint, icon plate and signature mark in the module's hue. Left out,
-   * a dialog that sits inside a module page takes that module's identity (by route); `null` keeps it neutral.
-   * Outside module pages (shell, overview, settings) a dialog stays neutral.
+   * The module identity of the head zone (S02): tint, icon plate and signature mark. Left out, a dialog rendered inside
+   * a module page takes that module's identity (`ModuleIdentityContext`, provided by the module frame); `null` keeps it
+   * neutral. Outside module pages (shell, overview, settings) a dialog stays neutral.
    */
   identity?: ModuleIdentityMark | null;
 }
@@ -73,16 +73,8 @@ export function Dialog({
   identity: identityProp,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
-  const routeIdentity = useCurrentModuleIdentity();
-  // Only a dialog that lives inside the module page wears its identity: the shell's own dialogs (tools,
-  // palette, capture, notifications) render outside it and stay neutral on every route. Resolved before the
-  // first paint and long before the dialog opens, so nothing jumps.
-  const [inPage, setInPage] = useState(false);
-  useLayoutEffect(() => {
-    setInPage(!!ref.current?.parentElement?.closest('[data-hue]'));
-  }, []);
-  const identity =
-    identityProp === null ? undefined : (identityProp ?? (inPage ? routeIdentity : undefined));
+  const pageIdentity = useModuleIdentity();
+  const identity = identityProp === null ? undefined : (identityProp ?? pageIdentity);
   const titleId = useId();
   const [confirming, setConfirming] = useState(false);
   // A closed dialog never reopens on the "discard?" question (adjusting state during render).
@@ -163,7 +155,6 @@ export function Dialog({
         backdrop === 'opaque' ? styles.opaque : '',
       ].join(' ')}
       data-hue={identity?.hue}
-      data-hue2={identity?.hue2}
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       aria-labelledby={titleId}
       onCancel={(e) => {
@@ -210,12 +201,12 @@ export function Dialog({
               {identity ? <HuePlate hue={identity.hue} icon={identity.icon} size="sm" /> : null}
               <h2 id={titleId} className={styles.title}>
                 {title}
+                {identity && identity.signature !== 'none' ? (
+                  <span className={styles.mark} aria-hidden="true">
+                    <SignatureMark id={identity.signature} size={20} />
+                  </span>
+                ) : null}
               </h2>
-              {identity && identity.signature !== 'none' ? (
-                <span className={styles.mark} aria-hidden="true">
-                  <SignatureMark id={identity.signature} size={24} />
-                </span>
-              ) : null}
               <IconButton label={t.actions.close} onClick={requestClose}>
                 <Icon name="close" />
               </IconButton>

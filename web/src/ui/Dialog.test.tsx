@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { identityOfPath } from '@/core/modules/currentModule';
+import { ModuleIdentityContext, type ModuleIdentityMark } from '@/core/modules/identityContext';
 import { setNow } from '@/core/time/now';
 import { Dialog } from './Dialog';
 import { DRAFT_TTL_MS, useDraft } from './useDraft';
@@ -106,6 +105,7 @@ describe('dialog', () => {
 describe('dialog identity (S02)', () => {
   const head = () => screen.getByTestId('dialog-head');
   const dialogEl = () => head().closest('dialog')!;
+  const pantry: ModuleIdentityMark = { hue: 'fern', icon: 'package', signature: 'shelf' };
 
   it('stays neutral without an identity and outside a module page', () => {
     render(
@@ -120,12 +120,7 @@ describe('dialog identity (S02)', () => {
 
   it('tints the head zone and shows plate and mark with an identity', () => {
     render(
-      <Dialog
-        open
-        onClose={() => {}}
-        title="Vorrat hinzufügen"
-        identity={{ hue: 'fern', icon: 'package', signature: 'shelf' }}
-      >
+      <Dialog open onClose={() => {}} title="Vorrat hinzufügen" identity={pantry}>
         <input aria-label="Name" />
       </Dialog>,
     );
@@ -133,44 +128,33 @@ describe('dialog identity (S02)', () => {
     expect(dialogEl()).toHaveAttribute('data-hue', 'fern');
     const mark = head().querySelector('[data-signature="shelf"]');
     expect(mark).not.toBeNull();
+    // The mark is decoration right after the title text, not a control beside the close button.
     expect(mark!.closest('[aria-hidden="true"]')).not.toBeNull();
-    // The plate sits before the title, the mark after it; the close button stays last.
-    const order = [...head().querySelectorAll('[data-hue], h2, [data-signature], button')];
-    expect(order.map((el) => el.tagName.toLowerCase())).toEqual(['span', 'h2', 'svg', 'button']);
+    expect(mark!.closest('h2')).not.toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Vorrat hinzufügen' })).toBeInTheDocument();
+    const order = [...head().querySelectorAll('[data-hue], h2, button')];
+    expect(order.map((el) => el.tagName.toLowerCase())).toEqual(['span', 'h2', 'button']);
   });
 
-  it('takes the identity of the module page it sits in, and only there', () => {
-    const pantry = identityOfPath('/pantry');
-    expect(pantry).toBeDefined();
-    const { unmount } = render(
-      <MemoryRouter initialEntries={['/pantry']}>
-        <div data-hue={pantry!.hue}>
-          <Dialog open onClose={() => {}} title="Vorrat hinzufügen">
-            <input aria-label="Name" />
-          </Dialog>
-        </div>
-      </MemoryRouter>,
-    );
-    expect(head()).toHaveAttribute('data-tinted', 'true');
-    expect(dialogEl()).toHaveAttribute('data-hue', pantry!.hue);
-    expect(head().querySelector(`[data-signature="${pantry!.signature}"]`)).not.toBeNull();
-    unmount();
-
-    // A shell dialog (outside the page) on the same route stays neutral; so does `identity={null}`.
+  it('takes the identity of the module page it sits in; null and the shell stay neutral', () => {
     render(
-      <MemoryRouter initialEntries={['/pantry']}>
+      <>
         <Dialog open onClose={() => {}} title="Werkzeuge">
           <p>…</p>
         </Dialog>
-        <div data-hue={pantry!.hue}>
+        <ModuleIdentityContext.Provider value={pantry}>
+          <Dialog open onClose={() => {}} title="Vorrat hinzufügen">
+            <p>…</p>
+          </Dialog>
           <Dialog open onClose={() => {}} title="Löschen?" identity={null}>
             <p>…</p>
           </Dialog>
-        </div>
-      </MemoryRouter>,
+        </ModuleIdentityContext.Provider>
+      </>,
     );
-    for (const zone of screen.getAllByTestId('dialog-head'))
-      expect(zone).not.toHaveAttribute('data-tinted');
+    const zones = screen.getAllByTestId('dialog-head');
+    expect(zones.map((z) => z.getAttribute('data-tinted'))).toEqual([null, 'true', null]);
+    expect(zones[1]!.querySelector('[data-signature="shelf"]')).not.toBeNull();
   });
 });
 

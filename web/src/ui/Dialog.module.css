@@ -104,10 +104,19 @@
   flex: 1;
   min-width: 0;
 }
+/* Tinted: the handle keeps its distance to the head as in a neutral sheet. */
+.headZone[data-tinted] .handle {
+  margin-bottom: calc(var(--space-1) + var(--space-4));
+}
+.full .headZone[data-tinted] {
+  border-radius: 0;
+}
+/* The signature right after the title text: quiet decoration, never mistaken for a button. */
 .mark {
   display: inline-grid;
-  flex: none;
-  color: var(--module-color);
+  vertical-align: middle;
+  margin-inline-start: var(--space-2);
+  color: var(--text-muted);
 }
 .head {
   display: flex;
