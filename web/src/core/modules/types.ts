@@ -583,6 +583,8 @@ export interface PlannableItem {
   done?: boolean;
   personId?: string;
   link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+  /** A short line the row shows after the minutes (e.g. „Mahnung · 92,40 € bis 13.10.“); never in the title. */
+  detail?: string;
   /** When the thing was created (epoch ms): the engine's tie-break "older first". */
   createdAt?: number;
 }
