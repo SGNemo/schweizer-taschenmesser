@@ -10,12 +10,7 @@ import {
   type Announcements,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  rectSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from '@dnd-kit/sortable';
+import { rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Suspense, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -55,6 +50,7 @@ import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
+import { orderKeyboardCoordinates } from './keyboardMove';
 import { usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
@@ -168,7 +164,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     // Long press on the handle on touch screens, so scrolling the page never moves a widget.
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, { coordinateGetter: orderKeyboardCoordinates }),
   );
 
   function onDragEnd({ active, over }: DragEndEvent) {
