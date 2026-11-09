@@ -94,7 +94,7 @@ export default function HabitsPage() {
       >
         {/* U26: while there is nothing, the empty state holds the one filled step. */}
         <Button
-          variant={goals && goals.length === 0 ? 'secondary' : 'primary'}
+          variant={goals && goals.length === 0 && view !== 'archive' ? 'secondary' : 'primary'}
           onClick={() => setTarget('new')}
         >
           <Icon name="plus" size={18} />

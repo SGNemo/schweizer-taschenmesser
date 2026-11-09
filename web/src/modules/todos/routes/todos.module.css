@@ -79,7 +79,8 @@
 }
 /* U21: on the phone the row's quick button ("Auf heute", "Morgen") gives the title its width; the ⋯ menu has both. */
 @media (max-width: 40rem) {
-  .rowQuick {
+  /* Element-qualified: wins over the Button's own display rule whatever order the stylesheets load in. */
+  button.rowQuick {
     display: none;
   }
 }
