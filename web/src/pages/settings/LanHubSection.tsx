@@ -20,6 +20,7 @@ import { Button, Dialog, Switch } from '@/ui';
 import { Actions, Facts, StateBanner, Step } from './ConnectParts';
 import { FoldedGroup } from './FoldedGroup';
 import { SwitchToLanDialog } from './SwitchToLanDialog';
+import { usePairWithPc } from './usePairWithPc';
 import styles from './settings.module.css';
 
 const LONG_UNSEEN_MS = 90 * 24 * 3600_000;
@@ -47,6 +48,9 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   const [unpair, setUnpair] = useState<LanHubDevice>();
   const [askRenew, setAskRenew] = useState(false);
   const [askHome, setAskHome] = useState(false);
+  // "Mit einem anderen PC koppeln": this PC pairs as a client with another hub PC (webcam)
+  const clientSupported = getPlatform().lanClient?.supported ?? false;
+  const asClient = usePairWithPc(true);
 
   // The hub's state is read while this page is open: often while a pairing window is open, else calmly.
   useEffect(() => {
@@ -75,7 +79,9 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
       ? l.keystore
       : reason === 'server-connected'
         ? l.serverFirst
-        : l.startFailed;
+        : reason === 'client-paired'
+          ? l.clientPaired
+          : l.startFailed;
 
   async function startPairing() {
     setFailure(undefined);
@@ -154,6 +160,32 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
             {failure}
           </p>
         ) : null}
+        {clientSupported && !serverOn ? (
+          <div>
+            <Button
+              variant="ghost"
+              onClick={asClient.start}
+              disabled={asClient.step !== 'idle' || busy}
+              data-testid="lan-pair-other-pc"
+            >
+              {asClient.failureInfo && asClient.failure !== 'no-camera'
+                ? asClient.failureInfo.again
+                : l.pairWithOtherPc}
+            </Button>
+          </div>
+        ) : null}
+        {asClient.failureInfo ? (
+          <p role="status" className={styles.muted} data-testid="lan-pair-failure">
+            {asClient.failureInfo.text}
+            {asClient.failure === 'no-camera' ? (
+              <>
+                {' '}
+                <span data-testid="lan-no-camera-server">{l.noCameraServer}</span>
+              </>
+            ) : null}
+          </p>
+        ) : null}
+        {asClient.dialogs}
         <PairDialog open={pairing} status={status} onClose={() => setPairing(false)} />
         <SwitchToLanDialog open={switching} onClose={() => setSwitching(false)} />
       </div>

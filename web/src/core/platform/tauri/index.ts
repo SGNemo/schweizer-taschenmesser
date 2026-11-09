@@ -216,7 +216,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     localApi: createLocalApi(kind === 'desktop'),
     vaultBridge: createVaultBridge(kind === 'desktop'),
     lanHub: createLanHub(kind === 'desktop'),
-    lanClient: createLanClient(kind === 'android'),
+    lanClient: createLanClient(kind === 'android' || kind === 'desktop'),
     disk: createDisk(kind === 'desktop'),
     system: createSystem(kind === 'desktop'),
     browser: createBrowser(kind === 'desktop'),

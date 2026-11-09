@@ -2,8 +2,9 @@
  * E2E stand-in for the phone's side of home-network sync (`src-tauri/src/lan_client.rs`). Only in
  * `--mode e2e` builds and only when a spec sets `localStorage['tm-e2e-lanclient'] = '1'`. The hub
  * behind it is the append-only fake of `fakeLanHub.ts` (no last-write-wins). Tests drive it through
- * `window.__tmLanClient`: `nextScan(text)`, `confirm()` (the user tapped "Koppeln" on the PC),
- * `refuse()` (the hub authenticated an `unknown-device`).
+ * `window.__tmLanClient`: `nextScan(text)`, `failScan(reason)` (e.g. `no-camera`: a PC without a
+ * webcam), `confirm()` (the user tapped "Koppeln" on the PC), `refuse()` (the hub authenticated an
+ * `unknown-device`).
  */
 import { createFakeLanHubParts } from './fakeLanHub';
 import type { LanClientService, LanHubDataKey } from './types';
@@ -23,6 +24,7 @@ export const noLanClient: LanClientService = {
 export function createFakeLanClient(): LanClientService {
   const { hub } = createFakeLanHubParts();
   let scanText: string | undefined;
+  let scanError: string | undefined;
   let confirm: ((key: LanHubDataKey) => void) | undefined;
   let fail: ((e: Error) => void) | undefined;
   let paired = false;
@@ -37,6 +39,11 @@ export function createFakeLanClient(): LanClientService {
       }
     },
     scan: async () => {
+      if (scanError) {
+        const reason = scanError;
+        scanError = undefined;
+        throw new Error(reason);
+      }
       if (scanText === undefined) throw new Error('cancelled');
       const text = scanText;
       scanText = undefined;
@@ -74,6 +81,9 @@ export function createFakeLanClient(): LanClientService {
     (window as unknown as { __tmLanClient?: unknown }).__tmLanClient = {
       nextScan: (text: string) => {
         scanText = text;
+      },
+      failScan: (reason: string) => {
+        scanError = reason;
       },
       confirm: async () => confirm?.((await hub.start()).dataKey),
       refuse: () => {

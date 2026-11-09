@@ -177,7 +177,7 @@ export interface LanHubDevice {
 
 /**
  * Desktop only (Windows listens; elsewhere the hub stays off): the home-network sync hub of
- * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`,
+ * `src-tauri/crates/lan-sync`. Every call rejects with a short code (`not-started`, `client-paired`,
  * `keystore-unavailable`, `busy`, `wrong-code`, …). Never logs, never stores the key in the web app
  * beyond the non-extractable `CryptoKey` the sync service imports.
  */
@@ -201,11 +201,12 @@ export interface LanHubService {
 }
 
 /**
- * The device side of home-network sync (Android): pairing with a hub PC by its QR and the sync
- * engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
+ * The device side of home-network sync (Android, and a second PC that pairs with the hub PC):
+ * pairing with a hub PC by its QR and the sync engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
  * the OS keystore on the Rust side; only the data key comes back, once, after the pairing.
  * Errors are short codes: `bad-qr`, `network`, `pairing-not-possible`, `unknown-device`,
- * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`.
+ * `pairing-aborted`, `cancelled`, `busy`, `not-paired`, `keystore-unavailable`, `protocol`, `hub-on`
+ * (this PC is the hub itself: one path per device).
  */
 export interface LanClientService {
   supported: boolean;

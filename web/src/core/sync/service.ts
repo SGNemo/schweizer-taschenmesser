@@ -600,24 +600,28 @@ export async function disconnect(deps: SyncServiceDeps = defaultDeps()): Promise
 
 /* -------------------------------- home-network hub -------------------------------- */
 
-export type LanHubFailure = 'unsupported' | 'server-connected' | 'keystore' | 'failed';
+export type LanHubFailure =
+  'unsupported' | 'server-connected' | 'client-paired' | 'keystore' | 'failed';
 export type LanHubResult = { ok: true } | { ok: false; reason: LanHubFailure };
 
 /**
  * Turns this PC into the home-network hub: starts the hub, imports its data key and runs the first
  * round (everything local is uploaded into the hub's store, encrypted). One path per device: a
- * device connected to an own server disconnects from it first.
+ * device connected to an own server disconnects from it first, and a PC paired with another hub PC
+ * never becomes a hub itself (refused here and again in Rust).
  */
 export async function enableLanHub(deps: SyncServiceDeps = defaultDeps()): Promise<LanHubResult> {
   const hub = deps.lanHub?.();
   if (!hub?.supported) return { ok: false, reason: 'unsupported' };
   const existing = await loadSyncConfig(deps.database);
   if (existing?.kind === 'selfHosted') return { ok: false, reason: 'server-connected' };
+  if (existing?.kind === 'lanClient') return { ok: false, reason: 'client-paired' };
   let dataKey: LanHubDataKey;
   try {
     dataKey = (await hub.start()).dataKey;
   } catch (e) {
     const code = e instanceof Error ? e.message : '';
+    if (code === 'client-paired') return { ok: false, reason: 'client-paired' };
     return { ok: false, reason: code === 'keystore-unavailable' ? 'keystore' : 'failed' };
   }
   await exclusive(async () => {
@@ -670,6 +674,7 @@ export async function renewLanHubKey(deps: SyncServiceDeps = defaultDeps()): Pro
 export type PairFailure =
   | 'unsupported'
   | 'other-path'
+  | 'hub-on'
   | 'bad-qr'
   | 'network'
   | 'pairing-not-possible'
@@ -687,12 +692,14 @@ const PAIR_FAILURES: readonly PairFailure[] = [
   'pairing-aborted',
   'cancelled',
   'busy',
+  'hub-on',
 ];
 
 /**
  * "Mit PC koppeln": pairs this device with the hub PC of `qr` (the PC asks the user to compare the
  * code that `onCode` receives), imports the data key and runs the first round. One path per device:
- * refused while an own server is connected.
+ * refused while an own server is connected, and on a PC while it is the hub itself (`hub-on`, also
+ * checked in Rust): a second PC pairs as a client only.
  */
 export async function pairWithPc(
   qr: string,
@@ -703,6 +710,7 @@ export async function pairWithPc(
   const client = deps.lanClient?.();
   if (!client?.supported) return { ok: false, reason: 'unsupported' };
   const existing = await loadSyncConfig(deps.database);
+  if (existing?.kind === 'lanHub') return { ok: false, reason: 'hub-on' };
   if (existing && existing.kind !== 'lanClient') return { ok: false, reason: 'other-path' };
   let dataKey: LanPairing;
   try {
