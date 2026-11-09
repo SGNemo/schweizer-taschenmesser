@@ -69,7 +69,7 @@ export function LinkDialog({
         .toast(saved.amended ? t.mail.invoice.alreadyNoted : t.mail.invoice.already);
       return;
     }
-    // Deleted under that id since the sheet opened: nothing was written; never bring back old values.
+    // Not expected (the sheet saves the shown values anew over a deleted entry); if ever, nothing was written.
     if (saved.existed === 'tombstone')
       return void useUiStore.getState().toast(t.mail.invoice.failed);
     await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);

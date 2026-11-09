@@ -417,6 +417,11 @@ export function CaptureForm({
     const saved = await saveCapture(ty, f, { confirmed, ...(id ? { id } : {}) });
     return id && saved.existed === 'tombstone' ? saveCapture(ty, f, { confirmed }) : saved;
   };
+  // The same rule for a reminder line that becomes a new invoice (`saveItem` with the item's id).
+  const saveItemWithId = async (item: CaptureItem) => {
+    const saved = await saveItem(item);
+    return item.id && saved.existed === 'tombstone' ? saveItem({ ...item, id: undefined }) : saved;
+  };
 
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
   const save = async (confirmed: boolean) => {
@@ -427,7 +432,7 @@ export function CaptureForm({
         multi
           ? await saveCaptures(await batchItems(), text)
           : isReminder(resolved.type, singleFields)
-            ? await saveItem(await singleItem())
+            ? await saveItemWithId(await singleItem())
             : await saveWithId(type!, fields, confirmed),
       );
       setText('');

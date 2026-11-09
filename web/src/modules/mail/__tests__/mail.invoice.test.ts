@@ -420,5 +420,9 @@ describe('Nachlese, council round 2', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ amountMinor: 8430, dueDate: '2026-10-15' });
     expect(rows[0]!.id).not.toBe(id);
+    // A second tap (the list not reloaded yet) finds that invoice: no second one.
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    expect(await live()).toHaveLength(1);
+    expect(lastToast()?.message).toBe(t.mail.invoice.already);
   });
 });

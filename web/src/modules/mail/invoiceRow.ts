@@ -217,15 +217,16 @@ async function filedMessages(
   );
 }
 
-/** A deleted invoice under the row's id still holds the row's payee, amount and due day. */
+/** A deleted invoice under the row's id still holds the row's payee, amount, due day and reminder level. */
 async function holdsRead(id: string, read: InvoiceRead): Promise<boolean> {
   const row = (await invoicesRepo()?.table.get(id)) as
-    { payee?: string; amountMinor?: number; dueDate?: string } | undefined;
+    { payee?: string; amountMinor?: number; dueDate?: string; dunningLevel?: number } | undefined;
   return (
     !!row &&
     row.payee === read.payee &&
     row.amountMinor === read.amountMinor &&
-    row.dueDate === read.date
+    row.dueDate === read.date &&
+    (row.dunningLevel ?? 0) === (read.dunning ?? 0)
   );
 }
 
@@ -348,10 +349,20 @@ export async function createInvoice(
     }
     // Deleted before: the same invoice comes back only while it holds exactly what the row shows (the sheet
     // may have written corrected values under this id); otherwise the row's values go into a new invoice.
-    if (saved.existed === 'tombstone')
-      saved = (await holdsRead(offer.id, read))
-        ? await reinstateCapture('invoice', offer.id)
-        : await saveCapture('invoice', fields);
+    if (saved.existed === 'tombstone') {
+      if (await holdsRead(offer.id, read)) saved = await reinstateCapture('invoice', offer.id);
+      else {
+        // A second fixed id from the message and the shown values: a repeat tap finds this invoice too.
+        const again = `mail-${await captureId([th.lastMessageId!, 'invoice', read.payee, String(read.amountMinor), read.date ?? '', String(read.dunning ?? 0)])}`;
+        saved = await saveCapture('invoice', fields, { id: again });
+        if (saved.existed === true) {
+          await linkOnce(account, th, saved);
+          onChanged();
+          return void toast(t.mail.invoice.already);
+        }
+        if (saved.existed === 'tombstone') saved = await reinstateCapture('invoice', again);
+      }
+    }
     const link = await linkOnce(account, th, saved);
     onChanged();
     const done = saved;
