@@ -263,7 +263,7 @@
   }
 }
 
-/* Kinds (used by chips, dots and badges) */
+/* Kinds (used by dots, badges and the hour-grid blocks; `.tgItem.kind_*` below overrides their look) */
 .kind_event {
   background: var(--accent-soft);
   color: var(--accent);
@@ -672,7 +672,8 @@ button.recentChip {
 }
 .tgTime {
   font-variant-numeric: tabular-nums;
-  color: var(--text-3);
+  /* Not --text-3: on the tinted blocks only --text-muted reaches AA (tokens.css). */
+  color: var(--text-muted);
 }
 .tgNow {
   position: absolute;
