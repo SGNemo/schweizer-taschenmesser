@@ -4,6 +4,7 @@ Rules: [README.md](README.md). One line per item: date · branch · text. The ch
 
 ## fix/browser-webview-breaks-app (2026-11-09)
 - 2026-11-09 · `fix/browser-webview-breaks-app` → **`review/ui-audit-2026-11`: Ursache des „…“ gefunden:** `browser_open` war ein synchroner Tauri-Befehl und legte die Tab-Webview auf dem Hauptthread an → WebView2-Deadlock unter Windows, danach beantwortete Rust weder IPC noch App-Assets, lazy Modulseiten blieben im Suspense-Fallback. Fix: `#[tauri::command(async)]` + Test. Follow-up für euch (nicht gemacht, `layout/AreaFrame` ist euer Hotspot): `ModulePageFallback` sollte nach ~10 s einen echten Zustand zeigen („Seite lädt nicht · Neu laden“) statt endlos „…“ – `ModuleErrorBoundary` greift nicht, weil ein hängender Chunk-Import nie rejected.
+- 2026-11-09 · `fix/browser-webview-breaks-app` → **wer am Browser weitermacht:** offener Randfall (Review S5): hängt `add_child` > 15 s und tippt man sofort „Noch einmal versuchen“, kann die verspätete Webview (gleiches Label) kurz Events in den neuen Versuch schicken oder dessen Anlegen mit „Label doppelt“ scheitern lassen; ein weiterer Versuch hilft. Lösung: Versuch-Nummer ins Label oder in die Callbacks. Handtest auf Windows steht aus (Sandbox ohne WebView2).
 
 ## Erstkontakt-Runde (demo-a…d, install-first-run, fitness-1)
 Rule: the first chat that lists a file here owns it; others post their finding with repro "für demo-x".
