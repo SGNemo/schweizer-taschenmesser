@@ -1,54 +1,54 @@
-Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Aktionen** = sichtbare button/a/input/select/[role=button|tab|switch|checkbox|menuitem] mit Oberkante über dem Falz; **Chrome** = davon außerhalb von Listenzeilen, Tabellen, Rasterzellen, Widgets und Dialogen (Navigation, Toolbars, Köpfe); **Inhalt ab y** = Oberkante des ersten Listen-/Raster-/Karten-Elements unter Kopf und Toolbars; **Farbe Text/Fläche/Icon** = Elemente über dem Falz, deren Farbe nicht eine der neutralen Tinten (--text, --text-muted, --text-3, --text-on-tint bzw. --bg, --surface) ist und Sättigung > 0,25 (Text/Icon) bzw. > 0,12 (Fläche); `color(srgb …)`-Werte aus `color-mix()` werden geparst; **Verläufe** = Elemente mit `background-image: …gradient` (das Kopfband zählt mit); **Rahmen** = 1 px solid auf allen vier Seiten mit sichtbarer Farbe, ≥ 40×24 px, keine Felder/Knöpfe; **Ring** = `box-shadow` als 0 0 0 n px oder inset; **Schatten** = anderer `box-shadow`; **getönt** = Hintergrund weder --bg/--surface/--surface-2 noch transparent (ohne Knöpfe/Felder/Tabs); **--surface-2** separat; Zählung über die ganze Seite, nicht nur den Falz. Seed = Testdaten „medium“, alle Module an; Desktop posiert als Windows-App in Linux-Headless-Chromium.
+Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main`, also ohne Seitenleiste und Topbar): **Aktionen** = sichtbare button/a[href]/input/select/textarea/[role=button|tab|switch|checkbox|menuitem], deren Box den Falz (Fensterhöhe) schneidet; **Chrome** = davon ohne Vorfahren li/[data-row]/table/[role=gridcell|grid]/article/Widget/dialog (also Navigation, Toolbars, Kopf) – gezählt über den ganzen Falz, nicht nur oberhalb des Inhalts; **Inhalt ab y** = kleinste Oberkante (> 60 px) eines sichtbaren Listen-/Tabellen-/Raster-/Artikel-/Widget-/Karten-/Canvas-Elements in `#main`, das nicht in nav/[role=tablist]/dialog/aside/Kopfband liegt (fehlt, wenn die Seite keines hat); **Kopf px** = Höhe des ersten `[data-size]`-Elements (Kopfband bzw. Kopfkarte); **Primär** = Knöpfe/Links mit Klasse `primary`; **Farbe Text/Icon/Fläche** = Elemente über dem Falz, deren Text-/Icon-/Hintergrundfarbe nicht eine der neutralen Tinten (--text, --text-muted, --text-3, --text-on-tint bzw. --bg, --surface, --surface-2) ist und Sättigung > 0,25 (Text/Icon) bzw. > 0,12 (Fläche); `color(srgb …)`-Werte aus `color-mix()` werden geparst; **Verläufe** = Elemente mit `background-image: …gradient` (Kopfband, Bank-Karten, Avatar-Ringe); **Wörter/Zeichen** = Textknoten sichtbarer Elemente über dem Falz; **Schriftgrößen/Gewichte** = verschiedene Werte an Textblättern über dem Falz; **Abstandswerte** = verschiedene gap/rowGap/paddingTop/paddingLeft-Werte sichtbarer Elemente (erste 2 500); **Rahmen** = gleiche Breite > 0 und `solid` auf allen vier Seiten mit sichtbarer Farbe (Alpha > 0,05), Element ≥ 40×24 px, keine input/select/textarea/button; **Ring** = `box-shadow`, dessen Segmente alle ohne Versatz und ohne Weichzeichnung sind (0 0 0 n px, inset oder nicht); **Schatten** = jeder andere `box-shadow` (ein inset mit Weichzeichnung zählt als Schatten); **getönt** = Hintergrund weder --bg/--surface/--surface-2 noch transparent, Sättigung > 0,12 (ohne button/input/select/tab); **neutrale Füllungen** = dasselbe ohne Sättigung (Hover, Bahnen, Scrims; nur in den facts); **--surface-2** separat; **Zeilen** = `[data-row]`-Elemente, Höhe des umschließenden `li` (sonst des Elements), Median/min/max; **CLS** = laufende Summe aller `layout-shift`-Einträge ohne kürzliche Eingabe seit `page.goto` der Ansicht (bei Reiter-Ansichten kumuliert seit dem Laden der Seite); Flächen-/Zeilen-/Bewegungs-Zählung über die ganze Seite, nicht nur den Falz. Seed = Testdaten „medium“, alle Module an; Desktop posiert als Windows-App in Linux-Headless-Chromium.
 
 ### Reizlast über dem Falz – 1920x1080-dark, seed
 
 | Seite | Aktionen | davon Chrome | Inhalt ab y | Kopf px | Primär | Farbe Text | Farbe Fläche | Verläufe | Farbe Icon | Wörter | Zeichen | Schriftgrößen | Gewichte | CLS |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| calendar | 147 | 25 | 506 | 241 | 1 | 10 | 104 | 2 | 3 | 363 | 2130 | 8 | 4 | 0.03 |
-| planner | 48 | 20 | 559 | 211 | 1 | 4 | 20 | 2 | 2 | 283 | 1486 | 8 | 4 | 0.01 |
-| todos | 59 | 21 | 589 | 240 | 1 | 2 | 16 | 2 | 3 | 139 | 769 | 8 | 4 | 0.02 |
+| calendar | 147 | 25 | 506 | 241 | 1 | 10 | 104 | 2 | 3 | 363 | 2130 | 8 | 4 | 0.02 |
+| planner | 48 | 20 | 559 | 211 | 1 | 4 | 20 | 2 | 2 | 283 | 1486 | 8 | 4 | 0.00 |
+| todos | 59 | 21 | 589 | 240 | 1 | 2 | 16 | 2 | 3 | 139 | 769 | 8 | 4 | 0.01 |
 | habits | 22 | 14 | 436 | 231 | 1 | 2 | 3 | 2 | 3 | 58 | 351 | 7 | 4 | 0.01 |
-| timetrack | 19 | 18 | 460 | 233 | 1 | 2 | 10 | 2 | 3 | 45 | 290 | 6 | 4 | 0.05 |
-| weather | 11 | 11 | 105 | 304 | 0 | 5 | 21 | 5 | 5 | 266 | 1361 | 9 | 5 | 0.01 |
-| maps | 39 | 23 | 671 | 274 | 1 | 2 | 16 | 2 | 4 | 92 | 635 | 8 | 4 | 0.01 |
-| people | 64 | 16 | 479 | 146 | 1 | 2 | 4 | 26 | 4 | 333 | 1552 | 7 | 4 | 0.01 |
+| timetrack | 19 | 18 | 460 | 233 | 1 | 2 | 10 | 2 | 3 | 45 | 290 | 6 | 4 | 0.01 |
+| weather | 11 | 11 | 105 | 304 | 0 | 5 | 21 | 5 | 5 | 266 | 1361 | 9 | 5 | 0.00 |
+| maps | 39 | 23 | 671 | 274 | 1 | 2 | 16 | 2 | 4 | 92 | 635 | 8 | 4 | 0.00 |
+| people | 64 | 16 | 479 | 146 | 1 | 2 | 4 | 26 | 4 | 333 | 1552 | 7 | 4 | 0.00 |
 | fitness | 23 | 16 | 546 | 233 | 1 | 2 | 3 | 2 | 8 | 148 | 603 | 8 | 4 | 0.01 |
-| finance | 28 | 21 | 687 | 292 | 1 | 9 | 6 | 4 | 6 | 133 | 819 | 9 | 4 | 0.02 |
+| finance | 28 | 21 | 687 | 292 | 1 | 9 | 6 | 4 | 6 | 133 | 819 | 9 | 4 | 0.01 |
 | invoices | 37 | 16 | 415 | 146 | 1 | 5 | 13 | 2 | 7 | 168 | 1020 | 9 | 4 | 0.01 |
 | subscriptions | 33 | 9 | 491 | 261 | 1 | 4 | 26 | 4 | 5 | 260 | 1419 | 8 | 4 | 0.01 |
 | budgets | 18 | 12 | 502 | 233 | 1 | 3 | 25 | 2 | 3 | 113 | 498 | 6 | 4 | 0.01 |
-| lists | 36 | 21 | 714 | 237 | 1 | 2 | 8 | 2 | 3 | 85 | 447 | 8 | 4 | 0.01 |
+| lists | 36 | 21 | 714 | 237 | 1 | 2 | 8 | 2 | 3 | 85 | 447 | 8 | 4 | 0.00 |
 | pantry | 49 | 11 | 543 | 233 | 1 | 6 | 23 | 2 | 3 | 124 | 643 | 9 | 4 | 0.01 |
 | bookmarks | 48 | 15 | 574 | 249 | 1 | 2 | 4 | 2 | 3 | 146 | 947 | 9 | 4 | 0.01 |
-| notes | 35 | 35 | – | 142 | 1 | 2 | 13 | 2 | 3 | 147 | 1016 | 8 | 3 | 0.02 |
-| chat | 13 | 12 | 368 | 163 | 1 | 1 | 9 | 2 | 2 | 52 | 361 | 5 | 3 | 0.01 |
-| browser | 28 | 16 | 554 | 118 | 0 | 0 | 2 | 1 | 1 | 62 | 599 | 7 | 3 | 0.02 |
+| notes | 35 | 35 | – | 142 | 1 | 2 | 13 | 2 | 3 | 147 | 1016 | 8 | 3 | 0.01 |
+| chat | 13 | 12 | 368 | 163 | 1 | 1 | 9 | 2 | 2 | 52 | 361 | 5 | 3 | 0.03 |
+| browser | 28 | 16 | 554 | 118 | 0 | 0 | 2 | 1 | 1 | 62 | 599 | 7 | 3 | 0.01 |
 | feeds | 26 | 14 | 634 | 233 | 1 | 1 | 11 | 2 | 3 | 54 | 453 | 9 | 4 | 0.01 |
 | mail | 27 | 20 | 710 | 141 | 1 | 1 | 5 | 1 | 3 | 113 | 703 | 9 | 4 | 0.01 |
 | music | 26 | 24 | 599 | 363 | 0 | 0 | 7 | 2 | 2 | 44 | 288 | 6 | 3 | 0.00 |
-| vault | 35 | 17 | 634 | 233 | 1 | 13 | 25 | 2 | 3 | 288 | 1628 | 9 | 4 | 0.02 |
-| accounts | 5 | 5 | – | 141 | 1 | 1 | 3 | 2 | 1 | 19 | 148 | 5 | 4 | 0.00 |
+| vault | 35 | 17 | 634 | 233 | 1 | 13 | 25 | 2 | 3 | 288 | 1628 | 9 | 4 | 0.00 |
+| accounts | 5 | 5 | – | 141 | 1 | 1 | 3 | 2 | 1 | 19 | 148 | 5 | 4 | 0.01 |
 | disk | 10 | 4 | 502 | 238 | 0 | 3 | 2 | 1 | 2 | 175 | 930 | 9 | 4 | 0.13 |
 | downloads | 18 | 10 | 415 | 165 | 1 | 2 | 7 | 1 | 1 | 87 | 564 | 5 | 4 | 0.01 |
 | library | 17 | 6 | 93 | 223 | 0 | 1 | 56 | 3 | 9 | 157 | 1093 | 7 | 3 | 0.01 |
 | library-vault | 4 | 4 | 145 | 133 | 0 | 0 | 11 | 2 | 1 | 53 | 379 | 6 | 3 | 0.01 |
 | tools | 24 | 4 | 93 | 207 | 0 | 1 | 22 | 1 | 9 | 172 | 1204 | 7 | 3 | 0.01 |
-| settings | 36 | 12 | 174 | 368 | 0 | 4 | 19 | 1 | 14 | 133 | 896 | 6 | 3 | 0.00 |
-| settings-einrichtung | 35 | 19 | 174 | 133 | 1 | 5 | 19 | 2 | 11 | 115 | 808 | 7 | 3 | 0.00 |
+| settings | 36 | 12 | 174 | 368 | 0 | 4 | 19 | 1 | 14 | 126 | 862 | 6 | 3 | 0.01 |
+| settings-einrichtung | 35 | 19 | 174 | 133 | 1 | 5 | 19 | 2 | 11 | 115 | 808 | 7 | 3 | 0.01 |
 | settings-allgemein | 45 | 18 | 174 | 133 | 0 | 5 | 17 | 1 | 11 | 187 | 1280 | 6 | 3 | 0.05 |
 | settings-darstellung | 67 | 46 | 174 | 133 | 0 | 22 | 34 | 1 | 11 | 459 | 3009 | 6 | 4 | 0.00 |
 | settings-barrierefreiheit | 42 | 23 | 174 | 133 | 0 | 9 | 18 | 1 | 11 | 197 | 1373 | 7 | 3 | 0.00 |
 | settings-module | 47 | 13 | 174 | 133 | 0 | 5 | 35 | 1 | 29 | 144 | 1060 | 7 | 3 | 0.00 |
 | settings-werkzeuge | 64 | 48 | 174 | 133 | 0 | 4 | 30 | 1 | 20 | 192 | 1453 | 6 | 3 | 0.00 |
-| settings-benachrichtigungen | 44 | 23 | 174 | 133 | 1 | 8 | 20 | 1 | 11 | 188 | 1323 | 7 | 3 | 0.00 |
+| settings-benachrichtigungen | 44 | 23 | 174 | 133 | 1 | 8 | 20 | 1 | 11 | 188 | 1323 | 7 | 3 | 0.05 |
 | settings-sicherheit | 41 | 25 | 174 | 133 | 0 | 7 | 17 | 1 | 11 | 291 | 2101 | 5 | 3 | 0.00 |
 | settings-sync | 32 | 16 | 174 | 133 | 0 | 4 | 18 | 1 | 11 | 148 | 1027 | 7 | 3 | 0.00 |
 | settings-ki | 40 | 16 | 174 | 133 | 0 | 6 | 20 | 1 | 11 | 216 | 1500 | 7 | 3 | 0.00 |
 | settings-verbindungen | 38 | 14 | 174 | 133 | 0 | 4 | 17 | 1 | 11 | 171 | 1221 | 7 | 3 | 0.00 |
 | settings-schnellerfassung | 33 | 17 | 174 | 133 | 0 | 4 | 18 | 1 | 11 | 187 | 1188 | 8 | 3 | 0.00 |
 | settings-updates | 29 | 13 | 174 | 133 | 0 | 4 | 17 | 1 | 11 | 235 | 1663 | 6 | 4 | 0.00 |
-| settings-entwickler | 34 | 18 | 174 | 133 | 1 | 5 | 17 | 1 | 11 | 169 | 1215 | 7 | 3 | 0.01 |
-| settings-ueber | 42 | 13 | 174 | 133 | 0 | 5 | 17 | 1 | 12 | 140 | 1037 | 5 | 4 | 0.00 |
+| settings-entwickler | 34 | 18 | 174 | 133 | 1 | 5 | 17 | 1 | 11 | 169 | 1215 | 7 | 3 | 0.00 |
+| settings-ueber | 42 | 13 | 174 | 133 | 0 | 5 | 17 | 1 | 12 | 140 | 1037 | 5 | 4 | 0.01 |
 | settings-module-finance | 38 | 21 | 174 | 173 | 0 | 5 | 20 | 2 | 12 | 198 | 1404 | 5 | 3 | 0.00 |
 
 ### Reizlast über dem Falz – 412x915-dark, seed
@@ -57,24 +57,24 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | calendar | 53 | 25 | 569 | 200 | 1 | 3 | 53 | 2 | 2 | 96 | 327 | 7 | 4 | 0.00 |
 | planner | 21 | 20 | 778 | 268 | 1 | 1 | 17 | 2 | 1 | 94 | 491 | 7 | 4 | 0 |
-| todos | 36 | 21 | 580 | 239 | 1 | 2 | 11 | 2 | 2 | 88 | 518 | 7 | 4 | 0.02 |
+| todos | 36 | 21 | 584 | 243 | 1 | 2 | 11 | 2 | 2 | 88 | 518 | 7 | 4 | 0 |
 | habits | 22 | 14 | 533 | 280 | 1 | 2 | 3 | 2 | 2 | 56 | 340 | 6 | 4 | 0.00 |
-| timetrack | 19 | 18 | 572 | 297 | 1 | 2 | 10 | 2 | 2 | 43 | 279 | 6 | 4 | 0.06 |
-| weather | 11 | 11 | 105 | 336 | 0 | 1 | 8 | 5 | 4 | 216 | 1037 | 9 | 5 | 0.97 |
+| timetrack | 19 | 18 | 572 | 297 | 1 | 2 | 10 | 2 | 2 | 43 | 279 | 6 | 4 | 0.05 |
+| weather | 11 | 11 | 105 | 336 | 0 | 1 | 8 | 5 | 4 | 216 | 1037 | 9 | 5 | 0.00 |
 | maps | 27 | 23 | 846 | 349 | 1 | 2 | 10 | 2 | 3 | 53 | 321 | 8 | 4 | 0 |
 | people | 24 | 16 | 554 | 169 | 1 | 2 | 4 | 6 | 3 | 79 | 426 | 7 | 4 | 0.00 |
 | fitness | 18 | 13 | 632 | 271 | 1 | 2 | 3 | 2 | 4 | 79 | 353 | 7 | 4 | 0.00 |
-| finance | 16 | 16 | 834 | 344 | 1 | 6 | 3 | 3 | 2 | 54 | 335 | 9 | 4 | 0.05 |
+| finance | 16 | 16 | 834 | 344 | 1 | 6 | 3 | 3 | 2 | 54 | 335 | 9 | 4 | 0.07 |
 | invoices | 18 | 14 | 687 | 314 | 1 | 5 | 5 | 2 | 6 | 75 | 459 | 8 | 4 | 0.00 |
-| subscriptions | 15 | 9 | 523 | 244 | 1 | 3 | 8 | 4 | 3 | 72 | 385 | 8 | 4 | 0.07 |
+| subscriptions | 15 | 9 | 523 | 244 | 1 | 3 | 8 | 4 | 3 | 72 | 385 | 8 | 4 | 0.19 |
 | budgets | 14 | 12 | 681 | 364 | 1 | 3 | 15 | 2 | 2 | 56 | 273 | 6 | 4 | 0.00 |
 | lists | 21 | 19 | 858 | 308 | 1 | 2 | 7 | 2 | 2 | 62 | 332 | 7 | 4 | 0 |
 | pantry | 20 | 11 | 642 | 280 | 1 | 5 | 14 | 2 | 2 | 52 | 268 | 8 | 4 | 0.00 |
 | bookmarks | 23 | 13 | 661 | 288 | 1 | 2 | 4 | 2 | 2 | 62 | 429 | 8 | 4 | 0.00 |
 | notes | 27 | 27 | – | 133 | 1 | 2 | 11 | 2 | 2 | 119 | 795 | 6 | 3 | 0.00 |
-| chat | 11 | 10 | 366 | 169 | 1 | 1 | 9 | 2 | 1 | 49 | 342 | 5 | 3 | 0 |
+| chat | 11 | 10 | 356 | 159 | 1 | 1 | 9 | 2 | 1 | 49 | 342 | 5 | 3 | 0.01 |
 | feeds | 17 | 11 | 690 | 306 | 1 | 1 | 11 | 2 | 2 | 37 | 316 | 9 | 4 | 0 |
-| music | 22 | 22 | 710 | 208 | 0 | 0 | 5 | 2 | 1 | 32 | 210 | 6 | 3 | 0.12 |
+| music | 22 | 22 | 710 | 208 | 0 | 0 | 5 | 2 | 1 | 32 | 210 | 6 | 3 | 0 |
 | vault | 18 | 17 | 817 | 307 | 1 | 1 | 13 | 2 | 2 | 72 | 430 | 7 | 4 | 0.00 |
 | accounts | 5 | 5 | – | 141 | 1 | 1 | 3 | 2 | 1 | 18 | 142 | 5 | 4 | 0 |
 | library | 9 | 6 | 93 | 232 | 0 | 1 | 6 | 1 | 3 | 57 | 421 | 7 | 3 | 0 |
@@ -82,67 +82,67 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 | tools | 8 | 4 | 93 | 212 | 0 | 1 | 6 | 1 | 3 | 65 | 437 | 7 | 3 | 0 |
 | settings | 19 | 12 | 169 | 338 | 0 | 4 | 1 | 1 | 2 | 57 | 361 | 5 | 3 | 0 |
 | settings-einrichtung | 6 | 6 | 169 | 137 | 1 | 2 | 3 | 2 | 2 | 39 | 302 | 7 | 3 | 0 |
-| settings-allgemein | 7 | 7 | 169 | 113 | 0 | 2 | 0 | 1 | 2 | 75 | 500 | 5 | 3 | 0.09 |
-| settings-darstellung | 19 | 19 | 169 | 113 | 0 | 14 | 12 | 1 | 2 | 232 | 1527 | 6 | 4 | 0 |
-| settings-barrierefreiheit | 9 | 9 | 169 | 113 | 0 | 3 | 1 | 1 | 2 | 100 | 707 | 6 | 3 | 0.07 |
-| settings-module | 7 | 3 | 169 | 113 | 0 | 2 | 4 | 1 | 5 | 60 | 480 | 7 | 3 | 0 |
-| settings-werkzeuge | 2 | 2 | 169 | 113 | 0 | 1 | 1 | 1 | 2 | 15 | 148 | 5 | 3 | 0.00 |
-| settings-benachrichtigungen | 6 | 6 | 169 | 113 | 1 | 3 | 3 | 1 | 2 | 86 | 614 | 7 | 3 | 0.12 |
+| settings-allgemein | 7 | 7 | 169 | 113 | 0 | 2 | 0 | 1 | 2 | 75 | 500 | 5 | 3 | 0.00 |
+| settings-darstellung | 19 | 19 | 169 | 113 | 0 | 14 | 12 | 1 | 2 | 232 | 1527 | 6 | 4 | 0.00 |
+| settings-barrierefreiheit | 9 | 9 | 169 | 113 | 0 | 3 | 1 | 1 | 2 | 100 | 707 | 6 | 3 | 0.01 |
+| settings-module | 7 | 3 | 169 | 113 | 0 | 2 | 4 | 1 | 5 | 60 | 480 | 7 | 3 | 0.00 |
+| settings-werkzeuge | 14 | 14 | 169 | 113 | 0 | 1 | 7 | 1 | 5 | 77 | 576 | 6 | 3 | 0.00 |
+| settings-benachrichtigungen | 6 | 6 | 169 | 113 | 1 | 3 | 3 | 1 | 2 | 86 | 614 | 7 | 3 | 0.00 |
 | settings-sicherheit | 7 | 7 | 169 | 137 | 0 | 3 | 0 | 1 | 2 | 107 | 758 | 5 | 3 | 0.01 |
 | settings-sync | 5 | 5 | 169 | 113 | 0 | 1 | 2 | 1 | 2 | 69 | 520 | 7 | 3 | 0.00 |
-| settings-ki | 6 | 6 | 169 | 113 | 0 | 3 | 3 | 1 | 2 | 89 | 648 | 7 | 3 | 0 |
+| settings-ki | 6 | 6 | 169 | 113 | 0 | 3 | 3 | 1 | 2 | 89 | 648 | 7 | 3 | 0.12 |
 | settings-verbindungen | 3 | 3 | 169 | 113 | 0 | 1 | 0 | 1 | 2 | 79 | 566 | 7 | 3 | 0.00 |
-| settings-schnellerfassung | 5 | 5 | 169 | 113 | 0 | 1 | 1 | 1 | 2 | 79 | 482 | 7 | 3 | 0 |
+| settings-schnellerfassung | 5 | 5 | 169 | 113 | 0 | 1 | 1 | 1 | 2 | 79 | 482 | 7 | 3 | 0.04 |
 | settings-updates | 3 | 3 | 169 | 113 | 0 | 1 | 1 | 1 | 2 | 84 | 593 | 6 | 4 | 0.00 |
 | settings-entwickler | 6 | 6 | 169 | 113 | 1 | 2 | 1 | 1 | 2 | 84 | 608 | 6 | 3 | 0.00 |
-| settings-ueber | 3 | 3 | 169 | 113 | 0 | 2 | 1 | 1 | 3 | 43 | 335 | 5 | 4 | 0.00 |
+| settings-ueber | 3 | 3 | 169 | 113 | 0 | 2 | 1 | 1 | 3 | 43 | 335 | 5 | 4 | 0.08 |
 | settings-module-finance | 5 | 5 | 169 | 249 | 0 | 1 | 4 | 2 | 3 | 97 | 721 | 5 | 3 | 0 |
 
 ### Reizlast über dem Falz – 1920x1080-dark, empty
 
 | Seite | Aktionen | davon Chrome | Inhalt ab y | Kopf px | Primär | Farbe Text | Farbe Fläche | Verläufe | Farbe Icon | Wörter | Zeichen | Schriftgrößen | Gewichte | CLS |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| calendar | 58 | 23 | 551 | 286 | 1 | 5 | 17 | 2 | 3 | 116 | 439 | 7 | 4 | 0.01 |
-| planner | 19 | 19 | – | 211 | 1 | 1 | 10 | 2 | 2 | 122 | 522 | 8 | 4 | 0.00 |
+| calendar | 58 | 23 | 551 | 286 | 1 | 5 | 17 | 2 | 3 | 116 | 439 | 7 | 4 | 0.04 |
+| planner | 19 | 19 | – | 211 | 1 | 1 | 10 | 2 | 2 | 122 | 522 | 8 | 4 | 0.01 |
 | todos | 19 | 19 | – | 180 | 0 | 1 | 5 | 2 | 3 | 42 | 255 | 7 | 4 | 0.01 |
 | habits | 15 | 15 | – | 200 | 1 | 2 | 3 | 2 | 2 | 42 | 298 | 4 | 3 | 0.02 |
-| timetrack | 15 | 15 | – | 233 | 1 | 2 | 3 | 2 | 2 | 43 | 280 | 6 | 4 | 0.05 |
+| timetrack | 15 | 15 | – | 233 | 1 | 2 | 3 | 2 | 2 | 43 | 280 | 6 | 4 | 0.01 |
 | weather | 11 | 11 | – | 200 | 1 | 1 | 3 | 5 | 1 | 40 | 255 | 4 | 4 | 0.01 |
 | maps | 14 | 14 | – | 233 | 1 | 2 | 4 | 2 | 4 | 35 | 201 | 6 | 4 | 0.01 |
 | people | 13 | 13 | – | 140 | 1 | 1 | 4 | 2 | 4 | 30 | 211 | 5 | 3 | 0.02 |
 | fitness | 10 | 10 | – | 206 | 1 | 2 | 3 | 2 | 3 | 40 | 241 | 7 | 4 | 0.01 |
-| finance | 14 | 14 | 660 | 292 | 1 | 5 | 3 | 3 | 3 | 57 | 316 | 8 | 4 | 0.08 |
+| finance | 14 | 14 | 660 | 292 | 1 | 5 | 3 | 3 | 3 | 57 | 316 | 8 | 4 | 0.02 |
 | invoices | 13 | 13 | – | 140 | 1 | 2 | 4 | 2 | 3 | 30 | 202 | 7 | 4 | 0.01 |
 | subscriptions | 9 | 9 | – | 213 | 1 | 1 | 4 | 2 | 4 | 32 | 174 | 7 | 3 | 0.02 |
-| budgets | 12 | 12 | – | 213 | 1 | 2 | 4 | 2 | 3 | 33 | 213 | 4 | 3 | 0.02 |
+| budgets | 12 | 12 | – | 213 | 1 | 2 | 4 | 2 | 3 | 33 | 213 | 4 | 3 | 0.03 |
 | lists | 14 | 14 | – | 233 | 1 | 2 | 6 | 2 | 3 | 30 | 191 | 7 | 4 | 0.01 |
 | pantry | 11 | 11 | – | 205 | 1 | 2 | 8 | 2 | 3 | 31 | 204 | 5 | 3 | 0.02 |
 | bookmarks | 14 | 14 | – | 249 | 1 | 2 | 4 | 2 | 3 | 22 | 156 | 5 | 3 | 0.01 |
 | notes | 21 | 21 | – | 142 | 1 | 2 | 4 | 2 | 3 | 31 | 186 | 6 | 3 | 0.01 |
-| chat | 12 | 12 | 368 | 163 | 1 | 1 | 9 | 2 | 2 | 58 | 390 | 5 | 3 | 0.01 |
+| chat | 12 | 12 | 368 | 163 | 1 | 1 | 9 | 2 | 2 | 58 | 390 | 5 | 3 | 0.00 |
 | browser | 17 | 17 | – | 118 | 0 | 0 | 2 | 1 | 1 | 42 | 289 | 6 | 3 | 0.02 |
 | feeds | 10 | 10 | – | 231 | 1 | 1 | 10 | 2 | 3 | 29 | 175 | 4 | 4 | 0.01 |
 | mail | 10 | 10 | – | 141 | 0 | 1 | 3 | 1 | 3 | 39 | 258 | 4 | 2 | 0.01 |
 | music | 10 | 10 | – | 213 | 1 | 1 | 4 | 2 | 3 | 38 | 252 | 4 | 3 | 0.01 |
 | vault | 15 | 15 | – | 205 | 1 | 1 | 13 | 2 | 3 | 39 | 295 | 7 | 3 | 0.02 |
-| accounts | 7 | 7 | – | 141 | 1 | 1 | 3 | 2 | 1 | 52 | 432 | 4 | 3 | 0.00 |
-| disk | 10 | 4 | 502 | 238 | 0 | 3 | 2 | 1 | 2 | 175 | 930 | 9 | 4 | 0.13 |
+| accounts | 7 | 7 | – | 141 | 1 | 1 | 3 | 2 | 1 | 52 | 432 | 4 | 3 | 0.01 |
+| disk | 10 | 4 | 502 | 238 | 0 | 3 | 2 | 1 | 2 | 175 | 930 | 9 | 4 | 0.01 |
 | downloads | 18 | 10 | 415 | 165 | 1 | 2 | 7 | 1 | 1 | 87 | 564 | 5 | 4 | 0.01 |
 | library | 17 | 6 | 93 | 223 | 0 | 1 | 56 | 3 | 9 | 157 | 1093 | 7 | 3 | 0.01 |
 | library-vault | 4 | 4 | 145 | 133 | 0 | 0 | 11 | 2 | 1 | 53 | 379 | 6 | 3 | 0.01 |
 | tools | 24 | 4 | 93 | 207 | 0 | 1 | 22 | 1 | 9 | 172 | 1204 | 7 | 3 | 0.01 |
 | settings | 36 | 12 | 174 | 368 | 0 | 4 | 19 | 1 | 14 | 131 | 889 | 6 | 3 | 0.00 |
 | settings-einrichtung | 35 | 19 | 174 | 133 | 1 | 5 | 20 | 2 | 11 | 118 | 829 | 7 | 3 | 0.00 |
-| settings-allgemein | 45 | 18 | 174 | 133 | 0 | 5 | 17 | 1 | 11 | 185 | 1273 | 6 | 3 | 0.07 |
+| settings-allgemein | 45 | 18 | 174 | 133 | 0 | 5 | 17 | 1 | 11 | 185 | 1273 | 6 | 3 | 0.00 |
 | settings-darstellung | 67 | 46 | 174 | 133 | 0 | 22 | 34 | 1 | 11 | 457 | 3002 | 6 | 4 | 0.00 |
-| settings-barrierefreiheit | 42 | 23 | 174 | 133 | 0 | 9 | 18 | 1 | 11 | 195 | 1366 | 7 | 3 | 0.00 |
+| settings-barrierefreiheit | 42 | 23 | 174 | 133 | 0 | 9 | 18 | 1 | 11 | 195 | 1366 | 7 | 3 | 0.04 |
 | settings-module | 47 | 13 | 174 | 133 | 0 | 5 | 35 | 1 | 29 | 142 | 1053 | 7 | 3 | 0.00 |
 | settings-werkzeuge | 64 | 48 | 174 | 133 | 0 | 4 | 30 | 1 | 20 | 190 | 1446 | 6 | 3 | 0.00 |
-| settings-benachrichtigungen | 44 | 23 | 174 | 133 | 1 | 8 | 20 | 1 | 11 | 186 | 1316 | 7 | 3 | 0.00 |
+| settings-benachrichtigungen | 44 | 23 | 174 | 133 | 1 | 8 | 20 | 1 | 11 | 186 | 1316 | 7 | 3 | 0.05 |
 | settings-sicherheit | 41 | 25 | 174 | 133 | 0 | 7 | 17 | 1 | 11 | 289 | 2094 | 5 | 3 | 0.00 |
 | settings-sync | 32 | 16 | 174 | 133 | 0 | 4 | 18 | 1 | 11 | 146 | 1020 | 7 | 3 | 0.00 |
-| settings-ki | 40 | 16 | 174 | 133 | 0 | 6 | 20 | 1 | 11 | 214 | 1493 | 7 | 3 | 0.00 |
-| settings-verbindungen | 38 | 14 | 174 | 133 | 0 | 4 | 17 | 1 | 11 | 169 | 1214 | 7 | 3 | 0.00 |
+| settings-ki | 40 | 16 | 174 | 133 | 0 | 6 | 20 | 1 | 11 | 214 | 1493 | 7 | 3 | 0.03 |
+| settings-verbindungen | 38 | 14 | 174 | 133 | 0 | 4 | 17 | 1 | 11 | 169 | 1214 | 7 | 3 | 0.02 |
 | settings-schnellerfassung | 33 | 17 | 174 | 133 | 0 | 4 | 18 | 1 | 11 | 185 | 1181 | 8 | 3 | 0.00 |
 | settings-updates | 29 | 13 | 174 | 133 | 0 | 4 | 17 | 1 | 11 | 233 | 1656 | 6 | 4 | 0.00 |
 | settings-entwickler | 34 | 18 | 174 | 133 | 1 | 5 | 17 | 1 | 11 | 177 | 1304 | 7 | 3 | 0.00 |
@@ -202,54 +202,54 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 
 ### Flächen: Rahmen vs. Schatten vs. Tönung – 1920 dunkel, Seed
 
-| Seite | Rahmen (1 px rundum) | Ringe | Schatten | getönt | --surface-2 | Verläufe | Radien (px×n) | Animationen | Transitions (Eigenschaft×n) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| calendar | 37 | 0 | 4 | 4 | 11 | 2 | 8px×87, 999px×15, 12px×3, 20px×2, 16px×1 | 1 | transform×7 |
-| planner | 0 | 0 | 12 | 1 | 21 | 2 | 8px×29, 16px×13, 12px×9, 999px×8 | 10 | transform×25 |
-| todos | 1 | 1 | 12 | 6 | 47 | 2 | 8px×47, 16px×12, 12px×12, 999px×12 | 10 | transform×57 |
-| habits | 4 | 0 | 2 | 1 | 6 | 2 | 999px×10, 16px×4, 12px×3, 20px×1 | 1 | transform×11 |
-| timetrack | 0 | 0 | 3 | 1 | 2 | 2 | 999px×10, 16px×4, 12px×3, 20px×1, 8px×1 | 2 | transform×4 |
-| weather | 1 | 0 | 28 | 19 | 2 | 5 | 12px×31, 999px×9, 8px×5, 16px×2, 40px×1 | 1 | transform×2 |
-| maps | 0 | 1 | 3 | 6 | 12 | 2 | 999px×15, 8px×8, 12px×6, 20px×1, 16px×1 | 9 | transform×10 |
-| people | 0 | 1 | 30 | 2 | 32 | 26 | 16px×28, 999px×10, 12px×3, 20px×1 | 10 | transform×33 |
-| fitness | 0 | 0 | 30 | 1 | 4 | 2 | 8px×57, 16px×28, 999px×5, 12px×3, 20px×1 | 10 | transform×7 |
-| finance | 0 | 0 | 25 | 1 | 25 | 4 | 16px×22, 8px×18, 999px×13, 12px×4, 20px×2 | 10 | transform×28 |
-| invoices | 0 | 1 | 5 | 4 | 11 | 2 | 12px×10, 8px×10, 999px×5, 16px×3, 20px×1 | 8 | transform×20 |
-| subscriptions | 15 | 0 | 2 | 16 | 15 | 4 | 8px×9, 999px×7, 16px×4, 12px×2 | 10 | transform×23 |
-| budgets | 3 | 0 | 8 | 11 | 5 | 2 | 999px×6, 16px×6, 12px×5, 20px×1 | 7 | transform×11 |
-| lists | 0 | 0 | 2 | 1 | 18 | 2 | 8px×18, 12px×7, 16px×4, 999px×3 | 10 | transform×38 |
-| pantry | 28 | 0 | 2 | 1 | 52 | 2 | 999px×19, 12px×16, 20px×1 | 10 | transform×39 |
-| bookmarks | 0 | 0 | 6 | 2 | 35 | 2 | 8px×35, 999px×9, 12px×4, 20px×1, 16px×1 | 10 | transform×66 |
-| notes | 1 | 0 | 2 | 2 | 20 | 2 | 8px×13, 12px×11, 999px×8, 16px×1, 20px×1 | 1 | transform×25 |
-| chat | 0 | 0 | 3 | 2 | 1 | 2 | 999px×7, 12px×4, 16px×3 | 1 | transform×4 |
-| browser | 1 | 0 | 2 | 1 | 9 | 1 | 12px×9, 999px×8, 8px×7, 16px×1 | 7 | transform×9 |
-| feeds | 1 | 0 | 2 | 2 | 8 | 2 | 999px×7, 8px×3, 12px×2 | 1 | transform×9 |
-| mail | 2 | 1 | 5 | 2 | 11 | 1 | 12px×18, 8px×11, 999px×9, 16px×4 | 8 | transform×21 |
-| music | 0 | 0 | 6 | 5 | 6 | 2 | 999px×12, 12px×5, 16px×1 | 1 | transform×8 |
-| vault | 34 | 0 | 1 | 1 | 1 | 2 | 12px×20, 999px×2 | 10 | transform×9 |
-| accounts | 0 | 1 | 0 | 2 | 1 | 2 | 999px×2, 12px×2 | 1 | transform×2 |
-| disk | 0 | 0 | 6 | 1 | 1 | 1 | 12px×6, 999px×4, 16px×4, 20px×1 | 1 | transform×6 |
-| downloads | 0 | 0 | 3 | 3 | 10 | 1 | 999px×3, 12px×3, 8px×3, 20px×1, 16px×1 | 4 | transform×14 |
-| library | 6 | 0 | 28 | 80 | 26 | 3 | 12px×72, 16px×32, 8px×25, 20px×3 | 1 | transform×44 |
-| library-vault | 0 | 0 | 3 | 1 | 1 | 2 | 20px×2, 16px×2, 12px×2, 8px×1 | 1 | transform×2 |
-| tools | 3 | 0 | 18 | 35 | 21 | 1 | 12px×21, 16px×19, 20px×3 | 1 | transform×28 |
-| settings | 9 | 0 | 5 | 1 | 4 | 1 | 12px×18, 16px×9, 20px×6, 999px×6 | 1 |  |
-| settings-einrichtung | 1 | 0 | 5 | 2 | 5 | 2 | 12px×24, 20px×6, 999px×6, 16px×1 | 1 | transform×7 |
-| settings-allgemein | 10 | 1 | 6 | 2 | 16 | 1 | 12px×47, 999px×11, 20px×7 | 1 | transform×27 |
-| settings-darstellung | 2 | 1 | 14 | 14 | 40 | 1 | 12px×32, 999px×21, 20px×15, 8px×10, 16px×2 | 1 | transform×31 |
-| settings-barrierefreiheit | 0 | 0 | 13 | 2 | 21 | 1 | 12px×22, 999px×17, 20px×14 | 1 | transform×18 |
-| settings-module | 24 | 0 | 5 | 1 | 4 | 1 | 12px×42, 20px×6, 999px×6 | 1 |  |
-| settings-werkzeuge | 0 | 0 | 5 | 1 | 64 | 1 | 12px×19, 20px×6, 999px×6 | 1 | transform×64 |
-| settings-benachrichtigungen | 4 | 0 | 14 | 3 | 14 | 1 | 12px×29, 999px×15, 20px×12, 16px×7 | 1 | transform×29 |
-| settings-sicherheit | 0 | 0 | 7 | 1 | 8 | 1 | 12px×20, 999px×14, 20px×8 | 1 | transform×3 |
-| settings-sync | 2 | 0 | 9 | 2 | 4 | 1 | 12px×29, 20px×6, 999px×6, 16px×5 | 1 | transform×7 |
-| settings-ki | 2 | 1 | 7 | 3 | 6 | 1 | 12px×27, 999px×11, 20px×7, 16px×3 | 1 | transform×21 |
-| settings-verbindungen | 4 | 1 | 11 | 3 | 11 | 1 | 12px×41, 16px×9, 999px×8, 20px×6 | 1 | transform×55 |
-| settings-schnellerfassung | 4 | 0 | 6 | 2 | 5 | 1 | 12px×20, 999px×9, 20px×6, 16px×2 | 1 | transform×2 |
-| settings-updates | 0 | 0 | 9 | 1 | 4 | 1 | 12px×19, 20px×6, 999px×6, 16px×4 | 1 | transform×1 |
-| settings-entwickler | 1 | 0 | 6 | 1 | 5 | 1 | 12px×25, 20px×6, 999px×6, 16px×2 | 1 | transform×5 |
-| settings-ueber | 2 | 1 | 5 | 3 | 6 | 1 | 12px×45, 999px×10, 20px×6, 16px×2 | 1 | transform×18 |
-| settings-module-finance | 2 | 1 | 6 | 2 | 6 | 2 | 12px×20, 999px×9, 20px×7, 16px×2 | 1 | transform×5 |
+| Seite | Rahmen (rundum) | Ringe | Schatten | getönt | neutrale Füllungen | --surface-2 | Verläufe | Radien (px×n) | Animationen | Transitions (Eigenschaft×n) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| calendar | 37 | 0 | 4 | 3 | 1 | 11 | 2 | 8px×87, 999px×15, 12px×3, 20px×2, 16px×1 | 1 | transform×7 |
+| planner | 0 | 0 | 12 | 1 | 0 | 21 | 2 | 8px×29, 16px×13, 12px×9, 999px×8 | 10 | transform×25 |
+| todos | 1 | 1 | 12 | 6 | 0 | 47 | 2 | 8px×47, 16px×12, 12px×12, 999px×12 | 10 | transform×57 |
+| habits | 4 | 0 | 2 | 1 | 0 | 6 | 2 | 999px×10, 16px×4, 12px×3, 20px×1 | 1 | transform×11 |
+| timetrack | 0 | 0 | 3 | 1 | 0 | 2 | 2 | 999px×10, 16px×4, 12px×3, 20px×1, 8px×1 | 2 | transform×4 |
+| weather | 1 | 0 | 28 | 14 | 5 | 2 | 5 | 12px×31, 999px×9, 8px×5, 16px×2, 40px×1 | 1 | transform×2 |
+| maps | 0 | 1 | 3 | 6 | 0 | 12 | 2 | 999px×15, 8px×8, 12px×6, 20px×1, 16px×1 | 9 | transform×10 |
+| people | 0 | 1 | 30 | 2 | 0 | 32 | 26 | 16px×28, 999px×10, 12px×3, 20px×1 | 10 | transform×33 |
+| fitness | 0 | 0 | 30 | 1 | 0 | 4 | 2 | 8px×57, 16px×28, 999px×5, 12px×3, 20px×1 | 10 | transform×7 |
+| finance | 0 | 0 | 25 | 1 | 0 | 25 | 4 | 16px×22, 8px×18, 999px×13, 12px×4, 20px×2 | 10 | transform×28 |
+| invoices | 0 | 1 | 5 | 4 | 0 | 11 | 2 | 12px×10, 8px×10, 999px×5, 16px×3, 20px×1 | 8 | transform×20 |
+| subscriptions | 15 | 0 | 2 | 16 | 0 | 15 | 4 | 8px×9, 999px×7, 16px×4, 12px×2 | 10 | transform×23 |
+| budgets | 3 | 0 | 8 | 11 | 0 | 5 | 2 | 999px×6, 16px×6, 12px×5, 20px×1 | 7 | transform×11 |
+| lists | 0 | 0 | 2 | 1 | 0 | 18 | 2 | 8px×18, 12px×7, 16px×4, 999px×3 | 10 | transform×38 |
+| pantry | 28 | 0 | 2 | 1 | 0 | 52 | 2 | 999px×19, 12px×16, 20px×1 | 10 | transform×39 |
+| bookmarks | 0 | 0 | 6 | 2 | 0 | 35 | 2 | 8px×35, 999px×9, 12px×4, 20px×1, 16px×1 | 10 | transform×66 |
+| notes | 1 | 0 | 2 | 2 | 0 | 20 | 2 | 8px×13, 12px×11, 999px×8, 16px×1, 20px×1 | 1 | transform×25 |
+| chat | 0 | 0 | 3 | 2 | 0 | 1 | 2 | 999px×7, 12px×4, 16px×3 | 1 | transform×4 |
+| browser | 1 | 0 | 2 | 1 | 0 | 9 | 1 | 12px×9, 999px×8, 8px×7, 16px×1 | 7 | transform×9 |
+| feeds | 1 | 0 | 2 | 2 | 0 | 8 | 2 | 999px×7, 8px×3, 12px×2 | 1 | transform×9 |
+| mail | 2 | 1 | 5 | 2 | 0 | 11 | 1 | 12px×18, 8px×11, 999px×9, 16px×4 | 8 | transform×21 |
+| music | 0 | 0 | 6 | 5 | 0 | 6 | 2 | 999px×12, 12px×5, 16px×1 | 1 | transform×8 |
+| vault | 34 | 0 | 1 | 1 | 0 | 1 | 2 | 12px×20, 999px×2 | 10 | transform×9 |
+| accounts | 0 | 1 | 0 | 2 | 0 | 1 | 2 | 999px×2, 12px×2 | 1 | transform×2 |
+| disk | 0 | 0 | 6 | 1 | 0 | 1 | 1 | 12px×6, 999px×4, 16px×4, 20px×1 | 1 | transform×6 |
+| downloads | 0 | 0 | 3 | 3 | 0 | 10 | 1 | 999px×3, 12px×3, 8px×3, 20px×1, 16px×1 | 4 | transform×14 |
+| library | 6 | 0 | 28 | 78 | 2 | 26 | 3 | 12px×72, 16px×32, 8px×25, 20px×3 | 1 | transform×44 |
+| library-vault | 0 | 0 | 3 | 1 | 0 | 1 | 2 | 20px×2, 16px×2, 12px×2, 8px×1 | 1 | transform×2 |
+| tools | 3 | 0 | 18 | 34 | 1 | 21 | 1 | 12px×21, 16px×19, 20px×3 | 1 | transform×28 |
+| settings | 9 | 0 | 5 | 1 | 0 | 4 | 1 | 12px×18, 16px×9, 20px×6, 999px×6 | 1 |  |
+| settings-einrichtung | 1 | 0 | 5 | 2 | 0 | 5 | 2 | 12px×24, 20px×6, 999px×6, 16px×1 | 1 | transform×7 |
+| settings-allgemein | 10 | 1 | 6 | 2 | 0 | 16 | 1 | 12px×47, 999px×11, 20px×7 | 1 | transform×27 |
+| settings-darstellung | 2 | 1 | 14 | 12 | 2 | 40 | 1 | 12px×32, 999px×21, 20px×15, 8px×10, 16px×2 | 1 | transform×31 |
+| settings-barrierefreiheit | 0 | 0 | 13 | 2 | 0 | 21 | 1 | 12px×22, 999px×17, 20px×14 | 1 | transform×18 |
+| settings-module | 24 | 0 | 5 | 1 | 0 | 4 | 1 | 12px×42, 20px×6, 999px×6 | 1 |  |
+| settings-werkzeuge | 0 | 0 | 5 | 1 | 0 | 64 | 1 | 12px×19, 20px×6, 999px×6 | 1 | transform×64 |
+| settings-benachrichtigungen | 4 | 0 | 14 | 3 | 0 | 14 | 1 | 12px×29, 999px×15, 20px×12, 16px×7 | 1 | transform×29 |
+| settings-sicherheit | 0 | 0 | 7 | 1 | 0 | 8 | 1 | 12px×20, 999px×14, 20px×8 | 1 | transform×3 |
+| settings-sync | 2 | 0 | 9 | 2 | 0 | 4 | 1 | 12px×29, 20px×6, 999px×6, 16px×5 | 1 | transform×7 |
+| settings-ki | 2 | 1 | 7 | 3 | 0 | 6 | 1 | 12px×27, 999px×11, 20px×7, 16px×3 | 1 | transform×21 |
+| settings-verbindungen | 4 | 1 | 11 | 3 | 0 | 11 | 1 | 12px×41, 16px×9, 999px×8, 20px×6 | 1 | transform×55 |
+| settings-schnellerfassung | 4 | 0 | 6 | 1 | 1 | 5 | 1 | 12px×20, 999px×9, 20px×6, 16px×2 | 1 | transform×2 |
+| settings-updates | 0 | 0 | 9 | 1 | 0 | 4 | 1 | 12px×19, 20px×6, 999px×6, 16px×4 | 1 | transform×1 |
+| settings-entwickler | 1 | 0 | 6 | 1 | 0 | 5 | 1 | 12px×25, 20px×6, 999px×6, 16px×2 | 1 | transform×5 |
+| settings-ueber | 2 | 1 | 5 | 3 | 0 | 6 | 1 | 12px×45, 999px×10, 20px×6, 16px×2 | 1 | transform×18 |
+| settings-module-finance | 2 | 1 | 6 | 2 | 0 | 6 | 2 | 12px×20, 999px×9, 20px×7, 16px×2 | 1 | transform×5 |
 
 ### Dialoge – 1920 dunkel, Seed
 
@@ -361,44 +361,69 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 | disk:system | 379 | 234 |
 | downloads:running | 379 | 224 |
 
-### Handy: Zeilenhöhen – 412 dunkel, Seed
+### Handy: Köpfe und Zeilenhöhen – 412 dunkel, Seed
 
-| Seite | Zeilen (n · Median · min–max) |
-| --- | --- |
-| planner | 5 · 57 · 56–57 |
-| todos | 42 · 59 · 56–210 |
-| timetrack | 1 · 56 · 56–56 |
-| maps | 8 · 57 · 56–78 |
-| people | 28 · 104 · 82–104 |
-| fitness | 29 · 77 · 56–119 |
-| invoices | 7 · 130 · 103–176 |
-| subscriptions | 9 · 155 · 81–181 |
-| lists | 14 · 57 · 56–109 |
-| pantry | 14 · 98 · 76–126 |
-| bookmarks | 31 · 83 · 57–104 |
-| feeds | 6 · 50 · 50–50 |
-| vault | 34 · 106 · 84–150 |
+| Seite | Kopf px | Inhalt ab y | Zeilen (n · Median · min–max) |
+| --- | --- | --- | --- |
+| calendar | 200 | 569 | – |
+| planner | 268 | 778 | 5 · 57 · 56–57 |
+| todos | 243 | 584 | 42 · 59 · 56–210 |
+| habits | 280 | 533 | – |
+| timetrack | 297 | 572 | 1 · 56 · 56–56 |
+| weather | 336 | 105 | – |
+| maps | 349 | 846 | 8 · 57 · 56–78 |
+| people | 169 | 554 | 28 · 104 · 82–104 |
+| fitness | 271 | 632 | 29 · 77 · 56–119 |
+| finance | 344 | 834 | – |
+| invoices | 314 | 687 | 7 · 130 · 103–176 |
+| subscriptions | 244 | 523 | 9 · 155 · 81–181 |
+| budgets | 364 | 681 | – |
+| lists | 308 | 858 | 14 · 57 · 56–109 |
+| pantry | 280 | 642 | 14 · 98 · 76–126 |
+| bookmarks | 288 | 661 | 31 · 83 · 57–104 |
+| notes | 133 | – | – |
+| chat | 159 | 356 | – |
+| feeds | 306 | 690 | 6 · 50 · 50–50 |
+| music | 208 | 710 | – |
+| vault | 307 | 817 | 34 · 106 · 84–150 |
+| accounts | 141 | – | – |
+| library | 232 | 93 | – |
+| library-vault | 209 | 145 | – |
+| tools | 212 | 93 | – |
+| settings | 338 | 169 | – |
+| settings-einrichtung | 137 | 169 | – |
+| settings-allgemein | 113 | 169 | – |
+| settings-darstellung | 113 | 169 | – |
+| settings-barrierefreiheit | 113 | 169 | – |
+| settings-module | 113 | 169 | – |
+| settings-werkzeuge | 113 | 169 | – |
+| settings-benachrichtigungen | 113 | 169 | – |
+| settings-sicherheit | 137 | 169 | – |
+| settings-sync | 113 | 169 | – |
+| settings-ki | 113 | 169 | – |
+| settings-verbindungen | 113 | 169 | – |
+| settings-schnellerfassung | 113 | 169 | – |
+| settings-updates | 113 | 169 | – |
+| settings-entwickler | 113 | 169 | – |
+| settings-ueber | 113 | 169 | – |
+| settings-module-finance | 249 | 169 | – |
 
 ### Layout-Sprung (CLS) über alle Läufe – nur Werte, die in mindestens zwei Läufen ≥ 0,05 sind
 
 | Seite | Läufe mit CLS ≥ 0,05 |
 | --- | --- |
-| page-maps--v-orte | D-dark/seed 0.06, D-light/seed 0.06 |
-| page-maps--v-routen | D-dark/seed 0.06, D-light/seed 0.06 |
-| page-maps--v-karte | D-dark/seed 0.06, D-light/seed 0.06 |
-| page-disk | D-dark/seed 0.13, D-dark/empty 0.13, D-light/seed 0.13 |
-| palette | D-dark/seed 0.08, D-light/seed 0.12, P-dark/seed 0.40, P-dark/empty 0.20, P-light/empty 0.07 |
-| toolbox | D-dark/seed 0.06, D-light/seed 0.14, P-light/empty 0.07 |
-| overview-calm | D-dark/seed 0.06, P-dark/seed 0.57, P-light/empty 0.07 |
-| overview-all | D-dark/seed 0.19, D-dark/empty 0.12, D-light/seed 0.18, D-light/empty 0.12, P-dark/seed 0.89, P-light/seed 0.25, P-light/empty 0.07 |
-| page-settings-allgemein | D-dark/empty 0.07, D-light/seed 0.07, D-light/empty 0.07, P-dark/seed 0.09, P-dark/empty 0.09, P-light/seed 0.08 |
-| page-lists | D-light/seed 0.07, P-light/seed 0.08 |
-| page-music | D-light/seed 0.14, P-dark/seed 0.12 |
-| page-settings-benachrichtigungen | D-light/empty 0.05, P-dark/seed 0.12 |
-| page-timetrack | P-dark/seed 0.06, P-light/empty 0.05 |
-| page-subscriptions | P-dark/seed 0.07, P-dark/empty 0.08 |
-| page-settings-barrierefreiheit | P-dark/seed 0.07, P-light/seed 0.07, P-light/empty 0.07 |
-| page-invoices | P-dark/empty 0.10, P-light/empty 0.10 |
+| page-calendar--v-plan | D-dark/seed 0.14, D-dark/empty 0.11 |
+| page-disk | D-dark/seed 0.13, D-light/seed 0.13 |
+| page-settings-benachrichtigungen | D-dark/seed 0.05, D-dark/empty 0.05, D-light/seed 0.05, P-light/empty 0.13 |
+| palette | D-dark/seed 0.11, D-light/seed 0.09, P-dark/seed 0.25, P-light/empty 0.07 |
+| overview-calm | D-dark/seed 0.06, D-light/seed 0.06, P-light/empty 0.07 |
+| overview-all | D-dark/seed 0.18, D-dark/empty 0.14, D-light/seed 0.18, D-light/empty 0.12, P-dark/seed 0.25, P-dark/empty 0.10, P-light/empty 0.07 |
+| page-timetrack | D-light/seed 0.06, P-dark/seed 0.05, P-dark/empty 0.05, P-light/empty 0.05 |
+| toolbox | D-light/seed 0.15, P-dark/seed 0.25, P-light/empty 0.07 |
+| dialog-subscriptions | D-light/empty 0.05, P-dark/seed 0.06 |
+| page-settings-ueber | D-light/empty 0.11, P-dark/seed 0.08, P-light/empty 0.13 |
+| page-subscriptions | P-dark/seed 0.19, P-dark/empty 0.08, P-light/seed 0.07 |
+| page-settings-ki | P-dark/seed 0.12, P-light/empty 0.12 |
 | page-bookmarks | P-dark/empty 0.07, P-light/empty 0.07 |
 | page-feeds | P-dark/empty 0.06, P-light/empty 0.06 |
 
@@ -415,7 +440,7 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Ak
 | page-todos--v-alle | 5 | 24×24 _check_jdqxd_88 | Recherche 16; 24×24 _check_jdqxd_88 | Bücher aussortieren 18 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
 | page-todos--v-heute | 2 | 24×24 _check_jdqxd_88 | Formular ausfüllen 8; 24×24 _check_jdqxd_88 | Termin vereinbaren 9 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
 | page-todos--v-demnächst | 4 | 24×24 _check_jdqxd_88 | Recherche 16; 24×24 _check_jdqxd_88 | Bücher aussortieren 18 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
-| page-todos--v-irgendwann | 3 | 24×24 _check_jdqxd_88 | Keller aufräumen; 24×24 _check_jdqxd_88 | Bücher aussortieren 22 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
+| page-todos--v-irgendwann | 2 | 24×24 _check_jdqxd_88 | Keller aufräumen; 24×24 _check_jdqxd_88 | Fahrradreifen aufpumpen 19 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
 | page-todos--v-erledigt | 5 | 24×24 _check_jdqxd_88 | Vorräte prüfen 15; 24×24 _check_jdqxd_88 | Schritt 2 | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
 | page-todos--v-board | 0 |  | 1 | _nextTitle_jdqxd_328 | Termin vereinbaren 9 |
 | page-habits | 0 |  | 1 | _eyebrowText_1ofc1_95 | Planen · Gewohnheiten |
