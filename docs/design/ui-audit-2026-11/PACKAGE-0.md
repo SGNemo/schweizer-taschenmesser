@@ -6,7 +6,7 @@ Gehört zu [REPORT.md](REPORT.md) (Entscheidung) und [PACKAGES.md](PACKAGES.md) 
 
 | Paket | Inhalt | Aufwand | Bedingung |
 | --- | --- | --- | --- |
-| **0a-1a** | CI-Mechanismus: `seed`-Output, Ratschen-Skript `ratchet.mjs` (Rückmeldung im Sammel-Check `web`; Vertrauenswurzel ist `nemo-merge` mit der `develop`-Fassung des Skripts), Aufnahme der Altzusagen-Specs in die Smoke-Liste, HOW-TO/ci.md; drei Schritte Svens (ci.yml-Patch einspielen, Schlüsselpaar erzeugen, Regel 7 in `nemo-merge`) | ≈ 2–2,5 Chat-Tage (M) plus Svens Schritte | erst nach Svens Bestätigung von Freigabe 3 in der Runde-15-Form (Signatur); Label-Schritt (Bootstrap) |
+| **0a-1a** | CI-Mechanismus: `seed`-Output, Ratschen-Skript `ratchet.mjs` (Rückmeldung im Sammel-Check `web`; Vertrauenswurzel ist `nemo-merge` mit der `develop`-Fassung des Skripts), Aufnahme der Altzusagen-Specs in die Smoke-Liste, HOW-TO/ci.md; drei Schritte Svens (ci.yml-Patch einspielen, Schlüsselpaar erzeugen, Regel 7 in `nemo-merge`) | ≈ 2–2,5 Chat-Tage (M) plus Svens Schritte | immer (Freigaben 3 und 4 in der Signatur-Form erteilt am 2026-11-09), sobald eine Council-Runde ohne Blocker endet; Label-Schritt (Bootstrap) |
 | **0a-1b** | Wächter, Baselines, die `autoFocus`- und zwei Minimal-Fixes | ≈ 1,5–2 Chat-Tage | immer, nach 0a-1a (die Baselines brauchen die Ratsche) |
 | **0a-2** | Lade-Robustheit, Maßnahmen 1–3 | ≈ 2 Chat-Tage | immer, parallel zu 0a-1a/0a-1b möglich |
 | **0a-3** | Decision-PR `RULES.md:16` | ≈ 0,5 Chat-Tag | Svens Ja liegt vor (2026-11-09, REPORT „Vier Freigaben“ 1) |
