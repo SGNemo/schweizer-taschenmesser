@@ -16,7 +16,7 @@ async function openMusic(page: Page) {
   await expect(page.getByTestId('music-now')).toBeVisible();
   return page.getByTestId('music-main');
 }
-/** The view chips of the toolbar (the library in the aside has the same names). */
+/** The view chips of the toolbar (the only way into the lists; the aside holds the queue). */
 const chip = (page: Page, name: RegExp | string) =>
   page.getByRole('navigation', { name: 'Ansichten' }).getByRole('button', { name });
 
@@ -52,6 +52,31 @@ test.describe('Music page', () => {
     await expect(start.getByRole('button', { name: /Gestern gehört/ })).toBeVisible();
     await expect(page.getByTestId('music-playlists').getByRole('button')).toHaveCount(2);
     await expect(page.getByTestId('music-queue')).toContainText('Als Nächstes');
+    // The lists exist once, as chips; no second "Bibliothek" card repeats them (U51).
+    await expect(
+      page.getByRole('main').getByRole('button', { name: 'Lieblingssongs', exact: true }),
+    ).toHaveCount(1);
+    await expect(page.getByRole('navigation', { name: 'Bibliothek' })).toHaveCount(0);
+  });
+
+  test('phone: the five controls stay in one row; the heart sits beside the title', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 412, height: 915 });
+    await mockSpotify(page);
+    await seedConnected(page, ALL);
+    await openMusic(page);
+    const controls = page.getByRole('group', { name: 'Wiedergabe steuern' });
+    const tops = await controls
+      .getByRole('button')
+      .evaluateAll((els) => [
+        ...new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))),
+      ]);
+    expect(tops).toHaveLength(1);
+    const heart = page.getByTestId('music-now').getByRole('button', { name: /Lieblingssongs/ });
+    const title = page.getByTestId('music-now').getByRole('heading', { level: 2 });
+    const [h, t] = [await heart.boundingBox(), await title.boundingBox()];
+    expect(Math.abs(h!.y + h!.height / 2 - (t!.y + t!.height / 2))).toBeLessThan(12);
   });
 
   test('the heart saves and removes a song in the liked songs', async ({ page }) => {

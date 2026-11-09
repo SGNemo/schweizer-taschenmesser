@@ -228,7 +228,25 @@ function JobRow({
   return (
     <ItemRow
       title={job.fileName}
-      meta={`${t.downloads.state[job.state]} · ${sizes}${speed}`}
+      meta={
+        job.state === 'done' ? (
+          // Checksum and folder sit in the row's main slot, flush with the title (U29).
+          <span className={styles.metaLines}>
+            <span>{`${t.downloads.state[job.state]} · ${sizes}${speed}`}</span>
+            {job.sha256 ? (
+              <span>
+                {t.downloads.checksum.label}: <span className={styles.hash}>{job.sha256}</span>
+                {job.hashCheck
+                  ? ` · ${job.hashCheck === 'match' ? t.downloads.checksum.match : t.downloads.checksum.mismatch}`
+                  : ''}
+              </span>
+            ) : null}
+            <span>{job.dir}</span>
+          </span>
+        ) : (
+          `${t.downloads.state[job.state]} · ${sizes}${speed}`
+        )
+      }
       lead={<StateIcon state={job.state} />}
       actions={
         <>
@@ -276,25 +294,18 @@ function JobRow({
           : []),
       ]}
     >
-      <div className={styles.detail}>
-        {job.state !== 'done' ? (
-          <Progress
-            value={job.done}
-            max={job.total ?? Math.max(job.done, 1)}
-            label={`${job.fileName} ${pct} %`}
-          />
-        ) : null}
-        {failed ? <span className={styles.error}>{failed}</span> : null}
-        {job.state === 'done' && job.sha256 ? (
-          <span className={styles.sub}>
-            {t.downloads.checksum.label}: <span className={styles.hash}>{job.sha256}</span>
-            {job.hashCheck
-              ? ` · ${job.hashCheck === 'match' ? t.downloads.checksum.match : t.downloads.checksum.mismatch}`
-              : ''}
-          </span>
-        ) : null}
-        {job.state === 'done' ? <span className={styles.sub}>{job.dir}</span> : null}
-      </div>
+      {job.state !== 'done' || failed ? (
+        <div className={styles.detail}>
+          {job.state !== 'done' ? (
+            <Progress
+              value={job.done}
+              max={job.total ?? Math.max(job.done, 1)}
+              label={`${job.fileName} ${pct} %`}
+            />
+          ) : null}
+          {failed ? <span className={styles.error}>{failed}</span> : null}
+        </div>
+      ) : null}
     </ItemRow>
   );
 }
