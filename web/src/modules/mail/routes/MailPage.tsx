@@ -33,7 +33,10 @@ import { MailError } from '../components/MailError';
 import { MailSettingsPanel } from '../components/MailSettingsPanel';
 import { ComposeDialog } from '../components/ComposeDialog';
 import { PendingSendBar } from '../components/PendingSendBar';
+import { InvoiceLine } from '../components/InvoiceLine';
 import { ThreadView } from '../components/ThreadView';
+import { createInvoice, noteReminder, type InvoiceOffer } from '../invoiceRow';
+import { useInvoiceOffers } from '../useInvoiceOffers';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { hasFeature } from '@/core/mail/service';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
@@ -74,6 +77,8 @@ function ThreadList({
   plannerOn,
   onPlan,
   titleOf,
+  invoices,
+  onInvoice,
 }: {
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
@@ -88,6 +93,9 @@ function ThreadList({
   onPlan?: (th: CachedThreadView) => void;
   /** The ToDo title the action would write (the label names it). */
   titleOf: (th: CachedThreadView) => string;
+  /** Rows read as an invoice or payment reminder: the muted line with its values and one verb. */
+  invoices: ReadonlyMap<string, InvoiceOffer>;
+  onInvoice: (th: CachedThreadView, offer: InvoiceOffer) => void;
 }) {
   const hover = useMediaQuery('(hover: hover)');
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
@@ -144,7 +152,14 @@ function ThreadList({
               }
               onSwipeLeft={onPlan && !planned.has(th.id) ? () => onPlan(th) : undefined}
               swipeLeftLabel={planLabel}
-            />
+            >
+              {invoices.get(th.id) ? (
+                <InvoiceLine
+                  offer={invoices.get(th.id)!}
+                  onAct={() => onInvoice(th, invoices.get(th.id)!)}
+                />
+              ) : null}
+            </ItemRow>
           ))}
         </ItemList>
       ),
@@ -152,6 +167,8 @@ function ThreadList({
   }).filter((g) => g.count > 0);
   return <GroupedList listId="mail" groups={groups} />;
 }
+
+const NO_OFFERS: ReadonlyMap<string, InvoiceOffer> = new Map();
 
 /** Page width (rem) from which folders, list and reading pane stand side by side: 12 + 20 + 24 rem and two gaps. */
 const MAIL_COLUMNS_REM = 58;
@@ -228,6 +245,10 @@ export default function MailPage() {
   const shown =
     // Headers cached before the flag existed (`personal` unknown) stay in until the next fetch.
     personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
+  const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
+  const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
+  // An unsure invoice row asked for the sheet: the thread opens with it (never a write without a look).
+  const [startInvoice, setStartInvoice] = useState<string | undefined>();
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
   const filteredOut = personalOnly && offerPersonal && box.threads.length > 0;
 
@@ -334,7 +355,7 @@ export default function MailPage() {
 
   const threadView = threadId ? (
     <ThreadView
-      key={`${account.key}|${threadId}`}
+      key={`${account.key}|${threadId}|${startInvoice === threadId ? 'invoice' : ''}`}
       account={account}
       threadId={threadId}
       cacheBodies={cacheBodies}
@@ -344,7 +365,11 @@ export default function MailPage() {
       localAi={localAi}
       onChanged={box.reload}
       onCompose={(state, title) => setCompose({ state, title, account })}
-      onBack={() => update({ thread: null })}
+      onBack={() => {
+        setStartInvoice(undefined);
+        update({ thread: null });
+      }}
+      startInvoice={startInvoice === threadId}
     />
   ) : null;
 
@@ -532,13 +557,25 @@ export default function MailPage() {
       ) : (
         <ThreadList
           threads={shown}
-          onOpen={(id) => update({ thread: id })}
+          onOpen={(id) => {
+            setStartInvoice(undefined);
+            update({ thread: id });
+          }}
           menuFor={menuFor}
           planned={planned}
           planLabel={planLabel}
           plannerOn={!!states?.planner}
           onPlan={onPlan}
           titleOf={(th) => planTitle(account, th)}
+          invoices={invoices}
+          onInvoice={(th, offer) => {
+            if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
+            else if (offer.kind === 'note') void noteReminder(account, th, offer, box.reload);
+            else if (offer.kind === 'check') {
+              setStartInvoice(th.id);
+              update({ thread: th.id });
+            }
+          }}
         />
       )}
       {box.hasMore ? (

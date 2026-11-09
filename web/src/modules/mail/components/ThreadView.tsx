@@ -88,11 +88,14 @@ function MessageCard({
   autoLoadImages,
   onCompose,
   localAi,
+  startLink,
 }: {
   account: MailAccountRef;
   threadId: string;
   link?: string;
   localAi: boolean;
+  /** Opens „Aus dieser Mail anlegen“ with this type at once (an unsure invoice row of the list). */
+  startLink?: MailLinkType;
   message: MailMessage;
   open: boolean;
   onToggle: () => void;
@@ -128,7 +131,7 @@ function MessageCard({
   }
 
   const [cid, setCid] = useState<Record<string, string>>({});
-  const [linkType, setLinkType] = useState<MailLinkType | undefined>();
+  const [linkType, setLinkType] = useState<MailLinkType | undefined>(startLink);
 
   useEffect(() => {
     if (!open || account.key === DEMO_ACCOUNT || message.inline.length === 0) return;
@@ -284,6 +287,7 @@ export function ThreadView({
   onChanged,
   onCompose,
   onBack,
+  startInvoice = false,
 }: {
   account: MailAccountRef;
   threadId: string;
@@ -297,6 +301,8 @@ export function ThreadView({
   onChanged: () => void;
   onCompose: (state: ComposeState, title: string) => void;
   onBack: () => void;
+  /** The list asked for the invoice sheet of the newest message (its values were unsure). */
+  startInvoice?: boolean;
 }) {
   const [messages, setMessages] = useState<MailMessage[] | undefined>();
   const [unreadNow, setUnreadNow] = useState<boolean | undefined>();
@@ -402,6 +408,9 @@ export function ThreadView({
           autoLoadImages={autoLoadImages}
           onCompose={onCompose}
           localAi={localAi}
+          startLink={
+            startInvoice && m.id === messages[messages.length - 1]!.id ? 'invoice' : undefined
+          }
           onToggle={() =>
             setOpenIds((ids) =>
               ids.includes(m.id) ? ids.filter((x) => x !== m.id) : [...ids, m.id],

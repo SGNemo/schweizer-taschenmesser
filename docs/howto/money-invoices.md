@@ -11,6 +11,9 @@ Binding rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Index: [HOW-TO](
 - `addPayment` (capped at the rest) emits `invoice.payment`; the payment that covers the rest calls `markPaid`. `removePayment` emits `invoice.paymentRemoved` and reopens a paid invoice. `markPaid` emits `invoice.paid` with **only the rest** (0 when parts covered it). Reopening keeps the parts (they stay booked).
 - Finance (`services.ts`) books each part as `inv-<invoiceId>-<paymentId>` and the rest as `inv-<invoiceId>`; all idempotent; a rest of 0 books nothing and drops an earlier rest booking.
 
+## From the mail list („Kopf leer“ 3b)
+The mail module writes invoices through the quick-capture `invoice` target (id `mail-<hash(message id)>`, create-if-absent) and notes a payment reminder with `amendCapture` on the invoice `findOpenInvoice` names (level, `dunnedAt`, one note line; amount and due stay). `plannable.ts` shows a noted reminder in the plan row as „… bezahlen · Mahnung · <Betrag> bis <Frist>“, read only from the note line the reminder wrote.
+
 ## Payment data
 `iban.ts` (normalise, group in fours, mod-97 check; a calm hint, never a block). `pay.ts` copies payee, IBAN, BIC, reference and the **rest** as one block (`paymentBlock`) or the IBAN alone. Row menu: "Zahlungsdaten kopieren"; editor (Mehr Felder): IBAN, BIC, the same buttons.
 
