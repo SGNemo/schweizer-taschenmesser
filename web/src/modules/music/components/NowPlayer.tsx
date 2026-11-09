@@ -136,15 +136,29 @@ export function NowPlayer({ api }: { api: PlayerApi }) {
     <div className={styles.now} data-testid="music-now">
       {current ? (
         <>
-          <h2 className={styles.nowTitle}>
-            {current.trackUrl ? (
-              <a href={current.trackUrl} target="_blank" rel="noreferrer noopener">
-                {current.title}
-              </a>
-            ) : (
-              current.title
-            )}
-          </h2>
+          {/* The heart sits beside the title it belongs to, so the controls below stay one row (U51). */}
+          <div className={styles.titleRow}>
+            <h2 className={styles.nowTitle}>
+              {current.trackUrl ? (
+                <a href={current.trackUrl} target="_blank" rel="noreferrer noopener">
+                  {current.title}
+                </a>
+              ) : (
+                current.title
+              )}
+            </h2>
+            {canControl && id && hearts.canSave ? (
+              <button
+                type="button"
+                className={[styles.heart, hearts.saved[id] ? styles.heartOn : ''].join(' ')}
+                aria-pressed={hearts.saved[id] === true}
+                aria-label={hearts.saved[id] ? tx.unlike(current.title) : tx.like(current.title)}
+                onClick={() => void hearts.toggle(id, !hearts.saved[id])}
+              >
+                <Icon name="heart" size={18} />
+              </button>
+            ) : null}
+          </div>
           <p className={styles.nowSub}>
             {[current.artist, current.album].filter(Boolean).join(' · ')}
           </p>
@@ -217,17 +231,6 @@ export function NowPlayer({ api }: { api: PlayerApi }) {
             >
               <Icon name={state?.repeat === 'track' ? 'repeatOne' : 'repeat'} size={20} />
             </Button>
-          ) : null}
-          {current && id && hearts.canSave ? (
-            <button
-              type="button"
-              className={[styles.heart, hearts.saved[id] ? styles.heartOn : ''].join(' ')}
-              aria-pressed={hearts.saved[id] === true}
-              aria-label={hearts.saved[id] ? tx.unlike(current.title) : tx.like(current.title)}
-              onClick={() => void hearts.toggle(id, !hearts.saved[id])}
-            >
-              <Icon name="heart" size={18} />
-            </button>
           ) : null}
         </div>
       ) : (
