@@ -1,6 +1,6 @@
 # PACKAGES – Identity 4.0 als Stopp-Pakete
 
-Gehört zu [REPORT.md](REPORT.md) (Entscheidung, Befunde, Fragen) und [PACKAGE-0.md](PACKAGE-0.md) (0a im Detail). Stand: Du neigst zu 4.0 (2026-11-09, „eher 4“); die Fragen 2–4 sind offen, ihre Empfehlungen stehen hier als Vorgabe, die Alternativen am Ende. Zielform: [mockups/README.md](mockups/README.md) (vier Seiten, Bilder auf dem Branch `shots/ui-audit-2026-11`). Einheiten: S ≈ 0,5–1, M ≈ 2–3, L ≈ 4–5 Chat-Tage; jedes Paket = eigener Branch + PR + Council + Stopp. Alle 26 Module: Planen (Kalender, ToDos, Gewohnheiten, Zeiterfassung, Wetter, Karten, Personen, Planer), Geld (Finanzen, Rechnungen, Abos, Budgets), Haushalt (Listen, Vorräte, Fitness), Wissen (Merkliste, Notizen, Chat, Browser, Mail, Musik, Feeds), Tresor (Unterlagen, Passwörter), System (Dieser PC, Downloads).
+Gehört zu [REPORT.md](REPORT.md) (Entscheidung, Befunde, Fragen) und [PACKAGE-0.md](PACKAGE-0.md) (0a im Detail). Stand: Du hast am 2026-11-09 alle vier Fragen mit der Empfehlung A beantwortet (4.0 jetzt; V-1 + vier Modul-Pakete; Bereiche bleiben, Sub-Navigation weg, Bottom-Bar mit Plus; 48-px-Zeilen) – dieser Plan gilt; die Alternativen am Ende bleiben als Referenz. Offen ist nur die Freigabe für `RULES.md:16` (0a-3). Zielform: [mockups/README.md](mockups/README.md) (vier Seiten, Bilder auf dem Branch `shots/ui-audit-2026-11`). Einheiten: S ≈ 0,5–1, M ≈ 2–3, L ≈ 4–5 Chat-Tage; jedes Paket = eigener Branch + PR + Council + Stopp. Alle 26 Module: Planen (Kalender, ToDos, Gewohnheiten, Zeiterfassung, Wetter, Karten, Personen, Planer), Geld (Finanzen, Rechnungen, Abos, Budgets), Haushalt (Listen, Vorräte, Fitness), Wissen (Merkliste, Notizen, Chat, Browser, Mail, Musik, Feeds), Tresor (Unterlagen, Passwörter), System (Dieser PC, Downloads).
 
 ## Was 4.0 ändert – die fünf Regeln
 
@@ -114,7 +114,7 @@ Dazu die 3.2-Politur (Einstiege zusammenlegen, Status-Wege kürzen, Dialoge „e
 | Klickweg: Backup-/Sync-Status 3–4 Klicks | S-b „Dieses Gerät“ (Frage 2) – ohne S-b bleibt der Weg; 0b-6 setzt die Status-Kacheln der Einstellungs-Startseite auf eine Zeile |
 | Lade-Robustheit H1–H5 | 0a-2 (Maßnahmen 1–3; H3-Retry = Reload in Maßnahme 1), 0a-4 (Maßnahme 4, unabhängig von Go und Frage 1) |
 
-## Wenn du anders antwortest
+## Alternativen (nicht gewählt, zur Referenz)
 
 - **Frage 1 B (erst nach 0a entscheiden):** 0a und V-1 laufen wie geplant; vor 0b-1 eine Council-Runde mit Go/No-Go-Frage an dich; kein Mehraufwand, nur ein Stopp mehr.
 - **Frage 1 C (3.2):** 0a (inkl. 0a-4) und V-1 laufen; statt 0b-1…0b-8 vier Politur-Pakete auf dem v3.1-Rahmen (Klickwege, Dichte, Bewegung, Konsistenz; 8–12 Chat-Tage, gesamt ≈ 15–20); B1, B2, B4 bleiben bestehen.
