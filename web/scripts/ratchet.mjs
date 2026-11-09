@@ -44,6 +44,7 @@ export const BASELINE_DIR = 'web/scripts/baselines/';
 export const SEED_ROWS_FILE = 'web/scripts/baselines/seed-rows.json';
 export const SIGNATURE_FILE = 'web/scripts/baselines/signature-blocks.json';
 export const PACKAGE_FILE = 'web/package.json';
+const SELF_TEST = 'web/scripts/ratchet.test.ts';
 
 /** New files here always count: they change what CI runs and what the guard builds show. */
 export const ALWAYS_PROTECTED = [
@@ -740,7 +741,8 @@ export function collectHits(repo, base, head) {
           hits.push(line);
       } else if (status === 'D') hits.push(line);
       else if (!(isTestFile(path) && isAppendOnly(was(path), now(path), path))) hits.push(line);
-      if (status !== 'D') {
+      // The script's own test holds such marks as fixture text; every change of it is a `protected` hit anyway.
+      if (status !== 'D' && path !== SELF_TEST) {
         for (const mark of added(skipMarks(was(path)), skipMarks(now(path))))
           hits.push(`skip ${path} ${mark}`);
         for (const entry of added(ignorePatterns(was(path)), ignorePatterns(now(path))))
