@@ -70,6 +70,10 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 - **Karte & WhatsApp:** Termine mit Ort haben „Auf der Karte zeigen“; bei Personen mit Geburtstag öffnet der Knopf WhatsApp mit einem Glückwunsch
   (den Kontakt wählst du in WhatsApp).
 
+## Mails in den Plan (Windows-App)
+
+Zeigst du auf die Zeile einer Mail, erscheint der Knopf „In den Plan“ („Als ToDo“ ohne Planer; am Touchscreen: wischen oder ⋯). Er legt ein ToDo „Absender · Betreff“ an, das zurück zur Mail führt, und der Hinweis bietet „Rückgängig“; der Planer bietet dafür „Zur Mail“. Dieselbe Mail ein zweites Mal ergibt keinen zweiten Eintrag („Schon im Plan“); wurde das ToDo gelöscht, bietet der Hinweis „Wieder einplanen“. Der Filter „Persönlich“ zeigt nur Mails von Menschen, und „Alle in den Plan…“ legt die angehakten Mails eines Ordners nach einer Vorschau an; beides lässt sich in den Mail-Einstellungen ausschalten.
+
 ## Kontoauszug importieren
 
 In **Finanzen** (Einstellungen → Module → Finanzen → Startdaten einrichten → _Kontoauszug importieren_) wählst du die Datei, die du im Online-Banking exportiert hast: **OFX**, **QIF**, **CAMT** oder **CSV**. Es wird nichts hochgeladen und kein Login gebraucht; du siehst erst eine Vorschau und kannst den Import rückgängig machen. Bekannte Banken (Sparkasse, ING, DKB, N26, comdirect, Volksbank/GLS) werden an der Datei erkannt und in der Vorschau genannt („Erkannt: DKB“). Bei einer CSV, die die App nicht kennt, ordnest du die Spalten Datum / Betrag / Empfänger / Verwendungszweck einmal zu; die App merkt es sich für den nächsten Export dieser Art. Eine Datei, die du zweimal importierst, bringt nichts Neues, und eine Datei in einer anderen Währung wird nur auf ein Konto dieser Währung gebucht.

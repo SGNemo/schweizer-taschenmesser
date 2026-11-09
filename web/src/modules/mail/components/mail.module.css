@@ -259,3 +259,18 @@
   box-shadow: var(--shadow-1);
   min-height: 12rem;
 }
+
+/* „Alle in den Plan…“: one tick per mail, a quiet list. */
+.planList {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+  padding: 0;
+  max-height: 50dvh;
+  overflow: auto;
+  list-style: none;
+}
+.planMark {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

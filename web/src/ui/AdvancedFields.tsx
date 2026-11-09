@@ -4,6 +4,7 @@ import { useAdvanced } from '@/core/settings/comfort';
 import { tAdvanced } from '@/strings.advanced';
 import { Button } from './Button';
 import { Switch } from './Fields';
+import buttonStyles from './Button.module.css';
 
 /**
  * "Erweitert" switch for a module header: Basis (default) or Erweitert for this module. The choice
@@ -37,7 +38,12 @@ export function AdvancedFields({
   if (advanced || hasData || revealed) return <>{children}</>;
   return (
     <div>
-      <Button variant="ghost" aria-label={tx.moreFieldsAria} onClick={() => setRevealed(true)}>
+      <Button
+        variant="ghost"
+        className={buttonStyles.flushStart}
+        aria-label={tx.moreFieldsAria}
+        onClick={() => setRevealed(true)}
+      >
         {tx.moreFields}
       </Button>
     </div>

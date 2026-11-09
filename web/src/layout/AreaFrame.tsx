@@ -12,6 +12,7 @@ import { areaOfPath } from '@/core/modules/areas';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { availableManifests } from '@/core/modules/available';
+import { ModuleIdentityContext } from '@/core/modules/identityContext';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
@@ -137,6 +138,18 @@ export function AreaFrame({
   const framed = !!area && !isFocusPath(pathname);
   const id = manifest?.identity;
   const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
+  // Dialogs opened inside the page wear the module's identity in their head (S02, `ui/Dialog`).
+  const dialogIdentity = useMemo(
+    () =>
+      manifest
+        ? {
+            hue: manifest.identity.hue,
+            icon: manifest.icon,
+            signature: manifest.identity.signature,
+          }
+        : undefined,
+    [manifest],
+  );
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
@@ -229,7 +242,9 @@ export function AreaFrame({
               }))}
             />
           ) : null}
-          {children}
+          <ModuleIdentityContext.Provider value={dialogIdentity}>
+            {children}
+          </ModuleIdentityContext.Provider>
         </PageContainer>
       </HeroControlsContext.Provider>
     </HeroContext.Provider>

@@ -10,6 +10,7 @@ export { useDraft } from './useDraft';
 export { useFormDraft } from './useFormDraft';
 export { TextField, TextArea, SelectField, DateField, Checkbox, Switch } from './Fields';
 export { CurrencyField } from './CurrencyField';
+export { FileField } from './FileField';
 export { Tabs, type TabItem } from './Tabs';
 export { SubNav, type SubNavItem } from './SubNav';
 export { OverlayScroll } from './OverlayScroll';

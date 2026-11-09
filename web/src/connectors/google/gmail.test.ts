@@ -109,6 +109,26 @@ describe('gmailProvider.threads', () => {
     expect(urls.every((u) => u.host === 'gmail.googleapis.com')).toBe(true);
   });
 
+  it('asks for List-Unsubscribe and Precedence and keeps only the derived „personal“ flag', async () => {
+    const bulk = metaThread('t3', 'Newsletter', false);
+    bulk.messages[1]!.payload.headers.push(hdr('List-Unsubscribe', '<mailto:out@example.org>'));
+    const { ctx, urls } = mock((url) =>
+      url.pathname.endsWith('/threads')
+        ? json({ threads: [{ id: 't1' }, { id: 't3' }] })
+        : json(url.pathname.endsWith('t3') ? bulk : metaThread('t1', 'Hallo', false)),
+    );
+    const page = await gmailProvider.threads(ctx, {});
+    expect(urls[1]!.searchParams.getAll('metadataHeaders')).toEqual(
+      expect.arrayContaining(['List-Unsubscribe', 'Precedence']),
+    );
+    expect(page.threads.map((t) => [t.id, t.personal])).toEqual([
+      ['t1', true],
+      ['t3', false],
+    ]);
+    // Only the boolean leaves the provider: no raw header in the summary.
+    expect(JSON.stringify(page.threads)).not.toContain('mailto:out@');
+  });
+
   it('passes the search text through untouched (Gmail syntax)', async () => {
     const { ctx, urls } = mock(() => json({}));
     const q = 'from:"Stadtwerke" has:attachment newer_than:30d -label:spam';
