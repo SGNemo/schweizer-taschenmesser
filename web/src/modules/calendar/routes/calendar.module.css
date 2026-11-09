@@ -493,7 +493,8 @@ button.recentChip {
   flex: 1 1 0;
   gap: 0;
   max-width: 14rem;
-  min-width: 0;
+  /* Room for the time; a narrow dialog wraps the chips to a second row instead of squeezing them. */
+  min-width: 7rem;
   padding: var(--space-1) var(--space-3);
 }
 .recentTitle {

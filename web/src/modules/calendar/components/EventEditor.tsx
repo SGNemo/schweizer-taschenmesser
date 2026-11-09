@@ -222,7 +222,7 @@ function Form({
         </p>
       ) : null}
       {slots && slots.length > 0 ? (
-        <div className={patternStyles.hstack} role="group" aria-label={t.calendar.recent}>
+        <div className={patternStyles.hstackWrap} role="group" aria-label={t.calendar.recent}>
           {slots.map((s) => (
             <Button
               key={`${s.title}|${s.startTime}|${s.endTime}`}
