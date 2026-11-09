@@ -23,7 +23,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { tComfort } from '@/strings.comfort';
-import { Button, HeadEyebrow, HeadSurface, Icon, SettingsLink, SubNav } from '@/ui';
+import { Button, HeadEyebrow, HeadSurface, Icon, SettingsLink, SubNav, useMediaQuery } from '@/ui';
 import {
   EMPTY_HERO,
   HeroContext,
@@ -221,7 +221,10 @@ export function AreaFrame({
   const figureShape = id ? FIGURE_HEADS[id.head] : undefined;
   // U01: while the page loads, the row under the title keeps the room it took on the last visit of this route; on a
   // first visit an empty figure of the head variant's shape holds the figure's place (the frame's own headline too).
-  const roomKey = route ?? manifest?.id;
+  // Per layout too: the phone stacks the row, so its room differs from the desktop's (same breakpoint as the CSS).
+  const phone = useMediaQuery('(max-width: 899px)');
+  const routeKey = route ?? manifest?.id;
+  const roomKey = routeKey ? `${routeKey}@${phone ? 'phone' : 'wide'}` : undefined;
   const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
   const holdRoom = figureHold && !!remembered;
   const figurePending =

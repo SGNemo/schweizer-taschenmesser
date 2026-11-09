@@ -243,6 +243,10 @@
   .band[data-size='compact'] .column {
     flex-direction: row;
   }
+  /* U01: in the stacked row a reserved room stays empty space; nothing grows into it while the page loads. */
+  .column > .body[data-hold='true'] > * {
+    flex-grow: 0;
+  }
   /* fokus (U24, MODULE-IDENTITY "Phone: the row under the title stacks"): the module's name on its own line, then the
      one thing with the mark beside it where it fits (else the mark wraps under it), the strip under both – every line
      on the same left edge. */
