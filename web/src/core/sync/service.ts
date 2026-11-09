@@ -13,6 +13,7 @@ import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
 import { getPlatform } from '@/core/platform';
 import type {
   LanClientService,
+  LanWatchService,
   LanHubDataKey,
   LanHubService,
   LanPairing,
@@ -100,6 +101,8 @@ export interface SyncServiceDeps {
   lanHub?: () => LanHubService;
   /** The device side of home-network sync (Android). */
   lanClient?: () => LanClientService;
+  /** Wi-Fi available/lost (Android): a phone paired with a PC syncs when it comes home. */
+  lanWatch?: () => LanWatchService;
 }
 
 export function defaultDeps(): SyncServiceDeps {
@@ -109,6 +112,7 @@ export function defaultDeps(): SyncServiceDeps {
     remote: (url, token) => new SelfHostedAdapter(url, token),
     lanHub: () => getPlatform().lanHub,
     lanClient: () => getPlatform().lanClient,
+    lanWatch: () => getPlatform().lanWatch,
   };
 }
 
@@ -369,7 +373,8 @@ function ignoreClosedDatabase(e: unknown): void {
 
 /**
  * Keeps the device in sync: on start, every minute, when coming back online or visible, and
- * shortly after local changes. Returns a function that stops everything.
+ * shortly after local changes; a phone paired with a PC also when Wi-Fi comes up (it came home).
+ * Returns a function that stops everything.
  */
 export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   let debounce: ReturnType<typeof setTimeout> | undefined;
@@ -404,6 +409,7 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
   const interval = setInterval(() => tick(), INTERVAL_MS);
   window.addEventListener('online', onOnline);
   document.addEventListener('visibilitychange', onVisible);
+  const stopWifi = watchWifi(deps, () => stopped, tick);
 
   // Local writes queue records in the outbox; sync soon after they settle.
   const sub = liveQuery(() => deps.storage.pendingCount()).subscribe({
@@ -428,8 +434,40 @@ export function startSync(deps: SyncServiceDeps = defaultDeps()): () => void {
     clearTimeout(retry);
     window.removeEventListener('online', onOnline);
     document.removeEventListener('visibilitychange', onVisible);
+    stopWifi();
     sub.unsubscribe();
   };
+}
+
+/**
+ * Android: keeps `wifi` in the status store and, when Wi-Fi comes up on a phone paired with a PC
+ * (`lanClient`), starts a round at once (CONCEPT §6). Only the platform knows how; this names no
+ * command. Elsewhere nothing is watched and `wifi` stays unset.
+ */
+function watchWifi(
+  deps: SyncServiceDeps,
+  stopped: () => boolean,
+  tick: (force?: boolean) => void,
+): () => void {
+  const watch = deps.lanWatch?.();
+  if (!watch?.supported) return () => undefined;
+  const status = useSyncStatus.getState();
+  void watch
+    .wifi()
+    .then((wifi) => {
+      if (!stopped()) status.set({ wifi });
+    })
+    .catch(() => undefined);
+  return watch.onWifiChange((connected) => {
+    if (stopped()) return;
+    status.set({ wifi: connected });
+    if (!connected) return;
+    void loadSyncConfig(deps.database)
+      .then((config) => {
+        if (config?.kind === 'lanClient') tick(true);
+      })
+      .catch(ignoreClosedDatabase);
+  });
 }
 
 const MAINTENANCE_KEY = 'sync.maintenance.at';

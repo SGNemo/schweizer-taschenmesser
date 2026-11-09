@@ -25,6 +25,11 @@ export interface SyncStatusState {
   errorAt?: number;
   /** Epoch ms of the next automatic retry (only for errors that can heal by themselves). */
   retryAt?: number;
+  /**
+   * Phone with home-network sync: whether a Wi-Fi network is connected (platform `lanWatch`);
+   * `undefined` where nobody watches it (browser, desktop) or before the first answer.
+   */
+  wifi?: boolean;
   /** Size of the data on the server, when it could be read. */
   serverStats?: { records: number; fields: number; bytes: number; devices: number };
   set(patch: Partial<Omit<SyncStatusState, 'set'>>): void;

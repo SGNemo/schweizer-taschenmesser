@@ -60,3 +60,30 @@ test('after the PC unpaired this phone it offers "Neu koppeln", never red', asyn
   await expect(page.getByTestId('lan-client-state')).toHaveText('Diese Kopplung wurde gelöst.');
   await expect(page.getByTestId('lan-pair-pc')).toHaveText('Neu koppeln');
 });
+
+test('without Wi-Fi "Jetzt abgleichen" waits and says why; Wi-Fi back syncs', async ({ page }) => {
+  const wifi = (on: boolean) =>
+    page.evaluate(
+      (v) => (window as unknown as { __tmLanWatch: { set(c: boolean): void } }).__tmLanWatch.set(v),
+      on,
+    );
+  await page.goto('/settings/sync');
+  await (await hooks(page)).evaluate((h) => h.nextScan('NEMO1:x'));
+  await page.getByTestId('lan-pair-pc').click();
+  await expect(page.getByTestId('lan-confirm-on-pc')).toBeVisible();
+  await (await hooks(page)).evaluate((h) => h.confirm());
+  await expect(page.getByTestId('lan-client-state')).toHaveText('Abgeglichen');
+  const syncNow = page.getByRole('button', { name: 'Jetzt abgleichen' });
+  await expect(syncNow).toBeEnabled();
+  await expect(page.getByTestId('lan-wifi-only')).toHaveCount(0);
+
+  await wifi(false);
+  await expect(syncNow).toBeDisabled();
+  await expect(page.getByTestId('lan-wifi-only')).toHaveText('Nur im WLAN');
+  await expect(syncNow).toHaveAccessibleDescription('Nur im WLAN');
+
+  await wifi(true); // the phone came home: a round runs at once
+  await expect(syncNow).toBeEnabled();
+  await expect(page.getByTestId('lan-wifi-only')).toHaveCount(0);
+  await expect(page.getByTestId('lan-client-state')).toHaveText('Abgeglichen');
+});

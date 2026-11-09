@@ -226,6 +226,20 @@ export interface LanClientService {
 }
 
 /**
+ * Android: the phone's Wi-Fi as home-network sync sees it (`src-tauri/plugins/lan-watch`). No
+ * network name, no location: only whether some Wi-Fi network is connected. Elsewhere unsupported
+ * (`wifi()` answers `undefined`, nothing fires). The plugin's search for a moved PC is Rust-only
+ * and not part of this service.
+ */
+export interface LanWatchService {
+  supported: boolean;
+  /** Whether a Wi-Fi network is connected right now; `undefined` when unknown or unsupported. */
+  wifi(): Promise<boolean | undefined>;
+  /** Fires `true` when the first Wi-Fi network comes up, `false` when the last one goes. */
+  onWifiChange(callback: (connected: boolean) => void): () => void;
+}
+
+/**
  * Desktop only: the channel to the browser extension's native messaging host. Nothing listens until
  * `start` is called; every request is answered with the JSON text the handler returns.
  */
@@ -376,6 +390,8 @@ export interface PlatformService {
   lanHub: LanHubService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
+  /** Wi-Fi available/lost for home-network sync (Android). */
+  lanWatch: LanWatchService;
   /** Drive overview and read-only scans for the disk module (desktop only). */
   disk: DiskService;
   /** Read-only system facts for the system module (desktop only). */
