@@ -168,6 +168,7 @@ H4. _Status-Widgets (Windows):_ Datenträger zeigt Füllstände, Systeminfo CPU/
 ### Nemo: Umbenennung und Design
 
 N1. _Windows-Portable starten (frische Datei und als Update):_ Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
+N1a. _Nach dem Update (Lade-Robustheit, UI-Audit 0a-2):_ Browser-Modul öffnen und eine Adresse laden, dann ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“ statt „…“, und „Neu laden“ ist nicht schlechter als Warten. ☐
 N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
 N3. _Hell / Dunkel / System, Akzentfarben:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
 N4. _Reduzierte Bewegung:_ Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
