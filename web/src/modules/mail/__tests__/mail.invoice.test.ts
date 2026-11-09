@@ -474,4 +474,35 @@ describe('Nachlese, council round 4', () => {
     expect(rows[0]).toMatchObject({ amountMinor: 8430 });
     expect([id, second!.id]).not.toContain(rows[0]!.id);
   });
+
+  it('a deleted invoice with a part payment never comes back, even with the same values', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-10-15',
+          status: 'open',
+          payments: [{ id: 'p1', date: '2026-10-01', amountMinor: 1000 }],
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.id).not.toBe(id);
+    expect(rows[0]!.payments).toBeUndefined();
+  });
+
+  it('a deleted invoice that holds exactly the row’s values comes back as the same invoice', async () => {
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const [first] = await live();
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live()).toHaveLength(0));
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    expect((await live()).map((r) => r.id)).toEqual([first!.id]);
+  });
 });

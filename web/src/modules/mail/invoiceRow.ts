@@ -221,32 +221,33 @@ async function filedMessages(
 const levelOf = (read: InvoiceRead): number =>
   read.dunning ? Math.min(3, Math.max(1, read.dunning)) : 0;
 
+/** Envelope fields every record carries; everything else is what an invoice holds. */
+const ENVELOPE = new Set(['id', 'createdAt', 'updatedAt', 'deviceId', 'deletedAt', '_f']);
+
 /**
- * A deleted invoice under one of the row's ids still is exactly what the row would write: payee, amount, due
- * day, reminder level and day, and still open (a paid or edited one never comes back unseen).
+ * A deleted invoice under one of the row's ids still is exactly what the row would write – and nothing else:
+ * payee, amount, due day, open, the reminder level and day, the note with the mail's web link. Any other field
+ * (a part payment, a currency, an account, a repeat rule, a reference, a paid date) only an edit can set, so
+ * such an invoice never comes back unseen.
  */
-async function holdsRead(id: string, read: InvoiceRead): Promise<boolean> {
-  const row = (await invoicesRepo()?.table.get(id)) as
-    | {
-        payee?: string;
-        amountMinor?: number;
-        dueDate?: string;
-        status?: string;
-        paidAt?: string;
-        dunningLevel?: number;
-        dunnedAt?: string;
-      }
-    | undefined;
-  return (
-    !!row &&
-    row.status !== 'paid' &&
-    !row.paidAt &&
-    row.payee === read.payee &&
-    row.amountMinor === read.amountMinor &&
-    row.dueDate === read.date &&
-    (row.dunningLevel ?? 0) === levelOf(read) &&
-    (row.dunnedAt ?? '') === (read.dunning ? read.mailDate : '')
-  );
+async function holdsRead(
+  id: string,
+  read: InvoiceRead,
+  note: string | undefined,
+): Promise<boolean> {
+  const row = (await invoicesRepo()?.table.get(id)) as Record<string, unknown> | undefined;
+  if (!row) return false;
+  const level = levelOf(read);
+  const expected: Record<string, unknown> = {
+    payee: read.payee,
+    amountMinor: read.amountMinor,
+    dueDate: read.date,
+    status: 'open',
+    ...(level ? { dunningLevel: level, dunnedAt: read.mailDate } : {}),
+    ...(note ? { note } : {}),
+  };
+  const keys = Object.keys(row).filter((k) => !ENVELOPE.has(k) && row[k] !== undefined);
+  return keys.length === Object.keys(expected).length && keys.every((k) => row[k] === expected[k]);
 }
 
 /**
@@ -379,7 +380,7 @@ export async function createInvoice(
         saved = tried;
         break;
       }
-      if (await holdsRead(id, read)) {
+      if (await holdsRead(id, read, note)) {
         saved = await reinstateCapture('invoice', id);
         break;
       }
