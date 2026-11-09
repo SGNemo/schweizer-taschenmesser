@@ -79,7 +79,10 @@ mod tests {
             .unwrap();
         assert!(!commands.contains("discover"), "{commands}");
         assert!(!DEFAULT.contains("discover"));
-        assert!(KOTLIN.contains("fun discover("), "the Kotlin side still has it");
+        assert!(
+            KOTLIN.contains("fun discover("),
+            "the Kotlin side still has it"
+        );
     }
 
     /// No location permission, no SSID, no logging on the Kotlin side.
