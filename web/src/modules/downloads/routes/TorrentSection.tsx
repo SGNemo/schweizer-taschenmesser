@@ -115,7 +115,7 @@ export function TorrentSection({
   if (!prefs.torrent) {
     return (
       // Off: one quiet block (heading, one line, a secondary button) – the page's one filled action stays „Download hinzufügen“ (U11).
-      <section className={styles.torrent} data-testid="torrent-off">
+      <section className={styles.torrent}>
         <h2>{t.downloads.torrent.off.title}</h2>
         <p className={styles.hint}>{t.downloads.torrent.off.body}</p>
         {incoming ? <p role="status">{t.downloads.torrent.launch.pendingOff}</p> : null}

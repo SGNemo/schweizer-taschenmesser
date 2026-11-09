@@ -47,6 +47,14 @@ describe('PageList controls (U22: fewer rows before the first note)', () => {
     expect(screen.getByRole('searchbox')).toHaveValue('gurken');
   });
 
+  it('keeps the field while it has the focus, also when a returning search is cleared', async () => {
+    const { rerender } = render(<PageList {...props({ query: 'gurken' })} />);
+    const box = screen.getByRole('searchbox');
+    await userEvent.click(box);
+    rerender(<PageList {...props({ query: '' })} />);
+    expect(screen.getByRole('searchbox')).toHaveFocus();
+  });
+
   it('sorts from the ⋯ menu instead of an own select row', async () => {
     const onSort = vi.fn();
     render(<PageList {...props({ onSort })} />);

@@ -151,6 +151,7 @@ export function PageList(p: PageListProps) {
           value={query}
           ref={searchRef}
           onChange={(e) => p.onQuery(e.target.value)}
+          onFocus={() => setSearchOpen(true)}
           onBlur={() => setSearchOpen(false)}
         />
       ) : null}

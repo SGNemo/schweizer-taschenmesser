@@ -153,8 +153,8 @@
   max-width: 100%;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: var(--clamp-lines);
+  line-clamp: var(--clamp-lines);
   text-align: center;
   overflow-wrap: break-word;
   font-size: var(--text-sm);
