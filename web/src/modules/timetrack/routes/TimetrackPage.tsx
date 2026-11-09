@@ -82,6 +82,8 @@ export default function TimetrackPage() {
     useUiStore.getState().toast(t.timetrack.startedToast(name));
   }
 
+  // U10: without a project the page says one thing (the empty state); idle line and day list follow the first project.
+  const noJobs = !!jobs && jobs.length === 0;
   const runJob = running?.jobId ? jobMap.get(running.jobId) : undefined;
   const figure = running
     ? stopwatch(runningSeconds(running, nowMs), !reduced)
@@ -133,17 +135,17 @@ export default function TimetrackPage() {
         <>
           {running ? (
             <RunningCard session={running} job={runJob} />
-          ) : (
+          ) : noJobs ? null : (
             <p className={styles.meta}>{t.timetrack.idleNow}</p>
           )}
-          {jobs && jobs.length === 0 ? (
+          {noJobs ? (
             <EmptyState
               title={t.timetrack.emptyJobs}
               testId="timetrack-empty"
               motif={<SignatureMark id="stopwatch" size={64} />}
             >
               <Button variant="primary" onClick={() => setJob('new')}>
-                {t.timetrack.job.add}
+                {t.timetrack.widgetText.addJob}
               </Button>
             </EmptyState>
           ) : (
@@ -168,7 +170,9 @@ export default function TimetrackPage() {
             </div>
           )}
           {todays.length === 0 ? (
-            <p>{t.timetrack.noSessions}</p>
+            noJobs ? null : (
+              <p>{t.timetrack.noSessions}</p>
+            )
           ) : (
             <ItemList>
               {todays.map((s) => {

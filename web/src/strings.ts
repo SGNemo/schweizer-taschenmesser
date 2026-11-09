@@ -7909,7 +7909,8 @@ export const de = {
       none: 'Noch keine Projekte.',
       addJob: 'Projekt anlegen',
       running: (name: string, since: string) => `${name} · seit ${since}`,
-      idle: 'Nichts läuft',
+      /** The idle widget's one context line under today's figure (U30). */
+      idle: 'heute · nichts läuft',
     },
     head: { running: 'Läuft', idle: 'Bereit' },
   },
