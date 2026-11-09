@@ -420,7 +420,7 @@ export const de = {
       done: 'Fertig',
       line: (name: string, value: string) => `${name}: ${value}`,
       /** One named value in a group line (U54): „Textgröße normal“, not a bare „Normal“. */
-      named: (name: string, value: string) => `${name} ${value.toLowerCase()}`,
+      named: (name: string, value: string) => `${name} ${value.toLocaleLowerCase()}`,
       theme: 'Thema',
       colors: 'Farben',
       text: 'Schrift & Lesen',

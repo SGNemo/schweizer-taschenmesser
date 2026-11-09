@@ -72,6 +72,9 @@
   .status {
     font-size: var(--text-label);
   }
-  /* U55: the context line is never cut (a one-line clamp cut "Deine Daten bleiben a…" in four of six tiles); the
-     texts are short, most take two lines on a phone. */
+  /* U55: the context line is never cut (a one-line clamp cut "Deine Daten bleiben a…" in four of six tiles). A line
+     that only describes the category stays off the phone, so the head stays a strip; the list below says it too. */
+  .tile[data-generic='true'] .context {
+    display: none;
+  }
 }

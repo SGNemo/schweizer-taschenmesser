@@ -102,7 +102,7 @@ export const settings: Strings['settings'] = {
     change: 'Change',
     done: 'Done',
     line: (name: string, value: string) => `${name}: ${value}`,
-    named: (name: string, value: string) => `${name} ${value.toLowerCase()}`,
+    named: (name: string, value: string) => `${name} ${value.toLocaleLowerCase()}`,
     theme: 'Theme',
     colors: 'Colours',
     text: 'Text & reading',
