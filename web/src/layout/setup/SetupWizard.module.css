@@ -77,6 +77,25 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+/* U06: "Zurück" / "Weiter" stay at the bottom edge of the wizard while the step scrolls under them (desktop and
+   phone): a bar on the surface with a hairline on top, across the dialog's full width. */
+.footer {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: var(--z-raised);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: auto calc(-1 * var(--space-5)) calc(-1 * var(--space-5));
+  padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+/* The dialog's content box grows to the screen height, so on a short step the bar still sits at the bottom edge. */
+div:has(> .footer) {
+  flex-grow: 1;
+}
 .footerGroup {
   display: flex;
   gap: var(--space-2);
