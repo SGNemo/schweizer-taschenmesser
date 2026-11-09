@@ -9,8 +9,10 @@ export interface PlaceHit {
   zone: string;
   /** The name to show and to store as the first label ("München" in German, "Munich" in English). */
   name: string;
-  /** Lower is better: 0 exact, 1 prefix, 2 word prefix, 3 substring, 4+ typo distance. */
+  /** Lower is better: 0 exact, 1 prefix, 2 word prefix, 3 substring, 4+ typo distance; +2 for an alias. */
   score: number;
+  /** Only a substring matched ("ber" in "Weißenberg"): fine in a list, too vague to act on alone. */
+  loose: boolean;
 }
 
 /** Lower case, no accents, `ß` → `ss`, separators → one space ("São_Paulo" → "sao paulo"). */
@@ -89,7 +91,12 @@ interface Candidate {
   zone: string;
   name: string;
   keys: string[];
+  /** Keys from this index on are aliases ("Sansibar" for Dar es Salaam): they rank after real names. */
+  aliasFrom: number;
 }
+
+/** An alias hit ranks two steps lower, so "San" lists San Francisco before Daressalam (alias "Sansibar"). */
+const ALIAS_PENALTY = 2;
 
 const candidateCache = new Map<string, Candidate[]>();
 function candidates(lang: string): Candidate[] {
@@ -101,7 +108,8 @@ function candidates(lang: string): Candidate[] {
     list.push({
       zone,
       name: lang === 'de' ? de || en : en,
-      keys: [de, en, ...aliases].filter(Boolean).map(normalizePlace),
+      keys: [de || en, en, ...aliases].map(normalizePlace),
+      aliasFrom: 2,
     });
   }
   for (const zone of allZones()) {
@@ -109,6 +117,7 @@ function candidates(lang: string): Candidate[] {
       zone,
       name: zoneCityName(zone),
       keys: [normalizePlace(zoneCityName(zone)), normalizePlace(zone)],
+      aliasFrom: 2,
     });
   }
   candidateCache.set(lang, list);
@@ -126,26 +135,31 @@ export function searchPlaces(query: string, lang: string, limit = 8): PlaceHit[]
   const seen = new Set<string>();
   candidates(lang).forEach((c, order) => {
     let best: number | undefined;
-    for (const key of c.keys) {
-      const s = scoreName(q, key);
-      if (s !== undefined && (best === undefined || s < best)) best = s;
+    let loose = false;
+    for (const [i, key] of c.keys.entries()) {
+      const raw = scoreName(q, key);
+      const s = raw === undefined ? undefined : raw + (i >= c.aliasFrom ? ALIAS_PENALTY : 0);
+      if (s !== undefined && (best === undefined || s < best)) {
+        best = s;
+        loose = raw === 3;
+      }
     }
     if (best === undefined) return;
     const id = `${c.zone}|${normalizePlace(c.name)}`;
     if (seen.has(id)) return;
     seen.add(id);
-    hits.push({ zone: c.zone, name: c.name, score: best, order });
+    hits.push({ zone: c.zone, name: c.name, score: best, loose, order });
   });
   hits.sort((a, b) => a.score - b.score || a.order - b.order);
-  return hits.slice(0, limit).map(({ zone, name, score }) => ({ zone, name, score }));
+  return hits.slice(0, limit).map(({ zone, name, score, loose }) => ({ zone, name, score, loose }));
 }
 
 /** The one place a typed name clearly means ("Tokio", "tokyo", "Tokoi"), else `undefined`. Needs 3 letters. */
 export function resolvePlace(query: string, lang: string): PlaceHit | undefined {
   if (normalizePlace(query).length < 3) return undefined;
   const [first] = searchPlaces(query, lang, 1);
-  // A substring hit ("ber" in "Weißenberg") is too loose to act on without a choice.
-  return first && first.score !== 3 ? first : undefined;
+  // A substring hit is too vague to act on without a choice; typos are fine.
+  return first && !first.loose ? first : undefined;
 }
 
 /** The device's zone (the reference for every offset), UTC when the platform cannot tell. */

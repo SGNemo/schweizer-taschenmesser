@@ -46,7 +46,12 @@ describe('editDistance', () => {
 
 describe('searchPlaces', () => {
   it('finds German and English names and shows the one of the UI language', () => {
-    expect(searchPlaces('Tokio', 'de')[0]).toEqual({ zone: 'Asia/Tokyo', name: 'Tokio', score: 0 });
+    expect(searchPlaces('Tokio', 'de')[0]).toEqual({
+      zone: 'Asia/Tokyo',
+      name: 'Tokio',
+      score: 0,
+      loose: false,
+    });
     expect(searchPlaces('tokyo', 'de')[0]!.name).toBe('Tokio');
     expect(searchPlaces('Munich', 'en')[0]).toMatchObject({
       zone: 'Europe/Berlin',
@@ -74,7 +79,9 @@ describe('searchPlaces', () => {
   it('puts prefixes before typos and stays empty for noise', () => {
     const hits = searchPlaces('San', 'de').map((h) => h.name);
     expect(hits.length).toBeGreaterThan(2);
-    expect(normalizePlace(hits[0]!).startsWith('san')).toBe(true);
+    expect(hits.slice(0, 5).every((n) => normalizePlace(n).startsWith('san'))).toBe(true);
+    // An alias still finds its place: Sansibar lies in Dar es Salaam's zone.
+    expect(searchPlaces('Sansibar', 'de')[0]!.zone).toBe('Africa/Dar_es_Salaam');
     expect(searchPlaces('', 'de')).toEqual([]);
     expect(searchPlaces('qqqqqqq', 'de')).toEqual([]);
   });
