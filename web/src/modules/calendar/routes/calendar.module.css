@@ -441,6 +441,29 @@ button.itemRow[style*='--cal']:hover {
 .itemRowCompact .itemTitle {
   flex-basis: 100%;
 }
+/* Phone lists (week, day, agenda; U05): the title gets the first line and the full width, time and kind below it. */
+@container page not (min-width: 40rem) {
+  .itemRow:not(.itemRowCompact) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'title title'
+      'time kind';
+    justify-items: start;
+    gap: 0 var(--space-2);
+    padding-block: var(--space-1);
+  }
+  .itemRow:not(.itemRowCompact) .itemTitle {
+    grid-area: title;
+  }
+  .itemRow:not(.itemRowCompact) .time {
+    grid-area: time;
+    min-width: 0;
+  }
+  .itemRow:not(.itemRowCompact) .kind {
+    grid-area: kind;
+  }
+}
 .kind {
   flex: none;
   display: inline-flex;
