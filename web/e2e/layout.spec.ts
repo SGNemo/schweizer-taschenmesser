@@ -257,6 +257,40 @@ test.describe('phone header', () => {
     expect(box.h1Top - box.mainTop).toBeLessThan(120);
   });
 
+  // U24 (UI round 6): a `fokus` head stacks on the phone – the module's name, then the figure with the mark beside it
+  // where it fits, else under it; one left edge, nothing centred.
+  test('fokus heads stack left-aligned under the title', async ({ page }) => {
+    await prepare(page);
+    for (const path of ['/people', '/invoices', '/todos']) {
+      await page.goto(path);
+      await expect(page.locator('main h1').first()).toBeVisible();
+      await page.waitForTimeout(1200);
+      const box = await page.getByTestId('module-frame').evaluate((frame) => {
+        const r = (el: Element | null | undefined) => {
+          const b = el?.getBoundingClientRect();
+          return b && b.width > 0
+            ? { left: b.left, right: b.right, top: b.top, bottom: b.bottom }
+            : null;
+        };
+        const mark = frame.querySelector('[data-testid="module-signature"]');
+        // The figure's box is the slot right before the mark.
+        return {
+          title: r(frame.querySelector('h1')),
+          figure: r(mark?.previousElementSibling),
+          mark: r(mark),
+        };
+      });
+      expect(box.title, path).not.toBeNull();
+      expect(box.mark, path).not.toBeNull();
+      // Under the title, never beside it.
+      expect(box.mark!.top, path).toBeGreaterThanOrEqual(box.title!.bottom - 1);
+      // On the title's left edge, or right beside the figure.
+      const onEdge = Math.abs(box.mark!.left - box.title!.left) <= 1;
+      const besideFigure = !!box.figure && box.mark!.left >= box.figure.right - 1;
+      expect(onEdge || besideFigure, `${path}: mark at ${box.mark!.left}`).toBe(true);
+    }
+  });
+
   test('the topbar folds away on scrolling down and returns on scrolling up', async ({ page }) => {
     await prepare(page);
     await page.goto('/calendar');

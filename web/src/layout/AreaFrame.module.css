@@ -239,6 +239,20 @@
   .band[data-size='compact'] .column {
     flex-direction: row;
   }
+  /* fokus (U24, MODULE-IDENTITY "Phone: the row under the title stacks"): the module's name on its own line, then the
+     one thing with the mark beside it where it fits (else the mark wraps under it), the strip under both – every line
+     on the same left edge. */
+  .band[data-head='fokus'] .column {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .band[data-head='fokus'] .body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-self: stretch;
+    gap: var(--space-3);
+  }
   .extra {
     flex-basis: auto;
     width: 100%;
