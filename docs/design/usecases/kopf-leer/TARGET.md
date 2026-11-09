@@ -63,7 +63,7 @@ After „Alle speichern“: „5 Dinge gespeichert. Sortiert wird später. · An
 
 **Smallest first step.** U03 + U04 + U05 (package 1): 2 taps and no detour.
 
-**Gebaut anders:** each line shows its target as a small tap-able text under the line (a card per line), not right-aligned in one row; the explicit mode „Abladen“ (large) is not built.
+**Gebaut anders:** each line is a card with its target as a small tap-able text under the title (about twice the height of the mockup's row), so with five lines „Alle speichern (5)“ sits below the fold and the sheet scrolls once; the reminder line's card is titled „Stadtwerke“ with its target text („Mahnung zu Rechnung …, fällig … · vermerken“); on the phone the sheet rises from the bottom and leaves a band of the covered page above it; the explicit mode „Abladen“ (large) is not built.
 
 **Variants.**
 
@@ -98,7 +98,7 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 **Rule conflicts.** Modules never import each other: the mail module writes through the capture target layer, as `LinkDialog` does today. **Decision change:** „Mail → Nemo entries“ (`decisions/features.md`, 2026-11-02) made the capture sheet's live preview the rule („Vorschau-Pflicht“, save only on confirm); the one-tap row action replaces the preview with the title it will write visible in the row's hover/menu text, the toast and undo – that is a change the maintainer decides (Q2), the batch keeps a real preview, and „Aus dieser Mail anlegen“ keeps the sheet. Privacy: the ToDo title (name and subject) and the link label are ordinary ToDo data – synced, backed up, readable by the local API, MCP and the AI import like any typed ToDo; the mail body never leaves the sealed cache except what the person ticks into a note themselves (share target, „Anfang der Mail als Notiz“); nothing of this reaches the assistant (it receives schemas, never entries), but a person who uses MCP or the import hands a model their own ToDo titles – Q3 therefore also offers the variant (b) in which the title is the sender's name only and the link label is the fixed word „Mail“ (`taskLinkSchema.label` is required); the name itself is still synced under every variant, the body never. Mail cache, `link` table and thread bodies stay `local: true`. A **batch** writes many names at once – therefore the preview with tick boxes, never a silent batch. Sync: nothing new. `accounts` untouched.
 
-**Gebaut anders:** „In den Plan“ is a quiet button that appears when pointing at the row (PC); on touch it is in ⋯ and a swipe – no standing button per row; the row mark is „im Plan“ without the day (the toast names the day).
+**Gebaut anders:** „In den Plan“ is a quiet button that appears when pointing at the row (PC); on touch it is in ⋯ and a swipe – no standing button per row; the row mark reads „Im Plan“ without the day (the toast names the day); „Persönlich“ and „Alle in den Plan…“ stand above the list (with search and „Aktualisieren“), not in a folder head.
 
 **Smallest first step.** `LinkDialog` passes `extra.link`, the URL loses the address (U17), the thread view gets „In den Plan“, the plan row says „Mail“ and offers „Zur Mail“: 2 taps per mail (open, button).
 
@@ -126,7 +126,7 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 **Rule conflicts.** Money is created only on a tap, with the values visible before the tap and undo after it (`decisions/automation.md`: mail offers `suggest`, never a silent `create` – unchanged); the one-tap path is the same „Vorschau-Pflicht“ change as in F2 (Q2) – the row shows payee, amount and date, which is what the sheet's preview would show. Everything local (heuristics). Mail cache stays sealed; the invoice stores payee, amount, date, reference – what a person types by hand. Invoices get no new field.
 
-**Gebaut anders:** dates read „fällig 15. Nov.“ (the app's day format); the debit line names payee and amount and ends in „Abbuchung am 3. Nov.“ (no „nichts zu planen“); a reminder's new amount and deadline stand in the plan row's title („… bezahlen · Mahnung · 92,40 € bis 13.10.2026“), not in a detail line; a reminder without an open invoice starts its line with „Mahnung“; no line in a thread the person wrote in.
+**Gebaut anders:** dates read „fällig 15. Nov.“ (the app's day format); „Anlegen“ is a quiet text button at the end of the line, which wraps onto its own line in the narrow middle column of the three-pane mail page (no accent colour); the debit line names payee and amount and ends in „Abbuchung am 3. Nov.“ (no „nichts zu planen“); a reminder's new amount and deadline stand in the plan row's title („… bezahlen · Mahnung · 92,40 € bis 13.10.2026“), not in a detail line; a reminder without an open invoice starts its line with „Mahnung“; no line in a thread the person wrote in.
 
 **Smallest first step.** The dunning flag in `heuristics.ts` and the additive `CaptureFields.dunning` + adapter mapping (S); the open-invoice match and `amend` next (M); then the list line.
 
@@ -146,7 +146,7 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 **Effort.** S.
 
-**Gebaut anders:** the head's next step takes the plan row's title as it is, so a noted reminder reads „Heute: Stadtwerke Musterstadt bezahlen · Mahnung. Das reicht für heute.“
+**Gebaut anders:** the head also shows a week bar chart and no „KW“; the head's next step takes the plan row's title as it is, so a noted reminder reads „Heute: Stadtwerke Musterstadt bezahlen · Mahnung. Das reicht für heute.“
 
 ### Not proposed (and why)
 
@@ -178,7 +178,7 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 ## 4. The target, measured
 
-Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds today's numbers; the package „Nachmessen“ lowers them to the target column).
+Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds the target column since the package „Nachmessen“).
 
 | Path                                 | Device | Today (taps · keys · screens · dialogs · detours · ≈ s)                                                      | Target                                                                                                      | Δ                                                      |
 | ------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
