@@ -124,7 +124,7 @@ Fest seit dem 2026-11-09; Herkunft und Regeln je Kandidat stehen in REPORT „Be
 | Klickweg: Enter im Suchfeld landet bei der KI | 0b-2 (Schnellerfassung als Modus der Palette: Enter = eintragen, „?“ = fragen) |
 | Klickweg: ToDo „auf heute“ am Handy über ⋯ | 0b-4 (Wischen bleibt, „Heute“ als erste Aktion im Blatt) |
 | Klickweg: Darstellung am Handy (Messung fehlgeschlagen) | 0b-6 (Einstellungen-Reiter als Tabs im Kopf, dann neu messen) |
-| Klickweg: Backup-/Sync-Status 3–4 Klicks | S-b „Gerätestatus“ (fest, Frage 2 A); 0b-6 setzt die Status-Kacheln der Einstellungs-Startseite auf eine Zeile, sie bleiben dort auch nach S-b |
+| Klickweg: Backup-/Sync-Status 3–4 Klicks | S-b „Gerätestatus“ (fest, Frage 2 A); 0b-6 setzt die Status-Kacheln der Einstellungs-Startseite auf eine Zeile, sie bleiben dort auch nach S-b (bei ausgeschaltetem `device`; ist es an, verweist die Zeile dorthin) |
 | Lade-Robustheit H1–H5 | 0a-2 (Maßnahmen 1–3; H3-Retry = Reload in Maßnahme 1), 0a-4 (Maßnahme 4, unabhängig von Go und Frage 1) |
 
 ## Alternativen (nicht gewählt, zur Referenz)
