@@ -1,10 +1,14 @@
-//! Home-network sync, device side (Android): pairing with a hub PC by its QR and the requests of
-//! the web app's sync engine. Thin glue around `lan_sync::client` (tested there, incl. the
-//! "open once more" rule of `client::Link`).
+//! Home-network sync, device side (Android, and a second PC that pairs with the hub PC): pairing
+//! with a hub PC by its QR and the requests of the web app's sync engine. Thin glue around
+//! `lan_sync::client` (tested there, incl. the "open once more" rule of `client::Link`).
 //!
 //! * Keys: the device's static Noise key and the pinned hub (key, address, name) sit in the OS
-//!   keystore through the secure-store plugin under the Rust-only prefix `lan-client:` – the
-//!   plugin's webview commands refuse those names, so the static key never leaves Rust. The only
+//!   keystore through the secure-store plugin under the Rust-only prefix `lan-client:` (Android
+//!   Keystore; on the desktop `keyring`, i.e. the Windows Credential Manager, with the app identifier
+//!   as service name like the hub keys of `lan_sync.rs`) – the plugin's webview commands refuse
+//!   those names, so the static key never leaves Rust.
+//! * One path per device: a PC is either the hub or a client. Pairing is refused (`hub-on`) while
+//!   this PC's hub runs, and `lan_hub_start` refuses (`client-paired`) while a hub is pinned here. The only
 //!   secret handed to the web app is the data key, once, right after the pairing was confirmed on
 //!   the PC; the web app imports it as a non-extractable `CryptoKey`.
 //! * Every pairing uses a FRESH static key ("Neu koppeln" after the PC unpaired this device must
@@ -22,7 +26,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime};
-use tauri_plugin_secure_store::{NameRequest, SecureStoreExt, SetRequest, RUST_ONLY_PREFIX};
+use tauri_plugin_secure_store::{NameRequest, SecureStoreExt, SetRequest};
 use zeroize::Zeroizing;
 
 const KEY_NAME: &str = "lan-client:static-key";
@@ -141,6 +145,24 @@ fn hub_entry<R: Runtime>(app: &AppHandle<R>) -> Result<(PublicKey, SocketAddrV4,
     Ok((PublicKey::from_bytes(hub), addr, entry.name))
 }
 
+/// A hub is pinned on this device (it syncs as a client). A keystore that does not answer counts as
+/// "not paired": the hub start then fails on the same keystore anyway.
+pub fn is_paired<R: Runtime>(app: &AppHandle<R>) -> bool {
+    matches!(get(app, HUB_NAME), Ok(Some(_)))
+}
+
+/// This PC is the hub right now (desktop); a phone never is.
+#[cfg(desktop)]
+fn hub_running<R: Runtime>(app: &AppHandle<R>) -> bool {
+    app.try_state::<crate::lan_sync::LanSync>()
+        .is_some_and(|s| s.is_running())
+}
+
+#[cfg(not(desktop))]
+fn hub_running<R: Runtime>(_app: &AppHandle<R>) -> bool {
+    false
+}
+
 /// Only a missing pairing is "unknown device"; a keystore that does not answer right now is a calm,
 /// retried `network` (it must never look like "the PC unpaired this device").
 fn missing_or_retry(e: String) -> ClientError {
@@ -198,6 +220,10 @@ pub async fn lan_client_pair<R: Runtime>(
     name: String,
     on_code: Channel<String>,
 ) -> Result<DataKeyDto, String> {
+    // one path per device: the hub PC never becomes a client of another hub
+    if hub_running(&app) {
+        return Err("hub-on".to_owned());
+    }
     let state = app.state::<LanClient>();
     if state.pairing.swap(true, Ordering::SeqCst) {
         return Err("busy".to_owned());
@@ -325,6 +351,7 @@ pub async fn lan_client_unpair<R: Runtime>(app: AppHandle<R>) -> Result<(), Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tauri_plugin_secure_store::RUST_ONLY_PREFIX;
 
     #[test]
     fn hex_round_trip() {
