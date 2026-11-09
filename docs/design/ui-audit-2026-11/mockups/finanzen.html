@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity 4.0 – Finanzen</title>
+<link rel="stylesheet" href="v4.css">
+<style>body{--mod:var(--mod-teal);--mod2:var(--mod-ocean)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kpi .k{font-size:.8125rem;color:var(--text-2)}.kpi .v{font-size:1.375rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .v.plus{color:var(--success)}
+html[data-device=mobile] .kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+html[data-device=mobile] .kpi .v{font-size:1.0625rem}
+</style></head>
+<body data-active="finance" data-area="money" data-add-label="Buchung">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <section class="head">
+    <div class="titlerow"><span class="plate" data-i="wallet"></span><div><div class="eyebrow">Geld<span class="more"> · September 2026</span></div><h1>Finanzen</h1></div>
+      <div class="figure"><b>12.616,33 €</b><small>11.598,49 € verfügbar · 3 Konten</small></div>
+      <div class="act"><a class="btn primary"><span data-i="plus"></span><span class="lbl">Buchung</span></a><a class="btn ghost icon"><span data-i="more"></span></a></div></div>
+    <nav class="modrow" data-area="money"></nav>
+    <nav class="tabs"><a class="on">Übersicht</a><a>Buchungen</a><a>Verlauf</a><a>Konten</a><a>Kategorien</a></nav>
+  </section>
+  <div class="monthrow"><a class="btn ghost icon" aria-label="Vormonat">‹</a><b>September 2026</b><a class="btn ghost icon" aria-label="Folgemonat">›</a><span class="spacer"></span></div>
+  <div class="kpiline meta">Einnahmen <b>2.863,12 €</b> · Ausgaben <b>1.618,76 €</b><br>Offene Rechnungen <b>1.017,84 €</b> · 2 mit Frist vorbei</div>
+  <div class="kpis"><div class="card kpi"><div class="k">Einnahmen</div><div class="v plus">2.863,12 €</div><div class="meta">1 Buchung</div></div><div class="card kpi"><div class="k">Ausgaben</div><div class="v">1.618,76 €</div><div class="meta">41 Buchungen · ▲ 463 € zum Vormonat</div></div><div class="card kpi"><div class="k">Offene Rechnungen</div><div class="v">1.017,84 €</div><div class="meta">7 offen · 2 mit Frist vorbei</div></div></div>
+  <div class="split">
+    <div class="list">
+      <div class="grp">Heute</div>
+      <div class="row sel-desktop"><span class="plate" data-i="cart"></span><span class="grow">REWE Musterstadt<span class="sub">Lebensmittel · Girokonto</span></span><span class="amt">−48,20 €</span></div>
+      <div class="grp">Gestern</div>
+      <div class="row"><span class="plate" data-i="wallet"></span><span class="grow">Gehalt<span class="sub">Einnahmen · Girokonto</span></span><span class="amt" style="color:var(--success)">+2.863,12 €</span></div>
+      <div class="grp">Diese Woche</div>
+      <div class="row"><span class="plate" data-i="repeat"></span><span class="grow">Streaming Plus<span class="sub">27. Sep · Abos</span></span><span class="amt">−12,99 €</span></div>
+      <div class="row"><span class="plate" data-i="box"></span><span class="grow">Stadtwerke<span class="sub">25. Sep · Wohnen</span></span><span class="amt">−87,40 €</span></div>
+      <div class="row"><span class="plate" data-i="people"></span><span class="grow">Kino mit Anna<span class="sub">24. Sep · Freizeit</span></span><span class="amt">−24,00 €</span></div>
+      <div class="row"><span class="plate" data-i="cart"></span><span class="grow">Wochenmarkt<span class="sub">23. Sep · Lebensmittel</span></span><span class="amt">−31,70 €</span></div>
+      <div class="grp">Früher im September</div>
+      <div class="row"><span class="plate" data-i="bill"></span><span class="grow">Zahnarztpraxis Dr. Beispiel<span class="sub">18. Sep · Gesundheit</span></span><span class="amt">−82,50 €</span></div>
+      <div class="row"><span class="plate" data-i="cart"></span><span class="grow">Drogerie<span class="sub">16. Sep · Haushalt</span></span><span class="amt">−19,45 €</span></div>
+    </div>
+    <div class="detail">
+      <div class="meta">Buchung · heute 09:12</div>
+      <h2>REWE Musterstadt</h2>
+      <div class="fig" style="font-size:2rem;margin-top:6px">−48,20 €</div>
+      <dl class="kv"><dt>Konto</dt><dd>Girokonto · 3.567,01 €</dd><dt>Kategorie</dt><dd>Lebensmittel · 38 % der Ausgaben, 615,10 € im September</dd><dt>Notiz</dt><dd class="meta">–</dd></dl>
+      <div class="meta" style="margin-top:16px;margin-bottom:6px">Lebensmittel im September</div>
+      <div class="spark" style="width:100%;height:44px"><i style="height:30%"></i><i style="height:55%"></i><i style="height:40%"></i><i class="hi" style="height:70%"></i></div><div class="meta">Wochen 1–4, letzter Balken = diese Woche</div>
+      <div class="row" style="margin-top:12px"><span class="grow">Wochenmarkt<span class="sub">23. Sep · 31,70 €</span></span></div><div class="row"><span class="grow">Drogerie<span class="sub">16. Sep · 19,45 €</span></span></div>
+      <div style="display:flex;gap:8px;margin-top:18px"><a class="btn ghost">Bearbeiten</a><a class="btn ghost">Teilen</a><a class="btn ghost" style="margin-left:auto">Löschen</a></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>
