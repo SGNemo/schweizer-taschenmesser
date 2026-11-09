@@ -80,12 +80,15 @@ struct Tab {
     page: Option<Url>,
     /// Third-party hosts already reported as `Seen`.
     seen: HashSet<String>,
+    /// Which `browser_open` call created this entry (see the check after `add_child`).
+    attempt: u64,
 }
 
 struct Inner {
     warn_http: bool,
     blocker: Blocker,
     tabs: HashMap<u32, Tab>,
+    attempts: u64,
 }
 
 pub struct BrowserState(Mutex<Inner>);
@@ -96,6 +99,7 @@ impl Default for BrowserState {
             warn_http: true,
             blocker: Blocker::new(true),
             tabs: HashMap::new(),
+            attempts: 0,
         }))
     }
 }
@@ -144,7 +148,12 @@ fn parse(url: &str) -> Result<Url, String> {
     Url::parse(url).map_err(|_| "url".to_string())
 }
 
-#[tauri::command]
+/// Lifecycle commands (`open`, `close`, `clear_data`) run with `async`, i.e. on Tauri's async
+/// runtime, never on the main thread: creating a webview from a synchronous command deadlocks
+/// WebView2 on Windows (tauri `WebviewBuilder` docs, wry#583). That froze the main thread, so no
+/// IPC call and no app asset (lazy module pages) was answered any more and every other page stayed
+/// at "…" until a restart. `tests/commands.rs` pins this.
+#[tauri::command(async)]
 pub fn browser_open(
     app: AppHandle,
     webview: Webview,
@@ -159,6 +168,8 @@ pub fn browser_open(
     if verdict == Verdict::Deny {
         return Err("scheme".into());
     }
+    // Idempotent: a tab id that still has a webview (an earlier attempt) is replaced, not duplicated.
+    forget(&app, &state, tab);
     let warn = state.lock().warn_http;
     let held = verdict == Verdict::WarnHttp && warn && !options.allow_http;
     let start = if held {
@@ -170,18 +181,25 @@ pub fn browser_open(
     if options.allow_http {
         allowed.insert(url.to_string());
     }
-    state.lock().tabs.insert(
-        tab,
-        Tab {
-            events: events.clone(),
-            history: Vec::new(),
-            pos: 0,
-            by_history: false,
-            allowed_http: allowed,
-            page: None,
-            seen: HashSet::new(),
-        },
-    );
+    let attempt = {
+        let mut g = state.lock();
+        g.attempts += 1;
+        let attempt = g.attempts;
+        g.tabs.insert(
+            tab,
+            Tab {
+                events: events.clone(),
+                history: Vec::new(),
+                pos: 0,
+                by_history: false,
+                allowed_http: allowed,
+                page: None,
+                seen: HashSet::new(),
+                attempt,
+            },
+        );
+        attempt
+    };
     if held {
         let _ = events.send(Event::HttpHeld {
             tab,
@@ -317,7 +335,14 @@ pub fn browser_open(
             LogicalSize::new(b.width, b.height),
         )
         .map_err(|e| e.to_string());
+    // The page may have given up meanwhile (timeout → `browser_close`): a webview without its entry
+    // would be out of reach of `browser_show` and stay on top of every page, so it is closed again.
+    let current = |g: &Inner| g.tabs.get(&tab).is_some_and(|t| t.attempt == attempt);
     match created {
+        Ok(wv) if !current(&state.lock()) => {
+            let _ = wv.close();
+            Err("tab".into())
+        }
         Ok(wv) => {
             #[cfg(windows)]
             crate::browser_win::hook(&app, &wv, tab);
@@ -327,7 +352,10 @@ pub fn browser_open(
             Ok(())
         }
         Err(e) => {
-            state.lock().tabs.remove(&tab);
+            let mut g = state.lock();
+            if current(&g) {
+                g.tabs.remove(&tab);
+            }
             Err(e)
         }
     }
@@ -407,7 +435,15 @@ pub fn browser_reload(app: AppHandle, webview: Webview, tab: u32) -> Result<(), 
     tab_webview(&app, tab)?.reload().map_err(|e| e.to_string())
 }
 
-#[tauri::command]
+/// Drops the tab's state and closes its webview if there is one. Safe to call any number of times.
+fn forget(app: &AppHandle, state: &BrowserState, tab: u32) {
+    state.lock().tabs.remove(&tab);
+    if let Ok(wv) = tab_webview(app, tab) {
+        let _ = wv.close();
+    }
+}
+
+#[tauri::command(async)]
 pub fn browser_close(
     app: AppHandle,
     webview: Webview,
@@ -415,10 +451,7 @@ pub fn browser_close(
     tab: u32,
 ) -> Result<(), String> {
     ensure_main(&webview)?;
-    state.lock().tabs.remove(&tab);
-    if let Ok(wv) = tab_webview(&app, tab) {
-        wv.close().map_err(|e| e.to_string())?;
-    }
+    forget(&app, &state, tab);
     Ok(())
 }
 
@@ -493,7 +526,7 @@ pub fn browser_configure(
 }
 
 /// Closes every tab and deletes cookies, cache and site data of the browser profile (not of Nemo).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn browser_clear_data(
     app: AppHandle,
     webview: Webview,

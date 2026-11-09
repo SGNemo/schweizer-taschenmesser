@@ -126,7 +126,8 @@ fn browser_tabs_get_no_capability() {
 #[test]
 fn browser_commands_check_the_caller() {
     let src = read("src/browser.rs");
-    let commands = src.matches("#[tauri::command]").count();
+    let commands =
+        src.matches("#[tauri::command]").count() + src.matches("#[tauri::command(async)]").count();
     assert_eq!(commands, src.matches("ensure_main(&webview)?;").count());
 }
 
@@ -151,4 +152,32 @@ fn opener_scope_adds_only_spotify_and_the_network_settings_page() {
         .map(|a| a["url"].as_str().unwrap())
         .collect();
     assert_eq!(urls, ["spotify:*", "ms-settings:network-status"]);
+}
+
+/// Creating (or closing) a webview from a synchronous command deadlocks WebView2 on Windows: the
+/// main thread hangs, IPC and app assets stop answering and every other Nemo page stays at "…".
+/// Every command that creates or closes webviews must run off the main thread (`async`).
+#[test]
+fn webview_lifecycle_commands_never_run_on_the_main_thread() {
+    let src = read("src/browser.rs");
+    for name in ["browser_open", "browser_close", "browser_clear_data"] {
+        let at = src
+            .find(&format!("pub fn {name}("))
+            .unwrap_or_else(|| panic!("{name} not found"));
+        let attr = src[..at]
+            .rfind("#[tauri::command")
+            .expect("command attribute");
+        assert!(
+            src[attr..at].starts_with("#[tauri::command(async)]"),
+            "{name} must be #[tauri::command(async)] (WebView2 deadlock on Windows)"
+        );
+    }
+    // No other command may build a webview.
+    for (i, _) in src.match_indices(".add_child(") {
+        let cmd = src[..i].rfind("pub fn ").unwrap();
+        assert!(
+            src[cmd..].starts_with("pub fn browser_open("),
+            "add_child outside browser_open"
+        );
+    }
 }

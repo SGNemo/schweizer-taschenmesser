@@ -30,6 +30,15 @@ export const browser: Strings['browser'] = {
   },
   hint: 'Not a full browser. Use the system browser for online banking.',
   hintClose: 'Hide hint',
+  failed: {
+    title: (reason: string) => `The page could not be loaded: ${reason}`,
+    timeout: 'the page window did not respond in time',
+    address: 'the built-in browser cannot open this address',
+    native: 'the page window could not be created',
+    body: 'The rest of Nemo is not affected.',
+    openSystem: 'Open in system browser',
+    retry: 'Try again',
+  },
   tabs: {
     title: 'Open tabs',
     openAll: 'Show all tabs',

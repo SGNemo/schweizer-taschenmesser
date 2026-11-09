@@ -1,0 +1,93 @@
+// @vitest-environment jsdom
+import 'fake-indexeddb/auto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setPlatform } from '@/core/platform';
+import type { BrowserService } from '@/core/platform/browser';
+import { createWebPlatform } from '@/core/platform/web';
+import { OPEN_TIMEOUT_MS, useBrowserTabs } from '../tabsStore';
+
+function nativeBrowser(open: BrowserService['open']) {
+  const close = vi.fn(() => Promise.resolve());
+  const web = createWebPlatform();
+  setPlatform({ ...web, browser: { ...web.browser, supported: true, open, close } });
+  return { close };
+}
+
+describe('tabs store: a failing native side never leaves an empty frame', () => {
+  beforeEach(() => useBrowserTabs.setState({ tabs: [], activeId: null }));
+  afterEach(() => {
+    vi.useRealTimers();
+    setPlatform(undefined);
+  });
+
+  it('a hanging open gives up after the timeout, closes the webview and keeps the address', async () => {
+    vi.useFakeTimers();
+    const { close } = nativeBrowser(() => new Promise<void>(() => {}));
+    const id = useBrowserTabs.getState().newTab();
+    const done = useBrowserTabs.getState().go(id, 'https://duckduckgo.com/?q=test');
+    expect(useBrowserTabs.getState().tabs[0]).toMatchObject({ opened: true, error: null });
+    await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS);
+    await done;
+    expect(useBrowserTabs.getState().tabs[0]).toMatchObject({
+      opened: false,
+      loading: false,
+      error: 'timeout',
+      url: 'https://duckduckgo.com/?q=test',
+    });
+    expect(close).toHaveBeenCalledWith(id);
+  });
+
+  it('a rejected open shows a reason kind, never the raw native message', async () => {
+    nativeBrowser(() => Promise.reject(new Error('WebView2 said https://secret.example.org/')));
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    expect(useBrowserTabs.getState().tabs[0]!.error).toBe('native');
+  });
+
+  it('a retry clears the error and opens again', async () => {
+    let fail = true;
+    nativeBrowser(() => (fail ? Promise.reject(new Error('x')) : Promise.resolve()));
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    fail = false;
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    expect(useBrowserTabs.getState().tabs[0]).toMatchObject({ opened: true, error: null });
+  });
+
+  it('a failed navigation keeps the open tab and its webview, and only says why', async () => {
+    const web = createWebPlatform();
+    const close = vi.fn(() => Promise.resolve());
+    setPlatform({
+      ...web,
+      browser: {
+        ...web.browser,
+        supported: true,
+        open: () => Promise.resolve(),
+        navigate: () => Promise.reject(new Error('tab')),
+        close,
+      },
+    });
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    await useBrowserTabs.getState().go(id, 'https://example.org/b');
+    expect(useBrowserTabs.getState().tabs[0]).toMatchObject({ opened: true, error: 'native' });
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it('closing a tab survives a failing native close', async () => {
+    const web = createWebPlatform();
+    setPlatform({
+      ...web,
+      browser: {
+        ...web.browser,
+        supported: true,
+        open: () => Promise.resolve(),
+        close: () => Promise.reject(new Error('gone')),
+      },
+    });
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    await useBrowserTabs.getState().closeTab(id);
+    expect(useBrowserTabs.getState().tabs).toHaveLength(0);
+  });
+});

@@ -87,6 +87,32 @@ test('start page is accessible; an address opens a tab, a search term searches',
   );
 });
 
+test('a tab that cannot open shows why, hides the webview, and other modules still load', async ({
+  page,
+}) => {
+  await go(page, 'https://fail-test.example.org/');
+  const failed = page.getByTestId('browser-failed');
+  await expect(failed).toContainText('Seite konnte nicht geladen werden');
+  await expect(failed.getByRole('button', { name: 'Im Systembrowser öffnen' })).toBeVisible();
+  await expect(failed.getByRole('button', { name: 'Noch einmal versuchen' })).toBeVisible();
+  await expect(page.getByLabel('Adresse oder Suchbegriff')).toHaveValue(
+    'https://fail-test.example.org/',
+  );
+  await audit(page, 'open failed');
+  // The failed webview is closed again; nothing is left on top of the content.
+  expect(await calls(page)).toContain('close:1');
+  // Route change inside the app (no reload): the page leaves, the tabs are hidden, ToDos load.
+  const hidden = async () => (await calls(page)).filter((c) => c === 'show:null').length;
+  const before = await hidden();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/todos');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.locator('main h1')).toHaveText(/ToDos/);
+  await expect(page.getByTestId('browser-failed')).toHaveCount(0);
+  expect(await hidden()).toBeGreaterThan(before);
+});
+
 test('plain HTTP is held back until the user confirms', async ({ page }) => {
   await go(page, 'http://example.org/');
   await expect(page.getByText('Diese Seite ist nicht verschlüsselt')).toBeVisible();
