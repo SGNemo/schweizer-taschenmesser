@@ -90,6 +90,9 @@ test('the row menu pauses a subscription (2 clicks) and the delete swipe action 
   await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
   await expect(row).not.toContainText('Pausiert');
 
+  // The toasts of the two actions above stack over the row on a phone (they sit above the "+"); close them like a person would.
+  const closeToast = page.getByRole('status').getByRole('button', { name: 'Schließen' });
+  while ((await closeToast.count()) > 0) await closeToast.first().click();
   await row.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await page.getByRole('menuitem', { name: 'Löschen' }).click();
   await expect(row).toHaveCount(0);
