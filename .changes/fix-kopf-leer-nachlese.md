@@ -18,6 +18,6 @@ en: An invoice added from a mail shows “In the plan · Wed” once the planner
 type: changed
 area: planner
 breaking: false
-de: Eine vermerkte Mahnung steht in der Plan-Zeile als Zusatz („Mahnung · 92,40 € bis …“), der nächste Schritt oben nennt nur „… bezahlen“.
-en: A noted payment reminder shows in the plan row as a detail (“Reminder · €92.40 by …”); the next step at the top only says “Pay …”.
+de: Oben im Planer steht „Heute: Stadtwerke bezahlen.“ ohne angehängtes „· Mahnung“; eine vermerkte Mahnung steht als Zusatz in der Zeile („Mahnung · 92,40 € bis …“).
+en: The top of the planner says “Today: Pay Stadtwerke.” without an added “· Reminder”; a noted payment reminder shows as a detail in the row (“Reminder · €92.40 by …”).
 ---

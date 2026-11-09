@@ -7198,6 +7198,7 @@ export const de = {
       created: 'Rechnung angelegt',
       createdMark: 'angelegt',
       inPlan: (day: string) => `Im Plan · ${day}`,
+      today: 'heute',
       already: 'Schon angelegt',
       reminderWord: (level: number) => (level > 1 ? `${level}. Mahnung` : 'Mahnung'),
       due: (day: string) => `fällig ${day}`,

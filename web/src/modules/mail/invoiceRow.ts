@@ -18,7 +18,8 @@ import { formatMoney } from '@/core/money';
 import { readInvoiceMail, type InvoiceRead } from '@/core/mail/heuristics';
 import { mailWebUrl } from '@/core/mail/service';
 import type { MailAccountRef, MailAddress } from '@/core/mail/types';
-import { getManifest } from '@/core/modules/registry';
+import { loadModuleStates } from '@/core/modules/activation';
+import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { formatDay } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import {
@@ -127,8 +128,8 @@ export async function invoiceOffers(
       continue;
     }
     const mine = own[i];
-    // „Anlegen“, undone, then filed through the sheet: the sheet's invoice counts; the deleted one stays
-    // deleted (a tap would bring it back beside the corrected one).
+    // „Anlegen“, undone, then filed through the sheet (under its own id, since a deleted invoice sits under the
+    // row's): the sheet's invoice counts; the deleted one stays deleted.
     if (mine && mine.deletedAt !== null && filed.has(th.lastMessageId!)) {
       out.set(th.id, { kind: 'create', read, id, state: 'live' });
       continue;
@@ -164,10 +165,12 @@ export async function invoiceOffers(
     if (filed.has(th.lastMessageId!)) out.set(th.id, { kind: 'create', read, id, state: 'live' });
     else out.set(th.id, read.sure ? { kind: 'create', read, id } : { kind: 'check', read });
   }
-  // Written under the row's id and placed: the row says where it is, so nobody opens the planner to check.
+  // Written under the row's own id, live, and placed: the row says where it is, so nobody opens the planner.
+  const liveOwn = new Set(own.filter((r) => r && r.deletedAt === null).map((r) => r!.id));
+  const states = liveOwn.size ? await loadModuleStates(visibleManifests) : undefined;
   for (const o of out.values())
-    if (o.kind === 'create' && o.state === 'live' && own.some((r) => r?.id === o.id)) {
-      const day = await plannedOn('invoices', o.id);
+    if (o.kind === 'create' && o.state === 'live' && liveOwn.has(o.id)) {
+      const day = await plannedOn('invoices', o.id, { states });
       if (day) o.planned = day;
     }
   return out;

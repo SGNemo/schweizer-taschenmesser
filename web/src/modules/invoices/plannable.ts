@@ -34,6 +34,11 @@ export function planDetail(i: {
   return t.invoices.planDunned(last.startsWith(prefix) ? last.slice(prefix.length) : undefined);
 }
 
+const detailOf = (i: Parameters<typeof planDetail>[0]) => {
+  const detail = planDetail(i);
+  return detail ? { detail } : {};
+};
+
 const source: PlannableSource = {
   async list(ctx) {
     const prefs = await getSettings('module.invoices', settings.schema, settings.defaults);
@@ -47,7 +52,7 @@ const source: PlannableSource = {
       id: i.id,
       kind: 'invoice',
       title: t.invoices.planTitle(i.payee),
-      ...(planDetail(i) ? { detail: planDetail(i) } : {}),
+      ...detailOf(i),
       to: `/invoices?open=${encodeURIComponent(i.id)}`,
       durationMin: PAY_MINUTES,
       priority: PAY_PRIORITY,

@@ -155,6 +155,38 @@ describe('create from this mail', () => {
     expect(await db.table('invoices_invoice').count()).toBe(1);
   });
 
+  it('a deleted invoice under the mail id never comes back with old values: the sheet saves its own', async () => {
+    const id = await invoiceMailId('m1');
+    await db.table('invoices_invoice').add({
+      id,
+      payee: 'Alt',
+      amountMinor: 100,
+      dueDate: '2026-01-01',
+      status: 'open',
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: 2,
+      _f: {},
+    });
+    const user = userEvent.setup();
+    view();
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    const live = async () =>
+      (await db.table('invoices_invoice').toArray()).filter((r) => !r.deletedAt);
+    await waitFor(async () => expect(await live()).toHaveLength(1));
+    const [created] = await live();
+    expect(created).toMatchObject({ payee: 'Stadtwerke Musterstadt', amountMinor: 8430 });
+    expect(created.id).not.toBe(id);
+    expect((await db.table('invoices_invoice').get(id)).deletedAt).not.toBeNull();
+  });
+
   it('cancelling saves nothing', async () => {
     const user = userEvent.setup();
     view();

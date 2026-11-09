@@ -3,7 +3,9 @@ import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
 import { today } from '@/core/time/now';
-import { reinstateCapture, type SavedCapture } from '@/quickCapture/targets';
+import type { SavedCapture } from '@/quickCapture/targets';
+import { createCollectionRepo } from '@/core/db/repo';
+import { getManifest } from '@/core/modules/registry';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
@@ -39,16 +41,27 @@ export function LinkDialog({
 }) {
   const [excerpt, setExcerpt] = useState(false);
   // An invoice from this message gets the id the mail list's „Anlegen“ uses (Kopf leer, Nachlese): the sheet
-  // and the row find the same invoice, also on another device once it has synced.
-  const [invoiceId, setInvoiceId] = useState<{ message: string; id: string }>();
+  // and the row find the same invoice, also on another device once it has synced. Not while a deleted invoice
+  // sits under that id: bringing it back would write its old values, not the ones this sheet shows – the sheet
+  // then saves a new one under its own id (the row knows it through the link). The sheet opens once this is
+  // settled, so a quick save never misses the id.
+  const [invoiceId, setInvoiceId] = useState<{ message: string; id?: string }>();
   useEffect(() => {
     let alive = true;
-    void invoiceMailId(message.id).then((id) => alive && setInvoiceId({ message: message.id, id }));
+    void (async () => {
+      const id = await invoiceMailId(message.id);
+      const invoices = getManifest('invoices');
+      const row = invoices
+        ? await createCollectionRepo(invoices, 'invoice').table.get(id)
+        : undefined;
+      if (alive) setInvoiceId({ message: message.id, ...(row?.deletedAt != null ? {} : { id }) });
+    })();
     return () => {
       alive = false;
     };
   }, [message.id]);
-  const idFor = invoiceId?.message === message.id ? { invoice: invoiceId.id } : undefined;
+  const idReady = invoiceId?.message === message.id;
+  const idFor = idReady && invoiceId.id ? { invoice: invoiceId.id } : undefined;
   const [suggestion, setSuggestion] = useState<
     { phase: 'idle' } | { phase: 'working' } | { phase: 'done'; text: string } | { phase: 'none' }
   >({ phase: 'idle' });
@@ -63,11 +76,11 @@ export function LinkDialog({
         .toast(saved.amended ? t.mail.invoice.alreadyNoted : t.mail.invoice.already);
       return;
     }
-    // Deleted before (an undo, or by hand): the same invoice comes back instead of a second one.
-    const entry =
-      saved.existed === 'tombstone' ? await reinstateCapture(saved.type, saved.id) : saved;
-    await saveLink(account.key, threadId, message.id, entry).catch(() => undefined);
-    await announceSaved(entry);
+    // Deleted under that id since the sheet opened: nothing was written; never bring back old values.
+    if (saved.existed === 'tombstone')
+      return void useUiStore.getState().toast(t.mail.invoice.failed);
+    await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
+    await announceSaved(saved);
   }
 
   // A fresh start for the next time the dialog opens (another destination, another mail).
@@ -151,15 +164,17 @@ export function LinkDialog({
               )}
             </div>
           ) : null}
-          <CaptureForm
-            key={`${type}-${message.id}-${applied ?? ''}`}
-            initialText={applied ?? prefill.text}
-            initialType={type}
-            extra={prefill.extra}
-            onCancel={close}
-            idFor={idFor}
-            onSaved={(saved) => void filed(saved).finally(close)}
-          />
+          {idReady ? (
+            <CaptureForm
+              key={`${type}-${message.id}-${applied ?? ''}`}
+              initialText={applied ?? prefill.text}
+              initialType={type}
+              extra={prefill.extra}
+              onCancel={close}
+              idFor={idFor}
+              onSaved={(saved) => void filed(saved).finally(close)}
+            />
+          ) : null}
           <p className={styles.hint}>{link ? t.mail.link.stores : t.mail.link.storesNothing}</p>
         </div>
       ) : null}

@@ -19,7 +19,8 @@ export { CaptureError } from './types';
 export type { CaptureRef, CaptureTarget, CaptureVia, OpenInvoice, SavedCapture } from './types';
 // `findOpenInvoice` lives in `./lookup` and is loaded on demand (only reminder lines need it).
 export type { InvoiceLookup } from './lookup';
-export { TARGETS } from './adapters';
+export { TARGETS, planItemKey } from './adapters';
+import { planItemKey } from './adapters';
 
 export interface SaveOptions {
   database?: TaschenmesserDB;
@@ -212,7 +213,7 @@ export async function amendCapture(
 
 /**
  * The first day from today the planner placed an entry on (its assignments), or undefined: not placed (yet),
- * waiting, or the planner off. The key is the plan target's own (`via.id`), so callers never build it. Dexie
+ * waiting, or the planner off. The key is `planItemKey` (the plan target's `via.id` uses it too), so callers never build it. Dexie
  * reads only (safe in a live query): a mail row can say „Im Plan · Mi“ the moment the planner placed it.
  */
 export async function plannedOn(
@@ -223,8 +224,8 @@ export async function plannedOn(
   const plan = targetFor('plan');
   const manifest = getManifest(plan.moduleId);
   const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
-  if (!manifest || !states[plan.moduleId] || !plan.via) return undefined;
-  const key = plan.via.id({ moduleId, id });
+  if (!manifest || !states[plan.moduleId]) return undefined;
+  const key = planItemKey(moduleId, id);
   const rows = (await createCollectionRepo(manifest, 'assignment', opts.database)
     .table.where('itemKey')
     .equals(key)
