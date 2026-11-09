@@ -26,10 +26,14 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   page,
 }) => {
   await ready(page, '/calendar');
-  const toggle = page.getByRole('switch', { name: 'Mehr Felder anzeigen' });
-  await toggle.click();
+  // The calendar keeps the switch in its "⋯" menu (U25, UI round 6).
+  await page.locator('main').getByRole('button', { name: 'Weitere Aktionen', exact: true }).click();
+  await page.getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }).click();
   // the choice is written asynchronously: wait for it before leaving the page
-  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  await page.locator('main').getByRole('button', { name: 'Weitere Aktionen', exact: true }).click();
+  await expect(
+    page.getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
+  ).toHaveAttribute('aria-checked', 'true');
   await ready(page, '/calendar?new=1');
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toBeVisible();
   // another module is unaffected
