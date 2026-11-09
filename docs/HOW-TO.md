@@ -32,7 +32,7 @@ How to read it:
 - **Docs-only changes** (see [howto/ci.md](howto/ci.md)) start none of the heavy jobs; `README*.md` and other root files are not docs for the pre-check and run every package; `docs/AI-IMPORT*` and `docs/user/installation*` run static + unit.
 - **What leaves the plain PR runs later, not never:** Pixel 7 and the specs outside the smoke list first run after the merge (push `develop`) or overnight; accessibility, layout, touch, calm mode, hide-values, identity and the seed specs run on every web PR (desktop project; the phone ones set their own viewport). A red `develop` run blocks the Dev-Preview; the chat whose merge broke it fixes it (check Actions → CI on `develop` after merging).
 - **Nightly** (`nightly.yml`) is a scheduled workflow and GitHub fires those only from the default branch: it is active once `nightly.yml` is on `main` (next release merge). Until then the push runs on `develop` cover the same set.
-- Add a spec to the PR smoke set only if it guards start-up, data safety, navigation or a module's create/edit path: `SMOKE_FILES` in `web/playwright.config.ts`.
+- Add a spec to the PR smoke set only if it guards start-up, data safety, navigation or a module's create/edit path: `SMOKE_FILES` in `web/playwright.config.ts` (a protected file: that PR is a ratchet hit and needs Sven's approval).
 
 ## More recipes (one file per topic, load only what you need)
 

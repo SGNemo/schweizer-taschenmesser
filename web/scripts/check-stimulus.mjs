@@ -66,8 +66,9 @@ if (process.env.CI || args.includes('--print')) {
 }
 if (result.violations.length) {
   console.error(
-    '\nBelow budget? Take the measured values of the CI run (job summary) into e2e/stimulus-budget.json.' +
-      '\nOver budget, or a page added or removed? That is a ratchet hit: say why in the PR (docs/howto/ci.md).',
+    '\nBelow budget? Take the measured values of the CI run (job summary) into e2e/stimulus-budget.json: lowering is free.' +
+      '\nOver budget on purpose, or a page added or removed? Take the CI values too; that raise is a ratchet hit:' +
+      '\nname it in the PR text and wait for the maintainer (docs/howto/ci.md).',
   );
   process.exit(1);
 }

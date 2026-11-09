@@ -55,7 +55,7 @@ describe('scripts/baselines/seed-rows.json', () => {
     const fewer = Object.entries(baseline.rows).filter(([t, n]) => (rows[t] ?? 0) < n);
     expect(
       fewer.map(([t, n]) => `${t}: ${n} → ${rows[t] ?? 0}`),
-      'seed rows were removed: the stimulus values are measured on this data (docs/howto/ci.md)',
+      'seed rows were removed: the stimulus values are measured on this data. Lowering the file is a ratchet hit: name it in the PR text, the maintainer approves (docs/howto/ci.md)',
     ).toEqual([]);
     expect(
       rows,

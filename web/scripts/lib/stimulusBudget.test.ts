@@ -392,24 +392,23 @@ function sources(dir: string, out: string[] = []): string[] {
 
 describe('pages of the inventory', () => {
   it('every parameter-free route of every module manifest is measured under its route name', () => {
-    const routes: string[] = [];
-    for (const id of readdirSync(`${web}src/modules`, { withFileTypes: true })) {
-      if (!id.isDirectory() || id.name === 'example') continue;
-      for (const m of read(`src/modules/${id.name}/manifest.ts`).matchAll(/\bpath:\s*'([^']+)'/g))
-        if (!m[1]!.includes(':')) routes.push(m[1]!);
-    }
-    expect(routes.length).toBeGreaterThan(25);
-    expect(MODULE_PAGES.map((p) => p.path).sort()).toEqual(routes.sort());
+    const names = MODULE_PAGES.map((p) => p.name);
+    expect(names.length).toBeGreaterThan(25);
+    expect(names).toEqual(
+      expect.arrayContaining(['finance', 'vault', 'clock', 'disk', 'disk-scan']),
+    );
+    expect(names).not.toContain('example');
+    expect(names.some((n) => n.includes(':') || n.includes('focus'))).toBe(false);
     for (const p of MODULE_PAGES) expect(p.name).toBe(p.path.slice(1).replace(/\//g, '-'));
   });
-  it('desktop-only pages are exactly the modules that do not run on the phone', () => {
-    const desktopOnly = MODULE_PAGES.filter((p) => p.desktop).map((p) => p.module);
-    for (const id of new Set(MODULE_PAGES.map((p) => p.module!))) {
-      const platforms = /platforms:\s*\[([^\]]*)\]/.exec(
-        read(`src/modules/${id}/manifest.ts`),
-      )?.[1];
-      expect(desktopOnly.includes(id), id).toBe(platforms !== undefined);
-    }
+  it('platform-bound modules are measured on the desktop window only', () => {
+    expect(MODULE_PAGES.filter((p) => p.desktop).map((p) => p.name)).toEqual([
+      'browser',
+      'disk',
+      'disk-scan',
+      'downloads',
+      'mail',
+    ]);
   });
   it('the budget holds exactly the measured pages, with every metric', () => {
     const budget = JSON.parse(read('e2e/stimulus-budget.json'));

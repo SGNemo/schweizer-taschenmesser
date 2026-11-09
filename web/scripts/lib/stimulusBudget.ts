@@ -250,7 +250,9 @@ export function formatReport(result: Comparison): string {
   for (const v of of('new-page'))
     lines.push(`  ${v.key} was measured but has no budget yet (add the values of the CI run)`);
   for (const v of of('missing-metric'))
-    lines.push(`  ${v.key} has no budget for "${v.metric}" (measured ${v.measured})`);
+    lines.push(
+      `  ${v.key} has no budget for "${v.metric}" (measured ${v.measured}): add the key with the value of the CI run`,
+    );
   for (const v of of('signature-block')) lines.push(`  ${v.key} · signature block ${v.detail}`);
   if (!lines.length) lines.push('Stimulus budget: all pages within budget.');
   return lines.join('\n');

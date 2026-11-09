@@ -764,8 +764,14 @@ export const approvalMessage = (pr, hash, repo = REPO) => `${LABEL} ${repo}#${pr
 export function hitTable(hits) {
   if (!hits.length) return 'Stimulus ratchet: no hits.';
   const esc = (s) => s.replace(/[\\|`]/g, '\\$&').replace(/\s+/g, ' ');
+  const kinds = new Map();
+  for (const h of hits) {
+    const kind = h.slice(0, h.indexOf(' '));
+    kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
+  }
   return [
     `Stimulus ratchet: ${hits.length} hit(s). Each one needs the maintainer's approval (docs/howto/ci.md).`,
+    [...kinds].map(([kind, n]) => `${n} ${kind}`).join(', '),
     '',
     '| Kind | Detail |',
     '| --- | --- |',
@@ -973,7 +979,7 @@ export async function runCi({
     return 1;
   }
   out(
-    `Hits without the label "${LABEL}". Only the maintainer sets it, by hand, after reading this table.`,
+    `Hits without the label "${LABEL}". Next step: name every hit in the pull request text and wait for the maintainer (only he sets the label, by hand), or take the change back. Lowering a budget and new guard files are free.`,
   );
   return 1;
 }
@@ -1039,7 +1045,7 @@ export async function runPr({
       problems.push('hits without a validly signed approval comment for this hash');
       out('Sign it (asks for the passphrase, prints the signature):');
       out(
-        `  printf '%s' '${message}' > /tmp/ratchet-msg.txt && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg.txt | openssl base64 -A; echo`,
+        `  printf '%s' '${message}' > /tmp/ratchet-msg.txt && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg.txt -out /tmp/ratchet-sig.bin && openssl base64 -A -in /tmp/ratchet-sig.bin; echo`,
       );
       out(
         `Then post as the whole text of one comment on the pull request:\n  ${message} <signature>`,
@@ -1052,7 +1058,7 @@ export async function runPr({
   if (!web.ok) problems.push(web.why);
 
   if (problems.length) {
-    out(`\nNOT mergeable:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
+    out(`\nNot mergeable yet:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
     return 1;
   }
   out(`\nMergeable: head ${head} (use it as expectedHeadSha).`);
