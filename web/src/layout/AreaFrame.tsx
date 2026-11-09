@@ -41,7 +41,7 @@ import {
   type ModuleHue,
   type PageLayout,
 } from '@/core/modules/types';
-import { readFigureRoom, writeFigureRoom } from './figureRoom';
+import { readHeadRoom, writeHeadRoom } from './headRoom';
 import { PageContainer, PageFallback } from './PageContainer';
 import { DefaultSignature } from './signatures';
 import { useHeroCollapse } from './useHeroCollapse';
@@ -219,22 +219,24 @@ export function AreaFrame({
   const id = manifest?.identity;
   const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
   const figureShape = id ? FIGURE_HEADS[id.head] : undefined;
-  // U01: the figure's room while it loads – the frame's own headline, or the page's figure: the room it took on the
-  // last visit of this route, else the head variant's shape.
+  // U01: while the page loads, the row under the title keeps the room it took on the last visit of this route; on a
+  // first visit an empty figure of the head variant's shape holds the figure's place (the frame's own headline too).
   const roomKey = route ?? manifest?.id;
-  const remembered = useMemo(() => (roomKey ? readFigureRoom(roomKey) : undefined), [roomKey]);
+  const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
+  const holdRoom = figureHold && !!remembered;
   const figurePending =
     headlinePending ||
     (!headline &&
       figureHold &&
-      !manifest?.contributions?.headline &&
-      (remembered === undefined ? !!figureShape : remembered > 0));
-  const figureRef = useRef<HTMLDivElement>(null);
+      remembered === undefined &&
+      !!figureShape &&
+      !manifest?.contributions?.headline);
+  const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = figureRef.current;
+    const el = bodyRef.current;
     if (figureHold || !framed || !roomKey || !el) return;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    writeFigureRoom(roomKey, el.getBoundingClientRect().height / rem);
+    writeHeadRoom(roomKey, el.getBoundingClientRect().height / rem);
   }, [figureHold, framed, roomKey]);
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
@@ -267,8 +269,15 @@ export function AreaFrame({
               </div>
               <div className={styles.column}>
                 <div className={styles.title} ref={setTitle} />
-                <div className={styles.body}>
-                  <div className={styles.figure} ref={figureRef}>
+                <div
+                  className={styles.body}
+                  ref={bodyRef}
+                  data-hold={holdRoom ? 'true' : undefined}
+                  style={
+                    holdRoom ? ({ '--head-room': `${remembered}rem` } as CSSProperties) : undefined
+                  }
+                >
+                  <div className={styles.figure}>
                     <div className={styles.target} ref={setFigure} />
                     {headline && !claimed('figure') ? (
                       <div data-testid="module-headline">
@@ -285,22 +294,13 @@ export function AreaFrame({
                         className={styles.figurePending}
                         aria-hidden="true"
                         data-testid="module-figure-pending"
-                        style={
-                          remembered
-                            ? ({ '--figure-room': `${remembered}rem` } as CSSProperties)
-                            : undefined
-                        }
                       >
-                        {remembered ? (
-                          '\u00a0'
-                        ) : (
-                          <HeroFigure
-                            label={figureShape === 'plain' ? undefined : '\u00a0'}
-                            value={'\u00a0'}
-                            detail={'\u00a0'}
-                            type={id?.type}
-                          />
-                        )}
+                        <HeroFigure
+                          label={figureShape === 'plain' ? undefined : '\u00a0'}
+                          value={'\u00a0'}
+                          detail={'\u00a0'}
+                          type={id?.type}
+                        />
                       </div>
                     ) : null}
                   </div>
