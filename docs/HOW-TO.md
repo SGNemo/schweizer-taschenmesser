@@ -11,8 +11,9 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Static (format, lint, types, i18n, modules, case) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
 | Licence check (lock files) | every code change | yes | every code change | yes | yes | – |
 | Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
-| E2E app, smoke (24 spec files, desktop, 3 shards) | if `web/` (not only `web/src-tauri/`) changed | yes | no | yes (**Dev-Preview gate**) | yes | – |
-| E2E app, rest (everything else: Pixel 7, a11y, layout, other specs; 8 shards) + seed project (2 shards) | no | yes | no | yes, next to the smoke list, the build and the publish | yes | – |
+| E2E app, smoke (35 spec files, desktop, 3 shards: critical paths plus the standing promises a11y, calm, hide-values, touch, layout, readability, identity) | if `web/` (not only `web/src-tauri/`) changed | yes | no | yes (**Dev-Preview gate**) | yes | – |
+| Seed project (2 shards) and **Stimulus budget** with its ratchet step (both blocking, parts of the check `Web`) | if `web/` (not only `web/src-tauri/`) or a shared input changed | yes | no | yes (ratchet step: PR runs only) | yes | – |
+| E2E app, rest (everything else: Pixel 7, the other specs on desktop; 8 shards) | no | yes | no | yes, next to the smoke list, the build and the publish | yes | – |
 | Sync E2E (next to the smoke list) | if `web/` (not only `src-tauri/`) or `server/` changed | yes | no | yes | yes | – |
 | Browser extension (its own E2E runs against the web app) | if `extension/` or `web/` (not only `src-tauri/`) changed | yes | no | yes | yes | – |
 | server, MCP, supporter (+ CLI), supporter webhook (job "Small packages") | only for the package that changed | yes | no | yes | yes | – |
@@ -24,12 +25,12 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
 How to read it:
-- Also in the E2E part: the warning-only job `Stimulus budget` runs whenever E2E runs; `scribble-guard` runs only for `main` (push or PR into `main`; fails while a `scribble/` folder exists).
+- Also in the E2E part: the jobs `Stimulus budget` (blocking, strict on both sides) and `e2e-seed` run whenever E2E runs and count for the check `Web`. On a PR the ratchet step compares merge base and head: a raised budget or baseline, fewer seed rows, a changed signature-block list, a changed `scripts` entry or **any change to a protected file – every workflow under `.github/workflows/**` included, repo-wide** – is a hit and red until Sven approves it (signed comment for the merge, label `stimulus-raise` for CI; [howto/ci.md](howto/ci.md)). Dependabot PRs for actions and release-workflow changes go that way too; npm bumps and version bumps are free. `scribble-guard` runs only for `main` (push or PR into `main`; fails while a `scribble/` folder exists).
 - **Skipped means "not needed for this diff"** and counts as passed. The check **Web (lint, types, unit, E2E)** fails if a part that was needed did not run or one that was not needed did.
 - **Need everything on your PR now** (UI-wide change, accessibility, layout, Pixel 7)? Add the label `full-ci` (the immediate full run starts only for branches of this repository; later pushes follow the label). It starts one separate full run now and makes every later push run the full set; a red smoke run from before stays visible next to it until the next push. Removing the label applies from the next push.
 - **A draft PR** runs the web static checks and unit tests only (if `web/` changed); marking it ready starts the plain PR set.
 - **Docs-only changes** (see [howto/ci.md](howto/ci.md)) start none of the heavy jobs; `README*.md` and other root files are not docs for the pre-check and run every package; `docs/AI-IMPORT*` and `docs/user/installation*` run static + unit.
-- **What leaves the plain PR runs later, not never:** Pixel 7, most accessibility specs (`a11y.spec.ts`), layout and seed specs first run after the merge (push `develop`) or overnight. A red `develop` run blocks the Dev-Preview; the chat whose merge broke it fixes it (check Actions → CI on `develop` after merging).
+- **What leaves the plain PR runs later, not never:** Pixel 7 and the specs outside the smoke list first run after the merge (push `develop`) or overnight; accessibility, layout, touch, calm mode, hide-values, identity and the seed specs run on every web PR (desktop project; the phone ones set their own viewport). A red `develop` run blocks the Dev-Preview; the chat whose merge broke it fixes it (check Actions → CI on `develop` after merging).
 - **Nightly** (`nightly.yml`) is a scheduled workflow and GitHub fires those only from the default branch: it is active once `nightly.yml` is on `main` (next release merge). Until then the push runs on `develop` cover the same set.
 - Add a spec to the PR smoke set only if it guards start-up, data safety, navigation or a module's create/edit path: `SMOKE_FILES` in `web/playwright.config.ts`.
 
