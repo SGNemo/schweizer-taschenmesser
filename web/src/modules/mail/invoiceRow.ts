@@ -10,7 +10,8 @@
  *
  * The invoice id comes from the provider's **message** id alone (a reminder usually answers in the same
  * thread), never an address or the device-local account key: tapping twice, or the same mail on another
- * device once the first has synced, finds the first invoice instead of doubling it.
+ * device once the first has synced, finds the first invoice instead of doubling it. An invoice filed
+ * through the sheet (random id) is known only on the device that filed it (its link row is device-local).
  */
 import { createCollectionRepo } from '@/core/db/repo';
 import { formatMoney } from '@/core/money';
@@ -111,7 +112,7 @@ export async function invoiceOffers(
   // The row's own invoice first (also a reminder's: it must not read as „vermerkt“ on itself), then an
   // invoice filed from this message through the sheet (its link row): both mean done, never a second one.
   const own = await repo.table.bulkGet(reads.map((x) => x.id));
-  const filed = await filedMessages(reads.map((x) => x.th.lastMessageId!));
+  const filed = await filedMessages(reads);
   for (const [i, { th, read, id }] of reads.entries()) {
     if (read.debit) {
       out.set(th.id, { kind: 'debit', read });
@@ -153,17 +154,29 @@ export async function invoiceOffers(
 }
 
 /** Messages an invoice was filed from (a live invoice behind its link row, e.g. saved through the sheet). */
-async function filedMessages(messageIds: readonly string[]): Promise<Set<string>> {
-  const want = new Set(messageIds);
+async function filedMessages(
+  rows: readonly { th: InvoiceThread; read: InvoiceRead }[],
+): Promise<Set<string>> {
+  // The newest message; for an invoice (not a reminder) also any other message of its thread, since the
+  // sheet links the message that was open.
+  const byMessage = new Set(rows.map((x) => x.th.lastMessageId!));
+  const byThread = new Set(rows.filter((x) => !x.read.dunning).map((x) => x.th.id));
   const links = await linkRepo
     .active()
-    .filter((r) => r.type === 'invoice' && want.has(r.messageId))
+    .filter((r) => r.type === 'invoice' && (byMessage.has(r.messageId) || byThread.has(r.threadId)))
     .toArray();
   const repo = invoicesRepo();
   if (!repo || links.length === 0) return new Set();
-  const rows = await repo.table.bulkGet(links.map((l) => l.entryId));
+  const found = await repo.table.bulkGet(links.map((l) => l.entryId));
+  const live = links.filter((_, i) => found[i] && found[i]!.deletedAt === null);
   return new Set(
-    links.filter((_, i) => rows[i] && rows[i]!.deletedAt === null).map((l) => l.messageId),
+    rows
+      .filter(
+        (x) =>
+          live.some((l) => l.messageId === x.th.lastMessageId) ||
+          (!x.read.dunning && live.some((l) => l.threadId === x.th.id)),
+      )
+      .map((x) => x.th.lastMessageId!),
   );
 }
 

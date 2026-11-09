@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useModuleStates } from '@/core/modules/activation';
 import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { NotizBody, WidgetBody } from '@/ui';
@@ -20,7 +21,11 @@ export default function InboxWidget() {
   const s = useMailSummary();
   const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
-  const open = toCreate(useInvoiceOffers(s?.recent ?? NO_THREADS, offerInvoices));
+  const offers = useInvoiceOffers(s?.recent ?? NO_THREADS, offerInvoices);
+  const open = offers ? toCreate(offers) : 0;
+  // „Nothing to add“ only once the offers are read, the invoices module is on and the line is wanted.
+  const states = useModuleStates();
+  const calm = !!offers && open === 0 && offerInvoices && !!states?.invoices;
   const empty = s !== undefined && s.total === 0;
   return (
     <WidgetBody
@@ -36,7 +41,7 @@ export default function InboxWidget() {
             lines={s.top
               .slice(0, 2)
               .map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
-            meta={open > 0 || !offerInvoices ? undefined : t.mail.widget.inboxNothingToCreate}
+            meta={calm ? t.mail.widget.inboxNothingToCreate : undefined}
           />
           {open > 0 ? (
             <p className={styles.foot}>

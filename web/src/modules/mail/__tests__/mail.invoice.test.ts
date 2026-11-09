@@ -280,6 +280,7 @@ describe('council round 1', () => {
 
   it('a thread the person wrote in shows no line; a fee clause is no reminder', async () => {
     expect((await offersOf([{ ...bill, labelIds: ['INBOX', 'SENT'] }])).size).toBe(0);
+    expect((await offersOf([{ ...bill, labelIds: ['INBOX', 'DRAFT'] }])).size).toBe(0);
     const fee = mail({
       id: 't-5',
       lastMessageId: 'm-5',

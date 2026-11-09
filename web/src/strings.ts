@@ -7179,7 +7179,7 @@ export const de = {
       create: 'Anlegen',
       createFor: (line: string) => `Rechnung anlegen: ${line}`,
       check: 'Ansehen…',
-      checkFor: (line: string) => `Rechnung ansehen und anlegen: ${line}`,
+      checkFor: (line: string) => `Ansehen und anlegen: ${line}`,
       created: 'Rechnung angelegt',
       createdMark: 'angelegt',
       already: 'Schon angelegt',

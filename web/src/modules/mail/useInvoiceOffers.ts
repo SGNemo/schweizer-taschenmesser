@@ -8,17 +8,25 @@ const NONE: ReadonlyMap<string, InvoiceOffer> = new Map();
 /**
  * The invoice offers of the listed rows, live: a written, noted or deleted invoice changes the row at once.
  * Empty while the invoices module is off or `enabled` is false (the setting „Rechnungen in der Liste
- * erkennen“).
+ * erkennen“); `undefined` while it is still reading – then nothing may claim „nothing to add“.
  */
 export function useInvoiceOffers(
   threads: readonly InvoiceThread[],
   enabled: boolean,
-): ReadonlyMap<string, InvoiceOffer> {
+): ReadonlyMap<string, InvoiceOffer> | undefined {
   const states = useModuleStates();
   const on = enabled && !!states?.invoices;
   // A key of what the reading depends on, so the ids are hashed only when the rows change.
   const key = useMemo(
-    () => (on ? threads.map((th) => `${th.id}:${th.lastMessageId ?? ''}`).join('|') : ''),
+    () =>
+      on
+        ? threads
+            .map((th) => {
+              const wrote = th.labelIds.includes('SENT') || th.labelIds.includes('DRAFT');
+              return `${th.id}:${th.lastMessageId ?? ''}:${wrote ? 1 : 0}`;
+            })
+            .join('|')
+        : '',
     [threads, on],
   );
   const [ids, setIds] = useState<{ key: string; ids: Map<string, string> }>();
@@ -33,8 +41,11 @@ export function useInvoiceOffers(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   const ready = on && ids?.key === key ? ids.ids : undefined;
-  return (
-    useLiveQuery(() => (ready ? invoiceOffers(threads, ready) : Promise.resolve(NONE)), [ready]) ??
-    NONE
+  const offers = useLiveQuery(
+    () => (ready ? invoiceOffers(threads, ready) : Promise.resolve(undefined)),
+    [ready],
   );
+  if (!states) return undefined; // module states still loading
+  if (!on || threads.length === 0) return NONE;
+  return ready ? offers : undefined;
 }

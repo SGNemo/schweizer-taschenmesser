@@ -168,6 +168,8 @@ function ThreadList({
   return <GroupedList listId="mail" groups={groups} />;
 }
 
+const NO_OFFERS: ReadonlyMap<string, InvoiceOffer> = new Map();
+
 /** Page width (rem) from which folders, list and reading pane stand side by side: 12 + 20 + 24 rem and two gaps. */
 const MAIL_COLUMNS_REM = 58;
 
@@ -244,7 +246,7 @@ export default function MailPage() {
     // Headers cached before the flag existed (`personal` unknown) stay in until the next fetch.
     personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
-  const invoices = useInvoiceOffers(shown, offerInvoices);
+  const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
   // An unsure invoice row asked for the sheet: the thread opens with it (never a write without a look).
   const [startInvoice, setStartInvoice] = useState<string | undefined>();
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
