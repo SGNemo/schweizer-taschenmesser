@@ -85,6 +85,30 @@
   gap: var(--space-4);
   padding: var(--space-5);
 }
+/* Neutral dialogs: the zone is no box at all, handle and head sit in the column as before. */
+.headZone {
+  display: contents;
+}
+/* S02: a dialog inside a module page wears its identity in a head zone (MODULE-IDENTITY "Frame"): the module's
+   tint up to the dialog's edges, icon plate, signature mark and a hairline below. The fields stay as they are. */
+.headZone[data-tinted] {
+  display: flex;
+  flex-direction: column;
+  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) 0;
+  padding: var(--space-5) var(--space-5) var(--card-pad);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
+}
+.headZone[data-tinted] .title {
+  flex: 1;
+  min-width: 0;
+}
+.mark {
+  display: inline-grid;
+  flex: none;
+  color: var(--module-color);
+}
 .head {
   display: flex;
   align-items: center;

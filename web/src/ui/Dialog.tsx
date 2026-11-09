@@ -1,8 +1,11 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCurrentModuleIdentity, type ModuleIdentityMark } from '@/core/modules/currentModule';
 import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
 import { Button, IconButton } from './Button';
+import { HuePlate } from './HuePlate';
 import { Icon } from './icons';
+import { SignatureMark } from './identity/SignatureMark';
 import styles from './Dialog.module.css';
 
 interface DialogProps {
@@ -28,6 +31,12 @@ interface DialogProps {
    * moment it opens (the capture sheet: nothing of the pile beside it, the page stays mounted).
    */
   backdrop?: 'dim' | 'opaque';
+  /**
+   * The module identity of the head zone (S02): tint, icon plate and signature mark in the module's hue. Left out,
+   * a dialog that sits inside a module page takes that module's identity (by route); `null` keeps it neutral.
+   * Outside module pages (shell, overview, settings) a dialog stays neutral.
+   */
+  identity?: ModuleIdentityMark | null;
 }
 
 /** Distance in px a sheet must be pulled down to close. */
@@ -61,8 +70,19 @@ export function Dialog({
   askAfterTyping = false,
   backHandled = false,
   backdrop = 'dim',
+  identity: identityProp,
 }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  const routeIdentity = useCurrentModuleIdentity();
+  // Only a dialog that lives inside the module page wears its identity: the shell's own dialogs (tools,
+  // palette, capture, notifications) render outside it and stay neutral on every route. Resolved before the
+  // first paint and long before the dialog opens, so nothing jumps.
+  const [inPage, setInPage] = useState(false);
+  useLayoutEffect(() => {
+    setInPage(!!ref.current?.parentElement?.closest('[data-hue]'));
+  }, []);
+  const identity =
+    identityProp === null ? undefined : (identityProp ?? (inPage ? routeIdentity : undefined));
   const titleId = useId();
   const [confirming, setConfirming] = useState(false);
   // A closed dialog never reopens on the "discard?" question (adjusting state during render).
@@ -142,6 +162,8 @@ export function Dialog({
         variant === 'full' ? styles.full : '',
         backdrop === 'opaque' ? styles.opaque : '',
       ].join(' ')}
+      data-hue={identity?.hue}
+      data-hue2={identity?.hue2}
       style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       aria-labelledby={titleId}
       onCancel={(e) => {
@@ -167,25 +189,37 @@ export function Dialog({
               : undefined
           }
         >
-          {variant === 'full' ? null : (
-            <div
-              className={styles.handle}
-              role="presentation"
-              title={t.ui.grabHandle}
-              onPointerDown={onHandleDown}
-              onPointerMove={onHandleMove}
-              onPointerUp={onHandleUp}
-              onPointerCancel={onHandleUp}
-            />
-          )}
-          <div className={styles.head}>
-            {headerStart}
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-            <IconButton label={t.actions.close} onClick={requestClose}>
-              <Icon name="close" />
-            </IconButton>
+          <div
+            className={styles.headZone}
+            data-tinted={identity ? 'true' : undefined}
+            data-testid="dialog-head"
+          >
+            {variant === 'full' ? null : (
+              <div
+                className={styles.handle}
+                role="presentation"
+                title={t.ui.grabHandle}
+                onPointerDown={onHandleDown}
+                onPointerMove={onHandleMove}
+                onPointerUp={onHandleUp}
+                onPointerCancel={onHandleUp}
+              />
+            )}
+            <div className={styles.head}>
+              {headerStart}
+              {identity ? <HuePlate hue={identity.hue} icon={identity.icon} size="sm" /> : null}
+              <h2 id={titleId} className={styles.title}>
+                {title}
+              </h2>
+              {identity && identity.signature !== 'none' ? (
+                <span className={styles.mark} aria-hidden="true">
+                  <SignatureMark id={identity.signature} size={24} />
+                </span>
+              ) : null}
+              <IconButton label={t.actions.close} onClick={requestClose}>
+                <Icon name="close" />
+              </IconButton>
+            </div>
           </div>
           {/* Stays mounted while the question is shown, so a "keep editing" loses nothing. */}
           <div hidden={confirming} className={styles.body}>
