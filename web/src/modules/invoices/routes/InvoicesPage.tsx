@@ -56,6 +56,7 @@ export default function InvoicesPage() {
   };
 
   const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
+  const emptyOpen = !!invoices && shown.length === 0 && view === 'open';
 
   function renderRow(i: Stored<Invoice>) {
     const state = dueState(i.dueDate, day, { done: i.status === 'paid' });
@@ -190,7 +191,11 @@ export default function InvoicesPage() {
         }
       >
         <AdvancedToggle moduleId="invoices" />
-        <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+        {/* U26: while the open list is empty, the empty state holds the one filled step. */}
+        <Button
+          variant={emptyOpen ? 'secondary' : 'primary'}
+          onClick={() => setTarget({ draft: true })}
+        >
           <Icon name="plus" size={18} />
           {t.invoices.add}
         </Button>
@@ -213,7 +218,13 @@ export default function InvoicesPage() {
           title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
           testId="invoices-empty"
           motif={<SignatureMark id="bill" size={64} />}
-        />
+        >
+          {emptyOpen ? (
+            <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+              {t.invoices.add}
+            </Button>
+          ) : null}
+        </EmptyState>
       ) : null}
       {view === 'open' ? (
         <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
