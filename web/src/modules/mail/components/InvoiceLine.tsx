@@ -25,9 +25,13 @@ export function InvoiceLine({ offer, onAct }: { offer: InvoiceOffer; onAct: () =
           : undefined;
   return (
     <p className={styles.invoiceLine} data-testid="mail-invoice-line">
-      <span>{text}</span>
-      {late ? <span className={styles.invoiceLate}>· {late}</span> : null}
-      {verb && 'done' in verb ? <span data-testid="mail-invoice-done">· {verb.done}</span> : null}
+      <span className={styles.invoiceText}>
+        {text}
+        {late ? <span className={styles.invoiceLate}> · {late}</span> : null}
+        {verb && 'done' in verb ? (
+          <span data-testid="mail-invoice-done"> · {verb.done}</span>
+        ) : null}
+      </span>
       {verb && 'label' in verb ? (
         <Button size="sm" variant="ghost" aria-label={verb.aria} onClick={onAct}>
           {verb.label}

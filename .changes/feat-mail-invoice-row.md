@@ -3,7 +3,7 @@ type: added
 area: mail
 breaking: false
 highlight: true
-de: Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit; „Anlegen“ legt die Rechnung mit einem Tipp an, rückgängig im Hinweis.
+de: Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit; „Anlegen“ legt die Rechnung mit einem Tipp an, und im Hinweis lässt sich das rückgängig machen.
 en: Under an invoice mail you see payee, amount and due date; “Add” creates the invoice in one tap, with undo in the notice.
 ---
 

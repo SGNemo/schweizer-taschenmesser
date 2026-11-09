@@ -83,7 +83,8 @@ export function mailPrefill(
         },
       }
     : {};
-  const dunning = dunningOf(`${subject} ${body.slice(0, 1500)}`);
+  // Only where a reminder says what it is (subject, opening lines): a fee clause in the terms is no reminder.
+  const dunning = dunningOf(`${subject} ${body.slice(0, 300)}`);
   const result = mailPrefillFor(type, {
     subject,
     sender,
@@ -125,6 +126,7 @@ function mailPrefillFor(
       const amount = found?.amountMinor;
       const due = found?.kind === 'invoice' ? found.date : undefined;
       // A payment reminder keeps its word, so the sheet looks for the open invoice first („Kopf leer“ 3b).
+      // The word is parser input (the parser reads German reminder words in every language), not UI text.
       const level = found?.kind === 'invoice' ? dunning : undefined;
       return {
         ...base,

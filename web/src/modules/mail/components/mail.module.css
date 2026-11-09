@@ -291,3 +291,11 @@
 .invoiceLate {
   color: var(--warning-ink);
 }
+/* The values wrap; the verb stays at the end of the line. */
+.invoiceText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.invoiceLine > button {
+  flex-shrink: 0;
+}

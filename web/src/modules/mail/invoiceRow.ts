@@ -44,6 +44,7 @@ export interface InvoiceThread {
   snippet: string;
   date: number;
   personal?: boolean;
+  labelIds: string[];
   lastMessageId?: string;
 }
 
@@ -54,6 +55,9 @@ export const invoiceMailId = async (messageId: string): Promise<string> =>
 /** The row's reading of a mail, or nothing (not an invoice, or no message id to key it on yet). */
 export function readRow(th: InvoiceThread): InvoiceRead | undefined {
   if (!th.lastMessageId) return undefined;
+  // A thread the person wrote in (a reply „überwiesen“, a forward): the newest sender may be them, so the
+  // payee would be wrong. No line – the mail can still be filed through „Aus dieser Mail anlegen“.
+  if (th.labelIds.includes('SENT') || th.labelIds.includes('DRAFT')) return undefined;
   const name = th.from.name?.trim();
   return readInvoiceMail({
     id: th.lastMessageId,
@@ -102,20 +106,28 @@ export async function invoiceOffers(
   const repo = invoicesRepo();
   if (!repo) return out;
   const reads = threads
-    .map((th) => ({ th, read: readRow(th) }))
-    .filter((x): x is { th: InvoiceThread; read: InvoiceRead } => !!x.read);
-  for (const { th, read } of reads) {
-    const id = ids.get(th.id);
-    if (!id) continue;
+    .map((th) => ({ th, read: readRow(th), id: ids.get(th.id) }))
+    .filter((x): x is { th: InvoiceThread; read: InvoiceRead; id: string } => !!x.read && !!x.id);
+  // The row's own invoice first (also a reminder's: it must not read as „vermerkt“ on itself), then an
+  // invoice filed from this message through the sheet (its link row): both mean done, never a second one.
+  const own = await repo.table.bulkGet(reads.map((x) => x.id));
+  const filed = await filedMessages(reads.map((x) => x.th.lastMessageId!));
+  for (const [i, { th, read, id }] of reads.entries()) {
     if (read.debit) {
       out.set(th.id, { kind: 'debit', read });
       continue;
     }
-    if (!read.sure) {
-      out.set(th.id, { kind: 'check', read });
+    const mine = own[i];
+    if (mine) {
+      out.set(th.id, {
+        kind: 'create',
+        read,
+        id,
+        state: mine.deletedAt === null ? 'live' : 'deleted',
+      });
       continue;
     }
-    if (read.dunning) {
+    if (read.dunning && read.sure) {
       const found = await findOpenInvoice(reminderFields(read), { today: today() });
       if (found && 'match' in found) {
         const row = (await repo.get(found.match.id)) as { dunnedAt?: string } | undefined;
@@ -125,21 +137,34 @@ export async function invoiceOffers(
       }
       // Several fit, or the payee is known and the amount does not: the sheet asks, never a guess.
       if (found) {
-        out.set(th.id, { kind: 'check', read });
+        out.set(
+          th.id,
+          filed.has(th.lastMessageId!)
+            ? { kind: 'create', read, id, state: 'live' }
+            : { kind: 'check', read },
+        );
         continue;
       }
     }
-    out.set(th.id, { kind: 'create', read, id });
+    if (filed.has(th.lastMessageId!)) out.set(th.id, { kind: 'create', read, id, state: 'live' });
+    else out.set(th.id, read.sure ? { kind: 'create', read, id } : { kind: 'check', read });
   }
-  const creates = [...out.values()].filter(
-    (o): o is Extract<InvoiceOffer, { kind: 'create' }> => o.kind === 'create',
-  );
-  const rows = await repo.table.bulkGet(creates.map((o) => o.id));
-  creates.forEach((o, i) => {
-    const r = rows[i];
-    if (r) o.state = r.deletedAt === null ? 'live' : 'deleted';
-  });
   return out;
+}
+
+/** Messages an invoice was filed from (a live invoice behind its link row, e.g. saved through the sheet). */
+async function filedMessages(messageIds: readonly string[]): Promise<Set<string>> {
+  const want = new Set(messageIds);
+  const links = await linkRepo
+    .active()
+    .filter((r) => r.type === 'invoice' && want.has(r.messageId))
+    .toArray();
+  const repo = invoicesRepo();
+  if (!repo || links.length === 0) return new Set();
+  const rows = await repo.table.bulkGet(links.map((l) => l.entryId));
+  return new Set(
+    links.filter((_, i) => rows[i] && rows[i]!.deletedAt === null).map((l) => l.messageId),
+  );
 }
 
 /** The capture fields of a reminder: payee, new amount and deadline, level and the mail's day. */
@@ -179,7 +204,14 @@ export function offerText(offer: InvoiceOffer, todayStr: string): { text: string
         .join(' · '),
     };
   }
-  const head = [read.payee, money].filter(Boolean).join(' · ');
+  // A reminder that makes a new invoice says so: the tap also writes its level („Mahnung“).
+  const head = [
+    read.dunning ? t.mail.invoice.reminderWord(read.dunning) : undefined,
+    read.payee,
+    money,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   if (offer.kind === 'check' || !read.date) return { text: head };
   // After the due day the line says so in a warning tone (never red: nothing is overdue in mail).
   if (read.date < todayStr) return { text: head, late: t.mail.invoice.late(day(read.date)) };
@@ -189,17 +221,24 @@ export function offerText(offer: InvoiceOffer, todayStr: string): { text: string
 const toast = (...a: Parameters<ReturnType<typeof useUiStore.getState>['toast']>) =>
   useUiStore.getState().toast(...a);
 
-/** Writes this device's link row once (the thread view lists what came out of the mail). */
+/**
+ * Writes this device's link row once (the thread view lists what came out of the mail). Never fatal: the
+ * entry is written by then, so a failed link must not turn the toast into „nothing saved“.
+ */
 async function linkOnce(
   account: MailAccountRef,
   th: InvoiceThread,
   saved: SavedCapture,
 ): Promise<string | undefined> {
-  const has = await linkRepo
-    .active()
-    .filter((r) => r.accountKey === account.key && r.threadId === th.id && r.entryId === saved.id)
-    .first();
-  return has ? undefined : saveLink(account.key, th.id, th.lastMessageId!, saved);
+  try {
+    const has = await linkRepo
+      .active()
+      .filter((r) => r.accountKey === account.key && r.threadId === th.id && r.entryId === saved.id)
+      .first();
+    return has ? undefined : await saveLink(account.key, th.id, th.lastMessageId!, saved);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -288,8 +327,9 @@ export async function noteReminder(
   }
 }
 
-/** Rows the widget counts as „zum Anlegen“: an invoice not written yet, or one the sheet would ask about. */
+/**
+ * Rows the widget counts as „zum Anlegen“: a sure invoice with no invoice behind it at all. A deleted one
+ * (the person's choice) and an unsure one (the sheet decides) do not count, so the number only goes down.
+ */
 export const toCreate = (offers: ReadonlyMap<string, InvoiceOffer>): number =>
-  [...offers.values()].filter(
-    (o) => (o.kind === 'create' && o.state !== 'live') || o.kind === 'check',
-  ).length;
+  [...offers.values()].filter((o) => o.kind === 'create' && o.state === undefined).length;

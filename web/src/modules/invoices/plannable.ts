@@ -28,6 +28,8 @@ export function planTitle(i: {
 }): string {
   const base = t.invoices.planTitle(i.payee);
   if (!i.dunningLevel || !i.dunnedAt) return base;
+  // The line was written in the language of that moment: after a language switch the detail is simply
+  // left out („· Mahnung“), never guessed.
   const prefix = t.quickCapture
     .dunningNote(formatDay(i.dunnedAt, 'dd.MM.yyyy'), '\u0000')
     .split('\u0000')[0]!;

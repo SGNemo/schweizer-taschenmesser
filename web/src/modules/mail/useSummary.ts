@@ -4,7 +4,6 @@ import { listMailAccounts } from '@/core/mail/accounts';
 import { mailThreads } from '@/core/mail/service';
 import { now } from '@/core/time/now';
 import { DEMO_ACCOUNT, loadThreads, saveThreads, type CachedThreadView } from './cache';
-import { looksLikeInvoice } from './format';
 import { threadRepo } from './repo';
 
 const REFRESH_EVERY = 10 * 60_000;
@@ -31,7 +30,6 @@ export interface MailSummary {
   unread: number;
   /** Unread inbox threads, "important" ones first, newest first. */
   top: CachedThreadView[];
-  invoices: number;
   /** Inbox threads of the last `INVOICE_DAYS` (the widget reads its invoice rows from them). */
   recent: CachedThreadView[];
 }
@@ -58,7 +56,6 @@ export function useMailSummary(): MailSummary | undefined {
       total: all.length,
       unread: unread.length,
       top: top.slice(0, 3),
-      invoices: all.filter((t) => t.date >= since && looksLikeInvoice(t.subject, t.from)).length,
       recent: inbox.filter((t) => t.date >= since),
     };
   }, []);

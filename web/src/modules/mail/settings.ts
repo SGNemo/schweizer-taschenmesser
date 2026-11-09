@@ -22,6 +22,7 @@ const schema = z.object({
   offerPersonal: z.boolean(),
   /** The list offers „Alle in den Plan…“ (a preview with ticks). */
   offerPlanAll: z.boolean(),
+  /** Rows read as an invoice or payment reminder show their values and one verb („Kopf leer“ 3b). */
   offerInvoices: z.boolean(),
 });
 

@@ -7183,6 +7183,7 @@ export const de = {
       created: 'Rechnung angelegt',
       createdMark: 'angelegt',
       already: 'Schon angelegt',
+      reminderWord: (level: number) => (level > 1 ? `${level}. Mahnung` : 'Mahnung'),
       due: (day: string) => `fällig ${day}`,
       late: (day: string) => `Frist war ${day}`,
       debit: (day: string) => `Abbuchung am ${day}`,
@@ -7474,7 +7475,7 @@ export const de = {
     widget: {
       inbox: 'Posteingang',
       inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
-      inboxNoInvoices: (days: number) => `Keine Rechnungsmails in den letzten ${days} Tagen`,
+      inboxNothingToCreate: 'Keine Rechnungen zum Anlegen',
       inboxToCreate: (n: number) =>
         n === 1 ? '1 Rechnung zum Anlegen' : `${n} Rechnungen zum Anlegen`,
       empty: 'Noch keine Mails.',

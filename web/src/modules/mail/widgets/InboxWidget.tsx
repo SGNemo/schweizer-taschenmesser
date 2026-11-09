@@ -6,16 +6,16 @@ import { personName, subjectOf } from '../format';
 import { toCreate } from '../invoiceRow';
 import { settings } from '../settings';
 import { useInvoiceOffers } from '../useInvoiceOffers';
-import { INVOICE_DAYS, useMailSummary } from '../useSummary';
+import { useMailSummary } from '../useSummary';
 import styles from './InboxWidget.module.css';
+
+const NO_THREADS: never[] = [];
 
 /**
  * "Posteingang" (`notiz`, identity v3.1): the stamp with the unread count, two subject lines (sender name and subject
  * only, never mail text) and, as a context line that is the way there, the invoices still to add from the list
  * („Kopf leer“ 3b). Reads the local cache only.
  */
-const NO_THREADS: never[] = [];
-
 export default function InboxWidget() {
   const s = useMailSummary();
   const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);
@@ -36,7 +36,7 @@ export default function InboxWidget() {
             lines={s.top
               .slice(0, 2)
               .map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
-            meta={s.invoices > 0 ? undefined : t.mail.widget.inboxNoInvoices(INVOICE_DAYS)}
+            meta={open > 0 || !offerInvoices ? undefined : t.mail.widget.inboxNothingToCreate}
           />
           {open > 0 ? (
             <p className={styles.foot}>

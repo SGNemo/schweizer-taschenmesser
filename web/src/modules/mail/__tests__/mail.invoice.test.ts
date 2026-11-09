@@ -35,6 +35,7 @@ const mail = (over: Partial<InvoiceThread> & { snippet: string; subject: string 
     id: 't-1',
     from: { name: 'Stadtwerke Musterstadt', email: 'rechnung@stadtwerke.example.org' },
     date: at('2026-09-28'),
+    labelIds: ['INBOX'],
     lastMessageId: 'm-1',
     ...over,
   }) as InvoiceThread;
@@ -224,5 +225,68 @@ describe('„Mahnung vermerken“', () => {
     await openInvoice('a', 'Stadtwerke Musterstadt', 8740, '2026-09-17');
     await openInvoice('b', 'Stadtwerke Musterstadt', 8740, '2026-09-17');
     expect((await offerOf(reminder)).kind).toBe('check');
+  });
+});
+
+describe('council round 1', () => {
+  it('a reminder that made its own invoice stays „angelegt“, never „vermerkt“ on itself', async () => {
+    await createInvoice(account, reminder, (await offerOf(reminder)) as never, () => {});
+    const offer = await offerOf(reminder);
+    expect(offer).toMatchObject({ kind: 'create', state: 'live' });
+    // Its line said what the tap writes: a reminder level.
+    expect(offerText({ ...offer, state: undefined } as InvoiceOffer, '2026-09-30').text).toMatch(
+      /^Mahnung · Stadtwerke Musterstadt/,
+    );
+  });
+
+  it('an invoice filed from the message through the sheet counts as done; deleted and unsure ones are not counted', async () => {
+    await invoices().createMany([
+      {
+        id: 'by-hand',
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await db.table('mail_link').add({
+      id: 'l1',
+      accountKey: account.key,
+      threadId: 't-1',
+      messageId: 'm-1',
+      type: 'invoice',
+      moduleId: 'invoices',
+      collection: 'invoice',
+      entryId: 'by-hand',
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: null,
+      _f: {},
+    });
+    const unsure = mail({
+      id: 't-4',
+      lastMessageId: 'm-4',
+      subject: 'Rechnung',
+      snippet: 'Ihre Rechnung über 12,00 EUR.',
+    });
+    const offers = await offersOf([bill, unsure]);
+    expect(offers.get('t-1')).toMatchObject({ kind: 'create', state: 'live' });
+    expect(offers.get('t-4')?.kind).toBe('check');
+    expect(toCreate(offers)).toBe(0);
+  });
+
+  it('a thread the person wrote in shows no line; a fee clause is no reminder', async () => {
+    expect((await offersOf([{ ...bill, labelIds: ['INBOX', 'SENT'] }])).size).toBe(0);
+    const fee = mail({
+      id: 't-5',
+      lastMessageId: 'm-5',
+      subject: 'Ihre Rechnung',
+      snippet: 'Rechnung über 84,30 EUR, fällig am 15.10. Mahnungsgebühren laut AGB.',
+    });
+    expect(await offerOf(fee)).toMatchObject({ kind: 'create' });
+    expect((await offerOf(fee)).read.dunning).toBeUndefined();
   });
 });

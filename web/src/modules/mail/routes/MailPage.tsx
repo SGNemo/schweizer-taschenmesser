@@ -363,7 +363,10 @@ export default function MailPage() {
       localAi={localAi}
       onChanged={box.reload}
       onCompose={(state, title) => setCompose({ state, title, account })}
-      onBack={() => update({ thread: null })}
+      onBack={() => {
+        setStartInvoice(undefined);
+        update({ thread: null });
+      }}
       startInvoice={startInvoice === threadId}
     />
   ) : null;

@@ -48,8 +48,9 @@ export const mail: Strings['mail'] = {
     created: 'Invoice added',
     createdMark: 'added',
     already: 'Already added',
+    reminderWord: (level: number) => (level > 1 ? `Reminder ${level}` : 'Reminder'),
     due: (day: string) => `due ${day}`,
-    late: (day: string) => `deadline was ${day}`,
+    late: (day: string) => `was due ${day}`,
     debit: (day: string) => `debited on ${day}`,
     debitNoDay: 'is debited',
     reminderFor: (payee: string, due: string, amount: string) =>
@@ -328,7 +329,7 @@ export const mail: Strings['mail'] = {
   widget: {
     inbox: 'Inbox',
     inboxTitle: (n: number) => (n === 0 ? 'All read' : `${n} unread`),
-    inboxNoInvoices: (days: number) => `No invoice mails in the last ${days} days`,
+    inboxNothingToCreate: 'No invoices to add',
     inboxToCreate: (n: number) => (n === 1 ? '1 invoice to add' : `${n} invoices to add`),
     empty: 'No mail yet.',
     emptyAction: 'Open mail',

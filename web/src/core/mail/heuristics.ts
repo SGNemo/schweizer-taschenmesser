@@ -234,7 +234,8 @@ export function analyzeMessage(m: MailMeta): MailFinding | undefined {
 }
 
 /** „Mahnung“, „2. Mahnung“, „Zahlungserinnerung“, „Zahlungsaufforderung“ (the words of the parser). */
-const DUNNING = /(?<!\d)(?:([1-3])\.\s*)?(mahnung|zahlungserinnerung|zahlungsaufforderung)/i;
+const DUNNING =
+  /(?<![\p{L}\p{N}])(?:([1-3])\.\s*)?(mahnung|zahlungserinnerung|zahlungsaufforderung)(?![\p{L}\p{N}])/iu;
 /** The level of a payment reminder named in the text („2. Mahnung“ → 2, „Zahlungserinnerung“ → 1). */
 export function dunningOf(text: string): number | undefined {
   const m = DUNNING.exec(text);
