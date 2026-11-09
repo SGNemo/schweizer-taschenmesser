@@ -30,6 +30,21 @@
     grid-row: span 4;
     min-height: calc(4 * var(--widget-unit) + 3 * var(--grid-gap));
   }
+  /* U19: packed (`masonry.ts`): 1 px rows without a gap; each card spans its own height plus the gap below it
+     (`--rows`), so a tall card no longer stretches a shared row and leaves holes beside it. */
+  .grid[data-packed] {
+    grid-auto-rows: 1px;
+    row-gap: 0;
+    margin-bottom: calc(-1 * var(--grid-gap));
+  }
+  .grid[data-packed] > .widget {
+    grid-row: span var(--rows, 2);
+    margin-bottom: var(--grid-gap);
+  }
+  /* U39: a card that only says "nothing here yet" takes its one line, not the size class's minimum height. */
+  .grid[data-packed] > .widget[data-empty] {
+    min-height: 0;
+  }
 }
 .l {
   grid-column: 1 / -1;
@@ -47,6 +62,10 @@
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+/* U49: the calm view with a single card ("Heute"): it takes the full width, flush with the agenda above. */
+.single > .widget {
+  grid-column: 1 / -1;
 }
 /* Cockpit: a little tighter; "dense" packs one column more at every step and a fifth from 120 rem. */
 .cockpit {

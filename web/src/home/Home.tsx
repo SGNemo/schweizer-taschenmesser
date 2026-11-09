@@ -55,6 +55,7 @@ import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
+import { usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -161,6 +162,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
+  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'));
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -296,11 +298,13 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
           <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
             <div
+              ref={gridRef}
               className={[
                 styles.grid,
                 editing ? styles.editing : '',
                 cockpit ? styles.cockpit : '',
                 cockpit && layout.dense ? styles.dense : '',
+                calm && shown.length === 1 ? styles.single : '',
               ].join(' ')}
               data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
             >
