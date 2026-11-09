@@ -31,10 +31,7 @@
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
-/* The rubric headings are set in the newspaper's serif; the columns come from `GroupedList columns`. */
+/* The columns come from `GroupedList columns`; its group heads stay in the app's sans (serif only for the lead). */
 .heads li {
   list-style: none;
-}
-.heads h2 {
-  font-family: var(--font-serif);
 }

@@ -8061,8 +8061,9 @@ export const de = {
     },
     widget: {
       label: 'Feeds',
-      context: (n: number, g: number) =>
-        `${n === 1 ? '1 Feed' : `${n} Feeds`}${g > 0 ? ` · ${g === 1 ? '1 Gruppe' : `${g} Gruppen`}` : ''}`,
+      /** Context under the feed count: only the groups, never the number again. */
+      context: (_n: number, g: number) =>
+        g === 0 ? 'ohne Gruppen' : g === 1 ? 'aus 1 Gruppe' : `aus ${g} Gruppen`,
       empty: 'Noch keine Feeds',
       add: 'Feed hinzufügen',
     },
