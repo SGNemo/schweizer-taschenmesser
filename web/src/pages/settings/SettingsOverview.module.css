@@ -7,8 +7,9 @@
   margin: 0;
   padding: 0;
   display: grid;
-  /* U03: the status tiles' grid (three columns, same gap, inset by the head's padding), so the cards line up with the
-     tiles above and are wide enough for "Benachrichtigungen" on one line. */
+  /* U03: at full width the status tiles' grid (three columns, same gap, inset by the head's padding), so the cards
+     line up with the tiles above; below 50 rem two columns (container query below), wide enough for
+     "Benachrichtigungen" on one line. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
   padding-inline: var(--space-5);

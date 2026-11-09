@@ -88,6 +88,9 @@ test.describe('UI round 6 – desktop 1920', () => {
 
   test('U49: the calm overview ends flush with the day cards', async ({ page }) => {
     await start(page, '/');
+    // The seeded calm view shows the one "Heute" card (no pins); wait for it before measuring.
+    const widgets = page.locator('[data-testid="home-grid"] > [data-testid^="widget-"]');
+    await expect(widgets).toHaveCount(1);
     const agenda = await page.getByTestId('agenda').boundingBox();
     const strip = page.locator('section[aria-label="Jetzt wichtig"] > ul').first();
     await expect(strip).toBeVisible();
@@ -96,13 +99,11 @@ test.describe('UI round 6 – desktop 1920', () => {
       .locator(':scope > li')
       .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
     const grid = await page.getByTestId('home-grid').boundingBox();
-    const widgets = page.locator('[data-testid="home-grid"] > [data-testid^="widget-"]');
     expect(agenda && list && grid).toBeTruthy();
     // The cards share the full width: the last one ends where the day cards end.
     expect(cards.length).toBeGreaterThan(0);
     expect(Math.abs(Math.max(...cards) - agenda!.x - agenda!.width)).toBeLessThan(2);
-    // The seeded calm view shows the one "Heute" card (no pins): it takes the full width.
-    await expect(widgets).toHaveCount(1);
+    // The single calm card takes the full width.
     const w = await widgets.first().boundingBox();
     expect(Math.abs(w!.width - grid!.width)).toBeLessThan(2);
   });
@@ -231,7 +232,7 @@ test.describe('UI round 6 – phone 412', () => {
     seeded: { scale: 'small', preview: true },
   });
 
-  test('U55: the status tiles keep their context line', async ({ page }) => {
+  test('U55: the status tiles show no cut text and stay a strip', async ({ page }) => {
     await start(page, '/settings');
     // A line that only explains the state or the category stays off the phone, so the head stays a strip (focus
     // rule): the tiles are no taller than with the old one-line clamp (288 px on develop, 247 px here).
