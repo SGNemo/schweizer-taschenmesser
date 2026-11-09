@@ -227,13 +227,18 @@ function Form({
             <Button
               key={`${s.title}|${s.startTime}|${s.endTime}`}
               variant="secondary"
+              className={styles.recentChip}
+              aria-label={`${s.title} ${s.startTime}–${s.endTime}`}
+              title={s.title}
               onClick={() => {
                 setTitle(s.title);
                 setStartTime(s.startTime);
                 setEndTime(s.endTime);
               }}
             >
-              {`${s.title} ${s.startTime}–${s.endTime}`}
+              {/* One title line with an ellipsis, the time as a meta line below (U27a). */}
+              <span className={styles.recentTitle}>{s.title}</span>
+              <span className={styles.recentTime}>{`${s.startTime}–${s.endTime}`}</span>
             </Button>
           ))}
         </div>
