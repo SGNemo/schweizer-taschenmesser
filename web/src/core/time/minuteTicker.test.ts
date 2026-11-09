@@ -33,6 +33,14 @@ describe('startMinuteTicker', () => {
     expect(ticks).toHaveLength(4);
   });
 
+  it('ticks at once when the minute turned between render and start', () => {
+    const ticks: number[] = [];
+    const rendered = new Date(2026, 10, 9, 14, 6, 59, 999).getTime();
+    const stop = startMinuteTicker((at) => ticks.push(at), rendered);
+    expect(ticks.map((at) => new Date(at).getMinutes())).toEqual([7]);
+    stop();
+  });
+
   it('shows a changed minute at once when the page becomes visible again', () => {
     const ticks: number[] = [];
     const stop = startMinuteTicker((at) => ticks.push(at));

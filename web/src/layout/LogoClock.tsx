@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { dateTimeFormat, useFormatLocale } from '@/core/i18n/format';
 import { startMinuteTicker } from '@/core/time/minuteTicker';
 import { now, pad2 } from '@/core/time/now';
@@ -8,7 +8,9 @@ import styles from './LogoClock.module.css';
 /** The current time in ms, re-read at every full minute (and when the page comes back). */
 function useMinuteNow(): number {
   const [at, setAt] = useState(now);
-  useEffect(() => startMinuteTicker(setAt), []);
+  // The time rendered first: a minute that turned before the effect runs is shown at once.
+  const shown = useRef(at);
+  useEffect(() => startMinuteTicker(setAt, shown.current), []);
   return at;
 }
 
