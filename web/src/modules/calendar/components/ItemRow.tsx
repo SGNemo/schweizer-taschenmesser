@@ -18,8 +18,12 @@ export function kindLabel(kind: string): string {
   return t.calendar.kinds[kind] ?? kind;
 }
 
-/** Kinds that are deadlines: only these turn red, and only once they are overdue (DESIGN-SPEC §4a). */
-const DEADLINES = new Set(['invoice', 'cancel', 'end', 'expiry']);
+/**
+ * Kinds whose source only lists what is still open (unpaid invoices, food still in stock): only these turn red, and
+ * only once their day has passed (DESIGN-SPEC §4a). A cancellation deadline or a contract end that passed is history,
+ * not a debt, so it keeps its warning tone.
+ */
+const DEADLINES = new Set(['invoice', 'expiry']);
 
 /** An open deadline whose day has passed. */
 export function isOverdue(item: CalendarItem, day: string = today()): boolean {

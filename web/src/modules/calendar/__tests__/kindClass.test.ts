@@ -39,7 +39,10 @@ describe('calendar kind badges (U08: red only when overdue)', () => {
 
   it('an open deadline in the past is overdue; a finished one or a past event is not', () => {
     expect(kindClass(item('invoice', '2026-09-20'), TODAY)).toBe('kind_overdue');
-    expect(kindClass(item('cancel', '2026-09-28'), TODAY)).toBe('kind_overdue');
+    expect(kindClass(item('expiry', '2026-09-28'), TODAY)).toBe('kind_overdue');
+    // a passed cancellation deadline or contract end is history, not overdue
+    expect(kindClass(item('cancel', '2026-09-28'), TODAY)).toBe('kind_cancel');
+    expect(kindClass(item('end', '2026-09-28'), TODAY)).toBe('kind_end');
     expect(kindClass(item('invoice', '2026-09-20', true), TODAY)).toBe('kind_invoice');
     expect(kindClass(item('event', '2026-09-20'), TODAY)).toBe('kind_event');
     expect(kindClass(item('birthday', '2026-09-20'), TODAY)).toBe('kind_birthday');
