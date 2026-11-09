@@ -63,6 +63,8 @@ After „Alle speichern“: „5 Dinge gespeichert. Sortiert wird später. · An
 
 **Smallest first step.** U03 + U04 + U05 (package 1): 2 taps and no detour.
 
+**Gebaut anders:** each line shows its target as a small tap-able text under the line (a card per line), not right-aligned in one row; the explicit mode „Abladen“ (large) is not built.
+
 **Variants.**
 
 | Variant           | What                                                                                                                                                                                                                               | Five things on the PC (taps · s) · pile elements visible                                    | For                                                                   | Against                                                                                                                                     |
@@ -96,6 +98,8 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 **Rule conflicts.** Modules never import each other: the mail module writes through the capture target layer, as `LinkDialog` does today. **Decision change:** „Mail → Nemo entries“ (`decisions/features.md`, 2026-11-02) made the capture sheet's live preview the rule („Vorschau-Pflicht“, save only on confirm); the one-tap row action replaces the preview with the title it will write visible in the row's hover/menu text, the toast and undo – that is a change the maintainer decides (Q2), the batch keeps a real preview, and „Aus dieser Mail anlegen“ keeps the sheet. Privacy: the ToDo title (name and subject) and the link label are ordinary ToDo data – synced, backed up, readable by the local API, MCP and the AI import like any typed ToDo; the mail body never leaves the sealed cache except what the person ticks into a note themselves (share target, „Anfang der Mail als Notiz“); nothing of this reaches the assistant (it receives schemas, never entries), but a person who uses MCP or the import hands a model their own ToDo titles – Q3 therefore also offers the variant (b) in which the title is the sender's name only and the link label is the fixed word „Mail“ (`taskLinkSchema.label` is required); the name itself is still synced under every variant, the body never. Mail cache, `link` table and thread bodies stay `local: true`. A **batch** writes many names at once – therefore the preview with tick boxes, never a silent batch. Sync: nothing new. `accounts` untouched.
 
+**Gebaut anders:** „In den Plan“ is a quiet button that appears when pointing at the row (PC); on touch it is in ⋯ and a swipe – no standing button per row; the row mark is „im Plan“ without the day (the toast names the day).
+
 **Smallest first step.** `LinkDialog` passes `extra.link`, the URL loses the address (U17), the thread view gets „In den Plan“, the plan row says „Mail“ and offers „Zur Mail“: 2 taps per mail (open, button).
 
 **Variants.**
@@ -122,6 +126,8 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 **Rule conflicts.** Money is created only on a tap, with the values visible before the tap and undo after it (`decisions/automation.md`: mail offers `suggest`, never a silent `create` – unchanged); the one-tap path is the same „Vorschau-Pflicht“ change as in F2 (Q2) – the row shows payee, amount and date, which is what the sheet's preview would show. Everything local (heuristics). Mail cache stays sealed; the invoice stores payee, amount, date, reference – what a person types by hand. Invoices get no new field.
 
+**Gebaut anders:** dates read „fällig 15. Nov.“ (the app's day format); the debit line names payee and amount and ends in „Abbuchung am 3. Nov.“ (no „nichts zu planen“); a reminder's new amount and deadline stand in the plan row's title („… bezahlen · Mahnung · 92,40 € bis 13.10.2026“), not in a detail line; a reminder without an open invoice starts its line with „Mahnung“; no line in a thread the person wrote in.
+
 **Smallest first step.** The dunning flag in `heuristics.ts` and the additive `CaptureFields.dunning` + adapter mapping (S); the open-invoice match and `amend` next (M); then the list line.
 
 **Effort.** M (together with F2 one package „mail → plan“).
@@ -139,6 +145,8 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 **Rule conflicts.** Q4 (a) moves the overload figure out of the folded head – a wording change to a decided line (CONCEPT §7, `decisions/plan.md` „Calm by construction“), therefore a question, not a package default.
 
 **Effort.** S.
+
+**Gebaut anders:** the head's next step takes the plan row's title as it is, so a noted reminder reads „Heute: Stadtwerke Musterstadt bezahlen · Mahnung. Das reicht für heute.“
 
 ### Not proposed (and why)
 
@@ -181,6 +189,8 @@ Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds today's 
 | C three things in passing            | phone  | 3 · 57 · 1 · 3 · 0 · 37 (1 tap · 19 keys · 1 sheet per thing)                                                | unchanged with F1 medium; F1 large: 2 · 57 · 1 · 1 · 0 · 30 (+1 tap per unlock)                             | 0 now; −7 s with the later mode                        |
 | D planner page at overload           | PC     | 29 rows · 508 words · 56 interactive · 1 274 px                                                              | ≤ 13 rows · ≤ 280 words · ≤ 40 interactive · ≤ 700 px (board + folded group)                                | −16 rows, ≈ −45 % words                                |
 | D planner page at overload           | phone  | 20 rows · 384 words · 39 interactive · 1 442 px                                                              | ≤ 5 rows · ≤ 200 words · ≤ 25 interactive · ≤ 800 px                                                        | −15 rows                                               |
+
+Remeasured after the packages (2026-11-09, ANALYSIS §2 „Gemessen danach“): every target is met except path B's screens (2, not 1 – the invoice line does not say it is in the plan, so the person still checks the planner; ≈ 6 s instead of 4).
 
 What the numbers show for S7: while unloading, the person sees no count, no red figure and none of the backlog (path A's card number goes to 0); the first screen after saving is one line with one optional verb. What they do not fix: the home screen before the „+“ still shows „Jetzt wichtig“ (S1) – a later idea, not designed here, is a calm-mode line that folds the money cards.
 
