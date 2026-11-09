@@ -12,8 +12,8 @@ import { useSettings } from '@/core/settings/settings';
 import { addDaysStr, DATE_RE, eachDay, isoWeekday, today } from '@/core/time/dates';
 import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
+import { tAdvanced } from '@/strings.advanced';
 import {
-  AdvancedToggle,
   Button,
   Icon,
   IconButton,
@@ -78,7 +78,15 @@ export default function CalendarPage() {
   const [externalId, setExternalId] = useState<string | null>(null);
   const [occurrence, setOccurrence] = useState<string | null>(null);
   const split = useSplitView();
-  const [advanced] = useAdvanced('calendar');
+  const [advanced, setAdvanced] = useAdvanced('calendar');
+  const tx = tAdvanced.use();
+  // U25 (UI round 6): "Mehr Felder anzeigen" lives in the page's "⋯" menu, not as its own toolbar row on the phone.
+  const advancedItem = {
+    id: 'advanced',
+    label: tx.switchLabel,
+    checked: advanced,
+    onSelect: () => setAdvanced(!advanced),
+  };
   const weekStart = useWeekStart();
   const plannerOn = useModuleStates()?.planner === true;
 
@@ -174,8 +182,7 @@ export default function CalendarPage() {
             />
           }
         >
-          <AdvancedToggle moduleId="calendar" />
-          <StartDataMenu moduleId="calendar" />
+          <StartDataMenu moduleId="calendar" items={[advancedItem]} />
         </PageHeader>
 
         <RemindersTab
@@ -206,17 +213,15 @@ export default function CalendarPage() {
           />
         }
       >
-        <AdvancedToggle moduleId="calendar" />
         <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
           <Icon name="plus" size={18} />
           {t.calendar.newEvent}
         </Button>
-        <StartDataMenu moduleId="calendar" />
+        <StartDataMenu moduleId="calendar" items={[advancedItem]} />
       </PageHeader>
       <NextEventLine onAdd={() => setTarget({ draft: { startDate: date } })} />
       <NowStrip modules={['calendar']} />
 
-      <CalendarsBar advanced={advanced} />
       <PersonFilter usedIds={(items ?? []).flatMap((i) => (i.personId ? [i.personId] : []))} />
       <div className={styles.toolbar}>
         <div className={styles.navBtns}>
@@ -239,19 +244,23 @@ export default function CalendarPage() {
         <h2 className={styles.title} aria-live="polite">
           {viewTitle(view, date, weekStart)}
         </h2>
-        <Segmented<CalendarView | typeof PLAN_LINK>
-          label={t.calendar.view}
-          value={view}
-          options={[
-            ...VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] })),
-            ...(plannerOn ? [{ value: PLAN_LINK, label: t.calendar.planLink }] : []),
-          ]}
-          onChange={(v) => {
-            if (v !== PLAN_LINK) return go({ view: v });
-            const monday = addDaysStr(date, 1 - isoWeekday(date));
-            void navigate(`/planner?week=${monday}`);
-          }}
-        />
+        {/* U25: views and calendar chips share one row; on the phone it scrolls sideways as a whole. */}
+        <div className={styles.viewRow}>
+          <Segmented<CalendarView | typeof PLAN_LINK>
+            label={t.calendar.view}
+            value={view}
+            options={[
+              ...VIEWS.map((v) => ({ value: v, label: VIEW_LABEL[v] })),
+              ...(plannerOn ? [{ value: PLAN_LINK, label: t.calendar.planLink }] : []),
+            ]}
+            onChange={(v) => {
+              if (v !== PLAN_LINK) return go({ view: v });
+              const monday = addDaysStr(date, 1 - isoWeekday(date));
+              void navigate(`/planner?week=${monday}`);
+            }}
+          />
+          <CalendarsBar advanced={advanced} />
+        </div>
       </div>
 
       <div className={styles.body}>

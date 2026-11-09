@@ -22,6 +22,42 @@
   min-width: 10rem;
   font-size: var(--text-lg);
 }
+/* Views and calendar chips: one group at the end of the toolbar row (U25, UI round 6). */
+.viewRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+/* Phone: a row of its own that scrolls sideways as a whole, so the switch shows every label in full ("Jahr", not
+   "Jah") and the chips never take a row of their own; the right edge fades out like the switch's own scroll. */
+@media (max-width: 899px) {
+  .viewRow {
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Room for the focus ring inside the scroller. */
+    padding: 3px;
+    margin: -3px;
+    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  }
+  .viewRow::-webkit-scrollbar {
+    display: none;
+  }
+  .viewRow > * {
+    flex: none;
+  }
+  .viewRow > [role='group']:first-child {
+    overflow: visible;
+    max-width: none;
+    mask-image: none;
+  }
+  .viewRow .calBar {
+    flex-wrap: nowrap;
+  }
+}
 /* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
 
 .title::first-letter {
@@ -58,6 +94,10 @@
 .outside .dayNum {
   color: var(--text-muted);
 }
+.cell.todayCell {
+  /* Today is the one cell with a surface (S03): a soft accent wash, the number carries the accent. */
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
 .todayCell .dayNum {
   background: var(--accent);
   color: var(--accent-contrast);
@@ -80,21 +120,111 @@
     inset: -6px;
   }
 }
-.chips {
-  list-style: none;
-  margin: 2px 0 0;
-  padding: 0;
-  display: none;
-  flex-direction: column;
-  gap: 2px;
-}
 .cellLabel {
   display: block;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 var(--space-1);
   font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+/* Phone cells: a text that does not fit in full is not shown at all, never as a fragment (S03, UI round 6). */
+.cellLabel[data-fits='false'],
+.cellHoliday[data-fits='false'] {
+  visibility: hidden;
+}
+
+/* Month entries are lines, not pills (S03, UI round 6): a kind mark, the time in --text-3, the title. No surface per entry;
+   only the user's own events keep a soft one, daily repeats are written quietly. */
+.lines {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-width: 0;
+  padding: 1px var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.line:hover {
+  background: var(--surface-2);
+}
+.lineOwn {
+  background: var(--accent-soft);
+}
+.lineOwn[style*='--cal'] {
+  background: color-mix(in srgb, var(--cal) 18%, var(--surface));
+}
+.lineTime {
+  flex: none;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.lineTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lineRepeat,
+.lineRepeat .lineTime {
+  color: var(--text-muted);
+}
+.line.done .lineTitle {
+  text-decoration: line-through;
+}
+.lineMark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  /* Same quiet tone per kind as the hour-grid blocks (`.tgItem.kind_*`); a calendar colour wins. */
+  background: var(--cal, var(--kind, var(--text-3)));
+}
+.lineMark[data-kind='event'] {
+  --kind: var(--accent);
+}
+.lineMark[data-kind='reminder'] {
+  --kind: var(--text-3);
+}
+.lineMark[data-kind='task'] {
+  --kind: var(--cat-1);
+}
+.lineMark[data-kind='invoice'],
+.lineMark[data-kind='subscription'] {
+  --kind: var(--cat-2);
+}
+.lineMark[data-kind='birthday'] {
+  --kind: var(--cat-3);
+}
+.lineMark[data-kind='cancel'],
+.lineMark[data-kind='end'],
+.lineMark[data-kind='expiry'] {
+  --kind: var(--warning);
+}
+.lineMark[data-kind='plan'] {
+  --kind: var(--module-color, var(--text-3));
+}
+.lineMark[data-kind='external'] {
+  --kind: var(--text-muted);
+}
+.dotsMore {
+  font-size: var(--text-xs);
+  line-height: 1;
   color: var(--text-muted);
 }
 .chip,
@@ -126,26 +256,14 @@
 }
 .dots {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  /* The count wraps under the marks instead of being cut ("+1" for "+12"). */
   gap: 3px;
   padding: 0 var(--space-1);
 }
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-}
 /* C19: the month cells follow the page container (40 rem = `MONTH_CHIPS_REM` in Views.tsx). */
 @container page (min-width: 40rem) {
-  .dots {
-    display: none;
-  }
-  .chips {
-    display: flex;
-  }
-  .cellLabel {
-    display: none;
-  }
   .cell {
     height: 7.5rem;
   }
@@ -191,22 +309,6 @@
 .kind_plan {
   background: var(--surface-2);
   color: var(--text);
-}
-.dot.kind_plan {
-  background: var(--module-color, var(--text-muted));
-}
-.dot.kind_external {
-  background: var(--text-muted);
-}
-.dot.kind_invoice,
-.dot.kind_cancel {
-  background: var(--danger);
-}
-.dot.kind_event {
-  background: var(--accent);
-}
-.dot.kind_reminder {
-  background: var(--warning);
 }
 .done {
   text-decoration: line-through;
@@ -384,12 +486,16 @@ button.itemRow[style*='--cal']:hover {
 
 /* Time grid (week / day) */
 .tg {
+  --hour: 3.5rem;
   flex: 1 0 auto;
   position: relative;
   min-height: 32rem;
 }
+/* With an all-day pane the grid still shows eight full hours: head + pane (at most 7rem) + 8 hours (S04, UI round 6). */
+.tgWithAllDay {
+  min-height: calc(var(--hour) * 8 + var(--touch) + 7rem + 4px);
+}
 .tgInner {
-  --hour: 3.5rem;
   position: absolute;
   inset: 0;
   display: flex;
@@ -422,6 +528,16 @@ button.itemRow[style*='--cal']:hover {
   gap: 2px;
   min-width: 0;
   border-left: 1px solid var(--border);
+}
+.tgAllDay {
+  flex: none;
+  max-height: 7rem;
+  overflow-y: auto;
+}
+/* Day view: one column is wide; its untimed entries sit side by side instead of in one tall stack. */
+.tgUntimedWide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
 }
 .tgBody {
   flex: 1;
