@@ -57,8 +57,10 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
   const hasUntimed = perDay.some((p) => p.untimed.length > 0);
 
   // Scroll once per shown range: to "now" when today is visible, else to the earliest item. Once more when the
-  // entries arrive (they load after the first paint), so a block at the top edge is never cut.
-  const rangeKey = `${days[0]}:${days.length}:${items.length > 0}`;
+  // shown days' timed entries arrive (they load after the first paint, and after Prev/Next the previous range's
+  // entries are still in `items` for a moment), so a block at the top edge is never cut.
+  const hasTimed = perDay.some((p) => p.timed.length > 0);
+  const rangeKey = `${days[0]}:${days.length}:${hasTimed}`;
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;

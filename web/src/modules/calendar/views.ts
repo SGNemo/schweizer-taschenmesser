@@ -197,7 +197,8 @@ export const ALL_DAY_LIMIT = 3;
 /**
  * Minute the hour grid opens at: an hour and a half before `anchor` (now, or the first entry), on a full hour, and never
  * inside a block. A block cut by the grid's top edge looks as if it were hidden under the all-day pane above it (S04), so
- * the start moves up to the full hour before such a block.
+ * the start moves up to the full hour before such a block – but at most two hours each time: a long block (05:00–22:00)
+ * must not open the grid at its start.
  */
 export function initialScrollMinute(
   blocks: readonly { start: number; end: number }[],
@@ -205,7 +206,7 @@ export function initialScrollMinute(
 ): number {
   let top = Math.max(0, Math.floor((anchor - 90) / 60) * 60);
   for (;;) {
-    const cut = blocks.find((b) => b.start < top && b.end > top);
+    const cut = blocks.find((b) => b.start < top && b.end > top && b.start >= top - 120);
     if (!cut) return top;
     top = Math.floor(cut.start / 60) * 60;
   }

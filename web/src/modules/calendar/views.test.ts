@@ -304,6 +304,8 @@ describe('hour grid start (S04, UI round 6)', () => {
     ).toBe(6 * 60);
     // a block that starts exactly on the top stays fully visible
     expect(initialScrollMinute([{ start: 480, end: 510 }], 10 * 60)).toBe(8 * 60);
+    // a long block that starts more than two hours above the top does not pull the grid up
+    expect(initialScrollMinute([{ start: 300, end: 1320 }], 10 * 60)).toBe(8 * 60);
   });
 });
 
