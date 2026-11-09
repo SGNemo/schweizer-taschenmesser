@@ -22,6 +22,7 @@ const schema = z.object({
   offerPersonal: z.boolean(),
   /** The list offers „Alle in den Plan…“ (a preview with ticks). */
   offerPlanAll: z.boolean(),
+  offerInvoices: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -39,6 +40,7 @@ export const settings: ModuleSettings = {
     localAi: false,
     offerPersonal: true,
     offerPlanAll: true,
+    offerInvoices: true,
   },
   get keywords() {
     return [
@@ -103,6 +105,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.offerPlanAllHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'offerInvoices',
+      get label() {
+        return t.mail.meta.offerInvoices;
+      },
+      get help() {
+        return t.mail.meta.offerInvoicesHelp;
       },
       type: 'boolean',
     },

@@ -23,7 +23,7 @@ const manifest: ModuleManifest = {
     head: 'schreib',
     signature: 'stamp',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.mail.meta.description;
   },
@@ -78,7 +78,7 @@ const manifest: ModuleManifest = {
   // Only tested against a mocked Gmail API so far; a real-account check is open (MANUAL-TESTS "E-Mail lesen").
   maturity: 'preview',
   defaultEnabled: false,
-  seed: { version: 2, dependsOn: [] },
+  seed: { version: 3, dependsOn: [] },
   layout: 'full',
   area: 'knowledge',
   automation: () => import('./automation'),

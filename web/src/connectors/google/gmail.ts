@@ -196,6 +196,7 @@ function summarize(raw: unknown, snippetFallback = ''): MailThreadSummary {
     unread: labelIds.includes('UNREAD'),
     labelIds,
     hasAttachment: false,
+    ...(str(last.id) ? { lastMessageId: str(last.id) } : {}),
     personal: isPersonalMail({
       listUnsubscribe: header(lastPayload, 'List-Unsubscribe'),
       precedence: header(lastPayload, 'Precedence'),

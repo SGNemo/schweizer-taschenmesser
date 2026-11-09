@@ -332,6 +332,11 @@
         "label": "„Alle in den Plan…“ anbieten",
         "default": true
       },
+      "offerInvoices": {
+        "type": "boolean",
+        "label": "Rechnungen in der Liste erkennen",
+        "default": true
+      },
       "notify": {
         "type": "boolean",
         "label": "Bei neuen Mails benachrichtigen",

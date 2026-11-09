@@ -72,6 +72,16 @@ const MAILS: Mock[] = [
     personal: false,
   },
   {
+    from: { name: 'Stadtwerke Musterstadt', email: 'mahnung@stadtwerke.example.org' },
+    subject: 'Zahlungserinnerung Kundennummer 4711',
+    text: 'Zahlungserinnerung: Bitte zahlen Sie 92,40 EUR bis 20.11. Der Betrag enthält eine Mahngebühr.',
+    days: -1,
+    time: '10:10',
+    unread: false,
+    labels: ['INBOX'],
+    personal: false,
+  },
+  {
     from: { name: 'Max Muster', email: 'max@example.org' },
     subject: 'Fotos vom Ausflug',
     text: 'Hier sind die Fotos vom Ausflug. Viel Spaß beim Anschauen!',
@@ -104,6 +114,7 @@ function seed(ctx: SeedContext): SeedRows {
           hasAttachment: false,
           labelIds: m.labels,
           personal: m.personal,
+          lastMessageId: `${threadId}-m1`,
         },
       },
     };

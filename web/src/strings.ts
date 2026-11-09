@@ -2936,6 +2936,8 @@ export const de = {
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
     planTitle: (payee: string) => `${payee} bezahlen`,
+    planDunned: (title: string, detail?: string) =>
+      detail ? `${title} · Mahnung · ${detail}` : `${title} · Mahnung`,
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -7169,6 +7171,32 @@ export const de = {
       offerPlanAll: '„Alle in den Plan…“ anbieten',
       offerPlanAllHelp:
         'Ein Knopf über der Liste legt die angehakten Mails mit Vorschau als ToDos in den Plan.',
+      offerInvoices: 'Rechnungen in der Liste erkennen',
+      offerInvoicesHelp:
+        'Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit mit „Anlegen“; bei einer Mahnung zur offenen Rechnung „Mahnung vermerken“. Gelesen wird nur auf diesem Gerät.',
+    },
+    invoice: {
+      create: 'Anlegen',
+      createFor: (line: string) => `Rechnung anlegen: ${line}`,
+      check: 'Ansehen…',
+      checkFor: (line: string) => `Rechnung ansehen und anlegen: ${line}`,
+      created: 'Rechnung angelegt',
+      createdMark: 'angelegt',
+      already: 'Schon angelegt',
+      due: (day: string) => `fällig ${day}`,
+      late: (day: string) => `Frist war ${day}`,
+      debit: (day: string) => `Abbuchung am ${day}`,
+      debitNoDay: 'wird abgebucht',
+      reminderFor: (payee: string, due: string, amount: string) =>
+        `Mahnung zu Rechnung ${payee}, fällig ${due} (${amount})`,
+      reminderNew: (amount: string, until: string) => `${amount} bis ${until}`,
+      note: 'Mahnung vermerken',
+      noteFor: (line: string) => `Mahnung vermerken: ${line}`,
+      noted: 'Mahnung vermerkt',
+      notedMark: 'vermerkt',
+      alreadyNoted: 'Schon vermerkt',
+      stale: 'Die Rechnung ist inzwischen bezahlt oder gelöscht. Nichts geändert.',
+      failed: 'Das hat nicht geklappt. Nichts gespeichert.',
     },
     plan: {
       action: 'In den Plan',
@@ -7447,9 +7475,8 @@ export const de = {
       inbox: 'Posteingang',
       inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
       inboxNoInvoices: (days: number) => `Keine Rechnungsmails in den letzten ${days} Tagen`,
-      inboxInvoices: (n: number, days: number) =>
-        n === 1 ? `1 Rechnungsmail in ${days} Tagen` : `${n} Rechnungsmails in ${days} Tagen`,
-      inboxInvoicesAction: 'Ansehen',
+      inboxToCreate: (n: number) =>
+        n === 1 ? '1 Rechnung zum Anlegen' : `${n} Rechnungen zum Anlegen`,
       empty: 'Noch keine Mails.',
       emptyAction: 'E-Mail öffnen',
       link: 'E-Mail öffnen',

@@ -32,6 +32,8 @@ export interface MailSummary {
   /** Unread inbox threads, "important" ones first, newest first. */
   top: CachedThreadView[];
   invoices: number;
+  /** Inbox threads of the last `INVOICE_DAYS` (the widget reads its invoice rows from them). */
+  recent: CachedThreadView[];
 }
 
 /** Live data for the inbox widget and the head: reads the local cache only (plus a throttled inbox refresh). */
@@ -57,6 +59,7 @@ export function useMailSummary(): MailSummary | undefined {
       unread: unread.length,
       top: top.slice(0, 3),
       invoices: all.filter((t) => t.date >= since && looksLikeInvoice(t.subject, t.from)).length,
+      recent: inbox.filter((t) => t.date >= since),
     };
   }, []);
 }

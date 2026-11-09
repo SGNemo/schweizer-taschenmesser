@@ -36,6 +36,32 @@ export const mail: Strings['mail'] = {
     offerPlanAll: 'Offer “Add all to plan…”',
     offerPlanAllHelp:
       'A button above the list adds the ticked mails to the plan as to-dos, with a preview.',
+    offerInvoices: 'Recognise invoices in the list',
+    offerInvoicesHelp:
+      'Under an invoice mail you see payee, amount and due date with “Add”; for a payment reminder on an open invoice, “Note the reminder”. It is read on this device only.',
+  },
+  invoice: {
+    create: 'Add',
+    createFor: (line: string) => `Add invoice: ${line}`,
+    check: 'View…',
+    checkFor: (line: string) => `View and add invoice: ${line}`,
+    created: 'Invoice added',
+    createdMark: 'added',
+    already: 'Already added',
+    due: (day: string) => `due ${day}`,
+    late: (day: string) => `deadline was ${day}`,
+    debit: (day: string) => `debited on ${day}`,
+    debitNoDay: 'is debited',
+    reminderFor: (payee: string, due: string, amount: string) =>
+      `Reminder for invoice ${payee}, due ${due} (${amount})`,
+    reminderNew: (amount: string, until: string) => `${amount} by ${until}`,
+    note: 'Note the reminder',
+    noteFor: (line: string) => `Note the reminder: ${line}`,
+    noted: 'Reminder noted',
+    notedMark: 'noted',
+    alreadyNoted: 'Already noted',
+    stale: 'The invoice has been paid or deleted meanwhile. Nothing changed.',
+    failed: 'That did not work. Nothing was saved.',
   },
   plan: {
     action: 'Add to plan',
@@ -303,9 +329,7 @@ export const mail: Strings['mail'] = {
     inbox: 'Inbox',
     inboxTitle: (n: number) => (n === 0 ? 'All read' : `${n} unread`),
     inboxNoInvoices: (days: number) => `No invoice mails in the last ${days} days`,
-    inboxInvoices: (n: number, days: number) =>
-      n === 1 ? `1 invoice mail in ${days} days` : `${n} invoice mails in ${days} days`,
-    inboxInvoicesAction: 'View',
+    inboxToCreate: (n: number) => (n === 1 ? '1 invoice to add' : `${n} invoices to add`),
     empty: 'No mail yet.',
     emptyAction: 'Open mail',
     link: 'Open mail',
