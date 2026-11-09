@@ -5,7 +5,7 @@
  */
 import { addDaysStr, pad2 } from '@/core/time/dates';
 import { plainText } from '@/core/io/feed';
-import { analyzeMessage, senderName } from './heuristics';
+import { analyzeMessage, dunningOf, senderName } from './heuristics';
 import type { MailMessage } from './types';
 
 export type MailLinkType = 'invoice' | 'event' | 'todo' | 'reminder' | 'bookmark' | 'note';
@@ -83,7 +83,18 @@ export function mailPrefill(
         },
       }
     : {};
-  const result = mailPrefillFor(type, { subject, sender, found, link, excerpt, base, opts });
+  // Only where a reminder says what it is (subject, opening lines): a fee clause in the terms is no reminder.
+  const dunning = dunningOf(`${subject} ${body.slice(0, 300)}`);
+  const result = mailPrefillFor(type, {
+    subject,
+    sender,
+    found,
+    dunning,
+    link,
+    excerpt,
+    base,
+    opts,
+  });
   return { ...result, extra: { ...result.extra, ...back } };
 }
 
@@ -93,6 +104,7 @@ function mailPrefillFor(
     subject,
     sender,
     found,
+    dunning,
     link,
     excerpt,
     base,
@@ -101,6 +113,8 @@ function mailPrefillFor(
     subject: string;
     sender: string;
     found: ReturnType<typeof analyzeMessage>;
+    /** A payment reminder's level, when the mail is one. */
+    dunning: number | undefined;
     link: string | undefined;
     excerpt: string | undefined;
     base: Pick<MailPrefill, 'type' | 'extra' | 'excerpt'>;
@@ -111,9 +125,13 @@ function mailPrefillFor(
     case 'invoice': {
       const amount = found?.amountMinor;
       const due = found?.kind === 'invoice' ? found.date : undefined;
+      // A payment reminder keeps its word, so the sheet looks for the open invoice first („Kopf leer“ 3b).
+      // The word is parser input (the parser reads German reminder words in every language), not UI text.
+      const level = found?.kind === 'invoice' ? dunning : undefined;
       return {
         ...base,
         text: [
+          level ? (level > 1 ? `${level}. Mahnung` : 'Mahnung') : '',
           found?.kind === 'invoice' ? found.title : sender,
           amount ? money(amount) : '',
           due ? dmy(due) : '',

@@ -458,17 +458,14 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await expect(annaRow).toBeVisible({ timeout: 10_000 });
   await m.tap(annaRow);
   await expect(page.getByText(/^Im Plan/).first()).toBeVisible();
-  const dialog = page.getByRole('dialog');
-  // The invoice mail (until package 3b through the sheet).
-  if (await page.getByRole('button', { name: 'Zur Liste' }).count())
-    await m.tap(page.getByRole('button', { name: 'Zur Liste' }));
-  await m.tap(page.getByText('Ihre Rechnung für Oktober'));
-  await m.tap(page.getByRole('button', { name: 'Aus dieser Mail anlegen' }));
-  await m.tap(page.getByRole('menuitem', { name: 'Rechnung' }));
-  m.dialog();
-  await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
-  await m.tap(dialog.getByRole('button', { name: 'Speichern' }));
-  await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');
+  // Package 3b: the invoice mail shows payee, amount and due date under its row; one tap writes the invoice
+  // (before: open the mail, „Aus dieser Mail anlegen“, „Rechnung“, a sheet with „Speichern“).
+  const invoice = page.getByRole('button', {
+    name: /^Rechnung anlegen: Stadtwerke Musterstadt · 84,30/,
+  });
+  await expect(invoice).toBeVisible({ timeout: 10_000 });
+  await m.tap(invoice);
+  await expect(page.getByText('Rechnung angelegt')).toBeVisible();
   // Is it in the plan? A second screen to check (U09: nothing in the mail says so).
   m.screens += 1;
   await page.goto(`${seed}/planner`);

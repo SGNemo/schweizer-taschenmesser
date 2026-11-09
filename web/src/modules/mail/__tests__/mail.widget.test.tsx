@@ -33,7 +33,7 @@ describe('mail inbox widget', () => {
     );
   });
 
-  it('counts unread threads, shows two subject lines and the invoice mails as a context line (from the seed)', async () => {
+  it('counts unread threads, shows two subject lines and the invoices to add as a context line (from the seed)', async () => {
     await seedDemo();
     wrap(<InboxWidget />);
     expect(await screen.findByText(/^\d+ ungelesen$/)).toBeInTheDocument();
@@ -41,10 +41,11 @@ describe('mail inbox widget', () => {
       screen.getByText(/Stadtwerke Musterstadt: Ihre Rechnung für Oktober/),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByText(/Rechnungsmails? in 30 Tagen/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ansehen' })).toHaveAttribute(
+    // „Kopf leer“ 3b: the old count got a verb – the invoices still to add, as the way to the list. The
+    // debit mail (nothing to add) does not count; the invoice and the reminder without an open invoice do.
+    expect(await screen.findByRole('link', { name: '2 Rechnungen zum Anlegen' })).toHaveAttribute(
       'href',
-      '/mail?q=rechnung',
+      '/mail',
     );
   });
 });

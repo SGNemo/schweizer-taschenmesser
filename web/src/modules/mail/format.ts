@@ -36,10 +36,3 @@ export const fullWhen = (ms: number): string =>
 export const personName = (a: MailAddress): string => a.name?.trim() || a.email;
 
 export const subjectOf = (s: string): string => s.trim() || t.mail.page.noSubject;
-
-/** Subject or sender looks like an invoice (local keyword check; nothing leaves the device). */
-export function looksLikeInvoice(subject: string, from: MailAddress): boolean {
-  return /rechnung|invoice|faktura|factura|facture|fatura|zahlungserinnerung|mahnung|payment due|beleg/i.test(
-    `${subject} ${from.name ?? ''}`,
-  );
-}

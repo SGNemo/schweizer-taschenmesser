@@ -12,6 +12,8 @@ export const threadMetaSchema = z.object({
   labelIds: z.array(z.string()),
   /** The sender is a person (derived from headers when the list was fetched; the headers are not kept). */
   personal: z.boolean().optional(),
+  /** Provider id of the newest message (an invoice from the row is keyed on the message, not the thread). */
+  lastMessageId: z.string().optional(),
 });
 export type ThreadMeta = z.output<typeof threadMetaSchema>;
 
