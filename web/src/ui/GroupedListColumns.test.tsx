@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { GroupedList } from './GroupedList';
 import { ItemRow } from './Patterns';
 
+// Under `columns` a group's children are its rows (`ItemRow`, an `<li>` each).
 const groups = [
-  { id: 'a', label: 'Nachrichten', count: 2, children: <p>Eins</p> },
-  { id: 'b', label: 'Podcasts', count: 1, children: <p>Zwei</p> },
+  { id: 'a', label: 'Nachrichten', count: 1, children: <ItemRow title="Eins" /> },
+  { id: 'b', label: 'Podcasts', count: 1, children: <ItemRow title="Zwei" /> },
 ];
 
 describe('GroupedList columns', () => {

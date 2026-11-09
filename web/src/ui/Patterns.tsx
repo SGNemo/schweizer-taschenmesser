@@ -38,11 +38,12 @@ export function PageTitle({ title, spacer = false }: { title: string; spacer?: b
 
 /**
  * The header actions with their last two kept as one group (U34): the primary action and the "⋯" menu after it wrap
- * together on a phone, so the menu never stands alone in a row of its own.
+ * together on a phone, so the menu never stands alone in a row of its own. Callers pass the primary action and the
+ * "⋯" menu as the last two direct children. The tree is the same for any number of children, so the primary
+ * button never remounts when the menu appears or goes (focus returns to it after a dialog).
  */
 function headerActions(children: ReactNode): ReactNode {
   const items = Children.toArray(children);
-  if (items.length < 2) return children;
   return (
     <>
       {items.slice(0, -2)}
@@ -78,7 +79,7 @@ export function PageHeader({
     <div className={styles.header}>
       <PageTitle title={title} />
       {views ? <div className={styles.headerViews}>{views}</div> : null}
-      {headerActions(children)}
+      {children ? headerActions(children) : null}
     </div>
   );
 }

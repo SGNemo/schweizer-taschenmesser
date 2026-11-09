@@ -20,8 +20,26 @@ en: File pickers look the same everywhere and say “Choose file” and “No fi
 type: fixed
 area: ui
 breaking: false
-de: Kacheltitel einer Reihe stehen auf einer Linie, das ⋯-Menü bleibt am Handy neben dem Hauptknopf und lange Wörter werden getrennt statt zerschnitten.
-en: Tile titles in a row line up, the ⋯ menu stays next to the main button on phones, and long words are hyphenated instead of cut.
+de: Die Titel von Kacheln in einer Reihe stehen jetzt auf einer Linie.
+en: Titles of tiles in one row now line up.
+---
+
+---
+
+type: fixed
+area: ui
+breaking: false
+de: Am Handy bleibt das ⋯-Menü neben dem Hauptknopf, statt allein in eine neue Zeile zu rutschen.
+en: On phones the ⋯ menu stays next to the main button instead of dropping into a row of its own.
+---
+
+---
+
+type: fixed
+area: ui
+breaking: false
+de: Lange Wörter in Listen werden an Silben getrennt statt mitten im Wort zerschnitten.
+en: Long words in lists are hyphenated at a syllable instead of being cut anywhere.
 ---
 
 ---
