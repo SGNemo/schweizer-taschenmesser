@@ -50,6 +50,8 @@
 .actions {
   grid-area: actions;
   align-self: center;
+  /* U01: as tall as its buttons from the first paint (the write button arrives with the AI settings). */
+  min-height: var(--touch);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -69,20 +71,25 @@
 .extra:empty {
   display: none;
 }
-.title h1 {
+.title h1,
+.title .titlePlaceholder {
   margin: var(--space-1) 0 0;
   font-size: var(--text-h1);
   line-height: 1.15;
   letter-spacing: -0.01em;
 }
-.band[data-type='thin'] .title h1 {
+/* U01: the fallback's line in the title's place has the heading's box (every variant below styles both alike). */
+.titlePlaceholder {
+  font-weight: var(--weight-semibold);
+}
+.band[data-type='thin'] .title :is(h1, .titlePlaceholder) {
   font-weight: var(--weight-light);
 }
-.band[data-type='mono'] .title h1 {
+.band[data-type='mono'] .title :is(h1, .titlePlaceholder) {
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
 }
-.band[data-type='serif'] .title h1 {
+.band[data-type='serif'] .title :is(h1, .titlePlaceholder) {
   font-family: var(--font-serif);
 }
 /* One row under the title: figure | signature slot | extra; the L slot takes a row of its own. */
@@ -97,6 +104,12 @@
 .body:not(:has(.target:not(:empty), .signature, .extra:not(:empty), .figure > :not(.target))) {
   display: none;
 }
+/* U01: while the page loads, the row keeps the room it took on the last visit (--head-room, set by the frame), even
+   before anything is in it (the selector outweighs the empty-row rule above). */
+.column > .body[data-hold='true'] {
+  display: flex;
+  min-height: var(--head-room);
+}
 .figure {
   flex: 0 1 auto;
   min-width: 0;
@@ -106,6 +119,10 @@
 }
 .figure > .target:not(:empty) + * {
   display: none;
+}
+/* U01: the placeholder of a figure that is still loading takes its room, unseen (first visit of a route). */
+.figurePending {
+  visibility: hidden;
 }
 /* The signature slot (identity v3.1, F02): S = the mark (--slot-s), M = a block of up to --slot-m, L = the whole column.
    A page that fills the slot claims it before paint (HeroSlot, useLayoutEffect); the target with content also hides a
@@ -157,24 +174,24 @@
 }
 
 /* ---- Variants: arrangement and typography (C10: the height class is the token, not the content) ---- */
-.band[data-head='kennzahl'] .title h1,
-.band[data-head='zeit'] .title h1,
-.band[data-head='cover'] .title h1,
-.band[data-head='tresor'] .title h1,
-.band[data-head='himmel'] .title h1 {
+.band[data-head='kennzahl'] .title :is(h1, .titlePlaceholder),
+.band[data-head='zeit'] .title :is(h1, .titlePlaceholder),
+.band[data-head='cover'] .title :is(h1, .titlePlaceholder),
+.band[data-head='tresor'] .title :is(h1, .titlePlaceholder),
+.band[data-head='himmel'] .title :is(h1, .titlePlaceholder) {
   font-size: var(--text-2xl);
 }
-.band[data-head='himmel'] .title h1 {
+.band[data-head='himmel'] .title :is(h1, .titlePlaceholder) {
   font-weight: var(--weight-light);
 }
-.band[data-head='schreib'] .title h1 {
+.band[data-head='schreib'] .title :is(h1, .titlePlaceholder) {
   font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
   letter-spacing: 0;
 }
 /* fokus: the one thing large beside the module's name, which steps back. */
-.band[data-head='fokus'] .title h1 {
+.band[data-head='fokus'] .title :is(h1, .titlePlaceholder) {
   font-size: var(--text-xl);
 }
 /* Compact heads: title, figure and the S mark on one line; nothing stacks. */
@@ -225,6 +242,26 @@
   }
   .band[data-size='compact'] .column {
     flex-direction: row;
+  }
+  /* U01: in the stacked row a reserved room stays empty space; nothing grows into it while the page loads. */
+  .column > .body[data-hold='true'] > * {
+    flex-grow: 0;
+  }
+  /* fokus (U24, MODULE-IDENTITY "Phone: the row under the title stacks"): the module's name on its own line, then the
+     one thing with the mark beside it where it fits (else the mark wraps under it), the strip under both – every line
+     on the same left edge. */
+  .band[data-head='fokus'] .column {
+    flex-direction: column;
+    /* One line: a wrapping column would size the row to its widest block instead of the column. */
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+  .band[data-head='fokus'] .body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-self: stretch;
+    gap: var(--space-3);
   }
   .extra {
     flex-basis: auto;

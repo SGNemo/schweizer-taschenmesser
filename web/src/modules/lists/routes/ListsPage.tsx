@@ -312,9 +312,7 @@ export default function ListsPage() {
                 autoComplete="off"
                 data-list-search
               />
-              <Button type="submit" variant="primary">
-                {t.actions.add}
-              </Button>
+              <Button type="submit">{t.actions.add}</Button>
               {isPacking ? (
                 <TextField
                   label={t.lists.categoryNow}

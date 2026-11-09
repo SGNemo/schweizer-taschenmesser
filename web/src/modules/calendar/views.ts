@@ -190,3 +190,77 @@ export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; time
   close();
   return { untimed, timed: sorted };
 }
+
+/** Untimed entries a day shows in the week grid's all-day pane; the rest folds into "+n weitere" (S04, UI round 6). */
+export const ALL_DAY_LIMIT = 3;
+
+/**
+ * Minute the hour grid opens at: an hour and a half before `anchor` (now, or the first entry), on a full hour, and never
+ * inside a block. A block cut by the grid's top edge looks as if it were hidden under the all-day pane above it (S04), so
+ * the start moves up to the full hour before such a block – but never more than two hours above the first choice: a long
+ * block (05:00–22:00) or a chain of overlapping ones must not open the grid far from now.
+ */
+export function initialScrollMinute(
+  blocks: readonly { start: number; end: number }[],
+  anchor: number,
+): number {
+  const top0 = Math.max(0, Math.floor((anchor - 90) / 60) * 60);
+  let top = top0;
+  for (;;) {
+    const cut = blocks.find((b) => b.start < top && b.end > top && b.start >= top0 - 120);
+    if (!cut) return top;
+    top = Math.floor(cut.start / 60) * 60;
+  }
+}
+
+/** What the hour grid remembers about its scroll: the shown range, and whether that range's entries have been seen. */
+export interface GridScrollMemo {
+  range: string;
+  settled: boolean;
+}
+
+/**
+ * Whether the hour grid scrolls now (S04, UI round 6). A new range always scrolls. The same range scrolls once more only
+ * while its entries are still loading (none of the shown days had any entry yet) and timed entries arrive; once entries
+ * were seen, the user's own edits (the first timed event saved into an all-day-only week, the last one deleted) never
+ * move the grid.
+ */
+export function gridScroll(
+  memo: GridScrollMemo | null,
+  range: string,
+  hasAny: boolean,
+  hasTimed: boolean,
+): { scroll: boolean; memo: GridScrollMemo } {
+  if (!memo || memo.range !== range) return { scroll: true, memo: { range, settled: hasAny } };
+  if (memo.settled || !hasAny) return { scroll: false, memo };
+  return { scroll: hasTimed, memo: { range, settled: true } };
+}
+
+/** Identity of an entry across days: the same source, kind, time and title. */
+export const repeatKey = (i: Pick<CalendarItem, 'source' | 'kind' | 'time' | 'title'>): string =>
+  `${i.source}|${i.kind}|${i.time ?? ''}|${i.title}`;
+
+/**
+ * Entries that come back almost every day (five or more times within seven days – a daily medication reminder). The month
+ * view writes them as quiet lines, so the one-off entries stand out (S03, UI round 6).
+ */
+export function dailyRepeats(items: readonly CalendarItem[]): Set<string> {
+  const days = new Map<string, string[]>();
+  for (const i of items) {
+    const key = repeatKey(i);
+    const list = days.get(key) ?? [];
+    if (!list.includes(i.date)) list.push(i.date);
+    days.set(key, list);
+  }
+  const out = new Set<string>();
+  for (const [key, list] of days) {
+    if (list.length < 5) continue;
+    list.sort();
+    for (let n = 0; n + 4 < list.length; n++)
+      if (daysBetween(list[n]!, list[n + 4]!) <= 6) {
+        out.add(key);
+        break;
+      }
+  }
+  return out;
+}

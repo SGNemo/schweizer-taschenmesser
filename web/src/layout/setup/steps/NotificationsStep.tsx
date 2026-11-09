@@ -4,6 +4,7 @@ import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { t } from '@/strings';
 import { Button, patternStyles } from '@/ui';
+import { useStepOwnsPrimary } from '../stepPrimary';
 
 const s = t.setup.steps.notifications;
 
@@ -21,6 +22,8 @@ export default function NotificationsStep({ registerCommit }: SetupStepProps) {
     registerCommit(async () => (permission === 'granted' ? undefined : 'skipped'));
     return () => registerCommit(null);
   }, [registerCommit, permission]);
+  // Until the question is answered, "Erlauben" is the one primary; the wizard's "Weiter" waits as secondary (U59).
+  useStepOwnsPrimary(permission === 'default');
 
   return (
     <>

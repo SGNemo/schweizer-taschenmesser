@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { moreFields, ready, showAllWidgets } from './helpers';
+import { primaryActions } from './primaries';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -29,6 +30,9 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
     // C23: the empty bookings page offers one verb; transfers live on "Konten".
     await ready(page, '/finance?tab=accounts');
+    // One primary on "Konten": the toolbar's "Buchung"; "Konto hinzufügen" is secondary (round 6, U13).
+    await expect(page.getByRole('button', { name: 'Konto hinzufügen' })).toBeVisible();
+    expect(await primaryActions(page)).toEqual(['Buchung']);
     await page.getByRole('button', { name: 'Umbuchung', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Umbuchung' });
     await dialog.getByLabel('Von Konto').selectOption({ label: 'Girokonto' });

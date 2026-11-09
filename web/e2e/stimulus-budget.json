@@ -164,7 +164,7 @@
       "buttons": 55,
       "links": 14,
       "icons": 15,
-      "firstScreenActions": 54
+      "firstScreenActions": 63
     },
     "phone--finance": {
       "height": 2954,
@@ -205,7 +205,7 @@
       "height": 2613,
       "buttons": 65,
       "links": 9,
-      "icons": 36,
+      "icons": 50,
       "firstScreenActions": 31
     },
     "phone--people": {
@@ -254,15 +254,15 @@
       "height": 2184,
       "buttons": 35,
       "links": 11,
-      "icons": 24,
+      "icons": 27,
       "firstScreenActions": 23
     },
     "phone--todos": {
-      "height": 4262,
-      "buttons": 111,
-      "links": 14,
-      "icons": 60,
-      "firstScreenActions": 35
+      "height": 3830,
+      "buttons": 103,
+      "links": 15,
+      "icons": 61,
+      "firstScreenActions": 39
     },
     "phone--vault": {
       "height": 5745,

@@ -3,7 +3,7 @@ import { t } from '@/strings';
 import styles from '../routes/reminders.module.css';
 
 /** The ring covers the next day: the nearer the reminder, the fuller the ring. */
-const HORIZON_MINUTES = 24 * 60;
+export const HORIZON_MINUTES = 24 * 60;
 
 /**
  * "Zeitring" of the reminders: a still ring (built from the shared `Ring`) that fills as the next

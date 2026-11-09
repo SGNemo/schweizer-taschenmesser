@@ -7,6 +7,7 @@ import { toEpoch } from '@/core/time/dates';
 import { setNow } from '@/core/time/now';
 import {
   ageOn,
+  metaLine,
   birthdaysInRange,
   birthdayTitle,
   dateInYear,
@@ -222,5 +223,16 @@ describe('people module', () => {
     expect(await personRepo.get(anna.id)).toBeUndefined();
     expect(await giftsOf(anna.id)).toEqual([]);
     expect(await giftsOf(bernd.id)).toHaveLength(1);
+  });
+});
+
+describe('card meta line (U47)', () => {
+  it('breaks only between the phrases, never inside one', () => {
+    const line = metaLine(['Mi., 2. Dezember', undefined, 'in 75 Tagen', '1 Geschenk offen']);
+    expect(line).toBe(
+      'Mi.,\u00a02.\u00a0Dezember\u00a0· in\u00a075\u00a0Tagen\u00a0· 1\u00a0Geschenk\u00a0offen',
+    );
+    // The only break chances are right after a dot.
+    expect(line.split('\u00a0· ').every((part) => !part.includes(' '))).toBe(true);
   });
 });

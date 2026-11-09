@@ -9,7 +9,8 @@ import { useUiStore } from '@/stores/ui';
 import { AppShell } from '@/layout/AppShell';
 import { ComponentSheet } from '@/layout/devTools';
 import { frameVariant } from '@/core/modules/frame';
-import { AreaFrame } from '@/layout/AreaFrame';
+import { AreaFrame, ModulePageFallback } from '@/layout/AreaFrame';
+import { LoadedModuleStates } from '@/layout/useNavItems';
 import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
@@ -103,9 +104,10 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
                 key={m.id}
                 variant={frameVariant(r.layout ?? m.layout)}
                 hue={m.identity.hue}
+                route={r.path}
               >
                 <ModuleErrorBoundary manifest={m}>
-                  <Suspense fallback={<PageFallback />}>
+                  <Suspense fallback={<ModulePageFallback manifest={m} />}>
                     <Cmp />
                   </Suspense>
                 </ModuleErrorBoundary>
@@ -228,7 +230,7 @@ export function AppRoutes() {
   // Routes are only known once module states are loaded; avoids a redirect flash on deep links.
   const element = useRoutes(routes ?? []);
   return routes ? (
-    element
+    <LoadedModuleStates.Provider value={states}>{element}</LoadedModuleStates.Provider>
   ) : (
     <p role="status" className="sr-only">
       …
