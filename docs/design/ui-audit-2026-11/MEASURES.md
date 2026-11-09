@@ -50,6 +50,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 34 | 18 | 174 | 133 | 1 | 5 | 17 | 1 | 11 | 169 | 1215 | 7 | 3 | 0.00 |
 | settings-ueber | 42 | 13 | 174 | 133 | 0 | 5 | 17 | 1 | 12 | 140 | 1037 | 5 | 4 | 0.01 |
 | settings-module-finance | 38 | 21 | 174 | 173 | 0 | 5 | 20 | 2 | 12 | 198 | 1404 | 5 | 3 | 0.00 |
+| übersicht-ruhig | 25 | 8 | 240 | – | 1 | 5 | 14 | 3 | 7 | 126 | 689 | 5 | 4 | 0.06 |
+| übersicht-ausführlich | 34 | 6 | 240 | 72 | 1 | 5 | 28 | 3 | 9 | 189 | 979 | 6 | 4 | 0.18 |
 
 ### Reizlast über dem Falz – 412x915-dark, seed
 
@@ -97,6 +99,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 6 | 6 | 169 | 113 | 1 | 2 | 1 | 1 | 2 | 84 | 608 | 6 | 3 | 0.00 |
 | settings-ueber | 3 | 3 | 169 | 113 | 0 | 2 | 1 | 1 | 3 | 43 | 335 | 5 | 4 | 0.08 |
 | settings-module-finance | 5 | 5 | 169 | 249 | 0 | 1 | 4 | 2 | 3 | 97 | 721 | 5 | 3 | 0 |
+| übersicht-ruhig | 14 | 5 | 365 | – | 0 | 3 | 9 | 3 | 6 | 77 | 431 | 5 | 4 | 0 |
+| übersicht-ausführlich | 15 | 5 | 365 | 72 | 0 | 3 | 10 | 3 | 6 | 80 | 449 | 5 | 4 | 0.25 |
 
 ### Reizlast über dem Falz – 1920x1080-dark, empty
 
@@ -148,6 +152,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 34 | 18 | 174 | 133 | 1 | 5 | 17 | 1 | 11 | 177 | 1304 | 7 | 3 | 0.00 |
 | settings-ueber | 42 | 13 | 174 | 133 | 0 | 5 | 17 | 1 | 12 | 138 | 1030 | 5 | 4 | 0.00 |
 | settings-module-finance | 38 | 21 | 174 | 173 | 0 | 5 | 20 | 2 | 12 | 196 | 1397 | 5 | 3 | 0.00 |
+| übersicht-ruhig | 13 | 10 | 216 | – | 1 | 3 | 3 | 0 | 1 | 90 | 568 | 5 | 4 | 0.01 |
+| übersicht-ausführlich | 27 | 8 | 216 | 48 | 1 | 3 | 16 | 0 | 7 | 143 | 915 | 5 | 4 | 0.14 |
 
 ### Köpfe und Typografie – 1920 dunkel, Seed
 
@@ -199,6 +205,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 133 | compact | 20px/600/Inter Variable | 3 | – | 8 | 20px/1.5×16, 18px/1.75×3, 16px/1.75×1, 14px/1.75×1 |
 | settings-ueber | 133 | compact | 20px/600/Inter Variable | 2 | – | 9 | 20px/1.5×16, 14px/1.75×2, 18px/1.75×1, 16px/1.75×1 |
 | settings-module-finance | 173 | compact | 20px/600/Inter Variable | 1 | – | 8 | 20px/1.5×16, 14px/1.75×2, 18px/1.75×1, 16px/1.75×1 |
+| overview-calm | – | – | 44px/700/Inter Variable | 3 | – | 6 | 18px/1.75×10, 16px/1.75×2, 22px/1.5×1 |
+| overview-all | 72 | md | 44px/700/Inter Variable | 3 | – | 6 | 16px/1.75×60, 18px/1.75×44, 22px/1.5×34, 72px/-×4 |
 
 ### Flächen: Rahmen vs. Schatten vs. Tönung – 1920 dunkel, Seed
 
@@ -250,6 +258,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 1 | 0 | 6 | 1 | 0 | 5 | 1 | 12px×25, 20px×6, 999px×6, 16px×2 | 1 | transform×5 |
 | settings-ueber | 2 | 1 | 5 | 3 | 0 | 6 | 1 | 12px×45, 999px×10, 20px×6, 16px×2 | 1 | transform×18 |
 | settings-module-finance | 2 | 1 | 6 | 2 | 0 | 6 | 2 | 12px×20, 999px×9, 20px×7, 16px×2 | 1 | transform×5 |
+| overview-calm | 0 | 2 | 9 | 1 | 0 | 4 | 3 | 16px×10, 12px×5, 20px×1, 999px×1 | 1 | transform×8 |
+| overview-all | 1 | 2 | 41 | 34 | 0 | 36 | 3 | 16px×39, 12px×25, 8px×3, 20px×1, 999px×1 | 1 | transform×62 |
 
 ### Dialoge – 1920 dunkel, Seed
 
@@ -407,6 +417,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-entwickler | 113 | 169 | – |
 | settings-ueber | 113 | 169 | – |
 | settings-module-finance | 249 | 169 | – |
+| overview-calm | – | 365 | – |
+| overview-all | 72 | 365 | – |
 
 ### Layout-Sprung (CLS) über alle Läufe – nur Werte, die in mindestens zwei Läufen ≥ 0,05 sind
 

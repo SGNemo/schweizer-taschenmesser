@@ -155,3 +155,7 @@ html[data-v=four] .greet{padding-top:8px}
 /* waits row */
 html[data-v=four] .grp.waits{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 html[data-v=four][data-device=mobile] .grp.waits .meta{flex-basis:100%}
+/* round-8 fixes: every target ≥ 44 px, no shadow on the cover (nothing floats) */
+html[data-v=four][data-device=mobile] .attn a.quiet{min-height:44px}
+html[data-v=four] .top .brand{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0}
+html[data-v=four] .w .mini .cover,html[data-v=four] .cover{box-shadow:none}
