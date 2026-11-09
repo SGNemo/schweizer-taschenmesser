@@ -25,7 +25,8 @@ export const ui: Strings['ui'] = {
     choose: 'Choose file',
     chooseMany: 'Choose files',
     none: 'No file chosen',
-    count: (n: number) => (n === 1 ? '1 file chosen' : `${n} files chosen`),
+    noneFolder: 'No folder chosen',
+    count: (n: number) => `${n} files chosen`,
     remove: 'Remove',
   },
 };

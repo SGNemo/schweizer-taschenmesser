@@ -1,36 +1,44 @@
-/* The real input: out of sight, still focusable (keyboard, screen readers); the button below is its label. */
-.input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
 .row {
-  position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-3);
 }
-/* The visible button (a secondary button, 44 px): the focus ring of the hidden input shows here. */
-.pick {
+/* The visible button and, on top of it, the real input: transparent, the same size, so click, keyboard focus and a
+   dropped file all reach the input. */
+.pickWrap {
+  position: relative;
+  display: inline-flex;
   flex: none;
 }
-.input:focus-visible + .pick {
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.input::file-selector-button {
+  cursor: pointer;
+}
+.pickWrap:hover .pick {
+  background: var(--surface-2);
+}
+.pickWrap:has(.input:focus-visible) .pick {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
-.input[aria-invalid='true'] + .pick {
+.pickWrap:has(.input[aria-invalid='true']) .pick {
   border-color: var(--danger);
 }
-.pick[data-disabled='true'] {
+.pickWrap[data-disabled='true'] .pick {
   opacity: 0.45;
-  cursor: not-allowed;
+}
+.pickWrap[data-disabled='true'] .input,
+.pickWrap[data-disabled='true'] .pick {
+  pointer-events: none;
 }
 .name {
   min-width: 0;

@@ -53,7 +53,7 @@ export function AttachmentSection({
         : undefined;
 
   function pick(files: FileList) {
-    const file = files?.[0];
+    const file = files[0];
     if (!file) return;
     if (!isAttachable(file.type)) return setError(e.wrongType);
     if (file.size > MAX_ATTACHMENT_BYTES)

@@ -161,7 +161,9 @@ export const de = {
       choose: 'Datei wählen',
       chooseMany: 'Dateien wählen',
       none: 'Keine Datei gewählt',
-      count: (n: number) => (n === 1 ? '1 Datei gewählt' : `${n} Dateien gewählt`),
+      noneFolder: 'Kein Ordner gewählt',
+      /** Several files were picked (one shows its name). */
+      count: (n: number) => `${n} Dateien gewählt`,
       remove: 'Entfernen',
     },
   },

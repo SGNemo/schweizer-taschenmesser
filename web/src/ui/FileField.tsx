@@ -9,8 +9,9 @@ import styles from './FileField.module.css';
 /**
  * File picker in the app's own look (U07): label above, a secondary "Datei wählen" button, the chosen name (or
  * "Keine Datei gewählt") beside it, an optional "Entfernen", then hint and error. The real `<input type="file">`
- * stays in the page, visually hidden but focusable (keyboard, screen readers, tests); the button is its second
- * label, so a click opens the browser's picker. Its accessible name is the field label alone.
+ * lies transparent over the button, the same size: a click, the keyboard focus and a dropped file all land on it,
+ * the focus ring shows on the button. Its accessible name is the field label plus the button text. A picker that is
+ * cancelled does not call `onFiles`.
  */
 export function FileField({
   label,
@@ -75,30 +76,31 @@ export function FileField({
         {label}
       </span>
       <div className={styles.row}>
-        <input
-          id={id}
-          type="file"
-          className={styles.input}
-          accept={accept}
-          multiple={multiple}
-          disabled={disabled}
-          aria-labelledby={`${id}-label`}
-          aria-describedby={describedBy}
-          aria-invalid={error ? true : undefined}
-          onChange={onChange}
-          {...((directory ? { webkitdirectory: '', directory: '' } : {}) as object)}
-        />
-        <label
-          htmlFor={id}
-          className={[buttonStyles.btn, buttonStyles.secondary, styles.pick].join(' ')}
-          aria-hidden="true"
-          data-disabled={disabled ? 'true' : undefined}
-        >
-          <Icon name="upload" size={16} />
-          {buttonLabel ?? (multiple ? t.ui.file.chooseMany : t.ui.file.choose)}
-        </label>
-        <span id={`${id}-name`} className={shown ? styles.name : styles.none}>
-          {shown || t.ui.file.none}
+        <span className={styles.pickWrap} data-disabled={disabled ? 'true' : undefined}>
+          <span
+            id={`${id}-btn`}
+            className={[buttonStyles.btn, buttonStyles.secondary, styles.pick].join(' ')}
+            aria-hidden="true"
+          >
+            <Icon name="upload" size={16} />
+            {buttonLabel ?? (multiple ? t.ui.file.chooseMany : t.ui.file.choose)}
+          </span>
+          <input
+            id={id}
+            type="file"
+            className={styles.input}
+            accept={accept}
+            multiple={multiple}
+            disabled={disabled}
+            aria-labelledby={`${id}-label ${id}-btn`}
+            aria-describedby={describedBy}
+            aria-invalid={error ? true : undefined}
+            onChange={onChange}
+            {...((directory ? { webkitdirectory: '', directory: '' } : {}) as object)}
+          />
+        </span>
+        <span id={`${id}-name`} className={shown ? styles.name : styles.none} aria-live="polite">
+          {shown || (directory ? t.ui.file.noneFolder : t.ui.file.none)}
         </span>
         {onRemove && shown ? (
           <Button
