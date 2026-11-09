@@ -92,7 +92,11 @@ export default function HabitsPage() {
           />
         }
       >
-        <Button variant="primary" onClick={() => setTarget('new')}>
+        {/* U26: while there is nothing, the empty state holds the one filled step. */}
+        <Button
+          variant={goals && goals.length === 0 ? 'secondary' : 'primary'}
+          onClick={() => setTarget('new')}
+        >
           <Icon name="plus" size={18} />
           {t.habits.add}
         </Button>
@@ -116,6 +120,9 @@ export default function HabitsPage() {
       {goals && goals.length === 0 && view !== 'archive' ? (
         <EmptyState title={t.habits.empty} testId="habits-empty" motif={<HabitsMotif />}>
           <p>{t.habits.emptyHint}</p>
+          <Button variant="primary" onClick={() => setTarget('new')}>
+            {t.habits.addFirst}
+          </Button>
         </EmptyState>
       ) : null}
 
