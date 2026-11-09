@@ -79,7 +79,7 @@
       <div class="favbar">${[MODS.plan[0], MODS.plan[1], MODS.money[0], MODS.household[1]].map(([id, icon, , hue]) => `<a class="${id === active ? 'cur' : ''}" style="--mod:var(--mod-${hue})" title="">${I[icon]}</a>`).join('')}</div>
       <div class="navscroll">
         <a class="nav${active === 'home' ? ' active-accent' : ''}">${I.home}<span>Übersicht</span></a>
-        ${Object.entries(MODS).map(([a, mods]) => `<div class="navgrp" style="--area:var(--mod-${AREA_HUE[a]})"><div class="navh">${AREA[a][0]}${a === area ? I.chevd : I.chev}</div>${a === area ? mods.map((m) => nav(m, m[0] === 'invoices' ? '2' : m[0] === 'todos' ? '11' : '')).join('') : ''}</div>`).join('')}
+        ${Object.entries(MODS).map(([a, mods]) => `<div class="navgrp" style="--area:var(--mod-${AREA_HUE[a]})"><div class="navh">${AREA[a][0]}${a === area ? I.chevd : I.chev}</div>${a === area ? mods.map((m) => nav(m, m[0] === 'invoices' ? '2' : m[0] === 'todos' ? '15' : '')).join('') : ''}</div>`).join('')}
       </div>
       <div class="navfoot"><a class="nav">${I.grid}<span>Modul-Bibliothek</span></a><a class="nav">${I.gear}<span>Einstellungen</span></a><a class="nav">${I.panel}<span>Einklappen</span></a></div>`;
   const tb = document.getElementById('tb');
