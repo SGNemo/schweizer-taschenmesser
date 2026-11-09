@@ -211,6 +211,27 @@ export async function amendCapture(
 }
 
 /**
+ * The second record of a two-stage entry saved under `id` (the plan row of a ToDo): live, deleted, or
+ * absent (also when the type has one stage or its module is off). Callers never build its key.
+ */
+export async function secondStage(
+  type: CaptureType,
+  id: string,
+  opts: SaveOptions = {},
+): Promise<'live' | 'deleted' | undefined> {
+  const target = targetFor(type);
+  if (!target.via) return undefined;
+  try {
+    const { repo } = await targetRepo(type, opts);
+    const ref: CaptureRef = { moduleId: targetFor(target.via.type).moduleId, id };
+    const row = await repo.table.get(target.via.id(ref));
+    return row ? (row.deletedAt === null ? 'live' : 'deleted') : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Brings back an entry saved under a fixed id and deleted since („Wieder einplanen“): the record and,
  * for a two-stage target, its second record `via.id(first)` – through `restore`, never `create`. The
  * undo deletes both again.

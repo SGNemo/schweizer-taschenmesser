@@ -243,7 +243,8 @@ export default function MailPage() {
       p.delete('open');
       if (known) p.set('thread', id!);
       // Not on this device (another device's entry, an old cache): say so instead of a silent inbox.
-      else useUiStore.getState().toast(t.mail.plan.notHere);
+      // A malformed value is dropped without a word: it names no mail.
+      else if (id) useUiStore.getState().toast(t.mail.plan.notHere);
       setParams(p, { replace: true });
     })();
   }, [openParam, account, params, setParams]);

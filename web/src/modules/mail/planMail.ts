@@ -19,6 +19,7 @@ import {
   availableTypes,
   captureId,
   reinstateCapture,
+  secondStage,
   saveCapture,
   saveCaptures,
   type CaptureItem,
@@ -127,13 +128,7 @@ export const planWords = (type: 'plan' | 'todo') =>
  * comes back alone (the planner reads ToDos anyway); never half of a two-stage entry.
  */
 async function reinstate(type: 'plan' | 'todo', id: string): Promise<SavedCapture> {
-  if (type === 'plan') {
-    const planner = getManifest('planner');
-    const row = planner
-      ? await createCollectionRepo(planner, 'item').table.get(`todos:${id}`)
-      : undefined;
-    if (!row) return reinstateCapture('todo', id);
-  }
+  if (type === 'plan' && !(await secondStage('plan', id))) return reinstateCapture('todo', id);
   return reinstateCapture(type, id);
 }
 
@@ -161,12 +156,9 @@ async function plannedDay(todoId: string): Promise<string | undefined> {
   return task?.plannedFor;
 }
 
-/** Whether the entry is in the plan (its plan row exists), not only a ToDo. */
-async function inPlan(todoId: string): Promise<boolean> {
-  const planner = getManifest('planner');
-  if (!planner) return false;
-  return !!(await createCollectionRepo(planner, 'item').get(`todos:${todoId}`));
-}
+/** Whether the entry is in the plan (its plan row is live), not only a ToDo. */
+const inPlan = async (todoId: string): Promise<boolean> =>
+  (await secondStage('plan', todoId)) === 'live';
 
 /**
  * One tap: the mail becomes a ToDo / plan entry. Already there → only this device's link, „Schon im Plan“,
@@ -265,13 +257,14 @@ export async function planMany(
     items.push({ type, fields: planFields(account, th), id: await planMailId(th.id) });
   // Entries live before this tap (e.g. from another device): skipped, and their link rows stay on undo.
   const before = await taskRepo.table.bulkGet(items.map((x) => x.id!));
+  const wasDeleted = before.map((r) => !!r && r.deletedAt !== null);
   let saved: SavedCapture | undefined;
   const revived: SavedCapture[] = [];
   const links: string[] = [];
   try {
     saved = await saveCaptures(items, '');
     for (let i = 0; i < items.length; i++)
-      if (before[i]?.deletedAt != null && revive.has(threads[i]!.id))
+      if (wasDeleted[i] && revive.has(threads[i]!.id))
         revived.push(await reinstate(type, items[i]!.id!));
     // Link rows for every mail whose ToDo is live now; only new entries' rows go with the undo.
     const undoLinks: string[] = [];
@@ -282,7 +275,7 @@ export async function planMany(
       const link = await linkOnce(account, threads[i]!.id, entry);
       if (!link) continue;
       links.push(link);
-      if (!before[i] || before[i]!.deletedAt !== null) undoLinks.push(link);
+      if (!before[i] || wasDeleted[i]) undoLinks.push(link);
     }
     onChanged();
     const added = (saved.count ?? 0) + revived.length;

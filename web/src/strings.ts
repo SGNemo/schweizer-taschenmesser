@@ -7190,9 +7190,11 @@ export const de = {
         allDone: (n: number) => (n === 1 ? '1 Mail als ToDo' : `${n} Mails als ToDo`),
         thread: 'Als ToDo da',
         wasMark: 'war als ToDo da',
-        allIntro: 'Massenmails und Mails, die schon als ToDo da sind, sind abgewählt.',
+        allIntro:
+          'Massenmails, Mails, die schon als ToDo da sind, und gelöschte Einträge sind abgewählt.',
       },
-      notHere: 'Diese Mail ist auf diesem Gerät gerade nicht geladen.',
+      notHere:
+        'Diese Mail ist auf diesem Gerät nicht geladen. Aktualisieren holt sie, wenn sie im Ordner liegt.',
       wasMark: 'war im Plan',
       thread: 'Im Plan',
       emptyPersonal: 'Hier sind gerade keine Mails von Menschen.',
@@ -7203,7 +7205,7 @@ export const de = {
       personal: 'Persönlich',
       all: 'Alle in den Plan…',
       allTitle: 'In den Plan',
-      allIntro: 'Massenmails und Mails, die schon im Plan sind, sind abgewählt.',
+      allIntro: 'Massenmails, Mails im Plan und gelöschte Einträge sind abgewählt.',
       allSave: (n: number) => `In den Plan (${n})`,
       allDone: (n: number) => (n === 1 ? '1 Mail im Plan' : `${n} Mails im Plan`),
       failed: 'Das hat nicht geklappt. Die Mail bleibt, wie sie ist.',
