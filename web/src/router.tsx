@@ -107,7 +107,7 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
                 route={r.path}
               >
                 <ModuleErrorBoundary manifest={m}>
-                  <Suspense fallback={<ModulePageFallback title={m.name} />}>
+                  <Suspense fallback={<ModulePageFallback manifest={m} />}>
                     <Cmp />
                   </Suspense>
                 </ModuleErrorBoundary>

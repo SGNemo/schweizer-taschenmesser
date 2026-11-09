@@ -84,6 +84,13 @@ async function metrics(page: Page) {
   });
 }
 
+/** U01: the frame stores the head row's room once the hold for that route ended, i.e. the page has settled. */
+async function headSettled(page: Page, key: string) {
+  await expect
+    .poll(() => page.evaluate((k) => localStorage.getItem(k), `tm-head-room:${key}`))
+    .not.toBeNull();
+}
+
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp });
@@ -264,7 +271,7 @@ test.describe('phone header', () => {
     for (const path of ['/people', '/invoices', '/todos']) {
       await page.goto(path);
       await expect(page.locator('main h1').first()).toBeVisible();
-      await page.waitForTimeout(1200);
+      await headSettled(page, `${path}@phone`);
       const box = await page.getByTestId('module-frame').evaluate((frame) => {
         const r = (el: Element | null | undefined) => {
           const b = el?.getBoundingClientRect();
@@ -401,6 +408,7 @@ test.describe('no layout shift on load', () => {
   async function visit(page: Page, path: string) {
     await page.goto(path);
     await expect(page.locator('main h1')).toBeVisible();
+    // Watch a window longer than the frame's hold (1 s): stability over time cannot be polled for.
     await page.waitForTimeout(1500);
     const { tops, cls } = await page.evaluate(
       () => (window as unknown as { __u01: { tops: number[]; cls: number } }).__u01,
@@ -448,7 +456,7 @@ test.describe('no layout shift on load', () => {
     await prepare(page);
     await page.goto('/people');
     await expect(page.locator('main h1')).toBeVisible();
-    await page.waitForTimeout(1500);
+    await headSettled(page, '/people@wide');
     await watchShifts(page);
     await visit(page, '/people');
   });

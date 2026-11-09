@@ -39,9 +39,11 @@ import {
   headHeight,
   SIGNATURE_SLOTS,
   type HeadVariant,
+  type ModuleManifest,
   type ModuleHue,
   type PageLayout,
 } from '@/core/modules/types';
+import { useFigureHold } from './figureHold';
 import { readHeadRoom, writeHeadRoom } from './headRoom';
 import { PageContainer, PageFallback } from './PageContainer';
 import { DefaultSignature } from './signatures';
@@ -107,40 +109,16 @@ const FIGURE_HEADS: Readonly<Partial<Record<HeadVariant, 'label' | 'plain'>>> = 
   regal: 'label',
   fokus: 'plain',
 };
-/**
- * How long after the page arrived the frame keeps the figure's room while the page reads its data (U01). Pages fill
- * the figure within a few frames; a page without one gives the room back after this (and the next visit keeps none).
- */
-const FIGURE_HOLD_MS = 1000;
-
 /** The fallback tells the frame that the page's chunk is still loading. */
 const PageLoadingContext = createContext<((loading: boolean) => void) | undefined>(undefined);
 
 /**
- * Keeps the figure's room from the first paint until the page has been there for `FIGURE_HOLD_MS` (the figure itself
- * replaces the placeholder in CSS as soon as the page fills the slot).
- */
-function useFigureHold(): [boolean, (loading: boolean) => void] {
-  const [loading, setLoadingState] = useState(false);
-  const [elapsed, setElapsed] = useState(false);
-  const setLoading = useCallback((next: boolean) => {
-    setLoadingState(next);
-    if (next) setElapsed(false);
-  }, []);
-  useEffect(() => {
-    if (loading) return;
-    const timer = setTimeout(() => setElapsed(true), FIGURE_HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [loading]);
-  return [loading || !elapsed, setLoading];
-}
-
-/**
  * Suspense fallback of a module page inside the frame (U01): while the module's chunk loads, the head already holds a
  * line in the title's place (the module's name, not a heading: tests and the reader wait for the page's own h1), so
- * the band has its final rows from the first paint and nothing below it moves when the page arrives.
+ * the band has its final rows from the first paint and nothing below it moves when the page arrives. The name is read
+ * at render time (a language switch shows the new one).
  */
-export function ModulePageFallback({ title }: { title: string }) {
+export function ModulePageFallback({ manifest }: { manifest: ModuleManifest }) {
   const hero = useHeroTargets();
   const setLoading = useContext(PageLoadingContext);
   useLayoutEffect(() => {
@@ -152,7 +130,7 @@ export function ModulePageFallback({ title }: { title: string }) {
       {hero?.title
         ? createPortal(
             <p className={styles.titlePlaceholder} aria-hidden="true">
-              {title}
+              {manifest.name}
             </p>,
             hero.title,
           )
@@ -215,7 +193,6 @@ export function AreaFrame({
   const claimed = (area: HeroArea) => (claims[area] ?? 0) > 0;
   const collapsed = useHeroCollapse();
   const { figure: headline, pending: headlinePending } = useModuleHeadline(manifest);
-  const [figureHold, setPageLoading] = useFigureHold();
   const framed = !!area && !isFocusPath(pathname);
   const id = manifest?.identity;
   const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
@@ -226,6 +203,8 @@ export function AreaFrame({
   const phone = useMediaQuery('(max-width: 899px)');
   const routeKey = route ?? manifest?.id;
   const roomKey = routeKey ? `${routeKey}@${phone ? 'phone' : 'wide'}` : undefined;
+  // The hold restarts for every route (and layout), so the room is measured only once that route's page is there.
+  const [figureHold, setPageLoading] = useFigureHold(roomKey);
   const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
   const holdRoom = figureHold && !!remembered;
   const figurePending =
