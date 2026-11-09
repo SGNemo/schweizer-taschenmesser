@@ -198,14 +198,20 @@ export default function PantryPage() {
                     title={i.name}
                     meta={
                       <span className={lamp.meta}>
-                        {state !== 'none' ? (
-                          <span className={lamp.dot} data-state={state} aria-hidden="true" />
-                        ) : null}
-                        {state === 'expired' || state === 'soon' ? (
-                          <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
+                        {/* The lamp stays with the words it stands for (never alone on a line). */}
+                        {state !== 'none' && text ? (
+                          <span className={lamp.state}>
+                            <span className={lamp.dot} data-state={state} aria-hidden="true" />
+                            {state === 'ok' ? (
+                              text
+                            ) : (
+                              <Badge tone={state === 'expired' ? 'danger' : 'warning'}>
+                                {text}
+                              </Badge>
+                            )}
+                          </span>
                         ) : null}
                         {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
-                        {state === 'ok' && text ? <span>{text}</span> : null}
                       </span>
                     }
                     onOpen={() => setTarget(i)}

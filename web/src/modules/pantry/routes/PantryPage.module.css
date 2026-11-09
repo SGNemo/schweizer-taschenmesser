@@ -49,6 +49,11 @@
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
+/* Lamp and its words in one piece. */
+.state {
+  display: inline-flex;
+  align-items: center;
+}
 /* Same width as the cart button: the end column of every tile lines up, cart or not. */
 .slot {
   display: inline-block;
