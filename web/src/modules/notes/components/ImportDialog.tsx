@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { isHiddenPath } from '@/importers/files';
 import { byFolderOrder } from '@/importers/obsidian/parse';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog } from '@/ui';
+import { Button, Dialog, FileField } from '@/ui';
 import { noteKey, parseImport, TEXT_FILE, type ImportedPage } from '../exchange';
 import { nextNotebookOrder } from '../logic';
 import { noteRepo, notebookRepo } from '../repo';
@@ -13,8 +13,6 @@ type Result = { pages: ImportedPage[]; fresh: ImportedPage[]; skipped: number };
 
 /** Import `.md` / `.txt` files (several at once) or a folder: the folder becomes a notebook. */
 export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const files = useRef<HTMLInputElement>(null);
-  const folder = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<Result | null>(null);
   const s = t.notes.importMenu;
 
@@ -85,31 +83,18 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
     <Dialog open={open} onClose={close} title={s.title}>
       <div className={styles.history}>
         <p className={styles.trashMeta}>{s.hint}</p>
-        <div className={styles.actions}>
-          <Button onClick={() => files.current?.click()}>{s.files}</Button>
-          <Button onClick={() => folder.current?.click()}>{s.folder}</Button>
-        </div>
-        <input
-          ref={files}
-          type="file"
+        <FileField
+          label={s.filesLabel}
+          buttonLabel={s.files}
           multiple
-          hidden
           accept=".md,.markdown,.txt,text/markdown,text/plain"
-          onChange={(e) => {
-            void read(e.target.files);
-            e.target.value = '';
-          }}
+          onFiles={(list) => void read(list)}
         />
-        <input
-          ref={folder}
-          type="file"
-          hidden
-          // Non-standard but supported by every browser and the desktop webview.
-          {...({ webkitdirectory: '', directory: '' } as object)}
-          onChange={(e) => {
-            void read(e.target.files);
-            e.target.value = '';
-          }}
+        <FileField
+          label={s.folderLabel}
+          buttonLabel={s.folder}
+          directory
+          onFiles={(list) => void read(list)}
         />
         {result ? (
           result.fresh.length === 0 ? (

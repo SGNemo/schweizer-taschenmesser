@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+UI schärfen Runde 6, `ui`-Bausteine (`fix/ui6-ui`, PR folgt nach Council): Dialoge tragen im Modul dessen Kopfzone (Farbe, Plate, Signatur), neuer Baustein `FileField` an sechs Stellen, Kachelkanten, 4-px-Segment, ⋯ bleibt beim Primärknopf, ruhige Widget-Links, Ghost-Kante, Silbentrennung.
 Dev-Preview Erststart (`feat/devpreview-first-start`, PR offen): keine Testdaten mehr von selbst, die Willkommenskarte fragt „Einrichtung starten“ oder „Mit Testdaten ansehen“; Testdaten-Banner bricht um (Svens Antworten zu #564).
 Installation ohne Sven daneben (`docs/install-first-run`, PR offen): Website `/install` + `/en/install` mit genauen Klicks für Windows-SmartScreen (Edge-Warnung, intelligente App-Steuerung) und Samsung (Quelle zulassen, Play Protect, automatische Blockierung), ehrlichem Warum und SHA-256-Prüfung; Dev-Preview-Release-Text beginnt mit Downloads, beiden Kurzanleitungen und SHA-256 je Datei; Screenshots fehlen noch (Windows-VM/Samsung nötig).
 Kopf leer Paket 3b (`feat/mail-invoice-row`, PR offen): unter einer Rechnungsmail „Empfänger · Betrag · fällig … · Anlegen“ in einem Tipp (feste Id aus der Nachricht), eine Mahnung vermerkt sich auf der offenen Rechnung („Mahnung vermerken“), Abbuchung nur als Text, Unsicheres öffnet den Zettel; Widget „n Rechnungen zum Anlegen“.
