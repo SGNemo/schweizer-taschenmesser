@@ -17,7 +17,9 @@ const smoke = process.env.E2E_PROFILE === 'smoke';
 const rest = process.env.E2E_PROFILE === 'rest';
 const withSeed = !smoke && !rest && process.env.E2E_SEED !== '0';
 // Add a spec here when it guards start-up, data safety, navigation or a module's create/edit path; everything
-// else runs on develop, nightly and with the label `full-ci`.
+// else runs on develop, nightly and with the label `full-ci`. The second block holds the standing promises of
+// the UI rebuild (UI audit 2026-11, package 0a-1a): they run on every pull request, on desktop-chrome; the
+// phone ones set their own viewport with `test.use`. This file is ratchet-protected (docs/howto/ci.md).
 const SMOKE_FILES = [
   'core',
   'shell',
@@ -43,6 +45,17 @@ const SMOKE_FILES = [
   'delete-undo',
   'today',
   'cockpit',
+  'a11y',
+  'calm',
+  'hide-values',
+  'mobile-layout',
+  'touch-hit-phone',
+  'layout',
+  'readability',
+  'identity',
+  'hue-consistency',
+  'library-identity',
+  'overview-head',
 ].map((name) => new RegExp(`/${name}\\.spec\\.ts$`));
 
 // Multi-device tests need the real sync server: see playwright.sync.config.ts
