@@ -1,11 +1,18 @@
 import {
+  createContext,
   useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
+  type CSSProperties,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
 import { isFocusPath } from '@/core/focus/path';
 import { areaOfPath } from '@/core/modules/areas';
@@ -21,13 +28,21 @@ import {
   EMPTY_HERO,
   HeroContext,
   HeroControlsContext,
+  useHeroTargets,
   type HeroArea,
   type HeroControls,
   type HeroTargets,
 } from '@/core/shell/heroContext';
 import { HeroFigure } from '@/ui/identity';
-import { headHeight, SIGNATURE_SLOTS, type ModuleHue, type PageLayout } from '@/core/modules/types';
-import { PageContainer } from './PageContainer';
+import {
+  headHeight,
+  SIGNATURE_SLOTS,
+  type HeadVariant,
+  type ModuleHue,
+  type PageLayout,
+} from '@/core/modules/types';
+import { readFigureRoom, writeFigureRoom } from './figureRoom';
+import { PageContainer, PageFallback } from './PageContainer';
 import { DefaultSignature } from './signatures';
 import { useHeroCollapse } from './useHeroCollapse';
 import { useModuleHeadline } from './useModuleHeadline';
@@ -84,6 +99,68 @@ function ModuleSettingsLink({ pathname }: { pathname: string }) {
   return <SettingsLink to={to} label={tComfort.get().gear.module} />;
 }
 
+/** Heads whose page puts a figure under the title (MODULE-IDENTITY "Head variants"); `fokus` without the caps label. */
+const FIGURE_HEADS: Readonly<Partial<Record<HeadVariant, 'label' | 'plain'>>> = {
+  kennzahl: 'label',
+  fortschritt: 'label',
+  regal: 'label',
+  fokus: 'plain',
+};
+/**
+ * How long after the page arrived the frame keeps the figure's room while the page reads its data (U01). Pages fill
+ * the figure within a few frames; a page without one gives the room back after this (and the next visit keeps none).
+ */
+const FIGURE_HOLD_MS = 1000;
+
+/** The fallback tells the frame that the page's chunk is still loading. */
+const PageLoadingContext = createContext<((loading: boolean) => void) | undefined>(undefined);
+
+/**
+ * Keeps the figure's room from the first paint until the page has been there for `FIGURE_HOLD_MS` (the figure itself
+ * replaces the placeholder in CSS as soon as the page fills the slot).
+ */
+function useFigureHold(): [boolean, (loading: boolean) => void] {
+  const [loading, setLoadingState] = useState(false);
+  const [elapsed, setElapsed] = useState(false);
+  const setLoading = useCallback((next: boolean) => {
+    setLoadingState(next);
+    if (next) setElapsed(false);
+  }, []);
+  useEffect(() => {
+    if (loading) return;
+    const timer = setTimeout(() => setElapsed(true), FIGURE_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [loading]);
+  return [loading || !elapsed, setLoading];
+}
+
+/**
+ * Suspense fallback of a module page inside the frame (U01): while the module's chunk loads, the head already holds a
+ * line in the title's place (the module's name, not a heading: tests and the reader wait for the page's own h1), so
+ * the band has its final rows from the first paint and nothing below it moves when the page arrives.
+ */
+export function ModulePageFallback({ title }: { title: string }) {
+  const hero = useHeroTargets();
+  const setLoading = useContext(PageLoadingContext);
+  useLayoutEffect(() => {
+    setLoading?.(true);
+    return () => setLoading?.(false);
+  }, [setLoading]);
+  return (
+    <>
+      {hero?.title
+        ? createPortal(
+            <p className={styles.titlePlaceholder} aria-hidden="true">
+              {title}
+            </p>,
+            hero.title,
+          )
+        : null}
+      <PageFallback />
+    </>
+  );
+}
+
 /**
  * The module frame (identity v3.1, docs/design/MODULE-IDENTITY.md "Head variants"): every module page sits in it. A
  * full-width band in the module's hue and the area's pattern (`HeadSurface`) holds, in a content column capped at
@@ -97,10 +174,13 @@ function ModuleSettingsLink({ pathname }: { pathname: string }) {
 export function AreaFrame({
   variant = 'wide',
   hue,
+  route,
   children,
 }: {
   /** Width variant of the page (`manifest.layout`, resolved by the router). */
   variant?: PageLayout;
+  /** The route's path pattern (`/people/:id`): the head remembers its figure's room per route (U01). */
+  route?: string;
   /** The module's hue for the page container (`data-hue`). */
   hue?: ModuleHue;
   children: ReactNode;
@@ -133,10 +213,29 @@ export function AreaFrame({
   );
   const claimed = (area: HeroArea) => (claims[area] ?? 0) > 0;
   const collapsed = useHeroCollapse();
-  const headline = useModuleHeadline(manifest);
+  const { figure: headline, pending: headlinePending } = useModuleHeadline(manifest);
+  const [figureHold, setPageLoading] = useFigureHold();
   const framed = !!area && !isFocusPath(pathname);
   const id = manifest?.identity;
   const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
+  const figureShape = id ? FIGURE_HEADS[id.head] : undefined;
+  // U01: the figure's room while it loads – the frame's own headline, or the page's figure: the room it took on the
+  // last visit of this route, else the head variant's shape.
+  const roomKey = route ?? manifest?.id;
+  const remembered = useMemo(() => (roomKey ? readFigureRoom(roomKey) : undefined), [roomKey]);
+  const figurePending =
+    headlinePending ||
+    (!headline &&
+      figureHold &&
+      !manifest?.contributions?.headline &&
+      (remembered === undefined ? !!figureShape : remembered > 0));
+  const figureRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = figureRef.current;
+    if (figureHold || !framed || !roomKey || !el) return;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    writeFigureRoom(roomKey, el.getBoundingClientRect().height / rem);
+  }, [figureHold, framed, roomKey]);
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
@@ -169,7 +268,7 @@ export function AreaFrame({
               <div className={styles.column}>
                 <div className={styles.title} ref={setTitle} />
                 <div className={styles.body}>
-                  <div className={styles.figure}>
+                  <div className={styles.figure} ref={figureRef}>
                     <div className={styles.target} ref={setFigure} />
                     {headline && !claimed('figure') ? (
                       <div data-testid="module-headline">
@@ -179,6 +278,29 @@ export function AreaFrame({
                           detail={headline.detail}
                           type={id?.type}
                         />
+                      </div>
+                    ) : figurePending ? (
+                      // U01: an empty figure of the same shape holds the row until the number is there.
+                      <div
+                        className={styles.figurePending}
+                        aria-hidden="true"
+                        data-testid="module-figure-pending"
+                        style={
+                          remembered
+                            ? ({ '--figure-room': `${remembered}rem` } as CSSProperties)
+                            : undefined
+                        }
+                      >
+                        {remembered ? (
+                          '\u00a0'
+                        ) : (
+                          <HeroFigure
+                            label={figureShape === 'plain' ? undefined : '\u00a0'}
+                            value={'\u00a0'}
+                            detail={'\u00a0'}
+                            type={id?.type}
+                          />
+                        )}
                       </div>
                     ) : null}
                   </div>
@@ -229,7 +351,9 @@ export function AreaFrame({
               }))}
             />
           ) : null}
-          {children}
+          <PageLoadingContext.Provider value={setPageLoading}>
+            {children}
+          </PageLoadingContext.Provider>
         </PageContainer>
       </HeroControlsContext.Provider>
     </HeroContext.Provider>

@@ -336,3 +336,86 @@ test.describe('desktop header', () => {
     expect(stacked).toBe(true);
   });
 });
+
+// U01 (UI round 6): the head band, the title row and the figure's room are there in the first paint, so nothing below
+// the band moves when the module's chunk and its data arrive.
+test.describe('no layout shift on load', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  /** Records the top of the page under the head on every frame (one entry per change) and the layout-shift total. */
+  const watchShifts = (page: Page) =>
+    page.addInitScript(`
+      window.__u01 = { tops: [], cls: 0 };
+      try {
+        new PerformanceObserver((list) => {
+          for (const e of list.getEntries()) if (!e.hadRecentInput) window.__u01.cls += e.value;
+        }).observe({ type: 'layout-shift', buffered: true });
+      } catch {}
+      let frames = 0;
+      const sample = () => {
+        const el = document.querySelector('main [data-testid="page"]');
+        if (el) {
+          const top = Math.round(el.getBoundingClientRect().top);
+          const tops = window.__u01.tops;
+          if (tops[tops.length - 1] !== top) tops.push(top);
+        }
+        if (++frames < 600) requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    `);
+
+  async function visit(page: Page, path: string) {
+    await page.goto(path);
+    await expect(page.locator('main h1')).toBeVisible();
+    await page.waitForTimeout(1500);
+    const { tops, cls } = await page.evaluate(
+      () => (window as unknown as { __u01: { tops: number[]; cls: number } }).__u01,
+    );
+    expect(tops, `${path}: top of the page under the head, one value per change`).toHaveLength(1);
+    expect(cls, `${path}: layout-shift total`).toBeLessThan(0.05);
+  }
+
+  test('the page under the module head keeps its place from the first paint', async ({ page }) => {
+    await prepare(page);
+    // One open invoice, so the head shows its figure (the open sum) – the case that used to push the page down.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction('invoices_invoice', 'readwrite');
+            tx.objectStore('invoices_invoice').put({
+              id: 'inv1',
+              payee: 'Stadtwerke',
+              amountMinor: 4200,
+              dueDate: '2026-10-05',
+              status: 'open',
+              createdAt: 1,
+              updatedAt: 1,
+              deviceId: 'e2e',
+              deletedAt: null,
+              _f: {},
+            });
+            tx.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+    );
+    await watchShifts(page);
+    await visit(page, '/invoices');
+  });
+
+  test('a module without a figure keeps its place on the next visit', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/people');
+    await expect(page.locator('main h1')).toBeVisible();
+    await page.waitForTimeout(1500);
+    await watchShifts(page);
+    await visit(page, '/people');
+  });
+});
