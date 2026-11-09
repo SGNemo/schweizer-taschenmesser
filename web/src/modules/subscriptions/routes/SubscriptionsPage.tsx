@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
-import { daysBetween, formatDay, today } from '@/core/time/dates';
+import { relativeDays } from '@/core/i18n/format';
+import { formatDay, today } from '@/core/time/dates';
 import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
@@ -32,6 +33,7 @@ import {
   sortSubscriptions,
   pickTotals,
   totalsByCurrency,
+  cancelTone,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
 import { NextChargesHead } from '../components/NextChargesHead';
@@ -43,7 +45,6 @@ import styles from './subscriptions.module.css';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
 /** Highlight a cancellation deadline that is closer than this many days. */
-const WARN_DAYS = 14;
 
 export default function SubscriptionsPage() {
   const day = today();
@@ -161,7 +162,7 @@ export default function SubscriptionsPage() {
           const charge = s.active ? nextCharge(s, day) : undefined;
           const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
           const missed = s.active ? missedDeadline(s, day) : undefined;
-          const urgent = cancel ? daysBetween(day, cancel.deadline) <= WARN_DAYS : false;
+          const soon = cancel ? cancelTone(cancel.deadline, day) : undefined;
           const increase = recentIncrease(s.priceHistory ?? [], day);
           const status = subscriptionStatus(s, day);
           const plainMonthly =
@@ -199,6 +200,13 @@ export default function SubscriptionsPage() {
               className={s.active ? undefined : styles.inactive}
               meta={
                 <>
+                  {/* Status badges sit in the meta line: the amount column stays put (U56). */}
+                  {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                  {status === 'trial' ? (
+                    <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
+                  ) : null}
+                  {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
+                  {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
                   {facts.join(' · ')}
                   {missed ? (
                     <span className={styles.missed} title={tDeadline.get().missedNote}>
@@ -207,9 +215,14 @@ export default function SubscriptionsPage() {
                     </span>
                   ) : null}
                   {cancel ? (
-                    <span className={`${styles.cancelLine} ${urgent ? styles.warn : ''}`}>
+                    <span
+                      className={`${styles.cancelLine} ${soon?.tone === 'soon' ? styles.warn : ''}`}
+                      data-tone={soon?.tone}
+                    >
                       {' · '}
+                      {soon?.tone === 'soon' ? <Icon name="clock" size={14} /> : null}
                       {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
+                      {soon?.tone === 'soon' ? ` · ${relativeDays(soon.days)}` : null}
                     </span>
                   ) : null}
                 </>
@@ -234,11 +247,6 @@ export default function SubscriptionsPage() {
                     checked={s.active}
                     onChange={toggle}
                   />
-                  {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
-                  {status === 'trial' ? (
-                    <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
-                  ) : null}
-                  {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
                 </>
               }
             />
