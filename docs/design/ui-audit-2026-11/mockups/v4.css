@@ -194,3 +194,4 @@ html[data-v=four] body[data-reading] .titlerow,html[data-v=four] body[data-readi
 html[data-v=four] body[data-reading] .head{text-align:initial}
 html[data-v=four][data-device=mobile] .kpiline{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.5}
 html[data-v=four][data-device=mobile] .label{bottom:auto;top:62px;opacity:.6}
+html[data-v=four] .reading{width:100%}
