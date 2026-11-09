@@ -112,7 +112,7 @@
 }
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: var(--space-2);
   margin: 0;
   padding: 0;
@@ -147,10 +147,15 @@
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
 }
+/* Up to two lines, so names like "Beispiel-Wetter" are read in full at every width. */
 .tileLabel {
+  display: -webkit-box;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  text-align: center;
+  overflow-wrap: break-word;
   font-size: var(--text-sm);
 }
