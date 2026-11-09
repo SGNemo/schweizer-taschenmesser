@@ -24,6 +24,10 @@ const baseline = args.includes('--baseline');
 const fromIdx = args.indexOf('--from');
 const outDir = resolve(web, process.env.STIMULUS_DIR ?? 'test-results/stimulus-check');
 
+// Read before anything of the build or the measurement runs: what is compared is what was committed.
+const budget = JSON.parse(readFileSync(budgetPath, 'utf8'));
+const signatureBlocks = JSON.parse(readFileSync(blocksPath, 'utf8')).blocks;
+
 let inventoryPath;
 if (fromIdx >= 0) {
   inventoryPath = resolve(args[fromIdx + 1] ?? '');
@@ -57,8 +61,6 @@ if (baseline) {
   process.exit(0);
 }
 
-const budget = JSON.parse(readFileSync(budgetPath, 'utf8'));
-const signatureBlocks = JSON.parse(readFileSync(blocksPath, 'utf8')).blocks;
 const result = compare(budget, inventory, { signatureBlocks });
 console.log(formatReport(result));
 if (process.env.GITHUB_STEP_SUMMARY) {

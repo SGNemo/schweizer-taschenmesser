@@ -349,10 +349,28 @@ describe('protected paths', () => {
     expect(found('web/e2e/seed/helpers/index.ts')).toBe(1);
     expect(found('web/src/core/ai/testing.js')).toBe(1);
     expect(found('web/e2e/axe.mjs')).toBe(1);
+    // Bare imports resolve to the nearest node_modules; a nested package.json changes how files load.
+    expect(found('web/e2e/node_modules/@playwright/test/index.js')).toBe(1);
+    expect(found('web/e2e/seed/node_modules/x/package.json')).toBe(1);
+    expect(found('web/e2e/package.json')).toBe(1);
+    // A new spec with the file name of a protected one is picked up by the smoke list and the measuring run.
+    expect(found('web/e2e/x/a11y.spec.ts')).toBe(1);
+    expect(found('web/e2e/screenshots/x/screenshots/stimulus.spec.ts')).toBe(1);
     // What no resolver loads is no shadow.
     expect(found('web/e2e/axe.md')).toBe(0);
     expect(found('web/e2e/seed/other-helpers.ts')).toBe(0);
     expect(found('web/src/modules/finance/helpers.js')).toBe(0);
+  });
+  it('nothing may be appended to the measuring spec, and what a protected config imports is protected', () => {
+    const spec = 'web/e2e/screenshots/stimulus.spec.ts';
+    expect(hits({ [spec]: SPEC }, { [spec]: more(CASE) })).toHaveLength(1);
+    const base = {
+      'web/vite.config.ts': "import { build } from './scripts/lib/changelogBuild';\n",
+      'web/scripts/lib/changelogBuild.ts': 'export const build = 1;\n',
+    };
+    expect(
+      hits(base, { ...base, 'web/scripts/lib/changelogBuild.ts': 'export const build = 2;\n' }),
+    ).toHaveLength(1);
   });
   it('new files: free for new guards and tests, always a hit for workflows, configs and web/.env*', () => {
     expect(
@@ -502,6 +520,22 @@ describe('additions only in protected test files', () => {
     [
       'division trick behind an if head',
       "test('a', () => { if (x) /2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
+    ],
+    [
+      'a property named like a keyword',
+      "test('b', () => { x = a. return /2; }); globalThis.evil = 1; test('c', () => { y = 1 /2; })",
+    ],
+    [
+      'a regex behind `of`',
+      "test('a', () => { for (const c of /'/.source) {} }); globalThis.evil = 1; test('b', () => {}) // ') {} })",
+    ],
+    [
+      'vitest.mock inside a body (hoisted)',
+      "test('z', () => {\n  vitest.mock('@/core/ai/aiSchema', () => ({}));\n});",
+    ],
+    [
+      'vi.mock with a comment in between',
+      "test('z', () => {\n  vi/**/.mock('@/core/ai/aiSchema', () => ({}));\n});",
     ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [

@@ -117,12 +117,18 @@ export const PROTECTED = [
   'web/e2e/helpers.ts',
   'web/e2e/seed/**',
   'web/e2e/screenshots/stimulus.spec.ts',
+  'web/e2e/screenshots/first-row.spec.ts', // matched by the measuring run's config
   'web/src/**/*.contrast.test.ts',
   ...E2E_PROMISES.map((n) => `web/e2e/${n}.spec.ts`),
   ...UNIT_PROMISES.map((n) => `web/src/${n}`),
   // Test helpers a protected test imports (they import no product code of their own).
   'web/src/core/ai/testing.ts',
   'web/src/test-utils.ts',
+];
+/** Whatever is appended here would run in the process that writes the inventory: every change is a hit. */
+export const NO_APPEND = [
+  'web/e2e/screenshots/stimulus.spec.ts',
+  'web/e2e/screenshots/first-row.spec.ts',
 ];
 export const NEW_FILES_FREE = [
   'web/e2e/seed/**',
@@ -433,9 +439,11 @@ function added(was, now) {
 }
 
 const PAIR = { ')': '(', ']': '[', '}': '{' };
-// Reserved words only (`of`, `yield`, `await` can be plain names), and never as the tail of a longer name.
-const REGEX_BEFORE =
-  /(?<![\p{ID_Continue}$.\\])(?:return|typeof|case|do|else|in|void|delete|throw|new|instanceof)$/u;
+// Reserved words an expression follows. `of`, `await` and `yield` can be a keyword or a plain name: undecidable here.
+const EXPRESSION_KEYWORDS = new Set(
+  'return typeof case do else in void delete throw new instanceof'.split(' '),
+);
+const AMBIGUOUS_WORDS = new Set(['of', 'await', 'yield']);
 const CONTROL_BEFORE = /(?<![\p{ID_Continue}$.\\])(?:if|while|for|with|await)$/u;
 /**
  * True if `appended` is nothing but top-level statements of the form
@@ -448,8 +456,13 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
   const src = appended.replace(/\r\n/g, '\n');
   // Line separators end a `//` comment for JavaScript but not for this reader.
   if (/[\r\u2028\u2029]/.test(src)) return false;
-  // Hoisted by Vitest wherever they stand, also inside a test body.
-  if (/\bvi\s*\.\s*(mock|unmock|hoisted)\b/.test(src)) return false;
+  // Vitest hoists these calls to the top of the file wherever they stand, also out of a test body, for `vi`
+  // and `vitest`, whatever stands between the name and the method.
+  if (
+    /\b(?:vi|vitest)\b/.test(src) &&
+    /\b(?:mock|unmock|hoisted|doMock|doUnmock|importActual|importMock)\b/.test(src)
+  )
+    return false;
   const n = src.length;
   let i = 0;
   const fail = () => {
@@ -502,6 +515,25 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
     fail();
   };
   /** May an expression start here (then `/` opens a regex and `<` a JSX element)? */
+  /** The word that ends at `at`: a keyword an expression follows, or a plain name (also `a.return`). */
+  const keywordAt = (at) => {
+    let s = at;
+    while (s >= 0 && /[\p{ID_Continue}$]/u.test(src[s])) s--;
+    const word = src.slice(s + 1, at + 1);
+    let k = s;
+    while (k >= 0 && /\s/.test(src[k])) k--;
+    if (k >= 0 && src[k] === '\\') fail();
+    // A comment between a dot and the word would hide the dot: do not guess.
+    if (k >= 1 && src[k] === '/' && src[k - 1] === '*') fail();
+    if (
+      src.slice(k + 1, s + 1).includes('\n') &&
+      src.slice(src.lastIndexOf('\n', k) + 1, k + 1).includes('//')
+    )
+      fail();
+    if (k >= 0 && src[k] === '.') return false; // a property name
+    if (AMBIGUOUS_WORDS.has(word)) fail();
+    return EXPRESSION_KEYWORDS.has(word);
+  };
   const expression = (last, lastAt) => {
     if (last === '') return true;
     if ((last === '+' || last === '-') && src[lastAt - 1] === last) fail(); // `x++ / 2` or `++ /re/`
@@ -511,11 +543,12 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       // Prefix `!` opens an expression; the TypeScript postfix `x!` does not (`x! / 2` is a division).
       let k = lastAt - 1;
       while (k >= 0 && (src[k] === ' ' || src[k] === '\t')) k--;
-      if (k < 0 || REGEX_BEFORE.test(src.slice(Math.max(0, k - 14), k + 1))) return true; // `return !/x/`
-      return !/[\p{ID_Continue}$)\]]/u.test(src[k]);
+      if (k < 0) return true;
+      if (/[\p{ID_Continue}$]/u.test(src[k])) return keywordAt(k); // `return !/x/` against `x! / 2`
+      return src[k] !== ')' && src[k] !== ']';
     }
     if ('(,=:[&|?{;+-*%<~^'.includes(last)) return true;
-    return REGEX_BEFORE.test(src.slice(Math.max(0, lastAt - 14), lastAt + 1));
+    return /[\p{ID_Continue}$]/u.test(last) && keywordAt(lastAt);
   };
   const name = () => {
     const m = /^[\w$.:-]*/.exec(src.slice(i, i + 200))[0];
@@ -715,8 +748,8 @@ const closureEligible = (path) =>
  */
 export function protectedClosure(tree, read) {
   const seen = new Set();
-  // Seeds are the protected specs and tests: what a config or tool file imports is build tooling, not a guard.
-  const queue = [...tree.keys()].filter((p) => isTestFile(p) && matchesAny(p, PROTECTED));
+  // Seeds are all protected code files, configs included: what `vite.config.ts` imports runs in the guard builds.
+  const queue = [...tree.keys()].filter((p) => isCode(p) && matchesAny(p, PROTECTED));
   const result = new Set();
   while (queue.length) {
     const file = queue.pop();
@@ -786,6 +819,20 @@ export function collectHits(repo, base, head) {
     );
   };
 
+  let specNames = null;
+  const namedLikeProtectedSpec = (path) => {
+    if (!path.startsWith('web/e2e/') || !isTestFile(path)) return false;
+    specNames ??= new Set(
+      [...baseTree.keys(), ...headTree.keys()]
+        .filter(
+          (p) =>
+            p !== path && p.startsWith('web/e2e/') && isTestFile(p) && matchesAny(p, PROTECTED),
+        )
+        .map((p) => p.slice(p.lastIndexOf('/') + 1)),
+    );
+    return specNames.has(path.slice(path.lastIndexOf('/') + 1));
+  };
+
   for (const { status, path } of changed) {
     if (path === BUDGET_FILE)
       hits.push(...budgetHits(path, text(was(path)), text(now(path)), newRouteSlugs));
@@ -804,7 +851,16 @@ export function collectHits(repo, base, head) {
       const line = `protected ${path} ${blob(baseTree)}→${blob(headTree)}`;
       // A new file that a resolver would pick instead of a protected one (`helpers.js` next to `helpers.ts`,
       // `helpers/index.ts`) is a hit wherever it lies, also under the paths that are free for new files.
-      if (status === 'A' && shadowsProtected(path)) {
+      // The same holds for anything under a `node_modules` folder (bare imports resolve to the nearest one),
+      // for a new nested `package.json` (it changes how the files below it load) and for a new spec with the
+      // file name of a protected one (the smoke list and the measuring run pick specs by name).
+      if (
+        /(^|\/)node_modules\//.test(path) ||
+        (status === 'A' &&
+          (shadowsProtected(path) ||
+            /^web\/.+\/package\.json$/.test(path) ||
+            namedLikeProtectedSpec(path)))
+      ) {
         hits.push(line);
         continue;
       }
@@ -814,7 +870,12 @@ export function collectHits(repo, base, head) {
         if (matchesAny(path, ALWAYS_PROTECTED) || !matchesAny(path, NEW_FILES_FREE))
           hits.push(line);
       } else if (status === 'D') hits.push(line);
-      else if (!(isTestFile(path) && isAppendOnly(was(path), now(path), path))) hits.push(line);
+      else if (!(
+        isTestFile(path) &&
+        !NO_APPEND.includes(path) &&
+        isAppendOnly(was(path), now(path), path)
+      ))
+        hits.push(line);
       // The script's own test holds such marks as fixture text; every change of it is a `protected` hit anyway.
       if (status !== 'D' && path !== SELF_TEST) {
         for (const mark of added(skipMarks(was(path)), skipMarks(now(path))))
