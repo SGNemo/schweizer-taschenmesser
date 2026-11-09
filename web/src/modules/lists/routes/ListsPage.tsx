@@ -312,7 +312,7 @@ export default function ListsPage() {
                 autoComplete="off"
                 data-list-search
               />
-              <Button type="submit" variant="primary">
+              <Button type="submit">
                 {t.actions.add}
               </Button>
               {isPacking ? (
