@@ -64,6 +64,7 @@
 .emptyCompact {
   flex-direction: row;
   justify-content: flex-start;
+  flex-wrap: wrap;
   text-align: left;
   padding: var(--space-2) 0;
   gap: var(--space-3);
@@ -73,6 +74,23 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--text-muted);
+}
+/* The next step in a widget is a quiet link, never an orange one (U40, DESIGN-SPEC §4a): muted and underlined, on
+   one line, with a 44 px target that adds no height. */
+.emptyCompact a {
+  position: relative;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.emptyCompact a:hover {
+  color: var(--text);
+}
+.emptyCompact a::after {
+  content: '';
+  position: absolute;
+  inset: calc((100% - var(--touch)) / 2) 0;
 }
 .fab {
   position: fixed;

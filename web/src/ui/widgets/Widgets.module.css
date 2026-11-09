@@ -26,7 +26,9 @@
 }
 .rowTitle {
   font-weight: var(--weight-medium);
-  overflow-wrap: anywhere;
+  /* Hyphenate long compounds at a syllable, never at any letter (U57). */
+  overflow-wrap: break-word;
+  hyphens: auto;
   min-width: 0;
   flex: 1;
 }

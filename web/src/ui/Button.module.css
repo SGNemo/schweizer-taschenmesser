@@ -71,6 +71,11 @@
 .quietDanger:hover:not(:disabled) {
   background: var(--danger-soft);
 }
+/* A ghost button between form fields ("Mehr Felder"): its text lines up with the field edge above it (U43); the
+   hover background reaches out into the gutter instead. */
+.flushStart {
+  margin-inline-start: calc(-1 * var(--space-4));
+}
 /* Icon button: 40 px square on a quiet chip, radius 12, hit area 44 px. */
 .icon {
   width: 2.5rem;

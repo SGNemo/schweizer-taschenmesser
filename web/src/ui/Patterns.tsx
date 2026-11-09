@@ -1,5 +1,5 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import { useEffect, useState, type ReactNode } from 'react';
+import { Children, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
@@ -36,6 +36,21 @@ export function PageTitle({ title, spacer = false }: { title: string; spacer?: b
   );
 }
 
+/**
+ * The header actions with their last two kept as one group (U34): the primary action and the "⋯" menu after it wrap
+ * together on a phone, so the menu never stands alone in a row of its own.
+ */
+function headerActions(children: ReactNode): ReactNode {
+  const items = Children.toArray(children);
+  if (items.length < 2) return children;
+  return (
+    <>
+      {items.slice(0, -2)}
+      <span className={styles.headerGroup}>{items.slice(-2)}</span>
+    </>
+  );
+}
+
 export function PageHeader({
   title,
   views,
@@ -53,7 +68,7 @@ export function PageHeader({
         {views || children ? (
           <div className={styles.header} data-in-head="true">
             {views ? <div className={styles.headerViews}>{views}</div> : null}
-            {children ? <div className={styles.headerEnd}>{children}</div> : null}
+            {children ? <div className={styles.headerEnd}>{headerActions(children)}</div> : null}
           </div>
         ) : null}
       </>
@@ -63,7 +78,7 @@ export function PageHeader({
     <div className={styles.header}>
       <PageTitle title={title} />
       {views ? <div className={styles.headerViews}>{views}</div> : null}
-      {children}
+      {headerActions(children)}
     </div>
   );
 }
