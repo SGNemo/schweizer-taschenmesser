@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
@@ -91,6 +91,7 @@ export default function PlannerPage() {
   const wide = usePageWidthAtLeast(WIDE_REM) ?? true;
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
+  const hintId = useId();
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
@@ -629,10 +630,13 @@ export default function PlannerPage() {
         aria-busy={reading || undefined}
       >
         <div className={styles.grow}>
+          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
+              with the input instead of with the hint's baseline. The prop replaces TextField's own description: an
+              `error` here would have to be appended to `hintId`. */}
           <TextField
             label={t.planner.add.label}
             placeholder={t.planner.add.placeholder}
-            hint={t.planner.add.hint}
+            aria-describedby={hintId}
             value={text}
             onChange={(e) => setText(e.target.value)}
             readOnly={reading}
@@ -649,6 +653,9 @@ export default function PlannerPage() {
           onOpenChange={setMenuOpen}
         />
       </form>
+      <p id={hintId} className={styles.addHint}>
+        {t.planner.add.hint}
+      </p>
 
       {sayLine ? (
         <p className={styles.say} role="status" data-testid="plan-say">
