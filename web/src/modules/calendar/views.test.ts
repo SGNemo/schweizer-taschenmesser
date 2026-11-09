@@ -9,6 +9,10 @@ import {
   shiftDate,
   splitDay,
   viewTitle,
+  dailyRepeats,
+  gridScroll,
+  initialScrollMinute,
+  repeatKey,
   weekNumberOf,
 } from './views';
 import type { CalendarItem } from '@/core/modules/types';
@@ -278,5 +282,85 @@ describe('splitDay with a multi-day entry', () => {
       },
     ]).timed;
     expect(night!.end).toBe(24 * 60);
+  });
+});
+
+describe('hour grid start (S04, UI round 6)', () => {
+  it('opens an hour and a half before now, on the full hour', () => {
+    expect(initialScrollMinute([], 10 * 60)).toBe(8 * 60);
+    expect(initialScrollMinute([], 60)).toBe(0);
+  });
+  it('never cuts a block at the top edge: it moves up to the block', () => {
+    // 07:30–09:00 crosses 08:00 → the grid opens at 07:00.
+    expect(initialScrollMinute([{ start: 450, end: 540 }], 10 * 60)).toBe(7 * 60);
+    // a chain: 06:30–07:15 crosses the new top 07:00 → 06:00
+    expect(
+      initialScrollMinute(
+        [
+          { start: 450, end: 540 },
+          { start: 390, end: 435 },
+        ],
+        10 * 60,
+      ),
+    ).toBe(6 * 60);
+    // a block that starts exactly on the top stays fully visible
+    expect(initialScrollMinute([{ start: 480, end: 510 }], 10 * 60)).toBe(8 * 60);
+    // a long block that starts more than two hours above the top does not pull the grid up
+    expect(initialScrollMinute([{ start: 300, end: 1320 }], 10 * 60)).toBe(8 * 60);
+    // overlapping blocks do not chain it further than two hours above the first choice (08:00 → at most 06:00)
+    expect(
+      initialScrollMinute(
+        [
+          { start: 450, end: 540 },
+          { start: 330, end: 460 },
+        ],
+        10 * 60,
+      ),
+    ).toBe(7 * 60);
+  });
+  it("scrolls on a new range and once when its entries load, never on the user's own edits", () => {
+    // new range, nothing loaded yet → scroll; entries arrive with a timed one → scroll once more
+    let step = gridScroll(null, 'w1', false, false);
+    expect(step.scroll).toBe(true);
+    step = gridScroll(step.memo, 'w1', true, true);
+    expect(step.scroll).toBe(true);
+    // the user deletes the last timed entry, then saves a new one: no jump
+    step = gridScroll(step.memo, 'w1', true, false);
+    expect(step.scroll).toBe(false);
+    step = gridScroll(step.memo, 'w1', true, true);
+    expect(step.scroll).toBe(false);
+    // a week with only all-day entries: saving the first timed event does not move the grid
+    step = gridScroll(null, 'w2', true, false);
+    step = gridScroll(step.memo, 'w2', true, true);
+    expect(step.scroll).toBe(false);
+    // all-day entries load first, timed ones never come: settled, a later edit does not scroll
+    step = gridScroll(null, 'w3', false, false);
+    step = gridScroll(step.memo, 'w3', true, false);
+    expect(step.scroll).toBe(false);
+    step = gridScroll(step.memo, 'w3', true, true);
+    expect(step.scroll).toBe(false);
+    // another range scrolls again
+    expect(gridScroll(step.memo, 'w4', true, true).scroll).toBe(true);
+  });
+});
+
+describe('daily repeats in the month (S03, UI round 6)', () => {
+  const item = (date: string, title = 'Medikament'): CalendarItem => ({
+    id: `${title}:${date}`,
+    source: 'reminders',
+    kind: 'reminder',
+    title,
+    date,
+    time: '08:00',
+    allDay: false,
+  });
+  it('marks an entry that comes back on five days of a week', () => {
+    const days = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'];
+    const set = dailyRepeats(days.map((d) => item(d)));
+    expect(set.has(repeatKey(item('2026-09-01')))).toBe(true);
+  });
+  it('leaves a weekly entry alone', () => {
+    const days = ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29'];
+    expect(dailyRepeats(days.map((d) => item(d, 'Training'))).size).toBe(0);
   });
 });
