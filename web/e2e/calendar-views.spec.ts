@@ -48,6 +48,25 @@ async function busyWeek(page: Page) {
               startDate: '2026-11-05',
               ...env,
             });
+          // A daily entry in another week: written quietly, without the own-event surface.
+          for (let d = 16; d <= 20; d++)
+            store.put({
+              id: `daily${d}`,
+              title: 'Täglich',
+              allDay: true,
+              startDate: `2026-11-${d}`,
+              ...env,
+            });
+          // Next week has a timed entry too, so its entries are still loaded when coming back.
+          store.put({
+            id: 'nextweek',
+            title: 'Nächste Woche',
+            allDay: false,
+            startDate: '2026-11-11',
+            startTime: '12:00',
+            endTime: '13:00',
+            ...env,
+          });
           store.put({
             id: 'early',
             title: 'Frühstart',
@@ -91,11 +110,18 @@ test.describe('Calendar: month lines, all-day pane, phone toolbar (UI round 6: S
       await page.goto('/calendar?view=month&date=2026-11-03');
       const cell = thursdayCell(page);
       await expect(cell.getByRole('button', { name: /^Ganztags/ })).toHaveCount(3);
-      // Lines, not pills: no entry has a surface of its own (only own events with a time … here: none is timed).
-      const backgrounds = await cell
+      // Lines, not pills: no entry has a pill edge. One-off own events keep a soft surface; a daily repeat has none.
+      const borderWidths = await cell
         .getByRole('button', { name: /^Ganztags/ })
         .evaluateAll((els) => els.map((el) => getComputedStyle(el).borderTopWidth));
-      expect(backgrounds.every((w) => w === '0px')).toBe(true);
+      expect(borderWidths.every((w) => w === '0px')).toBe(true);
+      const daily = page
+        .locator('main td', { has: page.getByRole('button', { name: /^Dienstag, 17\. November/ }) })
+        .getByRole('button', { name: 'Täglich' });
+      await expect(daily).toBeVisible();
+      expect(await daily.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+        'rgba(0, 0, 0, 0)',
+      );
       await cell.getByRole('button', { name: '+3 weitere' }).click();
       await expect(page).toHaveURL(/view=day&date=2026-11-05/);
     });
@@ -125,6 +151,17 @@ test.describe('Calendar: month lines, all-day pane, phone toolbar (UI round 6: S
         hour: el.scrollHeight / 24,
       }));
       expect(height).toBeGreaterThanOrEqual(8 * hour - 1);
+      // After next week and back via "Heute" the grid opens the same way (the new range's entries load late).
+      await page.locator('main').getByRole('button', { name: 'Weiter', exact: true }).click();
+      await expect(page).toHaveURL(/date=2026-11-10/);
+      await page.getByRole('button', { name: 'Heute', exact: true }).click();
+      await expect(earlier).toBeVisible();
+      await expect
+        .poll(async () => {
+          const top = (await pane.boundingBox())!;
+          return (await earlier.boundingBox())!.y - (top.y + top.height);
+        })
+        .toBeGreaterThanOrEqual(-1);
       await pane.getByRole('button', { name: /^\+3 weitere, Donnerstag/ }).click();
       await expect(page).toHaveURL(/view=day&date=2026-11-05/);
       // The day view shows every untimed entry of the day.
