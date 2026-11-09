@@ -2,7 +2,13 @@
   display: flex;
   gap: var(--space-2);
   align-items: flex-end;
-  margin: var(--space-3) 0 var(--space-4);
+  margin: var(--space-3) 0 var(--space-1);
+}
+/* S09: the hint under the row, where the field's own hint sat; the buttons align with the input's bottom edge. */
+.addHint {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-meta);
+  color: var(--text-3);
 }
 .grow {
   flex: 1;

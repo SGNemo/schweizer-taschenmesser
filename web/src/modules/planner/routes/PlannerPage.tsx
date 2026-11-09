@@ -629,10 +629,12 @@ export default function PlannerPage() {
         aria-busy={reading || undefined}
       >
         <div className={styles.grow}>
+          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
+              with the input instead of with the hint's baseline. */}
           <TextField
             label={t.planner.add.label}
             placeholder={t.planner.add.placeholder}
-            hint={t.planner.add.hint}
+            aria-describedby="planner-add-hint"
             value={text}
             onChange={(e) => setText(e.target.value)}
             readOnly={reading}
@@ -649,6 +651,9 @@ export default function PlannerPage() {
           onOpenChange={setMenuOpen}
         />
       </form>
+      <p id="planner-add-hint" className={styles.addHint}>
+        {t.planner.add.hint}
+      </p>
 
       {sayLine ? (
         <p className={styles.say} role="status" data-testid="plan-say">
