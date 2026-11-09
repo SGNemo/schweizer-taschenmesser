@@ -204,9 +204,9 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       const actions = all.filter((el) => el.matches(actionSel) && visible(el) && aboveFold(el));
       const chromeActions = actions.filter((el) => !el.closest('li, [data-row], table, [role="gridcell"], [role="grid"], [data-testid^="widget-"], article, dialog')).length;
       // Where the page's own content begins: the first list row, table, grid cell, tile or card below the head band and toolbars.
-      const contentSel = 'main [data-row], main li, main table, main [role="gridcell"], main [role="grid"], main article, main [data-testid^="widget-"], main form textarea';
+      const contentSel = 'main [data-row], main li, main table, main [role="gridcell"], main [role="grid"], main article, main [data-testid^="widget-"], main form textarea, main canvas, main svg[role="img"], main [class*="card"], main [class*="tile"], main [class*="Card"]';
       let firstContentY: number | null = null;
-      for (const el of Array.from(document.querySelectorAll<HTMLElement>(contentSel))) { if (!visible(el) || el.closest('nav, [role="tablist"], [role="group"], dialog, aside')) continue; const t = el.getBoundingClientRect().top; if (t > 60 && (firstContentY === null || t < firstContentY)) firstContentY = Math.round(t); }
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>(contentSel))) { if (!visible(el) || el.closest('nav, [role="tablist"], dialog, aside, [data-testid="module-frame"]')) continue; const t = el.getBoundingClientRect().top; if (t > 60 && (firstContentY === null || t < firstContentY)) firstContentY = Math.round(t); }
       const primaries = actions.filter((el) => el.matches('button, a') && /(^|_| )primary(_|$| )/.test(String(el.className))).map((el) => txt(el) || el.getAttribute('aria-label') || '?');
       let colouredText = 0, colouredSurfaces = 0, colouredIcons = 0, gradients = 0;
       const colourSamples: string[] = [];
@@ -253,7 +253,12 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         const s = getComputedStyle(el);
         const r = el.getBoundingClientRect(); if (r.width < 40 || r.height < 24) continue;
         if (s.borderTopWidth !== '0px' && s.borderTopStyle === 'solid' && s.borderTopWidth === s.borderBottomWidth && s.borderLeftWidth === s.borderTopWidth && s.borderRightWidth === s.borderTopWidth && visibleBorder(s.borderTopColor) && !el.matches('input, select, textarea, button')) bordered++;
-        if (s.boxShadow !== 'none') { if (/^(rgba?\([^)]*\)|color\([^)]*\)) 0px 0px 0px \d/.test(s.boxShadow) || /inset/.test(s.boxShadow)) ringed++; else shadowed++; }
+        if (s.boxShadow !== 'none') {
+          // A ring = every shadow segment has no offset and no blur (0 0 0 n px, inset or not); anything with blur is a shadow.
+          const segs = s.boxShadow.split(/\),\s*/);
+          const ring = segs.every((seg) => /(^|\s)0px 0px 0px \d+(\.\d+)?px/.test(seg));
+          if (ring) ringed++; else shadowed++;
+        }
         const pb = parseRgb(s.backgroundColor);
         if (s.backgroundColor === surface2) surface2Count++;
         else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) tinted++;
