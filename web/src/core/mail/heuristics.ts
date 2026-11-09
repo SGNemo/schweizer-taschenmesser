@@ -260,6 +260,7 @@ const BULK_LABELS = [
 /**
  * „Persönlich“: the sender is a person, read from headers only (no model): no `List-Unsubscribe`, no
  * `Precedence: bulk|list|junk`, no Gmail bulk category. Only this boolean is kept, never the headers.
+ * Broader than the scan's `bulk` (List-Unsubscribe only) on purpose: the filter leaves out more.
  */
 export function isPersonalMail(m: {
   listUnsubscribe?: string;

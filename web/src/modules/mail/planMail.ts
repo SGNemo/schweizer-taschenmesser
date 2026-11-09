@@ -127,12 +127,14 @@ export const planWords = (type: 'plan' | 'todo') =>
  * comes back alone (the planner reads ToDos anyway); never half of a two-stage entry.
  */
 async function reinstate(type: 'plan' | 'todo', id: string): Promise<SavedCapture> {
-  try {
-    return await reinstateCapture(type, id);
-  } catch (e) {
-    if (type !== 'plan') throw e;
-    return reinstateCapture('todo', id);
+  if (type === 'plan') {
+    const planner = getManifest('planner');
+    const row = planner
+      ? await createCollectionRepo(planner, 'item').table.get(`todos:${id}`)
+      : undefined;
+    if (!row) return reinstateCapture('todo', id);
   }
+  return reinstateCapture(type, id);
 }
 
 /** Writes this device's link row once (another device's entry may already exist after sync). */
@@ -249,36 +251,38 @@ export async function planMany(
   account: MailAccountRef,
   threads: readonly PlanThread[],
   onChanged: () => void,
+  /** Thread ids the preview showed as „war im Plan“: only these are brought back. */
+  revive: ReadonlySet<string> = new Set(),
 ): Promise<void> {
   const toast = useUiStore.getState().toast;
   const type = await planType();
-  if (!type || threads.length === 0) return;
+  const todos = getManifest('todos');
+  if (!type || !todos || threads.length === 0) return;
+  const taskRepo = createCollectionRepo(todos, 'task');
   const words = planWords(type);
   const items: CaptureItem[] = [];
   for (const th of threads)
     items.push({ type, fields: planFields(account, th), id: await planMailId(th.id) });
+  // Entries live before this tap (e.g. from another device): skipped, and their link rows stay on undo.
+  const before = await taskRepo.table.bulkGet(items.map((x) => x.id!));
   let saved: SavedCapture | undefined;
   const revived: SavedCapture[] = [];
+  const links: string[] = [];
   try {
     saved = await saveCaptures(items, '');
-    const todos = getManifest('todos');
-    const taskRepo = todos ? createCollectionRepo(todos, 'task') : undefined;
-    for (const item of items) {
-      const row = taskRepo ? await taskRepo.table.get(item.id!) : undefined;
-      if (row && row.deletedAt !== null) revived.push(await reinstate(type, item.id!));
-    }
-    // Link rows for every mail whose ToDo is live now (written, brought back or already there).
-    const links: string[] = [];
+    for (let i = 0; i < items.length; i++)
+      if (before[i]?.deletedAt != null && revive.has(threads[i]!.id))
+        revived.push(await reinstate(type, items[i]!.id!));
+    // Link rows for every mail whose ToDo is live now; only new entries' rows go with the undo.
+    const undoLinks: string[] = [];
     for (let i = 0; i < threads.length; i++) {
-      if (!taskRepo || !(await taskRepo.get(items[i]!.id!))) continue;
-      const entry: SavedCapture = {
-        id: items[i]!.id!,
-        type,
-        moduleId: 'todos',
-        undo: async () => undefined,
-      };
+      const id = items[i]!.id!;
+      if (!(await taskRepo.get(id))) continue;
+      const entry: SavedCapture = { id, type, moduleId: 'todos', undo: async () => undefined };
       const link = await linkOnce(account, threads[i]!.id, entry);
-      if (link) links.push(link);
+      if (!link) continue;
+      links.push(link);
+      if (!before[i] || before[i]!.deletedAt !== null) undoLinks.push(link);
     }
     onChanged();
     const added = (saved.count ?? 0) + revived.length;
@@ -290,14 +294,18 @@ export async function planMany(
         void (async () => {
           await done.undo();
           for (const r of revived) await r.undo();
-          for (const l of links) await linkRepo.remove(l);
+          for (const l of undoLinks) await linkRepo.remove(l);
           onChanged();
           toast(t.mail.write.undone);
         })(),
     });
   } catch {
-    // All or nothing: what this tap wrote or brought back goes again.
-    await Promise.allSettled([saved?.undo(), ...revived.map((r) => r.undo())]);
+    // All or nothing: what this tap wrote or brought back goes again, its link rows too.
+    await Promise.allSettled([
+      saved?.undo(),
+      ...revived.map((r) => r.undo()),
+      ...links.map((l) => linkRepo.remove(l)),
+    ]);
     onChanged();
     toast(t.mail.plan.failed);
   }

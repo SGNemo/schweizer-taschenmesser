@@ -3,8 +3,8 @@ type: added
 area: mail
 breaking: false
 highlight: true
-de: Eine Mail kommt direkt als ToDo „Absender · Betreff“ in den Plan und führt von dort zurück zur Mail.
-en: A mail goes into the plan straight from the mail as a to-do “sender · subject” and leads back to the mail from there.
+de: Eine Mail landet direkt aus der Liste als ToDo „Absender · Betreff“ im Plan; das ToDo führt zurück zur Mail.
+en: Add a mail to your plan as a to-do “sender · subject” right from the list; the to-do leads back to the mail.
 ---
 
 ---

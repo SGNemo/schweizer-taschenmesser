@@ -155,7 +155,10 @@ describe('planMany', () => {
     await planMail(account, anna, () => undefined);
     lastToast()!.action!.run();
     await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
+    // Not ticked as „war im Plan“ (e.g. deleted on another device after the preview): stays deleted.
     await planMany(account, [anna], () => undefined);
+    expect(await live('todos_task')).toHaveLength(0);
+    await planMany(account, [anna], () => undefined, new Set(['t-anna']));
     expect((await live('todos_task')).map((x) => x.title)).toEqual(['Anna Beispiel · Wochenende?']);
     expect(lastToast()?.message).toBe(t.mail.plan.todo.allDone(1));
     await planMany(account, [anna], () => undefined);
@@ -178,6 +181,31 @@ describe('planMany', () => {
       ]),
     );
     expect(await linkRepo.active().count()).toBe(1);
+  });
+});
+
+describe('planMany all or nothing', () => {
+  it('a failure after the save takes back the new ToDo, the revived one and their link rows', async () => {
+    await planMail(account, anna, () => undefined);
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
+    const links = (await live('mail_link')).length;
+    const create = linkRepo.create.bind(linkRepo);
+    const spy = vi.spyOn(linkRepo, 'create');
+    spy.mockImplementationOnce(create).mockRejectedValueOnce(new Error('disk'));
+    await planMany(account, [anna, noName], () => undefined, new Set(['t-anna']));
+    spy.mockRestore();
+    expect(await live('todos_task')).toHaveLength(0);
+    expect((await live('mail_link')).length).toBe(links);
+    expect(lastToast()?.message).toBe(t.mail.plan.failed);
+  });
+
+  it('undo leaves the link row of an entry that was there before (another device’s)', async () => {
+    await planMail(other, anna, () => undefined);
+    await planMany(account, [anna, noName], () => undefined);
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(1));
+    expect(await plannedThreads(account.key)).toEqual(new Set(['t-anna']));
   });
 });
 

@@ -51,7 +51,7 @@ export function PlanAllDialog({
       title={plannerOn ? t.mail.plan.allTitle : t.mail.plan.todo.allTitle}
       size="roomy"
     >
-      <p className={styles.hint}>{t.mail.plan.allIntro}</p>
+      <p className={styles.hint}>{plannerOn ? t.mail.plan.allIntro : t.mail.plan.todo.allIntro}</p>
       <ul className={styles.planList} data-testid="mail-plan-all">
         {threads.map((th, i) => (
           <li key={th.id}>
@@ -61,7 +61,7 @@ export function PlanAllDialog({
                 planned.has(th.id)
                   ? `${titleOf(th)} · ${plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark}`
                   : deleted.has(th.id)
-                    ? `${titleOf(th)} · ${t.mail.plan.wasMark}`
+                    ? `${titleOf(th)} · ${plannerOn ? t.mail.plan.wasMark : t.mail.plan.todo.wasMark}`
                     : titleOf(th)
               }
               checked={ticked.has(th.id)}

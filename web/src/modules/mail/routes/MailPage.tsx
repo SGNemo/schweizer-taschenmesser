@@ -6,6 +6,7 @@ import { mailLabels } from '@/core/mail/service';
 import type { MailAccountRef, MailLabel } from '@/core/mail/types';
 import { useSettings } from '@/core/settings/settings';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { useModuleStates } from '@/core/modules/activation';
 import {
@@ -70,6 +71,7 @@ function ThreadList({
   menuFor,
   planned,
   planLabel,
+  plannerOn,
   onPlan,
   titleOf,
 }: {
@@ -81,6 +83,8 @@ function ThreadList({
   planned: ReadonlySet<string>;
   /** „In den Plan“ (planner on) or „Als ToDo“. */
   planLabel: string;
+  /** Planner on: the row mark says „im Plan“, else „als ToDo da“. */
+  plannerOn: boolean;
   onPlan?: (th: CachedThreadView) => void;
   /** The ToDo title the action would write (the label names it). */
   titleOf: (th: CachedThreadView) => string;
@@ -115,8 +119,7 @@ function ThreadList({
                 <span className={styles.meta}>
                   {planned.has(th.id) ? (
                     <span className={styles.planMark} data-testid="mail-in-plan">
-                      {planLabel === t.mail.plan.action ? t.mail.plan.mark : t.mail.plan.todo.mark}{' '}
-                      ·{' '}
+                      {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
                     </span>
                   ) : null}
                   {shortWhen(th.date)}
@@ -124,8 +127,8 @@ function ThreadList({
               }
               onOpen={() => onOpen(th.id)}
               menu={menuFor?.(th)}
-              // Like „Archivieren“: a quiet button only where the pointer hovers (PC); on touch it is in ⋯
-              // and a swipe, so a phone row never carries a standing button.
+              // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
+              // so a phone row never carries a standing button.
               actions={
                 hover && onPlan && !planned.has(th.id) ? (
                   <Button
@@ -223,7 +226,8 @@ export default function MailPage() {
   const offerPersonal = (prefs as { offerPersonal?: boolean } | undefined)?.offerPersonal ?? true;
   const offerPlanAll = (prefs as { offerPlanAll?: boolean } | undefined)?.offerPlanAll ?? true;
   const shown =
-    personalOnly && offerPersonal ? box.threads.filter((th) => th.personal) : box.threads;
+    // Headers cached before the flag existed (`personal` unknown) stay in until the next fetch.
+    personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
   const filteredOut = personalOnly && offerPersonal && box.threads.length > 0;
 
@@ -238,6 +242,8 @@ export default function MailPage() {
       const p = new URLSearchParams(params);
       p.delete('open');
       if (known) p.set('thread', id!);
+      // Not on this device (another device's entry, an old cache): say so instead of a silent inbox.
+      else useUiStore.getState().toast(t.mail.plan.notHere);
       setParams(p, { replace: true });
     })();
   }, [openParam, account, params, setParams]);
@@ -496,7 +502,7 @@ export default function MailPage() {
           onClose={() => setPlanAll(false)}
           onPlan={(picked) => {
             setPlanAll(false);
-            void planMany(account, picked, box.reload);
+            void planMany(account, picked, box.reload, deleted);
           }}
         />
       ) : null}
@@ -529,6 +535,7 @@ export default function MailPage() {
           menuFor={menuFor}
           planned={planned}
           planLabel={planLabel}
+          plannerOn={!!states?.planner}
           onPlan={onPlan}
           titleOf={(th) => planTitle(account, th)}
         />

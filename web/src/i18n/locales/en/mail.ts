@@ -32,7 +32,7 @@ export const mail: Strings['mail'] = {
       'Off. When on, the local model (the built-in one or Ollama on this computer) can summarise a mail and make suggestions for “Create from this mail”. The mail text never goes to a cloud model or onto the network; if no local model is ready, nothing happens. None of it is stored.',
     offerPersonal: 'Offer the filter “Personal”',
     offerPersonalHelp:
-      'Shows mail that mostly comes from people – newsletters, promotions and notifications stay out.',
+      'Shows only mail from people – newsletters, promotions and notifications stay out (recognised from the headers, not always right).',
     offerPlanAll: 'Offer “Add all to plan…”',
     offerPlanAllHelp:
       'A button above the list adds the ticked mails to the plan as to-dos, with a preview.',
@@ -55,7 +55,10 @@ export const mail: Strings['mail'] = {
       allSave: (n: number) => `As to-do (${n})`,
       allDone: (n: number) => (n === 1 ? '1 mail as to-do' : `${n} mails as to-dos`),
       thread: 'A to-do already',
+      wasMark: 'was a to-do',
+      allIntro: 'Bulk mail and mails that are already to-dos are unticked.',
     },
+    notHere: 'This mail is not loaded on this device right now.',
     wasMark: 'was in the plan',
     thread: 'In the plan',
     emptyPersonal: 'No mail from people here right now.',
