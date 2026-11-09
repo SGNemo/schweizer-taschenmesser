@@ -192,30 +192,35 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--text-3);
+  /* Same quiet tone per kind as the hour-grid blocks (`.tgItem.kind_*`); a calendar colour wins. */
+  background: var(--cal, var(--kind, var(--text-3)));
 }
-.lineMark[data-kind='event'],
-.lineMark[data-kind='birthday'] {
-  background: var(--accent);
+.lineMark[data-kind='event'] {
+  --kind: var(--accent);
+}
+.lineMark[data-kind='reminder'] {
+  --kind: var(--text-3);
 }
 .lineMark[data-kind='task'] {
-  background: var(--cat-1);
+  --kind: var(--cat-1);
 }
 .lineMark[data-kind='invoice'],
 .lineMark[data-kind='subscription'] {
-  background: var(--cat-2);
+  --kind: var(--cat-2);
+}
+.lineMark[data-kind='birthday'] {
+  --kind: var(--cat-3);
 }
 .lineMark[data-kind='cancel'],
 .lineMark[data-kind='end'],
-.lineMark[data-kind='expiry'],
-.lineMark[data-kind='reminder'] {
-  background: var(--warning);
+.lineMark[data-kind='expiry'] {
+  --kind: var(--warning);
 }
 .lineMark[data-kind='plan'] {
-  background: var(--module-color, var(--text-3));
+  --kind: var(--module-color, var(--text-3));
 }
-.lineMark[style*='--cal'] {
-  background: var(--cal);
+.lineMark[data-kind='external'] {
+  --kind: var(--text-muted);
 }
 .dotsMore {
   font-size: var(--text-xs);
@@ -256,12 +261,6 @@
   /* The count wraps under the marks instead of being cut ("+1" for "+12"). */
   gap: 3px;
   padding: 0 var(--space-1);
-}
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
 }
 /* C19: the month cells follow the page container (40 rem = `MONTH_CHIPS_REM` in Views.tsx). */
 @container page (min-width: 40rem) {
@@ -318,22 +317,6 @@
 .kind_plan {
   background: var(--surface-2);
   color: var(--text);
-}
-.dot.kind_plan {
-  background: var(--module-color, var(--text-muted));
-}
-.dot.kind_external {
-  background: var(--text-muted);
-}
-.dot.kind_invoice,
-.dot.kind_cancel {
-  background: var(--danger);
-}
-.dot.kind_event {
-  background: var(--accent);
-}
-.dot.kind_reminder {
-  background: var(--warning);
 }
 .done {
   text-decoration: line-through;

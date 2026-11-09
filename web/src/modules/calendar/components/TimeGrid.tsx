@@ -10,7 +10,14 @@ import type { CalendarItem } from '@/core/modules/types';
 import { formatDay, isoWeekday, nowTime, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { movedSlot, resizedEnd, slotFromDrag, snap, SNAP_MINUTES, type Slot } from '../dragMath';
-import { ALL_DAY_LIMIT, groupByDate, initialScrollMinute, splitDay } from '../views';
+import {
+  ALL_DAY_LIMIT,
+  gridScroll,
+  groupByDate,
+  initialScrollMinute,
+  splitDay,
+  type GridScrollMemo,
+} from '../views';
 import { kindLabel } from './ItemRow';
 import { sourceHue } from './sourceHue';
 import styles from '../routes/calendar.module.css';
@@ -57,11 +64,19 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
   const hasUntimed = perDay.some((p) => p.untimed.length > 0);
 
   // Scroll once per shown range: to "now" when today is visible, else to the earliest item. Once more when the
-  // entries arrive (they load after the first paint), so a block at the top edge is never cut.
-  const rangeKey = `${days[0]}:${days.length}:${items.length > 0}`;
+  // shown days' entries arrive (they load after the first paint, and after Prev/Next the previous range's entries are
+  // still in `items` for a moment), so a block at the top edge is never cut; never on the user's own edits (`gridScroll`).
+  const hasTimed = perDay.some((p) => p.timed.length > 0);
+  const hasAny = hasTimed || hasUntimed;
+  const range = `${days[0]}:${days.length}`;
+  const scrollMemo = useRef<GridScrollMemo | null>(null);
+  const rangeKey = `${range}:${hasAny}:${hasTimed}`;
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;
+    const step = gridScroll(scrollMemo.current, range, hasAny, hasTimed);
+    scrollMemo.current = step.memo;
+    if (!step.scroll) return;
     const hourPx = body.scrollHeight / 24;
     const visibleToday = days.includes(now);
     const blocks = perDay.flatMap((p) => p.timed);
