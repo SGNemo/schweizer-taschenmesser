@@ -7,6 +7,7 @@ import { deleteWithUndo } from '@/core/undo/withToast';
 import {
   Button,
   Dialog,
+  FileField,
   Form,
   FormActions,
   SelectField,
@@ -158,32 +159,22 @@ function Fields({
       </Split>
       <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
       <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
-      <div>
-        <TextField
-          label={t.vault.file}
-          hint={t.vault.localOnly}
-          type="file"
-          error={error}
-          onChange={(e) => {
-            const picked = e.target.files?.[0];
-            if (!picked) return;
-            if (picked.size > MAX_FILE_BYTES) {
-              e.target.value = '';
-              return setError(t.vault.tooLarge(formatSize(MAX_FILE_BYTES)));
-            }
-            setError('');
-            setFile(picked);
-          }}
-        />
-        {shownFile ? (
-          <p style={{ margin: 'var(--space-2) 0 0' }}>
-            {shownFile}{' '}
-            <Button variant="ghost" onClick={() => setFile('remove')}>
-              {t.vault.removeFile}
-            </Button>
-          </p>
-        ) : null}
-      </div>
+      <FileField
+        label={t.vault.file}
+        hint={t.vault.localOnly}
+        error={error}
+        fileName={shownFile ?? null}
+        onFiles={(files) => {
+          const picked = files[0];
+          if (!picked) return;
+          if (picked.size > MAX_FILE_BYTES)
+            return setError(t.vault.tooLarge(formatSize(MAX_FILE_BYTES)));
+          setError('');
+          setFile(picked);
+        }}
+        onRemove={() => setFile('remove')}
+        removeLabel={t.vault.removeFile}
+      />
       <FormActions
         start={
           existing ? (
