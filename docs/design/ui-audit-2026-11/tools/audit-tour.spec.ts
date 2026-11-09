@@ -483,6 +483,8 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
   // Palette.
   await page.goto('/');
   await settle(page);
+  // CLS of the dialog alone: the counter has summed since the overview loaded.
+  await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
   await page.keyboard.press('Control+k');
   await page.waitForTimeout(WAIT);
   if (await page.locator('dialog[open], [role="dialog"]').count()) {
@@ -495,6 +497,7 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
   // Toolbox.
   await page.goto('/');
   await settle(page);
+  await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
   const dialog = await openToolbox(page).catch(() => null);
   if (dialog) {
     await page.waitForTimeout(WAIT);
