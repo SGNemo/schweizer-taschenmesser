@@ -86,6 +86,19 @@ test.describe('UI round 6 – desktop 1920', () => {
     await expect.poll(holes, { timeout: 15_000 }).toEqual([]);
   });
 
+  test('U19: editing shows the plain grid (moves follow the saved order), Fertig packs again', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => localStorage.setItem('tm-home-view', 'all'));
+    await start(page, '/');
+    const grid = page.getByTestId('home-grid');
+    await expect(grid).toHaveAttribute('data-packed', 'true');
+    await page.getByRole('button', { name: 'Anpassen' }).click();
+    await expect(grid).not.toHaveAttribute('data-packed');
+    await page.getByRole('button', { name: 'Fertig' }).click();
+    await expect(grid).toHaveAttribute('data-packed', 'true');
+  });
+
   test('U49: the calm overview ends flush with the day cards', async ({ page }) => {
     await start(page, '/');
     // The seeded calm view shows the one "Heute" card (no pins); wait for it before measuring.

@@ -18,12 +18,14 @@ export function packedRows(height: number, gap: number): number {
  * text needs no 300 px). Size classes, order and widths stay as they are; on one column nothing changes.
  * Measurements only write CSS variables and attributes (no React state), so a card that loads later only
  * re-packs; its own height never depends on its span (`align-items: start`), so there is no resize loop.
+ * `enabled = false` (the overview's edit mode) leaves the grid unpacked: there the cards sit in the saved order on
+ * the size-class rows, so dragging and the keyboard (dnd-kit picks targets by position) move a card where it looks.
  */
-export function usePackedGrid<T extends HTMLElement>(keys: string) {
+export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true) {
   // A callback ref: a grid element that mounts again (same keys) is packed again.
   const [grid, setGrid] = useState<T | null>(null);
   useLayoutEffect(() => {
-    if (!grid || typeof ResizeObserver === 'undefined') return;
+    if (!enabled || !grid || typeof ResizeObserver === 'undefined') return;
     const measure = (el: HTMLElement) => {
       const empty = el.querySelector(`.${misc.emptyCompact}`) !== null;
       if (empty !== el.hasAttribute('data-empty')) el.toggleAttribute('data-empty', empty);
@@ -57,6 +59,6 @@ export function usePackedGrid<T extends HTMLElement>(keys: string) {
       cancelAnimationFrame(frame);
       grid.removeAttribute('data-packed');
     };
-  }, [grid, keys]);
+  }, [enabled, grid, keys]);
   return setGrid;
 }

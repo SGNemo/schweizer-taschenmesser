@@ -10,7 +10,12 @@ import {
   type Announcements,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
+import {
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Suspense, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -50,7 +55,6 @@ import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { orderKeyboardCoordinates } from './keyboardMove';
 import { usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
@@ -158,13 +162,15 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
-  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'));
+  // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
+  // saved order on plain rows.
+  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'), !editing);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     // Long press on the handle on touch screens, so scrolling the page never moves a widget.
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: orderKeyboardCoordinates }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   function onDragEnd({ active, over }: DragEndEvent) {
