@@ -3,6 +3,7 @@
 Moved unchanged from CLAUDE.md. Index: [HOW-TO](../HOW-TO.md).
 
 ## Gotchas
+- Tauri on Windows: a plain `#[tauri::command]` runs on the main thread. Never create a window or webview there (`add_child`, `WebviewBuilder`, `WebviewWindowBuilder::build`): WebView2 deadlocks and the whole app stops answering. Use `#[tauri::command(async)]`.
 - `pkill -f "<pattern>"` inside a shell command also matches that shell's own command line (exit 144, shell dies). Start servers with `&` + `echo $! > file` and `kill $(cat file)`; for `vite preview` the `[v]ite preview` trick works only when the pattern is not repeated elsewhere in the same command.
 - Multi-device E2E lives in `e2e/sync/` (own config, `workers: 1`, shared server) and is ignored by `playwright.config.ts`. Helpers wait on IndexedDB (`_outbox` count) instead of UI state; use client-side navigation while a context is offline (a `goto` would fail).
 - Tests that need "another device" create a second `TaschenmesserDB` (unit) or a second browser context (E2E); `MemoryServer` (`core/sync/testing.ts`, tests only) mirrors the server rule.
