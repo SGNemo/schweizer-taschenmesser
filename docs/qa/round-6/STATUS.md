@@ -43,4 +43,4 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 
 ## Später (unverändert aus PLAN.md)
 
-U41 Kopfbandhöhen (`fix/ui6-head-heights`, Mockup + Stopp) · S05/S08/S09/T03 Planer (Board-Notiz, nach dem Planer-Paket) · S06/S07 Konzepte ([CONCEPTS-S06-S07.md](CONCEPTS-S06-S07.md)) · T01/T02/T05 Tabu-Bereiche (Board).
+U41 Kopfbandhöhen (`fix/ui6-head-heights`, Mockup + Stopp) · S05/S08/T03 Planer (Board-Notiz, nach dem Planer-Paket); S09 „Eintragen“-Zeile auf Svens Zuruf gefixt in [#614](https://github.com/SGNemo/schweizer-taschenmesser/pull/614) · S06/S07 Konzepte ([CONCEPTS-S06-S07.md](CONCEPTS-S06-S07.md)) · T01/T02/T05 Tabu-Bereiche (Board).
