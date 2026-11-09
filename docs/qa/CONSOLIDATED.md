@@ -4,6 +4,8 @@ Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbe
 
 **Lesehilfe:** Schwere/Nutzen hoch = 3, mittel = 2, niedrig = 1. Rang = Wert × Zahl der Personas, bei Fehlern +3, wenn eine Persona den Fund als ihren „einen Grund zum Deinstallieren“ nennt. Herkunfts-IDs in Klammern: H Herbert, J Jonas, L Lena, M Mia, P Priya, S Sofía, T Tom (`P-B07` = Priya, Fehler B07). Alles wurde nur im Browser/Viewport getestet, nie auf APK oder Windows-exe: Funde mit „prüfen“ brauchen ein Gerät.
 
+**UI schärfen, Runde 6 (2026-11-09):** Svens Stellen und die eigene Tour führten zu 8 Fix-PRs (`fix/ui6-*`, 59 Funde S01–S04 + U01–U59 ohne Planer/Konzepte); Stand je Fund in [round-6/STATUS.md](round-6/STATUS.md).
+
 ## 1. Die fünf wichtigsten Funde
 
 1. **Schmale Kopfzeile (B03):** 6 von 7 Personas; Suchfeld wird zum leeren Oval, Kalender-Umschalter abgeschnitten.
