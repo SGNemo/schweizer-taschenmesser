@@ -10,6 +10,8 @@ export const threadMetaSchema = z.object({
   messageCount: z.number(),
   hasAttachment: z.boolean(),
   labelIds: z.array(z.string()),
+  /** The sender is a person (derived from headers when the list was fetched; the headers are not kept). */
+  personal: z.boolean().optional(),
 });
 export type ThreadMeta = z.output<typeof threadMetaSchema>;
 
@@ -52,6 +54,9 @@ export const bodySchema = z.object({
 export type CachedBody = z.output<typeof bodySchema>;
 
 export const LINK_TYPES = ['invoice', 'event', 'todo', 'reminder', 'bookmark', 'note'] as const;
+/** A plan entry made from a mail is a ToDo (its first record): the link row says `todo`. */
+export const linkTypeOf = (type: string): (typeof LINK_TYPES)[number] | undefined =>
+  type === 'plan' ? 'todo' : LINK_TYPES.find((t) => t === type);
 
 /**
  * "This entry was created from that mail": the way back from a thread to what came out of it (device-local,

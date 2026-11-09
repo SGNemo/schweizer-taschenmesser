@@ -5,7 +5,7 @@
  * "Neu anmelden" when the token is gone.
  */
 import { createContext } from '@/core/connectors/context';
-import { getConnector } from '@/core/connectors/registry';
+import { connectors, getConnector } from '@/core/connectors/registry';
 import { failureStatus } from '@/core/connectors/service';
 import { saveStatus } from '@/core/connectors/state';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
@@ -75,6 +75,18 @@ export function mailWebUrl(
     threadId,
     opts.forStorage ? undefined : ref.email,
   );
+}
+
+/**
+ * A thread's web address without any account (for a ToDo's mail link where the mail module is not
+ * there, e.g. on the phone): the first mail provider that can build one; never an address in it.
+ */
+export function mailThreadUrl(threadId: string): string | undefined {
+  for (const c of connectors) {
+    const url = c.mailbox?.webUrl?.(threadId);
+    if (url) return url;
+  }
+  return undefined;
 }
 
 /* ---------------------------------- write side (opt-in) ---------------------------------- */

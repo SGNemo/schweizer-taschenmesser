@@ -5,6 +5,8 @@ import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import type { Instruction, PlanOp } from '@/core/plan/instructions';
+import { useModuleStates } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -112,6 +114,8 @@ export default function PlannerPage() {
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
+  const moduleStates = useModuleStates();
+  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const [focus] = useFocusSettings();
   const dismissedWeek = useLiveQuery(
     async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
@@ -457,6 +461,17 @@ export default function PlannerPage() {
               id: 'link',
               label: t.planner.row.openNote,
               onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
+            },
+          ]
+        : []),
+      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
+      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
+      ...(e.link?.kind === 'mail' && mailOn
+        ? [
+            {
+              id: 'mail',
+              label: t.planner.row.openMail,
+              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
             },
           ]
         : []),
