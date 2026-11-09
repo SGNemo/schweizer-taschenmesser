@@ -186,17 +186,29 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       const probe = document.createElement('span');
       document.body.appendChild(probe);
       const rgb = (css: string) => { probe.style.color = css; return getComputedStyle(probe).color; };
-      const bgs = new Set([rgb(token('--bg')), rgb(token('--surface')), rgb(token('--surface-2')), 'rgba(0, 0, 0, 0)', 'transparent']);
+      const bgs = new Set([rgb(token('--bg')), rgb(token('--surface')), 'rgba(0, 0, 0, 0)', 'transparent']);
+      const surface2 = rgb(token('--surface-2'));
       const neutralInk = new Set([rgb(token('--text')), rgb(token('--text-muted')), rgb(token('--text-3')), rgb(token('--text-on-tint'))]);
       probe.remove();
-      const parseRgb = (c: string) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(c); return m ? { r: +m[1]!, g: +m[2]!, b: +m[3]!, a: m[4] === undefined ? 1 : +m[4] } : null; };
+      const parseRgb = (c: string) => {
+        const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(c);
+        if (m) return { r: +m[1]!, g: +m[2]!, b: +m[3]!, a: m[4] === undefined ? 1 : +m[4] };
+        // Chromium serialises `color-mix()` results as `color(srgb r g b / a)` with 0–1 channels.
+        const k = /color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)/.exec(c);
+        return k ? { r: Math.round(+k[1]! * 255), g: Math.round(+k[2]! * 255), b: Math.round(+k[3]! * 255), a: k[4] === undefined ? 1 : +k[4] } : null;
+      };
       const saturation = (c: string) => { const p = parseRgb(c); if (!p || p.a < 0.05) return 0; const max = Math.max(p.r, p.g, p.b), min = Math.min(p.r, p.g, p.b); return max === 0 ? 0 : (max - min) / max; };
 
       // 1. Stimulus above the fold: actions, meaning colours, text amount.
       const actionSel = 'button, a[href], input:not([type=hidden]), select, textarea, [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="menuitem"]';
       const actions = all.filter((el) => el.matches(actionSel) && visible(el) && aboveFold(el));
+      const chromeActions = actions.filter((el) => !el.closest('li, [data-row], table, [role="gridcell"], [role="grid"], [data-testid^="widget-"], article, dialog')).length;
+      // Where the page's own content begins: the first list row, table, grid cell, tile or card below the head band and toolbars.
+      const contentSel = 'main [data-row], main li, main table, main [role="gridcell"], main [role="grid"], main article, main [data-testid^="widget-"], main form textarea';
+      let firstContentY: number | null = null;
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>(contentSel))) { if (!visible(el) || el.closest('nav, [role="tablist"], [role="group"], dialog, aside')) continue; const t = el.getBoundingClientRect().top; if (t > 60 && (firstContentY === null || t < firstContentY)) firstContentY = Math.round(t); }
       const primaries = actions.filter((el) => el.matches('button, a') && /(^|_| )primary(_|$| )/.test(String(el.className))).map((el) => txt(el) || el.getAttribute('aria-label') || '?');
-      let colouredText = 0, colouredSurfaces = 0, colouredIcons = 0;
+      let colouredText = 0, colouredSurfaces = 0, colouredIcons = 0, gradients = 0;
       const colourSamples: string[] = [];
       for (const el of all) {
         if (!visible(el) || !aboveFold(el)) continue;
@@ -208,7 +220,9 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         }
         const own = Array.from(el.childNodes).some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
         if (own && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) { colouredText++; if (colourSamples.length < 12) colourSamples.push(`text ${cls(el)} | ${txt(el).slice(0, 30)}`); }
-        if (!bgs.has(s.backgroundColor) && saturation(s.backgroundColor) > 0.12 && parseRgb(s.backgroundColor)!.a > 0.05) { colouredSurfaces++; if (colourSamples.length < 12) colourSamples.push(`bg ${cls(el)} | ${txt(el).slice(0, 30)}`); }
+        const pbg = parseRgb(s.backgroundColor);
+        if (!bgs.has(s.backgroundColor) && s.backgroundColor !== surface2 && pbg && pbg.a > 0.05 && saturation(s.backgroundColor) > 0.12) { colouredSurfaces++; if (colourSamples.length < 12) colourSamples.push(`bg ${cls(el)} | ${txt(el).slice(0, 30)}`); }
+        if (s.backgroundImage.includes('gradient')) gradients++;
       }
       let textChars = 0, words = 0;
       const leafs = all.filter((el) => visible(el) && aboveFold(el) && !(el instanceof SVGElement));
@@ -232,14 +246,17 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       for (const el of Array.from(scope.querySelectorAll<SVGElement>('svg')).filter(visible)) { const r = el.getBoundingClientRect(); const sw = el.getAttribute('stroke-width') ?? el.querySelector('[stroke-width]')?.getAttribute('stroke-width') ?? '-'; const key = `${Math.round(r.width)}px/${sw}`; icons.set(key, (icons.get(key) ?? 0) + 1); }
       const gaps = new Map<string, number>();
       for (const el of all.slice(0, 2500)) { if (!visible(el)) continue; const s = getComputedStyle(el); for (const p of ['gap', 'rowGap', 'paddingTop', 'paddingLeft'] as const) { const v = parseFloat(s[p]); if (v > 0) gaps.set(`${v}`, (gaps.get(`${v}`) ?? 0) + 1); } }
-      let bordered = 0, shadowed = 0, tinted = 0, radii = new Map<string, number>();
+      let bordered = 0, shadowed = 0, tinted = 0, surface2Count = 0, ringed = 0, radii = new Map<string, number>();
+      const visibleBorder = (c: string) => { const p = parseRgb(c); return !!p && p.a > 0.05; };
       for (const el of all) {
         if (!visible(el) || el instanceof SVGElement) continue;
         const s = getComputedStyle(el);
         const r = el.getBoundingClientRect(); if (r.width < 40 || r.height < 24) continue;
-        if (s.borderTopWidth !== '0px' && s.borderTopStyle === 'solid' && s.borderTopWidth === s.borderBottomWidth && s.borderLeftWidth === s.borderTopWidth && !el.matches('input, select, textarea, button')) bordered++;
-        if (s.boxShadow !== 'none') shadowed++;
-        if (!bgs.has(s.backgroundColor) && parseRgb(s.backgroundColor) && parseRgb(s.backgroundColor)!.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) tinted++;
+        if (s.borderTopWidth !== '0px' && s.borderTopStyle === 'solid' && s.borderTopWidth === s.borderBottomWidth && s.borderLeftWidth === s.borderTopWidth && s.borderRightWidth === s.borderTopWidth && visibleBorder(s.borderTopColor) && !el.matches('input, select, textarea, button')) bordered++;
+        if (s.boxShadow !== 'none') { if (/^(rgba?\([^)]*\)|color\([^)]*\)) 0px 0px 0px \d/.test(s.boxShadow) || /inset/.test(s.boxShadow)) ringed++; else shadowed++; }
+        const pb = parseRgb(s.backgroundColor);
+        if (s.backgroundColor === surface2) surface2Count++;
+        else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) tinted++;
         if (s.borderTopLeftRadius !== '0px' && r.width > 80) radii.set(s.borderTopLeftRadius, (radii.get(s.borderTopLeftRadius) ?? 0) + 1);
       }
       const rows = Array.from(scope.querySelectorAll<HTMLElement>('[data-row]')).filter(visible).map((el) => Math.round(el.closest('li')?.getBoundingClientRect().height ?? el.getBoundingClientRect().height));
@@ -269,12 +286,12 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
 
       const top = (m: Map<string, number>, n = 8) => Object.fromEntries(Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n));
       return {
-        stimulus: { actionsAboveFold: actions.length, primaries, colouredText, colouredSurfaces, colouredIcons, colourSamples, textChars, words },
+        stimulus: { actionsAboveFold: actions.length, chromeActions, firstContentY, primaries, colouredText, colouredSurfaces, gradients, colouredIcons, colourSamples, textChars, words },
         head,
         h1: h1s ? { size: h1s.fontSize, weight: h1s.fontWeight, family: h1s.fontFamily.split(',')[0]!.replace(/"/g, ''), text: txt(h1!) } : null,
         headings: Object.fromEntries(h2),
         fontSizes: top(sizes, 12), fontWeights: top(weights, 6), icons: top(icons, 10), spacing: { distinct: gaps.size, top: top(gaps, 10) },
-        surfaces: { bordered, shadowed, tinted, radii: top(radii, 6) },
+        surfaces: { bordered, ringed, shadowed, tinted, surface2: surface2Count, gradients, radii: top(radii, 6) },
         rows: { n: rows.length, median: rowMedian, min: rows[0] ?? null, max: rows[rows.length - 1] ?? null },
         motion: { animated: animated.slice(0, 10), transitions: top(transitions, 10) },
         overflow, clipped, small,

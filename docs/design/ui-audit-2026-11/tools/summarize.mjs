@@ -21,6 +21,7 @@ const fmt = (n) => (n === null || n === undefined ? '–' : typeof n === 'number
 const pages = (facts) => Object.entries(facts).filter(([k, v]) => k.startsWith('page-') && !k.includes('--') && v && v.stimulus);
 
 const out = [];
+out.push('Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht in `#main`): **Aktionen** = sichtbare button/a/input/select/[role=button|tab|switch|checkbox|menuitem] mit Oberkante über dem Falz; **Chrome** = davon außerhalb von Listenzeilen, Tabellen, Rasterzellen, Widgets und Dialogen (Navigation, Toolbars, Köpfe); **Inhalt ab y** = Oberkante des ersten Listen-/Raster-/Karten-Elements unter Kopf und Toolbars; **Farbe Text/Fläche/Icon** = Elemente über dem Falz, deren Farbe nicht eine der neutralen Tinten (--text, --text-muted, --text-3, --text-on-tint bzw. --bg, --surface) ist und Sättigung > 0,25 (Text/Icon) bzw. > 0,12 (Fläche); `color(srgb …)`-Werte aus `color-mix()` werden geparst; **Verläufe** = Elemente mit `background-image: …gradient` (das Kopfband zählt mit); **Rahmen** = 1 px solid auf allen vier Seiten mit sichtbarer Farbe, ≥ 40×24 px, keine Felder/Knöpfe; **Ring** = `box-shadow` als 0 0 0 n px oder inset; **Schatten** = anderer `box-shadow`; **getönt** = Hintergrund weder --bg/--surface/--surface-2 noch transparent (ohne Knöpfe/Felder/Tabs); **--surface-2** separat; Zählung über die ganze Seite, nicht nur den Falz. Seed = Testdaten „medium“, alle Module an; Desktop posiert als Windows-App in Linux-Headless-Chromium.');
 const h = (s) => out.push(`\n### ${s}\n`);
 const table = (head, rows) => { out.push(`| ${head.join(' | ')} |`); out.push(`| ${head.map(() => '---').join(' | ')} |`); for (const r of rows) out.push(`| ${r.map(fmt).join(' | ')} |`); };
 
@@ -29,8 +30,8 @@ for (const [vp, part] of [['1920x1080-dark', 'seed'], ['412x915-dark', 'seed'], 
   if (!f) continue;
   h(`Reizlast über dem Falz – ${vp}, ${part}`);
   table(
-    ['Seite', 'Aktionen', 'Primär', 'Farbe Text', 'Farbe Fläche', 'Farbe Icon', 'Wörter', 'Zeichen', 'Schriftgrößen', 'Gewichte', 'CLS'],
-    pages(f).map(([k, v]) => [k.replace('page-', ''), v.stimulus.actionsAboveFold, v.stimulus.primaries.length, v.stimulus.colouredText, v.stimulus.colouredSurfaces, v.stimulus.colouredIcons, v.stimulus.words, v.stimulus.textChars, Object.keys(v.fontSizes).length, Object.keys(v.fontWeights).length, v.cls]),
+    ['Seite', 'Aktionen', 'davon Chrome', 'Inhalt ab y', 'Kopf px', 'Primär', 'Farbe Text', 'Farbe Fläche', 'Verläufe', 'Farbe Icon', 'Wörter', 'Zeichen', 'Schriftgrößen', 'Gewichte', 'CLS'],
+    pages(f).map(([k, v]) => [k.replace('page-', ''), v.stimulus.actionsAboveFold, v.stimulus.chromeActions, v.stimulus.firstContentY, v.head?.height ?? '–', v.stimulus.primaries.length, v.stimulus.colouredText, v.stimulus.colouredSurfaces, v.stimulus.gradients, v.stimulus.colouredIcons, v.stimulus.words, v.stimulus.textChars, Object.keys(v.fontSizes).length, Object.keys(v.fontWeights).length, v.cls]),
   );
 }
 
@@ -38,13 +39,13 @@ const d = pick('1920x1080-dark', 'seed');
 if (d) {
   h('Köpfe und Typografie – 1920 dunkel, Seed');
   table(
-    ['Seite', 'Kopf px', 'Slot', 'h1 Größe/Gewicht/Schrift', 'h2/h3-Varianten', 'Zeilen (n · Median · min–max)', 'Abstandswerte', 'Icons (px/stroke)'],
+    ['Seite', 'Kopf px', 'Größenklasse', 'h1 Größe/Gewicht/Schrift', 'h2/h3-Varianten', 'Zeilen (n · Median · min–max)', 'Abstandswerte', 'Icons (px/stroke)'],
     pages(d).map(([k, v]) => [k.replace('page-', ''), v.head?.height ?? '–', v.head?.size ?? '–', v.h1 ? `${v.h1.size}/${v.h1.weight}/${v.h1.family}` : '–', Object.keys(v.headings).length, v.rows.n ? `${v.rows.n} · ${v.rows.median} · ${v.rows.min}–${v.rows.max}` : '–', v.spacing.distinct, Object.entries(v.icons).slice(0, 4).map(([a, b]) => `${a}×${b}`).join(', ')]),
   );
   h('Flächen: Rahmen vs. Schatten vs. Tönung – 1920 dunkel, Seed');
   table(
-    ['Seite', 'Rahmen (1 px rundum)', 'Schatten', 'getönt', 'Radien (px×n)', 'Animationen', 'Transitions (Eigenschaft×n)'],
-    pages(d).map(([k, v]) => [k.replace('page-', ''), v.surfaces.bordered, v.surfaces.shadowed, v.surfaces.tinted, Object.entries(v.surfaces.radii).map(([a, b]) => `${a}×${b}`).join(', '), v.motion.animated.length, Object.entries(v.motion.transitions).slice(0, 5).map(([a, b]) => `${a}×${b}`).join(', ')]),
+    ['Seite', 'Rahmen (1 px rundum)', 'Ringe', 'Schatten', 'getönt', '--surface-2', 'Verläufe', 'Radien (px×n)', 'Animationen', 'Transitions (Eigenschaft×n)'],
+    pages(d).map(([k, v]) => [k.replace('page-', ''), v.surfaces.bordered, v.surfaces.ringed, v.surfaces.shadowed, v.surfaces.tinted, v.surfaces.surface2, v.surfaces.gradients, Object.entries(v.surfaces.radii).map(([a, b]) => `${a}×${b}`).join(', '), v.motion.animated.length, Object.entries(v.motion.transitions).slice(0, 5).map(([a, b]) => `${a}×${b}`).join(', ')]),
   );
   h('Dialoge – 1920 dunkel, Seed');
   table(
