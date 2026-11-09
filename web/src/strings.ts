@@ -2945,8 +2945,7 @@ export const de = {
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
     planTitle: (payee: string) => `${payee} bezahlen`,
-    planDunned: (title: string, detail?: string) =>
-      detail ? `${title} · Mahnung · ${detail}` : `${title} · Mahnung`,
+    planDunned: (detail?: string) => (detail ? `Mahnung · ${detail}` : 'Mahnung'),
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -7193,6 +7192,7 @@ export const de = {
       checkFor: (line: string) => `Ansehen und anlegen: ${line}`,
       created: 'Rechnung angelegt',
       createdMark: 'angelegt',
+      inPlan: (day: string) => `Im Plan · ${day}`,
       already: 'Schon angelegt',
       reminderWord: (level: number) => (level > 1 ? `${level}. Mahnung` : 'Mahnung'),
       due: (day: string) => `fällig ${day}`,

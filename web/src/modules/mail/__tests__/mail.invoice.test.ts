@@ -6,6 +6,7 @@ import { createCollectionRepo } from '@/core/db/repo';
 import { readInvoiceMail } from '@/core/mail/heuristics';
 import type { MailAccountRef } from '@/core/mail/types';
 import { formatMoney } from '@/core/money';
+import { enableModule } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { captureId } from '@/quickCapture/targets';
@@ -370,5 +371,31 @@ describe('council round 3', () => {
         bulk: false,
       })?.dunning,
     ).toBe(3);
+  });
+});
+
+describe('Nachlese: the row says where the invoice is', () => {
+  it('„Im Plan · <Tag>“ once the planner placed it, else „angelegt“', async () => {
+    await enableModule(getManifest('planner')!);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const offer = await offerOf(bill);
+    expect(offer).toMatchObject({ kind: 'create', state: 'live' });
+    expect((offer as { planned?: string }).planned).toBeUndefined();
+    // The planner's assignment for the invoice (what its run writes).
+    await createCollectionRepo(getManifest('planner')!, 'assignment').createMany([
+      {
+        id: 'a1',
+        data: {
+          itemKey: `invoices:${(offer as { id: string }).id}`,
+          k: 0,
+          of: 1,
+          date: '2026-10-01',
+          minutes: 10,
+          order: 0,
+          reason: 'deadline',
+        },
+      },
+    ]);
+    expect(await offerOf(bill)).toMatchObject({ planned: '2026-10-01' });
   });
 });

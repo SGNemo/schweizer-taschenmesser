@@ -1,3 +1,4 @@
+import { dayName } from '@/core/plan/explain';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
@@ -14,7 +15,11 @@ export function InvoiceLine({ offer, onAct }: { offer: InvoiceOffer; onAct: () =
   const verb =
     offer.kind === 'create'
       ? offer.state === 'live'
-        ? { done: t.mail.invoice.createdMark }
+        ? {
+            done: offer.planned
+              ? t.mail.invoice.inPlan(dayName(offer.planned))
+              : t.mail.invoice.createdMark,
+          }
         : { label: t.mail.invoice.create, aria: t.mail.invoice.createFor(line) }
       : offer.kind === 'note'
         ? offer.noted

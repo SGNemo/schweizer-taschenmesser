@@ -211,6 +211,32 @@ export async function amendCapture(
 }
 
 /**
+ * The first day from today the planner placed an entry on (its assignments), or undefined: not placed (yet),
+ * waiting, or the planner off. The key is the plan target's own (`via.id`), so callers never build it. Dexie
+ * reads only (safe in a live query): a mail row can say „Im Plan · Mi“ the moment the planner placed it.
+ */
+export async function plannedOn(
+  moduleId: string,
+  id: string,
+  opts: SaveOptions = {},
+): Promise<string | undefined> {
+  const plan = targetFor('plan');
+  const manifest = getManifest(plan.moduleId);
+  const states = opts.states ?? (await loadModuleStates(visibleManifests, opts.database));
+  if (!manifest || !states[plan.moduleId] || !plan.via) return undefined;
+  const key = plan.via.id({ moduleId, id });
+  const rows = (await createCollectionRepo(manifest, 'assignment', opts.database)
+    .table.where('itemKey')
+    .equals(key)
+    .toArray()) as unknown as { date: string; deletedAt: number | null }[];
+  const days = rows
+    .filter((r) => r.deletedAt === null && r.date >= today())
+    .map((r) => r.date)
+    .sort();
+  return days[0];
+}
+
+/**
  * The second record of a two-stage entry saved under `id` (the plan row of a ToDo): live, deleted, or
  * absent (also when the type has one stage or its module is off). Callers never build its key.
  */

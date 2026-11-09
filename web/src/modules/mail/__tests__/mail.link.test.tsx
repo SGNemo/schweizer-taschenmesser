@@ -24,7 +24,9 @@ vi.mock('@/core/mail/service', async (orig) => ({
 
 import { ThreadView } from '../components/ThreadView';
 import { loadThreadBodies } from '../cache';
+import { invoiceMailId } from '../invoiceRow';
 import { linkRepo } from '../repo';
+import { useUiStore } from '@/stores/ui';
 
 const message: MailMessage = {
   id: 'm1',
@@ -124,6 +126,33 @@ describe('create from this mail', () => {
       type: 'invoice',
       moduleId: 'invoices',
     });
+  });
+
+  it('the sheet saves an invoice under the id the mail list uses; a second save finds it (Nachlese)', async () => {
+    const user = userEvent.setup();
+    view();
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    let dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
+    const [invoice] = await db.table('invoices_invoice').toArray();
+    expect(invoice.id).toBe(await invoiceMailId('m1'));
+    // The same message through the sheet again: no second invoice.
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await waitFor(() =>
+      expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Schon angelegt'),
+    );
+    expect(await db.table('invoices_invoice').count()).toBe(1);
   });
 
   it('cancelling saves nothing', async () => {

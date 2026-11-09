@@ -65,6 +65,11 @@ export interface CaptureFormProps {
   oneEntry?: boolean;
   /** Ctrl+Enter: open the module's full form pre-filled (where it supports that). */
   onOpenFull?: (path: string) => void;
+  /**
+   * A fixed id per target type for the single sheet (create-if-absent, `SaveOptions.id`): an invoice from a
+   * mail is saved under the id the mail list uses, so both ways find the same entry. Never used by a batch.
+   */
+  idFor?: Partial<Record<CaptureType, string>>;
   onSaved: (saved: SavedCapture) => void;
   onCancel?: () => void;
 }
@@ -107,6 +112,7 @@ export function CaptureForm({
   oneEntry,
   bookChip = true,
   onOpenFull,
+  idFor,
   onSaved,
   onCancel,
 }: CaptureFormProps) {
@@ -385,7 +391,8 @@ export function CaptureForm({
   };
   /** The single sheet's entry, a reminder looked up once more like a line of the batch. */
   const singleItem = async (): Promise<CaptureItem> => {
-    if (singleFinal || !isReminder(resolved.type, singleFields)) return { type: type!, fields };
+    if (singleFinal || !isReminder(resolved.type, singleFields))
+      return { type: type!, fields, ...(idFor?.[type!] ? { id: idFor[type!] } : {}) };
     const plan = await resolveReminder(
       resolved.type,
       singleFields,
@@ -393,7 +400,14 @@ export function CaptureForm({
       lookups[lookupKey(single)],
     );
     if (!plan.type) throw new ChooseTarget([lookupKey(single)], singleFields.title);
-    return { type: plan.type, fields: plan.fields, amend: plan.amend, fallback: plan.fallback };
+    const id = !plan.amend ? idFor?.[plan.type] : undefined;
+    return {
+      type: plan.type,
+      fields: plan.fields,
+      amend: plan.amend,
+      fallback: plan.fallback,
+      ...(id ? { id } : {}),
+    };
   };
 
   // `confirmed` only for the single sheet, after „Buchen“; a batch never passes it (and never books).
@@ -406,7 +420,10 @@ export function CaptureForm({
           ? await saveCaptures(await batchItems(), text)
           : isReminder(resolved.type, singleFields)
             ? await saveItem(await singleItem())
-            : await saveCapture(type!, fields, { confirmed }),
+            : await saveCapture(type!, fields, {
+                confirmed,
+                ...(idFor?.[type!] ? { id: idFor[type!] } : {}),
+              }),
       );
       setText('');
       if (keepDraft) clearCaptureDraft();
@@ -666,7 +683,7 @@ export function CaptureForm({
             </div>
           </div>
         ) : (
-          <div className={styles.actions}>
+          <div className={multi ? `${styles.actions} ${styles.actionsSticky}` : styles.actions}>
             {onCancel ? <Button onClick={onCancel}>{t.actions.cancel}</Button> : null}
             {/* Disabled for the moment module states load: which modules are on is not known yet. */}
             <Button

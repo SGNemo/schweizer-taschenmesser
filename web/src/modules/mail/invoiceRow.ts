@@ -24,6 +24,7 @@ import { today } from '@/core/time/now';
 import {
   amendCapture,
   captureId,
+  plannedOn,
   CaptureError,
   reinstateCapture,
   saveCapture,
@@ -77,7 +78,14 @@ export type InvoiceOffer =
   /** „wird abgebucht“: the values as text, no verb. */
   | { kind: 'debit'; read: InvoiceRead }
   /** One tap writes a new invoice (also a reminder whose invoice was never filed: at its level). */
-  | { kind: 'create'; read: InvoiceRead; id: string; state?: 'live' | 'deleted' }
+  | {
+      kind: 'create';
+      read: InvoiceRead;
+      id: string;
+      state?: 'live' | 'deleted';
+      /** The day the planner placed the written invoice on (its row says „Im Plan · Mi“). */
+      planned?: string;
+    }
   /** A reminder on an open invoice: one tap notes it there. */
   | { kind: 'note'; read: InvoiceRead; match: OpenInvoice; noted: boolean }
   /** Something is missing or unsure: the tap opens the preview sheet. */
@@ -156,6 +164,12 @@ export async function invoiceOffers(
     if (filed.has(th.lastMessageId!)) out.set(th.id, { kind: 'create', read, id, state: 'live' });
     else out.set(th.id, read.sure ? { kind: 'create', read, id } : { kind: 'check', read });
   }
+  // Written under the row's id and placed: the row says where it is, so nobody opens the planner to check.
+  for (const o of out.values())
+    if (o.kind === 'create' && o.state === 'live' && own.some((r) => r?.id === o.id)) {
+      const day = await plannedOn('invoices', o.id);
+      if (day) o.planned = day;
+    }
   return out;
 }
 

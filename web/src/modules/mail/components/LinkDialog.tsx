@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
 import { today } from '@/core/time/now';
+import { reinstateCapture, type SavedCapture } from '@/quickCapture/targets';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
+import { invoiceMailId } from '../invoiceRow';
 import { saveLink } from '../links';
+import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
 
 /**
@@ -35,10 +38,37 @@ export function LinkDialog({
   onClose: () => void;
 }) {
   const [excerpt, setExcerpt] = useState(false);
+  // An invoice from this message gets the id the mail list's „Anlegen“ uses (Kopf leer, Nachlese): the sheet
+  // and the row find the same invoice, also on another device once it has synced.
+  const [invoiceId, setInvoiceId] = useState<{ message: string; id: string }>();
+  useEffect(() => {
+    let alive = true;
+    void invoiceMailId(message.id).then((id) => alive && setInvoiceId({ message: message.id, id }));
+    return () => {
+      alive = false;
+    };
+  }, [message.id]);
+  const idFor = invoiceId?.message === message.id ? { invoice: invoiceId.id } : undefined;
   const [suggestion, setSuggestion] = useState<
     { phase: 'idle' } | { phase: 'working' } | { phase: 'done'; text: string } | { phase: 'none' }
   >({ phase: 'idle' });
   const [applied, setApplied] = useState<string | undefined>();
+
+  /** After the sheet saved: the link back, and the right words for an invoice that was there already. */
+  async function filed(saved: SavedCapture) {
+    if (saved.existed === true) {
+      await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
+      useUiStore
+        .getState()
+        .toast(saved.amended ? t.mail.invoice.alreadyNoted : t.mail.invoice.already);
+      return;
+    }
+    // Deleted before (an undo, or by hand): the same invoice comes back instead of a second one.
+    const entry =
+      saved.existed === 'tombstone' ? await reinstateCapture(saved.type, saved.id) : saved;
+    await saveLink(account.key, threadId, message.id, entry).catch(() => undefined);
+    await announceSaved(entry);
+  }
 
   // A fresh start for the next time the dialog opens (another destination, another mail).
   const close = () => {
@@ -127,11 +157,8 @@ export function LinkDialog({
             initialType={type}
             extra={prefill.extra}
             onCancel={close}
-            onSaved={(saved) => {
-              void saveLink(account.key, threadId, message.id, saved);
-              void announceSaved(saved);
-              close();
-            }}
+            idFor={idFor}
+            onSaved={(saved) => void filed(saved).finally(close)}
           />
           <p className={styles.hint}>{link ? t.mail.link.stores : t.mail.link.storesNothing}</p>
         </div>
