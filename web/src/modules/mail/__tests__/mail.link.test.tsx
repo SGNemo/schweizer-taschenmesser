@@ -93,7 +93,10 @@ describe('create from this mail', () => {
     expect(field).toHaveValue('Stadtwerke Musterstadt 84,30 € 15.11.2026');
     expect(within(dialog).getByText(/ein Link zu dieser Mail/)).toBeInTheDocument();
     // the preview is shown, nothing is stored yet
-    expect(await within(dialog).findByTestId('capture-chips')).toHaveTextContent('84,30');
+    // The chips render first and are filled once the line is read: wait for the content, not the box.
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
     expect(await db.table('invoices_invoice').count()).toBe(0);
     expect(await db.table('mail_link').count()).toBe(0);
 
