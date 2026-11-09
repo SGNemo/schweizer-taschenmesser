@@ -4344,6 +4344,7 @@ export const de = {
     noMatch: 'Nichts in dieser Ansicht.',
     plus: (n: string) => `${n}: einer mehr`,
     minus: (n: string) => `${n}: einer weniger`,
+    amount: 'Anzahl',
     countOf: (n: number) => `${n} Stück`,
     today: 'Läuft heute ab',
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),

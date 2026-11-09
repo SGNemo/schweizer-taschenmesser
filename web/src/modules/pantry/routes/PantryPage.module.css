@@ -42,9 +42,22 @@
 .label.label:focus-within {
   background: var(--surface-2);
 }
-.amount {
+.count {
+  min-width: var(--space-6);
+  padding: 0 var(--space-1);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+/* Same width as the cart button: the end column of every tile lines up, cart or not. */
+.slot {
+  display: inline-block;
+  width: 2.5rem;
+  flex: none;
+}
+/* Air between the filter and the first shelf heading. */
+.filters {
+  margin-bottom: var(--space-5);
 }
 .endCol {
   display: flex;
