@@ -1,16 +1,31 @@
 import { Link } from 'react-router';
+import { useModuleStates } from '@/core/modules/activation';
+import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { NotizBody, WidgetBody } from '@/ui';
 import { personName, subjectOf } from '../format';
-import { INVOICE_DAYS, useMailSummary } from '../useSummary';
+import { toCreate } from '../invoiceRow';
+import { settings } from '../settings';
+import { useInvoiceOffers } from '../useInvoiceOffers';
+import { useMailSummary } from '../useSummary';
 import styles from './InboxWidget.module.css';
+
+const NO_THREADS: never[] = [];
 
 /**
  * "Posteingang" (`notiz`, identity v3.1): the stamp with the unread count, two subject lines (sender name and subject
- * only, never mail text) and the invoice mails as a context line with one action. Reads the local cache only.
+ * only, never mail text) and, as a context line that is the way there, the invoices still to add from the list
+ * („Kopf leer“ 3b). Reads the local cache only.
  */
 export default function InboxWidget() {
   const s = useMailSummary();
+  const [prefs] = useSettings('module.mail', settings.schema, settings.defaults);
+  const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
+  const offers = useInvoiceOffers(s?.recent ?? NO_THREADS, offerInvoices);
+  const open = offers ? toCreate(offers) : 0;
+  // „Nothing to add“ only once the offers are read, the invoices module is on and the line is wanted.
+  const states = useModuleStates();
+  const calm = !!offers && open === 0 && offerInvoices && !!states?.invoices;
   const empty = s !== undefined && s.total === 0;
   return (
     <WidgetBody
@@ -26,13 +41,11 @@ export default function InboxWidget() {
             lines={s.top
               .slice(0, 2)
               .map((th) => `${personName(th.from)}: ${subjectOf(th.subject)}`)}
-            meta={s.invoices > 0 ? undefined : t.mail.widget.inboxNoInvoices(INVOICE_DAYS)}
+            meta={calm ? t.mail.widget.inboxNothingToCreate : undefined}
           />
-          {s.invoices > 0 ? (
+          {open > 0 ? (
             <p className={styles.foot}>
-              {t.mail.widget.inboxInvoices(s.invoices, INVOICE_DAYS)}
-              {' · '}
-              <Link to="/mail?q=rechnung">{t.mail.widget.inboxInvoicesAction}</Link>
+              <Link to="/mail">{t.mail.widget.inboxToCreate(open)}</Link>
             </p>
           ) : null}
         </>
