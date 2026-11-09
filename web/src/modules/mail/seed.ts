@@ -13,6 +13,8 @@ interface Mock {
   time: string;
   unread: boolean;
   labels: string[];
+  /** The sender is a person (the filter „Persönlich“). */
+  personal: boolean;
 }
 
 const ME = { name: 'Test Person', email: 'test@example.org' };
@@ -27,6 +29,7 @@ const MAILS: Mock[] = [
     time: '08:15',
     unread: true,
     labels: ['INBOX', 'UNREAD', 'IMPORTANT'],
+    personal: false,
   },
   {
     from: { name: 'Anna Beispiel', email: 'anna@example.org' },
@@ -36,6 +39,7 @@ const MAILS: Mock[] = [
     time: '07:40',
     unread: true,
     labels: ['INBOX', 'UNREAD'],
+    personal: true,
   },
   {
     from: { name: 'Hausverwaltung Muster', email: 'info@hausverwaltung.example.org' },
@@ -45,6 +49,7 @@ const MAILS: Mock[] = [
     time: '16:20',
     unread: false,
     labels: ['INBOX', 'IMPORTANT'],
+    personal: true,
   },
   {
     from: { name: 'Beispiel-Shop', email: 'service@shop.example.org' },
@@ -54,6 +59,7 @@ const MAILS: Mock[] = [
     time: '11:05',
     unread: false,
     labels: ['INBOX'],
+    personal: false,
   },
   {
     from: { name: 'Internetanbieter Muster', email: 'kundenservice@provider.example.org' },
@@ -63,6 +69,7 @@ const MAILS: Mock[] = [
     time: '09:30',
     unread: false,
     labels: ['INBOX'],
+    personal: false,
   },
   {
     from: { name: 'Max Muster', email: 'max@example.org' },
@@ -72,6 +79,7 @@ const MAILS: Mock[] = [
     time: '19:45',
     unread: false,
     labels: ['INBOX'],
+    personal: true,
   },
 ];
 
@@ -95,6 +103,7 @@ function seed(ctx: SeedContext): SeedRows {
           messageCount: 1,
           hasAttachment: false,
           labelIds: m.labels,
+          personal: m.personal,
         },
       },
     };

@@ -451,19 +451,17 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   m.screens += 1;
   await page.goto(`${seed}/mail`);
   await expect(page.getByText('Beispiel-Mails (Testdaten)')).toBeVisible();
-  // There is no „needs an answer“ view: the person reads the list and picks Anna's mail.
-  await m.tap(page.getByText('Wochenende?'));
-  await m.tap(page.getByRole('button', { name: 'Aus dieser Mail anlegen' }));
-  await m.tap(page.getByRole('menuitem', { name: 'ToDo' }));
-  m.dialog();
+  // Package 3a: the reply goes into the plan straight from the row – one tap, no sheet; the row then says
+  // „im Plan“. (Before: open the mail, „Aus dieser Mail anlegen“, „ToDo“, a sheet with „Speichern“.)
+  const annaRow = page.getByRole('button', { name: /^In den Plan: Anna Beispiel · Wochenende\?/ });
+  // The row action appears once the module states are read (a moment after the list); it must be there.
+  await expect(annaRow).toBeVisible({ timeout: 10_000 });
+  await m.tap(annaRow);
+  await expect(page.getByText(/^Im Plan/).first()).toBeVisible();
   const dialog = page.getByRole('dialog');
-  // U07: today the ToDo is prefilled with the subject („Wochenende?“), not with the intent; recorded, not asserted.
-  const prefilled = await dialog.getByRole('textbox').inputValue();
-  info.annotations.push({ type: 'usecase', description: `mail → ToDo prefill: „${prefilled}“` });
-  await m.tap(dialog.getByRole('button', { name: 'Speichern' }));
-  await expect(page.getByTestId('mail-linked')).toContainText('ToDo');
-  // The invoice mail.
-  await m.tap(page.getByRole('button', { name: 'Zur Liste' }));
+  // The invoice mail (until package 3b through the sheet).
+  if (await page.getByRole('button', { name: 'Zur Liste' }).count())
+    await m.tap(page.getByRole('button', { name: 'Zur Liste' }));
   await m.tap(page.getByText('Ihre Rechnung für Oktober'));
   await m.tap(page.getByRole('button', { name: 'Aus dieser Mail anlegen' }));
   await m.tap(page.getByRole('menuitem', { name: 'Rechnung' }));
@@ -480,7 +478,7 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   });
   // U09: the reply sits in the plan under the mail's subject; nothing says it came from a mail. The run that
   // places it follows the ToDo write; wait for it to settle before deciding whether the person has to search.
-  const reply = page.getByText('Wochenende?', { exact: true }).first();
+  const reply = page.getByText(/Wochenende\?$/).first();
   await expect(reply)
     .toBeVisible({ timeout: 15_000 })
     .catch(() => m.detour()); // waiting or not placed: the person has to look for it

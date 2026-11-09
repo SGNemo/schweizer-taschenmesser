@@ -68,6 +68,8 @@ export interface MailThreadSummary {
   unread: boolean;
   labelIds: string[];
   hasAttachment: boolean;
+  /** The sender is a person (header logic, `isPersonalMail`); absent when the provider cannot tell. */
+  personal?: boolean;
 }
 
 export interface MailThread {
