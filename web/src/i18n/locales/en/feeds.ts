@@ -40,8 +40,8 @@ export const feeds: Strings['feeds'] = {
   },
   widget: {
     label: 'Feeds',
-    context: (n: number, g: number) =>
-      `${n === 1 ? '1 feed' : `${n} feeds`}${g > 0 ? ` · ${g === 1 ? '1 group' : `${g} groups`}` : ''}`,
+    context: (_n: number, g: number) =>
+      g === 0 ? 'no groups' : g === 1 ? 'in 1 group' : `in ${g} groups`,
     empty: 'No feeds yet',
     add: 'Add feed',
   },

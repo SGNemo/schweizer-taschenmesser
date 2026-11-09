@@ -6,6 +6,7 @@ import { createCollectionRepo } from '@/core/db/repo';
 import { readInvoiceMail } from '@/core/mail/heuristics';
 import type { MailAccountRef } from '@/core/mail/types';
 import { formatMoney } from '@/core/money';
+import { enableModule } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { captureId } from '@/quickCapture/targets';
@@ -370,5 +371,138 @@ describe('council round 3', () => {
         bulk: false,
       })?.dunning,
     ).toBe(3);
+  });
+});
+
+describe('Nachlese: the row says where the invoice is', () => {
+  it('„Im Plan · <Tag>“ once the planner placed it, else „angelegt“', async () => {
+    await enableModule(getManifest('planner')!);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const offer = await offerOf(bill);
+    expect(offer).toMatchObject({ kind: 'create', state: 'live' });
+    expect((offer as { planned?: string }).planned).toBeUndefined();
+    // The planner's assignment for the invoice (what its run writes).
+    await createCollectionRepo(getManifest('planner')!, 'assignment').createMany([
+      {
+        id: 'a1',
+        data: {
+          itemKey: `invoices:${(offer as { id: string }).id}`,
+          k: 0,
+          of: 1,
+          date: '2026-10-01',
+          minutes: 10,
+          order: 0,
+          reason: 'deadline',
+        },
+      },
+    ]);
+    expect(await offerOf(bill)).toMatchObject({ planned: '2026-10-01' });
+  });
+});
+
+describe('Nachlese, council round 2', () => {
+  it('„Anlegen“ never brings back other values a sheet wrote under the row id: the shown values go into a new invoice', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8340,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ amountMinor: 8430, dueDate: '2026-10-15' });
+    expect(rows[0]!.id).not.toBe(id);
+    // A second tap (the list not reloaded yet) finds that invoice: no second one.
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    expect(await live()).toHaveLength(1);
+    expect(lastToast()?.message).toBe(t.mail.invoice.already);
+  });
+});
+
+describe('Nachlese, council round 4', () => {
+  it('a deleted invoice that was paid never comes back, even with the same values', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-10-15',
+          status: 'paid',
+          paidAt: '2026-10-01',
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ status: 'open', amountMinor: 8430 });
+    expect(rows[0]!.id).not.toBe(id);
+  });
+
+  it('an edited invoice under the second id is not brought back either', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 1,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const [second] = await live();
+    await invoices().update(second!.id, { amountMinor: 9999 });
+    await invoices().remove(second!.id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ amountMinor: 8430 });
+    expect([id, second!.id]).not.toContain(rows[0]!.id);
+  });
+
+  it('a deleted invoice with a part payment never comes back, even with the same values', async () => {
+    const id = await invoiceMailId('m-1');
+    await invoices().createMany([
+      {
+        id,
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-10-15',
+          status: 'open',
+          payments: [{ id: 'p1', date: '2026-10-01', amountMinor: 1000 }],
+        },
+      },
+    ]);
+    await invoices().remove(id);
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const rows = await live();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.id).not.toBe(id);
+    expect(rows[0]!.payments).toBeUndefined();
+  });
+
+  it('a deleted invoice that holds exactly the row’s values comes back as the same invoice', async () => {
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    const [first] = await live();
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live()).toHaveLength(0));
+    await createInvoice(account, bill, (await offerOf(bill)) as never, () => {});
+    expect((await live()).map((r) => r.id)).toEqual([first!.id]);
   });
 });

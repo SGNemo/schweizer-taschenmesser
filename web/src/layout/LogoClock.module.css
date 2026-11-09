@@ -1,0 +1,40 @@
+/* The time next to the logo: quiet secondary text, tabular figures, fixed width, no motion. */
+.clock {
+  flex: none;
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  user-select: none;
+}
+.digits {
+  display: inline-block;
+}
+/* "AM"/"PM" of 12-hour formats: smaller, so "02:07 PM" fits next to the wordmark (the screen reader reads the label). */
+.period {
+  margin-inline-start: 0.15em;
+  font-size: 0.6em;
+}
+/* Sidebar head: as tall as the wordmark's lettering, on the logo's middle (the row centres it). */
+.wide {
+  font-size: var(--text-lg);
+}
+.wide[data-period] {
+  font-size: var(--text-md);
+}
+.bar {
+  font-size: var(--text-md);
+}
+/* Folded sidebar: hours over minutes under the mark, smaller. */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+/* Only when two digits fit the rail without overflow (sidebar width, not the window). */
+@container sidebar (max-width: 2em) {
+  .rail {
+    display: none;
+  }
+}

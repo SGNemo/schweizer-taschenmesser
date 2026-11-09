@@ -202,12 +202,10 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
-      {/* Signature (slot S): the host of the open page or the prompt, never a full address or query. */}
+      {/* Signature (slot S): decoration only – lock and line, no text, so it never reads as a second address field. */}
       <HeroSlot area="signature">
         <span data-testid="address-bar-signature">
-          <AddressBar>
-            {(tab?.isPrivate ? undefined : hostOf(current)) || t.browser.toolbar.address}
-          </AddressBar>
+          <AddressBar />
         </span>
       </HeroSlot>
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">

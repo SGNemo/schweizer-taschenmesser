@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { compareText } from '@/core/i18n/format';
 import { t } from '@/strings';
@@ -11,7 +11,6 @@ import {
   IconButton,
   RowMenu,
   Segmented,
-  SelectField,
   SortableList,
   TextField,
 } from '@/ui';
@@ -76,6 +75,13 @@ const titleOf = (n: Page) => (isScratch(n) ? t.notes.scratch : displayTitle(n) |
 export function PageList(p: PageListProps) {
   const { pages, books, filter, sort, query } = p;
   const [tplOpen, setTplOpen] = useState(false);
+  // The search waits behind its icon until it is wanted; an active search keeps the field open.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const showSearch = searchOpen || query !== '';
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus();
+  }, [searchOpen]);
   const counts = countByNotebook(pages ?? []);
   const bookOf = new Map(books.map((b) => [b.id, b]));
   const shown = sortPages(
@@ -99,28 +105,56 @@ export function PageList(p: PageListProps) {
           <Icon name="plus" size={18} />
           {t.notes.newPage}
         </Button>
+        {showSearch ? null : (
+          <IconButton label={t.notes.search} onClick={() => setSearchOpen(true)}>
+            <Icon name="search" size={18} />
+          </IconButton>
+        )}
         <RowMenu
-          label={t.notes.templates.button}
+          label={t.notes.moreMenu}
           open={tplOpen}
           onOpenChange={setTplOpen}
           items={[
-            { id: 'blank', label: t.notes.templates.blank, onSelect: p.onNewPage },
+            {
+              id: 'blank',
+              label: t.notes.templates.blank,
+              onSelect: p.onNewPage,
+              group: t.notes.templates.button,
+            },
             ...TEMPLATE_IDS.map((id) => ({
               id,
               label: t.notes.templates[id],
               onSelect: () => p.onNewFromTemplate(id),
+              group: t.notes.templates.button,
+            })),
+            ...SORT_MODES.map((m) => ({
+              id: `sort-${m}`,
+              label:
+                m === 'recent'
+                  ? t.notes.sortRecent
+                  : m === 'title'
+                    ? t.notes.sortTitle
+                    : t.notes.sortManual,
+              onSelect: () => p.onSort(m),
+              checked: sort === m,
+              group: t.notes.sort,
             })),
           ]}
         />
       </div>
-      <TextField
-        label={t.notes.search}
-        labelHidden
-        placeholder={t.notes.search}
-        type="search"
-        value={query}
-        onChange={(e) => p.onQuery(e.target.value)}
-      />
+      {showSearch ? (
+        <TextField
+          label={t.notes.search}
+          labelHidden
+          placeholder={t.notes.search}
+          type="search"
+          value={query}
+          ref={searchRef}
+          onChange={(e) => p.onQuery(e.target.value)}
+          onFocus={() => setSearchOpen(true)}
+          onBlur={() => setSearchOpen(false)}
+        />
+      ) : null}
 
       {p.showOpenList && openPages.length > 0 ? (
         <section aria-label={t.notes.openPages} className={styles.open}>
@@ -145,30 +179,32 @@ export function PageList(p: PageListProps) {
         </section>
       ) : null}
 
-      <FolderTabs
-        label={t.notes.notebooks}
-        value={filter}
-        onChange={p.onFilter}
-        tabs={[
-          { id: 'all', label: `${t.notes.allPages} · ${total}` },
-          { id: 'none', label: `${t.notes.general} · ${counts.get(null) ?? 0}` },
-          ...books.map((b) => ({
-            id: b.id,
-            label: `${b.name} · ${counts.get(b.id) ?? 0}`,
-            color: categoryColor(b.tone),
-            icon: <Icon name={b.icon as IconName} size={14} />,
-          })),
-        ]}
-      >
-        <IconButton label={t.notes.newNotebook} onClick={p.onNewNotebook}>
-          <Icon name="plus" size={18} />
-        </IconButton>
-        {activeBook ? (
-          <IconButton label={t.notes.editNotebook} onClick={() => p.onEditNotebook(activeBook)}>
-            <Icon name="edit" size={18} />
+      <div className={styles.tabsRow}>
+        <FolderTabs
+          label={t.notes.notebooks}
+          value={filter}
+          onChange={p.onFilter}
+          tabs={[
+            { id: 'all', label: `${t.notes.allPages} · ${total}` },
+            { id: 'none', label: `${t.notes.general} · ${counts.get(null) ?? 0}` },
+            ...books.map((b) => ({
+              id: b.id,
+              label: `${b.name} · ${counts.get(b.id) ?? 0}`,
+              color: categoryColor(b.tone),
+              icon: <Icon name={b.icon as IconName} size={14} />,
+            })),
+          ]}
+        >
+          <IconButton label={t.notes.newNotebook} onClick={p.onNewNotebook}>
+            <Icon name="plus" size={18} />
           </IconButton>
-        ) : null}
-      </FolderTabs>
+          {activeBook ? (
+            <IconButton label={t.notes.editNotebook} onClick={() => p.onEditNotebook(activeBook)}>
+              <Icon name="edit" size={18} />
+            </IconButton>
+          ) : null}
+        </FolderTabs>
+      </div>
 
       <div className={styles.viewSwitch}>
         <Segmented
@@ -181,23 +217,6 @@ export function PageList(p: PageListProps) {
           onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
         />
       </div>
-
-      <SelectField
-        label={t.notes.sort}
-        labelHidden
-        value={sort}
-        onChange={(e) => p.onSort(e.target.value as SortMode)}
-      >
-        {SORT_MODES.map((m) => (
-          <option key={m} value={m}>
-            {m === 'recent'
-              ? t.notes.sortRecent
-              : m === 'title'
-                ? t.notes.sortTitle
-                : t.notes.sortManual}
-          </option>
-        ))}
-      </SelectField>
 
       {pages && rest.length === 0 && (query.trim() || filter !== 'all') ? (
         <EmptyState

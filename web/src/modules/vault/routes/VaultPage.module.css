@@ -30,10 +30,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0;
+  margin: 0 0 var(--space-4);
   font-size: var(--text-meta);
   color: var(--text-2);
 }
 .privacy > svg {
   flex: none;
+}
+/* Dates in the card meta stay in one piece ("30. Aug. 2026"), the line breaks between the parts. */
+.nowrap {
+  white-space: nowrap;
 }

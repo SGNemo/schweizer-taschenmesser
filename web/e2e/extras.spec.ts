@@ -140,7 +140,8 @@ test('Notizen: create, pin, search', async ({ page }) => {
   await toList();
   await expect(items.first()).toContainText('Schmierzettel');
   await expect(items.first()).not.toContainText('Paket abholen');
-  await page.getByLabel('Notizen durchsuchen').fill('kase');
+  await page.getByRole('button', { name: 'Notizen durchsuchen' }).click();
+  await page.getByRole('searchbox', { name: 'Notizen durchsuchen' }).fill('kase');
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText('Einkaufsideen');
 });

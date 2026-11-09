@@ -151,3 +151,19 @@
 .viewSwitch {
   flex: none;
 }
+
+/*
+ * Notebook tabs in one row that scrolls sideways instead of wrapping into three (U22). Relies on the
+ * `FolderTabs` markup (group > tabs row); the padding keeps the focus ring inside the scroll box.
+ */
+.tabsRow > [role='group'] > div:first-child {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-top: var(--space-1);
+  padding-right: var(--space-1);
+}
+.tabsRow > [role='group'] > div:first-child > * {
+  flex: none;
+  white-space: nowrap;
+}
