@@ -252,6 +252,8 @@
      on the same left edge. */
   .band[data-head='fokus'] .column {
     flex-direction: column;
+    /* One line: a wrapping column would size the row to its widest block instead of the column. */
+    flex-wrap: nowrap;
     align-items: flex-start;
   }
   .band[data-head='fokus'] .body {
