@@ -676,6 +676,15 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **MD3 Musik:** Warteschlange neben der Liste, sobald die Seite breit genug ist; Cover-Kopf unverändert.
 - **MD4 Downloads:** leere Ansicht zeigt den Pfeil in der Ablage; ein laufender Download zeigt Zahl und Band im Kopf.
 
+## Uhr (Paket 1, #615) – nur von Hand prüfbar
+
+Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
+
+- **U1 Logo-Uhr in der Windows-App:** „Uhrzeit neben dem Logo“ an; Klick auf die Uhrzeit öffnet die Uhr-Seite; Modul aus → die Uhrzeit ist kein Link mehr (kein Hand-Cursor, nichts passiert). Eingeklappte Seitenleiste: „14“/„07“ öffnet ebenfalls die Seite. ☐
+- **U2 Sortieren mit dem Finger (Android):** Griff lange drücken, Ort ziehen: die Reihenfolge bleibt nach Neustart; Scrollen der Liste verschiebt nichts; „Rückgängig“ im Toast stellt die alte Reihenfolge her. ☐
+- **U3 Minutenwechsel:** App 2 Minuten offen lassen: Seite, Widget und Logo-Uhr springen gleichzeitig zur vollen Minute; nach Standby/Bildschirm aus stimmt die Zeit sofort wieder. ☐
+- **U4 12-Stunden-Format:** Einstellungen → Sprache & Format → en-US: Seite und Widget zeigen „11:07 PM“ ohne Überlauf am Handy. ☐
+
 ## Sync im Heimnetz: Hub im PC (Paket 2b-2) – nur auf Windows prüfbar
 - **L1 Firewall:** Hub starten, Kopplungsfenster öffnen: Windows fragt einmal nach Freigabe für private Netze; „Zulassen“ merken, „Abbrechen“ → `lan_hub_status` meldet weiter `listening`, ein Handy findet den Hub nicht (Hinweis „Windows blockiert“ in der Oberfläche folgt mit Paket 4).
 - **L2 Netzwerkart:** WLAN auf „Öffentlich“ stellen: `lan_hub_status` zeigt `off`, `blocked: true`, kein Port lauscht (`netstat -ano`); zurück auf „Privat“: lauscht wieder, ohne Neustart (≤ 2 s).
