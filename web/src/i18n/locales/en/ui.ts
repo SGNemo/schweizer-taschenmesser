@@ -21,4 +21,12 @@ export const ui: Strings['ui'] = {
   nothingToUndo: 'Nothing to undo.',
   selection: 'Selection',
   selected: (n: number) => `${n} selected`,
+  file: {
+    choose: 'Choose file',
+    chooseMany: 'Choose files',
+    none: 'No file chosen',
+    noneFolder: 'No folder chosen',
+    count: (n: number) => `${n} files chosen`,
+    remove: 'Remove',
+  },
 };

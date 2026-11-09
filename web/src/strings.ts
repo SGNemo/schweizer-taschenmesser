@@ -157,6 +157,15 @@ export const de = {
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
     selected: (n: number) => (n === 1 ? '1 ausgewählt' : `${n} ausgewählt`),
+    file: {
+      choose: 'Datei wählen',
+      chooseMany: 'Dateien wählen',
+      none: 'Keine Datei gewählt',
+      noneFolder: 'Kein Ordner gewählt',
+      /** Several files were picked (one shows its name). */
+      count: (n: number) => `${n} Dateien gewählt`,
+      remove: 'Entfernen',
+    },
   },
   groups: {
     overdue: 'Überfällig',
@@ -4276,6 +4285,8 @@ export const de = {
       title: 'Dateien importieren',
       files: 'Dateien wählen',
       folder: 'Ordner wählen',
+      filesLabel: 'Einzelne Dateien',
+      folderLabel: 'Ganzer Ordner',
       hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',

@@ -36,7 +36,11 @@ export function GroupedList({
   listId: string;
   groups: readonly GroupedListGroup[];
   label?: string;
-  /** Let the groups flow into as many columns as fit (20 rem each, a hairline between them), like a newspaper. */
+  /**
+   * Let the groups flow into as many columns as fit (20 rem each, a hairline between them), like a newspaper. Here a
+   * group's `children` are the rows themselves (`ItemRow`s): the group body is their list (`<ul>`), so every `<li>`
+   * sits in a list (U23b).
+   */
   columns?: boolean;
 }) {
   const closed = useUiStore((s) => s.closedGroups);
@@ -73,7 +77,7 @@ export function GroupedList({
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
               {g.action}
-              {g.children}
+              {columns ? <ul className={styles.rowList}>{g.children}</ul> : g.children}
             </div>
           </section>
         );
