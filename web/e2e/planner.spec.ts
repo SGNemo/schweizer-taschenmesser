@@ -151,15 +151,17 @@ test.describe('Planer (week board, package 1)', () => {
     const field = page.getByLabel('Eintragen oder sagen', { exact: true });
     await expect(field).toBeVisible();
     await expect(field).toHaveAccessibleDescription(/Ein ToDo entsteht/);
-    const bottom = async (name: RegExp | string) => {
-      const box = await page.getByRole('button', { name }).boundingBox();
+    const bottom = async (name: RegExp | string, exact = false) => {
+      const box = await page.getByRole('button', { name, exact }).boundingBox();
       return box!.y + box!.height;
     };
     const input = await field.boundingBox();
     const inputBottom = input!.y + input!.height;
-    expect(Math.abs((await bottom('Eintragen')) - inputBottom)).toBeLessThanOrEqual(2);
-    const hint = await page.locator('#planner-add-hint').boundingBox();
-    expect(hint!.y).toBeGreaterThanOrEqual(inputBottom - 1);
+    expect(Math.abs((await bottom('Eintragen', true)) - inputBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs((await bottom('Weitere Optionen', true)) - inputBottom)).toBeLessThanOrEqual(2);
+    const hint = page.getByText(/Ein ToDo entsteht/).first();
+    const hintBox = await hint.boundingBox();
+    expect(hintBox!.y).toBeGreaterThanOrEqual(inputBottom - 1);
   });
 
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {

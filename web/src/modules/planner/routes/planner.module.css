@@ -14,7 +14,8 @@
   flex: 1;
   min-width: 0;
 }
-/* N04: with ⋯ beside „Eintragen“ a phone keeps the field (and its hint) on the full width; the two buttons follow. */
+/* N04: with ⋯ beside „Eintragen“ a phone keeps the field on the full width; the two buttons follow, the hint (S09) comes
+   after them as a note on the whole row. */
 @container page (max-width: 40rem) {
   .add {
     flex-wrap: wrap;
