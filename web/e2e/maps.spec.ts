@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, ready, showAllWidgets, showPreview } from './helpers';
+import { primaryActions } from './primaries';
 import { overpassFixture } from '../src/modules/maps/own/fixtures';
 import { SAMPLE_CENTER, samplePmtiles, sampleRegion } from '../src/modules/maps/own/sample';
 
@@ -242,6 +243,20 @@ test.describe('Karten & Orte', () => {
 
     await page.getByRole('button', { name: 'Orte', exact: true }).click();
     await expect(page.getByText('Schloss', { exact: true })).toBeVisible();
+    // One primary per tab, and it follows the tab; "Navigieren" sits in the row menu (round 6, U14).
+    await expect.poll(() => primaryActions(page)).toEqual(['Ort hinzufügen']);
+    await expect(page.getByRole('button', { name: 'Zu Schloss navigieren' })).toHaveCount(0);
+    const placeRow = page.getByRole('listitem').filter({ hasText: 'Schloss' });
+    await placeRow.getByRole('button', { name: 'Karten & Orte' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Navigieren' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Routen', exact: true }).click();
+    await expect.poll(() => primaryActions(page)).toEqual(['Route hinzufügen']);
+    await page.getByRole('button', { name: 'Karte', exact: true }).click();
+    await expect(page.getByTestId('tile-map')).toBeVisible();
+    expect((await primaryActions(page)).length).toBeLessThanOrEqual(1);
+    expect(await primaryActions(page)).not.toContain('Suchen');
+    await page.getByRole('button', { name: 'Orte', exact: true }).click();
 
     await ready(page, '/');
     await page.getByRole('button', { name: 'Schloss' }).click();
