@@ -1,6 +1,6 @@
 # UI schärfen, Runde 6 – Liste und Plan (Vorschlag an Sven)
 
-Quelle: [FINDINGS.md](FINDINGS.md) (S01–S09), [U-A](U-A-abbruch.md), [U-H](U-H-hierarchie.md), [U-K](U-K-kosmetik.md), Abgleich mit dem Reviewer in FINDINGS.md „Reviewer“. Sortierung: Svens Stellen zuerst, dann Abbruch-relevant, dann Hierarchie/Identität, dann Kosmetik. Status wird in Phase 5 nachgetragen.
+Quelle: [FINDINGS.md](FINDINGS.md) (S01–S09), [U-A](U-A-abbruch.md), [U-H](U-H-hierarchie.md), [U-K](U-K-kosmetik.md), Abgleich mit dem Reviewer in FINDINGS.md „Reviewer“. Sortierung: Svens Stellen zuerst, dann Abbruch-relevant, dann Hierarchie/Identität, dann Kosmetik. Stand je Fund nach den Merges: [STATUS.md](STATUS.md).
 
 ## Diese Runde (S und M, kein Vertrag) – nach Bereich = Umsetzer-Branch
 
