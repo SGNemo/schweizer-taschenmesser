@@ -1,0 +1,105 @@
+/* Identity 4.0 mockup – override layer on top of the v3 mockup base (docs/design/identity-v3/mockups/v3.css).
+   Not app code. Shows the five 4.0 rules: (1) tone steps instead of shadows, (2) one title row with tabs,
+   (3) navigation in one level (no sub-navigation on the desktop; one module row under the head on the phone),
+   (4) one entry point for capture (neutral "Neu", one module action), (5) density per device (master–detail,
+   reading measure, phone content on screen 1). Query: ?theme=light|dark&device=desktop|mobile */
+@import url(../../identity-v3/mockups/v3.css);
+
+/* (1) tone steps: two neutral surface levels, shadows only for floating things, borders only as hairlines in lists */
+html[data-theme=light]{--surface-raised:#fff;--surface-sunken:#e9ecee;--hair:#e4e7ea;--shadow-float:0 12px 32px rgb(23 31 36/.14),0 2px 6px rgb(23 31 36/.08)}
+html[data-theme=dark]{--surface-raised:#1b2126;--surface-sunken:#0c0f12;--hair:#242b30;--shadow-float:0 12px 32px rgb(0 0 0/.5),0 2px 6px rgb(0 0 0/.35)}
+html[data-v=four] .card,html[data-v=four] .list,html[data-v=four] .w,html[data-v=four] .attn a,html[data-v=four] .agenda .day{background:var(--surface-raised);box-shadow:none;border:0}
+html[data-v=four] .row{border-bottom:1px solid var(--hair)}
+html[data-v=four] .sidebar{background:var(--surface-sunken);border-right:0}
+html[data-v=four] .navgrp{background:transparent;padding:0;margin:0}
+html[data-v=four] .favbar{background:transparent;border:0;padding:0;margin:0 16px 4px}
+html[data-v=four] .favbar a{background:color-mix(in srgb,var(--mod) 10%,transparent)}
+html[data-v=four] .top{background:var(--bg);border-bottom:1px solid var(--hair);backdrop-filter:none}
+html[data-v=four] .btn.ghost{background:transparent;border:1px solid var(--hair)}
+html[data-v=four] .seg{background:var(--surface-sunken)}
+html[data-v=four] .seg span.on{box-shadow:none;background:var(--surface-raised)}
+html[data-v=four] .chip{background:transparent;border-color:var(--hair)}
+html[data-v=four] .plate{background:color-mix(in srgb,var(--mod) 14%,var(--surface-raised));color:var(--mod)}
+html[data-v=four] .minicard{background:var(--surface-sunken);color:var(--text)}
+html[data-v=four] .minicard.two{background:var(--surface-sunken)}
+
+/* (2) head = one title row: eyebrow · h1 28/600 · one figure with context · one action · tabs at the bottom edge */
+html[data-v=four] .head{margin:0;padding:12px 0 0;border-radius:0;background:transparent;box-shadow:none;border:0;min-height:0;display:block;position:sticky;top:var(--top-h);z-index:4;overflow:visible}
+html[data-v=four] .head::before{content:'';position:absolute;inset:0 calc(-1*var(--gutter));background:var(--bg);z-index:-1;border-bottom:1px solid var(--hair)}
+html[data-v=four] .head .pattern,html[data-v=four] .head .right{display:none}
+html[data-v=four] .titlerow{display:flex;align-items:center;gap:16px;min-height:44px}
+html[data-v=four] .titlerow .plate{width:32px;height:32px;border-radius:10px}
+html[data-v=four] .titlerow .eyebrow{font-size:.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+html[data-v=four] .titlerow h1{font-size:1.75rem;font-weight:600;letter-spacing:-.015em;line-height:1.1;margin:0}
+html[data-v=four] .titlerow .figure{margin-left:auto;text-align:right}
+html[data-v=four] .titlerow .figure b{display:block;font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+html[data-v=four] .titlerow .figure small{display:block;font-size:.8125rem;color:var(--text-2)}
+html[data-v=four] .titlerow .act{display:flex;gap:8px;align-items:center}
+html[data-v=four] .tabs{display:flex;gap:4px;margin-top:10px;overflow:hidden}
+html[data-v=four] .tabs a{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;font-size:.9375rem;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
+html[data-v=four] .tabs a.on{color:var(--text);font-weight:600;border-bottom-color:var(--mod)}
+html[data-v=four] .tabs a .cnt{font-size:.75rem;color:var(--text-3);font-variant-numeric:tabular-nums}
+html[data-v=four] .head.stage{padding:0}
+
+/* (3) navigation in one level: no sub-navigation on the desktop */
+html[data-v=four] .subnav{display:none}
+html[data-v=four][data-device=mobile] .modrow{display:flex;gap:4px;overflow:hidden;margin-top:6px;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 36px),transparent 100%);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 36px),transparent 100%)}
+html[data-v=four] .modrow{display:none}
+html[data-v=four][data-device=mobile] .modrow a{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:var(--r-full);font-size:.875rem;color:var(--text-2);white-space:nowrap;flex:none}
+html[data-v=four][data-device=mobile] .modrow a.on{background:color-mix(in srgb,var(--mod) 14%,var(--surface-raised));color:var(--text);font-weight:600}
+html[data-v=four][data-device=mobile] .modrow a .ic{width:15px;height:15px}
+
+/* (4) one entry point: "Neu" in the top bar is neutral, the module keeps one action in the title row */
+html[data-v=four] .top .btn.primary{background:transparent;border:1px solid var(--hair);color:var(--text)}
+
+/* (5) density per device: master–detail, reading measure, rows 44 px */
+html[data-v=four] .frame{gap:16px;padding-top:0}
+html[data-v=four] .body.with-aside{grid-template-columns:minmax(0,1fr) 24rem}
+html[data-v=four] .split{display:grid;grid-template-columns:minmax(0,26rem) minmax(0,1fr);gap:16px;align-items:start}
+html[data-v=four] .split .list{padding:0 16px}
+html[data-v=four] .split .list .row{min-height:44px;padding:4px 0}
+html[data-v=four] .split .list .row.sel{background:color-mix(in srgb,var(--mod) 10%,var(--surface-raised));margin:0 -16px;padding:4px 16px;border-radius:var(--r-sm)}
+html[data-v=four] .detail{background:var(--surface-raised);border-radius:var(--r-lg);padding:20px 24px;max-width:56rem}
+html[data-v=four] .detail h2{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+html[data-v=four] .detail .kv{display:grid;grid-template-columns:9rem minmax(0,1fr);gap:8px 16px;margin-top:14px;font-size:.9375rem}
+html[data-v=four] .detail .kv dt{color:var(--text-3)}
+html[data-v=four] .detail .kv dd{margin:0}
+html[data-v=four] .reading{max-width:56rem}
+html[data-v=four] .list .row{min-height:44px}
+html[data-v=four] .list .grp{padding:12px 0 2px}
+html[data-v=four] .kpis .card{padding:12px 16px}
+html[data-v=four] .empty{background:var(--surface-raised);border-radius:var(--r-lg)}
+
+/* phone */
+html[data-v=four][data-device=mobile] .head{top:var(--top-h)}
+html[data-v=four][data-device=mobile] .head::before{inset:0 -16px}
+html[data-v=four][data-device=mobile] .titlerow{gap:10px;min-height:40px}
+html[data-v=four][data-device=mobile] .titlerow h1{font-size:1.375rem}
+html[data-v=four][data-device=mobile] .titlerow .figure b{font-size:1.125rem}
+html[data-v=four][data-device=mobile] .titlerow .act .lbl{display:none}
+html[data-v=four][data-device=mobile] .titlerow .act .btn{height:36px;padding:0 10px}
+html[data-v=four][data-device=mobile] .tabs{margin-top:6px}
+html[data-v=four][data-device=mobile] .tabs a{height:34px;font-size:.875rem}
+html[data-v=four][data-device=mobile] .split{grid-template-columns:minmax(0,1fr)}
+html[data-v=four][data-device=mobile] .split .detail{display:none}
+html[data-v=four][data-device=mobile] .frame{padding-top:0;gap:12px}
+html[data-v=four][data-device=mobile] .list .row{min-height:48px}
+html[data-v=four][data-device=mobile] .wgrid{gap:10px}
+html[data-v=four] .label{background:var(--mod);color:var(--ink-on-mod)}
+/* phone: the title row never wraps – eyebrow and context get an ellipsis, the figure keeps one line */
+html[data-v=four][data-device=mobile] .titlerow > div{min-width:0}
+html[data-v=four][data-device=mobile] .titlerow .eyebrow,html[data-v=four][data-device=mobile] .titlerow .figure small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-v=four][data-device=mobile] .titlerow .figure{max-width:11rem;flex:none}
+html[data-v=four][data-device=mobile] .titlerow .figure b{font-size:1rem}
+html[data-v=four][data-device=mobile] .titlerow .figure small{font-size:.75rem}
+html[data-v=four][data-device=mobile] .titlerow .act{flex:none}
+html[data-v=four][data-device=mobile] .titlerow .eyebrow .more,html[data-v=four][data-device=mobile] .titlerow .figure small{display:none}
+html[data-v=four][data-device=mobile] .titlerow .figure{max-width:none}
+html[data-v=four][data-device=mobile] .titlerow .figure b{font-size:1.0625rem}
+/* overview head on the phone: one line greeting, date + weather, tools folded into the segment only */
+html[data-v=four][data-device=mobile] .greet h1{font-size:1.5rem}
+html[data-v=four][data-device=mobile] .greet .date{font-size:.875rem;gap:8px}
+html[data-v=four][data-device=mobile] .greet .tools .btn{display:none}
+html[data-v=four][data-device=mobile] .attn{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+html[data-v=four][data-device=mobile] .attn a{min-height:52px;padding:8px 12px}
+html[data-v=four][data-device=mobile] .attn a.quiet{grid-column:1/-1;min-height:40px}
