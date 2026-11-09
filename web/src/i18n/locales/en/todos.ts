@@ -21,6 +21,7 @@ export const todos: Strings['todos'] = {
   changed: 'Task changed.',
   noDue: 'No date',
   empty: 'Nothing to do – that’s fine.',
+  emptyAction: 'Add one thing',
   someday: 'Someday',
   views: {
     label: 'View',
@@ -33,6 +34,7 @@ export const todos: Strings['todos'] = {
   },
   board: {
     empty: 'Nothing here.',
+    wasDue: (date: string) => `was due ${date}`,
     moveTo: (view: string) => `Move to ${view}`,
     hint: 'Drag a card or use "⋯".',
   },
@@ -57,7 +59,7 @@ export const todos: Strings['todos'] = {
   startDate: 'Starts on',
   startHint: 'Until then the task stays under "Upcoming".',
   startsOn: (date: string) => `from ${date}`,
-  moveTomorrow: 'Tomorrow',
+  moveTomorrow: 'To tomorrow',
   allToday: 'All to today',
   allTodayDone: (n: number) =>
     n === 1 ? '1 to-do moved to today.' : `${n} to-dos moved to today.`,

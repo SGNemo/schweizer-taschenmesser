@@ -93,8 +93,7 @@ export const invoices: Strings['invoices'] = {
   add: 'Add invoice',
   edit: 'Edit invoice',
   planTitle: (payee: string) => `Pay ${payee}`,
-  planDunned: (title: string, detail?: string) =>
-    detail ? `${title} · Reminder · ${detail}` : `${title} · Reminder`,
+  planDunned: (detail?: string) => (detail ? `Reminder · ${detail}` : 'Reminder'),
   payee: 'Payee',
   reference: 'Reference / invoice number',
   dueDate: 'Due on',

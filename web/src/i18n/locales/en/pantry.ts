@@ -56,6 +56,7 @@ export const pantry: Strings['pantry'] = {
   noMatch: 'Nothing in this view.',
   plus: (n: string) => `${n}: one more`,
   minus: (n: string) => `${n}: one less`,
+  amount: 'Amount',
   countOf: (n: number) => (n === 1 ? '1 piece' : `${n} pieces`),
   today: 'Expires today',
   inDays: (d: number) => (d === 1 ? 'Expires tomorrow' : `${d} days left`),

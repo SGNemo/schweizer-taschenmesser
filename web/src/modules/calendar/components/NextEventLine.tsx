@@ -5,7 +5,6 @@ import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay } from '@/core/time/dates';
 import { pad2, today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { kindLabel } from './ItemRow';
@@ -18,9 +17,9 @@ const AHEAD_DAYS = 14;
 /**
  * Head line of the calendar. With an appointment left today: the countdown line ("in 20 Min · 10:00 Teammeeting",
  * follows the focus setting). Without one the head is not left empty: "Heute frei" with what comes next in the coming
- * two weeks, or – nothing planned at all – the page's one verb again ("Neuer Termin").
+ * two weeks, or "nothing planned". The page's one verb ("Neuer Termin") stays in the toolbar only (U15).
  */
-export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
+export function NextEventLine() {
   const [settings] = useFocusSettings();
   // F15: a narrow page (phone) keeps the countdown out of the head; the appointment is the first row of the list.
   const narrow = usePageWidthAtLeast(40) === false;
@@ -52,27 +51,20 @@ export function NextEventLine({ onAdd }: { onAdd?: () => void }) {
     .filter((i) => i.date > day)
     .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))[0];
   return (
-    <>
-      <HeroSlot area="figure">
-        <div data-testid="calendar-free">
-          <HeroFigure
-            value={todays.length > 0 ? h.rest : h.today}
-            detail={
-              upcoming
-                ? h.next(
-                    `${formatDay(upcoming.date, 'EEE, d. MMM')}${upcoming.time ? `, ${upcoming.time}` : ''}`,
-                    `${upcoming.title} · ${kindLabel(upcoming.kind)}`,
-                  )
-                : h.none
-            }
-          />
-        </div>
-      </HeroSlot>
-      {!upcoming && onAdd ? (
-        <HeroSlot>
-          <Button onClick={onAdd}>{t.calendar.newEvent}</Button>
-        </HeroSlot>
-      ) : null}
-    </>
+    <HeroSlot area="figure">
+      <div data-testid="calendar-free">
+        <HeroFigure
+          value={todays.length > 0 ? h.rest : h.today}
+          detail={
+            upcoming
+              ? h.next(
+                  `${formatDay(upcoming.date, 'EEE, d. MMM')}${upcoming.time ? `, ${upcoming.time}` : ''}`,
+                  `${upcoming.title} · ${kindLabel(upcoming.kind)}`,
+                )
+              : h.none
+          }
+        />
+      </div>
+    </HeroSlot>
   );
 }

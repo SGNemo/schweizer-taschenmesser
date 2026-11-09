@@ -106,6 +106,11 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await editor.getByLabel('Limit pro Monat').fill('120');
     await save(page);
     await expect(page.getByTestId('budgets-free')).toContainText(/119,00\s€/);
+    // Month navigation grouped like Finanzen (‹ month › side by side); no chips repeating the cards (round 6, U44).
+    const prev = (await page.getByRole('button', { name: 'Vorheriger Monat' }).boundingBox())!;
+    const next = (await page.getByRole('button', { name: 'Nächster Monat' }).boundingBox())!;
+    expect(next.x - (prev.x + prev.width)).toBeLessThan(260);
+    await expect(page.getByTestId('budget-chips')).toHaveCount(0);
   });
 
   test('a goal with a planned rate says when it is reached', async ({ page }) => {

@@ -69,14 +69,19 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
 
   test('"Wartet noch" appears once, as a group; each row can move to today right there', async ({
     page,
-  }) => {
+  }, info) => {
     await addTodo(page, 'Alte Sache', '2026-09-01');
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(1);
     await expect(page.getByTestId('todos-waiting')).toHaveCount(1);
     // The old separate card with its own count is gone.
     await expect(page.getByText('wartet noch.', { exact: false })).toHaveCount(0);
 
-    await page.locator('[data-group="overdue"]').getByRole('button', { name: 'Auf heute' }).click();
+    const waiting = page.locator('[data-group="overdue"]');
+    // On the phone the row's button gives way to the title (UI round 6, U21); the row menu has it.
+    if (info.project.name === 'pixel-7') {
+      await waiting.getByRole('button', { name: 'Weitere Aktionen' }).click();
+      await page.getByRole('menuitem', { name: 'Auf heute', exact: true }).click();
+    } else await waiting.getByRole('button', { name: 'Auf heute' }).click();
     await expect(page.locator('[data-group="overdue"]')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Alte Sache' })).toBeVisible();
     // Undo is one tap away.

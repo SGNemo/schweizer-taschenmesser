@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { backSettled, enable, moreFields } from './helpers';
+import { primaryActions } from './primaries';
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
@@ -45,6 +46,8 @@ test('Einkauf: quantities, duplicates, ticking, clearing bought entries (and und
   await input.press('Enter');
   await expect(rows(page)).toHaveCount(2);
   await expect(page.getByText('2', { exact: true })).toBeVisible(); // the quantity
+  // One primary per view: "Neue Liste"; the inline add is secondary (round 6, U12).
+  expect(await primaryActions(page)).toEqual(['Neue Liste']);
 
   await tick(page.getByRole('checkbox', { name: 'Milch' }));
   await page.getByRole('button', { name: 'Gekauftes entfernen (1)' }).click();

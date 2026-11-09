@@ -13,6 +13,20 @@
 .brand:hover {
   background: var(--surface-2);
 }
+/* Brand with the clock (layout/LogoClock): right of the wordmark on the logo's middle; under the mark in the rail. */
+.brandRow {
+  display: flex;
+  align-items: center;
+  /* The link's own inline padding is the gap. */
+  gap: 0;
+  min-width: 0;
+}
+.brandRail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
 .nav {
   flex: 1;
   min-height: 0;
@@ -35,6 +49,13 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-3);
+}
+/* U01: the favourites' room while the setting is read (heading box of the h2, one chip row), unseen. */
+.favPending {
+  visibility: hidden;
+}
+.favPending .heading {
+  line-height: var(--leading-tight);
 }
 /* Favourites: up to five icon chips in one bar. */
 .favbar {

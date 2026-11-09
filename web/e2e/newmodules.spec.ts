@@ -72,7 +72,13 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
 
   await page.goto('/pantry');
   await page.getByRole('button', { name: 'Milch: einer mehr' }).click();
-  await expect(fridge.getByRole('listitem').filter({ hasText: 'Milch' })).toContainText('2 Stück');
+  // The amount sits in the stepper between − and + (round 6, S01).
+  await expect(
+    fridge
+      .getByRole('listitem')
+      .filter({ hasText: 'Milch' })
+      .getByRole('group', { name: 'Anzahl' }),
+  ).toHaveText('2');
   await expect(fridge.getByRole('listitem').filter({ hasText: 'Milch' })).not.toContainText(
     'Wird knapp',
   );

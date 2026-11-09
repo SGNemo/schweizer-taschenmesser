@@ -311,10 +311,8 @@ export function AccountsTab({ data }: { data: FinanceData }) {
   return (
     <>
       <div className={patternStyles.gapBottom + ' ' + patternStyles.hstack}>
-        <Button
-          variant="primary"
-          onClick={() => setTarget({ draft: true, order: data.accounts.length })}
-        >
+        {/* Secondary: the page's primary is "Buchung" in the toolbar (one primary per view). */}
+        <Button onClick={() => setTarget({ draft: true, order: data.accounts.length })}>
           <Icon name="plus" size={18} />
           {t.finance.addAccount}
         </Button>
