@@ -205,7 +205,7 @@
       "height": 2613,
       "buttons": 65,
       "links": 9,
-      "icons": 36,
+      "icons": 50,
       "firstScreenActions": 31
     },
     "phone--people": {
@@ -254,7 +254,7 @@
       "height": 2184,
       "buttons": 35,
       "links": 11,
-      "icons": 24,
+      "icons": 27,
       "firstScreenActions": 23
     },
     "phone--todos": {
