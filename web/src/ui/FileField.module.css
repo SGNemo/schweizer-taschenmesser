@@ -1,0 +1,49 @@
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+/* The visible button and, on top of it, the real input: transparent, the same size, so click, keyboard focus and a
+   dropped file all reach the input. */
+.pickWrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.input::file-selector-button {
+  cursor: pointer;
+}
+.pickWrap:not([data-disabled='true']):hover .pick {
+  background: var(--surface-2);
+}
+.pickWrap:has(.input:focus-visible) .pick {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.pickWrap:has(.input[aria-invalid='true']) .pick {
+  border-color: var(--danger);
+}
+.pickWrap[data-disabled='true'] .pick {
+  opacity: 0.45;
+}
+.pickWrap[data-disabled='true'] .input,
+.pickWrap[data-disabled='true'] .pick {
+  pointer-events: none;
+}
+.name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.none {
+  color: var(--text-muted);
+}

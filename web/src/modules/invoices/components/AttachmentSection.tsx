@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getBlob } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
-import { Button } from '@/ui';
+import { Button, FileField } from '@/ui';
 import { ATTACHMENT_ACCEPT, attachmentKey, isAttachable, MAX_ATTACHMENT_BYTES } from '../pay';
 import type { Invoice } from '../schema';
 import styles from '../routes/invoices.module.css';
@@ -26,7 +26,6 @@ export function AttachmentSection({
   choice: AttachmentChoice;
   onChoice: (c: AttachmentChoice) => void;
 }) {
-  const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
   const e = t.invoices.ext.attachment;
 
@@ -53,8 +52,8 @@ export function AttachmentSection({
         ? meta
         : undefined;
 
-  function pick(files: FileList | null) {
-    const file = files?.[0];
+  function pick(files: FileList) {
+    const file = files[0];
     if (!file) return;
     if (!isAttachable(file.type)) return setError(e.wrongType);
     if (file.size > MAX_ATTACHMENT_BYTES)
@@ -66,16 +65,6 @@ export function AttachmentSection({
   return (
     <section className={styles.attachBox} aria-label={e.label}>
       <h3 className={styles.sectionTitle}>{e.label}</h3>
-      <input
-        ref={input}
-        type="file"
-        accept={ATTACHMENT_ACCEPT}
-        hidden
-        onChange={(ev) => {
-          pick(ev.target.files);
-          ev.target.value = '';
-        }}
-      />
       {shown ? (
         <>
           <p>{e.previewOf(shown.name)}</p>
@@ -109,22 +98,18 @@ export function AttachmentSection({
           )}
         </>
       ) : null}
-      <div className={styles.attachActions}>
-        <Button variant="ghost" onClick={() => input.current?.click()}>
-          {shown ? e.replace : e.add}
-        </Button>
-        {shown ? (
-          <Button variant="ghost" onClick={() => onChoice({ kind: 'remove' })}>
-            {e.remove}
-          </Button>
-        ) : null}
-      </div>
-      {error ? (
-        <p role="alert" className={styles.muted}>
-          {error}
-        </p>
-      ) : null}
-      <p className={styles.muted}>{e.localOnly}</p>
+      <FileField
+        label={e.label}
+        labelHidden
+        hint={e.localOnly}
+        error={error || undefined}
+        accept={ATTACHMENT_ACCEPT}
+        buttonLabel={shown ? e.replace : e.add}
+        fileName={shown?.name ?? null}
+        onFiles={pick}
+        onRemove={() => onChoice({ kind: 'remove' })}
+        removeLabel={e.remove}
+      />
     </section>
   );
 }

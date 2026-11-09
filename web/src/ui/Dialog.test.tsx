@@ -2,6 +2,7 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ModuleIdentityContext, type ModuleIdentityMark } from '@/core/modules/identityContext';
 import { setNow } from '@/core/time/now';
 import { Dialog } from './Dialog';
 import { DRAFT_TTL_MS, useDraft } from './useDraft';
@@ -98,6 +99,62 @@ describe('dialog', () => {
       </Dialog>,
     );
     expect(screen.getByRole('button', { name: 'Zurück' })).toBeInTheDocument();
+  });
+});
+
+describe('dialog identity (S02)', () => {
+  const head = () => screen.getByTestId('dialog-head');
+  const dialogEl = () => head().closest('dialog')!;
+  const pantry: ModuleIdentityMark = { hue: 'fern', icon: 'package', signature: 'shelf' };
+
+  it('stays neutral without an identity and outside a module page', () => {
+    render(
+      <Dialog open onClose={() => {}} title="Neu">
+        <input aria-label="Name" />
+      </Dialog>,
+    );
+    expect(head()).not.toHaveAttribute('data-tinted');
+    expect(dialogEl()).not.toHaveAttribute('data-hue');
+    expect(dialogEl().querySelector('[data-signature]')).toBeNull();
+  });
+
+  it('tints the head zone and shows plate and mark with an identity', () => {
+    render(
+      <Dialog open onClose={() => {}} title="Vorrat hinzufügen" identity={pantry}>
+        <input aria-label="Name" />
+      </Dialog>,
+    );
+    expect(head()).toHaveAttribute('data-tinted', 'true');
+    expect(dialogEl()).toHaveAttribute('data-hue', 'fern');
+    const mark = head().querySelector('[data-signature="shelf"]');
+    expect(mark).not.toBeNull();
+    // The mark is decoration right after the title text, not a control beside the close button.
+    expect(mark!.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(mark!.closest('h2')).not.toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Vorrat hinzufügen' })).toBeInTheDocument();
+    const order = [...head().querySelectorAll('[data-hue], h2, button')];
+    expect(order.map((el) => el.tagName.toLowerCase())).toEqual(['span', 'h2', 'button']);
+  });
+
+  it('takes the identity of the module page it sits in; null and the shell stay neutral', () => {
+    render(
+      <>
+        <Dialog open onClose={() => {}} title="Werkzeuge">
+          <p>…</p>
+        </Dialog>
+        <ModuleIdentityContext.Provider value={pantry}>
+          <Dialog open onClose={() => {}} title="Vorrat hinzufügen">
+            <p>…</p>
+          </Dialog>
+          <Dialog open onClose={() => {}} title="Löschen?" identity={null}>
+            <p>…</p>
+          </Dialog>
+        </ModuleIdentityContext.Provider>
+      </>,
+    );
+    const zones = screen.getAllByTestId('dialog-head');
+    expect(zones.map((z) => z.getAttribute('data-tinted'))).toEqual([null, 'true', null]);
+    expect(zones[1]!.querySelector('[data-signature="shelf"]')).not.toBeNull();
   });
 });
 
