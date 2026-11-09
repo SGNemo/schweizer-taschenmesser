@@ -36,7 +36,7 @@ html[data-v=four] .titlerow .figure b{display:block;font-size:1.5rem;font-weight
 html[data-v=four] .titlerow .figure small{display:block;font-size:.8125rem;color:var(--text-2)}
 html[data-v=four] .titlerow .act{display:flex;gap:8px;align-items:center}
 html[data-v=four] .tabs{display:flex;gap:4px;margin-top:10px;overflow:hidden}
-html[data-v=four] .tabs a{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;font-size:.9375rem;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
+html[data-v=four] .tabs a{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 10px;font-size:.9375rem;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
 html[data-v=four] .tabs a.on{color:var(--text);font-weight:600;border-bottom-color:var(--mod)}
 html[data-v=four] .tabs a .cnt{font-size:.75rem;color:var(--text-3);font-variant-numeric:tabular-nums}
 html[data-v=four] .head.stage{padding:0}
@@ -79,7 +79,7 @@ html[data-v=four][data-device=mobile] .titlerow .figure b{font-size:1.125rem}
 html[data-v=four][data-device=mobile] .titlerow .act .lbl{display:none}
 html[data-v=four][data-device=mobile] .titlerow .act .btn{height:36px;padding:0 10px}
 html[data-v=four][data-device=mobile] .tabs{margin-top:6px}
-html[data-v=four][data-device=mobile] .tabs a{height:34px;font-size:.875rem}
+html[data-v=four][data-device=mobile] .tabs a{height:44px;font-size:.875rem}
 html[data-v=four][data-device=mobile] .split{grid-template-columns:minmax(0,1fr)}
 html[data-v=four][data-device=mobile] .split .detail{display:none}
 html[data-v=four][data-device=mobile] .frame{padding-top:0;gap:12px}
@@ -159,3 +159,17 @@ html[data-v=four][data-device=mobile] .grp.waits .meta{flex-basis:100%}
 html[data-v=four][data-device=mobile] .attn a.quiet{min-height:44px}
 html[data-v=four] .top .brand{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0}
 html[data-v=four] .w .mini .cover,html[data-v=four] .cover{box-shadow:none}
+
+/* round-9: month switcher as real buttons on both devices, phone KPI line instead of three tiles, strip across the width */
+html[data-v=four] .monthrow{display:flex;align-items:center;gap:8px}
+html[data-v=four] .monthrow .btn.icon{width:44px;height:44px}
+html[data-v=four] .monthrow .spacer{flex:1}
+html[data-v=four] .kpiline{display:none}
+html[data-v=four][data-device=mobile] .kpiline{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+html[data-v=four][data-device=mobile] .kpiline b{color:var(--text);font-weight:600}
+html[data-v=four][data-device=mobile] .kpis{display:none}
+html[data-v=four][data-device=mobile] .monthrow .meta{display:none}
+html[data-v=four] .attn{grid-template-columns:repeat(5,minmax(0,1fr))}
+html[data-v=four] .attn a.quiet{grid-column:span 2}
+html[data-v=four][data-device=mobile] .attn{grid-template-columns:repeat(2,minmax(0,1fr))}
+html[data-v=four][data-device=mobile] .attn a.quiet{grid-column:1/-1}
