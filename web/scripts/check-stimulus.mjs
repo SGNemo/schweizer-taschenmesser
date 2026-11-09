@@ -29,12 +29,17 @@ if (fromIdx >= 0) {
   inventoryPath = resolve(args[fromIdx + 1] ?? '');
 } else {
   mkdirSync(outDir, { recursive: true });
-  const run = spawnSync('npx', ['playwright', 'test', '-c', 'playwright.stimulus.config.ts'], {
-    cwd: web,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-    env: { ...process.env, STIMULUS_DIR: outDir, STIMULUS_SHOTS: '0' },
-  });
+  // Only the measuring spec: nothing else may run in the process that writes the inventory.
+  const run = spawnSync(
+    'npx',
+    ['playwright', 'test', '-c', 'playwright.stimulus.config.ts', 'screenshots/stimulus.spec.ts'],
+    {
+      cwd: web,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+      env: { ...process.env, STIMULUS_DIR: outDir, STIMULUS_SHOTS: '0' },
+    },
+  );
   if (run.status !== 0) {
     console.error('Stimulus measurement failed (see above); nothing compared.');
     process.exit(2);

@@ -37,6 +37,7 @@ export const RATCHET_PUBLIC_KEY = '';
 export const LABEL = 'stimulus-raise';
 export const WEB_CHECK = 'Web (lint, types, unit, E2E)';
 export const CI_WORKFLOW = '.github/workflows/ci.yml';
+export const BASE_BRANCH = 'develop';
 const API = 'https://api.github.com';
 
 export const BUDGET_FILE = 'web/e2e/stimulus-budget.json';
@@ -105,6 +106,7 @@ export const PROTECTED = [
   'web/vitest.setup.ts',
   'web/tsconfig*.json',
   'web/eslint.*',
+  'web/eslint-rules/**',
   'web/scripts/check.mjs',
   'web/scripts/check-modules.mjs',
   'web/scripts/check-stimulus.mjs',
@@ -143,7 +145,7 @@ export function globToRegExp(glob) {
     } else if (c === '*') out += '[^/]*';
     else out += /[.+?^${}()|[\]\\]/.test(c) ? `\\${c}` : c;
   }
-  return new RegExp(`^${out}$`);
+  return new RegExp(`^${out}$`, 's'); // `s`: a line break in a file name must not slip past `**`
 }
 const compiled = new Map();
 export function matchesAny(path, globs) {
@@ -351,8 +353,36 @@ export function scriptsHits(baseText, headText) {
   for (const key of new Set([...Object.keys(was), ...Object.keys(now)]))
     if (canon(was[key]) !== canon(now[key]))
       hits.push(`scripts ${key} ${canon(was[key])}→${canon(now[key])}`);
+  // Every other field counts too (`type`, `overrides`, …), except the version and the dependency lists; in
+  // those a new or changed entry is free only as a plain version range from the registry (what Dependabot
+  // writes), not as an alias, a path, a URL or a git source that could swap a test runner.
+  const b = isObject(base) ? base : {};
+  const h = isObject(head) ? head : {};
+  for (const field of new Set([...Object.keys(b), ...Object.keys(h)])) {
+    if (field === 'scripts' || field === 'version') continue;
+    if (!DEPENDENCY_FIELDS.includes(field)) {
+      if (canon(b[field]) !== canon(h[field]))
+        hits.push(`scripts @${field} ${canon(b[field])}→${canon(h[field])}`);
+      continue;
+    }
+    const old = isObject(b[field]) ? b[field] : {};
+    const cur = isObject(h[field]) ? h[field] : {};
+    if (!isObject(h[field] ?? {}))
+      hits.push(`scripts @${field} ${canon(b[field])}→${canon(h[field])}`);
+    for (const [name, spec] of Object.entries(cur))
+      if (canon(old[name]) !== canon(spec) && !PLAIN_RANGE.test(String(spec)))
+        hits.push(`scripts @${field}.${name} ${canon(old[name])}→${canon(spec)}`);
+  }
   return hits;
 }
+
+const DEPENDENCY_FIELDS = [
+  'dependencies',
+  'devDependencies',
+  'optionalDependencies',
+  'peerDependencies',
+];
+const PLAIN_RANGE = /^(?:[\^~]|>=)?\d+(?:\.\d+){0,2}(?:-[0-9A-Za-z.-]+)?$/;
 
 const SKIP_RE = /\b(?:test|it|describe)(?:\.\w+)*\.(?:skip|fixme|todo|only|skipIf|runIf)\b/g;
 /** Titles (or, without one, the call itself) of every `test|it|describe` `.skip|.fixme|.todo|.only` in a file. */
@@ -403,8 +433,9 @@ function added(was, now) {
 }
 
 const PAIR = { ')': '(', ']': '[', '}': '{' };
+// Reserved words only (`of`, `yield`, `await` can be plain names), and never as the tail of a longer name.
 const REGEX_BEFORE =
-  /(?:^|[^\w$.])(?:return|typeof|case|do|else|in|of|void|delete|throw|new|instanceof|yield|await)$/;
+  /(?<![\p{ID_Continue}$.\\])(?:return|typeof|case|do|else|in|void|delete|throw|new|instanceof)$/u;
 /**
  * True if `appended` is nothing but top-level statements of the form
  * `test('title', [async] (params) => { body }[, timeout]);` (or `it(…)`). Everything else is refused: other
@@ -473,8 +504,16 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
   const expression = (last, lastAt) => {
     if (last === '') return true;
     if ((last === '+' || last === '-') && src[lastAt - 1] === last) fail(); // `x++ / 2` or `++ /re/`
-    if ('(,=:[!&|?{;+-*%<>~^'.includes(last)) return true;
-    return REGEX_BEFORE.test(src.slice(Math.max(0, lastAt - 12), lastAt + 1));
+    // `>` opens an expression only as the arrow `=>`; after type arguments or a comparison do not guess.
+    if (last === '>') return src[lastAt - 1] === '=' ? true : fail();
+    if (last === '!') {
+      // Prefix `!` opens an expression; the TypeScript postfix `x!` does not (`x! / 2` is a division).
+      let k = lastAt - 1;
+      while (k >= 0 && (src[k] === ' ' || src[k] === '\t')) k--;
+      return k < 0 || !/[\p{ID_Continue}$)\]]/u.test(src[k]);
+    }
+    if ('(,=:[&|?{;+-*%<~^'.includes(last)) return true;
+    return REGEX_BEFORE.test(src.slice(Math.max(0, lastAt - 14), lastAt + 1));
   };
   const name = () => {
     const m = /^[\w$.:-]*/.exec(src.slice(i, i + 200))[0];
@@ -719,6 +758,22 @@ export function collectHits(repo, base, head) {
     return closure.has(path);
   };
 
+  let stems = null;
+  const stemOf = (p) => p.replace(/\.[^./]+$/, '').replace(/\/index$/, '');
+  const shadowsProtected = (path) => {
+    if (!stems) {
+      stems = new Map();
+      for (const p of new Set([...baseTree.keys(), ...headTree.keys()])) {
+        const list = stems.get(stemOf(p));
+        if (list) list.push(p);
+        else stems.set(stemOf(p), [p]);
+      }
+    }
+    return (stems.get(stemOf(path)) ?? []).some(
+      (other) => other !== path && (matchesAny(other, PROTECTED) || inClosure(other)),
+    );
+  };
+
   for (const { status, path } of changed) {
     if (path === BUDGET_FILE)
       hits.push(...budgetHits(path, text(was(path)), text(now(path)), newRouteSlugs));
@@ -733,10 +788,16 @@ export function collectHits(repo, base, head) {
       hits.push(...baselineHits(path, text(was(path)), text(now(path))));
     else if (path === PACKAGE_FILE) hits.push(...scriptsHits(text(was(path)), text(now(path))));
     else {
-      const listed = matchesAny(path, PROTECTED);
-      if (!listed && !inClosure(path)) continue;
       const blob = (tree) => tree.get(path) ?? '-';
       const line = `protected ${path} ${blob(baseTree)}→${blob(headTree)}`;
+      // A new file that a resolver would pick instead of a protected one (`helpers.js` next to `helpers.ts`,
+      // `helpers/index.ts`) is a hit wherever it lies, also under the paths that are free for new files.
+      if (status === 'A' && shadowsProtected(path)) {
+        hits.push(line);
+        continue;
+      }
+      const listed = matchesAny(path, PROTECTED);
+      if (!listed && !inClosure(path)) continue;
       if (status === 'A') {
         if (matchesAny(path, ALWAYS_PROTECTED) || !matchesAny(path, NEW_FILES_FREE))
           hits.push(line);
@@ -751,7 +812,10 @@ export function collectHits(repo, base, head) {
       }
     }
   }
-  return hits.sort();
+  // One hit, one line: a control character in a path or key must not be able to forge a second line.
+  const visible = (h) =>
+    h.replace(/\p{Cc}|\p{Zl}|\p{Zp}/gu, (c) => `<U+${c.codePointAt(0).toString(16)}>`);
+  return hits.map(visible).sort();
 }
 
 /** SHA-256 over the sorted hit lines, one per line. */
@@ -856,6 +920,7 @@ export function gitRepo(cwd = process.cwd()) {
     },
     resolve: (rev) => git('rev-parse', '--verify', `${rev}^{commit}`).trim(),
     mergeBase: (a, b) => git('merge-base', a, b).trim(),
+    mergeBases: (a, b) => git('merge-base', '--all', a, b).split('\n').filter(Boolean),
     fetch: (...refs) => git('fetch', '--quiet', '--no-tags', 'origin', ...refs),
   };
 }
@@ -907,10 +972,21 @@ export async function webCheckPassed({ fetchImpl, token, repo = REPO, pr, head }
       r.event === 'pull_request' &&
       String(r.path ?? '').split('@')[0] === CI_WORKFLOW &&
       r.head_sha === head &&
-      (!Array.isArray(r.pull_requests) ||
-        r.pull_requests.length === 0 ||
-        r.pull_requests.some((p) => p.number === pr)),
+      // The run must name this pull request with `develop` as its base (ci.yml of a `pull_request` run comes
+      // from the merge with the base: another base could bring another workflow). Runs that name no pull
+      // request (forks) do not count.
+      Array.isArray(r.pull_requests) &&
+      r.pull_requests.some((p) => p.number === pr && p.base?.ref === BASE_BRANCH),
   );
+  // A second open pull request on the same head could have produced that run against another base.
+  const twins = (await githubAll(fetchImpl, token, `/repos/${repo}/commits/${head}/pulls`)).filter(
+    (p) => p.state === 'open' && p.number !== pr && p.head?.sha === head,
+  );
+  if (twins.length)
+    return {
+      ok: false,
+      why: `another open pull request has the same head (#${twins.map((p) => p.number).join(', #')})`,
+    };
   if (!runs.length) return { ok: false, why: `no pull_request run of ${CI_WORKFLOW} on ${head}` };
   const run = runs.reduce((a, b) => ((b.run_number ?? 0) > (a.run_number ?? 0) ? b : a));
   const checks = (
@@ -1015,7 +1091,8 @@ export async function runPr({
   if (wantedHead && wantedHead !== head)
     problems.push(`live head ${head} is not --head ${wantedHead}`);
 
-  repo.fetch(`refs/heads/${baseRef}`);
+  if (baseRef !== BASE_BRANCH) problems.push(`base branch is ${baseRef}, not ${BASE_BRANCH}`);
+  repo.fetch(`refs/heads/${BASE_BRANCH}`);
   const baseTip = repo.resolve('FETCH_HEAD');
   try {
     repo.fetch(head);
@@ -1023,7 +1100,11 @@ export async function runPr({
     repo.fetch(`refs/pull/${pr}/head`); // a server that does not hand out single commits
   }
   repo.resolve(head); // throws if the head commit is still not here
-  const base = repo.mergeBase(baseTip, head);
+  const bases = repo.mergeBases(baseTip, head);
+  // Several merge bases (criss-cross history): which one git would name is not ours to guess.
+  if (bases.length !== 1)
+    throw new Error(`${bases.length} merge bases of ${BASE_BRANCH} and ${head}`);
+  const base = bases[0];
   const hits = collectHits(repo, base, head);
   const hash = hashOf(hits);
   out(`Pull request ${slug}#${pr}: head ${head}, merge base ${base} (${baseRef}).`);
@@ -1062,6 +1143,8 @@ export async function runPr({
     out(`\nNot mergeable yet:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
     return 1;
   }
+  if (!wantedHead)
+    out('\nNote: no --head given, the head is not pinned (the merge rule always passes --head).');
   out(`\nMergeable: head ${head} (use it as expectedHeadSha).`);
   return 0;
 }

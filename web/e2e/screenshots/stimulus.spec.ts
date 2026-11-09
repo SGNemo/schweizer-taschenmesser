@@ -104,6 +104,14 @@ test('stimulus inventory', async ({ browser }) => {
     ];
     await enableModules(page, modules);
     expect(await pickWeatherPlace(page), 'weather place (mocked search)').toBe(true);
+    // Load the (mocked) forecast once and wait for it. A request cut off by a navigation is noted as failed,
+    // and with the frozen clock that note would keep every later page from asking again: the weather page and
+    // the overview would then be measured empty in one run and filled in the next.
+    await page.evaluate(() => localStorage.removeItem('tm-weather-tried'));
+    await page.goto('/weather');
+    await page.waitForFunction(() => localStorage.getItem('tm-weather') !== null, null, {
+      timeout: 30_000,
+    });
     await mockSpotify(page);
     await seedConnected(page, ['show', 'control', 'playlists', 'library', 'history']);
     for (const target of PAGES) {

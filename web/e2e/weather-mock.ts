@@ -125,6 +125,11 @@ export async function pickWeatherPlace(page: Page): Promise<boolean> {
       if (!shown) await search.click();
     }
     await pick.click({ timeout: 15_000 });
+    // The choice is stored asynchronously: a navigation right after the click would lose it.
+    await page
+      .getByTestId('weather-place')
+      .filter({ hasText: 'Bern' })
+      .waitFor({ timeout: 15_000 });
     return true;
   } catch {
     return false;

@@ -236,6 +236,27 @@ describe('package.json scripts', () => {
       'scripts preview:e2e-seed "vite preview --outDir dist-e2e-seed --port 4174 --strictPort"→-',
     ]);
   });
+  it('other fields and dependency sources that are no plain version range are hits', () => {
+    expect(
+      hits(pkg(SCRIPTS), pkg(SCRIPTS, { type: 'module', overrides: { vitest: '1.0.0' } })),
+    ).toEqual(['scripts @overrides -→{"vitest":"1.0.0"}', 'scripts @type -→"module"']);
+    expect(
+      hits(
+        pkg(SCRIPTS),
+        pkg(SCRIPTS, { dependencies: { zod: 'npm:other@4.0.0', left: 'file:../x', ok: '~1.2.3' } }),
+      ),
+    ).toEqual([
+      'scripts @dependencies.left -→"file:../x"',
+      'scripts @dependencies.zod "^4.0.0"→"npm:other@4.0.0"',
+    ]);
+  });
+  it('a control character in a path cannot forge a second hit line', () => {
+    const path = 'web/e2e/seed/a\nscripts x "1"→"2".spec.ts';
+    const found = hits({ [path]: 'a\n' }, { [path]: 'b\n' });
+    expect(found).toHaveLength(1);
+    expect(found[0]).not.toContain('\n');
+    expect(found[0]).toContain('<U+a>');
+  });
   it('dependencies and version stay free (Dependabot, version bumps)', () => {
     expect(
       hits(pkg(SCRIPTS), pkg(SCRIPTS, { version: '1.1.0', dependencies: { zod: '^4.1.0' } })),
@@ -312,6 +333,24 @@ describe('protected paths', () => {
     expect(hits(base, head)).toEqual([
       `protected web/e2e/util/deep.ts ${blob(base['web/e2e/util/deep.ts'])}→${blob(head['web/e2e/util/deep.ts'])}`,
     ]);
+  });
+  it('a new file that would be resolved instead of a protected one is a hit, also where new files are free', () => {
+    const base = {
+      'web/e2e/screenshots/stimulus.spec.ts': "import { bootDev } from '../seed/helpers';\n",
+      'web/e2e/seed/helpers.ts': 'export const bootDev = 1;\n',
+      'web/src/core/ai/testing.ts': 'export const seed = 1;\n',
+      'web/e2e/a11y.spec.ts': "import { x } from './axe';\n",
+      'web/e2e/axe.ts': 'export const x = 1;\n',
+    };
+    const found = (path: string) =>
+      hits(base, { ...base, [path]: 'export const bootDev = 2;\n' }).length;
+    // Playwright and Vite try `.js` before `.ts`.
+    expect(found('web/e2e/seed/helpers.js')).toBe(1);
+    expect(found('web/e2e/seed/helpers/index.ts')).toBe(1);
+    expect(found('web/src/core/ai/testing.js')).toBe(1);
+    expect(found('web/e2e/axe.mjs')).toBe(1);
+    expect(found('web/e2e/seed/other-helpers.ts')).toBe(0);
+    expect(found('web/src/modules/finance/helpers.js')).toBe(0);
   });
   it('new files: free for new guards and tests, always a hit for workflows, configs and .env.e2e*', () => {
     expect(
@@ -395,6 +434,13 @@ describe('additions only in protected test files', () => {
     expect(
       free(
         more(
+          "it('re', () => {\n  if (!/a\\/b/.test(x)) return;\n  const f = (a) => /x/.test(a);\n});",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      free(
+        more(
           "it('uses a new symbol', async () => {\n  const { x } = await import('./x');\n  expect(x).toBe(1);\n});",
         ),
       ),
@@ -430,6 +476,22 @@ describe('additions only in protected test files', () => {
     [
       'closing the call early behind a line separator',
       "test('a', () => {\n  // note\u2028}); evil(); test('b', () => {\n});",
+    ],
+    [
+      'division after a name that reads like a keyword (`of`)',
+      "test('a', () => { const of = 2; const y = of / 2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
+    ],
+    [
+      'division after the TypeScript postfix `!`',
+      "test('a', () => { const y = globalThis! / 2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
+    ],
+    [
+      'division after closing type arguments',
+      "test('a', () => { const y = 1 as Array<number> / 2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
+    ],
+    [
+      'division after a name that ends in a keyword',
+      "test('a', () => { const y = äin / 2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
     ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [
@@ -700,6 +762,8 @@ interface Recorded {
   labels?: object[];
   runs?: object[];
   checks?: object[];
+  /** Open pull requests GitHub lists for the head commit. */
+  twins?: object[];
   fail?: RegExp;
 }
 /** GitHub answers as recorded from the REST API (only the fields the script reads), keyed by path. */
@@ -726,12 +790,16 @@ function recorded(r: Recorded) {
                   total_count: r.runs?.length ?? 0,
                   workflow_runs: page === '1' ? (r.runs ?? []) : [],
                 }
-              : /\/check-runs$/.test(u.pathname)
-                ? {
-                    total_count: r.checks?.length ?? 0,
-                    check_runs: page === '1' ? (r.checks ?? []) : [],
-                  }
-                : null;
+              : /\/commits\/[0-9a-f]+\/pulls$/.test(u.pathname)
+                ? page === '1'
+                  ? (r.twins ?? [])
+                  : []
+                : /\/check-runs$/.test(u.pathname)
+                  ? {
+                      total_count: r.checks?.length ?? 0,
+                      check_runs: page === '1' ? (r.checks ?? []) : [],
+                    }
+                  : null;
     return { ok: body !== null, status: body === null ? 500 : 200, json: async () => body };
   };
   return { fetchImpl: fetchImpl as unknown as typeof fetch, calls };
@@ -751,7 +819,7 @@ const runOf = (head: string, extra: object = {}) => ({
   path: '.github/workflows/ci.yml',
   head_sha: head,
   check_suite_id: 501,
-  pull_requests: [{ number: 7 }],
+  pull_requests: [{ number: 7, base: { ref: 'develop' } }],
   ...extra,
 });
 const checkOf = (extra: object = {}) => ({
@@ -951,6 +1019,35 @@ describe('--pr (merge rule) with recorded API answers', () => {
     expect(r.code).toBe(1);
     expect(r.text).toMatch(/live head .* is not --head/);
   });
+  it('a pull request against another base than develop is not mergeable', async () => {
+    const p = pullRequest(false);
+    const pull = pullOf(p.head, { base: { ref: 'feat-base', sha: 'f'.repeat(40) } });
+    const r = await run(p.clone(), { pull, ...green(p.head) }, { head: p.head });
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/base branch is feat-base, not develop/);
+  });
+  it('several merge bases (criss-cross history) end with an error, not with a guess', async () => {
+    const p = pullRequest(false);
+    // develop and feat each merge the other's first tip: two merge bases.
+    const dev = p.commit({ 'web/src/a.ts': 'export const a = 1;\n' }, 'develop moves');
+    p.git(p.origin, 'merge', '-q', '--no-ff', '-m', 'develop takes feat', p.head);
+    p.git(p.origin, 'checkout', '-q', 'feat');
+    p.git(p.origin, 'merge', '-q', '--no-ff', '-m', 'feat takes develop', dev);
+    const head = p.git(p.origin, 'rev-parse', 'HEAD');
+    p.git(p.origin, 'checkout', '-q', 'develop');
+    const work = p.clone();
+    expect(gitRepo(work).mergeBases('origin/develop', head).length).toBeGreaterThan(1);
+    const lines: string[] = [];
+    const code = await cli(['--pr', '7'], {
+      repo: gitRepo(work),
+      env: ENV,
+      fetchImpl: recorded({ pull: pullOf(head), ...green(head) }).fetchImpl,
+      publicKey: PUBLIC_PEM,
+      out: (l: string) => lines.push(l),
+    });
+    expect(code).toBe(2);
+    expect(lines.join('\n')).toMatch(/merge bases/);
+  });
   it('a closed or merged pull request is not mergeable', async () => {
     const p = pullRequest(false);
     const r = await run(p.clone(), {
@@ -1000,10 +1097,35 @@ describe('--pr (merge rule) with recorded API answers', () => {
     expect(await code({ runs: [runOf('b'.repeat(40))], checks: [checkOf()] })).toBe(1);
     expect(
       await code({
-        runs: [runOf(p.head, { pull_requests: [{ number: 8 }] })],
+        runs: [runOf(p.head, { pull_requests: [{ number: 8, base: { ref: 'develop' } }] })],
         checks: [checkOf()],
       }),
     ).toBe(1);
+    // A run that names no pull request (fork), or this one against another base, does not count.
+    expect(await code({ runs: [runOf(p.head, { pull_requests: [] })], checks: [checkOf()] })).toBe(
+      1,
+    );
+    expect(
+      await code({
+        runs: [runOf(p.head, { pull_requests: [{ number: 7, base: { ref: 'evil' } }] })],
+        checks: [checkOf()],
+      }),
+    ).toBe(1);
+    // A second open pull request on the same head could have produced the green run against another base.
+    const twin = { number: 9, state: 'open', head: { sha: p.head } };
+    expect(await code({ runs: [runOf(p.head)], checks: [checkOf()], twins: [twin] })).toBe(1);
+    // A stacked pull request that only contains this commit, and a closed twin, are no reason to stop.
+    expect(
+      await code({
+        runs: [runOf(p.head)],
+        checks: [checkOf()],
+        twins: [
+          { number: 7, state: 'open', head: { sha: p.head } },
+          { number: 10, state: 'open', head: { sha: 'd'.repeat(40) } },
+          { number: 11, state: 'closed', head: { sha: p.head } },
+        ],
+      }),
+    ).toBe(0);
     // An older green run does not cover a newer red one on the same head.
     const older = runOf(p.head, { id: 9000, run_number: 40, check_suite_id: 500 });
     expect(
