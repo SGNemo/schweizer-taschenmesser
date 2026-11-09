@@ -49,7 +49,7 @@ export const mail: Strings['mail'] = {
     createdMark: 'added',
     already: 'Already added',
     reminderWord: (level: number) =>
-      level >= 3 ? 'Final reminder' : level === 2 ? 'Second reminder' : 'Reminder',
+      level >= 3 ? 'Third reminder' : level === 2 ? 'Second reminder' : 'Reminder',
     due: (day: string) => `due ${day}`,
     late: (day: string) => `was due ${day}`,
     debit: (day: string) => `debited on ${day}`,

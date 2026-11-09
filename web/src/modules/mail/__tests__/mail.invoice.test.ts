@@ -291,3 +291,52 @@ describe('council round 1', () => {
     expect((await offerOf(fee)).read.dunning).toBeUndefined();
   });
 });
+
+describe('council round 3', () => {
+  const link = (id: string, messageId: string, entryId: string) =>
+    db.table('mail_link').add({
+      id,
+      accountKey: account.key,
+      threadId: 't-1',
+      messageId,
+      type: 'invoice',
+      moduleId: 'invoices',
+      collection: 'invoice',
+      entryId,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: null,
+      _f: {},
+    });
+
+  it('a sheet-filed invoice from an older message of the thread counts only with the same amount and due day', async () => {
+    await invoices().createMany([
+      {
+        id: 'same',
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 8430,
+          dueDate: '2026-10-15',
+          status: 'open',
+        },
+      },
+      {
+        id: 'last-month',
+        data: {
+          payee: 'Stadtwerke Musterstadt',
+          amountMinor: 7900,
+          dueDate: '2026-09-15',
+          status: 'open',
+        },
+      },
+    ]);
+    await link('l-old', 'm-0', 'last-month');
+    // Last month's invoice in the same thread: this month's is still offered.
+    const offer = await offerOf(bill);
+    expect(offer.kind).toBe('create');
+    expect((offer as { state?: string }).state).toBeUndefined();
+    await link('l-same', 'm-0b', 'same');
+    expect(await offerOf(bill)).toMatchObject({ kind: 'create', state: 'live' });
+  });
+});

@@ -157,8 +157,9 @@ export async function invoiceOffers(
 async function filedMessages(
   rows: readonly { th: InvoiceThread; read: InvoiceRead }[],
 ): Promise<Set<string>> {
-  // The newest message; for an invoice (not a reminder) also any other message of its thread, since the
-  // sheet links the message that was open.
+  // The newest message; for an invoice (not a reminder) also another message of its thread – the sheet links
+  // the message that was open – but only when that invoice has the row's amount and due day: a thread of
+  // monthly bills („Ihre Rechnung ist da“) must still offer next month's.
   const byMessage = new Set(rows.map((x) => x.th.lastMessageId!));
   const byThread = new Set(rows.filter((x) => !x.read.dunning).map((x) => x.th.id));
   const links = await linkRepo
@@ -168,13 +169,24 @@ async function filedMessages(
   const repo = invoicesRepo();
   if (!repo || links.length === 0) return new Set();
   const found = await repo.table.bulkGet(links.map((l) => l.entryId));
-  const live = links.filter((_, i) => found[i] && found[i]!.deletedAt === null);
+  const live = links.flatMap((l, i) => {
+    const r = found[i] as
+      { deletedAt: number | null; amountMinor?: number; dueDate?: string } | undefined;
+    return r && r.deletedAt === null ? [{ link: l, row: r }] : [];
+  });
+  const byMsg = new Set(live.map((x) => x.link.messageId));
   return new Set(
     rows
       .filter(
         (x) =>
-          live.some((l) => l.messageId === x.th.lastMessageId) ||
-          (!x.read.dunning && live.some((l) => l.threadId === x.th.id)),
+          byMsg.has(x.th.lastMessageId!) ||
+          (!x.read.dunning &&
+            live.some(
+              ({ link, row }) =>
+                link.threadId === x.th.id &&
+                row.amountMinor === x.read.amountMinor &&
+                row.dueDate === x.read.date,
+            )),
       )
       .map((x) => x.th.lastMessageId!),
   );

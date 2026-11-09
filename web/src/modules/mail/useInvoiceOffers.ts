@@ -41,11 +41,15 @@ export function useInvoiceOffers(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   const ready = on && ids?.key === key ? ids.ids : undefined;
-  const offers = useLiveQuery(
-    () => (ready ? invoiceOffers(threads, ready) : Promise.resolve(undefined)),
+  // The result carries the key it was read for: a result of the previous rows is never handed out.
+  const result = useLiveQuery(
+    () =>
+      ready
+        ? invoiceOffers(threads, ready).then((offers) => ({ key, offers }))
+        : Promise.resolve(undefined),
     [ready],
   );
   if (!states) return undefined; // module states still loading
   if (!on || threads.length === 0) return NONE;
-  return ready ? offers : undefined;
+  return ready && result?.key === key ? result.offers : undefined;
 }
