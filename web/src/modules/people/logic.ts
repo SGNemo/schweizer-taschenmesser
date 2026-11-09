@@ -61,6 +61,14 @@ export function whenLabel(days: number): string {
   return Math.abs(days) <= 1 ? capitalize(relativeDays(days)) : relativeDays(days);
 }
 
+/** A card's meta line: phrases joined by " · ", each kept whole (no break inside "in 75 Tagen"). */
+export function metaLine(parts: readonly (string | undefined)[]): string {
+  return parts
+    .filter((p): p is string => !!p)
+    .map((p) => p.replace(/ /g, '\u00a0'))
+    .join(' · ');
+}
+
 export const dayBefore = (date: string, n: number): string => addDaysStr(date, -n);
 
 /** Only http(s) links are kept (a "javascript:" link in a shared backup must never be clickable). */
