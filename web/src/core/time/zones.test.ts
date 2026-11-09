@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isKnownZone, offsetLabel, offsetMinutes, showIn, zonedInstant } from './logic';
+import { isKnownZone, offsetLabel, offsetMinutes, showIn, zonedInstant } from './zones';
 
 const at = (date: string, time: string, zone: string) => {
   const ms = zonedInstant(date, time, zone);

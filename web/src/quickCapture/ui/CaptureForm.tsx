@@ -118,7 +118,7 @@ export function CaptureForm({
 }: CaptureFormProps) {
   const [settings] = useCaptureSettings();
   // One source for the module states and the types they allow (a second query could lag behind).
-  const { states, available, fitness } = useCaptureTypes();
+  const { states, available, fitness, place } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   // A text kept from an app the phone killed mid-typing comes back too (C04, `draft.ts`).
@@ -164,9 +164,14 @@ export function CaptureForm({
   const single = parts.length === 1 && text.includes('\n') && !oneEntry ? parts[0]! : text;
   const result = useMemo(
     () =>
-      parseCapture(single, { now: new Date(now()), defaultType: settings?.defaultType, fitness }),
+      parseCapture(single, {
+        now: new Date(now()),
+        defaultType: settings?.defaultType,
+        fitness,
+        place,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitness` is rebuilt per render; its two flags are the deps
-    [single, settings?.defaultType, fitness.meal, fitness.workout],
+    [single, settings?.defaultType, fitness.meal, fitness.workout, place],
   );
   const resolveOpts = {
     available,
@@ -208,6 +213,7 @@ export function CaptureForm({
               now: new Date(now()),
               defaultType: settings?.defaultType,
               fitness,
+              place,
             });
             const chosen = rowOverride[key];
             const res = resolveTarget(part, r, { ...resolveOpts, override: chosen?.type });
@@ -251,6 +257,7 @@ export function CaptureForm({
       settings?.defaultType,
       fitness.meal,
       fitness.workout,
+      place,
     ],
   );
   const rowTypes = batchTypes(available);

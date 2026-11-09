@@ -16,6 +16,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Habits | Daily and weekly goals with rings | optional |
 |  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
 |  | Weather | A page of its own for the weather at your place | on by default |
+|  | Clock | Add places and always see their time | preview |
 |  | Maps & places | Places and routes you need often | preview |
 |  | People | Never forget a birthday again and collect gifts per person | optional |
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |

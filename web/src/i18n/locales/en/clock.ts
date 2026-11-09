@@ -1,0 +1,56 @@
+import type { Strings } from '@/strings';
+
+export const clock: Strings['clock'] = {
+  meta: {
+    name: 'Clock',
+    description: 'Add places and always see their time – with day, night and time difference.',
+    quickAdd: 'Clock: add place',
+    widget: 'Time elsewhere',
+    showZone: 'Show the time zone under the place',
+    showZoneHelp: 'Shows the time zone under each place on the page, for example Asia/Tokyo.',
+  },
+  title: 'Clock',
+  here: 'Here',
+  hereLine: (zone) => `Your time · ${zone}`,
+  add: 'Add place',
+  addFirst: 'Add the first place',
+  empty: 'No places yet',
+  emptyHint:
+    'Add a place, for example where family or colleagues live. Its time then shows here and on the overview.',
+  full: (n) => `${n} places are added, no more fit. Remove one to add a new one.`,
+  list: 'Your places',
+  search: {
+    title: 'Add place',
+    label: 'City or time zone',
+    placeholder: 'e.g. Tokyo, New York, Asia/Kolkata',
+    hint: 'Works without internet. You can change the name afterwards.',
+    none: 'Nothing found. Try a bigger city nearby or the time zone, e.g. Europe/Lisbon.',
+    results: 'Results',
+  },
+  rename: {
+    title: 'Rename place',
+    label: 'Name',
+    hint: (zone) => `For example “Mum” or “Office”. Time zone: ${zone}`,
+  },
+  menu: {
+    label: (name) => `Actions for ${name}`,
+    rename: 'Rename',
+    up: 'Move up',
+    down: 'Move down',
+    remove: 'Remove',
+  },
+  added: (name) => `${name} added.`,
+  removed: (name) => `${name} removed.`,
+  renamed: 'Name changed.',
+  moved: 'Order changed.',
+  day: 'Day',
+  night: 'Night',
+  tomorrow: 'tomorrow',
+  yesterday: 'yesterday',
+  sameTime: 'same time',
+  aria: (name, time, parts) => `${name}: ${time}, ${parts}`,
+  widget: {
+    empty: 'No places yet.',
+    add: 'Add place',
+  },
+};

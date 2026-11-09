@@ -3341,6 +3341,26 @@
       "input": "Was habe ich letzte Woche trainiert?",
       "tags": ["negative"],
       "expect": []
+    },
+    {
+      "id": "h-clk-c01",
+      "input": "Nimm Kapstadt in die Weltuhr auf",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Kapstadt"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-clk-n01",
+      "input": "Welche Uhrzeit ist jetzt in New York?",
+      "tags": ["negative"],
+      "expect": []
     }
   ]
 }

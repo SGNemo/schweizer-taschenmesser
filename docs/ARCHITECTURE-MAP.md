@@ -20,7 +20,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 
 ## `web/` layout
 - `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, **fitness** (training + rough kcal, preview), invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, **clock** (Uhr: places and their time, preview), **fitness** (training + rough kcal, preview), invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
 - `src/tools/<id>/` – helpers (16: calc, currency, dates, dev, dice, diff, image, pdf, persona, qr, regex, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `tools/` (toolbox panel), `assistant/`.
@@ -45,7 +45,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Event bus | `web/src/core/events/{bus,events,index}.ts` | typed `EventMap` |
 | **DB / data** | `web/src/core/db/` | `repo.ts` (`createRepo`, `createMany`, `purge`), `hlc.ts`, `schema*.json`, `appMigrations.ts` (+`Steps`), `db.ts` (modules: no import) |
 | Settings | `core/settings/settings.ts` (`useSettings`), `core/settings/registry/`, `pages/settings/sections.tsx`; comfort: `core/settings/{quick,frequent,reset}.ts`, `core/deeplink.ts`; [howto/new-setting.md](howto/new-setting.md) | `SettingsSectionDef` |
-| Time | `web/src/core/time/{now,dates,due}.ts` | `now()`, `today()` |
+| Time | `web/src/core/time/{now,dates,due}.ts`; zones: `zones.ts`, `placeSearch.ts` + `cities.ts` (offline), `useMinuteNow.ts` | `now()`, `today()`; `showIn()`, `searchPlaces()`, one tick per minute |
 | **Sync client** | `web/src/core/sync/`: `engine.ts` (`runSync`), `ops.ts` (`mergeOps` – the LWW rule), `service.ts` (`syncNow`, `startSync`, `connect`), `types.ts` (`SyncAdapter`, `FieldOp`), `crypto.ts` (sync E2E), `adapters/selfHosted.ts`, `adapters/googleDrive.stub.ts` (unbuilt), `testing.ts` (`MemoryServer`) | |
 | Storage adapter | `web/src/core/storage/{types,dexie}.ts` | `StorageAdapter`, outbox |
 | **Sync server** | `server/src/`: `app.ts` (routes), `store.ts` (SQL upsert = LWW rule), `auth.ts` (bearer tokens), `push.ts` (Web Push), `proxy.ts` (SSRF-hardened fetch), `index.ts` (env/bootstrap) | env names in `server/.env.example`; compose service `sync`, port `${PORT:-8787}` |

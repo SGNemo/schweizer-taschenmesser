@@ -16,6 +16,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
 |  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
 |  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
+|  | Uhr | Orte eintragen und ihre Uhrzeit immer sehen | Vorschau |
 |  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
 |  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |

@@ -204,7 +204,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
       {rail ? <Logo size={32} /> : <Wordmark height={44} title={t.appName} />}
     </a>
   );
-  // The clock sits next to the link, not in it: it is no click target.
+  // The clock sits next to the home link, not in it: it opens the Uhr module (while that is on) or nothing.
   const brand = clockOn ? (
     <div className={rail ? styles.brandRail : styles.brandRow}>
       {link}
