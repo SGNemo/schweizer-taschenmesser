@@ -348,6 +348,7 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SV4 Punkt „weicht vom Standard ab“:** Darstellung → Farbschema „Dunkel“: in der Liste erscheint der Punkt bei „Darstellung“; „Auf Standard“ entfernt ihn; ein Screenreader liest den Text. ☐
 
 ## Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
+
 - **LB1 Handy:** Modul-Bibliothek: Kopf mit Zahlen, Werkzeugleiste (Suche, Filter, Bereich) bricht um, Karten einspaltig; „Details“ öffnet das Modul, Android-Zurück führt zur Liste. ☐
 - **LB2 „Ruhig“ und „Modulfarben: Aus“:** Kartenköpfe, Plättchen und Miniaturen werden grau, Text bleibt lesbar. ☐
 - **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
@@ -671,6 +672,7 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **WK5 Browser-Pille:** Browser (Windows-App): die Pille zeigt nur den Host der offenen Seite; der aktive Tab ist als gefüllter Chip erkennbar, auch in „Ruhig“.
 
 ## Identität v3: Medien und Dienste (Paket 3) – nur von Hand prüfbar
+
 - **MD1 Mail-Spalten (Windows-App):** E-Mail mit verbundenem Konto: bei breiter Seite stehen Ordner, Liste und Lesefenster nebeneinander, beim Verkleinern des Fensters oder Einblenden der Seitenleiste wechselt es zur Liste mit Mail darüber; der offene Ordner ist ein gefüllter Chip.
 - **MD2 Umschlag:** der Umschlag im Kopf zeigt keine Zahlen und keinen Mailtext; die Briefmarke daneben trägt die Zahl der ungelesenen Mails.
 - **MD3 Musik:** Warteschlange neben der Liste, sobald die Seite breit genug ist; Cover-Kopf unverändert.
@@ -686,6 +688,7 @@ Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-
 - **U4 12-Stunden-Format:** Einstellungen → Sprache & Format → en-US: Seite und Widget zeigen „11:07 PM“ ohne Überlauf am Handy. ☐
 
 ## Sync im Heimnetz: Hub im PC (Paket 2b-2) – nur auf Windows prüfbar
+
 - **L1 Firewall:** Hub starten, Kopplungsfenster öffnen: Windows fragt einmal nach Freigabe für private Netze; „Zulassen“ merken, „Abbrechen“ → `lan_hub_status` meldet weiter `listening`, ein Handy findet den Hub nicht (Hinweis „Windows blockiert“ in der Oberfläche folgt mit Paket 4).
 - **L2 Netzwerkart:** WLAN auf „Öffentlich“ stellen: `lan_hub_status` zeigt `off`, `blocked: true`, kein Port lauscht (`netstat -ano`); zurück auf „Privat“: lauscht wieder, ohne Neustart (≤ 2 s).
 - **L3 Netzwechsel:** erste Kopplung im Heim-WLAN, dann Hotspot des Handys: Hub lauscht nicht mehr; zurück ins Heim-WLAN: lauscht wieder. VPN/WSL/Docker-Adapter erscheinen nie in `netstat`.
@@ -693,6 +696,7 @@ Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-
 - **L5 Schlüsselspeicher:** In der Anmeldeinformationsverwaltung stehen Einträge `io.github.sgnemo.taschenmesser.lan-sync` (Dev-Preview: `….dev.lan-sync`); Eintrag löschen → nächster Start legt neue Schlüssel an, alle Geräte müssen neu koppeln.
 
 ## Sync im Heimnetz: PC und Handy koppeln (Pakete 3a/3b) – nur mit Windows-PC und Android-Handy prüfbar
+
 - **L6 Koppeln:** PC: Einstellungen → Synchronisation → „Gerät koppeln“ → QR erscheint (Firewall-Abfrage beim ersten Mal: „Zulassen“). Handy: Einstellungen → Synchronisation → „Mit PC koppeln“ → Kamera-Erlaubnis → QR scannen. Beide zeigen denselben 6-stelligen Code; PC: „Koppeln“. Handy: „Abgeglichen · Mit deinem PC gekoppelt“; PC listet das Gerät. Nichts eingetippt. ☐
 - **L7 Abgleich hin und zurück:** ToDo am Handy anlegen → am PC „Jetzt abgleichen“ → erscheint; am PC ändern → Handy „Jetzt abgleichen“ → geändert. Dasselbe Feld auf beiden geändert: die spätere Änderung gewinnt. ☐
 - **L8 PC aus:** Nemo am PC beenden → Handy „Jetzt abgleichen“: ruhige Zeile „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“, kein Rot, keine Meldung; Nemo wieder starten → nächster Abgleich klappt. Neue IP des PCs: siehe L16. ☐
@@ -706,5 +710,5 @@ Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-
 - **L13 Öffentliches Netz / Kamera:** Windows-Netz auf „Öffentlich“ → PC „Gerät koppeln“: kein QR, stattdessen die Schritte zu „Privat“ und „Windows-Einstellungen öffnen“ (öffnet Netzwerkstatus); auf „Privat“ stellen → QR erscheint nach wenigen Sekunden von selbst. Handy „Mit PC koppeln“: Kamera-Dialog in der App mit „Abbrechen“, Android fragt einmal nach der Kamera; ablehnen → ruhige Zeile „Kamera ist aus …“, kein Absturz; erlauben → QR wird erkannt. ☐
 - **L14 PC neu gestartet:** gekoppelt, am Handy eine Änderung → Nemo am PC beenden und neu starten (auch: am nächsten Tag) → Handy „Jetzt abgleichen“: gleicht ab, „Noch nicht abgeglichen“ verschwindet. Ist der PC aus: Zeile „Eben versucht – der PC hat nicht geantwortet …“. ☐
 - **L15 Umstieg vom Server:** PC und Handy am eigenen Server → „Vom Server auf das Heimnetz umstellen“: „Vom Server trennen“ erst nach „Sicherung speichern“; die Liste zeigt das andere Gerät mit „Am Server sperren“; nach dem Trennen bleiben alle Einträge, dann koppeln → beide gleichen im Heimnetz ab, nichts doppelt, nichts weg. ☐
-- **L16 PC neue IP → Handy findet ihn wieder:** gekoppelt; am Router dem PC eine andere IP geben (DHCP-Reservierung ändern oder PC an anderen Port/Switch, `ipconfig` prüfen), Nemo am PC läuft → Handy „Jetzt abgleichen“: nach höchstens ein paar Sekunden „Abgeglichen“, ohne neu zu koppeln; nächster Abgleich ist wieder sofort (neue Adresse gemerkt). Gegenprobe: Gäste-WLAN oder Netz mit Client-Isolation → ruhige Zeile, kein Rot, kein zweiter Versuch innerhalb von 30 s. ☐
-
+- **L16 Zweiter PC per Webcam koppeln:** Hub-PC: „Gerät koppeln“ → QR. Zweiter Windows-PC mit Webcam: Einstellungen → Synchronisation → „Mit einem anderen PC koppeln“ → WebView2 fragt nach der Kamera („Zulassen“) → Webcam auf den QR am Hub-PC → Code auf beiden gleich → am Hub-PC „Koppeln“: der zweite PC zeigt „Abgeglichen“ / „Mit deinem PC gekoppelt“, „Gerät koppeln“ ist dort weg; ein ToDo wandert hin und zurück. Ohne Webcam (oder abgesteckt): ruhige Zeile „Ohne Kamera geht das Koppeln mit einem anderen PC noch nicht.“ mit Verweis auf „Eigener Server (erweitert)“, kein Rot. In der Anmeldeinformationsverwaltung des zweiten PCs stehen `lan-client:static-key` und `lan-client:hub` unter `io.github.sgnemo.taschenmesser`. Hub-PC beenden → zweiter PC „Jetzt abgleichen“: „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“. ☐
+- **L17 PC neue IP → Handy findet ihn wieder:** gekoppelt; am Router dem PC eine andere IP geben (DHCP-Reservierung ändern oder PC an anderen Port/Switch, `ipconfig` prüfen), Nemo am PC läuft → Handy „Jetzt abgleichen“: nach höchstens ein paar Sekunden „Abgeglichen“, ohne neu zu koppeln; nächster Abgleich ist wieder sofort (neue Adresse gemerkt). Gegenprobe: Gäste-WLAN oder Netz mit Client-Isolation → ruhige Zeile, kein Rot, kein zweiter Versuch innerhalb von 30 s. ☐

@@ -44,6 +44,14 @@ const TICK: Duration = Duration::from_secs(2);
 #[derive(Default)]
 pub struct LanSync(Mutex<Option<Running>>);
 
+impl LanSync {
+    /// The hub is started (listening or waiting for a network); a poisoned lock counts as running,
+    /// so a client pairing is refused rather than allowed beside a hub.
+    pub fn is_running(&self) -> bool {
+        self.0.lock().map_or(true, |slot| slot.is_some())
+    }
+}
+
 struct Running {
     core: Arc<Core>,
     stop: Arc<AtomicBool>,
@@ -416,6 +424,10 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
                 key: base64::engine::general_purpose::STANDARD.encode(&dk.key[..]),
             },
         });
+    }
+    // one path per device: a PC paired with another hub PC never becomes a hub itself
+    if crate::lan_client::is_paired(&app) {
+        return Err("client-paired".to_owned());
     }
     let (core, data_key) = build(&app)?;
     let stop = Arc::new(AtomicBool::new(false));

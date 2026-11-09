@@ -260,6 +260,55 @@ describe('a phone paired with the hub PC', () => {
   });
 });
 
+describe('a second PC: one path per device', () => {
+  function secondPc() {
+    const p = pc();
+    const client = createFakeLanClientForTest();
+    p.deps.lanClient = () => client.client;
+    return { ...p, client };
+  }
+
+  it('a PC paired as a client never turns on its own hub', async () => {
+    const hubPc = pc();
+    await enableLanHub(hubPc.deps);
+    const p = secondPc();
+    expect(await pairWithPc('NEMO1:qr', 'Windows-PC', () => p.client.confirm(), p.deps)).toEqual({
+      ok: true,
+    });
+    const start = vi.spyOn(fake.hub, 'start');
+    expect(await enableLanHub(p.deps)).toEqual({ ok: false, reason: 'client-paired' });
+    expect(start).not.toHaveBeenCalled();
+    expect((await loadSyncConfig(p.db))?.kind).toBe('lanClient');
+  });
+
+  it('the hub PC never pairs as a client of another PC', async () => {
+    const p = secondPc();
+    await enableLanHub(p.deps);
+    const pair = vi.spyOn(p.client.client, 'pair');
+    expect(await pairWithPc('NEMO1:qr', 'Windows-PC', () => undefined, p.deps)).toEqual({
+      ok: false,
+      reason: 'hub-on',
+    });
+    expect(pair).not.toHaveBeenCalled();
+    expect((await loadSyncConfig(p.db))?.kind).toBe('lanHub');
+  });
+
+  it('keeps the shell refusals: hub-on from pairing, client-paired from the hub start', async () => {
+    const p = secondPc();
+    p.client.failNext('hub-on');
+    expect(await pairWithPc('NEMO1:qr', 'Windows-PC', () => undefined, p.deps)).toEqual({
+      ok: false,
+      reason: 'hub-on',
+    });
+    const refusing = pc({
+      ...fake.hub,
+      start: () => Promise.reject(new Error('client-paired')),
+    });
+    expect(await enableLanHub(refusing.deps)).toEqual({ ok: false, reason: 'client-paired' });
+    expect(await loadSyncConfig(refusing.db)).toBeUndefined();
+  });
+});
+
 /** A device client in front of the shared fake hub (stands in for `lan_client.rs`). */
 function createFakeLanClientForTest() {
   let resolveConfirm: (() => void) | undefined;

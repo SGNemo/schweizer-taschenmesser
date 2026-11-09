@@ -1,14 +1,8 @@
 {
   "$schema": "../gen/schemas/mobile-schema.json",
   "identifier": "mobile",
-  "description": "Android only: the device side of home-network sync (pair with the hub PC by QR, sync requests) and the Wi-Fi state/events of the lan-watch plugin (its hub search is Rust-only). The QR is scanned in the app's own camera dialog; nothing runs in the background.",
+  "description": "Android only: the Wi-Fi state and events of the lan-watch plugin (its hub search is Rust-only). The lan_client commands are granted in default.json (one path per device, phone and second PC); nothing runs in the background.",
   "webviews": ["main"],
   "platforms": ["android", "iOS"],
-  "permissions": [
-    "allow-lan-client-pair",
-    "allow-lan-client-pair-cancel",
-    "allow-lan-client-request",
-    "allow-lan-client-unpair",
-    "lan-watch:default"
-  ]
+  "permissions": ["lan-watch:default"]
 }
