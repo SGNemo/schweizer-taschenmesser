@@ -84,6 +84,13 @@ async function metrics(page: Page) {
   });
 }
 
+/** U01: the frame stores the head row's room once the hold for that route ended, i.e. the page has settled. */
+async function headSettled(page: Page, key: string) {
+  await expect
+    .poll(() => page.evaluate((k) => localStorage.getItem(k), `tm-head-room:${key}`))
+    .not.toBeNull();
+}
+
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp });
@@ -257,6 +264,40 @@ test.describe('phone header', () => {
     expect(box.h1Top - box.mainTop).toBeLessThan(120);
   });
 
+  // U24 (UI round 6): a `fokus` head stacks on the phone – the module's name, then the figure with the mark beside it
+  // where it fits, else under it; one left edge, nothing centred.
+  test('fokus heads stack left-aligned under the title', async ({ page }) => {
+    await prepare(page);
+    for (const path of ['/people', '/invoices', '/todos']) {
+      await page.goto(path);
+      await expect(page.locator('main h1').first()).toBeVisible();
+      await headSettled(page, `${path}@phone`);
+      const box = await page.getByTestId('module-frame').evaluate((frame) => {
+        const r = (el: Element | null | undefined) => {
+          const b = el?.getBoundingClientRect();
+          return b && b.width > 0
+            ? { left: b.left, right: b.right, top: b.top, bottom: b.bottom }
+            : null;
+        };
+        const mark = frame.querySelector('[data-testid="module-signature"]');
+        // The figure's box is the slot right before the mark.
+        return {
+          title: r(frame.querySelector('h1')),
+          figure: r(mark?.previousElementSibling),
+          mark: r(mark),
+        };
+      });
+      expect(box.title, path).not.toBeNull();
+      expect(box.mark, path).not.toBeNull();
+      // Under the title, never beside it.
+      expect(box.mark!.top, path).toBeGreaterThanOrEqual(box.title!.bottom - 1);
+      // On the title's left edge, or right beside the figure.
+      const onEdge = Math.abs(box.mark!.left - box.title!.left) <= 1;
+      const besideFigure = !!box.figure && box.mark!.left >= box.figure.right - 1;
+      expect(onEdge || besideFigure, `${path}: mark at ${box.mark!.left}`).toBe(true);
+    }
+  });
+
   test('the topbar folds away on scrolling down and returns on scrolling up', async ({ page }) => {
     await prepare(page);
     await page.goto('/calendar');
@@ -334,5 +375,89 @@ test.describe('desktop header', () => {
       return tabs.top >= label.bottom - 1;
     });
     expect(stacked).toBe(true);
+  });
+});
+
+// U01 (UI round 6): the head band, the title row and the figure's room are there in the first paint, so nothing below
+// the band moves when the module's chunk and its data arrive.
+test.describe('no layout shift on load', () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  /** Records the top of the page under the head on every frame (one entry per change) and the layout-shift total. */
+  const watchShifts = (page: Page) =>
+    page.addInitScript(`
+      window.__u01 = { tops: [], cls: 0 };
+      try {
+        new PerformanceObserver((list) => {
+          for (const e of list.getEntries()) if (!e.hadRecentInput) window.__u01.cls += e.value;
+        }).observe({ type: 'layout-shift', buffered: true });
+      } catch {}
+      let frames = 0;
+      const sample = () => {
+        const el = document.querySelector('main [data-testid="page"]');
+        if (el) {
+          const top = Math.round(el.getBoundingClientRect().top);
+          const tops = window.__u01.tops;
+          if (tops[tops.length - 1] !== top) tops.push(top);
+        }
+        if (++frames < 600) requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    `);
+
+  async function visit(page: Page, path: string) {
+    await page.goto(path);
+    await expect(page.locator('main h1')).toBeVisible();
+    // Watch a window longer than the frame's hold (1 s): stability over time cannot be polled for.
+    await page.waitForTimeout(1500);
+    const { tops, cls } = await page.evaluate(
+      () => (window as unknown as { __u01: { tops: number[]; cls: number } }).__u01,
+    );
+    expect(tops, `${path}: top of the page under the head, one value per change`).toHaveLength(1);
+    expect(cls, `${path}: layout-shift total`).toBeLessThan(0.05);
+  }
+
+  test('the page under the module head keeps its place from the first paint', async ({ page }) => {
+    await prepare(page);
+    // One open invoice, so the head shows its figure (the open sum) – the case that used to push the page down.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction('invoices_invoice', 'readwrite');
+            tx.objectStore('invoices_invoice').put({
+              id: 'inv1',
+              payee: 'Stadtwerke',
+              amountMinor: 4200,
+              dueDate: '2026-10-05',
+              status: 'open',
+              createdAt: 1,
+              updatedAt: 1,
+              deviceId: 'e2e',
+              deletedAt: null,
+              _f: {},
+            });
+            tx.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+    );
+    await watchShifts(page);
+    await visit(page, '/invoices');
+  });
+
+  test('a module without a figure keeps its place on the next visit', async ({ page }) => {
+    await prepare(page);
+    await page.goto('/people');
+    await expect(page.locator('main h1')).toBeVisible();
+    await headSettled(page, '/people@wide');
+    await watchShifts(page);
+    await visit(page, '/people');
   });
 });
