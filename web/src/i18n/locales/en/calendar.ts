@@ -124,6 +124,7 @@ export const calendar: Strings['calendar'] = {
   agenda: 'Agenda',
   allDayRow: 'All day and without a time',
   timeGrid: 'Time grid',
+  hoursRegion: 'Hours of the day',
   widgetEmpty: 'Nothing planned.',
   stageBody: (minutes: number, time: string) =>
     (minutes >= 1440
