@@ -55,7 +55,7 @@ html[data-v=four] .top .btn.primary{background:transparent;border:1px solid var(
 /* (5) density per device: master–detail, reading measure, rows 44 px */
 html[data-v=four] .frame{gap:16px;padding-top:0}
 html[data-v=four] .body.with-aside{grid-template-columns:minmax(0,1fr) 24rem}
-html[data-v=four] .split{display:grid;grid-template-columns:minmax(0,26rem) minmax(0,1fr);gap:16px;align-items:start}
+html[data-v=four] .split{display:grid;grid-template-columns:minmax(0,1fr) clamp(22rem,30%,30rem);gap:16px;align-items:start}
 html[data-v=four] .split .list{padding:0 16px}
 html[data-v=four] .split .list .row{min-height:44px;padding:4px 0}
 html[data-v=four] .split .list .row.sel{background:color-mix(in srgb,var(--mod) 10%,var(--surface-raised));margin:0 -16px;padding:4px 16px;border-radius:var(--r-sm)}
@@ -187,3 +187,10 @@ html[data-v=four] .favbar a{height:44px}
 html[data-v=four] .w .mini .ctl span{width:44px;height:44px}
 html[data-v=four] .seg{padding:0}
 html[data-v=four] .seg span{min-height:44px;padding:0 14px}
+
+/* round-10: master–detail per DESIGN-SPEC §2 (wide list, detail panel); reading pages centred; KPI line may wrap; label at the top on the phone */
+html[data-v=four] .detail{max-width:none}
+html[data-v=four] body[data-reading] .titlerow,html[data-v=four] body[data-reading] .tabs,html[data-v=four] .reading{margin-inline:auto}
+html[data-v=four] body[data-reading] .head{text-align:initial}
+html[data-v=four][data-device=mobile] .kpiline{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.5}
+html[data-v=four][data-device=mobile] .label{bottom:auto;top:62px;opacity:.6}
