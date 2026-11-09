@@ -217,16 +217,35 @@ async function filedMessages(
   );
 }
 
-/** A deleted invoice under the row's id still holds the row's payee, amount, due day and reminder level. */
+/** The reminder level as the invoices store it (1–3; none = 0). */
+const levelOf = (read: InvoiceRead): number =>
+  read.dunning ? Math.min(3, Math.max(1, read.dunning)) : 0;
+
+/**
+ * A deleted invoice under one of the row's ids still is exactly what the row would write: payee, amount, due
+ * day, reminder level and day, and still open (a paid or edited one never comes back unseen).
+ */
 async function holdsRead(id: string, read: InvoiceRead): Promise<boolean> {
   const row = (await invoicesRepo()?.table.get(id)) as
-    { payee?: string; amountMinor?: number; dueDate?: string; dunningLevel?: number } | undefined;
+    | {
+        payee?: string;
+        amountMinor?: number;
+        dueDate?: string;
+        status?: string;
+        paidAt?: string;
+        dunningLevel?: number;
+        dunnedAt?: string;
+      }
+    | undefined;
   return (
     !!row &&
+    row.status !== 'paid' &&
+    !row.paidAt &&
     row.payee === read.payee &&
     row.amountMinor === read.amountMinor &&
     row.dueDate === read.date &&
-    (row.dunningLevel ?? 0) === (read.dunning ?? 0)
+    (row.dunningLevel ?? 0) === levelOf(read) &&
+    (row.dunnedAt ?? '') === (read.dunning ? read.mailDate : '')
   );
 }
 
@@ -341,28 +360,31 @@ export async function createInvoice(
     ...(note ? { note } : {}),
   };
   try {
-    let saved = await saveCapture('invoice', fields, { id: offer.id });
-    if (saved.existed === true) {
-      await linkOnce(account, th, saved);
-      onChanged();
-      return void toast(t.mail.invoice.already);
-    }
-    // Deleted before: the same invoice comes back only while it holds exactly what the row shows (the sheet
-    // may have written corrected values under this id); otherwise the row's values go into a new invoice.
-    if (saved.existed === 'tombstone') {
-      if (await holdsRead(offer.id, read)) saved = await reinstateCapture('invoice', offer.id);
-      else {
-        // A second fixed id from the message and the shown values: a repeat tap finds this invoice too.
-        const again = `mail-${await captureId([th.lastMessageId!, 'invoice', read.payee, String(read.amountMinor), read.date ?? '', String(read.dunning ?? 0)])}`;
-        saved = await saveCapture('invoice', fields, { id: again });
-        if (saved.existed === true) {
-          await linkOnce(account, th, saved);
-          onChanged();
-          return void toast(t.mail.invoice.already);
-        }
-        if (saved.existed === 'tombstone') saved = await reinstateCapture('invoice', again);
+    // The row's id first, then a second fixed id from the message and the shown values (so a repeat tap after
+    // a deleted invoice with other values finds the new one). Under each: there → „Schon angelegt“; deleted →
+    // back only while it holds exactly what the row shows, else on to the next; none left → a new invoice.
+    const ids = [
+      offer.id,
+      `mail-${await captureId([th.lastMessageId!, 'invoice', read.payee, String(read.amountMinor), read.date ?? '', String(levelOf(read))])}`,
+    ];
+    let saved: SavedCapture | undefined;
+    for (const id of ids) {
+      const tried = await saveCapture('invoice', fields, { id });
+      if (tried.existed === true) {
+        await linkOnce(account, th, tried);
+        onChanged();
+        return void toast(t.mail.invoice.already);
+      }
+      if (!tried.existed) {
+        saved = tried;
+        break;
+      }
+      if (await holdsRead(id, read)) {
+        saved = await reinstateCapture('invoice', id);
+        break;
       }
     }
+    saved ??= await saveCapture('invoice', fields);
     const link = await linkOnce(account, th, saved);
     onChanged();
     const done = saved;
