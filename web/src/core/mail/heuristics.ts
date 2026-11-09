@@ -233,6 +233,72 @@ export function analyzeMessage(m: MailMeta): MailFinding | undefined {
   return undefined;
 }
 
+/** „Mahnung“, „2. Mahnung“, „Zahlungserinnerung“, „Zahlungsaufforderung“ (the words of the parser). */
+const DUNNING =
+  /(?<![\p{L}\p{N}])(?:(\d)\.\s*)?(mahnung|zahlungserinnerung|zahlungsaufforderung)(?![\p{L}\p{N}])/iu;
+/** The level of a payment reminder named in the text („2. Mahnung“ → 2, „Zahlungserinnerung“ → 1). */
+export function dunningOf(text: string): number | undefined {
+  const m = DUNNING.exec(text);
+  // Levels above 3 („4. Mahnung“) are the highest level the invoices know.
+  return m ? Math.min(3, Math.max(1, m[1] ? Number(m[1]) : 1)) : undefined;
+}
+
+/** The amount is collected by the payee: nothing to pay or plan. */
+const DEBIT = /(abgebucht|abbuchung|lastschrift|wird eingezogen|direct debit)/i;
+/** A reminder names its new deadline mostly with „bis“. */
+const DEADLINE = /(fällig|zahlbar|zahlungsziel|spätestens|\bbis\b|due)/i;
+
+/** An invoice mail as one row of the mail list can show it (sender, subject and preview line only). */
+export interface InvoiceRead {
+  payee: string;
+  amountMinor?: number;
+  /** Due day; for a reminder its new deadline, for a debit the day of the debit. 'YYYY-MM-DD'. */
+  date?: string;
+  /** A payment reminder and its level (1–3). */
+  dunning?: number;
+  /** „wird abgebucht“: shown as text, nothing to create. */
+  debit: boolean;
+  /** Exactly one amount, a date and a payee name: the values can be written in one tap. */
+  sure: boolean;
+  /** 'YYYY-MM-DD' of the mail. */
+  mailDate: string;
+}
+
+/**
+ * Reads an invoice or payment reminder from what a list row holds. Pure and local, like `analyzeMessage`
+ * (whose invoice rule it uses). `sure` only with one amount, one date and a payee that is a name (never
+ * an address): anything less opens the preview sheet instead of writing.
+ */
+export function readInvoiceMail(m: MailMeta): InvoiceRead | undefined {
+  const found = analyzeMessage(m);
+  if (found?.kind !== 'invoice') return undefined;
+  const text = `${cleanSubject(m.subject)}. ${m.snippet}`;
+  const dun = dunningOf(text);
+  const debit = !dun && DEBIT.test(text);
+  const date =
+    found.date ??
+    (dun ? dateNear(text, DEADLINE, found.mailDate) : undefined) ??
+    (debit ? findDates(text, found.mailDate)[0]?.date : undefined);
+  const amounts = new Set(
+    [...text.matchAll(AMOUNT)].map((x) => parseMoney(x[1] ?? x[2] ?? '')).filter(Boolean),
+  );
+  const payee = found.title.trim();
+  return {
+    payee,
+    ...(found.amountMinor !== undefined ? { amountMinor: found.amountMinor } : {}),
+    ...(date ? { date } : {}),
+    ...(dun ? { dunning: dun } : {}),
+    debit,
+    sure:
+      found.amountMinor !== undefined &&
+      !!date &&
+      amounts.size === 1 &&
+      !!payee &&
+      !payee.includes('@'),
+    mailDate: found.mailDate,
+  };
+}
+
 /** Keeps the newest suggestion per (kind, title, amount): monthly bills would otherwise repeat. */
 export function dedupeFindings(findings: MailFinding[]): MailFinding[] {
   const best = new Map<string, MailFinding>();
