@@ -148,11 +148,48 @@ test.describe('mail (demo mails)', () => {
     const list = dialog.getByTestId('mail-plan-all');
     // Personal senders ticked, bulk / invoice senders not; nothing written before the button.
     await expect(list.getByRole('checkbox', { name: /Anna Beispiel/ })).toBeChecked();
-    await expect(list.getByRole('checkbox', { name: /Stadtwerke/ })).not.toBeChecked();
+    await expect(
+      list.getByRole('checkbox', { name: /Stadtwerke Musterstadt · Ihre Rechnung/ }),
+    ).not.toBeChecked();
     const save = dialog.getByRole('button', { name: /^In den Plan \(\d+\)$/ });
     await expect(save).toBeEnabled();
     await save.click();
     await expect(page.getByText(/Mails im Plan/)).toBeVisible();
+  });
+
+  test('„Anlegen“ under an invoice mail: values first, one tap, a second tap finds it', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const create = page.getByRole('button', {
+      name: /^Rechnung anlegen: Stadtwerke Musterstadt · 84,30/,
+    });
+    await expect(create).toBeVisible({ timeout: 10_000 });
+    await create.click();
+    await expect(page.getByText('Rechnung angelegt')).toBeVisible();
+    // The line now says it is there; no second verb, so no second invoice.
+    await expect(create).toHaveCount(0);
+    await expect(page.getByTestId('mail-invoice-done').first()).toContainText('angelegt');
+    await page.goto('/invoices');
+    await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
+    // The mail of a debit shows its day as text and offers nothing to create.
+    await page.goto('/mail');
+    const debit = page.getByTestId('mail-invoice-line').filter({ hasText: 'Abbuchung am' });
+    await expect(debit).toContainText('Internetanbieter Muster · 39,99');
+    await expect(debit.getByRole('button')).toHaveCount(0);
+  });
+
+  test('a payment reminder notes itself on the open invoice; amount and due stay', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const line = page.getByTestId('mail-invoice-line').filter({ hasText: 'Mahnung zu Rechnung' });
+    await expect(line).toContainText('Stadtwerke Musterstadt');
+    await expect(line).toContainText('92,40 € bis');
+    await line.getByRole('button', { name: /^Mahnung vermerken:/ }).click();
+    await expect(page.getByText('Mahnung vermerkt')).toBeVisible();
+    await expect(line).toContainText('vermerkt');
+    await expect(line.getByRole('button')).toHaveCount(0);
   });
 
   test('`?open=` opens a known thread and ignores anything else', async ({ page }) => {
@@ -200,7 +237,8 @@ test.describe('mail (demo mails)', () => {
     const inbox = page.getByTestId('widget-mail:inbox');
     await expect(inbox).toContainText('ungelesen');
     await expect(inbox).toContainText('Ihre Rechnung für Oktober');
-    await expect(inbox).toContainText('Rechnungsmail');
+    // „Kopf leer“ 3b: the count got a verb and is the way to the list.
+    await expect(inbox.getByRole('link', { name: /Rechnung(en)? zum Anlegen/ })).toBeVisible();
   });
 
   test('new-mail notifications are off by default and their switch is in the module settings', async ({
