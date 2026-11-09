@@ -58,26 +58,32 @@ test.describe('UI round 6 – desktop 1920', () => {
     await start(page, '/');
     const grid = page.getByTestId('home-grid');
     await expect(grid).toHaveAttribute('data-packed', 'true');
-    // Lazy widgets load and re-pack; let the last ones settle.
-    await page.waitForTimeout(1500);
-    const holes = await grid.evaluate((g) => {
-      const gap = parseFloat(getComputedStyle(g).columnGap);
-      const boxes = Array.from(g.children).map((c) => {
-        const r = c.getBoundingClientRect();
-        return { id: c.getAttribute('data-testid'), x: r.left, y: r.top, w: r.width, h: r.height };
+    // Lazy widgets load and re-pack: poll until the grid has settled without holes.
+    const holes = () =>
+      grid.evaluate((g) => {
+        const gap = parseFloat(getComputedStyle(g).columnGap);
+        const boxes = Array.from(g.children).map((c) => {
+          const r = c.getBoundingClientRect();
+          return {
+            id: c.getAttribute('data-testid'),
+            x: r.left,
+            y: r.top,
+            w: r.width,
+            h: r.height,
+          };
+        });
+        const top = Math.min(...boxes.map((b) => b.y));
+        // Above every card, in the columns it covers, the nearest card ends one gap higher (or the grid starts).
+        return boxes
+          .map((b) => {
+            const above = boxes
+              .filter((o) => o.y < b.y && o.x < b.x + b.w - 1 && o.x + o.w > b.x + 1)
+              .map((o) => o.y + o.h);
+            return { id: b.id, free: Math.round(b.y - (above.length ? Math.max(...above) : top)) };
+          })
+          .filter((x) => x.free > gap + 2);
       });
-      const top = Math.min(...boxes.map((b) => b.y));
-      // Above every card, in the columns it covers, the nearest card ends one gap higher (or the grid starts).
-      return boxes
-        .map((b) => {
-          const above = boxes
-            .filter((o) => o.y < b.y && o.x < b.x + b.w - 1 && o.x + o.w > b.x + 1)
-            .map((o) => o.y + o.h);
-          return { id: b.id, free: Math.round(b.y - (above.length ? Math.max(...above) : top)) };
-        })
-        .filter((x) => x.free > gap + 2);
-    });
-    expect(holes).toEqual([]);
+    await expect.poll(holes, { timeout: 15_000 }).toEqual([]);
   });
 
   test('U49: the calm overview ends flush with the day cards', async ({ page }) => {
@@ -92,14 +98,13 @@ test.describe('UI round 6 – desktop 1920', () => {
     const grid = await page.getByTestId('home-grid').boundingBox();
     const widgets = page.locator('[data-testid="home-grid"] > [data-testid^="widget-"]');
     expect(agenda && list && grid).toBeTruthy();
-    // The cards of the (only) row share the full width: the last one ends where the day cards end.
-    if (cards.length <= 6)
-      expect(Math.abs(Math.max(...cards) - agenda!.x - agenda!.width)).toBeLessThan(2);
-    // A single calm card takes the full width.
-    if ((await widgets.count()) === 1) {
-      const w = await widgets.first().boundingBox();
-      expect(Math.abs(w!.width - grid!.width)).toBeLessThan(2);
-    }
+    // The cards share the full width: the last one ends where the day cards end.
+    expect(cards.length).toBeGreaterThan(0);
+    expect(Math.abs(Math.max(...cards) - agenda!.x - agenda!.width)).toBeLessThan(2);
+    // The seeded calm view shows the one "Heute" card (no pins): it takes the full width.
+    await expect(widgets).toHaveCount(1);
+    const w = await widgets.first().boundingBox();
+    expect(Math.abs(w!.width - grid!.width)).toBeLessThan(2);
   });
 
   test('U03 + U31: settings cards never break inside a word and line up; the nav state keeps its line', async ({
@@ -138,6 +143,8 @@ test.describe('UI round 6 – desktop 1920', () => {
 
   test('U32: library cards of one row share head height and foot rows', async ({ page }) => {
     await start(page, '/tools');
+    // The cards arrive with the tool list: wait for them before measuring.
+    await expect(page.locator('[data-testid^="tool-"]').nth(3)).toBeVisible();
     const heads = await page
       .locator('[data-testid^="tool-"] > div:first-child')
       .evaluateAll((els) =>
@@ -155,7 +162,7 @@ test.describe('UI round 6 – desktop 1920', () => {
     for (const [top, set] of byRow) expect([...set], `tool row at ${top}`).toHaveLength(1);
 
     await page.goto('/library');
-    await expect(page.locator('main h1').first()).toBeVisible();
+    await expect(page.locator('[data-testid^="module-"] [role="switch"]').nth(3)).toBeVisible();
     // Every module card: the switch sits on its own row below "Details".
     const rows = await page.locator('[data-testid^="module-"]').evaluateAll((els) =>
       els
@@ -170,6 +177,35 @@ test.describe('UI round 6 – desktop 1920', () => {
     for (const gap of rows) expect(gap).toBeGreaterThanOrEqual(0);
   });
 });
+
+for (const width of [1280, 1024]) {
+  test.describe(`UI round 6 – settings at ${width}`, () => {
+    test.use({
+      viewport: { width, height: 800 },
+      seeded: { scale: 'small', desktop: true, preview: true },
+    });
+
+    test('U03: the overview cards keep their titles whole and inside the card', async ({
+      page,
+    }) => {
+      await start(page, '/settings');
+      await expect(page.getByTestId('settings-overview')).toBeVisible();
+      expect(await wordBreaks(page, '[data-testid="settings-overview"]')).toEqual([]);
+      const spill = await page
+        .getByTestId('settings-overview')
+        .locator('a')
+        .evaluateAll((cards) =>
+          cards.flatMap((card) => {
+            const box = card.getBoundingClientRect();
+            return Array.from(card.querySelectorAll<HTMLElement>('span'))
+              .filter((e) => e.getBoundingClientRect().right > box.right - 1)
+              .map((e) => e.textContent ?? '');
+          }),
+        );
+      expect(spill).toEqual([]);
+    });
+  });
+}
 
 test.describe('UI round 6 – empty app 1920', () => {
   test.use({ viewport: { width: 1920, height: 1080 } });
@@ -197,6 +233,10 @@ test.describe('UI round 6 – phone 412', () => {
 
   test('U55: the status tiles keep their context line', async ({ page }) => {
     await start(page, '/settings');
+    // A line that only explains the state or the category stays off the phone, so the head stays a strip (focus
+    // rule): the tiles are no taller than with the old one-line clamp (288 px on develop, 247 px here).
+    const tiles = await page.getByTestId('settings-status').boundingBox();
+    expect(tiles!.height).toBeLessThanOrEqual(290);
     const clipped = await page
       .getByTestId('settings-status')
       .locator('span')
