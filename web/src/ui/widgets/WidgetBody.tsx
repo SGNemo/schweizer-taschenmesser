@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { EmptyState, Skeleton } from '../Misc';
+import miscStyles from '../Misc.module.css';
 import styles from './Widgets.module.css';
 
 export interface WidgetEmpty {
@@ -29,7 +30,11 @@ export function WidgetBody({
   if (isEmpty && empty)
     return (
       <EmptyState compact title={empty}>
-        {emptyAction ? <Link to={emptyAction.to}>{emptyAction.label}</Link> : null}
+        {emptyAction ? (
+          <Link className={miscStyles.emptyAction} to={emptyAction.to}>
+            {emptyAction.label}
+          </Link>
+        ) : null}
       </EmptyState>
     );
   return <>{children}</>;

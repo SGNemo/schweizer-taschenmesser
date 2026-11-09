@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setSettings } from '@/core/settings/settings';
 import manifest from '../manifest';
-import source from '../plannable';
+import source, { planTitle } from '../plannable';
 import { invoiceRepo } from '../repo';
 
 const ctx = { today: '2026-11-09', until: '2026-11-22' };
@@ -54,5 +54,31 @@ describe('invoices as a planner source', () => {
     expect(await source.list(ctx)).toEqual([]);
     expect(manifest.contributions?.plannable).toBeDefined();
     expect(manifest.settings?.defaults.showInPlan).toBe(true);
+  });
+});
+
+describe('a noted payment reminder in the plan row („Kopf leer“ 3b)', () => {
+  it('shows „Mahnung · <neuer Betrag> bis <Frist>“ from the line the reminder wrote, never other note text', async () => {
+    expect(
+      planTitle({
+        payee: 'Stadtwerke Musterstadt',
+        dunningLevel: 1,
+        dunnedAt: '2026-09-28',
+        note: 'Kundennummer 4711\nMahnung vom 28.09.2026: 92,40 € bis 13.10.2026',
+      }),
+    ).toBe('Stadtwerke Musterstadt bezahlen · Mahnung · 92,40 € bis 13.10.2026');
+    expect(
+      planTitle({
+        payee: 'X',
+        dunningLevel: 1,
+        dunnedAt: '2026-09-28',
+        note: 'Mahnung vom Nachbarn',
+      }),
+    ).toBe('X bezahlen · Mahnung');
+    expect(planTitle({ payee: 'X', note: 'Mahnung vom 28.09.2026: 1 €' })).toBe('X bezahlen');
+    await add({ dunningLevel: 2, dunnedAt: '2026-11-01', note: 'Mahnung vom 01.11.2026: 95,00 €' });
+    expect((await source.list(ctx)).map((i) => i.title)).toEqual([
+      'Stadtwerke bezahlen · Mahnung · 95,00 €',
+    ]);
   });
 });
