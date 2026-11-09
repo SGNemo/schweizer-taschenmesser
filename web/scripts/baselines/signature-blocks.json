@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "blocks": {
+    "pantry-label": {
+      "page": "pantry",
+      "source": "src/modules/pantry/routes/PantryPage.tsx",
+      "what": "a pantry item as a label: hairline all around, punched hole; the amount stepper inside is framed today (framedInside 1, to be lowered to 0 in package 0b-5)",
+      "framedInside": 1
+    },
+    "vault-doc": {
+      "page": "vault",
+      "source": "src/modules/vault/routes/VaultPage.tsx",
+      "what": "a document as a folder with a tab"
+    }
+  }
+}

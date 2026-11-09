@@ -220,6 +220,7 @@ export function ItemRow({
   onSwipeLeft,
   swipeLeftLabel,
   className,
+  signatureBlock,
   children,
 }: {
   title: ReactNode;
@@ -250,6 +251,11 @@ export function ItemRow({
   onSwipeLeft?: () => void;
   swipeLeftLabel?: string;
   className?: string;
+  /**
+   * Marks the row as one of the framed signature blocks (`data-signature-block`). Every value is listed in
+   * `web/scripts/baselines/signature-blocks.json`; the stimulus budget counts them per page (docs/howto/ci.md).
+   */
+  signatureBlock?: string;
   children?: ReactNode;
 }) {
   const body = (
@@ -284,6 +290,7 @@ export function ItemRow({
           : undefined
       }
       data-tone={tone}
+      data-signature-block={signatureBlock}
       className={[
         styles.item,
         swipe.enabled ? styles.swipeable : '',

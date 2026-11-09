@@ -195,6 +195,7 @@ export default function PantryPage() {
                   <ItemRow
                     key={i.id}
                     className={lamp.label}
+                    signatureBlock="pantry-label"
                     title={i.name}
                     meta={
                       <span className={lamp.meta}>

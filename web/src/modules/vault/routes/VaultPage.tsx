@@ -153,6 +153,7 @@ export default function VaultPage() {
             <ItemRow
               key={d.id}
               className={styles.doc}
+              signatureBlock="vault-doc"
               title={d.title}
               onOpen={() => setTarget(d)}
               meta={metaLine([

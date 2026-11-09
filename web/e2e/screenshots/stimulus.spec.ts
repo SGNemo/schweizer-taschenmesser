@@ -1,60 +1,120 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { measurePage, surfaceMetrics } from '../../scripts/lib/stimulusBudget';
 import { bootDev, seedApp } from '../seed/helpers';
+import { mockSpotify, seedConnected } from '../spotify-mock';
+import { mockWeather, pickWeatherPlace } from '../weather-mock';
+import { MODULE_PAGES, PAGES, VIEWPORTS } from './stimulusPages';
 
 /**
- * Stimulus inventory (focus audit 2): counts visible buttons, links, icons, badge-like elements,
- * colours and page height per view, phone and desktop, on the seeded Dev-Preview build. Measuring only:
- * it writes <dir>/inventory.json (plus one screenshot per view unless STIMULUS_SHOTS=0) and checks nothing. Manual use:
- * STIMULUS_DIR=test-results/stimulus npm run measure:stimulus, compare runs in docs/product/focus/12-results-2.md.
- * The budget check reads the inventory afterwards: `npm run check:stimulus` (scripts/check-stimulus.mjs, docs/howto/ci.md).
+ * Stimulus inventory (focus audit 2, UI audit 2026-11): counts visible buttons, links, icons, framed
+ * elements, shadows, colour above the fold, signature blocks and the page height per view, phone and desktop,
+ * on the seeded Dev-Preview build. Measuring only: it writes <dir>/inventory.json (plus one screenshot per view
+ * unless STIMULUS_SHOTS=0) and checks nothing. The budget check reads the inventory afterwards:
+ * `npm run check:stimulus` (scripts/check-stimulus.mjs, docs/howto/ci.md). Same set-up as the audit tour
+ * (docs/design/ui-audit-2026-11/tools/audit-tour.spec.ts): desktop platform faked on the desktop window so the
+ * desktop-only modules exist, every module switched on, "In Arbeit anzeigen" on, no network but the mocks.
+ * Pages and window sizes: `stimulusPages.ts`. This file is ratchet-protected (scripts/ratchet.mjs).
  */
 const OUT = process.env.STIMULUS_DIR ?? 'test-results/stimulus';
-const VPS = [
-  { name: 'desktop', width: 1280, height: 800, mobile: false },
-  { name: 'phone', width: 412, height: 915, mobile: true },
-];
-const PAGES = [
-  ['home', '/'],
-  ['todos', '/todos'],
-  ['calendar', '/calendar'],
-  ['reminders', '/calendar?tab=reminders'],
-  ['finance', '/finance'],
-  ['invoices', '/invoices'],
-  ['subscriptions', '/subscriptions'],
-  ['budgets', '/budgets'],
-  ['notes', '/notes'],
-  ['lists', '/lists'],
-  ['pantry', '/pantry'],
-  ['people', '/people'],
-  ['bookmarks', '/bookmarks'],
-  ['bookmarks-links', '/bookmarks?view=links'],
-  ['vault', '/vault'],
-  ['settings', '/settings'],
-  ['settings-darstellung', '/settings/darstellung'],
-  ['settings-benachrichtigungen', '/settings/benachrichtigungen'],
-  ['settings-module', '/settings/module'],
-];
+
+async function enableModules(page: Page, ids: string[]) {
+  await page.evaluate(
+    (list) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('_modules', 'readwrite');
+          for (const id of list)
+            tx.objectStore('_modules').put({
+              id,
+              enabled: true,
+              dataPolicy: null,
+              createdAt: 1,
+              updatedAt: 1,
+              deviceId: 'stimulus',
+              deletedAt: null,
+              _f: {},
+            });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    ids,
+  );
+}
+
+/**
+ * Waits until the page has stopped changing: lazy routes, widgets and mocked answers arrive at their own pace,
+ * and several budget bands are exact. Stable = element count, heights and text length unchanged for a second.
+ */
+async function settle(page: Page) {
+  await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+  let last = '';
+  let same = 0;
+  for (let i = 0; i < 60 && same < 4; i++) {
+    await page.waitForTimeout(250);
+    const now = await page.evaluate(() => {
+      const main = document.querySelector('main');
+      return [
+        document.querySelectorAll('*').length,
+        main?.scrollHeight,
+        document.documentElement.scrollHeight,
+        (main?.textContent ?? '').length,
+      ].join('/');
+    });
+    same = now === last ? same + 1 : 0;
+    last = now;
+  }
+}
 
 test('stimulus inventory', async ({ browser }) => {
   mkdirSync(OUT, { recursive: true });
   const result: Record<string, unknown>[] = [];
-  for (const vp of VPS) {
+  for (const vp of VIEWPORTS) {
+    const desktop = !vp.mobile;
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       isMobile: vp.mobile,
       hasTouch: vp.mobile,
+      deviceScaleFactor: 1,
       reducedMotion: 'no-preference',
     });
     const page = await context.newPage();
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await mockWeather(page);
+    await page.addInitScript((isDesktop) => {
+      localStorage.setItem('tm-show-preview', '1');
+      if (isDesktop) localStorage.setItem('__tmPlatformKind', 'desktop');
+    }, desktop);
     await bootDev(page);
     await seedApp(page, 'medium');
-    for (const [name, path] of PAGES) {
-      await page.goto(path);
+    const modules = [
+      ...new Set(MODULE_PAGES.filter((p) => desktop || !p.desktop).map((p) => p.module!)),
+    ];
+    await enableModules(page, modules);
+    expect(await pickWeatherPlace(page), 'weather place (mocked search)').toBe(true);
+    await mockSpotify(page);
+    await seedConnected(page, ['show', 'control', 'playlists', 'library', 'history']);
+    for (const target of PAGES) {
+      if (target.desktop && !desktop) continue;
+      if (target.homeView) {
+        await page.evaluate((view) => localStorage.setItem('tm-home-view', view), target.homeView);
+      }
+      await page.goto(target.path);
       await expect(page.locator('main')).toBeVisible();
       const notice = page.getByRole('button', { name: 'Schließen', exact: true });
-      if (await notice.count()) await notice.first().click();
-      await page.waitForTimeout(700);
+      if (await notice.count())
+        await notice
+          .first()
+          .click()
+          .catch(() => {});
+      await settle(page);
       const m = await page.evaluate(() => {
         const vis = (e: Element) => {
           const r = e.getBoundingClientRect();
@@ -102,16 +162,21 @@ test('stimulus inventory', async ({ browser }) => {
             .filter(inView)
             .map((e) => (e.children.length === 0 ? (e.textContent ?? '').length : 0))
             .reduce((a, b) => a + b, 0),
-          scrollHeight: document.documentElement.scrollHeight,
+          // On the desktop `main` scrolls, not the document: take the longer of the two.
+          scrollHeight: Math.max(
+            document.documentElement.scrollHeight,
+            Math.round(main.getBoundingClientRect().top) + main.scrollHeight,
+          ),
           smallTargets: small,
           h1: main.querySelector('h1')?.textContent ?? '',
         };
       });
-      result.push({ vp: vp.name, page: name, ...m });
+      const surfaces = surfaceMetrics(await page.evaluate(measurePage));
+      result.push({ vp: vp.name, page: target.name, ...m, ...surfaces });
       if (process.env.STIMULUS_SHOTS !== '0')
         await page.screenshot({
-          path: `${OUT}/${vp.name}--${name}.png`,
-          fullPage: name === 'home',
+          path: `${OUT}/${vp.name}--${target.name}.png`,
+          fullPage: target.name.startsWith('home'),
         });
     }
     await context.close();
