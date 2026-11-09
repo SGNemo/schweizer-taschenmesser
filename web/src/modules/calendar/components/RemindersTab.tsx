@@ -160,7 +160,7 @@ export function RemindersTab({
   const [focus] = useFocusSettings();
   // U17: like the calendar tab, a wide page names the next reminder in the head's figure line, so the head keeps its
   // height when the tab changes; a phone, "time to next" off or a page without a head keeps the ring in the list.
-  const wide = usePageWidthAtLeast(40) === true;
+  const wide = usePageWidthAtLeast(40) !== false;
   const inHead = !!useHeroTargets()?.figure && wide && focus.timeToNext;
 
   const draft: EventTarget = {
