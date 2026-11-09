@@ -196,7 +196,9 @@ fn unix_secs() -> u64 {
 /// address. `Ok(None)` = not found (calm `network` for the caller); `UnknownDevice` only for the
 /// hub's authenticated refusal at the new address. Call with the link lock held.
 fn find_hub_again<R: Runtime>(app: &AppHandle<R>) -> Result<Option<Session>, ClientError> {
-    if !search_due(&app.state::<LanClient>().last_search, Instant::now()) {
+    // without Wi-Fi there is nothing to find, and the slot stays free for the round when it comes up
+    let on_wifi = app.lan_watch().wifi_state().is_ok_and(|w| w.connected);
+    if !on_wifi || !search_due(&app.state::<LanClient>().last_search, Instant::now()) {
         return Ok(None);
     }
     let (hub, failed, name) = hub_entry(app).map_err(missing_or_retry)?;
