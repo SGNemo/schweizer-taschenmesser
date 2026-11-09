@@ -9,8 +9,8 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * screens, dialogs and detours (an action that did not do what the person meant), and estimates the seconds a
  * person needs for them (model: tap 1 s, character 0,25 s on a keyboard / 0,4 s on a phone, screen change 2 s,
  * reading a dialog 3 s, detour 5 s). The last path measures the stimulus load of the planner page (interactive
- * elements, words, rows, scroll length). `MAX` holds the numbers measured on `develop` (2026-11-08): no path
- * may get longer. The table lands in `test-results/usecase-kopf-leer.md` and as the attachment `usecase-kopf-leer`.
+ * elements, words, rows, scroll length). `MAX` holds the target column of TARGET §4 as remeasured after the
+ * packages (2026-11-09; the one miss is named there): no path may get longer. The table lands in `test-results/usecase-kopf-leer.md` and as the attachment `usecase-kopf-leer`.
  *
  * The mail path needs the demo mails of the seed, which only the Dev-Preview flavour has:
  *   npm run build:e2e-seed && npm run preview:e2e-seed   (port 4174)
@@ -30,20 +30,25 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
     ms: number;
   };
 
-/** Baseline on `develop`: upper bounds per path and project (taps · keys · screens · dialogs · detours). */
-const MAX: Record<string, Record<Metric, number>> = {
+/**
+ * Upper bounds per path and project: the target column of TARGET §4, remeasured on `develop` after the packages
+ * 1, 2, 3a and 3b (2026-11-09, package 4). One number misses its target and stays at the measured value:
+ * path B's second screen (the invoice line says „angelegt“, not whether it is in the plan, so the person still
+ * checks the planner; target 1 screen · ≈ 4 s, measured 2 · ≈ 6 s – docs/STATUS.md „Offen“).
+ */
+const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
-  'A Kopf leeren: fünf Dinge auf einmal · desktop-chrome': { taps: 3, keys: 141, screens: 2, dialogs: 2, detours: 1 },
+  'A Kopf leeren: fünf Dinge auf einmal · desktop-chrome': { taps: 2, keys: 141, screens: 1, dialogs: 1, detours: 0, seconds: 42 },
   // prettier-ignore
-  'A Kopf leeren: fünf Dinge auf einmal · pixel-7': { taps: 3, keys: 141, screens: 2, dialogs: 2, detours: 1 },
+  'A Kopf leeren: fünf Dinge auf einmal · pixel-7': { taps: 2, keys: 141, screens: 1, dialogs: 1, detours: 0, seconds: 63 },
   // prettier-ignore
-  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 9, keys: 0, screens: 2, dialogs: 2, detours: 0 },
+  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 6 },
   // prettier-ignore
-  'C Handy: eine Sache im Vorbeigehen · pixel-7': { taps: 1, keys: 19, screens: 1, dialogs: 1, detours: 0 },
+  'C Handy: eine Sache im Vorbeigehen · pixel-7': { taps: 1, keys: 19, screens: 1, dialogs: 1, detours: 0, seconds: 14 },
   // prettier-ignore
-  'D Planer öffnen bei Überlast · desktop-chrome': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0 },
+  'D Planer öffnen bei Überlast · desktop-chrome': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 2 },
   // prettier-ignore
-  'D Planer öffnen bei Überlast · pixel-7': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0 },
+  'D Planer öffnen bei Überlast · pixel-7': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 2 },
 };
 
 class Meter {
@@ -132,8 +137,8 @@ async function record(info: TestInfo, meter: Meter, name: string) {
   await info.attach('usecase-kopf-leer', { path: 'test-results/usecase-kopf-leer.md' });
   const max = MAX[`${name} · ${project}`];
   expect(max, `no baseline for „${name}“ on ${project}`).toBeTruthy();
-  for (const k of ['taps', 'keys', 'screens', 'dialogs', 'detours'] as const)
-    expect(row[k], `${name}: ${k} (baseline ${max![k]})`).toBeLessThanOrEqual(max![k]);
+  for (const k of ['taps', 'keys', 'screens', 'dialogs', 'detours', 'seconds'] as const)
+    expect(row[k], `${name}: ${k} (bound ${max![k]})`).toBeLessThanOrEqual(max![k]);
   info.annotations.push({
     type: 'usecase',
     description: `${name}: ${row.taps} taps · ${row.keys} keys · ${row.screens} screens · ${row.dialogs} dialogs · ${row.detours} detours · ≈ ${row.seconds} s`,
@@ -385,6 +390,11 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     type: 'stimulus',
     description: `while unloading: ${pile.cards} attention cards visible beside the sheet (backdrop ${pile.backdrop}) · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
   });
+  // TARGET §4 (F1): nothing of the pile beside the sheet, no select per line, no booking in a batch.
+  expect(pile.cards, 'attention cards visible beside the sheet').toBe(0);
+  expect(pile.selects, 'selects in the sheet').toBe(0);
+  expect(pile.booking, 'a booking line in the batch').toBe(false);
+  expect(stadtwerke, 'Stadtwerke invoices after the reminder line').toBe(1);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Where did they land? Until package 1 the person checked the ToDos (a second screen); the closing
   // line now names the place („Sortiert wird später. · Ansehen“), so no visit is counted. The machine
@@ -537,10 +547,11 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
     body: JSON.stringify({ ...s, waitingCount }),
     contentType: 'application/json',
   });
-  // Baseline on develop (U12), measured + about a tenth: no package may make the page longer.
+  // TARGET §4 (F4: the waiting group folded, the head names the next step); remeasured 2026-11-09: PC 40 · 244 ·
+  // 13 · 549 px, phone 23 · 120 · 4 · 437 px.
   const bound = isMobile
-    ? { interactive: 43, words: 425, rows: 22, scroll: 1600 }
-    : { interactive: 62, words: 560, rows: 32, scroll: 1400 };
+    ? { interactive: 25, words: 200, rows: 5, scroll: 800 }
+    : { interactive: 40, words: 280, rows: 13, scroll: 700 };
   expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
   expect(s.words, 'words').toBeLessThanOrEqual(bound.words);
   expect(s.rows, 'rows').toBeLessThanOrEqual(bound.rows);
