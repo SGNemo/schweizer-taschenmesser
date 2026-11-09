@@ -161,7 +161,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                           <li key={`${i.source}:${i.id}`}>
                             <button
                               type="button"
-                              className={`${styles.line} ${i.kind === 'event' ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
+                              className={`${styles.line} ${i.kind === 'event' && !repeats.has(repeatKey(i)) ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
                               title={`${kindLabel(i.kind)}: ${i.title}`}
                               style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
                               onClick={() => onOpenItem(i)}
