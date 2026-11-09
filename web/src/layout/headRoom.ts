@@ -2,8 +2,9 @@
  * The room the row under the module head's title (figure, signature, strip) took on the last visit, per route and
  * device (U01, UI round 6): on the next load the frame keeps exactly that room while the page reads its data, so the
  * head neither grows when the page's figure and strip arrive nor shrinks for an empty module. A per-viewer convenience
- * in `localStorage`: missing or blocked storage only means the frame falls back to the head variant's default shape. A
- * value that is off (measured while the data still changed) only costs one small shift and is replaced on that visit.
+ * in `localStorage`: missing or blocked storage only means the frame falls back to the head variant's default shape. The
+ * value is measured again at the end of every visit's hold; a page whose data arrives later than the hold is measured
+ * without it and keeps shifting once per load (it does not settle after one visit).
  * `key` is the route pattern and layout, e.g. `/people@phone`.
  */
 const KEY = 'tm-head-room:';

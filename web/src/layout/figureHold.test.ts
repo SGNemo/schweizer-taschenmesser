@@ -33,6 +33,20 @@ describe('figure hold (U01)', () => {
     expect(result.current[0]).toBe(false);
   });
 
+  it('holds again on the way back to a route whose hold had run out (A → B → A within the hold)', () => {
+    const { result, rerender } = renderHook(({ key }) => useFigureHold(key), {
+      initialProps: { key: '/people@wide' },
+    });
+    act(() => vi.advanceTimersByTime(FIGURE_HOLD_MS));
+    expect(result.current[0]).toBe(false);
+    rerender({ key: '/people@phone' });
+    act(() => vi.advanceTimersByTime(FIGURE_HOLD_MS / 2));
+    rerender({ key: '/people@wide' });
+    expect(result.current[0]).toBe(true);
+    act(() => vi.advanceTimersByTime(FIGURE_HOLD_MS));
+    expect(result.current[0]).toBe(false);
+  });
+
   it('a loading chunk holds until it arrived, then the hold time runs', () => {
     const { result } = renderHook(() => useFigureHold('/budgets@wide'));
     act(() => result.current[1](true));

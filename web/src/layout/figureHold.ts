@@ -16,6 +16,12 @@ export function useFigureHold(key: string | undefined): [boolean, (loading: bool
   const [loading, setLoadingState] = useState(false);
   // The key whose hold has run out; any other key (a new route) holds again in the same render.
   const [elapsedFor, setElapsedFor] = useState<string | undefined>();
+  // A key change restarts the hold during render, also on the way back to a key whose hold had run out (A → B → A).
+  const [heldKey, setHeldKey] = useState(key);
+  if (heldKey !== key) {
+    setHeldKey(key);
+    setElapsedFor(undefined);
+  }
   const setLoading = useCallback((next: boolean) => {
     setLoadingState(next);
     if (next) setElapsedFor(undefined);
