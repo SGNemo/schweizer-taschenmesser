@@ -227,7 +227,6 @@
   line-height: 1;
   color: var(--text-muted);
 }
-.chip,
 .more {
   display: block;
   width: 100%;
@@ -240,18 +239,13 @@
   padding: 1px var(--space-2);
   font-size: var(--text-xs);
   cursor: pointer;
-  background: var(--surface-2);
-  color: var(--text);
+  background: none;
+  color: var(--text-muted);
 }
-.chip svg,
 .tgItem svg {
   flex: none;
   vertical-align: -2px;
   margin-inline-end: 3px;
-  color: var(--text-muted);
-}
-.more {
-  background: none;
   color: var(--text-muted);
 }
 .dots {
@@ -655,16 +649,30 @@ button.recentChip {
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;
   padding: 2px var(--space-1);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   text-align: left;
   font-size: var(--text-xs);
   cursor: pointer;
   touch-action: none;
   user-select: none;
+  /* Kind look (see the kind rules below the grid): a faint tint and the month's kind mark, no frame, no edge stripe. */
+  --kind: var(--text-3);
+  border: 0;
+  background: color-mix(in srgb, var(--cal, var(--kind)) 12%, var(--surface));
+  color: var(--text);
+}
+.tgItem .lineMark {
+  display: inline-block;
+  vertical-align: middle;
+  margin-inline-end: 3px;
+}
+/* A narrow overlap lane keeps its width for the time and title. */
+.tgConflict .lineMark {
+  display: none;
 }
 .tgTime {
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
+  color: var(--text-3);
 }
 .tgNow {
   position: absolute;
@@ -740,69 +748,42 @@ button.recentChip {
   border-radius: 50%;
 }
 
-/* Blocks and chips: the calendar colour (--cal) tints the capsule; without one the kind picks a quiet tone. The kind itself is the icon, the label and the tooltip, never an edge. */
-.chip.kind_event,
+/* Hour-grid blocks look like the month's lines (S03 look in the week): the kind mark (dot) before the time and a faint
+   tint in the kind's quiet tone (a calendar colour wins) instead of a framed surface. Own events keep the accent tint; a
+   daily repeat (medication at 08:00) stays quiet. The kind itself is the mark and the tooltip, never a border. */
 .tgItem.kind_event {
   --kind: var(--accent);
   background: var(--accent-soft);
-  color: var(--text);
 }
-.chip.kind_reminder,
-.tgItem.kind_reminder {
-  --kind: var(--text-3);
-  background: var(--surface-2);
-  color: var(--text);
-}
-.chip.kind_task,
 .tgItem.kind_task {
   --kind: var(--cat-1);
-  background: var(--surface-2);
-  color: var(--text);
 }
-.chip.kind_invoice,
 .tgItem.kind_invoice,
-.chip.kind_subscription,
 .tgItem.kind_subscription {
   --kind: var(--cat-2);
-  background: var(--surface-2);
-  color: var(--text);
 }
-.chip.kind_birthday,
 .tgItem.kind_birthday {
   --kind: var(--cat-3);
-  background: var(--surface-2);
-  color: var(--text);
 }
-.chip.kind_cancel,
 .tgItem.kind_cancel,
-.chip.kind_end,
 .tgItem.kind_end,
-.chip.kind_expiry,
 .tgItem.kind_expiry {
   --kind: var(--warning);
-  background: var(--surface-2);
-  color: var(--text);
 }
-.chip.kind_plan,
 .tgItem.kind_plan {
   --kind: var(--module-color, var(--text-3));
-  background: color-mix(in srgb, var(--module-color, var(--surface-2)) 12%, var(--surface));
-  color: var(--text);
 }
-.chip.kind_external,
 .tgItem.kind_external {
   --kind: var(--text-muted);
 }
-.chip,
-.tgItem {
-  border: 1px solid color-mix(in srgb, var(--cal, var(--kind, var(--text-3))) 45%, transparent);
-}
-.chip[style*='--cal'],
 .tgItem[style*='--cal'] {
-  background: color-mix(in srgb, var(--cal) 18%, var(--surface));
+  background: color-mix(in srgb, var(--cal) 14%, var(--surface));
 }
-.tgItem.done,
-.chip.done {
+.tgItem.tgRepeat {
+  background: color-mix(in srgb, var(--text-3) 6%, var(--surface));
+  color: var(--text-muted);
+}
+.tgItem.done {
   color: var(--text-muted);
 }
 
