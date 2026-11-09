@@ -27,7 +27,9 @@ describe('pantry page: an expired item names its day (N08), in every active lang
   it('today, soon, later and no date keep their lines', () => {
     expect(at(TODAY)).toBe('Läuft heute ab');
     expect(at('2026-09-30')).toBe('Läuft morgen ab');
-    expect(at('2026-10-20')).toBe('Haltbar bis 20.10.2026');
+    // Short date like every other list (U-round 6, S01), the year only when it is not this one.
+    expect(at('2026-10-20')).toBe('Haltbar bis Di., 20. Okt.');
+    expect(at('2027-03-08')).toBe('Haltbar bis Mo., 8. März 2027');
     expect(expiryText({}, TODAY, 3)).toBeNull();
   });
 });

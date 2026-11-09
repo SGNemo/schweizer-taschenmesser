@@ -282,6 +282,14 @@ export default function MapsPage() {
     void requireNotice('maps').then(() => setReady(true));
   }, [tab, ready]);
 
+  // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered.
+  const [focusSearch, setFocusSearch] = useState(false);
+  useEffect(() => {
+    if (!focusSearch || tab !== 'map' || !searchInput.current) return;
+    searchInput.current.focus();
+    setFocusSearch(false);
+  }, [focusSearch, tab]);
+
   // `?new=1` (Quick-Add): the map tab with the search field ready.
   useEffect(() => {
     if (!params.get('new')) return;
@@ -525,7 +533,17 @@ export default function MapsPage() {
   };
   void km;
 
+  /** Opens the place in the device's map app (geo: on Android, OpenStreetMap elsewhere). */
+  const navigateTo = (p: Stored<Place>) =>
+    openUrl(placeLink(isAndroid() ? 'geo' : 'osm', { lat: p.lat, lon: p.lon, label: p.name }));
+  /** "Ort hinzufügen": places come from the map (search or a tap), so it opens the map with the search ready. */
+  const addPlace = () => {
+    setTab('map');
+    setFocusSearch(true);
+  };
   const placeMenu = (p: Stored<Place>): RowMenuItem[] => [
+    // "Navigieren" moved from every row into the menu (U14); a swipe to the right keeps it one gesture.
+    { id: 'navigate', label: t.maps.placesBar.navigate, onSelect: () => navigateTo(p) },
     {
       id: 'show',
       label: t.maps.map.showOnMap,
@@ -615,10 +633,22 @@ export default function MapsPage() {
           />
         }
       >
-        <Button variant="primary" onClick={() => setRouteTarget({ draft: true })}>
-          <Icon name="route" size={18} />
-          {t.maps.add.route}
-        </Button>
+        {/* The primary follows the tab (U14): places are added on the map, routes on "Routen". On the map the
+            search and the picked point lead; adding a route stays at hand as a secondary button. */}
+        {tab === 'places' ? (
+          <Button variant="primary" onClick={addPlace}>
+            <Icon name="plus" size={18} />
+            {t.maps.add.place}
+          </Button>
+        ) : (
+          <Button
+            variant={tab === 'routes' ? 'primary' : undefined}
+            onClick={() => setRouteTarget({ draft: true })}
+          >
+            <Icon name="route" size={18} />
+            {t.maps.add.route}
+          </Button>
+        )}
       </PageHeader>
 
       {tab === 'places' ? (
@@ -628,7 +658,7 @@ export default function MapsPage() {
             testId="maps-empty"
             motif={<SignatureMark id="pin" size={64} />}
           >
-            <Button onClick={() => setTab('map')}>{t.maps.add.place}</Button>
+            <Button onClick={addPlace}>{t.maps.add.place}</Button>
           </EmptyState>
         ) : (
           <>
@@ -687,24 +717,8 @@ export default function MapsPage() {
                     </span>
                   }
                   onOpen={() => show({ lat: p.lat, lon: p.lon, label: p.name, place: p })}
-                  end={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label={t.maps.placesBar.navigateTo(p.name)}
-                      onClick={() =>
-                        openUrl(
-                          placeLink(isAndroid() ? 'geo' : 'osm', {
-                            lat: p.lat,
-                            lon: p.lon,
-                            label: p.name,
-                          }),
-                        )
-                      }
-                    >
-                      {t.maps.placesBar.navigate}
-                    </Button>
-                  }
+                  onSwipeRight={() => navigateTo(p)}
+                  swipeRightLabel={t.maps.placesBar.navigate}
                   menu={placeMenu(p)}
                   menuLabel={t.maps.meta.name}
                 />
@@ -747,11 +761,7 @@ export default function MapsPage() {
                 enterKeyHint="search"
               />
             </div>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={query.trim().length < 2 || searching === 'busy'}
-            >
+            <Button type="submit" disabled={query.trim().length < 2 || searching === 'busy'}>
               <Icon name="search" size={18} />
               {searching === 'busy' ? t.maps.map.searching : t.maps.map.searchButton}
             </Button>

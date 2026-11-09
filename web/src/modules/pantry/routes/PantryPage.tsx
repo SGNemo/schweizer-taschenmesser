@@ -29,7 +29,6 @@ import {
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
   applyFilter,
-  countLabel,
   crossedMinimum,
   expiryState,
   expiryText,
@@ -131,31 +130,41 @@ export default function PantryPage() {
     <>
       <PageHeader title={t.pantry.title}>
         <AdvancedToggle moduleId="pantry" />
-        {low.length >= 2 ? (
-          <Button onClick={() => requestRestock(low.map((i) => i.name))}>
-            <Icon name="cart" size={18} />
-            {t.pantry.restockAll(low.length)}
-          </Button>
-        ) : null}
-        <Button onClick={() => setScanning(true)}>{t.pantry.scan.open}</Button>
         <Button variant="primary" onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </Button>
-        <StartDataMenu moduleId="pantry" />
+        {/* Scan and "restock all" are occasional: they sit in the ⋯ menu, one primary stays visible. */}
+        <StartDataMenu
+          moduleId="pantry"
+          items={[
+            ...(low.length >= 2
+              ? [
+                  {
+                    id: 'restock-all',
+                    label: t.pantry.restockAll(low.length),
+                    onSelect: () => requestRestock(low.map((i) => i.name)),
+                  },
+                ]
+              : []),
+            { id: 'scan', label: t.pantry.scan.open, onSelect: () => setScanning(true) },
+          ]}
+        />
       </PageHeader>
       <PantryHead counts={counts} />
       <NowStrip modules={['pantry']} />{' '}
-      <Segmented
-        label={t.pantry.filter}
-        value={filter}
-        options={[
-          { value: 'all' as const, label: t.pantry.filters.all },
-          { value: 'expiring' as const, label: t.pantry.filters.expiring },
-          { value: 'restock' as const, label: t.pantry.filters.restock },
-        ]}
-        onChange={setFilter}
-      />
+      <div className={lamp.filters}>
+        <Segmented
+          label={t.pantry.filter}
+          value={filter}
+          options={[
+            { value: 'all' as const, label: t.pantry.filters.all },
+            { value: 'expiring' as const, label: t.pantry.filters.expiring },
+            { value: 'restock' as const, label: t.pantry.filters.restock },
+          ]}
+          onChange={setFilter}
+        />
+      </div>
       {items && items.length === 0 ? (
         <EmptyState
           title={t.pantry.empty}
@@ -189,11 +198,18 @@ export default function PantryPage() {
                     title={i.name}
                     meta={
                       <span className={lamp.meta}>
-                        <span className={lamp.dot} data-state={state} aria-hidden="true" />
-                        <span className={lamp.amount}>{countLabel(i, t.pantry.countOf)}</span>
-                        {state === 'ok' && text ? ` · ${text}` : ''}
-                        {state === 'expired' || state === 'soon' ? (
-                          <Badge tone={state === 'expired' ? 'danger' : 'warning'}>{text}</Badge>
+                        {/* The lamp stays with the words it stands for (never alone on a line). */}
+                        {state !== 'none' && text ? (
+                          <span className={lamp.state}>
+                            <span className={lamp.dot} data-state={state} aria-hidden="true" />
+                            {state === 'ok' ? (
+                              text
+                            ) : (
+                              <Badge tone={state === 'expired' ? 'danger' : 'warning'}>
+                                {text}
+                              </Badge>
+                            )}
+                          </span>
                         ) : null}
                         {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
                       </span>
@@ -204,6 +220,7 @@ export default function PantryPage() {
                     end={
                       <span className={lamp.endCol}>
                         <span className={lamp.controls}>
+                          {/* Fixed slot: every tile's end column has the same width, cart or not. */}
                           {restockable ? (
                             <IconButton
                               label={t.pantry.restockOne(i.name)}
@@ -211,11 +228,17 @@ export default function PantryPage() {
                             >
                               <Icon name="cart" size={18} />
                             </IconButton>
-                          ) : null}
-                          <span className={lamp.stepper}>
+                          ) : (
+                            <span className={lamp.slot} aria-hidden="true" />
+                          )}
+                          <span className={lamp.stepper} role="group" aria-label={t.pantry.amount}>
                             <IconButton label={t.pantry.minus(i.name)} onClick={() => consume(i)}>
-                              <span aria-hidden="true">−</span>
+                              <Icon name="minus" size={16} />
                             </IconButton>
+                            {/* The amount sits between − and + (mono); a unit stays with it. */}
+                            <span className={lamp.count}>
+                              {i.unit ? `${i.count} ${i.unit}` : i.count}
+                            </span>
                             <IconButton
                               label={t.pantry.plus(i.name)}
                               onClick={() =>

@@ -275,3 +275,18 @@ export function paletteIndex(name: string, size: number): number {
   for (const c of name.trim().toLocaleLowerCase()) h = (h * 31 + c.codePointAt(0)!) >>> 0;
   return size > 0 ? h % size : 0;
 }
+
+/** Days before a cancellation deadline from which the list marks it (warning colour, clock, "in n Tagen"). */
+export const WARN_DAYS = 14;
+
+/**
+ * How the list shows an upcoming cancellation deadline: "soon" within `WARN_DAYS` (warning, never red – red is only
+ * for a deadline that was missed), otherwise plain text. Round 6, U18.
+ */
+export function cancelTone(
+  deadline: string,
+  day: string,
+): { tone: 'soon' | 'plain'; days: number } {
+  const days = daysBetween(day, deadline);
+  return { tone: days <= WARN_DAYS ? 'soon' : 'plain', days };
+}

@@ -89,6 +89,7 @@ export const budgets: Strings['budgets'] = {
   limit: 'Limit per month',
   needFinance: 'Budgets need the “Finances” module.',
   needFinanceHint: 'Turn it on in the module library – the expenses per category come from there.',
+  month: 'Month',
   prevMonth: 'Previous month',
   nextMonth: 'Next month',
   emptyBudgets: 'No budgets yet. Set a monthly limit for an expense category.',

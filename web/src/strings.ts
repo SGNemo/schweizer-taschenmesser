@@ -4357,6 +4357,7 @@ export const de = {
     noMatch: 'Nichts in dieser Ansicht.',
     plus: (n: string) => `${n}: einer mehr`,
     minus: (n: string) => `${n}: einer weniger`,
+    amount: 'Anzahl',
     countOf: (n: number) => `${n} Stück`,
     today: 'Läuft heute ab',
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),
@@ -5109,6 +5110,7 @@ export const de = {
     needFinance: 'Budgets brauchen das Modul „Finanzen“.',
     needFinanceHint:
       'Aktiviere es in der Modul-Bibliothek – die Ausgaben je Kategorie kommen von dort.',
+    month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',

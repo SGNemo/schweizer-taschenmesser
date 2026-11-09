@@ -62,9 +62,14 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* A near cancellation deadline: warning colour with a clock and "in n Tagen" – red only once it was missed. */
 .warn {
-  color: var(--danger);
+  color: var(--warning);
   font-weight: var(--weight-semibold);
+}
+.warn svg {
+  margin-right: var(--space-1);
+  vertical-align: -0.125em;
 }
 .amount {
   font-weight: var(--weight-semibold);
