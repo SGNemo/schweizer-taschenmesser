@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identity 4.0 – Übersicht ruhig</title>
+<link rel="stylesheet" href="v4.css">
+<style>
+body{--mod:var(--mod-slate)}
+.w.finance{--mod:var(--mod-teal)}.w.calendar{--mod:var(--mod-sky)}.w.todos{--mod:var(--mod-moss)}.w.weather{--mod:var(--mod-cobalt)}
+.w.habits{--mod:var(--mod-violet)}.w.invoices{--mod:var(--mod-ocean)}.w.pantry{--mod:var(--mod-fern)}.w.music{--mod:var(--mod-orchid)}
+.w.accounts{--mod:var(--mod-slate)}.w.lists{--mod:var(--mod-orchid)}
+.w.music .pattern,.w.calendar .pattern,.w.weather .pattern{display:none}
+</style></head>
+<body data-active="home" data-area="home" data-add-label="Neu">
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div class="main">
+<header class="top" id="tb"></header>
+<div class="frame">
+  <div class="reading calm">
+  <div class="greet">
+    <div>
+      <h1>Guten Morgen</h1>
+      <div class="date"><span>Dienstag, 29. September</span><span class="wx">14° · leicht bewölkt · Regen ab 15 Uhr</span></div>
+    </div>
+    <div class="tools"><a class="btn ghost"><span data-i="max"></span><span class="lbl">Cockpit</span></a><div class="seg"><span class="on">Ruhig</span><span>Ausführlich</span></div><a class="btn ghost icon"><span data-i="edit"></span></a></div>
+  </div>
+  <div>
+    <p class="caps" style="margin-bottom:8px">Jetzt wichtig</p>
+    <div class="attn">
+      <a class="danger" style="--mod:var(--mod-ocean)"><span class="plate" data-i="bill"></span><div><b>2</b><span>Rechnungen offen · Frist vorbei</span></div></a>
+      <a class="danger" style="--mod:var(--mod-lime)"><span class="plate" data-i="piggy"></span><div><b>35 €</b><span>Budget „Freizeit“ drüber</span></div></a>
+      <a class="quiet"><span data-i="chevd"></span><div><span>Kann warten · 6 · 2 Budgets fast aufgebraucht, 1 Vorrat abgelaufen, 3 Dokumente abgelaufen · nichts davon muss heute sein</span></div></a>
+    </div>
+  </div>
+  <div class="card today">
+    <h3 style="font-size:.9375rem;font-weight:600;color:var(--text-2);margin-bottom:10px">Heute · Di 29. Sep</h3>
+    <div class="row"><span class="t meta" style="width:4.5rem">ganztägig</span><span class="grow">Anna Beispiel wird 29</span></div>
+        <div class="row"><span class="t meta" style="width:4.5rem">10:00</span><span class="grow" style="font-weight:600">Teammeeting · jetzt</span></div>
+    <div class="row"><span class="t meta" style="width:4.5rem">13:00</span><span class="grow">Friseur</span></div>
+    <div class="row"><span class="t meta" style="width:4.5rem">15:30</span><span class="grow">Zahnarzt Dr. Beispiel</span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Urlaubsantrag einreichen<span class="sub">Arbeit · etwa 5 Min</span></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Fenster putzen<span class="sub">Haushalt · 30 Min</span></span></div>
+    <div class="row"><span class="cb"></span><span class="grow">Zahnbürsten kaufen<span class="sub">Einkäufe &amp; Besorgungen · 15 Min</span></span></div>
+  </div>
+  </div>
+</div>
+</div>
+</div>
+<nav class="bottomnav" id="bn"></nav>
+<script src="shell.js"></script>
+</body></html>
