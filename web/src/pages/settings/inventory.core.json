@@ -18,6 +18,7 @@
     "tm-home-view": "all",
     "tm-show-preview": "off",
     "tm-sidebar": "wide",
+    "tm-clock": "unset = on in the desktop app, off on Android/PWA (core/settings/clock.ts)",
     "tm-nav-closed": "[]",
     "tm-nav-open": "[] (F06: areas opened by hand; default = only the area of the current page)",
     "tm-quick-capture": "hotkey, vaultHotkey, closeToTray, autostart, clipboard, trayToday",

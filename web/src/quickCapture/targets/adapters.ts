@@ -305,6 +305,9 @@ const notes: CaptureTarget = {
   },
 };
 
+/** The planner's key of a thing from a module (`<moduleId>:<id>`): its item and its assignments carry it. */
+export const planItemKey = (moduleId: string, id: string): string => `${moduleId}:${id}`;
+
 /**
  * „p Steuer 2 Std bis Do“: a ToDo (through the `todo` target, so the backlog stays in ToDos) plus its
  * planner item `todos:<id>` with what only the planner holds – the pin of a plain day or the hard
@@ -314,7 +317,7 @@ const plan: CaptureTarget = {
   type: 'plan',
   moduleId: 'planner',
   collection: 'item',
-  via: { type: 'todo', id: (first) => `${first.moduleId}:${first.id}` },
+  via: { type: 'todo', id: (first) => planItemKey(first.moduleId, first.id) },
   build: (f, ctx, first) => {
     // The checks of the first stage (a title, real dates) hold for the plan entry too.
     todos.build(f, ctx);

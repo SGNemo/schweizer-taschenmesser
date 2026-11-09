@@ -1,8 +1,17 @@
+import { dayName } from '@/core/plan/explain';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { offerText, type InvoiceOffer } from '../invoiceRow';
 import styles from './mail.module.css';
+
+/** „heute“, a weekday within this week, else the date: never two Wednesdays that read the same. */
+function planDay(day: string): string {
+  const now = today();
+  if (day === now) return t.mail.invoice.today;
+  return day <= addDaysStr(now, 6) ? dayName(day) : formatDay(day, 'd. MMM');
+}
 
 /**
  * The muted second line of an invoice row („Kopf leer“ 3b): payee, amount and date as text – exactly
@@ -14,7 +23,11 @@ export function InvoiceLine({ offer, onAct }: { offer: InvoiceOffer; onAct: () =
   const verb =
     offer.kind === 'create'
       ? offer.state === 'live'
-        ? { done: t.mail.invoice.createdMark }
+        ? {
+            done: offer.planned
+              ? t.mail.invoice.inPlan(planDay(offer.planned))
+              : t.mail.invoice.createdMark,
+          }
         : { label: t.mail.invoice.create, aria: t.mail.invoice.createFor(line) }
       : offer.kind === 'note'
         ? offer.noted

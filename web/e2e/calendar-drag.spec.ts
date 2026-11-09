@@ -56,6 +56,11 @@ test.describe('Calendar: dragging in the hour grid (plan group)', () => {
     page,
   }) => {
     await ready(page, '/calendar?view=day&date=2026-11-03');
+    // 14:00 sits at the bottom edge of the opened grid (06:00 + eight hours); scroll it into the middle first, or the
+    // pointer can land outside the scroll pane and nothing is drawn.
+    const hours = page.getByRole('region', { name: 'Stunden' });
+    await expect.poll(() => hours.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    await hours.evaluate((el) => (el.scrollTop = (el.scrollHeight / 24) * 11));
     const col = page.locator('[data-date="2026-11-03"]');
     const box = (await col.boundingBox())!;
     // 14:00 is 14 hours down the 24-hour column.
