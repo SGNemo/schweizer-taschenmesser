@@ -92,4 +92,28 @@ describe('LanClientSection (phone)', () => {
     fireEvent.click(screen.getByText('Jetzt abgleichen'));
     expect(screen.getByTestId('lan-tried').textContent).toContain('der PC hat nicht geantwortet');
   });
+
+  it('after 7 days without the PC one calm line says what to do; before that it does not', () => {
+    const day = 24 * 60 * 60 * 1000;
+    useSyncStatus.getState().set({
+      phase: 'error',
+      via: 'lanClient',
+      error: 'network',
+      lastSyncAt: Date.now() - 2 * day,
+    });
+    const { unmount } = render(<LanClientSection />);
+    expect(screen.queryByTestId('lan-long-no-pc')).toBeNull();
+    unmount();
+    useSyncStatus.getState().set({ lastSyncAt: Date.now() - 8 * day });
+    render(<LanClientSection />);
+    expect(screen.getByTestId('lan-long-no-pc').textContent).toContain('Lange keinen PC gefunden');
+  });
+
+  it('a phone on an own server offers the switch to the home network', () => {
+    useSyncStatus.getState().set({ phase: 'idle', via: 'server', error: undefined });
+    render(<LanClientSection />);
+    expect(screen.getByTestId('lan-switch-open').textContent).toBe(
+      'Vom Server auf das Heimnetz umstellen',
+    );
+  });
 });

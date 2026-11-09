@@ -316,3 +316,16 @@
   border-radius: var(--radius-md);
   background: var(--surface-2);
 }
+
+/* SwitchToLanDialog: the server's devices, one row each (name, then "Am Server sperren"). */
+.plainList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.plainList > li {
+  justify-content: space-between;
+}

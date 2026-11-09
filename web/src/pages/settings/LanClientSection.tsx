@@ -16,6 +16,7 @@ import { tLanSync } from '@/strings.lanSync';
 import { Button, Dialog } from '@/ui';
 import { Actions, Facts, StateBanner } from './ConnectParts';
 import { QrScanDialog, type ScanFailure } from './QrScanDialog';
+import { SwitchToLanDialog } from './SwitchToLanDialog';
 import styles from './settings.module.css';
 
 type Texts = ReturnType<typeof tLanSync.use>;
@@ -32,6 +33,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   const sync = useSyncStatus();
   const paired = sync.via === 'lanClient';
   const otherPath = sync.via === 'server' || sync.via === 'lanHub';
+  const [switching, setSwitching] = useState(false);
   const [step, setStep] = useState<'idle' | 'scanning' | 'connecting' | 'confirm'>('idle');
   const [code, setCode] = useState<string>();
   const [failure, setFailure] = useState<Failure>();
@@ -164,10 +166,19 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
           line={otherPath ? l.otherPath : l.introPhoneLine}
           tinted={tinted}
           testId="lan-client-intro"
-          action={otherPath ? undefined : pairButton(failureInfo?.again ?? l.pairWithPc)}
+          action={
+            sync.via === 'server' ? (
+              <Button onClick={() => setSwitching(true)} data-testid="lan-switch-open">
+                {l.switchToLan}
+              </Button>
+            ) : otherPath ? undefined : (
+              pairButton(failureInfo?.again ?? l.pairWithPc)
+            )
+          }
         />
         {failureLine}
         {progress}
+        <SwitchToLanDialog open={switching} onClose={() => setSwitching(false)} />
       </div>
     );
   }
@@ -198,6 +209,11 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
             : []),
         ]}
       />
+      {longWithoutPc(sync.phase, sync.error, sync.lastSyncAt) ? (
+        <p className={styles.muted} data-testid="lan-long-no-pc">
+          {l.longNoPc}
+        </p>
+      ) : null}
       {failureLine}
       {tried && sync.phase === 'error' && sync.error === 'network' ? (
         <p role="status" className={styles.muted} data-testid="lan-tried">
@@ -290,6 +306,15 @@ function pairFailure(reason: Failure, l: Texts): { text: string; again: string }
     default:
       return { text: l.pairFailed, again: l.tryAgain };
   }
+}
+
+/** After 7 days without reaching the PC: one calm line (also on holiday, so no button; CONCEPT §8). */
+const LONG_NO_PC_MS = 7 * 24 * 60 * 60 * 1000;
+
+function longWithoutPc(phase: string, error: string | undefined, lastSyncAt?: number): boolean {
+  return (
+    phase === 'error' && error === 'network' && !!lastSyncAt && now() - lastSyncAt > LONG_NO_PC_MS
+  );
 }
 
 /** "482913" → "482 913": easier to compare between two screens. */

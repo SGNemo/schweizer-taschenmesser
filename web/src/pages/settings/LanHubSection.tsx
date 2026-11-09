@@ -19,6 +19,7 @@ import { makeQr, qrPath } from '@/tools/qr/logic';
 import { Button, Dialog, Switch } from '@/ui';
 import { Actions, Facts, StateBanner, Step } from './ConnectParts';
 import { FoldedGroup } from './FoldedGroup';
+import { SwitchToLanDialog } from './SwitchToLanDialog';
 import styles from './settings.module.css';
 
 const LONG_UNSEEN_MS = 90 * 24 * 3600_000;
@@ -40,6 +41,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
   const [devices, setDevices] = useState<LanHubDevice[]>([]);
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState<string>();
   const [unpair, setUnpair] = useState<LanHubDevice>();
@@ -131,7 +133,11 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
           tinted={tinted}
           testId="lan-hub-intro"
           action={
-            serverOn ? undefined : (
+            serverOn ? (
+              <Button onClick={() => setSwitching(true)} data-testid="lan-switch-open">
+                {l.switchToLan}
+              </Button>
+            ) : (
               <Button
                 variant="primary"
                 onClick={() => void startPairing()}
@@ -149,6 +155,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
           </p>
         ) : null}
         <PairDialog open={pairing} status={status} onClose={() => setPairing(false)} />
+        <SwitchToLanDialog open={switching} onClose={() => setSwitching(false)} />
       </div>
     );
   }
