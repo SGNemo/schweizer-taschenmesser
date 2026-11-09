@@ -144,6 +144,20 @@ export const tLanSync = defineBundle(
     unpairFromPcAsk: 'Vom PC lösen? Dieses Gerät gleicht erst wieder ab, wenn du es neu koppelst.',
     serverBlockedPhone:
       'Dieses Gerät ist mit deinem PC gekoppelt. Löse die Kopplung oben, um stattdessen einen eigenen Server zu verbinden.',
+    // a second PC that pairs with the hub PC (client by webcam)
+    pairWithOtherPc: 'Mit einem anderen PC koppeln',
+    scanHintPc: 'Richte die Webcam auf den QR-Code am anderen PC.',
+    noCamera: 'Ohne Kamera geht das Koppeln mit einem anderen PC noch nicht.',
+    noCameraServer: 'Abgleichen geht trotzdem: über „Eigener Server (erweitert)“ weiter unten.',
+    isHubAlready:
+      'Dieser PC ist schon der Abgleich-Punkt im Heimnetz. Schalte das zuerst aus, um ihn mit einem anderen PC zu koppeln.',
+    clientPaired:
+      'Dieser PC ist mit einem anderen PC gekoppelt. Löse die Kopplung zuerst, um ihn selbst als Abgleich-Punkt zu nutzen.',
+    cameraDeniedPc: 'Die Webcam ist aus. In den Windows-Einstellungen unter „Kamera“ erlauben.',
+    keystorePc:
+      'Der sichere Schlüsselspeicher von Windows antwortet nicht. Starte Nemo neu und versuche es noch einmal.',
+    offlineLinePc: 'Dieser PC ist gerade ohne Netz.',
+    clockOffPc: 'Die Uhrzeit dieses PCs weicht ab.',
     // folded server form
     ownServer: 'Eigener Server (erweitert)',
     ownServerOff: 'Aus',
@@ -283,6 +297,18 @@ export const tLanSync = defineBundle(
         'Unpair from the PC? This device will only sync again after you pair it again.',
       serverBlockedPhone:
         'This device is paired with your PC. Unpair it above to connect your own server instead.',
+      pairWithOtherPc: 'Pair with another PC',
+      scanHintPc: 'Point the webcam at the QR code on the other PC.',
+      noCamera: 'Pairing with another PC needs a camera for now.',
+      noCameraServer: 'You can still sync: use “Own server (advanced)” below.',
+      isHubAlready:
+        'This PC already is the sync point on your home network. Turn that off first to pair it with another PC.',
+      clientPaired:
+        'This PC is paired with another PC. Unpair it first to use it as the sync point itself.',
+      cameraDeniedPc: 'The webcam is off. Allow it in the Windows settings under “Camera”.',
+      keystorePc: 'The Windows secure key store does not answer. Restart Nemo and try again.',
+      offlineLinePc: 'This PC has no connection right now.',
+      clockOffPc: "This PC's clock is off.",
       ownServer: 'Own server (advanced)',
       ownServerOff: 'Off',
       serverBlocked:

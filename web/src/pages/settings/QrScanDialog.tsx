@@ -4,18 +4,20 @@ import { tLanSync } from '@/strings.lanSync';
 import { Button, Dialog } from '@/ui';
 import styles from './settings.module.css';
 
-export type ScanFailure = 'camera-denied' | 'scan-failed';
+export type ScanFailure = 'camera-denied' | 'no-camera' | 'scan-failed';
 
 /** Largest frame edge that is decoded: enough for a QR on a PC screen, cheap on a phone. */
 const FRAME_EDGE = 720;
 const EVERY_MS = 200;
 
 /**
- * The phone's QR scanner inside the app: the camera stream in a `<video>`, frames decoded with jsQR
- * (lazy). No native scanner view: nothing can cover the app without a way back, and a camera that
+ * The QR scanner inside the app (the phone's camera, or a PC's webcam): the camera stream in a
+ * `<video>`, frames decoded with jsQR (lazy). A PC without a webcam reports `no-camera`. No native scanner view: nothing can cover the app without a way back, and a camera that
  * fails is a calm line, never a crash. The camera is off again as soon as the dialog closes.
  */
 export function QrScanDialog(props: {
+  /** Replaces the phone's "point the camera at the PC" line (the webcam of a second PC). */
+  hint?: string;
   onResult: (text: string) => void;
   onCancel: () => void;
   onFailure: (reason: ScanFailure) => void;
@@ -69,11 +71,16 @@ export function QrScanDialog(props: {
           }
         }, EVERY_MS);
       } catch (e) {
-        const denied =
-          e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+        const name = e instanceof DOMException ? e.name : '';
         stop();
         if (closed) return;
-        done.current.onFailure(denied ? 'camera-denied' : 'scan-failed');
+        done.current.onFailure(
+          name === 'NotAllowedError' || name === 'SecurityError'
+            ? 'camera-denied'
+            : name === 'NotFoundError' || name === 'DevicesNotFoundError'
+              ? 'no-camera'
+              : 'scan-failed',
+        );
       }
     })();
 
@@ -99,7 +106,7 @@ export function QrScanDialog(props: {
           aria-label={l.scanTitle}
         />
         <p className={styles.muted} role="status">
-          {l.scanHint}
+          {props.hint ?? l.scanHint}
         </p>
       </div>
     </Dialog>

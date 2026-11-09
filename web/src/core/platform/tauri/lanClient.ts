@@ -7,7 +7,7 @@ const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> =>
     throw new Error(typeof e === 'string' ? e : 'failed');
   });
 
-/** The phone's side of home-network sync (`src-tauri/src/lan_client.rs`); the QR is scanned in the app. */
+/** The device side of home-network sync (phone, second PC; `src-tauri/src/lan_client.rs`); the QR is scanned in the app. */
 export function createLanClient(supported: boolean): LanClientService {
   const unsupported = () => Promise.reject(new Error('unsupported'));
   if (!supported) {
