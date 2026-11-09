@@ -8,10 +8,10 @@ import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { personName, usePeople } from '@/core/people/people';
 import type { Slot } from '../dragMath';
 import type { HolidayId } from '../holidays';
-import { groupByDate, monthWeeks, weekNumberOf } from '../views';
+import { dailyRepeats, groupByDate, monthWeeks, repeatKey, weekNumberOf } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
 import { sourceHue } from './sourceHue';
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { TimeGrid } from './TimeGrid';
 import styles from '../routes/calendar.module.css';
 
@@ -34,29 +34,74 @@ interface ViewProps {
  */
 const TIME_GRID_REM = 66;
 const TIME_GRID_QUERY = '(min-width: 1400px)';
-/** From this page width a month cell names its entries as chips (same threshold as `@container page` in the CSS). */
+/**
+ * From this page width (and a window of at least 700 px) a month cell names its entries as lines (same threshold as
+ * `@container page` in the CSS); below, a cell shows marks and a count, and a title only where it fits in full.
+ */
 const MONTH_CHIPS_REM = 40;
+const MONTH_LINES_QUERY = '(min-width: 700px)';
 
 function useTimeGrid(): boolean {
   const viewport = useMediaQuery(TIME_GRID_QUERY);
   return usePageWidthAtLeast(TIME_GRID_REM) ?? viewport;
 }
 
-/** Chips per month cell: taller windows have taller cells and room for more entries. */
-function useChipLimit(): number {
-  const h800 = useMediaQuery('(min-height: 800px)');
-  const h1000 = useMediaQuery('(min-height: 1000px)');
+/**
+ * Lines per month cell (S03, UI round 6): three up to a 1080 px window, then "+n weitere"; taller windows have taller
+ * cells and room for more – lines are shorter than the former pills, so 1300 px holds six.
+ */
+function useLineLimit(): number {
+  const h1150 = useMediaQuery('(min-height: 1150px)');
   const h1300 = useMediaQuery('(min-height: 1300px)');
-  return h1300 ? 7 : h1000 ? 5 : h800 ? 4 : 3;
+  return h1300 ? 6 : h1150 ? 4 : 3;
+}
+
+/** The quiet kind mark of an entry (the kind itself is in the tooltip and the day's list). */
+function KindMark({ item }: { item: CalendarItem }) {
+  return (
+    <span
+      className={styles.lineMark}
+      data-kind={item.kind}
+      data-hue={sourceHue(item)}
+      style={item.color ? ({ '--cal': item.color } as CSSProperties) : undefined}
+      aria-hidden="true"
+    />
+  );
+}
+
+/**
+ * A text that is shown only when it fits in full: a phone cell never shows a fragment like "Ver…" (S03). Measured after
+ * layout and again when the cell changes size.
+ */
+function FitText({ className, children }: { className?: string; children: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [fits, setFits] = useState(true);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setFits(el.scrollWidth <= el.clientWidth + 1);
+    check();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [children]);
+  return (
+    <span ref={ref} className={className} data-fits={fits ? 'true' : 'false'}>
+      {children}
+    </span>
+  );
 }
 
 export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: ViewProps) {
   const byDate = groupByDate(items);
   const now = today();
-  const MAX_CHIPS = useChipLimit();
-  // A phone cell has room for one line, not for buttons: the first entry is named as plain text.
-  const wideViewport = useMediaQuery('(min-width: 700px)');
-  const wide = usePageWidthAtLeast(MONTH_CHIPS_REM) ?? wideViewport;
+  const limit = useLineLimit();
+  const repeats = dailyRepeats(items);
+  // A phone cell has room for marks, not for lines: narrow below 700 px or a narrow page, whichever says so.
+  const wideViewport = useMediaQuery(MONTH_LINES_QUERY);
+  const widePage = usePageWidthAtLeast(MONTH_CHIPS_REM);
+  const wide = wideViewport && (widePage ?? true);
   const weekStart = useWeekStart();
   return (
     <div className={styles.monthWrap}>
@@ -100,55 +145,57 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                       {Number(d.slice(8, 10))}
                     </button>
                     {holiday ? (
-                      <span className={styles.cellHoliday} title={t.calendar.holidayLabel}>
-                        {t.calendar.holidays[holiday]}
-                      </span>
+                      wide ? (
+                        <span className={styles.cellHoliday} title={t.calendar.holidayLabel}>
+                          {t.calendar.holidays[holiday]}
+                        </span>
+                      ) : (
+                        <FitText className={styles.cellHoliday}>
+                          {t.calendar.holidays[holiday]}
+                        </FitText>
+                      )
                     ) : null}
-                    {!wide && list[0] ? (
-                      <span className={styles.cellLabel}>
-                        {list[0].time ? `${list[0].time} ` : ''}
-                        {list[0].title}
-                        {list.length > 1 ? ` +${list.length - 1}` : ''}
-                      </span>
-                    ) : null}
-                    <ul className={styles.chips}>
-                      {list.slice(0, MAX_CHIPS).map((i) => (
-                        <li key={`${i.source}:${i.id}`}>
-                          <button
-                            type="button"
-                            className={`${styles.chip} ${styles[`kind_${i.kind}`] ?? ''} ${i.done ? styles.done : ''}`}
-                            data-hue={sourceHue(i)}
-                            title={`${kindLabel(i.kind)}: ${i.title}`}
-                            style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
-                            onClick={() => onOpenItem(i)}
-                          >
-                            {i.time ? `${i.time} ` : ''}
-                            {i.title}
-                          </button>
-                        </li>
-                      ))}
-                      {list.length > MAX_CHIPS ? (
-                        <li>
-                          <button
-                            type="button"
-                            className={styles.more}
-                            onClick={() => onPickDay(d)}
-                          >
-                            {t.calendar.more(list.length - MAX_CHIPS)}
-                          </button>
-                        </li>
-                      ) : null}
-                    </ul>
-                    {list.length > 0 ? (
-                      <span className={styles.dots} aria-hidden="true">
-                        {list.slice(0, 3).map((i) => (
-                          <span
-                            key={`${i.source}:${i.id}`}
-                            className={`${styles.dot} ${styles[`kind_${i.kind}`] ?? ''}`}
-                            data-hue={sourceHue(i)}
-                          />
+                    {wide ? (
+                      <ul className={styles.lines}>
+                        {list.slice(0, limit).map((i) => (
+                          <li key={`${i.source}:${i.id}`}>
+                            <button
+                              type="button"
+                              className={`${styles.line} ${i.kind === 'event' ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
+                              title={`${kindLabel(i.kind)}: ${i.title}`}
+                              style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
+                              onClick={() => onOpenItem(i)}
+                            >
+                              <KindMark item={i} />
+                              {i.time ? <span className={styles.lineTime}>{i.time}</span> : null}
+                              <span className={styles.lineTitle}>{i.title}</span>
+                            </button>
+                          </li>
                         ))}
-                      </span>
+                        {list.length > limit ? (
+                          <li>
+                            <button
+                              type="button"
+                              className={styles.more}
+                              onClick={() => onPickDay(d)}
+                            >
+                              {t.calendar.more(list.length - limit)}
+                            </button>
+                          </li>
+                        ) : null}
+                      </ul>
+                    ) : list.length > 0 ? (
+                      <>
+                        <FitText className={styles.cellLabel}>{list[0]!.title}</FitText>
+                        <span className={styles.dots} aria-hidden="true">
+                          {list.slice(0, 3).map((i) => (
+                            <KindMark key={`${i.source}:${i.id}`} item={i} />
+                          ))}
+                          {list.length > 3 ? (
+                            <span className={styles.dotsMore}>{`+${list.length - 3}`}</span>
+                          ) : null}
+                        </span>
+                      </>
                     ) : null}
                   </td>
                 );
