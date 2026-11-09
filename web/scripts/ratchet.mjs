@@ -763,7 +763,7 @@ export const approvalMessage = (pr, hash, repo = REPO) => `${LABEL} ${repo}#${pr
 
 export function hitTable(hits) {
   if (!hits.length) return 'Stimulus ratchet: no hits.';
-  const esc = (s) => s.replace(/\|/g, '\\|');
+  const esc = (s) => s.replace(/[\\|`]/g, '\\$&').replace(/\s+/g, ' ');
   return [
     `Stimulus ratchet: ${hits.length} hit(s). Each one needs the maintainer's approval (docs/howto/ci.md).`,
     '',
