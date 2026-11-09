@@ -1,5 +1,6 @@
 import { getLang } from '@/core/i18n/lang';
 import { resolvePlace } from '@/core/time/placeSearch';
+import { isKnownZone } from '@/core/time/zones';
 import { listPlaces } from './repo';
 
 /**
@@ -12,7 +13,9 @@ export default async function defaults(
 ): Promise<Record<string, unknown>> {
   if (collection !== 'place') return {};
   const out: Record<string, unknown> = {};
-  if (data.zone === undefined && typeof data.label === 'string') {
+  // No zone, or one the platform does not know ("JST", "Tokyo"): look it up from the name.
+  const known = typeof data.zone === 'string' && isKnownZone(data.zone);
+  if (!known && typeof data.label === 'string') {
     const hit = resolvePlace(data.label, getLang());
     if (hit) out.zone = hit.zone;
   }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useLang } from '@/core/i18n/lang';
 import { searchPlaces, type PlaceHit } from '@/core/time/placeSearch';
 import { useMinuteNow } from '@/core/time/useMinuteNow';
@@ -22,8 +22,16 @@ export function AddPlaceDialog({ open, onClose }: { open: boolean; onClose: () =
     setQuery('');
     onClose();
   };
+  // One place per pick: a double click or Enter while saving adds nothing twice.
+  const busy = useRef(false);
   const pick = async (hit: PlaceHit) => {
-    await addPlace(hit.name, hit.zone);
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      await addPlace(hit.name, hit.zone);
+    } finally {
+      busy.current = false;
+    }
     useUiStore.getState().toast(t.clock.added(hit.name));
     close();
   };
@@ -33,7 +41,8 @@ export function AddPlaceDialog({ open, onClose }: { open: boolean; onClose: () =
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (hits[0]) void pick(hits[0]);
+          // Enter takes the first hit only when it is a clear one; a loose substring hit needs a tap.
+          if (hits[0] && !hits[0].loose) void pick(hits[0]);
         }}
       >
         <TextField

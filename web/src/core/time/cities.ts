@@ -2,7 +2,7 @@
  * Offline place names for the clock (docs/decisions/modules.md "Uhr"): cities in German and English → IANA zone.
  * No network, no geocoding: the zone list itself comes from `Intl.supportedValuesOf('timeZone')`, this table only
  * adds the names people type ("München", "Peking", "NYC"). Row: [zone, German, English, ...more aliases].
- * German is left empty ('') where it equals the English name. Every zone is checked in `cities.test.ts`.
+ * German is left empty ('') where it equals the English name. Every zone is checked in `placeSearch.test.ts`.
  */
 export type CityRow = readonly [zone: string, de: string, en: string, ...aliases: string[]];
 

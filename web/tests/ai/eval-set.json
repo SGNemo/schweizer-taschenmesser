@@ -3113,7 +3113,7 @@
     },
     {
       "id": "clk-c02",
-      "input": "Neuer Ort für die Uhr: New York",
+      "input": "Neuer Ort für die Weltuhr: New York",
       "tags": ["create"],
       "expect": [
         {

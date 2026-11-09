@@ -280,6 +280,8 @@ const place: CaptureTarget = {
   build: (f) => {
     const hit = resolvePlace(f.title, getLang());
     if (!hit) throw new CaptureError('invalid');
+    // `build` cannot read the list, so the order is the time in seconds: always after the page's 0, 1, 2 …
+    // (`addPlace` then continues after it; only the relative order matters).
     return { label: hit.name, zone: hit.zone, order: Math.floor(now() / 1000) };
   },
 };

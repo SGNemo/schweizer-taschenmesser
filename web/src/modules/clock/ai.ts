@@ -22,7 +22,8 @@ export const aiSchema: ModuleAiSchema = {
       description: 'Ort zur Uhr hinzufügen; zone = IANA-Zeitzone (z. B. Asia/Tokyo)',
       fields: ['label', 'zone'],
       required: ['label'],
-      parse: { keywords: ['weltuhr', 'uhr'] },
+      // Never plain „uhr“: create keywords match by word prefix, and „um 14 Uhr“ is a calendar time.
+      parse: { keywords: ['weltuhr', 'zeitzone'] },
       examples: [{ input: 'Füge Tokio zur Weltuhr hinzu', output: { label: 'Tokio' } }],
     },
   },
