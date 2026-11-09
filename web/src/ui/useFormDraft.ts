@@ -46,5 +46,9 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
   return { values, set, clear, discard, restored } as const;
 }
 
+/** Is any form draft still alive? A reload would lose it (layout/PageLoadingCard). Expired drafts do not count. */
+export const hasDrafts = (): boolean =>
+  [...drafts.values()].some((d) => now() - d.at < FORM_DRAFT_TTL_MS);
+
 /** Test helper: forget every draft. */
 export const clearAllFormDrafts = (): void => drafts.clear();
