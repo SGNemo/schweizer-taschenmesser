@@ -25,7 +25,10 @@ export function expiryText(
   if (d < 0) return capitalize(t.pantry.expiredOn(pastDay(item.expires!, today)));
   if (d === 0) return t.pantry.today;
   if (d <= soonDays) return t.pantry.inDays(d);
-  return t.pantry.until(formatDay(item.expires!, 'dd.MM.yyyy'));
+  // Short weekday date like every other list; the year only when it is not this one.
+  const pattern =
+    item.expires!.slice(0, 4) === today.slice(0, 4) ? 'EEE, d. MMM' : 'EEE, d. MMM yyyy';
+  return t.pantry.until(formatDay(item.expires!, pattern));
 }
 
 /** Empty stock never expires: there is nothing left that could spoil. */

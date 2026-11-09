@@ -36,6 +36,13 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
+/* U01: the favourites' room while the setting is read (heading box of the h2, one chip row), unseen. */
+.favPending {
+  visibility: hidden;
+}
+.favPending .heading {
+  line-height: var(--leading-tight);
+}
 /* Favourites: up to five icon chips in one bar. */
 .favbar {
   display: flex;

@@ -1559,6 +1559,7 @@ export const de = {
     changed: 'ToDo geändert.',
     noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
+    emptyAction: 'Eine Sache eintragen',
     someday: 'Irgendwann',
     views: {
       label: 'Ansicht',
@@ -1571,6 +1572,7 @@ export const de = {
     },
     board: {
       empty: 'Hier ist nichts.',
+      wasDue: (date: string) => `war am ${date} fällig`,
       moveTo: (view: string) => `Verschieben nach ${view}`,
       hint: 'Karte ziehen oder „⋯“ nutzen.',
     },
@@ -1595,7 +1597,7 @@ export const de = {
     startDate: 'Beginnt am',
     startHint: 'Bis dahin steht die Aufgabe unter „Demnächst“.',
     startsOn: (date: string) => `ab ${date}`,
-    moveTomorrow: 'Morgen',
+    moveTomorrow: 'Auf morgen',
     allToday: 'Alle auf heute',
     allTodayDone: (n: number) =>
       n === 1 ? '1 ToDo auf heute gelegt.' : `${n} ToDos auf heute gelegt.`,
@@ -1786,12 +1788,13 @@ export const de = {
     location: 'Ort',
     showOnMap: 'Auf der Karte zeigen',
     saveAsPlace: 'Als Ort merken',
-    nothing: 'Keine Einträge',
+    nothing: 'Noch nichts geplant.',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
     agenda: 'Agenda',
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
+    hoursRegion: 'Stunden des Tages',
     widgetEmpty: 'Nichts geplant.',
     stageBody: (minutes: number, time: string) =>
       (minutes >= 1440
@@ -4359,6 +4362,7 @@ export const de = {
     noMatch: 'Nichts in dieser Ansicht.',
     plus: (n: string) => `${n}: einer mehr`,
     minus: (n: string) => `${n}: einer weniger`,
+    amount: 'Anzahl',
     countOf: (n: number) => `${n} Stück`,
     today: 'Läuft heute ab',
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),
@@ -5111,6 +5115,7 @@ export const de = {
     needFinance: 'Budgets brauchen das Modul „Finanzen“.',
     needFinanceHint:
       'Aktiviere es in der Modul-Bibliothek – die Ausgaben je Kategorie kommen von dort.',
+    month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',
@@ -7948,7 +7953,8 @@ export const de = {
       none: 'Noch keine Projekte.',
       addJob: 'Projekt anlegen',
       running: (name: string, since: string) => `${name} · seit ${since}`,
-      idle: 'Nichts läuft',
+      /** The idle widget's one context line under today's figure (U30). */
+      idle: 'heute · nichts läuft',
     },
     head: { running: 'Läuft', idle: 'Bereit' },
   },
@@ -7970,6 +7976,7 @@ export const de = {
     emptyHint:
       'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
     add: 'Gewohnheit hinzufügen',
+    addFirst: 'Erste Gewohnheit',
     edit: 'Gewohnheit bearbeiten',
     form: {
       name: 'Name',

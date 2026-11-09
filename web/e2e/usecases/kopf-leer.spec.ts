@@ -9,16 +9,18 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * screens, dialogs and detours (an action that did not do what the person meant), and estimates the seconds a
  * person needs for them (model: tap 1 s, character 0,25 s on a keyboard / 0,4 s on a phone, screen change 2 s,
  * reading a dialog 3 s, detour 5 s). The last path measures the stimulus load of the planner page (interactive
- * elements, words, rows, scroll length). `MAX` holds the numbers measured on `develop` (2026-11-08): no path
- * may get longer. The table lands in `test-results/usecase-kopf-leer.md` and as the attachment `usecase-kopf-leer`.
+ * elements, words, rows, scroll length). `MAX` holds the target column of TARGET §4 as remeasured after the
+ * packages (2026-11-09; the misses are named there): no path may get longer. The table lands in
+ * `test-results/usecase-kopf-leer.md` and as the attachment `usecase-kopf-leer`.
  *
  * The mail path needs the demo mails of the seed, which only the Dev-Preview flavour has:
  *   npm run build:e2e-seed && npm run preview:e2e-seed   (port 4174)
  *   USECASE_SEED_URL=http://localhost:4174 npx playwright test e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome
  * Without the variable the mail path is skipped (mail is a desktop-only module; the phone never has it). It stays in
  * this file on purpose: one script per use case (docs/design/usecases), and the seed project is a Dev-Preview build.
- * Friction that the packages will remove is counted as a detour, never asserted, so a package lowers the numbers
- * instead of breaking the script.
+ * Friction is counted as taps, keys, screens, dialogs and detours (a scroll is not counted; the docs name it where
+ * it happens), never assumed away: a later change lowers the numbers instead of breaking the script. Since package 4 the target state of path A (no pile visible, no select,
+ * no booking, no doubled invoice) and the planner's folded group are asserted directly.
  */
 
 const OUT = 'test-results/usecase-kopf-leer';
@@ -30,20 +32,27 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
     ms: number;
   };
 
-/** Baseline on `develop`: upper bounds per path and project (taps · keys · screens · dialogs · detours). */
-const MAX: Record<string, Record<Metric, number>> = {
+/**
+ * Upper bounds per path and project: the target column of TARGET §4, remeasured on `develop` after the packages
+ * 1, 2, 3a and 3b (2026-11-09, package 4). One number misses its target and stays at the measured value:
+ * path B's second screen (the invoice line says „angelegt“, not whether it is in the plan, so the person still
+ * checks the planner; target 1 screen · ≈ 4 s, measured 2 · ≈ 6 s – docs/STATUS.md, line „Use case Kopf leer:
+ * nachgemessen“). That screen is counted only while the invoice line does not say „Im Plan“.
+ * `seconds` follows from the other five (the model above); it is listed so the table reads like TARGET §4.
+ */
+const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
-  'A Kopf leeren: fünf Dinge auf einmal · desktop-chrome': { taps: 3, keys: 141, screens: 2, dialogs: 2, detours: 1 },
+  'A Kopf leeren: fünf Dinge auf einmal · desktop-chrome': { taps: 2, keys: 141, screens: 1, dialogs: 1, detours: 0, seconds: 42 },
   // prettier-ignore
-  'A Kopf leeren: fünf Dinge auf einmal · pixel-7': { taps: 3, keys: 141, screens: 2, dialogs: 2, detours: 1 },
+  'A Kopf leeren: fünf Dinge auf einmal · pixel-7': { taps: 2, keys: 141, screens: 1, dialogs: 1, detours: 0, seconds: 63 },
   // prettier-ignore
-  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 9, keys: 0, screens: 2, dialogs: 2, detours: 0 },
+  'B Mail → Antwort-ToDo und Rechnung in den Plan · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 6 },
   // prettier-ignore
-  'C Handy: eine Sache im Vorbeigehen · pixel-7': { taps: 1, keys: 19, screens: 1, dialogs: 1, detours: 0 },
+  'C Handy: eine Sache im Vorbeigehen · pixel-7': { taps: 1, keys: 19, screens: 1, dialogs: 1, detours: 0, seconds: 14 },
   // prettier-ignore
-  'D Planer öffnen bei Überlast · desktop-chrome': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0 },
+  'D Planer öffnen bei Überlast · desktop-chrome': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 2 },
   // prettier-ignore
-  'D Planer öffnen bei Überlast · pixel-7': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0 },
+  'D Planer öffnen bei Überlast · pixel-7': { taps: 0, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 2 },
 };
 
 class Meter {
@@ -132,8 +141,8 @@ async function record(info: TestInfo, meter: Meter, name: string) {
   await info.attach('usecase-kopf-leer', { path: 'test-results/usecase-kopf-leer.md' });
   const max = MAX[`${name} · ${project}`];
   expect(max, `no baseline for „${name}“ on ${project}`).toBeTruthy();
-  for (const k of ['taps', 'keys', 'screens', 'dialogs', 'detours'] as const)
-    expect(row[k], `${name}: ${k} (baseline ${max![k]})`).toBeLessThanOrEqual(max![k]);
+  for (const k of ['taps', 'keys', 'screens', 'dialogs', 'detours', 'seconds'] as const)
+    expect(row[k], `${name}: ${k} (bound ${max![k]})`).toBeLessThanOrEqual(max![k]);
   info.annotations.push({
     type: 'usecase',
     description: `${name}: ${row.taps} taps · ${row.keys} keys · ${row.screens} screens · ${row.dialogs} dialogs · ${row.detours} detours · ≈ ${row.seconds} s`,
@@ -327,8 +336,12 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     const strip = document.querySelector('section[aria-label="Jetzt wichtig"]');
     const dialog = document.querySelector('dialog[open]');
     const backdrop = dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : '';
-    // Alpha only from a fourth component (`rgba(r, g, b, a)` or `rgb(r g b / a)`); three components = opaque.
-    const parts = /^(?:rgba?|color)\((.*)\)$/.exec(backdrop)?.[1] ?? '';
+    // Alpha only from a fourth component (`rgba(r, g, b, a)` or `rgb(r g b / a)`); three components = opaque. A
+    // `color(<space> …)` value drops its colour-space word first.
+    const parts = (/^(?:rgba?|color)\((.*)\)$/.exec(backdrop)?.[1] ?? '').replace(
+      /^[a-z-]+\s+/i,
+      '',
+    );
     const numbers = parts.split(/[\s,/]+/).filter(Boolean);
     const alpha = numbers.length >= 4 ? Number(numbers[numbers.length - 1]) : 1;
     const opaque = backdrop !== '' && alpha >= 0.98;
@@ -342,8 +355,37 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
           (sel) => sel.selectedOptions[0]?.textContent?.trim() === 'Buchung (Entwurf)',
         )
       : false;
-    return { cards, selects, booking, backdrop };
+    // `booking` is diagnostic only (annotation, JSON): the store count around the save is the assertion.
+    return { cards, selects, booking, backdrop, opaque, strip: !!strip };
   });
+  // A batch never books (F1): bookings are counted in the store before and after the save.
+  const bookings = () =>
+    page.evaluate(
+      () =>
+        new Promise<number>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(new Error('IndexedDB taschenmesser'));
+          open.onsuccess = () => {
+            let req: IDBRequest;
+            try {
+              req = open.result
+                .transaction('finance_transaction')
+                .objectStore('finance_transaction')
+                .getAll();
+            } catch (e) {
+              return reject(new Error(`store finance_transaction: ${String(e)}`));
+            }
+            req.onerror = () => reject(new Error('store finance_transaction'));
+            req.onsuccess = () => {
+              open.result.close();
+              resolve(
+                (req.result as { deletedAt?: number | null }[]).filter((r) => !r.deletedAt).length,
+              );
+            };
+          };
+        }),
+    );
+  const bookedBefore = await bookings();
   await m.tap(page.getByRole('button', { name: 'Alle speichern (5)' }).first());
   // U04: the first „Alle speichern“ may save nothing – a booking line asks for a confirmation first
   // (gone since package 1: a batch never books, the money line is a ToDo with a booking chip).
@@ -360,13 +402,20 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   // U03: the reminder line must raise the open Stadtwerke invoice, never file a second one (package 2).
   const stadtwerke = await page.evaluate(
     () =>
-      new Promise<number>((resolve) => {
+      new Promise<number>((resolve, reject) => {
         const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(new Error('IndexedDB taschenmesser'));
         open.onsuccess = () => {
-          const req = open.result
-            .transaction('invoices_invoice')
-            .objectStore('invoices_invoice')
-            .getAll();
+          let req: IDBRequest;
+          try {
+            req = open.result
+              .transaction('invoices_invoice')
+              .objectStore('invoices_invoice')
+              .getAll();
+          } catch (e) {
+            return reject(new Error(`store invoices_invoice: ${String(e)}`));
+          }
+          req.onerror = () => reject(new Error('store invoices_invoice'));
           req.onsuccess = () => {
             open.result.close();
             const all = req.result as { payee?: string; deletedAt?: number | null }[];
@@ -385,6 +434,13 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     type: 'stimulus',
     description: `while unloading: ${pile.cards} attention cards visible beside the sheet (backdrop ${pile.backdrop}) · ${pile.selects} selects in the sheet · booking line ${pile.booking}`,
   });
+  // TARGET §4 (F1): nothing of the pile beside the sheet, no select per line, no booking in a batch.
+  // 0 cards because the backdrop is opaque – not because the strip happened to be missing.
+  expect(pile.opaque, `opaque backdrop (${pile.backdrop})`).toBe(true);
+  expect(pile.cards, 'attention cards visible beside the sheet').toBe(0);
+  expect(pile.selects, 'selects in the sheet').toBe(0);
+  expect(await bookings(), 'bookings written by the batch').toBe(bookedBefore);
+  expect(stadtwerke, 'Stadtwerke invoices after the reminder line').toBe(1);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Where did they land? Until package 1 the person checked the ToDos (a second screen); the closing
   // line now names the place („Sortiert wird später. · Ansehen“), so no visit is counted. The machine
@@ -466,15 +522,26 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await expect(invoice).toBeVisible({ timeout: 10_000 });
   await m.tap(invoice);
   await expect(page.getByText('Rechnung angelegt')).toBeVisible();
-  // Is it in the plan? A second screen to check (U09: nothing in the mail says so).
-  m.screens += 1;
+  // Is it in the plan? The reply's row says „Im Plan“ (3a); the invoice line says only „angelegt“. While the invoice
+  // line's done mark does not say „Im Plan“, the person opens the planner to see it (a counted screen). Only a
+  // positive mark counts – „nicht im Plan“, „war im Plan“ or „im Planer“ never drop the screen; it is the capitalised
+  // mark of the mail strings (a lowercase one would still count the screen: stricter, never a false pass).
+  const invoiceLine = page
+    .getByTestId('mail-invoice-line')
+    .filter({ hasText: 'Stadtwerke Musterstadt' });
+  const saysPlan = await invoiceLine
+    .first()
+    .getByTestId('mail-invoice-done')
+    .filter({ hasText: /^\s*·?\s*Im Plan(\s*·.*|:.*)?$/ })
+    .count();
+  if (!saysPlan) m.screens += 1;
   await page.goto(`${seed}/planner`);
   await expect(page.getByTestId('planner-head')).toBeVisible();
   await expect(page.getByText('Stadtwerke Musterstadt bezahlen').first()).toBeVisible({
     timeout: 15_000,
   });
-  // U09: the reply sits in the plan under the mail's subject; nothing says it came from a mail. The run that
-  // places it follows the ToDo write; wait for it to settle before deciding whether the person has to search.
+  // The reply sits in the plan as „Anna Beispiel · Wochenende?“ (with „Zur Mail“ since 3a). The run that places it
+  // follows the ToDo write; wait for it to settle before deciding whether the person has to search.
   const reply = page.getByText(/Wochenende\?$/).first();
   await expect(reply)
     .toBeVisible({ timeout: 15_000 })
@@ -505,7 +572,7 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   await m.go('/planner');
   const head = page.getByTestId('planner-head');
   await expect(head).toContainText('frei heute');
-  // The overload shows as a number in the head of the waiting group – and as the whole waiting list.
+  // The overload shows as a number in the head of the waiting group, folded with its calming half (F4).
   const waiting = page.getByText(/Wartet auf freie Zeit/);
   await expect(waiting).toBeVisible({ timeout: 15_000 });
   // Settled: the run may still add rows after the heading appears.
@@ -518,7 +585,8 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
     last = now;
   }
   const s = await stimulus(page);
-  // Rows outside the day columns = the waiting group (every waiting thing is listed, with its reason).
+  await expect(page.getByText(/Nichts davon muss heute sein/).first()).toBeVisible();
+  // Rows outside the day columns = the waiting group (folded since package 1: only its head is a row).
   const waitingCount = await page.evaluate(() => {
     const all = document.querySelectorAll('main li').length;
     const inDays = document.querySelectorAll('main [data-testid^="day-"] li').length;
@@ -537,10 +605,12 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
     body: JSON.stringify({ ...s, waitingCount }),
     contentType: 'application/json',
   });
-  // Baseline on develop (U12), measured + about a tenth: no package may make the page longer.
+  // TARGET §4 (F4: the waiting group folded, the head names the next step); remeasured 2026-11-09: PC 40 · 244 ·
+  // 13 · 549 px, phone 23 · 120 · 4 · 437 px. The PC's rows and interactive elements sit exactly at the target:
+  // a planner change that adds one fails here on purpose (run this script for planner PRs).
   const bound = isMobile
-    ? { interactive: 43, words: 425, rows: 22, scroll: 1600 }
-    : { interactive: 62, words: 560, rows: 32, scroll: 1400 };
+    ? { interactive: 25, words: 200, rows: 5, scroll: 800 }
+    : { interactive: 40, words: 280, rows: 13, scroll: 700 };
   expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
   expect(s.words, 'words').toBeLessThanOrEqual(bound.words);
   expect(s.rows, 'rows').toBeLessThanOrEqual(bound.rows);

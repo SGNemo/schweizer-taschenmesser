@@ -28,6 +28,7 @@ import { tSettingsV31 } from '@/strings.settingsV31';
 import { Badge, Button, Dialog, EmptyState, HeadEyebrow, HeadSurface, ReadableText } from '@/ui';
 import { Ring } from '@/ui/identity';
 import { PageContainer, PageFallback } from '../PageContainer';
+import { StepPrimaryContext } from './stepPrimary';
 import styles from './SetupWizard.module.css';
 
 type View = 'start' | 'step' | 'summary' | 'confirm' | 'quick';
@@ -179,6 +180,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [error, setError] = useState(false);
   const [canContinue, setCanContinue] = useState(true);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  // The step shows its own primary (U59): "Weiter" is secondary meanwhile.
+  const [stepPrimary, setStepPrimary] = useState(false);
   const [quickIndex, setQuickIndex] = useState(0);
   const [overviewOpen, setOverviewOpen] = useState<boolean | null>(null);
   const commit = useRef<(() => Promise<void | 'skipped'>) | null>(null);
@@ -460,16 +463,18 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
           <ReadableText text={isQuick && quickText ? quickText.description : step.description} />
         </p>
         <Suspense fallback={<PageFallback />}>
-          <StepView
-            step={step}
-            ctx={ctx}
-            mode={isQuick ? 'quick' : 'full'}
-            registerCommit={(fn) => {
-              commit.current = fn;
-            }}
-            setCanContinue={setCanContinue}
-            setBlockedReason={setBlockedReason}
-          />
+          <StepPrimaryContext.Provider value={setStepPrimary}>
+            <StepView
+              step={step}
+              ctx={ctx}
+              mode={isQuick ? 'quick' : 'full'}
+              registerCommit={(fn) => {
+                commit.current = fn;
+              }}
+              setCanContinue={setCanContinue}
+              setBlockedReason={setBlockedReason}
+            />
+          </StepPrimaryContext.Provider>
         </Suspense>
         {error ? (
           <p role="alert" className={styles.error}>
@@ -507,7 +512,12 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
               {t.setup.skip}
             </Button>
           )}
-          <Button variant="primary" onClick={() => void onNext()} disabled={busy || !canContinue}>
+          <Button
+            variant={stepPrimary ? 'secondary' : 'primary'}
+            onClick={() => void onNext()}
+            disabled={busy || !canContinue}
+            data-testid="setup-next"
+          >
             {last ? (isQuick ? t.setup.finishQuestions : t.setup.finish) : t.setup.next}
           </Button>
         </span>
@@ -516,15 +526,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   }
 
   return (
-    <Dialog
-      open
-      onClose={requestClose}
-      title={t.setup.dialogTitle}
-      variant="full"
-      footer={footer}
-      backHandled
-    >
+    <Dialog open onClose={requestClose} title={t.setup.dialogTitle} variant="full" backHandled>
       <PageContainer variant="narrow">{body}</PageContainer>
+      {/* U06: the way on stays on screen – a bar at the bottom edge the step scrolls under, on every screen size. */}
+      {footer ? (
+        <div className={styles.footer} data-testid="setup-footer">
+          {footer}
+        </div>
+      ) : null}
     </Dialog>
   );
 }

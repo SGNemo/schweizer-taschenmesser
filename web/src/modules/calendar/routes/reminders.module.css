@@ -5,6 +5,10 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+.header h2 {
+  /* Same size as the calendar's view title and agenda heading (U16). */
+  font-size: var(--text-lg);
+}
 .banner {
   display: flex;
   gap: var(--space-3);

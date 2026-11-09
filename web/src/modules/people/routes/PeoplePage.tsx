@@ -37,6 +37,7 @@ import {
   sortByNext,
   sortGifts,
   totals,
+  metaLine,
   whenLabel,
 } from '../logic';
 import { inboxSchema, removeIdea, SCOPE as INBOX_SCOPE } from '../inbox';
@@ -176,16 +177,19 @@ function PeopleList({
             .join(' · ')}
         />
       ) : null}
+      {/* U47: the switch keeps the page's 16 px step to the search below (like Karten & Orte). */}
       {pending.length > 0 || view === 'gifts' ? (
-        <Segmented
-          label={t.people.viewLabel}
-          value={view}
-          options={[
-            { value: 'people' as const, label: t.people.viewPeople },
-            { value: 'gifts' as const, label: t.people.viewGifts },
-          ]}
-          onChange={setView}
-        />
+        <div className={patternStyles.gapBottom}>
+          <Segmented
+            label={t.people.viewLabel}
+            value={view}
+            options={[
+              { value: 'people' as const, label: t.people.viewPeople },
+              { value: 'gifts' as const, label: t.people.viewGifts },
+            ]}
+            onChange={setView}
+          />
+        </div>
       ) : null}
       {view === 'gifts' ? (
         <>
@@ -244,14 +248,13 @@ function PeopleList({
                 lead={
                   <PersonRing name={p.name} days={b ? daysUntil(b, day) : undefined} size={2.25} />
                 }
-                meta={[
+                // U47: the line breaks between phrases only ("in 75 / Tagen" read as two facts).
+                meta={metaLine([
                   next ? formatDay(next, 'EEE, d. MMMM') : undefined,
                   age !== undefined ? t.people.turns(age) : undefined,
                   b ? whenLabel(daysUntil(b, day)) : undefined,
                   gifting ? t.people.giftsOpen(gifting) : undefined,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+                ])}
                 onOpen={() => onOpen(p.id)}
                 end={
                   b ? (

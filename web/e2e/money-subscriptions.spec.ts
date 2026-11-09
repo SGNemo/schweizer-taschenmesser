@@ -49,6 +49,19 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
     await save(page);
     const row = rows(page).filter({ hasText: 'Musik Test' });
     await expect(row).toContainText('Probezeit');
+    // The chip sits in the meta line: the amount column of a trial row lines up with the others (round 6, U56).
+    await addSubscription(page, 'Hörbuch Flat', '7,49', '2026-10-12');
+    await save(page);
+    const amountEnd = async (name: string, amount: RegExp) => {
+      const box = (await rows(page).filter({ hasText: name }).getByText(amount).boundingBox())!;
+      return box.x + box.width;
+    };
+    expect(
+      Math.abs(
+        (await amountEnd('Musik Test', /^9,99\s€$/)) -
+          (await amountEnd('Hörbuch Flat', /^7,49\s€$/)),
+      ),
+    ).toBeLessThanOrEqual(1);
     // Category and payment method show in Erweitert.
     await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click();
     await expect(row).toContainText('Musik');
