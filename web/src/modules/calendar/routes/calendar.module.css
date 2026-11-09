@@ -891,6 +891,10 @@ button.recentChip {
   margin: 0 0 var(--space-1);
   font-size: var(--text-base);
 }
+/* "Mai" is narrower than a finger (U58). */
+.miniTitle .linkBtn {
+  min-width: var(--touch);
+}
 .miniTable {
   width: 100%;
   border-collapse: collapse;
