@@ -66,7 +66,7 @@ Everything that needs a decision or a merge from the maintainer, in one place. A
 
 | Topic                                                                           | Branch          | Area / files                                                                                    | State                                                                     | Last commit | Updated    |
 | ------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------- | ---------- |
-| UI-Audit mit Council: modern? Geld/Haushalt/Tresor/System, Identity 3.2 oder 4.0 | `review/ui-audit-2026-11` | `docs/design/ui-audit-2026-11/**` (Doku, Mess-Skripte), kein Produktcode | Phase 3 – Bericht + Fragen, wartet auf Sven | 2026-11-09 | 2026-11-09 |
+| UI-Audit mit Council: modern? Geld/Haushalt/Tresor/System, Identity 3.2 oder 4.0 | `review/ui-audit-2026-11` | `docs/design/ui-audit-2026-11/**` (Doku, Mess-Skripte), kein Produktcode | Phase 3 – Bericht nach 5 Council-Runden + 4 Fragen, wartet auf Sven (kein PR) | 2026-11-09 | 2026-11-09 |
 
 How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
 
