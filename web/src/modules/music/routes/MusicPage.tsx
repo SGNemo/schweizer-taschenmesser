@@ -121,7 +121,7 @@ export default function MusicPage() {
           )}
         </div>
         <aside className={styles.aside}>
-          <SideLists api={api} active={view} />
+          <SideLists api={api} />
         </aside>
       </div>
     </>
