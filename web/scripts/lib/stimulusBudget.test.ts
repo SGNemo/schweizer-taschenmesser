@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { MODULE_PAGES, PAGES, VIEWPORTS } from '../../e2e/screenshots/stimulusPages';
+import { routeSlug } from '../ratchet.mjs';
 import {
   ABSOLUTE_TOLERANCE,
   compare,
@@ -399,7 +400,8 @@ describe('pages of the inventory', () => {
     );
     expect(names).not.toContain('example');
     expect(names.some((n) => n.includes(':') || n.includes('focus'))).toBe(false);
-    for (const p of MODULE_PAGES) expect(p.name).toBe(p.path.slice(1).replace(/\//g, '-'));
+    // The ratchet recognises a new route by the same name (scripts/ratchet.mjs `routeSlug`).
+    for (const p of MODULE_PAGES) expect(p.name).toBe(routeSlug(p.path));
   });
   it('platform-bound modules are measured on the desktop window only', () => {
     expect(MODULE_PAGES.filter((p) => p.desktop).map((p) => p.name)).toEqual([

@@ -51,7 +51,7 @@ export const ALWAYS_PROTECTED = [
   '.github/workflows/**',
   '.github/actions/**',
   'web/*.config.*',
-  'web/.env.e2e*',
+  'web/.env*',
 ];
 
 const E2E_PROMISES = [
@@ -666,7 +666,8 @@ const closureEligible = (path) =>
  */
 export function protectedClosure(tree, read) {
   const seen = new Set();
-  const queue = [...tree.keys()].filter((p) => isCode(p) && matchesAny(p, PROTECTED));
+  // Seeds are the protected specs and tests: what a config or tool file imports is build tooling, not a guard.
+  const queue = [...tree.keys()].filter((p) => isTestFile(p) && matchesAny(p, PROTECTED));
   const result = new Set();
   while (queue.length) {
     const file = queue.pop();
@@ -904,7 +905,7 @@ export async function webCheckPassed({ fetchImpl, token, repo = REPO, pr, head }
   ).filter(
     (r) =>
       r.event === 'pull_request' &&
-      r.path === CI_WORKFLOW &&
+      String(r.path ?? '').split('@')[0] === CI_WORKFLOW &&
       r.head_sha === head &&
       (!Array.isArray(r.pull_requests) ||
         r.pull_requests.length === 0 ||

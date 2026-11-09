@@ -53,7 +53,7 @@ async function enableModules(page: Page, ids: string[]) {
  * Waits until the page has stopped changing: lazy routes, widgets and mocked answers arrive at their own pace,
  * and several budget bands are exact. Stable = element count, heights and text length unchanged for a second.
  */
-async function settle(page: Page) {
+async function settle(page: Page, name: string) {
   await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
   let last = '';
   let same = 0;
@@ -71,9 +71,14 @@ async function settle(page: Page) {
     same = now === last ? same + 1 : 0;
     last = now;
   }
+  // Measuring a page that still moves would look like a budget change: fail and name the page instead.
+  if (same < 4)
+    throw new Error(`${name}: the page did not stop changing within 15 s, nothing measured`);
 }
 
 test('stimulus inventory', async ({ browser }) => {
+  // Two seedings and every page at two window sizes in one run.
+  test.setTimeout(25 * 60_000);
   mkdirSync(OUT, { recursive: true });
   const result: Record<string, unknown>[] = [];
   for (const vp of VIEWPORTS) {
@@ -114,7 +119,7 @@ test('stimulus inventory', async ({ browser }) => {
           .first()
           .click()
           .catch(() => {});
-      await settle(page);
+      await settle(page, `${vp.name}--${target.name}`);
       const m = await page.evaluate(() => {
         const vis = (e: Element) => {
           const r = e.getBoundingClientRect();

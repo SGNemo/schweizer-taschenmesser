@@ -46,11 +46,15 @@ function modulePages(): StimulusPage[] {
     // A module with `platforms` does not exist in the plain web build: it is measured on the desktop window
     // only, where the spec fakes the desktop platform.
     const desktop = /\bplatforms:\s*\[/.test(text);
-    for (const m of text.matchAll(/\bpath:\s*'([^']+)'/g)) {
-      const path = m[1]!;
+    // Same reading and naming as `manifestRoutes` / `routeSlug` in scripts/ratchet.mjs (a unit test pins both).
+    for (const m of text.matchAll(/\bpath:\s*(['"`])([^'"`]+)\1/g)) {
+      const path = m[2]!;
       if (path.includes(':')) continue;
       pages.push({
-        name: path.replace(/^\/+/, '').replace(/\//g, '-'),
+        name: path
+          .replace(/^\/+/, '')
+          .replace(/[/:?=&]+/g, '-')
+          .replace(/-+$/, ''),
         path,
         module: entry.name,
         ...(desktop ? { desktop } : {}),
