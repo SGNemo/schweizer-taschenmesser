@@ -1,5 +1,6 @@
 .grid {
-  /* Row quantum: card heights snap to multiples of it, so cards of one band are equally tall. */
+  /* Row quantum of the size classes' minimum heights. From 44 rem on the grid is packed (`masonry.ts`, 1 px rows); the
+     cockpit's dense grid has two columns from 36 rem, but is packed only from 44 rem too. */
   --widget-unit: 5.5rem;
   display: grid;
   gap: var(--grid-gap);
@@ -41,9 +42,23 @@
     grid-row: span var(--rows, 2);
     margin-bottom: var(--grid-gap);
   }
-  /* U39: a card that only says "nothing here yet" takes its one line, not the size class's minimum height. */
+  /* U39: a card that only says "nothing here yet" takes its one line, not the size class's minimum height. It
+     shrinks once its data has loaded (a loading card keeps the minimum: letting skeletons shrink too measured far
+     worse in the seeded overview, see the PR). */
   .grid[data-packed] > .widget[data-empty] {
     min-height: 0;
+  }
+}
+/* Print reflows to the paper's width: the spans measured for the screen would overlap there, so print uses plain rows. */
+@media print {
+  .grid[data-packed] {
+    grid-auto-rows: auto;
+    row-gap: var(--grid-gap);
+    margin-bottom: 0;
+  }
+  .grid[data-packed] > .widget {
+    grid-row: auto;
+    margin-bottom: 0;
   }
 }
 .l {

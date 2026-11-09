@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import misc from '@/ui/Misc.module.css';
 
 /**
@@ -20,9 +20,9 @@ export function packedRows(height: number, gap: number): number {
  * re-packs; its own height never depends on its span (`align-items: start`), so there is no resize loop.
  */
 export function usePackedGrid<T extends HTMLElement>(keys: string) {
-  const ref = useRef<T>(null);
+  // A callback ref: a grid element that mounts again (same keys) is packed again.
+  const [grid, setGrid] = useState<T | null>(null);
   useLayoutEffect(() => {
-    const grid = ref.current;
     if (!grid || typeof ResizeObserver === 'undefined') return;
     const measure = (el: HTMLElement) => {
       const empty = el.querySelector(`.${misc.emptyCompact}`) !== null;
@@ -57,6 +57,6 @@ export function usePackedGrid<T extends HTMLElement>(keys: string) {
       cancelAnimationFrame(frame);
       delete grid.dataset.packed;
     };
-  }, [keys]);
-  return ref;
+  }, [grid, keys]);
+  return setGrid;
 }
