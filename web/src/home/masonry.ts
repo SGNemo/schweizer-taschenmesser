@@ -50,12 +50,12 @@ export function usePackedGrid<T extends HTMLElement>(keys: string) {
       });
     });
     mutations.observe(grid, { childList: true, subtree: true });
-    grid.dataset.packed = 'true';
+    grid.setAttribute('data-packed', 'true');
     return () => {
       observer.disconnect();
       mutations.disconnect();
       cancelAnimationFrame(frame);
-      delete grid.dataset.packed;
+      grid.removeAttribute('data-packed');
     };
   }, [grid, keys]);
   return setGrid;
