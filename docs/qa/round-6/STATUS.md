@@ -27,6 +27,7 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 - **Kontrast (axe serious):** Kalender-Monat – Uhrzeit (`--text-3`) auf der Fläche eigener Termine (`.lineOwn`) – Regression aus S03, kleiner Fix in `calendar.module.css`; Notizen-Karten-Meta (`.meta`, Bestand).
 - **Raster (U28):** Segment 4 px ✓; der Kopfband-Innenabstand bleibt 36,8 px, weil er aus `--page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem)` kommt (fließend, bei 1920 nicht auf dem 4-px-Raster) – Token-Änderung, `ui/tokens.css` ist tabu → Follow-up.
 - **Übersicht „Alle Widgets“:** Zeilen weiter ungleich hoch (U19 → #599); CLS 0,03.
+- **Handy (412×915 dunkel, mit/ohne Testdaten):** kein seitlicher Überlauf auf keiner Seite; Primärknöpfe > 1 nur Finanzen → Verlauf (leer) und Einstellungen → Sync; Rot wie oben. Wortumbrüche jetzt mit Trennstrich (`hyphens`, U57 – Abos „Haftpflicht-versicherung“, Lesezeichen, Übersichts-Zeilen; der Detektor zählt sie weiter). Abgeschnitten: Monatszellen (S03, erster Titel nur wenn er ganz passt), ToDo-Heute-Karte „nächste Sache“ (Ellipse), Kopf-Eyebrow „Planen · Gewohnheiten/Zeiterfassung“ im Kopfband (neu, klein), Finanzen-Kontokarten. CLS: Einstellungsseiten 0,07–0,22 (Darstellung 0,215 mit Testdaten, Benachrichtigungen 0,12, KI 0,12, Über 0,12), Werkzeuge 0,10, Tresor 0,07 – außerhalb der U01-Modulseiten, Follow-up. axe serious: ToDos-Board Scrollbereich nicht fokussierbar (wie U35), Notizen-Karten-Meta-Kontrast.
 
 ## Offen aus den PRs (Follow-ups, je ein kleiner PR)
 
@@ -37,7 +38,7 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 - **Einrichtung:** Fußzeile ohne `--kb-inset` (Handy-Tastatur); `e2e/setup.spec.ts` hat `localhost:4173` fest verdrahtet.
 - **Kalender:** „Ablauf · Überfällig“ (per-Art-Wort fehlt), Art „gift“ unübersetzt, Handy-Raster-Oberkante 569 statt ≤ 480 px (braucht Kopfband/Reiter, siehe U41).
 - **Texte:** eingefrorene es/fr/pt-BR behalten alte Kontextzeilen (Feeds-Widget, Zeiterfassung, Benachrichtigungs-Status); ungenutzte Schlüssel (`budgets.ext.head.chip`, `maps.placesBar.navigateTo`, `tMusicPage.libraryTitle`) für die nächste String-Bereinigung.
-- **Neu aus der Nachmessung:** Uhrzeit-Kontrast auf eigenen Monatszeilen (S03), Finanzen → Verlauf und Einstellungen → Sync je zwei Primärknöpfe, Finanzen-Kontokarten kürzen den Text, `--page-gutter` nicht auf dem 4-px-Raster (Token).
+- **Neu aus der Nachmessung:** Uhrzeit-Kontrast auf eigenen Monatszeilen (S03), Finanzen → Verlauf und Einstellungen → Sync je zwei Primärknöpfe, Finanzen-Kontokarten kürzen den Text, Kopf-Eyebrow am Handy abgeschnitten (Planen-Seiten), ToDos-Board-Scrollbereich ohne Tastaturfokus, Layout-Sprung auf Einstellungsseiten und Werkzeugen am Handy (0,07–0,22), `--page-gutter` nicht auf dem 4-px-Raster (Token).
 - **Handy-FAB** überdeckt Zeilen-⋯ und Karten-Knöpfe (Abos, Gewohnheiten) – Board-Notiz für `layout/`.
 
 ## Später (unverändert aus PLAN.md)
