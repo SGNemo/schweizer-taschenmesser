@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing to merge: the two normal permissions this plugin needs (ACCESS_NETWORK_STATE,
+  CHANGE_WIFI_MULTICAST_STATE) are added to the generated app manifest by
+  web/scripts/android-manifest.mjs (tested there), next to the camera. No location permission.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

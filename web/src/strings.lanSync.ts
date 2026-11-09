@@ -32,6 +32,7 @@ export const tLanSync = defineBundle(
     switchNeedBackup: 'Trennen geht nach der Sicherung. Deine Daten bleiben auf diesem Gerät.',
     switchThen: 'Nach dem Trennen bleiben deine Daten hier. Danach koppelst du wie gewohnt.',
     syncNow: 'Jetzt abgleichen',
+    wifiOnly: 'Nur im WLAN',
     hubOn: (n: number) =>
       n === 0
         ? 'Dieser PC gleicht ab · noch kein Gerät gekoppelt'
@@ -190,6 +191,7 @@ export const tLanSync = defineBundle(
       switchNeedBackup: 'You can disconnect after the backup. Your data stays on this device.',
       switchThen: 'After disconnecting your data stays here. Then you pair as usual.',
       syncNow: 'Sync now',
+      wifiOnly: 'Wi-Fi only',
       hubOn: (n: number) =>
         n === 0
           ? 'This PC syncs · no device paired yet'

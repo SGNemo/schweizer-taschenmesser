@@ -117,7 +117,9 @@ pub fn run() {
         // Text and links shared from other Android apps (ACTION_SEND).
         .plugin(tauri_plugin_share_intent::init())
         // Android: system bars hidden and screen kept on while the cockpit is open.
-        .plugin(tauri_plugin_screen_mode::init());
+        .plugin(tauri_plugin_screen_mode::init())
+        // Android, home-network sync: Wi-Fi events for the web app, hub search for lan_client.rs.
+        .plugin(tauri_plugin_lan_watch::init());
 
     // The device side of home-network sync (pairing by QR, requests to the hub PC): the phone, and a
     // second PC (one path per device, see lan_client.rs). The QR is scanned in the app (camera or

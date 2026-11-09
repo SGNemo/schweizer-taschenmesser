@@ -1,0 +1,3 @@
+[default]
+description = "Wi-Fi state and the wifi-available / wifi-lost events (home-network sync). The hub search stays Rust-only."
+permissions = ["allow-wifi-state", "allow-register-listener", "allow-remove-listener"]

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { hardenManifest, withCamera } from './androidManifest';
+import { hardenManifest, withCamera, withLanWatch } from './androidManifest';
 
 // Shape of the Tauri 2 template (placeholder for cleartext, no allowBackup).
 const template = `<?xml version="1.0" encoding="utf-8"?>
@@ -70,5 +70,31 @@ describe('camera for in-app QR scanning', () => {
     expect(once).toContain('android:name="android.hardware.camera.any" android:required="false"');
     expect(once.indexOf('android.permission.CAMERA')).toBeLessThan(once.indexOf('<application'));
     expect(withCamera(once)).toBe(once);
+  });
+
+  it('declares the two normal permissions of home-network sync once, before <application>', () => {
+    const once = withLanWatch(withCamera(hardenManifest(template).xml));
+    for (const name of ['ACCESS_NETWORK_STATE', 'CHANGE_WIFI_MULTICAST_STATE']) {
+      expect(once).toContain(`<uses-permission android:name="android.permission.${name}" />`);
+      expect(once.indexOf(`android.permission.${name}`)).toBeLessThan(once.indexOf('<application'));
+      expect(once.match(new RegExp(name, 'g'))).toHaveLength(1);
+    }
+    expect(withLanWatch(once)).toBe(once);
+    expect(once).not.toMatch(/LOCATION/);
+  });
+
+  it('keeps a network permission another plugin already declared and refuses location', () => {
+    const declared = template.replace(
+      '<application',
+      '<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <application',
+    );
+    const out = withLanWatch(declared);
+    expect(out.match(/ACCESS_NETWORK_STATE/g)).toHaveLength(1);
+    expect(out).toContain('CHANGE_WIFI_MULTICAST_STATE');
+    const located = template.replace(
+      '<application',
+      '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <application',
+    );
+    expect(() => withLanWatch(located)).toThrow(/location/);
   });
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { syncNow, unpairFromPc } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
@@ -31,6 +31,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   const [askUnpair, setAskUnpair] = useState(false);
   // "Jetzt abgleichen" was tapped: a round that does not reach the PC says so (not just the same line)
   const [tried, setTried] = useState(false);
+  const wifiOnlyId = useId();
   // a second PC paired with the hub PC (webcam): its own words where the phone's would be wrong
   const pc = getPlatform().kind === 'desktop';
   const pairing = usePairWithPc(pc);
@@ -81,6 +82,8 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
   }
 
   const banner = clientBanner(sync.phase, sync.error, sync.lastSyncAt, l, pc);
+  // the phone reaches its PC only on Wi-Fi (`wifi` is unset where nobody watches it)
+  const noWifi = sync.wifi === false;
   return (
     <div className={styles.form} data-testid="lan-client">
       <StateBanner
@@ -123,12 +126,19 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
             setTried(true);
             void syncNow();
           }}
-          disabled={sync.phase === 'syncing'}
+          disabled={sync.phase === 'syncing' || noWifi}
+          aria-describedby={noWifi ? wifiOnlyId : undefined}
+          data-testid="lan-sync-now"
         >
           {l.syncNow}
         </Button>
         <Button onClick={() => setAskUnpair(true)}>{l.unpair}</Button>
       </Actions>
+      {noWifi ? (
+        <p id={wifiOnlyId} className={styles.muted} data-testid="lan-wifi-only">
+          {l.wifiOnly}
+        </p>
+      ) : null}
       {progress}
       <Dialog
         open={askUnpair}

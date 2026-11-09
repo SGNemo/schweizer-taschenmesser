@@ -4,10 +4,11 @@
  * behind it is the append-only fake of `fakeLanHub.ts` (no last-write-wins). Tests drive it through
  * `window.__tmLanClient`: `nextScan(text)`, `failScan(reason)` (e.g. `no-camera`: a PC without a
  * webcam), `confirm()` (the user tapped "Koppeln" on the PC), `refuse()` (the hub authenticated an
- * `unknown-device`).
+ * `unknown-device`). The Wi-Fi of `createFakeLanWatch` (same flag) is switched with
+ * `window.__tmLanWatch.set(connected)`.
  */
 import { createFakeLanHubParts } from './fakeLanHub';
-import type { LanClientService, LanHubDataKey } from './types';
+import type { LanClientService, LanHubDataKey, LanWatchService } from './types';
 
 const FAKE_HUB = 'ab'.repeat(32);
 
@@ -91,4 +92,40 @@ export function createFakeLanClient(): LanClientService {
       },
     };
   return client;
+}
+
+/** Browser and desktop: nothing is watched (`wifi()` is unknown, nothing fires). */
+export const noLanWatch: LanWatchService = {
+  supported: false,
+  wifi: async () => undefined,
+  onWifiChange: () => () => undefined,
+};
+
+/** E2E stand-in for the `lan-watch` plugin: Wi-Fi starts connected; specs switch it. */
+export function createFakeLanWatch(): LanWatchService {
+  let connected = true;
+  const listeners = new Set<(connected: boolean) => void>();
+  const watch: LanWatchService = {
+    get supported() {
+      try {
+        return localStorage.getItem(E2E_FLAG) === '1';
+      } catch {
+        return false;
+      }
+    },
+    wifi: async () => (watch.supported ? connected : undefined),
+    onWifiChange(callback) {
+      listeners.add(callback);
+      return () => listeners.delete(callback);
+    },
+  };
+  if (typeof window !== 'undefined')
+    (window as unknown as { __tmLanWatch?: unknown }).__tmLanWatch = {
+      set: (next: boolean) => {
+        if (next === connected) return;
+        connected = next;
+        for (const l of listeners) l(next);
+      },
+    };
+  return watch;
 }

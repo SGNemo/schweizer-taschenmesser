@@ -54,3 +54,37 @@ export function withCamera(xml: string): string {
     throw new Error('AndroidManifest.xml: CAMERA permission missing after adding it');
   return out;
 }
+
+const NETWORK_PERMISSIONS = [
+  '<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />',
+  '<uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />',
+];
+
+/** Never in the manifest for home-network sync: reading the Wi-Fi name would need these. */
+const LOCATION = /android\.permission\.ACCESS_(FINE|COARSE|BACKGROUND)_LOCATION/;
+
+/**
+ * Home-network sync on the phone (`src-tauri/plugins/lan-watch`): the Wi-Fi callback needs
+ * ACCESS_NETWORK_STATE, the multicast lock for the hub search CHANGE_WIFI_MULTICAST_STATE. Both are
+ * normal permissions (granted at install, no prompt). No location permission and no SSID: the
+ * check fails if a location permission shows up. Idempotent.
+ */
+export function withLanWatch(xml: string): string {
+  const parts = NETWORK_PERMISSIONS.filter(
+    (line) => !xml.includes(/android:name="[^"]+"/.exec(line)?.[0] ?? line),
+  );
+  let out = xml;
+  if (parts.length > 0) {
+    const tag = APPLICATION_TAG.exec(xml);
+    if (!tag) throw new Error('AndroidManifest.xml: no <application> element');
+    out = xml.replace(tag[0], `${parts.join('\n    ')}\n    ${tag[0]}`);
+  }
+  for (const name of ['ACCESS_NETWORK_STATE', 'CHANGE_WIFI_MULTICAST_STATE'])
+    if (!out.includes(`android.permission.${name}`))
+      throw new Error(`AndroidManifest.xml: ${name} missing after adding it`);
+  if (LOCATION.test(out))
+    throw new Error(
+      'AndroidManifest.xml: a location permission is declared (home-network sync never needs one)',
+    );
+  return out;
+}
