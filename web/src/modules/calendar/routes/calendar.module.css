@@ -698,7 +698,8 @@ button.itemRow[style*='--cal']:hover {
 }
 .agendaTitle h2 {
   margin: 0;
-  font-size: inherit;
+  /* One size for the page's second-level headings: view title, agenda, reminders (U16). */
+  font-size: var(--text-lg);
 }
 .agendaHead {
   font-size: var(--text-sm);
