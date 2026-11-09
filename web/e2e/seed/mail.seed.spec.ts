@@ -113,6 +113,93 @@ test.describe('mail (demo mails)', () => {
     await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
   });
 
+  test('„In den Plan“ from a row: one tap, the row says „im Plan“, the open thread says so too', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const row = page.getByRole('button', {
+      name: /^(In den Plan|Als ToDo): Anna Beispiel · Wochenende\?/,
+    });
+    await row.click();
+    await expect(page.getByText(/^(Im Plan|Als ToDo gespeichert)/).first()).toBeVisible();
+    await expect(page.getByTestId('mail-in-plan').first()).toBeVisible();
+    // No second action anywhere: the row and the open thread both say where it is.
+    await expect(row).toHaveCount(0);
+    await page.getByText('Wochenende?').first().click();
+    await expect(page.getByTestId('mail-plan-thread')).toHaveCount(0);
+    await expect(page.getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
+    // The ToDo carries the way back: a mail link, never an address.
+    await page.goto('/todos');
+    await expect(page.getByText('Anna Beispiel · Wochenende?').first()).toBeVisible();
+  });
+
+  test('filter „Persönlich“ shows people only, without a count; „Alle in den Plan…“ previews first', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const chip = page.getByRole('button', { name: 'Persönlich' });
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('Wochenende?')).toBeVisible();
+    await expect(page.getByText('Ihre Rechnung für Oktober')).toHaveCount(0);
+    await chip.click();
+    await page.getByTestId('mail-plan-all-open').click();
+    const dialog = page.getByRole('dialog');
+    const list = dialog.getByTestId('mail-plan-all');
+    // Personal senders ticked, bulk / invoice senders not; nothing written before the button.
+    await expect(list.getByRole('checkbox', { name: /Anna Beispiel/ })).toBeChecked();
+    await expect(
+      list.getByRole('checkbox', { name: /Stadtwerke Musterstadt · Ihre Rechnung/ }),
+    ).not.toBeChecked();
+    const save = dialog.getByRole('button', { name: /^In den Plan \(\d+\)$/ });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(page.getByText(/Mails im Plan/)).toBeVisible();
+  });
+
+  test('„Anlegen“ under an invoice mail: values first, one tap, a second tap finds it', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const create = page.getByRole('button', {
+      name: /^Rechnung anlegen: Stadtwerke Musterstadt · 84,30/,
+    });
+    await expect(create).toBeVisible({ timeout: 10_000 });
+    await create.click();
+    await expect(page.getByText('Rechnung angelegt')).toBeVisible();
+    // The line now says it is there; no second verb, so no second invoice.
+    await expect(create).toHaveCount(0);
+    await expect(page.getByTestId('mail-invoice-done').first()).toContainText('angelegt');
+    await page.goto('/invoices');
+    await expect(page.getByText('Stadtwerke Musterstadt').first()).toBeVisible();
+    // The mail of a debit shows its day as text and offers nothing to create.
+    await page.goto('/mail');
+    const debit = page.getByTestId('mail-invoice-line').filter({ hasText: 'Abbuchung am' });
+    await expect(debit).toContainText('Internetanbieter Muster · 39,99');
+    await expect(debit.getByRole('button')).toHaveCount(0);
+  });
+
+  test('a payment reminder notes itself on the open invoice; amount and due stay', async ({
+    page,
+  }) => {
+    await page.goto('/mail');
+    const line = page.getByTestId('mail-invoice-line').filter({ hasText: 'Mahnung zu Rechnung' });
+    await expect(line).toContainText('Stadtwerke Musterstadt');
+    await expect(line).toContainText('92,40 € bis');
+    await line.getByRole('button', { name: /^Mahnung vermerken:/ }).click();
+    await expect(page.getByText('Mahnung vermerkt')).toBeVisible();
+    await expect(line).toContainText('vermerkt');
+    await expect(line.getByRole('button')).toHaveCount(0);
+  });
+
+  test('`?open=` opens a known thread and ignores anything else', async ({ page }) => {
+    await page.goto('/mail?open=%3Cimg%20src%3Dx%3E');
+    await expect(page).not.toHaveURL(/open=/);
+    await expect(page).not.toHaveURL(/thread=/);
+    await page.goto('/mail?open=no-such-thread');
+    await expect(page).not.toHaveURL(/thread=/);
+  });
+
   test('from 1200 px folders, list and mail stand side by side; below it the mail replaces the list', async ({
     page,
   }) => {
@@ -150,7 +237,8 @@ test.describe('mail (demo mails)', () => {
     const inbox = page.getByTestId('widget-mail:inbox');
     await expect(inbox).toContainText('ungelesen');
     await expect(inbox).toContainText('Ihre Rechnung für Oktober');
-    await expect(inbox).toContainText('Rechnungsmail');
+    // „Kopf leer“ 3b: the count got a verb and is the way to the list.
+    await expect(inbox.getByRole('link', { name: /Rechnung(en)? zum Anlegen/ })).toBeVisible();
   });
 
   test('new-mail notifications are off by default and their switch is in the module settings', async ({

@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { EmptyState, Skeleton } from './Misc';
+import miscStyles from './Misc.module.css';
 import styles from './Patterns.module.css';
 
 export interface WidgetEntry {
@@ -49,7 +50,9 @@ export function WidgetList({
     const action = emptyAction ?? { label: linkLabel, to };
     return (
       <EmptyState compact title={empty}>
-        <Link to={action.to}>{action.label}</Link>
+        <Link className={miscStyles.emptyAction} to={action.to}>
+          {action.label}
+        </Link>
       </EmptyState>
     );
   }

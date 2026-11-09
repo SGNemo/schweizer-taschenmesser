@@ -3,7 +3,14 @@ import { db } from '@/core/db/db';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { createCollectionRepo } from '@/core/db/repo';
 import { setNow } from '@/core/time/now';
-import { amendCapture, captureId, reinstateCapture, saveCapture, saveCaptures } from './index';
+import {
+  amendCapture,
+  captureId,
+  reinstateCapture,
+  saveCapture,
+  saveCaptures,
+  secondStage,
+} from './index';
 import { findOpenInvoice } from './lookup';
 
 // „Kopf leer“ package 2: create-if-absent ids, the open-invoice lookup and `amend`. Invented data.
@@ -371,5 +378,17 @@ describe('council round 4', () => {
         { today: TODAY, states: ON },
       ),
     ).toEqual({ candidates: [] });
+  });
+});
+
+describe('secondStage (package 3a)', () => {
+  it('says live, deleted or absent for the plan row; one-stage types and a module off say absent', async () => {
+    expect(await secondStage('plan', 'p9', { states: ON })).toBeUndefined();
+    const saved = await saveCapture('plan', { title: 'Steuer' }, { states: ON, id: 'p9' });
+    expect(await secondStage('plan', 'p9', { states: ON })).toBe('live');
+    await saved.undo();
+    expect(await secondStage('plan', 'p9', { states: ON })).toBe('deleted');
+    expect(await secondStage('todo', 'p9', { states: ON })).toBeUndefined();
+    expect(await secondStage('plan', 'p9', { states: { ...ON, planner: false } })).toBeUndefined();
   });
 });

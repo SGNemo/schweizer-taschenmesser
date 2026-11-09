@@ -6,7 +6,7 @@
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
 import { targetFor, type SavedCapture } from '@/quickCapture/targets';
-import { LINK_TYPES, type MailLink } from './schema';
+import { linkTypeOf, type MailLink } from './schema';
 import { linkRepo } from './repo';
 
 export async function saveLink(
@@ -14,18 +14,20 @@ export async function saveLink(
   threadId: string,
   messageId: string,
   saved: SavedCapture,
-): Promise<void> {
-  const type = LINK_TYPES.find((t) => t === saved.type);
-  if (!type) return;
-  await linkRepo.create({
+): Promise<string | undefined> {
+  const type = linkTypeOf(saved.type);
+  if (!type) return undefined;
+  // A plan entry links to its ToDo (the first record: `saved.moduleId`/`saved.id` are the ToDo's).
+  const row = await linkRepo.create({
     accountKey,
     threadId,
     messageId,
     type,
     moduleId: saved.moduleId,
-    collection: targetFor(saved.type).collection,
+    collection: targetFor(type).collection,
     entryId: saved.id,
   });
+  return row.id;
 }
 
 export interface LinkedEntry {

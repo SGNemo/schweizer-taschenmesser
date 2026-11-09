@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
@@ -15,6 +16,8 @@ import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
+import { useModuleStates } from '@/core/modules/activation';
+import { fromOf, planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
@@ -85,11 +88,14 @@ function MessageCard({
   autoLoadImages,
   onCompose,
   localAi,
+  startLink,
 }: {
   account: MailAccountRef;
   threadId: string;
   link?: string;
   localAi: boolean;
+  /** Opens „Aus dieser Mail anlegen“ with this type at once (an unsure invoice row of the list). */
+  startLink?: MailLinkType;
   message: MailMessage;
   open: boolean;
   onToggle: () => void;
@@ -125,7 +131,7 @@ function MessageCard({
   }
 
   const [cid, setCid] = useState<Record<string, string>>({});
-  const [linkType, setLinkType] = useState<MailLinkType | undefined>();
+  const [linkType, setLinkType] = useState<MailLinkType | undefined>(startLink);
 
   useEffect(() => {
     if (!open || account.key === DEMO_ACCOUNT || message.inline.length === 0) return;
@@ -281,6 +287,7 @@ export function ThreadView({
   onChanged,
   onCompose,
   onBack,
+  startInvoice = false,
 }: {
   account: MailAccountRef;
   threadId: string;
@@ -294,6 +301,8 @@ export function ThreadView({
   onChanged: () => void;
   onCompose: (state: ComposeState, title: string) => void;
   onBack: () => void;
+  /** The list asked for the invoice sheet of the newest message (its values were unsure). */
+  startInvoice?: boolean;
 }) {
   const [messages, setMessages] = useState<MailMessage[] | undefined>();
   const [unreadNow, setUnreadNow] = useState<boolean | undefined>();
@@ -331,6 +340,8 @@ export function ThreadView({
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   const web = mailWebUrl(account, threadId);
+  const states = useModuleStates();
+  const planned = useLiveQuery(() => plannedThreads(account.key), [account.key]);
   // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
   const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
@@ -343,6 +354,30 @@ export function ThreadView({
           <Button onClick={() => void getPlatform().app.openUrl(web)}>
             {t.mail.view.openInGmail}
           </Button>
+        ) : null}
+        {states?.todos && messages?.length ? (
+          planned?.has(threadId) ? (
+            <span className={styles.planMark} data-testid="mail-in-plan">
+              {states.planner ? t.mail.plan.thread : t.mail.plan.todo.thread}
+            </span>
+          ) : (
+            <Button
+              data-testid="mail-plan-thread"
+              onClick={() =>
+                void planMail(
+                  account,
+                  {
+                    id: threadId,
+                    from: fromOf(account, messages),
+                    subject: messages[0]!.subject,
+                  },
+                  onChanged,
+                )
+              }
+            >
+              {states.planner ? t.mail.plan.action : t.mail.plan.asTodo}
+            </Button>
+          )
         ) : null}
       </div>
       {messages ? (
@@ -373,6 +408,9 @@ export function ThreadView({
           autoLoadImages={autoLoadImages}
           onCompose={onCompose}
           localAi={localAi}
+          startLink={
+            startInvoice && m.id === messages[messages.length - 1]!.id ? 'invoice' : undefined
+          }
           onToggle={() =>
             setOpenIds((ids) =>
               ids.includes(m.id) ? ids.filter((x) => x !== m.id) : [...ids, m.id],

@@ -259,3 +259,43 @@
   box-shadow: var(--shadow-1);
   min-height: 12rem;
 }
+
+/* „Alle in den Plan…“: one tick per mail, a quiet list. */
+.planList {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+  padding: 0;
+  max-height: 50dvh;
+  overflow: auto;
+  list-style: none;
+}
+.planMark {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* „Kopf leer“ 3b: the muted invoice line under a row – every value that one tap writes, then one verb. */
+.invoiceLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+/* After the due day: a warning tone with its words („Frist war …“), never red in the mail list. */
+.invoiceLate {
+  color: var(--warning-ink);
+}
+/* The values wrap; the verb stays at the end of the line. */
+.invoiceText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.invoiceLine > button {
+  flex-shrink: 0;
+}
