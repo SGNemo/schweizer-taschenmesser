@@ -107,6 +107,7 @@ test('stimulus inventory', async ({ browser }) => {
     // Load the (mocked) forecast once and wait for it. A request cut off by a navigation is noted as failed,
     // and with the frozen clock that note would keep every later page from asking again: the weather page and
     // the overview would then be measured empty in one run and filled in the next.
+    // Keys: `TRIED_KEY` / `CACHE_KEY` in src/core/weather/cache.ts.
     await page.evaluate(() => localStorage.removeItem('tm-weather-tried'));
     await page.goto('/weather');
     await page.waitForFunction(() => localStorage.getItem('tm-weather') !== null, null, {

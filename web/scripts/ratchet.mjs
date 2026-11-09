@@ -436,6 +436,7 @@ const PAIR = { ')': '(', ']': '[', '}': '{' };
 // Reserved words only (`of`, `yield`, `await` can be plain names), and never as the tail of a longer name.
 const REGEX_BEFORE =
   /(?<![\p{ID_Continue}$.\\])(?:return|typeof|case|do|else|in|void|delete|throw|new|instanceof)$/u;
+const CONTROL_BEFORE = /(?<![\p{ID_Continue}$.\\])(?:if|while|for|with|await)$/u;
 /**
  * True if `appended` is nothing but top-level statements of the form
  * `test('title', [async] (params) => { body }[, timeout]);` (or `it(…)`). Everything else is refused: other
@@ -510,7 +511,8 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       // Prefix `!` opens an expression; the TypeScript postfix `x!` does not (`x! / 2` is a division).
       let k = lastAt - 1;
       while (k >= 0 && (src[k] === ' ' || src[k] === '\t')) k--;
-      return k < 0 || !/[\p{ID_Continue}$)\]]/u.test(src[k]);
+      if (k < 0 || REGEX_BEFORE.test(src.slice(Math.max(0, k - 14), k + 1))) return true; // `return !/x/`
+      return !/[\p{ID_Continue}$)\]]/u.test(src[k]);
     }
     if ('(,=:[&|?{;+-*%<~^'.includes(last)) return true;
     return REGEX_BEFORE.test(src.slice(Math.max(0, lastAt - 14), lastAt + 1));
@@ -565,6 +567,7 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
     const stack = [];
     let last = '';
     let lastAt = -1;
+    let afterControl = false;
     const mark = (c = src[i - 1]) => {
       last = c;
       lastAt = i - 1;
@@ -581,9 +584,9 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
         mark();
       } else if (c === '/') {
         if (expression(last, lastAt)) regex();
-        else if (/[\w$\]]/.test(last))
-          i++; // division
-        else fail(); // after `)` or `}` it could be either: do not guess
+        else if (/[\w$\]]/.test(last) || (last === ')' && !afterControl))
+          i++; // division (after a call or a bracketed expression too)
+        else fail(); // after `if (…)` or `}` it could be either: do not guess
         mark('/');
       } else if (
         jsx &&
@@ -593,11 +596,18 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       ) {
         if (!expression(last, lastAt)) fail(); // after `)` or `}`: could be a comparison or an element
         jsxElement();
+        afterControl = true; // nothing is assumed behind an element
         mark(')');
       } else {
-        if ('([{'.includes(c)) stack.push(c);
-        else if (')]}'.includes(c)) {
-          if (stack.pop() !== PAIR[c]) fail();
+        if ('([{'.includes(c)) {
+          // The head of `if (…)`, `while (…)`, `for (…)`, `with (…)`: only behind its `)` can a regex follow.
+          const head =
+            c === '(' && CONTROL_BEFORE.test(src.slice(Math.max(0, lastAt - 8), lastAt + 1));
+          stack.push(head ? 'control(' : c);
+        } else if (')]}'.includes(c)) {
+          const open = stack.pop();
+          afterControl = open === 'control(';
+          if ((afterControl ? '(' : open) !== PAIR[c]) fail();
           if (!stack.length) return void i++;
         }
         i++;
@@ -769,6 +779,8 @@ export function collectHits(repo, base, head) {
         else stems.set(stemOf(p), [p]);
       }
     }
+    // Only what a resolver could load: code, JSON, or a file without an extension.
+    if (!isCode(path) && !/(\.json|\/[^./]+)$/.test(path)) return false;
     return (stems.get(stemOf(path)) ?? []).some(
       (other) => other !== path && (matchesAny(other, PROTECTED) || inClosure(other)),
     );

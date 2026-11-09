@@ -404,6 +404,11 @@ describe('pages of the inventory', () => {
     for (const p of MODULE_PAGES) expect(p.name).toBe(routeSlug(p.path));
   });
   it('platform-bound modules are measured on the desktop window only', () => {
+    // No module drops out silently (a route that is no plain string, a manifest this reader cannot find).
+    const measured = new Set(MODULE_PAGES.map((p) => p.module));
+    for (const dir of readdirSync(`${web}src/modules`, { withFileTypes: true }))
+      if (dir.isDirectory() && dir.name !== 'example')
+        expect(measured, dir.name).toContain(dir.name);
     const bound = MODULE_PAGES.filter((p) => p.desktop);
     expect(bound.map((p) => p.name)).toEqual(expect.arrayContaining(['browser', 'disk', 'mail']));
     for (const p of MODULE_PAGES)

@@ -349,6 +349,8 @@ describe('protected paths', () => {
     expect(found('web/e2e/seed/helpers/index.ts')).toBe(1);
     expect(found('web/src/core/ai/testing.js')).toBe(1);
     expect(found('web/e2e/axe.mjs')).toBe(1);
+    // What no resolver loads is no shadow.
+    expect(found('web/e2e/axe.md')).toBe(0);
     expect(found('web/e2e/seed/other-helpers.ts')).toBe(0);
     expect(found('web/src/modules/finance/helpers.js')).toBe(0);
   });
@@ -434,7 +436,7 @@ describe('additions only in protected test files', () => {
     expect(
       free(
         more(
-          "it('re', () => {\n  if (!/a\\/b/.test(x)) return;\n  const f = (a) => /x/.test(a);\n});",
+          "it('re', () => {\n  if (!/a\\/b/.test(x)) return !/x/.test(y);\n  const avg = sum(xs) / xs.length + Math.round(x / 10) / 100 + (r(a)!.top + 1) / 2;\n  const rgb = hex.map((h) => parseInt(h, 16) / 255);\n  const f = (a) => /x/.test(a);\n});",
         ),
       ),
     ).toBe(true);
@@ -492,6 +494,14 @@ describe('additions only in protected test files', () => {
     [
       'division after a name that ends in a keyword',
       "test('a', () => { const y = äin / 2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
+    ],
+    [
+      'regex behind the head of a `for await`',
+      "test('a', async () => {\n  for await (const x of y) /a/.test(x);\n});",
+    ],
+    [
+      'division trick behind an if head',
+      "test('a', () => { if (x) /2; }); globalThis.fetch = null; it('c', () => { void /x/; });",
     ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [
