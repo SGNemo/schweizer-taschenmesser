@@ -131,13 +131,22 @@ function useOpenCategory(): SettingsCategoryId | undefined {
 function SubNav({ id }: { id: SettingsCategoryId }) {
   const sections = useSettingsSections();
   const g = tSettings2.use().groups as Record<string, string>;
+  const { hash } = useLocation();
   const groups = groupSections(id, sectionsOf(sections, id)).filter((x) => x.group);
   if (groups.length < 2) return null;
+  // U54: the group of the section in the URL (`#section[--field]`) is the current one; without a hash the first.
+  const target = decodeURIComponent(hash.slice(1)).split('--')[0];
+  const current =
+    groups.find((x) => x.sections.some((sec) => sec.id === target))?.group ?? groups[0]!.group;
   return (
     <ul className={styles.subnav} data-testid={`subnav-${id}`}>
       {groups.map((x) => (
         <li key={x.group}>
-          <Link to={settingsPath(id, x.sections[0]!.id)} className={styles.subLink}>
+          <Link
+            to={settingsPath(id, x.sections[0]!.id)}
+            className={styles.subLink}
+            aria-current={x.group === current ? 'location' : undefined}
+          >
             {g[x.group!]}
           </Link>
         </li>

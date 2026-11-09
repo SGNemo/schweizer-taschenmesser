@@ -163,9 +163,9 @@ export function AppearanceSection() {
         id="text"
         title={g.text}
         current={[
-          t.settings.textSizeOptions[textSize],
-          t.settings.leadingOptions[leading],
-          t.settings.densityOptions[density],
+          g.named(t.settings.textSize, t.settings.textSizeOptions[textSize]),
+          g.named(t.settings.leading, t.settings.leadingOptions[leading]),
+          g.named(t.settings.density, t.settings.densityOptions[density]),
         ]}
       >
         <LookPreview />

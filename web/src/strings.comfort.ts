@@ -30,7 +30,8 @@ export const tComfort = defineBundle(
     },
     status: {
       modulesActive: (n: number) => `${n} aktiv`,
-      notificationsOff: 'Nicht erlaubt',
+      // U31: one short word, so the state stays on the line of "Benachrichtigungen" in the settings navigation.
+      notificationsOff: 'Aus',
     },
     reset: {
       button: 'Auf Standard zurücksetzen',
@@ -129,7 +130,7 @@ export const tComfort = defineBundle(
       },
       status: {
         modulesActive: (n: number) => `${n} on`,
-        notificationsOff: 'Not allowed',
+        notificationsOff: 'Off',
       },
       reset: {
         button: 'Reset to default',
