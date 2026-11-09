@@ -195,11 +195,11 @@
       "firstScreenActions": 27
     },
     "phone--notes": {
-      "height": 1277,
-      "buttons": 44,
+      "height": 1249,
+      "buttons": 45,
       "links": 12,
       "icons": 39,
-      "firstScreenActions": 32
+      "firstScreenActions": 37
     },
     "phone--pantry": {
       "height": 2613,
