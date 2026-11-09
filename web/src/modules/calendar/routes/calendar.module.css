@@ -282,10 +282,14 @@
   background: var(--surface-2);
   color: var(--text);
 }
-.kind_invoice,
+/* Deadlines (U08): an invoice is neutral, cancellation/end/expiry are a quiet warning; red only once overdue. */
+.kind_invoice {
+  background: var(--surface-2);
+  color: var(--text);
+}
 .kind_cancel {
-  background: var(--danger-soft);
-  color: var(--danger);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 .kind_subscription {
   background: var(--surface-2);
@@ -302,8 +306,12 @@
 }
 .kind_end,
 .kind_expiry {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+.kind_overdue {
   background: var(--danger-soft);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 /* The planner's summary chip: its module hue (`data-hue`), the text stays body text. */
 .kind_plan {
@@ -416,6 +424,29 @@ button.itemRow[style*='--cal']:hover {
 .itemRowCompact .itemTitle {
   flex-basis: 100%;
 }
+/* Phone lists (week, day, agenda; U05): the title gets the first line and the full width, time and kind below it. */
+@container page not (min-width: 40rem) {
+  .itemRow:not(.itemRowCompact) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'title title'
+      'time kind';
+    justify-items: start;
+    gap: 0 var(--space-2);
+    padding-block: var(--space-1);
+  }
+  .itemRow:not(.itemRowCompact) .itemTitle {
+    grid-area: title;
+  }
+  .itemRow:not(.itemRowCompact) .time {
+    grid-area: time;
+    min-width: 0;
+  }
+  .itemRow:not(.itemRowCompact) .kind {
+    grid-area: kind;
+  }
+}
 .kind {
   flex: none;
   display: inline-flex;
@@ -437,6 +468,30 @@ button.itemRow[style*='--cal']:hover {
 }
 
 /* Editor */
+/* "Wie zuletzt" chips: equal height, the title on one line, the time below it (U27a). */
+button.recentChip {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1 1 0;
+  gap: 0;
+  max-width: 14rem;
+  /* Room for the time; a narrow dialog wraps the chips to a second row instead of squeezing them. */
+  min-width: 7rem;
+  padding: var(--space-1) var(--space-3);
+}
+.recentTitle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recentTime {
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
 .form {
   display: flex;
   flex-direction: column;
@@ -650,7 +705,8 @@ button.itemRow[style*='--cal']:hover {
 }
 .agendaTitle h2 {
   margin: 0;
-  font-size: inherit;
+  /* One size for the page's second-level headings: view title, agenda, reminders (U16). */
+  font-size: var(--text-lg);
 }
 .agendaHead {
   font-size: var(--text-sm);
@@ -820,6 +876,10 @@ button.itemRow[style*='--cal']:hover {
 .miniTitle {
   margin: 0 0 var(--space-1);
   font-size: var(--text-base);
+}
+/* "Mai" is narrower than a finger (U58). */
+.miniTitle .linkBtn {
+  min-width: var(--touch);
 }
 .miniTable {
   width: 100%;

@@ -1790,6 +1790,7 @@ export const de = {
     agenda: 'Agenda',
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
+    hoursRegion: 'Stunden des Tages',
     widgetEmpty: 'Nichts geplant.',
     stageBody: (minutes: number, time: string) =>
       (minutes >= 1440
