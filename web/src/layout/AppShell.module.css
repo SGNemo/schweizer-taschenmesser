@@ -77,6 +77,8 @@
     padding: var(--space-4) var(--space-3) var(--space-3);
     border-right: 1px solid var(--border);
     background: var(--bg);
+    /* The clock in the folded sidebar asks this width, not the window's (layout/LogoClock). */
+    container: sidebar / inline-size;
   }
   /* The active module tints the top of the sidebar; "Ruhig" and "Modulfarben: Aus" make it a neutral wash. */
   .sidebar[data-hue] {

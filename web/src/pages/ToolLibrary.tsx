@@ -153,12 +153,14 @@ export function ToolLibrary() {
                     description={tool.description}
                     hue={tool.identity.hue}
                     badges={
-                      <>
+                      // U32: the badges always sit in their own row under the name, so the heads of one row are
+                      // equally tall (a wrapping "Auch ohne Internet" made them 66 or 96 px).
+                      <span className={library.badgeRow}>
                         <Badge>{tool.offline ? s.offline : s.online}</Badge>
                         {tool.maturity === 'preview' ? (
                           <Badge>{t.settings.maturity.badge}</Badge>
                         ) : null}
-                      </>
+                      </span>
                     }
                   >
                     <Switch

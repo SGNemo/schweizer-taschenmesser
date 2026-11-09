@@ -79,6 +79,20 @@ test('list shows progress, state and checksum in words; the page is accessible',
   await audit(page, 'downloads page');
 });
 
+test('one filled action per page; checksum and folder lines start where the title starts (U11, U29)', async ({
+  page,
+}) => {
+  const primaries = await page
+    .locator('main button')
+    .evaluateAll((els) => els.filter((e) => /primary/.test(e.className)).map((e) => e.textContent));
+  expect(primaries).toEqual(['Download hinzufügen']);
+  const done = list(page).getByRole('listitem').nth(1);
+  const left = async (text: RegExp | string) =>
+    Math.round((await done.getByText(text).first().boundingBox())!.x);
+  const title = await left('handbuch.pdf');
+  expect(await left(/SHA-256/)).toBe(title);
+});
+
 test('the band counts what runs, the filter shows the history, the folder button reveals the last job', async ({
   page,
 }) => {

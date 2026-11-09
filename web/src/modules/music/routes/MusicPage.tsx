@@ -21,8 +21,8 @@ const CONNECTIONS = settingsPath('verbindungen');
 /**
  * The music module's page, a full page in the module frame (not a dialog): the head shows what plays (cover large, its colour
  * tinting the head, controls, volume, device) or the way out without a device; below it the start view (recently played, your playlists
- * as covers) or the chosen list (saved songs, queue, search with results by type, a playlist with cover and tracks); the aside holds the library
- * and the next songs. Not connected: one calm next step. Everything is read on request; nothing is kept.
+ * as covers) or the chosen list (saved songs, queue, search with results by type, a playlist with cover and tracks), picked with the chips;
+ * the aside holds the next songs. Not connected: one calm next step. Everything is read on request; nothing is kept.
  */
 export default function MusicPage() {
   const tx = tSpotify.use();
@@ -121,7 +121,7 @@ export default function MusicPage() {
           )}
         </div>
         <aside className={styles.aside}>
-          <SideLists api={api} active={view} />
+          <SideLists api={api} />
         </aside>
       </div>
     </>

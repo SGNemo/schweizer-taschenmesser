@@ -5,7 +5,7 @@ import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Badge, Button, EmptyState, Icon, PageHeader, TextField } from '@/ui';
+import { Badge, Button, Checkbox, EmptyState, Icon, PageHeader, TextField } from '@/ui';
 import { Bubble, HeroSlot, SignatureMark } from '@/ui/identity';
 import { SetupHint, useChatSetup } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
@@ -118,7 +118,7 @@ export default function ChatPage() {
         </Button>
       </PageHeader>
       <SetupHint setup={setup} />
-      <div className={styles.layout}>
+      <div className={styles.layout} data-after-hint={setup?.needed ? '' : undefined}>
         <TextField
           label={c.search}
           labelHidden
@@ -127,14 +127,11 @@ export default function ChatPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <label>
-          <input
-            type="checkbox"
-            checked={archived}
-            onChange={(e) => setArchived(e.target.checked)}
-          />{' '}
-          {c.showArchived}
-        </label>
+        <Checkbox
+          label={c.showArchived}
+          checked={archived}
+          onChange={(e) => setArchived(e.target.checked)}
+        />
         {threads && shown.length === 0 ? (
           // Title and motif only: „Neuer Chat“ in the toolbar is the page's one verb (C23).
           <EmptyState

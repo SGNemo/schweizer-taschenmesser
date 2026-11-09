@@ -65,6 +65,7 @@ test.describe('desktop layout', () => {
     const list = page.getByRole('navigation', { name: 'Seiten' });
     // The list excerpt shows the text once it is stored (autosave).
     await expect(list.getByText('Tomaten pflanzen')).toBeVisible();
+    await list.getByRole('button', { name: 'Notizen durchsuchen' }).click();
     await list.getByRole('searchbox').fill('tomaten');
     await expect(list.getByText('Gartenplan')).toBeVisible();
     await list.getByRole('searchbox').fill('zzz');
@@ -80,7 +81,7 @@ test.describe('desktop layout', () => {
     await enable(page, 'notes');
     await ready(page, '/notes');
     await expect(page.getByTestId('note-paper')).toBeAttached();
-    await page.getByRole('button', { name: 'Vorlage wählen' }).click();
+    await page.getByRole('button', { name: 'Vorlagen und Sortierung' }).click();
     await page.getByRole('menuitem', { name: 'Besprechung' }).click();
     await expect(editor(page)).toContainText('Beschlüsse');
     await expect(page.getByLabel('Titel der Seite')).toHaveValue(/^Besprechung /);
@@ -219,7 +220,8 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
     await page.keyboard.press('Alt+z');
     await expect(page.getByRole('heading', { name: 'Schmierzettel', level: 2 })).toBeVisible();
 
-    await page.getByLabel('Sortierung').selectOption({ label: 'Titel' });
+    await page.getByRole('button', { name: 'Vorlagen und Sortierung' }).click();
+    await page.getByRole('menuitemcheckbox', { name: 'Titel' }).click();
     const titles = await rows(page)
       .locator('span:not(:has(span))')
       .filter({ hasText: /^(Apfel|Zebra)$/ })
@@ -292,6 +294,7 @@ test.describe('notebook (links, search, export, import, to-do)', () => {
       'Beete',
       `${'Erde lockern, '.repeat(8)}dann Gurken säen ${'und gießen. '.repeat(8)}`,
     );
+    await page.getByRole('button', { name: 'Notizen durchsuchen' }).click();
     await page.getByRole('searchbox').fill('gurken');
     const row = rows(page).filter({ hasText: 'Beete' });
     await expect(row).toContainText('dann Gurken säen');

@@ -5,6 +5,8 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon, Logo, OverlayScroll, Wordmark } from '@/ui';
 import { useNewChangelog } from '@/core/changelog/useNewChangelog';
+import { useClockOn } from '@/core/settings/clock';
+import { LogoClock } from './LogoClock';
 import { NewDot } from './NewDot';
 import { SupporterBadge } from './SupporterBadge';
 import styles from './Sidebar.module.css';
@@ -186,9 +188,10 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   const newChanges = useNewChangelog();
   const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
   const activeArea = areaOfPath(tree, pathname)?.id;
+  const clockOn = useClockOn();
   const favouritesReady = useStoredFavourites().ready;
 
-  const brand = (
+  const link = (
     <a
       className={styles.brand}
       href="/"
@@ -200,6 +203,15 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
     >
       {rail ? <Logo size={32} /> : <Wordmark height={44} title={t.appName} />}
     </a>
+  );
+  // The clock sits next to the link, not in it: it is no click target.
+  const brand = clockOn ? (
+    <div className={rail ? styles.brandRail : styles.brandRow}>
+      {link}
+      <LogoClock variant={rail ? 'rail' : 'wide'} />
+    </div>
+  ) : (
+    link
   );
 
   if (rail) {
