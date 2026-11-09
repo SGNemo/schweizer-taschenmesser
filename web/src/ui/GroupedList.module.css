@@ -68,3 +68,12 @@
 .body > * + * {
   margin-top: var(--space-2);
 }
+/* The rows of a newspaper column (`columns`): a plain list, spaced like the body above. */
+.rowList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rowList > * + * {
+  margin-top: var(--space-2);
+}
