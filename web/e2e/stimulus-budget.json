@@ -162,7 +162,7 @@
     "phone--calendar": {
       "height": 1309,
       "buttons": 55,
-      "links": 14,
+      "links": 16,
       "icons": 15,
       "firstScreenActions": 63
     },
@@ -211,14 +211,14 @@
     "phone--people": {
       "height": 3736,
       "buttons": 66,
-      "links": 14,
+      "links": 16,
       "icons": 43,
       "firstScreenActions": 31
     },
     "phone--reminders": {
       "height": 2519,
       "buttons": 60,
-      "links": 15,
+      "links": 17,
       "icons": 37,
       "firstScreenActions": 32
     },
@@ -244,9 +244,9 @@
       "firstScreenActions": 26
     },
     "phone--settings-module": {
-      "height": 2340,
+      "height": 2581,
       "buttons": 5,
-      "links": 27,
+      "links": 30,
       "icons": 31,
       "firstScreenActions": 16
     },
