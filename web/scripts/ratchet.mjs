@@ -823,7 +823,7 @@ export function gitRepo(cwd = process.cwd()) {
       let tree = trees.get(rev);
       if (!tree) {
         tree = new Map();
-        for (const row of git('ls-tree', '-r', '-z', rev).split('\0')) {
+        for (const row of git('ls-tree', '-r', '-z', '--full-tree', rev).split('\0')) {
           const tab = row.indexOf('\t');
           if (tab > 0) tree.set(row.slice(tab + 1), row.slice(0, tab).split(' ')[2]);
         }

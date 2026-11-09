@@ -661,6 +661,17 @@ describe('merge base (real history)', () => {
     const base = repo.mergeBase(tip, head);
     expect(collectHits(repo, base, head)).toEqual([]);
   });
+  it('paths are those of the repository root, wherever the script is started (CI runs it in web/)', () => {
+    const s = sandbox();
+    const base = s.git(s.origin, 'rev-parse', 'HEAD');
+    const head = s.commit(
+      { [BUDGET_FILE]: budget({ 'd1920--finance': { ...PAGE, buttons: 25 } }) },
+      'raise',
+    );
+    expect(collectHits(gitRepo(join(s.origin, 'web')), base, head)).toEqual([
+      `budget ${BUDGET_FILE} d1920--finance.buttons 20→25`,
+    ]);
+  });
   it('git view: added, changed, deleted and renamed files', () => {
     const s = sandbox();
     const base = s.git(s.origin, 'rev-parse', 'HEAD');
