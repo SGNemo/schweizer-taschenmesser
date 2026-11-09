@@ -416,3 +416,7 @@
 Überlauf 412x915-dark seed: keiner
 
 Überlauf 412x915-dark empty: keiner
+
+Überlauf 412x915-light seed: keiner
+
+Überlauf 412x915-light empty: keiner
