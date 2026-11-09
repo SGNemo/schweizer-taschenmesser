@@ -195,6 +195,20 @@ export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; time
 export const ALL_DAY_LIMIT = 3;
 
 /**
+ * What the hour grid opens around (minutes of the day): now when today is shown, but never earlier than the shown days'
+ * first timed entry (or 08:00 when none starts earlier). At 04:45 the grid must not open on empty night hours with the
+ * day's entries below the fold ("die Woche passt nicht", S04 follow-up); later in the day "now" leads as before.
+ */
+export function scrollAnchor(
+  blocks: readonly { start: number }[],
+  nowMinute: number,
+  todayShown: boolean,
+): number {
+  const first = Math.min(...blocks.map((b) => b.start), 8 * 60);
+  return todayShown ? Math.max(nowMinute, first) : first;
+}
+
+/**
  * Minute the hour grid opens at: an hour and a half before `anchor` (now, or the first entry), on a full hour, and never
  * inside a block. A block cut by the grid's top edge looks as if it were hidden under the all-day pane above it (S04), so
  * the start moves up to the full hour before such a block – but never more than two hours above the first choice: a long
