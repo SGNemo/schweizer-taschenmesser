@@ -24,6 +24,7 @@ export const notes: Strings['notes'] = {
     list: 'List',
     cards: 'Cards',
   },
+  moreMenu: 'Templates and sorting',
   templates: {
     button: 'Choose template',
     blank: 'Blank page',

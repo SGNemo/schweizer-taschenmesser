@@ -151,3 +151,14 @@
 .viewSwitch {
   flex: none;
 }
+
+/* Notebook tabs in one row that scrolls sideways instead of wrapping into three (U22). */
+.tabsRow > [role='group'] > div:first-child {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tabsRow > [role='group'] > div:first-child > * {
+  flex: none;
+  white-space: nowrap;
+}

@@ -4109,6 +4109,8 @@ export const de = {
       list: 'Liste',
       cards: 'Karten',
     },
+    /** The ⋯ menu in the page list head: templates and the sort order. */
+    moreMenu: 'Vorlagen und Sortierung',
     templates: {
       button: 'Vorlage wählen',
       blank: 'Leere Seite',
