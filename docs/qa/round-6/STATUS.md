@@ -13,7 +13,7 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 | `fix/ui6-modules-plan` [#591](https://github.com/SGNemo/schweizer-taschenmesser/pull/591) | U02 · U21 · U48 · U26 · U09 · U10 · U30 · U47 (+ U57 ToDo-Zeile) | review-loop 1 Runde |
 | `fix/ui6-modules-household-money` [#592](https://github.com/SGNemo/schweizer-taschenmesser/pull/592) | S01 Vorräte-Stepper · U12 · U13 · U42 · U18 · U56 · U44 · U14 | review-loop 2 Runden |
 | `fix/ui6-modules-knowledge-system` [#596](https://github.com/SGNemo/schweizer-taschenmesser/pull/596) (offen) | U22 · U04 · U37 · U23a · U50 · U33 · U51 · U52 · U38 (geprüft, kein Code) · U11 · U29 · U27b · U53 | review-loop 2 Runden |
-| `fix/ui6-home-settings` [#599](https://github.com/SGNemo/schweizer-taschenmesser/pull/599) (offen) | U19 · U39 · U49 · U03 · U31 · U54 · U55 · U32 | review-loop 2 Runden |
+| `fix/ui6-home-settings` [#599](https://github.com/SGNemo/schweizer-taschenmesser/pull/599) (offen) | U19 · U39 · U49 · U03 · U31 · U54 · U55 · U32 | review-loop 3 Runden; Bearbeiten-Modus zeigt das ungepackte Raster (Tastatur/Drag folgen der gespeicherten Reihenfolge) |
 
 ## Nachmessung auf `develop` (ad3e1cd1, nach #590 #591 #592 #594 #595 #598; ohne #596 #599)
 
