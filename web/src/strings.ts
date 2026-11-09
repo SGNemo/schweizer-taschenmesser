@@ -419,6 +419,8 @@ export const de = {
       change: 'Ändern',
       done: 'Fertig',
       line: (name: string, value: string) => `${name}: ${value}`,
+      /** One named value in a group line (U54): „Textgröße normal“, not a bare „Normal“. */
+      named: (name: string, value: string) => `${name} ${value.toLocaleLowerCase()}`,
       theme: 'Thema',
       colors: 'Farben',
       text: 'Schrift & Lesen',
@@ -2948,8 +2950,7 @@ export const de = {
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
     planTitle: (payee: string) => `${payee} bezahlen`,
-    planDunned: (title: string, detail?: string) =>
-      detail ? `${title} · Mahnung · ${detail}` : `${title} · Mahnung`,
+    planDunned: (detail?: string) => (detail ? `Mahnung · ${detail}` : 'Mahnung'),
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -4123,6 +4124,8 @@ export const de = {
       list: 'Liste',
       cards: 'Karten',
     },
+    /** The ⋯ menu in the page list head: templates and the sort order. */
+    moreMenu: 'Vorlagen und Sortierung',
     templates: {
       button: 'Vorlage wählen',
       blank: 'Leere Seite',
@@ -7198,6 +7201,8 @@ export const de = {
       checkFor: (line: string) => `Ansehen und anlegen: ${line}`,
       created: 'Rechnung angelegt',
       createdMark: 'angelegt',
+      inPlan: (day: string) => `Im Plan · ${day}`,
+      today: 'heute',
       already: 'Schon angelegt',
       reminderWord: (level: number) => (level > 1 ? `${level}. Mahnung` : 'Mahnung'),
       due: (day: string) => `fällig ${day}`,
@@ -8107,8 +8112,9 @@ export const de = {
     },
     widget: {
       label: 'Feeds',
-      context: (n: number, g: number) =>
-        `${n === 1 ? '1 Feed' : `${n} Feeds`}${g > 0 ? ` · ${g === 1 ? '1 Gruppe' : `${g} Gruppen`}` : ''}`,
+      /** Context under the feed count: only the groups, never the number again. */
+      context: (_n: number, g: number) =>
+        g === 0 ? 'ohne Gruppen' : g === 1 ? 'aus 1 Gruppe' : `aus ${g} Gruppen`,
       empty: 'Noch keine Feeds',
       add: 'Feed hinzufügen',
     },

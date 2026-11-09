@@ -10,7 +10,7 @@ import type { Slot } from '../dragMath';
 import type { HolidayId } from '../holidays';
 import { dailyRepeats, groupByDate, monthWeeks, repeatKey, weekNumberOf } from '../views';
 import { ItemRow, kindLabel } from './ItemRow';
-import { sourceHue } from './sourceHue';
+import { KindMark } from './KindMark';
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { TimeGrid } from './TimeGrid';
 import styles from '../routes/calendar.module.css';
@@ -54,19 +54,6 @@ function useLineLimit(): number {
   const h1150 = useMediaQuery('(min-height: 1150px)');
   const h1300 = useMediaQuery('(min-height: 1300px)');
   return h1300 ? 6 : h1150 ? 4 : 3;
-}
-
-/** The quiet kind mark of an entry (the kind itself is in the tooltip and the day's list). */
-function KindMark({ item }: { item: CalendarItem }) {
-  return (
-    <span
-      className={styles.lineMark}
-      data-kind={item.kind}
-      data-hue={sourceHue(item)}
-      style={item.color ? ({ '--cal': item.color } as CSSProperties) : undefined}
-      aria-hidden="true"
-    />
-  );
 }
 
 /**

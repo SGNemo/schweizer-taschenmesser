@@ -41,6 +41,28 @@ const view = (path = '/chat') =>
   );
 
 describe('ChatPage', () => {
+  it('creates no chat by itself in an empty profile: the example chat comes only from the seed (U38)', async () => {
+    view();
+    expect(await screen.findByText(c.empty)).toBeInTheDocument();
+    expect(await threadRepo.active().count()).toBe(0);
+  });
+
+  it('uses the shared checkbox for „Archivierte anzeigen“ (U52)', async () => {
+    view();
+    const box = await screen.findByRole('checkbox', { name: c.showArchived });
+    expect(box.closest('label')?.className).toMatch(/check/);
+  });
+
+  it('keeps the search one step below the setup hint (U52)', async () => {
+    setPlatform({
+      ...createWebPlatform(),
+      localModel: createFakeLocalModel({ models: [], answer: () => '' }),
+    });
+    view();
+    await screen.findByTestId('chat-setup-hint');
+    expect(screen.getByRole('searchbox').closest('[data-after-hint]')).not.toBeNull();
+  });
+
   it('starts with an empty state and one way to begin: the toolbar, not a second button (C23)', async () => {
     view();
     expect(await screen.findByText(c.empty)).toBeInTheDocument();

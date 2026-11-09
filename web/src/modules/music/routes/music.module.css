@@ -41,6 +41,11 @@
   max-width: 44rem;
   margin-top: var(--space-2);
 }
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 .nowTitle {
   margin: 0;
   font-size: var(--text-2xl);
@@ -221,28 +226,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-}
-.libItem {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-height: var(--touch);
-  padding: 0 var(--space-2);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.libItem svg {
-  color: var(--module-color);
-}
-.libItem[aria-current='page'] {
-  background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
-  font-weight: var(--weight-semibold);
 }
 .queue {
   display: flex;
