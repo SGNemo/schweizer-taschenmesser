@@ -7165,7 +7165,7 @@ export const de = {
         'Aus. Wenn an, kann das lokale Modell (das eingebaute oder Ollama auf diesem Rechner) eine Mail zusammenfassen und Vorschläge für „Aus dieser Mail anlegen“ machen. Der Mailtext geht nie an ein Cloud-Modell und nie ins Netz; ist kein lokales Modell bereit, passiert nichts. Nichts davon wird gespeichert.',
       offerPersonal: 'Filter „Persönlich“ anbieten',
       offerPersonalHelp:
-        'Zeigt nur Mails von Menschen: ohne Abmeldelink, ohne Massenversand-Kennung, nicht in Werbung oder Benachrichtigungen. Ohne Zahl.',
+        'Zeigt nur Mails von Menschen – keine Newsletter, Werbung oder Benachrichtigungen.',
       offerPlanAll: '„Alle in den Plan…“ anbieten',
       offerPlanAllHelp:
         'Ein Knopf über der Liste legt die angehakten Mails mit Vorschau als ToDos in den Plan.',
@@ -7173,11 +7173,12 @@ export const de = {
     plan: {
       action: 'In den Plan',
       asTodo: 'Als ToDo',
-      actionFor: (title: string) => `In den Plan: ${title}`,
+      actionFor: (action: string, title: string) => `${action}: ${title}`,
       planned: (day: string) => `Im Plan: ${day}`,
       plannedNoDay: 'Im Plan',
       savedTodo: 'Als ToDo gespeichert',
       already: 'Schon im Plan',
+      alreadyTodo: 'Schon als ToDo da',
       was: 'War im Plan',
       reinstate: 'Wieder einplanen',
       mark: 'im Plan',
@@ -7186,7 +7187,7 @@ export const de = {
       allTitle: 'In den Plan',
       allIntro: 'Massenmails und Mails, die schon im Plan sind, sind abgewählt.',
       allSave: (n: number) => `In den Plan (${n})`,
-      allDone: (n: number) => `${n} Mails im Plan`,
+      allDone: (n: number) => (n === 1 ? '1 Mail im Plan' : `${n} Mails im Plan`),
       failed: 'Das hat nicht geklappt. Die Mail bleibt, wie sie ist.',
     },
     page: {

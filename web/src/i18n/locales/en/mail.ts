@@ -31,8 +31,7 @@ export const mail: Strings['mail'] = {
     localAiHelp:
       'Off. When on, the local model (the built-in one or Ollama on this computer) can summarise a mail and make suggestions for “Create from this mail”. The mail text never goes to a cloud model or onto the network; if no local model is ready, nothing happens. None of it is stored.',
     offerPersonal: 'Offer the filter “Personal”',
-    offerPersonalHelp:
-      'Shows only mail from people: no unsubscribe link, no bulk marker, not in promotions or updates. No count.',
+    offerPersonalHelp: 'Shows only mail from people – no newsletters, promotions or notifications.',
     offerPlanAll: 'Offer “Add all to plan…”',
     offerPlanAllHelp:
       'A button above the list adds the ticked mails to the plan as to-dos, with a preview.',
@@ -40,11 +39,12 @@ export const mail: Strings['mail'] = {
   plan: {
     action: 'Add to plan',
     asTodo: 'As to-do',
-    actionFor: (title: string) => `Add to plan: ${title}`,
+    actionFor: (action: string, title: string) => `${action}: ${title}`,
     planned: (day: string) => `In the plan: ${day}`,
     plannedNoDay: 'In the plan',
     savedTodo: 'Saved as to-do',
     already: 'Already in the plan',
+    alreadyTodo: 'Already a to-do',
     was: 'Was in the plan',
     reinstate: 'Plan again',
     mark: 'in the plan',
@@ -53,7 +53,7 @@ export const mail: Strings['mail'] = {
     allTitle: 'Add to plan',
     allIntro: 'Bulk mail and mails already in the plan are unticked.',
     allSave: (n: number) => `Add to plan (${n})`,
-    allDone: (n: number) => `${n} mails in the plan`,
+    allDone: (n: number) => (n === 1 ? '1 mail in the plan' : `${n} mails in the plan`),
     failed: 'That did not work. The mail stays as it is.',
   },
   page: {

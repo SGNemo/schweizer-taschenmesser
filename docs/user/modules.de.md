@@ -72,7 +72,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 
 ## Mails in den Plan (Windows-App)
 
-Eine Mail kommt mit einem Tipp auf ihre Zeile in den Plan („In den Plan“, ohne Planer „Als ToDo“): das ToDo heißt „Absender · Betreff“ und führt zurück zur Mail; dieselbe Mail ein zweites Mal findet den ersten Eintrag. Der Filter „Persönlich“ zeigt nur Mails von Menschen, und „Alle in den Plan…“ legt die angehakten Mails eines Ordners nach einer Vorschau an.
+Der Knopf „In den Plan“ an der Zeile einer Mail („Als ToDo“ ohne Planer; am Touchscreen: wischen oder ⋯) legt ein ToDo „Absender · Betreff“ an, das zurück zur Mail führt, mit „Rückgängig“ im Hinweis; der Planer bietet dafür „Zur Mail“, und dieselbe Mail ein zweites Mal findet den ersten Eintrag. Der Filter „Persönlich“ zeigt nur Mails von Menschen, und „Alle in den Plan…“ legt die angehakten Mails eines Ordners nach einer Vorschau an; beides lässt sich in den Mail-Einstellungen ausschalten.
 
 ## Kontoauszug importieren
 

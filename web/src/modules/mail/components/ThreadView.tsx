@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
@@ -16,7 +17,7 @@ import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
 import { LinkDialog } from './LinkDialog';
 import { useModuleStates } from '@/core/modules/activation';
-import { planMail } from '../planMail';
+import { planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
@@ -334,6 +335,7 @@ export function ThreadView({
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   const web = mailWebUrl(account, threadId);
   const states = useModuleStates();
+  const planned = useLiveQuery(() => plannedThreads(account.key), [account.key]);
   // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
   const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
@@ -348,22 +350,37 @@ export function ThreadView({
           </Button>
         ) : null}
         {states?.todos && messages?.length ? (
-          <Button
-            data-testid="mail-plan-thread"
-            onClick={() =>
-              void planMail(
-                account,
-                {
-                  id: threadId,
-                  from: messages[messages.length - 1]!.from,
-                  subject: messages[0]!.subject,
-                },
-                () => onChanged?.(),
-              )
-            }
-          >
-            {states.planner ? t.mail.plan.action : t.mail.plan.asTodo}
-          </Button>
+          planned?.has(threadId) ? (
+            <span className={styles.planMark} data-testid="mail-in-plan">
+              {t.mail.plan.mark}
+            </span>
+          ) : (
+            <Button
+              data-testid="mail-plan-thread"
+              onClick={() =>
+                void planMail(
+                  account,
+                  {
+                    id: threadId,
+                    // The other party: the newest message not written from this account, else the first.
+                    from: (
+                      [...messages]
+                        .reverse()
+                        .find(
+                          (m) =>
+                            !account.email ||
+                            m.from.email.toLowerCase() !== account.email.toLowerCase(),
+                        ) ?? messages[0]!
+                    ).from,
+                    subject: messages[0]!.subject,
+                  },
+                  onChanged,
+                )
+              }
+            >
+              {states.planner ? t.mail.plan.action : t.mail.plan.asTodo}
+            </Button>
+          )
         ) : null}
       </div>
       {messages ? (

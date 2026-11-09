@@ -38,7 +38,7 @@ import { hasFeature } from '@/core/mail/service';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { InboxHead } from '../components/InboxHead';
 import { PlanAllDialog } from '../components/PlanAllDialog';
-import { planMail, planMany, plannedThreads, safeThreadId } from '../planMail';
+import { planMail, planMany, plannedThreads, planTitle, safeThreadId } from '../planMail';
 import styles from '../components/mail.module.css';
 import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../format';
 import { threadRepo } from '../repo';
@@ -64,6 +64,7 @@ function ThreadList({
   planned,
   planLabel,
   onPlan,
+  titleOf,
 }: {
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
@@ -74,7 +75,10 @@ function ThreadList({
   /** „In den Plan“ (planner on) or „Als ToDo“. */
   planLabel: string;
   onPlan?: (th: CachedThreadView) => void;
+  /** The ToDo title the action would write (the label names it). */
+  titleOf: (th: CachedThreadView) => string;
 }) {
+  const hover = useMediaQuery('(hover: hover)');
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
     const rows = threads.filter((th) => dayGroup(th.date) === g);
     return {
@@ -112,15 +116,14 @@ function ThreadList({
               }
               onOpen={() => onOpen(th.id)}
               menu={menuFor?.(th)}
-              // Like „Archivieren“: a quiet action on hover (PC), in ⋯ and as a swipe (phone).
+              // Like „Archivieren“: a quiet button only where the pointer hovers (PC); on touch it is in ⋯
+              // and a swipe, so a phone row never carries a standing button.
               actions={
-                onPlan && !planned.has(th.id) ? (
+                hover && onPlan && !planned.has(th.id) ? (
                   <Button
                     size="sm"
                     variant="ghost"
-                    aria-label={t.mail.plan.actionFor(
-                      `${personName(th.from)} · ${subjectOf(th.subject)}`,
-                    )}
+                    aria-label={t.mail.plan.actionFor(planLabel, titleOf(th))}
                     onClick={() => onPlan(th)}
                     data-testid="mail-plan-row"
                   >
@@ -341,12 +344,15 @@ export default function MailPage() {
   const onPlan = canPlan
     ? (th: CachedThreadView) => void planMail(account, th, box.reload)
     : undefined;
-  const menuFor = (th: (typeof box.threads)[number]): RowMenuItem[] => [
-    ...(onPlan && !planned.has(th.id)
-      ? [{ id: 'plan', label: planLabel, onSelect: () => onPlan(th) }]
-      : []),
-    ...(canModify ? modifyItems(th) : []),
-  ];
+  const menuFor =
+    onPlan || canModify
+      ? (th: (typeof box.threads)[number]): RowMenuItem[] => [
+          ...(onPlan && !planned.has(th.id)
+            ? [{ id: 'plan', label: planLabel, onSelect: () => onPlan(th) }]
+            : []),
+          ...(canModify ? modifyItems(th) : []),
+        ]
+      : undefined;
   const modifyItems = (th: (typeof box.threads)[number]): RowMenuItem[] => [
     th.unread
       ? {
@@ -466,6 +472,7 @@ export default function MailPage() {
       {planAll ? (
         <PlanAllDialog
           threads={shown}
+          titleOf={(th) => planTitle(account, th)}
           planned={planned}
           onClose={() => setPlanAll(false)}
           onPlan={(picked) => {
@@ -494,6 +501,7 @@ export default function MailPage() {
           planned={planned}
           planLabel={planLabel}
           onPlan={onPlan}
+          titleOf={(th) => planTitle(account, th)}
         />
       )}
       {box.hasMore ? (

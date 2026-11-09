@@ -454,21 +454,10 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   // Package 3a: the reply goes into the plan straight from the row – one tap, no sheet; the row then says
   // „im Plan“. (Before: open the mail, „Aus dieser Mail anlegen“, „ToDo“, a sheet with „Speichern“.)
   const annaRow = page.getByRole('button', { name: /^In den Plan: Anna Beispiel · Wochenende\?/ });
-  // The row action appears once the module states are read (a moment after the list).
-  const hasRowAction = await annaRow
-    .waitFor({ timeout: 5_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (hasRowAction) {
-    await m.tap(annaRow);
-    await expect(page.getByText(/^Im Plan/).first()).toBeVisible();
-  } else {
-    await m.tap(page.getByText('Wochenende?'));
-    await m.tap(page.getByRole('button', { name: 'Aus dieser Mail anlegen' }));
-    await m.tap(page.getByRole('menuitem', { name: 'ToDo' }));
-    m.dialog();
-    await m.tap(page.getByRole('dialog').getByRole('button', { name: 'Speichern' }));
-  }
+  // The row action appears once the module states are read (a moment after the list); it must be there.
+  await expect(annaRow).toBeVisible({ timeout: 10_000 });
+  await m.tap(annaRow);
+  await expect(page.getByText(/^Im Plan/).first()).toBeVisible();
   const dialog = page.getByRole('dialog');
   // The invoice mail (until package 3b through the sheet).
   if (await page.getByRole('button', { name: 'Zur Liste' }).count())

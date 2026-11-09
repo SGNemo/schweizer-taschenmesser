@@ -72,7 +72,7 @@ Highlights of the modules that start with a short line above:
 
 ## Mail into the plan (Windows app)
 
-A mail goes into the plan with one tap on its row („In den Plan“, or „Als ToDo“ without the planner): the ToDo is called „sender · subject“ and leads back to the mail; planning the same mail again finds the first entry. The filter „Persönlich“ shows only mail from people, and „Alle in den Plan…“ adds the ticked mails of a folder after a preview.
+The button “Add to plan” on a mail's row (“As to-do” without the planner; on a touch screen: swipe or ⋯) makes a to-do “sender · subject” that leads back to the mail, with an undo in the notice; the planner offers “Go to mail” for it, and planning the same mail again finds the first entry. The filter “Personal” shows only mail from people, and “Add all to plan…” adds the ticked mails of a folder after a preview; both can be switched off in the mail settings.
 
 ## Importing a bank statement
 

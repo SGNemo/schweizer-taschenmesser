@@ -308,7 +308,8 @@ function EditorForm({
                   variant="ghost"
                   onClick={() => {
                     // A mail opens in the app where the mail module is (desktop), else on the web.
-                    if (l.kind === 'mail' && !(getManifest('mail') && states?.mail)) {
+                    // While the states load, a desktop with the mail module opens the app (the common case).
+                    if (l.kind === 'mail' && (!getManifest('mail') || states?.mail === false)) {
                       const url = mailThreadUrl(l.id);
                       if (url) void getPlatform().app.openUrl(url);
                       return;

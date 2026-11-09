@@ -48,10 +48,25 @@ describe('ids and titles', () => {
     expect(id).not.toContain('@');
   });
 
-  it('the title is „Name · Betreff“ and never an address', () => {
-    expect(mailPlanTitle(anna.from, anna.subject)).toBe('Anna Beispiel · Wochenende?');
-    expect(mailPlanTitle(noName.from, noName.subject)).toBe('Unterlagen');
-    expect(mailPlanTitle({ name: 'x@example.org', email: 'x@example.org' }, 'Hallo')).toBe('Hallo');
+  it('the title is „Name · Betreff“, never an address, never empty', () => {
+    const none = 'Ohne Betreff';
+    expect(mailPlanTitle(anna.from, anna.subject, none)).toBe('Anna Beispiel · Wochenende?');
+    expect(mailPlanTitle(noName.from, noName.subject, none)).toBe('Unterlagen');
+    expect(mailPlanTitle({ name: 'x@example.org', email: 'x@example.org' }, 'Hallo', none)).toBe(
+      'Hallo',
+    );
+    expect(mailPlanTitle({ email: 'x@example.org' }, 'Re: ', none)).toBe(none);
+  });
+
+  it('a reply of one’s own never names the ToDo after oneself', async () => {
+    const own = {
+      id: 't-own',
+      from: { name: 'Ich', email: 'me@example.org' },
+      subject: 'Re: Termin',
+    };
+    await planMail(account, own, () => undefined);
+    const [task] = await live('todos_task');
+    expect(task.title).toBe('Termin');
   });
 });
 
@@ -91,6 +106,13 @@ describe('planMail', () => {
     expect((await live('todos_task'))[0]!.id).toBe(await planMailId('t-anna'));
   });
 
+  it('a ToDo from before the planner was on says „Schon als ToDo da“, not „im Plan“', async () => {
+    await planMail(account, anna, () => undefined);
+    await enableModule(getManifest('planner')!);
+    await planMail(account, anna, () => undefined);
+    expect(lastToast()?.message).toBe(t.mail.plan.alreadyTodo);
+  });
+
   it('with the planner on, a plan entry is written beside the ToDo', async () => {
     await enableModule(getManifest('planner')!);
     await planMail(account, anna, () => undefined);
@@ -102,6 +124,18 @@ describe('planMail', () => {
 });
 
 describe('planMany', () => {
+  it('a ticked mail whose ToDo was deleted comes back; nothing new → „Schon im Plan“ without undo', async () => {
+    await planMail(account, anna, () => undefined);
+    lastToast()!.action!.run();
+    await vi.waitFor(async () => expect(await live('todos_task')).toHaveLength(0));
+    await planMany(account, [anna], () => undefined);
+    expect((await live('todos_task')).map((x) => x.title)).toEqual(['Anna Beispiel · Wochenende?']);
+    expect(lastToast()?.message).toBe(t.mail.plan.allDone(1));
+    await planMany(account, [anna], () => undefined);
+    expect(lastToast()?.message).toBe(t.mail.plan.already);
+    expect(lastToast()?.action).toBeUndefined();
+  });
+
   it('writes only what was ticked, skips an existing one untouched, one undo for what it wrote', async () => {
     await planMail(account, anna, () => undefined);
     const before = (await live('todos_task'))[0]!;

@@ -7,7 +7,7 @@
  * device once the first has synced – finds the first entry instead of doubling it.
  */
 import { createCollectionRepo } from '@/core/db/repo';
-import { mailPlanTitle } from '@/core/mail/prefill';
+import { cleanSubject, mailPlanTitle } from '@/core/mail/prefill';
 import { mailWebUrl } from '@/core/mail/service';
 import type { MailAccountRef, MailAddress } from '@/core/mail/types';
 import { loadModuleStates } from '@/core/modules/activation';
@@ -41,16 +41,22 @@ export interface PlanThread {
 export const planMailId = async (threadId: string): Promise<string> =>
   `mail-${await captureId([threadId, 'todo'])}`;
 
-const cleanSubject = (s: string) => s.replace(/^\s*((re|aw|fwd|wg):\s*)+/i, '').trim();
-
 /** The fields of the ToDo: title, 15 minutes, a soft due date when the subject names one, the way back. */
+/** The other party: the account's own address never names the ToDo (a reply of one's own gives the subject). */
+const otherParty = (account: MailAccountRef, from: MailAddress): MailAddress =>
+  account.email && from.email.toLowerCase() === account.email.toLowerCase() ? { email: '' } : from;
+
+/** The title the ToDo gets (the preview shows exactly this). */
+export const planTitle = (account: MailAccountRef, th: PlanThread): string =>
+  mailPlanTitle(otherParty(account, th.from), th.subject, t.mail.page.noSubject);
+
 export function planFields(account: MailAccountRef, th: PlanThread) {
   const subject = cleanSubject(th.subject);
   const read = subject ? parseCapture(subject, { now: new Date(now()) }).fields : undefined;
   const note =
     account.key === DEMO_ACCOUNT ? undefined : mailWebUrl(account, th.id, { forStorage: true }); // never `?authuser=<address>`
   return {
-    title: mailPlanTitle(th.from, th.subject),
+    title: planTitle(account, th),
     estimateMin: 15,
     // A date in the subject is a soft due date (never a hard deadline: the mail did not say so).
     ...(read?.date && read.date >= today() ? { date: read.date } : {}),
@@ -94,20 +100,20 @@ async function linkOnce(
   return has ? undefined : saveLink(account.key, threadId, threadId, saved);
 }
 
-/** The planner's day for the new entry, when its run placed it within a moment (for the toast). */
+/** The day the planner gave the ToDo, if it already did (read once; no waiting). */
 async function plannedDay(todoId: string): Promise<string | undefined> {
+  const todos = getManifest('todos');
+  if (!todos) return undefined;
+  const task = (await createCollectionRepo(todos, 'task').get(todoId)) as
+    { plannedFor?: string } | undefined;
+  return task?.plannedFor;
+}
+
+/** Whether the entry is in the plan (its plan row exists), not only a ToDo. */
+async function inPlan(todoId: string): Promise<boolean> {
   const planner = getManifest('planner');
-  if (!planner) return undefined;
-  const repo = createCollectionRepo(planner, 'assignment');
-  for (let i = 0; i < 8; i++) {
-    const row = (await repo
-      .active()
-      .filter((r) => r.itemKey === `todos:${todoId}`)
-      .first()) as { date?: string } | undefined;
-    if (row?.date) return row.date;
-    await new Promise((r) => setTimeout(r, 150));
-  }
-  return undefined;
+  if (!planner) return false;
+  return !!(await createCollectionRepo(planner, 'item').get(`todos:${todoId}`));
 }
 
 /**
@@ -128,7 +134,12 @@ export async function planMail(
     if (saved.existed === true) {
       await linkOnce(account, th.id, saved);
       onChanged();
-      return void toast(t.mail.plan.already);
+      // „Schon im Plan“ only when it is in the plan; a ToDo from before the planner was on says so.
+      return void toast(
+        type === 'plan' && !(await inPlan(saved.id))
+          ? t.mail.plan.alreadyTodo
+          : t.mail.plan.already,
+      );
     }
     if (saved.existed === 'tombstone') {
       return void toast(t.mail.plan.was, {
@@ -139,7 +150,8 @@ export async function planMail(
               const back = await reinstateCapture(type, id);
               const link = await linkOnce(account, th.id, back);
               onChanged();
-              toast(t.mail.plan.plannedNoDay, {
+              const again = type === 'plan' ? await plannedDay(back.id) : undefined;
+              toast(again ? t.mail.plan.planned(dayName(again)) : t.mail.plan.plannedNoDay, {
                 label: t.mail.write.undo,
                 run: () => void undoPlan(back, link, onChanged),
               });
@@ -189,10 +201,15 @@ export async function planMany(
     for (const th of threads)
       items.push({ type, fields: planFields(account, th), id: await planMailId(th.id) });
     const saved = await saveCaptures(items, '');
-    // Link rows for every mail whose ToDo is live now (written by this tap or already there); a deleted
-    // one (tombstone) stays deleted and gets no link.
     const todos = getManifest('todos');
     const taskRepo = todos ? createCollectionRepo(todos, 'task') : undefined;
+    // A ticked mail whose ToDo was deleted before: ticked after a preview, so it comes back.
+    const revived: SavedCapture[] = [];
+    for (const item of items) {
+      const row = taskRepo ? await taskRepo.table.get(item.id!) : undefined;
+      if (row && row.deletedAt !== null) revived.push(await reinstateCapture(type, item.id!));
+    }
+    // Link rows for every mail whose ToDo is live now (written, revived or already there).
     const links: string[] = [];
     for (let i = 0; i < threads.length; i++) {
       if (!taskRepo || !(await taskRepo.get(items[i]!.id!))) continue;
@@ -206,11 +223,14 @@ export async function planMany(
       if (link) links.push(link);
     }
     onChanged();
-    toast(t.mail.plan.allDone(saved.count ?? 0), {
+    const added = (saved.count ?? 0) + revived.length;
+    if (added === 0) return void toast(t.mail.plan.already);
+    toast(t.mail.plan.allDone(added), {
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
           await saved.undo();
+          for (const r of revived) await r.undo();
           for (const l of links) await linkRepo.remove(l);
           onChanged();
           toast(t.mail.write.undone);

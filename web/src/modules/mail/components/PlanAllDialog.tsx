@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
 import type { CachedThreadView } from '../cache';
-import { personName, subjectOf } from '../format';
 import styles from './mail.module.css';
 
 /**
@@ -12,11 +11,14 @@ import styles from './mail.module.css';
 export function PlanAllDialog({
   threads,
   planned,
+  titleOf,
   onPlan,
   onClose,
 }: {
   threads: readonly CachedThreadView[];
   planned: ReadonlySet<string>;
+  /** Exactly the title the ToDo would get (never an address). */
+  titleOf: (th: CachedThreadView) => string;
   onPlan: (picked: CachedThreadView[]) => void;
   onClose: () => void;
 }) {
@@ -35,10 +37,11 @@ export function PlanAllDialog({
     <Dialog open onClose={onClose} title={t.mail.plan.allTitle} size="roomy">
       <p className={styles.hint}>{t.mail.plan.allIntro}</p>
       <ul className={styles.planList} data-testid="mail-plan-all">
-        {threads.map((th) => (
+        {threads.map((th, i) => (
           <li key={th.id}>
             <Checkbox
-              label={`${personName(th.from)} · ${subjectOf(th.subject)}`}
+              data-autofocus={i === 0 || undefined}
+              label={planned.has(th.id) ? `${titleOf(th)} · ${t.mail.plan.mark}` : titleOf(th)}
               checked={ticked.has(th.id)}
               onChange={(e) => toggle(th.id, e.target.checked)}
             />
@@ -47,12 +50,7 @@ export function PlanAllDialog({
       </ul>
       <div className={styles.row}>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
-        <Button
-          variant="primary"
-          data-autofocus
-          disabled={picked.length === 0}
-          onClick={() => onPlan(picked)}
-        >
+        <Button variant="primary" disabled={picked.length === 0} onClick={() => onPlan(picked)}>
           {t.mail.plan.allSave(picked.length)}
         </Button>
       </div>
