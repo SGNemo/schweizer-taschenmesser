@@ -63,7 +63,7 @@ After „Alle speichern“: „5 Dinge gespeichert. Sortiert wird später. · An
 
 **Smallest first step.** U03 + U04 + U05 (package 1): 2 taps and no detour.
 
-**Gebaut anders:** each line is a card with its target as a small tap-able text under the title (about twice the height of the mockup's row), so with five lines „Alle speichern (5)“ sits below the fold and the sheet scrolls once; the reminder line's card is titled „Stadtwerke“ with its target text („Mahnung zu Rechnung …, fällig … · vermerken“); on the phone the sheet rises from the bottom and leaves a band of the covered page above it; the explicit mode „Abladen“ (large) is not built.
+**Gebaut anders:** each line is a card with its target as a small tap-able text under the title (about twice the height of the mockup's row), so with five lines „Alle speichern (5)“ sits below the fold and the sheet scrolls once; the reminder line's card is titled „Stadtwerke“ with its target text („Mahnung zu Rechnung …, fällig … · vermerken“); on the phone the sheet rises from the bottom and leaves a plain band (the opaque backdrop) above it; the explicit mode „Abladen“ (large) is not built.
 
 **Variants.**
 
@@ -180,7 +180,7 @@ Mail list (PC), filter „Persönlich“ on                                  Pla
 
 Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds the target column since the package „Nachmessen“).
 
-| Path                                 | Device | Today (taps · keys · screens · dialogs · detours · ≈ s)                                                      | Target                                                                                                      | Δ                                                      |
+| Path                                 | Device | Before (2026-11-08; taps · keys · screens · dialogs · detours · ≈ s)                                         | Target                                                                                                      | Δ                                                      |
 | ------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | A five things at once                | PC     | 3 · 141 · 2 · 2 · 1 · 53 · beside the sheet 1 „Jetzt wichtig“ card visible through the dim, 5 selects inside | 2 · 141 · 1 · 1 · 0 · 42 · 0 cards, 0 selects (F1 medium; the closing line names the place, no ToDos visit) | −1 tap, −1 screen, −1 dialog, −1 detour, −11 s, pile 0 |
 | A five things at once                | phone  | 3 · 141 · 2 · 2 · 1 · 74                                                                                     | 2 · 141 · 1 · 1 · 0 · 63                                                                                    | −11 s, nothing below the fold                          |
@@ -190,7 +190,7 @@ Same paths and counting model as ANALYSIS §2 (the script's `MAX` holds the targ
 | D planner page at overload           | PC     | 29 rows · 508 words · 56 interactive · 1 274 px                                                              | ≤ 13 rows · ≤ 280 words · ≤ 40 interactive · ≤ 700 px (board + folded group)                                | −16 rows, ≈ −45 % words                                |
 | D planner page at overload           | phone  | 20 rows · 384 words · 39 interactive · 1 442 px                                                              | ≤ 5 rows · ≤ 200 words · ≤ 25 interactive · ≤ 800 px                                                        | −15 rows                                               |
 
-Remeasured after the packages (2026-11-09, ANALYSIS §2 „Gemessen danach“): every target is met except path B's screens (2, not 1 – the invoice line does not say it is in the plan, so the person still checks the planner; ≈ 6 s instead of 4).
+Remeasured after the packages (2026-11-09, ANALYSIS §2 „Gemessen danach“): every counted target is met except path B's screens (2, not 1 – the invoice line does not say it is in the plan, so the person still checks the planner; ≈ 6 s instead of 4); path A's „nothing below the fold“ is not met either – with five lines the sheet scrolls once to „Alle speichern (5)“ on the phone and at 720 px on the PC (not counted by the model).
 
 What the numbers show for S7: while unloading, the person sees no count, no red figure and none of the backlog (path A's card number goes to 0); the first screen after saving is one line with one optional verb. What they do not fix: the home screen before the „+“ still shows „Jetzt wichtig“ (S1) – a later idea, not designed here, is a calm-mode line that folds the money cards.
 

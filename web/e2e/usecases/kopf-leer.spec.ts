@@ -18,7 +18,8 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  *   USECASE_SEED_URL=http://localhost:4174 npx playwright test e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome
  * Without the variable the mail path is skipped (mail is a desktop-only module; the phone never has it). It stays in
  * this file on purpose: one script per use case (docs/design/usecases), and the seed project is a Dev-Preview build.
- * Friction is counted (a detour, a screen the person has to visit), never assumed away: a later change lowers the
+ * Friction is counted as taps, keys, screens, dialogs and detours (a scroll is not counted; the docs name it where it
+ * happens), never assumed away: a later change lowers the
  * numbers instead of breaking the script. Since package 4 the target state of path A (no pile visible, no select,
  * no booking, no doubled invoice) and the planner's folded group are asserted directly.
  */
@@ -37,7 +38,7 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
  * 1, 2, 3a and 3b (2026-11-09, package 4). One number misses its target and stays at the measured value:
  * path B's second screen (the invoice line says „angelegt“, not whether it is in the plan, so the person still
  * checks the planner; target 1 screen · ≈ 4 s, measured 2 · ≈ 6 s – docs/STATUS.md, line „Use case Kopf leer:
- * nachgemessen“). That screen is counted only while nothing on the mail screen says the invoice is in the plan.
+ * nachgemessen“). That screen is counted only while the invoice line does not say „Im Plan“.
  * `seconds` follows from the other five (the model above); it is listed so the table reads like TARGET §4.
  */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
@@ -336,8 +337,12 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
     const strip = document.querySelector('section[aria-label="Jetzt wichtig"]');
     const dialog = document.querySelector('dialog[open]');
     const backdrop = dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : '';
-    // Alpha only from a fourth component (`rgba(r, g, b, a)` or `rgb(r g b / a)`); three components = opaque.
-    const parts = /^(?:rgba?|color)\((.*)\)$/.exec(backdrop)?.[1] ?? '';
+    // Alpha only from a fourth component (`rgba(r, g, b, a)` or `rgb(r g b / a)`); three components = opaque. A
+    // `color(<space> …)` value drops its colour-space word first.
+    const parts = (/^(?:rgba?|color)\((.*)\)$/.exec(backdrop)?.[1] ?? '').replace(
+      /^[a-z-]+\s+/i,
+      '',
+    );
     const numbers = parts.split(/[\s,/]+/).filter(Boolean);
     const alpha = numbers.length >= 4 ? Number(numbers[numbers.length - 1]) : 1;
     const opaque = backdrop !== '' && alpha >= 0.98;
@@ -351,19 +356,22 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
           (sel) => sel.selectedOptions[0]?.textContent?.trim() === 'Buchung (Entwurf)',
         )
       : false;
+    // `booking` is diagnostic only (annotation, JSON): the store count around the save is the assertion.
     return { cards, selects, booking, backdrop, opaque, strip: !!strip };
   });
   // A batch never books (F1): bookings are counted in the store before and after the save.
   const bookings = () =>
     page.evaluate(
       () =>
-        new Promise<number>((resolve) => {
+        new Promise<number>((resolve, reject) => {
           const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(new Error('IndexedDB taschenmesser'));
           open.onsuccess = () => {
             const req = open.result
               .transaction('finance_transaction')
               .objectStore('finance_transaction')
               .getAll();
+            req.onerror = () => reject(new Error('store finance_transaction'));
             req.onsuccess = () => {
               open.result.close();
               resolve(
@@ -503,14 +511,16 @@ test('B Mail → Antwort-ToDo und Rechnung in den Plan', async ({ page, isMobile
   await expect(invoice).toBeVisible({ timeout: 10_000 });
   await m.tap(invoice);
   await expect(page.getByText('Rechnung angelegt')).toBeVisible();
-  // Is it in the plan? The reply's row says „Im Plan“ (3a); the invoice line says only „angelegt“. While nothing on
-  // the mail screen says the invoice is in the plan, the person opens the planner to see it (a counted screen).
+  // Is it in the plan? The reply's row says „Im Plan“ (3a); the invoice line says only „angelegt“. While the invoice
+  // line's done mark does not say „Im Plan“, the person opens the planner to see it (a counted screen). Only a
+  // positive mark counts – „nicht im Plan“, „war im Plan“ or „im Planer“ never drop the screen.
   const invoiceLine = page
     .getByTestId('mail-invoice-line')
     .filter({ hasText: 'Stadtwerke Musterstadt' });
   const saysPlan = await invoiceLine
     .first()
-    .getByText(/im Plan/i)
+    .getByTestId('mail-invoice-done')
+    .filter({ hasText: /^\s*·?\s*Im Plan(\s*·.*|:.*)?$/ })
     .count();
   if (!saysPlan) m.screens += 1;
   await page.goto(`${seed}/planner`);
