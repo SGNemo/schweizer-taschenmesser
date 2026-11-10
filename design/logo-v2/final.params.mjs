@@ -4,16 +4,17 @@
 export const MARK = {
   params: {
     // v2.1 (2026-11-10): pinched tail stalk and a two-lobed fan instead of the cone, so the piece behind the band no
-    // longer reads as a speaker; the bands stop before the outline (rim), so the one-colour fish stays one piece.
+    // longer reads as a speaker; the bands stop before the outline (rim), so the fish stays one piece. Flat as
+    // before: one colour, white on the accent tile, no gradient.
     body: { nose: 452, joint: 184, height: 110, peak: 0.49, blunt: 0.6, stalk: 34 },
     tail: { style: 'lobe', length: 106, spread: 94, notch: 18, overlap: 30 },
     stripes: { at: [0.69, 0.31], width: [24, 34], bend: [-21, -18], rim: 28 },
     eye: { at: 0.836, dy: -0.22, r: 22 },
     fins: { dorsal: { height: 34, from: 0.23, to: 0.76 }, ventral: { height: 30, from: 0.33, to: 0.63 } },
     soften: 12,
-    // tile radius 146/512 = the module chips' 8/28; the app icon is the two-colour fish on the ocean gradient ('duo');
-    // dx centres the fish on the tile (its box is not centred in the canvas); Android adaptive keeps the fish inside the 66 dp safe zone
-    views: { tile: { radius: 146, scale: 0.9, dx: -6.5, style: 'duo' }, adaptive: { scale: 0.72, dx: -5.2 } },
+    // tile radius 146/512 = the module chips' 8/28; dx centres the fish on the tile (its box is not centred in the
+    // canvas); Android adaptive keeps the fish inside the 66 dp safe zone
+    views: { tile: { radius: 146, scale: 0.875, dx: -6 }, adaptive: { scale: 0.7, dx: -5 } },
   },
 };
 

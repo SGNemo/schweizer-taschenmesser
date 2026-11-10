@@ -17,7 +17,7 @@ const A2B = {
 export default {
   title: 'Mark v2.1: one piece at 16 px',
   subtitle:
-    'Same fish, new silhouette: pinched tail stalk and a two-lobed fan instead of the cone; the one-colour mark keeps a rim, so the bands no longer split it; the app icon turns the colours (accent fish, white filled bands, ocean gradient). Lettering and pill unchanged.',
+    'Same idea, new silhouette: pinched tail stalk and a two-lobed fan instead of the cone; the bands stop before the outline, so they no longer split the fish. As flat as before: one colour, white on the accent tile. Lettering and pill unchanged.',
   current: false,
   lockupHeight: 36,
   lockupWord: WORD,
@@ -36,10 +36,10 @@ export default {
     {
       label: 'v2.1',
       title: 'After: mark v2.1',
-      desc: 'Body 184–452, stalk 34, lobed tail 106 / 94 / notch 18, bands 24 and 34 with a rim of 28, eye r 22; tile: duo on the ocean gradient, fish at 0.9; Android adaptive at 0.72.',
+      desc: 'Body 184–452, stalk 34, lobed tail 106 / 94 / notch 18, bands 24 and 34 with a rim of 28, eye r 22; tile radius 146, fish at 0.875 and centred; Android adaptive at 0.7.',
       params: MARK.params,
       rail: 'app',
-      notes: '16 px: one orange fish with two white bands on the tile; one colour: one piece with two inner bands. Safe zone 152 of 156.',
+      notes: '16 px: one white fish with two inner bands on the tile; one colour: the same shape. Safe zone 148 of 156. A two-colour tile on the ocean gradient was built first and dropped by the maintainer (too 3D).',
     },
   ],
   wordmarks: [

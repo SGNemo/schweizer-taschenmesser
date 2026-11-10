@@ -2,6 +2,7 @@
 type: changed
 area: app
 breaking: false
-de: Das App-Icon zeigt jetzt einen orangen Fisch mit weißen Bändern auf Blaugrün und ist auch ganz klein als Fisch erkennbar; das Logo in der App hat dieselbe neue Form.
-en: The app icon now shows an orange fish with white bands on teal and still reads as a fish at tiny sizes; the logo inside the app has the same new shape.
+pr: 648
+de: Der Fisch im App-Icon und im Logo hat eine neue Form und ist jetzt auch ganz klein (Taskleiste, Browser-Tab, Handy) als Fisch erkennbar.
+en: The fish in the app icon and the logo has a new shape and now still reads as a fish at tiny sizes (taskbar, browser tab, phone).
 ---
