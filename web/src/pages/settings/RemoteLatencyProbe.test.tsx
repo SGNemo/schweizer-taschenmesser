@@ -116,6 +116,8 @@ describe('remote latency probe (Dev-Preview)', () => {
     fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).toHaveBeenCalledTimes(1);
     expect(result()).not.toContain('1 Werte');
+    // and it opens no session any more
+    expect(screen.getByRole('button', { name: t.open })).toBeDisabled();
   });
 
   it('never has more than a few calls on their way', () => {

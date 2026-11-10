@@ -26,7 +26,8 @@ import styles from './RemoteLatencyProbe.module.css';
  * `closed` right before it would seal and write. Should that call ever get any other answer –
  * success, or another error, which would mean the shell got further – the
  * probe stops for good (until the app restarts). The action it carries is the mildest of the
- * fixed list, a mute toggle: calls already on their way then could still toggle it.
+ * fixed list, a mute toggle: the calls already on their way then (at most eight) could still
+ * toggle it.
  *
  * Nothing is stored or logged, and no coordinate is read; the numbers live in this component
  * until it unmounts.
@@ -54,8 +55,8 @@ function codeOf(e: unknown): string {
 }
 
 /**
- * Set when a probe call was not refused, and never cleared: until the app restarts, no probe
- * call is made again (clearing the measurement does not bring it back).
+ * Set when a probe call was not refused, and never cleared: until the app restarts, the probe
+ * makes no call and opens no session again (clearing the measurement does not bring it back).
  */
 let stopped = false;
 /** When the next run of opens may start (`performance.now()`); kept across mounts. */
@@ -192,6 +193,7 @@ export function RemoteLatencyProbe() {
   }
 
   async function measureOpens() {
+    if (stopped) return;
     const times: number[] = [];
     const misses: Record<string, number> = {};
     let unclosed = 0;
@@ -260,7 +262,7 @@ export function RemoteLatencyProbe() {
       <div className={settings.row}>
         <Button
           variant="secondary"
-          disabled={running || pausing}
+          disabled={running || pausing || aborted}
           onClick={() => void measureOpens()}
         >
           {running ? t.openBusy(progress + 1, OPENS) : t.open}
