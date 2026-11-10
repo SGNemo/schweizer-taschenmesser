@@ -310,17 +310,20 @@ pub fn remote_ask_more(lang: Lang, more: usize) -> String {
 }
 
 /// The notice when a device starts to control mouse and keyboard: (title, text). `name` is
-/// already plain text. It says what happens and where it ends; nothing to do, no alarm.
+/// already plain text and stands behind a fixed label, in quotes, so it cannot read as part of
+/// the sentence. It says what happens and how to end it (the tray entry by its own label);
+/// nothing to do, no alarm.
 pub fn remote_notice(lang: Lang, name: &str) -> (&'static str, String) {
+    let end = remote_end_label(lang);
     if german(lang) {
         (
             "Fernsteuerung",
-            format!("{name} steuert jetzt Maus und Tastatur dieses PCs. Beenden: Nemo-Symbol in der Taskleiste."),
+            format!("Das Gerät „{name}“ steuert jetzt Maus und Tastatur dieses PCs. Zum Beenden: Rechtsklick auf das Nemo-Symbol im Tray, dann „{end}“."),
         )
     } else {
         (
             "Remote control",
-            format!("{name} now controls this PC's mouse and keyboard. To end it: the Nemo icon in the taskbar."),
+            format!("The device “{name}” now controls this PC's mouse and keyboard. To end it: right-click the Nemo icon in the tray, then “{end}”."),
         )
     }
 }
@@ -432,7 +435,10 @@ mod tests {
             assert!(tip.contains('X') && tip.chars().count() < 100);
             assert!(!remote_end_label(lang).is_empty() && !remote_end_hint(lang).is_empty());
             let (title, text) = remote_notice(lang, "X");
-            assert!(!title.is_empty() && text.starts_with('X') && !text.contains('!'));
+            assert!(!title.is_empty() && !text.contains('!'));
+            // the name in quotes behind a label, and the tray entry by the label the tray shows
+            assert!(text.contains("„X“") || text.contains("“X”"));
+            assert!(text.contains(remote_end_label(lang)));
         }
         assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
         assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));

@@ -160,7 +160,7 @@ pub struct RemoteHost {
     /// without anyone being asked. It is applied again on every start instead.
     narrowed: Mutex<Narrowed>,
     /// Whom the notice of a mouse/keyboard session was shown for, and when. Memory only.
-    notices: Mutex<Option<Notices>>,
+    notices: Mutex<Notices>,
 }
 
 #[derive(Default)]
@@ -319,13 +319,9 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     };
     // what was taken away earlier in this run holds for the freshly loaded controls too
     host.narrowed(|n| n.apply(&remote));
-    // sessions from before this moment are not told after the fact; what was shown is kept
+    // a new hub counts its mouse/keyboard sessions from zero; whom a notice was shown for is kept
     if let Ok(mut notices) = host.notices.lock() {
-        let count = remote.full_opened().0;
-        match notices.as_mut() {
-            Some(n) => n.restart(count),
-            None => *notices = Some(Notices::starting_at(count)),
-        }
+        notices.reset();
     }
     let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
@@ -355,15 +351,12 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                             .state::<RemoteHost>()
                             .notices
                             .lock()
-                            .ok()
-                            .and_then(|mut n| {
-                                n.as_mut().map(|n| {
-                                    n.due(
-                                        count,
-                                        device.map(|k| *k.as_bytes()),
-                                        remote_notice::since_start(),
-                                    )
-                                })
+                            .map(|mut n| {
+                                n.due(
+                                    count,
+                                    device.map(|k| *k.as_bytes()),
+                                    remote_notice::since_start(),
+                                )
                             })
                             .unwrap_or(false);
                         if let (true, Some(key)) = (due, device) {
@@ -1169,6 +1162,8 @@ mod tests {
         // the hub stops while it is shown: cleared
         tx.send(Signal::Stop).unwrap();
         thread.join().unwrap();
+        // every look also looks for a new mouse/keyboard session: the first and one per signal
+        assert!(looks.load(Ordering::SeqCst) >= 5);
         assert_eq!(
             *written.lock().unwrap(),
             vec![Some("Pixel".to_owned()), None]
@@ -1179,8 +1174,6 @@ mod tests {
         let mut writes = 0;
         watch(rx, || None, |_| writes += 1, || {});
         assert_eq!(writes, 0);
-        // every look also looks for a new mouse/keyboard session
-        assert!(looks.load(Ordering::SeqCst) >= 4);
     }
 
     #[test]

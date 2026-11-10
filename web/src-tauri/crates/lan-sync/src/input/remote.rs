@@ -237,10 +237,11 @@ impl Remote {
     /// was. The PC's notice watches the number: it moves with every such session, however short,
     /// and never for a media session, whatever the device's grant.
     pub fn full_opened(&self) -> (u64, Option<PublicKey>) {
-        // the device is written before the number moves, so a new number never comes with an
-        // older device
+        // the device is written before the number moves (and claims come one at a time): a new
+        // number never comes with an older device. An old number can come with a newer device;
+        // the reader acts on a moved number only, and sees it move at its next look.
         let count = self.full_claims.load(Ordering::SeqCst);
-        let last = self.full_last.lock().ok().and_then(|l| *l);
+        let last = *self.full_last.lock().unwrap_or_else(|e| e.into_inner());
         (count, last)
     }
 
@@ -384,9 +385,7 @@ impl Remote {
         });
         if level == Level::Full {
             self.full_active.fetch_add(1, Ordering::SeqCst);
-            if let Ok(mut last) = self.full_last.lock() {
-                *last = Some(peer);
-            }
+            *self.full_last.lock().unwrap_or_else(|e| e.into_inner()) = Some(peer);
             self.full_claims.fetch_add(1, Ordering::SeqCst);
         }
         *slot = Some(Controller {

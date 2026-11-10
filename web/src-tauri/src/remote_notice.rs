@@ -5,10 +5,13 @@
 //! * Only for a session of the full level – never for a media session, whatever the grant.
 //! * At most one per device in [`QUIET`]. That is counted in memory only: nothing about who
 //!   controlled when is written anywhere, and a restart of the app forgets it.
-//! * From Rust, without a sound, with the device's name and nothing else. The page is not asked
-//!   and cannot hold it back.
+//! * From Rust, with the device's name and nothing else; the page is not asked and cannot hold it
+//!   back. Without a sound: none is set, and a Windows toast without one is silent (the plugin's
+//!   own `silent()` is for iOS only).
+//! * The tray thread looks every 250 ms. Sessions of several devices between two looks are one
+//!   notice, for the latest device.
 //! * Nothing here logs. A notice the system does not show (notifications switched off in the
-//!   system) is not an error.
+//!   system) is not an error; the tray stays the guarantee.
 
 use crate::texts::{self, Lang};
 use std::sync::OnceLock;
@@ -21,7 +24,10 @@ pub const QUIET: Duration = Duration::from_secs(30 * 60);
 /// Devices remembered at once; the trust list is far smaller.
 const REMEMBERED: usize = 64;
 
-/// Decides when a notice is due. Pure: the count and the time come in as parameters.
+/// Decides when a notice is due. Pure: the count and the time come in as parameters. It starts
+/// at zero like the hub's count – the hub listens before anyone looks, and a session that opened
+/// in that moment has already moved the count and is told at the first look.
+#[derive(Default)]
 pub struct Notices {
     /// The count of full sessions last looked at.
     seen: u64,
@@ -30,17 +36,9 @@ pub struct Notices {
 }
 
 impl Notices {
-    /// `count` = the count right now: sessions before this moment are not told after the fact.
-    pub fn starting_at(count: u64) -> Notices {
-        Notices {
-            seen: count,
-            shown: Vec::new(),
-        }
-    }
-
     /// A hub that was stopped and started counts from zero again; what was shown is kept.
-    pub fn restart(&mut self, count: u64) {
-        self.seen = count;
+    pub fn reset(&mut self) {
+        self.seen = 0;
     }
 
     /// `true` = show a notice for `device` now. Called with the hub's current count of full
@@ -74,13 +72,7 @@ pub fn since_start() -> Duration {
 /// Shows the notice. `name` is already plain text (see `remote::shown_name`).
 pub fn show(app: &AppHandle, lang: Lang, name: &str) {
     let (title, text) = texts::remote_notice(lang, name);
-    let _ = app
-        .notification()
-        .builder()
-        .title(title)
-        .body(text)
-        .silent()
-        .show();
+    let _ = app.notification().builder().title(title).body(text).show();
 }
 
 #[cfg(test)]
@@ -95,19 +87,26 @@ mod tests {
 
     #[test]
     fn nothing_is_told_until_the_count_moves() {
-        let mut n = Notices::starting_at(3);
-        assert!(!n.due(3, Some(PHONE), min(0)), "a session from before");
-        assert!(!n.due(3, Some(PHONE), min(50)));
-        assert!(n.due(4, Some(PHONE), min(51)));
-        assert!(
-            !n.due(4, Some(PHONE), min(52)),
-            "the same session, looked at again"
-        );
+        let mut n = Notices::default();
+        assert!(!n.due(0, None, min(0)));
+        assert!(!n.due(0, None, min(50)));
+        assert!(n.due(1, Some(PHONE), min(51)));
+        assert!(!n.due(1, Some(PHONE), min(52)), "the same session again");
+    }
+
+    #[test]
+    fn a_session_that_opened_before_the_first_look_is_told() {
+        // the hub listens before the tray thread exists
+        let mut n = Notices::default();
+        assert!(n.due(1, Some(PHONE), min(0)));
+        // … also on a hub that was stopped and started, once the quiet time is over
+        n.reset();
+        assert!(n.due(1, Some(PHONE), min(31)));
     }
 
     #[test]
     fn one_notice_per_device_in_thirty_minutes() {
-        let mut n = Notices::starting_at(0);
+        let mut n = Notices::default();
         assert!(n.due(1, Some(PHONE), min(0)));
         assert!(!n.due(2, Some(PHONE), min(1)));
         assert!(!n.due(3, Some(PHONE), min(29)));
@@ -122,34 +121,24 @@ mod tests {
 
     #[test]
     fn several_sessions_between_two_looks_are_one_notice_for_the_latest_device() {
-        let mut n = Notices::starting_at(0);
+        let mut n = Notices::default();
         assert!(n.due(5, Some(TABLET), min(0)));
         assert!(!n.due(5, Some(TABLET), min(0)));
     }
 
     #[test]
-    fn a_count_without_a_device_tells_nothing_and_is_not_told_later() {
-        let mut n = Notices::starting_at(0);
-        assert!(!n.due(1, None, min(0)));
-        assert!(!n.due(1, Some(PHONE), min(0)));
-    }
-
-    #[test]
     fn a_restarted_hub_counts_anew_but_the_quiet_time_holds() {
-        let mut n = Notices::starting_at(0);
+        let mut n = Notices::default();
         assert!(n.due(1, Some(PHONE), min(0)));
-        n.restart(0);
+        n.reset();
         assert!(!n.due(0, Some(PHONE), min(1)));
-        assert!(
-            !n.due(1, Some(PHONE), min(2)),
-            "still within the quiet time"
-        );
+        assert!(!n.due(1, Some(PHONE), min(2)), "still the quiet time");
         assert!(n.due(2, Some(PHONE), min(31)));
     }
 
     #[test]
     fn what_is_remembered_has_a_bound() {
-        let mut n = Notices::starting_at(0);
+        let mut n = Notices::default();
         for i in 0..(REMEMBERED as u64 + 10) {
             let mut device = [0u8; 32];
             device[..8].copy_from_slice(&i.to_le_bytes());
