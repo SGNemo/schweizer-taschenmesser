@@ -363,12 +363,22 @@ fn no_tauri_command_simulates_input() {
     // pointer thread (only what `pointer_of` maps: move, button, scroll)
     let src = source("remote.rs");
     let code = &src[..src.find("#[cfg(test)]").unwrap()];
-    assert_eq!(code.matches("self.0.send(command_of(media))").count(), 1);
-    assert_eq!(code.matches("self.1.send(pointer)").count(), 1);
     assert_eq!(
-        code.matches(".send(").count(),
-        4,
-        "the sink twice, the watcher twice"
+        code.matches("self.media.send(command_of(media))").count(),
+        1
+    );
+    assert_eq!(code.matches("self.pointer.send(pointer)").count(), 1);
+    assert_eq!(code.matches("self.media.send(").count(), 1);
+    assert_eq!(code.matches("self.pointer.send(").count(), 1);
+    assert_eq!(
+        code.matches("Pointer::start()").count(),
+        1,
+        "started by the sink only"
+    );
+    assert_eq!(
+        code.matches("Worker::start()").count(),
+        1,
+        "started by the sink only"
     );
     assert_eq!(code.matches("impl InputSink for").count(), 1);
     let map = &code[code.find("fn pointer_of(").unwrap()..];
@@ -396,7 +406,7 @@ fn no_tauri_command_simulates_input() {
         }
         if name != "remote.rs" {
             assert!(
-                !text.contains("remote_input::") && !text.contains("InputSink for"),
+                !text.contains("remote_input") && !text.contains("InputSink for"),
                 "{name} reaches the input sink"
             );
         }

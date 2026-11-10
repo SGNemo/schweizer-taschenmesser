@@ -29,7 +29,7 @@ mod pointer;
 mod system;
 mod worker;
 
-pub use pointer::{Button, Hand, Mouse, Pointer, PointerAction, QUEUE, RELEASE_ROOM, WHEEL_UNIT};
+pub use pointer::{Button, Mouse, Pointer, PointerAction, QUEUE, WHEEL_UNIT};
 pub use system::System;
 pub use worker::{Worker, FRESH_WAIT, STALE};
 

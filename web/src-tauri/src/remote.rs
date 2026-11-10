@@ -44,11 +44,17 @@ const ASK_LIST_MAX: usize = 6;
 
 /// What the hub's input session acts through. Returns at once – the worker thread does the calls –
 /// except `state()` after a quiet time (bounded, see `InputSink::state`).
-pub struct Sink(Worker, Pointer);
+pub struct Sink {
+    media: Worker,
+    pointer: Pointer,
+}
 
 impl Sink {
     pub fn start() -> Sink {
-        Sink(Worker::start(), Pointer::start())
+        Sink {
+            media: Worker::start(),
+            pointer: Pointer::start(),
+        }
     }
 }
 
@@ -91,19 +97,21 @@ fn pc_state(state: remote_input::State) -> PcState {
 
 impl InputSink for Sink {
     fn supported(&self) -> bool {
-        self.0.supported()
+        self.media.supported()
     }
 
     fn state(&self) -> PcState {
-        pc_state(self.0.state())
+        pc_state(self.media.state())
     }
 
     fn apply(&self, action: Action) {
-        // Keys and text have no sink yet: dropped, never turned into anything.
+        // Keys and text have no sink yet: dropped, never turned into anything. Media and pointer
+        // run on two threads: the order holds within each, not between them (the hub checks the
+        // lock per pointer record, so "lock, then a move" is still safe).
         if let Action::Media(media) = action {
-            self.0.send(command_of(media));
+            self.media.send(command_of(media));
         } else if let Some(pointer) = pointer_of(&action) {
-            self.1.send(pointer);
+            self.pointer.send(pointer);
         }
     }
 }
@@ -735,7 +743,7 @@ mod tests {
                 .unwrap()
                 .push(format!("move {dx} {dy}"));
         }
-        fn button(&mut self, button: remote_input::Button, down: bool) {
+        fn button(&mut self, button: remote_input::Button, down: bool) -> bool {
             let which = match button {
                 remote_input::Button::Left => "left",
                 remote_input::Button::Right => "right",
@@ -745,6 +753,7 @@ mod tests {
                 .lock()
                 .unwrap()
                 .push(format!("{which} {down}"));
+            true
         }
         fn wheel(&mut self, horizontal: bool, amount: i32) {
             self.0
@@ -790,10 +799,10 @@ mod tests {
         let seen = Arc::new(Seen::default());
         let for_worker = seen.clone();
         let for_mouse = seen.clone();
-        let sink = Sink(
-            Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
-            Pointer::with(Box::new(FakeMouse(for_mouse))),
-        );
+        let sink = Sink {
+            media: Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
+            pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
+        };
         (sink, seen)
     }
 

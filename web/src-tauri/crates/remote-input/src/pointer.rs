@@ -6,23 +6,30 @@
 //! sometimes for many milliseconds; a pointer that shared its queue would stutter whenever the
 //! state is read. Here a call takes microseconds, so the queue is all but always empty.
 //!
-//! * Moves and wheel steps are dropped when [`QUEUE`] actions wait (a late move is worth nothing).
-//! * A button press is dropped then too. A **release is still taken** (up to [`RELEASE_ROOM`]):
-//!   a press that went through must not lose its release.
-//! * Only a button this crate pressed is ever released. A release without a press is ignored, so
-//!   the hub may release once more at the end of a session, and a button the person holds on the
-//!   real mouse is left alone. A press of a button already pressed is ignored as well.
-//! * When the last handle is dropped the thread releases what it still holds, then ends.
+//! * Moves, wheel steps and presses are dropped when [`QUEUE`] actions wait (a late move is worth
+//!   nothing).
+//! * A **release is never dropped** and never waits for room – but it is only taken for a button
+//!   whose press was taken before it. So there is at most one release per press, a flood of spare
+//!   releases takes no room at all, and a press that went through cannot lose its release.
+//! * The hub decides which button a session holds; this file only makes sure of two things: a
+//!   release without a press of ours does nothing (the hub may release once more at the end of a
+//!   session, and a button the person holds on the real mouse is left alone), and a press of a
+//!   button already pressed does nothing.
+//! * What this file believes is held can differ from the system for a moment: a click on the real
+//!   mouse lifts a button we pressed, and the next remote press of it is then ignored once. One
+//!   device controls at a time (the hub's slot), so two sessions never share the buttons.
+//! * A press the system refused is not held, so nothing is released for it later.
+//! * When the thread ends – the last handle was dropped, or it unwinds – it releases what it
+//!   still holds. A process that is killed cannot: the button then stays down for the system
+//!   until the person clicks it once.
 //! * Nothing is logged, counted or stored; no coordinate outlives the call that applies it.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{self, Sender};
 use std::sync::Arc;
 
 /// Moves, wheel steps and presses waiting for the thread; one more is dropped.
 pub const QUEUE: usize = 64;
-/// Releases are taken beyond [`QUEUE`], up to this many waiting actions in all.
-pub const RELEASE_ROOM: usize = 256;
 /// One wheel unit of a [`PointerAction::Scroll`], in the system's wheel delta (120 = one notch).
 pub const WHEEL_UNIT: i32 = 15;
 
@@ -55,20 +62,21 @@ pub enum PointerAction {
 /// The system's mouse as the pointer thread sees it. Called on that thread only.
 pub trait Mouse: Send {
     fn moved(&mut self, dx: i32, dy: i32);
-    fn button(&mut self, button: Button, down: bool);
+    /// `false` = the system did not take it.
+    fn button(&mut self, button: Button, down: bool) -> bool;
     /// `amount` in the system's wheel delta; positive = away from the person (up) or to the right.
     fn wheel(&mut self, horizontal: bool, amount: i32);
 }
 
-/// What the thread does with the actions: pure, so it is tested without a thread.
-pub struct Hand<M: Mouse + ?Sized> {
+/// What the thread does with the actions.
+struct Hand {
     left: bool,
     right: bool,
-    mouse: Box<M>,
+    mouse: Box<dyn Mouse>,
 }
 
-impl<M: Mouse + ?Sized> Hand<M> {
-    pub fn new(mouse: Box<M>) -> Self {
+impl Hand {
+    fn new(mouse: Box<dyn Mouse>) -> Self {
         Hand {
             left: false,
             right: false,
@@ -83,20 +91,22 @@ impl<M: Mouse + ?Sized> Hand<M> {
         }
     }
 
-    pub fn moved(&mut self, dx: i32, dy: i32) {
+    fn moved(&mut self, dx: i32, dy: i32) {
         if dx != 0 || dy != 0 {
             self.mouse.moved(dx, dy);
         }
     }
 
-    pub fn apply(&mut self, action: PointerAction) {
+    fn apply(&mut self, action: PointerAction) {
         match action {
             PointerAction::Move { dx, dy } => self.moved(i32::from(dx), i32::from(dy)),
             PointerAction::Button { button, down } => {
-                let held = self.held(button);
-                if *held != down {
-                    *held = down;
-                    self.mouse.button(button, down);
+                if *self.held(button) == down {
+                    return;
+                }
+                // a refused press is not held; a release counts as done either way
+                if self.mouse.button(button, down) || !down {
+                    *self.held(button) = down;
                 }
             }
             PointerAction::Scroll { dx, dy } => {
@@ -111,7 +121,7 @@ impl<M: Mouse + ?Sized> Hand<M> {
     }
 
     /// Lets go of every button this hand still holds.
-    pub fn release_all(&mut self) {
+    fn release_all(&mut self) {
         for button in [Button::Left, Button::Right] {
             self.apply(PointerAction::Button {
                 button,
@@ -121,11 +131,35 @@ impl<M: Mouse + ?Sized> Hand<M> {
     }
 }
 
+impl Drop for Hand {
+    /// Also when the thread unwinds: nothing this hand pressed stays down.
+    fn drop(&mut self) {
+        self.release_all();
+    }
+}
+
 /// The handle the shell keeps. Cheap to clone; the thread ends when the last handle is dropped.
 #[derive(Clone)]
 pub struct Pointer {
     tx: Option<Sender<PointerAction>>,
-    waiting: Arc<AtomicUsize>,
+    shared: Arc<Shared>,
+}
+
+#[derive(Default)]
+struct Shared {
+    /// Actions handed over and not yet taken by the thread.
+    waiting: AtomicUsize,
+    /// A press of this button was taken and its release was not yet: left, right.
+    pressed: [AtomicBool; 2],
+}
+
+impl Shared {
+    fn pressed(&self, button: Button) -> &AtomicBool {
+        &self.pressed[match button {
+            Button::Left => 0,
+            Button::Right => 1,
+        }]
+    }
 }
 
 impl Pointer {
@@ -135,7 +169,7 @@ impl Pointer {
             Some(mouse) => Pointer::with(mouse),
             None => Pointer {
                 tx: None,
-                waiting: Arc::new(AtomicUsize::new(0)),
+                shared: Arc::default(),
             },
         }
     }
@@ -143,8 +177,8 @@ impl Pointer {
     /// A pointer over a given mouse (tests).
     pub fn with(mouse: Box<dyn Mouse>) -> Pointer {
         let (tx, rx) = mpsc::channel::<PointerAction>();
-        let waiting = Arc::new(AtomicUsize::new(0));
-        let count = waiting.clone();
+        let shared = Arc::<Shared>::default();
+        let count = shared.clone();
         let spawned = std::thread::Builder::new()
             .name("remote-pointer".into())
             .spawn(move || {
@@ -155,7 +189,7 @@ impl Pointer {
                         Some(action) => action,
                         None => match rx.recv() {
                             Ok(action) => {
-                                count.fetch_sub(1, Ordering::SeqCst);
+                                count.waiting.fetch_sub(1, Ordering::SeqCst);
                                 action
                             }
                             Err(_) => break,
@@ -168,7 +202,7 @@ impl Pointer {
                     // moves that already wait become one move; anything else keeps its place
                     let (mut x, mut y) = (i32::from(dx), i32::from(dy));
                     while let Ok(next) = rx.try_recv() {
-                        count.fetch_sub(1, Ordering::SeqCst);
+                        count.waiting.fetch_sub(1, Ordering::SeqCst);
                         match next {
                             PointerAction::Move { dx, dy } => {
                                 x += i32::from(dx);
@@ -182,11 +216,11 @@ impl Pointer {
                     }
                     hand.moved(x, y);
                 }
-                hand.release_all();
+                // `hand` is dropped here and lets go of what it holds
             });
         Pointer {
             tx: spawned.is_ok().then_some(tx),
-            waiting,
+            shared,
         }
     }
 
@@ -195,19 +229,32 @@ impl Pointer {
         self.tx.is_some()
     }
 
-    /// Hands the action to the thread and returns at once. `false` = not supported, or too much
-    /// is waiting and the action was dropped.
+    /// Hands the action to the thread and returns at once. `false` = not supported, too much is
+    /// waiting, or a release without a press before it: the action was dropped.
     pub fn send(&self, action: PointerAction) -> bool {
         let Some(tx) = &self.tx else {
             return false;
         };
-        let room = match action {
-            PointerAction::Button { down: false, .. } => RELEASE_ROOM,
-            _ => QUEUE,
-        };
-        if self.waiting.fetch_add(1, Ordering::SeqCst) >= room || tx.send(action).is_err() {
-            self.waiting.fetch_sub(1, Ordering::SeqCst);
+        if let PointerAction::Button {
+            button,
+            down: false,
+        } = action
+        {
+            // one release per press that was taken, and that one always goes through
+            if !self.shared.pressed(button).swap(false, Ordering::SeqCst) {
+                return false;
+            }
+            self.shared.waiting.fetch_add(1, Ordering::SeqCst);
+        } else if self.shared.waiting.fetch_add(1, Ordering::SeqCst) >= QUEUE {
+            self.shared.waiting.fetch_sub(1, Ordering::SeqCst);
             return false;
+        }
+        if tx.send(action).is_err() {
+            self.shared.waiting.fetch_sub(1, Ordering::SeqCst);
+            return false;
+        }
+        if let PointerAction::Button { button, down: true } = action {
+            self.shared.pressed(button).store(true, Ordering::SeqCst);
         }
         true
     }
@@ -239,7 +286,7 @@ mod imp {
 
     /// One mouse event to the system. A refusal (an elevated window in front, the secure
     /// desktop) is not an error to anyone: the event is simply not applied.
-    fn send(flags: MOUSE_EVENT_FLAGS, dx: i32, dy: i32, data: i32) {
+    fn send(flags: MOUSE_EVENT_FLAGS, dx: i32, dy: i32, data: i32) -> bool {
         let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
@@ -256,9 +303,8 @@ mod imp {
         };
         // SAFETY: `SendInput` reads one fully initialised `INPUT` from the slice and is told its
         // exact size; it keeps no pointer after returning.
-        unsafe {
-            SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
-        }
+        let taken = unsafe { SendInput(&[input], std::mem::size_of::<INPUT>() as i32) };
+        taken == 1
     }
 
     impl Mouse for Windows {
@@ -266,14 +312,14 @@ mod imp {
             send(MOUSEEVENTF_MOVE, dx, dy, 0);
         }
 
-        fn button(&mut self, button: Button, down: bool) {
+        fn button(&mut self, button: Button, down: bool) -> bool {
             let flags = match (button, down) {
                 (Button::Left, true) => MOUSEEVENTF_LEFTDOWN,
                 (Button::Left, false) => MOUSEEVENTF_LEFTUP,
                 (Button::Right, true) => MOUSEEVENTF_RIGHTDOWN,
                 (Button::Right, false) => MOUSEEVENTF_RIGHTUP,
             };
-            send(flags, 0, 0, 0);
+            send(flags, 0, 0, 0)
         }
 
         fn wheel(&mut self, horizontal: bool, amount: i32) {

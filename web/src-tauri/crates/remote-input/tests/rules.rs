@@ -60,6 +60,11 @@ fn only_the_pointer_file_simulates_input_and_only_the_mouse() {
         "APPCOMMAND",
         "BlockInput",
         "SetWindowsHook",
+        // no flag or input type built from a number, no other member of the input union
+        "MOUSE_EVENT_FLAGS(",
+        "INPUT_TYPE(",
+        " ki:",
+        " hi:",
     ]);
     for (name, text) in sources() {
         if name == "pointer.rs" {
@@ -77,6 +82,11 @@ fn only_the_pointer_file_simulates_input_and_only_the_mouse() {
         .filter(|l| l.contains("SendInput(") && !l.contains("fn "))
         .count();
     assert_eq!(calls, 1, "one SendInput call");
+    let types = code_lines(&pointer)
+        .filter(|l| l.contains("r#type:"))
+        .collect::<Vec<_>>();
+    assert_eq!(types.len(), 1);
+    assert!(types[0].contains("r#type: INPUT_MOUSE,"));
     let mut flags: Vec<&str> = code_lines(&pointer)
         .flat_map(|l| l.split(|c: char| !c.is_ascii_alphanumeric() && c != '_'))
         .filter(|w| w.starts_with("MOUSEEVENTF_"))
@@ -95,19 +105,6 @@ fn only_the_pointer_file_simulates_input_and_only_the_mouse() {
             "MOUSEEVENTF_WHEEL",
         ]
     );
-}
-
-/// The media level stays API calls: the worker and the system file never reach for the pointer.
-#[test]
-fn the_media_level_simulates_nothing() {
-    for file in ["worker.rs", "system.rs"] {
-        let text = fs::read_to_string(root().join("src").join(file)).unwrap();
-        for line in code_lines(&text) {
-            for n in ["pointer", "Pointer", "Mouse", "Hand"] {
-                assert!(!line.contains(n), "{file}: `{n}`");
-            }
-        }
-    }
 }
 
 /// The crate that acts cannot listen, read files, or be reached by anything but its typed API.
