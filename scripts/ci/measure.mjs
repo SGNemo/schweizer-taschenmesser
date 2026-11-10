@@ -779,7 +779,7 @@ for (const e of expensive) {
     .map(([name, m]) => `${name.replace(/@[0-9a-f]{40}/, "")} ${f(m)}`)
     .join("; ");
   stepRows.push([
-    e.key.replace("|", " / "),
+    e.key.replaceAll("|", " / "),
     ok.length,
     f(e.total, 0),
     ...perKind,
@@ -811,7 +811,7 @@ for (const e of expensive) {
       /* logs expired or not readable */
     }
   }
-  cacheRows.push([e.key.replace("|", " / "), read, hit, miss]);
+  cacheRows.push([e.key.replaceAll("|", " / "), read, hit, miss]);
 }
 say(
   table(["Job", "n", "Runner min total", ...kinds, "Slowest steps"], stepRows),
