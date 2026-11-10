@@ -216,8 +216,12 @@ describe('a phone paired with the hub PC', () => {
       'Vom Handy',
       'Vom PC',
     ]);
+    // Both entries are here once the pull is applied; the same round still pushes the phone's own
+    // entry and stores its result after that, so "idle" comes later than the data.
+    await vi.waitFor(() =>
+      expect(useSyncStatus.getState()).toMatchObject({ phase: 'idle', via: 'lanClient' }),
+    );
     expect(fake.hooks.allEncrypted()).toBe(true);
-    expect(useSyncStatus.getState()).toMatchObject({ phase: 'idle', via: 'lanClient' });
   });
 
   it('says why pairing did not work and keeps nothing', async () => {
