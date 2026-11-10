@@ -83,7 +83,7 @@ Budget changes: area `CLAUDE.md` 500 → 700 tokens (details moved there from th
 | `docs/design-proposals/logo-l*.svg` | deleted | superseded by logo v2 |
 | `design/identity-v3/`, `plan/` (concept, prototype), `sync-lan/` (concept, notes, review), `usecases/kopf-leer/` (analysis, target), `settings-v3/ROUND-1…3`, `qa/CONSOLIDATED.md`, `qa/round-4…6`, `product/comfort`, `product/focus` (audit, img), `product/next` (rest) | kept | code, tests or decisions cite them (`qa/round-5/b/*.csv` is read by a test) |
 | `design/ui-audit-2026-11/`, `remote-control/`, `site/`, `product/clock/` | kept | rounds still running |
-| `design/ROUND-1…7`, `mockups/round-*`, `READABILITY-PLAN`, `VISUAL-AUDIT`, `meta/CLEANUP-2026-10-03`, `IMPROVEMENTS-2026-10-03` | kept for now | DESIGN-SPEC and RULES link into them; summarising is package 4 |
+| `design/ROUND-1…7`, `mockups/round-*`, `READABILITY-PLAN`, `VISUAL-AUDIT`, `meta/CLEANUP-2026-10-03`, `IMPROVEMENTS-2026-10-03` | summarised, deleted (package 4, `docs/design-rounds-summary`) | content in DESIGN-SPEC §§ 5a, 7a, 10, 14, `howto/known-duplicates.md`, ROADMAP |
 
 48 links that pointed at deleted files now read "… (removed 2026-11-10, in the git history)". New rule in DOCS-GUIDE: the PR that closes a round deletes its package prompts, mockups and tools.
 
