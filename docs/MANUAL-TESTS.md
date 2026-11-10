@@ -27,6 +27,8 @@ R5. Datenträger-Modul D1–D18 und Keystore/Windows Hello (Schritt 11b) wie unt
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 
+Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO; aus STATUS verschoben, 2026-11-10).
+
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
 D1. _Scan echtes Laufwerk:_ Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
 D2. _Treemap navigieren:_ Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
@@ -166,6 +168,23 @@ R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tas
 R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
 R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
 
+### Fernbedienung, Handy (`feat/remote-module-page`) – nur mit Pixel und Windows-PC prüfbar
+
+Vorher am Handy: Einstellungen → Allgemein → „In Arbeit anzeigen“, Modul „Fernbedienung“ einschalten; am PC: Einstellungen → Verbindungen → Fernsteuerung, dem Handy „Medien und Lautstärke“ erlauben. Zugleich R3–R7 oben ausführen.
+
+FB1. _Erster Android-Build mit dem Client:_ APK bauen und starten; „Fernbedienung“ öffnen: Zeile „Dein PC · Lautstärke … %“ erscheint binnen etwa einer Sekunde. ☐
+FB2. _Einhändig, ohne Hinsehen:_ Pause, Nächster, Vorheriger, Leiser/Lauter treffen; gehalten kommt der erste Schritt sofort mit einem Vibrieren, dann höchstens etwa 5 Schritte je Sekunde, auch mit leicht wanderndem Daumen, ohne Kontextmenü; zehnmal blind Leiser/Lauter, nie die untere Leiste getroffen. ☐
+FB3. _Menü:_ „Ton aus“ (danach „Ton an“) und „PC sperren“; nach dem Sperren steht „gesperrt“ in der Zeile, Medien gehen weiter. ☐
+FB4. _Zustände:_ am PC Schalter aus → Satz mit dem Schritt am PC; am PC „Fernsteuerung beenden“ → „am PC pausiert“; WLAN am Handy aus → nach etwa 5 s „antwortet noch nicht“, dann „nicht erreichbar“; WLAN an + „Erneut versuchen“ → verbunden. ☐
+FB5. _Langsames WLAN:_ Wiedergabe/Pause drücken; zeigt die Zeile kurz den alten Stand, heilt eine späte Antwort ihn ohne zweiten Druck? Ein zweiter Druck davor schaltet erneut um (bekannt). ☐
+FB6. _App wechseln:_ anderes Programm öffnen und zurück: verbindet neu ohne Frage; am PC verschwindet in der Zwischenzeit der Chip. ☐
+FB7. _Widget:_ gekoppelt steht auf der Übersicht „Dein PC“ mit „Öffnen“, ohne Kopplung „Noch kein PC gekoppelt.“ mit „PC koppeln“; es öffnet keine Verbindung (am PC kein Chip). ☐
+FB8. _Player ohne Medien-Sitzung:_ ein Player, der sich so nicht pausieren lässt: notieren, welcher (Frage an Sven, kein Tasten-Ersatz). ☐
+FB9. _Unterbrechung:_ Bildschirm aus oder eingehender Anruf: am PC verschwindet der Chip; zurück auf der Seite verbindet sie ohne Frage neu. ☐
+FB10. _Bildschirm anlassen:_ Einstellung an: der Bildschirm bleibt an, solange die Seite offen ist, und geht nach dem Verlassen wieder normal aus; mit eingeschaltetem Cockpit bleibt dessen „Bildschirm an“ nach dem Verlassen erhalten. ☐
+FB11. _TalkBack:_ liest die Zustandszeile bei Sätzen (nicht bei jedem Lautstärkeschritt) und jede Taste mit ihrem Namen. ☐
+FB12. _Benachrichtigung bei Maus und Tastatur (ab der Seite Touchpad prüfbar):_ Touchpad am Handy zum ersten Mal nutzen → am PC erscheint einmal, ohne Ton, „Das Gerät „…“ steuert jetzt Maus und Tastatur. Beenden: Rechtsklick auf das Nemo-Symbol im Tray, dann „Fernsteuerung beenden“.“ (ganz lesbar, auch mit einem langen Gerätenamen – der wird nach 24 Zeichen gekürzt); das Symbol liegt unter ^ (ausgeblendete Symbole) → der Text führt trotzdem hin, Rechtsklick → „Fernsteuerung beenden“ beendet und pausiert das Gerät; Klick auf die Benachrichtigung selbst richtet nichts an; Seite verlassen und gleich wieder öffnen → keine zweite; nur Medien nutzen → nie eine; nach 30 Minuten und erneutem Touchpad → wieder eine. Gerät ohne Namen → „Gerät ohne Namen (xxxx) steuert …“ ohne Anführungszeichen; Systemklänge an → trotzdem kein Ton. Mit dem portablen Exe prüfen, ob Windows die Benachrichtigung unter „Nemo“ führt. ☐
+
 ### Einrichtungsassistent
 
 E1. _Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):_ Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
@@ -184,7 +203,7 @@ H4. _Status-Widgets (Windows):_ Datenträger zeigt Füllstände, Systeminfo CPU/
 ### Nemo: Umbenennung und Design
 
 N1. _Windows-Portable starten (frische Datei und als Update):_ Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
-N1a. _Lade-Robustheit und Browser-Tab (UI-Audit 0a, Windows; Ergebnis als Tabelle Schritt · „…“ ja/nein · Titelleiste an den nächsten Chat oder in `scribble/`):_ (1) Variante notieren: Dev-Preview-Exe oder `tauri dev`. (2) Frisch starten, ohne Browser-Tab ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint, keine bleibt bei „…“. (3) Browser-Modul → eine Adresse laden: die Seite erscheint im Rahmen. (4) Danach dieselben drei Module öffnen: jede erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“. (5) Während (3) und (4) das Fenster ziehen und die Titelleiste ansehen: „Keine Rückmeldung“ = Hauptthread blockiert. (6) Tray-Icon anklicken: es reagiert. (7) Auf einer Modulseite „Neu laden“ auslösen (oder Strg+R), zurück zum Browser-Modul: der Tab ist wieder sichtbar; fehlt er, bietet die Seite „Tab neu öffnen“; beim Verlassen des Moduls verschwindet er. (8) Nur wenn in (5) das Fenster reagierte und trotzdem eine Seite leer blieb: in den WebView2-DevTools (Netzwerk) den hängenden `assets/*.js`-Request notieren (Adresse ohne Query, Status). Seit #638 baut `browser_open` den Tab nicht mehr auf dem Hauptthread: der Test prüft diesen Fix, „Keine Rückmeldung“ wäre ein Rückfall. ☐
+N1a. _Lade-Robustheit und Browser-Tab (UI-Audit 0a, Windows; Ergebnis als Tabelle Schritt · „…“ ja/nein · Titelleiste an den nächsten Chat oder ins Notiz-Repo):_ (1) Variante notieren: Dev-Preview-Exe oder `tauri dev`. (2) Frisch starten, ohne Browser-Tab ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint, keine bleibt bei „…“. (3) Browser-Modul → eine Adresse laden: die Seite erscheint im Rahmen. (4) Danach dieselben drei Module öffnen: jede erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“. (5) Während (3) und (4) das Fenster ziehen und die Titelleiste ansehen: „Keine Rückmeldung“ = Hauptthread blockiert. (6) Tray-Icon anklicken: es reagiert. (7) Auf einer Modulseite „Neu laden“ auslösen (oder Strg+R), zurück zum Browser-Modul: der Tab ist wieder sichtbar; fehlt er, bietet die Seite „Tab neu öffnen“; beim Verlassen des Moduls verschwindet er. (8) Nur wenn in (5) das Fenster reagierte und trotzdem eine Seite leer blieb: in den WebView2-DevTools (Netzwerk) den hängenden `assets/*.js`-Request notieren (Adresse ohne Query, Status). Seit #638 baut `browser_open` den Tab nicht mehr auf dem Hauptthread: der Test prüft diesen Fix, „Keine Rückmeldung“ wäre ein Rückfall. ☐
 N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
 N3. _Hell / Dunkel / System, Akzentfarben:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
 N4. _Reduzierte Bewegung:_ Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
@@ -305,7 +324,7 @@ V4. _Keine Banner mehr:_ mit Einstellung „Erinnerungen in der App automatisch 
 V1. _Windows-App (WebView2):_ Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
 V2. _Systemweite Taste (Windows):_ Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
 V3. _Android (Chrome-PWA und APK):_ PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
-V4. _Sprachen:_ App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+V4. _Sprachen:_ App auf English stellen, sprechen: wird in der App-Sprache erkannt? ☐
 
 ## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 
@@ -371,6 +390,45 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
 - **LB4 Breite Fenster (2560 px):** Karten füllen die Zeile, nichts läuft über; Werkzeug-Bibliothek ebenso, hell und dunkel. ☐
 
+## Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
+
+Standen nur in den Zeilen „Wartet auf Sven“ ([CHATS.md](CHATS.md)) oder im STATUS-Protokoll, nicht in dieser Datei. Wortlaut wie dort.
+
+### Windows
+
+- **GM1 Eingeklappte Seitenleiste, Fisch v2.2:** bei 125 % Skalierung: Kachel und Symbole scharf, Tooltip mit Maus und Tab, Taskleisten-Icon zeigt den neuen Fisch. (PR #669) ☐
+- **GM2 „Dieser PC“, Kopf v3.1:** Kopf hell/dunkel; „Ruhig“: Dateitypen grau, Muster + Legende bleiben; Baumkarte nach Alter/Dateityp. (PR #490) ☐
+- **GM3 Laufwerke-Seite:** Karten in zwei Spalten, „Details“, Scan aus der Karte, Liste. (PR #483) ☐
+- **GM4 Shell-Fixes:** Werkzeuge mit Strg+. und Alt+2; Lesehilfe 100 % in der Seitenleiste mit „Zurück“. (PR #481; vgl. TP3) ☐
+- **GM5 Lokales Modell in der Dev-Preview:** erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig); Lokales Modell → Download → Testfrage von Hand. (PR #504; vgl. K5) ☐
+
+### Android-Handy
+
+- **GM6 Launcher-Icon:** zeigt den Fisch v2.2. (PR #669) ☐
+- **GM7 Einstellungs-Suche:** Einstellungen lang runter/hoch scrollen: die Suche bleibt ohne Lücke unter der Kopfleiste. (`fix/settings-search-sticky-phone`) ☐
+- **GM8 Planen + Geld v3.1:** ToDos-Kopf: Titel gekürzt, „Später“ sichtbar; Rechnungen: „Nächste bezahlen“. (PR #493) ☐
+- **GM9 Topbar:** lang scrollen, Seite wechseln → die Leiste ist sofort da. (PR #481) ☐
+- **GM10 Handy-Layout (QA P2):** Gerätetest von Kopfzeile, Listenzeilen, Hinweisen, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi. (`fix/qa-mobile-layout`) ☐
+- **GM11 KI-Erinnerung per Satz:** Satz per Sprache („Erinner mich um 15 Uhr an die Wäsche“): die Benachrichtigung kommt zur Zeit. (`feat/ai-reminder-voice`) ☐
+- **GM12 PWA offline:** PWA einmal online öffnen, Flugmodus, dann App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)). (Runde T1–T6, #341–#349; vgl. BP1) ☐
+
+### Beide (Windows und Android)
+
+- **GM13 Fundament v3:** Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy. (PR #414) ☐
+- **GM14 Lesehilfe 100 %:** beim Modulwechsel prüfen. (PR #496) ☐
+- **GM15 Eigene Karte, Overpass:** erste echte Overpass-Antwort auf einem Gerät: Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“. (#342, #346, #348, #350, #352) ☐
+- **GM16 Eigene Karte, Regionsdatei:** eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser. (#342–#352) ☐
+- **GM17 Eigene Karte, Tempo:** Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen, Wartezeit vom Server); notieren, wie lange es dauert. (PR #387) ☐
+- **GM18 Bank, Person B:** echte Sparkassen-CSV-CAMT importieren, Export in Excel öffnen. (PR #580; vgl. C7, G5) ☐
+- **GM19 Kontoauszug-Import je Bank:** OFX, QIF, Bank-Vorlagen und Spaltenzuordnung je Bank mit echter Datei ([features/bank-import.md](features/bank-import.md)). ☐
+- **GM20 Komfort Einstellungen:** eine Woche Nutzung: Reizlast von Zahnrad und Schnellleiste. (#132, #150, #151, #153; vgl. M1–M4) ☐
+
+### Website (am Handy)
+
+- **GM21 Hero und Anker-Leiste:** Seite scrollen: die Leiste mit den vier Links + GitHub bleibt oben, das Hero-Bild blendet einmal ein (mit „Bewegung reduzieren“ nicht). (PR #674) ☐
+- **GM22 Rest der Seite:** Vorschau einmal ganz durchscrollen. (PR #685) ☐
+- **GM23 Eingefrorene Sprachen:** `/es`, `/fr`, `/pt-br` leiten auf `/en`. (PR #507) ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
@@ -390,6 +448,12 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 
 9. **Einrichtungsassistent prüfen.** Die Punkte E1–E5 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf Windows-Portable und Android durchgehen (frische Installation und eine mit Daten).
 
+### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
+
+LR1. _X1 Pipe auf Windows mit zweitem Nutzer_ (Fix: SQOS-Flag in `ipc.rs`). ☐
+LR2. _V1 Credential-Manager nach „Alle Daten löschen“_: das biometrische Siegel des Tresors ist danach weg. ☐
+LR3. _Android-APK-Update._ ☐
+
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".
@@ -398,6 +462,11 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 4. _Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID_ → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
+
+Hintergrund (aus STATUS verschoben, 2026-11-10; entschieden in [decisions/legal.md](decisions/legal.md)):
+
+- **Google-Prüfung für die Mail-Berechtigungen (Mail-Modul, Paket 3):** `gmail.readonly`, `gmail.modify` und `gmail.send` sind bei Google „eingeschränkte Bereiche“. Mit der eigenen OAuth-Client-ID jedes Nutzers (so ist es gebaut) braucht das keine Prüfung durch Google; im Teststatus der Cloud-Console laufen die Anmeldungen aber nach 7 Tagen ab, bis die App auf „In Produktion“ gestellt wird (dann zeigt Google den Hinweis „nicht verifizierte App“). Würde Nemo je einen **eigenen, mitgelieferten** Client für alle Nutzer einsetzen, wäre die Google-OAuth-Verifizierung samt jährlicher Sicherheitsprüfung (CASA) Pflicht – das ist eine Entscheidung für dich, nicht für den Code. Siehe [decisions/legal.md](decisions/legal.md).
+- **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
 
 ### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
 

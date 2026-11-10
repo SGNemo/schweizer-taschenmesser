@@ -309,6 +309,43 @@ pub fn remote_ask_more(lang: Lang, more: usize) -> String {
     }
 }
 
+/// Longest device name in the notice; a longer one is cut. A toast shows about four short
+/// lines, and the way to end it must stay in view.
+pub const NOTICE_NAME_CHARS: usize = 24;
+
+/// The notice when a device starts to control mouse and keyboard: (title, text). `name` is
+/// already plain text; `named` = it is the device's own name (then it stands in quotes behind a
+/// fixed label, so it cannot read as part of the sentence), not the label of a nameless device.
+/// It says what happens and how to end it (the tray entry by its own label); no alarm.
+pub fn remote_notice(lang: Lang, name: &str, named: bool) -> (&'static str, String) {
+    let end = remote_end_label(lang);
+    let mut short: String = name.chars().take(NOTICE_NAME_CHARS).collect();
+    if !named {
+        // our own label for a nameless device: short by construction
+        short = name.to_owned();
+    } else if name.chars().count() > NOTICE_NAME_CHARS {
+        short.truncate(short.trim_end().len());
+        short.push('…');
+    }
+    let german = german(lang);
+    let who = match (named, german) {
+        (true, true) => format!("Das Gerät „{short}“"),
+        (true, false) => format!("The device “{short}”"),
+        (false, _) => short,
+    };
+    if german {
+        (
+            "Fernsteuerung",
+            format!("{who} steuert jetzt Maus und Tastatur. Beenden: Rechtsklick auf das Nemo-Symbol im Tray, dann „{end}“."),
+        )
+    } else {
+        (
+            "Remote control",
+            format!("{who} now controls mouse and keyboard. To end it: right-click the Nemo icon in the tray, then “{end}”."),
+        )
+    }
+}
+
 /// The tray entry while a device controls this PC.
 pub fn remote_end_label(lang: Lang) -> &'static str {
     if german(lang) {
@@ -415,6 +452,18 @@ mod tests {
             let tip = remote_tooltip(lang, &"N".repeat(300), "X");
             assert!(tip.contains('X') && tip.chars().count() < 100);
             assert!(!remote_end_label(lang).is_empty() && !remote_end_hint(lang).is_empty());
+            let (title, text) = remote_notice(lang, "X", true);
+            assert!(!title.is_empty() && !text.contains('!'));
+            // the name in quotes behind a label, and the tray entry by the label the tray shows
+            assert!(text.contains("„X“") || text.contains("“X”"));
+            assert!(text.contains(remote_end_label(lang)));
+            // a nameless device is not quoted as if its label were a name
+            let (_, nameless) = remote_notice(lang, &remote_unnamed(lang, "ab12"), false);
+            assert!(nameless.starts_with(&remote_unnamed(lang, "ab12")));
+            // the longest name is cut, so the way to end it stays in view of a toast
+            let (_, long) = remote_notice(lang, &"W".repeat(40), true);
+            assert!(long.chars().count() <= 150 && long.contains('…'));
+            assert!(long.contains(remote_end_label(lang)));
         }
         assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
         assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));

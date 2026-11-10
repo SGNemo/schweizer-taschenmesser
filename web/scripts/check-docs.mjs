@@ -19,7 +19,7 @@ const strict = process.argv.includes('--strict');
 
 const BUDGET = {
   start: 2600,
-  area: 500,
+  area: 700,
   lookup: 3000,
   overrides: {
     'docs/README.md': 700,
@@ -108,7 +108,7 @@ const files = [
     .filter((n) => n.endsWith('.md'))
     .map((n) => join(repo, n)),
 ];
-for (const dir of ['server', 'web/src/modules', 'web/src-tauri', 'mcp']) {
+for (const dir of ['server', 'web/src/modules', 'web/src-tauri', 'mcp', 'extension']) {
   const p = join(repo, dir, 'CLAUDE.md');
   if (existsSync(p)) files.push(p);
 }

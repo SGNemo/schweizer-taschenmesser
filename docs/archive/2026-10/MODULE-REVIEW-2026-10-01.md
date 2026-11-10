@@ -379,7 +379,7 @@ Beantwortet, siehe Abschnitt 10. Ergebnis: [MODULE-PLAN.md](../../product/MODULE
 # Abgleich mit `develop` (Stand c89c691, nach PR #37 Seeds und PR #39 Design-Evaluation)
 
 ## 25 · Überschneidungen mit der Design-Spezifikation und den Seeds
-Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design/DESIGN-SPEC.md`](../../design/DESIGN-SPEC.md), Prompt mit PR-Aufteilung in [`docs/design/IMPLEMENTATION-PROMPT.md`](../../design/IMPLEMENTATION-PROMPT.md)) und das Seed-System gemergt ([`docs/howto/seed-data.md`](../../howto/seed-data.md)). Beides berührt diesen Plan:
+Parallel zu dieser Review wurde die Design-Evaluation beschlossen ([`docs/design/DESIGN-SPEC.md`](../../design/DESIGN-SPEC.md), Prompt mit PR-Aufteilung in docs/design/IMPLEMENTATION-PROMPT.md (removed 2026-11-10, in the git history)) und das Seed-System gemergt ([`docs/howto/seed-data.md`](../../howto/seed-data.md)). Beides berührt diesen Plan:
 
 | Thema | Design-Spezifikation | Dieser Plan | Abgleich (Vorschlag) |
 |---|---|---|---|

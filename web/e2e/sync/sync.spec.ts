@@ -292,6 +292,59 @@ test.describe('end-to-end encryption', () => {
     await b.context.close();
   });
 
+  test('a device without the passphrase syncing right after the vault was created uploads nothing', async ({
+    browser,
+    request,
+  }) => {
+    const old = await newDevice(browser);
+    await connect(old.page);
+
+    // B turns encryption on; its first encrypted push is held back, so the server has a vault
+    // and no data yet: the page the keyless device pulls is empty.
+    const b = await newDevice(browser);
+    await addTask(b.page, 'Geheime Steuernummer 12345');
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await b.page.route('**/v1/push', async (route) => {
+      await held;
+      await route.continue();
+    });
+    await submitConnect(b.page, { encrypt: true, passphrase: 'ein langer geheimer Satz' });
+    await expect
+      .poll(async () => {
+        const res = await request.get(`${SERVER}/v1/vault`, {
+          headers: { authorization: `Bearer ${TOKEN}` },
+        });
+        return ((await res.json()) as { vault: unknown }).vault !== null;
+      })
+      .toBe(true);
+
+    await addTask(old.page, 'Klartext im Fenster');
+    await openSettings(old.page);
+    await old.page.getByRole('button', { name: 'Jetzt synchronisieren' }).click();
+    await expect(old.page.getByTestId('sync-status')).toContainText('verschlüsselt');
+    expect((await serverDump(request)).ops).toEqual([]);
+
+    release();
+    await expect.poll(async () => (await serverDump(request)).ops.length).toBeGreaterThan(0);
+    await b.page.unroute('**/v1/push');
+    const { text, ops } = await serverDump(request);
+    expect(text).not.toContain('Klartext im Fenster');
+    expect(ops.every((o) => typeof o.value === 'string' && o.value.startsWith('enc:v1:'))).toBe(
+      true,
+    );
+
+    // With the passphrase the record of the old device reaches B (no plain value in its way).
+    await old.page.getByRole('button', { name: 'Trennen' }).click();
+    await connect(old.page, { passphrase: 'ein langer geheimer Satz' });
+    await syncNow(old.page);
+    await syncNow(b.page);
+    await b.page.goto('/todos');
+    await expect(b.page.getByRole('checkbox', { name: 'Klartext im Fenster' })).toBeVisible();
+    await old.context.close();
+    await b.context.close();
+  });
+
   test('a passphrase must be long enough', async ({ browser }) => {
     const { page, context } = await newDevice(browser);
     await submitConnect(page, { encrypt: true, passphrase: 'kurz' });

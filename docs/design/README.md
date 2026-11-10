@@ -1,26 +1,21 @@
-# Design evaluation (2026-10)
+# Design docs – index
 
-Result of the design review done together with the maintainer in eight rounds. Nothing here is imported by the app; mockups are standalone HTML (embedded CSS, invented data) with PNG renders. Start with the spec, then the prompt.
+Nothing here is imported by the app. Mockups are standalone HTML with invented data; images are never committed ([DOCS-GUIDE](../meta/DOCS-GUIDE.md#images)). A finished round keeps only what code, tests or decisions cite; package prompts, mockups and audit tools of a merged round are deleted (git history).
 
-| File | What |
-|---|---|
-| [`DESIGN-SPEC.md`](DESIGN-SPEC.md) | **the specification** (final): principles, shell, areas, home, tokens table, typography, components, interaction, motion, modules, a11y, open items |
-| [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md) | **the prompt** for the implementation chats + part B: split into parallel PRs |
-| [`identity-v3/`](identity-v3/) | **identity v3** (2026-11-03): layout frame, sidebar, overview head, head and widget variants – round 1 diagnosis (`01-DIAGNOSIS.md`), concept and mockups follow |
-| [`ROUND-1-DIAGNOSIS.md`](ROUND-1-DIAGNOSIS.md) | round 1: what works, problems P1–P17 with severity, daily scenarios (clicks) |
-| `screenshots/round-1/` | annotated screenshots (markers = problem ids), reduced to ≤ 1280 px |
-| [`ROUND-2-DIRECTION.md`](ROUND-2-DIRECTION.md) | round 2: three directions (A/B/C) compared, proposed principles |
-| `mockups/round-2/` | `variant-a|b|c.html` (standalone; `?theme=light`, toggle bottom right) + PNG renders desktop/phone, dark/light |
-| [`ROUND-3-LAYOUT.md`](ROUND-3-LAYOUT.md) | round 3: areas instead of a flat module list, three shell layouts (L1/L2/L3), rules for master–detail and ultrawide, click paths |
-| `mockups/round-3/` | `layout-l1|l2|l3.html` + PNG (desktop 1920, wide 2560, phone 412, dark; desktop light) |
-| [`ROUND-4-TOKENS.md`](ROUND-4-TOKENS.md) | round 4: palette (three neutral bases, AA-checked), depth, radii, spacing, typography, icons |
-| `mockups/round-4/` | `tokens.html`, `home.html`, `rechnungen.html` (`?theme=…&palette=cool|warm|graphite`) + renders, `palette-compare-dark.png` |
-| [`ROUND-5-COMPONENTS.md`](ROUND-5-COMPONENTS.md) | round 5: base components, quick capture vs. full form, keyboard/touch/undo concept |
-| `mockups/round-5/` | `components.html`, `form-rechnung.html`, `form-rechnung-phone.html`, `quickadd.html` + renders dark/light |
-| [`ROUND-6-MOTION.md`](ROUND-6-MOTION.md) | round 6: motion principles, six patterns, what is not animated |
-| `mockups/round-6/` | `motion.html` (interactive demo, reduced-motion switch) + captured frames |
-| [`ROUND-7-MODULES.md`](ROUND-7-MODULES.md) | round 7: Kalender, Finanzen, Tresor, Datenträger mocked; every other module as a short spec |
-| `mockups/round-7/` | `kalender.html`, `finanzen.html`, `tresor.html`, `datentraeger.html`, `einstellungen.html` + renders desktop dark/light, phone dark |
-| `mockups/fonts/` | Inter Variable (OFL, copied from `@fontsource-variable/inter`) so the mockups use the app font without importing anything |
+| Path | What | State |
+| --- | --- | --- |
+| [DESIGN-SPEC.md](DESIGN-SPEC.md) | the specification: principles, shell, areas, tokens + contrast ratios, components, widgets (§4a), motion, modules, a11y; summarises design rounds 1–7, the readability plan and the visual audit 2026-10-03 (files removed 2026-11-10) | living |
+| [MODULE-IDENTITY.md](MODULE-IDENTITY.md) | identity v3.1: hue, head, widget, signature per module | living |
+| [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md), [FOCUS-WORDING.md](FOCUS-WORDING.md) | checklist and wording for every new feature (hard rule) | living |
+| [ui-audit-2026-11/](ui-audit-2026-11/REPORT.md) | UI audit 4.0: report, ledger, packages, guards the tests cite | running |
+| [remote-control/](remote-control/CONCEPT.md) | phone → PC input: concept, packages, prototype | running |
+| [site/](site/ROUND-5.md) | website rounds | running |
+| [identity-v3/](identity-v3/) | concept and mockups behind MODULE-IDENTITY (code comments cite it) | reference |
+| [identity-v3-audit/](identity-v3-audit/03-acceptance.md) | findings and acceptance of v3.1 | finished, reference |
+| [plan/](plan/CONCEPT.md) | planner concept and engine prototype (code and tests cite it) | finished, reference |
+| [sync-lan/](sync-lan/CONCEPT.md) | LAN sync concept, notes, review, prototype | finished, reference |
+| [settings-v3/](settings-v3/ROUND-1.md) | settings rounds 1–3 (decisions cite them) | finished, reference |
+| [usecases/kopf-leer/](usecases/kopf-leer/TARGET.md) | use case analysis and target (a spec and the test corpus cite them) | finished, reference |
+| `mockups/fonts/`, `mockups/adhd/` | font the mockups load; focus-aid mockups ([features/focus-aids.md](../features/focus-aids.md)) | reference |
 
-How the screenshots were made: `cd web && SCREENS_DESKTOP=1 SCREENS_SCHEME=light|dark SCREENS_VIEWPORTS=1280x720,1920x1080,2560x1440,412x915 SCREENS_DIR=<dir> npm run screenshots` (invented data, fixed clock 2026-09-29).
+Screenshots for a design check: `cd web && npm run screenshots` ([howto/design-rules.md](../howto/design-rules.md)).

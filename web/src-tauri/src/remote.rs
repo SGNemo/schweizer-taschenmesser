@@ -2,26 +2,29 @@
 //! `remote_input` crate. Rules: `docs/rules/remote-control.md`.
 //!
 //! What decides lives in the crates (and is tested there). This file
-//! * hands the hub a sink ([`Sink`]): media actions go to the worker of `remote_input`, which
-//!   makes plain system calls; every other action is dropped here (pointer and keys are later
-//!   packages) – nothing in this file or in any Tauri command simulates input,
+//! * hands the hub a sink ([`Sink`]): media actions go to the worker of `remote_input` (plain
+//!   system calls), pointer actions to its pointer thread (the one place that simulates input);
+//!   keys and text are dropped here (a later package) – nothing in this file or in any Tauri
+//!   command simulates input,
 //! * offers the PC's own controls to the settings page. Every widening (a higher level, lifting a
 //!   pause, dropping the unlock request, the master switch) is confirmed in a **native** dialog
 //!   first, in a fixed order: take `Remote::ticket()`, show the dialog, call the setter with the
 //!   ticket. The page cannot answer that dialog, and the crate refuses a widening while a
 //!   mouse/keyboard session is open or was opened since the ticket,
-//! * keeps the tray telling the truth from Rust state while a device controls the PC.
+//! * keeps the tray telling the truth from Rust state while a device controls the PC, and shows
+//!   the quiet notice when a mouse/keyboard session begins (`remote_notice.rs`).
 //!
 //! Nothing here logs. No command takes an input action; the only way in is the hub's input session.
 
+use crate::remote_notice::{self, Notices};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
-use ::lan_sync::input::wire::{Level, Media, PcState, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{Button, Level, Media, PcState, VOLUME_UNKNOWN};
 use ::lan_sync::input::{Action, ControlError, FileSwitch, InputSink, MasterSwitch, Remote};
 use ::lan_sync::noise::PublicKey;
 use ::lan_sync::trust::file::{from_hex32, to_hex};
 use ::lan_sync::trust::{FileTrustStore, RemoteGrant, TrustStore};
-use remote_input::{Command, Worker};
+use remote_input::{Command, Pointer, PointerAction, Worker};
 use serde::Serialize;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -43,12 +46,34 @@ const ASK_LIST_MAX: usize = 6;
 
 /// What the hub's input session acts through. Returns at once – the worker thread does the calls –
 /// except `state()` after a quiet time (bounded, see `InputSink::state`).
-pub struct Sink(Worker);
+pub struct Sink {
+    media: Worker,
+    pointer: Pointer,
+}
 
 impl Sink {
     pub fn start() -> Sink {
-        Sink(Worker::start())
+        Sink {
+            media: Worker::start(),
+            pointer: Pointer::start(),
+        }
     }
+}
+
+/// The hub's pointer actions in the words of `remote_input`; `None` for everything else.
+fn pointer_of(action: &Action) -> Option<PointerAction> {
+    Some(match *action {
+        Action::Move { dx, dy } => PointerAction::Move { dx, dy },
+        Action::Button { button, down } => PointerAction::Button {
+            button: match button {
+                Button::Left => remote_input::Button::Left,
+                Button::Right => remote_input::Button::Right,
+            },
+            down,
+        },
+        Action::Scroll { dx, dy } => PointerAction::Scroll { dx, dy },
+        Action::Key(_) | Action::Media(_) | Action::Text(_) => return None,
+    })
 }
 
 fn command_of(media: Media) -> Command {
@@ -74,17 +99,21 @@ fn pc_state(state: remote_input::State) -> PcState {
 
 impl InputSink for Sink {
     fn supported(&self) -> bool {
-        self.0.supported()
+        self.media.supported()
     }
 
     fn state(&self) -> PcState {
-        pc_state(self.0.state())
+        pc_state(self.media.state())
     }
 
     fn apply(&self, action: Action) {
-        // Pointer, buttons, keys and text have no sink yet: dropped, never turned into anything.
+        // Keys and text have no sink yet: dropped, never turned into anything. Media and pointer
+        // run on two threads: the order holds within each, not between them (the hub checks the
+        // lock per pointer record, so "lock, then a move" is still safe).
         if let Action::Media(media) = action {
-            self.0.send(command_of(media));
+            self.media.send(command_of(media));
+        } else if let Some(pointer) = pointer_of(&action) {
+            self.pointer.send(pointer);
         }
     }
 }
@@ -130,6 +159,8 @@ pub struct RemoteHost {
     /// reads switch and grants from disk again; a narrowing whose write failed would come back
     /// without anyone being asked. It is applied again on every start instead.
     narrowed: Mutex<Narrowed>,
+    /// Whom the notice of a mouse/keyboard session was shown for, and when. Memory only.
+    notices: Mutex<Notices>,
 }
 
 #[derive(Default)]
@@ -222,20 +253,25 @@ fn invisible(c: char) -> bool {
 fn quote(c: char) -> bool {
     matches!(
         c,
-        '"' | '“'
-            | '”'
-            | '„'
-            | '‟'
-            | '«'
-            | '»'
-            | '‹'
-            | '›'
-            | '‘'
-            | '’'
-            | '‚'
-            | '‛'
-            | '`'
-            | '´'
+        '"' | '\u{FF02}' | '\u{301D}'
+            ..='\u{301F}'
+                | '\u{275D}'
+                | '\u{275E}'
+                | '\u{2E42}'
+                | '“'
+                | '”'
+                | '„'
+                | '‟'
+                | '«'
+                | '»'
+                | '‹'
+                | '›'
+                | '‘'
+                | '’'
+                | '‚'
+                | '‛'
+                | '`'
+                | '´'
     )
 }
 
@@ -288,6 +324,11 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     };
     // what was taken away earlier in this run holds for the freshly loaded controls too
     host.narrowed(|n| n.apply(&remote));
+    // a new hub counts its mouse/keyboard sessions from zero; whom a notice was shown for is kept
+    host.notices
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .reset();
     let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
         remote,
@@ -310,6 +351,25 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                         })
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
+                    || {
+                        let (count, device) = remote.full_opened();
+                        let due = app
+                            .state::<RemoteHost>()
+                            .notices
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .due(
+                                count,
+                                device.map(|k| *k.as_bytes()),
+                                remote_notice::since_start(),
+                            );
+                        if let (true, Some(key)) = (due, device) {
+                            let lang = crate::capture::native_lang(&app);
+                            let name = trust.find_by_key(&key).map(|d| d.name).unwrap_or_default();
+                            let named = !plain(&name).is_empty();
+                            remote_notice::show(&app, lang, &shown_name(lang, &name, &key), named);
+                        }
+                    },
                 )
             })
             .ok()
@@ -325,9 +385,11 @@ fn watch(
     rx: mpsc::Receiver<Signal>,
     controller: impl Fn() -> Option<String>,
     mut write: impl FnMut(Option<String>),
+    mut each_look: impl FnMut(),
 ) {
     let mut shown: Option<String> = None;
     loop {
+        each_look();
         let now = controller();
         if now != shown {
             write(now.clone());
@@ -700,9 +762,42 @@ mod tests {
         volume_sets: AtomicUsize,
         mute_sets: AtomicUsize,
         locks: AtomicUsize,
+        pointer: Mutex<Vec<String>>,
     }
 
     struct FakeSystem(Arc<Seen>);
+
+    /// Writes down what the pointer was asked to do.
+    struct FakeMouse(Arc<Seen>);
+
+    impl remote_input::Mouse for FakeMouse {
+        fn moved(&mut self, dx: i32, dy: i32) {
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("move {dx} {dy}"));
+        }
+        fn button(&mut self, button: remote_input::Button, down: bool) -> bool {
+            let which = match button {
+                remote_input::Button::Left => "left",
+                remote_input::Button::Right => "right",
+            };
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("{which} {down}"));
+            true
+        }
+        fn wheel(&mut self, horizontal: bool, amount: i32) {
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("wheel {horizontal} {amount}"));
+        }
+    }
 
     impl System for FakeSystem {
         fn volume(&mut self) -> Option<f32> {
@@ -738,9 +833,11 @@ mod tests {
     fn fake_sink() -> (Sink, Arc<Seen>) {
         let seen = Arc::new(Seen::default());
         let for_worker = seen.clone();
-        let sink = Sink(Worker::with(move || {
-            Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)
-        }));
+        let for_mouse = seen.clone();
+        let sink = Sink {
+            media: Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
+            pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
+        };
         (sink, seen)
     }
 
@@ -753,17 +850,25 @@ mod tests {
     }
 
     #[test]
-    fn the_sink_acts_on_media_and_drops_everything_else() {
+    fn the_sink_sends_media_to_the_worker_the_pointer_to_its_thread_and_drops_the_rest() {
         let (sink, seen) = fake_sink();
         assert!(sink.supported());
-        sink.apply(Action::Move { dx: 5, dy: 5 });
+        sink.apply(Action::Key(Key::Enter));
+        sink.apply(Action::Text("abc".into()));
+        sink.apply(Action::Move { dx: 5, dy: -5 });
         sink.apply(Action::Button {
             button: Button::Left,
             down: true,
         });
-        sink.apply(Action::Scroll { dx: 0, dy: 3 });
-        sink.apply(Action::Key(Key::Enter));
-        sink.apply(Action::Text("abc".into()));
+        sink.apply(Action::Scroll { dx: 0, dy: 8 });
+        sink.apply(Action::Button {
+            button: Button::Left,
+            down: false,
+        });
+        sink.apply(Action::Button {
+            button: Button::Right,
+            down: false,
+        });
         settle(&sink);
         let total = |s: &Seen| {
             s.media.load(Ordering::SeqCst)
@@ -771,7 +876,23 @@ mod tests {
                 + s.mute_sets.load(Ordering::SeqCst)
                 + s.locks.load(Ordering::SeqCst)
         };
-        assert_eq!(total(&seen), 0, "a non-media action reached the system");
+        // the pointer has its own thread: wait for it, with a deadline
+        for _ in 0..500 {
+            if seen.pointer.lock().unwrap().len() >= 4 {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(
+            total(&seen),
+            0,
+            "a non-media action reached the media worker"
+        );
+        // keys and text became nothing; the release of a button nobody pressed is ignored
+        assert_eq!(
+            *seen.pointer.lock().unwrap(),
+            ["move 5 -5", "left true", "wheel false -120", "left false"]
+        );
         sink.apply(Action::Media(Media::PlayPause));
         sink.apply(Action::Media(Media::VolumeDown));
         sink.apply(Action::Media(Media::Lock));
@@ -779,6 +900,11 @@ mod tests {
         assert_eq!(seen.media.load(Ordering::SeqCst), 1);
         assert_eq!(seen.volume_sets.load(Ordering::SeqCst), 1);
         assert_eq!(seen.locks.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            seen.pointer.lock().unwrap().len(),
+            4,
+            "media moved the pointer"
+        );
         let state = sink.state();
         assert_eq!(
             (state.volume, state.playing, state.locked),
@@ -877,6 +1003,8 @@ mod tests {
             assert!(!spoof.contains(c), "{spoof}");
         }
         assert_eq!(plain("\u{202E}\u{200B}"), "");
+        // look-alikes of a quotation mark close nothing either
+        assert_eq!(plain("A\u{FF02}B\u{301E}C\u{275E}D\u{2E42}"), "A'B'C'D'");
     }
 
     #[test]
@@ -1009,14 +1137,18 @@ mod tests {
     fn the_tray_thread_writes_only_changes_and_clears_when_the_hub_stops() {
         let who = Arc::new(Mutex::new(None::<String>));
         let written = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+        let looks = Arc::new(AtomicUsize::new(0));
         let (tx, rx) = mpsc::channel::<Signal>();
         let thread = {
-            let (who, written) = (who.clone(), written.clone());
+            let (who, written, looks) = (who.clone(), written.clone(), looks.clone());
             std::thread::spawn(move || {
                 watch(
                     rx,
                     || who.lock().unwrap().clone(),
                     |c| written.lock().unwrap().push(c),
+                    move || {
+                        looks.fetch_add(1, Ordering::SeqCst);
+                    },
                 )
             })
         };
@@ -1038,6 +1170,8 @@ mod tests {
         // the hub stops while it is shown: cleared
         tx.send(Signal::Stop).unwrap();
         thread.join().unwrap();
+        // every look also looks for a new mouse/keyboard session: the first and one per signal
+        assert!(looks.load(Ordering::SeqCst) >= 5);
         assert_eq!(
             *written.lock().unwrap(),
             vec![Some("Pixel".to_owned()), None]
@@ -1046,7 +1180,7 @@ mod tests {
         let (tx, rx) = mpsc::channel::<Signal>();
         drop(tx);
         let mut writes = 0;
-        watch(rx, || None, |_| writes += 1);
+        watch(rx, || None, |_| writes += 1, || {});
         assert_eq!(writes, 0);
     }
 

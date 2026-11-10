@@ -1,6 +1,6 @@
 # Agent team v3.1 – Routing & Guardrails (2026-11-08)
 
-Proposal, not in force until Sven re-creates the agents ([SETUP.md](SETUP.md) "Umstieg v3 → v3.1"); the binding roster stays [../AGENTS.md](../AGENTS.md) + [../../decisions/meta.md](../../decisions/meta.md). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
+Decided 2026-11-10 ([../../decisions/meta-agents.md](../../decisions/meta-agents.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; [../AGENTS.md](../AGENTS.md) describes the roster; the lead delegates by the table in its own prompt (`nemo-lead.json`), which wins if the two differ. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
 
 ## Changes v3 → v3.1
 
@@ -10,20 +10,20 @@ Proposal, not in force until Sven re-creates the agents ([SETUP.md](SETUP.md) "U
 | `docs/meta/WORK-ROUTING.md`: who does what, decline list, five questions, budget classes S/M/L                                                              | one source for routing; budget 200 USD/month                                            |
 | Routing gate as the first step of every prompt (`validate.mjs` pins the line); guardrails block at the top of `SHARED.md`                                   | agents decline out-of-routing work before they spend tokens                             |
 | Lead: routing gate, ≤ 4 threads, follow-up instead of a new thread, bundling; PO + triage folded in                                                         | threads, not work, drove the cost                                                       |
-| Reviewer: correctness always, security lens mandatory on RULES.md paths (`Security lens applied: <paths>`), design/a11y lens on UI paths                    | one review thread instead of three or four                                              |
+| Reviewer: correctness always, security lens for every path outside the light-path allowlist (`Security lens applied: <paths>`), design/a11y lens on UI paths | one review thread instead of three or four                                              |
 | `nemo-merge` on Haiku low, trivial conflicts only (everything else back to builder/ops)                                                                     | the merge gate is a checklist; judgement stays with the reviewer                        |
 | `session.mjs`: `--class S\|M\|L` (5/10/15 USD, default S), > 15 USD only with `--yes-expensive`, routing header, `--routing-check`, raise only with `--yes` | a session = a task = a budget, never raised to keep going                               |
-| `validate.mjs`: exactly 7, model/effort per role, prompt ≤ 7 000 chars (lead ≤ 8 000), routing line, lead advisor Opus                                      | the rules are checked, not only written                                                 |
+| `validate.mjs`: exactly 7, model/effort per role, prompt ≤ 7 000 chars (lead ≤ 8 000, builder ≤ 4 353, merge ≤ 7 450), routing line, lead advisor Opus      | the rules are checked, not only written                                                 |
 
 ## Contents
 
 | File                    | Purpose                                                                                                                                                                                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nemo-*.json` (7)       | **Source of truth.** Managed Agents definitions: model/effort per role, short prompt + routing gate + five hard limits, tools and GitHub-MCP deny list per role, `multiagent` block only in `nemo-lead` and `nemo-auditor`. No secrets (`validate.mjs`).             |
+| `nemo-*.json` (7)       | **Source of truth.** Managed Agents definitions: model/effort per role, prompt = role + routing gate + five hard limits (plus the role's own limits and gates; shared rules from `SHARED.md` and root `CLAUDE.md` are cited, not restated), tools and GitHub-MCP deny list per role, `multiagent` block only in `nemo-lead` and `nemo-auditor`. No secrets (`validate.mjs`).             |
 | `nemo-*.md` (7)         | Generated `ant apply` files – `node scripts/agents/to-ant.mjs`; never edit by hand (`--check` proves they match).                                                                                                                                                    |
 | `SHARED.md`             | The shared rule block every agent reads once per thread from the mounted repo (guardrails first).                                                                                                                                                                    |
 | `environment.yaml`      | Cloud environment, limited egress (package managers + MCP hosts).                                                                                                                                                                                                    |
-| `AGENTS.proposed.md`    | Proposed new `docs/meta/AGENTS.md` (Sven's decision).                                                                                                                                                                                                                |
+| `../AGENTS.md`         | The v3.1 roster (was `AGENTS.proposed.md` here until 2026-11-10).                                                                                             |
 | `SETUP.md`              | Step-by-step for Sven: Console, `ant`, vault/GitHub, start a session, costs, switch v3 → v3.1.                                                                                                                                                                       |
 | `../../scripts/agents/` | `validate.mjs` (offline schema check), `to-ant.mjs` (JSON → md), `session.mjs` (runner: lead + env + repo mount + budget class). `@anthropic-ai/sdk` is pinned (1.6.0) and not covered by Dependabot: `nemo-ops` (mode `deps`) prepares the bump PR, Sven merges it. |
 
@@ -52,7 +52,7 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 3. **Gate + situation** – the lead classifies again (declines with a ready prompt head), reads SHARED.md, CHATS, open PRs, `chats:status`.
 4. **Delegate** – at most 4 child threads, one per agent, bundled per area; follow-ups go into the open thread.
 5. **Review** – `nemo-reviewer` with the lenses the paths need (security lens for every path outside the light-path allowlist in SHARED.md; light path = correctness only).
-6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. PRs under `docs/meta/agents-v3/**`, `docs/meta/WORK-ROUTING.md` or `scripts/agents/**` are merged by Sven.
+6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. The paths under "Sven merges himself" in SHARED.md are merged by Sven.
 7. **Report** – budget class first, 3 points + PR links; then the session ends (a new task = a new session).
 
 **Audit (Sven's tool, outside the flow):** `node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means: AUDIT-pr535.md"` – own session, `nemo-auditor` as primary agent; result `AUDIT-<pr|branch>.md` in the session outputs.
@@ -75,8 +75,11 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 | Owners for `site/`, `services/`, `tools/`, `design/icon/`; `dependabot.yml` → deps; `contract/` → architekt         | gaps/overlaps (1.1, 6)                                                                                |
 | `ant apply` + `claude-lock.json` instead of the Console                                                             | Console-made agents cannot be adopted by `ant`; multiagent/effort/budget are API/CLI-only (SETUP 1–2) |
 
-## Switch-over (after Sven's decision)
+## Switch-over state (2026-11-10)
 
-1. Rename `docs/meta/agents-v3/` → `docs/meta/agents/` and replace `agents-v3` everywhere it occurs (`grep -rln agents-v3 docs/meta scripts/agents`): the 7 JSON prompts (incl. nemo-merge's and nemo-reviewer's "Sven merges" paths), `SHARED.md`, `README.md`, `SETUP.md`, `AGENTS.proposed.md`, `scripts/agents/validate.mjs` (default dir and the SHARED.md check), `to-ant.mjs` (default dir), `session.mjs` (`leadFile`, `envFile`); regenerate `.md` (`to-ant.mjs`), run `validate.mjs`, `ant apply`, then `ant apply --prune` for the old paths.
-2. Replace `docs/meta/AGENTS.md` with `AGENTS.proposed.md` (fix its relative links: `../../` → `../`, `../../../CLAUDE.md` → `../../CLAUDE.md`); decision bullets in `docs/decisions/meta.md` (text in the PR).
-3. Delete `docs/meta/agents-v2/`.
+| Step | State |
+| --- | --- |
+| Decision for v3.1, roster in `docs/meta/AGENTS.md`, `docs/meta/agents-v2/` deleted | done ([../../decisions/meta-agents.md](../../decisions/meta-agents.md), 2026-11-10) |
+| `ant apply` of the seven definitions and `--prune` of the 16 v3 agents ([SETUP.md](SETUP.md) §2a) | **open, Sven's step.** `claude-lock.json` (state 2026-11-10) lists six of the seven (`nemo-builder`, `nemo-ops` version 1; `nemo-docs`, `nemo-lead`, `nemo-merge`, `nemo-reviewer` version 2), no `nemo-auditor`, and still the 16 v3 agents. Whether the applied versions equal the files here cannot be seen from the repo: `ant apply --dry-run` shows it. Until then a running agent may carry an older prompt; `SHARED.md` is read live from `develop` either way. |
+| First real run of `nemo-merge` rule 7 (stimulus ratchet) | open, deferred to December 2026 ([../../decisions/meta-ci-docs.md](../../decisions/meta-ci-docs.md)) |
+| Folder rename to `docs/meta/agents/` | **dropped** (2026-11-10). The path is in every applied prompt (`cat …/docs/meta/agents-v3/SHARED.md`), is pinned by `validate.mjs` and is the key of every entry in `claude-lock.json`; a rename would break running agents until the next `ant apply` and buys nothing. "v3" in the path is a folder name, not the version: the version is the title of this file. |

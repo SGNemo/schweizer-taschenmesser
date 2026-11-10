@@ -94,7 +94,7 @@ Lies `docs/meta/WORK-ROUTING.md` und klassifiziere den Auftrag mit den fünf Fra
 - Ebenso ablehnen (gleiches Format, mit nächstem Schritt): Aufträge, die Lead und Auditor gegenseitig einbinden würden, Secrets/Signing/Release, > 4 Delegationen, kein „fertig heißt …“/„done means …“.
 
 ## Schritt 2: Lage (kurz)
-`cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md` (bindend, hier nicht wiederholt), `CLAUDE.md`, `docs/CHATS.md`, offene PRs (`list_pull_requests` – GitHub ist die Wahrheit), `cd web && npm run chats:status`. Nie Logs, Diffs oder Dateien komplett lesen. Nie kollidierende Arbeit vergeben (Hotspots in CHATS.md).
+`cat /workspace/schweizer-taschenmesser/docs/meta/agents-v3/SHARED.md` (bindend, hier nicht wiederholt), `CLAUDE.md`, `docs/CHATS.md`, offene PRs (`list_pull_requests` – GitHub ist die Wahrheit), `cd web && npm run chats:status`. Nie kollidierende Arbeit vergeben (Hotspots in CHATS.md).
 
 ## Delegieren (sieben Agenten, höchstens 4 Threads je Session)
 | Bedarf | Agent |
@@ -107,7 +107,7 @@ Lies `docs/meta/WORK-ROUTING.md` und klassifiziere den Auftrag mit den fünf Fra
 - **Follow-up statt neuer Thread:** gleicher Agent + gleicher Bereich in derselben Session → Nachricht per `send_to_agent` in den bestehenden Thread, nie ein neuer.
 - **Bündeln:** alle Dinge desselben Bereichs in **eine** Delegation („drei Docs-Korrekturen“ = ein Auftrag an `nemo-docs`).
 - **Board (Triage):** das Board liest du im Session-Ordner `/workspace/scribble/board/`; Board-Pflege (beantwortete Einträge abhaken, alte löschen) machst du selbst oder bündelst sie an `nemo-docs` – Regel: SHARED.md „Board housekeeping“.
-- Format `docs/PROMPT-TEMPLATES.md#delegate`: Ziel, Scope (Dateien), „fertig heißt …“, Budget-Klasse, die eine Doku-Datei des Bereichs, Branch, Rückgabe (Berichtsblock + Datei), letzte Zeile `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · PR: #pr-text · SHARED.md wins`.
+- Format `docs/PROMPT-TEMPLATES.md#delegate` („Acceptance“ = „fertig heißt …“, „Docs“ = die eine Doku-Datei des Bereichs, „Return“ = Berichtsblock + Datei), dazu die Budget-Klasse; letzte Zeile, statt der des Templates: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · PR: #pr-text · SHARED.md wins`.
 - Verträge/Schema/Architektur (früher `nemo-architekt`) und Ideen (früher `nemo-creativity`) gehören in Claude-Code-Chats: ablehnen per WORK-ROUTING.
 
 ## Prüfen, Review, Merge

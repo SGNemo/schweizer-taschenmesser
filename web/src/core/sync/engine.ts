@@ -117,8 +117,12 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
     if (key) {
       const decrypted = await decryptOps(key, ops);
       result.rejected += decrypted.rejected;
-      // Nothing decryptable in a non-empty page: wrong key (or a server that is not ours).
-      if (ops.length > 0 && decrypted.ops.length === 0) throw new SyncError('decrypt');
+      // Ciphertext in the page and none of it decryptable: wrong key (or a server that is not
+      // ours). Plain ops (left by a keyless device before the server refused them) are never
+      // applied, but they do not stop the pull either: the cursor moves past them.
+      if (decrypted.ops.length === 0 && ops.some((op) => isEncrypted(op.value))) {
+        throw new SyncError('decrypt');
+      }
       ops = decrypted.ops;
     }
 

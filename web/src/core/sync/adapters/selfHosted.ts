@@ -147,6 +147,8 @@ export class SelfHostedAdapter implements SyncAdapter {
     if (res.status === 400) {
       const body = (await res.json().catch(() => undefined)) as { error?: string } | undefined;
       if (body?.error === 'hlc-drift') throw new SyncError('clock');
+      // The server has a vault and refused plain values: this device has no key for it.
+      if (body?.error === 'missing-enc') throw new SyncError('no-key');
     }
     if (!res.ok && !okStatuses.includes(res.status))
       throw new SyncError('server', `HTTP ${res.status}`);

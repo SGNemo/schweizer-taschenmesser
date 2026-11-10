@@ -346,6 +346,8 @@ fn no_tauri_command_simulates_input() {
         "Action",
         "Sink",
         "Worker",
+        "Pointer",
+        "Mouse",
         "Command::",
         "Media::",
         ".apply(",
@@ -357,11 +359,31 @@ fn no_tauri_command_simulates_input() {
             "a remote command mentions {forbidden}"
         );
     }
-    // the sink is the only place that hands anything to the worker, and only media
+    // the sink is the only place that hands anything to the worker (only media) or to the
+    // pointer thread (only what `pointer_of` maps: move, button, scroll)
     let src = source("remote.rs");
     let code = &src[..src.find("#[cfg(test)]").unwrap()];
-    assert_eq!(code.matches("self.0.send(command_of(media))").count(), 1);
+    assert_eq!(
+        code.matches("self.media.send(command_of(media))").count(),
+        1
+    );
+    assert_eq!(code.matches("self.pointer.send(pointer)").count(), 1);
+    assert_eq!(code.matches("self.media.send(").count(), 1);
+    assert_eq!(code.matches("self.pointer.send(").count(), 1);
+    assert_eq!(
+        code.matches("Pointer::start()").count(),
+        1,
+        "started by the sink only"
+    );
+    assert_eq!(
+        code.matches("Worker::start()").count(),
+        1,
+        "started by the sink only"
+    );
     assert_eq!(code.matches("impl InputSink for").count(), 1);
+    let map = &code[code.find("fn pointer_of(").unwrap()..];
+    let map = &map[..map.find("\n}\n").unwrap()];
+    assert!(map.contains("Action::Key(_) | Action::Media(_) | Action::Text(_) => return None"));
 
     // nowhere in the shell: simulated input, or a command of another module reaching the sink
     for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
@@ -384,10 +406,32 @@ fn no_tauri_command_simulates_input() {
         }
         if name != "remote.rs" {
             assert!(
-                !text.contains("remote_input::") && !text.contains("InputSink for"),
+                !text.contains("remote_input") && !text.contains("InputSink for"),
                 "{name} reaches the input sink"
             );
         }
+    }
+}
+
+/// The notice of a mouse/keyboard session comes from Rust alone: one place shows it (the tray
+/// thread), no command and no event to the page is involved, and no sound is set (a Windows
+/// toast without one is silent).
+#[test]
+fn the_full_session_notice_is_shown_from_rust_only() {
+    let commands = remote_commands_source();
+    for forbidden in ["remote_notice", "Notices", "full_opened"] {
+        assert!(
+            !commands.contains(forbidden),
+            "a remote command mentions {forbidden}"
+        );
+    }
+    let remote = source("remote.rs");
+    let code = &remote[..remote.find("#[cfg(test)]").unwrap()];
+    assert_eq!(code.matches("remote_notice::show(").count(), 1);
+    let notice = source("remote_notice.rs");
+    let code = &notice[..notice.find("#[cfg(test)]").unwrap()];
+    for forbidden in ["emit(", "tauri::command", "std::fs", "File::", ".sound("] {
+        assert!(!code.contains(forbidden), "remote_notice.rs: {forbidden}");
     }
 }
 

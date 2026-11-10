@@ -67,6 +67,11 @@ test.describe('phone 412x915', () => {
     await page.goto(`/calendar?view=month&date=${SEED_TODAY}`);
     const main = page.locator('main');
     await expect(main.locator('table')).toBeVisible();
+    // The table shows before the calendars are read; until then the chips are missing, so the grid sits lower for a
+    // moment. Measure the loaded page.
+    await expect(
+      main.getByRole('group', { name: 'Kalender' }).getByRole('button').first(),
+    ).toBeVisible();
     // Identity 4.0: the phone has no "Neuer Termin" button in the page (the plus of the bottom bar adds one); the
     // toolbar starts under the module head.
     await expect(main.getByRole('button', { name: 'Neuer Termin' })).toHaveCount(0);

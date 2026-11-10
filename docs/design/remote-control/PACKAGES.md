@@ -1,6 +1,6 @@
 # Remote control – packages (prompts)
 
-Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 is done (2026-11-10). **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
+Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: plan/PACKAGES.md (removed 2026-11-10, in the git history). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 is done (2026-11-10). **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|
@@ -124,7 +124,8 @@ What part 2 gets from `core/remote/session.ts` and still has to decide:
 - The page applies `createHoldGate` to held buttons and held volume keys and passes `{ repeat: true }` for every repeat; a repeat never opens a connection.
 - Wording of `too-old`: the PC hanging up twice is strong evidence, not proof (a PC shedding load looks the same for a moment) – say what to check („Nemo auf dem PC aktuell?“), not a verdict.
 - Known and for the hand tests: on slow Wi-Fi a play/pause the PC did carry out can show „nicht verbunden“ after 3 s; a late answer heals it, but a second press before that toggles again. Show the fresh state as soon as the session stands.
-- Still open for part 2: haptics, keep-awake, the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`), `syncRound` wired to the sync service (`ok` / `not-paired` / `failed`).
+- Part 2 is split once more: the module (page, widget, settings) is `feat/remote-module-page`; the phone's **hardware volume keys** (`plugins/screen-mode`, Kotlin; the setting, the row „Lautstärketasten steuern den PC“ shown while `takesVolumeKeys()`) are their own PR `feat/remote-volume-keys`, because they need an Android build and a real phone to try.
+- Still open after `feat/remote-module-page`: the hardware volume keys with their setting and the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`) → `feat/remote-volume-keys`.
 
 ```
 # Aufgabe: Fernsteuerung – Handy-Modul mit der Seite „Medien“ und Lautstärketasten (Paket 2)
@@ -158,6 +159,10 @@ Touchpad, Tastatur, Widget-Aktion, Handy-Entsperren (kommt mit Paket 3, erst die
 ```
 
 ### Prompt – package 3: touchpad and clicks (`feat/remote-touchpad`)
+
+Split in three PRs (one topic each): **part 1** `feat/remote-touchpad-host` = `remote-input` pointer (`src/pointer.rs`, `SendInput` mouse only, own thread) and the shell sink forwarding move/button/scroll. **Part 2** `feat/remote-full-notice` = the PC's quiet notification when a session of the full level opens (Rust, once per device in 30 minutes). (Part 2 has no off switch: it belongs next to the level "Maus und Tastatur" in the PC's settings, which part 3 offers for the first time – part 3 adds the switch – held in Rust, device-local, default on, off only through the native dialog (it loosens an option) – and the level must not be offered without it: ☐ switch exists before `RemoteHostSection` offers "Maus und Tastatur".) **Part 3** `feat/remote-touchpad` = the phone: level `full` in `remote_client_open` with the native unlock, the page Touchpad, gestures as a pure function, texts, e2e. Part 3 starts with the measurement on a real phone (below); parts 1 and 2 do not depend on it.
+
+What part 3 gets from part 1: wheel unit = 1/8 notch per wire unit, `dy > 0` moves the view down and `dx > 0` to the right (the page decides "natural" direction before sending); a spare release is harmless; the PC sums moves that wait, so the phone never needs to merge for the PC's sake.
 
 ```
 # Aufgabe: Fernsteuerung – Touchpad, Klicks, Scrollen (Paket 3)

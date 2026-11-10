@@ -3,6 +3,7 @@
  * Implements the same rule as the real server: per field the greatest HLC wins.
  */
 import type { VaultInfo } from './adapters/selfHosted';
+import { isEncrypted } from './crypto';
 import type { RemoteServer } from './service';
 import { SyncError, type DeviceInfo, type FieldOp, type PullPage, type SyncAdapter } from './types';
 
@@ -72,7 +73,8 @@ export class MemoryServer {
       },
       putVault: async (vault) => {
         guard();
-        if (this.vault) return false;
+        // Like the real server: first writer wins, and only an empty server takes a vault (409).
+        if (this.vault || this.fields.size > 0) return false;
         this.vault = vault;
         return true;
       },
@@ -153,6 +155,8 @@ export class MemoryServer {
           throw new SyncError('network');
         }
         await this.onPush?.();
+        // Like the real server: with a vault it holds ciphertext only (400 `missing-enc`).
+        if (this.vault && !ops.every((op) => isEncrypted(op.value))) throw new SyncError('no-key');
         for (const op of ops) {
           const cur = this.fields.get(this.key(op));
           if (!cur || op.hlc > cur.hlc) this.fields.set(this.key(op), { ...op, seq: ++this.seq });

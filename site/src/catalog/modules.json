@@ -691,6 +691,30 @@
         "de": "Lädt Dateien herunter: Fortschritt, Pausieren, Fortsetzen, Tempolimit und Prüfsumme. Nichts wird automatisch geöffnet.",
         "en": "Downloads files: progress, pause, resume, speed limit and checksum. Nothing is opened automatically."
       }
+    },
+    {
+      "id": "remote",
+      "area": "system",
+      "status": "preview",
+      "fresh": false,
+      "platforms": "android",
+      "icon": "monitor",
+      "hue": "lime",
+      "hue2": null,
+      "head": "standard",
+      "widget": "status",
+      "name": {
+        "de": "Fernbedienung",
+        "en": "Remote"
+      },
+      "short": {
+        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus",
+        "en": "Control media and volume of your PC from your phone"
+      },
+      "description": {
+        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.",
+        "en": "Control media and volume of your PC from your phone – on your home network, once you allowed it at the PC."
+      }
     }
   ],
   "toolCategories": [

@@ -188,6 +188,8 @@ pub struct Remote {
     full_active: AtomicUsize,
     /// Mouse/keyboard sessions ever claimed (what a [`Ticket`] remembers).
     full_claims: AtomicU64,
+    /// The device of the latest of them (for the PC's notice; nothing is derived from it).
+    full_last: Mutex<Option<PublicKey>>,
 }
 
 impl Remote {
@@ -198,6 +200,7 @@ impl Remote {
             slot: Mutex::new(None),
             full_active: AtomicUsize::new(0),
             full_claims: AtomicU64::new(0),
+            full_last: Mutex::new(None),
         }
     }
 
@@ -228,6 +231,18 @@ impl Remote {
     /// finished. Being told to end is not enough – what it already took in may still be acting.
     pub fn full_session_open(&self) -> bool {
         self.full_active.load(Ordering::SeqCst) > 0
+    }
+
+    /// How many mouse/keyboard sessions were opened since this hub started, and whose the latest
+    /// was. The PC's notice watches the number: it moves with every such session, however short,
+    /// and never for a media session, whatever the device's grant.
+    pub fn full_opened(&self) -> (u64, Option<PublicKey>) {
+        // the device is written before the number moves (and claims come one at a time): a new
+        // number never comes with an older device. An old number can come with a newer device;
+        // the reader acts on a moved number only, and sees it move at its next look.
+        let count = self.full_claims.load(Ordering::SeqCst);
+        let last = *self.full_last.lock().unwrap_or_else(|e| e.into_inner());
+        (count, last)
     }
 
     /// Taken **before** the PC's confirmation is shown; passed to the setter afterwards.
@@ -370,6 +385,7 @@ impl Remote {
         });
         if level == Level::Full {
             self.full_active.fetch_add(1, Ordering::SeqCst);
+            *self.full_last.lock().unwrap_or_else(|e| e.into_inner()) = Some(peer);
             self.full_claims.fetch_add(1, Ordering::SeqCst);
         }
         *slot = Some(Controller {

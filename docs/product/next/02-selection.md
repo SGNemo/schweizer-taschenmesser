@@ -1,6 +1,6 @@
 # Auswahl und Zuschnitt (Runde 3, 2026-10-18; Nachtrag 2026-10-29)
 
-> **Nachtrag 2026-10-29 – was `develop` seit dem Zuschnitt überholt hat** (#180–#261, Fokus-Runden 3–5b in [../focus/14-parallel-prompts-3.md](../focus/14-parallel-prompts-3.md) und [15-parallel-prompts-4.md](../focus/15-parallel-prompts-4.md)):
+> **Nachtrag 2026-10-29 – was `develop` seit dem Zuschnitt überholt hat** (#180–#261, Fokus-Runden 3–5b in ../focus/14-parallel-prompts-3.md (removed 2026-11-10, in the git history) und 15-parallel-prompts-4.md (removed 2026-11-10, in the git history)):
 > - **T1 schrumpft zum Umzugsassistenten.** Google Tasks + Todoist (#231) und Google Keep + Markdown/Obsidian (#230) sind importierbar; Kalender-ICS aus Takeout ging schon. Übrig: der Schritt „Woher kommst du?“ im Einrichtungsassistenten, der Eintrag unter Einstellungen → Sync & Backup und die Checkliste „Was fehlt noch“. Aufwand S statt M, Modell opusplan.
 > - **T4 baut auf `core/shell/pageChrome.ts` auf** (#237 „Handy mit einer Hand“: `hideFab`, `writeInMenu`, Zurück-Geste, Tastatur-Inset). `AreaFrame.tsx`, `Patterns.tsx` und `AppShell.tsx` wurden dort geändert; der Zuschnitt (Kopfzeile, Topbar, Abstand unten) bleibt offen.
 > - **Alle Startbedingungen sind erfüllt:** #180, #181, #182, #184 und #185 sind gemergt. T3, T5-E2 und T5-E3 können sofort starten. `quickCapture/parser/dates.ts` ist durch #182 deutlich gewachsen (Uhrzeit-Wörter) – T5-E3 setzt darauf auf.

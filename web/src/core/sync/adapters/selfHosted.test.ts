@@ -71,6 +71,12 @@ describe('SelfHostedAdapter maps a refused clock', () => {
     });
   });
 
+  it("turns the server's missing-enc answer (plain push beside a vault) into no-key", async () => {
+    await expect(adapter({ error: 'missing-enc' }, 400).push([])).rejects.toMatchObject({
+      code: 'no-key',
+    });
+  });
+
   it('keeps other 400 answers as server errors', async () => {
     await expect(adapter({ error: 'bad-request' }, 400).push([])).rejects.toMatchObject({
       code: 'server',

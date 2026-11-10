@@ -16,17 +16,28 @@ export const DESKTOP = { width: 1920, height: 1080 } as const;
 export const PHONE = { width: 412, height: 915 } as const;
 
 /** Every module with a manifest (not the dev-only example). */
+const manifestOf = (id: string) => readFileSync(join(MODULES, id, 'manifest.ts'), 'utf8');
+
+/**
+ * True when the module exists in the faked desktop app of these runs: no platform limit, or one that names the
+ * desktop. A phone-only module (`platforms: ['android']`) has no page here; its own spec fakes the phone.
+ */
+export const onDesktop = (id: string): boolean => {
+  const limit = /\bplatforms: \[([^\]]*)\]/.exec(manifestOf(id));
+  return !limit || limit[1]!.includes("'desktop'");
+};
+
+/** Every module with a manifest that the desktop window shows (not the dev-only example). */
 export const MODULE_IDS = readdirSync(MODULES)
   .filter((id) => id !== 'example' && existsSync(join(MODULES, id, 'manifest.ts')))
+  .filter(onDesktop)
   .sort();
 
 /**
  * The modules of the phone-sized window: a browser at 412 px is the web platform, so everything with a platform limit
  * (`manifest.platforms`: desktop app, Android app) is not there.
  */
-export const PHONE_MODULE_IDS = MODULE_IDS.filter(
-  (id) => !/\bplatforms: \[/.test(readFileSync(join(MODULES, id, 'manifest.ts'), 'utf8')),
-);
+export const PHONE_MODULE_IDS = MODULE_IDS.filter((id) => !/\bplatforms: \[/.test(manifestOf(id)));
 
 /** Entry route of every module for the given window. */
 export const moduleRoutes = (phone: boolean): string[] =>
