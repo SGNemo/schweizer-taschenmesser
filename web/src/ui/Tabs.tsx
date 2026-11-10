@@ -16,6 +16,10 @@ interface TabsByItems {
   label: string;
   items: readonly TabItem[];
   onSelect?: (id: string) => void;
+  // One shape or the other, never a mix.
+  value?: never;
+  options?: never;
+  onChange?: never;
 }
 /** The shape of `Segmented` (`value`, `options`, `onChange`), so a view switch moves over without a rewrite. */
 interface TabsByValue<T extends string> {
@@ -23,6 +27,8 @@ interface TabsByValue<T extends string> {
   value: T;
   options: readonly { value: T; label: string }[];
   onChange: (value: T) => void;
+  items?: never;
+  onSelect?: never;
 }
 
 /**

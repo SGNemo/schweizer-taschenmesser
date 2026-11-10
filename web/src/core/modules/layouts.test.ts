@@ -2,8 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LAYOUTS } from '../../../scripts/lib/checkModules';
-import { validateManifest } from './registry';
-import { allManifests } from './registry';
+import { allManifests, validateManifest } from './registry';
 import { PAGE_LAYOUTS, type ModuleManifest } from './types';
 
 /**
