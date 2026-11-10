@@ -33,7 +33,7 @@ use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
 /// How often the tray is compared with who controls right now (only while the hub runs).
-const WATCH: Duration = Duration::from_millis(400);
+const WATCH: Duration = Duration::from_millis(250);
 /// Longest device name shown in a native text (it is whatever the device claimed).
 const NAME_MAX_CHARS: usize = 40;
 /// Devices listed in the master-switch question; more are summed up in one line.
@@ -107,12 +107,15 @@ impl MasterSwitch for ClosedSwitch {
 /// The remote-control parts of a hub: its controls and its sink. The switch file sits next to the
 /// trust list; an unreadable one keeps remote control off (fail closed).
 pub fn parts(dir: &Path, trust: Arc<FileTrustStore>) -> (Arc<Remote>, Arc<Sink>) {
-    let switch: Arc<dyn MasterSwitch> = match FileSwitch::open(&dir.join("remote.json")) {
+    let remote = Arc::new(Remote::new(trust, switch_at(&dir.join("remote.json"))));
+    (remote, Arc::new(Sink::start()))
+}
+
+fn switch_at(path: &Path) -> Arc<dyn MasterSwitch> {
+    match FileSwitch::open(path) {
         Ok(switch) => Arc::new(switch),
         Err(_) => Arc::new(ClosedSwitch),
-    };
-    let remote = Arc::new(Remote::new(trust, switch));
-    (remote, Arc::new(Sink::start()))
+    }
 }
 
 // ---- state shared with the tray ----
@@ -122,11 +125,48 @@ pub struct RemoteHost {
     slot: Mutex<Option<Attached>>,
     /// A confirmation is on screen; a second one is refused instead of stacked.
     asking: AtomicBool,
+    /// What was taken away at this PC since the app started. A hub that is stopped and started
+    /// reads switch and grants from disk again; a narrowing whose write failed would come back
+    /// without anyone being asked. It is applied again on every start instead.
+    narrowed: Mutex<Narrowed>,
+}
+
+#[derive(Default)]
+struct Narrowed {
+    off: bool,
+    grants: Vec<([u8; 32], RemoteGrant)>,
+}
+
+impl Narrowed {
+    fn keep(&mut self, key: &PublicKey, grant: RemoteGrant) {
+        self.forget(key);
+        self.grants.push((*key.as_bytes(), grant));
+    }
+
+    fn forget(&mut self, key: &PublicKey) {
+        self.grants.retain(|(k, _)| k != key.as_bytes());
+    }
+
+    /// Puts every remembered narrowing onto freshly loaded controls. No ticket is passed, so
+    /// nothing here can widen: the crate refuses that.
+    fn apply(&self, remote: &Remote) {
+        if self.off {
+            let _ = remote.set_enabled(false, None);
+        }
+        for (key, grant) in &self.grants {
+            let _ = remote.set_grant(&PublicKey::from_bytes(*key), *grant, None);
+        }
+    }
+}
+
+enum Signal {
+    /// Something changed at the PC: look now instead of at the next tick.
+    Look,
+    Stop,
 }
 
 struct Attached {
     parts: Parts,
-    stop: Sender<()>,
     thread: Option<JoinHandle<()>>,
 }
 
@@ -135,6 +175,15 @@ struct Parts {
     remote: Arc<Remote>,
     trust: Arc<FileTrustStore>,
     supported: bool,
+    /// To the thread that keeps the tray in step – the only writer of the tray's controller.
+    watcher: Sender<Signal>,
+}
+
+impl Parts {
+    /// Tells the tray thread to look now.
+    fn look(&self) {
+        let _ = self.watcher.send(Signal::Look);
+    }
 }
 
 impl RemoteHost {
@@ -142,13 +191,65 @@ impl RemoteHost {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.parts.clone())
     }
+
+    fn narrowed(&self, change: impl FnOnce(&mut Narrowed)) {
+        if let Ok(mut narrowed) = self.narrowed.lock() {
+            change(&mut narrowed);
+        }
+    }
+
+    /// Ends the controlling session, pauses that device and remembers the pause.
+    fn end(&self, parts: &Parts) -> bool {
+        let ended = parts.remote.end();
+        if let Some(key) = &ended {
+            let grant = parts.remote.grant_of(key);
+            self.narrowed(|n| n.keep(key, grant));
+        }
+        parts.look();
+        ended.is_some()
+    }
 }
 
-/// One line of plain text for a native dialog or tooltip: no control characters, capped.
+/// Characters that change how the text around them is laid out or hide in it: direction marks
+/// and overrides, zero-width and other invisible format characters.
+fn invisible(c: char) -> bool {
+    matches!(c,
+        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
+        | '\u{2060}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}' | '\u{E0000}'..='\u{E007F}')
+}
+
+fn quote(c: char) -> bool {
+    matches!(
+        c,
+        '"' | '“'
+            | '”'
+            | '„'
+            | '‟'
+            | '«'
+            | '»'
+            | '‹'
+            | '›'
+            | '‘'
+            | '’'
+            | '‚'
+            | '‛'
+            | '`'
+            | '´'
+    )
+}
+
+/// A claimed device name as one line of plain text for a native dialog or tooltip: no control or
+/// invisible characters, no quotation marks (the name must not be able to close the quotes around
+/// it or turn the sentence after it around), capped. May be empty.
 fn plain(name: &str) -> String {
     let flat: String = name
         .chars()
-        .map(|c| if c.is_control() { ' ' } else { c })
+        .filter(|c| !invisible(*c))
+        .map(|c| match c {
+            c if c.is_control() => ' ',
+            c if quote(c) => '\'',
+            c => c,
+        })
         .collect();
     let joined = flat.split_whitespace().collect::<Vec<_>>().join(" ");
     if joined.chars().count() > NAME_MAX_CHARS {
@@ -160,11 +261,21 @@ fn plain(name: &str) -> String {
     }
 }
 
+/// What a device is called in a native text: its plain name, or – without one – a neutral label
+/// with the first characters of its id, so two unnamed devices can be told apart.
+fn shown_name(lang: Lang, name: &str, key: &PublicKey) -> String {
+    let name = plain(name);
+    if name.is_empty() {
+        let id = to_hex(key.as_bytes());
+        texts::remote_unnamed(lang, &id[..4])
+    } else {
+        name
+    }
+}
+
 fn name_of(trust: &FileTrustStore, key: &PublicKey) -> String {
-    trust
-        .find_by_key(key)
-        .map(|d| plain(&d.name))
-        .unwrap_or_default()
+    let name = trust.find_by_key(key).map(|d| d.name).unwrap_or_default();
+    shown_name(crate::webview2::system_lang(), &name, key)
 }
 
 /// The hub started: its controls become reachable, and a small thread keeps the tray in step
@@ -174,45 +285,53 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     let Ok(mut slot) = host.slot.lock() else {
         return;
     };
+    // what was taken away earlier in this run holds for the freshly loaded controls too
+    host.narrowed(|n| n.apply(&remote));
+    let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
         remote,
         trust,
         supported,
+        watcher,
     };
-    let (stop, rx) = mpsc::channel::<()>();
     let thread = {
         let app = app.clone();
-        let parts = parts.clone();
+        let remote = parts.remote.clone();
+        let trust = parts.trust.clone();
         std::thread::Builder::new()
             .name("remote-tray".into())
             .spawn(move || {
+                // The only writer of the tray's controller: what it last sent is what the tray
+                // shows, so "changed" is always judged against the truth.
                 let mut shown: Option<String> = None;
                 loop {
-                    let now = parts
-                        .remote
+                    let now = remote
                         .status()
                         .controller
-                        .map(|(key, _)| name_of(&parts.trust, &key));
+                        .map(|(key, _)| name_of(&trust, &key));
                     if now != shown {
                         crate::capture::set_remote_tray(&app, now.clone());
                         shown = now;
                     }
-                    // a message or a dropped sender both mean "the hub stops"
-                    if !matches!(rx.recv_timeout(WATCH), Err(mpsc::RecvTimeoutError::Timeout)) {
-                        return;
+                    match rx.recv_timeout(WATCH) {
+                        Ok(Signal::Look) | Err(mpsc::RecvTimeoutError::Timeout) => {}
+                        // the hub stopped (or its controls are gone): nobody controls any more
+                        Ok(Signal::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => {
+                            if shown.is_some() {
+                                crate::capture::set_remote_tray(&app, None);
+                            }
+                            return;
+                        }
                     }
                 }
             })
             .ok()
     };
-    *slot = Some(Attached {
-        parts,
-        stop,
-        thread,
-    });
+    *slot = Some(Attached { parts, thread });
 }
 
-/// The hub stopped: no controls, and the tray is back to normal.
+/// The hub stopped: no controls, and the tray is back to normal. Called after the sessions were
+/// closed.
 pub fn detach(app: &AppHandle) {
     let taken = app
         .state::<RemoteHost>()
@@ -221,20 +340,19 @@ pub fn detach(app: &AppHandle) {
         .ok()
         .and_then(|mut slot| slot.take());
     if let Some(mut attached) = taken {
-        let _ = attached.stop.send(());
+        let _ = attached.parts.watcher.send(Signal::Stop);
         if let Some(thread) = attached.thread.take() {
             let _ = thread.join();
         }
     }
-    crate::capture::set_remote_tray(app, None);
 }
 
 /// "Fernsteuerung beenden" in the tray: ends the session and pauses that device.
 pub fn end_from_tray(app: &AppHandle) {
-    if let Ok(parts) = app.state::<RemoteHost>().parts() {
-        let _ = parts.remote.end();
+    let host = app.state::<RemoteHost>();
+    if let Ok(parts) = host.parts() {
+        host.end(&parts);
     }
-    crate::capture::set_remote_tray(app, None);
 }
 
 // ---- what the web app sees ----
@@ -332,7 +450,8 @@ fn unix_secs() -> u64 {
         .map_or(0, |d| d.as_secs())
 }
 
-/// The question for one device: what it may do afterwards, and when it was last in touch.
+/// The question for one device: which device, what it may do afterwards, and when it was last in
+/// touch. The name stands alone on its own labelled line, never inside a sentence.
 fn device_question(
     lang: Lang,
     name: &str,
@@ -341,7 +460,10 @@ fn device_question(
     last_seen: Option<u64>,
     now: u64,
 ) -> String {
-    let mut lines = vec![texts::remote_ask_device(lang, &plain(name), new.level)];
+    let mut lines = vec![
+        texts::remote_ask_device(lang, name),
+        texts::remote_ask_level(lang, new.level).to_owned(),
+    ];
     if old.paused && !new.paused {
         lines.push(texts::remote_ask_unpause(lang).to_owned());
     }
@@ -356,12 +478,18 @@ fn device_question(
 fn switch_question(lang: Lang, granted: &[(String, Level)]) -> String {
     let mut lines = vec![texts::remote_ask_switch(lang).to_owned()];
     for (name, level) in granted.iter().take(ASK_LIST_MAX) {
-        lines.push(texts::remote_ask_switch_line(lang, &plain(name), *level));
+        lines.push(texts::remote_ask_switch_line(lang, name, *level));
     }
     if granted.len() > ASK_LIST_MAX {
         lines.push(texts::remote_ask_more(lang, granted.len() - ASK_LIST_MAX));
     }
     lines.join("\n")
+}
+
+/// Mouse and keyboard, or one protection less: the question carries the warning sign. Media
+/// alone is asked calmly.
+fn serious(old: &RemoteGrant, new: &RemoteGrant) -> bool {
+    new.level == Level::Full || (old.unlock && !new.unlock)
 }
 
 /// Resets "a confirmation is on screen" however the command ends.
@@ -384,17 +512,16 @@ impl Drop for Asking<'_> {
 
 /// Shows the native question and waits for the answer. Runs on a command thread (never the main
 /// thread); the page cannot answer it.
-fn confirmed(app: &AppHandle, lang: Lang, text: String) -> bool {
+fn confirmed(app: &AppHandle, lang: Lang, text: String, serious: bool) -> bool {
     let (title, allow, cancel) = texts::remote_dialog(lang);
-    let mut dialog = app
-        .dialog()
-        .message(text)
-        .title(title)
-        .kind(MessageDialogKind::Warning)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            allow.into(),
-            cancel.into(),
-        ));
+    let kind = if serious {
+        MessageDialogKind::Warning
+    } else {
+        MessageDialogKind::Info
+    };
+    let mut dialog = app.dialog().message(text).title(title).kind(kind).buttons(
+        MessageDialogButtons::OkCancelCustom(allow.into(), cancel.into()),
+    );
     if let Some(window) = app.get_webview_window("main") {
         dialog = dialog.parent(&window);
     }
@@ -421,20 +548,23 @@ pub fn remote_set_enabled(
 ) -> Result<(), String> {
     let parts = state.parts()?;
     if !enabled {
-        return parts
-            .remote
-            .set_enabled(false, None)
-            .map_err(|e| error_name(e).to_owned());
+        // remembered first: off holds for this run even if it cannot be written
+        state.narrowed(|n| n.off = true);
+        let result = parts.remote.set_enabled(false, None);
+        parts.look();
+        return result.map_err(|e| error_name(e).to_owned());
     }
     if parts.remote.enabled() {
         return Ok(());
     }
+    // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
+    // before the question, or while it is on screen – makes the setter refuse.
+    let ticket = parts.remote.ticket();
     if parts.remote.full_session_open() {
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    // the ticket is taken before the question is shown; the setter checks it afterwards
-    let ticket = parts.remote.ticket();
+    let lang = crate::webview2::system_lang();
     let granted: Vec<(String, Level)> = parts
         .trust
         .list()
@@ -442,19 +572,21 @@ pub fn remote_set_enabled(
         .filter(|d| !d.revoked)
         .filter_map(|d| {
             let level = parts.remote.grant_of(&d.key).effective();
-            (level > Level::Off).then_some((d.name, level))
+            (level > Level::Off).then(|| (shown_name(lang, &d.name, &d.key), level))
         })
         .collect();
     if !granted.is_empty() {
-        let lang = crate::webview2::system_lang();
-        if !confirmed(&app, lang, switch_question(lang, &granted)) {
+        let serious = granted.iter().any(|(_, level)| *level == Level::Full);
+        if !confirmed(&app, lang, switch_question(lang, &granted), serious) {
             return Err("cancelled".to_owned());
         }
     }
     parts
         .remote
         .set_enabled(true, Some(ticket))
-        .map_err(|e| error_name(e).to_owned())
+        .map_err(|e| error_name(e).to_owned())?;
+    state.narrowed(|n| n.off = false);
+    Ok(())
 }
 
 /// The grant of one paired device: level, pause, "unlock at the phone". A change that gives or
@@ -482,42 +614,50 @@ pub fn remote_set_device(
         .ok_or("not-found")?;
     let old = parts.remote.grant_of(&key);
     if !grant.widens(&old) {
-        return parts
-            .remote
-            .set_grant(&key, grant, None)
-            .map_err(|e| error_name(e).to_owned());
+        // remembered first: a narrowing holds for this run even if it cannot be written
+        state.narrowed(|n| n.keep(&key, grant));
+        let result = parts.remote.set_grant(&key, grant, None);
+        parts.look();
+        return result.map_err(|e| error_name(e).to_owned());
     }
+    // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
+    // before the question, or while it is on screen – makes the setter refuse.
+    let ticket = parts.remote.ticket();
     if parts.remote.full_session_open() {
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    // the ticket is taken before the question is shown; the setter checks it afterwards
-    let ticket = parts.remote.ticket();
     let lang = crate::webview2::system_lang();
     let text = device_question(
         lang,
-        &device.name,
+        &shown_name(lang, &device.name, &key),
         &old,
         &grant,
         device.last_seen,
         unix_secs(),
     );
-    if !confirmed(&app, lang, text) {
+    if !confirmed(&app, lang, text, serious(&old, &grant)) {
         return Err("cancelled".to_owned());
+    }
+    // The question described the step from `old`. If the grant changed while it was on screen
+    // (paused from the tray, narrowed elsewhere), the answer was given to another question.
+    if parts.remote.grant_of(&key) != old {
+        return Err("changed".to_owned());
     }
     parts
         .remote
         .set_grant(&key, grant, Some(ticket))
-        .map_err(|e| error_name(e).to_owned())
+        .map_err(|e| error_name(e).to_owned())?;
+    state.narrowed(|n| n.forget(&key));
+    Ok(())
 }
 
 /// "Fernsteuerung beenden": ends the controlling session and pauses that device. `false` if
 /// nobody controlled.
 #[tauri::command(async)]
-pub fn remote_end(app: AppHandle, state: State<'_, RemoteHost>) -> Result<bool, String> {
-    let ended = state.parts()?.remote.end().is_some();
-    crate::capture::set_remote_tray(&app, None);
-    Ok(ended)
+pub fn remote_end(state: State<'_, RemoteHost>) -> Result<bool, String> {
+    let parts = state.parts()?;
+    Ok(state.end(&parts))
 }
 
 #[cfg(test)]
@@ -659,10 +799,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("nemo-remote-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("remote.json"), b"{ not json").unwrap();
-        let switch: Arc<dyn MasterSwitch> = match FileSwitch::open(&dir.join("remote.json")) {
-            Ok(s) => Arc::new(s),
-            Err(_) => Arc::new(ClosedSwitch),
-        };
+        let switch = switch_at(&dir.join("remote.json"));
         let remote = Remote::new(Arc::new(MemoryTrustStore::new()), switch);
         assert!(!remote.enabled());
         let ticket = remote.ticket();
@@ -707,6 +844,30 @@ mod tests {
     }
 
     #[test]
+    fn a_name_cannot_turn_the_text_around_or_close_its_quotes() {
+        // right-to-left override, isolates, zero-width space, byte order mark
+        assert_eq!(plain("Han\u{202E}dy\u{2066}\u{200B}\u{FEFF}"), "Handy");
+        let spoof = plain("Handy“ darf nur Medien steuern. „");
+        for c in ['“', '”', '„', '"', '«', '»'] {
+            assert!(!spoof.contains(c), "{spoof}");
+        }
+        assert_eq!(plain("\u{202E}\u{200B}"), "");
+    }
+
+    #[test]
+    fn a_device_without_a_name_gets_a_label_and_a_piece_of_its_id() {
+        let a = PublicKey::from_bytes([0xab; 32]);
+        let b = PublicKey::from_bytes([0x12; 32]);
+        for lang in [Lang::De, Lang::En] {
+            let named = shown_name(lang, " Pixel ", &a);
+            assert_eq!(named, "Pixel");
+            let unnamed = shown_name(lang, " \u{200B}\n", &a);
+            assert!(unnamed.contains("abab"), "{unnamed}");
+            assert_ne!(unnamed, shown_name(lang, "", &b));
+        }
+    }
+
+    #[test]
     fn the_device_question_names_every_widening() {
         let old = RemoteGrant {
             level: Level::Media,
@@ -719,15 +880,11 @@ mod tests {
             unlock: false,
         };
         for lang in [Lang::De, Lang::En] {
-            let text = device_question(
-                lang,
-                "Pixel\n8",
-                &old,
-                &new,
-                Some(1_000),
-                1_000 + 3 * 86_400,
-            );
-            assert!(text.contains("Pixel 8"), "{text}");
+            let text =
+                device_question(lang, "Pixel 8", &old, &new, Some(1_000), 1_000 + 3 * 86_400);
+            // the name stands alone on the first line
+            assert!(text.lines().next().unwrap().ends_with("Pixel 8"), "{text}");
+            assert!(text.contains(texts::remote_ask_level(lang, Level::Full)));
             assert!(text.contains(texts::remote_ask_unpause(lang)));
             assert!(text.contains(texts::remote_ask_no_unlock(lang)));
             assert!(text.contains('3'), "{text}");
@@ -735,6 +892,92 @@ mod tests {
             assert!(!plain_raise.contains(texts::remote_ask_unpause(lang)));
             assert!(!plain_raise.contains(texts::remote_ask_no_unlock(lang)));
         }
+    }
+
+    #[test]
+    fn only_mouse_and_keyboard_or_one_protection_less_carry_the_warning_sign() {
+        let off = RemoteGrant::default();
+        let media = RemoteGrant {
+            level: Level::Media,
+            ..off
+        };
+        let full = RemoteGrant {
+            level: Level::Full,
+            ..off
+        };
+        assert!(!serious(&off, &media));
+        assert!(serious(&off, &full));
+        assert!(serious(
+            &media,
+            &RemoteGrant {
+                unlock: false,
+                ..media
+            }
+        ));
+        assert!(!serious(
+            &RemoteGrant {
+                paused: true,
+                ..media
+            },
+            &media
+        ));
+    }
+
+    #[test]
+    fn what_was_taken_away_holds_for_freshly_loaded_controls() {
+        let trust = Arc::new(MemoryTrustStore::new());
+        let key = PublicKey::from_bytes([7; 32]);
+        trust
+            .add(::lan_sync::trust::Device {
+                key,
+                name: "Handy".into(),
+                last_seen: None,
+                revoked: false,
+            })
+            .unwrap();
+        // as loaded from disk after a hub restart: switch on, device granted
+        let switch = Arc::new(MemorySwitch::new());
+        switch.set(true).unwrap();
+        trust
+            .set_remote(
+                &key,
+                RemoteGrant {
+                    level: Level::Full,
+                    paused: false,
+                    unlock: true,
+                },
+            )
+            .unwrap();
+        let remote = Remote::new(trust.clone(), switch);
+        let mut narrowed = Narrowed {
+            off: true,
+            ..Narrowed::default()
+        };
+        narrowed.keep(
+            &key,
+            RemoteGrant {
+                level: Level::Full,
+                paused: true,
+                unlock: true,
+            },
+        );
+        narrowed.apply(&remote);
+        assert!(!remote.enabled());
+        assert!(remote.grant_of(&key).paused);
+        // a remembered grant can never give more than what is stored: no ticket, no widening
+        let mut wider = Narrowed::default();
+        wider.keep(
+            &key,
+            RemoteGrant {
+                level: Level::Full,
+                paused: false,
+                unlock: false,
+            },
+        );
+        wider.apply(&remote);
+        assert!(remote.grant_of(&key).paused && remote.grant_of(&key).unlock);
+        wider.forget(&key);
+        assert!(wider.grants.is_empty());
     }
 
     #[test]

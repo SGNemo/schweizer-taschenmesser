@@ -202,7 +202,7 @@ fn what_cannot_be_read_is_no_volume_and_locked() {
 }
 
 #[test]
-fn the_caller_never_waits_for_a_slow_system_longer_than_the_bound() {
+fn the_caller_never_waits_for_a_slow_system() {
     let (w, pc) = rig(Pc {
         slow: Duration::from_millis(400),
         ..usual()
@@ -210,7 +210,10 @@ fn the_caller_never_waits_for_a_slow_system_longer_than_the_bound() {
     // the first reading is still being taken: the caller gets "unknown" within the bound
     let began = Instant::now();
     let s = w.state();
-    assert!(began.elapsed() < remote_input::FRESH_WAIT + Duration::from_millis(100));
+    assert!(
+        began.elapsed() < Duration::from_millis(50),
+        "state() waited"
+    );
     assert_eq!(s, State::UNKNOWN);
     // sending never waits either
     let began = Instant::now();
@@ -238,8 +241,11 @@ fn a_full_queue_drops_commands_instead_of_blocking() {
 #[test]
 fn where_the_pc_cannot_be_controlled_everything_is_a_no_op() {
     // a system that cannot be created (what `Worker::start` gets off Windows)
+    // … or whose setup failed on the worker thread (COM, on Windows): not supported, so the hub
+    // answers `unsupported` instead of accepting commands that go nowhere
     let w = Worker::with(|| None);
-    std::thread::sleep(Duration::from_millis(30));
+    assert!(!w.supported());
+    assert!(!w.send(Command::PlayPause));
     assert_eq!(w.state(), State::UNKNOWN);
     #[cfg(not(windows))]
     {
@@ -260,4 +266,28 @@ fn nobody_asking_means_no_reading() {
     // … and the next asker (within the stale bound) gets the old reading at once, and the new
     // one right after
     until(&w, |s| s.volume == Some(80));
+}
+
+#[test]
+fn asking_for_the_state_never_crowds_out_a_command() {
+    let (w, pc) = rig(Pc {
+        slow: Duration::from_millis(20),
+        ..usual()
+    });
+    // a hub polls the state many times while the system is slow …
+    for _ in 0..1000 {
+        let _ = w.state();
+    }
+    // … and a command still finds a place and is carried out
+    assert!(w.send(Command::Lock));
+    pc.lock().unwrap().slow = Duration::ZERO;
+    until(&w, |s| s.volume.is_some());
+    let began = Instant::now();
+    while pc.lock().unwrap().lock_calls == 0 {
+        assert!(
+            began.elapsed() < Duration::from_secs(5),
+            "the lock never ran"
+        );
+        std::thread::sleep(Duration::from_millis(5));
+    }
 }

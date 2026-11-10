@@ -41,6 +41,8 @@ struct TrayItems {
     quit: MenuItem<Wry>,
     /// "Fernsteuerung beenden"; its text is native (`texts.rs`), the page never sets it.
     remote_end: MenuItem<Wry>,
+    /// Not clickable, under it: the device stays paused afterwards.
+    remote_hint: MenuItem<Wry>,
 }
 
 /// Everything the tray shows. The page sends labels, tooltip and the "Heute" block; who controls
@@ -201,6 +203,7 @@ fn tray_today_lines(today: &TrayToday) -> Vec<(usize, String)> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum TrayRow {
     RemoteEnd,
+    RemoteHint,
     Separator,
     Heading(String),
     Today(usize, String),
@@ -217,6 +220,7 @@ fn tray_rows(today: &TrayToday, remote: bool) -> Vec<TrayRow> {
     let mut rows = Vec::new();
     if remote {
         rows.push(TrayRow::RemoteEnd);
+        rows.push(TrayRow::RemoteHint);
         rows.push(TrayRow::Separator);
     }
     let lines = tray_today_lines(today);
@@ -246,6 +250,7 @@ fn tray_menu(app: &AppHandle, tray: &Tray) -> tauri::Result<Menu<Wry>> {
     for row in tray_rows(&tray.today, tray.remote.is_some()) {
         match row {
             TrayRow::RemoteEnd => menu.append(&tray.items.remote_end)?,
+            TrayRow::RemoteHint => menu.append(&tray.items.remote_hint)?,
             TrayRow::Separator => menu.append(&PredefinedMenuItem::separator(app)?)?,
             TrayRow::Heading(label) => menu.append(&item("today-heading", &label, false)?)?,
             TrayRow::Today(index, label) => {
@@ -378,6 +383,13 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             TRAY_REMOTE_END,
             crate::texts::remote_end_label(crate::webview2::system_lang()),
             true,
+            None::<&str>,
+        )?,
+        remote_hint: MenuItem::with_id(
+            app,
+            "remote-hint",
+            crate::texts::remote_end_hint(crate::webview2::system_lang()),
+            false,
             None::<&str>,
         )?,
     };
@@ -840,9 +852,12 @@ mod tests {
         };
         for today in [TrayToday::default(), full] {
             let rows = tray_rows(&today, true);
-            assert_eq!(rows[..2], [TrayRow::RemoteEnd, TrayRow::Separator]);
+            assert_eq!(
+                rows[..3],
+                [TrayRow::RemoteEnd, TrayRow::RemoteHint, TrayRow::Separator]
+            );
             // the rest is exactly the menu without a controller
-            assert_eq!(rows[2..], tray_rows(&today, false)[..]);
+            assert_eq!(rows[3..], tray_rows(&today, false)[..]);
             assert!(!tray_rows(&today, false).contains(&TrayRow::RemoteEnd));
         }
     }

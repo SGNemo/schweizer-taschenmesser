@@ -492,10 +492,11 @@ pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), Str
         if let Ok(mut live) = r.core.live.lock() {
             live.sup.stop();
         }
-        // the PC's remote controls go with the hub (and the tray is back to normal), whatever
-        // closing the sessions says
+        // Sessions first (an input session ends with them), then the PC's remote controls and
+        // the tray – whatever closing said, so nothing is left pointing at a stopped hub.
+        let closed = r.core.sessions.close_all();
         crate::remote::detach(&app);
-        r.core.sessions.close_all().map_err(|_| "internal")?;
+        closed.map_err(|_| "internal")?;
     }
     Ok(())
 }

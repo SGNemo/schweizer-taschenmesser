@@ -90,7 +90,7 @@ mod imp {
         eMultimedia, eRender, IMMDeviceEnumerator, MMDeviceEnumerator,
     };
     use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
+        CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
     };
     use windows::Win32::System::RemoteDesktop::{
         WTSFreeMemory, WTSQuerySessionInformationW, WTSSessionInfoEx, WTSINFOEXW,
@@ -100,25 +100,46 @@ mod imp {
     use windows::Win32::System::Shutdown::LockWorkStation;
 
     pub fn native() -> Option<Box<dyn System>> {
-        // SAFETY: initialises COM for this (the worker) thread, which lives as long as the
-        // process uses the worker; never uninitialised, so no object outlives its apartment.
+        // SAFETY: initialises COM for this (the worker) thread. Paired with the
+        // `CoUninitialize` in `Drop for Windows`, which runs on the same thread when the worker
+        // ends (the hub stopped) and only after every COM object here is released.
         let ok = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.is_ok();
-        ok.then(|| Box::new(Windows { manager: None }) as Box<dyn System>)
+        ok.then(|| {
+            Box::new(Windows {
+                devices: None,
+                manager: None,
+            }) as Box<dyn System>
+        })
     }
 
     struct Windows {
+        /// The audio device enumerator, created once and kept.
+        devices: Option<IMMDeviceEnumerator>,
         /// The media session manager, asked for once and kept.
         manager: Option<Manager>,
     }
 
+    impl Drop for Windows {
+        fn drop(&mut self) {
+            // every object of this apartment goes first
+            self.devices = None;
+            self.manager = None;
+            // SAFETY: the worker thread that ran the successful `CoInitializeEx` in `native`
+            // drops this value; nothing created in the apartment is left.
+            unsafe { CoUninitialize() };
+        }
+    }
+
     impl Windows {
-        /// The default playback device's volume control. Looked up every time: the default
-        /// device changes when headphones are plugged in.
-        fn endpoint(&self) -> Option<IAudioEndpointVolume> {
+        /// The default playback device's volume control. The device is looked up every time
+        /// (the default changes when headphones are plugged in); the enumerator is kept.
+        fn endpoint(&mut self) -> Option<IAudioEndpointVolume> {
             // SAFETY: COM calls on smart pointers; COM is initialised on this thread (`native`).
             unsafe {
-                let devices: IMMDeviceEnumerator =
-                    CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).ok()?;
+                if self.devices.is_none() {
+                    self.devices = CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL).ok();
+                }
+                let devices = self.devices.as_ref()?;
                 let device = devices.GetDefaultAudioEndpoint(eRender, eMultimedia).ok()?;
                 device
                     .Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)

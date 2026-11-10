@@ -2,16 +2,18 @@
 
 use crate::system::{self, System};
 use crate::{Command, State};
-use std::sync::mpsc::{self, RecvTimeoutError, SyncSender, TrySendError};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, RecvTimeoutError, SyncSender};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 /// Commands waiting for the worker; one more is dropped, never waited for.
 const QUEUE: usize = 32;
-/// A reading older than this is refreshed before it is handed out.
+/// A reading older than this is not handed out any more: the caller gets "unknown" and the
+/// fresh reading with its next question.
 pub const STALE: Duration = Duration::from_secs(2);
-/// The longest a caller waits for that refresh; then it gets what is there.
-pub const FRESH_WAIT: Duration = Duration::from_millis(150);
+/// How long starting the worker waits to hear whether the system could be set up at all.
+const READY_WAIT: Duration = Duration::from_secs(3);
 
 enum Message {
     Do(Command),
@@ -26,7 +28,21 @@ struct Reading {
 
 struct Cache {
     reading: Mutex<Reading>,
-    refreshed: Condvar,
+    /// A refresh is already waiting in the queue: askers do not add another one, so reading the
+    /// state – however often – takes at most one place and never crowds out a command.
+    refresh_wanted: AtomicBool,
+}
+
+impl Cache {
+    fn new() -> Arc<Cache> {
+        Arc::new(Cache {
+            reading: Mutex::new(Reading {
+                state: State::UNKNOWN,
+                at: None,
+            }),
+            refresh_wanted: AtomicBool::new(false),
+        })
+    }
 }
 
 /// The handle the shell keeps. Cheap to clone; the thread ends when the last handle is dropped.
@@ -45,27 +61,27 @@ impl Worker {
         Worker::with(system::native)
     }
 
-    /// A worker over a given system (tests). `make` runs on the worker thread.
+    /// A worker over a given system (tests). `make` runs on the worker thread; the worker is
+    /// supported only if it returned a system (waited for briefly, once, here).
     pub fn with<F>(make: F) -> Worker
     where
         F: FnOnce() -> Option<Box<dyn System>> + Send + 'static,
     {
-        let cache = Arc::new(Cache {
-            reading: Mutex::new(Reading {
-                state: State::UNKNOWN,
-                at: None,
-            }),
-            refreshed: Condvar::new(),
-        });
+        let cache = Cache::new();
         let (tx, rx) = mpsc::sync_channel::<Message>(QUEUE);
+        let (ready_tx, ready_rx) = mpsc::sync_channel::<bool>(1);
         let shared = cache.clone();
         let spawned = std::thread::Builder::new()
             .name("remote-input".into())
             .spawn(move || {
-                let Some(mut sys) = make() else {
+                let made = make();
+                let _ = ready_tx.send(made.is_some());
+                let Some(mut sys) = made else {
                     return;
                 };
                 let store = |sys: &mut dyn System| {
+                    // cleared first: a question that comes while this reading is taken asks again
+                    shared.refresh_wanted.store(false, Ordering::SeqCst);
                     let state = system::read(sys);
                     if let Ok(mut r) = shared.reading.lock() {
                         *r = Reading {
@@ -73,7 +89,6 @@ impl Worker {
                             at: Some(Instant::now()),
                         };
                     }
-                    shared.refreshed.notify_all();
                 };
                 store(&mut *sys);
                 loop {
@@ -89,8 +104,11 @@ impl Worker {
                     }
                 }
             });
+        // no thread, no system, or no word from it in time: not supported (dropping `tx` ends
+        // a thread that comes up late)
+        let ready = spawned.is_ok() && ready_rx.recv_timeout(READY_WAIT).unwrap_or(false);
         Worker {
-            tx: spawned.is_ok().then_some(tx),
+            tx: ready.then_some(tx),
             cache,
         }
     }
@@ -98,13 +116,7 @@ impl Worker {
     fn without() -> Worker {
         Worker {
             tx: None,
-            cache: Arc::new(Cache {
-                reading: Mutex::new(Reading {
-                    state: State::UNKNOWN,
-                    at: None,
-                }),
-                refreshed: Condvar::new(),
-            }),
+            cache: Cache::new(),
         }
     }
 
@@ -122,33 +134,23 @@ impl Worker {
         }
     }
 
-    /// The last reading. Asks the worker for a new one each time (so readers that keep asking see
-    /// a fresh state, and nobody asking costs nothing); waits for it – at most [`FRESH_WAIT`] –
-    /// only when what is there is older than [`STALE`].
+    /// The last reading, at once. Asks the worker for a new one (at most one such request waits
+    /// at a time), so readers that keep asking see a fresh state and nobody asking costs nothing.
+    /// A reading older than [`STALE`] is not handed out: the caller gets "unknown" now and the
+    /// fresh one with its next question.
     pub fn state(&self) -> State {
         let Some(tx) = &self.tx else {
             return State::UNKNOWN;
         };
-        let asked = match tx.try_send(Message::Refresh) {
-            Ok(()) | Err(TrySendError::Full(_)) => true,
-            Err(TrySendError::Disconnected(_)) => false,
-        };
-        let Ok(reading) = self.cache.reading.lock() else {
-            return State::UNKNOWN;
-        };
-        let stale = |r: &Reading| r.at.map_or(true, |at| at.elapsed() > STALE);
-        if !asked || !stale(&reading) {
-            return reading.state;
-        }
-        match self
-            .cache
-            .refreshed
-            .wait_timeout_while(reading, FRESH_WAIT, |r| stale(r))
+        if !self.cache.refresh_wanted.swap(true, Ordering::SeqCst)
+            && tx.try_send(Message::Refresh).is_err()
         {
-            // still stale after the wait: what cannot be told right now is treated as unknown
-            Ok((r, _)) if stale(&r) => State::UNKNOWN,
-            Ok((r, _)) => r.state,
-            Err(_) => State::UNKNOWN,
+            // a full queue: every command in it ends in a reading anyway; ask again next time
+            self.cache.refresh_wanted.store(false, Ordering::SeqCst);
+        }
+        match self.cache.reading.lock() {
+            Ok(r) if r.at.is_some_and(|at| at.elapsed() <= STALE) => r.state,
+            _ => State::UNKNOWN,
         }
     }
 }

@@ -150,16 +150,18 @@ L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teile
 L4. _Lesezeichen:_ Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
 L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
-### Fernsteuerung, PC-Seite (`feat/remote-host-media`) – nur auf echtem Windows prüfbar, R3–R9 ab Paket 2 (Handy-Modul)
+### Fernsteuerung, PC-Seite (`feat/remote-host-media`) – nur auf echtem Windows prüfbar
+
+R1–R2 gehen sofort. R8 braucht Teil 2 (`feat/remote-host-settings`: Einstellungen → Verbindungen → Fernsteuerung, dort wird die Freigabe gesetzt). R3–R7 brauchen Teil 2 und Paket 2 (Handy-Modul), R9 Paket 3.
 
 R1. _Hub ohne Fernsteuerung:_ Heimnetz-Sync wie bisher starten, koppeln, synchronisieren: alles unverändert; Tray zeigt das normale Symbol und kein „Fernsteuerung beenden“. ☐
 R2. _Tray nach Neuaufbau:_ App-Sprache wechseln und einen Termin für heute anlegen (Tray-Menü wird neu gebaut): Menü und Tooltip bleiben vollständig, das Symbol flackert nicht. ☐
 R3. _Lautstärke und Ton aus:_ vom Handy lauter/leiser (je 2 %) und Ton aus; „lauter“ hebt Ton aus auf; die Anzeige am Handy folgt dem PC, auch wenn am PC selbst gedreht wird. ☐
 R4. _Zwei Player:_ Spotify und ein Browser-Video offen: Wiedergabe/Pause, Nächster, Vorheriger treffen den Player, den auch die Medientasten der Tastatur treffen. ☐
 R5. _Sperrbildschirm:_ PC sperren (Win+L): Medien und Lautstärke gehen weiter; „PC sperren“ vom Handy sperrt; der Zustand „gesperrt“ kommt am Handy an. ☐
-R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“. ☐
+R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“, darunter grau „Das Gerät pausiert, bis du es hier wieder einschaltest“. ☐
 R7. _Beenden pausiert:_ „Fernsteuerung beenden“ im Tray: das Handy verliert die Verbindung sofort und kommt nicht wieder, bis das Gerät am PC wieder eingeschaltet wird (mit Bestätigung). ☐
-R8. _Bestätigung nur am PC:_ Stufe erhöhen, Pause aufheben, „Am Handy entsperren“ aus, Hauptschalter an (bei vorhandener Freigabe): jedes Mal ein Windows-Dialog mit Gerätename und letztem Kontakt; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
+R8. _Bestätigung nur am PC:_ Stufe erhöhen, Pause aufheben, „Am Handy entsperren“ aus, Hauptschalter an (bei vorhandener Freigabe): jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
 R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tastatur steuert, lässt sich keine Freigabe erhöhen – auch nicht mit einem Dialog, der vor der Sitzung geöffnet wurde. ☐
 
 ### Einrichtungsassistent

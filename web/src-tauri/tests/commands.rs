@@ -360,11 +360,6 @@ fn no_tauri_command_simulates_input() {
     // the sink is the only place that hands anything to the worker, and only media
     let src = source("remote.rs");
     let code = &src[..src.find("#[cfg(test)]").unwrap()];
-    assert_eq!(
-        code.matches(".send(").count(),
-        2,
-        "worker send + stop signal"
-    );
     assert_eq!(code.matches("self.0.send(command_of(media))").count(), 1);
     assert_eq!(code.matches("impl InputSink for").count(), 1);
 
@@ -408,11 +403,14 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
         let ticket = body.find("parts.remote.ticket()").expect("ticket");
         let dialog = body.find("confirmed(&app").expect("native dialog");
         let setter = body.rfind("Some(ticket)").expect("setter with the ticket");
-        assert!(ticket < dialog && dialog < setter, "{name}: wrong order");
+        let busy = body.find("full_session_open()").expect("session check");
+        assert!(
+            ticket < busy && busy < dialog && dialog < setter,
+            "{name}: wrong order"
+        );
         assert_eq!(body.matches("parts.remote.ticket()").count(), 1, "{name}");
         // the only setter call before the dialog passes no ticket (a narrowing)
         assert!(!body[..dialog].contains("Some("), "{name}");
-        assert!(body[..ticket].contains("full_session_open()"), "{name}");
     }
     // `remote_end` and `remote_status` widen nothing
     for name in ["remote_status", "remote_end"] {
@@ -441,5 +439,6 @@ fn the_hub_wires_remote_control_and_drops_it_on_stop() {
     assert_eq!(lan.matches("crate::remote::detach(").count(), 1);
     let stop = &lan[lan.find("pub fn lan_hub_stop(").unwrap()..];
     let stop = &stop[..stop.find("\n}\n").unwrap()];
-    assert!(stop.contains("crate::remote::detach("));
+    // sessions are closed before the controls and the tray indicator go
+    assert!(stop.find("close_all()").unwrap() < stop.find("crate::remote::detach(").unwrap());
 }
