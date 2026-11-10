@@ -40,11 +40,11 @@ interface TabsByValue<T extends string> {
 export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue<T>) {
   const { label } = props;
   const items: readonly TabItem[] =
-    'options' in props
+    props.options !== undefined
       ? props.options.map((o) => ({ id: o.value, label: o.label, active: o.value === props.value }))
       : props.items;
   const onSelect = (id: string) =>
-    'options' in props ? props.onChange(id as T) : props.onSelect?.(id);
+    props.options !== undefined ? props.onChange(id as T) : props.onSelect?.(id);
   const nav = useRef<HTMLElement>(null);
   const activeId = items.find((i) => i.active)?.id;
   // A row that scrolls sideways (phone) keeps the active tab in view; no animation with less motion.

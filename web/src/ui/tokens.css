@@ -132,7 +132,7 @@
   --text-3: #5f6c75; /* meta, captions, eyebrows: 4.5:1 on surface-2 */
   /* The grey that stands in for every hue in the calm colour mode: no colour cast (the text greys are bluish and
      read as a tint when they fill a mark), ≥ 4.5:1 on every surface, so it also carries status text. */
-  --calm-ink: #5f6367;
+  --calm-ink: #565a5e;
   /* Secondary text on a tinted module head or widget zone (identity v3.1): the only quiet ink allowed there;
      ≥ 4.5:1 on the 40 % tint of every hue in both themes (tokens.test.ts). --text-muted/--text-3 do not reach that. */
   --text-on-tint: color-mix(in srgb, var(--text) 84%, var(--surface));
@@ -235,7 +235,7 @@
   --text: #eceff1;
   --text-muted: #aab4bb;
   --text-3: #88939b;
-  --calm-ink: #8f9498;
+  --calm-ink: #9da2a6;
   --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
   --danger: #f4a39c;
   --success: #7fd3a3;
@@ -294,7 +294,7 @@
     --text: #eceff1;
     --text-muted: #aab4bb;
     --text-3: #88939b;
-    --calm-ink: #8f9498;
+    --calm-ink: #9da2a6;
     --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
     --danger: #f4a39c;
     --success: #7fd3a3;

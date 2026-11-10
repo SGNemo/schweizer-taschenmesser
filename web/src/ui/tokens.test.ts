@@ -598,11 +598,17 @@ it('calm colour mode: every hue and every state but danger becomes --calm-ink, a
   ] as const) {
     // Under the measurement's limit for a coloured surface (0.12), with room; --text-3 lies over it in both themes.
     expect(saturationOf(t['--calm-ink']!), `${name}: --calm-ink has no cast`).toBeLessThan(0.1);
-    for (const bg of TONE_SURFACES)
+    for (const bg of TONE_SURFACES) {
       expect(
         ratio(t['--calm-ink']!, t[bg]!),
         `${name}: --calm-ink on ${bg}`,
       ).toBeGreaterThanOrEqual(4.5);
+      // As a state it is also text on its own 15 % background (`--success` on `--success-soft`, a swipe hint).
+      expect(
+        ratio(t['--calm-ink']!, mix(t['--calm-ink']!, t[bg]!, 0.15)),
+        `${name}: --calm-ink on its soft background over ${bg}`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
   }
 });
 

@@ -21,6 +21,10 @@ import { DESKTOP, moduleRoutes, openPage, PHONE, startSeeded } from './guards';
  * On the listed routes a fill in exactly one of the two greys on an element of at most 12 × 12 px is not counted;
  * everywhere else it is. The entry goes with the package that owns the page (calendar: 0b-4).
  *
+ * What the guard cannot see is what the measurement cannot see: gradients and patterns (`background-image`: the
+ * module head band), borders, pseudo-elements and SVG (icons, charts). That those turn grey is pinned at the
+ * token level (`ui/tokens.test.ts`: every hue and state token is `--calm-ink` in calm, the patterns are off).
+ *
  * Light theme only (the theme of the stimulus measurement): the dark neutral steps themselves are bluish
  * (`--surface`: saturation 0.28) and the measurement reads every tone that is not exactly `--bg`, `--surface` or
  * `--surface-2` as a coloured surface there, grey or not.
@@ -33,8 +37,11 @@ const INK_MARKS: Record<string, string> = {
 /** Largest side (px) of an element that still is a mark. */
 const MARK_MAX = 12;
 
-/** How far a colour may lie from the hue of `--danger` / `--accent` (degrees): mixes over a surface drift a little. */
-const HUE_BAND = 20;
+/**
+ * How far a colour may lie from the hue of `--danger` / `--accent` (degrees): mixes over a surface drift a little.
+ * Narrow enough to keep amber out: the light `--warning` lies 19° from the accent.
+ */
+const HUE_BAND = 12;
 
 interface Kept {
   /** Hits of the measurement on the danger or accent hue. */

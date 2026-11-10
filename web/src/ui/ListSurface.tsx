@@ -23,10 +23,10 @@ export function ListSurface({
 }: ListSurfaceProps) {
   return (
     <Tag
+      {...rest}
       className={[styles.surface, className].filter(Boolean).join(' ')}
       aria-label={label}
       data-list-surface=""
-      {...rest}
     >
       {children}
     </Tag>
