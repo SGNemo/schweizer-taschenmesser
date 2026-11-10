@@ -541,7 +541,7 @@ fn a_session_lets_go_of_exactly_the_buttons_it_holds() {
     }
 
     // a session that was ended and whose device opened anew before it finished: the older one
-    // still lets go of its own button, the newer one's stays down
+    // still lets go of its own button
     let b = bench();
     b.grant(PHONE, Level::Full);
     let (mut old, _) = b.opened(PHONE, Level::Full);
@@ -555,6 +555,53 @@ fn a_session_lets_go_of_exactly_the_buttons_it_holds() {
     // a media session holds nothing and lets go of nothing
     drop(new);
     assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
+}
+
+#[test]
+fn the_same_device_reopening_at_full_can_lose_a_press_but_nothing_stays_held() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut old, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(events(&mut old, &[CLICK], T0), Step::Continue);
+    // a reconnect while the older session's connection has not finished yet
+    let (mut new, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(events(&mut new, &[CLICK], T0), Step::Continue);
+    b.sink.taken();
+    // the older one ends and lets go of the button it pressed – which is the one the newer
+    // session pressed too: that drag ends early
+    drop(old);
+    assert!(b.sink.taken() == vec![LEFT_UP]);
+    // the newer session's own release is then one more up (it still holds the button in its own
+    // book), and its end lets go of nothing further
+    assert_eq!(events(&mut new, &[UNCLICK], T0), Step::Continue);
+    assert!(b.sink.taken() == vec![LEFT_UP]);
+    drop(new);
+    assert!(b.sink.taken().is_empty());
+    assert!(!b.remote.full_session_open());
+}
+
+#[test]
+fn a_refused_open_leaves_the_devices_running_session_alone() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut media, _) = b.opened(PHONE, Level::Media);
+    // the PC is locked; the phone taps the Touchpad
+    b.sink.set_locked(true);
+    let ticket = b.remote.ticket();
+    assert_eq!(b.refusal(PHONE, Level::Full), Code::Locked);
+    // media goes on, on the very same session
+    assert_eq!(
+        b.remote.status().controller,
+        Some((key(PHONE), Level::Media))
+    );
+    assert_eq!(media.poll(T0), Step::Continue);
+    assert_eq!(events(&mut media, &[PAUSE], T0), Step::Continue);
+    assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
+    // and a session that never opened does not count as a mouse/keyboard session either
+    assert!(!b.remote.full_session_open());
+    b.remote
+        .set_grant(&key(TABLET), grant(Level::Media), Some(ticket))
+        .unwrap();
 }
 
 // ---- one controller ----

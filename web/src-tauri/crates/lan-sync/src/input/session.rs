@@ -10,9 +10,11 @@
 //!
 //! A session knows which mouse buttons it pressed. Letting go of one of those always passes (no
 //! limit, no lock: nothing may stay held because something got in the way), and when the session
-//! ends it lets go of exactly those – never of a button another session holds. A release of a
-//! button this session does not hold is an ordinary event: limited, and not applied on a locked
-//! PC.
+//! ends it lets go of exactly those – never of a button it did not press itself, so never of one
+//! another device holds. (When the same device opens anew and presses the same button before its
+//! older session has finished, the older one's end lets that button go: the drag ends early,
+//! nothing stays held.) A release of a button this session does not hold is an ordinary event:
+//! limited, and not applied on a locked PC.
 //!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
@@ -172,14 +174,19 @@ impl InputConn {
         if !self.sink.supported() {
             return refused(Code::Unsupported);
         }
-        if let Err(code) = self.remote.level_for(&self.peer, asked) {
-            return refused(code);
-        }
         let state = self.sink.state();
+        // judged before the slot is touched: a refused open must leave this device's running
+        // session (its media session, when the Touchpad is tapped on a locked PC) alone
+        match self.remote.level_for(&self.peer, asked) {
+            Err(code) => return refused(code),
+            Ok((Level::Full, _)) if state.locked => return refused(Code::Locked),
+            Ok(_) => {}
+        }
         match self.remote.claim(self.peer, asked, self.handle.clone()) {
             Err(code) => refused(code),
             Ok(Claimed { level, grant, flag }) => {
-                // judged on the level the session really got
+                // … and once more on the level the session really got (the grant may have been
+                // raised between the two looks)
                 if state.locked && level == Level::Full {
                     self.remote.release(&flag);
                     return refused(Code::Locked);
