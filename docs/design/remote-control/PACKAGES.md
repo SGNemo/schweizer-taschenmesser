@@ -1,6 +1,6 @@
 # Remote control – packages (prompts)
 
-Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 starts after this concept's PR is merged. **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
+Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 is done (2026-11-10). **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|
@@ -27,7 +27,7 @@ Branch `docs/remote-control-rules` von frischem `develop`. Vorgegebene Session-B
 Konzept docs/design/remote-control/CONCEPT.md, entschieden am 2026-11-10 (§11, §12). Regelvorschlag wörtlich in CONCEPT §5 „Proposed rule lines“.
 
 ## Pflichtliste
-- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext in docs/RULES.md, aus CONCEPT §5; nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
+- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext aus CONCEPT §5 (liegt in docs/rules/remote-control.md, weil docs/RULES.md am Größen-Budget ist); nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
 
 ## Nicht in diesem Paket
 Jeder Produktcode.
