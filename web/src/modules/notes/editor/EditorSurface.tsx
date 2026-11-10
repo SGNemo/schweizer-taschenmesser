@@ -26,7 +26,8 @@ export interface EditorSurfaceProps {
   /** Editor lost focus (a good moment to save). */
   onBlur: () => void;
   width: 'narrow' | 'medium' | 'full';
-  autoFocus: boolean;
+  /** Put the caret into the text when the editor appears (marked `data-autofocus` on the text box). */
+  focusOnOpen: boolean;
   onError: (message: string) => void;
   /** The editor exists and `apiRef` is filled. */
   onReady?: () => void;
@@ -50,7 +51,7 @@ export default function EditorSurface({
   onDirty,
   onBlur,
   width,
-  autoFocus,
+  focusOnOpen,
   onError,
   apiRef,
   onReady,
@@ -88,7 +89,8 @@ export default function EditorSurface({
     extensions: noteExtensions(relay.navigate),
     content: initial,
     contentType: 'markdown',
-    autofocus: autoFocus ? 'end' : false,
+    // TipTap's own option (not the DOM attribute): outside a Dialog nobody reads `data-autofocus`.
+    autofocus: focusOnOpen ? 'end' : false,
     shouldRerenderOnTransaction: false,
     editorProps: {
       attributes: {
@@ -96,6 +98,7 @@ export default function EditorSurface({
         'aria-multiline': 'true',
         role: 'textbox',
         spellcheck: 'true',
+        ...(focusOnOpen ? { 'data-autofocus': 'true' } : {}),
       },
       handlePaste: (_view, event) => {
         const files = [...(event.clipboardData?.files ?? [])].filter((f) =>
@@ -138,7 +141,7 @@ export default function EditorSurface({
     // The shell moves focus to the page's main region after a navigation; when that lands after the
     // editor's own autofocus, take focus back (only from the page itself, never from a field).
     const timers: ReturnType<typeof setTimeout>[] = [];
-    if (editor && autoFocus) {
+    if (editor && focusOnOpen) {
       for (const ms of [50, 250]) {
         timers.push(
           setTimeout(() => {
