@@ -33,7 +33,7 @@ export const REPO = 'SGNemo/schweizer-taschenmesser';
  * only its base64 line. Empty = no approval can be valid, `--pr` always fails. Changing it is a hit like any
  * other change of this file; that one pull request is merged by the maintainer himself (docs/howto/ci.md).
  */
-export const RATCHET_PUBLIC_KEY = '';
+export const RATCHET_PUBLIC_KEY = 'MCowBQYDK2VwAyEAY0kk4IV+hYV464o2tgrPyVps5jwszeQLq9IIuKvA/vI=';
 export const LABEL = 'stimulus-raise';
 export const WEB_CHECK = 'Web (lint, types, unit, E2E)';
 export const CI_WORKFLOW = '.github/workflows/ci.yml';
