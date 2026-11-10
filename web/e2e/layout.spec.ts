@@ -413,13 +413,28 @@ test.describe('desktop header', () => {
     });
     await page.waitForTimeout(300);
     await expect(page.locator('header').first()).not.toHaveAttribute('data-collapsed', 'true');
-    // area label above the tabs, as before
-    const stacked = await page.evaluate(() => {
-      const label = document.querySelector('main p')!.getBoundingClientRect();
-      const tabs = document.querySelector('main nav[aria-label]')!.getBoundingClientRect();
-      return tabs.top >= label.bottom - 1;
+    await page.evaluate(() => {
+      document.querySelector<HTMLElement>('main [data-testid="page"]')!.style.minHeight = '4000px';
+      document.getElementById('main')!.scrollTop = 500;
     });
-    expect(stacked).toBe(true);
+    // Identity 4.0: the head stays at the top of the content area while it scrolls (sticky), the eyebrow above the
+    // row of the tabs, and the content has moved under it.
+    const at = await page.getByTestId('module-frame').evaluate((head) => {
+      const main = document.getElementById('main')!.getBoundingClientRect();
+      const box = head.getBoundingClientRect();
+      const label = head.querySelector('p')!.getBoundingClientRect();
+      const tabs = head.querySelector('[data-slot="tabs"]')!.getBoundingClientRect();
+      return {
+        headTop: box.top - main.top,
+        height: box.height,
+        stacked: tabs.top >= label.bottom - 1,
+        scrolled: document.getElementById('main')!.scrollTop,
+      };
+    });
+    expect(at.scrolled).toBeGreaterThan(120);
+    expect(Math.abs(at.headTop)).toBeLessThanOrEqual(1);
+    expect(at.height).toBeLessThanOrEqual(120);
+    expect(at.stacked).toBe(true);
   });
 });
 

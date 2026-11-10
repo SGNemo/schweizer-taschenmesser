@@ -141,21 +141,28 @@
   gap: var(--space-2);
   min-width: 0;
 }
-/* The views of the page (`PageHeader views`): the head's lower edge. The tabs' own hairline is the head's. */
+/* The views of the page (`PageHeader views`): the head's lower edge, one row of a fixed height (the tabs' own
+   hairline is the head's). `data-hold`: the row is kept before the page has put its views in (U01). */
 .tabs {
+  display: flex;
+  align-items: flex-end;
+  height: calc(var(--touch) + var(--space-1));
   min-width: 0;
 }
-.tabs:empty {
+.tabs:empty:not([data-hold='true']) {
   display: none;
+}
+.tabs > * {
+  min-width: 0;
+  max-width: 100%;
 }
 .tabs > nav {
   border-bottom: 0;
 }
-/* A view switch that is still a `Segmented` (baseline `segmented-views`) keeps a little air above the edge. */
+/* A view switch that is still a `Segmented` (baseline `segmented-views`) sits at the top of the row, which leaves
+   a little air above the edge; like the tabs, it is one row that scrolls sideways when the phone is too narrow. */
 .tabs > :not(nav) {
-  max-width: 100%;
-  margin-bottom: var(--space-1);
-  /* Like the tabs, it is one row that scrolls sideways when the phone is too narrow for it. */
+  align-self: flex-start;
   overflow-x: auto;
   scrollbar-width: none;
 }

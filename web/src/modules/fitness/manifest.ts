@@ -21,6 +21,7 @@ const manifest: ModuleManifest = {
     hue2: 'ocean',
     widget: 'fortschritt',
     head: 'standard',
+    tabs: true,
     signature: 'dumbbell',
   },
   version: 2,

@@ -642,3 +642,31 @@ it('page widths: reading is 56 to 64 rem, the split detail panel follows DESIGN-
   expect(light['--page-reading']).toBe('clamp(56rem, 50vw, 64rem)');
   expect(light['--split-detail']).toBe('clamp(22rem, 30%, 30rem)');
 });
+
+it('links (B7): the text ink with an underline, in both themes; the accent is not a link colour', () => {
+  expect(light['--link']).toBe('var(--text)');
+  expect(light['--link-line']).toBe('underline');
+  // One definition for both themes: the dark blocks do not turn links back into an accent.
+  expect(dark['--link']).toBeUndefined();
+  expect(darkMedia['--link']).toBeUndefined();
+  const global = read('ui/global.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const a = /(?:^|\n)a \{([^}]*)\}/.exec(global)?.[1] ?? '';
+  expect(a).toMatch(/color:\s*var\(--link\)/);
+  expect(a).toMatch(/text-decoration-line:\s*var\(--link-line\)/);
+  expect(a).not.toMatch(/var\(--accent\)/);
+});
+
+it('module head (Identity 4.0): title row + tabs fit 120 px on the desktop and, with the module row, 144 px on the phone', () => {
+  const px = (v: string) => (v.endsWith('rem') ? parseFloat(v) * 16 : parseFloat(v));
+  const phone = block('@media (max-width: 899px) {\n  :root');
+  const touch = px(light['--touch']!);
+  expect(light['--head-pad']).toBe('var(--space-3)');
+  const desktop = px(light['--space-3']!) + px(light['--head-row']!) + touch + 1;
+  expect(desktop).toBeLessThanOrEqual(120);
+  const small = px(phone['--head-pad']!) + px(phone['--head-row']!) + 2 * touch + 1;
+  expect(small).toBeLessThanOrEqual(144);
+  // The phone's title row is still a 44 px target row, and the one h1 style is 28 px / 22 px.
+  expect(px(phone['--head-row']!)).toBeGreaterThanOrEqual(touch);
+  expect(light['--text-h1']).toBe('1.75rem');
+  expect(phone['--text-h1']).toBe('1.375rem');
+});

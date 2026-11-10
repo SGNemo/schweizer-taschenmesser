@@ -74,8 +74,10 @@ test("on a module page the plus is the module's action, not the quick capture", 
   const plus = page.getByRole('button', { name: 'Buchung eintragen', exact: true });
   await expect(plus).toHaveText('Buchung');
   await expect(page.getByTestId('bottom-plus')).toHaveAttribute('data-plus', 'page');
-  // No account yet: the action cannot run, so the plus is disabled instead of opening another sheet.
-  await expect(plus).toBeDisabled();
+  await plus.tap();
+  // The module's own dialog, not the capture sheet.
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
   await ready(page, '/calendar');
   await page.getByRole('button', { name: 'Termin eintragen', exact: true }).tap();
   await expect(page.getByRole('dialog')).toBeVisible();

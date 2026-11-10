@@ -38,6 +38,10 @@ interface Head {
   buttons: string[];
   scrollWidth: number;
   clientWidth: number;
+  /** The page put its views into the row of the tabs. */
+  hasTabs: boolean;
+  /** The frame keeps that row from the first paint (`identity.tabs` in the manifest). */
+  holdsTabs: boolean;
 }
 
 /** Runs in the page. */
@@ -66,6 +70,8 @@ function readHead(): Head | null {
     buttons,
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
+    hasTabs: (head.querySelector('[data-slot="tabs"]')?.childElementCount ?? 0) > 0,
+    holdsTabs: head.querySelector('[data-slot="tabs"]')?.getAttribute('data-hold') === 'true',
   };
 }
 
@@ -91,6 +97,10 @@ async function check(page: Page, phone: boolean) {
       .toBeLessThanOrEqual(head.clientWidth);
     if (phone)
       expect.soft(head.buttons, `${path}: the phone's title row holds no control`).toEqual([]);
+    // U01: the manifest says whether the entry page has views, so the row is there before the page's code is.
+    expect
+      .soft(head.holdsTabs, `${path}: \`identity.tabs\` in the manifest matches the page's views`)
+      .toBe(head.hasTabs);
     seen[path] = head.height;
     if (SHOTS) {
       mkdirSync(SHOTS, { recursive: true });

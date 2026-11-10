@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     hue2: 'sky',
     widget: 'faellig',
     head: 'standard',
+    tabs: true,
     signature: 'bill',
   },
   version: 4,

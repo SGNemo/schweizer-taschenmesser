@@ -224,6 +224,12 @@ export interface ModuleIdentity {
   type?: TypeAccent;
   /** Corner radius of the module's cards: `soft` 16 px (default), `round` 20 px, `sharp` 10 px. */
   shape?: CardShape;
+  /**
+   * The module's entry page has views (`PageHeader views`): the head keeps the row of the tabs from the first paint,
+   * before the page's code has arrived, so nothing under the head moves (U01). Guard: `e2e/seed/head-height.seed.spec.ts`
+   * compares it with the page.
+   */
+  tabs?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';

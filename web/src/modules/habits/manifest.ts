@@ -22,6 +22,7 @@ const manifest: ModuleManifest = {
     hue2: 'orchid',
     widget: 'fortschritt',
     head: 'standard',
+    tabs: true,
     signature: 'ring',
   },
   version: 1,

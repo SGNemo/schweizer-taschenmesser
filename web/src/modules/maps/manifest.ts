@@ -22,6 +22,7 @@ const manifest: ModuleManifest = {
     hue2: 'sky',
     widget: 'kacheln',
     head: 'standard',
+    tabs: true,
     signature: 'pin',
   },
   version: 1,

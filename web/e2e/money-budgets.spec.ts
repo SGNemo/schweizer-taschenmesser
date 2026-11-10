@@ -128,7 +128,9 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await expect(row.getByTestId('budgets-free')).toContainText(/119,00\s€/);
     await open(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
-    await page.getByRole('switch', { name: 'Werte ausblenden' }).click();
+    const toggle = page.getByRole('switch', { name: 'Werte ausblenden' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await open(page, '/budgets');
     await expect(row.getByTestId('budgets-free').getByTestId('sensitive-value')).toBeVisible();
     await expect(row).not.toContainText(/119,00/);

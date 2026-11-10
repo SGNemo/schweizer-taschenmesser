@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     hue2: 'moss',
     widget: 'fortschritt',
     head: 'standard',
+    tabs: true,
     signature: 'envelope',
   },
   version: 4,

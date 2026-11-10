@@ -69,14 +69,16 @@ test.describe('Werte ausblenden', () => {
 
     await ready(page, '/settings/barrierefreiheit');
     await openMoreFocus(page);
-    await page.getByRole('switch', { name: 'Werte ausblenden' }).click();
+    const toggle = page.getByRole('switch', { name: 'Werte ausblenden' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
 
     await ready(page, '/finance');
     await expect(row.getByTestId('sensitive-value')).toBeVisible();
     await expect(row).not.toContainText(/1\.234,56/);
     expect(await page.getByTestId('module-frame').ariaSnapshot()).not.toMatch(/1\.234,56/);
     // The context line stays and names no amount.
-    await expect(row).toContainText('1 Konto');
+    await expect(row).toContainText('Konten');
     // One tap shows it, until the view is left.
     await row.getByTestId('sensitive-value').click();
     await expect(row).toContainText(/1\.234,56\s€/);

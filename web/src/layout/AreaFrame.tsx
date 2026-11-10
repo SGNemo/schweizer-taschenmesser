@@ -259,7 +259,17 @@ export function AreaFrame({
         }))}
       />
     ) : null;
-  const tabs = <div className={styles.tabs} ref={setTabs} data-slot="tabs" />;
+  // U01: on the module's entry page the row of the tabs is there from the first paint when the manifest says the page
+  // has views (`identity.tabs`); the page's code arrives later and must not push the content down.
+  const expectTabs = !!id?.tabs && !!manifest && pathname === `/${manifest.id}`;
+  const tabs = (
+    <div
+      className={styles.tabs}
+      ref={setTabs}
+      data-slot="tabs"
+      data-hold={expectTabs ? 'true' : undefined}
+    />
+  );
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
