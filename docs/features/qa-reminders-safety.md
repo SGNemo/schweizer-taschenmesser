@@ -45,7 +45,7 @@ Outcome: all of 1–4 on time → Android text says closed app works; PWA text s
 - `vault/repo.ts` `deleteDocument` only tombstones; the file stays while the record is restorable (`core/db/trash.ts`: 30 days). `VaultPage` prunes files by `keepBlobIds` (active + restorable). Package D reuses the same window.
 - `DocumentEditor`: delete via `deleteWithUndo`, no confirmation dialog.
 - `ui/useFormDraft`: Esc / tap beside the dialog / X keep the text (memory only, 30 min); "Abbrechen" and saving drop it; a note "Dein Entwurf ist wieder da." with "Entwurf verwerfen". `ui/Dialog` untouched.
-- Tests: `vault.test.ts`, `core/db/trash.test.ts`, `e2e/delete-undo.spec.ts`. Hand test: MANUAL-TESTS LR-U1–LR-U2.
+- Tests: `vault.test.ts`, `core/db/trash.test.ts`, `e2e/delete-undo.spec.ts`. Hand test: MANUAL-TESTS LU-U1–LU-U2.
 
 ## Package D (built)
 - Settings → Allgemein → **Zuletzt gelöscht** (`pages/settings/RecentlyDeletedSection`): Unterlagen, Abos, Termine/Erinnerungen deleted in the last 30 days, per entry "Wiederherstellen" and "Endgültig löschen" (second tap to confirm). Allow-list in `core/trash/trash.ts` (`TRASH_COLLECTIONS`); `accounts` (vault) never takes part.

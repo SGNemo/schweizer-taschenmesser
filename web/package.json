@@ -31,6 +31,7 @@
     "check:licenses": "node scripts/gen-licenses.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
     "chats:status": "node scripts/chats-status.mjs",
+    "chats:sync": "node scripts/chats-sync.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "i18n:scaffold": "node scripts/i18n-scaffold.mjs",
     "check:readme": "node scripts/check-readme.mjs",

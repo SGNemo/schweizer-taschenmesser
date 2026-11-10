@@ -16,6 +16,7 @@ RL-R1. _Windows-Portable frisch herunterladen_ (`Nemo-Portable.exe` von der Rele
 
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 
+Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO; aus STATUS verschoben, 2026-11-10).
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
 DT-D14. _Berechtigungen:_ App startet, Updater, Google-Login und lokale API funktionieren weiterhin (alle App-Befehle sind jetzt einzeln freigegeben; `capabilities/desktop.json`). ☐
 
@@ -210,6 +211,11 @@ KS-4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Pa
 KS-5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
 KS-6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
 
+#### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
+
+LR1. _X1 Pipe auf Windows mit zweitem Nutzer_ (Fix: SQOS-Flag in `ipc.rs`). ☐
+LR2. _V1 Credential-Manager nach „Alle Daten löschen“_: das biometrische Siegel des Tresors ist danach weg. ☐
+
 ### Browser-Erweiterung
 
 #### Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
@@ -397,6 +403,10 @@ N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 
 - **GM12 PWA offline:** PWA einmal online öffnen, Flugmodus, dann App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)). (Runde T1–T6, #341–#349; vgl. BP1) ☐
+
+#### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
+
+LR3. _Android-APK-Update._ ☐
 
 #### Backlog-Ernte (`chore/backlog-harvest-2026-11`) – nur auf Geräten prüfbar
 
@@ -614,7 +624,7 @@ FR-F3. _Handy:_ Einheit-Auswahl (Tage/Wochen/Monate) und Zahlenfeld gut treffbar
 
 #### Löschen mit Rückgängig, Entwurf (P5 Paket C)
 
-LR-U2. _Handy:_ Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
+LU-U2. _Handy:_ Unterlage-Dialog öffnen, Text tippen, Zurück-Geste bzw. neben den Dialog tippen, Dialog erneut öffnen: Text ist da; „Abbrechen“ verwirft ihn. ☐
 
 ### Vorräte
 
@@ -1225,7 +1235,7 @@ FR-F2. _Abo jährlich mit Frist „3 Monate“:_ im Dialog steht „Kündigen bi
 
 #### Löschen mit Rückgängig, Entwurf (P5 Paket C)
 
-LR-U1. _Android/Windows:_ Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
+LU-U1. _Android/Windows:_ Unterlage mit Datei löschen: keine Rückfrage, Toast „Gelöscht · Rückgängig“; „Rückgängig“ bringt Eintrag und Datei zurück (Herunterladen geht). ☐
 
 ### Vorräte
 
@@ -1522,6 +1532,11 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
 
+Hintergrund (aus STATUS verschoben, 2026-11-10; entschieden in [decisions/legal.md](decisions/legal.md)):
+
+- **Google-Prüfung für die Mail-Berechtigungen (Mail-Modul, Paket 3):** `gmail.readonly`, `gmail.modify` und `gmail.send` sind bei Google „eingeschränkte Bereiche“. Mit der eigenen OAuth-Client-ID jedes Nutzers (so ist es gebaut) braucht das keine Prüfung durch Google; im Teststatus der Cloud-Console laufen die Anmeldungen aber nach 7 Tagen ab, bis die App auf „In Produktion“ gestellt wird (dann zeigt Google den Hinweis „nicht verifizierte App“). Würde Nemo je einen **eigenen, mitgelieferten** Client für alle Nutzer einsetzen, wäre die Google-OAuth-Verifizierung samt jährlicher Sicherheitsprüfung (CASA) Pflicht – das ist eine Entscheidung für dich, nicht für den Code. Siehe [decisions/legal.md](decisions/legal.md).
+- **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
+
 ## Umbenannte Ids
 
 Alte Id (Block) → neue Id. Verweise in alten PRs, Notizen und im Archiv meinen die alte Id.
@@ -1561,7 +1576,7 @@ Alte Id (Block) → neue Id. Verweise in alten PRs, Notizen und im Archiv meinen
 - A1–A5 (Erinnern-Zeile, Genommen, Ruhe) → EZ-A1–EZ-A5
 - F1–F3 (Fristen) → FR-F1–FR-F3
 - Q1–Q5 (Mit Partner teilen: QR-Bilder) → QR-Q1–QR-Q5
-- U1–U2 (Löschen mit Rückgängig, Entwurf) → LR-U1–LR-U2
+- U1–U2 (Löschen mit Rückgängig, Entwurf) → LU-U1–LU-U2
 - G1–G3 (Zuletzt gelöscht) → ZG-G1–ZG-G3
 - Q1–Q3 (Schnellerfassung: Android-Kurzbefehle, Kachel, Tray „Heute“) → SF-Q1–SF-Q3
 - T1–T3 (Schnellerfassung: Android-Kurzbefehle, Kachel, Tray „Heute“) → TR-T1–TR-T3
