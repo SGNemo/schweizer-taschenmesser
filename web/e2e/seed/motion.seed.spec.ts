@@ -12,10 +12,16 @@ const ALLOWED = new Set(['transform', 'opacity', 'none']);
 /** Transition properties of the bar and the page head that really run (longer than a millisecond). */
 const moving = (page: Page) =>
   page.evaluate(() => {
-    const roots = [document.querySelector('header'), document.querySelector('main [data-head]')];
+    const roots = [
+      document.querySelector('header'),
+      document.querySelector('main [data-head]'),
+      // The bar that takes the head's place once the page is scrolled (layout/AreaFrame).
+      document.querySelector('[data-testid="module-compact"]'),
+    ];
     const out = new Set<string>();
     for (const root of roots) {
-      if (!root) continue;
+      // Positive control: a part that is not found would pass unseen.
+      if (!root) return ['missing part of the frame'];
       const s = getComputedStyle(root);
       const durations = s.transitionDuration.split(',').map((d) => parseFloat(d));
       s.transitionProperty.split(',').forEach((p, i) => {

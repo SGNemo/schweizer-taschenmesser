@@ -96,6 +96,11 @@ test('every module route shows its page within 3 s', async ({ page }) => {
     await home(page);
     await navigate(page, path);
     await expect(page.locator('main h1').first(), path).toBeVisible({ timeout: 3_000 });
+    // Content of the page itself, not only its heading: a row, or a marked part other than the page container.
+    await expect(
+      page.locator('main [data-row], main [data-testid]:not([data-testid="page"])').first(),
+      `${path}: no content under the heading`,
+    ).toBeAttached({ timeout: 3_000 });
     await expect(dots(page), `${path}: still "…"`).toHaveCount(0);
     await expect(card(page), `${path}: loading card although the page arrived`).toHaveCount(0);
     await expect(page.getByTestId('module-error'), `${path}: error card`).toHaveCount(0);
