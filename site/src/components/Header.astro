@@ -13,11 +13,12 @@ const choices = localesFor(route);
 <header class="site-header">
   <div class="wrap bar">
     <a class="brand" href={home}><img src={logo.src} width="26" height="26" alt="" />{s.siteName}</a>
-    <nav aria-label={s.a11y.mainNav}>
+    <nav class="main" aria-label={s.a11y.mainNav}>
       <a href={`${home === '/' ? '' : home}#features`}>{s.nav.features}</a>
       <a href={`${home === '/' ? '' : home}#daten`}>{s.nav.privacy}</a>
       <a href={`${home === '/' ? '' : home}#install`}>{s.nav.install}</a>
       <a href={`${home === '/' ? '' : home}#support`}>{s.nav.support}</a>
+      <a class="gh-nav" href={REPO_URL} rel="noopener"><Icon name="github" size={18} />{s.nav.github}</a>
     </nav>
     <div class="end">
       <a class="gh" href={REPO_URL} rel="noopener"><Icon name="github" size={18} />{s.nav.github}</a>
@@ -43,19 +44,22 @@ const choices = localesFor(route);
 </header>
 
 <style>
+  /* Under 64rem the links are a second row (anchor bar, round 5 W4, no script): the header sticks with a negative
+     offset of its first row, so the logo row scrolls away and the links stay. From 64rem everything is one row. */
   .site-header {
+    --bar-h: 3.5rem;
     position: sticky;
-    top: 0;
+    top: calc(-1 * var(--bar-h));
     z-index: 2;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
   .bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-5);
-    min-height: 3.5rem;
+    column-gap: var(--space-5);
   }
   .brand {
     display: inline-flex;
@@ -63,14 +67,18 @@ const choices = localesFor(route);
     gap: 0.625rem;
     font-weight: var(--weight-semibold);
     text-decoration: none;
-    min-height: var(--touch);
+    height: var(--bar-h);
   }
-  nav:not(.lang) {
-    display: none;
+  nav.main {
+    order: 3;
+    flex: 0 0 100%;
+    display: flex;
     gap: var(--space-5);
-    margin-left: var(--space-4);
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 1px solid var(--border);
   }
-  nav:not(.lang) a,
+  nav.main a,
   .gh {
     text-decoration: none;
     color: var(--text-muted);
@@ -80,16 +88,21 @@ const choices = localesFor(route);
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
+    white-space: nowrap;
   }
-  nav:not(.lang) a:hover,
+  nav.main a:hover,
   .gh:hover {
     color: var(--text);
+  }
+  nav.main a:focus-visible {
+    outline-offset: -2px;
   }
   .end {
     margin-left: auto;
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    height: var(--bar-h);
   }
   .gh {
     display: none;
@@ -144,12 +157,27 @@ const choices = localesFor(route);
   }
   /* Tighter on a phone so the language switch stays on screen. */
   @media (max-width: 29.99rem) {
-    .bar { gap: var(--space-3); }
+    .bar { column-gap: var(--space-3); }
     .end { gap: var(--space-2); }
     .lang a { padding: 0 0.5rem; }
   }
   @media (min-width: 64rem) {
-    nav:not(.lang),
+    .site-header {
+      top: 0;
+    }
+    .bar {
+      flex-wrap: nowrap;
+    }
+    nav.main {
+      order: 0;
+      flex: 0 1 auto;
+      margin-left: var(--space-4);
+      overflow: visible;
+      border-top: 0;
+    }
+    nav.main .gh-nav {
+      display: none;
+    }
     .gh {
       display: inline-flex;
     }

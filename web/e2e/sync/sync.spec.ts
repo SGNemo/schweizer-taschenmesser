@@ -251,6 +251,47 @@ test.describe('end-to-end encryption', () => {
     await b.context.close();
   });
 
+  test('a device without the passphrase and with a clock far behind uploads no plain data', async ({
+    browser,
+    request,
+  }) => {
+    // Connected before the server was reset and encrypted; its clock stands weeks in the past, so
+    // every op of the other devices lies beyond the drift bound for it.
+    const old = await newDevice(browser);
+    await old.page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+    await addTask(old.page, 'Altlast im Klartext');
+    await connect(old.page);
+
+    await resetServer(request);
+    const a = await newDevice(browser);
+    const b = await newDevice(browser);
+    await addTask(a.page, 'Geheime Steuernummer 12345');
+    await connect(a.page, { encrypt: true, passphrase: 'ein langer geheimer Satz' });
+    await connect(b.page, { passphrase: 'ein langer geheimer Satz' });
+
+    // The old device's next round (the same path as its one-minute interval)
+    const pulled = old.page.waitForResponse((r) => r.url().includes('/v1/pull') && r.ok());
+    await old.page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await pulled;
+    await openSettings(old.page);
+    await expect(old.page.getByRole('alert')).toContainText('verschlüsselt');
+    const { text, ops } = await serverDump(request);
+    expect(text).not.toMatch(/Altlast/);
+    expect(ops.every((o) => typeof o.value === 'string' && o.value.startsWith('enc:v1:'))).toBe(
+      true,
+    );
+
+    // … and the encrypted devices keep syncing.
+    await addTask(b.page, 'Danach');
+    await syncNow(b.page);
+    await syncNow(a.page);
+    await a.page.goto('/todos');
+    await expect(a.page.getByRole('checkbox', { name: 'Danach' })).toBeVisible();
+    await old.context.close();
+    await a.context.close();
+    await b.context.close();
+  });
+
   test('a passphrase must be long enough', async ({ browser }) => {
     const { page, context } = await newDevice(browser);
     await submitConnect(page, { encrypt: true, passphrase: 'kurz' });
@@ -278,8 +319,13 @@ test.describe('end-to-end encryption', () => {
       .click();
     await b.page.getByRole('dialog').getByRole('button', { name: 'Zurücksetzen' }).click();
     await expect(b.page.getByTestId('sync-status')).toContainText('Verschlüsselt');
+    // "Verschlüsselt" shows as soon as the first round starts; go on only when it has pushed. Before
+    // that the server is still empty: the dump below would prove nothing, and A's sync further down
+    // would see no ciphertext and upload its plain data.
+    await expect(b.page.getByTestId('sync-status')).toContainText('Synchronisiert');
 
     const { text, ops } = await serverDump(request);
+    expect(ops.length).toBeGreaterThan(0);
     expect(text).not.toContain('lag unverschlüsselt');
     expect(text).not.toContain('Neuer Start');
     expect(ops.every((o) => typeof o.value === 'string' && o.value.startsWith('enc:v1:'))).toBe(

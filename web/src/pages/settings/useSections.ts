@@ -1,3 +1,4 @@
+import { useRemoteHost } from '@/core/remote/host';
 import { useAutomationSettings } from '@/core/automation/settings';
 import { useMemo } from 'react';
 import { useAiOn } from '@/core/ai/switch';
@@ -89,6 +90,8 @@ export function useSectionsInUse(): Readonly<Record<string, boolean>> {
   const networkBlocked = useNetLog((s) => s.blocked);
   const pairs = useLiveQuery(() => loadPairs(), []);
   const [automation] = useAutomationSettings();
+  // Remote control switched on at this PC (read by the top-bar chip's watch; desktop hub only).
+  const remoteOn = useRemoteHost((s) => s.status?.enabled === true);
   return useMemo(
     () => ({
       localapi: localApi?.enabled === true,
@@ -97,8 +100,17 @@ export function useSectionsInUse(): Readonly<Record<string, boolean>> {
       network: networkBlocked,
       share: (pairs?.length ?? 0) > 0,
       automation: automation?.enabled === true,
+      remote: remoteOn,
     }),
-    [localApi?.enabled, readAid, voice.enabled, networkBlocked, pairs?.length, automation?.enabled],
+    [
+      localApi?.enabled,
+      readAid,
+      voice.enabled,
+      networkBlocked,
+      pairs?.length,
+      automation?.enabled,
+      remoteOn,
+    ],
   );
 }
 

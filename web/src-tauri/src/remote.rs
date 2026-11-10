@@ -274,9 +274,9 @@ fn shown_name(lang: Lang, name: &str, key: &PublicKey) -> String {
     }
 }
 
-fn name_of(trust: &FileTrustStore, key: &PublicKey) -> String {
+fn name_of(lang: Lang, trust: &FileTrustStore, key: &PublicKey) -> String {
     let name = trust.find_by_key(key).map(|d| d.name).unwrap_or_default();
-    shown_name(crate::webview2::system_lang(), &name, key)
+    shown_name(lang, &name, key)
 }
 
 /// The hub started: its controls become reachable, and a small thread keeps the tray in step
@@ -305,10 +305,9 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                 watch(
                     rx,
                     || {
-                        remote
-                            .status()
-                            .controller
-                            .map(|(key, _)| name_of(&trust, &key))
+                        remote.status().controller.map(|(key, _)| {
+                            name_of(crate::capture::native_lang(&app), &trust, &key)
+                        })
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
                 )
@@ -421,14 +420,14 @@ pub struct RemoteDeviceDto {
     unlock: bool,
 }
 
-fn status_of(parts: &Parts) -> RemoteStatusDto {
+fn status_of(lang: Lang, parts: &Parts) -> RemoteStatusDto {
     let status = parts.remote.status();
     RemoteStatusDto {
         supported: parts.supported,
         enabled: status.enabled,
         controller: status.controller.map(|(key, level)| ControllerDto {
             id: to_hex(key.as_bytes()),
-            name: name_of(&parts.trust, &key),
+            name: name_of(lang, &parts.trust, &key),
             level: level_name(level),
         }),
         devices: parts
@@ -440,7 +439,7 @@ fn status_of(parts: &Parts) -> RemoteStatusDto {
                 let grant = parts.remote.grant_of(&d.key);
                 RemoteDeviceDto {
                     id: to_hex(d.key.as_bytes()),
-                    name: d.name,
+                    name: shown_name(lang, &d.name, &d.key),
                     last_seen: d.last_seen,
                     level: level_name(grant.level),
                     paused: grant.paused,
@@ -550,8 +549,14 @@ fn confirmed(app: &AppHandle, lang: Lang, text: String, serious: bool) -> bool {
 // triggers an input action – `tests/commands.rs` reads this part of the file to keep it that way.
 
 #[tauri::command(async)]
-pub fn remote_status(state: State<'_, RemoteHost>) -> Result<RemoteStatusDto, String> {
-    Ok(status_of(&state.parts()?))
+pub fn remote_status(
+    app: AppHandle,
+    state: State<'_, RemoteHost>,
+) -> Result<RemoteStatusDto, String> {
+    Ok(status_of(
+        crate::capture::native_lang(&app),
+        &state.parts()?,
+    ))
 }
 
 /// The master switch. Off is immediate. On is a widening: asked at the PC whenever a device
@@ -580,7 +585,7 @@ pub fn remote_set_enabled(
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    let lang = crate::webview2::system_lang();
+    let lang = crate::capture::native_lang(&app);
     let granted: Vec<(String, Level)> = parts
         .trust
         .list()
@@ -647,7 +652,7 @@ pub fn remote_set_device(
         return Err("busy-controlled".to_owned());
     }
     let _asking = Asking::take(&state.asking)?;
-    let lang = crate::webview2::system_lang();
+    let lang = crate::capture::native_lang(&app);
     let text = device_question(
         lang,
         &shown_name(lang, &device.name, &key),

@@ -200,6 +200,52 @@ export interface LanHubService {
   setHome(): Promise<void>;
 }
 
+export type RemoteLevel = 'off' | 'media' | 'full';
+
+/** What a paired device may do: level, "ended at the PC" (paused), "unlock the phone first". */
+export interface RemoteHostGrant {
+  level: RemoteLevel;
+  paused: boolean;
+  unlock: boolean;
+}
+
+export interface RemoteHostDevice extends RemoteHostGrant {
+  /** Hex of the device's static key. */
+  id: string;
+  /** Plain text, the device's own claim. */
+  name: string;
+  /** Unix seconds of the last sync contact. */
+  lastSeen?: number | null;
+}
+
+export interface RemoteHostStatus {
+  /** This PC can be controlled at all (Windows). */
+  supported: boolean;
+  /** The master switch. */
+  enabled: boolean;
+  /** Who controls this PC right now. */
+  controller?: { id: string; name: string; level: RemoteLevel } | null;
+  devices: RemoteHostDevice[];
+}
+
+/**
+ * Desktop only: this PC's own remote-control settings (`src-tauri/src/remote.rs`). No call sends
+ * input. Narrowing is immediate; every widening (a higher level, lifting a pause, dropping the
+ * unlock request, the master switch) is asked by the PC in a native dialog first – the call
+ * resolves after the answer. Errors are short codes: `not-started` (the hub is off), `cancelled`
+ * (the person said no), `busy` (a question is already open), `busy-controlled` (not while mouse
+ * and keyboard are controlled), `changed` (the grant changed while the question was open),
+ * `not-found`, `failed`.
+ */
+export interface RemoteHostService {
+  supported: boolean;
+  status(): Promise<RemoteHostStatus>;
+  setEnabled(enabled: boolean): Promise<void>;
+  setDevice(id: string, grant: RemoteHostGrant): Promise<void>;
+  /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
+  end(): Promise<boolean>;
+}
+
 /**
  * The device side of home-network sync (Android, and a second PC that pairs with the hub PC):
  * pairing with a hub PC by its QR and the sync engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
@@ -295,6 +341,8 @@ export interface TrayLabels {
   open: string;
   quit: string;
   tooltip: string;
+  /** The app language (`de`, `en`): the shell's own tray and dialog texts follow it. */
+  lang?: string;
 }
 
 /**
@@ -389,6 +437,8 @@ export interface PlatformService {
   vaultBridge: VaultBridgeService;
   /** Home-network sync hub (desktop only). */
   lanHub: LanHubService;
+  /** This PC's remote-control settings (desktop only; lives inside the hub). */
+  remoteHost: RemoteHostService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
   /** Wi-Fi available/lost for home-network sync (Android). */

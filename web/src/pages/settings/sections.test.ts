@@ -55,6 +55,7 @@ describe('preview sections (maturity)', () => {
     'voice',
     'automation',
     'automation-log',
+    'remote',
   ];
   // All manifests (not only those of the web platform): desktop-only preview modules count too.
   const all = allSettingsSections(allManifests.filter((m) => !m.retired));
