@@ -504,7 +504,7 @@ fn rotation_wipes_the_store_and_refuses_the_old_version() {
         o => panic!("{o:?}"),
     };
     let key = StaticKey::generate().unwrap().public();
-    let handle = sessions.register(key);
+    let handle = sessions.register(key, crate::noise::Mode::Session);
     let r = h.rotate_to(2).unwrap();
     assert_eq!(r.version, 2);
     assert_ne!(r.epoch, epoch_before);
@@ -666,8 +666,11 @@ fn bind_set_is_enumerated_and_never_wildcard_or_loopback() {
             panic!("off")
         };
         assert_eq!(
-            binds,
-            vec![Bind::new(Ipv4Addr::new(192, 168, 1, 20), 24).unwrap()]
+            binds
+                .iter()
+                .map(|b| (b.ip(), b.prefix()))
+                .collect::<Vec<_>>(),
+            vec![(Ipv4Addr::new(192, 168, 1, 20), 24)]
         );
         for b in &binds {
             assert!(!b.ip().is_unspecified() && !b.ip().is_loopback());
@@ -930,7 +933,7 @@ fn pair_until_hello(r: &R, key: &StaticKey, name: &str) -> Paired {
     };
     let attempt = conn.pairing_attempt().unwrap();
     assert_eq!(
-        conn.on_frame(&t.seal(TAG_HELLO, name.as_bytes()).unwrap(), 5, NOW_MS),
+        conn.on_frame(&t.seal(TAG_HELLO, name.as_bytes()).unwrap(), 5, NOW_MS, T0),
         Outcome::Continue
     );
     Paired {
@@ -960,7 +963,7 @@ fn session(r: &R, key: &StaticKey) -> Client {
         panic!()
     };
     assert_eq!(
-        conn.on_frame(&t.seal(TAG_HELLO, b"Phone").unwrap(), 6, NOW_MS),
+        conn.on_frame(&t.seal(TAG_HELLO, b"Phone").unwrap(), 6, NOW_MS, T0),
         Outcome::Continue
     );
     t.raise_cap();
@@ -973,7 +976,7 @@ impl Client {
             .t
             .seal(TAG_REQUEST, body.to_string().as_bytes())
             .unwrap();
-        let Outcome::Reply(reply) = self.conn.on_frame(&wire, 7, NOW_MS) else {
+        let Outcome::Reply(reply) = self.conn.on_frame(&wire, 7, NOW_MS, T0) else {
             panic!("no reply")
         };
         let (tag, body) = self.t.open(&reply).unwrap();
@@ -1007,16 +1010,16 @@ fn a_foreign_connection_cannot_touch_somebody_elses_pairing() {
     };
     let attempt = a.pairing_attempt().unwrap();
     let hello = a_t.seal(TAG_HELLO, b"Tablet").unwrap();
-    assert_eq!(b.conn.on_frame(&[7u8; 40], 8, NOW_MS), Outcome::Close);
+    assert_eq!(b.conn.on_frame(&[7u8; 40], 8, NOW_MS, T0), Outcome::Close);
     assert!(b.conn.is_closed());
     let mut b2 = session(&r, &b_key);
     assert_eq!(
-        b2.conn.on_frame(&hello, 8, NOW_MS),
+        b2.conn.on_frame(&hello, 8, NOW_MS, T0),
         Outcome::Close,
         "A's frame on B's connection"
     );
     // A's attempt is untouched: its own hello still goes through and confirmation succeeds
-    assert_eq!(a.on_frame(&hello, 9, NOW_MS), Outcome::Continue);
+    assert_eq!(a.on_frame(&hello, 9, NOW_MS, T0), Outcome::Continue);
     assert!(events(&r)
         .iter()
         .any(|e| matches!(e, PairingEvent::HelloReceived { attempt: x, .. } if *x == attempt)));
@@ -1068,7 +1071,7 @@ fn a_second_frame_on_a_pairing_connection_ends_the_attempt() {
     let mut p = pair_until_hello(&r, &StaticKey::generate().unwrap(), "Phone");
     events(&r);
     let extra = p.transport.seal(TAG_HELLO, b"again").unwrap();
-    assert_eq!(p.conn.on_frame(&extra, 9, NOW_MS), Outcome::Close);
+    assert_eq!(p.conn.on_frame(&extra, 9, NOW_MS, T0), Outcome::Close);
     assert!(events(&r).contains(&PairingEvent::Cancelled(CancelReason::ConnectionLost)));
     assert!(r.host.confirm(p.attempt, &p.code).is_err());
     assert!(r.trust.list().is_empty());
@@ -1086,9 +1089,9 @@ fn a_bad_hello_closes_the_connection_and_the_attempt() {
         panic!()
     };
     let bad = t.seal(TAG_UNPAIR, b"").unwrap();
-    assert_eq!(conn.on_frame(&bad, 1, NOW_MS), Outcome::Close);
+    assert_eq!(conn.on_frame(&bad, 1, NOW_MS, T0), Outcome::Close);
     assert!(conn.is_closed());
-    assert_eq!(conn.on_frame(&bad, 1, NOW_MS), Outcome::Close);
+    assert_eq!(conn.on_frame(&bad, 1, NOW_MS, T0), Outcome::Close);
     assert!(r.trust.list().is_empty());
 }
 
@@ -1110,7 +1113,7 @@ fn session_requests_flow_through_the_hub_with_the_key_version() {
     let wire =
         c.t.seal(TAG_REQUEST, br#"{"keyVersion":2,"type":"info"}"#)
             .unwrap();
-    assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS), Outcome::Close);
+    assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
     assert_eq!(r.sessions.open_count(), 0);
 }
 
@@ -1121,10 +1124,10 @@ fn unknown_tags_and_unpair_close_the_session() {
     pair_device(&r, &key);
     let mut c = session(&r, &key);
     let odd = c.t.seal(0x7f, b"x").unwrap();
-    assert_eq!(c.conn.on_frame(&odd, 1, NOW_MS), Outcome::Close);
+    assert_eq!(c.conn.on_frame(&odd, 1, NOW_MS, T0), Outcome::Close);
     let mut c = session(&r, &key);
     let un = c.t.seal(TAG_UNPAIR, b"").unwrap();
-    assert_eq!(c.conn.on_frame(&un, 1, NOW_MS), Outcome::Close);
+    assert_eq!(c.conn.on_frame(&un, 1, NOW_MS, T0), Outcome::Close);
     assert!(r.trust.find_by_key(&key.public()).unwrap().revoked);
 }
 
@@ -1324,4 +1327,424 @@ fn rotation_fails_when_sessions_cannot_be_closed() {
     assert_eq!(h.rotate_to(2), Err(HubError::Internal));
     assert_eq!(snapshot(&h), before);
     assert_eq!(h.key_version(), Ok(1));
+}
+
+// ---------- input sessions (remote control) through the router ----------
+
+use crate::input::tests::TestSink;
+use crate::input::wire::{self as iw, Code, Level, Media, Record};
+use crate::input::{Action, MasterSwitch, MemorySwitch, Remote};
+use crate::noise::frame::{INPUT_CAP, MAX_FRAME, PRE_CONFIRM_CAP};
+use crate::trust::RemoteGrant;
+
+const HOME_LOCAL: &str = "10.0.0.1";
+const FOREIGN_LOCAL: &str = "192.168.50.1";
+const FOREIGN_PEER: &str = "192.168.50.9";
+
+struct InputRig {
+    r: R,
+    remote: Arc<Remote>,
+    sink: Arc<TestSink>,
+}
+
+/// A hub with remote control wired, listening on a home bind (10.0.0.1/16) and on a bind that is
+/// there only for a pairing window in another network (192.168.50.1/24). The switch is on.
+fn input_rig() -> InputRig {
+    let mut r = rig();
+    let switch = Arc::new(MemorySwitch::new());
+    switch.set(true).unwrap();
+    let remote = Arc::new(Remote::new(r.trust.clone(), switch, r.sessions.clone()));
+    let sink = TestSink::new();
+    let keys = MemoryKeyStore::empty();
+    // the router is rebuilt around a fresh endpoint with the same parts
+    let hub_key = keys.load_or_create().unwrap().public();
+    let host = Arc::new(PairingHost::new(
+        hub_key,
+        r.clock.clone(),
+        r.trust.clone(),
+        Arc::new(Keys),
+    ));
+    let ep = Endpoint::start(&keys, r.trust.clone(), host.clone(), r.sessions.clone()).unwrap();
+    let mut a = Admission::new();
+    a.set_binds(vec![
+        Bind::new(Ipv4Addr::new(10, 0, 0, 1), 16)
+            .unwrap()
+            .with_home(true),
+        Bind::new(Ipv4Addr::new(192, 168, 50, 1), 24).unwrap(),
+    ]);
+    r.router =
+        Router::new(ep, host.clone(), r.hub.clone(), a).with_input(remote.clone(), sink.clone());
+    r.host = host;
+    r.hub_key = hub_key;
+    InputRig { r, remote, sink }
+}
+
+fn first(key: &StaticKey, hub: &noise::PublicKey, mode: Mode) -> (noise::Initiator, Vec<u8>) {
+    noise::start_initiator(mode, key, hub, None).unwrap()
+}
+
+/// An input session up to and including `hello`.
+fn input_session(i: &InputRig, key: &StaticKey) -> Client {
+    let (init, wire) = first(key, &i.r.hub_key, Mode::Input);
+    let Opened::Accept { m2, mut conn } = i.r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0)
+    else {
+        panic!("no input session")
+    };
+    let Finished::Established(mut t, _) = init.finish(&m2).unwrap() else {
+        panic!()
+    };
+    assert_eq!(conn.frame_cap(), PRE_CONFIRM_CAP);
+    assert_eq!(
+        conn.on_frame(&t.seal(TAG_HELLO, b"Phone").unwrap(), 6, NOW_MS, T0),
+        Outcome::Continue
+    );
+    t.raise_cap();
+    Client { conn, t }
+}
+
+fn open_input(c: &mut Client, level: Level) -> (u8, Vec<u8>) {
+    let wire = c.t.seal(iw::TAG_OPEN, &iw::encode_open(level)).unwrap();
+    let (Outcome::Reply(reply) | Outcome::ReplyClose(reply)) =
+        c.conn.on_frame(&wire, 7, NOW_MS, T0)
+    else {
+        panic!("no answer to open")
+    };
+    let (tag, body) = c.t.open(&reply).unwrap();
+    (tag, body.to_vec())
+}
+
+fn granted(i: &InputRig, key: &StaticKey, level: Level) {
+    pair_device(&i.r, key);
+    i.remote
+        .set_grant(
+            &key.public(),
+            RemoteGrant {
+                level,
+                ..RemoteGrant::default()
+            },
+        )
+        .unwrap();
+}
+
+#[test]
+fn an_input_session_starts_only_on_a_bind_of_the_home_network() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let refused = |local: Option<&str>, peer: &str, mode: Mode| {
+        let (init, wire) = first(&key, &i.r.hub_key, mode);
+        let opened = match local {
+            Some(l) => i.r.router.accept_on(v4(l), v4(peer), &wire, T0),
+            None => i.r.router.accept(v4(peer), &wire, T0),
+        };
+        match opened {
+            Opened::Accept { .. } => false,
+            // the same authenticated refusal a stranger's key gets; no transport is kept
+            Opened::Refuse(m2) => {
+                assert_eq!(m2.len(), 49);
+                assert!(matches!(init.finish(&m2).unwrap(), Finished::Refused(_)));
+                true
+            }
+            Opened::Drop(_) => panic!("dropped"),
+        }
+    };
+    assert!(!refused(Some(HOME_LOCAL), PEER, Mode::Input));
+    // the bind of a pairing window in another network
+    assert!(refused(Some(FOREIGN_LOCAL), FOREIGN_PEER, Mode::Input));
+    // a peer of the foreign subnet that reached the home address, an unknown local address,
+    // and a caller that does not know the local address at all
+    assert!(refused(Some(FOREIGN_LOCAL), PEER, Mode::Input));
+    assert!(refused(Some("10.0.0.99"), PEER, Mode::Input));
+    assert!(refused(None, PEER, Mode::Input));
+    // sync is what it was, on both binds
+    assert!(!refused(Some(FOREIGN_LOCAL), FOREIGN_PEER, Mode::Session));
+    assert!(!refused(Some(HOME_LOCAL), PEER, Mode::Session));
+    assert!(!refused(None, PEER, Mode::Session));
+    // a stranger's key, on the home bind
+    let stranger = StaticKey::generate().unwrap();
+    let (init, wire) = first(&stranger, &i.r.hub_key, Mode::Input);
+    let Opened::Refuse(m2) = i.r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0) else {
+        panic!()
+    };
+    assert_eq!(m2.len(), 49);
+    assert!(matches!(init.finish(&m2).unwrap(), Finished::Refused(_)));
+}
+
+#[test]
+fn a_hub_without_remote_control_refuses_every_input_session() {
+    let mut r = rig();
+    // every bind is home, but nothing is wired
+    let mut a = Admission::new();
+    a.set_binds(vec![Bind::new(Ipv4Addr::new(10, 0, 0, 1), 16)
+        .unwrap()
+        .with_home(true)]);
+    let keys = MemoryKeyStore::empty();
+    let hub_key = keys.load_or_create().unwrap().public();
+    let host = Arc::new(PairingHost::new(
+        hub_key,
+        r.clock.clone(),
+        r.trust.clone(),
+        Arc::new(Keys),
+    ));
+    let ep = Endpoint::start(&keys, r.trust.clone(), host.clone(), r.sessions.clone()).unwrap();
+    r.router = Router::new(ep, host.clone(), r.hub.clone(), a);
+    r.host = host;
+    r.hub_key = hub_key;
+    let key = StaticKey::generate().unwrap();
+    pair_device(&r, &key);
+    let (init, wire) = first(&key, &r.hub_key, Mode::Input);
+    let Opened::Refuse(m2) = r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0) else {
+        panic!()
+    };
+    assert!(matches!(init.finish(&m2).unwrap(), Finished::Refused(_)));
+    assert_eq!(r.sessions.open_count(), 0);
+}
+
+#[test]
+fn a_message_one_of_one_mode_never_opens_in_another() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    // a sync message 1 relabelled as input (and the other way round): the prologue differs
+    for (made, sent) in [(Mode::Session, 3u8), (Mode::Input, 2u8)] {
+        let (_init, mut wire) = first(&key, &i.r.hub_key, made);
+        wire[0] = sent;
+        assert!(matches!(
+            i.r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0),
+            Opened::Drop(None)
+        ));
+    }
+    // an unknown mode byte is dropped without a word
+    let (_init, mut wire) = first(&key, &i.r.hub_key, Mode::Input);
+    wire[0] = 4;
+    assert!(matches!(
+        i.r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0),
+        Opened::Drop(None)
+    ));
+}
+
+#[test]
+fn sync_and_input_sessions_never_carry_each_others_frames() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let before = snapshot(&i.r.hub);
+
+    // a sync session that sends input frames is closed, and nothing reaches the sink
+    for (tag, body) in [
+        (iw::TAG_OPEN, iw::encode_open(Level::Full).to_vec()),
+        (
+            iw::TAG_EVENTS,
+            iw::encode_events(&[Record::Media(Media::PlayPause)]).unwrap(),
+        ),
+        (iw::TAG_TEXT, b"calc".to_vec()),
+    ] {
+        let mut s = session(&i.r, &key);
+        let wire = s.t.seal(tag, &body).unwrap();
+        assert_eq!(s.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
+        assert_eq!(s.conn.poll_outbound(T0), Outcome::Close);
+    }
+    assert!(i.sink.taken().is_empty());
+    assert_eq!(i.remote.status().controller, None);
+
+    // an input session that sends a sync request is closed and the store never sees it
+    let push = json!({"keyVersion": 1, "type": "push", "ops": [op("a", 1)]});
+    for open_first in [false, true] {
+        let mut c = input_session(&i, &key);
+        if open_first {
+            assert_eq!(open_input(&mut c, Level::Full).0, iw::TAG_OPENED);
+        }
+        let wire = c.t.seal(TAG_REQUEST, push.to_string().as_bytes()).unwrap();
+        assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
+        assert!(c.conn.is_closed());
+    }
+    assert_eq!(snapshot(&i.r.hub), before, "the store is untouched");
+
+    // an input session cannot unpair the device
+    let mut c = input_session(&i, &key);
+    let wire = c.t.seal(TAG_UNPAIR, &[]).unwrap();
+    assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
+    assert!(!i.r.trust.find_by_key(&key.public()).unwrap().revoked);
+    // … a sync session still can
+    let mut s = session(&i.r, &key);
+    let wire = s.t.seal(TAG_UNPAIR, &[]).unwrap();
+    assert_eq!(s.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
+    assert!(i.r.trust.find_by_key(&key.public()).unwrap().revoked);
+}
+
+#[test]
+fn an_input_session_leaves_no_trace_in_the_trust_list() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let seen = || i.r.trust.find_by_key(&key.public()).unwrap().last_seen;
+    assert_eq!(seen(), None);
+    let mut c = input_session(&i, &key);
+    assert_eq!(open_input(&mut c, Level::Full).0, iw::TAG_OPENED);
+    let wire =
+        c.t.seal(
+            iw::TAG_EVENTS,
+            &iw::encode_events(&[Record::Move { dx: 1, dy: 1 }]).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(c.conn.on_frame(&wire, 99, NOW_MS, T0), Outcome::Continue);
+    assert_eq!(i.sink.taken().len(), 1);
+    assert_eq!(seen(), None, "lastSeen is sync contact only");
+    drop(c);
+    assert_eq!(seen(), None);
+    // a sync session does record its contact
+    let _s = session(&i.r, &key);
+    assert_eq!(seen(), Some(6));
+}
+
+#[test]
+fn the_frame_cap_of_an_input_session_is_256_then_512_and_never_more() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let mut c = input_session(&i, &key); // asserts 256 before the first frame
+    assert_eq!(c.conn.frame_cap(), INPUT_CAP);
+    assert_eq!(INPUT_CAP, 512);
+    assert_eq!(open_input(&mut c, Level::Full).0, iw::TAG_OPENED);
+    assert_eq!(c.conn.frame_cap(), INPUT_CAP);
+    // the largest text still fits one frame; the client side cannot seal a bigger one either
+    assert!(c.t.seal(iw::TAG_TEXT, &[b'a'; iw::MAX_TEXT_BYTES]).is_ok());
+    assert!(c.t.seal(iw::TAG_TEXT, &[b'a'; INPUT_CAP]).is_err());
+    // a sync session gets the big cap as before
+    let s = session(&i.r, &key);
+    assert_eq!(s.conn.frame_cap(), MAX_FRAME);
+}
+
+#[test]
+fn open_events_state_and_the_end_from_the_pc_through_the_router() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Media);
+    let mut c = input_session(&i, &key);
+    let (tag, body) = open_input(&mut c, Level::Full);
+    assert_eq!(tag, iw::TAG_OPENED);
+    let opened = iw::decode_opened(&body).unwrap();
+    assert_eq!((opened.level, opened.grant), (Level::Media, Level::Media));
+
+    let wire =
+        c.t.seal(
+            iw::TAG_EVENTS,
+            &iw::encode_events(&[Record::Media(Media::VolumeDown)]).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Continue);
+    assert!(i.sink.taken() == vec![Action::Media(Media::VolumeDown)]);
+
+    // the PC speaks unasked: a changed state …
+    assert_eq!(c.conn.poll_outbound(T0), Outcome::Continue);
+    i.sink.set_volume(40);
+    let Outcome::Reply(w) = c.conn.poll_outbound(T0 + Duration::from_secs(1)) else {
+        panic!("no state frame")
+    };
+    let (tag, body) = c.t.open(&w).unwrap();
+    assert_eq!(tag, iw::TAG_STATE);
+    assert_eq!(iw::decode_state(&body).unwrap().volume, 40);
+
+    // … and that it was ended at the PC
+    assert_eq!(i.remote.end(), Some(key.public()));
+    let Outcome::ReplyClose(w) = c.conn.poll_outbound(T0 + Duration::from_secs(2)) else {
+        panic!("no closed frame")
+    };
+    let (tag, body) = c.t.open(&w).unwrap();
+    assert_eq!(
+        (tag, iw::decode_code(&body).unwrap()),
+        (iw::TAG_CLOSED, Code::Ended)
+    );
+    assert!(c.conn.is_closed());
+    assert_eq!(c.conn.poll_outbound(T0), Outcome::Close);
+
+    // refused with the reason on the next try
+    let mut again = input_session(&i, &key);
+    let (tag, body) = open_input(&mut again, Level::Media);
+    assert_eq!(
+        (tag, iw::decode_code(&body).unwrap()),
+        (iw::TAG_REFUSED, Code::Paused)
+    );
+    assert!(again.conn.is_closed());
+}
+
+#[test]
+fn ending_remote_control_never_closes_a_sync_session() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let mut sync = session(&i.r, &key);
+    let info = json!({"keyVersion": 1, "type": "info"});
+    assert!(sync.request(&info).get("error").is_none());
+
+    // "Fernsteuerung beenden"
+    let mut c = input_session(&i, &key);
+    assert_eq!(open_input(&mut c, Level::Full).0, iw::TAG_OPENED);
+    i.remote.end();
+    assert!(matches!(c.conn.poll_outbound(T0), Outcome::ReplyClose(_)));
+    drop(c); // the transport drops a finished connection at once
+    assert!(sync.request(&info).get("error").is_none());
+
+    // the master switch off: every input session goes, with or without an open
+    i.remote
+        .set_grant(
+            &key.public(),
+            RemoteGrant {
+                level: Level::Full,
+                ..RemoteGrant::default()
+            },
+        )
+        .unwrap();
+    let mut opened = input_session(&i, &key);
+    assert_eq!(open_input(&mut opened, Level::Full).0, iw::TAG_OPENED);
+    let waiting = input_session(&i, &key);
+    assert_eq!(i.r.sessions.open_count(), 3);
+    i.remote.set_enabled(false).unwrap();
+    assert!(opened.conn.is_closed() && waiting.conn.is_closed());
+    assert_eq!(i.r.sessions.open_count(), 1, "the sync session");
+    assert!(sync.request(&info).get("error").is_none());
+    assert!(!i.remote.full_session_open());
+
+    // revoking the device closes both kinds
+    i.remote.set_enabled(true).unwrap();
+    let c = input_session(&i, &key);
+    i.r.sessions.revoke(&*i.r.trust, &key.public()).unwrap();
+    assert!(c.conn.is_closed() && sync.conn.is_closed());
+}
+
+#[test]
+fn binds_say_whether_they_are_on_the_stored_home_network() {
+    use NetCategory::*;
+    let net = Net(Ok(vec![
+        iface("192.168.1.20", true, Private, Some("home")),
+        iface("192.168.50.7", true, Private, Some("cafe")),
+        iface("10.9.0.2", true, Private, None),
+    ]));
+    let flags = |home: Home, w: Wanted| match decide(&net, &home, w) {
+        Decision::On(binds) => binds
+            .iter()
+            .map(|b| (b.ip().octets()[0], b.is_home()))
+            .collect::<Vec<_>>(),
+        Decision::Off(_) => vec![],
+    };
+    let home = || Home(Ok(Some("home".into())));
+    // paired devices only: the hub listens on the home network alone, and that bind is home
+    assert_eq!(flags(home(), want(false, 1)), vec![(192, true)]);
+    // an open window listens on every private network, and still only the home one is home
+    assert_eq!(
+        flags(home(), want(true, 1)),
+        vec![(10, false), (192, true), (192, false)]
+    );
+    // no home network stored yet (the very first pairing): no bind is home
+    assert_eq!(
+        flags(Home(Ok(None)), want(true, 0)),
+        vec![(10, false), (192, false), (192, false)]
+    );
+    // the home store cannot be read: the window still works, input nowhere (fail-closed)
+    assert_eq!(
+        flags(Home(Err(NetError)), want(true, 1)),
+        vec![(10, false), (192, false), (192, false)]
+    );
+    // an interface without a network id is never home, whatever is stored
+    assert!(Bind::new(Ipv4Addr::new(10, 0, 0, 1), 8).is_some_and(|b| !b.is_home()));
 }

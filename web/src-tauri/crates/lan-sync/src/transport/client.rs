@@ -30,7 +30,7 @@ pub const CONNECT_TIMEOUT: Duration = Duration::from_secs(4);
 pub const IO_TIMEOUT: Duration = Duration::from_secs(15);
 /// The hub keeps a confirmation open at most this long (`pairing::CONFIRM_HARD_CAP`).
 pub const CONFIRM_WAIT: Duration = Duration::from_secs(240);
-const POLL: Duration = Duration::from_millis(500);
+pub(crate) const POLL: Duration = Duration::from_millis(500);
 
 /// Why a client step failed. Carries no bytes and no address.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -274,10 +274,10 @@ impl Link {
     }
 }
 
-struct Conn(TcpStream);
+pub(crate) struct Conn(TcpStream);
 
 impl Conn {
-    fn connect(addr: SocketAddrV4) -> Result<Conn, ClientError> {
+    pub(crate) fn connect(addr: SocketAddrV4) -> Result<Conn, ClientError> {
         let s = TcpStream::connect_timeout(&addr.into(), CONNECT_TIMEOUT)
             .map_err(|_| ClientError::Network)?;
         s.set_nodelay(true).map_err(|_| ClientError::Network)?;
@@ -288,7 +288,20 @@ impl Conn {
         Ok(Conn(s))
     }
 
-    fn write(&mut self, wire: &[u8]) -> Result<(), ClientError> {
+    /// A second handle on the same socket (the input client reads on its own thread).
+    pub(crate) fn try_clone(&self) -> Result<Conn, ClientError> {
+        self.0
+            .try_clone()
+            .map(Conn)
+            .map_err(|_| ClientError::Network)
+    }
+
+    /// Ends the connection for both handles; a blocked read returns.
+    pub(crate) fn shutdown(&self) {
+        let _ = self.0.shutdown(std::net::Shutdown::Both);
+    }
+
+    pub(crate) fn write(&mut self, wire: &[u8]) -> Result<(), ClientError> {
         let len = u16::try_from(wire.len()).map_err(|_| ClientError::Protocol)?;
         let mut out = Vec::with_capacity(2 + wire.len());
         out.extend_from_slice(&len.to_be_bytes());
@@ -297,7 +310,7 @@ impl Conn {
     }
 
     /// One whole frame of at most `cap` bytes within `wait`; `cancelled` is polled between reads.
-    fn read(
+    pub(crate) fn read(
         &mut self,
         cap: usize,
         wait: Duration,

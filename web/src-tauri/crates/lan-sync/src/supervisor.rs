@@ -30,6 +30,9 @@ pub trait Launcher: Send {
     type Handle: Send;
     /// Starts on exactly `binds`; returns the handle and the port.
     fn launch(&mut self, binds: &[Bind], day: i64) -> Result<(Self::Handle, u16), ()>;
+    /// The addresses stay as they are, only their home-network flags changed (a home network was
+    /// stored or replaced while listening). Nothing is restarted for that.
+    fn home_changed(&mut self, _binds: &[Bind]) {}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -76,8 +79,13 @@ impl<L: Launcher> Supervisor<L> {
                 Status::Off(reason)
             }
             Decision::On(binds) => {
-                if let Some(r) = &self.running {
-                    if r.binds == binds && r.day == day {
+                if let Some(r) = &mut self.running {
+                    if same_addresses(&r.binds, &binds) && r.day == day {
+                        if r.binds != binds {
+                            // same sockets; only what counts as the home network changed
+                            self.launcher.home_changed(&binds);
+                            r.binds.clone_from(&binds);
+                        }
                         return Status::Listening {
                             binds,
                             port: r.port,
@@ -114,6 +122,15 @@ impl<L: Launcher> Supervisor<L> {
     pub fn listening(&self) -> Option<(&[Bind], u16)> {
         self.running.as_ref().map(|r| (&r.binds[..], r.port))
     }
+}
+
+/// Same addresses and subnets, whatever their home-network flags say: a changed flag alone never
+/// restarts a listener.
+fn same_addresses(a: &[Bind], b: &[Bind]) -> bool {
+    a.len() == b.len()
+        && a.iter()
+            .zip(b)
+            .all(|(x, y)| x.ip() == y.ip() && x.prefix() == y.prefix())
 }
 
 /// The real thing: transport server plus mDNS announcement on the same addresses.
@@ -195,6 +212,10 @@ fn unix_secs() -> u64 {
 
 impl Launcher for RealLauncher {
     type Handle = Live;
+
+    fn home_changed(&mut self, binds: &[Bind]) {
+        self.router.set_binds(binds.to_vec());
+    }
 
     fn launch(&mut self, binds: &[Bind], _day: i64) -> Result<(Live, u16), ()> {
         self.router.set_binds(binds.to_vec());
@@ -313,6 +334,9 @@ mod tests {
     struct Counters {
         started: AtomicUsize,
         alive: AtomicUsize,
+        /// How often only the home flags changed, and how many binds were home the last time.
+        reflagged: AtomicUsize,
+        home_binds: AtomicUsize,
     }
     struct Handle(Arc<Counters>);
     impl Drop for Handle {
@@ -334,6 +358,44 @@ mod tests {
             self.c.alive.fetch_add(1, Ordering::SeqCst);
             Ok((Handle(self.c.clone()), 4242))
         }
+        fn home_changed(&mut self, binds: &[Bind]) {
+            self.c.reflagged.fetch_add(1, Ordering::SeqCst);
+            let home = binds.iter().filter(|b| b.is_home()).count();
+            self.c.home_binds.store(home, Ordering::SeqCst);
+        }
+    }
+
+    /// The first pairing stores the home network while the window (and the pairing connection)
+    /// is still open: the listener must stay as it is, only the flag changes.
+    #[test]
+    fn a_home_network_stored_while_listening_restarts_nothing() {
+        let (mut s, c, _) = rig();
+        let net = Net(RefCell::new(Ok(vec![iface("192.168.1.20", "home")])));
+        let window = Wanted {
+            pairing_window_open: true,
+            paired_devices: 0,
+        };
+        let home_of = |st: &Status| match st {
+            Status::Listening { binds, .. } => binds.iter().map(Bind::is_home).collect(),
+            _ => vec![],
+        };
+        let st = s.tick(&net, &Home(None), window, 1);
+        assert_eq!(home_of(&st), vec![false]);
+        // the pairing was confirmed: the network is now the home network
+        let st = s.tick(&net, &Home(Some("home".into())), PAIRED, 1);
+        assert_eq!(home_of(&st), vec![true]);
+        assert_eq!(c.started.load(Ordering::SeqCst), 1, "no restart");
+        assert_eq!(c.alive.load(Ordering::SeqCst), 1);
+        assert_eq!(c.reflagged.load(Ordering::SeqCst), 1);
+        assert_eq!(c.home_binds.load(Ordering::SeqCst), 1);
+        // nothing changed: nothing is told again
+        s.tick(&net, &Home(Some("home".into())), PAIRED, 1);
+        assert_eq!(c.reflagged.load(Ordering::SeqCst), 1);
+        // a window in the home network, then the home network is replaced by another one
+        let st = s.tick(&net, &Home(Some("other".into())), window, 1);
+        assert_eq!(home_of(&st), vec![false]);
+        assert_eq!(c.started.load(Ordering::SeqCst), 1);
+        assert_eq!(c.home_binds.load(Ordering::SeqCst), 0);
     }
 
     fn rig() -> (Supervisor<Fake>, Arc<Counters>, Arc<AtomicBool>) {

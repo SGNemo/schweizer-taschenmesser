@@ -7,11 +7,18 @@
 //!   **no attempt id parameter**: the pairing attempt of a connection is fixed when it is created
 //!   and only that connection's frames ever reach it, so another connection cannot end or steer
 //!   somebody else's pairing.
+//! * A session is a sync session or an input session (remote control), by its handshake mode. The
+//!   two never mix: a sync session closes on any tag but `request`, an input session hands its
+//!   frames to `input::session` only (which knows no sync tag) and never reaches the [`Hub`]. An
+//!   input session starts only on a connection that came in on a bind of the stored home network.
 
 use super::netpolicy::{peer_allowed, Bind};
 use super::{Hub, HubError, Response, TAG_REQUEST, TAG_RESPONSE};
 use crate::endpoint::{Conn, Endpoint, FirstReply, Incoming, Session};
+use crate::input::session::{InputConn, Step};
+use crate::input::{InputSink, Remote};
 use crate::noise::frame::{FrameError, PRE_CONFIRM_CAP, PRE_HANDSHAKE_CAP};
+use crate::noise::Mode;
 use crate::pairing::PairingHost;
 use std::collections::HashMap;
 use std::net::IpAddr;
@@ -68,6 +75,13 @@ impl Admission {
         peer_allowed(peer, &self.binds)
     }
 
+    /// Whether `local` (the address a connection came in on) is a bind of the stored home network.
+    fn is_home(&self, local: IpAddr) -> bool {
+        self.binds
+            .iter()
+            .any(|b| IpAddr::V4(b.ip()) == local && b.is_home())
+    }
+
     /// Replaces the bound subnets (after the network decision changed).
     pub fn set_binds(&mut self, binds: Vec<Bind>) {
         self.binds = binds;
@@ -109,6 +123,8 @@ pub struct Router {
     pairing: Arc<PairingHost>,
     hub: Arc<Hub>,
     admission: Mutex<Admission>,
+    /// Remote control, if the shell wired it. Without it every input session is refused.
+    input: Option<(Arc<Remote>, Arc<dyn InputSink>)>,
 }
 
 /// What the transport does with a first message.
@@ -135,7 +151,14 @@ impl Router {
             pairing,
             hub,
             admission: Mutex::new(admission),
+            input: None,
         }
+    }
+
+    /// Wires remote control: the PC's switch and grants, and the sink that acts on the PC.
+    pub fn with_input(mut self, remote: Arc<Remote>, sink: Arc<dyn InputSink>) -> Self {
+        self.input = Some((remote, sink));
+        self
     }
 
     pub fn set_binds(&self, binds: Vec<Bind>) {
@@ -150,16 +173,37 @@ impl Router {
         self.admission.lock().is_ok_and(|a| a.peer_ok(peer))
     }
 
-    /// First message of a new connection from `peer`.
+    /// First message of a new connection from `peer` whose local address is not known: sync and
+    /// pairing as usual, never an input session.
     pub fn accept(&self, peer: IpAddr, wire: &[u8], now: Duration) -> Opened {
-        let admitted = match self.admission.lock() {
-            Ok(mut a) => a.admit(peer, wire.len(), now),
-            Err(_) => Err(Refusal::Address),
+        self.accept_from(None, peer, wire, now)
+    }
+
+    /// First message of a new connection from `peer` that came in on the address `local`.
+    pub fn accept_on(&self, local: IpAddr, peer: IpAddr, wire: &[u8], now: Duration) -> Opened {
+        self.accept_from(Some(local), peer, wire, now)
+    }
+
+    fn accept_from(
+        &self,
+        local: Option<IpAddr>,
+        peer: IpAddr,
+        wire: &[u8],
+        now: Duration,
+    ) -> Opened {
+        // (admitted, came in on the stored home network); a poisoned lock is neither
+        let (admitted, home) = match self.admission.lock() {
+            Ok(mut a) => (
+                a.admit(peer, wire.len(), now),
+                local.is_some_and(|l| a.is_home(l)),
+            ),
+            Err(_) => (Err(Refusal::Address), false),
         };
         if let Err(r) = admitted {
             return Opened::Drop(Some(r));
         }
-        match self.endpoint.handle_first(wire) {
+        let input_ok = home && self.input.is_some();
+        match self.endpoint.handle_first_on(wire, input_ok) {
             FirstReply::Drop => Opened::Drop(None),
             FirstReply::Refused { m2 } => Opened::Refuse(m2),
             FirstReply::Accept { m2, conn } => {
@@ -168,7 +212,16 @@ impl Router {
                         attempt,
                         helloed: false,
                     },
-                    Conn::Session(s) => Kind::Session(s),
+                    Conn::Session(s) => match (s.mode(), &self.input) {
+                        (Mode::Input, Some((remote, sink))) => {
+                            let conn =
+                                InputConn::new(remote.clone(), sink.clone(), s.peer(), s.handle());
+                            Kind::Input(s, Box::new(conn))
+                        }
+                        // the endpoint accepts an input session only with `input_ok`
+                        (Mode::Input, None) => return Opened::Drop(None),
+                        _ => Kind::Session(s),
+                    },
                 };
                 Opened::Accept {
                     m2,
@@ -185,8 +238,14 @@ impl Router {
 }
 
 enum Kind {
-    Pairing { attempt: u64, helloed: bool },
+    Pairing {
+        attempt: u64,
+        helloed: bool,
+    },
+    /// Sync session.
     Session(Box<Session>),
+    /// Input session (remote control): its frames go to the `InputConn` and nowhere else.
+    Input(Box<Session>, Box<InputConn>),
 }
 
 /// What to do after a frame.
@@ -195,6 +254,8 @@ pub enum Outcome {
     /// Nothing to send, keep the connection.
     Continue,
     Reply(Vec<u8>),
+    /// Send the bytes, then close the connection.
+    ReplyClose(Vec<u8>),
     /// Close the connection (no reply).
     Close,
 }
@@ -214,7 +275,7 @@ impl Connection {
     pub fn pairing_attempt(&self) -> Option<u64> {
         match self.kind {
             Kind::Pairing { attempt, .. } => Some(attempt),
-            Kind::Session(_) => None,
+            Kind::Session(_) | Kind::Input(..) => None,
         }
     }
 
@@ -223,21 +284,22 @@ impl Connection {
     pub fn frame_cap(&self) -> usize {
         match &self.kind {
             Kind::Pairing { .. } => PRE_CONFIRM_CAP,
-            Kind::Session(s) => s.cap(),
+            Kind::Session(s) | Kind::Input(s, _) => s.cap(),
         }
     }
 
     pub fn is_closed(&self) -> bool {
         self.done
             || match &self.kind {
-                Kind::Session(s) => s.is_closed(),
+                Kind::Session(s) | Kind::Input(s, _) => s.is_closed(),
                 Kind::Pairing { .. } => false,
             }
     }
 
     /// One complete frame from the peer. `now_unix` (s) stamps `lastSeenAt`, `now_ms` is the hub
-    /// clock for the HLC drift check.
-    pub fn on_frame(&mut self, wire: &[u8], now_unix: u64, now_ms: u64) -> Outcome {
+    /// clock for the HLC drift check, `mono` is monotonic time for the input session's rate limits
+    /// (a wall clock may jump).
+    pub fn on_frame(&mut self, wire: &[u8], now_unix: u64, now_ms: u64, mono: Duration) -> Outcome {
         if self.done {
             return Outcome::Close;
         }
@@ -278,18 +340,59 @@ impl Connection {
                 }
                 Ok(Incoming::App { .. }) | Err(_) => Outcome::Close,
             },
+            Kind::Input(s, input) => {
+                let step = match s.receive(wire, now_unix) {
+                    Ok(Incoming::Hello(_)) => input.on_hello(),
+                    Ok(Incoming::App { tag, body }) => input.on_frame(tag, &body, mono),
+                    Ok(Incoming::Unpair) | Err(_) => Step::Close,
+                };
+                seal_step(s, step)
+            }
         };
-        if out == Outcome::Close {
+        self.finish(out)
+    }
+
+    /// Called on every tick of the connection, also without a frame: what an input session has to
+    /// send unasked (a changed state, or the reason the PC ended it). Sync and pairing connections
+    /// never send unasked. The transport does not count this as activity.
+    pub fn poll_outbound(&mut self, mono: Duration) -> Outcome {
+        if self.done {
+            return Outcome::Close;
+        }
+        let out = match &mut self.kind {
+            Kind::Input(s, input) => {
+                let step = input.poll(mono);
+                seal_step(s, step)
+            }
+            Kind::Pairing { .. } | Kind::Session(_) => Outcome::Continue,
+        };
+        self.finish(out)
+    }
+
+    fn finish(&mut self, out: Outcome) -> Outcome {
+        if matches!(out, Outcome::Close | Outcome::ReplyClose(_)) {
             self.done = true;
         }
         out
     }
 }
 
+/// Seals what an input session wants to send. A frame that cannot be sealed closes the connection.
+fn seal_step(s: &mut Session, step: Step) -> Outcome {
+    match step {
+        Step::Continue => Outcome::Continue,
+        Step::Close => Outcome::Close,
+        Step::Reply(tag, body) => s.send(tag, &body).map_or(Outcome::Close, Outcome::Reply),
+        Step::ReplyClose(tag, body) => s
+            .send(tag, &body)
+            .map_or(Outcome::Close, Outcome::ReplyClose),
+    }
+}
+
 impl Drop for Connection {
     fn drop(&mut self) {
-        if let Kind::Pairing { attempt, .. } = self.kind {
-            self.pairing.abandon(attempt);
+        if let Kind::Pairing { attempt, .. } = &self.kind {
+            self.pairing.abandon(*attempt);
         }
     }
 }
