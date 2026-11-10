@@ -118,12 +118,15 @@ test('the vault stays locked after a reload (keys live in memory only)', async (
 
 test('the lock screen is ready to type into: the master password field has the focus', async ({
   page,
+  isMobile,
 }) => {
   await setUp(page);
   // First load of the page ...
   await page.reload();
   await expect(page.getByLabel('Master-Passwort')).toBeFocused();
   // ... and coming back to it inside the app (the shell moves the focus on a navigation first).
+  // The phone's bottom bar keeps "Bibliothek" behind "Mehr".
+  if (isMobile) await page.getByRole('button', { name: 'Mehr' }).click();
   await page.getByRole('link', { name: 'Bibliothek' }).first().click();
   await expect(page).toHaveURL(/\/library$/);
   await page.goBack();

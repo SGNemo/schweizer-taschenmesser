@@ -74,6 +74,32 @@ describe('tabs store: a failing native side never leaves an empty frame', () => 
     expect(close).not.toHaveBeenCalled();
   });
 
+  it('a tab whose webview is gone offers reopening: the address stays, no native close is needed', async () => {
+    const opens: number[] = [];
+    const { close } = nativeBrowser((o) => {
+      opens.push(o.tab);
+      return Promise.resolve();
+    });
+    const id = useBrowserTabs.getState().newTab();
+    const fresh = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    // The native side also names a tab the page never opened and one it does not know: both are ignored.
+    useBrowserTabs.getState().markLost([id, fresh, 99]);
+    const [lost, untouched] = useBrowserTabs.getState().tabs;
+    expect(lost).toMatchObject({
+      opened: false,
+      loading: false,
+      url: 'https://example.org/',
+      error: 'gone',
+    });
+    expect(untouched).toMatchObject({ opened: false, error: null });
+    // "Tab neu öffnen" creates the webview again instead of navigating a missing one.
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    expect(opens).toEqual([id, id]);
+    expect(useBrowserTabs.getState().tabs[0]).toMatchObject({ opened: true, error: null });
+    expect(close).not.toHaveBeenCalled();
+  });
+
   it('closing a tab survives a failing native close', async () => {
     const web = createWebPlatform();
     setPlatform({

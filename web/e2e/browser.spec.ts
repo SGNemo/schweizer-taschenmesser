@@ -87,6 +87,20 @@ test('start page is accessible; an address opens a tab, a search term searches',
   );
 });
 
+test('a tab whose webview disappeared says so and reopens with one click', async ({ page }) => {
+  await go(page, 'https://gone-test.example.org/');
+  const failed = page.getByTestId('browser-failed');
+  await expect(failed).toContainText('Dieser Tab ist nicht mehr da');
+  await expect(page.getByLabel('Adresse oder Suchbegriff')).toHaveValue(
+    'https://gone-test.example.org/',
+  );
+  await audit(page, 'tab gone');
+  await failed.getByRole('button', { name: 'Tab neu öffnen' }).click();
+  await expect(failed).toHaveCount(0);
+  const opens = (await calls(page)).filter((c) => c.startsWith('open:1:'));
+  expect(opens).toHaveLength(2);
+});
+
 test('a tab that cannot open shows why, hides the webview, and other modules still load', async ({
   page,
 }) => {

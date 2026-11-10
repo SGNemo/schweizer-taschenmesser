@@ -37,7 +37,11 @@ type View = 'page' | 'menu' | 'bookmarks' | 'history' | 'blocker' | 'clear' | 't
 /** The one cleanup path for the native tabs: hide all of them, never throw. */
 function hideTabs(): void {
   const browser = getPlatform().browser;
-  if (browser.supported) void browser.show(null).catch(() => undefined);
+  if (browser.supported)
+    void browser
+      .show(null)
+      .then(useBrowserTabs.getState().markLost)
+      .catch(() => undefined);
 }
 
 export default function BrowserPage() {
@@ -121,7 +125,10 @@ export default function BrowserPage() {
       const bounds = { x: r.left, y: r.top, width: r.width, height: r.height };
       useBrowserTabs.getState().setBounds(bounds);
       if (showing && activeId !== null && document.visibilityState !== 'hidden')
-        void platform.show(activeId, bounds).catch(() => undefined);
+        void platform
+          .show(activeId, bounds)
+          .then(useBrowserTabs.getState().markLost)
+          .catch(() => undefined);
     };
     // The app went to the background (minimised, tray): hide the tab; coming back places it again.
     const onVisibility = () => {
@@ -590,7 +597,11 @@ export default function BrowserPage() {
           </div>
         ) : tab?.error ? (
           <div className={styles.panel} role="alert" data-testid="browser-failed">
-            <h2>{t.browser.failed.title(t.browser.failed[tab.error])}</h2>
+            <h2>
+              {tab.error === 'gone'
+                ? t.browser.failed.gone
+                : t.browser.failed.title(t.browser.failed[tab.error])}
+            </h2>
             <p className={styles.muted}>{t.browser.failed.body}</p>
             <div className={styles.actions}>
               {isWebUrl(tab.url) ? (
@@ -599,7 +610,7 @@ export default function BrowserPage() {
                 </Button>
               ) : null}
               <Button variant="primary" onClick={() => void open(tab.url, tab.id)}>
-                {t.browser.failed.retry}
+                {tab.error === 'gone' ? t.browser.failed.reopen : t.browser.failed.retry}
               </Button>
             </div>
           </div>
