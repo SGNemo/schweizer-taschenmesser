@@ -143,11 +143,34 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
   return { kept, inkMarks, others };
 }
 
-/** The measured value and the count of danger and today elements of the page that is open. */
+/**
+ * The measured value and the count of danger and today elements of the page that is open. Rows and widgets arrive
+ * at their own pace, so the page is read until two readings in a row agree (the measurement before and after the
+ * count, and the count itself): a page that is still filling would look like a formula that drifted.
+ */
 async function count(page: Page) {
-  const measured = await page.evaluate(measurePage);
-  const found = await page.evaluate(keptColour, { band: HUE_BAND, markMax: MARK_MAX });
-  return { colouredAboveFold: measured.colouredText + measured.colouredSurfaces, ...found };
+  const read = async () => {
+    const before = await page.evaluate(measurePage);
+    const found = await page.evaluate(keptColour, { band: HUE_BAND, markMax: MARK_MAX });
+    const after = await page.evaluate(measurePage);
+    const coloured = (m: typeof before) => m.colouredText + m.colouredSurfaces;
+    return {
+      settled: coloured(before) === coloured(after),
+      colouredAboveFold: coloured(after),
+      ...found,
+    };
+  };
+  const key = (r: Awaited<ReturnType<typeof read>>) =>
+    [r.colouredAboveFold, r.kept, r.inkMarks, r.others.length].join('/');
+  let last = await read();
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(300);
+    const now = await read();
+    const same = now.settled && last.settled && key(now) === key(last);
+    last = now;
+    if (same) break;
+  }
+  return last;
 }
 
 const calm = (page: Page, on: boolean) =>
