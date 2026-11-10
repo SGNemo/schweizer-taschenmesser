@@ -9,7 +9,6 @@ import type {
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
 
-/** Bridge to `src-tauri/src/browser.rs`. Only the main window may call these commands. */
 /**
  * A number for this load of the page, different from the one before (never 0, the native side's start value):
  * random, so it needs no clock and no storage. Exported for the test.
@@ -20,6 +19,7 @@ export function pageEpoch(): number {
   return part[0]! + 1;
 }
 
+/** Bridge to `src-tauri/src/browser.rs`. Only the main window may call these commands. */
 export function createBrowser(supported: boolean): BrowserService {
   if (!supported)
     return {
