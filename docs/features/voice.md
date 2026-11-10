@@ -3,7 +3,7 @@
 One key (or the microphone button in the palette) turns speech into text in the existing search/AI input (`layout/CommandPalette.tsx`). The text is treated like typed text: it is appended to the field and the person sends it with Enter. Nothing is sent to the AI by the key itself.
 
 ## What works where (no new dependency)
-Engine = the browser's Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`). Only what is checked is marked ✔; the rest is from vendor documentation and **needs a hand test** ([MANUAL-TESTS](../MANUAL-TESTS.md) V1–V4).
+Engine = the browser's Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`). Only what is checked is marked ✔; the rest is from vendor documentation and **needs a hand test** ([MANUAL-TESTS](../MANUAL-TESTS.md) SE-V1–SE-V4).
 
 | Platform | Engine | Result |
 |---|---|---|

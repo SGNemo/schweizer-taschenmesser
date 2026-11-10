@@ -39,19 +39,19 @@ Outcome: all of 1–4 on time → Android text says closed app works; PWA text s
 - `vault/logic.ts` `statusOf` has a new status `missed`: deadline behind us, contract still runs (was shown as "Bald"/nothing). Shown as "Frist vorbei am …" in the list (neutral badge), the overview widget (muted tone, own summary line) and the calendar ("Frist vorbei: …").
 - `subscriptions/logic.ts` `missedDeadline`: for cycles of a quarter or longer the note stays until the charge; for monthly (long notice) it shows only for 7 days after the deadline (`MISSED_RECENT_DAYS`), otherwise it would be "missed" all the time; active, not cancelled "zum". List row + calendar; "Kündigen bis" is larger in the row and as a big line in the dialog (next reachable deadline).
 - `core/deadline/`: `NoticeField` (amount + days/weeks/months, stored as days, a month = 30 days) used by subscriptions and Unterlagen. `RecurrenceEditor` `followStartDay` hides the 31-day list for subscriptions (the first-charge date says the day; a rule that pins another day keeps the list).
-- Tests: `vault.test.ts`, `subscriptions.test.ts`, `core/deadline/notice.test.ts`, `e2e/deadline.spec.ts`. Hand test: MANUAL-TESTS F1–F3.
+- Tests: `vault.test.ts`, `subscriptions.test.ts`, `core/deadline/notice.test.ts`, `e2e/deadline.spec.ts`. Hand test: MANUAL-TESTS FR-F1–FR-F3.
 
 ## Package C (built)
 - `vault/repo.ts` `deleteDocument` only tombstones; the file stays while the record is restorable (`core/db/trash.ts`: 30 days). `VaultPage` prunes files by `keepBlobIds` (active + restorable). Package D reuses the same window.
 - `DocumentEditor`: delete via `deleteWithUndo`, no confirmation dialog.
 - `ui/useFormDraft`: Esc / tap beside the dialog / X keep the text (memory only, 30 min); "Abbrechen" and saving drop it; a note "Dein Entwurf ist wieder da." with "Entwurf verwerfen". `ui/Dialog` untouched.
-- Tests: `vault.test.ts`, `core/db/trash.test.ts`, `e2e/delete-undo.spec.ts`. Hand test: MANUAL-TESTS U1–U2.
+- Tests: `vault.test.ts`, `core/db/trash.test.ts`, `e2e/delete-undo.spec.ts`. Hand test: MANUAL-TESTS LR-U1–LR-U2.
 
 ## Package D (built)
 - Settings → Allgemein → **Zuletzt gelöscht** (`pages/settings/RecentlyDeletedSection`): Unterlagen, Abos, Termine/Erinnerungen deleted in the last 30 days, per entry "Wiederherstellen" and "Endgültig löschen" (second tap to confirm). Allow-list in `core/trash/trash.ts` (`TRASH_COLLECTIONS`); `accounts` (vault) never takes part.
 - **Restore** = normal repo write (field op, syncs). **For good** = the local clean-up `purgeTombstones` does after 90 days, done now: without a sync server the row, its outbox entry and the file go at once; with one, a deletion that has not reached the server yet is hidden and removed by `flushPurgeQueue` after the sync (otherwise other devices would never learn of it).
 - **Switch** "Gelöschtes 30 Tage aufbewahren" (synced scope `trash`, default on): off = list hidden, window shrinks to 10 minutes (`TRASH_GRACE_MS`, enough for the "Rückgängig" toast); files of Unterlagen follow the same window (`trashRetentionMs`).
-- Tests: `core/trash/trash.test.ts`, `core/db/trash.test.ts`, `e2e/recently-deleted.spec.ts`. Hand test: MANUAL-TESTS G1–G3.
+- Tests: `core/trash/trash.test.ts`, `core/db/trash.test.ts`, `e2e/recently-deleted.spec.ts`. Hand test: MANUAL-TESTS ZG-G1–ZG-G3.
 - Docs were stale: `purgeTombstones` (90 days after a successful sync) exists, "no tombstone GC" in `decisions/core.md`/`sync-backup.md`/STATUS is outdated.
 - **Follow-up (feat/trash-more-modules):** the allow-list now also covers ToDos, notes, bookmarks, lists, pantry items, people, gifts, invoices, budgets and savings goals. Left out on purpose: list items and bank transactions (bulk data), caches, and `accounts` (never).
 

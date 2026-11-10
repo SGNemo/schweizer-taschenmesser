@@ -39,7 +39,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 ## Heute möglich in 15 Minuten
 
 1. Social-Preview hochladen: GitHub → Settings → _Social preview_ → `docs/brand/social-preview.png` (Punkt 0 unten).
-2. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).
+2. Release `v0.3.1` kurz prüfen: Checkliste RL-R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).
 3. Offene PRs ansehen: Liste „Wartet auf Sven“ in [CHATS.md](CHATS.md).
 
 Website (`site/`, Cloudflare-Pages-Projekt `nemo-site`): `develop` deployt seit dem 04.11. wieder (Variablen `IMPRESSUM_*` in Production gesetzt). `main` baut als Preview und braucht die Variablen dort ebenfalls; Checkliste [howto/cloudflare-checks.md](howto/cloudflare-checks.md).
@@ -80,19 +80,19 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 
 ## Manuelle Tests offen
 
-Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
+Hardware-Checklisten (DT-D1–DT-D16, EA-E1–EA-E5, N1–N13, GV-C7, LT-L4, FO-F1–FO-F11 Fokushilfen …): vollständig in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 
 ## Offen – macht Sven
 
 0b. **Google-Prüfung für die Mail-Berechtigungen (Mail-Modul, Paket 3):** `gmail.readonly`, `gmail.modify` und `gmail.send` sind bei Google „eingeschränkte Bereiche“. Mit der eigenen OAuth-Client-ID jedes Nutzers (so ist es gebaut) braucht das keine Prüfung durch Google; im Teststatus der Cloud-Console laufen die Anmeldungen aber nach 7 Tagen ab, bis die App auf „In Produktion“ gestellt wird (dann zeigt Google den Hinweis „nicht verifizierte App“). Würde Nemo je einen **eigenen, mitgelieferten** Client für alle Nutzer einsetzen, wäre die Google-OAuth-Verifizierung samt jährlicher Sicherheitsprüfung (CASA) Pflicht – das ist eine Entscheidung für dich, nicht für den Code. Siehe [decisions/legal.md](decisions/legal.md).
 0a. **Dev-Preview-Schlüssel (vor dem Launch):** Schlüsselpaar erzeugt, öffentlicher Schlüssel (`FA423702E1D8B9CE`) steht in `src-tauri/tauri.dev.conf.json`; die Secrets `TAURI_DEV_SIGNING_PRIVATE_KEY` + `_PASSWORD` sind gesetzt (07.10.). Der Android-Keystore wurde am 07.10. neu angelegt (altes Passwort verloren): v0.3.1-Installationen lassen sich nicht aktualisieren, vorher Backup in der App, deinstallieren, neu installieren, Backup einspielen. Handtests aus dem Launch-Review (X1 Pipe auf Windows mit zweitem Nutzer, V1 Credential-Manager nach „Alle Daten löschen“, Android-APK-Update, Datenschutzseite: Name des Verantwortlichen eintragen). 0. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** Beschreibung (Englisch), Website, Topics, Social Preview (`docs/brand/social-preview.png`, jetzt mit englischem Claim), _Private vulnerability reporting_ und Sponsor-Button: Texte zum Einfügen in [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md). Kontakt-Adresse in `CODE_OF_CONDUCT.md` eintragen (Platzhalter).
 
-**Neu (Datenträger):** Die Checkliste D1–D16 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
+**Neu (Datenträger):** Die Checkliste DT-D1–DT-D16 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf einem echten Windows-Rechner abarbeiten (Windows-Code ist nur per `cargo check --target x86_64-pc-windows-msvc` geprüft, nicht ausgeführt). Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO).
 
 - **TODO Rechtliches vor dem Launch** ([Checkliste](legal/LAUNCH-LEGAL-CHECKLIST.md)): Name und Anschrift stehen als Cloudflare-Pages-Variablen `IMPRESSUM_NAME`/`IMPRESSUM_STREET`/`IMPRESSUM_POSTCODE_CITY` (Production seit 04.11.; **auch in Preview setzen**, sonst bleibt `main` rot; nicht im Repo; `cd web && npm run check:legal` prüft den Rest), `[[RECHTSGRUNDLAGE]]` in [DATA-FLOWS](legal/DATA-FLOWS.md) füllen; der Release-Workflow bricht das Veröffentlichen ab, solange welche offen sind. Markenname „Nemo“ prüfen. **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
 - Fehlerberichte: echte Adresse als `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (mit `.invalid` bleibt „Per Mail melden“ ausgeblendet).
 - [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus).
-- Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent E1–E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
+- Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent EA-E1–EA-E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
 
 ### Nemo-Rebranding
 

@@ -21,7 +21,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
 | [#606](https://github.com/SGNemo/schweizer-taschenmesser/pull/606) Dependabot | Dev-Abhängigkeiten `web/` | mergen, wenn grün |
 
-**Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ R3–R7, PC-Befehle ohne Hänger (Windows) N1a und H1–H7, Logo LG7, Heimnetz-Sync L9 a–c und L17.
+**Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ FS-R3–FS-R7, PC-Befehle ohne Hänger (Windows) N1a und MT-H1–MT-H7, Logo LG7, Heimnetz-Sync HN-L9 a–c und HN-L17.
 
 **Entscheidungen** (Empfehlung in Klammern):
 
@@ -44,7 +44,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
 - Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
-- L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
+- HN-L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
 
 ## Läuft gerade (Running work)
 
