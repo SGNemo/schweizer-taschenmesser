@@ -250,16 +250,19 @@
 
 /* Rail (collapsed): the brand tile, then quiet grey icons in 44 px tiles. Colour means "you are here": only the active
    area shows its hue (icon and tile). The name is the accessible name and a tooltip drawn from it. */
+/* The tile fills the link (as wide as the nav tiles below it) and is a whole number of pixels at every root size. */
 .brandTile {
   align-self: center;
-  display: grid;
-  place-items: center;
+  display: block;
   width: 2.75rem;
+  width: round(2.75rem, 1px);
   height: 2.75rem;
+  height: round(2.75rem, 1px);
   padding: 0;
 }
 .brandTile:hover {
   background: none;
+  opacity: 0.88;
 }
 .railFirst {
   margin-bottom: var(--space-2);
@@ -313,9 +316,19 @@ li[data-area] .railLink[aria-current='page'] {
   transform: translateY(-50%);
   transition: opacity var(--dur-fast) var(--ease-out);
 }
-.railLink:hover::after,
 .railLink:focus-visible::after {
   opacity: 1;
+}
+/* Not on touch: a tap leaves :hover set, and the name would stay over the page after the navigation. */
+@media (hover: hover) {
+  .railLink:hover::after {
+    opacity: 1;
+  }
+}
+/* "Ruhig" / "Modulfarben: Aus": the area colour is a grey there, so the active icon takes the text colour. */
+:global(:root[data-color='calm']) li[data-area] .railLink[aria-current='page'],
+:global(:root[data-module-colors='off']) li[data-area] .railLink[aria-current='page'] {
+  color: var(--text);
 }
 
 /* A screen that can be touched: the area heads and the favourite pins get the full hit size too (after the compact

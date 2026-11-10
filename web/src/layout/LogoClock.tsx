@@ -45,7 +45,7 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
     clockModule ? (
       <Link
         to="/clock"
-        className={compact ? `${styles.link} ${styles.railLink}` : styles.link}
+        className={compact ? `${styles.link} ${styles.railTime}` : styles.link}
         aria-label={tx.open(text)}
         data-testid="logo-clock-link"
       >

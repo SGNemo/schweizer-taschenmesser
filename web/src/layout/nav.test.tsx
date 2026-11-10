@@ -126,11 +126,11 @@ describe('sidebar', () => {
       expect(link).not.toHaveAttribute('title');
       expect(link).toHaveTextContent('');
     }
-    // The brand is the app icon tile, a square that scales with the root font size.
+    // The brand is the app icon tile; it fills the home link, whose box sets the size.
     const tile = screen.getByRole('link', { name: t.nav.homeAria }).querySelector('svg')!;
     expect(tile).toHaveAttribute('viewBox', '0 0 512 512');
-    expect(tile).toHaveAttribute('width', '2.5rem');
-    expect(tile).toHaveAttribute('height', '2.5rem');
+    expect(tile).toHaveAttribute('width', '100%');
+    expect(tile).toHaveAttribute('height', '100%');
     await user.click(screen.getByRole('button', { name: t.nav.expandSidebar }));
     expect(useUiStore.getState().sidebar).toBe('wide');
   });

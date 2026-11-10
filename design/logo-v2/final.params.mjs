@@ -27,7 +27,7 @@ export const LOCKUP = { source: 'mark', markHeight: 1.3, gap: 0.24, pill: { padX
 /** Where the pieces appear in the app (CSS px at 16 px root). */
 export const PLACEMENT = {
   sidebarWide: { pill: 36 }, // in the 44 px brand box, 4 px air above and below
-  sidebarRail: { tile: 40 }, // the mark on the accent tile (`<Logo tile />`, 2.5rem) in a 44 px link
+  sidebarRail: { tile: 44 }, // the mark on the accent tile (`<Logo tile />`) filling the 2.75rem home link
   phoneTopBar: { mark: 32 }, // the transparent mark, no tile
 };
 

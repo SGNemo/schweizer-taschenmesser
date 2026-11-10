@@ -2,6 +2,6 @@
 type: changed
 area: ui
 breaking: false
-de: Die eingeklappte Seitenleiste ist ruhiger: das Logo als scharfe Kachel, die Uhrzeit in einer Zeile, graue Symbole mit Farbe nur für den aktiven Bereich und Namen auch bei Tastaturbedienung.
-en: The collapsed sidebar is calmer: the logo as a crisp tile, the time on one line, grey icons with colour only for the active area, and names shown for keyboard users too.
+de: Die eingeklappte Seitenleiste ist ruhiger: Logo als scharfe Kachel, Uhrzeit in einer Zeile, Farbe nur für den aktiven Bereich, und die Bereichsnamen erscheinen auch bei Tastaturbedienung.
+en: The collapsed sidebar is calmer: the logo as a crisp tile, the time on one line, colour only for the active area, and area names also appear when you use the keyboard.
 ---

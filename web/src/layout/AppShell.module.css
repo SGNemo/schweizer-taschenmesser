@@ -87,10 +87,11 @@
     );
   }
   .shell[data-rail='true'] .sidebar {
-    padding: var(--space-3) var(--space-2);
+    /* 1 px less on the border side: the content box is then 3rem wide and the 2.75rem tiles centre on whole pixels. */
+    padding: var(--space-3) calc(var(--space-2) - 1px) var(--space-3) var(--space-2);
     align-items: stretch;
-    /* The rail's tooltips reach over the page (layout/Sidebar.module.css). */
-    z-index: var(--z-sticky);
+    /* The rail's tooltips reach over the page and the top bar (layout/Sidebar.module.css). */
+    z-index: var(--z-nav);
   }
   .main {
     flex: 1;

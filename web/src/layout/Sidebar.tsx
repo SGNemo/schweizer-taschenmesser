@@ -206,7 +206,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
         void navigate('/');
       }}
     >
-      {rail ? <Logo tile size="2.5rem" /> : <Wordmark height={44} title={t.appName} />}
+      {rail ? <Logo tile /> : <Wordmark height={44} title={t.appName} />}
     </a>
   );
   // The clock sits next to the home link, not in it: it opens the Uhr module (while that is on) or nothing.
