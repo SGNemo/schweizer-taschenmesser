@@ -17,10 +17,12 @@ test.use({
 /**
  * Links and buttons whose hit area is under 44 × 44 px. A small mark may carry a larger area as an absolutely placed
  * ::after (ui/Button, chips): its box follows from its insets against the element's own box and counts only when it
- * measures 44 px both ways. Half a pixel of rounding is allowed.
+ * measures 44 px both ways. Half a pixel of rounding is allowed for that computed box only (four parsed insets); the
+ * element itself is measured and has to reach the full 44 px.
  */
 function smallTargets(): string[] {
-  const MIN = 43.5;
+  const MIN = 44;
+  const AFTER_MIN = MIN - 0.5;
   const visible = (e: Element) => {
     const r = e.getBoundingClientRect();
     const s = getComputedStyle(e);
@@ -44,8 +46,8 @@ function smallTargets(): string[] {
         after.content !== 'none' &&
         after.position === 'absolute' &&
         inset.every(Number.isFinite) &&
-        r.width - left - right >= MIN &&
-        r.height - top - bottom >= MIN;
+        r.width - left - right >= AFTER_MIN &&
+        r.height - top - bottom >= AFTER_MIN;
       // Links inside running text are text, not targets of their own (WCAG 2.5.8, inline exception).
       const inline = e.tagName === 'A' && getComputedStyle(e).display === 'inline';
       return !extended && !inline;

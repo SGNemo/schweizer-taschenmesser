@@ -274,7 +274,7 @@ export function AreaFrame({
                 <ModuleSettingsLink pathname={pathname} />
               </div>
               <div className={styles.column}>
-                <div className={styles.title} ref={setTitle} />
+                <div className={styles.title} ref={setTitle} data-slot="title" />
                 <div
                   className={styles.body}
                   ref={bodyRef}
