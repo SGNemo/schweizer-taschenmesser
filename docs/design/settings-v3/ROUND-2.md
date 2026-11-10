@@ -1,6 +1,6 @@
 # Settings identity v3.1 – package 2 (remaining tabs)
 
-Branch `design/settings-identity-2`, prompt in [PACKAGES.md](PACKAGES.md). Same capture as round 1 ([tools/shots.spec.ts](tools/shots.spec.ts)); shots `shots2/{before,after}-<tab>-<w>-<scheme>.jpg` for Allgemein, Darstellung, Barrierefreiheit, Module, Werkzeugkasten, Benachrichtigungen, Sicherheit, Verbindungen, Updates, Entwickler (1920 stored at 960 px, 412; light and dark; seeded preview of `develop` 2026-11-08).
+Branch `design/settings-identity-2`, prompt in PACKAGES.md (removed 2026-11-10, in the git history). Same capture as round 1 (tools/shots.spec.ts (removed 2026-11-10, in the git history)); shots `shots2/{before,after}-<tab>-<w>-<scheme>.jpg` for Allgemein, Darstellung, Barrierefreiheit, Module, Werkzeugkasten, Benachrichtigungen, Sicherheit, Verbindungen, Updates, Entwickler (1920 stored at 960 px, 412; light and dark; seeded preview of `develop` 2026-11-08).
 
 ## What changed (blocks only, no content)
 

@@ -1,6 +1,6 @@
 # Settings identity v3.1 – round 1 (diagnosis, direction, package 1)
 
-Branch `design/settings-identity`. Rules: [MODULE-IDENTITY](../MODULE-IDENTITY.md) (Settings and libraries, Signatures), [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md), [DESIGN-SPEC](../DESIGN-SPEC.md). Shots: seeded e2e preview (`build:e2e-seed`, scale medium, clock 2026-09-29), 1920 × 1080 and 412 × 915, light and dark, full page: `shots/before-<tab>-<w>-<scheme>.jpg`, `shots/after-…` (16 tabs + the assistant). Capture: [tools/shots.spec.ts](tools/shots.spec.ts) (copy into `web/e2e/screenshots/`, preview on :4174). The browser build has no desktop shell, so hotkey and tray rows show only in the mockup and the unit tests.
+Branch `design/settings-identity`. Rules: [MODULE-IDENTITY](../MODULE-IDENTITY.md) (Settings and libraries, Signatures), [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md), [DESIGN-SPEC](../DESIGN-SPEC.md). Shots: seeded e2e preview (`build:e2e-seed`, scale medium, clock 2026-09-29), 1920 × 1080 and 412 × 915, light and dark, full page: `shots/before-<tab>-<w>-<scheme>.jpg`, `shots/after-…` (16 tabs + the assistant). Capture: tools/shots.spec.ts (removed 2026-11-10, in the git history) (copy into `web/e2e/screenshots/`, preview on :4174). The browser build has no desktop shell, so hotkey and tray rows show only in the mockup and the unit tests.
 
 ## Step 1 – diagnosis
 
@@ -34,7 +34,7 @@ Two variants differ in one point only (where the state figure sits):
 | Einrichtung          | `shots/mockup-variant-a-{1280,412}-{light,dark}.jpg` | `shots/mockup-variant-b-{1280,412}-{light,dark}.jpg` |
 | Schnellerfassung (B) | –                                                    | `shots/mockup-quick-capture-b-*.jpg`                 |
 
-Mockups: [mockups/](mockups/) (`node ../docs/design/settings-v3/mockups/render.mjs` from `web/`).
+Mockups: mockups/ (removed 2026-11-10, in the git history) (`node ../docs/design/settings-v3/mockups/render.mjs` from `web/`).
 
 **Recommendation: B.** The state already has a home on Sync and KI (the status card), so a head figure would say it twice; B keeps all 16 heads at one height, which is calmer when switching tabs. The figure and the primary action sit together in the tinted card, so "what is the state" and "what do I do" are one glance, also on the phone.
 

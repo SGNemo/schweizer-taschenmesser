@@ -1,6 +1,6 @@
 # QA-Konsolidierung – sieben Personas, ein Bild
 
-Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbert, Jonas, Lena, Mia, Priya, Sofía, Tom), getestet auf `develop` @ `4af432d`. Maschinenlesbar: [consolidated.json](consolidated.json). Kein Code geändert.
+Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbert, Jonas, Lena, Mia, Priya, Sofía, Tom), getestet auf `develop` @ `4af432d`. Maschinenlesbar: consolidated.json (removed 2026-11-10, in the git history). Kein Code geändert.
 
 **Lesehilfe:** Schwere/Nutzen hoch = 3, mittel = 2, niedrig = 1. Rang = Wert × Zahl der Personas, bei Fehlern +3, wenn eine Persona den Fund als ihren „einen Grund zum Deinstallieren“ nennt. Herkunfts-IDs in Klammern: H Herbert, J Jonas, L Lena, M Mia, P Priya, S Sofía, T Tom (`P-B07` = Priya, Fehler B07). Alles wurde nur im Browser/Viewport getestet, nie auf APK oder Windows-exe: Funde mit „prüfen“ brauchen ein Gerät.
 
@@ -14,7 +14,7 @@ Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbe
 4. **Verpasste Kündigungsfrist und Löschen ohne Rückgängig bei Unterlagen (B08, B09):** Herbert – Vertrauensbruch bei Dingen, die Geld oder Papiere kosten.
 5. **Doppelkästchen in der Einkaufsliste (B01)** und **README/Website „Oberfläche ist Deutsch“ (B15):** das eine bremst die meistgenutzte Handy-Funktion, das andere hält Sofía vom Download ab.
 
-**Sicherheit/Vertrauen, zusammengefasst:** Kein Blocker, kein hoher Fund. Die Kernversprechen hielten im Test (kein Netz ohne Klick im Offline-Build, KI sieht keine Daten, Tresor verschlüsselt, manipulierte *verschlüsselte* Backups werden abgelehnt). Fünf mittlere Funde: Ollama-Probe im Setup (B21), Suchverlauf im Klartext (B23), Klartext-Backup ohne Prüfsumme (B24), Kalender-Abo-Prüfung (B26) und ein Verfügbarkeitsthema im Sync-Server (B33, **vertraulich**, Details nur in [Toms Bericht](tom-sysadmin/REPORT.md) F-05 und direkt an Sven).
+**Sicherheit/Vertrauen, zusammengefasst:** Kein Blocker, kein hoher Fund. Die Kernversprechen hielten im Test (kein Netz ohne Klick im Offline-Build, KI sieht keine Daten, Tresor verschlüsselt, manipulierte *verschlüsselte* Backups werden abgelehnt). Fünf mittlere Funde: Ollama-Probe im Setup (B21), Suchverlauf im Klartext (B23), Klartext-Backup ohne Prüfsumme (B24), Kalender-Abo-Prüfung (B26) und ein Verfügbarkeitsthema im Sync-Server (B33, **vertraulich**, Details nur in Toms Bericht (removed 2026-11-10, in the git history) F-05 und direkt an Sven).
 
 ## 2. Top-20-Fehler
 

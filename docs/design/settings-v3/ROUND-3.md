@@ -1,6 +1,6 @@
 # Settings identity v3.1 – package 3 (navigation and search)
 
-Branch `design/settings-nav`, prompt in [PACKAGES.md](PACKAGES.md).
+Branch `design/settings-nav`, prompt in PACKAGES.md (removed 2026-11-10, in the git history).
 
 ## Variants (one point: where the search sits)
 

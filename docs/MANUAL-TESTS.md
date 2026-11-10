@@ -388,6 +388,45 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
 - **LB4 Breite Fenster (2560 px):** Karten füllen die Zeile, nichts läuft über; Werkzeug-Bibliothek ebenso, hell und dunkel. ☐
 
+## Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
+
+Standen nur in den Zeilen „Wartet auf Sven“ ([CHATS.md](CHATS.md)) oder im STATUS-Protokoll, nicht in dieser Datei. Wortlaut wie dort.
+
+### Windows
+
+- **GM1 Eingeklappte Seitenleiste, Fisch v2.2:** bei 125 % Skalierung: Kachel und Symbole scharf, Tooltip mit Maus und Tab, Taskleisten-Icon zeigt den neuen Fisch. (PR #669) ☐
+- **GM2 „Dieser PC“, Kopf v3.1:** Kopf hell/dunkel; „Ruhig“: Dateitypen grau, Muster + Legende bleiben; Baumkarte nach Alter/Dateityp. (PR #490) ☐
+- **GM3 Laufwerke-Seite:** Karten in zwei Spalten, „Details“, Scan aus der Karte, Liste. (PR #483) ☐
+- **GM4 Shell-Fixes:** Werkzeuge mit Strg+. und Alt+2; Lesehilfe 100 % in der Seitenleiste mit „Zurück“. (PR #481; vgl. TP3) ☐
+- **GM5 Lokales Modell in der Dev-Preview:** erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig); Lokales Modell → Download → Testfrage von Hand. (PR #504; vgl. K5) ☐
+
+### Android-Handy
+
+- **GM6 Launcher-Icon:** zeigt den Fisch v2.2. (PR #669) ☐
+- **GM7 Einstellungs-Suche:** Einstellungen lang runter/hoch scrollen: die Suche bleibt ohne Lücke unter der Kopfleiste. (`fix/settings-search-sticky-phone`) ☐
+- **GM8 Planen + Geld v3.1:** ToDos-Kopf: Titel gekürzt, „Später“ sichtbar; Rechnungen: „Nächste bezahlen“. (PR #493) ☐
+- **GM9 Topbar:** lang scrollen, Seite wechseln → die Leiste ist sofort da. (PR #481) ☐
+- **GM10 Handy-Layout (QA P2):** Gerätetest von Kopfzeile, Listenzeilen, Hinweisen, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi. (`fix/qa-mobile-layout`) ☐
+- **GM11 KI-Erinnerung per Satz:** Satz per Sprache („Erinner mich um 15 Uhr an die Wäsche“): die Benachrichtigung kommt zur Zeit. (`feat/ai-reminder-voice`) ☐
+- **GM12 PWA offline:** PWA einmal online öffnen, Flugmodus, dann App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)). (Runde T1–T6, #341–#349; vgl. BP1) ☐
+
+### Beide (Windows und Android)
+
+- **GM13 Fundament v3:** Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy. (PR #414) ☐
+- **GM14 Lesehilfe 100 %:** beim Modulwechsel prüfen. (PR #496) ☐
+- **GM15 Eigene Karte, Overpass:** erste echte Overpass-Antwort auf einem Gerät: Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“. (#342, #346, #348, #350, #352) ☐
+- **GM16 Eigene Karte, Regionsdatei:** eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser. (#342–#352) ☐
+- **GM17 Eigene Karte, Tempo:** Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen, Wartezeit vom Server); notieren, wie lange es dauert. (PR #387) ☐
+- **GM18 Bank, Person B:** echte Sparkassen-CSV-CAMT importieren, Export in Excel öffnen. (PR #580; vgl. C7, G5) ☐
+- **GM19 Kontoauszug-Import je Bank:** OFX, QIF, Bank-Vorlagen und Spaltenzuordnung je Bank mit echter Datei ([features/bank-import.md](features/bank-import.md)). ☐
+- **GM20 Komfort Einstellungen:** eine Woche Nutzung: Reizlast von Zahnrad und Schnellleiste. (#132, #150, #151, #153; vgl. M1–M4) ☐
+
+### Website (am Handy)
+
+- **GM21 Hero und Anker-Leiste:** Seite scrollen: die Leiste mit den vier Links + GitHub bleibt oben, das Hero-Bild blendet einmal ein (mit „Bewegung reduzieren“ nicht). (PR #674) ☐
+- **GM22 Rest der Seite:** Vorschau einmal ganz durchscrollen. (PR #685) ☐
+- **GM23 Eingefrorene Sprachen:** `/es`, `/fr`, `/pt-br` leiten auf `/en`. (PR #507) ☐
+
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
 > **Stand v0.3.1:** Die Schritte 1, 5 und 7 stammen aus der Beta-Phase (`0.2.0-beta.x`); die Tags `v0.2.0`, `v0.3.0`, `v0.3.1` sind inzwischen veröffentlicht, das neueste stabile Release ist `v0.3.1`. Sinngemäß heute: neueste Version von der Release-Seite installieren, für den Update-Test später ein neues Release schneiden (Rezept: [howto/release-deps.md](howto/release-deps.md)); der Text unten bleibt als Ablauf erhalten.
