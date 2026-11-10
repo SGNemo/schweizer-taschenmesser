@@ -467,13 +467,27 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
   if (/[\r\u2028\u2029]/.test(src)) return false;
   // Vitest hoists these calls to the top of the file wherever they stand, also out of a test body, for `vi`
   // and `vitest`, whatever stands between the name and the method.
-  if (
-    /\b(?:vi|vitest)\b/.test(src) &&
-    /\b(?:mock|unmock|hoisted|doMock|doUnmock|importActual|importMock)\b\s*(?:\/\*[\s\S]*?\*\/\s*)*[(<]/.test(
-      src,
-    )
-  )
-    return false;
+  if (/\b(?:vi|vitest)\b/.test(src)) {
+    for (const m of src.matchAll(
+      /\b(?:mock|unmock|hoisted|doMock|doUnmock|importActual|importMock)\b/g,
+    )) {
+      // Written as a call? Skip whitespace and comments behind the name (a plain loop, no backtracking).
+      let k = m.index + m[0].length;
+      for (;;) {
+        while (k < src.length && /\s/.test(src[k])) k++;
+        if (src.startsWith('/*', k)) {
+          const end = src.indexOf('*/', k + 2);
+          if (end < 0) return false;
+          k = end + 2;
+        } else if (src.startsWith('//', k)) {
+          const end = src.indexOf('\n', k);
+          if (end < 0) break;
+          k = end;
+        } else break;
+      }
+      if (src[k] === '(' || src[k] === '<') return false;
+    }
+  }
   const n = src.length;
   let i = 0;
   const fail = () => {
