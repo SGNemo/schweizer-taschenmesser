@@ -126,6 +126,12 @@ Fest seit dem 2026-11-09; Herkunft und Regeln je Kandidat stehen in REPORT „Be
 | Klickweg: Darstellung am Handy (Messung fehlgeschlagen) | 0b-6 (Einstellungen-Reiter als Tabs im Kopf, dann neu messen) |
 | Klickweg: Backup-/Sync-Status 3–4 Klicks | S-b „Gerätestatus“ (fest, Frage 2 A); 0b-6 setzt die Status-Kacheln der Einstellungs-Startseite auf eine Zeile, sie bleiben dort auch nach S-b (bei ausgeschaltetem `device`; ist es an, verweist die Zeile dorthin) |
 | Lade-Robustheit H1–H5 | 0a-2 (Maßnahmen 1–3; H3-Retry = Reload in Maßnahme 1), 0a-4 (Maßnahme 4, unabhängig von Go und Frage 1) |
+| AE1 deaktivierter Hauptknopf wird braun ([Nachtrag Ästhetik](AESTHETICS-ADDENDUM.md)) | 0b-1 (Disabled-Zustand ohne Akzent und ohne `opacity`) |
+| AE2 Bereichsmuster hinter Text im dunklen Theme | 0b-1 (Token je Theme), 0b-2 (kein Muster im Standard-Kopf) |
+| AE3 Modul-Tönungen im Dunkeln stumpf | 0b-8 (Prüfpunkt; keine Umstellung auf `oklab`, gemessen) |
+| AE4 Wochenraster: Wortbruch, angeschnittene Zeilen | 0b-4 |
+| AE5 App-Icon liest sich klein als Lautsprecher | eigenes Paket „Logo v2.1“ (`design/logo-v2`, Runde 10), unabhängig von 0b; entschieden 2026-11-10, Branch `feat/logo-v2-1` |
+| AE6 Website (W1–W6) | eigenes Paket „Website Runde 5“ nach 0b-8; Prompt im Nachtrag |
 
 ## Alternativen (nicht gewählt, zur Referenz)
 
