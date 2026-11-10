@@ -41,6 +41,7 @@ export const AREAS: Record<string, Label> = {
   calendar: { de: 'Kalender', en: 'Calendar' },
   chat: { de: 'Chat', en: 'Chat' },
   clock: { de: 'Uhr', en: 'Clock' },
+  remote: { de: 'Fernbedienung', en: 'Remote' },
   disk: { de: 'Dieser PC', en: 'This PC' },
   downloads: { de: 'Downloads', en: 'Downloads' },
   example: { de: 'Beispiel', en: 'Example' },

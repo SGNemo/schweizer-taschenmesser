@@ -166,6 +166,19 @@ R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tas
 R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
 R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
 
+### Fernbedienung, Handy (`feat/remote-module-page`) – nur mit Pixel und Windows-PC prüfbar
+
+Vorher am Handy: Einstellungen → Allgemein → „In Arbeit anzeigen“, Modul „Fernbedienung“ einschalten; am PC: Einstellungen → Verbindungen → Fernsteuerung, dem Handy „Medien und Lautstärke“ erlauben. Zugleich R3–R7 oben ausführen.
+
+FB1. _Erster Android-Build mit dem Client:_ APK bauen und starten; „Fernbedienung“ öffnen: Zeile „Dein PC · Lautstärke … %“ erscheint binnen etwa einer Sekunde. ☐
+FB2. _Einhändig, ohne Hinsehen:_ Pause, Nächster, Vorheriger, Leiser/Lauter (auch gehalten: höchstens etwa 5 Schritte je Sekunde) treffen; das kurze Vibrieren hilft, lässt sich abschalten. ☐
+FB3. _Menü:_ „Ton aus / an“ und „PC sperren“; nach dem Sperren steht „gesperrt“ in der Zeile, Medien gehen weiter. ☐
+FB4. _Zustände:_ am PC Schalter aus → Satz mit dem Schritt am PC; am PC „Fernsteuerung beenden“ → „am PC pausiert“; WLAN am Handy aus → nach etwa 5 s „antwortet noch nicht“, dann „nicht erreichbar“; WLAN an + „Erneut versuchen“ → verbunden. ☐
+FB5. _Langsames WLAN:_ Wiedergabe/Pause drücken; zeigt die Zeile kurz den alten Stand, heilt eine späte Antwort ihn ohne zweiten Druck? Ein zweiter Druck davor schaltet erneut um (bekannt). ☐
+FB6. _App wechseln:_ anderes Programm öffnen und zurück: verbindet neu ohne Frage; am PC verschwindet in der Zwischenzeit der Chip. ☐
+FB7. _Widget:_ auf der Übersicht steht „Dein PC · bereit“ mit „Öffnen“; es öffnet keine Verbindung (am PC kein Chip). ☐
+FB8. _Player ohne Medien-Sitzung:_ ein Player, der sich so nicht pausieren lässt: notieren, welcher (Frage an Sven, kein Tasten-Ersatz). ☐
+
 ### Einrichtungsassistent
 
 E1. _Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):_ Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐

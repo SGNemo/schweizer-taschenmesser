@@ -1,0 +1,52 @@
+import type { Strings } from '@/strings';
+
+export const remote: Strings['remote'] = {
+  meta: {
+    name: 'Remote',
+    description:
+      'Control media and volume of your PC from your phone – on your home network, once you allowed it at the PC.',
+    widget: 'Remote',
+    haptics: 'Short vibration on a tap',
+    hapticsHelp: 'A short tick on every press, so you do not have to look.',
+    keepAwake: 'Keep the screen on',
+    keepAwakeHelp: 'The screen stays on while the remote is open.',
+  },
+  phoneOnly: 'The remote is available in the phone app.',
+  media: 'Media',
+  more: 'More',
+  mute: 'Sound off / on',
+  lock: 'Lock PC',
+  previous: 'Previous',
+  next: 'Next',
+  play: 'Play',
+  pause: 'Pause',
+  quieter: 'Quieter',
+  louder: 'Louder',
+  retry: 'Try again',
+  pair: 'Pair a PC',
+  disable: 'Switch the module off',
+  open: 'Open',
+  widgetIdle: 'Your PC · ready',
+  widgetHint: 'Control media and volume of the PC.',
+  state: {
+    connecting: 'Your PC',
+    slow: 'Your PC has not answered yet.',
+    volume: (percent: number) => `Your PC · volume ${percent} %`,
+    volumeUnknown: 'Your PC · connected',
+    muted: 'Your PC · sound off',
+    pcLocked: 'locked',
+    notPaired: 'No PC paired yet. The remote needs the pairing on your home network.',
+    unreachable: 'Your PC cannot be reached right now. Both devices on the same Wi-Fi?',
+    notGranted:
+      'Remote control is off for this phone at the PC. Allow this phone at the PC under Settings → Remote control.',
+    paused:
+      'The remote is paused at the PC. Switch it on again at the PC under Settings → Remote control.',
+    busy: 'Another device is controlling the PC right now.',
+    noInputHere: 'Your PC takes no remote control here right now. Is the PC on your home network?',
+    unsupported: 'This PC cannot be remote controlled (Windows only).',
+    tooOld: 'Your PC does not answer the remote. Is Nemo on the PC up to date?',
+    locked: 'The PC is locked. Media and volume keep working.',
+    limit: 'Connection briefly interrupted.',
+    retry: 'The connection could not be set up.',
+  },
+};

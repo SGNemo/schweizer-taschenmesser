@@ -102,7 +102,7 @@ describe('module definition', () => {
   it('is registered, off by default, and one of only ten active manifests without aiSchema', () => {
     expect(allManifests.map((m) => m.id)).toContain('accounts');
     expect(visibleManifests.find((m) => m.id === 'accounts')?.defaultEnabled).toBe(false);
-    // `browser` (what you read: history and bookmarks stay private), `downloads` (the jobs live in the native side, never in the data), `disk` (scan results and live system facts, never stored) and `chat` (conversations never reach the assistant) and `mail` (mail content never reaches a model), `music` (what you listen to stays on the device) and `weather` (live forecast data, nothing of yours) and `feeds` (what you subscribe to and read is personal) have none by design; `planner` (decision 1 of docs/decisions/plan.md: AI replanning is local-only, the plan, blocker labels and day notes describe the user's days and never reach the cloud, the search or the chat context) by decision; retired modules have none by definition. A new
+    // `browser` (what you read: history and bookmarks stay private), `downloads` (the jobs live in the native side, never in the data), `disk` (scan results and live system facts, never stored) and `chat` (conversations never reach the assistant) and `mail` (mail content never reaches a model), `music` (what you listen to stays on the device) and `weather` (live forecast data, nothing of yours) and `feeds` (what you subscribe to and read is personal) have none by design; `remote` (the phone as a remote control: holds no data, the PC's state lives in memory only) and `planner` (decision 1 of docs/decisions/plan.md: AI replanning is local-only, the plan, blocker labels and day notes describe the user's days and never reach the cloud, the search or the chat context) by decision; retired modules have none by definition. A new
     // module without one must be a decision.
     expect(allManifests.filter((m) => !m.aiSchema && !m.retired).map((m) => m.id)).toEqual([
       'accounts',
@@ -114,6 +114,7 @@ describe('module definition', () => {
       'mail',
       'music',
       'planner',
+      'remote',
       'weather',
     ]);
     expect(allManifests.filter((m) => m.retired).every((m) => !m.aiSchema)).toBe(true);
