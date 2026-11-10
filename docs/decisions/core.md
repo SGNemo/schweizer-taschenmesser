@@ -2,8 +2,10 @@
 
 Full text (decision, reason, source). One-line summary table: [DECISIONS](../DECISIONS.md).
 
+New decisions go into the matching topic file as one bullet (not into this index).
+
 - [core-data-ai](core-data-ai.md) – Product & data (local-first, envelope, cents/dates, `now()`, manifest isolation, local-only collections); AI (no user data to the model, three tiers, Zod intents, router, `accounts` invisible and its one widget, AI writes)
-- [core-sync](core-sync.md) – Sync: field LWW by HLC, `SyncAdapter`, E2E values, single-tenant server, failed-login limit, batched storage adapter, `syncSettled()`, encrypted-server detection, vault server holds ciphertext only
+- [core-sync](core-sync.md) – Sync: field LWW by HLC, `SyncAdapter`, E2E values, single-tenant server, no tombstone GC, failed-login limit, batched storage adapter, `syncSettled()`, encrypted-server detection, vault server holds ciphertext only
 - [core-lan-sync-hub](core-lan-sync-hub.md) – LAN sync: PC as server, hub store (b), Noise channel and pairing (2a), hub core (2b-1), hub network (2b-2)
 - [core-lan-sync-devices](core-lan-sync-devices.md) – LAN sync: hub PC syncs (3a), phone pairs (3b), in-app QR scanner, stable port, switch from server, Wi-Fi trigger (4 rest B), second PC
 - [core-remote-control-1](core-remote-control-1.md) – Remote control: concept, package 1a (input session, grant), 1b part 1 (PC side in Rust), 1b part 2 (settings, chip, web seam)

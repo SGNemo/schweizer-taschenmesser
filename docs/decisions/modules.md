@@ -2,7 +2,9 @@
 
 Index: [DECISIONS](../DECISIONS.md). Plan: [product/MODULE-PLAN.md](../product/MODULE-PLAN.md).
 
-- [modules-retired-notes](modules-retired-notes.md) – Retired modules; Tools; Notizzettel
+New decisions go into the matching topic file as one bullet (not into this index).
+
+- [modules-retired-notes](modules-retired-notes.md) – Retired modules; Tools; Notizzettel; Notes editor packages 1–3 (TipTap + Markdown, notebooks/tabs/history/trash, `[[links]]`, export/import)
 - [modules-disk-lists-docs](modules-disk-lists-docs.md) – Dieser PC; App migrations and Listen (0.5.0); Unterlagen and Personen (0.6.0)
 - [modules-zeit](modules-zeit.md) – Zeit (0.7.0): Erinnerungen, assistant, ToDo recurrence, file imports; Uhr = a module in Planen
 - [modules-money](modules-money.md) – Money: comfort packages 5a–6, missed cancellation deadline, currency per account/invoice/subscription/budget, bank import (T2), rules from suggestions, paid invoice → booking, finance/invoices/subscriptions/budgets depth
