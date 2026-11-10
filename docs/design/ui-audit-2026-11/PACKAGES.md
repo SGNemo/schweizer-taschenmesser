@@ -130,7 +130,7 @@ Fest seit dem 2026-11-09; Herkunft und Regeln je Kandidat stehen in REPORT „Be
 | AE2 Bereichsmuster hinter Text im dunklen Theme | 0b-1 (Token je Theme), 0b-2 (kein Muster im Standard-Kopf) |
 | AE3 Modul-Tönungen im Dunkeln stumpf | 0b-8 (Prüfpunkt; keine Umstellung auf `oklab`, gemessen) |
 | AE4 Wochenraster: Wortbruch, angeschnittene Zeilen | 0b-4 |
-| AE5 App-Icon liest sich klein als Lautsprecher | eigenes Paket „Logo v2.1“ (`design/logo-v2`, Runde 10), unabhängig von 0b; Sven wählt die Richtung |
+| AE5 App-Icon liest sich klein als Lautsprecher | eigenes Paket „Logo v2.1“ (`design/logo-v2`, Runde 10), unabhängig von 0b; entschieden 2026-11-10, Branch `feat/logo-v2-1` |
 | AE6 Website (W1–W6) | eigenes Paket „Website Runde 5“ nach 0b-8; Prompt im Nachtrag |
 
 ## Alternativen (nicht gewählt, zur Referenz)
