@@ -175,9 +175,11 @@ Assets: control of the PC's input (code execution as the user), the user's atten
 | Mitleser auf dem Handy oder PC (Logs, Absturzbericht, Diagnose) | liest, was protokolliert wurde | nichts wird protokolliert: keine Tasten, kein Text, keine Koordinaten, keine Ereignisse, keine Zeitpunkte – auch `lastSeen` wird von einer Eingabe-Sitzung nicht geschrieben (Quelltext-Test wie `tests/rules.rs`); Textfeld ohne Verlauf und ohne Lesehilfe; Diagnose-Negativliste um die Fernsteuerung erweitert | Tastatur-App des Handys sieht den Text wie jeden anderen |
 | PC als Angreifer gegen das Handy | sendet Zustands-Frames | 4 Byte fester Aufbau, Werte geklemmt, höchstens 5 je Sekunde | keines bekannt |
 
-**Logging – proposed hard rule, verbatim:** "Never log, store, count per key, or put into diagnostics, crash reports or telemetry any remote-control input: no key, no text, no pointer coordinate, no click, no media command, and no time of use. An input session leaves no trace, not even the trust list's `lastSeen`. The only remote-control state the PC ever stores is the master switch and, per device, the grant level, the pause flag and the unlock option; throttles (the phone's unlock window, the PC's notification limit) live in memory only. The phone stores its module settings (sensitivity, haptics, switches), nothing about use."
+**Logging – wording as proposed (background; the rule in force is [rules/remote-control.md](../../rules/remote-control.md)):** "Never log, store, count per key, or put into diagnostics, crash reports or telemetry any remote-control input: no key, no text, no pointer coordinate, no click, no media command, and no time of use. An input session leaves no trace, not even the trust list's `lastSeen`. The only remote-control state the PC ever stores is the master switch and, per device, the grant level, the pause flag and the unlock option; throttles (the phone's unlock window, the PC's notification limit) live in memory only. The phone stores its module settings (sensitivity, haptics, switches), nothing about use."
 
 ### Proposed rule lines
+
+In force since package 0 (2026-11-10): the full text is in [rules/remote-control.md](../../rules/remote-control.md) (own file, RULES.md is at its size budget); the root line was shortened for the start-context budget without dropping a rule.
 
 Root `CLAUDE.md` (one line, after "LAN sync"):
 
