@@ -51,6 +51,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | --- | --- | --- | --- | --- |
 | UI-Audit 4.0, Paket 0b-2 Kopf und Navigation | `feat/ui4-0b-2-head-nav` (#688, Draft) | `web/src/layout/**`, module heads, `.changes/` | in work | 2026-11-10 |
 | Fernsteuerung: Latenzmessung | `feat/remote-latency-probe` (#690) | `web/src/core`, `docs/design/remote-control` | PR open | 2026-11-10 |
+| MODULE-PLAN: Paket 7 als gebaut markieren | `docs/module-plan-package-7` | `docs/product/MODULE-PLAN.md` | in work | 2026-11-10 |
 
 Add your row in the **first commit** of your branch, remove it in the **last commit** of your PR. On a merge conflict here keep both rows. Agent threads of one session share one row.
 
