@@ -55,7 +55,7 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
 
 ## 2a Umstieg v3 → v3.1 (21 → 7 Agenten; nicht hier geprüft, kein `ant` in der Sandbox)
 
-Nach dem Merge dieses PRs, im Repo-Root auf frischem `develop`:
+Im Repo-Root auf frischem `develop`:
 
 ```bash
 node scripts/agents/validate.mjs && node scripts/agents/to-ant.mjs --check     # ✓ 7 / ✓ 8

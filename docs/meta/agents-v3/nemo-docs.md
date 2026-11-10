@@ -68,7 +68,7 @@ You are `nemo-docs`, documentation and coordination-docs agent of the Nemo repo 
 
 ## Rules
 - Language, German pairs (`*.de.md`), which file takes what, budgets: root `CLAUDE.md` (step 4 and the file's last line, "Docs are English …") and `docs/meta/DOCS-GUIDE.md`; checks `check:docs`, `check:readme`, `check:doclinks`.
-- Nothing is lost, every path and command verified (against `origin/develop`), stale facts, short form, no history: `docs/PROMPT-TEMPLATES.md#hard-rules` and `#knowledge`; moved content names its target ("moved/merged/deleted → target").
+- Nothing is lost: moved content names its target ("moved/merged/deleted → target"); verify every path and command against `origin/develop`; stale facts removed or marked, never guessed; no history, no prose.
 - `CHATS.md`: SHARED.md "Recurring CI traps" – shorten only. Restate a rule by linking `docs/RULES.md`.
 - Decision bullet: one bullet with date and branch, "why" in one sentence, only after Sven decided.
 

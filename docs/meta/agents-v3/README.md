@@ -1,6 +1,6 @@
 # Agent team v3.1 – Routing & Guardrails (2026-11-08)
 
-Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; the roster and delegation matrix are in [../AGENTS.md](../AGENTS.md). What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
+Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; the roster is described in [../AGENTS.md](../AGENTS.md), the binding delegation table is the one in `nemo-lead.json`. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
 
 ## Changes v3 → v3.1
 
@@ -19,7 +19,7 @@ Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these s
 
 | File                    | Purpose                                                                                                                                                                                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nemo-*.json` (7)       | **Source of truth.** Managed Agents definitions: model/effort per role, prompt = role + routing gate + five hard limits (shared rules are cited from `SHARED.md`, root `CLAUDE.md` and `docs/PROMPT-TEMPLATES.md`, not restated; `nemo-merge` and `nemo-auditor` keep their gate and checklist texts in full), tools and GitHub-MCP deny list per role, `multiagent` block only in `nemo-lead` and `nemo-auditor`. No secrets (`validate.mjs`).             |
+| `nemo-*.json` (7)       | **Source of truth.** Managed Agents definitions: model/effort per role, prompt = role + routing gate + five hard limits (plus the role's own limits and gates; shared rules from `SHARED.md` and root `CLAUDE.md` are cited, not restated), tools and GitHub-MCP deny list per role, `multiagent` block only in `nemo-lead` and `nemo-auditor`. No secrets (`validate.mjs`).             |
 | `nemo-*.md` (7)         | Generated `ant apply` files – `node scripts/agents/to-ant.mjs`; never edit by hand (`--check` proves they match).                                                                                                                                                    |
 | `SHARED.md`             | The shared rule block every agent reads once per thread from the mounted repo (guardrails first).                                                                                                                                                                    |
 | `environment.yaml`      | Cloud environment, limited egress (package managers + MCP hosts).                                                                                                                                                                                                    |
@@ -52,7 +52,7 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 3. **Gate + situation** – the lead classifies again (declines with a ready prompt head), reads SHARED.md, CHATS, open PRs, `chats:status`.
 4. **Delegate** – at most 4 child threads, one per agent, bundled per area; follow-ups go into the open thread.
 5. **Review** – `nemo-reviewer` with the lenses the paths need (security lens for every path outside the light-path allowlist in SHARED.md; light path = correctness only).
-6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. The paths under "Sven merges himself" in SHARED.md (this folder, `docs/meta/WORK-ROUTING.md`, every `CLAUDE.md`, `docs/RULES.md`, `scripts/agents/**`) are merged by Sven.
+6. **Merge** – `nemo-merge` only: green checks, `MERGE-READY yes` + head SHA (+ `Security lens applied: <paths>`), note or `no-changelog`, merge commit with `expectedHeadSha`. The paths under "Sven merges himself" in SHARED.md are merged by Sven.
 7. **Report** – budget class first, 3 points + PR links; then the session ends (a new task = a new session).
 
 **Audit (Sven's tool, outside the flow):** `node scripts/agents/session.mjs "Routing: Auditor, M (10 USD) · PR #535 · done means: AUDIT-pr535.md"` – own session, `nemo-auditor` as primary agent; result `AUDIT-<pr|branch>.md` in the session outputs.

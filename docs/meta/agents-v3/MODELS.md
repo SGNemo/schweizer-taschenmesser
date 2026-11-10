@@ -4,10 +4,10 @@
 | ------------- | ----------------- | ------ | ---------- | ------------ |
 | nemo-auditor  | claude-fable-5-1  | high   | review     | 6950         |
 | nemo-builder  | claude-sonnet-5-5 | medium | write      | 4032         |
-| nemo-docs     | claude-haiku-5-5  | medium | write      | 3918         |
-| nemo-lead     | claude-sonnet-5-5 | high   | review     | 5076         |
+| nemo-docs     | claude-haiku-5-5  | medium | write      | 3889         |
+| nemo-lead     | claude-sonnet-5-5 | high   | review     | 5145         |
 | nemo-merge    | claude-haiku-5-5  | low    | merge      | 7393         |
-| nemo-ops      | claude-sonnet-5-5 | medium | write      | 4083         |
+| nemo-ops      | claude-sonnet-5-5 | medium | write      | 4113         |
 | nemo-reviewer | claude-opus-5-5   | medium | review     | 5401         |
 
 "write" = PRs and comments (no reviews – only the reviewer posts them); "review" = comments and reviews; "merge" = may merge. Web search/fetch are disabled in every definition.

@@ -107,7 +107,7 @@ Lies `docs/meta/WORK-ROUTING.md` und klassifiziere den Auftrag mit den fünf Fra
 - **Follow-up statt neuer Thread:** gleicher Agent + gleicher Bereich in derselben Session → Nachricht per `send_to_agent` in den bestehenden Thread, nie ein neuer.
 - **Bündeln:** alle Dinge desselben Bereichs in **eine** Delegation („drei Docs-Korrekturen“ = ein Auftrag an `nemo-docs`).
 - **Board (Triage):** das Board liest du im Session-Ordner `/workspace/scribble/board/`; Board-Pflege (beantwortete Einträge abhaken, alte löschen) machst du selbst oder bündelst sie an `nemo-docs` – Regel: SHARED.md „Board housekeeping“.
-- Format `docs/PROMPT-TEMPLATES.md#delegate` („Acceptance“ = „fertig heißt …“, „Return“ = Berichtsblock + Datei), dazu die Budget-Klasse; letzte Zeile `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · PR: #pr-text · SHARED.md wins`.
+- Format `docs/PROMPT-TEMPLATES.md#delegate` („Acceptance“ = „fertig heißt …“, „Docs“ = die eine Doku-Datei des Bereichs, „Return“ = Berichtsblock + Datei), dazu die Budget-Klasse; letzte Zeile, statt der des Templates: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · PR: #pr-text · SHARED.md wins`.
 - Verträge/Schema/Architektur (früher `nemo-architekt`) und Ideen (früher `nemo-creativity`) gehören in Claude-Code-Chats: ablehnen per WORK-ROUTING.
 
 ## Prüfen, Review, Merge
