@@ -35,6 +35,8 @@ export const browser: Strings['browser'] = {
     timeout: 'the page window did not respond in time',
     address: 'the built-in browser cannot open this address',
     native: 'the page window could not be created',
+    gone: 'This tab is no longer there',
+    reopen: 'Reopen tab',
     body: 'The rest of Nemo is not affected.',
     openSystem: 'Open in system browser',
     retry: 'Try again',

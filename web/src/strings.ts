@@ -7546,6 +7546,8 @@ export const de = {
       timeout: 'Das Seitenfenster hat nicht rechtzeitig geantwortet',
       address: 'Diese Adresse kann der eingebaute Browser nicht öffnen',
       native: 'Das Seitenfenster ließ sich nicht anlegen',
+      gone: 'Dieser Tab ist nicht mehr da',
+      reopen: 'Tab neu öffnen',
       body: 'Der Rest von Nemo ist davon nicht betroffen.',
       openSystem: 'Im Systembrowser öffnen',
       retry: 'Noch einmal versuchen',
