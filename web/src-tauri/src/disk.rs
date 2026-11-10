@@ -257,7 +257,7 @@ pub fn disk_scan_live(
     Ok(session.map_or_else(Vec::new, |s| s.control.live.snapshot(min_bytes)))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_children(
     state: State<'_, DiskScans>,
     scan_id: u64,
@@ -302,7 +302,7 @@ pub async fn disk_steam_games(
 // --- clean-up: places, duplicates, paths ------------------------------------------------------
 
 /// Well-known cache and temp folders that exist here; the UI offers them as scan roots.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_known_places() -> Vec<Place> {
     known_places()
 }
@@ -346,7 +346,7 @@ pub fn disk_node_path(
 }
 
 /// Shows the entry in Windows Explorer.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_reveal(state: State<'_, DiskScans>, scan_id: u64, node: u32) -> Result<(), String> {
     let tree = tree_of(&state, scan_id)?;
     let path = read(&tree).path(node).ok_or("not-an-entry")?;

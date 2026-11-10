@@ -40,7 +40,7 @@ pub fn endpoint() -> Endpoint {
     Endpoint::for_user(&user_name())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_start(
     state: State<'_, VaultBridge>,
     on_request: Channel<BridgeRequest>,
@@ -76,12 +76,15 @@ pub fn vault_bridge_respond(state: State<'_, VaultBridge>, id: u64, body: String
         .unwrap_or(false)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_stop(state: State<'_, VaultBridge>) {
-    if let Ok(mut slot) = state.server.lock() {
-        if let Some(mut server) = slot.take() {
-            server.stop();
-        }
+    // The server lock is kept until the responder is cleared too: a start on another thread waits
+    // for it, so it cannot have its fresh responder wiped by this stop.
+    let Ok(mut slot) = state.server.lock() else {
+        return;
+    };
+    if let Some(mut server) = slot.take() {
+        server.stop();
     }
     if let Ok(mut responder) = state.responder.lock() {
         *responder = None;
@@ -98,7 +101,7 @@ fn data_dir(app: &AppHandle, exe: &std::path::Path) -> Result<PathBuf, String> {
 }
 
 #[cfg(windows)]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_register(app: AppHandle) -> Result<Registration, String> {
     let exe = std::env::current_exe().map_err(|_| "failed")?;
     let dir = data_dir(&app, &exe)?;
@@ -106,7 +109,7 @@ pub fn vault_bridge_register(app: AppHandle) -> Result<Registration, String> {
 }
 
 #[cfg(windows)]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_status(app: AppHandle) -> Result<Registration, String> {
     let exe = std::env::current_exe().map_err(|_| "failed")?;
     let dir = data_dir(&app, &exe)?;
@@ -114,7 +117,7 @@ pub fn vault_bridge_status(app: AppHandle) -> Result<Registration, String> {
 }
 
 #[cfg(windows)]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_unregister(app: AppHandle) -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|_| "failed")?;
     let dir = data_dir(&app, &exe)?;
@@ -124,19 +127,19 @@ pub fn vault_bridge_unregister(app: AppHandle) -> Result<(), String> {
 // Browser registration is a Windows registry matter; elsewhere the commands exist (the handler list
 // is the same on every desktop OS) and report that they are unsupported.
 #[cfg(not(windows))]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_register(_app: AppHandle) -> Result<Registration, String> {
     Err("unsupported".into())
 }
 
 #[cfg(not(windows))]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_status(_app: AppHandle) -> Result<Registration, String> {
     Err("unsupported".into())
 }
 
 #[cfg(not(windows))]
-#[tauri::command]
+#[tauri::command(async)]
 pub fn vault_bridge_unregister(_app: AppHandle) -> Result<(), String> {
     Err("unsupported".into())
 }

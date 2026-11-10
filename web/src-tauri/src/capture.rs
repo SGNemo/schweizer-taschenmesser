@@ -494,7 +494,7 @@ pub fn capture_hide(app: AppHandle) {
 }
 
 /// Only called by the capture window when the user switched the clipboard option on.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn capture_read_clipboard(app: AppHandle) -> Option<String> {
     let text = app.clipboard().read_text().ok()?;
     let text = text.trim();
@@ -535,7 +535,7 @@ pub fn desktop_set_tray_today(app: AppHandle, state: State<'_, CaptureState>, to
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn desktop_set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
     let launcher = app.autolaunch();
     if enabled {
@@ -546,7 +546,7 @@ pub fn desktop_set_autostart(app: AppHandle, enabled: bool) -> Result<(), String
     .map_err(|e| e.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn desktop_autostart_enabled(app: AppHandle) -> bool {
     app.autolaunch().is_enabled().unwrap_or(false)
 }
@@ -578,7 +578,7 @@ pub fn desktop_data_dir(app: AppHandle) -> Option<String> {
 
 /// The panic lines of earlier runs (`logs/panic.log`), handed over once and then removed so they are
 /// reported a single time. Takes no argument.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn desktop_take_panic_log(app: AppHandle) -> Option<String> {
     app_data_folder(&app).and_then(|dir| crate::panic_log::take(&dir.join("logs")))
 }
@@ -626,7 +626,7 @@ mod safe_mode_tests {
 
 /// Opens exactly that folder in the file manager. Takes no path, so the webview cannot make the
 /// app open anything else.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn desktop_open_data_dir(app: AppHandle) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt as _;
     let dir = app_data_folder(&app)
