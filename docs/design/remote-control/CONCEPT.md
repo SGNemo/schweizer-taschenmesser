@@ -179,6 +179,8 @@ Assets: control of the PC's input (code execution as the user), the user's atten
 
 ### Proposed rule lines
 
+In force since package 0 (2026-11-10): the full text is in [rules/remote-control.md](../../rules/remote-control.md) (own file, RULES.md is at its size budget); the root line was shortened for the start-context budget without dropping a rule.
+
 Root `CLAUDE.md` (one line, after "LAN sync"):
 
 > **Remote control (phone → PC input):** pairing is not permission; input only over the LAN hub's own session mode (never the sync session, never a new listener, never the Local API), only on the stored home network and only for a device whose remote grant was switched on at the PC (off by default, device-local, never synced, never set over the network, every widening confirmed in a native dialog and never while a mouse/keyboard session is open); levels media/volume (no input simulation) and mouse/keyboard are separate; always visible on the PC with one click to end; fixed key and media lists, rate limits; never screen, clipboard, files or titles; never log input; simulation only in `crates/remote-input`, Windows only, no Tauri command simulates input. Full text: `docs/RULES.md`.
