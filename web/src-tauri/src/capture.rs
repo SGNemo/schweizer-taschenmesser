@@ -39,7 +39,23 @@ struct TrayItems {
     capture: MenuItem<Wry>,
     open: MenuItem<Wry>,
     quit: MenuItem<Wry>,
+    /// "Fernsteuerung beenden"; its text is native (`texts.rs`), the page never sets it.
+    remote_end: MenuItem<Wry>,
 }
+
+/// Everything the tray shows. The page sends labels, tooltip and the "Heute" block; who controls
+/// this PC comes from Rust (`remote.rs`) only, and every rebuild reads it from here – so no call
+/// from the page can make the tray look calm while a device controls the PC.
+struct Tray {
+    items: TrayItems,
+    /// The tooltip the page asked for (the plain one).
+    tooltip: String,
+    today: TrayToday,
+    /// A device controls this PC right now: its name (plain text, may be empty).
+    remote: Option<String>,
+}
+
+const TRAY_REMOTE_END: &str = "remote-end";
 
 /// Lines of the tray's "Heute" block; the web app never sends more (`traySnapshot.ts`).
 const TRAY_TODAY_MAX: usize = 5;
@@ -62,7 +78,7 @@ pub struct CaptureState {
     /// Third global key: starts/stops voice input in the main window (off until the user sets one).
     voice_hotkey: Mutex<Option<Shortcut>>,
     shown_at: Mutex<Option<Instant>>,
-    tray: Mutex<Option<TrayItems>>,
+    tray: Mutex<Option<Tray>>,
 }
 
 #[derive(Deserialize)]
@@ -181,46 +197,162 @@ fn tray_today_lines(today: &TrayToday) -> Vec<(usize, String)> {
         .collect()
 }
 
-/// The whole tray menu: the "Heute" block (only when it has lines), then capture/open/quit as
-/// before. The three fixed items are reused, so their translated labels stay.
-fn tray_menu(app: &AppHandle, items: &TrayItems, today: &TrayToday) -> tauri::Result<Menu<Wry>> {
-    let menu = Menu::new(app)?;
+/// One row of the tray menu, in order.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum TrayRow {
+    RemoteEnd,
+    Separator,
+    Heading(String),
+    Today(usize, String),
+    Now(String),
+    Timer(String),
+    Capture,
+    Open,
+    Quit,
+}
+
+/// The whole tray menu as rows: "Fernsteuerung beenden" first while a device controls this PC,
+/// then the "Heute" block (only when it has lines), then capture/open/quit as before.
+fn tray_rows(today: &TrayToday, remote: bool) -> Vec<TrayRow> {
+    let mut rows = Vec::new();
+    if remote {
+        rows.push(TrayRow::RemoteEnd);
+        rows.push(TrayRow::Separator);
+    }
     let lines = tray_today_lines(today);
     if !lines.is_empty() {
-        let heading = MenuItem::with_id(
-            app,
-            "today-heading",
-            tray_text(&today.heading),
-            false,
-            None::<&str>,
-        )?;
-        menu.append(&heading)?;
-        for (index, label) in &lines {
-            let id = TRAY_TODAY_IDS[*index];
-            menu.append(&MenuItem::with_id(app, id, label, true, None::<&str>)?)?;
-        }
-        menu.append(&PredefinedMenuItem::separator(app)?)?;
-        menu.append(&MenuItem::with_id(
-            app,
-            TRAY_NOW,
-            tray_text(&today.now),
-            true,
-            None::<&str>,
-        )?)?;
-        menu.append(&MenuItem::with_id(
-            app,
-            TRAY_TIMER,
-            tray_text(&today.timer),
-            true,
-            None::<&str>,
-        )?)?;
-        menu.append(&PredefinedMenuItem::separator(app)?)?;
+        rows.push(TrayRow::Heading(tray_text(&today.heading)));
+        rows.extend(lines.into_iter().map(|(i, l)| TrayRow::Today(i, l)));
+        rows.push(TrayRow::Separator);
+        rows.push(TrayRow::Now(tray_text(&today.now)));
+        rows.push(TrayRow::Timer(tray_text(&today.timer)));
+        rows.push(TrayRow::Separator);
     }
-    menu.append(&items.capture)?;
-    menu.append(&items.open)?;
-    menu.append(&PredefinedMenuItem::separator(app)?)?;
-    menu.append(&items.quit)?;
+    rows.extend([
+        TrayRow::Capture,
+        TrayRow::Open,
+        TrayRow::Separator,
+        TrayRow::Quit,
+    ]);
+    rows
+}
+
+/// Builds the menu from the rows. The fixed items are reused, so their translated labels stay.
+fn tray_menu(app: &AppHandle, tray: &Tray) -> tauri::Result<Menu<Wry>> {
+    let menu = Menu::new(app)?;
+    let item = |id: &str, label: &str, enabled: bool| {
+        MenuItem::with_id(app, id, label, enabled, None::<&str>)
+    };
+    for row in tray_rows(&tray.today, tray.remote.is_some()) {
+        match row {
+            TrayRow::RemoteEnd => menu.append(&tray.items.remote_end)?,
+            TrayRow::Separator => menu.append(&PredefinedMenuItem::separator(app)?)?,
+            TrayRow::Heading(label) => menu.append(&item("today-heading", &label, false)?)?,
+            TrayRow::Today(index, label) => {
+                menu.append(&item(TRAY_TODAY_IDS[index], &label, true)?)?
+            }
+            TrayRow::Now(label) => menu.append(&item(TRAY_NOW, &label, true)?)?,
+            TrayRow::Timer(label) => menu.append(&item(TRAY_TIMER, &label, true)?)?,
+            TrayRow::Capture => menu.append(&tray.items.capture)?,
+            TrayRow::Open => menu.append(&tray.items.open)?,
+            TrayRow::Quit => menu.append(&tray.items.quit)?,
+        }
+    }
     Ok(menu)
+}
+
+/// The tooltip that is shown: the page's one, with who controls this PC behind it.
+fn tray_tooltip(tray: &Tray) -> String {
+    match &tray.remote {
+        Some(name) => {
+            crate::texts::remote_tooltip(crate::webview2::system_lang(), &tray.tooltip, name)
+        }
+        None => tray.tooltip.clone(),
+    }
+}
+
+/// Edge length of the badge square, as a share of the icon's shorter side.
+const BADGE_SHARE: u32 = 2;
+
+/// The tray icon while a device controls this PC: the app icon with a filled dot in the lower
+/// right corner (white ring, orange centre), so the state is visible with the window closed.
+fn badged_icon(rgba: &[u8], width: u32, height: u32) -> Vec<u8> {
+    let mut out = rgba.to_vec();
+    if width == 0 || height == 0 || out.len() != (width as usize) * (height as usize) * 4 {
+        return out;
+    }
+    let size = (width.min(height) / BADGE_SHARE).max(1) as i64;
+    let radius = size as f32 / 2.0;
+    let (cx, cy) = (width as f32 - radius, height as f32 - radius);
+    for y in (height as i64 - size).max(0)..height as i64 {
+        for x in (width as i64 - size).max(0)..width as i64 {
+            let (dx, dy) = (x as f32 + 0.5 - cx, y as f32 + 0.5 - cy);
+            let dist = (dx * dx + dy * dy).sqrt();
+            let colour = if dist > radius {
+                continue;
+            } else if dist > radius * 0.72 {
+                [255, 255, 255, 255]
+            } else {
+                [230, 120, 20, 255]
+            };
+            let at = ((y as usize) * (width as usize) + x as usize) * 4;
+            out[at..at + 4].copy_from_slice(&colour);
+        }
+    }
+    out
+}
+
+/// Applies the stored tray state: menu and tooltip. The one place that does it, for the page's
+/// calls and for Rust's.
+fn apply_tray(app: &AppHandle, tray: &Tray) {
+    let Some(icon) = app.tray_by_id(TRAY_ID) else {
+        return;
+    };
+    if let Ok(menu) = tray_menu(app, tray) {
+        let _ = icon.set_menu(Some(menu));
+    }
+    let _ = icon.set_tooltip(Some(tray_tooltip(tray)));
+}
+
+/// The icon follows who controls; only touched when that changes.
+fn apply_tray_icon(app: &AppHandle, tray: &Tray) {
+    let Some(icon) = app.tray_by_id(TRAY_ID) else {
+        return;
+    };
+    if let Some(base) = app.default_window_icon() {
+        let image = if tray.remote.is_some() {
+            tauri::image::Image::new_owned(
+                badged_icon(base.rgba(), base.width(), base.height()),
+                base.width(),
+                base.height(),
+            )
+        } else {
+            base.clone()
+        };
+        let _ = icon.set_icon(Some(image));
+    }
+}
+
+/// Who controls this PC right now (`None`: nobody). Called from Rust only (`remote.rs`), from any
+/// thread: the work is handed to the main thread, where the page's tray commands run too – so the
+/// tray state is only ever locked there, and no thread waits for the main thread while holding it.
+pub fn set_remote_tray(app: &AppHandle, controller: Option<String>) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let state = handle.state::<CaptureState>();
+        let Ok(mut slot) = state.tray.lock() else {
+            return;
+        };
+        let Some(tray) = slot.as_mut() else {
+            return;
+        };
+        if tray.remote == controller {
+            return;
+        }
+        tray.remote = controller;
+        apply_tray(&handle, tray);
+        apply_tray_icon(&handle, tray);
+    });
 }
 
 /// A click in the "Heute" block: the main window comes forward (the existing open path) and the
@@ -241,9 +373,22 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         capture: MenuItem::with_id(app, "capture", capture, true, None::<&str>)?,
         open: MenuItem::with_id(app, "open", open, true, None::<&str>)?,
         quit: MenuItem::with_id(app, "quit", quit, true, None::<&str>)?,
+        remote_end: MenuItem::with_id(
+            app,
+            TRAY_REMOTE_END,
+            crate::texts::remote_end_label(crate::webview2::system_lang()),
+            true,
+            None::<&str>,
+        )?,
     };
-    // No "Heute" block until the web app sends one.
-    let menu = tray_menu(app, &items, &TrayToday::default())?;
+    // No "Heute" block until the web app sends one, and nobody controls this PC yet.
+    let state = Tray {
+        items,
+        tooltip: tooltip.to_owned(),
+        today: TrayToday::default(),
+        remote: None,
+    };
+    let menu = tray_menu(app, &state)?;
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip(tooltip)
         .menu(&menu)
@@ -252,6 +397,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             "capture" => show_capture(app),
             "open" => show_main(app),
             "quit" => app.exit(0),
+            TRAY_REMOTE_END => crate::remote::end_from_tray(app),
             other => open_tray_item(app, other),
         })
         .on_tray_icon_event(|tray, event| {
@@ -269,7 +415,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     }
     tray.build(app)?;
     if let Ok(mut slot) = app.state::<CaptureState>().tray.lock() {
-        *slot = Some(items);
+        *slot = Some(state);
     }
     Ok(())
 }
@@ -508,31 +654,32 @@ pub fn desktop_set_close_to_tray(state: State<'_, CaptureState>, enabled: bool) 
 
 #[tauri::command]
 pub fn desktop_set_tray_labels(app: AppHandle, state: State<'_, CaptureState>, labels: TrayLabels) {
-    if let Ok(items) = state.tray.lock() {
-        if let Some(items) = items.as_ref() {
-            let _ = items.capture.set_text(&labels.capture);
-            let _ = items.open.set_text(&labels.open);
-            let _ = items.quit.set_text(&labels.quit);
-        }
-    }
-    if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        let _ = tray.set_tooltip(Some(labels.tooltip));
-    }
+    let Ok(mut slot) = state.tray.lock() else {
+        return;
+    };
+    let Some(tray) = slot.as_mut() else {
+        return;
+    };
+    let _ = tray.items.capture.set_text(&labels.capture);
+    let _ = tray.items.open.set_text(&labels.open);
+    let _ = tray.items.quit.set_text(&labels.quit);
+    tray.tooltip = labels.tooltip;
+    apply_tray(&app, tray);
 }
 
-/// Replaces the tray's "Heute" block (rebuilds the menu; no polling, nothing stored but the labels
-/// inside the menu). No items = the block is hidden and the menu is the one from before.
+/// Replaces the tray's "Heute" block (rebuilds the menu; no polling). The labels are kept in memory
+/// only, so a rebuild from Rust (remote control) shows the same block; never written or logged. No
+/// items = the block is hidden and the menu is the one from before.
 #[tauri::command]
 pub fn desktop_set_tray_today(app: AppHandle, state: State<'_, CaptureState>, today: TrayToday) {
-    let Ok(items) = state.tray.lock() else {
+    let Ok(mut slot) = state.tray.lock() else {
         return;
     };
-    let Some(items) = items.as_ref() else {
+    let Some(tray) = slot.as_mut() else {
         return;
     };
-    if let (Ok(menu), Some(tray)) = (tray_menu(&app, items, &today), app.tray_by_id(TRAY_ID)) {
-        let _ = tray.set_menu(Some(menu));
-    }
+    tray.today = today;
+    apply_tray(&app, tray);
 }
 
 #[tauri::command(async)]
@@ -684,6 +831,59 @@ mod tests {
     }
 
     #[test]
+    fn the_end_entry_leads_the_menu_whatever_the_page_sent() {
+        let full = TrayToday {
+            heading: "Heute".into(),
+            items: vec!["a".into(), "b".into()],
+            now: "Jetzt".into(),
+            timer: "Timer".into(),
+        };
+        for today in [TrayToday::default(), full] {
+            let rows = tray_rows(&today, true);
+            assert_eq!(rows[..2], [TrayRow::RemoteEnd, TrayRow::Separator]);
+            // the rest is exactly the menu without a controller
+            assert_eq!(rows[2..], tray_rows(&today, false)[..]);
+            assert!(!tray_rows(&today, false).contains(&TrayRow::RemoteEnd));
+        }
+    }
+
+    #[test]
+    fn every_tray_update_goes_through_the_stored_state() {
+        // Source check: the page's two tray commands and Rust's own update all end in
+        // `apply_tray`, which reads the controller from the stored state; nothing else sets the
+        // menu or the tooltip.
+        let src = include_str!("capture.rs");
+        let code = src.split("#[cfg(test)]").next().unwrap();
+        assert_eq!(code.matches(".set_menu(").count(), 1);
+        assert_eq!(code.matches(".set_tooltip(").count(), 1);
+        for command in ["fn desktop_set_tray_labels", "fn desktop_set_tray_today"] {
+            let body = code.split(command).nth(1).unwrap();
+            let body = &body[..body.find("\n}\n").unwrap()];
+            assert!(body.contains("apply_tray(&app, tray)"), "{command}");
+            assert!(!body.contains("remote"), "{command} touches the controller");
+        }
+        // only Rust names the controller
+        assert_eq!(code.matches("tray.remote = ").count(), 1);
+    }
+
+    #[test]
+    fn the_badge_marks_the_lower_right_corner_only() {
+        let (w, h) = (32u32, 32u32);
+        let plain = vec![7u8; (w * h * 4) as usize];
+        let marked = badged_icon(&plain, w, h);
+        assert_eq!(marked.len(), plain.len());
+        let pixel = |x: u32, y: u32| {
+            let at = ((y * w + x) * 4) as usize;
+            [marked[at], marked[at + 1], marked[at + 2], marked[at + 3]]
+        };
+        assert_eq!(pixel(0, 0), [7, 7, 7, 7]);
+        assert_eq!(pixel(15, 15), [7, 7, 7, 7]);
+        assert_eq!(pixel(24, 24), [230, 120, 20, 255]);
+        // a buffer that does not match its size is left alone
+        assert_eq!(badged_icon(&[1, 2, 3], 4, 4), vec![1, 2, 3]);
+    }
+
+    #[test]
     fn tray_clicks_send_only_fixed_ids() {
         for (i, id) in TRAY_TODAY_IDS.iter().enumerate() {
             let script = tray_item_script(id).unwrap();
@@ -695,6 +895,7 @@ mod tests {
             "capture",
             "open",
             "quit",
+            TRAY_REMOTE_END,
             "today-5",
             "today-heading",
             "x');alert(1);//",

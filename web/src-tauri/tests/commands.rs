@@ -308,3 +308,138 @@ fn disk_delete_checks_keep_their_order() {
     assert_eq!(body.matches("execute(").count(), 1);
     assert_eq!(body.matches("guard_for(").count(), 1);
 }
+
+/// The four remote-control commands and nothing else, all off the main thread: two of them wait
+/// for a native dialog, which must never block the event loop (or be shown from it).
+#[test]
+fn remote_commands_never_run_on_the_main_thread() {
+    let src = source("remote.rs");
+    assert_eq!(src.matches("#[tauri::command]").count(), 0);
+    assert_eq!(src.matches("#[tauri::command(async)]\npub fn ").count(), 4);
+    assert_async(
+        &src,
+        &[
+            "remote_status",
+            "remote_set_enabled",
+            "remote_set_device",
+            "remote_end",
+        ],
+    );
+}
+
+/// The command part of `src/remote.rs` (between the marker and the unit tests).
+fn remote_commands_source() -> String {
+    let src = source("remote.rs");
+    let start = src.find("// ---- commands ----").expect("commands marker");
+    let end = src.find("#[cfg(test)]").expect("unit tests");
+    src[start..end].to_owned()
+}
+
+/// Rule "no Tauri command simulates input" (`docs/rules/remote-control.md`): input reaches the PC
+/// only through the hub's input session. No command takes an action, hands one to the sink or the
+/// worker, and nothing in the shell calls an input-simulation API – that lives in
+/// `crates/remote-input`, which has its own source test.
+#[test]
+fn no_tauri_command_simulates_input() {
+    let commands = remote_commands_source();
+    for forbidden in [
+        "Action",
+        "Sink",
+        "Worker",
+        "Command::",
+        "Media::",
+        ".apply(",
+        ".send(",
+        "remote_input",
+    ] {
+        assert!(
+            !commands.contains(forbidden),
+            "a remote command mentions {forbidden}"
+        );
+    }
+    // the sink is the only place that hands anything to the worker, and only media
+    let src = source("remote.rs");
+    let code = &src[..src.find("#[cfg(test)]").unwrap()];
+    assert_eq!(
+        code.matches(".send(").count(),
+        2,
+        "worker send + stop signal"
+    );
+    assert_eq!(code.matches("self.0.send(command_of(media))").count(), 1);
+    assert_eq!(code.matches("impl InputSink for").count(), 1);
+
+    // nowhere in the shell: simulated input, or a command of another module reaching the sink
+    for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "rs") {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        let text = fs::read_to_string(&path).unwrap();
+        for api in [
+            "SendInput",
+            "keybd_event",
+            "mouse_event",
+            "SetCursorPos",
+            "enigo",
+            "KEYEVENTF",
+            "MOUSEEVENTF",
+        ] {
+            assert!(!text.contains(api), "{name} mentions {api}");
+        }
+        if name != "remote.rs" {
+            assert!(
+                !text.contains("remote_input::") && !text.contains("InputSink for"),
+                "{name} reaches the input sink"
+            );
+        }
+    }
+}
+
+/// Every widening is asked at the PC, in a fixed order: ticket, native dialog, setter with that
+/// ticket. A setter without a ticket is only ever a narrowing (the crate refuses anything else).
+#[test]
+fn remote_widening_takes_a_ticket_before_the_native_dialog() {
+    let commands = remote_commands_source();
+    for name in ["remote_set_enabled", "remote_set_device"] {
+        let at = commands.find(&format!("pub fn {name}(")).unwrap();
+        let body = &commands[at..];
+        let body = &body[..body.find("\n}\n").unwrap()];
+        let ticket = body.find("parts.remote.ticket()").expect("ticket");
+        let dialog = body.find("confirmed(&app").expect("native dialog");
+        let setter = body.rfind("Some(ticket)").expect("setter with the ticket");
+        assert!(ticket < dialog && dialog < setter, "{name}: wrong order");
+        assert_eq!(body.matches("parts.remote.ticket()").count(), 1, "{name}");
+        // the only setter call before the dialog passes no ticket (a narrowing)
+        assert!(!body[..dialog].contains("Some("), "{name}");
+        assert!(body[..ticket].contains("full_session_open()"), "{name}");
+    }
+    // `remote_end` and `remote_status` widen nothing
+    for name in ["remote_status", "remote_end"] {
+        let at = commands.find(&format!("pub fn {name}(")).unwrap();
+        let body = &commands[at..];
+        let body = &body[..body.find("\n}\n").unwrap()];
+        assert!(
+            !body.contains("ticket")
+                && !body.contains("set_enabled")
+                && !body.contains("set_grant"),
+            "{name}"
+        );
+    }
+    // the answer comes from a blocking native dialog, never from the page
+    let src = source("remote.rs");
+    assert_eq!(src.matches(".blocking_show()").count(), 1);
+    assert!(!commands.contains("confirmed: bool") && !commands.contains("confirm: bool"));
+}
+
+/// The hub wires remote control on every desktop, and its controls go away with the hub.
+#[test]
+fn the_hub_wires_remote_control_and_drops_it_on_stop() {
+    let lan = source("lan_sync.rs");
+    assert_eq!(lan.matches(".with_input(").count(), 1);
+    assert_eq!(lan.matches("crate::remote::attach(").count(), 1);
+    assert_eq!(lan.matches("crate::remote::detach(").count(), 1);
+    let stop = &lan[lan.find("pub fn lan_hub_stop(").unwrap()..];
+    let stop = &stop[..stop.find("\n}\n").unwrap()];
+    assert!(stop.contains("crate::remote::detach("));
+}

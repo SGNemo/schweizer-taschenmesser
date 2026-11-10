@@ -67,6 +67,9 @@ struct Core {
     data_keys: DataKeys<KeyringSlot>,
     home: FileHomeNetwork,
     live: Mutex<LiveState>,
+    /// Remote control: the PC's own controls and the sink the input session acts through.
+    remote: Arc<::lan_sync::input::Remote>,
+    sink: Arc<crate::remote::Sink>,
 }
 
 struct LiveState {
@@ -367,12 +370,13 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
     ));
     let endpoint = Endpoint::start(&key_store, trust.clone(), host.clone(), sessions.clone())
         .map_err(|_| "keystore-unavailable")?;
-    let router = Arc::new(Router::new(
-        endpoint,
-        host.clone(),
-        hub.clone(),
-        Admission::new(),
-    ));
+    // Remote control is wired on every desktop; where the system cannot be controlled the sink
+    // says so and every `open` is answered `unsupported`.
+    let (remote, sink) = crate::remote::parts(&dir, trust.clone());
+    let router = Arc::new(
+        Router::new(endpoint, host.clone(), hub.clone(), Admission::new())
+            .with_input(remote.clone(), sink.clone()),
+    );
     let launcher = RealLauncher::new(
         router,
         PublicKey::from_bytes(*hub_key.as_bytes()),
@@ -392,6 +396,8 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
             status: Status::Off(OffReason::NothingWanted),
             pending: None,
         }),
+        remote,
+        sink,
     });
     Ok((core, key_dto))
 }
@@ -452,6 +458,15 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
     };
     core.round();
     let status = core.status();
+    {
+        use ::lan_sync::input::InputSink as _;
+        crate::remote::attach(
+            &app,
+            core.remote.clone(),
+            core.trust.clone(),
+            core.sink.supported(),
+        );
+    }
     *slot = Some(Running {
         core,
         stop,
@@ -463,7 +478,7 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
 
 /// Stops listening and closes every connection; the keys and the trust list stay.
 #[tauri::command(async)]
-pub fn lan_hub_stop(state: State<'_, LanSync>) -> Result<(), String> {
+pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), String> {
     // The lock is held until the hub is down: `lan_hub_start` on another thread must not build a
     // second hub (same port, same store file) while this one still closes.
     let mut slot = state.0.lock().map_err(|_| "internal")?;
@@ -477,6 +492,9 @@ pub fn lan_hub_stop(state: State<'_, LanSync>) -> Result<(), String> {
         if let Ok(mut live) = r.core.live.lock() {
             live.sup.stop();
         }
+        // the PC's remote controls go with the hub (and the tray is back to normal), whatever
+        // closing the sessions says
+        crate::remote::detach(&app);
         r.core.sessions.close_all().map_err(|_| "internal")?;
     }
     Ok(())
