@@ -25,6 +25,9 @@ export function createBrowser(supported: boolean): BrowserService {
       configure: unsupported,
       clearData: unsupported,
     };
+  // `browser_show` runs off the main thread, so two calls can overtake each other: the native side
+  // ignores a call older than the last one it applied.
+  let showSeq = 0;
   return {
     supported: true,
     open(options: BrowserOpenOptions, onEvent: (event: BrowserEvent) => void) {
@@ -39,7 +42,7 @@ export function createBrowser(supported: boolean): BrowserService {
     reload: (tab: number) => invoke<void>('browser_reload', { tab }),
     close: (tab: number) => invoke<void>('browser_close', { tab }),
     show: (tab: number | null, bounds?: BrowserBounds) =>
-      invoke<void>('browser_show', { tab, bounds }),
+      invoke<number[]>('browser_show', { tab, bounds, seq: ++showSeq }),
     setZoom: (tab: number, factor: number) => invoke<void>('browser_set_zoom', { tab, factor }),
     configure: (config: BrowserConfig) => invoke<void>('browser_configure', { config }),
     clearData: () => invoke<void>('browser_clear_data'),

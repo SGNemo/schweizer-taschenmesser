@@ -406,9 +406,14 @@ fn with_core<T>(
 }
 
 // ---- commands ----
+//
+// All of them run with `async` (Tauri's async runtime, not the main thread): starting, stopping,
+// rotating and the hub-local sync requests touch the keystore, the store file and the network, and
+// every command waits for the same `LanSync` lock, so a quick one on the main thread would wait for a
+// slow one. The lock keeps them one at a time, as before. `tests/commands.rs` pins this.
 
 /// Starts the hub (idempotent). Fails, and starts nothing, if the keystore does not answer.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartDto, String> {
     let mut slot = state.0.lock().map_err(|_| "internal")?;
     if let Some(r) = slot.as_ref() {
@@ -457,10 +462,12 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
 }
 
 /// Stops listening and closes every connection; the keys and the trust list stay.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_hub_stop(state: State<'_, LanSync>) -> Result<(), String> {
-    let running = state.0.lock().map_err(|_| "internal")?.take();
-    if let Some(mut r) = running {
+    // The lock is held until the hub is down: `lan_hub_start` on another thread must not build a
+    // second hub (same port, same store file) while this one still closes.
+    let mut slot = state.0.lock().map_err(|_| "internal")?;
+    if let Some(mut r) = slot.take() {
         r.stop.store(true, Ordering::SeqCst);
         let _ = r.wake.send(());
         if let Some(t) = r.thread.take() {
@@ -475,7 +482,7 @@ pub fn lan_hub_stop(state: State<'_, LanSync>) -> Result<(), String> {
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_hub_status(state: State<'_, LanSync>) -> StatusDto {
     match state.0.lock() {
         Ok(slot) => match slot.as_ref() {
@@ -507,7 +514,7 @@ pub fn lan_hub_status(state: State<'_, LanSync>) -> StatusDto {
 }
 
 /// Opens the pairing window; the QR shows up in `lan_hub_status` as soon as the hub listens.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_pair_open(state: State<'_, LanSync>) -> Result<(), String> {
     with_core(&state, |core, wake| {
         core.host.open().map_err(|_| "busy".to_owned())?;
@@ -518,7 +525,7 @@ pub fn lan_pair_open(state: State<'_, LanSync>) -> Result<(), String> {
 
 /// The user confirmed the code shown on the PC. The sealed data-key frame goes only to the
 /// connection of that attempt, and the device is trusted only if that write succeeded.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_pair_confirm(
     state: State<'_, LanSync>,
     attempt: u64,
@@ -555,7 +562,7 @@ pub fn lan_pair_confirm(
     })
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_pair_cancel(state: State<'_, LanSync>) -> Result<(), String> {
     with_core(&state, |core, wake| {
         // the waiting attempt is read before the window closes (a supervisor round clears it after)
@@ -566,7 +573,7 @@ pub fn lan_pair_cancel(state: State<'_, LanSync>) -> Result<(), String> {
     })
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_devices(state: State<'_, LanSync>) -> Result<Vec<DeviceDto>, String> {
     with_core(&state, |core, _| {
         Ok(core
@@ -584,7 +591,7 @@ pub fn lan_devices(state: State<'_, LanSync>) -> Result<Vec<DeviceDto>, String> 
 }
 
 /// Unpairs a device and closes its open connections at once.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_revoke(state: State<'_, LanSync>, id: String) -> Result<bool, String> {
     with_core(&state, |core, wake| {
         let key = from_hex32(&id).ok_or("bad-id")?;
@@ -599,7 +606,7 @@ pub fn lan_revoke(state: State<'_, LanSync>, id: String) -> Result<bool, String>
 
 /// "Schlüssel erneuern": a new data key version, the store is emptied (new epoch), every open
 /// connection ends. The new key goes to the web app; devices must pair again.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_hub_rotate(state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
     with_core(&state, |core, wake| {
         let old = core
@@ -627,7 +634,7 @@ pub fn lan_hub_rotate(state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
 
 /// The hub-local client's requests (in process, same JSON as remote clients, see `handler.rs`).
 /// Body and answer are JSON text; neither is ever logged.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_hub_request(state: State<'_, LanSync>, body: String) -> Result<String, String> {
     with_core(&state, |core, _| {
         let answer = core.hub.handle_json(body.as_bytes(), unix_ms());
@@ -637,7 +644,7 @@ pub fn lan_hub_request(state: State<'_, LanSync>, body: String) -> Result<String
 
 /// "Dieses Netz als Heimnetz verwenden": the network the PC is in now replaces the stored one. The
 /// web app asks for confirmation first.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn lan_home_set(state: State<'_, LanSync>) -> Result<(), String> {
     with_core(&state, |core, wake| {
         let id = Snapshot::take().current_network_id().ok_or("no-network")?;
