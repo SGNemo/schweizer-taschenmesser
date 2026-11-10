@@ -197,7 +197,8 @@ describe('remote latency probe (Dev-Preview)', () => {
       .mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     render(<RemoteLatencyProbe />);
-    await stroke(3);
+    // a verdict needs a hundred calls; at most eight are on their way at once
+    for (let i = 0; i < 20; i += 1) await stroke(6);
     fireEvent.click(screen.getByRole('button', { name: t.open }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(OPENS * 300 + 50);
@@ -209,7 +210,7 @@ describe('remote latency probe (Dev-Preview)', () => {
     fireEvent.click(screen.getByRole('button', { name: t.copy }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
     expect(writeText.mock.calls[1]![0]).toMatch(
-      /^nemo-remote-latency v3 \| .* \| invoke n=3 .* \| verdict=fits$/,
+      /^nemo-remote-latency v3 \| .* \| invoke n=120 .* \| verdict=fits$/,
     );
   });
 });

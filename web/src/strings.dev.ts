@@ -183,9 +183,10 @@ export const tDev = {
       fits: 'der Aufruf passt hinein',
       close: 'knapp – noch einmal messen und mit dem Touchpad ausprobieren',
       over: 'der Aufruf ist zu teuer',
+      few: 'zu wenige Werte – länger kreisen (mindestens hundert)',
     },
     readHint: (goal: number) =>
-      `Ziel für unseren Teil: unter ${goal} ms (p95). Entschieden wird am Aufruf, und zwar bei der Messung nah am Router: Er darf kosten, was nach einem Weg zum PC und 1 ms am PC übrig bleibt. Der Weg ist aus dem schnellsten Verbindungsaufbau geschätzt und eher zu hoch (jeder Aufbau liest auch Schlüssel), deshalb heißt bis zu 3 ms darüber „knapp“ und nicht „zu teuer“. Die Streuung zeigt nur, wie ruhig das WLAN gerade ist. Nicht gemessen: Verschlüsseln und Schreiben, und ein Stau bei schlechtem WLAN – das zeigt erst der Handtest mit dem Touchpad.`,
+      `Ziel für unseren Teil: unter ${goal} ms (p95). Entschieden wird am Aufruf, und zwar bei der Messung nah am Router: Er darf kosten, was nach einem Weg zum PC und 1 ms am PC übrig bleibt. Der Weg ist aus dem schnellsten Verbindungsaufbau geschätzt und eher zu hoch (jeder Aufbau liest auch Schlüssel), und der gemessene Aufruf ist ein Hin und Zurück, wo eine Bewegung nur den Hinweg braucht. Deshalb heißt bis zu 3 ms darüber – eine Annahme, kein Messwert – „knapp“ und nicht „zu teuer“. Die Streuung zeigt nur, wie ruhig das WLAN gerade ist. Nicht gemessen: Verschlüsseln und Schreiben, und ein Stau bei schlechtem WLAN – das zeigt erst der Handtest mit dem Touchpad.`,
     copy: 'Ergebnis kopieren',
     copied: 'Ergebnis kopiert.',
     copyFailed: 'Kopieren ging nicht. Die Werte stehen oben.',

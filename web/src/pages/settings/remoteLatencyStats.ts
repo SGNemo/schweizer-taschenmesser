@@ -54,32 +54,40 @@ export function spread(open: Summary | undefined): number | undefined {
 }
 
 /**
- * How much the trip estimate can be too high (key reads in every open, spread over six trips):
- * an invoke this far over its budget is "close", not "too expensive".
+ * How much the trip estimate is assumed to be too high (key reads in every open, spread over six
+ * trips) – an assumption, not a measurement: an invoke this far over its budget is "close", not
+ * "too expensive".
  */
 export const CLOSE_MS = 3;
+/** Below this many calls a p95 is just the slowest one: no verdict (about a second of circling). */
+export const MIN_INVOKES = 100;
 
 /**
  * What one `invoke` per event may cost at p95: the goal minus one trip (estimated) and the PC.
  * The question the probe answers is this one – WebView or touch capture in the Kotlin plugin –
- * because either way crosses the same Wi-Fi. Two leanings, in opposite directions: the trip
- * estimate is too high (budget too small, up to about [`CLOSE_MS`]), and it is the best trip,
- * not a typical one, held against a p95 (budget generous).
+ * because either way crosses the same Wi-Fi. Three leanings: the trip estimate is too high
+ * (budget too small, by about [`CLOSE_MS`] as an assumption) and the measured invoke is a round
+ * trip where a move needs one direction (both make the verdict stricter); and the trip is the
+ * best one, not a typical one, held against a p95 (which makes it more generous).
  */
 export function invokeBudget(open: Summary | undefined): number | undefined {
   const trip = tripEstimate(open);
   return trip === undefined ? undefined : round(GOAL_MS - trip - PC_MS);
 }
 
-export type Verdict = 'fits' | 'close' | 'over';
+export type Verdict = 'fits' | 'close' | 'over' | 'few';
 
-/** `undefined` until both were measured. `close` = measure again and try by hand, not the fallback. */
+/**
+ * `undefined` until both were measured; `few` = too few calls for a p95. `close` = measure again
+ * and try by hand, not the fallback.
+ */
 export function verdict(
   invoke: Summary | undefined,
   open: Summary | undefined,
 ): Verdict | undefined {
   const budget = invokeBudget(open);
   if (!invoke || budget === undefined) return undefined;
+  if (invoke.n < MIN_INVOKES) return 'few';
   if (invoke.p95 <= budget) return 'fits';
   return invoke.p95 <= budget + CLOSE_MS ? 'close' : 'over';
 }

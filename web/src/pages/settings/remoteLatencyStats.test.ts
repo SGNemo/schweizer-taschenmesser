@@ -29,11 +29,20 @@ describe('remote latency numbers', () => {
   it('the invoke is judged against the goal minus one trip and the PC – a slow open does not eat it', () => {
     const open = summarise([30, 36, 42, 200])!;
     expect(invokeBudget(open)).toBe(24);
-    expect(verdict(summarise([2, 3, 24])!, open)).toBe('fits');
-    // within what the trip estimate can be too high: close, not the fallback
-    expect(verdict(summarise([2, 3, 24.1])!, open)).toBe('close');
-    expect(verdict(summarise([2, 3, 27])!, open)).toBe('close');
-    expect(verdict(summarise([2, 3, 27.1])!, open)).toBe('over');
+    // a hundred calls, the slowest six at `slow`: that is the p95
+    const calls = (slow: number) =>
+      summarise([
+        ...Array.from({ length: 94 }, () => 2),
+        ...Array.from({ length: 6 }, () => slow),
+      ])!;
+    expect(calls(24).p95).toBe(24);
+    expect(verdict(calls(24), open)).toBe('fits');
+    // within what the trip estimate is assumed to be too high: close, not the fallback
+    expect(verdict(calls(24.1), open)).toBe('close');
+    expect(verdict(calls(27), open)).toBe('close');
+    expect(verdict(calls(27.1), open)).toBe('over');
+    // a handful of calls has no p95 worth a verdict
+    expect(verdict(summarise([2, 3, 400])!, open)).toBe('few');
     expect(verdict(summarise([2])!, undefined)).toBeUndefined();
     expect(verdict(undefined, open)).toBeUndefined();
   });
@@ -47,7 +56,7 @@ describe('remote latency numbers', () => {
       failed: { network: 2, 'not-granted': 1 },
     });
     expect(line).toBe(
-      'nemo-remote-latency v3 | input – | invoke n=1 min=2 p50=2 p95=2 max=2 | events/s=118 | overlap%=3 | open n=1 min=30 p50=30 p95=30 max=30 | failed=network:2,not-granted:1 | trip≈5 | spread=0 | invokeBudget=24 | verdict=fits',
+      'nemo-remote-latency v3 | input – | invoke n=1 min=2 p50=2 p95=2 max=2 | events/s=118 | overlap%=3 | open n=1 min=30 p50=30 p95=30 max=30 | failed=network:2,not-granted:1 | trip≈5 | spread=0 | invokeBudget=24 | verdict=few',
     );
     expect(resultLine({})).toContain('failed=0 | trip≈– | spread=– | invokeBudget=– | verdict=–');
   });
