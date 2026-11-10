@@ -461,7 +461,8 @@ fn the_hub_wires_remote_control_and_drops_it_on_stop() {
 
 /// The commands of the phone's handler (`#[cfg(mobile)]` block in `src/lib.rs`).
 fn mobile_handler_commands() -> Vec<String> {
-    let lib = read("src/lib.rs");
+    // LF line ends: a Windows checkout has CRLF, and the pattern below spans two lines
+    let lib = source("lib.rs");
     let at = lib
         .find("#[cfg(mobile)]\n    let builder = builder.invoke_handler(")
         .expect("mobile handler");
