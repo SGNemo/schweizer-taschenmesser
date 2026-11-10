@@ -187,22 +187,124 @@ fn webview_lifecycle_commands_never_run_on_the_main_thread() {
     }
 }
 
+/// Source of `src/<file>` with LF line ends (Windows checkouts have CRLF; the patterns below span
+/// two lines).
+fn source(file: &str) -> String {
+    read(&format!("src/{file}")).replace("\r\n", "\n")
+}
+
+fn assert_async(src: &str, names: &[&str]) {
+    for name in names {
+        assert!(
+            src.contains(&format!("#[tauri::command(async)]\npub fn {name}(")),
+            "{name} must be #[tauri::command(async)]"
+        );
+    }
+}
+
 /// Commands the inventory (`docs/perf/MAIN-THREAD-COMMANDS-2026-11.md`) rates "can block the main
-/// thread" stay off it. `disk_delete` is deliberately not in this list (its checks are frozen).
+/// thread" stay off it.
 #[test]
 fn blocking_commands_never_run_on_the_main_thread() {
-    // Windows checkouts have CRLF line ends; the patterns below span two lines.
-    let lan = read("src/lan_sync.rs").replace("\r\n", "\n");
+    let lan = source("lan_sync.rs");
     assert_eq!(lan.matches("#[tauri::command]").count(), 0, "lan_sync.rs");
     assert_eq!(
         lan.matches("#[tauri::command(async)]\npub fn lan_").count(),
         11
     );
-    let disk = read("src/disk.rs").replace("\r\n", "\n");
-    for name in ["disk_query", "disk_can_delete", "disk_delete_plan"] {
+    assert_async(
+        &source("disk.rs"),
+        &[
+            "disk_children",
+            "disk_query",
+            "disk_known_places",
+            "disk_reveal",
+            "disk_can_delete",
+            "disk_delete_plan",
+            "disk_delete",
+        ],
+    );
+    assert_async(
+        &source("capture.rs"),
+        &[
+            "capture_read_clipboard",
+            "desktop_set_autostart",
+            "desktop_autostart_enabled",
+            "desktop_take_panic_log",
+            "desktop_open_data_dir",
+        ],
+    );
+    assert_async(&source("system.rs"), &["system_open_task_manager"]);
+    // Every command that reaches the download manager (file access, one at a time under the gate).
+    let downloads = source("downloads.rs");
+    assert_eq!(
+        downloads
+            .matches("#[tauri::command(async)]\npub fn downloads_")
+            .count(),
+        10
+    );
+    assert_eq!(downloads.matches("#[tauri::command]").count(), 1);
+    assert!(downloads.contains("#[tauri::command]\npub fn downloads_default_dir("));
+    // Both builds of the three registration commands (Windows and elsewhere), plus start and stop.
+    let bridge = source("vault_bridge.rs");
+    assert_eq!(
+        bridge
+            .matches("#[tauri::command(async)]\npub fn vault_bridge_")
+            .count(),
+        8
+    );
+    assert_eq!(bridge.matches("#[tauri::command]").count(), 1);
+    assert!(bridge.contains("#[tauri::command]\npub fn vault_bridge_respond("));
+}
+
+/// The tab calls that stay on the main thread on purpose: the WebView2 call behind them runs there
+/// either way, and the main thread keeps two quick "back" clicks in order.
+#[test]
+fn tab_navigation_stays_in_call_order() {
+    let src = source("browser.rs");
+    for name in [
+        "browser_navigate",
+        "browser_back",
+        "browser_forward",
+        "browser_reload",
+        "browser_set_zoom",
+    ] {
         assert!(
-            disk.contains(&format!("#[tauri::command(async)]\npub fn {name}(")),
-            "{name} must be #[tauri::command(async)]"
+            src.contains(&format!("#[tauri::command]\npub fn {name}(")),
+            "{name} is expected to be a plain #[tauri::command]"
         );
     }
+}
+
+/// `disk_delete` left the main thread by its attribute alone. Its checks keep their order: plan
+/// known → not expired → second confirmation → not already running → fresh guard (block list) →
+/// only then the worker that deletes.
+#[test]
+fn disk_delete_checks_keep_their_order() {
+    let src = source("disk.rs");
+    let start = src.find("pub fn disk_delete(").expect("disk_delete");
+    let body = &src[start..start + src[start..].find("\n}\n").expect("end of disk_delete")];
+    let steps = [
+        "inner.plans.get(&plan_id).cloned().ok_or(\"unknown-plan\")?",
+        "return Err(\"plan-expired\".into());",
+        "if stored.plan.needs_double_confirmation(mode) && !confirmed_twice {",
+        "return Err(\"confirmation-missing\".into());",
+        ".swap(true, std::sync::atomic::Ordering::SeqCst)",
+        "return Err(\"already-running\".into());",
+        "let guard = guard_for(&app);",
+        ".spawn(move || {",
+        "let report = execute(",
+        "&stored.plan,",
+        "&guard,",
+    ];
+    let mut at = 0;
+    for step in steps {
+        let found = body[at..]
+            .find(step)
+            .unwrap_or_else(|| panic!("disk_delete: {step:?} missing or out of order"));
+        at += found + step.len();
+    }
+    // Nothing deletes outside that worker, and the guard is built once.
+    assert_eq!(body.matches("execute(").count(), 1);
+    assert_eq!(body.matches("guard_for(").count(), 1);
 }

@@ -257,7 +257,7 @@ pub fn disk_scan_live(
     Ok(session.map_or_else(Vec::new, |s| s.control.live.snapshot(min_bytes)))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_children(
     state: State<'_, DiskScans>,
     scan_id: u64,
@@ -302,7 +302,7 @@ pub async fn disk_steam_games(
 // --- clean-up: places, duplicates, paths ------------------------------------------------------
 
 /// Well-known cache and temp folders that exist here; the UI offers them as scan roots.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_known_places() -> Vec<Place> {
     known_places()
 }
@@ -346,7 +346,7 @@ pub fn disk_node_path(
 }
 
 /// Shows the entry in Windows Explorer.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_reveal(state: State<'_, DiskScans>, scan_id: u64, node: u32) -> Result<(), String> {
     let tree = tree_of(&state, scan_id)?;
     let path = read(&tree).path(node).ok_or("not-an-entry")?;
@@ -571,7 +571,7 @@ pub enum DeleteEvent {
 /// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirmed_twice` must be set when the
 /// plan needs a second confirmation (checked here, not only in the UI). Progress and the report
 /// arrive on the channel.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,

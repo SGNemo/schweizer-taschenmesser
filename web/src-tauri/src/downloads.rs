@@ -14,6 +14,9 @@ use tauri::{ipc::Channel, AppHandle, Manager as _, State};
 pub struct Downloads {
     manager: OnceLock<Manager>,
     watchers: Arc<Mutex<Vec<Channel<Vec<Job>>>>>,
+    /// One `downloads_*` command at a time: they run off the main thread, and the main thread used
+    /// to be what kept two of them (two writes of the job list, pause and resume) apart.
+    gate: Mutex<()>,
 }
 
 pub(crate) fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
@@ -33,10 +36,13 @@ pub(crate) fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 impl Downloads {
-    /// The manager is created on first use, so an app that never opens the module does nothing.
-    fn manager(&self, app: &AppHandle) -> Result<&Manager, String> {
+    /// Runs `f` with the manager while no other `downloads_*` command runs. The manager is created
+    /// on first use (under the same gate, so only once), so an app that never opens the module
+    /// does nothing.
+    fn with<T>(&self, app: &AppHandle, f: impl FnOnce(&Manager) -> T) -> Result<T, String> {
+        let _one_at_a_time = self.gate.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(m) = self.manager.get() {
-            return Ok(m);
+            return Ok(f(m));
         }
         let watchers = self.watchers.clone();
         let manager_cell: Arc<OnceLock<Manager>> = Arc::new(OnceLock::new());
@@ -52,7 +58,7 @@ impl Downloads {
             }),
         );
         let _ = manager_cell.set(m.clone());
-        Ok(self.manager.get_or_init(|| m))
+        Ok(f(self.manager.get_or_init(|| m)))
     }
 }
 
@@ -61,20 +67,21 @@ fn add_error(e: AddError) -> String {
 }
 
 /// Sends the current list now and after every change (about four times a second while downloading).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_watch(
     app: AppHandle,
     state: State<'_, Downloads>,
     events: Channel<Vec<Job>>,
 ) -> Result<(), String> {
-    let manager = state.manager(&app)?;
-    let _ = events.send(manager.snapshot());
-    state
-        .watchers
-        .lock()
-        .map_err(|_| "internal".to_string())?
-        .push(events);
-    Ok(())
+    state.with(&app, |manager| {
+        let _ = events.send(manager.snapshot());
+        state
+            .watchers
+            .lock()
+            .map_err(|_| "internal".to_string())?
+            .push(events);
+        Ok(())
+    })?
 }
 
 /// The system's Downloads folder, as the default target.
@@ -89,7 +96,7 @@ pub fn downloads_default_dir(app: AppHandle) -> Result<String, String> {
 
 /// Adds a job. Nothing starts without this call: a download offered by a web page first shows the
 /// address in the module and waits for a click.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_add(
     app: AppHandle,
     state: State<'_, Downloads>,
@@ -98,67 +105,63 @@ pub fn downloads_add(
     expected_hash: Option<String>,
 ) -> Result<Job, String> {
     state
-        .manager(&app)?
-        .add(&url, &PathBuf::from(dir), expected_hash.as_deref())
+        .with(&app, |m| {
+            m.add(&url, &PathBuf::from(dir), expected_hash.as_deref())
+        })?
         .map_err(add_error)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_pause(app: AppHandle, state: State<'_, Downloads>, id: u64) -> Result<(), String> {
-    state.manager(&app)?.pause(id);
-    Ok(())
+    state.with(&app, |m| m.pause(id))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_resume(
     app: AppHandle,
     state: State<'_, Downloads>,
     id: u64,
 ) -> Result<(), String> {
-    state.manager(&app)?.resume(id);
-    Ok(())
+    state.with(&app, |m| m.resume(id))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_remove(
     app: AppHandle,
     state: State<'_, Downloads>,
     id: u64,
     delete_data: bool,
 ) -> Result<(), String> {
-    state.manager(&app)?.remove(id, delete_data);
-    Ok(())
+    state.with(&app, |m| m.remove(id, delete_data))
 }
 
 /// Speed limit for all downloads together in bytes per second (0 = none).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_set_limit(
     app: AppHandle,
     state: State<'_, Downloads>,
     bps: u64,
 ) -> Result<(), String> {
-    state.manager(&app)?.set_global_limit(bps);
-    Ok(())
+    state.with(&app, |m| m.set_global_limit(bps))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_set_job_limit(
     app: AppHandle,
     state: State<'_, Downloads>,
     id: u64,
     bps: u64,
 ) -> Result<(), String> {
-    state.manager(&app)?.set_job_limit(id, bps);
-    Ok(())
+    state.with(&app, |m| m.set_job_limit(id, bps))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_global_limit(app: AppHandle, state: State<'_, Downloads>) -> Result<u64, String> {
-    Ok(state.manager(&app)?.global_limit())
+    state.with(&app, Manager::global_limit)
 }
 
 /// Compares a finished file with a pasted SHA-256/SHA-512 (result arrives with the list).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_verify(
     app: AppHandle,
     state: State<'_, Downloads>,
@@ -166,21 +169,19 @@ pub fn downloads_verify(
     expected: String,
 ) -> Result<(), String> {
     state
-        .manager(&app)?
-        .verify(id, &expected)
+        .with(&app, |m| m.verify(id, &expected))?
         .map_err(add_error)
 }
 
 /// Shows the file (or, before it exists, its folder) in the file manager. Never opens the file.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn downloads_reveal(
     app: AppHandle,
     state: State<'_, Downloads>,
     id: u64,
 ) -> Result<(), String> {
     let job = state
-        .manager(&app)?
-        .snapshot()
+        .with(&app, Manager::snapshot)?
         .into_iter()
         .find(|j| j.id == id)
         .ok_or("not-found")?;
