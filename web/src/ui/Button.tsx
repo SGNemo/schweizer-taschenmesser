@@ -5,6 +5,9 @@ import styles from './Button.module.css';
 /**
  * `primary` once per view (page head or dialog foot) · `secondary` · `ghost` = quiet text button ·
  * `danger` = confirm-level destructive action · `quietDanger` = red text (row-level delete).
+ *
+ * Every button and icon link carries its variant as `data-variant` (set after the caller's props, so it
+ * cannot be overwritten): guards count `[data-variant="primary"]` instead of a hashed class name.
  */
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quietDanger';
 
@@ -29,6 +32,7 @@ export function Button({
         .filter(Boolean)
         .join(' ')}
       {...rest}
+      data-variant={variant}
     />
   );
 }
@@ -55,6 +59,7 @@ export function IconButton({
       title={label}
       className={[styles.btn, styles.icon, styles[variant], className].filter(Boolean).join(' ')}
       {...rest}
+      data-variant={variant}
     />
   );
 }
@@ -73,6 +78,7 @@ export function IconLink({
         .filter(Boolean)
         .join(' ')}
       {...rest}
+      data-variant="ghost"
     />
   );
 }
