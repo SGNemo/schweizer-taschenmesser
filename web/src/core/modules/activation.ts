@@ -70,6 +70,21 @@ export async function isOnByDefaultSetOnly(
 }
 
 /**
+ * "Rückgängig" after a module was switched off. Normally that is switching it on again (a row). A module that was on
+ * only through this device's default set had no row before: undo takes the row away again, so the device is back
+ * where it was and no other device gets a `true` it never had.
+ */
+export async function undoDisable(
+  manifest: ModuleManifest,
+  wasOnByDefaultSetOnly: boolean,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
+  if (!wasOnByDefaultSetOnly) return enableModule(manifest, database);
+  await stateRepo(database).remove(manifest.id);
+  await bus.emit('module.enabled', { moduleId: manifest.id });
+}
+
+/**
  * The profile step of the setup deselects a module: a household choice (`enabled: false`) as before, except for a
  * module that is on only through this device's default set. That one is taken out device-locally: a `false` row
  * written on a fresh installation would later beat the household's `true` by last-write-wins.

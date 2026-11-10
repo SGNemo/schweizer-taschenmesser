@@ -137,24 +137,26 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
 
   const layout = saved ?? DEFAULT_LAYOUT;
   const showPreview = useUiStore((s) => s.showPreview);
-  // Widgets of enabled modules; a widget marked preview only with "In Arbeit anzeigen" or when pinned. Nothing is
-  // drawn before the saved layout is read: the default order (and widgets the person has hidden) would show for a
-  // moment and then jump.
-  const layoutRead = saved !== undefined;
+  // Widgets of enabled modules; a widget marked preview only with "In Arbeit anzeigen" or when pinned.
   const entries = useMemo(
     () =>
-      layoutRead
-        ? withoutFolded(
-            allEntries().filter(
-              (e) =>
-                states?.[e.moduleId] &&
-                isWidgetVisible(e.key, e, { showPreview, pinned: layout.pinned }),
-            ),
-          )
-        : [],
-    [states, showPreview, layout.pinned, layoutRead],
+      withoutFolded(
+        allEntries().filter(
+          (e) =>
+            states?.[e.moduleId] &&
+            isWidgetVisible(e.key, e, { showPreview, pinned: layout.pinned }),
+        ),
+      ),
+    [states, showPreview, layout.pinned],
   );
-  const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
+  // The cards are drawn only once the saved layout is read: before that the default order (and cards the person
+  // has hidden) would show for a moment and then jump. What depends on "are there cards at all" (the head's tools,
+  // the hint for an overview without cards) keeps using `entries`, so nothing of it flashes in the meantime.
+  const layoutRead = saved !== undefined;
+  const ordered = useMemo(
+    () => (layoutRead ? orderWidgets(entries, layout) : []),
+    [entries, layout, layoutRead],
+  );
   const homeView = useUiStore((s) => s.homeView);
   const setHomeView = useUiStore((s) => s.setHomeView);
   const calm = homeView === 'calm' && !editing && !cockpit;

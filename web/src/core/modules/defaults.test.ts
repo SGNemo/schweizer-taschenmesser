@@ -8,12 +8,15 @@ import finance from '@/modules/finance/manifest';
 import lists from '@/modules/lists/manifest';
 import todos from '@/modules/todos/manifest';
 import { createTestDb } from '@/test-utils';
+import { diffSelection, PROFILES, resolveProfile } from '@/core/setup/profiles';
 import {
   deselectInSetup,
   disableModule,
   enableModule,
+  isOnByDefaultSetOnly,
   loadModuleStates,
   loadStoredModuleState,
+  undoDisable,
 } from './activation';
 import {
   CURRENT_DEFAULTS_VERSION,
@@ -172,6 +175,66 @@ describe('default set of a fresh installation', () => {
     // Device B has the set too; the household's "off" still wins there.
     await arrive(db, other);
     expect(await loadModuleStates(DESKTOP, other)).toMatchObject({ lists: false, budgets: true });
+  });
+
+  it('5e: the profile step as it runs: a profile with lists writes nothing, the modules it leaves out go to defaults.off', async () => {
+    await markFreshDefaults(true, db);
+    const infos = DESKTOP.map((m) => ({ id: m.id, requires: m.requires }));
+    // What the step works with: the resolved states (the set included), not the rows.
+    const states = await loadModuleStates(DESKTOP, db);
+    const current = new Set(DESKTOP.filter((m) => states[m.id]).map((m) => m.id));
+    const everyday = PROFILES.find((p) => p.id === 'everyday')!;
+    const diff = diffSelection(current, resolveProfile(everyday, infos, []).modules);
+    // Lists and downloads are in the profile and already on through the set: nothing to switch on.
+    expect(diff.enable).toEqual([]);
+    expect(diff.disable.sort()).toEqual(['budgets', 'finance']);
+    for (const id of diff.disable)
+      await deselectInSetup(
+        DESKTOP.find((m) => m.id === id)!,
+        db,
+      );
+    // Budgets were on through the set only: device-local. Finance is a manifest default: a household row as before.
+    expect(await meta(db, DEFAULTS_OFF_KEY)).toEqual(['budgets']);
+    expect((await rows(db)).map((r) => [r.id, r.enabled])).toEqual([['finance', false]]);
+    expect(await loadModuleStates(DESKTOP, db)).toMatchObject({
+      lists: true,
+      downloads: true,
+      budgets: false,
+      finance: false,
+    });
+  });
+
+  it('5f: the finance profile finds budgets on through the set and writes no row for them', async () => {
+    await markFreshDefaults(true, db);
+    const infos = DESKTOP.map((m) => ({ id: m.id, requires: m.requires }));
+    const states = await loadModuleStates(DESKTOP, db);
+    const current = new Set(DESKTOP.filter((m) => states[m.id]).map((m) => m.id));
+    const finances = PROFILES.find((p) => p.id === 'finance')!;
+    const diff = diffSelection(current, resolveProfile(finances, infos, []).modules);
+    expect(diff.enable).toEqual([]);
+    expect(diff.disable.sort()).toEqual(['lists', 'todos']);
+  });
+
+  it('6b: "Rückgängig" after switching a set module off takes the row away again: no other device gets a `true`', async () => {
+    await markFreshDefaults(true, db);
+    const viaSet = await isOnByDefaultSetOnly('lists', db);
+    expect(viaSet).toBe(true);
+    await disableModule(lists, 'keep', db);
+    await undoDisable(lists, viaSet, db);
+    expect(await loadStoredModuleState('lists', db)).toBeUndefined();
+    expect(await loadModuleStates(DESKTOP, db)).toMatchObject({ lists: true });
+    // What reaches an old device is a deleted row, which counts as no row: lists stay off there.
+    await arrive(db, other);
+    expect(await loadModuleStates(DESKTOP, other)).toMatchObject({ lists: false });
+  });
+
+  it('6c: "Rückgängig" for a module with a row of its own switches it on again as before', async () => {
+    await enableModule(lists, db);
+    const viaSet = await isOnByDefaultSetOnly('lists', db);
+    expect(viaSet).toBe(false);
+    await disableModule(lists, 'keep', db);
+    await undoDisable(lists, viaSet, db);
+    expect(await loadStoredModuleState('lists', db)).toMatchObject({ enabled: true });
   });
 
   it('the test builds keep the set off unless a context switches it on', async () => {
