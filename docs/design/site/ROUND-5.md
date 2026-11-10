@@ -70,9 +70,11 @@ Render the sheets from `site/`: `MOCKUPS=round-5-a,round-5-b SHEET_ROW=1 node ..
 
 Untouched in every package: CSP and `public/_headers`, token check, `gen:modules`, `fetch-release`, legal texts.
 
-## Questions for the maintainer
+## Answers of the maintainer (2026-11-10)
 
-1. Direction: **B** (recommended) or A.
-2. One movement on the site (hero picture, `transform`/`opacity`, off under reduced motion): **yes** (recommended; belongs to B) or no.
-3. Preview modules: **one quiet row at the end of the list** (recommended, as in the mockups), listed like every other module, or not on the page.
-4. Order: **packages 2–4 now with today's pictures, package 1 after 0b-8** (recommended), or everything after 0b-8.
+1. Direction **B** (depth), with the anchor bar from A under 64 rem.
+2. One movement: **yes** (hero picture, `transform`/`opacity`, none under reduced motion); `site/README.md` changes in package 2.
+3. Preview modules: **one quiet row** at the end of the list.
+4. Order: **packages 2–4 now** with today's pictures, package 1 after 0b-8.
+
+Phase 2 starts when the maintainer writes "Plan freigegeben".
