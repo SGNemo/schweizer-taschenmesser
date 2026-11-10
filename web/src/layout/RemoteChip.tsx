@@ -14,9 +14,11 @@ import styles from './AppShell.module.css';
 export function RemoteChip() {
   useRemoteHostWatch();
   // the name alone: a reading that changes nothing re-renders nothing
-  const name = useRemoteHost((s) => s.status?.controller?.name);
+  const claimed = useRemoteHost((s) => s.status?.controller?.name);
+  const id = useRemoteHost((s) => s.status?.controller?.id);
   const l = tRemoteHost.use();
-  if (name === undefined) return null;
+  if (claimed === undefined || id === undefined) return null;
+  const name = claimed || l.unnamed(id.slice(0, 4));
   return (
     <Link
       to={settingsPath('verbindungen', 'remote')}

@@ -9,15 +9,7 @@ export const tRemoteHost = defineBundle(
   {
     title: 'Fernsteuerung',
     help: 'Ein gekoppeltes Handy darf Medien und Lautstärke dieses PCs steuern – nur im Heimnetz und nur, wenn du es hier erlaubst.',
-    keywords: [
-      'Fernbedienung',
-      'Handy steuert PC',
-      'Lautstärke',
-      'Medien',
-      'Maus',
-      'Tastatur',
-      'Fernsteuern',
-    ],
+    keywords: ['Fernbedienung', 'Handy steuert PC', 'Lautstärke', 'Medien', 'Fernsteuern'],
     allow: 'Fernsteuerung erlauben',
     allowHint:
       'Aus: Kein Gerät kann diesen PC steuern. Der Abgleich im Heimnetz läuft unverändert weiter.',
@@ -64,15 +56,7 @@ export const tRemoteHost = defineBundle(
     en: {
       title: 'Remote control',
       help: 'A paired phone may control media and volume of this PC – only on your home network and only if you allow it here.',
-      keywords: [
-        'Remote',
-        'Phone controls PC',
-        'Volume',
-        'Media',
-        'Mouse',
-        'Keyboard',
-        'Remote control',
-      ],
+      keywords: ['Remote', 'Phone controls PC', 'Volume', 'Media', 'Remote control'],
       allow: 'Allow remote control',
       allowHint: 'Off: no device can control this PC. Home-network sync keeps running unchanged.',
       allowHintOn: 'On: only the devices you allow below, and only on your home network.',

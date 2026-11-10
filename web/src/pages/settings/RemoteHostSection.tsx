@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import type { RemoteHostDevice, RemoteHostGrant, RemoteLevel } from '@/core/platform/types';
@@ -38,6 +38,15 @@ export function RemoteHostSection() {
   const { status, off } = useRemoteHost();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
+  // A Windows dialog can outlive this page: once it is gone, an answer changes nothing here and
+  // must not fill the shared state again (nobody would keep it fresh).
+  const open = useRef(true);
+  useEffect(() => {
+    open.current = true;
+    return () => {
+      open.current = false;
+    };
+  }, []);
 
   if (!host.supported) return null;
 
@@ -45,15 +54,17 @@ export function RemoteHostSection() {
   async function change(action: () => Promise<unknown>, done?: string) {
     setNote(undefined);
     setBusy(true);
+    let said = done;
     try {
       await action();
-      setNote(done);
     } catch (e) {
-      setNote(errorText(e, l));
-    } finally {
-      await refreshRemoteHost();
-      setBusy(false);
+      said = errorText(e, l);
     }
+    if (!open.current) return;
+    await refreshRemoteHost();
+    if (!open.current) return;
+    setNote(said);
+    setBusy(false);
   }
 
   if (off || !status) {
@@ -85,7 +96,10 @@ export function RemoteHostSection() {
    */
   const setGrant = (d: RemoteHostDevice, patch: Partial<RemoteHostGrant>) =>
     change(async () => {
-      const now = (await refreshRemoteHost())?.devices.find((x) => x.id === d.id);
+      const fresh = await refreshRemoteHost();
+      // no reading is not "unpaired": say that it did not work (or let the hub sentence take over)
+      if (!fresh) throw new Error(useRemoteHost.getState().off ? 'not-started' : 'failed');
+      const now = fresh.devices.find((x) => x.id === d.id);
       if (!now) throw new Error('not-found');
       await host.setDevice(d.id, {
         level: now.level,
@@ -96,7 +110,12 @@ export function RemoteHostSection() {
     });
   const nameOf = (d: RemoteHostDevice) => d.name || l.unnamed(d.id.slice(0, 4));
   const hasGrant = status.devices.some((d) => d.level !== 'off');
-  const controller = status.controller ?? undefined;
+  const controller = status.controller
+    ? {
+        ...status.controller,
+        name: status.controller.name || l.unnamed(status.controller.id.slice(0, 4)),
+      }
+    : undefined;
 
   return (
     <div className={styles.form} data-testid="remote-host">

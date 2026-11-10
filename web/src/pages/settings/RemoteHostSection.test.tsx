@@ -230,6 +230,62 @@ describe('RemoteHostSection (desktop)', () => {
     expect(fake.parts.hooks.asked()).toBe(asked + 1);
   });
 
+  it('a reading that fails is not reported as "unpaired"; without the hub its sentence takes over', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    fireEvent.click(master());
+    await flush();
+    fake.parts.hooks.setRunning(false);
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(screen.queryByText('Dieses Gerät ist nicht mehr gekoppelt.')).toBeNull();
+    expect(screen.getByTestId('remote-need-hub')).toBeTruthy();
+    fake.parts.hooks.setRunning(true);
+    expect(fake.parts.hooks.state().devices[0]!.level).toBe('off');
+  });
+
+  it('an answer that comes after the page was left does not fill the shared state again', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    const view = render(
+      <MemoryRouter>
+        <RemoteHostSection />
+      </MemoryRouter>,
+    );
+    await flush();
+    fireEvent.click(master());
+    await flush();
+    // the "Windows dialog" stays open …
+    let answer: () => void = () => undefined;
+    const real = fake.parts.host.setDevice.bind(fake.parts.host);
+    vi.spyOn(fake.parts.host, 'setDevice').mockImplementationOnce(async (dev, grant) => {
+      await new Promise<void>((r) => (answer = r));
+      return real(dev, grant);
+    });
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    // … while the person leaves the settings, then answers
+    view.unmount();
+    expect(useRemoteHost.getState()).toEqual({ status: undefined, off: true });
+    answer();
+    await flush();
+    expect(fake.parts.hooks.state().devices.find((d) => d.id === id)?.level).toBe('media');
+    expect(useRemoteHost.getState()).toEqual({ status: undefined, off: true });
+  });
+
+  it('a controller without a name is still named in the banner and the chip', async () => {
+    const id = fake.parts.hooks.addDevice('');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    fake.parts.hooks.open(id);
+    await show();
+    expect(screen.getByTestId('remote-controlling').textContent).toContain(
+      'Gerät ohne Namen (dev1) steuert gerade',
+    );
+    expect(screen.getByTestId('remote-chip').textContent).toBe(
+      'Fernsteuerung: Gerät ohne Namen (dev1)',
+    );
+  });
+
   it('a device without a name gets a label', async () => {
     fake.parts.hooks.addDevice('');
     await show();
