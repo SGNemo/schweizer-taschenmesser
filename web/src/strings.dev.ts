@@ -153,31 +153,38 @@ export const tDev = {
       'Misst, was das Handy allein messen kann, bevor die Touchpad-Seite gebaut wird. Am PC wird dabei nichts ausgeführt. Nichts wird gespeichert oder gesendet; das Ergebnis steht nur hier.',
     pad: 'Messfläche: mit einem Finger etwa zehn Sekunden kreisen',
     padHint:
-      'Je Zeiger-Ereignis läuft ein Aufruf in die Shell – derselbe Weg wie beim Senden, nur ohne Sitzung: Er endet vor dem Schreiben ins Netz.',
+      'Je Zeiger-Ereignis läuft ein Aufruf in die Shell – derselbe Weg wie beim Senden, nur ohne Sitzung: Er endet vor dem Verschlüsseln und Schreiben ins Netz.',
     reset: 'Messung leeren',
-    open: 'Verbindungsaufbau messen (10×)',
+    open: 'Verbindungsaufbau messen',
     openBusy: (done: number, total: number) => `Messe … ${done} von ${total}`,
     openHint:
-      'Öffnet zehnmal kurz eine Medien-Sitzung zum gekoppelten PC und schließt sie wieder (das Tray am PC zeigt das kurz an). Höchstens einmal pro Minute: der PC begrenzt Verbindungsaufbauten.',
-    openFailed: (n: number) =>
-      `${n} von 10 Versuchen kamen nicht zustande (PC gekoppelt, im selben WLAN, Fernsteuerung für dieses Gerät erlaubt?).`,
+      'Öffnet sechsmal kurz eine Medien-Sitzung zum gekoppelten PC und schließt sie wieder (das Tray am PC zeigt das kurz an); der erste Aufbau zählt nicht mit. Danach eine Minute Pause: Der PC begrenzt Verbindungsaufbauten je Gerät, und der Sync des Handys teilt sich dieses Kontingent.',
+    openFailed: (n: number, total: number) =>
+      `${n} von ${total} Versuchen kamen nicht zustande (PC gekoppelt, im selben WLAN, Fernsteuerung für dieses Gerät erlaubt? Zu viele Versuche in einer Minute?).`,
+    leftOpen:
+      'Eine Mess-Sitzung ließ sich nicht schließen. Am PC endet sie von selbst nach kurzer Zeit oder sofort über „Fernsteuerung beenden“ im Tray.',
     aborted:
-      'Abgebrochen: Der Messaufruf wurde nicht abgewiesen. Bitte melden – hier darf nichts ausgeführt werden.',
+      'Abgebrochen: Der Messaufruf wurde nicht abgewiesen. Bitte melden – hier darf nichts ausgeführt werden. Bis zum Neustart der App misst diese Fläche nicht mehr.',
     rows: {
-      input: 'Ereignis → Seite (Android und WebView, nicht unser Teil)',
       invoke: 'Ein Aufruf je Ereignis (Seite → Shell → Seite)',
-      rate: 'Ereignisse pro Sekunde',
+      budget: 'Was der Aufruf kosten darf (p95)',
+      input: 'Ereignis → Seite (Android und WebView, mit dem Warten aufs nächste Bild)',
+      rate: 'Ereignisse pro Sekunde (so viele Aufrufe würde die Seite senden)',
       overlap: 'Ereignisse, während ein Aufruf noch lief',
-      open: 'Verbindungsaufbau (sechs Wege und die Arbeit des PCs)',
-      our: 'Unser Teil, geschätzt (p95)',
+      open: 'Verbindungsaufbau (ohne den ersten)',
+      trip: 'Ein Weg zum PC, bestenfalls (schnellster Aufbau ÷ 6)',
+      spread: 'Streuung der Aufbauten (p95 − p50)',
     },
     summary: (n: number, p50: number, p95: number, max: number) =>
       `${n} Werte · p50 ${p50} ms · p95 ${p95} ms · max ${max} ms`,
+    ms: (x: number) => `${x} ms`,
     none: 'noch nicht gemessen',
-    ourValue: (ms: number, goal: number) => `≈ ${ms} ms (Ziel: unter ${goal} ms)`,
-    ourHint:
-      'Aufruf p95 + ein Sechstel des Verbindungsaufbaus p95 + 1 ms am PC. Eine Schätzung: Der Weg durchs WLAN lässt sich vom Handy allein nicht einzeln messen.',
+    fits: 'der Aufruf passt hinein',
+    fitsNot: 'der Aufruf ist zu teuer',
+    readHint: (goal: number) =>
+      `Ziel für unseren Teil: unter ${goal} ms (p95). Entschieden wird am Aufruf: Er darf kosten, was nach einem Weg zum PC und 1 ms am PC übrig bleibt. Der Weg ist eine Untergrenze aus dem schnellsten Verbindungsaufbau; die Streuung zeigt nur, wie ruhig das WLAN gerade ist. Nicht gemessen: Verschlüsseln und Schreiben, und ein Stau bei schlechtem WLAN – das zeigt erst der Handtest mit dem Touchpad.`,
     copy: 'Ergebnis kopieren',
     copied: 'Ergebnis kopiert.',
+    copyFailed: 'Kopieren ging nicht. Die Werte stehen oben.',
   },
 } as const;

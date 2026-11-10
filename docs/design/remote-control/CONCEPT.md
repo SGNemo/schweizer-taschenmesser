@@ -101,21 +101,26 @@ No timer on the phone: the WebView delivers pointer moves at most once per displ
 
 ### Measurement on a real phone (package 3, before the touchpad page)
 
-Tool: Dev-Preview build on the phone → Einstellungen → Entwickler → „Fernbedienung: Latenz messen“ (`pages/settings/RemoteLatencyProbe.tsx`; absent from every other build). It measures what the phone can measure alone, and nothing acts on the PC:
+Tool: Dev-Preview build on the phone → Einstellungen → Entwickler → „Fernbedienung: Latenz messen“ (`pages/settings/RemoteLatencyProbe.tsx`; absent from every other build). It measures what the phone can measure alone, and nothing acts on the PC.
 
-- **invoke** – one call per pointer event, page → shell → page: `send` for a session number that is never open. The shell goes the way of a real send (command, worker thread, session lookup) and answers `closed` right before it would seal and write (< 1 ms, prototype). A round trip, so it overstates the one direction a real move needs.
-- **input** – pointer event's own time stamp → handler (Android and WebView; not our part, shown to see the device's rate).
-- **events/s**, **overlap** – how often an event arrives while the previous call is still running (then moves are summed).
-- **open** – ten times: open a media session, close it. One open is three exchanges (TCP, handshake, `open`/`opened`) = six trips plus the PC's work.
-- **our part (p95), a guess** = invoke p95 + open p95 / 6 + 1 ms. The single trip through the Wi-Fi cannot be measured from the phone alone; the open's spread stands in for it.
+**The question it answers is one: WebView or touch capture in the Kotlin plugin** – so it judges the `invoke`, not a total. Either way crosses the same Wi-Fi.
 
-Not measured this way: seal and write on the phone, and `SendInput` on the PC (both < 1 ms in the prototype); the finger-to-pointer feeling as a whole (hand test).
+- **invoke** – one call per pointer event while a finger is down, page → shell → page: `send` for a session number that is never open. The shell goes the way of a real send (command, worker thread, session lookup) and answers `closed` right before it would seal and write. A round trip, so it overstates the one direction a real move needs.
+- **invoke budget** – what that call may cost at p95: the goal (30 ms) − one trip to the PC at its best − 1 ms on the PC. The tool says "fits" or "too expensive".
+- **trip, at best** – the fastest of five opens of a media session ÷ 6 (an open is three exchanges: TCP, handshake, `open`/`opened`). A floor that is still too high: every open also reads two keys on the phone and does the key agreement on both sides. The first open of a run is the warm-up (keys, Wi-Fi waking up, the PC's state read may wait up to 150 ms) and is not counted.
+- **spread** – p95 − p50 of those opens: how calm the Wi-Fi is right now. Shown on its own, never divided into a per-trip number.
+- **input** – the pointer event's own time stamp → handler: Android, the WebView and the wait for the next display frame, which "send per event" inherits. **events/s** = events the page was handed (about the display rate) = calls the page would make. **overlap** = events that arrived while the previous call was still running (then moves are summed).
 
-| Phone, Android, display Hz | Wi-Fi | input p50 / p95 ms | invoke p50 / p95 / max ms | events/s | overlap % | open p50 / p95 ms | our part p95 ≈ ms | Date |
-|---|---|---|---|---|---|---|---|---|
-| _to be measured_ | | | | | | | | |
+Not measured, and left to the touchpad hand test: seal and write on the phone (< 1 ms in the prototype – on one host; a real write blocks while the socket buffer is full, so on bad Wi-Fi the wait becomes per-event latency), `SendInput` on the PC, and the finger-to-pointer feeling as a whole.
 
-Reading: under 30 ms → the page sends per pointer event through the WebView as designed. Over it because of **invoke** → touch capture moves into the Kotlin plugin (fallback of package 3). Over it because of **open** → the Wi-Fi, not the design; measure again nearer the router before deciding.
+Measure twice: near the router and at the far end of the flat.
+
+| Phone, Android, display Hz | Where | invoke p50 / p95 / max ms | invoke budget ms → fits? | events/s | overlap % | input p50 / p95 ms | open p50 / p95 ms | trip ≥ ms | spread ms | Date |
+|---|---|---|---|---|---|---|---|---|---|---|
+| _to be measured_ | near the router | | | | | | | | | |
+| | far end | | | | | | | | | |
+
+Reading: invoke p95 within its budget → the page sends per pointer event through the WebView as designed. Over it → touch capture moves into the Kotlin plugin (fallback of package 3). A large spread or a high trip is the Wi-Fi, not the design, and no reason for the fallback.
 
 ### Prototype measurement
 

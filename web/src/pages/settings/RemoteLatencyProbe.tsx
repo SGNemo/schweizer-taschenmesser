@@ -1,9 +1,18 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { getPlatform } from '@/core/platform';
-import { GOAL_MS, ourPart, resultLine, summarise, type Summary } from '@/core/remote/latencyStats';
 import { tDev } from '@/strings.dev';
 import { useUiStore } from '@/stores/ui';
 import { Button } from '@/ui';
+import {
+  fits,
+  GOAL_MS,
+  invokeBudget,
+  resultLine,
+  spread,
+  summarise,
+  tripFloor,
+  type Summary,
+} from './remoteLatencyStats';
 import settings from './settings.module.css';
 import styles from './RemoteLatencyProbe.module.css';
 
@@ -13,19 +22,62 @@ import styles from './RemoteLatencyProbe.module.css';
  * pointer event, and the way to the PC.
  *
  * Nothing acts on the PC. The call per event is `send` for a session number that is never open:
- * the shell goes the whole way a real send goes (command, worker thread, session lookup) and
- * answers `closed` right before it would write. Should that call ever *not* be refused, the
- * probe stops at once.
+ * the shell goes the way a real send goes (command, worker thread, session lookup) and answers
+ * `closed` right before it would seal and write. Should that call ever *not* be refused, the
+ * probe stops for good (until the app restarts). The action it carries is the mildest of the
+ * fixed list, a mute toggle: calls already on their way then could still toggle it.
  *
- * Nothing is stored or logged; the numbers live in this component until it unmounts.
+ * Nothing is stored or logged, and no coordinate is read; the numbers live in this component
+ * until it unmounts.
  */
 
 /** Session numbers count up from 1; this one is never reached. */
 const NO_SESSION = Number.MAX_SAFE_INTEGER;
-const OPENS = 10;
+/**
+ * Opens per run; the first is the warm-up (it reads keys and wakes the Wi-Fi) and is not
+ * counted. Few on purpose: the PC allows 20 first messages per address and minute, and the
+ * phone's sync shares that budget – and only the fastest open is used.
+ */
+export const OPENS = 6;
 const BETWEEN_OPENS_MS = 300;
-/** Samples kept per row; a minute of 120 Hz is far below. */
+export const PAUSE_MS = 60_000;
+/** Samples kept per row; a minute at 120 Hz is far below. */
 const KEEP = 20_000;
+
+/**
+ * Set when a probe call was not refused, and never cleared: until the app restarts, no probe
+ * call is made again (clearing the measurement does not bring it back).
+ */
+let stopped = false;
+/** When the next run of opens may start (`performance.now()`); kept across mounts. */
+let nextRunAt = 0;
+
+/** Tests only. */
+export function resetProbeForTests() {
+  stopped = false;
+  nextRunAt = 0;
+}
+
+interface Samples {
+  input: number[];
+  invoke: number[];
+  events: number;
+  overlaps: number;
+  inFlight: number;
+  /** Time a finger was down, summed over the strokes; `downAt` = the running stroke. */
+  strokeMs: number;
+  downAt: number | undefined;
+}
+
+const empty = (): Samples => ({
+  input: [],
+  invoke: [],
+  events: 0,
+  overlaps: 0,
+  inFlight: 0,
+  strokeMs: 0,
+  downAt: undefined,
+});
 
 interface Shown {
   input?: Summary;
@@ -39,28 +91,35 @@ const wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
 export function RemoteLatencyProbe() {
   const toast = useUiStore((s) => s.toast);
   const remote = getPlatform().remote;
-  const samples = useRef({
-    input: [] as number[],
-    invoke: [] as number[],
-    events: 0,
-    overlaps: 0,
-    inFlight: 0,
-    first: 0,
-    last: 0,
-    aborted: false,
-  });
+  const samples = useRef<Samples>(empty());
+  const gone = useRef(false);
+  useEffect(() => {
+    gone.current = false;
+    return () => {
+      // leaving the page ends a running series: a real session must not be replaced by a probe
+      gone.current = true;
+    };
+  }, []);
   const [shown, setShown] = useState<Shown>({});
   const [open, setOpen] = useState<Summary | undefined>();
-  const [failed, setFailed] = useState(0);
+  const [failed, setFailed] = useState<Record<string, number>>({});
+  const [leftOpen, setLeftOpen] = useState(0);
   const [progress, setProgress] = useState<number | undefined>();
-  const [aborted, setAborted] = useState(false);
+  const [aborted, setAborted] = useState(stopped);
+  const [pausing, setPausing] = useState(() => performance.now() < nextRunAt);
+  useEffect(() => {
+    if (!pausing) return;
+    const timer = setTimeout(() => setPausing(false), Math.max(0, nextRunAt - performance.now()));
+    return () => clearTimeout(timer);
+  }, [pausing]);
 
   // only the phone app has the client; everywhere else the developer page stays as it is
   if (!remote.supported) return null;
 
   function refresh() {
+    if (gone.current) return;
     const s = samples.current;
-    const seconds = (s.last - s.first) / 1000;
+    const seconds = s.strokeMs / 1000;
     setShown({
       input: summarise(s.input),
       invoke: summarise(s.invoke),
@@ -70,28 +129,29 @@ export function RemoteLatencyProbe() {
   }
 
   function reset() {
-    samples.current = {
-      input: [],
-      invoke: [],
-      events: 0,
-      overlaps: 0,
-      inFlight: 0,
-      first: 0,
-      last: 0,
-      aborted: false,
-    };
+    samples.current = empty();
     setShown({});
     setOpen(undefined);
-    setFailed(0);
-    setAborted(false);
+    setFailed({});
+    setLeftOpen(0);
+  }
+
+  function onDown() {
+    samples.current.downAt ??= performance.now();
+  }
+
+  function onUp() {
+    const s = samples.current;
+    if (s.downAt !== undefined) s.strokeMs += performance.now() - s.downAt;
+    s.downAt = undefined;
+    refresh();
   }
 
   function onMove(e: ReactPointerEvent<HTMLDivElement>) {
+    // `samples` is taken once: a call that settles after "clear" lands in the old, dropped set
     const s = samples.current;
-    if (s.aborted || s.input.length >= KEEP) return;
+    if (stopped || s.downAt === undefined || s.input.length >= KEEP) return;
     const now = performance.now();
-    if (s.events === 0) s.first = now;
-    s.last = now;
     s.events += 1;
     s.input.push(now - e.timeStamp);
     if (s.inFlight > 0) s.overlaps += 1;
@@ -100,95 +160,121 @@ export function RemoteLatencyProbe() {
       .send(NO_SESSION, ['mute'])
       .then(
         () => {
-          // not refused: stop, nothing may ever be sent from here
-          s.aborted = true;
-          setAborted(true);
+          // not refused: stop for good, nothing may ever be sent from here
+          stopped = true;
+          if (!gone.current) setAborted(true);
         },
         () => s.invoke.push(performance.now() - now),
       )
       .finally(() => {
         s.inFlight -= 1;
+        // the last calls of a stroke settle after the finger is up
+        if (s.inFlight === 0 && s.downAt === undefined && s === samples.current) refresh();
       });
   }
 
   async function measureOpens() {
     const times: number[] = [];
-    let misses = 0;
-    for (let i = 0; i < OPENS; i += 1) {
+    const misses: Record<string, number> = {};
+    let unclosed = 0;
+    nextRunAt = performance.now() + PAUSE_MS;
+    for (let i = 0; i < OPENS && !gone.current; i += 1) {
       setProgress(i);
       const start = performance.now();
       try {
         const opened = await remote.open('media', () => {});
-        times.push(performance.now() - start);
-        await remote.close(opened.session).catch(() => {});
-      } catch {
-        misses += 1;
+        // the first open is the warm-up
+        if (i > 0) times.push(performance.now() - start);
+        await remote.close(opened.session).catch(() => {
+          unclosed += 1;
+        });
+      } catch (e) {
+        const code = typeof e === 'string' && /^[a-z-]{1,24}$/.test(e) ? e : 'other';
+        misses[code] = (misses[code] ?? 0) + 1;
       }
       await wait(BETWEEN_OPENS_MS);
     }
+    if (gone.current) return;
     setProgress(undefined);
+    setPausing(true);
     setOpen(summarise(times));
     setFailed(misses);
+    setLeftOpen(unclosed);
   }
 
-  const line = (x?: Summary) =>
-    x ? tDev.latency.summary(x.n, x.p50, x.p95, x.max) : tDev.latency.none;
-  const our = ourPart(shown.invoke, open);
+  const t = tDev.latency;
+  const line = (x?: Summary) => (x ? t.summary(x.n, x.p50, x.p95, x.max) : t.none);
+  const ms = (x?: number) => (x === undefined ? t.none : t.ms(x));
+  const budget = invokeBudget(open);
+  const verdict = fits(shown.invoke, open);
+  const failedTotal = Object.values(failed).reduce((a, b) => a + b, 0);
+  const running = progress !== undefined;
 
   async function copy() {
-    await navigator.clipboard.writeText(resultLine({ ...shown, open, failedOpens: failed }));
-    toast(tDev.latency.copied);
+    try {
+      await navigator.clipboard.writeText(resultLine({ ...shown, open, failed }));
+      toast(t.copied);
+    } catch {
+      toast(t.copyFailed);
+    }
   }
 
   return (
     <>
-      <h3>{tDev.latency.title}</h3>
-      <p className={settings.muted}>{tDev.latency.intro}</p>
-      {aborted && <p role="alert">{tDev.latency.aborted}</p>}
+      <h3>{t.title}</h3>
+      <p className={settings.muted}>{t.intro}</p>
+      {aborted && <p role="alert">{t.aborted}</p>}
       <div
         className={styles.pad}
         data-testid="latency-pad"
+        onPointerDown={onDown}
         onPointerMove={onMove}
-        onPointerUp={refresh}
-        onPointerCancel={refresh}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
       >
-        {tDev.latency.pad}
+        {t.pad}
       </div>
-      <p className={settings.muted}>{tDev.latency.padHint}</p>
+      <p className={settings.muted}>{t.padHint}</p>
       <div className={settings.row}>
         <Button
           variant="secondary"
-          disabled={progress !== undefined}
+          disabled={running || pausing}
           onClick={() => void measureOpens()}
         >
-          {progress === undefined ? tDev.latency.open : tDev.latency.openBusy(progress + 1, OPENS)}
+          {running ? t.openBusy(progress + 1, OPENS) : t.open}
         </Button>
-        <Button variant="ghost" onClick={reset}>
-          {tDev.latency.reset}
+        <Button variant="ghost" disabled={running} onClick={reset}>
+          {t.reset}
         </Button>
       </div>
-      <p className={settings.muted}>{tDev.latency.openHint}</p>
-      {failed > 0 && <p className={settings.muted}>{tDev.latency.openFailed(failed)}</p>}
+      <p className={settings.muted}>{t.openHint}</p>
+      {failedTotal > 0 && <p className={settings.muted}>{t.openFailed(failedTotal, OPENS)}</p>}
+      {leftOpen > 0 && <p className={settings.muted}>{t.leftOpen}</p>}
       <dl className={styles.rows} data-testid="latency-result">
-        <dt>{tDev.latency.rows.input}</dt>
-        <dd>{line(shown.input)}</dd>
-        <dt>{tDev.latency.rows.invoke}</dt>
+        <dt>{t.rows.invoke}</dt>
         <dd>{line(shown.invoke)}</dd>
-        <dt>{tDev.latency.rows.rate}</dt>
-        <dd>{shown.eventsPerSecond ?? tDev.latency.none}</dd>
-        <dt>{tDev.latency.rows.overlap}</dt>
+        <dt>{t.rows.budget}</dt>
         <dd>
-          {shown.overlapPercent === undefined ? tDev.latency.none : `${shown.overlapPercent} %`}
+          {budget === undefined ? t.none : t.ms(budget)}
+          {verdict !== undefined && ` · ${verdict ? t.fits : t.fitsNot}`}
         </dd>
-        <dt>{tDev.latency.rows.open}</dt>
+        <dt>{t.rows.input}</dt>
+        <dd>{line(shown.input)}</dd>
+        <dt>{t.rows.rate}</dt>
+        <dd>{shown.eventsPerSecond ?? t.none}</dd>
+        <dt>{t.rows.overlap}</dt>
+        <dd>{shown.overlapPercent === undefined ? t.none : `${shown.overlapPercent} %`}</dd>
+        <dt>{t.rows.open}</dt>
         <dd>{line(open)}</dd>
-        <dt>{tDev.latency.rows.our}</dt>
-        <dd>{our === undefined ? tDev.latency.none : tDev.latency.ourValue(our, GOAL_MS)}</dd>
+        <dt>{t.rows.trip}</dt>
+        <dd>{ms(tripFloor(open))}</dd>
+        <dt>{t.rows.spread}</dt>
+        <dd>{ms(spread(open))}</dd>
       </dl>
-      <p className={settings.muted}>{tDev.latency.ourHint}</p>
+      <p className={settings.muted}>{t.readHint(GOAL_MS)}</p>
       <div className={settings.row}>
         <Button variant="secondary" disabled={!shown.invoke && !open} onClick={() => void copy()}>
-          {tDev.latency.copy}
+          {t.copy}
         </Button>
       </div>
     </>
