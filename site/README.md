@@ -66,7 +66,7 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run check:links` | linkinator over `dist/` (internal and external) |
 | `npm run check:downloads` | the download URLs answer 200 against the real latest release |
 | `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/`; `-- --dark` audits a copy with the dark theme forced |
-| `npm run screenshots` | renders the preview at 360/768/1280/1920, light and dark → `out/` |
+| `npm run screenshots` | renders the preview at 360/390/768/1280/1440, light and dark → `out/` (`SITE_WIDTHS`, `SITE_PAGES`) |
 | `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
 | `npm run app:screenshots -- --readme` | the README pictures (overview, calendar, finance, toolbox, settings; desktop 1920×1080 and phone 412×915, light and dark, WebP) → `../docs/assets/screenshots/` |
 
