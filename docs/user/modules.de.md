@@ -22,8 +22,8 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
 |  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional |
-| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | optional |
+|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
+| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
 |  | Fitness | Training und Essen grob festhalten | Vorschau |
 | **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
@@ -36,7 +36,9 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
-|  | Downloads | Lädt Dateien herunter | optional, nur Windows-App |
+|  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
+
+„Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.
 
 **Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
 

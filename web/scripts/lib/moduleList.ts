@@ -12,6 +12,11 @@ export interface ModuleRecord {
   id: string;
   area: string;
   status: Status;
+  /**
+   * In the default set of a fresh installation (`core/modules/defaults`) although `defaultEnabled` is false: on when
+   * Nemo is installed new, unchanged on an installation that already existed.
+   */
+  fresh?: boolean;
   platforms: PlatformKey;
   /** `manifest.icon` (Lucide name) and `manifest.identity`: the website draws plate, card tint and widget sketch from them. */
   icon: string;
@@ -45,6 +50,9 @@ const WORDS = {
     toolsHint: 'Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.',
     on: 'on by default',
     optional: 'optional',
+    fresh: 'on for new installations',
+    freshHint:
+      '“On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.',
     preview: 'preview',
     previewHint:
       'Preview modules and tools stay hidden until you turn on “Show work in progress” (Settings → Appearance).',
@@ -63,6 +71,9 @@ const WORDS = {
       'Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.',
     on: 'standardmäßig an',
     optional: 'optional',
+    fresh: 'bei Neuinstallationen an',
+    freshHint:
+      '„Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.',
     preview: 'Vorschau',
     previewHint:
       'Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen“ einschaltest (Einstellungen → Darstellung).',
@@ -118,9 +129,15 @@ export function shortText(text: string): string {
 /** The Markdown block (table, tools line, preview hint) for one document language. */
 export function moduleBlock(data: ModuleData, l: DocLang): string {
   const w = WORDS[l];
-  const status = (x: { status: Status; platforms?: PlatformKey }) => {
+  const status = (x: { status: Status; fresh?: boolean; platforms?: PlatformKey }) => {
     const parts: string[] = [
-      x.status === 'default' ? w.on : x.status === 'preview' ? w.preview : w.optional,
+      x.status === 'default'
+        ? w.on
+        : x.status === 'preview'
+          ? w.preview
+          : x.fresh
+            ? w.fresh
+            : w.optional,
     ];
     if (x.platforms) parts.push(w.only(w[x.platforms]));
     return parts.join(', ');
@@ -139,9 +156,18 @@ export function moduleBlock(data: ModuleData, l: DocLang): string {
   const tools = data.tools
     .map((x) => (x.status === 'preview' ? `${x.name[l]} (${w.preview})` : x.name[l]))
     .join(' · ');
-  return [rows.join('\n'), '', `**${w.tools}:** ${tools}. ${w.toolsHint}`, '', w.previewHint].join(
-    '\n',
-  );
+  // Only said where a row uses the words (a preview module of the set is "preview" first).
+  const freshHint = data.modules.some((m) => m.status === 'optional' && m.fresh)
+    ? [w.freshHint, '']
+    : [];
+  return [
+    rows.join('\n'),
+    '',
+    ...freshHint,
+    `**${w.tools}:** ${tools}. ${w.toolsHint}`,
+    '',
+    w.previewHint,
+  ].join('\n');
 }
 
 /** `text` with what lies between the markers replaced; `undefined` when the file has no markers. */

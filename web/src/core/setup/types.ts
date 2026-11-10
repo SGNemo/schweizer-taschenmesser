@@ -10,7 +10,10 @@ import type { PlatformKind } from '@/core/platform/types';
 export const SETUP_VERSION = 1;
 
 export interface SetupCtx {
-  /** Enabled state per module id (explicit row, else `defaultEnabled`). */
+  /**
+   * Enabled state per module id, as `loadModuleStates` resolves it: explicit row, else the default set of a fresh
+   * installation (device-local, `core/modules/defaults`), else `defaultEnabled`.
+   */
   modules: Readonly<Record<string, boolean>>;
   platform: PlatformKind;
   isNative: boolean;

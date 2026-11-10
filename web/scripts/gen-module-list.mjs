@@ -6,7 +6,7 @@
  * catalogs through Vite's SSR loader, so names and descriptions are the ones the app shows, then
  * writes
  *   - `site/src/catalog/modules.json`   (the active languages, German and English, plus icon, hue, head and widget variant
- *     from `manifest.identity`; the website reads it),
+ *     from `manifest.identity`; the website reads it; `fresh` marks the default set of a fresh installation),
  *   - the block between `<!-- modules:start -->` and `<!-- modules:end -->` in README.md,
  *     README.de.md, docs/user/modules.md and docs/user/modules.de.md (English and German).
  *
@@ -50,6 +50,9 @@ try {
   const lang = await vite.ssrLoadModule('/src/core/i18n/lang.ts');
   await vite.ssrLoadModule('/src/core/i18n/catalogs.ts');
   const { allManifests } = await vite.ssrLoadModule('/src/core/modules/registry.ts');
+  // The default set of a fresh installation: on there although `defaultEnabled` is false (core/modules/defaults).
+  const { currentDefaultSet } = await vite.ssrLoadModule('/src/core/modules/defaults.ts');
+  const freshSet = new Set(currentDefaultSet());
   const { allTools } = await vite.ssrLoadModule('/src/core/tools/registry.ts');
   const { AREAS } = await vite.ssrLoadModule('/src/core/modules/types.ts');
   const { TOOL_CATEGORIES } = await vite.ssrLoadModule('/src/core/tools/types.ts');
@@ -67,6 +70,7 @@ try {
       id: m.id,
       area: m.area,
       status: status(m),
+      fresh: !m.defaultEnabled && freshSet.has(m.id),
       platforms: platformKey(m.platforms),
       // Identity v3 (docs/design/MODULE-IDENTITY.md): the website draws colour, head and widget shape from these.
       icon: m.icon,

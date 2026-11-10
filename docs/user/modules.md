@@ -22,8 +22,8 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | optional |
-| **Household** | Lists | Shopping, packing lists and checklists | optional |
+|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+| **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
@@ -36,7 +36,9 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
 | **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | optional, Windows app only |
+|  | Downloads | Downloads files | on for new installations, Windows app only |
+
+“On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 

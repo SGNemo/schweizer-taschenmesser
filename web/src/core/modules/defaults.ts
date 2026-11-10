@@ -27,6 +27,9 @@ const SETS: Readonly<Record<number, readonly string[]>> = {
   4: ['lists', 'budgets', 'downloads'],
 };
 
+/** The modules a fresh installation gets today (for lists outside the app: README, user docs, website catalog). */
+export const currentDefaultSet = (): readonly string[] => SETS[CURRENT_DEFAULTS_VERSION] ?? [];
+
 export interface DefaultsOverlay {
   /** Modules that count as on where no row says otherwise. */
   on: ReadonlySet<string>;
