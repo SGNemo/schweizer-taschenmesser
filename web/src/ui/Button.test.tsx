@@ -96,7 +96,11 @@ describe('disabled state (AE1)', () => {
   // "locked". The state is its own look now: neutral surface, quiet but readable text, no accent, no danger.
   it('is a neutral surface with quiet text, one rule for every variant', () => {
     const disabled = body('.btn:disabled');
-    expect(disabled).toContain('background: var(--surface-2);');
+    expect(disabled).toContain('background: var(--surface-sunken);');
+    // A quiet edge keeps the outline of a button: the control frame, weakened, never the accent.
+    expect(disabled).toMatch(
+      /border-color: color-mix\(in srgb, var\(--border-strong\) \d+%, transparent\);/,
+    );
     expect(disabled).toContain('color: var(--text-3);');
     expect(disabled).toContain('cursor: not-allowed;');
     expect(disabled).not.toMatch(/--accent|--danger|opacity/);
@@ -115,6 +119,23 @@ describe('disabled state (AE1)', () => {
     const quiet = body('.ghost:disabled,\n.quietDanger:disabled');
     expect(quiet).toContain('background: transparent;');
     expect(quiet).not.toMatch(/(^|\s)color:|--accent|--danger|opacity/);
+  });
+
+  it('a control locked by attribute (`data-disabled`, the file picker) is not faded either, in any folder of ui/', () => {
+    const offenders: string[] = [];
+    const files = (readdirSync(uiDir, { recursive: true }) as string[])
+      .map((f) => f.split('\\').join('/'))
+      .filter((f) => f.endsWith('.module.css'));
+    for (const file of files)
+      for (const [selector, rules] of ruleBlocks(readFileSync(join(uiDir, file), 'utf8'))) {
+        const locked = selector
+          .split(',')
+          .some((sel) =>
+            /:disabled|\[disabled|\[data-disabled/.test(sel.replace(/:not\([^)]*\)/g, '')),
+          );
+        if (locked && /(^|[\s;])opacity\s*:/.test(rules)) offenders.push(`${file}: ${selector}`);
+      }
+    expect(offenders).toEqual([]);
   });
 
   it('no shared component fades or colours a :disabled control', () => {

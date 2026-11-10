@@ -55,8 +55,16 @@ test.describe('Dev-Preview test data', () => {
     await expect(page.locator('main h1')).toBeVisible();
     for (const id of ['todos:next', 'todos:open', 'finance:balance', 'invoices:due'])
       await expect(page.getByTestId(`widget-${id}`)).toBeVisible();
-    // No widget falls back to its empty state.
-    await expect(page.locator('[data-testid^="widget-"] [class*="emptyTitle"]')).toHaveCount(0);
+    // The widgets load after the page. Until then none of them shows an empty state, so a check at this moment
+    // sees "no empty widget" whatever the data is: wait until no widget shows its skeleton any more.
+    const widgets = page.locator('[data-testid^="widget-"]');
+    await expect(widgets.locator('[class*="skeleton"]')).toHaveCount(0);
+    // No widget falls back to its empty state, except the two modules without test data (`seed.none:
+    // 'live-data'`): the weather needs a place, music an account.
+    const empty = await widgets
+      .filter({ has: page.locator('[class*="emptyTitle"]') })
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')).sort());
+    expect(empty).toEqual(['widget-music:player', 'widget-weather:today']);
 
     for (const id of MODULES) {
       await page.goto(`/${id}`);

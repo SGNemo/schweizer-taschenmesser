@@ -18,10 +18,19 @@ type LazyComponent = () => Promise<{ default: ComponentType }>;
 /**
  * Preferred page width of a route (see `layout/PageContainer`): `narrow` ≈ 720 px (forms),
  * `content` ≈ 1120 px (default, single-column lists), `wide` ≈ 1600 px (calendar, dashboards,
- * card grids), `full` uses the whole area.
+ * card grids), `full` uses the whole area. Identity 4.0 adds two layouts that say what the page is, not only how
+ * wide: `reading` = one column at a reading measure (56–64 rem: lists you read from top to bottom) and `split` =
+ * master–detail (the list at the page width, the detail in the panel of `SplitView`, DESIGN-SPEC § 2).
  */
-export type PageLayout = 'narrow' | 'content' | 'wide' | 'full';
-export const PAGE_LAYOUTS: readonly PageLayout[] = ['narrow', 'content', 'wide', 'full'];
+export type PageLayout = 'narrow' | 'content' | 'reading' | 'split' | 'wide' | 'full';
+export const PAGE_LAYOUTS: readonly PageLayout[] = [
+  'narrow',
+  'content',
+  'reading',
+  'split',
+  'wide',
+  'full',
+];
 
 /**
  * Navigation area of a module (sidebar groups, bottom navigation, area page tabs). Areas are

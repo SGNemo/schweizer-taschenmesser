@@ -11,9 +11,9 @@ import path from 'node:path';
 const base = process.env.SITE_PREVIEW_URL || 'http://localhost:4321';
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'out');
 await mkdir(out, { recursive: true });
-const widths = (process.env.SITE_WIDTHS || '360,768,1280,1920').split(',').map(Number);
+const widths = (process.env.SITE_WIDTHS || '360,390,768,1280,1440').split(',').map(Number);
 const pages = (process.env.SITE_PAGES || '/,/en,/impressum').split(',');
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium' });
 for (const p of pages) {
   for (const width of widths) {
     for (const scheme of ['dark', 'light']) {

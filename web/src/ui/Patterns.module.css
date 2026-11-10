@@ -52,7 +52,8 @@
   /* On the 4-px grid (U28). */
   padding: var(--space-1);
   border-radius: var(--radius-xl);
-  background: var(--surface-2);
+  /* A recess with the chosen option raised out of it: tone steps, no shadow (Identity 4.0). */
+  background: var(--surface-sunken);
 }
 /* Phone: one row that scrolls sideways; the right edge fades out. */
 @media (max-width: 899px) {
@@ -92,9 +93,8 @@
   color: var(--text);
 }
 .segment button[aria-pressed='true'] {
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--accent);
-  box-shadow: var(--shadow-1);
 }
 .split {
   display: flex;
@@ -143,16 +143,11 @@
 .item {
   min-width: 0;
 }
-/* List layout: one grouped surface, rows divided by hairlines. */
+/* List layout: the rows lie on a `ListSurface` (tone step, hairlines between the rows: ui/ListSurface). The
+   surface's padding is restated here because `.list` above resets it and the two stylesheets have no fixed order. */
 .rows {
   gap: 0;
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-}
-.rows > .item + .item {
-  border-top: 1px solid var(--border);
 }
 .rows > .item {
   border-radius: var(--radius-sm);
@@ -169,8 +164,7 @@
 .grid > .item {
   padding: var(--space-4);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--surface-raised);
 }
 .grid > .selected {
   background: var(--accent-soft);
@@ -425,7 +419,7 @@ button.chip[aria-pressed='true'] {
 }
 .splitView {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(22rem, 30%, 30rem);
+  grid-template-columns: minmax(0, 1fr) var(--split-detail);
   gap: var(--space-5);
   align-items: stretch;
   flex: 1 0 auto;

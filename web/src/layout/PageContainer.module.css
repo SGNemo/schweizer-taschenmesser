@@ -21,6 +21,14 @@
 .content {
   max-width: var(--page-content);
 }
+/* One column at a reading measure: 56 rem, up to 64 rem on a wide window. */
+.reading {
+  max-width: var(--page-reading);
+}
+/* Master–detail: the list takes the page width, the detail lies in the panel of `SplitView` (`--split-detail`). */
+.split {
+  max-width: var(--page-wide);
+}
 .wide {
   max-width: var(--page-wide);
 }

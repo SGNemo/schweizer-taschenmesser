@@ -11,7 +11,8 @@ export interface ModuleSource {
 }
 
 const PLATFORMS = ['web', 'desktop', 'android'];
-const LAYOUTS = ['narrow', 'content', 'wide', 'full'];
+/** Keep in step with `PAGE_LAYOUTS` in `src/core/modules/types.ts` (pinned by `src/core/modules/layouts.test.ts`). */
+export const LAYOUTS = ['narrow', 'content', 'reading', 'split', 'wide', 'full'];
 /** Keep in step with the lists in `src/core/modules/types.ts` (pinned by the registry test). */
 export const HUES = [
   'lime',
