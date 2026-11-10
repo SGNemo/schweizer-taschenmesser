@@ -11,10 +11,12 @@
 //!   first, in a fixed order: take `Remote::ticket()`, show the dialog, call the setter with the
 //!   ticket. The page cannot answer that dialog, and the crate refuses a widening while a
 //!   mouse/keyboard session is open or was opened since the ticket,
-//! * keeps the tray telling the truth from Rust state while a device controls the PC.
+//! * keeps the tray telling the truth from Rust state while a device controls the PC, and shows
+//!   the quiet notice when a mouse/keyboard session begins (`remote_notice.rs`).
 //!
 //! Nothing here logs. No command takes an input action; the only way in is the hub's input session.
 
+use crate::remote_notice::{self, Notices};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
 use ::lan_sync::input::wire::{Button, Level, Media, PcState, VOLUME_UNKNOWN};
@@ -157,6 +159,8 @@ pub struct RemoteHost {
     /// reads switch and grants from disk again; a narrowing whose write failed would come back
     /// without anyone being asked. It is applied again on every start instead.
     narrowed: Mutex<Narrowed>,
+    /// Whom the notice of a mouse/keyboard session was shown for, and when. Memory only.
+    notices: Mutex<Notices>,
 }
 
 #[derive(Default)]
@@ -249,20 +253,25 @@ fn invisible(c: char) -> bool {
 fn quote(c: char) -> bool {
     matches!(
         c,
-        '"' | '“'
-            | '”'
-            | '„'
-            | '‟'
-            | '«'
-            | '»'
-            | '‹'
-            | '›'
-            | '‘'
-            | '’'
-            | '‚'
-            | '‛'
-            | '`'
-            | '´'
+        '"' | '\u{FF02}' | '\u{301D}'
+            ..='\u{301F}'
+                | '\u{275D}'
+                | '\u{275E}'
+                | '\u{2E42}'
+                | '“'
+                | '”'
+                | '„'
+                | '‟'
+                | '«'
+                | '»'
+                | '‹'
+                | '›'
+                | '‘'
+                | '’'
+                | '‚'
+                | '‛'
+                | '`'
+                | '´'
     )
 }
 
@@ -315,6 +324,11 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     };
     // what was taken away earlier in this run holds for the freshly loaded controls too
     host.narrowed(|n| n.apply(&remote));
+    // a new hub counts its mouse/keyboard sessions from zero; whom a notice was shown for is kept
+    host.notices
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .reset();
     let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
         remote,
@@ -337,6 +351,25 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                         })
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
+                    || {
+                        let (count, device) = remote.full_opened();
+                        let due = app
+                            .state::<RemoteHost>()
+                            .notices
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .due(
+                                count,
+                                device.map(|k| *k.as_bytes()),
+                                remote_notice::since_start(),
+                            );
+                        if let (true, Some(key)) = (due, device) {
+                            let lang = crate::capture::native_lang(&app);
+                            let name = trust.find_by_key(&key).map(|d| d.name).unwrap_or_default();
+                            let named = !plain(&name).is_empty();
+                            remote_notice::show(&app, lang, &shown_name(lang, &name, &key), named);
+                        }
+                    },
                 )
             })
             .ok()
@@ -352,9 +385,11 @@ fn watch(
     rx: mpsc::Receiver<Signal>,
     controller: impl Fn() -> Option<String>,
     mut write: impl FnMut(Option<String>),
+    mut each_look: impl FnMut(),
 ) {
     let mut shown: Option<String> = None;
     loop {
+        each_look();
         let now = controller();
         if now != shown {
             write(now.clone());
@@ -968,6 +1003,8 @@ mod tests {
             assert!(!spoof.contains(c), "{spoof}");
         }
         assert_eq!(plain("\u{202E}\u{200B}"), "");
+        // look-alikes of a quotation mark close nothing either
+        assert_eq!(plain("A\u{FF02}B\u{301E}C\u{275E}D\u{2E42}"), "A'B'C'D'");
     }
 
     #[test]
@@ -1100,14 +1137,18 @@ mod tests {
     fn the_tray_thread_writes_only_changes_and_clears_when_the_hub_stops() {
         let who = Arc::new(Mutex::new(None::<String>));
         let written = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+        let looks = Arc::new(AtomicUsize::new(0));
         let (tx, rx) = mpsc::channel::<Signal>();
         let thread = {
-            let (who, written) = (who.clone(), written.clone());
+            let (who, written, looks) = (who.clone(), written.clone(), looks.clone());
             std::thread::spawn(move || {
                 watch(
                     rx,
                     || who.lock().unwrap().clone(),
                     |c| written.lock().unwrap().push(c),
+                    move || {
+                        looks.fetch_add(1, Ordering::SeqCst);
+                    },
                 )
             })
         };
@@ -1129,6 +1170,8 @@ mod tests {
         // the hub stops while it is shown: cleared
         tx.send(Signal::Stop).unwrap();
         thread.join().unwrap();
+        // every look also looks for a new mouse/keyboard session: the first and one per signal
+        assert!(looks.load(Ordering::SeqCst) >= 5);
         assert_eq!(
             *written.lock().unwrap(),
             vec![Some("Pixel".to_owned()), None]
@@ -1137,7 +1180,7 @@ mod tests {
         let (tx, rx) = mpsc::channel::<Signal>();
         drop(tx);
         let mut writes = 0;
-        watch(rx, || None, |_| writes += 1);
+        watch(rx, || None, |_| writes += 1, || {});
         assert_eq!(writes, 0);
     }
 

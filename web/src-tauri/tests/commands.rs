@@ -413,6 +413,28 @@ fn no_tauri_command_simulates_input() {
     }
 }
 
+/// The notice of a mouse/keyboard session comes from Rust alone: one place shows it (the tray
+/// thread), no command and no event to the page is involved, and no sound is set (a Windows
+/// toast without one is silent).
+#[test]
+fn the_full_session_notice_is_shown_from_rust_only() {
+    let commands = remote_commands_source();
+    for forbidden in ["remote_notice", "Notices", "full_opened"] {
+        assert!(
+            !commands.contains(forbidden),
+            "a remote command mentions {forbidden}"
+        );
+    }
+    let remote = source("remote.rs");
+    let code = &remote[..remote.find("#[cfg(test)]").unwrap()];
+    assert_eq!(code.matches("remote_notice::show(").count(), 1);
+    let notice = source("remote_notice.rs");
+    let code = &notice[..notice.find("#[cfg(test)]").unwrap()];
+    for forbidden in ["emit(", "tauri::command", "std::fs", "File::", ".sound("] {
+        assert!(!code.contains(forbidden), "remote_notice.rs: {forbidden}");
+    }
+}
+
 /// Every widening is asked at the PC, in a fixed order: ticket, native dialog, setter with that
 /// ticket. A setter without a ticket is only ever a narrowing (the crate refuses anything else).
 #[test]
