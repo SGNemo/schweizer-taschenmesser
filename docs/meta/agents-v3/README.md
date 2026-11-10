@@ -1,6 +1,6 @@
 # Agent team v3.1 – Routing & Guardrails (2026-11-08)
 
-Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; [../AGENTS.md](../AGENTS.md) describes the roster; the lead delegates by the table in its own prompt (`nemo-lead.json`), which wins if the two differ. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
+Decided 2026-11-10 ([../../decisions/meta-agents.md](../../decisions/meta-agents.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; [../AGENTS.md](../AGENTS.md) describes the roster; the lead delegates by the table in its own prompt (`nemo-lead.json`), which wins if the two differ. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
 
 ## Changes v3 → v3.1
 
@@ -79,7 +79,7 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 
 | Step | State |
 | --- | --- |
-| Decision for v3.1, roster in `docs/meta/AGENTS.md`, `docs/meta/agents-v2/` deleted | done ([../../decisions/meta.md](../../decisions/meta.md), 2026-11-10) |
+| Decision for v3.1, roster in `docs/meta/AGENTS.md`, `docs/meta/agents-v2/` deleted | done ([../../decisions/meta-agents.md](../../decisions/meta-agents.md), 2026-11-10) |
 | `ant apply` of the seven definitions and `--prune` of the 16 v3 agents ([SETUP.md](SETUP.md) §2a) | **open, Sven's step.** `claude-lock.json` (state 2026-11-10) lists six of the seven (`nemo-builder`, `nemo-ops` version 1; `nemo-docs`, `nemo-lead`, `nemo-merge`, `nemo-reviewer` version 2), no `nemo-auditor`, and still the 16 v3 agents. Whether the applied versions equal the files here cannot be seen from the repo: `ant apply --dry-run` shows it. Until then a running agent may carry an older prompt; `SHARED.md` is read live from `develop` either way. |
-| First real run of `nemo-merge` rule 7 (stimulus ratchet) | open, deferred to December 2026 ([../../decisions/meta.md](../../decisions/meta.md)) |
+| First real run of `nemo-merge` rule 7 (stimulus ratchet) | open, deferred to December 2026 ([../../decisions/meta-ci-docs.md](../../decisions/meta-ci-docs.md)) |
 | Folder rename to `docs/meta/agents/` | **dropped** (2026-11-10). The path is in every applied prompt (`cat …/docs/meta/agents-v3/SHARED.md`), is pinned by `validate.mjs` and is the key of every entry in `claude-lock.json`; a rename would break running agents until the next `ant apply` and buys nothing. "v3" in the path is a folder name, not the version: the version is the title of this file. |

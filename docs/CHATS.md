@@ -17,7 +17,6 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | --- | --- | --- |
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
-| [#553](https://github.com/SGNemo/schweizer-taschenmesser/pull/553) `chore/remove-scribble-folder` (Draft) | entfernt den alten Ordner `scribble/` (Notizen liegen im Notiz-Repo) | fertig machen lassen oder schließen; bis dahin liest `chats:status` ohne Klon des Notiz-Repos das alte Board |
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
 | [#606](https://github.com/SGNemo/schweizer-taschenmesser/pull/606) Dependabot | Dev-Abhängigkeiten `web/` | mergen, wenn grün |
 
@@ -40,7 +39,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 - `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
 - `nemo-merge` aus `meta/agents-v3/nemo-merge.json` neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
-- Agenten v3.1 (entschieden, `decisions/meta.md`), offen: dein `ant apply` der sieben Definitionen und `--prune` der 16 alten, danach `claude-lock.json` committen ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over state“, [SETUP](meta/agents-v3/SETUP.md) §2a). Der Ordner wird nicht umbenannt.
+- Agenten v3.1 (entschieden, `decisions/meta-agents.md`), offen: dein `ant apply` der sieben Definitionen und `--prune` der 16 alten, danach `claude-lock.json` committen ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over state“, [SETUP](meta/agents-v3/SETUP.md) §2a). Der Ordner wird nicht umbenannt.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
 - Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
