@@ -12,7 +12,7 @@ Thanks for helping with Nemo. This is the short version of the rules; the long o
 ## Conventions
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat(scope):`, `fix:`, `docs:`); release notes are generated from them.
 - **Language:** code, comments, commits and docs in English. User docs and the README also have a German translation (`*.de.md`, `README.de.md`); change both together, `npm run check:readme` (in `web/`) compares them.
-- **UI texts:** never hard-code them in components. German source in `web/src/strings.ts`, translations in `web/src/i18n/locales/<lang>/` (English, Spanish, French, Brazilian Portuguese) with the terms of [docs/i18n/GLOSSARY.md](docs/i18n/GLOSSARY.md); `npm run check:i18n` (in `web/`) checks them. Recipe: [docs/howto/i18n.md](docs/howto/i18n.md). Translation fixes are welcome, see [docs/i18n/README.md](docs/i18n/README.md).
+- **UI texts:** never hard-code them in components. German source in `web/src/strings.ts`, the English catalog in `web/src/i18n/locales/en/` (German and English are the app languages; es/fr/pt-BR are frozen, [docs/i18n/FROZEN.md](docs/i18n/FROZEN.md)) with the terms of [docs/i18n/GLOSSARY.md](docs/i18n/GLOSSARY.md); `npm run check:i18n` (in `web/`) checks them. Recipe: [docs/howto/i18n.md](docs/howto/i18n.md). Translation fixes are welcome, see [docs/i18n/README.md](docs/i18n/README.md).
 - **Design:** tokens and shared components only (`web/src/ui`), see [`docs/howto/design-rules.md`](docs/howto/design-rules.md). No hex colours or one-off radii in module CSS.
 - **Never change** internal identifiers (bundle id, package names, storage keys, backup format ids), weaken the release security steps, or commit secrets. `web/src/brand-ids.test.ts` pins the identifiers.
 - **New module or tool:** `docs/HOW-TO.md` has step-by-step recipes; `npm run gen:module -- <id> "<Name>"` scaffolds a module.
@@ -22,7 +22,7 @@ In `web/` run `npm run check` (format, lint, typecheck) and `npm test`. If you t
 
 ## Translations
 - **Docs:** English is the source. To fix or add a German translation, edit the matching `*.de.md` file and keep headings and links in step with the English file.
-- **App interface:** the German source is `web/src/strings.ts`, the translations are `web/src/i18n/locales/<lang>/` (`en`, `es`, `fr`, `pt-BR`). To fix a wording, edit the text in the matching file (same key, terms from [docs/i18n/GLOSSARY.md](docs/i18n/GLOSSARY.md)), run `npm run check:i18n` in `web/` and open a PR. Or report it as an issue ("Translation" template): where you saw the text, what it says and what it should say.
+- **App interface:** the German source is `web/src/strings.ts`, the English catalog is `web/src/i18n/locales/en/` (`es`, `fr`, `pt-BR` are frozen and not updated, [docs/i18n/FROZEN.md](docs/i18n/FROZEN.md)). To fix a wording, edit the text in the matching file (same key, terms from [docs/i18n/GLOSSARY.md](docs/i18n/GLOSSARY.md)), run `npm run check:i18n` in `web/` and open a PR. Or report it as an issue ("Translation" template): where you saw the text, what it says and what it should say.
 
 ## Bugs, ideas, security
 Use the issue templates. Security problems go to [`SECURITY.md`](SECURITY.md), not to a public issue. Everyone taking part follows the [Code of conduct](CODE_OF_CONDUCT.md).

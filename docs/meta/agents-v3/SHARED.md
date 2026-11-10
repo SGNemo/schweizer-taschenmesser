@@ -49,7 +49,7 @@ Read once at the start of every thread: `cat /workspace/schweizer-taschenmesser/
 - `cargo fmt` **inside each touched crate** under `web/src-tauri/crates/*` and `plugins/*`; `cargo test` inside a path crate's directory when it has dev-dependencies; crates with bundled C stay out of the msvc `cargo check` list in `ci.yml`.
 - `npm run check:i18n` when `strings.ts` or catalogs changed; only `de` + `en` are active, es/fr/pt-BR frozen (`docs/i18n/FROZEN.md`).
 - Change note in `.changes/` (`npm run change`, German + English, user view) **or** label `no-changelog` (docs/tests/CI only). No note and no label = no merge.
-- Docs budgets: `npm run check:docs`; `docs/CHATS.md` is over budget – only shorten there.
+- Docs budgets: `npm run check:docs`; `docs/CHATS.md` holds open items only (rules on top of the file): delete merged rows, never add history.
 - `docs/CHATS.md` "Läuft gerade" row in the **first** commit, removed in the **last**; hotspots (table in CHATS.md) need a heads-up row before you touch them; lines in root `CLAUDE.md` in their own commit.
 - No secrets, tokens, real user data or private paths anywhere: this repo (public; gitleaks scans all of it), the session folder `/workspace/scribble/` and `SGNemo/nemo-scribble` (private is not a secret store; it has its own gitleaks scan). Security rules may be shortened, never weakened.
 

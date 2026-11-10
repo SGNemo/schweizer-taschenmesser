@@ -1,6 +1,6 @@
 # QA-Konsolidierung – sieben Personas, ein Bild
 
-Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbert, Jonas, Lena, Mia, Priya, Sofía, Tom), getestet auf `develop` @ `4af432d`. Maschinenlesbar: [consolidated.json](consolidated.json). Kein Code geändert.
+Stand 2026-10-29. Quelle: die Persona-Berichte `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbert, Jonas, Lena, Mia, Priya, Sofía, Tom; am 2026-11-10 entfernt, in der Git-Historie – dort stehen auch Fund-Ids wie `J-V` oder `L-V-02`, die Code-Kommentare nennen), getestet auf `develop` @ `4af432d`. Maschinenlesbar: consolidated.json (removed 2026-11-10, in the git history). Kein Code geändert.
 
 **Lesehilfe:** Schwere/Nutzen hoch = 3, mittel = 2, niedrig = 1. Rang = Wert × Zahl der Personas, bei Fehlern +3, wenn eine Persona den Fund als ihren „einen Grund zum Deinstallieren“ nennt. Herkunfts-IDs in Klammern: H Herbert, J Jonas, L Lena, M Mia, P Priya, S Sofía, T Tom (`P-B07` = Priya, Fehler B07). Alles wurde nur im Browser/Viewport getestet, nie auf APK oder Windows-exe: Funde mit „prüfen“ brauchen ein Gerät.
 
@@ -14,7 +14,7 @@ Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbe
 4. **Verpasste Kündigungsfrist und Löschen ohne Rückgängig bei Unterlagen (B08, B09):** Herbert – Vertrauensbruch bei Dingen, die Geld oder Papiere kosten.
 5. **Doppelkästchen in der Einkaufsliste (B01)** und **README/Website „Oberfläche ist Deutsch“ (B15):** das eine bremst die meistgenutzte Handy-Funktion, das andere hält Sofía vom Download ab.
 
-**Sicherheit/Vertrauen, zusammengefasst:** Kein Blocker, kein hoher Fund. Die Kernversprechen hielten im Test (kein Netz ohne Klick im Offline-Build, KI sieht keine Daten, Tresor verschlüsselt, manipulierte *verschlüsselte* Backups werden abgelehnt). Fünf mittlere Funde: Ollama-Probe im Setup (B21), Suchverlauf im Klartext (B23), Klartext-Backup ohne Prüfsumme (B24), Kalender-Abo-Prüfung (B26) und ein Verfügbarkeitsthema im Sync-Server (B33, **vertraulich**, Details nur in [Toms Bericht](tom-sysadmin/REPORT.md) F-05 und direkt an Sven).
+**Sicherheit/Vertrauen, zusammengefasst:** Kein Blocker, kein hoher Fund. Die Kernversprechen hielten im Test (kein Netz ohne Klick im Offline-Build, KI sieht keine Daten, Tresor verschlüsselt, manipulierte *verschlüsselte* Backups werden abgelehnt). Fünf mittlere Funde: Ollama-Probe im Setup (B21), Suchverlauf im Klartext (B23), Klartext-Backup ohne Prüfsumme (B24), Kalender-Abo-Prüfung (B26) und ein Verfügbarkeitsthema im Sync-Server (B33, **vertraulich**, Details nur in Toms Bericht (removed 2026-11-10, in the git history) F-05 und direkt an Sven).
 
 ## 2. Top-20-Fehler
 
@@ -67,11 +67,11 @@ Stand 2026-10-29. Quelle: `docs/qa/<persona>/REPORT.md` + `findings.json` (Herbe
 | B30 | Sync-Anzeige: „0 empfangen“ trotz neuer Daten, Zähler passen nicht zur Erwartung; gesperrtes Gerät zeigt zusätzlich irreführenden „ältere Version“-Satz | Priya, Mia, Tom | niedrig | neu | P6 |
 | B23 | Suchverlauf „Zuletzt benutzt“ liegt im Klartext in localStorage, ist nicht löschbar und übersteht „KI abschalten“ | Tom | mittel | neu | P6 |
 | B24 | Klartext-Backup meldet manipulierte Dateien als „in Ordnung“ (keine Prüfsumme), Sicherheitskopie vor Wiederherstellung ist ein stiller Download | Tom | mittel | neu (verschlüsseltes Backup prüft) | P6 |
-| B26 | Kalender-Abo: „Wird geprüft …“ endet nie; Adressprüfung lässt Ziele zu, die die Fehlermeldung nicht nennt (Details in Toms Bericht F-02) | Tom | mittel | neu | P6 |
+| B26 | Kalender-Abo: „Wird geprüft …“ endet nie; Adressprüfung lässt Ziele zu, die die Fehlermeldung nicht nennt (Details: [features/connection-log.md](../features/connection-log.md); Toms Bericht wurde 2026-11-10 entfernt, Git-Historie) | Tom | mittel | neu | P6 |
 | B27 | Fokus: „3 kleine Schritte“ liefert immer dieselben Platzhalter und speichert sie als Teilaufgaben; neue Runde ersetzt laufende ohne Rückfrage; neue Aufgabe landet in „Haushalt / Ohne Datum“ | Jonas | mittel | neu | P4 |
 | B28 | Kontoauszug-Import verwirft Empfänger/Auftraggeber, keine Konto-/Kategoriewahl in der Vorschau; „Mit KI eintragen“ macht aus zwei Vorgängen einen Eintrag und heißt im Fenster „Befehlspalette“ | Priya | mittel | neu | P4 |
 | B29 | Tresor: Stärke-Label widerspricht Knackzeit; Website-Feld lehnt „service.berlin.de“ ab | Sofía | mittel | neu (Tresor: nur UI-Texte/Validierung, Krypto unberührt) | P3 |
-| B33 | Sync-Server: Verhalten des Anfragelimits bei Fehlversuchen (Verfügbarkeit, kein Datenzugriff). VERTRAULICH – Details nur in Toms Bericht F-05, Sven direkt informiert. | Tom | mittel | verwandt mit L1 im Launch-Review (lokale API) | Sven |
+| B33 | Sync-Server: Verhalten des Anfragelimits bei Fehlversuchen (Verfügbarkeit, kein Datenzugriff). VERTRAULICH – Details nur in Toms Bericht F-05 (2026-11-10 entfernt, Git-Historie), Sven direkt informiert. | Tom | mittel | verwandt mit L1 im Launch-Review (lokale API) | Sven |
 | B31 | Mehrtägiger Nachtdienst zeigt nur den Beginn („21:30“), kein Ende | Lena | niedrig | neu | P4 |
 
 ## 3. Top-20-Verbesserungen

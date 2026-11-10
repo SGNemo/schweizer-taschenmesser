@@ -1,6 +1,6 @@
 # Day and week planning – concept (phase 1 + 2)
 
-Branch `design/plan-concept`, 2026-11-05. Status: **freigegeben (approved)** – the four questions in §9 were answered on 2026-11-05 with the recommended options; decisions in §10 and [`docs/decisions/plan.md`](../../decisions/plan.md), final prompts and the package table in [PACKAGES.md](PACKAGES.md). Prototype of the engine: [`engine-proto.mjs`](engine-proto.mjs) (`node docs/design/plan/engine-proto.mjs`, five scenarios). Rules this concept obeys: root `CLAUDE.md`, [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC §4a](../DESIGN-SPEC.md). Nothing here is code; package 1 may start only after `feat/identity-v3-frame` is merged (hotspot `core/modules/types.ts`). Council rounds 1–3 (2026-11-05) folded in: see the PR description.
+Branch `design/plan-concept`, 2026-11-05. Status: **freigegeben (approved)** – the four questions in §9 were answered on 2026-11-05 with the recommended options; decisions in §10 and [`docs/decisions/plan.md`](../../decisions/plan.md), final prompts and the package table in PACKAGES.md (removed 2026-11-10, in the git history). Prototype of the engine: [`engine-proto.mjs`](engine-proto.mjs) (`node docs/design/plan/engine-proto.mjs`, five scenarios). Rules this concept obeys: root `CLAUDE.md`, [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC §4a](../DESIGN-SPEC.md). Nothing here is code; package 1 may start only after `feat/identity-v3-frame` is merged (hotspot `core/modules/types.ts`). Council rounds 1–3 (2026-11-05) folded in: see the PR description.
 
 ## 0. In one paragraph
 
@@ -231,7 +231,7 @@ Stimulus budget: the planner adds one widget (week load), one page with one fiel
 
 ## 8. Package plan
 
-Five packages, in sequence 1 → 2 → 3 → 4 → 5 (3 and 4 both edit `modules/planner/manifest.ts`); package 1 starts after `feat/identity-v3-frame` is merged. The table (scope, hotspots, skills) and the five prompts, with the decisions of §10 baked in, are in [PACKAGES.md](PACKAGES.md).
+Five packages, in sequence 1 → 2 → 3 → 4 → 5 (3 and 4 both edit `modules/planner/manifest.ts`); package 1 starts after `feat/identity-v3-frame` is merged. The table (scope, hotspots, skills) and the five prompts, with the decisions of §10 baked in, are in PACKAGES.md (removed 2026-11-10, in the git history).
 
 ## 9. Fragen an Sven (Empfehlung zuerst) – answered 2026-11-05, see §10
 
