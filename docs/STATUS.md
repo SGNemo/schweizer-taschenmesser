@@ -38,13 +38,13 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 ## Offen – macht Sven
 
-Was nur du tun kannst, dauerhaft bis zum Launch. Offene PRs, Entscheidungen und kleine Handgriffe stehen in [CHATS.md](CHATS.md) „Wartet auf Sven“. In 15 Minuten machbar: 1–4.
+Was nur du tun kannst, dauerhaft bis zum Launch. Offene PRs, Entscheidungen und kleine Handgriffe stehen in [CHATS.md](CHATS.md) „Wartet auf Sven“. In 15 Minuten machbar: 1–4. Website-Build (`nemo-site`): [howto/cloudflare-checks.md](howto/cloudflare-checks.md).
 
 1. **Repo-Auftritt setzen (kein API-Zugriff durch Sessions):** Beschreibung (Englisch), Website, Topics, Social Preview (`docs/brand/social-preview.png`, jetzt mit englischem Claim) und Sponsor-Button: Texte zum Einfügen in [meta/REPO-SETTINGS.md](meta/REPO-SETTINGS.md).
-2. Kontakt-Adresse in `CODE_OF_CONDUCT.md` eintragen (Platzhalter).
+2. Kontakt-Adresse in [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) eintragen (Platzhalter).
 3. Release `v0.3.1` kurz prüfen: Checkliste R1 in [MANUAL-TESTS.md](MANUAL-TESTS.md) (Download, Start, Version im Über-Dialog).
-4. Fehlerberichte: echte Adresse als `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (mit `.invalid` bleibt „Per Mail melden“ ausgeblendet).
-5. **TODO Rechtliches vor dem Launch** ([Checkliste](legal/LAUNCH-LEGAL-CHECKLIST.md)): Name und Anschrift stehen als Cloudflare-Pages-Variablen `IMPRESSUM_NAME`/`IMPRESSUM_STREET`/`IMPRESSUM_POSTCODE_CITY` (Production seit 04.11.; **auch in Preview setzen**, sonst bleibt `main` rot; nicht im Repo; `cd web && npm run check:legal` prüft den Rest), `[[RECHTSGRUNDLAGE]]` in [DATA-FLOWS](legal/DATA-FLOWS.md) füllen; der Release-Workflow bricht das Veröffentlichen ab, solange welche offen sind. Markenname „Nemo“ prüfen. Cloudflare: [howto/cloudflare-checks.md](howto/cloudflare-checks.md).
+4. Fehlerberichte ([howto/bug-reports.md](howto/bug-reports.md)): echte Adresse als `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (mit `.invalid` bleibt „Per Mail melden“ ausgeblendet).
+5. **TODO Rechtliches vor dem Launch** ([Checkliste](legal/LAUNCH-LEGAL-CHECKLIST.md)): Name und Anschrift stehen als Cloudflare-Pages-Variablen `IMPRESSUM_NAME`/`IMPRESSUM_STREET`/`IMPRESSUM_POSTCODE_CITY` (Production seit 04.11.; **auch in Preview setzen**, sonst bleibt `main` rot; nicht im Repo; `cd web && npm run check:legal` prüft den Rest), `[[RECHTSGRUNDLAGE]]` in [DATA-FLOWS](legal/DATA-FLOWS.md) füllen; der Release-Workflow bricht das Veröffentlichen ab, solange welche offen sind. Markenname „Nemo“ prüfen.
 6. Handtests aus dem Launch-Review (X1 Pipe auf Windows mit zweitem Nutzer, V1 Credential-Manager nach „Alle Daten löschen“, Android-APK-Update): LR1–LR3 in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
 7. [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus).
 8. Update-Test auf echten Geräten (Windows, Android), Einrichtungsassistent E1–E5, Google-Verbindung einrichten: Anleitungen in [MANUAL-TESTS.md](MANUAL-TESTS.md) → „Anleitungen für Sven“.
@@ -53,7 +53,7 @@ Was nur du tun kannst, dauerhaft bis zum Launch. Offene PRs, Entscheidungen und 
 11. Supporter-Modus ([howto/supporter.md](howto/supporter.md)): Ko-fi-Seite und „Code erneut senden“-Seite sind in `supporterLinks.ts` eingetragen; vor dem Release mit einer echten Spende testen (Mail kommt an, Code wird akzeptiert, `/resend`).
 12. Supporter-Modus: Webhook-Dienst deployen: Schritt für Schritt in [services/supporter-webhook/README.md](../services/supporter-webhook/README.md) (Cloudflare-Konto, KV und Queues anlegen, Secrets setzen, Resend mit verifizierter Domain, Webhook-URL und Token bei Ko-fi eintragen, Test-Spende). Vorher prüfen, dass die Feldnamen der echten Ko-fi-„Send test“-Nachricht zu `src/kofi.ts` passen (Schritt 15 der Anleitung).
 13. Supporter-Modus: Steuerliche und rechtliche Klärung (Impressum, Datenschutzhinweis für den Mailversand): Checkliste in [legal/SUPPORTER-NOTES.md](legal/SUPPORTER-NOTES.md). README-Abschnitt „Unterstützen“ erst mit der Zahlungsseite veröffentlichen.
-14. **GitHub-Repo umbenennen (optional):** erst einen Plan mit Übergangs-Release schreiben lassen (ein Update-Endpunkt darf nie kaputtgehen), dann umbenennen; betroffen sind `REPO`, Updater-Endpunkt, `RELEASES_PREFIX`, README-Links und Link-Check.
+14. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
 
 ## Nicht gebaut / bekannte Grenzen
 
@@ -72,7 +72,7 @@ Was nur du tun kannst, dauerhaft bis zum Launch. Offene PRs, Entscheidungen und 
 
 - TypeScript ist auf 6.0.x gepinnt (typescript-eslint unterstützt `<6.1`).
 - Aus PR #2 zurückgestellte Vorschläge: TypeScript 7 / `@types/node` 26, Vitest-`node`-Projekt für reine Logiktests, `windows`-Crate 0.61 → 0.62 (nur per CI prüfbar). `serde_json` bleibt: `tauri::generate_context!` braucht es.
-- Android-Keystore: Der Android-Keystore wurde am 07.10. neu angelegt (altes Passwort verloren): v0.3.1-Installationen lassen sich nicht aktualisieren, vorher Backup in der App, deinstallieren, neu installieren, Backup einspielen.
+- Der Android-Keystore wurde am 07.10. neu angelegt (altes Passwort verloren): v0.3.1-Installationen lassen sich nicht aktualisieren, vorher Backup in der App, deinstallieren, neu installieren, Backup einspielen.
 - Release-Dateinamen: Die Rust-/TS-Allowlists (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`) nennen den Altnamen noch, harmlos, später entfernbar. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 - Vorschlag offen (aus PR #3): ToDo-Board mit Listen als Spalten.
 - Vor dem nächsten Release: Docker-Image des Sync-Servers einmal bauen und starten (Node 26 als Toolchain, [decisions/distribution.md](decisions/distribution.md)).
@@ -80,7 +80,7 @@ Was nur du tun kannst, dauerhaft bis zum Launch. Offene PRs, Entscheidungen und 
 
 ## Modul-Review 2026-10-01
 
-Zielbild B ist umgesetzt (Pakete 1–6 veröffentlicht, Paket 7 Passwort-Check mit optionalem Datenleck-Abgleich in `accounts` gebaut); offen sind nur die Roadmap-Punkte ohne Datum (K3 Anhänge in Sync/Backup, M2 Kalender ziehen/ändern, M3 Budget-Übertrag): [product/MODULE-PLAN.md](product/MODULE-PLAN.md).
+Zielbild B ist umgesetzt (Pakete 1–6 auf `develop` gemergt, Paket 7 Passwort-Check mit optionalem Datenleck-Abgleich in `accounts` gebaut); offen sind die Roadmap-Punkte ohne Datum (K3 Anhänge in Sync/Backup, M2 Kalender ziehen/ändern, M3 Budget-Übertrag, Nachrichten als optionale Erweiterung): [product/MODULE-PLAN.md](product/MODULE-PLAN.md).
 
 ## Nächste sinnvolle Schritte
 
