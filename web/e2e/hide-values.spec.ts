@@ -48,4 +48,40 @@ test.describe('Werte ausblenden', () => {
       page.getByTestId('widget-finance:balance').getByTestId('sensitive-value'),
     ).toBeVisible();
   });
+
+  // Identity 4.0 (package 0b-2): the head's title row carries the module's one figure; a money figure is hidden there
+  // like in the widgets.
+  test('the figure in the head of Finanzen is hidden too, in the text and in the accessibility tree', async ({
+    page,
+  }) => {
+    await ready(page, '/finance?tab=accounts');
+    await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Kontoname').fill('Girokonto');
+    await dialog.getByLabel('Anfangssaldo').fill('1234,56');
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await ready(page, '/finance');
+    const row = page.getByTestId('module-title-row');
+    await expect(row).toContainText(/1\.234,56\s€/);
+    await expect(row.getByTestId('sensitive-value')).toHaveCount(0);
+
+    await ready(page, '/settings/barrierefreiheit');
+    await openMoreFocus(page);
+    await page.getByRole('switch', { name: 'Werte ausblenden' }).click();
+
+    await ready(page, '/finance');
+    await expect(row.getByTestId('sensitive-value')).toBeVisible();
+    await expect(row).not.toContainText(/1\.234,56/);
+    expect(await page.getByTestId('module-frame').ariaSnapshot()).not.toMatch(/1\.234,56/);
+    // The context line stays and names no amount.
+    await expect(row).toContainText('1 Konto');
+    // One tap shows it, until the view is left.
+    await row.getByTestId('sensitive-value').click();
+    await expect(row).toContainText(/1\.234,56\s€/);
+    await ready(page, '/todos');
+    await ready(page, '/finance');
+    await expect(row.getByTestId('sensitive-value')).toBeVisible();
+  });
 });

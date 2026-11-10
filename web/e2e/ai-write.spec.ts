@@ -251,10 +251,15 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       .toEqual(['Zahnarzt anrufen']);
   });
 
-  test('"Mit KI eintragen" in a module opens the bar for entries', async ({ page }) => {
+  test('"Mit KI eintragen" in a module opens the bar for entries (the one explicit way: the capture sheet)', async ({
+    page,
+  }) => {
     await page.goto('/invoices');
     await expect(page.locator('main h1')).toBeVisible();
-    await page.getByTestId('ai-write-button').click();
+    // Identity 4.0, rule 4: the head has no write button of its own any more.
+    await expect(page.getByTestId('ai-write-button')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
+    await page.getByTestId('quick-add-ai').click();
     const box = page.getByRole('combobox');
     await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);
     await box.fill('Telekom 39,99 € fällig 20.10.');

@@ -8,7 +8,8 @@ import type { NavTree } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AreaFrame } from './AreaFrame';
-import { BottomNav } from './BottomNav';
+import { usePageActionStore } from '@/core/shell/pageAction';
+import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { Sidebar } from './Sidebar';
 
 const tree: NavTree = {
@@ -146,25 +147,110 @@ describe('sidebar', () => {
 });
 
 describe('bottom navigation', () => {
-  it('has Heute, the first three areas and Mehr', () => {
+  it('has Übersicht, the first two areas around the plus, and Mehr (Identity 4.0)', () => {
     render(
       <MemoryRouter initialEntries={['/finance']}>
         <BottomNav tree={tree} onMore={() => undefined} />
       </MemoryRouter>,
     );
     const nav = screen.getByRole('navigation', { name: t.nav.main });
+    expect(BOTTOM_AREA_SLOTS).toBe(2);
     expect(
       within(nav)
         .getAllByRole('link')
         .map((l) => l.textContent),
     ).toEqual([t.nav.home, 'Planen', 'Geld']);
+    // Five targets in this order: Übersicht · area 1 · plus · area 2 · Mehr.
+    expect(Array.from(nav.children).map((c) => c.textContent)).toEqual([
+      t.nav.home,
+      'Planen',
+      t.nav.create,
+      'Geld',
+      t.nav.more,
+    ]);
     expect(within(nav).getByRole('button', { name: t.nav.more })).toBeVisible();
     expect(within(nav).getByRole('link', { name: 'Geld' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('a third area is not in the bar (it lives under Mehr)', () => {
+    const three: NavTree = {
+      ...tree,
+      areas: [
+        ...tree.areas,
+        { id: 'household', label: 'Haushalt', icon: 'cart', to: '/haushalt', items: [] },
+      ],
+    };
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <BottomNav tree={three} onMore={() => undefined} />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole('navigation', { name: t.nav.main });
+    expect(within(nav).queryByRole('link', { name: 'Haushalt' })).toBeNull();
+  });
+
+  it('the plus has one fixed name per context, and the name contains the visible text (WCAG 2.5.3)', async () => {
+    const user = userEvent.setup();
+    const plusOn = (path: string) => {
+      const view = render(
+        <MemoryRouter initialEntries={[path]}>
+          <BottomNav tree={tree} onMore={() => undefined} />
+        </MemoryRouter>,
+      );
+      const plus = screen.getByTestId('bottom-plus');
+      const out = {
+        visible: plus.textContent ?? '',
+        name: plus.getAttribute('aria-label') ?? '',
+        kind: plus.getAttribute('data-plus'),
+        plus,
+        view,
+      };
+      expect(out.name, path).toContain(out.visible);
+      expect(out.visible, path).not.toBe('');
+      return out;
+    };
+    // Overview: the quick capture.
+    useUiStore.setState({ quickAddOpen: false });
+    const home = plusOn('/');
+    expect(home).toMatchObject({
+      visible: t.nav.create,
+      name: t.nav.plusCapture,
+      kind: 'capture',
+    });
+    await user.click(home.plus);
+    expect(useUiStore.getState().quickAddOpen).toBe(true);
+    useUiStore.setState({ quickAddOpen: false });
+    home.view.unmount();
+    // A module page whose page declared its action: the thing it adds, named "<thing> eintragen".
+    let ran = 0;
+    usePageActionStore.getState().set({ short: 'Buchung', disabled: false, run: () => ran++ });
+    const finance = plusOn('/finance');
+    expect(finance).toMatchObject({ visible: 'Buchung', name: 'Buchung eintragen', kind: 'page' });
+    await user.click(finance.plus);
+    expect(ran).toBe(1);
+    expect(useUiStore.getState().quickAddOpen).toBe(false);
+    finance.view.unmount();
+    // A declared action that cannot run now: the plus is disabled, not a second way into the capture.
+    usePageActionStore.getState().set({ short: 'Buchung', disabled: true, run: () => ran++ });
+    const blocked = plusOn('/finance');
+    expect(blocked.plus).toBeDisabled();
+    blocked.view.unmount();
+    usePageActionStore.getState().set(undefined);
+    // A module page without a declared action: the module's own first quick-add entry.
+    const todos = plusOn('/todos');
+    expect(todos).toMatchObject({
+      visible: t.nav.create,
+      name: t.nav.plusModule(t.todos.meta.quickAdd),
+      kind: 'module',
+    });
+    todos.view.unmount();
+    // The vault's password page offers no quick-add entry: there the plus is the plain quick capture.
+    expect(plusOn('/accounts')).toMatchObject({ name: t.nav.plusCapture, kind: 'capture' });
   });
 });
 
 describe('area frame', () => {
-  it('shows the area name and its modules as tabs', async () => {
+  it('shows the area name in the eyebrow; on the desktop the modules of the area are no row of their own', async () => {
     render(
       <MemoryRouter initialEntries={['/invoices']}>
         <AreaFrame>
@@ -172,13 +258,9 @@ describe('area frame', () => {
         </AreaFrame>
       </MemoryRouter>,
     );
-    const tabs = await screen.findByRole('navigation', { name: t.nav.areaTabs('Geld') });
-    expect(within(tabs).getAllByRole('link').length).toBeGreaterThan(1);
-    expect(within(tabs).getByRole('link', { name: 'Rechnungen' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    expect(screen.getByText('Geld')).toBeVisible();
+    const frame = await screen.findByTestId('module-frame');
+    expect(within(frame).getByTestId('module-eyebrow')).toHaveTextContent('Geld');
+    expect(screen.queryByRole('navigation', { name: t.nav.areaTabs('Geld') })).toBeNull();
   });
 
   it('leaves pages outside the areas untouched', () => {

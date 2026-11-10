@@ -4,8 +4,12 @@ import { ready } from './helpers';
 /** Erstkontakt-Runde, person C (docs/qa/round-5/c/FINDINGS.md): quick capture on a phone. */
 test.use({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
 
+/** Identity 4.0: on the overview the plus of the bottom bar is the quick capture ("Neu", named "Neu eintragen"). */
+const capturePlus = (page: Page) =>
+  page.getByRole('button', { name: 'Neu eintragen', exact: true });
+
 const openSheet = async (page: Page) => {
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).tap();
+  await capturePlus(page).tap();
   return page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
 };
 
@@ -51,7 +55,7 @@ test('C01: saving a reminder asks for notifications once', async ({ page }) => {
 
 test('C06: a toast never covers the „+“ on the phone', async ({ page }) => {
   await ready(page, '/');
-  const plus = page.getByRole('button', { name: 'Schnell hinzufügen' });
+  const plus = capturePlus(page);
   const box = await openSheet(page);
   await box.fill('Ölwechsel');
   await box.press('Enter');
@@ -60,4 +64,20 @@ test('C06: a toast never covers the „+“ on the phone', async ({ page }) => {
   const [t, p] = await Promise.all([toast.boundingBox(), plus.boundingBox()]);
   // The toast ends above the „+“, so the next capture is one tap away.
   expect(t!.y + t!.height).toBeLessThanOrEqual(p!.y);
+});
+
+test("on a module page the plus is the module's action, not the quick capture", async ({
+  page,
+}) => {
+  await ready(page, '/finance');
+  await expect(capturePlus(page)).toHaveCount(0);
+  const plus = page.getByRole('button', { name: 'Buchung eintragen', exact: true });
+  await expect(plus).toHaveText('Buchung');
+  await expect(page.getByTestId('bottom-plus')).toHaveAttribute('data-plus', 'page');
+  // No account yet: the action cannot run, so the plus is disabled instead of opening another sheet.
+  await expect(plus).toBeDisabled();
+  await ready(page, '/calendar');
+  await page.getByRole('button', { name: 'Termin eintragen', exact: true }).tap();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
 });

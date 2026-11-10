@@ -16,7 +16,7 @@ async function save(page: Page) {
 test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', async ({ page }) => {
   await enable(page, 'invoices');
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await input(page).fill('r 89,90 Swisscom 31.10.');
   await expect(page.getByTestId('capture-chips')).toContainText('Rechnungen');
   await input(page).press('Enter');
@@ -30,7 +30,7 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
 test('a note with the "n " prefix lands in the notes without choosing a type', async ({ page }) => {
   await enable(page, 'notes');
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await input(page).fill('n Idee für den Garten');
   await expect(page.getByTestId('capture-chips')).toContainText('Notizen');
   await input(page).press('Enter');

@@ -385,3 +385,103 @@ describe('presets', () => {
     expect(getPreset('ollama')).toMatchObject({ tier: 'local', keyRequired: false });
   });
 });
+
+// Identity 4.0, package 0b-2: the palette and the quick capture are the entry points for adding things.
+it('palette search: the typed text and the local hits make no provider request; only the explicit question does', async () => {
+  const { searchEntries } = await import('./search/fulltext');
+  const ollama = CASES.find((c) => c.preset === 'ollama')!;
+  const { sent, fetchFn } = recording(ollama.answer);
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = fetchFn;
+  try {
+    const { manifests, known } = ctxFor();
+    // The palette's own call for its live hits (`useSearchHits`): it has no provider to hand over.
+    const hits = await searchEntries('Milch', { manifests, database: db }, 5, false);
+    expect(hits.map((row) => row.title)).toContain('Milch kaufen');
+    expect(sent).toHaveLength(0);
+
+    // Control: an option of kind 'ask' runs the assistant, and that request is seen by the same recorder.
+    const e: ProviderEntry = { ...entryFromPreset('ollama'), keySet: true };
+    const provider = createRouter({ members: [{ entry: e, provider: createProviderFor(e, '') }] });
+    await ask(QUESTION, { manifests, known, today: TODAY, provider, database: db });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.body).toContain(QUESTION);
+    // The hits listed before are not part of the question.
+    expect(sent[0]!.body).not.toContain('Milch');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+it('palette wiring: the search field feeds only the local full-text search, and the assistant is submitted only from an option of kind "ask"', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+  const hook = read('../../layout/assistant/useAssistant.ts');
+  const liveHits = hook.slice(hook.indexOf('export function useSearchHits'));
+  expect(liveHits).toMatch(/\bsearchEntries\(/);
+  expect(liveHits).not.toMatch(/\bask\(|Provider|createLocalStage|\bfetch\b/);
+
+  const palette = read('../../layout/CommandPalette.tsx');
+  // No way to the assistant or a provider except the hook's `submit`.
+  expect(palette).not.toMatch(/core\/ai\/assistant'|createRouterProvider|createProviderFor/);
+  expect(palette.match(/\bsubmit\(/g)).toHaveLength(1);
+  expect(palette).toMatch(/if \(o\.kind === 'ask'\) \{[^}]*\bsubmit\(query\.trim\(\)/);
+});
+
+it('quick capture: reading and saving a typed line makes no provider request and does not open the write palette', async () => {
+  const { parseCapture } = await import('@/quickCapture/parser');
+  const { saveCapture, saveCaptures } = await import('@/quickCapture/targets');
+  const { useUiStore } = await import('@/stores/ui');
+  const { sent, fetchFn } = recording(() => ({}));
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = fetchFn;
+  try {
+    useUiStore.setState({ paletteOpen: false, paletteWrite: false, quickAddOpen: true });
+    const states = { todos: true, calendar: true };
+    const at = { now: new Date(2026, 8, 29, 10, 0) };
+    const one = parseCapture('morgen 15 Uhr Zahnarzt Dr. Fuchsbauer', at);
+    const saved = await saveCapture(one.type, one.fields, { states, database: db });
+    const two = ['Dachboden entrümpeln', 'Werkstatt aufräumen'].map((line) => {
+      const parsed = parseCapture(line, at);
+      return { type: parsed.type, fields: parsed.fields };
+    });
+    const batch = await saveCaptures(two, 'Dachboden entrümpeln\nWerkstatt aufräumen', {
+      states,
+      database: db,
+    });
+    expect(['todos', 'calendar']).toContain(saved.moduleId);
+    expect(batch.count).toBe(2);
+    expect(sent).toHaveLength(0);
+    // Closing the sheet after the save (`QuickAdd` → `setQuickAddOpen(false)`) opens nothing else.
+    useUiStore.getState().setQuickAddOpen(false);
+    expect(useUiStore.getState()).toMatchObject({ paletteOpen: false, paletteWrite: false });
+    // The write palette is the one explicit action.
+    useUiStore.getState().openWritePalette();
+    expect(useUiStore.getState()).toMatchObject({ paletteOpen: true, paletteWrite: true });
+  } finally {
+    globalThis.fetch = realFetch;
+    useUiStore.setState({ paletteOpen: false, paletteWrite: false, quickAddOpen: false });
+  }
+});
+
+it('quick capture code imports nothing of the assistant; "Mit KI eintragen" (quick-add-ai) is the only way from the sheet to AI writing', async () => {
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const root = new URL('../../quickCapture/', import.meta.url);
+  const files = readdirSync(root, { recursive: true, encoding: 'utf8' }).filter(
+    (f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f),
+  );
+  expect(files.length).toBeGreaterThan(20);
+  for (const file of files) {
+    const src = readFileSync(new URL(file.replaceAll('\\', '/'), root), 'utf8');
+    // No assistant, prompt or provider code, no request of its own, no way to the write palette.
+    expect(src, file).not.toMatch(/core\/ai\//);
+    expect(src, file).not.toMatch(/\bfetch\(|XMLHttpRequest/);
+    // (a launcher shortcut may open the plain search palette, never the write mode)
+    expect(src, file).not.toMatch(/openWritePalette|paletteWrite/);
+  }
+  const sheet = readFileSync(new URL('../../layout/QuickAdd.tsx', import.meta.url), 'utf8');
+  expect(sheet.match(/\bopenWritePalette\(\)/g)).toHaveLength(1);
+  expect(sheet).toMatch(
+    /data-testid="quick-add-ai"\s+onClick=\{\(\) => \{[^}]*\bopenWritePalette\(\);/,
+  );
+});

@@ -17,7 +17,7 @@ const manifest = {
     { id: 'a', title: 'A', defaultSize: 's', sizes: ALL_WIDGET_SIZES, component: () => import('./widgets/AWidget') },
   ],
   layout: 'wide',
-  identity: { hue: 'teal', widget: 'kennzahl', head: 'kennzahl', signature: 'bankCard' },
+  identity: { hue: 'teal', widget: 'kennzahl', head: 'standard', signature: 'bankCard' },
   platforms: ['desktop'],
   maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
@@ -75,8 +75,10 @@ describe('checkModule', () => {
   it('requires the identity v3 fields (widget, head, signature) from their lists', () => {
     const files = has('widgets/AWidget.tsx', 'seed.ts');
     for (const [from, to, expected] of [
-      ["head: 'kennzahl'", "head: 'banner'", 'identity.head "banner"'],
-      ["head: 'kennzahl'", "head: 'figure'", 'identity.head "figure"'],
+      ["head: 'standard'", "head: 'banner'", 'identity.head "banner"'],
+      ["head: 'standard'", "head: 'figure'", 'identity.head "figure"'],
+      // Identity 4.0: a silhouette of identity v3 is no head variant any more; the stage is one.
+      ["head: 'standard'", "head: 'kennzahl'", 'identity.head "kennzahl"'],
       ["widget: 'kennzahl'", "widget: 'chart'", 'identity.widget "chart"'],
       ["signature: 'bankCard'", "signature: 'spaceship'", 'identity.signature "spaceship"'],
       ["signature: 'bankCard'", "signature: 'bankCard', shape: 'blob'", 'identity.shape "blob"'],
@@ -86,6 +88,13 @@ describe('checkModule', () => {
       expect(
         checkModule({ id: 'x', manifest: good.replace(from, to), fileExists: files }).join(),
       ).toContain(expected);
+    expect(
+      checkModule({
+        id: 'x',
+        manifest: good.replace("head: 'standard'", "head: 'stage'"),
+        fileExists: files,
+      }),
+    ).toEqual(checkModule({ id: 'x', manifest: good, fileExists: files }));
     for (const key of ['head', 'widget']) {
       const missing = good.replace(new RegExp(`, ${key}: '[a-z]+'`), '');
       expect(checkModule({ id: 'x', manifest: missing, fileExists: files }).join()).toContain(

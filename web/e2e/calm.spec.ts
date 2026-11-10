@@ -83,7 +83,7 @@ test.describe('Calm display, capture and finding things again', () => {
     page,
   }) => {
     await ready(page, '/');
-    await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+    await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
     const box = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     await box.fill('Irgendwas mit Oma klären');
     // Enter only means something once the module states are loaded: the target chip shows that.
