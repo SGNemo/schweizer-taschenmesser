@@ -1,6 +1,6 @@
 # Comfort review – 07 Summary (modules)
 
-Closing note for [01-friction](01-friction.md) → [02-plan](02-plan.md) → [03-results](03-results.md). Hand tests: [MANUAL-TESTS](../../MANUAL-TESTS.md) K1–K4.
+Closing note for [01-friction](01-friction.md) → [02-plan](02-plan.md) → [03-results](03-results.md). Hand tests: [MANUAL-TESTS](../../MANUAL-TESTS.md) KO-K1–KO-K4.
 
 | Package | PR | Outcome |
 |---|---|---|

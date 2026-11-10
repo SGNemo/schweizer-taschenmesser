@@ -12,7 +12,7 @@ Spalten: Objekt im Mechanismus · ein Satz Begründung · Empfehlung.
 - [ ] **Google-Drive-Stub** – nur `core/sync/adapters/googleDrive.stub.ts`, ohne UI; nichts, das ein Nutzer sieht. → **nein** (nichts zu markieren)
 - [x] **Textvergleich** – Werkzeug `diff`. Entwickler-Helfer, aus by default, wenige Nutzer. → **preview**
 - [x] **Regex** – Werkzeug `regex`. Wie Textvergleich. → **preview**
-- [x] **Bildschirmfoto** – Werkzeug `screenshot`. Handtest B1 (WebView2 `getDisplayMedia`) offen. → **preview**
+- [x] **Bildschirmfoto** – Werkzeug `screenshot`. Handtest BF-B1 (WebView2 `getDisplayMedia`) offen. → **preview**
 - [ ] **Wetter inkl. Luft/Pollen** – Abschnitt `weather` + Home-Zeile (Core-Block, nicht im Widget-Katalog). An by default und mehrfach überarbeitet; `preview` würde die Wetterzeile für alle verstecken (Default-Änderung). → **stable**; wenn doch: Abschnitt `preview` + kleine Reifegrad-Tabelle für Core-Blöcke in `home/Home.tsx`
 - [x] **Spotify-Verbindung + Player-Widget** – Connector `spotify` + Core-Block `core:nowplaying`. Desktop-OAuth, Premium-Abhängigkeit, Handtests offen; Connectoren haben noch kein `maturity` (additives Feld in `core/connectors/types.ts` + Filter in `ConnectorsSection`, klein). → **preview**
 - [ ] **Zock-Modus** – Karte `GameModeCard` im Abschnitt `notifications`, kein eigener Abschnitt; Handtests Z1–Z5 offen. Eigener Abschnitt wäre ein Umbau. → **nein (jetzt)**, Folgepaket wie bei den Feldern
