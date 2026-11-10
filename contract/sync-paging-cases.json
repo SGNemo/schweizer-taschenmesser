@@ -1,5 +1,5 @@
 {
-  "_comment": "Paging contract of a sync store, derived from what core/sync/engine.ts assumes. level 'store': checked against the store (server/src/store.ts, crates/lan-sync/src/store.rs); level 'handler': checked against the server's HTTP handler (server/test/paging.test.ts) and the hub handler (package 2). 'pushGenerated: n' pushes n distinct ops ({collection todos_task, id g<i>, field title, hlc 0000000001000-<i>-aaaa0001, value i}). 'epoch: same|changed' compares with the epoch seen in the previous step. Errors are abstract names; each transport maps them (server: hlc-drift = 400 hlc-drift, too-many-ops = 400, limit-too-large = 400).",
+  "_comment": "Paging contract of a sync store, derived from what core/sync/engine.ts assumes. level 'store': checked against the store (server/src/store.ts, crates/lan-sync/src/store.rs); level 'handler': checked against the server's HTTP handler (server/test/paging.test.ts) and the hub handler (package 2). 'pushGenerated: n' pushes n distinct ops ({collection todos_task, id g<i>, field title, hlc 0000000001000-<i>-aaaa0001, value i}). 'epoch: same|changed' compares with the epoch seen in the previous step. level 'server': Node server only, the rules around its optional vault ('vault: true' = PUT /v1/vault); the hub is always encrypted and pins its own 'missing-enc' in crates/lan-sync/src/hub/tests.rs. Errors are abstract names; each transport maps them (server: hlc-drift = 400 hlc-drift, missing-enc = 400 missing-enc, not-empty = 409 not-empty, too-many-ops = 400, limit-too-large = 400).",
   "cases": [
     {
       "name": "empty store pulls nothing",
@@ -513,6 +513,119 @@
           },
           "expect": {
             "error": "limit-too-large"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an encrypted store refuses a batch with a plain value as a whole",
+      "level": "server",
+      "steps": [
+        {
+          "vault": true,
+          "expect": {}
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "enc:v1:aXZpdml2aXZpdml2:Y2lwaGVy"
+            },
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "plain"
+            }
+          ],
+          "expect": {
+            "error": "missing-enc"
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r3",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": null
+            }
+          ],
+          "expect": {
+            "error": "missing-enc"
+          }
+        },
+        {
+          "pull": {
+            "since": 0,
+            "limit": 10
+          },
+          "expect": {
+            "ops": [],
+            "cursor": 0,
+            "more": false
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "enc:v1:aXZpdml2aXZpdml2:Y2lwaGVy"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "a store that holds plain values cannot become an encrypted one",
+      "level": "server",
+      "steps": [
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r1",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "A"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 1
+          }
+        },
+        {
+          "vault": true,
+          "expect": {
+            "error": "not-empty"
+          }
+        },
+        {
+          "push": [
+            {
+              "collection": "todos_task",
+              "id": "r2",
+              "field": "title",
+              "hlc": "0000000001000-0000-aaaa0001",
+              "value": "B"
+            }
+          ],
+          "expect": {
+            "accepted": 1,
+            "cursor": 2
           }
         }
       ]
