@@ -27,8 +27,8 @@ export const LOCKUP = { source: 'mark', markHeight: 1.3, gap: 0.24, pill: { padX
 /** Where the pieces appear in the app (CSS px at 16 px root). */
 export const PLACEMENT = {
   sidebarWide: { pill: 36 }, // in the 44 px brand box, 4 px air above and below
-  sidebarRail: { tile: 28 }, // mark only
-  phoneTopBar: { tile: 32 }, // mark only
+  sidebarRail: { tile: 40 }, // the mark on the accent tile (`<Logo tile />`, 2.5rem) in a 44 px link
+  phoneTopBar: { mark: 32 }, // the transparent mark, no tile
 };
 
 /** Safe zones of the 512 canvas: PWA maskable icon (circle, 40 % radius minus a margin) and the Android adaptive icon (66 dp of 108). */

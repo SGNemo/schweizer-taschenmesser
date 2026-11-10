@@ -27,9 +27,9 @@ function widthCh(fmt: Intl.DateTimeFormat): number {
 /**
  * The time next to the Nemo logo (the window often covers the taskbar): quiet secondary text, no seconds, no
  * date. While the Uhr module is on, a click opens it (`/clock`, by route only: no module import); otherwise it is
- * no click target. `wide` sits right of the wordmark in the sidebar head, `rail` under the mark of the
- * folded sidebar as "14" over "07" (hidden by a container query when the rail is too narrow, and for 12-hour
- * locales, whose "PM" does not fit), `bar` next to the logo in the phone top bar.
+ * no click target. `wide` sits right of the wordmark in the sidebar head, `rail` under the tile of the
+ * folded sidebar as one small line "14:07" (12-hour locales show the digits without "PM", which does not fit),
+ * `bar` next to the logo in the phone top bar.
  */
 export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
   const clockModule = useModuleStates()?.['clock'] === true;
@@ -41,11 +41,11 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
   const text = fmt.format(d);
   const iso = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   const label = `${tx.label} ${text}`;
-  const linked = (time: ReactElement): ReactElement =>
+  const linked = (time: ReactElement, compact = false): ReactElement =>
     clockModule ? (
       <Link
         to="/clock"
-        className={styles.link}
+        className={compact ? `${styles.link} ${styles.railLink}` : styles.link}
         aria-label={tx.open(text)}
         data-testid="logo-clock-link"
       >
@@ -58,9 +58,7 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
   const period = parts.find((p) => p.type === 'dayPeriod')?.value;
 
   if (variant === 'rail') {
-    if (period) return null;
-    const part = (type: Intl.DateTimeFormatPartTypes) =>
-      parts.find((p) => p.type === type)?.value ?? '';
+    // One short line under the tile: the digits only ("AM"/"PM" would not fit; the label carries it).
     return linked(
       <time
         className={`${styles.clock} ${styles.rail}`}
@@ -68,10 +66,9 @@ export function LogoClock({ variant }: { variant: 'wide' | 'rail' | 'bar' }) {
         aria-label={label}
         data-testid="logo-clock"
       >
-        <span>{part('hour')}</span>
-        <span className="sr-only">{part('literal') || ':'}</span>
-        <span>{part('minute')}</span>
+        {digits(parts)}
       </time>,
+      true,
     );
   }
   return linked(

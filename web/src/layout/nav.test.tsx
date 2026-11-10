@@ -118,12 +118,19 @@ describe('sidebar', () => {
     );
     expect(screen.getByRole('link', { name: 'Geld' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Planen' })).toHaveAttribute('href', '/planen');
-    // Collapsed: icons only, the name is the tooltip (and the accessible name); no visible label takes width.
+    // Collapsed: icons only. The name is the accessible name, and the tooltip is drawn from it in CSS (also on keyboard
+    // focus), so there is no `title` that would show a second, native tooltip; no visible label takes width.
     for (const name of ['Planen', 'Geld', t.nav.home, t.nav.library, t.nav.settings]) {
       const link = screen.getByRole('link', { name });
-      expect(link).toHaveAttribute('title', name);
+      expect(link).toHaveAttribute('aria-label', name);
+      expect(link).not.toHaveAttribute('title');
       expect(link).toHaveTextContent('');
     }
+    // The brand is the app icon tile, a square that scales with the root font size.
+    const tile = screen.getByRole('link', { name: t.nav.homeAria }).querySelector('svg')!;
+    expect(tile).toHaveAttribute('viewBox', '0 0 512 512');
+    expect(tile).toHaveAttribute('width', '2.5rem');
+    expect(tile).toHaveAttribute('height', '2.5rem');
     await user.click(screen.getByRole('button', { name: t.nav.expandSidebar }));
     expect(useUiStore.getState().sidebar).toBe('wide');
   });

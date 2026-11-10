@@ -44,7 +44,7 @@ test.describe('desktop (1920x1080)', () => {
     expect((await clock.boundingBox())!.width).toBe(width);
   });
 
-  test('a 12-hour format ("02:07 PM") still fits next to the wordmark; the folded rail leaves it out', async ({
+  test('a 12-hour format ("02:07 PM") still fits next to the wordmark; the folded rail shows the digits only', async ({
     page,
   }) => {
     await page.clock.install({ time: new Date('2026-09-29T14:07:10') });
@@ -66,10 +66,15 @@ test.describe('desktop (1920x1080)', () => {
     await page.evaluate(() => localStorage.setItem('tm-sidebar', 'narrow'));
     await page.reload();
     await expect(page.locator('main h1')).toBeVisible();
-    await expect(sidebar.getByTestId('logo-clock')).toHaveCount(0);
+    const folded = sidebar.getByTestId('logo-clock');
+    await expect(folded).toHaveText(/^0?2:07$/);
+    await expect(folded).toHaveAttribute('aria-label', /^Time 0?2:07\sPM$/);
+    const [s, f] = [(await sidebar.boundingBox())!, (await folded.boundingBox())!];
+    expect(f.x).toBeGreaterThanOrEqual(s.x);
+    expect(f.x + f.width).toBeLessThanOrEqual(s.x + s.width);
   });
 
-  test('folded: hours over minutes under the mark, without overflow', async ({ page }) => {
+  test('folded: one line under the tile, without overflow', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-29T14:07:10') });
     await clockOn(page);
     await page.addInitScript(() => localStorage.setItem('tm-sidebar', 'narrow'));
@@ -77,8 +82,19 @@ test.describe('desktop (1920x1080)', () => {
     const sidebar = page.getByTestId('sidebar');
     const clock = sidebar.getByTestId('logo-clock');
     await expect(clock).toBeVisible();
-    await expect(clock.locator('span:not(.sr-only)')).toHaveText(['14', '07']);
+    await expect(clock).toHaveText('14:07');
     const [s, c] = [(await sidebar.boundingBox())!, (await clock.boundingBox())!];
+    // The tile sits on whole pixels inside the rail, the time right under it.
+    const tile = (await sidebar
+      .getByRole('link', { name: /Startseite|Übersicht/ })
+      .first()
+      .locator('svg')
+      .boundingBox())!;
+    expect(tile.width).toBe(tile.height);
+    expect(Number.isInteger(tile.x) && Number.isInteger(tile.y)).toBe(true);
+    expect(tile.x).toBeGreaterThanOrEqual(s.x);
+    expect(tile.x + tile.width).toBeLessThanOrEqual(s.x + s.width);
+    expect(c.y).toBeGreaterThanOrEqual(tile.y + tile.height);
     expect(c.x).toBeGreaterThanOrEqual(s.x);
     expect(c.x + c.width).toBeLessThanOrEqual(s.x + s.width);
     expect(await clock.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);

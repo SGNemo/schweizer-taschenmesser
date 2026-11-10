@@ -1,5 +1,5 @@
 /* Sidebar v3 (identity v3, docs/design/identity-v3/02-CONCEPT.md § 6): brand, a favourites bar, the areas as quiet tinted blocks
-   with their modules, a filled capsule for the active one, the footer; collapsed it is an icon rail with tooltips. The module hue
+   with their modules, a filled capsule for the active one, the footer; collapsed it is an icon rail with tooltips (below). The module hue
    is the icon's colour and the capsule's fill; the text stays --text (AA on every hue, tokens.test.ts). No stars, no edge stripes. */
 .brand {
   display: flex;
@@ -248,13 +248,29 @@
   }
 }
 
-/* Rail: icons only. The name is the tooltip (title) and the accessible name; the active area is a capsule in its colour. */
+/* Rail (collapsed): the brand tile, then quiet grey icons in 44 px tiles. Colour means "you are here": only the active
+   area shows its hue (icon and tile). The name is the accessible name and a tooltip drawn from it. */
+.brandTile {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+}
+.brandTile:hover {
+  background: none;
+}
+.railFirst {
+  margin-bottom: var(--space-2);
+}
 .railLink {
   position: relative;
   display: grid;
   place-items: center;
-  width: 100%;
-  min-height: 3rem;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  margin-inline: auto;
   border: 0;
   border-radius: var(--radius-md);
   background: none;
@@ -262,20 +278,44 @@
   text-decoration: none;
   cursor: pointer;
 }
+.railLink > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.75;
+}
 .railLink:hover {
   background: var(--surface-2);
   color: var(--text);
-}
-li[data-area] .railLink > svg {
-  color: var(--area-color);
 }
 .railLink[aria-current='page'] {
   background: var(--accent-soft);
   color: var(--accent);
 }
 li[data-area] .railLink[aria-current='page'] {
-  background: color-mix(in srgb, var(--area-color) 16%, var(--surface));
+  background: color-mix(in srgb, var(--area-color) 18%, var(--surface));
+  color: var(--area-color);
+}
+.railLink::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: 50%;
+  left: calc(100% + var(--space-3));
+  z-index: var(--z-hint);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
   color: var(--text);
+  font-size: var(--text-meta);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.railLink:hover::after,
+.railLink:focus-visible::after {
+  opacity: 1;
 }
 
 /* A screen that can be touched: the area heads and the favourite pins get the full hit size too (after the compact
