@@ -13,6 +13,7 @@ import {
   Icon,
   IconButton,
   ItemList,
+  PageAction,
   PageHeader,
   patternStyles,
   Progress,
@@ -99,19 +100,22 @@ export default function BudgetsPage() {
         }
       >
         {tab === 'budgets' ? (
-          <Button
-            variant="primary"
+          <PageAction
+            short={t.nav.plusThings.budget}
             disabled={!canAddBudget}
             onClick={() => setBudgetTarget({ draft: true })}
           >
             <Icon name="plus" size={18} />
             {t.budgets.addBudget}
-          </Button>
+          </PageAction>
         ) : (
-          <Button variant="primary" onClick={() => setGoalTarget({ draft: true })}>
+          <PageAction
+            short={t.budgets.meta.quickAdd}
+            onClick={() => setGoalTarget({ draft: true })}
+          >
             <Icon name="plus" size={18} />
             {t.budgets.addGoal}
-          </Button>
+          </PageAction>
         )}
         <StartDataMenu moduleId="budgets" />
       </PageHeader>

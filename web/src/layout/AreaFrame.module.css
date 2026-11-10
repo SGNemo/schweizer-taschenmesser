@@ -1,34 +1,41 @@
-/* Module head ("band"), identity v3.1 (docs/design/MODULE-IDENTITY.md "Head variants"). The surface, pattern, heights and
-   identity hooks come from ui/HeadSurface; this file is the grid: eyebrow and actions on the first row, then the content
-   column (capped at --page-content, aligned to the page) with the title and one row of figure | signature slot | extra.
-   Everything on the band is text in --text or --text-on-tint (tokens.test.ts). */
-.band {
-  /* The frame's variants only change arrangement and typography; the hue is the plate and the sub-navigation's chip.
-     No overflow clipping here: menus opened from the head (the player's device list) reach over the page. */
-}
+/* Module head, Identity 4.0 (docs/design/MODULE-IDENTITY.md "4.0"): one title row in the width of the content and
+   the page's tabs at its lower edge. `standard` is a plain surface that stays at the top while the page scrolls;
+   `stage` (weather, music) puts the same title row above a stage drawn by ui/HeadSurface. Heights are tokens
+   (--head-row, --head-pad): the row has one height whatever is in it, so nothing below it moves when the figure or
+   the actions arrive (U01). Guard: e2e/seed/head-height.seed.spec.ts. */
 .notice {
   margin-bottom: var(--space-3);
 }
 .notice:empty {
   display: none;
 }
-.notice:empty + .band {
+.notice:empty + :is(.head, .stage) {
   margin-top: calc(-1 * var(--frame-bleed-top, 0px));
+}
+
+/* ---- Standard head ---- */
+.head {
+  position: sticky;
+  /* Desktop: the content area scrolls and has a top padding the head bleeds through; a sticky offset counts from the
+     padded edge, so the head sticks at the area's real top edge with the negative of that padding. */
+  top: calc(-1 * var(--frame-bleed-top, 0px));
+  z-index: calc(var(--z-sticky) - 1);
+  flex: none;
+  align-self: stretch;
+  /* Bleeds through the page gutters up to the shell's edges; the hairline below it is the one line of the head. */
+  margin: 0 calc(-1 * var(--frame-bleed-x, 0px)) var(--space-4);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 /* The inner box follows the page container (same width variant, same left edge), so head and page line up. */
 .inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    'eyebrow actions'
-    'column column';
-  align-items: start;
-  gap: var(--space-1) var(--space-5);
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: var(--head-max, none);
-  min-height: var(--head-h);
   margin-inline: auto;
-  padding: var(--space-4) var(--frame-bleed-x, var(--space-5)) var(--space-5);
+  padding: var(--head-pad) var(--frame-bleed-x, var(--space-5)) 0;
 }
 .inner[data-width='narrow'] {
   --head-max: calc(var(--page-narrow) + 2 * var(--frame-bleed-x, var(--space-5)));
@@ -43,80 +50,67 @@
 .inner[data-width='split'] {
   --head-max: calc(var(--page-wide) + 2 * var(--frame-bleed-x, var(--space-5)));
 }
-.band[data-size='compact'] .inner {
-  padding-block: var(--space-3) var(--space-4);
-}
-.eyebrow {
-  grid-area: eyebrow;
-  /* The row is as tall as the 44 px actions: the label and its plate sit on their middle line. */
-  align-self: center;
-}
-.actions {
-  grid-area: actions;
-  align-self: center;
-  /* U01: as tall as its buttons from the first paint (the write button arrives with the AI settings). */
-  min-height: var(--touch);
+
+/* The title row: plate · eyebrow + h1 · figure (pushed to the right) · actions. One line, never wraps. */
+.titleRow {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-/* The content column: 70 rem at most, left-aligned, whatever the page width (identity v3.1, F01). */
-.column {
-  grid-area: column;
+  gap: var(--space-4);
+  height: var(--head-row);
   min-width: 0;
-  max-width: var(--page-content);
+}
+/* The icon plate: the module's hue in the head (tinted plate, icon in the hue; grey in the calm colour modes). */
+.plate {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) 14%, var(--surface-raised));
+  color: var(--module-color, var(--text-3));
+}
+.titleBlock {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.eyebrow {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-3);
 }
 .title {
   min-width: 0;
 }
 .title:empty,
-.target:empty,
-.extra:empty {
+.target:empty {
   display: none;
 }
+/* One h1 style for every module (B8): 28/600 on the desktop, 22/600 on the phone (--text-h1). */
 .title h1,
 .title .titlePlaceholder {
-  margin: var(--space-1) 0 0;
+  margin: 0;
+  overflow: hidden;
   font-size: var(--text-h1);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-/* U01: the fallback's line in the title's place has the heading's box (every variant below styles both alike). */
-.titlePlaceholder {
   font-weight: var(--weight-semibold);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.band[data-type='thin'] .title :is(h1, .titlePlaceholder) {
-  font-weight: var(--weight-light);
-}
-.band[data-type='mono'] .title :is(h1, .titlePlaceholder) {
-  font-family: var(--font-mono);
-  letter-spacing: -0.02em;
-}
-.band[data-type='serif'] .title :is(h1, .titlePlaceholder) {
-  font-family: var(--font-serif);
-}
-/* One row under the title: figure | signature slot | extra; the L slot takes a row of its own. */
-.body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-4) var(--space-6);
-  min-width: 0;
-  margin-top: var(--space-3);
-}
-.body:not(:has(.target:not(:empty), .signature, .extra:not(:empty), .figure > :not(.target))) {
-  display: none;
-}
-/* U01: while the page loads, the row keeps the room it took on the last visit (--head-room, set by the frame), even
-   before anything is in it (the selector outweighs the empty-row rule above). */
-.column > .body[data-hold='true'] {
-  display: flex;
-  min-height: var(--head-room);
-}
+/* The one figure with its context line, at the right of the title (the compact look: ui/identity/HeroFigure). */
 .figure {
   flex: 0 1 auto;
   min-width: 0;
+  margin-left: auto;
+  text-align: right;
 }
 .figure:not(:has(> :not(:empty))) {
   display: none;
@@ -124,39 +118,124 @@
 .figure > .target:not(:empty) + * {
   display: none;
 }
-/* U01: the placeholder of a figure that is still loading takes its room, unseen (first visit of a route). */
+/* U01: the placeholder of a figure that is still loading takes its room, unseen. */
 .figurePending {
   visibility: hidden;
 }
-/* The signature slot (identity v3.1, F02): S = the mark (--slot-s), M = a block of up to --slot-m, L = the whole column.
-   A page that fills the slot claims it before paint (HeroSlot, useLayoutEffect); the target with content also hides a
-   default that is still mounted. */
-.signature {
+.actions {
+  flex: none;
   display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* Without a figure the actions take the right edge. */
+.titleBlock + .actions,
+.figure:not(:has(> :not(:empty))) + .actions {
+  margin-left: auto;
+}
+.actions > .target {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* The views of the page (`PageHeader views`): the head's lower edge. The tabs' own hairline is the head's. */
+.tabs {
+  min-width: 0;
+}
+.tabs:empty {
+  display: none;
+}
+.tabs > nav {
+  border-bottom: 0;
+}
+/* A view switch that is still a `Segmented` (baseline `segmented-views`) keeps a little air above the edge. */
+.tabs > :not(nav) {
+  max-width: 100%;
+  margin-bottom: var(--space-1);
+  /* Like the tabs, it is one row that scrolls sideways when the phone is too narrow for it. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs > :not(nav)::-webkit-scrollbar {
+  display: none;
+}
+/* AE2, variant A: no area pattern behind the title of a standard head (the stage keeps it, ui/HeadSurface). Variant B
+   would be one more layer here: `background-image: var(--area-pattern)` at `opacity: var(--pattern-head)`. */
+
+/* Under a standard head: the page's signature block and strips, in the page (not in the head). */
+.below {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-6);
+  min-width: 0;
+  margin-bottom: var(--space-4);
+}
+.below:not(:has(> .target:not(:empty))) {
+  display: none;
+}
+.below > .target {
+  display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--space-3);
   min-width: 0;
 }
-.signature[data-slot='S'] {
-  flex: 0 1 auto;
+.below > .target[data-slot='extra'] {
+  flex: 1 1 var(--slot-extra);
+  align-items: center;
 }
-.signature[data-slot='S'][data-default='true'] {
-  flex: 0 0 auto;
-  width: var(--slot-s);
+
+/* ---- Stage (weather, music): the title row on the stage's surface, the stage below it; not sticky ---- */
+.stage {
+  /* No overflow clipping: menus opened from the stage (the player's device list) reach over the page. */
+  max-height: none;
 }
-.signature[data-slot='M'] {
-  flex: 0 1 var(--slot-m);
-  max-width: var(--slot-m);
+.stage .eyebrow {
+  /* On a tint only --text or --text-on-tint (tokens.test.ts). */
+  color: var(--text-on-tint);
 }
-.signature[data-slot='L'] {
-  /* The frame's own L default (the calendar leaf) takes the whole column on its own row; a page's block flows beside
-     the figure and may grow to the column (the music cover and the timer strip keep their place). */
+.stage .plate {
+  background: var(--module-color);
+  color: var(--surface);
+}
+:global(:root[data-theme='dark']) .stage .plate {
+  color: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .stage .plate {
+    color: var(--bg);
+  }
+}
+.stage .figure {
+  margin-left: 0;
+  text-align: left;
+}
+.stageBody {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-6);
+  min-width: 0;
+  padding-block: var(--space-2) var(--space-4);
+}
+.stageBody:not(:has(.target:not(:empty), .signature, .figure > :not(.target))) {
+  display: none;
+}
+/* U01: while the page loads, the stage keeps the room it took on the last visit (--head-room, set by the frame). */
+.stageBody[data-hold='true'] {
+  display: flex;
+  min-height: var(--head-room);
+}
+.signature {
   flex: 1 1 var(--slot-l-min);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
   max-width: 100%;
-}
-.signature[data-slot='L'][data-default='true'] {
-  flex-basis: 100%;
-  width: 100%;
 }
 .signature > .target:not(:empty) {
   flex: 1 1 auto;
@@ -176,56 +255,29 @@
   gap: var(--space-3);
   min-width: 0;
 }
-
-/* ---- Variants: arrangement and typography (C10: the height class is the token, not the content) ---- */
-.band[data-head='kennzahl'] .title :is(h1, .titlePlaceholder),
-.band[data-head='zeit'] .title :is(h1, .titlePlaceholder),
-.band[data-head='cover'] .title :is(h1, .titlePlaceholder),
-.band[data-head='tresor'] .title :is(h1, .titlePlaceholder),
-.band[data-head='himmel'] .title :is(h1, .titlePlaceholder) {
-  font-size: var(--text-2xl);
-}
-.band[data-head='himmel'] .title :is(h1, .titlePlaceholder) {
-  font-weight: var(--weight-light);
-}
-.band[data-head='schreib'] .title :is(h1, .titlePlaceholder) {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0;
-}
-/* fokus: the one thing large beside the module's name, which steps back. */
-.band[data-head='fokus'] .title :is(h1, .titlePlaceholder) {
-  font-size: var(--text-xl);
-}
-/* Compact heads: title, figure and the S mark on one line; nothing stacks. */
-.band[data-size='compact'] .column {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-5);
-}
-.band[data-size='compact'] .title {
-  flex: 0 1 auto;
-}
-.band[data-size='compact'] .body {
-  flex: 1 1 auto;
-  align-items: center;
-  margin-top: 0;
-}
-
-/* Phone: label and actions share one line, the title follows; the row under it stacks and the signature shrinks
-   (never hidden: it is the thing the head is recognised by). Scrolled, the head scrolls away like content and a
-   one-line bar fades in at the top (core/shell/heroCollapse.ts). */
-/* The short verb of the write button: only on the phone (C31). */
-.writeShort {
+.extra:empty {
   display: none;
 }
+
+/* ---- Phone: title row, the one module row, tabs. Scrolled, the rows above the tabs slide away and the tabs stay at
+   hand under the top bar (sticky with a negative offset: no script, nothing animates). No action in the head: the
+   plus in the bottom bar is the entry (layout/BottomNav). ---- */
 @media (max-width: 899px) {
-  .inner {
-    padding: var(--space-3) var(--frame-bleed-x, var(--space-4)) var(--space-4);
+  .head {
+    --head-fold: calc(var(--head-pad) + var(--head-row));
+    top: calc(var(--topbar-h, 0px) - var(--head-fold));
+    margin-bottom: var(--space-3);
   }
-  .body {
+  .head:has(nav[data-module-row]) {
+    --head-fold: calc(var(--head-pad) + var(--head-row) + var(--touch));
+  }
+  .titleRow {
+    gap: var(--space-3);
+  }
+  .actions > .target {
+    display: none;
+  }
+  .stageBody {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
@@ -235,82 +287,16 @@
   .signature[data-default='true'] {
     zoom: 0.7;
   }
-  .signature[data-slot='S'][data-default='true'] {
-    zoom: 0.85;
-  }
-  .signature[data-slot='M'],
-  .signature[data-slot='L'] {
-    /* In the column the basis would be a height: the slot takes what its block needs. */
+  .signature {
     flex-basis: auto;
-    max-width: 100%;
-  }
-  .band[data-size='compact'] .column {
-    flex-direction: row;
-  }
-  /* U01: in the stacked row a reserved room stays empty space; nothing grows into it while the page loads. */
-  .column > .body[data-hold='true'] > * {
-    flex-grow: 0;
-  }
-  /* fokus (U24, MODULE-IDENTITY "Phone: the row under the title stacks"): the module's name on its own line, then the
-     one thing with the mark beside it where it fits (else the mark wraps under it), the strip under both – every line
-     on the same left edge. */
-  .band[data-head='fokus'] .column {
-    flex-direction: column;
-    /* One line: a wrapping column would size the row to its widest block instead of the column. */
-    flex-wrap: nowrap;
-    align-items: flex-start;
-  }
-  .band[data-head='fokus'] .body {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    align-self: stretch;
-    gap: var(--space-3);
   }
   .extra {
     flex-basis: auto;
     width: 100%;
   }
-  /* C31: the phone shows the short verb next to a small icon; the full name comes back with the width. */
-  .writeLabel {
-    display: none;
-  }
-  .writeShort {
-    display: inline;
-  }
 }
-.compact {
-  display: none;
-}
-@media (max-width: 899px) {
-  .compact {
-    position: fixed;
-    inset: 0 0 auto 0;
-    z-index: calc(var(--z-sticky) - 1);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 2.75rem;
-    padding: var(--space-1) var(--space-4);
-    padding-top: calc(var(--space-1) + env(safe-area-inset-top));
-    border-bottom: 1px solid color-mix(in srgb, var(--module-color) 35%, var(--border));
-    background: var(--head-gradient);
-    color: var(--text);
-    font-weight: var(--weight-semibold);
-    opacity: 0;
-    transform: translateY(-100%);
-    pointer-events: none;
-    transition:
-      opacity var(--dur-fast) linear,
-      transform var(--dur-fast) var(--ease);
-  }
-  .compact[data-visible='true'] {
-    opacity: 1;
-    transform: none;
-  }
-  .compactName {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+@media print {
+  .head {
+    position: static;
   }
 }

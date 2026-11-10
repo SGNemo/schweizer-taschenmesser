@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     hue: 'teal',
     hue2: 'ocean',
     widget: 'kennzahl',
-    head: 'zeit',
+    head: 'standard',
     signature: 'stopwatch',
     type: 'mono',
   },

@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     hue: 'violet',
     hue2: 'orchid',
     widget: 'fortschritt',
-    head: 'fortschritt',
+    head: 'standard',
     signature: 'ring',
   },
   version: 1,

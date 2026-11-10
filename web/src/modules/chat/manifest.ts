@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     hue: 'sky',
     hue2: 'cobalt',
     widget: 'notiz',
-    head: 'fokus',
+    head: 'standard',
     signature: 'bubble',
   },
   version: 1,

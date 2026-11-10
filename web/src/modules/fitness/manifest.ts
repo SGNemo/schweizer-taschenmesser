@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     hue: 'sky',
     hue2: 'ocean',
     widget: 'fortschritt',
-    head: 'fortschritt',
+    head: 'standard',
     signature: 'dumbbell',
   },
   version: 2,

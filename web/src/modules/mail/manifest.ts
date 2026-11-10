@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     hue: 'teal',
     hue2: 'ocean',
     widget: 'notiz',
-    head: 'schreib',
+    head: 'standard',
     signature: 'stamp',
   },
   version: 3,

@@ -17,7 +17,7 @@ const manifest: ModuleManifest = {
     hue: 'ocean',
     hue2: 'sky',
     widget: 'faellig',
-    head: 'fokus',
+    head: 'standard',
     signature: 'bill',
   },
   version: 4,

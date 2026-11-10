@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'indigo',
     hue2: 'cobalt',
     widget: 'kacheln',
-    head: 'regal',
+    head: 'standard',
     signature: 'pinboard',
   },
   version: 2,

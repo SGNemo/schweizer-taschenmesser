@@ -41,3 +41,36 @@
   font-family: var(--font-serif);
   letter-spacing: -0.01em;
 }
+
+/* In the title row of a standard module head (Identity 4.0, rule 2): one figure and its context line, right-aligned,
+   two short lines that fit the row. The caps label goes: the context line names the number. */
+:global([data-head='standard']) .figure {
+  gap: 0;
+  align-items: flex-end;
+}
+:global([data-head='standard']) .label {
+  display: none;
+}
+:global([data-head='standard']) .value {
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+:global([data-head='standard']) .detail {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+@media (max-width: 899px) {
+  :global([data-head='standard']) .value {
+    font-size: var(--text-lg);
+  }
+  :global([data-head='standard']) .detail {
+    font-size: var(--text-xs);
+  }
+}

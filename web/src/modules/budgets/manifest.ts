@@ -17,7 +17,7 @@ const manifest: ModuleManifest = {
     hue: 'lime',
     hue2: 'moss',
     widget: 'fortschritt',
-    head: 'kennzahl',
+    head: 'standard',
     signature: 'envelope',
   },
   version: 4,

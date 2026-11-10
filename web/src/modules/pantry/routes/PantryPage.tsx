@@ -16,12 +16,12 @@ import { t } from '@/strings';
 import {
   AdvancedToggle,
   Badge,
-  Button,
   EmptyState,
   Icon,
   IconButton,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Segmented,
   useOpenParam,
@@ -130,10 +130,10 @@ export default function PantryPage() {
     <>
       <PageHeader title={t.pantry.title}>
         <AdvancedToggle moduleId="pantry" />
-        <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+        <PageAction short={t.pantry.meta.quickAdd} onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.pantry.add}
-        </Button>
+        </PageAction>
         {/* Scan and "restock all" are occasional: they sit in the ⋯ menu, one primary stays visible. */}
         <StartDataMenu
           moduleId="pantry"

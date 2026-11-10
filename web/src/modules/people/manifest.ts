@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'orchid',
     hue2: 'violet',
     widget: 'faellig',
-    head: 'fokus',
+    head: 'standard',
     signature: 'avatarRing',
   },
   version: 2,

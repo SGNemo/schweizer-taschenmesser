@@ -17,19 +17,16 @@ export interface SubNavItem {
 }
 
 /**
- * The quiet navigation under a module head: the other modules of the area as pills with their icon (identity v3).
- * On the desktop it wraps instead of cutting off; on a phone it is one row that scrolls with a fade at the edge and
- * keeps the active entry in view. Underline `Tabs` stay for the views inside a page.
+ * The module row of the phone's module head (Identity 4.0, rule 3): the modules of the area as text pills in one row
+ * that scrolls sideways with a fade at the edge and keeps the active entry in view. The desktop has no such row: the
+ * sidebar lists the area's modules. Underline `Tabs` stay for the views inside a page.
  */
 export function SubNav({
   label,
-  eyebrow,
   items,
 }: {
   /** Accessible name of the navigation (`t.nav.areaTabs(area)`). */
   label: string;
-  /** Short caption in front of the pills: the area's name. */
-  eyebrow?: string;
   items: readonly SubNavItem[];
 }) {
   const nav = useRef<HTMLElement>(null);
@@ -44,12 +41,13 @@ export function SubNav({
     el.scrollTo({ left, behavior: motionReduced() ? 'auto' : 'smooth' });
   }, [activeId]);
   return (
-    <nav ref={nav} aria-label={label} className={styles.subnav} data-testid="subnav">
-      {eyebrow ? (
-        <span className={styles.eyebrow} aria-hidden="true">
-          {eyebrow}
-        </span>
-      ) : null}
+    <nav
+      ref={nav}
+      aria-label={label}
+      className={styles.subnav}
+      data-testid="subnav"
+      data-module-row
+    >
       {items.map((i) => (
         <Link
           key={i.id}

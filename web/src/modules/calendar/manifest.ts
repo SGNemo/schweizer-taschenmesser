@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'sky',
     hue2: 'ocean',
     widget: 'zeitleiste',
-    head: 'zeit',
+    head: 'standard',
     signature: 'calendarLeaf',
   },
   version: 4,

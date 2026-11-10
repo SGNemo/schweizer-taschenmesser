@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'moss',
     hue2: 'lime',
     widget: 'fokus',
-    head: 'fokus',
+    head: 'standard',
     signature: 'todayCard',
   },
   version: 5,

@@ -59,15 +59,19 @@ function HeadFigure({ drive: d, lastScanAt }: { drive: DriveInfo; lastScanAt?: n
   const figure = splitCapacity(formatCapacity(used));
   const state = h.state[level];
   return (
-    <HeroSlot area="figure">
-      <div className={styles.figure}>
+    <>
+      {/* Identity 4.0: the title row takes the one figure; its longer context lies in the page, under the head. */}
+      <HeroSlot area="figure">
         <HeroFigure
           type="mono"
           label={t.disk.driveName(d.root, d.label)}
           value={figure.value}
           unit={`${figure.unit} ${h.used}`}
+          detail={t.disk.driveName(d.root, d.label)}
           testId="disk-head-used"
         />
+      </HeroSlot>
+      <HeroSlot>
         <p className={styles.context} data-testid="disk-head-context">
           <span>
             {h.of(formatCapacity(d.totalBytes))} · {t.disk.free(formatCapacity(d.freeBytes))}
@@ -75,7 +79,7 @@ function HeadFigure({ drive: d, lastScanAt }: { drive: DriveInfo; lastScanAt?: n
           {state ? <Badge tone={level === 'full' ? 'warning' : 'neutral'}>{state}</Badge> : null}
           <span>{lastScanAt ? h.lastScan(scanWhen(lastScanAt)) : h.neverScanned}</span>
         </p>
-      </div>
-    </HeroSlot>
+      </HeroSlot>
+    </>
   );
 }
