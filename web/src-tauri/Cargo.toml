@@ -65,6 +65,8 @@ tauri-plugin-single-instance = "2"
 taschenmesser-local-api = { path = "crates/local-api" }
 # Home-network sync hub (desktop only; package 1 = the field store, see docs/design/sync-lan).
 taschenmesser-lan-sync = { path = "crates/lan-sync", features = ["store"] }
+# Remote control sink: volume, media commands and lock as system calls, no simulated input (src/remote.rs).
+taschenmesser-remote-input = { path = "crates/remote-input" }
 # Raw hub keys (static Noise key, data key) in the OS keystore, like the secure-store plugin; own service name.
 keyring = { version = "=3.6.3", features = ["windows-native", "apple-native", "linux-native"] }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }

@@ -5785,6 +5785,7 @@ dependencies = [
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
  "taschenmesser-os-association",
+ "taschenmesser-remote-input",
  "taschenmesser-system-info",
  "taschenmesser-torrent",
  "taschenmesser-vault-bridge",
@@ -5885,6 +5886,13 @@ dependencies = [
 [[package]]
 name = "taschenmesser-os-association"
 version = "0.1.0"
+
+[[package]]
+name = "taschenmesser-remote-input"
+version = "0.1.0"
+dependencies = [
+ "windows 0.61.3",
+]
 
 [[package]]
 name = "taschenmesser-system-info"

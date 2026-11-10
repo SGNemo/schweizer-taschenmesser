@@ -689,8 +689,8 @@ jobs:
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
       - run: cargo fmt --all --check
-      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -- -D warnings
-      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync
+      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -p taschenmesser-remote-input -- -D warnings
+      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -p taschenmesser-remote-input
       # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
       - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
 
@@ -721,8 +721,8 @@ jobs:
       # tauri::generate_context! needs the frontend directory to exist; its content does not matter here.
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
-      - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
-      - run: cargo test --locked --no-fail-fast -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser
+      - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-remote-input -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
+      - run: cargo test --locked --no-fail-fast -p taschenmesser-lan-sync -p taschenmesser-remote-input -p taschenmesser-disk-scan -p taschenmesser
       # The steps below run even after a red test step, so one failure does not hide the others (the job stays red).
       - if: ${{ !cancelled() }}
         run: cargo test --locked -p taschenmesser --test commands
