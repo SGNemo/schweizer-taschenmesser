@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "what": "transition entries and @keyframes declarations in src/modules/**/*.module.css that move something else than transform/opacity",
+  "what": "transition entries and @keyframes declarations in src/**/*.css that move something else than transform/opacity",
   "total": 1,
   "files": {
     "modules/accounts/accounts.module.css": 1
