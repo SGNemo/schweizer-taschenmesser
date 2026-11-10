@@ -2,9 +2,10 @@
 //! `remote_input` crate. Rules: `docs/rules/remote-control.md`.
 //!
 //! What decides lives in the crates (and is tested there). This file
-//! * hands the hub a sink ([`Sink`]): media actions go to the worker of `remote_input`, which
-//!   makes plain system calls; every other action is dropped here (pointer and keys are later
-//!   packages) – nothing in this file or in any Tauri command simulates input,
+//! * hands the hub a sink ([`Sink`]): media actions go to the worker of `remote_input` (plain
+//!   system calls), pointer actions to its pointer thread (the one place that simulates input);
+//!   keys and text are dropped here (a later package) – nothing in this file or in any Tauri
+//!   command simulates input,
 //! * offers the PC's own controls to the settings page. Every widening (a higher level, lifting a
 //!   pause, dropping the unlock request, the master switch) is confirmed in a **native** dialog
 //!   first, in a fixed order: take `Remote::ticket()`, show the dialog, call the setter with the
@@ -16,12 +17,12 @@
 
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
-use ::lan_sync::input::wire::{Level, Media, PcState, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{Button, Level, Media, PcState, VOLUME_UNKNOWN};
 use ::lan_sync::input::{Action, ControlError, FileSwitch, InputSink, MasterSwitch, Remote};
 use ::lan_sync::noise::PublicKey;
 use ::lan_sync::trust::file::{from_hex32, to_hex};
 use ::lan_sync::trust::{FileTrustStore, RemoteGrant, TrustStore};
-use remote_input::{Command, Worker};
+use remote_input::{Command, Pointer, PointerAction, Worker};
 use serde::Serialize;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -43,12 +44,34 @@ const ASK_LIST_MAX: usize = 6;
 
 /// What the hub's input session acts through. Returns at once – the worker thread does the calls –
 /// except `state()` after a quiet time (bounded, see `InputSink::state`).
-pub struct Sink(Worker);
+pub struct Sink {
+    media: Worker,
+    pointer: Pointer,
+}
 
 impl Sink {
     pub fn start() -> Sink {
-        Sink(Worker::start())
+        Sink {
+            media: Worker::start(),
+            pointer: Pointer::start(),
+        }
     }
+}
+
+/// The hub's pointer actions in the words of `remote_input`; `None` for everything else.
+fn pointer_of(action: &Action) -> Option<PointerAction> {
+    Some(match *action {
+        Action::Move { dx, dy } => PointerAction::Move { dx, dy },
+        Action::Button { button, down } => PointerAction::Button {
+            button: match button {
+                Button::Left => remote_input::Button::Left,
+                Button::Right => remote_input::Button::Right,
+            },
+            down,
+        },
+        Action::Scroll { dx, dy } => PointerAction::Scroll { dx, dy },
+        Action::Key(_) | Action::Media(_) | Action::Text(_) => return None,
+    })
 }
 
 fn command_of(media: Media) -> Command {
@@ -74,17 +97,21 @@ fn pc_state(state: remote_input::State) -> PcState {
 
 impl InputSink for Sink {
     fn supported(&self) -> bool {
-        self.0.supported()
+        self.media.supported()
     }
 
     fn state(&self) -> PcState {
-        pc_state(self.0.state())
+        pc_state(self.media.state())
     }
 
     fn apply(&self, action: Action) {
-        // Pointer, buttons, keys and text have no sink yet: dropped, never turned into anything.
+        // Keys and text have no sink yet: dropped, never turned into anything. Media and pointer
+        // run on two threads: the order holds within each, not between them (the hub checks the
+        // lock per pointer record, so "lock, then a move" is still safe).
         if let Action::Media(media) = action {
-            self.0.send(command_of(media));
+            self.media.send(command_of(media));
+        } else if let Some(pointer) = pointer_of(&action) {
+            self.pointer.send(pointer);
         }
     }
 }
@@ -700,9 +727,42 @@ mod tests {
         volume_sets: AtomicUsize,
         mute_sets: AtomicUsize,
         locks: AtomicUsize,
+        pointer: Mutex<Vec<String>>,
     }
 
     struct FakeSystem(Arc<Seen>);
+
+    /// Writes down what the pointer was asked to do.
+    struct FakeMouse(Arc<Seen>);
+
+    impl remote_input::Mouse for FakeMouse {
+        fn moved(&mut self, dx: i32, dy: i32) {
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("move {dx} {dy}"));
+        }
+        fn button(&mut self, button: remote_input::Button, down: bool) -> bool {
+            let which = match button {
+                remote_input::Button::Left => "left",
+                remote_input::Button::Right => "right",
+            };
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("{which} {down}"));
+            true
+        }
+        fn wheel(&mut self, horizontal: bool, amount: i32) {
+            self.0
+                .pointer
+                .lock()
+                .unwrap()
+                .push(format!("wheel {horizontal} {amount}"));
+        }
+    }
 
     impl System for FakeSystem {
         fn volume(&mut self) -> Option<f32> {
@@ -738,9 +798,11 @@ mod tests {
     fn fake_sink() -> (Sink, Arc<Seen>) {
         let seen = Arc::new(Seen::default());
         let for_worker = seen.clone();
-        let sink = Sink(Worker::with(move || {
-            Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)
-        }));
+        let for_mouse = seen.clone();
+        let sink = Sink {
+            media: Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
+            pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
+        };
         (sink, seen)
     }
 
@@ -753,17 +815,25 @@ mod tests {
     }
 
     #[test]
-    fn the_sink_acts_on_media_and_drops_everything_else() {
+    fn the_sink_sends_media_to_the_worker_the_pointer_to_its_thread_and_drops_the_rest() {
         let (sink, seen) = fake_sink();
         assert!(sink.supported());
-        sink.apply(Action::Move { dx: 5, dy: 5 });
+        sink.apply(Action::Key(Key::Enter));
+        sink.apply(Action::Text("abc".into()));
+        sink.apply(Action::Move { dx: 5, dy: -5 });
         sink.apply(Action::Button {
             button: Button::Left,
             down: true,
         });
-        sink.apply(Action::Scroll { dx: 0, dy: 3 });
-        sink.apply(Action::Key(Key::Enter));
-        sink.apply(Action::Text("abc".into()));
+        sink.apply(Action::Scroll { dx: 0, dy: 8 });
+        sink.apply(Action::Button {
+            button: Button::Left,
+            down: false,
+        });
+        sink.apply(Action::Button {
+            button: Button::Right,
+            down: false,
+        });
         settle(&sink);
         let total = |s: &Seen| {
             s.media.load(Ordering::SeqCst)
@@ -771,7 +841,23 @@ mod tests {
                 + s.mute_sets.load(Ordering::SeqCst)
                 + s.locks.load(Ordering::SeqCst)
         };
-        assert_eq!(total(&seen), 0, "a non-media action reached the system");
+        // the pointer has its own thread: wait for it, with a deadline
+        for _ in 0..500 {
+            if seen.pointer.lock().unwrap().len() >= 4 {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(
+            total(&seen),
+            0,
+            "a non-media action reached the media worker"
+        );
+        // keys and text became nothing; the release of a button nobody pressed is ignored
+        assert_eq!(
+            *seen.pointer.lock().unwrap(),
+            ["move 5 -5", "left true", "wheel false -120", "left false"]
+        );
         sink.apply(Action::Media(Media::PlayPause));
         sink.apply(Action::Media(Media::VolumeDown));
         sink.apply(Action::Media(Media::Lock));
@@ -779,6 +865,11 @@ mod tests {
         assert_eq!(seen.media.load(Ordering::SeqCst), 1);
         assert_eq!(seen.volume_sets.load(Ordering::SeqCst), 1);
         assert_eq!(seen.locks.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            seen.pointer.lock().unwrap().len(),
+            4,
+            "media moved the pointer"
+        );
         let state = sink.state();
         assert_eq!(
             (state.volume, state.playing, state.locked),

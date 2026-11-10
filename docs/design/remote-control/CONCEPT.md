@@ -218,7 +218,7 @@ Root `CLAUDE.md` (one line, after "LAN sync"):
 |---|---|
 | `move(dx, dy)` | `SendInput` `MOUSEEVENTF_MOVE` (relative; the system's pointer speed and acceleration apply); the phone's sensitivity factor is applied before sending |
 | `button(left\|right, down\|up)` | `MOUSEEVENTF_LEFTDOWN/UP`, `RIGHTDOWN/UP`; a double click is two clicks; a button still down when the session ends is released by the PC |
-| `scroll(dx, dy)` | `MOUSEEVENTF_WHEEL` / `HWHEEL` in fractions of 120 |
+| `scroll(dx, dy)` | `MOUSEEVENTF_WHEEL` / `HWHEEL`; one wire unit = 15 of the system's delta (8 units = one notch of 120); `dy > 0` moves the view down, `dx > 0` to the right |
 | text | `KEYEVENTF_UNICODE` per UTF-16 unit, down and up |
 | `key(id)` | fixed enum → virtual key(s): Enter, Esc, Backspace, Tab, Space, arrows, Home, End, PageUp, PageDown, Delete, F11, Alt+Tab – exactly the keys of the page in §2; modifiers are pressed and released inside one call, never left down |
 | `media(id)` | play/pause, next, previous: the system's media session controls (the current session); volume ±, mute: default audio endpoint (step 2 %). No `VK_MEDIA_*`/`VK_VOLUME_*` keys – they would be simulated input |

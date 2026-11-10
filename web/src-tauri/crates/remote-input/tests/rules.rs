@@ -36,29 +36,74 @@ fn assert_absent(needles: &[&str]) {
     }
 }
 
-/// The media level is API calls. Nothing in this crate simulates input: no injected key, mouse
-/// or media key.
+/// Simulated input is the mouse part of `SendInput`, in `src/pointer.rs`, and nothing else:
+/// no key of any kind, no absolute position, no window message, no other crate for it.
 #[test]
-fn nothing_simulates_input() {
+fn only_the_pointer_file_simulates_input_and_only_the_mouse() {
     assert_absent(&[
-        "SendInput",
         "keybd_event",
         "mouse_event",
         "SetCursorPos",
+        "SetPhysicalCursorPos",
+        "MOUSEEVENTF_ABSOLUTE",
+        "MOUSEEVENTF_VIRTUALDESK",
+        "MOUSEEVENTF_MIDDLE",
+        "MOUSEEVENTF_X",
         "VK_",
         "KEYEVENTF",
-        "MOUSEEVENTF",
+        "KEYBDINPUT",
         "INPUT_KEYBOARD",
-        "INPUT_MOUSE",
+        "INPUT_HARDWARE",
         "enigo",
         "PostMessage",
         "SendMessage",
         "APPCOMMAND",
+        "BlockInput",
+        "SetWindowsHook",
+        // no flag or input type built from a number, no other member of the input union
+        "MOUSE_EVENT_FLAGS(",
+        "INPUT_TYPE(",
+        " ki:",
+        " hi:",
     ]);
-    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
-    assert!(
-        !manifest.contains("KeyboardAndMouse"),
-        "no input feature of the windows crate"
+    for (name, text) in sources() {
+        if name == "pointer.rs" {
+            continue;
+        }
+        for line in code_lines(&text) {
+            for n in ["SendInput", "MOUSEEVENTF", "INPUT_MOUSE", "MOUSEINPUT"] {
+                assert!(!line.contains(n), "{name}: `{n}` outside pointer.rs");
+            }
+        }
+    }
+    // exactly one call site, and the flags are the seven of move, two buttons and the wheel
+    let pointer = fs::read_to_string(root().join("src/pointer.rs")).unwrap();
+    let calls = code_lines(&pointer)
+        .filter(|l| l.contains("SendInput(") && !l.contains("fn "))
+        .count();
+    assert_eq!(calls, 1, "one SendInput call");
+    let types = code_lines(&pointer)
+        .filter(|l| l.contains("r#type:"))
+        .collect::<Vec<_>>();
+    assert_eq!(types.len(), 1);
+    assert!(types[0].contains("r#type: INPUT_MOUSE,"));
+    let mut flags: Vec<&str> = code_lines(&pointer)
+        .flat_map(|l| l.split(|c: char| !c.is_ascii_alphanumeric() && c != '_'))
+        .filter(|w| w.starts_with("MOUSEEVENTF_"))
+        .collect();
+    flags.sort_unstable();
+    flags.dedup();
+    assert_eq!(
+        flags,
+        [
+            "MOUSEEVENTF_HWHEEL",
+            "MOUSEEVENTF_LEFTDOWN",
+            "MOUSEEVENTF_LEFTUP",
+            "MOUSEEVENTF_MOVE",
+            "MOUSEEVENTF_RIGHTDOWN",
+            "MOUSEEVENTF_RIGHTUP",
+            "MOUSEEVENTF_WHEEL",
+        ]
     );
 }
 
@@ -147,7 +192,10 @@ fn unsafe_is_windows_only_and_explained() {
             if line.trim_start().starts_with("//") || !line.contains("unsafe ") {
                 continue;
             }
-            assert_eq!(name, "system.rs", "unsafe outside the Windows calls");
+            assert!(
+                name == "system.rs" || name == "pointer.rs",
+                "{name}: unsafe outside the Windows calls"
+            );
             let explained = lines[i.saturating_sub(4)..i]
                 .iter()
                 .any(|l| l.contains("// SAFETY:"));
