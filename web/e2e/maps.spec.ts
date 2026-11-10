@@ -266,7 +266,7 @@ test.describe('Karten & Orte', () => {
     expect(await primaryActions(page)).not.toContain('Suchen');
     await page.getByRole('button', { name: 'Orte', exact: true }).click();
     // "Ort hinzufügen" opens the map with the search field ready.
-    await page.getByRole('button', { name: 'Ort hinzufügen' }).click();
+    await page.getByRole('button', { name: /Ort (hinzufügen|eintragen)/ }).click();
     await expect(page.getByLabel('Ort oder Adresse suchen')).toBeFocused();
 
     await ready(page, '/');

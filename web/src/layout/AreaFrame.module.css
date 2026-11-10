@@ -134,6 +134,12 @@
   gap: var(--space-2);
   min-width: 0;
 }
+/* A menu opened from the head cannot be scrolled into view with the page (the head stays put): a long one scrolls
+   inside itself instead of running past the window. */
+.actions [role='menu'] {
+  max-height: calc(100dvh - 11rem);
+  overflow-y: auto;
+}
 /* Without a figure the actions take the right edge. */
 .titleBlock + .actions,
 .figure:not(:has(> :not(:empty))) + .actions {

@@ -251,22 +251,24 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       .toEqual(['Zahnarzt anrufen']);
   });
 
-  test('"Mit KI eintragen" in a module opens the bar for entries (the one explicit way: the capture sheet)', async ({
+  test('"Mit KI eintragen" in a module opens the bar for entries (desktop: the capture sheet; phone: the search bar)', async ({
     page,
   }) => {
     await page.goto('/invoices');
     await expect(page.locator('main h1')).toBeVisible();
     // Identity 4.0, rule 4: the head has no write button of its own any more.
     await expect(page.getByTestId('ai-write-button')).toHaveCount(0);
-    if ((page.viewportSize()?.width ?? 1280) < 900) {
-      // Phone: the plus of a module page is the module's action; the capture sheet opens from the overview.
-      await page.goto('/');
-      await expect(page.locator('main h1').first()).toBeVisible();
-      await page.getByRole('button', { name: 'Neu eintragen', exact: true }).click();
-    } else await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
-    await page.getByTestId('quick-add-ai').click();
+    const phone = (page.viewportSize()?.width ?? 1280) < 900;
     const box = page.getByRole('combobox');
-    await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);
+    if (phone) {
+      // Phone: the plus of a module page is the module's action, so the sentence goes into the search bar of the
+      // page; the bar offers "Eintragen" for it and knows the module it was opened in.
+      await page.locator('header').first().getByRole('button', { name: /suche/i }).click();
+    } else {
+      await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
+      await page.getByTestId('quick-add-ai').click();
+      await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);
+    }
     await box.fill('Telekom 39,99 € fällig 20.10.');
     await box.press('Enter');
     await expect(page.getByTestId('ai-write-preview')).toBeVisible();
