@@ -5350,7 +5350,7 @@ export const de = {
     removeFile: 'Datei entfernen',
     tooLarge: (max: string) => `Die Datei ist zu groß (höchstens ${max}).`,
     renew: 'Verlängert +1 Jahr',
-    renewAria: (title: string) => `${title}: um 1 Jahr verlängern`,
+    renewAria: (title: string) => `${title}: Verlängert +1 Jahr`,
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',

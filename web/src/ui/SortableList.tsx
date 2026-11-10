@@ -86,6 +86,8 @@ export function SortableList<T>({
       accessibility={{
         announcements,
         screenReaderInstructions: { draggable: t.homeEdit.instructions },
+        // The live region goes to the end of the page: inside the list it would be a child that a list may not have.
+        container: document.body,
       }}
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>

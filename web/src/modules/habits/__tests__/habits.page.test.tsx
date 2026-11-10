@@ -102,7 +102,7 @@ describe('Habits page', () => {
     draw();
     await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Erledigt' }));
     await waitFor(async () => expect((await entryRepo.get(entryId(g.id, DAY)))?.count).toBe(1));
-    await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Erledigt' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Zurücknehmen' }));
     await waitFor(async () => expect((await entryRepo.get(entryId(g.id, DAY)))?.count).toBe(0));
   });
 

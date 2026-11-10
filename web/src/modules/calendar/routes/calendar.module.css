@@ -172,7 +172,8 @@
 }
 .lineTime {
   flex: none;
-  color: var(--text-3);
+  /* The line sits on a tint of the calendar's colour: only this token is tested for contrast on tints. */
+  color: var(--text-on-tint);
   font-variant-numeric: tabular-nums;
 }
 .lineTitle {

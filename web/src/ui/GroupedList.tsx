@@ -69,10 +69,11 @@ export function GroupedList({
               >
                 <Icon name={open ? 'chevronDown' : 'chevronRight'} size={16} />
                 <span>{g.label}</span>
-                <span className={styles.count} aria-label={t.groups.count(g.count)}>
-                  {g.count}
-                </span>
               </button>
+              {/* Beside the button, not in it: its name ("… einklappen") must contain all of its visible text. */}
+              <span className={styles.count} aria-label={t.groups.count(g.count)}>
+                {g.count}
+              </span>
               {g.detail ? <span className={styles.detail}>{`· ${g.detail}`}</span> : null}
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
