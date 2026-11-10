@@ -38,11 +38,14 @@ const metaOf = (database: TaschenmesserDB) =>
   database.table<{ key: string; value: unknown }, string>('_meta');
 
 /**
- * E2E builds keep the default set off (`VITE_DEFAULTS_OFF=1` in `.env.e2e*`), so every fresh test context is the
- * app the suites were written for; one spec switches it on for its context (`localStorage.__tmDefaultsOn`).
+ * The test builds (`vite build --mode e2e` / `e2e-seed`, the same test `isE2eBuild` in core/platform/web.ts uses)
+ * keep the default set off, so every fresh test context is the app the suites, the stimulus measurement and the
+ * seed guards were written for; one spec switches it on for its context (`localStorage.__tmDefaultsOn`). Release,
+ * Dev-Preview and the native apps build in production mode and never get here.
  */
 function switchedOff(): boolean {
-  if (import.meta.env.VITE_DEFAULTS_OFF !== '1') return false;
+  const mode = import.meta.env.MODE;
+  if (mode !== 'e2e' && mode !== 'e2e-seed') return false;
   try {
     return localStorage.getItem('__tmDefaultsOn') !== '1';
   } catch {

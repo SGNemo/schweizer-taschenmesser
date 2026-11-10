@@ -238,7 +238,7 @@ describe('default set of a fresh installation', () => {
   });
 
   it('the test builds keep the set off unless a context switches it on', async () => {
-    vi.stubEnv('VITE_DEFAULTS_OFF', '1');
+    vi.stubEnv('MODE', 'e2e-seed');
     await markFreshDefaults(true, db);
     expect(await meta(db, DEFAULTS_VERSION_KEY)).toBeUndefined();
   });

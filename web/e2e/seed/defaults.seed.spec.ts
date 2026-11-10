@@ -3,7 +3,7 @@ import { bootDev, test } from './helpers';
 
 /**
  * Default set of a fresh installation (UI audit 2026-11, package V-1; logic and its cases: core/modules/defaults.ts,
- * defaults.test.ts). The test builds keep the set off (`VITE_DEFAULTS_OFF=1` in `.env.e2e*`), so every other spec sees
+ * defaults.test.ts). The test builds keep the set off (build modes `e2e` and `e2e-seed`, `switchedOff` in defaults.ts), so every other spec sees
  * the app it was written for; this spec switches it on for its own context and checks what a new device shows, and
  * that nothing of it is written as a household row.
  */
