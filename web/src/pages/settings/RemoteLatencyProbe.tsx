@@ -23,7 +23,8 @@ import styles from './RemoteLatencyProbe.module.css';
  *
  * Nothing acts on the PC. The call per event is `send` for a session number that is never open:
  * the shell goes the way a real send goes (command, worker thread, session lookup) and answers
- * `closed` right before it would seal and write. Should that call ever *not* be refused, the
+ * `closed` right before it would seal and write. Should that call ever get any other answer –
+ * success, or another error, which would mean the shell got further – the
  * probe stops for good (until the app restarts). The action it carries is the mildest of the
  * fixed list, a mute toggle: calls already on their way then could still toggle it.
  *
@@ -43,6 +44,14 @@ const BETWEEN_OPENS_MS = 300;
 export const PAUSE_MS = 60_000;
 /** Samples kept per row; a minute at 120 Hz is far below. */
 const KEEP = 20_000;
+/** Calls on their way at once; an event beyond that is counted as an overlap and makes no call. */
+const IN_FLIGHT_MAX = 8;
+
+/** The short code the bridge puts into an error's message (`core/platform/tauri/remote.ts`). */
+function codeOf(e: unknown): string {
+  const raw = e instanceof Error ? e.message : e;
+  return typeof raw === 'string' && /^[a-z-]{1,24}$/.test(raw) ? raw : 'other';
+}
 
 /**
  * Set when a probe call was not refused, and never cleared: until the app restarts, no probe
@@ -52,8 +61,9 @@ let stopped = false;
 /** When the next run of opens may start (`performance.now()`); kept across mounts. */
 let nextRunAt = 0;
 
-/** Tests only. */
+/** Tests only: in the app nothing clears the latch. */
 export function resetProbeForTests() {
+  if (import.meta.env.MODE !== 'test') return;
   stopped = false;
   nextRunAt = 0;
 }
@@ -155,17 +165,21 @@ export function RemoteLatencyProbe() {
     s.events += 1;
     s.input.push(now - e.timeStamp);
     if (s.inFlight > 0) s.overlaps += 1;
+    if (s.inFlight >= IN_FLIGHT_MAX) return;
     s.inFlight += 1;
+    const stop = () => {
+      // stop for good: nothing may ever be sent from here
+      stopped = true;
+      if (!gone.current) setAborted(true);
+    };
     remote
       .send(NO_SESSION, ['mute'])
-      .then(
-        () => {
-          // not refused: stop for good, nothing may ever be sent from here
-          stopped = true;
-          if (!gone.current) setAborted(true);
-        },
-        () => s.invoke.push(performance.now() - now),
-      )
+      .then(stop, (e: unknown) => {
+        // only "no such session" is the refusal before any write; any other answer means the
+        // shell got further than it may
+        if (codeOf(e) === 'closed') s.invoke.push(performance.now() - now);
+        else stop();
+      })
       .finally(() => {
         s.inFlight -= 1;
         // the last calls of a stroke settle after the finger is up
@@ -189,11 +203,13 @@ export function RemoteLatencyProbe() {
           unclosed += 1;
         });
       } catch (e) {
-        const code = typeof e === 'string' && /^[a-z-]{1,24}$/.test(e) ? e : 'other';
+        const code = codeOf(e);
         misses[code] = (misses[code] ?? 0) + 1;
       }
       await wait(BETWEEN_OPENS_MS);
     }
+    // the minute counts from the last open (set at the start too, so a run that was left blocks)
+    nextRunAt = performance.now() + PAUSE_MS;
     if (gone.current) return;
     setProgress(undefined);
     setPausing(true);

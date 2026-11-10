@@ -27,7 +27,7 @@ beforeEach(() => {
   resetProbeForTests();
   remote.supported = true;
   remote.open.mockReset();
-  remote.send.mockReset().mockRejectedValue('closed');
+  remote.send.mockReset().mockRejectedValue(new Error('closed'));
   remote.close.mockReset().mockResolvedValue(undefined);
 });
 afterEach(() => vi.useRealTimers());
@@ -61,7 +61,7 @@ describe('remote latency probe (Dev-Preview)', () => {
     remote.send.mockImplementation(
       () =>
         new Promise((_, reject) => {
-          refuse = () => reject('closed');
+          refuse = () => reject(new Error('closed'));
         }),
     );
     render(<RemoteLatencyProbe />);
@@ -94,17 +94,36 @@ describe('remote latency probe (Dev-Preview)', () => {
     expect(remote.send).toHaveBeenCalledTimes(1);
   });
 
+  it('stops for good on any answer but "closed": the shell got further than it may', async () => {
+    remote.send.mockRejectedValue(new Error('network'));
+    render(<RemoteLatencyProbe />);
+    fireEvent.pointerDown(pad());
+    fireEvent.pointerMove(pad());
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.aborted);
+    fireEvent.pointerMove(pad());
+    expect(remote.send).toHaveBeenCalledTimes(1);
+    expect(result()).not.toContain('1 Werte');
+  });
+
+  it('never has more than a few calls on their way', () => {
+    remote.send.mockImplementation(() => new Promise(() => {}));
+    render(<RemoteLatencyProbe />);
+    fireEvent.pointerDown(pad());
+    for (let i = 0; i < 50; i += 1) fireEvent.pointerMove(pad());
+    expect(remote.send).toHaveBeenCalledTimes(8);
+  });
+
   it('measures a few opens without the first, closes each, counts failures by code, then pauses', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     let n = 0;
     remote.open.mockImplementation(async () => {
       n += 1;
-      if (n === 3) throw 'network';
-      if (n === 5) throw { secret: 'not a code' };
+      if (n === 3) throw new Error('network');
+      if (n === 5) throw new Error('Some Text 192.168.0.2');
       return { session: n };
     });
     remote.close.mockImplementation(async (session: number) => {
-      if (session === 4) throw 'internal';
+      if (session === 4) throw new Error('internal');
     });
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
