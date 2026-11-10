@@ -86,7 +86,7 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   request,
 }, info) => {
   test.setTimeout(180_000);
-  const { page } = await newDevice(browser);
+  const { page, context } = await newDevice(browser);
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
 
   // 1. a really empty app, setup assistant to the end
@@ -165,4 +165,6 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   await backSettled(page);
   await page.goto('/settings/ueber');
   await expect(page.getByRole('heading', { name: 'Diagnose und Fehler melden' })).toBeVisible();
+  // A context left open keeps syncing (every minute) into the servers of the tests that follow.
+  await context.close();
 });

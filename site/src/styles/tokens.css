@@ -91,6 +91,21 @@
   --sky-day-0: #6fb3e8;
   --sky-day-1: #cfe7f7;
   --sky-sun: #ffd36a;
+  /* Ocean gradient, the app's brand surface (splash, empty states); on the site it is the hero. Pinned to the app. */
+  --ocean-from: #1d6b7a;
+  --ocean-to: #0e2f45;
+  /* Site only: ink, accent and frame on the ocean surface, the same in both themes (the gradient does not change
+     with the theme). scripts/tokens.test.mjs checks their contrast against the lighter stop. */
+  --on-ocean: #ffffff;
+  --on-ocean-muted: #e6eef0;
+  --on-ocean-meta: #dbe6e9;
+  --on-ocean-line: rgb(255 255 255 / 0.2);
+  --on-ocean-accent: #ffb07a;
+  --on-ocean-accent-hover: #ffc59c;
+  --on-ocean-accent-ink: #1b0f06;
+  --on-ocean-ok: #a8ebc4;
+  --ocean-bezel: #0b2334;
+  --ocean-shadow: 0 24px 60px rgb(4 20 32 / 0.45);
   color-scheme: light;
 }
 
