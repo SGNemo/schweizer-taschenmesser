@@ -18,7 +18,7 @@ const manifest: ModuleManifest = {
   },
   icon: 'monitor',
   identity: {
-    hue: 'fern',
+    hue: 'lime',
     widget: 'status',
     head: 'schreib',
     signature: 'display',
