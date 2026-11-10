@@ -284,8 +284,14 @@ pub fn remote_ask_switch(lang: Lang) -> &'static str {
     }
 }
 
+/// One device of that list: the name alone on a labelled line (a name holds no line break), what
+/// it may do on the line below.
 pub fn remote_ask_switch_line(lang: Lang, name: &str, level: Level) -> String {
-    format!("• {name}: {}", remote_level(lang, level))
+    format!(
+        "{}\n      {}",
+        remote_ask_device(lang, name),
+        remote_level(lang, level)
+    )
 }
 
 pub fn remote_ask_more(lang: Lang, more: usize) -> String {
@@ -308,9 +314,9 @@ pub fn remote_end_label(lang: Lang) -> &'static str {
 /// Under that entry, not clickable: what the click also does.
 pub fn remote_end_hint(lang: Lang) -> &'static str {
     if german(lang) {
-        "Das Gerät pausiert, bis du es hier wieder einschaltest"
+        "Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest"
     } else {
-        "The device stays paused until you switch it on here"
+        "Afterwards the device stays paused until you switch it on here"
     }
 }
 

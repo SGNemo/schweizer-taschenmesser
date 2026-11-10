@@ -14,8 +14,8 @@
 //!   reach it through a bounded channel that never blocks the caller: when it is full, the command
 //!   is dropped.
 //! * [`Worker::state`] answers from a cache. The worker refreshes the cache when asked and after
-//!   every command; nobody asking means no polling at all, and asking never waits: a reading
-//!   older than [`STALE`] is answered "unknown" until the refresh is there.
+//!   every command; nobody asking means no polling at all. Only the first question after a
+//!   quiet time (a reading older than [`STALE`]) waits for the refresh, at most [`FRESH_WAIT`].
 //! * Nothing is logged, counted or stored.
 //! * Not Windows: [`Worker::supported`] is `false`, every command is ignored.
 
@@ -25,7 +25,7 @@ mod system;
 mod worker;
 
 pub use system::System;
-pub use worker::{Worker, STALE};
+pub use worker::{Worker, FRESH_WAIT, STALE};
 
 /// One thing the remote control may ask of this PC. A fixed list; there is no "any key".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

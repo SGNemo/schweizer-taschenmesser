@@ -41,7 +41,9 @@ impl From<Record> for Action {
 pub trait InputSink: Send + Sync {
     /// Whether this PC can be controlled at all (`false`: every `open` is answered `unsupported`).
     fn supported(&self) -> bool;
-    /// The last known state (cached; must not block).
+    /// The last known state, from a cache. While a session polls, this returns at once; the first
+    /// call after a quiet time (the `open` of a session) may wait a bounded moment – well under a
+    /// second – for a fresh reading, so an `open` is not answered from a stale "unknown".
     fn state(&self) -> PcState;
     /// Does it. Only called for an action that passed the gate and the limits – and, when a
     /// session ends, for the release of each mouse button that session still held. A key is

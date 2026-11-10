@@ -202,7 +202,7 @@ fn what_cannot_be_read_is_no_volume_and_locked() {
 }
 
 #[test]
-fn the_caller_never_waits_for_a_slow_system() {
+fn the_caller_never_waits_for_a_slow_system_longer_than_the_bound() {
     let (w, pc) = rig(Pc {
         slow: Duration::from_millis(400),
         ..usual()
@@ -210,10 +210,7 @@ fn the_caller_never_waits_for_a_slow_system() {
     // the first reading is still being taken: the caller gets "unknown" within the bound
     let began = Instant::now();
     let s = w.state();
-    assert!(
-        began.elapsed() < Duration::from_millis(50),
-        "state() waited"
-    );
+    assert!(began.elapsed() < remote_input::FRESH_WAIT + Duration::from_millis(100));
     assert_eq!(s, State::UNKNOWN);
     // sending never waits either
     let began = Instant::now();
@@ -290,4 +287,16 @@ fn asking_for_the_state_never_crowds_out_a_command() {
         );
         std::thread::sleep(Duration::from_millis(5));
     }
+}
+
+#[test]
+fn the_first_question_after_a_quiet_time_gets_a_real_reading() {
+    // what the `open` of a session does: nobody asked for longer than the stale bound, and the
+    // one question must not be answered "unknown, locked" for a PC that is neither
+    let (w, pc) = rig(usual());
+    until(&w, |s| s.volume == Some(42));
+    pc.lock().unwrap().volume = Some(0.6);
+    std::thread::sleep(remote_input::STALE + Duration::from_millis(200));
+    let s = w.state();
+    assert_eq!((s.volume, s.locked), (Some(60), false));
 }

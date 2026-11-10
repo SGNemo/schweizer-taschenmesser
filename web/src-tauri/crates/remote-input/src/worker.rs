@@ -4,14 +4,17 @@ use crate::system::{self, System};
 use crate::{Command, State};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError, SyncSender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
 /// Commands waiting for the worker; one more is dropped, never waited for.
 const QUEUE: usize = 32;
-/// A reading older than this is not handed out any more: the caller gets "unknown" and the
-/// fresh reading with its next question.
+/// A reading older than this is not handed out any more; the caller waits for the fresh one.
 pub const STALE: Duration = Duration::from_secs(2);
+/// The longest a caller waits for that fresh reading; then it gets "unknown". Only the first
+/// question after a quiet time can wait at all: whoever keeps asking finds a reading that is
+/// young enough.
+pub const FRESH_WAIT: Duration = Duration::from_millis(150);
 /// How long starting the worker waits to hear whether the system could be set up at all.
 const READY_WAIT: Duration = Duration::from_secs(3);
 
@@ -31,6 +34,7 @@ struct Cache {
     /// A refresh is already waiting in the queue: askers do not add another one, so reading the
     /// state – however often – takes at most one place and never crowds out a command.
     refresh_wanted: AtomicBool,
+    refreshed: Condvar,
 }
 
 impl Cache {
@@ -41,6 +45,7 @@ impl Cache {
                 at: None,
             }),
             refresh_wanted: AtomicBool::new(false),
+            refreshed: Condvar::new(),
         })
     }
 }
@@ -89,6 +94,7 @@ impl Worker {
                             at: Some(Instant::now()),
                         };
                     }
+                    shared.refreshed.notify_all();
                 };
                 store(&mut *sys);
                 loop {
@@ -134,10 +140,11 @@ impl Worker {
         }
     }
 
-    /// The last reading, at once. Asks the worker for a new one (at most one such request waits
-    /// at a time), so readers that keep asking see a fresh state and nobody asking costs nothing.
-    /// A reading older than [`STALE`] is not handed out: the caller gets "unknown" now and the
-    /// fresh one with its next question.
+    /// The last reading. Asks the worker for a new one (at most one such request waits at a
+    /// time), so readers that keep asking see a fresh state at once and nobody asking costs
+    /// nothing. Only when the reading is older than [`STALE`] – the first question after a quiet
+    /// time, such as the `open` of a session – does the caller wait for the fresh one, and never
+    /// longer than [`FRESH_WAIT`]; after that the answer is "unknown".
     pub fn state(&self) -> State {
         let Some(tx) = &self.tx else {
             return State::UNKNOWN;
@@ -148,8 +155,19 @@ impl Worker {
             // a full queue: every command in it ends in a reading anyway; ask again next time
             self.cache.refresh_wanted.store(false, Ordering::SeqCst);
         }
-        match self.cache.reading.lock() {
-            Ok(r) if r.at.is_some_and(|at| at.elapsed() <= STALE) => r.state,
+        let Ok(reading) = self.cache.reading.lock() else {
+            return State::UNKNOWN;
+        };
+        let stale = |r: &Reading| r.at.map_or(true, |at| at.elapsed() > STALE);
+        if !stale(&reading) {
+            return reading.state;
+        }
+        match self
+            .cache
+            .refreshed
+            .wait_timeout_while(reading, FRESH_WAIT, |r| stale(r))
+        {
+            Ok((r, _)) if !stale(&r) => r.state,
             _ => State::UNKNOWN,
         }
     }

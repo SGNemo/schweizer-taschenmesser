@@ -301,33 +301,48 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
         std::thread::Builder::new()
             .name("remote-tray".into())
             .spawn(move || {
-                // The only writer of the tray's controller: what it last sent is what the tray
-                // shows, so "changed" is always judged against the truth.
-                let mut shown: Option<String> = None;
-                loop {
-                    let now = remote
-                        .status()
-                        .controller
-                        .map(|(key, _)| name_of(&trust, &key));
-                    if now != shown {
-                        crate::capture::set_remote_tray(&app, now.clone());
-                        shown = now;
-                    }
-                    match rx.recv_timeout(WATCH) {
-                        Ok(Signal::Look) | Err(mpsc::RecvTimeoutError::Timeout) => {}
-                        // the hub stopped (or its controls are gone): nobody controls any more
-                        Ok(Signal::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => {
-                            if shown.is_some() {
-                                crate::capture::set_remote_tray(&app, None);
-                            }
-                            return;
-                        }
-                    }
-                }
+                watch(
+                    rx,
+                    || {
+                        remote
+                            .status()
+                            .controller
+                            .map(|(key, _)| name_of(&trust, &key))
+                    },
+                    |controller| crate::capture::set_remote_tray(&app, controller),
+                )
             })
             .ok()
     };
     *slot = Some(Attached { parts, thread });
+}
+
+/// The tray thread: the only writer of the tray's controller. What it last wrote is what the
+/// tray shows, so "changed" is always judged against the truth. It looks every [`WATCH`] and at
+/// once on [`Signal::Look`]; when the hub stops (or its controls are gone) nobody controls any
+/// more.
+fn watch(
+    rx: mpsc::Receiver<Signal>,
+    controller: impl Fn() -> Option<String>,
+    mut write: impl FnMut(Option<String>),
+) {
+    let mut shown: Option<String> = None;
+    loop {
+        let now = controller();
+        if now != shown {
+            write(now.clone());
+            shown = now;
+        }
+        match rx.recv_timeout(WATCH) {
+            Ok(Signal::Look) | Err(mpsc::RecvTimeoutError::Timeout) => {}
+            Ok(Signal::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => {
+                if shown.is_some() {
+                    write(None);
+                }
+                return;
+            }
+        }
+    }
 }
 
 /// The hub stopped: no controls, and the tray is back to normal. Called after the sessions were
@@ -614,9 +629,13 @@ pub fn remote_set_device(
         .ok_or("not-found")?;
     let old = parts.remote.grant_of(&key);
     if !grant.widens(&old) {
-        // remembered first: a narrowing holds for this run even if it cannot be written
-        state.narrowed(|n| n.keep(&key, grant));
         let result = parts.remote.set_grant(&key, grant, None);
+        // What holds now is remembered for this run, even if it could not be written – read
+        // back after the call, so a pause that landed in between is kept, not overwritten.
+        if !matches!(result, Err(ControlError::NotFound)) {
+            let holds = parts.remote.grant_of(&key);
+            state.narrowed(|n| n.keep(&key, holds));
+        }
         parts.look();
         return result.map_err(|e| error_name(e).to_owned());
     }
@@ -981,6 +1000,51 @@ mod tests {
     }
 
     #[test]
+    fn the_tray_thread_writes_only_changes_and_clears_when_the_hub_stops() {
+        let who = Arc::new(Mutex::new(None::<String>));
+        let written = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+        let (tx, rx) = mpsc::channel::<Signal>();
+        let thread = {
+            let (who, written) = (who.clone(), written.clone());
+            std::thread::spawn(move || {
+                watch(
+                    rx,
+                    || who.lock().unwrap().clone(),
+                    |c| written.lock().unwrap().push(c),
+                )
+            })
+        };
+        // nobody controls: several looks, nothing written
+        tx.send(Signal::Look).unwrap();
+        tx.send(Signal::Look).unwrap();
+        std::thread::sleep(Duration::from_millis(30));
+        assert!(written.lock().unwrap().is_empty());
+        // a controller appears: a look shows it at once, and only once
+        *who.lock().unwrap() = Some("Pixel".into());
+        tx.send(Signal::Look).unwrap();
+        for _ in 0..500 {
+            if !written.lock().unwrap().is_empty() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        tx.send(Signal::Look).unwrap();
+        // the hub stops while it is shown: cleared
+        tx.send(Signal::Stop).unwrap();
+        thread.join().unwrap();
+        assert_eq!(
+            *written.lock().unwrap(),
+            vec![Some("Pixel".to_owned()), None]
+        );
+        // a dropped sender ends it too, and writes nothing when nothing was shown
+        let (tx, rx) = mpsc::channel::<Signal>();
+        drop(tx);
+        let mut writes = 0;
+        watch(rx, || None, |_| writes += 1);
+        assert_eq!(writes, 0);
+    }
+
+    #[test]
     fn the_switch_question_lists_devices_and_sums_up_the_rest() {
         let many: Vec<(String, Level)> = (0..ASK_LIST_MAX + 3)
             .map(|i| (format!("Gerät {i}"), Level::Media))
@@ -989,7 +1053,9 @@ mod tests {
         assert!(text.contains("Gerät 0") && text.contains("Gerät 5"));
         assert!(!text.contains("Gerät 6"));
         assert!(text.contains('3'));
-        assert!(text.lines().count() == ASK_LIST_MAX + 2);
+        assert_eq!(text.lines().count(), 1 + 2 * ASK_LIST_MAX + 1);
+        // every name stands alone behind its label
+        assert!(text.lines().any(|l| l == "Gerät: Gerät 0"));
     }
 
     #[test]

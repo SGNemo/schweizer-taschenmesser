@@ -430,6 +430,22 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
     assert!(!commands.contains("confirmed: bool") && !commands.contains("confirm: bool"));
 }
 
+/// Only the tray thread says who controls: nothing else in the shell calls `set_remote_tray`.
+#[test]
+fn only_the_tray_thread_writes_who_controls() {
+    let mut calls = 0;
+    for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "rs") {
+            continue;
+        }
+        let text = fs::read_to_string(&path).unwrap();
+        calls += text.matches("set_remote_tray(&").count();
+    }
+    assert_eq!(calls, 1, "one call, inside the tray thread's writer");
+    assert!(!remote_commands_source().contains("set_remote_tray"));
+}
+
 /// The hub wires remote control on every desktop, and its controls go away with the hub.
 #[test]
 fn the_hub_wires_remote_control_and_drops_it_on_stop() {
