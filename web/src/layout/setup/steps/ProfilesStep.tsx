@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { disableModule, enableModule, useModuleStates } from '@/core/modules/activation';
+import { deselectInSetup, enableModule, useModuleStates } from '@/core/modules/activation';
 import { availableManifests, isVisible } from '@/core/modules/available';
 import { setSettings, useSettings } from '@/core/settings/settings';
 import {
@@ -97,7 +97,7 @@ export default function ProfilesStep({
       }
       for (const id of modDiff.disable) {
         const m = availableManifests().find((x) => x.id === id);
-        if (m) await disableModule(m, 'keep');
+        if (m) await deselectInSetup(m);
       }
       if (toolDiff.enable.length + toolDiff.disable.length > 0) {
         await setSettings(TOOLS_SCOPE, {
