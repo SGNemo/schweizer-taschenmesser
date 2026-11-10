@@ -2,6 +2,8 @@ use super::*;
 use crate::endpoint::Endpoint;
 use crate::hub::router::Admission;
 use crate::hub::{Hub, TAG_REQUEST, TAG_RESPONSE};
+use crate::input::tests::{Confirmed, TestSink};
+use crate::input::{MemorySwitch, Remote};
 use crate::noise::frame::{TAG_DATA_KEY, TAG_HELLO};
 use crate::noise::{self, Finished, Mode, Psk, StaticKey, Transport};
 use crate::pairing::{
@@ -25,6 +27,8 @@ impl DataKeyProvider for Keys {
 }
 
 struct Rig {
+    remote: Arc<Remote>,
+    sink: Arc<TestSink>,
     router: Arc<Router>,
     server: Server,
     host: Arc<PairingHost>,
@@ -38,6 +42,11 @@ fn loopback() -> Vec<Bind> {
 }
 
 fn rig_with(cfg: ServerConfig) -> Rig {
+    rig_on(cfg, true)
+}
+
+/// `home`: whether the one bind counts as the stored home network (input sessions only there).
+fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
     let keys = MemoryKeyStore::empty();
     let hub_key = keys.load_or_create().unwrap().public();
     let trust = Arc::new(MemoryTrustStore::new());
@@ -55,11 +64,17 @@ fn rig_with(cfg: ServerConfig) -> Rig {
         sessions.clone(),
     ));
     let mut adm = Admission::new();
-    adm.set_binds(loopback());
+    adm.set_binds(loopback().into_iter().map(|b| b.with_home(home)).collect());
     adm.allow_loopback_for_tests();
-    let router = Arc::new(Router::new(ep, host.clone(), hub, adm));
+    let switch = Arc::new(MemorySwitch::new());
+    let remote = Arc::new(Remote::new(trust.clone(), switch));
+    let sink = TestSink::new();
+    let router =
+        Arc::new(Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone()));
     let server = Server::start_for_tests(&loopback(), router.clone(), cfg).unwrap();
     Rig {
+        remote,
+        sink,
         router,
         server,
         host,
@@ -741,5 +756,423 @@ mod device_client {
         let long = "ä".repeat(40);
         let cut = client::hello_name(&long);
         assert!(cut.len() <= 64 && cut.chars().all(|c| c == 'ä'));
+    }
+}
+
+/// The phone's input client against the real server: own connection, own handshake, duplex.
+mod input_client {
+    use super::*;
+    use crate::input::wire::{self, Code, Level, Media, Record};
+    use crate::input::Action;
+    use crate::input_client::{testing::open_via, Event, InputError, InputSession};
+    use crate::noise::frame::{INPUT_CAP, TAG_UNPAIR};
+    use crate::trust::RemoteGrant;
+    use std::sync::mpsc::{channel, Receiver};
+
+    fn addr(r: &Rig) -> std::net::SocketAddrV4 {
+        r.server.local_addrs()[0]
+    }
+
+    /// A paired device with a grant, on a hub whose switch is on.
+    fn granted(r: &Rig, level: Level) -> StaticKey {
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(r, &key);
+        r.remote.enable_now(true).unwrap();
+        r.remote
+            .grant_now(
+                &key.public(),
+                RemoteGrant {
+                    level,
+                    ..RemoteGrant::default()
+                },
+            )
+            .unwrap();
+        key
+    }
+
+    fn open(
+        r: &Rig,
+        key: &StaticKey,
+        level: Level,
+    ) -> Result<(InputSession, wire::Opened, Receiver<Event>), InputError> {
+        let (tx, rx) = channel();
+        open_via(
+            addr(r),
+            key,
+            &r.hub_key,
+            level,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .map(|(s, o)| (s, o, rx))
+    }
+
+    fn wait_for(what: impl Fn() -> bool) {
+        for _ in 0..300 {
+            if what() {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        panic!("did not happen");
+    }
+
+    const WAIT: Duration = Duration::from_secs(5);
+
+    #[test]
+    fn a_granted_phone_controls_media_and_hears_the_state_while_sync_goes_on() {
+        let r = rig();
+        let key = granted(&r, Level::Media);
+        let mut sync = session(&r, &key);
+        let (input, opened, events) = open(&r, &key, Level::Full).unwrap();
+        // asked for full, granted media: the session is a media session
+        assert_eq!((opened.level, opened.grant), (Level::Media, Level::Media));
+        assert_eq!(opened.state.volume, 42);
+
+        input
+            .send_events(&[
+                Record::Media(Media::VolumeDown),
+                Record::Media(Media::PlayPause),
+            ])
+            .unwrap();
+        wait_for(|| r.sink.actions.lock().unwrap().len() == 2);
+        assert!(
+            r.sink.taken()
+                == vec![
+                    Action::Media(Media::VolumeDown),
+                    Action::Media(Media::PlayPause)
+                ]
+        );
+        // the PC tells its new state without being asked
+        r.sink.set_volume(40);
+        let Ok(Event::State(s)) = events.recv_timeout(WAIT) else {
+            panic!("no state")
+        };
+        assert_eq!(s.volume, 40);
+        // the sync session of the same device is its own connection and keeps working
+        let info = sync.request(&json!({"keyVersion": 1, "type": "info"}));
+        assert!(info.get("error").is_none());
+        assert_eq!(r.server.open_connections(), 2);
+
+        // ended at the PC: the phone hears why, and sync goes on
+        assert_eq!(r.remote.end(), Some(key.public()));
+        assert_eq!(
+            events.recv_timeout(WAIT),
+            Ok(Event::Closed(Some(Code::Ended)))
+        );
+        wait_for(|| input.is_over());
+        assert_eq!(
+            input.send_events(&[Record::Media(Media::PlayPause)]),
+            Err(InputError::Closed)
+        );
+        assert!(r.sink.taken().is_empty());
+        assert!(sync
+            .request(&json!({"keyVersion": 1, "type": "info"}))
+            .get("error")
+            .is_none());
+        // and the next try says "paused"
+        assert_eq!(
+            open(&r, &key, Level::Media).err(),
+            Some(InputError::Refused(Code::Paused))
+        );
+        input.close();
+    }
+
+    #[test]
+    fn mouse_keyboard_and_text_travel_on_a_full_session_and_close_a_media_one() {
+        let r = rig();
+        let key = granted(&r, Level::Full);
+        let (media, opened, events) = open(&r, &key, Level::Media).unwrap();
+        assert_eq!((opened.level, opened.grant), (Level::Media, Level::Full));
+        assert!(opened.unlock_required);
+        // a pointer record on the media session: the hub closes it, nothing acts
+        media.send_events(&[Record::Move { dx: 5, dy: 5 }]).unwrap();
+        assert_eq!(events.recv_timeout(WAIT), Ok(Event::Closed(None)));
+        assert!(r.sink.taken().is_empty());
+        media.close();
+
+        // the phone opens anew at the full level
+        let (full, opened, _events) = open(&r, &key, Level::Full).unwrap();
+        assert_eq!(opened.level, Level::Full);
+        let moves = vec![Record::Move { dx: 1, dy: -1 }; 40]; // more than one frame
+        full.send_events(&moves).unwrap();
+        full.send_text("Grüße").unwrap();
+        wait_for(|| r.sink.actions.lock().unwrap().len() == 41);
+        let acted = r.sink.taken();
+        assert!(acted[..40]
+            .iter()
+            .all(|a| *a == Action::Move { dx: 1, dy: -1 }));
+        assert!(acted[40] == Action::Text("Grüße".into()));
+        // text the protocol does not carry never leaves the phone
+        assert_eq!(full.send_text("a\nb"), Err(InputError::Protocol));
+        assert_eq!(full.send_text(""), Err(InputError::Protocol));
+        full.close();
+        wait_for(|| r.remote.status().controller.is_none());
+    }
+
+    #[test]
+    fn every_refusal_reaches_the_phone_as_its_own_code() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(&r, &key);
+        let refusal = |level| open(&r, &key, level).err();
+        // paired, but the PC's switch is off
+        assert_eq!(
+            refusal(Level::Media),
+            Some(InputError::Refused(Code::RemoteOff))
+        );
+        r.remote.enable_now(true).unwrap();
+        assert_eq!(
+            refusal(Level::Media),
+            Some(InputError::Refused(Code::NotGranted))
+        );
+        let grant = |level| {
+            r.remote
+                .grant_now(
+                    &key.public(),
+                    RemoteGrant {
+                        level,
+                        ..RemoteGrant::default()
+                    },
+                )
+                .unwrap()
+        };
+        grant(Level::Full);
+        r.sink.set_locked(true);
+        assert_eq!(
+            refusal(Level::Full),
+            Some(InputError::Refused(Code::Locked))
+        );
+        r.sink.set_locked(false);
+        r.sink
+            .supported
+            .store(false, std::sync::atomic::Ordering::SeqCst);
+        assert_eq!(
+            refusal(Level::Media),
+            Some(InputError::Refused(Code::Unsupported))
+        );
+        r.sink
+            .supported
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+        // another device controls
+        let other = granted(&r, Level::Media);
+        let (held, _, _) = open(&r, &other, Level::Media).unwrap();
+        assert_eq!(refusal(Level::Media), Some(InputError::Refused(Code::Busy)));
+        held.close();
+        wait_for(|| r.remote.status().controller.is_none());
+        // a device the hub does not know: the authenticated refusal
+        let stranger = StaticKey::generate().unwrap();
+        assert_eq!(
+            open(&r, &stranger, Level::Media).err(),
+            Some(InputError::UnknownDevice)
+        );
+        // a hub that hangs up on the first message without a word: a wrong hub key here, and what
+        // a hub from before remote control does with the unknown mode
+        let wrong = StaticKey::generate().unwrap().public();
+        let (tx, _rx) = channel();
+        assert_eq!(
+            open_via(
+                addr(&r),
+                &key,
+                &wrong,
+                Level::Media,
+                Box::new(move |e| {
+                    let _ = tx.send(e);
+                })
+            )
+            .err(),
+            Some(InputError::NoAnswer)
+        );
+        // nobody listening at all is "not reachable"
+        let dead = {
+            let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            match l.local_addr().unwrap() {
+                std::net::SocketAddr::V4(a) => a,
+                _ => unreachable!(),
+            }
+        };
+        let (tx, _rx) = channel();
+        assert_eq!(
+            open_via(
+                dead,
+                &key,
+                &r.hub_key,
+                Level::Media,
+                Box::new(move |e| {
+                    let _ = tx.send(e);
+                })
+            )
+            .err(),
+            Some(InputError::Network)
+        );
+        assert!(r.sink.taken().is_empty());
+    }
+
+    /// The phone is in the middle of sending when the PC ends the session and still hears the
+    /// reason. (A smoke test: on loopback the reason mostly arrives also without the hub's
+    /// half-close and drain, which is there for real networks.)
+    #[test]
+    fn the_reason_arrives_also_while_the_phone_is_still_sending() {
+        for _ in 0..5 {
+            let r = rig();
+            let key = granted(&r, Level::Full);
+            let (input, _, events) = open(&r, &key, Level::Full).unwrap();
+            let input = Arc::new(input);
+            let sender = {
+                let input = input.clone();
+                std::thread::spawn(move || {
+                    // well under the limits, so the only reason to close is the PC's
+                    let frame = [Record::Move { dx: 1, dy: 0 }];
+                    while input.send_events(&frame).is_ok() {
+                        std::thread::sleep(Duration::from_millis(4));
+                    }
+                })
+            };
+            wait_for(|| !r.sink.actions.lock().unwrap().is_empty());
+            r.remote.end();
+            assert_eq!(
+                events.recv_timeout(WAIT),
+                Ok(Event::Closed(Some(Code::Ended)))
+            );
+            sender.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn outside_the_home_network_the_hub_takes_sync_but_no_input() {
+        // the bind exists (a pairing window in another network), but it is not the home network
+        let r = rig_on(
+            ServerConfig {
+                tick: Duration::from_millis(20),
+                ..ServerConfig::default()
+            },
+            false,
+        );
+        let key = granted(&r, Level::Full);
+        assert_eq!(
+            open(&r, &key, Level::Media).err(),
+            Some(InputError::UnknownDevice)
+        );
+        // sync works there as before, so the phone can tell this from an old or absent hub
+        let mut sync = session(&r, &key);
+        assert!(sync
+            .request(&json!({"keyVersion": 1, "type": "info"}))
+            .get("error")
+            .is_none());
+        assert_eq!(r.remote.status().controller, None);
+    }
+
+    #[test]
+    fn what_the_pc_sends_unasked_does_not_keep_an_idle_session_alive() {
+        let r = rig_with(ServerConfig {
+            tick: Duration::from_millis(20),
+            idle_timeout: Duration::from_millis(600),
+            ..ServerConfig::default()
+        });
+        let key = granted(&r, Level::Media);
+        let (input, _, events) = open(&r, &key, Level::Media).unwrap();
+        // the PC's state keeps changing, the phone sends nothing
+        let began = std::time::Instant::now();
+        let mut states = 0;
+        let end = loop {
+            r.sink
+                .set_volume((began.elapsed().as_millis() / 50 % 100) as u8);
+            match events.recv_timeout(Duration::from_millis(50)) {
+                Ok(Event::State(_)) => states += 1,
+                Ok(closed @ Event::Closed(_)) => break closed,
+                Err(_) => {}
+            }
+            assert!(began.elapsed() < WAIT, "never closed");
+        };
+        assert_eq!(end, Event::Closed(None), "idle: closed without a reason");
+        assert!(states >= 1, "state frames did arrive");
+        // one per 200 ms at most, however fast the state changes
+        let most = began.elapsed().as_millis() / 200 + 1;
+        assert!(
+            states as u128 <= most,
+            "{states} state frames, at most {most}"
+        );
+        wait_for(|| r.remote.status().controller.is_none());
+        input.close();
+    }
+
+    #[test]
+    fn a_frame_over_512_bytes_ends_an_input_connection_before_it_is_read() {
+        let r = rig();
+        let key = granted(&r, Level::Full);
+        let (init, m1) = noise::start_initiator(Mode::Input, &key, &r.hub_key, None).unwrap();
+        let mut s = connect(&r);
+        send(&mut s, &m1);
+        let Finished::Established(mut t, _) = init.finish(&recv(&mut s).unwrap()).unwrap() else {
+            panic!()
+        };
+        send(&mut s, &t.seal(TAG_HELLO, b"Phone").unwrap());
+        // announces a 513-byte frame: the hub closes on the length alone
+        use std::io::Write;
+        s.write_all(&u16::try_from(INPUT_CAP + 1).unwrap().to_be_bytes())
+            .unwrap();
+        assert!(closed(&mut s));
+
+        // and before the first authenticated frame the cap is 256, as for every session
+        let (init, m1) = noise::start_initiator(Mode::Input, &key, &r.hub_key, None).unwrap();
+        let mut s = connect(&r);
+        send(&mut s, &m1);
+        let Finished::Established(..) = init.finish(&recv(&mut s).unwrap()).unwrap() else {
+            panic!()
+        };
+        s.write_all(&257u16.to_be_bytes()).unwrap();
+        assert!(closed(&mut s));
+    }
+
+    #[test]
+    fn revoking_closes_the_input_session_and_unpair_is_not_an_input_frame() {
+        let r = rig();
+        let key = granted(&r, Level::Media);
+        let (input, _, events) = open(&r, &key, Level::Media).unwrap();
+        r.sessions.revoke(&*r.trust, &key.public()).unwrap();
+        assert_eq!(events.recv_timeout(WAIT), Ok(Event::Closed(None)));
+        input.close();
+        assert_eq!(
+            open(&r, &key, Level::Media).err(),
+            Some(InputError::UnknownDevice)
+        );
+
+        // a raw `unpair` on an input session closes it and unpairs nobody
+        let key = granted(&r, Level::Media);
+        let (init, m1) = noise::start_initiator(Mode::Input, &key, &r.hub_key, None).unwrap();
+        let mut s = connect(&r);
+        send(&mut s, &m1);
+        let Finished::Established(mut t, _) = init.finish(&recv(&mut s).unwrap()).unwrap() else {
+            panic!()
+        };
+        send(&mut s, &t.seal(TAG_HELLO, b"Phone").unwrap());
+        send(&mut s, &t.seal(TAG_UNPAIR, &[]).unwrap());
+        assert!(closed(&mut s));
+        assert!(!r.trust.find_by_key(&key.public()).unwrap().revoked);
+    }
+
+    #[test]
+    fn the_input_client_dials_private_addresses_only() {
+        let key = StaticKey::generate().unwrap();
+        let hub = StaticKey::generate().unwrap().public();
+        for public in ["8.8.8.8:4000", "127.0.0.1:4000", "100.64.0.1:4000"] {
+            let (tx, _rx) = channel();
+            assert_eq!(
+                InputSession::open(
+                    public.parse().unwrap(),
+                    &key,
+                    &hub,
+                    "Phone",
+                    Level::Media,
+                    Box::new(move |e| {
+                        let _ = tx.send(e);
+                    })
+                )
+                .err(),
+                Some(InputError::Network),
+                "{public}"
+            );
+        }
     }
 }

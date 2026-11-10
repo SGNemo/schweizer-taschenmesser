@@ -11,7 +11,10 @@
 //!    key does not re-pair; no burn),
 //! 3. the window is consumed atomically (`PairingHost::consume`).
 //!
-//! A session message 1 from an unknown or revoked key gets the same authenticated refusal.
+//! A session message 1 from an unknown or revoked key gets the same authenticated refusal. So does
+//! an input-session message 1 (remote control) wherever input is not accepted: on a connection
+//! that did not come in on the stored home network, or on a hub without remote control. The bytes
+//! are the same as for a stranger's key, and no transport state is kept.
 
 use crate::noise::frame::{
     self, FrameError, MODE_PAIR, TAG_APP_MIN, TAG_DATA_KEY, TAG_HELLO, TAG_UNKNOWN_DEVICE,
@@ -92,12 +95,23 @@ impl Endpoint {
         self.key.public()
     }
 
-    /// Handles the first message of a connection.
+    /// Closes every input session (remote control) and no sync session. Returns how many.
+    pub fn close_input_sessions(&self) -> usize {
+        self.sessions.close_input(None)
+    }
+
+    /// Handles the first message of a connection on which no input session may start.
     pub fn handle_first(&self, wire: &[u8]) -> FirstReply {
+        self.handle_first_on(wire, false)
+    }
+
+    /// Handles the first message of a connection. `input_ok`: the connection came in on the stored
+    /// home network and the hub has remote control wired; only then an input session is accepted.
+    pub fn handle_first_on(&self, wire: &[u8], input_ok: bool) -> FirstReply {
         if wire.first() == Some(&MODE_PAIR) {
             self.pair_first(wire)
         } else {
-            self.session_first(wire)
+            self.session_first(wire, input_ok)
         }
     }
 
@@ -120,22 +134,25 @@ impl Endpoint {
         }
     }
 
-    fn session_first(&self, wire: &[u8]) -> FirstReply {
+    fn session_first(&self, wire: &[u8], input_ok: bool) -> FirstReply {
         let Ok(first) = noise::read_first(&self.key, wire, None) else {
             return FirstReply::Drop;
         };
         let peer = first.peer();
+        let mode = first.mode();
+        let here = mode != noise::Mode::Input || input_ok;
         match self.trust.find_by_key(&peer) {
-            Some(d) if !d.revoked => match first.accept() {
+            Some(d) if !d.revoked && here => match first.accept() {
                 Ok((m2, transport, _)) => {
                     // registered before the first frame: a revoke between message 2 and `hello` counts
-                    let handle = self.sessions.register(peer);
+                    let handle = self.sessions.register(peer, mode);
                     FirstReply::Accept {
                         m2,
                         conn: Conn::Session(Box::new(Session {
                             transport,
                             handle,
                             peer,
+                            mode,
                             trust: self.trust.clone(),
                             sessions: self.sessions.clone(),
                             authenticated: false,
@@ -170,11 +187,13 @@ pub enum SessionError {
     Frame(FrameError),
 }
 
-/// One authenticated connection of a trusted device.
+/// One authenticated connection of a trusted device: a sync session or an input session
+/// (remote control). The kind is fixed by the handshake and never changes.
 pub struct Session {
     transport: Transport,
     handle: SessionHandle,
     peer: PublicKey,
+    mode: noise::Mode,
     trust: Arc<dyn TrustStore>,
     sessions: Arc<SessionRegistry>,
     authenticated: bool,
@@ -198,6 +217,15 @@ impl Session {
         self.peer
     }
 
+    pub fn mode(&self) -> noise::Mode {
+        self.mode
+    }
+
+    /// The close flag of this session (shared with the registry).
+    pub fn handle(&self) -> SessionHandle {
+        self.handle.clone()
+    }
+
     pub fn is_closed(&self) -> bool {
         self.handle.is_closed()
     }
@@ -208,25 +236,31 @@ impl Session {
 
     /// Checks (in this order) closed flag, trust list, then decrypts. The cap is raised and the
     /// device's activity recorded only after the first frame decrypted; any failure closes for good.
+    /// An input session records no activity at all (`lastSeen` is sync contact only) and cannot
+    /// unpair the device.
     pub fn receive(&mut self, wire: &[u8], now_unix: u64) -> Result<Incoming, SessionError> {
         self.check_open()?;
         let (tag, body) = self.transport.open(wire).map_err(|e| self.fail(e))?;
         if !self.authenticated {
             self.authenticated = true;
             self.transport.raise_cap();
-            self.trust.touch(&self.peer, now_unix);
+            if self.mode == noise::Mode::Session {
+                self.trust.touch(&self.peer, now_unix);
+            }
         }
         match tag {
             TAG_HELLO => match frame::parse_hello(&body) {
                 Ok(name) => Ok(Incoming::Hello(name)),
                 Err(e) => Err(self.fail(e)),
             },
-            TAG_UNPAIR => {
+            TAG_UNPAIR if self.mode == noise::Mode::Session => {
                 let _ = self.sessions.revoke(&*self.trust, &self.peer);
                 self.handle.close();
                 Ok(Incoming::Unpair)
             }
-            TAG_DATA_KEY | TAG_UNKNOWN_DEVICE => Err(self.fail(FrameError::UnknownTag)),
+            TAG_UNPAIR | TAG_DATA_KEY | TAG_UNKNOWN_DEVICE => {
+                Err(self.fail(FrameError::UnknownTag))
+            }
             t if t >= TAG_APP_MIN => Ok(Incoming::App { tag: t, body }),
             _ => Err(self.fail(FrameError::UnknownTag)),
         }

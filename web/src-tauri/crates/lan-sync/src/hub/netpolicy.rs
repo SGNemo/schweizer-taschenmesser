@@ -54,12 +54,29 @@ pub fn is_allowed_hub_addr(ip: IpAddr) -> bool {
 pub struct Bind {
     ip: Ipv4Addr,
     prefix: u8,
+    /// The interface is on the stored home network (see [`decide`]). Remote-control input is
+    /// accepted only on such a bind; sync and pairing do not look at it.
+    home: bool,
 }
 
 impl Bind {
     /// `prefix` must be 1..=32: a /0 would match every peer.
     pub fn new(ip: Ipv4Addr, prefix: u8) -> Option<Bind> {
-        (1..=32).contains(&prefix).then_some(Bind { ip, prefix })
+        (1..=32).contains(&prefix).then_some(Bind {
+            ip,
+            prefix,
+            home: false,
+        })
+    }
+
+    /// Whether this bind is on the stored home network. Only [`decide`] ever says yes.
+    pub fn is_home(&self) -> bool {
+        self.home
+    }
+
+    pub(crate) fn with_home(mut self, home: bool) -> Bind {
+        self.home = home;
+        self
     }
 
     pub fn ip(&self) -> Ipv4Addr {
@@ -137,6 +154,8 @@ fn qualifies(i: &IfaceInfo) -> Option<Bind> {
 ///   first pairing, before a home network is stored).
 /// * Otherwise (paired devices only) only on interfaces whose network id equals the stored home
 ///   network; an interface without a network id never matches.
+/// * Every bind says whether it is on the stored home network ([`Bind::is_home`]). That flag changes
+///   nothing about where the hub listens; remote-control input is accepted only where it is set.
 pub fn decide(info: &dyn NetworkInfo, home: &dyn HomeNetworkStore, wanted: Wanted) -> Decision {
     if !wanted.listening() {
         return Decision::Off(OffReason::NothingWanted);
@@ -144,25 +163,40 @@ pub fn decide(info: &dyn NetworkInfo, home: &dyn HomeNetworkStore, wanted: Wante
     let Ok(ifaces) = info.interfaces() else {
         return Decision::Off(OffReason::NetworkUnreadable);
     };
+    // The stored home network is read also while a window is open: it does not decide where the
+    // window listens, only which binds are flagged `home` (fail-closed: unreadable or none = no
+    // bind is home, so no input session anywhere).
+    let stored = home.home_network_id();
     let home_id = if wanted.pairing_window_open {
         None
     } else {
-        match home.home_network_id() {
+        match &stored {
             Err(_) => return Decision::Off(OffReason::NetworkUnreadable),
             Ok(None) => return Decision::Off(OffReason::NoHomeNetwork),
-            Ok(Some(id)) => Some(id),
+            Ok(Some(id)) => Some(id.as_str()),
         }
+    };
+    let is_home = |i: &IfaceInfo| match (&stored, i.network_id.as_deref()) {
+        (Ok(Some(h)), Some(id)) => h == id,
+        _ => false,
     };
     let mut binds: Vec<Bind> = ifaces
         .iter()
-        .filter(|i| match &home_id {
-            Some(h) => i.network_id.as_deref() == Some(h.as_str()),
+        .filter(|i| match home_id {
+            Some(h) => i.network_id.as_deref() == Some(h),
             None => true,
         })
-        .filter_map(qualifies)
+        .filter_map(|i| qualifies(i).map(|b| b.with_home(is_home(i))))
         .collect();
     binds.sort();
-    binds.dedup();
+    // one listener per address; two interfaces on one address are home only if both are
+    binds.dedup_by(|later, kept| {
+        let same = later.ip == kept.ip && later.prefix == kept.prefix;
+        if same {
+            kept.home &= later.home;
+        }
+        same
+    });
     if !binds.is_empty() {
         return Decision::On(binds);
     }
