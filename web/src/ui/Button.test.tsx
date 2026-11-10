@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
@@ -62,6 +64,68 @@ describe('Button', () => {
       </IconButton>,
     );
     expect(screen.getByRole('button', { name: 'Schließen' })).toHaveAttribute('title', 'Schließen');
+  });
+});
+
+/** Rule blocks of a CSS source as `[selector, body]`, comments removed (flat files only: no nesting, no at-rules). */
+function ruleBlocks(css: string): [selector: string, body: string][] {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  return [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => [m[1]!.trim(), m[2]!.trim()]);
+}
+
+describe('disabled state (AE1)', () => {
+  const uiDir = join(process.cwd(), 'src/ui');
+  const buttonCss = ruleBlocks(readFileSync(join(uiDir, 'Button.module.css'), 'utf8'));
+  const body = (selector: string) => buttonCss.find(([s]) => s === selector)?.[1] ?? '';
+
+  it('a disabled button stays a disabled button for assistive tech and the mouse', () => {
+    let clicks = 0;
+    render(
+      <Button variant="primary" disabled onClick={() => clicks++}>
+        Entsperren
+      </Button>,
+    );
+    const button = screen.getByRole('button', { name: 'Entsperren' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('data-variant', 'primary');
+    button.click();
+    expect(clicks).toBe(0);
+  });
+
+  // Opacity over the filled accent mixed into a muddy brown on the dark theme: it read as a colour bug, not as
+  // "locked". The state is its own look now: neutral surface, quiet but readable text, no accent, no danger.
+  it('is a neutral surface with quiet text, one rule for every variant', () => {
+    const disabled = body('.btn:disabled');
+    expect(disabled).toContain('background: var(--surface-2);');
+    expect(disabled).toContain('color: var(--text-3);');
+    expect(disabled).toContain('cursor: not-allowed;');
+    expect(disabled).not.toMatch(/--accent|--danger|opacity/);
+    // `.btn:disabled` outranks the one-class variant rules, so primary, secondary and danger cannot leak through …
+    for (const variant of ['.primary', '.secondary', '.danger']) {
+      expect(body(variant), variant).toMatch(/background:/);
+      expect(buttonCss.some(([s]) => s.startsWith(`${variant}:disabled`))).toBe(false);
+    }
+    // … and no variant paints a hover on top of it.
+    for (const [selector] of buttonCss) {
+      if (selector.includes(':hover')) expect(selector, selector).toContain(':not(:disabled)');
+    }
+  });
+
+  it('the quiet variants stay without a surface and never bring colour back', () => {
+    const quiet = body('.ghost:disabled,\n.quietDanger:disabled');
+    expect(quiet).toContain('background: transparent;');
+    expect(quiet).not.toMatch(/(^|\s)color:|--accent|--danger|opacity/);
+  });
+
+  it('no shared component fades or colours a :disabled control', () => {
+    const offenders: string[] = [];
+    for (const file of readdirSync(uiDir).filter((f) => f.endsWith('.module.css'))) {
+      for (const [selector, rules] of ruleBlocks(readFileSync(join(uiDir, file), 'utf8'))) {
+        if (!selector.includes(':disabled') || selector.includes(':not(:disabled)')) continue;
+        if (/opacity|--accent|--danger/.test(rules)) offenders.push(`${file}: ${selector}`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });
 

@@ -16,7 +16,8 @@ export default function FitnessWidget() {
   const prefs = useFitnessSettings();
   const w = t.fitness.widget;
   const entries: FortschrittEntry[] = [];
-  if (data) {
+  // Rows only from the stored preferences: with defaults a switched-off kcal row would flash.
+  if (data && prefs) {
     const sessions = prefs.weekSessions
       ? w.sessionsOf(data.week.count, prefs.weekSessions)
       : w.sessions(data.week.count);
@@ -41,10 +42,11 @@ export default function FitnessWidget() {
       });
     }
   }
-  const isEmpty = !!data && data.week.count === 0 && (!prefs.nutrition || data.meals === 0);
+  const isEmpty =
+    !!data && !!prefs && data.week.count === 0 && (!prefs.nutrition || data.meals === 0);
   return (
     <WidgetBody
-      loading={!data}
+      loading={!data || !prefs}
       isEmpty={isEmpty}
       empty={w.empty}
       emptyAction={{ label: t.fitness.addSession, to: '/fitness?new=session' }}
