@@ -80,7 +80,7 @@ function readHead(): Head | null {
     hasTitleRow: !!titleRow,
     titleCut: (() => {
       const h1 = head.querySelector('h1');
-      return !!h1 && h1.scrollWidth > h1.clientWidth + 1;
+      return !!h1 && h1.scrollWidth > h1.clientWidth;
     })(),
     valueCut: (() => {
       const figure = titleRow?.querySelector<HTMLElement>('[data-testid="module-figure"]');
