@@ -47,15 +47,15 @@ const anchors = (names) => ({
 });
 const file = (rel, note) => ({ label: note ? `${rel} (${note})` : rel, tokens: fileTokens(rel) });
 
-/** The board between chats: the notes repo when a clone is at hand, else the legacy folder in this repo. */
+/** The board between chats: the notes repo when a clone is at hand (`--notes`, NEMO_SCRIBBLE_DIR, ../nemo-scribble). */
 function board() {
   const arg = process.argv.indexOf('--notes');
   const dirs = [arg > 0 ? process.argv[arg + 1] : null, process.env.NEMO_SCRIBBLE_DIR, join(repo, '..', 'nemo-scribble')];
   const dir = dirs.find((d) => d && existsSync(join(d, 'board')));
   if (!dir) {
-    if (arg > 0) console.error(`--notes ${process.argv[arg + 1]}: no board/ folder there, falling back`);
-    if (!has('scribble/BOARD.md')) console.error('no board found (pass --notes <clone of the notes repo>): counted as 0');
-    return file('scribble/BOARD.md', 'legacy board in this repo; no clone of the notes repo found');
+    if (arg > 0) console.error(`--notes ${process.argv[arg + 1]}: no board/ folder there`);
+    console.error('no board found (pass --notes <clone of the notes repo>): counted as 0');
+    return { label: 'no notes repo clone found', tokens: 0 };
   }
   const items = readdirSync(join(dir, 'board')).filter((f) => f.endsWith('.md'));
   const text = items.map((f) => readFileSync(join(dir, 'board', f), 'utf8'));

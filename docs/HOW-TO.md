@@ -56,6 +56,7 @@ How to read it:
 | [howto/money-subscriptions.md](howto/money-subscriptions.md) | Abos: service tiles, trial end, category, price hint from bookings, bookings from charges (money group package 3) |
 | [howto/money-budgets.md](howto/money-budgets.md) | Budgets: periods, carry-over, warning level, forecast, history, goal plan (money group package 4) |
 | [howto/planning-modules.md](howto/planning-modules.md)       | Planen group modules: calendar views, hour-grid drag, named calendars, holidays, reminders                                                                    |
+| [howto/known-duplicates.md](howto/known-duplicates.md) | helper and component copies still in the code, where the shared one goes |
 | [howto/readable-text.md](howto/readable-text.md)             | reading aid, groups, colour meaning: show text readably                                                                                                       |
 | [howto/new-extension.md](howto/new-extension.md)             | tool (incl. "Register a search-bar expression for a tool"), connector, setup step, AI provider, importer                                                      |
 | [howto/new-importer.md](howto/new-importer.md) | importer for another app (`web/src/importers/<source>/`: parser, source, tests, report) |

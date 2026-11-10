@@ -182,7 +182,7 @@ Dieser PC – „Lange nicht benutzt“ (`feat/disk-age-by-last-use`): wo Window
 
 Fokus- und Aufmerksamkeitshilfen: Paket 1 „Anfangen“ ist gebaut (PR gegen `develop`, wartet auf Review/Merge); danach Paket 2 „Erinnerungen“. Plan: [features/focus-aids.md](../../features/focus-aids.md).
 
-Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit [design/VISUAL-AUDIT-2026-10-03.md](../../design/VISUAL-AUDIT-2026-10-03.md), Handtests V1–V4 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
+Optik-Politur und Benachrichtigungs-Zentrum (`fix/visual-polish-notifications`): PR gegen `develop`, wartet auf Review; Audit `design/VISUAL-AUDIT-2026-10-03.md` (gelöscht 2026-11-10, Inhalt in DESIGN-SPEC §7a), Handtests V1–V4 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
 
 Torrent-Teil (Paket 3, Branch `feat/downloads-torrent`): eingebettete BitTorrent-Engine (`librqbit`), nur Magnet-Links und `.torrent`-Dateien, die du selbst einfügst/öffnest; aus bis zum einmaligen Hinweis, Dateiauswahl, Limits, Teilen endet bei Verhältnis/Zeit, nichts startet nach einem Neustart von selbst; nur mit Mock-Daten getestet, Handtests D7–D12 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md). Danach: Paket 4 (Android Custom Tabs, `magnet:`/`.torrent`-Zuordnung).
 
@@ -194,7 +194,7 @@ Browser + Downloads Paket 4 (Branch `feat/browser-android`, gestapelt auf Paket 
 
 KI-Eintragen (PR A, Branch `feat/ai-write-local-model-chat`): Sätze in der Leiste werden zu Einträgen/Änderungen/Löschungen mit Vorschau (Regeln → Cloud-Fallback, jede Antwort mit Stufe und Statistik); Regel-Trefferquote jetzt an drei Sätzen gemessen (Tuning, Held-out, Blind; erste Blind-Messung 97,4 %, 1 Fehlgriff bei Fragen); PR B (Branch `feat/ai-local-model`): lokales Modell als Stufe 1 (Rust-Laufzeit hinter Cargo-Feature, Einstellungen, Download mit Zustimmung/Prüfsumme, Mess-Harness); Modellwahl steht aus; PR C (Branch `feat/ai-chat-module`, gestapelt auf B): Chat-Modul (mehrere Chats, lokales Modell oder Anbieter, Daten aus Modulen nur freiwillig mit Vorschau, sicheres Markdown, Export). Handtests K1–K4 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
 
-Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md), Entwurf [design/READABILITY-PLAN.md](../../design/READABILITY-PLAN.md).
+Lesbarkeit (`feat/readability`): Lesehilfe für jeden Text (Umfang 25–100 %, Einstellungen → Darstellung → Lesen), Farben nur mit Bedeutung, gruppierte Listen, Bereichsfarben in Navigation und Modul-Bibliothek; PR gegen `develop`, wartet auf Review; Handtests L1–L4 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md), Entwurf `design/READABILITY-PLAN.md` (gelöscht 2026-11-10, Inhalt in DESIGN-SPEC §4b/§4c).
 
 KI abschalten (`feat/ai-off`): ein umkehrbarer Hauptschalter in Einstellungen → KI, löscht Schlüssel, Cache, Statistik und API-Tokens; PR gegen `develop`, wartet auf Review; Handtests A1–A2 in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
 

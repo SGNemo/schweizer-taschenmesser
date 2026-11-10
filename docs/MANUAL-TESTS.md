@@ -27,6 +27,8 @@ R5. Datenträger-Modul D1–D18 und Keystore/Windows Hello (Schritt 11b) wie unt
 
 ### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 
+Windows-Portable-Größe vorher/nachher: nur der Release-Workflow kann sie messen (Dry-Run auf `develop`, siehe HOW-TO; aus STATUS verschoben, 2026-11-10).
+
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
 D1. _Scan echtes Laufwerk:_ Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
 D2. _Treemap navigieren:_ Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
@@ -446,6 +448,12 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 
 9. **Einrichtungsassistent prüfen.** Die Punkte E1–E5 in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf Windows-Portable und Android durchgehen (frische Installation und eine mit Daten).
 
+### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
+
+LR1. _X1 Pipe auf Windows mit zweitem Nutzer_ (Fix: SQOS-Flag in `ipc.rs`). ☐
+LR2. _V1 Credential-Manager nach „Alle Daten löschen“_: das biometrische Siegel des Tresors ist danach weg. ☐
+LR3. _Android-APK-Update._ ☐
+
 ### Google-Verbindung einrichten (einmalig, für Kalender/Gmail)
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → neues Projekt „Nemo".
@@ -454,6 +462,11 @@ Installation und Update auf echten Geräten (Windows und Android) – Schritt f�
 4. _Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID_ → Typ **Desktop-App**. Client-ID und Client-Secret kopieren und in der Windows-App unter Einstellungen → Verbindungen → Google eintragen (landen im Windows-Anmeldeinformationsspeicher, nicht im Repo).
 5. **Ungetestet/prüfen:** ob `gmail.readonly` bei einer unverifizierten „In Produktion"-App wie erwartet funktioniert. Wenn nicht: Status auf „Testing" lassen und deine Adresse als Testnutzer eintragen.
 6. Android: Google-Login gibt es dort noch nicht; auf dem Handy kommen Termine über die Synchronisierung (sie liegen in einer synchronisierten Sammlung) oder über ein Kalender-Abo (ICS) an.
+
+Hintergrund (aus STATUS verschoben, 2026-11-10; entschieden in [decisions/legal.md](decisions/legal.md)):
+
+- **Google-Prüfung für die Mail-Berechtigungen (Mail-Modul, Paket 3):** `gmail.readonly`, `gmail.modify` und `gmail.send` sind bei Google „eingeschränkte Bereiche“. Mit der eigenen OAuth-Client-ID jedes Nutzers (so ist es gebaut) braucht das keine Prüfung durch Google; im Teststatus der Cloud-Console laufen die Anmeldungen aber nach 7 Tagen ab, bis die App auf „In Produktion“ gestellt wird (dann zeigt Google den Hinweis „nicht verifizierte App“). Würde Nemo je einen **eigenen, mitgelieferten** Client für alle Nutzer einsetzen, wäre die Google-OAuth-Verifizierung samt jährlicher Sicherheitsprüfung (CASA) Pflicht – das ist eine Entscheidung für dich, nicht für den Code. Siehe [decisions/legal.md](decisions/legal.md).
+- **Google-OAuth „Testing“ (7 Tage, ≤ 100 Testnutzer): entschieden, Variante (a)**: jede Person bringt ihren eigenen Client mit, die App erklärt Ablauf und „Neu anmelden“. Verworfen: eigener Projekt-Client „In Produktion“ (Kalender sensibel, Gmail eingeschränkt, Prüfung durch Google nötig).
 
 ### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
 
