@@ -16,6 +16,9 @@ import { eventSchema } from '@/modules/calendar/schema';
 import { taskRepo } from '@/modules/todos/repo';
 import { taskSchema } from '@/modules/todos/schema';
 import { availableManifests } from '@/core/modules/available';
+import { enableModule } from '@/core/modules/activation';
+import accountsManifest from '@/modules/accounts/manifest';
+import { createVault, lockVault, resetAttempts, saveEntry } from '@/modules/accounts/vault';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
@@ -316,6 +319,50 @@ describe('assistant in the palette', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/settings');
     expect(readRecent()).toEqual([]);
   });
+  it('never shows or remembers a password vault entry, unlocked or locked', async () => {
+    // Where the "Zuletzt" list comes from: commands (id + label of the command), settings hits and
+    // full-text hits. Full text only covers modules with `aiSchema` (`core/ai/scope.ts`), which
+    // `accounts` never has, and its entries are ciphertext at rest – so no vault title can get in.
+    const SECRET = 'Streng-Geheimes-Bankkonto';
+    await enableModule(accountsManifest);
+    lockVault();
+    resetAttempts();
+    await createVault('Master-Passwort-Nr-1', { m: 64, t: 1, p: 1 });
+    await saveEntry({ title: SECRET, username: 'alice', password: 'pw-123456' }); // gitleaks:allow (test fixture)
+    const user = userEvent.setup();
+    const first = render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    const box = await screen.findByRole('combobox');
+    await user.type(box, 'Streng-Geheimes');
+    // Live hits are debounced; give them time to arrive, then nothing of the entry is offered.
+    await new Promise((r) => setTimeout(r, 400));
+    expect(screen.queryByRole('option', { name: /Bankkonto/ })).toBeNull();
+    // Opening the password page is remembered as the command (its label only), never an entry.
+    await user.clear(box);
+    await user.type(box, accountsManifest.name);
+    const page = await screen.findByRole('option', { name: accountsManifest.name });
+    await user.click(page);
+    expect(screen.getByTestId('where')).toHaveTextContent('/accounts');
+    expect(readRecent().every((e) => e.kind === 'command')).toBe(true);
+    first.unmount();
+
+    lockVault();
+    useUiStore.setState({ paletteOpen: true });
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await screen.findAllByRole('option');
+    const stored = localStorage.getItem('tm-recent-search') ?? '';
+    expect(stored).not.toMatch(/Bankkonto|alice|pw-123456/);
+    expect(document.body.textContent).not.toMatch(/Bankkonto|alice/);
+  });
+
   it('switches a quick setting straight from the palette without leaving the page', async () => {
     useUiStore.getState().setTheme('system');
     const user = userEvent.setup();

@@ -31,6 +31,8 @@ mod panic_log;
 #[cfg(desktop)]
 mod portable;
 #[cfg(desktop)]
+mod remote;
+#[cfg(desktop)]
 mod system;
 #[cfg(desktop)]
 mod texts;
@@ -143,6 +145,7 @@ pub fn run() {
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
         .manage(lan_sync::LanSync::default())
+        .manage(remote::RemoteHost::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(downloads::Downloads::default())
@@ -198,6 +201,10 @@ pub fn run() {
             lan_sync::lan_hub_rotate,
             lan_sync::lan_hub_request,
             lan_sync::lan_home_set,
+            remote::remote_status,
+            remote::remote_set_enabled,
+            remote::remote_set_device,
+            remote::remote_end,
             lan_client::lan_client_pair,
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,
