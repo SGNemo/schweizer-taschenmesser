@@ -29,6 +29,13 @@ impl Lang {
         }
     }
 
+    /// The app language the page reports (`de`, `en`, or a longer tag); anything else is `None`
+    /// and the caller falls back to the system language.
+    pub fn from_app(tag: &str) -> Option<Lang> {
+        let primary = tag.split('-').next().unwrap_or("").to_ascii_lowercase();
+        Lang::from_primary(&primary)
+    }
+
     fn from_primary(code: &str) -> Option<Lang> {
         match code {
             "de" => Some(Lang::De),
@@ -354,6 +361,16 @@ mod tests {
         let frozen = "GET /callback HTTP/1.1\r\naccept-language: es-ES,es\r\n\r\n";
         assert_eq!(accept_language_of(frozen), Lang::En);
         assert_eq!(accept_language_of("GET / HTTP/1.1\r\n\r\n"), Lang::En);
+    }
+
+    #[test]
+    fn the_app_language_is_one_of_the_active_ones_or_nothing() {
+        assert_eq!(Lang::from_app("de"), Some(Lang::De));
+        assert_eq!(Lang::from_app("en-GB"), Some(Lang::En));
+        assert_eq!(Lang::from_app("EN"), Some(Lang::En));
+        for other in ["", "fr", "pt-BR", "x", "de_DE; drop"] {
+            assert_eq!(Lang::from_app(other), None, "{other:?}");
+        }
     }
 
     #[test]

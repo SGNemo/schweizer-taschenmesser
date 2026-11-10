@@ -297,6 +297,20 @@ describe('with end-to-end encryption', () => {
     expect(await titles(b)).toEqual([]);
   });
 
+  it('a device without a key whose clock is far behind still refuses and uploads no plain data', async () => {
+    const a = device();
+    const b = device();
+    await b.repo.create({ title: 'plain text of B', done: false });
+    // A's clock is two hours ahead of B's: to B every op of A is stamped beyond the drift bound.
+    clock += 2 * 3_600_000;
+    await a.repo.create({ title: 'x', done: false });
+    await a.sync({ key: await deriveKey('pass phrase 1', salt, ITER) });
+    clock -= 2 * 3_600_000;
+    await expect(b.sync()).rejects.toMatchObject({ code: 'no-key' });
+    expect(server.dump().every((o) => isEncrypted(o.value))).toBe(true);
+    expect(await b.storage.pendingCount()).toBeGreaterThan(0);
+  });
+
   it('ops on the server can be decrypted only with the right key and location', async () => {
     const a = device();
     await a.repo.create({ title: 'x', done: false });

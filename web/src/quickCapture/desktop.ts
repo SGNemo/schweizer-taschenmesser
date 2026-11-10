@@ -96,9 +96,11 @@ export async function startQuickCaptureDesktop(): Promise<void> {
   if (!desktop.supported) return;
   const prefs = readPrefs();
   // The tray menu is native: send its labels again whenever the UI language changes.
-  onLangChange(() => void desktop.setTrayLabels({ ...t.quickCapture.tray }).catch(() => {}));
+  onLangChange(
+    () => void desktop.setTrayLabels({ ...t.quickCapture.tray, lang: getLang() }).catch(() => {}),
+  );
   try {
-    await desktop.setTrayLabels({ ...t.quickCapture.tray });
+    await desktop.setTrayLabels({ ...t.quickCapture.tray, lang: getLang() });
     await desktop.setCloseToTray(prefs.closeToTray);
     if (prefs.autostart) await desktop.setAutostart(true);
   } catch {
