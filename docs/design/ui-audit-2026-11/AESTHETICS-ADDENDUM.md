@@ -10,7 +10,7 @@ Der Blick bestätigt B1–B4 und B8 als Ursache für „wirkt unfertig“ (Kalen
 | AE2 | Bereichsmuster hinter Text wirken im dunklen Theme wie Darstellungsfehler | Muster nie hinter Fließtext; nur Bühne, Leerzustand-Motiv, Bibliothek | 0b-1 (Token), 0b-2 (Kopf) |
 | AE3 | Modul-Tönungen im Dunkeln stumpf | **keine** Umstellung auf `oklab` (gemessen, hilft nicht); Prüfpunkt nach 0b-2 | 0b-8 (Prüfpunkt) |
 | AE4 | Wochenraster: Wortbruch und angeschnittene Zeilen in Terminblöcken | ganze Zeilen klemmen, Uhrzeit + Titel einzeilig, unter Mindestbreite stapeln | 0b-4 |
-| AE5 | App-Icon liest sich ab 32 px als Lautsprecher-Symbol | entschieden: neue Silhouette, zweifarbige Kachel + einfarbige Marke mit innen endenden Bändern | eigenes Paket „Logo v2.1“ (`feat/logo-v2-1`), unabhängig von 0b |
+| AE5 | App-Icon liest sich ab 32 px als Lautsprecher-Symbol | entschieden: neue Silhouette, Bänder enden vor dem Umriss, sonst flach wie bisher | eigenes Paket „Logo v2.1“ (`feat/logo-v2-1`), unabhängig von 0b |
 | AE6 | Website: Platzhalter-Karten, unlesbarer Hero, keine Handy-Navigation | Designrunde 5 mit neuen Bildern | eigenes Paket „Website Runde 5“, **nach 0b-8** |
 
 ## AE1 · Deaktivierter Hauptknopf (0b-1)
@@ -45,9 +45,9 @@ Der Blick bestätigt B1–B4 und B8 als Ursache für „wirkt unfertig“ (Kalen
 
 - **Befund:** `web/brand/app-icon.svg`: Bänder und Auge sind Ausschnitte in Kachelfarbe (`mask#nemo-app-cut`). Dadurch zerfällt der Fisch in drei Teile – Dreieck (Schwanz + Hinterkörper), senkrechter Balken, D-Form – und das ist ab 32 px abwärts das Lautsprecher-Symbol; bei 16 px sind Auge und Bänder weg. Die Marke nimmt 60 % der Kachelbreite ein (`scale(0.8)` auf 383 von 512). Fläche einfarbig `#b5430c`, ohne Tiefe; weißer Fisch mit farbigen Bändern ist die Umkehrung des Clownfisch-Signals.
 - **Rahmen aus `decisions/ui-brand.md` „Logo v2“:** die In-App-Marke bleibt einfarbig im Akzent-Token (`brand-sync.test.ts`); verworfen wurden dort schon „head-only“, geometrische Bänder und Linien-Fisch. Der Ozean-Verlauf `--ocean-from/to` ist als Marken-Fläche erlaubt („Design Klar“).
-- **Empfehlung:** Silhouette ändern (eingeschnürter Schwanzstiel, runde Fächerflosse statt Dreieck, damit das Stück hinter dem Band kein Kegel mehr ist) **und** für die statische Kachel die Farben drehen (Fisch im Akzent, Bänder weiß gefüllt statt ausgeschnitten, Kachel im Ozean-Verlauf). Die einfarbige In-App-Marke und das Android-Themed-Icon nehmen dieselbe Silhouette mit Ausschnitten.
-- **Entscheidung (Sven, 2026-11-10):** neue Silhouette. **App-Icon** = zweifarbige Kachel (Fisch im Akzent, zwei weiß gefüllte Bänder, Ozean-Verlauf); **einfarbige Marke** (Seitenleiste, Pille, Android-Themed-Icon, Benachrichtigung) = dieselbe Silhouette, die zwei Bänder enden vor dem Umriss, damit der Fisch ein Stück bleibt. Verworfen in der Probe: alte Form mit gedrehten Farben, „nur der Kopf“ (einfarbig wird daraus ein Play-Symbol), zwei durchgeschnittene Bänder (zerfällt in drei Teile), ein Band. Umsetzung: Branch `feat/logo-v2-1` (eigener PR): `design/logo-v2` parametrisch, `node export.mjs`, `npx tauri icon`, `npm run gen:icons`; Handtests LG1–LG6.
-- **Regeln/Tests:** Entscheidungs-Bullet in `decisions/ui-brand.md` (zweite Kachelfarbe für statische Dateien); `brand-sync.test.ts` und Android-Hintergrund `#b5430c` (`icons/android/values/ic_launcher_background.xml`) folgen der Entscheidung.
+- **Empfehlung (überholt durch die Entscheidung unten):** Silhouette ändern (eingeschnürter Schwanzstiel, runde Fächerflosse statt Dreieck) und für die statische Kachel die Farben drehen.
+- **Entscheidung (Sven, 2026-11-10):** nur die neue Silhouette und die innen endenden Bänder (der Fisch bleibt ein Stück); sonst so schlicht wie bisher – weiß auf der Akzent-Kachel, eine Farbe, kein Verlauf. Eine zweifarbige Kachel auf dem Ozean-Verlauf war zuerst gebaut und ist verworfen („zu 3D“), ebenso „nur der Kopf“. Umsetzung: PR #648 (`feat/logo-v2-1`), Handtest LG7.
+- **Regeln/Tests:** Entscheidungs-Bullet in `decisions/ui-brand.md`; `brand-sync.test.ts` prüft den Rand in jeder Datei; Farben und Android-Hintergrund bleiben `#b5430c`.
 
 ## AE6 · Website (eigenes Paket „Website Runde 5“, nach 0b-8)
 
