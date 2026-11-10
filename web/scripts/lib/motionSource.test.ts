@@ -1,8 +1,15 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SRC } from './baseline';
-import { findScriptMotion, isMotionHelper } from './motionSource';
+import { findScriptMotion, isMotionHelper, isMotionHelperPath } from './motionSource';
+
+/**
+ * The motion helpers, by name (posix paths relative to `src/`). None exists yet; the first one arrives with
+ * the package that needs it. This file is protected by the ratchet, so a new entry needs an approval: that is
+ * the review of what the helper animates and that it asks for reduced motion.
+ */
+const MOTION_HELPERS: readonly string[] = [];
 
 /** Source files under `src/` (no tests), as posix paths relative to it. */
 const sources = (): string[] =>
@@ -47,16 +54,24 @@ describe('findScriptMotion (what counts as a hit)', () => {
     ).toEqual([]);
   });
 
-  it('only ui/motion is a motion helper', () => {
+  it('a motion helper may live in ui/motion only', () => {
     for (const p of ['ui/motion.ts', 'ui/motion.tsx', 'ui/motion/collapse.ts'])
-      expect(isMotionHelper(p), p).toBe(true);
+      expect(isMotionHelperPath(p), p).toBe(true);
     for (const p of [
       'ui/motionless.ts',
       'modules/notes/ui/motion.ts',
       'layout/motion.ts',
       'ui/x.ts',
     ])
-      expect(isMotionHelper(p), p).toBe(false);
+      expect(isMotionHelperPath(p), p).toBe(false);
+  });
+
+  it('the place alone allows nothing: only a helper named in the list is one', () => {
+    expect(isMotionHelper('ui/motion/collapse.ts', [])).toBe(false);
+    expect(isMotionHelper('ui/motion.ts', ['ui/motion/collapse.ts'])).toBe(false);
+    expect(isMotionHelper('ui/motion/collapse.ts', ['ui/motion/collapse.ts'])).toBe(true);
+    // A name outside ui/motion is no helper, even when listed.
+    expect(isMotionHelper('modules/notes/motion.ts', ['modules/notes/motion.ts'])).toBe(false);
   });
 });
 
@@ -65,7 +80,7 @@ describe('script motion in src/', () => {
     const files = sources();
     expect(files.length).toBeGreaterThan(500);
     const hits = files
-      .filter((f) => !isMotionHelper(f))
+      .filter((f) => !isMotionHelper(f, MOTION_HELPERS))
       .flatMap((f) =>
         findScriptMotion(readFileSync(resolve(SRC, f), 'utf8')).map(
           (h) => `${f}:${h.line} ${h.what}`,
@@ -73,7 +88,15 @@ describe('script motion in src/', () => {
       );
     expect(
       hits,
-      'script-driven motion belongs in a motion helper (src/ui/motion*): it asks for reduced motion and animates transform/opacity only',
+      'script-driven motion belongs in a motion helper (src/ui/motion*, named in MOTION_HELPERS of this test): it asks for reduced motion and animates transform/opacity only',
     ).toEqual([]);
+  });
+
+  it('every named motion helper exists, lies in ui/motion and asks for reduced motion', () => {
+    for (const helper of MOTION_HELPERS) {
+      expect(isMotionHelperPath(helper), helper).toBe(true);
+      expect(existsSync(resolve(SRC, helper)), helper).toBe(true);
+      expect(readFileSync(resolve(SRC, helper), 'utf8'), helper).toMatch(/prefers-reduced-motion/);
+    }
   });
 });

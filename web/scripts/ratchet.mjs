@@ -89,8 +89,11 @@ const UNIT_PROMISES = [
   'home/AttentionStrip.test.tsx',
   'core/diagnostics/diagnostics.test.ts',
   'core/setup/detect.test.ts',
-  'modules/vault/__tests__/palette.test.ts',
   'layout/pageTitle.test.tsx',
+  'layout/NotificationCenter.readaid.test.tsx',
+  'layout/PageLoadingCard.test.tsx',
+  'layout/ModuleErrorBoundary.test.tsx',
+  'modules/accounts/__tests__/lockFocus.test.tsx',
 ];
 const TOOL_LOGIC = [
   'checkIdentity',
@@ -100,8 +103,10 @@ const TOOL_LOGIC = [
   'groupedList',
   'ownH1',
   'motionSource',
+  'cssMotion',
 ];
-const TOOL_TESTS = [...TOOL_LOGIC, 'seedRows'];
+// Tests without a logic file of their own: the seed rows and the ESLint blocks read through the real config.
+const TOOL_TESTS = [...TOOL_LOGIC, 'seedRows', 'eslintFixedLocale', 'eslintAutoFocus'];
 
 /**
  * Protected paths: every change or deletion of an existing file is a hit; a new file is a hit too, except
@@ -256,7 +261,8 @@ export function budgetHits(path, baseText, headText, newRouteSlugs = new Set()) 
   for (const key of Object.keys(hp)) {
     if (key in bp) continue;
     const name = key.slice(key.indexOf('--') + 2);
-    if (!newRouteSlugs.has(name)) hits.push(`page-new ${path} ${key}`);
+    // With its values: a push after the approval that rewrites the new page changes the line and the hash.
+    if (!newRouteSlugs.has(name)) hits.push(`page-new ${path} ${key} ${canon(hp[key])}`);
   }
   return hits;
 }
@@ -333,7 +339,10 @@ export function seedRowsHits(baseText, headText) {
   return hits;
 }
 
-/** `signature-blocks.json`: every new, changed or removed entry is a hit. */
+/**
+ * `signature-blocks.json`: every new, changed or removed entry is a hit. Each line carries the entry itself,
+ * so a push after the approval that rewrites an approved entry changes the line and with it the hash.
+ */
 export function signatureHits(path, baseText, headText) {
   const base = parseJson(baseText);
   const head = parseJson(headText);
@@ -343,13 +352,14 @@ export function signatureHits(path, baseText, headText) {
   const was = isObject(base?.blocks) ? base.blocks : {};
   const now = isObject(head?.blocks) ? head.blocks : {};
   for (const id of new Set([...Object.keys(was), ...Object.keys(now)])) {
-    if (!(id in was)) hits.push(`signature ${path} ${id} added`);
-    else if (!(id in now)) hits.push(`signature ${path} ${id} removed`);
-    else if (canon(was[id]) !== canon(now[id])) hits.push(`signature ${path} ${id} changed`);
+    if (!(id in was)) hits.push(`signature ${path} ${id} added ${canon(now[id])}`);
+    else if (!(id in now)) hits.push(`signature ${path} ${id} removed ${canon(was[id])}`);
+    else if (canon(was[id]) !== canon(now[id]))
+      hits.push(`signature ${path} ${id} changed ${canon(was[id])}→${canon(now[id])}`);
   }
   const rest = (o) => canon({ ...(isObject(o) ? o : { value: o }), blocks: undefined });
   if (base !== undefined && head !== undefined && rest(base) !== rest(head))
-    hits.push(`signature ${path} @file changed`);
+    hits.push(`signature ${path} @file changed ${rest(base)}→${rest(head)}`);
   return hits;
 }
 
@@ -872,18 +882,23 @@ export function collectHits(repo, base, head) {
     );
   };
 
+  // File name → every protected spec of that name, in base or head. Built once and without leaving the asked
+  // path out: the question per call is whether *another* path carries the name (two new seed specs in one
+  // pull request are protected paths themselves and must not turn each other into a hit).
   let specNames = null;
+  const nameOf = (p) => p.slice(p.lastIndexOf('/') + 1);
   const namedLikeProtectedSpec = (path) => {
     if (!path.startsWith('web/e2e/') || !isTestFile(path)) return false;
-    specNames ??= new Set(
-      [...baseTree.keys(), ...headTree.keys()]
-        .filter(
-          (p) =>
-            p !== path && p.startsWith('web/e2e/') && isTestFile(p) && matchesAny(p, PROTECTED),
-        )
-        .map((p) => p.slice(p.lastIndexOf('/') + 1)),
-    );
-    return specNames.has(path.slice(path.lastIndexOf('/') + 1));
+    if (!specNames) {
+      specNames = new Map();
+      for (const p of new Set([...baseTree.keys(), ...headTree.keys()])) {
+        if (!p.startsWith('web/e2e/') || !isTestFile(p) || !matchesAny(p, PROTECTED)) continue;
+        const list = specNames.get(nameOf(p));
+        if (list) list.push(p);
+        else specNames.set(nameOf(p), [p]);
+      }
+    }
+    return (specNames.get(nameOf(path)) ?? []).some((other) => other !== path);
   };
 
   for (const { status, path } of changed) {

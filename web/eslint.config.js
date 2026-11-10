@@ -8,6 +8,7 @@ import {
   FIXED_LOCALE_IGNORES,
   fixedLocaleSelectors,
 } from './eslint-rules/no-fixed-locale.js';
+import { autoFocusSelectors } from './eslint-rules/no-autofocus.js';
 
 // Module isolation: feature modules must not import each other.
 // Exception (see CLAUDE.md): finance may read subscriptions/invoices via their public.ts.
@@ -79,10 +80,12 @@ export default tseslint.config(
   {
     // Platform isolation: only `core/platform` may know that a native shell exists, and only
     // `core/platform/tauri` may import Tauri packages. Everything else uses `getPlatform()`.
+    // No `autoFocus` anywhere in src/ (eslint-rules/no-autofocus.js): it shares the core rule, so every
+    // block below that sets `no-restricted-syntax` repeats it.
     files: ['src/**/*.{ts,tsx}'],
     ignores: ['src/core/platform/**'],
     rules: {
-      'no-restricted-syntax': ['error', ...platformSelectors],
+      'no-restricted-syntax': ['error', ...platformSelectors, ...autoFocusSelectors],
     },
   },
   {
@@ -91,12 +94,24 @@ export default tseslint.config(
     // have them, and the next one covers core/platform, which has only the locale selectors.
     files: FIXED_LOCALE_FILES,
     ignores: [...FIXED_LOCALE_IGNORES, 'src/core/platform/**'],
-    rules: { 'no-restricted-syntax': ['error', ...platformSelectors, ...fixedLocaleSelectors] },
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...platformSelectors,
+        ...fixedLocaleSelectors,
+        ...autoFocusSelectors,
+      ],
+    },
   },
   {
     files: ['src/core/platform/**/*.{ts,tsx}'],
     ignores: FIXED_LOCALE_IGNORES,
-    rules: { 'no-restricted-syntax': ['error', ...fixedLocaleSelectors] },
+    rules: { 'no-restricted-syntax': ['error', ...fixedLocaleSelectors, ...autoFocusSelectors] },
+  },
+  {
+    // The tests of core/platform are in none of the blocks above.
+    files: ['src/core/platform/**/*.test.{ts,tsx}'],
+    rules: { 'no-restricted-syntax': ['error', ...autoFocusSelectors] },
   },
   {
     // Feature modules: no imports of sibling modules, no raw table writes.
