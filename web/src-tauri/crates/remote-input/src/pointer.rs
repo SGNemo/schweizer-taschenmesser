@@ -10,18 +10,23 @@
 //!   nothing).
 //! * A **release is never dropped** and never waits for room – but it is only taken for a button
 //!   whose press was taken before it. So there is at most one release per press, a flood of spare
-//!   releases takes no room at all, and a press that went through cannot lose its release.
-//! * The hub decides which button a session holds; this file only makes sure of two things: a
-//!   release without a press of ours does nothing (the hub may release once more at the end of a
-//!   session, and a button the person holds on the real mouse is left alone), and a press of a
-//!   button already pressed does nothing.
-//! * What this file believes is held can differ from the system for a moment: a click on the real
-//!   mouse lifts a button we pressed, and the next remote press of it is then ignored once. One
-//!   device controls at a time (the hub's slot), so two sessions never share the buttons.
-//! * A press the system refused is not held, so nothing is released for it later.
-//! * When the thread ends – the last handle was dropped, or it unwinds – it releases what it
-//!   still holds. A process that is killed cannot: the button then stays down for the system
-//!   until the person clicks it once.
+//!   releases takes no room at all, and a press that went through cannot lose its release. (The
+//!   hub already sends one release per press; this file repeats it so that its own promise does
+//!   not rest on the caller.)
+//! * A release without a press of ours does nothing: the hub may release once more at the end of
+//!   a session, and a button the person holds on the real mouse is left alone. A press of a
+//!   button already pressed does nothing either.
+//! * The buttons belong to this PC, not to a session. When a session is replaced, the old one's
+//!   closing release also lifts a press the new one just made; that drag is cut, nothing sticks.
+//!   A click on the real mouse lifts a button we pressed without this file knowing: the next
+//!   remote press of it is then ignored once.
+//! * A press the system refused (the secure desktop, a desktop switch) is not held, so nothing is
+//!   released for it later. An elevated window in front is different: the system swallows the
+//!   event and reports success, so that case cannot be told here. A refused release is not
+//!   tried again (the system may then keep the button down until the next real click).
+//! * When the thread ends – the handle was dropped, or the thread unwinds – it releases what it
+//!   still holds. A process that exits or is killed does not get that far: the button then stays
+//!   down for the system until the person clicks it once.
 //! * Nothing is logged, counted or stored; no coordinate outlives the call that applies it.
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -138,8 +143,7 @@ impl Drop for Hand {
     }
 }
 
-/// The handle the shell keeps. Cheap to clone; the thread ends when the last handle is dropped.
-#[derive(Clone)]
+/// The handle the shell keeps; the thread ends when it is dropped.
 pub struct Pointer {
     tx: Option<Sender<PointerAction>>,
     shared: Arc<Shared>,
@@ -201,7 +205,11 @@ impl Pointer {
                     };
                     // moves that already wait become one move; anything else keeps its place
                     let (mut x, mut y) = (i32::from(dx), i32::from(dy));
-                    while let Ok(next) = rx.try_recv() {
+                    // (a bounded number, so a steady stream cannot hold the pointer still)
+                    for _ in 0..QUEUE {
+                        let Ok(next) = rx.try_recv() else {
+                            break;
+                        };
                         count.waiting.fetch_sub(1, Ordering::SeqCst);
                         match next {
                             PointerAction::Move { dx, dy } => {
@@ -253,6 +261,8 @@ impl Pointer {
             self.shared.waiting.fetch_sub(1, Ordering::SeqCst);
             return false;
         }
+        // must stay after the send: a release is only taken once this is set, so it always
+        // enters the queue behind the press it belongs to
         if let PointerAction::Button { button, down: true } = action {
             self.shared.pressed(button).store(true, Ordering::SeqCst);
         }
@@ -284,8 +294,9 @@ mod imp {
 
     struct Windows;
 
-    /// One mouse event to the system. A refusal (an elevated window in front, the secure
-    /// desktop) is not an error to anyone: the event is simply not applied.
+    /// One mouse event to the system; `false` = it was not taken (the secure desktop, a desktop
+    /// switch). That is not an error to anyone: the event is simply not applied. An event the
+    /// system swallows because an elevated window is in front still counts as taken.
     fn send(flags: MOUSE_EVENT_FLAGS, dx: i32, dy: i32, data: i32) -> bool {
         let input = INPUT {
             r#type: INPUT_MOUSE,

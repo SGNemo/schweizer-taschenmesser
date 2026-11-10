@@ -242,18 +242,14 @@ fn a_full_queue_drops_moves_and_presses_but_never_a_release() {
 }
 
 #[test]
-fn dropping_the_last_handle_releases_what_is_held() {
+fn dropping_the_handle_releases_what_is_held() {
     let (pointer, log) = free();
-    let second = pointer.clone();
     assert!(pointer.send(LEFT_DOWN));
     assert!(pointer.send(RIGHT_DOWN));
     assert!(pointer.send(RIGHT_UP));
     assert!(pointer.send(END));
     log.until(|l| l.last() == Some(&ENDED));
     drop(pointer);
-    std::thread::sleep(Duration::from_millis(30));
-    assert_eq!(log.all().len(), 4, "a handle is left: nothing is released");
-    drop(second);
     let all = log.until(|l| l.len() == 5);
     assert_eq!(all[4..], [Did::Button(Button::Left, false)]);
 }
