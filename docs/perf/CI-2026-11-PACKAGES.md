@@ -8,7 +8,7 @@ prompts are). Every package that touches a workflow, an action or `web/*.config.
 
 | # | Package | Model | Depends on | Parallel with |
 |---|---|---|---|---|
-| 1 | `develop` runs: stop the jobs outside the Dev-Preview gate when a newer push waits, rest E2E for the newest commit only | Fable | this round merged | 3, 4 (tests only), 5 |
+| 1 | `develop` runs: stop the jobs outside the Dev-Preview gate when a newer push waits, rest E2E for the newest commit only | Fable | this round merged; the maintainer's yes (question in the prompt) | 3, 4 (tests only), 5 |
 | 2 | Install and build once per run | Opus | package 1 merged (both rewrite `ci.yml`) | 3, 4 (tests only), 5 |
 | 3 | CodeQL only where code changed | Fable | the maintainer's yes (question in the prompt) | 1, 2, 4, 5 |
 | 4 | Flaky tests | Opus | its one workflow commit (retried tests in the job summary) after package 2 | all, without that commit |
@@ -40,7 +40,12 @@ Branch `ci/develop-load` von frischem `develop`. Vorgegebene Session-Branches ig
 ## Ausgangslage
 docs/perf/CI-2026-11.md (Diagnose, Hebel 1): 90 Pushes auf develop in 42 h, ein Voll-Lauf will 35 Jobs und 152 Runner-Minuten, das Konto hat 20 Runner. 28 Läufe liefen zu Ende, obwohl ein neuerer Push wartete (2709 Runner-Minuten); das Rest-E2E allein kostet 56 Minuten je Lauf (2742 gesamt). Lies docs/decisions/meta.md (CI-Bullets vom 2026-11-04 bis 2026-11-10, vor allem „runs for develop are never cancelled“ und „Dev-Preview gate“), docs/howto/ci.md („Concurrency“, „Dev-Preview“, „Never lost“), `.github/workflows/ci.yml` ganz.
 
-## Pflichtliste
+## Erst fragen (ein AskUserQuestion, Empfehlung zuerst; vorher nichts ändern)
+1. Dürfen auf einem überholten develop-Lauf die Jobs außerhalb des Dev-Preview-Gates abgebrochen werden (Empfohlen: ja)? Das schränkt die Entscheidung `ci/develop-runs-finish` ein. Oder: alles lassen.
+2. Rest-E2E nur für den neuesten Stand (Empfohlen) oder weiter für jeden gestarteten Lauf.
+
+## Pflichtliste (nach Svens Ja)
+- Gruppen und Job-`concurrency` für `main`, `workflow_dispatch` und den nächtlichen Lauf bleiben ohne Abbruch; nur `push` auf `develop` ändert sich.
 - Heute hält die Workflow-Gruppe (`ci-…-push-refs/heads/develop`, kein Abbruch) einen neueren Lauf zurück, bis der ältere fertig ist; Job-Gruppen greifen erst danach. Die Gruppe für develop-Pushes muss sich also ändern (z. B. je Lauf), damit ein neuerer Lauf starten kann; Job-`concurrency` mit `cancel-in-progress` bekommen nur die Jobs **außerhalb** des Dev-Preview-Gates: Rest-E2E, Seed, Sync, Extension, kleine Pakete, Stimulus, lokales Modell, Windows-Shell. Die Gate-Jobs (gitleaks, Lizenzen, Static, Unit, Smoke, `rust`) und Dev-Preview-Build/-Publish eines gestarteten Laufs laufen zu Ende – veröffentlicht wird nur von grünem Gate (Entscheidung `ci/develop-runs-finish` bleibt für sie). Zwei Dev-Preview-Publishes dürfen sich nicht überholen (eigene Gruppe ohne Abbruch für den Publish). Alternative, falls das nicht sauber geht: ein überholter Commit bekommt gar keinen Preview – dann als Frage an Sven mit Empfehlung.
 - Rest-E2E (8 Shards) nur für den neuesten Stand: kein Lauf startet es für einen Commit, der schon überholt ist. Wenn `nightly.yml` auf `main` aktiv ist (prüfen: `gh api repos/SGNemo/schweizer-taschenmesser/actions/workflows`), zusätzlich vorschlagen, ob das Rest-E2E je Push bleibt oder stündlich gebündelt wird – als Frage an Sven mit Empfehlung, nicht selbst entscheiden.
 - Kein Commit geht ungetestet durch: nach einer Kette überholter Läufe testet der letzte Lauf alles; ein roter Lauf nennt im Job-Summary die Commits seit dem letzten grünen Voll-Lauf (`git log <letzter grüner>..HEAD --oneline`), damit der Verursacher findbar ist.
