@@ -1,6 +1,6 @@
 # Agent team – roster, delegation, sandbox start
 
-For Claude Managed Agents sessions (one session = one task = `nemo-lead` + at most 4 child threads, one sandbox, one budget class). **Routing first:** [WORK-ROUTING.md](WORK-ROUTING.md) decides whether a task goes to a Claude Code chat (all building) or to the agents (bounded coordination and review); agents decline the rest. `nemo-lead` delegates via `send_to_agent` and writes no product code; every agent reads `docs/meta/agents-v3/SHARED.md` first (after the switch-over: `docs/meta/agents/SHARED.md`) and follows root [CLAUDE.md](../../CLAUDE.md). Delegation format: [PROMPT-TEMPLATES.md#delegate](../PROMPT-TEMPLATES.md#delegate). Definitions, models per role and setup: `docs/meta/agents-v3/README.md`, `docs/meta/agents-v3/SETUP.md` (→ `docs/meta/agents/` after the switch-over).
+For Claude Managed Agents sessions (one session = one task = `nemo-lead` + at most 4 child threads, one sandbox, one budget class). **Routing first:** [WORK-ROUTING.md](WORK-ROUTING.md) decides whether a task goes to a Claude Code chat (all building) or to the agents (bounded coordination and review); agents decline the rest. `nemo-lead` delegates via `send_to_agent` and writes no product code; every agent reads `docs/meta/agents-v3/SHARED.md` first and follows root [CLAUDE.md](../../CLAUDE.md). Delegation format: [PROMPT-TEMPLATES.md#delegate](../PROMPT-TEMPLATES.md#delegate). Definitions, models per role and setup: `docs/meta/agents-v3/README.md`, `docs/meta/agents-v3/SETUP.md`.
 
 ## Roster and delegation matrix
 

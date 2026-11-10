@@ -40,7 +40,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 - `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
 - `nemo-merge` aus `meta/agents-v3/nemo-merge.json` neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
-- Agenten v3.1: `docs/meta/AGENTS.md` nennt jetzt die sieben Agenten; dazu gehören noch dein `ant apply` und ein Bullet in `decisions/meta.md` ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over“). Wenn v3.1 nicht gelten soll: Commit zu AGENTS.md zurücknehmen.
+- Agenten v3.1 (entschieden, `decisions/meta.md`): offen ist nur noch dein `ant apply` mit `--prune` der 16 alten Agenten, danach `claude-lock.json` committen ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over state“, [SETUP](meta/agents-v3/SETUP.md) §2a). Der Ordner wird nicht umbenannt.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
 - Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
