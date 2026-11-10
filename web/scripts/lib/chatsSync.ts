@@ -3,7 +3,7 @@
  * Pure functions, no network: the caller hands in the PR list as JSON. Erasable TypeScript.
  *
  * The block sits between `<!-- generated:open-prs -->` and `<!-- /generated:open-prs -->` and holds
- * two tables: ready PRs (they wait for the maintainer) and drafts (running work). Every cell is
+ * one table: ready PRs (they wait for the maintainer), then drafts (running work). Every cell is
  * generated except "Zu tun", which a person writes; it survives a sync, keyed by the PR number.
  * A PR that is no longer in the list loses its row (and its "Zu tun" text).
  */
@@ -93,7 +93,7 @@ function table(prs: OpenPr[], todos: Map<number, string>): string {
   const head = '| PR | Branch | Titel | Zu tun |\n| --- | --- | --- | --- |';
   const rows = prs.map((pr) =>
     [
-      `[#${pr.number}](${REPO_URL}${pr.number})`,
+      `[#${pr.number}](${REPO_URL}${pr.number})${pr.draft ? ' Draft' : ''}`,
       `\`${escapeCell(pr.head)}\``,
       [
         escapeCell(pr.title),
@@ -105,25 +105,14 @@ function table(prs: OpenPr[], todos: Map<number, string>): string {
   return [head, ...rows.map((r) => `| ${r} |`.replace(/ {2}\|/g, ' |'))].join('\n');
 }
 
-/** The block's inner text (between the markers) for this PR list. */
+/**
+ * The block's inner text (between the markers) for this PR list: one table, ready PRs first (they wait
+ * for the maintainer), then drafts (running work), marked as such. One table, not two, so the block has
+ * no repeated header row and stays cheap inside the CHATS.md budget.
+ */
 export function renderBlock(prs: OpenPr[], todos: Map<number, string>): string {
-  return [
-    '',
-    '### Bereit (wartet auf Sven)',
-    '',
-    table(
-      prs.filter((p) => !p.draft),
-      todos,
-    ),
-    '',
-    '### Läuft gerade (Draft)',
-    '',
-    table(
-      prs.filter((p) => p.draft),
-      todos,
-    ),
-    '',
-  ].join('\n');
+  const ordered = [...prs.filter((p) => !p.draft), ...prs.filter((p) => p.draft)];
+  return ['', table(ordered, todos), ''].join('\n');
 }
 
 /** The whole document with a freshly generated block; "Zu tun" cells carried over by PR number. */

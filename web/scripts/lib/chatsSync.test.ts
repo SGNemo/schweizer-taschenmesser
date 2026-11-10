@@ -47,11 +47,15 @@ describe('chats:sync – block', () => {
     expect(next).not.toContain('no-changelog');
   });
 
-  it('puts drafts under "Läuft gerade" and escapes pipes', () => {
-    const drafts = next.slice(next.indexOf('### Läuft gerade'));
-    expect(drafts).toContain('| `feat/b` | draft: pipes \\| in a title | |');
-    const row = drafts.split('\n').find((l) => l.includes('#12'))!;
-    expect(cells(row)).toHaveLength(4);
+  it('lists drafts after ready PRs, marked as such, and escapes pipes', () => {
+    const rows = next.split('\n').filter((l) => l.startsWith('| [#'));
+    expect(rows.map((r) => cells(r)[0])).toEqual([
+      '[#10](https://github.com/SGNemo/schweizer-taschenmesser/pull/10)',
+      '[#12](https://github.com/SGNemo/schweizer-taschenmesser/pull/12) Draft',
+    ]);
+    expect(rows[1]).toContain('| `feat/b` | draft: pipes \\| in a title | |');
+    expect(cells(rows[1]!)).toHaveLength(4);
+    expect(next.match(/\| PR \|/g)).toHaveLength(1);
   });
 
   it('leaves everything outside the markers alone and is idempotent', () => {
