@@ -71,3 +71,27 @@ test('both dark blocks of the site are identical', () => {
   const system = block(site, '@media (prefers-color-scheme: dark)', null);
   for (const k of Object.keys(explicit)) assert.equal(system[k], explicit[k], k);
 });
+
+// Round 5: the hero stands on the app's ocean gradient. The two stops are pinned to the app; the site's own ink on
+// it must stay readable on the lighter stop (WCAG AA: 4.5 for text, 3 for large text and non-text).
+const lum = (hex) => {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+
+test('the ocean gradient matches the app', () => {
+  const s = block(site, ':root {', ':root[data-theme');
+  const a = block(app, ':root {', ':root[data-theme');
+  for (const k of ['--ocean-from', '--ocean-to']) assert.equal(s[k], a[k], k);
+});
+
+test('ink on the ocean surface keeps AA contrast', () => {
+  const s = block(site, ':root {', ':root[data-theme');
+  const from = s['--ocean-from'];
+  for (const k of ['--on-ocean', '--on-ocean-muted', '--on-ocean-meta']) assert.ok(contrast(s[k], from) >= 4.5, `${k} ${contrast(s[k], from).toFixed(2)}`);
+  // The accent word is 34 px bold or larger, the button a non-text shape, the tick an icon.
+  for (const k of ['--on-ocean-accent', '--on-ocean-accent-hover', '--on-ocean-ok']) assert.ok(contrast(s[k], from) >= 3, `${k} ${contrast(s[k], from).toFixed(2)}`);
+  assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent']) >= 4.5, 'button text');
+  assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent-hover']) >= 4.5, 'button text on hover');
+});

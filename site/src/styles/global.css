@@ -203,6 +203,10 @@ button {
 section.block {
   padding-block: var(--block);
 }
+/* Anchor targets clear the sticky header (one row on the desktop, the link row on a phone). */
+section[id] {
+  scroll-margin-top: 3.5rem;
+}
 /* Every second section is a tinted band; the hairline separates the rest. */
 section.band {
   /* Neutral tint of the surface (the app's group blocks, F07), never a colour field; --band lets labels sit on it. */
@@ -293,7 +297,8 @@ section.band + section.band {
     display: block;
   }
 }
-/* Hover and focus only change colour, 150 ms; nothing moves (FOCUS-GUIDELINES). */
+/* Hover and focus only change colour, 150 ms. The one movement of the site is the hero picture's entrance
+   (components/Hero.astro), switched off under reduced motion. */
 a,
 .btn,
 button,
