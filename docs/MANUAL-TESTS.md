@@ -162,7 +162,6 @@ KZ-K1. _Aktivieren:_ Einstellungen → KI-Zugriff → Schalter an → Status „
 KZ-K2. _Zugang:_ „Zugang anlegen“, Name, ToDos Lesen + Schreiben → Schlüssel erscheint einmal, kopieren. PowerShell: `Invoke-RestMethod -Uri http://127.0.0.1:47631/v1/modules -Headers @{Authorization="Bearer <Schlüssel>"}` listet nur ToDos. ☐
 KZ-K3. _Schutz:_ dieselbe Anfrage ohne/mit falschem Schlüssel → 401; im Browser `http://127.0.0.1:47631/v1/modules` öffnen → Fehler (kein Zugriff). Von einem anderen Gerät im WLAN ist der Port nicht erreichbar. ☐
 KZ-K4. _Probelauf:_ `POST /v1/todos/import?dryRun=true` mit einem Eintrag → Ergebnis je Eintrag, in der App erscheint nichts. ☐
-KZ-K4b. _Import mit Vorschau:_ derselbe Aufruf ohne `dryRun` → Banner „… möchte 1 Eintrag in „ToDos“ übernehmen“ → Ansehen → Übernehmen; nach dem Sync ist der Eintrag auf dem Handy. „Import rückgängig machen“ (Einstellungen → KI-Zugriff) entfernt ihn überall. Ein Eintrag mit `id` erscheint als Änderung (alt → neu) und ist nicht vorausgewählt. ☐
 KZ-K5. _Widerrufen / Port belegt:_ Zugang widerrufen → nächste Anfrage 401. Port auf einen belegten Wert stellen → verständliche Meldung. ☐
 
 ### Heimnetz-Sync
@@ -184,11 +183,8 @@ KZ-K5. _Widerrufen / Port belegt:_ Zugang widerrufen → nächste Anfrage 401. P
 #### Fernsteuerung, PC-Seite (`feat/remote-host-media`, `feat/remote-host-settings`) – nur auf echtem Windows prüfbar
 
 FS-R1, FS-R2, FS-R8, FS-R10 und FS-R11 gehen sofort (Einstellungen → Allgemein → „In Arbeit anzeigen“ an, dann Einstellungen → Verbindungen → Fernsteuerung). FS-R3–FS-R7 brauchen Paket 2 (Handy-Modul), FS-R9 Paket 3.
-FS-R1. _Hub ohne Fernsteuerung:_ Heimnetz-Sync wie bisher starten, koppeln, synchronisieren: alles unverändert; Tray zeigt das normale Symbol und kein „Fernsteuerung beenden“. ☐
 FS-R2. _Tray nach Neuaufbau, Sprache:_ App-Sprache wechseln und einen Termin für heute anlegen (Tray-Menü wird neu gebaut): Menü und Tooltip bleiben vollständig, das Symbol flackert nicht; App auf Englisch bei deutschem Windows: der Bestätigungs-Dialog (FS-R8) ist englisch. ☐
-FS-R8. _Bestätigung nur am PC:_ „Medien und Lautstärke“ wählen, „Wieder einschalten“, Hauptschalter an (bei vorhandener Freigabe); ab Paket 3 auch Maus/Tastatur und „Entsperren aus“: jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
 FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
-FS-R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
 
 ### Kalender
 
@@ -802,6 +798,13 @@ FO-F11. _Darstellung am Handy und PC:_ „Sehr groß“, „Luftig“, „Bewegu
 - **KA-A1:** Einstellungen → KI → „Alle Geräte“ → abschalten. Das zweite Gerät nach dem nächsten Abgleich: keine KI-Einträge in der Suche, kein „Mit KI eintragen“, Einstellungen → KI zeigt nur „KI wieder einschalten“; die Schlüssel dort sind gelöscht (Windows: Anmeldeinformationsspeicher, Eintrag `ai-key:…`).
 - **KA-A2:** „Nur dieses Gerät“: das andere Gerät behält seine KI. Windows: der KI-Zugriff (Port 47631) ist nach dem Abschalten nicht mehr erreichbar.
 
+### Lokale API (KI-Zugriff)
+
+#### KI-Zugriff / lokale Import-API (Phase 2)
+
+Nur in der Windows-App prüfbar (der Server selbst ist per Rust-Tests geprüft, die Oberfläche per E2E mit Ersatz-Server):
+KZ-K4b. _Import mit Vorschau:_ derselbe Aufruf ohne `dryRun` → Banner „… möchte 1 Eintrag in „ToDos“ übernehmen“ → Ansehen → Übernehmen; nach dem Sync ist der Eintrag auf dem Handy. „Import rückgängig machen“ (Einstellungen → KI-Zugriff) entfernt ihn überall. Ein Eintrag mit `id` erscheint als Änderung (alt → neu) und ist nicht vorausgewählt. ☐
+
 ### Heimnetz-Sync
 
 #### Sync im Heimnetz: PC und Handy koppeln (Pakete 3a/3b) – nur mit Windows-PC und Android-Handy prüfbar
@@ -833,12 +836,15 @@ QR-Q2. _Reihenfolge und Wiederholung:_ „Anhalten“, Kamera wegnehmen und spä
 #### Fernsteuerung, PC-Seite (`feat/remote-host-media`, `feat/remote-host-settings`) – nur auf echtem Windows prüfbar
 
 FS-R1, FS-R2, FS-R8, FS-R10 und FS-R11 gehen sofort (Einstellungen → Allgemein → „In Arbeit anzeigen“ an, dann Einstellungen → Verbindungen → Fernsteuerung). FS-R3–FS-R7 brauchen Paket 2 (Handy-Modul), FS-R9 Paket 3.
+FS-R1. _Hub ohne Fernsteuerung:_ Heimnetz-Sync wie bisher starten, koppeln, synchronisieren: alles unverändert; Tray zeigt das normale Symbol und kein „Fernsteuerung beenden“. ☐
 FS-R3. _Lautstärke und Ton aus:_ vom Handy lauter/leiser (je 2 %) und Ton aus; „lauter“ hebt Ton aus auf; die Anzeige am Handy folgt dem PC, auch wenn am PC selbst gedreht wird. ☐
 FS-R4. _Zwei Player:_ Spotify und ein Browser-Video offen: Wiedergabe/Pause, Nächster, Vorheriger treffen den Player, den auch die Medientasten der Tastatur treffen. ☐
 FS-R5. _Sperrbildschirm:_ PC sperren (Win+L): Medien und Lautstärke gehen weiter; „PC sperren“ vom Handy sperrt; der Zustand „gesperrt“ kommt am Handy an. ☐
 FS-R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“, darunter grau „Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest“. ☐
 FS-R7. _Beenden pausiert:_ „Fernsteuerung beenden“ im Tray: das Handy verliert die Verbindung sofort und kommt nicht wieder, bis das Gerät am PC wieder eingeschaltet wird (mit Bestätigung). ☐
+FS-R8. _Bestätigung nur am PC:_ „Medien und Lautstärke“ wählen, „Wieder einschalten“, Hauptschalter an (bei vorhandener Freigabe); ab Paket 3 auch Maus/Tastatur und „Entsperren aus“: jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
 FS-R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tastatur steuert, lässt sich keine Freigabe erhöhen – auch nicht mit einem Dialog, der vor der Sitzung geöffnet wurde. ☐
+FS-R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
 
 #### Fernbedienung, Handy (`feat/remote-module-page`) – nur mit Pixel und Windows-PC prüfbar
 
@@ -1447,7 +1453,7 @@ EA-E5. _Google-Verbindung im Assistenten (Windows):_ Schritt „Konten verknüpf
 
 #### Links, Teilen, Lesezeichen (Phase 13, Schritt 6)
 
-LT-L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 bei „Spotify“). ☐
+LT-L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
 #### Spotify-Verbindung (Windows-App, eigenes Spotify-Konto) – nur von Hand prüfbar
 
@@ -1523,7 +1529,7 @@ Alte Id (Block) → neue Id. Verweise in alten PRs, Notizen und im Archiv meinen
 - C1–C4 (Cockpit-Modus) → CP-C1–CP-C4
 - R1–R5 (Release 0.3.1 prüfen) → RL-R1–RL-R5
 - D1–D20 (Datenträger, Systeminfo) → DT-D1–DT-D20
-- D13–D15 (Datenträger, Systeminfo) → ZO-D13–ZO-D15
+- D13–D15 (Datenträger, Systeminfo; Zuordnung, Magnet, .torrent) → ZO-D13–ZO-D15
 - V1–V8 (Übersicht und Dieser PC) → DV-V1–DV-V8
 - 1–3 (Tresor: Abgleich mit Datenlecks) → LK-1–LK-3
 - 1–12 (Schritt 11b) → KS-1–KS-12
@@ -1535,7 +1541,7 @@ Alte Id (Block) → neue Id. Verweise in alten PRs, Notizen und im Archiv meinen
 - R1–R11 (Fernsteuerung, PC-Seite) → FS-R1–FS-R11
 - E1–E5 (Einrichtungsassistent) → EA-E1–EA-E5
 - H1–H4 (Übersicht als Home-Screen) → HS-H1–HS-H4
-- N11–N13 (Nemo: Umbenennung und Design) → CF-N11–CF-N13
+- N11–N13 (Nemo: Umbenennung und Design; Clownfisch-Icon) → CF-N11–CF-N13
 - K1–K7 (KI-Eintragen per Leiste) → KL-K1–KL-K7
 - T1–T5 (Testdaten) → TS-T1–TS-T5
 - E1–E6 (Einstellungen neu) → EN-E1–EN-E6
