@@ -7,6 +7,7 @@ import { useClockOn } from '@/core/settings/clock';
 import { FocusIndicator } from './FocusIndicator';
 import { LogoClock } from './LogoClock';
 import { NotificationBell } from './NotificationBell';
+import { RemoteChip } from './RemoteChip';
 import { SyncBadge } from './SyncBadge';
 import { useTopbarCollapse } from './useTopbarCollapse';
 import styles from './TopBar.module.css';
@@ -69,6 +70,7 @@ export function TopBar() {
         <Icon name="wrench" />
         <span className={styles.desktopOnly}>{t.nav.tools}</span>
       </button>
+      <RemoteChip />
       <NotificationBell />
       <SyncBadge />
     </header>

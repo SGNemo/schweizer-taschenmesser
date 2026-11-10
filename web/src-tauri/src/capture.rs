@@ -57,6 +57,23 @@ struct Tray {
     remote: Option<String>,
 }
 
+/// The language of the shell's own texts (tray entry, tooltip, confirmation dialogs): the app's,
+/// so the tray is not half German and half English; the system's before the page said it.
+pub fn native_lang(app: &AppHandle) -> crate::texts::Lang {
+    lang_of(&app.state::<CaptureState>())
+}
+
+/// Kept apart from the tray state: commands and the tray thread read it from any thread, while
+/// the tray state itself is only ever locked on the main thread.
+fn lang_of(state: &CaptureState) -> crate::texts::Lang {
+    state
+        .lang
+        .lock()
+        .ok()
+        .and_then(|lang| *lang)
+        .unwrap_or_else(crate::webview2::system_lang)
+}
+
 const TRAY_REMOTE_END: &str = "remote-end";
 
 /// Lines of the tray's "Heute" block; the web app never sends more (`traySnapshot.ts`).
@@ -81,6 +98,9 @@ pub struct CaptureState {
     voice_hotkey: Mutex<Option<Shortcut>>,
     shown_at: Mutex<Option<Instant>>,
     tray: Mutex<Option<Tray>>,
+    /// The app language once the page said it (`desktop_set_tray_labels`); the system language
+    /// until then.
+    lang: Mutex<Option<crate::texts::Lang>>,
 }
 
 #[derive(Deserialize)]
@@ -90,6 +110,9 @@ pub struct TrayLabels {
     open: String,
     quit: String,
     tooltip: String,
+    /// The app language (`de`, `en`): the shell's own tray and dialog texts follow it.
+    #[serde(default)]
+    lang: Option<String>,
 }
 
 /// The tray's "Heute" block, all texts from the web app (Rust knows no strings). Only these labels
@@ -267,11 +290,9 @@ fn tray_menu(app: &AppHandle, tray: &Tray) -> tauri::Result<Menu<Wry>> {
 }
 
 /// The tooltip that is shown: the page's one, with who controls this PC behind it.
-fn tray_tooltip(tray: &Tray) -> String {
+fn tray_tooltip(tray: &Tray, lang: crate::texts::Lang) -> String {
     match &tray.remote {
-        Some(name) => {
-            crate::texts::remote_tooltip(crate::webview2::system_lang(), &tray.tooltip, name)
-        }
+        Some(name) => crate::texts::remote_tooltip(lang, &tray.tooltip, name),
         None => tray.tooltip.clone(),
     }
 }
@@ -316,7 +337,8 @@ fn apply_tray(app: &AppHandle, tray: &Tray) {
     if let Ok(menu) = tray_menu(app, tray) {
         let _ = icon.set_menu(Some(menu));
     }
-    let _ = icon.set_tooltip(Some(tray_tooltip(tray)));
+    let lang = lang_of(&app.state::<CaptureState>());
+    let _ = icon.set_tooltip(Some(tray_tooltip(tray, lang)));
 }
 
 /// The icon follows who controls; only touched when that changes.
@@ -536,7 +558,7 @@ fn ask_quit(app: &AppHandle) {
     if state.quit_prompt_open.swap(true, Ordering::AcqRel) {
         return;
     }
-    let (title, text, quit, cancel) = crate::texts::quit_dialog(crate::webview2::system_lang());
+    let (title, text, quit, cancel) = crate::texts::quit_dialog(native_lang(app));
     let handle = app.clone();
     app.dialog()
         .message(text)
@@ -676,6 +698,25 @@ pub fn desktop_set_tray_labels(app: AppHandle, state: State<'_, CaptureState>, l
     let _ = tray.items.open.set_text(&labels.open);
     let _ = tray.items.quit.set_text(&labels.quit);
     tray.tooltip = labels.tooltip;
+    // The shell's own two rows follow the app language (a fixed choice of texts, never the
+    // page's words).
+    if let Some(lang) = labels
+        .lang
+        .as_deref()
+        .and_then(crate::texts::Lang::from_app)
+    {
+        if let Ok(mut stored) = state.lang.lock() {
+            *stored = Some(lang);
+        }
+        let _ = tray
+            .items
+            .remote_end
+            .set_text(crate::texts::remote_end_label(lang));
+        let _ = tray
+            .items
+            .remote_hint
+            .set_text(crate::texts::remote_end_hint(lang));
+    }
     apply_tray(&app, tray);
 }
 
@@ -876,7 +917,16 @@ mod tests {
             let body = code.split(command).nth(1).unwrap();
             let body = &body[..body.find("\n}\n").unwrap()];
             assert!(body.contains("apply_tray(&app, tray)"), "{command}");
-            assert!(!body.contains("remote"), "{command} touches the controller");
+            assert!(
+                !body.contains("tray.remote") && !body.contains("set_remote_tray"),
+                "{command} touches the controller"
+            );
+            // the shell's own two rows only ever get the shell's own fixed texts, never the page's
+            assert!(!body.contains("remote_end.set_text(&labels"), "{command}");
+            assert!(!body.contains("remote_hint.set_text(&labels"), "{command}");
+            let own = body.matches("crate::texts::remote_").count();
+            let rows = body.matches(".remote_end").count() + body.matches(".remote_hint").count();
+            assert_eq!(own, rows, "{command}: a remote row without a shell text");
         }
         // only Rust names the controller
         assert_eq!(code.matches("tray.remote = ").count(), 1);
