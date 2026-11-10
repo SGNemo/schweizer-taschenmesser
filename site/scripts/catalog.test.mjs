@@ -63,8 +63,9 @@ test('every picture slot has a known ratio, matching capture sizes and none or a
   }
 });
 
-// The site says nothing about modules that are not finished: no preview module's name on a built page's source.
-test('no component names a preview module', () => {
+// The module lists say nothing about modules that are not finished: the components read the catalogue only through
+// shipped.ts, which drops preview modules. (Texts in i18n are not scanned; they are reviewed by hand.)
+test('module lists read the catalogue through shipped.ts, which drops preview modules', () => {
   const shipped = src('catalog', 'shipped.ts');
   assert.match(shipped, /status !== 'preview'/, 'shipped.ts filters preview modules');
   for (const file of ['Home.astro', 'ModulesPage.astro']) assert.ok(!/from '\.\.\/catalog\/modules\.json'/.test(src('components', file)), `${file} reads the catalogue through shipped.ts`);

@@ -17,7 +17,10 @@ variants. Rules: [DESIGN-SPEC](../DESIGN-SPEC.md), [FOCUS-GUIDELINES](../FOCUS-G
 Render the sheets (desktop 1280 + phone 360, dark and light) from `site/`:
 `node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored); `MOCKUPS=round-5-a,round-5-b` picks sheets, `SHEET_ROW=1` for long pages.
 
-Since round 4 the site speaks identity v3.1: the module palette, tints and area patterns are part of the pinned token subset (`site/src/styles/tokens.css`, `identity.css`), module cards and the nine head shapes are drawn by `IdentityMini.astro` from `site/src/catalog/modules.json` (icon, hue, head, widget per module, written by `npm run gen:modules` in `web/`), so the site keeps no module list of its own. Screenshots are renewed in package 2.
+Rounds 4 and 5 put the app's identity v3.1 on the site (module cards, area patterns, the ocean hero). The rethink
+round replaced that form; of the identity only the hue mapping in `site/src/styles/identity.css` is still used
+(`data-hue` → the dot before a module's name). The pattern and head rules in that file are pinned to the app by
+`scripts/tokens.test.mjs` and unused today; removing them with their tests is an open follow-up.
 
 ## Building blocks of the site (since the rethink round)
 

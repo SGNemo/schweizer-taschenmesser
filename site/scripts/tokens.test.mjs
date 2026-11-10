@@ -100,7 +100,8 @@ test('components, pages and stylesheets write no colour of their own', async () 
   for (const file of walk(root).filter((f) => /\.(astro|css)$/.test(f) && !f.endsWith('tokens.css'))) {
     // The two theme-color metas cannot read a custom property; the next test pins them to --bg.
     const src = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/&#\d+;/g, '').replace(/<meta name="theme-color"[^>]*>/g, '');
-    assert.doesNotMatch(src, /#[0-9a-f]{6}\b|#[0-9a-f]{3}\b(?=\s*[;)!])|\b(?:rgb|hsl|oklch)a?\(/i, `colour literal in ${path.relative(root, file)}`);
+    const code = src.replace(/href=(["'{`])[^"'}`]*\1?/g, '');
+    assert.doesNotMatch(code, /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b(?![\w-])|\b(?:rgb|hsl|hwb|lab|lch|oklab|oklch|color)a?\(/i, `colour literal in ${path.relative(root, file)}`);
     assert.doesNotMatch(src, /\sstyle=/, `inline style in ${path.relative(root, file)}`);
   }
 });

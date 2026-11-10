@@ -9,7 +9,7 @@
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
  *   SCREENS_PAGES=now|plan             limits the slots
  *
- * A slot with `app.clip` is cut to that element (the capture keeps the slot's ratio around its centre); a slot
+ * A slot with `app.clip` is shot as a window of the capture size centred on that element (so the ratio holds); a slot
  * with `app.todo` still needs a step the screenshot chat has to add (printed as a warning, the whole viewport is
  * shot until then). Notifications are granted so no permission banner shows. The seed's texts are German, so one
  * set serves every site language. The only cosmetic change is the hidden "Dev" badge of the preview flavour.
@@ -39,7 +39,7 @@ const PAGES = Object.entries(slots).flatMap(([name, def]) => [
   { name: `${name}-desk`, slot: name, ...def.app, viewport: { width: def.desk[0], height: def.desk[1] } },
   { name: `${name}-phone`, slot: name, ...def.app, viewport: { width: def.phone[0], height: def.phone[1] }, mobile: true },
 ]);
-for (const [name, def] of Object.entries(slots)) if (def.app.todo) console.warn(`slot ${name}: ${def.app.todo} (not automated yet, the viewport is shot as it is)`);
+if (!process.argv.includes('--readme')) for (const [name, def] of Object.entries(slots)) if (def.app.todo) console.warn(`slot ${name}: ${def.app.todo} (not automated yet, the viewport is shot as it is)`);
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
 const README_PAGES = [
@@ -127,12 +127,6 @@ try {
       await section.getByTestId('seed-status').filter({ hasText: SEED_TODAY }).waitFor({ timeout: 60_000 });
       await page.goto(p.path);
       await page.locator('main').waitFor();
-      if (p.unlock) {
-        // The vault list: unlock with the demo passphrase of the seed (modules/accounts/seed.ts).
-        await page.getByLabel('Master-Passwort').fill('nemo-demo-tresor'); // gitleaks:allow (invented demo value)
-        await page.getByRole('button', { name: 'Entsperren' }).click();
-        await page.getByRole('button', { name: 'Zugang hinzufügen' }).waitFor({ timeout: 30_000 });
-      }
       // The Dev-Preview flavour shows a one-time notice a moment after the shell mounts; wait for it, close it.
       await page.getByRole('button', { name: 'Schließen', exact: true }).first().click({ timeout: 3_000 }).catch(() => {});
       if (p.openToolbox) {
@@ -156,9 +150,11 @@ try {
         const file = path.join(out, `${p.file}-${scheme}.png`);
         // With a clip selector: the viewport-sized cut around the element's centre, so the slot's ratio is kept.
         const box = p.clip ? await page.locator(p.clip).first().boundingBox() : null;
+        const pageSize = box && (await page.evaluate(() => ({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight })));
+        const within = (v, max) => Math.max(0, Math.min(Math.round(v), Math.max(0, max)));
         const clip = box && {
-          x: Math.max(0, Math.round(box.x + box.width / 2 - p.viewport.width / 2)),
-          y: Math.max(0, Math.round(box.y + box.height / 2 - p.viewport.height / 2)),
+          x: within(box.x + box.width / 2 - p.viewport.width / 2, pageSize.w - p.viewport.width),
+          y: within(box.y + box.height / 2 - p.viewport.height / 2, pageSize.h - p.viewport.height),
           width: p.viewport.width,
           height: p.viewport.height,
         };

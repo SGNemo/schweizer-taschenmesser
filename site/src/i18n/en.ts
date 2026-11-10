@@ -104,7 +104,7 @@ export const en = {
     },
     data: {
       h: "And it stays with you",
-      lead: "No account, no Nemo server. What the app still sends online is listed here. None of it contains your entries.",
+      lead: "No account, no Nemo server. What the app still sends online is listed here. None of it goes to the project. Your entries leave the device only when you trigger it yourself: through sync to your own server, or as data you give an AI question.",
       link: "Every connection, and how to check",
     },
     inside: {
@@ -171,7 +171,7 @@ export const en = {
       alt: "Diagram: inside a line labelled “With you” are your PC, your phone and, dashed, your own server. Outside, under “Internet”, are update check, weather and AI, each with a note on how it is or gets switched off.",
       inside: "With you",
       pc: ["Your PC", "all data, vault encrypted"],
-      phone: ["Your phone", "the same data, offline"],
+      phone: ["Your phone", "the same data, with sync"],
       server: ["Your own server", "only if you want"],
       sync: "Sync",
       outside: "Internet",
@@ -186,7 +186,7 @@ export const en = {
       h: "The AI does not see your entries",
       p: [
         "The assistant sends your question, the date and the field names of the modules you switched on. Nothing more.",
-        "Two exceptions only you can trigger. In the chat you can attach data of one module; the app shows exactly what goes along first. And through the local import interface you can give an AI on your PC read access to single modules.",
+        "Two exceptions only you can trigger. You can give a question the data of one module; the app shows exactly what goes along first. And through the local import interface you can give an AI on your PC read access to single modules.",
         "The password vault is invisible to AI, search and import.",
       ],
     },

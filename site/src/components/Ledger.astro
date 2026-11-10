@@ -91,7 +91,7 @@ const rows = l.rows.filter((r) => !short || r.short);
       padding: 0.125rem 0;
     }
     td::before {
-      content: attr(data-label) ': ';
+      content: attr(data-label) ': ' / '';
       font-family: var(--font-site);
       font-size: var(--text-sm);
       color: var(--text-muted);

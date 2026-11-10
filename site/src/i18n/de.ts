@@ -110,7 +110,7 @@ export const de = {
     },
     data: {
       h: "Und es bleibt bei dir",
-      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon enthält deine Einträge.",
+      lead: "Kein Konto, kein Nemo-Server. Was die App trotzdem ins Netz schickt, steht hier. Nichts davon geht an das Projekt. Deine Einträge verlassen das Gerät nur, wenn du es selbst auslöst: per Sync zu deinem eigenen Server oder als Daten, die du einer KI-Frage mitgibst.",
       link: "Alle Verbindungen, und wie du nachprüfst",
     },
     inside: {
@@ -181,7 +181,7 @@ export const de = {
       alt: "Schema: Innerhalb einer Linie mit der Aufschrift „Bei dir“ stehen dein PC, dein Handy und, gestrichelt, dein eigener Server. Außerhalb, unter „Internet“, stehen Update-Abfrage, Wetter und KI, jede mit dem Hinweis, wie sie ausgeschaltet ist oder wird.",
       inside: "Bei dir",
       pc: ["Dein PC", "alle Daten, Tresor verschlüsselt"],
-      phone: ["Dein Handy", "dieselben Daten, offline"],
+      phone: ["Dein Handy", "mit Sync dieselben Daten"],
       server: ["Dein eigener Server", "nur wenn du willst"],
       sync: "Sync",
       outside: "Internet",
@@ -196,7 +196,7 @@ export const de = {
       h: "Die KI sieht deine Einträge nicht",
       p: [
         "Der Assistent schickt deine Frage, das Datum und die Feldnamen der eingeschalteten Module. Mehr nicht.",
-        "Zwei Ausnahmen löst nur du aus. Im Chat kannst du Daten eines Moduls anhängen; die App zeigt vorher genau, was mitgeht. Und über die lokale Import-Schnittstelle kannst du einer KI auf deinem PC Leserechte für einzelne Module geben.",
+        "Zwei Ausnahmen löst nur du aus. Du kannst einer Frage Daten eines Moduls mitgeben; die App zeigt vorher genau, was mitgeht. Und über die lokale Import-Schnittstelle kannst du einer KI auf deinem PC Leserechte für einzelne Module geben.",
         "Der Passwort-Tresor ist für KI, Suche und Import unsichtbar.",
       ],
     },

@@ -149,6 +149,9 @@ on the way: Atkinson Hyperlegible Next replaces Inter on the site (the app keeps
 switches on (`fresh`) count as "on at the start"; the ocean hero, the comparison table, the four-scene tour and all
 app pictures under `site/src/assets/screens` are gone; twelve tokens nothing used any more were removed.
 
+Disclosure wins over "say nothing about preview modules": the ledger keeps the Google and Spotify rows although
+the modules that use them are previews, because a list of connections must be complete.
+
 Measured after the build: phone start page 6 830 px (before: 5 739 px; the ledger and the day cost length, the
 maintainer chose both); axe and the site's own checks 0 findings on 15 pages × 2 widths × 2 themes.
 
