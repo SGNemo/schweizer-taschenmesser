@@ -486,3 +486,58 @@ const RAW_STACKS: Record<string, number> = {
   'tools/regex/Tool.module.css': 2,
   'tools/tools.module.css': 1,
 };
+
+it('BankCard: the ink keeps 4.5:1 at the worst point of the gradient, every hue, both themes, calm included', () => {
+  const card = read('ui/identity/BankCard.module.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const flat = card.replace(/\s+/g, ' ');
+  // The gradient as the test computes it: hue darkened at the start, the hue, the second hue itself at the end.
+  const gradient =
+    /linear-gradient\( 135deg, color-mix\(in srgb, var\(--module-color\) (\d+)%, black\), var\(--module-color\) \d+%, var\(--module-color-2, var\(--module-color\)\) \)/.exec(
+      flat,
+    );
+  expect(gradient, 'the gradient changed: compute its stops here').not.toBeNull();
+  const start = Number(gradient![1]) / 100;
+  // Nothing lowers the ink (no opacity on the text lines), and the shine moves the surface away from it.
+  expect(card).not.toMatch(/\bopacity\s*:/);
+  expect(flat).toMatch(/\.card \{[^}]*color: var\(--card-ink, var\(--surface\)\);/);
+  expect(flat).toMatch(
+    /\.card \{[^}]*--card-shine: color-mix\(in srgb, black \d+%, transparent\);/,
+  );
+  const darkRules = [
+    ...flat.matchAll(
+      /:global\(:root(?:\[data-theme='dark'\]|:not\(\[data-theme='light'\]\))\) \.card \{([^}]*)\}/g,
+    ),
+  ];
+  expect(darkRules, 'dark: explicit and system').toHaveLength(2);
+  for (const [, body] of darkRules) {
+    expect(body).toContain('--card-ink: var(--bg);');
+    expect(body).toMatch(/--card-shine: color-mix\(in srgb, white \d+%, transparent\);/);
+  }
+  expect(flat).toMatch(/\.card::before \{[^}]*background: var\(--card-shine\);/);
+  // Calm / module colours off: darkened grey in light, the plain grey in dark (explicit and system).
+  const calmLight =
+    /\[data-module-colors='off'\]\) \.card \{ background: color-mix\(in srgb, var\(--text-3\) (\d+)%, black\); \}/.exec(
+      flat,
+    );
+  expect(calmLight, 'calm fill in light').not.toBeNull();
+  expect(
+    flat.match(/\[data-module-colors='off'\]\) \.card \{ background: var\(--text-3\); \}/g),
+  ).toHaveLength(2);
+
+  const BLACK = '#000000';
+  for (const [name, t, ink] of [
+    ['light', light, light['--surface']!],
+    ['dark', dark, dark['--bg']!],
+  ] as const) {
+    // Every hue can be the first or the second one, so the stops are: any hue darkened, any hue itself.
+    for (const key of Object.keys(t).filter((k) => k.startsWith('--mod-'))) {
+      expect(ratio(ink, mix(t[key]!, BLACK, start)), `${name} ${key} start`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+      expect(ratio(ink, t[key]!), `${name} ${key} middle / end`).toBeGreaterThanOrEqual(4.5);
+    }
+    const calm =
+      name === 'light' ? mix(t['--text-3']!, BLACK, Number(calmLight![1]) / 100) : t['--text-3']!;
+    expect(ratio(ink, calm), `${name} calm`).toBeGreaterThanOrEqual(4.5);
+  }
+});
