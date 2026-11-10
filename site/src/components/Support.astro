@@ -34,14 +34,10 @@ const themes = [
 </section>
 
 <style>
+  /* No card around it: the text starts on the page's one left edge (round 5, W6). */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-1);
-    padding: clamp(1.5rem, 4vw, 2.5rem);
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-4);
     align-items: center;
   }
   .text {
@@ -52,10 +48,11 @@ const themes = [
   .meta {
     margin-top: var(--space-2);
   }
+  /* The five palettes are an illustration of the sentence above; on a phone the sentence is enough. */
   .themes {
     list-style: none;
     padding: 0;
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     gap: var(--space-3);
     margin-top: var(--space-4);
@@ -101,6 +98,10 @@ const themes = [
   @media (min-width: 48rem) {
     .card {
       grid-template-columns: 1fr auto;
+      gap: var(--space-6);
+    }
+    .themes {
+      display: flex;
     }
   }
 </style>

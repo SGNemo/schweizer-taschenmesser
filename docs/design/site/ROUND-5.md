@@ -77,4 +77,27 @@ Untouched in every package: CSP and `public/_headers`, token check, `gen:modules
 3. Preview modules: **one quiet row** at the end of the list.
 4. Order: **packages 2–4 now** with today's pictures, package 1 after 0b-8.
 
-Phase 2 starts when the maintainer writes "Plan freigegeben".
+Released on 2026-11-10; packages 2–4 are built (#674, #677, package 4), package 1 waits for 0b-8.
+
+## Result after packages 2–4 (measured on the built site, dark, Chromium)
+
+| | Before (2079bb5) | After |
+| --- | --- | --- |
+| Page height 360 / 390 px | 11 611 / 11 442 | 5 715 / 5 591 (49 %) |
+| Page height 768 / 1280 / 1440 px | 10 116 / 8 292 / 8 376 | 6 140 / 6 334 / 6 379 |
+| Hero picture at 1440 | 440 px, desktop capture also on the phone | 958 px; phone capture under 48 rem |
+| Navigation links under 64 rem | 0 | 5, sticky |
+| Features | 27 sketch cards | 4 pictures, 7 list rows |
+| Left edges (h1, h2, eyebrows) at 1440 | 170 and 352 px, plus 211 in the support card | 170 px |
+| Lighthouse, 5 pages, light and dark | – | 100 / 100 / 100 / 100 |
+
+| Id | State |
+| --- | --- |
+| W1 | fixed (package 3): scenes and compact list from `modules.json` |
+| W2 | fixed (package 2) |
+| W3 | fixed (packages 2 and 3): strip, texts and `IdentityMini` removed |
+| W4 | fixed (packages 2–4): anchor bar without script; phone length under half |
+| W5 | fixed as decided: ocean surface, pictures on plates, one entrance (off under reduced motion) |
+| W6 | fixed: logo once, checksums at the download, one left edge (support without a card), sync stations on shared lines, H2 reworded |
+
+Open: package 1 (pictures and social preview after Identity 4.0). The legal pages and `/install` keep their narrow centred column (`.wrap.narrow`); they are single-column pages of their own.

@@ -8,12 +8,12 @@ const s = t(Astro.props.locale);
 const items = [s.install.windows, s.install.android, s.install.updates];
 ---
 <section class="block band" id="install" aria-labelledby="install-title">
-  <div class="wrap narrow">
+  <div class="wrap">
     <p class="eyebrow">{s.install.eyebrow}</p>
     <h2 id="install-title">{s.install.title}</h2>
     <div class="list">
-      {items.map((it, i) => (
-        <details open={i === 0}>
+      {items.map((it) => (
+        <details>
           <summary>{it.summary}</summary>
           <p>{it.text}</p>
         </details>
@@ -32,16 +32,19 @@ const items = [s.install.windows, s.install.android, s.install.updates];
 </section>
 
 <style>
+  /* One left edge with the rest of the page: the list limits its own width. All items start closed; the step-by-step
+     page is one link below. */
   .list {
     margin-top: var(--space-4);
     border-bottom: 1px solid var(--border);
+    max-width: 46rem;
   }
   details {
     border-top: 1px solid var(--border);
   }
   summary {
     cursor: pointer;
-    min-height: 3.25rem;
+    min-height: 3rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
