@@ -122,12 +122,17 @@
   .devBadge {
     display: none;
   }
-  /* The fish alone instead of the wordmark: leaves room for the focus chip and the icons. */
+  /* The app icon tile alone instead of the wordmark: leaves room for the focus chip and the icons. */
   .wordmark {
     display: none;
   }
   .mark {
-    display: inline-flex;
+    display: block;
+    width: 2rem;
+    height: 2rem;
+  }
+  .mark > svg {
+    display: block;
   }
   .tools {
     padding: 0;

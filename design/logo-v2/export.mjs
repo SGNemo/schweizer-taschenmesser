@@ -277,6 +277,8 @@ export const LOGO_ACCENT = { light: '${ACCENT.light}', dark: '${ACCENT.dark}' } 
 /** Bounding box of the fish inside the 512 canvas. */
 export const LOGO_VIEWBOX = '${tight.join(' ')}';
 export const LOGO_ASPECT = ${r3(tight[2] / tight[3])};
+/** The mark on the accent tile (app icon geometry): corner radius and the fish's placement in the 512 canvas. */
+export const LOGO_TILE = { radius: ${tile.radius}, transform: '${place(tile.scale, tile.dx ?? 0, tile.dy ?? 0)}' } as const;
 // brand:end`;
 const replaceBlock = (file, re, text) => {
   const path = join(web, file);
