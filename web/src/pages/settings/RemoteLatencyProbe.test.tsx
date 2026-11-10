@@ -13,14 +13,16 @@ const remote = {
 vi.mock('@/core/platform', () => ({ getPlatform: () => ({ remote }) }));
 
 const t = tDev.latency;
+/** The first finger on the glass (jsdom's pointer events are not primary by default). */
+const FINGER = { isPrimary: true };
 const pad = () => screen.getByTestId('latency-pad');
 const result = () => screen.getByTestId('latency-result').textContent ?? '';
 
 async function stroke(moves: number) {
-  fireEvent.pointerDown(pad());
-  for (let i = 0; i < moves; i += 1) fireEvent.pointerMove(pad());
+  fireEvent.pointerDown(pad(), FINGER);
+  for (let i = 0; i < moves; i += 1) fireEvent.pointerMove(pad(), FINGER);
   await act(async () => {});
-  fireEvent.pointerUp(pad());
+  fireEvent.pointerUp(pad(), FINGER);
 }
 
 beforeEach(() => {
@@ -42,7 +44,7 @@ describe('remote latency probe (Dev-Preview)', () => {
   it('one call per pointer event while a finger is down, to a session that is never open, and nothing else', async () => {
     render(<RemoteLatencyProbe />);
     // a pointer that only hovers measures nothing
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).not.toHaveBeenCalled();
     await stroke(5);
     expect(remote.send).toHaveBeenCalledTimes(5);
@@ -52,8 +54,19 @@ describe('remote latency probe (Dev-Preview)', () => {
     expect(remote.close).not.toHaveBeenCalled();
     expect(result()).toMatch(/5 Werte · p50 [\d.]+ ms/);
     // the verdict needs both measurements
-    expect(result()).not.toContain(t.fits);
-    expect(result()).not.toContain(t.fitsNot);
+    for (const text of Object.values(t.verdict)) expect(result()).not.toContain(text);
+  });
+
+  it('a second finger is not a stroke of its own', async () => {
+    render(<RemoteLatencyProbe />);
+    fireEvent.pointerDown(pad(), { isPrimary: false });
+    fireEvent.pointerMove(pad(), { isPrimary: false });
+    expect(remote.send).not.toHaveBeenCalled();
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), { isPrimary: false });
+    fireEvent.pointerUp(pad(), { isPrimary: false });
+    fireEvent.pointerMove(pad(), FINGER);
+    expect(remote.send).toHaveBeenCalledTimes(1);
   });
 
   it('calls that settle after the finger is up still count', async () => {
@@ -65,9 +78,9 @@ describe('remote latency probe (Dev-Preview)', () => {
         }),
     );
     render(<RemoteLatencyProbe />);
-    fireEvent.pointerDown(pad());
-    fireEvent.pointerMove(pad());
-    fireEvent.pointerUp(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
+    fireEvent.pointerUp(pad(), FINGER);
     expect(result()).not.toContain(t.rows.invoke + '1 Werte');
     await act(async () => refuse!());
     await waitFor(() => expect(result()).toContain(t.rows.invoke + '1 Werte'));
@@ -76,31 +89,31 @@ describe('remote latency probe (Dev-Preview)', () => {
   it('stops for good when the call is not refused', async () => {
     remote.send.mockResolvedValue(undefined);
     render(<RemoteLatencyProbe />);
-    fireEvent.pointerDown(pad());
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
     expect(await screen.findByRole('alert')).toHaveTextContent(t.aborted);
-    fireEvent.pointerMove(pad());
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerMove(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).toHaveBeenCalledTimes(1);
     // clearing the measurement does not bring it back, nor does opening the page again
     fireEvent.click(screen.getByRole('button', { name: t.reset }));
-    fireEvent.pointerDown(pad());
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
     cleanup();
     render(<RemoteLatencyProbe />);
     expect(screen.getByRole('alert')).toHaveTextContent(t.aborted);
-    fireEvent.pointerDown(pad());
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).toHaveBeenCalledTimes(1);
   });
 
   it('stops for good on any answer but "closed": the shell got further than it may', async () => {
     remote.send.mockRejectedValue(new Error('network'));
     render(<RemoteLatencyProbe />);
-    fireEvent.pointerDown(pad());
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    fireEvent.pointerMove(pad(), FINGER);
     expect(await screen.findByRole('alert')).toHaveTextContent(t.aborted);
-    fireEvent.pointerMove(pad());
+    fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).toHaveBeenCalledTimes(1);
     expect(result()).not.toContain('1 Werte');
   });
@@ -108,8 +121,8 @@ describe('remote latency probe (Dev-Preview)', () => {
   it('never has more than a few calls on their way', () => {
     remote.send.mockImplementation(() => new Promise(() => {}));
     render(<RemoteLatencyProbe />);
-    fireEvent.pointerDown(pad());
-    for (let i = 0; i < 50; i += 1) fireEvent.pointerMove(pad());
+    fireEvent.pointerDown(pad(), FINGER);
+    for (let i = 0; i < 50; i += 1) fireEvent.pointerMove(pad(), FINGER);
     expect(remote.send).toHaveBeenCalledTimes(8);
   });
 
@@ -140,7 +153,7 @@ describe('remote latency probe (Dev-Preview)', () => {
     expect(remote.close).toHaveBeenCalledTimes(OPENS - 2);
     expect(screen.getByText(t.leftOpen)).toBeInTheDocument();
     for (const call of remote.open.mock.calls) expect(call[0]).toBe('media');
-    // six opens: the first is the warm-up, two failed
+    // six opens: the first that came about is the warm-up, two failed
     expect(result()).toContain(`${t.rows.open}${OPENS - 3} Werte`);
     expect(remote.send).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: t.copy }));
@@ -187,14 +200,14 @@ describe('remote latency probe (Dev-Preview)', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(OPENS * 300 + 50);
     });
-    await waitFor(() => expect(result()).toContain(t.fits));
+    await waitFor(() => expect(result()).toContain(t.verdict.fits));
     // a copy the system refuses is said, not thrown
     fireEvent.click(screen.getByRole('button', { name: t.copy }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     fireEvent.click(screen.getByRole('button', { name: t.copy }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
     expect(writeText.mock.calls[1]![0]).toMatch(
-      /^nemo-remote-latency v2 \| .* \| invoke n=3 .* \| fits=yes$/,
+      /^nemo-remote-latency v3 \| .* \| invoke n=3 .* \| verdict=fits$/,
     );
   });
 });

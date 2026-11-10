@@ -38,12 +38,13 @@ export const PC_MS = 1;
 export const GOAL_MS = 30;
 
 /**
- * One trip phone → PC at its best: the fastest open spread over its trips. A floor, and still
- * too high – an open also holds key reads on the phone and key agreement on both sides. The
- * fastest open is used because a slow one says nothing about a pointer stream (the first reads
- * keys and wakes the Wi-Fi, the PC may wait for a fresh state).
+ * One trip phone → PC at its best, estimated: the fastest open spread over its trips. The fastest
+ * open is used because a slow one says nothing about a pointer stream (the first reads keys and
+ * wakes the Wi-Fi, the PC may wait for a fresh state). The estimate is **too high rather than
+ * too low**: every open also reads two keys on the phone and does the key agreement on both
+ * sides, which can be as much per "trip" as the trip itself (see [`CLOSE_MS`]).
  */
-export function tripFloor(open: Summary | undefined): number | undefined {
+export function tripEstimate(open: Summary | undefined): number | undefined {
   return open ? round(open.min / TRIPS_PER_OPEN) : undefined;
 }
 
@@ -53,19 +54,34 @@ export function spread(open: Summary | undefined): number | undefined {
 }
 
 /**
- * What one `invoke` per event may cost at p95: the goal minus one trip at its best and the PC.
+ * How much the trip estimate can be too high (key reads in every open, spread over six trips):
+ * an invoke this far over its budget is "close", not "too expensive".
+ */
+export const CLOSE_MS = 3;
+
+/**
+ * What one `invoke` per event may cost at p95: the goal minus one trip (estimated) and the PC.
  * The question the probe answers is this one – WebView or touch capture in the Kotlin plugin –
- * because either way crosses the same Wi-Fi.
+ * because either way crosses the same Wi-Fi. Two leanings, in opposite directions: the trip
+ * estimate is too high (budget too small, up to about [`CLOSE_MS`]), and it is the best trip,
+ * not a typical one, held against a p95 (budget generous).
  */
 export function invokeBudget(open: Summary | undefined): number | undefined {
-  const trip = tripFloor(open);
+  const trip = tripEstimate(open);
   return trip === undefined ? undefined : round(GOAL_MS - trip - PC_MS);
 }
 
-/** `undefined` until both were measured. */
-export function fits(invoke: Summary | undefined, open: Summary | undefined): boolean | undefined {
+export type Verdict = 'fits' | 'close' | 'over';
+
+/** `undefined` until both were measured. `close` = measure again and try by hand, not the fallback. */
+export function verdict(
+  invoke: Summary | undefined,
+  open: Summary | undefined,
+): Verdict | undefined {
   const budget = invokeBudget(open);
-  return invoke && budget !== undefined ? invoke.p95 <= budget : undefined;
+  if (!invoke || budget === undefined) return undefined;
+  if (invoke.p95 <= budget) return 'fits';
+  return invoke.p95 <= budget + CLOSE_MS ? 'close' : 'over';
 }
 
 /** One line to copy: numbers and error codes only, nothing about the device, the PC or the network. */
@@ -82,18 +98,17 @@ export function resultLine(parts: {
   const failed = Object.entries(parts.failed ?? {})
     .map(([code, n]) => `${code}:${n}`)
     .join(',');
-  const verdict = fits(parts.invoke, parts.open);
   return [
-    'nemo-remote-latency v2',
+    'nemo-remote-latency v3',
     s('input', parts.input),
     s('invoke', parts.invoke),
     `events/s=${parts.eventsPerSecond ?? '–'}`,
     `overlap%=${parts.overlapPercent ?? '–'}`,
     s('open', parts.open),
     `failed=${failed || '0'}`,
-    `trip≥${tripFloor(parts.open) ?? '–'}`,
+    `trip≈${tripEstimate(parts.open) ?? '–'}`,
     `spread=${spread(parts.open) ?? '–'}`,
     `invokeBudget=${invokeBudget(parts.open) ?? '–'}`,
-    `fits=${verdict === undefined ? '–' : verdict ? 'yes' : 'no'}`,
+    `verdict=${verdict(parts.invoke, parts.open) ?? '–'}`,
   ].join(' | ');
 }

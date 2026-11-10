@@ -4,13 +4,13 @@ import { tDev } from '@/strings.dev';
 import { useUiStore } from '@/stores/ui';
 import { Button } from '@/ui';
 import {
-  fits,
   GOAL_MS,
   invokeBudget,
   resultLine,
   spread,
   summarise,
-  tripFloor,
+  tripEstimate,
+  verdict,
   type Summary,
 } from './remoteLatencyStats';
 import settings from './settings.module.css';
@@ -146,11 +146,14 @@ export function RemoteLatencyProbe() {
     setLeftOpen(0);
   }
 
-  function onDown() {
+  function onDown(e: ReactPointerEvent<HTMLDivElement>) {
+    // one finger: a second one is not a stroke of its own
+    if (e.isPrimary === false) return;
     samples.current.downAt ??= performance.now();
   }
 
-  function onUp() {
+  function onUp(e: ReactPointerEvent<HTMLDivElement>) {
+    if (e.isPrimary === false) return;
     const s = samples.current;
     if (s.downAt !== undefined) s.strokeMs += performance.now() - s.downAt;
     s.downAt = undefined;
@@ -160,7 +163,8 @@ export function RemoteLatencyProbe() {
   function onMove(e: ReactPointerEvent<HTMLDivElement>) {
     // `samples` is taken once: a call that settles after "clear" lands in the old, dropped set
     const s = samples.current;
-    if (stopped || s.downAt === undefined || s.input.length >= KEEP) return;
+    if (stopped || e.isPrimary === false || s.downAt === undefined || s.input.length >= KEEP)
+      return;
     const now = performance.now();
     s.events += 1;
     s.input.push(now - e.timeStamp);
@@ -191,14 +195,16 @@ export function RemoteLatencyProbe() {
     const times: number[] = [];
     const misses: Record<string, number> = {};
     let unclosed = 0;
+    let warmed = false;
     nextRunAt = performance.now() + PAUSE_MS;
     for (let i = 0; i < OPENS && !gone.current; i += 1) {
       setProgress(i);
       const start = performance.now();
       try {
         const opened = await remote.open('media', () => {});
-        // the first open is the warm-up
-        if (i > 0) times.push(performance.now() - start);
+        // the first open that came about is the warm-up
+        if (warmed) times.push(performance.now() - start);
+        warmed = true;
         await remote.close(opened.session).catch(() => {
           unclosed += 1;
         });
@@ -222,7 +228,7 @@ export function RemoteLatencyProbe() {
   const line = (x?: Summary) => (x ? t.summary(x.n, x.p50, x.p95, x.max) : t.none);
   const ms = (x?: number) => (x === undefined ? t.none : t.ms(x));
   const budget = invokeBudget(open);
-  const verdict = fits(shown.invoke, open);
+  const result = verdict(shown.invoke, open);
   const failedTotal = Object.values(failed).reduce((a, b) => a + b, 0);
   const running = progress !== undefined;
 
@@ -272,7 +278,7 @@ export function RemoteLatencyProbe() {
         <dt>{t.rows.budget}</dt>
         <dd>
           {budget === undefined ? t.none : t.ms(budget)}
-          {verdict !== undefined && ` · ${verdict ? t.fits : t.fitsNot}`}
+          {result && ` · ${t.verdict[result]}`}
         </dd>
         <dt>{t.rows.input}</dt>
         <dd>{line(shown.input)}</dd>
@@ -283,7 +289,7 @@ export function RemoteLatencyProbe() {
         <dt>{t.rows.open}</dt>
         <dd>{line(open)}</dd>
         <dt>{t.rows.trip}</dt>
-        <dd>{ms(tripFloor(open))}</dd>
+        <dd>{ms(tripEstimate(open))}</dd>
         <dt>{t.rows.spread}</dt>
         <dd>{ms(spread(open))}</dd>
       </dl>

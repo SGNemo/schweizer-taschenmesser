@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { fits, invokeBudget, resultLine, spread, summarise, tripFloor } from './remoteLatencyStats';
+import {
+  invokeBudget,
+  resultLine,
+  spread,
+  summarise,
+  tripEstimate,
+  verdict,
+} from './remoteLatencyStats';
 
 describe('remote latency numbers', () => {
   it('summarises with nearest-rank percentiles and ignores broken samples', () => {
@@ -13,19 +20,22 @@ describe('remote latency numbers', () => {
 
   it('a trip is the fastest open over six, the spread is shown undivided', () => {
     const open = summarise([30, 36, 42, 200])!;
-    expect(tripFloor(open)).toBe(5);
+    expect(tripEstimate(open)).toBe(5);
     expect(spread(open)).toBe(164);
-    expect(tripFloor(undefined)).toBeUndefined();
+    expect(tripEstimate(undefined)).toBeUndefined();
     expect(spread(undefined)).toBeUndefined();
   });
 
   it('the invoke is judged against the goal minus one trip and the PC – a slow open does not eat it', () => {
     const open = summarise([30, 36, 42, 200])!;
     expect(invokeBudget(open)).toBe(24);
-    expect(fits(summarise([2, 3, 24])!, open)).toBe(true);
-    expect(fits(summarise([2, 3, 24.1])!, open)).toBe(false);
-    expect(fits(summarise([2])!, undefined)).toBeUndefined();
-    expect(fits(undefined, open)).toBeUndefined();
+    expect(verdict(summarise([2, 3, 24])!, open)).toBe('fits');
+    // within what the trip estimate can be too high: close, not the fallback
+    expect(verdict(summarise([2, 3, 24.1])!, open)).toBe('close');
+    expect(verdict(summarise([2, 3, 27])!, open)).toBe('close');
+    expect(verdict(summarise([2, 3, 27.1])!, open)).toBe('over');
+    expect(verdict(summarise([2])!, undefined)).toBeUndefined();
+    expect(verdict(undefined, open)).toBeUndefined();
   });
 
   it('the line to copy holds numbers and error codes only', () => {
@@ -37,8 +47,8 @@ describe('remote latency numbers', () => {
       failed: { network: 2, 'not-granted': 1 },
     });
     expect(line).toBe(
-      'nemo-remote-latency v2 | input – | invoke n=1 min=2 p50=2 p95=2 max=2 | events/s=118 | overlap%=3 | open n=1 min=30 p50=30 p95=30 max=30 | failed=network:2,not-granted:1 | trip≥5 | spread=0 | invokeBudget=24 | fits=yes',
+      'nemo-remote-latency v3 | input – | invoke n=1 min=2 p50=2 p95=2 max=2 | events/s=118 | overlap%=3 | open n=1 min=30 p50=30 p95=30 max=30 | failed=network:2,not-granted:1 | trip≈5 | spread=0 | invokeBudget=24 | verdict=fits',
     );
-    expect(resultLine({})).toContain('failed=0 | trip≥– | spread=– | invokeBudget=– | fits=–');
+    expect(resultLine({})).toContain('failed=0 | trip≈– | spread=– | invokeBudget=– | verdict=–');
   });
 });

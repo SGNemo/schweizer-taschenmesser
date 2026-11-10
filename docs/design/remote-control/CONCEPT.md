@@ -106,21 +106,21 @@ Tool: Dev-Preview build on the phone → Einstellungen → Entwickler → „Fer
 **The question it answers is one: WebView or touch capture in the Kotlin plugin** – so it judges the `invoke`, not a total. Either way crosses the same Wi-Fi.
 
 - **invoke** – one call per pointer event while a finger is down, page → shell → page: `send` for a session number that is never open. The shell goes the way of a real send (command, worker thread, session lookup) and answers `closed` right before it would seal and write. A round trip, so it overstates the one direction a real move needs.
-- **invoke budget** – what that call may cost at p95: the goal (30 ms) − one trip to the PC at its best − 1 ms on the PC. The tool says "fits" or "too expensive".
-- **trip, at best** – the fastest of five opens of a media session ÷ 6 (an open is three exchanges: TCP, handshake, `open`/`opened`). A floor that is still too high: every open also reads two keys on the phone and does the key agreement on both sides. The first open of a run is the warm-up (keys, Wi-Fi waking up, the PC's state read may wait up to 150 ms) and is not counted.
+- **invoke budget** – what that call may cost at p95: the goal (30 ms) − one trip to the PC (estimated) − 1 ms on the PC. The tool says "fits", "close" (up to 3 ms over: measure again and try by hand, not the fallback) or "too expensive". Two leanings in opposite directions: the trip estimate is too high, so the budget is up to about 3 ms too small; and it is the best trip held against a p95, which makes the budget generous.
+- **trip, at best (estimate)** – the fastest of five opens of a media session ÷ 6 (an open is three exchanges: TCP, handshake, `open`/`opened`). Too high rather than too low: every open also reads two keys from the phone's key store and does the key agreement on both sides, which can add as much per "trip" as the trip itself. The first open of a run that comes about is the warm-up (keys, Wi-Fi waking up, the PC's state read may wait up to 150 ms) and is not counted.
 - **spread** – p95 − p50 of those opens: how calm the Wi-Fi is right now. Shown on its own, never divided into a per-trip number.
 - **input** – the pointer event's own time stamp → handler: Android, the WebView and the wait for the next display frame, which "send per event" inherits. **events/s** = events the page was handed (about the display rate) = calls the page would make. **overlap** = events that arrived while the previous call was still running (then moves are summed).
 
 Not measured, and left to the touchpad hand test: seal and write on the phone (< 1 ms in the prototype – on one host; a real write blocks while the socket buffer is full, so on bad Wi-Fi the wait becomes per-event latency), `SendInput` on the PC, and the finger-to-pointer feeling as a whole.
 
-Measure twice: near the router and at the far end of the flat.
+Measure twice: near the router and at the far end of the flat. **The run near the router decides**; the far-end run only shows what the Wi-Fi adds (trip, spread) and its verdict does not count.
 
-| Phone, Android, display Hz | Where | invoke p50 / p95 / max ms | invoke budget ms → fits? | events/s | overlap % | input p50 / p95 ms | open p50 / p95 ms | trip ≥ ms | spread ms | Date |
+| Phone, Android, display Hz | Where | invoke p50 / p95 / max ms | invoke budget ms → verdict | events/s | overlap % | input p50 / p95 ms | open p50 / p95 ms | trip ≈ ms | spread ms | Date |
 |---|---|---|---|---|---|---|---|---|---|---|
 | _to be measured_ | near the router | | | | | | | | | |
 | | far end | | | | | | | | | |
 
-Reading: invoke p95 within its budget → the page sends per pointer event through the WebView as designed. Over it → touch capture moves into the Kotlin plugin (fallback of package 3). A large spread or a high trip is the Wi-Fi, not the design, and no reason for the fallback.
+Reading (near the router): "fits" → the page sends per pointer event through the WebView as designed. "too expensive" → touch capture moves into the Kotlin plugin (fallback of package 3). "close" → measure again; if it stays close, build the page on the WebView path and let the hand test decide. A large spread or a high trip is the Wi-Fi, not the design, and no reason for the fallback.
 
 ### Prototype measurement
 
