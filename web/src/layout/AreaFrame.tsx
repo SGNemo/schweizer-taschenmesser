@@ -344,7 +344,12 @@ export function AreaFrame({
           {framed && !stage ? (
             // Under a standard head: what a page still brings for the signature slot and its strips lies in the
             // page (the area packages decide what stays), never in the head.
-            <div className={styles.below} data-testid="module-below">
+            <div
+              className={styles.below}
+              data-testid="module-below"
+              data-hue={id?.hue}
+              data-hue2={id?.hue2}
+            >
               <div className={styles.target} ref={setSignature} data-slot="signature" />
               <div className={styles.target} ref={setExtra} data-slot="extra" />
             </div>
