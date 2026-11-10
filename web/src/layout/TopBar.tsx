@@ -31,7 +31,7 @@ export function TopBar() {
           <Wordmark height={32} title={t.appName} />
         </span>
         <span className={styles.mark}>
-          <Logo size={32} title={t.appName} />
+          <Logo tile title={t.appName} />
         </span>
       </Link>
       {clockOn ? (

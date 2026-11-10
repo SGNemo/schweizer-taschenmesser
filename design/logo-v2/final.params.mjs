@@ -28,7 +28,7 @@ export const LOCKUP = { source: 'mark', markHeight: 1.3, gap: 0.24, pill: { padX
 export const PLACEMENT = {
   sidebarWide: { pill: 36 }, // in the 44 px brand box, 4 px air above and below
   sidebarRail: { tile: 44 }, // the mark on the accent tile (`<Logo tile />`) filling the 2.75rem home link
-  phoneTopBar: { mark: 32 }, // the transparent mark, no tile
+  phoneTopBar: { tile: 32 }, // below 416 px: the tile alone (`<Logo tile />` in a 2rem box); above: the pill
 };
 
 /** Safe zones of the 512 canvas: PWA maskable icon (circle, 40 % radius minus a margin) and the Android adaptive icon (66 dp of 108). */
