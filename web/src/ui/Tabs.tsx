@@ -12,19 +12,33 @@ export interface TabItem {
   to?: string;
 }
 
-/**
- * Underline tabs for the sub-views of a page (an area's modules, finance tabs). Filters inside
- * a list use `Segmented` instead.
- */
-export function Tabs({
-  label,
-  items,
-  onSelect,
-}: {
+interface TabsByItems {
   label: string;
   items: readonly TabItem[];
   onSelect?: (id: string) => void;
-}) {
+}
+/** The shape of `Segmented` (`value`, `options`, `onChange`), so a view switch moves over without a rewrite. */
+interface TabsByValue<T extends string> {
+  label: string;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: T) => void;
+}
+
+/**
+ * Underline tabs: the one navigation between the views of a page (Identity 4.0; an area's modules, the tabs of
+ * finance, month/week of a calendar). A `Segmented` is a filter inside a view, never the switch between views.
+ * Two ways to call it: `items` (links or buttons with `active`) or the shape of `Segmented` (`value`, `options`,
+ * `onChange`).
+ */
+export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue<T>) {
+  const { label } = props;
+  const items: readonly TabItem[] =
+    'options' in props
+      ? props.options.map((o) => ({ id: o.value, label: o.label, active: o.value === props.value }))
+      : props.items;
+  const onSelect = (id: string) =>
+    'options' in props ? props.onChange(id as T) : props.onSelect?.(id);
   const nav = useRef<HTMLElement>(null);
   const activeId = items.find((i) => i.active)?.id;
   // A row that scrolls sideways (phone) keeps the active tab in view; no animation with less motion.
@@ -55,7 +69,7 @@ export function Tabs({
             type="button"
             className={styles.tab}
             aria-current={i.active ? 'page' : undefined}
-            onClick={() => onSelect?.(i.id)}
+            onClick={() => onSelect(i.id)}
           >
             {i.label}
           </button>
