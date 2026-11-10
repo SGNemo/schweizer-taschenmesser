@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
+import { onDesktop } from './guards';
 import { bootDev, SEED_TODAY, test } from './helpers';
 
 /**
@@ -27,6 +28,8 @@ const MODULE_IDS = readdirSync(join(HERE, '../../src/modules'))
   .filter(
     (id) => id !== 'example' && existsSync(join(HERE, '../../src/modules', id, 'manifest.ts')),
   )
+  // A phone-only module has no page in the faked desktop app (see `onDesktop`).
+  .filter(onDesktop)
   .sort();
 const PAGES = [
   '/',
