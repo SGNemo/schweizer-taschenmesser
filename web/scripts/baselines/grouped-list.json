@@ -1,6 +1,10 @@
 {
   "version": 1,
-  "what": "<ul>/<ol> with an ItemRow in src/modules/**/routes outside GroupedList",
-  "total": 0,
-  "files": {}
+  "what": "<ul>/<ol> with an ItemRow in src/modules/**/*.tsx outside GroupedList",
+  "total": 4,
+  "files": {
+    "modules/calendar/components/Agenda.tsx": 1,
+    "modules/calendar/components/AgendaView.tsx": 1,
+    "modules/calendar/components/Views.tsx": 2
+  }
 }

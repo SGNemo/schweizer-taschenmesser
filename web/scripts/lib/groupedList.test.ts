@@ -4,7 +4,7 @@ import {
   baselineFile,
   countPerFile,
   diffBaseline,
-  isRouteSource,
+  isModuleSource,
   moduleFiles,
   readBaseline,
   sum,
@@ -18,8 +18,8 @@ import { findBareLists } from './groupedList';
  * (a raised number or a new file key is a ratchet hit: name it in the PR text, docs/howto/ci.md).
  */
 const NAME = 'grouped-list';
-const WHAT = '<ul>/<ol> with an ItemRow in src/modules/**/routes outside GroupedList';
-const files = () => moduleFiles(isRouteSource);
+const WHAT = '<ul>/<ol> with an ItemRow in src/modules/**/*.tsx outside GroupedList';
+const files = () => moduleFiles(isModuleSource);
 
 describe('findBareLists (what counts as a hit)', () => {
   it('a list with an ItemRow is a hit, also through map, a fragment or a wrapper', () => {
@@ -95,6 +95,21 @@ describe(`scripts/baselines/${NAME}.json`, () => {
     ).toEqual([]);
     expect(baseline.total, 'total = sum of the files').toBe(sum(baseline.files));
     expect(files().length, 'the counter found no files to read').toBeGreaterThan(20);
+  });
+
+  it('reads every component file of a module, not only its routes', () => {
+    const all = files();
+    for (const folder of ['routes', 'components', 'widgets'])
+      expect(
+        all.some((f) => f.includes(`/${folder}/`)),
+        folder,
+      ).toBe(true);
+    expect(isModuleSource('modules/calendar/components/Agenda.tsx')).toBe(true);
+    expect(isModuleSource('modules/calendar/widget.tsx')).toBe(true);
+    expect(isModuleSource('modules/calendar/__tests__/Agenda.tsx')).toBe(false);
+    expect(isModuleSource('modules/calendar/components/Agenda.test.tsx')).toBe(false);
+    expect(isModuleSource('modules/calendar/logic.ts')).toBe(false);
+    expect(isModuleSource('ui/ItemList.tsx')).toBe(false);
   });
 
   it('the comparison is strict on both sides', () => {
