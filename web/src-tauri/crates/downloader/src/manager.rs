@@ -63,6 +63,8 @@ struct Saved {
 
 pub(crate) struct Inner {
     state_file: PathBuf,
+    /// One `persist` at a time: commands and worker threads share the temporary file.
+    persist_gate: Mutex<()>,
     pub(crate) jobs: Mutex<Vec<Job>>,
     flags: Mutex<HashMap<u64, Arc<AtomicU8>>>,
     pub(crate) global_bps: AtomicU64,
@@ -104,8 +106,12 @@ impl Inner {
             .any(|j| j.id != except && j.dir == dir && j.file_name == name)
     }
 
-    /// Writes the job list (atomically: temp file, then rename).
+    /// Writes the job list (atomically: temp file, then rename). Called from command and worker threads;
+    /// the gate covers snapshot, write and rename, so the last caller always writes the newest state.
+    /// The `jobs` lock is held only for the copy, never during the file write. Never call this while
+    /// holding the `jobs` lock.
     pub(crate) fn persist(&self) {
+        let _gate = lock(&self.persist_gate);
         let saved = Saved {
             next_id: self.next_id.load(Ordering::Relaxed),
             global_bps: self.global_bps.load(Ordering::Relaxed),
@@ -176,6 +182,7 @@ impl Manager {
         }
         Manager(Arc::new(Inner {
             state_file,
+            persist_gate: Mutex::new(()),
             jobs: Mutex::new(jobs),
             flags: Mutex::new(HashMap::new()),
             global_bps: AtomicU64::new(saved.global_bps),
@@ -330,5 +337,103 @@ impl Manager {
             inner.notify();
         });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Barrier;
+
+    fn job(id: u64, dir: &Path, note: &str) -> Job {
+        Job {
+            id,
+            url: format!("https://example.invalid/{id}/{note}"),
+            file_name: format!("file-{id}-{note}.bin"),
+            dir: dir.to_path_buf(),
+            state: State::Paused,
+            done: id,
+            total: None,
+            limit_bps: 0,
+            speed_bps: 0,
+            error: None,
+            sha256: None,
+            expected_hash: None,
+            hash_check: None,
+        }
+    }
+
+    /// The state file as JSON; panics when it is missing or not a complete document.
+    fn on_disk(path: &Path) -> serde_json::Value {
+        let bytes = fs::read(path).expect("state file exists");
+        let saved: Saved = serde_json::from_slice(&bytes).expect("state file parses");
+        serde_json::to_value(saved).unwrap()
+    }
+
+    fn in_memory(inner: &Inner) -> serde_json::Value {
+        serde_json::to_value(Saved {
+            next_id: inner.next_id.load(Ordering::Relaxed),
+            global_bps: inner.global_bps.load(Ordering::Relaxed),
+            jobs: lock(&inner.jobs).clone(),
+        })
+        .unwrap()
+    }
+
+    /// Commands and worker threads persist at the same moment. Whatever the order, the file must be a
+    /// complete document and, once all of them are back, show the newest state.
+    #[test]
+    fn concurrent_persist_keeps_the_file_whole_and_newest() {
+        const THREADS: u64 = 8;
+        const ROUNDS: u64 = 60;
+        let root = std::env::temp_dir().join(format!("dl-persist-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let state = root.join("downloads.json");
+        let manager = Manager::open(state.clone(), Arc::new(|| {}));
+        // A list long enough that one write takes a moment.
+        lock(&manager.0.jobs).extend((1..=200).map(|id| job(id, &root, "base")));
+
+        for round in 0..ROUNDS {
+            let barrier = Arc::new(Barrier::new(THREADS as usize));
+            let handles: Vec<_> = (0..THREADS)
+                .map(|t| {
+                    let inner = manager.0.clone();
+                    let barrier = barrier.clone();
+                    let dir = root.clone();
+                    thread::spawn(move || {
+                        barrier.wait();
+                        let id = 1000 + round * THREADS + t;
+                        // Every change alters the length of the document, so a mixed write cannot pass.
+                        {
+                            let mut jobs = lock(&inner.jobs);
+                            match t % 3 {
+                                0 => jobs.push(job(id, &dir, &"x".repeat((id % 40) as usize))),
+                                1 => {
+                                    let at = (id as usize) % jobs.len();
+                                    jobs[at].error = Some("y".repeat((id % 50) as usize));
+                                }
+                                _ => {
+                                    let at = (id as usize) % jobs.len();
+                                    jobs.remove(at);
+                                }
+                            }
+                        }
+                        inner.global_bps.store(id, Ordering::Relaxed);
+                        inner.next_id.fetch_add(1, Ordering::Relaxed);
+                        inner.persist();
+                    })
+                })
+                .collect();
+            for h in handles {
+                h.join().unwrap();
+            }
+            assert_eq!(
+                on_disk(&state),
+                in_memory(&manager.0),
+                "round {round}: the file is not the newest state"
+            );
+        }
+        assert!(!state.with_extension("json.tmp").exists());
+        let _ = fs::remove_dir_all(&root);
     }
 }
