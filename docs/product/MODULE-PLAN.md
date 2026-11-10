@@ -1,6 +1,6 @@
 # Module and tool plan – Nemo (target picture B, decided 2026-10-01)
 
-Derivation and reasoning: [MODULE-REVIEW-2026-10-01.md](../archive/2026-10/MODULE-REVIEW-2026-10-01.md) (archived, German). Implementation prompts: [MODULE-IMPLEMENTATION-PROMPT.md](../archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md) (archived, German). Packages 1–6 are released (see [CHANGELOG](../../CHANGELOG.md)); package 7 is open. Status: **changed** = module stays (same ID), **new** = new ID, **merged** = data is copied, **area** = UI only, **retired** = invisible, tables stayed until package 6, **removed** = code gone. German UI names in quotes.
+Derivation and reasoning: [MODULE-REVIEW-2026-10-01.md](../archive/2026-10/MODULE-REVIEW-2026-10-01.md) (archived, German). Implementation prompts: [MODULE-IMPLEMENTATION-PROMPT.md](../archive/2026-10/MODULE-IMPLEMENTATION-PROMPT.md) (archived, German). Packages 1–7 are merged on `develop` (see [CHANGELOG](../../CHANGELOG.md); not in a release yet, the last tag is `v0.3.1`); package 7 lives in `modules/accounts/{audit,strength,breach}.ts` and `components/AuditDialog.tsx`. Status: **changed** = module stays (same ID), **new** = new ID, **merged** = data is copied, **area** = UI only, **retired** = invisible, tables stayed until package 6, **removed** = code gone. German UI names in quotes.
 
 ## Modules (target: 9 nav entries + "Dieser PC" on desktop)
 | Nav entry | Module ID(s) | Scope | Status | Prio | Package |
@@ -13,7 +13,7 @@ Derivation and reasoning: [MODULE-REVIEW-2026-10-01.md](../archive/2026-10/MODUL
 | Saved ("Merkliste") | `bookmarks` ← `launcher` | kinds + **bookmarks** (tiles, groups by tag), browser import, share target | changed, `launcher` merged | high | 3 |
 | People ("Personen") | **`people`** (new) ← `birthdays`, `gifts` | person (birthday, note, tags), gifts per person; age, WhatsApp, calendar items, reminder; gifts invisible to AI | new + merged | medium | 4 |
 | Documents ("Unterlagen") | `vault` (new UI name) ← `contracts` | document with category, provider, term, notice period, file (local until K3); deadlines in the calendar + reminder; mail scan | changed, `contracts` merged | medium | 4 |
-| Accounts | `accounts` | unchanged; mobile header; later password health | changed (small) | high | 1 (fix), 7 (S1) |
+| Accounts | `accounts` | unchanged; mobile header; password health (7) | changed (small) | high | 1 (fix), 7 (S1) |
 | This PC ("Dieser PC", desktop) | `disk` ← `system` (UI) | tabs drives · system; Rust unchanged | changed, `system` removed (UI) | medium | 1 |
 | – | `news` | module, `core/ai/newsBrief.ts`, starter pack, `e2e/news.spec.ts` | retired (code gone, tables stayed until 6) | – | 1 |
 | – | `habits`, `timetrack` | unused; data stays exportable | retired | – | 1 |
