@@ -1,13 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  baselineFile,
-  countPerFile,
-  diffBaseline,
-  srcFiles,
-  readBaseline,
-  sum,
-} from './baseline';
+import { baselineFile, countPerFile, diffBaseline, srcFiles, readBaseline, sum } from './baseline';
 import { findCssMotion, transitionProperties } from './cssMotion';
 
 /**
