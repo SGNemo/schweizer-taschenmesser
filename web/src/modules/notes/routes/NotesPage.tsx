@@ -442,7 +442,7 @@ export default function NotesPage() {
                 if (activeId) dropTab(activeId);
                 open(wide ? { kind: 'scratch' } : { kind: 'list' });
               }}
-              autoFocus={wide || sel.kind === 'new'}
+              focusOnOpen={wide || sel.kind === 'new'}
             />
           </div>
         ) : null}

@@ -47,7 +47,7 @@ export interface NotePaneProps {
   onOpenPage: (id: string) => void;
   onCreated: (id: string) => void;
   onDeleted: () => void;
-  autoFocus: boolean;
+  focusOnOpen: boolean;
 }
 
 type Snapshot = { title: string; body: string };
@@ -315,7 +315,7 @@ export function NotePane(props: NotePaneProps) {
         <EditorSurface
           initial={initial.body}
           width={prefs.width}
-          autoFocus={props.autoFocus}
+          focusOnOpen={props.focusOnOpen}
           apiRef={apiRef}
           onMoveSelection={scratch ? props.onMoveSelection : undefined}
           linkTitles={props.linkTitles}
