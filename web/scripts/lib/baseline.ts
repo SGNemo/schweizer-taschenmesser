@@ -27,6 +27,10 @@ export const isRouteSource = (path: string): boolean =>
   !/\.test\.tsx$/.test(path) &&
   !path.includes('/__tests__/');
 
+/** A component source file anywhere in a module: routes, components, widgets (no tests). */
+export const isModuleSource = (path: string): boolean =>
+  /^modules\/.+\.tsx$/.test(path) && !/\.test\.tsx$/.test(path) && !path.includes('/__tests__/');
+
 export const readSrc = (path: string): string => readFileSync(resolve(SRC, path), 'utf8');
 
 export interface Baseline {
