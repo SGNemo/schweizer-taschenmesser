@@ -113,7 +113,8 @@ What part 2 gets from `core/remote/session.ts` and still has to decide:
 | View | Sentence and step |
 | --- | --- |
 | `not-paired`, `unreachable`, `refused` (each reason), `no-input-here`, `too-old` | the rows of CONCEPT §7; `refused: locked` cannot happen on Medien, `limit` and `ended` can also arrive during a session |
-| `connecting` | the PC's line without a state word, no spinner that moves; after 5 s the view is `unreachable` by itself |
+| `connecting` | the PC's line without a state word, no spinner that moves |
+| `slow` (after 5 s, the attempt goes on) | a neutral line, e.g. „PC-Sven antwortet noch nicht.“ + _Erneut versuchen_ – no verdict and no Wi-Fi hint yet; a press that waited is dropped |
 | `disconnected` | no sentence of its own: the last known state stays, quiet; the next touch reconnects |
 | `retry` | the unconnected line + _Erneut versuchen_ |
 | `idle` | the page is not in front; nothing to show |
@@ -122,6 +123,7 @@ What part 2 gets from `core/remote/session.ts` and still has to decide:
 - The PC's name is not in `RemoteOpened`: take the name the phone shows for its sync PC (pairing), not a new field.
 - The page applies `createHoldGate` to held buttons and held volume keys and passes `{ repeat: true }` for every repeat; a repeat never opens a connection.
 - Wording of `too-old`: the PC hanging up twice is strong evidence, not proof (a PC shedding load looks the same for a moment) – say what to check („Nemo auf dem PC aktuell?“), not a verdict.
+- Known and for the hand tests: on slow Wi-Fi a play/pause the PC did carry out can show „nicht verbunden“ after 3 s; a late answer heals it, but a second press before that toggles again. Show the fresh state as soon as the session stands.
 - Still open for part 2: haptics, keep-awake, the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`), `syncRound` wired to the sync service (`ok` / `not-paired` / `failed`).
 
 ```

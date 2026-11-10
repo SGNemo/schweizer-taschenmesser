@@ -23,12 +23,15 @@ import type {
  * - after sending, the PC answers within about half a second; nothing for a few seconds is shown
  *   as "not connected" – the session is kept for a late answer and replaced on the next touch;
  * - while it connects, at most one action waits (the last one): held keys never pile up;
- * - "connecting" is shown for a few seconds at most, then "not reachable" while it keeps trying;
+ * - "connecting" is shown for a few seconds at most, then "no answer yet" (no verdict before the
+ *   attempt is over), and a press that waited until then is dropped: it must not arrive much later;
  * - one instance per app serves every screen (the PC keeps one session per device).
  */
 export type RemoteView =
   | { kind: 'idle' }
   | { kind: 'connecting' }
+  /** Still trying after a few seconds: say so, without a verdict (the attempt goes on). */
+  | { kind: 'slow' }
   | { kind: 'connected'; pc: RemotePcState }
   | { kind: 'not-paired' }
   | { kind: 'unreachable' }
@@ -57,7 +60,7 @@ export const OPEN_EVERY_MS = 1000;
 export const NO_ANSWER_GAP_MS = 4000;
 /** No state after something was sent for this long: shown as not connected (a late answer heals it). */
 export const ANSWER_WAIT_MS = 3000;
-/** "Connecting" is shown at most this long; after that the page says "not reachable" while it keeps trying. */
+/** "Connecting" is shown at most this long; after that the page says "no answer yet" while it keeps trying. */
 export const OPEN_PATIENCE_MS = 5000;
 /** The phone's volume keys stay with the PC this long after the session was last alive. */
 export const KEYS_LINGER_MS = 5000;
@@ -100,7 +103,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   let session: number | undefined;
   /** A session that did not answer in time: kept for a late answer, replaced on the next touch. */
   let quiet: number | undefined;
-  let opening: { generation: number; done: Promise<void> } | undefined;
+  let opening: { generation: number; done: Promise<void>; nudge(): void } | undefined;
+  /** The call to the PC that is in flight (also one of an attempt that was left). */
+  let dialing: Promise<unknown> | undefined;
   let lastOpenAt = -Infinity;
   let lastAliveAt = -Infinity;
   let answerTimer: ReturnType<typeof setTimeout> | undefined;
@@ -149,6 +154,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   const tryOpen = async (left: () => boolean): Promise<string | undefined> => {
     const wait = lastOpenAt + OPEN_EVERY_MS - deps.now();
     if (wait > 0) await sleep(wait);
+    // strictly one call at a time: one of an attempt that was left settles first, so the PC never
+    // sees the old handshake after the new one
+    if (dialing) await dialing.catch(() => undefined);
     if (left()) return 'left';
     lastOpenAt = deps.now();
     // The PC may speak before the answer to `open` is here (its reader runs already): what it
@@ -158,7 +166,11 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     const onEvent = (event: RemoteEvent) =>
       known === undefined ? early.push(event) : handle(event);
     try {
-      const opened = await deps.remote.open('media', onEvent);
+      const call = deps.remote.open('media', onEvent);
+      dialing = call;
+      const opened = await call.finally(() => {
+        if (dialing === call) dialing = undefined;
+      });
       if (left()) {
         drop(opened.session);
         return 'left';
@@ -175,16 +187,15 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     }
   };
 
-  const openOnce = async (mine: number): Promise<void> => {
+  const openOnce = async (
+    mine: number,
+    patience: { start(): void; stop(): void },
+  ): Promise<void> => {
     const left = () => mine !== generation;
     stopWaiting();
-    set({ kind: 'connecting' });
-    // "connecting" is no answer for long: after a few seconds the page says so, and this goes on
-    const patience = setTimeout(() => {
-      if (!left() && view.kind === 'connecting') set({ kind: 'unreachable' });
-    }, OPEN_PATIENCE_MS);
+    patience.start();
     const end = (next?: RemoteView) => {
-      clearTimeout(patience);
+      patience.stop();
       if (next && !left()) set(next);
     };
     let noAnswers = 0;
@@ -223,14 +234,41 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
 
   const open = (): Promise<void> => {
     // an attempt from before a `close()` is not this one: it ends by itself and leaves nothing
-    if (opening?.generation === generation) return opening.done;
+    if (opening?.generation === generation) {
+      opening.nudge();
+      return opening.done;
+    }
     const mine = generation;
+    // "connecting" is no answer for long: after a few seconds the page says "no answer yet" –
+    // not a verdict, the attempt goes on – and a press that waited is dropped (it must not
+    // arrive long after the person gave up on it)
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const patience = {
+      start() {
+        patience.stop();
+        set({ kind: 'connecting' });
+        timer = setTimeout(() => {
+          if (mine !== generation || view.kind !== 'connecting') return;
+          waiting = undefined;
+          set({ kind: 'slow' });
+        }, OPEN_PATIENCE_MS);
+      },
+      stop() {
+        if (timer !== undefined) clearTimeout(timer);
+        timer = undefined;
+      },
+    };
     const attempt = {
       generation: mine,
-      done: openOnce(mine).finally(() => {
-        if (opening === attempt) opening = undefined;
-      }),
+      // "Erneut versuchen" on the slow line joins the running attempt – visibly
+      nudge() {
+        if (view.kind === 'slow') patience.start();
+      },
+      done: Promise.resolve(),
     };
+    attempt.done = openOnce(mine, patience).finally(() => {
+      if (opening === attempt) opening = undefined;
+    });
     opening = attempt;
     return attempt.done;
   };
@@ -246,7 +284,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       if (view.kind !== 'connected') {
         const opensByTouch = view.kind === 'idle' || view.kind === 'disconnected';
         // refused, unreachable, …: nothing goes out. A key repeat never opens a connection.
-        if (!opensByTouch && !(view.kind === 'connecting' && opening)) return false;
+        const joins = (view.kind === 'connecting' || view.kind === 'slow') && opening;
+        if (!opensByTouch && !joins) return false;
         if (opensByTouch && options?.repeat) return false;
         // only the last action waits: what was pressed before it is dropped, not queued
         const mine = { action, token: ++tokens };
@@ -258,7 +297,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       if (view.kind !== 'connected' || session === undefined) return false;
       const used = session;
       // wait for the PC's answer from before the call: it may arrive while the call returns
-      if (answerTimer === undefined) {
+      // every press that goes out is waited for anew
+      stopWaiting();
+      {
         answerTimer = setTimeout(() => {
           answerTimer = undefined;
           if (session !== used) return;
@@ -303,7 +344,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     // the keys go back to the phone, so its own volume is never out of reach for long.
     takesVolumeKeys: () =>
       view.kind === 'connected' ||
-      ((view.kind === 'disconnected' || view.kind === 'connecting') &&
+      ((view.kind === 'disconnected' || view.kind === 'connecting' || view.kind === 'slow') &&
         deps.now() - lastAliveAt < KEYS_LINGER_MS),
   };
 }

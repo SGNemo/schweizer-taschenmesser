@@ -65,7 +65,7 @@ pub enum EventDto {
 #[serde(rename_all = "camelCase")]
 pub struct OpenedDto {
     session: u64,
-    /// What this session may do (`media` or `full`).
+    /// What this session may do (only `media` in this package).
     level: &'static str,
     /// What the PC grants this device at most.
     grant: &'static str,
@@ -183,7 +183,7 @@ fn stored_error(e: String) -> String {
     }
 }
 
-/// Opens an input session with the paired PC at `level` (`media` or `full`). An older session of
+/// Opens an input session with the paired PC at `level` (only `media` in this package). An older session of
 /// this device is closed first. The answer says what the session may really do and the PC's
 /// state; later states and the end of the session arrive on `on_event`.
 #[tauri::command]

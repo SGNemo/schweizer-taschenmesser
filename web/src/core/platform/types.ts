@@ -288,7 +288,8 @@ export interface RemoteOpened {
  */
 export interface RemoteService {
   supported: boolean;
-  open(level: 'media' | 'full', onEvent: (event: RemoteEvent) => void): Promise<RemoteOpened>;
+  /** Only `media` for now: the shell refuses any other level until it can send pointer and keys. */
+  open(level: 'media', onEvent: (event: RemoteEvent) => void): Promise<RemoteOpened>;
   send(session: number, actions: RemoteAction[]): Promise<void>;
   close(session: number): Promise<void>;
 }

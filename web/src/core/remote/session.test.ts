@@ -356,20 +356,57 @@ describe('remote session: leaving', () => {
 });
 
 describe('remote session: patience and races', () => {
-  it('"connecting" is shown for a few seconds at most, then "not reachable" while it keeps trying', async () => {
+  it('"connecting" is shown for a few seconds at most, then "no answer yet" while it keeps trying', async () => {
     const { session, hooks } = rig();
     const release = hooks.holdOpens();
     const opening = session.open();
     await pass(OPEN_PATIENCE_MS - 1);
     expect(session.view().kind).toBe('connecting');
     await pass(1);
-    expect(session.view().kind).toBe('unreachable');
-    // "Erneut versuchen" joins the attempt that is still running
+    expect(session.view().kind).toBe('slow');
+    // "Erneut versuchen" joins the attempt that is still running – and the tap shows
     void session.open();
     expect(hooks.opens()).toBe(1);
+    expect(session.view().kind).toBe('connecting');
+    await pass(OPEN_PATIENCE_MS);
+    expect(session.view().kind).toBe('slow');
     release();
     await opening;
     expect(session.view().kind).toBe('connected');
+  });
+
+  it('a press that waited longer than that is dropped: it never arrives long after', async () => {
+    const { session, hooks } = rig();
+    const release = hooks.holdOpens();
+    const press = session.send('play-pause');
+    await pass(OPEN_PATIENCE_MS + 3000);
+    release();
+    expect(await press).toBe(false);
+    expect(session.view().kind).toBe('connected');
+    expect(hooks.sent()).toEqual([]);
+  });
+
+  it('a PC that is too old is never called "not reachable" on the way to the verdict', async () => {
+    const { session, hooks, seen } = rig('ok');
+    hooks.failOpen('no-answer', 2);
+    const opening = session.open();
+    await pass(NO_ANSWER_GAP_MS + OPEN_PATIENCE_MS);
+    await opening;
+    expect(session.view().kind).toBe('too-old');
+    expect(seen).not.toContain('unreachable');
+  });
+
+  it('every press that goes out is waited for, also right after an answered one', async () => {
+    const { session, hooks } = rig();
+    await session.open();
+    await session.send('next');
+    hooks.goSilent();
+    await pass(ANSWER_WAIT_MS - 500);
+    await session.send('next');
+    await pass(ANSWER_WAIT_MS - 1);
+    expect(session.view().kind).toBe('connected');
+    await pass(1);
+    expect(session.view().kind).toBe('disconnected');
   });
 
   it('leaving while the PC is being dialled, then coming back, connects afresh', async () => {
