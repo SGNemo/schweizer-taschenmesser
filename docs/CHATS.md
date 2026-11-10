@@ -4,7 +4,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 **Keeping this page to one screen (budget 2 000 tokens, `check:docs`):**
 
-- "Offene PRs" is generated (`chats:sync`); a hand-written row is about an **open** decision or chore, and every chat that edits this page deletes the answered ones.
+- "Offene PRs" is generated; a hand-written item is an **open** decision or chore; whoever edits this page deletes answered ones.
 - Hand tests never live here: they go into [MANUAL-TESTS.md](MANUAL-TESTS.md) with an id, in the PR that needs them.
 - A decision that is answered becomes a bullet in `decisions/<area>.md`; its line here is deleted. Standing to-dos before the launch live in [STATUS](STATUS.md) "Offen – macht Sven", not here.
 - No history, no "merged" rows, one line per item.
