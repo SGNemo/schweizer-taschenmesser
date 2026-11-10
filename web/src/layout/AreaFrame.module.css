@@ -112,7 +112,8 @@
 /* The one figure with its context line, at the right of the title (the compact look: ui/identity/HeroFigure). */
 .figure {
   flex: 0 1000 auto;
-  /* Never narrower than its number: a figure is shown whole or not at all, never as "12.34…". */
+  /* Never narrower than its number, which is never cut ("12.34…" would be a wrong value); its context line is what
+     shrinks (ui/identity/HeroFigure). On a stage the rule does no harm: the figure has the stage's width. */
   min-width: min-content;
   margin-left: auto;
   text-align: right;

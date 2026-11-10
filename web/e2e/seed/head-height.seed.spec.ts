@@ -43,6 +43,8 @@ interface Head {
   titleCut: boolean;
   /** The figure's number is cut off or pushed out of the row. */
   valueCut: boolean;
+  /** The figure's context line is shortened (its one line is clamped). */
+  detailCut: boolean;
   /** The page put its views into the row of the tabs. */
   hasTabs: boolean;
   /** The frame keeps that row from the first paint (`identity.tabs` in the manifest). */
@@ -91,6 +93,12 @@ function readHead(): Head | null {
         f.left < row.left - 1
       );
     })(),
+    detailCut: Array.from(
+      titleRow?.querySelectorAll<HTMLElement>('[data-testid="module-figure"] span') ?? [],
+    )
+      // The context line is the clamped one (the label is hidden, the number never clamps).
+      .filter((el) => getComputedStyle(el).webkitLineClamp === '1')
+      .some((el) => el.scrollHeight > el.clientHeight + 2),
     hasTabs: (head.querySelector('[data-slot="tabs"]')?.childElementCount ?? 0) > 0,
     holdsTabs: head.querySelector('[data-slot="tabs"]')?.getAttribute('data-hold') === 'true',
   };
@@ -122,6 +130,11 @@ async function check(page: Page, phone: boolean, theme: string) {
     // The title is the head's orientation: the figure beside it gives way first, the h1 is never cut.
     expect.soft(head.titleCut, `${path}: the h1 is cut off`).toBe(false);
     expect.soft(head.valueCut, `${path}: the figure's number is cut or leaves the row`).toBe(false);
+    // The context line gives way only under pressure: on the wide desktop there is room, so it is whole there.
+    if (!phone)
+      expect
+        .soft(head.detailCut, `${path}: the figure's context line is cut although there is room`)
+        .toBe(false);
     // U01: the manifest says whether the entry page has views, so the row is there before the page's code is.
     expect
       .soft(head.holdsTabs, `${path}: \`identity.tabs\` in the manifest matches the page's views`)
