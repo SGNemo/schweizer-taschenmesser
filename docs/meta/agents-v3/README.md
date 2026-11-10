@@ -1,6 +1,6 @@
 # Agent team v3.1 – Routing & Guardrails (2026-11-08)
 
-Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; the roster is described in [../AGENTS.md](../AGENTS.md), the binding delegation table is the one in `nemo-lead.json`. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
+Decided 2026-11-10 ([../../decisions/meta.md](../../decisions/meta.md)): these seven definitions and [SHARED.md](SHARED.md) are the agent team; [../AGENTS.md](../AGENTS.md) describes the roster; the lead delegates by the table in its own prompt (`nemo-lead.json`), which wins if the two differ. What is not applied yet: [Switch-over](#switch-over-state-2026-11-10). Evidence: [REVIEW.md](REVIEW.md). **Routing comes first:** [../WORK-ROUTING.md](../WORK-ROUTING.md) – Claude Code chats (subscription) build everything; the agents take only bounded coordination and review jobs.
 
 ## Changes v3 → v3.1
 

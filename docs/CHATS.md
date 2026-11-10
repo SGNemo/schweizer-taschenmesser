@@ -40,7 +40,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 - `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
 - `nemo-merge` aus `meta/agents-v3/nemo-merge.json` neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
-- Agenten v3.1 (entschieden, `decisions/meta.md`): offen für v3.1: dein `ant apply` der sieben Definitionen und `--prune` der 16 alten, danach `claude-lock.json` committen ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over state“, [SETUP](meta/agents-v3/SETUP.md) §2a). Der Ordner wird nicht umbenannt.
+- Agenten v3.1 (entschieden, `decisions/meta.md`), offen: dein `ant apply` der sieben Definitionen und `--prune` der 16 alten, danach `claude-lock.json` committen ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over state“, [SETUP](meta/agents-v3/SETUP.md) §2a). Der Ordner wird nicht umbenannt.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
 - Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
@@ -52,7 +52,6 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | --- | --- | --- | --- | --- |
 | UI-Audit 4.0, Paket 0b-2 Kopf und Navigation | `feat/ui4-0b-2-head-nav` (#688, Draft) | `web/src/layout/**`, module heads, `.changes/` | in work | 2026-11-10 |
 | Fernsteuerung: Latenzmessung | `feat/remote-latency-probe` (#690) | `web/src/core`, `docs/design/remote-control` | PR open | 2026-11-10 |
-| Agenten v3.1: Prompts und Umstieg | `docs/agents-v31-switch` | `docs/meta/agents-v3/**`, `docs/decisions/meta.md` | in work | 2026-11-10 |
 
 Add your row in the **first commit** of your branch, remove it in the **last commit** of your PR. On a merge conflict here keep both rows. Agent threads of one session share one row.
 
