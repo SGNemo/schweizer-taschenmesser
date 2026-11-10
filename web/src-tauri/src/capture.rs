@@ -55,6 +55,19 @@ struct Tray {
     today: TrayToday,
     /// A device controls this PC right now: its name (plain text, may be empty).
     remote: Option<String>,
+    /// The app language once the page said it; the system language until then.
+    lang: Option<crate::texts::Lang>,
+}
+
+/// The language of the shell's own texts (tray entry, tooltip, confirmation dialogs): the app's,
+/// so the tray is not half German and half English; the system's before the page said it.
+pub fn native_lang(app: &AppHandle) -> crate::texts::Lang {
+    app.state::<CaptureState>()
+        .tray
+        .lock()
+        .ok()
+        .and_then(|slot| slot.as_ref().and_then(|tray| tray.lang))
+        .unwrap_or_else(crate::webview2::system_lang)
 }
 
 const TRAY_REMOTE_END: &str = "remote-end";
@@ -90,6 +103,9 @@ pub struct TrayLabels {
     open: String,
     quit: String,
     tooltip: String,
+    /// The app language (`de`, `en`): the shell's own tray and dialog texts follow it.
+    #[serde(default)]
+    lang: Option<String>,
 }
 
 /// The tray's "Heute" block, all texts from the web app (Rust knows no strings). Only these labels
@@ -270,7 +286,8 @@ fn tray_menu(app: &AppHandle, tray: &Tray) -> tauri::Result<Menu<Wry>> {
 fn tray_tooltip(tray: &Tray) -> String {
     match &tray.remote {
         Some(name) => {
-            crate::texts::remote_tooltip(crate::webview2::system_lang(), &tray.tooltip, name)
+            let lang = tray.lang.unwrap_or_else(crate::webview2::system_lang);
+            crate::texts::remote_tooltip(lang, &tray.tooltip, name)
         }
         None => tray.tooltip.clone(),
     }
@@ -399,6 +416,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         tooltip: tooltip.to_owned(),
         today: TrayToday::default(),
         remote: None,
+        lang: None,
     };
     let menu = tray_menu(app, &state)?;
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
@@ -676,6 +694,23 @@ pub fn desktop_set_tray_labels(app: AppHandle, state: State<'_, CaptureState>, l
     let _ = tray.items.open.set_text(&labels.open);
     let _ = tray.items.quit.set_text(&labels.quit);
     tray.tooltip = labels.tooltip;
+    // The shell's own two rows follow the app language (a fixed choice of texts, never the
+    // page's words).
+    if let Some(lang) = labels
+        .lang
+        .as_deref()
+        .and_then(crate::texts::Lang::from_app)
+    {
+        tray.lang = Some(lang);
+        let _ = tray
+            .items
+            .remote_end
+            .set_text(crate::texts::remote_end_label(lang));
+        let _ = tray
+            .items
+            .remote_hint
+            .set_text(crate::texts::remote_end_hint(lang));
+    }
     apply_tray(&app, tray);
 }
 
@@ -876,7 +911,10 @@ mod tests {
             let body = code.split(command).nth(1).unwrap();
             let body = &body[..body.find("\n}\n").unwrap()];
             assert!(body.contains("apply_tray(&app, tray)"), "{command}");
-            assert!(!body.contains("remote"), "{command} touches the controller");
+            assert!(
+                !body.contains("tray.remote"),
+                "{command} touches the controller"
+            );
         }
         // only Rust names the controller
         assert_eq!(code.matches("tray.remote = ").count(), 1);

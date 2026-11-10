@@ -52,6 +52,7 @@ import {
   QuickCaptureSection,
   ReadingSection,
   RecentlyDeletedSection,
+  RemoteHostSection,
   SetupSection,
   ShareSection,
   ShortcutsSection,
@@ -73,6 +74,7 @@ import { Suspense } from 'react';
 import { tShare } from '@/strings.share';
 import { tAuto } from '@/strings.automation';
 import { tNet } from '@/strings.netlog';
+import { tRemoteHost } from '@/strings.remoteHost';
 import { tTrash } from '@/strings.trash';
 import { tAdvanced } from '@/strings.advanced';
 import { tKeys } from '@/strings.keys';
@@ -908,6 +910,28 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => (
       <SettingsGroup id="network" title={tNet.get().title} bare>
         <NetworkSection />
+      </SettingsGroup>
+    ),
+  },
+  {
+    id: 'remote',
+    category: 'verbindungen',
+    maturity: 'preview',
+    order: 25,
+    get title() {
+      return tRemoteHost.get().title;
+    },
+    get hint() {
+      return tRemoteHost.get().help;
+    },
+    get keywords() {
+      return tRemoteHost.get().keywords;
+    },
+    // Only where this device can be the controlled PC (the desktop app); a phone never shows it.
+    visibleWhen: (ctx) => ctx.platform === 'desktop',
+    render: () => (
+      <SettingsGroup id="remote" title={tRemoteHost.get().title} hint={tRemoteHost.get().help} bare>
+        <RemoteHostSection />
       </SettingsGroup>
     ),
   },

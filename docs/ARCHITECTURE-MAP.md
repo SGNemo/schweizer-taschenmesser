@@ -8,7 +8,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | Path | What |
 |---|---|
 | `web/` | PWA (Vite, React 19, TS strict); own `package.json`; all UI/logic |
-| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info`, `lan-sync` (home-network hub: store, Noise, pairing, network; web side `core/sync/adapters/lanHub.ts`, `pages/settings/LanHubSection.tsx`), `remote-input` (remote control sink: volume, media session, lock as system calls on one worker thread, no simulated input; wired by `src/remote.rs`, which holds the PC's controls behind a native confirmation) |
+| `web/src-tauri/` | Tauri 2 shell (Rust): portable Windows exe, Android APK; crates `local-api`, `disk-scan`, `system-info`, `lan-sync` (home-network hub: store, Noise, pairing, network; web side `core/sync/adapters/lanHub.ts`, `pages/settings/LanHubSection.tsx`), `remote-input` (remote control sink: volume, media session, lock as system calls on one worker thread, no simulated input; wired by `src/remote.rs`, which holds the PC's controls behind a native confirmation; web side seam `remoteHost`, `core/remote/host.ts`, `pages/settings/RemoteHostSection.tsx`, `layout/RemoteChip.tsx`) |
 | `design/logo-v2/` | Logo workshop (no dependencies of its own, not part of the app; renders with Playwright from `web/`): parametric master (`mark.mjs`, `wordmark.mjs`), the chosen parameters `final.params.mjs`, `node export.mjs` → `web/brand/*.svg` + `Logo.tsx` + splash, preview sheets and screenshots per round in `rounds/` (`docs/HOW-TO.md` → Icons) |
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
