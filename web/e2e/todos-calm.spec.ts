@@ -65,7 +65,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await expect(fab).toHaveCount(0);
     await expect(plus).toHaveCount(1);
     await expect(plus).toHaveAttribute('data-plus', 'module');
-    await expect(plus).toHaveAttribute('aria-label', 'Neu: ToDo');
+    await expect(plus).toHaveAttribute('aria-label', 'Neu: ToDos');
     await ready(page, '/');
     await expect(fab).toHaveCount(0);
     await expect(plus).toHaveAttribute('data-plus', 'capture');

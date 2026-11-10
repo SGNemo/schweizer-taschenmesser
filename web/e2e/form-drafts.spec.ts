@@ -10,13 +10,19 @@ test.describe('Drafts in Termin- and Abo-Dialog', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // reopened inside the app (the draft lives in memory, a page reload drops it)
-    await page.getByRole('button', { name: 'Neuer Termin' }).first().click();
+    await page
+      .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+      .first()
+      .click();
     dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('draft-restored')).toBeVisible();
     await expect(dialog.getByLabel('Titel')).toHaveValue('Zahnarzt');
 
     await dialog.getByRole('button', { name: 'Abbrechen' }).click();
-    await page.getByRole('button', { name: 'Neuer Termin' }).first().click();
+    await page
+      .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+      .first()
+      .click();
     await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('');
   });
 
@@ -28,7 +34,10 @@ test.describe('Drafts in Termin- and Abo-Dialog', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Abo hinzufügen' }).first().click();
+    await page
+      .getByRole('button', { name: /Abo (hinzufügen|eintragen)/ })
+      .first()
+      .click();
     dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('draft-restored')).toBeVisible();
     await expect(dialog.getByLabel('Name')).toHaveValue('Streaming');

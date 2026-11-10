@@ -47,6 +47,11 @@ export function SubNav({
       className={styles.subnav}
       data-testid="subnav"
       data-module-row
+      // Scrolled away from the start: the left edge fades too, so a pill cut there reads as "more" as well.
+      onScroll={(e) => {
+        const el = e.currentTarget;
+        el.toggleAttribute('data-scrolled', el.scrollLeft > 4);
+      }}
     >
       {items.map((i) => (
         <Link

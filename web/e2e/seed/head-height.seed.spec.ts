@@ -13,8 +13,7 @@ import { DESKTOP, MODULE_IDS, moduleRoutes, openPage, PHONE, startSeeded } from 
  * runs past its edge, and on the phone the head holds no button of its own: the plus in the bottom bar is the entry.
  *
  * The pages come from the manifests (`guards.ts`), so a new module is measured without an edit here. The height is
- * the head's own box (`[data-testid="module-frame"]`), measured from the lower edge of the top bar: the notice above
- * it (a weather hint) is not part of the head.
+ * the head's own box (`[data-testid="module-frame"]`); the notice above it (a weather hint) is not part of the head.
  */
 const STANDARD_DESKTOP = 120;
 const STANDARD_PHONE = 144;
@@ -38,6 +37,10 @@ interface Head {
   buttons: string[];
   scrollWidth: number;
   clientWidth: number;
+  /** The head has its title row (without it the checks on the row would pass on nothing). */
+  hasTitleRow: boolean;
+  /** The h1 is cut off (its text is wider than its box). */
+  titleCut: boolean;
   /** The page put its views into the row of the tabs. */
   hasTabs: boolean;
   /** The frame keeps that row from the first paint (`identity.tabs` in the manifest). */
@@ -70,6 +73,11 @@ function readHead(): Head | null {
     buttons,
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
+    hasTitleRow: !!titleRow,
+    titleCut: (() => {
+      const h1 = head.querySelector('h1');
+      return !!h1 && h1.scrollWidth > h1.clientWidth + 1;
+    })(),
     hasTabs: (head.querySelector('[data-slot="tabs"]')?.childElementCount ?? 0) > 0,
     holdsTabs: head.querySelector('[data-slot="tabs"]')?.getAttribute('data-hold') === 'true',
   };
@@ -97,6 +105,9 @@ async function check(page: Page, phone: boolean, theme: string) {
       .toBeLessThanOrEqual(head.clientWidth);
     if (phone)
       expect.soft(head.buttons, `${path}: the phone's title row holds no control`).toEqual([]);
+    expect.soft(head.hasTitleRow, `${path}: the head has a title row`).toBe(true);
+    // The title is the head's orientation: the figure beside it gives way first, the h1 is never cut.
+    expect.soft(head.titleCut, `${path}: the h1 is cut off`).toBe(false);
     // U01: the manifest says whether the entry page has views, so the row is there before the page's code is.
     expect
       .soft(head.holdsTabs, `${path}: \`identity.tabs\` in the manifest matches the page's views`)

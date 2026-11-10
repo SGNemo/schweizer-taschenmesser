@@ -39,7 +39,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '40,00', 'Lebensmittel', '2026-07-10');
     await spend(page, '35,00', 'Lebensmittel', '2026-09-10');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('300');
@@ -55,7 +55,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '20,00', 'Lebensmittel', '2026-08-10'); // 100 € limit: 80 € left in August
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('100');
@@ -73,7 +73,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '60,00', 'Lebensmittel', '2026-09-15');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('61');
@@ -100,7 +100,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '1,00', 'Lebensmittel'); // also makes the default categories
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('120');
@@ -119,7 +119,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '1,00', 'Lebensmittel');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('120');
@@ -134,6 +134,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await open(page, '/budgets');
     await expect(row.getByTestId('budgets-free').getByTestId('sensitive-value')).toBeVisible();
     await expect(row).not.toContainText(/119,00/);
+    expect(await page.getByTestId('module-frame').ariaSnapshot()).not.toMatch(/119,00/);
   });
   test('a goal with a planned rate says when it is reached', async ({ page }) => {
     await enable(page, 'budgets');

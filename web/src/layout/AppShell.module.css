@@ -101,6 +101,8 @@
   .main {
     /* The content area is the scroller: a module head sticks to its top edge. */
     --topbar-h: 0px;
+    /* What is scrolled into view (keyboard focus, a search hit) stops below the sticky head, not under it. */
+    scroll-padding-top: calc(var(--head-pad) + var(--head-row) + var(--touch) + var(--space-4));
     flex: 1;
     min-height: 0;
     overflow-y: auto;

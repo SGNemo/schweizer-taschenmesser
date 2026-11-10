@@ -95,7 +95,7 @@
   --head-h-tall: 12.5rem;
   --head-h-compact: 6rem;
   /* Identity 4.0: the title row of a module head and the padding above it (phone values below). With the 44 px tabs
-     and the hairline a head is 113 px on the desktop (≤ 120) and, with the phone's module row, 139 px (≤ 144). */
+     and the hairline and their row a head is 117 px on the desktop (≤ 120) and, with the phone's module row, 141 px (≤ 144). */
   --head-row: 3.5rem;
   --head-pad: var(--space-3);
   --slot-s: 4rem;
@@ -386,7 +386,7 @@
     --text-h1: 1.375rem;
     --row-h: 3rem;
     --head-row: 2.75rem;
-    --head-pad: 0.375rem;
+    --head-pad: var(--space-1);
     --head-h-tall: 8.5rem;
     --head-h-compact: 5rem;
   }

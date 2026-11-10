@@ -23,7 +23,9 @@ export interface PlusTarget {
 /**
  * What the plus in the middle of the bottom bar does here (Identity 4.0, rule 4: one entry point per screen). On a
  * module page it is the module's action: the one the page declared (`PageAction`), else the module's first
- * `quickAdd` entry; everywhere else (overview, library, settings) the quick capture. A fixed name per context.
+ * `quickAdd` entry (named after the module: "Neu: ToDos"); everywhere else, also on a module page that adds nothing
+ * (weather, music, the password vault), the quick capture, as the top bar's "Neu" is on the desktop. A fixed name per
+ * context.
  */
 export function usePlusTarget(): PlusTarget {
   const { pathname } = useLocation();
@@ -45,7 +47,8 @@ export function usePlusTarget(): PlusTarget {
   if (manifest && quick)
     return {
       label: t.nav.create,
-      name: t.nav.plusModule(quick.label),
+      // The module's name, not the entry's label: those are written for a list ("Zeit starten") and may not be nouns.
+      name: t.nav.plusModule(manifest.name),
       kind: 'module',
       disabled: false,
       run: () => void navigate(quick.to),

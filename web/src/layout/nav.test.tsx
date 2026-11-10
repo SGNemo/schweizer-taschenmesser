@@ -240,7 +240,7 @@ describe('bottom navigation', () => {
     const todos = plusOn('/todos');
     expect(todos).toMatchObject({
       visible: t.nav.create,
-      name: t.nav.plusModule(t.todos.meta.quickAdd),
+      name: t.nav.plusModule(t.todos.meta.name),
       kind: 'module',
     });
     todos.view.unmount();

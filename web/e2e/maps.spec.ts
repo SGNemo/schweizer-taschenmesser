@@ -244,14 +244,22 @@ test.describe('Karten & Orte', () => {
     await page.getByRole('button', { name: 'Orte', exact: true }).click();
     await expect(page.getByText('Schloss', { exact: true })).toBeVisible();
     // One primary per tab, and it follows the tab; "Navigieren" sits in the row menu (round 6, U14).
-    await expect.poll(() => primaryActions(page)).toEqual(['Ort hinzufügen']);
+    if ((page.viewportSize()?.width ?? 1280) < 900) {
+      // Identity 4.0: the phone's one action is the plus of the bottom bar.
+      await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Ort eintragen');
+      expect(await primaryActions(page)).toEqual([]);
+    } else await expect.poll(() => primaryActions(page)).toEqual(['Ort hinzufügen']);
     await expect(page.getByRole('button', { name: 'Zu Schloss navigieren' })).toHaveCount(0);
     const placeRow = page.getByRole('listitem').filter({ hasText: 'Schloss' });
     await placeRow.getByRole('button', { name: 'Karten & Orte' }).click();
     await expect(page.getByRole('menuitem', { name: 'Navigieren' })).toBeVisible();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Routen', exact: true }).click();
-    await expect.poll(() => primaryActions(page)).toEqual(['Route hinzufügen']);
+    if ((page.viewportSize()?.width ?? 1280) < 900) {
+      // Identity 4.0: the phone's one action is the plus of the bottom bar.
+      await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Route eintragen');
+      expect(await primaryActions(page)).toEqual([]);
+    } else await expect.poll(() => primaryActions(page)).toEqual(['Route hinzufügen']);
     await page.getByRole('button', { name: 'Karte', exact: true }).click();
     await expect(page.getByTestId('tile-map')).toBeVisible();
     expect((await primaryActions(page)).length).toBeLessThanOrEqual(1);
@@ -273,7 +281,10 @@ test.describe('Karten & Orte', () => {
     await mockOsm(page);
     await enable(page, 'maps');
     await ready(page, '/maps?view=routes');
-    await page.getByRole('button', { name: 'Route hinzufügen' }).first().click();
+    await page
+      .getByRole('button', { name: /Route (hinzufügen|eintragen)/ })
+      .first()
+      .click();
     await page.getByLabel('Name').first().fill('Zum Markt');
     await page.getByLabel('Unterwegs mit').selectOption('bike');
     const from = page.getByTestId('endpoint-Start');
@@ -296,7 +307,10 @@ test.describe('Karten & Orte', () => {
     const seen = await mockOsm(page);
     await enable(page, 'maps');
     await ready(page, '/maps?view=routes');
-    await page.getByRole('button', { name: 'Route hinzufügen' }).first().click();
+    await page
+      .getByRole('button', { name: /Route (hinzufügen|eintragen)/ })
+      .first()
+      .click();
     await page.getByLabel('Name').first().fill('Zum Markt');
     await page.getByLabel('Unterwegs mit').selectOption('bike');
     const from = page.getByTestId('endpoint-Start');
@@ -328,7 +342,10 @@ test.describe('Karten & Orte', () => {
     const seen = await mockOsm(page);
     await enable(page, 'maps');
     await ready(page, '/maps?view=routes');
-    await page.getByRole('button', { name: 'Route hinzufügen' }).first().click();
+    await page
+      .getByRole('button', { name: /Route (hinzufügen|eintragen)/ })
+      .first()
+      .click();
     await page.getByLabel('Name').first().fill('Mit dem Zug');
     await page.getByLabel('Unterwegs mit').selectOption('transit');
     const from = page.getByTestId('endpoint-Start');

@@ -8,6 +8,7 @@ en: Several lines in quick capture save with one tap and never book money; a mon
 ---
 
 ---
+
 type: changed
 area: planner
 breaking: false
@@ -16,6 +17,7 @@ en: The planner folds “Waiting for free time” and names today’s first thin
 ---
 
 ---
+
 type: fixed
 area: mail
 breaking: false
@@ -24,6 +26,7 @@ en: Entries made from a mail store the link without your mail address and lead b
 ---
 
 ---
+
 type: fixed
 area: app
 breaking: false

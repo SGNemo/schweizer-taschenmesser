@@ -70,9 +70,12 @@
   background: color-mix(in srgb, var(--module-color, var(--text-3)) 14%, var(--surface-raised));
   color: var(--module-color, var(--text-3));
 }
+/* The title is the head's orientation: it keeps its width and everything beside it gives way first (the figure and
+   its context line end in an ellipsis). Only a title longer than the row itself is cut. */
 .titleBlock {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
+  max-width: 100%;
 }
 .eyebrow {
   margin: 0;
@@ -111,6 +114,7 @@
   flex: 0 1 auto;
   min-width: 0;
   margin-left: auto;
+  overflow: hidden;
   text-align: right;
 }
 .figure:not(:has(> :not(:empty))) {

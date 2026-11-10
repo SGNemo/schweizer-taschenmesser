@@ -661,9 +661,11 @@ it('module head (Identity 4.0): title row + tabs fit 120 px on the desktop and, 
   const phone = block('@media (max-width: 899px) {\n  :root');
   const touch = px(light['--touch']!);
   expect(light['--head-pad']).toBe('var(--space-3)');
-  const desktop = px(light['--space-3']!) + px(light['--head-row']!) + touch + 1;
+  expect(phone['--head-pad']).toBe('var(--space-1)');
+  const row = touch + px(light['--space-1']!);
+  const desktop = px(light['--space-3']!) + px(light['--head-row']!) + row + 1;
   expect(desktop).toBeLessThanOrEqual(120);
-  const small = px(phone['--head-pad']!) + px(phone['--head-row']!) + 2 * touch + 1;
+  const small = px(light['--space-1']!) + px(phone['--head-row']!) + touch + row + 1;
   expect(small).toBeLessThanOrEqual(144);
   // The phone's title row is still a 44 px target row, and the one h1 style is 28 px / 22 px.
   expect(px(phone['--head-row']!)).toBeGreaterThanOrEqual(touch);

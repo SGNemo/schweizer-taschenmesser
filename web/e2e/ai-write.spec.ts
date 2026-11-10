@@ -258,7 +258,12 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await expect(page.locator('main h1')).toBeVisible();
     // Identity 4.0, rule 4: the head has no write button of its own any more.
     await expect(page.getByTestId('ai-write-button')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
+    if ((page.viewportSize()?.width ?? 1280) < 900) {
+      // Phone: the plus of a module page is the module's action; the capture sheet opens from the overview.
+      await page.goto('/');
+      await expect(page.locator('main h1').first()).toBeVisible();
+      await page.getByRole('button', { name: 'Neu eintragen', exact: true }).click();
+    } else await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
     await page.getByTestId('quick-add-ai').click();
     const box = page.getByRole('combobox');
     await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);

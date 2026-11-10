@@ -49,18 +49,30 @@
 }
 
 /* In the title row of a standard module head (Identity 4.0, rule 2): one figure and its context line, right-aligned,
-   two short lines that fit the row. The caps label goes: the context line names the number. */
+   two short lines that fit the row. The caps label is not drawn (the context line names the number for the eye). */
 :global([data-head='standard']) .figure {
   gap: 0;
   align-items: flex-end;
 }
+/* Not shown, still read: a screen reader hears what the number measures ("Kontostand"). */
 :global([data-head='standard']) .label {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:global([data-head='standard']) .figure {
+  max-width: 100%;
 }
 :global([data-head='standard']) .value {
+  max-width: 100%;
+  overflow: hidden;
   font-size: var(--text-2xl);
   line-height: 1.1;
   letter-spacing: -0.02em;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 :global([data-head='standard']) .detail {

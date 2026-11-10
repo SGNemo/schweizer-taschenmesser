@@ -67,7 +67,6 @@ function HeadFigure({ drive: d, lastScanAt }: { drive: DriveInfo; lastScanAt?: n
           label={t.disk.driveName(d.root, d.label)}
           value={figure.value}
           unit={`${figure.unit} ${h.used}`}
-          detail={t.disk.driveName(d.root, d.label)}
           testId="disk-head-used"
         />
       </HeroSlot>

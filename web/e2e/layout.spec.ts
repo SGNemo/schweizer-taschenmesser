@@ -269,7 +269,7 @@ test.describe('phone header', () => {
     expect(box.eyebrowMid).toBeLessThan(box.h1Top);
     // Rule 4: no button and no link in the phone's title row (the plus in the bottom bar is the entry).
     expect(box.controls).toBe(0);
-    // The head starts at the top of the page and the content follows on the first screen (y ≤ 220 with the top bar).
+    // The head starts at the top of the page and the content follows on the first screen (≤ 240 here; PACKAGES leaves y ≤ 220 to the area packages).
     expect(box.h1Top - box.mainTop).toBeLessThan(60);
     expect(box.firstContentTop).toBeLessThanOrEqual(240);
   });
