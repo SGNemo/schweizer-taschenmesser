@@ -90,12 +90,12 @@ export default function RemotePage() {
         />
       </PageHeader>
 
-      {/* announced only when it is a sentence to act on, never for every volume step */}
-      <section
-        className={styles.state}
-        aria-live={view.kind === 'connected' ? 'off' : 'polite'}
-        data-testid="remote-state"
-      >
+      {/* Screen readers hear the sentences, never every volume step: one region that is always
+          live and holds only a sentence to act on (empty while connected). */}
+      <p className="sr-only" aria-live="polite" data-testid="remote-announce">
+        {line.step ? line.text : ''}
+      </p>
+      <section className={styles.state} data-testid="remote-state">
         <p className={styles.stateLine}>{line.text}</p>
         {line.step === 'retry' ? (
           <div>
@@ -159,8 +159,7 @@ export default function RemotePage() {
 /**
  * One big button. `hold` (volume): the press acts at once – a tick and the first step when the
  * finger goes down – and keeping it pressed repeats the step, at most a few times a second. A
- * repeat never opens a connection; only the press itself does. The click that follows a pointer
- * press is ignored (it already acted); a click from the keyboard or a screen reader acts once.
+ * repeat never opens a connection; only the press itself does.
  */
 function Key({
   icon,
@@ -180,7 +179,6 @@ function Key({
   hold?: boolean;
 }) {
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const byPointer = useRef(false);
   const stop = () => {
     if (timer.current !== undefined) clearInterval(timer.current);
     timer.current = undefined;
@@ -192,7 +190,6 @@ function Key({
   }, [disabled]);
   const down = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (!hold || disabled) return;
-    byPointer.current = true;
     // the release always arrives here, also when the thumb drifts off the key
     e.currentTarget.setPointerCapture?.(e.pointerId);
     stop();
@@ -203,11 +200,10 @@ function Key({
       if (gate()) onPress(action, true);
     }, HOLD_MS);
   };
-  const click = () => {
-    if (byPointer.current) {
-      byPointer.current = false;
-      return;
-    }
+  // A hold key already acted when the pointer went down: the click a pointer leaves behind
+  // (`detail` > 0) is ignored; one without a pointer (keyboard, screen reader) acts once.
+  const click = (e: React.MouseEvent) => {
+    if (hold && e.detail > 0) return;
     onPress(action);
   };
   return (

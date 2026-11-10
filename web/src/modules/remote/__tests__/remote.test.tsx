@@ -11,7 +11,8 @@ import { useSyncStatus } from '@/core/sync/status';
 const fake = vi.hoisted(() => ({
   parts: undefined as unknown as ReturnType<typeof createFakeRemoteParts>,
   supported: true,
-  keepAwake: vi.fn(async () => undefined),
+  keepAwake: vi.fn(async (_on: boolean) => undefined),
+  prefs: undefined as undefined | { haptics: boolean; keepAwake: boolean },
   syncNow: vi.fn(async () => undefined),
 }));
 
@@ -24,6 +25,8 @@ vi.mock('@/core/platform', () => ({
   }),
 }));
 vi.mock('@/core/sync/service', () => ({ syncNow: fake.syncNow }));
+// the module's two switches, as the settings store would hand them over
+vi.mock('@/core/settings/settings', () => ({ useSettings: () => [fake.prefs, vi.fn()] }));
 
 import RemotePage from '../routes/RemotePage';
 import { remoteSession, syncRound } from '../session';
@@ -37,8 +40,9 @@ const show = async () => {
       <RemotePage />
     </MemoryRouter>,
   );
-  // the session opens at most once a second (also across tests: it is the app's one session)
-  for (let i = 0; i < 150 && fake.supported && fake.parts.hooks.opens() === 0; i++) {
+  // the session opens at most once a second (also across tests: it is the app's one session; a
+  // test that ran on a fake clock leaves that second a little longer)
+  for (let i = 0; i < 600 && fake.supported && fake.parts.hooks.opens() === 0; i++) {
     await act(async () => new Promise((r) => setTimeout(r, 10)));
   }
   await flush();
@@ -51,6 +55,7 @@ beforeEach(async () => {
   await remoteSession.close();
   fake.parts = createFakeRemoteParts();
   fake.supported = true;
+  fake.prefs = undefined;
   fake.keepAwake.mockClear();
   fake.syncNow.mockClear();
   useSyncStatus.getState().set({ phase: 'idle', via: 'lanClient', error: undefined });
@@ -236,28 +241,76 @@ describe('holding a volume key, haptics, keep-awake', () => {
     expect(fake.parts.hooks.sent()).toEqual(['volume-up']);
   });
 
-  it('a key that goes inactive while held stops repeating', async () => {
+  it('a key that goes inactive while held stops repeating – also after the session is back', async () => {
     await show();
     vi.useFakeTimers();
     try {
+      const idle = vi.getTimerCount();
       fireEvent.pointerDown(key('volume-up'), { pointerId: 1 });
       await act(async () => vi.advanceTimersByTimeAsync(300));
+      expect(vi.getTimerCount()).toBeGreaterThan(idle);
       act(() => fake.parts.hooks.close('ended'));
-      const sent = fake.parts.hooks.sent().length;
-      await act(async () => vi.advanceTimersByTimeAsync(2000));
-      expect(fake.parts.hooks.sent().length).toBe(sent);
       expect(key('volume-up').disabled).toBe(true);
+      // no interval of the hold is left (no finger-up ever reached the inactive key)
+      expect(vi.getTimerCount()).toBe(idle);
+      const sent = fake.parts.hooks.sent().length;
+      fireEvent.click(screen.getByTestId('remote-retry'));
+      await act(async () => vi.advanceTimersByTimeAsync(3000));
+      expect(state()).toContain('Lautstärke');
+      expect(fake.parts.hooks.sent().length).toBe(sent);
     } finally {
       vi.useRealTimers();
     }
   });
 
+  it('the click a pointer press leaves behind is ignored, however the press ended', async () => {
+    await show();
+    fireEvent.pointerDown(key('volume-up'), { pointerId: 1 });
+    fireEvent.pointerCancel(key('volume-up'), { pointerId: 1 });
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['volume-up']);
+    // a later keyboard activation is not swallowed
+    fireEvent.click(key('volume-up'), { detail: 0 });
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['volume-up', 'volume-up']);
+  });
+
+  it('no vibration when the switch is off', async () => {
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true });
+    fake.prefs = { haptics: false, keepAwake: false };
+    await show();
+    fireEvent.click(key('play-pause'));
+    await flush();
+    expect(vibrate).not.toHaveBeenCalled();
+    expect(fake.parts.hooks.sent()).toEqual(['play-pause']);
+  });
+
   it('keeps the screen on only when asked, and gives the hold back on leaving', async () => {
-    const view = await show();
-    expect(fake.keepAwake).not.toHaveBeenCalled();
-    view.unmount();
+    const off = await show();
+    off.unmount();
     await flush();
     expect(fake.keepAwake).not.toHaveBeenCalled();
+
+    fake.prefs = { haptics: true, keepAwake: true };
+    const on = await show();
+    expect(fake.keepAwake.mock.calls).toEqual([[true]]);
+    on.unmount();
+    await flush();
+    expect(fake.keepAwake.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('screen readers hear the sentences, not the volume steps', async () => {
+    await show();
+    const announce = () => screen.getByTestId('remote-announce');
+    expect(announce().getAttribute('aria-live')).toBe('polite');
+    expect(announce().textContent).toBe('');
+    fireEvent.click(key('volume-up'), { detail: 0 });
+    await flush();
+    expect(announce().textContent).toBe('');
+    act(() => fake.parts.hooks.close('ended'));
+    expect(announce().textContent).toContain('am PC pausiert');
+    expect(screen.getByTestId('remote-state').getAttribute('aria-live')).toBeNull();
   });
 });
 
