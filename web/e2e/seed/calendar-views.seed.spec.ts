@@ -67,9 +67,13 @@ test.describe('phone 412x915', () => {
     await page.goto(`/calendar?view=month&date=${SEED_TODAY}`);
     const main = page.locator('main');
     await expect(main.locator('table')).toBeVisible();
-    const top = (await main.getByRole('button', { name: 'Neuer Termin' }).last().boundingBox())!.y;
+    // Identity 4.0: the phone has no "Neuer Termin" button in the page (the plus of the bottom bar adds one); the
+    // toolbar starts under the module head.
+    await expect(main.getByRole('button', { name: 'Neuer Termin' })).toHaveCount(0);
+    const head = (await page.getByTestId('module-frame').boundingBox())!;
+    const top = head.y + head.height;
     const grid = (await main.locator('table').boundingBox())!.y;
-    // Three 44 px rows and their gaps (was five rows, grid at 669 px); the module head band above is not part of it.
+    // Three 44 px rows and their gaps (was five rows, grid at 669 px); the module head above is not part of it.
     expect(grid - top).toBeLessThan(3 * 44 + 3 * 16 + 8);
     expect(grid).toBeLessThanOrEqual(580);
     // The view switch and the calendar chips share one row.

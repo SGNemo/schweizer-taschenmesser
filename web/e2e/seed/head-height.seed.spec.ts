@@ -75,7 +75,7 @@ function readHead(): Head | null {
   };
 }
 
-async function check(page: Page, phone: boolean) {
+async function check(page: Page, phone: boolean, theme: string) {
   await startSeeded(page, { phone });
   const routes = moduleRoutes(phone);
   // Every module of this window is measured: the list comes from the manifests, never from a number in here.
@@ -104,7 +104,6 @@ async function check(page: Page, phone: boolean) {
     seen[path] = head.height;
     if (SHOTS) {
       mkdirSync(SHOTS, { recursive: true });
-      const theme = await page.evaluate(() => document.documentElement.dataset.theme ?? 'light');
       await page.screenshot({
         path: join(SHOTS, `${phone ? 'phone' : 'desktop'}-${theme}-${id}.png`),
         clip: phone
@@ -128,7 +127,7 @@ for (const theme of SHOTS ? (['light', 'dark'] as const) : (['light'] as const))
       test(`every module head ≤ ${STANDARD_DESKTOP} px, a stage ≤ ${STAGE} px`, async ({
         page,
       }) => {
-        await check(page, false);
+        await check(page, false, theme);
       });
     });
 
@@ -143,7 +142,7 @@ for (const theme of SHOTS ? (['light', 'dark'] as const) : (['light'] as const))
       test(`every module head ≤ ${STANDARD_PHONE} px, a stage ≤ ${STAGE} px, no control in it`, async ({
         page,
       }) => {
-        await check(page, true);
+        await check(page, true, theme);
       });
     });
   });
