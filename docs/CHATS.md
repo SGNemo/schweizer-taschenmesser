@@ -18,6 +18,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
+| [#704](https://github.com/SGNemo/schweizer-taschenmesser/pull/704) `docs/manual-tests-by-device` | Handtests: eine Liste je Gerät, darin nach Modul; doppelte Ids mit Themen-Kürzel | mergen; Liste „möglicherweise veraltet“ im PR bestätigen |
 | [#606](https://github.com/SGNemo/schweizer-taschenmesser/pull/606) Dependabot | Dev-Abhängigkeiten `web/` | mergen, wenn grün |
 
 **Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ FS-R3–FS-R7, PC-Befehle ohne Hänger (Windows) N1a und MT-H1–MT-H7, Logo LG7, Heimnetz-Sync HN-L9 a–c und HN-L17.
@@ -51,7 +52,6 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | --- | --- | --- | --- | --- |
 | UI-Audit 4.0, Paket 0b-2 Kopf und Navigation | `feat/ui4-0b-2-head-nav` (#688, Draft) | `web/src/layout/**`, module heads, `.changes/` | in work | 2026-11-10 |
 | Fernsteuerung: Latenzmessung | `feat/remote-latency-probe` (#690) | `web/src/core`, `docs/design/remote-control` | PR open | 2026-11-10 |
-| Handtests nach Gerät sortiert | `docs/manual-tests-by-device` | `docs/MANUAL-TESTS.md`, id references in `docs/` | in work | 2026-11-10 |
 
 Add your row in the **first commit** of your branch, remove it in the **last commit** of your PR. On a merge conflict here keep both rows. Agent threads of one session share one row.
 
