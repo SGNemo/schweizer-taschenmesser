@@ -12,7 +12,7 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
   the identity v3 set: `--mod-*` hues, head/widget/group tints, pattern strengths); `scripts/tokens.test.mjs`
   fails when a value differs. `src/styles/identity.css` maps `data-hue`/`data-hue2`/`data-area` to
   `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). Module
-  cards and the nine head shapes are drawn by `IdentityMini.astro` from the catalogue; `scripts/catalog.test.mjs`
+  cards are drawn by `IdentityMini.astro` from the catalogue (the head strip under the hero is gone since round 5); `scripts/catalog.test.mjs`
   fails when a catalogue icon, hue, head or widget variant has no shape here (design rounds: `docs/design/site/`).
   Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, fonts (Inter Variable,
   OFL) and the social preview are copied at build time from `web/brand`, `web/public`,
@@ -26,8 +26,12 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Security headers and caching:** `public/_headers` (Cloudflare Pages): strict CSP
   (`script-src 'self'`, `style-src 'self'`), `_astro/*` and fonts immutable for a year, HTML
   5 minutes.
-- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): no animation (hover/focus change colour
-  only, 150 ms), reduced motion respected, one accent colour, calm wording, no countdowns or pop-ups.
+- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): one movement on the whole site (the hero picture
+  rises once on load, `transform`/`opacity` only, none under `prefers-reduced-motion`; decided in round 5), hover/focus
+  change colour only (150 ms), one accent colour, calm wording, no countdowns or pop-ups. The hero stands on the
+  app's ocean gradient (`--ocean-from/to`, pinned to the app; ink on it: `--on-ocean-*`, contrast tested).
+- **Navigation without script:** under 64 rem the links are a second header row (anchor bar) that stays on top
+  while the logo row scrolls away.
 - **Design rounds** (diagnosis, directions, layout, details, mockups): `docs/design/site/`.
 
 ## Layout
