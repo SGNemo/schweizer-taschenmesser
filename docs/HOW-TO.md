@@ -57,6 +57,7 @@ How to read it:
 | [howto/money-subscriptions.md](howto/money-subscriptions.md) | Abos: service tiles, trial end, category, price hint from bookings, bookings from charges (money group package 3) |
 | [howto/money-budgets.md](howto/money-budgets.md) | Budgets: periods, carry-over, warning level, forecast, history, goal plan (money group package 4) |
 | [howto/planning-modules.md](howto/planning-modules.md)       | Planen group modules: calendar views, hour-grid drag, named calendars, holidays, reminders                                                                    |
+| [howto/known-duplicates.md](howto/known-duplicates.md) | helper and component copies still in the code, where the shared one goes |
 | [howto/readable-text.md](howto/readable-text.md)             | reading aid, groups, colour meaning: show text readably                                                                                                       |
 | [howto/new-extension.md](howto/new-extension.md)             | tool (incl. "Register a search-bar expression for a tool"), connector, setup step, AI provider, importer                                                      |
 | [howto/new-importer.md](howto/new-importer.md) | importer for another app (`web/src/importers/<source>/`: parser, source, tests, report) |
@@ -101,7 +102,7 @@ How to read it:
 ## Other recipes
 
 - Regenerate PWA icons: `npm run gen:icons` (native: `npx tauri icon brand/app-icon.svg`, see [howto/design-brand.md](howto/design-brand.md)).
-- Parallel chats: `npm run chats:status` (other branches, files, overlap with yours, open scribble items); scratch notes between chats outside this repo, in the private repo <https://github.com/SGNemo/nemo-scribble> (the agent sandbox also has the live folder `/workspace/scribble/`).
+- Parallel chats: `npm run chats:status` (other branches, files, overlap with yours, open board items); notes between chats: root `CLAUDE.md` step 2.
 - Stimulus inventory (manual) and budget (`npm run check:stimulus`, blocking in CI; numbers come from the CI job summary, [howto/ci.md](howto/ci.md)): `STIMULUS_DIR=<dir> npm run measure:stimulus` counts buttons, links, icons, badge-like elements, colours and page height per view (phone + desktop, seeded Dev build) into `<dir>/inventory.json`; compare in `docs/product/focus/12-results-2.md`.
 - Bundle and cold start (`web/`): `npm run check:bundle` (critical path per entry, lazy chunks, precache, budget `scripts/bundle-budget.json`; warning in `npm run check` and CI E2E shard 1; `-- --baseline` for intended changes, `-- --modules` for the largest modules) · `npm run measure:coldstart` (pixel-7, CPU 4×, Fast 3G, median of 5): [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
 - Screenshots (manual, not CI): `npm run screenshots`; filters `SCREENS_VIEWPORTS`, `SCREENS_PAGES`, `SCREENS_SCHEME=dark`, `SCREENS_DIR`, `SCREENS_CSS`. The README pictures are `docs/assets/screenshots/*.webp`, shot from the seeded build with `npm run app:screenshots -- --readme` (in `site/`); the social preview comes from `npm run gen:social`.

@@ -70,6 +70,9 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | D4 | Per-module accent (subtle, from a fixed set) | Orientation | S | low: contrast test extension | tokens |
 | D5 | Print styles (shopping list, packing list, month calendar) | Paper still exists | S | low | none |
 | D6 | Reduced-data mode: hide amounts on the dashboard until tapped ("privacy blur") | Shoulder surfing | S | low | none |
+| D7 | Visual audit #17: check on a phone (820/412 px) that the bottom bar never covers the last list row (e.g. calendar month); the FAB goes with UI audit 4.0 package 0b-2 (rule 4), check it until then | Phone | S | low | UI audit 4.0 packages |
+| D8 | Visual audit #18: settings category list at 412 px – right-aligned status ("Aus", "Nicht eingerichtet") collides with the chevron, descriptions wrap unevenly; re-check after settings v3.1 | Phone polish | S | low | settings |
+| D9 | Readability Q16: performance spot check with seed `large` and the reading aid at 100 % (jsdom: 2 000 rows ≈ 7× render time) | Long lists | S | low | `core/text` |
 
 ## Security (S)
 | Id | Idea | Benefit | Effort | Risk | Conflicts |
@@ -98,7 +101,30 @@ Target picture B and packages 1–7 are in [`product/MODULE-PLAN.md`](product/MO
 - **Stay ideas without date:** K3 attachments in sync/backup (receipts, photos – wanted, but after Unterlagen), M2 calendar drag/resize, M3 budget carry-over, M4 habit statistics (module is back, see M4), M9 recipes → list, M10 journal, news as an optional extension, Timer ↔ timetrack (module retired), vehicle log, medication/water, cleaning plan.
 
 ## Cleanup proposals 2026-10-03 (not built)
-Prioritised refactors, test-tooling ideas and hygiene items from the repo cleanup: [meta/IMPROVEMENTS-2026-10-03.md](meta/IMPROVEMENTS-2026-10-03.md) (top 10, effort, risk, PR order). Analysis and numbers: [meta/CLEANUP-2026-10-03.md](meta/CLEANUP-2026-10-03.md).
+From the repo cleanup (report and improvements file removed 2026-11-10, git history). Effort S < 1 day, M 1–3 days. **P** = protected area (sync, vault, crypto, localapi): maintainer and a CHATS heads-up first. Copies of helpers: [howto/known-duplicates.md](howto/known-duplicates.md). PR order: 7, 8, 10 → 1, 2 → 3 → 5, 6, 4 → 9 → test tooling.
+1. Typed row helpers in `core/db/repo.ts` / `tx.ts` instead of the `as unknown as` casts (8 + 1 today). M.
+2. `logError(tag, e)` instead of the silent `.catch(() => undefined)`; done for resume/open-param/tray (#417), still open for disk, `core/sync/service.ts` chain, localapi, vault bridge (P). M.
+3. `EditorActions` in `@/ui` for the Save/Cancel/Delete footer copied in ~9 module editors. M.
+4. Split `server/src/app.ts` `buildApp` into route plugins (auth, ops, push, proxy); `store.ts` untouched. M.
+5. Split `modules/disk/components/ScanView.tsx` (747 lines) into hooks and sub-views; delete path byte-identical. M.
+6. Split `core/importer/OnboardingWizard.tsx` (755 lines) into step components + reducer. M.
+7. ESLint `complexity` and `max-lines-per-function` as warnings. S.
+8. Selectors instead of whole-store subscriptions (disk scan re-renders on every progress tick). S.
+9. Shared `toHex` / base64 helpers in `core` (P for the sync, vault and backup copies). S–M.
+10. `MS_PER_DAY` and one push-window constant in `core/time` (`push.ts` and `nativeSchedule.ts` define the 14-day window twice). S.
+- Hooks out of `LocalApiSection`, `AiSection`/`ProviderCard`, `CommandPalette`, `BackupSection`, `FocusPage`, `SetupWizard` (local API behaviour byte-identical). M.
+- `core/ai/testing.ts` imports modules from `core`: move to a fixtures folder, exempt it in the isolation lint. S.
+- `core/platform/fakeDisk.ts`: confirm it stays out of the production bundle. S.
+- Central `Window` augmentation instead of repeated `window as unknown as {…}`; one `getAudioContextCtor()` for `core/focus/announce.ts` and `tools/timer/engine.ts`. S.
+- `Date.now()` in `core/ai/providers/claude.ts`, `platform/fakeLocalApi.ts`, `core/backup/verify.ts` → `now()`. S.
+- `NotificationsStep.tsx` branches on `platform.kind === 'android'`: a capability flag instead. S, optional.
+- Rust files over 600 lines (`disk.rs`, `tree.rs`, `drives.rs`): split `cfg(windows)`/`cfg(unix)`; `guard.rs` stays. M, leave for now.
+- Find why `TIME_RE` in `modules/calendar/settings.ts` breaks the pantry e2e in CI only (load order; `madge --circular`). S–M.
+- E2E flakes under load: `reminders.spec.ts`, `newmodules.spec.ts` (fixed timeouts?). S–M.
+- Tests: shared `resetDb` helper; Vitest `isolate: false` for pure-logic folders (≈ 150 of 237 s is per-file setup); merge read-only `it`s in heavy jsdom files; logic-only e2e specs on `desktop-chrome` only (maintainer decision); outcome asserts instead of call counts in `services.test.ts`, `update/controller.test.ts`. M.
+- P, report only: real 1.8 s sleep in `sync/startSync.test.ts`, KDF in vault tests, 70 000-iteration loop in `crypto.test.ts`.
+- Hygiene: root `package.json`/lockfile (delete or workspaces) and the `@nemo/vault-core` alias in 5 configs; Inter font via package import in `ui/global.css`; `playwright*.config.ts` into `e2e/`; `.dockerignore` (docs, `src-tauri`, `extension`, `target`); user agent `Taschenmesser-Proxy/1` in `server/src/proxy.ts`; `core/net`/`core/text` single-file folders; `googleDrive.stub.ts` keep or delete; typed lookup for dynamic string keys (`backup.*Hint`, `disk.del.errors.*`, `disk.filter.*`); no coverage tool in the repo; docs name commands, not test counts. S each.
+- Checked, unclear: `disk.del.errors.already-running`, `disk.filter.none_found`, `PageContainer .full`, ~20 classes in `ui/Patterns.module.css`, `FRONT_WIDGETS`, `LEGACY_HASHES`, `DEFAULT_FOCUS`, `SETUP_STATUSES`.
 
 ## Explicitly not planned
 - Cloud accounts, telemetry, ads. Nemo stays local-first with an optional self-hosted server.
@@ -135,7 +161,7 @@ Feasibility note (2026-10). Until it exists: copy with the sensitive clipboard; 
 - **Effort:** roughly two PRs – (1) native decrypt + unlock + fill for web fields, (2) save/update and polish. Not started; needs a decision on option (b) first.
 
 ## Not chosen 2026-10 (planning round `docs/product/next/`, not built)
-Six tasks were cut from 46 ideas ([product/next/01-ideas.md](product/next/01-ideas.md), prompts in [product/next/prompts/](product/next/prompts/)). The rest, with the round's verdict; numbers refer to that list. Already built since the round and therefore dropped: Google Tasks/Todoist (#231), Keep/Markdown (#230), weather, screenshot, shortcut map, Spotify, phone one-hand paths (#237).
+Six tasks were cut from 46 ideas ([product/next/01-ideas.md](product/next/01-ideas.md), prompts in product/next/prompts/ (removed 2026-11-10, in the git history)). The rest, with the round's verdict; numbers refer to that list. Already built since the round and therefore dropped: Google Tasks/Todoist (#231), Keep/Markdown (#230), weather, screenshot, shortcut map, Spotify, phone one-hand paths (#237).
 - **Next round, good value:** 11 Android home-screen widget "Eingang" (L, hardware only; after capture-presence package 1), 38 test speed (`resetDb`, Vitest `isolate:false` for logic tests), 21/22 empty states with character + micro-transitions, 41 robust backup (folder choice + import validation V5), 44 small security leftovers (T2 CI manifest check, V4 clipboard flag, V10 CSV formula neutralisation, N11 server error handler), 27 comfort leftovers package 9 (K1, K7–K10, K15, K16 in [product/next/00-known-open.md](product/next/00-known-open.md)), 9 Android notification actions "Erledigt/Später".
 - **Worth it, but after something else:** 5 export per module (ICS/CSV/Markdown/HTML – "a way back"; after the importers settle), 19 calmer month view (dots instead of chips), 20 dense badge rows in people/bookmarks (bookmarks done in #233; people open), 26 evening moment (one optional "Tag abschließen?" notification, off by default), 29 list templates and recent chips, 31 calendar tap-to-create + search, 33 budget drill-down and carry-over (M3), 34 cross-module links (route button, invoice → document).
 - **Low value or not now:** 4 Google Tasks read connector (second sync path; import is enough), 6 KeePass/1Password/CXP import (CXP too young; Bitwarden CSV exists), 10 PWA badge (iOS/EU limits, small gain), 12 share target for files (wait for attachments K3), 13/14 share toast and clipboard hint (tiny), 18 phone week view 3 days (M for little daily gain), 23 haptics/sound (nice-to-have), 24 time-of-day accent (supporter goodie candidate), 30 palette verbs beyond 3–4 per module (decided against in comfort round), 32 ToDo bulk move (ToDo page just reworked), 40 `logError` instead of silent catch, 42 large-file splits, 43 docs refresh (STATUS/CHATS lag; do it in a docs-only chat), 45 password health (module plan package 7, unchanged), 46 X2/X4/V2 (Windows hardware only).

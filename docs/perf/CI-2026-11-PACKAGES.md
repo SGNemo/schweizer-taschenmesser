@@ -38,7 +38,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `ci/develop-load` von frischem `develop`. Vorgegebene Session-Branches ignorieren. Hotspot `.github/workflows/ci.yml`: Zeile in docs/CHATS.md vor dem ersten Commit.
 
 ## Ausgangslage
-docs/perf/CI-2026-11.md (Diagnose, Hebel „`develop`“): 90 Pushes auf develop in 42 h, ein Voll-Lauf will 35 Jobs und 152 Runner-Minuten, das Konto hat 20 Runner. 28 Läufe liefen zu Ende, obwohl ein neuerer Push wartete (2709 Runner-Minuten); das Rest-E2E allein kostet 56 Minuten je Lauf (2742 gesamt). Lies docs/howto/ci.md („Concurrency“: Läufe auf develop werden nie abgebrochen; „Dev-Preview“, „Never lost“), docs/decisions/meta.md (Bullet „The Dev-Preview gate is the fast part of CI“, 2026-11-04), `.github/workflows/ci.yml` ganz (Kommentar an `concurrency`).
+docs/perf/CI-2026-11.md (Diagnose, Hebel „`develop`“): 90 Pushes auf develop in 42 h, ein Voll-Lauf will 35 Jobs und 152 Runner-Minuten, das Konto hat 20 Runner. 28 Läufe liefen zu Ende, obwohl ein neuerer Push wartete (2709 Runner-Minuten); das Rest-E2E allein kostet 56 Minuten je Lauf (2742 gesamt). Lies docs/howto/ci.md („Concurrency“: Läufe auf develop werden nie abgebrochen; „Dev-Preview“, „Never lost“), docs/decisions/meta-ci-docs.md (Bullet „The Dev-Preview gate is the fast part of CI“, 2026-11-04), `.github/workflows/ci.yml` ganz (Kommentar an `concurrency`).
 
 ## Erst fragen (ein AskUserQuestion, Empfehlung zuerst; vorher nichts ändern)
 1. Dürfen auf einem überholten develop-Lauf die Jobs außerhalb des Dev-Preview-Gates abgebrochen werden (Empfohlen: ja)? Das schränkt die Regel „Läufe auf develop werden nie abgebrochen“ (docs/howto/ci.md „Concurrency“) ein. Oder: alles lassen.
@@ -50,7 +50,7 @@ docs/perf/CI-2026-11.md (Diagnose, Hebel „`develop`“): 90 Pushes auf develop
 - Rest-E2E (8 Shards) nur für den neuesten Stand: kein Lauf startet es für einen Commit, der schon überholt ist. Wenn `nightly.yml` auf `main` aktiv ist (prüfen: `gh api repos/SGNemo/schweizer-taschenmesser/actions/workflows`), zusätzlich vorschlagen, ob das Rest-E2E je Push bleibt oder stündlich gebündelt wird – als Frage an Sven mit Empfehlung, nicht selbst entscheiden.
 - Kein Commit geht ungetestet durch: nach einer Kette überholter Läufe testet der letzte Lauf alles; ein roter Lauf nennt im Job-Summary die Commits seit dem letzten grünen Voll-Lauf (`git log <letzter grüner>..HEAD --oneline`), damit der Verursacher findbar ist.
 - Die Regel „welcher Stand seit dem letzten veröffentlichten Dev-Preview“ im Job `changes` bleibt.
-- docs/howto/ci.md („Concurrency“) und die Tabelle in docs/HOW-TO.md auf den neuen Stand; neues Entscheidungs-Bullet in docs/decisions/meta.md (die Regel stand bisher nur in howto/ci.md und im Workflow-Kommentar).
+- docs/howto/ci.md („Concurrency“) und die Tabelle in docs/HOW-TO.md auf den neuen Stand; neues Entscheidungs-Bullet in docs/decisions/meta-ci-docs.md (die Regel stand bisher nur in howto/ci.md und im Workflow-Kommentar).
 
 ## Nicht in diesem Paket
 `dev-preview.yml`, `release.yml`, Signing, gitleaks, Artefakt-Audit, Branch-Schutz; der PR-Umfang (Smoke-Liste); Caches und Builds (Paket 2); CodeQL (Paket 3).
@@ -74,7 +74,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `ci/install-build-once` von frischem `develop`, erst nach Paket 1. Vorgegebene Session-Branches ignorieren. Hotspot `.github/workflows/ci.yml`: Zeile in docs/CHATS.md.
 
 ## Ausgangslage
-docs/perf/CI-2026-11.md (Hebel „`npm ci` once per run“): `npm ci` läuft in 2719 Jobs je 42 h, zusammen 1969 Minuten (im Schnitt 0,7 min, Median 0,8 bis 1,1 min in den Unit- und E2E-Jobs, trotz npm-Cache-Treffer). Ein gemeinsamer Build als Artefakt wurde am 2026-11-06 verworfen (docs/decisions/meta.md, „E2E speed“: der Build dauert 6 s) – nicht Teil dieses Pakets.
+docs/perf/CI-2026-11.md (Hebel „`npm ci` once per run“): `npm ci` läuft in 2719 Jobs je 42 h, zusammen 1969 Minuten (im Schnitt 0,7 min, Median 0,8 bis 1,1 min in den Unit- und E2E-Jobs, trotz npm-Cache-Treffer). Ein gemeinsamer Build als Artefakt wurde am 2026-11-06 verworfen (docs/decisions/meta-ci-docs.md, „E2E speed“: der Build dauert 6 s) – nicht Teil dieses Pakets.
 
 ## Pflichtliste
 - `node_modules` von `web/` als Cache mit dem Hash von `web/package-lock.json`, Node-Version und Runner-Image im Schlüssel (eine zusammengesetzte Action `.github/actions/web-install`): Treffer → kein `npm ci`; kein Treffer → `npm ci`. Gespeichert wird nur auf Pushes nach develop/main (`actions/cache/restore` auf PRs): Caches sind je Branch getrennt, das Repo hat 10 GB, und PR-Einträge von mehreren hundert MB würden die Rust-/Windows-Caches verdrängen, von denen Releases leben (docs/howto/ci.md „Windows release cache“). Cache-Größe im PR-Text nennen. Kein `restore-keys` (nie ein fremder Stand). Postinstall-Ergebnisse müssen im Cache liegen; vergleiche `npm ls --all` und einen Hash über `node_modules/.package-lock.json` zwischen Cache-Treffer und frischem `npm ci`.
@@ -103,7 +103,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `ci/codeql-scope` von frischem `develop`. Vorgegebene Session-Branches ignorieren.
 
 ## Ausgangslage
-docs/perf/CI-2026-11.md (Hebel „CodeQL“): auf jedem Push nach develop analysiert CodeQL Rust (90 Läufe × 13,1 min = 1186 Runner-Minuten in 42 h), auch bei Doku-Pushes; auf PRs ohne Rust startet der Rust-Zweig trotzdem einen Runner, um „nicht geprüft“ zu sagen (179 Läufe), dazu der Vorab-Job. Entscheidung heute (docs/decisions/meta.md, `codeql.yml`-Kommentar): „every push to develop … always analyse all three languages“. Der wöchentliche Lauf prüft nur `main`.
+docs/perf/CI-2026-11.md (Hebel „CodeQL“): auf jedem Push nach develop analysiert CodeQL Rust (90 Läufe × 13,1 min = 1186 Runner-Minuten in 42 h), auch bei Doku-Pushes; auf PRs ohne Rust startet der Rust-Zweig trotzdem einen Runner, um „nicht geprüft“ zu sagen (179 Läufe), dazu der Vorab-Job. Entscheidung heute (docs/decisions/meta-ci-docs.md, `codeql.yml`-Kommentar): „every push to develop … always analyse all three languages“. Der wöchentliche Lauf prüft nur `main`.
 
 ## Erst fragen (ein AskUserQuestion, Empfehlung zuerst)
 1. Rust-Analyse auf develop nur, wenn der Push Rust berührt (Empfohlen) – dazu ein täglicher Voll-Scan von develop, sobald `nightly.yml` auf `main` liegt; bis dahin einmal je Tag der erste Push. Oder: alles lassen.
@@ -113,7 +113,7 @@ docs/perf/CI-2026-11.md (Hebel „CodeQL“): auf jedem Push nach develop analys
 - Der Vorab-Job liefert die Sprachliste als JSON, `analyze` nimmt sie als Matrix: kein Runner für einen Zweig, der nichts prüft. Eine leere Liste lässt den Workflow scheitern (Matrix ohne Einträge): `analyze` bekommt `if: needs.<vorab>.outputs.languages != '[]'`. Fällt der Vorab-Job aus oder ist die Spanne unlesbar: alle drei Sprachen (fail-open wie heute).
 - Push auf develop: Spanne `github.event.before..github.sha`; ein Push ohne lesbare Spanne prüft alles.
 - Kein Rust-Stand bleibt länger als einen Tag ungeprüft (täglicher Voll-Scan, siehe Frage 1); der wöchentliche Lauf und `workflow_dispatch` prüfen immer alles.
-- Entscheidungs-Bullet in docs/decisions/meta.md (schränkt den vom 2026-11-04 ein), HOW-TO-Zeile „CodeQL“.
+- Entscheidungs-Bullet in docs/decisions/meta-ci-docs.md (schränkt den vom 2026-11-04 ein), HOW-TO-Zeile „CodeQL“.
 
 ## Nicht in diesem Paket
 Abfragen, Sprachen, `security-events`-Rechte, `ci.yml`, gitleaks.

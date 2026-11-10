@@ -21,28 +21,22 @@ afterEach(() => {
 });
 
 describe('scribble sources', () => {
-  it('orders the candidates: override, session folder, notes repo, legacy folder', () => {
-    expect(candidateDirs('/repo', { NEMO_SCRIBBLE_DIR: '/x' })).toEqual([
+  it('orders the candidates: override, session folder, notes repo', () => {
+    expect(candidateDirs({ NEMO_SCRIBBLE_DIR: '/x' })).toEqual([
       '/x',
       '/workspace/scribble',
       '/workspace/nemo-scribble',
-      '/repo/scribble',
     ]);
-    expect(candidateDirs('/repo', {})).toEqual([
-      '/workspace/scribble',
-      '/workspace/nemo-scribble',
-      '/repo/scribble',
-    ]);
+    expect(candidateDirs({})).toEqual(['/workspace/scribble', '/workspace/nemo-scribble']);
   });
 
-  it('reads board entries (only open ones) and notes in the board layout', () => {
+  it('reads board entries (only open ones) and notes', () => {
     const dir = temp();
     write(dir, 'board/2026-11-08-docs-a.md', '- [ ] heads-up: touching policy.ts\n\nmore text\n');
     write(dir, 'board/2026-11-08-docs-b.md', '- [x] answered\n');
     write(dir, 'notes/devops-ci.md', 'for the next chat: cache key changed\nbody\n');
     write(dir, 'README.md', '# readme\n');
     const source = readScribble(dir)!;
-    expect(source.layout).toBe('board');
     expect(source.open).toEqual([
       { file: 'board/2026-11-08-docs-a.md', text: '- [ ] heads-up: touching policy.ts' },
     ]);
@@ -51,50 +45,27 @@ describe('scribble sources', () => {
     ]);
   });
 
-  it('still reads the legacy BOARD.md format', () => {
-    const dir = temp();
-    write(dir, 'BOARD.md', '# Board\n- [ ] open one\n- [x] done\n- [ ] open two\n');
-    write(dir, 'feat-x.md', 'note on feat-x\n');
-    write(dir, 'README.md', '# readme\n');
-    const source = readScribble(dir)!;
-    expect(source.layout).toBe('legacy');
-    expect(source.open.map((i) => i.text)).toEqual(['- [ ] open one', '- [ ] open two']);
-    expect(source.notes).toEqual([{ file: 'feat-x.md', text: 'note on feat-x' }]);
-  });
-
   it('skips an empty folder and falls through to the next candidate', () => {
-    const root = temp();
-    const empty = join(root, 'session');
-    mkdirSync(empty);
-    const repo = join(root, 'repo');
-    write(repo, 'scribble/BOARD.md', '- [ ] legacy item\n');
+    const empty = temp();
     expect(readScribble(empty)).toBeUndefined();
-    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: empty }, []);
-    expect(source?.dir).toBe(join(repo, 'scribble'));
-  });
-
-  it('prefers the override over everything else', () => {
     const override = temp();
     write(override, 'board/2026-11-08-x-y.md', '- [ ] from the override\n');
-    const repo = temp();
-    write(repo, 'scribble/BOARD.md', '- [ ] legacy\n');
-    const source = findScribble(repo, { NEMO_SCRIBBLE_DIR: override }, []);
-    expect(source?.dir).toBe(override);
-    expect(source?.open[0]?.text).toBe('- [ ] from the override');
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: empty }, [])).toBeUndefined();
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: override }, [])?.dir).toBe(override);
   });
 
   it('finds nothing when no candidate holds notes (the fixed /workspace folders are not read in tests)', () => {
-    expect(findScribble(temp(), {}, [])).toBeUndefined();
-    expect(findScribble(temp(), { NEMO_SCRIBBLE_DIR: temp() }, [temp()])).toBeUndefined();
+    expect(findScribble({}, [])).toBeUndefined();
+    expect(findScribble({ NEMO_SCRIBBLE_DIR: temp() }, [temp()])).toBeUndefined();
   });
 
   it('reads the fixed folders in order when no override is set', () => {
     const session = temp();
     const notesRepo = temp();
     write(notesRepo, 'board/2026-11-08-a-b.md', '- [ ] from the notes repo\n');
-    expect(findScribble(temp(), {}, [session, notesRepo])?.dir).toBe(notesRepo);
+    expect(findScribble({}, [session, notesRepo])?.dir).toBe(notesRepo);
     write(session, 'board/2026-11-08-c-d.md', '- [ ] from the session\n');
-    expect(findScribble(temp(), {}, [session, notesRepo])?.dir).toBe(session);
+    expect(findScribble({}, [session, notesRepo])?.dir).toBe(session);
   });
 
   describe('hostile content', () => {
