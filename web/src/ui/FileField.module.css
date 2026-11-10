@@ -33,8 +33,11 @@
 .pickWrap:has(.input[aria-invalid='true']) .pick {
   border-color: var(--danger);
 }
+/* Disabled: the state of a disabled button (ui/Button, AE1), never faded. */
 .pickWrap[data-disabled='true'] .pick {
-  opacity: 0.45;
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
+  background: var(--surface-sunken);
+  color: var(--text-3);
 }
 .pickWrap[data-disabled='true'] .input,
 .pickWrap[data-disabled='true'] .pick {

@@ -21,9 +21,11 @@
    accent and its danger colour and sits on a neutral surface; the text stays readable (--text-3, 4.5:1 and up).
    Two selectors deep so it wins over every variant below, whatever the order. */
 .btn:disabled {
-  background: var(--surface-2);
+  /* Identity 4.0 (package 0b-1): the recess tone, and the control frame at about half strength so the outline of a
+     button stays where the sunken tone is close to the page. */
+  background: var(--surface-sunken);
   color: var(--text-3);
-  border-color: var(--border);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
 /* Row button: 32 px to look at, a 44 px target to hit. */

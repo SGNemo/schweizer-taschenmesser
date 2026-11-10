@@ -1,8 +1,7 @@
-/* Groups only: level-1 shadow, no border (DESIGN-SPEC § 7). */
+/* Groups only: a raised tone step, no shadow, no border (DESIGN-SPEC § 7, Identity 4.0). */
 .card {
-  background: var(--surface);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
   padding: var(--card-pad);
 }
 .title {
