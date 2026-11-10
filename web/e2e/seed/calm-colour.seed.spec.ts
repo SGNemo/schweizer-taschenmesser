@@ -163,13 +163,15 @@ async function count(page: Page) {
   const key = (r: Awaited<ReturnType<typeof read>>) =>
     [r.colouredAboveFold, r.kept, r.inkMarks, r.others.length].join('/');
   let last = await read();
-  for (let i = 0; i < 20; i++) {
+  let stable = false;
+  for (let i = 0; i < 20 && !stable; i++) {
     await page.waitForTimeout(300);
     const now = await read();
-    const same = now.settled && last.settled && key(now) === key(last);
+    stable = now.settled && last.settled && key(now) === key(last);
     last = now;
-    if (same) break;
   }
+  // A page that never came to rest is a failure of its own, not a number to judge.
+  expect(stable, `${page.url()}: the page did not stop changing, nothing to compare`).toBe(true);
   return last;
 }
 
