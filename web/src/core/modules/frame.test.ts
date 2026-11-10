@@ -11,6 +11,11 @@ describe('frameVariant', () => {
     expect(frameVariant('narrow')).toBe('narrow');
   });
 
+  it('keeps the two layouts of Identity 4.0 as declared', () => {
+    expect(frameVariant('reading')).toBe('reading');
+    expect(frameVariant('split')).toBe('split');
+  });
+
   it('no module of one area ends up as a narrow island between wide pages', () => {
     for (const area of new Set(allManifests.map((m) => m.area).filter(Boolean))) {
       const widths = allManifests

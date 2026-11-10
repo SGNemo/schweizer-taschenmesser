@@ -6,7 +6,9 @@ import { PageLoadingCard } from './PageLoadingCard';
 
 /**
  * The one place that decides how wide a page may get. Pages do not set their own `max-width`;
- * they pick a variant (modules via `manifest.layout`). The container is a size container named
+ * they pick a variant (modules via `manifest.layout`): `narrow`, `content`, `wide`, `full`, and since Identity 4.0
+ * `reading` (one column, 56–64 rem) and `split` (master–detail: the page width for the list, the detail in the panel
+ * of `SplitView`; below the panel's threshold the detail is a sheet). The container is a size container named
  * `page`, so module layouts react to the space they really get (`@container page (…)`), also
  * inside a narrow window or a future panel. Its width is also published (`ui/pageWidth`), so master–detail pages
  * (`useSplitView`) decide by the room the page has, not by the window.
@@ -37,6 +39,7 @@ export function PageContainer({
       <div
         ref={ref}
         className={`${styles.page} ${styles[variant]}`}
+        data-layout={variant}
         data-hue={hue}
         data-testid="page"
       >
