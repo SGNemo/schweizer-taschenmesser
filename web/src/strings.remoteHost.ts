@@ -21,6 +21,7 @@ export const tRemoteHost = defineBundle(
     allow: 'Fernsteuerung erlauben',
     allowHint:
       'Aus: Kein Gerät kann diesen PC steuern. Der Abgleich im Heimnetz läuft unverändert weiter.',
+    allowHintOn: 'An: Nur die Geräte, denen du unten etwas erlaubst, und nur im Heimnetz.',
     askNote: 'Wenn du etwas erlaubst, fragt Windows in einem eigenen Fenster noch einmal nach.',
     needHub: 'Die Fernsteuerung läuft über den Abgleich im Heimnetz.',
     needHubLine: 'Kopple dort zuerst dein Handy mit diesem PC.',
@@ -78,6 +79,7 @@ export const tRemoteHost = defineBundle(
       ],
       allow: 'Allow remote control',
       allowHint: 'Off: no device can control this PC. Home-network sync keeps running unchanged.',
+      allowHintOn: 'On: only the devices you allow below, and only on your home network.',
       askNote: 'When you allow something, Windows asks once more in a window of its own.',
       needHub: 'Remote control runs over home-network sync.',
       needHubLine: 'Pair your phone with this PC there first.',

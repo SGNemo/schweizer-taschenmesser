@@ -85,7 +85,7 @@ export function RemoteHostSection() {
     <div className={styles.form} data-testid="remote-host">
       <Switch
         label={l.allow}
-        hint={l.allowHint}
+        hint={status.enabled ? l.allowHintOn : l.allowHint}
         checked={status.enabled}
         disabled={busy}
         onChange={(on) => void change(() => host.setEnabled(on))}
