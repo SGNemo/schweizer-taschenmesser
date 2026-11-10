@@ -458,3 +458,143 @@ fn the_hub_wires_remote_control_and_drops_it_on_stop() {
     // sessions are closed before the controls and the tray indicator go
     assert!(stop.find("close_all()").unwrap() < stop.find("crate::remote::detach(").unwrap());
 }
+
+/// The commands of the phone's handler (`#[cfg(mobile)]` block in `src/lib.rs`).
+fn mobile_handler_commands() -> Vec<String> {
+    // LF line ends: a Windows checkout has CRLF, and the pattern below spans two lines
+    let lib = source("lib.rs");
+    let at = lib
+        .find("#[cfg(mobile)]\n    let builder = builder.invoke_handler(")
+        .expect("mobile handler");
+    let start = at + lib[at..].find("generate_handler![").unwrap();
+    let block = &lib[start..lib[start..].find(']').map(|i| start + i).unwrap()];
+    block
+        .split(',')
+        .filter_map(|item| item.trim().rsplit("::").next().map(str::trim))
+        .filter(|name| !name.is_empty() && !name.contains('['))
+        .map(str::to_owned)
+        .collect()
+}
+
+fn permissions_of(file: &str) -> Vec<String> {
+    let value: serde_json::Value = serde_json::from_str(&read(file)).unwrap();
+    value["permissions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|p| p.as_str().map(str::to_owned))
+        .collect()
+}
+
+/// Remote control, phone side: the three commands exist on the phone only. They are in the mobile
+/// handler and in `mobile.json`, in the app manifest, and nowhere a desktop window could get them.
+#[test]
+fn remote_client_commands_exist_on_the_phone_only() {
+    let wanted = [
+        "remote_client_open",
+        "remote_client_send",
+        "remote_client_close",
+    ];
+    let mobile = mobile_handler_commands();
+    let desktop = handler_commands();
+    let build = read("build.rs");
+    let granted = permissions_of("capabilities/mobile.json");
+    for name in wanted {
+        assert!(
+            mobile.iter().any(|c| c == name),
+            "{name}: not in the mobile handler"
+        );
+        assert!(
+            !desktop.iter().any(|c| c == name),
+            "{name}: in the desktop handler"
+        );
+        assert!(
+            build.contains(&format!("\"{name}\"")),
+            "{name}: not in build.rs"
+        );
+        let permission = format!("allow-{}", name.replace('_', "-"));
+        assert!(
+            granted.contains(&permission),
+            "{permission}: not in mobile.json"
+        );
+        for other in [
+            "capabilities/default.json",
+            "capabilities/desktop.json",
+            "capabilities/capture.json",
+        ] {
+            assert!(
+                !permissions_of(other).contains(&permission),
+                "{permission} is granted in {other}"
+            );
+        }
+    }
+    // every command of the mobile handler is in the app manifest and granted to the phone's page
+    let mut phone = permissions_of("capabilities/default.json");
+    phone.extend(granted);
+    for name in &mobile {
+        assert!(
+            build.contains(&format!("\"{name}\"")),
+            "{name} missing in build.rs"
+        );
+        let permission = format!("allow-{}", name.replace('_', "-"));
+        assert!(
+            phone.contains(&permission),
+            "{permission}: the phone's page cannot call it"
+        );
+    }
+    // mobile.json applies to the phone only
+    let value: serde_json::Value = serde_json::from_str(&read("capabilities/mobile.json")).unwrap();
+    assert_eq!(value["platforms"], serde_json::json!(["android", "iOS"]));
+    assert_eq!(value["webviews"], serde_json::json!(["main"]));
+}
+
+/// The phone's remote client never unpairs, never touches the sync link, keeps keys in Rust and
+/// takes only names from its fixed list.
+#[test]
+fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
+    let src = source("remote_client.rs");
+    // the code without its comments (the header explains what the file must not do)
+    let code: String = src[..src.find("#[cfg(test)]").unwrap()]
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let code = code.as_str();
+    for forbidden in [
+        "forget(",
+        "unpair",
+        ".link",
+        "Link",
+        "send_text",
+        "Record::Key",
+        "Record::Move",
+        "Record::Button",
+        "Record::Scroll",
+        "println!",
+        "eprintln!",
+        "log::",
+        "dbg!",
+    ] {
+        assert!(
+            !code.contains(forbidden),
+            "remote_client.rs mentions {forbidden}"
+        );
+    }
+    // the key and the hub entry are read, never returned: no DTO carries them
+    assert_eq!(code.matches("stored_key(&app)").count(), 1);
+    assert_eq!(code.matches("hub_entry(&app)").count(), 1);
+    for dto in ["StateDto", "EventDto", "OpenedDto"] {
+        let at = code
+            .find(&format!("pub struct {dto}"))
+            .or_else(|| code.find(&format!("pub enum {dto}")));
+        let body = &code[at.unwrap()..];
+        let body = &body[..body.find("\n}\n").unwrap()];
+        // field names only: the test names which kind of field a DTO must never have
+        for field in ["key", "hub", "addr", "name"] {
+            assert!(
+                !body.to_lowercase().contains(field),
+                "{dto} carries {field}"
+            );
+        }
+    }
+}

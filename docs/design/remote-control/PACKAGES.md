@@ -74,7 +74,7 @@ Nach dem Bau `council` über den Diff (Guardian: Heimnetz-Bedingung, Tor je Erei
 
 ### Prompt – package 1b: PC – media sink, settings, visible state (`feat/remote-host-media`)
 
-Split in two PRs (one topic each): **part 1** `feat/remote-host-media` = crate `remote-input`, shell `src/remote.rs`, tray, commands, Rust tests, hand tests. **Part 2** `feat/remote-host-settings` (from fresh `develop` after part 1) = everything under "Web" below plus the web tests, the diagnostics negative list, the DE/EN texts, the focus checklist and the `.changes/` note; contract of the four commands: `src/remote.rs` (`RemoteStatusDto`). Error names and what the page says: `not-started` (hub is off: the sentence + link to pairing), `cancelled` (the person pressed "Abbrechen": no message), `busy` (a question is already open at the PC), `busy-controlled` (not while mouse and keyboard are controlled; ask again afterwards), `changed` (the grant changed while the question was open: reload, ask again), `not-found` (device no longer paired), `failed` (could not be saved), `bad-id`/`bad-level`/`unconfirmed`/`internal` (programming errors: generic message). Open for part 2: the native texts (dialog, tray entry, tooltip) follow the Windows display language, the rest of the tray the app language – part 2 hands the app language to Rust with the tray labels so both match (checklist item of part 2; hand test R2 covers it).
+Split in two PRs (one topic each): **part 1** `feat/remote-host-media` = crate `remote-input`, shell `src/remote.rs`, tray, commands, Rust tests, hand tests. **Part 2** `feat/remote-host-settings` (from fresh `develop` after part 1) = everything under "Web" below plus the web tests, the diagnostics negative list, the DE/EN texts, the focus checklist and the `.changes/` note; contract of the four commands: `src/remote.rs` (`RemoteStatusDto`). Error names and what the page says: `not-started` (hub is off: the sentence + link to pairing), `cancelled` (the person pressed "Abbrechen": no message), `busy` (a question is already open at the PC), `busy-controlled` (not while mouse and keyboard are controlled; ask again afterwards), `changed` (the grant changed while the question was open: reload, ask again), `not-found` (device no longer paired), `failed` (could not be saved), `bad-id`/`bad-level`/`unconfirmed`/`internal` (programming errors: generic message). Part 2 hands the app language to Rust with the tray labels (`lang`), so the shell's own texts follow the app language. Part 2 holds back the level "mouse and keyboard" and the "Am Handy entsperren" option in the settings section: package 3 adds both (`LEVELS` in `RemoteHostSection.tsx`, texts `levels.full` already there).
 
 ```
 # Aufgabe: Fernsteuerung – PC-Seite: Medien und Lautstärke, Einstellungen, sichtbarer Zustand (Paket 1b)
@@ -105,6 +105,26 @@ Nach dem Bau `council` über den Diff (Guardian: nativer Dialog, kein Erhöhen w
 ```
 
 ### Prompt – package 2: phone – module with Medien (`feat/remote-module-media`)
+
+Split in two PRs (one topic each): **part 1** `feat/remote-module-media` = shell `src/remote_client.rs` (mobile handler, `mobile.json`, guard tests), seam `remote` (contract, bridge, stub, `fakeRemote.ts`), state logic `core/remote/session.ts` with its tests. **Part 2** `feat/remote-module-page` (from fresh `develop` after part 1) = the module `remote` (manifest, page Medien, settings, widget), the phone's volume keys (`plugins/screen-mode`), wiring `syncRound` to the sync service, texts, e2e, focus checklist, screenshots, `.changes/` note, hand tests.
+
+What part 2 gets from `core/remote/session.ts` and still has to decide:
+
+| View | Sentence and step |
+| --- | --- |
+| `not-paired`, `unreachable`, `refused` (each reason), `no-input-here`, `too-old` | the rows of CONCEPT §7; `refused: locked` cannot happen on Medien, `limit` and `ended` can also arrive during a session |
+| `connecting` | the PC's line without a state word, no spinner that moves |
+| `slow` (after 5 s, the attempt goes on) | a neutral line, e.g. „PC-Sven antwortet noch nicht.“ + _Erneut versuchen_ – no verdict and no Wi-Fi hint yet; a press that waited is dropped |
+| `disconnected` | no sentence of its own: the last known state stays, quiet; the next touch reconnects |
+| `retry` | the unconnected line + _Erneut versuchen_ |
+| `idle` | the page is not in front; nothing to show |
+
+- One `RemoteSession` for the whole app (module-level), shared by page and widget: the PC keeps one session per device, a second instance would replace the first.
+- The PC's name is not in `RemoteOpened`: take the name the phone shows for its sync PC (pairing), not a new field.
+- The page applies `createHoldGate` to held buttons and held volume keys and passes `{ repeat: true }` for every repeat; a repeat never opens a connection.
+- Wording of `too-old`: the PC hanging up twice is strong evidence, not proof (a PC shedding load looks the same for a moment) – say what to check („Nemo auf dem PC aktuell?“), not a verdict.
+- Known and for the hand tests: on slow Wi-Fi a play/pause the PC did carry out can show „nicht verbunden“ after 3 s; a late answer heals it, but a second press before that toggles again. Show the fresh state as soon as the session stands.
+- Still open for part 2: haptics, keep-awake, the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`), `syncRound` wired to the sync service (`ok` / `not-paired` / `failed`).
 
 ```
 # Aufgabe: Fernsteuerung – Handy-Modul mit der Seite „Medien“ und Lautstärketasten (Paket 2)

@@ -57,56 +57,9 @@ export const de = {
   },
   features: {
     eyebrow: "Was Nemo kann",
-    title: "Die Dinge des Alltags, an einem Ort.",
-    items: [
-      {
-        icon: "calendar",
-        shot: "home",
-        title: "Übersicht",
-        text: "Heute zuerst: was jetzt wichtig ist, eine Sache, die dran ist, und drei Dinge für heute.",
-        alt: "Übersicht mit „Jetzt wichtig“ und „Jetzt dran“",
-      },
-      {
-        icon: "calendar",
-        shot: "calendar",
-        title: "Kalender",
-        text: "Termine, Erinnerungen und Fristen aller Module in einer Woche, mit Agenda.",
-        alt: "Kalender in der Wochenansicht mit Agenda",
-      },
-      {
-        icon: "tasks",
-        shot: "todos",
-        title: "Aufgaben",
-        text: "Listen, Irgendwann, „Neu planen“ statt Rot. Ein erster Schritt statt einer langen Liste.",
-        alt: "ToDo-Listen mit „Wartet noch“ und „Neu planen“",
-      },
-      {
-        icon: "wallet",
-        shot: "finance",
-        title: "Geld und Abos",
-        text: "Konten, Rechnungen, Abos und Budgets, auch per Kontoauszug-Import.",
-        alt: "Finanzübersicht mit verfügbarem Betrag, Einnahmen und Ausgaben",
-      },
-      {
-        icon: "key",
-        shot: "vault",
-        title: "Tresor",
-        text: "Passwörter mit TOTP und Generator, Unterlagen mit Ablaufdatum. Verschlüsselt, für KI unsichtbar.",
-        alt: "Entsperrter Tresor mit Demo-Zugängen",
-      },
-      {
-        icon: "bell",
-        shot: "reminders",
-        title: "Erinnerungen",
-        text: "Gebündelt, mit Ruhezeiten und „Später“, auch bei geschlossener App.",
-        alt: "Erinnerungen mit Schaltern und nächstem Zeitpunkt",
-      },
-    ],
-    more: "Außerdem: Notizen, Listen, Merkliste, Vorräte, Personen, Gewohnheiten, Zeiterfassung, Wetter, PC aufräumen, ein Chat mit lokalem Modell (Vorschau). KI nur, wenn du willst. Die App gibt es auf Deutsch und Englisch.",
-    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number, a: number) =>
-      `${n} Module in ${a} Bereichen. Jedes hat seine Farbe, du schaltest nur ein, was du brauchst.`,
-    count: (n: number) => (n === 1 ? "1 Modul" : `${n} Module`),
+    title: "Sechs Bereiche. Du schaltest ein, was du brauchst.",
+    intro: "Jeder Bereich hat seine Farbe. Die Bilder zeigen die App mit erfundenen Beispieldaten.",
+    and: "und",
     areas: {
       plan: "Der Tag, die Woche, die Leute.",
       money: "Konten, Rechnungen, Abos, Budgets.",
@@ -115,41 +68,36 @@ export const de = {
       vault: "Verschlüsselt, nur hier.",
       system: "Was dein Gerät gerade tut.",
     },
-    // Planner highlight above the areas (shot: planner-*.png, name and state from the catalogue).
-    planner: {
-      text: "Du trägst ein, was ansteht, der Planer verteilt es auf deine freie Zeit – offline, ohne Konto.",
-      alt: "Planer am Handy: freie Zeit heute, die Woche als Balken und der Tag mit seinen Terminen",
-      altDesktop:
-        "Planer am Desktop: freie Zeit heute, die Woche als Balken und sieben Tage nebeneinander mit Terminen und ToDos",
+    // The four scenes (src/catalog/scenes.js), keyed by the scene's first area.
+    scenes: {
+      plan: {
+        text: "Termine, Erinnerungen und Fristen aller Module in einer Woche. Der Planer verteilt, was ansteht, auf deine freie Zeit.",
+        alt: "Kalender mit erfundenen Beispieldaten: die Woche mit Terminen und die Agenda daneben",
+      },
+      money: {
+        text: "Was da ist, was abgeht und was fällig wird. Auch per Kontoauszug-Import.",
+        alt: "Finanzen mit erfundenen Beispieldaten: Kontostand, Konten, Einnahmen und Ausgaben des Monats",
+      },
+      knowledge: {
+        text: "Notizen, Merkliste, Listen und Vorräte liegen neben dem Kalender statt in einer weiteren App.",
+        alt: "Notizen mit erfundenen Beispieldaten: Schmierzettel und die Liste der Seiten",
+      },
+      vault: {
+        text: "Passwörter mit TOTP und Generator, Unterlagen mit Ablaufdatum. Für die KI unsichtbar.",
+        alt: "Entsperrter Tresor mit erfundenen Demo-Zugängen",
+      },
     },
     modules: {
       summary: (n: number) => `Alle ${n} Module`,
-      status: {
-        default: "standardmäßig an",
-        optional: "optional",
-        preview: "Vorschau",
-      },
       only: {
         windows: "nur Windows-App",
         android: "nur Android-App",
         both: "nur Windows- und Android-App",
       },
-      hint: "Vorschau-Module bleiben versteckt, bis „In Arbeit anzeigen“ an ist (Einstellungen → Darstellung). Die Liste wird aus der App selbst erzeugt.",
-    },
-  },
-  heads: {
-    eyebrow: "Jedes Modul hat seine Form",
-    note: "Jede Modulseite beginnt mit einem Kopf in einer von neun Formen und in der Farbe des Moduls. So siehst du auf einen Blick, wo du bist.",
-    names: {
-      kennzahl: "Kennzahl",
-      zeit: "Zeit",
-      fortschritt: "Fortschritt",
-      cover: "Cover",
-      himmel: "Himmel",
-      regal: "Regal",
-      tresor: "Tresor",
-      schreib: "Papier",
-      fokus: "Fokus",
+      legend: "Fett: von Anfang an eingeschaltet. Alles andere schaltest du in der Modul-Bibliothek ein.",
+      wip: "In Arbeit",
+      wipText: "Vorschau, in der App ausgeblendet, bis du „In Arbeit anzeigen“ einschaltest (Einstellungen → Darstellung).",
+      note: "Die Liste wird aus der App selbst erzeugt.",
     },
   },
   data: {

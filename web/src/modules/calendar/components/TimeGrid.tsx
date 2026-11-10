@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -16,9 +17,11 @@ import {
   gridScroll,
   groupByDate,
   initialScrollMinute,
+  MIN_LANE_REM,
   repeatKey,
   scrollAnchor,
   splitDay,
+  stackLanes,
   type GridScrollMemo,
 } from '../views';
 import { kindLabel } from './ItemRow';
@@ -47,6 +50,42 @@ type Drag =
 const draggable = (item: CalendarItem): boolean =>
   item.source === 'calendar' && !item.external && !!item.time && !item.endDate && !item.continued;
 
+/**
+ * Text geometry of a block, in rem; the CSS holds the same values (`--tg-line`, `--tg-row` and the block's padding in
+ * `calendar.module.css`). A block shows only whole lines: the count comes from its height (AE4).
+ */
+const LINE_REM = 1.125;
+const STACK_ROW_REM = 1.375;
+const STACK_GAP_PX = 2;
+/** Height a block loses to its gap (2px) and its vertical padding (2 × 2px). */
+const BLOCK_CHROME_PX = 6;
+/** Up to this length the time and the title share one line (the hour axis already shows the time). */
+const SHORT_MINUTES = 60;
+
+/** Measured grid: width of a day column, height of an hour and the root font size, all in pixels. */
+interface Geo {
+  col: number;
+  hour: number;
+  rem: number;
+}
+const DEFAULT_GEO: Geo = { col: Infinity, hour: 56, rem: 16 };
+
+/** Whole text lines that fit into a block of `mins` minutes. */
+const textLines = (mins: number, geo: Geo): number =>
+  Math.max(1, Math.floor(((mins / 60) * geo.hour - BLOCK_CHROME_PX) / (LINE_REM * geo.rem)));
+/** Whole rows that fit into a stack of `mins` minutes. */
+const stackRows = (mins: number, geo: Geo): number =>
+  Math.max(
+    1,
+    Math.floor(
+      ((mins / 60) * geo.hour - 2 + STACK_GAP_PX) / (STACK_ROW_REM * geo.rem + STACK_GAP_PX),
+    ),
+  );
+
+/** Tooltip of a block: kind, time and the full title (the block itself may show less). */
+const blockTitle = (item: CalendarItem, overlaps: boolean): string =>
+  `${kindLabel(item.kind)}: ${item.time}${item.endTime ? `–${item.endTime}` : ''} ${item.title}${overlaps ? ` – ${t.calendar.overlaps}` : ''}`;
+
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 
@@ -55,6 +94,8 @@ const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.sl
  * above the grid: in the week at most `ALL_DAY_LIMIT` per day plus "+n weitere" (opens the day), in the day view
  * all of them side by side; the pane scrolls on its own, so the grid keeps its hours (S04, UI round 6). On open the
  * grid scrolls to the current time (or shortly before the first item) without cutting a block at its top edge.
+ * Block text is clamped to whole lines; overlapping entries share a column only while each lane stays at least
+ * `MIN_LANE_REM` wide, the rest folds into a stack of one-line rows with "+n" (opens the day) (AE4).
  */
 export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCreateSlot }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -88,6 +129,26 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
     body.scrollTop = (initialScrollMinute(blocks, anchor) / 60) * hourPx;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the shown range changes
   }, [rangeKey]);
+
+  // The column's width decides how many lanes an overlap may take, the hour's height how many lines a block shows.
+  const [geo, setGeo] = useState<Geo>(DEFAULT_GEO);
+  useLayoutEffect(() => {
+    const col = bodyRef.current?.querySelector<HTMLElement>('[data-date]');
+    if (!col) return;
+    const measure = () => {
+      const rect = col.getBoundingClientRect();
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      if (!rect.width || !rect.height || !rem) return;
+      const next = { col: rect.width, hour: rect.height / 24, rem };
+      setGeo((g) => (g.col === next.col && g.hour === next.hour && g.rem === next.rem ? g : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(col);
+    return () => observer.disconnect();
+  }, [days.length]);
+  const maxLanes = Math.max(1, Math.floor(geo.col / (MIN_LANE_REM * geo.rem)));
 
   const cols = { '--cols': days.length } as CSSProperties;
   const single = days.length === 1;
@@ -266,88 +327,158 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
               <span key={h}>{`${String(h).padStart(2, '0')}:00`}</span>
             ))}
           </div>
-          {perDay.map(({ d, timed }) => (
-            <div
-              key={d}
-              data-date={d}
-              className={`${styles.tgCol} ${isoWeekday(d) >= 6 ? styles.tgWeekend : ''} ${d === now ? styles.tgToday : ''}`}
-              onPointerDown={(e) => startDraw(e, d)}
-            >
-              {drag?.kind === 'draw' && drag.date === d ? (
-                <span
-                  className={styles.tgDraw}
-                  aria-hidden="true"
-                  style={
-                    {
-                      '--start': Math.min(drag.a, drag.b),
-                      '--minutes': Math.abs(drag.b - drag.a),
-                    } as CSSProperties
-                  }
-                />
-              ) : null}
-              {timed.map(({ item, start, end, lane, lanes }) => {
-                const active = drag && drag.kind !== 'draw' && drag.id === item.id ? drag : null;
-                const dStart = active?.kind === 'move' ? active.dMin : 0;
-                const dLen = active?.kind === 'resize' ? active.dMin : 0;
-                const canDrag = !!onMoveItem && draggable(item);
-                return (
-                  <button
-                    key={`${item.source}:${item.id}`}
-                    type="button"
-                    className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${repeats.has(repeatKey(item)) ? styles.tgRepeat : ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''}`}
+          {perDay.map(({ d, timed }) => {
+            const { blocks, stacks } = stackLanes(timed, maxLanes);
+            return (
+              <div
+                key={d}
+                data-date={d}
+                className={`${styles.tgCol} ${isoWeekday(d) >= 6 ? styles.tgWeekend : ''} ${d === now ? styles.tgToday : ''}`}
+                onPointerDown={(e) => startDraw(e, d)}
+              >
+                {drag?.kind === 'draw' && drag.date === d ? (
+                  <span
+                    className={styles.tgDraw}
+                    aria-hidden="true"
                     style={
                       {
-                        '--start': start + dStart,
-                        '--minutes': Math.max(SNAP_MINUTES, end - start + dLen),
-                        '--lane': lane,
-                        '--lanes': lanes,
-                        ...(item.color ? { '--cal': item.color } : {}),
-                        ...(active?.kind === 'move' && active.dDays
-                          ? { transform: `translateX(${active.dDays * 100}%)` }
-                          : {}),
+                        '--start': Math.min(drag.a, drag.b),
+                        '--minutes': Math.abs(drag.b - drag.a),
                       } as CSSProperties
                     }
-                    aria-keyshortcuts={
-                      canDrag
-                        ? 'Alt+ArrowUp Alt+ArrowDown Alt+Shift+ArrowUp Alt+Shift+ArrowDown'
-                        : undefined
-                    }
-                    data-dragging={active ? 'true' : undefined}
-                    onPointerDown={(e) => startItemDrag(e, item, 'move')}
-                    onKeyDown={(e) => onItemKey(e, item)}
-                    title={`${kindLabel(item.kind)}: ${item.title}${lanes > 1 ? ` – ${t.calendar.overlaps}` : ''}`}
-                    onClick={() => {
-                      if (swallowClick.current) {
-                        swallowClick.current = false;
-                        return;
+                  />
+                ) : null}
+                {blocks.map(({ item, start, end, lane, lanes }) => {
+                  const active = drag && drag.kind !== 'draw' && drag.id === item.id ? drag : null;
+                  const dStart = active?.kind === 'move' ? active.dMin : 0;
+                  const dLen = active?.kind === 'resize' ? active.dMin : 0;
+                  const canDrag = !!onMoveItem && draggable(item);
+                  const mins = Math.max(SNAP_MINUTES, end - start + dLen);
+                  const short = mins <= SHORT_MINUTES;
+                  const lines = textLines(mins, geo);
+                  return (
+                    <button
+                      key={`${item.source}:${item.id}`}
+                      type="button"
+                      className={`${styles.tgItem} ${styles[`kind_${item.kind}`] ?? ''} ${repeats.has(repeatKey(item)) ? styles.tgRepeat : ''} ${item.done ? styles.done : ''} ${lanes > 1 ? styles.tgConflict : ''} ${short ? styles.tgShort : ''}`}
+                      style={
+                        {
+                          '--start': start + dStart,
+                          '--minutes': mins,
+                          '--lane': lane,
+                          '--lanes': lanes,
+                          ...(item.color ? { '--cal': item.color } : {}),
+                          ...(active?.kind === 'move' && active.dDays
+                            ? { transform: `translateX(${active.dDays * 100}%)` }
+                            : {}),
+                        } as CSSProperties
                       }
-                      onOpenItem(item);
-                    }}
-                  >
-                    <KindMark item={item} />
-                    <span className={styles.tgTime}>{item.time}</span> {item.title}
-                    {lanes > 1 ? (
-                      <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
-                    ) : null}
-                    {canDrag ? (
+                      aria-keyshortcuts={
+                        canDrag
+                          ? 'Alt+ArrowUp Alt+ArrowDown Alt+Shift+ArrowUp Alt+Shift+ArrowDown'
+                          : undefined
+                      }
+                      data-dragging={active ? 'true' : undefined}
+                      onPointerDown={(e) => startItemDrag(e, item, 'move')}
+                      onKeyDown={(e) => onItemKey(e, item)}
+                      title={blockTitle(item, lanes > 1)}
+                      onClick={() => {
+                        if (swallowClick.current) {
+                          swallowClick.current = false;
+                          return;
+                        }
+                        onOpenItem(item);
+                      }}
+                    >
+                      <span className={styles.tgLead}>
+                        <KindMark item={item} />
+                        <span className={styles.tgTime}>{item.time}</span>
+                      </span>{' '}
+                      {/* A short block: the title beside the time; a longer one: the time's line, then the title. */}
                       <span
-                        className={styles.tgResize}
-                        aria-hidden="true"
-                        onPointerDown={(e) => startItemDrag(e, item, 'resize')}
-                      />
-                    ) : null}
-                  </button>
-                );
-              })}
-              {d === now ? (
-                <span
-                  className={styles.tgNow}
-                  aria-hidden="true"
-                  style={{ '--start': minutes(nowTime()) } as CSSProperties}
-                />
-              ) : null}
-            </div>
-          ))}
+                        className={styles.tgTitle}
+                        style={
+                          { '--lines': short ? lines : Math.max(1, lines - 1) } as CSSProperties
+                        }
+                      >
+                        {item.title}
+                      </span>
+                      {lanes > 1 ? (
+                        <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
+                      ) : null}
+                      {canDrag ? (
+                        <span
+                          className={styles.tgResize}
+                          aria-hidden="true"
+                          onPointerDown={(e) => startItemDrag(e, item, 'resize')}
+                        />
+                      ) : null}
+                    </button>
+                  );
+                })}
+                {stacks.map((stack) => {
+                  const rows = stackRows(stack.end - stack.start, geo);
+                  const shown = stack.items.slice(0, rows);
+                  const hidden = stack.items.length - shown.length;
+                  const more = `${t.calendar.more(hidden)}, ${formatDay(d, 'EEEE, d. MMMM')}`;
+                  return (
+                    <div
+                      key={`stack:${stack.start}`}
+                      className={`${styles.tgStack} ${styles.tgConflict}`}
+                      data-stack={stack.items.length}
+                      style={
+                        {
+                          '--start': stack.start,
+                          '--minutes': stack.end - stack.start,
+                          '--lane': stack.lane,
+                          '--lanes': stack.lanes,
+                        } as CSSProperties
+                      }
+                    >
+                      {shown.map(({ item }, index) => (
+                        <div key={`${item.source}:${item.id}`} className={styles.tgStackRow}>
+                          <button
+                            type="button"
+                            className={`${styles.tgItem} ${styles.tgStacked} ${styles[`kind_${item.kind}`] ?? ''} ${repeats.has(repeatKey(item)) ? styles.tgRepeat : ''} ${item.done ? styles.done : ''}`}
+                            style={
+                              item.color ? ({ '--cal': item.color } as CSSProperties) : undefined
+                            }
+                            title={blockTitle(item, true)}
+                            onClick={() => onOpenItem(item)}
+                          >
+                            <span className={styles.tgLead}>
+                              <KindMark item={item} />
+                              <span className={styles.tgTime}>{item.time}</span>
+                            </span>{' '}
+                            <span className={styles.tgTitle}>{item.title}</span>
+                            <span className={styles.srOnly}>{`, ${t.calendar.overlaps}`}</span>
+                          </button>
+                          {hidden > 0 && index === shown.length - 1 ? (
+                            <button
+                              type="button"
+                              className={styles.tgMore}
+                              aria-label={more}
+                              title={more}
+                              onClick={() => onPickDay(d)}
+                            >
+                              {`+${hidden}`}
+                            </button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+                {d === now ? (
+                  <span
+                    className={styles.tgNow}
+                    aria-hidden="true"
+                    style={{ '--start': minutes(nowTime()) } as CSSProperties}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

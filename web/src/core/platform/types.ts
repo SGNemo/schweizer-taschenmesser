@@ -200,6 +200,100 @@ export interface LanHubService {
   setHome(): Promise<void>;
 }
 
+export type RemoteLevel = 'off' | 'media' | 'full';
+
+/** What a paired device may do: level, "ended at the PC" (paused), "unlock the phone first". */
+export interface RemoteHostGrant {
+  level: RemoteLevel;
+  paused: boolean;
+  unlock: boolean;
+}
+
+export interface RemoteHostDevice extends RemoteHostGrant {
+  /** Hex of the device's static key. */
+  id: string;
+  /** Plain text, the device's own claim. */
+  name: string;
+  /** Unix seconds of the last sync contact. */
+  lastSeen?: number | null;
+}
+
+export interface RemoteHostStatus {
+  /** This PC can be controlled at all (Windows). */
+  supported: boolean;
+  /** The master switch. */
+  enabled: boolean;
+  /** Who controls this PC right now. */
+  controller?: { id: string; name: string; level: RemoteLevel } | null;
+  devices: RemoteHostDevice[];
+}
+
+/**
+ * Desktop only: this PC's own remote-control settings (`src-tauri/src/remote.rs`). No call sends
+ * input. Narrowing is immediate; every widening (a higher level, lifting a pause, dropping the
+ * unlock request, the master switch) is asked by the PC in a native dialog first – the call
+ * resolves after the answer. Errors are short codes: `not-started` (the hub is off), `cancelled`
+ * (the person said no), `busy` (a question is already open), `busy-controlled` (not while mouse
+ * and keyboard are controlled), `changed` (the grant changed while the question was open),
+ * `not-found`, `failed`.
+ */
+export interface RemoteHostService {
+  supported: boolean;
+  status(): Promise<RemoteHostStatus>;
+  setEnabled(enabled: boolean): Promise<void>;
+  setDevice(id: string, grant: RemoteHostGrant): Promise<void>;
+  /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
+  end(): Promise<boolean>;
+}
+
+/** What the phone may ask of the PC in a media session: a fixed list, there is no "any key". */
+export type RemoteAction =
+  'play-pause' | 'next' | 'previous' | 'volume-up' | 'volume-down' | 'mute' | 'lock';
+
+/** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
+export interface RemotePcState {
+  volume: number | null;
+  mute: boolean;
+  playing: boolean;
+  locked: boolean;
+}
+
+/** Why the PC refused or ended a session. */
+export type RemoteCloseReason =
+  'remote-off' | 'not-granted' | 'busy' | 'paused' | 'locked' | 'unsupported' | 'ended' | 'limit';
+
+export type RemoteEvent =
+  | { kind: 'state'; session: number; state: RemotePcState }
+  /** Over: with the PC's reason, or `null` (connection lost, idle, replaced at the PC). */
+  | { kind: 'closed'; session: number; reason: RemoteCloseReason | null };
+
+export interface RemoteOpened {
+  session: number;
+  /** What this session may do. */
+  level: 'media' | 'full';
+  /** What the PC grants this device at most. */
+  grant: RemoteLevel;
+  unlockRequired: boolean;
+  state: RemotePcState;
+}
+
+/**
+ * Phone only: one input session with the paired PC (`src-tauri/src/remote_client.rs`), apart from
+ * the sync connection. The device key and the pinned PC stay in Rust. What this device may do is
+ * decided and checked by the PC alone. `open` rejects with a short code: `not-paired`, `network`,
+ * `no-answer` (the PC hung up without a word), `unknown-device` (the PC takes no input here, or
+ * this device is not paired any more – never a reason to unpair), `protocol`, `closed` (a newer
+ * `open` overtook this one), or a [`RemoteCloseReason`]. `send` rejects with `closed` or
+ * `network`; neither is a state to show.
+ */
+export interface RemoteService {
+  supported: boolean;
+  /** Only `media` for now: the shell refuses any other level until it can send pointer and keys. */
+  open(level: 'media', onEvent: (event: RemoteEvent) => void): Promise<RemoteOpened>;
+  send(session: number, actions: RemoteAction[]): Promise<void>;
+  close(session: number): Promise<void>;
+}
+
 /**
  * The device side of home-network sync (Android, and a second PC that pairs with the hub PC):
  * pairing with a hub PC by its QR and the sync engine's requests (`src-tauri/src/lan_client.rs`). The device's own key and the pinned hub stay in
@@ -295,6 +389,8 @@ export interface TrayLabels {
   open: string;
   quit: string;
   tooltip: string;
+  /** The app language (`de`, `en`): the shell's own tray and dialog texts follow it. */
+  lang?: string;
 }
 
 /**
@@ -389,6 +485,10 @@ export interface PlatformService {
   vaultBridge: VaultBridgeService;
   /** Home-network sync hub (desktop only). */
   lanHub: LanHubService;
+  /** This PC's remote-control settings (desktop only; lives inside the hub). */
+  remoteHost: RemoteHostService;
+  /** The phone as a remote control of the paired PC (Android only). */
+  remote: RemoteService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
   /** Wi-Fi available/lost for home-network sync (Android). */

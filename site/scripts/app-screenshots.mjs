@@ -33,10 +33,18 @@ const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const PAGES = [
   { name: 'home', path: '/', viewport: { width: 1280, height: 720 } },
   { name: 'phone', path: '/', viewport: { width: 412, height: 915 }, mobile: true },
-  // The planner (Features highlight): on the phone one day per screen, on the desktop the week board (N01 fixed:
-  // titles break between words); the head figure is today's free time from the seed.
-  { name: 'planner', path: '/planner', viewport: { width: 412, height: 915 }, mobile: true },
-  { name: 'planner-desktop', path: '/planner', viewport: { width: 1920, height: 1080 } },
+  // The four scenes of the features section (round 5): one page per area, desktop at 1280 x 800 and the phone.
+  // A 1920 px capture is unreadable at the sizes the page uses; 1280 keeps 14 px app text near 10 px.
+  ...[
+    { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
+    { name: 'finance', path: '/finance?tab=overview' },
+    { name: 'notes', path: '/notes' },
+    // The vault list, unlocked with the seed's demo passphrase (invented entries only).
+    { name: 'accounts', path: '/accounts', unlock: true },
+  ].flatMap((x) => [
+    { ...x, viewport: { width: 1280, height: 800 } },
+    { ...x, name: `${x.name}-phone`, viewport: { width: 412, height: 915 }, mobile: true },
+  ]),
 ];
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
