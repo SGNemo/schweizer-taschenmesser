@@ -4,11 +4,11 @@ import { DESKTOP, moduleRoutes, openPage, PHONE, startSeeded } from './guards';
 
 /**
  * One filled main action per page and per dialog (DESIGN-SPEC: one filled accent per screen; UI audit 2026-11, package
- * 0a-1b). Counted are visible buttons of the `primary` variant inside `main` and inside an open dialog; the top bar's
+ * 0a-1b). Counted are visible buttons with `data-variant="primary"` (ui/Button) inside `main` and inside an open dialog; the top bar's
  * "+ Neu" sits outside `main` and is decided with package 0b-2.
  */
 const visiblePrimaries = (scope: Locator) =>
-  scope.locator('[class*="_primary_"]').evaluateAll((els) =>
+  scope.locator('[data-variant="primary"]').evaluateAll((els) =>
     els
       .filter((e) => {
         const r = e.getBoundingClientRect();
@@ -38,7 +38,7 @@ test.describe('desktop', () => {
   test('the count sees primary buttons: pages known to have one report exactly one', async ({
     page,
   }) => {
-    // Without this a renamed class would make every page pass with zero.
+    // Without this a renamed attribute would make every page pass with zero.
     await startSeeded(page);
     for (const path of ['/vault', '/invoices', '/pantry']) {
       await openPage(page, path);
