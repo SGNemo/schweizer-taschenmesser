@@ -116,6 +116,25 @@ test('the vault stays locked after a reload (keys live in memory only)', async (
   await expect(page.locator('body')).not.toContainText(SECRET_TITLE);
 });
 
+test('the lock screen is ready to type into: the master password field has the focus', async ({
+  page,
+}) => {
+  await setUp(page);
+  // First load of the page ...
+  await page.reload();
+  await expect(page.getByLabel('Master-Passwort')).toBeFocused();
+  // ... and coming back to it inside the app (the shell moves the focus on a navigation first).
+  await page.getByRole('link', { name: 'Bibliothek' }).first().click();
+  await expect(page).toHaveURL(/\/library$/);
+  await page.goBack();
+  await expect(page.getByLabel('Master-Passwort')).toBeFocused();
+  await page.keyboard.type(MASTER);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+    timeout: 20_000,
+  });
+});
+
 test('the generator fills the password field and the strength meter reacts', async ({ page }) => {
   await setUp(page);
   await page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
