@@ -44,11 +44,13 @@ interface TabsState {
   zoomBy(id: number, delta: number | 'reset'): Promise<void>;
   togglePause(host: string): void;
   dismissHeld(id: number): void;
+  /** The native side reported these tabs' webviews as gone: the frame offers "Tab neu öffnen". */
+  markLost(ids: number[]): void;
   dismissOffer(): void;
 }
 
 /** Why a tab could not load; only a kind, never the raw native error (it could carry the address). */
-export type OpenFailure = 'timeout' | 'address' | 'native';
+export type OpenFailure = 'timeout' | 'address' | 'native' | 'gone';
 
 /** How long creating a tab's webview may take before the frame gives up and says so. */
 export const OPEN_TIMEOUT_MS = 15_000;
@@ -232,5 +234,16 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
     }));
   },
   dismissHeld: (id) => patch(id, { held: null }),
+  markLost(ids) {
+    if (ids.length === 0) return;
+    // Only an opened tab can lose its webview; the address stays, so reopening needs one click.
+    set((s) => ({
+      tabs: s.tabs.map((x) =>
+        ids.includes(x.id) && x.opened
+          ? { ...x, opened: false, loading: false, held: null, error: 'gone' }
+          : x,
+      ),
+    }));
+  },
   dismissOffer: () => set({ offer: null }),
 }));
