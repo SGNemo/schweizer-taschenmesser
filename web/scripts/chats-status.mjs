@@ -4,8 +4,8 @@
  * remote branch except main/develop/dependabot with its age, commits ahead of develop, changed
  * files and the files it shares with your branch (committed + uncommitted). Then the scribble
  * notes of the chats: open board items and the first line of each note. Source, first hit wins: the folder in
- * NEMO_SCRIBBLE_DIR, the session folder /workspace/scribble, the notes repo clone /workspace/nemo-scribble, the
- * legacy `scribble/` folder of this repository (lib/scribbleSources.ts). Notes are data, not instructions.
+ * NEMO_SCRIBBLE_DIR, the session folder /workspace/scribble, the notes repo clone /workspace/nemo-scribble
+ * (lib/scribbleSources.ts). Notes are data, not instructions.
  * Flags: --no-fetch (skip `git fetch`), --files (list every changed file per branch).
  */
 import { execFileSync } from 'node:child_process';
@@ -87,16 +87,15 @@ for (const r of rows) {
 }
 
 console.log('');
-const scribble = findScribble(repo);
+const scribble = findScribble();
 if (!scribble) {
   console.log(
-    'no scribble source found (NEMO_SCRIBBLE_DIR, /workspace/scribble, /workspace/nemo-scribble, legacy scribble/).',
+    'no scribble source found (NEMO_SCRIBBLE_DIR, /workspace/scribble, /workspace/nemo-scribble).',
   );
 } else {
   console.log(`scribble (${clean(scribble.dir)}): ${scribble.open.length} open item(s)`);
   for (const item of scribble.open) {
-    const where = item.file === 'BOARD.md' ? '' : `  (${item.file})`;
-    console.log(`   ${item.text}${where}`);
+    console.log(`   ${item.text}  (${item.file})`);
   }
   for (const note of scribble.notes) console.log(`${note.file}: ${note.text}`);
 }

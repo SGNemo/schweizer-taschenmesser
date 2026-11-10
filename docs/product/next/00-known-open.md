@@ -16,10 +16,10 @@ Bereiche nach [MODULE-PLAN](../MODULE-PLAN.md) und `decisions/ui-shell.md`:
 | Komfort Einstellungen/Bibliothek/Werkzeugkasten | gemergt (#132, #150, #151, #153, #168, #169); Handtests ST-M1–ST-M4 offen | `comfort/06-settings-results.md` |
 | Fokus-Funktionen Runde 1 (Pakete 1–4) | gebaut; Handtests FO-F1–FO-F12 offen | `features/focus-aids.md` |
 | Fokus-Audit 2 | Doku gemergt (#176); **Paket 1 „Defaults“ als PR #177 offen**, Pakete 2–4 folgen auf `feat/focus2-today|reminders|additions` | `focus/11-plan-2.md` |
-| Design „Klar 2“, Visual-Audit, Lesbarkeit | gebaut; Visual #16–#18 offen | `design/VISUAL-AUDIT-2026-10-03.md` |
+| Design „Klar 2“, Visual-Audit, Lesbarkeit | gebaut; Visual #17/#18 offen (#16 durch Logo v2 erledigt) | `design/DESIGN-SPEC.md` §7a, ROADMAP D7/D8 |
 | Modulplan | Pakete 1–6 fertig, **Paket 7 Passwort-Gesundheit offen** | `MODULE-PLAN.md` |
 | Sicherheits-Launch-Review | Phase 2 fertig; B-Liste offen | `security/LAUNCH-REVIEW-2026-10-06.md` |
-| Cleanup 2026-10-03 | Phase 2 umgesetzt; Top-10-Refactors offen | `meta/IMPROVEMENTS-2026-10-03.md` |
+| Cleanup 2026-10-03 | Phase 2 umgesetzt; Top-10-Refactors offen | ROADMAP „Cleanup proposals 2026-10-03“ |
 | Lokales Modell | Qwen3 4B vorläufig; Profil „Leicht“ offen | `features/local-model-eval.md` |
 
 **Veraltet in STATUS/CHATS:** STATUS nennt viele Komfort-/Fokus-PRs noch als „wartet auf Review“, sie sind gemergt; CHATS führt den Fokus-Audit-2-Chat noch in Phase 0, der Audit ist gemergt und Paket 1 ist gebaut (#177).
@@ -79,25 +79,25 @@ Bereiche nach [MODULE-PLAN](../MODULE-PLAN.md) und `decisions/ui-shell.md`:
 | F13 | Google-Login auf Android fehlt | L | `MANUAL-TESTS.md` |
 
 ### Qualität und Technik
-Aufwand laut `meta/IMPROVEMENTS-2026-10-03.md` §Top 10.
+Aufwand laut ROADMAP „Cleanup proposals 2026-10-03“ (Top 10).
 | # | Punkt | Aufwand | Quelle |
 |---|---|---|---|
-| Q1 | Typisierte Zeilen-Helfer in `core/db/repo.ts`/`tx.ts` statt ~10 `as unknown as` | M | IMPROVEMENTS §Top 10 |
+| Q1 | Typisierte Zeilen-Helfer in `core/db/repo.ts`/`tx.ts` statt ~10 `as unknown as` | M | ROADMAP Cleanup 2026-10-03 |
 | Q2 | `logError(tag, e)` statt ~40 stummer `.catch(() => undefined)` | M | ebd. |
 | Q3 | Basiskomponente `EditorActions` für ~9 kopierte Editor-Fußzeilen | M | ebd. |
 | Q4 | `server/src/app.ts` `buildApp` in Route-Plugins teilen | M | ebd. |
-| Q5 | `ScanView.tsx` (516 Z.) und `OnboardingWizard.tsx` (551 Z.) aufteilen | M | ebd. |
+| Q5 | `ScanView.tsx` (747 Z.) und `OnboardingWizard.tsx` (755 Z.) aufteilen | M | ebd. |
 | Q6 | ESLint `complexity` / `max-lines-per-function` als Warnung | S | ebd. |
 | Q7 | `ScanPage` auf Selektoren statt Whole-Store-Subscription (Scan-Performance) | S | ebd. |
 | Q8 | Gemeinsame `toHex`/base64-Helfer; `MS_PER_DAY`; 14-Tage-Push-Fenster | S | ebd. |
-| Q9 | Hooks aus `LocalApiSection`, `AiSection`, `CommandPalette`, `BackupSection`, `FocusPage`, `SetupWizard` lösen | M | IMPROVEMENTS §Code structure |
-| Q10 | Ladereihenfolge-Rätsel `TIME_RE` (`calendar/settings.ts`) bricht E2E nur in CI; `madge --circular` | S | IMPROVEMENTS §Repo hygiene |
-| Q11 | E2E-Flakes unter Last: `reminders.spec.ts:89`, `newmodules.spec.ts:42` | S–M | CLEANUP §Result |
-| Q12 | Test-Tooling: `resetDb`-Helfer, Vitest `isolate:false` (≈150 von 237 s Setup), schwere jsdom-Tests zusammenlegen; Blocker: WebCrypto-Realm, Dexie-Singleton | M | IMPROVEMENTS §Tests; `perf/BUILD-BASELINE` |
-| Q13 | Repo-Hygiene: Root-`package.json`/Workspaces, Alias `@nemo/vault-core` 5×, Inter-Font-Pfad, `.dockerignore`, Playwright-Configs, User-Agent `Taschenmesser-Proxy/1` | S | IMPROVEMENTS §Repo hygiene |
-| Q14 | „Geprüft, unklar“: `disk.del.errors.already-running`, `disk.filter.none_found`, `PageContainer .full` + ~20 Klassen in `Patterns.module.css`, `FRONT_WIDGETS`, `LEGACY_HASHES`, `DEFAULT_FOCUS`, `SETUP_STATUSES`, `googleDrive.stub.ts` | S | CLEANUP §A2/A5/A7/A8 |
-| Q15 | Keine Coverage-Werkzeuge im Repo | S | CLEANUP §Baseline |
-| Q16 | Lesbarkeit: Performance-Stichprobe Seed `large` bei Lesehilfe 100 % | S | `READABILITY-PLAN` §5 |
+| Q9 | Hooks aus `LocalApiSection`, `AiSection`, `CommandPalette`, `BackupSection`, `FocusPage`, `SetupWizard` lösen | M | ROADMAP Cleanup 2026-10-03 |
+| Q10 | Ladereihenfolge-Rätsel `TIME_RE` (`calendar/settings.ts`) bricht E2E nur in CI; `madge --circular` | S | ROADMAP Cleanup 2026-10-03 |
+| Q11 | E2E-Flakes unter Last: `reminders.spec.ts:89`, `newmodules.spec.ts:42` | S–M | ROADMAP Cleanup 2026-10-03 |
+| Q12 | Test-Tooling: `resetDb`-Helfer, Vitest `isolate:false` (≈150 von 237 s Setup), schwere jsdom-Tests zusammenlegen; Blocker: WebCrypto-Realm, Dexie-Singleton | M | ROADMAP Cleanup 2026-10-03; `perf/BUILD-BASELINE` |
+| Q13 | Repo-Hygiene: Root-`package.json`/Workspaces, Alias `@nemo/vault-core` 5×, Inter-Font-Pfad, `.dockerignore`, Playwright-Configs, User-Agent `Taschenmesser-Proxy/1` | S | ROADMAP Cleanup 2026-10-03 |
+| Q14 | „Geprüft, unklar“: `disk.del.errors.already-running`, `disk.filter.none_found`, `PageContainer .full` + ~20 Klassen in `Patterns.module.css`, `FRONT_WIDGETS`, `LEGACY_HASHES`, `DEFAULT_FOCUS`, `SETUP_STATUSES`, `googleDrive.stub.ts` | S | ROADMAP Cleanup 2026-10-03 |
+| Q15 | Keine Coverage-Werkzeuge im Repo | S | ROADMAP Cleanup 2026-10-03 |
+| Q16 | Lesbarkeit: Performance-Stichprobe Seed `large` bei Lesehilfe 100 % | S | ROADMAP D9 |
 
 ### Sicherheit (Sicherheitsbereich – nur mit eigenem Chat und ohne Abschwächung)
 | # | Punkt | Aufwand | Quelle |
