@@ -134,8 +134,9 @@ const ROSTER = {
   "nemo-ops": ["claude-sonnet-5-5", "medium"],
   "nemo-reviewer": ["claude-opus-5-5", "medium"],
 };
-// prompt length caps (token diet): 7 000 chars, the lead 8 000, the builder 4 353
-const MAX_SYSTEM = { "nemo-lead": 8000, "nemo-builder": 4353 }; // builder ≤ the old nemo-frontend prompt
+// prompt length caps (token diet): 7 000 chars, the lead 8 000, the builder 4 353, the merger 7 450
+// nemo-merge: + rule 7 (stimulus ratchet, UI audit package 0a-1a), whose command has to stand in full
+const MAX_SYSTEM = { "nemo-lead": 8000, "nemo-builder": 4353, "nemo-merge": 7450 }; // builder ≤ the old nemo-frontend prompt
 const MAX_SYSTEM_DEFAULT = 7000;
 // the one routing source; every prompt names it, every prompt except the lead's (German) carries this exact gate
 const ROUTING_FILE = "docs/meta/WORK-ROUTING.md";
