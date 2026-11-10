@@ -588,6 +588,10 @@ describe('additions only in protected test files', () => {
       'the same behind debugger',
       "test('a', () => {\n  debugger\n  /'/;});evil();test(\"b\",()=>{//'\n});",
     ],
+    [
+      'a regex behind `extends`',
+      "test('parses', () => {\n  expect(class extends /`/ {}).toBeTruthy();\n});\n\nprocess.env.SKIP_GUARD = '1';\n\ntest('parses again', () => {\n  expect(`\\``).toBe('`');\n});",
+    ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [
       'nested regex class',

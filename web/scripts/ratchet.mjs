@@ -450,6 +450,16 @@ const EXPRESSION_KEYWORDS = new Set(
   'return typeof case do else in void delete throw new instanceof'.split(' '),
 );
 const AMBIGUOUS_WORDS = new Set(['of', 'await', 'yield']);
+// Reserved and contextual words that are neither a value (`this`, `super`, `null`, `true`, `false` are) nor in
+// the list above: what may follow them is not decided here.
+const OTHER_KEYWORDS = new Set(
+  (
+    'extends class function async static get set if while for with switch catch finally try break continue ' +
+    'debugger default export import var let const enum interface type namespace module declare abstract ' +
+    'implements package private protected public readonly as satisfies is keyof infer unique asserts ' +
+    'override accessor using from'
+  ).split(' '),
+);
 /** Tokens an expression may follow (allow-list: everything else is no expression start). */
 const OPENS_EXPRESSION = '(,=:[&|?{;+-*%<~^';
 const BEFORE_KEYWORD = ';{}(),=:[&|?!+-*%<>~^)';
@@ -556,6 +566,9 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       fail();
     if (k >= 0 && (src[k] === '.' || src[k] === '#')) return false; // a property or a private name
     if (AMBIGUOUS_WORDS.has(word)) fail();
+    // Any other word of the language (`extends`, `as`, `satisfies`, …): an operand only if it is one of the
+    // few value words; everything else is not guessed.
+    if (OTHER_KEYWORDS.has(word)) fail();
     if (!EXPRESSION_KEYWORDS.has(word)) return false;
     // A keyword only where a statement or an expression can begin; anywhere else do not guess.
     if (k >= 0 && !BEFORE_KEYWORD.includes(src[k])) fail();
