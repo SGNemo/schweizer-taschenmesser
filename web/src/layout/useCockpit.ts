@@ -1,3 +1,4 @@
+import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { getPlatform } from '@/core/platform';
@@ -79,12 +80,11 @@ export function useCockpit(): void {
   useEffect(() => {
     const display = getPlatform().display;
     void display.setImmersive(cockpit);
-    void display.setKeepAwake(cockpit && awake);
+    // a hold, not the bare switch: the remote control may keep the screen on at the same time
+    const release = cockpit && awake ? holdKeepAwake() : undefined;
     return () => {
-      if (cockpit) {
-        void display.setImmersive(false);
-        void display.setKeepAwake(false);
-      }
+      if (cockpit) void display.setImmersive(false);
+      release?.();
     };
   }, [cockpit, awake]);
 }

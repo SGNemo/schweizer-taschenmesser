@@ -124,7 +124,8 @@ What part 2 gets from `core/remote/session.ts` and still has to decide:
 - The page applies `createHoldGate` to held buttons and held volume keys and passes `{ repeat: true }` for every repeat; a repeat never opens a connection.
 - Wording of `too-old`: the PC hanging up twice is strong evidence, not proof (a PC shedding load looks the same for a moment) – say what to check („Nemo auf dem PC aktuell?“), not a verdict.
 - Known and for the hand tests: on slow Wi-Fi a play/pause the PC did carry out can show „nicht verbunden“ after 3 s; a late answer heals it, but a second press before that toggles again. Show the fresh state as soon as the session stands.
-- Still open for part 2: haptics, keep-awake, the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`), `syncRound` wired to the sync service (`ok` / `not-paired` / `failed`).
+- Part 2 is split once more: the module (page, widget, settings) is `feat/remote-module-page`; the phone's **hardware volume keys** (`plugins/screen-mode`, Kotlin; the setting, the row „Lautstärketasten steuern den PC“ shown while `takesVolumeKeys()`) are their own PR `feat/remote-volume-keys`, because they need an Android build and a real phone to try.
+- Still open after `feat/remote-module-page`: the hardware volume keys with their setting and the row „Lautstärketasten steuern den PC“ (shown while `takesVolumeKeys()`) → `feat/remote-volume-keys`.
 
 ```
 # Aufgabe: Fernsteuerung – Handy-Modul mit der Seite „Medien“ und Lautstärketasten (Paket 2)

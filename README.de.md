@@ -68,6 +68,7 @@ Nemo ist eine Sammlung kleiner Module für den Alltag. Was du brauchst, schaltes
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
 |  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
+|  | Fernbedienung | Steuere Medien und Lautstärke deines PCs vom Handy aus | Vorschau, nur Android-App |
 
 „Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.
 

@@ -76,6 +76,7 @@ import { feeds } from './feeds';
 import { planner } from './planner';
 import { fitness } from './fitness';
 import { clock } from './clock';
+import { remote } from './remote';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -155,4 +156,5 @@ export const en: Strings = {
   planner,
   fitness,
   clock,
+  remote,
 };

@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
 import { bootDev, SEED_TODAY, test } from './helpers';
+import { onDesktop } from './guards';
 
 /**
  * Load robustness (UI audit 2026-11, package 0a-2): on the seeded Dev-Preview build every module route shows its
@@ -17,6 +18,7 @@ const MODULES = join(HERE, '../../src/modules');
 /** Every module with a manifest (not the dev-only example) and its routes without a parameter. */
 const MODULE_IDS = readdirSync(MODULES)
   .filter((id) => id !== 'example' && existsSync(join(MODULES, id, 'manifest.ts')))
+  .filter(onDesktop)
   .sort();
 const routesOf = (id: string): string[] => {
   const source = readFileSync(join(MODULES, id, 'manifest.ts'), 'utf8');

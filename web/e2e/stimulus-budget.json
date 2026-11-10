@@ -329,6 +329,18 @@
       "colouredAboveFold": 15,
       "signatureBlocks": 0
     },
+    "d1920--remote": {
+      "height": 1080,
+      "buttons": 11,
+      "links": 10,
+      "icons": 18,
+      "firstScreenActions": 20,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
     "d1920--reminders": {
       "height": 1851,
       "buttons": 75,

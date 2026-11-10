@@ -15,6 +15,7 @@ import type {
 } from './types';
 
 const E2E_FLAG = 'tm-e2e-remote';
+const FAIL_FLAG = 'tm-e2e-remote-fail';
 /** The demo PC's name (the phone knows its PC by the name it shows for sync). */
 export const FAKE_PC_NAME = 'PC-Sven';
 const STEP = 2;
@@ -133,5 +134,13 @@ export function createFakeRemote(): RemoteService {
   };
   if (typeof window !== 'undefined')
     (window as unknown as { __tmRemote?: unknown }).__tmRemote = hooks;
+  // A spec that needs the very first open to fail says so before the app starts
+  // (`tm-e2e-remote-fail` = `<code>` or `<code>:<count>`).
+  try {
+    const [code, count] = (localStorage.getItem(FAIL_FLAG) ?? '').split(':');
+    if (code) hooks.failOpen(code, Number(count) || 1);
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
   return remote;
 }
