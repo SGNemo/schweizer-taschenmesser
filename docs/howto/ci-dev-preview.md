@@ -1,6 +1,6 @@
 # CI – Dev-Preview
 
-Part of [CI and Dev-Preview](ci.md).
+Part of [CI and Dev-Preview](ci.md). Commands run in `web/` unless stated.
 
 ## Dev-Preview
 - **What:** after every green push to `develop` that changed more than docs, `ci.yml` calls `dev-preview.yml`: gitleaks → version → signed Windows exe + Android APK (same signing, audit and keystore-cleanup steps as `release.yml`, plus `verify-sig.mjs` and `apksigner verify`) → rolling **pre-release** `dev-preview` (`--prerelease --latest=false`, assets replaced, tag moved to the commit, `dev-latest.json` uploaded last, link check, `releases/latest` compared before/after). A failed run publishes nothing; the previous preview stays.

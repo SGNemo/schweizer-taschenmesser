@@ -1,6 +1,6 @@
 # CI – stimulus budget
 
-Part of [CI and Dev-Preview](ci.md). Ratchet: [ci-ratchet.md](ci-ratchet.md), signing at the merge: [ci-ratchet-signing.md](ci-ratchet-signing.md).
+Part of [CI and Dev-Preview](ci.md). Ratchet: [ci-ratchet.md](ci-ratchet.md), signing at the merge: [ci-ratchet-signing.md](ci-ratchet-signing.md). Commands run in `web/` unless stated.
 
 ## Stimulus budget and ratchet
 Decided with UI audit 2026-11, package 0a-1a ([why](../decisions/meta.md), spec: [PACKAGE-0](../design/ui-audit-2026-11/PACKAGE-0.md)). In force on `develop` since 2026-11-10: script and measurement (PR #627), the maintainer's public key, and the workflow (PR #630): the job `Stimulus budget` blocks, `e2e-seed` runs on every PR that can change the web app, both count for the check `Web`.
