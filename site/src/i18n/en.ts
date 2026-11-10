@@ -54,56 +54,9 @@ export const en = {
   },
   features: {
     eyebrow: "What Nemo does",
-    title: "Everyday things, in one place.",
-    items: [
-      {
-        icon: "calendar",
-        shot: "home",
-        title: "Overview",
-        text: "Today first: what matters now, one thing that is up next, and three things for today.",
-        alt: "Overview with “important now” and “up next”",
-      },
-      {
-        icon: "calendar",
-        shot: "calendar",
-        title: "Calendar",
-        text: "Appointments, reminders and deadlines from every module in one week, with an agenda.",
-        alt: "Calendar week view with agenda",
-      },
-      {
-        icon: "tasks",
-        shot: "todos",
-        title: "Tasks",
-        text: "Lists, a “someday”, “replan” instead of red. One first step instead of a long list.",
-        alt: "To-do lists with “still waiting” and “replan”",
-      },
-      {
-        icon: "wallet",
-        shot: "finance",
-        title: "Money and subscriptions",
-        text: "Accounts, invoices, subscriptions and budgets, with bank statement import.",
-        alt: "Finance overview with available amount, income and expenses",
-      },
-      {
-        icon: "key",
-        shot: "vault",
-        title: "Vault",
-        text: "Passwords with TOTP and a generator, documents with expiry dates. Encrypted, invisible to AI.",
-        alt: "Unlocked vault with demo accounts",
-      },
-      {
-        icon: "bell",
-        shot: "reminders",
-        title: "Reminders",
-        text: "Bundled, with quiet hours and “later”, even when the app is closed.",
-        alt: "Reminders with switches and next time",
-      },
-    ],
-    more: "Also: notes, lists, bookmarks, pantry, people, habits, time tracking, weather, PC clean-up, a chat with a local model (preview). AI only if you want it. The app speaks German and English.",
-    // Area blocks and module cards (identity v3, docs/design/site/ROUND-4-IDENTITY-V3.md).
-    intro: (n: number, a: number) =>
-      `${n} modules in ${a} areas. Each has its colour; you turn on only what you need.`,
-    count: (n: number) => (n === 1 ? "1 module" : `${n} modules`),
+    title: "Six areas. You switch on what you need.",
+    intro: "Each area has its colour. The pictures show the app with invented sample data.",
+    and: "and",
     areas: {
       plan: "The day, the week, the people.",
       money: "Accounts, invoices, subscriptions, budgets.",
@@ -112,41 +65,36 @@ export const en = {
       vault: "Encrypted, only here.",
       system: "What your device is up to.",
     },
-    // Planner highlight above the areas (shot: planner-*.png, name and state from the catalogue).
-    planner: {
-      text: "You enter what’s coming up; the planner spreads it over your free time – offline, no account.",
-      alt: "Planner on the phone: free time today, the week as bars and the day with its appointments",
-      altDesktop:
-        "Planner on the desktop: free time today, the week as bars and seven days side by side with appointments and to-dos",
+    // The four scenes (src/catalog/scenes.js), keyed by the scene's first area.
+    scenes: {
+      plan: {
+        text: "Events, reminders and deadlines of every module in one week. The planner spreads what is due over your free time.",
+        alt: "Calendar with invented sample data: the week with its events and the agenda beside it",
+      },
+      money: {
+        text: "What is there, what goes out and what is due. Bank statement import included.",
+        alt: "Finance with invented sample data: balance, accounts, income and expenses of the month",
+      },
+      knowledge: {
+        text: "Notes, bookmarks, lists and pantry sit next to the calendar instead of in yet another app.",
+        alt: "Notes with invented sample data: the scratchpad and the list of pages",
+      },
+      vault: {
+        text: "Passwords with TOTP and generator, documents with expiry dates. Invisible to the AI.",
+        alt: "Unlocked vault with invented demo logins",
+      },
     },
     modules: {
       summary: (n: number) => `All ${n} modules`,
-      status: {
-        default: "on by default",
-        optional: "optional",
-        preview: "preview",
-      },
       only: {
         windows: "Windows app only",
         android: "Android app only",
         both: "Windows and Android apps only",
       },
-      hint: "Preview modules stay hidden until “Show work in progress” is on (Settings → Appearance). The list is generated from the app itself.",
-    },
-  },
-  heads: {
-    eyebrow: "Every module has its shape",
-    note: "Every module page starts with a head in one of nine shapes and in the module’s colour, so you see at a glance where you are.",
-    names: {
-      kennzahl: "Figure",
-      zeit: "Time",
-      fortschritt: "Progress",
-      cover: "Cover",
-      himmel: "Sky",
-      regal: "Shelf",
-      tresor: "Vault",
-      schreib: "Paper",
-      fokus: "Focus",
+      legend: "Bold: on from the start. You switch on everything else in the module library.",
+      wip: "In progress",
+      wipText: "Preview, hidden in the app until you turn on “Show work in progress” (Settings → Appearance).",
+      note: "The list is generated from the app itself.",
     },
   },
   data: {
