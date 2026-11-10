@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nemo Website – Runde 5, Richtung B: Tiefe (Ozean-Fläche, eine Bewegung)</title>
+<link rel="stylesheet" href="round-5.css">
+</head>
+<body class="depth">
+<!-- Mockup, docs/design/site/ROUND-5.md. Static HTML, no script, no inline style. Module names and states come from
+     site/src/catalog/modules.json (state of 2026-11-10); app pictures are test data only. -->
+<header class="hd sticky">
+  <div class="wrap bar">
+    <a class="brand" href="#"><img src="../../../web/brand/logo-mark.svg" width="26" height="26" alt="">Nemo</a>
+    <nav class="main" aria-label="Hauptnavigation"><a href="#features">Funktionen</a><a href="#daten">Datenschutz</a><a href="#install">Installation</a><a href="#support">Unterstützen</a></nav>
+    <div class="end">
+      <a class="gh" href="#"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .5A11.5 11.5 0 0 0 8.36 22.9c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.2.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
+      <button type="button" class="theme" aria-label="Dunkles Design einschalten"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      <nav class="lang" aria-label="Sprache"><a href="#" aria-current="page">DE</a><a href="#">EN</a></nav>
+      <details class="menu">
+        <summary><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Menü</summary>
+        <nav aria-label="Hauptnavigation"><a href="#features">Funktionen</a><a href="#daten">Datenschutz</a><a href="#install">Installation</a><a href="#support">Unterstützen</a><a href="#"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 .5A11.5 11.5 0 0 0 8.36 22.9c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.2.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a></nav>
+      </details>
+    </div>
+  </div>
+</header>
+<main>
+<section class="hero ocean" aria-labelledby="hero-title">
+  <div class="wrap grid">
+    <div class="copy">
+      <h1 id="hero-title">Alles Wichtige an einem Ort. <em>Und nur bei dir.</em></h1>
+      <p class="lead">Nemo bündelt Kalender, Aufgaben, Geld und Passwörter in einer ruhigen App für PC und Android. Ohne Konto, ohne Cloud.</p>
+      <div class="dl">
+        <a class="btn btn-primary" href="#"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 10.5 4.5v7H3zm8.5-1.2L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zm8.5 0H21V21l-9.5-1.3z" fill="currentColor" stroke="none"/></svg><span>Für Windows<span class="sub">Portable · 10,3 MB</span></span></a>
+        <a class="btn btn-primary" href="#"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v5a7 7 0 0 0 14 0v-5"/><path d="M5 10h14a7 7 0 0 0-14 0z"/><path d="m7 4 1.5 2.5M17 4l-1.5 2.5"/><circle cx="9.5" cy="8.5" r=".6" fill="currentColor"/><circle cx="14.5" cy="8.5" r=".6" fill="currentColor"/></svg><span>Für Android<span class="sub">APK · 20,6 MB</span></span></a>
+      </div>
+      <p class="meta version">Version 0.3.1 · 1. Oktober 2026 · <a href="#">Alle Versionen</a></p>
+      <details class="sha" id="checksums">
+        <summary>Prüfsummen (SHA-256)</summary>
+        <dl>
+          <dt>Nemo-Portable.exe</dt><dd><code>0000000000000000000000000000000000000000000000000000000000000000</code></dd>
+          <dt>Nemo.apk</dt><dd><code>0000000000000000000000000000000000000000000000000000000000000000</code></dd>
+        </dl>
+        <p class="meta">Die Prüfsumme stammt aus dem GitHub-Release. Vergleiche sie nach dem Download, wenn du sichergehen willst.</p>
+      </details>
+      <ul class="trust" aria-label="Auf einen Blick"><li><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Open Source, MIT</li><li><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Kein Konto</li><li><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Kostenlos, kein Tracking</li></ul>
+    </div>
+    <span class="shot window stage" data-shot="home" role="img" aria-label="Nemo-Übersicht mit erfundenen Beispieldaten"><span class="winbar" aria-hidden="true"><i></i><i></i><i></i></span><span class="slot">Bild: Übersicht, 1280 × 800</span><span class="img"></span></span>
+    <span class="shot handset" data-shot="phone" role="img" aria-label="Die Übersicht auf dem Handy, mit erfundenen Beispieldaten"><span class="slot">Bild: Übersicht am Handy, 412 × 915</span><span class="img"></span></span>
+  </div>
+</section>
+<section class="block" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <p class="eyebrow">Was Nemo kann</p>
+    <h2 id="features-title">Sechs Bereiche. Du schaltest ein, was du brauchst.</h2>
+    <p class="intro">Jeder Bereich hat seine Farbe. Die Bilder zeigen die App mit erfundenen Beispieldaten.</p>
+    <div class="scenes">
+      <article class="scene" data-hue="sky">
+        <div class="text">
+          <h3><span class="plate"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Planen</h3>
+          <p class="sub">Der Tag, die Woche, die Leute.</p>
+          <p class="more">Termine, Erinnerungen und Fristen aller Module in einer Woche. Der Planer verteilt, was ansteht, auf deine freie Zeit.</p>
+        </div>
+        <span class="stand"><span class="shot " data-shot="calendar" role="img" aria-label="Kalender in der Wochenansicht mit Agenda"><span class="slot">Bild: Kalender, Woche (Paket 1)</span><span class="img"></span></span></span>
+      </article>
+      <article class="scene" data-hue="teal">
+        <div class="text">
+          <h3><span class="plate"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></span>Geld</h3>
+          <p class="sub">Konten, Rechnungen, Abos, Budgets.</p>
+          <p class="more">Was da ist, was abgeht und was fällig wird. Auch per Kontoauszug-Import.</p>
+        </div>
+        <span class="stand"><span class="shot " data-shot="finance" role="img" aria-label="Finanzübersicht mit Kontostand, Einnahmen und Ausgaben"><span class="slot">Bild: Finanzen, Übersicht (Paket 1)</span><span class="img"></span></span></span>
+      </article>
+      <article class="scene" data-hue="violet">
+        <div class="text">
+          <h3><span class="plate"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"/><path d="M15 3v5a1 1 0 0 0 1 1h5"/></svg></span>Wissen und Haushalt</h3>
+          <p class="sub">Lesen, schreiben, merken. Einkaufen und Vorräte.</p>
+          <p class="more">Notizen, Merkliste, Listen und Vorräte liegen neben dem Kalender statt in einer weiteren App.</p>
+        </div>
+        <span class="stand"><span class="shot " data-shot="notes" role="img" aria-label="Notizen mit Schmierzettel und Seitenliste"><span class="slot">Bild: Notizen (Paket 1)</span><span class="img"></span></span></span>
+      </article>
+      <article class="scene" data-hue="slate">
+        <div class="text">
+          <h3><span class="plate"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Tresor</h3>
+          <p class="sub">Verschlüsselt, nur hier.</p>
+          <p class="more">Passwörter mit TOTP und Generator, Unterlagen mit Ablaufdatum. Für die KI unsichtbar.</p>
+        </div>
+        <span class="stand"><span class="shot " data-shot="accounts" role="img" aria-label="Entsperrter Tresor mit Demo-Zugängen"><span class="slot">Bild: Passwörter, entsperrt mit Demo-Daten (Paket 1)</span><span class="img"></span></span></span>
+      </article>
+    </div>
+    <div class="catalog">
+      <h3>Alle 20 Module</h3>
+      <p class="legend">Fett: von Anfang an eingeschaltet. Alles andere schaltest du in der Modul-Bibliothek ein.</p>
+      <dl>
+        <div class="row"><dt>Planen<span>7</span></dt><dd><span data-hue="sky"><strong>Kalender</strong></span> <span data-hue="indigo">Planer</span> <span data-hue="moss"><strong>ToDos</strong></span> <span data-hue="violet">Gewohnheiten</span> <span data-hue="teal">Zeiterfassung</span> <span data-hue="cobalt"><strong>Wetter</strong></span> <span data-hue="orchid">Personen</span></dd></div>
+        <div class="row"><dt>Geld<span>4</span></dt><dd><span data-hue="teal"><strong>Finanzen</strong></span> <span data-hue="ocean"><strong>Rechnungen</strong></span> <span data-hue="indigo"><strong>Abos</strong></span> <span data-hue="lime">Budgets & Sparziele</span></dd></div>
+        <div class="row"><dt>Haushalt<span>2</span></dt><dd><span data-hue="orchid">Listen</span> <span data-hue="fern">Vorräte</span></dd></div>
+        <div class="row"><dt>Wissen<span>3</span></dt><dd><span data-hue="indigo">Merkliste</span> <span data-hue="violet">Notizen</span> <span data-hue="moss">Feeds</span></dd></div>
+        <div class="row"><dt>Tresor<span>2</span></dt><dd><span data-hue="indigo">Unterlagen</span> <span data-hue="slate">Passwörter</span></dd></div>
+        <div class="row"><dt>System<span>2</span></dt><dd><span data-hue="slate">Dieser PC <small>(nur Windows)</small></span> <span data-hue="cobalt">Downloads <small>(nur Windows)</small></span></dd></div>
+        <div class="row wip"><dt>In Arbeit<span>7</span></dt><dd>Uhr · Chat · Fitness · Browser · E-Mail · Karten & Orte · Musik. Vorschau, in der App ausgeblendet, bis du „In Arbeit anzeigen“ einschaltest.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+<section class="block band" id="daten" aria-labelledby="data-title">
+  <div class="wrap">
+    <p class="eyebrow">Deine Daten bleiben bei dir</p>
+    <h2 id="data-title">Dein PC, dein Handy, dein Server. Sonst niemand.</h2>
+    <div class="flow" role="list">
+      <div class="node" role="listitem"><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><strong>Dein PC</strong><span class="t">Alle Daten liegen hier, verschlüsselter Tresor inklusive.</span></div>
+      <div class="link" aria-hidden="true">Sync, nur wenn du willst</div>
+      <div class="node" role="listitem"><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><strong>Dein eigener Server</strong><span class="t">Ein kleines Programm bei dir zu Hause oder auf deinem Webspace.</span></div>
+      <div class="link" aria-hidden="true">Sync</div>
+      <div class="node" role="listitem"><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span><strong>Dein Handy</strong><span class="t">Dieselben Daten, offline nutzbar.</span></div>
+    </div>
+    <div class="aside"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 12.5 3.5 3.5 0 0 0 6.5 19Z"/></svg><div><p><strong>Cloud-KI, nur auf Wunsch.</strong> Mit lokalem Modell ganz ohne Internet.</p><p><strong>Gesendet:</strong> deine Frage, das Datum, die Feldnamen der Module.</p><p><strong>Nie gesendet:</strong> Einträge, Beträge, Namen, Passwörter.</p></div></div>
+  </div>
+</section>
+<section class="block focus" id="fokus" aria-labelledby="focus-title">
+  <div class="wrap grid">
+    <div>
+      <p class="eyebrow">Gemacht für volle Köpfe</p>
+      <h2 id="focus-title">Weniger auf dem Bildschirm, damit Anfangen leichter fällt.</h2>
+      <ul class="points">
+        <li><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></span><h3>Eine Sache zuerst</h3><p>Die Übersicht zeigt, was jetzt dran ist, mit erstem Schritt und Dauer. Der Rest wartet eingeklappt.</p></li>
+        <li><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg></span><h3>Fokus-Modus</h3><p>Eine Aufgabe, ihre Schritte, ein Ring-Timer mit weichem Ende. Alles andere ist ausgeblendet.</p></li>
+        <li><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><h3>Ruhige Erinnerungen</h3><p>Höchstens drei pro Stunde, Ruhezeiten nachts, „Später“ mit sinnvollen Optionen.</p></li>
+        <li><span class="plate"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.5 5-6.5"/></svg></span><h3>Kein Druck</h3><p>„Wartet noch“ statt „überfällig seit 12 Tagen“. Keine Streaks, die verloren gehen, kein Zähler, der wächst.</p></li>
+      </ul>
+      <p class="note">Nemo ist mit ADHS im Blick entwickelt und hilft beim Anfangen und Dranbleiben. Es ist keine Behandlung und verspricht keine. Jede Hilfe lässt sich einzeln abschalten.</p>
+    </div>
+    <span class="shot handset" data-shot="phone" role="img" aria-label="Die Übersicht auf dem Handy: „Jetzt wichtig“ und der Plan für heute"><span class="slot">Bild: Übersicht am Handy</span><span class="img"></span></span>
+  </div>
+</section>
+<section class="block band" id="vergleich" aria-labelledby="compare-title">
+  <div class="wrap">
+    <p class="eyebrow">Vergleich</p>
+    <h2 id="compare-title">Nemo neben üblichen Apps.</h2>
+    <table class="cmp">
+      <thead><tr><th scope="col">Merkmal</th><th scope="col">Nemo</th><th scope="col">Übliche Apps</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Wo die Daten liegen</th><td>Auf deinem Gerät</td><td>Auf Servern des Anbieters</td></tr>
+        <tr><th scope="row">Konto</th><td>Keins nötig</td><td>Pflicht, meist mit E-Mail</td></tr>
+        <tr><th scope="row">Preis</th><td>Kostenlos, keine Premium-Stufe</td><td>Abo oder Werbung</td></tr>
+        <tr><th scope="row">Quellcode</th><td>Offen, MIT-Lizenz</td><td>Geschlossen</td></tr>
+        <tr><th scope="row">Abgleich zwischen Geräten</th><td>Über deinen eigenen Server, optional</td><td>Über die Cloud des Anbieters, immer</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="block support" id="support" aria-labelledby="support-title">
+  <div class="wrap">
+    <div class="card">
+      <div>
+        <p class="eyebrow">Unterstützen</p>
+        <h2 id="support-title">Nemo bleibt kostenlos.</h2>
+        <p class="text">Wer mag, gibt einmalig etwas über Ko-fi. Als Dank gibt es einen Supporter-Code für ein „Danke“-Abzeichen und fünf Farbthemen. Alle Funktionen bleiben für alle offen.</p>
+        <p class="meta">Ko-fi ist ein externer Anbieter; bezahlt wird nur dort.</p>
+      </div>
+      <a class="btn btn-secondary" href="#"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>Auf Ko-fi unterstützen</a>
+    </div>
+  </div>
+</section>
+<section class="block band install" id="install" aria-labelledby="install-title">
+  <div class="wrap">
+    <p class="eyebrow">Installation</p>
+    <h2 id="install-title">In einer Minute startklar.</h2>
+    <div class="list">
+      <details><summary>Windows: eine Datei, keine Installation</summary><p>Datei starten, fertig. Beim ersten Mal fragt SmartScreen nach: „Weitere Informationen“ → „Trotzdem ausführen“. Die exe hat kein gekauftes Zertifikat; Updates sind trotzdem signiert und werden vor dem Einspielen geprüft. Voraussetzung ist WebView2, auf Windows 10 und 11 meist vorhanden.</p></details>
+      <details><summary>Android: APK installieren</summary><p>…</p></details>
+      <details><summary>Updates kommen in der App</summary><p>…</p></details>
+      <details><summary>Dev-Preview (ungetestet)</summary><p>…</p></details>
+    </div>
+    <p class="more"><a href="#">Schritt für Schritt, mit den Warnungen von Windows und Android</a> · <a href="#">Ausführliche Anleitung</a></p>
+  </div>
+</section>
+</main>
+<footer class="ft">
+  <div class="wrap">
+    <nav aria-label="Fußzeile"><a href="#">GitHub</a><a href="#">Releases</a><a href="#">Änderungen</a><a href="#">Roadmap</a><a href="#">MIT-Lizenz</a><a href="#">Datenschutz</a><a href="#">Impressum</a></nav>
+  </div>
+</footer>
+</body>
+</html>
