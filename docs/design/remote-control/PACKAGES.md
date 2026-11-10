@@ -1,6 +1,6 @@
 # Remote control – packages (prompts)
 
-Decisions: [CONCEPT.md](CONCEPT.md) §11 (provisional) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. **Package 0 starts only after Sven has answered CONCEPT §12**; the chat first writes his answers into `docs/decisions/core.md` and adapts the prompts below where an answer differs from the recommendation. **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
+Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 starts after this concept's PR is merged. **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|
@@ -24,11 +24,10 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `docs/remote-control-rules` von frischem `develop`. Vorgegebene Session-Branches ignorieren. Hotspot root `CLAUDE.md`: Zeile in docs/CHATS.md „Hotspots“, eigener kleiner PR.
 
 ## Ausgangslage
-Konzept docs/design/remote-control/CONCEPT.md; Svens Antworten auf §12 stehen im Auftrag über diesem Prompt. Regelvorschlag wörtlich in CONCEPT §5 „Proposed rule lines“.
+Konzept docs/design/remote-control/CONCEPT.md, entschieden am 2026-11-10 (§11, §12). Regelvorschlag wörtlich in CONCEPT §5 „Proposed rule lines“.
 
 ## Pflichtliste
-- Svens Antworten als Bullet in docs/decisions/core.md („Remote control“), CONCEPT §11/§12 auf „answered <Datum>“ stellen; wo eine Antwort von der Empfehlung abweicht: CONCEPT §4 und die Prompts in PACKAGES.md anpassen.
-- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext in docs/RULES.md, aus CONCEPT §5, an die Antworten angepasst; nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
+- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext in docs/RULES.md, aus CONCEPT §5; nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
 
 ## Nicht in diesem Paket
 Jeder Produktcode.

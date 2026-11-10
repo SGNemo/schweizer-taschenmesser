@@ -1,6 +1,6 @@
 # Remote control – the phone steers the PC over the paired home network (concept)
 
-Branch `design/remote-control-concept`, 2026-11-10. Status: **concept, no product code**; every decision in §11 is provisional until Sven answers §12. Packages: [PACKAGES.md](PACKAGES.md). Prototype: [proto/](proto/run.mjs). Builds on [sync-lan/CONCEPT.md](../sync-lan/CONCEPT.md) (hub, pairing, trust list) and the LAN rule in [RULES.md](../../RULES.md).
+Branch `design/remote-control-concept`, 2026-11-10. Status: **concept, no product code**; Sven answered §12 on 2026-11-10 (all four recommendations), so §11 is decided. Packages: [PACKAGES.md](PACKAGES.md). Prototype: [proto/](proto/run.mjs). Builds on [sync-lan/CONCEPT.md](../sync-lan/CONCEPT.md) (hub, pairing, trust list) and the LAN rule in [RULES.md](../../RULES.md).
 
 Sven's wish: „Ich benutze Unified Remote, um mit dem Handy meinen PC zu steuern. Das will ich in Nemo haben – die Geräte sind im Netzwerk eh gepaart. Maus steuern, Medien (Ton) steuern: lauter, leiser, nächster Song usw.“
 
@@ -232,7 +232,7 @@ Root `CLAUDE.md` (one line, after "LAN sync"):
 
 | Manifest | Value | Note |
 |---|---|---|
-| `id` | `remote` | UI name → Question 4 |
+| `id` | `remote` | UI name „Fernbedienung“ (decided); the PC's setting stays „Fernsteuerung erlauben“ |
 | `platforms` | `['android']` | valid (`PlatformKind`); the first phone-only module; `'pwa'` is not a value and the browser has no LAN client. A second PC as controller: later |
 | `area`, `order` | `system`, 198 | after `disk` (190) and `downloads` (195), both desktop-only – on the phone it is the area's only module |
 | `identity` | hue `fern`, head `schreib` (compact: the page is a work surface), widget `status`, signature new mark `touchpad` | neighbour rule: not `slate`/`cobalt` (area), not head `fokus` (neighbour `downloads`); `fern` is a primary hue only in `pantry` (other head, other widget). `check:modules` is the judge; if identity 4.0 lands first, package 2 follows it |
@@ -290,7 +290,7 @@ Files: [proto/run.mjs](proto/run.mjs) (runner, table), [proto/pc.mjs](proto/pc.m
 
 [PACKAGES.md](PACKAGES.md): 0 rules (docs) → 1a hub: input session and grant → 1b PC: media sink, settings, visible state → 2 phone: module with _Medien_ and volume keys → 3 touchpad → 4 keyboard → 5 widget and polish. One package = one chat, one PR, a stop after each. Never parallel to an open LAN-sync package (hotspot `crates/lan-sync`).
 
-## 11. Decided (provisional, until §12 is answered)
+## 11. Decided (2026-11-10)
 
 1. Transport: own input session on the hub's listener, handshake mode 3, home network only, binary one-way records, frames ≤ 512 bytes (§3 option b).
 2. Grant: master switch + one choice per device, two levels, PC-only, device-local, native confirmation for every widening, none while a mouse/keyboard session is open; once per device.
@@ -305,7 +305,7 @@ Files: [proto/run.mjs](proto/run.mjs) (runner, table), [proto/pc.mjs](proto/pc.m
 11. Touchpad: follows the phone's orientation, not immersive; drag by holding _Links_; moves sent per pointer event, no timer.
 12. PC notification only for the full level; tray icon variant from the first PC package on.
 
-## 12. Fragen an Sven (Empfehlung zuerst)
+## 12. Fragen an Sven (Empfehlung zuerst) – answered 2026-11-10: 1 einmal je Gerät · 2 ja, nur Medien · 3 eigenes Paket 4 · 4 Modul „Fernbedienung“, Einstellung „Fernsteuerung erlauben“
 
 1. **Freigabe je Gerät oder je Sitzung?** Empfehlung: **einmal je Gerät** am PC einschalten (mit Bestätigung), danach ohne Rückfrage – vom Sofa aus kann niemand am PC bestätigen; der PC zeigt, wer steuert, und _Beenden_ pausiert das Gerät. Alternative: Maus und Tastatur jede Sitzung am PC bestätigen (sicherer, auf dem Sofa unbrauchbar).
 2. **Medien und Lautstärke auch bei gesperrtem PC?** Empfehlung: **ja** (Musik läuft hinter dem Sperrbildschirm weiter; Schaden höchstens Lärm), Maus und Tastatur nie. Alternative: bei gesperrtem PC gar nichts.
