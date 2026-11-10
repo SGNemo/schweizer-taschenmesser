@@ -36,7 +36,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
 | **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | preview, Windows app only |
+|  | Downloads | Downloads files | optional, Windows app only |
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 

@@ -3,6 +3,7 @@ import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
 import { applyDefaultsEra } from '@/core/focus/defaults';
+import { markFreshDefaults } from '@/core/modules/defaults';
 import { appHasData, ensureSetupState } from '@/core/setup/detect';
 import { readSetupState } from '@/core/setup/state';
 import { startAutomation } from '@/core/automation/start';
@@ -28,6 +29,8 @@ export async function initCore(): Promise<void> {
   // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes.
   await ensureSetupState();
   await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
+  // The same fresh installation notes its default set of modules (device-local, never a synced row).
+  await markFreshDefaults(fresh);
   // Dev-Preview: an empty app is no longer filled by itself; the welcome card offers
   // "Mit Testdaten ansehen" next to "Einrichtung starten" (A10, round 5), so a tester sees the setup.
   const states = await loadModuleStates();

@@ -27,8 +27,8 @@ const manifest: ModuleManifest = {
     return t.downloads.meta.description;
   },
   platforms: ['desktop'],
-  // Package 2 of 4 (browser + downloads): listed under "In Arbeit anzeigen" until the maintainer says so.
-  maturity: 'preview',
+  // Stable since UI audit 2026-11, package V-1 (maintainer's approval of 2026-11-09); the torrent part stays opt-in.
+  maturity: 'stable',
   routes: [
     {
       path: '/downloads',

@@ -6,6 +6,13 @@ import { bus, type DataPolicy } from '@/core/events';
 import { isSafeMode } from '@/core/safemode/safeMode';
 import { runMigrations } from './migrate';
 import { availableManifests } from '@/core/modules/available';
+import {
+  loadDefaultsOverlay,
+  NO_OVERLAY,
+  putBackIntoDefaults,
+  takeOutOfDefaults,
+  type DefaultsOverlay,
+} from './defaults';
 import type { ModuleManifest } from './types';
 
 const moduleStateSchema = z.object({
@@ -20,7 +27,10 @@ function stateRepo(database: TaschenmesserDB = defaultDb) {
 
 export type ModuleStates = Record<string, boolean>;
 
-/** Explicit user choice wins; otherwise the manifest default applies. */
+/**
+ * Explicit user choice wins; otherwise the default set of a fresh installation (device-local, `./defaults`), then the
+ * manifest default.
+ */
 export async function loadModuleStates(
   manifests: readonly ModuleManifest[] = availableManifests(),
   database: TaschenmesserDB = defaultDb,
@@ -30,15 +40,64 @@ export async function loadModuleStates(
     return Object.fromEntries(manifests.map((m) => [m.id, false]));
   }
   const rows = await stateRepo(database).active().toArray();
-  return resolveStates(manifests, rows);
+  return resolveStates(manifests, rows, await loadDefaultsOverlay(database));
 }
 
 export function resolveStates(
   manifests: readonly ModuleManifest[],
   rows: { id: string; enabled: boolean }[],
+  overlay: DefaultsOverlay = NO_OVERLAY,
 ): ModuleStates {
   const byId = new Map(rows.map((r) => [r.id, r.enabled]));
-  return Object.fromEntries(manifests.map((m) => [m.id, byId.get(m.id) ?? m.defaultEnabled]));
+  // First what rows and manifests say; the overlay then fills the gaps, and only where everything a module needs is on.
+  const states: ModuleStates = Object.fromEntries(
+    manifests.map((m) => [m.id, byId.get(m.id) ?? m.defaultEnabled]),
+  );
+  for (const m of manifests) {
+    if (byId.has(m.id) || !overlay.on.has(m.id)) continue;
+    states[m.id] = (m.requires ?? []).every((id) => states[id]);
+  }
+  return states;
+}
+
+/** Is the module on only because of the default set of this device (no row of its own)? */
+export async function isOnByDefaultSetOnly(
+  moduleId: string,
+  database: TaschenmesserDB = defaultDb,
+): Promise<boolean> {
+  if (await stateRepo(database).get(moduleId)) return false;
+  return (await loadDefaultsOverlay(database)).on.has(moduleId);
+}
+
+/**
+ * "Rückgängig" after a module was switched off. Normally that is switching it on again (a row). A module that was on
+ * only through this device's default set had no row before: undo takes the row away again, so the device is back
+ * where it was and no other device gets a `true` it never had.
+ */
+export async function undoDisable(
+  manifest: ModuleManifest,
+  wasOnByDefaultSetOnly: boolean,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
+  if (!wasOnByDefaultSetOnly) return enableModule(manifest, database);
+  await stateRepo(database).remove(manifest.id);
+  await bus.emit('module.enabled', { moduleId: manifest.id });
+}
+
+/**
+ * The profile step of the setup deselects a module: a household choice (`enabled: false`) as before, except for a
+ * module that is on only through this device's default set. That one is taken out device-locally: a `false` row
+ * written on a fresh installation would later beat the household's `true` by last-write-wins.
+ */
+export async function deselectInSetup(
+  manifest: ModuleManifest,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
+  if (await isOnByDefaultSetOnly(manifest.id, database)) {
+    await takeOutOfDefaults(manifest.id, database);
+    return;
+  }
+  await disableModule(manifest, 'keep', database);
 }
 
 /** The stored choice for one module (none = the manifest default applies); for clean-ups that must only run on an explicit "off". */
@@ -59,6 +118,7 @@ export async function enableModule(
   manifest: ModuleManifest,
   database: TaschenmesserDB = defaultDb,
 ): Promise<void> {
+  await putBackIntoDefaults(manifest.id, database);
   await stateRepo(database).upsert(manifest.id, { enabled: true, dataPolicy: null });
   await runMigrations(manifest, database);
   await bus.emit('module.enabled', { moduleId: manifest.id });

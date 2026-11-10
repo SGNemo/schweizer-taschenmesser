@@ -645,7 +645,7 @@
     {
       "id": "downloads",
       "area": "system",
-      "status": "preview",
+      "status": "optional",
       "platforms": "windows",
       "icon": "download",
       "hue": "cobalt",

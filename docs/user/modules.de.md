@@ -36,7 +36,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
-|  | Downloads | Lädt Dateien herunter | Vorschau, nur Windows-App |
+|  | Downloads | Lädt Dateien herunter | optional, nur Windows-App |
 
 **Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
 

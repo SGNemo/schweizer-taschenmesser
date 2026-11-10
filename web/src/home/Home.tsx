@@ -149,7 +149,14 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       ),
     [states, showPreview, layout.pinned],
   );
-  const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
+  // The cards are drawn only once the saved layout is read: before that the default order (and cards the person
+  // has hidden) would show for a moment and then jump. What depends on "are there cards at all" (the head's tools,
+  // the hint for an overview without cards) keeps using `entries`, so nothing of it flashes in the meantime.
+  const layoutRead = saved !== undefined;
+  const ordered = useMemo(
+    () => (layoutRead ? orderWidgets(entries, layout) : []),
+    [entries, layout, layoutRead],
+  );
   const homeView = useUiStore((s) => s.homeView);
   const setHomeView = useUiStore((s) => s.setHomeView);
   const calm = homeView === 'calm' && !editing && !cockpit;
