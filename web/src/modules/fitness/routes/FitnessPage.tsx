@@ -60,8 +60,17 @@ export default function FitnessPage() {
   const [params, setParams] = useSearchParams();
   const prefs = useFitnessSettings();
   const raw = params.get('view');
-  const view: View =
-    raw === 'food' && prefs.nutrition ? 'food' : raw === 'week' ? 'week' : 'training';
+  // `undefined` while `?view=food` cannot be decided yet: the stored preferences are still loading.
+  const view: View | undefined =
+    raw === 'week'
+      ? 'week'
+      : raw !== 'food'
+        ? 'training'
+        : prefs
+          ? prefs.nutrition
+            ? 'food'
+            : 'training'
+          : undefined;
   const day = today();
   const from = addDaysStr(day, -WINDOW_DAYS);
   const sessions = useSessions(from);
@@ -83,7 +92,7 @@ export default function FitnessPage() {
   const wanted = params.get('new');
   const sessionTarget: SessionTarget =
     session ?? (wanted === 'session' || (wanted && wanted !== 'meal') ? 'new' : null);
-  const mealTarget: MealTarget = meal ?? (wanted === 'meal' && prefs.nutrition ? 'new' : null);
+  const mealTarget: MealTarget = meal ?? (wanted === 'meal' && prefs?.nutrition ? 'new' : null);
   const close = () => {
     setSession(null);
     setMeal(null);
@@ -157,7 +166,7 @@ export default function FitnessPage() {
     await undoableWithToast(done, done, () => sessionRepo.create(repeatSession(last, day)));
   }
 
-  const views: readonly View[] = prefs.nutrition
+  const views: readonly View[] = prefs?.nutrition
     ? ['training', 'food', 'week']
     : ['training', 'week'];
   return (
@@ -165,15 +174,18 @@ export default function FitnessPage() {
       <PageHeader
         title={t.fitness.meta.name}
         views={
-          <Segmented
-            label={t.fitness.tabs.label}
-            value={view}
-            options={views.map((v) => ({ value: v, label: t.fitness.tabs[v] }))}
-            onChange={setView}
-          />
+          // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
+          prefs && view ? (
+            <Segmented
+              label={t.fitness.tabs.label}
+              value={view}
+              options={views.map((v) => ({ value: v, label: t.fitness.tabs[v] }))}
+              onChange={setView}
+            />
+          ) : undefined
         }
       >
-        {view !== 'food' ? (
+        {!view ? null : view !== 'food' ? (
           <Button variant="primary" onClick={() => setSession('new')}>
             <Icon name="plus" size={18} />
             {t.fitness.addSession}
@@ -187,7 +199,7 @@ export default function FitnessPage() {
         {/* ⋯: Importieren (Strong, Hevy, Cronometer) and the setup, as on the other module pages. */}
         <StartDataMenu moduleId="fitness" />
       </PageHeader>
-      {sessions && meals && view !== 'week' ? (
+      {sessions && meals && view && view !== 'week' ? (
         <HeroSlot area="figure">
           {view !== 'food' ? (
             <HeroFigure
@@ -202,19 +214,19 @@ export default function FitnessPage() {
               label={t.fitness.figure.today}
               value={kcalText(todayKcal)}
               unit="kcal"
-              detail={prefs.kcalGoal ? kcalLine(todayKcal, prefs.kcalGoal) : undefined}
+              detail={prefs?.kcalGoal ? kcalLine(todayKcal, prefs.kcalGoal) : undefined}
               testId="fitness-kcal"
             />
           )}
         </HeroSlot>
       ) : null}
-      {sessions && view !== 'week' ? (
+      {sessions && view && view !== 'week' ? (
         <HeroSlot area="signature">
           <WeekPlates day={day} weekStart={weekStart} sessions={sessions} />
         </HeroSlot>
       ) : null}
 
-      {view === 'week' ? (
+      {!prefs || !view ? null : view === 'week' ? (
         <WeekView
           day={day}
           weekStart={weekStart}
@@ -323,7 +335,11 @@ export default function FitnessPage() {
         onClose={close}
       />
       <MealEditor target={mealTarget} meals={meals ?? []} onClose={close} />
-      <GoalDialog open={goalOpen} current={prefs.kcalGoal} onClose={() => setGoalOpen(false)} />
+      <GoalDialog
+        open={goalOpen}
+        current={prefs?.kcalGoal ?? 0}
+        onClose={() => setGoalOpen(false)}
+      />
     </>
   );
 }

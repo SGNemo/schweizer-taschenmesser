@@ -1,12 +1,22 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
-import { setSettings } from '@/core/settings/settings';
+import { setSettings, settingsRepo } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
 import { mealRepo, sessionRepo } from '../repo';
 import FitnessWidget from '../widgets/FitnessWidget';
+
+/** The settings read answers `ms` later than the data: the order a busy device can produce. */
+function slowSettings(ms = 60) {
+  const get = settingsRepo.get.bind(settingsRepo);
+  return vi.spyOn(settingsRepo, 'get').mockImplementation(async (id) => {
+    const row = await get(id);
+    await new Promise((r) => setTimeout(r, ms));
+    return row;
+  });
+}
 
 const view = () =>
   render(
@@ -22,7 +32,10 @@ describe('fitness widget', () => {
     await db.table('fitness_meal').clear();
     await db.table('_settings').clear();
   });
-  afterEach(() => setNow());
+  afterEach(() => {
+    setNow();
+    vi.restoreAllMocks();
+  });
 
   it('shows an empty state with an action when there is no data', async () => {
     view();
@@ -56,5 +69,19 @@ describe('fitness widget', () => {
     view();
     expect(await screen.findByText('1 Einheit')).toBeInTheDocument();
     expect(screen.queryByText(/kcal/)).toBeNull();
+  });
+
+  it('never shows the kcal row from defaults while the settings are still loading', async () => {
+    await sessionRepo.create({ date: '2026-11-06', exercises: [] });
+    await mealRepo.create({ date: '2026-11-08', text: 'Brot', kcal: 400 });
+    await setSettings('module.fitness', { nutrition: false });
+    slowSettings();
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => seen.push(document.body.textContent ?? ''));
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    view();
+    expect(await screen.findByText('1 Einheit')).toBeInTheDocument();
+    observer.disconnect();
+    expect(seen.filter((text) => text.includes('kcal'))).toEqual([]);
   });
 });
