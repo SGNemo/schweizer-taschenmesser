@@ -162,3 +162,50 @@ Ausgang: **Blocker** (oben) · **vor 0b-n** (bestätigt, muss vor dem genannten 
 3. Handtest Maßnahme 0 (Sven, Windows).
 4. Ein Wächter-Nachzug als Label-PR vor 0b-1: Guardian F2, F3, F6, Architect F1–F3, `one-primary`-Positivkontrolle; vor 0b-2: `motion.seed`, `pageTitle`-Slot; vor 0b-4: `a11y`-Ausnahme.
 5. Danach ein Reviewer (`review-loop`) auf die Fixes, wie in PACKAGES „Reihenfolge“ vorgesehen; keine zweite Council-Runde nötig.
+
+## Council V-1
+
+Council über [PR #639](https://github.com/SGNemo/schweizer-taschenmesser/pull/639) (`feat/ui4-v1-defaults`, Kopf `2830c5a`, Basis `b5659c5`), 2026-11-10, eine Runde, drei Delegierte mit frischem Kontext (Claude Opus), nur lesend. Maßstab: PACKAGES „V-1“, PACKAGE-0 „H-a“. Nichts behoben; die Befunde gehen an den Chat von #639.
+
+| Delegierter | Punkte | Urteil |
+| --- | --- | --- |
+| Architect | 8,0/10 | CHANGES |
+| Guardian | 8,0/10 | APPROVE |
+| Advocate | 7,0/10 | CHANGES |
+
+**Kernfrage – kann der Default-Stand je eine synchronisierte `_modules`-Zeile erzeugen oder ein anderes Gerät verändern? Nein, am Code geprüft.** Der Default-Stand schreibt nur `_meta` (`defaults.ts:60`, `:89`); `_meta` ist nicht synchronisiert (`core/db/schema.ts:5`), nicht im Backup (`backup.ts:69`), und die Diagnose liest dort nur `moduleVersion.*`. Zeilen entstehen allein durch ausdrückliche Wahlen, wie die Spezifikation es will. Einzige Naht: „Rückgängig“ in der Bibliothek (G-F1).
+
+| Pfad | Zusage | Ergebnis |
+| --- | --- | --- |
+| Bibliothek | an/aus = Haushaltszeile | hält (`useModuleSwitch.tsx:27`, `:41`, `:50`); „Rückgängig“ siehe G-F1 |
+| Import, Migration, Teilen, Assistent | Zeile nur, wenn das Modul aus ist | hält (`appImport.tsx:201`, `MigrateStep.tsx:80`, `ShareTarget.tsx:154`, `AnswerView.tsx:245`, `offerEnable.ts:25`) |
+| Profil-Schritt | Abwahl eines nur überlagerten Moduls → `defaults.off`, keine Zeile; Profil mit Listen → keine Zeile | hält im Code (`ProfilesStep.tsx:96–100`, `activation.ts:77–86`; `current` enthält die Überlagerung); auf Schritt-Ebene ungetestet (G-F2); Folge für Downloads siehe V-F2 |
+| Restore | `defaults.version` bleibt, Zeilen des Backups gewinnen | hält (`importBackup` fasst `_meta` nicht an; Test 4) |
+| Beitritt | Altgerät unverändert, Haushaltszeile gewinnt | hält (`resolveStates`, `activation.ts:54–57`: eine Zeile schlägt die Überlagerung; Test 3 ohne LWW, A-F4) |
+| Testdaten (Dev-Preview) | keine Zeile für überlagerte Module | hält (`seed/dev.ts:171` überspringt, was an ist) |
+| `VITE_DEFAULTS_OFF` im Release | nie gesetzt | hält: nur in `web/.env.e2e` und `.env.e2e-seed`; Release, Dev-Preview und Tauri bauen mit `npm run build` (`tauri.conf.json:10`); `--mode e2e*` nur in `build:e2e*` für CI-Tests; `__tmDefaultsOn` ist ohne die Variable toter Code (`defaults.ts:45`) |
+
+### Befunde mit Ausgang
+
+Schwere wie im Council-Skill (blocker · should · nit). Kein Blocker.
+
+| Id | Schwere | Datei:Zeile | Behauptung (kurz) | Ausgang |
+| --- | --- | --- | --- | --- |
+| A-F1 = V-F1 | should | `web/src/home/Home.tsx:143`, `:293` | Solange das Layout lädt, ist `entries` leer; `states && entries.length === 0` zeigt dann kurz „Die aktiven Module bieten keine Karten an.“, die Kopf-Werkzeuge (`:232`) fehlen. Ein Aufblitzen ersetzt das andere, das neue sagt etwas Falsches. | **bestätigt** – vor dem Merge: Hinweis und Kopf an `layoutRead` binden oder den Home-Fix in einen eigenen PR (Regel 5; A, G-F4, V einig) |
+| G-F1 = V-F4 | should (Guardian) / nit (Advocate) | `web/src/pages/library/useModuleSwitch.tsx:42` | „Rückgängig“ nach dem Ausschalten eines nur überlagerten Moduls ruft `enableModule` → Zeile `true` → Listen erscheinen auf Altgeräten, die sie nie hatten. Rückgängig stellt den Stand davor nicht her. | **bestätigt, Entscheidung Sven** – Widerspruch in der Schwere: als should gewertet, weil ein anderes Gerät sich durch ein Versehen ändert und die Spezifikation diese Folge nicht nennt („Bibliothek an → Zeile“ deckt sie formal). Entweder Rückgängig stellt „keine Zeile“ wieder her, oder die Folge kommt zu den bewussten Folgen |
+| V-F2 | should | `web/src/core/setup/profiles.ts:17–59`, `ProfilesStep.tsx:137–148` | Kein Profil enthält `downloads`, nur zwei `lists`, nur eins `budgets`. Jede Profilkarte nennt auf einem frischen Desktop „Schaltet ab: … Downloads“; wer ein Profil wählt, verliert System wieder aus der Seitenleiste. Die Abnahme gilt nur ohne Profilwahl. | **bestätigt, Entscheidung Sven** – für Listen und Budgets ist das Spezifikation (Test 5, bewusste Folge), für Downloads eine Lücke: `downloads` in die Profile aufnehmen oder ausdrücklich hinnehmen |
+| G-F2 = A-F3 | should (Guardian) / nit (Architect) | `web/src/core/modules/defaults.test.ts:87`, `:127` | Test 2 „Profil `finance`“ und Test 5 „Profil mit Listen → keine Zeile“, „Budgets folgen `requires`“ laufen nicht über `resolveProfile` + `diffSelection`; die Ableitung von `fresh` in `initCore` ist ungetestet. Ein `current` aus Zeilen statt aus dem aufgelösten Stand fiele nicht auf. | **bestätigt** – ein Fall auf Schritt-Ebene vor dem Merge; der `fresh`-Fall als Follow-up |
+| A-F6 | should | `docs/STATUS.md` | PR ist nicht mergebar: Inhaltskonflikt mit `develop` (nach #640), nur diese Datei. | **bestätigt** (`git merge-tree`) – `develop` hineinmergen |
+| A-F2 | nit | `web/src/core/modules/activation.ts:116–122` | `enableModuleIfUnset` hält „keine Zeile“ für „nie gewählt“ und schriebe für ein überlagertes Modul eine `true`-Zeile. Heute nur `music`, nicht im Satz. | **bestätigt, Follow-up** – spätestens mit Stand 5 |
+| A-F4 = G-F3 | nit | `web/src/core/modules/defaults.test.ts:55` | `arrive` ist ein rohes `put` ohne HLC/LWW; „a household row wins“ zeigt Reihenfolge, nicht LWW. | **bestätigt, Follow-up** – Sync-Kern ist außerhalb des Pakets; Kommentar oder Umbenennung genügt |
+| A-F5 | nit | `web/src/core/setup/types.ts:13` | Kommentar zu `SetupCtx.modules` nennt die Überlagerung nicht. | **bestätigt, Follow-up** |
+| G-F5 = V-F5 | nit | `web/src/core/modules/activation.ts:64` | `isOnByDefaultSetOnly` ist exportiert, aber nur intern benutzt. | **bestätigt, Follow-up** (wird mit G-F1 gebraucht, falls Rückgängig es liest) |
+| V-F3 | nit | `README.md:56–57`, `docs/user/modules.md:25–26` (+ `.de.md`), `site/src/catalog/modules.json` | Listen und Budgets stehen weiter als „optional“ (`gen-module-list.mjs:46` aus `defaultEnabled`); nirgends steht, dass sie bei Neuinstallationen an sind. | **bestätigt, Follow-up** |
+| V-F6 | nit | `web/e2e/seed/defaults.seed.spec.ts:73–80` | Der Test des Build-Schalters doppelt `defaults.test.ts:177`. | **abgelehnt** – er prüft als einziger den gebauten Test-Build; drei Zeilen |
+| V-F7 | nit | `.changes/ui4-v1-defaults-changed.md:5–6` | Notiz korrekt und ruhig, DE = EN; sagt nicht, dass Ausschalten für alle verbundenen Geräte gilt. | **Follow-up, optional** |
+
+**Kein Befund:** „Stimulus budget“ ist rot allein durch die Ratsche (zwei geschützte Dateien, `web/.env.e2e`, `web/.env.e2e-seed`); die Messung selbst meldet „all pages within budget“. Das ist der angekündigte Label-Schritt und wartet auf Svens signierte Freigabe. `finance` ist `defaultEnabled: true`, Budgets sind auf einer schlichten Neuinstallation also an. Tombstones: `repo.get` und `active()` filtern beide (`repo.ts:230–233`). Downloads startet keine Hintergrundarbeit, Torrents bleiben aus.
+
+**Grenze dieser Runde:** kein Delegierter hat Tests lokal laufen lassen (kein `node_modules`); Unit-, Smoke-, Sync- und Seed-Jobs der CI sind auf `2830c5a` grün.
+
+**Empfehlung: erst beheben, dann mergen.** A-F1, G-F2 und A-F6 sind klein und gehören in #639; G-F1 und V-F2 brauchen je ein Wort von Sven. Danach genügt ein Reviewer (`review-loop`) auf die Fixes.
