@@ -42,10 +42,13 @@ export function useTemplates(): Stored<Template>[] | undefined {
   );
 }
 
-/** The module's settings with defaults filled in. */
-export function useFitnessSettings(): FitnessSettings {
+/**
+ * The module's stored settings (defaults filled in); `undefined` until they are read. Callers wait for
+ * them instead of rendering from `DEFAULTS`: a switched-off kcal row or „Essen“ tab would flash.
+ */
+export function useFitnessSettings(): FitnessSettings | undefined {
   const [values] = useSettings('module.fitness', settingsSchema, DEFAULTS);
-  return { ...DEFAULTS, ...(values as Partial<FitnessSettings> | undefined) };
+  return values as FitnessSettings | undefined;
 }
 
 /** The catalogue's exercise names in the UI language (suggestions; see `catalog.ts`). */
