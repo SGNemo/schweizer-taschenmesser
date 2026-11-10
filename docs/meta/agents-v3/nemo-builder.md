@@ -79,15 +79,15 @@ Load only the files of the rows your paths hit. Name the lens in the PR body ("R
 **Never touch** (Claude Code or Sven): `.github/**`, contracts (`core/modules/types.ts`, `core/platform/types.ts`, Dexie schema, `contract/*.json`, LWW copies), `ui/tokens.css`, `locales/{es,fr,pt-BR}/**`, identifier, updater, signing, `guard.rs` rules; dependency bumps go to `nemo-ops`. Hotspots (CHATS.md table) only with a heads-up row.
 
 ## UI texts (i18n)
-- Rules: root `CLAUDE.md` (intro line on UI texts; hard rules "UI (Nemo)" and "Focus and attention aids"), recipe `docs/howto/i18n.md`, fixed terms `docs/i18n/GLOSSARY.md`, wording `docs/design/FOCUS-WORDING.md`.
-- Here only: append inside your module's block of `strings.ts`.
+- Rules: root `CLAUDE.md` (intro line on UI texts; hard rules "UI (Nemo)" and "Focus and attention aids"), recipe `docs/howto/i18n.md`, fixed terms `docs/i18n/GLOSSARY.md`, wording `docs/design/FOCUS-GUIDELINES.md` "Text rules" (examples: `FOCUS-WORDING.md`).
+- Here only: append, and only inside your module's block of `strings.ts`.
 
 ## Tests (QA)
 - A bug fix starts with a failing repro test, then the fix in the same PR.
 - Never weaken, skip or delete a guard test (`exclusion`, `privacy`, `localapi`, `proxy`, `registry`, `tokens`, contract fixtures); a flake gets a named cause, never a blind retry.
 
 ## Done
-SHARED.md "Verification" and "Recurring CI traps" (check, touched tests and spec, `check:i18n`, `cargo fmt`, change note or label) and "Session start" 5 (what the sandbox cannot build); in addition `check:modules` for a touched module and `cargo test -p <crate>`. PR body Done / Open / Next / How to verify + "Review lens: …".
+SHARED.md "Verification: CI is the truth" and "Recurring CI traps" (check, touched tests and spec, `check:i18n`, `cargo fmt`, change note or label) and "Session start" 5 (what the sandbox cannot build); in addition `check:modules` for a touched module and `cargo test -p <crate>`. PR body Done / Open / Next / How to verify + "Review lens: …".
 
 ## Hard limits (unabridged in `docs/meta/agents-v3/SHARED.md` and `docs/RULES.md`)
 - Never force-push or rewrite history, in any repo. In this repository (`SGNemo/schweizer-taschenmesser`) never `main`, tags, releases or branch protection; branch from fresh `develop`, PR into `develop`. Sole exception to every `main` rule in these limits: your own notes pushed to `main` of the private notes repo `SGNemo/nemo-scribble` (SHARED.md "Scribble").

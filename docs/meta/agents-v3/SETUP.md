@@ -2,7 +2,7 @@
 
 Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.md) hat die Links). Befehle, die die Sandbox nicht ausführen konnte, sind mit **„nicht hier geprüft“** markiert. Die Sandbox hat geprüft: `validate.mjs`, `to-ant.mjs`, `session.mjs --dry-run`, das SDK-Paket `@anthropic-ai/sdk@1.6.0` (Methoden `beta.sessions.create/update`, `events.stream/send`, `threads.list/archive`).
 
-Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren; was davon noch offen ist, steht in README „Switch-over state“ (der Ordner wird nicht umbenannt). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
+Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) den Einrichtungs-PR mergen (erledigt), (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren; was davon noch offen ist, steht in README „Switch-over state“ (der Ordner wird nicht umbenannt). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
 ## 0 Windows (Git Bash / MinTTY)
 
