@@ -1,0 +1,73 @@
+{
+  "params": {
+    "body": {
+      "nose": 466,
+      "joint": 176,
+      "height": 132,
+      "peak": 0.48,
+      "blunt": 0.74,
+      "stalk": 50
+    },
+    "tail": {
+      "style": "fan",
+      "length": 68,
+      "spread": 76,
+      "notch": 16,
+      "overlap": 30
+    },
+    "stripes": {
+      "at": [
+        0.7,
+        0.37
+      ],
+      "width": [
+        34,
+        40
+      ],
+      "bend": [
+        -24,
+        -16
+      ]
+    },
+    "eye": {
+      "at": 0.84,
+      "dy": -0.22,
+      "r": 26
+    },
+    "fins": {
+      "dorsal": {
+        "height": 30,
+        "from": 0.3,
+        "to": 0.7
+      },
+      "ventral": {
+        "height": 18,
+        "from": 0.36,
+        "to": 0.6
+      }
+    },
+    "soften": 12,
+    "views": {
+      "tile": {
+        "radius": 146,
+        "scale": 0.8
+      },
+      "adaptive": {
+        "scale": 0.56
+      }
+    }
+  },
+  "ink": null,
+  "small": null,
+  "lockup": {
+    "source": "mark",
+    "markHeight": 1.3,
+    "gap": 0.24,
+    "pill": {
+      "padX": 0.36,
+      "padY": 0.3,
+      "radius": 0.5
+    }
+  },
+  "rail": "app"
+}

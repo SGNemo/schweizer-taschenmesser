@@ -94,8 +94,8 @@ struct Inner {
     attempts: u64,
 }
 
-/// `.1` serialises `browser_show` and holds the newest `seq` applied so far (see there).
-pub struct BrowserState(Mutex<Inner>, Mutex<u64>);
+/// `.1` serialises `browser_show` and holds which call was applied last (`ShowOrder`, see `newer_show`).
+pub struct BrowserState(Mutex<Inner>, Mutex<ShowOrder>);
 
 impl Default for BrowserState {
     fn default() -> Self {
@@ -106,7 +106,7 @@ impl Default for BrowserState {
                 tabs: HashMap::new(),
                 attempts: 0,
             }),
-            Mutex::new(0),
+            Mutex::new(ShowOrder::default()),
         )
     }
 }
@@ -381,12 +381,44 @@ fn mark_ready(inner: &mut Inner, tab: u32, attempt: u64) -> bool {
     }
 }
 
+/// Which `browser_show` call was applied last: the page life it came from, its number in that life, and
+/// the page lives that were replaced since (a handful at most: one per reload of the main window).
+#[derive(Default)]
+pub struct ShowOrder {
+    epoch: u64,
+    seq: u64,
+    retired: Vec<u64>,
+}
+
+/// Page lives remembered as replaced; older ones cannot have a call in flight any more.
+const RETIRED_EPOCHS: usize = 8;
+
 /// Whether a `browser_show` call numbered `seq` is newer than the last one applied; remembers it if so.
-fn newer_show(last: &mut u64, seq: u64) -> bool {
-    if seq <= *last {
+///
+/// The page counts from 1 again after every reload of the main window, while this state lives as long as
+/// the app. `epoch` names the page life the call comes from: a call from a new life is the newest and
+/// counting starts over (without it every show after a reload did nothing until the counter had caught
+/// up). A call the replaced page sent just before the reload can still arrive afterwards, because the
+/// command waits for this lock: its life is retired, so it does nothing.
+fn newer_show(last: &mut ShowOrder, epoch: u64, seq: u64) -> bool {
+    if last.retired.contains(&epoch) {
         return false;
     }
-    *last = seq;
+    if epoch == last.epoch {
+        if seq <= last.seq {
+            return false;
+        }
+        last.seq = seq;
+        return true;
+    }
+    if last.epoch != 0 {
+        if last.retired.len() == RETIRED_EPOCHS {
+            last.retired.remove(0);
+        }
+        last.retired.push(last.epoch);
+    }
+    last.epoch = epoch;
+    last.seq = seq;
     true
 }
 
@@ -519,11 +551,12 @@ pub fn browser_show(
     state: State<'_, BrowserState>,
     tab: Option<u32>,
     bounds: Option<Bounds>,
+    epoch: u64,
     seq: u64,
 ) -> Result<Vec<u32>, String> {
     ensure_main(&webview)?;
     let mut last = state.1.lock().unwrap_or_else(|e| e.into_inner());
-    if !newer_show(&mut last, seq) {
+    if !newer_show(&mut last, epoch, seq) {
         return Ok(Vec::new());
     }
     let ids: Vec<(u32, u64, bool)> = state
@@ -694,12 +727,49 @@ mod tests {
 
     #[test]
     fn an_older_show_never_overrides_a_newer_one() {
-        let mut last = 0;
-        assert!(newer_show(&mut last, 2));
-        assert!(!newer_show(&mut last, 1), "overtaken call");
-        assert!(!newer_show(&mut last, 2), "same call twice");
-        assert!(newer_show(&mut last, 3));
-        assert_eq!(last, 3);
+        let mut last = ShowOrder::default();
+        assert!(newer_show(&mut last, 7, 2));
+        assert!(!newer_show(&mut last, 7, 1), "overtaken call");
+        assert!(!newer_show(&mut last, 7, 2), "same call twice");
+        assert!(newer_show(&mut last, 7, 3));
+        assert_eq!((last.epoch, last.seq), (7, 3));
+    }
+
+    #[test]
+    fn a_reloaded_page_counts_from_one_again_and_is_heard() {
+        let mut last = ShowOrder::default();
+        for seq in 1..=40 {
+            assert!(newer_show(&mut last, 7, seq));
+        }
+        // The main window reloaded: a new page life, its first call is number 1.
+        assert!(newer_show(&mut last, 8, 1), "first show after a reload");
+        assert!(!newer_show(&mut last, 8, 1), "same call twice");
+        assert!(newer_show(&mut last, 8, 2));
+        assert_eq!((last.epoch, last.seq), (8, 2));
+    }
+
+    #[test]
+    fn a_late_call_of_the_replaced_page_does_nothing() {
+        let mut last = ShowOrder::default();
+        assert!(newer_show(&mut last, 7, 40));
+        assert!(newer_show(&mut last, 8, 1));
+        // Sent by the old page just before the reload, run after the new page's first call.
+        assert!(
+            !newer_show(&mut last, 7, 41),
+            "late call of the replaced page"
+        );
+        assert_eq!((last.epoch, last.seq), (8, 1));
+        assert!(newer_show(&mut last, 8, 2));
+        // Many reloads later the list of replaced lives stays small and the current life still counts.
+        for epoch in 9..40 {
+            assert!(newer_show(&mut last, epoch, 1));
+        }
+        assert!(last.retired.len() <= RETIRED_EPOCHS);
+        assert!(
+            !newer_show(&mut last, 38, 2),
+            "the life before the current one"
+        );
+        assert!(newer_show(&mut last, 39, 2));
     }
 
     #[test]
