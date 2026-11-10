@@ -1,82 +1,91 @@
 ---
 import { t, type Locale } from '../i18n';
 import Icon, { type IconName } from './Icon.astro';
-import IdentityMini from './IdentityMini.astro';
-import Shot from './Shot.astro';
+import Motif from './Motif.astro';
 // Generated from the app's own registry (`npm run gen:modules` in web/): names in German and English, plus
-// icon, hue, head and widget variant from every manifest's `identity`, so the site keeps no second mapping.
+// icon, hue, area, state and platform limit of every module, so the site keeps no module list of its own.
 import catalog from '../catalog/modules.json';
+import { scenes as sceneDefs } from '../catalog/scenes.js';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
 const locale = Astro.props.locale;
 const m = s.features.modules;
 type AreaId = keyof typeof s.features.areas;
-const areas = catalog.areas.map((a) => ({
-  id: a.id,
-  name: a.name[locale],
-  subtitle: s.features.areas[a.id as AreaId],
-  items: catalog.modules
-    .filter((x) => x.area === a.id)
-    .map((x) => ({
-      id: x.id,
-      name: x.name[locale],
-      text: x.short[locale],
-      icon: x.icon as IconName,
-      hue: x.hue,
-      widget: x.widget,
-      // "on by default" is the normal case and stays quiet; optional, preview and platform limits are said.
-      note: [x.status === 'default' ? null : m.status[x.status as 'optional' | 'preview'], x.platforms ? m.only[x.platforms as 'windows' | 'android' | 'both'] : null]
-        .filter(Boolean)
-        .join(', '),
-    })),
-}));
-// The planner highlight: name, hue, icon and state come from the catalogue like every card.
-const planner = catalog.modules.find((x) => x.id === 'planner');
-const plannerNote = planner && planner.status !== 'default' ? m.status[planner.status as 'optional' | 'preview'] : null;
+type SceneId = keyof typeof s.features.scenes;
+
+// Four scenes, one large real picture each (round 5, W1). Title and subtitle come from the catalogue's areas, hue
+// and icon from the module whose page the picture shows.
+const scenes = sceneDefs.map((d) => {
+  const mod = catalog.modules.find((x) => x.id === d.module)!;
+  const areas = d.areas.map((id) => catalog.areas.find((a) => a.id === id)!);
+  const text = s.features.scenes[d.areas[0] as SceneId];
+  return {
+    id: d.areas[0]!,
+    title: areas.map((a) => a.name[locale]).join(` ${s.features.and} `),
+    sub: d.areas.map((id) => s.features.areas[id as AreaId]).join(' '),
+    hue: mod.hue,
+    icon: mod.icon as IconName,
+    shot: d.shot,
+    ...text,
+  };
+});
+
+// The whole catalogue as a compact list: one row per area. Preview modules are hidden in the app until the visitor
+// turns them on, so they get one quiet row at the end instead of a place among the others.
+const shown = catalog.modules.filter((x) => x.status !== 'preview');
+const preview = catalog.modules.filter((x) => x.status === 'preview');
+const rows = catalog.areas
+  .map((a) => ({ id: a.id, name: a.name[locale], items: shown.filter((x) => x.area === a.id) }))
+  .filter((r) => r.items.length > 0);
 ---
 <section class="block" id="features" aria-labelledby="features-title">
   <div class="wrap">
     <p class="eyebrow">{s.features.eyebrow}</p>
     <h2 id="features-title">{s.features.title}</h2>
-    <p class="intro">{s.features.intro(catalog.modules.length, catalog.areas.length)}</p>
-    {planner && (
-      <div class="spot" data-hue={planner.hue}>
-        <div class="spottext">
-          <div class="mhead">
-            <span class="plate"><Icon name={planner.icon as IconName} size={18} /></span>
-            <span class="mname">{planner.name[locale]}{plannerNote && <span class="state">{plannerNote}</span>}</span>
+    <p class="intro">{s.features.intro}</p>
+    <div class="scenes">
+      {scenes.map((sc) => (
+        <article class="scene" data-hue={sc.hue} aria-labelledby={`scene-${sc.id}`}>
+          <div class="text">
+            <h3 id={`scene-${sc.id}`}><span class="plate"><Icon name={sc.icon} size={18} /></span>{sc.title}</h3>
+            <p class="sub">{sc.sub}</p>
+            <p class="more">{sc.text}</p>
           </div>
-          <p>{s.features.planner.text}</p>
-        </div>
-        <Shot name="planner" frame="phone" class="spotshot" alt={s.features.planner.alt} sizes="(min-width: 48rem) 12rem, 55vw" widths={[220, 440, 824]} />
-        <Shot name="planner-desktop" frame="window" class="spotwide" alt={s.features.planner.altDesktop} sizes="38rem" widths={[608, 960, 1216]} />
-      </div>
-    )}
-    <div class="areas">
-      {areas.map((a) => (
-        <section class="area" data-area={a.id} aria-labelledby={`area-${a.id}`}>
-          <div class="ahead">
-            <h3 id={`area-${a.id}`}>{a.name}</h3>
-            <span class="acount">{s.features.count(a.items.length)}</span>
-            <p class="asub">{a.subtitle}</p>
+          <div class="stand">
+            <div class="view">
+              <Motif desk={sc.shot} phone={`${sc.shot}-phone`} alt={sc.alt} sizesDesk="58rem" sizesPhone="100vw" />
+            </div>
           </div>
-          <ul class="cards">
-            {a.items.map((x) => (
-              <li class="mcard" data-hue={x.hue}>
-                <div class="mhead">
-                  <span class="plate"><Icon name={x.icon} size={18} /></span>
-                  <span class="mname">{x.name}{x.note && <span class="state">{x.note}</span>}</span>
-                </div>
-                <IdentityMini kind="widget" variant={x.widget} />
-                <p>{x.text}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        </article>
       ))}
     </div>
-    <p class="hint">{m.hint}</p>
+    <div class="catalog">
+      <h3>{m.summary(shown.length)}</h3>
+      <p class="legend">{m.legend}</p>
+      <dl>
+        {rows.map((r) => (
+          <div class="row">
+            <dt>{r.name}<span class="n">{r.items.length}</span></dt>
+            <dd>
+              {r.items.map((x) => (
+                <span class="mod" data-hue={x.hue}>
+                  {x.status === 'default' ? <strong>{x.name[locale]}</strong> : x.name[locale]}
+                  {x.platforms && <small> ({m.only[x.platforms as 'windows' | 'android' | 'both']})</small>}
+                </span>
+              ))}
+            </dd>
+          </div>
+        ))}
+        {preview.length > 0 && (
+          <div class="row wip">
+            <dt>{m.wip}<span class="n">{preview.length}</span></dt>
+            <dd>{preview.map((x) => x.name[locale]).join(' · ')}. {m.wipText}</dd>
+          </div>
+        )}
+      </dl>
+      <p class="meta note">{m.note}</p>
+    </div>
   </div>
 </section>
 
@@ -86,151 +95,160 @@ const plannerNote = planner && planner.status !== 'default' ? m.status[planner.s
     color: var(--text-muted);
     max-width: var(--measure);
   }
-  /* The planner highlight: one module card, wide, with its phone shot beside the text. */
-  .spot {
+  .scenes {
     display: grid;
-    gap: var(--space-4);
-    align-items: center;
-    justify-items: center;
-    margin-top: var(--space-6);
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    gap: var(--space-5);
+    margin-top: var(--space-5);
   }
-  .spottext {
+  .scene {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .scene h3 {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: var(--space-3);
-    justify-self: stretch;
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
   }
-  .spottext p {
-    font-size: var(--text-lg);
-    line-height: 1.45;
-    max-width: var(--measure);
+  .sub {
+    font-size: var(--text-label);
+    color: var(--text-muted);
   }
-  .spot :global(.spotshot) {
-    width: min(12rem, 55vw);
-  }
-  /* From 64rem the week board on the desktop takes the phone's place (a hidden lazy picture is never requested). */
-  .spot :global(.spotwide) {
+  /* The longer sentence needs room beside the picture; on a phone the picture speaks. */
+  .more {
     display: none;
+    font-size: var(--text-label);
+    color: var(--text-muted);
+    max-width: 36ch;
+  }
+  /* The picture stands on a plate in the module's colour and is cut by its right and bottom edge (direction B). */
+  .stand {
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
+    padding: var(--space-4) 0 0 var(--space-4);
+    overflow: hidden;
+  }
+  .view {
+    height: 9rem;
+    overflow: hidden;
+    border-radius: var(--radius-lg) 0 0 0;
+    border: 1px solid var(--border);
+    border-width: 1px 0 0 1px;
+    background: var(--surface);
+    box-shadow: var(--shadow-1);
+  }
+  /* Phone: the phone capture at full width, moved up past the app's top bar to the page head. */
+  .view :global(img) {
+    display: block;
     width: 100%;
+    max-width: none;
+    height: auto;
+    margin-top: -3rem;
   }
   @media (min-width: 48rem) {
-    .spot {
-      grid-template-columns: minmax(0, 34rem) auto;
-      justify-content: center;
-      column-gap: var(--space-7);
-      padding: var(--space-5) var(--space-6);
+    .scenes {
+      gap: var(--space-7);
+      margin-top: var(--space-6);
     }
-  }
-  /* After the 48rem block: both set the spot's columns, the later one wins from 64rem. */
-  @media (min-width: 64rem) {
-    .spot {
-      grid-template-columns: minmax(0, 20rem) minmax(0, 38rem);
+    .scene {
+      grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+      gap: var(--space-6);
+      align-items: start;
     }
-    .spot :global(.spotshot) {
-      display: none;
+    .text {
+      display: grid;
+      gap: var(--space-3);
+      padding-top: var(--space-2);
     }
-    .spot :global(.spotwide) {
+    .more {
       display: block;
     }
+    .stand {
+      padding: var(--space-6) 0 0 var(--space-6);
+    }
+    .view {
+      height: 25rem;
+    }
+    /* 58rem = 72 % of the 1280 px capture, moved left by the width of the app's sidebar: the page fills the frame. */
+    .view :global(img) {
+      width: 58rem;
+      margin: 0 0 0 -11.125rem;
+    }
   }
-  .areas {
-    display: grid;
-    gap: var(--space-4);
+  .catalog {
     margin-top: var(--space-6);
   }
-  /* An area block: the library's neutral group tint, a hairline all around, the area's pattern behind it. */
-  .area {
-    position: relative;
-    padding: var(--space-4);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--text-3) var(--group-tint), var(--surface));
-    isolation: isolate;
-  }
-  .area::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-image: var(--area-pattern, none);
-    background-size: var(--area-pattern-size, auto);
-    opacity: var(--pattern-widget);
-    pointer-events: none;
-    z-index: -1;
-  }
-  .ahead {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-3);
-  }
-  .ahead h3 {
+  .catalog h3 {
     font-size: var(--text-lg);
   }
-  .acount {
+  .legend {
+    margin-top: var(--space-1);
     font-size: var(--text-meta);
-    font-weight: var(--weight-medium);
-    font-variant-numeric: var(--font-num);
+    color: var(--text-3);
+    max-width: var(--measure);
   }
-  .asub {
-    flex-basis: 100%;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
+  dl {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--border);
   }
-  .cards {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
-    gap: var(--space-3);
+    gap: 0.125rem;
+    padding-block: var(--space-2);
+    border-bottom: 1px solid var(--border);
   }
-  /* A module card: head zone in the flat tint of its hue, the plate as the one solid spot, text in --text. */
-  .mcard {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .mhead {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin: calc(-1 * var(--space-1));
-    padding: var(--space-2);
-    border-radius: var(--radius-sm);
-    background: var(--head-flat);
-    color: var(--text);
-  }
-  .mname {
+  dt {
     font-weight: var(--weight-semibold);
     font-size: var(--text-label);
-    min-width: 0;
-    overflow-wrap: anywhere;
   }
-  .state {
+  .n {
     font-weight: normal;
     font-size: var(--text-meta);
-    color: var(--text-muted);
-    margin-left: 0.3rem;
+    color: var(--text-3);
+    margin-left: 0.375rem;
+    font-variant-numeric: var(--font-num);
   }
-  .mcard p {
-    font-size: var(--text-sm);
+  dd {
+    margin: 0;
+    font-size: var(--text-label);
     color: var(--text-muted);
-    line-height: 1.45;
+    line-height: 1.6;
   }
-  .hint {
-    margin-top: var(--space-5);
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    max-width: var(--measure);
+  /* The dot is the module's colour next to its name: colour never stands alone. */
+  .mod {
+    white-space: nowrap;
+    margin-right: 0.875rem;
+  }
+  .mod::before {
+    content: '';
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--module-color);
+    margin-right: 0.375rem;
+  }
+  .mod strong {
+    color: var(--text);
+    font-weight: var(--weight-semibold);
+  }
+  .mod small {
+    font-size: var(--text-meta);
+    color: var(--text-3);
+  }
+  .wip dt,
+  .wip dd {
+    color: var(--text-3);
+  }
+  .note {
+    margin-top: var(--space-3);
+  }
+  @media (min-width: 48rem) {
+    .row {
+      grid-template-columns: 11rem minmax(0, 1fr);
+      gap: var(--space-4);
+      padding-block: var(--space-3);
+    }
   }
 </style>
