@@ -9,7 +9,8 @@
  *   5. Freshness: CHATS.md table rows that say "merged"/"gemergt" or repeat another row; STATUS.md lines
  *      with "PR offen" or a backticked branch that `git branch -r` no longer lists.
  * Tokens are estimated as bytes / 4 (no tokenizer needed). Budgets live in docs/meta/DOCS-GUIDE.md.
- * Exit 1 (always): image rule, CHATS.md row rule, CHATS.md/STATUS.md over budget (they must not grow back),
+ * Exit 1 (always): image rule, CHATS.md row rule, CHATS.md/STATUS.md over budget (they must not grow back;
+ * the generated open-PR block of CHATS.md, `npm run chats:sync`, counts for neither),
  * start context over budget once START_CONTEXT_HARD is on. Everything else warns (exit 0; `--strict` exits 1).
  * `--root <dir>` checks another tree (tests).
  */
@@ -17,6 +18,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { END as GEN_END, START as GEN_START } from './lib/chatsSync.ts';
 
 export const BUDGET = {
   start: 2600,
@@ -91,8 +93,22 @@ function walk(dir, out = [], match = (name) => name.endsWith('.md')) {
 
 export const tokens = (text) => Math.ceil(Buffer.byteLength(text) / 4);
 
+/**
+ * CHATS.md without its generated open-PR block (`npm run chats:sync`, lib/chatsSync.ts): that block
+ * grows with the number of open PRs, not with prose, and its rows are open PRs by construction (a title
+ * may say "merged"). Lines inside it become empty so line numbers in findings stay right.
+ */
+export function withoutGenerated(text) {
+  const from = text.indexOf(GEN_START);
+  const to = text.indexOf(GEN_END);
+  if (from < 0 || to < from) return text;
+  const inner = text.slice(from + GEN_START.length, to).replace(/[^\n]/g, '');
+  return text.slice(0, from + GEN_START.length) + inner + text.slice(to);
+}
+
 /** Problems in docs/CHATS.md: table rows about merged PRs and duplicate rows (a row = an open item). */
-export function chatsProblems(text) {
+export function chatsProblems(raw) {
+  const text = withoutGenerated(raw);
   const out = [];
   const seen = new Map();
   text.split(/\r?\n/).forEach((line, i) => {
@@ -210,7 +226,7 @@ function main(argv) {
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const name = rel(file);
-    const t = tokens(text);
+    const t = tokens(name === 'docs/CHATS.md' ? withoutGenerated(text) : text);
     total += t;
     let limit;
     if (name === 'CLAUDE.md') limit = undefined;
