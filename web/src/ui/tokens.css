@@ -4,8 +4,10 @@
  * Guide: docs/howto/design-rules.md. Spec: docs/design/DESIGN-SPEC.md § 5–6 (values, contrast ratios).
  *
  * Look ("Klar 2", decided 2026-10-01): cool neutral base, dark is the reference theme, one orange
- * accent. Depth in three levels: page (solid `--bg`), cards/widgets (`--shadow-1`, no border),
- * floating layers (`--shadow-2`). Gradients only for brand surfaces (`--ocean-*`).
+ * accent. Depth (Identity 4.0, package 0b-1) is told by tone steps, not by shadows: page (solid `--bg`),
+ * a group on it (`--surface-raised`: cards, list surfaces, panels; no border, no shadow), a recess in it
+ * (`--surface-sunken`: control tracks, disabled controls). Shadows (`--shadow-1`, `--shadow-2`) are for things
+ * that float over the page only (menu, dialog, sheet, toast). Gradients only for brand surfaces (`--ocean-*`).
  *
  * Structure: (1) scale tokens, (2) light theme = default, (3) dark theme – the block exists twice
  * (explicit `data-theme='dark'` and the system preference); `tokens.test.ts` keeps both identical,
@@ -83,6 +85,10 @@
   --page-narrow: 45rem;
   --page-content: 70rem;
   --page-wide: 100rem;
+  /* `reading`: one column at a reading measure, 56 rem that grows to 64 rem on a wide window. */
+  --page-reading: clamp(56rem, 50vw, 64rem);
+  /* `split` (master–detail, DESIGN-SPEC § 2): the detail panel next to the list (`SplitView`). */
+  --split-detail: clamp(22rem, 30%, 30rem);
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
   /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes (phone values below) and the signature
      slot sizes S and M (`SIGNATURE_SLOTS`; L is the whole content column), plus the least room the extra slot keeps. */
@@ -115,11 +121,18 @@
   --bg: #f3f4f4;
   --surface: #ffffff;
   --surface-2: #eaecee;
-  --border: #e2e5e8; /* hairline row dividers, top/bottom bar line */
+  /* Tone steps (Identity 4.0): `raised` = a group on the page (card, list surface, panel), `sunken` = a recess
+     (control track, disabled control). Neutral, never a hue; text, muted and meta ink keep AA on both (tokens.test.ts). */
+  --surface-raised: #ffffff;
+  --surface-sunken: #e9ecee;
+  --border: #e2e5e8; /* hairline dividers between rows of a list and of a form, top/bottom bar line; never a frame */
   --border-strong: #76838c; /* form controls: 3.9:1 on surface, 3.3:1 on surface-2 (WCAG 1.4.11) */
   --text: #171f24;
   --text-muted: #55636b;
   --text-3: #5f6c75; /* meta, captions, eyebrows: 4.5:1 on surface-2 */
+  /* The grey that stands in for every hue in the calm colour mode: no colour cast (the text greys are bluish and
+     read as a tint when they fill a mark), ≥ 4.5:1 on every surface, so it also carries status text. */
+  --calm-ink: #5f6367;
   /* Secondary text on a tinted module head or widget zone (identity v3.1): the only quiet ink allowed there;
      ≥ 4.5:1 on the 40 % tint of every hue in both themes (tokens.test.ts). --text-muted/--text-3 do not reach that. */
   --text-on-tint: color-mix(in srgb, var(--text) 84%, var(--surface));
@@ -162,6 +175,7 @@
   /* Identity v3: the head zone of a widget, the area patterns (head band, widget, sidebar group) and the sidebar group tint.
      "Ruhig" and "Modulfarben: Aus" turn the tint down and the patterns off (below). */
   --widget-tint: 14%;
+  /* The dark theme sets its own, lower pattern values: light lines on a dark tint stand out more than dark ones on a light tint. */
   --pattern-head: 0.06;
   --pattern-widget: 0.04;
   --group-tint: 6%;
@@ -184,7 +198,8 @@
   --sky-sun-core: #fff5c8;
   --sky-cloud: rgb(255 255 255 / 0.75);
   --overlay: rgb(0 0 0 / 0.45);
-  /* Level 1: cards, widgets, panels (no border). Level 2: menus, dialogs, sheets, FAB, toast. */
+  /* Floating things only (Identity 4.0): level 1 = a small lift (selection bar, drag handle), level 2 = menus,
+     dialogs, sheets, toast. Cards, widgets and panels are tone steps (`--surface-raised`), not shadows. */
   --shadow-1: 0 1px 2px rgb(23 31 36 / 0.06), 0 8px 24px rgb(23 31 36 / 0.07);
   --shadow-2: 0 16px 48px rgb(23 31 36 / 0.18), 0 2px 6px rgb(23 31 36 / 0.08);
   /* Accent (orange): filled primary action + FAB, text/link/icon colour. */
@@ -213,11 +228,14 @@
   --bg: #0f1316;
   --surface: #171c20;
   --surface-2: #1f2529;
+  --surface-raised: #1b2126;
+  --surface-sunken: #0c0f12;
   --border: #262d32;
   --border-strong: #6b767e; /* 3.6:1 on surface, 3.1:1 on surface-2 */
   --text: #eceff1;
   --text-muted: #aab4bb;
   --text-3: #88939b;
+  --calm-ink: #8f9498;
   --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
   --danger: #f4a39c;
   --success: #7fd3a3;
@@ -244,6 +262,8 @@
   --mod-violet: #f7aef0;
   --mod-orchid: #eb90ba;
   --mod-slate: #a9b7c0;
+  --pattern-head: 0.03;
+  --pattern-widget: 0.02;
   --sky-day-0: #1c3a5c;
   --sky-day-1: #2e5a86;
   --sky-rain-0: #1d2733;
@@ -267,11 +287,14 @@
     --bg: #0f1316;
     --surface: #171c20;
     --surface-2: #1f2529;
+    --surface-raised: #1b2126;
+    --surface-sunken: #0c0f12;
     --border: #262d32;
     --border-strong: #6b767e; /* 3.6:1 on surface, 3.1:1 on surface-2 */
     --text: #eceff1;
     --text-muted: #aab4bb;
     --text-3: #88939b;
+    --calm-ink: #8f9498;
     --text-on-tint: color-mix(in srgb, var(--text) 94%, var(--surface));
     --danger: #f4a39c;
     --success: #7fd3a3;
@@ -298,6 +321,8 @@
     --mod-violet: #f7aef0;
     --mod-orchid: #eb90ba;
     --mod-slate: #a9b7c0;
+    --pattern-head: 0.03;
+    --pattern-widget: 0.02;
     --sky-day-0: #1c3a5c;
     --sky-day-1: #2e5a86;
     --sky-rain-0: #1d2733;
@@ -426,28 +451,30 @@
   color: var(--text);
 }
 
-/* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour. */
+/* "Ruhig" colour mode (Einstellungen → Darstellung → Farben): only overdue (red) and today (accent) keep colour.
+   Every other hue (categories, module hues and with them every module tint, the other states) becomes `--calm-ink`,
+   a grey without a cast: guard `e2e/seed/calm-colour.seed.spec.ts`. */
 :root[data-color='calm'] {
-  --cat-1: var(--text-3);
-  --cat-2: var(--text-3);
-  --cat-3: var(--text-3);
-  --cat-4: var(--text-3);
-  --cat-5: var(--text-3);
-  --cat-6: var(--text-3);
-  --success: var(--text-muted);
-  --warning: var(--text-muted);
-  --info: var(--text-muted);
-  --mod-lime: var(--text-3);
-  --mod-moss: var(--text-3);
-  --mod-fern: var(--text-3);
-  --mod-teal: var(--text-3);
-  --mod-ocean: var(--text-3);
-  --mod-sky: var(--text-3);
-  --mod-cobalt: var(--text-3);
-  --mod-indigo: var(--text-3);
-  --mod-violet: var(--text-3);
-  --mod-orchid: var(--text-3);
-  --mod-slate: var(--text-3);
+  --cat-1: var(--calm-ink);
+  --cat-2: var(--calm-ink);
+  --cat-3: var(--calm-ink);
+  --cat-4: var(--calm-ink);
+  --cat-5: var(--calm-ink);
+  --cat-6: var(--calm-ink);
+  --success: var(--calm-ink);
+  --warning: var(--calm-ink);
+  --info: var(--calm-ink);
+  --mod-lime: var(--calm-ink);
+  --mod-moss: var(--calm-ink);
+  --mod-fern: var(--calm-ink);
+  --mod-teal: var(--calm-ink);
+  --mod-ocean: var(--calm-ink);
+  --mod-sky: var(--calm-ink);
+  --mod-cobalt: var(--calm-ink);
+  --mod-indigo: var(--calm-ink);
+  --mod-violet: var(--calm-ink);
+  --mod-orchid: var(--calm-ink);
+  --mod-slate: var(--calm-ink);
   --head-tint-0: 12%;
   --head-tint-1: 5%;
   --widget-tint: 5%;

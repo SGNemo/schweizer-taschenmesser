@@ -110,7 +110,13 @@ describe('design tokens', () => {
         }
       });
       it('text on backgrounds and surfaces', () => {
-        for (const bg of ['--bg', '--surface', '--surface-2']) {
+        for (const bg of [
+          '--bg',
+          '--surface',
+          '--surface-2',
+          '--surface-raised',
+          '--surface-sunken',
+        ]) {
           text('--text', bg);
           text('--text-muted', bg);
           text('--text-3', bg);
@@ -207,7 +213,7 @@ describe('design tokens', () => {
     const calm = block(":root[data-color='calm']");
     const off = block(":root[data-module-colors='off']");
     for (const key of Object.keys(light).filter((k) => k.startsWith('--mod-'))) {
-      expect(calm[key], `${key} in calm`).toBe('var(--text-3)');
+      expect(calm[key], `${key} in calm`).toBe('var(--calm-ink)');
       expect(off[key], `${key} with module colours off`).toBe('var(--text-3)');
       expect(css, `data-hue rule for ${key}`).toContain(`[data-hue='${key.slice(6)}']`);
     }
@@ -540,4 +546,93 @@ it('BankCard: the ink keeps 4.5:1 at the worst point of the gradient, every hue,
       name === 'light' ? mix(t['--text-3']!, BLACK, Number(calmLight![1]) / 100) : t['--text-3']!;
     expect(ratio(ink, calm), `${name} calm`).toBeGreaterThanOrEqual(4.5);
   }
+});
+
+/** Saturation as the stimulus measurement reads it (`measurePage` in scripts/lib/stimulusBudget.ts): (max − min) / max. */
+const saturationOf = (hex: string): number => {
+  const c = hex
+    .replace('#', '')
+    .match(/../g)!
+    .map((h) => parseInt(h, 16));
+  const max = Math.max(...c);
+  return max === 0 ? 0 : (max - Math.min(...c)) / max;
+};
+const TONE_SURFACES = ['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken'];
+
+it('tone steps (Identity 4.0): sunken lies under the page and raised over it, in both themes; UI ink keeps 3:1 on both', () => {
+  for (const [name, t] of [
+    ['light', light],
+    ['dark', dark],
+  ] as const) {
+    expect(lum(t['--surface-sunken']!), `${name}: sunken under the page`).toBeLessThan(
+      lum(t['--bg']!),
+    );
+    expect(lum(t['--surface-raised']!), `${name}: raised over the page`).toBeGreaterThan(
+      lum(t['--bg']!),
+    );
+    for (const bg of ['--surface-raised', '--surface-sunken']) {
+      for (const fg of ['--border-strong', '--focus'])
+        expect(ratio(t[fg]!, t[bg]!), `${name}: ${fg} on ${bg}`).toBeGreaterThanOrEqual(3);
+      expect(ratio(t['--accent']!, t[bg]!), `${name}: --accent on ${bg}`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+    // A hairline between rows stays visible on the surface the rows lie on, and never reads as a frame (< 3:1).
+    const hair = ratio(t['--border']!, t['--surface-raised']!);
+    expect(hair, `${name}: --border on --surface-raised`).toBeGreaterThan(1.1);
+    expect(hair, `${name}: --border on --surface-raised`).toBeLessThan(3);
+  }
+});
+
+it('calm colour mode: every hue and every state but danger becomes --calm-ink, a grey without a cast that keeps AA on every surface', () => {
+  const calm = block(":root[data-color='calm']");
+  for (const key of Object.keys(light).filter((k) => /^--(cat|mod)-/.test(k)))
+    expect(calm[key], `${key} in calm`).toBe('var(--calm-ink)');
+  for (const key of ['--success', '--warning', '--info'])
+    expect(calm[key], `${key} in calm`).toBe('var(--calm-ink)');
+  // Overdue and today keep their colour.
+  for (const key of ['--danger', '--accent']) expect(calm, key).not.toHaveProperty(key);
+  for (const [name, t] of [
+    ['light', light],
+    ['dark', dark],
+  ] as const) {
+    // Under the measurement's limit for a coloured surface (0.12), with room; --text-3 lies over it in both themes.
+    expect(saturationOf(t['--calm-ink']!), `${name}: --calm-ink has no cast`).toBeLessThan(0.1);
+    for (const bg of TONE_SURFACES)
+      expect(
+        ratio(t['--calm-ink']!, t[bg]!),
+        `${name}: --calm-ink on ${bg}`,
+      ).toBeGreaterThanOrEqual(4.5);
+  }
+});
+
+it('BankCard in calm: the fill is --calm-ink with the same lightness rule, and the ink keeps 4.5:1 on it', () => {
+  const flat = read('ui/identity/BankCard.module.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ');
+  const calmLight =
+    /:global\(:root\[data-color='calm'\]\) \.card \{ background: color-mix\(in srgb, var\(--calm-ink\) (\d+)%, black\); \}/.exec(
+      flat,
+    );
+  expect(calmLight, 'calm fill in light').not.toBeNull();
+  expect(
+    flat.match(/\[data-color='calm'\]\) \.card \{ background: var\(--calm-ink\); \}/g),
+    'calm fill in dark: explicit and system',
+  ).toHaveLength(2);
+  const lightFill = mix(light['--calm-ink']!, '#000000', Number(calmLight![1]) / 100);
+  expect(ratio(light['--surface']!, lightFill), 'light').toBeGreaterThanOrEqual(4.5);
+  expect(ratio(dark['--bg']!, dark['--calm-ink']!), 'dark').toBeGreaterThanOrEqual(4.5);
+});
+
+it('area patterns (AE2): the dark theme has its own, lower values; light keeps the v3 ones', () => {
+  expect(Number(light['--pattern-head'])).toBe(0.06);
+  expect(Number(light['--pattern-widget'])).toBe(0.04);
+  expect(Number(dark['--pattern-head'])).toBeLessThanOrEqual(0.03);
+  expect(Number(dark['--pattern-widget'])).toBeLessThanOrEqual(0.02);
+  expect(Number(dark['--pattern-head'])).toBeGreaterThan(0);
+});
+
+it('page widths: reading is 56 to 64 rem, the split detail panel follows DESIGN-SPEC § 2', () => {
+  expect(light['--page-reading']).toBe('clamp(56rem, 50vw, 64rem)');
+  expect(light['--split-detail']).toBe('clamp(22rem, 30%, 30rem)');
 });
