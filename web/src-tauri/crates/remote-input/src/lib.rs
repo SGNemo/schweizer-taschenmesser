@@ -5,12 +5,16 @@
 //! crate makes the system calls. It knows no network, no device and no grant, and the hub knows no
 //! system call: *the crate that listens cannot act, the crate that acts cannot listen.*
 //!
-//! In this package there is the media level only, and it is made of API calls – the audio
-//! endpoint's volume, the system's media session, `LockWorkStation`. **Nothing here simulates
-//! input**: no `SendInput`, no media or volume key. (Pointer and keyboard come with their own
-//! packages, and with them the first simulated input.)
+//! Two levels, two threads:
 //!
-//! * One worker thread owns every system object (COM and WinRT are initialised there). Commands
+//! * **Media** ([`Worker`]) is made of API calls – the audio endpoint's volume, the system's
+//!   media session, `LockWorkStation`. Nothing there simulates input: no media or volume key.
+//! * **Pointer** ([`Pointer`], `src/pointer.rs`) is simulated input: the mouse part of
+//!   `SendInput` – relative moves, the left and right button, the wheel. That file is the only
+//!   place in the whole app that simulates input (`tests/rules.rs`). There is no keyboard here
+//!   yet (it comes with its own package), no absolute position and no window message.
+//!
+//! * The media worker thread owns every system object (COM and WinRT are initialised there). Commands
 //!   reach it through a bounded channel that never blocks the caller: when it is full, the command
 //!   is dropped.
 //! * [`Worker::state`] answers from a cache. The worker refreshes the cache when asked and after
@@ -21,13 +25,15 @@
 
 #![cfg_attr(not(windows), forbid(unsafe_code))]
 
+mod pointer;
 mod system;
 mod worker;
 
+pub use pointer::{Button, Hand, Mouse, Pointer, PointerAction, QUEUE, RELEASE_ROOM, WHEEL_UNIT};
 pub use system::System;
 pub use worker::{Worker, FRESH_WAIT, STALE};
 
-/// One thing the remote control may ask of this PC. A fixed list; there is no "any key".
+/// One thing the media level may ask of this PC. A fixed list; there is no "any key".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
     PlayPause,

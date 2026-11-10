@@ -346,6 +346,8 @@ fn no_tauri_command_simulates_input() {
         "Action",
         "Sink",
         "Worker",
+        "Pointer",
+        "Mouse",
         "Command::",
         "Media::",
         ".apply(",
@@ -357,11 +359,21 @@ fn no_tauri_command_simulates_input() {
             "a remote command mentions {forbidden}"
         );
     }
-    // the sink is the only place that hands anything to the worker, and only media
+    // the sink is the only place that hands anything to the worker (only media) or to the
+    // pointer thread (only what `pointer_of` maps: move, button, scroll)
     let src = source("remote.rs");
     let code = &src[..src.find("#[cfg(test)]").unwrap()];
     assert_eq!(code.matches("self.0.send(command_of(media))").count(), 1);
+    assert_eq!(code.matches("self.1.send(pointer)").count(), 1);
+    assert_eq!(
+        code.matches(".send(").count(),
+        4,
+        "the sink twice, the watcher twice"
+    );
     assert_eq!(code.matches("impl InputSink for").count(), 1);
+    let map = &code[code.find("fn pointer_of(").unwrap()..];
+    let map = &map[..map.find("\n}\n").unwrap()];
+    assert!(map.contains("Action::Key(_) | Action::Media(_) | Action::Text(_) => return None"));
 
     // nowhere in the shell: simulated input, or a command of another module reaching the sink
     for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {

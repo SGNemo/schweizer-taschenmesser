@@ -2,7 +2,7 @@
 name = "taschenmesser-remote-input"
 version = "0.1.0"
 authors = ["SGNemo"]
-description = "What the remote control does on the PC: volume, media commands, lock. Typed commands in, a small state out; a worker thread makes the system calls. No sockets, no Tauri, no serde, no dependency on the LAN hub. Windows only; elsewhere it says unsupported."
+description = "What the remote control does on the PC: volume, media commands, lock, and the pointer (moves, two buttons, wheel). Typed commands in, a small state out; worker threads make the system calls. No sockets, no Tauri, no serde, no dependency on the LAN hub. Windows only; elsewhere it says unsupported."
 license = "MIT"
 edition = "2021"
 rust-version = "1.77"
@@ -24,4 +24,5 @@ windows = { version = "0.61", features = [
   "Win32_System_Variant",
   "Win32_System_RemoteDesktop",
   "Win32_System_Shutdown",
+  "Win32_UI_Input_KeyboardAndMouse",
 ] }
