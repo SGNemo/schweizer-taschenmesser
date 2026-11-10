@@ -50,7 +50,7 @@ class Boundary extends Component<Props & { onDisable: () => void; lang: string }
     if (!error) return this.props.children;
     const inPlace = () => this.setState({ error: undefined });
     // The page's code did not arrive (offline, stale page after an update): the loading card, not the error card.
-    if (isLoadError(error)) return <PageLoadingCard />;
+    if (isLoadError(error)) return <PageLoadingCard failed />;
     const d = tDiag.get().card;
     return (
       <Card title={d.title(this.props.manifest.name)} role="alert" data-testid="module-error">
