@@ -181,6 +181,156 @@ pub fn quit_dialog(lang: Lang) -> (&'static str, &'static str, &'static str, &'s
     }
 }
 
+// ---- remote control (src/remote.rs) ----
+//
+// German and English only: the frozen languages get English, like everywhere else.
+
+use ::lan_sync::input::wire::Level;
+
+fn german(lang: Lang) -> bool {
+    lang == Lang::De
+}
+
+/// The confirmation at the PC before remote control is widened: (title, allow, cancel).
+pub fn remote_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    if german(lang) {
+        ("Fernsteuerung erlauben?", "Erlauben", "Abbrechen")
+    } else {
+        ("Allow remote control?", "Allow", "Cancel")
+    }
+}
+
+fn remote_level(lang: Lang, level: Level) -> &'static str {
+    match (german(lang), level) {
+        (true, Level::Full) => "Maus und Tastatur, dazu Medien, Lautstärke und das Sperren des PCs",
+        (true, _) => "Medien, Lautstärke und das Sperren des PCs",
+        (false, Level::Full) => "mouse and keyboard, plus media, volume and locking the PC",
+        (false, _) => "media, volume and locking the PC",
+    }
+}
+
+/// A device that claimed no usable name; `id` is the start of its id.
+pub fn remote_unnamed(lang: Lang, id: &str) -> String {
+    if german(lang) {
+        format!("Gerät ohne Namen ({id})")
+    } else {
+        format!("Device without a name ({id})")
+    }
+}
+
+/// First line of the question for one device: the name alone behind a fixed label. `name` is
+/// already plain text.
+pub fn remote_ask_device(lang: Lang, name: &str) -> String {
+    if german(lang) {
+        format!("Gerät: {name}")
+    } else {
+        format!("Device: {name}")
+    }
+}
+
+/// What that device may do afterwards.
+pub fn remote_ask_level(lang: Lang, level: Level) -> &'static str {
+    match (german(lang), level) {
+        (true, Level::Full) => {
+            "Dieses Gerät darf danach Maus und Tastatur dieses PCs steuern, dazu Medien, Lautstärke und das Sperren des PCs."
+        }
+        (true, _) => {
+            "Dieses Gerät darf danach Medien und Lautstärke dieses PCs steuern und den PC sperren."
+        }
+        (false, Level::Full) => {
+            "This device may then control the mouse and keyboard of this PC, plus media, volume and locking the PC."
+        }
+        (false, _) => "This device may then control media and volume of this PC and lock the PC.",
+    }
+}
+
+pub fn remote_ask_unpause(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Das Gerät ist zurzeit pausiert und wird wieder eingeschaltet."
+    } else {
+        "The device is paused right now and will be switched on again."
+    }
+}
+
+pub fn remote_ask_no_unlock(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Maus und Tastatur gehen dann auch, ohne das Handy vorher zu entsperren."
+    } else {
+        "Mouse and keyboard will then work without unlocking the phone first."
+    }
+}
+
+/// "Last contact" in whole days: no clock format, so no locale is needed.
+pub fn remote_last_contact(lang: Lang, last_seen: Option<u64>, now: u64) -> String {
+    let days = last_seen.map(|seen| now.saturating_sub(seen) / 86_400);
+    match (german(lang), days) {
+        (true, None) => "Letzter Kontakt: noch nie verbunden.".to_owned(),
+        (true, Some(0)) => "Letzter Kontakt: in den letzten 24 Stunden.".to_owned(),
+        (true, Some(1)) => "Letzter Kontakt: vor einem Tag.".to_owned(),
+        (true, Some(n)) => format!("Letzter Kontakt: vor {n} Tagen."),
+        (false, None) => "Last contact: never connected yet.".to_owned(),
+        (false, Some(0)) => "Last contact: within the last 24 hours.".to_owned(),
+        (false, Some(1)) => "Last contact: one day ago.".to_owned(),
+        (false, Some(n)) => format!("Last contact: {n} days ago."),
+    }
+}
+
+/// First line of the question for the master switch.
+pub fn remote_ask_switch(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Die Fernsteuerung dieses PCs wird eingeschaltet. Diese Geräte dürfen ihn dann steuern:"
+    } else {
+        "Remote control of this PC will be switched on. These devices may then control it:"
+    }
+}
+
+/// One device of that list: the name alone on a labelled line (a name holds no line break), what
+/// it may do on the line below.
+pub fn remote_ask_switch_line(lang: Lang, name: &str, level: Level) -> String {
+    format!(
+        "{}\n      {}",
+        remote_ask_device(lang, name),
+        remote_level(lang, level)
+    )
+}
+
+pub fn remote_ask_more(lang: Lang, more: usize) -> String {
+    if german(lang) {
+        format!("… und {more} weitere.")
+    } else {
+        format!("… and {more} more.")
+    }
+}
+
+/// The tray entry while a device controls this PC.
+pub fn remote_end_label(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Fernsteuerung beenden"
+    } else {
+        "End remote control"
+    }
+}
+
+/// Under that entry, not clickable: what the click also does.
+pub fn remote_end_hint(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest"
+    } else {
+        "Afterwards the device stays paused until you switch it on here"
+    }
+}
+
+/// The tray tooltip while a device controls this PC: who controls comes first (Windows cuts long
+/// tooltips at the end), the page's text – capped – after it. `name` is already plain text.
+pub fn remote_tooltip(lang: Lang, base: &str, name: &str) -> String {
+    let base: String = base.chars().take(40).collect();
+    if german(lang) {
+        format!("Wird ferngesteuert von {name} – {base}")
+    } else {
+        format!("Remote controlled by {name} – {base}")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -228,5 +378,39 @@ mod tests {
             assert!(qt.contains("Nemo") && qx.contains("Nemo"));
             assert!(!qq.is_empty() && !qc.is_empty());
         }
+    }
+
+    #[test]
+    fn remote_texts_exist_in_both_active_languages_and_frozen_ones_get_english() {
+        for lang in [Lang::De, Lang::En, Lang::Es, Lang::Fr, Lang::Pt] {
+            let (title, allow, cancel) = remote_dialog(lang);
+            assert!(!title.is_empty() && !allow.is_empty() && !cancel.is_empty());
+            assert_ne!(allow, cancel);
+            assert!(remote_ask_device(lang, "X").ends_with('X'));
+            assert!(remote_unnamed(lang, "ab12").contains("ab12"));
+            for level in [Level::Media, Level::Full] {
+                assert!(remote_ask_switch_line(lang, "X", level).contains('X'));
+            }
+            assert_ne!(
+                remote_ask_level(lang, Level::Media),
+                remote_ask_level(lang, Level::Full)
+            );
+            let tip = remote_tooltip(lang, &"N".repeat(300), "X");
+            assert!(tip.contains('X') && tip.chars().count() < 100);
+            assert!(!remote_end_label(lang).is_empty() && !remote_end_hint(lang).is_empty());
+        }
+        assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
+        assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));
+    }
+
+    #[test]
+    fn last_contact_counts_whole_days_and_never_goes_negative() {
+        let day = 86_400;
+        assert!(remote_last_contact(Lang::De, None, 5).contains("noch nie"));
+        assert!(remote_last_contact(Lang::De, Some(100), 100 + day - 1).contains("24 Stunden"));
+        assert!(remote_last_contact(Lang::De, Some(100), 100 + day).contains("einem Tag"));
+        assert!(remote_last_contact(Lang::En, Some(100), 100 + 9 * day).contains("9 days"));
+        // a clock set back: counted as now
+        assert!(remote_last_contact(Lang::En, Some(500), 100).contains("24 hours"));
     }
 }
