@@ -4,7 +4,7 @@
 | ------------- | ----------------- | ------ | ---------- | ------------ |
 | nemo-auditor  | claude-fable-5-1  | high   | review     | 6950         |
 | nemo-builder  | claude-sonnet-5-5 | medium | write      | 4075         |
-| nemo-docs     | claude-haiku-5-5  | medium | write      | 3828         |
+| nemo-docs     | claude-haiku-5-5  | medium | write      | 3958         |
 | nemo-lead     | claude-sonnet-5-5 | high   | review     | 5161         |
 | nemo-merge    | claude-haiku-5-5  | low    | merge      | 7393         |
 | nemo-ops      | claude-sonnet-5-5 | medium | write      | 4134         |

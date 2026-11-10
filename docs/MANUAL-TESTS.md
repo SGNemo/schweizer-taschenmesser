@@ -202,7 +202,7 @@ H4. _Status-Widgets (Windows):_ Datenträger zeigt Füllstände, Systeminfo CPU/
 ### Nemo: Umbenennung und Design
 
 N1. _Windows-Portable starten (frische Datei und als Update):_ Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
-N1a. _Lade-Robustheit und Browser-Tab (UI-Audit 0a, Windows; Ergebnis als Tabelle Schritt · „…“ ja/nein · Titelleiste an den nächsten Chat oder in `scribble/`):_ (1) Variante notieren: Dev-Preview-Exe oder `tauri dev`. (2) Frisch starten, ohne Browser-Tab ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint, keine bleibt bei „…“. (3) Browser-Modul → eine Adresse laden: die Seite erscheint im Rahmen. (4) Danach dieselben drei Module öffnen: jede erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“. (5) Während (3) und (4) das Fenster ziehen und die Titelleiste ansehen: „Keine Rückmeldung“ = Hauptthread blockiert. (6) Tray-Icon anklicken: es reagiert. (7) Auf einer Modulseite „Neu laden“ auslösen (oder Strg+R), zurück zum Browser-Modul: der Tab ist wieder sichtbar; fehlt er, bietet die Seite „Tab neu öffnen“; beim Verlassen des Moduls verschwindet er. (8) Nur wenn in (5) das Fenster reagierte und trotzdem eine Seite leer blieb: in den WebView2-DevTools (Netzwerk) den hängenden `assets/*.js`-Request notieren (Adresse ohne Query, Status). Seit #638 baut `browser_open` den Tab nicht mehr auf dem Hauptthread: der Test prüft diesen Fix, „Keine Rückmeldung“ wäre ein Rückfall. ☐
+N1a. _Lade-Robustheit und Browser-Tab (UI-Audit 0a, Windows; Ergebnis als Tabelle Schritt · „…“ ja/nein · Titelleiste an den nächsten Chat oder ins Notiz-Repo):_ (1) Variante notieren: Dev-Preview-Exe oder `tauri dev`. (2) Frisch starten, ohne Browser-Tab ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint, keine bleibt bei „…“. (3) Browser-Modul → eine Adresse laden: die Seite erscheint im Rahmen. (4) Danach dieselben drei Module öffnen: jede erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“. (5) Während (3) und (4) das Fenster ziehen und die Titelleiste ansehen: „Keine Rückmeldung“ = Hauptthread blockiert. (6) Tray-Icon anklicken: es reagiert. (7) Auf einer Modulseite „Neu laden“ auslösen (oder Strg+R), zurück zum Browser-Modul: der Tab ist wieder sichtbar; fehlt er, bietet die Seite „Tab neu öffnen“; beim Verlassen des Moduls verschwindet er. (8) Nur wenn in (5) das Fenster reagierte und trotzdem eine Seite leer blieb: in den WebView2-DevTools (Netzwerk) den hängenden `assets/*.js`-Request notieren (Adresse ohne Query, Status). Seit #638 baut `browser_open` den Tab nicht mehr auf dem Hauptthread: der Test prüft diesen Fix, „Keine Rückmeldung“ wäre ein Rückfall. ☐
 N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
 N3. _Hell / Dunkel / System, Akzentfarben:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
 N4. _Reduzierte Bewegung:_ Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
@@ -323,7 +323,7 @@ V4. _Keine Banner mehr:_ mit Einstellung „Erinnerungen in der App automatisch 
 V1. _Windows-App (WebView2):_ Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
 V2. _Systemweite Taste (Windows):_ Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
 V3. _Android (Chrome-PWA und APK):_ PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
-V4. _Sprachen:_ App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+V4. _Sprachen:_ App auf English stellen, sprechen: wird in der App-Sprache erkannt? ☐
 
 ## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 
@@ -388,6 +388,45 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **LB2 „Ruhig“ und „Modulfarben: Aus“:** Kartenköpfe, Plättchen und Miniaturen werden grau, Text bleibt lesbar. ☐
 - **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
 - **LB4 Breite Fenster (2560 px):** Karten füllen die Zeile, nichts läuft über; Werkzeug-Bibliothek ebenso, hell und dunkel. ☐
+
+## Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
+
+Standen nur in den Zeilen „Wartet auf Sven“ ([CHATS.md](CHATS.md)) oder im STATUS-Protokoll, nicht in dieser Datei. Wortlaut wie dort.
+
+### Windows
+
+- **GM1 Eingeklappte Seitenleiste, Fisch v2.2:** bei 125 % Skalierung: Kachel und Symbole scharf, Tooltip mit Maus und Tab, Taskleisten-Icon zeigt den neuen Fisch. (PR #669) ☐
+- **GM2 „Dieser PC“, Kopf v3.1:** Kopf hell/dunkel; „Ruhig“: Dateitypen grau, Muster + Legende bleiben; Baumkarte nach Alter/Dateityp. (PR #490) ☐
+- **GM3 Laufwerke-Seite:** Karten in zwei Spalten, „Details“, Scan aus der Karte, Liste. (PR #483) ☐
+- **GM4 Shell-Fixes:** Werkzeuge mit Strg+. und Alt+2; Lesehilfe 100 % in der Seitenleiste mit „Zurück“. (PR #481; vgl. TP3) ☐
+- **GM5 Lokales Modell in der Dev-Preview:** erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig); Lokales Modell → Download → Testfrage von Hand. (PR #504; vgl. K5) ☐
+
+### Android-Handy
+
+- **GM6 Launcher-Icon:** zeigt den Fisch v2.2. (PR #669) ☐
+- **GM7 Einstellungs-Suche:** Einstellungen lang runter/hoch scrollen: die Suche bleibt ohne Lücke unter der Kopfleiste. (`fix/settings-search-sticky-phone`) ☐
+- **GM8 Planen + Geld v3.1:** ToDos-Kopf: Titel gekürzt, „Später“ sichtbar; Rechnungen: „Nächste bezahlen“. (PR #493) ☐
+- **GM9 Topbar:** lang scrollen, Seite wechseln → die Leiste ist sofort da. (PR #481) ☐
+- **GM10 Handy-Layout (QA P2):** Gerätetest von Kopfzeile, Listenzeilen, Hinweisen, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi. (`fix/qa-mobile-layout`) ☐
+- **GM11 KI-Erinnerung per Satz:** Satz per Sprache („Erinner mich um 15 Uhr an die Wäsche“): die Benachrichtigung kommt zur Zeit. (`feat/ai-reminder-voice`) ☐
+- **GM12 PWA offline:** PWA einmal online öffnen, Flugmodus, dann App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)). (Runde T1–T6, #341–#349; vgl. BP1) ☐
+
+### Beide (Windows und Android)
+
+- **GM13 Fundament v3:** Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy. (PR #414) ☐
+- **GM14 Lesehilfe 100 %:** beim Modulwechsel prüfen. (PR #496) ☐
+- **GM15 Eigene Karte, Overpass:** erste echte Overpass-Antwort auf einem Gerät: Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“. (#342, #346, #348, #350, #352) ☐
+- **GM16 Eigene Karte, Regionsdatei:** eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser. (#342–#352) ☐
+- **GM17 Eigene Karte, Tempo:** Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen, Wartezeit vom Server); notieren, wie lange es dauert. (PR #387) ☐
+- **GM18 Bank, Person B:** echte Sparkassen-CSV-CAMT importieren, Export in Excel öffnen. (PR #580; vgl. C7, G5) ☐
+- **GM19 Kontoauszug-Import je Bank:** OFX, QIF, Bank-Vorlagen und Spaltenzuordnung je Bank mit echter Datei ([features/bank-import.md](features/bank-import.md)). ☐
+- **GM20 Komfort Einstellungen:** eine Woche Nutzung: Reizlast von Zahnrad und Schnellleiste. (#132, #150, #151, #153; vgl. M1–M4) ☐
+
+### Website (am Handy)
+
+- **GM21 Hero und Anker-Leiste:** Seite scrollen: die Leiste mit den vier Links + GitHub bleibt oben, das Hero-Bild blendet einmal ein (mit „Bewegung reduzieren“ nicht). (PR #674) ☐
+- **GM22 Rest der Seite:** Vorschau einmal ganz durchscrollen. (PR #685) ☐
+- **GM23 Eingefrorene Sprachen:** `/es`, `/fr`, `/pt-br` leiten auf `/en`. (PR #507) ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 

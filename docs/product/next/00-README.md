@@ -4,18 +4,18 @@
 
 **Refresh 2026-10-31:** none of the six had started; the QA round (#271–#333) overtook parts of three prompts, which are updated: **T1** moves out of the first-run quick mode (#276: 3 questions, 5 taps stay) into the full wizard + dashboard checklist; **T4** keeps only what #275 left (area row, Erweitert placement, collapsing top bar, seed banner); **T5 package 2** sits in front of the parser rebuilt by #274. T2, T3 and T6 got the new facts (currency per account, new candidates for the preview list and for lazy loading). All six can start now.
 
-Result of the planning round in this folder: [00-known-open.md](00-known-open.md) (what was already open), [01-ideas.md](01-ideas.md) (46 ideas, top 10), [02-selection.md](02-selection.md) (cut, files, hotspots, risks; addendum 2026-10-29 for what `develop` overtook). One prompt per chat in [prompts/](prompts/), German, same shape as [../focus/15-parallel-prompts-4.md](../focus/15-parallel-prompts-4.md): paste the **common header** from [prompts/00-header.md](prompts/00-header.md) first, then the chat's block. All chats work without questions, except T3 (one stop).
+Result of the planning round in this folder: [00-known-open.md](00-known-open.md) (what was already open), [01-ideas.md](01-ideas.md) (46 ideas, top 10), [02-selection.md](02-selection.md) (cut, files, hotspots, risks; addendum 2026-10-29 for what `develop` overtook). One prompt per chat in prompts/ (removed 2026-11-10, in the git history), German, same shape as ../focus/15-parallel-prompts-4.md (removed 2026-11-10, in the git history): paste the **common header** from prompts/00-header.md (removed 2026-11-10, in the git history) first, then the chat's block. All chats work without questions, except T3 (one stop).
 
 ## The six chats
 
 | # | Chat | Branch(es) | Model | Hotspots owned | Start | Merge order |
 |---|---|---|---|---|---|---|
-| T1 | [Umzugsassistent](prompts/01-umzugsassistent.md) – move-in step in the full wizard + checklist row, Settings entry | `feat/migrate-assistant` | opusplan | – | now | 3 |
-| T2 | [Bank import](prompts/02-bank-import.md) – OFX/QIF, bank CSV presets, remembered column mapping; package 2: money rules | `feat/import-bank-presets`, then `feat/finance-rules` | opusplan | – | now | 2 |
-| T3 | [Reifegrad / "In Arbeit anzeigen"](prompts/03-maturity-switch.md) | `feat/maturity-switch` | **Fable, one stop** | `core/modules/types.ts`, `registry.ts`, `available.ts`; `core/tools/*`; `core/settings/registry/types.ts`; `pages/settings/inventory.*` | now | 6 (last) |
-| T4 | [Mobile header](prompts/04-mobile-header.md) – area row, Erweitert placement, collapsing top bar | `fix/mobile-header` | opusplan | – (`core/shell/pageChrome.ts` one additive field) | now | 1 (first) |
-| T5 | [Capture & presence](prompts/05-capture-presence.md) – 3 packages: Android shortcuts + tile · multi-line capture · tray "Mini-Heute" | `feat/capture-presence-1`, `-2`, `-3` | Opus | `src-tauri/src/capture.rs`, `lib.rs`, `build.rs`, `capabilities/*`; `quickCapture/**`; `plugins/share-intent/android/**`; `core/platform/types.ts` (additive) | now | 4 (per package) |
-| T6 | [Cold start & bundle](prompts/06-cold-start.md) | `perf/cold-start` | Opus | `vite.config.ts`, `sw.ts`, `index.html`, `router.tsx`, `package.json` scripts | now | 5 |
+| T1 | Umzugsassistent (removed 2026-11-10, in the git history) – move-in step in the full wizard + checklist row, Settings entry | `feat/migrate-assistant` | opusplan | – | now | 3 |
+| T2 | Bank import (removed 2026-11-10, in the git history) – OFX/QIF, bank CSV presets, remembered column mapping; package 2: money rules | `feat/import-bank-presets`, then `feat/finance-rules` | opusplan | – | now | 2 |
+| T3 | Reifegrad / "In Arbeit anzeigen" (removed 2026-11-10, in the git history) | `feat/maturity-switch` | **Fable, one stop** | `core/modules/types.ts`, `registry.ts`, `available.ts`; `core/tools/*`; `core/settings/registry/types.ts`; `pages/settings/inventory.*` | now | 6 (last) |
+| T4 | Mobile header (removed 2026-11-10, in the git history) – area row, Erweitert placement, collapsing top bar | `fix/mobile-header` | opusplan | – (`core/shell/pageChrome.ts` one additive field) | now | 1 (first) |
+| T5 | Capture & presence (removed 2026-11-10, in the git history) – 3 packages: Android shortcuts + tile · multi-line capture · tray "Mini-Heute" | `feat/capture-presence-1`, `-2`, `-3` | Opus | `src-tauri/src/capture.rs`, `lib.rs`, `build.rs`, `capabilities/*`; `quickCapture/**`; `plugins/share-intent/android/**`; `core/platform/types.ts` (additive) | now | 4 (per package) |
+| T6 | Cold start & bundle (removed 2026-11-10, in the git history) | `perf/cold-start` | Opus | `vite.config.ts`, `sw.ts`, `index.html`, `router.tsx`, `package.json` scripts | now | 5 |
 
 Mix: 1 cleanup/comfort (T3) · 1 visual (T4) · 3 function (T1, T2, T5) · 1 technical (T6). Dropped from the top 10: 11 home-screen widget (after T5-1, hardware only), 28 money rules (= T2 package 2).
 
