@@ -31,7 +31,7 @@ if (dark) {
 }
 // Chrome: PLAYWRIGHT_CHROMIUM, else the pinned path of the cloud sessions if it exists, else whatever
 // chrome-launcher finds on its own (GitHub runners ship Chrome; CHROME_PATH must not point nowhere).
-const pinned = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const pinned = '/opt/pw-browsers/chromium';
 const chrome = process.env.PLAYWRIGHT_CHROMIUM || (existsSync(pinned) ? pinned : undefined);
 
 const child = spawn(lhci, ['autorun', '--config', path.join(site, 'lighthouserc.cjs'), ...extra], {
