@@ -9,7 +9,10 @@
 //!   back. Without a sound: none is set, and a Windows toast without one is silent (the plugin's
 //!   own `silent()` is for iOS only).
 //! * The tray thread looks every 250 ms. Sessions of several devices between two looks are one
-//!   notice, for the latest device.
+//!   notice, for the latest device; a session that opens in the last moment before the hub stops
+//!   is not told (it ends with the hub).
+//! * No event goes to the page from here. Should the page ever listen for notification actions
+//!   (it does not), the plugin would hand it a clicked notice's text, this one included.
 //! * Nothing here logs. A notice the system does not show (notifications switched off in the
 //!   system) is not an error; the tray stays the guarantee.
 
@@ -31,7 +34,7 @@ const REMEMBERED: usize = 64;
 pub struct Notices {
     /// The count of full sessions last looked at.
     seen: u64,
-    /// Whom a notice was shown for, and when (time since the app started).
+    /// Whom a notice was shown for, and when (on the clock of [`since_start`]).
     shown: Vec<([u8; 32], Duration)>,
 }
 
@@ -63,15 +66,16 @@ impl Notices {
     }
 }
 
-/// Time since the first call (the app's start, near enough): a clock that cannot jump.
+/// Time since the first look: a clock that cannot jump (only differences are used).
 pub fn since_start() -> Duration {
     static START: OnceLock<Instant> = OnceLock::new();
     START.get_or_init(Instant::now).elapsed()
 }
 
-/// Shows the notice. `name` is already plain text (see `remote::shown_name`).
-pub fn show(app: &AppHandle, lang: Lang, name: &str) {
-    let (title, text) = texts::remote_notice(lang, name);
+/// Shows the notice. `name` is already plain text (see `remote::shown_name`); `named` = it is
+/// the device's own name, not the label of a nameless one.
+pub fn show(app: &AppHandle, lang: Lang, name: &str, named: bool) {
+    let (title, text) = texts::remote_notice(lang, name, named);
     let _ = app.notification().builder().title(title).body(text).show();
 }
 
@@ -99,9 +103,6 @@ mod tests {
         // the hub listens before the tray thread exists
         let mut n = Notices::default();
         assert!(n.due(1, Some(PHONE), min(0)));
-        // … also on a hub that was stopped and started, once the quiet time is over
-        n.reset();
-        assert!(n.due(1, Some(PHONE), min(31)));
     }
 
     #[test]

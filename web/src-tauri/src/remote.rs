@@ -253,20 +253,25 @@ fn invisible(c: char) -> bool {
 fn quote(c: char) -> bool {
     matches!(
         c,
-        '"' | '“'
-            | '”'
-            | '„'
-            | '‟'
-            | '«'
-            | '»'
-            | '‹'
-            | '›'
-            | '‘'
-            | '’'
-            | '‚'
-            | '‛'
-            | '`'
-            | '´'
+        '"' | '\u{FF02}' | '\u{301D}'
+            ..='\u{301F}'
+                | '\u{275D}'
+                | '\u{275E}'
+                | '\u{2E42}'
+                | '“'
+                | '”'
+                | '„'
+                | '‟'
+                | '«'
+                | '»'
+                | '‹'
+                | '›'
+                | '‘'
+                | '’'
+                | '‚'
+                | '‛'
+                | '`'
+                | '´'
     )
 }
 
@@ -320,9 +325,10 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     // what was taken away earlier in this run holds for the freshly loaded controls too
     host.narrowed(|n| n.apply(&remote));
     // a new hub counts its mouse/keyboard sessions from zero; whom a notice was shown for is kept
-    if let Ok(mut notices) = host.notices.lock() {
-        notices.reset();
-    }
+    host.notices
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .reset();
     let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
         remote,
@@ -351,17 +357,17 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                             .state::<RemoteHost>()
                             .notices
                             .lock()
-                            .map(|mut n| {
-                                n.due(
-                                    count,
-                                    device.map(|k| *k.as_bytes()),
-                                    remote_notice::since_start(),
-                                )
-                            })
-                            .unwrap_or(false);
+                            .unwrap_or_else(|e| e.into_inner())
+                            .due(
+                                count,
+                                device.map(|k| *k.as_bytes()),
+                                remote_notice::since_start(),
+                            );
                         if let (true, Some(key)) = (due, device) {
                             let lang = crate::capture::native_lang(&app);
-                            remote_notice::show(&app, lang, &name_of(lang, &trust, &key));
+                            let name = trust.find_by_key(&key).map(|d| d.name).unwrap_or_default();
+                            let named = !plain(&name).is_empty();
+                            remote_notice::show(&app, lang, &shown_name(lang, &name, &key), named);
                         }
                     },
                 )
@@ -997,6 +1003,8 @@ mod tests {
             assert!(!spoof.contains(c), "{spoof}");
         }
         assert_eq!(plain("\u{202E}\u{200B}"), "");
+        // look-alikes of a quotation mark close nothing either
+        assert_eq!(plain("A\u{FF02}B\u{301E}C\u{275E}D\u{2E42}"), "A'B'C'D'");
     }
 
     #[test]
