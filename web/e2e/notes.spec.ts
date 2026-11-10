@@ -347,6 +347,25 @@ test.describe('notebook (links, search, export, import, to-do)', () => {
     );
   });
 
+  test('the link field of the selection toolbar takes the focus when it opens', async ({
+    page,
+  }) => {
+    await enable(page, 'notes');
+    await ready(page, '/notes?new=1');
+    await expect(editor(page)).toBeFocused();
+    await page.keyboard.type('Nemo');
+    await page.keyboard.press('Shift+Home');
+    await page.getByRole('button', { name: 'Link', exact: true }).click();
+    const field = page.getByRole('textbox', { name: 'Adresse des Links' });
+    await expect(field).toBeFocused();
+    await page.keyboard.type('https://example.org');
+    await page.keyboard.press('Enter');
+    await expect(editor(page).getByRole('link', { name: 'Nemo' })).toHaveAttribute(
+      'href',
+      'https://example.org',
+    );
+  });
+
   test('a selected checklist item becomes a to-do', async ({ page }) => {
     await enable(page, 'notes');
     await ready(page, '/notes?new=1');

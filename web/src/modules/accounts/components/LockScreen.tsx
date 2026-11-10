@@ -16,6 +16,11 @@ export function LockScreen() {
   const [busy, setBusy] = useState(false);
   const [bio, setBio] = useState<BiometricStatus>();
   const prompted = useRef(false);
+  const root = useRef<HTMLDivElement>(null);
+  // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself.
+  useEffect(() => {
+    root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+  }, []);
 
   async function unlockWithBiometric() {
     setError('');
@@ -60,7 +65,7 @@ export function LockScreen() {
   }
 
   return (
-    <div className={styles.center}>
+    <div className={styles.center} ref={root}>
       <p className={styles.intro}>
         <Icon name="lock" size={18} /> {t.accounts.lock.intro}
       </p>
@@ -76,7 +81,6 @@ export function LockScreen() {
           }}
           error={error}
           data-autofocus
-          autoFocus
         />
         <Button type="submit" variant="primary" disabled={busy || password === ''}>
           {busy ? t.accounts.lock.unlocking : t.accounts.lock.unlock}

@@ -52,7 +52,7 @@ export const vault: Strings['vault'] = {
   removeFile: 'Remove file',
   tooLarge: (max: string) => `The file is too large (at most ${max}).`,
   renew: 'Renewed +1 year',
-  renewAria: (title: string) => `${title}: renew for 1 year`,
+  renewAria: (title: string) => `${title}: Renewed +1 year`,
   renewed: (title: string, date: string) => `“${title}” now runs until ${date}.`,
   download: 'Download',
   search: 'Search documents',
