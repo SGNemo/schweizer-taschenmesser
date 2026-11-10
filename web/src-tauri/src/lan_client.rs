@@ -137,7 +137,7 @@ fn to_hex(bytes: &[u8]) -> String {
     s
 }
 
-fn stored_key<R: Runtime>(app: &AppHandle<R>) -> Result<StaticKey, String> {
+pub(crate) fn stored_key<R: Runtime>(app: &AppHandle<R>) -> Result<StaticKey, String> {
     let text = get(app, KEY_NAME)?.ok_or("not-paired")?;
     let raw = Zeroizing::new(
         STANDARD
@@ -152,7 +152,9 @@ fn stored_key<R: Runtime>(app: &AppHandle<R>) -> Result<StaticKey, String> {
     StaticKey::from_secret_bytes(secret).map_err(|_| "keystore-unavailable".to_owned())
 }
 
-fn hub_entry<R: Runtime>(app: &AppHandle<R>) -> Result<(PublicKey, SocketAddrV4, String), String> {
+pub(crate) fn hub_entry<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(PublicKey, SocketAddrV4, String), String> {
     let text = get(app, HUB_NAME)?.ok_or("not-paired")?;
     let entry: HubEntry = serde_json::from_str(&text).map_err(|_| "not-paired")?;
     let hub = hex32(&entry.hub).ok_or("not-paired")?;
