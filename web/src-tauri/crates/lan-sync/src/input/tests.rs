@@ -597,7 +597,9 @@ fn a_refused_open_leaves_the_devices_running_session_alone() {
     assert_eq!(media.poll(T0), Step::Continue);
     assert_eq!(events(&mut media, &[PAUSE], T0), Step::Continue);
     assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
-    // and a session that never opened does not count as a mouse/keyboard session either
+    // and a session that never opened does not count as a mouse/keyboard session either: the
+    // ticket from before the refused open is still good (`BusyControlled` here would mean the
+    // refused open went through the slot)
     assert!(!b.remote.full_session_open());
     b.remote
         .set_grant(&key(TABLET), grant(Level::Media), Some(ticket))

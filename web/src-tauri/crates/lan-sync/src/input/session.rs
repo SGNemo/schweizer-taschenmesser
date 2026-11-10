@@ -175,8 +175,9 @@ impl InputConn {
             return refused(Code::Unsupported);
         }
         let state = self.sink.state();
-        // judged before the slot is touched: a refused open must leave this device's running
-        // session (its media session, when the Touchpad is tapped on a locked PC) alone
+        // judged before the slot is touched, so that a refused open leaves this device's running
+        // session alone (its media session, when the Touchpad is tapped on a locked PC). What
+        // really keeps input off a locked PC is the check per event; this one is for the answer.
         match self.remote.level_for(&self.peer, asked) {
             Err(code) => return refused(code),
             Ok((Level::Full, _)) if state.locked => return refused(Code::Locked),
@@ -185,8 +186,8 @@ impl InputConn {
         match self.remote.claim(self.peer, asked, self.handle.clone()) {
             Err(code) => refused(code),
             Ok(Claimed { level, grant, flag }) => {
-                // … and once more on the level the session really got (the grant may have been
-                // raised between the two looks)
+                // … and once more on the level the session really got: the grant may have been
+                // raised between the two looks (only then is the older session already replaced)
                 if state.locked && level == Level::Full {
                     self.remote.release(&flag);
                     return refused(Code::Locked);

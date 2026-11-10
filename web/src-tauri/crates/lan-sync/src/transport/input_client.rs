@@ -26,8 +26,9 @@
 //!   next touch – the answer to that `open` is the real state. A `Closed` from a session the
 //!   caller has already replaced or closed is to be ignored.
 //! * There is no heartbeat, but an answer: after frames came in, the hub sends its state within
-//!   about half a second even if nothing changed. A PC that vanishes without closing (sleep, Wi-Fi gone)
-//!   is therefore noticed by the caller as "sent something, heard nothing for a few seconds".
+//!   about half a second even if nothing changed. A PC that vanishes without closing (sleep,
+//!   Wi-Fi gone) is therefore noticed by the caller as "sent something, heard nothing for a few
+//!   seconds".
 //! * `Protocol` from `open` also covers a refusal code this version does not know (a newer PC):
 //!   show the unconnected state and offer to try again.
 //! * A send error is never a state to show: `Closed` means this session is over (see its
