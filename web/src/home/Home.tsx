@@ -137,17 +137,22 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
 
   const layout = saved ?? DEFAULT_LAYOUT;
   const showPreview = useUiStore((s) => s.showPreview);
-  // Widgets of enabled modules; a widget marked preview only with "In Arbeit anzeigen" or when pinned.
+  // Widgets of enabled modules; a widget marked preview only with "In Arbeit anzeigen" or when pinned. Nothing is
+  // drawn before the saved layout is read: the default order (and widgets the person has hidden) would show for a
+  // moment and then jump.
+  const layoutRead = saved !== undefined;
   const entries = useMemo(
     () =>
-      withoutFolded(
-        allEntries().filter(
-          (e) =>
-            states?.[e.moduleId] &&
-            isWidgetVisible(e.key, e, { showPreview, pinned: layout.pinned }),
-        ),
-      ),
-    [states, showPreview, layout.pinned],
+      layoutRead
+        ? withoutFolded(
+            allEntries().filter(
+              (e) =>
+                states?.[e.moduleId] &&
+                isWidgetVisible(e.key, e, { showPreview, pinned: layout.pinned }),
+            ),
+          )
+        : [],
+    [states, showPreview, layout.pinned, layoutRead],
   );
   const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
   const homeView = useUiStore((s) => s.homeView);
