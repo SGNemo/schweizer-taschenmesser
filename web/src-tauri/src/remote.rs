@@ -11,10 +11,12 @@
 //!   first, in a fixed order: take `Remote::ticket()`, show the dialog, call the setter with the
 //!   ticket. The page cannot answer that dialog, and the crate refuses a widening while a
 //!   mouse/keyboard session is open or was opened since the ticket,
-//! * keeps the tray telling the truth from Rust state while a device controls the PC.
+//! * keeps the tray telling the truth from Rust state while a device controls the PC, and shows
+//!   the quiet notice when a mouse/keyboard session begins (`remote_notice.rs`).
 //!
 //! Nothing here logs. No command takes an input action; the only way in is the hub's input session.
 
+use crate::remote_notice::{self, Notices};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
 use ::lan_sync::input::wire::{Button, Level, Media, PcState, VOLUME_UNKNOWN};
@@ -157,6 +159,8 @@ pub struct RemoteHost {
     /// reads switch and grants from disk again; a narrowing whose write failed would come back
     /// without anyone being asked. It is applied again on every start instead.
     narrowed: Mutex<Narrowed>,
+    /// Whom the notice of a mouse/keyboard session was shown for, and when. Memory only.
+    notices: Mutex<Option<Notices>>,
 }
 
 #[derive(Default)]
@@ -315,6 +319,14 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     };
     // what was taken away earlier in this run holds for the freshly loaded controls too
     host.narrowed(|n| n.apply(&remote));
+    // sessions from before this moment are not told after the fact; what was shown is kept
+    if let Ok(mut notices) = host.notices.lock() {
+        let count = remote.full_opened().0;
+        match notices.as_mut() {
+            Some(n) => n.restart(count),
+            None => *notices = Some(Notices::starting_at(count)),
+        }
+    }
     let (watcher, rx) = mpsc::channel::<Signal>();
     let parts = Parts {
         remote,
@@ -337,6 +349,28 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                         })
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
+                    || {
+                        let (count, device) = remote.full_opened();
+                        let due = app
+                            .state::<RemoteHost>()
+                            .notices
+                            .lock()
+                            .ok()
+                            .and_then(|mut n| {
+                                n.as_mut().map(|n| {
+                                    n.due(
+                                        count,
+                                        device.map(|k| *k.as_bytes()),
+                                        remote_notice::since_start(),
+                                    )
+                                })
+                            })
+                            .unwrap_or(false);
+                        if let (true, Some(key)) = (due, device) {
+                            let lang = crate::capture::native_lang(&app);
+                            remote_notice::show(&app, lang, &name_of(lang, &trust, &key));
+                        }
+                    },
                 )
             })
             .ok()
@@ -352,9 +386,11 @@ fn watch(
     rx: mpsc::Receiver<Signal>,
     controller: impl Fn() -> Option<String>,
     mut write: impl FnMut(Option<String>),
+    mut each_look: impl FnMut(),
 ) {
     let mut shown: Option<String> = None;
     loop {
+        each_look();
         let now = controller();
         if now != shown {
             write(now.clone());
@@ -1100,14 +1136,18 @@ mod tests {
     fn the_tray_thread_writes_only_changes_and_clears_when_the_hub_stops() {
         let who = Arc::new(Mutex::new(None::<String>));
         let written = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+        let looks = Arc::new(AtomicUsize::new(0));
         let (tx, rx) = mpsc::channel::<Signal>();
         let thread = {
-            let (who, written) = (who.clone(), written.clone());
+            let (who, written, looks) = (who.clone(), written.clone(), looks.clone());
             std::thread::spawn(move || {
                 watch(
                     rx,
                     || who.lock().unwrap().clone(),
                     |c| written.lock().unwrap().push(c),
+                    move || {
+                        looks.fetch_add(1, Ordering::SeqCst);
+                    },
                 )
             })
         };
@@ -1137,8 +1177,10 @@ mod tests {
         let (tx, rx) = mpsc::channel::<Signal>();
         drop(tx);
         let mut writes = 0;
-        watch(rx, || None, |_| writes += 1);
+        watch(rx, || None, |_| writes += 1, || {});
         assert_eq!(writes, 0);
+        // every look also looks for a new mouse/keyboard session
+        assert!(looks.load(Ordering::SeqCst) >= 4);
     }
 
     #[test]

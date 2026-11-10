@@ -309,6 +309,22 @@ pub fn remote_ask_more(lang: Lang, more: usize) -> String {
     }
 }
 
+/// The notice when a device starts to control mouse and keyboard: (title, text). `name` is
+/// already plain text. It says what happens and where it ends; nothing to do, no alarm.
+pub fn remote_notice(lang: Lang, name: &str) -> (&'static str, String) {
+    if german(lang) {
+        (
+            "Fernsteuerung",
+            format!("{name} steuert jetzt Maus und Tastatur dieses PCs. Beenden: Nemo-Symbol in der Taskleiste."),
+        )
+    } else {
+        (
+            "Remote control",
+            format!("{name} now controls this PC's mouse and keyboard. To end it: the Nemo icon in the taskbar."),
+        )
+    }
+}
+
 /// The tray entry while a device controls this PC.
 pub fn remote_end_label(lang: Lang) -> &'static str {
     if german(lang) {
@@ -415,6 +431,8 @@ mod tests {
             let tip = remote_tooltip(lang, &"N".repeat(300), "X");
             assert!(tip.contains('X') && tip.chars().count() < 100);
             assert!(!remote_end_label(lang).is_empty() && !remote_end_hint(lang).is_empty());
+            let (title, text) = remote_notice(lang, "X");
+            assert!(!title.is_empty() && text.starts_with('X') && !text.contains('!'));
         }
         assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
         assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));

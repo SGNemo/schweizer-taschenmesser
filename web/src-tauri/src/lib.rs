@@ -32,6 +32,8 @@ mod panic_log;
 mod portable;
 #[cfg(desktop)]
 mod remote;
+#[cfg(desktop)]
+mod remote_notice;
 // Remote control, phone side. Compiled for the phone (and for the unit tests): on the desktop no
 // command of it is registered.
 #[cfg(any(mobile, test))]

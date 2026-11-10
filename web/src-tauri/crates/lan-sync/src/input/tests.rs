@@ -673,6 +673,30 @@ fn a_session_closed_by_the_registry_no_longer_holds_the_slot() {
     assert!(!b.remote.full_session_open());
 }
 
+#[test]
+fn the_count_of_full_sessions_moves_with_each_one_and_never_for_media() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    b.grant(TABLET, Level::Full);
+    assert_eq!(b.remote.full_opened(), (0, None));
+    // a media session of a device with a full grant: nothing
+    let (media, _) = b.opened(PHONE, Level::Media);
+    assert_eq!(b.remote.full_opened(), (0, None));
+    drop(media);
+    // a refused open: nothing
+    b.remote.enable_now(false).unwrap();
+    assert_eq!(b.refusal(PHONE, Level::Full), Code::RemoteOff);
+    assert_eq!(b.remote.full_opened(), (0, None));
+    b.remote.enable_now(true).unwrap();
+    // every full session counts, however short, and names its device
+    let (full, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(b.remote.full_opened(), (1, Some(key(PHONE))));
+    drop(full);
+    assert_eq!(b.remote.full_opened(), (1, Some(key(PHONE))));
+    let (_tablet, _) = b.opened(TABLET, Level::Full);
+    assert_eq!(b.remote.full_opened(), (2, Some(key(TABLET))));
+}
+
 // ---- nothing is widened while a device controls mouse and keyboard ----
 
 #[test]

@@ -348,6 +348,9 @@ fn no_tauri_command_simulates_input() {
         "Worker",
         "Pointer",
         "Mouse",
+        "remote_notice",
+        "Notices",
+        "full_opened",
         "Command::",
         "Media::",
         ".apply(",
@@ -410,6 +413,35 @@ fn no_tauri_command_simulates_input() {
                 "{name} reaches the input sink"
             );
         }
+    }
+}
+
+/// The notice of a mouse/keyboard session comes from Rust alone: one place shows it (the tray
+/// thread, off the hub's own count of such sessions), no command and no event to the page is
+/// involved, and it has no sound.
+#[test]
+fn the_full_session_notice_is_shown_from_rust_only() {
+    let remote = source("remote.rs");
+    let code = &remote[..remote.find("#[cfg(test)]").unwrap()];
+    assert_eq!(code.matches("remote_notice::show(").count(), 1);
+    assert_eq!(code.matches("full_opened()").count(), 2, "attach and look");
+    let notice = source("remote_notice.rs");
+    let code = &notice[..notice.find("#[cfg(test)]").unwrap()];
+    assert!(code.contains(".silent()"));
+    for forbidden in ["emit(", "tauri::command", "std::fs", "File::", ".sound("] {
+        assert!(!code.contains(forbidden), "remote_notice.rs: {forbidden}");
+    }
+    for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
+        let path = entry.unwrap().path();
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        if path.extension().is_none_or(|e| e != "rs") || name == "remote.rs" {
+            continue;
+        }
+        let text = fs::read_to_string(&path).unwrap();
+        assert!(
+            name == "remote_notice.rs" || name == "lib.rs" || !text.contains("remote_notice::"),
+            "{name} reaches the notice"
+        );
     }
 }
 
