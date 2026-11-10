@@ -67,6 +67,8 @@ jobs:
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    # Rust takes 13 min (p90 15.4, Nov 2026); without a limit a hang holds a runner for six hours.
+    timeout-minutes: 40
     permissions:
       # required for all workflows
       security-events: write

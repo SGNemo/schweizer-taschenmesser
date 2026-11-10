@@ -12,13 +12,13 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Licence check (lock files) | every code change | yes | every code change | yes | yes | – |
 | Unit tests (3 shards) | if `web/` or `.changes/` changed | yes | if `web/` or `.changes/` changed | yes | yes | – |
 | E2E app, smoke (35 spec files, desktop, 3 shards: critical paths plus the standing promises a11y, calm, hide-values, touch, layout, readability, identity) | if `web/` (not only `web/src-tauri/`) changed | yes | no | yes (**Dev-Preview gate**) | yes | – |
-| Seed project (2 shards) and **Stimulus budget** with its ratchet step (both blocking, parts of the check `Web`) | if `web/` (not only `web/src-tauri/`) or a shared input changed | yes | no | yes (ratchet step: PR runs only) | yes | – |
+| Seed project (4 jobs: the page walks and the other tests, 2 shards each) and **Stimulus budget** with its ratchet step (both blocking, parts of the check `Web`) | if `web/` (not only `web/src-tauri/`) or a shared input changed | yes | no | yes (ratchet step: PR runs only) | yes | – |
 | E2E app, rest (everything else: Pixel 7, the other specs on desktop; 8 shards) | no | yes | no | yes, next to the smoke list, the build and the publish | yes | – |
 | Sync E2E (next to the smoke list) | if `web/` (not only `src-tauri/`) or `server/` changed | yes | no | yes | yes | – |
 | Browser extension (its own E2E runs against the web app) | if `extension/` or `web/` (not only `src-tauri/`) changed | yes | no | yes | yes | – |
 | server, MCP, supporter (+ CLI), supporter webhook (job "Small packages") | only for the package that changed | yes | no | yes | yes | – |
 | vault-core | only when a shared input changed | yes | no | yes | yes | – |
-| Native shell (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes | no | yes | yes | – |
+| Native shell (fmt, clippy, tests; on Windows clippy and tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes, plus the Windows release build for the exe size | no | yes, with the release build | yes, with the release build | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
 | CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
 | Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published when the gate is green: gitleaks, licences, static, unit, E2E smoke, native shell**; the rest of the run (rest E2E, sync E2E + seed, small packages, extension, local model, docs) follows and cannot hold the preview back (not for docs-only pushes) | – | – |
@@ -32,6 +32,7 @@ How to read it:
 - **Docs-only changes** (see [howto/ci.md](howto/ci.md)) start none of the heavy jobs; `README*.md` and other root files are not docs for the pre-check and run every package; `docs/AI-IMPORT*` and `docs/user/installation*` run static + unit.
 - **What leaves the plain PR runs later, not never:** Pixel 7 and the specs outside the smoke list first run after the merge (push `develop`) or overnight; accessibility, layout, touch, calm mode, hide-values, identity and the seed specs run on every web PR (desktop project; the phone ones set their own viewport). A red `develop` run blocks the Dev-Preview; the chat whose merge broke it fixes it (check Actions → CI on `develop` after merging).
 - **Nightly** (`nightly.yml`) is a scheduled workflow and GitHub fires those only from the default branch: it is active once `nightly.yml` is on `main` (next release merge). Until then the push runs on `develop` cover the same set.
+- **CI feels slow?** `node scripts/ci/measure.mjs` (repo root; needs `gh`, read-only) prints wait and run time per job, push → green, runner load per hour, overtaken runs and, with `--tests 150`, failed and retried tests by file:line. Last report and levers: [perf/CI-2026-11.md](perf/CI-2026-11.md). Each push to a PR costs about 35 runner minutes: merge `develop` in once ([PROMPT-TEMPLATES](PROMPT-TEMPLATES.md#git)).
 - Add a spec to the PR smoke set only if it guards start-up, data safety, navigation or a module's create/edit path: `SMOKE_FILES` in `web/playwright.config.ts` (a protected file: that PR is a ratchet hit and needs Sven's approval).
 
 ## More recipes (one file per topic, load only what you need)
