@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS, LOGO_RIM } from './ui/Logo';
+import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS, LOGO_RIM, LOGO_TILE } from './ui/Logo';
 
 /**
  * The fish exists three times: as SVG source (`brand/logo-mark.svg`, rendered to every icon), in
@@ -31,6 +31,12 @@ describe('brand assets stay in step', () => {
       const text = read(`brand/${file}`);
       for (const d of paths) expect(text, file).toContain(`d="${d}"`);
     }
+  });
+
+  it('the tile in the app (collapsed sidebar) is the app icon: same corner radius, same placement of the fish', () => {
+    const icon = read('brand/app-icon.svg');
+    expect(icon).toContain(`rx="${LOGO_TILE.radius}"`);
+    expect(icon).toContain(`<g transform="${LOGO_TILE.transform}">`);
   });
 
   it('the logo colour is the accent token, in the app and in the static brand files', () => {

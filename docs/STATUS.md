@@ -4,6 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
+Eingeklappte Seitenleiste und Fisch v2.2 (#669, Council-Entwurf E): Logo als App-Icon-Kachel auf einem 4-px-Raster, Uhr einzeilig, Symbole grau (Farbe nur aktiv), Tooltip auch bei Tastaturfokus; Fisch = alte A2b-Form aus einem Stück mit größerer Schwanzflosse, füllt die Kachel, alle Icons neu erzeugt. Offen: Tooltip ohne Escape, README-/Website-Screenshots mit alter Pille.
 Sync-Fix (`e2e/sync/sync.spec.ts:211` blieb mit einem Outbox-Eintrag stehen): Gerät ohne Passwortsatz mit nachgehender Uhr lud Klartext auf einen verschlüsselten Server (`engine.ts`, Verschlüsselungsprüfung jetzt vor dem Drift-Filter; [decisions/core.md](decisions/core.md)); der Fresh-Install-Test schließt seinen Kontext; offen: Server nimmt neben einem Tresor weiter Klartext an.
 
 UI-Audit 4.0, AE1 vorgezogen (`fix/ae1-disabled-button`): deaktivierte `Button`, `Checkbox`, `Switch` sind ein eigener Zustand (Fläche `--surface-2`, Text `--text-3`, kein Akzent, keine `opacity`; ohne neuen Token, `--surface-sunken` bleibt bei 0b-1); Quelltext-Test in `ui/Button.test.tsx` („kein `opacity`/Akzent auf `:disabled` in `ui/*.module.css`“); offen: `FileField` (`data-disabled`).

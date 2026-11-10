@@ -25,19 +25,12 @@
 .bar {
   font-size: var(--text-md);
 }
-/* Folded sidebar: hours over minutes under the mark, smaller. */
+/* Folded sidebar: one small line under the tile, as tall with the Uhr module (a link) as without. */
 .rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: var(--text-sm);
-}
-/* Only when two digits fit the rail without overflow (sidebar width, not the window). */
-@container sidebar (max-width: 2em) {
-  .rail,
-  .link:has(.rail) {
-    display: none;
-  }
+  display: grid;
+  place-items: center;
+  min-height: 1.5rem;
+  font-size: var(--text-caps);
 }
 /* While the Uhr module is on, the time opens it: a quiet link, ≥ 44 px tall, underline only on hover/focus. */
 .link {
@@ -54,4 +47,14 @@
 .link:focus-visible .clock {
   color: var(--text);
   text-decoration: underline;
+}
+/* In the rail a mouse gets a low link (the time's own 24 px, docs/howto/design-rules.md), so the time stays close to
+   the tile; a touch screen keeps the full height. */
+.railTime {
+  min-height: 0;
+}
+@media (any-pointer: coarse) {
+  .railTime {
+    min-height: var(--touch);
+  }
 }
