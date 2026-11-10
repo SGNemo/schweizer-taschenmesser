@@ -95,6 +95,11 @@ impl Endpoint {
         self.key.public()
     }
 
+    /// Closes every input session (remote control) and no sync session. Returns how many.
+    pub fn close_input_sessions(&self) -> usize {
+        self.sessions.close_input(None)
+    }
+
     /// Handles the first message of a connection on which no input session may start.
     pub fn handle_first(&self, wire: &[u8]) -> FirstReply {
         self.handle_first_on(wire, false)

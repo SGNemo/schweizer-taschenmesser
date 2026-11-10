@@ -274,7 +274,11 @@ impl Link {
     }
 }
 
-pub(crate) struct Conn(TcpStream);
+pub(crate) struct Conn {
+    stream: TcpStream,
+    /// The peer closed the connection (as opposed to: nothing came in time).
+    eof: bool,
+}
 
 impl Conn {
     pub(crate) fn connect(addr: SocketAddrV4) -> Result<Conn, ClientError> {
@@ -285,20 +289,28 @@ impl Conn {
             .map_err(|_| ClientError::Network)?;
         s.set_read_timeout(Some(POLL))
             .map_err(|_| ClientError::Network)?;
-        Ok(Conn(s))
+        Ok(Conn {
+            stream: s,
+            eof: false,
+        })
     }
 
     /// A second handle on the same socket (the input client reads on its own thread).
     pub(crate) fn try_clone(&self) -> Result<Conn, ClientError> {
-        self.0
+        self.stream
             .try_clone()
-            .map(Conn)
+            .map(|stream| Conn { stream, eof: false })
             .map_err(|_| ClientError::Network)
+    }
+
+    /// Whether the last failed read ended because the peer closed the connection.
+    pub(crate) fn peer_closed(&self) -> bool {
+        self.eof
     }
 
     /// Ends the connection for both handles; a blocked read returns.
     pub(crate) fn shutdown(&self) {
-        let _ = self.0.shutdown(std::net::Shutdown::Both);
+        let _ = self.stream.shutdown(std::net::Shutdown::Both);
     }
 
     pub(crate) fn write(&mut self, wire: &[u8]) -> Result<(), ClientError> {
@@ -306,7 +318,9 @@ impl Conn {
         let mut out = Vec::with_capacity(2 + wire.len());
         out.extend_from_slice(&len.to_be_bytes());
         out.extend_from_slice(wire);
-        self.0.write_all(&out).map_err(|_| ClientError::Network)
+        self.stream
+            .write_all(&out)
+            .map_err(|_| ClientError::Network)
     }
 
     /// One whole frame of at most `cap` bytes within `wait`; `cancelled` is polled between reads.
@@ -340,8 +354,11 @@ impl Conn {
             }
             let mut chunk = [0u8; 4096];
             let take = want.min(chunk.len());
-            match self.0.read(&mut chunk[..take]) {
-                Ok(0) => return Err(ClientError::Network),
+            match self.stream.read(&mut chunk[..take]) {
+                Ok(0) => {
+                    self.eof = true;
+                    return Err(ClientError::Network);
+                }
                 Ok(n) => buf.extend_from_slice(&chunk[..n]),
                 Err(e) if matches!(e.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) => {}
                 Err(e) if e.kind() == ErrorKind::Interrupted => {}

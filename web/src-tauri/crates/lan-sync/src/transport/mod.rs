@@ -512,13 +512,42 @@ fn drive(
     }
 }
 
+/// How long a closing connection keeps reading (and discarding) so its last frame arrives.
+const GOODBYE: Duration = Duration::from_millis(500);
+
+/// The last frame is written; the peer may still be sending. Closing with unread bytes makes the
+/// OS reset the connection, and the peer could lose that last frame (the reason it was closed).
+/// So: no more writes, then read and discard until the peer closes or a short time is over.
+/// Nothing that is read here is looked at.
+fn say_goodbye(stream: &mut TcpStream) {
+    if stream.shutdown(std::net::Shutdown::Write).is_err() {
+        return;
+    }
+    let until = Instant::now() + GOODBYE;
+    let mut sink = [0u8; 1024];
+    while Instant::now() < until {
+        match stream.read(&mut sink) {
+            Ok(0) => return,
+            Ok(_) => {}
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    ErrorKind::WouldBlock | ErrorKind::TimedOut | ErrorKind::Interrupted
+                ) => {}
+            Err(_) => return,
+        }
+    }
+}
+
 /// Carries out what the connection decided; `false` = the connection is over.
 fn act(stream: &mut TcpStream, out: Outcome) -> bool {
     match out {
         Outcome::Continue => true,
         Outcome::Reply(w) => write_frame(stream, &w),
         Outcome::ReplyClose(w) => {
-            let _ = write_frame(stream, &w);
+            if write_frame(stream, &w) {
+                say_goodbye(stream);
+            }
             false
         }
         Outcome::Close => false,

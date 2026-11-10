@@ -3,15 +3,18 @@
 //! commands); no frame from the network ever calls one.
 //!
 //! Widening (switching the master switch on, a higher level, lifting a pause, dropping the unlock
-//! request) is refused while a mouse/keyboard session is open: that session could click the PC's
-//! own confirmation. The shell asks in a native dialog first and calls the setter afterwards, so
-//! the check here is the one that runs *after* the dialog returned.
+//! request) needs a [`Ticket`]: the shell takes one, asks in its native dialog, and passes the
+//! ticket to the setter. The setter refuses if a mouse/keyboard session is open now **or was
+//! opened at any moment since the ticket was taken** – such a session could have clicked the PC's
+//! own confirmation, also if it is gone again by the time the dialog returns. A session counts as
+//! open until its connection has really finished (buttons let go), not just until it was told to
+//! end.
 
 use super::wire::{Code, Level};
 use crate::noise::PublicKey;
-use crate::trust::{RemoteGrant, SessionHandle, SessionRegistry, TrustError, TrustStore};
+use crate::trust::{RemoteGrant, SessionHandle, TrustError, TrustStore};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// Could not read or write the switch. Carries no content.
@@ -105,8 +108,11 @@ impl MasterSwitch for FileSwitch {
 /// Why one of the PC's own controls refused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlError {
-    /// A device controls mouse and keyboard right now: nothing is widened until that session ended.
+    /// A device controls mouse and keyboard right now, or did since the confirmation was asked
+    /// for: nothing is widened. Ask again once that session has ended.
     BusyControlled,
+    /// A widening without a [`Ticket`]: the confirmation at the PC was skipped.
+    Unconfirmed,
     /// No such active device.
     NotFound,
     Storage,
@@ -119,6 +125,11 @@ pub struct Status {
     pub controller: Option<(PublicKey, Level)>,
 }
 
+/// Proof that a widening was asked for before the PC's confirmation was shown: it remembers how
+/// many mouse/keyboard sessions had been opened by then. Not `Clone`: one confirmation, one use.
+#[derive(Debug)]
+pub struct Ticket(u64);
+
 /// `end` of a controller: 0 = live, a [`Code`] byte = the PC ended it with that reason,
 /// [`REPLACED`] = the same device opened a new session (closed without a reason).
 const LIVE: u8 = 0;
@@ -128,6 +139,7 @@ const REPLACED: u8 = 0xff;
 pub(crate) struct Flag {
     end: AtomicU8,
     handle: SessionHandle,
+    level: Level,
 }
 
 /// How a controller's session ended from the PC's side.
@@ -152,6 +164,11 @@ impl Flag {
         self.end.load(Ordering::SeqCst) == LIVE && !self.handle.is_closed()
     }
 
+    /// Whether the session was replaced or its bind stopped being home (no word to the phone).
+    pub(crate) fn ended_silently(&self) -> bool {
+        self.ended() == Some(Ended::Silently)
+    }
+
     /// The first reason sticks.
     fn end_with(&self, reason: u8) {
         let _ = self
@@ -169,21 +186,22 @@ struct Controller {
 pub struct Remote {
     trust: Arc<dyn TrustStore>,
     switch: Arc<dyn MasterSwitch>,
-    sessions: Arc<SessionRegistry>,
     slot: Mutex<Option<Controller>>,
+    /// Mouse/keyboard sessions that were claimed and whose connection has not finished yet (a
+    /// session that was told to end still counts until it let go of everything).
+    full_active: AtomicUsize,
+    /// Mouse/keyboard sessions ever claimed (what a [`Ticket`] remembers).
+    full_claims: AtomicU64,
 }
 
 impl Remote {
-    pub fn new(
-        trust: Arc<dyn TrustStore>,
-        switch: Arc<dyn MasterSwitch>,
-        sessions: Arc<SessionRegistry>,
-    ) -> Self {
+    pub fn new(trust: Arc<dyn TrustStore>, switch: Arc<dyn MasterSwitch>) -> Self {
         Remote {
             trust,
             switch,
-            sessions,
             slot: Mutex::new(None),
+            full_active: AtomicUsize::new(0),
+            full_claims: AtomicU64::new(0),
         }
     }
 
@@ -210,54 +228,68 @@ impl Remote {
             .map(|c| (c.peer, c.level))
     }
 
-    /// Whether a mouse/keyboard session is open right now. A slot that cannot be read counts as
-    /// "yes" (nothing is widened on a doubt).
+    /// Whether a mouse/keyboard session is open right now: claimed, and its connection not yet
+    /// finished. Being told to end is not enough – what it already took in may still be acting.
     pub fn full_session_open(&self) -> bool {
-        match self.slot.lock() {
-            Ok(slot) => slot
-                .as_ref()
-                .is_some_and(|c| c.flag.live() && c.level == Level::Full),
-            Err(_) => true,
-        }
+        self.full_active.load(Ordering::SeqCst) > 0
     }
 
-    /// The master switch. Off ends every input session at once (sync sessions are not touched).
-    pub fn set_enabled(&self, on: bool) -> Result<(), ControlError> {
+    /// Taken **before** the PC's confirmation is shown; passed to the setter afterwards.
+    pub fn ticket(&self) -> Ticket {
+        Ticket(self.full_claims.load(Ordering::SeqCst))
+    }
+
+    /// A widening goes through only with a ticket, with no mouse/keyboard session open, and with
+    /// none opened since the ticket was taken.
+    fn may_widen(&self, ticket: Option<&Ticket>) -> Result<(), ControlError> {
+        let ticket = ticket.ok_or(ControlError::Unconfirmed)?;
+        if self.full_session_open() || ticket.0 != self.full_claims.load(Ordering::SeqCst) {
+            return Err(ControlError::BusyControlled);
+        }
+        Ok(())
+    }
+
+    /// The master switch. Switching on is a widening (it needs a ticket). Switching off needs
+    /// none: the controlling session is told `remote-off` and stops at its next frame or tick;
+    /// every later `open` is refused. Sync sessions are not touched.
+    pub fn set_enabled(&self, on: bool, ticket: Option<&Ticket>) -> Result<(), ControlError> {
         if on {
-            if !self.enabled() && self.full_session_open() {
-                return Err(ControlError::BusyControlled);
+            if self.enabled() {
+                return Ok(());
             }
+            self.may_widen(ticket)?;
             return self.switch.set(true).map_err(|_| ControlError::Storage);
         }
         let stored = self.switch.set(false);
-        // whatever the file said: the switch reads off now, and the sessions go
-        self.end_controller(None, Code::RemoteOff);
-        self.sessions.close_input(None);
+        // whatever the file said: the switch reads off now
+        self.end_controller(None, Code::RemoteOff.byte());
         stored.map_err(|_| ControlError::Storage)
     }
 
-    /// Sets the grant of one device. A widening is refused while a mouse/keyboard session is open;
-    /// a narrowing below the level of that device's open session ends the session.
-    pub fn set_grant(&self, key: &PublicKey, grant: RemoteGrant) -> Result<(), ControlError> {
+    /// Sets the grant of one device. A widening needs a ticket (see [`Ticket`]). If that device
+    /// controls right now, its session ends: with a reason when nothing is left for it, without a
+    /// word when it may simply open again (so it learns its new grant with the next `opened`).
+    pub fn set_grant(
+        &self,
+        key: &PublicKey,
+        grant: RemoteGrant,
+        ticket: Option<&Ticket>,
+    ) -> Result<(), ControlError> {
         let old = self.trust.remote_of(key);
-        if grant.widens(&old) && self.full_session_open() {
-            return Err(ControlError::BusyControlled);
+        if grant.widens(&old) {
+            self.may_widen(ticket)?;
         }
         self.trust.set_remote(key, grant).map_err(|e| match e {
             TrustError::NotFound | TrustError::Revoked => ControlError::NotFound,
             _ => ControlError::Storage,
         })?;
-        if let Ok(slot) = self.slot.lock() {
-            if let Some(c) = slot.as_ref().filter(|c| c.peer == *key) {
-                if grant.effective() < c.level {
-                    let code = if grant.paused {
-                        Code::Paused
-                    } else {
-                        Code::NotGranted
-                    };
-                    c.flag.end_with(code.byte());
-                }
-            }
+        if grant != old {
+            let reason = match grant.effective() {
+                Level::Off if grant.paused => Code::Paused.byte(),
+                Level::Off => Code::NotGranted.byte(),
+                _ => REPLACED,
+            };
+            self.end_controller(Some(key), reason);
         }
         Ok(())
     }
@@ -267,40 +299,41 @@ impl Remote {
     pub fn end(&self) -> Option<PublicKey> {
         let (peer, _) = self.live_controller()?;
         // the session is told first, so it stops whatever the store then says
-        self.end_controller(Some(&peer), Code::Ended);
+        self.end_controller(Some(&peer), Code::Ended.byte());
         let mut grant = self.trust.remote_of(&peer);
         grant.paused = true;
-        if self.trust.set_remote(&peer, grant).is_err() {
-            // the pause could not be stored: still no input from this device for now
-            self.sessions.close_input(Some(&peer));
-        }
+        // a pause that cannot be written still holds in memory (a narrowing is never rolled back)
+        let _ = self.trust.set_remote(&peer, grant);
         Some(peer)
     }
 
-    fn end_controller(&self, only: Option<&PublicKey>, code: Code) {
+    /// The bind a session came in on is no longer the home network: whoever controls stops.
+    pub(crate) fn home_lost(&self) {
+        self.end_controller(None, REPLACED);
+    }
+
+    fn end_controller(&self, only: Option<&PublicKey>, reason: u8) {
         if let Ok(slot) = self.slot.lock() {
             if let Some(c) = slot
                 .as_ref()
                 .filter(|c| only.map_or(true, |p| c.peer == *p))
             {
-                c.flag.end_with(code.byte());
+                c.flag.end_with(reason);
             }
         }
     }
 
-    /// An `open` from the network asks for the slot. Returns the session's level (the smaller of
-    /// asked and granted), the device's grant and the session's flag – or the reason for the phone.
-    /// This reads the switch and the grant; it never changes either.
-    pub(crate) fn claim(
+    /// What an `open` for `asked` would get: the session's level (the smaller of asked and
+    /// granted) and the device's grant – or the reason for the phone. Reads only.
+    pub(crate) fn level_for(
         &self,
-        peer: PublicKey,
+        peer: &PublicKey,
         asked: Level,
-        handle: SessionHandle,
-    ) -> Result<(Level, RemoteGrant, Arc<Flag>), Code> {
+    ) -> Result<(Level, RemoteGrant), Code> {
         if !self.enabled() {
             return Err(Code::RemoteOff);
         }
-        let grant = self.trust.remote_of(&peer);
+        let grant = self.trust.remote_of(peer);
         if grant.paused {
             return Err(Code::Paused);
         }
@@ -308,32 +341,70 @@ impl Remote {
         if level == Level::Off {
             return Err(Code::NotGranted);
         }
+        Ok((level, grant))
+    }
+
+    /// An `open` from the network asks for the slot. Returns the session's level, the device's
+    /// grant, the session's flag and whether an older session of the same device was replaced –
+    /// or the reason for the phone. This reads the switch and the grant; it never changes either.
+    pub(crate) fn claim(
+        &self,
+        peer: PublicKey,
+        asked: Level,
+        handle: SessionHandle,
+    ) -> Result<Claimed, Code> {
         let mut slot = self.slot.lock().map_err(|_| Code::Busy)?;
+        // decided under the slot's lock, so two opens cannot both see it free
+        let (level, grant) = self.level_for(&peer, asked)?;
+        let mut replaced = false;
         if let Some(c) = slot.as_ref().filter(|c| c.flag.live()) {
             if c.peer != peer {
                 return Err(Code::Busy);
             }
             // the same device moves on (media → full, or a reconnect): its older session ends
             c.flag.end_with(REPLACED);
+            replaced = true;
         }
         let flag = Arc::new(Flag {
             end: AtomicU8::new(LIVE),
             handle,
+            level,
         });
+        if level == Level::Full {
+            self.full_active.fetch_add(1, Ordering::SeqCst);
+            self.full_claims.fetch_add(1, Ordering::SeqCst);
+        }
         *slot = Some(Controller {
             peer,
             level,
             flag: flag.clone(),
         });
-        Ok((level, grant, flag))
+        Ok(Claimed {
+            level,
+            grant,
+            flag,
+            replaced,
+        })
     }
 
-    /// The session of `flag` is gone: frees the slot if it still holds it.
+    /// The session of `flag` has finished (its buttons are let go). Called exactly once per claim.
     pub(crate) fn release(&self, flag: &Arc<Flag>) {
+        if flag.level == Level::Full {
+            self.full_active.fetch_sub(1, Ordering::SeqCst);
+        }
         if let Ok(mut slot) = self.slot.lock() {
             if slot.as_ref().is_some_and(|c| Arc::ptr_eq(&c.flag, flag)) {
                 *slot = None;
             }
         }
     }
+}
+
+/// What an accepted `open` got.
+pub(crate) struct Claimed {
+    pub level: Level,
+    pub grant: RemoteGrant,
+    pub flag: Arc<Flag>,
+    /// An older session of the same device held the slot until now.
+    pub replaced: bool,
 }

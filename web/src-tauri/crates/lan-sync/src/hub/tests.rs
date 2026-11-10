@@ -1331,7 +1331,7 @@ fn rotation_fails_when_sessions_cannot_be_closed() {
 
 // ---------- input sessions (remote control) through the router ----------
 
-use crate::input::tests::TestSink;
+use crate::input::tests::{Confirmed, TestSink};
 use crate::input::wire::{self as iw, Code, Level, Media, Record};
 use crate::input::{Action, MasterSwitch, MemorySwitch, Remote};
 use crate::noise::frame::{INPUT_CAP, MAX_FRAME, PRE_CONFIRM_CAP};
@@ -1353,7 +1353,7 @@ fn input_rig() -> InputRig {
     let mut r = rig();
     let switch = Arc::new(MemorySwitch::new());
     switch.set(true).unwrap();
-    let remote = Arc::new(Remote::new(r.trust.clone(), switch, r.sessions.clone()));
+    let remote = Arc::new(Remote::new(r.trust.clone(), switch));
     let sink = TestSink::new();
     let keys = MemoryKeyStore::empty();
     // the router is rebuilt around a fresh endpoint with the same parts
@@ -1416,7 +1416,7 @@ fn open_input(c: &mut Client, level: Level) -> (u8, Vec<u8>) {
 fn granted(i: &InputRig, key: &StaticKey, level: Level) {
     pair_device(&i.r, key);
     i.remote
-        .set_grant(
+        .grant_now(
             &key.public(),
             RemoteGrant {
                 level,
@@ -1455,6 +1455,8 @@ fn an_input_session_starts_only_on_a_bind_of_the_home_network() {
     // and a caller that does not know the local address at all
     assert!(refused(Some(FOREIGN_LOCAL), PEER, Mode::Input));
     assert!(refused(Some("10.0.0.99"), PEER, Mode::Input));
+    // a peer on the other network that dials the home address is not on the home network
+    assert!(refused(Some(HOME_LOCAL), FOREIGN_PEER, Mode::Input));
     assert!(refused(None, PEER, Mode::Input));
     // sync is what it was, on both binds
     assert!(!refused(Some(FOREIGN_LOCAL), FOREIGN_PEER, Mode::Session));
@@ -1687,7 +1689,7 @@ fn ending_remote_control_never_closes_a_sync_session() {
 
     // the master switch off: every input session goes, with or without an open
     i.remote
-        .set_grant(
+        .grant_now(
             &key.public(),
             RemoteGrant {
                 level: Level::Full,
@@ -1697,16 +1699,29 @@ fn ending_remote_control_never_closes_a_sync_session() {
         .unwrap();
     let mut opened = input_session(&i, &key);
     assert_eq!(open_input(&mut opened, Level::Full).0, iw::TAG_OPENED);
-    let waiting = input_session(&i, &key);
-    assert_eq!(i.r.sessions.open_count(), 3);
-    i.remote.set_enabled(false).unwrap();
-    assert!(opened.conn.is_closed() && waiting.conn.is_closed());
+    let mut waiting = input_session(&i, &key);
+    i.remote.enable_now(false).unwrap();
+    // the open session is told why on its next tick; one that has not opened is refused
+    let Outcome::ReplyClose(w) = opened.conn.poll_outbound(T0) else {
+        panic!("not closed")
+    };
+    let (tag, body) = opened.t.open(&w).unwrap();
+    assert_eq!(
+        (tag, iw::decode_code(&body).unwrap()),
+        (iw::TAG_CLOSED, Code::RemoteOff)
+    );
+    let (tag, body) = open_input(&mut waiting, Level::Media);
+    assert_eq!(
+        (tag, iw::decode_code(&body).unwrap()),
+        (iw::TAG_REFUSED, Code::RemoteOff)
+    );
+    drop((opened, waiting));
     assert_eq!(i.r.sessions.open_count(), 1, "the sync session");
     assert!(sync.request(&info).get("error").is_none());
     assert!(!i.remote.full_session_open());
 
     // revoking the device closes both kinds
-    i.remote.set_enabled(true).unwrap();
+    i.remote.enable_now(true).unwrap();
     let c = input_session(&i, &key);
     i.r.sessions.revoke(&*i.r.trust, &key.public()).unwrap();
     assert!(c.conn.is_closed() && sync.conn.is_closed());
@@ -1747,4 +1762,60 @@ fn binds_say_whether_they_are_on_the_stored_home_network() {
     );
     // an interface without a network id is never home, whatever is stored
     assert!(Bind::new(Ipv4Addr::new(10, 0, 0, 1), 8).is_some_and(|b| !b.is_home()));
+}
+
+#[test]
+fn when_a_bind_stops_being_the_home_network_its_input_sessions_end() {
+    let i = input_rig();
+    let key = StaticKey::generate().unwrap();
+    granted(&i, &key, Level::Full);
+    let mut sync = session(&i.r, &key);
+    let mut c = input_session(&i, &key);
+    assert_eq!(open_input(&mut c, Level::Full).0, iw::TAG_OPENED);
+    let waiting = input_session(&i, &key);
+    let home = |flag: bool| {
+        vec![Bind::new(Ipv4Addr::new(10, 0, 0, 1), 16)
+            .unwrap()
+            .with_home(flag)]
+    };
+    // the same binds again: nothing happens
+    i.r.router.set_binds(home(true));
+    assert!(!c.conn.is_closed());
+    // the home network was replaced while listening: same address, no longer home
+    i.r.router.set_binds(home(false));
+    assert!(c.conn.is_closed() && waiting.conn.is_closed());
+    assert_eq!(i.remote.status().controller, None);
+    let wire =
+        c.t.seal(
+            iw::TAG_EVENTS,
+            &iw::encode_events(&[Record::Move { dx: 1, dy: 1 }]).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(c.conn.on_frame(&wire, 7, NOW_MS, T0), Outcome::Close);
+    assert!(i.sink.taken().is_empty());
+    // sync on that bind is what it was
+    assert!(sync
+        .request(&json!({"keyVersion": 1, "type": "info"}))
+        .get("error")
+        .is_none());
+    // and no new input session starts there
+    let (init, wire) = first(&key, &i.r.hub_key, Mode::Input);
+    let Opened::Refuse(m2) = i.r.router.accept_on(v4(HOME_LOCAL), v4(PEER), &wire, T0) else {
+        panic!()
+    };
+    assert!(matches!(init.finish(&m2).unwrap(), Finished::Refused(_)));
+}
+
+#[test]
+fn two_interfaces_on_one_address_give_one_bind_that_is_home_only_if_both_are() {
+    use NetCategory::*;
+    let net = Net(Ok(vec![
+        iface("192.168.1.20", true, Private, Some("home")),
+        iface("192.168.1.20", true, Private, Some("cafe")),
+    ]));
+    let Decision::On(binds) = decide(&net, &Home(Ok(Some("home".into()))), want(true, 1)) else {
+        panic!()
+    };
+    assert_eq!(binds.len(), 1, "one listener per address");
+    assert!(!binds[0].is_home());
 }

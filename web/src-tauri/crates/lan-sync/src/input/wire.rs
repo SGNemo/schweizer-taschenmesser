@@ -181,14 +181,14 @@ pub struct Opened {
     pub state: PcState,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Button {
     Left,
     Right,
 }
 
 /// The fixed list of keys. Never a raw key code; a combination is one id.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Key {
     Enter,
     Escape,
@@ -228,11 +228,12 @@ const KEYS: [Key; 16] = [
 ];
 
 /// The fixed list of media-level commands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Media {
     PlayPause,
     Next,
     Previous,
+    /// One step up. Also lifts a mute (the user pressed "louder" and expects to hear something).
     VolumeUp,
     VolumeDown,
     MuteToggle,
@@ -251,7 +252,7 @@ const MEDIA: [Media; 7] = [
 ];
 
 /// One input event. Four bytes on the wire: `kind, a, b, reserved (0)`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Record {
     Move { dx: i8, dy: i8 },
     Button { button: Button, down: bool },
@@ -259,6 +260,19 @@ pub enum Record {
     Key(Key),
     Media(Media),
 }
+
+/// What was pressed or moved is never formatted, not even by accident in an assertion message:
+/// these types print as their name only.
+macro_rules! name_only_fmt {
+    ($($ty:ident),*) => {$(
+        impl std::fmt::Debug for $ty {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(concat!(stringify!($ty), "(..)"))
+            }
+        }
+    )*};
+}
+name_only_fmt!(Button, Key, Media, Record);
 
 const KIND_MOVE: u8 = 1;
 const KIND_BUTTON: u8 = 2;

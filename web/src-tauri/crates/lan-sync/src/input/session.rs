@@ -5,14 +5,16 @@
 //! session ended at the PC, is the master switch on, does the device still hold this level. Then
 //! per record: does the session's level cover it (a pointer, key or text record on a media session
 //! is a violation and closes it, whatever the grant says), is the PC locked (then only media
-//! commands act), is it within the limits. Only what passed reaches the sink.
+//! commands act; the phone learns it from the `locked` bit of the state), is it within the limits.
+//! Only what passed reaches the sink. The release of a button always passes: nothing may stay
+//! held because a limit or the lock got in the way.
 //!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
 use super::limits::{Limits, Verdict};
-use super::remote::{Ended, Flag, Remote};
+use super::remote::{Claimed, Ended, Flag, Remote};
 use super::sink::{Action, InputSink};
-use super::wire::{self, Code, Level, Opened, PcState};
+use super::wire::{self, Code, Level, Opened, PcState, Record};
 use crate::noise::PublicKey;
 use crate::trust::SessionHandle;
 use std::sync::Arc;
@@ -134,27 +136,32 @@ impl InputConn {
         let Ok(asked) = wire::decode_open(body) else {
             return Step::Close;
         };
-        // the PC's own decisions first (switch, pause, grant), then what the machine can do
-        if !self.remote.enabled() {
-            return refused(Code::RemoteOff);
-        }
-        let grant = self.remote.grant_of(&self.peer);
-        if grant.paused {
-            return refused(Code::Paused);
-        }
-        if grant.level == Level::Off {
-            return refused(Code::NotGranted);
-        }
+        // what the machine can do at all comes first: on a PC that cannot be controlled, "allow it
+        // at the PC" would send the user on a pointless errand
         if !self.sink.supported() {
             return refused(Code::Unsupported);
         }
+        let level = match self.remote.level_for(&self.peer, asked) {
+            Ok((level, _)) => level,
+            Err(code) => return refused(code),
+        };
         let state = self.sink.state();
-        if state.locked && asked.min(grant.level) == Level::Full {
+        if state.locked && level == Level::Full {
             return refused(Code::Locked);
         }
         match self.remote.claim(self.peer, asked, self.handle.clone()) {
             Err(code) => refused(code),
-            Ok((level, grant, flag)) => {
+            Ok(Claimed {
+                level,
+                grant,
+                flag,
+                replaced,
+            }) => {
+                if replaced {
+                    // whatever the older session of this device still held is let go now, before
+                    // this one acts (its own teardown will not do it later, see `teardown`)
+                    self.sink.release_all();
+                }
                 self.phase = Phase::Live(Box::new(Live {
                     level,
                     flag,
@@ -184,14 +191,13 @@ impl InputConn {
             return Err(closed(Code::RemoteOff));
         }
         let grant = remote.grant_of(peer);
-        if grant.effective() < live.level {
-            return Err(closed(if grant.paused {
-                Code::Paused
-            } else {
-                Code::NotGranted
-            }));
+        match grant.effective() {
+            l if l >= live.level => Ok(()),
+            Level::Off if grant.paused => Err(closed(Code::Paused)),
+            Level::Off => Err(closed(Code::NotGranted)),
+            // something is left (media): no reason, the phone opens again and learns its grant
+            _ => Err(Step::Close),
         }
-        Ok(())
     }
 
     fn events(
@@ -206,7 +212,6 @@ impl InputConn {
         if let Err(step) = Self::still_allowed(remote, peer, live) {
             return step;
         }
-        let locked = sink.state().locked;
         match tag {
             wire::TAG_EVENTS => {
                 let Ok(records) = wire::decode_events(body) else {
@@ -217,10 +222,14 @@ impl InputConn {
                     return Step::Close;
                 }
                 for r in records {
-                    if locked && r.needs_full() {
-                        continue;
-                    }
-                    match live.limits.record(&r, now) {
+                    let release = matches!(r, Record::Button { down: false, .. });
+                    // the lock state is looked at for every record
+                    let verdict = if !release && r.needs_full() && sink.state().locked {
+                        live.limits.dropped(now)
+                    } else {
+                        live.limits.record(&r, now)
+                    };
+                    match verdict {
                         Verdict::Pass => sink.apply(Action::from(r)),
                         Verdict::Drop => {}
                         Verdict::Flood => return closed(Code::Limit),
@@ -235,10 +244,12 @@ impl InputConn {
                 let Ok(text) = wire::check_text(body) else {
                     return Step::Close;
                 };
-                if locked {
-                    return Step::Continue;
-                }
-                match live.limits.text(text.len(), now) {
+                let verdict = if sink.state().locked {
+                    live.limits.dropped(now)
+                } else {
+                    live.limits.text(text.len(), now)
+                };
+                match verdict {
                     Verdict::Pass => sink.apply(Action::Text(text.to_owned())),
                     Verdict::Drop => {}
                     Verdict::Flood => return closed(Code::Limit),
@@ -260,7 +271,11 @@ impl InputConn {
 
     fn teardown(&mut self) {
         if let Phase::Live(live) = std::mem::replace(&mut self.phase, Phase::Done) {
-            self.sink.release_all();
+            // a session that was replaced by a newer one of the same device lets go of nothing
+            // here: the newer one did that when it opened, and may be holding a button by now
+            if !(live.flag.ended_silently() && self.remote.status().controller.is_some()) {
+                self.sink.release_all();
+            }
             self.remote.release(&live.flag);
         }
     }

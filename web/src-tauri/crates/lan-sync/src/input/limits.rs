@@ -28,23 +28,32 @@ impl Bucket {
         }
     }
 
-    /// Takes `n` tokens if they are there. A `now` that runs backwards refills nothing.
-    pub fn take(&mut self, n: u64, now: Duration) -> bool {
+    /// Credits the whole milliseconds since the last refill (the rest stays for the next call). A
+    /// `now` that runs backwards refills nothing.
+    fn refill(&mut self, now: Duration) {
         let ms = u64::try_from(now.saturating_sub(self.last).as_millis()).unwrap_or(u64::MAX);
         if ms > 0 {
             self.micro = self
                 .micro
                 .saturating_add(ms.saturating_mul(self.micro_per_ms))
                 .min(self.cap);
-            self.last = now;
+            self.last = self.last.saturating_add(Duration::from_millis(ms));
         }
-        match n.checked_mul(MICRO) {
-            Some(need) if need <= self.micro => {
-                self.micro -= need;
-                true
-            }
-            _ => false,
+    }
+
+    /// Whether `n` tokens are there, without taking them.
+    pub fn has(&mut self, n: u64, now: Duration) -> bool {
+        self.refill(now);
+        n.checked_mul(MICRO).is_some_and(|need| need <= self.micro)
+    }
+
+    /// Takes `n` tokens if they are there.
+    pub fn take(&mut self, n: u64, now: Duration) -> bool {
+        if !self.has(n, now) {
+            return false;
         }
+        self.micro -= n * MICRO;
+        true
     }
 }
 
@@ -87,28 +96,42 @@ impl Limits {
     }
 
     pub fn record(&mut self, r: &Record, now: Duration) -> Verdict {
-        let ok = self.all.take(1, now)
-            && match r {
-                Record::Move { .. } | Record::Scroll { .. } => true,
-                // a release always passes its own limit: a button must never stay down
-                Record::Button { down, .. } => !*down || self.clicks.take(1, now),
-                Record::Key(_) => self.keys.take(1, now),
-                Record::Media(m) => {
-                    self.media.take(1, now)
-                        && match m {
-                            Media::VolumeUp => self.volume_up.take(1, now),
-                            Media::Lock => self.lock.take(1, now),
-                            _ => true,
-                        }
-                }
-            };
+        // the buckets on this record's path; a token is taken only if every one of them has one,
+        // so a refused volume step does not use up the media or the overall budget
+        let (a, b): (Option<&mut Bucket>, Option<&mut Bucket>) = match r {
+            // a release passes everything: a button must never stay down
+            Record::Button { down: false, .. } => return Verdict::Pass,
+            Record::Move { .. } | Record::Scroll { .. } => (None, None),
+            Record::Button { .. } => (Some(&mut self.clicks), None),
+            Record::Key(_) => (Some(&mut self.keys), None),
+            Record::Media(Media::VolumeUp) => (Some(&mut self.media), Some(&mut self.volume_up)),
+            Record::Media(Media::Lock) => (Some(&mut self.media), Some(&mut self.lock)),
+            Record::Media(_) => (Some(&mut self.media), None),
+        };
+        let mut path = [Some(&mut self.all), a, b];
+        let ok = path.iter_mut().flatten().all(|bucket| bucket.has(1, now));
+        if ok {
+            for bucket in path.iter_mut().flatten() {
+                bucket.take(1, now);
+            }
+        }
         self.verdict(ok, now)
     }
 
     pub fn text(&mut self, bytes: usize, now: Duration) -> Verdict {
         let n = u64::try_from(bytes).unwrap_or(u64::MAX);
-        let ok = self.all.take(1, now) && self.text.take(n, now);
+        let ok = self.all.has(1, now) && self.text.has(n, now);
+        if ok {
+            self.all.take(1, now);
+            self.text.take(n, now);
+        }
         self.verdict(ok, now)
+    }
+
+    /// Something that was not applied for another reason (the PC is locked) counts as a drop too,
+    /// so a session cannot send without end into a locked PC.
+    pub fn dropped(&mut self, now: Duration) -> Verdict {
+        self.verdict(false, now)
     }
 
     fn verdict(&mut self, ok: bool, now: Duration) -> Verdict {

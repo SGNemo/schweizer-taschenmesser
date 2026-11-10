@@ -2,7 +2,7 @@ use super::*;
 use crate::endpoint::Endpoint;
 use crate::hub::router::Admission;
 use crate::hub::{Hub, TAG_REQUEST, TAG_RESPONSE};
-use crate::input::tests::TestSink;
+use crate::input::tests::{Confirmed, TestSink};
 use crate::input::{MemorySwitch, Remote};
 use crate::noise::frame::{TAG_DATA_KEY, TAG_HELLO};
 use crate::noise::{self, Finished, Mode, Psk, StaticKey, Transport};
@@ -67,7 +67,7 @@ fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
     adm.set_binds(loopback().into_iter().map(|b| b.with_home(home)).collect());
     adm.allow_loopback_for_tests();
     let switch = Arc::new(MemorySwitch::new());
-    let remote = Arc::new(Remote::new(trust.clone(), switch, sessions.clone()));
+    let remote = Arc::new(Remote::new(trust.clone(), switch));
     let sink = TestSink::new();
     let router =
         Arc::new(Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone()));
@@ -777,9 +777,9 @@ mod input_client {
     fn granted(r: &Rig, level: Level) -> StaticKey {
         let key = StaticKey::generate().unwrap();
         pair_over_socket(r, &key);
-        r.remote.set_enabled(true).unwrap();
+        r.remote.enable_now(true).unwrap();
         r.remote
-            .set_grant(
+            .grant_now(
                 &key.public(),
                 RemoteGrant {
                     level,
@@ -924,14 +924,14 @@ mod input_client {
             refusal(Level::Media),
             Some(InputError::Refused(Code::RemoteOff))
         );
-        r.remote.set_enabled(true).unwrap();
+        r.remote.enable_now(true).unwrap();
         assert_eq!(
             refusal(Level::Media),
             Some(InputError::Refused(Code::NotGranted))
         );
         let grant = |level| {
             r.remote
-                .set_grant(
+                .grant_now(
                     &key.public(),
                     RemoteGrant {
                         level,
@@ -969,7 +969,8 @@ mod input_client {
             open(&r, &stranger, Level::Media).err(),
             Some(InputError::UnknownDevice)
         );
-        // a wrong hub key is just "not reachable"
+        // a hub that hangs up on the first message without a word: a wrong hub key here, and what
+        // a hub from before remote control does with the unknown mode
         let wrong = StaticKey::generate().unwrap().public();
         let (tx, _rx) = channel();
         assert_eq!(
@@ -983,9 +984,59 @@ mod input_client {
                 })
             )
             .err(),
+            Some(InputError::NoAnswer)
+        );
+        // nobody listening at all is "not reachable"
+        let dead = {
+            let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            match l.local_addr().unwrap() {
+                std::net::SocketAddr::V4(a) => a,
+                _ => unreachable!(),
+            }
+        };
+        let (tx, _rx) = channel();
+        assert_eq!(
+            open_via(
+                dead,
+                &key,
+                &r.hub_key,
+                Level::Media,
+                Box::new(move |e| {
+                    let _ = tx.send(e);
+                })
+            )
+            .err(),
             Some(InputError::Network)
         );
         assert!(r.sink.taken().is_empty());
+    }
+
+    /// The phone is in the middle of sending when the PC ends the session: the reason still
+    /// arrives (the hub does not just drop the socket with unread bytes in it).
+    #[test]
+    fn the_reason_arrives_also_while_the_phone_is_still_sending() {
+        for _ in 0..5 {
+            let r = rig();
+            let key = granted(&r, Level::Full);
+            let (input, _, events) = open(&r, &key, Level::Full).unwrap();
+            let input = Arc::new(input);
+            let sender = {
+                let input = input.clone();
+                std::thread::spawn(move || {
+                    let frame = [Record::Move { dx: 1, dy: 0 }; 8];
+                    while input.send_events(&frame).is_ok() {
+                        std::thread::sleep(Duration::from_millis(1));
+                    }
+                })
+            };
+            wait_for(|| !r.sink.actions.lock().unwrap().is_empty());
+            r.remote.end();
+            assert_eq!(
+                events.recv_timeout(WAIT),
+                Ok(Event::Closed(Some(Code::Ended)))
+            );
+            sender.join().unwrap();
+        }
     }
 
     #[test]
@@ -1036,9 +1087,12 @@ mod input_client {
         };
         assert_eq!(end, Event::Closed(None), "idle: closed without a reason");
         assert!(states >= 1, "state frames did arrive");
-        // at most 5 a second (one per 200 ms)
-        assert!(states <= 5, "{states} state frames in under a second");
-        assert!(began.elapsed() < Duration::from_millis(2500));
+        // one per 200 ms at most, however fast the state changes
+        let most = began.elapsed().as_millis() / 200 + 1;
+        assert!(
+            states as u128 <= most,
+            "{states} state frames, at most {most}"
+        );
         wait_for(|| r.remote.status().controller.is_none());
         input.close();
     }

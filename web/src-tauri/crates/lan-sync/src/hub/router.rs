@@ -75,11 +75,26 @@ impl Admission {
         peer_allowed(peer, &self.binds)
     }
 
-    /// Whether `local` (the address a connection came in on) is a bind of the stored home network.
-    fn is_home(&self, local: IpAddr) -> bool {
+    /// Whether a connection is on the stored home network: it came in on the address of a home
+    /// bind **and** its peer sits in that bind's subnet. The second half matters while a pairing
+    /// window has the hub on another network too: a peer over there that dials the home address
+    /// is still not on the home network.
+    fn is_home(&self, local: IpAddr, peer: IpAddr) -> bool {
+        let IpAddr::V4(peer) = peer else {
+            return false;
+        };
         self.binds
             .iter()
-            .any(|b| IpAddr::V4(b.ip()) == local && b.is_home())
+            .any(|b| IpAddr::V4(b.ip()) == local && b.is_home() && b.contains(peer))
+    }
+
+    /// The addresses that count as the home network right now.
+    fn home_addrs(&self) -> Vec<std::net::Ipv4Addr> {
+        self.binds
+            .iter()
+            .filter(|b| b.is_home())
+            .map(Bind::ip)
+            .collect()
     }
 
     /// Replaces the bound subnets (after the network decision changed).
@@ -161,9 +176,24 @@ impl Router {
         self
     }
 
+    /// Replaces the binds. If an address stops being the home network (the home network was
+    /// replaced, or the hub stopped listening there), every input session is closed: input is
+    /// accepted on the stored home network only, not just at its handshake.
     pub fn set_binds(&self, binds: Vec<Bind>) {
-        if let Ok(mut a) = self.admission.lock() {
-            a.set_binds(binds);
+        let lost_home = match self.admission.lock() {
+            Ok(mut a) => {
+                let before = a.home_addrs();
+                a.set_binds(binds);
+                let after = a.home_addrs();
+                before.iter().any(|ip| !after.contains(ip))
+            }
+            Err(_) => true,
+        };
+        if lost_home {
+            if let Some((remote, _)) = &self.input {
+                remote.home_lost();
+            }
+            self.endpoint.close_input_sessions();
         }
     }
 
@@ -195,7 +225,7 @@ impl Router {
         let (admitted, home) = match self.admission.lock() {
             Ok(mut a) => (
                 a.admit(peer, wire.len(), now),
-                local.is_some_and(|l| a.is_home(l)),
+                local.is_some_and(|l| a.is_home(l, peer)),
             ),
             Err(_) => (Err(Refusal::Address), false),
         };

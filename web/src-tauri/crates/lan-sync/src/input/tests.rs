@@ -60,6 +60,23 @@ impl InputSink for TestSink {
     }
 }
 
+/// The PC's confirmation given at once: a ticket taken right before the setter runs.
+pub(crate) trait Confirmed {
+    fn grant_now(&self, key: &PublicKey, grant: RemoteGrant) -> Result<(), ControlError>;
+    fn enable_now(&self, on: bool) -> Result<(), ControlError>;
+}
+
+impl Confirmed for Remote {
+    fn grant_now(&self, key: &PublicKey, grant: RemoteGrant) -> Result<(), ControlError> {
+        let ticket = self.ticket();
+        self.set_grant(key, grant, Some(&ticket))
+    }
+    fn enable_now(&self, on: bool) -> Result<(), ControlError> {
+        let ticket = self.ticket();
+        self.set_enabled(on, Some(&ticket))
+    }
+}
+
 const T0: Duration = Duration::from_secs(100);
 const PHONE: u8 = 1;
 const TABLET: u8 = 2;
@@ -91,7 +108,7 @@ fn bench() -> Bench {
     let sessions = Arc::new(SessionRegistry::new());
     let switch = Arc::new(MemorySwitch::new());
     switch.set(true).unwrap();
-    let remote = Arc::new(Remote::new(trust.clone(), switch, sessions.clone()));
+    let remote = Arc::new(Remote::new(trust.clone(), switch));
     Bench {
         trust,
         sessions,
@@ -109,7 +126,7 @@ fn grant(level: Level) -> RemoteGrant {
 
 impl Bench {
     fn grant(&self, device: u8, level: Level) {
-        self.remote.set_grant(&key(device), grant(level)).unwrap();
+        self.remote.grant_now(&key(device), grant(level)).unwrap();
     }
 
     /// A connection that said `hello`.
@@ -176,12 +193,12 @@ fn a_paired_device_controls_nothing_until_the_pc_says_so() {
     assert_eq!(b.refusal(PHONE, Level::Full), Code::NotGranted);
     // a grant, but the master switch is off
     b.grant(PHONE, Level::Full);
-    b.remote.set_enabled(false).unwrap();
+    b.remote.enable_now(false).unwrap();
     assert_eq!(b.refusal(PHONE, Level::Media), Code::RemoteOff);
-    b.remote.set_enabled(true).unwrap();
+    b.remote.enable_now(true).unwrap();
     // paused at the PC
     b.remote
-        .set_grant(
+        .grant_now(
             &key(PHONE),
             RemoteGrant {
                 paused: true,
@@ -240,7 +257,7 @@ fn the_level_of_a_session_is_the_smaller_of_asked_and_granted() {
 
     // the unlock option off
     b.remote
-        .set_grant(
+        .grant_now(
             &key(PHONE),
             RemoteGrant {
                 unlock: false,
@@ -338,6 +355,9 @@ fn a_locked_pc_takes_media_commands_only() {
     );
     assert_eq!(c.on_frame(wire::TAG_TEXT, b"hello", T0), Step::Continue);
     assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
+    // … except the release of a button, which always goes through (nothing stays held)
+    assert_eq!(events(&mut c, &[UNCLICK], T0), Step::Continue);
+    assert_eq!(b.sink.taken().len(), 1);
     // unlocked again (at the PC): the session goes on
     b.sink.set_locked(false);
     assert_eq!(events(&mut c, &[MOVE], T0), Step::Continue);
@@ -350,22 +370,36 @@ fn every_frame_looks_at_the_switch_and_the_grant_again() {
     let b = bench();
     b.grant(PHONE, Level::Full);
     let (mut c, _) = b.opened(PHONE, Level::Full);
-    b.remote.set_enabled(false).unwrap();
+    b.remote.enable_now(false).unwrap();
     assert_eq!(closed_with(&events(&mut c, &[MOVE], T0)), Code::RemoteOff);
     assert!(b.sink.taken().is_empty());
     assert_eq!(b.sink.released.load(Ordering::SeqCst), 1, "buttons let go");
 
-    // the level is lowered below the session's
+    // the grant changes but something is left: the session ends without a reason, and the
+    // phone's next open tells it what it has now (never "remote control is off" when media works)
+    for opened_at in [Level::Full, Level::Media] {
+        let b = bench();
+        b.grant(PHONE, Level::Full);
+        let (mut c, _) = b.opened(PHONE, opened_at);
+        b.grant(PHONE, Level::Media);
+        assert_eq!(events(&mut c, &[PAUSE], T0), Step::Close);
+        assert!(b.sink.taken().is_empty());
+        drop(c);
+        let (_c, o) = b.opened(PHONE, Level::Full);
+        assert_eq!((o.level, o.grant), (Level::Media, Level::Media));
+    }
+    // … also when it grows: a media session learns that mouse and keyboard are allowed now
     let b = bench();
-    b.grant(PHONE, Level::Full);
-    let (mut c, _) = b.opened(PHONE, Level::Full);
     b.grant(PHONE, Level::Media);
-    assert_eq!(closed_with(&events(&mut c, &[PAUSE], T0)), Code::NotGranted);
-    assert!(b.sink.taken().is_empty());
-
-    // lowered, but not below the session's level: it goes on
-    let b = bench();
+    let (mut c, o) = b.opened(PHONE, Level::Media);
+    assert_eq!(o.grant, Level::Media);
     b.grant(PHONE, Level::Full);
+    assert_eq!(c.poll(T0), Step::Close);
+    drop(c);
+    assert_eq!(b.opened(PHONE, Level::Media).1.grant, Level::Full);
+    // setting the same grant again changes nothing for an open session
+    let b = bench();
+    b.grant(PHONE, Level::Media);
     let (mut c, _) = b.opened(PHONE, Level::Media);
     b.grant(PHONE, Level::Media);
     assert_eq!(events(&mut c, &[PAUSE], T0), Step::Continue);
@@ -471,14 +505,21 @@ fn the_same_device_moves_from_media_to_full_by_opening_anew() {
     // the older session ends without a word and can do nothing any more
     assert_eq!(events(&mut media, &[PAUSE], T0), Step::Close);
     assert!(b.sink.taken().is_empty());
-    // … and its end does not free the newer session's slot
+    // what the older session might have held was let go when the newer one opened …
+    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1);
+    assert_eq!(events(&mut full, &[CLICK], T0), Step::Continue);
+    // … and the older session's end neither frees the newer one's slot nor lets go of the
+    // button the newer one is holding by now
     drop(media);
+    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1);
     assert_eq!(
         b.remote.status().controller,
         Some((key(PHONE), Level::Full))
     );
     assert_eq!(events(&mut full, &[MOVE], T0), Step::Continue);
-    assert_eq!(b.sink.taken().len(), 1);
+    assert_eq!(b.sink.taken().len(), 2);
+    drop(full);
+    assert_eq!(b.sink.released.load(Ordering::SeqCst), 2);
 }
 
 #[test]
@@ -486,13 +527,16 @@ fn a_session_closed_by_the_registry_no_longer_holds_the_slot() {
     let b = bench();
     b.grant(PHONE, Level::Full);
     b.grant(TABLET, Level::Media);
-    let (_phone, _) = b.opened(PHONE, Level::Full);
+    let (phone, _) = b.opened(PHONE, Level::Full);
     assert!(b.remote.full_session_open());
     // revoke closes the device's sessions (registry), whatever its connection thread does
     b.sessions.revoke(&*b.trust, &key(PHONE)).unwrap();
+    assert_eq!(b.remote.status().controller, None, "nobody controls");
+    let (_tablet, _) = b.opened(TABLET, Level::Media);
+    // but until that connection has really finished, it still counts for the widening guard
+    assert!(b.remote.full_session_open());
+    drop(phone);
     assert!(!b.remote.full_session_open());
-    assert_eq!(b.remote.status().controller, None);
-    b.opened(TABLET, Level::Media);
 }
 
 // ---- nothing is widened while a device controls mouse and keyboard ----
@@ -506,13 +550,13 @@ fn no_widening_while_a_mouse_and_keyboard_session_is_open() {
         paused: true,
         ..grant(Level::Media)
     };
-    b.remote.set_grant(&key(TABLET), paused).unwrap();
+    b.remote.grant_now(&key(TABLET), paused).unwrap();
     let (full, _) = b.opened(PHONE, Level::Full);
 
     let busy = Err(ControlError::BusyControlled);
     // a higher level, lifting a pause, dropping the unlock request: all refused
     assert_eq!(
-        b.remote.set_grant(
+        b.remote.grant_now(
             &key(TABLET),
             RemoteGrant {
                 level: Level::Full,
@@ -521,9 +565,9 @@ fn no_widening_while_a_mouse_and_keyboard_session_is_open() {
         ),
         busy
     );
-    assert_eq!(b.remote.set_grant(&key(TABLET), grant(Level::Media)), busy);
+    assert_eq!(b.remote.grant_now(&key(TABLET), grant(Level::Media)), busy);
     assert_eq!(
-        b.remote.set_grant(
+        b.remote.grant_now(
             &key(PHONE),
             RemoteGrant {
                 unlock: false,
@@ -536,7 +580,7 @@ fn no_widening_while_a_mouse_and_keyboard_session_is_open() {
     assert!(b.remote.grant_of(&key(PHONE)).unlock);
     // narrowing always works
     b.remote
-        .set_grant(
+        .grant_now(
             &key(TABLET),
             RemoteGrant {
                 level: Level::Off,
@@ -547,8 +591,83 @@ fn no_widening_while_a_mouse_and_keyboard_session_is_open() {
     // once that session is over, widening works again
     drop(full);
     b.remote
-        .set_grant(&key(TABLET), grant(Level::Full))
+        .grant_now(&key(TABLET), grant(Level::Full))
         .unwrap();
+}
+
+#[test]
+fn a_session_that_was_told_to_end_still_blocks_widening_until_it_has_finished() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened(PHONE, Level::Full);
+    b.remote.end();
+    // told to end, but its connection has not acted on it yet (it may be in the middle of a frame)
+    assert_eq!(b.remote.status().controller, None);
+    assert!(b.remote.full_session_open());
+    assert_eq!(
+        b.remote.grant_now(&key(TABLET), grant(Level::Media)),
+        Err(ControlError::BusyControlled)
+    );
+    assert_eq!(closed_with(&c.poll(T0)), Code::Ended);
+    assert!(!b.remote.full_session_open());
+    b.remote
+        .grant_now(&key(TABLET), grant(Level::Media))
+        .unwrap();
+}
+
+#[test]
+fn a_widening_needs_a_ticket_from_before_the_confirmation() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let widen = grant(Level::Media);
+    // no ticket: the confirmation at the PC was skipped
+    assert_eq!(
+        b.remote.set_grant(&key(TABLET), widen, None),
+        Err(ControlError::Unconfirmed)
+    );
+    assert_eq!(b.remote.grant_of(&key(TABLET)), RemoteGrant::default());
+    // the dialog is up (ticket taken) …
+    let ticket = b.remote.ticket();
+    // … a device with the full level opens a session, clicks, and is gone again …
+    let (c, _) = b.opened(PHONE, Level::Full);
+    drop(c);
+    assert!(!b.remote.full_session_open());
+    // … the dialog returns "confirmed": refused, because that session could have clicked it
+    assert_eq!(
+        b.remote.set_grant(&key(TABLET), widen, Some(&ticket)),
+        Err(ControlError::BusyControlled)
+    );
+    assert_eq!(b.remote.grant_of(&key(TABLET)), RemoteGrant::default());
+    // a media session in between changes nothing: it cannot click
+    let ticket = b.remote.ticket();
+    let (c, _) = b.opened(PHONE, Level::Media);
+    drop(c);
+    b.remote
+        .set_grant(&key(TABLET), widen, Some(&ticket))
+        .unwrap();
+    // narrowing never needs one
+    b.remote
+        .set_grant(&key(TABLET), RemoteGrant::default(), None)
+        .unwrap();
+    // the master switch: on is a widening, off is not
+    b.remote.set_enabled(false, None).unwrap();
+    assert_eq!(
+        b.remote.set_enabled(true, None),
+        Err(ControlError::Unconfirmed)
+    );
+    let stale = b.remote.ticket();
+    b.remote.enable_now(true).unwrap();
+    let (c, _) = b.opened(PHONE, Level::Full);
+    drop(c);
+    b.remote.set_enabled(false, None).unwrap();
+    assert_eq!(
+        b.remote.set_enabled(true, Some(&stale)),
+        Err(ControlError::BusyControlled)
+    );
+    assert!(!b.remote.enabled());
+    // switching on what is on already is no change
+    b.remote.enable_now(true).unwrap();
+    b.remote.set_enabled(true, None).unwrap();
 }
 
 #[test]
@@ -560,7 +679,7 @@ fn the_guard_hangs_on_the_opened_level_not_on_the_grant() {
     assert_eq!(o.level, Level::Media);
     assert!(!b.remote.full_session_open());
     b.remote
-        .set_grant(&key(TABLET), grant(Level::Full))
+        .grant_now(&key(TABLET), grant(Level::Full))
         .unwrap();
 }
 
@@ -568,12 +687,12 @@ fn the_guard_hangs_on_the_opened_level_not_on_the_grant() {
 fn unknown_devices_cannot_be_granted_and_the_switch_is_off_by_default() {
     let b = bench();
     assert_eq!(
-        b.remote.set_grant(&key(9), grant(Level::Media)),
+        b.remote.grant_now(&key(9), grant(Level::Media)),
         Err(ControlError::NotFound)
     );
     b.trust.revoke(&key(TABLET)).unwrap();
     assert_eq!(
-        b.remote.set_grant(&key(TABLET), grant(Level::Media)),
+        b.remote.grant_now(&key(TABLET), grant(Level::Media)),
         Err(ControlError::NotFound)
     );
     assert!(!MemorySwitch::new().enabled());
@@ -649,12 +768,24 @@ fn the_pc_tells_a_changed_state_at_most_every_interval_and_nothing_else() {
         Step::Continue,
         "told already"
     );
-    // a connection that has not opened says nothing; switching off closes it in the registry
+    // a connection that has not opened says nothing; with the switch off, its open is refused
     let mut idle = b.conn(TABLET);
     assert_eq!(idle.poll(T0), Step::Continue);
-    assert_eq!(b.sessions.open_count(), 2);
-    b.remote.set_enabled(false).unwrap();
-    assert_eq!(b.sessions.open_count(), 0);
+    b.remote.enable_now(false).unwrap();
+    assert_eq!(idle.poll(T0), Step::Continue);
+    let step = idle.on_frame(wire::TAG_OPEN, &wire::encode_open(Level::Media), T0);
+    assert_eq!(
+        step,
+        Step::ReplyClose(
+            wire::TAG_REFUSED,
+            wire::encode_code(Code::RemoteOff).to_vec()
+        )
+    );
+    // the open session hears `remote-off` on its tick
+    assert_eq!(
+        closed_with(&c.poll(T0 + STATE_INTERVAL * 3)),
+        Code::RemoteOff
+    );
 }
 
 // ---- limits ----
@@ -676,6 +807,13 @@ fn buckets_refill_with_time_and_never_past_their_burst() {
     assert!(!b.take(1, later));
     // time running backwards refills nothing
     assert!(!b.take(1, T0));
+    // calls closer together than a millisecond lose nothing of the refill
+    let mut fine = Bucket::new(1, 10_000, T0); // one per millisecond
+    assert!(fine.take(1, T0));
+    let passed = (1..=4000u64)
+        .filter(|i| fine.take(1, T0 + Duration::from_micros(i * 250)))
+        .count();
+    assert_eq!(passed, 1000, "one second at 1/ms");
     // more than the burst never fits
     assert!(!Bucket::new(5, 50, T0).take(6, T0));
     assert!(!Bucket::new(5, 50, T0).take(u64::MAX, T0));
@@ -705,6 +843,21 @@ fn each_kind_has_its_own_limit() {
     }
     assert_eq!(l.record(&CLICK, T0), Verdict::Drop);
     assert_eq!(l.record(&UNCLICK, T0), Verdict::Pass);
+    // … and even when nothing at all is left
+    for _ in 0..300 {
+        l.record(&MOVE, T0);
+    }
+    assert_eq!(l.record(&MOVE, T0), Verdict::Drop);
+    assert_eq!(l.record(&UNCLICK, T0), Verdict::Pass);
+    // a refused volume step does not use up the budget of the other media commands
+    let mut l = Limits::new(T0);
+    for _ in 0..50 {
+        l.record(&Record::Media(Media::VolumeUp), T0);
+    }
+    for _ in 0..5 {
+        assert_eq!(l.record(&PAUSE, T0), Verdict::Pass, "5 of 10 are left");
+    }
+    assert_eq!(l.record(&PAUSE, T0), Verdict::Drop);
     // text counts bytes: 512 at once
     let mut l = Limits::new(T0);
     assert_eq!(l.text(256, T0), Verdict::Pass);
@@ -742,6 +895,23 @@ fn a_flood_is_dropped_and_then_closes_the_session() {
         assert_eq!(events(&mut c, &[MOVE], at), Step::Continue);
     }
     assert_eq!(b.sink.taken().len(), 240 * 60);
+}
+
+#[test]
+fn frames_into_a_locked_pc_are_counted_and_close_the_session_like_any_flood() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened(PHONE, Level::Full);
+    b.sink.set_locked(true);
+    let frame = [MOVE; wire::MAX_RECORDS];
+    let mut last = Step::Continue;
+    let mut frames = 0;
+    while last == Step::Continue && frames < 200 {
+        last = events(&mut c, &frame, T0);
+        frames += 1;
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    assert!(b.sink.taken().is_empty());
 }
 
 // ---- the switch on disk ----

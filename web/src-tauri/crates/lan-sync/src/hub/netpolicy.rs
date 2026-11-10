@@ -189,7 +189,14 @@ pub fn decide(info: &dyn NetworkInfo, home: &dyn HomeNetworkStore, wanted: Wante
         .filter_map(|i| qualifies(i).map(|b| b.with_home(is_home(i))))
         .collect();
     binds.sort();
-    binds.dedup();
+    // one listener per address; two interfaces on one address are home only if both are
+    binds.dedup_by(|later, kept| {
+        let same = later.ip == kept.ip && later.prefix == kept.prefix;
+        if same {
+            kept.home &= later.home;
+        }
+        same
+    });
     if !binds.is_empty() {
         return Decision::On(binds);
     }

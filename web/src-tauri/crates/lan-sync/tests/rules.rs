@@ -177,6 +177,41 @@ fn no_frame_from_the_network_reaches_a_setter() {
             }
         }
     }
+    // the session uses exactly the reading half of `Remote`, plus claim/release of the slot
+    let session = source("src/input/session.rs");
+    let allowed = [
+        "enabled",
+        "grant_of",
+        "level_for",
+        "claim",
+        "release",
+        "status",
+    ];
+    for line in code_lines(&session) {
+        let mut rest = line;
+        while let Some(at) = rest.find("remote.") {
+            rest = &rest[at + "remote.".len()..];
+            let name: String = rest
+                .chars()
+                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                .collect();
+            assert!(
+                allowed.contains(&name.as_str()),
+                "session.rs calls Remote::{name}"
+            );
+        }
+    }
+    // the same for every other file under src/input but the controls themselves
+    for (name, text) in production_sources() {
+        if !name.starts_with("src/input/") || name == "src/input/remote.rs" {
+            continue;
+        }
+        for line in code_lines(&text) {
+            for s in setters {
+                assert!(!line.contains(s), "{name}: `{s}` in `{}`", line.trim());
+            }
+        }
+    }
     // and the trust store's setter is called from the PC's controls and the store itself only
     for (name, text) in production_sources() {
         if name == "src/input/remote.rs" || name.starts_with("src/trust/") {
@@ -238,6 +273,19 @@ fn input_is_never_formatted() {
     assert!(!derives.contains("Serialize"));
     assert!(sink.contains("f.write_str(\"Action(..)\")"));
     assert!(!sink.contains("impl fmt::Display"));
+    // what was pressed or moved prints as its type's name only
+    let wire = source("src/input/wire.rs");
+    assert!(wire.contains("name_only_fmt!(Button, Key, Media, Record);"));
+    for ty in ["Button", "Key", "Media", "Record"] {
+        let at = wire
+            .find(&format!("pub enum {ty} {{"))
+            .unwrap_or_else(|| panic!("{ty}"));
+        let derive = wire[..at].rfind("#[derive(").expect("derive");
+        assert!(
+            !wire[derive..at].contains("Debug"),
+            "{ty} must not derive Debug"
+        );
+    }
     assert_absent(
         &["format!", "to_string()", "write!(", "{:?}", "serde"],
         Some("src/input/s"),

@@ -9,10 +9,23 @@
 //!   "seal, then write" of two senders in the order of their nonces.
 //! * Only private IPv4 addresses are dialled. Nothing is logged or formatted: no address, no
 //!   frame, no event.
-//! * What an old hub does with this mode is drop it without a word, which looks like "not
-//!   reachable" here (`InputError::Network`); the caller tells the two apart by trying a sync
-//!   session. `UnknownDevice` is the hub's authenticated refusal: this device is not paired any
-//!   more, or the hub accepts no input on the network the connection came in on.
+//! * A hub from before remote control reads the first message and closes without a word:
+//!   `InputError::NoAnswer` (the connection stood, the hub hung up). Together with a sync session
+//!   that still opens, that means "the PC's Nemo is too old". A connection that never stood, or a
+//!   timeout, is `Network` and says nothing about the hub's age.
+//! * `UnknownDevice` is the hub's authenticated refusal of the handshake. It means one of two
+//!   things the hub does not tell apart on purpose: this device is not paired any more, or the hub
+//!   takes no input where this connection came in (not the home network, or nothing wired). **The
+//!   caller must never unpair or forget the hub because of it**; whether the device is still
+//!   paired is what a sync session says.
+//! * `Event::Closed(None)` covers an idle close, a lost connection and the hub closing without a
+//!   reason (this device opened a newer session, its grant changed, the PC left the home network).
+//!   The right reaction is the same every time: show the unconnected state and open again on the
+//!   next touch – the answer to that `open` is the real state. A `Closed` from a session the
+//!   caller has already replaced or closed is to be ignored.
+//! * There is no heartbeat. A PC that vanishes without closing (sleep, Wi-Fi gone) is noticed only
+//!   when a send fails or the operating system gives up; the caller should treat a longer silence
+//!   after its own sends as "not connected".
 
 use crate::client::{hello_name, ClientError, Conn, IO_TIMEOUT};
 use crate::input::wire::{self, Code, Level, Opened, PcState, Record};
@@ -28,8 +41,11 @@ use std::time::Duration;
 /// Why an input session could not be opened or used. Carries no bytes and no address.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputError {
-    /// Not reachable, no answer, or the connection dropped.
+    /// Not reachable, a timeout, or the connection dropped.
     Network,
+    /// The connection stood and the first message was sent, then the hub closed without answering:
+    /// what a hub from before remote control does.
+    NoAnswer,
     /// The hub authenticated itself and refused the handshake.
     UnknownDevice,
     /// The hub answered `open` with a reason.
@@ -51,6 +67,8 @@ const READ_WAIT: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub struct InputSession {
     writer: Mutex<Conn>,
+    /// A handle of its own for closing, so `close`/`Drop` never wait behind a blocked write.
+    closer: Conn,
     transport: Arc<Mutex<Transport>>,
     /// Set by `close`/`Drop`: the reader stops without reporting anything.
     stop: Arc<AtomicBool>,
@@ -102,9 +120,11 @@ impl InputSession {
         let (init, m1) = noise::start_initiator(Mode::Input, own, hub, None)
             .map_err(|_| InputError::Protocol)?;
         conn.write(&m1).map_err(net)?;
-        let m2 = conn
-            .read(PRE_CONFIRM_CAP, IO_TIMEOUT, &|| false)
-            .map_err(|_| InputError::Network)?;
+        let m2 = match conn.read(PRE_CONFIRM_CAP, IO_TIMEOUT, &|| false) {
+            Ok(m2) => m2,
+            Err(_) if conn.peer_closed() => return Err(InputError::NoAnswer),
+            Err(_) => return Err(InputError::Network),
+        };
         let mut transport = match init.finish(&m2) {
             Ok(Finished::Established(t, _)) => t,
             Ok(Finished::Refused(_)) => return Err(InputError::UnknownDevice),
@@ -134,6 +154,7 @@ impl InputSession {
         };
 
         let read_half = conn.try_clone().map_err(net)?;
+        let closer = conn.try_clone().map_err(net)?;
         let transport = Arc::new(Mutex::new(transport));
         let stop = Arc::new(AtomicBool::new(false));
         let over = Arc::new(AtomicBool::new(false));
@@ -147,6 +168,7 @@ impl InputSession {
         Ok((
             InputSession {
                 writer: Mutex::new(conn),
+                closer,
                 transport,
                 stop,
                 over,
@@ -200,9 +222,7 @@ impl InputSession {
 
     fn shut(&self) {
         self.stop.store(true, Ordering::SeqCst);
-        if let Ok(w) = self.writer.lock() {
-            w.shutdown();
-        }
+        self.closer.shutdown();
     }
 }
 
