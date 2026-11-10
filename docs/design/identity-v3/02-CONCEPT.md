@@ -124,8 +124,9 @@ and the plate, B tints the head zone (gradient to the surface after 58 px), C ti
 - 260 px, grouped: brand (home link), **favourites bar** (up to five icon chips in the module hue, a ring on the
   current), then the areas with small-caps headings, a chevron to fold, module rows with icon (A: grey, hue when active;
   B/C: always in the hue), the active row a **filled capsule** (16 % hue, text `--text`), counts right-aligned
-  (open ToDos, due invoices). Footer: Bibliothek, Einstellungen, Einklappen. Collapsed: 64 px rail with the favourites
-  as a column, area icons with tooltips, a hover fly-out of the group (optional, off with less motion).
+  (open ToDos, due invoices). Footer: Bibliothek, Einstellungen, Einklappen. Collapsed: 64 px rail with the app
+  icon tile, the time as one line, grey area icons (hue only on the active one) with tooltips on hover and keyboard
+  focus; the favourites column and the hover fly-out were not built (2026-11-10, `decisions/ui-shell.md`).
 - The stars go (favourites are edited in Settings → Navigation and by long-press/⋯ on a row); the 3 px edge stripe
   and the group-head stripe go; C tints the group block 6 % in the area hue.
 - **Scrollbars everywhere** (`global.css`): `scrollbar-width: thin; scrollbar-color: transparent transparent`, thumb

@@ -49,6 +49,9 @@ export const AiWriteSection = lazyOnline<object>(() =>
 export const CalmRemindersSection = lazyOnline<object>(() =>
   import('./CalmRemindersSection').then((m) => ({ default: m.CalmRemindersSection })),
 );
+export const RemoteHostSection = lazyOnline<object>(() =>
+  import('./RemoteHostSection').then((m) => ({ default: m.RemoteHostSection })),
+);
 export const NetworkSection = lazyOnline<object>(() =>
   import('./NetworkSection').then((m) => ({ default: m.NetworkSection })),
 );
