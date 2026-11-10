@@ -6,22 +6,22 @@ Report of the PR `docs/diet-2026-11` (2026-11-10). Measure again any time: `node
 
 | What | Before | After | Change |
 | --- | ---: | ---: | ---: |
-| Start cost, module fix | 67,594 | 36,850 | −45 % |
-| Start cost, docs PR | 58,100 | 27,218 | −53 % |
-| Start cost, new module | 79,025 | 48,297 | −39 % |
-| Agent thread `nemo-lead` | 25,414 | 11,635 | −54 % |
-| Agent thread, the other six (each) | 8,532–9,495 | 8,145–9,075 | −5 % |
-| Root `CLAUDE.md` (every chat, always) | 3,187 | 2,755 | −14 % |
-| `docs/CHATS.md` | 113 lines, 15,311 | 82 lines, 1,952 | −87 % |
-| `docs/STATUS.md` | 320 lines, 20,635 | 114 lines, 4,418 | −79 % |
-| `docs/README.md` (index) | 1,464 | 698 | −52 % |
+| Start cost, module fix | 67,594 | 36,909 | −45 % |
+| Start cost, docs PR | 58,100 | 27,287 | −53 % |
+| Start cost, new module | 79,025 | 48,356 | −39 % |
+| Agent thread `nemo-lead` | 25,414 | 11,618 | −54 % |
+| Agent thread, the other six (each) | 8,532–9,495 | 8,178–9,108 | −4 % |
+| Root `CLAUDE.md` (every chat, always) | 3,187 | 2,788 | −13 % |
+| `docs/CHATS.md` | 113 lines, 15,311 | 80 lines, 1,902 | −88 % |
+| `docs/STATUS.md` | 320 lines, 20,635 | 116 lines, 4,496 | −78 % |
+| `docs/README.md` (index) | 1,464 | 699 | −52 % |
 | `docs/PROMPT-TEMPLATES.md`, the six cited blocks | 881 | 626 | −29 % |
-| All Markdown in the repo | 579 files, 1,047,475 | 548 files, 910,997 | −13 % |
+| All Markdown in the repo | 579 files, 1,047,475 | 548 files, 911,172 | −13 % |
 | Other files removed (mockup HTML, audit tools, JSON, SVG) | – | 66 files | – |
 
 What a chat reads at its start (the list is `START` in the script): root `CLAUDE.md`, `docs/README.md`, `docs/CHATS.md`, `docs/STATUS.md` (it adds a line), the six blocks of `PROMPT-TEMPLATES.md` the prompt head cites, the board of the notes repo, plus per task: module fix = `web/src/modules/CLAUDE.md`, `ARCHITECTURE-MAP.md`, `howto/design-rules.md`, `howto/changelog.md`; docs PR = `meta/DOCS-GUIDE.md`; new module = the module-fix set plus `RULES.md`, `howto/new-module.md`, `howto/seed-data.md`, `design/MODULE-IDENTITY.md`, `design/FOCUS-GUIDELINES.md`. An agent thread: its system prompt, `SHARED.md`, root `CLAUDE.md`; the lead also `CHATS.md` and `WORK-ROUTING.md`.
 
-**Targets.** Start cost at least 30 % lower: met for all three chat tasks and the lead. **Missed for the six other agents (−5 %)**: their cost is system prompt + `SHARED.md` + root `CLAUDE.md`; the first two are guardrail texts that only the maintainer applies (`ant apply`), so this PR changed references only (package 6). **Missed: root `CLAUDE.md` is at 2,755, its budget is 2,600.** The rest is security wording that this PR may shorten but not move without a decision (rule change 1 below closes the gap). CHATS on one screen: met (budget 2,000 tokens). **Not done here:** the lower half of STATUS ("Offen – macht Sven", "Nächste sinnvolle Schritte", the module review) is the maintainer's own list and stayed as it was apart from one finished item; package 9 tidies it. **Decided for the maintainer, easy to undo:** `meta/AGENTS.md` now carries the v3.1 roster although `agents-v3/README.md` still calls v3.1 a proposal; `ant apply` and the decision bullet remain his (CHATS "Handgriffe").
+**Targets.** Start cost at least 30 % lower: met for all three chat tasks and the lead. **Missed for the six other agents (−4 %)**: their cost is system prompt + `SHARED.md` + root `CLAUDE.md`; the first two are guardrail texts that only the maintainer applies (`ant apply`), so this PR changed references only (package 6). **Missed: root `CLAUDE.md` is at 2,788, its budget is 2,600.** The rest is security wording that this PR may shorten but not move without a decision (rule change 1 below closes most of the gap). CHATS on one screen: met (budget 2,000 tokens). **Not done here:** the lower half of STATUS ("Offen – macht Sven", "Nächste sinnvolle Schritte", the module review) is the maintainer's own list and stayed as it was apart from one finished item; package 9 tidies it. **Decided for the maintainer, easy to undo:** `meta/AGENTS.md` now carries the v3.1 roster although `agents-v3/README.md` still calls v3.1 a proposal; `ant apply` and the decision bullet remain his (CHATS "Handgriffe").
 
 After the diet the largest start items are the board of the notes repo (15,610 if read in full; 111 items, 110 open, 38 older than the one-week rule) and `ARCHITECTURE-MAP.md` (6,879, budget 4,200): rule change 2 and package 3.
 
@@ -107,7 +107,7 @@ Numbers are estimates from the repo (bytes / 4); what a session really costs dep
 
 ### Three rule changes to decide (not applied)
 
-**1. Root `CLAUDE.md`: three area rules keep one line, the text moves unchanged to `docs/rules/`** (−150 tokens in every chat; root reaches its 2,600 budget). Price: a chat that touches supporter codes, diagnostics or the setup assistant must open the rule file; the tests named in the rules still fail on a breach.
+**1. Root `CLAUDE.md`: three area rules keep one line, the text moves unchanged to `docs/rules/`** (about −170 tokens in every chat; root lands at ≈ 2,620, next to its 2,600 budget). Price: a chat that touches supporter codes, diagnostics or the setup assistant must open the rule file; the tests named in the rules still fail on a breach.
 
 ```diff
 -- **Supporter mode:** cosmetic only, nothing behind a paywall, no nag; codes Ed25519-signed and checked offline (`packages/supporter-codes`, no network in `core/supporter`); status is derived from the code; the code-issuing service is separate and knows no user data. [docs/howto/supporter.md](docs/howto/supporter.md)
