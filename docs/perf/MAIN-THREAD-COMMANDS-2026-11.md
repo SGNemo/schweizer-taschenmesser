@@ -43,7 +43,7 @@ No command was added, renamed or removed, so `build.rs` `COMMANDS` and the capab
 ## Open
 
 - Calls of one kind sent at the same moment (bridge start and stop, pause and resume of a download) run one at a time, but no longer strictly in the order they were sent. The page awaits each call before the next, so this needs two clicks within the same few milliseconds.
-- The download manager writes its job list from the commands and from the worker threads through the same temporary file; two writes at the same moment can collide (older than this package, crate `downloader` `persist`). Not changed.
+- Fixed after this package (`fix/downloads-persist-race`): the download manager wrote its job list from the commands and from the worker threads through the same temporary file, so two writes at the same moment could collide. `persist` (crate `downloader`) now runs one at a time under its own lock, snapshot included; pinned by a test in `manager.rs`.
 - `find_duplicates` holds the tree's read lock for the whole search; a delete finishing meanwhile waits for the write lock, and a writer-preferring lock would then hold up every tree read. `disk_children` no longer waits on the main thread for that; `disk_node` and `disk_node_path` still do. Not changed.
 - After a reload of the Nemo page the native tab entries survive while the page's tab list is empty (orphan webviews stay hidden). Not changed.
 - Hand test on Windows: [MANUAL-TESTS](../MANUAL-TESTS.md) "Hauptthread frei halten" H1–H7.
