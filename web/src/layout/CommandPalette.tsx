@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { useAiOn } from '@/core/ai/switch';
@@ -83,6 +83,11 @@ export function filterCommands(commands: Command[], query: string): Command[] {
       (!c.onlyWhenQueryStartsWith || q.startsWith(c.onlyWhenQueryStartsWith)) &&
       normalize([c.label, ...(c.keywords ?? [])].join(' ')).includes(q),
   );
+}
+
+/** Children as they are, or without the reading aid. */
+function ReadAidGate({ off, children }: { off: boolean; children: ReactNode }) {
+  return off ? <NoReadAid>{children}</NoReadAid> : children;
 }
 
 export function CommandPalette() {
@@ -638,25 +643,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
               onClick={() => run(o)}
             >
               <Icon name={o.icon} />
-              <span className={styles.optionText}>
-                {o.kind === 'hit' && isCredentialPath(o.row.to) ? (
-                  // A document's title from the vault: the reading aid stays off, as on the vault page itself.
-                  <NoReadAid>
-                    <span>{o.label}</span>
-                  </NoReadAid>
-                ) : o.kind === 'ask' ? (
-                  `${o.label}: ${quoted(query.trim())}`
-                ) : (
-                  o.label
-                )}
-                {o.kind === 'setting' ? (
-                  <span className={styles.optionMeta}>{o.hit.path}</span>
-                ) : null}
-                {o.kind === 'hit' && o.row.subtitle ? (
-                  <span className={styles.optionMeta}>{o.row.subtitle}</span>
-                ) : null}
-                {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
-              </span>
+              {/* A hit from the vault names a document: the reading aid stays off for the whole row, as on the vault page. */}
+              <ReadAidGate off={o.kind === 'hit' && isCredentialPath(o.row.to)}>
+                <span className={styles.optionText}>
+                  {o.kind === 'ask' ? `${o.label}: ${quoted(query.trim())}` : o.label}
+                  {o.kind === 'setting' ? (
+                    <span className={styles.optionMeta}>{o.hit.path}</span>
+                  ) : null}
+                  {o.kind === 'hit' && o.row.subtitle ? (
+                    <span className={styles.optionMeta}>{o.row.subtitle}</span>
+                  ) : null}
+                  {o.recent ? <span className={styles.optionMeta}>{t.palette.recent}</span> : null}
+                </span>
+              </ReadAidGate>
               {o.kind === 'command' && o.command.shortcut ? (
                 <Keys keys={o.command.shortcut} decorative />
               ) : null}
