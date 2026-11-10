@@ -1,6 +1,6 @@
 # Docs guide – what goes where, budgets, style
 
-Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is room to grow) and loads details only on purpose. Check: `cd web && npm run check:docs` (warnings; `--strict` exits 1). Tokens ≈ bytes / 4.
+Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is room to grow) and loads details only on purpose. Check: `cd web && npm run check:docs` (local and CI; rules below; other findings warn, `--strict` exits 1). Tokens ≈ bytes / 4.
 
 ## Where things go
 | Kind | File |
@@ -26,6 +26,8 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Lookup doc (every `docs/**` file not exempt) | ≤ 3 000; overrides in `web/scripts/check-docs.mjs` (MAP 4 200; DECISIONS 3 500; STATUS 5 000; CHATS/PROMPT-TEMPLATES 2 000; `docs/README.md` 700; DOCS-GUIDE 1 500) |
 | Exempt (never auto-loaded) | `docs/user/`, `archive/`, `security/`, `perf/`, `features/`, `meta/`, `AI-IMPORT.md` (+ `.de.md`), `MANUAL-TESTS.md`, `ROADMAP.md`, `CHANGELOG.md` |
 A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed by dropping content.
+
+**Blocking (exit 1):** `CHATS.md` and `STATUS.md` over budget (they must not grow back); a `CHATS.md` table row that says "merged"/"gemergt" or repeats another row; images (below). Start context over budget warns until root `CLAUDE.md` is back under 2 600, then `START_CONTEXT_HARD` in the script turns it blocking. **Warning:** a `STATUS.md` line with "PR offen" or a backticked branch (`feat/…`, `fix/…`, …) that `git branch -r` does not list (skipped in a clone without other remote branches, e.g. CI).
 
 ## Style
 - All docs English (source language); German only as `*.de.md` translations of user docs and README, plus the German parts named in STATUS/MANUAL-TESTS/legal. Chat docs: bullets, tables, paths; one fact once (link instead of copying); no history, no "this PR", no general knowledge.
