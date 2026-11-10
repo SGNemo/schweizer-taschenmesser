@@ -4,12 +4,13 @@ Recipes: `docs/HOW-TO.md`; example module `notes/`; scaffold `web/templates/modu
 
 - **Never import another module** (ESLint + `core/modules/registry.test.ts`). Talk via `core/events` and `manifest.contributions`. Only sanctioned reads: `finance` → `subscriptions/public.ts`, `invoices/public.ts`; `budgets` → `finance/public.ts`.
 - **Never import `@/core/db/db`; write only via `createRepo`** (`repo.ts` per module). Local-only data: `local: true`. Manifests: lazy `import()` for routes, widgets, importers.
-- Every module needs `contributions.onboarding` (importers or `noOnboarding`) and a `layout` when the default (`content`) does not fit. No module-level `max-width` (use `PageContainer`).
+- Every module needs `contributions.onboarding` (importers or `noOnboarding`), an `area` (navigation only) and a `layout` when the default (`content`) does not fit. No module-level `max-width` (use `PageContainer`).
+- **Widget (every module ships one):** built from a base type of the widget catalogue (`@/ui`: KPI, due list, progress, checklist, timeline, tiles, status, gauge); red only for overdue/exceeded, a context line for every number; urgent things via `contributions.attention` → "Jetzt wichtig". Spec: `docs/design/DESIGN-SPEC.md` §4a, full text `docs/RULES.md` "Home screen & widgets".
+- **Identity (every module):** `identity` (hue, widget, head, signature); the page uses `PageHeader`/`PageTitle`, no own head: `docs/design/MODULE-IDENTITY.md`.
 - Collection/index change → `npm run db:bump` + add previous stores to `core/db/schema-history.json`. Stored shape change → bump `manifest.version` + `manifest.migrations`.
 - `ai.ts`: tiny `aiSchema` (none for private/third-party data); optional `actions` (`docs/howto/ai-actions.md`) + **5 inputs in `web/tests/ai/eval-set.json`**. Secret/connector collections: `dataApi: false`.
 - **`accounts/` (password vault): never add `aiSchema`, `searchable`, widget, calendar item or data-API exposure** (`accounts/__tests__/exclusion.test.ts`). Decrypted data stays in memory only.
-- Money = integer cents; dates `YYYY-MM-DD`/`HH:mm`; `now()`/`today()` (`core/time/now.ts`).
-- UI: texts in `src/strings.ts` + `locales/en/`, primitives from `ui/`, `data-autofocus` in dialogs, touch targets ≥ 44 px. Add new pages to `e2e/a11y.spec.ts`.
+- UI: root rule "UI" + `docs/howto/design-rules.md`; `data-autofocus` in dialogs. Add new pages to `e2e/a11y.spec.ts`.
 
 ## Module: Pflichtbestandteile
 

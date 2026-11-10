@@ -23,7 +23,7 @@ Proposal, not in force until Sven re-creates the agents ([SETUP.md](SETUP.md) "U
 | `nemo-*.md` (7)         | Generated `ant apply` files – `node scripts/agents/to-ant.mjs`; never edit by hand (`--check` proves they match).                                                                                                                                                    |
 | `SHARED.md`             | The shared rule block every agent reads once per thread from the mounted repo (guardrails first).                                                                                                                                                                    |
 | `environment.yaml`      | Cloud environment, limited egress (package managers + MCP hosts).                                                                                                                                                                                                    |
-| `AGENTS.proposed.md`    | Proposed new `docs/meta/AGENTS.md` (Sven's decision).                                                                                                                                                                                                                |
+| `../AGENTS.md`         | The v3.1 roster (was `AGENTS.proposed.md` here until 2026-11-10).                                                                                             |
 | `SETUP.md`              | Step-by-step for Sven: Console, `ant`, vault/GitHub, start a session, costs, switch v3 → v3.1.                                                                                                                                                                       |
 | `../../scripts/agents/` | `validate.mjs` (offline schema check), `to-ant.mjs` (JSON → md), `session.mjs` (runner: lead + env + repo mount + budget class). `@anthropic-ai/sdk` is pinned (1.6.0) and not covered by Dependabot: `nemo-ops` (mode `deps`) prepares the bump PR, Sven merges it. |
 
@@ -77,6 +77,6 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 
 ## Switch-over (after Sven's decision)
 
-1. Rename `docs/meta/agents-v3/` → `docs/meta/agents/` and replace `agents-v3` everywhere it occurs (`grep -rln agents-v3 docs/meta scripts/agents`): the 7 JSON prompts (incl. nemo-merge's and nemo-reviewer's "Sven merges" paths), `SHARED.md`, `README.md`, `SETUP.md`, `AGENTS.proposed.md`, `scripts/agents/validate.mjs` (default dir and the SHARED.md check), `to-ant.mjs` (default dir), `session.mjs` (`leadFile`, `envFile`); regenerate `.md` (`to-ant.mjs`), run `validate.mjs`, `ant apply`, then `ant apply --prune` for the old paths.
-2. Replace `docs/meta/AGENTS.md` with `AGENTS.proposed.md` (fix its relative links: `../../` → `../`, `../../../CLAUDE.md` → `../../CLAUDE.md`); decision bullets in `docs/decisions/meta.md` (text in the PR).
-3. Delete `docs/meta/agents-v2/`.
+1. Rename `docs/meta/agents-v3/` → `docs/meta/agents/` and replace `agents-v3` everywhere it occurs (`grep -rln agents-v3 docs/meta scripts/agents`): the 7 JSON prompts (incl. nemo-merge's and nemo-reviewer's "Sven merges" paths), `SHARED.md`, `README.md`, `SETUP.md`, `scripts/agents/validate.mjs` (default dir and the SHARED.md check), `to-ant.mjs` (default dir), `session.mjs` (`leadFile`, `envFile`); regenerate `.md` (`to-ant.mjs`), run `validate.mjs`, `ant apply`, then `ant apply --prune` for the old paths.
+2. Done 2026-11-10 (docs diet): `docs/meta/AGENTS.md` carries the v3.1 roster. Still open: decision bullets in `docs/decisions/meta.md` (text in the PR).
+3. Done 2026-11-10: `docs/meta/agents-v2/` deleted (git history).
