@@ -589,10 +589,11 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             .or_else(|| code.find(&format!("pub enum {dto}")));
         let body = &code[at.unwrap()..];
         let body = &body[..body.find("\n}\n").unwrap()];
-        for secret in ["key", "hub", "addr", "name"] {
+        // field names only: the test names which kind of field a DTO must never have
+        for field in ["key", "hub", "addr", "name"] {
             assert!(
-                !body.to_lowercase().contains(secret),
-                "{dto} carries {secret}"
+                !body.to_lowercase().contains(field),
+                "{dto} carries {field}"
             );
         }
     }
