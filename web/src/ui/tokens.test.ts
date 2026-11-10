@@ -214,7 +214,7 @@ describe('design tokens', () => {
     const off = block(":root[data-module-colors='off']");
     for (const key of Object.keys(light).filter((k) => k.startsWith('--mod-'))) {
       expect(calm[key], `${key} in calm`).toBe('var(--calm-ink)');
-      expect(off[key], `${key} with module colours off`).toBe('var(--text-3)');
+      expect(off[key], `${key} with module colours off`).toBe('var(--calm-ink)');
       expect(css, `data-hue rule for ${key}`).toContain(`[data-hue='${key.slice(6)}']`);
     }
   });

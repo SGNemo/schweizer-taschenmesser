@@ -482,19 +482,20 @@
   --pattern-widget: 0;
   --group-tint: 3%;
 }
-/* "Modulfarben" off (Einstellungen → Darstellung → Farben): the identity stays (chip, edge, icon), in grey. */
+/* "Modulfarben" off (Einstellungen → Darstellung → Farben): the identity stays (chip, edge, icon), in grey: the same
+   grey as in the calm colour mode (`--calm-ink`; e2e/identity.spec.ts holds the two alike). */
 :root[data-module-colors='off'] {
-  --mod-lime: var(--text-3);
-  --mod-moss: var(--text-3);
-  --mod-fern: var(--text-3);
-  --mod-teal: var(--text-3);
-  --mod-ocean: var(--text-3);
-  --mod-sky: var(--text-3);
-  --mod-cobalt: var(--text-3);
-  --mod-indigo: var(--text-3);
-  --mod-violet: var(--text-3);
-  --mod-orchid: var(--text-3);
-  --mod-slate: var(--text-3);
+  --mod-lime: var(--calm-ink);
+  --mod-moss: var(--calm-ink);
+  --mod-fern: var(--calm-ink);
+  --mod-teal: var(--calm-ink);
+  --mod-ocean: var(--calm-ink);
+  --mod-sky: var(--calm-ink);
+  --mod-cobalt: var(--calm-ink);
+  --mod-indigo: var(--calm-ink);
+  --mod-violet: var(--calm-ink);
+  --mod-orchid: var(--calm-ink);
+  --mod-slate: var(--calm-ink);
   --head-tint-0: 12%;
   --head-tint-1: 5%;
   --widget-tint: 5%;
