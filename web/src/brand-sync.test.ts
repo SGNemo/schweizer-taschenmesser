@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS } from './ui/Logo';
+import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS, LOGO_RIM } from './ui/Logo';
 
 /**
  * The fish exists three times: as SVG source (`brand/logo-mark.svg`, rendered to every icon), in
@@ -41,8 +41,55 @@ describe('brand assets stay in step', () => {
       m[1]!.toLowerCase(),
     );
     expect(LOGO_ACCENT).toEqual({ light, dark });
-    for (const file of ['logo-mark.svg', 'app-icon.svg', 'app-icon-maskable.svg'])
-      expect(read(`brand/${file}`), file).toContain(`fill="${LOGO_ACCENT.light}"`);
+    expect(read('brand/logo-mark.svg')).toContain(`fill="${LOGO_ACCENT.light}"`);
+  });
+
+  it('the app icon is the two-colour fish on the ocean gradient, every colour a token', () => {
+    // Fish: the dark-theme accent (lower stop) under its hover tone; bands white; eye and tile: the ocean gradient.
+    const tokens = read('src/ui/tokens.css');
+    const first = (name: string, nth = 0) =>
+      [...tokens.matchAll(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})`, 'g'))][
+        nth
+      ]![1]!.toLowerCase();
+    const from = first('--ocean-from');
+    const to = first('--ocean-to');
+    const hoverDark = first('--accent-hover', 1);
+    for (const file of ['app-icon.svg', 'app-icon-maskable.svg']) {
+      const text = read(`brand/${file}`);
+      const stops = [...text.matchAll(/stop-color="(#[0-9a-fA-F]{6})"/g)].map((m) => m[1]);
+      expect(stops, file).toEqual([from, to, hoverDark, LOGO_ACCENT.dark]);
+      expect(text, file).toContain(`fill="${to}"`); // the eye
+      expect(text, file).not.toContain(LOGO_ACCENT.light);
+    }
+    // Android: the foreground carries the fish, the background the gradient (gen-icons writes the drawable from it).
+    const fg = [
+      ...read('brand/android-foreground.svg').matchAll(/stop-color="(#[0-9a-fA-F]{6})"/g),
+    ];
+    expect(fg.map((m) => m[1])).toEqual([hoverDark, LOGO_ACCENT.dark]);
+    const bg = [
+      ...read('brand/android-background.svg').matchAll(/stop-color="(#[0-9a-fA-F]{6})"/g),
+    ];
+    expect(bg.map((m) => m[1])).toEqual([from, to]);
+    const drawable = read('src-tauri/icons/android/drawable/ic_launcher_background_gradient.xml');
+    expect(drawable).toContain(`android:startColor="${from}"`);
+    expect(drawable).toContain(`android:endColor="${to}"`);
+    expect(read('src-tauri/icons/android/mipmap-anydpi-v26/ic_launcher.xml')).toContain(
+      '@drawable/ic_launcher_background_gradient',
+    );
+  });
+
+  it('the one-colour fish stays one piece: the bands are cut inside the body and the rim is put back', () => {
+    expect(LOGO_RIM).toBeGreaterThan(0);
+    for (const file of [
+      'brand/logo-mark.svg',
+      'brand/logo-mono.svg',
+      'brand/android-monochrome.svg',
+      'index.html',
+    ]) {
+      const text = read(file);
+      expect(text, file).toMatch(/<g fill="none" stroke="#000" clip-path="url\(#[^"]+\)">/);
+      expect(text, file).toMatch(new RegExp(`stroke="#fff"\\s+stroke-width="${LOGO_RIM}"`));
+    }
   });
 
   it('the wordmark (the pill: mark + NEMO) follows the accent token in both schemes', () => {
@@ -71,6 +118,7 @@ describe('brand assets stay in step', () => {
       'app-icon.svg',
       'app-icon-maskable.svg',
       'android-foreground.svg',
+      'android-background.svg',
       'android-monochrome.svg',
       'logo-wordmark.svg',
       'logo-wordmark-light.svg',

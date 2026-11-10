@@ -6,7 +6,7 @@
  *   public/            icon.svg, favicon.svg, favicon.ico, favicon-32.png, apple-touch-icon.png,
  *                      pwa-*.png, pwa-badge-96.png (monochrome web-push badge)
  *   src-tauri/icons/   icon.png + icon.ico (16–256, incl. 128) and the Android launcher layers
- *                      (foreground, monochrome, notification icon, background colour)
+ *                      (foreground, monochrome, notification icon, background = the ocean gradient as a drawable)
  *   docs/brand/        README header (light + dark), English + German `*.de.png` (the social preview
  *                      comes from `npm run gen:social`: it shows the overview screenshot)
  *   ../extension/static/icons/  icon-32.png + icon-192.png (the tile, for the browser extension)
@@ -35,9 +35,13 @@ const maskable = brand('app-icon-maskable.svg');
 const appIconSmall = appIcon.replace(/rx="(\d+)"/, (_, r) => `rx="${Math.round(r * 0.85)}"`);
 const mark = brand('logo-mark.svg');
 // The accent token's two values, taken from the files (tokens.css `--accent` via the logo export).
-const ACCENT = maskable.match(/<rect[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
+const ACCENT = mark.match(/<g fill="(#[0-9a-fA-F]{6})"/)[1];
+// The two stops of the ocean gradient behind the app icon (tokens.css `--ocean-from` / `--ocean-to` via the logo export).
+const [OCEAN_FROM, OCEAN_TO] = [
+  ...brand('android-background.svg').matchAll(/stop-color="(#[0-9a-fA-F]{6})"/g),
+].map((m) => m[1]);
 const ACCENT_DARK = brand('logo-wordmark-light.svg').match(/<rect[^>]*fill="(#[0-9a-fA-F]{6})"/)[1];
-// Favicon: the tile (a solid accent square with the white fish). The transparent mark in the deeper accent has
+// Favicon: the tile (the two-colour fish on the ocean gradient). The transparent mark in the deeper accent has
 // too little contrast on dark tab strips; the tile reads on both.
 const favicon = appIconSmall;
 const androidFg = brand('android-foreground.svg');
@@ -162,16 +166,26 @@ try {
       await png(monoWhite, Math.round(24 * factor)),
     );
   }
+  // Background: the ocean gradient, top to bottom (angle 270) like the tile, as a shape drawable. The colour
+  // resource stays as the plain fallback (the dark end) for anything that still asks for it.
   write(
     out(icons, 'android', 'values', 'ic_launcher_background.xml'),
-    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">${ACCENT}</color>\n</resources>\n`,
+    `<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="ic_launcher_background">${OCEAN_TO}</color>\n</resources>\n`,
+  );
+  write(
+    out(icons, 'android', 'drawable', 'ic_launcher_background_gradient.xml'),
+    `<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+  <gradient android:type="linear" android:angle="270" android:startColor="${OCEAN_FROM}" android:endColor="${OCEAN_TO}"/>
+</shape>
+`,
   );
   write(
     out(icons, 'android', 'mipmap-anydpi-v26', 'ic_launcher.xml'),
     `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-  <background android:drawable="@color/ic_launcher_background"/>
+  <background android:drawable="@drawable/ic_launcher_background_gradient"/>
   <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
 </adaptive-icon>
 `,
