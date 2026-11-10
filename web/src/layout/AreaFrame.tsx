@@ -207,6 +207,7 @@ export function AreaFrame({
             value={headline.value}
             detail={headline.detail}
             type={id?.type}
+            sensitive={headline.sensitive}
           />
         </div>
       ) : headlinePending ? (

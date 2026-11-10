@@ -84,7 +84,8 @@
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--text-3);
+  /* The one quiet ink of a head, standard or stage (tokens.test.ts scans this file). */
+  color: var(--text-on-tint);
 }
 .title {
   min-width: 0;
@@ -192,10 +193,6 @@
 .stage {
   /* No overflow clipping: menus opened from the stage (the player's device list) reach over the page. */
   max-height: none;
-}
-.stage .eyebrow {
-  /* On a tint only --text or --text-on-tint (tokens.test.ts). */
-  color: var(--text-on-tint);
 }
 .stage .plate {
   background: var(--module-color);

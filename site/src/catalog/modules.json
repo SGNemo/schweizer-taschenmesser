@@ -53,7 +53,7 @@
       "icon": "calendar",
       "hue": "sky",
       "hue2": "ocean",
-      "head": "zeit",
+      "head": "standard",
       "widget": "zeitleiste",
       "name": {
         "de": "Kalender",
@@ -77,7 +77,7 @@
       "icon": "chartGantt",
       "hue": "indigo",
       "hue2": "cobalt",
-      "head": "kennzahl",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Planer",
@@ -101,7 +101,7 @@
       "icon": "checklist",
       "hue": "moss",
       "hue2": "lime",
-      "head": "fokus",
+      "head": "standard",
       "widget": "fokus",
       "name": {
         "de": "ToDos",
@@ -125,7 +125,7 @@
       "icon": "target",
       "hue": "violet",
       "hue2": "orchid",
-      "head": "fortschritt",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Gewohnheiten",
@@ -149,7 +149,7 @@
       "icon": "wallet",
       "hue": "teal",
       "hue2": "ocean",
-      "head": "kennzahl",
+      "head": "standard",
       "widget": "kennzahl",
       "name": {
         "de": "Finanzen",
@@ -173,7 +173,7 @@
       "icon": "clock",
       "hue": "teal",
       "hue2": "ocean",
-      "head": "zeit",
+      "head": "standard",
       "widget": "kennzahl",
       "name": {
         "de": "Zeiterfassung",
@@ -197,7 +197,7 @@
       "icon": "cloudSun",
       "hue": "cobalt",
       "hue2": "sky",
-      "head": "himmel",
+      "head": "stage",
       "widget": "himmel",
       "name": {
         "de": "Wetter",
@@ -221,7 +221,7 @@
       "icon": "globe",
       "hue": "lime",
       "hue2": "fern",
-      "head": "fokus",
+      "head": "standard",
       "widget": "kacheln",
       "name": {
         "de": "Uhr",
@@ -245,7 +245,7 @@
       "icon": "receipt",
       "hue": "ocean",
       "hue2": "sky",
-      "head": "fokus",
+      "head": "standard",
       "widget": "faellig",
       "name": {
         "de": "Rechnungen",
@@ -269,7 +269,7 @@
       "icon": "repeat",
       "hue": "indigo",
       "hue2": "cobalt",
-      "head": "fortschritt",
+      "head": "standard",
       "widget": "faellig",
       "name": {
         "de": "Abos",
@@ -293,7 +293,7 @@
       "icon": "bookmark",
       "hue": "indigo",
       "hue2": "cobalt",
-      "head": "regal",
+      "head": "standard",
       "widget": "kacheln",
       "name": {
         "de": "Merkliste",
@@ -317,7 +317,7 @@
       "icon": "note",
       "hue": "violet",
       "hue2": "indigo",
-      "head": "schreib",
+      "head": "standard",
       "widget": "notiz",
       "name": {
         "de": "Notizen",
@@ -341,7 +341,7 @@
       "icon": "sparkles",
       "hue": "sky",
       "hue2": "cobalt",
-      "head": "fokus",
+      "head": "standard",
       "widget": "notiz",
       "name": {
         "de": "Chat",
@@ -365,7 +365,7 @@
       "icon": "cart",
       "hue": "orchid",
       "hue2": "violet",
-      "head": "kennzahl",
+      "head": "standard",
       "widget": "checkliste",
       "name": {
         "de": "Listen",
@@ -389,7 +389,7 @@
       "icon": "package",
       "hue": "fern",
       "hue2": "moss",
-      "head": "regal",
+      "head": "standard",
       "widget": "kacheln",
       "name": {
         "de": "Vorräte",
@@ -413,7 +413,7 @@
       "icon": "dumbbell",
       "hue": "sky",
       "hue2": "ocean",
-      "head": "fortschritt",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Fitness",
@@ -437,7 +437,7 @@
       "icon": "globe",
       "hue": "cobalt",
       "hue2": "sky",
-      "head": "schreib",
+      "head": "standard",
       "widget": "kacheln",
       "name": {
         "de": "Browser",
@@ -461,7 +461,7 @@
       "icon": "wifi",
       "hue": "moss",
       "hue2": "lime",
-      "head": "regal",
+      "head": "standard",
       "widget": "kennzahl",
       "name": {
         "de": "Feeds",
@@ -485,7 +485,7 @@
       "icon": "mail",
       "hue": "teal",
       "hue2": "ocean",
-      "head": "schreib",
+      "head": "standard",
       "widget": "notiz",
       "name": {
         "de": "E-Mail",
@@ -509,7 +509,7 @@
       "icon": "map",
       "hue": "ocean",
       "hue2": "sky",
-      "head": "regal",
+      "head": "standard",
       "widget": "kacheln",
       "name": {
         "de": "Karten & Orte",
@@ -533,7 +533,7 @@
       "icon": "users",
       "hue": "orchid",
       "hue2": "violet",
-      "head": "fokus",
+      "head": "standard",
       "widget": "faellig",
       "name": {
         "de": "Personen",
@@ -557,7 +557,7 @@
       "icon": "piggy",
       "hue": "lime",
       "hue2": "moss",
-      "head": "kennzahl",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Budgets & Sparziele",
@@ -581,7 +581,7 @@
       "icon": "files",
       "hue": "indigo",
       "hue2": "violet",
-      "head": "regal",
+      "head": "standard",
       "widget": "kennzahl",
       "name": {
         "de": "Unterlagen",
@@ -605,7 +605,7 @@
       "icon": "lock",
       "hue": "slate",
       "hue2": null,
-      "head": "tresor",
+      "head": "standard",
       "widget": "status",
       "name": {
         "de": "Passwörter",
@@ -629,7 +629,7 @@
       "icon": "music",
       "hue": "orchid",
       "hue2": "violet",
-      "head": "cover",
+      "head": "stage",
       "widget": "cover",
       "name": {
         "de": "Musik",
@@ -653,7 +653,7 @@
       "icon": "disk",
       "hue": "slate",
       "hue2": null,
-      "head": "fortschritt",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Dieser PC",
@@ -677,7 +677,7 @@
       "icon": "download",
       "hue": "cobalt",
       "hue2": "sky",
-      "head": "fokus",
+      "head": "standard",
       "widget": "fortschritt",
       "name": {
         "de": "Downloads",

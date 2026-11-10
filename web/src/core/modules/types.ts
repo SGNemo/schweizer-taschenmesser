@@ -609,8 +609,10 @@ export interface PlannableSource {
 export interface HeadlineFigure {
   label: string;
   value: string;
-  /** Context line under the number ("2 Konten · Giro 1.203,10 €"). */
+  /** Context line under the number ("2 Konten"); no amount in it when the figure is `sensitive`. */
   detail?: string;
+  /** A money figure: hidden behind a placeholder while "Werte ausblenden" is on (the head, like the widgets). */
+  sensitive?: boolean;
   /** Route to open when the figure is activated (default: the module page). */
   to?: string;
 }

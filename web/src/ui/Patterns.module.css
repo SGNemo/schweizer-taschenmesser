@@ -7,8 +7,13 @@
   margin-bottom: var(--space-4);
 }
 .header[data-in-head='true'] {
-  /* The title moved into the module head: the row keeps views left and the actions on the right. */
+  /* Phone, inside the module frame: title and views are in the head and the page's action is the plus of the bottom
+     bar; what is left of the actions (a "⋯" menu, a switch) keeps this row, on the right. */
   justify-content: flex-start;
+}
+/* Nothing left (the page's only action was the one the plus took over): no empty row. */
+.header[data-in-head='true']:not(:has(button, a, input, select, label)) {
+  display: none;
 }
 .headerEnd {
   display: flex;
@@ -92,9 +97,12 @@
 .segment button:hover:not([aria-pressed='true']) {
   color: var(--text);
 }
+/* B7: a filter's chosen option is a raised surface and a heavier weight, not the accent (that is the main action and
+   the open tab). */
 .segment button[aria-pressed='true'] {
   background: var(--surface-raised);
-  color: var(--accent);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
 }
 .split {
   display: flex;
@@ -321,10 +329,13 @@ button.chip::after {
 button.chip:hover:not([aria-pressed='true']) {
   color: var(--text);
 }
+/* B7: a chosen filter chip is told by its fill, its weight and a ring (no blur: a line, not a shadow), not by the
+   accent. */
 button.chip[aria-pressed='true'] {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--surface-sunken);
+  color: var(--text);
   font-weight: var(--weight-semibold);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 .stat {
   display: flex;

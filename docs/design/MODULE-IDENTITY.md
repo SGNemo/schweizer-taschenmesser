@@ -1,5 +1,7 @@
 # Module identity v3.1 – rules for every module
 
+> **Identity 4.0 (UI audit 2026-11) changes the module head and the navigation around it:** the section [Identity 4.0 – draft](#identity-40--draft) at the end replaces "Frame – who owns what", "Head variants" and the `head` column of the mapping below for the module frame. Palette, signatures, widgets, sidebar and the stripe rule stay as written here.
+
 Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) (diagnosis, concept, mockups), audit and fix packages: [identity-v3-audit/](identity-v3-audit/01-findings.md) (v3.1 = the foundation fix package; sheets `identity-v3/shots/frame-v31-*.jpg`). Decisions: [ui-shell](../decisions/ui-shell.md) "Module identity v3" and "Identity v3.1". It extends [DESIGN-SPEC](DESIGN-SPEC.md) and [FOCUS-GUIDELINES](FOCUS-GUIDELINES.md).
 
 ## Frame – who owns what
@@ -156,3 +158,26 @@ Tools speak the same language: `ToolManifest.identity` `{ hue, hue2?, signature,
 Not module pages, so no band: `pages/settings/PageHead` on `ui/HeadSurface` as a rounded card. **Settings:** the landing page has the "Status" head, each category a compact head in its hue **without area pattern** and never a module's hue + area pair (`categoryLook.ts`, test), a module's settings page the module's identity with its signature at S (kept on the phone, smaller). The category list uses the sidebar's look. **Libraries:** `/library` and `/tools` carry neutral (slate) heads, a toolbar and one neutral-tinted section per area; a module card shows a sketch of `identity.widget` (`WidgetMiniature`). **Cards show the identity colour** on `ui/HuePlate` (`e2e/hue-consistency.spec.ts`). **Connect cards** (`pages/settings/ConnectParts`) say the state first. **Tabs** (settings v3.1, [settings-v3](settings-v3/ROUND-1.md)): compact head, at most one tinted `StatusCard` (state + the one filled action), groups with headings (`SettingsGroup plain`), rows = title + one line + control, long text behind ⓘ.
 
 **Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.
+
+## Identity 4.0 – draft
+
+In force in the code since package 0b-2 (UI audit 2026-11, [PACKAGES](ui-audit-2026-11/PACKAGES.md), rules 2–4); "draft" until the acceptance sweep 0b-8 makes it "valid". Decision: [ui-shell](../decisions/ui-shell.md) "Identity 4.0 head and navigation".
+
+**Frame.** `layout/AreaFrame` wraps every module page in a head and the `PageContainer`:
+
+| Zone | Owner | Content |
+| --- | --- | --- |
+| Notice (optional) | module via `HeroSlot area="notice"` | one hint that outranks the page |
+| Title row | shell + module | icon plate in the hue · eyebrow "area · context" (the module's name once the page's title is another one) · the page's **h1** · **one figure** with its context line (`HeroSlot area="figure"` with a `HeroFigure`, else `contributions.headline`) · desktop only: the page's actions and the gear |
+| Module row (phone only) | shell (`ui/SubNav`) | the modules of the area as text pills, one row that scrolls sideways |
+| Tabs | module via `PageHeader views` | the views of the page (`Tabs`); the head's lower edge |
+| Under the head, in the page | module | what a page still brings with `HeroSlot area="signature"` or `HeroSlot` (strips, controls); the area packages decide what stays |
+
+- **Two head variants** (`identity.head`, `HEAD_VARIANTS`): `standard` and `stage`. The nine silhouettes of v3.1 are gone. `standard`: plain `--bg`, a hairline below, **no tint, no area pattern** (AE2, variant A: a pattern never lies behind running text), **no signature slot** (`SIGNATURE_SLOTS.standard = 'none'`; the module's mark lives on its widget, its empty state and its library card). `stage` (Wetter, Musik): the same title row on a `ui/HeadSurface` with backdrop and pattern, then the stage with figure, signature slot (`L`, the frame draws `identity.signature` until the page fills it) and strips; at most one stage per area.
+- **Heights are tokens:** `--head-row` 3.5 rem (phone 2.75 rem), `--head-pad`, tabs and module row 44 px. A standard head is ≤ 120 px on the desktop and ≤ 144 px on the phone, a stage ≤ 320 px; the title row has one height whatever is in it, so nothing below it moves when a figure arrives. Guard: `e2e/seed/head-height.seed.spec.ts` (every module from the manifests, both windows; nothing leaves the head's box, no control in the phone's title row).
+- **One h1 style:** `--text-h1` 28/600, 22/600 on the phone; no serif, mono or thin titles. The figure in the row is `--text-2xl` with a context line in `--text-muted`; a money figure takes `sensitive` and hides with "Werte ausblenden".
+- **It stays at the top.** Desktop: the whole head is sticky in the content area. Phone: sticky with a negative offset, so the title row and the module row slide away and the tabs stay under the top bar (`--topbar-h`, 0 while the bar is folded). No second "compact bar".
+- **Navigation in one level.** Desktop: no row of area modules under the head; the sidebar lists them. Phone: the one module row in the head; bottom bar Übersicht · area 1 · **plus** · area 2 · Mehr (`BOTTOM_AREA_SLOTS` 2).
+- **One entry point per screen.** A page declares its action once, as `PageAction` inside `PageHeader` (`short` = the thing it adds, a noun). Desktop: the one filled button in the title row; the top bar's "Neu" (quick capture) is neutral. Phone: no control in the head and no floating button; the plus in the bottom bar is the action – on a module page the page's `PageAction` (text `short`, name "`short` eintragen"), else the module's first `quickAdd` entry (text "Neu", name "Neu: …"), everywhere else the quick capture ("Neu", "Neu eintragen"). The name always contains the visible text (WCAG 2.5.3). The head has no "Mit KI eintragen" button; that stays an explicit entry of the capture sheet and the palette.
+- **Rules that changed** (`scripts/lib/checkIdentity.ts`): "neighbours never share a head" and "same hue never head and widget alike" are gone; app-wide two modules with one hue each need a signature of their own, and an area has one hue per module and at most one stage.
+- **Links and accent (B7):** a link is `--link` (text ink) with `--link-line` (underline); the accent is for the main action and the one active state (the open tab). A chosen filter (`Segmented`, `Chip`) is a surface and a weight, not the accent.

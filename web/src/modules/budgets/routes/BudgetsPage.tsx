@@ -126,6 +126,7 @@ export default function BudgetsPage() {
               label={t.budgets.ext.head.free}
               value={formatMoney(free, mainCurrency)}
               detail={t.budgets.ext.head.context(inMain.length, overCount)}
+              sensitive
               testId="budgets-free"
             />
           </HeroSlot>

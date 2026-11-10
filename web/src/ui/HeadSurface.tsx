@@ -42,10 +42,11 @@ export interface HeadSurfaceProps {
 }
 
 /**
- * The tinted surface every head is made of (identity v3.1, C09): module hue gradient over the surface, the area's
- * quiet pattern, the identity hooks as data attributes and the head height as `--head-h`. The shell's band
- * (`layout/AreaFrame`), the settings head (`pages/settings/PageHead`) and the tool stage (`layout/tools/ToolStage`)
- * put their own grid inside; text on it is `--text` or `--text-on-tint` only (tokens.test.ts).
+ * The tinted surface of a stage and of the heads outside the module frame: hue gradient over the surface, the area's
+ * quiet pattern, the identity hooks as data attributes and the head height as `--head-h`. The stage of a module
+ * head (`layout/AreaFrame`, Identity 4.0: weather and music), the settings head (`pages/settings/PageHead`) and the
+ * tool stage (`layout/tools/ToolStage`) put their own grid inside; text on it is `--text` or `--text-on-tint` only
+ * (tokens.test.ts). A standard module head does not use it: it is a plain title row without tint or pattern.
  */
 export function HeadSurface({
   as: Tag = 'div',

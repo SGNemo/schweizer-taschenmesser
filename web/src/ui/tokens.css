@@ -103,6 +103,14 @@
   --slot-l-min: 20rem;
   --slot-extra: 12rem;
 
+  /* Links (UI audit 2026-11, B7): a link is told by its underline, never by colour alone (WCAG 1.4.1). It takes the
+     text ink in both themes; the accent stays for the main action of a view and its one active state (the open tab).
+     A link that is a row or a tile of its own (navigation, cards) switches the line off and carries an arrow or icon. */
+  --link: var(--text);
+  --link-line: underline;
+  --link-line-color: color-mix(in srgb, var(--text) 45%, transparent);
+  --link-line-offset: 0.18em;
+
   /* Layer order (never write a bare z-index) */
   --z-raised: 5;
   --z-sticky: 10;

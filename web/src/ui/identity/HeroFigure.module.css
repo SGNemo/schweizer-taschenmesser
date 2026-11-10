@@ -29,6 +29,12 @@
   font-size: var(--text-sm);
   color: var(--text);
 }
+/* The placeholder of a hidden value keeps the size of running text, whatever the figure's size. */
+.mask {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+}
 .figure[data-type='thin'] .value {
   font-weight: var(--weight-light);
   letter-spacing: -0.045em;
@@ -64,7 +70,7 @@
   line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-muted);
+  color: var(--text-on-tint);
 }
 @media (max-width: 899px) {
   :global([data-head='standard']) .value {
