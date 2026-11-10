@@ -113,6 +113,18 @@ test('a tab that cannot open shows why, hides the webview, and other modules sti
   expect(await hidden()).toBeGreaterThan(before);
 });
 
+test('a tab whose opening never answers does not hold up other modules', async ({ page }) => {
+  // UI state only: the fake's promise stays open; a blocked main thread of the desktop app is a hand test.
+  await go(page, 'https://hang-test.example.org/');
+  expect(await calls(page)).toContain('open:1:normal:https://hang-test.example.org/');
+  await page.evaluate(() => {
+    history.pushState({}, '', '/todos');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.locator('main h1')).toHaveText(/ToDos/);
+  await expect(page.getByTestId('page-loading-card')).toHaveCount(0);
+});
+
 test('plain HTTP is held back until the user confirms', async ({ page }) => {
   await go(page, 'http://example.org/');
   await expect(page.getByText('Diese Seite ist nicht verschlüsselt')).toBeVisible();
