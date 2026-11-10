@@ -150,7 +150,7 @@ Review: review-loop · then file-pr (label no-changelog)
 
 ## 9 · STATUS lower half: "Offen – macht Sven" as one numbered list
 
-The diet PR left everything below "Heute möglich in 15 Minuten" in `docs/STATUS.md` unchanged on purpose (it is the maintainer's own list).
+The diet PR left everything below "Heute möglich in 15 Minuten" in `docs/STATUS.md` as it was on purpose (it is the maintainer's own list); it only removed one finished item and added two launch to-dos from CHATS (`REPORT_MAIL`, LAUNCH-CHECKLIST).
 
 ```
 Routing: Claude Code · STATUS "Offen – macht Sven" tidy · Opus

@@ -28,8 +28,8 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder das Raster erst nach allen Karten packen? (keine Empfehlung; [qa/round-6/STATUS.md](qa/round-6/STATUS.md))
 2. Pflicht-Check `Web` im `develop`-Ruleset in GitHub eintragen? (ja; danach Bullet in `decisions/meta.md`)
 3. Die Angabe „seit n Tagen“ überall in der App einheitlich machen: als eigenes Paket starten? (ja; Fund C27 aus der Abnahme #496)
-4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2), und die Einblend-Bewegung auf der Website bleibt (AE6, seit #674 so gebaut).
-5. Website zeigt Listen und Budgets weiter als „optional“ (eigener kleiner Site-PR).
+4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2), und die Einblend-Bewegung auf der Website bleibt (AE6, seit #674 so gebaut)? (ja)
+5. Die Website nennt Listen und Budgets noch „optional“ (`fresh` in `modules.json`): ändern? (ja, als eigener kleiner Site-PR)
 6. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 auf Hardware prüfen, dann entscheiden)
 7. Unterlagen: Titel der Einträge auf der Übersicht zeigen, als Opt-in? (nein; aus #489)
 8. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (keine Empfehlung; aus #566)
@@ -39,7 +39,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 **Handgriffe:**
 
 - `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
-- `nemo-merge` aus der JSON neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
+- `nemo-merge` aus `meta/agents-v3/nemo-merge.json` neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
 - Agenten v3.1: `docs/meta/AGENTS.md` nennt jetzt die sieben Agenten; dazu gehören noch dein `ant apply` und ein Bullet in `decisions/meta.md` ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over“). Wenn v3.1 nicht gelten soll: Commit zu AGENTS.md zurücknehmen.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
