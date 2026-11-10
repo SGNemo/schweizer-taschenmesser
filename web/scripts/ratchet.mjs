@@ -516,7 +516,6 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
     }
     fail();
   };
-  /** May an expression start here (then `/` opens a regex and `<` a JSX element)? */
   /** The word that ends at `at`: a keyword an expression follows, or a plain name (also `a.return`). */
   const keywordAt = (at) => {
     let s = at;
@@ -536,6 +535,7 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
     if (AMBIGUOUS_WORDS.has(word)) fail();
     return EXPRESSION_KEYWORDS.has(word);
   };
+  /** May an expression start here (then `/` opens a regex and `<` a JSX element)? */
   const expression = (last, lastAt) => {
     if (last === '') return true;
     if ((last === '+' || last === '-') && src[lastAt - 1] === last) fail(); // `x++ / 2` or `++ /re/`

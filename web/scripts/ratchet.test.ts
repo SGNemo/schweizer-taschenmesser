@@ -461,6 +461,13 @@ describe('additions only in protected test files', () => {
     expect(
       free(
         more(
+          "it('uses a mock clock', () => {\n  const f = vi.fn();\n  vi.useFakeTimers();\n  f.mockReturnValue(1);\n  expect(f.mock.calls.length).toBe(0);\n});",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      free(
+        more(
           "it('uses a new symbol', async () => {\n  const { x } = await import('./x');\n  expect(x).toBe(1);\n});",
         ),
       ),

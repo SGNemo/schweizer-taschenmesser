@@ -11,7 +11,14 @@
  *   node scripts/check-stimulus.mjs --from <inventory.json> [--baseline]    skip the measurement
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compare, formatReport, makeBudget, summaryMarkdown } from './lib/stimulusBudget.ts';
@@ -25,8 +32,9 @@ const fromIdx = args.indexOf('--from');
 const outDir = resolve(web, process.env.STIMULUS_DIR ?? 'test-results/stimulus-check');
 
 // Read before anything of the build or the measurement runs: what is compared is what was committed.
-const budget = JSON.parse(readFileSync(budgetPath, 'utf8'));
-const signatureBlocks = JSON.parse(readFileSync(blocksPath, 'utf8')).blocks;
+// (Rewriting the budget does not need the old one.)
+const budget = baseline ? undefined : JSON.parse(readFileSync(budgetPath, 'utf8'));
+const signatureBlocks = baseline ? undefined : JSON.parse(readFileSync(blocksPath, 'utf8')).blocks;
 
 let inventoryPath;
 if (fromIdx >= 0) {
@@ -50,13 +58,17 @@ if (fromIdx >= 0) {
   }
   inventoryPath = resolve(outDir, 'inventory.json');
 }
+if (!existsSync(inventoryPath) || !statSync(inventoryPath).isFile()) {
+  console.error(`No inventory at ${inventoryPath}; nothing compared.`);
+  process.exit(2);
+}
 const inventory = JSON.parse(readFileSync(inventoryPath, 'utf8'));
 
 if (baseline) {
-  const budget = makeBudget(inventory);
-  writeFileSync(budgetPath, `${JSON.stringify(budget, null, 2)}\n`);
+  const fresh = makeBudget(inventory);
+  writeFileSync(budgetPath, `${JSON.stringify(fresh, null, 2)}\n`);
   console.log(
-    `Stimulus budget written: ${Object.keys(budget.pages).length} page × viewport entries → e2e/stimulus-budget.json`,
+    `Stimulus budget written: ${Object.keys(fresh.pages).length} page × viewport entries → e2e/stimulus-budget.json`,
   );
   process.exit(0);
 }
