@@ -14,7 +14,7 @@
  * `--root <dir>` checks another tree (tests).
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -129,7 +129,7 @@ export function statusWarnings(text, remoteBranches, exists = () => false) {
       const name = m[1];
       if (!BRANCH_RE.test(name) || remoteBranches.has(name) || exists(name)) continue;
       out.push(
-        `docs/STATUS.md:${n}: branch \`${name}\` is not on the remote (merged or never pushed) – update the line`,
+        `docs/STATUS.md:${n}: branch \`${name}\` is not on the remote – check whether the line is still current`,
       );
     }
   });
@@ -272,7 +272,11 @@ function main(argv) {
     const remotes = remoteBranches(repo);
     if (!remotes) lines.push('STATUS.md branch check skipped: no remote branches in this clone.');
     problems.push(
-      ...statusWarnings(readFileSync(status, 'utf8'), remotes, (p) => existsSync(join(repo, p))),
+      ...statusWarnings(
+        readFileSync(status, 'utf8'),
+        remotes,
+        (p) => existsSync(join(repo, p)) || existsSync(join(repo, 'docs', p)),
+      ),
     );
   }
 
@@ -302,5 +306,5 @@ function main(argv) {
   if (imageProblems.length || fatal.length || (strict && problems.length)) process.exit(1);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href)
   main(process.argv.slice(2));

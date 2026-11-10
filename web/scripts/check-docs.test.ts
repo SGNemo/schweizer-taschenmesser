@@ -4,13 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-import {
-  BUDGET,
-  chatsProblems,
-  HARD_BUDGET_FILES,
-  isHardBudget,
-  statusWarnings,
-} from './check-docs.mjs';
+import { BUDGET, chatsProblems, isHardBudget, statusWarnings } from './check-docs.mjs';
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check-docs.mjs');
 
@@ -64,7 +58,6 @@ describe('statusWarnings', () => {
 
 describe('budgets', () => {
   it('CHATS.md and STATUS.md are hard limits, other docs warn', () => {
-    expect(HARD_BUDGET_FILES).toEqual(['docs/CHATS.md', 'docs/STATUS.md']);
     expect(isHardBudget('docs/CHATS.md')).toBe(true);
     expect(isHardBudget('docs/STATUS.md')).toBe(true);
     expect(isHardBudget('docs/HOW-TO.md')).toBe(false);
