@@ -82,6 +82,9 @@ struct Tab {
     seen: HashSet<String>,
     /// Which `browser_open` call created this entry (see the check after `add_child`).
     attempt: u64,
+    /// The webview was created. Only then can `browser_show` call it lost: while `browser_open`
+    /// still builds it, the entry exists and the webview does not.
+    ready: bool,
 }
 
 struct Inner {
@@ -91,16 +94,20 @@ struct Inner {
     attempts: u64,
 }
 
-pub struct BrowserState(Mutex<Inner>);
+/// `.1` serialises `browser_show` and holds the newest `seq` applied so far (see there).
+pub struct BrowserState(Mutex<Inner>, Mutex<u64>);
 
 impl Default for BrowserState {
     fn default() -> Self {
-        BrowserState(Mutex::new(Inner {
-            warn_http: true,
-            blocker: Blocker::new(true),
-            tabs: HashMap::new(),
-            attempts: 0,
-        }))
+        BrowserState(
+            Mutex::new(Inner {
+                warn_http: true,
+                blocker: Blocker::new(true),
+                tabs: HashMap::new(),
+                attempts: 0,
+            }),
+            Mutex::new(0),
+        )
     }
 }
 
@@ -196,6 +203,7 @@ pub fn browser_open(
                 page: None,
                 seen: HashSet::new(),
                 attempt,
+                ready: false,
             },
         );
         attempt
@@ -339,7 +347,7 @@ pub fn browser_open(
     // would be out of reach of `browser_show` and stay on top of every page, so it is closed again.
     let current = |g: &Inner| g.tabs.get(&tab).is_some_and(|t| t.attempt == attempt);
     match created {
-        Ok(wv) if !current(&state.lock()) => {
+        Ok(wv) if !mark_ready(&mut state.lock(), tab, attempt) => {
             let _ = wv.close();
             Err("tab".into())
         }
@@ -359,6 +367,47 @@ pub fn browser_open(
             Err(e)
         }
     }
+}
+
+/// Marks the entry of this `browser_open` call as having its webview; `false` when the entry is gone
+/// or belongs to a newer call.
+fn mark_ready(inner: &mut Inner, tab: u32, attempt: u64) -> bool {
+    match inner.tabs.get_mut(&tab) {
+        Some(t) if t.attempt == attempt => {
+            t.ready = true;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Whether a `browser_show` call numbered `seq` is newer than the last one applied; remembers it if so.
+fn newer_show(last: &mut u64, seq: u64) -> bool {
+    if seq <= *last {
+        return false;
+    }
+    *last = seq;
+    true
+}
+
+/// Forgets the tabs in `gone` (id, attempt) that are still the same ready entry and returns their
+/// ids. An entry that was closed or reopened meanwhile is not lost and is left alone.
+fn drop_lost(inner: &mut Inner, gone: &[(u32, u64)]) -> Vec<u32> {
+    let mut lost: Vec<u32> = gone
+        .iter()
+        .filter(|(id, attempt)| {
+            inner
+                .tabs
+                .get(id)
+                .is_some_and(|t| t.ready && t.attempt == *attempt)
+        })
+        .map(|(id, _)| *id)
+        .collect();
+    for id in &lost {
+        inner.tabs.remove(id);
+    }
+    lost.sort_unstable();
+    lost
 }
 
 fn tab_webview(app: &AppHandle, tab: u32) -> Result<Webview, String> {
@@ -455,18 +504,40 @@ pub fn browser_close(
     Ok(())
 }
 
-#[tauri::command]
+/// Shows `tab` (and hides every other tab); `None` hides all. Runs off the main thread like the
+/// lifecycle commands, so two calls can overtake each other: the page numbers them (`seq`) and a
+/// call older than the last applied one does nothing, otherwise a late "show" could put a tab back
+/// on top of another Nemo page after the "hide" that followed it.
+///
+/// Returns the ids of tabs whose webview no longer exists although it was created (it is not
+/// registered any more, e.g. after it was destroyed underneath us). They are forgotten here and the
+/// page shows "Tab neu öffnen" instead of an empty area. A tab that is still being created is not lost.
+#[tauri::command(async)]
 pub fn browser_show(
     app: AppHandle,
     webview: Webview,
     state: State<'_, BrowserState>,
     tab: Option<u32>,
     bounds: Option<Bounds>,
-) -> Result<(), String> {
+    seq: u64,
+) -> Result<Vec<u32>, String> {
     ensure_main(&webview)?;
-    let ids: Vec<u32> = state.lock().tabs.keys().copied().collect();
-    for id in ids {
+    let mut last = state.1.lock().unwrap_or_else(|e| e.into_inner());
+    if !newer_show(&mut last, seq) {
+        return Ok(Vec::new());
+    }
+    let ids: Vec<(u32, u64, bool)> = state
+        .lock()
+        .tabs
+        .iter()
+        .map(|(id, t)| (*id, t.attempt, t.ready))
+        .collect();
+    let mut gone = Vec::new();
+    for (id, attempt, ready) in ids {
         let Ok(wv) = tab_webview(&app, id) else {
+            if ready {
+                gone.push((id, attempt));
+            }
             continue;
         };
         if Some(id) == tab {
@@ -479,7 +550,7 @@ pub fn browser_show(
             let _ = wv.hide();
         }
     }
-    Ok(())
+    Ok(drop_lost(&mut state.lock(), &gone))
 }
 
 #[tauri::command]
@@ -589,4 +660,69 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
         state.emit(tab, Event::Seen { tab, host });
     }
     block
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn inner_with(tabs: &[(u32, u64, bool)]) -> Inner {
+        let mut inner = Inner {
+            warn_http: true,
+            blocker: Blocker::new(true),
+            tabs: HashMap::new(),
+            attempts: 0,
+        };
+        for &(id, attempt, ready) in tabs {
+            inner.tabs.insert(
+                id,
+                Tab {
+                    events: Channel::new(|_| Ok(())),
+                    history: Vec::new(),
+                    pos: 0,
+                    by_history: false,
+                    allowed_http: HashSet::new(),
+                    page: None,
+                    seen: HashSet::new(),
+                    attempt,
+                    ready,
+                },
+            );
+        }
+        inner
+    }
+
+    #[test]
+    fn an_older_show_never_overrides_a_newer_one() {
+        let mut last = 0;
+        assert!(newer_show(&mut last, 2));
+        assert!(!newer_show(&mut last, 1), "overtaken call");
+        assert!(!newer_show(&mut last, 2), "same call twice");
+        assert!(newer_show(&mut last, 3));
+        assert_eq!(last, 3);
+    }
+
+    #[test]
+    fn only_a_created_tab_of_the_same_attempt_counts_as_lost() {
+        // 1: created, webview gone → lost. 2: still being created. 3: reopened meanwhile (attempt 9).
+        let mut inner = inner_with(&[(1, 1, true), (2, 2, false), (3, 9, true)]);
+        // 4 was closed meanwhile (no entry any more).
+        let lost = drop_lost(&mut inner, &[(1, 1), (2, 2), (3, 3), (4, 4)]);
+        assert_eq!(lost, [1]);
+        let mut left: Vec<u32> = inner.tabs.keys().copied().collect();
+        left.sort_unstable();
+        assert_eq!(left, [2, 3]);
+        // Reported once: the entry is forgotten.
+        assert!(drop_lost(&mut inner, &[(1, 1)]).is_empty());
+    }
+
+    #[test]
+    fn a_tab_is_ready_only_for_the_call_that_created_it() {
+        let mut inner = inner_with(&[(1, 5, false)]);
+        assert!(!mark_ready(&mut inner, 1, 4), "an older open call");
+        assert!(!mark_ready(&mut inner, 2, 5), "closed meanwhile");
+        assert!(!inner.tabs[&1].ready);
+        assert!(mark_ready(&mut inner, 1, 5));
+        assert!(inner.tabs[&1].ready);
+    }
 }

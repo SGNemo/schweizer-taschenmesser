@@ -160,7 +160,12 @@ fn opener_scope_adds_only_spotify_and_the_network_settings_page() {
 #[test]
 fn webview_lifecycle_commands_never_run_on_the_main_thread() {
     let src = read("src/browser.rs");
-    for name in ["browser_open", "browser_close", "browser_clear_data"] {
+    for name in [
+        "browser_open",
+        "browser_close",
+        "browser_show",
+        "browser_clear_data",
+    ] {
         let at = src
             .find(&format!("pub fn {name}("))
             .unwrap_or_else(|| panic!("{name} not found"));
@@ -178,6 +183,25 @@ fn webview_lifecycle_commands_never_run_on_the_main_thread() {
         assert!(
             src[cmd..].starts_with("pub fn browser_open("),
             "add_child outside browser_open"
+        );
+    }
+}
+
+/// Commands the inventory (`docs/perf/MAIN-THREAD-COMMANDS-2026-11.md`) rates "can block the main
+/// thread" stay off it. `disk_delete` is deliberately not in this list (its checks are frozen).
+#[test]
+fn blocking_commands_never_run_on_the_main_thread() {
+    let lan = read("src/lan_sync.rs");
+    assert_eq!(lan.matches("#[tauri::command]").count(), 0, "lan_sync.rs");
+    assert_eq!(
+        lan.matches("#[tauri::command(async)]\npub fn lan_").count(),
+        11
+    );
+    let disk = read("src/disk.rs");
+    for name in ["disk_query", "disk_can_delete", "disk_delete_plan"] {
+        assert!(
+            disk.contains(&format!("#[tauri::command(async)]\npub fn {name}(")),
+            "{name} must be #[tauri::command(async)]"
         );
     }
 }
