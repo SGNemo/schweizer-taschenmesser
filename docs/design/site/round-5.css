@@ -1,0 +1,284 @@
+/* Website round 5 (docs/design/site/ROUND-5.md): shared sheet of round-5-a.html (flat) and round-5-b.html (depth).
+   Tokens = site/src/styles/tokens.css; --ocean-* = web/src/ui/tokens.css (not in the site subset yet).
+   No inline styles and no script, like the site's CSP. Pictures are CSS backgrounds in two layers: the local
+   capture from the seeded app (web/.screens/site-round-5, git-ignored) over a committed picture where one
+   exists; where neither loads, the labelled slot underneath stays visible. */
+@font-face{font-family:'Inter Variable';font-weight:100 900;font-display:swap;src:url(../mockups/fonts/inter-latin-wght-normal.woff2) format('woff2-variations');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Inter Variable';font-weight:100 900;font-display:swap;src:url(../mockups/fonts/inter-latin-ext-wght-normal.woff2) format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+:root{
+  --font-sans:'Inter Variable',Inter,system-ui,sans-serif;--font-mono:ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+  --text-caps:.6875rem;--text-meta:.8125rem;--text-sm:.875rem;--text-label:.9375rem;--text-md:1rem;--text-lg:1.125rem;--text-xl:1.25rem;
+  --text-h2:clamp(1.5rem,1.2rem + 1.2vw,2rem);--block:clamp(2rem,6vw,5rem);--measure:68ch;
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.5rem;--space-6:2rem;--space-7:3rem;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-full:999px;--touch:44px;
+  --content-w:68.75rem;--gutter:clamp(1rem,.5rem + 1.5vw,2.5rem);--dur-fast:150ms;
+  --ocean-from:#1d6b7a;--ocean-to:#0e2f45;
+  --bg:#f3f4f4;--surface:#fff;--surface-2:#eaecee;--border:#e2e5e8;--border-strong:#76838c;--text:#171f24;--text-muted:#55636b;--text-3:#5f6c75;
+  --focus:#963709;--shadow-1:0 1px 2px rgb(23 31 36/.06),0 8px 24px rgb(23 31 36/.07);
+  --accent:#b5430c;--accent-hover:#963709;--accent-contrast:#fff;--success:#1b7545;
+  --mod-lime:#6c7a04;--mod-moss:#2f6800;--mod-fern:#368535;--mod-teal:#01665f;--mod-ocean:#0077bc;--mod-sky:#3a4fa5;--mod-cobalt:#755fbb;--mod-indigo:#733b8f;--mod-violet:#9e4f96;--mod-orchid:#902d5b;--mod-slate:#55636b;
+  --group-tint:6%;
+  --img-home:url(../../../web/.screens/site-round-5/home-light.png),url(../../../site/src/assets/screens/home-light.png);
+  --img-phone:url(../../../web/.screens/site-round-5/home-phone-light.png),url(../../../site/src/assets/screens/phone-light.png);
+  --img-calendar:url(../../../web/.screens/site-round-5/calendar-light.png),url(../../assets/screenshots/calendar-desktop-light.webp);
+  --img-calendar-phone:url(../../../web/.screens/site-round-5/calendar-phone-light.png),url(../../assets/screenshots/calendar-phone-light.webp);
+  --img-finance:url(../../../web/.screens/site-round-5/finance-light.png),url(../../assets/screenshots/finance-desktop-light.webp);
+  --img-finance-phone:url(../../../web/.screens/site-round-5/finance-phone-light.png),url(../../assets/screenshots/finance-phone-light.webp);
+  --img-notes:url(../../../web/.screens/site-round-5/notes-light.png);
+  --img-notes-phone:url(../../../web/.screens/site-round-5/notes-phone-light.png);
+  --img-accounts:url(../../../web/.screens/site-round-5/accounts-light.png);
+  --img-accounts-phone:url(../../../web/.screens/site-round-5/accounts-phone-light.png);
+  color-scheme:light;
+}
+:root[data-theme=dark]{
+  --bg:#0f1316;--surface:#171c20;--surface-2:#1f2529;--border:#262d32;--border-strong:#6b767e;--text:#eceff1;--text-muted:#aab4bb;--text-3:#88939b;
+  --focus:#ffb07a;--shadow-1:0 1px 0 rgb(255 255 255/.04) inset,0 8px 24px rgb(0 0 0/.35),0 1px 2px rgb(0 0 0/.3);
+  --accent:#ff9a57;--accent-hover:#ffb07a;--accent-contrast:#1b0f06;--success:#7fd3a3;
+  --mod-lime:#c9d475;--mod-moss:#94c16f;--mod-fern:#99df98;--mod-teal:#37c9bf;--mod-ocean:#8ed5fe;--mod-sky:#98acfd;--mod-cobalt:#cec0fe;--mod-indigo:#cd9ae7;--mod-violet:#f7aef0;--mod-orchid:#eb90ba;--mod-slate:#a9b7c0;
+  --img-home:url(../../../web/.screens/site-round-5/home-dark.png),url(../../../site/src/assets/screens/home-dark.png);
+  --img-phone:url(../../../web/.screens/site-round-5/home-phone-dark.png),url(../../../site/src/assets/screens/phone-dark.png);
+  --img-calendar:url(../../../web/.screens/site-round-5/calendar-dark.png),url(../../assets/screenshots/calendar-desktop-dark.webp);
+  --img-calendar-phone:url(../../../web/.screens/site-round-5/calendar-phone-dark.png),url(../../assets/screenshots/calendar-phone-dark.webp);
+  --img-finance:url(../../../web/.screens/site-round-5/finance-dark.png),url(../../assets/screenshots/finance-desktop-dark.webp);
+  --img-finance-phone:url(../../../web/.screens/site-round-5/finance-phone-dark.png),url(../../assets/screenshots/finance-phone-dark.webp);
+  --img-notes:url(../../../web/.screens/site-round-5/notes-dark.png);
+  --img-notes-phone:url(../../../web/.screens/site-round-5/notes-phone-dark.png);
+  --img-accounts:url(../../../web/.screens/site-round-5/accounts-dark.png);
+  --img-accounts-phone:url(../../../web/.screens/site-round-5/accounts-phone-dark.png);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0f1316;--surface:#171c20;--surface-2:#1f2529;--border:#262d32;--border-strong:#6b767e;--text:#eceff1;--text-muted:#aab4bb;--text-3:#88939b;
+  --focus:#ffb07a;--shadow-1:0 1px 0 rgb(255 255 255/.04) inset,0 8px 24px rgb(0 0 0/.35),0 1px 2px rgb(0 0 0/.3);
+  --accent:#ff9a57;--accent-hover:#ffb07a;--accent-contrast:#1b0f06;--success:#7fd3a3;
+  --mod-lime:#c9d475;--mod-moss:#94c16f;--mod-fern:#99df98;--mod-teal:#37c9bf;--mod-ocean:#8ed5fe;--mod-sky:#98acfd;--mod-cobalt:#cec0fe;--mod-indigo:#cd9ae7;--mod-violet:#f7aef0;--mod-orchid:#eb90ba;--mod-slate:#a9b7c0;
+  --img-home:url(../../../web/.screens/site-round-5/home-dark.png),url(../../../site/src/assets/screens/home-dark.png);
+  --img-phone:url(../../../web/.screens/site-round-5/home-phone-dark.png),url(../../../site/src/assets/screens/phone-dark.png);
+  --img-calendar:url(../../../web/.screens/site-round-5/calendar-dark.png),url(../../assets/screenshots/calendar-desktop-dark.webp);
+  --img-calendar-phone:url(../../../web/.screens/site-round-5/calendar-phone-dark.png),url(../../assets/screenshots/calendar-phone-dark.webp);
+  --img-finance:url(../../../web/.screens/site-round-5/finance-dark.png),url(../../assets/screenshots/finance-desktop-dark.webp);
+  --img-finance-phone:url(../../../web/.screens/site-round-5/finance-phone-dark.png),url(../../assets/screenshots/finance-phone-dark.webp);
+  --img-notes:url(../../../web/.screens/site-round-5/notes-dark.png);
+  --img-notes-phone:url(../../../web/.screens/site-round-5/notes-phone-dark.png);
+  --img-accounts:url(../../../web/.screens/site-round-5/accounts-dark.png);
+  --img-accounts-phone:url(../../../web/.screens/site-round-5/accounts-phone-dark.png);
+  color-scheme:dark;
+}}
+[data-hue=lime]{--module-color:var(--mod-lime)}[data-hue=moss]{--module-color:var(--mod-moss)}[data-hue=fern]{--module-color:var(--mod-fern)}
+[data-hue=teal]{--module-color:var(--mod-teal)}[data-hue=ocean]{--module-color:var(--mod-ocean)}[data-hue=sky]{--module-color:var(--mod-sky)}
+[data-hue=cobalt]{--module-color:var(--mod-cobalt)}[data-hue=indigo]{--module-color:var(--mod-indigo)}[data-hue=violet]{--module-color:var(--mod-violet)}
+[data-hue=orchid]{--module-color:var(--mod-orchid)}[data-hue=slate]{--module-color:var(--mod-slate)}
+[data-shot=home]{--img:var(--img-home)}[data-shot=phone]{--img:var(--img-phone)}
+[data-shot=calendar]{--img:var(--img-calendar);--img-s:var(--img-calendar-phone)}
+[data-shot=finance]{--img:var(--img-finance);--img-s:var(--img-finance-phone)}
+[data-shot=notes]{--img:var(--img-notes);--img-s:var(--img-notes-phone)}
+[data-shot=accounts]{--img:var(--img-accounts);--img-s:var(--img-accounts-phone)}
+
+*,*::before,*::after{box-sizing:border-box}
+html{font-family:var(--font-sans);line-height:1.6;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text)}
+h1,h2,h3,p,ul,dl,dd{margin:0}
+ul{padding:0;list-style:none}
+a{color:inherit;text-underline-offset:.15em}
+svg{display:block;flex:none}
+.ic{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* One left edge (W6): a single wrap; narrow text limits its own width and never centres. */
+.wrap{width:min(100% - 2*var(--gutter),var(--content-w));margin-inline:auto}
+.eyebrow{font-size:var(--text-caps);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-3)}
+h2{font-size:var(--text-h2);font-weight:600;line-height:1.2;letter-spacing:-.01em;max-width:24ch;text-wrap:balance}
+.meta{font-size:var(--text-meta);color:var(--text-3)}
+section.block{padding-block:var(--block);scroll-margin-top:3.5rem}
+section.band{background:color-mix(in srgb,var(--text-3) var(--group-tint),var(--surface));border-block:1px solid var(--border)}
+section.block + section.block:not(.band){border-top:1px solid var(--border)}
+.plate{display:inline-grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-muted)}
+
+/* Header: one logo (W6). Above 64rem the links sit in the bar. */
+.hd{background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:3}
+.hd .bar{display:flex;align-items:center;gap:var(--space-5);min-height:3.5rem}
+.brand{display:inline-flex;align-items:center;gap:.625rem;font-weight:600;text-decoration:none;min-height:var(--touch)}
+.brand img{width:26px;height:26px}
+.hd nav.main{display:none;gap:var(--space-5);margin-left:var(--space-4)}
+.hd nav.main a,.hd .gh,.anchors a,.menu nav a{text-decoration:none;color:var(--text-muted);font-size:var(--text-label);font-weight:500;min-height:var(--touch);display:inline-flex;align-items:center;gap:.375rem}
+.hd nav.main a:hover,.hd .gh:hover,.anchors a:hover,.menu nav a:hover{color:var(--text)}
+.hd .end{margin-left:auto;display:flex;align-items:center;gap:var(--space-3)}
+.hd .gh{display:none}
+.theme{width:var(--touch);height:var(--touch);display:inline-grid;place-items:center;border:0;background:transparent;border-radius:var(--radius-md);color:var(--text-muted)}
+.lang{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--radius-full);overflow:hidden;font-size:var(--text-sm)}
+.lang a{padding:0 .75rem;min-height:2.25rem;display:inline-flex;align-items:center;text-decoration:none;color:var(--text-muted)}
+.lang a[aria-current]{background:var(--surface-2);color:var(--text);font-weight:600}
+/* W4, variant "anchor bar" (mockup A): a second row of plain links under 64rem; it is the sticky part on a phone. */
+.anchors{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.anchors .wrap{display:flex;gap:var(--space-5);overflow-x:auto;scrollbar-width:none}
+.anchors a{white-space:nowrap}
+/* W4, variant "menu" (mockup B): <details> in the bar, the panel hangs under it. */
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer;min-height:var(--touch);padding-inline:var(--space-3);display:inline-flex;align-items:center;gap:.375rem;border:1px solid var(--border-strong);border-radius:var(--radius-md);font-size:var(--text-label);font-weight:500}
+.menu summary::-webkit-details-marker{display:none}
+.menu nav{position:absolute;right:0;top:calc(100% + .5rem);min-width:13rem;display:grid;padding:var(--space-2) var(--space-4);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-1)}
+.hd.sticky{position:sticky;top:0}
+@media (min-width:64rem){
+  .hd{position:sticky;top:0}
+  .hd nav.main,.hd .gh{display:inline-flex}
+  .anchors,.menu{display:none}
+}
+@media (max-width:29.99rem){.hd .bar{gap:var(--space-3)}.hd .end{gap:var(--space-2)}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:var(--space-3);min-height:3.5rem;padding:var(--space-3) 1.25rem;border-radius:var(--radius-md);text-decoration:none;font-weight:600;line-height:1.2;border:1px solid transparent;transition:background var(--dur-fast),border-color var(--dur-fast)}
+.btn-primary{background:var(--accent);color:var(--accent-contrast)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{border-color:var(--border-strong);color:var(--text)}
+.btn-secondary:hover{background:var(--surface-2)}
+.btn .sub{display:block;font-size:var(--text-sm);font-weight:500;margin-top:.125rem;font-variant-numeric:tabular-nums}
+
+/* Pictures: a slot label under a background layer (see the note at the top). */
+.shot{position:relative;display:block;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+.shot .slot{position:absolute;inset:0;display:grid;place-items:center;padding:var(--space-4);text-align:center;font-size:var(--text-meta);color:var(--text-3)}
+.shot .img{position:absolute;inset:0;background-image:var(--img);background-repeat:no-repeat;background-position:var(--x,0) var(--y,0);background-size:var(--w,100%) auto}
+.shot .winbar{position:absolute;inset:0 0 auto 0;height:1.75rem;display:flex;align-items:center;gap:.375rem;padding-inline:.75rem;border-bottom:1px solid var(--border);background:var(--surface-2);z-index:1}
+.shot .winbar i{width:.6rem;height:.6rem;border-radius:50%;background:var(--border-strong);opacity:.5}
+.shot.window .img{top:1.75rem}
+
+/* Hero (W2): one large picture, cut by the right and the bottom edge; on a phone the phone picture. Logo only in the header. */
+.hero{overflow:hidden;background:var(--surface);border-bottom:1px solid var(--border);padding-top:clamp(2rem,6vw,5rem)}
+.hero .grid{display:grid;gap:var(--space-6)}
+.hero h1{font-size:clamp(2.125rem,1.4rem + 2.8vw,3.25rem);font-weight:700;line-height:1.08;letter-spacing:-.02em;max-width:14ch;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lead{margin-top:var(--space-4);font-size:var(--text-lg);line-height:1.5;color:var(--text-muted);max-width:34rem}
+.dl{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-5)}
+.dl .btn{flex:1 1 13rem;max-width:20rem}
+.version{margin-top:var(--space-3)}
+/* W6: the checksums belong to the download, directly under the version line. */
+.sha summary{cursor:pointer;min-height:var(--touch);display:inline-flex;align-items:center;font-size:var(--text-meta);color:var(--text-muted);text-decoration:underline;text-underline-offset:.15em}
+.sha dl{display:grid;gap:.125rem;font-size:var(--text-meta);max-width:34rem}
+.sha dt{font-weight:600;margin-top:var(--space-2)}
+.sha code{font-family:var(--font-mono);font-size:.75rem;overflow-wrap:anywhere;color:var(--text-muted)}
+.trust{display:flex;flex-wrap:wrap;gap:var(--space-1) var(--space-5);margin-top:var(--space-2);font-size:var(--text-sm);color:var(--text-muted)}
+.trust li{display:inline-flex;align-items:center;gap:.4rem}
+.trust svg{color:var(--success)}
+.hero .stage{display:none}
+.hero .handset{width:min(18rem,82%);height:12.5rem;margin-inline:auto;border:.4rem solid var(--surface-2);border-bottom:0;border-radius:2rem 2rem 0 0;outline:1px solid var(--border)}
+@media (min-width:48rem){
+  .hero .handset{display:none}
+  .hero .stage{display:block;height:24rem;border-bottom:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;--w:56rem}
+}
+@media (min-width:64rem){
+  .hero{padding-top:clamp(3rem,6vw,5rem)}
+  .hero .grid{grid-template-columns:minmax(0,29rem) minmax(0,1fr);gap:var(--space-7);align-items:start}
+  .hero .copy{padding-bottom:clamp(3rem,6vw,5rem)}
+  /* 60rem wide = 75 % of the 1280 px capture: 14 px app text stays about 10.5 px. The column is narrower, the rest is cut. */
+  .hero .stage{width:60rem;height:100%;min-height:31rem;--w:60rem}
+}
+
+/* Features (W1): four large real pictures, then the whole catalogue as a compact list. */
+.intro{margin-top:var(--space-3);color:var(--text-muted);max-width:var(--measure)}
+.scenes{display:grid;gap:var(--space-5);margin-top:var(--space-5)}
+.scene{display:grid;gap:var(--space-2)}
+.scene h3{font-size:var(--text-xl);font-weight:600;line-height:1.25;display:flex;align-items:center;gap:var(--space-3)}
+.scene h3 .plate{background:color-mix(in srgb,var(--module-color) 18%,var(--surface));color:var(--module-color)}
+.scene .sub{color:var(--text-muted);font-size:var(--text-label)}
+.scene .more{display:none;font-size:var(--text-label);color:var(--text-muted);max-width:36ch}
+.scene .shot{height:9rem;border-radius:var(--radius-lg);--img:var(--img-s);--y:-3rem}
+@media (min-width:48rem){
+  .scenes{gap:var(--space-7)}
+  .scene{grid-template-columns:minmax(0,17rem) minmax(0,1fr);gap:var(--space-6);align-items:start}
+  .scene .text{display:grid;gap:var(--space-3);padding-top:var(--space-2)}
+  .scene .more{display:block}
+  /* 58rem wide = 72 % of the capture, moved left by the width of the app sidebar: the page itself fills the frame. */
+  .scene .shot{height:27rem;--w:58rem;--x:-11.125rem;--y:0}
+  .scene [data-shot=calendar]{--img:var(--img-calendar)}.scene [data-shot=finance]{--img:var(--img-finance)}
+  .scene [data-shot=notes]{--img:var(--img-notes)}.scene [data-shot=accounts]{--img:var(--img-accounts)}
+}
+.catalog{margin-top:var(--space-6)}
+.catalog h3{font-size:var(--text-lg);font-weight:600}
+.catalog .legend{margin-top:var(--space-1);font-size:var(--text-meta);color:var(--text-3);max-width:var(--measure)}
+.catalog dl{margin-top:var(--space-4);border-top:1px solid var(--border)}
+.catalog .row{display:grid;gap:.125rem;padding-block:var(--space-2);border-bottom:1px solid var(--border)}
+.catalog dt{font-weight:600;font-size:var(--text-label)}
+.catalog dt span{font-weight:400;color:var(--text-3);font-size:var(--text-meta);margin-left:.375rem}
+.catalog dd{font-size:var(--text-label);color:var(--text-muted);line-height:1.6}
+.catalog dd span{white-space:nowrap;margin-right:.875rem}
+.catalog dd span::before{content:'';display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--module-color);margin-right:.375rem}
+.catalog dd strong{color:var(--text);font-weight:600}
+.catalog dd small{font-size:var(--text-meta);color:var(--text-3)}
+.catalog .wip dt,.catalog .wip dd{color:var(--text-3)}
+@media (min-width:48rem){.catalog .row{grid-template-columns:11rem minmax(0,1fr);gap:var(--space-4)}}
+
+/* Data (W6): three nodes with icon, title and text on the same lines; the links sit on the icon line. */
+.flow{margin-top:var(--space-5);display:grid;gap:0;max-width:60rem}
+.node{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--space-3);align-items:start}
+.node strong{font-size:var(--text-label);align-self:center}
+.node span.t{grid-column:2;font-size:var(--text-sm);color:var(--text-muted)}
+.link{margin-left:1.0625rem;padding:var(--space-2) 0 var(--space-2) 1.75rem;border-left:1px dashed var(--border-strong);font-size:var(--text-meta);color:var(--text-3)}
+.aside{margin-top:var(--space-5);max-width:var(--measure);display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-3);padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);font-size:var(--text-sm);color:var(--text-muted)}
+.aside strong{color:var(--text)}
+.aside svg{margin-top:.125rem}
+@media (min-width:48rem){
+  .flow{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);column-gap:var(--space-4);align-items:start}
+  .node{grid-template-columns:minmax(0,1fr);row-gap:var(--space-2)}
+  .node span.t{grid-column:1}
+  .link{margin:0;padding:0 0 .375rem;border-left:0;border-bottom:1px dashed var(--border-strong);min-width:7rem;height:1.5rem;text-align:center;white-space:nowrap}
+}
+
+/* Focus */
+.focus .grid{display:grid;gap:var(--space-6)}
+.points{display:grid;gap:var(--space-3);margin-top:var(--space-4)}
+.points li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--space-3)}
+.points h3{font-size:var(--text-md);font-weight:600;align-self:center}
+.points p{grid-column:2;font-size:var(--text-sm);color:var(--text-muted)}
+.note{margin-top:var(--space-5);font-size:var(--text-sm);color:var(--text-muted);max-width:var(--measure);padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
+.focus .handset{display:none}
+@media (min-width:48rem){.points{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5) var(--space-6)}}
+@media (min-width:64rem){
+  .focus .grid{grid-template-columns:minmax(0,1fr) 15rem;gap:var(--space-7);align-items:center}
+  .focus .handset{display:block;height:27rem;border:.4rem solid var(--surface-2);border-radius:1.75rem;outline:1px solid var(--border)}
+}
+
+/* Compare, support, install, footer */
+.cmp{width:100%;max-width:46rem;border-collapse:collapse;margin-top:var(--space-4);font-size:var(--text-label)}
+.cmp th,.cmp td{text-align:left;padding:var(--space-3) var(--space-3) var(--space-3) 0;border-bottom:1px solid var(--border);vertical-align:top}
+.cmp thead th{font-size:var(--text-caps);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.cmp tbody th{font-weight:500;color:var(--text-muted)}
+.cmp td:nth-child(2){font-weight:600}
+.cmp td:nth-child(3){color:var(--text-muted)}
+@media (max-width:47.99rem){
+  /* On a phone each feature is a small block instead of a three-column table. */
+  .cmp thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .cmp tr{display:grid;grid-template-columns:1fr 1fr;column-gap:var(--space-3);padding-block:var(--space-2);border-bottom:1px solid var(--border)}
+  .cmp tbody th{grid-column:1/-1;font-size:var(--text-meta)}
+  .cmp th,.cmp td{border:0;padding:0}
+  .cmp td{font-size:var(--text-sm)}
+}
+.support .card{display:grid;gap:var(--space-4);align-items:center}
+.support .text{margin-top:var(--space-3);color:var(--text-muted);max-width:var(--measure)}
+.support .meta{margin-top:var(--space-2)}
+@media (min-width:48rem){.support .card{grid-template-columns:minmax(0,1fr) auto;gap:var(--space-6)}}
+.install .list{margin-top:var(--space-4);border-bottom:1px solid var(--border);max-width:46rem}
+.install details{border-top:1px solid var(--border)}
+.install summary{cursor:pointer;min-height:3rem;display:flex;align-items:center;font-weight:600;font-size:var(--text-label)}
+.install details p{padding-bottom:var(--space-4);color:var(--text-muted);font-size:var(--text-label);max-width:var(--measure)}
+.install .more{margin-top:var(--space-4);font-size:var(--text-sm)}
+.ft{border-top:1px solid var(--border);padding-block:var(--space-5);font-size:var(--text-sm);color:var(--text-muted)}
+.ft nav{display:flex;flex-wrap:wrap;gap:var(--space-1) var(--space-5)}
+.ft a{min-height:var(--touch);display:inline-flex;align-items:center}
+.ft .fine{display:flex;gap:var(--space-5)}
+
+/* ---------- Mockup B only: depth ---------- */
+/* The ocean gradient as the one brand surface. It is the same in both themes, so the hero carries its own
+   (dark-theme) ink and accent; AA figures in ROUND-5.md. */
+.hero.ocean{background:linear-gradient(135deg,var(--ocean-from),var(--ocean-to));border-bottom:0;color-scheme:dark;
+  --text:#fff;--text-muted:#e6eef0;--text-3:#dbe6e9;--border:rgb(255 255 255/.2);--border-strong:rgb(255 255 255/.55);
+  --accent:#ffb07a;--accent-hover:#ffc59c;--accent-contrast:#1b0f06;--success:#a8ebc4;--focus:#fff;color:var(--text)}
+.hero.ocean h1 em{color:#ffc59c}
+.hero.ocean .stage,.hero.ocean .handset{border-color:rgb(255 255 255/.16);box-shadow:0 24px 60px rgb(4 20 32/.45);background:#171c20}
+.hero.ocean .handset{outline:0;border-color:#0b2334}
+/* The one movement: the hero picture rises once on load. transform/opacity only; none under reduced motion. */
+@keyframes rise{from{opacity:0;transform:translateY(1.25rem)}to{opacity:1;transform:none}}
+.hero.ocean .stage,.hero.ocean .handset{animation:rise 480ms cubic-bezier(.2,.7,.2,1) 120ms both}
+@media (prefers-reduced-motion:reduce){.hero.ocean .stage,.hero.ocean .handset{animation:none}*{transition-duration:0s!important}}
+/* Scene pictures stand on a plate in the module colour and carry the floating shadow. */
+.depth .scene .stand{display:block;border-radius:var(--radius-xl);background:color-mix(in srgb,var(--module-color) 14%,var(--surface));padding:var(--space-4) 0 0 var(--space-4);overflow:hidden}
+.depth .scene .shot{border-radius:var(--radius-lg) 0 0 0;border-right:0;border-bottom:0;box-shadow:var(--shadow-1)}
+@media (min-width:48rem){.depth .scene .stand{padding:var(--space-6) 0 0 var(--space-6)}.depth .scene .shot{height:25rem}}
+@media (min-width:48rem){.depth .support .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-1);padding:clamp(1.25rem,4vw,2.5rem)}}
