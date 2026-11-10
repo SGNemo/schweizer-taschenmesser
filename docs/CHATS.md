@@ -16,6 +16,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | PR | Was | Zu tun |
 | --- | --- | --- |
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
+| [#694](https://github.com/SGNemo/schweizer-taschenmesser/pull/694) `design/site-rethink` (Draft) | Website neu denken: [RETHINK.md](design/site/RETHINK.md) und drei Richtungen als echte Seiten `/_r/a`, `/_r/b`, `/_r/c`, ohne App-Bilder | Richtung, Kernaussage, Ton und Startseiten-Inhalt wählen (Empfehlung: C mit der Tabelle aus B); danach Phase 3. Später: Website – Bilder, sobald die App steht |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
 | [#553](https://github.com/SGNemo/schweizer-taschenmesser/pull/553) `chore/remove-scribble-folder` (Draft) | entfernt den alten Ordner `scribble/` (Notizen liegen im Notiz-Repo) | fertig machen lassen oder schließen; bis dahin liest `chats:status` ohne Klon des Notiz-Repos das alte Board |
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
