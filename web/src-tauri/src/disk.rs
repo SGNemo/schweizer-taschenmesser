@@ -571,7 +571,7 @@ pub enum DeleteEvent {
 /// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirmed_twice` must be set when the
 /// plan needs a second confirmation (checked here, not only in the UI). Progress and the report
 /// arrive on the channel.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,

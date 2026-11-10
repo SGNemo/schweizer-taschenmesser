@@ -203,7 +203,7 @@ fn assert_async(src: &str, names: &[&str]) {
 }
 
 /// Commands the inventory (`docs/perf/MAIN-THREAD-COMMANDS-2026-11.md`) rates "can block the main
-/// thread" stay off it. `disk_delete` is not in this list yet (its checks are frozen).
+/// thread" stay off it.
 #[test]
 fn blocking_commands_never_run_on_the_main_thread() {
     let lan = source("lan_sync.rs");
@@ -221,6 +221,7 @@ fn blocking_commands_never_run_on_the_main_thread() {
             "disk_reveal",
             "disk_can_delete",
             "disk_delete_plan",
+            "disk_delete",
         ],
     );
     assert_async(
@@ -273,4 +274,37 @@ fn tab_navigation_stays_in_call_order() {
             "{name} is expected to be a plain #[tauri::command]"
         );
     }
+}
+
+/// `disk_delete` left the main thread by its attribute alone. Its checks keep their order: plan
+/// known → not expired → second confirmation → not already running → fresh guard (block list) →
+/// only then the worker that deletes.
+#[test]
+fn disk_delete_checks_keep_their_order() {
+    let src = source("disk.rs");
+    let start = src.find("pub fn disk_delete(").expect("disk_delete");
+    let body = &src[start..start + src[start..].find("\n}\n").expect("end of disk_delete")];
+    let steps = [
+        "inner.plans.get(&plan_id).cloned().ok_or(\"unknown-plan\")?",
+        "return Err(\"plan-expired\".into());",
+        "if stored.plan.needs_double_confirmation(mode) && !confirmed_twice {",
+        "return Err(\"confirmation-missing\".into());",
+        ".swap(true, std::sync::atomic::Ordering::SeqCst)",
+        "return Err(\"already-running\".into());",
+        "let guard = guard_for(&app);",
+        ".spawn(move || {",
+        "let report = execute(",
+        "&stored.plan,",
+        "&guard,",
+    ];
+    let mut at = 0;
+    for step in steps {
+        let found = body[at..]
+            .find(step)
+            .unwrap_or_else(|| panic!("disk_delete: {step:?} missing or out of order"));
+        at += found + step.len();
+    }
+    // Nothing deletes outside that worker, and the guard is built once.
+    assert_eq!(body.matches("execute(").count(), 1);
+    assert_eq!(body.matches("guard_for(").count(), 1);
 }
