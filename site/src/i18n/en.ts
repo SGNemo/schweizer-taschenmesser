@@ -9,8 +9,8 @@ export const en = {
       "Calendar, tasks, finances and passwords in one app for Windows and Android. Your data stays with you: no account, no cloud. Open source, free.",
   },
   nav: {
-    features: "Features",
-    privacy: "Privacy",
+    modules: "Modules",
+    data: "Your data",
     install: "Install",
     support: "Support",
     github: "GitHub",
@@ -32,31 +32,111 @@ export const en = {
   },
   ogLocale: "en_GB",
   skip: "Skip to content",
-  hero: {
-    title: "Everything that matters, in one place.",
-    titleAccent: "And only with you.",
-    lead: "Nemo brings calendar, tasks, money and passwords together in one calm app for PC and Android. No account, no cloud.",
-    windows: "For Windows",
+  download: {
+    windows: "Download for Windows",
+    android: "Download for Android",
     windowsSub: "Portable",
-    android: "For Android",
     androidSub: "APK",
-    trust: ["Open source, MIT", "No account", "Free, no tracking"],
-    version: (v: string, d: string) => `Version ${v} · ${d}`,
-    fallbackVersion: "Latest version",
+    version: (v: string, d: string) => `Version ${v}, ${d}`,
+    warn: "Windows and Android ask before the first start. For now that is normal.",
+    guide: "Install step by step",
     allReleases: "All versions",
-    checksums: "Checksums",
-    checksumsTitle: "Checksums (SHA-256)",
-    checksumsHint:
-      "The checksum comes from the GitHub release. Compare it after downloading if you want to be sure.",
-    screenshotAlt:
-      "Nemo overview with made-up sample data (shown in German): “important now”, “still waiting”, the “up next” card with a first step and today’s plan",
-    phoneAlt: "The same overview on the phone",
   },
-  features: {
-    eyebrow: "What Nemo does",
-    title: "Six areas. You switch on what you need.",
-    intro: "Each area has its colour. The pictures show the app with invented sample data.",
-    and: "and",
+  honest:
+    "Nemo is built with ADHD in mind and helps with starting and keeping going. It is not a treatment and does not promise one. Every aid can be switched off on its own.",
+  home: {
+    h1: "One thing first.",
+    lead: "Nemo is a calm app for what everyday life brings: appointments, tasks, money, lists, passwords. It shows you what to do now. The rest waits.",
+    sub: "For Windows and Android. No account. Your data stays on your device.",
+    now: {
+      alt: "Sketch of the “Up now” card: one task, below it the button “Start, 5 min” and the ways out “Later” and “Something else”. Behind it two folded rows saying “Still waiting”. Drawn, not a picture of the app.",
+      label: "Up now",
+      task: "Taxes: find the receipts",
+      start: "Start, 5 min",
+      later: "Later",
+      other: "Something else",
+      waiting: "Still waiting",
+    },
+    day: {
+      h: "One day with Nemo",
+      intro: "An invented day. The features exist.",
+      plan: {
+        time: "07:40",
+        h: "What is today?",
+        p: "The overview shows what matters now and the plan for today. Nothing more.",
+        alt: "Sketch of the plan for the day: three rows with time and title, 08:00 take medication, 10:00 team meeting, 13:00 hairdresser. Drawn, not a picture of the app.",
+        rows: [
+          ["08:00", "Take medication"],
+          ["10:00", "Team meeting"],
+          ["13:00", "Hairdresser"],
+        ],
+      },
+      focus: {
+        time: "10:15",
+        h: "Start",
+        p: "Focus mode: one task, its steps, a ring timer with a soft end. Everything else is hidden.",
+        alt: "Sketch of the focus mode: a ring, two thirds full, next to it three steps, the first ticked. Drawn, not a picture of the app.",
+        ring: "16:40",
+        steps: ["Get the folder", "Sort the receipts", "Tick the list"],
+      },
+      capture: {
+        time: "13:05",
+        h: "Noted quickly",
+        p: "You type “morgen 15 Uhr Zahnarzt” (German phrases for now). Nemo recognises the appointment and the date on your device, without the network.",
+        alt: "Sketch of the quick capture: an input field with the German phrase “morgen 15 Uhr Zahnarzt”, below it the recognised entry: appointment, tomorrow, 15:00. Drawn, not a picture of the app.",
+        input: "morgen 15 Uhr Zahnarzt",
+        kind: "Appointment",
+        what: "Zahnarzt",
+        when: "tomorrow, 15:00",
+      },
+      money: {
+        time: "18:30",
+        h: "What goes out?",
+        p: "Accounts, invoices, subscriptions and budgets side by side: what is there, what goes out, what is due.",
+        alt: "Sketch of the budgets: three bars for housing, food and leisure, filled to different lengths. Drawn, not a picture of the app.",
+        bars: ["Housing", "Food", "Leisure"],
+      },
+      night: {
+        time: "22:00",
+        h: "Quiet",
+        p: "At night it stays silent. During the day at most three reminders an hour arrive. You set both yourself.",
+      },
+    },
+    data: {
+      h: "And it stays with you",
+      lead: "No account, no Nemo server. What the app still sends online is listed here. None of it contains your entries.",
+      link: "Every connection, and how to check",
+    },
+    inside: {
+      h: "You switch on what you need",
+      intro: (areas: number, modules: number) => `${areas} areas, ${modules} modules. Only the essentials are on at the start.`,
+      link: "See all modules",
+    },
+    get: { h: "Try it", p: "Free, no premium tier." },
+  },
+  ledger: {
+    caption: "Connections the app makes",
+    head: ["When", "Where to", "What", "Switch"],
+    rows: [
+      { short: true, when: "Update check, at most once a day", where: "GitHub", what: "The request for the version file. GitHub sees your IP address.", off: "Settings → Updates" },
+      { short: true, when: "Weather, after you chose a place", where: "open-meteo.com", what: "The place name while searching, then the position rounded to about 1 km.", off: "Settings → Connections → Weather" },
+      { short: true, when: "Opening the currency converter", where: "frankfurter.dev", what: "The request for the rates.", off: "Only when opened" },
+      { short: false, when: "Clicking “Look up public IP”", where: "api.ipify.org", what: "The request.", off: "Only on click" },
+      { short: false, when: "Loading the local AI model", where: "huggingface.co", what: "The download. The checksum is verified.", off: "Only after you confirm" },
+      { short: false, when: "Feeds and calendar subscriptions", where: "The addresses you enter", what: "Fetching the address.", off: "Off until you enter one" },
+      { short: false, when: "Google and Spotify", where: "Google, Spotify", what: "Google: reading calendar and email headers. Spotify: what is playing and a few controls.", off: "Off until you set up the connection" },
+      { short: true, when: "AI assistant", where: "A provider you choose", what: "Your question, the date, the field names of the modules.", off: "Off until you store a key" },
+      { short: true, when: "Sync", where: "Your own server", what: "Your data, end-to-end encrypted if you want.", off: "Off until you set it up" },
+    ],
+    never: "Never:",
+    neverText: "entries, amounts, names or passwords to the project. There is no Nemo server, no account, no telemetry, no advertising.",
+  },
+  modules: {
+    title: "Modules",
+    description: "All of Nemo's modules by area: Plan, Money, Household, Knowledge, Vault and System. You switch on what you need.",
+    h1: "You switch on what you need.",
+    lead: (areas: number, modules: number) =>
+      `${modules} modules in ${areas} areas. Only the essentials are on at the start. You fetch the rest from the module library when you need it.`,
     areas: {
       plan: "The day, the week, the people.",
       money: "Accounts, invoices, subscriptions, budgets.",
@@ -65,137 +145,83 @@ export const en = {
       vault: "Encrypted, only here.",
       system: "What your device is up to.",
     },
-    // The four scenes (src/catalog/scenes.js), keyed by the scene's first area.
-    scenes: {
-      plan: {
-        text: "Events, reminders and deadlines of every module in one week. The planner spreads what is due over your free time.",
-        alt: "Calendar with invented sample data: the week with its events and the agenda beside it",
-      },
-      money: {
-        text: "What is there, what goes out and what is due. Bank statement import included.",
-        alt: "Finance with invented sample data: balance, accounts, income and expenses of the month",
-      },
-      knowledge: {
-        text: "Notes, bookmarks, lists and pantry sit next to the calendar instead of in yet another app.",
-        alt: "Notes with invented sample data: the scratchpad and the list of pages",
-      },
-      vault: {
-        text: "Passwords with TOTP and generator, documents with expiry dates. Invisible to the AI.",
-        alt: "Unlocked vault with invented demo logins",
-      },
+    only: {
+      windows: "Windows app only",
+      android: "Android app only",
+      both: "Windows and Android app only",
     },
-    modules: {
-      summary: (n: number) => `All ${n} modules`,
-      only: {
-        windows: "Windows app only",
-        android: "Android app only",
-        both: "Windows and Android apps only",
-      },
-      legend: "Bold: on from the start. You switch on everything else in the module library.",
-      wip: "In progress",
-      wipText: "Preview, hidden in the app until you turn on “Show work in progress” (Settings → Appearance).",
-      note: "The list is generated from the app itself.",
-    },
-  },
-  data: {
-    eyebrow: "Your data stays with you",
-    title: "Your PC, your phone, your server. Nobody else.",
-    nodes: [
-      {
-        icon: "pc",
-        title: "Your PC",
-        text: "All data lives here, encrypted vault included.",
-      },
-      {
-        icon: "server",
-        title: "Your own server",
-        text: "A small program at home or on your web space.",
-      },
-      {
-        icon: "phone",
-        title: "Your phone",
-        text: "The same data, usable offline.",
-      },
-    ],
-    links: ["Sync, only if you want it", "Sync"],
-    ai: "Cloud AI, only on request.",
-    aiText: "With a local model it works without internet.",
-    sent: "Sent:",
-    sentText: "your question, the date, the field names of the modules.",
-    never: "Never sent:",
-    neverText: "entries, amounts, names, passwords.",
-  },
-  focus: {
-    eyebrow: "Made for busy minds",
-    title: "Less on the screen, so starting gets easier.",
-    items: [
-      {
-        icon: "target",
-        title: "One thing first",
-        text: "The overview shows what is up next, with a first step and a duration. The rest waits, collapsed.",
-      },
-      {
-        icon: "timer",
-        title: "Focus mode",
-        text: "One task, its steps, a ring timer with a soft end. Everything else is hidden.",
-      },
-      {
-        icon: "bell",
-        title: "Calm reminders",
-        text: "At most three per hour, quiet hours at night, “later” with sensible options.",
-      },
-      {
-        icon: "leaf",
-        title: "No pressure",
-        text: "“Still waiting” instead of “overdue for 12 days”. No streaks to lose, no counter that grows.",
-      },
-    ],
-    honest:
-      "Nemo is developed with ADHD in mind and helps with starting and staying on track. It is not a treatment and does not promise one. Every aid can be switched off individually.",
-    shotAlt:
-      "Detail of the overview: the “up next” card with “start · 5 min”, “later” and “something else”",
-    phoneAlt:
-      "The overview on the phone: “important now” and the “up next” card with a first step and duration",
-  },
-  compare: {
-    eyebrow: "Comparison",
-    title: "Nemo next to typical apps.",
-    head: ["Feature", "Nemo", "Typical apps"],
-    rows: [
-      ["Where the data lives", "On your device", "On the provider’s servers"],
-      ["Account", "None needed", "Required, usually with e-mail"],
-      ["Price", "Free, no premium tier", "Subscription or ads"],
-      ["Source code", "Open, MIT licence", "Closed"],
-      [
-        "Sync between devices",
-        "Through your own server, optional",
-        "Through the provider’s cloud, always",
+    on: "on at the start",
+    library: {
+      alt: "Sketch of the module library: three rows with a module name and a switch. Calendar and Finances are on, Pantry is off. Drawn, not a picture of the app.",
+      title: "Module library",
+      rows: [
+        ["sky", "Calendar", "on"],
+        ["teal", "Finances", "on"],
+        ["fern", "Pantry", "off"],
       ],
-    ],
+    },
+    note: "The list is generated from the app itself.",
   },
-  install: {
-    eyebrow: "Install",
-    title: "Ready in a minute.",
-    windows: {
-      summary: "Windows: one file, no installation",
-      text: "Run the file, done. The first time, SmartScreen asks: “More info” → “Run anyway”. The exe has no purchased certificate; updates are still signed and verified before they are applied. It needs WebView2, which Windows 10 and 11 usually have.",
+  dataPage: {
+    title: "What goes online",
+    description: "Every connection Nemo makes, with destination, content and switch. Your entries stay on your device.",
+    h1: "What goes online.",
+    lead: "Your entries stay on your device. Here is every connection Nemo makes, and where you switch it off.",
+    schema: {
+      alt: "Diagram: inside a line labelled “With you” are your PC, your phone and, dashed, your own server. Outside, under “Internet”, are update check, weather and AI, each with a note on how it is or gets switched off.",
+      inside: "With you",
+      pc: ["Your PC", "all data, vault encrypted"],
+      phone: ["Your phone", "the same data, offline"],
+      server: ["Your own server", "only if you want"],
+      sync: "Sync",
+      outside: "Internet",
+      lines: [
+        ["Update check", "can be switched off"],
+        ["Weather", "can be switched off"],
+        ["AI", "off until you switch it on"],
+      ],
     },
-    android: {
-      summary: "Android: install the APK",
-      text: "Open the APK and allow “Install from this source” for your browser or file manager. Later updates are downloaded by the app itself and checksum-verified; Android only accepts APKs with the same signing key.",
+    table: { h: "Every connection", intro: "Apart from your IP address and the request itself nothing is transferred, unless the row says otherwise." },
+    ai: {
+      h: "The AI does not see your entries",
+      p: [
+        "The assistant sends your question, the date and the field names of the modules you switched on. Nothing more.",
+        "Two exceptions only you can trigger. In the chat you can attach data of one module; the app shows exactly what goes along first. And through the local import interface you can give an AI on your PC read access to single modules.",
+        "The password vault is invisible to AI, search and import.",
+      ],
     },
-    updates: {
-      summary: "Updates arrive in the app",
-      text: "Settings → App updates. Before each update Nemo makes a backup and verifies the project’s signature. You decide when.",
+    check: {
+      h: "Check it yourself",
+      intro: "You do not have to take this on trust. You can look these up yourself.",
+      items: [
+        ["Source code", "Open, MIT licence. Every line of the app is on GitHub."],
+        ["Updates", "Signed with the project key and verified before they are applied."],
+        ["Windows file", "No purchased certificate. That is why SmartScreen asks before the first start."],
+      ],
+      sums: "Checksums (SHA-256)",
+      sumsHint: "From the GitHub release. If the sum matches your file, it is the file the project built.",
+      source: "Source code on GitHub",
+      docs: "Security and privacy, in full",
+      site: "Privacy policy of this website",
     },
-    dev: {
-      summary: "Dev preview (untested)",
-      text: "Every state of the development branch automatically produces a preview. It is a separate app “Nemo Dev” with its own data, untested and not meant for daily use. It does not replace the stable app.",
-      windows: "Dev preview for Windows",
-      android: "Dev preview for Android",
+  },
+  supportPage: {
+    title: "Support",
+    description: "Nemo stays free. If you like, give once through Ko-fi and get a badge and five colour themes as a thank-you.",
+    h1: "Nemo stays free.",
+    lead: "There is no premium tier and no advertising. Every feature stays open to everyone.",
+    give: {
+      h: "If you would like to give something",
+      p: "You give once through Ko-fi. As a thank-you you get a supporter code: a “thanks” badge and five colour themes.",
+      button: "Support on Ko-fi",
+      note: "Ko-fi is an external provider; payment happens only there.",
     },
-    steps: "Step by step, with the Windows and Android warnings",
-    more: "Full guide",
+    themes: { h: "The five colour themes", label: "Colour themes for supporters" },
+    code: {
+      h: "The code",
+      p: "The code is checked on your device only, without the network. It unlocks colours and the badge, no feature.",
+      link: "How the supporter code works",
+    },
   },
   // Step-by-step page /en/install (components/InstallGuide.astro). Button labels are the exact wording of
   // Windows 11 and Samsung One UI in English; `ui` marks the word to tap, `text` explains the step.
@@ -294,14 +320,6 @@ export const en = {
     help: "Stuck somewhere? Tell us at which step; a screenshot helps.",
     helpLink: "Ask on GitHub",
     back: "Back to the start page",
-  },
-  support: {
-    eyebrow: "Support",
-    title: "Nemo stays free.",
-    text: "If you like, give something once via Ko-fi. As a thank-you you get a supporter code for a “thanks” badge and five colour themes. Every feature stays open to everyone.",
-    button: "Support on Ko-fi",
-    note: "Ko-fi is an external provider; payment happens only there.",
-    themes: "Colour themes for supporters",
   },
   footer: {
     github: "GitHub",

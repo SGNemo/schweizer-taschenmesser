@@ -16,7 +16,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | PR | Was | Zu tun |
 | --- | --- | --- |
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
-| [#694](https://github.com/SGNemo/schweizer-taschenmesser/pull/694) `design/site-rethink` (Draft) | Website neu denken: [RETHINK.md](design/site/RETHINK.md) und drei Richtungen als echte Seiten `/_r/a`, `/_r/b`, `/_r/c`, ohne App-Bilder | Richtung, Kernaussage, Ton und Startseiten-Inhalt wählen (Empfehlung: C mit der Tabelle aus B); danach Phase 3. Später: Website – Bilder, sobald die App steht |
+| [#694](https://github.com/SGNemo/schweizer-taschenmesser/pull/694) `design/site-rethink` | Website neu gedacht und gebaut: „Ein Tag“ mit der Tabelle „Was ins Netz geht“, alle Seiten de/en, ohne App-Bilder ([RETHINK.md](design/site/RETHINK.md)) | mergen; Vorschau am Handy einmal durchsehen |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
 | [#553](https://github.com/SGNemo/schweizer-taschenmesser/pull/553) `chore/remove-scribble-folder` (Draft) | entfernt den alten Ordner `scribble/` (Notizen liegen im Notiz-Repo) | fertig machen lassen oder schließen; bis dahin liest `chats:status` ohne Klon des Notiz-Repos das alte Board |
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
@@ -29,13 +29,12 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder das Raster erst nach allen Karten packen? (keine Empfehlung; [qa/round-6/STATUS.md](qa/round-6/STATUS.md))
 2. Pflicht-Check `Web` im `develop`-Ruleset in GitHub eintragen? (ja; danach Bullet in `decisions/meta.md`)
 3. Die Angabe „seit n Tagen“ überall in der App einheitlich machen: als eigenes Paket starten? (ja; Fund C27 aus der Abnahme #496)
-4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2), und die Einblend-Bewegung auf der Website bleibt (AE6, seit #674 so gebaut)? (ja)
-5. Die Website nennt Listen und Budgets noch „optional“ (`fresh` in `modules.json`): ändern? (ja, als eigener kleiner Site-PR)
-6. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 auf Hardware prüfen, dann entscheiden)
-7. Unterlagen: Titel der Einträge auf der Übersicht zeigen, als Opt-in? (nein; aus #489)
-8. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (keine Empfehlung; aus #566)
-9. Merkliste und Unterlagen haben denselben Kopf: so lassen? Und: Akzent-Varianten gegen den festen 25°-Abstand der Modulfarben (keine Empfehlung; beides aus #485).
-10. Weitere Fragen stehen nur in den PR-Texten unter „Open questions“ und sind von hier aus nicht zu beantworten: #656 (vor allem: darf `disk_delete` nur per Attribut `async` bleiben), #632, #490, #492 (Planer: Budget von `plan.md`, Seed-Widget-Test, Swipe-Clip, schema-history).
+4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2)? (ja; AE6 hat sich erledigt: seit #694 bewegt sich auf der Website nichts mehr)
+5. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 auf Hardware prüfen, dann entscheiden)
+6. Unterlagen: Titel der Einträge auf der Übersicht zeigen, als Opt-in? (nein; aus #489)
+7. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (keine Empfehlung; aus #566)
+8. Merkliste und Unterlagen haben denselben Kopf: so lassen? Und: Akzent-Varianten gegen den festen 25°-Abstand der Modulfarben (keine Empfehlung; beides aus #485).
+9. Weitere Fragen stehen nur in den PR-Texten unter „Open questions“ und sind von hier aus nicht zu beantworten: #656 (vor allem: darf `disk_delete` nur per Attribut `async` bleiben), #632, #490, #492 (Planer: Budget von `plan.md`, Seed-Widget-Test, Swipe-Clip, schema-history).
 
 **Handgriffe:**
 
@@ -44,7 +43,8 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 - Agenten v3.1: `docs/meta/AGENTS.md` nennt jetzt die sieben Agenten; dazu gehören noch dein `ant apply` und ein Bullet in `decisions/meta.md` ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over“). Wenn v3.1 nicht gelten soll: Commit zu AGENTS.md zurücknehmen.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
-- Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
+- Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: alle Bildschirmfotos (README, Social-Preview) neu.
+- Website – Bilder, sobald die App steht: Chat nach [design/site/SLOTS.md](design/site/SLOTS.md) starten (sechs Slots, `npm run app:screenshots`).
 - L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
 
 ## Läuft gerade (Running work)
@@ -53,7 +53,6 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | --- | --- | --- | --- | --- |
 | UI-Audit 4.0, Paket 0b-2 Kopf und Navigation | `feat/ui4-0b-2-head-nav` (#688, Draft) | `web/src/layout/**`, module heads, `.changes/` | in work | 2026-11-10 |
 | Fernsteuerung: Latenzmessung | `feat/remote-latency-probe` (#690) | `web/src/core`, `docs/design/remote-control` | PR open | 2026-11-10 |
-| Website neu denken (Rohphase ohne App-Bilder) | `design/site-rethink` | `site/src/drafts/**`, `site/src/pages/[r]/`, `docs/design/site/RETHINK.md` | Phasen 1–2 im PR, Stopp bis zu Svens Wahl | 2026-11-10 |
 
 Add your row in the **first commit** of your branch, remove it in the **last commit** of your PR. On a merge conflict here keep both rows. Agent threads of one session share one row.
 

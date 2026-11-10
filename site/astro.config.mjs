@@ -24,8 +24,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       i18n: { defaultLocale: 'de', locales: { de: 'de', en: 'en' } },
-      // /_r/* are the draft directions of the rethink round: built, not indexed, not linked.
-      filter: (page) => !page.endsWith('/404') && !page.includes('/_r/'),
+      filter: (page) => !page.endsWith('/404'),
     }),
   ],
   // Lucide icons are inlined as SVG; the only script is the tiny theme switch in public/theme.js.

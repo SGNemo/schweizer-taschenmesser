@@ -8,18 +8,18 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Astro 7**, static output, no client JavaScript except `public/theme.js` (theme switch, ~1 KB,
   stores the choice in `localStorage` only). No cookies, no analytics, no external scripts or
   fonts. Every link to GitHub/Ko-fi carries `rel="noopener"`.
-- **Design** = Nemo tokens: `src/styles/tokens.css` is a subset of `web/src/ui/tokens.css` (colours, scale and
-  the identity v3 set: `--mod-*` hues, head/widget/group tints, pattern strengths); `scripts/tokens.test.mjs`
-  fails when a value differs. `src/styles/identity.css` maps `data-hue`/`data-hue2`/`data-area` to
-  `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). The features
-  section shows four scenes with one large real picture each (`src/catalog/scenes.js`) and the whole catalogue as a
-  compact list (one row per area, the module's colour as a dot, bold = on by default, preview modules in one last
-  row); `scripts/catalog.test.mjs` fails when a catalogue icon, hue, area or platform limit has no counterpart here
-  or a scene lacks its module, text or pictures (design rounds: `docs/design/site/`).
-  Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, fonts (Inter Variable,
-  OFL) and the social preview are copied at build time from `web/brand`, `web/public`,
-  `docs/brand` and `node_modules/@fontsource-variable/inter` (`scripts/copy-brand.mjs`, copies are
-  git-ignored).
+- **Design** (rethink round, `docs/design/site/RETHINK.md`; building blocks: `docs/design/site/README.md`): colours and
+  scale are a subset of the app's tokens (`src/styles/tokens.css`; `scripts/tokens.test.mjs` fails when a value
+  differs, when a token is neither the app's nor listed as site-only, or when a component writes a colour or an inline
+  style). The site has its own form: one typeface (Atkinson Hyperlegible Next Variable, OFL, copied at build time from
+  `node_modules/@fontsource-variable/atkinson-hyperlegible-next`), heavy headlines, ruled sections. Module colours
+  appear only as the dot before a module's name (`src/styles/identity.css` maps `data-hue` to `--module-color`, no
+  inline styles). **No app picture:** every picture place is a slot (`src/components/Slot.astro`, `src/slots.js`)
+  filled by a drawing until `npm run app:screenshots` writes its four pictures (`docs/design/site/SLOTS.md`).
+  The module lists come from `src/catalog/modules.json` through `src/catalog/shipped.ts` (shipped modules only, no
+  preview module); `scripts/catalog.test.mjs` checks icons, hues, areas, platform labels and the slots.
+  Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, the
+  font and the social preview are copied at build time (`scripts/copy-brand.mjs`; logo and favicons are git-ignored).
 - **Downloads:** `scripts/fetch-release.mjs` reads `releases/latest` from the GitHub API once per
   build (anonymous, 10 s timeout) and refreshes `src/release/latest.json` (version, date, size and
   SHA-256 per asset, taken from the API's `digest`). On any failure the committed JSON is kept,
@@ -28,18 +28,12 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Security headers and caching:** `public/_headers` (Cloudflare Pages): strict CSP
   (`script-src 'self'`, `style-src 'self'`), `_astro/*` and fonts immutable for a year, HTML
   5 minutes.
-- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): one movement on the whole site (the hero picture
-  rises once on load, `transform`/`opacity` only, none under `prefers-reduced-motion`; decided in round 5), hover/focus
-  change colour only (150 ms), one accent colour, calm wording, no countdowns or pop-ups. The hero stands on the
-  app's ocean gradient (`--ocean-from/to`, pinned to the app; ink on it: `--on-ocean-*`, contrast tested).
-- **Navigation without script:** under 64 rem the links are a second header row (anchor bar) that stays on top
-  while the logo row scrolls away.
+- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): nothing on the site moves; hover/focus change colour
+  only (150 ms), one accent colour, calm wording, no countdowns or pop-ups. One honest sentence about ADHD, further
+  down the start page, never a headline.
+- **Navigation without script:** under 64 rem the links are a second header row that stays on top while the logo
+  row scrolls away.
 - **Design rounds** (diagnosis, directions, layout, details, mockups): `docs/design/site/`.
-- **Rethink round, drafts:** `/_r/a`, `/_r/b`, `/_r/c` (+ `/_r/en/…`) are three draft start pages without app pictures
-  (`src/drafts/`, route `src/pages/[r]/[...slug].astro`; noindex, not linked, not in the sitemap; fonts from three
-  `@fontsource-variable` dev packages, copied by `copy-brand.mjs` to the git-ignored `public/fonts/draft/`). Picture
-  places are named slots (`src/drafts/Slot.astro`, `slots.js`). Plan: `docs/design/site/RETHINK.md`; phase 3 removes the two
-  directions that lose.
 
 ## Layout
 ```
@@ -48,16 +42,19 @@ src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset 
 src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
-src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in German and English,
-                       icon, hue, area, state and platform limit per module · scenes.js = the four scenes
-src/components/        Hero, Features, Data, Focus, Compare, Support, Install, InstallGuide (/install: warnings, clicks, SHA-256), Header, Footer,
-                       Motif (one picture, phone capture under 48rem and desktop capture above, both themes: hero and scenes),
-                       Shot (one screenshot in both themes with a phone frame: focus band), Icon (inline Lucide)
-src/pages/             index, install, impressum, datenschutz, 404, robots.txt.ts · en/index, en/install, en/imprint, en/privacy
-src/assets/screens/    <page>-{dark,light}.png from the seeded app (npm run app:screenshots; Astro makes AVIF/WebP)
+src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/) · shipped.ts = areas with
+                       their shipped modules (no preview module)
+src/slots.js           the picture slots: name, ratio per breakpoint, capture size, app target
+src/components/        Home (start page: statement, the day, ledger, areas), ModulesPage, DataPage, SupportPage,
+                       InstallGuide (/install: warnings, clicks, SHA-256), Slot (picture slot), Downloads, Ledger
+                       ("what goes online"), Header, Footer, Icon (inline Lucide)
+src/pages/             index, module, daten, unterstuetzen, install, impressum, datenschutz, 404, robots.txt.ts ·
+                       en/index, en/modules, en/data, en/support, en/install, en/imprint, en/privacy
+src/assets/slots/      <slot>-{desk,phone}-{light,dark}.png once npm run app:screenshots has run (empty today)
 public/                .well-known/security.txt, _headers, theme.js
 scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse (--dark audits
-                       the dark theme), screenshots (site), app-screenshots (app), *.test.mjs
+                       the dark theme), a11y, screenshots (site), app-screenshots (app pictures for the slots),
+                       *.test.mjs
 ```
 
 ## Commands (in `site/`)
@@ -70,9 +67,10 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run check` | `astro check` (types, templates) + tests |
 | `npm run check:links` | linkinator over `dist/` (internal and external) |
 | `npm run check:downloads` | the download URLs answer 200 against the real latest release |
-| `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/`; `-- --dark` audits a copy with the dark theme forced |
+| `npm run a11y` | axe (WCAG 2.1 AA) plus contrast inside the drawings, 44-px targets, overflow and heading order on every page at 360 and 1280, light and dark; needs `npm run preview` |
+| `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, every page of `lighthouserc.cjs`), reports in `.lighthouseci/`; `-- --dark` audits a copy with the dark theme forced |
 | `npm run screenshots` | renders the preview at 360/390/768/1280/1440, light and dark → `out/` (`SITE_WIDTHS`, `SITE_PAGES`) |
-| `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
+| `npm run app:screenshots` | app pictures for the picture slots from the seeded app build → `src/assets/slots/` (not run yet: `docs/design/site/SLOTS.md`) |
 | `npm run app:screenshots -- --readme` | the README pictures (overview, calendar, finance, toolbox, settings; desktop 1920×1080 and phone 412×915, light and dark, WebP) → `../docs/assets/screenshots/` |
 
 `NO_RELEASE_FETCH=1 npm run build` skips the API call. Chromium for Lighthouse/screenshots:
@@ -126,20 +124,13 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
   `PLACEHOLDER`.
 - Release data refreshes itself on every build; to update the committed fallback run
   `npm run build` and commit `src/release/latest.json`.
-- Screenshots (after UI changes): `npm run app:screenshots` (needs `web/node_modules`). It builds
-  `web/dist-e2e-seed` if missing, serves it, loads the seed "medium" via Settings → Entwickler,
-  fixes the clock to the seed date, hides the Dev badge and writes `home`, `phone` and the four scenes
-  `calendar`, `finance`, `notes`, `accounts` (unlocked with the seed's demo passphrase; desktop 1280 × 800 and
-  `-phone` 412 × 915), light and dark, to `src/assets/screens/`. `APP_URL=http://localhost:4174` reuses a running preview,
-  `SCREENS_PAGES=<regex>` filters. The seed's texts are German, so one set serves every language;
-  how a scene picture is cut (width, offset past the app's sidebar) lives in `Features.astro`. Only test data, never real data.
+- Pictures for the slots (when the app's UI is final): follow `docs/design/site/SLOTS.md`, then `npm run app:screenshots`
+  (needs `web/node_modules`). It builds `web/dist-e2e-seed` if missing, serves it, loads the seed "medium" via
+  Settings → Entwickler, fixes the clock to the seed date, hides the Dev badge and writes four pictures per slot to
+  `src/assets/slots/`. `APP_URL=http://localhost:4174` reuses a running preview, `SCREENS_PAGES=<regex>` filters. Only
+  test data, never real data.
   With `--readme` the same script shoots the README motifs instead (see the table above); after a
   big UI change run it again and commit the WebP files together with the README.
-- Product video (not on the page yet): record the quick capture (Ctrl+K or "+ Neu", type
-  "Zahnarzt Di 10 Uhr", Enter, entry appears) in the seeded app at 1280×720, ≤ 20 s, no sound,
-  export MP4 (H.264, ≤ 1.5 MB) + WebM and a poster PNG; add a `<video>` with `preload="none"`,
-  `controls`, `poster`, no autoplay, a `prefers-reduced-motion` fallback to the poster, in a new
-  section between "Gemacht für volle Köpfe" and "Vergleich".
 - Social preview: `docs/brand/social-preview.png` (1280×640) is copied to `/og-image.png`.
 
 ## Offen – macht Sven

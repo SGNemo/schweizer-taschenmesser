@@ -1,0 +1,100 @@
+---
+/**
+ * The ledger "what goes online" (texts: i18n `ledger`): a table from 48rem, labelled blocks below. `short` shows
+ * the five most common rows (start page), otherwise all rows (/daten). Hosts are set in the mono face.
+ */
+import { t, type Locale } from '../i18n';
+interface Props { locale: Locale; short?: boolean }
+const { locale, short = false } = Astro.props;
+const l = t(locale).ledger;
+const rows = l.rows.filter((r) => !short || r.short);
+---
+<table class="ledger">
+  <caption>{l.caption}</caption>
+  <thead><tr>{l.head.map((h) => <th scope="col">{h}</th>)}</tr></thead>
+  <tbody>
+    {rows.map((r) => (
+      <tr>
+        <th scope="row">{r.when}</th>
+        <td class:list={{ host: r.where.includes('.') }} data-label={l.head[1]}>{r.where}</td>
+        <td data-label={l.head[2]}>{r.what}</td>
+        <td data-label={l.head[3]}>{r.off}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+<p class="never"><b>{l.never}</b> {l.neverText}</p>
+
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  thead th {
+    padding-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+  }
+  tbody th,
+  tbody td {
+    padding: var(--space-3) var(--space-4) var(--space-3) 0;
+    border-top: var(--line) solid var(--border-strong);
+    vertical-align: top;
+    font-weight: normal;
+  }
+  tbody th {
+    font-weight: var(--weight-heavy);
+  }
+  .host {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .never {
+    margin-top: var(--space-5);
+    max-width: 46rem;
+    padding: var(--space-4);
+    border: var(--rule) solid var(--text);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  /* Under 48rem a row becomes a block with labelled lines. */
+  @media (max-width: 47.99rem) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    tr,
+    tbody th,
+    td {
+      display: block;
+    }
+    tr {
+      padding-block: var(--space-3);
+      border-top: var(--line) solid var(--border-strong);
+    }
+    tbody th,
+    tbody td {
+      border: 0;
+      padding: 0.125rem 0;
+    }
+    td::before {
+      content: attr(data-label) ': ';
+      font-family: var(--font-site);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+  }
+</style>

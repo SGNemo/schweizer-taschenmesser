@@ -1,0 +1,53 @@
+---
+/** The two download buttons, the version line, the sentence about the install warning and the way to /install. */
+import { RELEASES_URL } from '../config.js';
+import { routes, t, type Locale } from '../i18n';
+import { release, formatSize, formatDate, assetUrl } from '../lib/release';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = t(locale).download;
+const r = release;
+const buttons = [
+  { key: 'windows' as const, label: s.windows, sub: s.windowsSub },
+  { key: 'android' as const, label: s.android, sub: s.androidSub },
+];
+---
+<div class="dl">
+  <div class="btns">
+    {buttons.map((b) => (
+      <a class="btn btn-primary" href={assetUrl(b.key)} rel="noopener" download>
+        <Icon name={b.key} size={22} />
+        <span>{b.label}<span class="sub">{b.sub} · {formatSize(r.assets[b.key].size, locale)}</span></span>
+      </a>
+    ))}
+  </div>
+  <p class="note-line">
+    {r.version && <span>{s.version(r.version, formatDate(r.publishedAt, locale))}. </span>}
+    {s.warn} <a href={routes.install[locale]}>{s.guide}</a> · <a href={RELEASES_URL} rel="noopener">{s.allReleases}</a>
+  </p>
+</div>
+
+<style>
+  .btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .note-line {
+    margin-top: var(--space-4);
+    max-width: 36rem;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .note-line a {
+    display: inline-block;
+    padding-block: var(--space-2);
+  }
+  @media (max-width: 29.99rem) {
+    .btns .btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>

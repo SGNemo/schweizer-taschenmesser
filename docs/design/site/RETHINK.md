@@ -6,7 +6,7 @@ pictures come when the app is finished. Limits unchanged (`site/README.md`): sta
 single app picture. The app's identity decision (3.2 or 4.0, `review/ui-audit-2026-11`) is not anticipated: the
 site gets a form of its own, module colours appear as dots only.
 
-**State: phases 1 and 2 done, waiting for the maintainer's choice.** Entschieden: open (see "Decided").
+**State: built (phase 3).** Entschieden: see "Decided". Sections 1–6 record how the choice came about; the drafts `/_r/*` and `site/src/drafts/` named in §4–5 were deleted after it.
 
 ## 1 Who comes, with which question
 
@@ -81,14 +81,14 @@ Out: comparison table, the four-scene tour, the supporter theme swatches, previe
 Own pages in phase 3 (content exists, form is new): `/install` (content unchanged), modules/features, "what goes
 online", support, legal (content unchanged).
 
-**Picture slots.** Every picture place is a named slot (`site/src/drafts/Slot.astro`, table
-`site/src/drafts/slots.js`): fixed aspect ratio per breakpoint, one alt text. Today a drawing fills it that
+**Picture slots.** Every picture place is a named slot (`site/src/components/Slot.astro`, table
+`site/src/slots.js`): fixed aspect ratio per breakpoint, one alt text. Today a drawing fills it that
 stands for itself; later an app picture of the same ratio drops in and nothing moves.
 
 ## 5 Three directions (phase 2)
 
-Real pages, noindex, not linked, not in the sitemap: `/_r/a`, `/_r/b`, `/_r/c` (English: `/_r/en/a` …). Source
-`site/src/drafts/`, route `site/src/pages/[r]/[...slug].astro`. All three: Lighthouse 100/100/100 (performance,
+Real pages, noindex, not linked, not in the sitemap: `/_r/a`, `/_r/b`, `/_r/c` (deleted after the choice; in the
+history of PR #694). All three: Lighthouse 100/100/100 (performance,
 accessibility, best practices; SEO is low on purpose, noindex), light and dark.
 
 | | A „Brief“ (letter) | B „Nachweis“ (proof) | C „Ein Tag“ (one day) |
@@ -120,7 +120,7 @@ disabled. Open: the slashed zero of the face in the large times is a matter of t
 
 ### Copy (`ux-copy`)
 
-All texts de/en in `site/src/drafts/copy.ts`; every claim is one the current page or `docs/user/security.md`
+All texts de/en (now `site/src/i18n/{de,en}.ts`); every claim is one the current page or `docs/user/security.md`
 already makes. Rules applied: buttons say what happens ("Für Windows herunterladen"); the install warning is
 named before the click ("fragen beim ersten Start nach. Das ist im Moment normal."); every slot's alt text
 describes the drawing and ends with "Gezeichnet, kein Bild aus der App."; captions name what comes later. One
@@ -132,15 +132,29 @@ Recommendation: **C as the frame, with B's ledger "what goes online" as its priv
 switcher in the hero, keeps the ADHS sentence honest without making it the headline, and its slots are exactly
 the pictures the app can deliver later; B's table is the strongest single piece for the careful visitor.
 
-Questions to the maintainer: direction · statement (K1–K3) · tone (tell / state / show) · what must be on the
-start page.
 
 ## Decided
 
-Open – filled in after the maintainer's choice (direction, statement, tone, start page content).
+Entschieden (maintainer, 2026-11-10):
+
+- **Direction:** C „Ein Tag“ as the frame, with B's ledger "what goes online" as its privacy section.
+- **Statement:** „Eine Sache zuerst.“ (K3); privacy is the second message, one line under the lead.
+- **Tone:** show – short scenes, verbs, concrete examples.
+- **Start page:** statement and download · the day · ledger (five most common rows) · the honest ADHS sentence ·
+  what is inside · download. Support and the install steps have their own pages.
+
+Built from it: start page, `/module`, `/daten`, `/unterstuetzen`, `/install` (content unchanged), legal pages
+(content unchanged), de and en. Six picture slots, all filled by drawings ([SLOTS.md](SLOTS.md)). Decided by the chat
+on the way: Atkinson Hyperlegible Next replaces Inter on the site (the app keeps Inter); modules a new installation
+switches on (`fresh`) count as "on at the start"; the ocean hero, the comparison table, the four-scene tour and all
+app pictures under `site/src/assets/screens` are gone; twelve tokens nothing used any more were removed.
+
+Measured after the build: phone start page 6 830 px (before: 5 739 px; the ledger and the day cost length, the
+maintainer chose both); axe and the site's own checks 0 findings on 15 pages × 2 widths × 2 themes.
 
 ## Skills used
 
-`user-research`, `research-synthesis` (§ 1) · `design-critique` (§ 5) · `ux-copy` (§ 5, `copy.ts`). Phase 3:
-`design-system`, `accessibility-review`, `design-handoff` (→ `SLOTS.md`). `frontend-design` is not installed in
-this session; typography and layout were done without it.
+`user-research`, `research-synthesis` (§ 1) · `design-critique` (§ 5) · `ux-copy` (§ 5, all page texts). `design-system` (unused tokens removed, building blocks in [README.md](README.md)) · `accessibility-review`
+(`site/scripts/a11y.mjs`; found and fixed: language switch and skip link under 44 px, a code block that could not
+be focused, a heading wider than the phone) · `design-handoff` ([SLOTS.md](SLOTS.md)). `frontend-design` is not
+installed in this session; typography and layout were done without it.
