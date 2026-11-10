@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
@@ -62,6 +64,66 @@ describe('Button', () => {
       </IconButton>,
     );
     expect(screen.getByRole('button', { name: 'Schließen' })).toHaveAttribute('title', 'Schließen');
+  });
+});
+
+/** A stylesheet of `ui/` without its comments. */
+const sheet = (name: string): string =>
+  readFileSync(resolve(__dirname, name), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+describe('disabled state (UI audit 2026-11, AE1)', () => {
+  it('a disabled button stays a button with its variant; the state comes from :disabled alone', () => {
+    render(
+      <Button variant="primary" disabled>
+        Entsperren
+      </Button>,
+    );
+    const button = screen.getByRole('button', { name: 'Entsperren' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('data-variant', 'primary');
+  });
+
+  it('is a state of its own: sunken surface, --text-3, no accent, the same for primary, secondary and danger', () => {
+    const css = sheet('Button.module.css');
+    const filled =
+      /\.primary:disabled,\s*\.secondary:disabled,\s*\.danger:disabled,\s*\.icon\.ghost:disabled\s*\{([^}]*)\}/.exec(
+        css,
+      );
+    expect(filled, 'one rule for the filled and framed variants').not.toBeNull();
+    expect(filled![1]).toMatch(/background:\s*var\(--surface-sunken\)/);
+    expect(filled![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
+    expect(filled![1]).toMatch(/border-color:\s*transparent/);
+    const quiet = /\.ghost:disabled,\s*\.quietDanger:disabled\s*\{([^}]*)\}/.exec(css);
+    expect(quiet![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
+    // No rule that matches a disabled button brings the accent or the danger tone back.
+    for (const m of css.matchAll(/([^{}]*:disabled[^{}]*)\{([^}]*)\}/g)) {
+      if (/:not\(:disabled\)/.test(m[1]!)) continue;
+      expect(m[2], m[1]!.trim()).not.toMatch(/--accent|--danger/);
+    }
+    // The state wins over every variant: its rules are the last ones of the file.
+    expect(css.lastIndexOf('.primary {')).toBeLessThan(css.indexOf('.primary:disabled'));
+    expect(css.lastIndexOf('.icon.ghost {')).toBeLessThan(css.indexOf('.primary:disabled'));
+  });
+
+  it('no stylesheet of ui/ fades a disabled control: no opacity on :disabled, [disabled] or [data-disabled]', () => {
+    const files = (readdirSync(__dirname, { recursive: true }) as string[])
+      .map((f) => f.split('\\').join('/'))
+      .filter((f) => f.endsWith('.module.css'));
+    expect(files.length).toBeGreaterThan(30);
+    const hits: string[] = [];
+    for (const file of files)
+      for (const m of sheet(file).matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+        const selectors = m[1]!.split(',').filter(
+          // `:not(:disabled)` and `:not([data-disabled…])` describe the enabled control.
+          (sel) =>
+            /:disabled|\[disabled|\[data-disabled|\[aria-disabled/.test(
+              sel.replace(/:not\([^)]*\)/g, ''),
+            ),
+        );
+        if (selectors.length && /(?:^|[\s;])opacity\s*:/.test(m[2]!))
+          hits.push(`${file}: ${selectors.join(',').trim()}`);
+      }
+    expect(hits).toEqual([]);
   });
 });
 

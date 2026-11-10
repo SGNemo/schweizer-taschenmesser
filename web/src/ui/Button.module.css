@@ -18,7 +18,6 @@
   transform: scale(0.97);
 }
 .btn:disabled {
-  opacity: 0.45;
   cursor: not-allowed;
 }
 /* Row button: 32 px to look at, a 44 px target to hit. */
@@ -99,4 +98,21 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+/* Disabled is a state of its own (UI audit 2026-11, AE1), never the variant faded out: a faded accent turns a muddy
+   brown on the dark page and reads as a colour fault. Filled and framed buttons sink into the page, quiet ones only
+   lose their ink; the label keeps AA (`--text-3` on `--surface-sunken`, tokens.test.ts). Last in the file so it wins
+   over every variant. */
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled,
+.icon.ghost:disabled {
+  background: var(--surface-sunken);
+  color: var(--text-3);
+  border-color: transparent;
+}
+.ghost:disabled,
+.quietDanger:disabled {
+  color: var(--text-3);
 }

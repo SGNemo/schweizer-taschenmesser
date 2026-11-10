@@ -95,9 +95,15 @@
   transform: rotate(45deg) scale(1);
   opacity: 1;
 }
+/* Disabled: sunken and without the accent, never faded (AE1; the same state as a disabled button). */
 .check input:disabled {
-  opacity: 0.45;
+  border-color: var(--border);
+  background: var(--surface-sunken);
   cursor: not-allowed;
+}
+.check input:checked:disabled {
+  border-color: var(--text-3);
+  background: var(--text-3);
 }
 .check input:active {
   transform: scale(0.9);
@@ -125,13 +131,19 @@
   position: absolute;
   inset: -9px 0;
 }
-.track:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 .track[aria-checked='true'] {
   background: var(--accent);
   border-color: var(--accent);
+}
+/* Disabled: sunken and without the accent, never faded (AE1). After the "on" rule, so it wins over the accent. */
+.track:disabled {
+  border-color: var(--border);
+  background: var(--surface-sunken);
+  cursor: not-allowed;
+}
+.track[aria-checked='true']:disabled {
+  border-color: var(--text-3);
+  background: var(--text-3);
 }
 .thumb {
   position: absolute;
