@@ -191,6 +191,58 @@ export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; time
   return { untimed, timed: sorted };
 }
 
+/** Narrowest lane (rem) an overlapping block may get in the hour grid; below it the overlap folds into a stack (AE4). */
+export const MIN_LANE_REM = 4.5;
+
+/** Overlapping entries that share one lane as a list of one-line rows ("+n" opens the day when not all fit). */
+export interface GridStack {
+  start: number;
+  end: number;
+  lane: number;
+  lanes: number;
+  items: TimedItem[];
+}
+
+/**
+ * Caps the lanes of each overlap cluster at `maxLanes` (what the column's width allows, `MIN_LANE_REM`): a cluster that
+ * needs more keeps its first `maxLanes - 1` lanes as blocks, everything else becomes one stack in the last lane. With
+ * room for a single lane the whole cluster is the stack. `timed` is `splitDay`'s output (sorted by start).
+ */
+export function stackLanes(
+  timed: readonly TimedItem[],
+  maxLanes: number,
+): { blocks: TimedItem[]; stacks: GridStack[] } {
+  const cap = Math.max(1, Math.floor(maxLanes));
+  const blocks: TimedItem[] = [];
+  const stacks: GridStack[] = [];
+  let cluster: TimedItem[] = [];
+  let clusterEnd = 0;
+  const close = () => {
+    const lanes = cluster[0]?.lanes ?? 1;
+    if (lanes <= cap) blocks.push(...cluster);
+    else {
+      const folded = cluster.filter((c) => c.lane >= cap - 1);
+      blocks.push(...cluster.filter((c) => c.lane < cap - 1).map((c) => ({ ...c, lanes: cap })));
+      stacks.push({
+        start: Math.min(...folded.map((c) => c.start)),
+        end: Math.max(...folded.map((c) => c.end)),
+        lane: cap - 1,
+        lanes: cap,
+        items: folded,
+      });
+    }
+    cluster = [];
+  };
+  for (const item of timed) {
+    if (cluster.length && item.start >= clusterEnd) close();
+    if (!cluster.length) clusterEnd = 0;
+    cluster.push(item);
+    clusterEnd = Math.max(clusterEnd, item.end);
+  }
+  if (cluster.length) close();
+  return { blocks, stacks };
+}
+
 /** Untimed entries a day shows in the week grid's all-day pane; the rest folds into "+n weitere" (S04, UI round 6). */
 export const ALL_DAY_LIMIT = 3;
 

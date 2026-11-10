@@ -597,6 +597,9 @@ button.recentChip {
   grid-template-columns: 3.5rem repeat(var(--cols), minmax(0, 1fr));
   --tg-hour-line: color-mix(in srgb, var(--text-3) 45%, var(--border));
   --tg-half-line: color-mix(in srgb, var(--border) 55%, transparent);
+  /* Fixed text geometry (not the reading setting): TimeGrid.tsx counts whole lines and rows with the same values. */
+  --tg-line: 1.125rem;
+  --tg-row: 1.375rem;
 }
 .tgHours {
   display: flex;
@@ -649,10 +652,16 @@ button.recentChip {
   left: calc(var(--lane) / var(--lanes) * 100% + 2px);
   width: calc(100% / var(--lanes) - 4px);
   overflow: hidden;
+  /* The time's line, then the title; a short block (`.tgShort`) puts both into one line. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  container-type: inline-size;
   padding: 2px var(--space-1);
   border-radius: var(--radius-sm);
   text-align: left;
   font-size: var(--text-xs);
+  line-height: var(--tg-line);
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -675,6 +684,111 @@ button.recentChip {
   font-variant-numeric: tabular-nums;
   /* Not --text-3: on the tinted blocks only --text-muted reaches AA (tokens.css). */
   color: var(--text-muted);
+}
+.tgLead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: var(--tg-line);
+  white-space: nowrap;
+}
+/* Whole lines only (AE4): `--lines` comes from the block's height, the last line ends in an ellipsis, and a word wider
+   than the block is never broken or cut at the edge, it ends in an ellipsis too. */
+.tgTitle {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, 1);
+  line-clamp: var(--lines, 1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+.tgShort {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+.tgShort .tgTitle {
+  flex: 1 1 auto;
+}
+/* Overlap without room for another lane (below `MIN_LANE_REM`, views.ts): one-line rows over the overlap's span. */
+.tgStack {
+  position: absolute;
+  top: calc(var(--start) / 60 * var(--hour));
+  height: calc(var(--minutes) / 60 * var(--hour) - 2px);
+  left: calc(var(--lane) / var(--lanes) * 100% + 2px);
+  width: calc(100% / var(--lanes) - 4px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  /* The span stays readable as one quiet block even where its rows end early. */
+  background: color-mix(in srgb, var(--text-3) 6%, var(--surface));
+}
+.tgStackRow {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  height: var(--tg-row);
+  min-width: 0;
+}
+.tgItem.tgStacked {
+  position: static;
+  flex: 1 1 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-1);
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  padding-block: 0;
+  touch-action: auto;
+}
+.tgStacked .tgTitle {
+  display: block;
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+.tgMore {
+  flex: none;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: var(--tg-line);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.tgMore:hover {
+  color: var(--text);
+}
+/* No mark (overlap) and no visible time: the title starts at the block's edge. */
+.tgConflict.tgShort,
+.tgConflict .tgStacked {
+  gap: 0;
+}
+.tgConflict .tgTime {
+  margin-inline-end: var(--space-1);
+}
+/* A narrow block gives its width to the title: the hour axis shows the time, the tooltip and screen readers keep it. */
+@container (max-width: 7.5rem) {
+  .tgShort .lineMark {
+    margin-inline-end: 0;
+  }
+  .tgShort .tgTime,
+  .tgStacked .tgTime {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
 }
 .tgNow {
   position: absolute;

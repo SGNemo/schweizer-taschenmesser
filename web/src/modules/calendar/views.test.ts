@@ -8,6 +8,7 @@ import {
   rangeFor,
   shiftDate,
   splitDay,
+  stackLanes,
   viewTitle,
   dailyRepeats,
   gridScroll,
@@ -243,6 +244,34 @@ describe('splitDay', () => {
     expect([by.a!.lane, by.a!.lanes]).toEqual([0, 2]);
     expect([by.b!.lane, by.b!.lanes]).toEqual([1, 2]);
     expect([by.c!.lane, by.c!.lanes]).toEqual([0, 1]);
+  });
+
+  it('folds an overlap that needs more lanes than the column has room for into a stack', () => {
+    const { timed } = splitDay([
+      at('a', '18:00', '19:00'),
+      at('b', '18:00', '19:00'),
+      at('c', '18:30', '19:30'),
+      at('d', '19:00', '20:00'),
+      at('e', '21:00', '22:00'),
+    ]);
+    // Room for three lanes: nothing changes.
+    expect(stackLanes(timed, 3)).toEqual({ blocks: timed, stacks: [] });
+    // One lane: the whole cluster is one stack over its span; the free-standing entry stays a block.
+    const one = stackLanes(timed, 1);
+    expect(one.blocks.map((b) => b.item.id)).toEqual(['e']);
+    expect(one.stacks).toHaveLength(1);
+    expect(one.stacks[0]).toMatchObject({ start: 1080, end: 1200, lane: 0, lanes: 1 });
+    expect(one.stacks[0]!.items.map((i) => i.item.id)).toEqual(['a', 'b', 'c', 'd']);
+    // Two lanes: the first lane keeps its blocks, the rest shares the second lane as a stack.
+    const two = stackLanes(timed, 2);
+    expect(two.blocks.map((b) => [b.item.id, b.lane, b.lanes])).toEqual([
+      ['a', 0, 2],
+      ['d', 0, 2],
+      ['e', 0, 1],
+    ]);
+    expect(two.stacks[0]).toMatchObject({ start: 1080, end: 1170, lane: 1, lanes: 2 });
+    expect(two.stacks[0]!.items.map((i) => i.item.id)).toEqual(['b', 'c']);
+    expect(stackLanes([], 1)).toEqual({ blocks: [], stacks: [] });
   });
 
   it('gives very short items a minimum height and clamps to midnight', () => {
