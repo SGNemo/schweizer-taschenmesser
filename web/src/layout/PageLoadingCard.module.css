@@ -1,0 +1,23 @@
+.wrap {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+.card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+.text {
+  margin: 0;
+}
+.hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-muted);
+}

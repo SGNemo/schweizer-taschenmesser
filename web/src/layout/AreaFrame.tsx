@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
+import { logLine } from '@/core/diagnostics/errorLog';
 import { isFocusPath } from '@/core/focus/path';
 import { areaOfPath } from '@/core/modules/areas';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
@@ -21,6 +22,7 @@ import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { availableManifests } from '@/core/modules/available';
 import { ModuleIdentityContext } from '@/core/modules/identityContext';
 import { t } from '@/strings';
+import { PAGE_SLOW_MS, PAGE_STUCK_MS } from './PageLoadingCard';
 import { useUiStore } from '@/stores/ui';
 import { moduleSettingsPath } from '@/pages/settings/useSections';
 import { tComfort } from '@/strings.comfort';
@@ -125,6 +127,15 @@ export function ModulePageFallback({ manifest }: { manifest: ModuleManifest }) {
     setLoading?.(true);
     return () => setLoading?.(false);
   }, [setLoading]);
+  // A page that is still not there is worth a line in the diagnostics log: the module id only, never a path.
+  const { id } = manifest;
+  useEffect(() => {
+    const timer = setTimeout(
+      () => logLine('warn', `module-${id}`, 'page still loading after 15 s'),
+      PAGE_STUCK_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [id]);
   return (
     <>
       {hero?.title
@@ -135,7 +146,7 @@ export function ModulePageFallback({ manifest }: { manifest: ModuleManifest }) {
             hero.title,
           )
         : null}
-      <PageFallback />
+      <PageFallback delay={PAGE_SLOW_MS} />
     </>
   );
 }

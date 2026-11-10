@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ModuleHue, PageLayout } from '@/core/modules/types';
 import { createPageWidthStore, PageWidthContext } from '@/ui/pageWidth';
 import styles from './PageContainer.module.css';
+import { PageLoadingCard } from './PageLoadingCard';
 
 /**
  * The one place that decides how wide a page may get. Pages do not set their own `max-width`;
@@ -45,8 +46,18 @@ export function PageContainer({
   );
 }
 
-/** Suspense fallback that fills the page area instead of a stray line of text. */
-export function PageFallback() {
+/**
+ * Suspense fallback that fills the page area instead of a stray line of text. With `delay` (ms) the "…" gives
+ * way to the calm card "Die Seite lädt noch · Neu laden" once loading takes that long (module pages).
+ */
+export function PageFallback({ delay }: { delay?: number }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (delay === undefined) return;
+    const timer = setTimeout(() => setSlow(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+  if (slow) return <PageLoadingCard />;
   return (
     <p role="status" className={styles.loading}>
       …
