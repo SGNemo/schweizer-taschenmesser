@@ -32,6 +32,10 @@ mod panic_log;
 mod portable;
 #[cfg(desktop)]
 mod remote;
+// Remote control, phone side. Compiled for the phone (and for the unit tests): on the desktop no
+// command of it is registered.
+#[cfg(any(mobile, test))]
+mod remote_client;
 #[cfg(desktop)]
 mod system;
 #[cfg(desktop)]
@@ -127,6 +131,8 @@ pub fn run() {
     // second PC (one path per device, see lan_client.rs). The QR is scanned in the app (camera or
     // webcam in the WebView), not by a native scanner view.
     let builder = builder.manage(lan_client::LanClient::default());
+    #[cfg(mobile)]
+    let builder = builder.manage(remote_client::RemoteClient::default());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]
@@ -279,7 +285,10 @@ pub fn run() {
         lan_client::lan_client_pair,
         lan_client::lan_client_pair_cancel,
         lan_client::lan_client_request,
-        lan_client::lan_client_unpair
+        lan_client::lan_client_unpair,
+        remote_client::remote_client_open,
+        remote_client::remote_client_send,
+        remote_client::remote_client_close
     ]);
 
     // Windows creates the main window itself (portable data folder); every desktop OS then sets up

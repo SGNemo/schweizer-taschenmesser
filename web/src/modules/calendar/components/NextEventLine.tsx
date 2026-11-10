@@ -30,7 +30,17 @@ export function NextEventLine() {
     (i) => !i.done && i.kind !== 'plan' && (!forPerson || i.personId === forPerson),
   );
   const tick = useNow(30_000, settings.timeToNext);
-  if (!items) return null;
+  // U01: the entries come after the first paint. Until then the line holds the room of "Heute frei" (a figure with
+  // its detail line), unseen: that is what a calendar without an appointment left today shows, a first visit most of
+  // all. Without it the head grows by that much once the entries are read and everything below moves down.
+  if (!items)
+    return (
+      <HeroSlot area="figure">
+        <div className={styles.headPending} aria-hidden="true" data-testid="calendar-head-pending">
+          <HeroFigure value={'\u00a0'} detail={'\u00a0'} />
+        </div>
+      </HeroSlot>
+    );
   const d = new Date(tick);
   const hhmm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   const todays = items.filter((i) => i.date === day);
