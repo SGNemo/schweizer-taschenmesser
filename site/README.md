@@ -35,6 +35,11 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Navigation without script:** under 64 rem the links are a second header row (anchor bar) that stays on top
   while the logo row scrolls away.
 - **Design rounds** (diagnosis, directions, layout, details, mockups): `docs/design/site/`.
+- **Rethink round, drafts:** `/_r/a`, `/_r/b`, `/_r/c` (+ `/_r/en/…`) are three draft start pages without app pictures
+  (`src/drafts/`, route `src/pages/[r]/[...slug].astro`; noindex, not linked, not in the sitemap; fonts from three
+  `@fontsource-variable` dev packages, copied by `copy-brand.mjs` to the git-ignored `public/fonts/draft/`). Picture
+  places are named slots (`src/drafts/Slot.astro`, `slots.js`). Plan: `docs/design/site/RETHINK.md`; phase 3 removes the two
+  directions that lose.
 
 ## Layout
 ```

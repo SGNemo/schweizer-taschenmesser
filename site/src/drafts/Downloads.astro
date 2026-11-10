@@ -1,0 +1,30 @@
+---
+/** The two download buttons with version line and the way to the step-by-step guide (all three drafts). */
+import { routes, type Locale } from '../i18n';
+import { release, formatSize, formatDate, assetUrl } from '../lib/release';
+import Icon from '../components/Icon.astro';
+import { common } from './copy';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = common[locale];
+const r = release;
+const buttons = [
+  { key: 'windows' as const, label: s.windows, sub: s.windowsSub },
+  { key: 'android' as const, label: s.android, sub: s.androidSub },
+];
+---
+<div class="r-dl">
+  <div class="r-dl-btns">
+    {buttons.map((b) => (
+      <a class="btn btn-primary" href={assetUrl(b.key)} rel="noopener" download>
+        <Icon name={b.key} size={22} />
+        <span>{b.label}<span class="sub">{b.sub} · {formatSize(r.assets[b.key].size, locale)}</span></span>
+      </a>
+    ))}
+  </div>
+  <p class="r-dl-note">
+    {r.version && <span>{s.version(r.version, formatDate(r.publishedAt, locale))}. </span>}
+    {s.warn} <a href={routes.install[locale]}>{s.guide}</a>
+  </p>
+</div>

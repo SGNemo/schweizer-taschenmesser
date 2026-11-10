@@ -95,3 +95,18 @@ test('ink on the ocean surface keeps AA contrast', () => {
   assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent']) >= 4.5, 'button text');
   assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent-hover']) >= 4.5, 'button text on hover');
 });
+
+// Rethink round: the draft directions (src/drafts, /_r/*) may add type and layout tokens of their own (--r-*),
+// but every colour still comes from tokens.css. No colour literal and no inline style in the drafts.
+test('the draft directions write no colour of their own', async () => {
+  const { readdirSync } = await import('node:fs');
+  const dir = path.join(here, '..', 'src', 'drafts');
+  for (const file of readdirSync(dir).filter((f) => /\.(astro|css)$/.test(f))) {
+    const src = readFileSync(path.join(dir, file), 'utf8');
+    assert.doesNotMatch(src, /#[0-9a-f]{3,8}\b(?![^<]*<\/a>)|\b(?:rgb|hsl|oklch)a?\(/i, `colour literal in ${file}`);
+    assert.doesNotMatch(src, /\sstyle=/, `inline style in ${file}`);
+  }
+  const css = readFileSync(path.join(dir, 'drafts.css'), 'utf8');
+  for (const m of css.matchAll(/^\s*(--[\w-]+)\s*:/gm)) assert.match(m[1], /^--r-/, `${m[1]}: draft tokens are named --r-*`);
+  for (const m of css.matchAll(/^\s*(--r-[\w-]+)\s*:/gm)) assert.ok(!site.includes(`${m[1]}:`), `${m[1]} is already a site token`);
+});

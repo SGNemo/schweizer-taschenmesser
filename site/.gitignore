@@ -13,3 +13,5 @@ src/assets/brand/
 out/
 
 .lighthouseci-dark/
+# Fonts of the draft directions, copied by scripts/copy-brand.mjs
+public/fonts/draft/
