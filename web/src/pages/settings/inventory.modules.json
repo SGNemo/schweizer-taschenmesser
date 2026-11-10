@@ -564,6 +564,21 @@
       }
     }
   },
+  "remote": {
+    "scope": "module.remote",
+    "fields": {
+      "haptics": {
+        "type": "boolean",
+        "label": "Kurzes Vibrieren bei jedem Tastendruck",
+        "default": true
+      },
+      "keepAwake": {
+        "type": "boolean",
+        "label": "Bildschirm anlassen",
+        "default": false
+      }
+    }
+  },
   "subscriptions": {
     "scope": "module.subscriptions",
     "fields": {
