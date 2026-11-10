@@ -51,9 +51,20 @@ test('links and buttons of navigation and page are at least 44 px on a touch des
         .filter(visible)
         .filter((e) => {
           const r = e.getBoundingClientRect();
-          // A small mark may carry a larger hit area as an absolutely placed ::after (ui/Button, chips).
+          // A small mark may carry a larger hit area as an absolutely placed ::after (ui/Button, chips): it counts
+          // only when that area itself measures 44 px both ways.
           const after = getComputedStyle(e, '::after');
-          const extended = after.content !== 'none' && after.position === 'absolute';
+          // The box of an absolutely placed ::after follows from its insets against the element's own box.
+          const inset = ['left', 'right', 'top', 'bottom'].map((side) =>
+            parseFloat(after.getPropertyValue(side)),
+          );
+          const [left, right, top, bottom] = inset as [number, number, number, number];
+          const extended =
+            after.content !== 'none' &&
+            after.position === 'absolute' &&
+            inset.every(Number.isFinite) &&
+            r.width - left - right >= 44 &&
+            r.height - top - bottom >= 44;
           // Links inside running text are text, not targets of their own (WCAG 2.5.8, inline exception).
           const inline = e.tagName === 'A' && getComputedStyle(e).display === 'inline';
           return !extended && !inline && (r.height < 44 || r.width < 44);

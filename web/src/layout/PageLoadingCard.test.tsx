@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearErrorLog, logLines } from '@/core/diagnostics/errorLog';
 import { page } from '@/core/net/OnlineChunk';
+import * as platform from '@/core/platform';
 import type { ModuleManifest } from '@/core/modules/types';
 import { clearAllFormDrafts, FORM_DRAFT_TTL_MS, hasDrafts, useFormDraft } from '@/ui/useFormDraft';
 import { ModulePageFallback } from './AreaFrame';
@@ -44,42 +45,56 @@ describe('PageFallback with a delay', () => {
 });
 
 describe('PageLoadingCard', () => {
-  it('reloads the page on "Neu laden" while online', () => {
+  it('reloads the page on "Neu laden"', () => {
     const reload = vi.spyOn(page, 'reload').mockImplementation(() => {});
     render(<PageLoadingCard />);
     fireEvent.click(screen.getByRole('button', { name: 'Neu laden' }));
     expect(reload).toHaveBeenCalledTimes(1);
   });
 
-  it('does not reload offline: it says so and tries in place when the device is back online', () => {
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    const reload = vi.spyOn(page, 'reload').mockImplementation(() => {});
-    const inPlace = vi.fn();
-    render(<PageLoadingCard onRetryInPlace={inPlace} />);
-    expect(screen.getByTestId('page-loading-card')).toHaveTextContent('wieder online');
-    fireEvent.click(screen.getByRole('button', { name: 'Neu laden' }));
-    expect(reload).not.toHaveBeenCalled();
-    expect(inPlace).toHaveBeenCalledTimes(1);
-    act(() => void window.dispatchEvent(new Event('online')));
-    expect(inPlace).toHaveBeenCalledTimes(2);
-  });
-
-  it('offers no button offline when nothing can be tried in place: the text is the next step', () => {
+  it('in the browser, offline: says that it continues once online and offers no button until then', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     render(<PageLoadingCard />);
     expect(screen.getByTestId('page-loading-card')).toHaveTextContent('wieder online');
     expect(screen.queryByRole('button')).toBeNull();
     act(() => void window.dispatchEvent(new Event('online')));
+    expect(screen.getByTestId('page-loading-card')).toHaveTextContent('Die Seite lädt noch.');
     expect(screen.getByRole('button', { name: 'Neu laden' })).toBeInTheDocument();
   });
 
-  it('warns about unsaved input only while a form draft is alive', () => {
+  it('in the desktop app, offline: the code is on the disk, so the card stays "Neu laden"', () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    vi.spyOn(platform, 'getPlatform').mockReturnValue({ kind: 'desktop' } as ReturnType<
+      typeof platform.getPlatform
+    >);
+    const reload = vi.spyOn(page, 'reload').mockImplementation(() => {});
+    render(<PageLoadingCard />);
+    expect(screen.getByTestId('page-loading-card')).toHaveTextContent('Die Seite lädt noch.');
+    expect(screen.getByTestId('page-loading-card')).not.toHaveTextContent('online');
+    fireEvent.click(screen.getByRole('button', { name: 'Neu laden' }));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns about unsaved input only while a form draft is alive, and before the button', () => {
     const first = render(<PageLoadingCard />);
     expect(screen.queryByText('Ungespeicherte Eingaben gehen verloren.')).toBeNull();
     first.unmount();
     typeDraft();
     render(<PageLoadingCard />);
-    expect(screen.getByText('Ungespeicherte Eingaben gehen verloren.')).toBeInTheDocument();
+    const hint = screen.getByText('Ungespeicherte Eingaben gehen verloren.');
+    const button = screen.getByRole('button', { name: 'Neu laden' });
+    expect(hint.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+describe('the live region of the fallback', () => {
+  it('is one element from the start: only its content changes when the card comes', () => {
+    render(<PageFallback delay={PAGE_SLOW_MS} />);
+    const region = screen.getByRole('status');
+    expect(region).toHaveTextContent('…');
+    act(() => void vi.advanceTimersByTime(PAGE_SLOW_MS));
+    expect(screen.getAllByRole('status')).toEqual([region]);
+    expect(region).toContainElement(screen.getByTestId('page-loading-card'));
   });
 });
 

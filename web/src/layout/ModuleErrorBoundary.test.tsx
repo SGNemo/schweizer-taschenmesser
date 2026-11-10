@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { lazy, Suspense } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -86,6 +87,25 @@ describe('ModuleErrorBoundary', () => {
     expect(screen.getByTestId('page-loading-card')).toHaveTextContent('Die Seite lädt noch.');
     fireEvent.click(screen.getByRole('button', { name: 'Neu laden' }));
     expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('a lazy page whose code did not load, offline in the browser: no button that could do nothing', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    const Page = lazy(() =>
+      Promise.reject(new TypeError('Failed to fetch dynamically imported module')),
+    );
+    render(
+      <MemoryRouter>
+        <ModuleErrorBoundary manifest={{ id: 'todos', name: 'Aufgaben' }}>
+          <Suspense fallback={<p>…</p>}>
+            <Page />
+          </Suspense>
+        </ModuleErrorBoundary>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByTestId('page-loading-card')).toHaveTextContent('wieder online');
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('opens the prefilled report in the browser on click only', async () => {

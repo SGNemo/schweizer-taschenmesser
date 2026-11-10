@@ -57,10 +57,11 @@ export function PageFallback({ delay }: { delay?: number }) {
     const timer = setTimeout(() => setSlow(true), delay);
     return () => clearTimeout(timer);
   }, [delay]);
-  if (slow) return <PageLoadingCard />;
+  // One live region from the start: a region that is swapped for another one is usually not announced, a change
+  // of its content is.
   return (
-    <p role="status" className={styles.loading}>
-      …
-    </p>
+    <div role="status" className={styles.loading}>
+      {slow ? <PageLoadingCard live={false} /> : '…'}
+    </div>
   );
 }

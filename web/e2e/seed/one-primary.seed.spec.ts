@@ -35,6 +35,17 @@ test.describe('desktop', () => {
     await check(page, false);
   });
 
+  test('the count sees primary buttons: pages known to have one report exactly one', async ({
+    page,
+  }) => {
+    // Without this a renamed class would make every page pass with zero.
+    await startSeeded(page);
+    for (const path of ['/vault', '/invoices', '/pantry']) {
+      await openPage(page, path);
+      expect(await visiblePrimaries(page.locator('main')), path).toHaveLength(1);
+    }
+  });
+
   test('at most one primary button in the dialogs of the shell', async ({ page }) => {
     await startSeeded(page);
     await openPage(page, '/todos');
