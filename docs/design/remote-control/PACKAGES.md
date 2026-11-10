@@ -106,6 +106,8 @@ Nach dem Bau `council` über den Diff (Guardian: nativer Dialog, kein Erhöhen w
 
 ### Prompt – package 2: phone – module with Medien (`feat/remote-module-media`)
 
+Split in two PRs (one topic each): **part 1** `feat/remote-module-media` = shell `src/remote_client.rs` (mobile handler, `mobile.json`, guard tests), seam `remote` (contract, bridge, stub, `fakeRemote.ts`), state logic `core/remote/session.ts` with its tests. **Part 2** `feat/remote-module-page` (from fresh `develop` after part 1) = the module `remote` (manifest, page Medien, settings, widget), the phone's volume keys (`plugins/screen-mode`), wiring `syncRound` to the sync service, texts, e2e, focus checklist, screenshots, `.changes/` note, hand tests.
+
 ```
 # Aufgabe: Fernsteuerung – Handy-Modul mit der Seite „Medien“ und Lautstärketasten (Paket 2)
 
