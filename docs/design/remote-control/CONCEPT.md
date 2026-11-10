@@ -99,6 +99,24 @@ Goal for **our part**: pointer event in the page → input applied on the PC in 
 
 No timer on the phone: the WebView delivers pointer moves at most once per display frame, so **each pointer event is sent at once** (its coalesced moves summed into one record) – one `invoke` and one network frame per display frame, without the waiting time a bundling timer adds (prototype row 3). Only while a write is still pending do moves keep summing (latest position wins, nothing queues up); clicks and keys are never merged or dropped by the phone.
 
+### Measurement on a real phone (package 3, before the touchpad page)
+
+Tool: Dev-Preview build on the phone → Einstellungen → Entwickler → „Fernbedienung: Latenz messen“ (`pages/settings/RemoteLatencyProbe.tsx`; absent from every other build). It measures what the phone can measure alone, and nothing acts on the PC:
+
+- **invoke** – one call per pointer event, page → shell → page: `send` for a session number that is never open. The shell goes the way of a real send (command, worker thread, session lookup) and answers `closed` right before it would seal and write (< 1 ms, prototype). A round trip, so it overstates the one direction a real move needs.
+- **input** – pointer event's own time stamp → handler (Android and WebView; not our part, shown to see the device's rate).
+- **events/s**, **overlap** – how often an event arrives while the previous call is still running (then moves are summed).
+- **open** – ten times: open a media session, close it. One open is three exchanges (TCP, handshake, `open`/`opened`) = six trips plus the PC's work.
+- **our part (p95), a guess** = invoke p95 + open p95 / 6 + 1 ms. The single trip through the Wi-Fi cannot be measured from the phone alone; the open's spread stands in for it.
+
+Not measured this way: seal and write on the phone, and `SendInput` on the PC (both < 1 ms in the prototype); the finger-to-pointer feeling as a whole (hand test).
+
+| Phone, Android, display Hz | Wi-Fi | input p50 / p95 ms | invoke p50 / p95 / max ms | events/s | overlap % | open p50 / p95 ms | our part p95 ≈ ms | Date |
+|---|---|---|---|---|---|---|---|---|
+| _to be measured_ | | | | | | | | |
+
+Reading: under 30 ms → the page sends per pointer event through the WebView as designed. Over it because of **invoke** → touch capture moves into the Kotlin plugin (fallback of package 3). Over it because of **open** → the Wi-Fi, not the design; measure again nearer the router before deciding.
+
 ### Prototype measurement
 
 `node docs/design/remote-control/proto/run.mjs` (Node ≥ 20, no install): two processes, the PC side and the phone side, over the interface address, with the Noise-_like_ channel of the sync prototype (**not** Noise; the product uses `snow`). The phone generates touchpad moves, the PC measures _event created → applied_ on the shared monotonic clock and "applies" to a virtual cursor (nothing is injected into the OS). Measured 2026-11-10, container, both processes on one host (not real Wi-Fi), 5 rounds × 3 s per variant, Node v22.23.4, Xeon 2.1 GHz:

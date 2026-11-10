@@ -147,4 +147,37 @@ export const tDev = {
       'Tippe etwas und schließe mit Esc: du wirst gefragt, ob der Entwurf verworfen werden soll.',
     save: 'Speichern',
   },
+  latency: {
+    title: 'Fernbedienung: Latenz messen',
+    intro:
+      'Misst, was das Handy allein messen kann, bevor die Touchpad-Seite gebaut wird. Am PC wird dabei nichts ausgeführt. Nichts wird gespeichert oder gesendet; das Ergebnis steht nur hier.',
+    pad: 'Messfläche: mit einem Finger etwa zehn Sekunden kreisen',
+    padHint:
+      'Je Zeiger-Ereignis läuft ein Aufruf in die Shell – derselbe Weg wie beim Senden, nur ohne Sitzung: Er endet vor dem Schreiben ins Netz.',
+    reset: 'Messung leeren',
+    open: 'Verbindungsaufbau messen (10×)',
+    openBusy: (done: number, total: number) => `Messe … ${done} von ${total}`,
+    openHint:
+      'Öffnet zehnmal kurz eine Medien-Sitzung zum gekoppelten PC und schließt sie wieder (das Tray am PC zeigt das kurz an). Höchstens einmal pro Minute: der PC begrenzt Verbindungsaufbauten.',
+    openFailed: (n: number) =>
+      `${n} von 10 Versuchen kamen nicht zustande (PC gekoppelt, im selben WLAN, Fernsteuerung für dieses Gerät erlaubt?).`,
+    aborted:
+      'Abgebrochen: Der Messaufruf wurde nicht abgewiesen. Bitte melden – hier darf nichts ausgeführt werden.',
+    rows: {
+      input: 'Ereignis → Seite (Android und WebView, nicht unser Teil)',
+      invoke: 'Ein Aufruf je Ereignis (Seite → Shell → Seite)',
+      rate: 'Ereignisse pro Sekunde',
+      overlap: 'Ereignisse, während ein Aufruf noch lief',
+      open: 'Verbindungsaufbau (sechs Wege und die Arbeit des PCs)',
+      our: 'Unser Teil, geschätzt (p95)',
+    },
+    summary: (n: number, p50: number, p95: number, max: number) =>
+      `${n} Werte · p50 ${p50} ms · p95 ${p95} ms · max ${max} ms`,
+    none: 'noch nicht gemessen',
+    ourValue: (ms: number, goal: number) => `≈ ${ms} ms (Ziel: unter ${goal} ms)`,
+    ourHint:
+      'Aufruf p95 + ein Sechstel des Verbindungsaufbaus p95 + 1 ms am PC. Eine Schätzung: Der Weg durchs WLAN lässt sich vom Handy allein nicht einzeln messen.',
+    copy: 'Ergebnis kopieren',
+    copied: 'Ergebnis kopiert.',
+  },
 } as const;

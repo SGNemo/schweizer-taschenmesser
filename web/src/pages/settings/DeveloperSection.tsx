@@ -24,6 +24,7 @@ import { availableManifests } from '@/core/modules/available';
 import { tDev } from '@/strings.dev';
 import { useUiStore } from '@/stores/ui';
 import { Button, Card, DangerZone, SelectField, Switch, TextField } from '@/ui';
+import { RemoteLatencyProbe } from './RemoteLatencyProbe';
 import styles from './settings.module.css';
 
 /** Dev-Preview only: generated test data (see `core/seed/`). Stable builds never mount this. */
@@ -163,6 +164,8 @@ export default function DeveloperSection() {
           <p className={styles.muted}>{tDev.status.none}</p>
         )}
         <p className={styles.muted}>{tDev.status.demoVault(DEMO_PASSPHRASE)}</p>
+
+        <RemoteLatencyProbe />
 
         <DangerZone>
           <h3>{tDev.reset.title}</h3>

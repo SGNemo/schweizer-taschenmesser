@@ -1,0 +1,27 @@
+.pad {
+  min-height: 14rem;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+}
+
+.rows {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.rows dt {
+  color: var(--text-2);
+}
+
+.rows dd {
+  margin: 0 0 var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
