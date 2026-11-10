@@ -9,29 +9,31 @@ import { DESKTOP, moduleRoutes, openPage, PHONE, startSeeded } from './guards';
  * overview and the library carry the test data, in both themes, on the desktop and at 412 × 915.
  */
 /**
- * Violations that exist today and belong to a package of the 4.0 plan (docs/design/ui-audit-2026-11/PACKAGES.md). The
- * list only shrinks: an entry that no longer occurs fails the test until it is removed here. Never add one for new code.
+ * One known case, owned by package 0b-4 of the 4.0 plan (docs/design/ui-audit-2026-11/PACKAGES.md): the entry lines
+ * of the calendar's month view are under 24 px high, one pixel apart (WCAG 2.5.8 `target-size`). Only those lines,
+ * only on the desktop (the phone shows no month grid), are left out of the audit. The exception only shrinks: once
+ * the lines measure 24 px, the test fails until it is removed here. Never add one for new code.
  */
-const KNOWN: Readonly<Record<string, readonly string[]>> = {
-  // Month view: the entry lines are 18 px high, one pixel apart (WCAG 2.5.8 asks for 24 px or space). Package 0b-4.
-  '/calendar': ['target-size'],
-};
+const MONTH_LINES = 'main table td li > button';
+const KNOWN_PATH = '/calendar';
 
-async function violations(page: Page, path: string): Promise<{ found: string[]; ids: string[] }> {
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  const ids = results.violations.map((v) => v.id);
-  const found = results.violations
-    .filter((v) => !(KNOWN[path] ?? []).includes(v.id))
-    .map(
-      (v) =>
-        `${v.id} (${v.impact}): ${v.help}\n${v.nodes
-          .slice(0, 3)
-          .map((n) => `   ${n.target.join(' ')}\n   ${n.failureSummary?.split('\n')[1] ?? ''}`)
-          .join('\n')}`,
-    );
-  return { found, ids };
+async function violations(page: Page, leaveOut?: string): Promise<string[]> {
+  let audit = new AxeBuilder({ page }).withTags([
+    'wcag2a',
+    'wcag2aa',
+    'wcag21a',
+    'wcag21aa',
+    'wcag22aa',
+  ]);
+  if (leaveOut) audit = audit.exclude(leaveOut);
+  const results = await audit.analyze();
+  return results.violations.map(
+    (v) =>
+      `${v.id} (${v.impact}): ${v.help}\n${v.nodes
+        .slice(0, 3)
+        .map((n) => `   ${n.target.join(' ')}\n   ${n.failureSummary?.split('\n')[1] ?? ''}`)
+        .join('\n')}`,
+  );
 }
 
 for (const vp of [
@@ -53,13 +55,22 @@ for (const vp of [
         await startSeeded(page, { phone: vp.phone });
         for (const path of ['/', '/library', ...moduleRoutes(vp.phone)]) {
           await openPage(page, path);
-          const { found, ids } = await violations(page, path);
+          const known = !vp.phone && path === KNOWN_PATH;
+          const found = await violations(page, known ? MONTH_LINES : undefined);
           // Soft: every page reports before the test fails.
           expect.soft(found, `${path}\n${found.join('\n')}`).toEqual([]);
-          // Only where the known case can show: the month view with its entry lines is the desktop's default.
-          if (!vp.phone)
-            for (const id of KNOWN[path] ?? [])
-              expect.soft(ids, `${path}: "${id}" is gone, remove it from KNOWN`).toContain(id);
+          if (known) {
+            const heights = await page
+              .locator(MONTH_LINES)
+              .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+            expect.soft(heights.length, 'month lines the exception is about').toBeGreaterThan(0);
+            expect
+              .soft(
+                heights.some((h) => h < 24),
+                'the month lines measure 24 px now: remove the exception (MONTH_LINES)',
+              )
+              .toBe(true);
+          }
         }
       });
     }

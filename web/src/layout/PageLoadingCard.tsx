@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { page } from '@/core/net/OnlineChunk';
+import { getPlatform } from '@/core/platform';
 import { tLoading } from '@/strings.loading';
 import { tOffline } from '@/strings.offline';
 import { t } from '@/strings';
@@ -33,36 +34,43 @@ export function retryPage(inPlace?: () => void): void {
 /**
  * Calm card in the page area: "Die Seite lädt noch · Neu laden". Shown by the module fallback once loading takes
  * long, and by the module error boundary when the page's code could not be loaded. A reload drops form drafts
- * (memory only, ui/useFormDraft), so the card says so while there are any.
+ * (memory only, ui/useFormDraft), so the card says so, before the button, while there are any.
+ *
+ * Only the app in the browser can be waiting for the network: there, offline, the card says that it continues once
+ * online and offers no button (a reload would end on the browser's own error page, and a page that failed to load
+ * cannot be tried again in place). The desktop and Android apps carry their code with them, so they always get
+ * "Neu laden". `live={false}` when the caller already is the live region (the fallback's `role="status"`).
  */
-export function PageLoadingCard({ onRetryInPlace }: { onRetryInPlace?: () => void }) {
+export function PageLoadingCard({ live = true }: { live?: boolean }) {
   const texts = tLoading.use();
   const offlineText = tOffline.use().part;
-  const [offline, setOffline] = useState(() => !navigator.onLine);
+  const networked = getPlatform().kind === 'web';
+  const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {
-    const on = () => {
-      setOffline(false);
-      onRetryInPlace?.();
-    };
-    const off = () => setOffline(true);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
     window.addEventListener('online', on);
     window.addEventListener('offline', off);
     return () => {
       window.removeEventListener('online', on);
       window.removeEventListener('offline', off);
     };
-  }, [onRetryInPlace]);
+  }, []);
+  const waitingForNetwork = networked && !online;
   return (
     <div className={styles.wrap}>
-      <div className={styles.card} role="status" data-testid="page-loading-card">
-        <p className={styles.text}>{offline ? offlineText : texts.still}</p>
-        {/* Offline a reload is not offered; without something to try in place the text is the next step. */}
-        {!offline || onRetryInPlace ? (
-          <Button size="sm" onClick={() => retryPage(onRetryInPlace)}>
+      <div
+        className={styles.card}
+        role={live ? 'status' : undefined}
+        data-testid="page-loading-card"
+      >
+        <p className={styles.text}>{waitingForNetwork ? offlineText : texts.still}</p>
+        {!waitingForNetwork && hasDrafts() ? <p className={styles.hint}>{texts.drafts}</p> : null}
+        {!waitingForNetwork ? (
+          <Button size="sm" onClick={() => page.reload()}>
             {t.actions.reload}
           </Button>
         ) : null}
-        {!offline && hasDrafts() ? <p className={styles.hint}>{texts.drafts}</p> : null}
       </div>
     </div>
   );
