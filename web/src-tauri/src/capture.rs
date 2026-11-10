@@ -867,7 +867,8 @@ mod tests {
         // Source check: the page's two tray commands and Rust's own update all end in
         // `apply_tray`, which reads the controller from the stored state; nothing else sets the
         // menu or the tooltip.
-        let src = include_str!("capture.rs");
+        // LF line ends: a Windows checkout has CRLF, and the patterns below span lines
+        let src = include_str!("capture.rs").replace("\r\n", "\n");
         let code = src.split("#[cfg(test)]").next().unwrap();
         assert_eq!(code.matches(".set_menu(").count(), 1);
         assert_eq!(code.matches(".set_tooltip(").count(), 1);
