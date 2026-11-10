@@ -95,16 +95,18 @@
   transform: rotate(45deg) scale(1);
   opacity: 1;
 }
-/* Disabled: sunken and without the accent, never faded (AE1; the same state as a disabled button, with its quiet
-   edge so the box stays a box). */
+/* Locked like a disabled button (AE1): neutral surface, no accent, no opacity. A ticked box keeps its tick. */
 .check input:disabled {
-  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   background: var(--surface-sunken);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
-.check input:checked:disabled {
-  border-color: var(--text-3);
+.check input:disabled:checked {
   background: var(--text-3);
+  border-color: var(--text-3);
+}
+.check input:disabled:checked::after {
+  border-color: var(--surface-2);
 }
 .check input:active {
   transform: scale(0.9);
@@ -136,15 +138,15 @@
   background: var(--accent);
   border-color: var(--accent);
 }
-/* Disabled: sunken and without the accent, never faded (AE1). After the "on" rule, so it wins over the accent. */
+/* Locked like a disabled button (AE1): no accent, no opacity; on and off stay apart by position and fill. */
 .track:disabled {
-  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   background: var(--surface-sunken);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
-.track[aria-checked='true']:disabled {
-  border-color: var(--text-3);
+.track:disabled[aria-checked='true'] {
   background: var(--text-3);
+  border-color: var(--text-3);
 }
 .thumb {
   position: absolute;
@@ -159,6 +161,13 @@
 }
 .track[aria-checked='true'] .thumb {
   transform: translateX(1.125rem);
+}
+.track:disabled .thumb {
+  background: var(--text-3);
+  box-shadow: none;
+}
+.track:disabled[aria-checked='true'] .thumb {
+  background: var(--surface-2);
 }
 
 .area {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { readdirSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
@@ -67,66 +67,86 @@ describe('Button', () => {
   });
 });
 
-/** A stylesheet of `ui/` without its comments. */
-const sheet = (name: string): string =>
-  readFileSync(resolve(__dirname, name), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+/** Rule blocks of a CSS source as `[selector, body]`, comments removed (flat files only: no nesting, no at-rules). */
+function ruleBlocks(css: string): [selector: string, body: string][] {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  return [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => [m[1]!.trim(), m[2]!.trim()]);
+}
 
-describe('disabled state (UI audit 2026-11, AE1)', () => {
-  it('a disabled button stays a button with its variant; the state comes from :disabled alone', () => {
+describe('disabled state (AE1)', () => {
+  const uiDir = join(process.cwd(), 'src/ui');
+  const buttonCss = ruleBlocks(readFileSync(join(uiDir, 'Button.module.css'), 'utf8'));
+  const body = (selector: string) => buttonCss.find(([s]) => s === selector)?.[1] ?? '';
+
+  it('a disabled button stays a disabled button for assistive tech and the mouse', () => {
+    let clicks = 0;
     render(
-      <Button variant="primary" disabled>
+      <Button variant="primary" disabled onClick={() => clicks++}>
         Entsperren
       </Button>,
     );
     const button = screen.getByRole('button', { name: 'Entsperren' });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('data-variant', 'primary');
+    button.click();
+    expect(clicks).toBe(0);
   });
 
-  it('is a state of its own: sunken surface, --text-3, no accent, the same for primary, secondary and danger', () => {
-    const css = sheet('Button.module.css');
-    const filled =
-      /\.primary:disabled,\s*\.secondary:disabled,\s*\.danger:disabled,\s*\.icon\.ghost:disabled\s*\{([^}]*)\}/.exec(
-        css,
-      );
-    expect(filled, 'one rule for the filled and framed variants').not.toBeNull();
-    expect(filled![1]).toMatch(/background:\s*var\(--surface-sunken\)/);
-    expect(filled![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
-    // A quiet edge keeps the outline: the control frame, weakened, never the accent.
-    expect(filled![1]).toMatch(
-      /border-color:\s*color-mix\(in srgb, var\(--border-strong\) \d+%, transparent\)/,
+  // Opacity over the filled accent mixed into a muddy brown on the dark theme: it read as a colour bug, not as
+  // "locked". The state is its own look now: neutral surface, quiet but readable text, no accent, no danger.
+  it('is a neutral surface with quiet text, one rule for every variant', () => {
+    const disabled = body('.btn:disabled');
+    expect(disabled).toContain('background: var(--surface-sunken);');
+    // A quiet edge keeps the outline of a button: the control frame, weakened, never the accent.
+    expect(disabled).toMatch(
+      /border-color: color-mix\(in srgb, var\(--border-strong\) \d+%, transparent\);/,
     );
-    const quiet = /\.ghost:disabled,\s*\.quietDanger:disabled\s*\{([^}]*)\}/.exec(css);
-    expect(quiet![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
-    // No rule that matches a disabled button brings the accent or the danger tone back.
-    for (const m of css.matchAll(/([^{}]*:disabled[^{}]*)\{([^}]*)\}/g)) {
-      if (/:not\(:disabled\)/.test(m[1]!)) continue;
-      expect(m[2], m[1]!.trim()).not.toMatch(/--accent|--danger/);
+    expect(disabled).toContain('color: var(--text-3);');
+    expect(disabled).toContain('cursor: not-allowed;');
+    expect(disabled).not.toMatch(/--accent|--danger|opacity/);
+    // `.btn:disabled` outranks the one-class variant rules, so primary, secondary and danger cannot leak through …
+    for (const variant of ['.primary', '.secondary', '.danger']) {
+      expect(body(variant), variant).toMatch(/background:/);
+      expect(buttonCss.some(([s]) => s.startsWith(`${variant}:disabled`))).toBe(false);
     }
-    // The state wins over every variant: its rules are the last ones of the file.
-    expect(css.lastIndexOf('.primary {')).toBeLessThan(css.indexOf('.primary:disabled'));
-    expect(css.lastIndexOf('.icon.ghost {')).toBeLessThan(css.indexOf('.primary:disabled'));
+    // … and no variant paints a hover on top of it.
+    for (const [selector] of buttonCss) {
+      if (selector.includes(':hover')) expect(selector, selector).toContain(':not(:disabled)');
+    }
   });
 
-  it('no stylesheet of ui/ fades a disabled control: no opacity on :disabled, [disabled] or [data-disabled]', () => {
-    const files = (readdirSync(__dirname, { recursive: true }) as string[])
+  it('the quiet variants stay without a surface and never bring colour back', () => {
+    const quiet = body('.ghost:disabled,\n.quietDanger:disabled');
+    expect(quiet).toContain('background: transparent;');
+    expect(quiet).not.toMatch(/(^|\s)color:|--accent|--danger|opacity/);
+  });
+
+  it('a control locked by attribute (`data-disabled`, the file picker) is not faded either, in any folder of ui/', () => {
+    const offenders: string[] = [];
+    const files = (readdirSync(uiDir, { recursive: true }) as string[])
       .map((f) => f.split('\\').join('/'))
       .filter((f) => f.endsWith('.module.css'));
-    expect(files.length).toBeGreaterThan(30);
-    const hits: string[] = [];
     for (const file of files)
-      for (const m of sheet(file).matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-        const selectors = m[1]!.split(',').filter(
-          // `:not(:disabled)` and `:not([data-disabled…])` describe the enabled control.
-          (sel) =>
-            /:disabled|\[disabled|\[data-disabled|\[aria-disabled/.test(
-              sel.replace(/:not\([^)]*\)/g, ''),
-            ),
-        );
-        if (selectors.length && /(?:^|[\s;])opacity\s*:/.test(m[2]!))
-          hits.push(`${file}: ${selectors.join(',').trim()}`);
+      for (const [selector, rules] of ruleBlocks(readFileSync(join(uiDir, file), 'utf8'))) {
+        const locked = selector
+          .split(',')
+          .some((sel) =>
+            /:disabled|\[disabled|\[data-disabled/.test(sel.replace(/:not\([^)]*\)/g, '')),
+          );
+        if (locked && /(^|[\s;])opacity\s*:/.test(rules)) offenders.push(`${file}: ${selector}`);
       }
-    expect(hits).toEqual([]);
+    expect(offenders).toEqual([]);
+  });
+
+  it('no shared component fades or colours a :disabled control', () => {
+    const offenders: string[] = [];
+    for (const file of readdirSync(uiDir).filter((f) => f.endsWith('.module.css'))) {
+      for (const [selector, rules] of ruleBlocks(readFileSync(join(uiDir, file), 'utf8'))) {
+        if (!selector.includes(':disabled') || selector.includes(':not(:disabled)')) continue;
+        if (/opacity|--accent|--danger/.test(rules)) offenders.push(`${file}: ${selector}`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });
 

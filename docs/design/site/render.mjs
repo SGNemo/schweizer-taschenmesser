@@ -14,7 +14,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const out = path.join(here, '../../../web/.screens/site-directions');
 await mkdir(out, { recursive: true });
 const files = (process.env.MOCKUPS || 'direction-a,direction-b,direction-c').split(',');
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium' });
 const GAP = 24, PHONE_W = 400;
 for (const f of files) {
   const shots = {};

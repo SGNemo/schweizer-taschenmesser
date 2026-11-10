@@ -17,7 +17,15 @@
 .btn:active:not(:disabled) {
   transform: scale(0.97);
 }
+/* Locked, not faded (AE1): opacity over the filled accent mixed into a muddy brown. A disabled button drops its
+   accent and its danger colour and sits on a neutral surface; the text stays readable (--text-3, 4.5:1 and up).
+   Two selectors deep so it wins over every variant below, whatever the order. */
 .btn:disabled {
+  /* Identity 4.0 (package 0b-1): the recess tone, and the control frame at about half strength so the outline of a
+     button stays where the sunken tone is close to the page. */
+  background: var(--surface-sunken);
+  color: var(--text-3);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
 /* Row button: 32 px to look at, a 44 px target to hit. */
@@ -70,6 +78,12 @@
 .quietDanger:hover:not(:disabled) {
   background: var(--danger-soft);
 }
+/* The quiet variants have no surface of their own, locked or not; only the text goes quiet. */
+.ghost:disabled,
+.quietDanger:disabled {
+  background: transparent;
+  border-color: transparent;
+}
 /* A ghost button between form fields ("Mehr Felder"): its text lines up with the field edge above it (U43); the
    hover background reaches out into the gutter instead. */
 .flushStart {
@@ -98,22 +112,4 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-}
-
-/* Disabled is a state of its own (UI audit 2026-11, AE1), never the variant faded out: a faded accent turns a muddy
-   brown on the dark page and reads as a colour fault. Filled and framed buttons sink into the page, quiet ones only
-   lose their ink; the label keeps AA (`--text-3` on `--surface-sunken`, tokens.test.ts). A quiet edge (the control
-   frame at about half strength) keeps the outline of a button where the sunken tone is close to the page. Last in the
-   file so it wins over every variant. */
-.primary:disabled,
-.secondary:disabled,
-.danger:disabled,
-.icon.ghost:disabled {
-  background: var(--surface-sunken);
-  color: var(--text-3);
-  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
-}
-.ghost:disabled,
-.quietDanger:disabled {
-  color: var(--text-3);
 }
