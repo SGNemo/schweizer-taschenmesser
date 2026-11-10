@@ -94,8 +94,8 @@ struct Inner {
     attempts: u64,
 }
 
-/// `.1` serialises `browser_show` and holds the newest `seq` applied so far (see there).
-pub struct BrowserState(Mutex<Inner>, Mutex<u64>);
+/// `.1` serialises `browser_show` and holds the page life (`epoch`) and the newest `seq` applied in it (see there).
+pub struct BrowserState(Mutex<Inner>, Mutex<(u64, u64)>);
 
 impl Default for BrowserState {
     fn default() -> Self {
@@ -106,7 +106,7 @@ impl Default for BrowserState {
                 tabs: HashMap::new(),
                 attempts: 0,
             }),
-            Mutex::new(0),
+            Mutex::new((0, 0)),
         )
     }
 }
@@ -382,11 +382,16 @@ fn mark_ready(inner: &mut Inner, tab: u32, attempt: u64) -> bool {
 }
 
 /// Whether a `browser_show` call numbered `seq` is newer than the last one applied; remembers it if so.
-fn newer_show(last: &mut u64, seq: u64) -> bool {
-    if seq <= *last {
+///
+/// The page counts from 1 again after every reload of the main window, while this state lives as long as
+/// the app. `epoch` names the page life the call comes from: a call from another life than the last one
+/// applied is always the newest (the old page is gone and can send nothing any more), and counting starts
+/// over. Without it every show after a reload did nothing until the counter had caught up.
+fn newer_show(last: &mut (u64, u64), epoch: u64, seq: u64) -> bool {
+    if epoch == last.0 && seq <= last.1 {
         return false;
     }
-    *last = seq;
+    *last = (epoch, seq);
     true
 }
 
@@ -519,11 +524,12 @@ pub fn browser_show(
     state: State<'_, BrowserState>,
     tab: Option<u32>,
     bounds: Option<Bounds>,
+    epoch: u64,
     seq: u64,
 ) -> Result<Vec<u32>, String> {
     ensure_main(&webview)?;
     let mut last = state.1.lock().unwrap_or_else(|e| e.into_inner());
-    if !newer_show(&mut last, seq) {
+    if !newer_show(&mut last, epoch, seq) {
         return Ok(Vec::new());
     }
     let ids: Vec<(u32, u64, bool)> = state
@@ -694,12 +700,25 @@ mod tests {
 
     #[test]
     fn an_older_show_never_overrides_a_newer_one() {
-        let mut last = 0;
-        assert!(newer_show(&mut last, 2));
-        assert!(!newer_show(&mut last, 1), "overtaken call");
-        assert!(!newer_show(&mut last, 2), "same call twice");
-        assert!(newer_show(&mut last, 3));
-        assert_eq!(last, 3);
+        let mut last = (0, 0);
+        assert!(newer_show(&mut last, 7, 2));
+        assert!(!newer_show(&mut last, 7, 1), "overtaken call");
+        assert!(!newer_show(&mut last, 7, 2), "same call twice");
+        assert!(newer_show(&mut last, 7, 3));
+        assert_eq!(last, (7, 3));
+    }
+
+    #[test]
+    fn a_reloaded_page_counts_from_one_again_and_is_heard() {
+        let mut last = (0, 0);
+        for seq in 1..=40 {
+            assert!(newer_show(&mut last, 7, seq));
+        }
+        // The main window reloaded: a new page life, its first call is number 1.
+        assert!(newer_show(&mut last, 8, 1), "first show after a reload");
+        assert!(!newer_show(&mut last, 8, 1), "same call twice");
+        assert!(newer_show(&mut last, 8, 2));
+        assert_eq!(last, (8, 2));
     }
 
     #[test]

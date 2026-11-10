@@ -10,6 +10,16 @@ import type {
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
 
 /** Bridge to `src-tauri/src/browser.rs`. Only the main window may call these commands. */
+/**
+ * A number for this load of the page, different from the one before (never 0, the native side's start value):
+ * random, so it needs no clock and no storage. Exported for the test.
+ */
+export function pageEpoch(): number {
+  const part = new Uint32Array(1);
+  crypto.getRandomValues(part);
+  return part[0]! + 1;
+}
+
 export function createBrowser(supported: boolean): BrowserService {
   if (!supported)
     return {
@@ -26,8 +36,10 @@ export function createBrowser(supported: boolean): BrowserService {
       clearData: unsupported,
     };
   // `browser_show` runs off the main thread, so two calls can overtake each other: the native side
-  // ignores a call older than the last one it applied.
+  // ignores a call older than the last one it applied. The count starts at 1 with every load of the page,
+  // the native state outlives it: `showEpoch` names this page life, so the first call after a reload counts.
   let showSeq = 0;
+  const showEpoch = pageEpoch();
   return {
     supported: true,
     open(options: BrowserOpenOptions, onEvent: (event: BrowserEvent) => void) {
@@ -42,7 +54,7 @@ export function createBrowser(supported: boolean): BrowserService {
     reload: (tab: number) => invoke<void>('browser_reload', { tab }),
     close: (tab: number) => invoke<void>('browser_close', { tab }),
     show: (tab: number | null, bounds?: BrowserBounds) =>
-      invoke<number[]>('browser_show', { tab, bounds, seq: ++showSeq }),
+      invoke<number[]>('browser_show', { tab, bounds, epoch: showEpoch, seq: ++showSeq }),
     setZoom: (tab: number, factor: number) => invoke<void>('browser_set_zoom', { tab, factor }),
     configure: (config: BrowserConfig) => invoke<void>('browser_configure', { config }),
     clearData: () => invoke<void>('browser_clear_data'),
