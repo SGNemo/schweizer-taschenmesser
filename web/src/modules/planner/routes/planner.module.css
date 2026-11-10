@@ -1,3 +1,7 @@
+/* U01: the head figure's room while the board is read (same shape as the figure, unseen). */
+.headPending {
+  visibility: hidden;
+}
 .add {
   display: flex;
   gap: var(--space-2);

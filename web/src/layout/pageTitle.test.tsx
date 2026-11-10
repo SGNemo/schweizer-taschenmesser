@@ -89,9 +89,12 @@ describe('every module route renders exactly one PageTitle h1, in the title slot
         { timeout: 10_000 },
       );
       const [title] = within(frame).getAllByRole('heading', { level: 1 });
-      // PageTitle renders a bare <h1> as the only child of the frame's title slot.
+      // PageTitle renders a bare <h1> straight into the frame's title slot, which the frame marks as such: an
+      // <h1> of the page's own, anywhere else in the head, does not pass.
       expect(title!.attributes, 'the h1 of PageTitle carries no attributes').toHaveLength(0);
-      expect(title!.parentElement!.children, 'the title slot holds the h1 only').toHaveLength(1);
+      const slots = frame.querySelectorAll('[data-slot="title"]');
+      expect(slots, 'the head has exactly one title slot').toHaveLength(1);
+      expect(title!.parentElement, 'the h1 sits in the title slot of the head').toBe(slots[0]);
       expect(title!.textContent!.trim()).not.toBe('');
       // Exactly one on the whole screen: none below the head, none in a second place.
       expect(h1s()).toEqual([title]);

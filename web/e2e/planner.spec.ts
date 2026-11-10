@@ -164,6 +164,33 @@ test.describe('Planer (week board, package 1)', () => {
     expect(hintBox!.y).toBeGreaterThanOrEqual(inputBottom - 1);
   });
 
+  test('the entry row stays where it is while the head figure loads (U01)', async ({ page }) => {
+    await enablePlanner(page);
+    // Every frame from the first one: a jump between two frames is what a person sees (and what moved the row
+    // under the measurements of the test above).
+    await page.addInitScript(() => {
+      const tops: number[] = [];
+      (window as unknown as { __entryTops: number[] }).__entryTops = tops;
+      const frame = () => {
+        const row = document.querySelector('form[data-keep-visible]');
+        if (row) {
+          const top = Math.round(row.getBoundingClientRect().top);
+          if (tops.at(-1) !== top) tops.push(top);
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+    await ready(page, '/planner');
+    await expect(page.getByTestId('planner-head')).toContainText('frei');
+    // the frame gives the figure's room back one second after the page arrived (`FIGURE_HOLD_MS`)
+    await page.waitForTimeout(1200);
+    const tops = await page.evaluate(
+      () => (window as unknown as { __entryTops: number[] }).__entryTops,
+    );
+    expect(tops).toHaveLength(1);
+  });
+
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
