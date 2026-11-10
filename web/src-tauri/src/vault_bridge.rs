@@ -80,9 +80,7 @@ pub fn vault_bridge_respond(state: State<'_, VaultBridge>, id: u64, body: String
 pub fn vault_bridge_stop(state: State<'_, VaultBridge>) {
     // The server lock is kept until the responder is cleared too: a start on another thread waits
     // for it, so it cannot have its fresh responder wiped by this stop.
-    let Ok(mut slot) = state.server.lock() else {
-        return;
-    };
+    let mut slot = state.server.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(mut server) = slot.take() {
         server.stop();
     }
