@@ -40,14 +40,28 @@ export function retryPage(inPlace?: () => void): void {
  * online and offers no button (a reload would end on the browser's own error page, and a page that failed to load
  * cannot be tried again in place). The desktop and Android apps carry their code with them, so they always get
  * "Neu laden". `live={false}` when the caller already is the live region (the fallback's `role="status"`).
+ *
+ * `failed`: the page's code did not arrive (the error boundary), so nothing is loading any more. Offline the card
+ * then promises a reload once online instead of "it continues here", and when the connection comes back it says so
+ * and points at the button instead of "still loading".
  */
-export function PageLoadingCard({ live = true }: { live?: boolean }) {
+export function PageLoadingCard({
+  live = true,
+  failed = false,
+}: {
+  live?: boolean;
+  failed?: boolean;
+}) {
   const texts = tLoading.use();
-  const offlineText = tOffline.use().part;
+  const offline = tOffline.use();
   const networked = getPlatform().kind === 'web';
   const [online, setOnline] = useState(() => navigator.onLine);
+  const [cameBack, setCameBack] = useState(false);
   useEffect(() => {
-    const on = () => setOnline(true);
+    const on = () => {
+      setOnline(true);
+      setCameBack(true);
+    };
     const off = () => setOnline(false);
     window.addEventListener('online', on);
     window.addEventListener('offline', off);
@@ -57,6 +71,13 @@ export function PageLoadingCard({ live = true }: { live?: boolean }) {
     };
   }, []);
   const waitingForNetwork = networked && !online;
+  const text = waitingForNetwork
+    ? failed
+      ? offline.page
+      : offline.part
+    : failed && networked && cameBack
+      ? offline.pageBack
+      : texts.still;
   return (
     <div className={styles.wrap}>
       <div
@@ -64,7 +85,7 @@ export function PageLoadingCard({ live = true }: { live?: boolean }) {
         role={live ? 'status' : undefined}
         data-testid="page-loading-card"
       >
-        <p className={styles.text}>{waitingForNetwork ? offlineText : texts.still}</p>
+        <p className={styles.text}>{text}</p>
         {!waitingForNetwork && hasDrafts() ? <p className={styles.hint}>{texts.drafts}</p> : null}
         {!waitingForNetwork ? (
           <Button size="sm" onClick={() => page.reload()}>

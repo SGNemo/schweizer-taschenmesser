@@ -13,6 +13,7 @@ import {
   deselectInSetup,
   disableModule,
   enableModule,
+  enableModuleIfUnset,
   isOnByDefaultSetOnly,
   loadModuleStates,
   loadStoredModuleState,
@@ -54,7 +55,11 @@ const meta = (d: TaschenmesserDB, key: string) =>
     .get(key)
     .then((row) => row?.value);
 const rows = (d: TaschenmesserDB) => d.table('_modules').toArray();
-/** What sync does with a household row: it lands in the other device's table as it is. */
+/**
+ * Stands in for sync: every row is copied into the other device's table as it is. A raw `put`, no HLC and no
+ * last-write-wins (that is `core/sync/ops.ts`, pinned by `contract/lww-cases.json`). The cases here show what a
+ * device does once a household row is there, in the order the test writes them, not which of two rows wins.
+ */
 const arrive = async (from: TaschenmesserDB, to: TaschenmesserDB) => {
   for (const row of await rows(from)) await to.table('_modules').put(row);
 };
@@ -234,6 +239,35 @@ describe('default set of a fresh installation', () => {
     expect(viaSet).toBe(false);
     await disableModule(lists, 'keep', db);
     await undoDisable(lists, viaSet, db);
+    expect(await loadStoredModuleState('lists', db)).toMatchObject({ enabled: true });
+  });
+
+  it('7a: "switch on if never chosen" (a connector) leaves a module alone that is on through the set: no row, nothing for other devices', async () => {
+    await markFreshDefaults(true, db);
+    expect(await enableModuleIfUnset(lists, db)).toBe(false);
+    expect(await rows(db)).toEqual([]);
+    expect(await loadModuleStates(DESKTOP, db)).toMatchObject({ lists: true });
+    await arrive(db, other);
+    expect(await loadModuleStates(DESKTOP, other)).toMatchObject({ lists: false });
+  });
+
+  it('7b: it still switches on what the set does not carry: taken out on this device, or missing what it requires', async () => {
+    await markFreshDefaults(true, db);
+    // Taken out in the setup: off and without a row, so the connector may switch it on (a household choice from then on).
+    await deselectInSetup(lists, db);
+    expect(await enableModuleIfUnset(lists, db)).toBe(true);
+    expect(await loadStoredModuleState('lists', db)).toMatchObject({ enabled: true });
+    // In the set, but off because finance is off: the set does not count, so this is "never chosen" as well.
+    await disableModule(finance, 'keep', db);
+    expect(await loadModuleStates(DESKTOP, db)).toMatchObject({ budgets: false });
+    expect(await enableModuleIfUnset(budgets, db)).toBe(true);
+    expect(await loadStoredModuleState('budgets', db)).toMatchObject({ enabled: true });
+  });
+
+  it('7c: without a set (existing installation) it switches on once, as before', async () => {
+    await markFreshDefaults(false, db);
+    expect(await enableModuleIfUnset(lists, db)).toBe(true);
+    expect(await enableModuleIfUnset(lists, db)).toBe(false);
     expect(await loadStoredModuleState('lists', db)).toMatchObject({ enabled: true });
   });
 

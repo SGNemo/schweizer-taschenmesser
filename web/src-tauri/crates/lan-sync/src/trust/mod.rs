@@ -3,7 +3,8 @@
 //! Persistence of the real list and the OS keystore live in the shell (package 2b); this module
 //! holds the traits and in-memory implementations the logic is tested with.
 
-use crate::noise::{KeyError, PublicKey, StaticKey};
+use crate::input::wire::Level;
+use crate::noise::{KeyError, Mode, PublicKey, StaticKey};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -32,6 +33,44 @@ impl fmt::Debug for Device {
     }
 }
 
+/// What a paired device may do as a remote control (`crate::input`). Pairing gives none of it: the
+/// default is "nothing", and only someone at the PC changes it. Nothing here records use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RemoteGrant {
+    pub level: Level,
+    /// Ended at the PC: nothing is accepted until someone there switches the device on again.
+    pub paused: bool,
+    /// The PC asks the phone to unlock itself before a `Full` session.
+    pub unlock: bool,
+}
+
+impl RemoteGrant {
+    /// What the hub acts on: a paused grant is worth nothing.
+    pub fn effective(&self) -> Level {
+        if self.paused {
+            Level::Off
+        } else {
+            self.level
+        }
+    }
+
+    /// Whether going from `old` to `self` gives or gives back control in any way (a higher level,
+    /// lifting a pause, dropping the unlock request).
+    pub fn widens(&self, old: &RemoteGrant) -> bool {
+        self.level > old.level || (old.paused && !self.paused) || (old.unlock && !self.unlock)
+    }
+}
+
+impl Default for RemoteGrant {
+    fn default() -> Self {
+        RemoteGrant {
+            level: Level::Off,
+            paused: false,
+            unlock: true,
+        }
+    }
+}
+
 /// Trust list failures. Carry no keys or names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrustError {
@@ -56,12 +95,24 @@ pub trait TrustStore: Send + Sync {
     /// Records activity; only called after an authenticated transport frame.
     fn touch(&self, key: &PublicKey, at: u64);
     fn list(&self) -> Vec<Device>;
+    /// The remote-control grant of an active device. Unknown and revoked keys, and a store that
+    /// does not keep grants, have none (fail-closed).
+    fn remote_of(&self, _key: &PublicKey) -> RemoteGrant {
+        RemoteGrant::default()
+    }
+    /// Sets the grant of an active device. Called only from the PC's own controls
+    /// (`input::Remote`), never on behalf of a network message.
+    fn set_remote(&self, _key: &PublicKey, _grant: RemoteGrant) -> Result<(), TrustError> {
+        Err(TrustError::Storage)
+    }
 }
 
 /// In-memory trust list (tests, and the logic behind the shell's persistent one).
 #[derive(Default)]
 pub struct MemoryTrustStore {
     devices: Mutex<HashMap<[u8; 32], Device>>,
+    /// Only non-default grants are kept; a device that is removed or revoked loses its entry.
+    grants: Mutex<HashMap<[u8; 32], RemoteGrant>>,
 }
 
 impl MemoryTrustStore {
@@ -92,6 +143,7 @@ impl TrustStore for MemoryTrustStore {
         match map.get(key.as_bytes()) {
             Some(d) if !d.revoked => {
                 map.remove(key.as_bytes());
+                self.forget_grant(key);
                 Ok(())
             }
             _ => Err(TrustError::NotFound),
@@ -103,6 +155,7 @@ impl TrustStore for MemoryTrustStore {
         match map.get_mut(key.as_bytes()) {
             Some(d) if !d.revoked => {
                 d.revoked = true;
+                self.forget_grant(key);
                 Ok(true)
             }
             _ => Ok(false),
@@ -124,6 +177,46 @@ impl TrustStore for MemoryTrustStore {
             .lock()
             .map(|m| m.values().cloned().collect())
             .unwrap_or_default()
+    }
+
+    fn remote_of(&self, key: &PublicKey) -> RemoteGrant {
+        let active = self
+            .devices
+            .lock()
+            .is_ok_and(|m| m.get(key.as_bytes()).is_some_and(|d| !d.revoked));
+        if !active {
+            return RemoteGrant::default();
+        }
+        self.grants
+            .lock()
+            .ok()
+            .and_then(|g| g.get(key.as_bytes()).copied())
+            .unwrap_or_default()
+    }
+
+    fn set_remote(&self, key: &PublicKey, grant: RemoteGrant) -> Result<(), TrustError> {
+        let devices = self.devices.lock().map_err(|_| TrustError::Storage)?;
+        match devices.get(key.as_bytes()) {
+            Some(d) if !d.revoked => {}
+            Some(_) => return Err(TrustError::Revoked),
+            None => return Err(TrustError::NotFound),
+        }
+        let mut grants = self.grants.lock().map_err(|_| TrustError::Storage)?;
+        if grant == RemoteGrant::default() {
+            grants.remove(key.as_bytes());
+        } else {
+            grants.insert(*key.as_bytes(), grant);
+        }
+        Ok(())
+    }
+}
+
+impl MemoryTrustStore {
+    /// A poisoned grant map reads as "no grant" everywhere, so a failure here stays closed.
+    fn forget_grant(&self, key: &PublicKey) {
+        if let Ok(mut g) = self.grants.lock() {
+            g.remove(key.as_bytes());
+        }
     }
 }
 
@@ -198,10 +291,11 @@ impl SessionHandle {
     }
 }
 
-/// Open sessions by peer key, so a revoke closes them at once.
+/// Open sessions by peer key and kind (sync or input), so a revoke closes all of a device's
+/// sessions at once and ending remote control closes its input sessions only.
 #[derive(Default)]
 pub struct SessionRegistry {
-    sessions: Mutex<Vec<(PublicKey, SessionHandle)>>,
+    sessions: Mutex<Vec<(PublicKey, Mode, SessionHandle)>>,
 }
 
 impl SessionRegistry {
@@ -210,32 +304,42 @@ impl SessionRegistry {
     }
 
     /// Registered at `accept`, before the first frame (a revoke between message 2 and `hello` counts).
-    pub fn register(&self, peer: PublicKey) -> SessionHandle {
+    pub fn register(&self, peer: PublicKey, mode: Mode) -> SessionHandle {
         let handle = SessionHandle {
             closed: Arc::new(AtomicBool::new(false)),
         };
         if let Ok(mut s) = self.sessions.lock() {
-            s.retain(|(_, h)| !h.is_closed());
-            s.push((peer, handle.clone()));
+            s.retain(|(_, _, h)| !h.is_closed());
+            s.push((peer, mode, handle.clone()));
         } else {
             handle.close();
         }
         handle
     }
 
-    /// Closes every session of this peer; returns how many were open.
+    /// Closes every session of this peer, sync and input; returns how many were open.
     pub fn close_peer(&self, peer: &PublicKey) -> usize {
+        self.close_where(|p, _| p == peer)
+    }
+
+    /// Closes the input sessions (remote control) and leaves every sync session alone: of one
+    /// device, or of all with `None`. Returns how many were open.
+    pub fn close_input(&self, peer: Option<&PublicKey>) -> usize {
+        self.close_where(|p, m| m == Mode::Input && peer.map_or(true, |x| x == p))
+    }
+
+    fn close_where(&self, pick: impl Fn(&PublicKey, Mode) -> bool) -> usize {
         let Ok(mut s) = self.sessions.lock() else {
             return 0;
         };
         let mut n = 0;
-        for (p, h) in s.iter() {
-            if p == peer && !h.is_closed() {
+        for (p, m, h) in s.iter() {
+            if pick(p, *m) && !h.is_closed() {
                 h.close();
                 n += 1;
             }
         }
-        s.retain(|(_, h)| !h.is_closed());
+        s.retain(|(_, _, h)| !h.is_closed());
         n
     }
 
@@ -245,8 +349,8 @@ impl SessionRegistry {
         let Ok(mut s) = self.sessions.lock() else {
             return Err(TrustError::Storage);
         };
-        let n = s.iter().filter(|(_, h)| !h.is_closed()).count();
-        for (_, h) in s.iter() {
+        let n = s.iter().filter(|(_, _, h)| !h.is_closed()).count();
+        for (_, _, h) in s.iter() {
             h.close();
         }
         s.clear();
@@ -262,7 +366,7 @@ impl SessionRegistry {
     pub fn open_count(&self) -> usize {
         self.sessions
             .lock()
-            .map(|s| s.iter().filter(|(_, h)| !h.is_closed()).count())
+            .map(|s| s.iter().filter(|(_, _, h)| !h.is_closed()).count())
             .unwrap_or(0)
     }
 

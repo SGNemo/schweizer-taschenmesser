@@ -136,6 +136,21 @@ describe('moduleBlock', () => {
     expect(md).toContain('**Tools:** Calculator · Regex (preview).');
   });
 
+  it('names a module of the fresh-installation set instead of "optional" and explains the words once', () => {
+    const withSet: ModuleData = {
+      ...data,
+      modules: data.modules.map((m) => (m.status === 'optional' ? { ...m, fresh: true } : m)),
+    };
+    const en = moduleBlock(withSet, 'en');
+    expect(en).toContain('|  | To-dos | Tasks in lists | on for new installations |');
+    expect(en.match(/“On for new installations”: /g)).toHaveLength(1);
+    const de = moduleBlock(withSet, 'de');
+    expect(de).toContain('| bei Neuinstallationen an |');
+    expect(de).toContain('„Bei Neuinstallationen an“: ');
+    // Without such a module the block says nothing about it.
+    expect(moduleBlock(data, 'en')).not.toContain('new installations');
+  });
+
   it('speaks German for the German files', () => {
     const md = moduleBlock(data, 'de');
     expect(md).toContain('| Bereich | Modul | Was es tut | Status |');

@@ -2,6 +2,7 @@
 //!
 //! * Pairing: `Noise_IKpsk1_25519_ChaChaPoly_BLAKE2s`, the PSK is the single-use pairing secret.
 //! * Session: `Noise_IK_25519_ChaChaPoly_BLAKE2s`, only keys of the trust list get a session.
+//! * Input session (remote control): the same `IK` pattern with its own mode byte in the prologue.
 //! * Prologue = `nemo-lan-sync/1 || mode`, so message 1 of one mode never opens in the other.
 //! * Only `TransportState` is used, never the stateless variant (nonces stay strictly ordered).
 //!
@@ -16,8 +17,8 @@
 pub mod frame;
 
 use frame::{
-    FrameError, MAX_FRAME, MODE_PAIR, MODE_SESSION, NOISE_M1_LEN, PRE_CONFIRM_CAP,
-    PRE_HANDSHAKE_CAP, PROLOGUE_BASE, TAG_UNKNOWN_DEVICE, WIRE_M1_LEN,
+    FrameError, INPUT_CAP, MAX_FRAME, MODE_INPUT, MODE_PAIR, MODE_SESSION, NOISE_M1_LEN,
+    PRE_CONFIRM_CAP, PRE_HANDSHAKE_CAP, PROLOGUE_BASE, TAG_UNKNOWN_DEVICE, WIRE_M1_LEN,
 };
 use snow::params::DHChoice;
 use snow::resolvers::{CryptoResolver, DefaultResolver};
@@ -34,7 +35,11 @@ const PSK_LOCATION: u8 = 1;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
     Pair,
+    /// Sync session.
     Session,
+    /// Remote-control input session (`crate::input`): same pattern and keys as a sync session, its
+    /// own prologue byte.
+    Input,
 }
 
 impl Mode {
@@ -42,19 +47,21 @@ impl Mode {
         match self {
             Mode::Pair => MODE_PAIR,
             Mode::Session => MODE_SESSION,
+            Mode::Input => MODE_INPUT,
         }
     }
     fn from_byte(b: u8) -> Option<Mode> {
         match b {
             MODE_PAIR => Some(Mode::Pair),
             MODE_SESSION => Some(Mode::Session),
+            MODE_INPUT => Some(Mode::Input),
             _ => None,
         }
     }
     fn pattern(self) -> &'static str {
         match self {
             Mode::Pair => PATTERN_PAIR,
-            Mode::Session => PATTERN_SESSION,
+            Mode::Session | Mode::Input => PATTERN_SESSION,
         }
     }
     fn prologue(self) -> Vec<u8> {
@@ -241,15 +248,16 @@ impl Transport {
         self.cap
     }
 
-    /// Lifts the cap to Noise's limit. Only a session, and only after its first authenticated frame
-    /// was decrypted; a pairing connection keeps the small cap for good.
+    /// Lifts the cap after the first authenticated frame was decrypted: a sync session to Noise's
+    /// limit, an input session to [`INPUT_CAP`] (never more); a pairing connection keeps the small
+    /// cap for good.
     pub fn raise_cap(&mut self) -> bool {
-        if self.mode == Mode::Session {
-            self.cap = MAX_FRAME;
-            true
-        } else {
-            false
+        match self.mode {
+            Mode::Session => self.cap = MAX_FRAME,
+            Mode::Input => self.cap = INPUT_CAP,
+            Mode::Pair => return false,
         }
+        true
     }
 
     /// Encrypts `tag || body`.

@@ -125,14 +125,25 @@ export async function enableModule(
 }
 
 /**
- * Switches a module on once, only if the user never chose (no stored state): a connector that brings a module of its own
+ * Switches a module on once, only if the user never chose: a connector that brings a module of its own
  * (Spotify → music) activates it when it is connected. Returns true when it did switch it on.
+ *
+ * "Never chose" is no stored state and not already on through this device's default set: such a module has no row
+ * either, and a `true` written for it here would sync and switch it on for the whole household.
  */
 export async function enableModuleIfUnset(
   manifest: ModuleManifest,
   database: TaschenmesserDB = defaultDb,
 ): Promise<boolean> {
-  if (await stateRepo(database).get(manifest.id)) return false;
+  const repo = stateRepo(database);
+  if (await repo.get(manifest.id)) return false;
+  const overlay = await loadDefaultsOverlay(database);
+  if (overlay.on.has(manifest.id)) {
+    // The set only counts where everything the module needs is on (`resolveStates`); otherwise it is off and unset.
+    const known = availableManifests();
+    const manifests = known.some((m) => m.id === manifest.id) ? known : [...known, manifest];
+    if (resolveStates(manifests, await repo.active().toArray(), overlay)[manifest.id]) return false;
+  }
   await enableModule(manifest, database);
   return true;
 }

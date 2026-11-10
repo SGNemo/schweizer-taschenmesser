@@ -71,7 +71,7 @@ pub fn system_play_tone(notes: Vec<Note>, volume: f32) -> Result<(), String> {
 }
 
 /// Opens the Windows Task Manager (the only way to end a program: Nemo itself never does).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn system_open_task_manager() -> Result<(), String> {
     #[cfg(windows)]
     {
