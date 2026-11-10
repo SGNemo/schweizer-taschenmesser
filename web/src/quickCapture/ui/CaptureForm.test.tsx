@@ -227,12 +227,15 @@ describe('CaptureForm', () => {
 
   it('a row target changes through its menu', async () => {
     const user = userEvent.setup();
-    render(<CaptureForm onSaved={() => undefined} />);
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
     await user.type(await box(), 'Milch kaufen, Oma anrufen');
     await screen.findAllByTestId('capture-row-target');
     await pickTarget(user, 1, 'reminder');
     await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
-    await waitFor(async () => expect(await db.table('todos_task').count()).toBe(1));
+    // The batch writes one entry after the other: the ToDo is there before the reminder is.
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(await db.table('todos_task').count()).toBe(1);
     const [reminder] = await db.table('calendar_event').toArray();
     expect(reminder).toMatchObject({ title: 'Oma anrufen', kind: 'reminder' });
   });
@@ -328,10 +331,12 @@ describe('CaptureForm', () => {
       />,
     );
     expect(await screen.findAllByTestId('capture-row')).toHaveLength(2);
-    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) }));
-    // Two entries are written to IndexedDB one after the other: on a loaded CI runner that took 1.03 s, just
-    // over the 1 s default of waitFor (the assertion itself is unchanged).
-    await waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 5000 });
+    // Shared text is there from the first render, the module states are not (one IndexedDB read): until they
+    // are, the button is disabled and a click does nothing, however long the test waits afterwards.
+    const saveAll = screen.getByRole('button', { name: t.quickCapture.multi.saveAll(2) });
+    await waitFor(() => expect(saveAll).toBeEnabled());
+    await user.click(saveAll);
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
     const tasks = await db.table('todos_task').toArray();
     expect(tasks.map((x) => x.title).sort()).toEqual(['Milch kaufen', 'Oma anrufen']);
     expect(tasks.every((x) => !x.notes)).toBe(true);
