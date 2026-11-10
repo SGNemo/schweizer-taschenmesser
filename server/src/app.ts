@@ -78,6 +78,10 @@ const HLC_PATTERN = '^\\d{13}-\\d{4}-[a-z0-9]{1,32}$';
  */
 export const MAX_HLC_DRIFT_MS = 60 * 60 * 1000;
 const hlcWall = (hlc: string): number => Number(hlc.slice(0, 13));
+/** Client-side ciphertext marker (`web/src/core/sync/crypto.ts`); the server never reads further. */
+const ENC_PREFIX = 'enc:v1:';
+const isEncrypted = (value: unknown): boolean =>
+  typeof value === 'string' && value.startsWith(ENC_PREFIX);
 
 const opSchema = {
   type: 'object',
@@ -209,6 +213,11 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       const body = req.body as Vault;
       // A v2 vault needs its KDF parameters and the other way round.
       if ((body.v === 2) !== Boolean(body.kdf)) return reply.code(400).send({ error: 'bad-vault' });
+      // Encryption starts on an empty server only. The client asks first, but a push can land
+      // between its question and this request; plain data beside a vault must not come to exist.
+      if (!store.vault() && store.pull(0, 1).ops.length > 0) {
+        return reply.code(409).send({ error: 'not-empty' });
+      }
       const created = store.setVault(body);
       if (!created) return reply.code(409).send({ error: 'vault-exists', vault: store.vault() });
       return reply.code(201).send({ epoch: store.epoch() });
@@ -231,6 +240,11 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
       const { ops } = req.body as { ops: FieldOp[] };
       if (ops.some((op) => JSON.stringify(op.value ?? null).length > MAX_VALUE_BYTES)) {
         return reply.code(413).send({ error: 'value-too-large' });
+      }
+      // With a vault the server holds ciphertext only: a device without the key (or an old client)
+      // must not add plain values. Whole batch, like the LAN hub (`missing-enc`).
+      if (store.vault() && !ops.every((op) => isEncrypted(op.value))) {
+        return reply.code(400).send({ error: 'missing-enc' });
       }
       const latest = clock() + MAX_HLC_DRIFT_MS;
       if (ops.some((op) => hlcWall(op.hlc) > latest)) {

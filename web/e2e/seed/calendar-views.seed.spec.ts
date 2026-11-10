@@ -67,6 +67,11 @@ test.describe('phone 412x915', () => {
     await page.goto(`/calendar?view=month&date=${SEED_TODAY}`);
     const main = page.locator('main');
     await expect(main.locator('table')).toBeVisible();
+    // The table shows before the calendars are read; until then the chips are missing and the head band is
+    // 70 px taller, so the grid sits lower for a moment. Measure the loaded page.
+    await expect(
+      main.getByRole('group', { name: 'Kalender' }).getByRole('button').first(),
+    ).toBeVisible();
     const top = (await main.getByRole('button', { name: 'Neuer Termin' }).last().boundingBox())!.y;
     const grid = (await main.locator('table').boundingBox())!.y;
     // Three 44 px rows and their gaps (was five rows, grid at 669 px); the module head band above is not part of it.

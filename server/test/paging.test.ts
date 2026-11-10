@@ -1,17 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { FieldOp } from '../src/store.js';
-import { pull, push, setup } from './helpers.js';
+import { auth, pull, push, setup } from './helpers.js';
 
 type Expect = Record<string, unknown>;
 type Step =
   | { push: FieldOp[]; expect: Expect }
   | { pushGenerated: number; expect: Expect }
   | { pull: { since: number; limit: number }; expect: Expect }
-  | { reset: true; expect: Expect };
+  | { reset: true; expect: Expect }
+  | { vault: true; expect: Expect };
 interface Case {
   name: string;
-  level: 'store' | 'handler';
+  level: 'store' | 'handler' | 'server';
   steps: Step[];
 }
 
@@ -31,6 +32,8 @@ const generated = (n: number): FieldOp[] =>
 /** Abstract contract errors → what this server answers. */
 const errors: Record<string, { status: number; error?: string }> = {
   'hlc-drift': { status: 400, error: 'hlc-drift' },
+  'missing-enc': { status: 400, error: 'missing-enc' },
+  'not-empty': { status: 409, error: 'not-empty' },
   'too-many-ops': { status: 400 },
   'limit-too-large': { status: 400 },
 };
@@ -77,6 +80,16 @@ describe('sync paging contract (Node server)', () => {
             expect(res.body.cursor).toBe(want.cursor);
             expect(res.body.more).toBe(want.more);
           }
+        } else if ('vault' in step) {
+          const res = await app.inject({
+            method: 'PUT',
+            url: '/v1/vault',
+            headers: auth,
+            payload: { salt: 'c2FsdHNhbHRzYWx0', check: 'enc:v1:abcdefgh:ijklmnop' },
+          });
+          const e = typeof want.error === 'string' ? errors[want.error]! : undefined;
+          expect(res.statusCode).toBe(e?.status ?? 201);
+          if (e?.error) expect(res.json()).toMatchObject({ error: e.error });
         } else {
           checkEpoch(want.epoch, store.reset());
         }
