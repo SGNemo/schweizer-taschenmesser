@@ -179,7 +179,7 @@ function RailLink({
         aria-current={active ? 'page' : undefined}
         aria-label={label}
       >
-        <Icon name={icon} size={20} />
+        <Icon name={icon} />
         {dot ? <NewDot floating /> : null}
       </Link>
     </li>
@@ -260,7 +260,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
                 aria-label={t.nav.expandSidebar}
                 onClick={() => setSidebar('wide')}
               >
-                <Icon name="panelOpen" size={20} />
+                <Icon name="panelOpen" />
               </button>
             </li>
           ) : null}

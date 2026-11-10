@@ -250,15 +250,15 @@
 
 /* Rail (collapsed): the brand tile, then quiet grey icons in 44 px tiles. Colour means "you are here": only the active
    area shows its hue (icon and tile). The name is the accessible name and a tooltip drawn from it. */
-/* The tile fills the link (as wide as the nav tiles below it) and is a whole number of pixels at every root size. */
+/* The tile fills the rail's content box, like the nav tiles below it (2.75rem; the pixel grid: AppShell.module.css). */
 .brandTile {
-  align-self: center;
   display: block;
-  width: 2.75rem;
-  width: round(2.75rem, 1px);
-  height: 2.75rem;
-  height: round(2.75rem, 1px);
+  width: 100%;
+  aspect-ratio: 1;
   padding: 0;
+}
+.brandTile > svg {
+  display: block;
 }
 .brandTile:hover {
   background: none;
@@ -271,9 +271,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 2.75rem;
+  width: 100%;
   min-height: 2.75rem;
-  margin-inline: auto;
   border: 0;
   border-radius: var(--radius-md);
   background: none;
@@ -319,10 +318,12 @@ li[data-area] .railLink[aria-current='page'] {
 .railLink:focus-visible::after {
   opacity: 1;
 }
-/* Not on touch: a tap leaves :hover set, and the name would stay over the page after the navigation. */
+/* Not on touch: a tap leaves :hover set, and the name would stay over the page after the navigation. With a mouse it
+   waits a moment, so moving down the rail does not flash every name. */
 @media (hover: hover) {
   .railLink:hover::after {
     opacity: 1;
+    transition-delay: var(--dur-slow);
   }
 }
 /* "Ruhig" / "Modulfarben: Aus": the area colour is a grey there, so the active icon takes the text colour. */

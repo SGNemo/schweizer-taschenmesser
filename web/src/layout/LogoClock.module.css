@@ -48,10 +48,10 @@
   color: var(--text);
   text-decoration: underline;
 }
-/* In the rail a mouse gets a low link (24 px, docs/howto/design-rules.md), so the time stays close to the tile; a
-   touch screen keeps the full height. */
+/* In the rail a mouse gets a low link (the time's own 24 px, docs/howto/design-rules.md), so the time stays close to
+   the tile; a touch screen keeps the full height. */
 .railTime {
-  min-height: 1.5rem;
+  min-height: 0;
 }
 @media (any-pointer: coarse) {
   .railTime {

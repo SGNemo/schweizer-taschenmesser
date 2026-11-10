@@ -84,14 +84,15 @@ test.describe('desktop (1920x1080)', () => {
     await expect(clock).toBeVisible();
     await expect(clock).toHaveText('14:07');
     const [s, c] = [(await sidebar.boundingBox())!, (await clock.boundingBox())!];
-    // The tile sits on whole pixels inside the rail, the time right under it.
+    // The tile sits inside the rail, the time right under it.
     const tile = (await sidebar
       .getByRole('link', { name: /Startseite|Übersicht/ })
       .first()
       .locator('svg')
       .boundingBox())!;
     expect(tile.width).toBe(tile.height);
-    expect(Number.isInteger(tile.x) && Number.isInteger(tile.y)).toBe(true);
+    // Every edge on the 4 px grid: whole device pixels at 100, 125 and 150 % display scaling.
+    for (const v of [tile.x, tile.y, tile.width]) expect(v % 4).toBe(0);
     expect(tile.x).toBeGreaterThanOrEqual(s.x);
     expect(tile.x + tile.width).toBeLessThanOrEqual(s.x + s.width);
     expect(c.y).toBeGreaterThanOrEqual(tile.y + tile.height);
