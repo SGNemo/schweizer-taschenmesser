@@ -2,8 +2,9 @@
 //! hands over typed actions; the sink never sees a network byte and never decides.
 //!
 //! Contract for an implementation (the Windows one lives in `crates/remote-input`, wired by the
-//! shell): every method returns at once (a worker thread behind it does the system calls), and it
-//! logs nothing.
+//! shell): every method returns at once (a worker thread behind it does the system calls) – except
+//! `state()` after a quiet time, which may wait a bounded moment (see [`InputSink::state`]) – and
+//! it logs nothing.
 
 use super::wire::{Button, Key, Media, PcState, Record};
 use std::fmt;

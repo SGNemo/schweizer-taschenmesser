@@ -41,7 +41,8 @@ const ASK_LIST_MAX: usize = 6;
 
 // ---- the sink ----
 
-/// What the hub's input session acts through. Returns at once: the worker thread does the calls.
+/// What the hub's input session acts through. Returns at once – the worker thread does the calls –
+/// except `state()` after a quiet time (bounded, see `InputSink::state`).
 pub struct Sink(Worker);
 
 impl Sink {
