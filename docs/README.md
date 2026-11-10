@@ -15,12 +15,12 @@ Chats: root [CLAUDE.md](../CLAUDE.md) first, then only the row you need. Budgets
 | [ROADMAP.md](ROADMAP.md) | ideas, not built | proposing features |
 | [PROMPT-TEMPLATES.md](PROMPT-TEMPLATES.md), [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md) | prompt blocks; Claude Code or agents? | writing a prompt |
 | [meta/](meta/DOCS-GUIDE.md) | docs guide, agent team ([AGENTS](meta/AGENTS.md), `agents-v3/`), reports | changing docs or agents |
-| [design/](design/README.md) | design spec, [MODULE-IDENTITY](design/MODULE-IDENTITY.md), [FOCUS-GUIDELINES](design/FOCUS-GUIDELINES.md) (checklist for every feature), concepts of running rounds | module/design work |
+| [design/](design/README.md) | design spec, [MODULE-IDENTITY](design/MODULE-IDENTITY.md), [FOCUS-GUIDELINES](design/FOCUS-GUIDELINES.md) (checklist for every feature), concepts | module/design work |
 | [product/](product/README.md) | module plan and product rounds (partly German) | planning modules |
-| [qa/](qa/CONSOLIDATED.md) | QA findings that tests cite | a cited finding |
+| [qa/](qa/CONSOLIDATED.md) | QA findings tests cite | a cited finding |
 | [features/](features/README.md), [security/](security/README.md), [perf/](perf/README.md) | feature notes and reports | that topic |
 | [i18n/](i18n/README.md), [legal/](legal/) | app languages; maintainer checklists | UI text; legal |
-| [archive/](archive/README.md) | history (hidden from scans) | never by default |
-| `assets/screenshots/`, `brand/`, `design-proposals/` | README pictures, brand, token tests | design work |
+| [archive/](archive/README.md) | history (hidden from scans) | never |
+| `assets/screenshots/`, `brand/`, `design-proposals/` | pictures, brand, token tests | design work |
 
 Users (English; German copies `*.de.md`): [installation](user/installation.md) · [modules](user/modules.md) · [ai-assistant](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [sync](user/sync.md) · [backup](user/backup.md) · [security](user/security.md) · [faq](user/faq.md) · [spotify](user/spotify.md) · [browser-extension](user/browser-extension.md) · [development](user/development.md)

@@ -13,7 +13,7 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | `server/` | Sync server (Fastify 5 + better-sqlite3), Dockerfile, compose |
 | `mcp/` | MCP stdio wrapper around the local import API (own project) |
 | `contract/` | `lww-cases.json` – merge-rule fixtures used by web and server tests |
-| `docs/` | index [`README.md`](README.md); `user/` (user docs, English + `*.de.md`), `architecture.md` + `architecture/`, `howto/`, `decisions/`, `AI-IMPORT.md`, `STATUS.md`, `MANUAL-TESTS.md`, `ROADMAP.md`, `CHATS.md`, `PROMPT-TEMPLATES.md`, `meta/`, `security/`, `perf/`, `features/`, `archive/`, `design-proposals/`, `brand/` (rendered headers), `screenshots/` |
+| `docs/` | index [`README.md`](README.md); `user/` (user docs, English + `*.de.md`), `architecture.md` + `architecture/`, `howto/`, `decisions/`, `AI-IMPORT.md`, `STATUS.md`, `MANUAL-TESTS.md`, `ROADMAP.md`, `CHATS.md`, `PROMPT-TEMPLATES.md`, `meta/`, `security/`, `perf/`, `features/`, `archive/`, `design-proposals/`, `brand/` (rendered headers), |
 | root files | `README.md` (short, German), `LICENSE` (MIT), `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` |
 | `site/` | Website (Astro, static, own `package.json`): download buttons from `src/release/latest.json` (refreshed by `scripts/fetch-release.mjs`), DE at `/`, EN at `/en`, legal placeholders, tokens pinned to the app (`scripts/tokens.test.mjs`); deployment via Cloudflare Pages ([site/README.md](../site/README.md)) |
 | `.github/workflows/` | `ci.yml`, `release.yml`, `dev-preview.yml` (reusable, called from `ci.yml`), `site.yml` (only on `site/**` changes) |

@@ -1,6 +1,6 @@
 # Docs diet 2026-11 – follow-up packages
 
-Ready prompts for what is larger than the diet PR or touches code. Background and numbers: [DOCS-DIET-2026-11.md](DOCS-DIET-2026-11.md). One package = one branch = one PR; they do not depend on each other unless said. Every prompt uses the head line of [PROMPT-TEMPLATES](../PROMPT-TEMPLATES.md#shorter-prompts). Delete a package here in the PR that finishes it.
+Ready prompts for what is larger than the diet PR or touches code. Background and numbers: [DOCS-DIET-2026-11.md](DOCS-DIET-2026-11.md). One package = one branch = one PR; they do not depend on each other unless said. The prompts use the proposed lean head ([DOCS-DIET-2026-11.md](DOCS-DIET-2026-11.md) §4), with the blocks of [PROMPT-TEMPLATES](../PROMPT-TEMPLATES.md) it cites. Delete a package here in the PR that finishes it.
 
 | # | Package | Model | Why this model |
 | --- | --- | --- | --- |
@@ -12,12 +12,13 @@ Ready prompts for what is larger than the diet PR or touches code. Background an
 | 6 | Agent prompts: remove repeats, finish the switch-over | Fable | guardrail texts: every cut is a trade-off, and Sven applies it |
 | 7 | MANUAL-TESTS by device, done items out | Opus | regrouping 760 lines without losing an id |
 | 8 | Move the round-5 fixture, drop the rest of `qa/round-5` | Haiku | one file move and a path in one spec |
+| 9 | STATUS lower half: "Offen – macht Sven" as one numbered list | Opus | needs care with what is done; Sven confirms |
 
 ## 1 · `check:docs` enforces freshness and size
 
 ```
 Routing: Claude Code · check:docs freshness rules · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: ci/check-docs-freshness · Read: docs/meta/DOCS-GUIDE.md, web/scripts/check-docs.mjs
 
 Goal: CHATS.md and STATUS.md cannot grow back; a stale row fails locally and in CI.
@@ -35,7 +36,7 @@ Review: review-loop · then file-pr (label no-changelog)
 
 ```
 Routing: Claude Code · CHATS.md open-PR table from GitHub · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: feat/chats-generated · Read: docs/CHATS.md, web/scripts/chats-status.mjs
 
 Goal: nobody maintains "Offene PRs" and "Läuft gerade" by hand; the tables are written from the open PRs.
@@ -52,11 +53,11 @@ Review: review-loop · then file-pr
 
 ```
 Routing: Claude Code · split lookup docs over budget · Haiku
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: docs/split-lookup-docs · Read: docs/meta/DOCS-GUIDE.md ("A file over budget is split by topic")
 
 Goal: a chat that needs one decision or one path reads at most 3 000 tokens.
-Scope: docs/ARCHITECTURE-MAP.md (6.9 k, budget 4.2 k), docs/decisions/{core,ui-shell,modules,features,plan,meta,focus}.md, docs/howto/ci.md, docs/architecture/connectors.md, docs/legal/DATA-FLOWS.md; not: docs/HOW-TO.md "Which checks run when" (owned by ci/cleanup-round-3), docs/RULES.md.
+Scope: docs/ARCHITECTURE-MAP.md (6.9 k, budget 4.2 k), docs/decisions/{core,ui-shell,modules,features,plan,meta,focus}.md, docs/howto/ci.md, docs/architecture/connectors.md, docs/legal/DATA-FLOWS.md; not: docs/HOW-TO.md "Which checks run when" (a CI clean-up edits it in parallel), docs/RULES.md.
 Done means:
 - Every bullet moves unchanged into `<file>/<topic>.md` or `<area>-<topic>.md`; the old file becomes an index with one line per topic. No bullet is reworded or dropped (`git diff --stat` shows moves; a script in the PR text counts bullets before and after).
 - Inbound links and anchors still resolve (`npm run check:docs`, `check:doclinks`); section names that code comments cite stay findable (`grep -rn "<old heading>" web/src`).
@@ -69,7 +70,7 @@ Review: review-loop · then file-pr (label no-changelog). One PR per two or thre
 
 ```
 Routing: Claude Code · design rounds 1–7 into the spec · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: docs/design-rounds-summary · Read: docs/design/README.md, docs/design/DESIGN-SPEC.md
 
 Goal: DESIGN-SPEC stands alone; the seven round files and their mockups can go (≈ 1 MB, 56 KB Markdown).
@@ -86,7 +87,7 @@ Review: review-loop · then file-pr (label no-changelog)
 
 ```
 Routing: Claude Code · notes repo housekeeping · Haiku
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing
 Repos: SGNemo/nemo-scribble (push to main per its README), SGNemo/schweizer-taschenmesser (PR #553)
 
 Goal: `chats:status` shows a board a chat can read in one screen.
@@ -102,7 +103,7 @@ Review: review-loop for #553
 
 ```
 Routing: Claude Code · agents v3.1 prompts and switch-over · Fable
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: docs/agents-v31-switch · Read: docs/meta/agents-v3/README.md ("Switch-over"), SHARED.md
 
 Goal: one description of the agent team that is true, and system prompts that carry role and limits only.
@@ -119,7 +120,7 @@ Review: council · then file-pr (label no-changelog)
 
 ```
 Routing: Claude Code · MANUAL-TESTS regrouped · Opus
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: docs/manual-tests-by-device · Read: docs/MANUAL-TESTS.md
 
 Goal: Sven sits at one device and works one list top to bottom (33 k tokens, 760 lines today, grouped by the PR that added the test).
@@ -135,7 +136,7 @@ Review: review-loop · then file-pr (label no-changelog)
 
 ```
 Routing: Claude Code · round-5 fixture out of docs · Haiku
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: test/round5-fixture-move · Read: web/e2e/first-contact-b.spec.ts
 
 Goal: no test reads a file under docs/; the finished first-contact round keeps one summary.
@@ -144,5 +145,23 @@ Done means:
 - `sparkasse-demo.csv` lives under web/e2e/fixtures/, the spec is green (`npx playwright test e2e/first-contact-b.spec.ts`).
 - The MESSAGE.md files stay until Sven has sent them (CHATS "Handgriffe"); FINDINGS of A–D become one `docs/qa/round-5.md` with the open findings only.
 Stop and ask only if: a finding is still open and has no PR.
+Review: review-loop · then file-pr (label no-changelog)
+```
+
+## 9 · STATUS lower half: "Offen – macht Sven" as one numbered list
+
+The diet PR left everything below "Heute möglich in 15 Minuten" in `docs/STATUS.md` unchanged on purpose (it is the maintainer's own list).
+
+```
+Routing: Claude Code · STATUS "Offen – macht Sven" tidy · Opus
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
+Branch: docs/status-open-list · Read: docs/STATUS.md, docs/CHATS.md
+
+Goal: Sven reads one numbered list of what only he can do, each item one or two lines with the link to its instructions.
+Scope: docs/STATUS.md from "Heute möglich in 15 Minuten" down; long instructions move to docs/MANUAL-TESTS.md "Anleitungen für Sven"; not: the heading "Offen – macht Sven" (pinned, `web/src/strings.ts` cites it).
+Done means:
+- Numbering 1…n (today 0b, 0a, 0, then bullets, then 10–13); items marked "erledigt" are gone; the social preview appears once; "Modul-Review 2026-10-01" is one line about package 7; "Nächste sinnvolle Schritte" does not repeat CHATS.
+- Every removed sentence is either done (evidence in the PR) or moved (table old → new in the PR). Nothing about keys, keystore or legal items is reworded.
+Stop and ask only if: it is unclear whether an item is done (bundle these, at most 4).
 Review: review-loop · then file-pr (label no-changelog)
 ```

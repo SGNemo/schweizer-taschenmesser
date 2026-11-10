@@ -34,7 +34,7 @@ Two variants differ in one point only (where the state figure sits):
 | Einrichtung          | `shots/mockup-variant-a-{1280,412}-{light,dark}.jpg` | `shots/mockup-variant-b-{1280,412}-{light,dark}.jpg` |
 | Schnellerfassung (B) | –                                                    | `shots/mockup-quick-capture-b-*.jpg`                 |
 
-Mockups: mockups/ (removed 2026-11-10, in the git history) (`node ../docs/design/settings-v3/mockups/render.mjs` from `web/`).
+Mockups: removed 2026-11-10, in the git history.
 
 **Recommendation: B.** The state already has a home on Sync and KI (the status card), so a head figure would say it twice; B keeps all 16 heads at one height, which is calmer when switching tabs. The figure and the primary action sit together in the tinted card, so "what is the state" and "what do I do" are one glance, also on the phone.
 

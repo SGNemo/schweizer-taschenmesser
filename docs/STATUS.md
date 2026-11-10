@@ -8,7 +8,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 ## Laufende Runden
 
-- **UI-Audit 4.0** ([design/ui-audit-2026-11/](design/ui-audit-2026-11/REPORT.md), Entscheidungen [decisions/ui-shell.md](decisions/ui-shell.md)): Paket 0a (Wächter, Ratsche, Lade-Robustheit, Hauptthread), V-1, AE1, AE4 und 0b-1 Fundament sind auf `develop`; 0b-2 läuft. Offen daraus: Monatskalender-Zeilen 18 px (0b-4), Tooltip der eingeklappten Seitenleiste schließt nicht mit Escape, Tray-Hinweis für den H1-Fall erst nach dem Handtest, `disk_delete` nur per Attribut `async`.
+- **UI-Audit 4.0** ([design/ui-audit-2026-11/](design/ui-audit-2026-11/REPORT.md), Entscheidungen [decisions/ui-shell.md](decisions/ui-shell.md)): Paket 0a (Wächter, Ratsche, Lade-Robustheit, Hauptthread), V-1, AE1, AE4 und 0b-1 Fundament sind auf `develop`; 0b-2 läuft. Offen daraus: Monatskalender-Zeilen 18 px (0b-4), Tooltip der eingeklappten Seitenleiste schließt nicht mit Escape; technische Reste im [LEDGER](design/ui-audit-2026-11/LEDGER.md).
 - **Fernsteuerung des PCs vom Handy** ([design/remote-control/PACKAGES.md](design/remote-control/PACKAGES.md), Regel [rules/remote-control.md](rules/remote-control.md)): PC-Seite, Modul „Fernbedienung“ und Benachrichtigung der vollen Stufe sind auf `develop`. Offen: Latenzmessung mit echtem Handy (#690), dann Seite Touchpad; Schalter für die Benachrichtigung; Lautstärketasten (`feat/remote-volume-keys`, braucht Android-Build).
 - **Website Runde 5** ([design/site/ROUND-5.md](design/site/ROUND-5.md)): Pakete 2–4 auf `develop`; Paket 1 (neue Bilder, Social-Preview) wartet auf 0b-8. Website-Screenshots bleiben bis dahin deutsch und zeigen das alte Logo.
 - **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 auf `develop`; Folge-Prompts in [product/clock/](product/clock/01-followups.md), nicht gestartet.
@@ -25,7 +25,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 - Einstellungen v2 und v3 (Überblick, Suche, Profile, Reiter „Einrichtung“): [decisions/ui-shell.md](decisions/ui-shell.md).
 - Logo v2 bis v2.2 und eingeklappte Seitenleiste: [decisions/ui-brand.md](decisions/ui-brand.md).
 - Sprachen nur Deutsch + Englisch, es/fr/pt-BR eingefroren: [i18n/FROZEN.md](i18n/FROZEN.md).
-- Agenten-Team v3.1 (sieben Agenten, Routing, Budgets): [meta/AGENTS.md](meta/AGENTS.md), [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md).
+- Agenten-Team v3.1 (sieben Agenten, Routing, Budgets): [meta/AGENTS.md](meta/AGENTS.md), [meta/WORK-ROUTING.md](meta/WORK-ROUTING.md). Offen bei Sven: Definitionen mit `ant apply` anwenden, Entscheidungs-Bullet in `decisions/meta.md`.
 - Umzug v2 und Importer für andere Apps: [features/import-v2.md](features/import-v2.md), [features/import-apps.md](features/import-apps.md).
 - Automatisierungen (Engine, Modul-Verträge, Einstellungen): [decisions/features.md](decisions/features.md). Vorschlag offen: Regel-Editor und Widget.
 - Datenebene Performance (Phase 1, P2a–d): [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md); E2E-Tempo und CI: [perf/CI-BASELINE-2-2026-11-04.md](perf/CI-BASELINE-2-2026-11-04.md).
@@ -33,7 +33,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 - Planen-Gruppe, Geld-Gruppe, Haushalt & Tresor, Wissen/Medien/Dienste, Cockpit-Modus, Rechner (Modi, Plotter), Anonyme Persona: [CHANGELOG](../CHANGELOG.md), Rezepte in [HOW-TO](HOW-TO.md).
 - Fokus- und Aufmerksamkeitshilfen (Pakete 1–4, Runden 2–5), Komfort-Review, Lesbarkeit: [features/focus-aids.md](features/focus-aids.md), [product/comfort/07-summary.md](product/comfort/07-summary.md). Nicht in `develop`: Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`).
 - QA-Runden (Personas, P1–P6, Runde 4 Chaos): [qa/CONSOLIDATED.md](qa/CONSOLIDATED.md), [qa/round-4/chaos/FINDINGS.md](qa/round-4/chaos/FINDINGS.md) (X25/X31/X37 nur teilweise). Offen: Feld-Reifegrad (Erinnerungs-Felder, Zock-Modus), Kalender „Wetter am Tag“ und „Als Ort speichern“.
-- Fehlerberichte, Sicherheits-Review vor dem Launch, Änderungsprotokoll, Supporter-Modus, KI abschalten, Spracheingabe, KI-Eintragen: [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md) (offen daraus: X2 Pipe-Erstinstanz, V2 Windows-Hello-Wrapping, T2 Android-Manifest-Prüfung in CI), [howto/bug-reports.md](howto/bug-reports.md), [howto/changelog.md](howto/changelog.md).
+- Fehlerberichte, Sicherheits-Review vor dem Launch, Änderungsprotokoll, Supporter-Modus, KI abschalten, Spracheingabe, KI-Eintragen: [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md) (offen daraus u. a. X2 Pipe-Erstinstanz, V2 Windows-Hello-Wrapping, V4, P1 SHA-Pinning, S5 Sync-Token in den `SecretStore`; vollständig: Abschnitt B des Berichts), [howto/bug-reports.md](howto/bug-reports.md), [howto/changelog.md](howto/changelog.md).
 - Docs-Diät 2026-11 (Startkosten eines Chats, CHATS/STATUS gekürzt, abgeschlossene Arbeitsordner entfernt): [meta/DOCS-DIET-2026-11.md](meta/DOCS-DIET-2026-11.md).
 
 ## Heute möglich in 15 Minuten
@@ -76,7 +76,7 @@ Zielbild B: 9 Nav-Einträge + „Dieser PC“; Gruppen „Geld“ und „Listen�
 2. Update-Test auf echten Geräten mit dem nächsten Release (Schritte unter „Offen – macht Sven").
 3. Unverifizierte Adressen/Formate mit echten Daten prüfen (N1, C7, L4, Provider-Endpunkte).
 4. Browser-Erweiterung auf echter Hardware prüfen (Checkliste X1–X14 in [MANUAL-TESTS.md](MANUAL-TESTS.md)), dann Store-/Release-Zip-Entscheidung.
-5. Entscheidung: FAB-Änderung (Chat 10). Kaltstart/Precache: [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
+5. Kaltstart/Precache: [perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md).
 
 ## Manuelle Tests offen
 
@@ -95,7 +95,6 @@ Hardware-Checklisten (D1–D16, E1–E5, N1–N13, C7, L4, F1–F11 Fokushilfen 
 ### Nemo-Rebranding
 
 10. **GitHub-Repo umbenennen (optional).** Betrifft `REPO` (`core/update/github.ts`), den Updater-Endpunkt in `tauri.conf.json`, `RELEASES_PREFIX` in `update.rs`, README-Links und den Link-Check. GitHub leitet alte URLs zwar um, aber ein Update-Endpunkt darf nie kaputtgehen: erst einen Plan mit Übergangs-Release schreiben lassen, dann umbenennen.
-11. **Download-Buttons der README:** erledigt – README und `docs/user/installation.md` verlinken seit dem Folge-PR `Nemo-Portable.exe` / `Nemo.apk` (das neueste stabile Release trägt beide Namen). Die `Taschenmesser-*`-Kopien entfallen ab dem nächsten Release (siehe 13); `v0.3.1` und älter behalten ihre Dateien.
 12. **Social-Preview hochladen:** `docs/brand/social-preview.png` in GitHub → Settings → Social preview.
 13. **Erledigt (ab dem nächsten Release nach `v0.3.1`):** Releases tragen nur noch `Nemo-*`; `latest.json` zeigt auf `Nemo-Portable.exe`. Folge: Installationen ≤ 0.2.x können sich nicht mehr selbst aktualisieren (Neuinstallation nötig); Clients ab 0.3.0 akzeptieren beide Namen. Offen: Die Rust-/TS-Allowlists (`PORTABLE_ASSETS`, `APK_ASSET_PAIRS`) nennen den Altnamen noch, harmlos, später entfernbar. Optional: MCP-Variablen `NEMO_TOKEN/NEMO_URL` als Alias zu `TASCHENMESSER_*`.
 

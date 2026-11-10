@@ -6,24 +6,24 @@ Report of the PR `docs/diet-2026-11` (2026-11-10). Measure again any time: `node
 
 | What | Before | After | Change |
 | --- | ---: | ---: | ---: |
-| Start cost, module fix | 67,594 | 36,651 | −46 % |
-| Start cost, docs PR | 58,100 | 27,004 | −54 % |
-| Start cost, new module | 79,025 | 48,098 | −39 % |
-| Agent thread `nemo-lead` | 25,414 | 11,368 | −55 % |
-| Agent thread, the other six (each) | 8,500–9,500 | 8,100–9,050 | −5 % |
-| Root `CLAUDE.md` (every chat, always) | 3,187 | 2,728 | −14 % |
-| `docs/CHATS.md` | 113 lines, 15,311 | 77 lines, 1,712 | −89 % |
-| `docs/STATUS.md` | 320 lines, 20,635 | 115 lines, 4,473 | −78 % |
-| `docs/README.md` (index) | 1,464 | 715 | −51 % |
-| `docs/PROMPT-TEMPLATES.md`, the six cited blocks | 881 | 621 | −30 % |
-| All Markdown in the repo | 579 files, 1,047,475 | 546 files, 902,265 | −14 % |
+| Start cost, module fix | 67,594 | 36,850 | −45 % |
+| Start cost, docs PR | 58,100 | 27,218 | −53 % |
+| Start cost, new module | 79,025 | 48,297 | −39 % |
+| Agent thread `nemo-lead` | 25,414 | 11,635 | −54 % |
+| Agent thread, the other six (each) | 8,532–9,495 | 8,145–9,075 | −5 % |
+| Root `CLAUDE.md` (every chat, always) | 3,187 | 2,755 | −14 % |
+| `docs/CHATS.md` | 113 lines, 15,311 | 82 lines, 1,952 | −87 % |
+| `docs/STATUS.md` | 320 lines, 20,635 | 114 lines, 4,418 | −79 % |
+| `docs/README.md` (index) | 1,464 | 698 | −52 % |
+| `docs/PROMPT-TEMPLATES.md`, the six cited blocks | 881 | 626 | −29 % |
+| All Markdown in the repo | 579 files, 1,047,475 | 548 files, 910,997 | −13 % |
 | Other files removed (mockup HTML, audit tools, JSON, SVG) | – | 66 files | – |
 
 What a chat reads at its start (the list is `START` in the script): root `CLAUDE.md`, `docs/README.md`, `docs/CHATS.md`, `docs/STATUS.md` (it adds a line), the six blocks of `PROMPT-TEMPLATES.md` the prompt head cites, the board of the notes repo, plus per task: module fix = `web/src/modules/CLAUDE.md`, `ARCHITECTURE-MAP.md`, `howto/design-rules.md`, `howto/changelog.md`; docs PR = `meta/DOCS-GUIDE.md`; new module = the module-fix set plus `RULES.md`, `howto/new-module.md`, `howto/seed-data.md`, `design/MODULE-IDENTITY.md`, `design/FOCUS-GUIDELINES.md`. An agent thread: its system prompt, `SHARED.md`, root `CLAUDE.md`; the lead also `CHATS.md` and `WORK-ROUTING.md`.
 
-**Targets.** Start cost at least 30 % lower: met for all three chat tasks and the lead. **Missed for the six other agents (−5 %)**: their cost is system prompt + `SHARED.md` + root `CLAUDE.md`; the first two are guardrail texts that only the maintainer applies (`ant apply`), so this PR changed references only (package 6). **Missed: root `CLAUDE.md` is at 2,728, its budget is 2,600.** The rest is security wording that this PR may shorten but not move without a decision (rule change 1 below closes the gap). CHATS on one screen: met (77 lines, budget 2,000 tokens).
+**Targets.** Start cost at least 30 % lower: met for all three chat tasks and the lead. **Missed for the six other agents (−5 %)**: their cost is system prompt + `SHARED.md` + root `CLAUDE.md`; the first two are guardrail texts that only the maintainer applies (`ant apply`), so this PR changed references only (package 6). **Missed: root `CLAUDE.md` is at 2,755, its budget is 2,600.** The rest is security wording that this PR may shorten but not move without a decision (rule change 1 below closes the gap). CHATS on one screen: met (budget 2,000 tokens). **Not done here:** the lower half of STATUS ("Offen – macht Sven", "Nächste sinnvolle Schritte", the module review) is the maintainer's own list and stayed as it was apart from one finished item; package 9 tidies it. **Decided for the maintainer, easy to undo:** `meta/AGENTS.md` now carries the v3.1 roster although `agents-v3/README.md` still calls v3.1 a proposal; `ant apply` and the decision bullet remain his (CHATS "Handgriffe").
 
-After the diet the largest start items are the board of the notes repo (15,610 if read in full; 111 items, 110 open, 38 older than the one-week rule) and `ARCHITECTURE-MAP.md` (6,883, budget 4,200): rule change 2 and package 3.
+After the diet the largest start items are the board of the notes repo (15,610 if read in full; 111 items, 110 open, 38 older than the one-week rule) and `ARCHITECTURE-MAP.md` (6,879, budget 4,200): rule change 2 and package 3.
 
 ## 2. What the measurement found
 
@@ -31,9 +31,10 @@ After the diet the largest start items are the board of the notes repo (15,610 i
 - **STATUS.md:** "Nächste eine Sache" was a 202-line work log (62,949 characters); 31 lines still said "PR offen" for merged PRs, 14 named branches that are gone. The header said "no open PRs".
 - **Notes between chats:** the rule is the private notes repo (root `CLAUDE.md`, since #681). The folder `scribble/` in this repo is a leftover (77 files, 47,909 tokens; draft PR #553 removes it); its README still described the old "small PR" way. `chats:status` falls back to that stale board when no clone of the notes repo is at hand. This PR leaves the folder to #553.
 - **Stale facts fixed here:** five app languages as current (`CONTRIBUTING.md` twice, `howto/seed-data.md`, `MANUAL-TESTS.md` V4, two decision bullets marked); the roster of 19 agents in `meta/AGENTS.md` (now the seven of v3.1); identity fields "(hue, head, surface, signature)" (the type has `widget`, not `surface`); the LWW rule "twice" in `server/CLAUDE.md` (it exists three times); crate lists in root and `web/src-tauri/CLAUDE.md` (4 and 5 of 11 crates, a clippy list that differed from CI); `user/` as "German user docs" in the map; `docs/README.md` (a row for `screenshots/`, which does not exist; no rows for `qa/`, `rules/`, `LAUNCH-CHECKLIST.md`); `extension/CLAUDE.md` missing from the area lists and from `check:docs`.
+- **Changed in an agent prompt (takes effect only after `ant apply`):** `nemo-docs` removes a "Wartet auf Sven" row with the evidence "merged PR, its hand tests in MANUAL-TESTS with an id, its decision in the list or answered by a bullet" instead of "merged PR + ticked test / decision bullet", because hand tests no longer live in CHATS rows.
 - **Not fixed, needs the maintainer:** git tags end at `v0.3.1` while `web/package.json` and `CHANGELOG.md` say `1.0.0` (noted in STATUS); `agents-v3/README.md` still calls v3.1 a proposal while `SHARED.md` calls it binding; `docs/decisions/meta.md` has no v3.1 bullet and describes the older light path; `claude-lock.json` lists 22 agents.
 - **Duplicates (one fact in several files):** change note (5 places), git rules (5), notes between chats (7), "what to touch in docs" (3), questions to the maintainer (3, with different counts), Chromium path (5), module rules (3), roster (5). This PR made root `CLAUDE.md` the source for chats and lets `PROMPT-TEMPLATES`, `HOW-TO` and the area files point to it; `SHARED.md` stays the source for agents.
-- **Script heuristics, not all real:** 206 backticked paths that do not exist and 121 branch names that are gone remain, most of them in finished reports that describe the past; 34 lines match a stale-wording pattern (mostly "five languages" in historical reports).
+- **Script heuristics, not all real:** 217 backticked paths that do not exist and 124 branch names that are gone remain, most of them in finished reports that describe the past; 48 lines match a stale-wording pattern (mostly "five languages" in historical reports).
 
 ## 3. What changed
 
@@ -52,7 +53,7 @@ No rule was dropped or changed in meaning. `docs/RULES.md` and `docs/rules/remot
 | Step 4 (end: notes, which docs to touch) | root | root, same rules; "default branch" now also says `main`, as SHARED does |
 | Modules: never import each other, sanctioned reads | root + `web/src/modules/CLAUDE.md` + RULES | unchanged in all three |
 | Modules: widget from the catalogue (base types, red only for overdue, context line, `attention`), `area`, `identity`, page head | root | `web/src/modules/CLAUDE.md` (same words; `surface` corrected to `widget`); root names the five mandatory parts and points there; full text RULES "Home screen & widgets" |
-| Modules: onboarding, layout, seed | root + area file | both, unchanged |
+| Modules: onboarding, layout, seed | root + area file | area file, full and unchanged; root names onboarding and seed ("never merge a module without one") and points there; `layout` and "`seed` in the manifest + `seed.ts`" only in the area file |
 | LAN sync | root short + RULES full | root short (words "interface" and "with a" trimmed, every clause kept) + RULES full + a pointer line in `web/src-tauri/CLAUDE.md` |
 | Remote control | root (11 clauses) + `rules/remote-control.md` full | root keeps: pairing is not permission, own input session, stored home network, grant at the PC, off by default, native dialog for every widening, always visible, one click ends, never screen/clipboard/files/titles, never log input, simulation only in `crates/remote-input`. Left to the full text (all present there): "never while a mouse/keyboard session is open", media/volume separate from mouse/keyboard, fixed key and media lists, rate limits, "Windows only", "no Tauri command simulates input"; the last two are also in `web/src-tauri/CLAUDE.md` now |
 | Disk module | root; "new Tauri command: `build.rs` + capabilities" in root and area | root (guard, second confirmation, recycle bin: same words); the command recipe only in `web/src-tauri/CLAUDE.md` (was there already) |
@@ -139,7 +140,7 @@ About half the length of today's prompts. Safety stays in the files the head lin
 
 ```
 Routing: Claude Code · <title> · <model>
-Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Closing: #closing · PR: #pr-text
+Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: <type>/<topic> · Read: <the one area doc> (nothing else up front)
 
 Goal: <one sentence: what is different for the user or the next chat afterwards>

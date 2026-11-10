@@ -52,7 +52,11 @@ function board() {
   const arg = process.argv.indexOf('--notes');
   const dirs = [arg > 0 ? process.argv[arg + 1] : null, process.env.NEMO_SCRIBBLE_DIR, join(repo, '..', 'nemo-scribble')];
   const dir = dirs.find((d) => d && existsSync(join(d, 'board')));
-  if (!dir) return file('scribble/BOARD.md', 'legacy board in this repo; no clone of the notes repo found');
+  if (!dir) {
+    if (arg > 0) console.error(`--notes ${process.argv[arg + 1]}: no board/ folder there, falling back`);
+    if (!has('scribble/BOARD.md')) console.error('no board found (pass --notes <clone of the notes repo>): counted as 0');
+    return file('scribble/BOARD.md', 'legacy board in this repo; no clone of the notes repo found');
+  }
   const items = readdirSync(join(dir, 'board')).filter((f) => f.endsWith('.md'));
   const text = items.map((f) => readFileSync(join(dir, 'board', f), 'utf8'));
   const open = text.filter((t) => !/^- \[x\]/i.test(t)).length;
@@ -62,6 +66,7 @@ function board() {
   };
 }
 
+// The blocks a prompt head cites for a Claude Code chat (#routing is read by the prompt's author, not the chat).
 const HEAD_ANCHORS = ['git', 'hard-rules', 'knowledge', 'questions', 'closing', 'pr-text'];
 // Every chat: root rules, the index, the running-work page, the status page it has to add a line to,
 // the prompt blocks its head line cites, and the board between chats.
@@ -149,6 +154,9 @@ const remoteBranches = new Set(
     .split('\n')
     .map((b) => b.replace(/^origin\//, '')),
 );
+// Without remote branches (no remote, single-branch or CI checkout) "gone" would mean every branch: skip that finding.
+const knowsBranches = remoteBranches.size > 2;
+const shallow = git('rev-parse', '--is-shallow-repository').trim() === 'true';
 const STALE = [
   ['five app languages', /\b(five|5|fünf) (app |UI )?(languages|Sprachen)\b/i],
   ['21 agents / agents-v2 as current', /\b21 agents\b|\b21 Agenten\b/i],
@@ -178,7 +186,7 @@ for (const f of mdFiles.filter(SCAN)) {
       const p = code.replace(/[:#].*$/, '').replace(/[.,;)]+$/, '');
       if (!has(p)) findings.missingPaths.push(`${f} → ${p}`);
     } else if (/^(feat|fix|docs|ci|chore|review|qa|perf|test|design)\/[a-z0-9][a-z0-9._-]+$/.test(code)) {
-      if (!remoteBranches.has(code)) findings.goneBranches.push(`${f} → ${code}`);
+      if (knowsBranches && !remoteBranches.has(code)) findings.goneBranches.push(`${f} → ${code}`);
     }
   }
   for (const [label, re] of STALE) {
@@ -226,7 +234,7 @@ function ageReport(rel) {
   const merged = /\b(gemergt|merged)\b/i;
   const branchDone = (text) =>
     [...text.matchAll(/`((?:feat|fix|docs|ci|chore|review|qa|perf|test|design)\/[a-z0-9._-]+)`/g)].some(
-      (m) => !remoteBranches.has(m[1]),
+      (m) => knowsBranches && !remoteBranches.has(m[1]),
     );
   return {
     lines: lines.length,
@@ -314,6 +322,8 @@ out.push(
 out.push('## Top 30 files', '', table(['File', 'Chars', 'Tokens', 'Last change'], result.top.map((s) => [s.file, n(s.chars), n(s.tokens), lastChange[s.file] ?? '–'])), '');
 out.push('## Tokens per folder', '', table(['Folder', 'Files', 'Tokens'], result.folders.map(([k, v]) => [k, v.files, n(v.tokens)])), '');
 out.push('## Freshness', '');
+if (!knowsBranches) out.push('- No remote branches in this clone: branch findings skipped.');
+if (shallow) out.push('- Shallow clone: "last change" dates and line ages stop at the clone boundary.');
 out.push(`- Dead relative links: ${result.findings.deadLinks.length}`);
 for (const l of result.findings.deadLinks.slice(0, 40)) out.push(`  - ${l}`);
 out.push(`- Paths in backticks that do not exist: ${result.findings.missingPaths.length} (per file: ${byFile(result.findings.missingPaths).slice(0, 15).map(([f, c]) => `${f} ${c}`).join(', ') || '–'})`);

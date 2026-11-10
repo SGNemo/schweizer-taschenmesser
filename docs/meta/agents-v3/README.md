@@ -77,6 +77,6 @@ Dropped without replacement: `nemo-creativity` (ideas → a Fable chat in Claude
 
 ## Switch-over (after Sven's decision)
 
-1. Rename `docs/meta/agents-v3/` → `docs/meta/agents/` and replace `agents-v3` everywhere it occurs (`grep -rln agents-v3 docs/meta scripts/agents`): the 7 JSON prompts (incl. nemo-merge's and nemo-reviewer's "Sven merges" paths), `SHARED.md`, `README.md`, `SETUP.md`, `AGENTS.proposed.md`, `scripts/agents/validate.mjs` (default dir and the SHARED.md check), `to-ant.mjs` (default dir), `session.mjs` (`leadFile`, `envFile`); regenerate `.md` (`to-ant.mjs`), run `validate.mjs`, `ant apply`, then `ant apply --prune` for the old paths.
+1. Rename `docs/meta/agents-v3/` → `docs/meta/agents/` and replace `agents-v3` everywhere it occurs (`grep -rln agents-v3 docs/meta scripts/agents`): the 7 JSON prompts (incl. nemo-merge's and nemo-reviewer's "Sven merges" paths), `SHARED.md`, `README.md`, `SETUP.md`, `scripts/agents/validate.mjs` (default dir and the SHARED.md check), `to-ant.mjs` (default dir), `session.mjs` (`leadFile`, `envFile`); regenerate `.md` (`to-ant.mjs`), run `validate.mjs`, `ant apply`, then `ant apply --prune` for the old paths.
 2. Done 2026-11-10 (docs diet): `docs/meta/AGENTS.md` carries the v3.1 roster. Still open: decision bullets in `docs/decisions/meta.md` (text in the PR).
 3. Done 2026-11-10: `docs/meta/agents-v2/` deleted (git history).

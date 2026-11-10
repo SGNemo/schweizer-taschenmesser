@@ -16,7 +16,7 @@ Nothing here is imported by the app. Mockups are standalone HTML with invented d
 | [sync-lan/](sync-lan/CONCEPT.md) | LAN sync concept, notes, review, prototype | finished, reference |
 | [settings-v3/](settings-v3/ROUND-1.md) | settings rounds 1–3 (decisions cite them) | finished, reference |
 | [usecases/kopf-leer/](usecases/kopf-leer/TARGET.md) | use case analysis and target (a spec and the test corpus cite them) | finished, reference |
-| `ROUND-1-DIAGNOSIS.md` … `ROUND-7-MODULES.md`, `mockups/round-*` | the 2026-10 design evaluation behind DESIGN-SPEC (the spec links into rounds 4 and 7) | finished |
+| `ROUND-1-DIAGNOSIS.md` … `ROUND-7-MODULES.md`, `mockups/round-*`, `mockups/readability/` | the 2026-10 design evaluation behind DESIGN-SPEC (the spec links into rounds 4 and 7) | finished |
 | [READABILITY-PLAN.md](READABILITY-PLAN.md), [VISUAL-AUDIT-2026-10-03.md](VISUAL-AUDIT-2026-10-03.md) | plan and audit, built | finished |
 | `mockups/fonts/`, `mockups/adhd/` | font the mockups load; focus-aid mockups ([features/focus-aids.md](../features/focus-aids.md)) | reference |
 

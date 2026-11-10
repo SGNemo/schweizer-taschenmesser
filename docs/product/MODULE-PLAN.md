@@ -44,7 +44,7 @@ Mobile nav: Overview · Calendar · To-dos · Money · More. Library: groups wit
 ## Packages
 | # | Name | Version | Breaking | Depends on |
 |---|---|---|---|---|
-| D1, D2 | design PRs tokens, shell + areas (`docs/design/IMPLEMENTATION-PROMPT.md`) | – | no | – |
+| D1, D2 | design PRs tokens, shell + areas (`docs/design/IMPLEMENTATION-PROMPT.md`, removed 2026-11-10, git history) | – | no | – |
 | 1 | Clean-up (retiring, tools, scratchpad, this PC, findings) | 0.4.0 | yes (messages, habits, time tracking invisible) | D2 |
 | D3, D4 | design PRs components, home (contains the overview actions; package 2 is dropped) | – | no | D1, 1 |
 | 3 | Lists + bookmarks (+ migration runner); new modules in the new style | 0.5.0 | yes | 1, D3 |

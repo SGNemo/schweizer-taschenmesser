@@ -21,7 +21,7 @@ Blocks for the maintainer's prompts; cite the anchor instead of repeating the te
 - Verify every path and command against the repo; stale facts are removed or marked, not guessed.
 - Security rules (signing, secrets, vault, updater, "never user data to the AI") may be shortened but never weakened.
 - No secrets, tokens, real data or private paths (public repo).
-- UI texts in German and English only (`check:i18n`); es/fr/pt-BR are frozen ([i18n/FROZEN.md](i18n/FROZEN.md)).
+- UI texts in German and English only (`check:i18n`); es/fr/pt-BR are frozen ([i18n/FROZEN.md](i18n/FROZEN.md)): do not add or update them.
 
 ## knowledge
 
@@ -36,7 +36,7 @@ Blocks for the maintainer's prompts; cite the anchor instead of repeating the te
 
 ## questions
 
-- **Fragen an Sven:** bundled in one `AskUserQuestion` per stop, at most 3–4, recommended option first ("(Recommended)"), short German labels, no essay questions. What does not change the next step, the chat decides and names in the report.
+- **Fragen an Sven:** bundled in one `AskUserQuestion` per stop, at most 4, recommended option first ("(Recommended)"), short German labels, no essay questions. What does not change the next step, the chat decides and names in the report.
 
 ## closing
 
@@ -46,7 +46,7 @@ Blocks for the maintainer's prompts; cite the anchor instead of repeating the te
 
 ## delegate
 
-Lead → agent, one block per task: **Goal** (why, what done looks like) · **Scope** (files/dirs; read-only or may edit) · **Acceptance** (checks + result) · **Docs** to read · **Branch** `<type>/<topic>` (or "no commit") · **Return** (file `/workspace/<agent-dir>/…` + short summary; verified vs. inferred) · last line: the head line from [#shorter-prompts](#shorter-prompts). Roster: [meta/AGENTS.md](meta/AGENTS.md).
+Lead → agent, one block per task: **Goal** (why, what done looks like) · **Scope** (files/dirs; read-only or may edit) · **Acceptance** (checks + result) · **Docs** to read · **Branch** `<type>/<topic>` (or "no commit") · **Return** (file `/workspace/<agent-dir>/…` + short summary; verified vs. inferred) · last line: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`. Roster: [meta/AGENTS.md](meta/AGENTS.md).
 
 ## pr-text
 
