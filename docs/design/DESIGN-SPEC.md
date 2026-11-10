@@ -155,7 +155,7 @@ Text needs ≥ 4.5:1, UI parts (borders, focus ring, chart marks) ≥ 3:1. The l
 | `--accent` | 8.9 / 8.2 / 7.4 / – | 5.1 / 5.6 / 4.7 / – |
 | `--danger` / `--success` | 9.4 / 8.6 / 7.8 · 10.4 / 9.6 / 8.7 | 5.9 / 6.5 / 5.5 · 5.2 / 5.7 / 4.8 |
 | `--warning` / `--info` | 10.2 / 9.3 / 8.4 · 9.9 / 9.1 / 8.3 | 5.4 / 5.9 / 5.0 · 5.8 / 6.4 / 5.4 |
-| `--focus` (UI) | 10.4 / 9.6 / 8.7 | 5.4 / 5.9 / 5.0 |
+| `--focus` (UI) | 10.4 / 9.6 / 8.7 | 6.7 / 7.4 / 6.2 (live `#963709` since identity v3.1; the teal `#0b6f72` in § 5 gave 5.4 / 5.9 / 5.0) |
 | `--border-strong` (UI) | 4.0 / 3.7 / 3.3 | 3.5 / 3.9 / 3.3 |
 | `--viz-1` / `--viz-2` (UI) | 7.5 / 6.9 · 8.9 / 8.2 (bg / surface) | 4.1 / 4.5 · 4.1 / 4.6 (bg / surface) |
 | `--accent-contrast` on `--accent` | 9.0 | 5.6 |
@@ -227,7 +227,7 @@ The audit (branch `fix/visual-polish-notifications`, 6 viewports from 412 to 344
 Decided per module in round 7; highlights first, then the table for all modules. Every module keeps its data model; what changes is the page frame, the list pattern (ItemRow), create (quick capture + full form) and the widget (hero number + rows + action).
 
 - **Kalender:** week = time grid 07–21 h (44 px/h), all-day row (ToDos with date, birthdays, invoices), today column tint 5 %, now line, one colour per kind (Termin accent, Erinnerung grey, extern info), overlapping items share width; agenda column 22 rem from 1200 px; phone default Agenda, week = 3 days, month = dot grid; slot click creates, drag moves (15-min steps); detail = panel (desktop) / sheet (phone); widget "Heute" = day list with kinds, tomorrow below, tick (ToDo) and snooze (Erinnerung).
-- **Finanzen:** hero "Verfügbar" + breakdown line, 3 KPI cards with delta, 6-month bar chart, categories as rows with inline bars, Buchungen side column; Buchungen tab = table. Phone: KPIs as one-line rows.
+- **Finanzen:** hero "Verfügbar" + breakdown line (Kontostand · offene Rechnungen · Abos bis Monatsende), 3 KPI cards with delta, 6-month bar chart, categories as rows with inline bars + percent, Buchungen side column; Buchungen tab = table. Phone: KPIs as one-line rows.
 - **Rechnungen / Abos / Verträge / Budgets:** rows with sums in the toolbar, panel details, "Bezahlt" row button; Abos without a visible switch label; Budgets with `ui/Progress`.
 - **Tresor (Accounts):** status pill "Entsperrt · Windows Hello", "Sperren" always visible, auto-lock countdown in the panel, per-row copy, secret rows (reveal/copy), TOTP ring, health line; red only for weak/reused; lock screen = one centred card; widget status only.
 - **Datenträger:** treemap keeps its categorical palette (documented exception) + accent selection outline; detail panel with facts, Korb with "Frei danach", one primary "In den Papierkorb"; safety text once.
@@ -295,7 +295,7 @@ Internal identifiers (`io.github.sgnemo.taschenmesser`, storage keys `tm-*`, DB 
 | 3 Layout | L1 grouped sidebar, L2 rail + area column, L3 top navigation; 7 areas | L1 that collapses to L2's rail (§ 2); areas (§ 3); phone nav by area | L3 (crowded below 1400 px, no vertical scanning); L2 alone (module names hidden until an area is chosen, two columns cost 300 px at 1280) |
 | 4 Tokens | neutral bases cool, warm, graphite with the same orange | cool (§ 5); Inter only; teal out of the UI; icon stroke 1.5 | warm (orange looks brownish on buttons), graphite (characterless) |
 | 5 Components | base components, quick capture vs. full form, keyboard scheme, Textgröße/Dichte | §§ 7–8 as written, both settings | module pages opening the full form directly; `Ctrl+K` only |
-| 6 Motion | six feedback patterns vs. the animations of the time | § 9 | `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin, backdrop blur, width/colour/shadow transitions; no animation on navigation, first render or data updates |
+| 6 Motion | six feedback patterns vs. the animations of the time | § 9; navigation = 120 ms crossfade only (over "truly none"), no motion on first render or data updates | `pageIn`, `itemIn` stagger, `pillIn`, endless sync spin, backdrop blur, width/colour/shadow transitions |
 | 7 Modules | Kalender, Finanzen, Tresor, Datenträger, Einstellungen in detail; table for all modules | § 10 | – |
 
 Measurements behind it (clicks per scenario, before/after screenshots) are in the git history of the removed round files.

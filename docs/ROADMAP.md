@@ -70,7 +70,7 @@ Sources: [to-do app comparisons 2026](https://blog.toodledo.com/toodledo-vs-thin
 | D4 | Per-module accent (subtle, from a fixed set) | Orientation | S | low: contrast test extension | tokens |
 | D5 | Print styles (shopping list, packing list, month calendar) | Paper still exists | S | low | none |
 | D6 | Reduced-data mode: hide amounts on the dashboard until tapped ("privacy blur") | Shoulder surfing | S | low | none |
-| D7 | Visual audit #17: check on a phone (820/412 px) that the bottom bar never covers the last list row (e.g. calendar month); the FAB part is gone with 4.0 rule 4 | Phone | S | low | UI audit 4.0 packages |
+| D7 | Visual audit #17: check on a phone (820/412 px) that the bottom bar never covers the last list row (e.g. calendar month); the FAB goes with UI audit 4.0 package 0b-2 (rule 4), check it until then | Phone | S | low | UI audit 4.0 packages |
 | D8 | Visual audit #18: settings category list at 412 px – right-aligned status ("Aus", "Nicht eingerichtet") collides with the chevron, descriptions wrap unevenly; re-check after settings v3.1 | Phone polish | S | low | settings |
 | D9 | Readability Q16: performance spot check with seed `large` and the reading aid at 100 % (jsdom: 2 000 rows ≈ 7× render time) | Long lists | S | low | `core/text` |
 
