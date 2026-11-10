@@ -5,8 +5,10 @@ export type SyncPhase = 'off' | 'idle' | 'syncing' | 'error';
 
 export interface SyncStatusState {
   phase: SyncPhase;
-  /** Host of the configured server, for display. */
+  /** Host of the configured server, for display (unset for the home-network hub). */
   server?: string;
+  /** How this device syncs: an own server, as the home-network hub PC, or with a hub PC (phone). */
+  via?: 'server' | 'lanHub' | 'lanClient';
   encrypted: boolean;
   /** Epoch ms of the last successful sync. */
   lastSyncAt?: number;
@@ -23,6 +25,11 @@ export interface SyncStatusState {
   errorAt?: number;
   /** Epoch ms of the next automatic retry (only for errors that can heal by themselves). */
   retryAt?: number;
+  /**
+   * Phone with home-network sync: whether a Wi-Fi network is connected (platform `lanWatch`);
+   * `undefined` where nobody watches it (browser, desktop) or before the first answer.
+   */
+  wifi?: boolean;
   /** Size of the data on the server, when it could be read. */
   serverStats?: { records: number; fields: number; bytes: number; devices: number };
   set(patch: Partial<Omit<SyncStatusState, 'set'>>): void;

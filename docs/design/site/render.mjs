@@ -1,6 +1,6 @@
 /**
  * Renders each direction-*.html at 1280 px (desktop) and 360 px (phone), dark and light, and
- * composes one sheet per direction: out/direction-<x>.png (desktop + phone, dark on top, light
+ * composes one sheet per direction: web/.screens/site-directions/direction-<x>.png (gitignored) (desktop + phone, dark on top, light
  * below; SHEET_ROW=1 puts all four side by side for long pages). Run from site/ so playwright-core and sharp resolve:  node ../docs/design/site/render.mjs
  */
 import { createRequire } from 'node:module';
@@ -11,10 +11,10 @@ const require = createRequire(path.join(process.cwd(), 'package.json'));
 const { chromium } = require('playwright-core');
 const sharp = require('sharp');
 const here = path.dirname(fileURLToPath(import.meta.url));
-const out = path.join(here, 'out');
+const out = path.join(here, '../../../web/.screens/site-directions');
 await mkdir(out, { recursive: true });
 const files = (process.env.MOCKUPS || 'direction-a,direction-b,direction-c').split(',');
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium' });
 const GAP = 24, PHONE_W = 400;
 for (const f of files) {
   const shots = {};

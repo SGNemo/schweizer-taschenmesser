@@ -9,6 +9,10 @@
     "allow-install-update",
     "allow-oauth-listen-start",
     "allow-oauth-listen-wait",
+    "allow-lan-client-pair",
+    "allow-lan-client-pair-cancel",
+    "allow-lan-client-request",
+    "allow-lan-client-unpair",
     "allow-local-api-start",
     "allow-local-api-stop",
     "allow-local-api-set-tokens",
@@ -72,7 +76,7 @@
     "opener:allow-default-urls",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "spotify:*" }]
+      "allow": [{ "url": "spotify:*" }, { "url": "ms-settings:network-status" }]
     },
     "apk-installer:default",
     "secure-store:default",

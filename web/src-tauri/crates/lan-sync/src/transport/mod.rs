@@ -12,6 +12,10 @@
 //!   addresses and frames are never formatted.
 //! * A pairing connection waits for the sealed data-key frame that `PairingHost::confirm` returns:
 //!   the shell hands it over with [`Server::deliver`], keyed by the attempt id of the connection.
+//! * An input session (remote control) may send unasked: on every tick the connection is asked
+//!   for an outbound frame (`Connection::poll_outbound`). That is not activity: only a frame from
+//!   the peer resets the idle timer. The router learns the local address a connection came in on,
+//!   because an input session is accepted only on a bind of the stored home network.
 
 use crate::hub::netpolicy::{is_allowed_hub_addr, Bind};
 use crate::hub::router::{Connection, Opened, Outcome, Router};
@@ -103,6 +107,15 @@ impl Deliverer {
             })
             .unwrap_or(false);
         sent && done.recv_timeout(ACK_TIMEOUT).unwrap_or(false)
+    }
+
+    /// Ends the waiting connection of `attempt` without a key frame (the user cancelled on the PC
+    /// or the code was wrong): the device sees the connection close at once instead of waiting for
+    /// its own timeout. Nothing to do if there is no such connection.
+    pub fn abort(&self, attempt: u64) {
+        if let Ok(mut m) = self.0.deliveries.lock() {
+            m.remove(&attempt);
+        }
     }
 }
 
@@ -409,7 +422,12 @@ fn serve(mut stream: TcpStream, ip: IpAddr, sh: &Arc<Shared>) {
         }
     };
     let now = sh.started.elapsed();
-    let (m2, mut conn) = match sh.router.accept(ip, &first, now) {
+    // without a readable local address the connection is served as before, minus input sessions
+    let opened = match stream.local_addr() {
+        Ok(local) => sh.router.accept_on(local.ip(), ip, &first, now),
+        Err(_) => sh.router.accept(ip, &first, now),
+    };
+    let (m2, mut conn) = match opened {
         Opened::Drop(_) => return,
         Opened::Refuse(m2) => {
             let _ = write_frame(&mut stream, &m2);
@@ -479,19 +497,60 @@ fn drive(
             Polled::Frame(wire) => {
                 last = Instant::now();
                 let (unix_s, unix_ms) = unix_now();
-                match conn.on_frame(&wire, unix_s, unix_ms) {
-                    Outcome::Continue => {}
-                    Outcome::Reply(w) => {
-                        if !write_frame(stream, &w) {
-                            return;
-                        }
-                    }
-                    Outcome::Close => return,
+                let out = conn.on_frame(&wire, unix_s, unix_ms, sh.started.elapsed());
+                if !act(stream, out) {
+                    return;
                 }
             }
             Polled::Nothing => {}
             Polled::Close => return,
         }
+        // at most one unasked frame per pass (the read above returns after `tick` at the latest)
+        if !act(stream, conn.poll_outbound(sh.started.elapsed())) {
+            return;
+        }
+    }
+}
+
+/// How long a closing connection keeps reading (and discarding) so its last frame arrives.
+const GOODBYE: Duration = Duration::from_millis(500);
+
+/// The last frame is written; the peer may still be sending. Closing with unread bytes makes the
+/// OS reset the connection, and the peer could lose that last frame (the reason it was closed).
+/// So: no more writes, then read and discard until the peer closes or a short time is over.
+/// Nothing that is read here is looked at.
+fn say_goodbye(stream: &mut TcpStream) {
+    if stream.shutdown(std::net::Shutdown::Write).is_err() {
+        return;
+    }
+    let until = Instant::now() + GOODBYE;
+    let mut sink = [0u8; 1024];
+    while Instant::now() < until {
+        match stream.read(&mut sink) {
+            Ok(0) => return,
+            Ok(_) => {}
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    ErrorKind::WouldBlock | ErrorKind::TimedOut | ErrorKind::Interrupted
+                ) => {}
+            Err(_) => return,
+        }
+    }
+}
+
+/// Carries out what the connection decided; `false` = the connection is over.
+fn act(stream: &mut TcpStream, out: Outcome) -> bool {
+    match out {
+        Outcome::Continue => true,
+        Outcome::Reply(w) => write_frame(stream, &w),
+        Outcome::ReplyClose(w) => {
+            if write_frame(stream, &w) {
+                say_goodbye(stream);
+            }
+            false
+        }
+        Outcome::Close => false,
     }
 }
 

@@ -59,8 +59,12 @@ export interface BrowserService {
   forward(tab: number): Promise<void>;
   reload(tab: number): Promise<void>;
   close(tab: number): Promise<void>;
-  /** Show this tab (and hide all others); `null` hides every tab (e.g. while a Nemo dialog is open). */
-  show(tab: number | null, bounds?: BrowserBounds): Promise<void>;
+  /**
+   * Show this tab (and hide all others); `null` hides every tab (e.g. while a Nemo dialog is open).
+   * Resolves with the ids of tabs whose webview no longer exists (each reported once): the page
+   * shows "Tab neu öffnen" for them instead of an empty area.
+   */
+  show(tab: number | null, bounds?: BrowserBounds): Promise<number[]>;
   setZoom(tab: number, factor: number): Promise<void>;
   configure(config: BrowserConfig): Promise<void>;
   /** Close every tab and delete cookies, cache and site data of the browser (not of Nemo). */

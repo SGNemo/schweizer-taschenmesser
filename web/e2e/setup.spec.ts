@@ -186,11 +186,11 @@ test('cancelling keeps finished steps, drops the current one and resumes after a
 test('the Android back gesture asks before leaving the assistant', async ({ page }) => {
   await ready(page, '/settings/einrichtung');
   await page.getByRole('button', { name: 'Einrichtung starten' }).click();
-  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 4')).toBeVisible();
   await page.goBack();
   await expect(wizard(page).getByTestId('setup-confirm')).toBeVisible();
   await wizard(page).getByRole('button', { name: 'Weiter einrichten' }).click();
-  await expect(wizard(page).getByText('Frage 1 von 3')).toBeVisible();
+  await expect(wizard(page).getByText('Frage 1 von 4')).toBeVisible();
 });
 
 test('starts from the command palette; ending leaves a checklist on the dashboard', async ({
@@ -273,7 +273,7 @@ function watchNetwork(page: Page) {
   return external;
 }
 
-test('first run: three questions, five taps, nothing leaves the page, the rest waits in the checklist', async ({
+test('first run: four questions, six taps, nothing leaves the page, the rest waits in the checklist', async ({
   page,
 }) => {
   const external = watchNetwork(page);
@@ -285,11 +285,11 @@ test('first run: three questions, five taps, nothing leaves the page, the rest w
   };
   await tap(page.getByTestId('setup-welcome').getByRole('button', { name: 'Einrichtung starten' }));
   const dialog = wizard(page);
-  await expect(dialog.getByText('Frage 1 von 3')).toBeVisible();
+  await expect(dialog.getByText('Frage 1 von 4')).toBeVisible();
   await dialog.getByLabel('Dein Name (optional)').fill('Erika Erfunden');
   await tap(dialog.getByRole('button', { name: 'Weiter' }));
 
-  await expect(dialog.getByText('Frage 2 von 3')).toBeVisible();
+  await expect(dialog.getByText('Frage 2 von 4')).toBeVisible();
   // Each card says what it switches off; the choice is shown as chosen.
   await expect(dialog.getByTestId('profile-everyday').locator('xpath=ancestor::li')).toContainText(
     'Schaltet ab:',
@@ -299,19 +299,24 @@ test('first run: three questions, five taps, nothing leaves the page, the rest w
   await expect(dialog.getByRole('button', { name: 'Weiter' })).toBeEnabled();
   await tap(dialog.getByRole('button', { name: 'Weiter' }));
 
-  await expect(dialog.getByText('Frage 3 von 3')).toBeVisible();
+  // Round 5: "Fokus-Hilfen", preselected "Ruhig", one tap.
+  await expect(dialog.getByText('Frage 3 von 4')).toBeVisible();
+  await expect(dialog.getByRole('switch', { name: 'Bewegung reduzieren' })).toBeChecked();
+  await tap(dialog.getByRole('button', { name: 'Weiter' }));
+
+  await expect(dialog.getByText('Frage 4 von 4')).toBeVisible();
   await expect(dialog.getByTestId('ai-choice-local')).toBeChecked();
-  await tap(dialog.getByRole('button', { name: 'Fertig' }));
+  await tap(dialog.getByRole('button', { name: 'Fragen abschließen' }));
   await expect(wizard(page)).toHaveCount(0);
 
-  expect(taps).toBeLessThanOrEqual(6);
+  expect(taps).toBeLessThanOrEqual(7); // one more question since round 5 (Fokus-Hilfen)
   await expect.poll(async () => (await setupState(page))?.status).toBe('completed');
   const state = await setupState(page);
-  expect(state?.doneSteps).toEqual(['core.basics', 'core.profiles', 'core.ai']);
+  expect(state?.doneSteps).toEqual(['core.basics', 'core.profiles', 'core.focus', 'core.ai']);
   // One number, and the open steps wait on the dashboard.
   const checklist = page.getByTestId('setup-checklist');
   await expect(checklist).toBeVisible();
-  await expect(checklist.getByText(/^2 von \d+ Schritten erledigt$/)).toBeVisible();
+  await expect(checklist.getByText(/^3 von \d+ Schritten erledigt$/)).toBeVisible();
   expect(external).toEqual([]);
 });
 
@@ -341,11 +346,13 @@ test('"Weiter" without a change is not "erledigt"; the sync default is', async (
   await dialog.getByRole('button', { name: 'Weiter' }).click(); // sync default is the answer
   await expect(dialog.getByRole('heading', { name: 'Profil und Module' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Weiter' }).click(); // nothing chosen
+  await expect(dialog.getByRole('heading', { name: 'Fokus-Hilfen' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Später', exact: true }).click(); // round 5 step, skipped
   await expect(dialog.getByRole('heading', { name: 'Werkzeugkasten' })).toBeVisible();
   await expect
     .poll(async () => (await setupState(page))?.doneSteps)
     .toEqual(['core.basics', 'core.sync']);
-  expect((await setupState(page))?.skippedSteps).toEqual(['core.profiles']);
+  expect((await setupState(page))?.skippedSteps).toEqual(['core.profiles', 'core.focus']);
 });
 
 test('the AI step asks nothing until "nach Ollama suchen" is clicked; Spotify has no Google note', async ({
@@ -461,3 +468,83 @@ test('Einrichtung is its own settings tab; the old link from "Über Nemo" arrive
   // Nothing opened by itself.
   await expect(wizard(page)).toHaveCount(0);
 });
+
+// UI round 6: U06 – "Weiter" is on screen on every step without scrolling (desktop and phone); U59 – one primary
+// button per step (notifications: "Erlauben" first, "Weiter" waits as a secondary button).
+for (const viewport of [
+  { width: 1920, height: 1080 },
+  { width: 412, height: 915 },
+]) {
+  test.describe(`setup footer ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport });
+
+    /** The "Weiter" button lies inside the window as it is (nothing scrolled into view). */
+    async function nextOnScreen(page: Page) {
+      const box = await wizard(page).getByTestId('setup-next').boundingBox();
+      expect(box, 'Weiter has a box').not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+    }
+
+    /** Filled primary buttons in the wizard (CSS Modules class `…primary…`). */
+    const primaries = (page: Page) =>
+      wizard(page)
+        .locator('button')
+        .evaluateAll(
+          (buttons) =>
+            buttons.filter((b) => /(^|_)primary(_|$)/.test(b.className.split(' ').join('|')))
+              .length,
+        );
+
+    test('"Weiter" stays on screen on every step; each step has one primary button', async ({
+      page,
+    }) => {
+      test.setTimeout(120_000);
+      // A browser that has not been asked yet; the answer is "no" (headless Chromium starts at "denied").
+      await page.addInitScript(() => {
+        let state: NotificationPermission = 'default';
+        Object.defineProperty(Notification, 'permission', { get: () => state });
+        Notification.requestPermission = () => Promise.resolve((state = 'denied'));
+      });
+      await ready(page, '/settings/einrichtung');
+      await page.getByRole('button', { name: 'Einrichtung starten' }).click();
+      const dialog = wizard(page);
+      // The questions first (question 3 is the long one that used to push the bar below the fold).
+      for (let q = 1; q <= 3; q++) {
+        await expect(dialog.getByText(`Frage ${q} von 4`)).toBeVisible();
+        if (q === 2) await dialog.getByTestId('profile-everyday').click();
+        await nextOnScreen(page);
+        await dialog.getByTestId('setup-next').click();
+      }
+      await expect(dialog.getByText('Frage 4 von 4')).toBeVisible();
+      await nextOnScreen(page);
+      // Then the full list, step by step.
+      await dialog.getByRole('button', { name: 'Alle Schritte ansehen' }).click();
+      const title = dialog.locator('h3').first();
+      let sawNotifications = false;
+      for (let i = 0; i < 40; i++) {
+        await expect(title).toBeVisible();
+        if (await dialog.getByTestId('setup-summary').isVisible()) break;
+        const label = await title.textContent();
+        // The step's own part loads lazily: count buttons once it is there.
+        await expect(dialog.getByText('…', { exact: true })).toHaveCount(0);
+        await nextOnScreen(page);
+        expect(await primaries(page), `primary buttons on "${label}"`).toBe(1);
+        if (label === 'Benachrichtigungen') {
+          const allow = dialog.getByRole('button', { name: 'Benachrichtigungen erlauben' });
+          await expect(allow).toBeVisible();
+          sawNotifications = true;
+          await expect(dialog.getByTestId('setup-next')).not.toHaveClass(/(^|_)primary(_|\s|$)/);
+          // Answered: "Erlauben" is gone and "Weiter" is the one primary again.
+          await allow.click();
+          await expect(allow).toHaveCount(0);
+          await expect(dialog.getByTestId('setup-next')).toHaveClass(/(^|_)primary(_|\s|$)/);
+          expect(await primaries(page)).toBe(1);
+        }
+        await dialog.getByRole('button', { name: 'Später', exact: true }).click();
+        await expect(title).not.toHaveText(label ?? '');
+      }
+      expect(sawNotifications, 'the notifications step was on the way').toBe(true);
+    });
+  });
+}

@@ -3,9 +3,9 @@
   "npm": [
     {
       "name": "@anthropic-ai/sdk",
-      "version": "1.3.0",
+      "version": "1.6.0",
       "license": "Apache-2.0",
-      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.3.0"
+      "url": "https://www.npmjs.com/package/@anthropic-ai/sdk/v/1.6.0"
     },
     {
       "name": "@babel/runtime",
@@ -165,213 +165,213 @@
     },
     {
       "name": "@tiptap/core",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/core/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/core/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-blockquote",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-blockquote/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-blockquote/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-bold",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-bold/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bold/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-bubble-menu",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-bubble-menu/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bubble-menu/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-bullet-list",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-bullet-list/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-bullet-list/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-code",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-code/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-code-block",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-code-block-lowlight",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block-lowlight/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-code-block-lowlight/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-document",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-document/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-document/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-dropcursor",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-dropcursor/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-dropcursor/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-floating-menu",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-floating-menu/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-floating-menu/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-gapcursor",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-gapcursor/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-gapcursor/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-hard-break",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-hard-break/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-hard-break/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-heading",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-heading/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-heading/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-highlight",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-highlight/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-highlight/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-horizontal-rule",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-horizontal-rule/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-horizontal-rule/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-image",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-image/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-image/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-italic",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-italic/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-italic/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-link",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-link/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-link/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-list",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-list/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-list-item",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-list-item/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list-item/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-list-keymap",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-list-keymap/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-list-keymap/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-ordered-list",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-ordered-list/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-ordered-list/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-paragraph",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-paragraph/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-paragraph/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-strike",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-strike/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-strike/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-table",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-table/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-table/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-task-item",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-task-item/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-task-item/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-task-list",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-task-list/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-task-list/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-text",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-text/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-text/v/3.33.0"
     },
     {
       "name": "@tiptap/extension-underline",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extension-underline/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extension-underline/v/3.33.0"
     },
     {
       "name": "@tiptap/extensions",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/extensions/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/extensions/v/3.33.0"
     },
     {
       "name": "@tiptap/markdown",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/markdown/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/markdown/v/3.33.0"
     },
     {
       "name": "@tiptap/pm",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/pm/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/pm/v/3.33.0"
     },
     {
       "name": "@tiptap/react",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/react/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/react/v/3.33.0"
     },
     {
       "name": "@tiptap/starter-kit",
-      "version": "3.32.2",
+      "version": "3.33.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/@tiptap/starter-kit/v/3.32.2"
+      "url": "https://www.npmjs.com/package/@tiptap/starter-kit/v/3.33.0"
     },
     {
       "name": "@types/d3-array",
@@ -722,6 +722,12 @@
       "url": "https://www.npmjs.com/package/json-schema-to-ts/v/3.1.1"
     },
     {
+      "name": "jsqr",
+      "version": "1.4.0",
+      "license": "Apache-2.0",
+      "url": "https://www.npmjs.com/package/jsqr/v/1.4.0"
+    },
+    {
       "name": "linkifyjs",
       "version": "4.4.0",
       "license": "MIT",
@@ -735,9 +741,9 @@
     },
     {
       "name": "lucide-react",
-      "version": "1.65.0",
+      "version": "1.69.0",
       "license": "ISC",
-      "url": "https://www.npmjs.com/package/lucide-react/v/1.65.0"
+      "url": "https://www.npmjs.com/package/lucide-react/v/1.69.0"
     },
     {
       "name": "marked",
@@ -765,9 +771,9 @@
     },
     {
       "name": "otpauth",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
-      "url": "https://www.npmjs.com/package/otpauth/v/9.5.2"
+      "url": "https://www.npmjs.com/package/otpauth/v/9.6.0"
     },
     {
       "name": "pako",

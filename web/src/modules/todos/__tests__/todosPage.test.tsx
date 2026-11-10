@@ -135,6 +135,34 @@ describe('ToDos board', () => {
   });
 });
 
+describe('ToDos board wording (U48)', () => {
+  it('names a passed due date as passed and gives the card button a verb', async () => {
+    await taskRepo.create({ ...base, title: 'Recherche', dueDate: '2026-11-01' });
+    draw('/todos?view=board');
+    const card = (await screen.findByText('Recherche')).closest('li')!;
+    expect(card).toHaveTextContent('war am So., 1. Nov. fällig');
+    expect(within(card).getByRole('button', { name: 'Auf morgen' })).toBeVisible();
+  });
+
+  it('keeps a coming due date as a plain date', async () => {
+    await taskRepo.create({ ...base, title: 'Bald', dueDate: '2026-11-10' });
+    draw('/todos?view=board');
+    const card = (await screen.findByText('Bald')).closest('li')!;
+    expect(card).toHaveTextContent('Di., 10. Nov.');
+    expect(card).not.toHaveTextContent('war am');
+  });
+});
+
+describe('ToDos empty page (U26)', () => {
+  it('offers one next step that puts the cursor into the add field', async () => {
+    draw('/todos');
+    const empty = await screen.findByTestId('todos-empty');
+    expect(empty).toHaveTextContent('Nichts zu tun – gut so.');
+    await userEvent.click(within(empty).getByRole('button', { name: 'Eine Sache eintragen' }));
+    expect(screen.getByRole('textbox', { name: 'ToDo hinzufügen' })).toHaveFocus();
+  });
+});
+
 describe('ToDos board drag and drop', () => {
   it('drops a card onto another column', async () => {
     const task = await taskRepo.create({ ...base, title: 'Ziehkarte' });
@@ -195,8 +223,23 @@ describe('Heute card', () => {
   });
 
   it('says so calmly when nothing is left for today', () => {
-    render(<TodayCard day="2026-11-03" tasks={[task({ dueDate: '2026-11-20' })]} />);
+    const doneToday = new Date(2026, 10, 3, 9, 30).getTime();
+    render(
+      <TodayCard
+        day="2026-11-03"
+        tasks={[
+          task({ dueDate: '2026-11-20' }),
+          task({ id: 'd', dueDate: '2026-11-03', done: true, completedAt: doneToday }),
+        ]}
+      />,
+    );
     expect(screen.getByText('Alles für heute erledigt.')).toBeVisible();
+  });
+
+  it('A07: never says "erledigt" when nothing was there for today', () => {
+    render(<TodayCard day="2026-11-03" tasks={[task({ dueDate: '2026-11-20' })]} />);
+    expect(screen.queryByText('Alles für heute erledigt.')).toBeNull();
+    expect(screen.getByText('Für heute ist nichts eingetragen.')).toBeVisible();
   });
 });
 

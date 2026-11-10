@@ -157,6 +157,15 @@ export const de = {
     nothingToUndo: 'Nichts zum Rückgängigmachen.',
     selection: 'Auswahl',
     selected: (n: number) => (n === 1 ? '1 ausgewählt' : `${n} ausgewählt`),
+    file: {
+      choose: 'Datei wählen',
+      chooseMany: 'Dateien wählen',
+      none: 'Keine Datei gewählt',
+      noneFolder: 'Kein Ordner gewählt',
+      /** Several files were picked (one shows its name). */
+      count: (n: number) => `${n} Dateien gewählt`,
+      remove: 'Entfernen',
+    },
   },
   groups: {
     overdue: 'Überfällig',
@@ -410,6 +419,8 @@ export const de = {
       change: 'Ändern',
       done: 'Fertig',
       line: (name: string, value: string) => `${name}: ${value}`,
+      /** One named value in a group line (U54): „Textgröße normal“, not a bare „Normal“. */
+      named: (name: string, value: string) => `${name} ${value.toLocaleLowerCase()}`,
       theme: 'Thema',
       colors: 'Farben',
       text: 'Schrift & Lesen',
@@ -627,15 +638,27 @@ export const de = {
     restLater: 'Rest später',
     allSteps: 'Alle Schritte ansehen',
     questionOf: (n: number, total: number) => `Frage ${n} von ${total}`,
+    finishQuestions: 'Fragen abschließen',
+    overviewNow: 'Jetzt',
+    overviewQuestions: (n: number) => `Alle ${n} Fragen und was danach kommt`,
+    overviewSteps: (n: number) => `Alle ${n} Schritte im Überblick`,
+    overviewAfter:
+      'Nach der letzten Frage schließt sich die Einrichtung. Die übrigen Schritte sind freiwillig und stehen danach als Checkliste auf der Übersicht.',
     quick: {
       basics: {
-        title: 'Wie darfst du heißen?',
-        description: 'Name und Textgröße. Beides lässt sich später ändern.',
+        title: 'Sprache, Name und Textgröße',
+        description:
+          'Hier stellst du die Sprache, deinen Namen und die Textgröße ein. Unter „Weitere Einstellungen“ folgen Farbschema und Wochenstart. Alles lässt sich später in den Einstellungen ändern.',
       },
       profiles: {
         title: 'Was passt zu dir?',
         description:
-          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet.',
+          'Das Profil schaltet passende Module ein. Jedes Profil sagt, was es abschaltet. Passt keins genau, wähle das nächste: Einzelne Module schaltest du danach unter Mehr → Modul-Bibliothek ein oder aus. „Weiter“ ohne Auswahl lässt die Module, wie sie sind.',
+      },
+      focus: {
+        title: 'Wie ruhig soll die App sein?',
+        description:
+          'Vier Schalter: Bewegung, Erinnerungen, Serien und Rückblicke, Hinweise; dazu die Lesehilfe.',
       },
       ai: {
         title: 'Soll eine KI helfen?',
@@ -692,6 +715,33 @@ export const de = {
         dataKept: 'Daten bleiben erhalten, alles lässt sich wieder einschalten.',
         pick: 'Wählen',
         picked: 'Gewählt',
+      },
+      focus: {
+        title: 'Fokus-Hilfen',
+        description: 'Fünf Schalter bestimmen, wie ruhig sich die App verhält.',
+        preselect:
+          'Empfohlen und vorausgewählt: Die ersten vier Schalter sind an, die Lesehilfe bleibt, wie sie gerade ist. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        preselectDone:
+          'Die Schalter zeigen, wie sie gerade eingestellt sind. Gespeichert wird erst, wenn du mit dem hervorgehobenen Knopf weitergehst, genau so, wie die Schalter hier stehen.',
+        laterFull: '„Später“ ändert nichts.',
+        laterQuick: '„Rest später“ ändert nichts.',
+        motion: 'Bewegung reduzieren',
+        motionHint:
+          'An: Übergänge und Animationen der App sind aus, Inhalte erscheinen sofort an ihrer Stelle.',
+        ownReminders: 'Keine Morgen-Übersicht und keine Vorab-Erinnerungen',
+        ownRemindersHint:
+          'An: Die App schickt keine Morgen-Übersicht der heutigen ToDos und keine zusätzlichen Vorab-Erinnerungen vor Terminen. Erinnerungen, die du an einem Eintrag selbst einstellst, kommen weiterhin.',
+        noCounts: 'Keine Serien und Rückblicke',
+        noCountsHint:
+          'An: Wiederkehrende ToDos zeigen kein „n in Folge“, Gewohnheiten keine längste Serie, und „Jetzt dran“ zeigt keinen „Rückblick auf die Woche“.',
+        toastStay: 'Hinweise bleiben stehen',
+        toastStayHint:
+          'An: Kurze Hinweise am unteren Rand (zum Beispiel „ToDo geändert.“ mit „Rückgängig“) bleiben stehen, bis du „Schließen“ oder die Aktion tippst oder ein neuer Hinweis sie ersetzt. Aus: Sie verschwinden nach 6 Sekunden; solange du sie berührst, mit der Maus darauf zeigst oder mit der Tastatur darin bist, warten sie.',
+        readAid: 'Lesehilfe',
+        readAidHint:
+          'An: Die Anfänge der Wörter in längeren Texten werden fett, das führt den Blick. Zahlen und Eingabefelder bleiben ohne. Nicht vorausgewählt, probiere sie aus, wenn du magst.',
+        where:
+          'Jeder Schalter lässt sich später in den Einstellungen ändern: Bewegung, Hinweise und Lesehilfe unter „Barrierefreiheit“ (nur dieses Gerät), die Erinnerungen unter „Ruhige Erinnerungen“, Serien und Rückblick unter „Fokus & Aufmerksamkeit“. Erinnerungen, Serien und Rückblick gelten mit Sync auf allen deinen Geräten.',
       },
       tools: {
         title: 'Werkzeugkasten',
@@ -807,6 +857,19 @@ export const de = {
           'obsidian.notes': 'Markdown-Notizen importiert',
           'bank.statement': 'Kontoauszug importiert',
           'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importiert',
+        } as Record<string, string>,
+        /** The same points as a goal, while not done yet (B08, round 5). */
+        goals: {
+          'google.calendar': 'Kalender (.ics) importieren',
+          'google.tasks': 'Tasks.json importieren',
+          'google.keep': 'Keep-Notizen importieren',
+          'google.subscription': 'Kalender als Abo verbinden (Einstellungen → Verbindungen)',
+          'todoist.tasks': 'Todoist-CSV importieren',
+          'evernote.notes': 'Evernote-Notizen importieren',
+          'microsoft.tasks': 'Microsoft-To-Do-Aufgaben (Outlook-CSV) importieren',
+          'obsidian.notes': 'Markdown-Notizen importieren',
+          'bank.statement': 'Kontoauszug importieren',
+          'bitwarden.vault': 'Bitwarden-CSV bei den Passwörtern importieren',
         } as Record<string, string>,
         tick: 'Abhaken',
         untick: 'Wieder öffnen',
@@ -939,7 +1002,7 @@ export const de = {
   quickCapture: {
     title: 'Schnell erfassen',
     inputLabel: 'Was möchtest du festhalten?',
-    placeholder: 'z. B. „morgen 15 Uhr Zahnarzt“',
+    placeholder: 'z. B. „Tanken 62,40, morgen 9 Uhr Kunde anrufen“',
     save: 'Speichern',
     book: 'Buchen',
     type: {
@@ -955,6 +1018,9 @@ export const de = {
       birthday: 'Geburtstag',
       note: 'Notiz',
       plan: 'Plan',
+      meal: 'Mahlzeit',
+      workout: 'Training',
+      place: 'Ort',
     },
     target: {
       todo: 'ToDos',
@@ -968,6 +1034,9 @@ export const de = {
       birthday: 'Personen',
       note: 'Notizen',
       plan: 'Planer',
+      meal: 'Fitness',
+      workout: 'Fitness',
+      place: 'Uhr',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -1012,6 +1081,10 @@ export const de = {
     undo: 'Rückgängig',
     undone: 'Rückgängig gemacht.',
     empty: 'Bitte gib etwas ein.',
+    alertsOff: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Einstellungen → Benachrichtigungen.`,
+    alertsBlocked: (saved: string) =>
+      `${saved}. Damit die Erinnerung klingelt: Benachrichtigungen in den Handy- oder Browser-Einstellungen erlauben.`,
     errors: {
       moduleOff: (name: string) => `Das Modul „${name}“ ist ausgeschaltet.`,
       invalid: 'Der Eintrag ist unvollständig. Prüfe Titel, Datum und Betrag.',
@@ -1020,6 +1093,8 @@ export const de = {
       failed: 'Speichern fehlgeschlagen.',
     },
     todoTimeNote: (time: string) => `Uhrzeit: ${time}`,
+    dunningNote: (day: string, amount: string, due?: string) =>
+      `Mahnung vom ${day}: ${amount}${due ? ` bis ${due}` : ''}`,
     noTargets: 'Es ist kein Zielmodul eingeschaltet.',
     multi: {
       lineHint: 'Eine Zeile = ein Eintrag',
@@ -1030,8 +1105,20 @@ export const de = {
       inbox: 'Eingang',
       financeDraft: 'Buchung (Entwurf)',
       saveAll: (n: number) => `Alle speichern (${n})`,
-      saved: (n: number) => `${n} Dinge gespeichert`,
+      saved: (n: number) => `${n} Dinge gespeichert. Sortiert wird später.`,
       change: 'Ändern',
+      view: 'Ansehen',
+      bookExpense: 'Als Ausgabe buchen',
+      bookIncome: 'Als Einnahme buchen',
+      bookLine: (action: string, line: string) => `${action}: ${line}`,
+      calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      dunningMatch: (payee: string, due: string) =>
+        `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
+      dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
+      dunningChoose: (payee: string) =>
+        `Bei ${payee} ist nicht klar, welche Rechnung gemeint ist. Bitte ein Ziel wählen.`,
+      dunningWill: (payee: string, due: string) =>
+        `Wird bei Rechnung ${payee}, fällig ${due}, vermerkt.`,
     },
     trayToday: {
       heading: 'Heute',
@@ -1092,6 +1179,7 @@ export const de = {
       suggestion: 'Vorschlag',
       saveAs: 'Speichern als',
       or: 'oder im Modul öffnen',
+      asNote: 'Text als Notiz',
     },
   },
   pwa: {
@@ -1268,9 +1356,9 @@ export const de = {
           : m >= 60
             ? `${Math.round(m / 60)} Std`
             : `${m} Min`,
-      leadHintTitle: 'Hinweis im Terminformular',
+      leadHintTitle: 'Hinweis, wenn Benachrichtigungen aus sind',
       leadHintHint:
-        'Zeigt ruhig einen Satz, wenn du eine Erinnerung wählst, aber Benachrichtigungen nicht erlaubt sind.',
+        'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
         'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
@@ -1473,6 +1561,7 @@ export const de = {
     changed: 'ToDo geändert.',
     noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
+    emptyAction: 'Eine Sache eintragen',
     someday: 'Irgendwann',
     views: {
       label: 'Ansicht',
@@ -1485,6 +1574,7 @@ export const de = {
     },
     board: {
       empty: 'Hier ist nichts.',
+      wasDue: (date: string) => `war am ${date} fällig`,
       moveTo: (view: string) => `Verschieben nach ${view}`,
       hint: 'Karte ziehen oder „⋯“ nutzen.',
     },
@@ -1509,7 +1599,7 @@ export const de = {
     startDate: 'Beginnt am',
     startHint: 'Bis dahin steht die Aufgabe unter „Demnächst“.',
     startsOn: (date: string) => `ab ${date}`,
-    moveTomorrow: 'Morgen',
+    moveTomorrow: 'Auf morgen',
     allToday: 'Alle auf heute',
     allTodayDone: (n: number) =>
       n === 1 ? '1 ToDo auf heute gelegt.' : `${n} ToDos auf heute gelegt.`,
@@ -1522,6 +1612,7 @@ export const de = {
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
       done: 'Alles für heute erledigt.',
+      nothing: 'Für heute ist nichts eingetragen.',
       /** C22: the accessible name of the head's buttons says which task they act on ("Anfangen: Steuer"). */
       named: (action: string, title: string) => `${action}: ${title}`,
     },
@@ -1547,7 +1638,9 @@ export const de = {
       open: (n: number) =>
         n === 1 ? 'Eingang sortieren · 1 Ding' : `Eingang sortieren · ${n} Dinge`,
       hint: (n: number) =>
-        n === 1 ? '1 Ding wartet auf einen Platz.' : `${n} Dinge warten auf einen Platz.`,
+        n === 1
+          ? '1 Aufgabe liegt im Eingang, noch in keiner Liste.'
+          : `${n} Aufgaben liegen im Eingang, noch in keiner Liste.`,
       progress: (n: number, total: number) => `${n} von ${total}`,
       today: 'Für heute',
       skip: 'Überspringen',
@@ -1697,12 +1790,13 @@ export const de = {
     location: 'Ort',
     showOnMap: 'Auf der Karte zeigen',
     saveAsPlace: 'Als Ort merken',
-    nothing: 'Keine Einträge',
+    nothing: 'Noch nichts geplant.',
     endBeforeStart: 'Das Ende darf nicht vor dem Beginn liegen.',
     more: (n: number) => `+${n} weitere`,
     agenda: 'Agenda',
     allDayRow: 'Ganztägig und ohne Uhrzeit',
     timeGrid: 'Zeitraster',
+    hoursRegion: 'Stunden des Tages',
     widgetEmpty: 'Nichts geplant.',
     stageBody: (minutes: number, time: string) =>
       (minutes >= 1440
@@ -1785,6 +1879,7 @@ export const de = {
       expiry: 'Ablauf',
       external: 'Extern',
       plan: 'Plan',
+      training: 'Training',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -2857,6 +2952,7 @@ export const de = {
     add: 'Rechnung hinzufügen',
     edit: 'Rechnung bearbeiten',
     planTitle: (payee: string) => `${payee} bezahlen`,
+    planDunned: (detail?: string) => (detail ? `Mahnung · ${detail}` : 'Mahnung'),
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -3087,6 +3183,14 @@ export const de = {
         file: 'buchungen',
       },
       widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      month: {
+        title: 'Diesen Monat',
+        free: 'Frei bis Monatsende',
+        coming: (amount: string) => `Kommt noch ${amount}`,
+        nothingComing: 'Nichts mehr fällig',
+        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        open: 'Was noch kommt',
+      },
       settings: {
         bookSubscriptions: 'Abo-Abbuchungen als Ausgabe buchen',
         bookSubscriptionsHelp:
@@ -3195,6 +3299,10 @@ export const de = {
     editAccount: 'Konto bearbeiten',
     accountName: 'Kontoname',
     openingBalance: 'Anfangssaldo',
+    balanceToday: 'Kontostand heute laut Bank (optional)',
+    openingFromToday: 'Wird aus „Kontostand heute laut Bank“ berechnet.',
+    balanceTodayHint:
+      'Steht in deinem Online-Banking. Nemo setzt den Anfangssaldo so, dass der Kontostand heute stimmt.',
     deleteAccountHint: 'Löscht auch alle Buchungen dieses Kontos.',
     noAccounts: 'Noch keine Konten.',
     fromSubscription: 'Durch eine Regel dem Abo zugeordnet.',
@@ -3378,7 +3486,8 @@ export const de = {
     replace: 'Ersetzen',
     replaceHint: 'Das Backup wird zum Stand: Einträge, die nicht im Backup sind, werden gelöscht.',
     doImport: 'Importieren',
-    contains: (records: number, tables: number) => `${records} Einträge in ${tables} Tabellen`,
+    contains: (records: number, tables: number) =>
+      `${records} ${records === 1 ? 'Eintrag' : 'Einträge'} in ${tables} ${tables === 1 ? 'Tabelle' : 'Tabellen'}`,
     confirmTitle: 'Backup ersetzen?',
     confirmText:
       'Alle Einträge, die nicht im Backup stehen, werden gelöscht – auch auf anderen Geräten, sobald sie synchronisieren.',
@@ -4017,6 +4126,8 @@ export const de = {
       list: 'Liste',
       cards: 'Karten',
     },
+    /** The ⋯ menu in the page list head: templates and the sort order. */
+    moreMenu: 'Vorlagen und Sortierung',
     templates: {
       button: 'Vorlage wählen',
       blank: 'Leere Seite',
@@ -4049,6 +4160,7 @@ export const de = {
     editorLabel: 'Text der Seite',
     placeholder: 'Einfach losschreiben … „/“ öffnet das Befehlsmenü.',
     saved: 'Gespeichert',
+    savedWhere: 'Gespeichert. Die Seite steht unter Notizen → Alle Seiten.',
     saving: 'Speichert …',
     words: (n: number) => (n === 1 ? '1 Wort' : `${n} Wörter`),
     writingMode: 'Schreibmodus',
@@ -4181,7 +4293,9 @@ export const de = {
       title: 'Dateien importieren',
       files: 'Dateien wählen',
       folder: 'Ordner wählen',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten.',
+      filesLabel: 'Einzelne Dateien',
+      folderLabel: 'Ganzer Ordner',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
@@ -4251,6 +4365,7 @@ export const de = {
     noMatch: 'Nichts in dieser Ansicht.',
     plus: (n: string) => `${n}: einer mehr`,
     minus: (n: string) => `${n}: einer weniger`,
+    amount: 'Anzahl',
     countOf: (n: number) => `${n} Stück`,
     today: 'Läuft heute ab',
     inDays: (d: number) => (d === 1 ? 'Läuft morgen ab' : `Noch ${d} Tage`),
@@ -5003,6 +5118,7 @@ export const de = {
     needFinance: 'Budgets brauchen das Modul „Finanzen“.',
     needFinanceHint:
       'Aktiviere es in der Modul-Bibliothek – die Ausgaben je Kategorie kommen von dort.',
+    month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',
@@ -5234,7 +5350,7 @@ export const de = {
     removeFile: 'Datei entfernen',
     tooLarge: (max: string) => `Die Datei ist zu groß (höchstens ${max}).`,
     renew: 'Verlängert +1 Jahr',
-    renewAria: (title: string) => `${title}: um 1 Jahr verlängern`,
+    renewAria: (title: string) => `${title}: Verlängert +1 Jahr`,
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',
@@ -6036,6 +6152,10 @@ export const de = {
       ticktick: 'TickTick (CSV-Sicherung)',
       contacts: 'Kontakte (vCard: Google, Apple, Outlook)',
       bookmarks: 'Browser-Lesezeichen (HTML)',
+      strong: 'Strong (Training, CSV)',
+      hevy: 'Hevy (Training, CSV)',
+      cronometer: 'Cronometer (Essen, CSV)',
+      myfitnesspal: 'MyFitnessPal (Essen und Training, Export)',
     },
     reasons: {
       trashed: (n: number) =>
@@ -6252,6 +6372,8 @@ export const de = {
       noAccounts: 'Lege zuerst ein Konto an.',
       bankFormat:
         'Das Dateiformat wurde nicht erkannt. Erwartet wird eine OFX-, QIF- oder CAMT-Datei oder eine CSV-Datei mit Datum und Betrag.',
+      bankBalanceHint:
+        'Stimmt der Kontostand danach nicht mit deiner Bank überein? Trag ihn unter Finanzen → Konten als „Kontostand heute laut Bank“ ein.',
       bankSkipped: (n: number) =>
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
@@ -6347,6 +6469,11 @@ export const de = {
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
       placeholder: '# Wochenplan\n\n- Einkaufen #haushalt\n- Mama anrufen',
+    },
+    fitness: {
+      file: 'CSV aus einer Trainings- oder Ernährungs-App',
+      fileHint:
+        'Strong und Hevy (Training) oder Cronometer (Essen): exportiere dort die CSV-Datei und wähle sie hier. Sätze einer Übung werden zu einer Übung zusammengefasst, Doppeltes erkennt Nemo. Es wird nichts hochgeladen.',
     },
     feeds: {
       file: 'OPML-Datei (Feeds und Podcasts)',
@@ -7059,6 +7186,81 @@ export const de = {
       localAi: 'Lokales Modell darf Mails lesen',
       localAiHelp:
         'Aus. Wenn an, kann das lokale Modell (das eingebaute oder Ollama auf diesem Rechner) eine Mail zusammenfassen und Vorschläge für „Aus dieser Mail anlegen“ machen. Der Mailtext geht nie an ein Cloud-Modell und nie ins Netz; ist kein lokales Modell bereit, passiert nichts. Nichts davon wird gespeichert.',
+      offerPersonal: 'Filter „Persönlich“ anbieten',
+      offerPersonalHelp:
+        'Zeigt nur Mails von Menschen – Newsletter, Werbung und Benachrichtigungen bleiben weg (an den Kopfzeilen erkannt, nicht immer treffsicher).',
+      offerPlanAll: '„Alle in den Plan…“ anbieten',
+      offerPlanAllHelp:
+        'Ein Knopf über der Liste legt die angehakten Mails mit Vorschau als ToDos in den Plan.',
+      offerInvoices: 'Rechnungen in der Liste erkennen',
+      offerInvoicesHelp:
+        'Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit mit „Anlegen“; bei einer Mahnung zur offenen Rechnung „Mahnung vermerken“. Gelesen wird nur auf diesem Gerät.',
+    },
+    invoice: {
+      create: 'Anlegen',
+      createFor: (line: string) => `Rechnung anlegen: ${line}`,
+      check: 'Ansehen…',
+      checkFor: (line: string) => `Ansehen und anlegen: ${line}`,
+      created: 'Rechnung angelegt',
+      createdMark: 'angelegt',
+      inPlan: (day: string) => `Im Plan · ${day}`,
+      today: 'heute',
+      already: 'Schon angelegt',
+      reminderWord: (level: number) => (level > 1 ? `${level}. Mahnung` : 'Mahnung'),
+      due: (day: string) => `fällig ${day}`,
+      late: (day: string) => `Frist war ${day}`,
+      debit: (day: string) => `Abbuchung am ${day}`,
+      debitNoDay: 'wird abgebucht',
+      reminderFor: (payee: string, due: string, amount: string) =>
+        `Mahnung zu Rechnung ${payee}, fällig ${due} (${amount})`,
+      reminderNew: (amount: string, until: string) => `${amount} bis ${until}`,
+      note: 'Mahnung vermerken',
+      noteFor: (line: string) => `Mahnung vermerken: ${line}`,
+      noted: 'Mahnung vermerkt',
+      notedMark: 'vermerkt',
+      alreadyNoted: 'Schon vermerkt',
+      stale: 'Die Rechnung ist inzwischen bezahlt oder gelöscht. Nichts geändert.',
+      failed: 'Das hat nicht geklappt. Nichts gespeichert.',
+    },
+    plan: {
+      action: 'In den Plan',
+      asTodo: 'Als ToDo',
+      actionFor: (action: string, title: string) => `${action}: ${title}`,
+      planned: (day: string) => `Im Plan: ${day}`,
+      plannedNoDay: 'Im Plan',
+      savedTodo: 'Als ToDo gespeichert',
+      already: 'Schon im Plan',
+      alreadyTodo: 'Schon als ToDo da',
+      /** The same moments while the planner is off: the mail becomes a plain ToDo. */
+      todo: {
+        was: 'War als ToDo da',
+        reinstate: 'Wieder anlegen',
+        mark: 'als ToDo',
+        all: 'Alle als ToDo…',
+        allTitle: 'Als ToDo',
+        allSave: (n: number) => `Als ToDo (${n})`,
+        allDone: (n: number) => (n === 1 ? '1 Mail als ToDo' : `${n} Mails als ToDo`),
+        thread: 'Als ToDo da',
+        wasMark: 'war als ToDo da',
+        allIntro:
+          'Massenmails, Mails, die schon als ToDo da sind, und gelöschte Einträge sind abgewählt.',
+      },
+      notHere:
+        'Diese Mail ist auf diesem Gerät nicht geladen. Aktualisieren holt sie, wenn sie im Ordner liegt.',
+      wasMark: 'war im Plan',
+      thread: 'Im Plan',
+      emptyPersonal: 'Hier sind gerade keine Mails von Menschen.',
+      clearPersonal: 'Alle Mails zeigen',
+      was: 'War im Plan',
+      reinstate: 'Wieder einplanen',
+      mark: 'im Plan',
+      personal: 'Persönlich',
+      all: 'Alle in den Plan…',
+      allTitle: 'In den Plan',
+      allIntro: 'Massenmails, Mails im Plan und gelöschte Einträge sind abgewählt.',
+      allSave: (n: number) => `In den Plan (${n})`,
+      allDone: (n: number) => (n === 1 ? '1 Mail im Plan' : `${n} Mails im Plan`),
+      failed: 'Das hat nicht geklappt. Die Mail bleibt, wie sie ist.',
     },
     page: {
       refresh: 'Aktualisieren',
@@ -7296,10 +7498,9 @@ export const de = {
     widget: {
       inbox: 'Posteingang',
       inboxTitle: (n: number) => (n === 0 ? 'Alles gelesen' : `${n} ungelesen`),
-      inboxNoInvoices: (days: number) => `Keine Rechnungsmails in den letzten ${days} Tagen`,
-      inboxInvoices: (n: number, days: number) =>
-        n === 1 ? `1 Rechnungsmail in ${days} Tagen` : `${n} Rechnungsmails in ${days} Tagen`,
-      inboxInvoicesAction: 'Ansehen',
+      inboxNothingToCreate: 'Keine Rechnungen zum Anlegen',
+      inboxToCreate: (n: number) =>
+        n === 1 ? '1 Rechnung zum Anlegen' : `${n} Rechnungen zum Anlegen`,
       empty: 'Noch keine Mails.',
       emptyAction: 'E-Mail öffnen',
       link: 'E-Mail öffnen',
@@ -7340,6 +7541,17 @@ export const de = {
     },
     hint: 'Kein vollwertiger Browser. Für Online-Banking den Systembrowser nutzen.',
     hintClose: 'Hinweis ausblenden',
+    failed: {
+      title: (reason: string) => `Seite konnte nicht geladen werden: ${reason}`,
+      timeout: 'Das Seitenfenster hat nicht rechtzeitig geantwortet',
+      address: 'Diese Adresse kann der eingebaute Browser nicht öffnen',
+      native: 'Das Seitenfenster ließ sich nicht anlegen',
+      gone: 'Dieser Tab ist nicht mehr da',
+      reopen: 'Tab neu öffnen',
+      body: 'Der Rest von Nemo ist davon nicht betroffen.',
+      openSystem: 'Im Systembrowser öffnen',
+      retry: 'Noch einmal versuchen',
+    },
     tabs: {
       title: 'Offene Tabs',
       openAll: 'Alle Tabs anzeigen',
@@ -7757,7 +7969,8 @@ export const de = {
       none: 'Noch keine Projekte.',
       addJob: 'Projekt anlegen',
       running: (name: string, since: string) => `${name} · seit ${since}`,
-      idle: 'Nichts läuft',
+      /** The idle widget's one context line under today's figure (U30). */
+      idle: 'heute · nichts läuft',
     },
     head: { running: 'Läuft', idle: 'Bereit' },
   },
@@ -7779,6 +7992,7 @@ export const de = {
     emptyHint:
       'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
     add: 'Gewohnheit hinzufügen',
+    addFirst: 'Erste Gewohnheit',
     edit: 'Gewohnheit bearbeiten',
     form: {
       name: 'Name',
@@ -7911,8 +8125,9 @@ export const de = {
     },
     widget: {
       label: 'Feeds',
-      context: (n: number, g: number) =>
-        `${n === 1 ? '1 Feed' : `${n} Feeds`}${g > 0 ? ` · ${g === 1 ? '1 Gruppe' : `${g} Gruppen`}` : ''}`,
+      /** Context under the feed count: only the groups, never the number again. */
+      context: (_n: number, g: number) =>
+        g === 0 ? 'ohne Gruppen' : g === 1 ? 'aus 1 Gruppe' : `aus ${g} Gruppen`,
       empty: 'Noch keine Feeds',
       add: 'Feed hinzufügen',
     },
@@ -7971,6 +8186,8 @@ export const de = {
       noTime: 'Heute ist keine Zeit frei.',
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
+      first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
+      nextFree: (day: string, free: string) => `Heute ist frei. ${day}: ${free} frei.`,
       context: (n: number, planned: string) =>
         `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
       week: (week: string) => `KW ${week}`,
@@ -8036,6 +8253,7 @@ export const de = {
       due: (day: string) => `Frist ${day}`,
       dueWas: (day: string) => `Frist war ${day}`,
       openNote: 'Zur Notiz',
+      openMail: 'Zur Mail',
       blocker: 'Blocker',
       focus: 'Fokus starten',
     },
@@ -8055,6 +8273,7 @@ export const de = {
     },
     wait: {
       title: 'Wartet auf freie Zeit',
+      calm: 'Nichts davon muss heute sein.',
       over: (min: string) => `${min} mehr zu tun, als Zeit frei ist`,
       horizon: 'keine freie Zeit im Planungszeitraum',
       'too-long': 'länger als jeder Tag',
@@ -8169,6 +8388,328 @@ export const de = {
         vacation: 'Urlaub eingetragen – alles wartet ruhig.',
         sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
       },
+    },
+  },
+  fitness: {
+    meta: {
+      name: 'Fitness',
+      description: 'Training und Essen grob festhalten: Einheiten, Sätze, Gewichte und kcal.',
+      quickAddSession: 'Fitness: Einheit eintragen',
+      quickAddMeal: 'Fitness: Mahlzeit eintragen',
+      widget: 'Fitness',
+      settings: {
+        nutrition: 'Kalorien erfassen',
+        nutritionHelp:
+          'Aus: Die Ansicht „Essen“ und die kcal-Zeile im Widget verschwinden. Deine Einträge bleiben.',
+        kcalGoal: 'Tagesziel kcal',
+        kcalGoalHelp: '0 = kein Ziel. Unter „Essen“ → „Tagesziel“ kannst du es grob ausrechnen.',
+        weekSessions: 'Einheiten pro Woche',
+        weekSessionsHelp: '0 = kein Ziel, das Widget zählt dann nur.',
+      },
+    },
+    tabs: { label: 'Ansicht', training: 'Training', food: 'Essen', week: 'Woche' },
+    addSession: 'Einheit eintragen',
+    addMeal: 'Mahlzeit eintragen',
+    editSession: 'Einheit bearbeiten',
+    editMeal: 'Mahlzeit bearbeiten',
+    repeat: (title: string) => `Wie letztes Mal: ${title}`,
+    repeated: (title: string) => `Für heute eingetragen: ${title}`,
+    untitled: 'Einheit',
+    figure: {
+      week: 'Diese Woche',
+      sessions: (n: number) => (n === 1 ? 'Einheit' : 'Einheiten'),
+      today: 'Heute',
+    },
+    empty: {
+      training: 'Noch nichts eingetragen. Eine Einheit reicht.',
+      trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
+      food: 'Noch keine Mahlzeit eingetragen.',
+      foodHint: 'Auch in der Schnellerfassung: „kcal 650 Döner“.',
+    },
+    list: {
+      training: 'Einheiten nach Tag',
+      food: 'Mahlzeiten nach Tag',
+      dayKcal: (kcal: string) => `${kcal} kcal`,
+      exercises: (n: number) => (n === 1 ? '1 Übung' : `${n} Übungen`),
+    },
+    line: {
+      setsReps: (sets: number, reps: number) => `${sets} × ${reps}`,
+      sets: (sets: number) => (sets === 1 ? '1 Satz' : `${sets} Sätze`),
+      reps: (reps: number) => `${reps} Wdh.`,
+      weight: (kg: string) => `${kg} kg`,
+      kcal: (kcal: string) => `${kcal} kcal`,
+    },
+    form: {
+      date: 'Datum',
+      time: 'Uhrzeit',
+      title: 'Titel',
+      titleHint: 'Zum Beispiel „Oberkörper“ (freiwillig)',
+      duration: 'Dauer in Minuten',
+      exercises: 'Übungen',
+      exercise: 'Übung',
+      sets: 'Sätze',
+      reps: 'Wdh.',
+      weight: 'kg',
+      minutes: 'Min',
+      addExercise: 'Übung hinzufügen',
+      removeExercise: (name: string) => `${name} entfernen`,
+      note: 'Notiz',
+      text: 'Was',
+      textHint: 'Zum Beispiel „Haferflocken mit Obst“',
+      kcal: 'kcal',
+      protein: 'Eiweiß in g',
+      carbs: 'Kohlenhydrate in g',
+      fat: 'Fett in g',
+      known: 'Schon einmal eingetragen',
+      invalid: 'Bitte prüfe die Angaben.',
+      emptySession: 'Trag eine Übung oder eine Dauer ein.',
+    },
+    catalog: {
+      pick: 'Aus dem Katalog',
+      title: 'Übung aus dem Katalog',
+      intro: 'Tippe eine Übung an, sie kommt mit deinen Werten vom letzten Mal dazu.',
+      add: (name: string) => `${name} hinzufügen`,
+      groups: {
+        chest: 'Brust',
+        back: 'Rücken',
+        legs: 'Beine',
+        shoulders: 'Schultern',
+        arms: 'Arme',
+        core: 'Rumpf',
+        cardio: 'Ausdauer',
+        mobility: 'Beweglichkeit',
+      },
+      names: {
+        benchPress: 'Bankdrücken',
+        inclineBench: 'Schrägbankdrücken',
+        dumbbellPress: 'Kurzhantel-Drücken',
+        pushUp: 'Liegestütze',
+        dips: 'Dips',
+        flyes: 'Butterfly',
+        pullUp: 'Klimmzüge',
+        latPulldown: 'Latziehen',
+        row: 'Rudern',
+        dumbbellRow: 'Kurzhantel-Rudern',
+        deadlift: 'Kreuzheben',
+        backExtension: 'Rückenstrecker',
+        squat: 'Kniebeuge',
+        legPress: 'Beinpresse',
+        lunge: 'Ausfallschritte',
+        romanianDeadlift: 'Rumänisches Kreuzheben',
+        legCurl: 'Beinbeuger',
+        calfRaise: 'Wadenheben',
+        hipThrust: 'Hip Thrust',
+        shoulderPress: 'Schulterdrücken',
+        lateralRaise: 'Seitheben',
+        facePull: 'Face Pull',
+        shrug: 'Schulterheben',
+        bicepsCurl: 'Bizepscurls',
+        hammerCurl: 'Hammercurls',
+        tricepsExtension: 'Trizepsdrücken über Kopf',
+        plank: 'Plank',
+        crunch: 'Crunches',
+        legRaise: 'Beinheben',
+        russianTwist: 'Russian Twist',
+        run: 'Laufen',
+        walk: 'Gehen',
+        bike: 'Radfahren',
+        swim: 'Schwimmen',
+        rowing: 'Rudergerät',
+        jumpRope: 'Seilspringen',
+        crossTrainer: 'Crosstrainer',
+        stretch: 'Dehnen',
+        yoga: 'Yoga',
+        foamRoll: 'Faszienrolle',
+      },
+    },
+    plates: {
+      label: (trained: string, planned: string) =>
+        [
+          trained ? `Diese Woche trainiert: ${trained}` : 'Diese Woche: kein Training eingetragen',
+          planned ? `geplant: ${planned}` : '',
+        ]
+          .filter(Boolean)
+          .join('; '),
+    },
+    goal: {
+      open: 'Tagesziel',
+      title: 'Tagesziel kcal',
+      direct: 'kcal pro Tag',
+      directHint: '0 = kein Ziel',
+      calc: 'Ausrechnen',
+      calcIntro: 'Grobe Schätzung nach der Mifflin-St-Jeor-Formel.',
+      weight: 'Gewicht in kg',
+      height: 'Größe in cm',
+      age: 'Alter',
+      sex: 'Formel-Variante (Geschlecht)',
+      sexes: { male: 'männlich', female: 'weiblich', none: 'keine Angabe' },
+      activity: 'Alltag',
+      activities: {
+        sitting: 'meist sitzend',
+        light: 'leicht aktiv (1–3 × Sport pro Woche)',
+        moderate: 'mäßig aktiv (3–5 × pro Woche)',
+        active: 'sehr aktiv (6–7 × pro Woche)',
+        veryActive: 'körperliche Arbeit und Sport',
+      },
+      result: (kcal: string) => `Etwa ${kcal} kcal pro Tag`,
+      noResult: 'Gewicht, Größe und Alter eintragen (Erwachsene, 18–99 Jahre).',
+      hint: 'Grobe Schätzung, keine medizinische Beratung. Gewicht, Größe und Alter werden nicht gespeichert.',
+      take: 'Übernehmen',
+      saved: 'Tagesziel gespeichert.',
+    },
+    widget: {
+      week: 'Diese Woche',
+      weekDetail: (sessions: string, duration: string) =>
+        duration ? `${sessions} · ${duration}` : sessions,
+      sessions: (n: number) => (n === 1 ? '1 Einheit' : `${n} Einheiten`),
+      sessionsOf: (n: number, goal: number) => `${n} von ${goal} Einheiten`,
+      today: 'Heute',
+      kcal: (kcal: string) => `${kcal} kcal`,
+      kcalOf: (kcal: string, goal: string) => `${kcal} kcal von ${goal}`,
+      kcalPastGoal: (kcal: string, goal: string) => `${kcal} kcal · Ziel ${goal}`,
+      summary: (sessions: string) => `Diese Woche: ${sessions}`,
+      empty: 'Noch nichts diese Woche.',
+    },
+    calendar: { session: (title: string) => `Training: ${title}` },
+    saved: 'Gespeichert.',
+    week: {
+      label: 'Woche im Überblick',
+      prev: 'Vorherige Woche',
+      next: 'Nächste Woche',
+      today: 'Diese Woche',
+      range: (from: string, to: string) => `${from} – ${to}`,
+      nothing: 'Nichts eingetragen',
+      sessions: (n: number, duration: string) =>
+        `${n === 1 ? '1 Einheit' : `${n} Einheiten`}${duration ? ` · ${duration}` : ''}`,
+      planned: (n: number) => (n === 1 ? '1 geplant' : `${n} geplant`),
+      kcal: (kcal: string) => `${kcal} kcal`,
+      total: 'Zusammen',
+    },
+    planned: {
+      group: 'Geplant',
+      toggle: 'Geplant, noch nicht gemacht',
+      toggleHint: 'Zählt erst, wenn du „Erledigt“ tippst.',
+      timeHint: 'Mit Uhrzeit steht es am Tag unter „Jetzt wichtig“.',
+      waiting: 'Wartet noch',
+      done: 'Erledigt',
+      doneFor: (title: string) => `Erledigt: ${title}`,
+      logged: (title: string) => `Eingetragen: ${title}`,
+      attention: (time: string, title: string) => `Heute ${time} · Training: ${title}`,
+    },
+    templates: {
+      label: 'Vorlagen',
+      use: (title: string) => `Vorlage ${title} übernehmen`,
+      save: 'Als Vorlage speichern',
+      saved: 'Als Vorlage gespeichert.',
+      remove: (title: string) => `Vorlage ${title} entfernen`,
+      removed: 'Vorlage entfernt.',
+    },
+  },
+  clock: {
+    meta: {
+      name: 'Uhr',
+      description: 'Orte eintragen und ihre Uhrzeit immer sehen – mit Tag, Nacht und Zeitversatz.',
+      quickAdd: 'Uhr: Ort hinzufügen',
+      widget: 'Uhrzeit anderswo',
+      showZone: 'Zeitzone unter dem Ort zeigen',
+      showZoneHelp: 'Zeigt auf der Seite unter jedem Ort seine Zeitzone, zum Beispiel Asia/Tokyo.',
+    },
+    title: 'Uhr',
+    here: 'Hier',
+    hereLine: (zone: string) => `Deine Zeit · ${zone}`,
+    add: 'Ort hinzufügen',
+    addFirst: 'Ersten Ort hinzufügen',
+    empty: 'Noch keine Orte',
+    emptyHint:
+      'Trag einen Ort ein, zum Beispiel wo Familie oder Kolleg*innen leben. Seine Uhrzeit steht dann hier und auf der Übersicht.',
+    full: (n: number) =>
+      `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
+    list: 'Deine Orte',
+    search: {
+      title: 'Ort hinzufügen',
+      label: 'Stadt oder Zeitzone',
+      placeholder: 'z. B. Tokio, New York, Asia/Kolkata',
+      hint: 'Funktioniert ohne Internet. Den Namen kannst du danach ändern.',
+      none: 'Nichts gefunden. Versuch eine größere Stadt in der Nähe oder die Zeitzone, z. B. Europe/Lisbon.',
+      results: 'Treffer',
+    },
+    rename: {
+      title: 'Ort umbenennen',
+      label: 'Name',
+      hint: (zone: string) => `Zum Beispiel „Mama“ oder „Büro“. Zeitzone: ${zone}`,
+    },
+    menu: {
+      label: (name: string) => `Aktionen für ${name}`,
+      rename: 'Umbenennen',
+      up: 'Nach oben',
+      down: 'Nach unten',
+      remove: 'Entfernen',
+    },
+    added: (name: string) => `${name} hinzugefügt.`,
+    removed: (name: string) => `${name} entfernt.`,
+    renamed: 'Name geändert.',
+    moved: 'Reihenfolge geändert.',
+    day: 'Tag',
+    night: 'Nacht',
+    tomorrow: 'morgen',
+    yesterday: 'gestern',
+    sameTime: 'gleiche Zeit',
+    /** Screen reader text of one place: "Tokio: 23:07, Nacht, morgen, 8 Stunden später". */
+    aria: (name: string, time: string, parts: string) => `${name}: ${time}, ${parts}`,
+    widget: {
+      empty: 'Noch keine Orte.',
+      add: 'Ort hinzufügen',
+    },
+  },
+  remote: {
+    meta: {
+      name: 'Fernbedienung',
+      description:
+        'Steuere Medien und Lautstärke deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.',
+      widget: 'Fernbedienung',
+      haptics: 'Kurzes Vibrieren bei jedem Tastendruck',
+      hapticsHelp: 'Ein kurzer Tick bei jedem Tastendruck, damit du nicht hinsehen musst.',
+      keepAwake: 'Bildschirm anlassen',
+      keepAwakeHelp: 'Der Bildschirm bleibt an, solange die Fernbedienung offen ist.',
+    },
+    phoneOnly: 'Die Fernbedienung gibt es in der Handy-App.',
+    media: 'Medien',
+    more: 'Weitere Aktionen',
+    mute: 'Ton aus',
+    unmute: 'Ton an',
+    lock: 'PC sperren',
+    previous: 'Vorheriger',
+    next: 'Nächster',
+    play: 'Wiedergabe',
+    pause: 'Pause',
+    quieter: 'Leiser',
+    louder: 'Lauter',
+    retry: 'Erneut versuchen',
+    pair: 'PC koppeln',
+    disable: 'Modul ausschalten',
+    open: 'Öffnen',
+    widgetIdle: 'Dein PC',
+    widgetHint: 'Medien und Lautstärke des PCs steuern.',
+    state: {
+      connecting: 'Dein PC',
+      slow: 'Dein PC antwortet noch nicht.',
+      volume: (percent: number) => `Dein PC · Lautstärke ${percent} %`,
+      volumeUnknown: 'Dein PC · verbunden',
+      muted: 'Dein PC · Ton aus',
+      pcLocked: 'gesperrt',
+      notPaired: 'Noch kein PC gekoppelt. Die Fernbedienung braucht die Kopplung im Heimnetz.',
+      unreachable: 'Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?',
+      notGranted:
+        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung dieses Handy erlauben.',
+      paused:
+        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.',
+      busy: 'Gerade steuert ein anderes Gerät den PC.',
+      noInputHere: 'Dein PC nimmt hier gerade keine Fernbedienung an. Ist der PC im Heimnetz?',
+      unsupported: 'Dieser PC lässt sich nicht fernsteuern (nur Windows).',
+      tooOld: 'Dein PC antwortet nicht auf die Fernbedienung. Ist Nemo auf dem PC aktuell?',
+      locked: 'PC ist gesperrt. Medien und Lautstärke gehen weiter.',
+      limit: 'Verbindung kurz unterbrochen.',
+      retry: 'Die Verbindung kam nicht zustande.',
     },
   },
 } as const;

@@ -8,7 +8,13 @@ import {
   rangeFor,
   shiftDate,
   splitDay,
+  stackLanes,
   viewTitle,
+  dailyRepeats,
+  gridScroll,
+  initialScrollMinute,
+  scrollAnchor,
+  repeatKey,
   weekNumberOf,
 } from './views';
 import type { CalendarItem } from '@/core/modules/types';
@@ -240,6 +246,34 @@ describe('splitDay', () => {
     expect([by.c!.lane, by.c!.lanes]).toEqual([0, 1]);
   });
 
+  it('folds an overlap that needs more lanes than the column has room for into a stack', () => {
+    const { timed } = splitDay([
+      at('a', '18:00', '19:00'),
+      at('b', '18:00', '19:00'),
+      at('c', '18:30', '19:30'),
+      at('d', '19:00', '20:00'),
+      at('e', '21:00', '22:00'),
+    ]);
+    // Room for three lanes: nothing changes.
+    expect(stackLanes(timed, 3)).toEqual({ blocks: timed, stacks: [] });
+    // One lane: the whole cluster is one stack over its span; the free-standing entry stays a block.
+    const one = stackLanes(timed, 1);
+    expect(one.blocks.map((b) => b.item.id)).toEqual(['e']);
+    expect(one.stacks).toHaveLength(1);
+    expect(one.stacks[0]).toMatchObject({ start: 1080, end: 1200, lane: 0, lanes: 1 });
+    expect(one.stacks[0]!.items.map((i) => i.item.id)).toEqual(['a', 'b', 'c', 'd']);
+    // Two lanes: the first lane keeps its blocks, the rest shares the second lane as a stack.
+    const two = stackLanes(timed, 2);
+    expect(two.blocks.map((b) => [b.item.id, b.lane, b.lanes])).toEqual([
+      ['a', 0, 2],
+      ['d', 0, 2],
+      ['e', 0, 1],
+    ]);
+    expect(two.stacks[0]).toMatchObject({ start: 1080, end: 1170, lane: 1, lanes: 2 });
+    expect(two.stacks[0]!.items.map((i) => i.item.id)).toEqual(['b', 'c']);
+    expect(stackLanes([], 1)).toEqual({ blocks: [], stacks: [] });
+  });
+
   it('gives very short items a minimum height and clamps to midnight', () => {
     const { timed } = splitDay([at('a', '09:00', '09:05'), at('b', '23:30', '01:00')]);
     expect(timed[0]!.end - timed[0]!.start).toBe(30);
@@ -278,5 +312,98 @@ describe('splitDay with a multi-day entry', () => {
       },
     ]).timed;
     expect(night!.end).toBe(24 * 60);
+  });
+});
+
+describe('hour grid start (S04, UI round 6)', () => {
+  it('at night opens around the first entry, not on empty night hours (S04 follow-up)', () => {
+    const day = [{ start: 8 * 60 }, { start: 9 * 60 }];
+    // 04:45 with today shown: the first entry (08:00) leads, so the grid opens at 06:00, not 03:00
+    expect(scrollAnchor(day, 4 * 60 + 45, true)).toBe(8 * 60);
+    expect(initialScrollMinute([], scrollAnchor(day, 4 * 60 + 45, true))).toBe(6 * 60);
+    // an early entry (06:30) still leads at night
+    expect(scrollAnchor([{ start: 6 * 60 + 30 }], 2 * 60, true)).toBe(6 * 60 + 30);
+    // nothing timed: 08:00
+    expect(scrollAnchor([], 3 * 60, true)).toBe(8 * 60);
+    // during the day now leads as before; without today the first entry leads
+    expect(scrollAnchor(day, 14 * 60, true)).toBe(14 * 60);
+    expect(scrollAnchor(day, 14 * 60, false)).toBe(8 * 60);
+  });
+  it('opens an hour and a half before now, on the full hour', () => {
+    expect(initialScrollMinute([], 10 * 60)).toBe(8 * 60);
+    expect(initialScrollMinute([], 60)).toBe(0);
+  });
+  it('never cuts a block at the top edge: it moves up to the block', () => {
+    // 07:30–09:00 crosses 08:00 → the grid opens at 07:00.
+    expect(initialScrollMinute([{ start: 450, end: 540 }], 10 * 60)).toBe(7 * 60);
+    // a chain: 06:30–07:15 crosses the new top 07:00 → 06:00
+    expect(
+      initialScrollMinute(
+        [
+          { start: 450, end: 540 },
+          { start: 390, end: 435 },
+        ],
+        10 * 60,
+      ),
+    ).toBe(6 * 60);
+    // a block that starts exactly on the top stays fully visible
+    expect(initialScrollMinute([{ start: 480, end: 510 }], 10 * 60)).toBe(8 * 60);
+    // a long block that starts more than two hours above the top does not pull the grid up
+    expect(initialScrollMinute([{ start: 300, end: 1320 }], 10 * 60)).toBe(8 * 60);
+    // overlapping blocks do not chain it further than two hours above the first choice (08:00 → at most 06:00)
+    expect(
+      initialScrollMinute(
+        [
+          { start: 450, end: 540 },
+          { start: 330, end: 460 },
+        ],
+        10 * 60,
+      ),
+    ).toBe(7 * 60);
+  });
+  it("scrolls on a new range and once when its entries load, never on the user's own edits", () => {
+    // new range, nothing loaded yet → scroll; entries arrive with a timed one → scroll once more
+    let step = gridScroll(null, 'w1', false, false);
+    expect(step.scroll).toBe(true);
+    step = gridScroll(step.memo, 'w1', true, true);
+    expect(step.scroll).toBe(true);
+    // the user deletes the last timed entry, then saves a new one: no jump
+    step = gridScroll(step.memo, 'w1', true, false);
+    expect(step.scroll).toBe(false);
+    step = gridScroll(step.memo, 'w1', true, true);
+    expect(step.scroll).toBe(false);
+    // a week with only all-day entries: saving the first timed event does not move the grid
+    step = gridScroll(null, 'w2', true, false);
+    step = gridScroll(step.memo, 'w2', true, true);
+    expect(step.scroll).toBe(false);
+    // all-day entries load first, timed ones never come: settled, a later edit does not scroll
+    step = gridScroll(null, 'w3', false, false);
+    step = gridScroll(step.memo, 'w3', true, false);
+    expect(step.scroll).toBe(false);
+    step = gridScroll(step.memo, 'w3', true, true);
+    expect(step.scroll).toBe(false);
+    // another range scrolls again
+    expect(gridScroll(step.memo, 'w4', true, true).scroll).toBe(true);
+  });
+});
+
+describe('daily repeats in the month (S03, UI round 6)', () => {
+  const item = (date: string, title = 'Medikament'): CalendarItem => ({
+    id: `${title}:${date}`,
+    source: 'reminders',
+    kind: 'reminder',
+    title,
+    date,
+    time: '08:00',
+    allDay: false,
+  });
+  it('marks an entry that comes back on five days of a week', () => {
+    const days = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'];
+    const set = dailyRepeats(days.map((d) => item(d)));
+    expect(set.has(repeatKey(item('2026-09-01')))).toBe(true);
+  });
+  it('leaves a weekly entry alone', () => {
+    const days = ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29'];
+    expect(dailyRepeats(days.map((d) => item(d, 'Training'))).size).toBe(0);
   });
 });

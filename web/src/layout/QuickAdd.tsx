@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useAiOn } from '@/core/ai/switch';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { CaptureForm } from '@/quickCapture/ui/CaptureForm';
 import { announceSaved } from '@/quickCapture/ui/announceSaved';
+import { readCaptureDraft } from '@/quickCapture/ui/draft';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, Icon } from '@/ui';
@@ -19,10 +21,12 @@ export function QuickAdd() {
   const [write] = useAiWriteSettings();
   const aiOn = useAiOn();
   const writeLabel = useWriteLabel();
+  // Reading drops a draft older than 30 minutes, so an old one never stays on the device (C04).
+  useEffect(() => void readCaptureDraft(), []);
 
   const onSaved: Parameters<typeof CaptureForm>[0]['onSaved'] = (saved) => {
     setOpen(false);
-    announceSaved(saved);
+    void announceSaved(saved, undefined, (to) => void navigate(to));
   };
 
   return (
@@ -32,9 +36,11 @@ export function QuickAdd() {
       title={t.quickAdd.title}
       size="roomy"
       askAfterTyping
+      backdrop="opaque"
     >
       {open ? (
         <CaptureForm
+          keepDraft
           onSaved={onSaved}
           onCancel={() => setOpen(false)}
           onOpenFull={(path) => {

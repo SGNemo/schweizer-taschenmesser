@@ -12,6 +12,7 @@ import {
   pauseSetup,
   readSetupState,
   resumeStep,
+  resumeTarget,
   setChecklistHidden,
   SETUP_STATE_KEY,
   stepProgress,
@@ -113,5 +114,46 @@ describe('honest progress', () => {
   it('never counts hint steps, so the wizard and the card show the same total', () => {
     const steps = [{ id: 'a' }, { id: 'b', hint: true }, { id: 'c' }];
     expect(countedSteps(steps).map((x) => x.id)).toEqual(['a', 'c']);
+  });
+});
+
+describe('A01: resume exactly where the setup was paused', () => {
+  const steps = [
+    { id: 'core.basics', since: 1 },
+    { id: 'core.sync', since: 1 },
+    { id: 'core.profiles', since: 1 },
+  ];
+
+  it('remembers the step and the question mode of the pause', async () => {
+    await markStepDone('core.basics');
+    const s = await pauseSetup(undefined, { step: 'core.profiles', quick: true });
+    expect(s).toMatchObject({ status: 'inProgress', pausedAt: 'core.profiles', pausedQuick: true });
+  });
+
+  it('resumes at the paused step, not at the first open one', () => {
+    const state = {
+      ...initialState('inProgress'),
+      doneSteps: ['core.basics'],
+      pausedAt: 'core.profiles',
+      pausedQuick: true,
+    };
+    expect(resumeStep(steps, state)?.id).toBe('core.sync');
+    expect(resumeTarget(steps, state)).toEqual({ step: steps[2], quick: true });
+  });
+
+  it('answering a step or ending the setup forgets the pause', async () => {
+    await pauseSetup(undefined, { step: 'core.profiles', quick: true });
+    expect((await markStepDone('core.profiles')).pausedAt).toBeUndefined();
+    await pauseSetup(undefined, { step: 'core.sync', quick: false });
+    expect((await pauseSetup()).pausedAt).toBeUndefined();
+  });
+
+  it('falls back to the first open step once the paused one is handled', () => {
+    const state = {
+      ...initialState('inProgress'),
+      doneSteps: ['core.basics', 'core.profiles'],
+      pausedAt: 'core.profiles',
+    };
+    expect(resumeTarget(steps, state)).toEqual({ step: steps[1], quick: false });
   });
 });

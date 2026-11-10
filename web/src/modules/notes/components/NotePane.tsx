@@ -3,6 +3,7 @@ import type { Stored } from '@/core/db/types';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
+import { saveStatusText } from '../saveStatus';
 import { Button, Icon, IconButton, Skeleton } from '@/ui';
 import { randomId } from '@/core/db/util';
 import { useUiStore } from '@/stores/ui';
@@ -46,7 +47,7 @@ export interface NotePaneProps {
   onOpenPage: (id: string) => void;
   onCreated: (id: string) => void;
   onDeleted: () => void;
-  autoFocus: boolean;
+  focusOnOpen: boolean;
 }
 
 type Snapshot = { title: string; body: string };
@@ -314,7 +315,7 @@ export function NotePane(props: NotePaneProps) {
         <EditorSurface
           initial={initial.body}
           width={prefs.width}
-          autoFocus={props.autoFocus}
+          focusOnOpen={props.focusOnOpen}
           apiRef={apiRef}
           onMoveSelection={scratch ? props.onMoveSelection : undefined}
           linkTitles={props.linkTitles}
@@ -357,7 +358,7 @@ export function NotePane(props: NotePaneProps) {
         />
       ) : null}
       <footer className={styles.foot} aria-live="polite">
-        <span>{status === 'saving' ? t.notes.saving : t.notes.saved}</span>
+        <span>{saveStatusText(status, scratch)}</span>
         {prefs.wordCount ? <span>{t.notes.words(words)}</span> : null}
       </footer>
     </section>

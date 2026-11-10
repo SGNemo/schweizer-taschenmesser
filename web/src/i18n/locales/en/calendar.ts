@@ -118,12 +118,13 @@ export const calendar: Strings['calendar'] = {
   location: 'Location',
   showOnMap: 'Show on map',
   saveAsPlace: 'Remember as place',
-  nothing: 'No entries',
+  nothing: 'Nothing planned yet.',
   endBeforeStart: 'The end can’t be before the start.',
   more: (n: number) => `+${n} more`,
   agenda: 'Agenda',
   allDayRow: 'All day and without a time',
   timeGrid: 'Time grid',
+  hoursRegion: 'Hours of the day',
   widgetEmpty: 'Nothing planned.',
   stageBody: (minutes: number, time: string) =>
     (minutes >= 1440
@@ -203,6 +204,7 @@ export const calendar: Strings['calendar'] = {
     expiry: 'Expiry',
     external: 'External',
     plan: 'Plan',
+    training: 'Training',
   } as Record<string, string>,
   planLink: 'Plan',
   external: {

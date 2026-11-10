@@ -3,9 +3,33 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import i18n from './eslint-rules/i18n.js';
+import {
+  FIXED_LOCALE_FILES,
+  FIXED_LOCALE_IGNORES,
+  fixedLocaleSelectors,
+} from './eslint-rules/no-fixed-locale.js';
+import { autoFocusSelectors } from './eslint-rules/no-autofocus.js';
 
 // Module isolation: feature modules must not import each other.
 // Exception (see CLAUDE.md): finance may read subscriptions/invoices via their public.ts.
+
+/** Platform isolation (see the block below); a constant because the fixed-locale blocks repeat it. */
+const platformSelectors = [
+  {
+    selector: 'ImportDeclaration[source.value=/^@tauri-apps\\//]',
+    message:
+      'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
+  },
+  {
+    selector: 'ImportExpression[source.value=/^@tauri-apps\\//]',
+    message:
+      'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
+  },
+  {
+    selector: 'Identifier[name=/^__TAURI/], Literal[value=/^__TAURI/]',
+    message: 'Do not detect the native shell yourself; ask getPlatform().',
+  },
+];
 
 export default tseslint.config(
   {
@@ -56,27 +80,38 @@ export default tseslint.config(
   {
     // Platform isolation: only `core/platform` may know that a native shell exists, and only
     // `core/platform/tauri` may import Tauri packages. Everything else uses `getPlatform()`.
+    // No `autoFocus` anywhere in src/ (eslint-rules/no-autofocus.js): it shares the core rule, so every
+    // block below that sets `no-restricted-syntax` repeats it.
     files: ['src/**/*.{ts,tsx}'],
     ignores: ['src/core/platform/**'],
     rules: {
+      'no-restricted-syntax': ['error', ...platformSelectors, ...autoFocusSelectors],
+    },
+  },
+  {
+    // No fixed 'de-DE' outside core/i18n, core/time, core/voice (eslint-rules/no-fixed-locale.js). ESLint
+    // replaces a rule's options per file, so this block repeats the platform selectors for the files that
+    // have them, and the next one covers core/platform, which has only the locale selectors.
+    files: FIXED_LOCALE_FILES,
+    ignores: [...FIXED_LOCALE_IGNORES, 'src/core/platform/**'],
+    rules: {
       'no-restricted-syntax': [
         'error',
-        {
-          selector: 'ImportDeclaration[source.value=/^@tauri-apps\\//]',
-          message:
-            'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
-        },
-        {
-          selector: 'ImportExpression[source.value=/^@tauri-apps\\//]',
-          message:
-            'Use getPlatform() from @/core/platform; Tauri packages belong in core/platform/tauri.',
-        },
-        {
-          selector: 'Identifier[name=/^__TAURI/], Literal[value=/^__TAURI/]',
-          message: 'Do not detect the native shell yourself; ask getPlatform().',
-        },
+        ...platformSelectors,
+        ...fixedLocaleSelectors,
+        ...autoFocusSelectors,
       ],
     },
+  },
+  {
+    files: ['src/core/platform/**/*.{ts,tsx}'],
+    ignores: FIXED_LOCALE_IGNORES,
+    rules: { 'no-restricted-syntax': ['error', ...fixedLocaleSelectors, ...autoFocusSelectors] },
+  },
+  {
+    // The tests of core/platform are in none of the blocks above.
+    files: ['src/core/platform/**/*.test.{ts,tsx}'],
+    rules: { 'no-restricted-syntax': ['error', ...autoFocusSelectors] },
   },
   {
     // Feature modules: no imports of sibling modules, no raw table writes.

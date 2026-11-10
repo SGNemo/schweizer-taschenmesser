@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-wifi-state"
+description = "Enables the wifi_state command without any pre-configured scope."
+commands.allow = ["wifi_state"]
+
+[[permission]]
+identifier = "deny-wifi-state"
+description = "Denies the wifi_state command without any pre-configured scope."
+commands.deny = ["wifi_state"]

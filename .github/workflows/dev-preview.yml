@@ -245,7 +245,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-dev-thin-llm
+          shared-key: windows-dev-thin-llm-vk1.4.363.1
           cache-targets: false
           cache-directories: C:/t
       - run: npm ci
@@ -255,7 +255,7 @@ jobs:
       - name: Vulkan SDK (for the local model's GPU backend)
         shell: pwsh
         run: |
-          choco install vulkan-sdk -y --no-progress
+          choco install vulkan-sdk --version 1.4.363.1 -y --no-progress
           $sdk = (Get-ChildItem 'C:\VulkanSDK' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
           if (-not $sdk) { throw 'Vulkan SDK not found after install' }
           "VULKAN_SDK=$sdk" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -351,7 +351,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # the app build maps each change note to the build it came with (git history)
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: 17
@@ -511,8 +511,10 @@ jobs:
             echo "::error::releases/latest points at $TAG – refusing to continue."
             exit 1
           fi
-          cp dl/DEV_NOTES.md notes.md
           mapfile -t NAMES < assets.txt
+          # Download links, the short Windows/Android install guides and the SHA-256 of the exe and the APK go on top.
+          node web/scripts/dev-release-body.mjs --dir dl --repo "$GITHUB_REPOSITORY" --tag "$TAG" \
+            --notes dl/DEV_NOTES.md --out notes.md Nemo-Portable-dev.exe Nemo-dev.apk
           BINARIES=(); MANIFEST=()
           for n in "${NAMES[@]}"; do
             if [[ "$n" == dev-latest.json ]]; then MANIFEST+=("dl/$n"); else BINARIES+=("dl/$n"); fi

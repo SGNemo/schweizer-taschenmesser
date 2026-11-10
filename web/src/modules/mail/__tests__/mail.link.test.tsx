@@ -24,7 +24,9 @@ vi.mock('@/core/mail/service', async (orig) => ({
 
 import { ThreadView } from '../components/ThreadView';
 import { loadThreadBodies } from '../cache';
+import { invoiceMailId } from '../invoiceRow';
 import { linkRepo } from '../repo';
+import { useUiStore } from '@/stores/ui';
 
 const message: MailMessage = {
   id: 'm1',
@@ -93,7 +95,10 @@ describe('create from this mail', () => {
     expect(field).toHaveValue('Stadtwerke Musterstadt 84,30 € 15.11.2026');
     expect(within(dialog).getByText(/ein Link zu dieser Mail/)).toBeInTheDocument();
     // the preview is shown, nothing is stored yet
-    expect(await within(dialog).findByTestId('capture-chips')).toHaveTextContent('84,30');
+    // The chips render first and are filled once the line is read: wait for the content, not the box.
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
     expect(await db.table('invoices_invoice').count()).toBe(0);
     expect(await db.table('mail_link').count()).toBe(0);
 
@@ -121,6 +126,65 @@ describe('create from this mail', () => {
       type: 'invoice',
       moduleId: 'invoices',
     });
+  });
+
+  it('the sheet saves an invoice under the id the mail list uses; a second save finds it (Nachlese)', async () => {
+    const user = userEvent.setup();
+    view();
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    let dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
+    const [invoice] = await db.table('invoices_invoice').toArray();
+    expect(invoice.id).toBe(await invoiceMailId('m1'));
+    // The same message through the sheet again: no second invoice.
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await waitFor(() =>
+      expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Schon angelegt'),
+    );
+    expect(await db.table('invoices_invoice').count()).toBe(1);
+  });
+
+  it('a deleted invoice under the mail id never comes back with old values: the sheet saves its own', async () => {
+    const id = await invoiceMailId('m1');
+    await db.table('invoices_invoice').add({
+      id,
+      payee: 'Alt',
+      amountMinor: 100,
+      dueDate: '2026-01-01',
+      status: 'open',
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: 2,
+      _f: {},
+    });
+    const user = userEvent.setup();
+    view();
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    const live = async () =>
+      (await db.table('invoices_invoice').toArray()).filter((r) => !r.deletedAt);
+    await waitFor(async () => expect(await live()).toHaveLength(1));
+    const [created] = await live();
+    expect(created).toMatchObject({ payee: 'Stadtwerke Musterstadt', amountMinor: 8430 });
+    expect(created.id).not.toBe(id);
+    expect((await db.table('invoices_invoice').get(id)).deletedAt).not.toBeNull();
   });
 
   it('cancelling saves nothing', async () => {
@@ -198,5 +262,34 @@ describe('create from this mail', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
     await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
     expect('note' in (await db.table('invoices_invoice').toArray())[0]!).toBe(false);
+  });
+  it('an invoice deleted under the mail id while the sheet is open: the shown values are saved anew', async () => {
+    const user = userEvent.setup();
+    view();
+    await openMenu(user);
+    await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
+    );
+    const id = await invoiceMailId('m1');
+    await db.table('invoices_invoice').add({
+      id,
+      payee: 'Alt',
+      amountMinor: 100,
+      dueDate: '2026-01-01',
+      status: 'open',
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'd',
+      deletedAt: 2,
+      _f: {},
+    });
+    await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    const live = async () =>
+      (await db.table('invoices_invoice').toArray()).filter((r) => !r.deletedAt);
+    await waitFor(async () => expect(await live()).toHaveLength(1));
+    expect((await live())[0]).toMatchObject({ payee: 'Stadtwerke Musterstadt', amountMinor: 8430 });
+    expect((await db.table('invoices_invoice').get(id)).payee).toBe('Alt');
   });
 });

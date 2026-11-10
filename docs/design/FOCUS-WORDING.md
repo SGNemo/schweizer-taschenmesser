@@ -15,6 +15,8 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Empty, all done | "Alles erledigt. Zeit für etwas Schönes." | "Keine Aufgaben vorhanden" |
 | Empty, nothing yet | "Noch nichts geplant. Eine Sache reicht." | "Es gibt keine Einträge." |
 | Day plan full | "Drei Dinge reichen für heute." | "Limit erreicht" |
+| Day plan head (planner) | "Heute: Stadtwerke bezahlen. Das reicht für heute." · nothing planned: "Heute ist frei. Mi: 1 h 24 frei." · folded waiting group: "Wartet auf freie Zeit · 16 · Nichts davon muss heute sein." | "Noch 16 offen" |
+| After a batch | "5 Dinge gespeichert. Sortiert wird später. · Ansehen · Rückgängig" | "5 neue Aufgaben – jetzt sortieren!" |
 | Focus start | "Fokus: Formular ausfüllen · 25 Min" | "Konzentrier dich!" |
 | Focus end | "Zeit ist um. Noch fünf Minuten oder fertig?" | "Zeit abgelaufen!" |
 | Focus leave | "Fokus beendet. Dein Stand ist gespeichert." | "Abgebrochen" |

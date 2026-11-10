@@ -1,6 +1,7 @@
 //! Wire layout and frame rules of the LAN channel (no I/O, no keys).
 //!
-//! Handshake message 1 on the wire: `mode byte (1) || Noise message 1 (96 B)` = 97 B.
+//! Handshake message 1 on the wire: `mode byte (1) || Noise message 1 (96 B)` = 97 B. Modes: pairing,
+//! sync session, input session (remote control, `crate::input`).
 //! Message 2 is the bare Noise message (48 B, 49 B when it carries `unknown-device`).
 //! Transport frame = Noise ciphertext of `tag (1) || body`. Framing on the stream (length prefix) is
 //! the transport's business (package 2b); these checks work on one complete message.
@@ -9,6 +10,10 @@
 pub const MODE_PAIR: u8 = 1;
 /// Mode byte: session of an already paired device (`IK`).
 pub const MODE_SESSION: u8 = 2;
+
+/// Mode byte: remote-control input session of an already paired device (`IK`, own prologue, so a
+/// sync session can never become an input session or the other way round).
+pub const MODE_INPUT: u8 = 3;
 
 /// Noise message 1 length for both patterns (e 32 + encrypted s 32 + tag 16 + tag 16).
 pub const NOISE_M1_LEN: usize = 96;
@@ -19,6 +24,8 @@ pub const PRE_HANDSHAKE_CAP: usize = 256;
 /// Cap of every message until the peer proved itself with a first transport frame, and for the
 /// whole pairing connection (only `hello` and the key frame exist there).
 pub const PRE_CONFIRM_CAP: usize = 256;
+/// Cap of an input session after its first authenticated frame (it never gets [`MAX_FRAME`]).
+pub const INPUT_CAP: usize = 512;
 /// Noise's own limit for one message.
 pub const MAX_FRAME: usize = 65_535;
 

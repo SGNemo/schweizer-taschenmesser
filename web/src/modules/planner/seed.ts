@@ -109,11 +109,12 @@ function seed(ctx: SeedContext): SeedRows {
   return { day: days, item: items };
 }
 
-/** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions). */
+/** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions, fitness). */
 const SEED_SOURCES: readonly (readonly [string, string])[] = [
   ['todos', 'task'],
   ['invoices', 'invoice'],
   ['subscriptions', 'subscription'],
+  ['fitness', 'session'],
 ];
 
 /**
@@ -138,9 +139,12 @@ async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; i
     return false;
   };
   await runBackground({ force: true });
-  // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless).
-  const items = (await itemRepo.active().toArray()).filter((r) => isSeed(r.id)).map((r) => r.id);
-  const assignments = (await assignmentRepo.active().toArray())
+  // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless),
+  // and also a deleted one: on a slow device the service runs between the todos rows and the planner's own rows,
+  // plans the task that is meant to stay out, and the run above takes that row away again. Its tombstone is test
+  // data too; left unregistered it would sit in the sync outbox.
+  const items = (await itemRepo.table.toArray()).filter((r) => isSeed(r.id)).map((r) => r.id);
+  const assignments = (await assignmentRepo.table.toArray())
     .filter((r) => isSeed(r.itemKey))
     .map((r) => r.id);
   return [

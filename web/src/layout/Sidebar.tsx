@@ -1,10 +1,12 @@
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
-import { setFavourite } from '@/core/settings/nav';
+import { setFavourite, useStoredFavourites } from '@/core/settings/nav';
 import { areaOfPath, type NavArea, type NavItem, type NavTree } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon, Logo, OverlayScroll, Wordmark } from '@/ui';
 import { useNewChangelog } from '@/core/changelog/useNewChangelog';
+import { useClockOn } from '@/core/settings/clock';
+import { LogoClock } from './LogoClock';
 import { NewDot } from './NewDot';
 import { SupporterBadge } from './SupporterBadge';
 import styles from './Sidebar.module.css';
@@ -45,6 +47,20 @@ function FavouriteBar({ items }: { items: NavItem[] }) {
         ))}
       </ul>
     </>
+  );
+}
+
+/** U01: the favourites' room while the setting is read, so the module list below does not move down when they come. */
+function FavouritesPending() {
+  return (
+    <div className={styles.favPending} aria-hidden="true" data-testid="favourites-pending">
+      <p className={styles.heading}>{t.nav.favourites}</p>
+      <div className={styles.favbar}>
+        <span className={styles.fav}>
+          <span className={styles.favLink} />
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -133,7 +149,10 @@ function AreaGroup({ area, shown, active }: { area: NavArea; shown: string[]; ac
   );
 }
 
-/** An icon of the collapsed rail: the name is the tooltip and the accessible name, nothing else takes width. */
+/**
+ * An icon of the collapsed rail: the name is the accessible name and a tooltip drawn from it in CSS (on hover and on
+ * keyboard focus, which a `title` never shows); nothing else takes width.
+ */
 function RailLink({
   to,
   icon,
@@ -141,6 +160,7 @@ function RailLink({
   active,
   area,
   dot,
+  first,
 }: {
   to: string;
   icon: NavItem['icon'];
@@ -148,17 +168,18 @@ function RailLink({
   active: boolean;
   area?: NavItem['area'];
   dot?: boolean;
+  /** Home, set off from the areas below it. */
+  first?: boolean;
 }) {
   return (
-    <li data-area={area}>
+    <li data-area={area} className={first ? styles.railFirst : undefined}>
       <Link
         to={to}
         className={styles.railLink}
         aria-current={active ? 'page' : undefined}
         aria-label={label}
-        title={label}
       >
-        <Icon name={icon} size={22} />
+        <Icon name={icon} />
         {dot ? <NewDot floating /> : null}
       </Link>
     </li>
@@ -172,10 +193,12 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   const newChanges = useNewChangelog();
   const shown = tree.favourites.flatMap((i) => (i.moduleId ? [i.moduleId] : []));
   const activeArea = areaOfPath(tree, pathname)?.id;
+  const clockOn = useClockOn();
+  const favouritesReady = useStoredFavourites().ready;
 
-  const brand = (
+  const link = (
     <a
-      className={styles.brand}
+      className={rail ? `${styles.brand} ${styles.brandTile}` : styles.brand}
       href="/"
       aria-label={t.nav.homeAria}
       onClick={(e) => {
@@ -183,8 +206,17 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
         void navigate('/');
       }}
     >
-      {rail ? <Logo size={32} /> : <Wordmark height={44} title={t.appName} />}
+      {rail ? <Logo tile /> : <Wordmark height={44} title={t.appName} />}
     </a>
+  );
+  // The clock sits next to the home link, not in it: it opens the Uhr module (while that is on) or nothing.
+  const brand = clockOn ? (
+    <div className={rail ? styles.brandRail : styles.brandRow}>
+      {link}
+      <LogoClock variant={rail ? 'rail' : 'wide'} />
+    </div>
+  ) : (
+    link
   );
 
   if (rail) {
@@ -193,7 +225,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
         {brand}
         <nav aria-label={t.nav.main} className={styles.nav}>
           <ul className={styles.list}>
-            <RailLink to="/" icon="home" label={t.nav.home} active={pathname === '/'} />
+            <RailLink to="/" icon="home" label={t.nav.home} active={pathname === '/'} first />
             {tree.areas.map((a) => (
               <RailLink
                 key={a.id}
@@ -206,7 +238,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
             ))}
           </ul>
         </nav>
-        <ul className={styles.list}>
+        <ul className={`${styles.list} ${styles.footer}`}>
           <RailLink
             to="/library"
             icon="grid"
@@ -226,10 +258,9 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
                 type="button"
                 className={styles.railLink}
                 aria-label={t.nav.expandSidebar}
-                title={t.nav.expandSidebar}
                 onClick={() => setSidebar('wide')}
               >
-                <Icon name="panelOpen" size={22} />
+                <Icon name="panelOpen" />
               </button>
             </li>
           ) : null}
@@ -243,7 +274,11 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
       {brand}
       <SupporterBadge placement="sidebar" />
       <nav aria-label={t.nav.main} className={styles.nav}>
-        {tree.favourites.length > 0 ? <FavouriteBar items={tree.favourites} /> : null}
+        {tree.favourites.length > 0 ? (
+          <FavouriteBar items={tree.favourites} />
+        ) : favouritesReady ? null : (
+          <FavouritesPending />
+        )}
         <OverlayScroll>
           <ul className={styles.list}>
             <li className={styles.row}>

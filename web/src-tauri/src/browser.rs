@@ -80,23 +80,34 @@ struct Tab {
     page: Option<Url>,
     /// Third-party hosts already reported as `Seen`.
     seen: HashSet<String>,
+    /// Which `browser_open` call created this entry (see the check after `add_child`).
+    attempt: u64,
+    /// The webview was created. Only then can `browser_show` call it lost: while `browser_open`
+    /// still builds it, the entry exists and the webview does not.
+    ready: bool,
 }
 
 struct Inner {
     warn_http: bool,
     blocker: Blocker,
     tabs: HashMap<u32, Tab>,
+    attempts: u64,
 }
 
-pub struct BrowserState(Mutex<Inner>);
+/// `.1` serialises `browser_show` and holds which call was applied last (`ShowOrder`, see `newer_show`).
+pub struct BrowserState(Mutex<Inner>, Mutex<ShowOrder>);
 
 impl Default for BrowserState {
     fn default() -> Self {
-        BrowserState(Mutex::new(Inner {
-            warn_http: true,
-            blocker: Blocker::new(true),
-            tabs: HashMap::new(),
-        }))
+        BrowserState(
+            Mutex::new(Inner {
+                warn_http: true,
+                blocker: Blocker::new(true),
+                tabs: HashMap::new(),
+                attempts: 0,
+            }),
+            Mutex::new(ShowOrder::default()),
+        )
     }
 }
 
@@ -144,7 +155,12 @@ fn parse(url: &str) -> Result<Url, String> {
     Url::parse(url).map_err(|_| "url".to_string())
 }
 
-#[tauri::command]
+/// Lifecycle commands (`open`, `close`, `clear_data`) run with `async`, i.e. on Tauri's async
+/// runtime, never on the main thread: creating a webview from a synchronous command deadlocks
+/// WebView2 on Windows (tauri `WebviewBuilder` docs, wry#583). That froze the main thread, so no
+/// IPC call and no app asset (lazy module pages) was answered any more and every other page stayed
+/// at "…" until a restart. `tests/commands.rs` pins this.
+#[tauri::command(async)]
 pub fn browser_open(
     app: AppHandle,
     webview: Webview,
@@ -159,6 +175,8 @@ pub fn browser_open(
     if verdict == Verdict::Deny {
         return Err("scheme".into());
     }
+    // Idempotent: a tab id that still has a webview (an earlier attempt) is replaced, not duplicated.
+    forget(&app, &state, tab);
     let warn = state.lock().warn_http;
     let held = verdict == Verdict::WarnHttp && warn && !options.allow_http;
     let start = if held {
@@ -170,18 +188,26 @@ pub fn browser_open(
     if options.allow_http {
         allowed.insert(url.to_string());
     }
-    state.lock().tabs.insert(
-        tab,
-        Tab {
-            events: events.clone(),
-            history: Vec::new(),
-            pos: 0,
-            by_history: false,
-            allowed_http: allowed,
-            page: None,
-            seen: HashSet::new(),
-        },
-    );
+    let attempt = {
+        let mut g = state.lock();
+        g.attempts += 1;
+        let attempt = g.attempts;
+        g.tabs.insert(
+            tab,
+            Tab {
+                events: events.clone(),
+                history: Vec::new(),
+                pos: 0,
+                by_history: false,
+                allowed_http: allowed,
+                page: None,
+                seen: HashSet::new(),
+                attempt,
+                ready: false,
+            },
+        );
+        attempt
+    };
     if held {
         let _ = events.send(Event::HttpHeld {
             tab,
@@ -317,7 +343,14 @@ pub fn browser_open(
             LogicalSize::new(b.width, b.height),
         )
         .map_err(|e| e.to_string());
+    // The page may have given up meanwhile (timeout → `browser_close`): a webview without its entry
+    // would be out of reach of `browser_show` and stay on top of every page, so it is closed again.
+    let current = |g: &Inner| g.tabs.get(&tab).is_some_and(|t| t.attempt == attempt);
     match created {
+        Ok(wv) if !mark_ready(&mut state.lock(), tab, attempt) => {
+            let _ = wv.close();
+            Err("tab".into())
+        }
         Ok(wv) => {
             #[cfg(windows)]
             crate::browser_win::hook(&app, &wv, tab);
@@ -327,10 +360,86 @@ pub fn browser_open(
             Ok(())
         }
         Err(e) => {
-            state.lock().tabs.remove(&tab);
+            let mut g = state.lock();
+            if current(&g) {
+                g.tabs.remove(&tab);
+            }
             Err(e)
         }
     }
+}
+
+/// Marks the entry of this `browser_open` call as having its webview; `false` when the entry is gone
+/// or belongs to a newer call.
+fn mark_ready(inner: &mut Inner, tab: u32, attempt: u64) -> bool {
+    match inner.tabs.get_mut(&tab) {
+        Some(t) if t.attempt == attempt => {
+            t.ready = true;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Which `browser_show` call was applied last: the page life it came from, its number in that life, and
+/// the page lives that were replaced since (a handful at most: one per reload of the main window).
+#[derive(Default)]
+pub struct ShowOrder {
+    epoch: u64,
+    seq: u64,
+    retired: Vec<u64>,
+}
+
+/// Page lives remembered as replaced; older ones cannot have a call in flight any more.
+const RETIRED_EPOCHS: usize = 8;
+
+/// Whether a `browser_show` call numbered `seq` is newer than the last one applied; remembers it if so.
+///
+/// The page counts from 1 again after every reload of the main window, while this state lives as long as
+/// the app. `epoch` names the page life the call comes from: a call from a new life is the newest and
+/// counting starts over (without it every show after a reload did nothing until the counter had caught
+/// up). A call the replaced page sent just before the reload can still arrive afterwards, because the
+/// command waits for this lock: its life is retired, so it does nothing.
+fn newer_show(last: &mut ShowOrder, epoch: u64, seq: u64) -> bool {
+    if last.retired.contains(&epoch) {
+        return false;
+    }
+    if epoch == last.epoch {
+        if seq <= last.seq {
+            return false;
+        }
+        last.seq = seq;
+        return true;
+    }
+    if last.epoch != 0 {
+        if last.retired.len() == RETIRED_EPOCHS {
+            last.retired.remove(0);
+        }
+        last.retired.push(last.epoch);
+    }
+    last.epoch = epoch;
+    last.seq = seq;
+    true
+}
+
+/// Forgets the tabs in `gone` (id, attempt) that are still the same ready entry and returns their
+/// ids. An entry that was closed or reopened meanwhile is not lost and is left alone.
+fn drop_lost(inner: &mut Inner, gone: &[(u32, u64)]) -> Vec<u32> {
+    let mut lost: Vec<u32> = gone
+        .iter()
+        .filter(|(id, attempt)| {
+            inner
+                .tabs
+                .get(id)
+                .is_some_and(|t| t.ready && t.attempt == *attempt)
+        })
+        .map(|(id, _)| *id)
+        .collect();
+    for id in &lost {
+        inner.tabs.remove(id);
+    }
+    lost.sort_unstable();
+    lost
 }
 
 fn tab_webview(app: &AppHandle, tab: u32) -> Result<Webview, String> {
@@ -407,7 +516,15 @@ pub fn browser_reload(app: AppHandle, webview: Webview, tab: u32) -> Result<(), 
     tab_webview(&app, tab)?.reload().map_err(|e| e.to_string())
 }
 
-#[tauri::command]
+/// Drops the tab's state and closes its webview if there is one. Safe to call any number of times.
+fn forget(app: &AppHandle, state: &BrowserState, tab: u32) {
+    state.lock().tabs.remove(&tab);
+    if let Ok(wv) = tab_webview(app, tab) {
+        let _ = wv.close();
+    }
+}
+
+#[tauri::command(async)]
 pub fn browser_close(
     app: AppHandle,
     webview: Webview,
@@ -415,25 +532,45 @@ pub fn browser_close(
     tab: u32,
 ) -> Result<(), String> {
     ensure_main(&webview)?;
-    state.lock().tabs.remove(&tab);
-    if let Ok(wv) = tab_webview(&app, tab) {
-        wv.close().map_err(|e| e.to_string())?;
-    }
+    forget(&app, &state, tab);
     Ok(())
 }
 
-#[tauri::command]
+/// Shows `tab` (and hides every other tab); `None` hides all. Runs off the main thread like the
+/// lifecycle commands, so two calls can overtake each other: the page numbers them (`seq`) and a
+/// call older than the last applied one does nothing, otherwise a late "show" could put a tab back
+/// on top of another Nemo page after the "hide" that followed it.
+///
+/// Returns the ids of tabs whose webview no longer exists although it was created (it is not
+/// registered any more, e.g. after it was destroyed underneath us). They are forgotten here and the
+/// page shows "Tab neu öffnen" instead of an empty area. A tab that is still being created is not lost.
+#[tauri::command(async)]
 pub fn browser_show(
     app: AppHandle,
     webview: Webview,
     state: State<'_, BrowserState>,
     tab: Option<u32>,
     bounds: Option<Bounds>,
-) -> Result<(), String> {
+    epoch: u64,
+    seq: u64,
+) -> Result<Vec<u32>, String> {
     ensure_main(&webview)?;
-    let ids: Vec<u32> = state.lock().tabs.keys().copied().collect();
-    for id in ids {
+    let mut last = state.1.lock().unwrap_or_else(|e| e.into_inner());
+    if !newer_show(&mut last, epoch, seq) {
+        return Ok(Vec::new());
+    }
+    let ids: Vec<(u32, u64, bool)> = state
+        .lock()
+        .tabs
+        .iter()
+        .map(|(id, t)| (*id, t.attempt, t.ready))
+        .collect();
+    let mut gone = Vec::new();
+    for (id, attempt, ready) in ids {
         let Ok(wv) = tab_webview(&app, id) else {
+            if ready {
+                gone.push((id, attempt));
+            }
             continue;
         };
         if Some(id) == tab {
@@ -446,7 +583,7 @@ pub fn browser_show(
             let _ = wv.hide();
         }
     }
-    Ok(())
+    Ok(drop_lost(&mut state.lock(), &gone))
 }
 
 #[tauri::command]
@@ -493,7 +630,7 @@ pub fn browser_configure(
 }
 
 /// Closes every tab and deletes cookies, cache and site data of the browser profile (not of Nemo).
-#[tauri::command]
+#[tauri::command(async)]
 pub fn browser_clear_data(
     app: AppHandle,
     webview: Webview,
@@ -556,4 +693,106 @@ pub(crate) fn decide_request(app: &AppHandle, tab: u32, url: &Url) -> bool {
         state.emit(tab, Event::Seen { tab, host });
     }
     block
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn inner_with(tabs: &[(u32, u64, bool)]) -> Inner {
+        let mut inner = Inner {
+            warn_http: true,
+            blocker: Blocker::new(true),
+            tabs: HashMap::new(),
+            attempts: 0,
+        };
+        for &(id, attempt, ready) in tabs {
+            inner.tabs.insert(
+                id,
+                Tab {
+                    events: Channel::new(|_| Ok(())),
+                    history: Vec::new(),
+                    pos: 0,
+                    by_history: false,
+                    allowed_http: HashSet::new(),
+                    page: None,
+                    seen: HashSet::new(),
+                    attempt,
+                    ready,
+                },
+            );
+        }
+        inner
+    }
+
+    #[test]
+    fn an_older_show_never_overrides_a_newer_one() {
+        let mut last = ShowOrder::default();
+        assert!(newer_show(&mut last, 7, 2));
+        assert!(!newer_show(&mut last, 7, 1), "overtaken call");
+        assert!(!newer_show(&mut last, 7, 2), "same call twice");
+        assert!(newer_show(&mut last, 7, 3));
+        assert_eq!((last.epoch, last.seq), (7, 3));
+    }
+
+    #[test]
+    fn a_reloaded_page_counts_from_one_again_and_is_heard() {
+        let mut last = ShowOrder::default();
+        for seq in 1..=40 {
+            assert!(newer_show(&mut last, 7, seq));
+        }
+        // The main window reloaded: a new page life, its first call is number 1.
+        assert!(newer_show(&mut last, 8, 1), "first show after a reload");
+        assert!(!newer_show(&mut last, 8, 1), "same call twice");
+        assert!(newer_show(&mut last, 8, 2));
+        assert_eq!((last.epoch, last.seq), (8, 2));
+    }
+
+    #[test]
+    fn a_late_call_of_the_replaced_page_does_nothing() {
+        let mut last = ShowOrder::default();
+        assert!(newer_show(&mut last, 7, 40));
+        assert!(newer_show(&mut last, 8, 1));
+        // Sent by the old page just before the reload, run after the new page's first call.
+        assert!(
+            !newer_show(&mut last, 7, 41),
+            "late call of the replaced page"
+        );
+        assert_eq!((last.epoch, last.seq), (8, 1));
+        assert!(newer_show(&mut last, 8, 2));
+        // Many reloads later the list of replaced lives stays small and the current life still counts.
+        for epoch in 9..40 {
+            assert!(newer_show(&mut last, epoch, 1));
+        }
+        assert!(last.retired.len() <= RETIRED_EPOCHS);
+        assert!(
+            !newer_show(&mut last, 38, 2),
+            "the life before the current one"
+        );
+        assert!(newer_show(&mut last, 39, 2));
+    }
+
+    #[test]
+    fn only_a_created_tab_of_the_same_attempt_counts_as_lost() {
+        // 1: created, webview gone → lost. 2: still being created. 3: reopened meanwhile (attempt 9).
+        let mut inner = inner_with(&[(1, 1, true), (2, 2, false), (3, 9, true)]);
+        // 4 was closed meanwhile (no entry any more).
+        let lost = drop_lost(&mut inner, &[(1, 1), (2, 2), (3, 3), (4, 4)]);
+        assert_eq!(lost, [1]);
+        let mut left: Vec<u32> = inner.tabs.keys().copied().collect();
+        left.sort_unstable();
+        assert_eq!(left, [2, 3]);
+        // Reported once: the entry is forgotten.
+        assert!(drop_lost(&mut inner, &[(1, 1)]).is_empty());
+    }
+
+    #[test]
+    fn a_tab_is_ready_only_for_the_call_that_created_it() {
+        let mut inner = inner_with(&[(1, 5, false)]);
+        assert!(!mark_ready(&mut inner, 1, 4), "an older open call");
+        assert!(!mark_ready(&mut inner, 2, 5), "closed meanwhile");
+        assert!(!inner.tabs[&1].ready);
+        assert!(mark_ready(&mut inner, 1, 5));
+        assert!(inner.tabs[&1].ready);
+    }
 }

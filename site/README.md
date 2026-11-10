@@ -11,9 +11,11 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Design** = Nemo tokens: `src/styles/tokens.css` is a subset of `web/src/ui/tokens.css` (colours, scale and
   the identity v3 set: `--mod-*` hues, head/widget/group tints, pattern strengths); `scripts/tokens.test.mjs`
   fails when a value differs. `src/styles/identity.css` maps `data-hue`/`data-hue2`/`data-area` to
-  `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). Module
-  cards and the nine head shapes are drawn by `IdentityMini.astro` from the catalogue; `scripts/catalog.test.mjs`
-  fails when a catalogue icon, hue, head or widget variant has no shape here (design rounds: `docs/design/site/`).
+  `--module-color` and the area patterns as the app does (no inline styles, the CSP allows none). The features
+  section shows four scenes with one large real picture each (`src/catalog/scenes.js`) and the whole catalogue as a
+  compact list (one row per area, the module's colour as a dot, bold = on by default, preview modules in one last
+  row); `scripts/catalog.test.mjs` fails when a catalogue icon, hue, area or platform limit has no counterpart here
+  or a scene lacks its module, text or pictures (design rounds: `docs/design/site/`).
   Icons are Lucide (ISC) inlined in `Icon.astro`; the licence notice is `web/brand/LICENSES.md`. Logo, favicons, fonts (Inter Variable,
   OFL) and the social preview are copied at build time from `web/brand`, `web/public`,
   `docs/brand` and `node_modules/@fontsource-variable/inter` (`scripts/copy-brand.mjs`, copies are
@@ -26,8 +28,12 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 - **Security headers and caching:** `public/_headers` (Cloudflare Pages): strict CSP
   (`script-src 'self'`, `style-src 'self'`), `_astro/*` and fonts immutable for a year, HTML
   5 minutes.
-- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): no animation (hover/focus change colour
-  only, 150 ms), reduced motion respected, one accent colour, calm wording, no countdowns or pop-ups.
+- **Focus guidelines** (`docs/design/FOCUS-GUIDELINES.md`): one movement on the whole site (the hero picture
+  rises once on load, `transform`/`opacity` only, none under `prefers-reduced-motion`; decided in round 5), hover/focus
+  change colour only (150 ms), one accent colour, calm wording, no countdowns or pop-ups. The hero stands on the
+  app's ocean gradient (`--ocean-from/to`, pinned to the app; ink on it: `--on-ocean-*`, contrast tested).
+- **Navigation without script:** under 64 rem the links are a second header row (anchor bar) that stays on top
+  while the logo row scrolls away.
 - **Design rounds** (diagnosis, directions, layout, details, mockups): `docs/design/site/`.
 
 ## Layout
@@ -38,11 +44,11 @@ src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
 src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/): names in German and English,
-                       icon, hue, hue2, head and widget variant per module
-src/components/        Hero, Features, Data, Focus, Compare, Support, Install, Header, Footer,
-                       Shot (one screenshot in both themes, window or phone frame), Icon (inline Lucide),
-                       IdentityMini (widget miniatures and head silhouettes, no text, no data)
-src/pages/             index, impressum, datenschutz, 404, robots.txt.ts · en/index, en/imprint, en/privacy
+                       icon, hue, area, state and platform limit per module · scenes.js = the four scenes
+src/components/        Hero, Features, Data, Focus, Compare, Support, Install, InstallGuide (/install: warnings, clicks, SHA-256), Header, Footer,
+                       Motif (one picture, phone capture under 48rem and desktop capture above, both themes: hero and scenes),
+                       Shot (one screenshot in both themes with a phone frame: focus band), Icon (inline Lucide)
+src/pages/             index, install, impressum, datenschutz, 404, robots.txt.ts · en/index, en/install, en/imprint, en/privacy
 src/assets/screens/    <page>-{dark,light}.png from the seeded app (npm run app:screenshots; Astro makes AVIF/WebP)
 public/                .well-known/security.txt, _headers, theme.js
 scripts/               fetch-release, copy-brand, check-links, check-downloads, lighthouse (--dark audits
@@ -60,7 +66,7 @@ scripts/               fetch-release, copy-brand, check-links, check-downloads, 
 | `npm run check:links` | linkinator over `dist/` (internal and external) |
 | `npm run check:downloads` | the download URLs answer 200 against the real latest release |
 | `npm run lighthouse` | Lighthouse CI on `dist/` (3 runs, `/`, `/en`, `/impressum`), reports in `.lighthouseci/`; `-- --dark` audits a copy with the dark theme forced |
-| `npm run screenshots` | renders the preview at 360/768/1280/1920, light and dark → `out/` |
+| `npm run screenshots` | renders the preview at 360/390/768/1280/1440, light and dark → `out/` (`SITE_WIDTHS`, `SITE_PAGES`) |
 | `npm run app:screenshots` | app screenshots for the page from the seeded app build → `src/assets/screens/` |
 | `npm run app:screenshots -- --readme` | the README pictures (overview, calendar, finance, toolbox, settings; desktop 1920×1080 and phone 412×915, light and dark, WebP) → `../docs/assets/screenshots/` |
 
@@ -117,11 +123,11 @@ triggered by `workflow_run` on the release workflow. Needs secrets in GitHub, so
   `npm run build` and commit `src/release/latest.json`.
 - Screenshots (after UI changes): `npm run app:screenshots` (needs `web/node_modules`). It builds
   `web/dist-e2e-seed` if missing, serves it, loads the seed "medium" via Settings → Entwickler,
-  fixes the clock to the seed date, hides the Dev badge and writes `home`, `phone`, `calendar`,
-  `todos`, `finance`, `vault` (unlocked with the seed's demo passphrase) and `reminders`, light and
-  dark, to `src/assets/screens/`. `APP_URL=http://localhost:4174` reuses a running preview,
+  fixes the clock to the seed date, hides the Dev badge and writes `home`, `phone` and the four scenes
+  `calendar`, `finance`, `notes`, `accounts` (unlocked with the seed's demo passphrase; desktop 1280 × 800 and
+  `-phone` 412 × 915), light and dark, to `src/assets/screens/`. `APP_URL=http://localhost:4174` reuses a running preview,
   `SCREENS_PAGES=<regex>` filters. The seed's texts are German, so one set serves every language;
-  tile focal points live in `Features.astro` (`focus`). Only test data, never real data.
+  how a scene picture is cut (width, offset past the app's sidebar) lives in `Features.astro`. Only test data, never real data.
   With `--readme` the same script shoots the README motifs instead (see the table above); after a
   big UI change run it again and commit the WebP files together with the README.
 - Product video (not on the page yet): record the quick capture (Ctrl+K or "+ Neu", type

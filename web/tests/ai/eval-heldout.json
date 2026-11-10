@@ -3305,6 +3305,62 @@
           "target": "Gartenbau"
         }
       ]
+    },
+    {
+      "id": "fit-h01",
+      "input": "Trainingseinheit Radfahren 45 Minuten anlegen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createSession",
+          "data": {
+            "title": "Radfahren",
+            "durationMin": 45
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-h02",
+      "input": "Neue Mahlzeit Apfel 80 kcal",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createMeal",
+          "data": {
+            "text": "Apfel",
+            "kcal": 80
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-h03",
+      "input": "Was habe ich letzte Woche trainiert?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "h-clk-c01",
+      "input": "Nimm Kapstadt in die Weltuhr auf",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Kapstadt"
+          }
+        }
+      ]
+    },
+    {
+      "id": "h-clk-n01",
+      "input": "Welche Uhrzeit ist jetzt in New York?",
+      "tags": ["negative"],
+      "expect": []
     }
   ]
 }

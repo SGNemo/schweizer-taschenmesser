@@ -13,10 +13,13 @@ import {
   readMigrateOverview,
   readMigrateState,
   setManualDone,
+  orderOrigins,
+  ORIGINS,
 } from './migrate';
 
 const batch = (moduleId: string, at: number, extra = {}) => ({
   moduleId,
+  importerId: 'file',
   createdAt: at,
   committedAt: at,
   ...extra,
@@ -61,7 +64,9 @@ describe('migrateItems (pure)', () => {
     expect(migrateOutcome(EMPTY_MIGRATE, [])).toBe('skipped');
     const chosen = { origins: { bank: 1 }, manualDone: [] };
     expect(migrateOutcome(chosen, migrateItems(chosen, []))).toBe('skipped');
-    expect(migrateOutcome(chosen, migrateItems(chosen, [batch('finance', 5)]))).toBe('done');
+    expect(
+      migrateOutcome(chosen, migrateItems(chosen, [batch('finance', 5, { importerId: 'bank' })])),
+    ).toBe('done');
     const paper = { origins: { paper: 1 }, manualDone: [] };
     expect(hasMigrateChoice(paper)).toBe(true);
     expect(migrateOutcome(paper, migrateItems(paper, []))).toBe('done');
@@ -134,5 +139,53 @@ describe('step registration', () => {
     expect(await has()).toBe(false);
     await chooseOrigin('bank');
     expect(await has()).toBe(true);
+  });
+});
+
+describe('B08 (demo-b, round 5): the bank point needs a real bank import', () => {
+  const chosen = { origins: { bank: 1 }, manualDone: [] };
+  it('an account with an opening balance is no bank statement', () => {
+    const items = migrateItems(chosen, [
+      { ...batch('finance', 5), importerId: 'account' },
+    ] as never);
+    expect(items.find((i) => i.id === 'bank.statement')?.done).toBe(false);
+  });
+  it('the bank importer ticks it', () => {
+    const items = migrateItems(chosen, [{ ...batch('finance', 5), importerId: 'bank' }] as never);
+    expect(items.find((i) => i.id === 'bank.statement')?.done).toBe(true);
+  });
+});
+
+describe('B05 (demo-b, round 5): tiles of switched-on modules come first', () => {
+  const targets = {
+    google: ['calendar', 'todos', 'notes'],
+    todoist: ['todos'],
+    microsoft: ['todos'],
+    evernote: ['notes'],
+    obsidian: ['notes'],
+    bank: ['finance'],
+    bitwarden: ['accounts'],
+    paper: [],
+  };
+  it('keeps the fixed order inside each group and "paper" last', () => {
+    const order = orderOrigins(targets, {
+      finance: true,
+      calendar: true,
+      todos: false,
+      notes: false,
+    });
+    expect(order).toEqual([
+      'google',
+      'bank',
+      'todoist',
+      'microsoft',
+      'evernote',
+      'obsidian',
+      'bitwarden',
+      'paper',
+    ]);
+  });
+  it('changes nothing when every module is on or off', () => {
+    expect(orderOrigins(targets, {})).toEqual([...ORIGINS]);
   });
 });

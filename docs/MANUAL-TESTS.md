@@ -150,6 +150,39 @@ L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teile
 L4. _Lesezeichen:_ Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
 L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
+### Fernsteuerung, PC-Seite (`feat/remote-host-media`, `feat/remote-host-settings`) – nur auf echtem Windows prüfbar
+
+R1, R2, R8, R10 und R11 gehen sofort (Einstellungen → Allgemein → „In Arbeit anzeigen“ an, dann Einstellungen → Verbindungen → Fernsteuerung). R3–R7 brauchen Paket 2 (Handy-Modul), R9 Paket 3.
+
+R1. _Hub ohne Fernsteuerung:_ Heimnetz-Sync wie bisher starten, koppeln, synchronisieren: alles unverändert; Tray zeigt das normale Symbol und kein „Fernsteuerung beenden“. ☐
+R2. _Tray nach Neuaufbau, Sprache:_ App-Sprache wechseln und einen Termin für heute anlegen (Tray-Menü wird neu gebaut): Menü und Tooltip bleiben vollständig, das Symbol flackert nicht; App auf Englisch bei deutschem Windows: der Bestätigungs-Dialog (R8) ist englisch. ☐
+R3. _Lautstärke und Ton aus:_ vom Handy lauter/leiser (je 2 %) und Ton aus; „lauter“ hebt Ton aus auf; die Anzeige am Handy folgt dem PC, auch wenn am PC selbst gedreht wird. ☐
+R4. _Zwei Player:_ Spotify und ein Browser-Video offen: Wiedergabe/Pause, Nächster, Vorheriger treffen den Player, den auch die Medientasten der Tastatur treffen. ☐
+R5. _Sperrbildschirm:_ PC sperren (Win+L): Medien und Lautstärke gehen weiter; „PC sperren“ vom Handy sperrt; der Zustand „gesperrt“ kommt am Handy an. ☐
+R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“, darunter grau „Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest“. ☐
+R7. _Beenden pausiert:_ „Fernsteuerung beenden“ im Tray: das Handy verliert die Verbindung sofort und kommt nicht wieder, bis das Gerät am PC wieder eingeschaltet wird (mit Bestätigung). ☐
+R8. _Bestätigung nur am PC:_ „Medien und Lautstärke“ wählen, „Wieder einschalten“, Hauptschalter an (bei vorhandener Freigabe); ab Paket 3 auch Maus/Tastatur und „Entsperren aus“: jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
+R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tastatur steuert, lässt sich keine Freigabe erhöhen – auch nicht mit einem Dialog, der vor der Sitzung geöffnet wurde. ☐
+R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
+R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
+
+### Fernbedienung, Handy (`feat/remote-module-page`) – nur mit Pixel und Windows-PC prüfbar
+
+Vorher am Handy: Einstellungen → Allgemein → „In Arbeit anzeigen“, Modul „Fernbedienung“ einschalten; am PC: Einstellungen → Verbindungen → Fernsteuerung, dem Handy „Medien und Lautstärke“ erlauben. Zugleich R3–R7 oben ausführen.
+
+FB1. _Erster Android-Build mit dem Client:_ APK bauen und starten; „Fernbedienung“ öffnen: Zeile „Dein PC · Lautstärke … %“ erscheint binnen etwa einer Sekunde. ☐
+FB2. _Einhändig, ohne Hinsehen:_ Pause, Nächster, Vorheriger, Leiser/Lauter treffen; gehalten kommt der erste Schritt sofort mit einem Vibrieren, dann höchstens etwa 5 Schritte je Sekunde, auch mit leicht wanderndem Daumen, ohne Kontextmenü; zehnmal blind Leiser/Lauter, nie die untere Leiste getroffen. ☐
+FB3. _Menü:_ „Ton aus“ (danach „Ton an“) und „PC sperren“; nach dem Sperren steht „gesperrt“ in der Zeile, Medien gehen weiter. ☐
+FB4. _Zustände:_ am PC Schalter aus → Satz mit dem Schritt am PC; am PC „Fernsteuerung beenden“ → „am PC pausiert“; WLAN am Handy aus → nach etwa 5 s „antwortet noch nicht“, dann „nicht erreichbar“; WLAN an + „Erneut versuchen“ → verbunden. ☐
+FB5. _Langsames WLAN:_ Wiedergabe/Pause drücken; zeigt die Zeile kurz den alten Stand, heilt eine späte Antwort ihn ohne zweiten Druck? Ein zweiter Druck davor schaltet erneut um (bekannt). ☐
+FB6. _App wechseln:_ anderes Programm öffnen und zurück: verbindet neu ohne Frage; am PC verschwindet in der Zwischenzeit der Chip. ☐
+FB7. _Widget:_ gekoppelt steht auf der Übersicht „Dein PC“ mit „Öffnen“, ohne Kopplung „Noch kein PC gekoppelt.“ mit „PC koppeln“; es öffnet keine Verbindung (am PC kein Chip). ☐
+FB8. _Player ohne Medien-Sitzung:_ ein Player, der sich so nicht pausieren lässt: notieren, welcher (Frage an Sven, kein Tasten-Ersatz). ☐
+FB9. _Unterbrechung:_ Bildschirm aus oder eingehender Anruf: am PC verschwindet der Chip; zurück auf der Seite verbindet sie ohne Frage neu. ☐
+FB10. _Bildschirm anlassen:_ Einstellung an: der Bildschirm bleibt an, solange die Seite offen ist, und geht nach dem Verlassen wieder normal aus; mit eingeschaltetem Cockpit bleibt dessen „Bildschirm an“ nach dem Verlassen erhalten. ☐
+FB11. _TalkBack:_ liest die Zustandszeile bei Sätzen (nicht bei jedem Lautstärkeschritt) und jede Taste mit ihrem Namen. ☐
+FB12. _Benachrichtigung bei Maus und Tastatur (ab der Seite Touchpad prüfbar):_ Touchpad am Handy zum ersten Mal nutzen → am PC erscheint einmal, ohne Ton, „Das Gerät „…“ steuert jetzt Maus und Tastatur. Beenden: Rechtsklick auf das Nemo-Symbol im Tray, dann „Fernsteuerung beenden“.“ (ganz lesbar, auch mit einem langen Gerätenamen – der wird nach 24 Zeichen gekürzt); das Symbol liegt unter ^ (ausgeblendete Symbole) → der Text führt trotzdem hin, Rechtsklick → „Fernsteuerung beenden“ beendet und pausiert das Gerät; Klick auf die Benachrichtigung selbst richtet nichts an; Seite verlassen und gleich wieder öffnen → keine zweite; nur Medien nutzen → nie eine; nach 30 Minuten und erneutem Touchpad → wieder eine. Gerät ohne Namen → „Gerät ohne Namen (xxxx) steuert …“ ohne Anführungszeichen; Systemklänge an → trotzdem kein Ton. Mit dem portablen Exe prüfen, ob Windows die Benachrichtigung unter „Nemo“ führt. ☐
+
 ### Einrichtungsassistent
 
 E1. _Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):_ Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
@@ -168,6 +201,7 @@ H4. _Status-Widgets (Windows):_ Datenträger zeigt Füllstände, Systeminfo CPU/
 ### Nemo: Umbenennung und Design
 
 N1. _Windows-Portable starten (frische Datei und als Update):_ Taskleisten-Icon zeigt den Fisch, Fenstertitel „Nemo“, Tray/Benachrichtigungen ohne „Taschenmesser“; Update von einer alten Version findet die Datei (`latest.json` zeigt ab dem nächsten Release auf `Nemo-Portable.exe`), Daten bleiben erhalten.
+N1a. _Lade-Robustheit und Browser-Tab (UI-Audit 0a, Windows; Ergebnis als Tabelle Schritt · „…“ ja/nein · Titelleiste an den nächsten Chat oder ins Notiz-Repo):_ (1) Variante notieren: Dev-Preview-Exe oder `tauri dev`. (2) Frisch starten, ohne Browser-Tab ToDos, Gewohnheiten und Zeiterfassung öffnen: jede Seite erscheint, keine bleibt bei „…“. (3) Browser-Modul → eine Adresse laden: die Seite erscheint im Rahmen. (4) Danach dieselben drei Module öffnen: jede erscheint; bleibt eine länger als vier Sekunden leer, steht dort „Die Seite lädt noch“ mit „Neu laden“. (5) Während (3) und (4) das Fenster ziehen und die Titelleiste ansehen: „Keine Rückmeldung“ = Hauptthread blockiert. (6) Tray-Icon anklicken: es reagiert. (7) Auf einer Modulseite „Neu laden“ auslösen (oder Strg+R), zurück zum Browser-Modul: der Tab ist wieder sichtbar; fehlt er, bietet die Seite „Tab neu öffnen“; beim Verlassen des Moduls verschwindet er. (8) Nur wenn in (5) das Fenster reagierte und trotzdem eine Seite leer blieb: in den WebView2-DevTools (Netzwerk) den hängenden `assets/*.js`-Request notieren (Adresse ohne Query, Status). Seit #638 baut `browser_open` den Tab nicht mehr auf dem Hauptthread: der Test prüft diesen Fix, „Keine Rückmeldung“ wäre ein Rückfall. ☐
 N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo“, neues Icon, alle Daten da, Tresor entsperrbar. Adaptives Icon (runde/eckige Launcher-Maske, Fisch nicht abgeschnitten), Themed-Icon (Android 13+ einfarbig), Benachrichtigungs-Icon in der Statusleiste (`ic_notification` – prüfen, ob es das Tauri-Notification-Plugin wirklich nutzt), Splash.
 N3. _Hell / Dunkel / System, Akzentfarben:_ Einstellungen → Darstellung: alle vier Akzente in beiden Themes ansehen; Text lesbar, Fokus sichtbar (Tab-Taste).
 N4. _Reduzierte Bewegung:_ Betriebssystem-Einstellung „Animationen reduzieren“ an: keine Seiten-/Listen-/Diagramm-Animation, Ladeplatzhalter ohne Schimmer.
@@ -288,7 +322,7 @@ V4. _Keine Banner mehr:_ mit Einstellung „Erinnerungen in der App automatisch 
 V1. _Windows-App (WebView2):_ Einstellungen → Schnellerfassung → Spracheingabe einschalten (Hinweis lesen), F4 halten und sprechen: erscheint der Text im Suchfeld (Strg+K)? Wenn nicht: kommt ein ruhiger Satz statt eines Fehlers, und ist das Ergebnis in [features/voice.md](features/voice.md) nachgetragen? ☐
 V2. _Systemweite Taste (Windows):_ Taste setzen, Nemo im Hintergrund: ein Druck holt das Fenster und startet die Aufnahme, der nächste beendet sie; Esc bricht ab, nichts geht verloren. ☐
 V3. _Android (Chrome-PWA und APK):_ PWA: Mikrofon-Knopf in der Palette spricht, Berechtigung wird erfragt. APK: Knopf ist ausgeblendet, Einstellungen sagen „Hier nicht verfügbar“. ☐
-V4. _Sprachen:_ App auf English/Español/Français/Português stellen, sprechen: wird in der App-Sprache erkannt? ☐
+V4. _Sprachen:_ App auf English stellen, sprechen: wird in der App-Sprache erkannt? ☐
 
 ## Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 
@@ -348,10 +382,50 @@ Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: 
 - **SV4 Punkt „weicht vom Standard ab“:** Darstellung → Farbschema „Dunkel“: in der Liste erscheint der Punkt bei „Darstellung“; „Auf Standard“ entfernt ihn; ein Screenreader liest den Text. ☐
 
 ## Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
+
 - **LB1 Handy:** Modul-Bibliothek: Kopf mit Zahlen, Werkzeugleiste (Suche, Filter, Bereich) bricht um, Karten einspaltig; „Details“ öffnet das Modul, Android-Zurück führt zur Liste. ☐
 - **LB2 „Ruhig“ und „Modulfarben: Aus“:** Kartenköpfe, Plättchen und Miniaturen werden grau, Text bleibt lesbar. ☐
 - **LB3 Schalter überall gleich:** ein Modul mit Einträgen auf der Karte und auf der Detailseite ausschalten: dieselbe Rückfrage „behalten/löschen“; ein leeres Modul: Hinweis mit „Rückgängig“. ☐
 - **LB4 Breite Fenster (2560 px):** Karten füllen die Zeile, nichts läuft über; Werkzeug-Bibliothek ebenso, hell und dunkel. ☐
+
+## Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
+
+Standen nur in den Zeilen „Wartet auf Sven“ ([CHATS.md](CHATS.md)) oder im STATUS-Protokoll, nicht in dieser Datei. Wortlaut wie dort.
+
+### Windows
+
+- **GM1 Eingeklappte Seitenleiste, Fisch v2.2:** bei 125 % Skalierung: Kachel und Symbole scharf, Tooltip mit Maus und Tab, Taskleisten-Icon zeigt den neuen Fisch. (PR #669) ☐
+- **GM2 „Dieser PC“, Kopf v3.1:** Kopf hell/dunkel; „Ruhig“: Dateitypen grau, Muster + Legende bleiben; Baumkarte nach Alter/Dateityp. (PR #490) ☐
+- **GM3 Laufwerke-Seite:** Karten in zwei Spalten, „Details“, Scan aus der Karte, Liste. (PR #483) ☐
+- **GM4 Shell-Fixes:** Werkzeuge mit Strg+. und Alt+2; Lesehilfe 100 % in der Seitenleiste mit „Zurück“. (PR #481; vgl. TP3) ☐
+- **GM5 Lokales Modell in der Dev-Preview:** erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig); Lokales Modell → Download → Testfrage von Hand. (PR #504; vgl. K5) ☐
+
+### Android-Handy
+
+- **GM6 Launcher-Icon:** zeigt den Fisch v2.2. (PR #669) ☐
+- **GM7 Einstellungs-Suche:** Einstellungen lang runter/hoch scrollen: die Suche bleibt ohne Lücke unter der Kopfleiste. (`fix/settings-search-sticky-phone`) ☐
+- **GM8 Planen + Geld v3.1:** ToDos-Kopf: Titel gekürzt, „Später“ sichtbar; Rechnungen: „Nächste bezahlen“. (PR #493) ☐
+- **GM9 Topbar:** lang scrollen, Seite wechseln → die Leiste ist sofort da. (PR #481) ☐
+- **GM10 Handy-Layout (QA P2):** Gerätetest von Kopfzeile, Listenzeilen, Hinweisen, Willkommenskarte, ToDos-Spalte, Einstellungs-Navi. (`fix/qa-mobile-layout`) ☐
+- **GM11 KI-Erinnerung per Satz:** Satz per Sprache („Erinner mich um 15 Uhr an die Wäsche“): die Benachrichtigung kommt zur Zeit. (`feat/ai-reminder-voice`) ☐
+- **GM12 PWA offline:** PWA einmal online öffnen, Flugmodus, dann App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)). (Runde T1–T6, #341–#349; vgl. BP1) ☐
+
+### Beide (Windows und Android)
+
+- **GM13 Fundament v3:** Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy. (PR #414) ☐
+- **GM14 Lesehilfe 100 %:** beim Modulwechsel prüfen. (PR #496) ☐
+- **GM15 Eigene Karte, Overpass:** erste echte Overpass-Antwort auf einem Gerät: Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“. (#342, #346, #348, #350, #352) ☐
+- **GM16 Eigene Karte, Regionsdatei:** eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser. (#342–#352) ☐
+- **GM17 Eigene Karte, Tempo:** Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen, Wartezeit vom Server); notieren, wie lange es dauert. (PR #387) ☐
+- **GM18 Bank, Person B:** echte Sparkassen-CSV-CAMT importieren, Export in Excel öffnen. (PR #580; vgl. C7, G5) ☐
+- **GM19 Kontoauszug-Import je Bank:** OFX, QIF, Bank-Vorlagen und Spaltenzuordnung je Bank mit echter Datei ([features/bank-import.md](features/bank-import.md)). ☐
+- **GM20 Komfort Einstellungen:** eine Woche Nutzung: Reizlast von Zahnrad und Schnellleiste. (#132, #150, #151, #153; vgl. M1–M4) ☐
+
+### Website (am Handy)
+
+- **GM21 Hero und Anker-Leiste:** Seite scrollen: die Leiste mit den vier Links + GitHub bleibt oben, das Hero-Bild blendet einmal ein (mit „Bewegung reduzieren“ nicht). (PR #674) ☐
+- **GM22 Rest der Seite:** Vorschau einmal ganz durchscrollen. (PR #685) ☐
+- **GM23 Eingefrorene Sprachen:** `/es`, `/fr`, `/pt-br` leiten auf `/en`. (PR #507) ☐
 
 ## Anleitungen für Sven (aus STATUS verschoben, 2026-10-02)
 
@@ -660,6 +734,7 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
 - **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
 - **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
+- **LG7 Logo v2.1 (nach dem ersten Dev-Preview-Build):** Windows-Taskleiste bei 100 % und 150 %: der weiße Fisch auf der Akzent-Kachel ist bei 16–24 px als Fisch in einem Stück erkennbar (zwei innere Bänder, kein Lautsprecher-Symbol); Android-Launcher (Kreis/Squircle), Themed Icon und Benachrichtigung zeigen dieselbe Form, nichts angeschnitten. ☐
 - **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
 
 ## Identität v3: Wissen (Paket 2) – nur von Hand prüfbar
@@ -671,14 +746,55 @@ Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mar
 - **WK5 Browser-Pille:** Browser (Windows-App): die Pille zeigt nur den Host der offenen Seite; der aktive Tab ist als gefüllter Chip erkennbar, auch in „Ruhig“.
 
 ## Identität v3: Medien und Dienste (Paket 3) – nur von Hand prüfbar
+
 - **MD1 Mail-Spalten (Windows-App):** E-Mail mit verbundenem Konto: bei breiter Seite stehen Ordner, Liste und Lesefenster nebeneinander, beim Verkleinern des Fensters oder Einblenden der Seitenleiste wechselt es zur Liste mit Mail darüber; der offene Ordner ist ein gefüllter Chip.
 - **MD2 Umschlag:** der Umschlag im Kopf zeigt keine Zahlen und keinen Mailtext; die Briefmarke daneben trägt die Zahl der ungelesenen Mails.
 - **MD3 Musik:** Warteschlange neben der Liste, sobald die Seite breit genug ist; Cover-Kopf unverändert.
 - **MD4 Downloads:** leere Ansicht zeigt den Pfeil in der Ablage; ein laufender Download zeigt Zahl und Band im Kopf.
 
+## Uhr (Paket 1, #615) – nur von Hand prüfbar
+
+Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
+
+- **U1 Logo-Uhr in der Windows-App:** „Uhrzeit neben dem Logo“ an; Klick auf die Uhrzeit öffnet die Uhr-Seite; Modul aus → die Uhrzeit ist kein Link mehr (kein Hand-Cursor, nichts passiert). Eingeklappte Seitenleiste: „14“/„07“ öffnet ebenfalls die Seite. ☐
+- **U2 Sortieren mit dem Finger (Android):** Griff lange drücken, Ort ziehen: die Reihenfolge bleibt nach Neustart; Scrollen der Liste verschiebt nichts; „Rückgängig“ im Toast stellt die alte Reihenfolge her. ☐
+- **U3 Minutenwechsel:** App 2 Minuten offen lassen: Seite, Widget und Logo-Uhr springen gleichzeitig zur vollen Minute; nach Standby/Bildschirm aus stimmt die Zeit sofort wieder. ☐
+- **U4 12-Stunden-Format:** Einstellungen → Sprache & Format → en-US: Seite und Widget zeigen „11:07 PM“ ohne Überlauf am Handy. ☐
+
 ## Sync im Heimnetz: Hub im PC (Paket 2b-2) – nur auf Windows prüfbar
+
 - **L1 Firewall:** Hub starten, Kopplungsfenster öffnen: Windows fragt einmal nach Freigabe für private Netze; „Zulassen“ merken, „Abbrechen“ → `lan_hub_status` meldet weiter `listening`, ein Handy findet den Hub nicht (Hinweis „Windows blockiert“ in der Oberfläche folgt mit Paket 4).
 - **L2 Netzwerkart:** WLAN auf „Öffentlich“ stellen: `lan_hub_status` zeigt `off`, `blocked: true`, kein Port lauscht (`netstat -ano`); zurück auf „Privat“: lauscht wieder, ohne Neustart (≤ 2 s).
 - **L3 Netzwechsel:** erste Kopplung im Heim-WLAN, dann Hotspot des Handys: Hub lauscht nicht mehr; zurück ins Heim-WLAN: lauscht wieder. VPN/WSL/Docker-Adapter erscheinen nie in `netstat`.
 - **L4 mDNS:** `dns-sd -B _nemo-sync._tcp` (oder Handy-Scanner) zeigt einen zufälligen Namen `nemo-xxxxxxxx`, TXT nur `v=1` und `h=…`; nach Neustart anderer Name; nur auf der Heim-Schnittstelle.
 - **L5 Schlüsselspeicher:** In der Anmeldeinformationsverwaltung stehen Einträge `io.github.sgnemo.taschenmesser.lan-sync` (Dev-Preview: `….dev.lan-sync`); Eintrag löschen → nächster Start legt neue Schlüssel an, alle Geräte müssen neu koppeln.
+
+## Sync im Heimnetz: PC und Handy koppeln (Pakete 3a/3b) – nur mit Windows-PC und Android-Handy prüfbar
+
+- **L6 Koppeln:** PC: Einstellungen → Synchronisation → „Gerät koppeln“ → QR erscheint (Firewall-Abfrage beim ersten Mal: „Zulassen“). Handy: Einstellungen → Synchronisation → „Mit PC koppeln“ → Kamera-Erlaubnis → QR scannen. Beide zeigen denselben 6-stelligen Code; PC: „Koppeln“. Handy: „Abgeglichen · Mit deinem PC gekoppelt“; PC listet das Gerät. Nichts eingetippt. ☐
+- **L7 Abgleich hin und zurück:** ToDo am Handy anlegen → am PC „Jetzt abgleichen“ → erscheint; am PC ändern → Handy „Jetzt abgleichen“ → geändert. Dasselbe Feld auf beiden geändert: die spätere Änderung gewinnt. ☐
+- **L8 PC aus:** Nemo am PC beenden → Handy „Jetzt abgleichen“: ruhige Zeile „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“, kein Rot, keine Meldung; Nemo wieder starten → nächster Abgleich klappt. Neue IP des PCs: siehe L17. ☐
+- **L9 Handy kommt heim** (WLAN-Auslöser `lan-watch`; Abgleich ganz im Hintergrund ist nicht gebaut). Jeweils: am Handy unterwegs (WLAN aus, Mobilfunk) eine Änderung, dann WLAN an im Heimnetz, Uhr starten:
+  - **a) App offen** (Sync-Seite sichtbar): ohne WLAN ist „Jetzt abgleichen“ grau mit „Nur im WLAN“; WLAN an → innerhalb weniger Sekunden „Abgeglichen“, „Noch nicht abgeglichen“ verschwindet, Knopf wieder aktiv, ohne Tippen. ☐
+  - **b) App im Hintergrund** (Home-Taste, 1 / 5 / 15 Minuten warten, dann WLAN an): am PC prüfen, ob die Änderung ankommt, ohne die App zu öffnen; Zeit bis zum Einfrieren notieren (Android friert Apps im Hintergrund nach Minuten ein, CONCEPT §6/F8) → Messwert in CONCEPT §9 nachtragen. ☐
+  - **c) App geschlossen** (aus „Zuletzt verwendet“ weggewischt): WLAN an → nichts passiert (erwartet); App öffnen → gleicht nach wenigen Sekunden ab. ☐
+- **L10 Kopplung lösen:** am PC „Kopplung lösen“ → Handy „Jetzt abgleichen“: „Diese Kopplung wurde gelöst.“ mit „Neu koppeln“. Am Handy „Kopplung lösen“ → am PC verschwindet das Gerät beim nächsten Kontakt. ☐
+- **L11 Abbruch / alter Code:** am PC beim Code „Abbrechen“: Handy zeigt sofort (nicht erst nach Minuten) „Kopplung abgebrochen.“ mit „Neu versuchen“; einen alten QR (Foto) scannen: „Kopplung nicht möglich – am PC neu zeigen.“ mit „Neu scannen“. Am Handy während „Verbindet …“ „Abbrechen“: Dialog schließt sofort. Nach „Kopplung lösen“ am PC: am Handy „Neu koppeln“ → klappt (frischer Geräteschlüssel). ☐
+- **L12 Kopfleiste unterwegs:** Handy im Mobilfunk: das Sync-Symbol oben ist grau (kein Rot), Tooltip „Synchronisation: wartet auf deinen PC“. ☐
+- **L13 Öffentliches Netz / Kamera:** Windows-Netz auf „Öffentlich“ → PC „Gerät koppeln“: kein QR, stattdessen die Schritte zu „Privat“ und „Windows-Einstellungen öffnen“ (öffnet Netzwerkstatus); auf „Privat“ stellen → QR erscheint nach wenigen Sekunden von selbst. Handy „Mit PC koppeln“: Kamera-Dialog in der App mit „Abbrechen“, Android fragt einmal nach der Kamera; ablehnen → ruhige Zeile „Kamera ist aus …“, kein Absturz; erlauben → QR wird erkannt. ☐
+- **L14 PC neu gestartet:** gekoppelt, am Handy eine Änderung → Nemo am PC beenden und neu starten (auch: am nächsten Tag) → Handy „Jetzt abgleichen“: gleicht ab, „Noch nicht abgeglichen“ verschwindet. Ist der PC aus: Zeile „Eben versucht – der PC hat nicht geantwortet …“. ☐
+- **L15 Umstieg vom Server:** PC und Handy am eigenen Server → „Vom Server auf das Heimnetz umstellen“: „Vom Server trennen“ erst nach „Sicherung speichern“; die Liste zeigt das andere Gerät mit „Am Server sperren“; nach dem Trennen bleiben alle Einträge, dann koppeln → beide gleichen im Heimnetz ab, nichts doppelt, nichts weg. ☐
+- **L16 Zweiter PC per Webcam koppeln:** Hub-PC: „Gerät koppeln“ → QR. Zweiter Windows-PC mit Webcam: Einstellungen → Synchronisation → „Mit einem anderen PC koppeln“ → WebView2 fragt nach der Kamera („Zulassen“) → Webcam auf den QR am Hub-PC → Code auf beiden gleich → am Hub-PC „Koppeln“: der zweite PC zeigt „Abgeglichen“ / „Mit deinem PC gekoppelt“, „Gerät koppeln“ ist dort weg; ein ToDo wandert hin und zurück. Ohne Webcam (oder abgesteckt): ruhige Zeile „Ohne Kamera geht das Koppeln mit einem anderen PC noch nicht.“ mit Verweis auf „Eigener Server (erweitert)“, kein Rot. In der Anmeldeinformationsverwaltung des zweiten PCs stehen `lan-client:static-key` und `lan-client:hub` unter `io.github.sgnemo.taschenmesser`. Hub-PC beenden → zweiter PC „Jetzt abgleichen“: „Gleicht ab, sobald dein PC im selben WLAN erreichbar ist“. ☐
+- **L17 PC neue IP → Handy findet ihn wieder:** gekoppelt; am Router dem PC eine andere IP geben (DHCP-Reservierung ändern oder PC an anderen Port/Switch, `ipconfig` prüfen), Nemo am PC läuft → Handy „Jetzt abgleichen“: nach höchstens ein paar Sekunden „Abgeglichen“, ohne neu zu koppeln; nächster Abgleich ist wieder sofort (neue Adresse gemerkt). Gegenprobe: Gäste-WLAN oder Netz mit Client-Isolation → ruhige Zeile, kein Rot, kein zweiter Versuch innerhalb von 30 s. ☐
+
+## Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
+
+Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
+- **H1 Löschen in „Dieser PC“ (wichtigster Punkt):** einen Testordner mit ein paar Wegwerf-Dateien scannen, zwei Dateien markieren, „Löschen“: der Plan erscheint, nach der Bestätigung liegen die Dateien im Papierkorb, die Karte zeigt die neue Größe. Dann „Endgültig löschen“ wählen: Nemo fragt ein **zweites Mal** nach; ohne die zweite Bestätigung wird nichts gelöscht. Ein Ordner aus der Sperrliste (z. B. `C:\Windows`) lässt sich weiterhin nicht zum Löschen vormerken. Zweimal schnell auf „Löschen“ klicken: es läuft nur ein Löschvorgang. ☐
+- **H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. „Aufräumen“ zeigt die bekannten Orte (Temp, Browser-Caches). ☐
+- **H3 Downloads:** einen großen Download starten, schnell hintereinander Pause → Fortsetzen → Pause klicken: der Eintrag steht am Ende auf „Pausiert“ und zeigt nach „Fortsetzen“ wieder Tempo; Limit setzen und wieder auf 0; „Im Ordner zeigen“; „Aus der Liste entfernen“. Nemo beenden und neu starten: die Liste ist dieselbe wie vorher (kein leerer Stand, kein doppelter Eintrag). Wenn möglich einmal mit einem USB-Stick oder Netzlaufwerk als Zielordner. ☐
+- **H4 Browser-Erweiterung:** Konten → Browser-Erweiterung: „Verbinden“ (Registrierung) zeigt die Browser als eingetragen, der Status bleibt nach einem Seitenwechsel richtig; Brücke aus und wieder ein, danach füllt die Erweiterung auf einer Testseite weiter aus (Klick → Zugangsdaten erscheinen). „Trennen“ entfernt die Einträge wieder. ☐
+- **H5 Schnellerfassung mit Zwischenablage:** Einstellung „Zwischenablage beim Öffnen einfügen“ ein, in einem anderen Programm Text kopieren, Schnellerfassung per Tastenkürzel öffnen: der Text steht sofort im Feld. Noch einmal mit einer großen kopierten Excel-Tabelle (Excel offen lassen): das Fenster öffnet sich ohne Hänger. ☐
+- **H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
+- **H7 Browser-Tabs (bleiben auf dem Hauptthread):** in einem Tab vier Seiten nacheinander öffnen, dann dreimal sehr schnell „Zurück“: der Tab steht auf der ersten Seite, „Vor“ dreimal: auf der vierten. Neu laden und Zoom (Strg +/−) reagieren sofort. Hängt das Fenster genau hier, bitte mit Seite und Uhrzeit notieren – das wäre ein Fall für WebView2 selbst. ☐

@@ -48,6 +48,7 @@
       "id": "calendar",
       "area": "plan",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "calendar",
       "hue": "sky",
@@ -70,7 +71,8 @@
     {
       "id": "planner",
       "area": "plan",
-      "status": "preview",
+      "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "chartGantt",
       "hue": "indigo",
@@ -94,6 +96,7 @@
       "id": "todos",
       "area": "plan",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "checklist",
       "hue": "moss",
@@ -117,6 +120,7 @@
       "id": "habits",
       "area": "plan",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "target",
       "hue": "violet",
@@ -140,6 +144,7 @@
       "id": "finance",
       "area": "money",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "wallet",
       "hue": "teal",
@@ -163,6 +168,7 @@
       "id": "timetrack",
       "area": "plan",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "clock",
       "hue": "teal",
@@ -186,6 +192,7 @@
       "id": "weather",
       "area": "plan",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "cloudSun",
       "hue": "cobalt",
@@ -206,9 +213,34 @@
       }
     },
     {
+      "id": "clock",
+      "area": "plan",
+      "status": "preview",
+      "fresh": false,
+      "platforms": null,
+      "icon": "globe",
+      "hue": "lime",
+      "hue2": "fern",
+      "head": "fokus",
+      "widget": "kacheln",
+      "name": {
+        "de": "Uhr",
+        "en": "Clock"
+      },
+      "short": {
+        "de": "Orte eintragen und ihre Uhrzeit immer sehen",
+        "en": "Add places and always see their time"
+      },
+      "description": {
+        "de": "Orte eintragen und ihre Uhrzeit immer sehen – mit Tag, Nacht und Zeitversatz.",
+        "en": "Add places and always see their time – with day, night and time difference."
+      }
+    },
+    {
       "id": "invoices",
       "area": "money",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "receipt",
       "hue": "ocean",
@@ -232,6 +264,7 @@
       "id": "subscriptions",
       "area": "money",
       "status": "default",
+      "fresh": false,
       "platforms": null,
       "icon": "repeat",
       "hue": "indigo",
@@ -255,6 +288,7 @@
       "id": "bookmarks",
       "area": "knowledge",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "bookmark",
       "hue": "indigo",
@@ -278,6 +312,7 @@
       "id": "notes",
       "area": "knowledge",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "note",
       "hue": "violet",
@@ -301,6 +336,7 @@
       "id": "chat",
       "area": "knowledge",
       "status": "preview",
+      "fresh": false,
       "platforms": null,
       "icon": "sparkles",
       "hue": "sky",
@@ -324,6 +360,7 @@
       "id": "lists",
       "area": "household",
       "status": "optional",
+      "fresh": true,
       "platforms": null,
       "icon": "cart",
       "hue": "orchid",
@@ -347,6 +384,7 @@
       "id": "pantry",
       "area": "household",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "package",
       "hue": "fern",
@@ -367,9 +405,34 @@
       }
     },
     {
+      "id": "fitness",
+      "area": "household",
+      "status": "preview",
+      "fresh": false,
+      "platforms": null,
+      "icon": "dumbbell",
+      "hue": "sky",
+      "hue2": "ocean",
+      "head": "fortschritt",
+      "widget": "fortschritt",
+      "name": {
+        "de": "Fitness",
+        "en": "Fitness"
+      },
+      "short": {
+        "de": "Training und Essen grob festhalten",
+        "en": "Keep a rough log of training and food"
+      },
+      "description": {
+        "de": "Training und Essen grob festhalten: Einheiten, Sätze, Gewichte und kcal.",
+        "en": "Keep a rough log of training and food: sessions, sets, weights and kcal."
+      }
+    },
+    {
       "id": "browser",
       "area": "knowledge",
       "status": "preview",
+      "fresh": false,
       "platforms": "both",
       "icon": "globe",
       "hue": "cobalt",
@@ -393,6 +456,7 @@
       "id": "feeds",
       "area": "knowledge",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "wifi",
       "hue": "moss",
@@ -416,6 +480,7 @@
       "id": "mail",
       "area": "knowledge",
       "status": "preview",
+      "fresh": false,
       "platforms": "windows",
       "icon": "mail",
       "hue": "teal",
@@ -439,6 +504,7 @@
       "id": "maps",
       "area": "plan",
       "status": "preview",
+      "fresh": false,
       "platforms": null,
       "icon": "map",
       "hue": "ocean",
@@ -462,6 +528,7 @@
       "id": "people",
       "area": "plan",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "users",
       "hue": "orchid",
@@ -485,6 +552,7 @@
       "id": "budgets",
       "area": "money",
       "status": "optional",
+      "fresh": true,
       "platforms": null,
       "icon": "piggy",
       "hue": "lime",
@@ -508,6 +576,7 @@
       "id": "vault",
       "area": "vault",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "files",
       "hue": "indigo",
@@ -531,6 +600,7 @@
       "id": "accounts",
       "area": "vault",
       "status": "optional",
+      "fresh": false,
       "platforms": null,
       "icon": "lock",
       "hue": "slate",
@@ -554,6 +624,7 @@
       "id": "music",
       "area": "knowledge",
       "status": "preview",
+      "fresh": false,
       "platforms": null,
       "icon": "music",
       "hue": "orchid",
@@ -577,6 +648,7 @@
       "id": "disk",
       "area": "system",
       "status": "optional",
+      "fresh": false,
       "platforms": "windows",
       "icon": "disk",
       "hue": "slate",
@@ -599,7 +671,8 @@
     {
       "id": "downloads",
       "area": "system",
-      "status": "preview",
+      "status": "optional",
+      "fresh": true,
       "platforms": "windows",
       "icon": "download",
       "hue": "cobalt",
@@ -617,6 +690,30 @@
       "description": {
         "de": "Lädt Dateien herunter: Fortschritt, Pausieren, Fortsetzen, Tempolimit und Prüfsumme. Nichts wird automatisch geöffnet.",
         "en": "Downloads files: progress, pause, resume, speed limit and checksum. Nothing is opened automatically."
+      }
+    },
+    {
+      "id": "remote",
+      "area": "system",
+      "status": "preview",
+      "fresh": false,
+      "platforms": "android",
+      "icon": "monitor",
+      "hue": "lime",
+      "hue2": null,
+      "head": "schreib",
+      "widget": "status",
+      "name": {
+        "de": "Fernbedienung",
+        "en": "Remote"
+      },
+      "short": {
+        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus",
+        "en": "Control media and volume of your PC from your phone"
+      },
+      "description": {
+        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.",
+        "en": "Control media and volume of your PC from your phone – on your home network, once you allowed it at the PC."
       }
     }
   ],

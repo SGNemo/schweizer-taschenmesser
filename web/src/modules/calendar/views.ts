@@ -190,3 +190,143 @@ export function splitDay(items: CalendarItem[]): { untimed: CalendarItem[]; time
   close();
   return { untimed, timed: sorted };
 }
+
+/** Narrowest lane (rem) an overlapping block may get in the hour grid; below it the overlap folds into a stack (AE4). */
+export const MIN_LANE_REM = 4.5;
+
+/** Overlapping entries that share one lane as a list of one-line rows ("+n" opens the day when not all fit). */
+export interface GridStack {
+  start: number;
+  end: number;
+  lane: number;
+  lanes: number;
+  items: TimedItem[];
+}
+
+/**
+ * Caps the lanes of each overlap cluster at `maxLanes` (what the column's width allows, `MIN_LANE_REM`): a cluster that
+ * needs more keeps its first `maxLanes - 1` lanes as blocks, everything else becomes one stack in the last lane. With
+ * room for a single lane the whole cluster is the stack. `timed` is `splitDay`'s output (sorted by start).
+ */
+export function stackLanes(
+  timed: readonly TimedItem[],
+  maxLanes: number,
+): { blocks: TimedItem[]; stacks: GridStack[] } {
+  const cap = Math.max(1, Math.floor(maxLanes));
+  const blocks: TimedItem[] = [];
+  const stacks: GridStack[] = [];
+  let cluster: TimedItem[] = [];
+  let clusterEnd = 0;
+  const close = () => {
+    const lanes = cluster[0]?.lanes ?? 1;
+    if (lanes <= cap) blocks.push(...cluster);
+    else {
+      const folded = cluster.filter((c) => c.lane >= cap - 1);
+      blocks.push(...cluster.filter((c) => c.lane < cap - 1).map((c) => ({ ...c, lanes: cap })));
+      stacks.push({
+        start: Math.min(...folded.map((c) => c.start)),
+        end: Math.max(...folded.map((c) => c.end)),
+        lane: cap - 1,
+        lanes: cap,
+        items: folded,
+      });
+    }
+    cluster = [];
+  };
+  for (const item of timed) {
+    if (cluster.length && item.start >= clusterEnd) close();
+    if (!cluster.length) clusterEnd = 0;
+    cluster.push(item);
+    clusterEnd = Math.max(clusterEnd, item.end);
+  }
+  if (cluster.length) close();
+  return { blocks, stacks };
+}
+
+/** Untimed entries a day shows in the week grid's all-day pane; the rest folds into "+n weitere" (S04, UI round 6). */
+export const ALL_DAY_LIMIT = 3;
+
+/**
+ * What the hour grid opens around (minutes of the day): now when today is shown, but never earlier than the shown days'
+ * first timed entry (or 08:00 when none starts earlier). At 04:45 the grid must not open on empty night hours with the
+ * day's entries below the fold ("die Woche passt nicht", S04 follow-up); later in the day "now" leads as before.
+ */
+export function scrollAnchor(
+  blocks: readonly { start: number }[],
+  nowMinute: number,
+  todayShown: boolean,
+): number {
+  const first = Math.min(...blocks.map((b) => b.start), 8 * 60);
+  return todayShown ? Math.max(nowMinute, first) : first;
+}
+
+/**
+ * Minute the hour grid opens at: an hour and a half before `anchor` (now, or the first entry), on a full hour, and never
+ * inside a block. A block cut by the grid's top edge looks as if it were hidden under the all-day pane above it (S04), so
+ * the start moves up to the full hour before such a block – but never more than two hours above the first choice: a long
+ * block (05:00–22:00) or a chain of overlapping ones must not open the grid far from now.
+ */
+export function initialScrollMinute(
+  blocks: readonly { start: number; end: number }[],
+  anchor: number,
+): number {
+  const top0 = Math.max(0, Math.floor((anchor - 90) / 60) * 60);
+  let top = top0;
+  for (;;) {
+    const cut = blocks.find((b) => b.start < top && b.end > top && b.start >= top0 - 120);
+    if (!cut) return top;
+    top = Math.floor(cut.start / 60) * 60;
+  }
+}
+
+/** What the hour grid remembers about its scroll: the shown range, and whether that range's entries have been seen. */
+export interface GridScrollMemo {
+  range: string;
+  settled: boolean;
+}
+
+/**
+ * Whether the hour grid scrolls now (S04, UI round 6). A new range always scrolls. The same range scrolls once more only
+ * while its entries are still loading (none of the shown days had any entry yet) and timed entries arrive; once entries
+ * were seen, the user's own edits (the first timed event saved into an all-day-only week, the last one deleted) never
+ * move the grid.
+ */
+export function gridScroll(
+  memo: GridScrollMemo | null,
+  range: string,
+  hasAny: boolean,
+  hasTimed: boolean,
+): { scroll: boolean; memo: GridScrollMemo } {
+  if (!memo || memo.range !== range) return { scroll: true, memo: { range, settled: hasAny } };
+  if (memo.settled || !hasAny) return { scroll: false, memo };
+  return { scroll: hasTimed, memo: { range, settled: true } };
+}
+
+/** Identity of an entry across days: the same source, kind, time and title. */
+export const repeatKey = (i: Pick<CalendarItem, 'source' | 'kind' | 'time' | 'title'>): string =>
+  `${i.source}|${i.kind}|${i.time ?? ''}|${i.title}`;
+
+/**
+ * Entries that come back almost every day (five or more times within seven days – a daily medication reminder). The month
+ * view writes them as quiet lines, so the one-off entries stand out (S03, UI round 6).
+ */
+export function dailyRepeats(items: readonly CalendarItem[]): Set<string> {
+  const days = new Map<string, string[]>();
+  for (const i of items) {
+    const key = repeatKey(i);
+    const list = days.get(key) ?? [];
+    if (!list.includes(i.date)) list.push(i.date);
+    days.set(key, list);
+  }
+  const out = new Set<string>();
+  for (const [key, list] of days) {
+    if (list.length < 5) continue;
+    list.sort();
+    for (let n = 0; n + 4 < list.length; n++)
+      if (daysBetween(list[n]!, list[n + 4]!) <= 6) {
+        out.add(key);
+        break;
+      }
+  }
+  return out;
+}

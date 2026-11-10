@@ -3,9 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Screenshots of the setup assistant (manual tooling, see playwright.screens.config.ts).
- * Invented data only. Output: SCREENS_DIR (default test-results/screens/setup).
+ * Invented data only. Output: SCREENS_DIR (default .screens/setup).
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/setup';
+const OUT = process.env.SCREENS_DIR ?? '.screens/setup';
 const VIEWPORTS = [
   { name: '1280x720', width: 1280, height: 720 },
   { name: '1920x1080', width: 1920, height: 1080 },
@@ -46,6 +46,9 @@ for (const vp of VIEWPORTS) {
     await wizard(page).getByTestId('profile-minimal').click();
     await shot('3-profiles-diff');
     await wizard(page).getByRole('button', { name: 'Später', exact: true }).click();
+    await expect(wizard(page).getByRole('heading', { name: 'Fokus-Hilfen' })).toBeVisible();
+    await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // focus aids
+    await expect(wizard(page).getByRole('heading', { name: 'Werkzeugkasten' })).toBeVisible();
     await wizard(page).getByRole('button', { name: 'Später', exact: true }).click(); // tools
     await expect(wizard(page).getByRole('heading', { name: 'KI-Anbieter' })).toBeVisible();
     await shot('4-ai');

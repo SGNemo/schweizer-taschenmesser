@@ -31,6 +31,19 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* „Als Ausgabe buchen“: a chip that acts; the hit area grows to the touch size without a bigger look. */
+.chipAction {
+  position: relative;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.chipAction::after {
+  content: '';
+  position: absolute;
+  inset: calc((28px - var(--touch)) / 2) 0;
+}
 .warn {
   border-color: var(--warning, var(--accent));
   color: var(--text);
@@ -71,6 +84,15 @@
   gap: var(--space-2);
   justify-content: flex-end;
 }
+/* Many lines: the save button stays in view while the list scrolls (nothing to look for below the fold). */
+.actionsSticky {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  padding-block: var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
 .draft {
   display: flex;
   flex-direction: column;
@@ -86,6 +108,9 @@ textarea.input {
   padding: var(--space-2) var(--space-3);
   line-height: 1.5;
   resize: none;
+  /* C05: grow with wrapped lines too (`rows` only counts typed line breaks), up to six lines. */
+  field-sizing: content;
+  max-block-size: calc(6lh + 2 * var(--space-2));
 }
 /* "Eine Zeile = ein Eintrag": on the phone, where there is no Shift+Enter hint. */
 .lineHint {
@@ -109,14 +134,37 @@ textarea.input {
 }
 .row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
+/* One line per entry where it fits: the title left, its target as words on the right (Kopf leer, Nachlese). */
 .rowTitle {
+  flex: 1 1 12rem;
+  min-width: 0;
   overflow-wrap: anywhere;
+}
+/* The target of a line as words: quiet, a full-size tap target that opens the choice. */
+.rowTarget {
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.rowTarget:hover {
+  color: var(--text);
 }
 .rowType {
   min-height: var(--touch);

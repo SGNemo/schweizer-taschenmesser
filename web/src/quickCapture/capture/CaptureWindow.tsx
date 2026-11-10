@@ -92,6 +92,7 @@ export function CaptureWindow() {
             initialText={prefill}
             selectInitial
             tabSwitchesType
+            bookChip={false}
             onSaved={onSaved}
             onCancel={hide}
           />

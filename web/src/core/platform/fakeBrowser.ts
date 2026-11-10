@@ -1,7 +1,7 @@
 /**
  * E2E stand-in for the native browser tabs (only wired in `--mode e2e` builds). No real page is
  * loaded: it answers navigations with url/title events and records what the UI asked for on
- * `window.__tmBrowserCalls`, so specs can assert on it. Addresses are example.org-style test data.
+ * `window.__tmBrowserCalls`, so specs can assert on it. An address containing `fail-test` fails to open, one containing `hang-test` never answers, and the webview of one containing `gone-test` is lost once after it opened. Addresses are example.org-style test data.
  */
 import type { BrowserEvent, BrowserService } from './browser';
 
@@ -9,6 +9,9 @@ type Win = { __tmBrowserCalls?: string[] };
 
 export function createFakeBrowser(): BrowserService {
   const sinks = new Map<number, (e: BrowserEvent) => void>();
+  // Tabs whose webview "disappeared" (what a destroyed native webview looks like to `show`).
+  const gone = new Set<number>();
+  let loseOnce = true;
   const log = (call: string) => {
     const w = window as unknown as Win;
     (w.__tmBrowserCalls ??= []).push(call);
@@ -30,9 +33,17 @@ export function createFakeBrowser(): BrowserService {
     async open(o, onEvent) {
       sinks.set(o.tab, onEvent);
       log(`open:${o.tab}:${o.privateTab ? 'private' : 'normal'}:${o.url}`);
+      // The native side could not create the tab's webview (what Windows did when the command hung).
+      if (o.url.includes('fail-test')) throw new Error('webview');
+      // The command never answers (a blocked main thread): neither a tab nor an error.
+      if (o.url.includes('hang-test')) return new Promise<void>(() => {});
       if (o.url.startsWith('http://') && !o.allowHttp) {
         onEvent({ event: 'httpHeld', tab: o.tab, url: o.url });
         return;
+      }
+      if (o.url.includes('gone-test') && loseOnce) {
+        loseOnce = false;
+        gone.add(o.tab);
       }
       load(o.tab, o.url);
     },
@@ -59,6 +70,9 @@ export function createFakeBrowser(): BrowserService {
     },
     async show(tab) {
       log(`show:${tab}`);
+      const lost = [...gone];
+      gone.clear();
+      return lost;
     },
     async setZoom(tab, factor) {
       log(`zoom:${tab}:${factor}`);

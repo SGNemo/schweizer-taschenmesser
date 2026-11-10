@@ -1,10 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import type { Instruction, PlanOp } from '@/core/plan/instructions';
+import { useModuleStates } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -89,6 +91,7 @@ export default function PlannerPage() {
   const wide = usePageWidthAtLeast(WIDE_REM) ?? true;
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
+  const hintId = useId();
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
@@ -112,6 +115,8 @@ export default function PlannerPage() {
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
+  const moduleStates = useModuleStates();
+  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const [focus] = useFocusSettings();
   const dismissedWeek = useLiveQuery(
     async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
@@ -321,9 +326,15 @@ export default function PlannerPage() {
           : todayDay.usable === 0
             ? t.planner.head.noTime
             : t.planner.head.full;
-  const headDetail = todayDay
-    ? `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`
-    : undefined;
+  // U13: the detail line names the next step – today's first thing, or the next day with free time.
+  const nextFree = board?.days.slice(1).find((d) => !d.off && d.free > 0);
+  const headDetail = !todayDay
+    ? undefined
+    : !todayDay.off && todayDay.rows[0]
+      ? t.planner.head.first(todayDay.rows[0].title)
+      : !todayDay.off && todayDay.usable > 0 && nextFree
+        ? t.planner.head.nextFree(dayName(nextFree.date), compact(nextFree.free))
+        : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
 
   const pageMenu: RowMenuItem[] = [
     {
@@ -454,6 +465,17 @@ export default function PlannerPage() {
             },
           ]
         : []),
+      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
+      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
+      ...(e.link?.kind === 'mail' && mailOn
+        ? [
+            {
+              id: 'mail',
+              label: t.planner.row.openMail,
+              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
+            },
+          ]
+        : []),
     ];
   };
 
@@ -491,6 +513,7 @@ export default function PlannerPage() {
                 {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
               </span>
             ) : null}
+            {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
             {open ? <span className={styles.reason}>{reason}</span> : null}
           </span>
         }
@@ -572,11 +595,17 @@ export default function PlannerPage() {
   return (
     <>
       <PageHeader title={t.planner.title} />
-      {todayDay ? (
-        <HeroSlot area="figure">
+      {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
+          read the page holds the row itself, in the figure's own shape, so the entry row below never moves. */}
+      <HeroSlot area="figure">
+        {todayDay ? (
           <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
-        </HeroSlot>
-      ) : null}
+        ) : (
+          <div className={styles.headPending} aria-hidden="true" data-testid="planner-head-pending">
+            <HeroFigure value={'\u00a0'} detail={'\u00a0'} type="thin" />
+          </div>
+        )}
+      </HeroSlot>
       {board ? (
         <HeroSlot area="signature">
           <WeekBars
@@ -607,10 +636,13 @@ export default function PlannerPage() {
         aria-busy={reading || undefined}
       >
         <div className={styles.grow}>
+          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
+              with the input instead of with the hint's baseline. The prop replaces TextField's own description: an
+              `error` here would have to be appended to `hintId`. */}
           <TextField
             label={t.planner.add.label}
             placeholder={t.planner.add.placeholder}
-            hint={t.planner.add.hint}
+            aria-describedby={hintId}
             value={text}
             onChange={(e) => setText(e.target.value)}
             readOnly={reading}
@@ -627,6 +659,9 @@ export default function PlannerPage() {
           onOpenChange={setMenuOpen}
         />
       </form>
+      <p id={hintId} className={styles.addHint}>
+        {t.planner.add.hint}
+      </p>
 
       {sayLine ? (
         <p className={styles.say} role="status" data-testid="plan-say">
@@ -693,33 +728,48 @@ export default function PlannerPage() {
             listId="planner"
             groups={[
               {
-                id: 'waiting',
+                // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
+                id: 'wait',
+                defaultClosed: true,
                 label: t.planner.wait.title,
                 count: waiting.length,
-                // The overload figure: neutral text, no tone (CONCEPT §7).
-                ...(overflow > 0 ? { detail: overloadText(overflow) } : {}),
+                detail: t.planner.wait.calm,
+                // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
+                ...(overflow > 0
+                  ? {
+                      action: (
+                        <p className={styles.reason} data-testid="planner-overload">
+                          {overloadText(overflow)}
+                        </p>
+                      ),
+                    }
+                  : {}),
                 children: (
                   <ItemList>
-                    {waiting.map((w) => (
-                      <ItemRow
-                        key={w.unitId}
-                        title={
-                          <span>
-                            {w.title}
-                            {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
-                          </span>
-                        }
-                        titleFull
-                        meta={
-                          w.reason === 'excluded'
-                            ? t.planner.row.excludedState
-                            : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf)
-                        }
-                        end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
-                        menu={rowMenu(w)}
-                        menuLabel={t.planner.row.menu(w.title)}
-                      />
-                    ))}
+                    {waiting.map((w) => {
+                      const reason =
+                        w.reason === 'excluded'
+                          ? t.planner.row.excludedState
+                          : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+                      return (
+                        <ItemRow
+                          key={w.unitId}
+                          title={
+                            <span>
+                              {w.title}
+                              {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
+                            </span>
+                          }
+                          titleFull
+                          // The reason only behind „Warum hier?“, like on the board (U12).
+                          // A row without a menu (no entry) keeps its reason in sight.
+                          meta={why === w.unitId || !w.entry ? reason : undefined}
+                          end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
+                          menu={rowMenu(w, undefined, reason)}
+                          menuLabel={t.planner.row.menu(w.title)}
+                        />
+                      );
+                    })}
                   </ItemList>
                 ),
               },

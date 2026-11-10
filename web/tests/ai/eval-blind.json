@@ -2287,6 +2287,62 @@
           "target": "Nachhilfe"
         }
       ]
+    },
+    {
+      "id": "fit-b01",
+      "input": "Training Schwimmen 40 Minuten eintragen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createSession",
+          "data": {
+            "title": "Schwimmen",
+            "durationMin": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-b02",
+      "input": "Mahlzeit Joghurt 150 kcal eintragen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "fitness",
+          "action": "createMeal",
+          "data": {
+            "text": "Joghurt",
+            "kcal": 150
+          }
+        }
+      ]
+    },
+    {
+      "id": "fit-b03",
+      "input": "Habe ich heute schon zu viel gegessen?",
+      "tags": ["negative"],
+      "expect": []
+    },
+    {
+      "id": "b-clk-c01",
+      "input": "Weltuhr: Seoul hinzufügen",
+      "tags": ["create"],
+      "expect": [
+        {
+          "module": "clock",
+          "action": "create",
+          "data": {
+            "label": "Seoul"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b-clk-n01",
+      "input": "Wie groß ist der Zeitunterschied nach Tokio?",
+      "tags": ["negative"],
+      "expect": []
     }
   ]
 }

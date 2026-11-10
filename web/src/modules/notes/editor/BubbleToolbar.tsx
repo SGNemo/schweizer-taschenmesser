@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { t } from '@/strings';
 import { Icon } from '@/ui';
 import { toneLabel } from './commands';
@@ -22,6 +22,11 @@ export function BubbleToolbar({
 }) {
   const [mode, setMode] = useState<'main' | 'tone' | 'link'>('main');
   const [url, setUrl] = useState('');
+  const linkInput = useRef<HTMLInputElement>(null);
+  // `data-autofocus` is read by Dialog only; the bubble is not one, so the field is focused here when it appears.
+  useEffect(() => {
+    if (mode === 'link') linkInput.current?.focus();
+  }, [mode]);
   const on = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -139,7 +144,8 @@ export function BubbleToolbar({
               placeholder={URL_HINT}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              autoFocus
+              ref={linkInput}
+              data-autofocus
             />
             <button type="submit" className={styles.tool}>
               {t.notes.fmt.linkApply}

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS } from './ui/Logo';
+import { LOGO_ACCENT, LOGO_COLOR, LOGO_PATHS, LOGO_RIM, LOGO_TILE } from './ui/Logo';
 
 /**
  * The fish exists three times: as SVG source (`brand/logo-mark.svg`, rendered to every icon), in
@@ -33,6 +33,12 @@ describe('brand assets stay in step', () => {
     }
   });
 
+  it('the tile in the app (collapsed sidebar) is the app icon: same corner radius, same placement of the fish', () => {
+    const icon = read('brand/app-icon.svg');
+    expect(icon).toContain(`rx="${LOGO_TILE.radius}"`);
+    expect(icon).toContain(`<g transform="${LOGO_TILE.transform}">`);
+  });
+
   it('the logo colour is the accent token, in the app and in the static brand files', () => {
     expect(LOGO_COLOR).toBe('var(--accent)');
     // The static files cannot read a token: they carry its two values, and these must not drift from tokens.css.
@@ -43,6 +49,23 @@ describe('brand assets stay in step', () => {
     expect(LOGO_ACCENT).toEqual({ light, dark });
     for (const file of ['logo-mark.svg', 'app-icon.svg', 'app-icon-maskable.svg'])
       expect(read(`brand/${file}`), file).toContain(`fill="${LOGO_ACCENT.light}"`);
+  });
+
+  it('the fish stays one piece: the bands are cut inside the body and the rim is put back', () => {
+    expect(LOGO_RIM).toBeGreaterThan(0);
+    for (const file of [
+      'brand/logo-mark.svg',
+      'brand/logo-mono.svg',
+      'brand/app-icon.svg',
+      'brand/app-icon-maskable.svg',
+      'brand/android-foreground.svg',
+      'brand/android-monochrome.svg',
+      'index.html',
+    ]) {
+      const text = read(file);
+      expect(text, file).toMatch(/<g fill="none" stroke="#000" clip-path="url\(#[^"]+\)">/);
+      expect(text, file).toMatch(new RegExp(`stroke="#fff"\\s+stroke-width="${LOGO_RIM}"`));
+    }
   });
 
   it('the wordmark (the pill: mark + NEMO) follows the accent token in both schemes', () => {

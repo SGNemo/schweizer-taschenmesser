@@ -42,19 +42,21 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 | Area | Module | What it does | Status |
 |---|---|---|---|
 | **Plan** | Calendar | Events in month, week and day view | on by default |
-|  | Planner | Spreads your open to-dos over the coming days | preview |
+|  | Planner | Spreads your open to-dos over the coming days | optional |
 |  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
 |  | Habits | Daily and weekly goals with rings | optional |
 |  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
 |  | Weather | A page of its own for the weather at your place | on by default |
+|  | Clock | Add places and always see their time | preview |
 |  | Maps & places | Places and routes you need often | preview |
 |  | People | Never forget a birthday again and collect gifts per person | optional |
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | optional |
-| **Household** | Lists | Shopping, packing lists and checklists | optional |
+|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+| **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
+|  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
 |  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
 |  | Chat | Conversations with the built-in local model or your providers | preview |
@@ -65,7 +67,10 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
 | **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | preview, Windows app only |
+|  | Downloads | Downloads files | on for new installations, Windows app only |
+|  | Remote | Control media and volume of your PC from your phone | preview, Android app only |
+
+“On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 

@@ -2,6 +2,12 @@ import { createFakeDisk } from './fakeDisk';
 import { loggedFetch } from '@/core/net/netlog';
 import { createFakeLocalApi } from './fakeLocalApi';
 import { createFakeVaultBridge } from './fakeVaultBridge';
+import { createFakeLanHub, noLanHub } from './fakeLanHub';
+import { createFakeRemoteHost } from './fakeRemoteHost';
+import { createFakeRemote } from './fakeRemote';
+import { noRemote } from './noRemote';
+import { noRemoteHost } from './noRemoteHost';
+import { createFakeLanClient, createFakeLanWatch, noLanClient, noLanWatch } from './fakeLanClient';
 import { createFakeBrowser } from './fakeBrowser';
 import { createFakeLocalModel } from './fakeLocalModel';
 import { createFakeCustomTabs } from './fakeCustomTabs';
@@ -279,6 +285,14 @@ export function createWebPlatform(): PlatformService {
           unregister: unsupported,
           status: unsupported,
         },
+    // E2E builds only: a stand-in for the home-network hub of the desktop shell.
+    lanHub: isE2eBuild() ? createFakeLanHub() : noLanHub,
+    // E2E builds only: a stand-in for the PC's remote-control settings.
+    remoteHost: isE2eBuild() ? createFakeRemoteHost() : noRemoteHost,
+    // E2E builds only: the demo PC "PC-Sven" for the phone's remote control.
+    remote: isE2eBuild() ? createFakeRemote() : noRemote,
+    lanClient: isE2eBuild() ? createFakeLanClient() : noLanClient,
+    lanWatch: isE2eBuild() ? createFakeLanWatch() : noLanWatch,
     // E2E builds only: an invented folder tree instead of the native scan.
     disk: isE2eBuild()
       ? createFakeDisk()

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAiOn } from '@/core/ai/switch';
 import { isEntryUsable, useAiConfig } from '@/core/ai/config';
 import { useUsageRows } from '@/core/ai/usage';
-import { loadAutoLast, type AutoBackupLast } from '@/core/backup/auto';
+import { loadLastBackup, type LastBackup } from '@/core/backup/lastBackup';
 import { formatNumber, formatTimestamp } from '@/core/i18n/format';
 import { useModuleStates } from '@/core/modules/activation';
 import { getPlatform } from '@/core/platform';
@@ -28,6 +28,9 @@ export interface StatusTile {
   context: string;
   /** `true` = something needs a look (a plain marker, never red). */
   attention: boolean;
+  /** `true` = the context line only explains the state or the category (no date, number or setting of its own): the
+   *  phone leaves it out (U55). */
+  generic?: boolean;
   testId: string;
 }
 
@@ -43,11 +46,11 @@ export function useSettingsStatus(): StatusTile[] {
   const vaultOn = states?.accounts === true;
   const session = useSession((s) => s.session);
   const [minutes, setMinutes] = useState<string>();
-  const [last, setLast] = useState<AutoBackupLast>();
+  const [last, setLast] = useState<LastBackup>();
   useEffect(() => {
     // The reads finish later; an unmounted head (or a finished test) must not get the state update.
     let live = true;
-    void loadAutoLast().then((v) => live && setLast(v));
+    void loadLastBackup().then((v) => live && setLast(v));
     if (vaultOn) void loadAccountsSettings().then((s) => live && setMinutes(s.autoLockMinutes));
     return () => {
       live = false;
@@ -130,6 +133,7 @@ export function useSettingsStatus(): StatusTile[] {
           : o.security.unlocked,
       context:
         vaultOn && minutes ? o.security.autoLock(minutes) : categoryDef('sicherheit').description,
+      generic: !(vaultOn && minutes),
       attention: false,
       testId: 'overview-security',
     },
@@ -140,6 +144,7 @@ export function useSettingsStatus(): StatusTile[] {
       title: v3.tiles.sync,
       status: syncStatus,
       context: syncContext,
+      generic: sync.phase === 'off',
       attention: sync.phase === 'error',
       testId: 'overview-sync',
     },
@@ -152,8 +157,9 @@ export function useSettingsStatus(): StatusTile[] {
       context: !last
         ? v3.backup.noneContext
         : last.ok
-          ? v3.backup.at(formatTimestamp(last.at))
+          ? (last.kind === 'file' ? v3.backup.fileAt : v3.backup.at)(formatTimestamp(last.at))
           : v3.backup.tried(formatTimestamp(last.at)),
+      generic: !last,
       attention: last?.ok === false,
       testId: 'overview-backup',
     },
@@ -164,6 +170,7 @@ export function useSettingsStatus(): StatusTile[] {
       title: v3.tiles.updates,
       status: available ? o.updates.available : o.updates.current,
       context: version ? o.updates.version(version) : categoryDef('updates').description,
+      generic: !version,
       attention: available,
       testId: 'overview-updates',
     },
@@ -174,6 +181,7 @@ export function useSettingsStatus(): StatusTile[] {
       title: v3.tiles.ai,
       status: aiStatus,
       context: aiContext,
+      generic: !aiOn || providers === 0,
       attention: false,
       testId: 'overview-ai',
     },
@@ -184,6 +192,7 @@ export function useSettingsStatus(): StatusTile[] {
       title: v3.tiles.storage,
       status: used ? o.storage.used(size) : o.storage.unknown,
       context: o.storage.context,
+      generic: true,
       attention: false,
       testId: 'overview-storage',
     },

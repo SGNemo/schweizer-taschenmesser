@@ -1,8 +1,18 @@
-import { DEFAULT_CURRENCY } from '@/core/money';
-import { addDaysStr } from '@/core/time/dates';
+import { getLang } from '@/core/i18n/lang';
+import { DEFAULT_CURRENCY, formatMoney } from '@/core/money';
+import { now } from '@/core/time/now';
+import { resolvePlace } from '@/core/time/placeSearch';
+import { addDaysStr, formatDay, nowTime } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { CaptureFields } from '../parser';
-import { CaptureError, type BuildContext, type CaptureTarget } from './types';
+import {
+  CaptureError,
+  type AmendContext,
+  type BuildContext,
+  type CaptureTarget,
+  type OpenInvoice,
+  type SavedCapture,
+} from './types';
 
 /** Shared guard: adapters reject an empty title instead of writing a blank record. */
 function title(fields: CaptureFields): string {
@@ -151,8 +161,128 @@ const invoices: CaptureTarget = {
       ...(f.currency ? { currency: f.currency } : {}),
       dueDate: date(f.date ?? ctx.today),
       status: 'open',
+      // A reminder for an invoice that was not filed yet: the invoice starts at its level.
+      ...(f.dunning
+        ? {
+            dunningLevel: Math.min(3, Math.max(1, f.dunning.level)),
+            dunnedAt: date(f.dunning.date),
+          }
+        : {}),
       ...noteOf(f.note),
     };
+  },
+  amend: amendInvoice,
+};
+
+/** What is still open on an invoice row: amount minus part payments, cents (shared with `lookup.ts`). */
+export const openRest = (row: Record<string, unknown>): number =>
+  (Number(row.amountMinor) || 0) -
+  (Array.isArray(row.payments)
+    ? (row.payments as { amountMinor?: number }[]).reduce((n, p) => n + (p.amountMinor ?? 0), 0)
+    : 0);
+
+/**
+ * A payment reminder on its open invoice: writes exactly three things – the level + 1 (at most 3), the
+ * day of the reminder and one appended note line – and never the amount or the due date (money changes
+ * only in the editor). Noting the same reminder again does nothing. The undo removes only that line
+ * and resets level and day only while they still hold what was written; it never removes the invoice.
+ */
+async function amendInvoice(
+  f: CaptureFields,
+  match: OpenInvoice,
+  ctx: AmendContext,
+): Promise<SavedCapture> {
+  const { repo } = ctx;
+  const row = (await repo.get(match.id)) as Record<string, unknown> | undefined;
+  if (!row || row.status === 'paid' || openRest(row) <= 0) throw new CaptureError('stale');
+  const day = date(f.dunning?.date ?? ctx.today)!;
+  const base = { id: match.id, type: 'invoice' as const, moduleId: 'invoices' };
+  const before = {
+    level: row.dunningLevel as number | undefined,
+    at: row.dunnedAt as string | undefined,
+  };
+  if (before.at && before.at >= day)
+    return { ...base, amended: true, existed: true, undo: async () => undefined };
+  const level = Math.min(3, (before.level ?? 0) + 1);
+  // The invoice's own currency and today's rest when the line names no amount (never the preview's).
+  const currency = f.currency ?? (row.currency as string | undefined);
+  const line = t.quickCapture.dunningNote(
+    formatDay(day, 'dd.MM.yyyy'),
+    formatMoney(f.amountMinor ?? openRest(row), currency),
+    f.date ? formatDay(f.date, 'dd.MM.yyyy') : undefined,
+  );
+  const note = [row.note as string | undefined, line].filter(Boolean).join('\n');
+  await repo.update(match.id, { dunningLevel: level, dunnedAt: day, note });
+  return {
+    ...base,
+    amended: true,
+    undo: async () => {
+      const now = (await repo.get(match.id)) as Record<string, unknown> | undefined;
+      if (!now) return;
+      const patch: Record<string, unknown> = {};
+      const text = typeof now.note === 'string' ? now.note : '';
+      // Exactly the line and the one line break that joined it; the person's own text stays as it is.
+      const at = text.lastIndexOf(line);
+      if (at >= 0) {
+        const end = at + line.length;
+        const kept =
+          at > 0 && text[at - 1] === '\n'
+            ? text.slice(0, at - 1) + text.slice(end)
+            : text.slice(0, at) + text.slice(text[end] === '\n' ? end + 1 : end);
+        patch.note = kept || undefined;
+      }
+      if (now.dunningLevel === level) patch.dunningLevel = before.level;
+      if (now.dunnedAt === day) patch.dunnedAt = before.at;
+      if (Object.keys(patch).length > 0) await repo.update(match.id, patch);
+    },
+  };
+}
+
+/** Fitness (docs/features/fitness.md §5): a meal with rough kcal, a session with its exercises. */
+const meal: CaptureTarget = {
+  type: 'meal',
+  moduleId: 'fitness',
+  collection: 'meal',
+  build: (f, ctx) => {
+    if (f.kcal === undefined || !f.title.trim()) throw new CaptureError('invalid');
+    return {
+      text: f.title.trim(),
+      kcal: f.kcal,
+      date: date(f.date ?? ctx.today),
+      // Logged now unless a past day was typed („gestern kcal 400 Pizza“).
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
+    };
+  },
+};
+
+const workout: CaptureTarget = {
+  type: 'workout',
+  moduleId: 'fitness',
+  collection: 'session',
+  build: (f, ctx) => {
+    if (!f.exercises?.length) throw new CaptureError('invalid');
+    return {
+      date: date(f.date ?? ctx.today),
+      ...(!f.date || f.date === ctx.today ? { time: nowTime() } : {}),
+      exercises: f.exercises.map((e) => ({ ...e })),
+    };
+  },
+};
+
+/**
+ * Uhr: „uhr Tokio“ → a place named like the city in the UI language, at the end of the list (an order above any
+ * the page hands out; the page renumbers on the next move). Offline city search, never a guess on a loose match.
+ */
+const place: CaptureTarget = {
+  type: 'place',
+  moduleId: 'clock',
+  collection: 'place',
+  build: (f) => {
+    const hit = resolvePlace(f.title, getLang());
+    if (!hit) throw new CaptureError('invalid');
+    // `build` cannot read the list, so the order is the time in seconds: always after the page's 0, 1, 2 …
+    // (`addPlace` then continues after it; only the relative order matters).
+    return { label: hit.name, zone: hit.zone, order: Math.floor(now() / 1000) };
   },
 };
 
@@ -195,6 +325,9 @@ const notes: CaptureTarget = {
   },
 };
 
+/** The planner's key of a thing from a module (`<moduleId>:<id>`): its item and its assignments carry it. */
+export const planItemKey = (moduleId: string, id: string): string => `${moduleId}:${id}`;
+
 /**
  * „p Steuer 2 Std bis Do“: a ToDo (through the `todo` target, so the backlog stays in ToDos) plus its
  * planner item `todos:<id>` with what only the planner holds – the pin of a plain day or the hard
@@ -204,7 +337,7 @@ const plan: CaptureTarget = {
   type: 'plan',
   moduleId: 'planner',
   collection: 'item',
-  via: { type: 'todo', id: (first) => `${first.moduleId}:${first.id}` },
+  via: { type: 'todo', id: (first) => planItemKey(first.moduleId, first.id) },
   build: (f, ctx, first) => {
     // The checks of the first stage (a title, real dates) hold for the plan entry too.
     todos.build(f, ctx);
@@ -230,6 +363,9 @@ export const TARGETS = {
   list: lists,
   finance,
   invoice: invoices,
+  meal,
+  workout,
+  place,
   note: notes,
   subscription: subscriptions,
   birthday: people,

@@ -86,6 +86,12 @@ export async function createBackup(
 
 export const serializeBackup = (backup: Backup): string => JSON.stringify(backup);
 
+/** Rows and the tables that actually hold rows (a backup lists every table, most of them empty). */
+export function backupCounts(backup: Pick<Backup, 'tables'>): { records: number; tables: number } {
+  const filled = Object.values(backup.tables).filter((rows) => rows.length > 0);
+  return { records: filled.reduce((n, rows) => n + rows.length, 0), tables: filled.length };
+}
+
 export function backupFileName(date: Date = new Date()): string {
   return `nemo-backup-${date.toISOString().slice(0, 10)}.json`;
 }

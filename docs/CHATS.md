@@ -1,62 +1,79 @@
 # Chats – running work and hand-over
 
-Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours; notes and questions between chats go to [`scribble/`](../scribble/README.md) (develop only). Keep this file short; delete finished rows. Last full review: 2026-10-02. Agent threads of one session share one row (topic = session); roster: [meta/AGENTS.md](meta/AGENTS.md).
+Several Claude chats work in parallel and only see each other through GitHub. `cd web && npm run chats:status` lists the other branches, their files and the overlap with yours. Source of truth for PRs is GitHub (`list_pull_requests`); this page adds topic, area and what waits on the maintainer. Notes between chats: root [CLAUDE.md](../CLAUDE.md) step 2. Last full review: 2026-11-10 ([meta/DOCS-DIET-2026-11.md](meta/DOCS-DIET-2026-11.md)).
+
+**Keeping this page to one screen (budget 2 000 tokens, `check:docs`):**
+
+- A row is about an **open** PR or an **open** decision. A PR removes its own rows in its last commit (root CLAUDE.md step 2); every chat that edits this page also deletes the rows whose PR is merged.
+- Hand tests never live here: they go into [MANUAL-TESTS.md](MANUAL-TESTS.md) with an id, in the PR that needs them.
+- A decision that is answered becomes a bullet in `decisions/<area>.md`; its line here is deleted. Standing to-dos before the launch live in [STATUS](STATUS.md) "Offen – macht Sven", not here.
+- No history, no "merged" rows, one line per item.
 
 ## Wartet auf Sven
 
-Everything that needs a decision or a merge from the maintainer, in one place. A chat adds a row when it stops for him and removes it when done. Source of truth for PRs: GitHub (`list_pull_requests`).
+**Offene PRs** (Stand 2026-11-10, sonst GitHub):
 
-| Was                                                                                                                               | Was zu tun ist                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TBD – Secrets-Umzug, erst vor dem öffentlichen Launch: [PR #542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) (Draft, pausiert) | Vor Launch entscheiden; `ci/signing-release-split` planen (Dev-Preview, Dev-Keystore offen); Repo-Secrets bis dahin unverändert |
-| PR #507 `feat/lang-de-en` (gemergt): Sprachen nur Deutsch + Englisch, es/fr/pt-BR eingefroren ([i18n/FROZEN.md](i18n/FROZEN.md))  | Handtest MANUAL-TESTS „Sprachen“ S1–S3 und Website `/es`, `/fr`, `/pt-br` → `/en`; danach Zeile löschen (BOARD-Notiz „ab jetzt nur de/en“ steht)                                                                                                                                                                                                                                                  |
-| PR #504 `fix/local-model-clarity` (gemergt): Lokales Modell – Texte je Fall, Dev-Preview mit `local-llm-vulkan`                   | erste Dev-Preview beobachten (kalter Cache, ~20 min einmalig), Lokales Modell → Download → Testfrage von Hand                                                                                                                                                                                                                                       |
-| PR #496 `qa/identity-v3-sweep` (gemergt): Identität v3.1, Abnahme ([03-acceptance.md](design/identity-v3-audit/03-acceptance.md)) | Handtest Lesehilfe 100 % beim Modulwechsel; Entscheidungen aus dem PR: C27 „seit n Tagen“ app-weit als eigenes Paket, C31 Schreib-Knopf am Telefon nur Icon, F06 Scrollen der Seitenleiste                                                                                                                                                          |
-| PR #493 `feat/identity-v3-plan-money-fix` (gemergt): Identität v3.1, Paket 1 – Planen + Geld                                      | Handtest Telefon: ToDos-Kopf (Titel gekürzt, „Später“ sichtbar), Rechnungen „Nächste bezahlen“                                                                                                                                                                                                                                                      |
-| PR #492 `feat/plan-core` (gemergt): Planer, Paket 1 – Engine, Vertrag, Modul Planer, ToDos als Quelle                             | fünf offene Fragen aus dem PR-Text beantworten, soweit noch offen (plan.md-Budget, Brett 4+3 Spalten, Seed-Widget-Test, Swipe-Clip, schema-history)                                                                                                                                                                                                 |
-| PR #485 `feat/identity-v3-frame` (gemergt): Identität v3.1, Fundament-Fixpaket                                                    | vier offene Fragen aus dem PR beantworten, soweit noch offen: F06-Sidebar ohne Scrollen, `--text-on-tint` 84/94 %, Akzent-Varianten vs. 25°, Merkliste/Unterlagen gleicher Kopf                                                                                                                                                                     |
-| PR #490 `feat/identity-v3-disk` (gemergt): Identität v3.1, Paket 3 – Dieser PC                                                    | Handtest auf Windows: Kopf hell/dunkel, „Ruhig“ (Dateitypen grau, Muster + Legende bleiben), Baumkarte nach Alter/Dateityp; offene Fragen im PR                                                                                                                                                                                                     |
-| PR #489 `feat/identity-v3-household-knowledge-fix` (gemergt): Identität v3.1, Paket 2                                             | Entscheidung: Opt-in „Titel auf der Übersicht zeigen“ für Unterlagen (Empfehlung: nein)                                                                                                                                                                                                                                                             |
-| PR #481 `fix/shell-topbar-focus` (gemergt): Shell-Fixes (Topbar, Fokus im Werkzeug-Panel, Lesehilfe)                              | Handtest: Handy lang scrollen, Seite wechseln → Leiste sofort da; Windows: Werkzeuge mit Strg+. und Alt+2, Lesehilfe 100 % in der Seitenleiste mit Zurück                                                                                                                                                                                           |
-| PR #483 `feat/disk-drives-calm` (gemergt): Dieser PC – Laufwerke-Seite aufgeräumt                                                 | Handtest auf Windows: Karten in zwei Spalten, „Details“, Scan aus der Karte, Liste                                                                                                                                                                                                                                                                  |
-| PR #477 (gemergt): Dieser PC – Scan blockiert nichts mehr                                                                         | Handtest D18 in [MANUAL-TESTS](MANUAL-TESTS.md) auf Windows (C:\ scannen, zum Kalender und zurück, Pause, Abbrechen)                                                                                                                                                                                                                                |
-| PR #414 `feat/identity-v3-foundation` (gemergt): Fundament v3 (Rahmen, Sidebar, Übersichtskopf, Palette v3)                       | Handtest: Übersicht und je ein Modul pro Bereich in hell/dunkel, „Ruhig“, eingeklappte Sidebar, Handy                                                                                                                                                                                                                                               |
-| Anonyme Persona (#372, #381 gemergt)                                                                                              | Handtests AP1–AP6 in [MANUAL-TESTS](MANUAL-TESTS.md) (Wegwerf-Mail-Links, Notiz, Telefonbereiche, Einstellung, „Im Tresor speichern“)                                                                                                                                                                                                               |
-| Rechner-Tab „Plotter“ (#379 gemergt)                                                                                              | Handtests PL1–PL3 in [MANUAL-TESTS](MANUAL-TESTS.md)                                                                                                                                                                                                                                                                                                |
-| Rechner-Modi (PR #359, gemergt)                                                                                                   | Handtests C1–C4 in [MANUAL-TESTS](MANUAL-TESTS.md): Android-Tabs, Offline vor dem ersten Gebrauch, en-US-Eingabe, Verlauf → Notiz                                                                                                                                                                                                                   |
-| Eigene Karte (Pakete 1–5 gemergt: #342, #346, #348, #350, #352)                                                                   | Handtest: erste echte Overpass-Antwort auf einem Gerät (Suche → Ort → „Eigene Karte erzeugen“, „Genauer machen“, Straße suchen → „Aus deiner Karte“); eine echte Regionsdatei (Planetiler/`pmtiles`) auf einem eigenen Host gegen den Leser                                                                                                         |
-| Runde „next tasks“ T1–T6 (#341, #343, #344, #345, #347, #349 gemergt)                                                             | Handtests: Schnellerfassung Q1–Q3 (Android-Kurzbefehle/Kachel) und T1–T3 (Tray „Heute“) in [MANUAL-TESTS](MANUAL-TESTS.md); PWA am Handy einmal online öffnen, Flugmodus, App + benutztes Werkzeug + Tresor-Stärke öffnen ([perf/COLD-START-2026-10.md](perf/COLD-START-2026-10.md)); offen aus T3: Feld-Reifegrad (Erinnerungs-Felder, Zock-Modus) |
-| PR #387 `fix/map-own-speed` (gemergt): Eigene Karte, Tempo                                                                        | Erlanger Karte löschen und neu erzeugen (Blöcke von vier Zellen, zwei Anfragen, Wartezeit vom Server); sagen, wie lange es dauert                                                                                                                                                                                                                   |
-| Entscheidungen aus [STATUS](STATUS.md) „Nächste sinnvolle Schritte“ 5                                                             | „+ Neu“ statt FAB (Spotify läuft, Chat 10)                                                                                                                                                                                                                                                                                                          |
-| QA-Wording (P3a–c gemergt: #273, #283, #286)                                                                                      | Handtest S5 (Datumsfeld) auf Windows/Android: [MANUAL-TESTS](MANUAL-TESTS.md). Entscheidung: Abo-/Rechnungs-Anbieterlisten nur mit Name und Rhythmus, ohne Preise?                                                                                                                                                                                  |
-| Fehlerberichte: echte Mail-Adresse                                                                                                | `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (`.invalid` blendet „Per Mail melden“ aus)                                                                                                                                                                                                                                          |
-| Fehlerberichte: Launch-Checkliste                                                                                                 | [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus)                                                                                                                                                                                 |
+| PR | Was | Zu tun |
+| --- | --- | --- |
+| [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
+| [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
+| [#553](https://github.com/SGNemo/schweizer-taschenmesser/pull/553) `chore/remove-scribble-folder` (Draft) | entfernt den alten Ordner `scribble/` (Notizen liegen im Notiz-Repo) | fertig machen lassen oder schließen; bis dahin liest `chats:status` ohne Klon des Notiz-Repos das alte Board |
+| [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
+| [#606](https://github.com/SGNemo/schweizer-taschenmesser/pull/606) Dependabot | Dev-Abhängigkeiten `web/` | mergen, wenn grün |
+
+**Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ R3–R7, PC-Befehle ohne Hänger (Windows) N1a und H1–H7, Logo LG7, Heimnetz-Sync L9 a–c und L17.
+
+**Entscheidungen** (Empfehlung in Klammern):
+
+1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder das Raster erst nach allen Karten packen? (keine Empfehlung; [qa/round-6/STATUS.md](qa/round-6/STATUS.md))
+2. Pflicht-Check `Web` im `develop`-Ruleset in GitHub eintragen? (ja; danach Bullet in `decisions/meta.md`)
+3. Die Angabe „seit n Tagen“ überall in der App einheitlich machen: als eigenes Paket starten? (ja; Fund C27 aus der Abnahme #496)
+4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2), und die Einblend-Bewegung auf der Website bleibt (AE6, seit #674 so gebaut)? (ja)
+5. Die Website nennt Listen und Budgets noch „optional“ (`fresh` in `modules.json`): ändern? (ja, als eigener kleiner Site-PR)
+6. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 auf Hardware prüfen, dann entscheiden)
+7. Unterlagen: Titel der Einträge auf der Übersicht zeigen, als Opt-in? (nein; aus #489)
+8. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (keine Empfehlung; aus #566)
+9. Merkliste und Unterlagen haben denselben Kopf: so lassen? Und: Akzent-Varianten gegen den festen 25°-Abstand der Modulfarben (keine Empfehlung; beides aus #485).
+10. Weitere Fragen stehen nur in den PR-Texten unter „Open questions“ und sind von hier aus nicht zu beantworten: #656 (vor allem: darf `disk_delete` nur per Attribut `async` bleiben), #632, #490, #492 (Planer: Budget von `plan.md`, Seed-Widget-Test, Swipe-Clip, schema-history).
+
+**Handgriffe:**
+
+- `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
+- `nemo-merge` aus `meta/agents-v3/nemo-merge.json` neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
+- Agenten v3.1: `docs/meta/AGENTS.md` nennt jetzt die sieben Agenten; dazu gehören noch dein `ant apply` und ein Bullet in `decisions/meta.md` ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over“). Wenn v3.1 nicht gelten soll: Commit zu AGENTS.md zurücknehmen.
+- Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
+- Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.
+- Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8: Website Runde 5 Paket 1 und alle Bildschirmfotos (README, Website, Social-Preview) neu.
+- L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
 
 ## Läuft gerade (Running work)
 
-| Topic | Branch | Area / files | State | Last commit | Updated |
-| ----- | ------ | ------------ | ----- | ----------- | ------- |
+| Topic | Branch | Area / files | State | Updated |
+| --- | --- | --- | --- | --- |
+| UI-Audit 4.0, Paket 0b-2 Kopf und Navigation | `feat/ui4-0b-2-head-nav` (#688, Draft) | `web/src/layout/**`, module heads, `.changes/` | in work | 2026-11-10 |
+| Fernsteuerung: Latenzmessung | `feat/remote-latency-probe` (#690) | `web/src/core`, `docs/design/remote-control` | PR open | 2026-11-10 |
 
-How: add your row in the **first commit** of your branch (or in a draft PR as early as possible), update State/Last commit when you push something notable, remove the row in the **last commit** of your PR. On a merge conflict here keep both rows. Source of truth for live work is GitHub: `list_pull_requests` / branch list; this table adds topic and area.
+Add your row in the **first commit** of your branch, remove it in the **last commit** of your PR. On a merge conflict here keep both rows. Agent threads of one session share one row.
 
-## Hotspots (many chats edit them – announce first)
+## Hotspots (announce first)
 
-| File / area                                                                                      | Rule                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| root `CLAUDE.md`                                                                                 | only when a root rule changes; own PR, merge quickly                                            |
-| `web/src/strings.ts`                                                                             | append inside your module's block only; never reorder or reformat others                        |
-| `web/src/core/modules/types.ts`, `core/modules/registry.ts`                                      | manifest contract: one chat at a time (add a row here saying so)                                |
-| `web/src/core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/platform/web.ts`         | platform seam: one chat at a time                                                               |
-| `web/src/ui/tokens.css` (+ `tokens.test.ts`)                                                     | token changes: one chat at a time                                                               |
-| `web/package.json`, lock files, `web/src-tauri/Cargo.toml`/`Cargo.lock`                          | add dependencies in a small separate commit; lock files regenerated by tools, never hand-merged |
-| `core/db/schema.snapshot.json`, Dexie version (`npm run db:bump`)                                | on conflict re-run `db:bump` after merging `develop`; never hand-edit                           |
-| `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx`                                | keep edits small and local to your section                                                      |
-| `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting                                |
+| File / area | Rule |
+| --- | --- |
+| root `CLAUDE.md`, area `CLAUDE.md`, `docs/RULES.md` | only when a rule changes; own PR; Sven merges (`meta/agents-v3/SHARED.md`) |
+| `web/src/strings.ts` | append inside your module's block only; never reorder or reformat others |
+| `web/src/core/modules/types.ts`, `core/modules/registry.ts` | manifest contract: one chat at a time (row here) |
+| `web/src/core/platform/types.ts`, `core/platform/tauri/index.ts`, `core/platform/web.ts` | platform seam: one chat at a time |
+| `web/src/ui/tokens.css` (+ `tokens.test.ts`) | token changes: one chat at a time |
+| `web/package.json`, lock files, `web/src-tauri/Cargo.toml`/`Cargo.lock` | dependencies in a small separate commit; lock files regenerated by tools, never hand-merged |
+| `core/db/schema.snapshot.json`, Dexie version | on conflict re-run `npm run db:bump` after merging `develop`; never hand-edit |
+| `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx` | small edits, local to your section |
+| images under `docs/` | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text |
+| `docs/STATUS.md`, `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md` | touch only on real change; one line / one block, no reformatting |
 
 ## Hand-over conventions
 
 - PR description = hand-over: **Done / Open / Next / How to verify**, links to files, no history.
 - Unfinished work: push the branch, keep the row with State `paused – <what is missing>`, list open items in the PR.
-- A chat that finds a problem outside its scope: note it in the PR text (or open an issue), do not fix it silently; the next chat picks it up from there.
+- A problem outside your scope: note it in the PR text (or open an issue), do not fix it silently.
 - Do not merge another chat's PR; do not push to another chat's branch.
-- Decisions that change a root rule or a hotspot contract go into DECISIONS.md in the same PR.
+- A decision that changes a root rule or a hotspot contract goes into `decisions/` in the same PR.

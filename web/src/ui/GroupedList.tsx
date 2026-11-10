@@ -25,7 +25,8 @@ export interface GroupedListGroup {
 /**
  * Lists grouped by time or status (DESIGN-SPEC §7b): the group header is a small muted toggle with a count, groups are
  * separated by space and one hairline (never between every entry), and each group can be folded. The fold state is
- * device-local and keyed by `listId:groupId` (for a `defaultClosed` group the key lists the choice "open"). Rows inside are normal `ItemRow`s in an `ItemList`-like surface.
+ * device-local and keyed by `listId:groupId` (for a `defaultClosed` group the key lists the choice "open"). Rows inside are normal
+ * `ItemRow`s on a `ListSurface` (what an `ItemList` renders): the surface belongs to the rows, the grouping to this component.
  */
 export function GroupedList({
   listId,
@@ -36,7 +37,11 @@ export function GroupedList({
   listId: string;
   groups: readonly GroupedListGroup[];
   label?: string;
-  /** Let the groups flow into as many columns as fit (20 rem each, a hairline between them), like a newspaper. */
+  /**
+   * Let the groups flow into as many columns as fit (20 rem each, a hairline between them), like a newspaper. Here a
+   * group's `children` are the rows themselves (`ItemRow`s): the group body is their list (`<ul>`), so every `<li>`
+   * sits in a list (U23b).
+   */
   columns?: boolean;
 }) {
   const closed = useUiStore((s) => s.closedGroups);
@@ -65,15 +70,16 @@ export function GroupedList({
               >
                 <Icon name={open ? 'chevronDown' : 'chevronRight'} size={16} />
                 <span>{g.label}</span>
-                <span className={styles.count} aria-label={t.groups.count(g.count)}>
-                  {g.count}
-                </span>
               </button>
+              {/* Beside the button, not in it: its name ("… einklappen") must contain all of its visible text. */}
+              <span className={styles.count} aria-label={t.groups.count(g.count)}>
+                {g.count}
+              </span>
               {g.detail ? <span className={styles.detail}>{`· ${g.detail}`}</span> : null}
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
               {g.action}
-              {g.children}
+              {columns ? <ul className={styles.rowList}>{g.children}</ul> : g.children}
             </div>
           </section>
         );

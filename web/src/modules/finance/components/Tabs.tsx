@@ -27,6 +27,7 @@ import { RulesList } from './RulesList';
 import { balances, filterTransactions, isTransfer, signed, type TxFilter } from '../logic';
 import { applyBookingFilter, type BookingFilter } from '../analysis';
 import { bookingsCsv } from '../export';
+import { decimalSeparator } from '@/core/i18n/format';
 import { TransferEditor, transferPair, type TransferTarget } from './TransferEditor';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
@@ -109,6 +110,7 @@ export function TransactionsTab({
       (id) => account.get(id) ?? '',
       (id) => (id ? (category.get(id) ?? '') : ''),
       { header: e.header, expense: e.expense, income: e.income, transfer: e.transfer },
+      { decimal: decimalSeparator() === ',' ? ',' : '.', bom: true },
     );
     const name = `${e.file}-${searching || narrowed ? 'filter' : month}.csv`;
     if ((await getPlatform().saveFile({ fileName: name, data: csv, mime: 'text/csv' })) === 'saved')
@@ -125,14 +127,19 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {advanced || narrowed || more ? (
-        <div className={styles.toolbarRow}>
+      {/* The export sits next to the list it exports; the filters stay in the "Erweitert" layer. */}
+      <div className={styles.toolbarRow}>
+        {advanced || narrowed || more ? (
           <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
             {t.finance.ext.filter.more}
             {narrowed ? ' •' : ''}
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+        <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
+          <Icon name="download" size={18} />
+          {t.finance.ext.export.button}
+        </Button>
+      </div>
       {more ? (
         <div className={styles.filterBox}>
           <div className={styles.toolbarRow}>
@@ -143,13 +150,6 @@ export function TransactionsTab({
             >
               <Icon name="repeat" size={18} />
               {t.finance.ext.transfer.button}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => void exportCsv()}
-              disabled={inMonth.length === 0}
-            >
-              {t.finance.ext.export.button}
             </Button>
           </div>
           <div className={styles.split}>
@@ -311,10 +311,8 @@ export function AccountsTab({ data }: { data: FinanceData }) {
   return (
     <>
       <div className={patternStyles.gapBottom + ' ' + patternStyles.hstack}>
-        <Button
-          variant="primary"
-          onClick={() => setTarget({ draft: true, order: data.accounts.length })}
-        >
+        {/* Secondary: the page's primary is "Buchung" in the toolbar (one primary per view). */}
+        <Button onClick={() => setTarget({ draft: true, order: data.accounts.length })}>
           <Icon name="plus" size={18} />
           {t.finance.addAccount}
         </Button>

@@ -15,7 +15,22 @@ export type CaptureType =
   | 'subscription'
   | 'birthday'
   /** A ToDo that goes into the planner at once (prefix `p` or „plan:“): a pin, an earliest day or a hard due. */
-  | 'plan';
+  | 'plan'
+  /** A meal for Fitness (prefix „kcal“/„essen“, or „650 kcal“ anywhere). */
+  | 'meal'
+  /** A training session for Fitness (prefix „training“/„workout“). */
+  | 'workout'
+  /** A place for the Uhr module (prefix „uhr“/„clock“ and a known city or zone). */
+  | 'place';
+
+/** One exercise of a `workout` capture („Bankdrücken 3×8 60“). */
+export interface CaptureExercise {
+  name: string;
+  sets?: number;
+  reps?: number;
+  weightKg?: number;
+  durationMin?: number;
+}
 
 /** Same shape as the app's recurrence schema, declared locally to keep the parser dependency-free. */
 export interface CaptureRecurrence {
@@ -56,8 +71,14 @@ export interface CaptureFields {
   pin?: string;
   /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
   hardDue?: boolean;
+  /** Meal captures: rough kcal. */
+  kcal?: number;
+  /** Workout captures: the exercises of the line. */
+  exercises?: CaptureExercise[];
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
+  /** A payment reminder („Mahnung“, „2. Mahnung“): its level (1–3) and the day it was noted, 'YYYY-MM-DD'. */
+  dunning?: { level: number; date: string };
   /** ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser. */
   link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
 }
@@ -96,4 +117,15 @@ export interface ParseOptions {
   now: Date;
   /** Type used for plain text without any signal. Defaults to `todo`. */
   defaultType?: CaptureType;
+  /**
+   * Fitness captures the caller can save (the module is on; `meal` only while „Kalorien erfassen“ is on).
+   * Without it the fitness parser never runs, so other callers (planner field, ToDo quick add) keep the
+   * general parse.
+   */
+  fitness?: { meal?: boolean; workout?: boolean };
+  /**
+   * Set while the Uhr module is on: whether a name is a place the offline city search knows. Without it „uhr …“
+   * is read like any other text.
+   */
+  place?: (name: string) => boolean;
 }

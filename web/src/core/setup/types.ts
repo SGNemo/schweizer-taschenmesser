@@ -10,7 +10,10 @@ import type { PlatformKind } from '@/core/platform/types';
 export const SETUP_VERSION = 1;
 
 export interface SetupCtx {
-  /** Enabled state per module id (explicit row, else `defaultEnabled`). */
+  /**
+   * Enabled state per module id, as `loadModuleStates` resolves it: explicit row, else the default set of a fresh
+   * installation (device-local, `core/modules/defaults`), else `defaultEnabled`.
+   */
   modules: Readonly<Record<string, boolean>>;
   platform: PlatformKind;
   isNative: boolean;
@@ -29,7 +32,7 @@ export interface SetupStepProps {
   setCanContinue(ok: boolean): void;
   /** Why "Weiter" is disabled; shown next to the button. `null` clears it. */
   setBlockedReason?(reason: string | null): void;
-  /** `quick` = one of the three first-run questions (short form of the step); default `full`. */
+  /** `quick` = one of the four first-run questions (short form of the step); default `full`. */
   mode?: 'quick' | 'full';
 }
 

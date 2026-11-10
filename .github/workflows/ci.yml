@@ -31,7 +31,8 @@ jobs:
   # heavy runs; the secret scan and the docs checks always run.
   #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
   #           whole E2E suite (smoke + rest on both browser projects) and the seed project
-  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards);
+  #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards), the seed
+  #           project (`seed`) and the stimulus budget with its ratchet whenever the web app can change;
   #           a draft PR runs only the static checks and the unit tests of the web app
   changes:
     name: Which parts changed
@@ -52,6 +53,7 @@ jobs:
       llm: ${{ steps.diff.outputs.llm }}
       full: ${{ steps.diff.outputs.full }}
       rest: ${{ steps.diff.outputs.rest }}
+      seed: ${{ steps.diff.outputs.seed }}
       shards: ${{ steps.diff.outputs.shards }}
       e2e_profile: ${{ steps.diff.outputs.e2e_profile }}
     steps:
@@ -151,8 +153,11 @@ jobs:
           shards='[1,2,3]'; profile=smoke
           rest=false
           if [ "$full" = "true" ] && [ "$e2e" = "true" ]; then rest=true; fi
+          # The seed project (guards of the UI rebuild) runs whenever the app E2E runs, not only on full runs. Set
+          # here, after the draft and documentation overrides above, so that those stay without it.
+          seed=$e2e
           {
-            echo "code=$code"; echo "full=$full"; echo "rest=$rest"; echo "shards=$shards"; echo "e2e_profile=$profile"
+            echo "code=$code"; echo "full=$full"; echo "rest=$rest"; echo "seed=$seed"; echo "shards=$shards"; echo "e2e_profile=$profile"
             echo "web=$web"; echo "e2e=$e2e"; echo "sync=$sync"; echo "server=$server"; echo "mcp=$mcp"
             echo "shared=$shared"; echo "supporter=$supporter"; echo "webhook=$webhook"
             echo "extension=$extension"; echo "tauri=$tauri"; echo "llm=$llm"
@@ -198,13 +203,13 @@ jobs:
           set -euo pipefail
           "$(go env GOPATH)/bin/gitleaks" detect --source . --redact --no-banner --verbose --exit-code 1
 
-  # Non-blocking docs budget check (start context, file sizes, dead links; needs only Node, no install).
-  # Warnings never fail the run; budgets: docs/meta/DOCS-GUIDE.md.
+  # Docs budget check (start context, file sizes, dead links; needs only Node, no install).
+  # Budget and link warnings never fail the run; an image under docs/ outside the allowed paths or over
+  # 100 KB does (binaries bloat every clone). Rules: docs/meta/DOCS-GUIDE.md.
   docs-budget:
-    name: Docs budget (warnings only)
+    name: Docs budget and images
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -212,21 +217,35 @@ jobs:
           node-version: 26
       - run: node web/scripts/check-docs.mjs
 
-  # Non-blocking stimulus budget (focus audit): measures buttons, links, icons, page height and first-screen
-  # actions per page and viewport on the seeded build and compares them with web/e2e/stimulus-budget.json.
-  # Warnings only: intended changes run `npm run stimulus:baseline`. Docs: docs/howto/ci.md.
+  # Stimulus budget (focus audit, UI audit 2026-11): measures buttons, links, icons, frames, shadows, colour above
+  # the fold, signature blocks and the page height per page and viewport on the seeded build and compares them,
+  # strict on both sides, with web/e2e/stimulus-budget.json. Blocking: part of the aggregate check `web`.
+  # The ratchet step compares merge base and head of the pull request (budget, baselines, protected guard files)
+  # and is red on a hit unless the label `stimulus-raise` is on the pull request right now. It is feedback, not
+  # proof: here the script comes from the pull request; the merge rule runs its `develop` version
+  # (docs/howto/ci.md "Stimulus budget and ratchet").
   stimulus-budget:
-    name: Stimulus budget (warnings only)
+    name: Stimulus budget
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    continue-on-error: true
+    timeout-minutes: 20
+    # A job-level block replaces the workflow-level one: `contents: read` has to be repeated.
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      PR_BASE: ${{ github.event.pull_request.base.sha }}
+      PR_HEAD: ${{ github.event.pull_request.head.sha }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GITHUB_TOKEN: ${{ github.token }}
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the ratchet needs the merge base
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
@@ -235,8 +254,15 @@ jobs:
       - run: npm ci
       - uses: ./.github/actions/playwright-chromium
       # playwright.stimulus.config.ts builds (build:e2e-seed) and serves (preview:e2e-seed) the seeded app itself
-      # and uses /opt/pw-browsers/chromium only where it exists.
+      # and uses /opt/pw-browsers/chromium only where it exists. The job summary carries the measured values.
       - run: npm run check:stimulus
+      # Always the merge base, never PR_BASE itself: PR_BASE is the tip of develop when the event fired, and a
+      # budget another package lowered there in the meantime would read as a raise by this pull request.
+      # No pull request (push, nightly, full-ci dispatch): no label to read, the step is left out; the merge
+      # rule asks for the Web check of the pull_request run. Runs also when the measurement above was red.
+      - name: Ratchet (budget, baselines, protected guard files)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: node scripts/ratchet.mjs --base "$(git merge-base "$PR_BASE" "$PR_HEAD")" --head "$PR_HEAD"
 
   # English docs and their German translations (README.de.md, *.de.md) must stay in step. Blocking and cheap,
   # so it also runs on doc-only changes.
@@ -330,7 +356,7 @@ jobs:
 
   # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
   # cores were slower per test and failed under load). Sharding is by test: every test runs exactly once.
-  # This job is the smoke list (desktop-chrome, 24 spec files, 3 shards; E2E_PROFILE=smoke, list in
+  # This job is the smoke list (desktop-chrome, 35 spec files, 3 shards; E2E_PROFILE=smoke, list in
   # web/playwright.config.ts) and part of the Dev-Preview gate. Full runs add `web-e2e-rest` below.
   web-e2e:
     name: E2E app (smoke, shard ${{ matrix.shard }})
@@ -419,7 +445,7 @@ jobs:
   # (documentation only, other packages only, draft PR without the E2E part).
   web:
     name: Web (lint, types, unit, E2E)
-    needs: [changes, licences, web-static, web-unit, web-e2e, web-e2e-rest]
+    needs: [changes, licences, web-static, web-unit, web-e2e, web-e2e-rest, e2e-seed, stimulus-budget]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -436,6 +462,10 @@ jobs:
           E2E_RESULT: ${{ needs.web-e2e.result }}
           REST: ${{ needs.changes.outputs.rest }}
           REST_RESULT: ${{ needs.web-e2e-rest.result }}
+          SEED: ${{ needs.changes.outputs.seed }}
+          SEED_RESULT: ${{ needs.e2e-seed.result }}
+          STIMULUS: ${{ needs.changes.outputs.e2e }}
+          STIMULUS_RESULT: ${{ needs.stimulus-budget.result }}
         run: |
           echo "pre-check=$CHANGES web=$WEB e2e=$E2E static=$STATIC unit=$UNIT e2e-result=$E2E_RESULT"
           [ "$CHANGES" = "success" ] || echo "::notice::The pre-check did not finish; every part was asked to run."
@@ -451,6 +481,8 @@ jobs:
           check "Web unit tests (shards)" "$UNIT" "$WEB"
           check "E2E app (smoke shards)" "$E2E_RESULT" "$E2E"
           check "E2E app (rest shards)" "$REST_RESULT" "$REST"
+          check "E2E seed project (shards)" "$SEED_RESULT" "$SEED"
+          check "Stimulus budget (budget and ratchet)" "$STIMULUS_RESULT" "$STIMULUS"
 
   # Server, MCP wrapper, shared vault package, supporter codes + CLI and the supporter webhook are five small
   # packages (about a minute each). They share one runner: every extra job waits for a free runner (up to
@@ -596,12 +628,13 @@ jobs:
       - run: npm run e2e:sync
         working-directory: web
 
-  # The Dev-Preview flavour (seed project, playwright.config.ts `seed-dev`) on every full run; the app shards skip
-  # it. Its own job: it took 6.5 min behind the sync E2E in the same job.
+  # The Dev-Preview flavour (seed project, playwright.config.ts `seed-dev`) whenever the app E2E runs (output
+  # `seed`: every pull request that can change the web app, and every full run); the app shards skip it. Part of
+  # the aggregate check `web`. Its own job: it took 6.5 min behind the sync E2E in the same job.
   e2e-seed:
     name: E2E seed project (Dev-Preview flavour, shard ${{ matrix.shard }})
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.rest != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.seed != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -656,8 +689,8 @@ jobs:
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
       - run: cargo fmt --all --check
-      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -- -D warnings
-      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync
+      - run: cargo clippy --all-targets --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -p taschenmesser-remote-input -- -D warnings
+      - run: cargo test --locked -p taschenmesser -p tauri-plugin-apk-installer -p tauri-plugin-secure-store -p tauri-plugin-share-intent -p tauri-plugin-lan-watch -p tauri-plugin-custom-tabs -p taschenmesser-os-association -p taschenmesser-local-api -p taschenmesser-disk-scan -p taschenmesser-system-info -p taschenmesser-browser-filter -p taschenmesser-downloader -p taschenmesser-torrent -p taschenmesser-vault-bridge -p taschenmesser-lan-sync -p taschenmesser-remote-input
       # Windows-only code (named pipe, registry) of the bridge crate compiles without a Windows box.
       - run: rustup target add x86_64-pc-windows-msvc && cargo check --locked -p taschenmesser-vault-bridge --target x86_64-pc-windows-msvc
 
@@ -688,8 +721,8 @@ jobs:
       # tauri::generate_context! needs the frontend directory to exist; its content does not matter here.
       - name: Placeholder frontend
         run: mkdir -p ../dist && echo '<!doctype html><title>ci</title>' > ../dist/index.html
-      - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
-      - run: cargo test --locked --no-fail-fast -p taschenmesser-lan-sync -p taschenmesser-disk-scan -p taschenmesser
+      - run: cargo clippy --all-targets --locked -p taschenmesser-lan-sync -p taschenmesser-remote-input -p taschenmesser-disk-scan -p taschenmesser -- -D warnings
+      - run: cargo test --locked --no-fail-fast -p taschenmesser-lan-sync -p taschenmesser-remote-input -p taschenmesser-disk-scan -p taschenmesser
       # The steps below run even after a red test step, so one failure does not hide the others (the job stays red).
       - if: ${{ !cancelled() }}
         run: cargo test --locked -p taschenmesser --test commands

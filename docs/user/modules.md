@@ -8,33 +8,38 @@ In the **module library** you turn modules on and off (when turning one off: kee
 
 <!-- modules:start -->
 
-| Area          | Module                  | What it does                                                                                      | Status                                 |
-| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **Plan**      | Calendar                | Events in month, week and day view                                                                | on by default                          |
-|               | Planner                 | Spreads your open to-dos over the coming days                                                     | preview                                |
-|               | To-dos                  | Tasks in lists with priorities, due date and subtasks                                             | on by default                          |
-|               | Habits                  | Daily and weekly goals with rings                                                                 | optional                               |
-|               | Time tracking           | Start and stop with one click, projects and clients with colour and hourly rate                   | optional                               |
-|               | Weather                 | A page of its own for the weather at your place                                                   | on by default                          |
-|               | Maps & places           | Places and routes you need often                                                                  | preview                                |
-|               | People                  | Never forget a birthday again and collect gifts per person                                        | optional                               |
-| **Money**     | Finances                | Accounts, income and expenses with categories                                                     | on by default                          |
-|               | Invoices                | Open invoices with amount, payee and due date                                                     | on by default                          |
-|               | Subscriptions           | Subscriptions and recurring payments                                                              | on by default                          |
-|               | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress  | optional                               |
-| **Household** | Lists                   | Shopping, packing lists and checklists                                                            | optional                               |
-|               | Pantry                  | What’s in the fridge, the cupboard and the freezer?                                               | optional                               |
-| **Knowledge** | Saved                   | Save links, reading, films, places and ideas                                                      | optional                               |
-|               | Notes                   | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional                               |
-|               | Chat                    | Conversations with the built-in local model or your providers                                     | preview                                |
-|               | Browser                 | Simple browser with tabs, bookmarks and a private mode                                            | preview, Windows and Android apps only |
-|               | Feeds                   | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group                       | optional                               |
-|               | Mail                    | Inbox, search and reading mail                                                                    | preview, Windows app only              |
-|               | Music                   | Spotify on one page                                                                               | preview                                |
-| **Vault**     | Documents               | IDs, contracts, insurance and warranties with end date, notice period and an attached file        | optional                               |
-|               | Passwords               | Password vault                                                                                    | optional                               |
-| **System**    | This PC                 | Drives with a scan of the biggest folders and system info (processor, memory, battery, network)   | optional, Windows app only             |
-|               | Downloads               | Downloads files                                                                                   | preview, Windows app only              |
+| Area | Module | What it does | Status |
+|---|---|---|---|
+| **Plan** | Calendar | Events in month, week and day view | on by default |
+|  | Planner | Spreads your open to-dos over the coming days | optional |
+|  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
+|  | Habits | Daily and weekly goals with rings | optional |
+|  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
+|  | Weather | A page of its own for the weather at your place | on by default |
+|  | Clock | Add places and always see their time | preview |
+|  | Maps & places | Places and routes you need often | preview |
+|  | People | Never forget a birthday again and collect gifts per person | optional |
+| **Money** | Finances | Accounts, income and expenses with categories | on by default |
+|  | Invoices | Open invoices with amount, payee and due date | on by default |
+|  | Subscriptions | Subscriptions and recurring payments | on by default |
+|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+| **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
+|  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
+|  | Fitness | Keep a rough log of training and food | preview |
+| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
+|  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
+|  | Chat | Conversations with the built-in local model or your providers | preview |
+|  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
+|  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
+|  | Mail | Inbox, search and reading mail | preview, Windows app only |
+|  | Music | Spotify on one page | preview |
+| **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
+|  | Passwords | Password vault | optional |
+| **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
+|  | Downloads | Downloads files | on for new installations, Windows app only |
+|  | Remote | Control media and volume of your PC from your phone | preview, Android app only |
+
+“On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
 **Tools:** Calculator · Currency · Timer & stopwatch · QR code · Units · Date calculator · Time zones · Dice & random · Text tool · Shrink images · PDF tool · Screenshot (preview) · Anonymous persona · Developer · Text compare (preview) · Regex tester (preview). Open with Ctrl+. or the Tools button; more can be turned on under “Manage tools”.
 
@@ -68,6 +73,10 @@ Highlights of the modules that start with a short line above:
 - **Retired (1.0.0):** Messages are no longer visible. Their data stays stored and is still part of every backup.
 - **Map & WhatsApp:** events with a location have "Show on map"; for people with a birthday the button opens WhatsApp with a greeting
   (you pick the contact in WhatsApp).
+
+## Mail into the plan (Windows app)
+
+Point at a mail's row and the button “Add to plan” appears (“As to-do” without the planner; on a touch screen: swipe or ⋯). It makes a to-do “sender · subject” that leads back to the mail, and the notice offers an undo; the planner offers “Go to mail” for it. Planning the same mail again adds no second entry (“Already in the plan”); if the to-do was deleted, the notice offers “Plan again”. The filter “Personal” shows only mail from people, and “Add all to plan…” adds the ticked mails of a folder after a preview; both can be switched off in the mail settings.
 
 ## Importing a bank statement
 

@@ -1,0 +1,9 @@
+---
+import Base from '../layouts/Base.astro';
+import InstallGuide from '../components/InstallGuide.astro';
+import { t } from '../i18n';
+const p = t('de').installPage;
+---
+<Base locale="de" route="install" title={p.title} description={p.description}>
+  <InstallGuide locale="de" />
+</Base>

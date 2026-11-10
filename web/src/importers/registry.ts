@@ -1,14 +1,18 @@
 import { source as bank } from './bank/source';
 import { source as bookmarks } from './bookmarks/source';
 import { source as contacts } from './contacts/source';
+import { source as cronometer } from './cronometer/source';
 import { source as enex } from './enex/source';
 import { source as googleCalendar } from './google-calendar/source';
 import { source as googleKeep } from './google-keep/source';
 import { source as googleTasks } from './google-tasks/source';
+import { source as hevy } from './hevy/source';
+import { source as myfitnesspal } from './myfitnesspal/source';
 import { source as notion } from './notion/source';
 import { source as obsidian } from './obsidian/source';
 import { source as opml } from './opml/source';
 import { source as outlookTasks } from './outlook-tasks/source';
+import { source as strong } from './strong/source';
 import { source as ticktick } from './ticktick/source';
 import { source as todoist } from './todoist/source';
 import type { Detection, SourceDef, SourceFile } from './types';
@@ -26,6 +30,10 @@ export const SOURCES: readonly SourceDef[] = [
   enex,
   notion,
   opml,
+  strong,
+  hevy,
+  cronometer,
+  myfitnesspal,
   contacts,
   bookmarks,
   obsidian,

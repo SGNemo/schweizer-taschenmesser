@@ -1,5 +1,7 @@
 import { markdownToPlain, plainToMarkdown } from './editor/markdown';
 import { parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
+import { isHiddenPath } from '@/importers/files';
+import { placeOf, stripAttachments, withFolderTag } from '@/importers/obsidian/parse';
 import { displayTitle, isScratch } from './logic';
 import type { Note } from './schema';
 
@@ -64,30 +66,57 @@ export interface ImportedPage {
   body: string;
 }
 
-const TEXT_FILE = /\.(?:md|markdown|txt)$/i;
+/** Files the notes import reads as pages. */
+export const TEXT_FILE = /\.(?:md|markdown|txt)$/i;
 
-/** Reads `.md` / `.txt` files; a folder (first path segment) becomes the notebook, `.txt` keeps its line breaks. */
+/**
+ * Reads `.md` / `.txt` files; a picked folder becomes the notebook, `.txt` keeps its line breaks.
+ * An export (an Obsidian vault with `.obsidian`, or a folder with several sub-folders) is read like
+ * the vault importer: the picked folder itself is no notebook, its sub-folders are. Deeper folders
+ * become a tag, hidden folders (`.obsidian`, `.trash`) are left out and embedded pictures are
+ * removed from the text.
+ */
 export function parseImport(files: readonly ImportFile[]): {
   pages: ImportedPage[];
   skipped: number;
 } {
   const pages: ImportedPage[] = [];
   let skipped = 0;
-  for (const file of files) {
-    const base = file.path.split('/').pop() ?? file.path;
+  const paths = files.map((f) => ({ ...f, path: f.path.replaceAll('\\', '/') }));
+  const visible = paths.filter((f) => !isHiddenPath(f.path));
+  // An export (Obsidian vault: a `.obsidian` folder, or several sub-folders under the picked one):
+  // the picked folder is no notebook, its sub-folders are. A plain folder stays one notebook.
+  const roots = new Set(visible.map((f) => f.path.split('/')[0]));
+  const subFolders = new Set(
+    visible
+      .map((f) => f.path.split('/').filter(Boolean))
+      .filter((s) => s.length > 2)
+      .map((s) => s[1]),
+  );
+  const vault =
+    roots.size === 1 &&
+    (paths.some((f) => f.path.split('/').includes('.obsidian')) || subFolders.size > 1) &&
+    subFolders.size > 0;
+  for (const file of visible) {
+    const segments = file.path.split('/').filter(Boolean);
+    const base = segments[segments.length - 1] ?? file.path;
     if (!TEXT_FILE.test(base)) {
       skipped++;
       continue;
     }
-    const parsed: ParsedNote | undefined = parseMarkdownNote(file.text, base);
+    const parsed: ParsedNote | undefined = parseMarkdownNote(
+      stripAttachments(file.text).text,
+      base,
+    );
     if (!parsed) {
       skipped++;
       continue;
     }
-    const segments = file.path.split('/').filter(Boolean);
-    const folder = segments.length > 1 ? segments[0]! : null;
-    const body = /\.txt$/i.test(base) ? plainToMarkdown(parsed.body) : parsed.body;
-    pages.push({ folder, title: parsed.title, body });
+    // Deeper folders become a tag, so nothing of the folder order is lost.
+    const place = placeOf(segments.slice(vault ? 1 : 0, -1));
+    const note = withFolderTag(parsed, place.tag);
+    const body = /\.txt$/i.test(base) ? plainToMarkdown(note.body) : note.body;
+    pages.push({ folder: place.folder ?? null, title: note.title, body });
   }
   return { pages, skipped };
 }

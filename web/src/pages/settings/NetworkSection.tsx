@@ -1,4 +1,5 @@
 import { formatTimestamp, DATE_TIME_NUMERIC } from '@/core/i18n/format';
+import { NET_CATALOGUE } from '@/core/net/catalogue';
 import { clearNetLog, setKeepNetLog, setNetworkBlocked, useNetLog } from '@/core/net/netlog';
 import { useUiStore } from '@/stores/ui';
 import { tNet } from '@/strings.netlog';
@@ -36,6 +37,27 @@ export function NetworkSection() {
           </ul>
         )}
         <Switch label={n.keep} hint={n.keepHint} checked={keep} onChange={setKeepNetLog} />
+        <details className={styles.details} data-testid="net-catalogue">
+          <summary>{n.catalogue.title}</summary>
+          <p className={styles.muted}>{n.catalogue.intro}</p>
+          <ul className={styles.notes}>
+            {NET_CATALOGUE.map((use) => (
+              <li key={use.reason}>
+                <strong>{n.reasons[use.reason]}</strong> · {n.catalogue.when[use.when]}
+                <br />
+                {use.reason === 'other' ? (
+                  n.catalogue.other
+                ) : (
+                  <>
+                    {/* hosts stay as they are: no reading aid inside code */}
+                    <code>{use.hosts.join(', ')}</code>
+                    {use.own ? `${use.hosts.length > 0 ? ', ' : ''}${n.catalogue.own}` : null}
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
         <div className={styles.row}>
           <Button
             disabled={entries.length === 0}

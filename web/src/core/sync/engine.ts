@@ -106,6 +106,10 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
       if (cursor !== 0) continue;
     }
 
+    // Asked of the whole page, before the drift filter below: a device whose clock is far behind
+    // would drop every encrypted op as "too far ahead", see nothing encrypted and upload plain data.
+    if (!key && page.ops.some((op) => isEncrypted(op.value))) throw new SyncError('no-key');
+
     // A stamp far beyond the local clock would be adopted for good (see MAX_HLC_DRIFT_MS): drop it
     // before merging. The cursor still advances, so the page is not fetched again and again.
     let ops = page.ops.filter((op) => !isHlcTooFarAhead(op.hlc));
@@ -113,11 +117,13 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
     if (key) {
       const decrypted = await decryptOps(key, ops);
       result.rejected += decrypted.rejected;
-      // Nothing decryptable in a non-empty page: wrong key (or a server that is not ours).
-      if (ops.length > 0 && decrypted.ops.length === 0) throw new SyncError('decrypt');
+      // Ciphertext in the page and none of it decryptable: wrong key (or a server that is not
+      // ours). Plain ops (left by a keyless device before the server refused them) are never
+      // applied, but they do not stop the pull either: the cursor moves past them.
+      if (decrypted.ops.length === 0 && ops.some((op) => isEncrypted(op.value))) {
+        throw new SyncError('decrypt');
+      }
       ops = decrypted.ops;
-    } else if (ops.some((op) => isEncrypted(op.value))) {
-      throw new SyncError('no-key');
     }
 
     const applied = await storage.applyRemote(ops);

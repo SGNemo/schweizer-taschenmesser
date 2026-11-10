@@ -212,7 +212,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: web/src-tauri
-          shared-key: windows-release
+          shared-key: windows-release-vk1.4.363.1
           cache-targets: false
           # A release (tag / manual run with version) reads the cache but never writes it.
           save-if: ${{ needs.prepare.outputs.publish != 'true' }}
@@ -225,7 +225,7 @@ jobs:
       - name: Vulkan SDK (for the local model's GPU backend)
         shell: pwsh
         run: |
-          choco install vulkan-sdk -y --no-progress
+          choco install vulkan-sdk --version 1.4.363.1 -y --no-progress
           $sdk = (Get-ChildItem 'C:\VulkanSDK' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
           if (-not $sdk) { throw 'Vulkan SDK not found after install' }
           "VULKAN_SDK=$sdk" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -321,7 +321,7 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: 17

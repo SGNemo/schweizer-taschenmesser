@@ -1,19 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nemo">
   <defs>
+    <clipPath id="nemo-app-cut-b">
+      <path d="M176 206C220.5 165 256.7 124 315.2 124C426.8 124 466 158.3 466 256C466 353.7 426.8 388 315.2 388C256.7 388 220.5 347 176 306Z"/>
+    </clipPath>
     <mask id="nemo-app-cut" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
       <rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/>
-      <g fill="none" stroke="#000">
+      <g fill="none" stroke="#000" clip-path="url(#nemo-app-cut-b)">
         <path d="M379 64Q331 256 379 448" stroke-width="34"/>
-        <path d="M280.3 64Q248.3 256 280.3 448M286.3 64Q254.3 256 286.3 448" stroke-width="34"/>
+        <path d="M279.3 64Q247.3 256 279.3 448M287.3 64Q255.3 256 287.3 448" stroke-width="34"/>
       </g>
+      <path d="M176 206C220.5 165 256.7 124 315.2 124C426.8 124 466 158.3 466 256C466 353.7 426.8 388 315.2 388C256.7 388 220.5 347 176 306Z" fill="none" stroke="#fff" stroke-width="18" stroke-linejoin="round"/>
       <circle cx="419.6" cy="227" r="26" fill="#000"/>
     </mask>
   </defs>
   <rect width="512" height="512" rx="146" fill="#b5430c"/>
-  <g transform="translate(51.2 51.2) scale(0.8)">
+  <g transform="translate(-40 -16) scale(1.0625)">
     <g fill="#ffffff" stroke="#ffffff" stroke-width="12" stroke-linejoin="round" mask="url(#nemo-app-cut)">
       <path d="M176 206C220.5 165 256.7 124 315.2 124C426.8 124 466 158.3 466 256C466 353.7 426.8 388 315.2 388C256.7 388 220.5 347 176 306Z"/>
-      <path d="M206 206L176 206C148.8 206 128.4 180 108 180C92 225.6 92 286.4 108 332C128.4 332 148.8 306 176 306L206 306ZM263 183.4C268.8 94 297.8 94 315.2 94C355.8 94 379 134.6 379 183.4ZM280.4 328.6C283.9 406 301.3 406 311.7 406C336.1 406 350 377.4 350 328.6Z"/>
+      <path d="M206 206L176 206C140.8 206 114.4 160 88 160C68 217.6 68 294.4 88 352C114.4 352 140.8 306 176 306L206 306ZM263 183.4C268.8 94 297.8 94 315.2 94C355.8 94 379 134.6 379 183.4ZM280.4 328.6C283.9 406 301.3 406 311.7 406C336.1 406 350 377.4 350 328.6Z"/>
     </g>
   </g>
 </svg>

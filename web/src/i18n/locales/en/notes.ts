@@ -24,6 +24,7 @@ export const notes: Strings['notes'] = {
     list: 'List',
     cards: 'Cards',
   },
+  moreMenu: 'Templates and sorting',
   templates: {
     button: 'Choose template',
     blank: 'Blank page',
@@ -56,6 +57,7 @@ export const notes: Strings['notes'] = {
   editorLabel: 'Page text',
   placeholder: 'Just start writing … “/” opens the command menu.',
   saved: 'Saved',
+  savedWhere: 'Saved. The page is under Notes → All pages.',
   saving: 'Saving …',
   words: (n: number) => (n === 1 ? '1 word' : `${n} words`),
   writingMode: 'Writing mode',
@@ -188,7 +190,9 @@ export const notes: Strings['notes'] = {
     title: 'Import files',
     files: 'Choose files',
     folder: 'Choose folder',
-    hint: '.md and .txt files. A folder becomes a notebook, its files become pages.',
+    filesLabel: 'Single files',
+    folderLabel: 'Whole folder',
+    hint: '.md and .txt files. A folder becomes a notebook, its files become pages. An Obsidian export (or a folder with several sub-folders) becomes one notebook per sub-folder; deeper folders become a tag.',
     none: 'No matching files found.',
     confirm: 'Import',
     summary: (pages: number, books: number) =>

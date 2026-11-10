@@ -143,6 +143,54 @@ test.describe('Planer (week board, package 1)', () => {
     }
   });
 
+  test('„Eintragen“ and ⋯ line up with the field; the hint sits under the row (S09, UI round 6)', async ({
+    page,
+  }) => {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    const field = page.getByLabel('Eintragen oder sagen', { exact: true });
+    await expect(field).toBeVisible();
+    await expect(field).toHaveAccessibleDescription(/Ein ToDo entsteht/);
+    const bottom = async (name: RegExp | string, exact = false) => {
+      const box = await page.getByRole('button', { name, exact }).boundingBox();
+      return box!.y + box!.height;
+    };
+    const input = await field.boundingBox();
+    const inputBottom = input!.y + input!.height;
+    expect(Math.abs((await bottom('Eintragen', true)) - inputBottom)).toBeLessThanOrEqual(2);
+    expect(Math.abs((await bottom('Weitere Optionen', true)) - inputBottom)).toBeLessThanOrEqual(2);
+    const hint = page.getByText(/Ein ToDo entsteht/).first();
+    const hintBox = await hint.boundingBox();
+    expect(hintBox!.y).toBeGreaterThanOrEqual(inputBottom - 1);
+  });
+
+  test('the entry row stays where it is while the head figure loads (U01)', async ({ page }) => {
+    await enablePlanner(page);
+    // Every frame from the first one: a jump between two frames is what a person sees (and what moved the row
+    // under the measurements of the test above).
+    await page.addInitScript(() => {
+      const tops: number[] = [];
+      (window as unknown as { __entryTops: number[] }).__entryTops = tops;
+      const frame = () => {
+        const row = document.querySelector('form[data-keep-visible]');
+        if (row) {
+          const top = Math.round(row.getBoundingClientRect().top);
+          if (tops.at(-1) !== top) tops.push(top);
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+    await ready(page, '/planner');
+    await expect(page.getByTestId('planner-head')).toContainText('frei');
+    // the frame gives the figure's room back one second after the page arrived (`FIGURE_HOLD_MS`)
+    await page.waitForTimeout(1200);
+    const tops = await page.evaluate(
+      () => (window as unknown as { __entryTops: number[] }).__entryTops,
+    );
+    expect(tops).toHaveLength(1);
+  });
+
   test('day sheet: less time, „Tag frei“ empties the day, both undoable', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
@@ -494,7 +542,14 @@ async function smallWeek(page: Page) {
 
 /** The toast region (the header has a status line of its own). */
 const toast = (page: Page) => page.getByRole('status').last();
-const waitingHead = (page: Page) => page.locator('[data-group="waiting"] h2');
+const waitingHead = (page: Page) => page.locator('[data-group="wait"] h2');
+/** The waiting group is folded by default („Kopf leer“ Q4 a): open it before reading what it holds. */
+async function openWaiting(page: Page) {
+  const toggle = waitingHead(page).getByRole('button');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+const overload = (page: Page) => page.getByTestId('planner-overload');
 
 test.describe('Planer (more sources, overload – package 3)', () => {
   test.beforeEach(({ isMobile }) => {
@@ -552,7 +607,8 @@ test.describe('Planer (more sources, overload – package 3)', () => {
       status: 'open',
     });
     await ready(page, '/planner');
-    const row = page.getByText('Stadtwerke bezahlen');
+    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“).
+    const row = page.getByText('Stadtwerke bezahlen', { exact: true });
     await expect(row).toBeVisible();
     const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
     await expect(day).toContainText('Frist Do');
@@ -585,16 +641,20 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await expect(toast(page)).toContainText('mehr zu tun, als Zeit frei ist');
     await expect(toast(page).getByRole('button', { name: 'Rückgängig' })).toBeVisible();
     await expect(waitingHead(page)).toContainText('Wartet auf freie Zeit');
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
-    const first = await waitingHead(page).innerText();
+    // Folded, the head carries the count and the calming sentence; the hours wait inside.
+    await expect(waitingHead(page)).toContainText('Nichts davon muss heute sein.');
+    await expect(waitingHead(page)).not.toContainText('mehr zu tun');
+    await openWaiting(page);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    const first = await overload(page).innerText();
     await enter(page, 'Keller 1 Std');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
-    await expect(waitingHead(page)).not.toHaveText(first);
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await expect(overload(page)).not.toHaveText(first);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 
-  test('switch `overloadToast` off → no toast line, the figure stays in the group head', async ({
+  test('switch `overloadToast` off → no toast line, the figure stays in the opened group', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -606,7 +666,8 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     await enter(page, 'Umzug planen 5 Std');
     await expect(toast(page)).toContainText('Eingetragen');
     await expect(toast(page)).not.toContainText('mehr zu tun');
-    await expect(waitingHead(page)).toContainText('mehr zu tun, als Zeit frei ist');
+    await openWaiting(page);
+    await expect(overload(page)).toContainText('mehr zu tun, als Zeit frei ist');
   });
 });
 

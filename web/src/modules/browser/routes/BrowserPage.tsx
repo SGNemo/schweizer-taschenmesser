@@ -34,6 +34,16 @@ import styles from './BrowserPage.module.css';
 
 type View = 'page' | 'menu' | 'bookmarks' | 'history' | 'blocker' | 'clear' | 'tabs' | 'reader';
 
+/** The one cleanup path for the native tabs: hide all of them, never throw. */
+function hideTabs(): void {
+  const browser = getPlatform().browser;
+  if (browser.supported)
+    void browser
+      .show(null)
+      .then(useBrowserTabs.getState().markLost)
+      .catch(() => undefined);
+}
+
 export default function BrowserPage() {
   const platform = getPlatform().browser;
   const [params, setParams] = useSearchParams();
@@ -68,7 +78,8 @@ export default function BrowserPage() {
   // Reader mode needs an https page in a normal tab (the text is fetched without the tab's cookies).
   const canRead = !!tab && !tab.isPrivate && current.startsWith('https://');
 
-  const input = draft && draft.tab === activeId ? draft.text : current;
+  // After a failed open the address stays in the bar, so it can be corrected or retried.
+  const input = draft && draft.tab === activeId ? draft.text : tab?.error ? tab.url : current;
   const setInput = (text: string) => setDraft({ tab: activeId, text });
 
   // Tell the native side what to hold back and block.
@@ -102,8 +113,9 @@ export default function BrowserPage() {
     if (isWebUrl(url)) queueMicrotask(() => void open(url, useBrowserTabs.getState().newTab()));
   }, [params, platform, open, setParams]);
 
-  // Place the native tab exactly over the area; hide it whenever a Nemo panel is shown.
-  const showing = view === 'page' && !!tab?.opened && !tab.held;
+  // Place the native tab exactly over the area; hide it whenever a Nemo panel is shown. Every native
+  // call here is best effort: a failing or hanging native side must never break the page (or the app).
+  const showing = view === 'page' && !!tab?.opened && !tab.held && !tab.error;
   useLayoutEffect(() => {
     if (!platform.supported) return;
     const el = area.current;
@@ -112,25 +124,31 @@ export default function BrowserPage() {
       const r = el.getBoundingClientRect();
       const bounds = { x: r.left, y: r.top, width: r.width, height: r.height };
       useBrowserTabs.getState().setBounds(bounds);
-      if (showing && activeId !== null) void platform.show(activeId, bounds);
+      if (showing && activeId !== null && document.visibilityState !== 'hidden')
+        void platform
+          .show(activeId, bounds)
+          .then(useBrowserTabs.getState().markLost)
+          .catch(() => undefined);
     };
-    if (!showing) void platform.show(null);
+    // The app went to the background (minimised, tray): hide the tab; coming back places it again.
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') hideTabs();
+      else place();
+    };
+    if (!showing) hideTabs();
     place();
     const ro = new ResizeObserver(place);
     if (el) ro.observe(el);
     window.addEventListener('resize', place);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', place);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [platform, showing, activeId]);
-  // Leaving the page hides the tabs (they stay alive in the background).
-  useEffect(
-    () => () => {
-      if (platform.supported) void platform.show(null);
-    },
-    [platform],
-  );
+  // Leaving the page (route change, error boundary) hides the tabs; they stay alive in the background.
+  useEffect(() => () => hideTabs(), []);
 
   const toast = useUiStore.getState().toast;
   const hosts = (tab?.hosts ?? []).filter((h) => h !== hostOf(current));
@@ -202,12 +220,10 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
-      {/* Signature (slot S): the host of the open page or the prompt, never a full address or query. */}
+      {/* Signature (slot S): decoration only – lock and line, no text, so it never reads as a second address field. */}
       <HeroSlot area="signature">
         <span data-testid="address-bar-signature">
-          <AddressBar>
-            {(tab?.isPrivate ? undefined : hostOf(current)) || t.browser.toolbar.address}
-          </AddressBar>
+          <AddressBar />
         </span>
       </HeroSlot>
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
@@ -576,6 +592,25 @@ export default function BrowserPage() {
                 }}
               >
                 {t.browser.clear.confirm}
+              </Button>
+            </div>
+          </div>
+        ) : tab?.error ? (
+          <div className={styles.panel} role="alert" data-testid="browser-failed">
+            <h2>
+              {tab.error === 'gone'
+                ? t.browser.failed.gone
+                : t.browser.failed.title(t.browser.failed[tab.error])}
+            </h2>
+            <p className={styles.muted}>{t.browser.failed.body}</p>
+            <div className={styles.actions}>
+              {isWebUrl(tab.url) ? (
+                <Button onClick={() => void getPlatform().app.openUrl(tab.url)}>
+                  {t.browser.failed.openSystem}
+                </Button>
+              ) : null}
+              <Button variant="primary" onClick={() => void open(tab.url, tab.id)}>
+                {tab.error === 'gone' ? t.browser.failed.reopen : t.browser.failed.retry}
               </Button>
             </div>
           </div>

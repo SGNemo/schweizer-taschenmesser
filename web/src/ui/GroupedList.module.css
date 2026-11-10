@@ -25,6 +25,10 @@
   border-top: 1px solid var(--border);
 }
 .head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
   margin: 0;
   font-size: var(--text-meta);
   font-weight: var(--weight-medium);
@@ -64,7 +68,16 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
 }
-/* Rows come as a surface of their own inside the group. */
+/* Rows come on a surface of their own inside the group (`ListSurface`: tone step, hairlines between the rows only). */
 .body > * + * {
+  margin-top: var(--space-2);
+}
+/* The rows of a newspaper column (`columns`): a plain list, spaced like the body above. */
+.rowList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rowList > * + * {
   margin-top: var(--space-2);
 }

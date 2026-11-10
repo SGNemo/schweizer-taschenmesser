@@ -55,6 +55,7 @@ import { AttentionStrip } from './AttentionStrip';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
+import { usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -148,17 +149,29 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       ),
     [states, showPreview, layout.pinned],
   );
-  const ordered = useMemo(() => orderWidgets(entries, layout), [entries, layout]);
+  // The cards are drawn only once the saved layout is read: before that the default order (and cards the person
+  // has hidden) would show for a moment and then jump. What depends on "are there cards at all" (the head's tools,
+  // the hint for an overview without cards) keeps using `entries`, so nothing of it flashes in the meantime.
+  const layoutRead = saved !== undefined;
+  const ordered = useMemo(
+    () => (layoutRead ? orderWidgets(entries, layout) : []),
+    [entries, layout, layoutRead],
+  );
   const homeView = useUiStore((s) => s.homeView);
   const setHomeView = useUiStore((s) => s.setHomeView);
   const calm = homeView === 'calm' && !editing && !cockpit;
   const hiddenByUser = ordered.filter((e) => layout.hidden.includes(e.key));
+  // Keys the calm view may show; a Heute card the user hid lets the month card stand in.
+  const available = ordered.filter((e) => !layout.hidden.includes(e.key)).map((e) => e.key);
   const shown = editing
     ? ordered
     : ordered.filter(
-        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout)),
+        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
       );
   const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
+  // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
+  // saved order on plain rows.
+  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'), !editing);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -294,11 +307,13 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
           <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
             <div
+              ref={gridRef}
               className={[
                 styles.grid,
                 editing ? styles.editing : '',
                 cockpit ? styles.cockpit : '',
                 cockpit && layout.dense ? styles.dense : '',
+                calm && shown.length === 1 ? styles.single : '',
               ].join(' ')}
               data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
             >

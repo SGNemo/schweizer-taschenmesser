@@ -14,45 +14,50 @@ export interface Profile {
   quick?: boolean;
 }
 
+/**
+ * Every profile keeps `downloads`: it only exists in the desktop app (an id that is not available is dropped), and
+ * there a new installation starts with it (core/modules/defaults.ts). Without it every profile card would switch
+ * the System area off again.
+ */
 export const PROFILES: readonly Profile[] = [
   {
     id: 'everyday',
-    modules: ['calendar', 'todos', 'lists', 'notes', 'people'],
+    modules: ['calendar', 'todos', 'lists', 'notes', 'people', 'downloads'],
     tools: ['calc', 'timer', 'units', 'dates', 'qr'],
     quick: true,
   },
   {
     id: 'family',
-    modules: ['calendar', 'todos', 'lists', 'pantry', 'people'],
+    modules: ['calendar', 'todos', 'lists', 'pantry', 'people', 'downloads'],
     tools: ['calc', 'timer', 'units'],
     quick: true,
   },
   {
     id: 'papers',
-    modules: ['calendar', 'vault', 'subscriptions', 'invoices'],
+    modules: ['calendar', 'vault', 'subscriptions', 'invoices', 'downloads'],
     tools: ['calc', 'dates'],
     quick: true,
   },
   {
     id: 'study',
-    modules: ['todos', 'calendar', 'notes', 'bookmarks'],
+    modules: ['todos', 'calendar', 'notes', 'bookmarks', 'downloads'],
     tools: ['timer', 'calc', 'dates', 'units'],
     quick: true,
   },
   {
     id: 'finance',
-    modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar'],
+    modules: ['finance', 'budgets', 'subscriptions', 'invoices', 'vault', 'calendar', 'downloads'],
     tools: ['calc', 'currency'],
     quick: true,
   },
   {
     id: 'productive',
-    modules: ['todos', 'notes', 'calendar', 'bookmarks'],
+    modules: ['todos', 'notes', 'calendar', 'bookmarks', 'downloads'],
     tools: ['timer', 'calc', 'dates'],
   },
   {
     id: 'minimal',
-    modules: ['calendar', 'todos'],
+    modules: ['calendar', 'todos', 'downloads'],
     tools: ['calc'],
     quick: true,
   },

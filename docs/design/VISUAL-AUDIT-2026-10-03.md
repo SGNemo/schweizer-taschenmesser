@@ -1,6 +1,6 @@
 # Visual audit 2026-10-03 (final: fixed / open)
 
-Branch `fix/visual-polish-notifications`. Method: Dev-Preview build with `medium` test data, `npm run screenshots` (`e2e/screenshots/capture.spec.ts`), 6 viewports (1280×720, 1920×1080, 2560×1440, 3440×1440, 820×1180, 412×915) × light/dark, 31 pages each. "Before" shots: [`screenshots/visual-audit-2026-10-03/`](screenshots/visual-audit-2026-10-03/) (test data only).
+Branch `fix/visual-polish-notifications`. Method: Dev-Preview build with `medium` test data, `npm run screenshots` (`e2e/screenshots/capture.spec.ts`), 6 viewports (1280×720, 1920×1080, 2560×1440, 3440×1440, 820×1180, 412×915) × light/dark, 31 pages each. "Before" shots: [PR #62](https://github.com/SGNemo/schweizer-taschenmesser/pull/62) (test data only).
 
 **Coverage so far:** all module main views and all settings categories. **Still to capture before phase 2 ends:** detail/capture dialogs, Command Palette, setup assistant, Werkzeuge sheet, toasts, empty/loading/error states, long-text and many-entry data, half-screen snapping (≈ 640 px wide). Marked "to capture" below where a finding is suspected but unverified.
 

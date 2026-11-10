@@ -10,18 +10,29 @@
   aspect-ratio: 1.586;
   padding: var(--space-4) var(--space-4);
   border-radius: var(--radius-lg);
-  /* Text colour for both themes: the card is dark enough in light (hue 92 % over black) and light enough in dark. */
+  /* Text colour for both themes: the card is dark in light and light in dark. The gradient ends at the second
+     hue itself (no white mixed in) and the shine moves away from the ink, so the text keeps 4.5:1 at every
+     point of the card, for every hue (ui/tokens.test.ts). */
   color: var(--card-ink, var(--surface));
+  --card-shine: color-mix(in srgb, black 8%, transparent);
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--module-color) 88%, black),
     var(--module-color) 58%,
-    color-mix(in srgb, var(--module-color-2, var(--module-color)) 78%, white)
+    var(--module-color-2, var(--module-color))
   );
   box-shadow: var(--shadow-2);
 }
 :global(:root[data-theme='dark']) .card {
   --card-ink: var(--bg);
+  --card-shine: color-mix(in srgb, white 14%, transparent);
+}
+/* The same for "System" on a dark device (no data-theme attribute then). */
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .card {
+    --card-ink: var(--bg);
+    --card-shine: color-mix(in srgb, white 14%, transparent);
+  }
 }
 .card::before {
   content: '';
@@ -31,7 +42,7 @@
   width: 14rem;
   aspect-ratio: 1;
   border-radius: var(--radius-full);
-  background: rgb(255 255 255 / 0.14);
+  background: var(--card-shine);
 }
 .name {
   position: relative;
@@ -39,7 +50,6 @@
   font-weight: var(--weight-semibold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.9;
 }
 .balance {
   position: relative;
@@ -54,7 +64,6 @@
   justify-content: space-between;
   gap: var(--space-3);
   font-size: var(--text-meta);
-  opacity: 0.92;
 }
 .compact {
   width: 100%;
@@ -74,4 +83,27 @@
 :global(:root[data-color='calm']) .card,
 :global(:root[data-module-colors='off']) .card {
   background: color-mix(in srgb, var(--text-3) 85%, black);
+}
+/* Dark: the ink is dark, so the grey stays as light as it is (darkened it would fall under 4.5:1). */
+:global(:root[data-theme='dark'][data-color='calm']) .card,
+:global(:root[data-theme='dark'][data-module-colors='off']) .card {
+  background: var(--text-3);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])[data-color='calm']) .card,
+  :global(:root:not([data-theme='light'])[data-module-colors='off']) .card {
+    background: var(--text-3);
+  }
+}
+/* Calm (after the rules above, so it wins for calm alone): the grey without a cast, `--calm-ink`, by the same lightness rule. */
+:global(:root[data-color='calm']) .card {
+  background: color-mix(in srgb, var(--calm-ink) 85%, black);
+}
+:global(:root[data-theme='dark'][data-color='calm']) .card {
+  background: var(--calm-ink);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])[data-color='calm']) .card {
+    background: var(--calm-ink);
+  }
 }

@@ -257,7 +257,7 @@ pub fn disk_scan_live(
     Ok(session.map_or_else(Vec::new, |s| s.control.live.snapshot(min_bytes)))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_children(
     state: State<'_, DiskScans>,
     scan_id: u64,
@@ -277,7 +277,8 @@ pub fn disk_node(
     Ok(read(&tree_of(&state, scan_id)?).view(node))
 }
 
-#[tauri::command]
+/// Walks every node of the scan and sorts the hits, so it runs off the main thread (`async`).
+#[tauri::command(async)]
 pub fn disk_query(
     state: State<'_, DiskScans>,
     scan_id: u64,
@@ -301,7 +302,7 @@ pub async fn disk_steam_games(
 // --- clean-up: places, duplicates, paths ------------------------------------------------------
 
 /// Well-known cache and temp folders that exist here; the UI offers them as scan roots.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_known_places() -> Vec<Place> {
     known_places()
 }
@@ -345,7 +346,7 @@ pub fn disk_node_path(
 }
 
 /// Shows the entry in Windows Explorer.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_reveal(state: State<'_, DiskScans>, scan_id: u64, node: u32) -> Result<(), String> {
     let tree = tree_of(&state, scan_id)?;
     let path = read(&tree).path(node).ok_or("not-an-entry")?;
@@ -413,9 +414,9 @@ fn guard_for(app: &AppHandle) -> ::disk_scan::Guard {
     system_guard(&dirs)
 }
 
-/// Why an entry cannot be deleted, or `None` when it can. Cheap; the details view asks it so the
-/// buttons are only offered for entries the block list allows.
-#[tauri::command]
+/// Why an entry cannot be deleted, or `None` when it can. The details view asks it so the buttons are
+/// only offered for entries the block list allows. `async`: the guard lists the running programs.
+#[tauri::command(async)]
 pub fn disk_can_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,
@@ -467,8 +468,9 @@ pub struct PlanView {
 }
 
 /// Checks the selected entries against the block list and returns what would be deleted. Nothing
-/// is touched. The plan is valid for five minutes.
-#[tauri::command]
+/// is touched. The plan is valid for five minutes. `async`: the guard lists the running programs and
+/// up to 5000 entries are checked; the checks themselves are the same on any thread.
+#[tauri::command(async)]
 pub fn disk_delete_plan(
     app: AppHandle,
     state: State<'_, DiskScans>,
@@ -569,7 +571,7 @@ pub enum DeleteEvent {
 /// Runs a confirmed plan. `mode` is `trash` or `permanent`; `confirmed_twice` must be set when the
 /// plan needs a second confirmation (checked here, not only in the UI). Progress and the report
 /// arrive on the channel.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn disk_delete(
     app: AppHandle,
     state: State<'_, DiskScans>,

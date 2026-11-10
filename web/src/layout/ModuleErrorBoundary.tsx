@@ -7,7 +7,10 @@ import type { ModuleManifest } from '@/core/modules/types';
 import { useLang } from '@/core/i18n/lang';
 import { tDiag } from '@/strings.diagnostics';
 import { useUiStore } from '@/stores/ui';
+import { tLoading } from '@/strings.loading';
 import { Button, Card } from '@/ui';
+import { hasDrafts } from '@/ui/useFormDraft';
+import { isLoadError, PageLoadingCard, retryPage } from './PageLoadingCard';
 
 interface Props {
   manifest: Pick<ModuleManifest, 'id' | 'name'> & Partial<ModuleManifest>;
@@ -23,7 +26,8 @@ interface State {
 
 /**
  * A broken module shows a calm card instead of taking the app down. The error goes into the
- * diagnostics buffer (no data), nothing is sent. Retry, switch the module off (data stays) or report.
+ * diagnostics buffer (no data), nothing is sent. Retry (a reload while online: React keeps a failed lazy page
+ * for good, see core/net/OnlineChunk), switch the module off (data stays) or report.
  */
 class Boundary extends Component<Props & { onDisable: () => void; lang: string }, State> {
   override state: State = { key: this.props.resetKey };
@@ -44,12 +48,16 @@ class Boundary extends Component<Props & { onDisable: () => void; lang: string }
   override render() {
     const { error } = this.state;
     if (!error) return this.props.children;
+    const inPlace = () => this.setState({ error: undefined });
+    // The page's code did not arrive (offline, stale page after an update): the loading card, not the error card.
+    if (isLoadError(error)) return <PageLoadingCard failed />;
     const d = tDiag.get().card;
     return (
       <Card title={d.title(this.props.manifest.name)} role="alert" data-testid="module-error">
         <p>{d.body}</p>
+        {navigator.onLine && hasDrafts() ? <p>{tLoading.get().drafts}</p> : null}
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <Button variant="primary" onClick={() => this.setState({ error: undefined })}>
+          <Button variant="primary" onClick={() => retryPage(inPlace)}>
             {d.retry}
           </Button>
           <Button onClick={this.props.onDisable}>{d.disable}</Button>

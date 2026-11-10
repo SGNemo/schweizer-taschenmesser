@@ -10,6 +10,8 @@
 // fill with a same-colour stroke (corner rounding) under a mask that cuts the two bands and the eye.
 // Both bands are stroked with one width (the narrower one); the wider band is two offset strokes, so
 // the React `Logo` (one stroke width constant) draws the same shape as the master.
+// With `stripes.rim` the bands are cut inside the body only (clip path = `body`) and a white stroke of
+// that width on the body outline puts the rim back: the fish stays one piece.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
@@ -74,13 +76,19 @@ function bandPath(cut) {
 const [cut1, cut2] = g.cuts.map(bandPath);
 const { cx, cy, r } = g.eye;
 
+const RIM = g.rim;
+/** Clip path of the body: keeps the cut bands inside it, so a rim of the fish stays. */
+const bodyClip = (id, indent = '    ') =>
+  `<clipPath id="${id}-b">
+${indent}  <path d="${g.body}"/>
+${indent}</clipPath>`;
 const mask = (id, indent = '    ') =>
-  `<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
+  `${RIM > 0 ? `${bodyClip(id, indent)}\n${indent}` : ''}<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
 ${indent}  <rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/>
-${indent}  <g fill="none" stroke="#000">
+${indent}  <g fill="none" stroke="#000"${RIM > 0 ? ` clip-path="url(#${id}-b)"` : ''}>
 ${indent}    <path d="${cut1}" stroke-width="${base}"/>
 ${indent}    <path d="${cut2}" stroke-width="${base}"/>
-${indent}  </g>
+${indent}  </g>${RIM > 0 ? `\n${indent}  <path d="${g.body}" fill="none" stroke="#fff" stroke-width="${RIM}" stroke-linejoin="round"/>` : ''}
 ${indent}  <circle cx="${cx}" cy="${cy}" r="${r}" fill="#000"/>
 ${indent}</mask>`;
 /** The fish with the bands and the eye cut out; the stroke in the same colour rounds the corners. */
@@ -104,7 +112,9 @@ const square = [r1(b.x + b.w / 2 - side / 2), r1(b.y + b.h / 2 - side / 2), side
 const tile = views.tile;
 const ad = views.adaptive;
 if (g.radius(ad.scale, ad.dx ?? 0, ad.dy ?? 0) > ADAPTIVE_SAFE_RADIUS) throw new Error('the adaptive layer leaves the 66 dp safe zone');
-const maskable = Math.min(1, MASKABLE_SAFE_RADIUS / g.radius(1));
+// The fish's box is not centred in the canvas: the maskable icon centres it before scaling into the safe circle.
+const offCentre = b.x + b.w / 2 - 256;
+const maskable = Math.min(1, MASKABLE_SAFE_RADIUS / g.radius(1, -offCentre, 0));
 
 // ---- files ---------------------------------------------------------------------------------------
 const files = {};
@@ -139,7 +149,7 @@ files['app-icon-maskable.svg'] = svg(
     ${mask('nemo-maskable-cut')}
   </defs>
   <rect width="512" height="512" fill="${ACCENT.light}"/>
-  <g transform="${place(r3(maskable))}">
+  <g transform="${place(r3(maskable), r3(-offCentre * maskable))}">
 ${fish(WHITE, 'nemo-maskable-cut', '    ')}
   </g>`,
 );
@@ -232,6 +242,7 @@ const checks = [
   ['logo-mark.svg', files['logo-mark.svg'], master.mark],
   ['app-icon.svg', files['app-icon.svg'], master.app],
   ['android-foreground.svg', files['android-foreground.svg'], master.adFg],
+  ['android-monochrome.svg', files['android-monochrome.svg'], master.adMono],
 ];
 for (const [name, ours, theirs] of checks) {
   const d = await diff(ours, theirs);
@@ -257,6 +268,8 @@ export const LOGO_PATHS = {
 export const LOGO_CUT_WIDTH = ${base};
 export const LOGO_EYE = { cx: ${cx}, cy: ${cy}, r: ${r} } as const;
 export const LOGO_SOFTEN = ${g.soften};
+/** The bands are cut inside the body only; a stroke of this width on the body outline keeps the rim (0 = bands cut through). */
+export const LOGO_RIM = ${RIM};
 /** The mark follows the accent token (and "Logo in Themenfarbe" via \`--logo-ink\`). */
 export const LOGO_COLOR = 'var(--accent)';
 /** The accent token's two values (tokens.css \`--accent\`, light and dark) that the static brand files use. */
@@ -264,6 +277,8 @@ export const LOGO_ACCENT = { light: '${ACCENT.light}', dark: '${ACCENT.dark}' } 
 /** Bounding box of the fish inside the 512 canvas. */
 export const LOGO_VIEWBOX = '${tight.join(' ')}';
 export const LOGO_ASPECT = ${r3(tight[2] / tight[3])};
+/** The mark on the accent tile (app icon geometry): corner radius and the fish's placement in the 512 canvas. */
+export const LOGO_TILE = { radius: ${tile.radius}, transform: '${place(tile.scale, tile.dx ?? 0, tile.dy ?? 0)}' } as const;
 // brand:end`;
 const replaceBlock = (file, re, text) => {
   const path = join(web, file);
@@ -286,5 +301,5 @@ const splash = `<!-- brand:begin -->
       <!-- brand:end -->`;
 replaceBlock('index.html', /<!-- brand:begin -->[\s\S]*?<!-- brand:end -->/, splash);
 
-console.log(`brand sources written; fish view box ${tight.join(' ')}, maskable scale ${r3(maskable)}, adaptive radius ${r1(g.radius(ad.scale))} of ${ADAPTIVE_SAFE_RADIUS}`);
+console.log(`brand sources written; fish view box ${tight.join(' ')}, maskable scale ${r3(maskable)}, adaptive radius ${r1(g.radius(ad.scale, ad.dx ?? 0, ad.dy ?? 0))} of ${ADAPTIVE_SAFE_RADIUS}`);
 console.log(`wordmark box ${files['logo-wordmark.svg'].match(/viewBox="([^"]+)"/)[1]}`);

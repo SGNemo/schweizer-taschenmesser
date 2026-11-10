@@ -14,6 +14,8 @@ mod capture;
 mod disk;
 #[cfg(desktop)]
 mod downloads;
+// Home-network sync, device side: the phone, and a second PC that pairs with the hub PC.
+mod lan_client;
 #[cfg(desktop)]
 mod lan_sync;
 #[cfg(desktop)]
@@ -28,6 +30,14 @@ mod oauth;
 mod panic_log;
 #[cfg(desktop)]
 mod portable;
+#[cfg(desktop)]
+mod remote;
+#[cfg(desktop)]
+mod remote_notice;
+// Remote control, phone side. Compiled for the phone (and for the unit tests): on the desktop no
+// command of it is registered.
+#[cfg(any(mobile, test))]
+mod remote_client;
 #[cfg(desktop)]
 mod system;
 #[cfg(desktop)]
@@ -115,7 +125,16 @@ pub fn run() {
         // Text and links shared from other Android apps (ACTION_SEND).
         .plugin(tauri_plugin_share_intent::init())
         // Android: system bars hidden and screen kept on while the cockpit is open.
-        .plugin(tauri_plugin_screen_mode::init());
+        .plugin(tauri_plugin_screen_mode::init())
+        // Android, home-network sync: Wi-Fi events for the web app, hub search for lan_client.rs.
+        .plugin(tauri_plugin_lan_watch::init());
+
+    // The device side of home-network sync (pairing by QR, requests to the hub PC): the phone, and a
+    // second PC (one path per device, see lan_client.rs). The QR is scanned in the app (camera or
+    // webcam in the WebView), not by a native scanner view.
+    let builder = builder.manage(lan_client::LanClient::default());
+    #[cfg(mobile)]
+    let builder = builder.manage(remote_client::RemoteClient::default());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]
@@ -134,6 +153,7 @@ pub fn run() {
         .manage(update::PendingUpdate::default())
         .manage(oauth::OAuthListener::default())
         .manage(lan_sync::LanSync::default())
+        .manage(remote::RemoteHost::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(downloads::Downloads::default())
@@ -189,6 +209,14 @@ pub fn run() {
             lan_sync::lan_hub_rotate,
             lan_sync::lan_hub_request,
             lan_sync::lan_home_set,
+            remote::remote_status,
+            remote::remote_set_enabled,
+            remote::remote_set_device,
+            remote::remote_end,
+            lan_client::lan_client_pair,
+            lan_client::lan_client_pair_cancel,
+            lan_client::lan_client_request,
+            lan_client::lan_client_unpair,
             local_api::local_api_start,
             local_api::local_api_stop,
             local_api::local_api_set_tokens,
@@ -251,6 +279,19 @@ pub fn run() {
             capture::desktop_open_data_dir,
             capture::desktop_show_main
         ]);
+
+    // Android has no other app command: only the device side of home-network sync (granted in
+    // capabilities/default.json; the desktop list above is the one `tests/commands.rs` reads).
+    #[cfg(mobile)]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        lan_client::lan_client_pair,
+        lan_client::lan_client_pair_cancel,
+        lan_client::lan_client_request,
+        lan_client::lan_client_unpair,
+        remote_client::remote_client_open,
+        remote_client::remote_client_send,
+        remote_client::remote_client_close
+    ]);
 
     // Windows creates the main window itself (portable data folder); every desktop OS then sets up
     // the hidden capture window and the tray.

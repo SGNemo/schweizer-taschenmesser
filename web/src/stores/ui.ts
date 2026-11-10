@@ -59,6 +59,8 @@ export const MODULE_COLOR_MODES = ['on', 'off'] as const;
 export type ModuleColorMode = (typeof MODULE_COLOR_MODES)[number];
 const MODULE_COLORS_KEY = 'tm-module-colors';
 const READ_AID_KEY = 'tm-read-aid';
+/** Toasts stay until closed by hand (focus aid, setup step "Fokus-Hilfen"). */
+const TOAST_STAY_KEY = 'tm-toast-stay';
 const READ_SHARE_KEY = 'tm-read-share';
 const READ_STYLE_KEY = 'tm-read-style';
 const READ_COVER_KEY = 'tm-read-cover';
@@ -212,6 +214,8 @@ export interface Toast {
   /** Optional leading icon (a check for confirmations). */
   icon?: IconName;
   action?: { label: string; run: () => void };
+  /** A second action shown before `action` („Ansehen · Rückgängig“). */
+  lead?: { label: string; run: () => void };
 }
 
 interface UiState {
@@ -227,6 +231,9 @@ interface UiState {
   setLeading(leading: LeadingChoice): void;
   readAid: boolean;
   setReadAid(on: boolean): void;
+  /** Toasts stay until "Schließen" instead of hiding after a few seconds. */
+  toastStay: boolean;
+  setToastStay(on: boolean): void;
   readShare: ReadShare;
   setReadShare(share: ReadShare): void;
   readStyle: ReadStyle;
@@ -293,7 +300,7 @@ interface UiState {
   setHomeEditing(editing: boolean): void;
   toasts: Toast[];
   /** One notice at a time: a new one replaces the old (stacked notices covered a fifth of a phone). */
-  toast(message: string, action?: Toast['action'], icon?: IconName): number;
+  toast(message: string, action?: Toast['action'], icon?: IconName, lead?: Toast['lead']): number;
   dismissToast(id: number): void;
 }
 
@@ -341,6 +348,11 @@ export const useUiStore = create<UiState>((set) => ({
     storeChoice(LEADING_KEY, leading, leading === 'normal');
     applyLeading(leading);
     set({ leading });
+  },
+  toastStay: readFlag(TOAST_STAY_KEY),
+  setToastStay(toastStay) {
+    storeChoice(TOAST_STAY_KEY, '1', !toastStay);
+    set({ toastStay });
   },
   readAid: readFlag(READ_AID_KEY),
   setReadAid(readAid) {
@@ -459,9 +471,11 @@ export const useUiStore = create<UiState>((set) => ({
   homeEditing: false,
   setHomeEditing: (homeEditing) => set({ homeEditing }),
   toasts: [],
-  toast(message, action, icon) {
+  toast(message, action, icon, lead) {
     const id = ++toastId;
-    set((s) => ({ toasts: [...s.toasts, { id, message, action, icon }].slice(-MAX_TOASTS) }));
+    set((s) => ({
+      toasts: [...s.toasts, { id, message, action, icon, lead }].slice(-MAX_TOASTS),
+    }));
     return id;
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),

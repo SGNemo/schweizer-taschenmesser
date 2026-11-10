@@ -90,7 +90,7 @@ export const timetrack: Strings['timetrack'] = {
     none: 'No projects yet.',
     addJob: 'Add a project',
     running: (name: string, since: string) => `${name} · since ${since}`,
-    idle: 'Nothing running',
+    idle: 'today · nothing running',
   },
   head: { running: 'Running', idle: 'Ready' },
 };

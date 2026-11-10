@@ -28,6 +28,8 @@ test.describe('Calendar: dragging in the hour grid (plan group)', () => {
       .getByRole('group', { name: 'Zeitraster' })
       .getByRole('button', { name: /Ziehtest/ });
     await expect(item).toContainText('10:00');
+    // Like below: the line under the title ("in 2 Std · …") comes after the entries and moves the grid.
+    await expect(page.getByTestId('calendar-next')).toBeVisible();
     const box = (await item.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + 10);
     await page.mouse.down();
@@ -56,6 +58,15 @@ test.describe('Calendar: dragging in the hour grid (plan group)', () => {
     page,
   }) => {
     await ready(page, '/calendar?view=day&date=2026-11-03');
+    // The line under the title ("Heute frei") arrives after the first paint, once the entries are read, and on a
+    // first visit it moves the whole grid down by 84 px. A position read before that points somewhere else by the
+    // time the mouse gets there (the slot then started at 13:30 or 12:30).
+    await expect(page.getByTestId('calendar-free')).toBeVisible();
+    // 14:00 sits at the bottom edge of the opened grid (06:00 + eight hours); scroll it into the middle first, or the
+    // pointer can land outside the scroll pane and nothing is drawn.
+    const hours = page.getByRole('region', { name: 'Stunden' });
+    await expect.poll(() => hours.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    await hours.evaluate((el) => (el.scrollTop = (el.scrollHeight / 24) * 11));
     const col = page.locator('[data-date="2026-11-03"]');
     const box = (await col.boundingBox())!;
     // 14:00 is 14 hours down the 24-hour column.
@@ -67,5 +78,37 @@ test.describe('Calendar: dragging in the hour grid (plan group)', () => {
     const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
     await expect(dialog.getByLabel('Beginn')).toHaveValue('14:00');
     await expect(dialog.getByLabel('Ende', { exact: true })).not.toHaveValue('');
+  });
+});
+
+test.describe('Calendar: the page while its head loads', () => {
+  test.skip(({ isMobile }) => isMobile, 'the hour grid is the desktop view');
+
+  test('the hour grid stays where it is while the head line loads (U01)', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-11-03T08:00:00'));
+    // Every frame from the first one: a jump between two frames is what a person sees, and what moved the grid
+    // under the mouse in the tests above.
+    await page.addInitScript(() => {
+      const tops: number[] = [];
+      (window as unknown as { __gridTops: number[] }).__gridTops = tops;
+      const frame = () => {
+        const column = document.querySelector('[data-date="2026-11-03"]');
+        const pane = column?.closest('[role="region"]');
+        if (pane) {
+          const top = Math.round(pane.getBoundingClientRect().top);
+          if (tops.at(-1) !== top) tops.push(top);
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+    await ready(page, '/calendar?view=day&date=2026-11-03');
+    await expect(page.getByTestId('calendar-free')).toBeVisible();
+    // the frame gives the head row's room back one second after the page arrived (`FIGURE_HOLD_MS`)
+    await page.waitForTimeout(1200);
+    const tops = await page.evaluate(
+      () => (window as unknown as { __gridTops: number[] }).__gridTops,
+    );
+    expect(tops).toHaveLength(1);
   });
 });

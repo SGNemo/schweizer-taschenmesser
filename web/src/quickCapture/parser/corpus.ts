@@ -24,6 +24,10 @@ export interface CorpusCase {
   pin?: string;
   startDate?: string;
   hardDue?: boolean;
+  /** Run with Fitness on (`ParseOptions.fitness`): the meal and workout sentences. */
+  fitness?: true;
+  /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
+  place?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -231,5 +235,129 @@ export const CORPUS: CorpusCase[] = [
     title: 'Steuerbescheid prüfen',
     date: '2026-11-03',
     hardDue: true,
+  },
+  // Uhr: „uhr <Stadt>“ adds a place, parsed with the module on; anything that is no place stays a ToDo.
+  { from: 'clock', place: true, text: 'uhr Tokio', type: 'place', title: 'Tokio' },
+  { from: 'clock', place: true, text: 'Uhr: New York', type: 'place', title: 'New York' },
+  { from: 'clock', place: true, text: 'clock lisbon', type: 'place', title: 'lisbon' },
+  { from: 'clock', place: true, text: 'Uhr reparieren lassen', type: 'todo' },
+  { from: 'clock', text: 'uhr Tokio', type: 'todo' },
+  // Fitness (docs/features/fitness.md §5), parsed with Fitness on.
+  { from: 'fitness', fitness: true, text: 'kcal 650 Döner', type: 'meal', title: 'Döner' },
+  { from: 'fitness', fitness: true, text: 'Döner 650 kcal', type: 'meal', title: 'Döner' },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'gestern kcal 400 Pizza',
+    type: 'meal',
+    title: 'Pizza',
+    date: '2026-10-28',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'training Bankdrücken 3×8 60',
+    type: 'workout',
+    title: 'Bankdrücken',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Training: Bankdrücken 3x8 60kg, Kniebeuge 3×5 80',
+    type: 'workout',
+    title: 'Bankdrücken, Kniebeuge',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'training Laufen 30 Min',
+    type: 'workout',
+    title: 'Laufen',
+  },
+  // … and these stay what they were.
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Essen mit Anna Freitag 19 Uhr',
+    type: 'event',
+    date: '2026-10-30',
+    time: '19:00',
+  },
+  {
+    from: 'fitness',
+    fitness: true,
+    text: 'Training morgen 18 Uhr',
+    type: 'event',
+    date: '2026-10-30',
+    time: '18:00',
+  },
+  // Use case „Kopf leer“ (docs/design/usecases/kopf-leer/TARGET.md §3): the five lines of a brain dump
+  // (reminder words wait for package 2), the counter-scenarios, and past-tense spend words.
+  { from: 'KL', text: 'Müll runterbringen', type: 'todo', title: 'Müll runterbringen' },
+  { from: 'KL', text: 'Wohnzimmer aufräumen', type: 'todo', title: 'Wohnzimmer aufräumen' },
+  {
+    from: 'KL',
+    text: 'Vermieter wegen Heizung antworten',
+    type: 'todo',
+    title: 'Vermieter wegen Heizung antworten',
+  },
+  {
+    from: 'KL',
+    text: 'Steuerbescheid prüfen bis Freitag',
+    type: 'todo',
+    date: '2026-10-30',
+    title: 'Steuerbescheid prüfen',
+  },
+  {
+    from: 'KL',
+    text: 'Mittagessen 12,50 € ausgegeben',
+    type: 'finance',
+    amountMinor: 1250,
+    kind: 'expense',
+    title: 'Mittagessen',
+  },
+  {
+    from: 'KL',
+    text: 'Rechnung an Kunde Nord 500 € bis 30.10.',
+    type: 'invoice',
+    amountMinor: 50000,
+    date: '2026-10-30',
+  },
+  {
+    from: 'KL',
+    text: 'Brot gekauft 3,80 €',
+    type: 'finance',
+    amountMinor: 380,
+    kind: 'expense',
+    title: 'Brot',
+  },
+  {
+    from: 'KL',
+    text: 'Tanken 62,40 bezahlt',
+    type: 'finance',
+    amountMinor: 6240,
+    kind: 'expense',
+    title: 'Tanken',
+  },
+  { from: 'KL', text: 'Miete bezahlt 850 €', type: 'finance', amountMinor: 85000, title: 'Miete' },
+  // Without an amount a past-tense word is just text.
+  { from: 'KL', text: 'Schuhe gekauft', type: 'todo', title: 'Schuhe gekauft' },
+  // „Kopf leer“ package 2: payment reminder words are invoice words; „zahlen“ + amount points to an invoice.
+  {
+    from: 'KL2',
+    text: 'Mahnung Stadtwerke 87,40 € zahlen',
+    type: 'invoice',
+    amountMinor: 8740,
+    title: 'Stadtwerke',
+  },
+  { from: 'KL2', text: '2. Mahnung Telekom 45,90 €', type: 'invoice', title: 'Telekom' },
+  { from: 'KL2', text: 'Zahlungserinnerung Zahnarzt 120 €', type: 'invoice', amountMinor: 12000 },
+  { from: 'KL2', text: 'Stadtwerke 84,30 € zahlen', type: 'invoice', title: 'Stadtwerke' },
+  // Without an amount a reminder word stays text: a ToDo to check it.
+  {
+    from: 'KL2',
+    text: 'Mahnung Stadtwerke prüfen',
+    type: 'todo',
+    title: 'Mahnung Stadtwerke prüfen',
   },
 ];

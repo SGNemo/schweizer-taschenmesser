@@ -68,6 +68,10 @@ export interface MailThreadSummary {
   unread: boolean;
   labelIds: string[];
   hasAttachment: boolean;
+  /** The sender is a person (header logic, `isPersonalMail`); absent when the provider cannot tell. */
+  personal?: boolean;
+  /** Provider id of the newest message (an invoice read from the row is keyed on it); absent when unknown. */
+  lastMessageId?: string;
 }
 
 export interface MailThread {

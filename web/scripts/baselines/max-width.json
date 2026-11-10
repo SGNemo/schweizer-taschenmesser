@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "what": "max-width declarations in src/modules/**/*.module.css outside @media and @container",
+  "total": 34,
+  "files": {
+    "modules/accounts/accounts.module.css": 1,
+    "modules/bookmarks/routes/reader.module.css": 1,
+    "modules/browser/components/ReaderPanel.module.css": 1,
+    "modules/browser/routes/BrowserPage.module.css": 3,
+    "modules/calendar/routes/calendar.module.css": 3,
+    "modules/chat/chat.module.css": 1,
+    "modules/disk/components/Breadcrumb.module.css": 1,
+    "modules/disk/components/DiskHead.module.css": 1,
+    "modules/disk/components/Duplicates.module.css": 1,
+    "modules/disk/components/ScanView.module.css": 1,
+    "modules/disk/components/TreemapView.module.css": 1,
+    "modules/disk/routes/DrivesPage.module.css": 1,
+    "modules/downloads/components/DownloadsBand.module.css": 1,
+    "modules/downloads/routes/DownloadsPage.module.css": 1,
+    "modules/finance/components/columnMapping.module.css": 1,
+    "modules/habits/habits.module.css": 1,
+    "modules/invoices/routes/invoices.module.css": 1,
+    "modules/maps/components/TileMap.module.css": 1,
+    "modules/maps/routes/maps.module.css": 1,
+    "modules/music/components/Spotify.module.css": 1,
+    "modules/music/routes/music.module.css": 2,
+    "modules/notes/components/TabBar.module.css": 1,
+    "modules/notes/editor/Editor.module.css": 4,
+    "modules/todos/routes/todos.module.css": 1,
+    "modules/weather/components/WeatherChart.module.css": 1,
+    "modules/weather/routes/weather.module.css": 1
+  }
+}

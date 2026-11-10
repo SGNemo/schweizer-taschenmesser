@@ -5785,6 +5785,7 @@ dependencies = [
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
  "taschenmesser-os-association",
+ "taschenmesser-remote-input",
  "taschenmesser-system-info",
  "taschenmesser-torrent",
  "taschenmesser-vault-bridge",
@@ -5798,6 +5799,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-http",
+ "tauri-plugin-lan-watch",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
  "tauri-plugin-screen-mode",
@@ -5884,6 +5886,13 @@ dependencies = [
 [[package]]
 name = "taschenmesser-os-association"
 version = "0.1.0"
+
+[[package]]
+name = "taschenmesser-remote-input"
+version = "0.1.0"
+dependencies = [
+ "windows 0.61.3",
+]
 
 [[package]]
 name = "taschenmesser-system-info"
@@ -6172,6 +6181,16 @@ dependencies = [
  "tokio",
  "url",
  "urlpattern 0.3.0",
+]
+
+[[package]]
+name = "tauri-plugin-lan-watch"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

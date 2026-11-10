@@ -19,6 +19,8 @@ export interface Tab {
   opened: boolean;
   /** A plain-HTTP address waiting for the user's decision. */
   held: string | null;
+  /** Opening or navigating failed: the frame shows why instead of an empty area (no webview is shown). */
+  error: OpenFailure | null;
   blocked: number;
   /** Third-party hosts this page talked to. */
   hosts: string[];
@@ -42,7 +44,38 @@ interface TabsState {
   zoomBy(id: number, delta: number | 'reset'): Promise<void>;
   togglePause(host: string): void;
   dismissHeld(id: number): void;
+  /** The native side reported these tabs' webviews as gone: the frame offers "Tab neu öffnen". */
+  markLost(ids: number[]): void;
   dismissOffer(): void;
+}
+
+/** Why a tab could not load; only a kind, never the raw native error (it could carry the address). */
+export type OpenFailure = 'timeout' | 'address' | 'native' | 'gone';
+
+/** How long creating a tab's webview may take before the frame gives up and says so. */
+export const OPEN_TIMEOUT_MS = 15_000;
+
+function failureOf(err: unknown): OpenFailure {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg === 'timeout') return 'timeout';
+  return msg === 'url' || msg === 'scheme' ? 'address' : 'native';
+}
+
+/** Rejects with `timeout` when the native side does not answer: a hung call must never keep the frame empty. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e: unknown) => {
+        clearTimeout(timer);
+        reject(e instanceof Error ? e : new Error(String(e)));
+      },
+    );
+  });
 }
 
 let counter = 0;
@@ -58,6 +91,7 @@ const blank = (id: number, isPrivate: boolean): Tab => ({
   zoom: 1,
   opened: false,
   held: null,
+  error: null,
   blocked: 0,
   hosts: [],
 });
@@ -131,30 +165,50 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
   async go(id, url, allowHttp = false) {
     const tab = get().tabs.find((x) => x.id === id);
     if (!tab) return;
-    patch(id, { held: null });
+    patch(id, { held: null, error: null });
     const browser = getPlatform().browser;
-    if (!tab.opened) {
-      patch(id, { opened: true, url, loading: true });
-      await browser.open(
-        {
-          tab: id,
-          url,
-          bounds: get().bounds,
-          privateTab: tab.isPrivate,
-          zoom: tab.zoom,
-          allowHttp,
-        },
-        onEvent,
-      );
-    } else {
-      await browser.navigate(id, url, allowHttp);
+    try {
+      if (!tab.opened) {
+        patch(id, { opened: true, url, loading: true });
+        await withTimeout(
+          browser.open(
+            {
+              tab: id,
+              url,
+              bounds: get().bounds,
+              privateTab: tab.isPrivate,
+              zoom: tab.zoom,
+              allowHttp,
+            },
+            onEvent,
+          ),
+          OPEN_TIMEOUT_MS,
+        );
+      } else {
+        await withTimeout(browser.navigate(id, url, allowHttp), OPEN_TIMEOUT_MS);
+      }
+    } catch (err) {
+      const error = failureOf(err);
+      if (tab.opened) {
+        // A navigation failed: the tab and its page stay, the frame only says why.
+        patch(id, { loading: false, url, error });
+        return;
+      }
+      // Opening failed: no webview stays (Rust also closes one that arrives after a timeout), the
+      // frame shows the reason, the address stays so "Im Systembrowser öffnen" and retry can use it.
+      patch(id, { opened: false, loading: false, url, error });
+      void browser.close(id).catch(() => undefined);
     }
   },
   async closeTab(id) {
     const { tabs, activeId } = get();
     const tab = tabs.find((x) => x.id === id);
     if (!tab) return;
-    if (tab.opened) await getPlatform().browser.close(id);
+    // Best effort: a native failure must not keep a dead tab in the strip.
+    if (tab.opened)
+      await getPlatform()
+        .browser.close(id)
+        .catch(() => undefined);
     lastHistory.delete(id);
     const rest = tabs.filter((x) => x.id !== id);
     set({ tabs: rest, activeId: activeId === id ? (rest[rest.length - 1]?.id ?? null) : activeId });
@@ -180,5 +234,16 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
     }));
   },
   dismissHeld: (id) => patch(id, { held: null }),
+  markLost(ids) {
+    if (ids.length === 0) return;
+    // Only an opened tab can lose its webview; the address stays, so reopening needs one click.
+    set((s) => ({
+      tabs: s.tabs.map((x) =>
+        ids.includes(x.id) && x.opened
+          ? { ...x, opened: false, loading: false, held: null, error: 'gone' }
+          : x,
+      ),
+    }));
+  },
   dismissOffer: () => set({ offer: null }),
 }));

@@ -84,10 +84,30 @@ export async function sha256Hex(text: string): Promise<string> {
  */
 export type PlainChecksumStatus = 'ok' | 'mismatch' | 'missing';
 
-/** The plain backup as text, sealed with its checksum. */
-export async function serializeSealedBackup(backup: Backup): Promise<string> {
+/** Read by people who open the file in a text editor; the app ignores it when reading. */
+export const PLAIN_BACKUP_ABOUT =
+  'Nemo backup, readable JSON. tables: one list per collection (<module>_<collection>); each entry has id, createdAt, updatedAt, deviceId, deletedAt (deleted entries stay for merging) and _f (a time stamp per field). checksum: SHA-256 of the compact JSON of tables. Format: https://github.com/SGNemo/schweizer-taschenmesser/blob/main/docs/user/backup.md';
+
+/**
+ * The plain backup as text, sealed with its checksum. `readable` (the download a person opens)
+ * indents it and names the format; copies the app keeps for itself stay compact.
+ */
+export async function serializeSealedBackup(
+  backup: Backup,
+  opts: { readable?: boolean } = {},
+): Promise<string> {
   const checksum = await sha256Hex(JSON.stringify(backup.tables));
-  return JSON.stringify({ ...backup, checksum });
+  if (!opts.readable) return JSON.stringify({ ...backup, checksum });
+  const { format, version, ...rest } = backup;
+  const text = JSON.stringify(
+    { format, version, about: PLAIN_BACKUP_ABOUT, ...rest, checksum },
+    null,
+    1,
+  );
+  // Indenting adds about a quarter; a file over the read limit falls back to the compact form.
+  return text.length > MAX_BACKUP_CHARS
+    ? JSON.stringify({ format, version, about: PLAIN_BACKUP_ABOUT, ...rest, checksum })
+    : text;
 }
 
 export async function plainChecksumStatus(text: string): Promise<PlainChecksumStatus> {

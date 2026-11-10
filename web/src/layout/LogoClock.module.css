@@ -1,0 +1,60 @@
+/* The time next to the logo: quiet secondary text, tabular figures, fixed width, no motion. */
+.clock {
+  flex: none;
+  color: var(--text-muted);
+  font-variant-numeric: var(--font-num);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  user-select: none;
+}
+.digits {
+  display: inline-block;
+}
+/* "AM"/"PM" of 12-hour formats: smaller, so "02:07 PM" fits next to the wordmark (the screen reader reads the label). */
+.period {
+  margin-inline-start: 0.15em;
+  font-size: 0.6em;
+}
+/* Sidebar head: as tall as the wordmark's lettering, on the logo's middle (the row centres it). */
+.wide {
+  font-size: var(--text-lg);
+}
+.wide[data-period] {
+  font-size: var(--text-md);
+}
+.bar {
+  font-size: var(--text-md);
+}
+/* Folded sidebar: one small line under the tile, as tall with the Uhr module (a link) as without. */
+.rail {
+  display: grid;
+  place-items: center;
+  min-height: 1.5rem;
+  font-size: var(--text-caps);
+}
+/* While the Uhr module is on, the time opens it: a quiet link, ≥ 44 px tall, underline only on hover/focus. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.link:hover .clock,
+.link:focus-visible .clock {
+  color: var(--text);
+  text-decoration: underline;
+}
+/* In the rail a mouse gets a low link (the time's own 24 px, docs/howto/design-rules.md), so the time stays close to
+   the tile; a touch screen keeps the full height. */
+.railTime {
+  min-height: 0;
+}
+@media (any-pointer: coarse) {
+  .railTime {
+    min-height: var(--touch);
+  }
+}

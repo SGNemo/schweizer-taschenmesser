@@ -1,7 +1,13 @@
 import { useState, type ReactNode } from 'react';
 import { markOnboardingHandled, wasOnboardingHandled } from '@/core/importer/batches';
 import { hasImporters, OnboardingWizard } from '@/core/importer/OnboardingWizard';
-import { disableModule, enableModule, moduleHasData } from '@/core/modules/activation';
+import {
+  disableModule,
+  enableModule,
+  isOnByDefaultSetOnly,
+  moduleHasData,
+  undoDisable,
+} from '@/core/modules/activation';
 import type { ModuleManifest } from '@/core/modules/types';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -38,8 +44,13 @@ export function useModuleSwitch(): {
       setPending(m);
       return;
     }
+    // Read before the switch: afterwards the module has a row and looks like any other choice.
+    const viaDefaultSet = await isOnByDefaultSetOnly(m.id);
     await disableModule(m, 'keep');
-    toast(text.turnedOff(m.name), { label: t.ui.undo, run: () => void enableModule(m) });
+    toast(text.turnedOff(m.name), {
+      label: t.ui.undo,
+      run: () => void undoDisable(m, viaDefaultSet),
+    });
   }
 
   async function disable(policy: 'keep' | 'delete') {

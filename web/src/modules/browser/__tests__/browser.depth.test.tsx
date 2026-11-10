@@ -18,6 +18,7 @@ const tab = (over: Partial<Tab>): Tab => ({
   zoom: 1,
   opened: true,
   held: null,
+  error: null,
   blocked: 0,
   hosts: [],
   ...over,

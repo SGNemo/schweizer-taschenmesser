@@ -14,7 +14,8 @@ Nemo comes as a portable Windows file, as an Android app and as a PWA in the bro
 2. Windows may show "Windows protected your PC" (SmartScreen), because unknown `.exe` files without a purchased
    code-signing certificate are always treated this way: **"More info" → "Run anyway"**. The update payload is signed
    with the project's update key; the app checks the signature itself before every update (and refuses unsigned or
-   foreign-signed files).
+   foreign-signed files). If Windows shows **Smart App Control** instead, with no "Run anyway", it does not allow
+   unsigned apps at all; more on this and every click including the Edge download warning: [step by step](https://nemo-adhd-helper.online/en/install) ([Deutsch](https://nemo-adhd-helper.online/install)).
 3. **Requirement: Microsoft WebView2.** On Windows 10/11 the component is usually already there (it ships with Edge).
    If it is missing, the app explains this in a window and can open the
    [download page](https://developer.microsoft.com/microsoft-edge/webview2/) ("Evergreen Bootstrapper").
@@ -41,7 +42,9 @@ The old installed version cannot update itself to the portable file; the switch 
 1. Download `Nemo.apk` on your phone (for example in Chrome) and open it.
 2. The first time, Android asks whether **installing from unknown sources** is allowed: **"Settings" →
    "Allow from this source"** for the browser or the files app, then go back and tap "Install". Play Protect
-   may offer an extra check ("Install anyway" or "Scan app").
+   may offer an extra check ("Install anyway" or "Scan app"). If **Auto Blocker** on newer Samsung phones blocks
+   the installation: Settings → Security and privacy → Auto Blocker off, install, turn it back on (while it is on,
+   updates from inside the app fail too).
 3. For later updates open Settings → Updates and tap "Update now": the app downloads the update, checks its checksum and hands over to
    Android's installer (if asked, allow installing from this source). The new APK must be signed with the same
    key, otherwise Android rejects it.
@@ -58,6 +61,8 @@ HTTPS (or `localhost`).
 1. **Where are you coming from?** Google, Apple, Microsoft, Todoist, TickTick, Notion, Evernote, Obsidian/Markdown, bank statement, password manager, browser bookmarks, or "I don't know". Nemo says where to get the export.
 2. **Files:** choose the files or the ZIP as it is (Google Takeout, Todoist backup, Notion export). They are read on this device only.
 3. **Check:** Nemo shows what it recognised, why, how sure it is and how much ("Todoist (CSV) · 3 projects · 214 tasks"). Then the usual preview per area: new entries, already there, not readable, and what stays out and why.
+
+Training and food exports from Strong, Hevy, Cronometer (CSV) and MyFitnessPal (the export ZIP) are recognised under "I don't know" and imported into Fitness (work in progress, switch it on first).
 
 Repeats (Todoist "every Monday", TickTick repeats) and planned durations become real repeats and effort estimates. Every move can be undone as a whole: in the summary after a move with several parts, or later under **Recent moves** on the same card; entries you changed since stay. Passwords are only imported in the vault, with your master password. The **Checklist** button keeps the list of what is still missing per origin. All of it is optional.
 

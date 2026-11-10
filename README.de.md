@@ -42,19 +42,21 @@ Nemo ist eine Sammlung kleiner Module für den Alltag. Was du brauchst, schaltes
 | Bereich | Modul | Was es tut | Status |
 |---|---|---|---|
 | **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
-|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | Vorschau |
+|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | optional |
 |  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
 |  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
 |  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
 |  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
+|  | Uhr | Orte eintragen und ihre Uhrzeit immer sehen | Vorschau |
 |  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
 |  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
 |  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | optional |
-| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | optional |
+|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
+| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
+|  | Fitness | Training und Essen grob festhalten | Vorschau |
 | **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
 |  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
 |  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
@@ -65,7 +67,10 @@ Nemo ist eine Sammlung kleiner Module für den Alltag. Was du brauchst, schaltes
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
-|  | Downloads | Lädt Dateien herunter | Vorschau, nur Windows-App |
+|  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
+|  | Fernbedienung | Steuere Medien und Lautstärke deines PCs vom Handy aus | Vorschau, nur Android-App |
+
+„Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.
 
 **Werkzeuge:** Rechner · Währung · Timer & Stoppuhr · QR-Code · Einheiten · Datumsrechner · Zeitzonen · Würfel & Zufall · Text-Werkzeug · Bilder verkleinern · PDF-Werkzeug · Bildschirmfoto (Vorschau) · Anonyme Persona · Entwickler · Textvergleich (Vorschau) · Regex-Tester (Vorschau). Öffnen mit Strg+. oder dem Knopf „Werkzeuge“; weitere schaltest du unter „Werkzeuge verwalten“ ein.
 
@@ -172,9 +177,9 @@ Genauer, inklusive Browser (PWA) und Umstieg von einer anderen App: [Installatio
 <details>
 <summary><strong>Installation: Windows, Android, PWA</strong></summary>
 
-**Windows:** eine portable Datei, keine Installation und keine Adminrechte. Voraussetzung ist Microsoft WebView2 (auf Windows 10/11 meist vorhanden). Beim ersten Start kann „Der PC wurde durch Windows geschützt“ (SmartScreen) erscheinen, weil die exe kein gekauftes Code-Signing-Zertifikat hat: „Weitere Informationen“ → „Trotzdem ausführen“. Der Update-Inhalt ist mit dem Schlüssel des Projekts signiert, die App prüft diese Signatur selbst. Daten liegen im Benutzerprofil unter `%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`; ein leerer Ordner `data` neben der exe macht sie portabel (USB-Stick). Updates: Einstellungen → Updates, zuerst mit automatischer Sicherungskopie.
+**Windows:** eine portable Datei, keine Installation und keine Adminrechte. Voraussetzung ist Microsoft WebView2 (auf Windows 10/11 meist vorhanden). Beim ersten Start kann „Der Computer wurde durch Windows geschützt“ (SmartScreen) erscheinen, weil die exe kein gekauftes Code-Signing-Zertifikat hat: „Weitere Informationen“ → „Trotzdem ausführen“. Der Update-Inhalt ist mit dem Schlüssel des Projekts signiert, die App prüft diese Signatur selbst. Daten liegen im Benutzerprofil unter `%LOCALAPPDATA%\io.github.sgnemo.taschenmesser`; ein leerer Ordner `data` neben der exe macht sie portabel (USB-Stick). Updates: Einstellungen → Updates, zuerst mit automatischer Sicherungskopie.
 
-**Android:** APK öffnen und „Aus dieser Quelle zulassen“ für den Browser oder Dateimanager erlauben. Spätere Updates: Einstellungen → Updates → „Jetzt aktualisieren“. Die App lädt das Update, prüft die Prüfsumme und übergibt an den Android-Installer, der nur APKs mit demselben Signaturschlüssel akzeptiert.
+**Android:** APK öffnen und „Von dieser Quelle zulassen“ für den Browser oder Dateimanager erlauben. Spätere Updates: Einstellungen → Updates → „Jetzt aktualisieren“. Die App lädt das Update, prüft die Prüfsumme und übergibt an den Android-Installer, der nur APKs mit demselben Signaturschlüssel akzeptiert.
 
 **PWA:** In Chrome oder Edge (Windows) oder Chrome (Android) „App installieren“ wählen (braucht HTTPS oder localhost). Auf dem iPhone lässt sich die PWA im Browser nutzen, ohne Push.
 

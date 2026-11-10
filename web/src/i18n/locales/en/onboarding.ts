@@ -163,6 +163,8 @@ export const onboarding: Strings['onboarding'] = {
     noAccounts: 'Add an account first.',
     bankFormat:
       'The file format wasn’t recognised. Expected is an OFX, QIF or CAMT file, or a CSV file with date and amount.',
+    bankBalanceHint:
+      "Balance not matching your bank afterwards? Enter it under Finance → Accounts as “Today's balance according to the bank”.",
     bankSkipped: (n: number) =>
       n === 1
         ? '1 line without a valid date or amount was skipped.'
@@ -256,6 +258,11 @@ export const onboarding: Strings['onboarding'] = {
     textHint: 'The pasted text becomes one note; a first heading becomes the title.',
     textLabel: 'Markdown text',
     placeholder: '# Weekly plan\n\n- Shopping #household\n- Call Mum',
+  },
+  fitness: {
+    file: 'CSV from a training or food app',
+    fileHint:
+      'Strong and Hevy (training) or Cronometer (food): export the CSV file there and choose it here. Sets of one exercise are combined into one exercise, Nemo spots duplicates. Nothing is uploaded.',
   },
   feeds: {
     file: 'OPML file (feeds and podcasts)',

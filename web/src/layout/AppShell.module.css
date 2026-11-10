@@ -87,8 +87,13 @@
     );
   }
   .shell[data-rail='true'] .sidebar {
-    padding: var(--space-3) var(--space-2);
+    /* The tiles fill the content box: 4rem rail - 0.5rem - 0.75rem (1 px of it is the border) = 2.75rem, starting at
+       0.5rem. At a 16 px root every edge is then a multiple of 4 px, so it is a whole device pixel at 100, 125 and 150 %. */
+    padding: var(--space-3) calc(var(--space-3) - 1px) var(--space-3) var(--space-2);
     align-items: stretch;
+    /* The rail's tooltips reach over the page and the top bar (layout/Sidebar.module.css); this is their effective
+       layer, page popovers and toasts stay above them. */
+    z-index: var(--z-nav);
   }
   .main {
     flex: 1;
@@ -110,6 +115,37 @@
 .syncBadge:hover {
   background: var(--surface-2);
 }
+.remoteChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: none;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.remoteChip:hover {
+  text-decoration: underline;
+}
+/* Narrow window: the icon alone (the label stays for assistive tech and as the tooltip). */
+.remoteChipText {
+  display: none;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 900px) {
+  .remoteChipText {
+    display: inline;
+  }
+}
 .syncError {
   color: var(--danger);
 }
@@ -120,5 +156,27 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/*
+ * Printing (Strg+P) shows only the page content: navigation, top bar, banners, the quick-add
+ * button and toasts would lie on top of the list. Everything in the shell except `main` is left out.
+ */
+@media print {
+  .shell > :not(.col),
+  .col > :not(.main) {
+    display: none !important;
+  }
+
+  .shell,
+  .col,
+  .main {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
   }
 }

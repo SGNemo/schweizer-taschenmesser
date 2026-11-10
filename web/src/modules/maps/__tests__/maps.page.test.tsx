@@ -174,7 +174,8 @@ describe('Karten & Orte page', () => {
   it('opens on the lists: nothing is requested, empty states offer the next step', async () => {
     open();
     expect(await screen.findByText('Noch keine Orte.')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Ort hinzufügen' })).toBeTruthy();
+    // The toolbar's primary and the empty state both offer the next step (round 6, U14).
+    expect(screen.getAllByRole('button', { name: 'Ort hinzufügen' }).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Routen' }));
     expect(await screen.findByText('Noch keine Routen.')).toBeTruthy();
     expect(requests).toEqual([]);
@@ -780,7 +781,7 @@ describe('places tab (plan group)', () => {
     expect(await screen.findByText('Keine passenden Orte.')).toBeTruthy();
   });
 
-  it('has a Navigieren button per place that opens the place in another map app, nothing else is requested', async () => {
+  it('has "Navigieren" in each place row menu that opens the place in another map app, nothing else is requested', async () => {
     await full('Büro', 'work');
     open();
     await screen.findByText('Büro');
@@ -790,7 +791,10 @@ describe('places tab (plan group)', () => {
       ...platform,
       app: { ...platform.app, openUrl: async (u: string) => void opened.push(u) },
     } as PlatformService);
-    fireEvent.click(screen.getByRole('button', { name: 'Zu Büro navigieren' }));
+    // Round 6, U14: no button per row any more; the row menu (or a swipe) navigates.
+    expect(screen.queryByRole('button', { name: 'Zu Büro navigieren' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Karten & Orte' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Navigieren' }));
     expect(opened).toHaveLength(1);
     expect(opened[0]).toContain('openstreetmap.org');
     expect(requests).toEqual([]);

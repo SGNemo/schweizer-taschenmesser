@@ -3,8 +3,11 @@ import { isDevBuild } from '@/core/update/buildInfo';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Badge, Button, Icon, Logo, Wordmark } from '@/ui';
+import { useClockOn } from '@/core/settings/clock';
 import { FocusIndicator } from './FocusIndicator';
+import { LogoClock } from './LogoClock';
 import { NotificationBell } from './NotificationBell';
+import { RemoteChip } from './RemoteChip';
 import { SyncBadge } from './SyncBadge';
 import { useTopbarCollapse } from './useTopbarCollapse';
 import styles from './TopBar.module.css';
@@ -15,9 +18,11 @@ export function TopBar() {
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
   const openTools = useUiStore((s) => s.openTools);
   const { collapsed, instant, focusProps } = useTopbarCollapse();
+  const clockOn = useClockOn();
   return (
     <header
       className={styles.topbar}
+      data-topbar
       data-collapsed={collapsed ? 'true' : undefined}
       data-instant={instant ? 'true' : undefined}
       {...focusProps}
@@ -27,9 +32,14 @@ export function TopBar() {
           <Wordmark height={32} title={t.appName} />
         </span>
         <span className={styles.mark}>
-          <Logo size={32} title={t.appName} />
+          <Logo tile title={t.appName} />
         </span>
       </Link>
+      {clockOn ? (
+        <span className={styles.phoneOnly}>
+          <LogoClock variant="bar" />
+        </span>
+      ) : null}
       <button type="button" className={styles.searchBtn} onClick={() => setPaletteOpen(true)}>
         <Icon name="search" size={18} />
         <span className={styles.searchLabel}>{t.actions.search}</span>
@@ -60,6 +70,7 @@ export function TopBar() {
         <Icon name="wrench" />
         <span className={styles.desktopOnly}>{t.nav.tools}</span>
       </button>
+      <RemoteChip />
       <NotificationBell />
       <SyncBadge />
     </header>

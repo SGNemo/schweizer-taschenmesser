@@ -5,7 +5,7 @@
  * "Neu anmelden" when the token is gone.
  */
 import { createContext } from '@/core/connectors/context';
-import { getConnector } from '@/core/connectors/registry';
+import { connectors, getConnector } from '@/core/connectors/registry';
 import { failureStatus } from '@/core/connectors/service';
 import { saveStatus } from '@/core/connectors/state';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
@@ -60,8 +60,33 @@ export const mailAttachment = (
 export const mailUnread = (ref: MailAccountRef): Promise<number> =>
   call(ref, (p, ctx) => p.unread(ctx));
 
-export function mailWebUrl(ref: MailAccountRef, threadId: string): string | undefined {
-  return getConnector(ref.connectorId)?.mailbox?.webUrl?.(threadId, ref.email);
+/**
+ * Address that opens the thread in the provider's web mail. `forStorage`: for anything saved into an
+ * entry (note, bookmark URL) – without the account's mail address (`?authuser=`), so no address lands
+ * in synced data, backups or the data API (U17); the browser then opens the signed-in account.
+ * „In Gmail öffnen“ keeps the account.
+ */
+export function mailWebUrl(
+  ref: MailAccountRef,
+  threadId: string,
+  opts: { forStorage?: boolean } = {},
+): string | undefined {
+  return getConnector(ref.connectorId)?.mailbox?.webUrl?.(
+    threadId,
+    opts.forStorage ? undefined : ref.email,
+  );
+}
+
+/**
+ * A thread's web address without any account (for a ToDo's mail link where the mail module is not
+ * there, e.g. on the phone): the first mail provider that can build one; never an address in it.
+ */
+export function mailThreadUrl(threadId: string): string | undefined {
+  for (const c of connectors) {
+    const url = c.mailbox?.webUrl?.(threadId);
+    if (url) return url;
+  }
+  return undefined;
 }
 
 /* ---------------------------------- write side (opt-in) ---------------------------------- */

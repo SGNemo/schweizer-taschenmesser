@@ -1,0 +1,13 @@
+/* Rows as one surface (Identity 4.0): a raised tone, no frame, no shadow; hairlines only between the rows. */
+.surface {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+.surface > * + * {
+  border-top: 1px solid var(--border);
+}

@@ -28,7 +28,7 @@ export const CATEGORY_LOOK: Readonly<Record<SettingsCategoryId, CategoryLook>> =
   sync: { hue: 'ocean', area: 'system' },
   ki: { hue: 'violet', area: 'system' },
   verbindungen: { hue: 'slate', area: 'system' },
-  schnellerfassung: { hue: 'lime', area: 'system' },
+  schnellerfassung: { hue: 'teal', area: 'system' },
   updates: { hue: 'fern', area: 'system' },
   entwickler: { hue: 'slate', area: 'system' },
   ueber: { hue: 'slate', area: 'system' },

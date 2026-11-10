@@ -11,8 +11,8 @@ import type {
 import { t } from '@/strings';
 import { formatDay } from '@/core/time/dates';
 import { listSubscriptionNames } from '@/modules/subscriptions/public';
-import { accountRepo, categoryRepo, transactionRepo } from './repo';
-import { suggestCategories } from './categoryHints';
+import { accountRepo, categoryRepo, ensureDefaults, transactionRepo } from './repo';
+import { keywordCategory, suggestCategories } from './categoryHints';
 import { MAPPING_EXTRA, readBank } from './bankRead';
 import { ColumnMapping } from './components/ColumnMapping';
 import { RuleSuggestions } from './components/RuleSuggestions';
@@ -91,9 +91,18 @@ async function parseBank(
     loadRules(),
     listSubscriptionNames(),
   ]);
+  // A first import into an account that starts at 0: today's balance will not match the bank yet.
+  const target = await accountRepo.get(accountId);
+  if (target?.openingBalanceMinor === 0 && !past.some((x) => x.accountId === accountId))
+    notes.push(s.bankBalanceHint);
+  // Then, for payees the app has never seen, a default category from well-known names.
   const hints = suggestCategories(
     past,
     rows.map((tx) => ({ payee: tx.payee, kind: kindOf(tx) })),
+  ).map(
+    (hint, i) =>
+      hint ??
+      keywordCategory({ payee: rows[i]!.payee, purpose: rows[i]!.purpose, kind: kindOf(rows[i]!) }),
   );
   const categoryName = (id: string | undefined) => categories.find((c) => c.id === id)?.name;
   const subscriptionName = (id: string | undefined) => subscriptions.find((x) => x.id === id)?.name;
@@ -254,6 +263,9 @@ const runtime: ImporterRuntime = {
   },
   async optionChoices(key) {
     if (key !== 'accountId') return [];
+    // Opened from the setup assistant before the finance page ever ran: create the defaults.
+    // (After the user deleted every account on purpose, the import still asks for one first.)
+    await ensureDefaults();
     const accounts = (await accountRepo.active().toArray()).sort((a, b) => a.order - b.order);
     return accounts.map((a) => ({ value: a.id, label: a.name }));
   },

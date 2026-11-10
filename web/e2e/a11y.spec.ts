@@ -29,9 +29,11 @@ const MODULES = [
   'maps',
   'habits',
   'timetrack',
+  'fitness',
   'planner',
   'weather',
   'music',
+  'clock',
 ];
 
 /** Enables every module (raw write into the module table, like the library would do). */
@@ -108,6 +110,10 @@ const PAGES = [
   ['todos', '/todos'],
   ['planner', '/planner'],
   ['habits', '/habits'],
+  ['clock', '/clock'],
+  ['fitness', '/fitness'],
+  ['fitness food', '/fitness?view=food'],
+  ['fitness week', '/fitness?view=week'],
   ['timetrack', '/timetrack'],
   ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],

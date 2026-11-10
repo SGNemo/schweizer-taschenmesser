@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useCenterStore } from '@/core/notifications/centerStore';
 import {
@@ -14,12 +14,13 @@ import { refreshOpen } from '@/core/notifications/useOpenReminders';
 import { snoozeOptions, type SnoozeOption } from '@/core/notifications/snooze';
 import type { DueNotification } from '@/core/modules/types';
 import { getPlatform } from '@/core/platform';
+import { isCredentialPath } from '@/core/text/credentialPath';
 import { now } from '@/core/time/now';
 import { relativeDayLabel } from '@/core/time/dates';
 import { pad2, toDateString } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, EmptyState, ItemList, ItemRow } from '@/ui';
+import { Button, Dialog, EmptyState, ItemList, ItemRow, NoReadAid } from '@/ui';
 import styles from './NotificationCenter.module.css';
 
 /** "Heute · 14:30" – the day word and the local time of a reminder. */
@@ -94,29 +95,34 @@ export function NotificationCenter() {
   const todayStart = new Date(now()).setHours(0, 0, 0, 0);
   const today = open.filter((n) => n.at >= todayStart);
   const earlier = open.filter((n) => n.at < todayStart);
-  const renderRow = (n: DueNotification) => (
-    <ItemRow
-      key={n.key}
-      title={n.title}
-      meta={whenLabel(n.at)}
-      onOpen={() => {
-        setChoosing(false);
-        setAsRandom(false);
-        setFocused(n);
-      }}
-      end={
-        <Button
-          size="sm"
-          aria-label={
-            n.taken ? t.reminder.center.takenAria(n.title) : t.reminder.center.doneAria(n.title)
-          }
-          onClick={() => void done(n)}
-        >
-          {n.taken ? t.reminder.taken : t.reminder.done}
-        </Button>
-      }
-    />
-  );
+  // A reminder of the vault names a document: the reading aid stays off, as on the vault page itself.
+  const plain = (n: DueNotification, node: ReactNode) =>
+    isCredentialPath(n.url) ? <NoReadAid key={n.key}>{node}</NoReadAid> : node;
+  const renderRow = (n: DueNotification) =>
+    plain(
+      n,
+      <ItemRow
+        key={n.key}
+        title={n.title}
+        meta={whenLabel(n.at)}
+        onOpen={() => {
+          setChoosing(false);
+          setAsRandom(false);
+          setFocused(n);
+        }}
+        end={
+          <Button
+            size="sm"
+            aria-label={
+              n.taken ? t.reminder.center.takenAria(n.title) : t.reminder.center.doneAria(n.title)
+            }
+            onClick={() => void done(n)}
+          >
+            {n.taken ? t.reminder.taken : t.reminder.done}
+          </Button>
+        }
+      />,
+    );
 
   return (
     <Dialog open={isOpen} onClose={close} title={t.reminder.center.title}>
@@ -135,8 +141,13 @@ export function NotificationCenter() {
       {focused ? (
         <section className={styles.card} aria-label={t.reminder.label} data-testid="center-card">
           <span className={styles.label}>{whenLabel(focused.at)}</span>
-          <span className={styles.title}>{focused.title}</span>
-          {focused.body ? <span className={styles.body}>{focused.body}</span> : null}
+          {plain(
+            focused,
+            <>
+              <span className={styles.title}>{focused.title}</span>
+              {focused.body ? <span className={styles.body}>{focused.body}</span> : null}
+            </>,
+          )}
           {choosing ? (
             <ul className={styles.options} aria-label={t.reminder.later}>
               {options.map((o) => (

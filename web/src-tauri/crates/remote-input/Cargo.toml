@@ -1,0 +1,28 @@
+[package]
+name = "taschenmesser-remote-input"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "What the remote control does on the PC: volume, media commands, lock, and the pointer (moves, two buttons, wheel). Typed commands in, a small state out; worker threads make the system calls. No sockets, no Tauri, no serde, no dependency on the LAN hub. Windows only; elsewhere it says unsupported."
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "remote_input"
+
+# No dependency at all outside Windows (tests/rules.rs pins the list).
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+  "Foundation",
+  "Media_Control",
+  "Win32_Foundation",
+  "Win32_Media_Audio",
+  "Win32_Media_Audio_Endpoints",
+  "Win32_System_Com",
+  "Win32_System_Com_StructuredStorage",
+  "Win32_System_Variant",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_Shutdown",
+  "Win32_UI_Input_KeyboardAndMouse",
+] }

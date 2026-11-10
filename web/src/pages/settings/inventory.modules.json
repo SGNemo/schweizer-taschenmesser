@@ -154,6 +154,16 @@
       }
     }
   },
+  "clock": {
+    "scope": "module.clock",
+    "fields": {
+      "showZone": {
+        "type": "boolean",
+        "label": "Zeitzone unter dem Ort zeigen",
+        "default": true
+      }
+    }
+  },
   "downloads": {
     "scope": "module.downloads",
     "fields": {
@@ -249,6 +259,26 @@
       }
     }
   },
+  "fitness": {
+    "scope": "module.fitness",
+    "fields": {
+      "nutrition": {
+        "type": "boolean",
+        "label": "Kalorien erfassen",
+        "default": true
+      },
+      "kcalGoal": {
+        "type": "number",
+        "label": "Tagesziel kcal",
+        "default": 0
+      },
+      "weekSessions": {
+        "type": "number",
+        "label": "Einheiten pro Woche",
+        "default": 0
+      }
+    }
+  },
   "habits": {
     "scope": "module.habits",
     "fields": {
@@ -300,6 +330,21 @@
       "confirmMoves": {
         "type": "boolean",
         "label": "Vor dem Archivieren und Beschriften fragen",
+        "default": true
+      },
+      "offerPersonal": {
+        "type": "boolean",
+        "label": "Filter „Persönlich“ anbieten",
+        "default": true
+      },
+      "offerPlanAll": {
+        "type": "boolean",
+        "label": "„Alle in den Plan…“ anbieten",
+        "default": true
+      },
+      "offerInvoices": {
+        "type": "boolean",
+        "label": "Rechnungen in der Liste erkennen",
         "default": true
       },
       "notify": {
@@ -515,6 +560,21 @@
       "allDayBlocks": {
         "type": "boolean",
         "label": "Ganztägige Termine blocken Zeit",
+        "default": false
+      }
+    }
+  },
+  "remote": {
+    "scope": "module.remote",
+    "fields": {
+      "haptics": {
+        "type": "boolean",
+        "label": "Kurzes Vibrieren bei jedem Tastendruck",
+        "default": true
+      },
+      "keepAwake": {
+        "type": "boolean",
+        "label": "Bildschirm anlassen",
         "default": false
       }
     }

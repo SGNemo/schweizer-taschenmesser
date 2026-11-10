@@ -17,6 +17,16 @@
   gap: var(--space-3);
   margin-left: auto;
 }
+/* The last two actions (primary + "⋯") wrap as one (U34). */
+.headerGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  /* A long primary label shrinks on a 320–360 px phone instead of widening the header. */
+  min-width: 0;
+  max-width: 100%;
+}
 .headerViews {
   /* Wraps under the title instead of being squeezed (a cut-off switch on a phone); the segment itself never scrolls. */
   flex: 1 1 14rem;
@@ -39,9 +49,11 @@
   align-self: flex-start;
   max-width: 100%;
   gap: var(--space-hair);
-  padding: 3px;
+  /* On the 4-px grid (U28). */
+  padding: var(--space-1);
   border-radius: var(--radius-xl);
-  background: var(--surface-2);
+  /* A recess with the chosen option raised out of it: tone steps, no shadow (Identity 4.0). */
+  background: var(--surface-sunken);
 }
 /* Phone: one row that scrolls sideways; the right edge fades out. */
 @media (max-width: 899px) {
@@ -64,19 +76,25 @@
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target (track 38 px for the mouse). */
+/* Touch devices get the full 44 px target (track 40 px for the mouse): the button looks 36 px and
+   its hit strip reaches over the 4 px track padding (C09; the padding alone took no taps). */
 @media (pointer: coarse) {
   .segment button {
-    min-height: calc(var(--touch) - 6px);
+    position: relative;
+    min-height: calc(var(--touch) - 2 * var(--space-1));
+  }
+  .segment button::after {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--space-1)) 0;
   }
 }
 .segment button:hover:not([aria-pressed='true']) {
   color: var(--text);
 }
 .segment button[aria-pressed='true'] {
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--accent);
-  box-shadow: var(--shadow-1);
 }
 .split {
   display: flex;
@@ -86,13 +104,15 @@
   flex: 1;
   min-width: 0;
 }
-.actions {
+/* FormActions: its own class names. A shared `.actions` with the row actions below (opacity 0 until the
+   row is hovered) made every form's save button invisible on devices with a mouse. */
+.formActions {
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
   flex-wrap: wrap;
 }
-.actionsEnd {
+.formActionsEnd {
   display: flex;
   gap: var(--space-2);
 }
@@ -123,16 +143,11 @@
 .item {
   min-width: 0;
 }
-/* List layout: one grouped surface, rows divided by hairlines. */
+/* List layout: the rows lie on a `ListSurface` (tone step, hairlines between the rows: ui/ListSurface). The
+   surface's padding is restated here because `.list` above resets it and the two stylesheets have no fixed order. */
 .rows {
   gap: 0;
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-}
-.rows > .item + .item {
-  border-top: 1px solid var(--border);
 }
 .rows > .item {
   border-radius: var(--radius-sm);
@@ -149,19 +164,20 @@
 .grid > .item {
   padding: var(--space-4);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--surface-raised);
 }
 .grid > .selected {
   background: var(--accent-soft);
 }
-/* Tiles of one band are equally tall; the row fills the tile and centres checkbox, text and actions. */
+/* Tiles of one band are equally tall; the row fills the tile. Checkbox, text and actions sit at the top, so the
+   titles of one band line up whatever the meta below them holds (U20, DESIGN-SPEC §4b "Kanten fluchten"). */
 .grid > .item {
   display: flex;
 }
 .grid .row {
   flex: 1;
   flex-wrap: nowrap;
+  align-items: flex-start;
 }
 .grid .main {
   min-width: 0;
@@ -224,13 +240,15 @@
   line-clamp: var(--clamp-lines);
   overflow: hidden;
   max-width: 100%;
+  /* Long compounds ("Haftpflichtversicherung") hyphenate at a syllable (the document's lang) instead of
+     breaking at any letter (U57); a word still too long for the row breaks as a last resort. */
   overflow-wrap: break-word;
+  hyphens: auto;
 }
-/* Full wrap: the text is the point of the row (shopping list); words without spaces break too. */
+/* Full wrap: the text is the point of the row (shopping list); long words hyphenate, never overflow (max-width above). */
 .titleFull {
   display: block;
   overflow: visible;
-  overflow-wrap: anywhere;
 }
 .grid .title {
   font-weight: var(--weight-semibold);
@@ -401,7 +419,7 @@ button.chip[aria-pressed='true'] {
 }
 .splitView {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(22rem, 30%, 30rem);
+  grid-template-columns: minmax(0, 1fr) var(--split-detail);
   gap: var(--space-5);
   align-items: stretch;
   flex: 1 0 auto;

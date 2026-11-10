@@ -14,6 +14,7 @@ import { DEFAULT_TYPES, useCaptureSettings } from '@/quickCapture/settings';
 import { now, today } from '@/core/time/now';
 import { parseCapture, PREFIXES, type CaptureType } from '@/quickCapture/parser';
 import { previewChips } from '@/quickCapture/ui/chips';
+import { useCaptureTypes } from '@/quickCapture/ui/useCaptureTypes';
 import { t } from '@/strings';
 import { tSettingsV31 } from '@/strings.settingsV31';
 import {
@@ -119,7 +120,8 @@ export function CaptureSample({ defaultType }: { defaultType?: CaptureType }) {
   const [text, setText] = useState('');
   const sentence = text.trim() || o.samplePlaceholder;
   // React Compiler memoizes this; the parser is pure and fast (one short sentence).
-  const result = parseCapture(sentence, { now: new Date(now()), defaultType });
+  const { fitness, place } = useCaptureTypes();
+  const result = parseCapture(sentence, { now: new Date(now()), defaultType, fitness, place });
   const chips = previewChips(result.fields, result.type, result.notes, today());
   const prefixes = SAMPLE_PREFIXES.map((p) => `${p} → ${t.quickCapture.target[PREFIXES[p]!]}`).join(
     ' · ',

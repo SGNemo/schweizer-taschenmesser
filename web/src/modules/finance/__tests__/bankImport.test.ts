@@ -267,3 +267,44 @@ describe('rules from suggestions', () => {
     expect(await loadRules()).toEqual([]);
   });
 });
+
+// B01 (round 5, person B): the bank import opened from the setup assistant before the finance page
+// was ever shown had no account to book on and ended in "Lege zuerst ein Konto an".
+describe('a bank import on an installation without an account', () => {
+  it('offers a ready account instead of a dead end', async () => {
+    await db.table('finance_account').clear();
+    // A fresh installation: the defaults were never created.
+    await db.table('_settings').delete('module.finance');
+    const runtime = (await manifest.contributions!.onboarding!.load!()).default;
+    const choices = await runtime.optionChoices!('accountId');
+    expect(choices).toHaveLength(1);
+    expect(choices[0]!.label).toBe('Girokonto');
+    const { rows } = await parse(file(fixture('sparkasse-camt.csv')), choices[0]!.value);
+    expect(rows.length).toBeGreaterThan(0);
+  });
+});
+
+describe('a first bank import', () => {
+  it('puts default categories on well-known payees so a grocery budget fills (B03)', async () => {
+    await categoryRepo.create({ name: 'Lebensmittel', kind: 'expense' }, { id: 'cat-food' });
+    const csv = [
+      'Buchungstag;Betrag;Beguenstigter/Zahlungspflichtiger;Verwendungszweck',
+      '02.10.26;-54,37;Rewe Markt;Einkauf',
+      '03.10.26;-1.234,56;Elektro Möller;Kühlschrank',
+    ].join('\n');
+    const { rows } = await parse(file(csv), account);
+    const byPayee = Object.fromEntries(rows.map((r) => [r.candidate.data.payee, r.candidate.data]));
+    expect(byPayee['Rewe Markt']!.categoryId).toBe('cat-food');
+    expect(byPayee['Elektro Möller']!.categoryId).toBeUndefined();
+  });
+});
+
+describe('the first import into an account that starts at 0', () => {
+  it('says where to enter the balance the bank shows (B06)', async () => {
+    const { result } = await parse(file(fixture('sparkasse-camt.csv')), account);
+    expect(result.notes.some((n) => n.includes('Kontostand heute laut Bank'))).toBe(true);
+    await importAll(file(fixture('sparkasse-camt.csv')), account);
+    const again = await parse(file(fixture('ing.csv')), account);
+    expect(again.result.notes.some((n) => n.includes('Kontostand heute laut Bank'))).toBe(false);
+  });
+});

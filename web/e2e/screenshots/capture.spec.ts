@@ -4,9 +4,9 @@ import { bootDev, SEED_TODAY, seedApp } from '../seed/helpers';
 
 /**
  * Layout screenshots with the shared, seeded test data of the Dev-Preview build (src/core/seed). Not part of CI (see playwright.screens.config.ts).
- * Output directory: SCREENS_DIR (default test-results/screens/current).
+ * Output directory: SCREENS_DIR (default .screens/current).
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/current';
+const OUT = process.env.SCREENS_DIR ?? '.screens/current';
 const VIEWPORTS = [
   { name: '1280x720', width: 1280, height: 720 },
   { name: '1920x1080', width: 1920, height: 1080 },

@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Android only: the Wi-Fi state and events of the lan-watch plugin (its hub search is Rust-only). The lan_client commands are granted in default.json (one path per device, phone and second PC); nothing runs in the background. Remote control, phone side (remote_client_*): granted here only, never to the desktop app.",
+  "webviews": ["main"],
+  "platforms": ["android", "iOS"],
+  "permissions": [
+    "lan-watch:default",
+    "allow-remote-client-open",
+    "allow-remote-client-send",
+    "allow-remote-client-close"
+  ]
+}

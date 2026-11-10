@@ -3,7 +3,7 @@ import type { Strings } from '@/strings';
 export const quickCapture: Strings['quickCapture'] = {
   title: 'Quick capture',
   inputLabel: 'What would you like to note down?',
-  placeholder: 'e.g. “morgen 15 Uhr Zahnarzt” (German for now)',
+  placeholder: 'e.g. “Tanken 62,40, morgen 9 Uhr Kunde anrufen” (German for now)',
   save: 'Save',
   book: 'Record',
   type: {
@@ -19,6 +19,9 @@ export const quickCapture: Strings['quickCapture'] = {
     birthday: 'Birthday',
     note: 'Note',
     plan: 'Plan',
+    meal: 'Meal',
+    workout: 'Workout',
+    place: 'Place',
   },
   target: {
     todo: 'To-dos',
@@ -32,6 +35,9 @@ export const quickCapture: Strings['quickCapture'] = {
     birthday: 'People',
     note: 'Notes',
     plan: 'Planner',
+    meal: 'Fitness',
+    workout: 'Fitness',
+    place: 'Clock',
   },
   chip: {
     to: (name: string) => `To: ${name}`,
@@ -77,6 +83,9 @@ export const quickCapture: Strings['quickCapture'] = {
   undo: 'Undo',
   undone: 'Undone.',
   empty: 'Please enter something.',
+  alertsOff: (saved: string) => `${saved}. So the reminder can ring: Settings → Notifications.`,
+  alertsBlocked: (saved: string) =>
+    `${saved}. So the reminder can ring: allow notifications in the phone or browser settings.`,
   errors: {
     moduleOff: (name: string) => `The “${name}” module is turned off.`,
     invalid: 'The entry is incomplete. Check title, date and amount.',
@@ -84,6 +93,8 @@ export const quickCapture: Strings['quickCapture'] = {
       `Amount in ${code}: please record it in the full form in Finances, where the account fits.`,
     failed: 'Saving failed.',
   },
+  dunningNote: (day: string, amount: string, due?: string) =>
+    `Reminder dated ${day}: ${amount}${due ? ` by ${due}` : ''}`,
   todoTimeNote: (time: string) => `Time: ${time}`,
   noTargets: 'No target module is turned on.',
   multi: {
@@ -95,8 +106,19 @@ export const quickCapture: Strings['quickCapture'] = {
     inbox: 'Inbox',
     financeDraft: 'Booking (draft)',
     saveAll: (n: number) => `Save all (${n})`,
-    saved: (n: number) => `${n} things saved`,
+    saved: (n: number) => `${n} things saved. Sorting comes later.`,
     change: 'Change',
+    view: 'View',
+    bookExpense: 'Book as expense',
+    bookIncome: 'Book as income',
+    bookLine: (action: string, line: string) => `${action}: ${line}`,
+    calmHint: 'One line = one entry. Sorting comes later.',
+    dunningMatch: (payee: string, due: string) =>
+      `Reminder for invoice ${payee}, due ${due} · note it`,
+    dunningCheck: (payee: string) => `Check reminder ${payee}`,
+    dunningChoose: (payee: string) =>
+      `It is not clear which invoice for ${payee} is meant. Please choose a target.`,
+    dunningWill: (payee: string, due: string) => `Will be noted on invoice ${payee}, due ${due}.`,
   },
   trayToday: {
     heading: 'Today',
@@ -155,5 +177,6 @@ export const quickCapture: Strings['quickCapture'] = {
     suggestion: 'Suggestion',
     saveAs: 'Save as',
     or: 'or open in module',
+    asNote: 'Text as note',
   },
 };

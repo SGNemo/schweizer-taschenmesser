@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { useRemoteHost } from '@/core/remote/host';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearErrorLog,
@@ -150,6 +151,9 @@ const CANARIES = {
   spotifyPlaylist: 'GeheimePlaylist4711xyz',
   // Songs hidden in the player (device-local view setting): ids only, and never in a report.
   spotifyHiddenTrack: 'GeheimerHiddenSong8842',
+  // Remote control (transient state of the PC): the name of a paired or controlling device.
+  remoteDevice: 'Geheimes-Fernsteuer-Handy',
+  remoteDeviceId: 'f00dfeedf00dfeedf00dfeedf00dfeedf00dfeedf00dfeedf00dfeedf00dfeed',
 };
 
 describe('diagnostics export', () => {
@@ -198,6 +202,25 @@ describe('diagnostics export', () => {
       ),
     );
     logLine('warn', 'sync', `retry ${CANARIES.server} ${CANARIES.email} ${CANARIES.ip}`);
+    // Remote control: who is paired, who controls and what they may do stays on the PC.
+    useRemoteHost.setState({
+      off: false,
+      status: {
+        supported: true,
+        enabled: true,
+        controller: { id: CANARIES.remoteDeviceId, name: CANARIES.remoteDevice, level: 'media' },
+        devices: [
+          {
+            id: CANARIES.remoteDeviceId,
+            name: CANARIES.remoteDevice,
+            lastSeen: 1,
+            level: 'full',
+            paused: false,
+            unlock: false,
+          },
+        ],
+      },
+    });
     // The connection log (hosts the person talks to) is never part of the diagnostics.
     recordNet({ host: CANARIES.server, reason: 'sync', out: 10, status: 200 });
     const text = renderDiagnostics(await buildDiagnostics());

@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
+import { onDesktop } from './guards';
 import { bootDev, SEED_TODAY, test } from './helpers';
 
 /**
@@ -27,6 +28,8 @@ const MODULE_IDS = readdirSync(join(HERE, '../../src/modules'))
   .filter(
     (id) => id !== 'example' && existsSync(join(HERE, '../../src/modules', id, 'manifest.ts')),
   )
+  // A phone-only module has no page in the faked desktop app (see `onDesktop`).
+  .filter(onDesktop)
   .sort();
 const PAGES = [
   '/',
@@ -148,6 +151,8 @@ function report(page: Page): Promise<Report> {
             // Visually hidden text (sr-only: 1 px, clipped) is for screen readers, not cut off.
             if (e.clientWidth <= 1 || e.clientHeight <= 1) return false;
             const cs = getComputedStyle(e);
+            // Text that is deliberately not shown (visibility: hidden, e.g. a month-cell label that does not fit, S03) is not cut off.
+            if (cs.visibility === 'hidden') return false;
             if (cs.clip !== 'auto' || cs.clipPath !== 'none') return false;
             if (cs.overflowX !== 'hidden' && cs.overflowX !== 'clip') return false;
             if (cs.textOverflow === 'ellipsis' || cs.webkitLineClamp !== 'none') return false;

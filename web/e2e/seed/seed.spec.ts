@@ -55,8 +55,16 @@ test.describe('Dev-Preview test data', () => {
     await expect(page.locator('main h1')).toBeVisible();
     for (const id of ['todos:next', 'todos:open', 'finance:balance', 'invoices:due'])
       await expect(page.getByTestId(`widget-${id}`)).toBeVisible();
-    // No widget falls back to its empty state.
-    await expect(page.locator('[data-testid^="widget-"] [class*="emptyTitle"]')).toHaveCount(0);
+    // The widgets load after the page. Until then none of them shows an empty state, so a check at this moment
+    // sees "no empty widget" whatever the data is: wait until no widget shows its skeleton any more.
+    const widgets = page.locator('[data-testid^="widget-"]');
+    await expect(widgets.locator('[class*="skeleton"]')).toHaveCount(0);
+    // No widget falls back to its empty state, except the two modules without test data (`seed.none:
+    // 'live-data'`): the weather needs a place, music an account.
+    const empty = await widgets
+      .filter({ has: page.locator('[class*="emptyTitle"]') })
+      .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')).sort());
+    expect(empty).toEqual(['widget-music:player', 'widget-weather:today']);
 
     for (const id of MODULES) {
       await page.goto(`/${id}`);
@@ -91,9 +99,16 @@ test.describe('Dev-Preview test data', () => {
     expect(outbox).toBe(0);
   });
 
-  test('first start of an empty dev app fills it and shows the banner', async ({ page }) => {
+  test('first start of an empty dev app asks first; "Mit Testdaten ansehen" fills it and shows the banner', async ({
+    page,
+  }) => {
     await bootDev(page, { autofill: true });
     await page.goto('/');
+    // A10 (round 5): nothing is filled by itself; the welcome card offers both ways.
+    const welcome = page.getByTestId('setup-welcome');
+    await expect(welcome.getByRole('button', { name: 'Einrichtung starten' })).toBeVisible();
+    await expect(page.getByTestId('seed-banner')).toHaveCount(0);
+    await welcome.getByRole('button', { name: 'Mit Testdaten ansehen' }).click();
     await expect(page.getByTestId('seed-banner')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId('seed-banner')).toContainText('Testdaten geladen');
     await page.getByRole('button', { name: 'Verstanden' }).click();

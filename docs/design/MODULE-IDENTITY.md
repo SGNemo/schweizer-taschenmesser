@@ -28,7 +28,7 @@ Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) 
 
 ## Head variants (manifest `identity.head`)
 
-Nine silhouettes, two heights from tokens (`--head-h-tall` 12.5 rem / phone 8.5 rem; `--head-h-compact` 6 / 5 rem – the class is the token, content in `extra` does not change it). The head carries the area's pattern at 6 % and a tint of the hue (40 → 12 %). **Text on the band is `--text` or `--text-on-tint`, nothing quieter** (`tokens.test.ts` scans the head-zone files).
+Nine silhouettes, two heights from tokens (`--head-h-tall` 12.5 rem / phone 8.5 rem; `--head-h-compact` 6 / 5 rem – the class is the token, content in `extra` does not change it). The head carries the area's pattern at 6 % (dark theme 3 %, UI audit 2026-11 AE2) and a tint of the hue (40 → 12 %). **Text on the band is `--text` or `--text-on-tint`, nothing quieter** (`tokens.test.ts` scans the head-zone files).
 
 | Variant | Height | Slot | Content | Modules |
 | --- | --- | --- | --- | --- |
@@ -68,7 +68,7 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 - `--text-on-tint`: the one quiet ink on a tinted head or widget zone (light `--text` 84 % over the surface, dark 94 %; ≥ 4.5:1 on the 40 % tint of every hue). `--text-muted`/`--text-3` never on the band.
 - `--font-serif`, `--weight-light`: the type accents; no bare `font-weight` number or font stack outside `tokens.css` (`tokens.test.ts` ratchet, module files listed until their package cleans them).
 - `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-m`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
-- `--widget-tint` 14 %, `--pattern-head` 0.06, `--pattern-widget` 0.04, `--group-tint` 6 % (neutral on `--text-3` in sidebar and library).
+- `--widget-tint` 14 %, `--pattern-head` 0.06 (dark 0.03), `--pattern-widget` 0.04 (dark 0.02; light lines on a dark tint stand out more, AE2), `--group-tint` 6 % (neutral on `--text-3` in sidebar and library).
 - **"Ruhig" and "Modulfarben: Aus"** flatten the hues to grey, lower the tints and set `--area-pattern: none` (not painted). Shape and signature stay.
 
 ## Widgets
@@ -108,6 +108,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | Zeiterfassung `timetrack` | plan | teal | ocean | zeit | kennzahl | `stopwatch` (round dial, C25/G12: not the calendar's hour strip) |
 | Wetter `weather` | plan | cobalt | sky | himmel | himmel | `sky` |
 | Karten & Orte `maps` | plan | ocean | sky | regal | kacheln | `pin` |
+| Uhr `clock` | plan | lime | fern | fokus | kacheln | `dial` (order 47 after Wetter; lime shares neither head nor widget with Budgets) |
 | Personen `people` | plan | orchid | violet | fokus | faellig | `avatarRing` |
 | Finanzen `finance` | money | teal | ocean | kennzahl | kennzahl | `bankCard` |
 | Rechnungen `invoices` | money | ocean | sky | fokus | faellig | `bill` |

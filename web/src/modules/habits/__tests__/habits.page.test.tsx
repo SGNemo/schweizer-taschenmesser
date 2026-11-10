@@ -43,6 +43,36 @@ describe('Habits page', () => {
     expect(await screen.findByText('Noch keine Gewohnheiten.')).toBeVisible();
   });
 
+  it('puts the one filled step into the empty state; the head button steps back (U26)', async () => {
+    draw();
+    const empty = await screen.findByTestId('habits-empty');
+    const first = within(empty).getByRole('button', { name: 'Erste Gewohnheit' });
+    expect(first.className).toMatch(/primary/);
+    expect(screen.getByRole('button', { name: 'Gewohnheit hinzufügen' }).className).not.toMatch(
+      /primary/,
+    );
+    await userEvent.click(first);
+    expect(await screen.findByRole('dialog')).toBeVisible();
+  });
+
+  it('keeps one filled button: the head; the card actions are secondary (U09)', async () => {
+    await water();
+    await goalRepo.create({
+      name: 'Lesen',
+      kind: 'yesno',
+      target: 1,
+      period: 'day',
+      weeklyTimes: 3,
+      order: 1,
+    });
+    draw();
+    await waitFor(() => expect(screen.getAllByTestId('habit-card')).toHaveLength(2));
+    const primaries = screen
+      .getAllByRole('button')
+      .filter((b) => /(^|\s)\S*primary\S*/.test(b.className));
+    expect(primaries.map((b) => b.textContent)).toEqual(['Gewohnheit hinzufügen']);
+  });
+
   it('a tap on +1 counts one glass; the menu takes it back and sets a rest day', async () => {
     const g = await water();
     draw();
@@ -72,7 +102,7 @@ describe('Habits page', () => {
     draw();
     await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Erledigt' }));
     await waitFor(async () => expect((await entryRepo.get(entryId(g.id, DAY)))?.count).toBe(1));
-    await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Erledigt' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Dehnen: Zurücknehmen' }));
     await waitFor(async () => expect((await entryRepo.get(entryId(g.id, DAY)))?.count).toBe(0));
   });
 

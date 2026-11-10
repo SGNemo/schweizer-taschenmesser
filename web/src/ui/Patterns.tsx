@@ -1,10 +1,11 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import { useEffect, useState, type ReactNode } from 'react';
+import { Children, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { useHeroControls, useHeroTargets } from '@/core/shell/heroContext';
 import { Checkbox } from './Fields';
+import { ListSurface } from './ListSurface';
 import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
 import { useSwipeRow } from './useSwipeRow';
@@ -12,7 +13,7 @@ import { useMediaQuery } from './useMediaQuery';
 import { usePageWidthAtLeast } from './pageWidth';
 import styles from './Patterns.module.css';
 
-/** `views` = the segmented switch between the sub-views of the page (replaces a second row of tabs). */
+/** `views` = the switch between the sub-views of the page: `Tabs` (Identity 4.0). `Segmented` is for filters only. */
 /**
  * The page title (h1). Inside a module page it renders into the module head (`layout/ModuleShell` hero), anywhere else
  * where it is called. Pages that lay out their own header use this instead of a bare `<h1>`.
@@ -36,6 +37,22 @@ export function PageTitle({ title, spacer = false }: { title: string; spacer?: b
   );
 }
 
+/**
+ * The header actions with their last two kept as one group (U34): the primary action and the "⋯" menu after it wrap
+ * together on a phone, so the menu never stands alone in a row of its own. Callers pass the primary action and the
+ * "⋯" menu as the last two direct children. The tree is the same for any number of children, so the primary
+ * button never remounts when the menu appears or goes (focus returns to it after a dialog).
+ */
+function headerActions(children: ReactNode): ReactNode {
+  const items = Children.toArray(children);
+  return (
+    <>
+      {items.slice(0, -2)}
+      <span className={styles.headerGroup}>{items.slice(-2)}</span>
+    </>
+  );
+}
+
 export function PageHeader({
   title,
   views,
@@ -53,7 +70,7 @@ export function PageHeader({
         {views || children ? (
           <div className={styles.header} data-in-head="true">
             {views ? <div className={styles.headerViews}>{views}</div> : null}
-            {children ? <div className={styles.headerEnd}>{children}</div> : null}
+            {children ? <div className={styles.headerEnd}>{headerActions(children)}</div> : null}
           </div>
         ) : null}
       </>
@@ -63,7 +80,7 @@ export function PageHeader({
     <div className={styles.header}>
       <PageTitle title={title} />
       {views ? <div className={styles.headerViews}>{views}</div> : null}
-      {children}
+      {children ? headerActions(children) : null}
     </div>
   );
 }
@@ -72,6 +89,7 @@ export function Toolbar({ children }: { children: ReactNode }) {
   return <div className={styles.toolbar}>{children}</div>;
 }
 
+/** A filter inside a view (period, status, sort). The views of a page are `Tabs`, never a `Segmented` (Identity 4.0). */
 export function Segmented<T extends string>({
   label,
   value,
@@ -140,16 +158,16 @@ export function Form({
 /** Footer of an editor form: `start` (e.g. delete) on the left, `children` (cancel/save) on the right. */
 export function FormActions({ start, children }: { start?: ReactNode; children: ReactNode }) {
   return (
-    <div className={styles.actions}>
+    <div className={styles.formActions}>
       {start ?? <span />}
-      <span className={styles.actionsEnd}>{children}</span>
+      <span className={styles.formActionsEnd}>{children}</span>
     </div>
   );
 }
 
 /**
- * The one list pattern. `layout="list"` (default) groups flat rows under hairlines in one surface;
- * `layout="grid"` turns the same rows into card tiles once the page is wide enough (Links, tools).
+ * The one list pattern. `layout="list"` (default) lays flat rows on one `ListSurface` (a raised tone, hairlines
+ * between the rows); `layout="grid"` turns the same rows into tiles once the page is wide enough (Links, tools).
  */
 export function ItemList({
   children,
@@ -160,15 +178,16 @@ export function ItemList({
   label?: string;
   layout?: 'list' | 'grid';
 }) {
+  if (layout === 'grid')
+    return (
+      <ul className={`${styles.list} ${styles.grid}`} aria-label={label}>
+        {children}
+      </ul>
+    );
   return (
-    <ul
-      className={
-        layout === 'grid' ? `${styles.list} ${styles.grid}` : `${styles.list} ${styles.rows}`
-      }
-      aria-label={label}
-    >
+    <ListSurface className={`${styles.list} ${styles.rows}`} label={label}>
       {children}
-    </ul>
+    </ListSurface>
   );
 }
 
@@ -204,6 +223,7 @@ export function ItemRow({
   onSwipeLeft,
   swipeLeftLabel,
   className,
+  signatureBlock,
   children,
 }: {
   title: ReactNode;
@@ -234,6 +254,11 @@ export function ItemRow({
   onSwipeLeft?: () => void;
   swipeLeftLabel?: string;
   className?: string;
+  /**
+   * Marks the row as one of the framed signature blocks (`data-signature-block`). Every value is listed in
+   * `web/scripts/baselines/signature-blocks.json`; the stimulus budget counts them per page (docs/howto/ci.md).
+   */
+  signatureBlock?: string;
   children?: ReactNode;
 }) {
   const body = (
@@ -268,6 +293,7 @@ export function ItemRow({
           : undefined
       }
       data-tone={tone}
+      data-signature-block={signatureBlock}
       className={[
         styles.item,
         swipe.enabled ? styles.swipeable : '',

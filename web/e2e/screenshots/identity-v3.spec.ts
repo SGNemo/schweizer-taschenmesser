@@ -11,10 +11,10 @@ import { mockWeather, pickWeatherPlace } from '../weather-mock';
  * overflow of the document, the main region and the elements that stick out. Not part of CI.
  *
  * Usage (in web/, both preview servers running or started by the config):
- *   SCREENS_DIR=test-results/screens/v3 npx playwright test -c playwright.screens.config.ts identity-v3 --project=seeded
+ *   SCREENS_DIR=.screens/v3 npx playwright test -c playwright.screens.config.ts identity-v3 --project=seeded
  * Filters: SCREENS_VIEWPORTS=1920x1080,412x915 SCREENS_SCHEMES=light SCREENS_READ_MODES=off SCREENS_PAGES=calendar
  */
-const OUT = process.env.SCREENS_DIR ?? 'test-results/screens/identity-v3';
+const OUT = process.env.SCREENS_DIR ?? '.screens/identity-v3';
 const VIEWPORTS = [
   { name: '1280x720', width: 1280, height: 720 },
   // 1920 × 1080 at the 125 % scaling of Windows laptops.

@@ -19,7 +19,7 @@ import {
   markStepSkipped,
   newSteps,
   pauseSetup,
-  resumeStep,
+  resumeTarget,
   stepProgress,
 } from '@/core/setup/state';
 import type { SetupCtx, SetupStepDef, SetupStepProps } from '@/core/setup/types';
@@ -28,12 +28,76 @@ import { tSettingsV31 } from '@/strings.settingsV31';
 import { Badge, Button, Dialog, EmptyState, HeadEyebrow, HeadSurface, ReadableText } from '@/ui';
 import { Ring } from '@/ui/identity';
 import { PageContainer, PageFallback } from '../PageContainer';
+import { StepPrimaryContext } from './stepPrimary';
 import styles from './SetupWizard.module.css';
 
 type View = 'start' | 'step' | 'summary' | 'confirm' | 'quick';
 
-/** The three first-run questions, in order; a step the app does not offer right now is left out. */
-const QUICK_IDS = ['core.basics', 'core.profiles', 'core.ai'] as const;
+/** The four first-run questions, in order; a step the app does not offer right now is left out. */
+const QUICK_IDS = ['core.basics', 'core.profiles', 'core.focus', 'core.ai'] as const;
+
+/** The short question title of a first-run step, else its normal title. */
+function quickTitle(step: SetupStepDef): string {
+  const q = t.setup.quick[step.id.replace('core.', '') as keyof typeof t.setup.quick];
+  return q ? q.title : step.title;
+}
+
+/**
+ * The whole way at a glance (A02, round 5): every question or step with its state, the current one
+ * marked, and in the questions also what comes afterwards – so "Frage 3 von 4" and the checklist's
+ * "x von y" never contradict each other.
+ */
+function StepOverview({
+  items,
+  current,
+  after,
+  open,
+  onToggle,
+  progressOf,
+}: {
+  items: readonly SetupStepDef[];
+  current: string;
+  after: readonly SetupStepDef[];
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  progressOf: (s: SetupStepDef) => 'done' | 'skipped' | 'open';
+}) {
+  const quick = after.length > 0;
+  const label = (s: SetupStepDef) => {
+    if (s.id === current) return t.setup.overviewNow;
+    const p = progressOf(s);
+    return p === 'done'
+      ? t.setup.statusDone
+      : p === 'skipped'
+        ? t.setup.statusSkipped
+        : t.setup.statusOpen;
+  };
+  return (
+    <details
+      className={styles.overview}
+      open={open}
+      // The browser also fires "toggle" for the initial open state: only a real change is a choice.
+      onToggle={(e) => {
+        const now = (e.currentTarget as HTMLDetailsElement).open;
+        if (now !== open) onToggle(now);
+      }}
+      data-testid="setup-overview"
+    >
+      <summary>
+        {quick ? t.setup.overviewQuestions(items.length) : t.setup.overviewSteps(items.length)}
+      </summary>
+      <ol className={styles.overviewList}>
+        {items.map((s) => (
+          <li key={s.id} aria-current={s.id === current ? 'step' : undefined}>
+            {quick ? quickTitle(s) : s.title}{' '}
+            <span className={styles.overviewState}>· {label(s)}</span>
+          </li>
+        ))}
+      </ol>
+      {quick ? <p className={styles.hint}>{t.setup.overviewAfter}</p> : null}
+    </details>
+  );
+}
 
 const lazyCache = new WeakMap<object, ComponentType<SetupStepProps>>();
 function stepComponent(step: SetupStepDef): ComponentType<SetupStepProps> {
@@ -116,7 +180,10 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   const [error, setError] = useState(false);
   const [canContinue, setCanContinue] = useState(true);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  // The step shows its own primary (U59): "Weiter" is secondary meanwhile.
+  const [stepPrimary, setStepPrimary] = useState(false);
   const [quickIndex, setQuickIndex] = useState(0);
+  const [overviewOpen, setOverviewOpen] = useState<boolean | null>(null);
   const commit = useRef<(() => Promise<void | 'skipped'>) | null>(null);
   const cancelled = useRef(false);
 
@@ -139,8 +206,10 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   // Where to begin: the checklist target, else the resume offer when there is progress.
   const target = list && stepId ? list.findIndex((s) => s.id === stepId) : -1;
-  const hasProgress = !!state && state.doneSteps.length + state.skippedSteps.length > 0;
-  // A really empty installation gets the three questions; everyone else (or a checklist link) the full list.
+  // A pause on the very first question (nothing answered yet) counts as progress too (council F2).
+  const hasProgress =
+    !!state && (state.doneSteps.length + state.skippedSteps.length > 0 || !!state.pausedAt);
+  // A really empty installation gets the four questions; everyone else (or a checklist link) the full list.
   const quickSteps = (list ?? []).filter((s) => (QUICK_IDS as readonly string[]).includes(s.id));
   const firstRun =
     quickSteps.length > 0 &&
@@ -154,7 +223,8 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   const total = list?.length ?? 0;
   const counted = countedSteps(list ?? []);
-  const step = view === 'quick' ? quickSteps[quickIndex] : list?.[index];
+  const inQuestions = view === 'quick' || (view === 'confirm' && before === 'quick');
+  const step = inQuestions ? quickSteps[quickIndex] : list?.[index];
   const numberOf = (s: SetupStepDef) => counted.findIndex((c) => c.id === s.id) + 1;
 
   const requestClose = useCallback(() => {
@@ -230,7 +300,10 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
 
   async function leave(kind: 'later' | 'end') {
     cancelled.current = true;
-    if (kind === 'later') await pauseSetup();
+    // The step on screen (also behind the "Unterbrechen?" question) is where "Fortsetzen" opens.
+    const onScreen = view === 'step' || view === 'quick' || view === 'confirm' ? step : undefined;
+    if (kind === 'later')
+      await pauseSetup(undefined, onScreen ? { step: onScreen.id, quick: inQuestions } : undefined);
     else await dismissSetup();
     onClose();
   }
@@ -264,7 +337,9 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   } else if (total === 0) {
     body = <p className={styles.desc}>{t.setup.noSteps}</p>;
   } else if (view === 'start') {
-    const next = resumeStep(list, state);
+    const target = resumeTarget(list, state);
+    const next = target?.step;
+    const quickAt = target?.quick ? quickSteps.findIndex((q) => q.id === next?.id) : -1;
     const fresh = newSteps(list, state);
     body = (
       <div className={styles.body}>
@@ -278,9 +353,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             <Button
               variant="primary"
               data-autofocus
-              onClick={() => go(list.findIndex((s) => s.id === next.id))}
+              onClick={() => {
+                if (quickAt >= 0) {
+                  setQuickIndex(quickAt);
+                  setView('quick');
+                } else go(list.findIndex((s) => s.id === next.id));
+              }}
             >
-              {t.setup.resumeAt(next.title)}
+              {t.setup.resumeAt(quickAt >= 0 ? quickTitle(next) : next.title)}
             </Button>
           ) : (
             <Button variant="primary" data-autofocus onClick={() => setView('summary')}>
@@ -370,21 +450,31 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
             label={isQuick ? t.setup.questionOf(position, of) : t.setup.stepOf(position, of)}
           />
         ) : null}
+        <StepOverview
+          items={isQuick ? quickSteps : counted}
+          current={step.id}
+          after={isQuick ? counted.filter((c) => !quickSteps.some((q) => q.id === c.id)) : []}
+          open={overviewOpen ?? (isQuick && position === 1)}
+          onToggle={setOverviewOpen}
+          progressOf={(s) => stepProgress(state, s.id, auto.has(s.id))}
+        />
         <h3 className={styles.stepTitle}>{isQuick && quickText ? quickText.title : step.title}</h3>
         <p className={styles.desc}>
           <ReadableText text={isQuick && quickText ? quickText.description : step.description} />
         </p>
         <Suspense fallback={<PageFallback />}>
-          <StepView
-            step={step}
-            ctx={ctx}
-            mode={isQuick ? 'quick' : 'full'}
-            registerCommit={(fn) => {
-              commit.current = fn;
-            }}
-            setCanContinue={setCanContinue}
-            setBlockedReason={setBlockedReason}
-          />
+          <StepPrimaryContext.Provider value={setStepPrimary}>
+            <StepView
+              step={step}
+              ctx={ctx}
+              mode={isQuick ? 'quick' : 'full'}
+              registerCommit={(fn) => {
+                commit.current = fn;
+              }}
+              setCanContinue={setCanContinue}
+              setBlockedReason={setBlockedReason}
+            />
+          </StepPrimaryContext.Provider>
         </Suspense>
         {error ? (
           <p role="alert" className={styles.error}>
@@ -422,8 +512,13 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
               {t.setup.skip}
             </Button>
           )}
-          <Button variant="primary" onClick={() => void onNext()} disabled={busy || !canContinue}>
-            {last ? t.setup.finish : t.setup.next}
+          <Button
+            variant={stepPrimary ? 'secondary' : 'primary'}
+            onClick={() => void onNext()}
+            disabled={busy || !canContinue}
+            data-testid="setup-next"
+          >
+            {last ? (isQuick ? t.setup.finishQuestions : t.setup.finish) : t.setup.next}
           </Button>
         </span>
       </>
@@ -431,15 +526,14 @@ export function SetupWizard({ onClose, stepId, steps = allSetupSteps }: Props) {
   }
 
   return (
-    <Dialog
-      open
-      onClose={requestClose}
-      title={t.setup.dialogTitle}
-      variant="full"
-      footer={footer}
-      backHandled
-    >
+    <Dialog open onClose={requestClose} title={t.setup.dialogTitle} variant="full" backHandled>
       <PageContainer variant="narrow">{body}</PageContainer>
+      {/* U06: the way on stays on screen – a bar at the bottom edge the step scrolls under, on every screen size. */}
+      {footer ? (
+        <div className={styles.footer} data-testid="setup-footer">
+          {footer}
+        </div>
+      ) : null}
     </Dialog>
   );
 }

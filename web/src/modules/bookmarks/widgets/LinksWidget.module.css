@@ -1,3 +1,8 @@
+/* Link names often differ only at the end ("… der Region (2)"): give the tile labels a third line. */
+.tiles {
+  display: contents;
+  --clamp-lines: 3;
+}
 /* The context line under the tiles (every widget says what its content means). */
 .context {
   margin: var(--space-2) 0 0;
