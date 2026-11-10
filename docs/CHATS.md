@@ -15,7 +15,7 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 | PR | Was | Zu tun |
 | --- | --- | --- |
-| [#692](https://github.com/SGNemo/schweizer-taschenmesser/pull/692) `ci/cleanup-round-3` | CI aufräumen, Runde 3: Messung, drei kleine Workflow-Änderungen, fünf Übergabe-Prompts ([perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md)) | mergen (Ratchet-Treffer `ci.yml`, `codeql.yml`: signieren oder selbst mergen); Liste „Only the maintainer“ in der Paket-Datei; Pakete 1 und 3 fragen zuerst je einmal |
+| [#692](https://github.com/SGNemo/schweizer-taschenmesser/pull/692) `ci/cleanup-round-3` | CI Runde 3: Messung, kleine Workflow-Änderungen, [Übergabe-Pakete](perf/CI-2026-11-PACKAGES.md) | mergen (Ratchet-Treffer: Workflows); Liste „Only the maintainer“ dort |
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
