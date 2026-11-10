@@ -97,8 +97,8 @@
 }
 /* Locked like a disabled button (AE1): neutral surface, no accent, no opacity. A ticked box keeps its tick. */
 .check input:disabled {
-  background: var(--surface-2);
-  border-color: var(--border);
+  background: var(--surface-sunken);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
 .check input:disabled:checked {
@@ -140,8 +140,8 @@
 }
 /* Locked like a disabled button (AE1): no accent, no opacity; on and off stay apart by position and fill. */
 .track:disabled {
-  background: var(--surface-2);
-  border-color: var(--border);
+  background: var(--surface-sunken);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   cursor: not-allowed;
 }
 .track:disabled[aria-checked='true'] {

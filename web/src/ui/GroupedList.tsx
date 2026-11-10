@@ -25,7 +25,8 @@ export interface GroupedListGroup {
 /**
  * Lists grouped by time or status (DESIGN-SPEC §7b): the group header is a small muted toggle with a count, groups are
  * separated by space and one hairline (never between every entry), and each group can be folded. The fold state is
- * device-local and keyed by `listId:groupId` (for a `defaultClosed` group the key lists the choice "open"). Rows inside are normal `ItemRow`s in an `ItemList`-like surface.
+ * device-local and keyed by `listId:groupId` (for a `defaultClosed` group the key lists the choice "open"). Rows inside are normal
+ * `ItemRow`s on a `ListSurface` (what an `ItemList` renders): the surface belongs to the rows, the grouping to this component.
  */
 export function GroupedList({
   listId,

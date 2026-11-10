@@ -18,6 +18,7 @@ export { Badge, EmptyState, ErrorState, Fab, Skeleton, SkeletonRows, Toaster } f
 export { NoReadAid, ReadableText } from './ReadableText';
 export { ReadAidProvider } from './ReadAidProvider';
 export { GroupedList, type GroupedListGroup } from './GroupedList';
+export { ListSurface } from './ListSurface';
 export { ReaderView } from './ReaderView';
 export { Prose } from './Prose';
 export { MEANINGS, categoryColor, categoryIndex, type Meaning } from './semantics';

@@ -68,7 +68,7 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
 }
-/* Rows come as a surface of their own inside the group. */
+/* Rows come on a surface of their own inside the group (`ListSurface`: tone step, hairlines between the rows only). */
 .body > * + * {
   margin-top: var(--space-2);
 }

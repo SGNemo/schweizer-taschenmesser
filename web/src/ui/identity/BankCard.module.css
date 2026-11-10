@@ -95,3 +95,15 @@
     background: var(--text-3);
   }
 }
+/* Calm (after the rules above, so it wins for calm alone): the grey without a cast, `--calm-ink`, by the same lightness rule. */
+:global(:root[data-color='calm']) .card {
+  background: color-mix(in srgb, var(--calm-ink) 85%, black);
+}
+:global(:root[data-theme='dark'][data-color='calm']) .card {
+  background: var(--calm-ink);
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])[data-color='calm']) .card {
+    background: var(--calm-ink);
+  }
+}
