@@ -95,9 +95,10 @@
   transform: rotate(45deg) scale(1);
   opacity: 1;
 }
-/* Disabled: sunken and without the accent, never faded (AE1; the same state as a disabled button). */
+/* Disabled: sunken and without the accent, never faded (AE1; the same state as a disabled button, with its quiet
+   edge so the box stays a box). */
 .check input:disabled {
-  border-color: var(--border);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   background: var(--surface-sunken);
   cursor: not-allowed;
 }
@@ -137,7 +138,7 @@
 }
 /* Disabled: sunken and without the accent, never faded (AE1). After the "on" rule, so it wins over the accent. */
 .track:disabled {
-  border-color: var(--border);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   background: var(--surface-sunken);
   cursor: not-allowed;
 }

@@ -92,7 +92,10 @@ describe('disabled state (UI audit 2026-11, AE1)', () => {
     expect(filled, 'one rule for the filled and framed variants').not.toBeNull();
     expect(filled![1]).toMatch(/background:\s*var\(--surface-sunken\)/);
     expect(filled![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
-    expect(filled![1]).toMatch(/border-color:\s*transparent/);
+    // A quiet edge keeps the outline: the control frame, weakened, never the accent.
+    expect(filled![1]).toMatch(
+      /border-color:\s*color-mix\(in srgb, var\(--border-strong\) \d+%, transparent\)/,
+    );
     const quiet = /\.ghost:disabled,\s*\.quietDanger:disabled\s*\{([^}]*)\}/.exec(css);
     expect(quiet![1]).toMatch(/(?:^|[\s;])color:\s*var\(--text-3\)/);
     // No rule that matches a disabled button brings the accent or the danger tone back.

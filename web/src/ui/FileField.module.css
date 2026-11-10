@@ -35,7 +35,7 @@
 }
 /* Disabled: the state of a disabled button (ui/Button, AE1), never faded. */
 .pickWrap[data-disabled='true'] .pick {
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
   background: var(--surface-sunken);
   color: var(--text-3);
 }
