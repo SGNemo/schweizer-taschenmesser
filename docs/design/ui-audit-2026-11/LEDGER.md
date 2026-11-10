@@ -165,6 +165,70 @@ Ausgang: **Blocker** (oben) · **vor 0b-n** (bestätigt, muss vor dem genannten 
 4. Ein Wächter-Nachzug als Label-PR vor 0b-1: Guardian F2, F3, F6, Architect F1–F3, `one-primary`-Positivkontrolle; vor 0b-2: `motion.seed`, `pageTitle`-Slot; vor 0b-4: `a11y`-Ausnahme.
 5. Danach ein Reviewer (`review-loop`) auf die Fixes, wie in PACKAGES „Reihenfolge“ vorgesehen; keine zweite Council-Runde nötig.
 
+## Abnahme 0a, Runde 2
+
+Zweite, kurze Abnahme auf `develop` 96a207f (2026-11-10), nach #636 (B2), #638 (0a-4 Teil 1), #640 (Ratsche, statische Wächter), #642 (Lade-Karte, Seed-Wächter), #635 (BankCard), #639 (V-1). Maßstab ist nur der Abschnitt „Abnahme 0a“ oben: je offenem Befund behoben / teilweise / offen. Keine neue Vollprüfung; drei Delegierte mit frischem Kontext (Claude Opus), nur lesend; jeder Befund ist vor dem Eintrag am Code, per Lauf oder an der GitHub-API geprüft. Nichts behoben.
+
+| Runde | Gegenstand                           | Advocate      | Architect     | Guardian      |
+| ----- | ------------------------------------ | ------------- | ------------- | ------------- |
+| A2    | Offene Punkte aus A1 (`develop` 96a207f) | 7,0 · CHANGES | 6,4 · CHANGES | 5,4 · CHANGES |
+
+**Ergebnis: No-Go für 0b-1.** Die Wächter-Nachzüge sind bis auf Reste gebaut und halten (lokal `npx vitest run scripts/` plus die drei Layout-Tests: 45 Dateien, 535 Tests grün). Offen bleiben alle drei Go-Bedingungen: B1 ist nicht nur unbelegt, sondern seit A1 zweimal wiederholt; `develop` ist wieder rot; der Handtest steht aus.
+
+### Blocker und Go-Bedingungen
+
+- **B1 · offen, verschärft** (alle drei; Architect R2-F1 als Blocker). `docs/howto/ci.md:21` führt unverändert als offen: `nemo-merge` neu anlegen, ein Lauf von `--pr` in der Sandbox, ein Probelauf des Signier-Befehls; `docs/decisions/meta.md` hat keinen Bullet zu #630/#634. An der API: #640 (PR-Lauf 42750161990, Ratsche „15 hit(s)“, darunter `web/scripts/ratchet.mjs` selbst, also die Datei, die Regel 7 von `develop` lädt) und #642 (Lauf 42756740301, „7 hit(s)“) wurden gemergt, während `Web (lint, types, unit, E2E)` `failure` war; der einzige rote Schritt war die Ratsche. An beiden PRs gibt es kein Label-Ereignis `stimulus-raise` und keinen Kommentar der Form `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash> <signatur>`. Gemergt hat `SGNemo` (ohne App-Feld; ob von Hand oder mit dem PAT eines Agenten, ist von hier nicht zu unterscheiden). #635, #636, #638, #639 waren auf dem gemergten Kopf grün und ohne Treffer. Bis heute hat keine echte Signatur `RATCHET_PUBLIC_KEY` bestanden, und `RULES.md:21` („every merger, also Sven's own merges“) ist bei vier Label-Schritten (#630, #634, #640, #642) nicht angewandt worden. Das Ruleset von `develop` (24307594: `deletion`, `non_fast_forward`, `pull_request`) verlangt keinen Status-Check; technisch hält nichts einen solchen Merge auf.
+- **B2 · behoben; die Go-Bedingung „`develop` grün“ ist offen** (eigener Befund M2). `web/e2e/accounts.spec.ts:129` öffnet am Handy erst „Mehr“; der `develop`-Lauf 42748763801 (b5659c5) war grün. Die vier abgeschlossenen Läufe danach sind rot, jeder mit anderen Tests: 9d73fbe (42750169258) `src/core/sync/lanHub.test.ts:220` und `e2e/seed/seed.spec.ts:77` „seed data never enters the sync outbox“ (Outbox 1 statt 0, in beiden Versuchen; derselbe Test war schon auf 7e69d91 rot) plus `:49` flaky; bef198f (42754097776) `e2e/planner.spec.ts:146`; f80d019 (42781003968) `e2e/calendar-drag.spec.ts:55` und `e2e/calendar-polish.spec.ts:139`. Der Lauf auf dem Kopf 96a207f (42781413305) lief beim Schreiben noch. Widerspruch: Architect wertet B2 als behoben, Guardian und Advocate als teilweise; entschieden wie hier getrennt, weil der Befund selbst weg ist und die Bedingung eine andere Ursache hat.
+- **Handtest N1a · offen.** `docs/MANUAL-TESTS.md:171` steht auf ☐. Davor zu klären: Guardian R2-F1 und Advocate R2-F2 (unten), beide treffen genau den Weg, den der Handtest geht.
+
+### Offene Befunde aus A1
+
+| Id (A1) | Stand | Beleg |
+| --- | --- | --- |
+| Guardian F2 (mehrere neue Seed-Specs) | **behoben** | `ratchet.mjs:885–901`: Namensmenge ohne Ausnahme, Frage je Aufruf „ein anderer Pfad mit diesem Namen“; Fixture `ratchet.test.ts:462` (drei neue Specs frei, geliehener Name bleibt Treffer) |
+| Guardian F3 (Trefferzeilen ohne Inhalt) | **behoben** | `ratchet.mjs:265` (`page-new` mit `canon`), `:355–362` (`signature … added/removed/changed`, `@file`) |
+| Guardian F6 · Architect F5, F15 (Schutzliste) | **behoben** | `ratchet.mjs:93–96`, `:109`: `palette.test.ts` entfernt, fünf Tests und `eslintAutoFocus` geschützt; 15-s-Fall im geschützten `layout/PageLoadingCard.test.tsx:114`; `eslint-rules/no-autofocus.js` |
+| Architect F1 (Bewegung in Modul-CSS) | **behoben**, Reichweite siehe Architect R2-F2 | `scripts/lib/cssMotion.ts`, `baselines/css-motion.json` (1: `accounts.module.css`) |
+| Architect F2 (Motion-Helfer namentlich) | **behoben** | `motionSource.test.ts:12` (`MOTION_HELPERS`, leer) |
+| Architect F3 (`grouped-list` nur `routes/`) | **behoben**; `ItemList` bleibt blind, ohne Besitzer | `baseline.ts:31`, Baseline 4; `groupedList.ts:13–15` nennt die offene Entscheidung, PACKAGES 0b-1 nicht |
+| Architect F4 (`pageTitle`-Slot) | **offen** (vor 0b-2) | `pageTitle.test.tsx:93–94` erkennt den Slot weiter nur über „einziges Kind“; kein `data-slot="title"` |
+| Advocate F4 · Guardian F4 (`motion.seed`) | **behoben** | `motion.seed.spec.ts:19`, `:24` (fehlender Teil ist rot) |
+| Advocate F5 · Guardian F5 · Architect F12 (`one-primary`) | **teilweise** | `one-primary.seed.spec.ts:11` zählt `data-variant`, Positivkontrolle `:38–47`; Dialoge weiter nur Palette und Erinnerungen (`:52–55`), `PACKAGE-0.md:44` sagt „je Dialog“ |
+| Advocate F6 · Guardian F9 (`touch-desktop`) | **behoben**, Toleranz siehe Guardian R2-F3 | `touch-desktop.seed.spec.ts:38–48` |
+| Advocate F7 · Architect F13 · Guardian F8 (`a11y`-Ausnahme) | **behoben**, mit neuer Lücke (Guardian R2-F2) | `a11y.seed.spec.ts:17–18`, `:58–73` |
+| Advocate F8 · Architect F6 (Browser-Fall) | **offen** | `playwright.config.ts:23` ohne `browser`; `e2e/browser.spec.ts:130` (in A1 `:116`) und der neue Fall `:90` nur im Rest-Lauf; keine Abweichung in `ci.md`, `PACKAGE-0.md:58` unverändert |
+| Advocate F1, F2 · Architect F9, Advocate F3, F10 (Lade-Karte) | **behoben** | `PageLoadingCard.tsx:47`, `:59`, `:67–73`; `ModuleErrorBoundary.tsx:53`, Test mit echtem `lazy()` `:92–108`; `PageContainer.tsx:63–64` |
+| Architect F10 · Advocate F9 (`pages-content`) | **behoben** | `pages-content.seed.spec.ts:99–103` |
+| Architect F7 (direkter Push 9c63095) | **offen**, Frage an Sven | unbeantwortet; siehe B1 zum Ruleset |
+| Architect F11, Guardian F11, F13 | **offen** (Follow-up) | `ci.yml:643`, `ci.yml:241`, `nemo-merge.md:78` unverändert |
+| Advocate F15 · Guardian F14 (STATUS) | **offen** | `docs/STATUS.md:8–15` führt #625, #632, 0a-1b, #640, #639, 0a-4 als „PR offen“; alle gemergt |
+| Architect F14, Guardian F7/F10/F12, Advocate F11–F14 | **nicht geprüft** | nits, in keinem der sechs PRs angefasst |
+| Bekannt: 0a-4 | **teilweise** | Inventur `docs/perf/MAIN-THREAD-COMMANDS-2026-11.md`, `browser_show` `async` mit Rückgabe; offen: Handtest, `disk_delete`, 28 „ungeprüft“; Wortlaut „unabhängig vom Go“ (`PACKAGES.md:44`) gegen „0a grün“ unentschieden |
+| Bekannt: BankCard-Kontrast | **behoben** | `ui/tokens.test.ts:490` (#635) |
+| Bekannt: Monatskalender 18 px | **offen** (vor 0b-4) | `PACKAGES.md:67–69` nennt weder `MONTH_LINES` noch die Ausnahme in `touch-desktop.seed.spec.ts:9` |
+
+### Neue Befunde (nur an den Fixes)
+
+| Id | Schwere | Datei:Zeile | Befund (kurz) | Ausgang |
+| --- | --- | --- | --- | --- |
+| Architect R2-F1 | blocker | `docs/howto/ci.md:21` | #640 und #642 ohne Signatur und mit rotem `Web` gemergt | **bestätigt** (API), Teil von B1 |
+| M2 (eigen) | blocker | Läufe oben | `develop` in vier Läufen nacheinander rot, fünf verschiedene Tests | **bestätigt** (Logs gelesen), Go-Bedingung; ob Flake oder Fehler, ist je Test zu klären, `seed.spec.ts:77` zuerst (Zusage „Testdaten nie im Sync-Ausgang“) |
+| Guardian R2-F1 | should | `web/src-tauri/src/browser.rs:525–528`, `web/src/core/platform/tauri/browser.ts:30`, `:45` | `showSeq` beginnt nach jedem Neuladen des Hauptfensters bei 1, `BrowserState.1` behält den alten Höchststand und wird nie zurückgesetzt: jedes `browser_show` tut nichts, bis der Zähler aufgeholt hat, auch `show(null)` beim Verlassen der Browser-Seite. Auslöser ist „Neu laden“ der Lade-Karte (`PageLoadingCard.tsx:70`). | **bestätigt am Code**, unter Windows nicht nachgestellt; **vor dem Handtest** – Epoche je Seitenleben mitsenden oder `last` beim Neuladen zurücksetzen, Rust-Fall „neue Epoche, seq 1“ |
+| Guardian R2-F2 = Advocate R2-F1 | should | `web/e2e/seed/a11y.seed.spec.ts:28` | `exclude(MONTH_LINES)` nimmt die Monatszeilen aus allen axe-Regeln, nicht nur aus `target-size`; ihr Kontrast auf der Kalender-Tönung ist am Desktop ungeprüft (vor #642 entfiel nur die eine Regel) | **bestätigt**, **vor 0b-1** (Tokens ändern genau diese Tönung); nur `target-size`-Knoten auf `MONTH_LINES` ausfiltern |
+| Architect R2-F2 | should | `web/scripts/lib/cssMotion.test.ts:22` | Zähler liest nur `src/modules/**`; 0b-1 baut in `src/ui`, 0b-2 in `src/layout` | **bestätigt** (Probe mit demselben Zähler über alle übrigen `src/**/*.css`: heute 0 Treffer, Baseline bliebe 1), **vor 0b-1** |
+| Advocate R2-F2 | should | `docs/MANUAL-TESTS.md:171` | N1a nennt weder die Variante noch Titelleiste/Tray (`REPORT.md:191`, acht Schritte) noch „Tab neu öffnen“; seit #638 misst der Test den Fix, nicht mehr H1 | **bestätigt**, **vor dem Handtest**; N1a als nummerierte Schritte mit Ziel für das Ergebnis |
+| Guardian R2-F3 | nit | `web/e2e/seed/touch-desktop.seed.spec.ts:23`, `:37` | `MIN = 43.5` gilt auch für das Element selbst (vorher `< 44`) | **bestätigt**, Follow-up |
+| Advocate R2-F3 | nit | `web/src/strings.offline.ts:9`, `PageLoadingCard.tsx:67` | Nach einem Ladefehler offline verspricht die Karte „geht es hier weiter“; online wechselt sie auf „Die Seite lädt noch“, obwohl nichts lädt | **bestätigt am Code**, Follow-up |
+| Advocate R2-F4 | nit | `web/src/layout/PageLoadingCard.test.tsx:65` | „Vitest-Fall je Plattform“ (Nachzug 1): Android fehlt | **bestätigt**, Follow-up |
+
+### Was vor 0b-1 noch fehlt
+
+1. **B1 (Sven):** `nemo-merge` neu anlegen; Wegwerf-PR mit einem Treffer (ohne Kommentar → Exit ≠ 0, signiert → 0, zweiter Push → ≠ 0), Ergebnis als Zeile in `ci.md`; die Treffer von #640 und #642 nachträglich ansehen (zuerst `ratchet.mjs`); ein Bullet in `decisions/meta.md`, dass #630, #634, #640, #642 vor der Regel gemergt wurden.
+2. **`develop` grün auf dem Kopf**, die fünf Tests aus M2 geklärt.
+3. **Vor dem Handtest:** Guardian R2-F1 (`browser_show` nach Neuladen), Advocate R2-F2 (N1a-Wortlaut). Dann der **Handtest N1a** (Sven, Windows).
+4. **Ein kleiner Label-PR:** `a11y`-Ausnahme nur für `target-size`, CSS-Zähler über `src/**`, `one-primary` mit einem Moduldialog oder der kleinere Umfang in `PACKAGE-0.md:44`; dazu ohne Label: Besitzer für die `ItemList`-Frage in PACKAGES 0b-1, Browser-Fall entschieden (`SMOKE_FILES` oder Abweichung in `ci.md`).
+5. Ein Reviewer (`review-loop`) auf 3 und 4. Nicht vor 0b-1 nötig: Architect F4 (vor 0b-2), PACKAGES 0b-4, die Follow-ups.
+
 ## Council V-1
 
 Council über [PR #639](https://github.com/SGNemo/schweizer-taschenmesser/pull/639) (`feat/ui4-v1-defaults`, Kopf `2830c5a`, Basis `b5659c5`), 2026-11-10, eine Runde, drei Delegierte mit frischem Kontext (Claude Opus), nur lesend. Maßstab: PACKAGES „V-1“, PACKAGE-0 „H-a“. Nichts behoben; die Befunde gehen an den Chat von #639.
