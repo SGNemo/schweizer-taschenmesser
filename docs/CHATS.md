@@ -15,7 +15,6 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 
 | PR | Was | Zu tun |
 | --- | --- | --- |
-| `docs/design-rounds-summary` (PR folgt) | Design-Runden 1–7, Lesbarkeitsplan, Visual-Audit und Cleanup 2026-10-03 in DESIGN-SPEC/howto/ROADMAP zusammengefasst, Dateien gelöscht (Bereich `docs/design`, `docs/meta`) | prüfen, mergen |
 | [#690](https://github.com/SGNemo/schweizer-taschenmesser/pull/690) `feat/remote-latency-probe` | Fernsteuerung: Latenzmessung mit echtem Handy (nur Dev-Preview), nötig vor der Seite Touchpad | mergen, einmal im WLAN messen |
 | [#688](https://github.com/SGNemo/schweizer-taschenmesser/pull/688) `feat/ui4-0b-2-head-nav` (Draft) | UI-Audit 4.0, Paket 0b-2: Modulkopf als eine Titelzeile mit Reitern | läuft noch |
 | [#553](https://github.com/SGNemo/schweizer-taschenmesser/pull/553) `chore/remove-scribble-folder` (Draft) | entfernt den alten Ordner `scribble/` (Notizen liegen im Notiz-Repo) | fertig machen lassen oder schließen; bis dahin liest `chats:status` ohne Klon des Notiz-Repos das alte Board |
