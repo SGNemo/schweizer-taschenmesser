@@ -228,7 +228,7 @@
 }
 /* The phone's module row lies on the stage's backdrop (the sun, a cover): a quiet backing keeps its text readable. */
 .stage nav[data-module-row] {
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border-radius: var(--radius-md);
 }
 .stage .figure {

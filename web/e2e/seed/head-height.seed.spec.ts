@@ -43,7 +43,7 @@ interface Head {
   titleCut: boolean;
   /** The figure's number is cut off or pushed out of the row. */
   valueCut: boolean;
-  /** The figure's context line is shortened (its one line is clamped). */
+  /** The figure's context line is shortened (it ends in an ellipsis). */
   detailCut: boolean;
   /** The page put its views into the row of the tabs. */
   hasTabs: boolean;
@@ -96,9 +96,9 @@ function readHead(): Head | null {
     detailCut: Array.from(
       titleRow?.querySelectorAll<HTMLElement>('[data-testid="module-figure"] span') ?? [],
     )
-      // The context line is the clamped one (the label is hidden, the number never clamps).
-      .filter((el) => getComputedStyle(el).webkitLineClamp === '1')
-      .some((el) => el.scrollHeight > el.clientHeight + 2),
+      // The context line is the one that hides its overflow behind an ellipsis (the number never does).
+      .filter((el) => getComputedStyle(el).textOverflow === 'ellipsis')
+      .some((el) => el.scrollWidth > el.clientWidth + 1),
     hasTabs: (head.querySelector('[data-slot="tabs"]')?.childElementCount ?? 0) > 0,
     holdsTabs: head.querySelector('[data-slot="tabs"]')?.getAttribute('data-hold') === 'true',
   };

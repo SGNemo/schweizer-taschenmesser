@@ -51,8 +51,12 @@
 /* In the title row of a standard module head (Identity 4.0, rule 2): one figure and its context line, right-aligned,
    two short lines that fit the row. The caps label is not drawn (the context line names the number for the eye). */
 :global([data-head='standard']) .figure {
+  /* One column that is at least as wide as the number and at most as wide as the widest line: the context line has
+     no least width of its own (it hides its overflow), so it is the part that gives way, with an ellipsis. */
+  display: grid;
+  grid-template-columns: minmax(auto, max-content);
+  justify-items: end;
   gap: 0;
-  align-items: flex-end;
 }
 /* Not shown, still read: a screen reader hears what the number measures ("Kontostand"). */
 :global([data-head='standard']) .label {
@@ -71,17 +75,13 @@
   white-space: nowrap;
 }
 :global([data-head='standard']) .detail {
-  /* One line with an ellipsis that may give way: it asks for its whole width when there is room and for next to
-     nothing when there is not (a clamped line may break anywhere), so the figure's least width is its number. */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  min-width: 0;
   max-width: 100%;
   overflow: hidden;
   font-size: var(--text-meta);
   line-height: 1.3;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-on-tint);
 }
 @media (max-width: 899px) {
