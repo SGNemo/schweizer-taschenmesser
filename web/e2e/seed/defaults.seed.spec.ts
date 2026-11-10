@@ -88,8 +88,12 @@ test('switching a set module off in the library is a household choice: it writes
   page,
 }) => {
   await fresh(page, { set: true, desktop: true });
-  await page.getByTestId('module-lists').getByRole('switch').click();
-  await expect(page.getByTestId('module-lists').getByRole('switch')).not.toBeChecked();
+  const lists = page.getByTestId('module-lists').getByRole('switch');
+  // On through the set first: the set is applied a moment after the stored states, and a click on the switch
+  // while it still shows "off" switches the module on (and opens its start-data offer) instead of off.
+  await expect(lists).toBeChecked();
+  await lists.click();
+  await expect(lists).not.toBeChecked();
   await expect.poll(async () => (await stored(page)).rows).toBe(1);
 });
 
@@ -98,6 +102,7 @@ test('"Rückgängig" after that brings the device back to no row: lists are on a
 }) => {
   await fresh(page, { set: true, desktop: true });
   const lists = page.getByTestId('module-lists').getByRole('switch');
+  await expect(lists).toBeChecked(); // as above: only a switch that is on can be switched off
   await lists.click();
   await expect(lists).not.toBeChecked();
   await page.getByRole('button', { name: 'Rückgängig' }).click();
