@@ -124,8 +124,13 @@ test('the lock screen is ready to type into: the master password field has the f
   await page.reload();
   await expect(page.getByLabel('Master-Passwort')).toBeFocused();
   // ... and coming back to it inside the app (the shell moves the focus on a navigation first).
-  await page.getByRole('link', { name: 'Bibliothek' }).first().click();
+  // A route change inside the app, the way a navigation link does it: the phone has no sidebar link to click.
+  await page.evaluate(() => {
+    history.pushState({}, '', '/library');
+    dispatchEvent(new PopStateEvent('popstate'));
+  });
   await expect(page).toHaveURL(/\/library$/);
+  await expect(page.locator('main h1')).toHaveText('Modul-Bibliothek');
   await page.goBack();
   await expect(page.getByLabel('Master-Passwort')).toBeFocused();
   await page.keyboard.type(MASTER);
